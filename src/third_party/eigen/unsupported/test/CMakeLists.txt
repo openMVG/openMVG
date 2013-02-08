@@ -1,0 +1,87 @@
+
+include_directories(../../test ../../unsupported ../../Eigen 
+                    ${CMAKE_CURRENT_BINARY_DIR}/../../test)
+
+find_package(GoogleHash)
+if(GOOGLEHASH_FOUND)
+  add_definitions("-DEIGEN_GOOGLEHASH_SUPPORT")
+  include_directories(${GOOGLEHASH_INCLUDES})
+  ei_add_property(EIGEN_TESTED_BACKENDS  "GoogleHash, ")
+else(GOOGLEHASH_FOUND)
+  ei_add_property(EIGEN_MISSING_BACKENDS  "GoogleHash, ")
+endif(GOOGLEHASH_FOUND)
+
+find_package(Adolc)
+if(ADOLC_FOUND)
+  include_directories(${ADOLC_INCLUDES})
+  ei_add_property(EIGEN_TESTED_BACKENDS "Adolc, ")
+  ei_add_test(forward_adolc "" ${ADOLC_LIBRARIES})
+else(ADOLC_FOUND)
+  ei_add_property(EIGEN_MISSING_BACKENDS "Adolc, ")
+endif(ADOLC_FOUND)
+
+# this test seems to never have been successful on x87, so is considered to contain a FP-related bug.
+# see thread: "non-linear optimization test summary"
+#ei_add_test(NonLinearOptimization)
+
+ei_add_test(NumericalDiff)
+ei_add_test(autodiff)
+
+if (NOT CMAKE_CXX_COMPILER MATCHES "clang\\+\\+$")
+ei_add_test(BVH)
+endif()
+
+ei_add_test(matrix_exponential)
+ei_add_test(matrix_function)
+ei_add_test(matrix_square_root)
+ei_add_test(alignedvector3)
+ei_add_test(FFT)
+
+find_package(MPFR 2.3.0)
+find_package(GMP)
+if(MPFR_FOUND)
+  include_directories(${MPFR_INCLUDES} ./mpreal)
+  ei_add_property(EIGEN_TESTED_BACKENDS "MPFR C++, ")
+  set(EIGEN_MPFR_TEST_LIBRARIES ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
+  ei_add_test(mpreal_support "" "${EIGEN_MPFR_TEST_LIBRARIES}" )
+else()
+  ei_add_property(EIGEN_MISSING_BACKENDS "MPFR C++, ")
+endif()
+
+ei_add_test(sparse_extra   "" "")
+
+find_package(FFTW)
+if(FFTW_FOUND)
+  ei_add_property(EIGEN_TESTED_BACKENDS "fftw, ")
+  include_directories( ${FFTW_INCLUDES} )
+  if(FFTWL_LIB)
+    ei_add_test(FFTW  "-DEIGEN_FFTW_DEFAULT -DEIGEN_HAS_FFTWL" "${FFTW_LIBRARIES}" )
+  else()
+    ei_add_test(FFTW  "-DEIGEN_FFTW_DEFAULT" "${FFTW_LIBRARIES}" )
+  endif()
+else()
+  ei_add_property(EIGEN_MISSING_BACKENDS "fftw, ")
+endif()
+
+option(EIGEN_TEST_NO_OPENGL "Disable OpenGL support in unit tests" OFF)
+if(NOT EIGEN_TEST_NO_OPENGL)
+  find_package(OpenGL)
+  find_package(GLUT)
+  find_package(GLEW)
+  if(OPENGL_FOUND AND GLUT_FOUND AND GLEW_FOUND)
+    ei_add_property(EIGEN_TESTED_BACKENDS "OpenGL, ")
+    set(EIGEN_GL_LIB ${GLUT_LIBRARIES} ${GLEW_LIBRARIES})
+    ei_add_test(openglsupport  "" "${EIGEN_GL_LIB}" )
+  else()
+    ei_add_property(EIGEN_MISSING_BACKENDS "OpenGL, ")
+  endif()
+else()
+    ei_add_property(EIGEN_MISSING_BACKENDS "OpenGL, ")
+endif()
+
+ei_add_test(polynomialsolver)
+ei_add_test(polynomialutils)
+ei_add_test(kronecker_product)
+ei_add_test(splines)
+ei_add_test(gmres)
+

@@ -1,0 +1,5 @@
+
+ADD_DEFINITIONS(-DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+ADD_EXECUTABLE(openMVG_sample_bundleAdjustment bundle_adjustment.cpp)
+TARGET_LINK_LIBRARIES(openMVG_sample_bundleAdjustment openMVG_multiview_test_data openMVG_multiview ceres)
+

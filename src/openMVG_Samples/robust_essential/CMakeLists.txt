@@ -1,0 +1,12 @@
+
+ADD_DEFINITIONS(-DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
+ADD_EXECUTABLE(openMVG_sample_robustEssential robust_essential.cpp)
+TARGET_LINK_LIBRARIES(openMVG_sample_robustEssential 
+  openMVG_image
+  openMVG_multiview
+  vlsift
+  stlplus
+  flann_cpp_s
+  ${OPENMVG_LIBRARY_DEPENDENCIES})
+

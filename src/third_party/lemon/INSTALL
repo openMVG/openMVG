@@ -1,0 +1,197 @@
+Installation Instructions
+=========================
+
+Since you are reading this I assume you already obtained one of the release
+tarballs and successfully extracted it. The latest version of LEMON is
+available at our web page (http://lemon.cs.elte.hu/).
+
+LEMON provides two different build environments, one is based on "autotool",
+while the other is based on "cmake". This file contains instructions only for
+the former one, which is the recommended build environment on Linux, Mac OSX
+and other unices or if you use Cygwin on Windows. For cmake installation
+instructions visit http://lemon.cs.elte.hu.
+
+In order to install LEMON from the extracted source tarball you have to
+issue the following commands:
+
+   1. `cd lemon-x.y.z'
+
+      This command changes to the directory which was created when you
+      extracted the sources. The x.y.z part is a version number.
+
+   2. `./configure'
+
+      This command runs the configure shell script, which does some checks and
+      creates the makefiles.
+
+   3. `make'
+
+      This command compiles the non-template part of LEMON into libemon.a
+      file. It also compiles the programs in the tools subdirectory by
+      default.
+
+   4. `make check'
+
+      This step is optional, but recommended. It runs the test programs that
+      we developed for LEMON to check whether the library works properly on
+      your platform.
+
+   5. `make install'
+
+      This command installs LEMON under /usr/local (you will need root
+      privileges to be able to do that). If you want to install it to some
+      other location, then pass the --prefix=DIRECTORY flag to configure in
+      step 2. For example: `./configure --prefix=/home/username/lemon'.
+
+   6. `make install-html'
+
+      This command installs the documentation under share/doc/lemon/docs. The
+      generated documentation is included in the tarball. If you want to
+      generate it yourself, then run `make html'. Note that for this you need
+      to have the following programs installed: Doxygen, Graphviz, Ghostscript,
+      Latex.
+
+
+Configure Options and Variables
+===============================
+
+In step 2 you can customize the actions of configure by setting variables
+and passing options to it. This can be done like this:
+`./configure [OPTION]... [VARIABLE=VALUE]...'
+
+Below you will find some useful variables and options (see `./configure --help'
+for more):
+
+CXX='comp'
+
+  Change the C++ compiler to 'comp'.
+
+CXXFLAGS='flags'
+
+  Pass the 'flags' to the compiler. For example CXXFLAGS='-O3 -march=pentium-m'
+  turns on generation of aggressively optimized Pentium-M specific code.
+
+--prefix=PREFIX
+
+  Set the installation prefix to PREFIX. By default it is /usr/local.
+
+--enable-tools
+
+   Build the programs in the tools subdirectory (default).
+
+--disable-tools
+
+   Do not build the programs in the tools subdirectory.
+
+--with-glpk[=PREFIX]
+
+   Enable GLPK support (default). You should specify the prefix too if
+   you installed GLPK to some non-standard location (e.g. your home
+   directory). If it is not found, GLPK support will be disabled.
+
+--with-glpk-includedir=DIR
+
+   The directory where the GLPK header files are located. This is only
+   useful when the GLPK headers and libraries are not under the same
+   prefix (which is unlikely).
+
+--with-glpk-libdir=DIR
+
+   The directory where the GLPK libraries are located. This is only
+   useful when the GLPK headers and libraries are not under the same
+   prefix (which is unlikely).
+
+--without-glpk
+
+   Disable GLPK support.
+
+--with-cplex[=PREFIX]
+
+   Enable CPLEX support (default). You should specify the prefix too
+   if you installed CPLEX to some non-standard location
+   (e.g. /opt/ilog/cplex75). If it is not found, CPLEX support will be
+   disabled.
+
+--with-cplex-includedir=DIR
+
+   The directory where the CPLEX header files are located. This is
+   only useful when the CPLEX headers and libraries are not under the
+   same prefix (e.g.  /usr/local/cplex/cplex75/include).
+
+--with-cplex-libdir=DIR
+
+   The directory where the CPLEX libraries are located. This is only
+   useful when the CPLEX headers and libraries are not under the same
+   prefix (e.g.
+   /usr/local/cplex/cplex75/lib/i86_linux2_glibc2.2_gcc3.0/static_pic_mt).
+
+--without-cplex
+
+   Disable CPLEX support.
+
+--with-soplex[=PREFIX]
+
+   Enable SoPlex support (default). You should specify the prefix too if
+   you installed SoPlex to some non-standard location (e.g. your home
+   directory). If it is not found, SoPlex support will be disabled.
+
+--with-soplex-includedir=DIR
+
+   The directory where the SoPlex header files are located. This is only
+   useful when the SoPlex headers and libraries are not under the same
+   prefix (which is unlikely).
+
+--with-soplex-libdir=DIR
+
+   The directory where the SoPlex libraries are located. This is only
+   useful when the SoPlex headers and libraries are not under the same
+   prefix (which is unlikely).
+
+--without-soplex
+
+   Disable SoPlex support.
+
+--with-coin[=PREFIX]
+
+   Enable support for COIN-OR solvers (CLP and CBC). You should
+   specify the prefix too. (by default, COIN-OR tools install
+   themselves to the source code directory). This command enables the
+   solvers that are actually found.
+
+--with-coin-includedir=DIR
+
+   The directory where the COIN-OR header files are located. This is
+   only useful when the COIN-OR headers and libraries are not under
+   the same prefix (which is unlikely).
+
+--with-coin-libdir=DIR
+
+   The directory where the COIN-OR libraries are located. This is only
+   useful when the COIN-OR headers and libraries are not under the
+   same prefix (which is unlikely).
+
+--without-coin
+
+   Disable COIN-OR support.
+
+
+Makefile Variables
+==================
+
+Some Makefile variables are reserved by the GNU Coding Standards for
+the use of the "user" - the person building the package. For instance,
+CXX and CXXFLAGS are such variables, and have the same meaning as
+explained in the previous section. These variables can be set on the
+command line when invoking `make' like this:
+`make [VARIABLE=VALUE]...'
+
+WARNINGCXXFLAGS is a non-standard Makefile variable introduced by us
+to hold several compiler flags related to warnings. Its default value
+can be overridden when invoking `make'. For example to disable all
+warning flags use `make WARNINGCXXFLAGS='.
+
+In order to turn off a single flag from the default set of warning
+flags, you can use the CXXFLAGS variable, since this is passed after
+WARNINGCXXFLAGS. For example to turn off `-Wold-style-cast' (which is
+used by default when g++ is detected) you can use
+`make CXXFLAGS="-g -O2 -Wno-old-style-cast"'.

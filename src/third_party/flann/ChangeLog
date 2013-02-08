@@ -1,0 +1,42 @@
+Version 1.6.11
+	* bug fixes
+
+Version 1.6.10
+	* fixed a radiusSearch bug introduced in 1.6.9
+
+Version 1.6.9
+	* bug fixes
+	* fixed radius search bug on MSVC compiler
+	* fixed windows linking problems
+
+Version 1.6.8
+	* bug fixes, low dimensional search speedup
+
+Version 1.6.7
+	* bug fixes
+
+Version 1.6.6
+	* misc bug fixes
+
+Version 1.6.5
+	* fix compilation problem on some C++ compilers
+	* fixes in the python bindings
+
+Version 1.6.4
+	* small bug fix
+
+Version 1.6.3
+	* radius search speedup
+
+Version 1.6.2
+	* slight API changes to the C++ bindings, now the main index type is templated
+	* on the distance functor which makes it easier to use custom distances
+	* new kd-tree implementation optimized for low dimensionality data
+	* experimental MPI support for cluster computing
+
+Version 1.5
+	* new C++ templated API
+	* saving/loading of indices to disk
+	* threadsafe search
+	* new distance types (thanks to Radu Bogdan Rusu and Romain Thibaux for the patch)
+	* (api change) autotuned is no longer selected by passing a precision >0, it's used when the algorithm type is set to autotuned

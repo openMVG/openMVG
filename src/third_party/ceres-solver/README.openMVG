@@ -1,0 +1,9 @@
+Project: ceres-solver
+URL: http://code.google.com/p/ceres-solver/
+License: BSD License
+Upstream version: 1.4.0
+
+Local modifications:
+
+  * Use minilog to avoid using glog
+  * Remove automatic headers search to limit to openMVG libraries scope

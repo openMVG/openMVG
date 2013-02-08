@@ -1,0 +1,8 @@
+ADD_SUBDIRECTORY(image)
+ADD_SUBDIRECTORY(features)
+ADD_SUBDIRECTORY(matching)
+ADD_SUBDIRECTORY(multiview)
+ADD_SUBDIRECTORY(numeric)
+ADD_SUBDIRECTORY(tracks)
+
+ADD_SUBDIRECTORY(robust_estimation)

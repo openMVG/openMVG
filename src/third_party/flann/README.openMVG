@@ -1,0 +1,10 @@
+Project: FLANN
+URL: http://people.cs.ubc.ca/~mariusm/index.php/FLANN/FLANN
+License: BSD
+Upstream version: Version 1.8.4
+Doc : http://people.cs.ubc.ca/~mariusm/uploads/FLANN/manual.pdf
+
+Local modifications:
+* Remove matlab and python in CMAKE native build system.
+* Remove files that are not used (matlab/python)
+
