@@ -153,7 +153,7 @@ public:
 
     DataInputIteratorY itery = yStart;
     for(DataInputIteratorX iterx = xStart;
-     iterx != xEnd; advance(iterx, 1), advance(itery, 1))
+     iterx != xEnd; std::advance(iterx, 1), std::advance(itery, 1))
     {
       svgStream << *iterx << ',' << *itery << ' ';
     }
