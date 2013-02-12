@@ -16,7 +16,7 @@ void ConcatH(const Image & imageA, const Image & imageB, Image & Out)
   // Compute new dimensions.
   int ww = imageA.Width() + imageB.Width();
 
-  Out = Image(ww, max(imageA.Height(), imageB.Height()));
+  Out = Image(ww, std::max(imageA.Height(), imageB.Height()));
 
   // Fill with original data from imageA.
   for(size_t i = 0; i < imageA.Width(); ++i)
