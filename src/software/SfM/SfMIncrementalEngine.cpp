@@ -435,18 +435,14 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
   //-> Triangulate the common tracks
   //--> Triangulate the point
 
-  Mat34 P1, P2;
-  Mat3 R1 = Mat3::Identity();
-  Vec3 t1 = Vec3::Zero();
-  P_From_KRt(_K, R1, t1, &P1);
-  P_From_KRt(_K, R2, t2, &P2);
-
   // Add information related to the View (I,J) to the reconstruction data
   _reconstructorData.set_imagedId.insert(I);
   _reconstructorData.set_imagedId.insert(J);
 
-  _reconstructorData.map_Camera.insert(std::make_pair(I, SimpleCamera(_K, R1, t1)));
-  _reconstructorData.map_Camera.insert(std::make_pair(J, SimpleCamera(_K, R2, t2)));
+  PinholeCamera cam1 = PinholeCamera(_K, Mat3::Identity(), Vec3::Zero());
+  PinholeCamera cam2 = PinholeCamera(_K, R2, t2);
+  _reconstructorData.map_Camera.insert(std::make_pair(I, cam1));
+  _reconstructorData.map_Camera.insert(std::make_pair(J, cam2));
 
   _reconstructorData.map_ACThreshold.insert(std::make_pair(I, errorMax));
   _reconstructorData.map_ACThreshold.insert(std::make_pair(J, errorMax));
@@ -466,7 +462,7 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
   std::vector<Vec3> vec_3dPoint;
   std::vector<double> vec_triangulationResidual;
 
-  SfMRobust::triangulate2View_Vector(P1, P2,
+  SfMRobust::triangulate2View_Vector(cam1._P, cam2._P,
     vec_featI, vec_featJ,
     vec_index, &vec_3dPoint, &vec_triangulationResidual);
 
@@ -486,9 +482,9 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
       //-- Depth
       //-- Residuals
       //-- Angle between rays ?
-      if (Depth(R1,t1,vec_3dPoint[cptIndex]) > 0
-        && Depth(R2,t2,vec_3dPoint[cptIndex]) > 0)  {
-        double angle = SfMRobust::angleBetweenRay(_K,R1,t1,_K,R2,t2,x1,x2);
+      if (cam1.Depth(vec_3dPoint[cptIndex]) > 0
+        && cam2.Depth(vec_3dPoint[cptIndex]) > 0)  {
+        double angle = PinholeCamera::AngleBetweenRay(cam1, cam2, x1, x2);
         if (angle > 2)  {
           _reconstructorData.map_3DPoints[trackId] = vec_3dPoint[cptIndex];
           _reconstructorData.set_trackId.insert(trackId);
@@ -793,7 +789,7 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
     Vec3 t;
     KRt_From_P(P,&K,&R,&t);
     _reconstructorData.map_Camera.insert(
-      std::make_pair(imageIndex, SimpleCamera(K, R, t)));
+      std::make_pair(imageIndex, PinholeCamera(K, R, t)));
   }
   _reconstructorData.map_ACThreshold.insert(std::make_pair(imageIndex, errorMax));
   _set_remainingImageId.erase(imageIndex);
@@ -802,8 +798,7 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
   std::vector<double> vec_ResectionResidual;
   for (size_t i = 0; i < pt3D.cols(); ++i)
   {
-    Vec2 pj = Project(P, Vec3(pt3D.col(i)));
-    double dResidual = (pj - pt2D.col(i)).norm();
+    double dResidual = PinholeCamera::Residual(P, pt3D.col(i), pt2D.col(i));
     vec_ResectionResidual.push_back(dResidual);
   }
 
@@ -922,14 +917,16 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
         // Analyse 3D reconstructed point
         //  - Check positive depth
         //  - Check angle (small angle leads imprecise triangulation)
-        const SimpleCamera & cam1 = _reconstructorData.map_Camera[I];
-        const SimpleCamera & cam2 = _reconstructorData.map_Camera[J];
+        const PinholeCamera & cam1 = _reconstructorData.map_Camera[I];
+        const PinholeCamera & cam2 = _reconstructorData.map_Camera[J];
 
         //- Add reconstructed point to the reconstruction data
         size_t cardPointsBefore = _reconstructorData.map_3DPoints.size();
         for (size_t i = 0; i < vec_tracksToAdd.size(); ++i)
         {
           size_t trackId = vec_tracksToAdd[i];
+          const Vec3 & cur3DPt = vec_3dPoint[i];
+
           if ( _reconstructorData.set_trackId.find(trackId) == _reconstructorData.set_trackId.end())
           {
             //Use error related to the current view with a max value of 4 pixels
@@ -940,17 +937,14 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
             Vec2 x2 = vec_featJ[vec_index[i]._j].coords().cast<double>();
 
             bool bReproj =
-              (x1 - Project(P1, vec_3dPoint[i])).norm() < maxTh &&
-              (x2 - Project(P2, vec_3dPoint[i])).norm() < maxTh;
+              cam1.Residual(cur3DPt, x1) < maxTh &&
+              cam2.Residual(cur3DPt, x2) < maxTh;
 
             if ( bReproj
-                && Depth(cam1._R, cam1._t, vec_3dPoint[i]) > 0
-                && Depth(cam2._R, cam2._t, vec_3dPoint[i]) > 0)
+                && cam1.Depth(cur3DPt) > 0
+                && cam2.Depth(cur3DPt) > 0)
             {
-              double angle = SfMRobust::angleBetweenRay(
-                cam1._K, cam1._R, cam1._t,
-                cam2._K, cam2._R, cam2._t,
-                x1, x2);
+              double angle = PinholeCamera::AngleBetweenRay(cam1, cam2, x1, x2);
               if(angle>2) {
                 _reconstructorData.map_3DPoints[trackId] = vec_3dPoint[i];
                 _reconstructorData.set_trackId.insert(trackId);
@@ -1006,15 +1000,14 @@ size_t IncrementalReconstructionEngine::badTrackRejector(double dPrecision)
     {
       size_t imageId = iterTrack->first;
       size_t featId = iterTrack->second;
-      const SimpleCamera & cam = _reconstructorData.map_Camera[imageId];
+      const PinholeCamera & cam = _reconstructorData.map_Camera[imageId];
 
       if ( set_camIndex.find(imageId) != set_camIndex.end())  {
         const std::vector<SIOPointFeature> & vec_feats = _map_feats[imageId];
         const SIOPointFeature & ptFeat = vec_feats[featId];
         const std::pair<size_t, size_t> & imageDim = _vec_imageSize[imageId];
 
-        Vec2 pj = Project(cam._P, pt3D);
-        double dResidual2D = (pj-ptFeat.coords().cast<double>()).norm();
+        double dResidual2D = cam.Residual(pt3D, ptFeat.coords().cast<double>());
 
         Vec3 camPos = cam._C;
         Vec3 dir = (pt3D - camPos).normalized();
@@ -1025,8 +1018,7 @@ size_t IncrementalReconstructionEngine::badTrackRejector(double dPrecision)
         else
         {
           double dot = originRay.dot(dir);
-          #define RAD2DEG(r) ((r) * (180.0 / M_PI))
-          double angle = RAD2DEG(acos(clamp(dot, -1.0 + 1.e-8, 1.0 - 1.e-8)));
+          double angle = R2D(acos(clamp(dot, -1.0 + 1.e-8, 1.0 - 1.e-8)));
           maxAngle = max(angle, maxAngle);
         }
 
@@ -1036,7 +1028,7 @@ size_t IncrementalReconstructionEngine::badTrackRejector(double dPrecision)
         }
       }
     }
-    if (maxAngle<3)
+    if (maxAngle < 3)
     {
       for( tracks::submapTrack::const_iterator iterTrack = track.begin();
         iterTrack != track.end(); ++iterTrack)  {
@@ -1286,7 +1278,7 @@ void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
   std::set<size_t> set_camIndex;
   std::map<size_t,size_t> map_camIndexToNumber;
   size_t cpt = 0;
-  for (std::map<size_t,SimpleCamera >::const_iterator iter = _reconstructorData.map_Camera.begin();
+  for (std::map<size_t, PinholeCamera >::const_iterator iter = _reconstructorData.map_Camera.begin();
     iter != _reconstructorData.map_Camera.end();  ++iter, ++cpt)
   {
     // in order to map camera index to contiguous number
@@ -1417,7 +1409,7 @@ void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
 
     // Get back camera
     cpt = 0;
-    for (std::map<size_t,SimpleCamera >::iterator iter = _reconstructorData.map_Camera.begin();
+    for (std::map<size_t, PinholeCamera >::iterator iter = _reconstructorData.map_Camera.begin();
       iter != _reconstructorData.map_Camera.end(); ++iter, ++cpt)
     {
       const double * cam = ba_problem.mutable_cameras() + cpt*7;
@@ -1428,10 +1420,10 @@ void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
       double focal = cam[6];
 
       // Update the camera
-      SimpleCamera & sCam = iter->second;
+      PinholeCamera & sCam = iter->second;
       Mat3 K = sCam._K;
       K(0,0) = K(1,1) = focal;
-      sCam = SimpleCamera(K, R, t);
+      sCam = PinholeCamera(K, R, t);
     }
   }
 }
@@ -1439,7 +1431,7 @@ void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
 double IncrementalReconstructionEngine::ComputeResidualsHistogram(Histogram<double> * histo)
 {
   std::set<size_t> set_camIndex;
-  for (std::map<size_t,SimpleCamera>::const_iterator iter = _reconstructorData.map_Camera.begin();
+  for (std::map<size_t, PinholeCamera>::const_iterator iter = _reconstructorData.map_Camera.begin();
     iter != _reconstructorData.map_Camera.end();
     ++iter)
   {
@@ -1472,9 +1464,9 @@ double IncrementalReconstructionEngine::ComputeResidualsHistogram(Histogram<doub
         const std::vector<SIOPointFeature> & vec_feats = _map_feats[imageId];
         const SIOPointFeature & ptFeat = vec_feats[featId];
         const std::pair<size_t, size_t> & imageDim = _vec_imageSize[imageId];
+        const PinholeCamera & cam = _reconstructorData.map_Camera[imageId];
 
-        Vec2 pj = Project( _reconstructorData.map_Camera[imageId]._P, pt3D);
-        double dResidual = (pj-ptFeat.coords().cast<double>()).norm();
+        double dResidual = cam.Residual(pt3D, ptFeat.coords().cast<double>());
         vec_residuals.push_back(dResidual);
       }
     }

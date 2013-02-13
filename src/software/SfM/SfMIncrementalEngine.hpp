@@ -10,7 +10,6 @@
 
 #include "openMVG/numeric/numeric.h"
 
-#include "software/SfM/SfMSimpleCamera.hpp"
 #include "software/SfM/SfMEngine.hpp"
 #include "software/SfM/SfMReconstructionData.hpp"
 #include "openMVG/features/features.hpp"
