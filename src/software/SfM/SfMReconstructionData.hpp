@@ -21,7 +21,7 @@
 #include "openMVG/image/image.hpp"
 #include "openMVG/tracks/tracks.hpp"
 
-#include "software/SfM/SfMSimpleCamera.hpp"
+#include "software/SfM/SfMPinholeCamera.hpp"
 #include "software/SfM/SfMPlyHelper.hpp"
 #include "third_party/stlAddition/stlMap.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -38,7 +38,7 @@ struct reconstructorHelper
 
   // Reconstructed camera information
   std::set<size_t> set_imagedId;
-  std::map<size_t, SimpleCamera> map_Camera;
+  std::map<size_t, PinholeCamera> map_Camera;
 
   // Per camera confidence (A contrario estimated threshold error)
   std::map<size_t, double> map_ACThreshold;
@@ -54,7 +54,7 @@ struct reconstructorHelper
       RetrieveValue());
     //-- Add camera position to the Point cloud
     std::vector<Vec3> vec_camPos;
-    for (std::map<size_t, SimpleCamera>::const_iterator iter = map_Camera.begin();
+    for (std::map<size_t, PinholeCamera>::const_iterator iter = map_Camera.begin();
       iter != map_Camera.end(); ++ iter) {
       vec_camPos.push_back(iter->second._C);
     }
@@ -99,7 +99,7 @@ struct reconstructorHelper
       //Export Camera as binary files
       std::map<size_t, size_t> map_cameratoIndex;
       size_t count = 0;
-      for (std::map<size_t,SimpleCamera>::const_iterator iter =
+      for (std::map<size_t, PinholeCamera>::const_iterator iter =
         map_Camera.begin();
         iter != map_Camera.end();
         ++iter)
@@ -162,7 +162,7 @@ struct reconstructorHelper
           if ( map_cameratoIndex.find(imageId) != map_cameratoIndex.end())
           {
             set_imageIndex.insert(map_cameratoIndex[imageId]);
-            const SimpleCamera & cam = (map_Camera.find(imageId))->second;
+            const PinholeCamera & cam = (map_Camera.find(imageId))->second;
             double z = Depth(cam._R, cam._t, pos);
             znear[map_cameratoIndex[imageId]] = std::min(znear[map_cameratoIndex[imageId]], z );
             zfar[map_cameratoIndex[imageId]] = std::max(zfar[map_cameratoIndex[imageId]], z );
@@ -186,7 +186,7 @@ struct reconstructorHelper
       f << "images\ncameras\n" << nc << endl;
 
       count = 0;
-      for (std::map<size_t,SimpleCamera>::const_iterator iter = map_Camera.begin();
+      for (std::map<size_t, PinholeCamera>::const_iterator iter = map_Camera.begin();
         iter != map_Camera.end();
         ++iter)
       {
@@ -205,7 +205,7 @@ struct reconstructorHelper
       // EXPORT IMAGES
       if (bExportImage)
       {
-        for (std::map<size_t,SimpleCamera>::const_iterator iter = map_Camera.begin();
+        for (std::map<size_t, PinholeCamera>::const_iterator iter = map_Camera.begin();
         iter != map_Camera.end();
         ++iter)
         {
@@ -262,7 +262,7 @@ struct reconstructorHelper
       //Camera
 
       size_t count = 0;
-      for (std::map<size_t,SimpleCamera>::const_iterator iter = map_Camera.begin();
+      for (std::map<size_t, PinholeCamera>::const_iterator iter = map_Camera.begin();
         iter != map_Camera.end(); ++iter, ++count)
       {
         const Mat34 & PMat = iter->second._P;
@@ -279,7 +279,7 @@ struct reconstructorHelper
       // Image
       count = 0;
       Image<RGBColor> image;
-      for (std::map<size_t,SimpleCamera>::const_iterator iter = map_Camera.begin();
+      for (std::map<size_t, PinholeCamera>::const_iterator iter = map_Camera.begin();
         iter != map_Camera.end();  ++iter, ++count)
       {
         size_t imageIndex = iter->first;

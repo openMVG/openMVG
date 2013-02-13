@@ -15,6 +15,7 @@
 #include "openMVG/multiview/solver_essential_kernel.hpp"
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation.hpp"
+#include "software/SfM/SfMPinholeCamera.hpp"
 
 using namespace openMVG;
 
@@ -140,58 +141,35 @@ void triangulate2View_Vector(const Mat34 & P1,
 
   pvec_3dPoint->reserve(vec_index.size());
   pvec_residual->reserve(vec_index.size());
-  double dMin = std::numeric_limits<double>::max(),
-         dMax = std::numeric_limits<double>::min();
+
   for (size_t i=0; i < vec_index.size(); ++i)
   {
     //Get corresponding point and triangulate it
     const SIOPointFeature & imaA = vec_feat1[vec_index[i]._i];
     const SIOPointFeature & imaB = vec_feat2[vec_index[i]._j];
 
-    Vec2 x1 = imaA.coords().cast<double>(),
-         x2 = imaB.coords().cast<double>();
+    const Vec2 x1 = imaA.coords().cast<double>(),
+      x2 = imaB.coords().cast<double>();
 
     Vec3 X_euclidean = Vec3::Zero();
     TriangulateDLT(P1, x1, P2, x2, &X_euclidean);
-    //RefineTriangulation(P1, x1, P2, x2, &X_euclidean);
-    double dResidual2D = ( (x1-Project(P1, X_euclidean)).norm() +
-      (x2-Project(P2, X_euclidean)).norm() ) /2.0;
 
-    dMin = std::min(dMin, dResidual2D);
-    dMax = std::max(dMax, dResidual2D);
+    double dResidual2D =
+      (PinholeCamera::Residual(P1, X_euclidean, x1) +
+      PinholeCamera::Residual(P2, X_euclidean, x2)) /2.0;
 
     // store 3DPoint and associated residual
     pvec_3dPoint->push_back(X_euclidean);
     pvec_residual->push_back(dResidual2D);
   }
-  std::cout << std::endl
-    << "bundlerHelper::triangulate2View_Vector" << std::endl
-    << "\t-- Residual min max -- " << dMin <<"\t" << dMax << std::endl;
-}
-
-/// Return the angle (degree) between two camera ray
-double angleBetweenRay(
-  const Mat3 & K1, const Mat3 & R1, const Vec3 & t1,
-  const Mat3 &K2, const Mat3 & R2, const Vec3 & t2,
-  const Vec2 & x1, const Vec2 & x2)
-{
-  Vec3 C1 = -R1.inverse()*t1;
-  Vec3 C2 = -R2.inverse()*t2;
-
-  Vec3 ray1 = R1.transpose()*(K1.inverse()*Vec3(x1(0),x1(1),1)).normalized();
-  Vec3 ray2 = R2.transpose()*(K2.inverse()*Vec3(x2(0),x2(1),1)).normalized();
-  ray1.normalize();
-  ray2.normalize();
-  // Subtract camera center
-  ray1 = ray1-C1;
-  ray2 = ray2-C2;
-
-  double mag = ray1.norm() * ray2.norm();
-
-  double dotAngle = ray1.dot(ray2);
-#define RAD2DEG(r) ((r) * (180.0 / M_PI))
-
-  return RAD2DEG(acos(clamp(dotAngle/mag, -1.0+1.e-8, 1.0-1.e-8)));
+  if (!vec_index.empty())
+  {
+    double dMin = *min_element(pvec_residual->begin(), pvec_residual->end()),
+      dMax = *max_element(pvec_residual->begin(), pvec_residual->end());
+    std::cout << std::endl
+      << "SfMRobust::triangulate2View_Vector" << std::endl
+      << "\t-- Residual min max -- " << dMin <<"\t" << dMax << std::endl;
+  }
 }
 
 /// Compute the robust resection of the 3D<->2D correspondences.
