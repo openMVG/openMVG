@@ -79,7 +79,7 @@ bool IncrementalReconstructionEngine::Process()
   //-------------------
   //-- Incremental reconstruction
   //-------------------
-
+  bool bOk = true;
   std::pair<size_t,size_t> initialPairIndex;
   if (InitialPairChoice(initialPairIndex))
   {
@@ -159,8 +159,11 @@ bool IncrementalReconstructionEngine::Process()
         _htmlDocStream->pushInfo(jsxGraph.toStr());
       }
     }
+    else  { // (MakeInitialPair3D(initialPairIndex)) failed
+      bOk = false;
+    }
   }
-  return true;
+  return bOk;
 }
 
 bool IncrementalReconstructionEngine::ReadInputData()
