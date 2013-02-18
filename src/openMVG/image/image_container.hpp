@@ -49,6 +49,13 @@ public:
   //-- Image construction method
   //------------------------------
 
+  //-- Resize overhead
+  inline void resize(int width, int height, bool fInit=true, const T val = T())
+  {
+    Base::resize(height, width);
+    Base::fill(val);
+  }
+  //--
 
   //------------------------------
   //-- accessors/getters methods
