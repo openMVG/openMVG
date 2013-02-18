@@ -13,42 +13,34 @@
 template < class Image >
 void ConcatH(const Image & imageA, const Image & imageB, Image & Out)
 {
-  // Compute new dimensions.
+  // Compute new dimensions // |imgA|+|imgB|
   int ww = imageA.Width() + imageB.Width();
+  Out.resize(ww, std::max(imageA.Height(), imageB.Height()));
 
-  Out = Image(ww, std::max(imageA.Height(), imageB.Height()));
-
-  // Fill with original data from imageA.
-  for(size_t i = 0; i < imageA.Width(); ++i)
-    for(size_t j = 0; j < imageA.Height(); ++j)
-      Out(j,i) = imageA(j,i);
-
-  // Fill with original data from imageB with the imageA Width offset.
-  const size_t offset = imageA.Width();
-  for(size_t i = 0; i < imageB.Width(); ++i)
-    for(size_t j = 0; j < imageB.Height(); ++j)
-      Out(j,i+offset) = imageB(j,i);
+  // Copy the first image |imgA|...|
+  Out.block(0,0, imageA.Height(), imageA.Width()) = imageA.GetMat();
+  // Copy the second image |imgA|imgB|
+  Out.block(0, imageA.Width(), imageB.Height(), imageB.Width()) = imageB.GetMat();
 }
 
 /// Vertical concatenation of images
 template < class Image >
 void ConcatV(const Image & imageA, const Image & imageB, Image & Out)
 {
-  // Compute new dimensions.
+  // Compute new dimensions
+  // |imgA|
+  // |imgB|
   int hh = imageA.Height() + imageB.Height();
+  Out.resize(max(imageA.Width(), imageB.Width()), hh);
 
-  Out = Image(max(imageA.Width(), imageB.Width()), hh);
-
-  // Fill with original data from imageA.
-  for(size_t i = 0; i < imageA.Width(); ++i)
-    for(size_t j = 0; j < imageA.Height(); ++j)
-      Out(j,i) = imageA(j,i);
-
-  // Fill with original data from imageB with the imageA Height offset.
-  const size_t offset = imageA.Height();
-  for(size_t i = 0; i < imageB.Width(); ++i)
-    for(size_t j = 0; j < imageB.Height(); ++j)
-      Out(j+offset,i) = imageB(j,i);
+  // Copy the first image
+  // |imgA|
+  // |....|
+  Out.block(0,0, imageA.Height(), imageA.Width()) = imageA.GetMat();
+  // Copy the second image
+  // |imgA|
+  // |imgB|
+  Out.block(imageA.Height(), 0, imageB.Height(), imageB.Width()) = imageB.GetMat();
 }
 
 #endif // OPENMVG_IMAGE_IMAGE_CONCAT_H_
