@@ -169,14 +169,14 @@ int main() {
     std::pair<double,double> ACRansacOut = ACRANSAC(kernel, vec_inliers, 1024, &E,
       std::numeric_limits<double>::infinity(),
       true);
-    const double & thresholdH = ACRansacOut.first;
+    const double & thresholdE = ACRansacOut.first;
     const double & NFAH = ACRansacOut.second;
 
     // Check the essential matrix support some point to be considered as valid
     if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5) {
 
       std::cout << "\nFound an Essential matrix under the confidence threshold of: "
-        << thresholdH << " pixels\n\twith: " << vec_inliers.size() << " inliers"
+        << thresholdE << " pixels\n\twith: " << vec_inliers.size() << " inliers"
         << " from: " << vec_PutativeMatches.size()
          << " putatives correspondences"
         << std::endl;
