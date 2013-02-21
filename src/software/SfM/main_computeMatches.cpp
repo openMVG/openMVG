@@ -124,6 +124,12 @@ int main(int argc, char **argv)
     // DEBUG INFO
     std::cout << std::endl << "IMAGE(S) :" << std::endl;
     copy(vec_fileNames.begin(), vec_fileNames.end(), ostream_iterator<string>(cout, "\n"));
+
+    if (vec_fileNames.empty())
+    {
+      std::cout << "\n No images in the provided directory.";
+      return EXIT_FAILURE;
+    }
   }
 
 
@@ -266,25 +272,15 @@ int main(int argc, char **argv)
             IndMatch(vec_nIndice10[vec_NNRatioIndexes[k]*NNN__],
                      vec_NNRatioIndexes[k]) );
         }
-        // Remove multi-index
-        {
-          std::sort(vec_FilteredMatches.begin(), vec_FilteredMatches.end());
-          std::vector<IndMatch>::iterator end =
-            std::unique(vec_FilteredMatches.begin(),
-                        vec_FilteredMatches.end(),
-                        IndMatch::compareIorJ);
-          if(end != vec_FilteredMatches.end()) {
-            //std::cout << "Remove " << std::distance(end, vec_FilteredMatches.end())
-            //  << "/" << vec_FilteredMatches.size() << " duplicate matches, "
-            //  << " keeping " << std::distance(vec_FilteredMatches.begin(), end) <<std::endl;
-            vec_FilteredMatches.erase(end, vec_FilteredMatches.end());
-          }
-        }
+
+        // Remove duplicates
+        IndMatch::getDeduplicated(vec_FilteredMatches);
 
         // Remove matches that have the same X,Y coordinates
         {
-          IndMatchDecorator<float> matchDeduplicator(vec_FilteredMatches, kpSetI.features(), kpSetJ.features());
-          matchDeduplicator.getDeduplicated(vec_FilteredMatches, false);
+          IndMatchDecorator<float> matchDeduplicator(
+            vec_FilteredMatches, kpSetI.features(), kpSetJ.features());
+          matchDeduplicator.getDeduplicated(vec_FilteredMatches);
 #ifdef USE_OPENMP
   #pragma omp critical
 #endif
