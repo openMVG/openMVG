@@ -145,14 +145,14 @@ int main() {
     std::pair<double,double> ACRansacOut = ACRANSAC(kernel, vec_inliers, 1024, &F,
       4.0, // Upper bound of authorized threshold
       true);
-    const double & thresholdH = ACRansacOut.first;
+    const double & thresholdF = ACRansacOut.first;
     const double & NFAH = ACRansacOut.second;
 
     // Check the fundemantal support some point to be considered as valid
     if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5) {
 
       std::cout << "\nFound a fundamental under the confidence threshold of: "
-        << thresholdH << " pixels\n\twith: " << vec_inliers.size() << " inliers"
+        << thresholdF << " pixels\n\twith: " << vec_inliers.size() << " inliers"
         << " from: " << vec_PutativeMatches.size()
          << " putatives correspondences"
         << std::endl;
