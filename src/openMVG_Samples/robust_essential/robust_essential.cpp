@@ -9,6 +9,7 @@
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/features.hpp"
 #include "openMVG/matching/matcher_brute_force.hpp"
+#include "openMVG/matching/indMatchDecoratorXY.hpp"
 #include "openMVG/multiview/solver_essential_kernel.hpp"
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation.hpp"
@@ -115,6 +116,10 @@ int main() {
 
     // Distance ratio quite high in order to have noise corrupted data. Squared due to squared metric
     getPutativesMatches<SIFTDescriptor, MatcherT>(descsL, descsR, Square(0.8), vec_PutativeMatches);
+
+    IndMatchDecorator<float> matchDeduplicator(
+            vec_PutativeMatches, featsL, featsR);
+    matchDeduplicator.getDeduplicated(vec_PutativeMatches);
 
     // Draw correspondences after Nearest Neighbor ratio filter
     svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
@@ -248,7 +253,7 @@ int main() {
       }
       if (nbPointWithNegativeDepth>0)
       {
-        std::cout << nbPointWithNegativeDepth 
+        std::cout << nbPointWithNegativeDepth
           << " correspondence(s) with negative depth have been discarded."
           << std::endl;
       }
