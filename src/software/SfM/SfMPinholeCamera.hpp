@@ -77,9 +77,6 @@ struct PinholeCamera
     const PinholeCamera & cam2,
     const Vec2 & x1, const Vec2 & x2)
   {
-    Vec3 C1 = -cam1._R.inverse() * cam1._t;
-    Vec3 C2 = -cam2._R.inverse() * cam2._t;
-
     Vec3 ray1 = cam1._R.transpose() *
       (cam1._K.inverse() * Vec3(x1(0),x1(1),1.)).normalized();
     Vec3 ray2 = cam2._R.transpose() *
@@ -88,8 +85,8 @@ struct PinholeCamera
     ray1.normalize();
     ray2.normalize();
     // Subtract camera center
-    ray1 = ray1 - C1;
-    ray2 = ray2 - C2;
+    ray1 = ray1 - cam1._C;
+    ray2 = ray2 - cam2._C;
 
     double mag = ray1.norm() * ray2.norm();
     double dotAngle = ray1.dot(ray2);
