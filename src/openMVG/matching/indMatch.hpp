@@ -9,6 +9,8 @@
 #define OPENMVG_MATCHING_IND_MATCH_H
 
 #include <iostream>
+#include <set>
+#include <vector>
 
 namespace openMVG {
 namespace matching {
@@ -26,19 +28,27 @@ struct IndMatch
     return (m1._i == m2._i && m1._j == m2._j);
   }
 
-  // Functor used to remove duplicate that share index
-  static bool compareIorJ(const IndMatch & m1, const IndMatch & m2) {
-    return (m1._i == m2._i || m1._j == m2._j);
+  friend bool operator!=(const IndMatch& m1, const IndMatch& m2)  {
+    return !(m1 == m2);
   }
 
   // Lexicographical ordering of matches. Used to remove duplicates.
   friend bool operator<(const IndMatch& m1, const IndMatch& m2) {
-    if(m1._i < m2._i) return true;
-    if(m1._i > m2._i) return false;
-
-    if(m1._j < m2._j) return true;
+    if (m1._i < m2._i)
+      return m1._j < m2._j;
     else
-      return false;
+      if (m1._i > m2._i)
+        return m1._j < m2._j;
+    return m1._i < m2._i;
+  }
+
+  /// Remove duplicates (same _i or _j that appears multiple times)
+  static size_t getDeduplicated(std::vector<IndMatch> & vec_match){
+
+    size_t sizeBefore = vec_match.size();
+    std::set<IndMatch> set_deduplicated( vec_match.begin(), vec_match.end());
+    vec_match.assign(set_deduplicated.begin(), set_deduplicated.end());
+    return sizeBefore != vec_match.size();
   }
 
   size_t _i, _j;  // Left, right index
