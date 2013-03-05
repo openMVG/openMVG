@@ -49,7 +49,7 @@ int main(int argc, char ** argv)
       std::cerr << "Export pairwise tracks.\nUsage: " << argv[0] << ' '
       << "[-i|--imadir path] "
       << "[-d|--matchdir path] "
-      << "[-m|--sMathFile filename] "
+      << "[-m|--sMatchFile filename] "
       << "[-o|--outdir path] "
       << std::endl;
 

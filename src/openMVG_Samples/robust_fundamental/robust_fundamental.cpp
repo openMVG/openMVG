@@ -154,7 +154,7 @@ int main() {
       std::cout << "\nFound a fundamental under the confidence threshold of: "
         << thresholdF << " pixels\n\twith: " << vec_inliers.size() << " inliers"
         << " from: " << vec_PutativeMatches.size()
-         << " putatives correspondences"
+        << " putatives correspondences"
         << std::endl;
 
       //Show fundamental validated point and compute residuals

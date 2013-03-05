@@ -91,6 +91,7 @@ static bool SIFTDetector(const Image<unsigned char>& I,
 
   vl_sift_pix descr[128];
   Descriptor<type, 128> descriptor;
+
   while (true) {
     vl_sift_detect(filt);
 

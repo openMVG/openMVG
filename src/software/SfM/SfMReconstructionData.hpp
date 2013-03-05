@@ -206,8 +206,8 @@ struct reconstructorHelper
       if (bExportImage)
       {
         for (std::map<size_t, PinholeCamera>::const_iterator iter = map_Camera.begin();
-        iter != map_Camera.end();
-        ++iter)
+          iter != map_Camera.end();
+          ++iter)
         {
           size_t imageIndex = iter->first;
           std::string sImageName = vec_fileNames[imageIndex];

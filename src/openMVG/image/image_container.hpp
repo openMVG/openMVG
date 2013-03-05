@@ -55,7 +55,6 @@ public:
     Base::resize(height, width);
     Base::fill(val);
   }
-  //--
 
   //------------------------------
   //-- accessors/getters methods
