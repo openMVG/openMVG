@@ -1,0 +1,3 @@
+[submodule "dependencies/glfw"]
+	path = dependencies/glfw
+	url = git://github.com/elmindreda/glfw.git
