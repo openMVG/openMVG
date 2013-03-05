@@ -367,7 +367,7 @@ VL_INLINE float fabsf(float x) { return (float) fabs((double) x) ; }
 
 # if defined(VL_OS_MACOSX)
 # undef VL_EXPORT
-# define VL_EXPORT 
+# define VL_EXPORT
 #endif
 
 

@@ -281,6 +281,7 @@ int main(int argc, char **argv)
           IndMatchDecorator<float> matchDeduplicator(
             vec_FilteredMatches, kpSetI.features(), kpSetJ.features());
           matchDeduplicator.getDeduplicated(vec_FilteredMatches);
+
 #ifdef USE_OPENMP
   #pragma omp critical
 #endif

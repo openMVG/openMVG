@@ -162,6 +162,7 @@ void triangulate2View_Vector(const Mat34 & P1,
     pvec_3dPoint->push_back(X_euclidean);
     pvec_residual->push_back(dResidual2D);
   }
+
   if (!vec_index.empty())
   {
     double dMin = *min_element(pvec_residual->begin(), pvec_residual->end()),

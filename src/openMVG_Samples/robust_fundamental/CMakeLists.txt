@@ -2,7 +2,7 @@
 ADD_DEFINITIONS(-DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 ADD_EXECUTABLE(openMVG_sample_robustFundamental robust_fundamental.cpp)
-TARGET_LINK_LIBRARIES(openMVG_sample_robustFundamental 
+TARGET_LINK_LIBRARIES(openMVG_sample_robustFundamental
   openMVG_image
   openMVG_multiview
   vlsift

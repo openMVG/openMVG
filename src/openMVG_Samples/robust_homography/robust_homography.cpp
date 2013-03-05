@@ -154,7 +154,7 @@ int main() {
       std::cout << "\nFound a homography under the confidence threshold of: "
         << thresholdH << " pixels\n\twith: " << vec_inliers.size() << " inliers"
         << " from: " << vec_PutativeMatches.size()
-         << " putatives correspondences"
+        << " putatives correspondences"
         << std::endl;
 
       //Show homography validated point and compute residuals
