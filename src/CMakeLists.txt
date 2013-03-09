@@ -43,6 +43,16 @@ else(OPENMP_FOUND)
 endif (OPENMP_FOUND)
 
 # ==============================================================================
+# glfw
+# ==============================================================================
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Do not build the GLFW example programs" FORCE)
+set(GLFW_BUILD_TESTS    OFF CACHE BOOL "Do not build the GLFW tests programs"   FORCE)
+add_subdirectory(dependencies/glfw)
+
+include_directories(SYSTEM dependencies/glfw/include)
+include_directories(SYSTEM dependencies/glm)
+
+# ==============================================================================
 # Enable UNIT TEST cmake framework
 # ==============================================================================
 ENABLE_TESTING()
