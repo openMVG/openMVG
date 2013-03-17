@@ -61,10 +61,10 @@ public:
   inline float& y() { return _coords(1); }
   inline Vec2f& coords() { return _coords;}
 
-  inline std::ostream& print(std::ostream& os) const
+  virtual inline std::ostream& print(std::ostream& os) const
   { return os << _coords(0) << " " << _coords(1); }
 
-  inline std::istream& read(std::istream& in)
+  virtual inline std::istream& read(std::istream& in)
   { return in >> _coords(0) >> _coords(1); }
 
 protected:
@@ -96,12 +96,12 @@ public:
            (x() == b.x()) && (y() == b.y()) ;
   };
 
-  std::ostream& print(std::ostream& os) const
+  virtual std::ostream& print(std::ostream& os) const
   {
     return PointFeature::print(os) << " " << _scale << " " << _orientation;
   }
 
-  std::istream& read(std::istream& in)
+  virtual std::istream& read(std::istream& in)
   {
     return PointFeature::read(in) >> _scale >> _orientation;
   }
@@ -142,6 +142,26 @@ static bool saveFeatsToFile(
   bool bOk = file.good();
   file.close();
   return bOk;
+}
+
+/// Export point feature based vector to a matrix [(x,y)'T, (x,y)'T]
+template< typename FeaturesT, typename MatT >
+void PointsToMat(
+  const FeaturesT & vec_feats,
+  MatT & m)
+{
+  m.resize(2, vec_feats.size());
+  typedef typename FeaturesT::value_type ValueT; // Container type
+  typedef typename MatT::Scalar Scalar; // Output matrix type
+
+  size_t i = 0;
+  for( typename FeaturesT::const_iterator iter = vec_feats.begin();
+    iter != vec_feats.end(); ++iter, ++i)
+  {
+    const ValueT & feat = *iter;
+    m.col(i)(0) = Scalar(feat.x());
+    m.col(i)(1) = Scalar(feat.y());
+  }
 }
 
 } // namespace openMVG
