@@ -16,6 +16,8 @@
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/image/image.hpp"
 
+#include "third_party/cmdLine/cmdLine.h"
+
 static int running = 1;
 static Document m_doc;
 static int cur_cam = -1;
@@ -75,23 +77,6 @@ void key( GLFWwindow* window, int k, int action)
 bool bTextureChange = false;
 
   switch (k) {
-  case GLFW_KEY_O:
-    {
-      // OpenProject
-      std::cout << "Type the path to the project :" <<std::endl;
-      std::string spath;
-      std::cin >> spath;
-
-      std::cout << "\n Open the directory : \n" << spath << std::endl;
-
-      if (m_doc.load(spath))
-      {
-        cur_cam = 0;
-        if (!m_doc._map_camera.empty())
-        bTextureChange = true;
-      }
-    }
-    break;
   case GLFW_KEY_ESCAPE:
     running = 0;
     break;
@@ -281,6 +266,35 @@ static void draw(void)
 }
 
 int main(int argc, char *argv[]) {
+
+  CmdLine cmd;
+
+  std::string sSfM_Dir;
+
+  cmd.add( make_option('i', sSfM_Dir, "sfmdir") );
+
+  try {
+    if (argc == 1) throw std::string("Invalid command line parameter.");
+    cmd.process(argc, argv);
+  } catch(const std::string& s) {
+    std::cerr << "Usage: " << argv[0] << ' '
+    << "[-i|--sfmdir SfM_Output path] "
+    << std::endl;
+
+    std::cerr << s << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  if (m_doc.load(sSfM_Dir))
+  {
+    cur_cam = 0;
+    std::cout << "Press left or right key to navigate ;-)" << std::endl;
+    std::cout << "Esc to quit" << std::endl;
+  }
+  else{
+    exit( EXIT_FAILURE);
+  }
+
 
   //-- Create the GL window context
   GLFWwindow* window;

@@ -18,6 +18,7 @@ using namespace openMVG;
 #include <vector>
 #include <map>
 #include <string>
+#include <iterator>
 
 struct Document
 {
