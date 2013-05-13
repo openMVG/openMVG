@@ -28,6 +28,8 @@
 //
 // Author: keir@google.com (Keir Mierle)
 
+#include "ceres/split.h"
+
 #include <string>
 #include <vector>
 #include <iterator>

@@ -38,7 +38,7 @@ namespace internal {
 
 TEST(ParameterBlock, SetLocalParameterization) {
   double x[3] = { 1.0, 2.0, 3.0 };
-  ParameterBlock parameter_block(x, 3);
+  ParameterBlock parameter_block(x, 3, -1);
 
   // The indices to set constant within the parameter block (used later).
   vector<int> indices;
@@ -111,7 +111,7 @@ struct TestParameterization : public LocalParameterization {
 TEST(ParameterBlock, SetStateUpdatesLocalParameterizationJacobian) {
   TestParameterization test_parameterization;
   double x[1] = { 1.0 };
-  ParameterBlock parameter_block(x, 1, &test_parameterization);
+  ParameterBlock parameter_block(x, 1, -1, &test_parameterization);
 
   EXPECT_EQ(2.0, *parameter_block.LocalParameterizationJacobian());
 
@@ -122,7 +122,7 @@ TEST(ParameterBlock, SetStateUpdatesLocalParameterizationJacobian) {
 
 TEST(ParameterBlock, PlusWithNoLocalParameterization) {
   double x[2] = { 1.0, 2.0 };
-  ParameterBlock parameter_block(x, 2);
+  ParameterBlock parameter_block(x, 2, -1);
 
   double delta[2] = { 0.2, 0.3 };
   double x_plus_delta[2];
@@ -164,7 +164,7 @@ class BadLocalParameterization : public LocalParameterization {
 TEST(ParameterBlock, DetectBadLocalParameterization) {
   double x = 1;
   BadLocalParameterization bad_parameterization;
-  ParameterBlock parameter_block(&x, 1, &bad_parameterization);
+  ParameterBlock parameter_block(&x, 1, -1, &bad_parameterization);
   double y = 2;
   EXPECT_FALSE(parameter_block.SetState(&y));
 }

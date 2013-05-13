@@ -35,7 +35,6 @@
 #include <string>
 #include <vector>
 #include "Eigen/Core"
-#include "ceres/random.h"
 #include "ceres/rotation.h"
 #include "glog/logging.h"
 
@@ -44,6 +43,25 @@ namespace examples {
 namespace {
 typedef Eigen::Map<Eigen::VectorXd> VectorRef;
 typedef Eigen::Map<const Eigen::VectorXd> ConstVectorRef;
+
+inline double RandDouble() {
+  double r = static_cast<double>(rand());
+  return r / RAND_MAX;
+}
+
+// Box-Muller algorithm for normal random number generation.
+// http://en.wikipedia.org/wiki/Box-Muller_transform
+inline double RandNormal() {
+  double x1, x2, w;
+  do {
+    x1 = 2.0 * RandDouble() - 1.0;
+    x2 = 2.0 * RandDouble() - 1.0;
+    w = x1 * x1 + x2 * x2;
+  } while ( w >= 1.0 || w == 0.0 );
+
+  w = sqrt((-2.0 * log(w)) / w);
+  return x1 * w;
+}
 
 template<typename T>
 void FscanfOrDie(FILE* fptr, const char* format, T* value) {

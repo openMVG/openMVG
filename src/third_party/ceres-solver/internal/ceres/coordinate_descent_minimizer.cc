@@ -129,7 +129,8 @@ void CoordinateDescentMinimizer::Minimize(
     parameter_block->SetConstant();
   }
 
-  scoped_array<LinearSolver*> linear_solvers(new LinearSolver*[options.num_threads]);
+  scoped_array<LinearSolver*> linear_solvers(
+      new LinearSolver*[options.num_threads]);
 
   LinearSolver::Options linear_solver_options;
   linear_solver_options.type = DENSE_QR;

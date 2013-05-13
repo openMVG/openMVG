@@ -103,19 +103,12 @@
 #include <set>
 #include <sstream>
 #include <vector>
-#include <ctime>
 
 // Log severity level constants.
-#undef FATAL
-#undef ERROR
-#undef WARNING
-#undef INFO
-enum {
-  FATAL   = -3,
-  ERROR   = -2,
-  WARNING = -1,
-  INFO    =  0
-};
+const int FATAL   = -3;
+const int ERROR   = -2;
+const int WARNING = -1;
+const int INFO    =  0;
 
 // ------------------------- Glog compatibility ------------------------------
 

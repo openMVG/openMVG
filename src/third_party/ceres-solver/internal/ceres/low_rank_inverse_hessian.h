@@ -78,7 +78,7 @@ class LowRankInverseHessian : public LinearOperator {
   // LinearOperator interface
   virtual void RightMultiply(const double* x, double* y) const;
   virtual void LeftMultiply(const double* x, double* y) const {
-    RightMultiply(x,y);
+    RightMultiply(x, y);
   }
   virtual int num_rows() const { return num_parameters_; }
   virtual int num_cols() const { return num_parameters_; }

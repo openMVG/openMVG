@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2010, 2011, 2012 Google Inc. All rights reserved.
+// Copyright 2010, 2011, 2012, 2013 Google Inc. All rights reserved.
 // http://code.google.com/p/ceres-solver/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -200,6 +200,7 @@ TEST_F(DenseSparseMatrixTest, AppendDiagonal) {
 
   // Verify the diagonal got added.
   Matrix m = dsm.matrix();
+
   EXPECT_EQ(6, m.rows());
   EXPECT_EQ(3, m.cols());
   for (int i = 0; i < 3; ++i) {
@@ -215,6 +216,7 @@ TEST_F(DenseSparseMatrixTest, AppendDiagonal) {
 
   // Verify the diagonal gets removed.
   dsm.RemoveDiagonal();
+
   m = dsm.matrix();
 
   EXPECT_EQ(3, m.rows());

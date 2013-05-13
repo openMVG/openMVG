@@ -46,37 +46,6 @@ namespace internal {
 class SparseMatrixProto;
 class TripletSparseMatrix;
 
-// A further extension of the SparseMatrix interface to support block-oriented
-// matrices. The key addition is the RowBlockValues() accessor, which enables
-// the lazy block sparse matrix implementation.
-class BlockSparseMatrixBase : public SparseMatrix {
- public:
-  BlockSparseMatrixBase() {}
-  virtual ~BlockSparseMatrixBase() {}
-
-  // Convert this matrix into a triplet sparse matrix.
-  virtual void ToTripletSparseMatrix(TripletSparseMatrix* matrix) const = 0;
-
-  // Returns a pointer to the block structure. Does not transfer
-  // ownership.
-  virtual const CompressedRowBlockStructure* block_structure() const = 0;
-
-  // Returns a pointer to a row of the matrix. The returned array is only valid
-  // until the next call to RowBlockValues. The caller does not own the result.
-  //
-  // The returned array is laid out such that cells on the specified row are
-  // contiguous in the returned array, though neighbouring cells in row order
-  // may not be contiguous in the row values. The cell values for cell
-  // (row_block, cell_block) are found at offset
-  //
-  //   block_structure()->rows[row_block].cells[cell_block].position
-  //
-  virtual const double* RowBlockValues(int row_block_index) const = 0;
-
- private:
-  CERES_DISALLOW_COPY_AND_ASSIGN(BlockSparseMatrixBase);
-};
-
 // This class implements the SparseMatrix interface for storing and
 // manipulating block sparse matrices. The block structure is stored
 // in the CompressedRowBlockStructure object and one is needed to
@@ -85,7 +54,7 @@ class BlockSparseMatrixBase : public SparseMatrix {
 //
 //   internal/ceres/block_structure.h
 //
-class BlockSparseMatrix : public BlockSparseMatrixBase {
+class BlockSparseMatrix : public SparseMatrix {
  public:
   // Construct a block sparse matrix with a fully initialized
   // CompressedRowBlockStructure objected. The matrix takes over
@@ -121,12 +90,8 @@ class BlockSparseMatrix : public BlockSparseMatrixBase {
   virtual const double* values() const { return values_.get(); }
   virtual double* mutable_values()     { return values_.get(); }
 
-  // Implementation of BlockSparseMatrixBase interface.
-  virtual void ToTripletSparseMatrix(TripletSparseMatrix* matrix) const;
-  virtual const CompressedRowBlockStructure* block_structure() const;
-  virtual const double* RowBlockValues(int row_block_index) const {
-    return values_.get();
-  }
+  void ToTripletSparseMatrix(TripletSparseMatrix* matrix) const;
+  const CompressedRowBlockStructure* block_structure() const;
 
  private:
   int num_rows_;

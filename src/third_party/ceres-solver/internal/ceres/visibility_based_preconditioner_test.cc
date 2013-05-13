@@ -99,7 +99,11 @@ class VisibilityBasedPreconditionerTest : public ::testing::Test {
     Vector rhs(schur_complement_->num_rows());
 
     scoped_ptr<SchurEliminatorBase> eliminator;
-    eliminator.reset(SchurEliminatorBase::Create(options_));
+    LinearSolver::Options eliminator_options;
+    eliminator_options.elimination_groups = options_.elimination_groups;
+    eliminator_options.num_threads = options_.num_threads;
+
+    eliminator.reset(SchurEliminatorBase::Create(eliminator_options));
     eliminator->Init(num_eliminate_blocks_, bs);
     eliminator->Eliminate(A_.get(), b_.get(), D_.get(),
                           schur_complement_.get(), rhs.data());
@@ -229,35 +233,14 @@ class VisibilityBasedPreconditionerTest : public ::testing::Test {
   scoped_array<double> b_;
   scoped_array<double> D_;
 
-  LinearSolver::Options options_;
+  Preconditioner::Options options_;
   scoped_ptr<VisibilityBasedPreconditioner> preconditioner_;
   scoped_ptr<BlockRandomAccessDenseMatrix> schur_complement_;
 };
 
 #ifndef CERES_NO_PROTOCOL_BUFFERS
-TEST_F(VisibilityBasedPreconditionerTest, SchurJacobiStructure) {
-  options_.preconditioner_type = SCHUR_JACOBI;
-  preconditioner_.reset(
-      new VisibilityBasedPreconditioner(*A_->block_structure(), options_));
-  EXPECT_EQ(get_num_blocks(), num_camera_blocks_);
-  EXPECT_EQ(get_num_clusters(), num_camera_blocks_);
-  for (int i = 0; i < num_camera_blocks_; ++i) {
-    for (int j = 0; j < num_camera_blocks_; ++j) {
-      const string msg = StringPrintf("Camera pair: %d %d", i, j);
-      SCOPED_TRACE(msg);
-      if (i == j) {
-        EXPECT_TRUE(IsBlockPairInPreconditioner(i, j));
-        EXPECT_FALSE(IsBlockPairOffDiagonal(i, j));
-      } else {
-        EXPECT_FALSE(IsBlockPairInPreconditioner(i, j));
-        EXPECT_TRUE(IsBlockPairOffDiagonal(i, j));
-      }
-    }
-  }
-}
-
 TEST_F(VisibilityBasedPreconditionerTest, OneClusterClusterJacobi) {
-  options_.preconditioner_type = CLUSTER_JACOBI;
+  options_.type = CLUSTER_JACOBI;
   preconditioner_.reset(
       new VisibilityBasedPreconditioner(*A_->block_structure(), options_));
 
@@ -304,7 +287,7 @@ TEST_F(VisibilityBasedPreconditionerTest, OneClusterClusterJacobi) {
 
 
 TEST_F(VisibilityBasedPreconditionerTest, ClusterJacobi) {
-  options_.preconditioner_type = CLUSTER_JACOBI;
+  options_.type = CLUSTER_JACOBI;
   preconditioner_.reset(
       new VisibilityBasedPreconditioner(*A_->block_structure(), options_));
 
@@ -330,7 +313,7 @@ TEST_F(VisibilityBasedPreconditionerTest, ClusterJacobi) {
 
 
 TEST_F(VisibilityBasedPreconditionerTest, ClusterTridiagonal) {
-  options_.preconditioner_type = CLUSTER_TRIDIAGONAL;
+  options_.type = CLUSTER_TRIDIAGONAL;
   preconditioner_.reset(
       new VisibilityBasedPreconditioner(*A_->block_structure(), options_));
   static const int kNumClusters = 3;

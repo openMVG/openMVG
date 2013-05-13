@@ -45,13 +45,14 @@ namespace internal {
 // with one residual succeeds with true or dies.
 void CheckEvaluation(const CostFunction& cost_function, bool is_good) {
   double x = 1.0;
-  ParameterBlock parameter_block(&x, 1);
+  ParameterBlock parameter_block(&x, 1, -1);
   vector<ParameterBlock*> parameter_blocks;
   parameter_blocks.push_back(&parameter_block);
 
   ResidualBlock residual_block(&cost_function,
                                NULL,
-                               parameter_blocks);
+                               parameter_blocks,
+                               -1);
 
   scoped_array<double> scratch(
       new double[residual_block.NumScratchDoublesForEvaluate()]);
@@ -61,7 +62,8 @@ void CheckEvaluation(const CostFunction& cost_function, bool is_good) {
   double jacobian;
   double* jacobians[] = { &jacobian };
 
-  EXPECT_EQ(residual_block.Evaluate(&cost,
+  EXPECT_EQ(residual_block.Evaluate(true,
+                                    &cost,
                                     &residuals,
                                     jacobians,
                                     scratch.get()), is_good);

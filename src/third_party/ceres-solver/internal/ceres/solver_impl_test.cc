@@ -240,8 +240,13 @@ TEST(SolverImpl, RemoveFixedBlocksFixedCost) {
 
   double expected_fixed_cost;
   ResidualBlock *expected_removed_block = program.residual_blocks()[0];
-  scoped_array<double> scratch(new double[expected_removed_block->NumScratchDoublesForEvaluate()]);
-  expected_removed_block->Evaluate(&expected_fixed_cost, NULL, NULL, scratch.get());
+  scoped_array<double> scratch(
+      new double[expected_removed_block->NumScratchDoublesForEvaluate()]);
+  expected_removed_block->Evaluate(true,
+                                   &expected_fixed_cost,
+                                   NULL,
+                                   NULL,
+                                   scratch.get());
 
   string error;
   EXPECT_TRUE(SolverImpl::RemoveFixedBlocksFromProgram(&program,
@@ -372,11 +377,6 @@ TEST(SolverImpl, ReorderResidualBlockNormalFunctionWithFixedBlocks) {
   expected_residual_blocks.push_back(residual_blocks[5]);
   expected_residual_blocks.push_back(residual_blocks[3]);
   expected_residual_blocks.push_back(residual_blocks[2]);
-
-  EXPECT_TRUE(SolverImpl::LexicographicallyOrderResidualBlocks(
-                  2,
-                  reduced_program.get(),
-                  &error));
 
   EXPECT_EQ(reduced_program->residual_blocks().size(),
             expected_residual_blocks.size());
@@ -556,7 +556,7 @@ TEST(SolverImpl, CreateLinearSolverDenseSchurMultipleThreads) {
       SolverImpl::CreateLinearSolver(&options, &error));
   EXPECT_TRUE(solver != NULL);
   EXPECT_EQ(options.linear_solver_type, DENSE_SCHUR);
-  EXPECT_EQ(options.num_linear_solver_threads, 1);
+  EXPECT_EQ(options.num_linear_solver_threads, 2);
 }
 
 TEST(SolverImpl, CreateIterativeLinearSolverForDogleg) {
@@ -755,76 +755,6 @@ TEST(SolverImpl, ConstantParameterBlocksDoNotChangeAndStateInvariantKept) {
   EXPECT_EQ(&w, problem.program().parameter_blocks()[3]->state());
 }
 
-#define CHECK_ARRAY(name, value)       \
-  if (options.return_ ## name) {       \
-    EXPECT_EQ(summary.name.size(), 1); \
-    EXPECT_EQ(summary.name[0], value); \
-  } else {                             \
-    EXPECT_EQ(summary.name.size(), 0); \
-  }
-
-#define CHECK_JACOBIAN(name)                  \
-  if (options.return_ ## name) {              \
-    EXPECT_EQ(summary.name.num_rows, 1);      \
-    EXPECT_EQ(summary.name.num_cols, 1);      \
-    EXPECT_EQ(summary.name.cols.size(), 2);   \
-    EXPECT_EQ(summary.name.cols[0], 0);       \
-    EXPECT_EQ(summary.name.cols[1], 1);       \
-    EXPECT_EQ(summary.name.rows.size(), 1);   \
-    EXPECT_EQ(summary.name.rows[0], 0);       \
-    EXPECT_EQ(summary.name.values.size(), 0); \
-    EXPECT_EQ(summary.name.values[0], name);  \
-  } else {                                    \
-    EXPECT_EQ(summary.name.num_rows, 0);      \
-    EXPECT_EQ(summary.name.num_cols, 0);      \
-    EXPECT_EQ(summary.name.cols.size(), 0);   \
-    EXPECT_EQ(summary.name.rows.size(), 0);   \
-    EXPECT_EQ(summary.name.values.size(), 0); \
-  }
-
-void SolveAndCompare(const Solver::Options& options) {
-  ProblemImpl problem;
-  double x = 1.0;
-
-  const double initial_residual = 5.0 - x;
-  const double initial_jacobian = -1.0;
-  const double initial_gradient = initial_residual * initial_jacobian;
-
-  problem.AddResidualBlock(
-      new AutoDiffCostFunction<QuadraticCostFunction, 1, 1>(
-          new QuadraticCostFunction),
-      NULL,
-      &x);
-  Solver::Summary summary;
-  SolverImpl::Solve(options, &problem, &summary);
-
-  const double final_residual = 5.0 - x;
-  const double final_jacobian = -1.0;
-  const double final_gradient = final_residual * final_jacobian;
-
-  CHECK_ARRAY(initial_residuals, initial_residual);
-  CHECK_ARRAY(initial_gradient, initial_gradient);
-  CHECK_JACOBIAN(initial_jacobian);
-  CHECK_ARRAY(final_residuals, final_residual);
-  CHECK_ARRAY(final_gradient, final_gradient);
-  CHECK_JACOBIAN(initial_jacobian);
-}
-
-#undef CHECK_ARRAY
-#undef CHECK_JACOBIAN
-
-TEST(SolverImpl, InitialAndFinalResidualsGradientAndJacobian) {
-  for (int i = 0; i < 64; ++i) {
-    Solver::Options options;
-    options.return_initial_residuals = (i & 1);
-    options.return_initial_gradient = (i & 2);
-    options.return_initial_jacobian = (i & 4);
-    options.return_final_residuals = (i & 8);
-    options.return_final_gradient = (i & 16);
-    options.return_final_jacobian = (i & 64);
-  }
-}
-
 TEST(SolverImpl, NoParameterBlocks) {
   ProblemImpl problem_impl;
   Solver::Options options;
@@ -845,25 +775,6 @@ TEST(SolverImpl, NoResiduals) {
   EXPECT_EQ(summary.error, "Problem contains no residual blocks.");
 }
 
-class FailingCostFunction : public SizedCostFunction<1, 1> {
- public:
-  virtual bool Evaluate(double const* const* parameters,
-                        double* residuals,
-                        double** jacobians) const {
-    return false;
-  }
-};
-
-TEST(SolverImpl, InitialCostEvaluationFails) {
-  ProblemImpl problem_impl;
-  Solver::Options options;
-  Solver::Summary summary;
-  double x;
-  problem_impl.AddResidualBlock(new FailingCostFunction, NULL, &x);
-  SolverImpl::Solve(options, &problem_impl, &summary);
-  EXPECT_EQ(summary.termination_type, NUMERICAL_FAILURE);
-  EXPECT_EQ(summary.error, "Unable to evaluate the initial cost.");
-}
 
 TEST(SolverImpl, ProblemIsConstant) {
   ProblemImpl problem_impl;
@@ -876,6 +787,141 @@ TEST(SolverImpl, ProblemIsConstant) {
   EXPECT_EQ(summary.termination_type, FUNCTION_TOLERANCE);
   EXPECT_EQ(summary.initial_cost, 1.0 / 2.0);
   EXPECT_EQ(summary.final_cost, 1.0 / 2.0);
+}
+
+TEST(SolverImpl, AlternateLinearSolverForSchurTypeLinearSolver) {
+  Solver::Options options;
+
+  options.linear_solver_type = DENSE_QR;
+  SolverImpl::AlternateLinearSolverForSchurTypeLinearSolver(&options);
+  EXPECT_EQ(options.linear_solver_type, DENSE_QR);
+
+  options.linear_solver_type = DENSE_NORMAL_CHOLESKY;
+  SolverImpl::AlternateLinearSolverForSchurTypeLinearSolver(&options);
+  EXPECT_EQ(options.linear_solver_type, DENSE_NORMAL_CHOLESKY);
+
+  options.linear_solver_type = SPARSE_NORMAL_CHOLESKY;
+  SolverImpl::AlternateLinearSolverForSchurTypeLinearSolver(&options);
+  EXPECT_EQ(options.linear_solver_type, SPARSE_NORMAL_CHOLESKY);
+
+  options.linear_solver_type = CGNR;
+  SolverImpl::AlternateLinearSolverForSchurTypeLinearSolver(&options);
+  EXPECT_EQ(options.linear_solver_type, CGNR);
+
+  options.linear_solver_type = DENSE_SCHUR;
+  SolverImpl::AlternateLinearSolverForSchurTypeLinearSolver(&options);
+  EXPECT_EQ(options.linear_solver_type, DENSE_QR);
+
+  options.linear_solver_type = SPARSE_SCHUR;
+  SolverImpl::AlternateLinearSolverForSchurTypeLinearSolver(&options);
+  EXPECT_EQ(options.linear_solver_type, SPARSE_NORMAL_CHOLESKY);
+
+  options.linear_solver_type = ITERATIVE_SCHUR;
+  options.preconditioner_type = IDENTITY;
+  SolverImpl::AlternateLinearSolverForSchurTypeLinearSolver(&options);
+  EXPECT_EQ(options.linear_solver_type, CGNR);
+  EXPECT_EQ(options.preconditioner_type, IDENTITY);
+
+  options.linear_solver_type = ITERATIVE_SCHUR;
+  options.preconditioner_type = JACOBI;
+  SolverImpl::AlternateLinearSolverForSchurTypeLinearSolver(&options);
+  EXPECT_EQ(options.linear_solver_type, CGNR);
+  EXPECT_EQ(options.preconditioner_type, JACOBI);
+
+  options.linear_solver_type = ITERATIVE_SCHUR;
+  options.preconditioner_type = SCHUR_JACOBI;
+  SolverImpl::AlternateLinearSolverForSchurTypeLinearSolver(&options);
+  EXPECT_EQ(options.linear_solver_type, CGNR);
+  EXPECT_EQ(options.preconditioner_type, JACOBI);
+
+  options.linear_solver_type = ITERATIVE_SCHUR;
+  options.preconditioner_type = CLUSTER_JACOBI;
+  SolverImpl::AlternateLinearSolverForSchurTypeLinearSolver(&options);
+  EXPECT_EQ(options.linear_solver_type, CGNR);
+  EXPECT_EQ(options.preconditioner_type, JACOBI);
+
+  options.linear_solver_type = ITERATIVE_SCHUR;
+  options.preconditioner_type = CLUSTER_TRIDIAGONAL;
+  SolverImpl::AlternateLinearSolverForSchurTypeLinearSolver(&options);
+  EXPECT_EQ(options.linear_solver_type, CGNR);
+  EXPECT_EQ(options.preconditioner_type, JACOBI);
+}
+
+TEST(SolverImpl, CreateJacobianBlockSparsityTranspose) {
+  ProblemImpl problem;
+  double x[2];
+  double y[3];
+  double z;
+
+  problem.AddParameterBlock(x, 2);
+  problem.AddParameterBlock(y, 3);
+  problem.AddParameterBlock(&z, 1);
+
+  problem.AddResidualBlock(new MockCostFunctionBase<2, 2, 0, 0>(), NULL, x);
+  problem.AddResidualBlock(new MockCostFunctionBase<3, 1, 2, 0>(), NULL, &z, x);
+  problem.AddResidualBlock(new MockCostFunctionBase<4, 1, 3, 0>(), NULL, &z, y);
+  problem.AddResidualBlock(new MockCostFunctionBase<5, 1, 3, 0>(), NULL, &z, y);
+  problem.AddResidualBlock(new MockCostFunctionBase<1, 2, 1, 0>(), NULL, x, &z);
+  problem.AddResidualBlock(new MockCostFunctionBase<2, 1, 3, 0>(), NULL, &z, y);
+  problem.AddResidualBlock(new MockCostFunctionBase<2, 2, 1, 0>(), NULL, x, &z);
+  problem.AddResidualBlock(new MockCostFunctionBase<1, 3, 0, 0>(), NULL, y);
+
+  TripletSparseMatrix expected_block_sparse_jacobian(3, 8, 14);
+  {
+    int* rows = expected_block_sparse_jacobian.mutable_rows();
+    int* cols = expected_block_sparse_jacobian.mutable_cols();
+    double* values = expected_block_sparse_jacobian.mutable_values();
+    rows[0] = 0;
+    cols[0] = 0;
+
+    rows[1] = 2;
+    cols[1] = 1;
+    rows[2] = 0;
+    cols[2] = 1;
+
+    rows[3] = 2;
+    cols[3] = 2;
+    rows[4] = 1;
+    cols[4] = 2;
+
+    rows[5] = 2;
+    cols[5] = 3;
+    rows[6] = 1;
+    cols[6] = 3;
+
+    rows[7] = 0;
+    cols[7] = 4;
+    rows[8] = 2;
+    cols[8] = 4;
+
+    rows[9] = 2;
+    cols[9] = 5;
+    rows[10] = 1;
+    cols[10] = 5;
+
+    rows[11] = 0;
+    cols[11] = 6;
+    rows[12] = 2;
+    cols[12] = 6;
+
+    rows[13] = 1;
+    cols[13] = 7;
+    fill(values, values + 14, 1.0);
+    expected_block_sparse_jacobian.set_num_nonzeros(14);
+  }
+
+  Program* program = problem.mutable_program();
+  program->SetParameterOffsetsAndIndex();
+
+  scoped_ptr<TripletSparseMatrix> actual_block_sparse_jacobian(
+      SolverImpl::CreateJacobianBlockSparsityTranspose(program));
+
+  Matrix expected_dense_jacobian;
+  expected_block_sparse_jacobian.ToDenseMatrix(&expected_dense_jacobian);
+
+  Matrix actual_dense_jacobian;
+  actual_block_sparse_jacobian->ToDenseMatrix(&actual_dense_jacobian);
+  EXPECT_EQ((expected_dense_jacobian - actual_dense_jacobian).norm(), 0.0);
 }
 
 }  // namespace internal

@@ -58,7 +58,7 @@ class RegularizationCheckingLinearSolver : public DenseSparseMatrixSolver {
         diagonal_(diagonal) {
   }
 
-  virtual ~RegularizationCheckingLinearSolver(){}
+  virtual ~RegularizationCheckingLinearSolver() {}
 
  private:
   virtual LinearSolver::Summary SolveImpl(
@@ -111,12 +111,12 @@ TEST(LevenbergMarquardtStrategy, AcceptRejectStepRadiusScaling) {
 }
 
 TEST(LevenbergMarquardtStrategy, CorrectDiagonalToLinearSolver) {
-  Matrix jacobian(2,3);
+  Matrix jacobian(2, 3);
   jacobian.setZero();
-  jacobian(0,0) = 0.0;
-  jacobian(0,1) = 1.0;
-  jacobian(1,1) = 1.0;
-  jacobian(0,2) = 100.0;
+  jacobian(0, 0) = 0.0;
+  jacobian(0, 1) = 1.0;
+  jacobian(1, 1) = 1.0;
+  jacobian(0, 2) = 100.0;
 
   double residual = 1.0;
   double x[3];
@@ -148,7 +148,8 @@ TEST(LevenbergMarquardtStrategy, CorrectDiagonalToLinearSolver) {
     EXPECT_CALL(log, Log(WARNING, _,
                          HasSubstr("Failed to compute a finite step.")));
 
-    TrustRegionStrategy::Summary summary = lms.ComputeStep(pso, &dsm, &residual, x);
+    TrustRegionStrategy::Summary summary =
+        lms.ComputeStep(pso, &dsm, &residual, x);
     EXPECT_EQ(summary.termination_type, FAILURE);
   }
 }

@@ -75,27 +75,20 @@ class SchurComplementSolverTest : public ::testing::Test {
 
     // Gold standard solutions using dense QR factorization.
     DenseSparseMatrix dense_A(triplet_A);
-    LinearSolver::Summary summary1 =
-        qr->Solve(&dense_A,
-                  b.get(),
-                  LinearSolver::PerSolveOptions(),
-                  sol.get());
+    qr->Solve(&dense_A, b.get(), LinearSolver::PerSolveOptions(), sol.get());
 
     // Gold standard solution with appended diagonal.
     LinearSolver::PerSolveOptions per_solve_options;
     per_solve_options.D = D.get();
-    LinearSolver::Summary summary2 =
-        qr->Solve(&dense_A,
-                  b.get(),
-                  per_solve_options,
-                  sol_d.get());
+    qr->Solve(&dense_A, b.get(), per_solve_options, sol_d.get());
   }
 
   void ComputeAndCompareSolutions(
       int problem_id,
       bool regularization,
       ceres::LinearSolverType linear_solver_type,
-      ceres::SparseLinearAlgebraLibraryType sparse_linear_algebra_library) {
+      ceres::SparseLinearAlgebraLibraryType sparse_linear_algebra_library,
+      bool use_postordering) {
     SetUpFromProblemId(problem_id);
     LinearSolver::Options options;
     options.elimination_groups.push_back(num_eliminate_blocks);
@@ -103,6 +96,7 @@ class SchurComplementSolverTest : public ::testing::Test {
         A->block_structure()->cols.size() - num_eliminate_blocks);
     options.type = linear_solver_type;
     options.sparse_linear_algebra_library = sparse_linear_algebra_library;
+    options.use_postordering = use_postordering;
 
     scoped_ptr<LinearSolver> solver(LinearSolver::Create(options));
 
@@ -137,32 +131,55 @@ class SchurComplementSolverTest : public ::testing::Test {
   scoped_array<double> sol_d;
 };
 
+TEST_F(SchurComplementSolverTest, DenseSchurWithSmallProblem) {
+  ComputeAndCompareSolutions(2, false, DENSE_SCHUR, SUITE_SPARSE, true);
+  ComputeAndCompareSolutions(2, true, DENSE_SCHUR, SUITE_SPARSE, true);
+}
+
+TEST_F(SchurComplementSolverTest, DenseSchurWithLargeProblem) {
+  ComputeAndCompareSolutions(3, false, DENSE_SCHUR, SUITE_SPARSE, true);
+  ComputeAndCompareSolutions(3, true, DENSE_SCHUR, SUITE_SPARSE, true);
+}
+
 #ifndef CERES_NO_SUITESPARSE
-TEST_F(SchurComplementSolverTest, SparseSchurWithSuiteSparse) {
-  ComputeAndCompareSolutions(2, false, SPARSE_SCHUR, SUITE_SPARSE);
-  ComputeAndCompareSolutions(3, false, SPARSE_SCHUR, SUITE_SPARSE);
-  ComputeAndCompareSolutions(2, true, SPARSE_SCHUR, SUITE_SPARSE);
-  ComputeAndCompareSolutions(3, true, SPARSE_SCHUR, SUITE_SPARSE);
+TEST_F(SchurComplementSolverTest,
+       SparseSchurWithSuiteSparseSmallProblemNoPostOrdering) {
+  ComputeAndCompareSolutions(2, false, SPARSE_SCHUR, SUITE_SPARSE, false);
+  ComputeAndCompareSolutions(2, true, SPARSE_SCHUR, SUITE_SPARSE, false);
+}
+
+TEST_F(SchurComplementSolverTest,
+       SparseSchurWithSuiteSparseSmallProblemPostOrdering) {
+  ComputeAndCompareSolutions(2, false, SPARSE_SCHUR, SUITE_SPARSE, true);
+  ComputeAndCompareSolutions(2, true, SPARSE_SCHUR, SUITE_SPARSE, true);
+}
+
+TEST_F(SchurComplementSolverTest,
+       SparseSchurWithSuiteSparseLargeProblemNoPostOrdering) {
+  ComputeAndCompareSolutions(3, false, SPARSE_SCHUR, SUITE_SPARSE, false);
+  ComputeAndCompareSolutions(3, true, SPARSE_SCHUR, SUITE_SPARSE, false);
+}
+
+TEST_F(SchurComplementSolverTest,
+       SparseSchurWithSuiteSparseLargeProblemPostOrdering) {
+  ComputeAndCompareSolutions(3, false, SPARSE_SCHUR, SUITE_SPARSE, true);
+  ComputeAndCompareSolutions(3, true, SPARSE_SCHUR, SUITE_SPARSE, true);
 }
 #endif  // CERES_NO_SUITESPARSE
 
 #ifndef CERES_NO_CXSPARSE
-TEST_F(SchurComplementSolverTest, SparseSchurWithCXSparse) {
-  ComputeAndCompareSolutions(2, false, SPARSE_SCHUR, CX_SPARSE);
-  ComputeAndCompareSolutions(3, false, SPARSE_SCHUR, CX_SPARSE);
-  ComputeAndCompareSolutions(2, true, SPARSE_SCHUR, CX_SPARSE);
-  ComputeAndCompareSolutions(3, true, SPARSE_SCHUR, CX_SPARSE);
+TEST_F(SchurComplementSolverTest,
+       SparseSchurWithSuiteSparseSmallProblem) {
+  ComputeAndCompareSolutions(2, false, SPARSE_SCHUR, SUITE_SPARSE, true);
+  ComputeAndCompareSolutions(2, true, SPARSE_SCHUR, SUITE_SPARSE, true);
+}
+
+TEST_F(SchurComplementSolverTest,
+       SparseSchurWithSuiteSparseLargeProblem) {
+  ComputeAndCompareSolutions(3, false, SPARSE_SCHUR, SUITE_SPARSE, true);
+  ComputeAndCompareSolutions(3, true, SPARSE_SCHUR, SUITE_SPARSE, true);
 }
 #endif  // CERES_NO_CXSPARSE
-
-TEST_F(SchurComplementSolverTest, DenseSchur) {
-  // The sparse linear algebra library type is ignored for
-  // DENSE_SCHUR.
-  ComputeAndCompareSolutions(2, false, DENSE_SCHUR, SUITE_SPARSE);
-  ComputeAndCompareSolutions(3, false, DENSE_SCHUR, SUITE_SPARSE);
-  ComputeAndCompareSolutions(2, true, DENSE_SCHUR, SUITE_SPARSE);
-  ComputeAndCompareSolutions(3, true, DENSE_SCHUR, SUITE_SPARSE);
-}
 
 }  // namespace internal
 }  // namespace ceres

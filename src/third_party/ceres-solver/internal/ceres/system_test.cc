@@ -121,7 +121,7 @@ void RunSolversAndCheckTheyMatch(const vector<SolverConfig>& configurations,
                                  const double max_abs_difference) {
   int num_configurations = configurations.size();
   vector<SystemTestProblem*> problems;
-  vector<Solver::Summary> summaries(num_configurations);
+  vector<vector<double> > final_residuals(num_configurations);
 
   for (int i = 0; i < num_configurations; ++i) {
     SystemTestProblem* system_test_problem = new SystemTestProblem();
@@ -135,7 +135,6 @@ void RunSolversAndCheckTheyMatch(const vector<SolverConfig>& configurations,
     options.preconditioner_type = config.preconditioner_type;
     options.num_threads = config.num_threads;
     options.num_linear_solver_threads = config.num_threads;
-    options.return_final_residuals = true;
 
     if (config.use_automatic_ordering) {
       delete options.linear_solver_ordering;
@@ -145,11 +144,20 @@ void RunSolversAndCheckTheyMatch(const vector<SolverConfig>& configurations,
     LOG(INFO) << "Running solver configuration: "
               << config.ToString();
 
+    Solver::Summary summary;
     Solve(options,
           system_test_problem->mutable_problem(),
-          &summaries[i]);
+          &summary);
 
-    CHECK_NE(summaries[i].termination_type, ceres::NUMERICAL_FAILURE)
+    system_test_problem
+        ->mutable_problem()
+        ->Evaluate(Problem::EvaluateOptions(),
+                   NULL,
+                   &final_residuals[i],
+                   NULL,
+                   NULL);
+
+    CHECK_NE(summary.termination_type, ceres::NUMERICAL_FAILURE)
         << "Solver configuration " << i << " failed.";
     problems.push_back(system_test_problem);
 
@@ -161,8 +169,8 @@ void RunSolversAndCheckTheyMatch(const vector<SolverConfig>& configurations,
     // the same residuals at two completely different positions in
     // parameter space.
     if (i > 0) {
-      const vector<double>& reference_residuals = summaries[0].final_residuals;
-      const vector<double>& current_residuals = summaries[i].final_residuals;
+      const vector<double>& reference_residuals = final_residuals[0];
+      const vector<double>& current_residuals = final_residuals[i];
 
       for (int j = 0; j < reference_residuals.size(); ++j) {
         EXPECT_NEAR(current_residuals[j],
@@ -501,17 +509,19 @@ TEST(SystemTest, BundleAdjustmentProblem) {
 
   CONFIGURE(CGNR,                   SUITE_SPARSE, kAutomaticOrdering, JACOBI);
   CONFIGURE(ITERATIVE_SCHUR,        SUITE_SPARSE, kUserOrdering,      JACOBI);
+  CONFIGURE(ITERATIVE_SCHUR,        SUITE_SPARSE, kUserOrdering,      SCHUR_JACOBI);
 
 #ifndef CERES_NO_SUITESPARSE
-  CONFIGURE(ITERATIVE_SCHUR,        SUITE_SPARSE, kUserOrdering,      SCHUR_JACOBI);
+
   CONFIGURE(ITERATIVE_SCHUR,        SUITE_SPARSE, kUserOrdering,      CLUSTER_JACOBI);
   CONFIGURE(ITERATIVE_SCHUR,        SUITE_SPARSE, kUserOrdering,      CLUSTER_TRIDIAGONAL);
 #endif  // CERES_NO_SUITESPARSE
 
   CONFIGURE(ITERATIVE_SCHUR,        SUITE_SPARSE, kAutomaticOrdering, JACOBI);
+  CONFIGURE(ITERATIVE_SCHUR,        SUITE_SPARSE, kAutomaticOrdering, SCHUR_JACOBI);
 
 #ifndef CERES_NO_SUITESPARSE
-  CONFIGURE(ITERATIVE_SCHUR,        SUITE_SPARSE, kAutomaticOrdering, SCHUR_JACOBI);
+
   CONFIGURE(ITERATIVE_SCHUR,        SUITE_SPARSE, kAutomaticOrdering, CLUSTER_JACOBI);
   CONFIGURE(ITERATIVE_SCHUR,        SUITE_SPARSE, kAutomaticOrdering, CLUSTER_TRIDIAGONAL);
 #endif  // CERES_NO_SUITESPARSE

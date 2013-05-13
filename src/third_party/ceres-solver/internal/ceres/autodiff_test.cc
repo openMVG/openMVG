@@ -372,7 +372,8 @@ TEST(AutoDiff, VaryingNumberOfResidualsForOneCostFunctorType) {
     const double kTolerance = 1e-14;
     for (int i = 0; i < num_residuals; ++i) {
       EXPECT_NEAR(J_x[2 * i + 0], i * x[1] * x[1], kTolerance) << "i: " << i;
-      EXPECT_NEAR(J_x[2 * i + 1], 2 * i * x[0] * x[1], kTolerance) << "i: " << i;
+      EXPECT_NEAR(J_x[2 * i + 1], 2 * i * x[0] * x[1], kTolerance)
+          << "i: " << i;
     }
   }
 }

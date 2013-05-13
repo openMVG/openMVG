@@ -35,6 +35,7 @@
 #include <cstddef>
 #include <vector>
 
+#include "ceres/blas.h"
 #include "ceres/corrector.h"
 #include "ceres/parameter_block.h"
 #include "ceres/residual_block_utils.h"
@@ -44,23 +45,28 @@
 #include "ceres/local_parameterization.h"
 #include "ceres/loss_function.h"
 
+using Eigen::Dynamic;
+
 namespace ceres {
 namespace internal {
 
 ResidualBlock::ResidualBlock(const CostFunction* cost_function,
                              const LossFunction* loss_function,
-                             const vector<ParameterBlock*>& parameter_blocks)
+                             const vector<ParameterBlock*>& parameter_blocks,
+                             int index)
     : cost_function_(cost_function),
       loss_function_(loss_function),
       parameter_blocks_(
           new ParameterBlock* [
-              cost_function->parameter_block_sizes().size()]) {
+              cost_function->parameter_block_sizes().size()]),
+      index_(index) {
   std::copy(parameter_blocks.begin(),
             parameter_blocks.end(),
             parameter_blocks_.get());
 }
 
-bool ResidualBlock::Evaluate(double* cost,
+bool ResidualBlock::Evaluate(const bool apply_loss_function,
+                             double* cost,
                              double* residuals,
                              double** jacobians,
                              double* scratch) const {
@@ -136,23 +142,21 @@ bool ResidualBlock::Evaluate(double* cost,
 
         // Apply local reparameterization to the jacobians.
         if (parameter_block->LocalParameterizationJacobian() != NULL) {
-          ConstMatrixRef local_to_global(
+          // jacobians[i] = global_jacobians[i] * global_to_local_jacobian.
+          MatrixMatrixMultiply<Dynamic, Dynamic, Dynamic, Dynamic, 0>(
+              global_jacobians[i],
+              num_residuals,
+              parameter_block->Size(),
               parameter_block->LocalParameterizationJacobian(),
               parameter_block->Size(),
-              parameter_block->LocalSize());
-          MatrixRef global_jacobian(global_jacobians[i],
-                                    num_residuals,
-                                    parameter_block->Size());
-          MatrixRef local_jacobian(jacobians[i],
-                                   num_residuals,
-                                   parameter_block->LocalSize());
-          local_jacobian.noalias() = global_jacobian * local_to_global;
+              parameter_block->LocalSize(),
+              jacobians[i], 0, 0,  num_residuals, parameter_block->LocalSize());
         }
       }
     }
   }
 
-  if (loss_function_ == NULL) {
+  if (loss_function_ == NULL || !apply_loss_function) {
     *cost = 0.5 * squared_norm;
     return true;
   }

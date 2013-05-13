@@ -29,6 +29,8 @@
 // Author: kushalav@google.com (Avanish Kushal)
 //         sameeragarwal@google.com (Sameer Agarwal)
 
+#ifndef CERES_NO_SUITESPARSE
+
 #include "ceres/visibility.h"
 
 #include <set>
@@ -201,3 +203,5 @@ TEST(VisibilityTest, NoEBlocks) {
 
 }  // namespace internal
 }  // namespace ceres
+
+#endif  // CERES_NO_SUITESPARSE

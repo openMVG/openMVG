@@ -41,13 +41,15 @@
 #ifndef CERES_INTERNAL_CANONICAL_VIEWS_CLUSTERING_H_
 #define CERES_INTERNAL_CANONICAL_VIEWS_CLUSTERING_H_
 
+#ifndef CERES_NO_SUITESPARSE
+
 #include <vector>
 
-#include <glog/logging.h>
 #include "ceres/collections_port.h"
 #include "ceres/graph.h"
-#include "ceres/map_util.h"
 #include "ceres/internal/macros.h"
+#include "ceres/map_util.h"
+#include "glog/logging.h"
 
 namespace ceres {
 namespace internal {
@@ -130,4 +132,5 @@ struct CanonicalViewsClusteringOptions {
 }  // namespace internal
 }  // namespace ceres
 
+#endif  // CERES_NO_SUITESPARSE
 #endif  // CERES_INTERNAL_CANONICAL_VIEWS_CLUSTERING_H_

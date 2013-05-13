@@ -44,25 +44,26 @@
 #include "ceres/block_sparse_matrix.h"
 #include "ceres/block_structure.h"
 #include "ceres/detect_structure.h"
+#include "ceres/internal/eigen.h"
+#include "ceres/internal/port.h"
+#include "ceres/internal/scoped_ptr.h"
 #include "ceres/linear_solver.h"
 #include "ceres/schur_complement_solver.h"
 #include "ceres/suitesparse.h"
 #include "ceres/triplet_sparse_matrix.h"
-#include "ceres/internal/eigen.h"
-#include "ceres/internal/port.h"
-#include "ceres/internal/scoped_ptr.h"
 #include "ceres/types.h"
-
+#include "ceres/wall_time.h"
 
 namespace ceres {
 namespace internal {
 
 LinearSolver::Summary SchurComplementSolver::SolveImpl(
-    BlockSparseMatrixBase* A,
+    BlockSparseMatrix* A,
     const double* b,
     const LinearSolver::PerSolveOptions& per_solve_options,
     double* x) {
-  const time_t start_time = time(NULL);
+  EventLogger event_logger("SchurComplementSolver::Solve");
+
   if (eliminator_.get() == NULL) {
     InitStorage(A->block_structure());
     DetectStructure(*A->block_structure(),
@@ -73,32 +74,27 @@ LinearSolver::Summary SchurComplementSolver::SolveImpl(
     eliminator_.reset(CHECK_NOTNULL(SchurEliminatorBase::Create(options_)));
     eliminator_->Init(options_.elimination_groups[0], A->block_structure());
   };
-  const time_t init_time = time(NULL);
   fill(x, x + A->num_cols(), 0.0);
+  event_logger.AddEvent("Setup");
 
   LinearSolver::Summary summary;
   summary.num_iterations = 1;
   summary.termination_type = FAILURE;
   eliminator_->Eliminate(A, b, per_solve_options.D, lhs_.get(), rhs_.get());
-  const time_t eliminate_time = time(NULL);
+  event_logger.AddEvent("Eliminate");
 
   double* reduced_solution = x + A->num_cols() - lhs_->num_cols();
   const bool status = SolveReducedLinearSystem(reduced_solution);
-  const time_t solve_time = time(NULL);
+  event_logger.AddEvent("ReducedSolve");
 
   if (!status) {
     return summary;
   }
 
   eliminator_->BackSubstitute(A, b, per_solve_options.D, reduced_solution, x);
-  const time_t backsubstitute_time = time(NULL);
   summary.termination_type = TOLERANCE;
 
-  VLOG(2) << "time (sec) total: " << (backsubstitute_time - start_time)
-          << " init: " << (init_time - start_time)
-          << " eliminate: " << (eliminate_time - init_time)
-          << " solve: " << (solve_time - eliminate_time)
-          << " backsubstitute: " << (backsubstitute_time - solve_time);
+  event_logger.AddEvent("BackSubstitute");
   return summary;
 }
 
@@ -145,6 +141,7 @@ bool DenseSchurComplementSolver::SolveReducedLinearSystem(double* solution) {
   return true;
 }
 
+#if !defined(CERES_NO_SUITESPARSE) || !defined(CERES_NO_CXSPARE)
 
 SparseSchurComplementSolver::SparseSchurComplementSolver(
     const LinearSolver::Options& options)
@@ -267,8 +264,6 @@ bool SparseSchurComplementSolver::SolveReducedLinearSystem(double* solution) {
 // CHOLMOD's sparse cholesky factorization routines.
 bool SparseSchurComplementSolver::SolveReducedLinearSystemUsingSuiteSparse(
     double* solution) {
-  const time_t start_time = time(NULL);
-
   TripletSparseMatrix* tsm =
       const_cast<TripletSparseMatrix*>(
           down_cast<const BlockRandomAccessSparseMatrix*>(lhs())->matrix());
@@ -281,41 +276,42 @@ bool SparseSchurComplementSolver::SolveReducedLinearSystemUsingSuiteSparse(
     return true;
   }
 
-  cholmod_sparse* cholmod_lhs = ss_.CreateSparseMatrix(tsm);
-  // The matrix is symmetric, and the upper triangular part of the
-  // matrix contains the values.
-  cholmod_lhs->stype = 1;
-  const time_t lhs_time = time(NULL);
+  cholmod_sparse* cholmod_lhs = NULL;
+  if (options().use_postordering) {
+    // If we are going to do a full symbolic analysis of the schur
+    // complement matrix from scratch and not rely on the
+    // pre-ordering, then the fastest path in cholmod_factorize is the
+    // one corresponding to upper triangular matrices.
 
-  cholmod_dense*  cholmod_rhs =
-      ss_.CreateDenseVector(const_cast<double*>(rhs()), num_rows, num_rows);
-  const time_t rhs_time = time(NULL);
+    // Create a upper triangular symmetric matrix.
+    cholmod_lhs = ss_.CreateSparseMatrix(tsm);
+    cholmod_lhs->stype = 1;
 
-  // Symbolic factorization is computed if we don't already have one handy.
-  if (factor_ == NULL) {
-    if (options().use_block_amd) {
+    if (factor_ == NULL) {
       factor_ = ss_.BlockAnalyzeCholesky(cholmod_lhs, blocks_, blocks_);
-    } else {
-      factor_ = ss_.AnalyzeCholesky(cholmod_lhs);
     }
+  } else {
+    // If we are going to use the natural ordering (i.e. rely on the
+    // pre-ordering computed by solver_impl.cc), then the fastest
+    // path in cholmod_factorize is the one corresponding to lower
+    // triangular matrices.
 
-    if (VLOG_IS_ON(2)) {
-      cholmod_print_common("Symbolic Analysis", ss_.mutable_cc());
+    // Create a upper triangular symmetric matrix.
+    cholmod_lhs = ss_.CreateSparseMatrixTranspose(tsm);
+    cholmod_lhs->stype = -1;
+
+    if (factor_ == NULL) {
+      factor_ = ss_.AnalyzeCholeskyWithNaturalOrdering(cholmod_lhs);
     }
   }
 
-  CHECK_NOTNULL(factor_);
-
-  const time_t symbolic_time = time(NULL);
+  cholmod_dense*  cholmod_rhs =
+      ss_.CreateDenseVector(const_cast<double*>(rhs()), num_rows, num_rows);
   cholmod_dense* cholmod_solution =
       ss_.SolveCholesky(cholmod_lhs, factor_, cholmod_rhs);
 
-  const time_t solve_time = time(NULL);
-
   ss_.Free(cholmod_lhs);
-  cholmod_lhs = NULL;
   ss_.Free(cholmod_rhs);
-  cholmod_rhs = NULL;
 
   if (cholmod_solution == NULL) {
     LOG(WARNING) << "CHOLMOD solve failed.";
@@ -325,13 +321,6 @@ bool SparseSchurComplementSolver::SolveReducedLinearSystemUsingSuiteSparse(
   VectorRef(solution, num_rows)
       = VectorRef(static_cast<double*>(cholmod_solution->x), num_rows);
   ss_.Free(cholmod_solution);
-  const time_t final_time = time(NULL);
-  VLOG(2) << "time: " << (final_time - start_time)
-          << " lhs : " << (lhs_time - start_time)
-          << " rhs:  " << (rhs_time - lhs_time)
-          << " analyze: " <<  (symbolic_time - rhs_time)
-          << " factor_and_solve: " << (solve_time - symbolic_time)
-          << " cleanup: " << (final_time - solve_time);
   return true;
 }
 #else
@@ -366,7 +355,8 @@ bool SparseSchurComplementSolver::SolveReducedLinearSystemUsingCXSparse(
 
   // Compute symbolic factorization if not available.
   if (cxsparse_factor_ == NULL) {
-    cxsparse_factor_ = CHECK_NOTNULL(cxsparse_.AnalyzeCholesky(lhs));
+    cxsparse_factor_ =
+        CHECK_NOTNULL(cxsparse_.BlockAnalyzeCholesky(lhs, blocks_, blocks_));
   }
 
   // Solve the linear system.
@@ -383,5 +373,6 @@ bool SparseSchurComplementSolver::SolveReducedLinearSystemUsingCXSparse(
 }
 #endif  // CERES_NO_CXPARSE
 
+#endif  // !defined(CERES_NO_SUITESPARSE) || !defined(CERES_NO_CXSPARE)
 }  // namespace internal
 }  // namespace ceres

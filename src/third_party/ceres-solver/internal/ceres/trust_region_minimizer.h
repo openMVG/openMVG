@@ -52,10 +52,10 @@ class TrustRegionMinimizer : public Minimizer {
  private:
   void Init(const Minimizer::Options& options);
   void EstimateScale(const SparseMatrix& jacobian, double* scale) const;
-  bool MaybeDumpLinearLeastSquaresProblem( const int iteration,
-                                           const SparseMatrix* jacobian,
-                                           const double* residuals,
-                                           const double* step) const;
+  bool MaybeDumpLinearLeastSquaresProblem(const int iteration,
+                                          const SparseMatrix* jacobian,
+                                          const double* residuals,
+                                          const double* step) const;
 
   Minimizer::Options options_;
 };
