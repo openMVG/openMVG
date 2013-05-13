@@ -577,7 +577,7 @@ struct kernel_retval<FullPivLU<_MatrixType> >
     RealScalar premultiplied_threshold = dec().maxPivot() * dec().threshold();
     Index p = 0;
     for(Index i = 0; i < dec().nonzeroPivots(); ++i)
-      if(abs(dec().matrixLU().coeff(i,i)) > premultiplied_threshold)
+      if(internal::abs(dec().matrixLU().coeff(i,i)) > premultiplied_threshold)
         pivots.coeffRef(p++) = i;
     eigen_internal_assert(p == rank());
 
@@ -645,7 +645,7 @@ struct image_retval<FullPivLU<_MatrixType> >
     RealScalar premultiplied_threshold = dec().maxPivot() * dec().threshold();
     Index p = 0;
     for(Index i = 0; i < dec().nonzeroPivots(); ++i)
-      if(abs(dec().matrixLU().coeff(i,i)) > premultiplied_threshold)
+      if(internal::abs(dec().matrixLU().coeff(i,i)) > premultiplied_threshold)
         pivots.coeffRef(p++) = i;
     eigen_internal_assert(p == rank());
 

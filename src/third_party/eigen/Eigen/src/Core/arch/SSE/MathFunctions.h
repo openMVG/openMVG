@@ -31,7 +31,8 @@ Packet4f plog<Packet4f>(const Packet4f& _x)
 
   /* the smallest non denormalized float number */
   _EIGEN_DECLARE_CONST_Packet4f_FROM_INT(min_norm_pos,  0x00800000);
-
+  _EIGEN_DECLARE_CONST_Packet4f_FROM_INT(minus_inf,     0xff800000);//-1.f/0.f);
+  
   /* natural logarithm computed for 4 simultaneous float
     return NaN for x <= 0
   */
@@ -51,7 +52,8 @@ Packet4f plog<Packet4f>(const Packet4f& _x)
 
   Packet4i emm0;
 
-  Packet4f invalid_mask = _mm_cmple_ps(x, _mm_setzero_ps());
+  Packet4f invalid_mask = _mm_cmplt_ps(x, _mm_setzero_ps());
+  Packet4f iszero_mask = _mm_cmpeq_ps(x, _mm_setzero_ps());
 
   x = pmax(x, p4f_min_norm_pos);  /* cut off denormalized stuff */
   emm0 = _mm_srli_epi32(_mm_castps_si128(x), 23);
@@ -96,7 +98,9 @@ Packet4f plog<Packet4f>(const Packet4f& _x)
   y2 = pmul(e, p4f_cephes_log_q2);
   x = padd(x, y);
   x = padd(x, y2);
-  return _mm_or_ps(x, invalid_mask); // negative arg will be NAN
+  // negative arg will be NAN, 0 will be -INF
+  return _mm_or_ps(_mm_andnot_ps(iszero_mask, _mm_or_ps(x, invalid_mask)),
+                   _mm_and_ps(iszero_mask, p4f_minus_inf));
 }
 
 template<> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED

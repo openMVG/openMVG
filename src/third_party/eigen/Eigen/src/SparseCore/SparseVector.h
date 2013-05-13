@@ -202,7 +202,7 @@ class SparseVector
     }
 
     inline SparseVector(const SparseVector& other)
-      : m_size(0)
+      : SparseBase(other), m_size(0)
     {
       *this = other.derived();
     }
@@ -230,7 +230,8 @@ class SparseVector
     template<typename OtherDerived>
     inline SparseVector& operator=(const SparseMatrixBase<OtherDerived>& other)
     {
-      if (int(RowsAtCompileTime)!=int(OtherDerived::RowsAtCompileTime))
+      if ( (bool(OtherDerived::IsVectorAtCompileTime) && int(RowsAtCompileTime)!=int(OtherDerived::RowsAtCompileTime))
+          || ((!bool(OtherDerived::IsVectorAtCompileTime)) && ( bool(IsColVector) ? other.cols()>1 : other.rows()>1 )))
         return assign(other.transpose());
       else
         return assign(other);

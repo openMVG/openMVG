@@ -533,8 +533,11 @@ template <typename Scalar, bool RandomAccess> struct linspaced_op_impl;
 // linear access for packet ops:
 // 1) initialization
 //   base = [low, ..., low] + ([step, ..., step] * [-size, ..., 0])
-// 2) each step
+// 2) each step (where size is 1 for coeff access or PacketSize for packet access)
 //   base += [size*step, ..., size*step]
+//
+// TODO: Perhaps it's better to initialize lazily (so not in the constructor but in packetOp)
+//       in order to avoid the padd() in operator() ?
 template <typename Scalar>
 struct linspaced_op_impl<Scalar,false>
 {
@@ -543,10 +546,15 @@ struct linspaced_op_impl<Scalar,false>
   linspaced_op_impl(Scalar low, Scalar step) :
   m_low(low), m_step(step),
   m_packetStep(pset1<Packet>(packet_traits<Scalar>::size*step)),
-  m_base(padd(pset1<Packet>(low),pmul(pset1<Packet>(step),plset<Scalar>(-packet_traits<Scalar>::size)))) {}
+  m_base(padd(pset1<Packet>(low), pmul(pset1<Packet>(step),plset<Scalar>(-packet_traits<Scalar>::size)))) {}
 
   template<typename Index>
-  EIGEN_STRONG_INLINE const Scalar operator() (Index i) const { return m_low+i*m_step; }
+  EIGEN_STRONG_INLINE const Scalar operator() (Index i) const 
+  { 
+    m_base = padd(m_base, pset1<Packet>(m_step));
+    return m_low+i*m_step; 
+  }
+
   template<typename Index>
   EIGEN_STRONG_INLINE const Packet packetOp(Index) const { return m_base = padd(m_base,m_packetStep); }
 

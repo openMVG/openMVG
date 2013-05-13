@@ -209,6 +209,7 @@ class SparseSelfAdjointTimeDenseProduct
 
     template<typename Dest> void scaleAndAddTo(Dest& dest, Scalar alpha) const
     {
+      EIGEN_ONLY_USED_FOR_DEBUG(alpha);
       // TODO use alpha
       eigen_assert(alpha==Scalar(1) && "alpha != 1 is not implemented yet, sorry");
       typedef typename internal::remove_all<Lhs>::type _Lhs;

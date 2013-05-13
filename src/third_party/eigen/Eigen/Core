@@ -44,7 +44,7 @@
   #endif
 #else
   // Remember that usage of defined() in a #define is undefined by the standard
-  #if (defined __SSE2__) && ( (!defined __GNUC__) || EIGEN_GNUC_AT_LEAST(4,2) )
+  #if (defined __SSE2__) && ( (!defined __GNUC__) || (defined __INTEL_COMPILER) || EIGEN_GNUC_AT_LEAST(4,2) )
     #define EIGEN_SSE2_ON_NON_MSVC_BUT_NOT_OLD_GCC
   #endif
 #endif

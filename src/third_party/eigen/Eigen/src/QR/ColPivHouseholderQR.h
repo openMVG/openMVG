@@ -56,6 +56,12 @@ template<typename _MatrixType> class ColPivHouseholderQR
     typedef typename internal::plain_row_type<MatrixType>::type RowVectorType;
     typedef typename internal::plain_row_type<MatrixType, RealScalar>::type RealRowVectorType;
     typedef typename HouseholderSequence<MatrixType,HCoeffsType>::ConjugateReturnType HouseholderSequenceType;
+    
+  private:
+    
+    typedef typename PermutationType::Index PermIndexType;
+    
+  public:
 
     /**
     * \brief Default Constructor.
@@ -81,7 +87,7 @@ template<typename _MatrixType> class ColPivHouseholderQR
     ColPivHouseholderQR(Index rows, Index cols)
       : m_qr(rows, cols),
         m_hCoeffs((std::min)(rows,cols)),
-        m_colsPermutation(cols),
+        m_colsPermutation(PermIndexType(cols)),
         m_colsTranspositions(cols),
         m_temp(cols),
         m_colSqNorms(cols),
@@ -91,7 +97,7 @@ template<typename _MatrixType> class ColPivHouseholderQR
     ColPivHouseholderQR(const MatrixType& matrix)
       : m_qr(matrix.rows(), matrix.cols()),
         m_hCoeffs((std::min)(matrix.rows(),matrix.cols())),
-        m_colsPermutation(matrix.cols()),
+        m_colsPermutation(PermIndexType(matrix.cols())),
         m_colsTranspositions(matrix.cols()),
         m_temp(matrix.cols()),
         m_colSqNorms(matrix.cols()),
@@ -436,9 +442,9 @@ ColPivHouseholderQR<MatrixType>& ColPivHouseholderQR<MatrixType>::compute(const 
     m_colSqNorms.tail(cols-k-1) -= m_qr.row(k).tail(cols-k-1).cwiseAbs2();
   }
 
-  m_colsPermutation.setIdentity(cols);
-  for(Index k = 0; k < m_nonzero_pivots; ++k)
-    m_colsPermutation.applyTranspositionOnTheRight(k, m_colsTranspositions.coeff(k));
+  m_colsPermutation.setIdentity(PermIndexType(cols));
+  for(PermIndexType k = 0; k < m_nonzero_pivots; ++k)
+    m_colsPermutation.applyTranspositionOnTheRight(PermIndexType(k), PermIndexType(m_colsTranspositions.coeff(k)));
 
   m_det_pq = (number_of_transpositions%2) ? -1 : 1;
   m_isInitialized = true;
