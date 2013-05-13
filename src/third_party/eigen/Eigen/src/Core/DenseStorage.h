@@ -39,13 +39,24 @@ struct plain_array
   plain_array(constructor_without_unaligned_array_assert) {}
 };
 
-#ifdef EIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT
+#if defined(EIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT)
   #define EIGEN_MAKE_UNALIGNED_ARRAY_ASSERT(sizemask)
+#elif EIGEN_GNUC_AT_LEAST(4,7) 
+  // GCC 4.7 is too aggressive in its optimizations and remove the alignement test based on the fact the array is declared to be aligned.
+  // See this bug report: http://gcc.gnu.org/bugzilla/show_bug.cgi?id=53900
+  // Hiding the origin of the array pointer behind a function argument seems to do the trick even if the function is inlined:
+  template<typename PtrType>
+  EIGEN_ALWAYS_INLINE PtrType eigen_unaligned_array_assert_workaround_gcc47(PtrType array) { return array; }
+  #define EIGEN_MAKE_UNALIGNED_ARRAY_ASSERT(sizemask) \
+    eigen_assert((reinterpret_cast<size_t>(eigen_unaligned_array_assert_workaround_gcc47(array)) & sizemask) == 0 \
+              && "this assertion is explained here: " \
+              "http://eigen.tuxfamily.org/dox-devel/group__TopicUnalignedArrayAssert.html" \
+              " **** READ THIS WEB PAGE !!! ****");
 #else
   #define EIGEN_MAKE_UNALIGNED_ARRAY_ASSERT(sizemask) \
     eigen_assert((reinterpret_cast<size_t>(array) & sizemask) == 0 \
               && "this assertion is explained here: " \
-              "http://eigen.tuxfamily.org/dox-devel/TopicUnalignedArrayAssert.html" \
+              "http://eigen.tuxfamily.org/dox-devel/group__TopicUnalignedArrayAssert.html" \
               " **** READ THIS WEB PAGE !!! ****");
 #endif
 

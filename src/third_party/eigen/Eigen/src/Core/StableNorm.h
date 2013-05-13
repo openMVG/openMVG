@@ -13,6 +13,7 @@
 namespace Eigen { 
 
 namespace internal {
+
 template<typename ExpressionType, typename Scalar>
 inline void stable_norm_kernel(const ExpressionType& bl, Scalar& ssq, Scalar& scale, Scalar& invScale)
 {
@@ -76,21 +77,20 @@ MatrixBase<Derived>::blueNorm() const
   using std::pow;
   using std::min;
   using std::max;
-  static Index nmax = -1;
+  static bool initialized = false;
   static RealScalar b1, b2, s1m, s2m, overfl, rbig, relerr;
-  if(nmax <= 0)
+  if(!initialized)
   {
-    int nbig, ibeta, it, iemin, iemax, iexp;
+    int ibeta, it, iemin, iemax, iexp;
     RealScalar abig, eps;
     // This program calculates the machine-dependent constants
-    // bl, b2, slm, s2m, relerr overfl, nmax
+    // bl, b2, slm, s2m, relerr overfl
     // from the "basic" machine-dependent numbers
-    // nbig, ibeta, it, iemin, iemax, rbig.
+    // ibeta, it, iemin, iemax, rbig.
     // The following define the basic machine-dependent constants.
     // For portability, the PORT subprograms "ilmaeh" and "rlmach"
     // are used. For any specific computer, each of the assignment
     // statements can be replaced
-    nbig  = (std::numeric_limits<Index>::max)();            // largest integer
     ibeta = std::numeric_limits<RealScalar>::radix;         // base for floating-point numbers
     it    = std::numeric_limits<RealScalar>::digits;        // number of base-beta digits in mantissa
     iemin = std::numeric_limits<RealScalar>::min_exponent;  // minimum exponent
@@ -111,8 +111,7 @@ MatrixBase<Derived>::blueNorm() const
     eps     = RealScalar(pow(double(ibeta), 1-it));
     relerr  = internal::sqrt(eps);         // tolerance for neglecting asml
     abig    = RealScalar(1.0/eps - 1.0);
-    if (RealScalar(nbig)>abig)  nmax = int(abig);  // largest safe n
-    else                        nmax = nbig;
+    initialized = true;
   }
   Index n = size();
   RealScalar ab2 = b2 / RealScalar(n);

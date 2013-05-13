@@ -69,8 +69,8 @@ inline void manage_caching_sizes(Action action, std::ptrdiff_t* l1=0, std::ptrdi
   * - the number of scalars that fit into a packet (when vectorization is enabled).
   *
   * \sa setCpuCacheSizes */
-template<typename LhsScalar, typename RhsScalar, int KcFactor>
-void computeProductBlockingSizes(std::ptrdiff_t& k, std::ptrdiff_t& m, std::ptrdiff_t& n)
+template<typename LhsScalar, typename RhsScalar, int KcFactor, typename SizeType>
+void computeProductBlockingSizes(SizeType& k, SizeType& m, SizeType& n)
 {
   EIGEN_UNUSED_VARIABLE(n);
   // Explanations:
@@ -91,13 +91,13 @@ void computeProductBlockingSizes(std::ptrdiff_t& k, std::ptrdiff_t& m, std::ptrd
   };
 
   manage_caching_sizes(GetAction, &l1, &l2);
-  k = std::min<std::ptrdiff_t>(k, l1/kdiv);
-  std::ptrdiff_t _m = k>0 ? l2/(4 * sizeof(LhsScalar) * k) : 0;
+  k = std::min<SizeType>(k, l1/kdiv);
+  SizeType _m = k>0 ? l2/(4 * sizeof(LhsScalar) * k) : 0;
   if(_m<m) m = _m & mr_mask;
 }
 
-template<typename LhsScalar, typename RhsScalar>
-inline void computeProductBlockingSizes(std::ptrdiff_t& k, std::ptrdiff_t& m, std::ptrdiff_t& n)
+template<typename LhsScalar, typename RhsScalar, typename SizeType>
+inline void computeProductBlockingSizes(SizeType& k, SizeType& m, SizeType& n)
 {
   computeProductBlockingSizes<LhsScalar,RhsScalar,1>(k, m, n);
 }
