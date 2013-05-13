@@ -1393,7 +1393,11 @@ void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
       // Use dense solving
       options.linear_solver_type = ceres::DENSE_SCHUR;
     }
-  options.minimizer_progress_to_stdout = true;
+  options.minimizer_progress_to_stdout = false;
+  options.logging_type = ceres::SILENT;
+#ifdef USE_OPENMP
+  options.num_threads = omp_get_num_threads();
+#endif // USE_OPENMP
 
   // Solve BA
   ceres::Solver::Summary summary;
