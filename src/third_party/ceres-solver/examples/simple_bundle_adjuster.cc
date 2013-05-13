@@ -160,6 +160,14 @@ struct SnavelyReprojectionError {
     return true;
   }
 
+  // Factory to hide the construction of the CostFunction object from
+  // the client code.
+  static ceres::CostFunction* Create(const double observed_x,
+                                     const double observed_y) {
+    return (new ceres::AutoDiffCostFunction<SnavelyReprojectionError, 2, 9, 3>(
+                new SnavelyReprojectionError(observed_x, observed_y)));
+  }
+
   double observed_x;
   double observed_y;
 };
@@ -177,6 +185,8 @@ int main(int argc, char** argv) {
     return 1;
   }
 
+  const double* observations = bal_problem.observations();
+
   // Create residuals for each observation in the bundle adjustment problem. The
   // parameters for cameras and points are added automatically.
   ceres::Problem problem;
@@ -184,12 +194,10 @@ int main(int argc, char** argv) {
     // Each Residual block takes a point and a camera as input and outputs a 2
     // dimensional residual. Internally, the cost function stores the observed
     // image location and compares the reprojection against the observation.
-    ceres::CostFunction* cost_function =
-        new ceres::AutoDiffCostFunction<SnavelyReprojectionError, 2, 9, 3>(
-            new SnavelyReprojectionError(
-                bal_problem.observations()[2 * i + 0],
-                bal_problem.observations()[2 * i + 1]));
 
+    ceres::CostFunction* cost_function =
+        SnavelyReprojectionError::Create(observations[2 * i + 0],
+                                         observations[2 * i + 1]);
     problem.AddResidualBlock(cost_function,
                              NULL /* squared loss */,
                              bal_problem.mutable_camera_for_observation(i),

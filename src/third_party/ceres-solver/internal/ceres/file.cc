@@ -30,6 +30,8 @@
 //
 // Really simple file IO.
 
+#include "ceres/file.h"
+
 #include <cstdio>
 #include "glog/logging.h"
 

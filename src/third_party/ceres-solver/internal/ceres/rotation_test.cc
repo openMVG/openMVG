@@ -55,7 +55,7 @@ double RandDouble() {
 // A tolerance value for floating-point comparisons.
 static double const kTolerance = numeric_limits<double>::epsilon() * 10;
 
-// Looser tolerance used for for numerically unstable conversions.
+// Looser tolerance used for numerically unstable conversions.
 static double const kLooseTolerance = 1e-9;
 
 // Use as:
@@ -965,6 +965,61 @@ TEST(AngleAxis, NearZeroRotatePointGivesSameAnswerAsRotationMatrix) {
   }
 }
 
+TEST(MatrixAdapter, RowMajor3x3ReturnTypeAndAccessIsCorrect) {
+  double array[9] = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 };
+  const float const_array[9] =
+      { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f };
+  MatrixAdapter<double, 3, 1> A = RowMajorAdapter3x3(array);
+  MatrixAdapter<const float, 3, 1> B = RowMajorAdapter3x3(const_array);
+
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      // The values are integers from 1 to 9, so equality tests are appropriate
+      // even for float and double values.
+      EXPECT_EQ(A(i, j), array[3*i+j]);
+      EXPECT_EQ(B(i, j), const_array[3*i+j]);
+    }
+  }
+}
+
+TEST(MatrixAdapter, ColumnMajor3x3ReturnTypeAndAccessIsCorrect) {
+  double array[9] = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 };
+  const float const_array[9] =
+      { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f };
+  MatrixAdapter<double, 1, 3> A = ColumnMajorAdapter3x3(array);
+  MatrixAdapter<const float, 1, 3> B = ColumnMajorAdapter3x3(const_array);
+
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      // The values are integers from 1 to 9, so equality tests are
+      // appropriate even for float and double values.
+      EXPECT_EQ(A(i, j), array[3*j+i]);
+      EXPECT_EQ(B(i, j), const_array[3*j+i]);
+    }
+  }
+}
+
+TEST(MatrixAdapter, RowMajor2x4IsCorrect) {
+  const int expected[8] = { 1, 2, 3, 4, 5, 6, 7, 8 };
+  int array[8];
+  MatrixAdapter<int, 4, 1> M(array);
+  M(0, 0) = 1; M(0, 1) = 2; M(0, 2) = 3; M(0, 3) = 4;
+  M(1, 0) = 5; M(1, 1) = 6; M(1, 2) = 7; M(1, 3) = 8;
+  for (int k = 0; k < 8; ++k) {
+    EXPECT_EQ(array[k], expected[k]);
+  }
+}
+
+TEST(MatrixAdapter, ColumnMajor2x4IsCorrect) {
+  const int expected[8] = { 1, 5, 2, 6, 3, 7, 4, 8 };
+  int array[8];
+  MatrixAdapter<int, 1, 2> M(array);
+  M(0, 0) = 1; M(0, 1) = 2; M(0, 2) = 3; M(0, 3) = 4;
+  M(1, 0) = 5; M(1, 1) = 6; M(1, 2) = 7; M(1, 3) = 8;
+  for (int k = 0; k < 8; ++k) {
+    EXPECT_EQ(array[k], expected[k]);
+  }
+}
 
 }  // namespace internal
 }  // namespace ceres

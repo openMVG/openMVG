@@ -83,11 +83,15 @@
 #include <omp.h>
 #endif
 
+#include <map>
+#include <vector>
+#include "ceres/blas.h"
+#include "ceres/execution_summary.h"
+#include "ceres/internal/eigen.h"
+#include "ceres/internal/scoped_ptr.h"
 #include "ceres/parameter_block.h"
 #include "ceres/program.h"
 #include "ceres/residual_block.h"
-#include "ceres/internal/eigen.h"
-#include "ceres/internal/scoped_ptr.h"
 
 namespace ceres {
 namespace internal {
@@ -117,11 +121,18 @@ class ProgramEvaluator : public Evaluator {
     return jacobian_writer_.CreateJacobian();
   }
 
-  bool Evaluate(const double* state,
+  bool Evaluate(const Evaluator::EvaluateOptions& evaluate_options,
+                const double* state,
                 double* cost,
                 double* residuals,
                 double* gradient,
                 SparseMatrix* jacobian) {
+    ScopedExecutionTimer total_timer("Evaluator::Total", &execution_summary_);
+    ScopedExecutionTimer call_type_timer(gradient == NULL && jacobian == NULL
+                                         ? "Evaluator::Residual"
+                                         : "Evaluator::Jacobian",
+                                         &execution_summary_);
+
     // The parameters are stateful, so set the state before evaluating.
     if (!program_->StateVectorToParameterBlocks(state)) {
       return false;
@@ -187,6 +198,7 @@ class ProgramEvaluator : public Evaluator {
       // Evaluate the cost, residuals, and jacobians.
       double block_cost;
       if (!residual_block->Evaluate(
+              evaluate_options.apply_loss_function,
               &block_cost,
               block_residuals,
               block_jacobians,
@@ -219,14 +231,13 @@ class ProgramEvaluator : public Evaluator {
           if (parameter_block->IsConstant()) {
             continue;
           }
-          MatrixRef block_jacobian(block_jacobians[j],
-                                   num_residuals,
-                                   parameter_block->LocalSize());
-          VectorRef block_gradient(scratch->gradient.get() +
-                                   parameter_block->delta_offset(),
-                                   parameter_block->LocalSize());
-          VectorRef block_residual(block_residuals, num_residuals);
-          block_gradient += block_residual.transpose() * block_jacobian;
+
+          MatrixTransposeVectorMultiply<Eigen::Dynamic, Eigen::Dynamic, 1>(
+              block_jacobians[j],
+              num_residuals,
+              parameter_block->LocalSize(),
+              block_residuals,
+              scratch->gradient.get() + parameter_block->delta_offset());
         }
       }
     }
@@ -264,6 +275,14 @@ class ProgramEvaluator : public Evaluator {
 
   int NumResiduals() const {
     return program_->NumResiduals();
+  }
+
+  virtual map<string, int> CallStatistics() const {
+    return execution_summary_.calls();
+  }
+
+  virtual map<string, double> TimeStatistics() const {
+    return execution_summary_.times();
   }
 
  private:
@@ -331,6 +350,7 @@ class ProgramEvaluator : public Evaluator {
   scoped_array<EvaluatePreparer> evaluate_preparers_;
   scoped_array<EvaluateScratch> evaluate_scratch_;
   vector<int> residual_layout_;
+  ::ceres::internal::ExecutionSummary execution_summary_;
 };
 
 }  // namespace internal

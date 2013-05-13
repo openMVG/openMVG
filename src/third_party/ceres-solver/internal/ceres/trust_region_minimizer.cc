@@ -139,13 +139,15 @@ void TrustRegionMinimizer::Minimize(const Minimizer::Options& options,
 
   // Do initial cost and Jacobian evaluation.
   double cost = 0.0;
-  if (!evaluator->Evaluate(x.data(), &cost, residuals.data(), NULL, jacobian)) {
+  if (!evaluator->Evaluate(x.data(),
+                           &cost,
+                           residuals.data(),
+                           gradient.data(),
+                           jacobian)) {
     LOG(WARNING) << "Terminating: Residual and Jacobian evaluation failed.";
     summary->termination_type = NUMERICAL_FAILURE;
     return;
   }
-
-  iteration_summary.cost = cost + summary->fixed_cost;
 
   int num_consecutive_nonmonotonic_steps = 0;
   double minimum_cost = cost;
@@ -154,16 +156,9 @@ void TrustRegionMinimizer::Minimize(const Minimizer::Options& options,
   double candidate_cost = cost;
   double accumulated_candidate_model_cost_change = 0.0;
 
-  gradient.setZero();
-  jacobian->LeftMultiply(residuals.data(), gradient.data());
+  summary->initial_cost = cost + summary->fixed_cost;
+  iteration_summary.cost = cost + summary->fixed_cost;
   iteration_summary.gradient_max_norm = gradient.lpNorm<Eigen::Infinity>();
-
-  if (options_.jacobi_scaling) {
-    EstimateScale(*jacobian, scale.data());
-    jacobian->ScaleColumns(scale.data());
-  } else {
-    scale.setOnes();
-  }
 
   // The initial gradient max_norm is bounded from below so that we do
   // not divide by zero.
@@ -188,7 +183,14 @@ void TrustRegionMinimizer::Minimize(const Minimizer::Options& options,
       + summary->preprocessor_time_in_seconds;
   summary->iterations.push_back(iteration_summary);
 
-   int num_consecutive_invalid_steps = 0;
+  if (options_.jacobi_scaling) {
+    EstimateScale(*jacobian, scale.data());
+    jacobian->ScaleColumns(scale.data());
+  } else {
+    scale.setOnes();
+  }
+
+  int num_consecutive_invalid_steps = 0;
   while (true) {
     if (!RunCallbacks(options.callbacks, iteration_summary, summary)) {
       return;
@@ -322,9 +324,9 @@ void TrustRegionMinimizer::Minimize(const Minimizer::Options& options,
           options.inner_iteration_minimizer->Minimize(options,
                                                       inner_iteration_x.data(),
                                                       &inner_iteration_summary);
-          if(!evaluator->Evaluate(inner_iteration_x.data(),
-                                  &new_cost,
-                                  NULL, NULL, NULL)) {
+          if (!evaluator->Evaluate(inner_iteration_x.data(),
+                                   &new_cost,
+                                   NULL, NULL, NULL)) {
             VLOG(2) << "Inner iteration failed.";
             new_cost = x_plus_delta_cost;
           } else {
@@ -418,23 +420,23 @@ void TrustRegionMinimizer::Minimize(const Minimizer::Options& options,
       if (!evaluator->Evaluate(x.data(),
                                &cost,
                                residuals.data(),
-                               NULL,
+                               gradient.data(),
                                jacobian)) {
         summary->termination_type = NUMERICAL_FAILURE;
-        summary->error = "Terminating: Residual and Jacobian evaluation failed.";
+        summary->error =
+            "Terminating: Residual and Jacobian evaluation failed.";
         LOG(WARNING) << summary->error;
         return;
       }
 
-      gradient.setZero();
-      jacobian->LeftMultiply(residuals.data(), gradient.data());
       iteration_summary.gradient_max_norm = gradient.lpNorm<Eigen::Infinity>();
 
       if (iteration_summary.gradient_max_norm <= absolute_gradient_tolerance) {
         summary->termination_type = GRADIENT_TOLERANCE;
         VLOG(1) << "Terminating: Gradient tolerance reached."
                 << "Relative gradient max norm: "
-                << iteration_summary.gradient_max_norm / initial_gradient_max_norm
+                << (iteration_summary.gradient_max_norm /
+                    initial_gradient_max_norm)
                 << " <= " << options_.gradient_tolerance;
         return;
       }

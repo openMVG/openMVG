@@ -38,6 +38,8 @@
 // For details on the theory and implementation see "Numerical
 // Optimization" by Nocedal & Wright.
 
+#ifndef CERES_NO_LINE_SEARCH_MINIMIZER
+
 #include "ceres/line_search_minimizer.h"
 
 #include <algorithm>
@@ -63,7 +65,10 @@ namespace ceres {
 namespace internal {
 namespace {
 // Small constant for various floating point issues.
+// TODO(sameeragarwal): Change to a better name if this has only one
+// use.
 const double kEpsilon = 1e-12;
+
 bool Evaluate(Evaluator* evaluator,
               const Vector& x,
               LineSearchMinimizer::State* state) {
@@ -121,7 +126,9 @@ void LineSearchMinimizer::Minimize(const Minimizer::Options& options,
     return;
   }
 
+  summary->initial_cost = current_state.cost + summary->fixed_cost;
   iteration_summary.cost = current_state.cost + summary->fixed_cost;
+
   iteration_summary.gradient_max_norm = current_state.gradient_max_norm;
 
   // The initial gradient max_norm is bounded from below so that we do
@@ -276,3 +283,5 @@ void LineSearchMinimizer::Minimize(const Minimizer::Options& options,
 
 }  // namespace internal
 }  // namespace ceres
+
+#endif  // CERES_NO_LINE_SEARCH_MINIMIZER

@@ -35,7 +35,7 @@
 namespace ceres {
 namespace internal {
 
-Minimizer::~Minimizer() {};
+Minimizer::~Minimizer() {}
 
 bool Minimizer::RunCallbacks(const vector<IterationCallback*> callbacks,
                              const IterationSummary& iteration_summary,

@@ -1,5 +1,5 @@
 # Ceres Solver - A fast non-linear least squares minimizer
-# Copyright 2012 Google Inc. All rights reserved.
+# Copyright 2013 Google Inc. All rights reserved.
 # http://code.google.com/p/ceres-solver/
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,42 +25,5 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-#
-# Author: arnaudgelas@gmail.com (Arnaud Gelas)
 
-FIND_PROGRAM(PYGMENTIZE NAMES pygmentize
-    PATHS
-        /usr/bin
-        /usr/local/bin
-        /opt/bin
-        /opt/local/bin)
-
-IF (${PYGMENTIZE} MATCHES PYGMENTIZE-NOTFOUND)
-  MESSAGE(SEND_ERROR "Pygmentize is not installed")
-ENDIF (${PYGMENTIZE} MATCHES PYGMENTIZE-NOTFOUND)
-
-FIND_PACKAGE(LATEX REQUIRED)
-
-FILE(DOWNLOAD http://minted.googlecode.com/files/minted.sty
-     ${CMAKE_BINARY_DIR}/docs/minted.sty
-     SHOW_PROGRESS)
-
-ADD_CUSTOM_TARGET(UserGuide ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_SOURCE_DIR}/docs ${CMAKE_BINARY_DIR}/docs
-    COMMAND ${PDFLATEX_COMPILER}
-        -shell-escape ${CMAKE_BINARY_DIR}/docs/ceres-solver.tex
-        -output-directory ${CMAKE_BINARY_DIR}/docs
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/docs
-    COMMAND ${BIBTEX_COMPILER} ceres-solver.aux
-    COMMAND ${PDFLATEX_COMPILER}
-        -shell-escape ${CMAKE_BINARY_DIR}/docs/ceres-solver.tex
-        -output-directory ${CMAKE_BINARY_DIR}/docs
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/docs
-    COMMAND ${PDFLATEX_COMPILER}
-        -shell-escape ${CMAKE_BINARY_DIR}/docs/ceres-solver.tex
-        -output-directory ${CMAKE_BINARY_DIR}/docs
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/docs)
-
-INSTALL(FILES ${CMAKE_BINARY_DIR}/docs/ceres-solver.pdf
-        DESTINATION share/ceres/docs)
+ADD_SUBDIRECTORY(source)

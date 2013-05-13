@@ -181,7 +181,7 @@ TEST(VertexDegreeLessThan, TotalOrdering) {
   VertexDegreeLessThan<int> less_than(graph);
 
   for (int i = 0; i < 4; ++i) {
-    EXPECT_FALSE(less_than(i,i)) << "Failing vertex: " << i;
+    EXPECT_FALSE(less_than(i, i)) << "Failing vertex: " << i;
     for (int j = 0; j < 4; ++j) {
       if (i != j) {
         EXPECT_TRUE(less_than(i, j) ^ less_than(j, i))

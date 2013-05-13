@@ -32,12 +32,13 @@
 #define CERES_INTERNAL_GRAPH_H_
 
 #include <limits>
-#include <glog/logging.h>
+#include <utility>
 #include "ceres/integral_types.h"
 #include "ceres/map_util.h"
 #include "ceres/collections_port.h"
 #include "ceres/internal/macros.h"
 #include "ceres/types.h"
+#include "glog/logging.h"
 
 namespace ceres {
 namespace internal {

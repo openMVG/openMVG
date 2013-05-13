@@ -40,12 +40,11 @@ namespace ceres {
 namespace internal {
 
 class BlockSparseMatrix;
-class BlockSparseMatrixBase;
 class ImplicitSchurComplement;
-class VisibilityBasedPreconditioner;
+class Preconditioner;
 
 // This class implements an iterative solver for the linear least
-// squares problems that have a bi-partitte sparsity structure common
+// squares problems that have a bi-partite sparsity structure common
 // to Structure from Motion problems.
 //
 // The algorithm used by this solver was developed in a series of
@@ -68,24 +67,23 @@ class VisibilityBasedPreconditioner;
 // a proof of this fact and others related to this solver please see
 // the section on Domain Decomposition Methods in Saad's book
 // "Iterative Methods for Sparse Linear Systems".
-class IterativeSchurComplementSolver : public BlockSparseMatrixBaseSolver {
+class IterativeSchurComplementSolver : public BlockSparseMatrixSolver {
  public:
-  explicit IterativeSchurComplementSolver(
-      const LinearSolver::Options& options);
-
+  explicit IterativeSchurComplementSolver(const LinearSolver::Options& options);
   virtual ~IterativeSchurComplementSolver();
 
  private:
   virtual LinearSolver::Summary SolveImpl(
-      BlockSparseMatrixBase* A,
+      BlockSparseMatrix* A,
       const double* b,
       const LinearSolver::PerSolveOptions& options,
       double* x);
 
   LinearSolver::Options options_;
   scoped_ptr<internal::ImplicitSchurComplement> schur_complement_;
-  scoped_ptr<VisibilityBasedPreconditioner> visibility_based_preconditioner_;
+  scoped_ptr<Preconditioner> preconditioner_;
   Vector reduced_linear_system_solution_;
+  CERES_DISALLOW_COPY_AND_ASSIGN(IterativeSchurComplementSolver);
 };
 
 }  // namespace internal

@@ -35,15 +35,16 @@
 #define CERES_INTERNAL_LINEAR_SOLVER_H_
 
 #include <cstddef>
+#include <map>
 #include <vector>
-
-#include <glog/logging.h>
 #include "ceres/block_sparse_matrix.h"
 #include "ceres/casts.h"
 #include "ceres/compressed_row_sparse_matrix.h"
 #include "ceres/dense_sparse_matrix.h"
+#include "ceres/execution_summary.h"
 #include "ceres/triplet_sparse_matrix.h"
 #include "ceres/types.h"
+#include "glog/logging.h"
 
 namespace ceres {
 namespace internal {
@@ -73,14 +74,14 @@ class LinearSolver {
         : type(SPARSE_NORMAL_CHOLESKY),
           preconditioner_type(JACOBI),
           sparse_linear_algebra_library(SUITE_SPARSE),
-          use_block_amd(true),
+          use_postordering(false),
           min_num_iterations(1),
           max_num_iterations(1),
           num_threads(1),
           residual_reset_period(10),
-          row_block_size(Dynamic),
-          e_block_size(Dynamic),
-          f_block_size(Dynamic) {
+          row_block_size(Eigen::Dynamic),
+          e_block_size(Eigen::Dynamic),
+          f_block_size(Eigen::Dynamic) {
     }
 
     LinearSolverType type;
@@ -89,8 +90,8 @@ class LinearSolver {
 
     SparseLinearAlgebraLibraryType sparse_linear_algebra_library;
 
-    // See solver.h for explanation of this option.
-    bool use_block_amd;
+    // See solver.h for information about this flag.
+    bool use_postordering;
 
     // Number of internal iterations that the solver uses. This
     // parameter only makes sense for iterative solvers like CG.
@@ -105,11 +106,11 @@ class LinearSolver {
     //
     // For example if elimination_groups is a vector of size k, then
     // the linear solver is informed that it should eliminate the
-    // parameter blocks 0 - elimination_groups[0] - 1 first, and then
-    // elimination_groups[0] - elimination_groups[1] and so on. Within
-    // each elimination group, the linear solver is free to choose how
-    // the parameter blocks are ordered. Different linear solvers have
-    // differing requirements on elimination_groups.
+    // parameter blocks 0 ... elimination_groups[0] - 1 first, and
+    // then elimination_groups[0] ... elimination_groups[1] - 1 and so
+    // on. Within each elimination group, the linear solver is free to
+    // choose how the parameter blocks are ordered. Different linear
+    // solvers have differing requirements on elimination_groups.
     //
     // The most common use is for Schur type solvers, where there
     // should be at least two elimination groups and the first
@@ -255,6 +256,18 @@ class LinearSolver {
                         const PerSolveOptions& per_solve_options,
                         double* x) = 0;
 
+  // The following two methods return copies instead of references so
+  // that the base class implementation does not have to worry about
+  // life time issues. Further, these calls are not expected to be
+  // frequent or performance sensitive.
+  virtual map<string, int> CallStatistics() const {
+    return map<string, int>();
+  }
+
+  virtual map<string, double> TimeStatistics() const {
+    return map<string, double>();
+  }
+
   // Factory
   static LinearSolver* Create(const Options& options);
 };
@@ -275,10 +288,19 @@ class TypedLinearSolver : public LinearSolver {
       const double* b,
       const LinearSolver::PerSolveOptions& per_solve_options,
       double* x) {
+    ScopedExecutionTimer total_time("LinearSolver::Solve", &execution_summary_);
     CHECK_NOTNULL(A);
     CHECK_NOTNULL(b);
     CHECK_NOTNULL(x);
     return SolveImpl(down_cast<MatrixType*>(A), b, per_solve_options, x);
+  }
+
+  virtual map<string, int> CallStatistics() const {
+    return execution_summary_.calls();
+  }
+
+  virtual map<string, double> TimeStatistics() const {
+    return execution_summary_.times();
   }
 
  private:
@@ -287,12 +309,13 @@ class TypedLinearSolver : public LinearSolver {
       const double* b,
       const LinearSolver::PerSolveOptions& per_solve_options,
       double* x) = 0;
+
+  ExecutionSummary execution_summary_;
 };
 
 // Linear solvers that depend on acccess to the low level structure of
 // a SparseMatrix.
 typedef TypedLinearSolver<BlockSparseMatrix>         BlockSparseMatrixSolver;          // NOLINT
-typedef TypedLinearSolver<BlockSparseMatrixBase>     BlockSparseMatrixBaseSolver;      // NOLINT
 typedef TypedLinearSolver<CompressedRowSparseMatrix> CompressedRowSparseMatrixSolver;  // NOLINT
 typedef TypedLinearSolver<DenseSparseMatrix>         DenseSparseMatrixSolver;          // NOLINT
 typedef TypedLinearSolver<TripletSparseMatrix>       TripletSparseMatrixSolver;        // NOLINT

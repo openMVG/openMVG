@@ -601,7 +601,9 @@ class GTestFlagSaver {
   bool list_tests_;
   String output_;
   bool print_time_;
-  bool pretty_;
+  // TODO(keir): We removed this to fix the unused private variable issue;
+  // remove this when/if upstream has the patch.
+  //bool pretty_;
   internal::Int32 random_seed_;
   internal::Int32 repeat_;
   bool shuffle_;

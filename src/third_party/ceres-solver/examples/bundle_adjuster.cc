@@ -60,7 +60,6 @@
 
 #include "bal_problem.h"
 #include "ceres/ceres.h"
-#include "ceres/random.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "snavely_reprojection_error.h"
@@ -96,9 +95,6 @@ DEFINE_bool(robustify, false, "Use a robust loss function.");
 DEFINE_double(eta, 1e-2, "Default value for eta. Eta determines the "
              "accuracy of each linear solve of the truncated newton step. "
              "Changing this parameter can affect solve performance.");
-
-DEFINE_bool(use_block_amd, true, "Use a block oriented fill reducing "
-            "ordering.");
 
 DEFINE_int32(num_threads, 1, "Number of threads.");
 DEFINE_int32(num_iterations, 5, "Number of iterations.");
@@ -139,8 +135,6 @@ void SetOrdering(BALProblem* bal_problem, Solver::Options* options) {
   const int num_cameras = bal_problem->num_cameras();
   const int camera_block_size = bal_problem->camera_block_size();
   double* cameras = bal_problem->mutable_cameras();
-
-  options->use_block_amd = FLAGS_use_block_amd;
 
   if (options->use_inner_iterations) {
     if (FLAGS_blocks_for_inner_iterations == "cameras") {
@@ -305,7 +299,7 @@ void SolveProblem(const char* filename) {
   BALProblem bal_problem(filename, FLAGS_use_quaternions);
   Problem problem;
 
-  SetRandomState(FLAGS_random_seed);
+  srand(FLAGS_random_seed);
   bal_problem.Normalize();
   bal_problem.Perturb(FLAGS_rotation_sigma,
                       FLAGS_translation_sigma,

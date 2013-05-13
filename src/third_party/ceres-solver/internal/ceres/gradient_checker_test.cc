@@ -34,11 +34,11 @@
 
 #include <cmath>
 #include <cstdlib>
-#include <glog/logging.h>
 #include <vector>
 
 #include "ceres/cost_function.h"
 #include "ceres/random.h"
+#include "glog/logging.h"
 #include "gtest/gtest.h"
 
 namespace ceres {

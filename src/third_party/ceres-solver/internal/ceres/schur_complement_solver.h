@@ -33,6 +33,7 @@
 
 #include <set>
 #include <utility>
+#include <vector>
 
 #include "ceres/block_random_access_matrix.h"
 #include "ceres/block_sparse_matrix.h"
@@ -47,7 +48,7 @@
 namespace ceres {
 namespace internal {
 
-class BlockSparseMatrixBase;
+class BlockSparseMatrix;
 
 // Base class for Schur complement based linear least squares
 // solvers. It assumes that the input linear system Ax = b can be
@@ -99,7 +100,7 @@ class BlockSparseMatrixBase;
 // set to DENSE_SCHUR and SPARSE_SCHUR
 // respectively. LinearSolver::Options::elimination_groups[0] should be
 // at least 1.
-class SchurComplementSolver : public BlockSparseMatrixBaseSolver {
+class SchurComplementSolver : public BlockSparseMatrixSolver {
  public:
   explicit SchurComplementSolver(const LinearSolver::Options& options)
       : options_(options) {
@@ -110,7 +111,7 @@ class SchurComplementSolver : public BlockSparseMatrixBaseSolver {
   // LinearSolver methods
   virtual ~SchurComplementSolver() {}
   virtual LinearSolver::Summary SolveImpl(
-      BlockSparseMatrixBase* A,
+      BlockSparseMatrix* A,
       const double* b,
       const LinearSolver::PerSolveOptions& per_solve_options,
       double* x);
@@ -150,7 +151,7 @@ class DenseSchurComplementSolver : public SchurComplementSolver {
   CERES_DISALLOW_COPY_AND_ASSIGN(DenseSchurComplementSolver);
 };
 
-
+#if !defined(CERES_NO_SUITESPARSE) || !defined(CERES_NO_CXSPARE)
 // Sparse Cholesky factorization based solver.
 class SparseSchurComplementSolver : public SchurComplementSolver {
  public:
@@ -181,6 +182,7 @@ class SparseSchurComplementSolver : public SchurComplementSolver {
   CERES_DISALLOW_COPY_AND_ASSIGN(SparseSchurComplementSolver);
 };
 
+#endif  // !defined(CERES_NO_SUITESPARSE) || !defined(CERES_NO_CXSPARE)
 }  // namespace internal
 }  // namespace ceres
 

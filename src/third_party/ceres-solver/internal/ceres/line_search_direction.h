@@ -31,6 +31,8 @@
 #ifndef CERES_INTERNAL_LINE_SEARCH_DIRECTION_H_
 #define CERES_INTERNAL_LINE_SEARCH_DIRECTION_H_
 
+#ifndef CERES_NO_LINE_SEARCH_MINIMIZER
+
 #include "ceres/internal/eigen.h"
 #include "ceres/line_search_minimizer.h"
 #include "ceres/types.h"
@@ -56,16 +58,16 @@ class LineSearchDirection {
     int max_lbfgs_rank;
   };
 
-  static LineSearchDirection* Create(Options& options);
+  static LineSearchDirection* Create(const Options& options);
 
   virtual ~LineSearchDirection() {}
   virtual bool NextDirection(const LineSearchMinimizer::State& previous,
                              const LineSearchMinimizer::State& current,
                              Vector* search_direction) = 0;
-
 };
 
 }  // namespace internal
 }  // namespace ceres
 
-#endif // CERES_INTERNAL_LINE_SEARCH_DIRECTION_H_
+#endif  // CERES_NO_LINE_SEARCH_MINIMIZER
+#endif  // CERES_INTERNAL_LINE_SEARCH_DIRECTION_H_

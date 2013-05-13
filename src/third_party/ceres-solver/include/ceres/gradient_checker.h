@@ -37,16 +37,16 @@
 #ifndef CERES_PUBLIC_GRADIENT_CHECKER_H_
 #define CERES_PUBLIC_GRADIENT_CHECKER_H_
 
-#include <algorithm>
 #include <cstddef>
+#include <algorithm>
 #include <vector>
 
-#include <glog/logging.h>
 #include "ceres/internal/eigen.h"
 #include "ceres/internal/fixed_array.h"
 #include "ceres/internal/macros.h"
 #include "ceres/internal/scoped_ptr.h"
 #include "ceres/numeric_diff_cost_function.h"
+#include "glog/logging.h"
 
 namespace ceres {
 
@@ -161,7 +161,8 @@ class GradientChecker {
     results->finite_difference_jacobians.resize(num_blocks);
 
     internal::FixedArray<double*> term_jacobian_pointers(num_blocks);
-    internal::FixedArray<double*> finite_difference_jacobian_pointers(num_blocks);
+    internal::FixedArray<double*>
+        finite_difference_jacobian_pointers(num_blocks);
     for (int i = 0; i < num_blocks; i++) {
       results->term_jacobians[i].resize(num_residuals, block_sizes[i]);
       term_jacobian_pointers[i] = results->term_jacobians[i].data();

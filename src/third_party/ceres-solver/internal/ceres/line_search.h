@@ -33,6 +33,8 @@
 #ifndef CERES_INTERNAL_LINE_SEARCH_H_
 #define CERES_INTERNAL_LINE_SEARCH_H_
 
+#ifndef CERES_NO_LINE_SEARCH_MINIMIZER
+
 #include <glog/logging.h>
 #include <vector>
 #include "ceres/internal/eigen.h"
@@ -137,7 +139,7 @@ class LineSearch {
     // g is the gradient f'(x) at x.
     //
     // f must not be null. The gradient is computed only if g is not null.
-    virtual bool Evaluate(const double x, double* f, double* g) = 0;
+    virtual bool Evaluate(double x, double* f, double* g) = 0;
   };
 
   // Result of the line search.
@@ -209,4 +211,5 @@ class ArmijoLineSearch : public LineSearch {
 }  // namespace internal
 }  // namespace ceres
 
+#endif  // CERES_NO_LINE_SEARCH_MINIMIZER
 #endif  // CERES_INTERNAL_LINE_SEARCH_H_

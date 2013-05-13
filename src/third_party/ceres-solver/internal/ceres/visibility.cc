@@ -28,6 +28,10 @@
 //
 // Author: kushalav@google.com (Avanish Kushal)
 
+#ifndef CERES_NO_SUITESPARSE
+
+#include "ceres/visibility.h"
+
 #include <cmath>
 #include <ctime>
 #include <algorithm>
@@ -137,7 +141,8 @@ Graph<int>* CreateSchurComplementGraph(const vector<set<int> >& visibility) {
     const int count = it->second;
     // Static cast necessary for Windows.
     const double weight = static_cast<double>(count) /
-        (sqrt(static_cast<double>(visibility[camera1].size() * visibility[camera2].size())));
+        (sqrt(static_cast<double>(
+                  visibility[camera1].size() * visibility[camera2].size())));
     graph->AddEdge(camera1, camera2, weight);
   }
 
@@ -147,3 +152,5 @@ Graph<int>* CreateSchurComplementGraph(const vector<set<int> >& visibility) {
 
 }  // namespace internal
 }  // namespace ceres
+
+#endif

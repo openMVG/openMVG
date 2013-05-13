@@ -59,7 +59,7 @@ class Solver {
     // Default constructor that sets up a generic sparse problem.
     Options() {
       minimizer_type = TRUST_REGION;
-      line_search_direction_type = STEEPEST_DESCENT;
+      line_search_direction_type = LBFGS;
       line_search_type = ARMIJO;
       nonlinear_conjugate_gradient_type = FLETCHER_REEVES;
       max_lbfgs_rank = 20;
@@ -95,13 +95,8 @@ class Solver {
 #endif
 
       num_linear_solver_threads = 1;
-
-#if defined(CERES_NO_SUITESPARSE)
-      use_block_amd = false;
-#else
-      use_block_amd = true;
-#endif
       linear_solver_ordering = NULL;
+      use_postordering = false;
       use_inner_iterations = false;
       inner_iteration_ordering = NULL;
       linear_solver_min_num_iterations = 1;
@@ -110,12 +105,6 @@ class Solver {
       jacobi_scaling = true;
       logging_type = PER_MINIMIZER_ITERATION;
       minimizer_progress_to_stdout = false;
-      return_initial_residuals = false;
-      return_initial_gradient = false;
-      return_initial_jacobian = false;
-      return_final_residuals = false;
-      return_final_gradient = false;
-      return_final_jacobian = false;
       lsqp_dump_directory = "/tmp";
       lsqp_dump_format_type = TEXTFILE;
       check_gradients = false;
@@ -362,19 +351,26 @@ class Solver {
     // deallocate the memory when destroyed.
     ParameterBlockOrdering* linear_solver_ordering;
 
-    // By virtue of the modeling layer in Ceres being block oriented,
-    // all the matrices used by Ceres are also block oriented. When
-    // doing sparse direct factorization of these matrices (for
-    // SPARSE_NORMAL_CHOLESKY, SPARSE_SCHUR and ITERATIVE in
-    // conjunction with CLUSTER_TRIDIAGONAL AND CLUSTER_JACOBI
-    // preconditioners), the fill-reducing ordering algorithms can
-    // either be run on the block or the scalar form of these matrices.
-    // Running it on the block form exposes more of the super-nodal
-    // structure of the matrix to the factorization routines. Setting
-    // this parameter to true runs the ordering algorithms in block
-    // form. Currently this option only makes sense with
-    // sparse_linear_algebra_library = SUITE_SPARSE.
-    bool use_block_amd;
+    // Sparse Cholesky factorization algorithms use a fill-reducing
+    // ordering to permute the columns of the Jacobian matrix. There
+    // are two ways of doing this.
+
+    // 1. Compute the Jacobian matrix in some order and then have the
+    //    factorization algorithm permute the columns of the Jacobian.
+
+    // 2. Compute the Jacobian with its columns already permuted.
+
+    // The first option incurs a significant memory penalty. The
+    // factorization algorithm has to make a copy of the permuted
+    // Jacobian matrix, thus Ceres pre-permutes the columns of the
+    // Jacobian matrix and generally speaking, there is no performance
+    // penalty for doing so.
+
+    // In some rare cases, it is worth using a more complicated
+    // reordering algorithm which has slightly better runtime
+    // performance at the expense of an extra copy of the Jacobian
+    // matrix. Setting use_postordering to true enables this tradeoff.
+    bool use_postordering;
 
     // Some non-linear least squares problems have additional
     // structure in the way the parameter blocks interact that it is
@@ -481,14 +477,6 @@ class Solver {
     // is sent to STDOUT.
     bool minimizer_progress_to_stdout;
 
-    bool return_initial_residuals;
-    bool return_initial_gradient;
-    bool return_initial_jacobian;
-
-    bool return_final_residuals;
-    bool return_final_gradient;
-    bool return_final_jacobian;
-
     // List of iterations at which the optimizer should dump the
     // linear least squares problem to disk. Useful for testing and
     // benchmarking. If empty (default), no problems are dumped.
@@ -578,6 +566,8 @@ class Solver {
     string FullReport() const;
 
     // Minimizer summary -------------------------------------------------
+    MinimizerType minimizer_type;
+
     SolverTerminationType termination_type;
 
     // If the solver did not run, or there was a failure, a
@@ -593,54 +583,6 @@ class Solver {
     // were held fixed by the preprocessor because all the parameter
     // blocks that they depend on were fixed.
     double fixed_cost;
-
-    // Vectors of residuals before and after the optimization. The
-    // entries of these vectors are in the order in which
-    // ResidualBlocks were added to the Problem object.
-    //
-    // Whether the residual vectors are populated with values is
-    // controlled by Solver::Options::return_initial_residuals and
-    // Solver::Options::return_final_residuals respectively.
-    vector<double> initial_residuals;
-    vector<double> final_residuals;
-
-    // Gradient vectors, before and after the optimization.  The rows
-    // are in the same order in which the ParameterBlocks were added
-    // to the Problem object.
-    //
-    // NOTE: Since AddResidualBlock adds ParameterBlocks to the
-    // Problem automatically if they do not already exist, if you wish
-    // to have explicit control over the ordering of the vectors, then
-    // use Problem::AddParameterBlock to explicitly add the
-    // ParameterBlocks in the order desired.
-    //
-    // Whether the vectors are populated with values is controlled by
-    // Solver::Options::return_initial_gradient and
-    // Solver::Options::return_final_gradient respectively.
-    vector<double> initial_gradient;
-    vector<double> final_gradient;
-
-    // Jacobian matrices before and after the optimization. The rows
-    // of these matrices are in the same order in which the
-    // ResidualBlocks were added to the Problem object. The columns
-    // are in the same order in which the ParameterBlocks were added
-    // to the Problem object.
-    //
-    // NOTE: Since AddResidualBlock adds ParameterBlocks to the
-    // Problem automatically if they do not already exist, if you wish
-    // to have explicit control over the column ordering of the
-    // matrix, then use Problem::AddParameterBlock to explicitly add
-    // the ParameterBlocks in the order desired.
-    //
-    // The Jacobian matrices are stored as compressed row sparse
-    // matrices. Please see ceres/crs_matrix.h for more details of the
-    // format.
-    //
-    // Whether the Jacboan matrices are populated with values is
-    // controlled by Solver::Options::return_initial_jacobian and
-    // Solver::Options::return_final_jacobian respectively.
-    CRSMatrix initial_jacobian;
-    CRSMatrix final_jacobian;
 
     vector<IterationSummary> iterations;
 
@@ -664,14 +606,20 @@ class Solver {
     // Some total of all time spent inside Ceres when Solve is called.
     double total_time_in_seconds;
 
+    double linear_solver_time_in_seconds;
+    double residual_evaluation_time_in_seconds;
+    double jacobian_evaluation_time_in_seconds;
+
     // Preprocessor summary.
     int num_parameter_blocks;
     int num_parameters;
+    int num_effective_parameters;
     int num_residual_blocks;
     int num_residuals;
 
     int num_parameter_blocks_reduced;
     int num_parameters_reduced;
+    int num_effective_parameters_reduced;
     int num_residual_blocks_reduced;
     int num_residuals_reduced;
 
@@ -687,11 +635,23 @@ class Solver {
     LinearSolverType linear_solver_type_given;
     LinearSolverType linear_solver_type_used;
 
+    vector<int> linear_solver_ordering_given;
+    vector<int> linear_solver_ordering_used;
+
     PreconditionerType preconditioner_type;
 
     TrustRegionStrategyType trust_region_strategy_type;
     DoglegType dogleg_type;
+    bool inner_iterations;
+
     SparseLinearAlgebraLibraryType sparse_linear_algebra_library;
+
+    LineSearchDirectionType line_search_direction_type;
+    LineSearchType line_search_type;
+    int max_lbfgs_rank;
+
+    vector<int> inner_iteration_ordering_given;
+    vector<int> inner_iteration_ordering_used;
   };
 
   // Once a least squares problem has been built, this function takes

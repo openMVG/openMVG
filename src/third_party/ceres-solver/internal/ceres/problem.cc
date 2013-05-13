@@ -32,11 +32,10 @@
 #include "ceres/problem.h"
 
 #include <vector>
+#include "ceres/crs_matrix.h"
 #include "ceres/problem_impl.h"
 
 namespace ceres {
-
-class ResidualBlock;
 
 Problem::Problem() : problem_impl_(new internal::ProblemImpl) {}
 Problem::Problem(const Problem::Options& options)
@@ -141,9 +140,10 @@ ResidualBlockId Problem::AddResidualBlock(
     LossFunction* loss_function,
     double* x0, double* x1, double* x2, double* x3, double* x4, double* x5,
     double* x6, double* x7, double* x8, double* x9) {
-  return problem_impl_->AddResidualBlock(cost_function,
-                                         loss_function,
-                                         x0, x1, x2, x3, x4, x5, x6, x7, x8, x9);
+  return problem_impl_->AddResidualBlock(
+      cost_function,
+      loss_function,
+      x0, x1, x2, x3, x4, x5, x6, x7, x8, x9);
 }
 
 void Problem::AddParameterBlock(double* values, int size) {
@@ -154,6 +154,14 @@ void Problem::AddParameterBlock(double* values,
                                 int size,
                                 LocalParameterization* local_parameterization) {
   problem_impl_->AddParameterBlock(values, size, local_parameterization);
+}
+
+void Problem::RemoveResidualBlock(ResidualBlockId residual_block) {
+  problem_impl_->RemoveResidualBlock(residual_block);
+}
+
+void Problem::RemoveParameterBlock(double* values) {
+  problem_impl_->RemoveParameterBlock(values);
 }
 
 void Problem::SetParameterBlockConstant(double* values) {
@@ -170,6 +178,18 @@ void Problem::SetParameterization(
   problem_impl_->SetParameterization(values, local_parameterization);
 }
 
+bool Problem::Evaluate(const EvaluateOptions& evaluate_options,
+                       double* cost,
+                       vector<double>* residuals,
+                       vector<double>* gradient,
+                       CRSMatrix* jacobian) {
+  return problem_impl_->Evaluate(evaluate_options,
+                                 cost,
+                                 residuals,
+                                 gradient,
+                                 jacobian);
+}
+
 int Problem::NumParameterBlocks() const {
   return problem_impl_->NumParameterBlocks();
 }
@@ -184,6 +204,18 @@ int Problem::NumResidualBlocks() const {
 
 int Problem::NumResiduals() const {
   return problem_impl_->NumResiduals();
+}
+
+int Problem::ParameterBlockSize(double* parameter_block) const {
+  return problem_impl_->ParameterBlockSize(parameter_block);
+};
+
+int Problem::ParameterBlockLocalSize(double* parameter_block) const {
+  return problem_impl_->ParameterBlockLocalSize(parameter_block);
+};
+
+void Problem::GetParameterBlocks(vector<double*>* parameter_blocks) const {
+  problem_impl_->GetParameterBlocks(parameter_blocks);
 }
 
 }  // namespace ceres

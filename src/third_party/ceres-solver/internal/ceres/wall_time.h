@@ -31,12 +31,56 @@
 #ifndef CERES_INTERNAL_WALL_TIME_H_
 #define CERES_INTERNAL_WALL_TIME_H_
 
+#include <map>
+
+#include "ceres/internal/port.h"
+#include "ceres/stringprintf.h"
+#include "glog/logging.h"
+
 namespace ceres {
 namespace internal {
 
-// Returns time, in seconds, from some arbitrary starting point. Has very
-// high precision if OpenMP is available, otherwise only second granularity.
+// Returns time, in seconds, from some arbitrary starting point. If
+// OpenMP is available then the high precision openmp_get_wtime()
+// function is used. Otherwise on unixes, gettimeofday is used. The
+// granularity is in seconds on windows systems.
 double WallTimeInSeconds();
+
+// Log a series of events, recording for each event the time elapsed
+// since the last event and since the creation of the object.
+//
+// The information is output to VLOG(3) upon destruction. A
+// name::Total event is added as the final event right before
+// destruction.
+//
+// Example usage:
+//
+//  void Foo() {
+//    EventLogger event_logger("Foo");
+//    Bar1();
+//    event_logger.AddEvent("Bar1")
+//    Bar2();
+//    event_logger.AddEvent("Bar2")
+//    Bar3();
+//  }
+//
+// Will produce output that looks like
+//
+//  Foo
+//      Bar1:  time1  time1
+//      Bar2:  time2  time1 + time2;
+//     Total:  time3  time1 + time2 + time3;
+class EventLogger {
+ public:
+  explicit EventLogger(const string& logger_name);
+  ~EventLogger();
+  void AddEvent(const string& event_name);
+
+ private:
+  const double start_time_;
+  double last_event_time_;
+  string events_;
+};
 
 }  // namespace internal
 }  // namespace ceres

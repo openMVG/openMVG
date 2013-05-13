@@ -39,7 +39,7 @@ namespace ceres {
 #define CASESTR(x) case x: return #x
 #define STRENUM(x) if (value == #x) { *type = x; return true;}
 
-void UpperCase(string* input) {
+static void UpperCase(string* input) {
   std::transform(input->begin(), input->end(), input->begin(), ::toupper);
 }
 

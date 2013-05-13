@@ -170,7 +170,7 @@ class SchurEliminatorBase {
   // also the caller's responsibilty to ensure that the
   // CompressedRowBlockStructure object passed to this method is the
   // same one (or is equivalent to) the one associated with the
-  // BlockSparseMatrixBase objects below.
+  // BlockSparseMatrix objects below.
   virtual void Init(int num_eliminate_blocks,
                     const CompressedRowBlockStructure* bs) = 0;
 
@@ -185,7 +185,7 @@ class SchurEliminatorBase {
   //
   // Since the Schur complement is a symmetric matrix, only the upper
   // triangular part of the Schur complement is computed.
-  virtual void Eliminate(const BlockSparseMatrixBase* A,
+  virtual void Eliminate(const BlockSparseMatrix* A,
                          const double* b,
                          const double* D,
                          BlockRandomAccessMatrix* lhs,
@@ -194,7 +194,7 @@ class SchurEliminatorBase {
   // Given values for the variables z in the F block of A, solve for
   // the optimal values of the variables y corresponding to the E
   // block in A.
-  virtual void BackSubstitute(const BlockSparseMatrixBase* A,
+  virtual void BackSubstitute(const BlockSparseMatrix* A,
                               const double* b,
                               const double* D,
                               const double* z,
@@ -213,9 +213,9 @@ class SchurEliminatorBase {
 //
 // This implementation is mulithreaded using OpenMP. The level of
 // parallelism is controlled by LinearSolver::Options::num_threads.
-template <int kRowBlockSize = Dynamic,
-          int kEBlockSize = Dynamic,
-          int kFBlockSize = Dynamic >
+template <int kRowBlockSize = Eigen::Dynamic,
+          int kEBlockSize = Eigen::Dynamic,
+          int kFBlockSize = Eigen::Dynamic >
 class SchurEliminator : public SchurEliminatorBase {
  public:
   explicit SchurEliminator(const LinearSolver::Options& options)
@@ -226,12 +226,12 @@ class SchurEliminator : public SchurEliminatorBase {
   virtual ~SchurEliminator();
   virtual void Init(int num_eliminate_blocks,
                     const CompressedRowBlockStructure* bs);
-  virtual void Eliminate(const BlockSparseMatrixBase* A,
+  virtual void Eliminate(const BlockSparseMatrix* A,
                          const double* b,
                          const double* D,
                          BlockRandomAccessMatrix* lhs,
                          double* rhs);
-  virtual void BackSubstitute(const BlockSparseMatrixBase* A,
+  virtual void BackSubstitute(const BlockSparseMatrix* A,
                               const double* b,
                               const double* D,
                               const double* z,
@@ -273,19 +273,19 @@ class SchurEliminator : public SchurEliminatorBase {
 
   void ChunkDiagonalBlockAndGradient(
       const Chunk& chunk,
-      const BlockSparseMatrixBase* A,
+      const BlockSparseMatrix* A,
       const double* b,
       int row_block_counter,
       typename EigenTypes<kEBlockSize, kEBlockSize>::Matrix* eet,
-      typename EigenTypes<kEBlockSize>::Vector* g,
+      double* g,
       double* buffer,
       BlockRandomAccessMatrix* lhs);
 
   void UpdateRhs(const Chunk& chunk,
-                 const BlockSparseMatrixBase* A,
+                 const BlockSparseMatrix* A,
                  const double* b,
                  int row_block_counter,
-                 const Vector& inverse_ete_g,
+                 const double* inverse_ete_g,
                  double* rhs);
 
   void ChunkOuterProduct(const CompressedRowBlockStructure* bs,
@@ -293,18 +293,18 @@ class SchurEliminator : public SchurEliminatorBase {
                          const double* buffer,
                          const BufferLayoutType& buffer_layout,
                          BlockRandomAccessMatrix* lhs);
-  void EBlockRowOuterProduct(const BlockSparseMatrixBase* A,
+  void EBlockRowOuterProduct(const BlockSparseMatrix* A,
                              int row_block_index,
                              BlockRandomAccessMatrix* lhs);
 
 
-  void NoEBlockRowsUpdate(const BlockSparseMatrixBase* A,
+  void NoEBlockRowsUpdate(const BlockSparseMatrix* A,
                              const double* b,
                              int row_block_counter,
                              BlockRandomAccessMatrix* lhs,
                              double* rhs);
 
-  void NoEBlockRowOuterProduct(const BlockSparseMatrixBase* A,
+  void NoEBlockRowOuterProduct(const BlockSparseMatrix* A,
                                int row_block_index,
                                BlockRandomAccessMatrix* lhs);
 
@@ -321,9 +321,25 @@ class SchurEliminator : public SchurEliminatorBase {
   // see the documentation of the Chunk object above.
   vector<Chunk> chunks_;
 
+  // TODO(sameeragarwal): The following two arrays contain per-thread
+  // storage. They should be refactored into a per thread struct.
+
   // Buffer to store the products of the y and z blocks generated
-  // during the elimination phase.
+  // during the elimination phase. buffer_ is of size num_threads *
+  // buffer_size_. Each thread accesses the chunk
+  //
+  //   [thread_id * buffer_size_ , (thread_id + 1) * buffer_size_]
+  //
   scoped_array<double> buffer_;
+
+  // Buffer to store per thread matrix matrix products used by
+  // ChunkOuterProduct. Like buffer_ it is of size num_threads *
+  // buffer_size_. Each thread accesses the chunk
+  //
+  //   [thread_id * buffer_size_ , (thread_id + 1) * buffer_size_ -1]
+  //
+  scoped_array<double> chunk_outer_product_buffer_;
+
   int buffer_size_;
   int num_threads_;
   int uneliminated_row_begins_;
