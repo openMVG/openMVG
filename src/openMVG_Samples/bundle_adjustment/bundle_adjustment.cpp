@@ -8,6 +8,8 @@
 
 // An example of a minimal, self-contained bundle adjuster using Ceres
 // It refines Focal, Rotation and Translation of the cameras.
+// => A synthetic scene is used:
+//    a random noise between [-.5,.5] is added on observed data points
 
 #include <cmath>
 #include <cstdio>
@@ -60,14 +62,6 @@ struct PinholeReprojectionError {
                   const T* const point,
                   T* residuals) const {
 
-                    std::cout << "\n Camera: "
-                    << camera[0] << " "
-                    << camera[1] << " "
-                    << camera[2] << " "
-                    << camera[3] << " "
-                    << camera[4] << " "
-                    << camera[5] << " "
-                    << camera[6] << "\n";
     // camera[0,1,2] are the angle-axis rotation.
     T p[3];
     ceres::AngleAxisRotatePoint(camera, point, p);
@@ -86,11 +80,6 @@ struct PinholeReprojectionError {
     T predicted_x = focal * xp;
     T predicted_y = focal * yp;
 
-    std::cout << predicted_x << "\t" << observed_x << std::endl;
-    std::cout << predicted_y << "\t" << observed_y << std::endl << std::endl;
-
-    //unsigned char a = 2;
-    //std::cin >> a;
     // The error is the difference between the predicted and observed position.
     residuals[0] = predicted_x - T(observed_x);
     residuals[1] = predicted_y - T(observed_y);
@@ -98,13 +87,11 @@ struct PinholeReprojectionError {
     return true;
   }
 
-  double observed_x;
-  double observed_y;
+  double observed_x,  observed_y; // Image point observation.
 };
 
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
-
 
   int nviews = 3;
   int npoints = 6;
@@ -132,13 +119,14 @@ int main(int argc, char** argv) {
     for (int j = 0; j < nviews; ++j) {
       ba_problem.camera_index_.push_back(j);
       ba_problem.point_index_.push_back(i);
-      Vec2 pt = d._x[j].col(i);
-      ba_problem.observations_.push_back( pt(0) - ppx );
-      ba_problem.observations_.push_back( pt(1) - ppy );
+      const Vec2 & pt = d._x[j].col(i);
+      // => random noise between [-.5,.5] is added
+      ba_problem.observations_.push_back( pt(0) - ppx + rand()/RAND_MAX - .5);
+      ba_problem.observations_.push_back( pt(1) - ppy + rand()/RAND_MAX - .5);
     }
   }
 
-  // camera parameters, 3D points
+  // Add camera parameters (R, t, focal)
   for (int j = 0; j < nviews; ++j) {
     // Rotation matrix to angle axis
     std::vector<double> angleAxis(3);
@@ -155,6 +143,7 @@ int main(int argc, char** argv) {
     ba_problem.parameters_.push_back(focal);
   }
 
+  // Add 3D points coordinates parameters
   for (int i = 0; i < npoints; ++i) {
     Vec3 pt3D = d._X.col(i);
     double * ptr3D = ba_problem.mutable_points()+i*3;
@@ -198,11 +187,20 @@ int main(int argc, char** argv) {
       // Use dense solving
       options.linear_solver_type = ceres::DENSE_SCHUR;
     }
-  options.minimizer_progress_to_stdout = true;
+  options.minimizer_progress_to_stdout = false;
+  options.logging_type = ceres::SILENT;
+#ifdef USE_OPENMP
+  options.num_threads = omp_get_num_threads();
+#endif // USE_OPENMP
 
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
   std::cout << summary.FullReport() << "\n";
+
+  std::cout << std::endl
+    << " Initial RMSE : " << std::sqrt( summary.initial_cost / (ba_problem.num_observations_*2.)) << "\n"
+    << " Final RMSE : " << std::sqrt( summary.final_cost / (ba_problem.num_observations_*2.)) << "\n"
+    << std::endl;
 
   return 0;
 }
