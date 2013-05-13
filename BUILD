@@ -12,6 +12,11 @@ Required tools:
 
 Getting the sources:
 $ git clone --recursive https://github.com/openMVG/openMVG.git
+or
+$ git clone https://github.com/openMVG/openMVG.git
+$ cd openMVG
+$ git submodule init
+$ git submodule update
 
 Depending of your platform :
 
