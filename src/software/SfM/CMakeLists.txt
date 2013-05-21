@@ -49,5 +49,11 @@ ADD_EXECUTABLE(openMVG_main_exportTracks main_exportTracks.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_exportTracks
                      ${LIBS})
 
+# - Export a computed SfM_Ouput scene to pmvs format
+#
+ADD_EXECUTABLE(openMVG_main_openMVG2PMVS main_openMVG2PMVS.cpp ../SfMViewer/Ply.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_openMVG2PMVS
+                     ${LIBS})
+
 
 
