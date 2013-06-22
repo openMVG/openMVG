@@ -102,6 +102,7 @@
 #include <fstream>
 #include <set>
 #include <sstream>
+#include <time.h>
 #include <vector>
 
 // Log severity level constants.
