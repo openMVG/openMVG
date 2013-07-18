@@ -872,11 +872,11 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
     for (std::set<size_t>::const_iterator iterI = _reconstructorData.set_imagedId.begin();
       iterI != _reconstructorData.set_imagedId.end(); ++iterI)
     {
-      size_t indexI = *iterI;
+      const size_t & indexI = *iterI;
       if (indexI == imageIndex) {  continue; }
-      size_t I = min(imageIndex, indexI);
-      size_t J = max(imageIndex, indexI);
-
+      size_t I = std::min(imageIndex, indexI);
+      size_t J = std::max(imageIndex, indexI);
+      
       // Compute possible content (match between indexI, indexJ)
       map_tracksCommon.clear(); set_imageIndex.clear();
       set_imageIndex.insert(I); set_imageIndex.insert(J);
