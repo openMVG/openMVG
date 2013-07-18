@@ -1080,9 +1080,12 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_col
 {
   // Colorize each track
   //  Start with the most representative image
-  //    and iterate
+  //    and iterate to provide a color to each 3D point
   {
-    vec_color.reserve(_map_reconstructed.size());
+    vec_color.resize(_map_reconstructed.size());
+    // The track list that will be colored (point removed during the process)
+    STLMAPTracks mapTrackToColorRef(_map_reconstructed);
+    STLMAPTracks::iterator iterTBegin = mapTrackToColorRef.begin();
     STLMAPTracks mapTrackToColor(_map_reconstructed);
     while( !mapTrackToColor.empty() )
     {
@@ -1136,13 +1139,15 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_col
         const size_t trackId = iterT->first;
         const tracks::submapTrack & track = mapTrackToColor[trackId];
         tracks::submapTrack::const_iterator iterF = track.find(indexImage);
+
         if (iterF != track.end())
         {
           // Color the track
           size_t featId = iterF->second;
           const SIOPointFeature & feat = _map_feats[indexImage][featId];
           RGBColor color = image(feat.y(), feat.x());
-          vec_color.push_back(Vec3(color.r(), color.g(), color.b()));
+
+          vec_color[std::distance ( iterTBegin, mapTrackToColorRef.find(trackId) )] = Vec3(color.r(), color.g(), color.b());
           set_toRemove.insert(trackId);
         }
       }
@@ -1151,87 +1156,6 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_col
         iter != set_toRemove.end(); ++iter)
       {
         mapTrackToColor.erase(*iter);
-      }
-    }
-  }
-  return;
-  // In order to occupy less memory as possible, start from the image that have the more track
-  {
-    std::map<size_t, size_t> map_IndexCardinal; // ImageIndex, Cardinal
-    for (STLMAPTracks::const_iterator iterT = _map_reconstructed.begin();
-     iterT != _map_reconstructed.end(); ++iterT)
-    {
-      const size_t trackId = iterT->first;
-      const tracks::submapTrack & track = _map_reconstructed[trackId];
-      for( tracks::submapTrack::const_iterator iterTrack = track.begin();
-        iterTrack != track.end(); ++iterTrack)
-      {
-        size_t imageId = iterTrack->first;
-        size_t featId = iterTrack->second;
-        if (map_IndexCardinal.find(imageId) == map_IndexCardinal.end())
-          map_IndexCardinal[imageId] = 1;
-        else
-        ++map_IndexCardinal[imageId];
-      }
-    }
-
-    // Count the image that is the most represented
-    std::vector<size_t> vec_cardinal;
-    std::transform(map_IndexCardinal.begin(),
-      map_IndexCardinal.end(),
-      std::back_inserter(vec_cardinal),
-      RetrieveValue());
-    using namespace indexed_sort;
-    std::vector< sort_index_packet_descend< size_t, size_t> > packet_vec(vec_cardinal.size());
-    sort_index_helper(packet_vec, &vec_cardinal[0]);
-
-    //First index is the image with the most matches
-    size_t index = packet_vec[0].index;
-    std::cout << "\n USE IMAGE INDEX: " << index << std::endl;
-    Image<RGBColor> image;
-    ReadImage(
-      stlplus::create_filespec(
-        _sImagePath,
-        stlplus::basename_part(_vec_fileNames[index]),
-        stlplus::extension_part(_vec_fileNames[index])).c_str(), &image);
-  }
-  return;
-  {
-    // Load Images
-    std::vector< Image<RGBColor> > vec_Images;
-    Image<RGBColor> image;
-    for (size_t i=0; i < _vec_fileNames.size(); ++i)
-    {
-      ReadImage(
-        stlplus::create_filespec(
-          _sImagePath,
-          stlplus::basename_part(_vec_fileNames[i]),
-          stlplus::extension_part(_vec_fileNames[i])).c_str(), &image);
-      vec_Images.push_back( image );
-    }
-
-    std::set<size_t> set_toColorize = _reconstructorData.set_trackId;
-
-    while (!set_toColorize.empty())
-    {
-      STLMAPTracks::const_iterator iterT = _map_reconstructed.find(*(set_toColorize.begin()));
-      if (iterT != _map_reconstructed.end())
-      {
-        size_t trackId = iterT->first;
-
-        Vec3 col(255,255,255);
-        if (!iterT->second.empty())
-        {
-          size_t indexImage = iterT->second.begin()->first;
-          size_t index = iterT->second.begin()->second;
-
-          const SIOPointFeature & feat = _map_feats[indexImage][index];
-
-          RGBColor color = vec_Images[indexImage](feat.y(), feat.x());
-          col = Vec3(color.r(), color.g(), color.b());
-        }
-        vec_color.push_back(col);
-        set_toColorize.erase(trackId);
       }
     }
   }
