@@ -49,7 +49,7 @@ using namespace std;
 * \param samples       num_samples of numbers in [0, total_samples) is placed
 *                      here on return.
 */
-void UniformSample(
+static void UniformSample(
   size_t num_samples,
   size_t total_samples,
   std::vector<size_t> *samples)
