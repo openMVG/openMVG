@@ -83,7 +83,7 @@ LIST(APPEND SEARCH_HEADERS /usr/local/homebrew/include) # Mac OS X
 LIST(APPEND SEARCH_HEADERS /opt/local/include)
 
 # Locations to search for Eigen
-SET(EIGEN_SEARCH_HEADERS ../eigen) # use the Eigen openMVG code
+SET(EIGEN_SEARCH_HEADERS ../eigen) # OpenMVG
 # SET(EIGEN_SEARCH_HEADERS ${SEARCH_HEADERS})
 # LIST(APPEND EIGEN_SEARCH_HEADERS /usr/include/eigen3) # Ubuntu 10.04's default location.
 # LIST(APPEND EIGEN_SEARCH_HEADERS /usr/local/include/eigen3)
@@ -104,6 +104,7 @@ LIST(APPEND SUITESPARSE_SEARCH_HEADERS /opt/local/include/ufsparse) # Mac OS X
 SET(CXSPARSE_SEARCH_LIBS ${SEARCH_LIBS})
 SET(CXSPARSE_SEARCH_HEADERS ${SEARCH_HEADERS})
 LIST(APPEND CXSPARSE_SEARCH_HEADERS /usr/include/suitesparse) # Ubuntu
+LIST(APPEND CXSPARSE_SEARCH_HEADERS ../cxsparse/Include) # OpenMVG
 
 IF ((NOT DEFINED SUITESPARSE) OR (DEFINED SUITESPARSE AND SUITESPARSE))
 # Check for SuiteSparse dependencies
