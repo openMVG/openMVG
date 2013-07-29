@@ -2,10 +2,6 @@
 // for linear algebra.
 //
 // Copyright (C) 2008-2009 Gael Guennebaud <gael.guennebaud@inria.fr>
-//
-// This Source Code Form is subject to the terms of the Mozilla
-// Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /* NOTE The class IterationController has been adapted from the iteration
  *      class of the GMM++ and ITL libraries.
@@ -129,7 +125,8 @@ class IterationController
     bool converged() const { return m_res <= m_rhsn * m_resmax; }
     bool converged(double nr)
     {
-      m_res = internal::abs(nr); 
+      using std::abs;
+      m_res = abs(nr); 
       m_resminreach = (std::min)(m_resminreach, m_res);
       return converged();
     }

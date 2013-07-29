@@ -18,7 +18,7 @@
 
 namespace Eigen {
 
-/** \ingroup Unsupported_modules
+/**
   * \defgroup BVH_Module BVH module
   * \brief This module provides generic bounding volume hierarchy algorithms
   * and reference tree implementations.

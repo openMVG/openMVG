@@ -28,6 +28,7 @@ struct kiss_cpx_fft
   inline
     void make_twiddles(int nfft,bool inverse)
     {
+      using std::acos;
       m_inverse = inverse;
       m_twiddles.resize(nfft);
       Scalar phinc =  (inverse?2:-2)* acos( (Scalar) -1)  / nfft;
@@ -399,6 +400,7 @@ struct kissfft_impl
   inline
     Complex * real_twiddles(int ncfft2)
     {
+      using std::acos;
       std::vector<Complex> & twidref = m_realTwiddles[ncfft2];// creates new if not there
       if ( (int)twidref.size() != ncfft2 ) {
         twidref.resize(ncfft2);

@@ -189,7 +189,7 @@ struct minimizer_helper1
   Object2 stored;
   Minimizer &minimizer;
 private:
-  minimizer_helper1& operator=(const minimizer_helper1&) {}
+  minimizer_helper1& operator=(const minimizer_helper1&);
 };
 
 template<typename Volume2, typename Object2, typename Object1, typename Minimizer>

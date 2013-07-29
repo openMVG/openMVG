@@ -21,8 +21,8 @@ namespace Eigen {
   *
   * It supports the following list of global math function:
   *  - std::abs, std::sqrt, std::pow, std::exp, std::log, std::sin, std::cos,
-  *  - internal::abs, internal::sqrt, internal::pow, internal::exp, internal::log, internal::sin, internal::cos,
-  *  - internal::conj, internal::real, internal::imag, internal::abs2.
+  *  - internal::abs, internal::sqrt, numext::pow, internal::exp, internal::log, internal::sin, internal::cos,
+  *  - internal::conj, internal::real, internal::imag, numext::abs2.
   *
   * AutoDiffScalar can be used as the scalar type of an Eigen::Matrix object. However,
   * in that case, the expression template mechanism only occurs at the top Matrix level,

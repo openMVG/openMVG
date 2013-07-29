@@ -116,7 +116,7 @@ inline bool getMarketHeader(const std::string& filename, int& sym, bool& iscompl
   
   std::string line; 
   // The matrix header is always the first line in the file 
-  std::getline(in, line); assert(in.good());
+  std::getline(in, line); eigen_assert(in.good());
   
   std::stringstream fmtline(line); 
   std::string substr[5];
@@ -200,11 +200,11 @@ bool loadMarketVector(VectorType& vec, const std::string& filename)
   int n(0), col(0); 
   do 
   { // Skip comments
-    std::getline(in, line); assert(in.good());
+    std::getline(in, line); eigen_assert(in.good());
   } while (line[0] == '%');
   std::istringstream newline(line);
   newline  >> n >> col; 
-  assert(n>0 && col>0);
+  eigen_assert(n>0 && col>0);
   vec.resize(n);
   int i = 0; 
   Scalar value; 

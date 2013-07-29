@@ -12,7 +12,7 @@
 
 namespace Eigen {
 
-/** \ingroup Unsupported_modules
+/**
   * \defgroup AutoDiff_Module Auto Diff module
   *
   * This module features forward automatic differentation via a simple

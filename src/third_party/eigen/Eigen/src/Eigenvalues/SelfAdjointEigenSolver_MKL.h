@@ -56,7 +56,7 @@ SelfAdjointEigenSolver<Matrix<EIGTYPE, Dynamic, Dynamic, EIGCOLROW> >::compute(c
 \
   if(n==1) \
   { \
-    m_eivalues.coeffRef(0,0) = internal::real(matrix.coeff(0,0)); \
+    m_eivalues.coeffRef(0,0) = numext::real(matrix.coeff(0,0)); \
     if(computeEigenvectors) m_eivec.setOnes(n,n); \
     m_info = Success; \
     m_isInitialized = true; \

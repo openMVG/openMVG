@@ -12,6 +12,12 @@
 
 namespace Eigen { 
 
+#if 0
+
+// NOTE Have to be reimplemented as a specialization of BlockImpl< DynamicSparseMatrix<_Scalar, _Options, _Index>, ... >
+// See SparseBlock.h for an example
+
+
 /***************************************************************************
 * specialisation for DynamicSparseMatrix
 ***************************************************************************/
@@ -108,6 +114,8 @@ class SparseInnerVectorSet<DynamicSparseMatrix<_Scalar, _Options, _Index>, Size>
     const internal::variable_if_dynamic<Index, Size> m_outerSize;
 
 };
+
+#endif
 
 } // end namespace Eigen
 

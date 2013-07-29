@@ -47,7 +47,7 @@ T poly_eval( const Polynomials& poly, const T& x )
 {
   typedef typename NumTraits<T>::Real Real;
 
-  if( internal::abs2( x ) <= Real(1) ){
+  if( numext::abs2( x ) <= Real(1) ){
     return poly_eval_horner( poly, x ); }
   else
   {
@@ -74,15 +74,16 @@ template <typename Polynomial>
 inline
 typename NumTraits<typename Polynomial::Scalar>::Real cauchy_max_bound( const Polynomial& poly )
 {
+  using std::abs;
   typedef typename Polynomial::Scalar Scalar;
   typedef typename NumTraits<Scalar>::Real Real;
 
-  assert( Scalar(0) != poly[poly.size()-1] );
+  eigen_assert( Scalar(0) != poly[poly.size()-1] );
   const Scalar inv_leading_coeff = Scalar(1)/poly[poly.size()-1];
   Real cb(0);
 
   for( DenseIndex i=0; i<poly.size()-1; ++i ){
-    cb += internal::abs(poly[i]*inv_leading_coeff); }
+    cb += abs(poly[i]*inv_leading_coeff); }
   return cb + Real(1);
 }
 
@@ -96,6 +97,7 @@ template <typename Polynomial>
 inline
 typename NumTraits<typename Polynomial::Scalar>::Real cauchy_min_bound( const Polynomial& poly )
 {
+  using std::abs;
   typedef typename Polynomial::Scalar Scalar;
   typedef typename NumTraits<Scalar>::Real Real;
 
@@ -107,7 +109,7 @@ typename NumTraits<typename Polynomial::Scalar>::Real cauchy_min_bound( const Po
   const Scalar inv_min_coeff = Scalar(1)/poly[i];
   Real cb(1);
   for( DenseIndex j=i+1; j<poly.size(); ++j ){
-    cb += internal::abs(poly[j]*inv_min_coeff); }
+    cb += abs(poly[j]*inv_min_coeff); }
   return Real(1)/cb;
 }
 

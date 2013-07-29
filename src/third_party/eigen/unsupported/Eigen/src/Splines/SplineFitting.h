@@ -40,8 +40,6 @@ namespace Eigen
   template <typename KnotVectorType>
   void KnotAveraging(const KnotVectorType& parameters, DenseIndex degree, KnotVectorType& knots)
   {
-    typedef typename KnotVectorType::Scalar Scalar;
-
     knots.resize(parameters.size()+degree+1);      
 
     for (DenseIndex j=1; j<parameters.size()-degree; ++j)
@@ -118,7 +116,6 @@ namespace Eigen
   SplineType SplineFitting<SplineType>::Interpolate(const PointArrayType& pts, DenseIndex degree, const KnotVectorType& knot_parameters)
   {
     typedef typename SplineType::KnotVectorType::Scalar Scalar;      
-    typedef typename SplineType::BasisVectorType BasisVectorType;
     typedef typename SplineType::ControlPointVectorType ControlPointVectorType;      
 
     typedef Matrix<Scalar,Dynamic,Dynamic> MatrixType;

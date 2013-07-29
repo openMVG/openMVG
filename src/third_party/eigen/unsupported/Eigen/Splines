@@ -12,7 +12,7 @@
 
 namespace Eigen 
 {
-/** \ingroup Unsupported_modules
+/**
   * \defgroup Splines_Module Spline and spline fitting module
   *
   * This module provides a simple multi-dimensional spline class while

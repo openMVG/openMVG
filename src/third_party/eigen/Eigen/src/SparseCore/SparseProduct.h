@@ -99,15 +99,16 @@ class SparseSparseProduct : internal::no_assignment_operator,
     }
 
     template<typename Lhs, typename Rhs>
-    EIGEN_STRONG_INLINE SparseSparseProduct(const Lhs& lhs, const Rhs& rhs, RealScalar tolerance)
+    EIGEN_STRONG_INLINE SparseSparseProduct(const Lhs& lhs, const Rhs& rhs, const RealScalar& tolerance)
       : m_lhs(lhs), m_rhs(rhs), m_tolerance(tolerance), m_conservative(false)
     {
       init();
     }
 
-    SparseSparseProduct pruned(Scalar reference = 0, RealScalar epsilon = NumTraits<RealScalar>::dummy_precision()) const
+    SparseSparseProduct pruned(const Scalar& reference = 0, const RealScalar& epsilon = NumTraits<RealScalar>::dummy_precision()) const
     {
-      return SparseSparseProduct(m_lhs,m_rhs,internal::abs(reference)*epsilon);
+      using std::abs;
+      return SparseSparseProduct(m_lhs,m_rhs,abs(reference)*epsilon);
     }
 
     template<typename Dest>

@@ -1,3 +1,11 @@
+// This file is part of Eigen, a lightweight C++ template library
+// for linear algebra.
+//
+//
+// This Source Code Form is subject to the terms of the Mozilla
+// Public License v. 2.0. If a copy of the MPL was not distributed
+// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #ifndef EIGEN_POLYNOMIALS_MODULE_H
 #define EIGEN_POLYNOMIALS_MODULE_H
 
@@ -16,11 +24,8 @@
   #undef EIGEN_HIDE_HEAVY_CODE
 #endif
 
-/** \ingroup Unsupported_modules
+/**
   * \defgroup Polynomials_Module Polynomials module
-  *
-  *
-  *
   * \brief This module provides a QR based polynomial solver.
 	*
   * To use this module, add

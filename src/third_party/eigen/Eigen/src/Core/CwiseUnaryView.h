@@ -56,8 +56,7 @@ template<typename ViewOp, typename MatrixType, typename StorageKind>
 class CwiseUnaryViewImpl;
 
 template<typename ViewOp, typename MatrixType>
-class CwiseUnaryView : internal::no_assignment_operator,
-  public CwiseUnaryViewImpl<ViewOp, MatrixType, typename internal::traits<MatrixType>::StorageKind>
+class CwiseUnaryView : public CwiseUnaryViewImpl<ViewOp, MatrixType, typename internal::traits<MatrixType>::StorageKind>
 {
   public:
 
@@ -99,6 +98,10 @@ class CwiseUnaryViewImpl<ViewOp,MatrixType,Dense>
     typedef typename internal::dense_xpr_base< CwiseUnaryView<ViewOp, MatrixType> >::type Base;
 
     EIGEN_DENSE_PUBLIC_INTERFACE(Derived)
+    EIGEN_INHERIT_ASSIGNMENT_OPERATORS(CwiseUnaryViewImpl)
+    
+    inline Scalar* data() { return &coeffRef(0); }
+    inline const Scalar* data() const { return &coeff(0); }
 
     inline Index innerStride() const
     {

@@ -16,6 +16,8 @@
 using namespace openMVG;
 using namespace openMVG::robust;
 
+static const double dExpectedPrecision = 1e-9;
+
 template<typename Kernel>
 void EvalInlier(const Kernel & kernel, const typename Kernel::Model & model,
    double dThreshold, std::vector<size_t> * vec_inliers)
@@ -42,40 +44,16 @@ TEST(LMedsLineFitter, OutlierFree) {
   // Check the best model that fit the most of the data
   //  in a robust framework (LMeds).
   Vec2 model;
-  double dThreshold;
+  double dThreshold = std::numeric_limits<double>::infinity();
   double dBestMedian = LeastMedianOfSquares(kernel, &model, &dThreshold);
-  EXPECT_NEAR(2.0, model[1], 1e-9);
-  EXPECT_NEAR(1.0, model[0], 1e-9);
-  EXPECT_NEAR(0.0, dBestMedian, 1e-9);
-  EXPECT_NEAR(0.0, dThreshold, 1e-9);
-
+  EXPECT_NEAR(2.0, model[1], dExpectedPrecision);
+  EXPECT_NEAR(1.0, model[0], dExpectedPrecision);
+  EXPECT_NEAR(0.0, dBestMedian, dExpectedPrecision);
+  EXPECT_NEAR(0.0, dThreshold, dExpectedPrecision);
   //Compute which point are inliers (error below dThreshold)
   std::vector<size_t> vec_inliers;
-  EvalInlier(kernel, model, dThreshold, &vec_inliers);
+  EvalInlier(kernel, model, dExpectedPrecision, &vec_inliers);
   CHECK_EQUAL(5, vec_inliers.size());
-}
-
-// Test without getting back the model
-TEST(LMedsLineFitter, OutlierFree_DoNotGetBackModel) {
-
-  Mat2X xy(2, 5);
-  // y = 2x + 1
-  xy << 1, 2, 3, 4,  5,
-        3, 5, 7, 9, 11;
-
-  LineKernel kernel(xy);
-  Vec2 model;
-  double dThreshold;
-  double dBestMedian = LeastMedianOfSquares(kernel, &model, &dThreshold);
-  EXPECT_NEAR(2.0, model[1], 1e-9);
-  EXPECT_NEAR(1.0, model[0], 1e-9);
-  EXPECT_NEAR(0.0, dBestMedian, 1e-9);
-  EXPECT_NEAR(0.0, dThreshold, 1e-9);
-  //Compute which point are inliers (error below dThreshold)
-  std::vector<size_t> vec_inliers;
-  EvalInlier(kernel, model, dThreshold, &vec_inliers);
-  CHECK_EQUAL(5, vec_inliers.size());
-
 }
 
 // Test efficiency of LMeds to find (inlier/outlier) in contamined data
@@ -89,15 +67,15 @@ TEST(LMedsLineFitter, OneOutlier) {
   LineKernel kernel(xy);
 
   Vec2 model;
-  double dThreshold;
+  double dThreshold = std::numeric_limits<double>::infinity();
   double dBestMedian = LeastMedianOfSquares(kernel, &model, &dThreshold);
-  EXPECT_NEAR(2.0, model[1], 1e-9);
-  EXPECT_NEAR(1.0, model[0], 1e-9);
-  EXPECT_NEAR(0.0, dBestMedian, 1e-9);
-  EXPECT_NEAR(0.0, dThreshold, 1e-9);
+  EXPECT_NEAR(2.0, model[1], dExpectedPrecision);
+  EXPECT_NEAR(1.0, model[0], dExpectedPrecision);
+  EXPECT_NEAR(0.0, dBestMedian, dExpectedPrecision);
+  EXPECT_NEAR(0.0, dThreshold, dExpectedPrecision);
   //Compute which point are inliers (error below dThreshold)
   std::vector<size_t> vec_inliers;
-  EvalInlier(kernel, model, dThreshold, &vec_inliers);
+  EvalInlier(kernel, model, dExpectedPrecision, &vec_inliers);
   CHECK_EQUAL(5, vec_inliers.size());
 }
 
@@ -112,7 +90,7 @@ TEST(LMedsLineFitter, TooFewPoints) {
   LineKernel kernel(xy);
 
   Vec2 model;
-  double dThreshold;
+  double dThreshold = std::numeric_limits<double>::infinity();
   double dBestMedian = LeastMedianOfSquares(kernel, &model, &dThreshold);
   //No inliers
   CHECK_EQUAL( dBestMedian, std::numeric_limits<double>::max());
@@ -151,10 +129,10 @@ TEST(LMedsLineFitter, RealisticCase) {
   LineKernel kernel(xy);
 
   Vec2 model;
-  double dThreshold;
+  double dThreshold = std::numeric_limits<double>::infinity();
   double dBestMedian = LeastMedianOfSquares(kernel, &model, &dThreshold);
-  EXPECT_NEAR(-2.0, model[0], 1e-9);
-  EXPECT_NEAR(6.3, model[1], 1e-9);
+  EXPECT_NEAR(-2.0, model[0], dExpectedPrecision);
+  EXPECT_NEAR(6.3, model[1], dExpectedPrecision);
   //Compute which point are inliers (error below dThreshold)
   std::vector<size_t> vec_inliers;
   EvalInlier(kernel, model, dThreshold, &vec_inliers);

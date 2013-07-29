@@ -7,38 +7,7 @@
 // Public License v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "main.h"
-#include <unsupported/Eigen/MatrixFunctions>
-
-template <typename MatrixType, int IsComplex = NumTraits<typename internal::traits<MatrixType>::Scalar>::IsComplex>
-struct generateTestMatrix;
-
-// for real matrices, make sure none of the eigenvalues are negative
-template <typename MatrixType>
-struct generateTestMatrix<MatrixType,0>
-{
-  static void run(MatrixType& result, typename MatrixType::Index size)
-  {
-    MatrixType mat = MatrixType::Random(size, size);
-    EigenSolver<MatrixType> es(mat);
-    typename EigenSolver<MatrixType>::EigenvalueType eivals = es.eigenvalues();
-    for (typename MatrixType::Index i = 0; i < size; ++i) {
-      if (eivals(i).imag() == 0 && eivals(i).real() < 0)
-	eivals(i) = -eivals(i);
-    }
-    result = (es.eigenvectors() * eivals.asDiagonal() * es.eigenvectors().inverse()).real();
-  }
-};
-
-// for complex matrices, any matrix is fine
-template <typename MatrixType>
-struct generateTestMatrix<MatrixType,1>
-{
-  static void run(MatrixType& result, typename MatrixType::Index size)
-  {
-    result = MatrixType::Random(size, size);
-  }
-};
+#include "matrix_functions.h"
 
 template<typename MatrixType>
 void testMatrixSqrt(const MatrixType& m)

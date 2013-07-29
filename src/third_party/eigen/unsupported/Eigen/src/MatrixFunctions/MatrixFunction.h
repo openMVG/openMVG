@@ -209,7 +209,7 @@ void MatrixFunction<MatrixType,AtomicType,1>::compute(ResultType& result)
   permuteSchur();
   computeBlockAtomic();
   computeOffDiagonal();
-  result = m_U * m_fT * m_U.adjoint();
+  result = m_U * (m_fT.template triangularView<Upper>() * m_U.adjoint());
 }
 
 /** \brief Store the Schur decomposition of #m_A in #m_T and #m_U */
@@ -235,6 +235,7 @@ void MatrixFunction<MatrixType,AtomicType,1>::computeSchurDecomposition()
 template <typename MatrixType, typename AtomicType>
 void MatrixFunction<MatrixType,AtomicType,1>::partitionEigenvalues()
 {
+  using std::abs;
   const Index rows = m_T.rows();
   VectorType diag = m_T.diagonal(); // contains eigenvalues of A
 
@@ -251,14 +252,14 @@ void MatrixFunction<MatrixType,AtomicType,1>::partitionEigenvalues()
 
     // Look for other element to add to the set
     for (Index j=i+1; j<rows; ++j) {
-      if (internal::abs(diag(j) - diag(i)) <= separation() && std::find(qi->begin(), qi->end(), diag(j)) == qi->end()) {
-	typename ListOfClusters::iterator qj = findCluster(diag(j));
-	if (qj == m_clusters.end()) {
-	  qi->push_back(diag(j));
-	} else {
-	  qi->insert(qi->end(), qj->begin(), qj->end());
-	  m_clusters.erase(qj);
-	}
+      if (abs(diag(j) - diag(i)) <= separation() && std::find(qi->begin(), qi->end(), diag(j)) == qi->end()) {
+        typename ListOfClusters::iterator qj = findCluster(diag(j));
+        if (qj == m_clusters.end()) {
+          qi->push_back(diag(j));
+        } else {
+          qi->insert(qi->end(), qj->begin(), qj->end());
+          m_clusters.erase(qj);
+        }
       }
     }
   }

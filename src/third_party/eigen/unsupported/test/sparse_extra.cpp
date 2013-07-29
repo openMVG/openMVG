@@ -17,7 +17,6 @@
 template<typename SetterType,typename DenseType, typename Scalar, int Options>
 bool test_random_setter(SparseMatrix<Scalar,Options>& sm, const DenseType& ref, const std::vector<Vector2i>& nonzeroCoords)
 {
-  typedef SparseMatrix<Scalar,Options> SparseType;
   {
     sm.setZero();
     SetterType w(sm);

@@ -1,5 +1,5 @@
 // This file is part of Eigen, a lightweight C++ template library
-// for linear algebra. Eigen itself is part of the KDE project.
+// for linear algebra.
 //
 // Copyright (C) 2008 Gael Guennebaud <g.gael@free.fr>
 //
@@ -315,7 +315,7 @@ void SVD<MatrixType>::compute(const MatrixType& matrix)
         e[p-2] = 0.0;
         for (j = p-2; j >= k; --j)
         {
-          Scalar t(internal::hypot(m_sigma[j],f));
+          Scalar t(numext::hypot(m_sigma[j],f));
           Scalar cs(m_sigma[j]/t);
           Scalar sn(f/t);
           m_sigma[j] = t;
@@ -344,7 +344,7 @@ void SVD<MatrixType>::compute(const MatrixType& matrix)
         e[k-1] = 0.0;
         for (j = k; j < p; ++j)
         {
-          Scalar t(internal::hypot(m_sigma[j],f));
+          Scalar t(numext::hypot(m_sigma[j],f));
           Scalar cs( m_sigma[j]/t);
           Scalar sn(f/t);
           m_sigma[j] = t;
@@ -392,7 +392,7 @@ void SVD<MatrixType>::compute(const MatrixType& matrix)
 
         for (j = k; j < p-1; ++j)
         {
-          Scalar t = internal::hypot(f,g);
+          Scalar t = numext::hypot(f,g);
           Scalar cs = f/t;
           Scalar sn = g/t;
           if (j != k)
@@ -410,7 +410,7 @@ void SVD<MatrixType>::compute(const MatrixType& matrix)
               m_matV(i,j) = t;
             }
           }
-          t = internal::hypot(f,g);
+          t = numext::hypot(f,g);
           cs = f/t;
           sn = g/t;
           m_sigma[j] = t;

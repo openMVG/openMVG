@@ -44,7 +44,7 @@
 
 namespace Eigen {
 
-/** \ingroup Unsupported_modules
+/**
   * \defgroup AdolcForward_Module Adolc forward module
   * This module provides support for adolc's adouble type in forward mode.
   * ADOL-C is a C++ automatic differentiation library,

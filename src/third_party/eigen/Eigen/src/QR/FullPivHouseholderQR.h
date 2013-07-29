@@ -100,6 +100,18 @@ template<typename _MatrixType> class FullPivHouseholderQR
         m_isInitialized(false),
         m_usePrescribedThreshold(false) {}
 
+    /** \brief Constructs a QR factorization from a given matrix
+      *
+      * This constructor computes the QR factorization of the matrix \a matrix by calling
+      * the method compute(). It is a short cut for:
+      * 
+      * \code
+      * FullPivHouseholderQR<MatrixType> qr(matrix.rows(), matrix.cols());
+      * qr.compute(matrix);
+      * \endcode
+      * 
+      * \sa compute()
+      */
     FullPivHouseholderQR(const MatrixType& matrix)
       : m_qr(matrix.rows(), matrix.cols()),
         m_hCoeffs((std::min)(matrix.rows(), matrix.cols())),
@@ -152,12 +164,14 @@ template<typename _MatrixType> class FullPivHouseholderQR
 
     FullPivHouseholderQR& compute(const MatrixType& matrix);
 
+    /** \returns a const reference to the column permutation matrix */
     const PermutationType& colsPermutation() const
     {
       eigen_assert(m_isInitialized && "FullPivHouseholderQR is not initialized.");
       return m_cols_permutation;
     }
 
+    /** \returns a const reference to the vector of indices representing the rows transpositions */
     const IntColVectorType& rowsTranspositions() const
     {
       eigen_assert(m_isInitialized && "FullPivHouseholderQR is not initialized.");
@@ -201,11 +215,12 @@ template<typename _MatrixType> class FullPivHouseholderQR
       */
     inline Index rank() const
     {
+      using std::abs;
       eigen_assert(m_isInitialized && "FullPivHouseholderQR is not initialized.");
-      RealScalar premultiplied_threshold = internal::abs(m_maxpivot) * threshold();
+      RealScalar premultiplied_threshold = abs(m_maxpivot) * threshold();
       Index result = 0;
       for(Index i = 0; i < m_nonzero_pivots; ++i)
-        result += (internal::abs(m_qr.coeff(i,i)) > premultiplied_threshold);
+        result += (abs(m_qr.coeff(i,i)) > premultiplied_threshold);
       return result;
     }
 
@@ -274,6 +289,11 @@ template<typename _MatrixType> class FullPivHouseholderQR
 
     inline Index rows() const { return m_qr.rows(); }
     inline Index cols() const { return m_qr.cols(); }
+    
+    /** \returns a const reference to the vector of Householder coefficients used to represent the factor \c Q.
+      * 
+      * For advanced uses only.
+      */
     const HCoeffsType& hCoeffs() const { return m_hCoeffs; }
 
     /** Allows to prescribe a threshold to be used by certain methods, such as rank(),
@@ -362,9 +382,10 @@ template<typename _MatrixType> class FullPivHouseholderQR
 template<typename MatrixType>
 typename MatrixType::RealScalar FullPivHouseholderQR<MatrixType>::absDeterminant() const
 {
+  using std::abs;
   eigen_assert(m_isInitialized && "FullPivHouseholderQR is not initialized.");
   eigen_assert(m_qr.rows() == m_qr.cols() && "You can't take the determinant of a non-square matrix!");
-  return internal::abs(m_qr.diagonal().prod());
+  return abs(m_qr.diagonal().prod());
 }
 
 template<typename MatrixType>
@@ -375,9 +396,16 @@ typename MatrixType::RealScalar FullPivHouseholderQR<MatrixType>::logAbsDetermin
   return m_qr.diagonal().cwiseAbs().array().log().sum();
 }
 
+/** Performs the QR factorization of the given matrix \a matrix. The result of
+  * the factorization is stored into \c *this, and a reference to \c *this
+  * is returned.
+  *
+  * \sa class FullPivHouseholderQR, FullPivHouseholderQR(const MatrixType&)
+  */
 template<typename MatrixType>
 FullPivHouseholderQR<MatrixType>& FullPivHouseholderQR<MatrixType>::compute(const MatrixType& matrix)
 {
+  using std::abs;
   Index rows = matrix.rows();
   Index cols = matrix.cols();
   Index size = (std::min)(rows,cols);
@@ -439,7 +467,7 @@ FullPivHouseholderQR<MatrixType>& FullPivHouseholderQR<MatrixType>::compute(cons
     m_qr.coeffRef(k,k) = beta;
 
     // remember the maximum absolute value of diagonal coefficients
-    if(internal::abs(beta) > m_maxpivot) m_maxpivot = internal::abs(beta);
+    if(abs(beta) > m_maxpivot) m_maxpivot = abs(beta);
 
     m_qr.bottomRightCorner(rows-k, cols-k-1)
         .applyHouseholderOnTheLeft(m_qr.col(k).tail(rows-k-1), m_hCoeffs.coeffRef(k), &m_temp.coeffRef(k+1));
@@ -544,6 +572,7 @@ public:
   template <typename ResultType>
   void evalTo(ResultType& result, WorkVectorType& workspace) const
   {
+    using numext::conj;
     // compute the product H'_0 H'_1 ... H'_n-1,
     // where H_k is the k-th Householder transformation I - h_k v_k v_k'
     // and v_k is the k-th Householder vector [1,m_qr(k+1,k), m_qr(k+2,k), ...]
@@ -555,7 +584,7 @@ public:
     for (Index k = size-1; k >= 0; k--)
     {
       result.block(k, k, rows-k, rows-k)
-            .applyHouseholderOnTheLeft(m_qr.col(k).tail(rows-k-1), internal::conj(m_hCoeffs.coeff(k)), &workspace.coeffRef(k));
+            .applyHouseholderOnTheLeft(m_qr.col(k).tail(rows-k-1), conj(m_hCoeffs.coeff(k)), &workspace.coeffRef(k));
       result.row(k).swap(result.row(m_rowsTranspositions.coeff(k)));
     }
   }

@@ -1,4 +1,4 @@
-// This file is part of Eugenio, a lightweight C++ template library
+// This file is part of Eigen, a lightweight C++ template library
 // for linear algebra.
 //
 // Copyright (C) 2009 Thomas Capricelli <orzel@freehackers.org>
@@ -17,7 +17,7 @@
 #include <Eigen/QR>
 #include <unsupported/Eigen/NumericalDiff>
 
-/** \ingroup Unsupported_modules
+/**
   * \defgroup NonLinearOptimization_Module Non linear optimization module
   *
   * \code

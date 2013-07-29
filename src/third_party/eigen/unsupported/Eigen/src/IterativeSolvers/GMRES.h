@@ -61,7 +61,6 @@ bool gmres(const MatrixType & mat, const Rhs & rhs, Dest & x, const Precondition
 
 	typedef typename Dest::RealScalar RealScalar;
 	typedef typename Dest::Scalar Scalar;
-	typedef Matrix < RealScalar, Dynamic, 1 > RealVectorType;
 	typedef Matrix < Scalar, Dynamic, 1 > VectorType;
 	typedef Matrix < Scalar, Dynamic, Dynamic > FMatrixType;
 
@@ -348,7 +347,8 @@ public:
   template<typename Rhs,typename Dest>
   void _solve(const Rhs& b, Dest& x) const
   {
-    x.setZero();
+    x = b;
+    if(x.squaredNorm() == 0) return; // Check Zero right hand side
     _solveWithGuess(b,x);
   }
 

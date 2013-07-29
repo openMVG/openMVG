@@ -139,7 +139,8 @@ MatrixBase<Derived>::operator*=(const EigenBase<OtherDerived> &other)
   return derived();
 }
 
-/** replaces \c *this by \c *this * \a other. It is equivalent to MatrixBase::operator*=() */
+/** replaces \c *this by \c *this * \a other. It is equivalent to MatrixBase::operator*=().
+  */
 template<typename Derived>
 template<typename OtherDerived>
 inline void MatrixBase<Derived>::applyOnTheRight(const EigenBase<OtherDerived> &other)
