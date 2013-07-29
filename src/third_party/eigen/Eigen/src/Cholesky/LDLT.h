@@ -196,7 +196,7 @@ template<typename _MatrixType, int _UpLo> class LDLT
     LDLT& compute(const MatrixType& matrix);
 
     template <typename Derived>
-    LDLT& rankUpdate(const MatrixBase<Derived>& w,RealScalar alpha=1);
+    LDLT& rankUpdate(const MatrixBase<Derived>& w, const RealScalar& alpha=1);
 
     /** \returns the internal LDLT decomposition matrix
       *
@@ -248,6 +248,7 @@ template<> struct ldlt_inplace<Lower>
   template<typename MatrixType, typename TranspositionType, typename Workspace>
   static bool unblocked(MatrixType& mat, TranspositionType& transpositions, Workspace& temp, int* sign=0)
   {
+    using std::abs;
     typedef typename MatrixType::Scalar Scalar;
     typedef typename MatrixType::RealScalar RealScalar;
     typedef typename MatrixType::Index Index;
@@ -258,7 +259,7 @@ template<> struct ldlt_inplace<Lower>
     {
       transpositions.setIdentity();
       if(sign)
-        *sign = real(mat.coeff(0,0))>0 ? 1:-1;
+        *sign = numext::real(mat.coeff(0,0))>0 ? 1:-1;
       return true;
     }
 
@@ -277,15 +278,13 @@ template<> struct ldlt_inplace<Lower>
         // are compared; if any diagonal is negligible compared
         // to the largest overall, the algorithm bails.
         cutoff = abs(NumTraits<Scalar>::epsilon() * biggest_in_corner);
-
-        if(sign)
-          *sign = real(mat.diagonal().coeff(index_of_biggest_in_corner)) > 0 ? 1 : -1;
       }
 
       // Finish early if the matrix is not full rank.
       if(biggest_in_corner < cutoff)
       {
         for(Index i = k; i < size; i++) transpositions.coeffRef(i) = i;
+        if(sign) *sign = 0;
         break;
       }
 
@@ -301,11 +300,11 @@ template<> struct ldlt_inplace<Lower>
         for(int i=k+1;i<index_of_biggest_in_corner;++i)
         {
           Scalar tmp = mat.coeffRef(i,k);
-          mat.coeffRef(i,k) = conj(mat.coeffRef(index_of_biggest_in_corner,i));
-          mat.coeffRef(index_of_biggest_in_corner,i) = conj(tmp);
+          mat.coeffRef(i,k) = numext::conj(mat.coeffRef(index_of_biggest_in_corner,i));
+          mat.coeffRef(index_of_biggest_in_corner,i) = numext::conj(tmp);
         }
         if(NumTraits<Scalar>::IsComplex)
-          mat.coeffRef(index_of_biggest_in_corner,k) = conj(mat.coeff(index_of_biggest_in_corner,k));
+          mat.coeffRef(index_of_biggest_in_corner,k) = numext::conj(mat.coeff(index_of_biggest_in_corner,k));
       }
 
       // partition the matrix:
@@ -326,6 +325,16 @@ template<> struct ldlt_inplace<Lower>
       }
       if((rs>0) && (abs(mat.coeffRef(k,k)) > cutoff))
         A21 /= mat.coeffRef(k,k);
+      
+      if(sign)
+      {
+        // LDLT is not guaranteed to work for indefinite matrices, but let's try to get the sign right
+        int newSign = numext::real(mat.diagonal().coeff(index_of_biggest_in_corner)) > 0;
+        if(k == 0)
+          *sign = newSign;
+        else if(*sign != newSign)
+          *sign = 0;
+      }
     }
 
     return true;
@@ -339,9 +348,9 @@ template<> struct ldlt_inplace<Lower>
   // Here only rank-1 updates are implemented, to reduce the
   // requirement for intermediate storage and improve accuracy
   template<typename MatrixType, typename WDerived>
-  static bool updateInPlace(MatrixType& mat, MatrixBase<WDerived>& w, typename MatrixType::RealScalar sigma=1)
+  static bool updateInPlace(MatrixType& mat, MatrixBase<WDerived>& w, const typename MatrixType::RealScalar& sigma=1)
   {
-    using internal::isfinite;
+    using numext::isfinite;
     typedef typename MatrixType::Scalar Scalar;
     typedef typename MatrixType::RealScalar RealScalar;
     typedef typename MatrixType::Index Index;
@@ -359,9 +368,9 @@ template<> struct ldlt_inplace<Lower>
         break;
 
       // Update the diagonal terms
-      RealScalar dj = real(mat.coeff(j,j));
+      RealScalar dj = numext::real(mat.coeff(j,j));
       Scalar wj = w.coeff(j);
-      RealScalar swj2 = sigma*abs2(wj);
+      RealScalar swj2 = sigma*numext::abs2(wj);
       RealScalar gamma = dj*alpha + swj2;
 
       mat.coeffRef(j,j) += swj2/alpha;
@@ -372,13 +381,13 @@ template<> struct ldlt_inplace<Lower>
       Index rs = size-j-1;
       w.tail(rs) -= wj * mat.col(j).tail(rs);
       if(gamma != 0)
-        mat.col(j).tail(rs) += (sigma*conj(wj)/gamma)*w.tail(rs);
+        mat.col(j).tail(rs) += (sigma*numext::conj(wj)/gamma)*w.tail(rs);
     }
     return true;
   }
 
   template<typename MatrixType, typename TranspositionType, typename Workspace, typename WType>
-  static bool update(MatrixType& mat, const TranspositionType& transpositions, Workspace& tmp, const WType& w, typename MatrixType::RealScalar sigma=1)
+  static bool update(MatrixType& mat, const TranspositionType& transpositions, Workspace& tmp, const WType& w, const typename MatrixType::RealScalar& sigma=1)
   {
     // Apply the permutation to the input w
     tmp = transpositions * w;
@@ -397,7 +406,7 @@ template<> struct ldlt_inplace<Upper>
   }
 
   template<typename MatrixType, typename TranspositionType, typename Workspace, typename WType>
-  static EIGEN_STRONG_INLINE bool update(MatrixType& mat, TranspositionType& transpositions, Workspace& tmp, WType& w, typename MatrixType::RealScalar sigma=1)
+  static EIGEN_STRONG_INLINE bool update(MatrixType& mat, TranspositionType& transpositions, Workspace& tmp, WType& w, const typename MatrixType::RealScalar& sigma=1)
   {
     Transpose<MatrixType> matt(mat);
     return ldlt_inplace<Lower>::update(matt, transpositions, tmp, w.conjugate(), sigma);
@@ -449,7 +458,7 @@ LDLT<MatrixType,_UpLo>& LDLT<MatrixType,_UpLo>::compute(const MatrixType& a)
   */
 template<typename MatrixType, int _UpLo>
 template<typename Derived>
-LDLT<MatrixType,_UpLo>& LDLT<MatrixType,_UpLo>::rankUpdate(const MatrixBase<Derived>& w,typename NumTraits<typename MatrixType::Scalar>::Real sigma)
+LDLT<MatrixType,_UpLo>& LDLT<MatrixType,_UpLo>::rankUpdate(const MatrixBase<Derived>& w, const typename NumTraits<typename MatrixType::Scalar>::Real& sigma)
 {
   const Index size = w.rows();
   if (m_isInitialized)

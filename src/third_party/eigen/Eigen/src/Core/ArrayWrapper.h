@@ -55,22 +55,22 @@ class ArrayWrapper : public ArrayBase<ArrayWrapper<ExpressionType> >
     inline Index outerStride() const { return m_expression.outerStride(); }
     inline Index innerStride() const { return m_expression.innerStride(); }
 
-    inline ScalarWithConstIfNotLvalue* data() { return m_expression.data(); }
+    inline ScalarWithConstIfNotLvalue* data() { return m_expression.const_cast_derived().data(); }
     inline const Scalar* data() const { return m_expression.data(); }
 
-    inline CoeffReturnType coeff(Index row, Index col) const
+    inline CoeffReturnType coeff(Index rowId, Index colId) const
     {
-      return m_expression.coeff(row, col);
+      return m_expression.coeff(rowId, colId);
     }
 
-    inline Scalar& coeffRef(Index row, Index col)
+    inline Scalar& coeffRef(Index rowId, Index colId)
     {
-      return m_expression.const_cast_derived().coeffRef(row, col);
+      return m_expression.const_cast_derived().coeffRef(rowId, colId);
     }
 
-    inline const Scalar& coeffRef(Index row, Index col) const
+    inline const Scalar& coeffRef(Index rowId, Index colId) const
     {
-      return m_expression.const_cast_derived().coeffRef(row, col);
+      return m_expression.const_cast_derived().coeffRef(rowId, colId);
     }
 
     inline CoeffReturnType coeff(Index index) const
@@ -89,15 +89,15 @@ class ArrayWrapper : public ArrayBase<ArrayWrapper<ExpressionType> >
     }
 
     template<int LoadMode>
-    inline const PacketScalar packet(Index row, Index col) const
+    inline const PacketScalar packet(Index rowId, Index colId) const
     {
-      return m_expression.template packet<LoadMode>(row, col);
+      return m_expression.template packet<LoadMode>(rowId, colId);
     }
 
     template<int LoadMode>
-    inline void writePacket(Index row, Index col, const PacketScalar& x)
+    inline void writePacket(Index rowId, Index colId, const PacketScalar& val)
     {
-      m_expression.const_cast_derived().template writePacket<LoadMode>(row, col, x);
+      m_expression.const_cast_derived().template writePacket<LoadMode>(rowId, colId, val);
     }
 
     template<int LoadMode>
@@ -107,9 +107,9 @@ class ArrayWrapper : public ArrayBase<ArrayWrapper<ExpressionType> >
     }
 
     template<int LoadMode>
-    inline void writePacket(Index index, const PacketScalar& x)
+    inline void writePacket(Index index, const PacketScalar& val)
     {
-      m_expression.const_cast_derived().template writePacket<LoadMode>(index, x);
+      m_expression.const_cast_derived().template writePacket<LoadMode>(index, val);
     }
 
     template<typename Dest>
@@ -168,29 +168,29 @@ class MatrixWrapper : public MatrixBase<MatrixWrapper<ExpressionType> >
 
     typedef typename internal::nested<ExpressionType>::type NestedExpressionType;
 
-    inline MatrixWrapper(ExpressionType& matrix) : m_expression(matrix) {}
+    inline MatrixWrapper(ExpressionType& a_matrix) : m_expression(a_matrix) {}
 
     inline Index rows() const { return m_expression.rows(); }
     inline Index cols() const { return m_expression.cols(); }
     inline Index outerStride() const { return m_expression.outerStride(); }
     inline Index innerStride() const { return m_expression.innerStride(); }
 
-    inline ScalarWithConstIfNotLvalue* data() { return m_expression.data(); }
+    inline ScalarWithConstIfNotLvalue* data() { return m_expression.const_cast_derived().data(); }
     inline const Scalar* data() const { return m_expression.data(); }
 
-    inline CoeffReturnType coeff(Index row, Index col) const
+    inline CoeffReturnType coeff(Index rowId, Index colId) const
     {
-      return m_expression.coeff(row, col);
+      return m_expression.coeff(rowId, colId);
     }
 
-    inline Scalar& coeffRef(Index row, Index col)
+    inline Scalar& coeffRef(Index rowId, Index colId)
     {
-      return m_expression.const_cast_derived().coeffRef(row, col);
+      return m_expression.const_cast_derived().coeffRef(rowId, colId);
     }
 
-    inline const Scalar& coeffRef(Index row, Index col) const
+    inline const Scalar& coeffRef(Index rowId, Index colId) const
     {
-      return m_expression.derived().coeffRef(row, col);
+      return m_expression.derived().coeffRef(rowId, colId);
     }
 
     inline CoeffReturnType coeff(Index index) const
@@ -209,15 +209,15 @@ class MatrixWrapper : public MatrixBase<MatrixWrapper<ExpressionType> >
     }
 
     template<int LoadMode>
-    inline const PacketScalar packet(Index row, Index col) const
+    inline const PacketScalar packet(Index rowId, Index colId) const
     {
-      return m_expression.template packet<LoadMode>(row, col);
+      return m_expression.template packet<LoadMode>(rowId, colId);
     }
 
     template<int LoadMode>
-    inline void writePacket(Index row, Index col, const PacketScalar& x)
+    inline void writePacket(Index rowId, Index colId, const PacketScalar& val)
     {
-      m_expression.const_cast_derived().template writePacket<LoadMode>(row, col, x);
+      m_expression.const_cast_derived().template writePacket<LoadMode>(rowId, colId, val);
     }
 
     template<int LoadMode>
@@ -227,9 +227,9 @@ class MatrixWrapper : public MatrixBase<MatrixWrapper<ExpressionType> >
     }
 
     template<int LoadMode>
-    inline void writePacket(Index index, const PacketScalar& x)
+    inline void writePacket(Index index, const PacketScalar& val)
     {
-      m_expression.const_cast_derived().template writePacket<LoadMode>(index, x);
+      m_expression.const_cast_derived().template writePacket<LoadMode>(index, val);
     }
 
     const typename internal::remove_all<NestedExpressionType>::type& 

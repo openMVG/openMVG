@@ -110,7 +110,6 @@ void testMatrixLogarithm(const MatrixType& A)
 {
   typedef typename internal::traits<MatrixType>::Scalar Scalar;
   typedef typename NumTraits<Scalar>::Real RealScalar;
-  typedef std::complex<RealScalar> ComplexScalar;
 
   MatrixType scaledA;
   RealScalar maxImagPartOfSpectrum = A.eigenvalues().imag().cwiseAbs().maxCoeff();

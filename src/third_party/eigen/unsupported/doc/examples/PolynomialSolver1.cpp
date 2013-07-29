@@ -49,5 +49,5 @@ int main()
   cout.precision(10);
   cout << "The last root in float then in double: " << psolvef.roots()[5] << "\t" << psolve6d.roots()[5] << endl;
   std::complex<float> castedRoot( psolve6d.roots()[5].real(), psolve6d.roots()[5].imag() );
-  cout << "Norm of the difference: " << internal::abs( psolvef.roots()[5] - castedRoot ) << endl;
+  cout << "Norm of the difference: " << std::abs( psolvef.roots()[5] - castedRoot ) << endl;
 }

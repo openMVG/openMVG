@@ -56,9 +56,14 @@ class DiagonalBase : public EigenBase<Derived>
     inline Index rows() const { return diagonal().size(); }
     inline Index cols() const { return diagonal().size(); }
 
+    /** \returns the diagonal matrix product of \c *this by the matrix \a matrix.
+      */
     template<typename MatrixDerived>
     const DiagonalProduct<MatrixDerived, Derived, OnTheLeft>
-    operator*(const MatrixBase<MatrixDerived> &matrix) const;
+    operator*(const MatrixBase<MatrixDerived> &matrix) const
+    {
+      return DiagonalProduct<MatrixDerived, Derived, OnTheLeft>(matrix.derived(), derived());
+    }
 
     inline const DiagonalWrapper<const CwiseUnaryOp<internal::scalar_inverse_op<Scalar>, const DiagonalVectorType> >
     inverse() const
@@ -250,7 +255,7 @@ class DiagonalWrapper
     #endif
 
     /** Constructor from expression of diagonal coefficients to wrap. */
-    inline DiagonalWrapper(DiagonalVectorType& diagonal) : m_diagonal(diagonal) {}
+    inline DiagonalWrapper(DiagonalVectorType& a_diagonal) : m_diagonal(a_diagonal) {}
 
     /** \returns a const reference to the wrapped expression of diagonal coefficients. */
     const DiagonalVectorType& diagonal() const { return m_diagonal; }
@@ -284,13 +289,14 @@ MatrixBase<Derived>::asDiagonal() const
   * \sa asDiagonal()
   */
 template<typename Derived>
-bool MatrixBase<Derived>::isDiagonal(RealScalar prec) const
+bool MatrixBase<Derived>::isDiagonal(const RealScalar& prec) const
 {
+  using std::abs;
   if(cols() != rows()) return false;
   RealScalar maxAbsOnDiagonal = static_cast<RealScalar>(-1);
   for(Index j = 0; j < cols(); ++j)
   {
-    RealScalar absOnDiagonal = internal::abs(coeff(j,j));
+    RealScalar absOnDiagonal = abs(coeff(j,j));
     if(absOnDiagonal > maxAbsOnDiagonal) maxAbsOnDiagonal = absOnDiagonal;
   }
   for(Index j = 0; j < cols(); ++j)

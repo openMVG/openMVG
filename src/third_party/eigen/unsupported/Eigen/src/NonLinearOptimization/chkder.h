@@ -16,6 +16,10 @@ void chkder(
         Matrix< Scalar, Dynamic, 1 >  &err
         )
 {
+    using std::sqrt;
+    using std::abs;
+    using std::log;
+    
     typedef DenseIndex Index;
 
     const Scalar eps = sqrt(NumTraits<Scalar>::epsilon());

@@ -16,7 +16,7 @@
 #include <Eigen/Core>
 
 
-/** \ingroup Unsupported_modules
+/**
   * \defgroup FFT_Module Fast Fourier Transform module
   *
   * \code

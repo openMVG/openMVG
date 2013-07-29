@@ -103,8 +103,8 @@ class PartialReduxExpr : internal::no_assignment_operator,
 
 #define EIGEN_MEMBER_FUNCTOR(MEMBER,COST)                               \
   template <typename ResultType>                                        \
-  struct member_##MEMBER {                                           \
-    EIGEN_EMPTY_STRUCT_CTOR(member_##MEMBER)                         \
+  struct member_##MEMBER {                                              \
+    EIGEN_EMPTY_STRUCT_CTOR(member_##MEMBER)                            \
     typedef ResultType result_type;                                     \
     template<typename Scalar, int Size> struct Cost                     \
     { enum { value = COST }; };                                         \
@@ -233,6 +233,28 @@ template<typename ExpressionType, int Direction> class VectorwiseOp
                        Direction==Vertical   ? 1 : m_matrix.rows(),
                        Direction==Horizontal ? 1 : m_matrix.cols());
     }
+    
+    template<typename OtherDerived> struct OppositeExtendedType {
+      typedef Replicate<OtherDerived,
+                        Direction==Horizontal ? 1 : ExpressionType::RowsAtCompileTime,
+                        Direction==Vertical   ? 1 : ExpressionType::ColsAtCompileTime> Type;
+    };
+
+    /** \internal
+      * Replicates a vector in the opposite direction to match the size of \c *this */
+    template<typename OtherDerived>
+    typename OppositeExtendedType<OtherDerived>::Type
+    extendedToOpposite(const DenseBase<OtherDerived>& other) const
+    {
+      EIGEN_STATIC_ASSERT(EIGEN_IMPLIES(Direction==Horizontal, OtherDerived::MaxColsAtCompileTime==1),
+                          YOU_PASSED_A_ROW_VECTOR_BUT_A_COLUMN_VECTOR_WAS_EXPECTED)
+      EIGEN_STATIC_ASSERT(EIGEN_IMPLIES(Direction==Vertical, OtherDerived::MaxRowsAtCompileTime==1),
+                          YOU_PASSED_A_COLUMN_VECTOR_BUT_A_ROW_VECTOR_WAS_EXPECTED)
+      return typename OppositeExtendedType<OtherDerived>::Type
+                      (other.derived(),
+                       Direction==Horizontal  ? 1 : m_matrix.rows(),
+                       Direction==Vertical    ? 1 : m_matrix.cols());
+    }
 
   public:
 
@@ -255,6 +277,8 @@ template<typename ExpressionType, int Direction> class VectorwiseOp
 
     /** \returns a row (or column) vector expression of the smallest coefficient
       * of each column (or row) of the referenced expression.
+      * 
+      * \warning the result is undefined if \c *this contains NaN.
       *
       * Example: \include PartialRedux_minCoeff.cpp
       * Output: \verbinclude PartialRedux_minCoeff.out
@@ -265,6 +289,8 @@ template<typename ExpressionType, int Direction> class VectorwiseOp
 
     /** \returns a row (or column) vector expression of the largest coefficient
       * of each column (or row) of the referenced expression.
+      * 
+      * \warning the result is undefined if \c *this contains NaN.
       *
       * Example: \include PartialRedux_maxCoeff.cpp
       * Output: \verbinclude PartialRedux_maxCoeff.out
@@ -503,6 +529,23 @@ template<typename ExpressionType, int Direction> class VectorwiseOp
       EIGEN_STATIC_ASSERT_ARRAYXPR(ExpressionType)
       EIGEN_STATIC_ASSERT_SAME_XPR_KIND(ExpressionType, OtherDerived)
       return m_matrix / extendedTo(other.derived());
+    }
+    
+    /** \returns an expression where each column of row of the referenced matrix are normalized.
+      * The referenced matrix is \b not modified.
+      * \sa MatrixBase::normalized(), normalize()
+      */
+    CwiseBinaryOp<internal::scalar_quotient_op<Scalar>,
+                  const ExpressionTypeNestedCleaned,
+                  const typename OppositeExtendedType<typename ReturnType<internal::member_norm,RealScalar>::Type>::Type>
+    normalized() const { return m_matrix.cwiseQuotient(extendedToOpposite(this->norm())); }
+    
+    
+    /** Normalize in-place each row or columns of the referenced matrix.
+      * \sa MatrixBase::normalize(), normalized()
+      */
+    void normalize() {
+      m_matrix = this->normalized();
     }
 
 /////////// Geometry module ///////////

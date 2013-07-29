@@ -7,8 +7,7 @@
 // Public License v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "main.h"
-#include <unsupported/Eigen/MatrixFunctions>
+#include "matrix_functions.h"
 
 double binom(int n, int k)
 {
@@ -16,12 +15,6 @@ double binom(int n, int k)
   for (int i=0; i<k; i++)
     res = res * (n-k+i+1) / (i+1);
   return res;
-}
-
-template <typename Derived, typename OtherDerived>
-double relerr(const MatrixBase<Derived>& A, const MatrixBase<OtherDerived>& B)
-{
-  return std::sqrt((A - B).cwiseAbs2().sum() / (std::min)(A.cwiseAbs2().sum(), B.cwiseAbs2().sum()));
 }
 
 template <typename T>
@@ -109,8 +102,7 @@ void randomTest(const MatrixType& m, double tol)
   */
   typename MatrixType::Index rows = m.rows();
   typename MatrixType::Index cols = m.cols();
-  MatrixType m1(rows, cols), m2(rows, cols), m3(rows, cols),
-             identity = MatrixType::Identity(rows, rows);
+  MatrixType m1(rows, cols), m2(rows, cols), identity = MatrixType::Identity(rows, cols);
 
   typedef typename NumTraits<typename internal::traits<MatrixType>::Scalar>::Real RealScalar;
 

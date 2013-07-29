@@ -85,9 +85,7 @@ inline bool DenseBase<Derived>::all() const
           && SizeAtCompileTime * (CoeffReadCost + NumTraits<Scalar>::AddCost) <= EIGEN_UNROLLING_LIMIT
   };
   if(unroll)
-    return internal::all_unroller<Derived,
-                           unroll ? int(SizeAtCompileTime) : Dynamic
-     >::run(derived());
+    return internal::all_unroller<Derived, unroll ? int(SizeAtCompileTime) : Dynamic>::run(derived());
   else
   {
     for(Index j = 0; j < cols(); ++j)
@@ -111,9 +109,7 @@ inline bool DenseBase<Derived>::any() const
           && SizeAtCompileTime * (CoeffReadCost + NumTraits<Scalar>::AddCost) <= EIGEN_UNROLLING_LIMIT
   };
   if(unroll)
-    return internal::any_unroller<Derived,
-                           unroll ? int(SizeAtCompileTime) : Dynamic
-           >::run(derived());
+    return internal::any_unroller<Derived, unroll ? int(SizeAtCompileTime) : Dynamic>::run(derived());
   else
   {
     for(Index j = 0; j < cols(); ++j)
@@ -133,6 +129,26 @@ inline typename DenseBase<Derived>::Index DenseBase<Derived>::count() const
   return derived().template cast<bool>().template cast<Index>().sum();
 }
 
+/** \returns true is \c *this contains at least one Not A Number (NaN).
+  *
+  * \sa allFinite()
+  */
+template<typename Derived>
+inline bool DenseBase<Derived>::hasNaN() const
+{
+  return !((derived().array()==derived().array()).all());
+}
+
+/** \returns true if \c *this contains only finite numbers, i.e., no NaN and no +/-INF values.
+  *
+  * \sa hasNaN()
+  */
+template<typename Derived>
+inline bool DenseBase<Derived>::allFinite() const
+{
+  return !((derived()-derived()).hasNaN());
+}
+    
 } // end namespace Eigen
 
 #endif // EIGEN_ALLANDANY_H

@@ -12,6 +12,8 @@ void lmpar(
         Scalar &par,
         Matrix< Scalar, Dynamic, 1 >  &x)
 {
+    using std::abs;
+    using std::sqrt;
     typedef DenseIndex Index;
 
     /* Local variables */
@@ -25,11 +27,11 @@ void lmpar(
 
 
     /* Function Body */
-    const Scalar dwarf = std::numeric_limits<Scalar>::min();
+    const Scalar dwarf = (std::numeric_limits<Scalar>::min)();
     const Index n = r.cols();
-    assert(n==diag.size());
-    assert(n==qtb.size());
-    assert(n==x.size());
+    eigen_assert(n==diag.size());
+    eigen_assert(n==qtb.size());
+    eigen_assert(n==x.size());
 
     Matrix< Scalar, Dynamic, 1 >  wa1, wa2;
 
@@ -168,6 +170,8 @@ void lmpar2(
         Matrix< Scalar, Dynamic, 1 >  &x)
 
 {
+    using std::sqrt;
+    using std::abs;
     typedef DenseIndex Index;
 
     /* Local variables */
@@ -181,10 +185,10 @@ void lmpar2(
 
 
     /* Function Body */
-    const Scalar dwarf = std::numeric_limits<Scalar>::min();
+    const Scalar dwarf = (std::numeric_limits<Scalar>::min)();
     const Index n = qr.matrixQR().cols();
-    assert(n==diag.size());
-    assert(n==qtb.size());
+    eigen_assert(n==diag.size());
+    eigen_assert(n==qtb.size());
 
     Matrix< Scalar, Dynamic, 1 >  wa1, wa2;
 

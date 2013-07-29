@@ -56,6 +56,18 @@ EIGEN_DONT_INLINE static void run(
   #ifdef EIGEN_INTERNAL_DEBUGGING
     resIncr
   #endif
+  , RhsScalar alpha);
+};
+
+template<typename Index, typename LhsScalar, bool ConjugateLhs, typename RhsScalar, bool ConjugateRhs, int Version>
+EIGEN_DONT_INLINE void general_matrix_vector_product<Index,LhsScalar,ColMajor,ConjugateLhs,RhsScalar,ConjugateRhs,Version>::run(
+  Index rows, Index cols,
+  const LhsScalar* lhs, Index lhsStride,
+  const RhsScalar* rhs, Index rhsIncr,
+  ResScalar* res, Index
+  #ifdef EIGEN_INTERNAL_DEBUGGING
+    resIncr
+  #endif
   , RhsScalar alpha)
 {
   eigen_internal_assert(resIncr==1);
@@ -74,13 +86,14 @@ EIGEN_DONT_INLINE static void run(
   conj_helper<LhsScalar,RhsScalar,ConjugateLhs,ConjugateRhs> cj;
   conj_helper<LhsPacket,RhsPacket,ConjugateLhs,ConjugateRhs> pcj;
   if(ConjugateRhs)
-    alpha = conj(alpha);
+    alpha = numext::conj(alpha);
 
   enum { AllAligned = 0, EvenAligned, FirstAligned, NoneAligned };
   const Index columnsAtOnce = 4;
   const Index peels = 2;
   const Index LhsPacketAlignedMask = LhsPacketSize-1;
   const Index ResPacketAlignedMask = ResPacketSize-1;
+//  const Index PeelAlignedMask = ResPacketSize*peels-1;
   const Index size = rows;
   
   // How many coeffs of the result do we have to skip to be aligned.
@@ -273,7 +286,6 @@ EIGEN_DONT_INLINE static void run(
   } while(Vectorizable);
   #undef _EIGEN_ACCUMULATE_PACKETS
 }
-};
 
 /* Optimized row-major matrix * vector product:
  * This algorithm processes 4 rows at onces that allows to both reduce
@@ -311,6 +323,15 @@ EIGEN_DONT_INLINE static void run(
   const LhsScalar* lhs, Index lhsStride,
   const RhsScalar* rhs, Index rhsIncr,
   ResScalar* res, Index resIncr,
+  ResScalar alpha);
+};
+
+template<typename Index, typename LhsScalar, bool ConjugateLhs, typename RhsScalar, bool ConjugateRhs, int Version>
+EIGEN_DONT_INLINE void general_matrix_vector_product<Index,LhsScalar,RowMajor,ConjugateLhs,RhsScalar,ConjugateRhs,Version>::run(
+  Index rows, Index cols,
+  const LhsScalar* lhs, Index lhsStride,
+  const RhsScalar* rhs, Index rhsIncr,
+  ResScalar* res, Index resIncr,
   ResScalar alpha)
 {
   EIGEN_UNUSED_VARIABLE(rhsIncr);
@@ -334,6 +355,7 @@ EIGEN_DONT_INLINE static void run(
   const Index peels = 2;
   const Index RhsPacketAlignedMask = RhsPacketSize-1;
   const Index LhsPacketAlignedMask = LhsPacketSize-1;
+//   const Index PeelAlignedMask = RhsPacketSize*peels-1;
   const Index depth = cols;
 
   // How many coeffs of the result do we have to skip to be aligned.
@@ -543,7 +565,6 @@ EIGEN_DONT_INLINE static void run(
 
   #undef _EIGEN_ACCUMULATE_PACKETS
 }
-};
 
 } // end namespace internal
 

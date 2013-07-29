@@ -11,6 +11,8 @@
 
 #include <unsupported/Eigen/Splines>
 
+namespace Eigen {
+  
 // lets do some explicit instantiations and thus
 // force the compilation of all spline functions...
 template class Spline<double, 2, Dynamic>;
@@ -28,6 +30,8 @@ template class Spline<float, 3, 2>;
 template class Spline<float, 3, 3>;
 template class Spline<float, 3, 4>;
 template class Spline<float, 3, 5>;
+
+}
 
 Spline<double, 2, Dynamic> closed_spline2d()
 {

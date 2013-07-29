@@ -121,9 +121,9 @@ static void conservative_sparse_sparse_product_impl(const Lhs& lhs, const Rhs& r
 namespace internal {
 
 template<typename Lhs, typename Rhs, typename ResultType,
-  int LhsStorageOrder = traits<Lhs>::Flags&RowMajorBit,
-  int RhsStorageOrder = traits<Rhs>::Flags&RowMajorBit,
-  int ResStorageOrder = traits<ResultType>::Flags&RowMajorBit>
+  int LhsStorageOrder = (traits<Lhs>::Flags&RowMajorBit) ? RowMajor : ColMajor,
+  int RhsStorageOrder = (traits<Rhs>::Flags&RowMajorBit) ? RowMajor : ColMajor,
+  int ResStorageOrder = (traits<ResultType>::Flags&RowMajorBit) ? RowMajor : ColMajor>
 struct conservative_sparse_sparse_product_selector;
 
 template<typename Lhs, typename Rhs, typename ResultType>

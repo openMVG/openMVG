@@ -26,8 +26,6 @@ template<typename T> void test_gmres_T()
 
 void test_gmres()
 {
-  for(int i = 0; i < g_repeat; i++) {
-    CALL_SUBTEST_1(test_gmres_T<double>());
-    CALL_SUBTEST_2(test_gmres_T<std::complex<double> >());
-  }
+  CALL_SUBTEST_1(test_gmres_T<double>());
+  CALL_SUBTEST_2(test_gmres_T<std::complex<double> >());
 }

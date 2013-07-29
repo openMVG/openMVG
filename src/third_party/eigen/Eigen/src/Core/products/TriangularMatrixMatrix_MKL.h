@@ -91,7 +91,7 @@ struct product_triangular_matrix_matrix_trmm<EIGTYPE,Index,Mode,true, \
     conjA = ((LhsStorageOrder==ColMajor) && ConjugateLhs) ? 1 : 0 \
   }; \
 \
-  static EIGEN_DONT_INLINE void run( \
+  static void run( \
     Index _rows, Index _cols, Index _depth, \
     const EIGTYPE* _lhs, Index lhsStride, \
     const EIGTYPE* _rhs, Index rhsStride, \
@@ -205,7 +205,7 @@ struct product_triangular_matrix_matrix_trmm<EIGTYPE,Index,Mode,false, \
     conjA = ((RhsStorageOrder==ColMajor) && ConjugateRhs) ? 1 : 0 \
   }; \
 \
-  static EIGEN_DONT_INLINE void run( \
+  static void run( \
     Index _rows, Index _cols, Index _depth, \
     const EIGTYPE* _lhs, Index lhsStride, \
     const EIGTYPE* _rhs, Index rhsStride, \

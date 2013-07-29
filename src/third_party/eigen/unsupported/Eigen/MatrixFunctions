@@ -2,6 +2,7 @@
 // for linear algebra.
 //
 // Copyright (C) 2009 Jitse Niesen <jitse@maths.leeds.ac.uk>
+// Copyright (C) 2012 Chen-Pang He <jdh8@ms63.hinet.net>
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
@@ -19,7 +20,7 @@
 #include <Eigen/LU>
 #include <Eigen/Eigenvalues>
 
-/** \ingroup Unsupported_modules
+/**
   * \defgroup MatrixFunctions_Module Matrix functions module
   * \brief This module aims to provide various methods for the computation of
   * matrix functions. 
@@ -35,6 +36,7 @@
   *  - \ref matrixbase_cosh "MatrixBase::cosh()", for computing the matrix hyperbolic cosine
   *  - \ref matrixbase_exp "MatrixBase::exp()", for computing the matrix exponential
   *  - \ref matrixbase_log "MatrixBase::log()", for computing the matrix logarithm
+  *  - \ref matrixbase_pow "MatrixBase::pow()", for computing the matrix power
   *  - \ref matrixbase_matrixfunction "MatrixBase::matrixFunction()", for computing general matrix functions
   *  - \ref matrixbase_sin "MatrixBase::sin()", for computing the matrix sine
   *  - \ref matrixbase_sinh "MatrixBase::sinh()", for computing the matrix hyperbolic sine
@@ -57,19 +59,21 @@
 #include "src/MatrixFunctions/MatrixFunction.h"
 #include "src/MatrixFunctions/MatrixSquareRoot.h"
 #include "src/MatrixFunctions/MatrixLogarithm.h"
-
+#include "src/MatrixFunctions/MatrixPower.h"
 
 
 /** 
-\page matrixbaseextra MatrixBase methods defined in the MatrixFunctions module
+\page matrixbaseextra_page
 \ingroup MatrixFunctions_Module
+
+\section matrixbaseextra MatrixBase methods defined in the MatrixFunctions module
 
 The remainder of the page documents the following MatrixBase methods
 which are defined in the MatrixFunctions module.
 
 
 
-\section matrixbase_cos MatrixBase::cos()
+\subsection matrixbase_cos MatrixBase::cos()
 
 Compute the matrix cosine.
 
@@ -86,7 +90,7 @@ This function calls \ref matrixbase_matrixfunction "matrixFunction()" with StdSt
 
 
 
-\section matrixbase_cosh MatrixBase::cosh()
+\subsection matrixbase_cosh MatrixBase::cosh()
 
 Compute the matrix hyberbolic cosine.
 
@@ -103,7 +107,7 @@ This function calls \ref matrixbase_matrixfunction "matrixFunction()" with StdSt
 
 
 
-\section matrixbase_exp MatrixBase::exp()
+\subsection matrixbase_exp MatrixBase::exp()
 
 Compute the matrix exponential.
 
@@ -158,7 +162,7 @@ Output: \verbinclude MatrixExponential.out
 \c complex<float>, \c complex<double>, or \c complex<long double> .
 
 
-\section matrixbase_log MatrixBase::log()
+\subsection matrixbase_log MatrixBase::log()
 
 Compute the matrix logarithm.
 
@@ -209,14 +213,77 @@ documentation of \ref matrixbase_exp "exp()".
 \include MatrixLogarithm.cpp
 Output: \verbinclude MatrixLogarithm.out
 
-\note \p M has to be a matrix of \c float, \c double, \c long double
-\c complex<float>, \c complex<double>, or \c complex<long double> .
+\note \p M has to be a matrix of \c float, \c double, <tt>long
+double</tt>, \c complex<float>, \c complex<double>, or \c complex<long
+double> .
 
 \sa MatrixBase::exp(), MatrixBase::matrixFunction(), 
     class MatrixLogarithmAtomic, MatrixBase::sqrt().
 
 
-\section matrixbase_matrixfunction MatrixBase::matrixFunction()
+\subsection matrixbase_pow MatrixBase::pow()
+
+Compute the matrix raised to arbitrary real power.
+
+\code
+const MatrixPowerReturnValue<Derived> MatrixBase<Derived>::pow(RealScalar p) const
+\endcode
+
+\param[in]  M  base of the matrix power, should be a square matrix.
+\param[in]  p  exponent of the matrix power, should be real.
+
+The matrix power \f$ M^p \f$ is defined as \f$ \exp(p \log(M)) \f$,
+where exp denotes the matrix exponential, and log denotes the matrix
+logarithm.
+
+The matrix \f$ M \f$ should meet the conditions to be an argument of
+matrix logarithm. If \p p is not of the real scalar type of \p M, it
+is casted into the real scalar type of \p M.
+
+This function computes the matrix power using the Schur-Pad&eacute;
+algorithm as implemented by class MatrixPower. The exponent is split
+into integral part and fractional part, where the fractional part is
+in the interval \f$ (-1, 1) \f$. The main diagonal and the first
+super-diagonal is directly computed.
+
+Details of the algorithm can be found in: Nicholas J. Higham and
+Lijing Lin, "A Schur-Pad&eacute; algorithm for fractional powers of a
+matrix," <em>SIAM J. %Matrix Anal. Applic.</em>,
+<b>32(3)</b>:1056&ndash;1078, 2011.
+
+Example: The following program checks that
+\f[ \left[ \begin{array}{ccc}
+      \cos1 & -\sin1 & 0 \\
+      \sin1 & \cos1 & 0 \\
+      0 & 0 & 1
+    \end{array} \right]^{\frac14\pi} = \left[ \begin{array}{ccc}
+      \frac12\sqrt2 & -\frac12\sqrt2 & 0 \\
+      \frac12\sqrt2 & \frac12\sqrt2 & 0 \\
+      0 & 0 & 1
+    \end{array} \right]. \f]
+This corresponds to \f$ \frac14\pi \f$ rotations of 1 radian around
+the z-axis.
+
+\include MatrixPower.cpp
+Output: \verbinclude MatrixPower.out
+
+MatrixBase::pow() is user-friendly. However, there are some
+circumstances under which you should use class MatrixPower directly.
+MatrixPower can save the result of Schur decomposition, so it's
+better for computing various powers for the same matrix.
+
+Example:
+\include MatrixPower_optimal.cpp
+Output: \verbinclude MatrixPower_optimal.out
+
+\note \p M has to be a matrix of \c float, \c double, <tt>long
+double</tt>, \c complex<float>, \c complex<double>, or \c complex<long
+double> .
+
+\sa MatrixBase::exp(), MatrixBase::log(), class MatrixPower.
+
+
+\subsection matrixbase_matrixfunction MatrixBase::matrixFunction()
 
 Compute a matrix function.
 
@@ -272,7 +339,7 @@ A.matrixFunction(StdStemFunctions<std::complex<double> >::exp, &B);
 
 
 
-\section matrixbase_sin MatrixBase::sin()
+\subsection matrixbase_sin MatrixBase::sin()
 
 Compute the matrix sine.
 
@@ -290,7 +357,7 @@ Output: \verbinclude MatrixSine.out
 
 
 
-\section matrixbase_sinh MatrixBase::sinh()
+\subsection matrixbase_sinh MatrixBase::sinh()
 
 Compute the matrix hyperbolic sine.
 
@@ -307,7 +374,7 @@ Example: \include MatrixSinh.cpp
 Output: \verbinclude MatrixSinh.out
 
 
-\section matrixbase_sqrt MatrixBase::sqrt()
+\subsection matrixbase_sqrt MatrixBase::sqrt()
 
 Compute the matrix square root.
 

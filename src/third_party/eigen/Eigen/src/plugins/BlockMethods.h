@@ -8,8 +8,6 @@
 // Public License v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef EIGEN_BLOCKMETHODS_H
-#define EIGEN_BLOCKMETHODS_H
 
 #ifndef EIGEN_PARSED_BY_DOXYGEN
 
@@ -32,6 +30,10 @@ template<int N> struct ConstNColsBlockXpr { typedef const Block<const Derived, i
 template<int N> struct NRowsBlockXpr { typedef Block<Derived, N, internal::traits<Derived>::ColsAtCompileTime, IsRowMajor> Type; };
 template<int N> struct ConstNRowsBlockXpr { typedef const Block<const Derived, N, internal::traits<Derived>::ColsAtCompileTime, IsRowMajor> Type; };
 
+typedef VectorBlock<Derived> SegmentReturnType;
+typedef const VectorBlock<const Derived> ConstSegmentReturnType;
+template<int Size> struct FixedSegmentReturnType { typedef VectorBlock<Derived, Size> Type; };
+template<int Size> struct ConstFixedSegmentReturnType { typedef const VectorBlock<const Derived, Size> Type; };
 
 #endif // not EIGEN_PARSED_BY_DOXYGEN
 
@@ -88,12 +90,13 @@ inline const Block<const Derived> topRightCorner(Index cRows, Index cCols) const
 
 /** \returns an expression of a fixed-size top-right corner of *this.
   *
-  * The template parameters CRows and CCols are the number of rows and columns in the corner.
+  * \tparam CRows the number of rows in the corner
+  * \tparam CCols the number of columns in the corner
   *
   * Example: \include MatrixBase_template_int_int_topRightCorner.cpp
   * Output: \verbinclude MatrixBase_template_int_int_topRightCorner.out
   *
-  * \sa class Block, block(Index,Index,Index,Index)
+  * \sa class Block, block<int,int>(Index,Index)
   */
 template<int CRows, int CCols>
 inline Block<Derived, CRows, CCols> topRightCorner()
@@ -108,6 +111,35 @@ inline const Block<const Derived, CRows, CCols> topRightCorner() const
   return Block<const Derived, CRows, CCols>(derived(), 0, cols() - CCols);
 }
 
+/** \returns an expression of a top-right corner of *this.
+  *
+  * \tparam CRows number of rows in corner as specified at compile time
+  * \tparam CCols number of columns in corner as specified at compile time
+  * \param  cRows number of rows in corner as specified at run time
+  * \param  cCols number of columns in corner as specified at run time
+  *
+  * This function is mainly useful for corners where the number of rows is specified at compile time
+  * and the number of columns is specified at run time, or vice versa. The compile-time and run-time
+  * information should not contradict. In other words, \a cRows should equal \a CRows unless
+  * \a CRows is \a Dynamic, and the same for the number of columns.
+  *
+  * Example: \include MatrixBase_template_int_int_topRightCorner_int_int.cpp
+  * Output: \verbinclude MatrixBase_template_int_int_topRightCorner_int_int.out
+  *
+  * \sa class Block
+  */
+template<int CRows, int CCols>
+inline Block<Derived, CRows, CCols> topRightCorner(Index cRows, Index cCols)
+{
+  return Block<Derived, CRows, CCols>(derived(), 0, cols() - cCols, cRows, cCols);
+}
+
+/** This is the const version of topRightCorner<int, int>(Index, Index).*/
+template<int CRows, int CCols>
+inline const Block<const Derived, CRows, CCols> topRightCorner(Index cRows, Index cCols) const
+{
+  return Block<const Derived, CRows, CCols>(derived(), 0, cols() - cCols, cRows, cCols);
+}
 
 
 
@@ -152,6 +184,36 @@ template<int CRows, int CCols>
 inline const Block<const Derived, CRows, CCols> topLeftCorner() const
 {
   return Block<const Derived, CRows, CCols>(derived(), 0, 0);
+}
+
+/** \returns an expression of a top-left corner of *this.
+  *
+  * \tparam CRows number of rows in corner as specified at compile time
+  * \tparam CCols number of columns in corner as specified at compile time
+  * \param  cRows number of rows in corner as specified at run time
+  * \param  cCols number of columns in corner as specified at run time
+  *
+  * This function is mainly useful for corners where the number of rows is specified at compile time
+  * and the number of columns is specified at run time, or vice versa. The compile-time and run-time
+  * information should not contradict. In other words, \a cRows should equal \a CRows unless
+  * \a CRows is \a Dynamic, and the same for the number of columns.
+  *
+  * Example: \include MatrixBase_template_int_int_topLeftCorner_int_int.cpp
+  * Output: \verbinclude MatrixBase_template_int_int_topLeftCorner_int_int.out
+  *
+  * \sa class Block
+  */
+template<int CRows, int CCols>
+inline Block<Derived, CRows, CCols> topLeftCorner(Index cRows, Index cCols)
+{
+  return Block<Derived, CRows, CCols>(derived(), 0, 0, cRows, cCols);
+}
+
+/** This is the const version of topLeftCorner<int, int>(Index, Index).*/
+template<int CRows, int CCols>
+inline const Block<const Derived, CRows, CCols> topLeftCorner(Index cRows, Index cCols) const
+{
+  return Block<const Derived, CRows, CCols>(derived(), 0, 0, cRows, cCols);
 }
 
 
@@ -199,6 +261,36 @@ inline const Block<const Derived, CRows, CCols> bottomRightCorner() const
   return Block<const Derived, CRows, CCols>(derived(), rows() - CRows, cols() - CCols);
 }
 
+/** \returns an expression of a bottom-right corner of *this.
+  *
+  * \tparam CRows number of rows in corner as specified at compile time
+  * \tparam CCols number of columns in corner as specified at compile time
+  * \param  cRows number of rows in corner as specified at run time
+  * \param  cCols number of columns in corner as specified at run time
+  *
+  * This function is mainly useful for corners where the number of rows is specified at compile time
+  * and the number of columns is specified at run time, or vice versa. The compile-time and run-time
+  * information should not contradict. In other words, \a cRows should equal \a CRows unless
+  * \a CRows is \a Dynamic, and the same for the number of columns.
+  *
+  * Example: \include MatrixBase_template_int_int_bottomRightCorner_int_int.cpp
+  * Output: \verbinclude MatrixBase_template_int_int_bottomRightCorner_int_int.out
+  *
+  * \sa class Block
+  */
+template<int CRows, int CCols>
+inline Block<Derived, CRows, CCols> bottomRightCorner(Index cRows, Index cCols)
+{
+  return Block<Derived, CRows, CCols>(derived(), rows() - cRows, cols() - cCols, cRows, cCols);
+}
+
+/** This is the const version of bottomRightCorner<int, int>(Index, Index).*/
+template<int CRows, int CCols>
+inline const Block<const Derived, CRows, CCols> bottomRightCorner(Index cRows, Index cCols) const
+{
+  return Block<const Derived, CRows, CCols>(derived(), rows() - cRows, cols() - cCols, cRows, cCols);
+}
+
 
 
 /** \returns a dynamic-size expression of a bottom-left corner of *this.
@@ -242,6 +334,36 @@ template<int CRows, int CCols>
 inline const Block<const Derived, CRows, CCols> bottomLeftCorner() const
 {
   return Block<const Derived, CRows, CCols>(derived(), rows() - CRows, 0);
+}
+
+/** \returns an expression of a bottom-left corner of *this.
+  *
+  * \tparam CRows number of rows in corner as specified at compile time
+  * \tparam CCols number of columns in corner as specified at compile time
+  * \param  cRows number of rows in corner as specified at run time
+  * \param  cCols number of columns in corner as specified at run time
+  *
+  * This function is mainly useful for corners where the number of rows is specified at compile time
+  * and the number of columns is specified at run time, or vice versa. The compile-time and run-time
+  * information should not contradict. In other words, \a cRows should equal \a CRows unless
+  * \a CRows is \a Dynamic, and the same for the number of columns.
+  *
+  * Example: \include MatrixBase_template_int_int_bottomLeftCorner_int_int.cpp
+  * Output: \verbinclude MatrixBase_template_int_int_bottomLeftCorner_int_int.out
+  *
+  * \sa class Block
+  */
+template<int CRows, int CCols>
+inline Block<Derived, CRows, CCols> bottomLeftCorner(Index cRows, Index cCols)
+{
+  return Block<Derived, CRows, CCols>(derived(), rows() - cRows, 0, cRows, cCols);
+}
+
+/** This is the const version of bottomLeftCorner<int, int>(Index, Index).*/
+template<int CRows, int CCols>
+inline const Block<const Derived, CRows, CCols> bottomLeftCorner(Index cRows, Index cCols) const
+{
+  return Block<const Derived, CRows, CCols>(derived(), rows() - cRows, 0, cRows, cCols);
 }
 
 
@@ -543,6 +665,40 @@ inline const Block<const Derived, BlockRows, BlockCols> block(Index startRow, In
   return Block<const Derived, BlockRows, BlockCols>(derived(), startRow, startCol);
 }
 
+/** \returns an expression of a block in *this.
+  *
+  * \tparam BlockRows number of rows in block as specified at compile time
+  * \tparam BlockCols number of columns in block as specified at compile time
+  * \param  startRow  the first row in the block
+  * \param  startCol  the first column in the block
+  * \param  blockRows number of rows in block as specified at run time
+  * \param  blockCols number of columns in block as specified at run time
+  *
+  * This function is mainly useful for blocks where the number of rows is specified at compile time
+  * and the number of columns is specified at run time, or vice versa. The compile-time and run-time
+  * information should not contradict. In other words, \a blockRows should equal \a BlockRows unless
+  * \a BlockRows is \a Dynamic, and the same for the number of columns.
+  *
+  * Example: \include MatrixBase_template_int_int_block_int_int_int_int.cpp
+  * Output: \verbinclude MatrixBase_template_int_int_block_int_int_int_int.cpp
+  *
+  * \sa class Block, block(Index,Index,Index,Index)
+  */
+template<int BlockRows, int BlockCols>
+inline Block<Derived, BlockRows, BlockCols> block(Index startRow, Index startCol, 
+                                                  Index blockRows, Index blockCols)
+{
+  return Block<Derived, BlockRows, BlockCols>(derived(), startRow, startCol, blockRows, blockCols);
+}
+
+/** This is the const version of block<>(Index, Index, Index, Index). */
+template<int BlockRows, int BlockCols>
+inline const Block<const Derived, BlockRows, BlockCols> block(Index startRow, Index startCol,
+                                                              Index blockRows, Index blockCols) const
+{
+  return Block<const Derived, BlockRows, BlockCols>(derived(), startRow, startCol, blockRows, blockCols);
+}
+
 /** \returns an expression of the \a i-th column of *this. Note that the numbering starts at 0.
   *
   * Example: \include MatrixBase_col.cpp
@@ -577,4 +733,169 @@ inline ConstRowXpr row(Index i) const
   return ConstRowXpr(derived(), i);
 }
 
-#endif // EIGEN_BLOCKMETHODS_H
+/** \returns a dynamic-size expression of a segment (i.e. a vector block) in *this.
+  *
+  * \only_for_vectors
+  *
+  * \param start the first coefficient in the segment
+  * \param vecSize the number of coefficients in the segment
+  *
+  * Example: \include MatrixBase_segment_int_int.cpp
+  * Output: \verbinclude MatrixBase_segment_int_int.out
+  *
+  * \note Even though the returned expression has dynamic size, in the case
+  * when it is applied to a fixed-size vector, it inherits a fixed maximal size,
+  * which means that evaluating it does not cause a dynamic memory allocation.
+  *
+  * \sa class Block, segment(Index)
+  */
+inline SegmentReturnType segment(Index start, Index vecSize)
+{
+  EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived)
+  return SegmentReturnType(derived(), start, vecSize);
+}
+
+
+/** This is the const version of segment(Index,Index).*/
+inline ConstSegmentReturnType segment(Index start, Index vecSize) const
+{
+  EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived)
+  return ConstSegmentReturnType(derived(), start, vecSize);
+}
+
+/** \returns a dynamic-size expression of the first coefficients of *this.
+  *
+  * \only_for_vectors
+  *
+  * \param vecSize the number of coefficients in the block
+  *
+  * Example: \include MatrixBase_start_int.cpp
+  * Output: \verbinclude MatrixBase_start_int.out
+  *
+  * \note Even though the returned expression has dynamic size, in the case
+  * when it is applied to a fixed-size vector, it inherits a fixed maximal size,
+  * which means that evaluating it does not cause a dynamic memory allocation.
+  *
+  * \sa class Block, block(Index,Index)
+  */
+inline SegmentReturnType head(Index vecSize)
+{
+  EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived)
+  return SegmentReturnType(derived(), 0, vecSize);
+}
+
+/** This is the const version of head(Index).*/
+inline ConstSegmentReturnType
+  head(Index vecSize) const
+{
+  EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived)
+  return ConstSegmentReturnType(derived(), 0, vecSize);
+}
+
+/** \returns a dynamic-size expression of the last coefficients of *this.
+  *
+  * \only_for_vectors
+  *
+  * \param vecSize the number of coefficients in the block
+  *
+  * Example: \include MatrixBase_end_int.cpp
+  * Output: \verbinclude MatrixBase_end_int.out
+  *
+  * \note Even though the returned expression has dynamic size, in the case
+  * when it is applied to a fixed-size vector, it inherits a fixed maximal size,
+  * which means that evaluating it does not cause a dynamic memory allocation.
+  *
+  * \sa class Block, block(Index,Index)
+  */
+inline SegmentReturnType tail(Index vecSize)
+{
+  EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived)
+  return SegmentReturnType(derived(), this->size() - vecSize, vecSize);
+}
+
+/** This is the const version of tail(Index).*/
+inline ConstSegmentReturnType tail(Index vecSize) const
+{
+  EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived)
+  return ConstSegmentReturnType(derived(), this->size() - vecSize, vecSize);
+}
+
+/** \returns a fixed-size expression of a segment (i.e. a vector block) in \c *this
+  *
+  * \only_for_vectors
+  *
+  * The template parameter \a Size is the number of coefficients in the block
+  *
+  * \param start the index of the first element of the sub-vector
+  *
+  * Example: \include MatrixBase_template_int_segment.cpp
+  * Output: \verbinclude MatrixBase_template_int_segment.out
+  *
+  * \sa class Block
+  */
+template<int Size>
+inline typename FixedSegmentReturnType<Size>::Type segment(Index start)
+{
+  EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived)
+  return typename FixedSegmentReturnType<Size>::Type(derived(), start);
+}
+
+/** This is the const version of segment<int>(Index).*/
+template<int Size>
+inline typename ConstFixedSegmentReturnType<Size>::Type segment(Index start) const
+{
+  EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived)
+  return typename ConstFixedSegmentReturnType<Size>::Type(derived(), start);
+}
+
+/** \returns a fixed-size expression of the first coefficients of *this.
+  *
+  * \only_for_vectors
+  *
+  * The template parameter \a Size is the number of coefficients in the block
+  *
+  * Example: \include MatrixBase_template_int_start.cpp
+  * Output: \verbinclude MatrixBase_template_int_start.out
+  *
+  * \sa class Block
+  */
+template<int Size>
+inline typename FixedSegmentReturnType<Size>::Type head()
+{
+  EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived)
+  return typename FixedSegmentReturnType<Size>::Type(derived(), 0);
+}
+
+/** This is the const version of head<int>().*/
+template<int Size>
+inline typename ConstFixedSegmentReturnType<Size>::Type head() const
+{
+  EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived)
+  return typename ConstFixedSegmentReturnType<Size>::Type(derived(), 0);
+}
+
+/** \returns a fixed-size expression of the last coefficients of *this.
+  *
+  * \only_for_vectors
+  *
+  * The template parameter \a Size is the number of coefficients in the block
+  *
+  * Example: \include MatrixBase_template_int_end.cpp
+  * Output: \verbinclude MatrixBase_template_int_end.out
+  *
+  * \sa class Block
+  */
+template<int Size>
+inline typename FixedSegmentReturnType<Size>::Type tail()
+{
+  EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived)
+  return typename FixedSegmentReturnType<Size>::Type(derived(), size() - Size);
+}
+
+/** This is the const version of tail<int>.*/
+template<int Size>
+inline typename ConstFixedSegmentReturnType<Size>::Type tail() const
+{
+  EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived)
+  return typename ConstFixedSegmentReturnType<Size>::Type(derived(), size() - Size);
+}

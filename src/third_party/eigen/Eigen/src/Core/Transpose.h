@@ -62,7 +62,7 @@ template<typename MatrixType> class Transpose
     typedef typename TransposeImpl<MatrixType,typename internal::traits<MatrixType>::StorageKind>::Base Base;
     EIGEN_GENERIC_PUBLIC_INTERFACE(Transpose)
 
-    inline Transpose(MatrixType& matrix) : m_matrix(matrix) {}
+    inline Transpose(MatrixType& a_matrix) : m_matrix(a_matrix) {}
 
     EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Transpose)
 
@@ -104,6 +104,7 @@ template<typename MatrixType> class TransposeImpl<MatrixType,Dense>
 
     typedef typename internal::TransposeImpl_base<MatrixType>::type Base;
     EIGEN_DENSE_PUBLIC_INTERFACE(Transpose<MatrixType>)
+    EIGEN_INHERIT_ASSIGNMENT_OPERATORS(TransposeImpl)
 
     inline Index innerStride() const { return derived().nestedExpression().innerStride(); }
     inline Index outerStride() const { return derived().nestedExpression().outerStride(); }
@@ -117,10 +118,10 @@ template<typename MatrixType> class TransposeImpl<MatrixType,Dense>
     inline ScalarWithConstIfNotLvalue* data() { return derived().nestedExpression().data(); }
     inline const Scalar* data() const { return derived().nestedExpression().data(); }
 
-    inline ScalarWithConstIfNotLvalue& coeffRef(Index row, Index col)
+    inline ScalarWithConstIfNotLvalue& coeffRef(Index rowId, Index colId)
     {
       EIGEN_STATIC_ASSERT_LVALUE(MatrixType)
-      return derived().nestedExpression().const_cast_derived().coeffRef(col, row);
+      return derived().nestedExpression().const_cast_derived().coeffRef(colId, rowId);
     }
 
     inline ScalarWithConstIfNotLvalue& coeffRef(Index index)
@@ -129,9 +130,9 @@ template<typename MatrixType> class TransposeImpl<MatrixType,Dense>
       return derived().nestedExpression().const_cast_derived().coeffRef(index);
     }
 
-    inline const Scalar& coeffRef(Index row, Index col) const
+    inline const Scalar& coeffRef(Index rowId, Index colId) const
     {
-      return derived().nestedExpression().coeffRef(col, row);
+      return derived().nestedExpression().coeffRef(colId, rowId);
     }
 
     inline const Scalar& coeffRef(Index index) const
@@ -139,9 +140,9 @@ template<typename MatrixType> class TransposeImpl<MatrixType,Dense>
       return derived().nestedExpression().coeffRef(index);
     }
 
-    inline CoeffReturnType coeff(Index row, Index col) const
+    inline CoeffReturnType coeff(Index rowId, Index colId) const
     {
-      return derived().nestedExpression().coeff(col, row);
+      return derived().nestedExpression().coeff(colId, rowId);
     }
 
     inline CoeffReturnType coeff(Index index) const
@@ -150,15 +151,15 @@ template<typename MatrixType> class TransposeImpl<MatrixType,Dense>
     }
 
     template<int LoadMode>
-    inline const PacketScalar packet(Index row, Index col) const
+    inline const PacketScalar packet(Index rowId, Index colId) const
     {
-      return derived().nestedExpression().template packet<LoadMode>(col, row);
+      return derived().nestedExpression().template packet<LoadMode>(colId, rowId);
     }
 
     template<int LoadMode>
-    inline void writePacket(Index row, Index col, const PacketScalar& x)
+    inline void writePacket(Index rowId, Index colId, const PacketScalar& x)
     {
-      derived().nestedExpression().const_cast_derived().template writePacket<LoadMode>(col, row, x);
+      derived().nestedExpression().const_cast_derived().template writePacket<LoadMode>(colId, rowId, x);
     }
 
     template<int LoadMode>
@@ -206,7 +207,7 @@ DenseBase<Derived>::transpose()
   *
   * \sa transposeInPlace(), adjoint() */
 template<typename Derived>
-inline const typename DenseBase<Derived>::ConstTransposeReturnType
+inline typename DenseBase<Derived>::ConstTransposeReturnType
 DenseBase<Derived>::transpose() const
 {
   return ConstTransposeReturnType(derived());
@@ -252,7 +253,7 @@ struct inplace_transpose_selector;
 template<typename MatrixType>
 struct inplace_transpose_selector<MatrixType,true> { // square matrix
   static void run(MatrixType& m) {
-    m.template triangularView<StrictlyUpper>().swap(m.transpose());
+    m.matrix().template triangularView<StrictlyUpper>().swap(m.matrix().transpose());
   }
 };
 
@@ -260,7 +261,7 @@ template<typename MatrixType>
 struct inplace_transpose_selector<MatrixType,false> { // non square matrix
   static void run(MatrixType& m) {
     if (m.rows()==m.cols())
-      m.template triangularView<StrictlyUpper>().swap(m.transpose());
+      m.matrix().template triangularView<StrictlyUpper>().swap(m.matrix().transpose());
     else
       m = m.transpose().eval();
   }
@@ -278,7 +279,7 @@ struct inplace_transpose_selector<MatrixType,false> { // non square matrix
   * m = m.transpose().eval();
   * \endcode
   * and is faster and also safer because in the latter line of code, forgetting the eval() results
-  * in a bug caused by aliasing.
+  * in a bug caused by \ref TopicAliasing "aliasing".
   *
   * Notice however that this method is only useful if you want to replace a matrix by its own transpose.
   * If you just need the transpose of a matrix, use transpose().
@@ -289,6 +290,8 @@ struct inplace_transpose_selector<MatrixType,false> { // non square matrix
 template<typename Derived>
 inline void DenseBase<Derived>::transposeInPlace()
 {
+  eigen_assert((rows() == cols() || (RowsAtCompileTime == Dynamic && ColsAtCompileTime == Dynamic))
+               && "transposeInPlace() called on a non-square non-resizable matrix");
   internal::inplace_transpose_selector<Derived>::run(derived());
 }
 
@@ -385,7 +388,7 @@ struct checkTransposeAliasing_impl
         eigen_assert((!check_transpose_aliasing_run_time_selector
                       <typename Derived::Scalar,blas_traits<Derived>::IsTransposed,OtherDerived>
                       ::run(extract_data(dst), other))
-          && "aliasing detected during tranposition, use transposeInPlace() "
+          && "aliasing detected during transposition, use transposeInPlace() "
              "or evaluate the rhs into a temporary using .eval()");
 
     }

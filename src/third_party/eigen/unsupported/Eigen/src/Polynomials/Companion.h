@@ -210,6 +210,7 @@ bool companion<_Scalar,_Deg>::balancedR( Scalar colNorm, Scalar rowNorm,
 template< typename _Scalar, int _Deg >
 void companion<_Scalar,_Deg>::balance()
 {
+  using std::abs;
   EIGEN_STATIC_ASSERT( Deg == Dynamic || 1 < Deg, YOU_MADE_A_PROGRAMMING_MISTAKE );
   const Index deg   = m_monic.size();
   const Index deg_1 = deg-1;

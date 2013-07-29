@@ -7,8 +7,8 @@
 // Public License v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef EIGEN_SCALING_H
-#define EIGEN_SCALING_H
+#ifndef EIGEN_ITERSCALING_H
+#define EIGEN_ITERSCALING_H
 /**
   * \ingroup IterativeSolvers_Module
   * \brief iterative scaling algorithm to equilibrate rows and column norms in matrices
@@ -24,7 +24,7 @@
   * VectorXd x(n), b(n);
   * SparseMatrix<double> A;
   * // fill A and b;
-  * Scaling<SparseMatrix<double> > scal; 
+  * IterScaling<SparseMatrix<double> > scal; 
   * // Compute the left and right scaling vectors. The matrix is equilibrated at output
   * scal.computeRef(A); 
   * // Scale the right hand side
@@ -41,10 +41,10 @@
   * 
   * \sa \ref IncompleteLUT 
   */
+namespace Eigen {
 using std::abs; 
-using namespace Eigen;
 template<typename _MatrixType>
-class Scaling
+class IterScaling
 {
   public:
     typedef _MatrixType MatrixType; 
@@ -52,15 +52,15 @@ class Scaling
     typedef typename MatrixType::Index Index;
     
   public:
-    Scaling() { init(); }
+    IterScaling() { init(); }
     
-    Scaling(const MatrixType& matrix)
+    IterScaling(const MatrixType& matrix)
     {
       init();
       compute(matrix);
     }
     
-    ~Scaling() { }
+    ~IterScaling() { }
     
     /** 
      * Compute the left and right diagonal matrices to scale the input matrix @p mat
@@ -73,7 +73,7 @@ class Scaling
     {
       int m = mat.rows(); 
       int n = mat.cols();
-      assert((m>0 && m == n) && "Please give a non - empty matrix");
+      eigen_assert((m>0 && m == n) && "Please give a non - empty matrix");
       m_left.resize(m); 
       m_right.resize(n);
       m_left.setOnes();
@@ -181,5 +181,5 @@ class Scaling
     double m_tol; 
     int m_maxits; // Maximum number of iterations allowed
 };
-
+}
 #endif

@@ -24,10 +24,10 @@ void r1updt(
 
     // r1updt had a broader usecase, but we dont use it here. And, more
     // importantly, we can not test it.
-    assert(m==n);
-    assert(u.size()==m);
-    assert(v.size()==n);
-    assert(w.size()==n);
+    eigen_assert(m==n);
+    eigen_assert(u.size()==m);
+    eigen_assert(v.size()==n);
+    eigen_assert(w.size()==n);
 
     /* move the nontrivial part of the last column of s into w. */
     w[n-1] = s(n-1,n-1);

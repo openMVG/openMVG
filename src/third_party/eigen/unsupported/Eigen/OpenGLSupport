@@ -15,7 +15,7 @@
 
 namespace Eigen {
 
-/** \ingroup Unsupported_modules
+/**
   * \defgroup OpenGLSUpport_Module OpenGL Support module
   *
   * This module provides wrapper functions for a couple of OpenGL functions

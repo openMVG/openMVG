@@ -5,7 +5,6 @@
 #include <sstream>
 
 using namespace mpfr;
-using namespace std;
 using namespace Eigen;
 
 void test_mpreal_support()
@@ -46,8 +45,7 @@ void test_mpreal_support()
     // symmetric eigenvalues
     SelfAdjointEigenSolver<MatrixXmp> eig(S);
     VERIFY_IS_EQUAL(eig.info(), Success);
-    VERIFY_IS_APPROX((S.selfadjointView<Lower>() * eig.eigenvectors()),
-                      eig.eigenvectors() * eig.eigenvalues().asDiagonal());
+    VERIFY( (S.selfadjointView<Lower>() * eig.eigenvectors()).isApprox(eig.eigenvectors() * eig.eigenvalues().asDiagonal(), NumTraits<mpreal>::dummy_precision()*1e3) );
   }
   
   {
@@ -57,8 +55,3 @@ void test_mpreal_support()
     stream << A;
   }
 }
-
-extern "C" {
-#include "mpreal/dlmalloc.c"
-}
-#include "mpreal/mpreal.cpp"
