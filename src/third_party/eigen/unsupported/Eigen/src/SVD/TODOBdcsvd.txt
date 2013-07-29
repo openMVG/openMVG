@@ -1,0 +1,29 @@
+TO DO LIST
+
+
+
+(optional optimization) - do all the allocations in the allocate part 
+                        - support static matrices
+                        - return a error at compilation time when using integer matrices (int, long, std::complex<int>, ...)
+
+to finish the algorithm :
+			-implement the last part of the algorithm as described on the reference paper. 
+			    You may find more information on that part on this paper
+
+			-to replace the call to JacobiSVD at the end of the divide algorithm, just after the call to 
+			    deflation.
+
+(suggested step by step resolution)
+                       0) comment the call to Jacobi in the last part of the divide method and everything right after
+                               until the end of the method. What is commented can be a guideline to steps 3) 4) and 6)
+                       1) solve the secular equation (Characteristic equation) on the values that are not null (zi!=0 and di!=0), after the deflation
+                               wich should be uncommented in the divide method
+                       2) remember the values of the singular values that are already computed (zi=0)
+                       3) assign the singular values found in m_computed at the right places (with the ones found in step 2) )
+                               in decreasing order
+                       4) set the firstcol to zero (except the first element) in m_computed
+                       5) compute all the singular vectors when CompV is set to true and only the left vectors when
+                               CompV is set to false
+                       6) multiply naiveU and naiveV to the right by the matrices found, only naiveU when CompV is set to
+                               false, /!\ if CompU is false NaiveU has only 2 rows
+                       7) delete everything commented in step 0)
