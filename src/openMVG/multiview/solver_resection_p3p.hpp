@@ -294,7 +294,7 @@ struct P3PSolver {
     Vec3 t;
     Mat34 P;
     assert(2 == pt2D.rows());
-    assert(3 == pt3d.rows());
+    assert(3 == pt3D.rows());
     assert(pt2D.cols() == pt3D.cols());
     Mat solutions = Mat(3, 4*4);
     Mat3 pt2D_3x3;
