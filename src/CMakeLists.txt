@@ -31,16 +31,22 @@ ENDIF (SSE2_FOUND)
 # OpenMP detection
 # ==============================================================================
 FIND_PACKAGE(OpenMP)
-if (OPENMP_FOUND)
+IF (OPENMP_FOUND)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
   option(USE_OPENMP "Use OpenMP for parallelization" ON)
   ADD_DEFINITIONS(-DUSE_OPENMP)
   IF (NOT MSVC)
     LIST(APPEND OPENMVG_LIBRARY_DEPENDENCIES gomp)
   ENDIF (NOT MSVC)
-else(OPENMP_FOUND)
+ELSE (OPENMP_FOUND)
   option(USE_OPENMP "Use OpenMP for parallelization" OFF)
-endif (OPENMP_FOUND)
+ENDIF (OPENMP_FOUND)
+
+# ==============================================================================
+# IMAGE IO detection
+# ==============================================================================
+FIND_PACKAGE(JPEG QUIET)
+FIND_PACKAGE(PNG QUIET)
 
 # ==============================================================================
 # glfw
@@ -53,7 +59,7 @@ include_directories(SYSTEM dependencies/glfw/include)
 include_directories(SYSTEM dependencies/glm)
 
 # ==============================================================================
-# Enable UNIT TEST cmake framework
+# Enable cmake UNIT TEST framework
 # ==============================================================================
 ENABLE_TESTING()
 # MACRO to ease UnitTesting
@@ -78,6 +84,8 @@ ADD_SUBDIRECTORY(third_party)
 # ==============================================================================
 INCLUDE_DIRECTORIES(./
   ./third_party/
+  ${JPEG_INCLUDE_DIR}
+  ${PNG_INCLUDE_DIRS}
   ./third_party/eigen
   ./third_party/lemon
   ${PROJECT_BINARY_DIR}/third_party/lemon
@@ -85,13 +93,6 @@ INCLUDE_DIRECTORIES(./
   ./third_party/ceres-solver/internal/ceres/miniglog
   ./third_party/flann/src/cpp
 )
-
-IF (WIN32 OR APPLE)
-  INCLUDE_DIRECTORIES(
-    third_party/jpeg
-    third_party/zlib
-    third_party/png)
-ENDIF (WIN32 OR APPLE)
 
 # ==============================================================================
 # openMVG modules
@@ -103,7 +104,7 @@ ADD_SUBDIRECTORY(openMVG)
 # Included for research purpose only
 ADD_SUBDIRECTORY(patented)
 
-# openMVG pratical example
+# openMVG tutorial examples
 ADD_SUBDIRECTORY(openMVG_Samples)
 
 # Complete software build on openMVG
