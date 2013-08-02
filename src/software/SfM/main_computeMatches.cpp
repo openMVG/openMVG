@@ -182,7 +182,7 @@ int main(int argc, char **argv)
 
   //-- Load descriptor in memory
   std::map<size_t, KeypointSetT > map_featAndDesc; //empty descriptor
-  std::map<size_t, float * > map_Desc; // descriptor as contiguous memory
+  std::map<size_t, descT::bin_type * > map_Desc; // descriptor as contiguous memory
   {
      for (size_t j = 0; j < vec_fileNames.size(); ++j)  {
         // Load descriptor of Jnth image
@@ -229,11 +229,11 @@ int main(int argc, char **argv)
     {
       // Define the matcher and the used metric (Squared L2)
       // ANN matcher could be defined as follow:
-      typedef flann::L2<descT::bin_type> Metric;
-      typedef ArrayMatcher_Kdtree_Flann<descT::bin_type, Metric> MatcherT;
+      typedef flann::L2<descT::bin_type> MetricT;
+      typedef ArrayMatcher_Kdtree_Flann<descT::bin_type, MetricT> MatcherT;
       // Brute force matcher is defined as following:
-      //typedef L2_Vectorized<descT::bin_type> Metric;
-      //typedef ArrayMatcherBruteForce<descT::bin_type, Metric> MatcherT;
+      //typedef L2_Vectorized<descT::bin_type> MetricT;
+      //typedef ArrayMatcherBruteForce<descT::bin_type, MetricT> MatcherT;
 
       // Load descriptor of Inth image
       const KeypointSetT & kpSetI = map_featAndDesc[i];
@@ -253,7 +253,7 @@ int main(int argc, char **argv)
 
         const size_t NNN__ = 2;
         std::vector<int> vec_nIndice01, vec_nIndice10;
-        std::vector<Metric::ResultType> vec_fDistance01, vec_fDistance10;
+        std::vector<MetricT::ResultType> vec_fDistance01, vec_fDistance10;
 
         //Find left->right
         matcher10.SearchNeighbours(tab1, kpSetJ.features().size(), &vec_nIndice10, &vec_fDistance10, NNN__);
@@ -303,7 +303,7 @@ int main(int argc, char **argv)
   }
 
   //-- Free descriptor memory:
-  for (std::map<size_t, float * >::const_iterator itDesc = map_Desc.begin();
+  for (std::map<size_t, descT::bin_type * >::const_iterator itDesc = map_Desc.begin();
     itDesc != map_Desc.end(); ++itDesc)
   {
     delete [] itDesc->second;
