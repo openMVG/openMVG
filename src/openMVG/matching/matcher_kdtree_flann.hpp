@@ -43,16 +43,21 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
    */
   bool Build( const Scalar * dataset, int nbRows, int dimension)  {
 
-    _dimension = dimension;
-    //-- Build Flann Matrix container (map to already allocated memory)
-    _datasetM = auto_ptr< flann::Matrix<Scalar> >(
-        new flann::Matrix<Scalar>((Scalar*)dataset, nbRows, dimension));
-    //-- Build FLANN index
-    _index = auto_ptr< flann::Index<Metric> > (
-        new flann::Index<Metric> (*_datasetM, flann::KDTreeIndexParams(4)) );
-    (*_index).buildIndex();
+    if (nbRows > 0)
+    {
+      _dimension = dimension;
+      //-- Build Flann Matrix container (map to already allocated memory)
+      _datasetM = auto_ptr< flann::Matrix<Scalar> >(
+          new flann::Matrix<Scalar>((Scalar*)dataset, nbRows, dimension));
 
-    return (true);
+      //-- Build FLANN index
+      _index = auto_ptr< flann::Index<Metric> > (
+          new flann::Index<Metric> (*_datasetM, flann::KDTreeIndexParams(4)) );
+      (*_index).buildIndex();
+
+      return true;
+    }
+    return false;
   }
 
   /**
