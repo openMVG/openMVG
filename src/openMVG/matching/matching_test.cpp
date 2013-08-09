@@ -116,26 +116,24 @@ TEST(Matching, ArrayMatcher_Kdtree_Flann_Simple__NN)
 
 TEST(Matching, ArrayMatcherBruteForce_Simple_EmptyArrays)
 {
-  float array[0];
+  std::vector<float> array;
   ArrayMatcherBruteForce<float> matcher;
-  EXPECT_FALSE( matcher.Build(array, 0, 4) );
+  EXPECT_FALSE( matcher.Build(&array[0], 0, 4) );
 
-  float query[0];
   int nIndice = -1;
   float fDistance = -1.0f;
-  EXPECT_FALSE( matcher.SearchNeighbour( query, &nIndice, &fDistance) );
+  EXPECT_FALSE( matcher.SearchNeighbour( &array[0], &nIndice, &fDistance) );
 }
 
 TEST(Matching, ArrayMatcher_Kdtree_Flann_Simple_EmptyArrays)
 {
-  float array[0];
+  std::vector<float> array;
   ArrayMatcher_Kdtree_Flann<float> matcher;
-  EXPECT_FALSE( matcher.Build(array, 0, 4) );
+  EXPECT_FALSE( matcher.Build(&array[0], 0, 4) );
 
-  float query[0];
   int nIndice = -1;
   float fDistance = -1.0f;
-  EXPECT_FALSE( matcher.SearchNeighbour( query, &nIndice, &fDistance) );
+  EXPECT_FALSE( matcher.SearchNeighbour( &array[0], &nIndice, &fDistance) );
 }
 
 /* ************************************************************************* */
