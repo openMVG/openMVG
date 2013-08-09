@@ -252,8 +252,8 @@ int main(int argc, char **argv)
         const descT::bin_type * tab1 = map_Desc[j];
 
         const size_t NNN__ = 2;
-        std::vector<int> vec_nIndice01, vec_nIndice10;
-        std::vector<MetricT::ResultType> vec_fDistance01, vec_fDistance10;
+        std::vector<int> vec_nIndice10;
+        std::vector<MetricT::ResultType> vec_fDistance10;
 
         //Find left->right
         matcher10.SearchNeighbours(tab1, kpSetJ.features().size(), &vec_nIndice10, &vec_fDistance10, NNN__);
