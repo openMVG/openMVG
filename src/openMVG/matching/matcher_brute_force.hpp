@@ -37,6 +37,10 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
    * \return True if success.
    */
   bool Build(const Scalar * dataset, int nbRows, int dimension) {
+    if (nbRows < 1) {
+      memMapping = auto_ptr< Eigen::Map<BaseMat> >(NULL);
+      return false;
+    }
     memMapping = auto_ptr< Eigen::Map<BaseMat> >
       (new Eigen::Map<BaseMat>( (Scalar*)dataset, nbRows, dimension) );
     return true;
@@ -55,22 +59,29 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
   bool SearchNeighbour( const Scalar * query,
                         int * indice, DistanceType * distance)
   {
-    //matrix representation of the input data;
-    Eigen::Map<BaseMat> mat_query((Scalar*)query, 1, (*memMapping).cols() );
-    Metric metric;
-    vector<double> vec_dist((*memMapping).rows(), 0.0);
-    for (int i = 0; i < (*memMapping).rows(); ++i)  {
-      // Compute Distance Metric
-      vec_dist[i] = metric( (Scalar*)query, (*memMapping).row(i).data(), (*memMapping).cols() );
+    if (memMapping.get() != NULL)  {
+      //matrix representation of the input data;
+      Eigen::Map<BaseMat> mat_query((Scalar*)query, 1, (*memMapping).cols() );
+      Metric metric;
+      vector<double> vec_dist((*memMapping).rows(), 0.0);
+      for (int i = 0; i < (*memMapping).rows(); ++i)  {
+        // Compute Distance Metric
+        vec_dist[i] = metric( (Scalar*)query, (*memMapping).row(i).data(), (*memMapping).cols() );
+      }
+      if (!vec_dist.empty())
+      {
+        // Find the minimum distance :
+        vector<double>::const_iterator min_iter =
+          min_element( vec_dist.begin(), vec_dist.end());
+        *indice =std::distance(vector<double>::const_iterator(vec_dist.begin()),
+          min_iter);
+        *distance = static_cast<DistanceType>(*min_iter);
+      }
+      return true;
     }
-    // Find the minimum distance :
-    vector<double>::const_iterator min_iter =
-      min_element( vec_dist.begin(), vec_dist.end());
-    *indice =std::distance(vector<double>::const_iterator(vec_dist.begin()),
-      min_iter);
-    *distance = static_cast<DistanceType>(*min_iter);
-
-    return true;
+    else  {
+      return false;
+    }
   }
 
 
@@ -92,8 +103,7 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
                           vector<DistanceType> * pvec_distance,
                           size_t NN)
   {
-    if (NN > (*memMapping).rows() )
-    {
+    if (NN > (*memMapping).rows() || nbQuery < 1) {
       std::cerr << "Too much asked nearest neighbors" << std::endl;
       return false;
     }
@@ -121,7 +131,6 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
         pvec_indice->push_back(packet_vec[i].index);
       }
     }
-
     return true;
   };
 

@@ -80,7 +80,6 @@ TEST(Matching, ArrayMatcherBruteForce_Simple_Dim4)
   EXPECT_NEAR( 0.0f, fDistance, 1e-8); //distance
 }
 
-
 TEST(Matching, ArrayMatcher_Kdtree_Flann_Simple__NN)
 {
   float array[] = {0, 1, 2, 5, 6};
@@ -111,6 +110,32 @@ TEST(Matching, ArrayMatcher_Kdtree_Flann_Simple__NN)
   EXPECT_EQ(0, vec_nIndice[2]);
   EXPECT_EQ(3, vec_nIndice[3]);
   EXPECT_EQ(4, vec_nIndice[4]);
+}
+
+//-- Test LIMIT case (empty arrays)
+
+TEST(Matching, ArrayMatcherBruteForce_Simple_EmptyArrays)
+{
+  float array[0];
+  ArrayMatcherBruteForce<float> matcher;
+  EXPECT_FALSE( matcher.Build(array, 0, 4) );
+
+  float query[0];
+  int nIndice = -1;
+  float fDistance = -1.0f;
+  EXPECT_FALSE( matcher.SearchNeighbour( query, &nIndice, &fDistance) );
+}
+
+TEST(Matching, ArrayMatcher_Kdtree_Flann_Simple_EmptyArrays)
+{
+  float array[0];
+  ArrayMatcher_Kdtree_Flann<float> matcher;
+  EXPECT_FALSE( matcher.Build(array, 0, 4) );
+
+  float query[0];
+  int nIndice = -1;
+  float fDistance = -1.0f;
+  EXPECT_FALSE( matcher.SearchNeighbour( query, &nIndice, &fDistance) );
 }
 
 /* ************************************************************************* */
