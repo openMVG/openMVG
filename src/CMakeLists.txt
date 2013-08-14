@@ -59,6 +59,17 @@ include_directories(SYSTEM dependencies/glfw/include)
 include_directories(SYSTEM dependencies/glm)
 
 # ==============================================================================
+# Opencv is not used by openMVG but some samples show how to use openCV
+#  and openMVG simultaneously
+# ==============================================================================
+SET(USE_OPENCV OFF CACHE BOOL "Do not build opencv+openMVG samples programs" FORCE)
+IF (USE_OPENCV)
+# In order use openMVG+openCV samples set USE_OPENCV to ON and set the OpenCV_DIR
+#  to the build directory of openCV. Prefer use static version of openCV libraries.
+  SET(OpenCV_DIR "/home/pierre/Documents/Dev_OpenCV/opencv_Build")
+ENDIF (USE_OPENCV)
+
+# ==============================================================================
 # Enable cmake UNIT TEST framework
 # ==============================================================================
 ENABLE_TESTING()
