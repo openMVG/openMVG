@@ -9,20 +9,18 @@
 #include "openMVG/features/features.hpp"
 #include "openMVG/matching/matcher_brute_force.hpp"
 #include "openMVG/matching/matcher_kdtree_flann.hpp"
-#include "openMVG/matching/matching_filters.hpp"
-#include "openMVG/matching/indMatchDecoratorXY.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
-#include "openMVG/multiview/solver_fundamental_kernel.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 
+/// Generic Image Collection image matching
+#include "software/SfM/ImageCollectionMatcher_AllInMemory.hpp"
+#include "software/SfM/ImageCollectionGeometricFilter.hpp"
+#include "software/SfM/ImageCollection_F_ACRobust.hpp"
+#include "software/SfM/pairwiseAdjacencyDisplay.hpp"
+
+/// Feature detector and descriptor interface
 #include "patented/sift/SIFT.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/progress/progress.hpp"
-
-#include "software/SfM/pairwiseAdjacencyDisplay.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -137,24 +135,25 @@ int main(int argc, char **argv)
   // b. Compute features and descriptor
   //    - extract sift features and descriptor
   //    - if keypoints already computed, re-load them
-  //    - else save features and descriptors and disk
+  //    - else save features and descriptors on disk
   //---------------------------------------
 
-  typedef Descriptor<float, 128> descT;
+  typedef Descriptor<float, 128> DescriptorT;
   typedef SIOPointFeature FeatureT;
-  typedef std::vector<FeatureT> featsT;
-  typedef vector<descT > descsT;
-  typedef KeypointSet<featsT, descsT > KeypointSetT;
+  typedef std::vector<FeatureT> FeatsT;
+  typedef vector<DescriptorT > DescsT;
+  typedef KeypointSet<FeatsT, DescsT > KeypointSetT;
 
-  vec_imagesSize.resize(vec_fileNames.size());
+  // extract SIFT features
   {
-    // extract SIFT features
-    cout << endl << endl << "EXTRACT SIFT FEATURES" << endl;
+    std::cout << "\n\nEXTRACT SIFT FEATURES" << std::endl;
+    vec_imagesSize.resize(vec_fileNames.size());
+    Image<RGBColor> imageRGB;
+    Image<unsigned char> imageGray;
+
     C_Progress_display my_progress_bar( vec_fileNames.size() );
     for(size_t i=0; i < vec_fileNames.size(); ++i)  {
       KeypointSetT kpSet;
-      Image<RGBColor> imageRGB;
-      Image<unsigned char> imageGray;
 
       std::string sFeat = stlplus::create_filespec(sOutDir,
         stlplus::basename_part(vec_fileNames[i]), "feat");
@@ -164,151 +163,68 @@ int main(int argc, char **argv)
       //Test if descriptor and feature was already computed
       if (stlplus::file_exists(sFeat) && stlplus::file_exists(sDesc)) {
 
-        ReadImage(vec_fileNames[i].c_str(), &imageRGB);
-        vec_imagesSize[i] = make_pair(imageRGB.Width(), imageRGB.Height());
+        if (ReadImage(vec_fileNames[i].c_str(), &imageRGB)) {
+          vec_imagesSize[i] = make_pair(imageRGB.Width(), imageRGB.Height());
+        }
+        else {
+          ReadImage(vec_fileNames[i].c_str(), &imageGray);
+          vec_imagesSize[i] = make_pair(imageGray.Width(), imageGray.Height());
+        }
       }
       else  { //Not already computed, so compute and save
 
-        ReadImage(vec_fileNames[i].c_str(), &imageRGB);
-        Rgb2Gray(imageRGB, &imageGray);
+        if (ReadImage(vec_fileNames[i].c_str(), &imageRGB)) {
+          Rgb2Gray(imageRGB, &imageGray);
+        }
+        else{
+          ReadImage(vec_fileNames[i].c_str(), &imageGray);
+        }
         // Compute features and descriptors and export them to file
         SIFTDetector(imageGray,  kpSet.features(), kpSet.descriptors(), bOctMinus1);
         kpSet.saveToBinFile(sFeat, sDesc);
-        vec_imagesSize[i] = make_pair(imageRGB.Width(), imageRGB.Height());
+        vec_imagesSize[i] = make_pair(imageGray.Width(), imageRGB.Height());
       }
       ++my_progress_bar;
     }
   }
 
-  //-- Load descriptor in memory
-  std::map<size_t, KeypointSetT > map_featAndDesc; //empty descriptor
-  std::map<size_t, descT::bin_type * > map_Desc; // descriptor as contiguous memory
-  {
-     for (size_t j = 0; j < vec_fileNames.size(); ++j)  {
-        // Load descriptor of Jnth image
-        std::string sFeatJ = stlplus::create_filespec(sOutDir,
-          stlplus::basename_part(vec_fileNames[j]), "feat");
 
-        std::string sDescJ = stlplus::create_filespec(sOutDir,
-          stlplus::basename_part(vec_fileNames[j]), "desc");
-        loadFeatsFromFile(sFeatJ, map_featAndDesc[j].features());
-
-        KeypointSetT kpSetI;
-        loadDescsFromBinFile(sDescJ, kpSetI.descriptors());
-        map_Desc[j] = new descT::bin_type[kpSetI.descriptors().size() * descT::static_size];
-        for(size_t k=0; k < kpSetI.descriptors().size(); ++k)
-          memcpy(
-                 &map_Desc[j][k*descT::static_size],
-                 kpSetI.descriptors()[k].getData(),
-                 descT::static_size*sizeof(descT::bin_type));
-     }
-  }
 
   //---------------------------------------
   // c. Compute putatives descriptor matches
   //    - L2 descriptor matching
   //    - Keep correspondences only if NearestNeighbor ratio is ok
   //---------------------------------------
-  typedef std::map< std::pair<size_t, size_t>, std::vector<IndMatch> > IndexedMatchPerPair;
-
   IndexedMatchPerPair map_PutativesMatches;
-  if (stlplus::file_exists(sOutDir + "/matches.putative.txt"))
-  {
-    PairedIndMatchImport(sOutDir + "/matches.putative.txt",map_PutativesMatches);
-    cout << endl << endl << "PUTATIVE MATCHES -- PREVIOUS RESULTS LOADED" << endl;
-  }
-  else
-  {
-    std::cout << std::endl << std::endl << "PUTATIVE MATCHES" << std::endl;
-#ifdef USE_OPENMP
-    std::cout << "Using the OPENMP thread interface" << std::endl;
-#endif
-    C_Progress_display my_progress_bar2( vec_fileNames.size()*(vec_fileNames.size()-1) / 2.0 );
+  // Define the matcher and the used metric (Squared L2)
+  // ANN matcher could be defined as follow:
+  typedef flann::L2<DescriptorT::bin_type> MetricT;
+  typedef ArrayMatcher_Kdtree_Flann<DescriptorT::bin_type, MetricT> MatcherT;
+  // Brute force matcher is defined as following:
+  //typedef L2_Vectorized<DescriptorT::bin_type> MetricT;
+  //typedef ArrayMatcherBruteForce<DescriptorT::bin_type, MetricT> MatcherT;
 
-    for (size_t i = 0; i < vec_fileNames.size(); ++i)
+  ImageCollectionMatcher_AllInMemory<KeypointSetT, MatcherT> collectionMatcher(fDistRatio);
+  if (collectionMatcher.loadData(vec_fileNames, sOutDir))
+  {
+    if (stlplus::file_exists(sOutDir + "/matches.putative.txt"))
     {
-      // Define the matcher and the used metric (Squared L2)
-      // ANN matcher could be defined as follow:
-      typedef flann::L2<descT::bin_type> MetricT;
-      typedef ArrayMatcher_Kdtree_Flann<descT::bin_type, MetricT> MatcherT;
-      // Brute force matcher is defined as following:
-      //typedef L2_Vectorized<descT::bin_type> MetricT;
-      //typedef ArrayMatcherBruteForce<descT::bin_type, MetricT> MatcherT;
-
-      // Load descriptor of Inth image
-      const KeypointSetT & kpSetI = map_featAndDesc[i];
-      const descT::bin_type * tab0 = map_Desc[i];
-
-      MatcherT matcher10;
-      ( matcher10.Build(tab0, kpSetI.features().size(), descT::static_size) );
-
-#ifdef USE_OPENMP
-  #pragma omp parallel for schedule(dynamic, 1)
-#endif
-      for (int j = i+1; j < (int)vec_fileNames.size(); ++j)
-      {
-        // Load descriptor of Jnth image
-        const KeypointSetT & kpSetJ = map_featAndDesc[j];
-        const descT::bin_type * tab1 = map_Desc[j];
-
-        const size_t NNN__ = 2;
-        std::vector<int> vec_nIndice10;
-        std::vector<MetricT::ResultType> vec_fDistance10;
-
-        //Find left->right
-        matcher10.SearchNeighbours(tab1, kpSetJ.features().size(), &vec_nIndice10, &vec_fDistance10, NNN__);
-
-        std::vector<IndMatch> vec_FilteredMatches;
-        std::vector<int> vec_NNRatioIndexes;
-        NNdistanceRatio( vec_fDistance10.begin(), // distance start
-          vec_fDistance10.end(),  // distance end
-          NNN__, // Number of neighbor in iterator sequence (minimum required 2)
-          vec_NNRatioIndexes, // output (index that respect Lowe Ratio)
-          Square(fDistRatio)); // squared dist ratio due to usage of a squared metric
-
-        for (size_t k=0; k < vec_NNRatioIndexes.size()-1&& vec_NNRatioIndexes.size()>0; ++k)
-        {
-          vec_FilteredMatches.push_back(
-            IndMatch(vec_nIndice10[vec_NNRatioIndexes[k]*NNN__],
-                     vec_NNRatioIndexes[k]) );
-        }
-
-        // Remove duplicates
-        IndMatch::getDeduplicated(vec_FilteredMatches);
-
-        // Remove matches that have the same X,Y coordinates
-        {
-          IndMatchDecorator<float> matchDeduplicator(
-            vec_FilteredMatches, kpSetI.features(), kpSetJ.features());
-          matchDeduplicator.getDeduplicated(vec_FilteredMatches);
-
-#ifdef USE_OPENMP
-  #pragma omp critical
-#endif
-          {
-            map_PutativesMatches.insert( make_pair( make_pair(i,j), vec_FilteredMatches ));
-          }
-
-        }
-        ++my_progress_bar2;
-      }
+      PairedIndMatchImport(sOutDir + "/matches.putative.txt", map_PutativesMatches);
+      std::cout << std::endl << "PUTATIVE MATCHES -- PREVIOUS RESULTS LOADED" << std::endl;
     }
-    //---------------------------------------
-    //-- Export putative matches
-    //---------------------------------------
-    std::ofstream file (std::string(sOutDir + "/matches.putative.txt").c_str());
-    if (file.is_open())
-      PairedIndMatchToStream(map_PutativesMatches, file);
-    file.close();
+    else
+    {
+      std::cout  << std::endl << "PUTATIVE MATCHES" << std::endl;
+      collectionMatcher.Match(vec_fileNames, map_PutativesMatches);
+      //---------------------------------------
+      //-- Export putative matches
+      //---------------------------------------
+      std::ofstream file (std::string(sOutDir + "/matches.putative.txt").c_str());
+      if (file.is_open())
+        PairedIndMatchToStream(map_PutativesMatches, file);
+      file.close();
+    }
   }
-
-  //-- Free descriptor memory:
-  for (std::map<size_t, descT::bin_type * >::const_iterator itDesc = map_Desc.begin();
-    itDesc != map_Desc.end(); ++itDesc)
-  {
-    delete [] itDesc->second;
-  }
-  map_Desc.clear();
 
   //---------------------------------------
   // d. Geometric filtering of putatives matches
@@ -316,79 +232,19 @@ int main(int argc, char **argv)
   //    - Use a upper bound for the plausible F matrix
   //      acontrario estimated threshold
   //---------------------------------------
-
-
   IndexedMatchPerPair map_GeometricMatches_F;
+
+  GeometricFilter_FMatrix_AC geomFilter_F_AC(4.0);
+  ImageCollectionGeometricFilter<FeatureT, GeometricFilter_FMatrix_AC> collectionGeomFilter;
+  if (collectionGeomFilter.loadData(vec_fileNames, sOutDir))
   {
-    cout << endl << endl << " - GEOMETRIC FILTERING - " << endl;
-    C_Progress_display my_progress_bar3( map_PutativesMatches.size() );
+    std::cout << std::endl << " - GEOMETRIC FILTERING - " << std::endl;
+    collectionGeomFilter.Filter(
+      geomFilter_F_AC,
+      map_PutativesMatches,
+      map_GeometricMatches_F,
+      vec_imagesSize);
 
-#ifdef USE_OPENMP
-  #pragma omp parallel for schedule(dynamic, 1)
-#endif
-    for (int i = 0; i < (int)map_PutativesMatches.size(); ++i)
-    {
-      IndexedMatchPerPair::const_iterator iter = map_PutativesMatches.begin();
-      advance(iter,i);
-
-      size_t iIndex = iter->first.first;
-      size_t jIndex = iter->first.second;
-      const vector<IndMatch> & vec_FilteredMatches = iter->second;
-
-      // Load features of Inth image
-      const std::vector<FeatureT> & kpSetI = map_featAndDesc[iIndex].features();
-      // Load features of Jnth image
-      const std::vector<FeatureT> & kpSetJ = map_featAndDesc[jIndex].features();
-
-      //-- Copy point to array in order to estimate fundamental matrix :
-      const size_t n = vec_FilteredMatches.size();
-      Mat xA(2,n), xB(2,n);
-
-      for (size_t i=0; i < vec_FilteredMatches.size(); ++i)  {
-        const FeatureT & imaA = kpSetI[vec_FilteredMatches[i]._i];
-        const FeatureT & imaB = kpSetJ[vec_FilteredMatches[i]._j];
-        xA.col(i) = imaA.coords().cast<double>();
-        xB.col(i) = imaB.coords().cast<double>();
-      }
-
-      //-- Fundamental matrix robust estimation
-      {
-        std::vector<size_t> vec_inliers;
-        // Define the AContrario adapted Fundamental matrix solver
-        typedef ACKernelAdaptor<
-          openMVG::fundamental::kernel::SevenPointSolver,
-          openMVG::fundamental::kernel::SimpleError,
-          UnnormalizerT,
-          Mat3>
-          KernelType;
-
-        KernelType kernel(xA, vec_imagesSize[iIndex].first, vec_imagesSize[iIndex].second,
-                          xB, vec_imagesSize[jIndex].first, vec_imagesSize[jIndex].second, true);
-
-        // Robustly estimate the Fundamental matrix with A Contrario ransac
-        Mat3 F;
-        double upper_bound_precision = 4.0; // upper_bound of 4 pixels
-        std::pair<double,double> ACRansacOut =
-          ACRANSAC(kernel, vec_inliers, 4096, &F, upper_bound_precision);
-        const double & threshold = ACRansacOut.first;
-        const double & NFA = ACRansacOut.second;
-
-        if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5)  {
-          std::vector<IndMatch> vec_matchesF;
-          vec_matchesF.reserve(vec_inliers.size());
-          for (size_t i=0; i < vec_inliers.size(); ++i)  {
-            vec_matchesF.push_back( vec_FilteredMatches[vec_inliers[i]] );
-          }
-#ifdef USE_OPENMP
-  #pragma omp critical
-#endif
-          {
-            map_GeometricMatches_F[make_pair(iIndex,jIndex)] = vec_matchesF;
-          }
-        }
-      }
-      ++my_progress_bar3;
-    }
     //---------------------------------------
     //-- Export geometric filtered matches
     //---------------------------------------

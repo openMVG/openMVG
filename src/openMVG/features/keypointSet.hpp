@@ -20,9 +20,12 @@ namespace openMVG {
 /// typedef vector<SIOPointFeature> featsT;
 /// typedef vector<Descriptor<uchar,128> > descsT;
 /// KeypointSet< featsT, descsT > kpSet;
-template<typename FeatureT, typename DescriptorT>
+template<typename FeaturesT, typename DescriptorsT>
 class KeypointSet {
 public:
+  // Alias to stored Feature and Descriptor type
+  typedef typename FeaturesT::value_type FeatureT;
+  typedef typename DescriptorsT::value_type DescriptorT;
 
   /// Read from files the feats and their corresponding descriptors.
   bool loadFromFile(
@@ -63,16 +66,16 @@ public:
   }
 
   /// Mutable and non-mutable FeatureT getters.
-  FeatureT & features() { return _feats; }
-  const FeatureT & features() const { return _feats; }
+  FeaturesT & features() { return _feats; }
+  const FeaturesT & features() const { return _feats; }
 
   /// Mutable and non-mutable DescriptorT getters.
-  DescriptorT & descriptors() { return _descs; }
-  const DescriptorT & descriptors() const { return _descs; }
+  DescriptorsT & descriptors() { return _descs; }
+  const DescriptorsT & descriptors() const { return _descs; }
 
 private:
-  FeatureT _feats;
-  DescriptorT _descs;
+  FeaturesT _feats;
+  DescriptorsT _descs;
 };
 
 } // namespace openMVG
