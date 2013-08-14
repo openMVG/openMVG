@@ -1,11 +1,11 @@
 
 SET(LIBS ${EXTRA_LIBS}
-					  openMVG_multiview
-					  openMVG_image
-					  vlsift
-					  lemon
-			      stlplus
-            ${OPENMVG_LIBRARY_DEPENDENCIES})
+  openMVG_multiview
+  openMVG_image
+  vlsift
+  lemon
+  stlplus
+  ${OPENMVG_LIBRARY_DEPENDENCIES})
 
 #Add executable that computes:
 # - features and descriptors
@@ -55,5 +55,20 @@ ADD_EXECUTABLE(openMVG_main_openMVG2PMVS main_openMVG2PMVS.cpp ../SfMViewer/Ply.
 TARGET_LINK_LIBRARIES(openMVG_main_openMVG2PMVS
                      ${LIBS})
 
+# -
+# Use openCV Feature detector with the openMVG matching framework
+# -
+IF(USE_OPENCV)
+  FIND_PACKAGE( OpenCV )
 
+  if(NOT OpenCV_FOUND)
+    MESSAGE(STATUS "WARNING: OpenCV was not found. ")
+  else(NOT OpenCV_FOUND)
+
+  ADD_EXECUTABLE(openMVG_main_computeMatches_OpenCV main_computeMatches_OpenCV.cpp)
+  TARGET_LINK_LIBRARIES(openMVG_main_computeMatches_OpenCV
+  ${LIBS} flann_cpp_s ${OpenCV_LIBS})
+
+  ENDIF(NOT OpenCV_FOUND)
+ENDIF(USE_OPENCV)
 
