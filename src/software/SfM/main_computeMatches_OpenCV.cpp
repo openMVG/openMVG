@@ -131,14 +131,12 @@ int main(int argc, char **argv)
   std::string sImaDirectory;
   std::string sImaExtension;
   std::string sOutDir = "";
-  std::string sFeatureType = "SIFT";
   float fDistRatio = .6f;
 
   cmd.add( make_option('i', sImaDirectory, "imadir") );
   cmd.add( make_option('e', sImaExtension, "ext") );
   cmd.add( make_option('o', sOutDir, "outdir") );
   cmd.add( make_option('r', fDistRatio, "distratio") );
-  cmd.add( make_option('f', sFeatureType, "featuretype") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -156,7 +154,7 @@ int main(int argc, char **argv)
   }
 
   std::cout << " You called : " <<std::endl
-            << "main_computeMatches" << std::endl
+            << argv[0] << std::endl
             << "--imadir " << sImaDirectory << std::endl
             << "--ext " << sImaExtension << std::endl
             << "--outdir " << sOutDir << std::endl
