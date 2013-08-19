@@ -55,6 +55,13 @@ library an opensource project.
 [2] [http://imagine.enpc.fr/](http://imagine.enpc.fr/)
 
 ---------
+Contact
+---------
+
+openmvg-team[AT]googlegroups.com
+
+
+---------
 Citations
 ---------
 
