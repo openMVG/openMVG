@@ -13,9 +13,6 @@
 extern "C" {
   #include "jpeglib.h"
   #include "png.h"
-  #if PNG_LIBPNG_VER_MINOR > 4
-  #include "pnginfo.h"
-  #endif
 }
 
 using namespace std;
@@ -245,7 +242,8 @@ int ReadPng(const char *filename,
   return res;
 }
 
-// The writing and reading functions using libpng are based on http://zarb.org/~gc/html/libpng.html
+// The writing and reading functions using libpng are based on
+// http://www.libpng.org/pub/png/book
 int ReadPngStream(FILE *file,
                   vector<unsigned char> * ptr,
                   int * w,
@@ -271,30 +269,35 @@ int ReadPngStream(FILE *file,
     return 0;
   }
 
-
   png_init_io(png_ptr, file);
   png_set_sig_bytes(png_ptr, 8);
 
   png_read_info(png_ptr, info_ptr);
 
-  *h = info_ptr->height;
-  *w = info_ptr->width;
-  *depth = info_ptr->channels;
-  (*ptr) = vector<unsigned char>((*h)*(*w)*(*depth));
+  png_uint_32 pngWidth, pngHeight;
+  int bitDepth, colorType, interlaceType;
+  png_get_IHDR(png_ptr, info_ptr, &pngWidth, &pngHeight, &bitDepth, &colorType,
+    &interlaceType, (int*)NULL, (int*)NULL);
 
   png_read_update_info(png_ptr, info_ptr);
+  png_uint_32 rowbytes = png_get_rowbytes(png_ptr, info_ptr);
+  int channels = (int)png_get_channels(png_ptr, info_ptr);
+
+  *h = pngHeight;
+  *w = pngWidth;
+  *depth = channels;
+  (*ptr) = std::vector<unsigned char>((*h)*(*w)*(*depth));
 
   png_bytep *row_pointers =
-       (png_bytep*)malloc(sizeof(png_bytep) * info_ptr->channels *
-       (*h));
+    (png_bytep*)malloc(sizeof(png_bytep) * channels * (*h));
 
   unsigned char * ptrArray = &((*ptr)[0]);
-  int y;
-  for (y = 0; y < (*h); ++y)
-    row_pointers[y] = (png_byte*) (ptrArray) + info_ptr->rowbytes*y;
+  for (int y = 0; y < (*h); ++y)
+    row_pointers[y] = (png_byte*) (ptrArray) + rowbytes*y;
 
   png_read_image(png_ptr, row_pointers);
-
+  png_read_end(png_ptr, NULL);
+  png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
   free(row_pointers);
   return 1;
 }
@@ -354,16 +357,13 @@ int WritePngStream(FILE * file,
   png_bytep *row_pointers =
       (png_bytep*) malloc(sizeof(png_bytep) * depth * h);
 
-  int y;
-  for (y = 0; y < h; ++y)
-    row_pointers[y] = (png_byte*) (&ptr[0]) + info_ptr->rowbytes*y;
+  for (int y = 0; y < h; ++y)
+    row_pointers[y] = (png_byte*) (&ptr[0]) + w*y;
 
   png_write_image(png_ptr, row_pointers);
-
   free(row_pointers);
-
   png_write_end(png_ptr, NULL);
-
+  png_destroy_write_struct(&png_ptr, &info_ptr);
   return 1;
 }
 
