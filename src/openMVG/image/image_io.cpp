@@ -358,7 +358,7 @@ int WritePngStream(FILE * file,
       (png_bytep*) malloc(sizeof(png_bytep) * depth * h);
 
   for (int y = 0; y < h; ++y)
-    row_pointers[y] = (png_byte*) (&ptr[0]) + w*y;
+    row_pointers[y] = (png_byte*) (&ptr[0]) + w * depth * y;
 
   png_write_image(png_ptr, row_pointers);
   free(row_pointers);
