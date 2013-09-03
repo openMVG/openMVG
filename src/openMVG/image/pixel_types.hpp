@@ -14,6 +14,7 @@ template <typename T>
 class Rgb : public Eigen::Matrix<T, 3, 1, 0, 3, 1>
 {
   typedef Eigen::Matrix<T, 3, 1, 0, 3, 1> Base;
+  typedef T TBase;
 public:
 
   //------------------------------
