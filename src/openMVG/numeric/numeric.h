@@ -51,7 +51,6 @@ namespace openMVG {
 
   typedef Eigen::NumTraits<double> EigenDoubleTraits;
 
-  //typedef Eigen::Vector2d Vec2;
   typedef Eigen::Vector3d Vec3;
   typedef Eigen::Vector4d Vec4;
   typedef Eigen::Vector2i Vec2i;
@@ -182,7 +181,7 @@ namespace openMVG {
   /// Solve the linear system Ax = 0 via SVD. Finds two solutions, x1 and x2, such
   /// that x1 is the best solution and x2 is the next best solution (in the L2
   /// norm sense). Store the solution in x1 and x2, such that ||x|| = 1.0. Return
-  /// the singular value corresponding to the solution x1.  Destroys A and resizes
+  /// the singular value corresponding to the solution x1. Destroys A and resizes
   /// x if necessary.
   template <typename TMat, typename TVec1, typename TVec2>
   inline double Nullspace2(TMat *A, TVec1 *x1, TVec2 *x2) {
@@ -335,7 +334,7 @@ namespace openMVG {
     minMaxMeanMedian(begin,end, min, max, mean, median);
     std::cout << "\n"
       << "\t min: " << min << "\n"
-      << "\t mean: " <<  mean << "\n"
+      << "\t mean: " << mean << "\n"
       << "\t median: " << median << std::endl
       << "\t max: " << max << std::endl;
   }

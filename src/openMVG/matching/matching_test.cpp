@@ -15,8 +15,6 @@ using namespace std;
 using namespace openMVG;
 using namespace matching;
 
-#define SquareL2(vala, valb) ( (double(vala-valb)*double(vala-valb)) );
-
 TEST(Matching, ArrayMatcherBruteForce_Simple_Dim1)
 {
   float array[] = {0, 1, 2, 3, 4};
@@ -48,11 +46,11 @@ TEST(Matching, ArrayMatcherBruteForce_NN)
   EXPECT_EQ( 5, vec_fDistance.size());
 
   // Check distances:
-  EXPECT_NEAR( vec_fDistance[0], SquareL2(2.0f,2.0f), 1e-6);
-  EXPECT_NEAR( vec_fDistance[1], SquareL2(1.0f,2.0f), 1e-6);
-  EXPECT_NEAR( vec_fDistance[2], SquareL2(0.0f,2.0f), 1e-6);
-  EXPECT_NEAR( vec_fDistance[3], SquareL2(5.0f,2.0f), 1e-6);
-  EXPECT_NEAR( vec_fDistance[4], SquareL2(6.0f,2.0f), 1e-6);
+  EXPECT_NEAR( vec_fDistance[0], Square(2.0f-2.0f), 1e-6);
+  EXPECT_NEAR( vec_fDistance[1], Square(1.0f-2.0f), 1e-6);
+  EXPECT_NEAR( vec_fDistance[2], Square(0.0f-2.0f), 1e-6);
+  EXPECT_NEAR( vec_fDistance[3], Square(5.0f-2.0f), 1e-6);
+  EXPECT_NEAR( vec_fDistance[4], Square(6.0f-2.0f), 1e-6);
 
   // Check indexes:
   EXPECT_EQ(2, vec_nIndice[0]);
@@ -98,11 +96,11 @@ TEST(Matching, ArrayMatcher_Kdtree_Flann_Simple__NN)
   EXPECT_EQ( 5, vec_fDistance.size());
 
   // Check distances:
-  EXPECT_NEAR( vec_fDistance[0], SquareL2(2.0f,2.0f), 1e-6);
-  EXPECT_NEAR( vec_fDistance[1], SquareL2(1.0f,2.0f), 1e-6);
-  EXPECT_NEAR( vec_fDistance[2], SquareL2(0.0f,2.0f), 1e-6);
-  EXPECT_NEAR( vec_fDistance[3], SquareL2(5.0f,2.0f), 1e-6);
-  EXPECT_NEAR( vec_fDistance[4], SquareL2(6.0f,2.0f), 1e-6);
+  EXPECT_NEAR( vec_fDistance[0], Square(2.0f-2.0f), 1e-6);
+  EXPECT_NEAR( vec_fDistance[1], Square(1.0f-2.0f), 1e-6);
+  EXPECT_NEAR( vec_fDistance[2], Square(0.0f-2.0f), 1e-6);
+  EXPECT_NEAR( vec_fDistance[3], Square(5.0f-2.0f), 1e-6);
+  EXPECT_NEAR( vec_fDistance[4], Square(6.0f-2.0f), 1e-6);
 
   // Check indexes:
   EXPECT_EQ(2, vec_nIndice[0]);
