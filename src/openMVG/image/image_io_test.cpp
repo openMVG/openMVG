@@ -85,6 +85,19 @@ TEST(ImageIOTest, Png_Out) {
   remove(out_filename.c_str());
 }
 
+TEST(ImageIOTest, Png_Out_Color) {
+  Image<RGBColor> image(1,2);
+  image(0,0) = RGBColor(255,127,0);
+  image(1,0) = RGBColor(0,127,255);
+  string out_filename = ("test_write_png_color.png");
+  EXPECT_TRUE(WriteImage(out_filename.c_str(), image));
+
+  Image<RGBColor> read_image;
+  EXPECT_TRUE(ReadImage(out_filename.c_str(), &read_image));
+  EXPECT_TRUE(read_image == image);
+  remove(out_filename.c_str());
+}
+
 TEST(ImageIOTest, InvalidFiles) {
   Image<unsigned char> image;
   string filename = string(THIS_SOURCE_DIR) + "/donotexist.jpg";

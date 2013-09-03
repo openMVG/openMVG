@@ -19,9 +19,9 @@ ENDIF()
 # ==============================================================================
 # Additional cmake find modules
 # ==============================================================================
-set(CMAKE_MODULE_PATH
+SET(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmakeFindModules)
-include (OptimizeForArchitecture)
+INCLUDE(OptimizeForArchitecture)
 OptimizeForArchitecture()
 IF (SSE2_FOUND)
   ADD_DEFINITIONS(-DUSE_SSE)
@@ -33,20 +33,22 @@ ENDIF (SSE2_FOUND)
 FIND_PACKAGE(OpenMP)
 IF (OPENMP_FOUND)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  option(USE_OPENMP "Use OpenMP for parallelization" ON)
+  OPTION(USE_OPENMP "Use OpenMP for parallelization" ON)
   ADD_DEFINITIONS(-DUSE_OPENMP)
   IF (NOT MSVC)
     LIST(APPEND OPENMVG_LIBRARY_DEPENDENCIES gomp)
   ENDIF (NOT MSVC)
 ELSE (OPENMP_FOUND)
-  option(USE_OPENMP "Use OpenMP for parallelization" OFF)
+  OPTION(USE_OPENMP "Use OpenMP for parallelization" OFF)
 ENDIF (OPENMP_FOUND)
 
 # ==============================================================================
 # IMAGE IO detection
 # ==============================================================================
-FIND_PACKAGE(JPEG QUIET)
-FIND_PACKAGE(PNG QUIET)
+IF (NOT ${APPLE})
+  FIND_PACKAGE(JPEG QUIET)
+  FIND_PACKAGE(PNG QUIET)
+ENDIF (NOT ${APPLE})
 
 # ==============================================================================
 # glfw
