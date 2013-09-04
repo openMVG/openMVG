@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits>
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
@@ -10,7 +11,9 @@ using namespace openMVG::robust;
 //-- A contrario Functor to filter putative corresponding points
 struct GeometricFilter_FMatrix_AC
 {
-  GeometricFilter_FMatrix_AC(double dPrecision, size_t iteration = 4096)
+  GeometricFilter_FMatrix_AC(
+    double dPrecision = std::numeric_limits<double>::infinity(),
+    size_t iteration = 4096)
     : m_dPrecision(dPrecision), m_stIteration(iteration) {};
 
   /// Robust fitting of the FUNDAMENTAL matrix
