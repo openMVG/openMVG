@@ -56,7 +56,7 @@ static void UniformSample(
 {
   samples->resize(0);
   while (samples->size() < num_samples) {
-    int sample = rand() % total_samples;
+    size_t sample = size_t(rand() % total_samples);
     bool bFound = false;
     for (size_t j = 0; j < samples->size(); ++j) {
       bFound = (*samples)[j] == sample;

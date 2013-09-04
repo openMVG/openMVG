@@ -62,6 +62,8 @@ inline int ReadImage(const char * path, Image<unsigned char> * im)
     //convert raw array to Image
     (*im) = Eigen::Map<Image<unsigned char>::Base>(&ptr[0], h, w);
   }
+  else if (depth!=1)
+    return 0;
   return res;
 }
 

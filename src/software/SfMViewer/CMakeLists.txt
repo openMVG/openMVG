@@ -14,7 +14,7 @@ endif()
 # GLFW
 #
 add_definitions(-DGLFW_NO_GLU)
-             
+
 FIND_FILE(GL3HEADER gl3.h)
 if(NOT ${GL3HEADER} MATCHES NOTFOUND)
 add_definitions(-DGLFW_INCLUDE_GL3)
