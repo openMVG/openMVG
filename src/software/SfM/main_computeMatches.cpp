@@ -204,15 +204,16 @@ int main(int argc, char **argv)
   //typedef L2_Vectorized<DescriptorT::bin_type> MetricT;
   //typedef ArrayMatcherBruteForce<DescriptorT::bin_type, MetricT> MatcherT;
 
-  ImageCollectionMatcher_AllInMemory<KeypointSetT, MatcherT> collectionMatcher(fDistRatio);
-  if (collectionMatcher.loadData(vec_fileNames, sOutDir))
+  // If the matches already exists, reload them
+  if (stlplus::file_exists(sOutDir + "/matches.putative.txt"))
   {
-    if (stlplus::file_exists(sOutDir + "/matches.putative.txt"))
-    {
-      PairedIndMatchImport(sOutDir + "/matches.putative.txt", map_PutativesMatches);
-      std::cout << std::endl << "PUTATIVE MATCHES -- PREVIOUS RESULTS LOADED" << std::endl;
-    }
-    else
+    PairedIndMatchImport(sOutDir + "/matches.putative.txt", map_PutativesMatches);
+    std::cout << std::endl << "PUTATIVE MATCHES -- PREVIOUS RESULTS LOADED" << std::endl;
+  }
+  else // Compute the putatives matches
+  {
+    ImageCollectionMatcher_AllInMemory<KeypointSetT, MatcherT> collectionMatcher(fDistRatio);
+    if (collectionMatcher.loadData(vec_fileNames, sOutDir))
     {
       std::cout  << std::endl << "PUTATIVE MATCHES" << std::endl;
       collectionMatcher.Match(vec_fileNames, map_PutativesMatches);
@@ -225,6 +226,11 @@ int main(int argc, char **argv)
       file.close();
     }
   }
+  //-- export putative matches Adjacency matrix
+  PairWiseMatchingToAdjacencyMatrixSVG(vec_fileNames.size(),
+    map_PutativesMatches,
+    stlplus::create_filespec(sOutDir, "PutativeAdjacencyMatrix", "svg"));
+
 
   //---------------------------------------
   // d. Geometric filtering of putatives matches
