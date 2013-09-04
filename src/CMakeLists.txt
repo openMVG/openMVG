@@ -53,12 +53,10 @@ ENDIF (NOT APPLE)
 # ==============================================================================
 # glfw
 # ==============================================================================
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Do not build the GLFW example programs" FORCE)
-set(GLFW_BUILD_TESTS    OFF CACHE BOOL "Do not build the GLFW tests programs"   FORCE)
-add_subdirectory(dependencies/glfw)
-
-include_directories(SYSTEM dependencies/glfw/include)
-include_directories(SYSTEM dependencies/glm)
+SET(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Do not build the GLFW example programs" FORCE)
+SET(GLFW_BUILD_TESTS    OFF CACHE BOOL "Do not build the GLFW tests programs"   FORCE)
+ADD_SUBDIRECTORY(dependencies/glfw)
+INCLUDE_DIRECTORIES(SYSTEM dependencies/glfw/include)
 
 # ==============================================================================
 # Opencv is not used by openMVG but some samples show how to use openCV
