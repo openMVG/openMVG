@@ -66,8 +66,8 @@ BlockJacobiPreconditioner::BlockJacobiPreconditioner(
 
 BlockJacobiPreconditioner::~BlockJacobiPreconditioner() {}
 
-bool BlockJacobiPreconditioner::Update(const BlockSparseMatrix& A,
-                                       const double* D) {
+bool BlockJacobiPreconditioner::UpdateImpl(const BlockSparseMatrix& A,
+                                           const double* D) {
   const CompressedRowBlockStructure* bs = A.block_structure();
 
   // Compute the diagonal blocks by block inner products.
@@ -111,7 +111,7 @@ bool BlockJacobiPreconditioner::Update(const BlockSparseMatrix& A,
     }
 
     block = block.selfadjointView<Eigen::Upper>()
-                 .ldlt()
+                 .llt()
                  .solve(Matrix::Identity(size, size));
   }
   return true;

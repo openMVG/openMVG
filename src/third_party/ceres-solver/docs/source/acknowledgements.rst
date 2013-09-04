@@ -22,4 +22,4 @@ API for the better.
 Since the initial release of Ceres, a number of people have
 contributed to Ceres by porting it to new platforms, reporting bugs,
 fixing bugs and adding new functionality. We acknowledge all of these
-contributions in :ref:`chapter-version-history`.
+contributions in the :ref:`chapter-version-history`.

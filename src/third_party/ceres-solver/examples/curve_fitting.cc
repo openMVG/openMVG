@@ -28,8 +28,8 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
-#include <glog/logging.h>
 #include "ceres/ceres.h"
+#include "glog/logging.h"
 
 using ceres::AutoDiffCostFunction;
 using ceres::CostFunction;

@@ -18,10 +18,9 @@ to make a suggestion or three.
 
 We follow Google's `C++ Style Guide
 <http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml>`_ and
-use `git
-<http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml>`_ for
-version control. We use the Gerrit code review system to collaborate
-and review changes to Ceres. Gerrit enables pre-commit reviews so that
+use `git <http://git-scm.com/>`_ for version control. We use the
+`Gerrit <https://ceres-solver-review.googlesource.com/>`_ to collaborate and
+review changes to Ceres. Gerrit enables pre-commit reviews so that
 Ceres can maintain a linear history with clean, reviewed commits, and
 no merges.
 

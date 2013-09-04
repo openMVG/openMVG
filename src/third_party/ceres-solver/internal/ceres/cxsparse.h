@@ -125,6 +125,11 @@ class CXSparse {
 }  // namespace internal
 }  // namespace ceres
 
+#else  // CERES_NO_CXSPARSE
+
+class CXSparse {};
+typedef void cs_dis;
+
 #endif  // CERES_NO_CXSPARSE
 
 #endif  // CERES_INTERNAL_CXSPARSE_H_

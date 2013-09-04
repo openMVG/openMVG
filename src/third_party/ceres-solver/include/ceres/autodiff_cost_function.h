@@ -128,11 +128,11 @@
 #ifndef CERES_PUBLIC_AUTODIFF_COST_FUNCTION_H_
 #define CERES_PUBLIC_AUTODIFF_COST_FUNCTION_H_
 
-#include <glog/logging.h>
 #include "ceres/internal/autodiff.h"
 #include "ceres/internal/scoped_ptr.h"
 #include "ceres/sized_cost_function.h"
 #include "ceres/types.h"
+#include "glog/logging.h"
 
 namespace ceres {
 

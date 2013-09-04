@@ -34,13 +34,13 @@
 
 #include "ceres/dense_sparse_matrix.h"
 
-#include "gtest/gtest.h"
 #include "ceres/casts.h"
 #include "ceres/linear_least_squares_problems.h"
-#include "ceres/matrix_proto.h"
 #include "ceres/triplet_sparse_matrix.h"
 #include "ceres/internal/eigen.h"
 #include "ceres/internal/scoped_ptr.h"
+#include "glog/logging.h"
+#include "gtest/gtest.h"
 
 namespace ceres {
 namespace internal {
@@ -155,22 +155,6 @@ TEST_F(DenseSparseMatrixTest, Scale) {
   CompareMatrices(tsm.get(), dsm.get());
 }
 
-#ifndef CERES_NO_PROTOCOL_BUFFERS
-TEST_F(DenseSparseMatrixTest, Serialization) {
-  SparseMatrixProto proto;
-  dsm->ToProto(&proto);
-
-  DenseSparseMatrix n(proto);
-  ASSERT_EQ(dsm->num_rows(),     n.num_rows());
-  ASSERT_EQ(dsm->num_cols(),     n.num_cols());
-  ASSERT_EQ(dsm->num_nonzeros(), n.num_nonzeros());
-
-  for (int i = 0; i < n.num_rows() + 1; ++i) {
-    ASSERT_EQ(dsm->values()[i], proto.dense_matrix().values(i));
-  }
-}
-#endif
-
 TEST_F(DenseSparseMatrixTest, ToDenseMatrix) {
   Matrix tsm_dense;
   Matrix dsm_dense;
@@ -180,55 +164,6 @@ TEST_F(DenseSparseMatrixTest, ToDenseMatrix) {
 
   EXPECT_EQ((tsm_dense - dsm_dense).norm(), 0.0);
 }
-
-// TODO(keir): Make this work without protocol buffers.
-#ifndef CERES_NO_PROTOCOL_BUFFERS
-TEST_F(DenseSparseMatrixTest, AppendDiagonal) {
-  DenseSparseMatrixProto proto;
-  proto.set_num_rows(3);
-  proto.set_num_cols(3);
-  for (int i = 0; i < 9; ++i) {
-    proto.add_values(i);
-  }
-  SparseMatrixProto outer_proto;
-  *outer_proto.mutable_dense_matrix() = proto;
-
-  DenseSparseMatrix dsm(outer_proto);
-
-  double diagonal[] = { 10, 11, 12 };
-  dsm.AppendDiagonal(diagonal);
-
-  // Verify the diagonal got added.
-  Matrix m = dsm.matrix();
-
-  EXPECT_EQ(6, m.rows());
-  EXPECT_EQ(3, m.cols());
-  for (int i = 0; i < 3; ++i) {
-    for (int j = 0; j < 3; ++j) {
-      EXPECT_EQ(3 * i + j, m(i, j));
-      if (i == j) {
-        EXPECT_EQ(10 + i, m(i + 3, j));
-      } else {
-        EXPECT_EQ(0, m(i + 3, j));
-      }
-    }
-  }
-
-  // Verify the diagonal gets removed.
-  dsm.RemoveDiagonal();
-
-  m = dsm.matrix();
-
-  EXPECT_EQ(3, m.rows());
-  EXPECT_EQ(3, m.cols());
-
-  for (int i = 0; i < 3; ++i) {
-    for (int j = 0; j < 3; ++j) {
-      EXPECT_EQ(3 * i + j, m(i, j));
-    }
-  }
-}
-#endif
 
 }  // namespace internal
 }  // namespace ceres

@@ -59,13 +59,6 @@ class SchurEliminatorTest : public ::testing::Test {
     SetupHelper(problem.get());
   }
 
-  void SetUpFromFilename(const string& filename) {
-    scoped_ptr<LinearLeastSquaresProblem>
-        problem(CreateLinearLeastSquaresProblemFromFile(filename));
-    CHECK_NOTNULL(problem.get());
-    SetupHelper(problem.get());
-  }
-
   void SetupHelper(LinearLeastSquaresProblem* problem) {
     A.reset(down_cast<BlockSparseMatrix*>(problem->A.release()));
     b.reset(problem->b.release());
@@ -119,7 +112,7 @@ class SchurEliminatorTest : public ::testing::Test {
       P.block(row, row,  block_size, block_size) =
           P
           .block(row, row,  block_size, block_size)
-          .ldlt()
+          .llt()
           .solve(Matrix::Identity(block_size, block_size));
       row += block_size;
     }
@@ -128,7 +121,7 @@ class SchurEliminatorTest : public ::testing::Test {
         .triangularView<Eigen::Upper>() = R - Q.transpose() * P * Q;
     rhs_expected =
         g.tail(schur_size) - Q.transpose() * P * g.head(num_eliminate_cols);
-    sol_expected = H.ldlt().solve(g);
+    sol_expected = H.llt().solve(g);
   }
 
   void EliminateSolveAndCompare(const VectorRef& diagonal,
@@ -167,7 +160,7 @@ class SchurEliminatorTest : public ::testing::Test {
     Vector reduced_sol  =
         lhs_ref
         .selfadjointView<Eigen::Upper>()
-        .ldlt()
+        .llt()
         .solve(rhs);
 
     // Solution to the linear least squares problem.
@@ -213,17 +206,6 @@ TEST_F(SchurEliminatorTest, ScalarProblem) {
   EliminateSolveAndCompare(VectorRef(D.get(), A->num_cols()), true, 1e-14);
   EliminateSolveAndCompare(VectorRef(D.get(), A->num_cols()), false, 1e-14);
 }
-
-#ifndef CERES_NO_PROTOCOL_BUFFERS
-TEST_F(SchurEliminatorTest, BlockProblem) {
-  const string input_file = TestFileAbsolutePath("problem-6-1384-000.lsqp");
-
-  SetUpFromFilename(input_file);
-  ComputeReferenceSolution(VectorRef(D.get(), A->num_cols()));
-  EliminateSolveAndCompare(VectorRef(D.get(), A->num_cols()), true, 1e-10);
-  EliminateSolveAndCompare(VectorRef(D.get(), A->num_cols()), false, 1e-10);
-}
-#endif  // CERES_NO_PROTOCOL_BUFFERS
 
 }  // namespace internal
 }  // namespace ceres

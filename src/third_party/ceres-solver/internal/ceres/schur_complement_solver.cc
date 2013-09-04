@@ -33,20 +33,18 @@
 #include <set>
 #include <vector>
 
-#ifndef CERES_NO_CXSPARSE
-#include "cs.h"
-#endif  // CERES_NO_CXSPARSE
-
 #include "Eigen/Dense"
 #include "ceres/block_random_access_dense_matrix.h"
 #include "ceres/block_random_access_matrix.h"
 #include "ceres/block_random_access_sparse_matrix.h"
 #include "ceres/block_sparse_matrix.h"
 #include "ceres/block_structure.h"
+#include "ceres/cxsparse.h"
 #include "ceres/detect_structure.h"
 #include "ceres/internal/eigen.h"
 #include "ceres/internal/port.h"
 #include "ceres/internal/scoped_ptr.h"
+#include "ceres/lapack.h"
 #include "ceres/linear_solver.h"
 #include "ceres/schur_complement_solver.h"
 #include "ceres/suitesparse.h"
@@ -130,29 +128,31 @@ bool DenseSchurComplementSolver::SolveReducedLinearSystem(double* solution) {
     return true;
   }
 
-  // TODO(sameeragarwal): Add proper error handling; this completely ignores
-  // the quality of the solution to the solve.
-  VectorRef(solution, num_rows) =
-      ConstMatrixRef(m->values(), num_rows, num_rows)
-      .selfadjointView<Eigen::Upper>()
-      .ldlt()
-      .solve(ConstVectorRef(rhs(), num_rows));
+  if (options().dense_linear_algebra_library_type == EIGEN) {
+    // TODO(sameeragarwal): Add proper error handling; this completely ignores
+    // the quality of the solution to the solve.
+    VectorRef(solution, num_rows) =
+        ConstMatrixRef(m->values(), num_rows, num_rows)
+        .selfadjointView<Eigen::Upper>()
+        .llt()
+        .solve(ConstVectorRef(rhs(), num_rows));
+    return true;
+  }
 
-  return true;
+  VectorRef(solution, num_rows) = ConstVectorRef(rhs(), num_rows);
+  const int info = LAPACK::SolveInPlaceUsingCholesky(num_rows,
+                                                     m->values(),
+                                                     solution);
+  return (info == 0);
 }
 
 #if !defined(CERES_NO_SUITESPARSE) || !defined(CERES_NO_CXSPARE)
 
 SparseSchurComplementSolver::SparseSchurComplementSolver(
     const LinearSolver::Options& options)
-    : SchurComplementSolver(options) {
-#ifndef CERES_NO_SUITESPARSE
-  factor_ = NULL;
-#endif  // CERES_NO_SUITESPARSE
-
-#ifndef CERES_NO_CXSPARSE
-  cxsparse_factor_ = NULL;
-#endif  // CERES_NO_CXSPARSE
+    : SchurComplementSolver(options),
+      factor_(NULL),
+      cxsparse_factor_(NULL) {
 }
 
 SparseSchurComplementSolver::~SparseSchurComplementSolver() {
@@ -243,18 +243,18 @@ void SparseSchurComplementSolver::InitStorage(
 }
 
 bool SparseSchurComplementSolver::SolveReducedLinearSystem(double* solution) {
-  switch (options().sparse_linear_algebra_library) {
+  switch (options().sparse_linear_algebra_library_type) {
     case SUITE_SPARSE:
       return SolveReducedLinearSystemUsingSuiteSparse(solution);
     case CX_SPARSE:
       return SolveReducedLinearSystemUsingCXSparse(solution);
     default:
       LOG(FATAL) << "Unknown sparse linear algebra library : "
-                 << options().sparse_linear_algebra_library;
+                 << options().sparse_linear_algebra_library_type;
   }
 
   LOG(FATAL) << "Unknown sparse linear algebra library : "
-             << options().sparse_linear_algebra_library;
+             << options().sparse_linear_algebra_library_type;
   return false;
 }
 

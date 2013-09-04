@@ -36,6 +36,7 @@
 
 #include <cstddef>
 #include <map>
+#include <string>
 #include <vector>
 #include "ceres/block_sparse_matrix.h"
 #include "ceres/casts.h"
@@ -73,7 +74,8 @@ class LinearSolver {
     Options()
         : type(SPARSE_NORMAL_CHOLESKY),
           preconditioner_type(JACOBI),
-          sparse_linear_algebra_library(SUITE_SPARSE),
+          dense_linear_algebra_library_type(EIGEN),
+          sparse_linear_algebra_library_type(SUITE_SPARSE),
           use_postordering(false),
           min_num_iterations(1),
           max_num_iterations(1),
@@ -88,7 +90,8 @@ class LinearSolver {
 
     PreconditionerType preconditioner_type;
 
-    SparseLinearAlgebraLibraryType sparse_linear_algebra_library;
+    DenseLinearAlgebraLibraryType dense_linear_algebra_library_type;
+    SparseLinearAlgebraLibraryType sparse_linear_algebra_library_type;
 
     // See solver.h for information about this flag.
     bool use_postordering;

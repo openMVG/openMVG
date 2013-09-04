@@ -20,7 +20,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.5.0',
+        VERSION:     '1.7.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -38,7 +38,7 @@
 </script>
     <script type="text/javascript" src="_static/searchtools.js"></script>
     <link rel="top" title="Ceres Solver" href="index.html" />
-    <link rel="next" title="Modeling API" href="modeling.html" />
+    <link rel="next" title="Modeling" href="modeling.html" />
     <link rel="prev" title="Building Ceres Solver" href="building.html" /> 
   </head>
   <body>
@@ -49,7 +49,7 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="modeling.html" title="Modeling API"
+          <a href="modeling.html" title="Modeling"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="building.html" title="Building Ceres Solver"
@@ -221,7 +221,7 @@ the corresponding functor would be</p>
 </div>
 <p>Which is added to the <a class="reference internal" href="modeling.html#Problem" title="Problem"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Problem</span></tt></a> as:</p>
 <div class="highlight-c++"><div class="highlight"><pre><span class="n">CostFunction</span><span class="o">*</span> <span class="n">cost_function</span> <span class="o">=</span>
-  <span class="k">new</span> <span class="n">NumericDiffCostFunction</span><span class="o">&lt;</span><span class="n">F4</span><span class="p">,</span> <span class="n">ceres</span><span class="o">::</span><span class="n">CENTRAL</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">&gt;</span><span class="p">(</span>
+  <span class="k">new</span> <span class="n">NumericDiffCostFunction</span><span class="o">&lt;</span><span class="n">NumericDiffCostFunctor</span><span class="p">,</span> <span class="n">ceres</span><span class="o">::</span><span class="n">CENTRAL</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">&gt;</span><span class="p">(</span>
       <span class="k">new</span> <span class="n">NumericDiffCostFunctor</span><span class="p">)</span>
 <span class="n">problem</span><span class="p">.</span><span class="n">AddResidualBlock</span><span class="p">(</span><span class="n">cost_function</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">x</span><span class="p">);</span>
 </pre></div>
@@ -232,7 +232,7 @@ the corresponding functor would be</p>
 <span class="n">problem</span><span class="p">.</span><span class="n">AddResidualBlock</span><span class="p">(</span><span class="n">cost_function</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">x</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>The construction looks almost identical to the used for automatic
+<p>The construction looks almost identical to the one used for automatic
 differentiation, except for an extra template parameter that indicates
 the kind of finite differencing scheme to be used for computing the
 numerical derivatives <a class="footnote-reference" href="#f3" id="id5">[3]</a>. For more details see the documentation
@@ -245,11 +245,9 @@ expensive, prone to numeric errors, and leads to slower convergence.</strong></p
 <div class="section" id="analytic-derivatives">
 <h3>Analytic Derivatives<a class="headerlink" href="#analytic-derivatives" title="Permalink to this headline">¶</a></h3>
 <p>In some cases, using automatic differentiation is not possible. For
-example, Ceres currently does not support automatic differentiation of
-functors with dynamically sized parameter blocks. Or it may be the
-case that it is more efficient to compute the derivatives in closed
-form instead of relying on the chain rule used by the automatic
-differentition code.</p>
+example, it may be the case that it is more efficient to compute the
+derivatives in closed form instead of relying on the chain rule used
+by the automatic differentiation code.</p>
 <p>In such cases, it is possible to supply your own residual and jacobian
 computation code. To do this, define a subclass of
 <a class="reference internal" href="modeling.html#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> or <a class="reference internal" href="modeling.html#SizedCostFunction" title="SizedCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">SizedCostFunction</span></tt></a> if you know the
@@ -266,7 +264,7 @@ x\)</span>.</p>
     <span class="n">residuals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">-</span> <span class="n">x</span><span class="p">;</span>
 
     <span class="c1">// Compute the Jacobian if asked for.</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">jacobians</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">jacobians</span> <span class="o">!=</span> <span class="nb">NULL</span> <span class="o">&amp;&amp;</span> <span class="n">jacobians</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
       <span class="n">jacobians</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
     <span class="p">}</span>
     <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
@@ -286,6 +284,19 @@ linear, the Jacobian is constant <a class="footnote-reference" href="#f4" id="id
 unless you have a good reason to manage the jacobian computation
 yourself, you use <a class="reference internal" href="modeling.html#AutoDiffCostFunction" title="AutoDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">AutoDiffCostFunction</span></tt></a> or
 <a class="reference internal" href="modeling.html#NumericDiffCostFunction" title="NumericDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">NumericDiffCostFunction</span></tt></a> to construct your residual blocks.</p>
+</div>
+<div class="section" id="more-about-derivatives">
+<h3>More About Derivatives<a class="headerlink" href="#more-about-derivatives" title="Permalink to this headline">¶</a></h3>
+<p>Computing derivatives is by far the most complicated part of using
+Ceres, and depending on the circumstance the user may need more
+sophisticated ways of computing derivatives. This section just
+scratches the surface of how derivatives can be supplied to
+Ceres. Once you are comfortable with using
+<a class="reference internal" href="modeling.html#NumericDiffCostFunction" title="NumericDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">NumericDiffCostFunction</span></tt></a> and <a class="reference internal" href="modeling.html#AutoDiffCostFunction" title="AutoDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">AutoDiffCostFunction</span></tt></a> we
+recommend taking a look at <a class="reference internal" href="modeling.html#DynamicAutoDiffCostFunction" title="DynamicAutoDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">DynamicAutoDiffCostFunction</span></tt></a>,
+<a class="reference internal" href="modeling.html#CostFunctionToFunctor" title="CostFunctionToFunctor"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunctionToFunctor</span></tt></a>, <a class="reference internal" href="modeling.html#NumericDiffFunctor" title="NumericDiffFunctor"><tt class="xref cpp cpp-class docutils literal"><span class="pre">NumericDiffFunctor</span></tt></a> and
+<a class="reference internal" href="modeling.html#ConditionedCostFunction" title="ConditionedCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">ConditionedCostFunction</span></tt></a> for more advanced ways of
+constructing and computing cost functions.</p>
 <p class="rubric">Footnotes</p>
 <table class="docutils footnote" frame="void" id="f3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -350,8 +361,7 @@ respectively. Using these, the problem can be constructed as follows:</p>
 </div>
 <p>Note that each <tt class="docutils literal"><span class="pre">ResidualBlock</span></tt> only depends on the two parameters
 that the corresponding residual object depends on and not on all four
-parameters.</p>
-<p>Compiling and running <a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/powell.cc">examples/powell.cc</a>
+parameters. Compiling and running <a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/powell.cc">examples/powell.cc</a>
 gives us:</p>
 <div class="highlight-bash"><div class="highlight"><pre>Initial <span class="nv">x1</span> <span class="o">=</span> 3, <span class="nv">x2</span> <span class="o">=</span> -1, <span class="nv">x3</span> <span class="o">=</span> 0, <span class="nv">x4</span> <span class="o">=</span> 1
    0: f: 1.075000e+02 d: 0.00e+00 g: 1.55e+02 h: 0.00e+00 rho: 0.00e+00 mu: 1.00e+04 li:  0 it: 0.00e+00 tt: 0.00e+00
@@ -525,7 +535,7 @@ similar to the <tt class="docutils literal"><span class="pre">ExponentialResidua
 instance of this object responsible for each image observation.</p>
 <p>Each residual in a BAL problem depends on a three dimensional point
 and a nine parameter camera. The nine parameters defining the camera
-can are: Three for rotation as a Rodriquez axis-angle vector, three
+are: three for rotation as a Rodriques&#8217; axis-angle vector, three
 for translation, one for focal length and two for radial distortion.
 The details of this camera model can be found the <a class="reference external" href="http://phototour.cs.washington.edu/bundler/">Bundler homepage</a> and the <a class="reference external" href="http://grail.cs.washington.edu/projects/bal/">BAL homepage</a>.</p>
 <div class="highlight-c++"><div class="highlight"><pre><span class="k">struct</span> <span class="n">SnavelyReprojectionError</span> <span class="p">{</span>
@@ -647,6 +657,8 @@ model.</li>
 <li><a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/nist.cc">nist.cc</a>
 implements and attempts to solves the <a class="reference external" href="http://www.itl.nist.gov/div898/strd/nls/nls_main.shtm">NIST</a>
 non-linear regression problems.</li>
+<li><a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/libmv_bundle_adjuster.cc">libmv_bundle_adjuster.cc</a>
+is the bundle adjustment algorithm used by <a class="reference external" href="www.blender.org">Blender</a>/libmv.</li>
 </ol>
 </div>
 </div>
@@ -662,8 +674,8 @@ non-linear regression problems.</li>
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="building.html">Building Ceres Solver</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="solving.html">Solver API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solving.html">Solving</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reading.html">Further Reading</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="acknowledgements.html">Acknowledgements</a></li>
@@ -677,7 +689,7 @@ non-linear regression problems.</li>
                         title="previous chapter">Building Ceres Solver</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="modeling.html"
-                        title="next chapter">Modeling API</a></p>
+                        title="next chapter">Modeling</a></p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
@@ -702,7 +714,7 @@ non-linear regression problems.</li>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="modeling.html" title="Modeling API"
+          <a href="modeling.html" title="Modeling"
              >next</a> |</li>
         <li class="right" >
           <a href="building.html" title="Building Ceres Solver"

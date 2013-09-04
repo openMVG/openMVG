@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2011, 2012 Google Inc. All rights reserved.
+// Copyright 2013 Google Inc. All rights reserved.
 // http://code.google.com/p/ceres-solver/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 // Author: settinger@google.com (Scott Ettinger)
-//         keir@google.com (Keir Mierle)
+//         mierle@gmail.com (Keir Mierle)
 //
 // Simplified Glog style logging with Android support. Supported macros in
 // decreasing severity level per line:
@@ -93,16 +93,16 @@
 #define CERCES_INTERNAL_MINIGLOG_GLOG_LOGGING_H_
 
 #ifdef ANDROID
-#include <android/log.h>
+#  include <android/log.h>
 #endif  // ANDROID
 
 #include <algorithm>
-#include <iostream>
-#include <string>
+#include <ctime>
 #include <fstream>
+#include <iostream>
 #include <set>
 #include <sstream>
-#include <time.h>
+#include <string>
 #include <vector>
 
 // Log severity level constants.
@@ -194,11 +194,11 @@ class MessageLogger {
     int android_log_level = android_log_levels[android_level_index];
 
     // Output the log string the Android log at the appropriate level.
-    __android_log_print(android_log_level, tag_.c_str(), stream_.str().c_str());
+    __android_log_write(android_log_level, tag_.c_str(), stream_.str().c_str());
 
     // Indicate termination if needed.
     if (severity_ == FATAL) {
-      __android_log_print(ANDROID_LOG_FATAL,
+      __android_log_write(ANDROID_LOG_FATAL,
                           tag_.c_str(),
                           "terminating.\n");
     }
@@ -248,7 +248,7 @@ class MessageLogger {
   }
 
   void StripBasename(const std::string &full_path, std::string *filename) {
-    // TODO(settinger): add support for OS with different path separators.
+    // TODO(settinger): Add support for OSs with different path separators.
     const char kSeparator = '/';
     size_t pos = full_path.rfind(kSeparator);
     if (pos != std::string::npos) {
@@ -268,20 +268,6 @@ class MessageLogger {
 
 // ---------------------- Logging Macro definitions --------------------------
 
-#define LG MessageLogger((char *)__FILE__, __LINE__, "native", \
-                         INFO).stream()
-
-#define LOG(n) MessageLogger((char *)__FILE__, __LINE__, "native", \
-                             n).stream()
-
-#define VLOG(n) MessageLogger((char *)__FILE__, __LINE__, "native", \
-                              n).stream()
-
-// Currently, VLOG is always on.
-#define VLOG_IS_ON(x) true
-
-// ---------------------------- CHECK helpers --------------------------------
-
 // This class is used to explicitly ignore values in the conditional
 // logging macros.  This avoids compiler warnings like "value computed
 // is not used" and "statement has no effect".
@@ -295,7 +281,39 @@ class LoggerVoidify {
 
 // Log only if condition is met.  Otherwise evaluates to void.
 #define LOG_IF(severity, condition) \
-  condition ? (void) 0 : LoggerVoidify() & LOG(severity)
+    !(condition) ? (void) 0 : LoggerVoidify() & \
+      MessageLogger((char *)__FILE__, __LINE__, "native", severity).stream()
+
+// Log only if condition is NOT met.  Otherwise evaluates to void.
+#define LOG_IF_FALSE(severity, condition) LOG_IF(severity, !(condition))
+
+// LG is a convenient shortcut for LOG(INFO). Its use is in new
+// google3 code is discouraged and the following shortcut exists for
+// backward compatibility with existing code.
+#ifdef MAX_LOG_LEVEL
+#  define LOG(n)  LOG_IF(n, n <= MAX_LOG_LEVEL)
+#  define VLOG(n) LOG_IF(n, n <= MAX_LOG_LEVEL)
+#  define LG      LOG_IF(INFO, INFO <= MAX_LOG_LEVEL)
+#else
+#  define LOG(n)  MessageLogger((char *)__FILE__, __LINE__, "native", n).stream()    // NOLINT
+#  define VLOG(n) MessageLogger((char *)__FILE__, __LINE__, "native", n).stream()    // NOLINT
+#  define LG      MessageLogger((char *)__FILE__, __LINE__, "native", INFO).stream() // NOLINT
+#endif
+
+// Currently, VLOG is always on for levels below MAX_LOG_LEVEL.
+#ifndef MAX_LOG_LEVEL
+#  define VLOG_IS_ON(x) (1)
+#else
+#  define VLOG_IS_ON(x) (x <= MAX_LOG_LEVEL)
+#endif
+
+#ifndef NDEBUG
+#  define DLOG LOG
+#else
+#  define DLOG(severity) true ? (void) 0 : LoggerVoidify() & \
+      MessageLogger((char *)__FILE__, __LINE__, "native", severity).stream()
+#endif
+
 
 // Log a message and terminate.
 template<class T>
@@ -307,24 +325,24 @@ void LogMessageFatal(const char *file, int line, const T &message) {
 // ---------------------------- CHECK macros ---------------------------------
 
 // Check for a given boolean condition.
-#define CHECK(condition) LOG_IF(FATAL, condition) \
+#define CHECK(condition) LOG_IF_FALSE(FATAL, condition) \
         << "Check failed: " #condition " "
 
 #ifndef NDEBUG
 // Debug only version of CHECK
-#define DCHECK(condition) LOG_IF(FATAL, condition) \
-        << "Check failed: " #condition " "
+#  define DCHECK(condition) LOG_IF_FALSE(FATAL, condition) \
+          << "Check failed: " #condition " "
 #else
 // Optimized version - generates no code.
-#define DCHECK(condition) if (false) LOG_IF(FATAL, condition) \
-        << "Check failed: " #condition " "
+#  define DCHECK(condition) if (false) LOG_IF_FALSE(FATAL, condition) \
+          << "Check failed: " #condition " "
 #endif  // NDEBUG
 
 // ------------------------- CHECK_OP macros ---------------------------------
 
 // Generic binary operator check macro. This should not be directly invoked,
 // instead use the binary comparison macros defined below.
-#define CHECK_OP(val1, val2, op) LOG_IF(FATAL, (val1 op val2)) \
+#define CHECK_OP(val1, val2, op) LOG_IF_FALSE(FATAL, (val1 op val2)) \
   << "Check failed: " #val1 " " #op " " #val2 " "
 
 // Check_op macro definitions
@@ -337,20 +355,20 @@ void LogMessageFatal(const char *file, int line, const T &message) {
 
 #ifndef NDEBUG
 // Debug only versions of CHECK_OP macros.
-#define DCHECK_EQ(val1, val2) CHECK_OP(val1, val2, ==)
-#define DCHECK_NE(val1, val2) CHECK_OP(val1, val2, !=)
-#define DCHECK_LE(val1, val2) CHECK_OP(val1, val2, <=)
-#define DCHECK_LT(val1, val2) CHECK_OP(val1, val2, <)
-#define DCHECK_GE(val1, val2) CHECK_OP(val1, val2, >=)
-#define DCHECK_GT(val1, val2) CHECK_OP(val1, val2, >)
+#  define DCHECK_EQ(val1, val2) CHECK_OP(val1, val2, ==)
+#  define DCHECK_NE(val1, val2) CHECK_OP(val1, val2, !=)
+#  define DCHECK_LE(val1, val2) CHECK_OP(val1, val2, <=)
+#  define DCHECK_LT(val1, val2) CHECK_OP(val1, val2, <)
+#  define DCHECK_GE(val1, val2) CHECK_OP(val1, val2, >=)
+#  define DCHECK_GT(val1, val2) CHECK_OP(val1, val2, >)
 #else
 // These versions generate no code in optimized mode.
-#define DCHECK_EQ(val1, val2) if (false) CHECK_OP(val1, val2, ==)
-#define DCHECK_NE(val1, val2) if (false) CHECK_OP(val1, val2, !=)
-#define DCHECK_LE(val1, val2) if (false) CHECK_OP(val1, val2, <=)
-#define DCHECK_LT(val1, val2) if (false) CHECK_OP(val1, val2, <)
-#define DCHECK_GE(val1, val2) if (false) CHECK_OP(val1, val2, >=)
-#define DCHECK_GT(val1, val2) if (false) CHECK_OP(val1, val2, >)
+#  define DCHECK_EQ(val1, val2) if (false) CHECK_OP(val1, val2, ==)
+#  define DCHECK_NE(val1, val2) if (false) CHECK_OP(val1, val2, !=)
+#  define DCHECK_LE(val1, val2) if (false) CHECK_OP(val1, val2, <=)
+#  define DCHECK_LT(val1, val2) if (false) CHECK_OP(val1, val2, <)
+#  define DCHECK_GE(val1, val2) if (false) CHECK_OP(val1, val2, >=)
+#  define DCHECK_GT(val1, val2) if (false) CHECK_OP(val1, val2, >)
 #endif  // NDEBUG
 
 // ---------------------------CHECK_NOTNULL macros ---------------------------

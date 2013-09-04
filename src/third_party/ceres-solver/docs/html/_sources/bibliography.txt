@@ -39,6 +39,11 @@ Bibliography
 .. [HartleyZisserman] R.I. Hartley & A. Zisserman, **Multiview
    Geometry in Computer Vision**, Cambridge University Press, 2004.
 
+.. [KanataniMorris] K. Kanatani and D. D. Morris, **Gauges and gauge
+   transformations for uncertainty description of geometric structure
+   with indeterminacy**, *IEEE Transactions on Information Theory*
+   47(5):2017-2028, 2001.
+
 .. [KushalAgarwal] A. Kushal and S. Agarwal, **Visibility based
    preconditioning for bundle adjustment**, *In Proceedings of the
    IEEE Conference on Computer Vision and Pattern Recognition*, 2012.
@@ -74,6 +79,10 @@ Bibliography
 
 .. [NocedalWright] J. Nocedal & S. Wright, **Numerical Optimization**,
    Springer, 2004.
+
+.. [Oren] S. S. Oren, **Self-scaling Variable Metric (SSVM) Algorithms
+   Part II: Implementation and Experiments**, Management Science,
+   20(5), 863-874, 1974.
 
 .. [RuheWedin] A. Ruhe and P.Å. Wedin, **Algorithms for separable
    nonlinear least squares problems**, Siam Review, 22(3):318–337,

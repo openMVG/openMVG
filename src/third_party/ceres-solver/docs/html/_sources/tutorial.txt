@@ -193,7 +193,7 @@ Which is added to the :class:`Problem` as:
 .. code-block:: c++
 
   CostFunction* cost_function =
-    new NumericDiffCostFunction<F4, ceres::CENTRAL, 1, 1, 1>(
+    new NumericDiffCostFunction<NumericDiffCostFunctor, ceres::CENTRAL, 1, 1, 1>(
         new NumericDiffCostFunctor)
   problem.AddResidualBlock(cost_function, NULL, &x);
 
@@ -205,7 +205,7 @@ Notice the parallel from when we were using automatic differentiation
       new AutoDiffCostFunction<CostFunctor, 1, 1>(new CostFunctor);
   problem.AddResidualBlock(cost_function, NULL, &x);
 
-The construction looks almost identical to the used for automatic
+The construction looks almost identical to the one used for automatic
 differentiation, except for an extra template parameter that indicates
 the kind of finite differencing scheme to be used for computing the
 numerical derivatives [#f3]_. For more details see the documentation
@@ -221,11 +221,9 @@ Analytic Derivatives
 --------------------
 
 In some cases, using automatic differentiation is not possible. For
-example, Ceres currently does not support automatic differentiation of
-functors with dynamically sized parameter blocks. Or it may be the
-case that it is more efficient to compute the derivatives in closed
-form instead of relying on the chain rule used by the automatic
-differentition code.
+example, it may be the case that it is more efficient to compute the
+derivatives in closed form instead of relying on the chain rule used
+by the automatic differentiation code.
 
 In such cases, it is possible to supply your own residual and jacobian
 computation code. To do this, define a subclass of
@@ -246,7 +244,7 @@ x`.
       residuals[0] = 10 - x;
 
       // Compute the Jacobian if asked for.
-      if (jacobians != NULL) {
+      if (jacobians != NULL && jacobians[0] != NULL) {
         jacobians[0][0] = -1;
       }
       return true;
@@ -268,6 +266,20 @@ unless you have a good reason to manage the jacobian computation
 yourself, you use :class:`AutoDiffCostFunction` or
 :class:`NumericDiffCostFunction` to construct your residual blocks.
 
+More About Derivatives
+----------------------
+
+Computing derivatives is by far the most complicated part of using
+Ceres, and depending on the circumstance the user may need more
+sophisticated ways of computing derivatives. This section just
+scratches the surface of how derivatives can be supplied to
+Ceres. Once you are comfortable with using
+:class:`NumericDiffCostFunction` and :class:`AutoDiffCostFunction` we
+recommend taking a look at :class:`DynamicAutoDiffCostFunction`,
+:class:`CostFunctionToFunctor`, :class:`NumericDiffFunctor` and
+:class:`ConditionedCostFunction` for more advanced ways of
+constructing and computing cost functions.
+
 .. rubric:: Footnotes
 
 .. [#f3] `examples/helloworld_numeric_diff.cc
@@ -285,7 +297,6 @@ Powell's Function
 Consider now a slightly more complicated example -- the minimization
 of Powell's function. Let :math:`x = \left[x_1, x_2, x_3, x_4 \right]`
 and
-
 
 .. math::
 
@@ -342,9 +353,7 @@ respectively. Using these, the problem can be constructed as follows:
 
 Note that each ``ResidualBlock`` only depends on the two parameters
 that the corresponding residual object depends on and not on all four
-parameters.
-
-Compiling and running `examples/powell.cc
+parameters. Compiling and running `examples/powell.cc
 <https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/powell.cc>`_
 gives us:
 
@@ -554,7 +563,7 @@ instance of this object responsible for each image observation.
 
 Each residual in a BAL problem depends on a three dimensional point
 and a nine parameter camera. The nine parameters defining the camera
-can are: Three for rotation as a Rodriquez axis-angle vector, three
+are: three for rotation as a Rodriques' axis-angle vector, three
 for translation, one for focal length and two for radial distortion.
 The details of this camera model can be found the `Bundler homepage
 <http://phototour.cs.washington.edu/bundler/>`_ and the `BAL homepage
@@ -700,5 +709,9 @@ directory contains a number of other examples:
    implements and attempts to solves the `NIST
    <http://www.itl.nist.gov/div898/strd/nls/nls_main.shtm>`_
    non-linear regression problems.
+
+#. `libmv_bundle_adjuster.cc
+   <https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/libmv_bundle_adjuster.cc>`_
+   is the bundle adjustment algorithm used by `Blender <www.blender.org>`_/libmv.
 
 

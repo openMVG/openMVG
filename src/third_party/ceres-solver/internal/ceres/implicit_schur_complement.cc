@@ -161,7 +161,7 @@ void ImplicitSchurComplement::AddDiagonalAndInvert(
 
     m = m
         .selfadjointView<Eigen::Upper>()
-        .ldlt()
+        .llt()
         .solve(Matrix::Identity(row_block_size, row_block_size));
   }
 }

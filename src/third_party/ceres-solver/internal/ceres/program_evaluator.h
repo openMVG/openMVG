@@ -84,14 +84,15 @@
 #endif
 
 #include <map>
+#include <string>
 #include <vector>
-#include "ceres/blas.h"
 #include "ceres/execution_summary.h"
 #include "ceres/internal/eigen.h"
 #include "ceres/internal/scoped_ptr.h"
 #include "ceres/parameter_block.h"
 #include "ceres/program.h"
 #include "ceres/residual_block.h"
+#include "ceres/small_blas.h"
 
 namespace ceres {
 namespace internal {

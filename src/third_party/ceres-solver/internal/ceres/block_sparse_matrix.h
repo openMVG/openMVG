@@ -43,7 +43,6 @@
 namespace ceres {
 namespace internal {
 
-class SparseMatrixProto;
 class TripletSparseMatrix;
 
 // This class implements the SparseMatrix interface for storing and
@@ -64,11 +63,6 @@ class BlockSparseMatrix : public SparseMatrix {
   // CompressedRowBlockStructure objects.
   explicit BlockSparseMatrix(CompressedRowBlockStructure* block_structure);
 
-  // Construct a block sparse matrix from a protocol buffer.
-#ifndef CERES_NO_PROTOCOL_BUFFERS
-  explicit BlockSparseMatrix(const SparseMatrixProto& proto);
-#endif
-
   BlockSparseMatrix();
   virtual ~BlockSparseMatrix();
 
@@ -79,9 +73,6 @@ class BlockSparseMatrix : public SparseMatrix {
   virtual void SquaredColumnNorm(double* x) const;
   virtual void ScaleColumns(const double* scale);
   virtual void ToDenseMatrix(Matrix* dense_matrix) const;
-#ifndef CERES_NO_PROTOCOL_BUFFERS
-  virtual void ToProto(SparseMatrixProto* proto) const;
-#endif
   virtual void ToTextFile(FILE* file) const;
 
   virtual int num_rows()         const { return num_rows_;     }

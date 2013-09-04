@@ -81,6 +81,8 @@
 
 DEFINE_string(nist_data_dir, "", "Directory containing the NIST non-linear"
               "regression examples");
+DEFINE_string(minimizer, "trust_region",
+              "Minimizer type to use, choices are: line_search & trust_region");
 DEFINE_string(trust_region_strategy, "levenberg_marquardt",
               "Options are: levenberg_marquardt, dogleg");
 DEFINE_string(dogleg, "traditional_dogleg",
@@ -90,6 +92,25 @@ DEFINE_string(linear_solver, "dense_qr", "Options are: "
               "cgnr");
 DEFINE_string(preconditioner, "jacobi", "Options are: "
               "identity, jacobi");
+DEFINE_string(line_search, "armijo",
+              "Line search algorithm to use, choices are: armijo and wolfe.");
+DEFINE_string(line_search_direction, "lbfgs",
+              "Line search direction algorithm to use, choices: lbfgs, bfgs");
+DEFINE_int32(max_line_search_iterations, 20,
+             "Maximum number of iterations for each line search.");
+DEFINE_int32(max_line_search_restarts, 10,
+             "Maximum number of restarts of line search direction algorithm.");
+DEFINE_string(line_search_interpolation, "cubic",
+              "Degree of polynomial aproximation in line search, "
+              "choices are: bisection, quadratic & cubic.");
+DEFINE_int32(lbfgs_rank, 20,
+             "Rank of L-BFGS inverse Hessian approximation in line search.");
+DEFINE_bool(approximate_eigenvalue_bfgs_scaling, false,
+            "Use approximate eigenvalue scaling in (L)BFGS line search.");
+DEFINE_double(sufficient_decrease, 1.0e-4,
+              "Line search Armijo sufficient (function) decrease factor.");
+DEFINE_double(sufficient_curvature_decrease, 0.9,
+              "Line search Wolfe sufficient curvature decrease factor.");
 DEFINE_int32(num_iterations, 10000, "Number of iterations");
 DEFINE_bool(nonmonotonic_steps, false, "Trust region algorithm can use"
             " nonmonotic steps");
@@ -392,7 +413,7 @@ struct Nelson {
 
 template <typename Model, int num_residuals, int num_parameters>
 int RegressionDriver(const std::string& filename,
-                      const ceres::Solver::Options& options) {
+                     const ceres::Solver::Options& options) {
   NISTProblem nist_problem(FLAGS_nist_data_dir + filename);
   CHECK_EQ(num_residuals, nist_problem.response_size());
   CHECK_EQ(num_parameters, nist_problem.num_parameters());
@@ -446,18 +467,22 @@ int RegressionDriver(const std::string& filename,
       ++num_success;
     }
 
-    printf("start: %d status: %s lre: %4.1f initial cost: %e final cost:%e certified cost: %e\n",
+    printf("start: %d status: %s lre: %4.1f initial cost: %e final cost:%e "
+           "certified cost: %e total iterations: %d\n",
            start + 1,
            log_relative_error < kMinNumMatchingDigits ? "FAILURE" : "SUCCESS",
            log_relative_error,
            summary.initial_cost,
            summary.final_cost,
-           nist_problem.certified_cost());
+           nist_problem.certified_cost(),
+           (summary.num_successful_steps + summary.num_unsuccessful_steps));
   }
   return num_success;
 }
 
 void SetMinimizerOptions(ceres::Solver::Options* options) {
+  CHECK(ceres::StringToMinimizerType(FLAGS_minimizer,
+                                     &options->minimizer_type));
   CHECK(ceres::StringToLinearSolverType(FLAGS_linear_solver,
                                         &options->linear_solver_type));
   CHECK(ceres::StringToPreconditionerType(FLAGS_preconditioner,
@@ -466,10 +491,28 @@ void SetMinimizerOptions(ceres::Solver::Options* options) {
             FLAGS_trust_region_strategy,
             &options->trust_region_strategy_type));
   CHECK(ceres::StringToDoglegType(FLAGS_dogleg, &options->dogleg_type));
+  CHECK(ceres::StringToLineSearchDirectionType(
+      FLAGS_line_search_direction,
+      &options->line_search_direction_type));
+  CHECK(ceres::StringToLineSearchType(FLAGS_line_search,
+                                      &options->line_search_type));
+  CHECK(ceres::StringToLineSearchInterpolationType(
+      FLAGS_line_search_interpolation,
+      &options->line_search_interpolation_type));
 
   options->max_num_iterations = FLAGS_num_iterations;
   options->use_nonmonotonic_steps = FLAGS_nonmonotonic_steps;
   options->initial_trust_region_radius = FLAGS_initial_trust_region_radius;
+  options->max_lbfgs_rank = FLAGS_lbfgs_rank;
+  options->line_search_sufficient_function_decrease = FLAGS_sufficient_decrease;
+  options->line_search_sufficient_curvature_decrease =
+      FLAGS_sufficient_curvature_decrease;
+  options->max_num_line_search_step_size_iterations =
+      FLAGS_max_line_search_iterations;
+  options->max_num_line_search_direction_restarts =
+      FLAGS_max_line_search_restarts;
+  options->use_approximate_eigenvalue_bfgs_scaling =
+      FLAGS_approximate_eigenvalue_bfgs_scaling;
   options->function_tolerance = 1e-18;
   options->gradient_tolerance = 1e-18;
   options->parameter_tolerance = 1e-18;

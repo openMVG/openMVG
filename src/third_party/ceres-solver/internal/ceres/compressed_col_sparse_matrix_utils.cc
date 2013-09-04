@@ -31,6 +31,7 @@
 #include "ceres/compressed_col_sparse_matrix_utils.h"
 
 #include <vector>
+#include <algorithm>
 #include "ceres/internal/port.h"
 #include "glog/logging.h"
 

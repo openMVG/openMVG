@@ -51,8 +51,6 @@
 
 #include <algorithm>
 #include <map>
-
-#include "ceres/blas.h"
 #include "ceres/block_random_access_matrix.h"
 #include "ceres/block_sparse_matrix.h"
 #include "ceres/block_structure.h"
@@ -61,6 +59,7 @@
 #include "ceres/internal/scoped_ptr.h"
 #include "ceres/map_util.h"
 #include "ceres/schur_eliminator.h"
+#include "ceres/small_blas.h"
 #include "ceres/stl_util.h"
 #include "Eigen/Dense"
 #include "glog/logging.h"

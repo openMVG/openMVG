@@ -43,6 +43,7 @@
 #include "ceres/internal/port.h"
 #include "cholmod.h"
 #include "glog/logging.h"
+#include "SuiteSparseQR.hpp"
 
 // Before SuiteSparse version 4.2.0, cholmod_camd was only enabled
 // if SuiteSparse was compiled with Metis support. This makes
@@ -56,6 +57,14 @@
 // things are stable.
 #if (SUITESPARSE_VERSION < 4002)
 #define CERES_NO_CAMD
+#endif
+
+// UF_long is deprecated but SuiteSparse_long is only available in
+// newer versions of SuiteSparse. So for older versions of
+// SuiteSparse, we define SuiteSparse_long to be the same as UF_long,
+// which is what recent versions of SuiteSparse do anyways.
+#ifndef SuiteSparse_long
+#define SuiteSparse_long UF_long
 #endif
 
 namespace ceres {
@@ -260,6 +269,11 @@ class SuiteSparse {
 
 }  // namespace internal
 }  // namespace ceres
+
+#else  // CERES_NO_SUITESPARSE
+
+class SuiteSparse {};
+typedef void cholmod_factor;
 
 #endif  // CERES_NO_SUITESPARSE
 

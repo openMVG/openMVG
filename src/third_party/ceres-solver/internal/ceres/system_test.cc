@@ -64,21 +64,21 @@ const bool kUserOrdering = false;
 // Struct used for configuring the solver.
 struct SolverConfig {
   SolverConfig(LinearSolverType linear_solver_type,
-               SparseLinearAlgebraLibraryType sparse_linear_algebra_library,
+               SparseLinearAlgebraLibraryType sparse_linear_algebra_library_type,
                bool use_automatic_ordering)
       : linear_solver_type(linear_solver_type),
-        sparse_linear_algebra_library(sparse_linear_algebra_library),
+        sparse_linear_algebra_library_type(sparse_linear_algebra_library_type),
         use_automatic_ordering(use_automatic_ordering),
         preconditioner_type(IDENTITY),
         num_threads(1) {
   }
 
   SolverConfig(LinearSolverType linear_solver_type,
-               SparseLinearAlgebraLibraryType sparse_linear_algebra_library,
+               SparseLinearAlgebraLibraryType sparse_linear_algebra_library_type,
                bool use_automatic_ordering,
                PreconditionerType preconditioner_type)
       : linear_solver_type(linear_solver_type),
-        sparse_linear_algebra_library(sparse_linear_algebra_library),
+        sparse_linear_algebra_library_type(sparse_linear_algebra_library_type),
         use_automatic_ordering(use_automatic_ordering),
         preconditioner_type(preconditioner_type),
         num_threads(1) {
@@ -88,14 +88,14 @@ struct SolverConfig {
     return StringPrintf(
         "(%s, %s, %s, %s, %d)",
         LinearSolverTypeToString(linear_solver_type),
-        SparseLinearAlgebraLibraryTypeToString(sparse_linear_algebra_library),
+        SparseLinearAlgebraLibraryTypeToString(sparse_linear_algebra_library_type),
         use_automatic_ordering ? "AUTOMATIC" : "USER",
         PreconditionerTypeToString(preconditioner_type),
         num_threads);
   }
 
   LinearSolverType linear_solver_type;
-  SparseLinearAlgebraLibraryType sparse_linear_algebra_library;
+  SparseLinearAlgebraLibraryType sparse_linear_algebra_library_type;
   bool use_automatic_ordering;
   PreconditionerType preconditioner_type;
   int num_threads;
@@ -130,8 +130,8 @@ void RunSolversAndCheckTheyMatch(const vector<SolverConfig>& configurations,
 
     Solver::Options& options = *(system_test_problem->mutable_solver_options());
     options.linear_solver_type = config.linear_solver_type;
-    options.sparse_linear_algebra_library =
-        config.sparse_linear_algebra_library;
+    options.sparse_linear_algebra_library_type =
+        config.sparse_linear_algebra_library_type;
     options.preconditioner_type = config.preconditioner_type;
     options.num_threads = config.num_threads;
     options.num_linear_solver_threads = config.num_threads;
@@ -281,9 +281,9 @@ class PowellsFunction {
 
 TEST(SystemTest, PowellsFunction) {
   vector<SolverConfig> configs;
-#define CONFIGURE(linear_solver, sparse_linear_algebra_library, ordering) \
-  configs.push_back(SolverConfig(linear_solver,                           \
-                                 sparse_linear_algebra_library,           \
+#define CONFIGURE(linear_solver, sparse_linear_algebra_library_type, ordering) \
+  configs.push_back(SolverConfig(linear_solver,                         \
+                                 sparse_linear_algebra_library_type,    \
                                  ordering))
 
   CONFIGURE(DENSE_QR,               SUITE_SPARSE, kAutomaticOrdering);
@@ -485,9 +485,9 @@ class BundleAdjustmentProblem {
 TEST(SystemTest, BundleAdjustmentProblem) {
   vector<SolverConfig> configs;
 
-#define CONFIGURE(linear_solver, sparse_linear_algebra_library, ordering, preconditioner) \
+#define CONFIGURE(linear_solver, sparse_linear_algebra_library_type, ordering, preconditioner) \
   configs.push_back(SolverConfig(linear_solver,                         \
-                                 sparse_linear_algebra_library,         \
+                                 sparse_linear_algebra_library_type,    \
                                  ordering,                              \
                                  preconditioner))
 

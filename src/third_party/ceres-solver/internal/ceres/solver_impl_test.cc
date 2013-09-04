@@ -509,7 +509,7 @@ TEST(SolverImpl, CreateLinearSolverNoSuiteSparse) {
 TEST(SolverImpl, CreateLinearSolverNegativeMaxNumIterations) {
   Solver::Options options;
   options.linear_solver_type = DENSE_QR;
-  options.linear_solver_max_num_iterations = -1;
+  options.max_linear_solver_iterations = -1;
   // CreateLinearSolver assumes a non-empty ordering.
   options.linear_solver_ordering = new ParameterBlockOrdering;
   string error;
@@ -520,7 +520,7 @@ TEST(SolverImpl, CreateLinearSolverNegativeMaxNumIterations) {
 TEST(SolverImpl, CreateLinearSolverNegativeMinNumIterations) {
   Solver::Options options;
   options.linear_solver_type = DENSE_QR;
-  options.linear_solver_min_num_iterations = -1;
+  options.min_linear_solver_iterations = -1;
   // CreateLinearSolver assumes a non-empty ordering.
   options.linear_solver_ordering = new ParameterBlockOrdering;
   string error;
@@ -531,8 +531,8 @@ TEST(SolverImpl, CreateLinearSolverNegativeMinNumIterations) {
 TEST(SolverImpl, CreateLinearSolverMaxLessThanMinIterations) {
   Solver::Options options;
   options.linear_solver_type = DENSE_QR;
-  options.linear_solver_min_num_iterations = 10;
-  options.linear_solver_max_num_iterations = 5;
+  options.min_linear_solver_iterations = 10;
+  options.max_linear_solver_iterations = 5;
   options.linear_solver_ordering = new ParameterBlockOrdering;
   string error;
   EXPECT_EQ(SolverImpl::CreateLinearSolver(&options, &error),
@@ -592,7 +592,7 @@ TEST(SolverImpl, CreateLinearSolverNormalOperation) {
 
 #ifndef CERES_NO_SUITESPARSE
   options.linear_solver_type = SPARSE_NORMAL_CHOLESKY;
-  options.sparse_linear_algebra_library = SUITE_SPARSE;
+  options.sparse_linear_algebra_library_type = SUITE_SPARSE;
   solver.reset(SolverImpl::CreateLinearSolver(&options, &error));
   EXPECT_EQ(options.linear_solver_type, SPARSE_NORMAL_CHOLESKY);
   EXPECT_TRUE(solver.get() != NULL);
@@ -600,7 +600,7 @@ TEST(SolverImpl, CreateLinearSolverNormalOperation) {
 
 #ifndef CERES_NO_CXSPARSE
   options.linear_solver_type = SPARSE_NORMAL_CHOLESKY;
-  options.sparse_linear_algebra_library = CX_SPARSE;
+  options.sparse_linear_algebra_library_type = CX_SPARSE;
   solver.reset(SolverImpl::CreateLinearSolver(&options, &error));
   EXPECT_EQ(options.linear_solver_type, SPARSE_NORMAL_CHOLESKY);
   EXPECT_TRUE(solver.get() != NULL);
@@ -922,6 +922,120 @@ TEST(SolverImpl, CreateJacobianBlockSparsityTranspose) {
   Matrix actual_dense_jacobian;
   actual_block_sparse_jacobian->ToDenseMatrix(&actual_dense_jacobian);
   EXPECT_EQ((expected_dense_jacobian - actual_dense_jacobian).norm(), 0.0);
+}
+
+template <int kNumResiduals, int kNumParameterBlocks>
+class NumParameterBlocksCostFunction : public CostFunction {
+ public:
+  NumParameterBlocksCostFunction() {
+    set_num_residuals(kNumResiduals);
+    for (int i = 0; i < kNumParameterBlocks; ++i) {
+      mutable_parameter_block_sizes()->push_back(1);
+    }
+  }
+
+  virtual ~NumParameterBlocksCostFunction() {
+  }
+
+  virtual bool Evaluate(double const* const* parameters,
+                        double* residuals,
+                        double** jacobians) const {
+    return true;
+  }
+};
+
+TEST(SolverImpl, ReallocationInCreateJacobianBlockSparsityTranspose) {
+  // CreateJacobianBlockSparsityTranspose starts with a conservative
+  // estimate of the size of the sparsity pattern. This test ensures
+  // that when those estimates are violated, the reallocation/resizing
+  // logic works correctly.
+
+  ProblemImpl problem;
+  double x[20];
+
+  vector<double*> parameter_blocks;
+  for (int i = 0; i < 20; ++i) {
+    problem.AddParameterBlock(x + i, 1);
+    parameter_blocks.push_back(x + i);
+  }
+
+  problem.AddResidualBlock(new NumParameterBlocksCostFunction<1, 20>(),
+                           NULL,
+                           parameter_blocks);
+
+  TripletSparseMatrix expected_block_sparse_jacobian(20, 1, 20);
+  {
+    int* rows = expected_block_sparse_jacobian.mutable_rows();
+    int* cols = expected_block_sparse_jacobian.mutable_cols();
+    for (int i = 0; i < 20; ++i) {
+      rows[i] = i;
+      cols[i] = 0;
+    }
+
+    double* values = expected_block_sparse_jacobian.mutable_values();
+    fill(values, values + 20, 1.0);
+    expected_block_sparse_jacobian.set_num_nonzeros(20);
+  }
+
+  Program* program = problem.mutable_program();
+  program->SetParameterOffsetsAndIndex();
+
+  scoped_ptr<TripletSparseMatrix> actual_block_sparse_jacobian(
+      SolverImpl::CreateJacobianBlockSparsityTranspose(program));
+
+  Matrix expected_dense_jacobian;
+  expected_block_sparse_jacobian.ToDenseMatrix(&expected_dense_jacobian);
+
+  Matrix actual_dense_jacobian;
+  actual_block_sparse_jacobian->ToDenseMatrix(&actual_dense_jacobian);
+  EXPECT_EQ((expected_dense_jacobian - actual_dense_jacobian).norm(), 0.0);
+}
+
+TEST(CompactifyArray, ContiguousEntries) {
+  vector<int> array;
+  array.push_back(0);
+  array.push_back(1);
+  vector<int> expected = array;
+  SolverImpl::CompactifyArray(&array);
+  EXPECT_EQ(array, expected);
+  array.clear();
+
+  array.push_back(1);
+  array.push_back(0);
+  expected = array;
+  SolverImpl::CompactifyArray(&array);
+  EXPECT_EQ(array, expected);
+}
+
+TEST(CompactifyArray, NonContiguousEntries) {
+  vector<int> array;
+  array.push_back(0);
+  array.push_back(2);
+  vector<int> expected;
+  expected.push_back(0);
+  expected.push_back(1);
+  SolverImpl::CompactifyArray(&array);
+  EXPECT_EQ(array, expected);
+}
+
+TEST(CompactifyArray, NonContiguousRepeatingEntries) {
+  vector<int> array;
+  array.push_back(3);
+  array.push_back(1);
+  array.push_back(0);
+  array.push_back(0);
+  array.push_back(0);
+  array.push_back(5);
+  vector<int> expected;
+  expected.push_back(2);
+  expected.push_back(1);
+  expected.push_back(0);
+  expected.push_back(0);
+  expected.push_back(0);
+  expected.push_back(3);
+
+  SolverImpl::CompactifyArray(&array);
+  EXPECT_EQ(array, expected);
 }
 
 }  // namespace internal
