@@ -35,7 +35,6 @@
 #include "ceres/internal/eigen.h"
 #include "ceres/internal/scoped_ptr.h"
 #include "ceres/linear_least_squares_problems.h"
-#include "ceres/matrix_proto.h"
 #include "ceres/triplet_sparse_matrix.h"
 #include "glog/logging.h"
 #include "gtest/gtest.h"
@@ -108,28 +107,6 @@ TEST_F(BlockSparseMatrixTest, ToDenseMatrixTest) {
   B_->ToDenseMatrix(&m_b);
   EXPECT_LT((m_a - m_b).norm(), 1e-12);
 }
-
-#ifndef CERES_NO_PROTOCOL_BUFFERS
-TEST_F(BlockSparseMatrixTest, Serialization) {
-  // Roundtrip through serialization and check for equality.
-  SparseMatrixProto proto;
-  A_->ToProto(&proto);
-
-  LOG(INFO) << proto.DebugString();
-
-  BlockSparseMatrix A2(proto);
-
-  Matrix m_a;
-  Matrix m_b;
-  A_->ToDenseMatrix(&m_a);
-  A2.ToDenseMatrix(&m_b);
-
-  LOG(INFO) << "\n" << m_a;
-  LOG(INFO) << "\n" << m_b;
-
-  EXPECT_LT((m_a - m_b).norm(), 1e-12);
-}
-#endif
 
 }  // namespace internal
 }  // namespace ceres

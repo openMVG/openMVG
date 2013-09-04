@@ -35,10 +35,10 @@
 #include <algorithm>
 #include <cstring>
 #include <vector>
-#include "ceres/blas.h"
 #include "ceres/block_sparse_matrix.h"
 #include "ceres/block_structure.h"
 #include "ceres/internal/eigen.h"
+#include "ceres/small_blas.h"
 #include "glog/logging.h"
 
 namespace ceres {

@@ -20,7 +20,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.5.0',
+        VERSION:     '1.7.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -66,9 +66,109 @@
   <div class="section" id="version-history">
 <span id="chapter-version-history"></span><h1>Version History<a class="headerlink" href="#version-history" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="id1">
-<h2>1.6.0<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<h2>1.7.0<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="backward-incompatible-api-changes">
+<h3>Backward Incompatible API Changes<a class="headerlink" href="#backward-incompatible-api-changes" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li><tt class="docutils literal"><span class="pre">Solver::Options::sparse_linear_algebra_library</span></tt> has been renamed
+to <tt class="docutils literal"><span class="pre">Solver::Options::sparse_linear_algebra_library_type</span></tt>.</li>
+</ol>
+</div>
 <div class="section" id="new-features">
 <h3>New Features<a class="headerlink" href="#new-features" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>Sparse and dense covariance estimation.</li>
+<li>A new Wolfe line search. (Alex Stewart)</li>
+<li><tt class="docutils literal"><span class="pre">BFGS</span></tt> line search direction. (Alex Stewart)</li>
+<li>C API</li>
+<li>Speeded up the use of loss functions &gt; 17x.</li>
+<li>Faster <tt class="docutils literal"><span class="pre">DENSE_QR</span></tt>, <tt class="docutils literal"><span class="pre">DENSE_NORMAL_CHOLESKY</span></tt> and <tt class="docutils literal"><span class="pre">DENSE_SCHUR</span></tt>
+solvers.</li>
+<li>Support for multiple dense linear algebra backends. In particular
+optimized <tt class="docutils literal"><span class="pre">BLAS</span></tt> and <tt class="docutils literal"><span class="pre">LAPACK</span></tt> implementations (e.g., Intel MKL,
+ACML, OpenBLAS etc) can now be used to do the dense linear
+algebra for <tt class="docutils literal"><span class="pre">DENSE_QR</span></tt>, <tt class="docutils literal"><span class="pre">DENSE_NORMAL_CHOLESKY</span></tt> and
+<tt class="docutils literal"><span class="pre">DENSE_SCHUR</span></tt></li>
+<li>Use of Inner iterations can now be adaptively stopped. Iteration
+and runtime statistics for inner iterations are not reported in
+<tt class="docutils literal"><span class="pre">Solver::Summary</span></tt> and <tt class="docutils literal"><span class="pre">Solver::Summary::FullReport</span></tt>.</li>
+<li>Improved inner iteration step acceptance criterion.</li>
+<li>Add BlockRandomAccessCRSMatrix.</li>
+<li>Speeded up automatic differentiation by 7%.</li>
+<li>Bundle adjustment example from libmv/Blender (Sergey Sharybin)</li>
+<li>Shared library building is now controlled by CMake, rather than a custom
+solution. Previously, Ceres had a custom option, but this is now deprecated
+in favor of CMake&#8217;s built in support for switching between static and
+shared. Turn on BUILD_SHARED_LIBS to get shared Ceres libraries.</li>
+<li>No more dependence on Protocol Buffers.</li>
+<li>Incomplete LQ factorization.</li>
+<li>Ability to write trust region problems to disk.</li>
+<li>Add sinh, cosh, tanh and tan functions to automatic differentiation
+(Johannes Schönberger)</li>
+<li>Simplifications to the cmake build file.</li>
+<li><tt class="docutils literal"><span class="pre">miniglog</span></tt> can now be used as a replacement for <tt class="docutils literal"><span class="pre">google-glog</span></tt>
+on non Android platforms. (This is NOT recommended).</li>
+</ol>
+</div>
+<div class="section" id="bug-fixes">
+<h3>Bug Fixes<a class="headerlink" href="#bug-fixes" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>Fix <tt class="docutils literal"><span class="pre">ITERATIVE_SCHUR</span></tt> solver to work correctly when the schur
+complement is of size zero. (Soohyun Bae)</li>
+<li>Fix the <tt class="docutils literal"><span class="pre">spec</span></tt> file for generating <tt class="docutils literal"><span class="pre">RPM</span></tt> packages (Brian Pitts
+and Taylor Braun-Jones).</li>
+<li>Fix how ceres calls CAMD (Manas Jagadev)</li>
+<li>Fix breakage on old versions of SuiteSparse. (Fisher Yu)</li>
+<li>Fix warning C4373 in Visual Studio (Petter Strandmark)</li>
+<li>Fix compilation error caused by missing suitesparse headers and
+reorganize them to be more robust. (Sergey Sharybin)</li>
+<li>Check GCC Version before adding -fast compiler option on
+OSX. (Steven Lovegrove)</li>
+<li>Add documentation for minimizer progress output.</li>
+<li>Lint and other cleanups (William Rucklidge and James Roseborough)</li>
+<li>Collections port fix for MSC 2008 (Sergey Sharybin)</li>
+<li>Various corrections and cleanups in the documentation.</li>
+<li>Change the path where CeresConfig.cmake is installed (Pablo
+Speciale)</li>
+<li>Minor errors in documentation (Pablo Speciale)</li>
+<li>Updated depend.cmake to follow CMake IF convention. (Joydeep
+Biswas)</li>
+<li>Stablize the schur ordering algorithm.</li>
+<li>Update license header in split.h.</li>
+<li>Enabling -O4 (link-time optimization) only if compiler/linker
+support it. (Alex Stewart)</li>
+<li>Consistent glog path across files.</li>
+<li>ceres-solver.spec: Use cleaner, more conventional Release string
+(Taylor Braun-Jones)</li>
+<li>Fix compile bug on RHEL6 due to missing header (Taylor Braun-Jones)</li>
+<li>CMake file is less verbose.</li>
+<li>Use the latest upstream version of google-test and gmock.</li>
+<li>Rationalize some of the variable names in <tt class="docutils literal"><span class="pre">Solver::Options</span></tt>.</li>
+<li>Improve Summary::FullReport when line search is used.</li>
+<li>Expose line search parameters in <tt class="docutils literal"><span class="pre">Solver::Options</span></tt>.</li>
+<li>Fix update of L-BFGS history buffers after they become full. (Alex
+Stewart)</li>
+<li>Fix configuration error on systems without SuiteSparse installed
+(Sergey Sharybin)</li>
+<li>Enforce the read call returns correct value in <tt class="docutils literal"><span class="pre">curve_fitting_c.c</span></tt>
+(Arnaud Gelas)</li>
+<li>Fix DynamicAutoDiffCostFunction (Richard Stebbing)</li>
+<li>Fix Problem::RemoveParameterBlock documentation (Johannes
+Schönberger)</li>
+<li>Fix a logging bug in parameter_block.h</li>
+<li>Refactor the preconditioner class structure.</li>
+<li>Fix an uninitialized variable warning when building with <tt class="docutils literal"><span class="pre">GCC</span></tt>.</li>
+<li>Fix a reallocation bug in
+<tt class="docutils literal"><span class="pre">CreateJacobianBlockSparsityTranspose</span></tt>. (Yuliy Schwartzburg)</li>
+<li>Add a define for O_BINARY.</li>
+<li>Fix miniglog-based Android NDK build; now works with NDK r9. (Scott Ettinger)</li>
+</ol>
+</div>
+</div>
+<div class="section" id="id2">
+<h2>1.6.0<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id3">
+<h3>New Features<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Major Performance improvements.<ol class="loweralpha">
 <li>Schur type solvers (<tt class="docutils literal"><span class="pre">SPARSE_SCHUR</span></tt>, <tt class="docutils literal"><span class="pre">DENSE_SCHUR</span></tt>,
@@ -96,8 +196,8 @@ instead of a matrix vector multiply.</li>
 <li>Enable larger tuple sizes for Visual Studio 2012. (Petter Strandmark)</li>
 </ol>
 </div>
-<div class="section" id="bug-fixes">
-<h3>Bug Fixes<a class="headerlink" href="#bug-fixes" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id4">
+<h3>Bug Fixes<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Update the documentation for <tt class="docutils literal"><span class="pre">CostFunction</span></tt>.</li>
 <li>Fixed a typo in the documentation. (Pablo Speciale)</li>
@@ -113,10 +213,10 @@ instead of a matrix vector multiply.</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id2">
-<h2>1.5.0<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="backward-incompatible-api-changes">
-<h3>Backward Incompatible API Changes<a class="headerlink" href="#backward-incompatible-api-changes" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id5">
+<h2>1.5.0<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id6">
+<h3>Backward Incompatible API Changes<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic">
 <li><p class="first">Added <tt class="docutils literal"><span class="pre">Problem::Evaluate</span></tt>. Now you can evaluate a problem or any
 part of it without calling the solver.</p>
@@ -156,8 +256,8 @@ removed from the API.</p>
 </li>
 </ol>
 </div>
-<div class="section" id="id3">
-<h3>New Features<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id7">
+<h3>New Features<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Problem now supports removal of ParameterBlocks and
 ResidualBlocks. There is a space/time tradeoff in doing this which
@@ -220,8 +320,8 @@ size and/or compile time is a concern, larger parts of the solver
 can be disabled at compile time.</li>
 </ol>
 </div>
-<div class="section" id="id4">
-<h3>Bug Fixes<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id8">
+<h3>Bug Fixes<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Compilation fixes for MSVC2010 (Sergey Sharybin)</li>
 <li>Fixed &#8220;deprecated conversion from string constant to char*&#8221;
@@ -257,10 +357,10 @@ solution rather than the ground truth function value.</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id5">
-<h2>1.4.0<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id6">
-<h3>Backward Incompatible API Changes<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id9">
+<h2>1.4.0<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id10">
+<h3>Backward Incompatible API Changes<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
 <p>The new ordering API breaks existing code. Here the common case fixes.</p>
 <p><strong>Before</strong></p>
 <div class="highlight-c++"><div class="highlight"><pre><span class="n">options</span><span class="p">.</span><span class="n">linear_solver_type</span> <span class="o">=</span> <span class="n">ceres</span><span class="o">::</span><span class="n">DENSE_SCHUR</span>
@@ -295,8 +395,8 @@ solution rather than the ground truth function value.</li>
 </pre></div>
 </div>
 </div>
-<div class="section" id="id7">
-<h3>New Features<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id11">
+<h3>New Features<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>A new richer, more expressive and consistent API for ordering
 parameter blocks.</li>
@@ -319,8 +419,8 @@ non-monotonic step.</li>
 <li>Add support for 10 parameter blocks in <tt class="docutils literal"><span class="pre">AutoDiffCostFunction</span></tt>.</li>
 </ol>
 </div>
-<div class="section" id="id8">
-<h3>Bug Fixes<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id12">
+<h3>Bug Fixes<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>static cast to force Eigen::Index to long conversion</li>
 <li>Change LOG(ERROR) to LOG(WARNING) in <tt class="docutils literal"><span class="pre">schur_complement_solver.cc</span></tt>.</li>
@@ -345,10 +445,10 @@ Snavely&#8217;s camera model. (Ricardo Martin)</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id9">
-<h2>1.3.0<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id10">
-<h3>New Features<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id13">
+<h2>1.3.0<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id14">
+<h3>New Features<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Android Port (Scott Ettinger also contributed to the port)</li>
 <li>Windows port. (Changchang Wu and Pierre Moulon also contributed to the port)</li>
@@ -385,8 +485,8 @@ associated versioning and build release script changes.</li>
 <li>Portable floating point classification API.</li>
 </ol>
 </div>
-<div class="section" id="id11">
-<h3>Bug Fixes<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id15">
+<h3>Bug Fixes<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Fix how invalid step evaluations are handled.</li>
 <li>Change the slop handling around zero for model cost changes to use
@@ -431,10 +531,10 @@ namespace conflicts.</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id12">
-<h2>1.2.3<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id13">
-<h3>Bug Fixes<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id16">
+<h2>1.2.3<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id17">
+<h3>Bug Fixes<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li><tt class="docutils literal"><span class="pre">suitesparse_test</span></tt> is enabled even when <tt class="docutils literal"><span class="pre">-DSUITESPARSE=OFF</span></tt>.</li>
 <li><tt class="docutils literal"><span class="pre">FixedArray</span></tt> internal struct did not respect <tt class="docutils literal"><span class="pre">Eigen</span></tt>
@@ -444,10 +544,10 @@ alignment requirements (Koichi Akabe &amp; Stephan Kassemeyer).</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id14">
-<h2>1.2.2<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id15">
-<h3>Bug Fixes<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id18">
+<h2>1.2.2<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id19">
+<h3>Bug Fixes<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Fix constant parameter blocks, and other minor fixes (Markus Moll)</li>
 <li>Fix alignment issues when combining <tt class="docutils literal"><span class="pre">Jet</span></tt> and
@@ -456,18 +556,18 @@ alignment requirements (Koichi Akabe &amp; Stephan Kassemeyer).</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id16">
-<h2>1.2.1<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id17">
-<h3>New Features<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id20">
+<h2>1.2.1<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id21">
+<h3>New Features<a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Powell&#8217;s Dogleg solver</li>
 <li>Documentation now has a brief overview of Trust Region methods and
 how the Levenberg-Marquardt and Dogleg methods work.</li>
 </ol>
 </div>
-<div class="section" id="id18">
-<h3>Bug Fixes<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id22">
+<h3>Bug Fixes<a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Destructor for <tt class="docutils literal"><span class="pre">TrustRegionStrategy</span></tt> was not virtual (Markus Moll)</li>
 <li>Invalid <tt class="docutils literal"><span class="pre">DCHECK</span></tt> in <tt class="docutils literal"><span class="pre">suitesparse.cc</span></tt> (Markus Moll)</li>
@@ -479,10 +579,10 @@ how the Levenberg-Marquardt and Dogleg methods work.</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id19">
-<h2>1.2.0<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id20">
-<h3>New Features<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id23">
+<h2>1.2.0<a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id24">
+<h3>New Features<a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li><tt class="docutils literal"><span class="pre">CXSparse</span></tt> support.</li>
 <li>Block oriented fill reducing orderings. This reduces the
@@ -490,14 +590,13 @@ factorization time for sparse <tt class="docutils literal"><span class="pre">CHO
 <li>New Trust region loop with support for multiple trust region step
 strategies. Currently only Levenberg-Marquardt is supported, but
 this refactoring opens the door for Dog-leg, Stiehaug and others.</li>
-<li><tt class="docutils literal"><span class="pre">CMake</span></tt> file restructuring.  Builds in <tt class="docutils literal"><span class="pre">Release</span></tt> mode by
-default, and now has platform specific tuning flags.</li>
+<li><tt class="docutils literal"><span class="pre">CMake</span></tt> file restructuring.  Builds in <tt class="docutils literal"><span class="pre">Release</span></tt> mode by   default, and now has platform specific tuning flags.</li>
 <li>Re-organized documentation. No new content, but better
 organization.</li>
 </ol>
 </div>
-<div class="section" id="id21">
-<h3>Bug Fixes<a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id25">
+<h3>Bug Fixes<a class="headerlink" href="#id25" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Fixed integer overflow bug in <tt class="docutils literal"><span class="pre">block_random_access_sparse_matrix.cc</span></tt>.</li>
 <li>Renamed some macros to prevent name conflicts.</li>
@@ -507,10 +606,10 @@ organization.</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id22">
-<h2>1.1.1<a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id23">
-<h3>Bug Fixes<a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id26">
+<h2>1.1.1<a class="headerlink" href="#id26" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id27">
+<h3>Bug Fixes<a class="headerlink" href="#id27" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Fix a bug in the handling of constant blocks. (Louis Simard)</li>
 <li>Add an optional lower bound to the Levenberg-Marquardt regularizer
@@ -519,10 +618,10 @@ to prevent oscillating between well and ill posed linear problems.</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id24">
-<h2>1.1.0<a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id25">
-<h3>New Features<a class="headerlink" href="#id25" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id28">
+<h2>1.1.0<a class="headerlink" href="#id28" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id29">
+<h3>New Features<a class="headerlink" href="#id29" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>New iterative linear solver for general sparse problems - <tt class="docutils literal"><span class="pre">CGNR</span></tt>
 and a block Jacobi preconditioner for it.</li>
@@ -537,8 +636,8 @@ text format so that they can loaded into <tt class="docutils literal"><span clas
 <li>A better more robust build system.</li>
 </ol>
 </div>
-<div class="section" id="id26">
-<h3>Bug Fixes<a class="headerlink" href="#id26" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id30">
+<h3>Bug Fixes<a class="headerlink" href="#id30" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Fixed a strict weak ordering bug in the schur ordering.</li>
 <li>Grammar and typos in the documents and code comments.</li>
@@ -546,8 +645,8 @@ text format so that they can loaded into <tt class="docutils literal"><span clas
 </ol>
 </div>
 </div>
-<div class="section" id="id27">
-<h2>1.0.0<a class="headerlink" href="#id27" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id31">
+<h2>1.0.0<a class="headerlink" href="#id31" title="Permalink to this headline">¶</a></h2>
 <p>Initial Release. Nathan Wiegand contributed to the Mac OSX port.</p>
 </div>
 </div>
@@ -563,8 +662,8 @@ text format so that they can loaded into <tt class="docutils literal"><span clas
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="building.html">Building Ceres Solver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="solving.html">Solver API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solving.html">Solving</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reading.html">Further Reading</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="acknowledgements.html">Acknowledgements</a></li>

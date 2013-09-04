@@ -8,7 +8,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
 
-    <title>Modeling API &mdash; Ceres Solver</title>
+    <title>Modeling &mdash; Ceres Solver</title>
 
 <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
 
@@ -20,7 +20,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.5.0',
+        VERSION:     '1.7.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -38,7 +38,7 @@
 </script>
     <script type="text/javascript" src="_static/searchtools.js"></script>
     <link rel="top" title="Ceres Solver" href="index.html" />
-    <link rel="next" title="Solver API" href="solving.html" />
+    <link rel="next" title="Solving" href="solving.html" />
     <link rel="prev" title="Tutorial" href="tutorial.html" /> 
   </head>
   <body>
@@ -49,7 +49,7 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="solving.html" title="Solver API"
+          <a href="solving.html" title="Solving"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
@@ -63,8 +63,8 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="modeling-api">
-<span id="chapter-modeling"></span><h1>Modeling API<a class="headerlink" href="#modeling-api" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="modeling">
+<span id="chapter-modeling"></span><h1>Modeling<a class="headerlink" href="#modeling" title="Permalink to this headline">¶</a></h1>
 <p>Recall that Ceres solves robustified non-linear least squares problems
 of the form</p>
 <div class="math" id="equation-ceresproblem">
@@ -83,15 +83,18 @@ of small scalars as a <tt class="docutils literal"><span class="pre">ParameterBl
 that is used to reduce the influence of outliers on the solution of
 non-linear least squares problems.</p>
 <p>In this chapter we will describe the various classes that are part of
-Ceres Solver&#8217;s modeling API, and how they can be used to construct
-optimization.</p>
-<p>Once a problem has been constructed, various methods for solving them
-will be discussed in <a class="reference internal" href="solving.html#chapter-solving"><em>Solver API</em></a>. It is by design that the
-modeling and the solving APIs are orthogonal to each other. This
-enables easy switching/tweaking of various solver parameters without
-having to touch the problem once it has been successfuly modeling.</p>
+Ceres Solver&#8217;s modeling API, and how they can be used to construct an
+optimization problem. Once a problem has been constructed, various
+methods for solving them will be discussed in
+<a class="reference internal" href="solving.html#chapter-solving"><em>Solving</em></a>. It is by design that the modeling and the
+solving APIs are orthogonal to each other. This enables
+switching/tweaking of various solver parameters without having to
+touch the problem once it has been successfully modeled.</p>
 <div class="section" id="costfunction">
 <h2><a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a><a class="headerlink" href="#costfunction" title="Permalink to this headline">¶</a></h2>
+<p>The single biggest task when modeling a problem is specifying the
+residuals and their derivatives. This is done using
+<a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> objects.</p>
 <dl class="class">
 <dt id="CostFunction">
 <em class="property">class </em><tt class="descname">CostFunction</tt><a class="headerlink" href="#CostFunction" title="Permalink to this definition">¶</a></dt>
@@ -116,7 +119,7 @@ residuals and if asked a vector of Jacobian matrices, i.e., given
 <span class="math">\(f_i\left(x_{i_1},...,x_{i_k}\right)\)</span> and the matrices</p>
 <div class="math">
 \[J_{ij} = \frac{\partial}{\partial x_{i_j}}f_i\left(x_{i_1},...,x_{i_k}\right),\quad \forall j \in \{i_1,..., i_k\}\]</div>
-<p>The signature of the class:<cite>CostFunction</cite> (number and sizes of
+<p>The signature of the <a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> (number and sizes of
 input parameter blocks and number of outputs) is stored in
 <tt class="xref cpp cpp-member docutils literal"><span class="pre">CostFunction::parameter_block_sizes_</span></tt> and
 <tt class="xref cpp cpp-member docutils literal"><span class="pre">CostFunction::num_residuals_</span></tt> respectively. User code
@@ -129,12 +132,11 @@ by the <a class="reference internal" href="#Problem" title="Problem"><tt class="
 <dl class="function">
 <dt id="CostFunction::Evaluate__doubleCPCP.doubleP.doublePP">
 bool <tt class="descclassname">CostFunction::</tt><tt class="descname">Evaluate</tt><big>(</big>double const* const* <em>parameters</em>, double* <em>residuals</em>, double** <em>jacobians</em><big>)</big><a class="headerlink" href="#CostFunction::Evaluate__doubleCPCP.doubleP.doublePP" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is the key methods. It implements the residual and Jacobian
-computation.</p>
+<dd><p>Compute the residual vector and the Jacobian matrices.</p>
 <p><tt class="docutils literal"><span class="pre">parameters</span></tt> is an array of pointers to arrays containing the
-various parameter blocks. parameters has the same number of
-elements as <tt class="xref cpp cpp-member docutils literal"><span class="pre">CostFunction::parameter_block_sizes_</span></tt>.
-Parameter blocks are in the same order as
+various parameter blocks. <tt class="docutils literal"><span class="pre">parameters</span></tt> has the same number of
+elements as <tt class="xref cpp cpp-member docutils literal"><span class="pre">CostFunction::parameter_block_sizes_</span></tt> and the
+parameter blocks are in the same order as
 <tt class="xref cpp cpp-member docutils literal"><span class="pre">CostFunction::parameter_block_sizes_</span></tt>.</p>
 <p><tt class="docutils literal"><span class="pre">residuals</span></tt> is an array of size <tt class="docutils literal"><span class="pre">num_residuals_</span></tt>.</p>
 <p><tt class="docutils literal"><span class="pre">jacobians</span></tt> is an array of size
@@ -151,7 +153,7 @@ elements. Each Jacobian matrix is stored in row-major order, i.e.,
 this is the case when computing cost only. If <tt class="docutils literal"><span class="pre">jacobians[i]</span></tt> is
 <tt class="docutils literal"><span class="pre">NULL</span></tt>, then the Jacobian matrix corresponding to the
 <span class="math">\(i^{\textrm{th}}\)</span> parameter block must not be returned, this
-is the case when the a parameter block is marked constant.</p>
+is the case when a parameter block is marked constant.</p>
 <p><strong>NOTE</strong> The return value indicates whether the computation of the
 residuals and/or jacobians was successful or not.</p>
 <p>This can be used to communicate numerical failures in Jacobian
@@ -175,10 +177,10 @@ numerical problem at iteration 0.</p>
 <dt id="SizedCostFunction">
 <em class="property">class </em><tt class="descname">SizedCostFunction</tt><a class="headerlink" href="#SizedCostFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>If the size of the parameter blocks and the size of the residual
-vector is known at compile time (this is the common case), Ceres
-provides <a class="reference internal" href="#SizedCostFunction" title="SizedCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">SizedCostFunction</span></tt></a>, where these values can be
-specified as template parameters. In this case the user only needs
-to implement the <a class="reference internal" href="#CostFunction::Evaluate__doubleCPCP.doubleP.doublePP" title="CostFunction::Evaluate"><tt class="xref cpp cpp-func docutils literal"><span class="pre">CostFunction::Evaluate()</span></tt></a>.</p>
+vector is known at compile time (this is the common case),
+<tt class="xref cpp cpp-class docutils literal"><span class="pre">SizeCostFunction</span></tt> can be used where these values can be
+specified as template parameters and the user only needs to
+implement <a class="reference internal" href="#CostFunction::Evaluate__doubleCPCP.doubleP.doublePP" title="CostFunction::Evaluate"><tt class="xref cpp cpp-func docutils literal"><span class="pre">CostFunction::Evaluate()</span></tt></a>.</p>
 <div class="highlight-c++"><div class="highlight"><pre><span class="k">template</span><span class="o">&lt;</span><span class="kt">int</span> <span class="n">kNumResiduals</span><span class="p">,</span>
          <span class="kt">int</span> <span class="n">N0</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="kt">int</span> <span class="n">N1</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="kt">int</span> <span class="n">N2</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="kt">int</span> <span class="n">N3</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="kt">int</span> <span class="n">N4</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
          <span class="kt">int</span> <span class="n">N5</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="kt">int</span> <span class="n">N6</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="kt">int</span> <span class="n">N7</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="kt">int</span> <span class="n">N8</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="kt">int</span> <span class="n">N9</span> <span class="o">=</span> <span class="mi">0</span><span class="o">&gt;</span>
@@ -198,9 +200,26 @@ to implement the <a class="reference internal" href="#CostFunction::Evaluate__do
 <dl class="class">
 <dt id="AutoDiffCostFunction">
 <em class="property">class </em><tt class="descname">AutoDiffCostFunction</tt><a class="headerlink" href="#AutoDiffCostFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>But even defining the <a class="reference internal" href="#SizedCostFunction" title="SizedCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">SizedCostFunction</span></tt></a> can be a tedious
-affair if complicated derivative computations are involved. To this
-end Ceres provides automatic differentiation.</p>
+<dd><p>Defining a <a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> or a <a class="reference internal" href="#SizedCostFunction" title="SizedCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">SizedCostFunction</span></tt></a>
+can be a tedious and error prone especially when computing
+derivatives.  To this end Ceres provides <a class="reference external" href="http://en.wikipedia.org/wiki/Automatic_differentiation">automatic differentiation</a>.</p>
+<div class="highlight-c++"><div class="highlight"><pre><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">CostFunctor</span><span class="p">,</span>
+       <span class="kt">int</span> <span class="n">M</span><span class="p">,</span>        <span class="c1">// Number of residuals, or ceres::DYNAMIC.</span>
+       <span class="kt">int</span> <span class="n">N0</span><span class="p">,</span>       <span class="c1">// Number of parameters in block 0.</span>
+       <span class="kt">int</span> <span class="n">N1</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>   <span class="c1">// Number of parameters in block 1.</span>
+       <span class="kt">int</span> <span class="n">N2</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>   <span class="c1">// Number of parameters in block 2.</span>
+       <span class="kt">int</span> <span class="n">N3</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>   <span class="c1">// Number of parameters in block 3.</span>
+       <span class="kt">int</span> <span class="n">N4</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>   <span class="c1">// Number of parameters in block 4.</span>
+       <span class="kt">int</span> <span class="n">N5</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>   <span class="c1">// Number of parameters in block 5.</span>
+       <span class="kt">int</span> <span class="n">N6</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>   <span class="c1">// Number of parameters in block 6.</span>
+       <span class="kt">int</span> <span class="n">N7</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>   <span class="c1">// Number of parameters in block 7.</span>
+       <span class="kt">int</span> <span class="n">N8</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>   <span class="c1">// Number of parameters in block 8.</span>
+       <span class="kt">int</span> <span class="n">N9</span> <span class="o">=</span> <span class="mi">0</span><span class="o">&gt;</span>   <span class="c1">// Number of parameters in block 9.</span>
+<span class="k">class</span> <span class="nc">AutoDiffCostFunction</span> <span class="o">:</span> <span class="k">public</span>
+<span class="n">SizedCostFunction</span><span class="o">&lt;</span><span class="n">M</span><span class="p">,</span> <span class="n">N0</span><span class="p">,</span> <span class="n">N1</span><span class="p">,</span> <span class="n">N2</span><span class="p">,</span> <span class="n">N3</span><span class="p">,</span> <span class="n">N4</span><span class="p">,</span> <span class="n">N5</span><span class="p">,</span> <span class="n">N6</span><span class="p">,</span> <span class="n">N7</span><span class="p">,</span> <span class="n">N8</span><span class="p">,</span> <span class="n">N9</span><span class="o">&gt;</span> <span class="p">{</span>
+<span class="p">};</span>
+</pre></div>
+</div>
 <p>To get an auto differentiated cost function, you must define a
 class with a templated <tt class="docutils literal"><span class="pre">operator()</span></tt> (a functor) that computes the
 cost function in terms of the template parameter <tt class="docutils literal"><span class="pre">T</span></tt>. The
@@ -263,13 +282,13 @@ of <tt class="docutils literal"><span class="pre">k</span></tt>.</p>
 <tt class="docutils literal"><span class="pre">MyScalarCostFunction</span></tt>, <tt class="docutils literal"><span class="pre">&lt;1,</span> <span class="pre">2,</span> <span class="pre">2&gt;</span></tt> describe the functor as
 computing a 1-dimensional output from two arguments, both
 2-dimensional.</p>
-<p>The framework can currently accommodate cost functions of up to 6
-independent variables, and there is no limit on the dimensionality of
-each of them.</p>
+<p>The framework can currently accommodate cost functions of up to 10
+independent variables, and there is no limit on the dimensionality
+of each of them.</p>
 <p><strong>WARNING 1</strong> Since the functor will get instantiated with
 different types for <tt class="docutils literal"><span class="pre">T</span></tt>, you must convert from other numeric
 types to <tt class="docutils literal"><span class="pre">T</span></tt> before mixing computations with other variables
-oftype <tt class="docutils literal"><span class="pre">T</span></tt>. In the example above, this is seen where instead of
+of type <tt class="docutils literal"><span class="pre">T</span></tt>. In the example above, this is seen where instead of
 using <tt class="docutils literal"><span class="pre">k_</span></tt> directly, <tt class="docutils literal"><span class="pre">k_</span></tt> is wrapped with <tt class="docutils literal"><span class="pre">T(k_)</span></tt>.</p>
 <p><strong>WARNING 2</strong> A common beginner&#8217;s error when first using
 <a class="reference internal" href="#AutoDiffCostFunction" title="AutoDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">AutoDiffCostFunction</span></tt></a> is to get the sizing wrong. In particular,
@@ -281,12 +300,75 @@ as the last template argument.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="dynamicautodiffcostfunction">
+<h2><a class="reference internal" href="#DynamicAutoDiffCostFunction" title="DynamicAutoDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">DynamicAutoDiffCostFunction</span></tt></a><a class="headerlink" href="#dynamicautodiffcostfunction" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="DynamicAutoDiffCostFunction">
+<em class="property">class </em><tt class="descname">DynamicAutoDiffCostFunction</tt><a class="headerlink" href="#DynamicAutoDiffCostFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#AutoDiffCostFunction" title="AutoDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">AutoDiffCostFunction</span></tt></a> requires that the number of parameter
+blocks and their sizes be known at compile time, e.g., Bezier curve
+fitting, Neural Network training etc. It also has an upper limit of
+10 parameter blocks. In a number of applications, this is not
+enough.</p>
+<blockquote>
+<div><div class="highlight-c++"><div class="highlight"><pre><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">CostFunctor</span><span class="p">,</span> <span class="kt">int</span> <span class="n">Stride</span> <span class="o">=</span> <span class="mi">4</span><span class="o">&gt;</span>
+<span class="k">class</span> <span class="nc">DynamicAutoDiffCostFunction</span> <span class="o">:</span> <span class="k">public</span> <span class="n">CostFunction</span> <span class="p">{</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>In such cases <a class="reference internal" href="#DynamicAutoDiffCostFunction" title="DynamicAutoDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">DynamicAutoDiffCostFunction</span></tt></a> can be
+used. Like <a class="reference internal" href="#AutoDiffCostFunction" title="AutoDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">AutoDiffCostFunction</span></tt></a> the user must define a
+templated functor, but the signature of the functor differs
+slightly. The expected interface for the cost functors is:</p>
+<blockquote>
+<div><div class="highlight-c++"><div class="highlight"><pre><span class="k">struct</span> <span class="n">MyCostFunctor</span> <span class="p">{</span>
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+  <span class="kt">bool</span> <span class="k">operator</span><span class="p">()(</span><span class="n">T</span> <span class="k">const</span><span class="o">*</span> <span class="k">const</span><span class="o">*</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">T</span><span class="o">*</span> <span class="n">residuals</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Since the sizing of the parameters is done at runtime, you must
+also specify the sizes after creating the dynamic autodiff cost
+function. For example:</p>
+<blockquote>
+<div><div class="highlight-c++"><div class="highlight"><pre><span class="n">DynamicAutoDiffCostFunction</span><span class="o">&lt;</span><span class="n">MyCostFunctor</span><span class="p">,</span> <span class="mi">4</span><span class="o">&gt;</span> <span class="n">cost_function</span><span class="p">(</span>
+    <span class="k">new</span> <span class="n">MyCostFunctor</span><span class="p">());</span>
+<span class="n">cost_function</span><span class="p">.</span><span class="n">AddParameterBlock</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+<span class="n">cost_function</span><span class="p">.</span><span class="n">AddParameterBlock</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+<span class="n">cost_function</span><span class="p">.</span><span class="n">SetNumResiduals</span><span class="p">(</span><span class="mi">21</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Under the hood, the implementation evaluates the cost function
+multiple times, computing a small set of the derivatives (four by
+default, controlled by the <tt class="docutils literal"><span class="pre">Stride</span></tt> template parameter) with each
+pass. There is a performance tradeoff with the size of the passes;
+Smaller sizes are more cache efficient but result in larger number
+of passes, and larger stride lengths can destroy cache-locality
+while reducing the number of passes over the cost function. The
+optimal value depends on the number and sizes of the various
+parameter blocks.</p>
+<p>As a rule of thumb, try using <a class="reference internal" href="#AutoDiffCostFunction" title="AutoDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">AutoDiffCostFunction</span></tt></a> before
+you use <a class="reference internal" href="#DynamicAutoDiffCostFunction" title="DynamicAutoDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">DynamicAutoDiffCostFunction</span></tt></a>.</p>
+</dd></dl>
+
+</div>
 <div class="section" id="numericdiffcostfunction">
 <h2><a class="reference internal" href="#NumericDiffCostFunction" title="NumericDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">NumericDiffCostFunction</span></tt></a><a class="headerlink" href="#numericdiffcostfunction" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="NumericDiffCostFunction">
 <em class="property">class </em><tt class="descname">NumericDiffCostFunction</tt><a class="headerlink" href="#NumericDiffCostFunction" title="Permalink to this definition">¶</a></dt>
-<dd><div class="highlight-c++"><div class="highlight"><pre><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">CostFunctionNoJacobian</span><span class="p">,</span>
+<dd><p>In some cases, its not possible to define a templated cost functor,
+for example when the evaluation of the residual involves a call to a
+library function that you do not have control over.  In such a
+situation, <a class="reference external" href="http://en.wikipedia.org/wiki/Numerical_differentiation">numerical differentiation</a> can be
+used.</p>
+<blockquote>
+<div><blockquote>
+<div><div class="highlight-c++"><div class="highlight"><pre><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">CostFunctionNoJacobian</span><span class="p">,</span>
           <span class="n">NumericDiffMethod</span> <span class="n">method</span> <span class="o">=</span> <span class="n">CENTRAL</span><span class="p">,</span> <span class="kt">int</span> <span class="n">M</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
           <span class="kt">int</span> <span class="n">N0</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="kt">int</span> <span class="n">N1</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="kt">int</span> <span class="n">N2</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="kt">int</span> <span class="n">N3</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="kt">int</span> <span class="n">N4</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
           <span class="kt">int</span> <span class="n">N5</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="kt">int</span> <span class="n">N6</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="kt">int</span> <span class="n">N7</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="kt">int</span> <span class="n">N8</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="kt">int</span> <span class="n">N9</span> <span class="o">=</span> <span class="mi">0</span><span class="o">&gt;</span>
@@ -295,14 +377,11 @@ as the last template argument.</p>
 <span class="p">};</span>
 </pre></div>
 </div>
-<p>Create a <a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> as needed by the least squares
-framework with jacobians computed via numeric (a.k.a. finite)
-differentiation. For more details see
-<a class="reference external" href="http://en.wikipedia.org/wiki/Numerical_differentiation">http://en.wikipedia.org/wiki/Numerical_differentiation</a>.</p>
-<p>To get an numerically differentiated <a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a>, you
-must define a class with a <tt class="docutils literal"><span class="pre">operator()</span></tt> (a functor) that computes
-the residuals. The functor must write the computed value in the
-last argument (the only non-<tt class="docutils literal"><span class="pre">const</span></tt> one) and return <tt class="docutils literal"><span class="pre">true</span></tt> to
+</div></blockquote>
+<p>To get a numerically differentiated <a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a>, you must
+define a class with a <tt class="docutils literal"><span class="pre">operator()</span></tt> (a functor) that computes the
+residuals. The functor must write the computed value in the last
+argument (the only non-<tt class="docutils literal"><span class="pre">const</span></tt> one) and return <tt class="docutils literal"><span class="pre">true</span></tt> to
 indicate success.  Please see <a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> for details on
 how the return value may be used to impose simple constraints on
 the parameter block. e.g., an object of the form</p>
@@ -351,15 +430,16 @@ the example above, the residual is a scalar, so only
 the derivative can be constructed as follows.</p>
 <div class="highlight-c++"><div class="highlight"><pre><span class="n">CostFunction</span><span class="o">*</span> <span class="n">cost_function</span>
     <span class="o">=</span> <span class="k">new</span> <span class="n">NumericDiffCostFunction</span><span class="o">&lt;</span><span class="n">MyScalarCostFunctor</span><span class="p">,</span> <span class="n">CENTRAL</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="o">&gt;</span><span class="p">(</span>
-        <span class="k">new</span> <span class="n">MyScalarCostFunctor</span><span class="p">(</span><span class="mf">1.0</span><span class="p">));</span>                          <span class="o">^</span>  <span class="o">^</span>  <span class="o">^</span>
-                                                            <span class="o">|</span>   <span class="o">|</span>  <span class="o">|</span>  <span class="o">|</span>
-                                <span class="n">Finite</span> <span class="n">Differencing</span> <span class="n">Scheme</span> <span class="o">-+</span>   <span class="o">|</span>  <span class="o">|</span>  <span class="o">|</span>
-                                <span class="n">Dimension</span> <span class="n">of</span> <span class="n">residual</span> <span class="o">----------+</span>  <span class="o">|</span>  <span class="o">|</span>
-                                <span class="n">Dimension</span> <span class="n">of</span> <span class="n">x</span> <span class="o">--------------------+</span>  <span class="o">|</span>
-                                <span class="n">Dimension</span> <span class="n">of</span> <span class="n">y</span> <span class="o">-----------------------+</span>
+        <span class="k">new</span> <span class="n">MyScalarCostFunctor</span><span class="p">(</span><span class="mf">1.0</span><span class="p">));</span>                    <span class="o">^</span>     <span class="o">^</span>  <span class="o">^</span>  <span class="o">^</span>
+                                                          <span class="o">|</span>     <span class="o">|</span>  <span class="o">|</span>  <span class="o">|</span>
+                              <span class="n">Finite</span> <span class="n">Differencing</span> <span class="n">Scheme</span> <span class="o">-+</span>     <span class="o">|</span>  <span class="o">|</span>  <span class="o">|</span>
+                              <span class="n">Dimension</span> <span class="n">of</span> <span class="n">residual</span> <span class="o">------------+</span>  <span class="o">|</span>  <span class="o">|</span>
+                              <span class="n">Dimension</span> <span class="n">of</span> <span class="n">x</span> <span class="o">----------------------+</span>  <span class="o">|</span>
+                              <span class="n">Dimension</span> <span class="n">of</span> <span class="n">y</span> <span class="o">-------------------------+</span>
 </pre></div>
 </div>
-<p>In this example, there is usually an instance for each measumerent of <cite>k</cite>.</p>
+<p>In this example, there is usually an instance for each measurement
+of <cite>k</cite>.</p>
 <p>In the instantiation above, the template parameters following
 <tt class="docutils literal"><span class="pre">MyScalarCostFunctor</span></tt>, <tt class="docutils literal"><span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">2</span></tt>, describe the functor as
 computing a 1-dimensional output from two arguments, both
@@ -387,7 +467,7 @@ how.</p>
 subclass of <a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> such that the
 <a class="reference internal" href="#CostFunction::Evaluate__doubleCPCP.doubleP.doublePP" title="CostFunction::Evaluate"><tt class="xref cpp cpp-func docutils literal"><span class="pre">CostFunction::Evaluate()</span></tt></a> function ignores the <tt class="docutils literal"><span class="pre">jacobians</span></tt>
 parameter. The numeric differentiation wrapper will fill in the
-jacobian parameter if nececssary by repeatedly calling the
+jacobian parameter if necessary by repeatedly calling the
 <a class="reference internal" href="#CostFunction::Evaluate__doubleCPCP.doubleP.doublePP" title="CostFunction::Evaluate"><tt class="xref cpp cpp-func docutils literal"><span class="pre">CostFunction::Evaluate()</span></tt></a> with small changes to the
 appropriate parameters, and computing the slope. For performance,
 the numeric differentiation wrapper class is templated on the
@@ -403,140 +483,7 @@ cost function can be constructed as follows:</p>
 <p>where <tt class="docutils literal"><span class="pre">MyCostFunction</span></tt> has 1 residual and 2 parameter blocks with
 sizes 4 and 8 respectively. Look at the tests for a more detailed
 example.</p>
-</dd></dl>
-
-</div>
-<div class="section" id="normalprior">
-<h2><a class="reference internal" href="#NormalPrior" title="NormalPrior"><tt class="xref cpp cpp-class docutils literal"><span class="pre">NormalPrior</span></tt></a><a class="headerlink" href="#normalprior" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="NormalPrior">
-<em class="property">class </em><tt class="descname">NormalPrior</tt><a class="headerlink" href="#NormalPrior" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><div class="highlight-c++"><div class="highlight"><pre><span class="k">class</span> <span class="nc">NormalPrior</span><span class="o">:</span> <span class="k">public</span> <span class="n">CostFunction</span> <span class="p">{</span>
- <span class="k">public</span><span class="o">:</span>
-  <span class="c1">// Check that the number of rows in the vector b are the same as the</span>
-  <span class="c1">// number of columns in the matrix A, crash otherwise.</span>
-  <span class="n">NormalPrior</span><span class="p">(</span><span class="k">const</span> <span class="n">Matrix</span><span class="o">&amp;</span> <span class="n">A</span><span class="p">,</span> <span class="k">const</span> <span class="n">Vector</span><span class="o">&amp;</span> <span class="n">b</span><span class="p">);</span>
-
-  <span class="k">virtual</span> <span class="kt">bool</span> <span class="n">Evaluate</span><span class="p">(</span><span class="kt">double</span> <span class="k">const</span><span class="o">*</span> <span class="k">const</span><span class="o">*</span> <span class="n">parameters</span><span class="p">,</span>
-                        <span class="kt">double</span><span class="o">*</span> <span class="n">residuals</span><span class="p">,</span>
-                        <span class="kt">double</span><span class="o">**</span> <span class="n">jacobians</span><span class="p">)</span> <span class="k">const</span><span class="p">;</span>
- <span class="p">};</span>
-</pre></div>
-</div>
-<p>Implements a cost function of the form</p>
-<div class="math">
-\[cost(x) = ||A(x - b)||^2\]</div>
-<p>where, the matrix A and the vector b are fixed and x is the
-variable. In case the user is interested in implementing a cost
-function of the form</p>
 </div></blockquote>
-<div class="math">
-\[cost(x) = (x - \mu)^T S^{-1} (x - \mu)\]</div>
-<p>where, <span class="math">\(\mu\)</span> is a vector and <span class="math">\(S\)</span> is a covariance matrix,
-then, <span class="math">\(A = S^{-1/2}\)</span>, i.e the matrix <span class="math">\(A\)</span> is the square
-root of the inverse of the covariance, also known as the stiffness
-matrix. There are however no restrictions on the shape of
-<span class="math">\(A\)</span>. It is free to be rectangular, which would be the case if
-the covariance matrix <span class="math">\(S\)</span> is rank deficient.</p>
-</dd></dl>
-
-</div>
-<div class="section" id="conditionedcostfunction">
-<h2><a class="reference internal" href="#ConditionedCostFunction" title="ConditionedCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">ConditionedCostFunction</span></tt></a><a class="headerlink" href="#conditionedcostfunction" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="ConditionedCostFunction">
-<em class="property">class </em><tt class="descname">ConditionedCostFunction</tt><a class="headerlink" href="#ConditionedCostFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>This class allows you to apply different conditioning to the residual
-values of a wrapped cost function. An example where this is useful is
-where you have an existing cost function that produces N values, but you
-want the total cost to be something other than just the sum of these
-squared values - maybe you want to apply a different scaling to some
-values, to change their contribution to the cost.</p>
-<p>Usage:</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="c1">//  my_cost_function produces N residuals</span>
-<span class="n">CostFunction</span><span class="o">*</span> <span class="n">my_cost_function</span> <span class="o">=</span> <span class="p">...</span>
-<span class="n">CHECK_EQ</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">my_cost_function</span><span class="o">-&gt;</span><span class="n">num_residuals</span><span class="p">());</span>
-<span class="n">vector</span><span class="o">&lt;</span><span class="n">CostFunction</span><span class="o">*&gt;</span> <span class="n">conditioners</span><span class="p">;</span>
-
-<span class="c1">//  Make N 1x1 cost functions (1 parameter, 1 residual)</span>
-<span class="n">CostFunction</span><span class="o">*</span> <span class="n">f_1</span> <span class="o">=</span> <span class="p">...</span>
-<span class="n">conditioners</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">f_1</span><span class="p">);</span>
-
-<span class="n">CostFunction</span><span class="o">*</span> <span class="n">f_N</span> <span class="o">=</span> <span class="p">...</span>
-<span class="n">conditioners</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">f_N</span><span class="p">);</span>
-<span class="n">ConditionedCostFunction</span><span class="o">*</span> <span class="n">ccf</span> <span class="o">=</span>
-  <span class="k">new</span> <span class="n">ConditionedCostFunction</span><span class="p">(</span><span class="n">my_cost_function</span><span class="p">,</span> <span class="n">conditioners</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>Now <tt class="docutils literal"><span class="pre">ccf</span></tt> &#8216;s <tt class="docutils literal"><span class="pre">residual[i]</span></tt> (i=0..N-1) will be passed though the
-<span class="math">\(i^{\text{th}}\)</span> conditioner.</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="n">ccf_residual</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_i</span><span class="p">(</span><span class="n">my_cost_function_residual</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-</pre></div>
-</div>
-<p>and the Jacobian will be affected appropriately.</p>
-</dd></dl>
-
-</div>
-<div class="section" id="costfunctiontofunctor">
-<h2><a class="reference internal" href="#CostFunctionToFunctor" title="CostFunctionToFunctor"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunctionToFunctor</span></tt></a><a class="headerlink" href="#costfunctiontofunctor" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="CostFunctionToFunctor">
-<em class="property">class </em><tt class="descname">CostFunctionToFunctor</tt><a class="headerlink" href="#CostFunctionToFunctor" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="#CostFunctionToFunctor" title="CostFunctionToFunctor"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunctionToFunctor</span></tt></a> is an adapter class that allows users to use
-<a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> objects in templated functors which are to be used for
-automatic differentiation.  This allows the user to seamlessly mix
-analytic, numeric and automatic differentiation.</p>
-<p>For example, let us assume that</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="k">class</span> <span class="nc">IntrinsicProjection</span> <span class="o">:</span> <span class="k">public</span> <span class="n">SizedCostFunction</span><span class="o">&lt;</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="o">&gt;</span> <span class="p">{</span>
-  <span class="k">public</span><span class="o">:</span>
-    <span class="n">IntrinsicProjection</span><span class="p">(</span><span class="k">const</span> <span class="kt">double</span><span class="o">*</span> <span class="n">observations</span><span class="p">);</span>
-    <span class="k">virtual</span> <span class="kt">bool</span> <span class="n">Evaluate</span><span class="p">(</span><span class="kt">double</span> <span class="k">const</span><span class="o">*</span> <span class="k">const</span><span class="o">*</span> <span class="n">parameters</span><span class="p">,</span>
-                          <span class="kt">double</span><span class="o">*</span> <span class="n">residuals</span><span class="p">,</span>
-                          <span class="kt">double</span><span class="o">**</span> <span class="n">jacobians</span><span class="p">)</span> <span class="k">const</span><span class="p">;</span>
-<span class="p">};</span>
-</pre></div>
-</div>
-<p>is a <a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> that implements the projection of a
-point in its local coordinate system onto its image plane and
-subtracts it from the observed point projection. It can compute its
-residual and either via analytic or numerical differentiation can
-compute its jacobians.</p>
-<p>Now we would like to compose the action of this
-<a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> with the action of camera extrinsics, i.e.,
-rotation and translation. Say we have a templated function</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
-<span class="kt">void</span> <span class="n">RotateAndTranslatePoint</span><span class="p">(</span><span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">rotation</span><span class="p">,</span>
-                             <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">translation</span><span class="p">,</span>
-                             <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">point</span><span class="p">,</span>
-                             <span class="n">T</span><span class="o">*</span> <span class="n">result</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>Then we can now do the following,</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="k">struct</span> <span class="n">CameraProjection</span> <span class="p">{</span>
-  <span class="n">CameraProjection</span><span class="p">(</span><span class="kt">double</span><span class="o">*</span> <span class="n">observation</span><span class="p">)</span> <span class="p">{</span>
-    <span class="n">intrinsic_projection_</span><span class="p">.</span><span class="n">reset</span><span class="p">(</span>
-        <span class="k">new</span> <span class="n">CostFunctionToFunctor</span><span class="o">&lt;</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="o">&gt;</span><span class="p">(</span><span class="k">new</span> <span class="n">IntrinsicProjection</span><span class="p">(</span><span class="n">observation_</span><span class="p">)));</span>
-  <span class="p">}</span>
-  <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
-  <span class="kt">bool</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">rotation</span><span class="p">,</span>
-                  <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">translation</span><span class="p">,</span>
-                  <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">intrinsics</span><span class="p">,</span>
-                  <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">point</span><span class="p">,</span>
-                  <span class="n">T</span><span class="o">*</span> <span class="n">residual</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
-    <span class="n">T</span> <span class="n">transformed_point</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
-    <span class="n">RotateAndTranslatePoint</span><span class="p">(</span><span class="n">rotation</span><span class="p">,</span> <span class="n">translation</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">transformed_point</span><span class="p">);</span>
-
-    <span class="c1">//   Note that we call intrinsic_projection_, just like it was</span>
-    <span class="c1">//   any other templated functor.</span>
-    <span class="k">return</span> <span class="p">(</span><span class="o">*</span><span class="n">intrinsic_projection_</span><span class="p">)(</span><span class="n">intrinsics</span><span class="p">,</span> <span class="n">transformed_point</span><span class="p">,</span> <span class="n">residual</span><span class="p">);</span>
-  <span class="p">}</span>
-
- <span class="k">private</span><span class="o">:</span>
-  <span class="n">scoped_ptr</span><span class="o">&lt;</span><span class="n">CostFunctionToFunctor</span><span class="o">&lt;</span><span class="mi">2</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">3</span><span class="o">&gt;</span> <span class="o">&gt;</span> <span class="n">intrinsic_projection_</span><span class="p">;</span>
-<span class="p">};</span>
-</pre></div>
-</div>
 </dd></dl>
 
 </div>
@@ -545,10 +492,13 @@ rotation and translation. Say we have a templated function</p>
 <dl class="class">
 <dt id="NumericDiffFunctor">
 <em class="property">class </em><tt class="descname">NumericDiffFunctor</tt><a class="headerlink" href="#NumericDiffFunctor" title="Permalink to this definition">¶</a></dt>
-<dd><p>A wrapper class that takes a variadic functor evaluating a
-function, numerically differentiates it and makes it available as a
-templated functor so that it can be easily used as part of Ceres&#8217;
-automatic differentiation framework.</p>
+<dd><p>Sometimes parts of a cost function can be differentiated
+automatically or analytically but others require numeric
+differentiation. <a class="reference internal" href="#NumericDiffFunctor" title="NumericDiffFunctor"><tt class="xref cpp cpp-class docutils literal"><span class="pre">NumericDiffFunctor</span></tt></a> is a wrapper class
+that takes a variadic functor evaluating a function, numerically
+differentiates it and makes it available as a templated functor so
+that it can be easily used as part of Ceres&#8217; automatic
+differentiation framework.</p>
 <p>For example, let us assume that</p>
 <div class="highlight-c++"><div class="highlight"><pre><span class="k">struct</span> <span class="n">IntrinsicProjection</span>
   <span class="n">IntrinsicProjection</span><span class="p">(</span><span class="k">const</span> <span class="kt">double</span><span class="o">*</span> <span class="n">observations</span><span class="p">);</span>
@@ -610,6 +560,144 @@ function as</p>
 <p><tt class="docutils literal"><span class="pre">cost_function</span></tt> now seamlessly integrates automatic
 differentiation of <tt class="docutils literal"><span class="pre">RotateAndTranslatePoint</span></tt> with a numerically
 differentiated version of <tt class="docutils literal"><span class="pre">IntrinsicProjection</span></tt>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="costfunctiontofunctor">
+<h2><a class="reference internal" href="#CostFunctionToFunctor" title="CostFunctionToFunctor"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunctionToFunctor</span></tt></a><a class="headerlink" href="#costfunctiontofunctor" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="CostFunctionToFunctor">
+<em class="property">class </em><tt class="descname">CostFunctionToFunctor</tt><a class="headerlink" href="#CostFunctionToFunctor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Just like <a class="reference internal" href="#NumericDiffFunctor" title="NumericDiffFunctor"><tt class="xref cpp cpp-class docutils literal"><span class="pre">NumericDiffFunctor</span></tt></a> allows numeric
+differentiation to be mixed with automatic differentiation,
+<a class="reference internal" href="#CostFunctionToFunctor" title="CostFunctionToFunctor"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunctionToFunctor</span></tt></a> provides an even more general
+mechanism.  <a class="reference internal" href="#CostFunctionToFunctor" title="CostFunctionToFunctor"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunctionToFunctor</span></tt></a> is an adapter class that
+allows users to use <a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> objects in templated
+functors which are to be used for automatic differentiation.  This
+allows the user to seamlessly mix analytic, numeric and automatic
+differentiation.</p>
+<p>For example, let us assume that</p>
+<div class="highlight-c++"><div class="highlight"><pre><span class="k">class</span> <span class="nc">IntrinsicProjection</span> <span class="o">:</span> <span class="k">public</span> <span class="n">SizedCostFunction</span><span class="o">&lt;</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="k">public</span><span class="o">:</span>
+    <span class="n">IntrinsicProjection</span><span class="p">(</span><span class="k">const</span> <span class="kt">double</span><span class="o">*</span> <span class="n">observations</span><span class="p">);</span>
+    <span class="k">virtual</span> <span class="kt">bool</span> <span class="n">Evaluate</span><span class="p">(</span><span class="kt">double</span> <span class="k">const</span><span class="o">*</span> <span class="k">const</span><span class="o">*</span> <span class="n">parameters</span><span class="p">,</span>
+                          <span class="kt">double</span><span class="o">*</span> <span class="n">residuals</span><span class="p">,</span>
+                          <span class="kt">double</span><span class="o">**</span> <span class="n">jacobians</span><span class="p">)</span> <span class="k">const</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>is a <a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> that implements the projection of a
+point in its local coordinate system onto its image plane and
+subtracts it from the observed point projection. It can compute its
+residual and either via analytic or numerical differentiation can
+compute its jacobians.</p>
+<p>Now we would like to compose the action of this
+<a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> with the action of camera extrinsics, i.e.,
+rotation and translation. Say we have a templated function</p>
+<div class="highlight-c++"><div class="highlight"><pre><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+<span class="kt">void</span> <span class="n">RotateAndTranslatePoint</span><span class="p">(</span><span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">rotation</span><span class="p">,</span>
+                             <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">translation</span><span class="p">,</span>
+                             <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">point</span><span class="p">,</span>
+                             <span class="n">T</span><span class="o">*</span> <span class="n">result</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Then we can now do the following,</p>
+<div class="highlight-c++"><div class="highlight"><pre><span class="k">struct</span> <span class="n">CameraProjection</span> <span class="p">{</span>
+  <span class="n">CameraProjection</span><span class="p">(</span><span class="kt">double</span><span class="o">*</span> <span class="n">observation</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">intrinsic_projection_</span><span class="p">.</span><span class="n">reset</span><span class="p">(</span>
+        <span class="k">new</span> <span class="n">CostFunctionToFunctor</span><span class="o">&lt;</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="o">&gt;</span><span class="p">(</span><span class="k">new</span> <span class="n">IntrinsicProjection</span><span class="p">(</span><span class="n">observation_</span><span class="p">)));</span>
+  <span class="p">}</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+  <span class="kt">bool</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">rotation</span><span class="p">,</span>
+                  <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">translation</span><span class="p">,</span>
+                  <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">intrinsics</span><span class="p">,</span>
+                  <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">point</span><span class="p">,</span>
+                  <span class="n">T</span><span class="o">*</span> <span class="n">residual</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+    <span class="n">T</span> <span class="n">transformed_point</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+    <span class="n">RotateAndTranslatePoint</span><span class="p">(</span><span class="n">rotation</span><span class="p">,</span> <span class="n">translation</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">transformed_point</span><span class="p">);</span>
+
+    <span class="c1">// Note that we call intrinsic_projection_, just like it was</span>
+    <span class="c1">// any other templated functor.</span>
+    <span class="k">return</span> <span class="p">(</span><span class="o">*</span><span class="n">intrinsic_projection_</span><span class="p">)(</span><span class="n">intrinsics</span><span class="p">,</span> <span class="n">transformed_point</span><span class="p">,</span> <span class="n">residual</span><span class="p">);</span>
+  <span class="p">}</span>
+
+ <span class="k">private</span><span class="o">:</span>
+  <span class="n">scoped_ptr</span><span class="o">&lt;</span><span class="n">CostFunctionToFunctor</span><span class="o">&lt;</span><span class="mi">2</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">3</span><span class="o">&gt;</span> <span class="o">&gt;</span> <span class="n">intrinsic_projection_</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="conditionedcostfunction">
+<h2><a class="reference internal" href="#ConditionedCostFunction" title="ConditionedCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">ConditionedCostFunction</span></tt></a><a class="headerlink" href="#conditionedcostfunction" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ConditionedCostFunction">
+<em class="property">class </em><tt class="descname">ConditionedCostFunction</tt><a class="headerlink" href="#ConditionedCostFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class allows you to apply different conditioning to the residual
+values of a wrapped cost function. An example where this is useful is
+where you have an existing cost function that produces N values, but you
+want the total cost to be something other than just the sum of these
+squared values - maybe you want to apply a different scaling to some
+values, to change their contribution to the cost.</p>
+<p>Usage:</p>
+<div class="highlight-c++"><div class="highlight"><pre><span class="c1">//  my_cost_function produces N residuals</span>
+<span class="n">CostFunction</span><span class="o">*</span> <span class="n">my_cost_function</span> <span class="o">=</span> <span class="p">...</span>
+<span class="n">CHECK_EQ</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">my_cost_function</span><span class="o">-&gt;</span><span class="n">num_residuals</span><span class="p">());</span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="n">CostFunction</span><span class="o">*&gt;</span> <span class="n">conditioners</span><span class="p">;</span>
+
+<span class="c1">//  Make N 1x1 cost functions (1 parameter, 1 residual)</span>
+<span class="n">CostFunction</span><span class="o">*</span> <span class="n">f_1</span> <span class="o">=</span> <span class="p">...</span>
+<span class="n">conditioners</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">f_1</span><span class="p">);</span>
+
+<span class="n">CostFunction</span><span class="o">*</span> <span class="n">f_N</span> <span class="o">=</span> <span class="p">...</span>
+<span class="n">conditioners</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">f_N</span><span class="p">);</span>
+<span class="n">ConditionedCostFunction</span><span class="o">*</span> <span class="n">ccf</span> <span class="o">=</span>
+  <span class="k">new</span> <span class="n">ConditionedCostFunction</span><span class="p">(</span><span class="n">my_cost_function</span><span class="p">,</span> <span class="n">conditioners</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Now <tt class="docutils literal"><span class="pre">ccf</span></tt> &#8216;s <tt class="docutils literal"><span class="pre">residual[i]</span></tt> (i=0..N-1) will be passed though the
+<span class="math">\(i^{\text{th}}\)</span> conditioner.</p>
+<div class="highlight-c++"><div class="highlight"><pre><span class="n">ccf_residual</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_i</span><span class="p">(</span><span class="n">my_cost_function_residual</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>and the Jacobian will be affected appropriately.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="normalprior">
+<h2><a class="reference internal" href="#NormalPrior" title="NormalPrior"><tt class="xref cpp cpp-class docutils literal"><span class="pre">NormalPrior</span></tt></a><a class="headerlink" href="#normalprior" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="NormalPrior">
+<em class="property">class </em><tt class="descname">NormalPrior</tt><a class="headerlink" href="#NormalPrior" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><div class="highlight-c++"><div class="highlight"><pre><span class="k">class</span> <span class="nc">NormalPrior</span><span class="o">:</span> <span class="k">public</span> <span class="n">CostFunction</span> <span class="p">{</span>
+ <span class="k">public</span><span class="o">:</span>
+  <span class="c1">// Check that the number of rows in the vector b are the same as the</span>
+  <span class="c1">// number of columns in the matrix A, crash otherwise.</span>
+  <span class="n">NormalPrior</span><span class="p">(</span><span class="k">const</span> <span class="n">Matrix</span><span class="o">&amp;</span> <span class="n">A</span><span class="p">,</span> <span class="k">const</span> <span class="n">Vector</span><span class="o">&amp;</span> <span class="n">b</span><span class="p">);</span>
+
+  <span class="k">virtual</span> <span class="kt">bool</span> <span class="n">Evaluate</span><span class="p">(</span><span class="kt">double</span> <span class="k">const</span><span class="o">*</span> <span class="k">const</span><span class="o">*</span> <span class="n">parameters</span><span class="p">,</span>
+                        <span class="kt">double</span><span class="o">*</span> <span class="n">residuals</span><span class="p">,</span>
+                        <span class="kt">double</span><span class="o">**</span> <span class="n">jacobians</span><span class="p">)</span> <span class="k">const</span><span class="p">;</span>
+ <span class="p">};</span>
+</pre></div>
+</div>
+<p>Implements a cost function of the form</p>
+<div class="math">
+\[cost(x) = ||A(x - b)||^2\]</div>
+<p>where, the matrix A and the vector b are fixed and x is the
+variable. In case the user is interested in implementing a cost
+function of the form</p>
+</div></blockquote>
+<div class="math">
+\[cost(x) = (x - \mu)^T S^{-1} (x - \mu)\]</div>
+<p>where, <span class="math">\(\mu\)</span> is a vector and <span class="math">\(S\)</span> is a covariance matrix,
+then, <span class="math">\(A = S^{-1/2}\)</span>, i.e the matrix <span class="math">\(A\)</span> is the square
+root of the inverse of the covariance, also known as the stiffness
+matrix. There are however no restrictions on the shape of
+<span class="math">\(A\)</span>. It is free to be rectangular, which would be the case if
+the covariance matrix <span class="math">\(S\)</span> is rank deficient.</p>
 </dd></dl>
 
 </div>
@@ -676,9 +764,9 @@ its square.</p>
 
 <div class="section" id="instances">
 <h3>Instances<a class="headerlink" href="#instances" title="Permalink to this headline">¶</a></h3>
-<p>Ceres includes a number of other loss functions. For simplicity we
-described their unscaled versions. The figure below illustrates their
-shape graphically. More details can be found in
+<p>Ceres includes a number of predefined loss functions. For simplicity
+we described their unscaled versions. The figure below illustrates
+their shape graphically. More details can be found in
 <tt class="docutils literal"><span class="pre">include/ceres/loss_function.h</span></tt>.</p>
 <div class="figure align-center" style="width: 500px">
 <img alt="_images/loss.png" src="_images/loss.png" style="height: 400px;" />
@@ -729,17 +817,67 @@ shape graphically. More details can be found in
 <dl class="class">
 <dt id="ComposedLoss">
 <em class="property">class </em><tt class="descname">ComposedLoss</tt><a class="headerlink" href="#ComposedLoss" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Given two loss functions <tt class="docutils literal"><span class="pre">f</span></tt> and <tt class="docutils literal"><span class="pre">g</span></tt>, implements the loss
+function <tt class="docutils literal"><span class="pre">h(s)</span> <span class="pre">=</span> <span class="pre">f(g(s))</span></tt>.</p>
+<div class="highlight-c++"><div class="highlight"><pre><span class="k">class</span> <span class="nc">ComposedLoss</span> <span class="o">:</span> <span class="k">public</span> <span class="n">LossFunction</span> <span class="p">{</span>
+ <span class="k">public</span><span class="o">:</span>
+  <span class="k">explicit</span> <span class="n">ComposedLoss</span><span class="p">(</span><span class="k">const</span> <span class="n">LossFunction</span><span class="o">*</span> <span class="n">f</span><span class="p">,</span>
+                        <span class="n">Ownership</span> <span class="n">ownership_f</span><span class="p">,</span>
+                        <span class="k">const</span> <span class="n">LossFunction</span><span class="o">*</span> <span class="n">g</span><span class="p">,</span>
+                        <span class="n">Ownership</span> <span class="n">ownership_g</span><span class="p">);</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</dd></dl>
 
 <dl class="class">
 <dt id="ScaledLoss">
 <em class="property">class </em><tt class="descname">ScaledLoss</tt><a class="headerlink" href="#ScaledLoss" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Sometimes you want to simply scale the output value of the
+robustifier. For example, you might want to weight different error
+terms differently (e.g., weight pixel reprojection errors
+differently from terrain errors).</p>
+<p>Given a loss function <span class="math">\(\rho(s)\)</span> and a scalar <span class="math">\(a\)</span>, <a class="reference internal" href="#ScaledLoss" title="ScaledLoss"><tt class="xref cpp cpp-class docutils literal"><span class="pre">ScaledLoss</span></tt></a>
+implements the function <span class="math">\(a \rho(s)\)</span>.</p>
+<p>Since we treat the a <tt class="docutils literal"><span class="pre">NULL</span></tt> Loss function as the Identity loss
+function, <span class="math">\(rho\)</span> = <tt class="docutils literal"><span class="pre">NULL</span></tt>: is a valid input and will result
+in the input being scaled by <span class="math">\(a\)</span>. This provides a simple way
+of implementing a scaled ResidualBlock.</p>
+</dd></dl>
 
 <dl class="class">
 <dt id="LossFunctionWrapper">
 <em class="property">class </em><tt class="descname">LossFunctionWrapper</tt><a class="headerlink" href="#LossFunctionWrapper" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Sometimes after the optimization problem has been constructed, we
+wish to mutate the scale of the loss function. For example, when
+performing estimation from data which has substantial outliers,
+convergence can be improved by starting out with a large scale,
+optimizing the problem and then reducing the scale. This can have
+better convergence behavior than just using a loss function with a
+small scale.</p>
+<p>This templated class allows the user to implement a loss function
+whose scale can be mutated after an optimization problem has been
+constructed. e.g,</p>
+<div class="highlight-c++"><div class="highlight"><pre><span class="n">Problem</span> <span class="n">problem</span><span class="p">;</span>
+
+<span class="c1">// Add parameter blocks</span>
+
+<span class="n">CostFunction</span><span class="o">*</span> <span class="n">cost_function</span> <span class="o">=</span>
+    <span class="k">new</span> <span class="n">AutoDiffCostFunction</span> <span class="o">&lt;</span> <span class="n">UW_Camera_Mapper</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">3</span><span class="o">&gt;</span><span class="p">(</span>
+        <span class="k">new</span> <span class="n">UW_Camera_Mapper</span><span class="p">(</span><span class="n">feature_x</span><span class="p">,</span> <span class="n">feature_y</span><span class="p">));</span>
+
+<span class="n">LossFunctionWrapper</span><span class="o">*</span> <span class="n">loss_function</span><span class="p">(</span><span class="k">new</span> <span class="n">HuberLoss</span><span class="p">(</span><span class="mf">1.0</span><span class="p">),</span> <span class="n">TAKE_OWNERSHIP</span><span class="p">);</span>
+<span class="n">problem</span><span class="p">.</span><span class="n">AddResidualBlock</span><span class="p">(</span><span class="n">cost_function</span><span class="p">,</span> <span class="n">loss_function</span><span class="p">,</span> <span class="n">parameters</span><span class="p">);</span>
+
+<span class="n">Solver</span><span class="o">::</span><span class="n">Options</span> <span class="n">options</span><span class="p">;</span>
+<span class="n">Solver</span><span class="o">::</span><span class="n">Summary</span> <span class="n">summary</span><span class="p">;</span>
+<span class="n">Solve</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">problem</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">summary</span><span class="p">);</span>
+
+<span class="n">loss_function</span><span class="o">-&gt;</span><span class="n">Reset</span><span class="p">(</span><span class="k">new</span> <span class="n">HuberLoss</span><span class="p">(</span><span class="mf">1.0</span><span class="p">),</span> <span class="n">TAKE_OWNERSHIP</span><span class="p">);</span>
+<span class="n">Solve</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">problem</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">summary</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd></dl>
 
 </div>
 <div class="section" id="theory">
@@ -770,7 +908,7 @@ the robustified Gauss-Newton step.</p>
 we limit <span class="math">\(\alpha \le 1- \epsilon\)</span> for some small
 <span class="math">\(\epsilon\)</span>. For more details see <a class="reference internal" href="bibliography.html#triggs">[Triggs]</a>.</p>
 <p>With this simple rescaling, one can use any Jacobian based non-linear
-least squares algorithm to robustifed non-linear least squares
+least squares algorithm to robustified non-linear least squares
 problems.</p>
 </div>
 </div>
@@ -899,6 +1037,77 @@ of <a href="#equation-quaternion">(2)</a>.</p>
 
 </div>
 </div>
+<div class="section" id="autodifflocalparameterization">
+<h2><a class="reference internal" href="#AutoDiffLocalParameterization" title="AutoDiffLocalParameterization"><tt class="xref cpp cpp-class docutils literal"><span class="pre">AutoDiffLocalParameterization</span></tt></a><a class="headerlink" href="#autodifflocalparameterization" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AutoDiffLocalParameterization">
+<em class="property">class </em><tt class="descname">AutoDiffLocalParameterization</tt><a class="headerlink" href="#AutoDiffLocalParameterization" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#AutoDiffLocalParameterization" title="AutoDiffLocalParameterization"><tt class="xref cpp cpp-class docutils literal"><span class="pre">AutoDiffLocalParameterization</span></tt></a> does for
+<a class="reference internal" href="#LocalParameterization" title="LocalParameterization"><tt class="xref cpp cpp-class docutils literal"><span class="pre">LocalParameterization</span></tt></a> what <a class="reference internal" href="#AutoDiffCostFunction" title="AutoDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">AutoDiffCostFunction</span></tt></a>
+does for <a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a>. It allows the user to define a
+templated functor that implements the
+<a class="reference internal" href="#LocalParameterization::Plus__doubleCP.doubleCP.doublePC" title="LocalParameterization::Plus"><tt class="xref cpp cpp-func docutils literal"><span class="pre">LocalParameterization::Plus()</span></tt></a> operation and it uses automatic
+differentiation to implement the computation of the Jacobian.</p>
+<p>To get an auto differentiated local parameterization, you must
+define a class with a templated operator() (a functor) that computes</p>
+<blockquote>
+<div><div class="math">
+\[x' = \boxplus(x, \Delta x),\]</div>
+</div></blockquote>
+<p>For example, Quaternions have a three dimensional local
+parameterization. It&#8217;s plus operation can be implemented as (taken
+from <a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/include/ceres/local_parameterization.h">internal/ceres/auto_diff_local_parameterization_test.cc</a>
+)</p>
+<blockquote>
+<div><div class="highlight-c++"><div class="highlight"><pre><span class="k">struct</span> <span class="n">QuaternionPlus</span> <span class="p">{</span>
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+  <span class="kt">bool</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">x</span><span class="p">,</span> <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">delta</span><span class="p">,</span> <span class="n">T</span><span class="o">*</span> <span class="n">x_plus_delta</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="n">T</span> <span class="n">squared_norm_delta</span> <span class="o">=</span>
+        <span class="n">delta</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">delta</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">delta</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">delta</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">delta</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">delta</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+
+    <span class="n">T</span> <span class="n">q_delta</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">squared_norm_delta</span> <span class="o">&gt;</span> <span class="n">T</span><span class="p">(</span><span class="mf">0.0</span><span class="p">))</span> <span class="p">{</span>
+      <span class="n">T</span> <span class="n">norm_delta</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">squared_norm_delta</span><span class="p">);</span>
+      <span class="k">const</span> <span class="n">T</span> <span class="n">sin_delta_by_delta</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">norm_delta</span><span class="p">)</span> <span class="o">/</span> <span class="n">norm_delta</span><span class="p">;</span>
+      <span class="n">q_delta</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">norm_delta</span><span class="p">);</span>
+      <span class="n">q_delta</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">sin_delta_by_delta</span> <span class="o">*</span> <span class="n">delta</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+      <span class="n">q_delta</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">sin_delta_by_delta</span> <span class="o">*</span> <span class="n">delta</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+      <span class="n">q_delta</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">sin_delta_by_delta</span> <span class="o">*</span> <span class="n">delta</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="c1">// We do not just use q_delta = [1,0,0,0] here because that is a</span>
+      <span class="c1">// constant and when used for automatic differentiation will</span>
+      <span class="c1">// lead to a zero derivative. Instead we take a first order</span>
+      <span class="c1">// approximation and evaluate it at zero.</span>
+      <span class="n">q_delta</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">T</span><span class="p">(</span><span class="mf">1.0</span><span class="p">);</span>
+      <span class="n">q_delta</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">delta</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+      <span class="n">q_delta</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">delta</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+      <span class="n">q_delta</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">delta</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+    <span class="p">}</span>
+
+    <span class="n">Quaternionproduct</span><span class="p">(</span><span class="n">q_delta</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">x_plus_delta</span><span class="p">);</span>
+    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Then given this struct, the auto differentiated local
+parameterization can now be constructed as</p>
+<div class="highlight-c++"><div class="highlight"><pre><span class="n">LocalParameterization</span><span class="o">*</span> <span class="n">local_parameterization</span> <span class="o">=</span>
+    <span class="k">new</span> <span class="n">AutoDiffLocalParameterization</span><span class="o">&lt;</span><span class="n">QuaternionPlus</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="o">&gt;</span><span class="p">;</span>
+                                                      <span class="o">|</span>  <span class="o">|</span>
+                           <span class="n">Global</span> <span class="n">Size</span> <span class="o">---------------+</span>  <span class="o">|</span>
+                           <span class="n">Local</span> <span class="n">Size</span> <span class="o">-------------------+</span>
+</pre></div>
+</div>
+<p><strong>WARNING:</strong> Since the functor will get instantiated with different
+types for <tt class="docutils literal"><span class="pre">T</span></tt>, you must to convert from other numeric types to
+<tt class="docutils literal"><span class="pre">T</span></tt> before mixing computations with other variables of type
+<tt class="docutils literal"><span class="pre">T</span></tt>. In the example above, this is seen where instead of using
+<tt class="docutils literal"><span class="pre">k_</span></tt> directly, <tt class="docutils literal"><span class="pre">k_</span></tt> is wrapped with <tt class="docutils literal"><span class="pre">T(k_)</span></tt>.</p>
+</dd></dl>
+
+</div>
 <div class="section" id="problem">
 <h2><a class="reference internal" href="#Problem" title="Problem"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Problem</span></tt></a><a class="headerlink" href="#problem" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -930,26 +1139,17 @@ match the sizes of the parameter blocks listed in
 detected. <tt class="docutils literal"><span class="pre">loss_function</span></tt> can be <tt class="docutils literal"><span class="pre">NULL</span></tt>, in which case the cost
 of the term is just the squared norm of the residuals.</p>
 <p>The user has the option of explicitly adding the parameter blocks
-using <a class="reference internal" href="#Problem::AddParameterBlock__doubleP.i.LocalParameterizationP" title="Problem::AddParameterBlock"><tt class="xref cpp cpp-func docutils literal"><span class="pre">Problem::AddParameterBlock()</span></tt></a>. This causes additional correctness
-checking; however, <a class="reference internal" href="#Problem::AddResidualBlock__CostFunctionP.LossFunctionP.vector:doubleP:C" title="Problem::AddResidualBlock"><tt class="xref cpp cpp-func docutils literal"><span class="pre">Problem::AddResidualBlock()</span></tt></a> implicitly adds the
-parameter blocks if they are not present, so calling
-<a class="reference internal" href="#Problem::AddParameterBlock__doubleP.i.LocalParameterizationP" title="Problem::AddParameterBlock"><tt class="xref cpp cpp-func docutils literal"><span class="pre">Problem::AddParameterBlock()</span></tt></a> explicitly is not required.</p>
-<p><a class="reference internal" href="#Problem" title="Problem"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Problem</span></tt></a> by default takes ownership of the <tt class="docutils literal"><span class="pre">cost_function</span></tt> and
-<tt class="docutils literal"><span class="pre">loss_function</span></tt> pointers. These objects remain live for the life of
-the <a class="reference internal" href="#Problem" title="Problem"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Problem</span></tt></a> object. If the user wishes to keep control over the
-destruction of these objects, then they can do this by setting the
-corresponding enums in the <tt class="docutils literal"><span class="pre">Problem::Options</span></tt> struct.</p>
-<p>Note that even though the Problem takes ownership of <tt class="docutils literal"><span class="pre">cost_function</span></tt>
-and <tt class="docutils literal"><span class="pre">loss_function</span></tt>, it does not preclude the user from re-using
-them in another residual block. The destructor takes care to call
-delete on each <tt class="docutils literal"><span class="pre">cost_function</span></tt> or <tt class="docutils literal"><span class="pre">loss_function</span></tt> pointer only
-once, regardless of how many residual blocks refer to them.</p>
+using <a class="reference internal" href="#Problem::AddParameterBlock__doubleP.i.LocalParameterizationP" title="Problem::AddParameterBlock"><tt class="xref cpp cpp-func docutils literal"><span class="pre">Problem::AddParameterBlock()</span></tt></a>. This causes additional
+correctness checking; however, <a class="reference internal" href="#Problem::AddResidualBlock__CostFunctionP.LossFunctionP.vector:doubleP:C" title="Problem::AddResidualBlock"><tt class="xref cpp cpp-func docutils literal"><span class="pre">Problem::AddResidualBlock()</span></tt></a>
+implicitly adds the parameter blocks if they are not present, so
+calling <a class="reference internal" href="#Problem::AddParameterBlock__doubleP.i.LocalParameterizationP" title="Problem::AddParameterBlock"><tt class="xref cpp cpp-func docutils literal"><span class="pre">Problem::AddParameterBlock()</span></tt></a> explicitly is not
+required.</p>
 <p><a class="reference internal" href="#Problem::AddParameterBlock__doubleP.i.LocalParameterizationP" title="Problem::AddParameterBlock"><tt class="xref cpp cpp-func docutils literal"><span class="pre">Problem::AddParameterBlock()</span></tt></a> explicitly adds a parameter
 block to the <a class="reference internal" href="#Problem" title="Problem"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Problem</span></tt></a>. Optionally it allows the user to
-associate a <a class="reference internal" href="#LocalParameterization" title="LocalParameterization"><tt class="xref cpp cpp-class docutils literal"><span class="pre">LocalParameterization</span></tt></a> object with the parameter
-block too. Repeated calls with the same arguments are
+associate a <a class="reference internal" href="#LocalParameterization" title="LocalParameterization"><tt class="xref cpp cpp-class docutils literal"><span class="pre">LocalParameterization</span></tt></a> object with the
+parameter block too. Repeated calls with the same arguments are
 ignored. Repeated calls with the same double pointer but a
-different size results in undefined behaviour.</p>
+different size results in undefined behavior.</p>
 <p>You can set any parameter block to be constant using
 <a class="reference internal" href="#Problem::SetParameterBlockConstant__doubleP" title="Problem::SetParameterBlockConstant"><tt class="xref cpp cpp-func docutils literal"><span class="pre">Problem::SetParameterBlockConstant()</span></tt></a> and undo this using
 <a class="reference internal" href="#Problem::SetParameterBlockVariable__doubleP" title="Problem::SetParameterBlockVariable"><tt class="xref cpp cpp-func docutils literal"><span class="pre">SetParameterBlockVariable()</span></tt></a>.</p>
@@ -970,10 +1170,11 @@ pointers. These objects remain live for the life of the
 <a class="reference internal" href="#Problem" title="Problem"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Problem</span></tt></a>. If the user wishes to keep control over the
 destruction of these objects, then they can do this by setting the
 corresponding enums in the <tt class="xref cpp cpp-class docutils literal"><span class="pre">Problem::Options</span></tt> struct.</p>
-<p>Even though <a class="reference internal" href="#Problem" title="Problem"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Problem</span></tt></a> takes ownership of these pointers, it
-does not preclude the user from re-using them in another residual
-or parameter block. The destructor takes care to call delete on
-each pointer only once.</p>
+<p>Note that even though the Problem takes ownership of <tt class="docutils literal"><span class="pre">cost_function</span></tt>
+and <tt class="docutils literal"><span class="pre">loss_function</span></tt>, it does not preclude the user from re-using
+them in another residual block. The destructor takes care to call
+delete on each <tt class="docutils literal"><span class="pre">cost_function</span></tt> or <tt class="docutils literal"><span class="pre">loss_function</span></tt> pointer only
+once, regardless of how many residual blocks refer to them.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1020,7 +1221,7 @@ void <tt class="descclassname">Problem::</tt><tt class="descname">AddParameterBl
 <dd><p>Add a parameter block with appropriate size to the problem.
 Repeated calls with the same arguments are ignored. Repeated calls
 with the same double pointer but a different size results in
-undefined behaviour.</p>
+undefined behavior.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1029,12 +1230,26 @@ void <tt class="descclassname">Problem::</tt><tt class="descname">AddParameterBl
 <dd><p>Add a parameter block with appropriate size and parameterization to
 the problem. Repeated calls with the same arguments are
 ignored. Repeated calls with the same double pointer but a
-different size results in undefined behaviour.</p>
+different size results in undefined behavior.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="Problem::RemoveResidualBlock__ResidualBlockId">
 void <tt class="descclassname">Problem::</tt><tt class="descname">RemoveResidualBlock</tt><big>(</big>ResidualBlockId <em>residual_block</em><big>)</big><a class="headerlink" href="#Problem::RemoveResidualBlock__ResidualBlockId" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a residual block from the problem. Any parameters that the residual
+block depends on are not removed. The cost and loss functions for the
+residual block will not get deleted immediately; won&#8217;t happen until the
+problem itself is deleted.</p>
+<p><strong>WARNING:</strong> Removing a residual or parameter block will destroy
+the implicit ordering, rendering the jacobian or residuals returned
+from the solver uninterpretable. If you depend on the evaluated
+jacobian, do not use remove! This may change in a future release.
+Hold the indicated parameter block constant during optimization.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Problem::RemoveParameterBlock__doubleP">
+void <tt class="descclassname">Problem::</tt><tt class="descname">RemoveParameterBlock</tt><big>(</big>double* <em>values</em><big>)</big><a class="headerlink" href="#Problem::RemoveParameterBlock__doubleP" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove a parameter block from the problem. The parameterization of
 the parameter block, if it exists, will persist until the deletion
 of the problem (similar to cost/loss functions in residual block
@@ -1043,24 +1258,10 @@ removed, as described above in RemoveResidualBlock().  If
 Problem::Options::enable_fast_parameter_block_removal is true, then
 the removal is fast (almost constant time). Otherwise, removing a
 parameter block will incur a scan of the entire Problem object.</p>
-<p>WARNING: Removing a residual or parameter block will destroy the
-implicit ordering, rendering the jacobian or residuals returned
+<p><strong>WARNING:</strong> Removing a residual or parameter block will destroy
+the implicit ordering, rendering the jacobian or residuals returned
 from the solver uninterpretable. If you depend on the evaluated
 jacobian, do not use remove! This may change in a future release.</p>
-</dd></dl>
-
-<dl class="function">
-<dt>
-void <tt class="descclassname">Problem::</tt><tt class="descname">RemoveResidualBlock</tt><big>(</big>ResidualBlockId <em>residual_block</em><big>)</big></dt>
-<dd><p>Remove a residual block from the problem. Any parameters that the residual
-block depends on are not removed. The cost and loss functions for the
-residual block will not get deleted immediately; won&#8217;t happen until the
-problem itself is deleted.</p>
-<p>WARNING: Removing a residual or parameter block will destroy the implicit
-ordering, rendering the jacobian or residuals returned from the solver
-uninterpretable. If you depend on the evaluated jacobian, do not use
-remove! This may change in a future release.
-Hold the indicated parameter block constant during optimization.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1340,8 +1541,8 @@ void <tt class="descname">AngleAxisRotatePoint&lt;T&gt;</tt><big>(</big>const T 
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="building.html">Building Ceres Solver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Modeling API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="solving.html">Solver API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Modeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solving.html">Solving</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reading.html">Further Reading</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="acknowledgements.html">Acknowledgements</a></li>
@@ -1355,7 +1556,7 @@ void <tt class="descname">AngleAxisRotatePoint&lt;T&gt;</tt><big>(</big>const T 
                         title="previous chapter">Tutorial</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="solving.html"
-                        title="next chapter">Solver API</a></p>
+                        title="next chapter">Solving</a></p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
@@ -1380,7 +1581,7 @@ void <tt class="descname">AngleAxisRotatePoint&lt;T&gt;</tt><big>(</big>const T 
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="solving.html" title="Solver API"
+          <a href="solving.html" title="Solving"
              >next</a> |</li>
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"

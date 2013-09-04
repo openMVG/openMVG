@@ -8,7 +8,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
 
-    <title>Solver API &mdash; Ceres Solver</title>
+    <title>Solving &mdash; Ceres Solver</title>
 
 <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
 
@@ -20,7 +20,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.5.0',
+        VERSION:     '1.7.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -39,7 +39,7 @@
     <script type="text/javascript" src="_static/searchtools.js"></script>
     <link rel="top" title="Ceres Solver" href="index.html" />
     <link rel="next" title="Further Reading" href="reading.html" />
-    <link rel="prev" title="Modeling API" href="modeling.html" /> 
+    <link rel="prev" title="Modeling" href="modeling.html" /> 
   </head>
   <body>
     <div class="related">
@@ -52,7 +52,7 @@
           <a href="reading.html" title="Further Reading"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="modeling.html" title="Modeling API"
+          <a href="modeling.html" title="Modeling"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Ceres Solver</a> &raquo;</li> 
       </ul>
@@ -63,15 +63,14 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="solver-api">
-<span id="chapter-solving"></span><h1>Solver API<a class="headerlink" href="#solver-api" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="solving">
+<span id="chapter-solving"></span><h1>Solving<a class="headerlink" href="#solving" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 <p>Effective use of Ceres requires some familiarity with the basic
 components of a nonlinear least squares solver, so before we describe
-how to configure the solver, we will begin by taking a brief look at
-how some of the core optimization algorithms in Ceres work and the
-various linear solvers and preconditioners that power it.</p>
+how to configure and use the solver, we will take a brief look at how
+some of the core optimization algorithms in Ceres work.</p>
 <p>Let <span class="math">\(x \in \mathbb{R}^n\)</span> be an <span class="math">\(n\)</span>-dimensional vector of
 variables, and
 <span class="math">\(F(x) = \left[f_1(x), ... ,  f_{m}(x) \right]^{\top}\)</span> be a
@@ -118,8 +117,8 @@ inexactly.</li>
 <p>Trust region methods are in some sense dual to line search methods:
 trust region methods first choose a step size (the size of the trust
 region) and then a step direction while line search methods first
-choose a step direction and then a step size.</p>
-<p>Ceres implements multiple algorithms in both categories.</p>
+choose a step direction and then a step size. Ceres implements
+multiple algorithms in both categories.</p>
 </div>
 <div class="section" id="trust-region-methods">
 <span id="section-trust-region-methods"></span><h2>Trust Region Methods<a class="headerlink" href="#trust-region-methods" title="Permalink to this headline">¶</a></h2>
@@ -159,7 +158,7 @@ and Dogleg. The user can choose between them by setting
 <table class="docutils footnote" frame="void" id="f1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>At the level of the non-linear solver, the block and
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>At the level of the non-linear solver, the block
 structure is not relevant, therefore our discussion here is
 in terms of an optimization problem defined over a state
 vector of size <span class="math">\(n\)</span>.</td></tr>
@@ -324,7 +323,7 @@ function.</p>
 the long term at the cost of some local increase in the value of the
 objective function.</p>
 <p>This is because allowing for non-decreasing objective function values
-in a princpled manner allows the algorithm to <em>jump over boulders</em> as
+in a principled manner allows the algorithm to <em>jump over boulders</em> as
 the method is not restricted to move into narrow valleys while
 preserving its convergence properties.</p>
 <p>Setting <a class="reference internal" href="#Solver::Options::use_nonmonotonic_steps__b" title="Solver::Options::use_nonmonotonic_steps"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::use_nonmonotonic_steps</span></tt></a> to <tt class="docutils literal"><span class="pre">true</span></tt>
@@ -377,12 +376,22 @@ performed in a number of different ways, resulting in a variety of
 search directions. Ceres Solver currently supports
 <tt class="docutils literal"><span class="pre">FLETCHER_REEVES</span></tt>, <tt class="docutils literal"><span class="pre">POLAK_RIBIRERE</span></tt> and <tt class="docutils literal"><span class="pre">HESTENES_STIEFEL</span></tt>
 directions.</li>
-<li><tt class="docutils literal"><span class="pre">LBFGS</span></tt> In this method, a limited memory approximation to the
-inverse Hessian is maintained and used to compute a quasi-Newton
-step <a class="reference internal" href="bibliography.html#nocedal">[Nocedal]</a>, <a class="reference internal" href="bibliography.html#byrdnocedal">[ByrdNocedal]</a>.</li>
+<li><tt class="docutils literal"><span class="pre">BFGS</span></tt> A generalization of the Secant method to multiple
+dimensions in which a full, dense approximation to the inverse
+Hessian is maintained and used to compute a quasi-Newton step
+<a class="reference internal" href="bibliography.html#nocedalwright">[NocedalWright]</a>.  BFGS is currently the best known general
+quasi-Newton algorithm.</li>
+<li><tt class="docutils literal"><span class="pre">LBFGS</span></tt> A limited memory approximation to the full <tt class="docutils literal"><span class="pre">BFGS</span></tt>
+method in which the last <cite>M</cite> iterations are used to approximate the
+inverse Hessian used to compute a quasi-Newton step <a class="reference internal" href="bibliography.html#nocedal">[Nocedal]</a>,
+<a class="reference internal" href="bibliography.html#byrdnocedal">[ByrdNocedal]</a>.</li>
 </ol>
-<p>Currently Ceres Solver uses a backtracking and interpolation based
-Armijo line search algorithm.</p>
+<p>Currently Ceres Solver supports both a backtracking and interpolation
+based Armijo line search algorithm, and a sectioning / zoom
+interpolation (strong) Wolfe condition line search algorithm.
+However, note that in order for the assumptions underlying the
+<tt class="docutils literal"><span class="pre">BFGS</span></tt> and <tt class="docutils literal"><span class="pre">LBFGS</span></tt> methods to be guaranteed to be satisfied the
+Wolfe line search algorithm should be used.</p>
 </div>
 <div class="section" id="linearsolver">
 <span id="section-linear-solver"></span><h2>LinearSolver<a class="headerlink" href="#linearsolver" title="Permalink to this headline">¶</a></h2>
@@ -702,15 +711,18 @@ MinimizerType <tt class="descclassname">Solver::Options::</tt><tt class="descnam
 <dt id="Solver::Options::line_search_direction_type__LineSearchDirectionType">
 LineSearchDirectionType <tt class="descclassname">Solver::Options::</tt><tt class="descname">line_search_direction_type</tt><a class="headerlink" href="#Solver::Options::line_search_direction_type__LineSearchDirectionType" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default: <tt class="docutils literal"><span class="pre">LBFGS</span></tt></p>
-<p>Choices are <tt class="docutils literal"><span class="pre">STEEPEST_DESCENT</span></tt>, <tt class="docutils literal"><span class="pre">NONLINEAR_CONJUGATE_GRADIENT</span></tt>
-and <tt class="docutils literal"><span class="pre">LBFGS</span></tt>.</p>
+<p>Choices are <tt class="docutils literal"><span class="pre">STEEPEST_DESCENT</span></tt>, <tt class="docutils literal"><span class="pre">NONLINEAR_CONJUGATE_GRADIENT</span></tt>,
+<tt class="docutils literal"><span class="pre">BFGS</span></tt> and <tt class="docutils literal"><span class="pre">LBFGS</span></tt>.</p>
 </dd></dl>
 
 <dl class="member">
 <dt id="Solver::Options::line_search_type__LineSearchType">
 LineSearchType <tt class="descclassname">Solver::Options::</tt><tt class="descname">line_search_type</tt><a class="headerlink" href="#Solver::Options::line_search_type__LineSearchType" title="Permalink to this definition">¶</a></dt>
-<dd><p>Default: <tt class="docutils literal"><span class="pre">ARMIJO</span></tt></p>
-<p><tt class="docutils literal"><span class="pre">ARMIJO</span></tt> is the only choice right now.</p>
+<dd><p>Default: <tt class="docutils literal"><span class="pre">WOLFE</span></tt></p>
+<p>Choices are <tt class="docutils literal"><span class="pre">ARMIJO</span></tt> and <tt class="docutils literal"><span class="pre">WOLFE</span></tt> (strong Wolfe conditions).
+Note that in order for the assumptions underlying the <tt class="docutils literal"><span class="pre">BFGS</span></tt> and
+<tt class="docutils literal"><span class="pre">LBFGS</span></tt> line search direction algorithms to be guaranteed to be
+satisifed, the <tt class="docutils literal"><span class="pre">WOLFE</span></tt> line search should be used.</p>
 </dd></dl>
 
 <dl class="member">
@@ -725,7 +737,7 @@ NonlinearConjugateGradientType <tt class="descclassname">Solver::Options::</tt><
 <dt id="Solver::Options::max_lbfs_rank__i">
 int <tt class="descclassname">Solver::Options::</tt><tt class="descname">max_lbfs_rank</tt><a class="headerlink" href="#Solver::Options::max_lbfs_rank__i" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default: 20</p>
-<p>The LBFGS hessian approximation is a low rank approximation to the
+<p>The L-BFGS hessian approximation is a low rank approximation to the
 inverse of the Hessian matrix. The rank of the approximation
 determines (linearly) the space and time complexity of using the
 approximation. Higher the rank, the better is the quality of the
@@ -744,6 +756,164 @@ complexity without the corresponding increase in solution
 quality. There are no hard and fast rules for choosing the maximum
 rank. The best choice usually requires some problem specific
 experimentation.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Options::use_approximate_eigenvalue_bfgs_scaling__b">
+bool <tt class="descclassname">Solver::Options::</tt><tt class="descname">use_approximate_eigenvalue_bfgs_scaling</tt><a class="headerlink" href="#Solver::Options::use_approximate_eigenvalue_bfgs_scaling__b" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Default: <tt class="docutils literal"><span class="pre">false</span></tt></p>
+<p>As part of the <tt class="docutils literal"><span class="pre">BFGS</span></tt> update step / <tt class="docutils literal"><span class="pre">LBFGS</span></tt> right-multiply
+step, the initial inverse Hessian approximation is taken to be the
+Identity.  However, <a class="reference internal" href="bibliography.html#oren">[Oren]</a> showed that using instead <span class="math">\(I *
+\gamma\)</span>, where <span class="math">\(\gamma\)</span> is a scalar chosen to approximate an
+eigenvalue of the true inverse Hessian can result in improved
+convergence in a wide variety of cases.  Setting
+<tt class="docutils literal"><span class="pre">use_approximate_eigenvalue_bfgs_scaling</span></tt> to true enables this
+scaling in <tt class="docutils literal"><span class="pre">BFGS</span></tt> (before first iteration) and <tt class="docutils literal"><span class="pre">LBFGS</span></tt> (at each
+iteration).</p>
+<p>Precisely, approximate eigenvalue scaling equates to</p>
+<div class="math">
+\[\gamma = \frac{y_k' s_k}{y_k' y_k}\]</div>
+<p>With:</p>
+</div></blockquote>
+<div class="math">
+\[y_k = \nabla f_{k+1} - \nabla f_k\]</div>
+<div class="math">
+\[s_k = x_{k+1} - x_k\]</div>
+<p>Where <span class="math">\(f()\)</span> is the line search objective and <span class="math">\(x\)</span> the
+vector of parameter values <a class="reference internal" href="bibliography.html#nocedalwright">[NocedalWright]</a>.</p>
+<p>It is important to note that approximate eigenvalue scaling does
+<strong>not</strong> <em>always</em> improve convergence, and that it can in fact
+<em>significantly</em> degrade performance for certain classes of problem,
+which is why it is disabled by default.  In particular it can
+degrade performance when the sensitivity of the problem to different
+parameters varies significantly, as in this case a single scalar
+factor fails to capture this variation and detrimentally downscales
+parts of the Jacobian approximation which correspond to
+low-sensitivity parameters. It can also reduce the robustness of the
+solution to errors in the Jacobians.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Options::line_search_interpolation_type__LineSearchIterpolationType">
+LineSearchIterpolationType <tt class="descclassname">Solver::Options::</tt><tt class="descname">line_search_interpolation_type</tt><a class="headerlink" href="#Solver::Options::line_search_interpolation_type__LineSearchIterpolationType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default: <tt class="docutils literal"><span class="pre">CUBIC</span></tt></p>
+<p>Degree of the polynomial used to approximate the objective
+function. Valid values are <tt class="docutils literal"><span class="pre">BISECTION</span></tt>, <tt class="docutils literal"><span class="pre">QUADRATIC</span></tt> and
+<tt class="docutils literal"><span class="pre">CUBIC</span></tt>.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Options::min_line_search_step_size__double">
+double <tt class="descclassname">Solver::Options::</tt><tt class="descname">min_line_search_step_size</tt><a class="headerlink" href="#Solver::Options::min_line_search_step_size__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>The line search terminates if:</p>
+<div class="math">
+\[\begin{split}\|\Delta x_k\|_\infty &lt; \text{min_line_search_step_size}\end{split}\]</div>
+<p>where <span class="math">\(\|\cdot\|_\infty\)</span> refers to the max norm, and
+<span class="math">\(\Delta x_k\)</span> is the step change in the parameter values at
+the <span class="math">\(k\)</span>-th iteration.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Options::line_search_sufficient_function_decrease__double">
+double <tt class="descclassname">Solver::Options::</tt><tt class="descname">line_search_sufficient_function_decrease</tt><a class="headerlink" href="#Solver::Options::line_search_sufficient_function_decrease__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default: <tt class="docutils literal"><span class="pre">1e-4</span></tt></p>
+<p>Solving the line search problem exactly is computationally
+prohibitive. Fortunately, line search based optimization algorithms
+can still guarantee convergence if instead of an exact solution,
+the line search algorithm returns a solution which decreases the
+value of the objective function sufficiently. More precisely, we
+are looking for a step size s.t.</p>
+<div class="math">
+\[f(\text{step_size}) \le f(0) + \text{sufficient_decrease} * [f'(0) * \text{step_size}]\]</div>
+<p>This condition is known as the Armijo condition.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Options::max_line_search_step_contraction__double">
+double <tt class="descclassname">Solver::Options::</tt><tt class="descname">max_line_search_step_contraction</tt><a class="headerlink" href="#Solver::Options::max_line_search_step_contraction__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default: <tt class="docutils literal"><span class="pre">1e-3</span></tt></p>
+<p>In each iteration of the line search,</p>
+<div class="math">
+\[\begin{split}\text{new_step_size} &gt;= \text{max_line_search_step_contraction} * \text{step_size}\end{split}\]</div>
+<p>Note that by definition, for contraction:</p>
+<div class="math">
+\[\begin{split}0 &lt; \text{max_step_contraction} &lt; \text{min_step_contraction} &lt; 1\end{split}\]</div>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Options::min_line_search_step_contraction__double">
+double <tt class="descclassname">Solver::Options::</tt><tt class="descname">min_line_search_step_contraction</tt><a class="headerlink" href="#Solver::Options::min_line_search_step_contraction__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default: <tt class="docutils literal"><span class="pre">0.6</span></tt></p>
+<p>In each iteration of the line search,</p>
+<div class="math">
+\[\begin{split}\text{new_step_size} &lt;= \text{min_line_search_step_contraction} * \text{step_size}\end{split}\]</div>
+<p>Note that by definition, for contraction:</p>
+<div class="math">
+\[\begin{split}0 &lt; \text{max_step_contraction} &lt; \text{min_step_contraction} &lt; 1\end{split}\]</div>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Options::max_num_line_search_step_size_iterations__i">
+int <tt class="descclassname">Solver::Options::</tt><tt class="descname">max_num_line_search_step_size_iterations</tt><a class="headerlink" href="#Solver::Options::max_num_line_search_step_size_iterations__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default: <tt class="docutils literal"><span class="pre">20</span></tt></p>
+<p>Maximum number of trial step size iterations during each line
+search, if a step size satisfying the search conditions cannot be
+found within this number of trials, the line search will stop.</p>
+<p>As this is an &#8216;artificial&#8217; constraint (one imposed by the user, not
+the underlying math), if <tt class="docutils literal"><span class="pre">WOLFE</span></tt> line search is being used, <em>and</em>
+points satisfying the Armijo sufficient (function) decrease
+condition have been found during the current search (in <span class="math">\(&lt;=\)</span>
+<tt class="docutils literal"><span class="pre">max_num_line_search_step_size_iterations</span></tt>).  Then, the step size
+with the lowest function value which satisfies the Armijo condition
+will be returned as the new valid step, even though it does <em>not</em>
+satisfy the strong Wolfe conditions.  This behaviour protects
+against early termination of the optimizer at a sub-optimal point.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Options::max_num_line_search_direction_restarts__i">
+int <tt class="descclassname">Solver::Options::</tt><tt class="descname">max_num_line_search_direction_restarts</tt><a class="headerlink" href="#Solver::Options::max_num_line_search_direction_restarts__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default: <tt class="docutils literal"><span class="pre">5</span></tt></p>
+<p>Maximum number of restarts of the line search direction algorithm
+before terminating the optimization. Restarts of the line search
+direction algorithm occur when the current algorithm fails to
+produce a new descent direction. This typically indicates a
+numerical failure, or a breakdown in the validity of the
+approximations used.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Options::line_search_sufficient_curvature_decrease__double">
+double <tt class="descclassname">Solver::Options::</tt><tt class="descname">line_search_sufficient_curvature_decrease</tt><a class="headerlink" href="#Solver::Options::line_search_sufficient_curvature_decrease__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default: <tt class="docutils literal"><span class="pre">0.9</span></tt></p>
+<p>The strong Wolfe conditions consist of the Armijo sufficient
+decrease condition, and an additional requirement that the
+step size be chosen s.t. the <em>magnitude</em> (&#8216;strong&#8217; Wolfe
+conditions) of the gradient along the search direction
+decreases sufficiently. Precisely, this second condition
+is that we seek a step size s.t.</p>
+<div class="math">
+\[\begin{split}\|f'(\text{step_size})\| &lt;= \text{sufficient_curvature_decrease} * \|f'(0)\|\end{split}\]</div>
+<p>Where <span class="math">\(f()\)</span> is the line search objective and <span class="math">\(f'()\)</span> is the derivative
+of <span class="math">\(f\)</span> with respect to the step size: <span class="math">\(\frac{d f}{d~\text{step size}}\)</span>.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Options::max_line_search_step_expansion__double">
+double <tt class="descclassname">Solver::Options::</tt><tt class="descname">max_line_search_step_expansion</tt><a class="headerlink" href="#Solver::Options::max_line_search_step_expansion__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default: <tt class="docutils literal"><span class="pre">10.0</span></tt></p>
+<p>During the bracketing phase of a Wolfe line search, the step size
+is increased until either a point satisfying the Wolfe conditions
+is found, or an upper bound for a bracket containinqg a point
+satisfying the conditions is found.  Precisely, at each iteration
+of the expansion:</p>
+<div class="math">
+\[\begin{split}\text{new_step_size} &lt;= \text{max_step_expansion} * \text{step_size}\end{split}\]</div>
+<p>By definition for expansion</p>
+<div class="math">
+\[\begin{split}\text{max_step_expansion} &gt; 1.0\end{split}\]</div>
 </dd></dl>
 
 <dl class="member">
@@ -833,12 +1003,12 @@ this value.</p>
 double <tt class="descclassname">Solver::Options::</tt><tt class="descname">min_relative_decrease</tt><a class="headerlink" href="#Solver::Options::min_relative_decrease__double" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default: <tt class="docutils literal"><span class="pre">1e-3</span></tt></p>
 <p>Lower threshold for relative decrease before a trust-region step is
-acceped.</p>
+accepted.</p>
 </dd></dl>
 
 <dl class="member">
-<dt id="Solver::Options::lm_min_diagonal__double">
-double <tt class="descclassname">Solver::Options::</tt><tt class="descname">lm_min_diagonal</tt><a class="headerlink" href="#Solver::Options::lm_min_diagonal__double" title="Permalink to this definition">¶</a></dt>
+<dt id="Solver::Options::min_lm_diagonal__double">
+double <tt class="descclassname">Solver::Options::</tt><tt class="descname">min_lm_diagonal</tt><a class="headerlink" href="#Solver::Options::min_lm_diagonal__double" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default: <tt class="docutils literal"><span class="pre">1e6</span></tt></p>
 <p>The <tt class="docutils literal"><span class="pre">LEVENBERG_MARQUARDT</span></tt> strategy, uses a diagonal matrix to
 regularize the the trust region step. This is the lower bound on
@@ -846,8 +1016,8 @@ the values of this diagonal matrix.</p>
 </dd></dl>
 
 <dl class="member">
-<dt id="Solver::Options::lm_max_diagonal__double">
-double <tt class="descclassname">Solver::Options::</tt><tt class="descname">lm_max_diagonal</tt><a class="headerlink" href="#Solver::Options::lm_max_diagonal__double" title="Permalink to this definition">¶</a></dt>
+<dt id="Solver::Options::max_lm_diagonal__double">
+double <tt class="descclassname">Solver::Options::</tt><tt class="descname">max_lm_diagonal</tt><a class="headerlink" href="#Solver::Options::max_lm_diagonal__double" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default:  <tt class="docutils literal"><span class="pre">1e32</span></tt></p>
 <p>The <tt class="docutils literal"><span class="pre">LEVENBERG_MARQUARDT</span></tt> strategy, uses a diagonal matrix to
 regularize the the trust region step. This is the upper bound on
@@ -873,8 +1043,9 @@ double <tt class="descclassname">Solver::Options::</tt><tt class="descname">func
 <p>Solver terminates if</p>
 <div class="math">
 \[\begin{split}\frac{|\Delta \text{cost}|}{\text{cost} &lt; \text{function_tolerance}}\end{split}\]</div>
-<p>where, <span class="math">\(\Delta \text{cost}\)</span> is the change in objective function
-value (up or down) in the current iteration of Levenberg-Marquardt.</p>
+<p>where, <span class="math">\(\Delta \text{cost}\)</span> is the change in objective
+function value (up or down) in the current iteration of
+Levenberg-Marquardt.</p>
 </dd></dl>
 
 <dl class="member">
@@ -895,8 +1066,8 @@ double <tt class="descclassname">Solver::Options::</tt><tt class="descname">para
 <p>Solver terminates if</p>
 <div class="math">
 \[\begin{split}\|\Delta x\| &lt; (\|x\| + \text{parameter_tolerance}) * \text{parameter_tolerance}\end{split}\]</div>
-<p>where <span class="math">\(\Delta x\)</span> is the step computed by the linear solver in the
-current iteration of Levenberg-Marquardt.</p>
+<p>where <span class="math">\(\Delta x\)</span> is the step computed by the linear solver in
+the current iteration of Levenberg-Marquardt.</p>
 </dd></dl>
 
 <dl class="member">
@@ -922,8 +1093,24 @@ order of complexity) <tt class="docutils literal"><span class="pre">IDENTITY</sp
 </dd></dl>
 
 <dl class="member">
-<dt id="Solver::Options::sparse_linear_algebra_library__SparseLinearAlgebraLibrary">
-SparseLinearAlgebraLibrary <tt class="descclassname">Solver::Options::</tt><tt class="descname">sparse_linear_algebra_library</tt><a class="headerlink" href="#Solver::Options::sparse_linear_algebra_library__SparseLinearAlgebraLibrary" title="Permalink to this definition">¶</a></dt>
+<dt id="Solver::Options::dense_linear_algebra_library_type__DenseLinearAlgebraLibrary">
+DenseLinearAlgebraLibrary <tt class="descclassname">Solver::Options::</tt><tt class="descname">dense_linear_algebra_library_type</tt><a class="headerlink" href="#Solver::Options::dense_linear_algebra_library_type__DenseLinearAlgebraLibrary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default:<tt class="docutils literal"><span class="pre">EIGEN</span></tt></p>
+<p>Ceres supports using multiple dense linear algebra libraries for
+dense matrix factorizations. Currently <tt class="docutils literal"><span class="pre">EIGEN</span></tt> and <tt class="docutils literal"><span class="pre">LAPACK</span></tt> are
+the valid choices. <tt class="docutils literal"><span class="pre">EIGEN</span></tt> is always available, <tt class="docutils literal"><span class="pre">LAPACK</span></tt> refers
+to the system <tt class="docutils literal"><span class="pre">BLAS</span> <span class="pre">+</span> <span class="pre">LAPACK</span></tt> library which may or may not be
+available.</p>
+<p>This setting affects the <tt class="docutils literal"><span class="pre">DENSE_QR</span></tt>, <tt class="docutils literal"><span class="pre">DENSE_NORMAL_CHOLESKY</span></tt>
+and <tt class="docutils literal"><span class="pre">DENSE_SCHUR</span></tt> solvers. For small to moderate sized probem
+<tt class="docutils literal"><span class="pre">EIGEN</span></tt> is a fine choice but for large problems, an optimized
+<tt class="docutils literal"><span class="pre">LAPACK</span> <span class="pre">+</span> <span class="pre">BLAS</span></tt> implementation can make a substantial difference
+in performance.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Options::sparse_linear_algebra_library_type__SparseLinearAlgebraLibrary">
+SparseLinearAlgebraLibrary <tt class="descclassname">Solver::Options::</tt><tt class="descname">sparse_linear_algebra_library_type</tt><a class="headerlink" href="#Solver::Options::sparse_linear_algebra_library_type__SparseLinearAlgebraLibrary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default:<tt class="docutils literal"><span class="pre">SUITE_SPARSE</span></tt></p>
 <p>Ceres supports the use of two sparse linear algebra libraries,
 <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt>, which is enabled by setting this parameter to
@@ -945,34 +1132,6 @@ int <tt class="descclassname">Solver::Options::</tt><tt class="descname">num_lin
 </dd></dl>
 
 <dl class="member">
-<dt id="Solver::Options::use_inner_iterations__b">
-bool <tt class="descclassname">Solver::Options::</tt><tt class="descname">use_inner_iterations</tt><a class="headerlink" href="#Solver::Options::use_inner_iterations__b" title="Permalink to this definition">¶</a></dt>
-<dd><p>Default: <tt class="docutils literal"><span class="pre">false</span></tt></p>
-<p>Use a non-linear version of a simplified variable projection
-algorithm. Essentially this amounts to doing a further optimization
-on each Newton/Trust region step using a coordinate descent
-algorithm.  For more details, see <a class="reference internal" href="#section-inner-iterations"><em>Inner Iterations</em></a>.</p>
-</dd></dl>
-
-<dl class="member">
-<dt id="Solver::Options::inner_iteration_ordering__ParameterBlockOrderingP">
-ParameterBlockOrdering* <tt class="descclassname">Solver::Options::</tt><tt class="descname">inner_iteration_ordering</tt><a class="headerlink" href="#Solver::Options::inner_iteration_ordering__ParameterBlockOrderingP" title="Permalink to this definition">¶</a></dt>
-<dd><p>Default: <tt class="docutils literal"><span class="pre">NULL</span></tt></p>
-<p>If <a class="reference internal" href="#Solver::Options::use_inner_iterations__b" title="Solver::Options::use_inner_iterations"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::use_inner_iterations</span></tt></a> true, then the user has
-two choices.</p>
-<ol class="arabic simple">
-<li>Let the solver heuristically decide which parameter blocks to
-optimize in each inner iteration. To do this, set
-<a class="reference internal" href="#Solver::Options::inner_iteration_ordering__ParameterBlockOrderingP" title="Solver::Options::inner_iteration_ordering"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::inner_iteration_ordering</span></tt></a> to <tt class="docutils literal"><span class="pre">NULL</span></tt>.</li>
-<li>Specify a collection of of ordered independent sets. The lower
-numbered groups are optimized before the higher number groups
-during the inner optimization phase. Each group must be an
-independent set.</li>
-</ol>
-<p>See <a class="reference internal" href="#section-ordering"><em>Ordering</em></a> for more details.</p>
-</dd></dl>
-
-<dl class="member">
 <dt id="Solver::Options::linear_solver_ordering__ParameterBlockOrderingP">
 ParameterBlockOrdering* <tt class="descclassname">Solver::Options::</tt><tt class="descname">linear_solver_ordering</tt><a class="headerlink" href="#Solver::Options::linear_solver_ordering__ParameterBlockOrderingP" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default: <tt class="docutils literal"><span class="pre">NULL</span></tt></p>
@@ -980,34 +1139,36 @@ ParameterBlockOrdering* <tt class="descclassname">Solver::Options::</tt><tt clas
 desired order in which parameter blocks should be eliminated by the
 linear solvers. See section~ref{sec:ordering`` for more details.</p>
 <p>If <tt class="docutils literal"><span class="pre">NULL</span></tt>, the solver is free to choose an ordering that it
-thinks is best. Note: currently, this option only has an effect on
-the Schur type solvers, support for the <tt class="docutils literal"><span class="pre">SPARSE_NORMAL_CHOLESKY</span></tt>
-solver is forth coming.</p>
+thinks is best.</p>
 <p>See <a class="reference internal" href="#section-ordering"><em>Ordering</em></a> for more details.</p>
 </dd></dl>
 
 <dl class="member">
-<dt id="Solver::Options::use_block_amd__b">
-bool <tt class="descclassname">Solver::Options::</tt><tt class="descname">use_block_amd</tt><a class="headerlink" href="#Solver::Options::use_block_amd__b" title="Permalink to this definition">¶</a></dt>
-<dd><p>Default: <tt class="docutils literal"><span class="pre">true</span></tt></p>
-<p>By virtue of the modeling layer in Ceres being block oriented, all
-the matrices used by Ceres are also block oriented.  When doing
-sparse direct factorization of these matrices, the fill-reducing
-ordering algorithms can either be run on the block or the scalar
-form of these matrices. Running it on the block form exposes more
-of the super-nodal structure of the matrix to the Cholesky
-factorization routines. This leads to substantial gains in
-factorization performance. Setting this parameter to true, enables
-the use of a block oriented Approximate Minimum Degree ordering
-algorithm. Settings it to <tt class="docutils literal"><span class="pre">false</span></tt>, uses a scalar AMD
-algorithm. This option only makes sense when using
-<a class="reference internal" href="#Solver::Options::sparse_linear_algebra_library__SparseLinearAlgebraLibrary" title="Solver::Options::sparse_linear_algebra_library"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::sparse_linear_algebra_library</span></tt></a> = <tt class="docutils literal"><span class="pre">SUITE_SPARSE</span></tt>
-as it uses the <tt class="docutils literal"><span class="pre">AMD</span></tt> package that is part of <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt>.</p>
+<dt id="Solver::Options::use_post_ordering__b">
+bool <tt class="descclassname">Solver::Options::</tt><tt class="descname">use_post_ordering</tt><a class="headerlink" href="#Solver::Options::use_post_ordering__b" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default: <tt class="docutils literal"><span class="pre">false</span></tt></p>
+<p>Sparse Cholesky factorization algorithms use a fill-reducing
+ordering to permute the columns of the Jacobian matrix. There are
+two ways of doing this.</p>
+<ol class="arabic simple">
+<li>Compute the Jacobian matrix in some order and then have the
+factorization algorithm permute the columns of the Jacobian.</li>
+<li>Compute the Jacobian with its columns already permuted.</li>
+</ol>
+<p>The first option incurs a significant memory penalty. The
+factorization algorithm has to make a copy of the permuted Jacobian
+matrix, thus Ceres pre-permutes the columns of the Jacobian matrix
+and generally speaking, there is no performance penalty for doing
+so.</p>
+<p>In some rare cases, it is worth using a more complicated reordering
+algorithm which has slightly better runtime performance at the
+expense of an extra copy of the Jacobian matrix. Setting
+<tt class="docutils literal"><span class="pre">use_postordering</span></tt> to <tt class="docutils literal"><span class="pre">true</span></tt> enables this tradeoff.</p>
 </dd></dl>
 
 <dl class="member">
-<dt id="Solver::Options::linear_solver_min_num_iterations__i">
-int <tt class="descclassname">Solver::Options::</tt><tt class="descname">linear_solver_min_num_iterations</tt><a class="headerlink" href="#Solver::Options::linear_solver_min_num_iterations__i" title="Permalink to this definition">¶</a></dt>
+<dt id="Solver::Options::min_linear_solver_iterations__i">
+int <tt class="descclassname">Solver::Options::</tt><tt class="descname">min_linear_solver_iterations</tt><a class="headerlink" href="#Solver::Options::min_linear_solver_iterations__i" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default: <tt class="docutils literal"><span class="pre">1</span></tt></p>
 <p>Minimum number of iterations used by the linear solver. This only
 makes sense when the linear solver is an iterative solver, e.g.,
@@ -1015,8 +1176,8 @@ makes sense when the linear solver is an iterative solver, e.g.,
 </dd></dl>
 
 <dl class="member">
-<dt id="Solver::Options::linear_solver_max_num_iterations__i">
-int <tt class="descclassname">Solver::Options::</tt><tt class="descname">linear_solver_max_num_iterations</tt><a class="headerlink" href="#Solver::Options::linear_solver_max_num_iterations__i" title="Permalink to this definition">¶</a></dt>
+<dt id="Solver::Options::max_linear_solver_iterations__i">
+int <tt class="descclassname">Solver::Options::</tt><tt class="descname">max_linear_solver_iterations</tt><a class="headerlink" href="#Solver::Options::max_linear_solver_iterations__i" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default: <tt class="docutils literal"><span class="pre">500</span></tt></p>
 <p>Minimum number of iterations used by the linear solver. This only
 makes sense when the linear solver is an iterative solver, e.g.,
@@ -1046,6 +1207,49 @@ numerical conditioning of the normal equations.</p>
 </dd></dl>
 
 <dl class="member">
+<dt id="Solver::Options::use_inner_iterations__b">
+bool <tt class="descclassname">Solver::Options::</tt><tt class="descname">use_inner_iterations</tt><a class="headerlink" href="#Solver::Options::use_inner_iterations__b" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default: <tt class="docutils literal"><span class="pre">false</span></tt></p>
+<p>Use a non-linear version of a simplified variable projection
+algorithm. Essentially this amounts to doing a further optimization
+on each Newton/Trust region step using a coordinate descent
+algorithm.  For more details, see <a class="reference internal" href="#section-inner-iterations"><em>Inner Iterations</em></a>.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Options::inner_itearation_tolerance__double">
+double <tt class="descclassname">Solver::Options::</tt><tt class="descname">inner_itearation_tolerance</tt><a class="headerlink" href="#Solver::Options::inner_itearation_tolerance__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default: <tt class="docutils literal"><span class="pre">1e-3</span></tt></p>
+<p>Generally speaking, inner iterations make significant progress in
+the early stages of the solve and then their contribution drops
+down sharply, at which point the time spent doing inner iterations
+is not worth it.</p>
+<p>Once the relative decrease in the objective function due to inner
+iterations drops below <tt class="docutils literal"><span class="pre">inner_iteration_tolerance</span></tt>, the use of
+inner iterations in subsequent trust region minimizer iterations is
+disabled.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Options::inner_iteration_ordering__ParameterBlockOrderingP">
+ParameterBlockOrdering* <tt class="descclassname">Solver::Options::</tt><tt class="descname">inner_iteration_ordering</tt><a class="headerlink" href="#Solver::Options::inner_iteration_ordering__ParameterBlockOrderingP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default: <tt class="docutils literal"><span class="pre">NULL</span></tt></p>
+<p>If <a class="reference internal" href="#Solver::Options::use_inner_iterations__b" title="Solver::Options::use_inner_iterations"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::use_inner_iterations</span></tt></a> true, then the
+user has two choices.</p>
+<ol class="arabic simple">
+<li>Let the solver heuristically decide which parameter blocks to
+optimize in each inner iteration. To do this, set
+<a class="reference internal" href="#Solver::Options::inner_iteration_ordering__ParameterBlockOrderingP" title="Solver::Options::inner_iteration_ordering"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::inner_iteration_ordering</span></tt></a> to <tt class="docutils literal"><span class="pre">NULL</span></tt>.</li>
+<li>Specify a collection of of ordered independent sets. The lower
+numbered groups are optimized before the higher number groups
+during the inner optimization phase. Each group must be an
+independent set. Not all parameter blocks need to be included in
+the ordering.</li>
+</ol>
+<p>See <a class="reference internal" href="#section-ordering"><em>Ordering</em></a> for more details.</p>
+</dd></dl>
+
+<dl class="member">
 <dt id="Solver::Options::logging_type__LoggingType">
 LoggingType <tt class="descclassname">Solver::Options::</tt><tt class="descname">logging_type</tt><a class="headerlink" href="#Solver::Options::logging_type__LoggingType" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default: <tt class="docutils literal"><span class="pre">PER_MINIMIZER_ITERATION</span></tt></p>
@@ -1059,33 +1263,79 @@ bool <tt class="descclassname">Solver::Options::</tt><tt class="descname">minimi
 depending on the <tt class="docutils literal"><span class="pre">vlog</span></tt> level. If this flag is set to true, and
 <a class="reference internal" href="#Solver::Options::logging_type__LoggingType" title="Solver::Options::logging_type"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::logging_type</span></tt></a> is not <tt class="docutils literal"><span class="pre">SILENT</span></tt>, the logging
 output is sent to <tt class="docutils literal"><span class="pre">STDOUT</span></tt>.</p>
+<p>For <tt class="docutils literal"><span class="pre">TRUST_REGION_MINIMIZER</span></tt> the progress display looks like</p>
+<div class="highlight-bash"><div class="highlight"><pre>0: f: 1.250000e+01 d: 0.00e+00 g: 5.00e+00 h: 0.00e+00 rho: 0.00e+00 mu: 1.00e+04 li:  0 it: 6.91e-06 tt: 1.91e-03
+1: f: 1.249750e-07 d: 1.25e+01 g: 5.00e-04 h: 5.00e+00 rho: 1.00e+00 mu: 3.00e+04 li:  1 it: 2.81e-05 tt: 1.99e-03
+2: f: 1.388518e-16 d: 1.25e-07 g: 1.67e-08 h: 5.00e-04 rho: 1.00e+00 mu: 9.00e+04 li:  1 it: 1.00e-05 tt: 2.01e-03
+</pre></div>
+</div>
+<p>Here</p>
+<ol class="arabic simple">
+<li><tt class="docutils literal"><span class="pre">f</span></tt> is the value of the objective function.</li>
+<li><tt class="docutils literal"><span class="pre">d</span></tt> is the change in the value of the objective function if
+the step computed in this iteration is accepted.</li>
+<li><tt class="docutils literal"><span class="pre">g</span></tt> is the max norm of the gradient.</li>
+<li><tt class="docutils literal"><span class="pre">h</span></tt> is the change in the parameter vector.</li>
+<li><tt class="docutils literal"><span class="pre">rho</span></tt> is the ratio of the actual change in the objective
+function value to the change in the the value of the trust
+region model.</li>
+<li><tt class="docutils literal"><span class="pre">mu</span></tt> is the size of the trust region radius.</li>
+<li><tt class="docutils literal"><span class="pre">li</span></tt> is the number of linear solver iterations used to compute
+the trust region step. For direct/factorization based solvers it
+is always 1, for iterative solvers like <tt class="docutils literal"><span class="pre">ITERATIVE_SCHUR</span></tt> it
+is the number of iterations of the Conjugate Gradients
+algorithm.</li>
+<li><tt class="docutils literal"><span class="pre">it</span></tt> is the time take by the current iteration.</li>
+<li><tt class="docutils literal"><span class="pre">tt</span></tt> is the the total time taken by the minimizer.</li>
+</ol>
+<p>For <tt class="docutils literal"><span class="pre">LINE_SEARCH_MINIMIZER</span></tt> the progress display looks like</p>
+<div class="highlight-bash"><div class="highlight"><pre>0: f: 2.317806e+05 d: 0.00e+00 g: 3.19e-01 h: 0.00e+00 s: 0.00e+00 e:  0 it: 2.98e-02 tt: 8.50e-02
+1: f: 2.312019e+05 d: 5.79e+02 g: 3.18e-01 h: 2.41e+01 s: 1.00e+00 e:  1 it: 4.54e-02 tt: 1.31e-01
+2: f: 2.300462e+05 d: 1.16e+03 g: 3.17e-01 h: 4.90e+01 s: 2.54e-03 e:  1 it: 4.96e-02 tt: 1.81e-01
+</pre></div>
+</div>
+<p>Here</p>
+<ol class="arabic simple">
+<li><tt class="docutils literal"><span class="pre">f</span></tt> is the value of the objective function.</li>
+<li><tt class="docutils literal"><span class="pre">d</span></tt> is the change in the value of the objective function if
+the step computed in this iteration is accepted.</li>
+<li><tt class="docutils literal"><span class="pre">g</span></tt> is the max norm of the gradient.</li>
+<li><tt class="docutils literal"><span class="pre">h</span></tt> is the change in the parameter vector.</li>
+<li><tt class="docutils literal"><span class="pre">s</span></tt> is the optimal step length computed by the line search.</li>
+<li><tt class="docutils literal"><span class="pre">it</span></tt> is the time take by the current iteration.</li>
+<li><tt class="docutils literal"><span class="pre">tt</span></tt> is the the total time taken by the minimizer.</li>
+</ol>
 </dd></dl>
 
 <dl class="member">
-<dt id="Solver::Options::lsqp_iterations_to_dump__vector:i:">
-vector&lt;int&gt; <tt class="descclassname">Solver::Options::</tt><tt class="descname">lsqp_iterations_to_dump</tt><a class="headerlink" href="#Solver::Options::lsqp_iterations_to_dump__vector:i:" title="Permalink to this definition">¶</a></dt>
+<dt id="Solver::Options::trust_region_minimizer_iterations_to_dump__vector:i:">
+vector&lt;int&gt; <tt class="descclassname">Solver::Options::</tt><tt class="descname">trust_region_minimizer_iterations_to_dump</tt><a class="headerlink" href="#Solver::Options::trust_region_minimizer_iterations_to_dump__vector:i:" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default: <tt class="docutils literal"><span class="pre">empty</span></tt></p>
-<p>List of iterations at which the optimizer should dump the linear
-least squares problem to disk. Useful for testing and
-benchmarking. If <tt class="docutils literal"><span class="pre">empty</span></tt>, no problems are dumped.</p>
+<p>List of iterations at which the trust region minimizer should dump
+the trust region problem. Useful for testing and benchmarking. If
+<tt class="docutils literal"><span class="pre">empty</span></tt>, no problems are dumped.</p>
 </dd></dl>
 
 <dl class="member">
-<dt id="Solver::Options::lsqp_dump_directory__string">
-string <tt class="descclassname">Solver::Options::</tt><tt class="descname">lsqp_dump_directory</tt><a class="headerlink" href="#Solver::Options::lsqp_dump_directory__string" title="Permalink to this definition">¶</a></dt>
+<dt id="Solver::Options::trust_region_problem_dump_directory__string">
+string <tt class="descclassname">Solver::Options::</tt><tt class="descname">trust_region_problem_dump_directory</tt><a class="headerlink" href="#Solver::Options::trust_region_problem_dump_directory__string" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default: <tt class="docutils literal"><span class="pre">/tmp</span></tt></p>
-<p>If <a class="reference internal" href="#Solver::Options::lsqp_iterations_to_dump__vector:i:" title="Solver::Options::lsqp_iterations_to_dump"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::lsqp_iterations_to_dump</span></tt></a> is non-empty, then
-this setting determines the directory to which the files containing
-the linear least squares problems are written to.</p>
+<blockquote>
+<div>Directory to which the problems should be written to. Should be
+non-empty if
+<a class="reference internal" href="#Solver::Options::trust_region_minimizer_iterations_to_dump__vector:i:" title="Solver::Options::trust_region_minimizer_iterations_to_dump"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::trust_region_minimizer_iterations_to_dump</span></tt></a> is
+non-empty and
+<tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::trust_region_problem_dump_format_type</span></tt> is not
+<tt class="docutils literal"><span class="pre">CONSOLE</span></tt>.</div></blockquote>
 </dd></dl>
 
 <dl class="member">
-<dt id="Solver::Options::lsqp_dump_format__DumpFormatType">
-DumpFormatType <tt class="descclassname">Solver::Options::</tt><tt class="descname">lsqp_dump_format</tt><a class="headerlink" href="#Solver::Options::lsqp_dump_format__DumpFormatType" title="Permalink to this definition">¶</a></dt>
+<dt id="Solver::Options::trust_region_problem_dump_format__DumpFormatType">
+DumpFormatType <tt class="descclassname">Solver::Options::</tt><tt class="descname">trust_region_problem_dump_format</tt><a class="headerlink" href="#Solver::Options::trust_region_problem_dump_format__DumpFormatType" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default: <tt class="docutils literal"><span class="pre">TEXTFILE</span></tt></p>
-<p>The format in which linear least squares problems should be logged
-when <a class="reference internal" href="#Solver::Options::lsqp_iterations_to_dump__vector:i:" title="Solver::Options::lsqp_iterations_to_dump"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::lsqp_iterations_to_dump</span></tt></a> is non-empty.
-There are three options:</p>
+<p>The format in which trust region problems should be logged when
+<a class="reference internal" href="#Solver::Options::trust_region_minimizer_iterations_to_dump__vector:i:" title="Solver::Options::trust_region_minimizer_iterations_to_dump"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::trust_region_minimizer_iterations_to_dump</span></tt></a>
+is non-empty.  There are three options:</p>
 <ul>
 <li><dl class="first docutils">
 <dt><tt class="docutils literal"><span class="pre">CONSOLE</span></tt> prints the linear least squares problem in a human</dt>
@@ -1096,24 +1346,18 @@ problems.</p>
 </dd>
 </dl>
 </li>
-<li><p class="first"><tt class="docutils literal"><span class="pre">PROTOBUF</span></tt> Write out the linear least squares problem to the
-directory pointed to by <a class="reference internal" href="#Solver::Options::lsqp_dump_directory__string" title="Solver::Options::lsqp_dump_directory"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::lsqp_dump_directory</span></tt></a> as
-a protocol buffer. <tt class="docutils literal"><span class="pre">linear_least_squares_problems.h/cc</span></tt>
-contains routines for loading these problems. For details on the
-on disk format used, see <tt class="docutils literal"><span class="pre">matrix.proto</span></tt>. The files are named
-<tt class="docutils literal"><span class="pre">lm_iteration_???.lsqp</span></tt>. This requires that <tt class="docutils literal"><span class="pre">protobuf</span></tt> be
-linked into Ceres Solver.</p>
-</li>
 <li><p class="first"><tt class="docutils literal"><span class="pre">TEXTFILE</span></tt> Write out the linear least squares problem to the
-directory pointed to by member::<cite>Solver::Options::lsqp_dump_directory</cite> as
+directory pointed to by
+<a class="reference internal" href="#Solver::Options::trust_region_problem_dump_directory__string" title="Solver::Options::trust_region_problem_dump_directory"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::trust_region_problem_dump_directory</span></tt></a> as
 text files which can be read into <tt class="docutils literal"><span class="pre">MATLAB/Octave</span></tt>. The Jacobian
 is dumped as a text file containing <span class="math">\((i,j,s)\)</span> triplets, the
 vectors <span class="math">\(D\)</span>, <cite>x</cite> and <cite>f</cite> are dumped as text files
 containing a list of their values.</p>
+<p>A <tt class="docutils literal"><span class="pre">MATLAB/Octave</span></tt> script called
+<tt class="docutils literal"><span class="pre">ceres_solver_iteration_???.m</span></tt> is also output, which can be
+used to parse and load the problem into memory.</p>
 </li>
 </ul>
-<p>A <tt class="docutils literal"><span class="pre">MATLAB/Octave</span></tt> script called <tt class="docutils literal"><span class="pre">lm_iteration_???.m</span></tt> is also
-output, which can be used to parse and load the problem into memory.</p>
 </dd></dl>
 
 <dl class="member">
@@ -1164,8 +1408,8 @@ vector&lt;IterationCallback&gt; <tt class="descclassname">Solver::Options::</tt>
 specified in this vector. By default, parameter blocks are updated
 only at the end of the optimization, i.e when the
 <tt class="xref cpp cpp-class docutils literal"><span class="pre">Minimizer</span></tt> terminates. This behavior is controlled by
-<tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::update_state_every_variable</span></tt>. If the user wishes
-to have access to the update parameter blocks when his/her
+<tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::update_state_every_variable</span></tt>. If the user
+wishes to have access to the update parameter blocks when his/her
 callbacks are executed, then set
 <a class="reference internal" href="#Solver::Options::update_state_every_iteration__b" title="Solver::Options::update_state_every_iteration"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::update_state_every_iteration</span></tt></a> to true.</p>
 <p>The solver does NOT take ownership of these pointers.</p>
@@ -1199,16 +1443,234 @@ framework is fleshed out.</p>
 <dl class="class">
 <dt id="ParameterBlockOrdering">
 <em class="property">class </em><tt class="descname">ParameterBlockOrdering</tt><a class="headerlink" href="#ParameterBlockOrdering" title="Permalink to this definition">¶</a></dt>
-<dd><p>TBD</p>
+<dd><p><tt class="docutils literal"><span class="pre">ParameterBlockOrdering</span></tt> is a class for storing and manipulating
+an ordered collection of groups/sets with the following semantics:</p>
+<p>Group IDs are non-negative integer values. Elements are any type
+that can serve as a key in a map or an element of a set.</p>
+<p>An element can only belong to one group at a time. A group may
+contain an arbitrary number of elements.</p>
+<p>Groups are ordered by their group id.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ParameterBlockOrdering::AddElementToGroup__doubleCP.iC">
+bool <tt class="descclassname">ParameterBlockOrdering::</tt><tt class="descname">AddElementToGroup</tt><big>(</big>const double* <em>element</em>, const int <em>group</em><big>)</big><a class="headerlink" href="#ParameterBlockOrdering::AddElementToGroup__doubleCP.iC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an element to a group. If a group with this id does not exist,
+one is created. This method can be called any number of times for
+the same element. Group ids should be non-negative numbers.  Return
+value indicates if adding the element was a success.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ParameterBlockOrdering::Clear">
+void <tt class="descclassname">ParameterBlockOrdering::</tt><tt class="descname">Clear</tt><big>(</big><big>)</big><a class="headerlink" href="#ParameterBlockOrdering::Clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the ordering.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ParameterBlockOrdering::Remove__doubleCP">
+bool <tt class="descclassname">ParameterBlockOrdering::</tt><tt class="descname">Remove</tt><big>(</big>const double* <em>element</em><big>)</big><a class="headerlink" href="#ParameterBlockOrdering::Remove__doubleCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the element, no matter what group it is in. If the element
+is not a member of any group, calling this method will result in a
+crash.  Return value indicates if the element was actually removed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ParameterBlockOrdering::Reverse">
+void <tt class="descclassname">ParameterBlockOrdering::</tt><tt class="descname">Reverse</tt><big>(</big><big>)</big><a class="headerlink" href="#ParameterBlockOrdering::Reverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reverse the order of the groups in place.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ParameterBlockOrdering::GroupId__doubleCPC">
+int <tt class="descclassname">ParameterBlockOrdering::</tt><tt class="descname">GroupId</tt><big>(</big>const double* <em>element</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ParameterBlockOrdering::GroupId__doubleCPC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the group id for the element. If the element is not a member
+of any group, return -1.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ParameterBlockOrdering::IsMember__doubleCPC">
+bool <tt class="descclassname">ParameterBlockOrdering::</tt><tt class="descname">IsMember</tt><big>(</big>const double* <em>element</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ParameterBlockOrdering::IsMember__doubleCPC" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if there is a group containing the parameter block.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ParameterBlockOrdering::GroupSize__iCC">
+int <tt class="descclassname">ParameterBlockOrdering::</tt><tt class="descname">GroupSize</tt><big>(</big>const int <em>group</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ParameterBlockOrdering::GroupSize__iCC" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function always succeeds, i.e., implicitly there exists a
+group for every integer.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ParameterBlockOrdering::NumElementsC">
+int <tt class="descclassname">ParameterBlockOrdering::</tt><tt class="descname">NumElements</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ParameterBlockOrdering::NumElementsC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of elements in the ordering.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ParameterBlockOrdering::NumGroupsC">
+int <tt class="descclassname">ParameterBlockOrdering::</tt><tt class="descname">NumGroups</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ParameterBlockOrdering::NumGroupsC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of groups with one or more elements.</p>
 </dd></dl>
 
 </div>
 <div class="section" id="iterationcallback">
 <h3><a class="reference internal" href="#IterationCallback" title="IterationCallback"><tt class="xref cpp cpp-class docutils literal"><span class="pre">IterationCallback</span></tt></a><a class="headerlink" href="#iterationcallback" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
+<dt id="IterationSummary">
+<em class="property">class </em><tt class="descname">IterationSummary</tt><a class="headerlink" href="#IterationSummary" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#IterationSummary" title="IterationSummary"><tt class="xref cpp cpp-class docutils literal"><span class="pre">IterationSummary</span></tt></a> describes the state of the optimizer
+after each iteration of the minimization. Note that all times are
+wall times.</p>
+<div class="highlight-c++"><div class="highlight"><pre> <span class="k">struct</span> <span class="n">IterationSummary</span> <span class="p">{</span>
+   <span class="c1">// Current iteration number.</span>
+   <span class="n">int32</span> <span class="n">iteration</span><span class="p">;</span>
+
+   <span class="c1">// Step was numerically valid, i.e., all values are finite and the</span>
+   <span class="c1">// step reduces the value of the linearized model.</span>
+   <span class="c1">//</span>
+   <span class="c1">// Note: step_is_valid is false when iteration = 0.</span>
+   <span class="kt">bool</span> <span class="n">step_is_valid</span><span class="p">;</span>
+
+   <span class="c1">// Step did not reduce the value of the objective function</span>
+   <span class="c1">// sufficiently, but it was accepted because of the relaxed</span>
+   <span class="c1">// acceptance criterion used by the non-monotonic trust region</span>
+   <span class="c1">// algorithm.</span>
+   <span class="c1">//</span>
+   <span class="c1">// Note: step_is_nonmonotonic is false when iteration = 0;</span>
+   <span class="kt">bool</span> <span class="n">step_is_nonmonotonic</span><span class="p">;</span>
+
+   <span class="c1">// Whether or not the minimizer accepted this step or not. If the</span>
+   <span class="c1">// ordinary trust region algorithm is used, this means that the</span>
+   <span class="c1">// relative reduction in the objective function value was greater</span>
+   <span class="c1">// than Solver::Options::min_relative_decrease. However, if the</span>
+   <span class="c1">// non-monotonic trust region algorithm is used</span>
+   <span class="c1">// (Solver::Options:use_nonmonotonic_steps = true), then even if the</span>
+   <span class="c1">// relative decrease is not sufficient, the algorithm may accept the</span>
+   <span class="c1">// step and the step is declared successful.</span>
+   <span class="c1">//</span>
+   <span class="c1">// Note: step_is_successful is false when iteration = 0.</span>
+   <span class="kt">bool</span> <span class="n">step_is_successful</span><span class="p">;</span>
+
+   <span class="c1">// Value of the objective function.</span>
+   <span class="kt">double</span> <span class="n">cost</span><span class="p">;</span>
+
+   <span class="c1">// Change in the value of the objective function in this</span>
+   <span class="c1">// iteration. This can be positive or negative.</span>
+   <span class="kt">double</span> <span class="n">cost_change</span><span class="p">;</span>
+
+   <span class="c1">// Infinity norm of the gradient vector.</span>
+   <span class="kt">double</span> <span class="n">gradient_max_norm</span><span class="p">;</span>
+
+   <span class="c1">// 2-norm of the size of the step computed by the optimization</span>
+   <span class="c1">// algorithm.</span>
+   <span class="kt">double</span> <span class="n">step_norm</span><span class="p">;</span>
+
+   <span class="c1">// For trust region algorithms, the ratio of the actual change in</span>
+   <span class="c1">// cost and the change in the cost of the linearized approximation.</span>
+   <span class="kt">double</span> <span class="n">relative_decrease</span><span class="p">;</span>
+
+   <span class="c1">// Size of the trust region at the end of the current iteration. For</span>
+   <span class="c1">// the Levenberg-Marquardt algorithm, the regularization parameter</span>
+   <span class="c1">// mu = 1.0 / trust_region_radius.</span>
+   <span class="kt">double</span> <span class="n">trust_region_radius</span><span class="p">;</span>
+
+   <span class="c1">// For the inexact step Levenberg-Marquardt algorithm, this is the</span>
+   <span class="c1">// relative accuracy with which the Newton(LM) step is solved. This</span>
+   <span class="c1">// number affects only the iterative solvers capable of solving</span>
+   <span class="c1">// linear systems inexactly. Factorization-based exact solvers</span>
+   <span class="c1">// ignore it.</span>
+   <span class="kt">double</span> <span class="n">eta</span><span class="p">;</span>
+
+   <span class="c1">// Step sized computed by the line search algorithm.</span>
+   <span class="kt">double</span> <span class="n">step_size</span><span class="p">;</span>
+
+   <span class="c1">// Number of function evaluations used by the line search algorithm.</span>
+   <span class="kt">int</span> <span class="n">line_search_function_evaluations</span><span class="p">;</span>
+
+   <span class="c1">// Number of iterations taken by the linear solver to solve for the</span>
+   <span class="c1">// Newton step.</span>
+   <span class="kt">int</span> <span class="n">linear_solver_iterations</span><span class="p">;</span>
+
+   <span class="c1">// Time (in seconds) spent inside the minimizer loop in the current</span>
+   <span class="c1">// iteration.</span>
+   <span class="kt">double</span> <span class="n">iteration_time_in_seconds</span><span class="p">;</span>
+
+   <span class="c1">// Time (in seconds) spent inside the trust region step solver.</span>
+   <span class="kt">double</span> <span class="n">step_solver_time_in_seconds</span><span class="p">;</span>
+
+   <span class="c1">// Time (in seconds) since the user called Solve().</span>
+   <span class="kt">double</span> <span class="n">cumulative_time_in_seconds</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
 <dt id="IterationCallback">
 <em class="property">class </em><tt class="descname">IterationCallback</tt><a class="headerlink" href="#IterationCallback" title="Permalink to this definition">¶</a></dt>
-<dd><p>TBD</p>
+<dd><blockquote>
+<div><div class="highlight-c++"><div class="highlight"><pre><span class="k">class</span> <span class="nc">IterationCallback</span> <span class="p">{</span>
+ <span class="k">public</span><span class="o">:</span>
+  <span class="k">virtual</span> <span class="o">~</span><span class="n">IterationCallback</span><span class="p">()</span> <span class="p">{}</span>
+  <span class="k">virtual</span> <span class="n">CallbackReturnType</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="n">IterationSummary</span><span class="o">&amp;</span> <span class="n">summary</span><span class="p">)</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Interface for specifying callbacks that are executed at the end of
+each iteration of the Minimizer. The solver uses the return value of
+<tt class="docutils literal"><span class="pre">operator()</span></tt> to decide whether to continue solving or to
+terminate. The user can return three values.</p>
+<ol class="arabic simple">
+<li><tt class="docutils literal"><span class="pre">SOLVER_ABORT</span></tt> indicates that the callback detected an abnormal
+situation. The solver returns without updating the parameter
+blocks (unless <tt class="docutils literal"><span class="pre">Solver::Options::update_state_every_iteration</span></tt> is
+set true). Solver returns with <tt class="docutils literal"><span class="pre">Solver::Summary::termination_type</span></tt>
+set to <tt class="docutils literal"><span class="pre">USER_ABORT</span></tt>.</li>
+<li><tt class="docutils literal"><span class="pre">SOLVER_TERMINATE_SUCCESSFULLY</span></tt> indicates that there is no need
+to optimize anymore (some user specified termination criterion
+has been met). Solver returns with
+<tt class="docutils literal"><span class="pre">Solver::Summary::termination_type`</span></tt> set to <tt class="docutils literal"><span class="pre">USER_SUCCESS</span></tt>.</li>
+<li><tt class="docutils literal"><span class="pre">SOLVER_CONTINUE</span></tt> indicates that the solver should continue
+optimizing.</li>
+</ol>
+<p>For example, the following <tt class="docutils literal"><span class="pre">IterationCallback</span></tt> is used internally
+by Ceres to log the progress of the optimization.</p>
+<div class="highlight-c++"><div class="highlight"><pre><span class="k">class</span> <span class="nc">LoggingCallback</span> <span class="o">:</span> <span class="k">public</span> <span class="n">IterationCallback</span> <span class="p">{</span>
+ <span class="k">public</span><span class="o">:</span>
+  <span class="k">explicit</span> <span class="n">LoggingCallback</span><span class="p">(</span><span class="kt">bool</span> <span class="n">log_to_stdout</span><span class="p">)</span>
+      <span class="o">:</span> <span class="n">log_to_stdout_</span><span class="p">(</span><span class="n">log_to_stdout</span><span class="p">)</span> <span class="p">{}</span>
+
+  <span class="o">~</span><span class="n">LoggingCallback</span><span class="p">()</span> <span class="p">{}</span>
+
+  <span class="n">CallbackReturnType</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="n">IterationSummary</span><span class="o">&amp;</span> <span class="n">summary</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">kReportRowFormat</span> <span class="o">=</span>
+        <span class="s">&quot;% 4d: f:% 8e d:% 3.2e g:% 3.2e h:% 3.2e &quot;</span>
+        <span class="s">&quot;rho:% 3.2e mu:% 3.2e eta:% 3.2e li:% 3d&quot;</span><span class="p">;</span>
+    <span class="n">string</span> <span class="n">output</span> <span class="o">=</span> <span class="n">StringPrintf</span><span class="p">(</span><span class="n">kReportRowFormat</span><span class="p">,</span>
+                                 <span class="n">summary</span><span class="p">.</span><span class="n">iteration</span><span class="p">,</span>
+                                 <span class="n">summary</span><span class="p">.</span><span class="n">cost</span><span class="p">,</span>
+                                 <span class="n">summary</span><span class="p">.</span><span class="n">cost_change</span><span class="p">,</span>
+                                 <span class="n">summary</span><span class="p">.</span><span class="n">gradient_max_norm</span><span class="p">,</span>
+                                 <span class="n">summary</span><span class="p">.</span><span class="n">step_norm</span><span class="p">,</span>
+                                 <span class="n">summary</span><span class="p">.</span><span class="n">relative_decrease</span><span class="p">,</span>
+                                 <span class="n">summary</span><span class="p">.</span><span class="n">trust_region_radius</span><span class="p">,</span>
+                                 <span class="n">summary</span><span class="p">.</span><span class="n">eta</span><span class="p">,</span>
+                                 <span class="n">summary</span><span class="p">.</span><span class="n">linear_solver_iterations</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">log_to_stdout_</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">output</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="n">VLOG</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">output</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">SOLVER_CONTINUE</span><span class="p">;</span>
+  <span class="p">}</span>
+
+ <span class="k">private</span><span class="o">:</span>
+  <span class="k">const</span> <span class="kt">bool</span> <span class="n">log_to_stdout_</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -1217,7 +1679,40 @@ framework is fleshed out.</p>
 <dl class="class">
 <dt id="CRSMatrix">
 <em class="property">class </em><tt class="descname">CRSMatrix</tt><a class="headerlink" href="#CRSMatrix" title="Permalink to this definition">¶</a></dt>
-<dd><p>TBD</p>
+<dd><div class="highlight-c++"><div class="highlight"><pre><span class="k">struct</span> <span class="n">CRSMatrix</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">num_rows</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">num_cols</span><span class="p">;</span>
+  <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">cols</span><span class="p">;</span>
+  <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">rows</span><span class="p">;</span>
+  <span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">values</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>A compressed row sparse matrix used primarily for communicating the
+Jacobian matrix to the user.</p>
+<p>A compressed row matrix stores its contents in three arrays,
+<tt class="docutils literal"><span class="pre">rows</span></tt>, <tt class="docutils literal"><span class="pre">cols</span></tt> and <tt class="docutils literal"><span class="pre">values</span></tt>.</p>
+<p><tt class="docutils literal"><span class="pre">rows</span></tt> is a <tt class="docutils literal"><span class="pre">num_rows</span> <span class="pre">+</span> <span class="pre">1</span></tt> sized array that points into the <tt class="docutils literal"><span class="pre">cols</span></tt> and
+<tt class="docutils literal"><span class="pre">values</span></tt> array. For each row <tt class="docutils literal"><span class="pre">i</span></tt>:</p>
+<p><tt class="docutils literal"><span class="pre">cols[rows[i]]</span></tt> ... <tt class="docutils literal"><span class="pre">cols[rows[i</span> <span class="pre">+</span> <span class="pre">1]</span> <span class="pre">-</span> <span class="pre">1]</span></tt> are the indices of the
+non-zero columns of row <tt class="docutils literal"><span class="pre">i</span></tt>.</p>
+<p><tt class="docutils literal"><span class="pre">values[rows[i]]</span></tt> ... <tt class="docutils literal"><span class="pre">values[rows[i</span> <span class="pre">+</span> <span class="pre">1]</span> <span class="pre">-</span> <span class="pre">1]</span></tt> are the values of the
+corresponding entries.</p>
+<p><tt class="docutils literal"><span class="pre">cols</span></tt> and <tt class="docutils literal"><span class="pre">values</span></tt> contain as many entries as there are
+non-zeros in the matrix.</p>
+<p>e.g, consider the 3x4 sparse matrix</p>
+<div class="highlight-c++"><div class="highlight"><pre><span class="mi">0</span> <span class="mi">10</span>  <span class="mi">0</span>  <span class="mi">4</span>
+<span class="mi">0</span>  <span class="mi">2</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">2</span>
+<span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">0</span>  <span class="mi">0</span>
+</pre></div>
+</div>
+<p>The three arrays will be:</p>
+<div class="highlight-c++"><div class="highlight"><pre>          <span class="o">-</span><span class="n">row0</span><span class="o">-</span>  <span class="o">---</span><span class="n">row1</span><span class="o">---</span>  <span class="o">-</span><span class="n">row2</span><span class="o">-</span>
+<span class="n">rows</span>   <span class="o">=</span> <span class="p">[</span> <span class="mi">0</span><span class="p">,</span>      <span class="mi">2</span><span class="p">,</span>          <span class="mi">5</span><span class="p">,</span>     <span class="mi">7</span><span class="p">]</span>
+<span class="n">cols</span>   <span class="o">=</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span>  <span class="mi">3</span><span class="p">,</span>  <span class="mi">1</span><span class="p">,</span>  <span class="mi">2</span><span class="p">,</span>  <span class="mi">3</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span>  <span class="mi">1</span><span class="p">]</span>
+<span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span>  <span class="mi">4</span><span class="p">,</span>  <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span>  <span class="mi">2</span><span class="p">,</span>  <span class="mi">1</span><span class="p">,</span>  <span class="mi">2</span><span class="p">]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -1226,17 +1721,473 @@ framework is fleshed out.</p>
 <dl class="class">
 <dt id="Solver::Summary">
 <em class="property">class </em><tt class="descclassname">Solver::</tt><tt class="descname">Summary</tt><a class="headerlink" href="#Solver::Summary" title="Permalink to this definition">¶</a></dt>
-<dd><p>TBD</p>
+<dd><p>Note that all times reported in this struct are wall times.</p>
+<div class="highlight-c++"><div class="highlight"><pre> <span class="k">struct</span> <span class="n">Summary</span> <span class="p">{</span>
+   <span class="c1">// A brief one line description of the state of the solver after</span>
+   <span class="c1">// termination.</span>
+   <span class="n">string</span> <span class="n">BriefReport</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
+
+   <span class="c1">// A full multiline description of the state of the solver after</span>
+   <span class="c1">// termination.</span>
+   <span class="n">string</span> <span class="n">FullReport</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
+
+   <span class="c1">// Minimizer summary -------------------------------------------------</span>
+   <span class="n">MinimizerType</span> <span class="n">minimizer_type</span><span class="p">;</span>
+
+   <span class="n">SolverTerminationType</span> <span class="n">termination_type</span><span class="p">;</span>
+
+   <span class="c1">// If the solver did not run, or there was a failure, a</span>
+   <span class="c1">// description of the error.</span>
+   <span class="n">string</span> <span class="n">error</span><span class="p">;</span>
+
+   <span class="c1">// Cost of the problem before and after the optimization. See</span>
+   <span class="c1">// problem.h for definition of the cost of a problem.</span>
+   <span class="kt">double</span> <span class="n">initial_cost</span><span class="p">;</span>
+   <span class="kt">double</span> <span class="n">final_cost</span><span class="p">;</span>
+
+   <span class="c1">// The part of the total cost that comes from residual blocks that</span>
+   <span class="c1">// were held fixed by the preprocessor because all the parameter</span>
+   <span class="c1">// blocks that they depend on were fixed.</span>
+   <span class="kt">double</span> <span class="n">fixed_cost</span><span class="p">;</span>
+
+   <span class="n">vector</span><span class="o">&lt;</span><span class="n">IterationSummary</span><span class="o">&gt;</span> <span class="n">iterations</span><span class="p">;</span>
+
+   <span class="kt">int</span> <span class="n">num_successful_steps</span><span class="p">;</span>
+   <span class="kt">int</span> <span class="n">num_unsuccessful_steps</span><span class="p">;</span>
+   <span class="kt">int</span> <span class="n">num_inner_iteration_steps</span><span class="p">;</span>
+
+   <span class="c1">// When the user calls Solve, before the actual optimization</span>
+   <span class="c1">// occurs, Ceres performs a number of preprocessing steps. These</span>
+   <span class="c1">// include error checks, memory allocations, and reorderings. This</span>
+   <span class="c1">// time is accounted for as preprocessing time.</span>
+   <span class="kt">double</span> <span class="n">preprocessor_time_in_seconds</span><span class="p">;</span>
+
+   <span class="c1">// Time spent in the TrustRegionMinimizer.</span>
+   <span class="kt">double</span> <span class="n">minimizer_time_in_seconds</span><span class="p">;</span>
+
+   <span class="c1">// After the Minimizer is finished, some time is spent in</span>
+   <span class="c1">// re-evaluating residuals etc. This time is accounted for in the</span>
+   <span class="c1">// postprocessor time.</span>
+   <span class="kt">double</span> <span class="n">postprocessor_time_in_seconds</span><span class="p">;</span>
+
+   <span class="c1">// Some total of all time spent inside Ceres when Solve is called.</span>
+   <span class="kt">double</span> <span class="n">total_time_in_seconds</span><span class="p">;</span>
+
+   <span class="kt">double</span> <span class="n">linear_solver_time_in_seconds</span><span class="p">;</span>
+   <span class="kt">double</span> <span class="n">residual_evaluation_time_in_seconds</span><span class="p">;</span>
+   <span class="kt">double</span> <span class="n">jacobian_evaluation_time_in_seconds</span><span class="p">;</span>
+   <span class="kt">double</span> <span class="n">inner_iteration_time_in_seconds</span><span class="p">;</span>
+
+   <span class="c1">// Preprocessor summary.</span>
+   <span class="kt">int</span> <span class="n">num_parameter_blocks</span><span class="p">;</span>
+   <span class="kt">int</span> <span class="n">num_parameters</span><span class="p">;</span>
+   <span class="kt">int</span> <span class="n">num_effective_parameters</span><span class="p">;</span>
+   <span class="kt">int</span> <span class="n">num_residual_blocks</span><span class="p">;</span>
+   <span class="kt">int</span> <span class="n">num_residuals</span><span class="p">;</span>
+
+   <span class="kt">int</span> <span class="n">num_parameter_blocks_reduced</span><span class="p">;</span>
+   <span class="kt">int</span> <span class="n">num_parameters_reduced</span><span class="p">;</span>
+   <span class="kt">int</span> <span class="n">num_effective_parameters_reduced</span><span class="p">;</span>
+   <span class="kt">int</span> <span class="n">num_residual_blocks_reduced</span><span class="p">;</span>
+   <span class="kt">int</span> <span class="n">num_residuals_reduced</span><span class="p">;</span>
+
+   <span class="kt">int</span> <span class="n">num_eliminate_blocks_given</span><span class="p">;</span>
+   <span class="kt">int</span> <span class="n">num_eliminate_blocks_used</span><span class="p">;</span>
+
+   <span class="kt">int</span> <span class="n">num_threads_given</span><span class="p">;</span>
+   <span class="kt">int</span> <span class="n">num_threads_used</span><span class="p">;</span>
+
+   <span class="kt">int</span> <span class="n">num_linear_solver_threads_given</span><span class="p">;</span>
+   <span class="kt">int</span> <span class="n">num_linear_solver_threads_used</span><span class="p">;</span>
+
+   <span class="n">LinearSolverType</span> <span class="n">linear_solver_type_given</span><span class="p">;</span>
+   <span class="n">LinearSolverType</span> <span class="n">linear_solver_type_used</span><span class="p">;</span>
+
+   <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">linear_solver_ordering_given</span><span class="p">;</span>
+   <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">linear_solver_ordering_used</span><span class="p">;</span>
+
+   <span class="kt">bool</span> <span class="n">inner_iterations_given</span><span class="p">;</span>
+   <span class="kt">bool</span> <span class="n">inner_iterations_used</span><span class="p">;</span>
+
+   <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">inner_iteration_ordering_given</span><span class="p">;</span>
+   <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">inner_iteration_ordering_used</span><span class="p">;</span>
+
+   <span class="n">PreconditionerType</span> <span class="n">preconditioner_type</span><span class="p">;</span>
+
+   <span class="n">TrustRegionStrategyType</span> <span class="n">trust_region_strategy_type</span><span class="p">;</span>
+   <span class="n">DoglegType</span> <span class="n">dogleg_type</span><span class="p">;</span>
+
+   <span class="n">DenseLinearAlgebraLibraryType</span> <span class="n">dense_linear_algebra_library_type</span><span class="p">;</span>
+   <span class="n">SparseLinearAlgebraLibraryType</span> <span class="n">sparse_linear_algebra_library_type</span><span class="p">;</span>
+
+   <span class="n">LineSearchDirectionType</span> <span class="n">line_search_direction_type</span><span class="p">;</span>
+   <span class="n">LineSearchType</span> <span class="n">line_search_type</span><span class="p">;</span>
+   <span class="kt">int</span> <span class="n">max_lbfgs_rank</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
-<div class="section" id="gradientchecker">
-<h3><a class="reference internal" href="#GradientChecker" title="GradientChecker"><tt class="xref cpp cpp-class docutils literal"><span class="pre">GradientChecker</span></tt></a><a class="headerlink" href="#gradientchecker" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="covariance-estimation">
+<h2>Covariance Estimation<a class="headerlink" href="#covariance-estimation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="background">
+<h3>Background<a class="headerlink" href="#background" title="Permalink to this headline">¶</a></h3>
+<p>One way to assess the quality of the solution returned by a
+non-linear least squares solve is to analyze the covariance of the
+solution.</p>
+<p>Let us consider the non-linear regression problem</p>
+<div class="math">
+\[y = f(x) + N(0, I)\]</div>
+<p>i.e., the observation <span class="math">\(y\)</span> is a random non-linear function of the
+independent variable <span class="math">\(x\)</span> with mean <span class="math">\(f(x)\)</span> and identity
+covariance. Then the maximum likelihood estimate of <span class="math">\(x\)</span> given
+observations <span class="math">\(y\)</span> is the solution to the non-linear least squares
+problem:</p>
+<div class="math">
+\[x^* = \arg \min_x \|f(x)\|^2\]</div>
+<p>And the covariance of <span class="math">\(x^*\)</span> is given by</p>
+<div class="math">
+\[C(x^*) = \left(J'(x^*)J(x^*)\right)^{-1}\]</div>
+<p>Here <span class="math">\(J(x^*)\)</span> is the Jacobian of <span class="math">\(f\)</span> at <span class="math">\(x^*\)</span>. The
+above formula assumes that <span class="math">\(J(x^*)\)</span> has full column rank.</p>
+<p>If <span class="math">\(J(x^*)\)</span> is rank deficient, then the covariance matrix <span class="math">\(C(x^*)\)</span>
+is also rank deficient and is given by the Moore-Penrose pseudo inverse.</p>
+<div class="math">
+\[C(x^*) =  \left(J'(x^*)J(x^*)\right)^{\dagger}\]</div>
+<p>Note that in the above, we assumed that the covariance matrix for
+<span class="math">\(y\)</span> was identity. This is an important assumption. If this is
+not the case and we have</p>
+<div class="math">
+\[y = f(x) + N(0, S)\]</div>
+<p>Where <span class="math">\(S\)</span> is a positive semi-definite matrix denoting the
+covariance of <span class="math">\(y\)</span>, then the maximum likelihood problem to be
+solved is</p>
+<div class="math">
+\[x^* = \arg \min_x f'(x) S^{-1} f(x)\]</div>
+<p>and the corresponding covariance estimate of <span class="math">\(x^*\)</span> is given by</p>
+<div class="math">
+\[C(x^*) = \left(J'(x^*) S^{-1} J(x^*)\right)^{-1}\]</div>
+<p>So, if it is the case that the observations being fitted to have a
+covariance matrix not equal to identity, then it is the user&#8217;s
+responsibility that the corresponding cost functions are correctly
+scaled, e.g. in the above case the cost function for this problem
+should evaluate <span class="math">\(S^{-1/2} f(x)\)</span> instead of just <span class="math">\(f(x)\)</span>,
+where <span class="math">\(S^{-1/2}\)</span> is the inverse square root of the covariance
+matrix <span class="math">\(S\)</span>.</p>
+</div>
+<div class="section" id="gauge-invariance">
+<h3>Gauge Invariance<a class="headerlink" href="#gauge-invariance" title="Permalink to this headline">¶</a></h3>
+<p>In structure from motion (3D reconstruction) problems, the
+reconstruction is ambiguous upto a similarity transform. This is
+known as a <em>Gauge Ambiguity</em>. Handling Gauges correctly requires the
+use of SVD or custom inversion algorithms. For small problems the
+user can use the dense algorithm. For more details see the work of
+Kanatani &amp; Morris <a class="reference internal" href="bibliography.html#kanatanimorris">[KanataniMorris]</a>.</p>
+</div>
+<div class="section" id="covariance">
+<h3><a class="reference internal" href="#Covariance" title="Covariance"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Covariance</span></tt></a><a class="headerlink" href="#covariance" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="#Covariance" title="Covariance"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Covariance</span></tt></a> allows the user to evaluate the covariance for a
+non-linear least squares problem and provides random access to its
+blocks. The computation assumes that the cost functions compute
+residuals such that their covariance is identity.</p>
+<p>Since the computation of the covariance matrix requires computing the
+inverse of a potentially large matrix, this can involve a rather large
+amount of time and memory. However, it is usually the case that the
+user is only interested in a small part of the covariance
+matrix. Quite often just the block diagonal. <a class="reference internal" href="#Covariance" title="Covariance"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Covariance</span></tt></a>
+allows the user to specify the parts of the covariance matrix that she
+is interested in and then uses this information to only compute and
+store those parts of the covariance matrix.</p>
+</div>
+<div class="section" id="rank-of-the-jacobian">
+<h3>Rank of the Jacobian<a class="headerlink" href="#rank-of-the-jacobian" title="Permalink to this headline">¶</a></h3>
+<p>As we noted above, if the Jacobian is rank deficient, then the inverse
+of <span class="math">\(J'J\)</span> is not defined and instead a pseudo inverse needs to be
+computed.</p>
+<p>The rank deficiency in <span class="math">\(J\)</span> can be <em>structural</em> &#8211; columns
+which are always known to be zero or <em>numerical</em> &#8211; depending on the
+exact values in the Jacobian.</p>
+<p>Structural rank deficiency occurs when the problem contains parameter
+blocks that are constant. This class correctly handles structural rank
+deficiency like that.</p>
+<p>Numerical rank deficiency, where the rank of the matrix cannot be
+predicted by its sparsity structure and requires looking at its
+numerical values is more complicated. Here again there are two
+cases.</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li>The rank deficiency arises from overparameterization. e.g., a
+four dimensional quaternion used to parameterize <span class="math">\(SO(3)\)</span>,
+which is a three dimensional manifold. In cases like this, the
+user should use an appropriate
+<a class="reference internal" href="modeling.html#LocalParameterization" title="LocalParameterization"><tt class="xref cpp cpp-class docutils literal"><span class="pre">LocalParameterization</span></tt></a>. Not only will this lead to better
+numerical behaviour of the Solver, it will also expose the rank
+deficiency to the <a class="reference internal" href="#Covariance" title="Covariance"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Covariance</span></tt></a> object so that it can
+handle it correctly.</li>
+<li>More general numerical rank deficiency in the Jacobian requires
+the computation of the so called Singular Value Decomposition
+(SVD) of <span class="math">\(J'J\)</span>. We do not know how to do this for large
+sparse matrices efficiently. For small and moderate sized
+problems this is done using dense linear algebra.</li>
+</ol>
+</div></blockquote>
+<p><a class="reference internal" href="#Covariance::Options" title="Covariance::Options"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Covariance::Options</span></tt></a></p>
 <dl class="class">
-<dt id="GradientChecker">
-<em class="property">class </em><tt class="descname">GradientChecker</tt><a class="headerlink" href="#GradientChecker" title="Permalink to this definition">¶</a></dt>
+<dt id="Covariance::Options">
+<em class="property">class </em><tt class="descclassname">Covariance::</tt><tt class="descname">Options</tt><a class="headerlink" href="#Covariance::Options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="member">
+<dt id="Covariance::Options::num_threads__i">
+int <tt class="descclassname">Covariance::Options::</tt><tt class="descname">num_threads</tt><a class="headerlink" href="#Covariance::Options::num_threads__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default: <tt class="docutils literal"><span class="pre">1</span></tt></p>
+<p>Number of threads to be used for evaluating the Jacobian and
+estimation of covariance.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Covariance::Options::algorithm_type__CovarianceAlgorithmType">
+CovarianceAlgorithmType <tt class="descclassname">Covariance::Options::</tt><tt class="descname">algorithm_type</tt><a class="headerlink" href="#Covariance::Options::algorithm_type__CovarianceAlgorithmType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default: <tt class="docutils literal"><span class="pre">SPARSE_QR</span></tt> or <tt class="docutils literal"><span class="pre">DENSE_SVD</span></tt></p>
+<p>Ceres supports three different algorithms for covariance
+estimation, which represent different tradeoffs in speed, accuracy
+and reliability.</p>
+<ol class="arabic">
+<li><p class="first"><tt class="docutils literal"><span class="pre">DENSE_SVD</span></tt> uses <tt class="docutils literal"><span class="pre">Eigen</span></tt>&#8216;s <tt class="docutils literal"><span class="pre">JacobiSVD</span></tt> to perform the
+computations. It computes the singular value decomposition</p>
+<div class="math">
+\[U S V^\top = J\]</div>
+<p>and then uses it to compute the pseudo inverse of J&#8217;J as</p>
+<div class="math">
+\[(J'J)^{\dagger} = V  S^{\dagger}  V^\top\]</div>
+<p>It is an accurate but slow method and should only be used for
+small to moderate sized problems. It can handle full-rank as
+well as rank deficient Jacobians.</p>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">SPARSE_CHOLESKY</span></tt> uses the <tt class="docutils literal"><span class="pre">CHOLMOD</span></tt> sparse Cholesky
+factorization library to compute the decomposition :</p>
+<div class="math">
+\[R^\top R = J^\top J\]</div>
+<p>and then</p>
+<div class="math">
+\[\left(J^\top J\right)^{-1}  = \left(R^\top R\right)^{-1}\]</div>
+<p>It a fast algorithm for sparse matrices that should be used when
+the Jacobian matrix J is well conditioned. For ill-conditioned
+matrices, this algorithm can fail unpredictabily. This is
+because Cholesky factorization is not a rank-revealing
+factorization, i.e., it cannot reliably detect when the matrix
+being factorized is not of full
+rank. <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt>/<tt class="docutils literal"><span class="pre">CHOLMOD</span></tt> supplies a heuristic for
+checking if the matrix is rank deficient (cholmod_rcond), but it
+is only a heuristic and can have both false positive and false
+negatives.</p>
+<p>Recent versions of <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt> (&gt;= 4.2.0) provide a much more
+efficient method for solving for rows of the covariance
+matrix. Therefore, if you are doing <tt class="docutils literal"><span class="pre">SPARSE_CHOLESKY</span></tt>, we strongly
+recommend using a recent version of <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt>.</p>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">SPARSE_QR</span></tt> uses the <tt class="docutils literal"><span class="pre">SuiteSparseQR</span></tt> sparse QR factorization
+library to compute the decomposition</p>
+<blockquote>
+<div><div class="math">
+\[\begin{split}QR &amp;= J\\
+\left(J^\top J\right)^{-1} &amp;= \left(R^\top R\right)^{-1}\end{split}\]</div>
+</div></blockquote>
+<p>It is a moderately fast algorithm for sparse matrices, which at
+the price of more time and memory than the <tt class="docutils literal"><span class="pre">SPARSE_CHOLESKY</span></tt>
+algorithm is numerically better behaved and is rank revealing,
+i.e., it can reliably detect when the Jacobian matrix is rank
+deficient.</p>
+</li>
+</ol>
+<p>Neither <tt class="docutils literal"><span class="pre">SPARSE_CHOLESKY</span></tt> or <tt class="docutils literal"><span class="pre">SPARSE_QR</span></tt> are capable of computing
+the covariance if the Jacobian is rank deficient.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Covariance::Options::min_reciprocal_condition_number__i">
+int <tt class="descclassname">Covariance::Options::</tt><tt class="descname">min_reciprocal_condition_number</tt><a class="headerlink" href="#Covariance::Options::min_reciprocal_condition_number__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default: <span class="math">\(10^{-14}\)</span></p>
+<p>If the Jacobian matrix is near singular, then inverting <span class="math">\(J'J\)</span>
+will result in unreliable results, e.g, if</p>
+<div class="math">
+\[\begin{split}J = \begin{bmatrix}
+    1.0&amp; 1.0 \\
+    1.0&amp; 1.0000001
+    \end{bmatrix}\end{split}\]</div>
+<p>which is essentially a rank deficient matrix, we have</p>
+<div class="math">
+\[\begin{split}(J'J)^{-1} = \begin{bmatrix}
+             2.0471e+14&amp;  -2.0471e+14 \\
+             -2.0471e+14   2.0471e+14
+             \end{bmatrix}\end{split}\]</div>
+<p>This is not a useful result. Therefore, by default
+<a class="reference internal" href="#Covariance::Compute__vector:pair:doubleCP.doubleCP::CR.ProblemP" title="Covariance::Compute"><tt class="xref cpp cpp-func docutils literal"><span class="pre">Covariance::Compute()</span></tt></a> will return <tt class="docutils literal"><span class="pre">false</span></tt> if a rank
+deficient Jacobian is encountered. How rank deficiency is detected
+depends on the algorithm being used.</p>
+<ol class="arabic">
+<li><p class="first"><tt class="docutils literal"><span class="pre">DENSE_SVD</span></tt></p>
+<div class="math">
+\[\begin{split}\frac{\sigma_{\text{min}}}{\sigma_{\text{max}}}  &lt; \sqrt{\text{min_reciprocal_condition_number}}\end{split}\]</div>
+<p>where <span class="math">\(\sigma_{\text{min}}\)</span> and
+<span class="math">\(\sigma_{\text{max}}\)</span> are the minimum and maxiumum
+singular values of <span class="math">\(J\)</span> respectively.</p>
+</li>
+</ol>
+<blockquote>
+<div><ol class="arabic" start="2">
+<li><p class="first"><tt class="docutils literal"><span class="pre">SPARSE_CHOLESKY</span></tt></p>
+<div class="math">
+\[\begin{split}\text{cholmod_rcond} &lt; \text{min_reciprocal_conditioner_number}\end{split}\]</div>
+</li>
+</ol>
+<blockquote>
+<div>Here cholmod_rcond is a crude estimate of the reciprocal
+condition number of <span class="math">\(J^\top J\)</span> by using the maximum and
+minimum diagonal entries of the Cholesky factor <span class="math">\(R\)</span>. There
+are no theoretical guarantees associated with this test. It can
+give false positives and negatives. Use at your own risk. The
+default value of <tt class="docutils literal"><span class="pre">min_reciprocal_condition_number</span></tt> has been
+set to a conservative value, and sometimes the
+<a class="reference internal" href="#Covariance::Compute__vector:pair:doubleCP.doubleCP::CR.ProblemP" title="Covariance::Compute"><tt class="xref cpp cpp-func docutils literal"><span class="pre">Covariance::Compute()</span></tt></a> may return false even if it is
+possible to estimate the covariance reliably. In such cases, the
+user should exercise their judgement before lowering the value
+of <tt class="docutils literal"><span class="pre">min_reciprocal_condition_number</span></tt>.</div></blockquote>
+<ol class="arabic" start="3">
+<li><p class="first"><tt class="docutils literal"><span class="pre">SPARSE_QR</span></tt></p>
+<div class="math">
+\[\begin{split}\operatorname{rank}(J) &lt; \operatorname{num\_col}(J)\end{split}\]</div>
+<p>Here :math:<cite>operatorname{rank}(J)</cite> is the estimate of the
+rank of <cite>J</cite> returned by the <tt class="docutils literal"><span class="pre">SuiteSparseQR</span></tt> algorithm. It is
+a fairly reliable indication of rank deficiency.</p>
+</li>
+</ol>
+</div></blockquote>
+</dd></dl>
+
+<dl class="member">
+<dt id="Covariance::Options::null_space_rank__i">
+int <tt class="descclassname">Covariance::Options::</tt><tt class="descname">null_space_rank</tt><a class="headerlink" href="#Covariance::Options::null_space_rank__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>When using <tt class="docutils literal"><span class="pre">DENSE_SVD</span></tt>, the user has more control in dealing
+with singular and near singular covariance matrices.</p>
+<p>As mentioned above, when the covariance matrix is near singular,
+instead of computing the inverse of <span class="math">\(J'J\)</span>, the Moore-Penrose
+pseudoinverse of <span class="math">\(J'J\)</span> should be computed.</p>
+<p>If <span class="math">\(J'J\)</span> has the eigen decomposition <span class="math">\((\lambda_i,
+e_i)\)</span>, where <span class="math">\(lambda_i\)</span> is the <span class="math">\(i^\textrm{th}\)</span>
+eigenvalue and <span class="math">\(e_i\)</span> is the corresponding eigenvector, then
+the inverse of <span class="math">\(J'J\)</span> is</p>
+<div class="math">
+\[(J'J)^{-1} = \sum_i \frac{1}{\lambda_i} e_i e_i'\]</div>
+<p>and computing the pseudo inverse involves dropping terms from this
+sum that correspond to small eigenvalues.</p>
+<p>How terms are dropped is controlled by
+<cite>min_reciprocal_condition_number</cite> and <cite>null_space_rank</cite>.</p>
+<p>If <cite>null_space_rank</cite> is non-negative, then the smallest
+<cite>null_space_rank</cite> eigenvalue/eigenvectors are dropped irrespective
+of the magnitude of <span class="math">\(\lambda_i\)</span>. If the ratio of the
+smallest non-zero eigenvalue to the largest eigenvalue in the
+truncated matrix is still below min_reciprocal_condition_number,
+then the <cite>Covariance::Compute()</cite> will fail and return <cite>false</cite>.</p>
+<p>Setting <cite>null_space_rank = -1</cite> drops all terms for which</p>
+<div class="math">
+\[\begin{split}\frac{\lambda_i}{\lambda_{\textrm{max}}} &lt; \textrm{min_reciprocal_condition_number}\end{split}\]</div>
+<dl class="docutils">
+<dt>This option has no effect on <tt class="docutils literal"><span class="pre">SPARSE_QR</span></tt> and <tt class="docutils literal"><span class="pre">SPARSE_CHOLESKY</span></tt></dt>
+<dd>algorithms.</dd>
+</dl>
+</dd></dl>
+
+<dl class="member">
+<dt id="Covariance::Options::apply_loss_function__b">
+bool <tt class="descclassname">Covariance::Options::</tt><tt class="descname">apply_loss_function</tt><a class="headerlink" href="#Covariance::Options::apply_loss_function__b" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default: <cite>true</cite></p>
+<p>Even though the residual blocks in the problem may contain loss
+functions, setting <tt class="docutils literal"><span class="pre">apply_loss_function</span></tt> to false will turn off
+the application of the loss function to the output of the cost
+function and in turn its effect on the covariance.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="Covariance">
+<em class="property">class </em><tt class="descname">Covariance</tt><a class="headerlink" href="#Covariance" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#Covariance::Options" title="Covariance::Options"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Covariance::Options</span></tt></a> as the name implies is used to control
+the covariance estimation algorithm. Covariance estimation is a
+complicated and numerically sensitive procedure. Please read the
+entire documentation for <a class="reference internal" href="#Covariance::Options" title="Covariance::Options"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Covariance::Options</span></tt></a> before using
+<a class="reference internal" href="#Covariance" title="Covariance"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Covariance</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Covariance::Compute__vector:pair:doubleCP.doubleCP::CR.ProblemP">
+bool <tt class="descclassname">Covariance::</tt><tt class="descname">Compute</tt><big>(</big>const vector&lt;pair&lt;const double*, const double*&gt;&gt;&amp; <em>covariance_blocks</em>, Problem* <em>problem</em><big>)</big><a class="headerlink" href="#Covariance::Compute__vector:pair:doubleCP.doubleCP::CR.ProblemP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute a part of the covariance matrix.</p>
+<p>The vector <tt class="docutils literal"><span class="pre">covariance_blocks</span></tt>, indexes into the covariance
+matrix block-wise using pairs of parameter blocks. This allows the
+covariance estimation algorithm to only compute and store these
+blocks.</p>
+<p>Since the covariance matrix is symmetric, if the user passes
+<tt class="docutils literal"><span class="pre">&lt;block1,</span> <span class="pre">block2&gt;</span></tt>, then <tt class="docutils literal"><span class="pre">GetCovarianceBlock</span></tt> can be called with
+<tt class="docutils literal"><span class="pre">block1</span></tt>, <tt class="docutils literal"><span class="pre">block2</span></tt> as well as <tt class="docutils literal"><span class="pre">block2</span></tt>, <tt class="docutils literal"><span class="pre">block1</span></tt>.</p>
+<p><tt class="docutils literal"><span class="pre">covariance_blocks</span></tt> cannot contain duplicates. Bad things will
+happen if they do.</p>
+<p>Note that the list of <tt class="docutils literal"><span class="pre">covariance_blocks</span></tt> is only used to
+determine what parts of the covariance matrix are computed. The
+full Jacobian is used to do the computation, i.e. they do not have
+an impact on what part of the Jacobian is used for computation.</p>
+<p>The return value indicates the success or failure of the covariance
+computation. Please see the documentation for
+<a class="reference internal" href="#Covariance::Options" title="Covariance::Options"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Covariance::Options</span></tt></a> for more on the conditions under which
+this function returns <tt class="docutils literal"><span class="pre">false</span></tt>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="GetCovarianceBlock__doubleCP.doubleCP.doublePC">
+bool <tt class="descname">GetCovarianceBlock</tt><big>(</big>const double* <em>parameter_block1</em>, const double* <em>parameter_block2</em>, double* <em>covariance_block</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#GetCovarianceBlock__doubleCP.doubleCP.doublePC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the block of the covariance matrix corresponding to
+<tt class="docutils literal"><span class="pre">parameter_block1</span></tt> and <tt class="docutils literal"><span class="pre">parameter_block2</span></tt>.</p>
+<p>Compute must be called before the first call to <tt class="docutils literal"><span class="pre">GetCovarianceBlock</span></tt>
+and the pair <tt class="docutils literal"><span class="pre">&lt;parameter_block1,</span> <span class="pre">parameter_block2&gt;</span></tt> OR the pair
+<tt class="docutils literal"><span class="pre">&lt;parameter_block2,</span> <span class="pre">parameter_block1&gt;</span></tt> must have been present in the
+vector covariance_blocks when <tt class="docutils literal"><span class="pre">Compute</span></tt> was called. Otherwise
+<tt class="docutils literal"><span class="pre">GetCovarianceBlock</span></tt> will return false.</p>
+<p><tt class="docutils literal"><span class="pre">covariance_block</span></tt> must point to a memory location that can store
+a <tt class="docutils literal"><span class="pre">parameter_block1_size</span> <span class="pre">x</span> <span class="pre">parameter_block2_size</span></tt> matrix. The
+returned covariance will be a row-major matrix.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="example-usage">
+<h3>Example Usage<a class="headerlink" href="#example-usage" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-c++"><div class="highlight"><pre><span class="kt">double</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+<span class="kt">double</span> <span class="n">y</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+
+<span class="n">Problem</span> <span class="n">problem</span><span class="p">;</span>
+<span class="n">problem</span><span class="p">.</span><span class="n">AddParameterBlock</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+<span class="n">problem</span><span class="p">.</span><span class="n">AddParameterBlock</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+<span class="o">&lt;</span><span class="n">Build</span> <span class="n">Problem</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="n">Solve</span> <span class="n">Problem</span><span class="o">&gt;</span>
+
+<span class="n">Covariance</span><span class="o">::</span><span class="n">Options</span> <span class="n">options</span><span class="p">;</span>
+<span class="n">Covariance</span> <span class="n">covariance</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+
+<span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="k">const</span> <span class="kt">double</span><span class="o">*</span><span class="p">,</span> <span class="k">const</span> <span class="kt">double</span><span class="o">*&gt;</span> <span class="o">&gt;</span> <span class="n">covariance_blocks</span><span class="p">;</span>
+<span class="n">covariance_blocks</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">make_pair</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">));</span>
+<span class="n">covariance_blocks</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">make_pair</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y</span><span class="p">));</span>
+<span class="n">covariance_blocks</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">make_pair</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">));</span>
+
+<span class="n">CHECK</span><span class="p">(</span><span class="n">covariance</span><span class="p">.</span><span class="n">Compute</span><span class="p">(</span><span class="n">covariance_blocks</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">problem</span><span class="p">));</span>
+
+<span class="kt">double</span> <span class="n">covariance_xx</span><span class="p">[</span><span class="mi">3</span> <span class="o">*</span> <span class="mi">3</span><span class="p">];</span>
+<span class="kt">double</span> <span class="n">covariance_yy</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="mi">2</span><span class="p">];</span>
+<span class="kt">double</span> <span class="n">covariance_xy</span><span class="p">[</span><span class="mi">3</span> <span class="o">*</span> <span class="mi">2</span><span class="p">];</span>
+<span class="n">covariance</span><span class="p">.</span><span class="n">GetCovarianceBlock</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">covariance_xx</span><span class="p">)</span>
+<span class="n">covariance</span><span class="p">.</span><span class="n">GetCovarianceBlock</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">covariance_yy</span><span class="p">)</span>
+<span class="n">covariance</span><span class="p">.</span><span class="n">GetCovarianceBlock</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">covariance_xy</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 </div>
 </div>
@@ -1252,8 +2203,8 @@ framework is fleshed out.</p>
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="building.html">Building Ceres Solver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling API</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Solver API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Solving</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reading.html">Further Reading</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="acknowledgements.html">Acknowledgements</a></li>
@@ -1264,7 +2215,7 @@ framework is fleshed out.</p>
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="modeling.html"
-                        title="previous chapter">Modeling API</a></p>
+                        title="previous chapter">Modeling</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="reading.html"
                         title="next chapter">Further Reading</a></p>
@@ -1295,7 +2246,7 @@ framework is fleshed out.</p>
           <a href="reading.html" title="Further Reading"
              >next</a> |</li>
         <li class="right" >
-          <a href="modeling.html" title="Modeling API"
+          <a href="modeling.html" title="Modeling"
              >previous</a> |</li>
         <li><a href="index.html">Ceres Solver</a> &raquo;</li> 
       </ul>

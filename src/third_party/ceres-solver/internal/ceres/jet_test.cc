@@ -142,6 +142,38 @@ TEST(Jet, Jet) {
     ExpectJetsClose(u, t);
   }
 
+  { // Check that tan(x) = sin(x) / cos(x).
+    J z = tan(x);
+    J w = sin(x) / cos(x);
+    VL << "z = " << z;
+    VL << "w = " << w;
+    ExpectJetsClose(z, w);
+  }
+
+  { // Check that tan(atan(x)) = x.
+    J z = tan(atan(x));
+    J w = x;
+    VL << "z = " << z;
+    VL << "w = " << w;
+    ExpectJetsClose(z, w);
+  }
+
+  { // Check that cosh(x)*cosh(x) - sinh(x)*sinh(x) = 1
+    J z = cosh(x) * cosh(x);
+    J w = sinh(x) * sinh(x);
+    VL << "z = " << z;
+    VL << "w = " << w;
+    ExpectJetsClose(z - w, J(1.0));
+  }
+
+  { // Check that tanh(x + y) = (tanh(x) + tanh(y)) / (1 + tanh(x) tanh(y))
+    J z = tanh(x + y);
+    J w = (tanh(x) + tanh(y)) / (J(1.0) + tanh(x) * tanh(y));
+    VL << "z = " << z;
+    VL << "w = " << w;
+    ExpectJetsClose(z, w);
+  }
+
   { // Check that pow(x, 1) == x.
     VL << "x = " << x;
 

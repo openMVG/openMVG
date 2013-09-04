@@ -11,20 +11,28 @@ Ceres Solver is a portable C++ library for solving non-linear least
 squares problems.
 
 * Download the latest stable `release
-  <https://ceres-solver.googlecode.com/files/ceres-solver-1.5.0.tar.gz>`_
+  <https://ceres-solver.googlecode.com/files/ceres-solver-1.6.0.tar.gz>`_
   or clone the `repository
   <https://ceres-solver.googlesource.com/ceres-solver>`_
 
 * Read the :ref:`chapter-tutorial`
 
-* Browse the :ref:`chapter-modeling` and :ref:`chapter-solving`
+* Browse the :ref:`chapter-modeling` API and :ref:`chapter-solving` API.
 
-* Ask questions and join the discussion on the `mailing list
-  <https://groups.google.com/forum/?fromgroups#!forum/ceres-solver>`_.
+* Join the `mailing list
+  <https://groups.google.com/forum/?fromgroups#!forum/ceres-solver>`_
+  and ask questions.
 
 * File bugs, feature requests in the `issue tracker
   <https://code.google.com/p/ceres-solver/issues/list>`_.
 
+* If you use Ceres Solver for a publication, you must cite it as::
+
+    @misc{ceres-solver,
+      author = "Sameer Agarwal and Keir Mierle and Others",
+      title = "Ceres Solver",
+      howpublished = "\url{https://code.google.com/p/ceres-solver/}",
+    }
 
 .. toctree::
    :maxdepth: 1

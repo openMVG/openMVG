@@ -8,19 +8,11 @@ Solving nonlinear least squares problems [#f1]_ comes up in a broad
 range of areas across science and engineering - from fitting curves in
 statistics, to constructing 3D models from photographs in computer
 vision. Ceres Solver [#f2]_ [#f3]_ is a portable C++ library for
-solving non-linear least squares problems. It is designed to solve
-small and large sparse problems accurately and efficiently.
+solving non-linear least squares problems accurately and efficiently.
 
-At Google, Ceres Solver has been used for solving a variety of
-problems in computer vision and machine learning. e.g., it is used to
-to estimate the pose of Street View cars, aircrafts, and satellites;
-to build 3D models for PhotoTours; to estimate satellite image sensor
-characteristics, and more.
+**Features**
 
-
-Features:
-
-#. A friendly :ref:`chapter-modeling`.
+#. A friendly :ref:`chapter-modeling` API.
 
 #. Automatic and numeric differentiation.
 
@@ -45,12 +37,22 @@ Features:
    c. Specialized solvers for bundle adjustment problems in computer
       vision.
 
-   d. Iterative linear solvers with perconditioners for general sparse
+   d. Iterative linear solvers with preconditioners for general sparse
       and bundle adjustment problems.
 
-#. Portable: Runs on Linux, Windows, Mac OS X and Android. An iOS port is
-   underway.
+#. Portable: Runs on Linux, Windows, Mac OS X and Android.
 
+
+At Google, Ceres Solver has been used for solving a variety of
+problems in computer vision and machine learning. e.g., it is used to
+to estimate the pose of Street View cars, aircrafts, and satellites;
+to build 3D models for PhotoTours; to estimate satellite image sensor
+characteristics, and more.
+
+`Blender <http://www.blender.org>`_ uses Ceres for `motion tracking
+<http://mango.blender.org/development/planar-tracking-preview/>`_ and
+`bundle adjustment
+<http://wiki.blender.org/index.php/Dev:Ref/Release_Notes/2.67/Motion_Tracker>`_.
 
 
 .. rubric:: Footnotes

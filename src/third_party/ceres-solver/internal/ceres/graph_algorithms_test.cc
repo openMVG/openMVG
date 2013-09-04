@@ -165,7 +165,7 @@ TEST(Degree2MaximumSpanningForest, StarGraph) {
   }
 }
 
-TEST(VertexDegreeLessThan, TotalOrdering) {
+TEST(VertexTotalOrdering, TotalOrdering) {
   Graph<int> graph;
   graph.AddVertex(0);
   graph.AddVertex(1);
@@ -178,7 +178,7 @@ TEST(VertexDegreeLessThan, TotalOrdering) {
   // 0,1 and 2 have degree 1 and 3 has degree 2.
   graph.AddEdge(0, 1, 1.0);
   graph.AddEdge(2, 3, 1.0);
-  VertexDegreeLessThan<int> less_than(graph);
+  VertexTotalOrdering<int> less_than(graph);
 
   for (int i = 0; i < 4; ++i) {
     EXPECT_FALSE(less_than(i, i)) << "Failing vertex: " << i;
@@ -196,5 +196,49 @@ TEST(VertexDegreeLessThan, TotalOrdering) {
   }
 }
 
+
+TEST(StableIndependentSet, BreakTies) {
+  Graph<int> graph;
+  graph.AddVertex(0);
+  graph.AddVertex(1);
+  graph.AddVertex(2);
+  graph.AddVertex(3);
+
+  graph.AddEdge(0, 1);
+  graph.AddEdge(0, 2);
+  graph.AddEdge(0, 3);
+  graph.AddEdge(1, 2);
+  graph.AddEdge(1, 3);
+  graph.AddEdge(2, 3);
+
+  // Since this is a completely connected graph, the independent set
+  // contains exactly one vertex. StableIndependentSetOrdering
+  // guarantees that it will always be the first vertex in the
+  // ordering vector.
+  {
+    vector<int> ordering;
+    ordering.push_back(0);
+    ordering.push_back(1);
+    ordering.push_back(2);
+    ordering.push_back(3);
+    const int independent_set_size =
+        StableIndependentSetOrdering(graph, &ordering);
+    EXPECT_EQ(independent_set_size, 1);
+    EXPECT_EQ(ordering[0], 0);
+  }
+
+  {
+    vector<int> ordering;
+    ordering.push_back(1);
+    ordering.push_back(0);
+    ordering.push_back(2);
+    ordering.push_back(3);
+    const int independent_set_size =
+        StableIndependentSetOrdering(graph, &ordering);
+    EXPECT_EQ(independent_set_size, 1);
+    EXPECT_EQ(ordering[0], 1);
+  }
+
+}
 }  // namespace internal
 }  // namespace ceres

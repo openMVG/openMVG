@@ -84,6 +84,8 @@ DEFINE_string(preconditioner, "jacobi", "Options are: "
               "cluster_tridiagonal.");
 DEFINE_string(sparse_linear_algebra_library, "suite_sparse",
               "Options are: suite_sparse and cx_sparse.");
+DEFINE_string(dense_linear_algebra_library, "eigen",
+              "Options are: eigen and lapack.");
 DEFINE_string(ordering, "automatic", "Options are: automatic, user.");
 
 DEFINE_bool(use_quaternions, false, "If true, uses quaternions to represent "
@@ -112,6 +114,8 @@ DEFINE_int32(random_seed, 38401, "Random seed used to set the state "
              "of the pseudo random number generator used to generate "
              "the pertubations.");
 DEFINE_string(solver_log, "", "File to record the solver execution to.");
+DEFINE_bool(line_search, false, "Use a line search instead of trust region "
+            "algorithm.");
 
 namespace ceres {
 namespace examples {
@@ -123,7 +127,10 @@ void SetLinearSolver(Solver::Options* options) {
                                    &options->preconditioner_type));
   CHECK(StringToSparseLinearAlgebraLibraryType(
             FLAGS_sparse_linear_algebra_library,
-            &options->sparse_linear_algebra_library));
+            &options->sparse_linear_algebra_library_type));
+  CHECK(StringToDenseLinearAlgebraLibraryType(
+            FLAGS_dense_linear_algebra_library,
+            &options->dense_linear_algebra_library_type));
   options->num_linear_solver_threads = FLAGS_num_threads;
 }
 
@@ -219,6 +226,10 @@ void SetMinimizerOptions(Solver::Options* options) {
   options->eta = FLAGS_eta;
   options->max_solver_time_in_seconds = FLAGS_max_solver_time;
   options->use_nonmonotonic_steps = FLAGS_nonmonotonic_steps;
+  if (FLAGS_line_search) {
+    options->minimizer_type = ceres::LINE_SEARCH;
+  }
+
   CHECK(StringToTrustRegionStrategyType(FLAGS_trust_region_strategy,
                                         &options->trust_region_strategy_type));
   CHECK(StringToDoglegType(FLAGS_dogleg, &options->dogleg_type));

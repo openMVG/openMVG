@@ -20,7 +20,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.5.0',
+        VERSION:     '1.7.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -65,7 +65,9 @@
             
   <div class="section" id="building-ceres-solver">
 <span id="chapter-building"></span><h1>Building Ceres Solver<a class="headerlink" href="#building-ceres-solver" title="Permalink to this headline">¶</a></h1>
-<p>Ceres source code and documentation are hosted at <a class="reference external" href="http://code.google.com/p/ceres-solver/">code.google.com</a>.</p>
+<p>Stable Ceres Solver releases are available for download at
+<a class="reference external" href="http://code.google.com/p/ceres-solver/">code.google.com</a>. For the
+more adventurous, the git repository is hosted on <a class="reference external" href="https://ceres-solver-review.googlesource.com/">Gerrit</a>.</p>
 <div class="section" id="dependencies">
 <span id="section-dependencies"></span><h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
 <p>Ceres relies on a number of open source libraries, some of which are
@@ -86,7 +88,7 @@ tests. While it is not strictly necessary to build the library, we
 strongly recommend building the library with gflags.</p>
 <p>5. <a class="reference external" href="http://www.cise.ufl.edu/research/sparse/SuiteSparse/">SuiteSparse</a> is used for
 sparse matrix analysis, ordering and factorization. In particular
-Ceres uses the AMD, COLAMD and CHOLMOD libraries. This is an optional
+Ceres uses the AMD, CAMD, COLAMD and CHOLMOD libraries. This is an optional
 dependency.</p>
 <p>6. <a class="reference external" href="http://www.cise.ufl.edu/research/sparse/CXSparse/">CXSparse</a> is
 a sparse matrix library similar in scope to <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt> but with
@@ -95,19 +97,17 @@ build process and a smaller binary.  The simplicity comes at a cost &#8211;
 for all but the most trivial matrices, <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt> is
 significantly faster than <tt class="docutils literal"><span class="pre">CXSparse</span></tt>.</p>
 <p>7. <a class="reference external" href="http://www.netlib.org/blas/">BLAS</a> and <a class="reference external" href="http://www.netlib.org/lapack/">LAPACK</a> routines are needed by
-SuiteSparse. We recommend either <a class="reference external" href="http://www.tacc.utexas.edu/tacc-projects/gotoblas2">GotoBlas2</a> or <a class="reference external" href="http://math-atlas.sourceforge.net/">ATLAS</a> , both of which ship with BLAS
-and LAPACK routines.</p>
-<p>8. <a class="reference external" href="http://code.google.com/p/protobuf/">protobuf</a> is used for
-serializing and deserializing linear least squares problems to
-disk. This is useful for debugging and testing. It is an optional
-depdendency and without it some of the tests will be disabled.</p>
+SuiteSparse. We recommend <a class="reference external" href="http://math-atlas.sourceforge.net/">ATLAS</a>, which includes BLAS and LAPACK
+routines. It is also possible to use <a class="reference external" href="https://github.com/xianyi/OpenBLAS">OpenBLAS</a> . However, one needs to be
+careful to <a class="reference external" href="https://github.com/xianyi/OpenBLAS/wiki/faq#wiki-multi-threaded">turn off the threading</a>
+inside <tt class="docutils literal"><span class="pre">OpenBLAS</span></tt> as it conflicts with use of threads in Ceres.</p>
 </div>
 <div class="section" id="building-on-linux">
 <span id="section-linux"></span><h2>Building on Linux<a class="headerlink" href="#building-on-linux" title="Permalink to this headline">¶</a></h2>
 <p>We will use <a class="reference external" href="http://www.ubuntu.com">Ubuntu</a> as our example
 platform. Start by installing all the dependencies.</p>
 <div class="highlight-bash"><div class="highlight"><pre><span class="c"># CMake</span>
-sudo apt-hey install cmake
+sudo apt-get install cmake
 <span class="c"># gflags</span>
 tar -xvzf gflags-2.0.tar.gz
 <span class="nb">cd </span>gflags-2.0
@@ -120,20 +120,19 @@ tar -xvzf glog-0.3.2.tar.gz
 ./configure --with-gflags<span class="o">=</span>/usr/local/
 make
 sudo make install
+<span class="c"># BLAS &amp; LAPACK</span>
+sudo apt-get install libatlas-base-dev
 <span class="c"># Eigen3</span>
 sudo apt-get install libeigen3-dev
 <span class="c"># SuiteSparse and CXSparse</span>
 sudo apt-get install libsuitesparse-dev
-<span class="c"># protobuf</span>
-sudo apt-get install libprotobuf-dev
 </pre></div>
 </div>
-<p>We are now ready to build and test Ceres. Note that <tt class="docutils literal"><span class="pre">CMake</span></tt> requires
-the exact path to the <tt class="docutils literal"><span class="pre">libglog.a</span></tt> and <tt class="docutils literal"><span class="pre">libgflag.a</span></tt>.</p>
-<div class="highlight-bash"><div class="highlight"><pre>tar zxf ceres-solver-1.5.0.tar.gz
+<p>We are now ready to build and test Ceres.</p>
+<div class="highlight-bash"><div class="highlight"><pre>tar zxf ceres-solver-1.7.0.tar.gz
 mkdir ceres-bin
 <span class="nb">cd </span>ceres-bin
-cmake ../ceres-solver-1.5.0
+cmake ../ceres-solver-1.7.0
 make -j3
 make <span class="nb">test</span>
 </pre></div>
@@ -141,8 +140,7 @@ make <span class="nb">test</span>
 <p>You can also try running the command line bundling application with one of the
 included problems, which comes from the University of Washington&#8217;s BAL
 dataset <a class="reference internal" href="bibliography.html#agarwal">[Agarwal]</a>.</p>
-<div class="highlight-bash"><div class="highlight"><pre>bin/simple_bundle_adjuster <span class="se">\</span>
-  ../ceres-solver-1.5.0/data/problem-16-22106-pre.txt <span class="se">\</span>
+<div class="highlight-bash"><div class="highlight"><pre>bin/simple_bundle_adjuster ../ceres-solver-1.7.0/data/problem-16-22106-pre.txt
 </pre></div>
 </div>
 <p>This runs Ceres for a maximum of 10 iterations using the
@@ -199,25 +197,26 @@ Termination:               FUNCTION_TOLERANCE
 </div>
 <div class="section" id="building-on-mac-os-x">
 <h2>Building on Mac OS X<a class="headerlink" href="#building-on-mac-os-x" title="Permalink to this headline">¶</a></h2>
-<p>On OS X, we recommend using the <a class="reference external" href="http://mxcl.github.com/homebrew/">homebrew</a> package manager. Start by
-installing all the dependencies.</p>
+<p>On OS X, we recommend using the <a class="reference external" href="http://mxcl.github.com/homebrew/">homebrew</a> package manager to install the
+dependencies. There is no need to install <tt class="docutils literal"><span class="pre">BLAS</span></tt> or <tt class="docutils literal"><span class="pre">LAPACK</span></tt>
+separately as OS X ships with optimized <tt class="docutils literal"><span class="pre">BLAS</span></tt> and <tt class="docutils literal"><span class="pre">LAPACK</span></tt>
+routines as part of the <a class="reference external" href="https://developer.apple.com/library/mac/#documentation/Performance/Conceptual/vecLib/Reference/reference.html">vecLib</a>
+framework.</p>
 <div class="highlight-bash"><div class="highlight"><pre><span class="c"># CMake</span>
 brew install cmake
 <span class="c"># google-glog and gflags</span>
 brew install glog
-<span class="c"># Eigen2</span>
+<span class="c"># Eigen3</span>
 brew install eigen
 <span class="c"># SuiteSparse and CXSparse</span>
 brew install suite-sparse
-<span class="c"># protobuf</span>
-brew install protobuf
 </pre></div>
 </div>
 <p>We are now ready to build and test Ceres.</p>
-<div class="highlight-bash"><div class="highlight"><pre>tar zxf ceres-solver-1.5.0.tar.gz
+<div class="highlight-bash"><div class="highlight"><pre>tar zxf ceres-solver-1.7.0.tar.gz
 mkdir ceres-bin
 <span class="nb">cd </span>ceres-bin
-cmake ../ceres-solver-1.5.0
+cmake ../ceres-solver-1.7.0
 make -j3
 make <span class="nb">test</span>
 </pre></div>
@@ -229,7 +228,7 @@ make <span class="nb">test</span>
 <span id="section-windows"></span><h2>Building on Windows with Visual Studio<a class="headerlink" href="#building-on-windows-with-visual-studio" title="Permalink to this headline">¶</a></h2>
 <p>On Windows, we support building with Visual Studio 2010 or newer. Note
 that the Windows port is less featureful and less tested than the
-Linux or Mac OS X versions due to the unavaliability of SuiteSparse
+Linux or Mac OS X versions due to the unavailability of SuiteSparse
 and <tt class="docutils literal"><span class="pre">CXSparse</span></tt>. Building is also more involved since there is no
 automated way to install the dependencies.</p>
 <ol class="arabic">
@@ -302,10 +301,6 @@ supported Windows port.</li>
 customize the build process by passing appropriate flags to
 <tt class="docutils literal"><span class="pre">CMake</span></tt>. Use these flags only if you really know what you are doing.</p>
 <ol class="arabic simple">
-<li><tt class="docutils literal"><span class="pre">-DPROTOBUF=OFF</span></tt>: <tt class="docutils literal"><span class="pre">protobuf</span></tt> is a large and complicated
-dependency. If you do not care for the tests that depend on it and
-the logging support it enables, you can use this flag to turn it
-off.</li>
 <li><tt class="docutils literal"><span class="pre">-DSUITESPARSE=OFF</span></tt>: By default, Ceres will link to
 <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt> if all its dependencies are present. Use this flag
 to build Ceres without <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt>. This will also disable
@@ -399,8 +394,8 @@ the <strong>PATHS</strong> option to the <tt class="docutils literal"><span clas
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Building Ceres Solver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="solving.html">Solver API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solving.html">Solving</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reading.html">Further Reading</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="acknowledgements.html">Acknowledgements</a></li>

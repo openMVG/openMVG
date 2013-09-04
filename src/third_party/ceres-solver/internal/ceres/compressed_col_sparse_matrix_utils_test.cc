@@ -193,5 +193,92 @@ TEST(_, ScalarMatrixToBlockMatrix) {
   ss.Free(ccsm.release());
 }
 
+class SolveUpperTriangularTest : public ::testing::Test {
+ protected:
+  void SetUp() {
+    cols.resize(5);
+    rows.resize(7);
+    values.resize(7);
+
+    cols[0] = 0;
+    rows[0] = 0;
+    values[0] = 0.50754;
+
+    cols[1] = 1;
+    rows[1] = 1;
+    values[1] = 0.80483;
+
+    cols[2] = 2;
+    rows[2] = 1;
+    values[2] = 0.14120;
+    rows[3] = 2;
+    values[3] = 0.3;
+
+    cols[3] = 4;
+    rows[4] = 0;
+    values[4] = 0.77696;
+    rows[5] = 1;
+    values[5] = 0.41860;
+    rows[6] = 3;
+    values[6] = 0.88979;
+
+    cols[4] = 7;
+  }
+
+  vector<int> cols;
+  vector<int> rows;
+  vector<double> values;
+};
+
+TEST_F(SolveUpperTriangularTest, SolveInPlace) {
+  double rhs_and_solution[] = {1.0, 1.0, 2.0, 2.0};
+  const double expected[] = { -1.4706, -1.0962, 6.6667, 2.2477};
+
+  SolveUpperTriangularInPlace<int>(cols.size() - 1,
+                                   &rows[0],
+                                   &cols[0],
+                                   &values[0],
+                                   rhs_and_solution);
+
+  for (int i = 0; i < 4; ++i) {
+    EXPECT_NEAR(rhs_and_solution[i], expected[i], 1e-4) << i;
+  }
+}
+
+TEST_F(SolveUpperTriangularTest, TransposeSolveInPlace) {
+  double rhs_and_solution[] = {1.0, 1.0, 2.0, 2.0};
+  double expected[] = {1.970288,  1.242498,  6.081864, -0.057255};
+
+  SolveUpperTriangularTransposeInPlace<int>(cols.size() - 1,
+                                            &rows[0],
+                                            &cols[0],
+                                            &values[0],
+                                            rhs_and_solution);
+
+  for (int i = 0; i < 4; ++i) {
+    EXPECT_NEAR(rhs_and_solution[i], expected[i], 1e-4) << i;
+  }
+}
+
+TEST_F(SolveUpperTriangularTest, RTRSolveWithSparseRHS) {
+  double solution[4];
+  double expected[] = { 6.8420e+00,   1.0057e+00,  -1.4907e-16,  -1.9335e+00,
+                        1.0057e+00,   2.2275e+00,  -1.9493e+00,  -6.5693e-01,
+                       -1.4907e-16,  -1.9493e+00,   1.1111e+01,   9.7381e-17,
+                       -1.9335e+00,  -6.5693e-01,   9.7381e-17,   1.2631e+00 };
+
+  for (int i = 0; i < 4; ++i) {
+    SolveRTRWithSparseRHS<int>(cols.size() - 1,
+                               &rows[0],
+                               &cols[0],
+                               &values[0],
+                               i,
+                               solution);
+    for (int j = 0; j < 4; ++j) {
+      EXPECT_NEAR(solution[j], expected[4 * i + j], 1e-3) << i;
+    }
+  }
+}
+
 }  // namespace internal
 }  // namespace ceres

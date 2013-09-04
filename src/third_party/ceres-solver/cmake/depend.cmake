@@ -52,7 +52,7 @@ OPTION(GFLAGS
        "Enable Google Flags."
        ON)
 
-IF (${GFLAGS})
+IF (GFLAGS)
   MESSAGE("-- Check for Google Flags")
   FIND_LIBRARY(GFLAGS_LIB NAMES gflags PATHS ${SEARCH_LIBS})
   IF (NOT EXISTS ${GFLAGS_LIB})
@@ -68,7 +68,7 @@ IF (${GFLAGS})
             "-DGFLAGS_INCLUDE=...")
   ENDIF (NOT EXISTS ${GFLAGS_INCLUDE})
   MESSAGE("-- Found Google Flags header in: ${GFLAGS_INCLUDE}")
-ENDIF (${GFLAGS})
+ENDIF (GFLAGS)
 
 # Google Logging
 MESSAGE("-- Check for Google Log")

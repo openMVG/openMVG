@@ -20,7 +20,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.5.0',
+        VERSION:     '1.7.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -69,16 +69,10 @@
 range of areas across science and engineering - from fitting curves in
 statistics, to constructing 3D models from photographs in computer
 vision. Ceres Solver <a class="footnote-reference" href="#f2" id="id2">[2]</a> <a class="footnote-reference" href="#f3" id="id3">[3]</a> is a portable C++ library for
-solving non-linear least squares problems. It is designed to solve
-small and large sparse problems accurately and efficiently.</p>
-<p>At Google, Ceres Solver has been used for solving a variety of
-problems in computer vision and machine learning. e.g., it is used to
-to estimate the pose of Street View cars, aircrafts, and satellites;
-to build 3D models for PhotoTours; to estimate satellite image sensor
-characteristics, and more.</p>
-<p>Features:</p>
+solving non-linear least squares problems accurately and efficiently.</p>
+<p><strong>Features</strong></p>
 <ol class="arabic simple">
-<li>A friendly <a class="reference internal" href="modeling.html#chapter-modeling"><em>Modeling API</em></a>.</li>
+<li>A friendly <a class="reference internal" href="modeling.html#chapter-modeling"><em>Modeling</em></a> API.</li>
 <li>Automatic and numeric differentiation.</li>
 <li>Robust loss functions and local parameterizations.</li>
 <li>Multithreading.</li>
@@ -92,13 +86,19 @@ small problems.</li>
 large sparse problems.</li>
 <li>Specialized solvers for bundle adjustment problems in computer
 vision.</li>
-<li>Iterative linear solvers with perconditioners for general sparse
+<li>Iterative linear solvers with preconditioners for general sparse
 and bundle adjustment problems.</li>
 </ol>
 </li>
-<li>Portable: Runs on Linux, Windows, Mac OS X and Android. An iOS port is
-underway.</li>
+<li>Portable: Runs on Linux, Windows, Mac OS X and Android.</li>
 </ol>
+<p>At Google, Ceres Solver has been used for solving a variety of
+problems in computer vision and machine learning. e.g., it is used to
+to estimate the pose of Street View cars, aircrafts, and satellites;
+to build 3D models for PhotoTours; to estimate satellite image sensor
+characteristics, and more.</p>
+<p><a class="reference external" href="http://www.blender.org">Blender</a> uses Ceres for <a class="reference external" href="http://mango.blender.org/development/planar-tracking-preview/">motion tracking</a> and
+<a class="reference external" href="http://wiki.blender.org/index.php/Dev:Ref/Release_Notes/2.67/Motion_Tracker">bundle adjustment</a>.</p>
 <p class="rubric">Footnotes</p>
 <table class="docutils footnote" frame="void" id="f1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -143,8 +143,8 @@ the term Ceres.</td></tr>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="building.html">Building Ceres Solver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="solving.html">Solver API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solving.html">Solving</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reading.html">Further Reading</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="acknowledgements.html">Acknowledgements</a></li>

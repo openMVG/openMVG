@@ -208,6 +208,13 @@ class SolverImpl {
       ParameterBlockOrdering* parameter_block_ordering,
       Program* program,
       string* error);
+
+  // array contains a list of (possibly repeating) non-negative
+  // integers. Let us assume that we have constructed another array
+  // `p` by sorting and uniqueing the entries of array.
+  // CompactifyArray replaces each entry in "array" with its position
+  // in `p`.
+  static void CompactifyArray(vector<int>* array);
 };
 
 }  // namespace internal

@@ -4,8 +4,10 @@
 Building Ceres Solver
 =====================
 
-Ceres source code and documentation are hosted at `code.google.com
-<http://code.google.com/p/ceres-solver/>`_.
+Stable Ceres Solver releases are available for download at
+`code.google.com <http://code.google.com/p/ceres-solver/>`_. For the
+more adventurous, the git repository is hosted on `Gerrit
+<https://ceres-solver-review.googlesource.com/>`_.
 
 .. _section-dependencies:
 
@@ -37,7 +39,7 @@ strongly recommend building the library with gflags.
 5. `SuiteSparse
 <http://www.cise.ufl.edu/research/sparse/SuiteSparse/>`_ is used for
 sparse matrix analysis, ordering and factorization. In particular
-Ceres uses the AMD, COLAMD and CHOLMOD libraries. This is an optional
+Ceres uses the AMD, CAMD, COLAMD and CHOLMOD libraries. This is an optional
 dependency.
 
 6. `CXSparse <http://www.cise.ufl.edu/research/sparse/CXSparse/>`_ is
@@ -47,18 +49,15 @@ build process and a smaller binary.  The simplicity comes at a cost --
 for all but the most trivial matrices, ``SuiteSparse`` is
 significantly faster than ``CXSparse``.
 
-
 7. `BLAS <http://www.netlib.org/blas/>`_ and `LAPACK
 <http://www.netlib.org/lapack/>`_ routines are needed by
-SuiteSparse. We recommend either `GotoBlas2
-<http://www.tacc.utexas.edu/tacc- projects/gotoblas2>`_ or `ATLAS
-<http://math- atlas.sourceforge.net/>`_ , both of which ship with BLAS
-and LAPACK routines.
-
-8. `protobuf <http://code.google.com/p/protobuf/>`_ is used for
-serializing and deserializing linear least squares problems to
-disk. This is useful for debugging and testing. It is an optional
-depdendency and without it some of the tests will be disabled.
+SuiteSparse. We recommend `ATLAS
+<http://math-atlas.sourceforge.net/>`_, which includes BLAS and LAPACK
+routines. It is also possible to use `OpenBLAS
+<https://github.com/xianyi/OpenBLAS>`_ . However, one needs to be
+careful to `turn off the threading
+<https://github.com/xianyi/OpenBLAS/wiki/faq#wiki-multi-threaded>`_
+inside ``OpenBLAS`` as it conflicts with use of threads in Ceres.
 
 .. _section-linux:
 
@@ -70,7 +69,7 @@ platform. Start by installing all the dependencies.
 .. code-block:: bash
 
      # CMake
-     sudo apt-hey install cmake
+     sudo apt-get install cmake
      # gflags
      tar -xvzf gflags-2.0.tar.gz
      cd gflags-2.0
@@ -83,22 +82,21 @@ platform. Start by installing all the dependencies.
      ./configure --with-gflags=/usr/local/
      make
      sudo make install
+     # BLAS & LAPACK
+     sudo apt-get install libatlas-base-dev
      # Eigen3
      sudo apt-get install libeigen3-dev
      # SuiteSparse and CXSparse
      sudo apt-get install libsuitesparse-dev
-     # protobuf
-     sudo apt-get install libprotobuf-dev
 
-We are now ready to build and test Ceres. Note that ``CMake`` requires
-the exact path to the ``libglog.a`` and ``libgflag.a``.
+We are now ready to build and test Ceres.
 
 .. code-block:: bash
 
- tar zxf ceres-solver-1.5.0.tar.gz
+ tar zxf ceres-solver-1.7.0.tar.gz
  mkdir ceres-bin
  cd ceres-bin
- cmake ../ceres-solver-1.5.0
+ cmake ../ceres-solver-1.7.0
  make -j3
  make test
 
@@ -108,8 +106,7 @@ dataset [Agarwal]_.
 
 .. code-block:: bash
 
- bin/simple_bundle_adjuster \
-   ../ceres-solver-1.5.0/data/problem-16-22106-pre.txt \
+ bin/simple_bundle_adjuster ../ceres-solver-1.7.0/data/problem-16-22106-pre.txt
 
 This runs Ceres for a maximum of 10 iterations using the
 ``DENSE_SCHUR`` linear solver. The output should look something like
@@ -170,8 +167,12 @@ Building on Mac OS X
 ====================
 
 On OS X, we recommend using the `homebrew
-<http://mxcl.github.com/homebrew/>`_ package manager. Start by
-installing all the dependencies.
+<http://mxcl.github.com/homebrew/>`_ package manager to install the
+dependencies. There is no need to install ``BLAS`` or ``LAPACK``
+separately as OS X ships with optimized ``BLAS`` and ``LAPACK``
+routines as part of the `vecLib
+<https://developer.apple.com/library/mac/#documentation/Performance/Conceptual/vecLib/Reference/reference.html>`_
+framework.
 
 .. code-block:: bash
 
@@ -179,22 +180,20 @@ installing all the dependencies.
       brew install cmake
       # google-glog and gflags
       brew install glog
-      # Eigen2
+      # Eigen3
       brew install eigen
       # SuiteSparse and CXSparse
       brew install suite-sparse
-      # protobuf
-      brew install protobuf
 
 
 We are now ready to build and test Ceres.
 
 .. code-block:: bash
 
-   tar zxf ceres-solver-1.5.0.tar.gz
+   tar zxf ceres-solver-1.7.0.tar.gz
    mkdir ceres-bin
    cd ceres-bin
-   cmake ../ceres-solver-1.5.0
+   cmake ../ceres-solver-1.7.0
    make -j3
    make test
 
@@ -209,7 +208,7 @@ Building on Windows with Visual Studio
 
 On Windows, we support building with Visual Studio 2010 or newer. Note
 that the Windows port is less featureful and less tested than the
-Linux or Mac OS X versions due to the unavaliability of SuiteSparse
+Linux or Mac OS X versions due to the unavailability of SuiteSparse
 and ``CXSparse``. Building is also more involved since there is no
 automated way to install the dependencies.
 
@@ -289,11 +288,6 @@ Customizing the build
 It is possible to reduce the libraries needed to build Ceres and
 customize the build process by passing appropriate flags to
 ``CMake``. Use these flags only if you really know what you are doing.
-
-#. ``-DPROTOBUF=OFF``: ``protobuf`` is a large and complicated
-   dependency. If you do not care for the tests that depend on it and
-   the logging support it enables, you can use this flag to turn it
-   off.
 
 #. ``-DSUITESPARSE=OFF``: By default, Ceres will link to
    ``SuiteSparse`` if all its dependencies are present. Use this flag

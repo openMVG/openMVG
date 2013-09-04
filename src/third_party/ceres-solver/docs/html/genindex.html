@@ -22,7 +22,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.5.0',
+        VERSION:     '1.7.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -63,6 +63,7 @@
 <div class="genindex-jumpbox">
  <a href="#A"><strong>A</strong></a>
  | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
@@ -92,18 +93,22 @@
   <dt><a href="modeling.html#AngleAxisToRotationMatrix:T.row_stride.col_stride:__TCP.MatrixAdapter:T.row_stride.col_stride:CR">AngleAxisToRotationMatrix&lt;T, row_stride, col_stride&gt; (C++ function)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="modeling.html#AngleAxisToRotationMatrix:T:__TCP.TP">AngleAxisToRotationMatrix&lt;T&gt; (C++ function)</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="modeling.html#ArctanLoss">ArctanLoss (C++ class)</a>
   </dt>
 
       
   <dt><a href="modeling.html#AutoDiffCostFunction">AutoDiffCostFunction (C++ class)</a>
+  </dt>
+
+      
+  <dt><a href="modeling.html#AutoDiffLocalParameterization">AutoDiffLocalParameterization (C++ class)</a>
   </dt>
 
   </dl></td>
@@ -128,8 +133,6 @@
   <dt><a href="modeling.html#CostFunction">CostFunction (C++ class)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="modeling.html#CostFunction::Evaluate__doubleCPCP.doubleP.doublePP">CostFunction::Evaluate (C++ function)</a>
   </dt>
@@ -139,11 +142,55 @@
   </dt>
 
       
+  <dt><a href="solving.html#Covariance">Covariance (C++ class)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Covariance::Compute__vector:pair:doubleCP.doubleCP::CR.ProblemP">Covariance::Compute (C++ function)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="solving.html#Covariance::Options">Covariance::Options (C++ class)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Covariance::Options::algorithm_type__CovarianceAlgorithmType">Covariance::Options::algorithm_type (C++ member)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Covariance::Options::apply_loss_function__b">Covariance::Options::apply_loss_function (C++ member)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Covariance::Options::min_reciprocal_condition_number__i">Covariance::Options::min_reciprocal_condition_number (C++ member)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Covariance::Options::null_space_rank__i">Covariance::Options::null_space_rank (C++ member)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Covariance::Options::num_threads__i">Covariance::Options::num_threads (C++ member)</a>
+  </dt>
+
+      
   <dt><a href="modeling.html#CrossProduct:T:__TCA.TCA.TA">CrossProduct&lt;T&gt; (C++ function)</a>
   </dt>
 
       
   <dt><a href="solving.html#CRSMatrix">CRSMatrix (C++ class)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="modeling.html#DynamicAutoDiffCostFunction">DynamicAutoDiffCostFunction (C++ class)</a>
   </dt>
 
   </dl></td>
@@ -169,7 +216,7 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="solving.html#GradientChecker">GradientChecker (C++ class)</a>
+  <dt><a href="solving.html#GetCovarianceBlock__doubleCP.doubleCP.doublePC">GetCovarianceBlock (C++ function)</a>
   </dt>
 
   </dl></td>
@@ -192,10 +239,14 @@
   <dt><a href="modeling.html#IdentityParameterization">IdentityParameterization (C++ class)</a>
   </dt>
 
+      
+  <dt><a href="solving.html#IterationCallback">IterationCallback (C++ class)</a>
+  </dt>
+
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="solving.html#IterationCallback">IterationCallback (C++ class)</a>
+  <dt><a href="solving.html#IterationSummary">IterationSummary (C++ class)</a>
   </dt>
 
   </dl></td>
@@ -265,6 +316,42 @@
   </dt>
 
       
+  <dt><a href="solving.html#ParameterBlockOrdering::AddElementToGroup__doubleCP.iC">ParameterBlockOrdering::AddElementToGroup (C++ function)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#ParameterBlockOrdering::Clear">ParameterBlockOrdering::Clear (C++ function)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#ParameterBlockOrdering::GroupId__doubleCPC">ParameterBlockOrdering::GroupId (C++ function)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#ParameterBlockOrdering::GroupSize__iCC">ParameterBlockOrdering::GroupSize (C++ function)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#ParameterBlockOrdering::IsMember__doubleCPC">ParameterBlockOrdering::IsMember (C++ function)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#ParameterBlockOrdering::NumElementsC">ParameterBlockOrdering::NumElements (C++ function)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#ParameterBlockOrdering::NumGroupsC">ParameterBlockOrdering::NumGroups (C++ function)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#ParameterBlockOrdering::Remove__doubleCP">ParameterBlockOrdering::Remove (C++ function)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#ParameterBlockOrdering::Reverse">ParameterBlockOrdering::Reverse (C++ function)</a>
+  </dt>
+
+      
   <dt><a href="modeling.html#Problem">Problem (C++ class)</a>
   </dt>
 
@@ -276,6 +363,8 @@
   <dt><a href="modeling.html#Problem::AddResidualBlock__CostFunctionP.LossFunctionP.vector:doubleP:C">Problem::AddResidualBlock (C++ function)</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="modeling.html#Problem::Evaluate__Problem::EvaluateOptionsCR.doubleP.vector:double:P.vector:double:P.CRSMatrixP">Problem::Evaluate (C++ function)</a>
   </dt>
@@ -292,8 +381,6 @@
   <dt><a href="modeling.html#Problem::EvaluateOptions::residual_blocks__vector:ResidualBlockId:">Problem::EvaluateOptions::residual_blocks (C++ member)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="modeling.html#Problem::NumParameterBlocksC">Problem::NumParameterBlocks (C++ function)</a>
   </dt>
@@ -311,7 +398,11 @@
   </dt>
 
       
-  <dt><a href="modeling.html#Problem::RemoveResidualBlock__ResidualBlockId">Problem::RemoveResidualBlock (C++ function)</a>, <a href="modeling.html#Problem::RemoveResidualBlock__ResidualBlockId">[1]</a>
+  <dt><a href="modeling.html#Problem::RemoveParameterBlock__doubleP">Problem::RemoveParameterBlock (C++ function)</a>
+  </dt>
+
+      
+  <dt><a href="modeling.html#Problem::RemoveResidualBlock__ResidualBlockId">Problem::RemoveResidualBlock (C++ function)</a>
   </dt>
 
       
@@ -409,6 +500,10 @@
   </dt>
 
       
+  <dt><a href="solving.html#Solver::Options::dense_linear_algebra_library_type__DenseLinearAlgebraLibrary">Solver::Options::dense_linear_algebra_library_type (C++ member)</a>
+  </dt>
+
+      
   <dt><a href="solving.html#Solver::Options::dogleg_type__DoglegType">Solver::Options::dogleg_type (C++ member)</a>
   </dt>
 
@@ -433,6 +528,10 @@
   </dt>
 
       
+  <dt><a href="solving.html#Solver::Options::inner_itearation_tolerance__double">Solver::Options::inner_itearation_tolerance (C++ member)</a>
+  </dt>
+
+      
   <dt><a href="solving.html#Solver::Options::inner_iteration_ordering__ParameterBlockOrderingP">Solver::Options::inner_iteration_ordering (C++ member)</a>
   </dt>
 
@@ -445,15 +544,19 @@
   </dt>
 
       
+  <dt><a href="solving.html#Solver::Options::line_search_interpolation_type__LineSearchIterpolationType">Solver::Options::line_search_interpolation_type (C++ member)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Solver::Options::line_search_sufficient_curvature_decrease__double">Solver::Options::line_search_sufficient_curvature_decrease (C++ member)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Solver::Options::line_search_sufficient_function_decrease__double">Solver::Options::line_search_sufficient_function_decrease (C++ member)</a>
+  </dt>
+
+      
   <dt><a href="solving.html#Solver::Options::line_search_type__LineSearchType">Solver::Options::line_search_type (C++ member)</a>
-  </dt>
-
-      
-  <dt><a href="solving.html#Solver::Options::linear_solver_max_num_iterations__i">Solver::Options::linear_solver_max_num_iterations (C++ member)</a>
-  </dt>
-
-      
-  <dt><a href="solving.html#Solver::Options::linear_solver_min_num_iterations__i">Solver::Options::linear_solver_min_num_iterations (C++ member)</a>
   </dt>
 
       
@@ -465,37 +568,31 @@
   </dt>
 
       
-  <dt><a href="solving.html#Solver::Options::lm_max_diagonal__double">Solver::Options::lm_max_diagonal (C++ member)</a>
-  </dt>
-
-      
-  <dt><a href="solving.html#Solver::Options::lm_min_diagonal__double">Solver::Options::lm_min_diagonal (C++ member)</a>
-  </dt>
-
-      
   <dt><a href="solving.html#Solver::Options::logging_type__LoggingType">Solver::Options::logging_type (C++ member)</a>
   </dt>
 
-      
-  <dt><a href="solving.html#Solver::Options::lsqp_dump_directory__string">Solver::Options::lsqp_dump_directory (C++ member)</a>
-  </dt>
-
-      
-  <dt><a href="solving.html#Solver::Options::lsqp_dump_format__DumpFormatType">Solver::Options::lsqp_dump_format (C++ member)</a>
-  </dt>
-
-      
-  <dt><a href="solving.html#Solver::Options::lsqp_iterations_to_dump__vector:i:">Solver::Options::lsqp_iterations_to_dump (C++ member)</a>
-  </dt>
-
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="solving.html#Solver::Options::max_consecutive_nonmonotonic_steps__i">Solver::Options::max_consecutive_nonmonotonic_steps (C++ member)</a>
   </dt>
 
       
   <dt><a href="solving.html#Solver::Options::max_lbfs_rank__i">Solver::Options::max_lbfs_rank (C++ member)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Solver::Options::max_line_search_step_contraction__double">Solver::Options::max_line_search_step_contraction (C++ member)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Solver::Options::max_line_search_step_expansion__double">Solver::Options::max_line_search_step_expansion (C++ member)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Solver::Options::max_linear_solver_iterations__i">Solver::Options::max_linear_solver_iterations (C++ member)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Solver::Options::max_lm_diagonal__double">Solver::Options::max_lm_diagonal (C++ member)</a>
   </dt>
 
       
@@ -506,12 +603,38 @@
   <dt><a href="solving.html#Solver::Options::max_num_iterations__i">Solver::Options::max_num_iterations (C++ member)</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="solving.html#Solver::Options::max_num_line_search_direction_restarts__i">Solver::Options::max_num_line_search_direction_restarts (C++ member)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Solver::Options::max_num_line_search_step_size_iterations__i">Solver::Options::max_num_line_search_step_size_iterations (C++ member)</a>
+  </dt>
+
       
   <dt><a href="solving.html#Solver::Options::max_solver_time_in_seconds__double">Solver::Options::max_solver_time_in_seconds (C++ member)</a>
   </dt>
 
       
   <dt><a href="solving.html#Solver::Options::max_trust_region_radius__double">Solver::Options::max_trust_region_radius (C++ member)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Solver::Options::min_line_search_step_contraction__double">Solver::Options::min_line_search_step_contraction (C++ member)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Solver::Options::min_line_search_step_size__double">Solver::Options::min_line_search_step_size (C++ member)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Solver::Options::min_linear_solver_iterations__i">Solver::Options::min_linear_solver_iterations (C++ member)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Solver::Options::min_lm_diagonal__double">Solver::Options::min_lm_diagonal (C++ member)</a>
   </dt>
 
       
@@ -559,7 +682,19 @@
   </dt>
 
       
-  <dt><a href="solving.html#Solver::Options::sparse_linear_algebra_library__SparseLinearAlgebraLibrary">Solver::Options::sparse_linear_algebra_library (C++ member)</a>
+  <dt><a href="solving.html#Solver::Options::sparse_linear_algebra_library_type__SparseLinearAlgebraLibrary">Solver::Options::sparse_linear_algebra_library_type (C++ member)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Solver::Options::trust_region_minimizer_iterations_to_dump__vector:i:">Solver::Options::trust_region_minimizer_iterations_to_dump (C++ member)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Solver::Options::trust_region_problem_dump_directory__string">Solver::Options::trust_region_problem_dump_directory (C++ member)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Solver::Options::trust_region_problem_dump_format__DumpFormatType">Solver::Options::trust_region_problem_dump_format (C++ member)</a>
   </dt>
 
       
@@ -571,7 +706,7 @@
   </dt>
 
       
-  <dt><a href="solving.html#Solver::Options::use_block_amd__b">Solver::Options::use_block_amd (C++ member)</a>
+  <dt><a href="solving.html#Solver::Options::use_approximate_eigenvalue_bfgs_scaling__b">Solver::Options::use_approximate_eigenvalue_bfgs_scaling (C++ member)</a>
   </dt>
 
       
@@ -580,6 +715,10 @@
 
       
   <dt><a href="solving.html#Solver::Options::use_nonmonotonic_steps__b">Solver::Options::use_nonmonotonic_steps (C++ member)</a>
+  </dt>
+
+      
+  <dt><a href="solving.html#Solver::Options::use_post_ordering__b">Solver::Options::use_post_ordering (C++ member)</a>
   </dt>
 
       
@@ -631,8 +770,8 @@
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="building.html">Building Ceres Solver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="solving.html">Solver API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solving.html">Solving</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reading.html">Further Reading</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="acknowledgements.html">Acknowledgements</a></li>

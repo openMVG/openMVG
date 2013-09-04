@@ -82,8 +82,8 @@ TEST(LevenbergMarquardtStrategy, AcceptRejectStepRadiusScaling) {
   TrustRegionStrategy::Options options;
   options.initial_radius = 2.0;
   options.max_radius = 20.0;
-  options.lm_min_diagonal = 1e-8;
-  options.lm_max_diagonal = 1e8;
+  options.min_lm_diagonal = 1e-8;
+  options.max_lm_diagonal = 1e8;
 
   // We need a non-null pointer here, so anything should do.
   scoped_ptr<LinearSolver> linear_solver(
@@ -125,13 +125,13 @@ TEST(LevenbergMarquardtStrategy, CorrectDiagonalToLinearSolver) {
   TrustRegionStrategy::Options options;
   options.initial_radius = 2.0;
   options.max_radius = 20.0;
-  options.lm_min_diagonal = 1e-2;
-  options.lm_max_diagonal = 1e2;
+  options.min_lm_diagonal = 1e-2;
+  options.max_lm_diagonal = 1e2;
 
   double diagonal[3];
-  diagonal[0] = options.lm_min_diagonal;
+  diagonal[0] = options.min_lm_diagonal;
   diagonal[1] = 2.0;
-  diagonal[2] = options.lm_max_diagonal;
+  diagonal[2] = options.max_lm_diagonal;
   for (int i = 0; i < 3; ++i) {
     diagonal[i] = sqrt(diagonal[i] / options.initial_radius);
   }

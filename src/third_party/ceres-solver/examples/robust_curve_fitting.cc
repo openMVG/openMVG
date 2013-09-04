@@ -28,8 +28,8 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
-#include <glog/logging.h>
 #include "ceres/ceres.h"
+#include "glog/logging.h"
 
 // Data generated using the following octave code.
 //   randn('seed', 23497);

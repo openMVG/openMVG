@@ -31,7 +31,6 @@
 #include "ceres/triplet_sparse_matrix.h"
 
 #include "gtest/gtest.h"
-#include "ceres/matrix_proto.h"
 #include "ceres/internal/scoped_ptr.h"
 
 namespace ceres {
@@ -315,40 +314,6 @@ TEST(TripletSparseMatrix, Resize) {
     EXPECT_EQ(m.values()[i], m.rows()[i] + m.cols()[i]);
   }
 }
-
-#ifndef CERES_NO_PROTOCOL_BUFFERS
-TEST(TripletSparseMatrix, Serialization) {
-  TripletSparseMatrix m(2, 5, 4);
-
-  m.mutable_rows()[0] = 0;
-  m.mutable_cols()[0] = 1;
-  m.mutable_values()[0] = 2.5;
-
-  m.mutable_rows()[1] = 1;
-  m.mutable_cols()[1] = 4;
-  m.mutable_values()[1] = 5.2;
-  m.set_num_nonzeros(2);
-
-  // Roundtrip through serialization and check for equality.
-  SparseMatrixProto proto;
-  m.ToProto(&proto);
-
-  TripletSparseMatrix n(proto);
-
-  ASSERT_EQ(n.num_rows(), 2);
-  ASSERT_EQ(n.num_cols(), 5);
-
-  // Note that max_num_nonzeros gets truncated; the serialization
-  ASSERT_EQ(n.num_nonzeros(), 2);
-  ASSERT_EQ(n.max_num_nonzeros(), 2);
-
-  for (int i = 0; i < m.num_nonzeros(); ++i) {
-    EXPECT_EQ(m.rows()[i],   n.rows()[i]);
-    EXPECT_EQ(m.cols()[i],   n.cols()[i]);
-    EXPECT_EQ(m.values()[i], n.values()[i]);
-  }
-}
-#endif
 
 }  // namespace internal
 }  // namespace ceres

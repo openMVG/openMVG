@@ -84,8 +84,8 @@ class DoglegStrategyFixtureEllipse : public Fixture {
     x_.resize(6);
     x_.setZero();
 
-    options_.lm_min_diagonal = 1.0;
-    options_.lm_max_diagonal = 1.0;
+    options_.min_lm_diagonal = 1.0;
+    options_.max_lm_diagonal = 1.0;
   }
 };
 
@@ -112,8 +112,8 @@ class DoglegStrategyFixtureValley : public Fixture {
     x_.resize(6);
     x_.setZero();
 
-    options_.lm_min_diagonal = 1.0;
-    options_.lm_max_diagonal = 1.0;
+    options_.min_lm_diagonal = 1.0;
+    options_.max_lm_diagonal = 1.0;
   }
 };
 

@@ -177,10 +177,10 @@ int main(int argc, char** argv) {
   ceres::Solver::Options options;
   options.linear_solver_type = ceres::SPARSE_SCHUR;
   if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
-    options.sparse_linear_algebra_library = ceres::SUITE_SPARSE;
+    options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
   else
     if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
-      options.sparse_linear_algebra_library = ceres::CX_SPARSE;
+      options.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
     else
     {
       // No sparse backend for Ceres.

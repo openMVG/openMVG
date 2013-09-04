@@ -167,18 +167,14 @@ class SparseSchurComplementSolver : public SchurComplementSolver {
   // Size of the blocks in the Schur complement.
   vector<int> blocks_;
 
-#ifndef CERES_NO_SUITESPARSE
   SuiteSparse ss_;
   // Symbolic factorization of the reduced linear system. Precomputed
   // once and reused in subsequent calls.
   cholmod_factor* factor_;
-#endif  // CERES_NO_SUITESPARSE
 
-#ifndef CERES_NO_CXSPARSE
   CXSparse cxsparse_;
   // Cached factorization
   cs_dis* cxsparse_factor_;
-#endif  // CERES_NO_CXSPARSE
   CERES_DISALLOW_COPY_AND_ASSIGN(SparseSchurComplementSolver);
 };
 

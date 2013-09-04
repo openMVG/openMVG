@@ -58,9 +58,9 @@ const double kEpsilon = 1e-14;
 
 class IterativeSchurComplementSolverTest : public ::testing::Test {
  protected :
-  virtual void SetUp() {
+  void SetUpProblem(int problem_id) {
     scoped_ptr<LinearLeastSquaresProblem> problem(
-        CreateLinearLeastSquaresProblemFromId(2));
+        CreateLinearLeastSquaresProblemFromId(problem_id));
 
     CHECK_NOTNULL(problem.get());
     A_.reset(down_cast<BlockSparseMatrix*>(problem->A.release()));
@@ -90,7 +90,9 @@ class IterativeSchurComplementSolverTest : public ::testing::Test {
     qr->Solve(&dense_A, b_.get(), per_solve_options, reference_solution.data());
 
     options.elimination_groups.push_back(num_eliminate_blocks_);
+    options.elimination_groups.push_back(0);
     options.max_num_iterations = num_cols_;
+    options.preconditioner_type = SCHUR_JACOBI;
     IterativeSchurComplementSolver isc(options);
 
     Vector isc_sol(num_cols_);
@@ -114,7 +116,14 @@ class IterativeSchurComplementSolverTest : public ::testing::Test {
   scoped_array<double> D_;
 };
 
-TEST_F(IterativeSchurComplementSolverTest, SolverTest) {
+TEST_F(IterativeSchurComplementSolverTest, NormalProblem) {
+  SetUpProblem(2);
+  EXPECT_TRUE(TestSolver(NULL));
+  EXPECT_TRUE(TestSolver(D_.get()));
+}
+
+TEST_F(IterativeSchurComplementSolverTest, ProblemWithNoFBlocks) {
+  SetUpProblem(3);
   EXPECT_TRUE(TestSolver(NULL));
   EXPECT_TRUE(TestSolver(D_.get()));
 }

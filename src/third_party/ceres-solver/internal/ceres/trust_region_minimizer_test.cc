@@ -238,8 +238,8 @@ void IsTrustRegionSolveSuccessful(TrustRegionStrategyType strategy_type) {
   trust_region_strategy_options.linear_solver = &linear_solver;
   trust_region_strategy_options.initial_radius = 1e4;
   trust_region_strategy_options.max_radius = 1e20;
-  trust_region_strategy_options.lm_min_diagonal = 1e-6;
-  trust_region_strategy_options.lm_max_diagonal = 1e32;
+  trust_region_strategy_options.min_lm_diagonal = 1e-6;
+  trust_region_strategy_options.max_lm_diagonal = 1e32;
   scoped_ptr<TrustRegionStrategy> strategy(
       TrustRegionStrategy::Create(trust_region_strategy_options));
   minimizer_options.trust_region_strategy = strategy.get();

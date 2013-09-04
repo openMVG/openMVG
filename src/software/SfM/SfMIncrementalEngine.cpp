@@ -876,7 +876,7 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
       if (indexI == imageIndex) {  continue; }
       size_t I = std::min(imageIndex, indexI);
       size_t J = std::max(imageIndex, indexI);
-      
+
       // Compute possible content (match between indexI, indexJ)
       map_tracksCommon.clear(); set_imageIndex.clear();
       set_imageIndex.insert(I); set_imageIndex.insert(J);
@@ -1307,10 +1307,10 @@ void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
   ceres::Solver::Options options;
   options.linear_solver_type = ceres::SPARSE_SCHUR;
   if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
-    options.sparse_linear_algebra_library = ceres::SUITE_SPARSE;
+    options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
   else
     if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
-      options.sparse_linear_algebra_library = ceres::CX_SPARSE;
+      options.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
     else
     {
       // No sparse backend for Ceres.
