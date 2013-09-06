@@ -173,6 +173,15 @@ void triangulate2View_Vector(const Mat34 & P1,
   }
 }
 
+struct ResectionSquaredResidualError {
+// Compute the residual of the projection distance(pt2D, Project(P,pt3D))
+// Return the squared error
+static double Error(const Mat34 & P, const Vec2 & pt2D, const Vec3 & pt3D){
+  Vec2 x = Project(P, pt3D);
+  return (x - pt2D).squaredNorm();
+}
+};
+
 /// Compute the robust resection of the 3D<->2D correspondences.
 bool robustResection(
   const std::pair<size_t,size_t> & imageSize,
@@ -192,7 +201,7 @@ bool robustResection(
     MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
 
     typedef ACKernelAdaptorResection<
-      SolverType, SolverType, UnnormalizerResection, Mat34>
+      SolverType, ResectionSquaredResidualError, UnnormalizerResection, Mat34>
       KernelType;
 
     KernelType kernel(pt2D, imageSize.first, imageSize.second, pt3D);
@@ -210,7 +219,7 @@ bool robustResection(
     MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
 
     typedef ACKernelAdaptorResection_K<
-      SolverType,  SolverType,  UnnormalizerResection, Mat34>  KernelType;
+      SolverType,  ResectionSquaredResidualError,  UnnormalizerResection, Mat34>  KernelType;
 
     KernelType kernel(pt2D, pt3D, *K);
     // Robustly estimation of the Projection matrix and it's precision
