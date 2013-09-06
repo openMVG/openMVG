@@ -156,7 +156,7 @@ public:
   double multError() const {return 1.0;} // point to point error
   Mat3 normalizer1() const {return N1_;}
   Mat3 normalizer2() const {return Mat3::Identity();}
-  double unormalizeError(double val) const {return (val) / N1_(0,0);}
+  double unormalizeError(double val) const {return sqrt(val) / N1_(0,0);}
 
 private:
   Mat x2d_, x3D_;
@@ -214,7 +214,7 @@ public:
   double multError() const {return 1.0;} // point to point error
   Mat3 normalizer1() const {return N1_;}
   Mat3 normalizer2() const {return Mat3::Identity();}
-  double unormalizeError(double val) const {return (val) / N1_(0,0);}
+  double unormalizeError(double val) const {return sqrt(val) / N1_(0,0);}
 
 private:
   Mat x2d_, x3D_;

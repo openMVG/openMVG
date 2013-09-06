@@ -104,24 +104,24 @@ bool IncrementalReconstructionEngine::Process()
           _reconstructorData.exportToPly( stlplus::create_filespec(_sOutDirectory, os.str(), ".ply"));
           bImageAdded = true;
         }
-        ++round;
-      }
+        ++round;      
 
-      if (bImageAdded)
-      {
-        // Perform BA until all point are under the given precision
-        do
+        if (bImageAdded)
         {
-          ComputeResidualsHistogram(NULL);
-          BundleAdjustment();
-          ComputeResidualsHistogram(NULL);
+          // Perform BA until all point are under the given precision
+          do
+          {
+            ComputeResidualsHistogram(NULL);
+            BundleAdjustment();
+            ComputeResidualsHistogram(NULL);
+          }
+          while (badTrackRejector(4.0) != 0);
         }
-        while (badTrackRejector(4.0) != 0);
       }
 
       //-- Reconstruction done.
       //-- Display some statistics
-     std::cout << "\n\n-------------------------------" << "\n"
+      std::cout << "\n\n-------------------------------" << "\n"
         << "-- Structure from Motion (statistics):\n"
         << "-- #Camera calibrated: " << _reconstructorData.map_Camera.size()
         << " from " <<_vec_fileNames.size() << " input images.\n"
@@ -964,7 +964,7 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
         }
 
         std::cout << "--Triangulated 3D points [" << I << "-" << J <<"] count : " << vec_3dPoint.size()
-          << "\t Validated/Possible" << _reconstructorData.map_3DPoints.size() - cardPointsBefore
+          << "\t Validated/Possible: " << _reconstructorData.map_3DPoints.size() - cardPointsBefore
           << "/" << vec_3dPoint.size() << std::endl
           << "to Add: " << vec_tracksToAdd.size() << std::endl
         << std::endl <<"Size after " << _reconstructorData.set_trackId.size() << std::endl;
