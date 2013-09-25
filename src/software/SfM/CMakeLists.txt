@@ -72,3 +72,9 @@ IF(USE_OPENCV)
   ENDIF(NOT OpenCV_FOUND)
 ENDIF(USE_OPENCV)
 
+# -
+# Export a SfM openMVG scene to meshlab scene with rasters
+# -
+ADD_EXECUTABLE(openMVG_main_openMVG2MESHLAB main_openMVG2MESHLAB.cpp ../SfMViewer/Ply.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MESHLAB
+                     ${LIBS})
