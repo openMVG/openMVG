@@ -20,6 +20,10 @@ Building
 
 See [BUILD](https://github.com/openMVG/openMVG/raw/master/BUILD) text file
 
+Continuous integration (master, develop branch, linux 64 bits):
+
+[![Build Status](https://drone.io/github.com/openMVG/openMVG/status.png)](https://drone.io/github.com/openMVG/openMVG/latest)
+
 -------
 License
 -------
