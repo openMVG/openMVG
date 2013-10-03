@@ -393,3 +393,4 @@ class P3P_ResectionKernel_K {
 }  // namespace openMVG
 
 #endif // OPENMVG_MULTIVIEW_RESECTION_P3P_H_
+
