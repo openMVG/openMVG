@@ -147,7 +147,7 @@ int main(int argc, char ** argv)
           dimImage1.second, dimImage0.first);
 
 
-        // Load the features for the file
+        // Load the features from the features files
         std::vector<SIOPointFeature> vec_featI, vec_featJ;
         loadFeatsFromFile(
           stlplus::create_filespec(sMatchesDir, stlplus::basename_part(vec_fileNames[I]), ".feat"),
