@@ -137,15 +137,16 @@ int main(int argc, char ** argv)
       set_imageIndex.insert(J);
       TracksUtilsMap::GetTracksInImages(set_imageIndex, map_tracks, map_tracksCommon);
 
-      svgDrawer svgStream( dimImage0.first + dimImage1.first, max(dimImage0.second, dimImage1.second));
-      svgStream.drawImage(stlplus::create_filespec(sImaDirectory,vec_fileNames[I]),
-        dimImage0.first,
-        dimImage0.second);
-      svgStream.drawImage(stlplus::create_filespec(sImaDirectory,vec_fileNames[J]),
-        dimImage1.first,
-        dimImage1.second, dimImage0.first);
-
       if (!map_tracksCommon.empty()) {
+        svgDrawer svgStream( dimImage0.first + dimImage1.first, max(dimImage0.second, dimImage1.second));
+        svgStream.drawImage(stlplus::create_filespec(sImaDirectory,vec_fileNames[I]),
+          dimImage0.first,
+          dimImage0.second);
+        svgStream.drawImage(stlplus::create_filespec(sImaDirectory,vec_fileNames[J]),
+          dimImage1.first,
+          dimImage1.second, dimImage0.first);
+
+
         // Load the features for the file
         std::vector<SIOPointFeature> vec_featI, vec_featJ;
         loadFeatsFromFile(
@@ -181,13 +182,13 @@ int main(int argc, char ** argv)
           svgStream.drawCircle(imaB.x() + dimImage0.first,imaB.y(),
             imaB.scale(), svgStyle().stroke("yellow", 2.0));
         }
+        std::ostringstream os;
+        os << stlplus::folder_append_separator(sOutDir)
+           << I << "_" << J
+           << "_" << map_tracksCommon.size() << "_.svg";
+        ofstream svgFile( os.str().c_str() );
+        svgFile << svgStream.closeSvgFile().str();
       }
-      std::ostringstream os;
-      os << stlplus::folder_append_separator(sOutDir)
-         << I << "_" << J
-         << "_" << map_tracksCommon.size() << "_.svg";
-      ofstream svgFile( os.str().c_str() );
-      svgFile << svgStream.closeSvgFile().str();
     }
   }
   return EXIT_SUCCESS;
