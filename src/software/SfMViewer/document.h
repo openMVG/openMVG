@@ -8,7 +8,7 @@
 #ifndef DOCUMENT
 #define DOCUMENT
 
-#include "software/SfM/SfMPinholeCamera.hpp"
+#include "openMVG/cameras/PinholeCamera.hpp"
 using namespace openMVG;
 
 #include "software/SfMViewer/Ply.h"

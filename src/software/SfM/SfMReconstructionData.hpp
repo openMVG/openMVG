@@ -20,8 +20,8 @@
 
 #include "openMVG/image/image.hpp"
 #include "openMVG/tracks/tracks.hpp"
+#include "openMVG/cameras/PinholeCamera.hpp"
 
-#include "software/SfM/SfMPinholeCamera.hpp"
 #include "software/SfM/SfMPlyHelper.hpp"
 #include "third_party/stlAddition/stlMap.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"

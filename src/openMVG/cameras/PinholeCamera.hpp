@@ -5,15 +5,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_SIMPLE_CAMERA_H
-#define OPENMVG_SFM_SIMPLE_CAMERA_H
+#ifndef OPENMVG_CAMERA_PINHOLECAMERA_H
+#define OPENMVG_CAMERA_PINHOLECAMERA_H
 
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/multiview/projection.hpp"
 
 namespace openMVG{
 
-// Modelize a pinhole camera P = K[R|t], t = -RC
+/// Pinhole camera P = K[R|t], t = -RC
 struct PinholeCamera
 {
   PinholeCamera(
@@ -94,5 +94,5 @@ struct PinholeCamera
 
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_SIMPLE_CAMERA_H
+#endif // #ifndef OPENMVG_CAMERA_PINHOLECAMERA_H
 

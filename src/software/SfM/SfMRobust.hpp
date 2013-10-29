@@ -15,7 +15,7 @@
 #include "openMVG/multiview/solver_essential_kernel.hpp"
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation.hpp"
-#include "software/SfM/SfMPinholeCamera.hpp"
+#include "openMVG/cameras/PinholeCamera.hpp"
 
 using namespace openMVG;
 

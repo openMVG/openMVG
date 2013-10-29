@@ -104,7 +104,7 @@ bool IncrementalReconstructionEngine::Process()
           _reconstructorData.exportToPly( stlplus::create_filespec(_sOutDirectory, os.str(), ".ply"));
           bImageAdded = true;
         }
-        ++round;      
+        ++round;
 
         if (bImageAdded)
         {
@@ -1291,8 +1291,8 @@ void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
     // dimensional residual. Internally, the cost function stores the observed
     // image location and compares the reprojection against the observation.
     ceres::CostFunction* cost_function =
-        new ceres::AutoDiffCostFunction<PinholeReprojectionError, 2, 7, 3>(
-            new PinholeReprojectionError(
+        new ceres::AutoDiffCostFunction<Pinhole_Rtf_ReprojectionError, 2, 7, 3>(
+            new Pinhole_Rtf_ReprojectionError(
                 ba_problem.observations()[2 * i + 0],
                 ba_problem.observations()[2 * i + 1]));
 

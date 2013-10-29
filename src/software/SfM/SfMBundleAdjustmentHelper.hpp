@@ -45,47 +45,46 @@ class BAProblem {
 };
 
 /// Templated functor for pinhole camera model to be used with Ceres.
-/// The camera is parameterized using 7 parameters:
-///   - 3 for rotation(angle axis), 3 for translation, 1 for the focal
-///    length. Principal point is assumed be located at the image center
+/// The camera is parameterized using one block of 7 parameters [R;t;f]:
+///   - 3 for rotation(angle axis), 3 for translation, 1 for the focal length.
+///   Principal point is assumed being applied on observed points.
 ///
-struct PinholeReprojectionError {
-  PinholeReprojectionError(double observed_x, double observed_y)
+struct Pinhole_Rtf_ReprojectionError {
+  Pinhole_Rtf_ReprojectionError(double observed_x, double observed_y)
       : observed_x(observed_x), observed_y(observed_y) {}
 
   /// Compute the residual error after reprojection
-  /// residual = observed - euclidean( focal * [R|t] point)
+  /// residual = observed - euclidean( f * [R|t] X)
   template <typename T>
-  bool operator()(const T* const camera,
-                  const T* const point,
+  bool operator()(const T* const Rtf,
+                  const T* const X,
                   T* residuals) const {
-    // camera[0,1,2] are the angle-axis rotation.
-    T p[3];
-    ceres::AngleAxisRotatePoint(camera, point, p);
+    // Rtf[0,1,2] : angle-axis camera rotation
+    T x[3];
+    ceres::AngleAxisRotatePoint(Rtf, X, x);
 
-    // camera[3,4,5] are the translation.
-    p[0] += camera[3];
-    p[1] += camera[4];
-    p[2] += camera[5];
+    // Rtf[3,4,5] : the camera translation
+    x[0] += Rtf[3];
+    x[1] += Rtf[4];
+    x[2] += Rtf[5];
 
     // Point from homogeneous to euclidean
-    T xp = p[0] / p[2];
-    T yp = p[1] / p[2];
+    T xe = x[0] / x[2];
+    T ye = x[1] / x[2];
 
-    // Compute final projected point position.
-    const T& focal = camera[6];
-    T predicted_x = focal * xp;
-    T predicted_y = focal * yp;
+    // Rtf[6] : the focal length
+    const T& focal = Rtf[6];
+    T predicted_x = focal * xe;
+    T predicted_y = focal * ye;
 
-    // The error is the difference between the predicted and observed position.
+    // The error is the difference between the predicted and observed position
     residuals[0] = predicted_x - T(observed_x);
     residuals[1] = predicted_y - T(observed_y);
 
     return true;
   }
 
-  double observed_x;
-  double observed_y;
+  double observed_x, observed_y;
 };
 
 } // namespace bundleAdjustment

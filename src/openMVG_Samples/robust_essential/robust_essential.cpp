@@ -6,6 +6,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+#include "openMVG/cameras/PinholeCamera.hpp"
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/features.hpp"
 #include "openMVG/matching/matcher_brute_force.hpp"
@@ -48,6 +49,18 @@ bool readIntrinsic(const std::string & fileName, Mat3 & K);
 bool exportToPly(const std::vector<Vec3> & vec_points,
   const std::vector<Vec3> & vec_camPos,
   const std::string & sFileName);
+
+/// Estimate the essential matrix from point matches and K matrices.
+bool robustEssential(
+  const Mat3 & K1, const Mat3 & K2,
+  const Mat & x1, const Mat & x2,
+  Mat3 * pE,
+  std::vector<size_t> * pvec_inliers,
+  const std::pair<size_t, size_t> & size_ima1,
+  const std::pair<size_t, size_t> & size_ima2,
+  double * errorMax,
+  double * NFA,
+  double precision = std::numeric_limits<double>::infinity());
 
 int main() {
 
@@ -141,10 +154,13 @@ int main() {
 
   // Essential geometry filtering of putative matches
   {
-    //A. get back interest point and send it to the robust estimation framework
+    Mat3 K;
+    //read K from file
+    readIntrinsic(stlplus::create_filespec(sInputDir,"K","txt"), K);
+
+    //A. prepare the corresponding putatives points
     Mat xL(2, vec_PutativeMatches.size());
     Mat xR(2, vec_PutativeMatches.size());
-
     for (size_t k = 0; k < vec_PutativeMatches.size(); ++k)  {
       const SIOPointFeature & imaL = featsL[vec_PutativeMatches[k]._i];
       const SIOPointFeature & imaR = featsR[vec_PutativeMatches[k]._j];
@@ -152,41 +168,30 @@ int main() {
       xR.col(k) = imaR.coords().cast<double>();
     }
 
-    //-- Essential robust estimation
+    //B. robust estimation of the essential matrix
     std::vector<size_t> vec_inliers;
-    typedef ACKernelAdaptorEssential<
-      openMVG::essential::kernel::FivePointKernel,
-      openMVG::fundamental::kernel::EpipolarDistanceError,
-      UnnormalizerT,
-      Mat3>
-      KernelType;
-
-    Mat3 K;
-    //read K from file
-    readIntrinsic(stlplus::create_filespec(sInputDir,"K","txt"), K);
-
-    KernelType kernel(
-      xL, imageL.Width(), imageL.Height(),
-      xR, imageR.Width(), imageR.Height(),
-      K, K); // configure as point to point error model.
-
     Mat3 E;
-    std::pair<double,double> ACRansacOut = ACRANSAC(kernel, vec_inliers, 1024, &E,
-      std::numeric_limits<double>::infinity(),
-      true);
-    const double & thresholdE = ACRansacOut.first;
-    const double & NFAH = ACRansacOut.second;
-
-    // Check the essential matrix support some point to be considered as valid
-    if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5) {
-
+    std::pair<size_t, size_t> size_imaL(imageL.Width(), imageL.Height());
+    std::pair<size_t, size_t> size_imaR(imageR.Width(), imageR.Height());
+    double thresholdE = 0.0, NFA = 0.0;
+    if (robustEssential(
+      K, K,         // intrinsics
+      xL, xR,       // corresponding points
+      &E,           // essential matrix
+      &vec_inliers, // inliers
+      size_imaL,    // Left image size
+      size_imaR,    // Right image size
+      &thresholdE,  // Found AContrario Theshold
+      &NFA,         // Found AContrario NFA
+      std::numeric_limits<double>::infinity()))
+    {
       std::cout << "\nFound an Essential matrix under the confidence threshold of: "
         << thresholdE << " pixels\n\twith: " << vec_inliers.size() << " inliers"
         << " from: " << vec_PutativeMatches.size()
         << " putatives correspondences"
         << std::endl;
 
-      //Show Essential validated point
+      // Show Essential validated point
       svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
       svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
       svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
@@ -205,7 +210,7 @@ int main() {
       svgFile << svgStream.closeSvgFile().str();
       svgFile.close();
 
-      // Triangulate and export result as PLY
+      //C. Triangulate and export result as PLY
 
       Mat3 R;
       Vec3 t;
@@ -222,12 +227,9 @@ int main() {
         << R << std::endl << std::endl << t << std::endl;
 
       // Triangulate inliers and export as PLY the scene
-      // Build Left and Right Projection matrix
-      Mat34 PL, PR;
-      Mat3 RL = Mat3::Identity();
-      Vec3 tL = Vec3::Zero();
-      P_From_KRt(K, RL, tL, &PL);
-      P_From_KRt(K, R, t, &PR);
+      // Build Left and Right Camera
+      PinholeCamera camL(K,Mat3::Identity(), Vec3::Zero());
+      PinholeCamera camR(K, R, t);
 
       std::vector<Vec3> vec_3DPoints;
       std::vector<double> vec_residuals;
@@ -237,21 +239,19 @@ int main() {
         const Vec2 & xR_ = xR.col(vec_inliers[k]);
 
         Vec3 X = Vec3::Zero();
-        TriangulateDLT(PL, xL_, PR, xR_, &X);
+        TriangulateDLT(camL._P, xL_, camR._P, xR_, &X);
 
         // Compute residual:
-        double dResidual =
-          ((xL_ - Project(PL, X)).norm()
-          + (xR_ - Project(PR, X)).norm())/2.0;
+        double dResidual = (camL.Residual(X, xL_) + camR.Residual(X, xR_))/2.0;
         vec_residuals.push_back(dResidual);
-        if (Depth(RL, tL, X) < 0 && Depth(R, t, X) < 0) {
+        if (camL.Depth(X) < 0 && camR.Depth(X) < 0) {
           ++nbPointWithNegativeDepth;
         }
         else  {
           vec_3DPoints.push_back(X);
         }
       }
-      if (nbPointWithNegativeDepth>0)
+      if (nbPointWithNegativeDepth > 0)
       {
         std::cout << nbPointWithNegativeDepth
           << " correspondence(s) with negative depth have been discarded."
@@ -329,11 +329,12 @@ bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
     }
   }
   // Check the solution :
-  std::cout << "\t Number of points in front of both cameras:" << f[0] << " " << f[1] << " " << f[2] << " " << f[3] << std::endl;
+  std::cout << "\t Number of points in front of both cameras:"
+    << f[0] << " " << f[1] << " " << f[2] << " " << f[3] << std::endl;
   std::vector<size_t>::iterator iter = max_element(f.begin(), f.end());
   if(*iter != 0)
   {
-    size_t index = std::distance(f.begin(),iter);
+    size_t index = std::distance(f.begin(), iter);
     (*R) = Rs[index];
     (*t) = ts[index];
     bOk = true;
@@ -397,4 +398,41 @@ bool exportToPly(const std::vector<Vec3> & vec_points,
   bool bOk = outfile.good();
   outfile.close();
   return bOk;
+}
+
+/// Estimate the essential matrix from point matches and K matrices.
+bool robustEssential(
+  const Mat3 & K1, const Mat3 & K2,
+  const Mat & x1, const Mat & x2,
+  Mat3 * pE,
+  std::vector<size_t> * pvec_inliers,
+  const std::pair<size_t, size_t> & size_ima1,
+  const std::pair<size_t, size_t> & size_ima2,
+  double * errorMax,
+  double * NFA,
+  double precision)
+{
+  assert(pvec_inliers != NULL);
+  assert(pE != NULL);
+
+  // Use the 5 point solver to estimate E
+  typedef openMVG::essential::kernel::FivePointKernel SolverType;
+  // Define the AContrario adaptor
+  typedef ACKernelAdaptorEssential<
+      SolverType,
+      openMVG::fundamental::kernel::EpipolarDistanceError,
+      UnnormalizerT,
+      Mat3>
+      KernelType;
+
+  KernelType kernel(x1, size_ima1.first, size_ima1.second,
+                    x2, size_ima2.first, size_ima2.second, K1, K2);
+
+  // Robustly estimation of the Essential matrix and it's precision
+  std::pair<double,double> ACRansacOut = ACRANSAC(kernel, *pvec_inliers,
+    4096, pE, precision, true);
+  *errorMax = ACRansacOut.first;
+  *NFA = ACRansacOut.second;
+
+  return pvec_inliers->size() > 2.5 * SolverType::MINIMUM_SAMPLES;
 }
