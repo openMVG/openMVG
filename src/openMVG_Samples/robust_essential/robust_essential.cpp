@@ -62,6 +62,14 @@ bool robustEssential(
   double * NFA,
   double precision = std::numeric_limits<double>::infinity());
 
+/// Triangulate and export valid point as PLY (point in front of the cameras)
+void triangulateAndSaveResult(
+  const PinholeCamera & camL,
+  const PinholeCamera & camR,
+  const std::vector<size_t> & vec_inliers,
+  const Mat & xL,
+  const Mat & xR);
+
 int main() {
 
   std::string sInputDir = stlplus::folder_up(string(THIS_SOURCE_DIR))
@@ -210,12 +218,9 @@ int main() {
       svgFile << svgStream.closeSvgFile().str();
       svgFile.close();
 
-      //C. Triangulate and export result as PLY
-
+      //C. Extract the rotation and translation of the camera from the essential matrix
       Mat3 R;
       Vec3 t;
-
-      // Export point to matrix array
       if (!estimate_Rt_fromE(K, K, xL, xR, E, vec_inliers,
         &R, &t))
       {
@@ -226,54 +231,15 @@ int main() {
         << "-- Rotation|Translation matrices: --" << std::endl
         << R << std::endl << std::endl << t << std::endl;
 
-      // Triangulate inliers and export as PLY the scene
       // Build Left and Right Camera
-      PinholeCamera camL(K,Mat3::Identity(), Vec3::Zero());
+      PinholeCamera camL(K, Mat3::Identity(), Vec3::Zero());
       PinholeCamera camR(K, R, t);
 
-      std::vector<Vec3> vec_3DPoints;
-      std::vector<double> vec_residuals;
-      size_t nbPointWithNegativeDepth = 0;
-      for (size_t k = 0; k < vec_inliers.size(); ++k) {
-        const Vec2 & xL_ = xL.col(vec_inliers[k]);
-        const Vec2 & xR_ = xR.col(vec_inliers[k]);
-
-        Vec3 X = Vec3::Zero();
-        TriangulateDLT(camL._P, xL_, camR._P, xR_, &X);
-
-        // Compute residual:
-        double dResidual = (camL.Residual(X, xL_) + camR.Residual(X, xR_))/2.0;
-        vec_residuals.push_back(dResidual);
-        if (camL.Depth(X) < 0 && camR.Depth(X) < 0) {
-          ++nbPointWithNegativeDepth;
-        }
-        else  {
-          vec_3DPoints.push_back(X);
-        }
-      }
-      if (nbPointWithNegativeDepth > 0)
-      {
-        std::cout << nbPointWithNegativeDepth
-          << " correspondence(s) with negative depth have been discarded."
-          << std::endl;
-      }
-      // Display some statistics of reprojection errors
-      float dMin, dMax, dMean, dMedian;
-      minMaxMeanMedian<float>(vec_residuals.begin(), vec_residuals.end(),
-                            dMin, dMax, dMean, dMedian);
-
-      std::cout << std::endl
-        << "Essential matrix estimation, residuals statistics:" << "\n"
-        << "\t-- Residual min:\t" << dMin << std::endl
-        << "\t-- Residual median:\t" << dMedian << std::endl
-        << "\t-- Residual max:\t "  << dMax << std::endl
-        << "\t-- Residual mean:\t " << dMean << std::endl;
-
-      // Export as PLY (camera pos + 3Dpoints)
-      std::vector<Vec3> vec_camPos;
-      vec_camPos.push_back(Vec3::Zero());
-      vec_camPos.push_back( -R.transpose()* t);
-      exportToPly(vec_3DPoints, vec_camPos, "EssentialGeometry.ply");
+      //C. Triangulate and export inliers as a PLY scene
+      triangulateAndSaveResult(
+        camL, camR,
+        vec_inliers,
+        xL, xR);
     }
     else  {
       std::cout << "ACRANSAC was unable to estimate a rigid essential matrix"
@@ -435,4 +401,57 @@ bool robustEssential(
   *NFA = ACRansacOut.second;
 
   return pvec_inliers->size() > 2.5 * SolverType::MINIMUM_SAMPLES;
+}
+
+/// Triangulate and export valid point as PLY (point in front of the cameras)
+void triangulateAndSaveResult(
+  const PinholeCamera & camL,
+  const PinholeCamera & camR,
+  const std::vector<size_t> & vec_inliers,
+  const Mat & xL,
+  const Mat & xR)
+{
+  std::vector<Vec3> vec_3DPoints;
+  std::vector<double> vec_residuals;
+  size_t nbPointWithNegativeDepth = 0;
+  for (size_t k = 0; k < vec_inliers.size(); ++k) {
+    const Vec2 & xL_ = xL.col(vec_inliers[k]);
+    const Vec2 & xR_ = xR.col(vec_inliers[k]);
+
+    Vec3 X = Vec3::Zero();
+    TriangulateDLT(camL._P, xL_, camR._P, xR_, &X);
+
+    // Compute residual:
+    double dResidual = (camL.Residual(X, xL_) + camR.Residual(X, xR_))/2.0;
+    vec_residuals.push_back(dResidual);
+    if (camL.Depth(X) < 0 && camR.Depth(X) < 0) {
+      ++nbPointWithNegativeDepth;
+    }
+    else  {
+      vec_3DPoints.push_back(X);
+    }
+  }
+  if (nbPointWithNegativeDepth > 0)
+  {
+    std::cout << nbPointWithNegativeDepth
+      << " correspondence(s) with negative depth have been discarded."
+      << std::endl;
+  }
+  // Display some statistics of reprojection errors
+  float dMin, dMax, dMean, dMedian;
+  minMaxMeanMedian<float>(vec_residuals.begin(), vec_residuals.end(),
+                        dMin, dMax, dMean, dMedian);
+
+  std::cout << std::endl
+    << "Essential matrix estimation, residuals statistics:" << "\n"
+    << "\t-- Residual min:\t" << dMin << std::endl
+    << "\t-- Residual median:\t" << dMedian << std::endl
+    << "\t-- Residual max:\t "  << dMax << std::endl
+    << "\t-- Residual mean:\t " << dMean << std::endl;
+
+  // Export as PLY (camera pos + 3Dpoints)
+  std::vector<Vec3> vec_camPos;
+  vec_camPos.push_back( camL._C );
+  vec_camPos.push_back( camR._C );
+  exportToPly(vec_3DPoints, vec_camPos, "EssentialGeometry.ply");
 }
