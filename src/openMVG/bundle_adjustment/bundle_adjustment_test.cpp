@@ -11,94 +11,30 @@
 // => A synthetic scene is used:
 //    a random noise between [-.5,.5] is added on observed data points
 
-#include <cmath>
-#include <cstdio>
-#include <iostream>
+#include "testing/testing.h"
 
 #include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/multiview/projection.hpp"
 
+// Bundle Adjustment includes
+#include "openMVG/bundle_adjustment/pinhole_Rtf_ceres_functor.hpp"
+#include "openMVG/bundle_adjustment/problem_data_container.hpp"
+
 using namespace openMVG;
+using namespace openMVG::bundle_adjustment;
 
-#include "ceres/ceres.h"
-#include "ceres/rotation.h"
+#include <cmath>
+#include <cstdio>
+#include <iostream>
 
-// Build a Bundle Adjustment dataset.
-class BAProblem {
- public:
-
-  int num_observations()        const { return num_observations_; }
-  const double* observations() const { return &observations_[0];  }
-  double* mutable_cameras()          { return &parameters_[0];  }
-  double* mutable_points()           { return &parameters_[0]  + 7 * num_cameras_; }
-
-  double* mutable_camera_for_observation(int i) {
-    return mutable_cameras() + camera_index_[i] * 7;
-  }
-  double* mutable_point_for_observation(int i) {
-    return mutable_points() + point_index_[i] * 3;
-  }
-  int num_cameras_;
-  int num_points_;
-  int num_observations_;
-  int num_parameters_;
-
-  std::vector<int> point_index_;
-  std::vector<int> camera_index_;
-  std::vector<double> observations_; // 3D points
-  std::vector<double> parameters_;   // Camera (pinhole, f,R,t)
-
-};
-
-// Templated pinhole camera model for used with Ceres.  The camera is
-// parameterized using 7 parameters: 3 for rotation, 3 for translation, 1 for
-// focal length. Principal point it is assumed be located at the image center.
-struct PinholeReprojectionError {
-  PinholeReprojectionError(double observed_x, double observed_y)
-      : observed_x(observed_x), observed_y(observed_y) {}
-
-  template <typename T>
-  bool operator()(const T* const camera,
-                  const T* const point,
-                  T* residuals) const {
-
-    // camera[0,1,2] are the angle-axis rotation.
-    T p[3];
-    ceres::AngleAxisRotatePoint(camera, point, p);
-
-    // camera[3,4,5] are the translation.
-    p[0] += camera[3];
-    p[1] += camera[4];
-    p[2] += camera[5];
-
-    // Point from homogeneous to euclidean
-    T xp = p[0] / p[2];
-    T yp = p[1] / p[2];
-
-    // Compute final projected point position.
-    const T& focal = camera[6];
-    T predicted_x = focal * xp;
-    T predicted_y = focal * yp;
-
-    // The error is the difference between the predicted and observed position.
-    residuals[0] = predicted_x - T(observed_x);
-    residuals[1] = predicted_y - T(observed_y);
-
-    return true;
-  }
-
-  double observed_x,  observed_y; // Image point observation.
-};
-
-int main(int argc, char** argv) {
-  google::InitGoogleLogging(argv[0]);
+TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization) {
 
   int nviews = 3;
   int npoints = 6;
   NViewDataSet d = NRealisticCamerasRing(nviews, npoints);
 
   // Setup a BA problem
-  BAProblem ba_problem;
+  BA_Problem_data_container<7> ba_problem;
 
   // Configure the size of the problem
   ba_problem.num_cameras_ = nviews;
@@ -160,8 +96,8 @@ int main(int argc, char** argv) {
     // dimensional residual. Internally, the cost function stores the observed
     // image location and compares the reprojection against the observation.
     ceres::CostFunction* cost_function =
-        new ceres::AutoDiffCostFunction<PinholeReprojectionError, 2, 7, 3>(
-            new PinholeReprojectionError(
+        new ceres::AutoDiffCostFunction<Pinhole_Rtf_ReprojectionError, 2, 7, 3>(
+            new Pinhole_Rtf_ReprojectionError(
                 ba_problem.observations()[2 * i + 0],
                 ba_problem.observations()[2 * i + 1]));
 
@@ -197,10 +133,17 @@ int main(int argc, char** argv) {
   ceres::Solve(options, &problem, &summary);
   std::cout << summary.FullReport() << "\n";
 
+  double dResidual_before = std::sqrt( summary.initial_cost / (ba_problem.num_observations_*2.));
+  double dResidual_after = std::sqrt( summary.final_cost / (ba_problem.num_observations_*2.));
+
   std::cout << std::endl
-    << " Initial RMSE : " << std::sqrt( summary.initial_cost / (ba_problem.num_observations_*2.)) << "\n"
-    << " Final RMSE : " << std::sqrt( summary.final_cost / (ba_problem.num_observations_*2.)) << "\n"
+    << " Initial RMSE : " << dResidual_before << "\n"
+    << " Final RMSE : " << dResidual_after << "\n"
     << std::endl;
 
-  return 0;
+  EXPECT_TRUE( dResidual_before > dResidual_after);
 }
+
+/* ************************************************************************* */
+int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
+/* ************************************************************************* */

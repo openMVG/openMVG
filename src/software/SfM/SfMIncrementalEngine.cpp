@@ -8,9 +8,11 @@
 #include "software/SfM/SfMIncrementalEngine.hpp"
 #include "software/SfM/SfMIOHelper.hpp"
 #include "software/SfM/SfMRobust.hpp"
-#include "software/SfM/SfMBundleAdjustmentHelper.hpp"
 #include "openMVG/image/image.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
+// Bundle Adjustment includes
+#include "openMVG/bundle_adjustment/pinhole_Rtf_ceres_functor.hpp"
+#include "openMVG/bundle_adjustment/problem_data_container.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
@@ -111,9 +113,7 @@ bool IncrementalReconstructionEngine::Process()
           // Perform BA until all point are under the given precision
           do
           {
-            ComputeResidualsHistogram(NULL);
             BundleAdjustment();
-            ComputeResidualsHistogram(NULL);
           }
           while (badTrackRejector(4.0) != 0);
         }
@@ -1191,8 +1191,8 @@ void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
     << "measurements: " << nbmeasurements << std::endl;
 
   // Setup a BA problem
-  using namespace openMVG::bundleAdjustment;
-  BAProblem<7> ba_problem; //Will refine R,t,focal.
+  using namespace openMVG::bundle_adjustment;
+  BA_Problem_data_container<7> ba_problem; //Will refine R,t,focal.
 
   // Configure the size of the problem
   ba_problem.num_cameras_ = nbCams;
@@ -1333,6 +1333,13 @@ void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
       summary.termination_type != ceres::USER_ABORT &&
       summary.termination_type != ceres::NUMERICAL_FAILURE)
   {
+    // Display statistics about the minimization
+    std::cout << std::endl
+      << "Bundle Adjustment statistics:\n"
+      << " Initial RMSE : " << std::sqrt( summary.initial_cost / (ba_problem.num_observations_*2.)) << "\n"
+      << " Final RMSE : " << std::sqrt( summary.final_cost / (ba_problem.num_observations_*2.)) << "\n"
+      << std::endl;
+
     // Get back 3D points
     cpt = 0;
     for (std::map<size_t,Vec3>::iterator iter = _reconstructorData.map_3DPoints.begin();

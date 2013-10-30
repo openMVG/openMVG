@@ -6,3 +6,4 @@ ADD_SUBDIRECTORY(numeric)
 ADD_SUBDIRECTORY(tracks)
 
 ADD_SUBDIRECTORY(robust_estimation)
+ADD_SUBDIRECTORY(bundle_adjustment)
