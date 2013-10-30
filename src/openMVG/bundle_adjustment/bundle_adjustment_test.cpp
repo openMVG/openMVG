@@ -141,6 +141,10 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization) {
     << " Final RMSE : " << dResidual_after << "\n"
     << std::endl;
 
+  CHECK(summary.termination_type != ceres::DID_NOT_RUN &&
+      summary.termination_type != ceres::USER_ABORT &&
+      summary.termination_type != ceres::NUMERICAL_FAILURE);
+
   EXPECT_TRUE( dResidual_before > dResidual_after);
 }
 
