@@ -11,11 +11,9 @@
 #include "openMVG/features/features.hpp"
 #include "openMVG/matching/matcher_brute_force.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
-#include "openMVG/multiview/solver_essential_kernel.hpp"
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
+#include "openMVG_Samples/robust_essential/essential_estimation.hpp"
 
 #include "patented/sift/SIFT.hpp"
 #include "openMVG_Samples/siftPutativeMatches/two_view_matches.hpp"
@@ -28,16 +26,8 @@
 
 using namespace openMVG;
 using namespace openMVG::matching;
-using namespace openMVG::robust;
 using namespace svg;
 using namespace std;
-
-/// From the essential matrix test the 4 possible solutions
-///  and return the best one. (point in front of the selected solution)
-bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
-  const Mat & x1, const Mat & x2,
-  const Mat3 & E, const std::vector<size_t> & vec_inliers,
-  Mat3 * R, Vec3 * t);
 
 /// Read intrinsic K matrix from a file (ASCII)
 /// F 0 ppx
@@ -50,25 +40,14 @@ bool exportToPly(const std::vector<Vec3> & vec_points,
   const std::vector<Vec3> & vec_camPos,
   const std::string & sFileName);
 
-/// Estimate the essential matrix from point matches and K matrices.
-bool robustEssential(
-  const Mat3 & K1, const Mat3 & K2,
-  const Mat & x1, const Mat & x2,
-  Mat3 * pE,
-  std::vector<size_t> * pvec_inliers,
-  const std::pair<size_t, size_t> & size_ima1,
-  const std::pair<size_t, size_t> & size_ima2,
-  double * errorMax,
-  double * NFA,
-  double precision = std::numeric_limits<double>::infinity());
-
 /// Triangulate and export valid point as PLY (point in front of the cameras)
 void triangulateAndSaveResult(
   const PinholeCamera & camL,
   const PinholeCamera & camR,
   const std::vector<size_t> & vec_inliers,
   const Mat & xL,
-  const Mat & xR);
+  const Mat & xR,
+  std::vector<Vec3> & vec_3DPoints);
 
 int main() {
 
@@ -164,7 +143,11 @@ int main() {
   {
     Mat3 K;
     //read K from file
-    readIntrinsic(stlplus::create_filespec(sInputDir,"K","txt"), K);
+    if (!readIntrinsic(stlplus::create_filespec(sInputDir,"K","txt"), K))
+    {
+      std::cerr << "Cannot read intrinsic parameters." << std::endl;
+      return EXIT_FAILURE;
+    }
 
     //A. prepare the corresponding putatives points
     Mat xL(2, vec_PutativeMatches.size());
@@ -236,10 +219,18 @@ int main() {
       PinholeCamera camR(K, R, t);
 
       //C. Triangulate and export inliers as a PLY scene
+      std::vector<Vec3> vec_3DPoints;
       triangulateAndSaveResult(
         camL, camR,
         vec_inliers,
-        xL, xR);
+        xL, xR, vec_3DPoints);
+
+      // Export as PLY (camera pos + 3Dpoints)
+      std::vector<Vec3> vec_camPos;
+      vec_camPos.push_back( camL._C );
+      vec_camPos.push_back( camR._C );
+      exportToPly(vec_3DPoints, vec_camPos, "EssentialGeometry.ply");
+
     }
     else  {
       std::cout << "ACRANSAC was unable to estimate a rigid essential matrix"
@@ -247,71 +238,6 @@ int main() {
     }
   }
   return EXIT_SUCCESS;
-}
-
-/// Estimate the best possible Rotation/Translation from E
-bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
-  const Mat & x1, const Mat & x2,
-  const Mat3 & E, const std::vector<size_t> & vec_inliers,
-  Mat3 * R, Vec3 * t)
-{
-  bool bOk = false;
-
-  // Accumulator to find the best solution
-  std::vector<size_t> f(4, 0);
-
-  std::vector<Mat3> Es; // Essential,
-  std::vector<Mat3> Rs;  // Rotation matrix.
-  std::vector<Vec3> ts;  // Translation matrix.
-
-  Es.push_back(E);
-  // Recover best rotation and translation from E.
-  MotionFromEssential(E, &Rs, &ts);
-
-  //-> Test the 4 solutions will all the point
-  assert(Rs.size() == 4);
-  assert(ts.size() == 4);
-
-  Mat34 P1, P2;
-  Mat3 R1 = Mat3::Identity();
-  Vec3 t1 = Vec3::Zero();
-  P_From_KRt(K1, R1, t1, &P1);
-
-  for (int i = 0; i < 4; ++i) {
-    const Mat3 &R2 = Rs[i];
-    const Vec3 &t2 = ts[i];
-    P_From_KRt(K2, R2, t2, &P2);
-    Vec3 X;
-
-    for (size_t k = 0; k < vec_inliers.size(); ++k)
-    {
-      const Vec2 & x1_ = x1.col(vec_inliers[k]);
-      const Vec2 & x2_ = x2.col(vec_inliers[k]);
-      TriangulateDLT(P1, x1_, P2, x2_, &X);
-      // Test if point is front to the two cameras.
-      if (Depth(R1, t1, X) > 0 && Depth(R2, t2, X) > 0) {
-          ++f[i];
-      }
-    }
-  }
-  // Check the solution :
-  std::cout << "\t Number of points in front of both cameras:"
-    << f[0] << " " << f[1] << " " << f[2] << " " << f[3] << std::endl;
-  std::vector<size_t>::iterator iter = max_element(f.begin(), f.end());
-  if(*iter != 0)
-  {
-    size_t index = std::distance(f.begin(), iter);
-    (*R) = Rs[index];
-    (*t) = ts[index];
-    bOk = true;
-  }
-  else  {
-    std::cout << std::endl << "/!\\There is no right solution,"
-      <<" probably intermediate results are not correct or no points"
-      <<" in front of both cameras" << std::endl;
-    bOk = false;
-  }
-  return bOk;
 }
 
 bool readIntrinsic(const std::string & fileName, Mat3 & K)
@@ -366,52 +292,15 @@ bool exportToPly(const std::vector<Vec3> & vec_points,
   return bOk;
 }
 
-/// Estimate the essential matrix from point matches and K matrices.
-bool robustEssential(
-  const Mat3 & K1, const Mat3 & K2,
-  const Mat & x1, const Mat & x2,
-  Mat3 * pE,
-  std::vector<size_t> * pvec_inliers,
-  const std::pair<size_t, size_t> & size_ima1,
-  const std::pair<size_t, size_t> & size_ima2,
-  double * errorMax,
-  double * NFA,
-  double precision)
-{
-  assert(pvec_inliers != NULL);
-  assert(pE != NULL);
-
-  // Use the 5 point solver to estimate E
-  typedef openMVG::essential::kernel::FivePointKernel SolverType;
-  // Define the AContrario adaptor
-  typedef ACKernelAdaptorEssential<
-      SolverType,
-      openMVG::fundamental::kernel::EpipolarDistanceError,
-      UnnormalizerT,
-      Mat3>
-      KernelType;
-
-  KernelType kernel(x1, size_ima1.first, size_ima1.second,
-                    x2, size_ima2.first, size_ima2.second, K1, K2);
-
-  // Robustly estimation of the Essential matrix and it's precision
-  std::pair<double,double> ACRansacOut = ACRANSAC(kernel, *pvec_inliers,
-    4096, pE, precision, true);
-  *errorMax = ACRansacOut.first;
-  *NFA = ACRansacOut.second;
-
-  return pvec_inliers->size() > 2.5 * SolverType::MINIMUM_SAMPLES;
-}
-
 /// Triangulate and export valid point as PLY (point in front of the cameras)
 void triangulateAndSaveResult(
   const PinholeCamera & camL,
   const PinholeCamera & camR,
   const std::vector<size_t> & vec_inliers,
   const Mat & xL,
-  const Mat & xR)
+  const Mat & xR,
+  std::vector<Vec3> & vec_3DPoints)
 {
-  std::vector<Vec3> vec_3DPoints;
   std::vector<double> vec_residuals;
   size_t nbPointWithNegativeDepth = 0;
   for (size_t k = 0; k < vec_inliers.size(); ++k) {
@@ -448,10 +337,4 @@ void triangulateAndSaveResult(
     << "\t-- Residual median:\t" << dMedian << std::endl
     << "\t-- Residual max:\t "  << dMax << std::endl
     << "\t-- Residual mean:\t " << dMean << std::endl;
-
-  // Export as PLY (camera pos + 3Dpoints)
-  std::vector<Vec3> vec_camPos;
-  vec_camPos.push_back( camL._C );
-  vec_camPos.push_back( camR._C );
-  exportToPly(vec_3DPoints, vec_camPos, "EssentialGeometry.ply");
 }
