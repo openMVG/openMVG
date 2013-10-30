@@ -1192,7 +1192,7 @@ void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
 
   // Setup a BA problem
   using namespace openMVG::bundle_adjustment;
-  BA_Problem_data_container<7> ba_problem; //Will refine R,t,focal.
+  BA_Problem_data<7> ba_problem; //Will refine R,t,focal.
 
   // Configure the size of the problem
   ba_problem.num_cameras_ = nbCams;

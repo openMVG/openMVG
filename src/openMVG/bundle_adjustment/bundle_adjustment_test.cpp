@@ -34,7 +34,7 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization) {
   NViewDataSet d = NRealisticCamerasRing(nviews, npoints);
 
   // Setup a BA problem
-  BA_Problem_data_container<7> ba_problem;
+  BA_Problem_data<7> ba_problem;
 
   // Configure the size of the problem
   ba_problem.num_cameras_ = nviews;

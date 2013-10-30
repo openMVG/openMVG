@@ -14,10 +14,15 @@ namespace bundle_adjustment{
 
 /// Container for a Bundle Adjustment dataset
 ///  Allows to refine NCamParam per camera and the structure (3Dpts)
-///  Used with 7 parameter by default (Rotation(angle,axis), t, focal)
+///  Used with 7 parameters by default:
+///   (Rotation(angle,axis), t, focal)
 template<unsigned char NCamParam = 7>
-class BA_Problem_data_container {
+class BA_Problem_data {
  public:
+
+  // Number of camera parameters
+  static const unsigned char NCAMPARAM = NCamParam;
+
   /// Return the number of observed 3D points
   size_t num_observations()    const { return num_observations_; }
   /// Return a pointer to observed points [X_0, ... ,X_n]
@@ -48,6 +53,68 @@ class BA_Problem_data_container {
   std::vector<double> observations_; // 3D points
 
   std::vector<double> parameters_;  // Camera parametrization
+};
+
+/// Container for a Bundle Adjustment dataset
+/// Allows to refine cameras, shared intrinsics and the structure
+/// Camera can be parametrized by the number of desired values
+///   External parameter => 6: [Rotation(angle,axis), t]
+///   Intrinsic => 1: [Focal]
+template<
+  unsigned char NExternalParam = 6,
+  unsigned char NIntrinsicParam = 1>
+class BA_Problem_data_camMotionAndIntrinsic {
+ public:
+
+  // Number of camera parameters
+  static const unsigned char NEXTERNALPARAM = NExternalParam;
+  static const unsigned char NINTRINSICPARAM = NIntrinsicParam;
+
+  /// Return the number of observed 3D points
+  size_t num_observations()    const { return num_observations_; }
+  /// Return a pointer to observed points [X_0, ... ,X_n]
+  const double* observations() const { return &observations_[0]; }
+  /// Return pointer to external camera data
+  double* mutable_cameras_extrinsic() {
+    return &parameters_[0];}
+  /// Return a point to intrinsic camera data
+  double* mutable_cameras_intrinsic() {
+    return &parameters_[0] + NExternalParam * num_cameras_;}
+  /// Return point to points data
+  double* mutable_points()  {
+    return &parameters_[0]
+      + NExternalParam * num_cameras_
+      + NIntrinsicParam * num_intrinsic_;}
+
+  /// Return a pointer to the camera extrinsic that observe the Inth observation
+  double* mutable_camera_extrinsic_for_observation(size_t i) {
+    return mutable_cameras_extrinsic() + camera_index_extrinsic[i] * NExternalParam;
+  }
+  /// Return a pointer to the camera intrinsic that observe the Inth observation
+  double* mutable_camera_intrisic_for_observation(size_t i) {
+    return mutable_cameras_intrinsic() + camera_index_intrinsic[i] * NIntrinsicParam;
+  }
+
+  /// Return a pointer to the point that observe the Inth observation
+  double* mutable_point_for_observation(size_t i) {
+    return mutable_points() + point_index_[i] * 3;
+  }
+
+  size_t num_cameras_;      // # of cameras
+  size_t num_intrinsic_;    // # of intrinsic
+  size_t num_points_;       // # of 3D points
+  size_t num_observations_; // # of observations
+  // # of parameters: NIntrinsicParam * num_cameras_ + NIntrinsicParam * num_intrinsic_ + 3 * num_points_
+  size_t num_parameters_;
+
+  std::vector<size_t> point_index_;  // re-projection linked to the Inth 2d point
+  std::vector<size_t> camera_index_extrinsic; // re-projection linked to the Inth camera extrinsic
+  std::vector<size_t> camera_index_intrinsic; // re-projection linked to the Inth camera intrinsic
+  std::vector<double> observations_; // 3D points
+
+  // Camera parametrization ([R|t]_0,...,[R|t]_n,[f]_0,...,[f]_n)
+  std::vector<double> parameters_;
+
 };
 
 } // namespace bundle_adjustment
