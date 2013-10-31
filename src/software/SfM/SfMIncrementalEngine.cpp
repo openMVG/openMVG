@@ -364,12 +364,21 @@ bool IncrementalReconstructionEngine::InitialPairChoice( std::pair<size_t, size_
     if ( std::cin>> val && std::cin>> val2) {
       initialPairIndex.first = val;
       initialPairIndex.second = val2;
-      std::cout << "\nStarting pair is: (" << initialPairIndex.first
-        << "," << initialPairIndex.second << ")" << std::endl;
-      return true;
     }
   }
-  return false;
+
+  std::cout << "\nPutative starting pair is: (" << initialPairIndex.first
+      << "," << initialPairIndex.second << ")" << std::endl;
+
+  // Check validity of the initial pair indices:
+  if (_map_feats.find(initialPairIndex.first) == _map_feats.end() ||
+       _map_feats.find(initialPairIndex.second) == _map_feats.end())
+  {
+    std::cerr << "At least one of the initial pair indices is invalid."
+      << std::endl;
+    return false;
+  }
+  return true;
 }
 
 bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,size_t> & initialPair)
@@ -378,6 +387,15 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
   // use min max to have I < J
   const size_t I = min(initialPair.first,initialPair.second);
   const size_t J = max(initialPair.first,initialPair.second);
+
+  // Check validity of the initial pair indices:
+  if (_map_feats.find(I) == _map_feats.end() ||
+       _map_feats.find(J) == _map_feats.end())
+  {
+    std::cerr << "At least one of the initial pair indices is invalid."
+      << std::endl;
+    return false;
+  }
 
   // a.coords Get common tracks between the two images
   STLMAPTracks map_tracksCommon;
@@ -390,7 +408,7 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
   std::vector<SIOPointFeature> & vec_featI = _map_feats[I];
   std::vector<SIOPointFeature> & vec_featJ = _map_feats[J];
 
-  //-- Copy point to array in order to estimate essential matrix :
+  //-- Copy point to array in order to estimate essential matrix:
   const size_t n = map_tracksCommon.size();
   Mat x1(2,n), x2(2,n);
   size_t cptIndex = 0;
@@ -521,7 +539,7 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
   Histogram<double> histoResiduals;
   std::cout << std::endl
     << "=========================\n"
-    << " MSE Residual InitialPair Inlier : " << ComputeResidualsHistogram(&histoResiduals) << "\n"
+    << " MSE Residual InitialPair Inlier: " << ComputeResidualsHistogram(&histoResiduals) << "\n"
     << "=========================" << std::endl;
 
   if (_bHtmlReport)
@@ -535,8 +553,8 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
       << stlplus::basename_part(_vec_fileNames[I]) << ","
       << stlplus::basename_part(_vec_fileNames[J]) << "<br>"
       << "-- Threshold: " << errorMax << "<br>"
-      << "-- Resection status : " << "OK" << "<br>"
-      << "-- Nb points used for robust Essential matrix estimation : "
+      << "-- Resection status: " << "OK" << "<br>"
+      << "-- Nb points used for robust Essential matrix estimation: "
         << map_tracksCommon.size() << "<br>"
       << "-- Nb points validated by robust estimation: "
         << vec_inliers.size() << "<br>"
@@ -672,7 +690,7 @@ bool IncrementalReconstructionEngine::Resection(std::vector<size_t> & vec_possib
     if (!bResect) {
     // Resection was not possible (we remove the image from the remaining list)
       std::cerr << std::endl
-        << "Resection of image : " << *iter << " was not possible" << std::endl;
+        << "Resection of image: " << *iter << " was not possible" << std::endl;
     }
     _set_remainingImageId.erase(*iter);
   }
@@ -714,11 +732,11 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
     &vec_featIdForResection);
 
   std::cout << std::endl << std::endl
-    << " Tracks in : " << imageIndex << std::endl
+    << " Tracks in: " << imageIndex << std::endl
     << " \t" << map_tracksCommon.size() << std::endl
-    << " Reconstructed tracks :" << std::endl
+    << " Reconstructed tracks:" << std::endl
     << " \t" << _reconstructorData.set_trackId.size() << std::endl
-    << " Tracks Valid for resection :" << std::endl
+    << " Tracks Valid for resection:" << std::endl
     << " \t" << set_trackIdForResection.size() << std::endl;
 
   // Normally it must not crash even if it have 0 matches
@@ -774,7 +792,7 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
     os.str("");
     os << std::endl
       << "-------------------------------" << "<br>"
-      << "-- Robust Resection of camera index : <" << imageIndex << "> image: "
+      << "-- Robust Resection of camera index: <" << imageIndex << "> image: "
       << stlplus::basename_part(_vec_fileNames[imageIndex]) <<"<br>"
       << "-- Threshold: " << errorMax << "<br>"
       << "-- Resection status: " << (bResection ? "OK" : "FAILED") << "<br>"
@@ -963,7 +981,7 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
           }
         }
 
-        std::cout << "--Triangulated 3D points [" << I << "-" << J <<"] count : " << vec_3dPoint.size()
+        std::cout << "--Triangulated 3D points [" << I << "-" << J <<"] count: " << vec_3dPoint.size()
           << "\t Validated/Possible: " << _reconstructorData.map_3DPoints.size() - cardPointsBefore
           << "/" << vec_3dPoint.size() << std::endl
           << "to Add: " << vec_tracksToAdd.size() << std::endl
@@ -1168,7 +1186,7 @@ void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
     << "--      BUNDLE ADJUSTMENT      --\n"
     << "---------------------------------" << std::endl;
 
-  //-- All the data that I must fill :
+  //-- All the data that I must fill:
   using namespace std;
 
   const size_t nbCams = _reconstructorData.map_Camera.size();
@@ -1260,7 +1278,7 @@ void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
       size_t imageId = iterTrack->first;
       size_t featId = iterTrack->second;
 
-      // If imageId reconstructed :
+      // If imageId reconstructed:
       //  - Add measurements (the feature position)
       //  - Add camidx (map the image number to the camera index)
       //  - Add ptidx (the 3D corresponding point index) (must be increasing)
@@ -1336,8 +1354,8 @@ void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
     // Display statistics about the minimization
     std::cout << std::endl
       << "Bundle Adjustment statistics:\n"
-      << " Initial RMSE : " << std::sqrt( summary.initial_cost / (ba_problem.num_observations_*2.)) << "\n"
-      << " Final RMSE : " << std::sqrt( summary.final_cost / (ba_problem.num_observations_*2.)) << "\n"
+      << " Initial RMSE: " << std::sqrt( summary.initial_cost / (ba_problem.num_observations_*2.)) << "\n"
+      << " Final RMSE: " << std::sqrt( summary.final_cost / (ba_problem.num_observations_*2.)) << "\n"
       << std::endl;
 
     // Get back 3D points
