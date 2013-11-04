@@ -631,7 +631,6 @@ void do_bundle_adjustment_common_focal(
   // Add 3D points coordinates parameters
   for (int i = 0; i < n3Dpoints; ++i) {
     Vec3 pt3D = vec_3DPoints[i];
-    double * ptr3D = ba_problem.mutable_points() + i * 3;
     ba_problem.parameters_.push_back(pt3D[0]);
     ba_problem.parameters_.push_back(pt3D[1]);
     ba_problem.parameters_.push_back(pt3D[2]);
@@ -702,14 +701,14 @@ void do_bundle_adjustment_common_focal(
     for (std::vector<Vec3>::iterator iter = vec_3DPoints.begin();
       iter != vec_3DPoints.end(); ++iter, ++cpt)
     {
-      const double * pt = ba_problem.mutable_points() + cpt*3;
+      const double * pt = ba_problem.mutable_points() + cpt * 3;
       Vec3 & pt3D = *iter;
       pt3D = Vec3(pt[0], pt[1], pt[2]);
     }
     // Get back camera
     for (cpt = 0; cpt < nCameraMotion; ++cpt)
     {
-      const double * cam = ba_problem.mutable_cameras_extrinsic() + cpt*6;
+      const double * cam = ba_problem.mutable_cameras_extrinsic() + cpt * 6;
       Mat3 R;
       // angle axis to rotation matrix
       ceres::AngleAxisToRotationMatrix(cam, R.data());
