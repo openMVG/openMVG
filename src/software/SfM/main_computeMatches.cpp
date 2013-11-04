@@ -182,7 +182,7 @@ int main(int argc, char **argv)
         // Compute features and descriptors and export them to file
         SIFTDetector(imageGray,  kpSet.features(), kpSet.descriptors(), bOctMinus1);
         kpSet.saveToBinFile(sFeat, sDesc);
-        vec_imagesSize[i] = make_pair(imageGray.Width(), imageRGB.Height());
+        vec_imagesSize[i] = make_pair(imageGray.Width(), imageGray.Height());
       }
       ++my_progress_bar;
     }
