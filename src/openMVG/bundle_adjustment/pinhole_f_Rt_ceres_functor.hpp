@@ -42,7 +42,7 @@ struct Pinhole_f_Rt_ReprojectionError {
     T x[3];
     ceres::AngleAxisRotatePoint(Rt, X, x);
 
-    // Rtf[3,4,5] : the camera translation.
+    // Rt[3,4,5] : the camera translation.
     x[0] += Rt[3];
     x[1] += Rt[4];
     x[2] += Rt[5];
