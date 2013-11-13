@@ -119,6 +119,7 @@ Solver::Summary::Summary()
       inner_iterations_given(false),
       inner_iterations_used(false),
       preconditioner_type(IDENTITY),
+      visibility_clustering_type(CANONICAL_VIEWS),
       trust_region_strategy_type(LEVENBERG_MARQUARDT),
       dense_linear_algebra_library_type(EIGEN),
       sparse_linear_algebra_library_type(SUITE_SPARSE),
@@ -237,6 +238,14 @@ string Solver::Summary::FullReport() const {
                     PreconditionerTypeToString(preconditioner_type));
     }
 
+    if (preconditioner_type == CLUSTER_JACOBI ||
+        preconditioner_type == CLUSTER_TRIDIAGONAL) {
+      StringAppendF(&report, "Visibility clustering%24s%25s\n",
+                    VisibilityClusteringTypeToString(
+                        visibility_clustering_type),
+                    VisibilityClusteringTypeToString(
+                        visibility_clustering_type));
+    }
     StringAppendF(&report, "Threads             % 25d% 25d\n",
                   num_threads_given, num_threads_used);
     StringAppendF(&report, "Linear solver threads % 23d% 25d\n",

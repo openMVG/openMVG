@@ -120,7 +120,10 @@ class ImplicitSchurComplementTest : public ::testing::Test {
     Vector reference_solution;
     ReducedLinearSystemAndSolution(D, &lhs, &rhs, &reference_solution);
 
-    ImplicitSchurComplement isc(num_eliminate_blocks_, true);
+    LinearSolver::Options options;
+    options.elimination_groups.push_back(num_eliminate_blocks_);
+    options.preconditioner_type = JACOBI;
+    ImplicitSchurComplement isc(options);
     isc.Init(*A_, D, b_.get());
 
     int num_sc_cols = lhs.cols();

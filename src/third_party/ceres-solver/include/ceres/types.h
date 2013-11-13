@@ -102,19 +102,47 @@ enum PreconditionerType {
   // Block diagonal of the Gauss-Newton Hessian.
   JACOBI,
 
+  // Note: The following three preconditioners can only be used with
+  // the ITERATIVE_SCHUR solver. They are well suited for Structure
+  // from Motion problems.
+
   // Block diagonal of the Schur complement. This preconditioner may
   // only be used with the ITERATIVE_SCHUR solver.
   SCHUR_JACOBI,
 
   // Visibility clustering based preconditioners.
   //
-  // These preconditioners are well suited for Structure from Motion
-  // problems, particularly problems arising from community photo
-  // collections. These preconditioners use the visibility structure
-  // of the scene to determine the sparsity structure of the
-  // preconditioner. Requires SuiteSparse/CHOLMOD.
+  // The following two preconditioners use the visibility structure of
+  // the scene to determine the sparsity structure of the
+  // preconditioner. This is done using a clustering algorithm. The
+  // available visibility clustering algorithms are described below.
+  //
+  // Note: Requires SuiteSparse.
   CLUSTER_JACOBI,
   CLUSTER_TRIDIAGONAL
+};
+
+enum VisibilityClusteringType {
+  // Canonical views algorithm as described in
+  //
+  // "Scene Summarization for Online Image Collections", Ian Simon, Noah
+  // Snavely, Steven M. Seitz, ICCV 2007.
+  //
+  // This clustering algorithm can be quite slow, but gives high
+  // quality clusters. The original visibility based clustering paper
+  // used this algorithm.
+  CANONICAL_VIEWS,
+
+  // The classic single linkage algorithm. It is extremely fast as
+  // compared to CANONICAL_VIEWS, but can give slightly poorer
+  // results. For problems with large number of cameras though, this
+  // is generally a pretty good option.
+  //
+  // If you are using SCHUR_JACOBI preconditioner and have SuiteSparse
+  // available, CLUSTER_JACOBI and CLUSTER_TRIDIAGONAL in combination
+  // with the SINGLE_LINKAGE algorithm will generally give better
+  // results.
+  SINGLE_LINKAGE
 };
 
 enum SparseLinearAlgebraLibraryType {
@@ -399,6 +427,10 @@ bool StringToLinearSolverType(string value, LinearSolverType* type);
 
 const char* PreconditionerTypeToString(PreconditionerType type);
 bool StringToPreconditionerType(string value, PreconditionerType* type);
+
+const char* VisibilityClusteringTypeToString(VisibilityClusteringType type);
+bool StringToVisibilityClusteringType(string value,
+                                      VisibilityClusteringType* type);
 
 const char* SparseLinearAlgebraLibraryTypeToString(
     SparseLinearAlgebraLibraryType type);

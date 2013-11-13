@@ -1,4 +1,3 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -19,8 +18,8 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '1.7.0',
+        URL_ROOT:    './',
+        VERSION:     '1.8.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -39,7 +38,7 @@
     <script type="text/javascript" src="_static/searchtools.js"></script>
     <link rel="top" title="Ceres Solver" href="index.html" />
     <link rel="next" title="Modeling" href="modeling.html" />
-    <link rel="prev" title="Building Ceres Solver" href="building.html" /> 
+    <link rel="prev" title="Installation" href="building.html" /> 
   </head>
   <body>
     <div class="related">
@@ -52,7 +51,7 @@
           <a href="modeling.html" title="Modeling"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="building.html" title="Building Ceres Solver"
+          <a href="building.html" title="Installation"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Ceres Solver</a> &raquo;</li> 
       </ul>
@@ -104,7 +103,7 @@ function <span class="math">\(f(x) = 10 - x\)</span>:</p>
    <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
    <span class="kt">bool</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="k">const</span> <span class="n">x</span><span class="p">,</span> <span class="n">T</span><span class="o">*</span> <span class="n">residual</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
      <span class="n">residual</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">T</span><span class="p">(</span><span class="mf">10.0</span><span class="p">)</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-     <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+     <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
    <span class="p">}</span>
 <span class="p">};</span>
 </pre></div>
@@ -119,7 +118,7 @@ various ways of supplying derivatives to Ceres in more detail.</p>
 <p>Once we have a way of computing the residual function, it is now time
 to construct a non-linear least squares problem using it and have
 Ceres solve it.</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+<div class="highlight-c++"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
   <span class="n">google</span><span class="o">::</span><span class="n">InitGoogleLogging</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
 
   <span class="c1">// The variable to solve for with its initial value.</span>
@@ -138,7 +137,7 @@ Ceres solve it.</p>
   <span class="c1">// Run the solver!</span>
   <span class="n">Solver</span><span class="o">::</span><span class="n">Options</span> <span class="n">options</span><span class="p">;</span>
   <span class="n">options</span><span class="p">.</span><span class="n">linear_solver_type</span> <span class="o">=</span> <span class="n">ceres</span><span class="o">::</span><span class="n">DENSE_QR</span><span class="p">;</span>
-  <span class="n">options</span><span class="p">.</span><span class="n">minimizer_progress_to_stdout</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+  <span class="n">options</span><span class="p">.</span><span class="n">minimizer_progress_to_stdout</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
   <span class="n">Solver</span><span class="o">::</span><span class="n">Summary</span> <span class="n">summary</span><span class="p">;</span>
   <span class="n">Solve</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">problem</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">summary</span><span class="p">);</span>
 
@@ -214,7 +213,7 @@ the corresponding functor would be</p>
 <div class="highlight-c++"><div class="highlight"><pre><span class="k">struct</span> <span class="n">NumericDiffCostFunctor</span> <span class="p">{</span>
   <span class="kt">bool</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="kt">double</span><span class="o">*</span> <span class="k">const</span> <span class="n">x</span><span class="p">,</span> <span class="kt">double</span><span class="o">*</span> <span class="n">residual</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
     <span class="n">residual</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">10.0</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
   <span class="p">}</span>
 <span class="p">};</span>
 </pre></div>
@@ -255,7 +254,7 @@ sizes of the parameters and residuals at compile time. Here for
 example is <tt class="docutils literal"><span class="pre">SimpleCostFunction</span></tt> that implements <span class="math">\(f(x) = 10 -
 x\)</span>.</p>
 <div class="highlight-c++"><div class="highlight"><pre><span class="k">class</span> <span class="nc">QuadraticCostFunction</span> <span class="o">:</span> <span class="k">public</span> <span class="n">ceres</span><span class="o">::</span><span class="n">SizedCostFunction</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">&gt;</span> <span class="p">{</span>
- <span class="k">public</span><span class="o">:</span>
+ <span class="nl">public:</span>
   <span class="k">virtual</span> <span class="o">~</span><span class="n">QuadraticCostFunction</span><span class="p">()</span> <span class="p">{}</span>
   <span class="k">virtual</span> <span class="kt">bool</span> <span class="n">Evaluate</span><span class="p">(</span><span class="kt">double</span> <span class="k">const</span><span class="o">*</span> <span class="k">const</span><span class="o">*</span> <span class="n">parameters</span><span class="p">,</span>
                         <span class="kt">double</span><span class="o">*</span> <span class="n">residuals</span><span class="p">,</span>
@@ -267,7 +266,7 @@ x\)</span>.</p>
     <span class="k">if</span> <span class="p">(</span><span class="n">jacobians</span> <span class="o">!=</span> <span class="nb">NULL</span> <span class="o">&amp;&amp;</span> <span class="n">jacobians</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
       <span class="n">jacobians</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
     <span class="p">}</span>
-    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
   <span class="p">}</span>
 <span class="p">};</span>
 </pre></div>
@@ -335,7 +334,7 @@ in the objective functor. Here is the code for evaluating
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
   <span class="kt">bool</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="k">const</span> <span class="n">x1</span><span class="p">,</span> <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="k">const</span> <span class="n">x4</span><span class="p">,</span> <span class="n">T</span><span class="o">*</span> <span class="n">residual</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
     <span class="n">residual</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">T</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">10.0</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">x1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x4</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">x1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x4</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
-    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
   <span class="p">}</span>
 <span class="p">};</span>
 </pre></div>
@@ -412,10 +411,10 @@ residual. There will be a residual for each observation.</p>
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
   <span class="kt">bool</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="k">const</span> <span class="n">m</span><span class="p">,</span> <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="k">const</span> <span class="n">c</span><span class="p">,</span> <span class="n">T</span><span class="o">*</span> <span class="n">residual</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
     <span class="n">residual</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">T</span><span class="p">(</span><span class="n">y_</span><span class="p">)</span> <span class="o">-</span> <span class="n">exp</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">T</span><span class="p">(</span><span class="n">x_</span><span class="p">)</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
-    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
   <span class="p">}</span>
 
- <span class="k">private</span><span class="o">:</span>
+ <span class="nl">private:</span>
   <span class="c1">// Observations for a sample.</span>
   <span class="k">const</span> <span class="kt">double</span> <span class="n">x_</span><span class="p">;</span>
   <span class="k">const</span> <span class="kt">double</span> <span class="n">y_</span><span class="p">;</span>
@@ -468,7 +467,7 @@ see such deviations. Indeed, if you were to evaluate the objective
 function for <span class="math">\(m=0.3, c=0.1\)</span>, the fit is worse with an objective
 function value of <span class="math">\(1.082425\)</span>.  The figure below illustrates the fit.</p>
 <div class="figure align-center" style="width: 500px">
-<img alt="_images/least_squares_fit.png" src="_images/least_squares_fit.png" style="height: 400px;" />
+<a class="reference internal image-reference" href="_images/least_squares_fit.png"><img alt="_images/least_squares_fit.png" src="_images/least_squares_fit.png" style="height: 400px;" /></a>
 <p class="caption">Least squares curve fitting.</p>
 </div>
 <p class="rubric">Footnotes</p>
@@ -486,7 +485,7 @@ some points that do not obey the noise model. If we were to use the
 code above to fit such data, we would get a fit that looks as
 below. Notice how the fitted curve deviates from the ground truth.</p>
 <div class="figure align-center" style="width: 500px">
-<img alt="_images/non_robust_least_squares_fit.png" src="_images/non_robust_least_squares_fit.png" style="height: 400px;" />
+<a class="reference internal image-reference" href="_images/non_robust_least_squares_fit.png"><img alt="_images/non_robust_least_squares_fit.png" src="_images/non_robust_least_squares_fit.png" style="height: 400px;" /></a>
 </div>
 <p>To deal with outliers, a standard technique is to use a
 <a class="reference internal" href="modeling.html#LossFunction" title="LossFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">LossFunction</span></tt></a>. Loss functions, reduce the influence of
@@ -504,7 +503,7 @@ Solver. The argument <span class="math">\(0.5\)</span> specifies the scale of th
 function. As a result, we get the fit below <a class="footnote-reference" href="#f7" id="id10">[7]</a>. Notice how the
 fitted curve moves back closer to the ground truth curve.</p>
 <div class="figure align-center" style="width: 500px">
-<img alt="_images/robust_least_squares_fit.png" src="_images/robust_least_squares_fit.png" style="height: 400px;" />
+<a class="reference internal image-reference" href="_images/robust_least_squares_fit.png"><img alt="_images/robust_least_squares_fit.png" src="_images/robust_least_squares_fit.png" style="height: 400px;" /></a>
 <p class="caption">Using <a class="reference internal" href="modeling.html#LossFunction" title="LossFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">LossFunction</span></tt></a> to reduce the effect of outliers on a
 least squares fit.</p>
 </div>
@@ -519,7 +518,7 @@ least squares fit.</p>
 <div class="section" id="bundle-adjustment">
 <h2>Bundle Adjustment<a class="headerlink" href="#bundle-adjustment" title="Permalink to this headline">¶</a></h2>
 <p>One of the main reasons for writing Ceres was our need to solve large
-scale bundle adjustment problems <a class="reference internal" href="bibliography.html#hartleyzisserman">[HartleyZisserman]</a>, <a class="reference internal" href="bibliography.html#triggs">[Triggs]</a>.</p>
+scale bundle adjustment problems <a class="reference internal" href="bibliography.html#hartleyzisserman" id="id11">[HartleyZisserman]</a>, <a class="reference internal" href="bibliography.html#triggs" id="id12">[Triggs]</a>.</p>
 <p>Given a set of measured image feature locations and correspondences,
 the goal of bundle adjustment is to find 3D point positions and camera
 parameters that minimize the reprojection error. This optimization
@@ -572,7 +571,7 @@ The details of this camera model can be found the <a class="reference external" 
     <span class="c1">// The error is the difference between the predicted and observed position.</span>
     <span class="n">residuals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">predicted_x</span> <span class="o">-</span> <span class="n">T</span><span class="p">(</span><span class="n">observed_x</span><span class="p">);</span>
     <span class="n">residuals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">predicted_y</span> <span class="o">-</span> <span class="n">T</span><span class="p">(</span><span class="n">observed_y</span><span class="p">);</span>
-    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
   <span class="p">}</span>
 
    <span class="c1">// Factory to hide the construction of the CostFunction object from</span>
@@ -623,7 +622,7 @@ known as Schur-based solvers) for this task. The example code uses the
 simplest of them <tt class="docutils literal"><span class="pre">DENSE_SCHUR</span></tt>.</p>
 <div class="highlight-c++"><div class="highlight"><pre><span class="n">ceres</span><span class="o">::</span><span class="n">Solver</span><span class="o">::</span><span class="n">Options</span> <span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">linear_solver_type</span> <span class="o">=</span> <span class="n">ceres</span><span class="o">::</span><span class="n">DENSE_SCHUR</span><span class="p">;</span>
-<span class="n">options</span><span class="p">.</span><span class="n">minimizer_progress_to_stdout</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">minimizer_progress_to_stdout</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
 <span class="n">ceres</span><span class="o">::</span><span class="n">Solver</span><span class="o">::</span><span class="n">Summary</span> <span class="n">summary</span><span class="p">;</span>
 <span class="n">ceres</span><span class="o">::</span><span class="n">Solve</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">problem</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">summary</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">summary</span><span class="p">.</span><span class="n">FullReport</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
@@ -672,7 +671,7 @@ is the bundle adjustment algorithm used by <a class="reference external" href="w
 <h3><a href="index.html">Ceres Solver</a></h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="building.html">Building Ceres Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="building.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="solving.html">Solving</a></li>
@@ -686,7 +685,7 @@ is the bundle adjustment algorithm used by <a class="reference external" href="w
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="building.html"
-                        title="previous chapter">Building Ceres Solver</a></p>
+                        title="previous chapter">Installation</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="modeling.html"
                         title="next chapter">Modeling</a></p>
@@ -717,7 +716,7 @@ is the bundle adjustment algorithm used by <a class="reference external" href="w
           <a href="modeling.html" title="Modeling"
              >next</a> |</li>
         <li class="right" >
-          <a href="building.html" title="Building Ceres Solver"
+          <a href="building.html" title="Installation"
              >previous</a> |</li>
         <li><a href="index.html">Ceres Solver</a> &raquo;</li> 
       </ul>

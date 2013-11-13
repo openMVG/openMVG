@@ -28,51 +28,56 @@
 #
 # Author: keir@google.com (Keir Mierle)
 
-ADD_EXECUTABLE(helloworld helloworld.cc)
-TARGET_LINK_LIBRARIES(helloworld ceres)
+ADD_EXECUTABLE(ceres_helloworld helloworld.cc)
+TARGET_LINK_LIBRARIES(ceres_helloworld ceres)
 
-ADD_EXECUTABLE(helloworld_numeric_diff helloworld_numeric_diff.cc)
-TARGET_LINK_LIBRARIES(helloworld_numeric_diff ceres)
+ADD_EXECUTABLE(ceres_helloworld_numeric_diff helloworld_numeric_diff.cc)
+TARGET_LINK_LIBRARIES(ceres_helloworld_numeric_diff ceres)
 
-ADD_EXECUTABLE(helloworld_analytic_diff helloworld_analytic_diff.cc)
-TARGET_LINK_LIBRARIES(helloworld_analytic_diff ceres)
+ADD_EXECUTABLE(ceres_helloworld_analytic_diff helloworld_analytic_diff.cc)
+TARGET_LINK_LIBRARIES(ceres_helloworld_analytic_diff ceres)
 
-ADD_EXECUTABLE(curve_fitting curve_fitting.cc)
-TARGET_LINK_LIBRARIES(curve_fitting ceres)
+ADD_EXECUTABLE(ceres_curve_fitting curve_fitting.cc)
+TARGET_LINK_LIBRARIES(ceres_curve_fitting ceres)
 
-ADD_EXECUTABLE(curve_fitting_c curve_fitting.c)
-TARGET_LINK_LIBRARIES(curve_fitting_c ceres)
+ADD_EXECUTABLE(ceres_curve_fitting_c curve_fitting.c)
+TARGET_LINK_LIBRARIES(ceres_curve_fitting_c ceres)
+# As this is a C file #including <math.h> we have to explicitly add the math
+# library (libm). Although some compilers (dependent upon options) will accept
+# the indirect link to libm via Ceres, at least GCC 4.8 on pure Debian won't.
+IF (NOT MSVC)
+  TARGET_LINK_LIBRARIES(ceres_curve_fitting_c m)
+ENDIF (NOT MSVC)
 
+ADD_EXECUTABLE(ceres_robust_curve_fitting robust_curve_fitting.cc)
+TARGET_LINK_LIBRARIES(ceres_robust_curve_fitting ceres)
 
-ADD_EXECUTABLE(robust_curve_fitting robust_curve_fitting.cc)
-TARGET_LINK_LIBRARIES(robust_curve_fitting ceres)
-
-ADD_EXECUTABLE(simple_bundle_adjuster
+ADD_EXECUTABLE(ceres_simple_bundle_adjuster
                simple_bundle_adjuster.cc)
-TARGET_LINK_LIBRARIES(simple_bundle_adjuster ceres)
+TARGET_LINK_LIBRARIES(ceres_simple_bundle_adjuster ceres)
 
 IF (GFLAGS)
-  ADD_EXECUTABLE(powell powell.cc)
-  TARGET_LINK_LIBRARIES(powell ceres)
+  ADD_EXECUTABLE(ceres_powell powell.cc)
+  TARGET_LINK_LIBRARIES(ceres_powell ceres ${GFLAGS_LIBRARIES})
 
-  ADD_EXECUTABLE(nist nist.cc)
-  TARGET_LINK_LIBRARIES(nist ceres)
+  ADD_EXECUTABLE(ceres_nist nist.cc)
+  TARGET_LINK_LIBRARIES(ceres_nist ceres ${GFLAGS_LIBRARIES})
 
-  ADD_EXECUTABLE(circle_fit circle_fit.cc)
-  TARGET_LINK_LIBRARIES(circle_fit ceres)
+  ADD_EXECUTABLE(ceres_circle_fit circle_fit.cc)
+  TARGET_LINK_LIBRARIES(ceres_circle_fit ceres ${GFLAGS_LIBRARIES})
 
-  ADD_EXECUTABLE(bundle_adjuster
+  ADD_EXECUTABLE(ceres_bundle_adjuster
                  bundle_adjuster.cc
                  bal_problem.cc)
-  TARGET_LINK_LIBRARIES(bundle_adjuster ceres)
+  TARGET_LINK_LIBRARIES(ceres_bundle_adjuster ceres ${GFLAGS_LIBRARIES})
 
-  ADD_EXECUTABLE(libmv_bundle_adjuster
+  ADD_EXECUTABLE(ceres_libmv_bundle_adjuster
                  libmv_bundle_adjuster.cc)
-  TARGET_LINK_LIBRARIES(libmv_bundle_adjuster ceres)
+  TARGET_LINK_LIBRARIES(ceres_libmv_bundle_adjuster ceres ${GFLAGS_LIBRARIES})
 
-  ADD_EXECUTABLE(denoising
+  ADD_EXECUTABLE(ceres_denoising
                  denoising.cc
                  fields_of_experts.cc)
-  TARGET_LINK_LIBRARIES(denoising ceres)
+  TARGET_LINK_LIBRARIES(ceres_denoising ceres ${GFLAGS_LIBRARIES})
 ENDIF (GFLAGS)
 

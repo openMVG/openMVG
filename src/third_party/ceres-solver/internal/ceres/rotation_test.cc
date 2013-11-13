@@ -548,6 +548,40 @@ TEST(Rotation, AngleAxisToRotationMatrixAndBack) {
   }
 }
 
+// Takes a bunch of random axis/angle values near zero, converts them
+// to rotation matrices, and back again.
+TEST(Rotation, AngleAxisToRotationMatrixAndBackNearZero) {
+  srand(5);
+  for (int i = 0; i < kNumTrials; i++) {
+    double axis_angle[3];
+    // Make an axis by choosing three random numbers in [-1, 1) and
+    // normalizing.
+    double norm = 0;
+    for (int i = 0; i < 3; i++) {
+      axis_angle[i] = RandDouble() * 2 - 1;
+      norm += axis_angle[i] * axis_angle[i];
+    }
+    norm = sqrt(norm);
+
+    // Tiny theta.
+    double theta = 1e-16 * (kPi * 2 * RandDouble() - kPi);
+    for (int i = 0; i < 3; i++) {
+      axis_angle[i] = axis_angle[i] * theta / norm;
+    }
+
+    double matrix[9];
+    double round_trip[3];
+    AngleAxisToRotationMatrix(axis_angle, matrix);
+    ASSERT_THAT(matrix, IsOrthonormal());
+    RotationMatrixToAngleAxis(matrix, round_trip);
+
+    for (int i = 0; i < 3; ++i) {
+      EXPECT_NEAR(round_trip[i], axis_angle[i], std::numeric_limits<double>::epsilon());
+    }
+  }
+}
+
+
 // Transposes a 3x3 matrix.
 static void Transpose3x3(double m[9]) {
   std::swap(m[1], m[3]);

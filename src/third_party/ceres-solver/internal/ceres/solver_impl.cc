@@ -494,6 +494,7 @@ void SolverImpl::TrustRegionSolve(const Solver::Options& original_options,
 
     // Ensure the program state is set to the user parameters on the way out.
     original_program->SetParameterBlockStatePtrsToUserStatePtrs();
+    original_program->SetParameterOffsetsAndIndex();
 
     summary->postprocessor_time_in_seconds =
         WallTimeInSeconds() - post_process_start_time;
@@ -511,6 +512,7 @@ void SolverImpl::TrustRegionSolve(const Solver::Options& original_options,
   summary->linear_solver_type_used = options.linear_solver_type;
 
   summary->preconditioner_type = options.preconditioner_type;
+  summary->visibility_clustering_type = options.visibility_clustering_type;
 
   summary->num_linear_solver_threads_given =
       original_options.num_linear_solver_threads;
@@ -596,6 +598,7 @@ void SolverImpl::TrustRegionSolve(const Solver::Options& original_options,
   // Ensure the program state is set to the user parameters on the way
   // out.
   original_program->SetParameterBlockStatePtrsToUserStatePtrs();
+  original_program->SetParameterOffsetsAndIndex();
 
   const map<string, double>& linear_solver_time_statistics =
       linear_solver->TimeStatistics();
@@ -839,6 +842,8 @@ void SolverImpl::LineSearchSolve(const Solver::Options& original_options,
 
     // Ensure the program state is set to the user parameters on the way out.
     original_program->SetParameterBlockStatePtrsToUserStatePtrs();
+    original_program->SetParameterOffsetsAndIndex();
+
     summary->postprocessor_time_in_seconds =
         WallTimeInSeconds() - post_process_start_time;
     return;
@@ -889,6 +894,7 @@ void SolverImpl::LineSearchSolve(const Solver::Options& original_options,
 
   // Ensure the program state is set to the user parameters on the way out.
   original_program->SetParameterBlockStatePtrsToUserStatePtrs();
+  original_program->SetParameterOffsetsAndIndex();
 
   const map<string, double>& evaluator_time_statistics =
       evaluator->TimeStatistics();
@@ -1239,6 +1245,8 @@ LinearSolver* SolverImpl::CreateLinearSolver(Solver::Options* options,
       options->max_linear_solver_iterations;
   linear_solver_options.type = options->linear_solver_type;
   linear_solver_options.preconditioner_type = options->preconditioner_type;
+  linear_solver_options.visibility_clustering_type =
+      options->visibility_clustering_type;
   linear_solver_options.sparse_linear_algebra_library_type =
       options->sparse_linear_algebra_library_type;
   linear_solver_options.dense_linear_algebra_library_type =

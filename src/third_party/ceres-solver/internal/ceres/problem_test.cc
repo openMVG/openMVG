@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2010, 2011, 2012 Google Inc. All rights reserved.
+// Copyright 2013 Google Inc. All rights reserved.
 // http://code.google.com/p/ceres-solver/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -768,6 +768,141 @@ TEST_P(DynamicProblem, RemoveResidualBlock) {
     ExpectParameterBlockContains(y);
     ExpectParameterBlockContains(z);
     ExpectParameterBlockContains(w);
+  }
+}
+
+// Check that a null-terminated array, a, has the same elements as b.
+template<typename T>
+void ExpectVectorContainsUnordered(const T* a, const vector<T>& b) {
+  // Compute the size of a.
+  int size = 0;
+  while (a[size]) {
+    ++size;
+  }
+  ASSERT_EQ(size, b.size());
+
+  // Sort a.
+  vector<T> a_sorted(size);
+  copy(a, a + size, a_sorted.begin());
+  sort(a_sorted.begin(), a_sorted.end());
+
+  // Sort b.
+  vector<T> b_sorted(b);
+  sort(b_sorted.begin(), b_sorted.end());
+
+  // Compare.
+  for (int i = 0; i < size; ++i) {
+    EXPECT_EQ(a_sorted[i], b_sorted[i]);
+  }
+}
+
+void ExpectProblemHasResidualBlocks(
+    const ProblemImpl &problem,
+    const ResidualBlockId *expected_residual_blocks) {
+  vector<ResidualBlockId> residual_blocks;
+  problem.GetResidualBlocks(&residual_blocks);
+  ExpectVectorContainsUnordered(expected_residual_blocks, residual_blocks);
+}
+
+TEST_P(DynamicProblem, GetXXXBlocksForYYYBlock) {
+  problem->AddParameterBlock(y, 4);
+  problem->AddParameterBlock(z, 5);
+  problem->AddParameterBlock(w, 3);
+
+  // Add all combinations of cost functions.
+  CostFunction* cost_yzw = new TernaryCostFunction(1, 4, 5, 3);
+  CostFunction* cost_yz  = new BinaryCostFunction (1, 4, 5);
+  CostFunction* cost_yw  = new BinaryCostFunction (1, 4, 3);
+  CostFunction* cost_zw  = new BinaryCostFunction (1, 5, 3);
+  CostFunction* cost_y   = new UnaryCostFunction  (1, 4);
+  CostFunction* cost_z   = new UnaryCostFunction  (1, 5);
+  CostFunction* cost_w   = new UnaryCostFunction  (1, 3);
+
+  ResidualBlock* r_yzw = problem->AddResidualBlock(cost_yzw, NULL, y, z, w);
+  {
+    ResidualBlockId expected_residuals[] = {r_yzw, 0};
+    ExpectProblemHasResidualBlocks(*problem, expected_residuals);
+  }
+  ResidualBlock* r_yz  = problem->AddResidualBlock(cost_yz,  NULL, y, z);
+  {
+    ResidualBlockId expected_residuals[] = {r_yzw, r_yz, 0};
+    ExpectProblemHasResidualBlocks(*problem, expected_residuals);
+  }
+  ResidualBlock* r_yw  = problem->AddResidualBlock(cost_yw,  NULL, y, w);
+  {
+    ResidualBlock *expected_residuals[] = {r_yzw, r_yz, r_yw, 0};
+    ExpectProblemHasResidualBlocks(*problem, expected_residuals);
+  }
+  ResidualBlock* r_zw  = problem->AddResidualBlock(cost_zw,  NULL, z, w);
+  {
+    ResidualBlock *expected_residuals[] = {r_yzw, r_yz, r_yw, r_zw, 0};
+    ExpectProblemHasResidualBlocks(*problem, expected_residuals);
+  }
+  ResidualBlock* r_y   = problem->AddResidualBlock(cost_y,   NULL, y);
+  {
+    ResidualBlock *expected_residuals[] = {r_yzw, r_yz, r_yw, r_zw, r_y, 0};
+    ExpectProblemHasResidualBlocks(*problem, expected_residuals);
+  }
+  ResidualBlock* r_z   = problem->AddResidualBlock(cost_z,   NULL, z);
+  {
+    ResidualBlock *expected_residuals[] = {
+      r_yzw, r_yz, r_yw, r_zw, r_y, r_z, 0
+    };
+    ExpectProblemHasResidualBlocks(*problem, expected_residuals);
+  }
+  ResidualBlock* r_w   = problem->AddResidualBlock(cost_w,   NULL, w);
+  {
+    ResidualBlock *expected_residuals[] = {
+      r_yzw, r_yz, r_yw, r_zw, r_y, r_z, r_w, 0
+    };
+    ExpectProblemHasResidualBlocks(*problem, expected_residuals);
+  }
+
+  vector<double*> parameter_blocks;
+  vector<ResidualBlockId> residual_blocks;
+
+  // Check GetResidualBlocksForParameterBlock() for all parameter blocks.
+  struct GetResidualBlocksForParameterBlockTestCase {
+    double* parameter_block;
+    ResidualBlockId expected_residual_blocks[10];
+  };
+  GetResidualBlocksForParameterBlockTestCase get_residual_blocks_cases[] = {
+    { y, { r_yzw, r_yz, r_yw, r_y, NULL} },
+    { z, { r_yzw, r_yz, r_zw, r_z, NULL} },
+    { w, { r_yzw, r_yw, r_zw, r_w, NULL} },
+    { NULL }
+  };
+  for (int i = 0; get_residual_blocks_cases[i].parameter_block; ++i) {
+    problem->GetResidualBlocksForParameterBlock(
+        get_residual_blocks_cases[i].parameter_block,
+        &residual_blocks);
+    ExpectVectorContainsUnordered(
+        get_residual_blocks_cases[i].expected_residual_blocks,
+        residual_blocks);
+  }
+
+  // Check GetParameterBlocksForResidualBlock() for all residual blocks.
+  struct GetParameterBlocksForResidualBlockTestCase {
+    ResidualBlockId residual_block;
+    double* expected_parameter_blocks[10];
+  };
+  GetParameterBlocksForResidualBlockTestCase get_parameter_blocks_cases[] = {
+    { r_yzw, { y, z, w, NULL } },
+    { r_yz , { y, z, NULL } },
+    { r_yw , { y, w, NULL } },
+    { r_zw , { z, w, NULL } },
+    { r_y  , { y, NULL } },
+    { r_z  , { z, NULL } },
+    { r_w  , { w, NULL } },
+    { NULL }
+  };
+  for (int i = 0; get_parameter_blocks_cases[i].residual_block; ++i) {
+    problem->GetParameterBlocksForResidualBlock(
+        get_parameter_blocks_cases[i].residual_block,
+        &parameter_blocks);
+    ExpectVectorContainsUnordered(
+        get_parameter_blocks_cases[i].expected_parameter_blocks,
+        parameter_blocks);
   }
 }
 

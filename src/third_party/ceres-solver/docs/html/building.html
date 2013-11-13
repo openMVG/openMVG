@@ -1,4 +1,3 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -8,7 +7,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
 
-    <title>Building Ceres Solver &mdash; Ceres Solver</title>
+    <title>Installation &mdash; Ceres Solver</title>
 
 <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
 
@@ -19,8 +18,8 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '1.7.0',
+        URL_ROOT:    './',
+        VERSION:     '1.8.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -63,8 +62,8 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="building-ceres-solver">
-<span id="chapter-building"></span><h1>Building Ceres Solver<a class="headerlink" href="#building-ceres-solver" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="installation">
+<span id="chapter-building"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p>Stable Ceres Solver releases are available for download at
 <a class="reference external" href="http://code.google.com/p/ceres-solver/">code.google.com</a>. For the
 more adventurous, the git repository is hosted on <a class="reference external" href="https://ceres-solver-review.googlesource.com/">Gerrit</a>.</p>
@@ -81,7 +80,11 @@ used for doing all the low level matrix and linear algebra operations.</p>
 <p>3. <a class="reference external" href="http://code.google.com/p/google-glog">google-glog</a> is
 used for error checking and logging. Ceres needs glog version 0.3.1 or
 later. Version 0.3 (which ships with Fedora 16) has a namespace bug
-which prevents Ceres from building.</p>
+which prevents Ceres from building. Ceres contains a stripped-down,
+minimal version of <tt class="docutils literal"><span class="pre">glog</span></tt> called <tt class="docutils literal"><span class="pre">miniglog</span></tt>, which can be enabled
+with the <tt class="docutils literal"><span class="pre">MINIGLOG</span></tt> build option. If enabled, it replaces the
+requirement for <tt class="docutils literal"><span class="pre">glog</span></tt>. However, in general it is recommended that
+you use the full <tt class="docutils literal"><span class="pre">glog</span></tt>.</p>
 <p>4. <a class="reference external" href="http://code.google.com/p/gflags">gflags</a> is a library for
 processing command line flags. It is used by some of the examples and
 tests. While it is not strictly necessary to build the library, we
@@ -95,17 +98,28 @@ a sparse matrix library similar in scope to <tt class="docutils literal"><span c
 no dependencies on <tt class="docutils literal"><span class="pre">LAPACK</span></tt> and <tt class="docutils literal"><span class="pre">BLAS</span></tt>. This makes for a simpler
 build process and a smaller binary.  The simplicity comes at a cost &#8211;
 for all but the most trivial matrices, <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt> is
-significantly faster than <tt class="docutils literal"><span class="pre">CXSparse</span></tt>.</p>
+significantly faster than <tt class="docutils literal"><span class="pre">CXSparse</span></tt>. This is an optional dependency.</p>
 <p>7. <a class="reference external" href="http://www.netlib.org/blas/">BLAS</a> and <a class="reference external" href="http://www.netlib.org/lapack/">LAPACK</a> routines are needed by
-SuiteSparse. We recommend <a class="reference external" href="http://math-atlas.sourceforge.net/">ATLAS</a>, which includes BLAS and LAPACK
-routines. It is also possible to use <a class="reference external" href="https://github.com/xianyi/OpenBLAS">OpenBLAS</a> . However, one needs to be
-careful to <a class="reference external" href="https://github.com/xianyi/OpenBLAS/wiki/faq#wiki-multi-threaded">turn off the threading</a>
+SuiteSparse, and optionally used by Ceres directly for some operations.
+We recommend <a class="reference external" href="http://math-atlas.sourceforge.net/">ATLAS</a>,
+which includes BLAS and LAPACK routines. It is also possible to use
+<a class="reference external" href="https://github.com/xianyi/OpenBLAS">OpenBLAS</a> . However, one needs
+to be careful to <a class="reference external" href="https://github.com/xianyi/OpenBLAS/wiki/faq#wiki-multi-threaded">turn off the threading</a>
 inside <tt class="docutils literal"><span class="pre">OpenBLAS</span></tt> as it conflicts with use of threads in Ceres.</p>
 </div>
 <div class="section" id="building-on-linux">
 <span id="section-linux"></span><h2>Building on Linux<a class="headerlink" href="#building-on-linux" title="Permalink to this headline">¶</a></h2>
 <p>We will use <a class="reference external" href="http://www.ubuntu.com">Ubuntu</a> as our example
 platform. Start by installing all the dependencies.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Up to at least Ubuntu 13.10, the SuiteSparse package in the official
+package repository (built from SuiteSparse v3.4.0) <strong>cannot</strong> be used
+to build Ceres as a <em>shared</em> library.  Thus if you want to build
+Ceres as a shared library using SuiteSparse, you must perform a
+source install of SuiteSparse.  It is recommended that you use the
+current version of SuiteSparse (4.2.1 at the time of writing).</p>
+</div>
 <div class="highlight-bash"><div class="highlight"><pre><span class="c"># CMake</span>
 sudo apt-get install cmake
 <span class="c"># gflags</span>
@@ -124,23 +138,29 @@ sudo make install
 sudo apt-get install libatlas-base-dev
 <span class="c"># Eigen3</span>
 sudo apt-get install libeigen3-dev
-<span class="c"># SuiteSparse and CXSparse</span>
+<span class="c"># SuiteSparse and CXSparse (optional)</span>
+<span class="c"># - If you want to build Ceres as a *static* library (the default)</span>
+<span class="c">#   you can use the SuiteSparse package in the main Ubuntu package</span>
+<span class="c">#   repository:</span>
 sudo apt-get install libsuitesparse-dev
+<span class="c"># - However, if you want to build Ceres as a *shared* library, you must</span>
+<span class="c">#   perform a source install of SuiteSparse (and uninstall the Ubuntu</span>
+<span class="c">#   package if it is currently installed.</span>
 </pre></div>
 </div>
 <p>We are now ready to build and test Ceres.</p>
-<div class="highlight-bash"><div class="highlight"><pre>tar zxf ceres-solver-1.7.0.tar.gz
+<div class="highlight-bash"><div class="highlight"><pre>tar zxf ceres-solver-1.8.0.tar.gz
 mkdir ceres-bin
 <span class="nb">cd </span>ceres-bin
-cmake ../ceres-solver-1.7.0
+cmake ../ceres-solver-1.8.0
 make -j3
 make <span class="nb">test</span>
 </pre></div>
 </div>
 <p>You can also try running the command line bundling application with one of the
 included problems, which comes from the University of Washington&#8217;s BAL
-dataset <a class="reference internal" href="bibliography.html#agarwal">[Agarwal]</a>.</p>
-<div class="highlight-bash"><div class="highlight"><pre>bin/simple_bundle_adjuster ../ceres-solver-1.7.0/data/problem-16-22106-pre.txt
+dataset <a class="reference internal" href="bibliography.html#agarwal" id="id1">[Agarwal]</a>.</p>
+<div class="highlight-bash"><div class="highlight"><pre>bin/simple_bundle_adjuster ../ceres-solver-1.8.0/data/problem-16-22106-pre.txt
 </pre></div>
 </div>
 <p>This runs Ceres for a maximum of 10 iterations using the
@@ -202,6 +222,12 @@ dependencies. There is no need to install <tt class="docutils literal"><span cla
 separately as OS X ships with optimized <tt class="docutils literal"><span class="pre">BLAS</span></tt> and <tt class="docutils literal"><span class="pre">LAPACK</span></tt>
 routines as part of the <a class="reference external" href="https://developer.apple.com/library/mac/#documentation/Performance/Conceptual/vecLib/Reference/reference.html">vecLib</a>
 framework.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Ceres will not compile using Xcode 4.5.x (Clang version 4.1) due to a bug in that version of
+Clang.  If you are running Xcode 4.5.x, please update to Xcode &gt;= 4.6.x before attempting to
+build Ceres.</p>
+</div>
 <div class="highlight-bash"><div class="highlight"><pre><span class="c"># CMake</span>
 brew install cmake
 <span class="c"># google-glog and gflags</span>
@@ -213,10 +239,10 @@ brew install suite-sparse
 </pre></div>
 </div>
 <p>We are now ready to build and test Ceres.</p>
-<div class="highlight-bash"><div class="highlight"><pre>tar zxf ceres-solver-1.7.0.tar.gz
+<div class="highlight-bash"><div class="highlight"><pre>tar zxf ceres-solver-1.8.0.tar.gz
 mkdir ceres-bin
 <span class="nb">cd </span>ceres-bin
-cmake ../ceres-solver-1.7.0
+cmake ../ceres-solver-1.8.0
 make -j3
 make <span class="nb">test</span>
 </pre></div>
@@ -259,12 +285,15 @@ get <tt class="docutils literal"><span class="pre">ceres-solver.git</span></tt> 
 <li><p class="first">Try running <tt class="docutils literal"><span class="pre">Configure</span></tt>. It won&#8217;t work. It&#8217;ll show a bunch of options.
 You&#8217;ll need to set:</p>
 <ol class="arabic simple">
-<li><tt class="docutils literal"><span class="pre">GLOG_INCLUDE</span></tt></li>
-<li><tt class="docutils literal"><span class="pre">GLOG_LIB</span></tt></li>
-<li><tt class="docutils literal"><span class="pre">GFLAGS_LIB</span></tt></li>
-<li><tt class="docutils literal"><span class="pre">GFLAGS_INCLUDE</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">EIGEN_INCLUDE_DIR</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">GLOG_INCLUDE_DIR</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">GLOG_LIBRARY</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">GFLAGS_INCLUDE_DIR</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">GFLAGS_LIBRARY</span></tt></li>
 </ol>
-<p>to the appropriate place where you unpacked/built them.</p>
+<p>to the appropriate place where you unpacked/built them. If any of the
+variables are not visible in the <tt class="docutils literal"><span class="pre">CMake</span></tt> GUI, toggle to the
+<em>Advanced View</em> with <tt class="docutils literal"><span class="pre">&lt;t&gt;</span></tt>.</p>
 </li>
 <li><p class="first">You may have to tweak some more settings to generate a MSVC
 project.  After each adjustment, try pressing Configure &amp; Generate
@@ -275,7 +304,8 @@ until it generates successfully.</p>
 </ol>
 <p>To run the tests, select the <tt class="docutils literal"><span class="pre">RUN_TESTS</span></tt> target and hit <strong>Build
 RUN_TESTS</strong> from the build menu.</p>
-<p>Like the Linux build, you should now be able to run <tt class="docutils literal"><span class="pre">bin/simple_bundle_adjuster</span></tt>.</p>
+<p>Like the Linux build, you should now be able to run
+<tt class="docutils literal"><span class="pre">bin/simple_bundle_adjuster</span></tt>.</p>
 <p>Notes:</p>
 <ol class="arabic simple">
 <li>The default build is Debug; consider switching it to release mode.</li>
@@ -298,37 +328,113 @@ supported Windows port.</li>
 <div class="section" id="customizing-the-build">
 <span id="section-customizing"></span><h2>Customizing the build<a class="headerlink" href="#customizing-the-build" title="Permalink to this headline">¶</a></h2>
 <p>It is possible to reduce the libraries needed to build Ceres and
-customize the build process by passing appropriate flags to
-<tt class="docutils literal"><span class="pre">CMake</span></tt>. Use these flags only if you really know what you are doing.</p>
+customize the build process by setting the appropriate options in
+<tt class="docutils literal"><span class="pre">CMake</span></tt>.  These options can either be set in the <tt class="docutils literal"><span class="pre">CMake</span></tt> GUI,
+or via <tt class="docutils literal"><span class="pre">-D&lt;OPTION&gt;=&lt;ON/OFF&gt;</span></tt> when running <tt class="docutils literal"><span class="pre">CMake</span></tt> from the
+command line.  In general, you should only modify these options from
+their defaults if you know what you are doing.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>If you are setting variables via <tt class="docutils literal"><span class="pre">-D&lt;VARIABLE&gt;=&lt;VALUE&gt;</span></tt> when calling
+<tt class="docutils literal"><span class="pre">CMake</span></tt>, it is important to understand that this forcibly <strong>overwrites</strong> the
+variable <tt class="docutils literal"><span class="pre">&lt;VARIABLE&gt;</span></tt> in the <tt class="docutils literal"><span class="pre">CMake</span></tt> cache at the start of <em>every configure</em>.</p>
+<p>This can lead to confusion if you are invoking the <tt class="docutils literal"><span class="pre">CMake</span></tt>
+<a class="reference external" href="http://www.gnu.org/software/ncurses/ncurses.html">curses</a> terminal GUI
+(via <tt class="docutils literal"><span class="pre">ccmake</span></tt>, e.g. <tt class="docutils literal"><span class="pre">`ccmake</span> <span class="pre">-D&lt;VARIABLE&gt;=&lt;VALUE&gt;</span> <span class="pre">&lt;PATH_TO_SRC&gt;</span></tt>).
+In this case, even if you change the value of <tt class="docutils literal"><span class="pre">&lt;VARIABLE&gt;</span></tt> in the <tt class="docutils literal"><span class="pre">CMake</span></tt>
+GUI, your changes will be <strong>overwritten</strong> with the value passed via
+<tt class="docutils literal"><span class="pre">-D&lt;VARIABLE&gt;=&lt;VALUE&gt;</span></tt> (if one exists) at the start of each configure.</p>
+<p class="last">As such, it is generally easier not to pass values to <tt class="docutils literal"><span class="pre">CMake</span></tt> via <tt class="docutils literal"><span class="pre">-D</span></tt>
+and instead interactively experiment with their values in the <tt class="docutils literal"><span class="pre">CMake</span></tt> GUI.
+If they are not present in the <em>Standard View</em>, toggle to the <em>Advanced View</em>
+with <tt class="docutils literal"><span class="pre">&lt;t&gt;</span></tt>.</p>
+</div>
+<div class="section" id="options-controlling-ceres-configuration">
+<h3>Options controlling Ceres configuration<a class="headerlink" href="#options-controlling-ceres-configuration" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
-<li><tt class="docutils literal"><span class="pre">-DSUITESPARSE=OFF</span></tt>: By default, Ceres will link to
-<tt class="docutils literal"><span class="pre">SuiteSparse</span></tt> if all its dependencies are present. Use this flag
-to build Ceres without <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt>. This will also disable
-dependency checking for <tt class="docutils literal"><span class="pre">LAPACK</span></tt> and <tt class="docutils literal"><span class="pre">BLAS</span></tt>. This will reduce
-Ceres&#8217; dependencies down to <tt class="docutils literal"><span class="pre">Eigen</span></tt>, <tt class="docutils literal"><span class="pre">gflags</span></tt> and
-<tt class="docutils literal"><span class="pre">google-glog</span></tt>.</li>
-<li><tt class="docutils literal"><span class="pre">-DCXSPARSE=OFF</span></tt>: By default, Ceres will link to <tt class="docutils literal"><span class="pre">CXSparse</span></tt> if
-all its dependencies are present. Use this flag to builds Ceres
-without <tt class="docutils literal"><span class="pre">CXSparse</span></tt>. This will reduce Ceres&#8217; dependencies down to
-<tt class="docutils literal"><span class="pre">Eigen</span></tt>, <tt class="docutils literal"><span class="pre">gflags</span></tt> and <tt class="docutils literal"><span class="pre">google-glog</span></tt>.</li>
-<li><tt class="docutils literal"><span class="pre">-DGFLAGS=OFF</span></tt>: Use this flag to build Ceres without
+<li><tt class="docutils literal"><span class="pre">LAPACK</span> <span class="pre">[Default:</span> <span class="pre">ON]</span></tt>: By default Ceres will use <tt class="docutils literal"><span class="pre">LAPACK</span></tt> (&amp;
+<tt class="docutils literal"><span class="pre">BLAS</span></tt>) if they are found.  Turn this <tt class="docutils literal"><span class="pre">OFF</span></tt> to build Ceres
+without <tt class="docutils literal"><span class="pre">LAPACK</span></tt>. Turning this <tt class="docutils literal"><span class="pre">OFF</span></tt> also disables
+<tt class="docutils literal"><span class="pre">SUITESPARSE</span></tt> as it depends on <tt class="docutils literal"><span class="pre">LAPACK</span></tt>.</li>
+<li><tt class="docutils literal"><span class="pre">SUITESPARSE</span> <span class="pre">[Default:</span> <span class="pre">ON]</span></tt>: By default, Ceres will link to
+<tt class="docutils literal"><span class="pre">SuiteSparse</span></tt> if it and all of its dependencies are present. Turn
+this <tt class="docutils literal"><span class="pre">OFF</span></tt> to build Ceres without <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt>. Note that
+<tt class="docutils literal"><span class="pre">LAPACK</span></tt> must be <tt class="docutils literal"><span class="pre">ON</span></tt> in order to build with <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt>.</li>
+<li><tt class="docutils literal"><span class="pre">CXSPARSE</span> <span class="pre">[Default:</span> <span class="pre">ON]</span></tt>: By default, Ceres will link to
+<tt class="docutils literal"><span class="pre">CXSparse</span></tt> if all its dependencies are present. Turn this <tt class="docutils literal"><span class="pre">OFF</span></tt>
+to build Ceres without <tt class="docutils literal"><span class="pre">CXSparse</span></tt>.</li>
+<li><tt class="docutils literal"><span class="pre">GFLAGS</span> <span class="pre">[Default:</span> <span class="pre">ON]</span></tt>: Turn this <tt class="docutils literal"><span class="pre">OFF</span></tt> to build Ceres without
 <tt class="docutils literal"><span class="pre">gflags</span></tt>. This will also prevent some of the example code from
 building.</li>
-<li><tt class="docutils literal"><span class="pre">-DSCHUR_SPECIALIZATIONS=OFF</span></tt>: If you are concerned about binary
-size/compilation time over some small (10-20%) performance gains in
-the <tt class="docutils literal"><span class="pre">SPARSE_SCHUR</span></tt> solver, you can disable some of the template
-specializations by using this flag.</li>
-<li><tt class="docutils literal"><span class="pre">-DLINE_SEARCH_MINIMIZER=OFF</span></tt>: The line search based minimizer is
-mostly suitable for large scale optimization problems, or when sparse
-linear algebra libraries are not available. You can further save on
-some compile time and binary size by using this flag.</li>
-<li><tt class="docutils literal"><span class="pre">-DOPENMP=OFF</span></tt>: On certain platforms like Android,
-multi-threading with <tt class="docutils literal"><span class="pre">OpenMP</span></tt> is not supported. Use this flag to
-disable multithreading.</li>
-<li><tt class="docutils literal"><span class="pre">-DBUILD_DOCUMENTATION=ON</span></tt>: Use this flag to enable building the
-documentation. In addition, <tt class="docutils literal"><span class="pre">make</span> <span class="pre">ceres_docs</span></tt> can be used to
-build only the documentation.</li>
+<li><tt class="docutils literal"><span class="pre">MINIGLOG</span> <span class="pre">[Default:</span> <span class="pre">OFF]</span></tt>: Ceres includes a stripped-down,
+minimal implementation of <tt class="docutils literal"><span class="pre">glog</span></tt> which can optionally be used as
+a substitute for <tt class="docutils literal"><span class="pre">glog</span></tt>, thus removing <tt class="docutils literal"><span class="pre">glog</span></tt> as a required
+dependency. Turn this <tt class="docutils literal"><span class="pre">ON</span></tt> to use this minimal <tt class="docutils literal"><span class="pre">glog</span></tt>
+implementation.</li>
+<li><tt class="docutils literal"><span class="pre">SCHUR_SPECIALIZATIONS</span> <span class="pre">[Default:</span> <span class="pre">ON]</span></tt>: If you are concerned about
+binary size/compilation time over some small (10-20%) performance
+gains in the <tt class="docutils literal"><span class="pre">SPARSE_SCHUR</span></tt> solver, you can disable some of the
+template specializations by turning this <tt class="docutils literal"><span class="pre">OFF</span></tt>.</li>
+<li><tt class="docutils literal"><span class="pre">LINE_SEARCH_MINIMIZER</span> <span class="pre">[Default:</span> <span class="pre">ON]</span></tt>: The line search based
+minimizer is mostly suitable for large scale optimization problems,
+or when sparse linear algebra libraries are not available. You can
+further save on some compile time and binary size by turning this
+<tt class="docutils literal"><span class="pre">OFF</span></tt>.</li>
+<li><tt class="docutils literal"><span class="pre">OPENMP</span> <span class="pre">[Default:</span> <span class="pre">ON]</span></tt>: On certain platforms like Android,
+multi-threading with <tt class="docutils literal"><span class="pre">OpenMP</span></tt> is not supported. Turn this <tt class="docutils literal"><span class="pre">OFF</span></tt>
+to disable multithreading.</li>
+<li><tt class="docutils literal"><span class="pre">BUILD_SHARED_LIBS</span> <span class="pre">[Default:</span> <span class="pre">OFF]</span></tt>: By default Ceres is built as
+a static library, turn this <tt class="docutils literal"><span class="pre">ON</span></tt> to instead build Ceres as a
+shared library.</li>
+<li><tt class="docutils literal"><span class="pre">BUILD_DOCUMENTATION</span> <span class="pre">[Default:</span> <span class="pre">OFF]</span></tt>: Use this to enable building
+the documentation, requires <a class="reference external" href="http://sphinx-doc.org/">Sphinx</a>. In
+addition, <tt class="docutils literal"><span class="pre">make</span> <span class="pre">ceres_docs</span></tt> can be used to build only the
+documentation.</li>
+<li><tt class="docutils literal"><span class="pre">MSVC_USE_STATIC_CRT</span> <span class="pre">[Default:</span> <span class="pre">OFF]</span></tt> <em>Windows Only</em>: By default
+Ceres will use the Visual Studio default, <em>shared</em> C-Run Time (CRT) library.
+Turn this <tt class="docutils literal"><span class="pre">ON</span></tt> to use the <em>static</em> C-Run Time library instead.</li>
 </ol>
+</div>
+<div class="section" id="options-controlling-ceres-dependency-locations">
+<h3>Options controlling Ceres dependency locations<a class="headerlink" href="#options-controlling-ceres-dependency-locations" title="Permalink to this headline">¶</a></h3>
+<p>Ceres uses the <tt class="docutils literal"><span class="pre">CMake</span></tt>
+<a class="reference external" href="http://www.cmake.org/cmake/help/v2.8.12/cmake.html#command:find_package">find_package</a>
+function to find all of its dependencies using
+<tt class="docutils literal"><span class="pre">Find&lt;DEPENDENCY_NAME&gt;.cmake</span></tt> scripts which are either included in Ceres
+(for most dependencies) or are shipped as standard with <tt class="docutils literal"><span class="pre">CMake</span></tt>
+(for <tt class="docutils literal"><span class="pre">LAPACK</span></tt> &amp; <tt class="docutils literal"><span class="pre">BLAS</span></tt>).  These scripts will search all of the &#8220;standard&#8221;
+install locations for various OSs for each dependency.  However, particularly
+for Windows, they may fail to find the library, in this case you will have to
+manually specify its installed location.  The <tt class="docutils literal"><span class="pre">Find&lt;DEPENDENCY_NAME&gt;.cmake</span></tt>
+scripts shipped with Ceres support two ways for you to do this:</p>
+<ol class="arabic">
+<li><p class="first">Set the <em>hints</em> variables specifying the <em>directories</em> to search in
+preference, but in addition, to the search directories in the
+<tt class="docutils literal"><span class="pre">Find&lt;DEPENDENCY_NAME&gt;.cmake</span></tt> script:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">&lt;DEPENDENCY_NAME</span> <span class="pre">(CAPS)&gt;_INCLUDE_DIR_HINTS</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">&lt;DEPENDENCY_NAME</span> <span class="pre">(CAPS)&gt;_LIBRARY_DIR_HINTS</span></tt></li>
+</ul>
+<p>These variables should be set via <tt class="docutils literal"><span class="pre">-D&lt;VAR&gt;=&lt;VALUE&gt;</span></tt>
+<tt class="docutils literal"><span class="pre">CMake</span></tt> arguments as they are not visible in the GUI.</p>
+</li>
+<li><p class="first">Set the variables specifying the <em>explicit</em> include directory
+and library file to use:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">&lt;DEPENDENCY_NAME</span> <span class="pre">(CAPS)&gt;_INCLUDE_DIR</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">&lt;DEPENDENCY_NAME</span> <span class="pre">(CAPS)&gt;_LIBRARY</span></tt></li>
+</ul>
+<p>This bypasses <em>all</em> searching in the
+<tt class="docutils literal"><span class="pre">Find&lt;DEPENDENCY_NAME&gt;.cmake</span></tt> script, but validation is still
+performed.</p>
+<p>These variables are available to set in the <tt class="docutils literal"><span class="pre">CMake</span></tt> GUI. They
+are visible in the <em>Standard View</em> if the library has not been
+found (but the current Ceres configuration requires it), but
+are always visible in the <em>Advanced View</em>.  They can also be
+set directly via <tt class="docutils literal"><span class="pre">-D&lt;VAR&gt;=&lt;VALUE&gt;</span></tt> arguments to <tt class="docutils literal"><span class="pre">CMake</span></tt>.</p>
+</li>
+</ol>
+</div>
 </div>
 <div class="section" id="using-ceres-with-cmake">
 <span id="section-using-ceres"></span><h2>Using Ceres with CMake<a class="headerlink" href="#using-ceres-with-cmake" title="Permalink to this headline">¶</a></h2>
@@ -342,7 +448,7 @@ the following CMakeList.txt can be used:</p>
 <span class="nb">PROJECT</span><span class="p">(</span><span class="s">helloworld</span><span class="p">)</span>
 
 <span class="nb">FIND_PACKAGE</span><span class="p">(</span><span class="s">Ceres</span> <span class="s">REQUIRED</span><span class="p">)</span>
-<span class="nb">INCLUDE_DIRECTORIES</span><span class="p">(</span><span class="o">${</span><span class="nv">CERES_INCLUDES</span><span class="o">}</span><span class="p">)</span>
+<span class="nb">INCLUDE_DIRECTORIES</span><span class="p">(</span><span class="o">${</span><span class="nv">CERES_INCLUDE_DIRS</span><span class="o">}</span><span class="p">)</span>
 
 <span class="c"># helloworld</span>
 <span class="nb">ADD_EXECUTABLE</span><span class="p">(</span><span class="s">helloworld</span> <span class="s">helloworld.cc</span><span class="p">)</span>
@@ -367,18 +473,8 @@ the <strong>PATHS</strong> option to the <tt class="docutils literal"><span clas
 <div class="highlight-cmake"><div class="highlight"><pre><span class="nb">FIND_PACKAGE</span><span class="p">(</span><span class="s">Ceres</span> <span class="s">REQUIRED</span> <span class="s">PATHS</span> <span class="s2">&quot;/some/where/local/&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Note that this can be used to have multiple versions of Ceres installed.</p>
-</div>
-<div class="section" id="compiling-against-static-or-shared-library">
-<h3>Compiling against static or shared library<a class="headerlink" href="#compiling-against-static-or-shared-library" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-cmake"><div class="highlight"><pre><span class="nb">TARGET_LINK_LIBRARIES</span><span class="p">(</span><span class="s">helloworld</span> <span class="o">${</span><span class="nv">CERES_LIBRARIES</span><span class="o">}</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>will result in a statically linked binary. Changing this line to</p>
-<div class="highlight-cmake"><div class="highlight"><pre><span class="nb">TARGET_LINK_LIBRARIES</span><span class="p">(</span><span class="s">helloworld</span> <span class="o">${</span><span class="nv">CERES_LIBRARIES_SHARED</span><span class="o">}</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>will result in a dynamically linked binary.</p>
+<p>Note that this can be used to have multiple versions of Ceres
+installed.</p>
 </div>
 </div>
 </div>
@@ -392,7 +488,7 @@ the <strong>PATHS</strong> option to the <tt class="docutils literal"><span clas
 <h3><a href="index.html">Ceres Solver</a></h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Building Ceres Solver</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="solving.html">Solving</a></li>

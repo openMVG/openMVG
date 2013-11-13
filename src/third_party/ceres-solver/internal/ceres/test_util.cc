@@ -30,6 +30,7 @@
 //
 // Utility functions useful for testing.
 
+#include <algorithm>
 #include <cmath>
 #include "ceres/file.h"
 #include "ceres/stringprintf.h"

@@ -114,7 +114,7 @@ int LAPACK::EstimateWorkSizeForQR(int num_rows, int num_cols) {
          &info);
 
   CHECK_EQ(info, 0);
-  return work;
+  return static_cast<int>(work);
 #endif
 }
 
