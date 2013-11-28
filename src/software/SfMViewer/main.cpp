@@ -54,27 +54,11 @@ void reshape( GLFWwindow* window, int width, int height )
   glLoadIdentity();
 }
 
-void glCheckError() {
-#ifndef NDEBUG
-	std::vector<unsigned> errors;
-	unsigned error = GL_NO_ERROR;
-	for (; (error = glGetError()) != GL_NO_ERROR;)
-		errors.push_back(error);
-	if (errors.empty())
-		return;
-	std::ostringstream oss;
-	oss << "OpenGL errors :\n";
-	for (const unsigned error : errors)
-		oss << " - " << getErrorString(error) << '\n';
-	throw std::runtime_error(oss.str());
-#endif
-}
-
 void key( GLFWwindow* window, int k, int action)
 {
   if( action != GLFW_PRESS ) return;
 
-bool bTextureChange = false;
+  bool bTextureChange = false;
 
   switch (k) {
   case GLFW_KEY_ESCAPE:
@@ -113,7 +97,7 @@ bool bTextureChange = false;
               &depth))
     {
       glEnable(GL_TEXTURE_2D);
-      std::cout << "Read image : " << sImageName << std::endl;
+      std::cout << "Read image : " << sImageName << "\n" << std::endl;
       glDeleteTextures(1, &m_cur_image.texture);
 
       // Create texture
@@ -126,9 +110,7 @@ bool bTextureChange = false;
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,  m_cur_image.width,
                 m_cur_image.height, 0, GL_RGB, GL_UNSIGNED_BYTE,
                 &img[0]);
-      std::cout << std::endl;
 
-      glCheckError();
       glBindTexture(GL_TEXTURE_2D, m_cur_image.texture);
     }
   }
@@ -268,9 +250,7 @@ static void draw(void)
 int main(int argc, char *argv[]) {
 
   CmdLine cmd;
-
   std::string sSfM_Dir;
-
   cmd.add( make_option('i', sSfM_Dir, "sfmdir") );
 
   try {
@@ -294,8 +274,7 @@ int main(int argc, char *argv[]) {
   else{
     exit( EXIT_FAILURE);
   }
-
-
+  
   //-- Create the GL window context
   GLFWwindow* window;
   int width, height;
@@ -338,8 +317,7 @@ int main(int argc, char *argv[]) {
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
-
-
+  
   // Terminate GLFW
   glfwTerminate();
 
