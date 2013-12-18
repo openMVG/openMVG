@@ -18,38 +18,13 @@
 namespace openMVG {
 
 /**
- * Abstract base class for features.
- */
-class DescriptorBase {
-public:
-  virtual ~DescriptorBase() {};
-
-  //this pure virtual method will be called to print the derived class' object.
-  virtual std::ostream& print(std::ostream& output) const = 0;
-
-  //this pure virtual method will be called to read the derived class' object.
-  virtual std::istream& read(std::istream& input) = 0;
-};
-
-//with overloaded operators:
-inline std::ostream& operator<<(std::ostream& out, const DescriptorBase& obj)
-{
-  return obj.print(out); //simply call the print method.
-}
-
-inline std::istream& operator>>(std::istream& in, DescriptorBase& obj)
-{
-  return obj.read(in); //simply call the read method.
-}
-
-/**
  * Class that handle descriptor (a data container of N values of type T).
  * SiftDescriptor => <uchar,128> or <float,128>
 
  * Surf 64 => <float,64>
  */
 template <typename T, std::size_t N>
-class Descriptor : public DescriptorBase
+class Descriptor
 {
 public:
   typedef T bin_type;
@@ -78,6 +53,20 @@ public:
 private:
   bin_type data[N];
 };
+
+// Output stream definition
+template <typename T, std::size_t N>
+inline std::ostream& operator<<(std::ostream& out, const Descriptor<T, N>& obj)
+{
+  return obj.print(out); //simply call the print method.
+}
+
+// Input stream definition
+template <typename T, std::size_t N>
+inline std::istream& operator>>(std::istream& in, Descriptor<T, N>& obj)
+{
+  return obj.read(in); //simply call the read method.
+}
 
 //-- Use specialization to handle unsigned char case.
 //-- We do not want confuse unsigned char value with the spaces written in the file
