@@ -40,10 +40,8 @@ Descriptors
 
 Class to store a region description (a descriptor):
 
- * all must inheritate from ``DescriptorBase`` in order to implement serialization.
-
- * ``template <typename T, std::size_t N> class Descriptor : public DescriptorBase``
-    * Class that handle descriptor (a data container of N values of type T).
+ * ``template <typename T, std::size_t N> class Descriptor``
+    * Class that handle a descriptor (a data container of N values of type T).
 
 .. code-block:: c++ 
 
