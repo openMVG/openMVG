@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2009
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -35,6 +35,22 @@ namespace lemon {
   */
 
   template <class T> inline void ignore_unused_variable_warning(const T&) { }
+  template <class T1, class T2>
+  inline void ignore_unused_variable_warning(const T1&, const T2&) { }
+  template <class T1, class T2, class T3>
+  inline void ignore_unused_variable_warning(const T1&, const T2&,
+                                             const T3&) { }
+  template <class T1, class T2, class T3, class T4>
+  inline void ignore_unused_variable_warning(const T1&, const T2&,
+                                             const T3&, const T4&) { }
+  template <class T1, class T2, class T3, class T4, class T5>
+  inline void ignore_unused_variable_warning(const T1&, const T2&,
+                                             const T3&, const T4&,
+                                             const T5&) { }
+  template <class T1, class T2, class T3, class T4, class T5, class T6>
+  inline void ignore_unused_variable_warning(const T1&, const T2&,
+                                             const T3&, const T4&,
+                                             const T5&, const T6&) { }
 
   ///\e
   template <class Concept>
@@ -42,7 +58,7 @@ namespace lemon {
   {
 #if !defined(NDEBUG)
     void (Concept::*x)() = & Concept::constraints;
-    ignore_unused_variable_warning(x);
+    ::lemon::ignore_unused_variable_warning(x);
 #endif
   }
 
@@ -52,7 +68,7 @@ namespace lemon {
 #if !defined(NDEBUG)
     typedef typename Concept::template Constraints<Type> ConceptCheck;
     void (ConceptCheck::*x)() = & ConceptCheck::constraints;
-    ignore_unused_variable_warning(x);
+    ::lemon::ignore_unused_variable_warning(x);
 #endif
   }
 

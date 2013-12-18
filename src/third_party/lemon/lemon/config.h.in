@@ -1,26 +1,13 @@
-/* The version string */
-#undef LEMON_VERSION
-
-/* Define to 1 if you have long long */
-#undef LEMON_HAVE_LONG_LONG
-
-/* Define to 1 if you have any LP solver. */
-#undef LEMON_HAVE_LP
-
-/* Define to 1 if you have any MIP solver. */
-#undef LEMON_HAVE_MIP
-
-/* Define to 1 if you have CPLEX. */
-#undef LEMON_HAVE_CPLEX
-
-/* Define to 1 if you have GLPK. */
-#undef LEMON_HAVE_GLPK
-
-/* Define to 1 if you have SOPLEX */
-#undef LEMON_HAVE_SOPLEX
-
-/* Define to 1 if you have CLP */
-#undef LEMON_HAVE_CLP
-
-/* Define to 1 if you have CBC */
-#undef LEMON_HAVE_CBC
+#define LEMON_VERSION "@PROJECT_VERSION@"
+#cmakedefine LEMON_HAVE_LONG_LONG 1
+#cmakedefine LEMON_HAVE_LP 1
+#cmakedefine LEMON_HAVE_MIP 1
+#cmakedefine LEMON_HAVE_GLPK 1
+#cmakedefine LEMON_HAVE_CPLEX 1
+#cmakedefine LEMON_HAVE_SOPLEX 1
+#cmakedefine LEMON_HAVE_CLP 1
+#cmakedefine LEMON_HAVE_CBC 1
+#cmakedefine LEMON_DEFAULT_LP @LEMON_DEFAULT_LP@
+#cmakedefine LEMON_DEFAULT_MIP @LEMON_DEFAULT_MIP@
+#cmakedefine LEMON_USE_PTHREAD 1
+#cmakedefine LEMON_USE_WIN32_THREADS 1

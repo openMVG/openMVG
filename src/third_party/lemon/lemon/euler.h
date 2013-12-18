@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -36,7 +36,7 @@ namespace lemon {
 
   ///Euler tour iterator for digraphs.
 
-  /// \ingroup graph_prop
+  /// \ingroup graph_properties
   ///This iterator provides an Euler tour (Eulerian circuit) of a \e directed
   ///graph (if there exists) and it converts to the \c Arc type of the digraph.
   ///

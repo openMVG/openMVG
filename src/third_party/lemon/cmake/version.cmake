@@ -1,1 +1,1 @@
-SET(LEMON_VERSION "1.2.3" CACHE STRING "LEMON version string.")
+SET(LEMON_VERSION "1.3" CACHE STRING "LEMON version string.")

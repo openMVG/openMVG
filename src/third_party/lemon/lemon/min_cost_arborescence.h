@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -101,7 +101,7 @@ namespace lemon {
   /// more sources should be given to the algorithm and it will calculate
   /// the minimum cost subgraph that is the union of arborescences with the
   /// given sources and spans all the nodes which are reachable from the
-  /// sources. The time complexity of the algorithm is O(n<sup>2</sup>+e).
+  /// sources. The time complexity of the algorithm is O(n<sup>2</sup>+m).
   ///
   /// The algorithm also provides an optimal dual solution, therefore
   /// the optimality of the solution can be checked.
@@ -128,7 +128,7 @@ namespace lemon {
   class MinCostArborescence {
   public:
 
-    /// \brief The \ref MinCostArborescenceDefaultTraits "traits class"
+    /// \brief The \ref lemon::MinCostArborescenceDefaultTraits "traits class"
     /// of the algorithm.
     typedef TR Traits;
     /// The type of the underlying digraph.
