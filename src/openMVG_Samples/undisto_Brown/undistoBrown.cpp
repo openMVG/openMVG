@@ -33,7 +33,7 @@ using namespace std;
 // [1] Decentering distortion of lenses.
 //      Brown, Duane C
 //      Photometric Engineering 1966
-struct Disto
+struct BrownDistoModel
 {
   Vec2 m_disto_center; // distortion center
   Vec m_radial_distortion; // radial distortion factor
@@ -61,9 +61,10 @@ struct Disto
 };
 
 /// Undistort an image according a given Distortion model
-Image<RGBColor > undistortImage(
-  const Image<RGBColor >& I,
-  const Disto& d,
+template <typename Image>
+Image undistortImage(
+  const Image& I,
+  const BrownDistoModel& d,
   RGBColor fillcolor = BLACK,
   bool bcenteringPPpoint = true)
 {
@@ -74,7 +75,7 @@ Image<RGBColor > undistortImage(
   if (bcenteringPPpoint)
     offset = Vec2(cx,cy) - d.m_disto_center;
 
-  Image<RGBColor > J ( w,h );
+  Image J ( w,h );
   double xu, yu, xd,yd;
   for ( int j=0; j<h; j++ ) {
     for ( int i=0; i<w; i++ ) {
@@ -134,14 +135,14 @@ int main(int argc, char **argv)
   if (!stlplus::folder_exists(sOutPath))
     stlplus::folder_create(sOutPath);
 
-  Disto distoModel;
+  BrownDistoModel distoModel;
   distoModel.m_disto_center = Vec2(c(0), c(1));
   distoModel.m_radial_distortion = k;
   distoModel.m_f = f;
 
   std::cout << "Used Brown's distortion model values: \n"
     << "  Distortion center: " << distoModel.m_disto_center.transpose() << "\n"
-    << "  Distortion coefficients (K0,K1,K2,K3): "
+    << "  Distortion coefficients (K1,K2,K3): "
     << distoModel.m_radial_distortion.transpose() << "\n"
     << "  Distortion focal: " << distoModel.m_f << std::endl;
 
