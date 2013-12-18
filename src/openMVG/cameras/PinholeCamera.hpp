@@ -66,6 +66,10 @@ struct PinholeCamera
     return (ref - openMVG::Project(_P, pt3D)).norm();
   }
 
+  double ResidualSquared(const Vec3 & pt3D, const Vec2 & ref) const  {
+    return (ref - openMVG::Project(_P, pt3D)).squaredNorm();
+  }
+
   // Compute the depth of the X point. R*X[2]+t[2].
   double Depth(const Vec3 &X) const{
     return openMVG::Depth(_R, _t, X);
