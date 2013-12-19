@@ -5,3 +5,5 @@ ADD_SUBDIRECTORY(robust_fundamental)
 ADD_SUBDIRECTORY(robust_essential)
 ADD_SUBDIRECTORY(robust_essential_ba)
 ADD_SUBDIRECTORY(undisto_Brown)
+
+ADD_SUBDIRECTORY(exifParsing)
