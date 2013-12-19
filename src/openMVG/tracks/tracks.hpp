@@ -19,7 +19,7 @@
 // Usage :
 //  typedef std::map< std::pair<size_t, size_t>, std::vector<IndMatch> > map_pairWiseMatches;
 //  map_pairWiseMatches map_Matches;
-//  PairedIndMatchImport(sMatchFile, map_Matches); // Load of fill pairwise matches
+//  PairedIndMatchImport(sMatchFile, map_Matches); // Load series of pairwise matches
 //  //---------------------------------------
 //  // Compute tracks from matches
 //  //---------------------------------------

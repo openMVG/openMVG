@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2009
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -49,7 +49,7 @@ namespace lemon {
 
       /// Returns the value associated with the given key.
       Value operator[](const Key &) const {
-        return *static_cast<Value *>(0);
+        return *(static_cast<Value *>(0)+1);
       }
 
       template<typename _ReadMap>
@@ -60,14 +60,15 @@ namespace lemon {
           typename _ReadMap::Value own_val = m[own_key];
           own_val = m[own_key];
 
-          ignore_unused_variable_warning(key);
-          ignore_unused_variable_warning(val);
-          ignore_unused_variable_warning(own_key);
-          ignore_unused_variable_warning(own_val);
+          ::lemon::ignore_unused_variable_warning(key);
+          ::lemon::ignore_unused_variable_warning(val);
+          ::lemon::ignore_unused_variable_warning(own_key);
+          ::lemon::ignore_unused_variable_warning(own_val);
         }
         const Key& key;
         const typename _ReadMap::Key& own_key;
         const _ReadMap& m;
+        Constraints() {}
       };
 
     };
@@ -99,16 +100,17 @@ namespace lemon {
           m.set(key, val);
           m.set(own_key, own_val);
 
-          ignore_unused_variable_warning(key);
-          ignore_unused_variable_warning(val);
-          ignore_unused_variable_warning(own_key);
-          ignore_unused_variable_warning(own_val);
+          ::lemon::ignore_unused_variable_warning(key);
+          ::lemon::ignore_unused_variable_warning(val);
+          ::lemon::ignore_unused_variable_warning(own_key);
+          ::lemon::ignore_unused_variable_warning(own_val);
         }
         const Key& key;
         const Value& val;
         const typename _WriteMap::Key& own_key;
         const typename _WriteMap::Value& own_val;
         _WriteMap& m;
+        Constraints() {}
       };
     };
 
@@ -129,7 +131,8 @@ namespace lemon {
 
       /// Returns the value associated with the given key.
       Value operator[](const Key &) const {
-        return *static_cast<Value *>(0);
+        Value *r = 0;
+        return *r;
       }
 
       /// Sets the value associated with the given key.
@@ -169,12 +172,14 @@ namespace lemon {
 
       /// Returns a reference to the value associated with the given key.
       Reference operator[](const Key &) {
-        return *static_cast<Value *>(0);
+        Value *r = 0;
+        return *r;
       }
 
       /// Returns a const reference to the value associated with the given key.
       ConstReference operator[](const Key &) const {
-        return *static_cast<Value *>(0);
+        Value *r = 0;
+        return *r;
       }
 
       /// Sets the value associated with the given key.
@@ -205,6 +210,7 @@ namespace lemon {
         typename _ReferenceMap::Reference own_ref;
         typename _ReferenceMap::ConstReference own_cref;
         _ReferenceMap& m;
+        Constraints() {}
       };
     };
 

@@ -6,6 +6,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/image/image.hpp"
+#include "openMVG/image/image_warping.hpp"
 #include "openMVG/features/features.hpp"
 #include "openMVG/matching/matcher_brute_force.hpp"
 #include "openMVG/multiview/solver_homography_kernel.hpp"
@@ -192,6 +193,22 @@ int main() {
         << "\t-- Residual median:\t" << dMedian << std::endl
         << "\t-- Residual max:\t "  << dMax << std::endl
         << "\t-- Residual mean:\t " << dMean << std::endl;
+
+
+      //---------------------------------------
+      // Warp the images to fit the reference view
+      //---------------------------------------
+      // reread right image that will be warped to fit left image
+      ReadImage(jpg_filenameR.c_str(), &image);
+      WriteImage("query.png", image);
+
+      // Create and fill the output image
+      Image<RGBColor> imaOut(imageL.Width(), imageL.Height());
+      image::Warp(image, H, imaOut);
+      std::string imageNameOut = "query_warped.png";
+      WriteImage(imageNameOut.c_str(), imaOut);
+
+
     }
     else  {
       std::cout << "ACRANSAC was unable to estimate a rigid homography"
@@ -200,3 +217,4 @@ int main() {
   }
   return EXIT_SUCCESS;
 }
+

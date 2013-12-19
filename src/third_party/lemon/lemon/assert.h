@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2009
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -199,7 +199,7 @@ namespace lemon {
                              LEMON_FUNCTION_NAME,                       \
                              ::lemon::_assert_bits::cstringify(msg),    \
                              #exp), 0)))
-#    if LEMON_ENABLE_DEBUG
+#    if defined LEMON_ENABLE_DEBUG
 #      define LEMON_DEBUG(exp, msg)                                     \
          (static_cast<void> (!!(exp) ? 0 : (                            \
            LEMON_ASSERT_HANDLER(__FILE__, __LINE__,                     \

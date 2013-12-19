@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -437,8 +437,6 @@ namespace lemon {
   void ClpLp::_clear() {
     delete _prob;
     _prob = new ClpSimplex();
-    rows.clear();
-    cols.clear();
     _col_names_ref.clear();
     _clear_temporals();
   }

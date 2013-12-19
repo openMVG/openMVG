@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2009
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -75,7 +75,7 @@ namespace lemon {
       /// \brief Template assigment operator
       template <typename CPath>
       Path& operator=(const CPath& cpath) {
-        ignore_unused_variable_warning(cpath);
+        ::lemon::ignore_unused_variable_warning(cpath);
         return *this;
       }
 
@@ -135,12 +135,12 @@ namespace lemon {
           e = (i != ii);
           e = (i < ii);
 
-          ignore_unused_variable_warning(l);
-          ignore_unused_variable_warning(pp);
-          ignore_unused_variable_warning(e);
-          ignore_unused_variable_warning(id);
-          ignore_unused_variable_warning(ii);
-          ignore_unused_variable_warning(ed);
+          ::lemon::ignore_unused_variable_warning(l);
+          ::lemon::ignore_unused_variable_warning(pp);
+          ::lemon::ignore_unused_variable_warning(e);
+          ::lemon::ignore_unused_variable_warning(id);
+          ::lemon::ignore_unused_variable_warning(ii);
+          ::lemon::ignore_unused_variable_warning(ed);
         }
       };
 
@@ -162,12 +162,13 @@ namespace lemon {
           e = (i == INVALID);
           e = (i != INVALID);
 
-          ignore_unused_variable_warning(l);
-          ignore_unused_variable_warning(e);
-          ignore_unused_variable_warning(id);
-          ignore_unused_variable_warning(ed);
+          ::lemon::ignore_unused_variable_warning(l);
+          ::lemon::ignore_unused_variable_warning(e);
+          ::lemon::ignore_unused_variable_warning(id);
+          ::lemon::ignore_unused_variable_warning(ed);
         }
         _Path& p;
+        PathDumperConstraints() {}
       };
 
       template <typename _Digraph, typename _Path>
@@ -187,12 +188,13 @@ namespace lemon {
           e = (i == INVALID);
           e = (i != INVALID);
 
-          ignore_unused_variable_warning(l);
-          ignore_unused_variable_warning(e);
-          ignore_unused_variable_warning(id);
-          ignore_unused_variable_warning(ed);
+          ::lemon::ignore_unused_variable_warning(l);
+          ::lemon::ignore_unused_variable_warning(e);
+          ::lemon::ignore_unused_variable_warning(id);
+          ::lemon::ignore_unused_variable_warning(ed);
         }
         _Path& p;
+        PathDumperConstraints() {}
       };
 
     }

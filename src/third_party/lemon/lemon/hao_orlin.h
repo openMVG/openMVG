@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -53,8 +53,8 @@ namespace lemon {
   /// minimum cut of \f$ D \f$. The algorithm is a modified
   /// preflow push-relabel algorithm. Our implementation calculates
   /// the minimum cut in \f$ O(n^2\sqrt{m}) \f$ time (we use the
-  /// highest-label rule), or in \f$O(nm)\f$ for unit capacities. The
-  /// purpose of such algorithm is e.g. testing network reliability.
+  /// highest-label rule), or in \f$O(nm)\f$ for unit capacities. A notable
+  /// use of this algorithm is testing network reliability.
   ///
   /// For an undirected graph you can run just the first phase of the
   /// algorithm or you can use the algorithm of Nagamochi and Ibaraki,
@@ -912,6 +912,8 @@ namespace lemon {
     /// This function calculates a minimum cut with \f$ source \f$ on the
     /// source-side (i.e. a set \f$ X\subsetneq V \f$ with
     /// \f$ source \in X \f$ and minimal outgoing capacity).
+    /// It updates the stored cut if (and only if) the newly found one
+    /// is better.
     ///
     /// \pre \ref init() must be called before using this function.
     void calculateOut() {
@@ -924,6 +926,8 @@ namespace lemon {
     /// This function calculates a minimum cut with \f$ source \f$ on the
     /// sink-side (i.e. a set \f$ X\subsetneq V \f$ with
     /// \f$ source \notin X \f$ and minimal outgoing capacity).
+    /// It updates the stored cut if (and only if) the newly found one
+    /// is better.
     ///
     /// \pre \ref init() must be called before using this function.
     void calculateIn() {
@@ -933,8 +937,8 @@ namespace lemon {
 
     /// \brief Run the algorithm.
     ///
-    /// This function runs the algorithm. It finds nodes \c source and
-    /// \c target arbitrarily and then calls \ref init(), \ref calculateOut()
+    /// This function runs the algorithm. It chooses source node,
+    /// then calls \ref init(), \ref calculateOut()
     /// and \ref calculateIn().
     void run() {
       init();
@@ -944,9 +948,9 @@ namespace lemon {
 
     /// \brief Run the algorithm.
     ///
-    /// This function runs the algorithm. It uses the given \c source node,
-    /// finds a proper \c target node and then calls the \ref init(),
-    /// \ref calculateOut() and \ref calculateIn().
+    /// This function runs the algorithm. It calls \ref init(),
+    /// \ref calculateOut() and \ref calculateIn() with the given
+    /// source node.
     void run(const Node& s) {
       init(s);
       calculateOut();
@@ -965,7 +969,9 @@ namespace lemon {
 
     /// \brief Return the value of the minimum cut.
     ///
-    /// This function returns the value of the minimum cut.
+    /// This function returns the value of the best cut found by the
+    /// previously called \ref run(), \ref calculateOut() or \ref
+    /// calculateIn().
     ///
     /// \pre \ref run(), \ref calculateOut() or \ref calculateIn()
     /// must be called before using this function.
@@ -976,9 +982,13 @@ namespace lemon {
 
     /// \brief Return a minimum cut.
     ///
-    /// This function sets \c cutMap to the characteristic vector of a
-    /// minimum value cut: it will give a non-empty set \f$ X\subsetneq V \f$
-    /// with minimal outgoing capacity (i.e. \c cutMap will be \c true exactly
+    /// This function gives the best cut found by the
+    /// previously called \ref run(), \ref calculateOut() or \ref
+    /// calculateIn().
+    ///
+    /// It sets \c cutMap to the characteristic vector of the found
+    /// minimum value cut - a non-empty set \f$ X\subsetneq V \f$
+    /// of minimum outgoing capacity (i.e. \c cutMap will be \c true exactly
     /// for the nodes of \f$ X \f$).
     ///
     /// \param cutMap A \ref concepts::WriteMap "writable" node map with

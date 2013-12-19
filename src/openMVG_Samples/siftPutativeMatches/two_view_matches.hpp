@@ -21,27 +21,21 @@ void getPutativesMatches(
 {
     //-- Copy to contiguous array for matching
     //-- In order to be generic as possible, the array matcher use raw pointer.
-    typedef typename DESCRIPTOR_TYPE::bin_type descTbin;
-    const size_t DSIZE = DESCRIPTOR_TYPE::static_size;
-    descTbin * tab0 = new descTbin[descsL.size()*DSIZE];
-    descTbin * tab1 = new descTbin[descsR.size()*DSIZE];
-    for(size_t i=0; i < descsL.size(); ++i)
-      memcpy(&tab0[i*DSIZE],descsL[i].getData(),DSIZE*sizeof(typename DESCRIPTOR_TYPE::bin_type));
-
-    for(size_t i=0; i < descsR.size(); ++i)
-      memcpy(&tab1[i*DSIZE],descsR[i].getData(),DSIZE*sizeof(typename DESCRIPTOR_TYPE::bin_type));
+    typedef typename DESCRIPTOR_TYPE::bin_type DescTbin;
 
     const int NNN__ = 2; // look for the two nearest distance for each Left descriptor
     std::vector<int> vec_nIndice;
     std::vector<typename MatcherT::MetricT::ResultType> vec_Distance;
 
     MatcherT matcher;
-    matcher.Build(tab0, descsL.size(), DESCRIPTOR_TYPE::static_size);
-    matcher.SearchNeighbours(tab1, descsR.size(), &vec_nIndice, &vec_Distance, NNN__);
+    const DescTbin* descsLReinterpret =
+      reinterpret_cast<const DescTbin *>(&descsL[0]);
 
-    // Free temporary used memory
-    delete [] tab0;
-    delete [] tab1;
+    const DescTbin* descsRReinterpret =
+      reinterpret_cast<const DescTbin *>(&descsR[0]);
+
+    matcher.Build(descsLReinterpret, descsL.size(), DESCRIPTOR_TYPE::static_size);
+    matcher.SearchNeighbours(descsRReinterpret, descsR.size(), &vec_nIndice, &vec_Distance, NNN__);
 
     // Filter the correspondences with the Ratio of distance
     std::vector<int> vec_loweRatioIndexes;

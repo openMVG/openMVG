@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -312,7 +312,9 @@ namespace lemon {
 
         /// Sets the iterator to the first arc of the given digraph.
         ///
-        explicit ArcIt(const Digraph& g) { ignore_unused_variable_warning(g); }
+        explicit ArcIt(const Digraph& g) {
+          ::lemon::ignore_unused_variable_warning(g);
+        }
         /// Sets the iterator to the given arc.
 
         /// Sets the iterator to the given arc of the given digraph.
@@ -409,13 +411,13 @@ namespace lemon {
 
       /// \brief The base node of the iterator.
       ///
-      /// Returns the base node of the given incomming arc iterator
+      /// Returns the base node of the given incoming arc iterator
       /// (i.e. the target node of the corresponding arc).
       Node baseNode(InArcIt) const { return INVALID; }
 
       /// \brief The running node of the iterator.
       ///
-      /// Returns the running node of the given incomming arc iterator
+      /// Returns the running node of the given incoming arc iterator
       /// (i.e. the source node of the corresponding arc).
       Node runningNode(InArcIt) const { return INVALID; }
 

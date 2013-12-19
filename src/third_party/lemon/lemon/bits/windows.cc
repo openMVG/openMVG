@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2011
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -128,6 +128,38 @@ namespace lemon {
       timeval tv;
       gettimeofday(&tv, 0);
       return getpid() + tv.tv_sec + tv.tv_usec;
+#endif
+    }
+
+    WinLock::WinLock() {
+#ifdef WIN32
+      CRITICAL_SECTION *lock = new CRITICAL_SECTION;
+      InitializeCriticalSection(lock);
+      _repr = lock;
+#else
+      _repr = 0; //Just to avoid 'unused variable' warning with clang
+#endif
+    }
+
+    WinLock::~WinLock() {
+#ifdef WIN32
+      CRITICAL_SECTION *lock = static_cast<CRITICAL_SECTION*>(_repr);
+      DeleteCriticalSection(lock);
+      delete lock;
+#endif
+    }
+
+    void WinLock::lock() {
+#ifdef WIN32
+      CRITICAL_SECTION *lock = static_cast<CRITICAL_SECTION*>(_repr);
+      EnterCriticalSection(lock);
+#endif
+    }
+
+    void WinLock::unlock() {
+#ifdef WIN32
+      CRITICAL_SECTION *lock = static_cast<CRITICAL_SECTION*>(_repr);
+      LeaveCriticalSection(lock);
 #endif
     }
   }

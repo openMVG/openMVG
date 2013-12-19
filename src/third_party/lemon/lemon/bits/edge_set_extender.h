@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -523,13 +523,13 @@ namespace lemon {
     //
     // Returns the base node of the iterator
     Node baseNode(const IncEdgeIt &e) const {
-      return e.direction ? u(e) : v(e);
+      return e.direction ? this->u(e) : this->v(e);
     }
     // Running node of the iterator
     //
     // Returns the running node of the iterator
     Node runningNode(const IncEdgeIt &e) const {
-      return e.direction ? v(e) : u(e);
+      return e.direction ? this->v(e) : this->u(e);
     }
 
 

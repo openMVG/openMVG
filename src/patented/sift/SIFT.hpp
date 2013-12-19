@@ -61,7 +61,8 @@ static bool SIFTDetector(const Image<unsigned char>& I,
   std::vector<SIOPointFeature>& feats,
   std::vector<Descriptor<type,128> >& descs,
   bool bDezoom = false,
-  bool bRootSift = false)
+  bool bRootSift = false,
+  float dPeakThreshold = 0.04f)
 {
   // First Octave Index.
   int firstOctave = (bDezoom == true) ? -1 : 0;
@@ -72,7 +73,7 @@ static bool SIFTDetector(const Image<unsigned char>& I,
   // Max ratio of Hessian eigenvalues.
   float edgeThresh = 10.0f;
   // Min contrast.
-  float peakThresh = 0.04f;
+  float peakThresh = dPeakThreshold;
 
   int w=I.Width(), h=I.Height();
   //Convert to float

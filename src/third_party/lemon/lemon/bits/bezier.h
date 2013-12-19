@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2009
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -159,7 +159,7 @@ public:
     const Point c=(p3+p4)/2;
     const Point d=(a+b)/2;
     const Point e=(b+c)/2;
-    const Point f=(d+e)/2;
+    // const Point f=(d+e)/2;
     R f1=_f(Bezier3(p1,a,d,e),_d);
     R f2=_f(Bezier3(e,d,c,p4),_d);
     return _s(f1,f2);

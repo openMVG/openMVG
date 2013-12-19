@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -108,6 +108,8 @@ namespace lemon {
           i1 = i2 = i3;
 
           bool b;
+          ::lemon::ignore_unused_variable_warning(b);
+
           b = (ia == ib) && (ia != ib);
           b = (ia == INVALID) && (ib != INVALID);
           b = (ia < ib);
@@ -115,6 +117,7 @@ namespace lemon {
 
         const _GraphItem &ia;
         const _GraphItem &ib;
+        Constraints() {}
       };
     };
 
@@ -174,6 +177,7 @@ namespace lemon {
         }
 
         const _Digraph& digraph;
+        Constraints() {}
       };
     };
 
@@ -285,11 +289,178 @@ namespace lemon {
             e = graph.oppositeArc(e);
             ue = e;
             bool d = graph.direction(e);
-            ignore_unused_variable_warning(d);
+            ::lemon::ignore_unused_variable_warning(d);
           }
         }
 
         const _Graph& graph;
+      Constraints() {}
+      };
+
+    };
+
+    /// \brief Base skeleton class for undirected bipartite graphs.
+    ///
+    /// This class describes the base interface of undirected
+    /// bipartite graph types.  All bipartite graph %concepts have to
+    /// conform to this class.  It extends the interface of \ref
+    /// BaseGraphComponent with an \c Edge type and functions to get
+    /// the end nodes of edges, to convert from arcs to edges and to
+    /// get both direction of edges.
+    class BaseBpGraphComponent : public BaseGraphComponent {
+    public:
+
+      typedef BaseBpGraphComponent BpGraph;
+
+      typedef BaseDigraphComponent::Node Node;
+      typedef BaseDigraphComponent::Arc Arc;
+
+      /// \brief Class to represent red nodes.
+      ///
+      /// This class represents the red nodes of the graph. The red
+      /// nodes can also be used as normal nodes.
+      class RedNode : public Node {
+        typedef Node Parent;
+
+      public:
+        /// \brief Default constructor.
+        ///
+        /// Default constructor.
+        /// \warning The default constructor is not required to set
+        /// the item to some well-defined value. So you should consider it
+        /// as uninitialized.
+        RedNode() {}
+
+        /// \brief Copy constructor.
+        ///
+        /// Copy constructor.
+        RedNode(const RedNode &) : Parent() {}
+
+        /// \brief Constructor for conversion from \c INVALID.
+        ///
+        /// Constructor for conversion from \c INVALID.
+        /// It initializes the item to be invalid.
+        /// \sa Invalid for more details.
+        RedNode(Invalid) {}
+      };
+
+      /// \brief Class to represent blue nodes.
+      ///
+      /// This class represents the blue nodes of the graph. The blue
+      /// nodes can also be used as normal nodes.
+      class BlueNode : public Node {
+        typedef Node Parent;
+
+      public:
+        /// \brief Default constructor.
+        ///
+        /// Default constructor.
+        /// \warning The default constructor is not required to set
+        /// the item to some well-defined value. So you should consider it
+        /// as uninitialized.
+        BlueNode() {}
+
+        /// \brief Copy constructor.
+        ///
+        /// Copy constructor.
+        BlueNode(const BlueNode &) : Parent() {}
+
+        /// \brief Constructor for conversion from \c INVALID.
+        ///
+        /// Constructor for conversion from \c INVALID.
+        /// It initializes the item to be invalid.
+        /// \sa Invalid for more details.
+        BlueNode(Invalid) {}
+
+        /// \brief Constructor for conversion from a node.
+        ///
+        /// Constructor for conversion from a node. The conversion can
+        /// be invalid, since the Node can be member of the red
+        /// set.
+        BlueNode(const Node&) {}
+      };
+
+      /// \brief Gives back %true for red nodes.
+      ///
+      /// Gives back %true for red nodes.
+      bool red(const Node&) const { return true; }
+
+      /// \brief Gives back %true for blue nodes.
+      ///
+      /// Gives back %true for blue nodes.
+      bool blue(const Node&) const { return true; }
+
+      /// \brief Gives back the red end node of the edge.
+      ///
+      /// Gives back the red end node of the edge.
+      RedNode redNode(const Edge&) const { return RedNode(); }
+
+      /// \brief Gives back the blue end node of the edge.
+      ///
+      /// Gives back the blue end node of the edge.
+      BlueNode blueNode(const Edge&) const { return BlueNode(); }
+
+      /// \brief Converts the node to red node object.
+      ///
+      /// This function converts unsafely the node to red node
+      /// object. It should be called only if the node is from the red
+      /// partition or INVALID.
+      RedNode asRedNodeUnsafe(const Node&) const { return RedNode(); }
+
+      /// \brief Converts the node to blue node object.
+      ///
+      /// This function converts unsafely the node to blue node
+      /// object. It should be called only if the node is from the red
+      /// partition or INVALID.
+      BlueNode asBlueNodeUnsafe(const Node&) const { return BlueNode(); }
+
+      /// \brief Converts the node to red node object.
+      ///
+      /// This function converts safely the node to red node
+      /// object. If the node is not from the red partition, then it
+      /// returns INVALID.
+      RedNode asRedNode(const Node&) const { return RedNode(); }
+
+      /// \brief Converts the node to blue node object.
+      ///
+      /// This function converts unsafely the node to blue node
+      /// object. If the node is not from the blue partition, then it
+      /// returns INVALID.
+      BlueNode asBlueNode(const Node&) const { return BlueNode(); }
+
+      template <typename _BpGraph>
+      struct Constraints {
+        typedef typename _BpGraph::Node Node;
+        typedef typename _BpGraph::RedNode RedNode;
+        typedef typename _BpGraph::BlueNode BlueNode;
+        typedef typename _BpGraph::Arc Arc;
+        typedef typename _BpGraph::Edge Edge;
+
+        void constraints() {
+          checkConcept<BaseGraphComponent, _BpGraph>();
+          checkConcept<GraphItem<'n'>, RedNode>();
+          checkConcept<GraphItem<'n'>, BlueNode>();
+          {
+            Node n;
+            RedNode rn;
+            BlueNode bn;
+            Node rnan = rn;
+            Node bnan = bn;
+            Edge e;
+            bool b;
+            b = bpgraph.red(rnan);
+            b = bpgraph.blue(bnan);
+            rn = bpgraph.redNode(e);
+            bn = bpgraph.blueNode(e);
+            rn = bpgraph.asRedNodeUnsafe(rnan);
+            bn = bpgraph.asBlueNodeUnsafe(bnan);
+            rn = bpgraph.asRedNode(rnan);
+            bn = bpgraph.asBlueNode(bnan);
+            ::lemon::ignore_unused_variable_warning(b);
+          }
+        }
+
+        const _BpGraph& bpgraph;
       };
 
     };
@@ -363,12 +534,13 @@ namespace lemon {
           arc = digraph.arcFromId(eid);
 
           nid = digraph.maxNodeId();
-          ignore_unused_variable_warning(nid);
+          ::lemon::ignore_unused_variable_warning(nid);
           eid = digraph.maxArcId();
-          ignore_unused_variable_warning(eid);
+          ::lemon::ignore_unused_variable_warning(eid);
         }
 
         const _Digraph& digraph;
+        Constraints() {}
       };
     };
 
@@ -417,10 +589,75 @@ namespace lemon {
           ueid = graph.id(edge);
           edge = graph.edgeFromId(ueid);
           ueid = graph.maxEdgeId();
-          ignore_unused_variable_warning(ueid);
+          ::lemon::ignore_unused_variable_warning(ueid);
         }
 
         const _Graph& graph;
+        Constraints() {}
+      };
+    };
+
+    /// \brief Skeleton class for \e idable undirected bipartite graphs.
+    ///
+    /// This class describes the interface of \e idable undirected
+    /// bipartite graphs. It extends \ref IDableGraphComponent with
+    /// the core ID functions of undirected bipartite graphs. Beside
+    /// the regular node ids, this class also provides ids within the
+    /// the red and blue sets of the nodes. This concept is part of
+    /// the BpGraph concept.
+    template <typename BAS = BaseBpGraphComponent>
+    class IDableBpGraphComponent : public IDableGraphComponent<BAS> {
+    public:
+
+      typedef BAS Base;
+      typedef IDableGraphComponent<BAS> Parent;
+      typedef typename Base::Node Node;
+      typedef typename Base::RedNode RedNode;
+      typedef typename Base::BlueNode BlueNode;
+
+      using Parent::id;
+
+      /// \brief Return a unique integer id for the given node in the red set.
+      ///
+      /// Return a unique integer id for the given node in the red set.
+      int id(const RedNode&) const { return -1; }
+
+      /// \brief Return a unique integer id for the given node in the blue set.
+      ///
+      /// Return a unique integer id for the given node in the blue set.
+      int id(const BlueNode&) const { return -1; }
+
+      /// \brief Return an integer greater or equal to the maximum
+      /// node id in the red set.
+      ///
+      /// Return an integer greater or equal to the maximum
+      /// node id in the red set.
+      int maxRedId() const { return -1; }
+
+      /// \brief Return an integer greater or equal to the maximum
+      /// node id in the blue set.
+      ///
+      /// Return an integer greater or equal to the maximum
+      /// node id in the blue set.
+      int maxBlueId() const { return -1; }
+
+      template <typename _BpGraph>
+      struct Constraints {
+
+        void constraints() {
+          checkConcept<IDableGraphComponent<Base>, _BpGraph>();
+          typename _BpGraph::Node node;
+          typename _BpGraph::RedNode red;
+          typename _BpGraph::BlueNode blue;
+          int rid = bpgraph.id(red);
+          int bid = bpgraph.id(blue);
+          rid = bpgraph.maxRedId();
+          bid = bpgraph.maxBlueId();
+          ::lemon::ignore_unused_variable_warning(rid);
+          ::lemon::ignore_unused_variable_warning(bid);
+        }
+
+        const _BpGraph& bpgraph;
       };
     };
 
@@ -489,6 +726,8 @@ namespace lemon {
           _GraphItemIt it2;
           _GraphItemIt it3 = it1;
           _GraphItemIt it4 = INVALID;
+          ::lemon::ignore_unused_variable_warning(it3);
+          ::lemon::ignore_unused_variable_warning(it4);
 
           it2 = ++it1;
           ++it2 = it1;
@@ -498,6 +737,7 @@ namespace lemon {
           bi = it2;
         }
         const GR& g;
+        Constraints() {}
       };
     };
 
@@ -577,6 +817,8 @@ namespace lemon {
           _GraphIncIt it2;
           _GraphIncIt it3 = it1;
           _GraphIncIt it4 = INVALID;
+          ::lemon::ignore_unused_variable_warning(it3);
+          ::lemon::ignore_unused_variable_warning(it4);
 
           it2 = ++it1;
           ++it2 = it1;
@@ -586,6 +828,7 @@ namespace lemon {
         }
         const Base& node;
         const GR& graph;
+        Constraints() {}
       };
     };
 
@@ -632,15 +875,15 @@ namespace lemon {
       /// This function gives back the next arc in the iteration order.
       void next(Arc&) const {}
 
-      /// \brief Return the first arc incomming to the given node.
+      /// \brief Return the first arc incoming to the given node.
       ///
-      /// This function gives back the first arc incomming to the
+      /// This function gives back the first arc incoming to the
       /// given node.
       void firstIn(Arc&, const Node&) const {}
 
-      /// \brief Return the next arc incomming to the given node.
+      /// \brief Return the next arc incoming to the given node.
       ///
-      /// This function gives back the next arc incomming to the
+      /// This function gives back the next arc incoming to the
       /// given node.
       void nextIn(Arc&) const {}
 
@@ -757,11 +1000,12 @@ namespace lemon {
             n = digraph.runningNode(iait);
             n = digraph.baseNode(oait);
             n = digraph.runningNode(oait);
-            ignore_unused_variable_warning(n);
+            ::lemon::ignore_unused_variable_warning(n);
           }
         }
 
         const _Digraph& digraph;
+        Constraints() {}
       };
     };
 
@@ -886,6 +1130,98 @@ namespace lemon {
         }
 
         const _Graph& graph;
+        Constraints() {}
+      };
+    };
+
+    /// \brief Skeleton class for iterable undirected bipartite graphs.
+    ///
+    /// This class describes the interface of iterable undirected
+    /// bipartite graphs. It extends \ref IterableGraphComponent with
+    /// the core iterable interface of undirected bipartite graphs.
+    /// This concept is part of the BpGraph concept.
+    template <typename BAS = BaseBpGraphComponent>
+    class IterableBpGraphComponent : public IterableGraphComponent<BAS> {
+    public:
+
+      typedef BAS Base;
+      typedef typename Base::Node Node;
+      typedef typename Base::RedNode RedNode;
+      typedef typename Base::BlueNode BlueNode;
+      typedef typename Base::Arc Arc;
+      typedef typename Base::Edge Edge;
+
+      typedef IterableBpGraphComponent BpGraph;
+
+      using IterableGraphComponent<BAS>::first;
+      using IterableGraphComponent<BAS>::next;
+
+      /// \name Base Iteration
+      ///
+      /// This interface provides functions for iteration on red and blue nodes.
+      ///
+      /// @{
+
+      /// \brief Return the first red node.
+      ///
+      /// This function gives back the first red node in the iteration order.
+      void first(RedNode&) const {}
+
+      /// \brief Return the next red node.
+      ///
+      /// This function gives back the next red node in the iteration order.
+      void next(RedNode&) const {}
+
+      /// \brief Return the first blue node.
+      ///
+      /// This function gives back the first blue node in the iteration order.
+      void first(BlueNode&) const {}
+
+      /// \brief Return the next blue node.
+      ///
+      /// This function gives back the next blue node in the iteration order.
+      void next(BlueNode&) const {}
+
+
+      /// @}
+
+      /// \name Class Based Iteration
+      ///
+      /// This interface provides iterator classes for red and blue nodes.
+      ///
+      /// @{
+
+      /// \brief This iterator goes through each red node.
+      ///
+      /// This iterator goes through each red node.
+      typedef GraphItemIt<BpGraph, RedNode> RedNodeIt;
+
+      /// \brief This iterator goes through each blue node.
+      ///
+      /// This iterator goes through each blue node.
+      typedef GraphItemIt<BpGraph, BlueNode> BlueNodeIt;
+
+      /// @}
+
+      template <typename _BpGraph>
+      struct Constraints {
+        void constraints() {
+          checkConcept<IterableGraphComponent<Base>, _BpGraph>();
+
+          typename _BpGraph::RedNode rn(INVALID);
+          bpgraph.first(rn);
+          bpgraph.next(rn);
+          typename _BpGraph::BlueNode bn(INVALID);
+          bpgraph.first(bn);
+          bpgraph.next(bn);
+
+          checkConcept<GraphItemIt<_BpGraph, typename _BpGraph::RedNode>,
+            typename _BpGraph::RedNodeIt>();
+          checkConcept<GraphItemIt<_BpGraph, typename _BpGraph::BlueNode>,
+            typename _BpGraph::BlueNodeIt>();
+        }
+
+        const _BpGraph& bpgraph;
       };
     };
 
@@ -914,18 +1250,21 @@ namespace lemon {
       typedef AlterationNotifier<AlterableDigraphComponent, Arc>
       ArcNotifier;
 
+      mutable NodeNotifier node_notifier;
+      mutable ArcNotifier arc_notifier;
+
       /// \brief Return the node alteration notifier.
       ///
       /// This function gives back the node alteration notifier.
       NodeNotifier& notifier(Node) const {
-         return NodeNotifier();
+        return node_notifier;
       }
 
       /// \brief Return the arc alteration notifier.
       ///
       /// This function gives back the arc alteration notifier.
       ArcNotifier& notifier(Arc) const {
-        return ArcNotifier();
+        return arc_notifier;
       }
 
       template <typename _Digraph>
@@ -938,11 +1277,12 @@ namespace lemon {
           typename _Digraph::ArcNotifier& en
             = digraph.notifier(typename _Digraph::Arc());
 
-          ignore_unused_variable_warning(nn);
-          ignore_unused_variable_warning(en);
+          ::lemon::ignore_unused_variable_warning(nn);
+          ::lemon::ignore_unused_variable_warning(en);
         }
 
         const _Digraph& digraph;
+        Constraints() {}
       };
     };
 
@@ -960,6 +1300,7 @@ namespace lemon {
     public:
 
       typedef BAS Base;
+      typedef AlterableDigraphComponent<Base> Parent;
       typedef typename Base::Edge Edge;
 
 
@@ -967,11 +1308,15 @@ namespace lemon {
       typedef AlterationNotifier<AlterableGraphComponent, Edge>
       EdgeNotifier;
 
+      mutable EdgeNotifier edge_notifier;
+
+      using Parent::notifier;
+
       /// \brief Return the edge alteration notifier.
       ///
       /// This function gives back the edge alteration notifier.
       EdgeNotifier& notifier(Edge) const {
-        return EdgeNotifier();
+        return edge_notifier;
       }
 
       template <typename _Graph>
@@ -980,10 +1325,73 @@ namespace lemon {
           checkConcept<AlterableDigraphComponent<Base>, _Graph>();
           typename _Graph::EdgeNotifier& uen
             = graph.notifier(typename _Graph::Edge());
-          ignore_unused_variable_warning(uen);
+          ::lemon::ignore_unused_variable_warning(uen);
         }
 
         const _Graph& graph;
+        Constraints() {}
+      };
+    };
+
+    /// \brief Skeleton class for alterable undirected bipartite graphs.
+    ///
+    /// This class describes the interface of alterable undirected
+    /// bipartite graphs. It extends \ref AlterableGraphComponent with
+    /// the alteration notifier interface of bipartite graphs. It
+    /// implements an observer-notifier pattern for the red and blue
+    /// nodes. More obsevers can be registered into the notifier and
+    /// whenever an alteration occured in the graph all the observers
+    /// will be notified about it.
+    template <typename BAS = BaseBpGraphComponent>
+    class AlterableBpGraphComponent : public AlterableGraphComponent<BAS> {
+    public:
+
+      typedef BAS Base;
+      typedef AlterableGraphComponent<Base> Parent;
+      typedef typename Base::RedNode RedNode;
+      typedef typename Base::BlueNode BlueNode;
+
+
+      /// Red node alteration notifier class.
+      typedef AlterationNotifier<AlterableBpGraphComponent, RedNode>
+      RedNodeNotifier;
+
+      /// Blue node alteration notifier class.
+      typedef AlterationNotifier<AlterableBpGraphComponent, BlueNode>
+      BlueNodeNotifier;
+
+      mutable RedNodeNotifier red_node_notifier;
+      mutable BlueNodeNotifier blue_node_notifier;
+
+      using Parent::notifier;
+
+      /// \brief Return the red node alteration notifier.
+      ///
+      /// This function gives back the red node alteration notifier.
+      RedNodeNotifier& notifier(RedNode) const {
+        return red_node_notifier;
+      }
+
+      /// \brief Return the blue node alteration notifier.
+      ///
+      /// This function gives back the blue node alteration notifier.
+      BlueNodeNotifier& notifier(BlueNode) const {
+        return blue_node_notifier;
+      }
+
+      template <typename _BpGraph>
+      struct Constraints {
+        void constraints() {
+          checkConcept<AlterableGraphComponent<Base>, _BpGraph>();
+          typename _BpGraph::RedNodeNotifier& rnn
+            = bpgraph.notifier(typename _BpGraph::RedNode());
+          typename _BpGraph::BlueNodeNotifier& bnn
+            = bpgraph.notifier(typename _BpGraph::BlueNode());
+          ::lemon::ignore_unused_variable_warning(rnn);
+          ::lemon::ignore_unused_variable_warning(bnn);
+        }
+
+        const _BpGraph& bpgraph;
       };
     };
 
@@ -1053,14 +1461,15 @@ namespace lemon {
           // ReadMap<Key, Value> cmap;
           // m3 = cmap;
 
-          ignore_unused_variable_warning(m1);
-          ignore_unused_variable_warning(m2);
-          // ignore_unused_variable_warning(m3);
+          ::lemon::ignore_unused_variable_warning(m1);
+          ::lemon::ignore_unused_variable_warning(m2);
+          // ::lemon::ignore_unused_variable_warning(m3);
         }
 
         const _Map &m;
         const GR &g;
         const typename GraphMap::Value &t;
+        Constraints() {}
       };
 
     };
@@ -1199,6 +1608,7 @@ namespace lemon {
         }
 
         const _Digraph& digraph;
+        Constraints() {}
       };
     };
 
@@ -1284,6 +1694,151 @@ namespace lemon {
         }
 
         const _Graph& graph;
+        Constraints() {}
+      };
+    };
+
+    /// \brief Skeleton class for mappable undirected bipartite graphs.
+    ///
+    /// This class describes the interface of mappable undirected
+    /// bipartite graphs.  It extends \ref MappableGraphComponent with
+    /// the standard graph map class for red and blue nodes (\c
+    /// RedNodeMap and BlueNodeMap). This concept is part of the
+    /// BpGraph concept.
+    template <typename BAS = BaseBpGraphComponent>
+    class MappableBpGraphComponent : public MappableGraphComponent<BAS>  {
+    public:
+
+      typedef BAS Base;
+      typedef typename Base::Node Node;
+
+      typedef MappableBpGraphComponent BpGraph;
+
+      /// \brief Standard graph map for the red nodes.
+      ///
+      /// Standard graph map for the red nodes.
+      /// It conforms to the ReferenceMap concept.
+      template <typename V>
+      class RedNodeMap : public GraphMap<MappableBpGraphComponent, Node, V> {
+        typedef GraphMap<MappableBpGraphComponent, Node, V> Parent;
+
+      public:
+        /// \brief Construct a new map.
+        ///
+        /// Construct a new map for the graph.
+        explicit RedNodeMap(const MappableBpGraphComponent& graph)
+          : Parent(graph) {}
+
+        /// \brief Construct a new map with default value.
+        ///
+        /// Construct a new map for the graph and initalize the values.
+        RedNodeMap(const MappableBpGraphComponent& graph, const V& value)
+          : Parent(graph, value) {}
+
+      private:
+        /// \brief Copy constructor.
+        ///
+        /// Copy Constructor.
+        RedNodeMap(const RedNodeMap& nm) : Parent(nm) {}
+
+        /// \brief Assignment operator.
+        ///
+        /// Assignment operator.
+        template <typename CMap>
+        RedNodeMap& operator=(const CMap&) {
+          checkConcept<ReadMap<Node, V>, CMap>();
+          return *this;
+        }
+
+      };
+
+      /// \brief Standard graph map for the blue nodes.
+      ///
+      /// Standard graph map for the blue nodes.
+      /// It conforms to the ReferenceMap concept.
+      template <typename V>
+      class BlueNodeMap : public GraphMap<MappableBpGraphComponent, Node, V> {
+        typedef GraphMap<MappableBpGraphComponent, Node, V> Parent;
+
+      public:
+        /// \brief Construct a new map.
+        ///
+        /// Construct a new map for the graph.
+        explicit BlueNodeMap(const MappableBpGraphComponent& graph)
+          : Parent(graph) {}
+
+        /// \brief Construct a new map with default value.
+        ///
+        /// Construct a new map for the graph and initalize the values.
+        BlueNodeMap(const MappableBpGraphComponent& graph, const V& value)
+          : Parent(graph, value) {}
+
+      private:
+        /// \brief Copy constructor.
+        ///
+        /// Copy Constructor.
+        BlueNodeMap(const BlueNodeMap& nm) : Parent(nm) {}
+
+        /// \brief Assignment operator.
+        ///
+        /// Assignment operator.
+        template <typename CMap>
+        BlueNodeMap& operator=(const CMap&) {
+          checkConcept<ReadMap<Node, V>, CMap>();
+          return *this;
+        }
+
+      };
+
+
+      template <typename _BpGraph>
+      struct Constraints {
+
+        struct Dummy {
+          int value;
+          Dummy() : value(0) {}
+          Dummy(int _v) : value(_v) {}
+        };
+
+        void constraints() {
+          checkConcept<MappableGraphComponent<Base>, _BpGraph>();
+
+          { // int map test
+            typedef typename _BpGraph::template RedNodeMap<int>
+              IntRedNodeMap;
+            checkConcept<GraphMap<_BpGraph, typename _BpGraph::RedNode, int>,
+              IntRedNodeMap >();
+          } { // bool map test
+            typedef typename _BpGraph::template RedNodeMap<bool>
+              BoolRedNodeMap;
+            checkConcept<GraphMap<_BpGraph, typename _BpGraph::RedNode, bool>,
+              BoolRedNodeMap >();
+          } { // Dummy map test
+            typedef typename _BpGraph::template RedNodeMap<Dummy>
+              DummyRedNodeMap;
+            checkConcept<GraphMap<_BpGraph, typename _BpGraph::RedNode, Dummy>,
+              DummyRedNodeMap >();
+          }
+
+          { // int map test
+            typedef typename _BpGraph::template BlueNodeMap<int>
+              IntBlueNodeMap;
+            checkConcept<GraphMap<_BpGraph, typename _BpGraph::BlueNode, int>,
+              IntBlueNodeMap >();
+          } { // bool map test
+            typedef typename _BpGraph::template BlueNodeMap<bool>
+              BoolBlueNodeMap;
+            checkConcept<GraphMap<_BpGraph, typename _BpGraph::BlueNode, bool>,
+              BoolBlueNodeMap >();
+          } { // Dummy map test
+            typedef typename _BpGraph::template BlueNodeMap<Dummy>
+              DummyBlueNodeMap;
+            checkConcept<GraphMap<_BpGraph, typename _BpGraph::BlueNode, Dummy>,
+              DummyBlueNodeMap >();
+          }
+        }
+
+        const _BpGraph& bpgraph;
       };
     };
 
@@ -1328,6 +1883,7 @@ namespace lemon {
         }
 
         _Digraph& digraph;
+        Constraints() {}
       };
     };
 
@@ -1372,6 +1928,66 @@ namespace lemon {
         }
 
         _Graph& graph;
+        Constraints() {}
+      };
+    };
+
+    /// \brief Skeleton class for extendable undirected bipartite graphs.
+    ///
+    /// This class describes the interface of extendable undirected
+    /// bipartite graphs. It extends \ref BaseGraphComponent with
+    /// functions for adding nodes and edges to the graph. This
+    /// concept requires \ref AlterableBpGraphComponent.
+    template <typename BAS = BaseBpGraphComponent>
+    class ExtendableBpGraphComponent : public BAS {
+    public:
+
+      typedef BAS Base;
+      typedef typename Base::Node Node;
+      typedef typename Base::RedNode RedNode;
+      typedef typename Base::BlueNode BlueNode;
+      typedef typename Base::Edge Edge;
+
+      /// \brief Add a new red node to the digraph.
+      ///
+      /// This function adds a red new node to the digraph.
+      RedNode addRedNode() {
+        return INVALID;
+      }
+
+      /// \brief Add a new blue node to the digraph.
+      ///
+      /// This function adds a blue new node to the digraph.
+      BlueNode addBlueNode() {
+        return INVALID;
+      }
+
+      /// \brief Add a new edge connecting the given two nodes.
+      ///
+      /// This function adds a new edge connecting the given two nodes
+      /// of the graph. The first node has to be a red node, and the
+      /// second one a blue node.
+      Edge addEdge(const RedNode&, const BlueNode&) {
+        return INVALID;
+      }
+      Edge addEdge(const BlueNode&, const RedNode&) {
+        return INVALID;
+      }
+
+      template <typename _BpGraph>
+      struct Constraints {
+        void constraints() {
+          checkConcept<Base, _BpGraph>();
+          typename _BpGraph::RedNode red_node;
+          typename _BpGraph::BlueNode blue_node;
+          red_node = bpgraph.addRedNode();
+          blue_node = bpgraph.addBlueNode();
+          typename _BpGraph::Edge edge;
+          edge = bpgraph.addEdge(red_node, blue_node);
+          edge = bpgraph.addEdge(blue_node, red_node);
+        }
+
+        _BpGraph& bpgraph;
       };
     };
 
@@ -1411,6 +2027,7 @@ namespace lemon {
         }
 
         _Digraph& digraph;
+        Constraints() {}
       };
     };
 
@@ -1450,8 +2067,18 @@ namespace lemon {
         }
 
         _Graph& graph;
+        Constraints() {}
       };
     };
+
+    /// \brief Skeleton class for erasable undirected graphs.
+    ///
+    /// This class describes the interface of erasable undirected
+    /// bipartite graphs. It extends \ref BaseBpGraphComponent with
+    /// functions for removing nodes and edges from the graph. This
+    /// concept requires \ref AlterableBpGraphComponent.
+    template <typename BAS = BaseBpGraphComponent>
+    class ErasableBpGraphComponent : public ErasableGraphComponent<BAS> {};
 
     /// \brief Skeleton class for clearable directed graphs.
     ///
@@ -1478,6 +2105,7 @@ namespace lemon {
         }
 
         _Digraph& digraph;
+        Constraints() {}
       };
     };
 
@@ -1488,26 +2116,16 @@ namespace lemon {
     /// the graph.
     /// This concept requires \ref AlterableGraphComponent.
     template <typename BAS = BaseGraphComponent>
-    class ClearableGraphComponent : public ClearableDigraphComponent<BAS> {
-    public:
+    class ClearableGraphComponent : public ClearableDigraphComponent<BAS> {};
 
-      typedef BAS Base;
-
-      /// \brief Erase all nodes and edges from the graph.
-      ///
-      /// This function erases all nodes and edges from the graph.
-      void clear() {}
-
-      template <typename _Graph>
-      struct Constraints {
-        void constraints() {
-          checkConcept<Base, _Graph>();
-          graph.clear();
-        }
-
-        _Graph& graph;
-      };
-    };
+    /// \brief Skeleton class for clearable undirected biparite graphs.
+    ///
+    /// This class describes the interface of clearable undirected
+    /// bipartite graphs. It extends \ref BaseBpGraphComponent with a
+    /// function for clearing the graph.  This concept requires \ref
+    /// AlterableBpGraphComponent.
+    template <typename BAS = BaseBpGraphComponent>
+    class ClearableBpGraphComponent : public ClearableGraphComponent<BAS> {};
 
   }
 

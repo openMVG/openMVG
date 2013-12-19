@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2009
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -34,6 +34,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <lemon/math.h>
 
 namespace lemon {
 
@@ -63,11 +64,40 @@ namespace lemon {
     double cstime;
     double rtime;
 
+  public:
+    ///Display format specifier
+
+    ///\e
+    ///
+    enum Format {
+      /// Reports all measured values
+      NORMAL = 0,
+      /// Only real time and an error indicator is displayed
+      SHORT = 1
+    };
+
+  private:
+    static Format _format;
+
     void _reset() {
       utime = stime = cutime = cstime = rtime = 0;
     }
 
   public:
+
+    ///Set output format
+
+    ///Set output format.
+    ///
+    ///The output format is global for all timestamp instances.
+    static void format(Format f) { _format = f; }
+    ///Retrieve the current output format
+
+    ///Retrieve the current output format
+    ///
+    ///The output format is global for all timestamp instances.
+    static Format format() { return _format; }
+
 
     ///Read the current time values of the process
     void stamp()
@@ -224,11 +254,24 @@ namespace lemon {
   /// calculated.
   inline std::ostream& operator<<(std::ostream& os,const TimeStamp &t)
   {
-    os << "u: " << t.userTime() <<
-      "s, s: " << t.systemTime() <<
-      "s, cu: " << t.cUserTime() <<
-      "s, cs: " << t.cSystemTime() <<
-      "s, real: " << t.realTime() << "s";
+    switch(t._format)
+      {
+      case TimeStamp::NORMAL:
+        os << "u: " << t.userTime() <<
+          "s, s: " << t.systemTime() <<
+          "s, cu: " << t.cUserTime() <<
+          "s, cs: " << t.cSystemTime() <<
+          "s, real: " << t.realTime() << "s";
+        break;
+      case TimeStamp::SHORT:
+        double total = t.userTime()+t.systemTime()+
+          t.cUserTime()+t.cSystemTime();
+        os << t.realTime()
+           << "s (err: " << round((t.realTime()-total)/
+                                  t.realTime()*10000)/100
+           << "%)";
+        break;
+      }
     return os;
   }
 
@@ -468,6 +511,7 @@ namespace lemon {
   {
     std::string _title;
     std::ostream &_os;
+    bool _active;
   public:
     ///Constructor
 
@@ -475,13 +519,27 @@ namespace lemon {
     ///\param title This text will be printed before the ellapsed time.
     ///\param os The stream to print the report to.
     ///\param run Sets whether the timer should start immediately.
-    TimeReport(std::string title,std::ostream &os=std::cerr,bool run=true)
-      : Timer(run), _title(title), _os(os){}
+    ///\param active Sets whether the report should actually be printed
+    ///       on destruction.
+    TimeReport(std::string title,std::ostream &os=std::cerr,bool run=true,
+               bool active=true)
+      : Timer(run), _title(title), _os(os), _active(active) {}
     ///Destructor that prints the ellapsed time
     ~TimeReport()
     {
-      _os << _title << *this << std::endl;
+      if(_active) _os << _title << *this << std::endl;
     }
+
+    ///Retrieve the activity status
+
+    ///\e
+    ///
+    bool active() const { return _active; }
+    ///Set the activity status
+
+    /// This function set whether the time report should actually be printed
+    /// on destruction.
+    void active(bool a) { _active=a; }
   };
 
   ///'Do nothing' version of TimeReport

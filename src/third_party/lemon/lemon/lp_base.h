@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2011
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -1007,6 +1007,36 @@ namespace lemon {
 
   public:
 
+    ///Unsupported file format exception
+    class UnsupportedFormatError : public Exception
+    {
+      std::string _format;
+      mutable std::string _what;
+    public:
+      explicit UnsupportedFormatError(std::string format) throw()
+        : _format(format) { }
+      virtual ~UnsupportedFormatError() throw() {}
+      virtual const char* what() const throw() {
+        try {
+          _what.clear();
+          std::ostringstream oss;
+          oss << "lemon::UnsupportedFormatError: " << _format;
+          _what = oss.str();
+        }
+        catch (...) {}
+        if (!_what.empty()) return _what.c_str();
+        else return "lemon::UnsupportedFormatError";
+      }
+    };
+
+  protected:
+    virtual void _write(std::string, std::string format) const
+    {
+      throw UnsupportedFormatError(format);
+    }
+
+  public:
+
     /// Virtual destructor
     virtual ~LpBase() {}
 
@@ -1555,11 +1585,26 @@ namespace lemon {
     ///Set the sense to maximization
     void min() { _setSense(MIN); }
 
-    ///Clears the problem
-    void clear() { _clear(); }
+    ///Clear the problem
+    void clear() { _clear(); rows.clear(); cols.clear(); }
 
-    /// Sets the message level of the solver
+    /// Set the message level of the solver
     void messageLevel(MessageLevel level) { _messageLevel(level); }
+
+    /// Write the problem to a file in the given format
+
+    /// This function writes the problem to a file in the given format.
+    /// Different solver backends may support different formats.
+    /// Trying to write in an unsupported format will trigger
+    /// \ref UnsupportedFormatError. For the supported formats,
+    /// visit the documentation of the base class of the related backends
+    /// (\ref CplexBase, \ref GlpkBase etc.)
+    /// \param file The file path
+    /// \param format The output file format.
+    void write(std::string file, std::string format = "MPS") const
+    {
+      _write(file.c_str(),format.c_str());
+    }
 
     ///@}
 

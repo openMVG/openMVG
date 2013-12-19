@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2009
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -23,6 +23,7 @@
 #include <list>
 
 #include <lemon/core.h>
+#include <lemon/bits/lock.h>
 
 //\ingroup graphbits
 //\file
@@ -251,7 +252,7 @@ namespace lemon {
 
     typedef std::list<ObserverBase*> Observers;
     Observers _observers;
-
+    lemon::bits::Lock _lock;
 
   public:
 
@@ -332,14 +333,18 @@ namespace lemon {
   protected:
 
     void attach(ObserverBase& observer) {
+      _lock.lock();
       observer._index = _observers.insert(_observers.begin(), &observer);
       observer._notifier = this;
+      _lock.unlock();
     }
 
     void detach(ObserverBase& observer) {
+      _lock.lock();
       _observers.erase(observer._index);
       observer._index = _observers.end();
       observer._notifier = 0;
+      _lock.unlock();
     }
 
   public:

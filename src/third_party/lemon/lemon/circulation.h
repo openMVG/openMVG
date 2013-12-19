@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -195,7 +195,8 @@ template< typename GR,
   class Circulation {
   public:
 
-    ///The \ref CirculationDefaultTraits "traits class" of the algorithm.
+    /// \brief The \ref lemon::CirculationDefaultTraits "traits class"
+    /// of the algorithm.
     typedef TR Traits;
     ///The type of the digraph the algorithm runs on.
     typedef typename Traits::Digraph Digraph;
@@ -572,8 +573,6 @@ template< typename GR,
     {
 
       Node act;
-      Node bact=INVALID;
-      Node last_activated=INVALID;
       while((act=_level->highestActive())!=INVALID) {
         int actlevel=(*_level)[act];
         int mlevel=_node_num;

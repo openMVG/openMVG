@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -123,8 +123,8 @@ namespace lemon {
   class MaxFractionalMatching {
   public:
 
-    /// \brief The \ref MaxFractionalMatchingDefaultTraits "traits
-    /// class" of the algorithm.
+    /// \brief The \ref lemon::MaxFractionalMatchingDefaultTraits
+    /// "traits class" of the algorithm.
     typedef TR Traits;
     /// The type of the graph the algorithm runs on.
     typedef typename TR::Graph Graph;

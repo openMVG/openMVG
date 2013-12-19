@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -115,6 +115,8 @@ namespace lemon {
 
     virtual void _messageLevel(MessageLevel level);
 
+    virtual void _write(std::string file, std::string format) const;
+
   private:
 
     static void freeEnv();
@@ -143,6 +145,19 @@ namespace lemon {
 
     ///Returns the variable identifier understood by GLPK.
     int lpxCol(Col c) const { return cols(id(c)); }
+
+#ifdef DOXYGEN
+    /// Write the problem or the solution to a file in the given format
+
+    /// This function writes the problem or the solution
+    /// to a file in the given format.
+    /// Trying to write in an unsupported format will trigger
+    /// \ref LpBase::UnsupportedFormatError.
+    /// \param file The file path
+    /// \param format The output file format.
+    /// Supportted formats are "MPS" and "LP".
+    void write(std::string file, std::string format = "MPS") const {}
+#endif
 
   };
 

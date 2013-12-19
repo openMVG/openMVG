@@ -1,38 +1,100 @@
-2011-11-09 Version 1.2.3 released
+2013-08-10 Version 1.3 released
 
-        Bugfix release.
+        This is major feature release
 
-        #428: Add missing lemon/lemon.pc.cmake to the release tarball
-        #429: Fix VS warnings
-        #430: Fix LpBase::Constr two-side limit bug
+        * New data structures
 
-2011-08-08 Version 1.2.2 released
+          #69 : Bipartite graph concepts and implementations
 
-        Bugfix release.
+        * New algorithms
 
-        #392: Bug fix in Dfs::start(s,t)
-        #414: Fix wrong initialization in Preflow
-        #404: Update Doxygen configuration
-        #416: Support tests with valgrind
-        #418: Better Win CodeBlock/MinGW support
-        #419: Backport build environment improvements from the main branch
-              - Build of mip_test and lp_test precede the running of the tests
-              - Also search for coin libs under ${COIN_ROOT_DIR}/lib/coin
-              - Do not look for COIN_VOL libraries
-        #382: Allow lgf file without Arc maps
-        #417: Bug fix in CostScaling
+          #177: Port Edmonds-Karp algorithm
+          #380, #405: Heuristic algorithm for the max clique problem
+          #386: Heuristic algorithms for symmetric TSP
+          ----: Nagamochi-Ibaraki algorithm [5087694945e4]
+          #397, #56: Max. cardinality search
 
-2010-10-21 Version 1.2.1 released
+        * Other new features
 
-        Bugfix release.
+          #223: Thread safe graph and graph map implementations
+          #442: Different TimeStamp print formats
+          #457: File export functionality to LpBase
+          #362: Bidirectional iterator support for radixSort()
 
-        #366: Fix Pred[Matrix]MapPath::empty()
-        #371: Bug fix in (di)graphCopy()
-              The target graph is cleared before adding nodes and arcs/edges.
+        * Implementation improvements
 
-        #364: Add missing UndirectedTags
-        #368: Fix the usage of std::numeric_limits<>::min() in Network Simplex
-        #372: Fix a critical bug in preflow
+          ----: Network Simplex
+                #391: Better update process, pivot rule and arc mixing
+                #435: Improved Altering List pivot rule
+          #417: Various fine tunings in CostScaling
+          #438: Optional iteration limit in HowardMmc
+          #436: Ensure strongly polynomial running time for CycleCanceling
+                while keeping the same performance
+          ----: Make the CBC interface be compatible with latest CBC releases
+                [ee581a0ecfbf]
+
+        * CMAKE has become the default build environment (#434)
+
+          ----: Autotool support has been dropped
+          ----: Improved LP/MIP configuration
+                #465: Enable/disable options for LP/MIP backends
+                #446: Better CPLEX discovery
+                #460: Add cmake config to find SoPlex
+          ----: Allow CPACK configuration on all platforms
+          #390: Add 'Maintainer' CMAKE build type
+          #388: Add 'check' target.
+          #401: Add contrib dir
+          #389: Better version string setting in CMAKE
+          #433: Support shared library build    
+          #416: Support testing with valgrind
+  
+        * Doc improvements
+
+          #395: SOURCE_BROWSER Doxygen switch is configurable from CMAKE
+                update-external-tags CMAKE target
+          #455: Optionally use MathJax for rendering the math formulae
+          #402, #437, #459, #456, #463: Various doc improvements
+
+        * Bugfixes (compared to release 1.2):
+
+          #432: Add missing doc/template.h and doc/references.bib to release
+                tarball
+          ----: Intel C++ compatibility fixes
+          #441: Fix buggy reinitialization in _solver_bits::VarIndex::clear()
+          #444: Bugfix in path copy constructors and assignment operators
+          #447: Bugfix in AllArcLookUp<>
+          #448: Bugfix in adaptor_test.cc
+          #449: Fix clang compilation warnings and errors
+          #440: Fix a bug + remove redundant typedefs in dimacs-solver
+          #453: Avoid GCC 4.7 compiler warnings
+          #445: Fix missing initialization in CplexEnv::CplexEnv()
+          #428: Add missing lemon/lemon.pc.cmake to the release tarball
+          #393: Create and install lemon.pc
+          #429: Fix VS warnings
+          #430: Fix LpBase::Constr two-side limit bug
+          #392: Bug fix in Dfs::start(s,t)
+          #414: Fix wrong initialization in Preflow
+          #418: Better Win CodeBlock/MinGW support
+          #419: Build environment improvements
+                - Build of mip_test and lp_test precede the running of the tests
+                - Also search for coin libs under ${COIN_ROOT_DIR}/lib/coin
+                - Do not look for COIN_VOL libraries
+          #382: Allow lgf file without Arc maps
+          #417: Bug fix in CostScaling
+          #366: Fix Pred[Matrix]MapPath::empty()
+          #371: Bug fix in (di)graphCopy()
+                The target graph is cleared before adding nodes and arcs/edges.
+          #364: Add missing UndirectedTags
+          #368: Fix the usage of std::numeric_limits<>::min() in Network Simplex
+          #372: Fix a critical bug in preflow
+          #461: Bugfix in assert.h
+          #470: Fix compilation issues related to various gcc versions
+          #446: Fix #define indicating CPLEX availability
+          #294: Add explicit namespace to
+                ignore_unused_variable_warning() usages
+          #420: Bugfix in IterableValueMap
+          #439: Bugfix in biNodeConnected()
+
 
 2010-03-19 Version 1.2 released
 

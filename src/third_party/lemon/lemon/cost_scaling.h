@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2011
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -91,11 +91,18 @@ namespace lemon {
   ///
   /// \ref CostScaling implements a cost scaling algorithm that performs
   /// push/augment and relabel operations for finding a \ref min_cost_flow
-  /// "minimum cost flow" \ref amo93networkflows, \ref goldberg90approximation,
-  /// \ref goldberg97efficient, \ref bunnagel98efficient.
+  /// "minimum cost flow" \cite amo93networkflows,
+  /// \cite goldberg90approximation,
+  /// \cite goldberg97efficient, \cite bunnagel98efficient.
   /// It is a highly efficient primal-dual solution method, which
   /// can be viewed as the generalization of the \ref Preflow
   /// "preflow push-relabel" algorithm for the maximum flow problem.
+  /// It is a polynomial algorithm, its running time complexity is
+  /// \f$O(n^2m\log(nK))\f$, where <i>K</i> denotes the maximum arc cost.
+  ///
+  /// In general, \ref NetworkSimplex and \ref CostScaling are the fastest
+  /// implementations available in LEMON for solving this problem.
+  /// (For more information, see \ref min_cost_flow_algs "the module page".)
   ///
   /// Most of the parameters of the problem (except for the digraph)
   /// can be given using separate functions, and the algorithm can be
@@ -113,10 +120,11 @@ namespace lemon {
   /// In most cases, this parameter should not be set directly,
   /// consider to use the named template parameters instead.
   ///
-  /// \warning Both number types must be signed and all input data must
+  /// \warning Both \c V and \c C must be signed number types.
+  /// \warning All input data (capacities, supply values, and costs) must
   /// be integer.
-  /// \warning This algorithm does not support negative costs for such
-  /// arcs that have infinite upper bound.
+  /// \warning This algorithm does not support negative costs for
+  /// arcs having infinite upper bound.
   ///
   /// \note %CostScaling provides three different internal methods,
   /// from which the most efficient one is used by default.
@@ -145,7 +153,8 @@ namespace lemon {
     /// otherwise it is \c double.
     typedef typename TR::LargeCost LargeCost;
 
-    /// The \ref CostScalingDefaultTraits "traits class" of the algorithm
+    /// \brief The \ref lemon::CostScalingDefaultTraits "traits class"
+    /// of the algorithm
     typedef TR Traits;
 
   public:
@@ -178,7 +187,7 @@ namespace lemon {
     /// in their base operations, which are used in conjunction with the
     /// relabel operation.
     /// By default, the so called \ref PARTIAL_AUGMENT
-    /// "Partial Augment-Relabel" method is used, which proved to be
+    /// "Partial Augment-Relabel" method is used, which turned out to be
     /// the most efficient and the most robust on various test inputs.
     /// However, the other methods can be selected using the \ref run()
     /// function with the proper parameter.
@@ -205,7 +214,8 @@ namespace lemon {
     typedef std::vector<Cost> CostVector;
     typedef std::vector<LargeCost> LargeCostVector;
     typedef std::vector<char> BoolVector;
-    // Note: vector<char> is used instead of vector<bool> for efficiency reasons
+    // Note: vector<char> is used instead of vector<bool>
+    // for efficiency reasons
 
   private:
 
@@ -233,7 +243,6 @@ namespace lemon {
       std::vector<Value>& _v;
     };
 
-    typedef StaticVectorMap<StaticDigraph::Node, LargeCost> LargeCostNodeMap;
     typedef StaticVectorMap<StaticDigraph::Arc, LargeCost> LargeCostArcMap;
 
   private:
@@ -284,14 +293,6 @@ namespace lemon {
     IntVector _rank;
     int _max_rank;
 
-    // Data for a StaticDigraph structure
-    typedef std::pair<int, int> IntPair;
-    StaticDigraph _sgr;
-    std::vector<IntPair> _arc_vec;
-    std::vector<LargeCost> _cost_vec;
-    LargeCostArcMap _cost_map;
-    LargeCostNodeMap _pi_map;
-
   public:
 
     /// \brief Constant for infinite upper bounds (capacities).
@@ -338,7 +339,6 @@ namespace lemon {
     /// \param graph The digraph the algorithm runs on.
     CostScaling(const GR& graph) :
       _graph(graph), _node_id(graph), _arc_idf(graph), _arc_idb(graph),
-      _cost_map(_cost_vec), _pi_map(_pi),
       INF(std::numeric_limits<Value>::has_infinity ?
           std::numeric_limits<Value>::infinity() :
           std::numeric_limits<Value>::max())
@@ -447,7 +447,7 @@ namespace lemon {
     /// calling \ref run(), the supply of each node will be set to zero.
     ///
     /// Using this function has the same effect as using \ref supplyMap()
-    /// with such a map in which \c k is assigned to \c s, \c -k is
+    /// with a map in which \c k is assigned to \c s, \c -k is
     /// assigned to \c t and all other nodes have zero supply value.
     ///
     /// \param s The source node.
@@ -493,7 +493,7 @@ namespace lemon {
     ///
     /// \param method The internal method that will be used in the
     /// algorithm. For more information, see \ref Method.
-    /// \param factor The cost scaling factor. It must be larger than one.
+    /// \param factor The cost scaling factor. It must be at least two.
     ///
     /// \return \c INFEASIBLE if no feasible flow exists,
     /// \n \c OPTIMAL if the problem has optimal solution
@@ -507,7 +507,8 @@ namespace lemon {
     ///
     /// \see ProblemType, Method
     /// \see resetParams(), reset()
-    ProblemType run(Method method = PARTIAL_AUGMENT, int factor = 8) {
+    ProblemType run(Method method = PARTIAL_AUGMENT, int factor = 16) {
+      LEMON_ASSERT(factor >= 2, "The scaling factor must be at least 2");
       _alpha = factor;
       ProblemType pt = init();
       if (pt != OPTIMAL) return pt;
@@ -571,18 +572,25 @@ namespace lemon {
       return *this;
     }
 
-    /// \brief Reset all the parameters that have been given before.
+    /// \brief Reset the internal data structures and all the parameters
+    /// that have been given before.
     ///
-    /// This function resets all the paramaters that have been given
-    /// before using functions \ref lowerMap(), \ref upperMap(),
-    /// \ref costMap(), \ref supplyMap(), \ref stSupply().
+    /// This function resets the internal data structures and all the
+    /// paramaters that have been given before using functions \ref lowerMap(),
+    /// \ref upperMap(), \ref costMap(), \ref supplyMap(), \ref stSupply().
     ///
-    /// It is useful for multiple run() calls. If this function is not
-    /// used, all the parameters given before are kept for the next
-    /// \ref run() call.
-    /// However, the underlying digraph must not be modified after this
-    /// class have been constructed, since it copies and extends the graph.
+    /// It is useful for multiple \ref run() calls. By default, all the given
+    /// parameters are kept for the next \ref run() call, unless
+    /// \ref resetParams() or \ref reset() is used.
+    /// If the underlying digraph was also modified after the construction
+    /// of the class or the last \ref reset() call, then the \ref reset()
+    /// function must be used, otherwise \ref resetParams() is sufficient.
+    ///
+    /// See \ref resetParams() for examples.
+    ///
     /// \return <tt>(*this)</tt>
+    ///
+    /// \see resetParams(), run()
     CostScaling& reset() {
       // Resize vectors
       _node_num = countNodes(_graph);
@@ -607,9 +615,6 @@ namespace lemon {
       _pi.resize(_res_node_num);
       _excess.resize(_res_node_num);
       _next_out.resize(_res_node_num);
-
-      _arc_vec.reserve(_res_arc_num);
-      _cost_vec.reserve(_res_arc_num);
 
       // Copy the graph
       int i = 0, j = 0, k = 2 * _arc_num + _node_num;
@@ -667,7 +672,7 @@ namespace lemon {
     /// \brief Return the total cost of the found flow.
     ///
     /// This function returns the total cost of the found flow.
-    /// Its complexity is O(e).
+    /// Its complexity is O(m).
     ///
     /// \note The return type of the function can be specified as a
     /// template parameter. For example,
@@ -705,7 +710,8 @@ namespace lemon {
       return _res_cap[_arc_idb[a]];
     }
 
-    /// \brief Return the flow map (the primal solution).
+    /// \brief Copy the flow values (the primal solution) into the
+    /// given map.
     ///
     /// This function copies the flow value on each arc into the given
     /// map. The \c Value type of the algorithm must be convertible to
@@ -729,7 +735,8 @@ namespace lemon {
       return static_cast<Cost>(_pi[_node_id[n]]);
     }
 
-    /// \brief Return the potential map (the dual solution).
+    /// \brief Copy the potential values (the dual solution) into the
+    /// given map.
     ///
     /// This function copies the potential (dual value) of each node
     /// into the given map.
@@ -758,6 +765,10 @@ namespace lemon {
         _sum_supply += _supply[i];
       }
       if (_sum_supply > 0) return INFEASIBLE;
+
+      // Check lower and upper bounds
+      LEMON_DEBUG(checkBoundMaps(),
+          "Upper bounds must be greater or equal to the lower bounds");
 
 
       // Initialize vectors
@@ -886,14 +897,6 @@ namespace lemon {
         }
       }
 
-      return OPTIMAL;
-    }
-
-    // Execute the algorithm and transform the results
-    void start(Method method) {
-      // Maximum path length for partial augment
-      const int MAX_PATH_LENGTH = 4;
-
       // Initialize data structures for buckets
       _max_rank = _alpha * _res_node_num;
       _buckets.resize(_max_rank);
@@ -901,7 +904,22 @@ namespace lemon {
       _bucket_prev.resize(_res_node_num + 1);
       _rank.resize(_res_node_num + 1);
 
-      // Execute the algorithm
+      return OPTIMAL;
+    }
+
+    // Check if the upper bound is greater or equal to the lower bound
+    // on each arc.
+    bool checkBoundMaps() {
+      for (int j = 0; j != _res_arc_num; ++j) {
+        if (_upper[j] < _lower[j]) return false;
+      }
+      return true;
+    }
+
+    // Execute the algorithm and transform the results
+    void start(Method method) {
+      const int MAX_PARTIAL_PATH_LENGTH = 4;
+
       switch (method) {
         case PUSH:
           startPush();
@@ -910,26 +928,67 @@ namespace lemon {
           startAugment(_res_node_num - 1);
           break;
         case PARTIAL_AUGMENT:
-          startAugment(MAX_PATH_LENGTH);
+          startAugment(MAX_PARTIAL_PATH_LENGTH);
           break;
       }
 
-      // Compute node potentials for the original costs
-      _arc_vec.clear();
-      _cost_vec.clear();
-      for (int j = 0; j != _res_arc_num; ++j) {
-        if (_res_cap[j] > 0) {
-          _arc_vec.push_back(IntPair(_source[j], _target[j]));
-          _cost_vec.push_back(_scost[j]);
+      // Compute node potentials (dual solution)
+      for (int i = 0; i != _res_node_num; ++i) {
+        _pi[i] = static_cast<Cost>(_pi[i] / (_res_node_num * _alpha));
+      }
+      bool optimal = true;
+      for (int i = 0; optimal && i != _res_node_num; ++i) {
+        LargeCost pi_i = _pi[i];
+        int last_out = _first_out[i+1];
+        for (int j = _first_out[i]; j != last_out; ++j) {
+          if (_res_cap[j] > 0 && _scost[j] + pi_i - _pi[_target[j]] < 0) {
+            optimal = false;
+            break;
+          }
         }
       }
-      _sgr.build(_res_node_num, _arc_vec.begin(), _arc_vec.end());
 
-      typename BellmanFord<StaticDigraph, LargeCostArcMap>
-        ::template SetDistMap<LargeCostNodeMap>::Create bf(_sgr, _cost_map);
-      bf.distMap(_pi_map);
-      bf.init(0);
-      bf.start();
+      if (!optimal) {
+        // Compute node potentials for the original costs with BellmanFord
+        // (if it is necessary)
+        typedef std::pair<int, int> IntPair;
+        StaticDigraph sgr;
+        std::vector<IntPair> arc_vec;
+        std::vector<LargeCost> cost_vec;
+        LargeCostArcMap cost_map(cost_vec);
+
+        arc_vec.clear();
+        cost_vec.clear();
+        for (int j = 0; j != _res_arc_num; ++j) {
+          if (_res_cap[j] > 0) {
+            int u = _source[j], v = _target[j];
+            arc_vec.push_back(IntPair(u, v));
+            cost_vec.push_back(_scost[j] + _pi[u] - _pi[v]);
+          }
+        }
+        sgr.build(_res_node_num, arc_vec.begin(), arc_vec.end());
+
+        typename BellmanFord<StaticDigraph, LargeCostArcMap>::Create
+          bf(sgr, cost_map);
+        bf.init(0);
+        bf.start();
+
+        for (int i = 0; i != _res_node_num; ++i) {
+          _pi[i] += bf.dist(sgr.node(i));
+        }
+      }
+
+      // Shift potentials to meet the requirements of the GEQ type
+      // optimality conditions
+      LargeCost max_pot = _pi[_root];
+      for (int i = 0; i != _res_node_num; ++i) {
+        if (_pi[i] > max_pot) max_pot = _pi[i];
+      }
+      if (max_pot != 0) {
+        for (int i = 0; i != _res_node_num; ++i) {
+          _pi[i] -= max_pot;
+        }
+      }
 
       // Handle non-zero lower bounds
       if (_have_lower) {
@@ -947,13 +1006,15 @@ namespace lemon {
         int last_out = _first_out[u+1];
         LargeCost pi_u = _pi[u];
         for (int a = _first_out[u]; a != last_out; ++a) {
-          int v = _target[a];
-          if (_res_cap[a] > 0 && _cost[a] + pi_u - _pi[v] < 0) {
-            Value delta = _res_cap[a];
-            _excess[u] -= delta;
-            _excess[v] += delta;
-            _res_cap[a] = 0;
-            _res_cap[_reverse[a]] += delta;
+          Value delta = _res_cap[a];
+          if (delta > 0) {
+            int v = _target[a];
+            if (_cost[a] + pi_u - _pi[v] < 0) {
+              _excess[u] -= delta;
+              _excess[v] += delta;
+              _res_cap[a] = 0;
+              _res_cap[_reverse[a]] += delta;
+            }
           }
         }
       }
@@ -969,53 +1030,254 @@ namespace lemon {
       }
     }
 
-    // Early termination heuristic
-    bool earlyTermination() {
-      const double EARLY_TERM_FACTOR = 3.0;
+    // Price (potential) refinement heuristic
+    bool priceRefinement() {
 
-      // Build a static residual graph
-      _arc_vec.clear();
-      _cost_vec.clear();
-      for (int j = 0; j != _res_arc_num; ++j) {
-        if (_res_cap[j] > 0) {
-          _arc_vec.push_back(IntPair(_source[j], _target[j]));
-          _cost_vec.push_back(_cost[j] + 1);
+      // Stack for stroing the topological order
+      IntVector stack(_res_node_num);
+      int stack_top;
+
+      // Perform phases
+      while (topologicalSort(stack, stack_top)) {
+
+        // Compute node ranks in the acyclic admissible network and
+        // store the nodes in buckets
+        for (int i = 0; i != _res_node_num; ++i) {
+          _rank[i] = 0;
         }
-      }
-      _sgr.build(_res_node_num, _arc_vec.begin(), _arc_vec.end());
+        const int bucket_end = _root + 1;
+        for (int r = 0; r != _max_rank; ++r) {
+          _buckets[r] = bucket_end;
+        }
+        int top_rank = 0;
+        for ( ; stack_top >= 0; --stack_top) {
+          int u = stack[stack_top], v;
+          int rank_u = _rank[u];
 
-      // Run Bellman-Ford algorithm to check if the current flow is optimal
-      BellmanFord<StaticDigraph, LargeCostArcMap> bf(_sgr, _cost_map);
-      bf.init(0);
-      bool done = false;
-      int K = int(EARLY_TERM_FACTOR * std::sqrt(double(_res_node_num)));
-      for (int i = 0; i < K && !done; ++i) {
-        done = bf.processNextWeakRound();
+          LargeCost rc, pi_u = _pi[u];
+          int last_out = _first_out[u+1];
+          for (int a = _first_out[u]; a != last_out; ++a) {
+            if (_res_cap[a] > 0) {
+              v = _target[a];
+              rc = _cost[a] + pi_u - _pi[v];
+              if (rc < 0) {
+                LargeCost nrc = static_cast<LargeCost>((-rc - 0.5) / _epsilon);
+                if (nrc < LargeCost(_max_rank)) {
+                  int new_rank_v = rank_u + static_cast<int>(nrc);
+                  if (new_rank_v > _rank[v]) {
+                    _rank[v] = new_rank_v;
+                  }
+                }
+              }
+            }
+          }
+
+          if (rank_u > 0) {
+            top_rank = std::max(top_rank, rank_u);
+            int bfirst = _buckets[rank_u];
+            _bucket_next[u] = bfirst;
+            _bucket_prev[bfirst] = u;
+            _buckets[rank_u] = u;
+          }
+        }
+
+        // Check if the current flow is epsilon-optimal
+        if (top_rank == 0) {
+          return true;
+        }
+
+        // Process buckets in top-down order
+        for (int rank = top_rank; rank > 0; --rank) {
+          while (_buckets[rank] != bucket_end) {
+            // Remove the first node from the current bucket
+            int u = _buckets[rank];
+            _buckets[rank] = _bucket_next[u];
+
+            // Search the outgoing arcs of u
+            LargeCost rc, pi_u = _pi[u];
+            int last_out = _first_out[u+1];
+            int v, old_rank_v, new_rank_v;
+            for (int a = _first_out[u]; a != last_out; ++a) {
+              if (_res_cap[a] > 0) {
+                v = _target[a];
+                old_rank_v = _rank[v];
+
+                if (old_rank_v < rank) {
+
+                  // Compute the new rank of node v
+                  rc = _cost[a] + pi_u - _pi[v];
+                  if (rc < 0) {
+                    new_rank_v = rank;
+                  } else {
+                    LargeCost nrc = rc / _epsilon;
+                    new_rank_v = 0;
+                    if (nrc < LargeCost(_max_rank)) {
+                      new_rank_v = rank - 1 - static_cast<int>(nrc);
+                    }
+                  }
+
+                  // Change the rank of node v
+                  if (new_rank_v > old_rank_v) {
+                    _rank[v] = new_rank_v;
+
+                    // Remove v from its old bucket
+                    if (old_rank_v > 0) {
+                      if (_buckets[old_rank_v] == v) {
+                        _buckets[old_rank_v] = _bucket_next[v];
+                      } else {
+                        int pv = _bucket_prev[v], nv = _bucket_next[v];
+                        _bucket_next[pv] = nv;
+                        _bucket_prev[nv] = pv;
+                      }
+                    }
+
+                    // Insert v into its new bucket
+                    int nv = _buckets[new_rank_v];
+                    _bucket_next[v] = nv;
+                    _bucket_prev[nv] = v;
+                    _buckets[new_rank_v] = v;
+                  }
+                }
+              }
+            }
+
+            // Refine potential of node u
+            _pi[u] -= rank * _epsilon;
+          }
+        }
+
       }
-      return done;
+
+      return false;
+    }
+
+    // Find and cancel cycles in the admissible network and
+    // determine topological order using DFS
+    bool topologicalSort(IntVector &stack, int &stack_top) {
+      const int MAX_CYCLE_CANCEL = 1;
+
+      BoolVector reached(_res_node_num, false);
+      BoolVector processed(_res_node_num, false);
+      IntVector pred(_res_node_num);
+      for (int i = 0; i != _res_node_num; ++i) {
+        _next_out[i] = _first_out[i];
+      }
+      stack_top = -1;
+
+      int cycle_cnt = 0;
+      for (int start = 0; start != _res_node_num; ++start) {
+        if (reached[start]) continue;
+
+        // Start DFS search from this start node
+        pred[start] = -1;
+        int tip = start, v;
+        while (true) {
+          // Check the outgoing arcs of the current tip node
+          reached[tip] = true;
+          LargeCost pi_tip = _pi[tip];
+          int a, last_out = _first_out[tip+1];
+          for (a = _next_out[tip]; a != last_out; ++a) {
+            if (_res_cap[a] > 0) {
+              v = _target[a];
+              if (_cost[a] + pi_tip - _pi[v] < 0) {
+                if (!reached[v]) {
+                  // A new node is reached
+                  reached[v] = true;
+                  pred[v] = tip;
+                  _next_out[tip] = a;
+                  tip = v;
+                  a = _next_out[tip];
+                  last_out = _first_out[tip+1];
+                  break;
+                }
+                else if (!processed[v]) {
+                  // A cycle is found
+                  ++cycle_cnt;
+                  _next_out[tip] = a;
+
+                  // Find the minimum residual capacity along the cycle
+                  Value d, delta = _res_cap[a];
+                  int u, delta_node = tip;
+                  for (u = tip; u != v; ) {
+                    u = pred[u];
+                    d = _res_cap[_next_out[u]];
+                    if (d <= delta) {
+                      delta = d;
+                      delta_node = u;
+                    }
+                  }
+
+                  // Augment along the cycle
+                  _res_cap[a] -= delta;
+                  _res_cap[_reverse[a]] += delta;
+                  for (u = tip; u != v; ) {
+                    u = pred[u];
+                    int ca = _next_out[u];
+                    _res_cap[ca] -= delta;
+                    _res_cap[_reverse[ca]] += delta;
+                  }
+
+                  // Check the maximum number of cycle canceling
+                  if (cycle_cnt >= MAX_CYCLE_CANCEL) {
+                    return false;
+                  }
+
+                  // Roll back search to delta_node
+                  if (delta_node != tip) {
+                    for (u = tip; u != delta_node; u = pred[u]) {
+                      reached[u] = false;
+                    }
+                    tip = delta_node;
+                    a = _next_out[tip] + 1;
+                    last_out = _first_out[tip+1];
+                    break;
+                  }
+                }
+              }
+            }
+          }
+
+          // Step back to the previous node
+          if (a == last_out) {
+            processed[tip] = true;
+            stack[++stack_top] = tip;
+            tip = pred[tip];
+            if (tip < 0) {
+              // Finish DFS from the current start node
+              break;
+            }
+            ++_next_out[tip];
+          }
+        }
+
+      }
+
+      return (cycle_cnt == 0);
     }
 
     // Global potential update heuristic
     void globalUpdate() {
-      int bucket_end = _root + 1;
+      const int bucket_end = _root + 1;
 
       // Initialize buckets
       for (int r = 0; r != _max_rank; ++r) {
         _buckets[r] = bucket_end;
       }
       Value total_excess = 0;
+      int b0 = bucket_end;
       for (int i = 0; i != _res_node_num; ++i) {
         if (_excess[i] < 0) {
           _rank[i] = 0;
-          _bucket_next[i] = _buckets[0];
-          _bucket_prev[_buckets[0]] = i;
-          _buckets[0] = i;
+          _bucket_next[i] = b0;
+          _bucket_prev[b0] = i;
+          b0 = i;
         } else {
           total_excess += _excess[i];
           _rank[i] = _max_rank;
         }
       }
       if (total_excess == 0) return;
+      _buckets[0] = b0;
 
       // Search the buckets
       int r = 0;
@@ -1025,7 +1287,7 @@ namespace lemon {
           int u = _buckets[r];
           _buckets[r] = _bucket_next[u];
 
-          // Search the incomming arcs of u
+          // Search the incoming arcs of u
           LargeCost pi_u = _pi[u];
           int last_out = _first_out[u+1];
           for (int a = _first_out[u]; a != last_out; ++a) {
@@ -1037,8 +1299,9 @@ namespace lemon {
                 // Compute the new rank of v
                 LargeCost nrc = (_cost[ra] + _pi[v] - pi_u) / _epsilon;
                 int new_rank_v = old_rank_v;
-                if (nrc < LargeCost(_max_rank))
-                  new_rank_v = r + 1 + int(nrc);
+                if (nrc < LargeCost(_max_rank)) {
+                  new_rank_v = r + 1 + static_cast<int>(nrc);
+                }
 
                 // Change the rank of v
                 if (new_rank_v < old_rank_v) {
@@ -1050,14 +1313,16 @@ namespace lemon {
                     if (_buckets[old_rank_v] == v) {
                       _buckets[old_rank_v] = _bucket_next[v];
                     } else {
-                      _bucket_next[_bucket_prev[v]] = _bucket_next[v];
-                      _bucket_prev[_bucket_next[v]] = _bucket_prev[v];
+                      int pv = _bucket_prev[v], nv = _bucket_next[v];
+                      _bucket_next[pv] = nv;
+                      _bucket_prev[nv] = pv;
                     }
                   }
 
-                  // Insert v to its new bucket
-                  _bucket_next[v] = _buckets[new_rank_v];
-                  _bucket_prev[_buckets[new_rank_v]] = v;
+                  // Insert v into its new bucket
+                  int nv = _buckets[new_rank_v];
+                  _bucket_next[v] = nv;
+                  _bucket_prev[nv] = v;
                   _buckets[new_rank_v] = v;
                 }
               }
@@ -1086,23 +1351,25 @@ namespace lemon {
     /// Execute the algorithm performing augment and relabel operations
     void startAugment(int max_length) {
       // Paramters for heuristics
-      const int EARLY_TERM_EPSILON_LIMIT = 1000;
-      const double GLOBAL_UPDATE_FACTOR = 3.0;
-
-      const int global_update_freq = int(GLOBAL_UPDATE_FACTOR *
+      const int PRICE_REFINEMENT_LIMIT = 2;
+      const double GLOBAL_UPDATE_FACTOR = 1.0;
+      const int global_update_skip = static_cast<int>(GLOBAL_UPDATE_FACTOR *
         (_res_node_num + _sup_node_num * _sup_node_num));
-      int next_update_limit = global_update_freq;
-
-      int relabel_cnt = 0;
+      int next_global_update_limit = global_update_skip;
 
       // Perform cost scaling phases
-      std::vector<int> path;
+      IntVector path;
+      BoolVector path_arc(_res_arc_num, false);
+      int relabel_cnt = 0;
+      int eps_phase_cnt = 0;
       for ( ; _epsilon >= 1; _epsilon = _epsilon < _alpha && _epsilon > 1 ?
                                         1 : _epsilon / _alpha )
       {
-        // Early termination heuristic
-        if (_epsilon <= EARLY_TERM_EPSILON_LIMIT) {
-          if (earlyTermination()) break;
+        ++eps_phase_cnt;
+
+        // Price refinement heuristic
+        if (eps_phase_cnt >= PRICE_REFINEMENT_LIMIT) {
+          if (priceRefinement()) continue;
         }
 
         // Initialize current phase
@@ -1119,32 +1386,45 @@ namespace lemon {
           int start = _active_nodes.front();
 
           // Find an augmenting path from the start node
-          path.clear();
           int tip = start;
-          while (_excess[tip] >= 0 && int(path.size()) < max_length) {
+          while (int(path.size()) < max_length && _excess[tip] >= 0) {
             int u;
-            LargeCost min_red_cost, rc, pi_tip = _pi[tip];
+            LargeCost rc, min_red_cost = std::numeric_limits<LargeCost>::max();
+            LargeCost pi_tip = _pi[tip];
             int last_out = _first_out[tip+1];
             for (int a = _next_out[tip]; a != last_out; ++a) {
-              u = _target[a];
-              if (_res_cap[a] > 0 && _cost[a] + pi_tip - _pi[u] < 0) {
-                path.push_back(a);
-                _next_out[tip] = a;
-                tip = u;
-                goto next_step;
+              if (_res_cap[a] > 0) {
+                u = _target[a];
+                rc = _cost[a] + pi_tip - _pi[u];
+                if (rc < 0) {
+                  path.push_back(a);
+                  _next_out[tip] = a;
+                  if (path_arc[a]) {
+                    goto augment;   // a cycle is found, stop path search
+                  }
+                  tip = u;
+                  path_arc[a] = true;
+                  goto next_step;
+                }
+                else if (rc < min_red_cost) {
+                  min_red_cost = rc;
+                }
               }
             }
 
             // Relabel tip node
-            min_red_cost = std::numeric_limits<LargeCost>::max();
             if (tip != start) {
               int ra = _reverse[path.back()];
-              min_red_cost = _cost[ra] + pi_tip - _pi[_target[ra]];
+              min_red_cost =
+                std::min(min_red_cost, _cost[ra] + pi_tip - _pi[_target[ra]]);
             }
+            last_out = _next_out[tip];
             for (int a = _first_out[tip]; a != last_out; ++a) {
-              rc = _cost[a] + pi_tip - _pi[_target[a]];
-              if (_res_cap[a] > 0 && rc < min_red_cost) {
-                min_red_cost = rc;
+              if (_res_cap[a] > 0) {
+                rc = _cost[a] + pi_tip - _pi[_target[a]];
+                if (rc < min_red_cost) {
+                  min_red_cost = rc;
+                }
               }
             }
             _pi[tip] -= min_red_cost + _epsilon;
@@ -1153,7 +1433,9 @@ namespace lemon {
 
             // Step back
             if (tip != start) {
-              tip = _source[path.back()];
+              int pa = path.back();
+              path_arc[pa] = false;
+              tip = _source[pa];
               path.pop_back();
             }
 
@@ -1161,51 +1443,59 @@ namespace lemon {
           }
 
           // Augment along the found path (as much flow as possible)
+        augment:
           Value delta;
           int pa, u, v = start;
           for (int i = 0; i != int(path.size()); ++i) {
             pa = path[i];
             u = v;
             v = _target[pa];
+            path_arc[pa] = false;
             delta = std::min(_res_cap[pa], _excess[u]);
             _res_cap[pa] -= delta;
             _res_cap[_reverse[pa]] += delta;
             _excess[u] -= delta;
             _excess[v] += delta;
-            if (_excess[v] > 0 && _excess[v] <= delta)
+            if (_excess[v] > 0 && _excess[v] <= delta) {
               _active_nodes.push_back(v);
+            }
           }
+          path.clear();
 
           // Global update heuristic
-          if (relabel_cnt >= next_update_limit) {
+          if (relabel_cnt >= next_global_update_limit) {
             globalUpdate();
-            next_update_limit += global_update_freq;
+            next_global_update_limit += global_update_skip;
           }
         }
+
       }
+
     }
 
     /// Execute the algorithm performing push and relabel operations
     void startPush() {
       // Paramters for heuristics
-      const int EARLY_TERM_EPSILON_LIMIT = 1000;
+      const int PRICE_REFINEMENT_LIMIT = 2;
       const double GLOBAL_UPDATE_FACTOR = 2.0;
 
-      const int global_update_freq = int(GLOBAL_UPDATE_FACTOR *
+      const int global_update_skip = static_cast<int>(GLOBAL_UPDATE_FACTOR *
         (_res_node_num + _sup_node_num * _sup_node_num));
-      int next_update_limit = global_update_freq;
-
-      int relabel_cnt = 0;
+      int next_global_update_limit = global_update_skip;
 
       // Perform cost scaling phases
       BoolVector hyper(_res_node_num, false);
       LargeCostVector hyper_cost(_res_node_num);
+      int relabel_cnt = 0;
+      int eps_phase_cnt = 0;
       for ( ; _epsilon >= 1; _epsilon = _epsilon < _alpha && _epsilon > 1 ?
                                         1 : _epsilon / _alpha )
       {
-        // Early termination heuristic
-        if (_epsilon <= EARLY_TERM_EPSILON_LIMIT) {
-          if (earlyTermination()) break;
+        ++eps_phase_cnt;
+
+        // Price refinement heuristic
+        if (eps_phase_cnt >= PRICE_REFINEMENT_LIMIT) {
+          if (priceRefinement()) continue;
         }
 
         // Initialize current phase
@@ -1277,9 +1567,11 @@ namespace lemon {
              min_red_cost = hyper[n] ? -hyper_cost[n] :
                std::numeric_limits<LargeCost>::max();
             for (int a = _first_out[n]; a != last_out; ++a) {
-              rc = _cost[a] + pi_n - _pi[_target[a]];
-              if (_res_cap[a] > 0 && rc < min_red_cost) {
-                min_red_cost = rc;
+              if (_res_cap[a] > 0) {
+                rc = _cost[a] + pi_n - _pi[_target[a]];
+                if (rc < min_red_cost) {
+                  min_red_cost = rc;
+                }
               }
             }
             _pi[n] -= min_red_cost + _epsilon;
@@ -1297,11 +1589,11 @@ namespace lemon {
           }
 
           // Global update heuristic
-          if (relabel_cnt >= next_update_limit) {
+          if (relabel_cnt >= next_global_update_limit) {
             globalUpdate();
             for (int u = 0; u != _res_node_num; ++u)
               hyper[u] = false;
-            next_update_limit += global_update_freq;
+            next_global_update_limit += global_update_skip;
           }
         }
       }

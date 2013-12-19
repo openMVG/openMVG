@@ -10,6 +10,8 @@
 
 #include "openMVG/numeric/numeric.h"
 
+#include "openMVG/features/feature.hpp"
+#include "openMVG/matching/indMatch.hpp"
 #include "openMVG/multiview/solver_resection_kernel.hpp"
 #include "openMVG/multiview/solver_resection_p3p.hpp"
 #include "openMVG/multiview/solver_essential_kernel.hpp"
@@ -22,6 +24,7 @@ using namespace openMVG;
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 
+using namespace openMVG::matching;
 using namespace openMVG::robust;
 
 static const size_t ACRANSAC_ITER = 4096;

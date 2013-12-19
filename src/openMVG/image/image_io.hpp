@@ -79,7 +79,7 @@ inline int ReadImage(const char * path, Image<RGBColor> * im)
     (*im) = Eigen::Map<Image<RGBColor>::Base>(ptrCol, h, w);
   }
   else if (depth!=3)
-      return 0;
+    return 0;
   return res;
 }
 

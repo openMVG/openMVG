@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2009
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -148,6 +148,88 @@ namespace lemon {
       Map(const GR& _digraph, const Value& _value)
         : Parent(_digraph, _value) {}
     };
+
+  };
+
+  template <typename GR, typename Enable = void>
+  struct RedNodeNotifierIndicator {
+    typedef InvalidType Type;
+  };
+  template <typename GR>
+  struct RedNodeNotifierIndicator<
+    GR,
+    typename enable_if<typename GR::RedNodeNotifier::Notifier, void>::type
+  > {
+    typedef typename GR::RedNodeNotifier Type;
+  };
+
+  template <typename GR>
+  class ItemSetTraits<GR, typename GR::RedNode> {
+  public:
+
+    typedef GR BpGraph;
+    typedef GR Graph;
+    typedef GR Digraph;
+
+    typedef typename GR::RedNode Item;
+    typedef typename GR::RedNodeIt ItemIt;
+
+    typedef typename RedNodeNotifierIndicator<GR>::Type ItemNotifier;
+
+    template <typename V>
+    class Map : public GR::template RedNodeMap<V> {
+      typedef typename GR::template RedNodeMap<V> Parent;
+
+    public:
+      typedef typename GR::template RedNodeMap<V> Type;
+      typedef typename Parent::Value Value;
+
+      Map(const GR& _bpgraph) : Parent(_bpgraph) {}
+      Map(const GR& _bpgraph, const Value& _value)
+        : Parent(_bpgraph, _value) {}
+
+     };
+
+  };
+
+  template <typename GR, typename Enable = void>
+  struct BlueNodeNotifierIndicator {
+    typedef InvalidType Type;
+  };
+  template <typename GR>
+  struct BlueNodeNotifierIndicator<
+    GR,
+    typename enable_if<typename GR::BlueNodeNotifier::Notifier, void>::type
+  > {
+    typedef typename GR::BlueNodeNotifier Type;
+  };
+
+  template <typename GR>
+  class ItemSetTraits<GR, typename GR::BlueNode> {
+  public:
+
+    typedef GR BpGraph;
+    typedef GR Graph;
+    typedef GR Digraph;
+
+    typedef typename GR::BlueNode Item;
+    typedef typename GR::BlueNodeIt ItemIt;
+
+    typedef typename BlueNodeNotifierIndicator<GR>::Type ItemNotifier;
+
+    template <typename V>
+    class Map : public GR::template BlueNodeMap<V> {
+      typedef typename GR::template BlueNodeMap<V> Parent;
+
+    public:
+      typedef typename GR::template BlueNodeMap<V> Type;
+      typedef typename Parent::Value Value;
+
+      Map(const GR& _bpgraph) : Parent(_bpgraph) {}
+      Map(const GR& _bpgraph, const Value& _value)
+        : Parent(_bpgraph, _value) {}
+
+     };
 
   };
 
