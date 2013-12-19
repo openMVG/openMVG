@@ -12,9 +12,11 @@ PROJECT(openMVG C CXX)
 # By default build in Release mode
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE "Release")
-ENDIF()
+ENDIF(NOT CMAKE_BUILD_TYPE)
 
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -ffast-math -msse -msse2 -msse3")
+IF (WIN32)
+  ADD_DEFINITIONS(-DNOMINMAX)
+ENDIF (WIN32)
 
 # ==============================================================================
 # Additional cmake find modules
@@ -51,12 +53,27 @@ IF (NOT APPLE)
 ENDIF (NOT APPLE)
 
 # ==============================================================================
-# glfw
+# SUBMODULE CONFIGURATION
+# ==============================================================================
+#- glfw
 # ==============================================================================
 SET(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Do not build the GLFW example programs" FORCE)
 SET(GLFW_BUILD_TESTS    OFF CACHE BOOL "Do not build the GLFW tests programs"   FORCE)
 ADD_SUBDIRECTORY(dependencies/glfw)
 INCLUDE_DIRECTORIES(SYSTEM dependencies/glfw/include)
+
+#- OpenExif
+# ==============================================================================
+ADD_SUBDIRECTORY(dependencies/OpenExif)
+
+#- EXIV 2
+# ==============================================================================
+IF (UNIX)
+  FIND_PACKAGE( Exiv2 QUIET)
+  IF (EXIV2_FOUND)
+    ADD_DEFINITIONS(-DUSE_EXIV2)
+  ENDIF (EXIV2_FOUND)
+ENDIF (UNIX)
 
 # ==============================================================================
 # Opencv is not used by openMVG but some samples show how to use openCV
@@ -68,6 +85,8 @@ IF (USE_OPENCV)
 #  to the build directory of openCV. Prefer use static version of openCV libraries.
   SET(OpenCV_DIR "/home/pierre/Documents/Dev_OpenCV/opencv_Build")
 ENDIF (USE_OPENCV)
+
+
 
 # ==============================================================================
 # Enable cmake UNIT TEST framework
