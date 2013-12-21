@@ -7,3 +7,4 @@ ADD_SUBDIRECTORY(robust_essential_ba)
 ADD_SUBDIRECTORY(undisto_Brown)
 
 ADD_SUBDIRECTORY(exifParsing)
+ADD_SUBDIRECTORY(sensorWidthDatabase)

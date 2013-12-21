@@ -7,6 +7,11 @@ SET(LIBS ${EXTRA_LIBS}
   stlplus
   ${OPENMVG_LIBRARY_DEPENDENCIES})
 
+
+ADD_EXECUTABLE(openMVG_main_CreateList main_CreateList.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_CreateList
+                     ${LIBS} ${EXIV2_LIBRARIES} OpenExif)
+
 #Add executable that computes:
 # - features and descriptors
 # - putatives matches

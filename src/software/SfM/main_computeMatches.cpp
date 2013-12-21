@@ -5,8 +5,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/features.hpp"
+
+/// Generic Image Collection image matching
+#include "software/SfM/ImageCollectionMatcher_AllInMemory.hpp"
+#include "software/SfM/ImageCollectionGeometricFilter.hpp"
+#include "software/SfM/ImageCollection_F_ACRobust.hpp"
+#include "software/SfM/pairwiseAdjacencyDisplay.hpp"
+#include "software/SfM/SfMIOHelper.hpp"
 #include "openMVG/matching/matcher_brute_force.hpp"
 #include "openMVG/matching/matcher_kdtree_flann.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
@@ -21,6 +29,9 @@
 #include "patented/sift/SIFT.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
+
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+#include "third_party/progress/progress.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -38,16 +49,17 @@ int main(int argc, char **argv)
   CmdLine cmd;
 
   std::string sImaDirectory;
-  std::string sImaExtension;
   std::string sOutDir = "";
   float fDistRatio = .6f;
   bool bOctMinus1 = false;
+  size_t coefZoom = 1;
+  float dPeakThreshold = 0.04f;
 
   cmd.add( make_option('i', sImaDirectory, "imadir") );
-  cmd.add( make_option('e', sImaExtension, "ext") );
   cmd.add( make_option('o', sOutDir, "outdir") );
   cmd.add( make_option('r', fDistRatio, "distratio") );
   cmd.add( make_option('s', bOctMinus1, "octminus1") );
+  cmd.add( make_option('p', dPeakThreshold, "peakThreshold") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -55,10 +67,10 @@ int main(int argc, char **argv)
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << ' '
       << "[-i|--imadir path] "
-      << "[-e|--ext extension '*.jpg' or '*.png'] "
       << "[-o|--outdir path] "
       << "[-r|--distratio 0.6] "
       << "[-s|--octminus1 0 or 1] "
+      << "[-p|--peakThreshold 0.04 -> 0.01] "
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -66,12 +78,12 @@ int main(int argc, char **argv)
   }
 
   std::cout << " You called : " <<std::endl
-            << "main_computeMatches" << std::endl
+            << argv[0] << std::endl
             << "--imadir " << sImaDirectory << std::endl
-            << "--ext " << sImaExtension << std::endl
             << "--outdir " << sOutDir << std::endl
             << "--distratio " << fDistRatio << std::endl
-            << "--octminus1 " << bOctMinus1 << std::endl;
+            << "--octminus1 " << bOctMinus1 << std::endl
+            << "--peakThreshold " << dPeakThreshold << std::endl;
 
   if (sOutDir.empty())  {
     std::cerr << "\nIt is an invalid output directory" << std::endl;
@@ -93,43 +105,35 @@ int main(int argc, char **argv)
   //---------------------------------------
   // a. List images
   //---------------------------------------
+  std::string sListsFile = stlplus::create_filespec( sOutDir,
+                                                     "lists.txt" ).c_str();
+  if (!stlplus::is_file(sListsFile) )
+  {
+    std::cerr << std::endl
+      << "The input matching/lists.txt is missing" << std::endl;
+    return false;
+  }
+
+  std::vector<openMVG::SfMIO::CameraInfo> vec_camImageName;
+  std::vector<openMVG::SfMIO::IntrinsicCameraInfo> vec_focalGroup;
+  if (!openMVG::SfMIO::loadImageList( vec_camImageName,
+                                      vec_focalGroup,
+                                      sListsFile) )
+  {
+    std::cerr << "\nEmpty image list." << std::endl;
+    return false;
+  }
 
   std::vector<std::string> vec_fileNames;
   std::vector<std::pair<size_t, size_t> > vec_imagesSize;
-
-  if (!stlplus::folder_exists(sImaDirectory)) {
-    std::cerr << "It is an invalid input image directory" << std::endl;
-    return EXIT_FAILURE;
-  } else  {
-
-    //---------------------------------------
-    // Look for images in the given directory
-    //---------------------------------------
-    vec_fileNames = stlplus::folder_wildcard(sImaDirectory,
-      sImaExtension, false, true);
-
-    std::sort(vec_fileNames.begin(), vec_fileNames.end());
-
-    std::ofstream file(stlplus::create_filespec(sOutDir, "/lists", ".txt").c_str());
-    std::copy(vec_fileNames.begin(), vec_fileNames.end(),
-              std::ostream_iterator<std::string>(file, "\n"));
-    file.close();
-
-    for (size_t i=0; i < vec_fileNames.size(); ++i)  {
-      vec_fileNames[i] = stlplus::create_filespec(
-        stlplus::folder_append_separator(sImaDirectory), vec_fileNames[i]);
-    }
-    // DEBUG INFO
-    std::cout << std::endl << "IMAGE(S) :" << std::endl;
-    copy(vec_fileNames.begin(), vec_fileNames.end(), ostream_iterator<string>(cout, "\n"));
-
-    if (vec_fileNames.empty())
-    {
-      std::cout << "\n No images in the provided directory.";
-      return EXIT_FAILURE;
-    }
+  for ( std::vector<openMVG::SfMIO::CameraInfo>::const_iterator iter_camInfo = vec_camImageName.begin();
+     iter_camInfo != vec_camImageName.end();
+     iter_camInfo++ )
+  {
+    vec_imagesSize.push_back( std::make_pair( vec_focalGroup[iter_camInfo->m_intrinsicId].m_w,
+                                              vec_focalGroup[iter_camInfo->m_intrinsicId].m_h ) );
+    vec_fileNames.push_back( stlplus::create_filespec( sImaDirectory, iter_camInfo->m_sImageName) );
   }
-
 
   //---------------------------------------
   // b. Compute features and descriptor
@@ -144,10 +148,10 @@ int main(int argc, char **argv)
   typedef vector<DescriptorT > DescsT;
   typedef KeypointSet<FeatsT, DescsT > KeypointSetT;
 
-  // extract SIFT features
   {
-    std::cout << "\n\nEXTRACT SIFT FEATURES" << std::endl;
+    std::cout << "\n\nEXTRACT FEATURES" << std::endl;
     vec_imagesSize.resize(vec_fileNames.size());
+
     Image<RGBColor> imageRGB;
     Image<unsigned char> imageGray;
 
@@ -179,10 +183,14 @@ int main(int argc, char **argv)
         else{
           ReadImage(vec_fileNames[i].c_str(), &imageGray);
         }
+
         // Compute features and descriptors and export them to file
-        SIFTDetector(imageGray,  kpSet.features(), kpSet.descriptors(), bOctMinus1);
+        SIFTDetector(imageGray,
+          kpSet.features(), kpSet.descriptors(),
+          bOctMinus1, true, dPeakThreshold);
+        
         kpSet.saveToBinFile(sFeat, sDesc);
-        vec_imagesSize[i] = make_pair(imageGray.Width(), imageGray.Height());
+        vec_imagesSize[i] = make_pair(imageGray.Width(), imageRGB.Height());
       }
       ++my_progress_bar;
     }

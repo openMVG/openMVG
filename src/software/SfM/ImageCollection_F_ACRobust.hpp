@@ -1,12 +1,14 @@
 #pragma once
 
-#include <limits>
+
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 
 using namespace openMVG;
 using namespace openMVG::robust;
+
+#include <limits>
 
 //-- A contrario Functor to filter putative corresponding points
 struct GeometricFilter_FMatrix_AC

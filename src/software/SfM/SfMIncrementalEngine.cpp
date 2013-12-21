@@ -6,12 +6,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "software/SfM/SfMIncrementalEngine.hpp"
-#include "software/SfM/SfMIOHelper.hpp"
 #include "software/SfM/SfMRobust.hpp"
 #include "openMVG/image/image.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
 // Bundle Adjustment includes
+#include "openMVG/bundle_adjustment/pinhole_brown_Rt_ceres_functor.hpp"
 #include "openMVG/bundle_adjustment/pinhole_Rtf_ceres_functor.hpp"
+#include "openMVG/bundle_adjustment/pinhole_f_Rt_ceres_functor.hpp"
 #include "openMVG/bundle_adjustment/problem_data_container.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -34,7 +35,10 @@ typedef std::vector<FeatureT> featsT;
 
 IncrementalReconstructionEngine::IncrementalReconstructionEngine(const std::string & sImagePath,
   const std::string & sMatchesPath, const std::string & sOutDirectory, bool bHtmlReport)
-  : ReconstructionEngine(sImagePath, sMatchesPath, sOutDirectory)
+  : ReconstructionEngine(sImagePath, sMatchesPath, sOutDirectory),
+  _initialpair(std::make_pair<size_t,size_t>(0,0)),
+  _bRefinePPandDisto(true),
+  _bUseBundleAdjustment(true)
 {
   _bHtmlReport = bHtmlReport;
   if (!stlplus::folder_exists(sOutDirectory)) {
@@ -107,8 +111,7 @@ bool IncrementalReconstructionEngine::Process()
           bImageAdded = true;
         }
         ++round;
-
-        if (bImageAdded)
+        if (bImageAdded && _bUseBundleAdjustment)
         {
           // Perform BA until all point are under the given precision
           do
@@ -124,7 +127,7 @@ bool IncrementalReconstructionEngine::Process()
       std::cout << "\n\n-------------------------------" << "\n"
         << "-- Structure from Motion (statistics):\n"
         << "-- #Camera calibrated: " << _reconstructorData.map_Camera.size()
-        << " from " <<_vec_fileNames.size() << " input images.\n"
+        << " from " << _vec_camImageNames.size() << " input images.\n"
         << "-- #Tracks, #3D points: " << _reconstructorData.map_3DPoints.size() << "\n"
         << "-------------------------------" << "\n";
 
@@ -144,7 +147,7 @@ bool IncrementalReconstructionEngine::Process()
         os << "-------------------------------" << "<br>"
           << "-- Structure from Motion (statistics):<br>"
           << "-- #Camera calibrated: " << _reconstructorData.map_Camera.size()
-          << " from " <<_vec_fileNames.size() << " input images.<br>"
+          << " from " <<_vec_camImageNames.size() << " input images.<br>"
           << "-- #Tracks, #3D points: " << _reconstructorData.map_3DPoints.size() << "<br>"
           << "-------------------------------" << "<br>";
         _htmlDocStream->pushInfo(os.str());
@@ -182,43 +185,41 @@ bool IncrementalReconstructionEngine::ReadInputData()
     return false;
   }
 
-  if (!stlplus::is_file(stlplus::create_filespec(_sMatchesPath,"lists","txt"))||
-    //!stlplus::is_file(stlplus::create_filespec(_sMatchesPath,"matches.h","txt"))||
-    !stlplus::is_file(stlplus::create_filespec(_sMatchesPath,"matches.f","txt"))||
-    !stlplus::is_file(stlplus::create_filespec(_sImagePath,"K","txt")))
+  std::string sListsFile = stlplus::create_filespec(_sMatchesPath,"lists","txt");
+  std::string sComputedMatchesFile_F = stlplus::create_filespec(_sMatchesPath,"matches.f","txt");
+  if (!stlplus::is_file(sListsFile)||
+    !stlplus::is_file(sComputedMatchesFile_F) )
   {
     std::cerr << std::endl
-      << "One of the input required file is not a present (lists.txt, matches.h.txt, matches.f.txt, K.txt)" << std::endl;
+      << "One of the input required file is not a present (lists.txt, matches.f.txt)" << std::endl;
     return false;
   }
 
   // a. Read images names
   {
-    if (!SfMIO::loadImageList(_vec_fileNames,
-          stlplus::create_filespec(_sMatchesPath,"lists","txt"))) {
+    if (!openMVG::SfMIO::loadImageList( _vec_camImageNames,
+                                        _vec_intrinsicGroups,
+                                        sListsFile) )
+    {
       std::cerr << "\nEmpty image list." << std::endl;
       return false;
     }
-
-    Image<RGBColor> image;
-    for (size_t i =0; i < _vec_fileNames.size(); ++i) {
-      _set_remainingImageId.insert(i);
-      //Open image and store it's dimension
-      if( ReadImage(
-        stlplus::create_filespec(_sImagePath, _vec_fileNames[i],"").c_str(),
-        &image))
+    else
+    {
+      // Find to which intrinsic groups each image belong
+      for (std::vector<openMVG::SfMIO::CameraInfo>::const_iterator iter = _vec_camImageNames.begin();
+        iter != _vec_camImageNames.end(); ++iter)
       {
-        cout << endl << image.Width() << " " << image.Height() << endl;
-        _vec_imageSize.push_back(std::make_pair(image.Width(),image.Height()));
-      }
-      else  {
-        std::cerr << "\nCannot read one of the input image" << std::endl;
+        const openMVG::SfMIO::CameraInfo & camInfo = *iter;
+        // Find the index of the camera
+        size_t idx = std::distance((std::vector<openMVG::SfMIO::CameraInfo>::const_iterator)_vec_camImageNames.begin(), iter);
+        _set_remainingImageId.insert(idx);
+        _map_IntrinsicIdPerImageId[idx] = camInfo.m_intrinsicId;
       }
     }
   }
 
   // b. Read matches (Fundamental)
-  string sComputedMatchesFile_F = stlplus::create_filespec(_sMatchesPath,"matches.f","txt");
   if (!matching::PairedIndMatchImport(sComputedMatchesFile_F, _map_Matches_F)) {
     std::cerr<< "Unable to read the Fundamental matrix matches" << std::endl;
     return false;
@@ -267,16 +268,11 @@ bool IncrementalReconstructionEngine::ReadInputData()
     }
   }
 
-  // Load the K matrix
-  if (!SfMIO::loadIntrinsic(stlplus::create_filespec(_sImagePath,"K","txt"), _K))  {
-    return false;
-  }
-
   // Read features:
-  for (size_t i = 0; i < _vec_fileNames.size(); ++i)  {
+  for (size_t i = 0; i < _vec_camImageNames.size(); ++i)  {
     const size_t camIndex = i;
     if (!loadFeatsFromFile(
-      stlplus::create_filespec(_sMatchesPath, stlplus::basename_part(_vec_fileNames[camIndex]), ".feat"),
+      stlplus::create_filespec(_sMatchesPath, stlplus::basename_part(_vec_camImageNames[camIndex].m_sImageName), ".feat"),
       _map_feats[camIndex])) {
       std::cerr << "Bad reading of feature files" << std::endl;
       return false;
@@ -287,7 +283,7 @@ bool IncrementalReconstructionEngine::ReadInputData()
   {
     _htmlDocStream->pushInfo( "Dataset info:");
     _htmlDocStream->pushInfo( "Number of images: " +
-      htmlDocument::toString(_vec_fileNames.size()) + "<br>");
+      htmlDocument::toString(_vec_camImageNames.size()) + "<br>");
 
     std::ostringstream osTrack;
     {
@@ -328,40 +324,45 @@ bool IncrementalReconstructionEngine::ReadInputData()
 /// Find the best initial pair
 bool IncrementalReconstructionEngine::InitialPairChoice( std::pair<size_t, size_t> & initialPairIndex)
 {
-  std::cout << std::endl
-    << "---------------------------------------------------\n"
-    << "IncrementalReconstructionEngine::InitialPairChoice\n"
-    << "---------------------------------------------------\n"
-    << " The best F matrix validated pair are displayed\n"
-    << " Choose one pair manually by typing the two integer indexes\n"
-    << "---------------------------------------------------\n"
-    << std::endl;
-
-  // Display to the user the 10 top Fundamental matches pair
-  std::vector< size_t > vec_NbMatchesPerPair;
-  for (STLPairWiseMatches::const_iterator iter = _map_Matches_F.begin();
-    iter != _map_Matches_F.end(); ++iter)
+  if (_initialpair != std::make_pair<size_t,size_t>(0,0))
   {
-    vec_NbMatchesPerPair.push_back(iter->second.size());
+    initialPairIndex = _initialpair;
   }
-  // sort in descending order
-  using namespace indexed_sort;
-  std::vector< sort_index_packet_descend< double, int> > packet_vec(vec_NbMatchesPerPair.size());
-  sort_index_helper(packet_vec, &vec_NbMatchesPerPair[0], std::min((size_t)10, _map_Matches_F.size()));
-
-  for (size_t i = 0; i < std::min((size_t)10, _map_Matches_F.size()); ++i) {
-    size_t index = packet_vec[i].index;
-    STLPairWiseMatches::const_iterator iter = _map_Matches_F.begin();
-    std::advance(iter, index);
-    std::cout << "(" << iter->first.first << "," << iter->first.second <<")\t\t"
-      << iter->second.size() << " matches" << std::endl;
-  }
-
+  else
   {
-    //Manual choice of the initial pair
+    std::cout << std::endl
+      << "---------------------------------------------------\n"
+      << "IncrementalReconstructionEngine::InitialPairChoice\n"
+      << "---------------------------------------------------\n"
+      << " The best F matrix validated pair are displayed\n"
+      << " Choose one pair manually by typing the two integer indexes\n"
+      << "---------------------------------------------------\n"
+      << std::endl;
+
+    // Display to the user the 10 top Fundamental matches pair
+    std::vector< size_t > vec_NbMatchesPerPair;
+    for (STLPairWiseMatches::const_iterator iter = _map_Matches_F.begin();
+      iter != _map_Matches_F.end(); ++iter)
+    {
+      vec_NbMatchesPerPair.push_back(iter->second.size());
+    }
+    // sort in descending order
+    using namespace indexed_sort;
+    std::vector< sort_index_packet_descend< double, int> > packet_vec(vec_NbMatchesPerPair.size());
+    sort_index_helper(packet_vec, &vec_NbMatchesPerPair[0], std::min((size_t)10, _map_Matches_F.size()));
+
+    for (size_t i = 0; i < std::min((size_t)10, _map_Matches_F.size()); ++i) {
+      size_t index = packet_vec[i].index;
+      STLPairWiseMatches::const_iterator iter = _map_Matches_F.begin();
+      std::advance(iter, index);
+      std::cout << "(" << iter->first.first << "," << iter->first.second <<")\t\t"
+        << iter->second.size() << " matches" << std::endl;
+    }
+
+    // Manual choice of the initial pair
     std::cout << std::endl << " type INITIAL pair Indexes: X enter Y enter\n";
     int val, val2;
-    if ( std::cin>> val && std::cin>> val2) {
+    if ( std::cin >> val && std::cin >> val2) {
       initialPairIndex.first = val;
       initialPairIndex.second = val2;
     }
@@ -430,10 +431,22 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
   Mat3 E = Mat3::Identity();
   std::vector<size_t> vec_inliers;
   double errorMax = std::numeric_limits<double>::max();
-  if (!SfMRobust::robustEssential(_K, _K,
+
+  const openMVG::SfMIO::IntrinsicCameraInfo & intrinsicCamI = _vec_intrinsicGroups[_vec_camImageNames[I].m_intrinsicId];
+  const openMVG::SfMIO::IntrinsicCameraInfo & intrinsicCamJ = _vec_intrinsicGroups[_vec_camImageNames[J].m_intrinsicId];
+
+  if (!intrinsicCamI.m_bKnownIntrinsic ||
+      !intrinsicCamJ.m_bKnownIntrinsic)
+  {
+    std::cerr << "The selected image pair doesn't have intrinsic parameters, we cannot estimate an initial reconstruction from the two provided index: [I,J]=[" << I <<"," << J << "]" << std::endl;
+    return false;
+  }
+
+  if (!SfMRobust::robustEssential(intrinsicCamI.m_K, intrinsicCamJ.m_K,
     x1, x2,
     &E, &vec_inliers,
-    _vec_imageSize[I], _vec_imageSize[J],
+    std::make_pair(intrinsicCamI.m_w, intrinsicCamI.m_h),
+    std::make_pair(intrinsicCamJ.m_w, intrinsicCamJ.m_h),
     &errorMax))
   {
     std::cerr << " /!\\ Robust estimation failed to compute E for the initial pair" << std::endl;
@@ -446,17 +459,18 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
     << "-- Threshold: " << errorMax << std::endl;
 
   //--> Estimate the best possible Rotation/Translation from E
-  Mat3 R2;
-  Vec3 t2;
-  if (!SfMRobust::estimate_Rt_fromE(_K, _K, x1, x2, E, vec_inliers,
-    &R2, &t2))
+  Mat3 RJ;
+  Vec3 tJ;
+  if (!SfMRobust::estimate_Rt_fromE(intrinsicCamI.m_K, intrinsicCamJ.m_K,
+        x1, x2, E, vec_inliers,
+        &RJ, &tJ))
   {
     std::cout << " /!\\ Failed to compute initial R|t for the initial pair" << std::endl;
     return false;
   }
   std::cout << std::endl
     << "-- Rotation|Translation matrices: --" << std::endl
-    << R2 << std::endl << std::endl << t2 << std::endl;
+    << RJ << std::endl << std::endl << tJ << std::endl;
 
   //-> Triangulate the common tracks
   //--> Triangulate the point
@@ -465,10 +479,19 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
   _reconstructorData.set_imagedId.insert(I);
   _reconstructorData.set_imagedId.insert(J);
 
-  PinholeCamera cam1 = PinholeCamera(_K, Mat3::Identity(), Vec3::Zero());
-  PinholeCamera cam2 = PinholeCamera(_K, R2, t2);
-  _reconstructorData.map_Camera.insert(std::make_pair(I, cam1));
-  _reconstructorData.map_Camera.insert(std::make_pair(J, cam2));
+  BrownPinholeCamera camI(intrinsicCamI.m_focal, intrinsicCamI.m_K(0,2), intrinsicCamI.m_K(1,2), Mat3::Identity(), Vec3::Zero());
+  BrownPinholeCamera camJ(intrinsicCamJ.m_focal, intrinsicCamJ.m_K(0,2), intrinsicCamJ.m_K(1,2), RJ, tJ);
+  _reconstructorData.map_Camera.insert(std::make_pair(I, camI));
+  _reconstructorData.map_Camera.insert(std::make_pair(J, camJ));
+
+  // Add the images to the reconstructed intrinsic group
+  _map_ImagesIdPerIntrinsicGroup[_map_IntrinsicIdPerImageId[I]].push_back(I);
+  _map_ImagesIdPerIntrinsicGroup[_map_IntrinsicIdPerImageId[J]].push_back(J);
+  // Initialize the first intrinsics groups:
+  Vec6 & intrinsicI = _map_IntrinsicsPerGroup[_map_IntrinsicIdPerImageId[I]];
+  intrinsicI<< camI._f, camI._ppx, camI._ppy, camI._k1, camI._k2, camI._k3;
+  Vec6 & intrinsicJ = _map_IntrinsicsPerGroup[_map_IntrinsicIdPerImageId[J]];
+  intrinsicJ<< camJ._f, camJ._ppx, camJ._ppy, camJ._k1, camJ._k2, camJ._k3;
 
   _reconstructorData.map_ACThreshold.insert(std::make_pair(I, errorMax));
   _reconstructorData.map_ACThreshold.insert(std::make_pair(J, errorMax));
@@ -488,7 +511,7 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
   std::vector<Vec3> vec_3dPoint;
   std::vector<double> vec_triangulationResidual;
 
-  SfMRobust::triangulate2View_Vector(cam1._P, cam2._P,
+  SfMRobust::triangulate2View_Vector(camI._P, camJ._P,
     vec_featI, vec_featJ,
     vec_index, &vec_3dPoint, &vec_triangulationResidual);
 
@@ -500,18 +523,18 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
     ++iterT, cptIndex++)
   {
     size_t trackId = iterT->first;
-    const Vec2 x1 = vec_featI[vec_index[cptIndex]._i].coords().cast<double>();
-    const Vec2 x2 = vec_featJ[vec_index[cptIndex]._j].coords().cast<double>();
+    const Vec2 xI = vec_featI[vec_index[cptIndex]._i].coords().cast<double>();
+    const Vec2 xJ = vec_featJ[vec_index[cptIndex]._j].coords().cast<double>();
 
     if (find(vec_inliers.begin(), vec_inliers.end(), cptIndex) != vec_inliers.end())
     {
       //-- Depth
       //-- Residuals
       //-- Angle between rays ?
-      if (cam1.Depth(vec_3dPoint[cptIndex]) > 0
-        && cam2.Depth(vec_3dPoint[cptIndex]) > 0)  {
-        double angle = PinholeCamera::AngleBetweenRay(cam1, cam2, x1, x2);
-        if (angle > 2)  {
+      if (camI.Depth(vec_3dPoint[cptIndex]) > 0
+        && camJ.Depth(vec_3dPoint[cptIndex]) > 0)  {
+        double angle = BrownPinholeCamera::AngleBetweenRay(camI, camJ, xI, xJ);
+        if (angle > 2.)  {
           _reconstructorData.map_3DPoints[trackId] = vec_3dPoint[cptIndex];
           _reconstructorData.set_trackId.insert(trackId);
           _map_reconstructed[trackId].insert(make_pair(I,vec_index[cptIndex]._i));
@@ -550,8 +573,8 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
     os << std::endl
       << "-------------------------------" << "<br>"
       << "-- Robust Essential matrix: <"  << I << "," <<J << "> images: "
-      << stlplus::basename_part(_vec_fileNames[I]) << ","
-      << stlplus::basename_part(_vec_fileNames[J]) << "<br>"
+      << stlplus::basename_part(_vec_camImageNames[I].m_sImageName) << ","
+      << stlplus::basename_part(_vec_camImageNames[J].m_sImageName) << "<br>"
       << "-- Threshold: " << errorMax << "<br>"
       << "-- Resection status: " << "OK" << "<br>"
       << "-- Nb points used for robust Essential matrix estimation: "
@@ -765,11 +788,17 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
   std::vector<size_t> vec_inliers;
   Mat34 P;
   double errorMax = std::numeric_limits<double>::max();
+
+  const openMVG::SfMIO::IntrinsicCameraInfo & intrinsicCam = _vec_intrinsicGroups[_vec_camImageNames[imageIndex].m_intrinsicId];
+
   bool bResection = SfMRobust::robustResection(
-    _vec_imageSize[imageIndex],
+    std::make_pair( intrinsicCam.m_w,
+                    intrinsicCam.m_h ),
     pt2D, pt3D,
     &vec_inliers,
-    &_K, // known parameter for the focal and principal point
+    // If intrinsics guess exist use it, else use standard 6 points pose resection
+    (intrinsicCam.m_bKnownIntrinsic == true) ? & intrinsicCam.m_K : NULL,
+    //NULL,
     &P, &errorMax);
 
   std::cout << std::endl
@@ -786,14 +815,14 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
     using namespace htmlDocument;
     ostringstream os;
     os << "Resection of Image index: <" << imageIndex << "> image: "
-      << stlplus::basename_part(_vec_fileNames[imageIndex]) <<"<br> \n";
+      << stlplus::basename_part(_vec_camImageNames[imageIndex].m_sImageName) <<"<br> \n";
     _htmlDocStream->pushInfo(htmlMarkup("h1",os.str()));
 
     os.str("");
     os << std::endl
       << "-------------------------------" << "<br>"
       << "-- Robust Resection of camera index: <" << imageIndex << "> image: "
-      << stlplus::basename_part(_vec_fileNames[imageIndex]) <<"<br>"
+      << stlplus::basename_part(_vec_camImageNames[imageIndex].m_sImageName) <<"<br>"
       << "-- Threshold: " << errorMax << "<br>"
       << "-- Resection status: " << (bResection ? "OK" : "FAILED") << "<br>"
       << "-- Nb points used for Resection: " << vec_featIdForResection.size() << "<br>"
@@ -813,9 +842,21 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
   {
     Mat3 K, R;
     Vec3 t;
-    KRt_From_P(P,&K,&R,&t);
-    _reconstructorData.map_Camera.insert(
-      std::make_pair(imageIndex, PinholeCamera(K, R, t)));
+    KRt_From_P(P, &K, &R, &t);
+    std::cout << "\n Resection Calibration Matrix \n" << K << std::endl << std::endl;
+
+    BrownPinholeCamera cam(K(0,0), K(0,2), K(1,2), R, t);
+    _reconstructorData.map_Camera.insert(std::make_pair(imageIndex, cam));
+
+    // Add the image to the reconstructed intrinsic group
+    _map_ImagesIdPerIntrinsicGroup[_map_IntrinsicIdPerImageId[imageIndex]].push_back(imageIndex);
+
+    // if intrinsic groups is empty fill a new:
+    if (_map_IntrinsicsPerGroup.find(_map_IntrinsicIdPerImageId[imageIndex])  == _map_IntrinsicsPerGroup.end())
+    {
+      Vec6 & intrinsic = _map_IntrinsicsPerGroup[_map_IntrinsicIdPerImageId[imageIndex]];
+      intrinsic << cam._f, cam._ppx, cam._ppy, cam._k1, cam._k2, cam._k3;
+    }
   }
   _reconstructorData.map_ACThreshold.insert(std::make_pair(imageIndex, errorMax));
   _set_remainingImageId.erase(imageIndex);
@@ -880,7 +921,7 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
   }
 
   // Add new possible tracks (triangulation)
-  // Triangulate new possible tracks :
+  // Triangulate new possible tracks:
   // For all Union [ CurrentId, [PreviousReconstructedIds] ]
   //   -- If trackId not yet registered:
   //      -- Triangulate and add tracks id.
@@ -914,8 +955,8 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
 
       if (!vec_tracksToAdd.empty())
       {
-        const Mat34 & P1 = _reconstructorData.map_Camera[I]._P;
-        const Mat34 & P2 = _reconstructorData.map_Camera[J]._P;
+        const Mat34 & P1 = _reconstructorData.map_Camera.find(I)->second._P;
+        const Mat34 & P2 = _reconstructorData.map_Camera.find(J)->second._P;
 
         const std::vector<SIOPointFeature> & vec_featI = _map_feats[I];
         const std::vector<SIOPointFeature> & vec_featJ = _map_feats[J];
@@ -943,8 +984,8 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
         // Analyse 3D reconstructed point
         //  - Check positive depth
         //  - Check angle (small angle leads imprecise triangulation)
-        const PinholeCamera & cam1 = _reconstructorData.map_Camera[I];
-        const PinholeCamera & cam2 = _reconstructorData.map_Camera[J];
+        const BrownPinholeCamera & cam1 = _reconstructorData.map_Camera.find(I)->second;
+        const BrownPinholeCamera & cam2 = _reconstructorData.map_Camera.find(J)->second;
 
         //- Add reconstructed point to the reconstruction data
         size_t cardPointsBefore = _reconstructorData.map_3DPoints.size();
@@ -970,7 +1011,7 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
                 && cam1.Depth(cur3DPt) > 0
                 && cam2.Depth(cur3DPt) > 0)
             {
-              double angle = PinholeCamera::AngleBetweenRay(cam1, cam2, x1, x2);
+              double angle = BrownPinholeCamera::AngleBetweenRay(cam1, cam2, x1, x2);
               if(angle>2) {
                 _reconstructorData.map_3DPoints[trackId] = vec_3dPoint[i];
                 _reconstructorData.set_trackId.insert(trackId);
@@ -1026,12 +1067,15 @@ size_t IncrementalReconstructionEngine::badTrackRejector(double dPrecision)
     {
       size_t imageId = iterTrack->first;
       size_t featId = iterTrack->second;
-      const PinholeCamera & cam = _reconstructorData.map_Camera[imageId];
+      const BrownPinholeCamera & cam = _reconstructorData.map_Camera.find(imageId)->second;
 
       if ( set_camIndex.find(imageId) != set_camIndex.end())  {
         const std::vector<SIOPointFeature> & vec_feats = _map_feats[imageId];
         const SIOPointFeature & ptFeat = vec_feats[featId];
-        const std::pair<size_t, size_t> & imageDim = _vec_imageSize[imageId];
+
+        const std::pair<size_t, size_t> & imageDim = std::make_pair(
+            _vec_intrinsicGroups[_vec_camImageNames[imageId].m_intrinsicId].m_w,
+            _vec_intrinsicGroups[_vec_camImageNames[imageId].m_intrinsicId].m_h );
 
         double dResidual2D = cam.Residual(pt3D, ptFeat.coords().cast<double>());
 
@@ -1101,6 +1145,7 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_col
   //    and iterate to provide a color to each 3D point
   {
     vec_color.resize(_map_reconstructed.size());
+
     // The track list that will be colored (point removed during the process)
     STLMAPTracks mapTrackToColorRef(_map_reconstructed);
     STLMAPTracks::iterator iterTBegin = mapTrackToColorRef.begin();
@@ -1146,8 +1191,8 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_col
       ReadImage(
         stlplus::create_filespec(
           _sImagePath,
-          stlplus::basename_part(_vec_fileNames[indexImage]),
-          stlplus::extension_part(_vec_fileNames[indexImage])).c_str(), &image);
+          stlplus::basename_part(_vec_camImageNames[indexImage].m_sImageName),
+          stlplus::extension_part(_vec_camImageNames[indexImage].m_sImageName) ).c_str(), &image);
 
       // Iterate through the track
       std::set<size_t> set_toRemove;
@@ -1179,7 +1224,7 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_col
   }
 }
 
-void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
+void IncrementalReconstructionEngine::BundleAdjustment()
 {
   std::cout << std::endl
     << "---------------------------------\n"
@@ -1190,6 +1235,7 @@ void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
   using namespace std;
 
   const size_t nbCams = _reconstructorData.map_Camera.size();
+  const size_t nbIntrinsics = _map_ImagesIdPerIntrinsicGroup.size();
   const size_t nbPoints3D = _reconstructorData.map_3DPoints.size();
 
   // Count the number of measurement (sum of the reconstructed track length)
@@ -1205,52 +1251,86 @@ void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
   }
 
   std::cout << "nbCams: " << nbCams << std::endl
+    << "nbIntrinsics:" << nbIntrinsics << std::endl
     << "nbPoints3D: " << nbPoints3D << std::endl
     << "measurements: " << nbmeasurements << std::endl;
 
   // Setup a BA problem
   using namespace openMVG::bundle_adjustment;
-  BA_Problem_data<7> ba_problem; //Will refine R,t,focal.
+  BA_Problem_data_camMotionAndIntrinsic<6,6> ba_problem;
+  // Will refine extrinsics[R,t] per camera and grouped intrinsics [focal,ppx,ppy,k1,k2,k3].
 
-  // Configure the size of the problem
+    // Configure the size of the problem
   ba_problem.num_cameras_ = nbCams;
+  ba_problem.num_intrinsic_ = nbIntrinsics;
   ba_problem.num_points_ = nbPoints3D;
   ba_problem.num_observations_ = nbmeasurements;
 
   ba_problem.point_index_.reserve(ba_problem.num_observations_);
-  ba_problem.camera_index_.reserve(ba_problem.num_observations_);
+  ba_problem.camera_index_extrinsic.reserve(ba_problem.num_observations_);
+  ba_problem.camera_index_intrinsic.reserve(ba_problem.num_observations_);
   ba_problem.observations_.reserve(2 * ba_problem.num_observations_);
 
-  ba_problem.num_parameters_ = 7 * ba_problem.num_cameras_ + 3 * ba_problem.num_points_;
+  ba_problem.num_parameters_ =
+    6 * ba_problem.num_cameras_ // #[Rotation|translation]
+    + 6 * ba_problem.num_intrinsic_ // #[f,ppx,ppy,k1,k2,k3]
+    + 3 * ba_problem.num_points_; // #[X]
   ba_problem.parameters_.reserve(ba_problem.num_parameters_);
 
-  // Fill camera
+  // Setup extrinsic parameters
   std::set<size_t> set_camIndex;
-  std::map<size_t,size_t> map_camIndexToNumber;
+  std::map<size_t,size_t> map_camIndexToNumber_extrinsic, map_camIndexToNumber_intrinsic;
   size_t cpt = 0;
-  for (std::map<size_t, PinholeCamera >::const_iterator iter = _reconstructorData.map_Camera.begin();
+  for (std::map<size_t, BrownPinholeCamera >::const_iterator iter = _reconstructorData.map_Camera.begin();
     iter != _reconstructorData.map_Camera.end();  ++iter, ++cpt)
   {
     // in order to map camera index to contiguous number
     set_camIndex.insert(iter->first);
-    map_camIndexToNumber.insert(std::make_pair(iter->first, cpt));
+    map_camIndexToNumber_extrinsic.insert(std::make_pair(iter->first, cpt));
 
     Mat3 R = iter->second._R;
     double angleAxis[3];
     ceres::RotationMatrixToAngleAxis((const double*)R.data(), angleAxis);
     // translation
     Vec3 t = iter->second._t;
-    double focal = ( iter->second._K(0,0) + iter->second._K(1,1) ) / 2.0;
     ba_problem.parameters_.push_back(angleAxis[0]);
     ba_problem.parameters_.push_back(angleAxis[1]);
     ba_problem.parameters_.push_back(angleAxis[2]);
     ba_problem.parameters_.push_back(t[0]);
     ba_problem.parameters_.push_back(t[1]);
     ba_problem.parameters_.push_back(t[2]);
-    ba_problem.parameters_.push_back(focal);
   }
 
-  // Fill 3D points
+  // Setup intrinsic parameters groups
+  cpt = 0;
+  for (std::map<size_t, Vec6 >::const_iterator iterIntrinsicGroup = _map_IntrinsicsPerGroup.begin();
+    iterIntrinsicGroup != _map_IntrinsicsPerGroup.end();
+    ++iterIntrinsicGroup, ++cpt)
+  {
+    const Vec6 & intrinsic = iterIntrinsicGroup->second;
+    ba_problem.parameters_.push_back(intrinsic(0)); // FOCAL_LENGTH
+    ba_problem.parameters_.push_back(intrinsic(1)); // PRINCIPAL_POINT_X
+    ba_problem.parameters_.push_back(intrinsic(2)); // PRINCIPAL_POINT_Y
+    ba_problem.parameters_.push_back(intrinsic(3)); // K1
+    ba_problem.parameters_.push_back(intrinsic(4)); // K2
+    ba_problem.parameters_.push_back(intrinsic(5)); // K3
+  }
+
+  cpt = 0;
+  // Link each camera to it's intrinsic group
+  for (std::map<size_t, std::vector<size_t> >::const_iterator iterIntrinsicGroup = _map_ImagesIdPerIntrinsicGroup.begin();
+    iterIntrinsicGroup != _map_ImagesIdPerIntrinsicGroup.end(); ++ iterIntrinsicGroup, ++cpt)
+  {
+    const std::vector<size_t> vec_imagesId = iterIntrinsicGroup->second;
+    for (std::vector<size_t>::const_iterator iter_vec = vec_imagesId.begin();
+      iter_vec != vec_imagesId.end(); ++iter_vec)
+    {
+      const size_t camIndex = *iter_vec;
+      map_camIndexToNumber_intrinsic.insert(std::make_pair(camIndex, cpt));
+    }
+  }
+
+  // Setup 3D points
   for (std::map<size_t,Vec3>::const_iterator iter = _reconstructorData.map_3DPoints.begin();
     iter != _reconstructorData.map_3DPoints.end();
     ++iter)
@@ -1288,17 +1368,31 @@ void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
         const std::vector<SIOPointFeature> & vec_feats = _map_feats[imageId];
         const SIOPointFeature & ptFeat = vec_feats[featId];
 
-        const Mat3 & K = _reconstructorData.map_Camera[imageId]._K;
-
-        double ppx = K(0,2), ppy = K(1,2);
-        ba_problem.observations_.push_back( ptFeat.x() - ppx );
-        ba_problem.observations_.push_back( ptFeat.y() - ppy );
+        ba_problem.observations_.push_back( ptFeat.x() );
+        ba_problem.observations_.push_back( ptFeat.y() );
 
         ba_problem.point_index_.push_back(cpt);
-        ba_problem.camera_index_.push_back(map_camIndexToNumber[imageId]);
+        ba_problem.camera_index_extrinsic.push_back(map_camIndexToNumber_extrinsic[imageId]);
+        ba_problem.camera_index_intrinsic.push_back(map_camIndexToNumber_intrinsic[imageId]);
       }
     }
     ++cpt;
+  }
+
+  // Parameterization used to restrict camera intrinsics (Brown model or Pinhole Model).
+  ceres::SubsetParameterization *constant_transform_parameterization = NULL;
+  if (!_bRefinePPandDisto) {
+      std::vector<int> vec_constant_PPAndRadialDisto;
+
+      // Last five elements are ppx,ppy and radial disto factors.
+      vec_constant_PPAndRadialDisto.push_back(1); // PRINCIPAL_POINT_X FIXED
+      vec_constant_PPAndRadialDisto.push_back(2); // PRINCIPAL_POINT_Y FIXED
+      vec_constant_PPAndRadialDisto.push_back(3); // K1 FIXED
+      vec_constant_PPAndRadialDisto.push_back(4); // K2 FIXED
+      vec_constant_PPAndRadialDisto.push_back(5); // K3 FIXED
+
+      constant_transform_parameterization =
+        new ceres::SubsetParameterization(6, vec_constant_PPAndRadialDisto);
   }
 
   // Create residuals for each observation in the bundle adjustment problem. The
@@ -1309,21 +1403,37 @@ void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
     // dimensional residual. Internally, the cost function stores the observed
     // image location and compares the reprojection against the observation.
     ceres::CostFunction* cost_function =
-        new ceres::AutoDiffCostFunction<Pinhole_Rtf_ReprojectionError, 2, 7, 3>(
-            new Pinhole_Rtf_ReprojectionError(
+      new ceres::AutoDiffCostFunction<Pinhole_brown_Rt_ReprojectionError, 2, 6, 6, 3>(
+            new Pinhole_brown_Rt_ReprojectionError(
                 ba_problem.observations()[2 * i + 0],
                 ba_problem.observations()[2 * i + 1]));
 
     problem.AddResidualBlock(cost_function,
-                             NULL, // squared loss
-                             ba_problem.mutable_camera_for_observation(i),
+                             //NULL, // squared loss
+                             new ceres::HuberLoss(4.0),
+                             ba_problem.mutable_camera_intrisic_for_observation(i),
+                             ba_problem.mutable_camera_extrinsic_for_observation(i),
                              ba_problem.mutable_point_for_observation(i));
+
+    if (!_bRefinePPandDisto) {
+      problem.SetParameterization(ba_problem.mutable_camera_intrisic_for_observation(i),
+                                  constant_transform_parameterization);
+    }
+  }
+
+  //-- Lock the first camera to better deal with scene orientation ambiguity
+  {
+    // First camera is the first one that have been used
+    problem.SetParameterBlockConstant(
+      ba_problem.mutable_camera_extrinsic_for_observation(
+        map_camIndexToNumber_extrinsic[_vec_added_order[0]]));
   }
 
   // Configure a BA engine and run it
   //  Make Ceres automatically detect the bundle structure.
   ceres::Solver::Options options;
-  options.linear_solver_type = ceres::SPARSE_SCHUR;
+  options.preconditioner_type = ceres::SCHUR_JACOBI;
+  options.linear_solver_type = ceres::ITERATIVE_SCHUR;
   if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
     options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
   else
@@ -1368,23 +1478,57 @@ void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
       pt3D = Vec3(pt[0], pt[1], pt[2]);
     }
 
-    // Get back camera
-    cpt = 0;
-    for (std::map<size_t, PinholeCamera >::iterator iter = _reconstructorData.map_Camera.begin();
-      iter != _reconstructorData.map_Camera.end(); ++iter, ++cpt)
+    // Get back camera external and intrinsic parameters
+    for (std::map<size_t, BrownPinholeCamera >::iterator iter = _reconstructorData.map_Camera.begin();
+      iter != _reconstructorData.map_Camera.end(); ++iter)
     {
-      const double * cam = ba_problem.mutable_cameras() + cpt*7;
+      const size_t imageId = iter->first;
+      size_t extrinsicId = map_camIndexToNumber_extrinsic[imageId];
+      // Get back extrinsic pointer
+      const double * camE = ba_problem.mutable_cameras_extrinsic() + extrinsicId * 6;
       Mat3 R;
       // angle axis to rotation matrix
-      ceres::AngleAxisToRotationMatrix(cam, R.data());
-      Vec3 t(cam[3], cam[4], cam[5]);
-      double focal = cam[6];
+      ceres::AngleAxisToRotationMatrix(camE, R.data());
+      Vec3 t(camE[3], camE[4], camE[5]);
 
-      // Update the camera
-      PinholeCamera & sCam = iter->second;
-      Mat3 K = sCam._K;
-      K(0,0) = K(1,1) = focal;
-      sCam = PinholeCamera(K, R, t);
+      // Get back the intrinsic group of the camera
+      size_t intrinsicId = map_camIndexToNumber_intrinsic[imageId];
+      const double * camIntrinsics = ba_problem.mutable_cameras_intrinsic() + intrinsicId * 6;
+      // Update the camera with update intrinsic and extrinsic parameters
+      BrownPinholeCamera & sCam = iter->second;
+      sCam = BrownPinholeCamera(
+        camIntrinsics[OFFSET_FOCAL_LENGTH],
+        camIntrinsics[OFFSET_PRINCIPAL_POINT_X],
+        camIntrinsics[OFFSET_PRINCIPAL_POINT_Y],
+        R,
+        t,
+        camIntrinsics[OFFSET_K1],
+        camIntrinsics[OFFSET_K2],
+        camIntrinsics[OFFSET_K3]);
+    }
+
+    //-- Update each intrinsic parameters group
+    cpt = 0;
+    for (std::map<size_t, Vec6 >::iterator iterIntrinsicGroup = _map_IntrinsicsPerGroup.begin();
+      iterIntrinsicGroup != _map_IntrinsicsPerGroup.end();
+      ++iterIntrinsicGroup, ++cpt)
+    {
+      const double * camIntrinsics = ba_problem.mutable_cameras_intrinsic() + cpt * 6;
+      Vec6 & intrinsic = iterIntrinsicGroup->second;
+      intrinsic << camIntrinsics[OFFSET_FOCAL_LENGTH],
+        camIntrinsics[OFFSET_PRINCIPAL_POINT_X],
+        camIntrinsics[OFFSET_PRINCIPAL_POINT_Y],
+        camIntrinsics[OFFSET_K1],
+        camIntrinsics[OFFSET_K2],
+        camIntrinsics[OFFSET_K3];
+
+       std::cout << " for camera Idx=[" << cpt << "]: " << std::endl
+        << "\t focal: " << camIntrinsics[OFFSET_FOCAL_LENGTH] << std::endl
+        << "\t ppx: " << camIntrinsics[OFFSET_PRINCIPAL_POINT_X] << std::endl
+        << "\t ppy: " << camIntrinsics[OFFSET_PRINCIPAL_POINT_Y] << std::endl
+        << "\t k1: " << camIntrinsics[OFFSET_K1] << std::endl
+        << "\t k2: " << camIntrinsics[OFFSET_K2] << std::endl
+        << "\t k3: " << camIntrinsics[OFFSET_K3] << std::endl;
     }
   }
 }
@@ -1392,7 +1536,7 @@ void IncrementalReconstructionEngine::BundleAdjustment(bool bStructureAndMotion)
 double IncrementalReconstructionEngine::ComputeResidualsHistogram(Histogram<double> * histo)
 {
   std::set<size_t> set_camIndex;
-  for (std::map<size_t, PinholeCamera>::const_iterator iter = _reconstructorData.map_Camera.begin();
+  for (std::map<size_t, BrownPinholeCamera>::const_iterator iter = _reconstructorData.map_Camera.begin();
     iter != _reconstructorData.map_Camera.end();
     ++iter)
   {
@@ -1424,8 +1568,9 @@ double IncrementalReconstructionEngine::ComputeResidualsHistogram(Histogram<doub
       {
         const std::vector<SIOPointFeature> & vec_feats = _map_feats[imageId];
         const SIOPointFeature & ptFeat = vec_feats[featId];
-        const std::pair<size_t, size_t> & imageDim = _vec_imageSize[imageId];
-        const PinholeCamera & cam = _reconstructorData.map_Camera[imageId];
+        const std::pair<size_t, size_t> & imageDim = std::make_pair(_vec_intrinsicGroups[_vec_camImageNames[imageId].m_intrinsicId ].m_w,
+                                                                    _vec_intrinsicGroups[_vec_camImageNames[imageId].m_intrinsicId ].m_h );
+        const BrownPinholeCamera & cam = _reconstructorData.map_Camera.find(imageId)->second;
 
         double dResidual = cam.Residual(pt3D, ptFeat.coords().cast<double>());
         vec_residuals.push_back(dResidual);

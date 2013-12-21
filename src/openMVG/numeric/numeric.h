@@ -55,6 +55,7 @@ namespace openMVG {
   typedef Eigen::Vector2i Vec2i;
   typedef Eigen::Vector2f Vec2f;
   typedef Eigen::Vector3f Vec3f;
+  typedef Eigen::Matrix<double, 6, 1> Vec6;
   typedef Eigen::Matrix<double, 9, 1> Vec9;
 
   typedef Eigen::Quaternion<double> Quaternion;
