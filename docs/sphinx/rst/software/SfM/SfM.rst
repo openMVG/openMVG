@@ -4,8 +4,11 @@ SfM: Structure-from-Motion
 
 Structure from Motion computes an external camera pose per image (the motion) and a 3D point cloud (the structure) representing the pictured scene.
 Inputs are images and internal camera calibration information (intrinsic parameters).
-Feature points are detected in each image (e.g., SIFT) and matched between image pairs.
-There are two main approaches to correlate detected features and solve the SfM problem: the incremental pipeline and the global method. 
+Feature points are detected in each image (e.g., SIFT) and matched between image pairs and then the SfM pipeline compute the scene and camera motion.
+There are three main approaches to solve the SfM problem:
+  - the incremental/sequential pipeline,
+  - the hierarchical pipeline,
+  - the global one.
 
 .. figure:: imagesInput.png
    :align: center
@@ -13,7 +16,7 @@ There are two main approaches to correlate detected features and solve the SfM p
    Figure : Input images, estimated camera location and structure.
 
 
-openMVG proposes a customizable implementation of an Incremental Structure from Motion chain, it is the implementation used for the paper "Adaptive Structure from Motion with a contrario model estimation" [ACSfM]_ published at ACCV 2012.
+openMVG proposes a customizable implementation of an Incremental Structure from Motion chain, it is an evolution of the implementation used for the paper "Adaptive Structure from Motion with a contrario model estimation" [ACSfM]_ published at ACCV 2012.
 
 .. figure:: structureFromMotion.png
    :align: center
@@ -26,7 +29,7 @@ Due to the incremental nature of the process, successive steps of non-linear ref
 
 The general feature correspondence and SfM processes are described in algorithms 1 and 2.
 The first algorithm outputs pairwise correspondences that are consistent with the estimated fundamental matrix.
-The initial pair must be chosen with numerous correspondences while keeping a wide enough baseline.
+The initial pair must be choosen with numerous correspondences while keeping a wide enough baseline.
 The second algorithm takes these correspondences as input and yields a 3D point cloud as well as the camera poses.
 Steps marked with a star (*) are estimated within the a contrario framework.
 This allows critical thresholds to be automatically adapted to the input images (and remove the choice of an empiric T threshold value).
@@ -81,36 +84,50 @@ along the SfM binary directory.
 Structure from Motion chain usage
 =====================================
 
-The a contrario Structure from Motion chain take as input a sequence of distortion corrected
-images and the intrinsic associated calibration matrix K. This calibration matrix is stored as a
-"K.txt" file as a raw ascii 3 x 3 matrix in the same directory as the pictures.
+The a contrario Structure from Motion chain take as input an image collection.
 Using a 3 directories based data organisation structure is suggested:
 
 * images
 
-  - your image sequence,
-  - K.txt
+  - your image sequence.
 
 * matches
 
-  * the points and matches information will be saved here
+  * the image information (lists.txt), images points and matches information will be saved here
 
 * outReconstruction
 
   * directory where result and log of the 3D reconstruction will be exported
 
-1. Point matching:
+1. Intrinsic analysis and export:
+
+  The process export in outputDirectory/lists.txt file the extracted camera intrinsics in three way:
+    - no information can be extracted (only the principal point position is exported)
+    - the image contain EXIF Jpeg approximated focal length
+      - if the camera sensor is saved in the openMVG database the focal length and principal point is exported
+      - else no focal camera can be computed, only the image size is exported.
+  The focal is computed as follow (with a database of knowed camera sensor size in mm for different camera model):
+  double ccdw = datasheet._sensorSize; // In mm
+  focal = max ( width, height ) * focalmm / ccdw;
+
+  $ ./openMVG_main_CreateList [-i|--imageDirectory] [-d|--sensorWidthDatabase] [-o|--outputDirectory] [-f|--focal]
+
+  // Usage of the automatic chain (with JPEG images)
+  $ ./openMVG_main_CreateList /home/pierre/Pictures/Dataset/images -o /home/pierre/Pictures/Dataset/matches -d ./openMVG/src/software/SfM/cameraSensorWidth/cameraGenerated.txt
+  // If all the camera have the same focal length and you know it exactly
+    $ ./openMVG_main_CreateList /home/pierre/Pictures/Dataset/images -o /home/pierre/Pictures/Dataset/matches -f YOURFOCAL(i.e 2750)
+
+2. Point matching:
 
   The first step consists in computing relative image matches (i.e algorithm 2): You have to use the openMVG_main_computeMatches software in the software/SfM openMVG module.
 
   .. code-block:: c++
 
-    $ openMVG_main_computeMatches -i /home/pierre/Pictures/Dataset/images -e *.JPG -o /home/pierre/Pictures/Dataset/matches
+    $ openMVG_main_computeMatches -i /home/pierre/Pictures/Dataset/images -o /home/pierre/Pictures/Dataset/matches
 
   Arguments are the following:
 
   - -i|-imadir the path where image are stored.
-  - -e|-ext image extension i.e "*.jpg" or "*.png". Case sensitive.
   - -o|-outdir path where features, descriptors, putative and geometric matches will be exported.
   - -r|-distratio optional argument (Nearest Neighbor distance ratio, default value is set to 0.6).
   - -s|-octminus1 optional argument (Use the octave -1 option of SIFT or not, default value is set to false: 0).
@@ -118,7 +135,7 @@ Using a 3 directories based data organisation structure is suggested:
   Once matches have been computed you can, at your choice, display detected points, matches or
   start the 3D reconstruction.
 
-2. Point, matching visualization:
+3. Point, matching visualization:
 
   Three softwares are available to display:
 
@@ -127,14 +144,17 @@ Using a 3 directories based data organisation structure is suggested:
   *	**Tracks**: openMVG_main_exportTracks
 
 
-3. SfM, 3D structure and camera calibration:
+4. SfM, 3D structure and camera calibration:
 
   The main binary in order to run the SfM process is openMVG_main_IncrementalSfM, it use previous
   computed data and is implemented as explained in algorithm 2.
 
   .. code-block:: c++
 
-    $ openMVG_main_IncrementalSfM -i /home/pierre/Pictures/Dataset/images/ -m /home/pierre/Pictures/Dataset/matches/ -o /home/pierre/Pictures/Dataset/outReconstruction /
+    // If you want refine intrinsics (focal, principal point and radial distortion) for each focal group
+    $ openMVG_main_IncrementalSfM -i /home/pierre/Pictures/Dataset/images/ -m /home/pierre/Pictures/Dataset/matches/ -o /home/pierre/Pictures/Dataset/outReconstruction/
+    // If you want only refine the focal (to use with image were the distortion have been already removed)
+    $ openMVG_main_IncrementalSfM -i /home/pierre/Pictures/Dataset/images/ -m /home/pierre/Pictures/Dataset/matches/ -o /home/pierre/Pictures/Dataset/outReconstruction/ -d 0
 
   openMVG_main_IncrementalSfM displays to you some initial pairs that share an important number of common point.
   Please select two image indexes that are convergent and the 3D reconstruction will start.
