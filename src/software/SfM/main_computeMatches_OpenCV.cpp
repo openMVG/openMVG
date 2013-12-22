@@ -5,8 +5,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/features.hpp"
+
+/// Generic Image Collection image matching
+#include "software/SfM/ImageCollectionMatcher_AllInMemory.hpp"
+#include "software/SfM/ImageCollectionGeometricFilter.hpp"
+#include "software/SfM/ImageCollection_F_ACRobust.hpp"
+#include "software/SfM/pairwiseAdjacencyDisplay.hpp"
+#include "software/SfM/SfMIOHelper.hpp"
 #include "openMVG/matching/matcher_brute_force.hpp"
 #include "openMVG/matching/matcher_kdtree_flann.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
@@ -34,6 +42,7 @@
 
 using namespace openMVG;
 using namespace openMVG::matching;
+using namespace openMVG::robust;
 using namespace std;
 
 /// Extract OpenCV features and convert them to openMVG features/descriptor data
@@ -129,12 +138,10 @@ int main(int argc, char **argv)
   CmdLine cmd;
 
   std::string sImaDirectory;
-  std::string sImaExtension;
   std::string sOutDir = "";
   float fDistRatio = .6f;
 
   cmd.add( make_option('i', sImaDirectory, "imadir") );
-  cmd.add( make_option('e', sImaExtension, "ext") );
   cmd.add( make_option('o', sOutDir, "outdir") );
   cmd.add( make_option('r', fDistRatio, "distratio") );
 
@@ -144,7 +151,6 @@ int main(int argc, char **argv)
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << ' '
       << "[-i|--imadir path] "
-      << "[-e|--ext extension '*.jpg' or '*.png'] "
       << "[-o|--outdir path] "
       << "[-r|--distratio 0.6] "
       << std::endl;
@@ -156,7 +162,6 @@ int main(int argc, char **argv)
   std::cout << " You called : " <<std::endl
             << argv[0] << std::endl
             << "--imadir " << sImaDirectory << std::endl
-            << "--ext " << sImaExtension << std::endl
             << "--outdir " << sOutDir << std::endl
             << "--distratio " << fDistRatio << std::endl;
 
@@ -180,43 +185,35 @@ int main(int argc, char **argv)
   //---------------------------------------
   // a. List images
   //---------------------------------------
+  std::string sListsFile = stlplus::create_filespec( sOutDir,
+                                                     "lists.txt" ).c_str();
+  if (!stlplus::is_file(sListsFile) )
+  {
+    std::cerr << std::endl
+      << "The input file \""<< sListsFile << "\" is missing" << std::endl;
+    return false;
+  }
+
+  std::vector<openMVG::SfMIO::CameraInfo> vec_camImageName;
+  std::vector<openMVG::SfMIO::IntrinsicCameraInfo> vec_focalGroup;
+  if (!openMVG::SfMIO::loadImageList( vec_camImageName,
+                                      vec_focalGroup,
+                                      sListsFile) )
+  {
+    std::cerr << "\nEmpty image list." << std::endl;
+    return false;
+  }
 
   std::vector<std::string> vec_fileNames;
   std::vector<std::pair<size_t, size_t> > vec_imagesSize;
-
-  if (!stlplus::folder_exists(sImaDirectory)) {
-    std::cerr << "It is an invalid input image directory" << std::endl;
-    return EXIT_FAILURE;
-  } else  {
-
-    //---------------------------------------
-    // Look for images in the given directory
-    //---------------------------------------
-    vec_fileNames = stlplus::folder_wildcard(sImaDirectory,
-      sImaExtension, false, true);
-
-    std::sort(vec_fileNames.begin(), vec_fileNames.end());
-
-    std::ofstream file(stlplus::create_filespec(sOutDir, "/lists", ".txt").c_str());
-    std::copy(vec_fileNames.begin(), vec_fileNames.end(),
-              std::ostream_iterator<std::string>(file, "\n"));
-    file.close();
-
-    for (size_t i=0; i < vec_fileNames.size(); ++i)  {
-      vec_fileNames[i] = stlplus::create_filespec(
-        stlplus::folder_append_separator(sImaDirectory), vec_fileNames[i]);
-    }
-    // DEBUG INFO
-    std::cout << std::endl << "IMAGE(S) :" << std::endl;
-    copy(vec_fileNames.begin(), vec_fileNames.end(), ostream_iterator<string>(cout, "\n"));
-
-    if (vec_fileNames.empty())
-    {
-      std::cout << "\n No images in the provided directory.";
-      return EXIT_FAILURE;
-    }
+  for ( std::vector<openMVG::SfMIO::CameraInfo>::const_iterator iter_camInfo = vec_camImageName.begin();
+     iter_camInfo != vec_camImageName.end();
+     iter_camInfo++ )
+  {
+    vec_imagesSize.push_back( std::make_pair( vec_focalGroup[iter_camInfo->m_intrinsicId].m_w,
+                                              vec_focalGroup[iter_camInfo->m_intrinsicId].m_h ) );
+    vec_fileNames.push_back( stlplus::create_filespec( sImaDirectory, iter_camInfo->m_sImageName) );
   }
-
 
   //---------------------------------------
   // b. Compute features and descriptor
@@ -265,15 +262,16 @@ int main(int argc, char **argv)
   //typedef L2_Vectorized<DescriptorT::bin_type> MetricT;
   //typedef ArrayMatcherBruteForce<DescriptorT::bin_type, MetricT> MatcherT;
 
-  ImageCollectionMatcher_AllInMemory<KeypointSetT, MatcherT> collectionMatcher(fDistRatio);
-  if (collectionMatcher.loadData(vec_fileNames, sOutDir))
+  // If the matches already exists, reload them
+  if (stlplus::file_exists(sOutDir + "/matches.putative.txt"))
   {
-    if (stlplus::file_exists(sOutDir + "/matches.putative.txt"))
-    {
-      PairedIndMatchImport(sOutDir + "/matches.putative.txt", map_PutativesMatches);
-      std::cout << std::endl << "PUTATIVE MATCHES -- PREVIOUS RESULTS LOADED" << std::endl;
-    }
-    else
+    PairedIndMatchImport(sOutDir + "/matches.putative.txt", map_PutativesMatches);
+    std::cout << std::endl << "PUTATIVE MATCHES -- PREVIOUS RESULTS LOADED" << std::endl;
+  }
+  else // Compute the putatives matches
+  {
+    ImageCollectionMatcher_AllInMemory<KeypointSetT, MatcherT> collectionMatcher(fDistRatio);
+    if (collectionMatcher.loadData(vec_fileNames, sOutDir))
     {
       std::cout  << std::endl << "PUTATIVE MATCHES" << std::endl;
       collectionMatcher.Match(vec_fileNames, map_PutativesMatches);
@@ -286,6 +284,11 @@ int main(int argc, char **argv)
       file.close();
     }
   }
+  //-- export putative matches Adjacency matrix
+  PairWiseMatchingToAdjacencyMatrixSVG(vec_fileNames.size(),
+    map_PutativesMatches,
+    stlplus::create_filespec(sOutDir, "PutativeAdjacencyMatrix", "svg"));
+
 
   //---------------------------------------
   // d. Geometric filtering of putatives matches
@@ -321,7 +324,6 @@ int main(int argc, char **argv)
       map_GeometricMatches_F,
       stlplus::create_filespec(sOutDir, "EpipolarAdjacencyMatrix", "svg"));
   }
-
   return EXIT_SUCCESS;
 }
 
