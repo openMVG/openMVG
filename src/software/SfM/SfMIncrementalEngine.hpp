@@ -12,6 +12,7 @@
 
 #include "software/SfM/SfMEngine.hpp"
 #include "software/SfM/SfMReconstructionData.hpp"
+#include "software/SfM/SfMIOHelper.hpp"
 #include "openMVG/features/features.hpp"
 
 #include "openMVG/tracks/tracks.hpp"
@@ -70,38 +71,78 @@ public:
     return _reconstructorData;
   }
 
-  /// Bundle adjustment Refine Structure and Motion or Structure only
-  void BundleAdjustment(bool bStructureAndMotion = true);
+  /// Bundle adjustment to refine Structure and Motion
+  void BundleAdjustment();
 
   // Return MSE (Mean Square Error) and an histogram of residual values.
   double ComputeResidualsHistogram(Histogram<double> * histo);
 
-  const std::vector<std::string> & getFilenamesVector() const
-    {return _vec_fileNames;}
+  const std::vector<std::string> getFilenamesVector() const
+  {
+    std::vector<std::string> vec_fileNames;
+    for ( std::vector<openMVG::SfMIO::CameraInfo>::const_iterator iter_camInfo = _vec_camImageNames.begin();
+      iter_camInfo != _vec_camImageNames.end();
+      iter_camInfo++ )
+    {
+      vec_fileNames.push_back( iter_camInfo->m_sImageName);
+    }
+    return vec_fileNames;
+  }
 
   const openMVG::tracks::STLMAPTracks & getTracks() const
     {return _map_reconstructed;}
 
-  const std::vector< std::pair<size_t, size_t> > & getImagesSize() const
-    {return _vec_imageSize;}
+  const std::vector< std::pair<size_t, size_t> > getImagesSize() const
+  {
+    std::vector< std::pair<size_t, size_t> > vec_imageSize;
+    for ( std::vector<openMVG::SfMIO::CameraInfo>::const_iterator iter_camInfo = _vec_camImageNames.begin();
+      iter_camInfo != _vec_camImageNames.end();
+      iter_camInfo++ )
+    {
+      std::vector<openMVG::SfMIO::IntrinsicCameraInfo>::const_iterator it_intrinsic = _vec_intrinsicGroups.begin();
+      std::advance(it_intrinsic, iter_camInfo->m_intrinsicId);
+      vec_imageSize.push_back( std::make_pair( it_intrinsic->m_w, it_intrinsic->m_h ) );
+    }
+    return vec_imageSize;
+  }
+
+  void setInitialPair(std::pair<size_t,size_t> initialPair)
+  {
+    _initialpair = initialPair;
+  }
+
+  void setIfUseBundleAdjustment(bool bUseBundleAdjustment)
+  {
+    _bUseBundleAdjustment = bUseBundleAdjustment;
+  }
+  
+  void setIfRefinePrincipalPointAndRadialDisto(bool bRefinePPandDisto)
+  {
+    _bRefinePPandDisto = bRefinePPandDisto;
+  }
 
 private:
 
   // -----
   // Input data
   // ----
-
-  std::vector<std::string> _vec_fileNames; // Images considered for the reconstruction
+  std::vector<openMVG::SfMIO::CameraInfo> _vec_camImageNames;
+  std::vector<openMVG::SfMIO::IntrinsicCameraInfo> _vec_intrinsicGroups;
   std::map< size_t, std::vector<SIOPointFeature> > _map_feats; // feature per images
 
-  std::vector< std::pair<size_t, size_t> > _vec_imageSize; // Size of each image
-  Mat3 _K; // Intrinsic guess for the used camera.
+  // Intrinsic Id per imageId
+  std::map<size_t, size_t> _map_IntrinsicIdPerImageId;
+
 
   typedef tracks::mapPairWiseMatches STLPairWiseMatches;
-  STLPairWiseMatches _map_Matches_H; // pairwise matches for Homography model
   STLPairWiseMatches _map_Matches_F; // pairwise matches for Fundamental model
 
   openMVG::tracks::STLMAPTracks _map_tracks; // reconstructed track (visibility per 3D point)
+
+  //-- configuration of the reconstruction
+  std::pair<size_t,size_t> _initialpair;
+  bool _bUseBundleAdjustment;
+  bool _bRefinePPandDisto; // Boolean used to know if Principal point and Radial disto is refined
 
   // -----
   // Future reconstructed data
@@ -110,9 +151,14 @@ private:
 
   openMVG::tracks::STLMAPTracks _map_reconstructed;
 
-  std::set<size_t> _set_remainingImageId;  // Remaining image index that could be incrementally added
+  std::set<size_t> _set_remainingImageId;  // Remaining image index that could be sequentially added
 
-  std::vector<size_t> _vec_added_order; //show the added image order of the image
+  std::vector<size_t> _vec_added_order; //store in which order image have been added
+
+  /// List of images that belong to a common intrinsic group
+  std::map<size_t, std::vector<size_t> > _map_ImagesIdPerIntrinsicGroup;
+  std::map<size_t, Vec6 > _map_IntrinsicsPerGroup;
+  //std::map<size_t, BrownPinholeCamera> _map_Camera;
 
   // -----
   // Reporting ..

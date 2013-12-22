@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2009
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -25,12 +25,7 @@
 #include <coin/CbcModel.hpp>
 #include <coin/OsiSolverInterface.hpp>
 
-#ifdef COIN_HAS_CLP
 #include "coin/OsiClpSolverInterface.hpp"
-#endif
-#ifdef COIN_HAS_OSL
-#include "coin/OsiOslSolverInterface.hpp"
-#endif
 
 #include "coin/CbcCutGenerator.hpp"
 #include "coin/CbcHeuristicLocal.hpp"
@@ -270,13 +265,7 @@ namespace lemon {
     if (_osi_solver) {
       delete _osi_solver;
     }
-#ifdef COIN_HAS_CLP
     _osi_solver = new OsiClpSolverInterface();
-#elif COIN_HAS_OSL
-    _osi_solver = new OsiOslSolverInterface();
-#else
-#error Cannot instantiate Osi solver
-#endif
 
     _osi_solver->loadFromCoinModel(*_prob);
 
@@ -328,13 +317,11 @@ namespace lemon {
       CglFlowCover flowGen;
       _cbc_model->addCutGenerator(&flowGen, -1, "FlowCover");
 
-#ifdef COIN_HAS_CLP
       OsiClpSolverInterface* osiclp =
         dynamic_cast<OsiClpSolverInterface*>(_cbc_model->solver());
       if (osiclp->getNumRows() < 300 && osiclp->getNumCols() < 500) {
         osiclp->setupForRepeatedUse(2, 0);
       }
-#endif
 
       CbcRounding heuristic1(*_cbc_model);
       heuristic1.setWhen(3);
@@ -448,8 +435,6 @@ namespace lemon {
     }
 
     _prob = new CoinModel();
-    rows.clear();
-    cols.clear();
   }
 
   void CbcMip::_messageLevel(MessageLevel level) {

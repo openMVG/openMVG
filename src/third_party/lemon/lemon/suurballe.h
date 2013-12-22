@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -137,7 +137,7 @@ namespace lemon {
     /// The heap type used for internal Dijkstra computations.
     typedef typename TR::Heap Heap;
 
-    /// The \ref SuurballeDefaultTraits "traits class" of the algorithm.
+    /// The \ref lemon::SuurballeDefaultTraits "traits class" of the algorithm.
     typedef TR Traits;
 
   private:
@@ -682,7 +682,7 @@ namespace lemon {
     ///
     /// This function returns the total length of the found paths, i.e.
     /// the total cost of the found flow.
-    /// The complexity of the function is O(e).
+    /// The complexity of the function is O(m).
     ///
     /// \pre \ref run() or \ref findFlow() must be called before using
     /// this function.

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -19,8 +18,8 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '1.7.0',
+        URL_ROOT:    './',
+        VERSION:     '1.8.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -86,7 +85,7 @@ general <span class="math">\(F(x)\)</span> is an intractable problem, we will ha
 for finding a local minimum.</p>
 <p>The general strategy when solving non-linear optimization problems is
 to solve a sequence of approximations to the original problem
-<a class="reference internal" href="bibliography.html#nocedalwright">[NocedalWright]</a>. At each iteration, the approximation is solved to
+<a class="reference internal" href="bibliography.html#nocedalwright" id="id2">[NocedalWright]</a>. At each iteration, the approximation is solved to
 determine a correction <span class="math">\(\Delta x\)</span> to the vector <span class="math">\(x\)</span>. For
 non-linear least squares, an approximation can be constructed by using
 the linearization <span class="math">\(F(x+\Delta x) \approx F(x) + J(x)\Delta x\)</span>,
@@ -98,7 +97,7 @@ updating <span class="math">\(x \leftarrow x+ \Delta x\)</span> leads to an algo
 may not converge.  To get a convergent algorithm, we need to control
 the size of the step <span class="math">\(\Delta x\)</span>. Depending on how the size of
 the step <span class="math">\(\Delta x\)</span> is controlled, non-linear optimization
-algorithms can be divided into two major categories <a class="reference internal" href="bibliography.html#nocedalwright">[NocedalWright]</a>.</p>
+algorithms can be divided into two major categories <a class="reference internal" href="bibliography.html#nocedalwright" id="id3">[NocedalWright]</a>.</p>
 <ol class="arabic simple">
 <li><strong>Trust Region</strong> The trust region approach approximates the
 objective function using using a model function (often a quadratic)
@@ -166,12 +165,12 @@ vector of size <span class="math">\(n\)</span>.</td></tr>
 </table>
 <div class="section" id="levenberg-marquardt">
 <span id="section-levenberg-marquardt"></span><h3>Levenberg-Marquardt<a class="headerlink" href="#levenberg-marquardt" title="Permalink to this headline">¶</a></h3>
-<p>The Levenberg-Marquardt algorithm <a class="reference internal" href="bibliography.html#levenberg">[Levenberg]</a> <a class="reference internal" href="bibliography.html#marquardt">[Marquardt]</a> is the
+<p>The Levenberg-Marquardt algorithm <a class="reference internal" href="bibliography.html#levenberg" id="id4">[Levenberg]</a> <a class="reference internal" href="bibliography.html#marquardt" id="id5">[Marquardt]</a> is the
 most popular algorithm for solving non-linear least squares problems.
 It was also the first trust region algorithm to be developed
-<a class="reference internal" href="bibliography.html#levenberg">[Levenberg]</a> <a class="reference internal" href="bibliography.html#marquardt">[Marquardt]</a>. Ceres implements an exact step <a class="reference internal" href="bibliography.html#madsen">[Madsen]</a>
+<a class="reference internal" href="bibliography.html#levenberg" id="id6">[Levenberg]</a> <a class="reference internal" href="bibliography.html#marquardt" id="id7">[Marquardt]</a>. Ceres implements an exact step <a class="reference internal" href="bibliography.html#madsen" id="id8">[Madsen]</a>
 and an inexact step variant of the Levenberg-Marquardt algorithm
-<a class="reference internal" href="bibliography.html#wrightholt">[WrightHolt]</a> <a class="reference internal" href="bibliography.html#nashsofer">[NashSofer]</a>.</p>
+<a class="reference internal" href="bibliography.html#wrightholt" id="id9">[WrightHolt]</a> <a class="reference internal" href="bibliography.html#nashsofer" id="id10">[NashSofer]</a>.</p>
 <p>It can be shown, that the solution to <a href="#equation-trp">(3)</a> can be obtained by
 solving an unconstrained optimization of the form</p>
 <div class="math">
@@ -204,17 +203,17 @@ that this may not be the case, as <a href="#equation-lsqr">(4)</a> is itself a r
 version of <a href="#equation-linearapprox">(2)</a>. Indeed, it is possible to
 construct non-linear optimization algorithms in which the linearized
 problem is solved approximately. These algorithms are known as inexact
-Newton or truncated Newton methods <a class="reference internal" href="bibliography.html#nocedalwright">[NocedalWright]</a>.</p>
+Newton or truncated Newton methods <a class="reference internal" href="bibliography.html#nocedalwright" id="id11">[NocedalWright]</a>.</p>
 <p>An inexact Newton method requires two ingredients. First, a cheap
 method for approximately solving systems of linear
 equations. Typically an iterative linear solver like the Conjugate
 Gradients method is used for this
-purpose <a class="reference internal" href="bibliography.html#nocedalwright">[NocedalWright]</a>. Second, a termination rule for
+purpose <a class="reference internal" href="bibliography.html#nocedalwright" id="id12">[NocedalWright]</a>. Second, a termination rule for
 the iterative solver. A typical termination rule is of the form</p>
 <div class="math" id="equation-inexact">
 <span class="eqno">(6)</span>\[\|H(x) \Delta x + g(x)\| \leq \eta_k \|g(x)\|.\]</div>
 <p>Here, <span class="math">\(k\)</span> indicates the Levenberg-Marquardt iteration number and
-<span class="math">\(0 &lt; \eta_k &lt;1\)</span> is known as the forcing sequence.  <a class="reference internal" href="bibliography.html#wrightholt">[WrightHolt]</a>
+<span class="math">\(0 &lt; \eta_k &lt;1\)</span> is known as the forcing sequence.  <a class="reference internal" href="bibliography.html#wrightholt" id="id13">[WrightHolt]</a>
 prove that a truncated Levenberg-Marquardt algorithm that uses an
 inexact Newton step based on <a href="#equation-inexact">(6)</a> converges for any
 sequence <span class="math">\(\eta_k \leq \eta_0 &lt; 1\)</span> and the rate of convergence
@@ -246,11 +245,11 @@ supports two variants that can be chose by setting
 segments using the Gauss-Newton and Cauchy vectors and finds the point
 farthest along this line shaped like a dogleg (hence the name) that is
 contained in the trust-region. For more details on the exact reasoning
-and computations, please see Madsen et al <a class="reference internal" href="bibliography.html#madsen">[Madsen]</a>.</p>
+and computations, please see Madsen et al <a class="reference internal" href="bibliography.html#madsen" id="id14">[Madsen]</a>.</p>
 <p><tt class="docutils literal"><span class="pre">SUBSPACE_DOGLEG</span></tt> is a more sophisticated method that considers the
 entire two dimensional subspace spanned by these two vectors and finds
 the point that minimizes the trust region problem in this subspace
-<a class="reference internal" href="bibliography.html#byrdschnabel">[ByrdSchnabel]</a>.</p>
+<a class="reference internal" href="bibliography.html#byrdschnabel" id="id15">[ByrdSchnabel]</a>.</p>
 <p>The key advantage of the Dogleg over Levenberg Marquardt is that if
 the step computation for a particular choice of <span class="math">\(\mu\)</span> does not
 result in sufficient decrease in the value of the objective function,
@@ -278,13 +277,13 @@ of <span class="math">\(a_1\)</span> and <span class="math">\(a_2\)</span>. It&#
 eliminate the variables <span class="math">\(a_1\)</span> and <span class="math">\(a_2\)</span> from the problem
 entirely. Problems like these are known as separable least squares
 problem and the most famous algorithm for solving them is the Variable
-Projection algorithm invented by Golub &amp; Pereyra <a class="reference internal" href="bibliography.html#golubpereyra">[GolubPereyra]</a>.</p>
+Projection algorithm invented by Golub &amp; Pereyra <a class="reference internal" href="bibliography.html#golubpereyra" id="id16">[GolubPereyra]</a>.</p>
 <p>Similar structure can be found in the matrix factorization with
 missing data problem. There the corresponding algorithm is known as
-Wiberg&#8217;s algorithm <a class="reference internal" href="bibliography.html#wiberg">[Wiberg]</a>.</p>
+Wiberg&#8217;s algorithm <a class="reference internal" href="bibliography.html#wiberg" id="id17">[Wiberg]</a>.</p>
 <p>Ruhe &amp; Wedin present an analysis of various algorithms for solving
 separable non-linear least squares problems and refer to <em>Variable
-Projection</em> as Algorithm I in their paper <a class="reference internal" href="bibliography.html#ruhewedin">[RuheWedin]</a>.</p>
+Projection</em> as Algorithm I in their paper <a class="reference internal" href="bibliography.html#ruhewedin" id="id18">[RuheWedin]</a>.</p>
 <p>Implementing Variable Projection is tedious and expensive. Ruhe &amp;
 Wedin present a simpler algorithm with comparable convergence
 properties, which they call Algorithm II.  Algorithm II performs an
@@ -328,7 +327,7 @@ the method is not restricted to move into narrow valleys while
 preserving its convergence properties.</p>
 <p>Setting <a class="reference internal" href="#Solver::Options::use_nonmonotonic_steps__b" title="Solver::Options::use_nonmonotonic_steps"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::use_nonmonotonic_steps</span></tt></a> to <tt class="docutils literal"><span class="pre">true</span></tt>
 enables the non-monotonic trust region algorithm as described by Conn,
-Gould &amp; Toint in <a class="reference internal" href="bibliography.html#conn">[Conn]</a>.</p>
+Gould &amp; Toint in <a class="reference internal" href="bibliography.html#conn" id="id19">[Conn]</a>.</p>
 <p>Even though the value of the objective function may be larger
 than the minimum value encountered over the course of the
 optimization, the final parameters returned to the user are the
@@ -379,12 +378,12 @@ directions.</li>
 <li><tt class="docutils literal"><span class="pre">BFGS</span></tt> A generalization of the Secant method to multiple
 dimensions in which a full, dense approximation to the inverse
 Hessian is maintained and used to compute a quasi-Newton step
-<a class="reference internal" href="bibliography.html#nocedalwright">[NocedalWright]</a>.  BFGS is currently the best known general
+<a class="reference internal" href="bibliography.html#nocedalwright" id="id20">[NocedalWright]</a>.  BFGS is currently the best known general
 quasi-Newton algorithm.</li>
 <li><tt class="docutils literal"><span class="pre">LBFGS</span></tt> A limited memory approximation to the full <tt class="docutils literal"><span class="pre">BFGS</span></tt>
 method in which the last <cite>M</cite> iterations are used to approximate the
-inverse Hessian used to compute a quasi-Newton step <a class="reference internal" href="bibliography.html#nocedal">[Nocedal]</a>,
-<a class="reference internal" href="bibliography.html#byrdnocedal">[ByrdNocedal]</a>.</li>
+inverse Hessian used to compute a quasi-Newton step <a class="reference internal" href="bibliography.html#nocedal" id="id21">[Nocedal]</a>,
+<a class="reference internal" href="bibliography.html#byrdnocedal" id="id22">[ByrdNocedal]</a>.</li>
 </ol>
 <p>Currently Ceres Solver supports both a backtracking and interpolation
 based Armijo line search algorithm, and a sectioning / zoom
@@ -411,9 +410,9 @@ equivalent to solving the <em>normal equations</em>.</p>
 <span id="section-qr"></span><h3><tt class="docutils literal"><span class="pre">DENSE_QR</span></tt><a class="headerlink" href="#dense-qr" title="Permalink to this headline">¶</a></h3>
 <p>For small problems (a couple of hundred parameters and a few thousand
 residuals) with relatively dense Jacobians, <tt class="docutils literal"><span class="pre">DENSE_QR</span></tt> is the method
-of choice <a class="reference internal" href="bibliography.html#bjorck">[Bjorck]</a>. Let <span class="math">\(J = QR\)</span> be the QR-decomposition of
+of choice <a class="reference internal" href="bibliography.html#bjorck" id="id23">[Bjorck]</a>. Let <span class="math">\(J = QR\)</span> be the QR-decomposition of
 <span class="math">\(J\)</span>, where <span class="math">\(Q\)</span> is an orthonormal matrix and <span class="math">\(R\)</span> is
-an upper triangular matrix <a class="reference internal" href="bibliography.html#trefethenbau">[TrefethenBau]</a>. Then it can be shown that
+an upper triangular matrix <a class="reference internal" href="bibliography.html#trefethenbau" id="id24">[TrefethenBau]</a>. Then it can be shown that
 the solution to <a href="#equation-normal">(8)</a> is given by</p>
 <div class="math">
 \[\Delta x^* = -R^{-1}Q^\top f\]</div>
@@ -441,7 +440,7 @@ Cholesky factorization of the normal equations. Ceres uses
 Cholesky factorization of the normal equations. This leads to
 substantial savings in time and memory for large sparse
 problems. Ceres uses the sparse Cholesky factorization routines in
-Professor Tim Davis&#8217; <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt> or <tt class="docutils literal"><span class="pre">CXSparse</span></tt> packages <a class="reference internal" href="bibliography.html#chen">[Chen]</a>.</p>
+Professor Tim Davis&#8217; <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt> or <tt class="docutils literal"><span class="pre">CXSparse</span></tt> packages <a class="reference internal" href="bibliography.html#chen" id="id25">[Chen]</a>.</p>
 </div>
 <div class="section" id="dense-schur-sparse-schur">
 <span id="section-schur"></span><h3><tt class="docutils literal"><span class="pre">DENSE_SCHUR</span></tt> &amp; <tt class="docutils literal"><span class="pre">SPARSE_SCHUR</span></tt><a class="headerlink" href="#dense-schur-sparse-schur" title="Permalink to this headline">¶</a></h3>
@@ -505,13 +504,13 @@ and matrix-vector multiplies, and the solution of block sparse
 problems, the number of cameras is much smaller than the number of
 points, <span class="math">\(p \ll q\)</span>, thus solving <a href="#equation-schur">(11)</a> is
 significantly cheaper than solving <a href="#equation-linear2">(10)</a>. This is the
-<em>Schur complement trick</em> <a class="reference internal" href="bibliography.html#brown">[Brown]</a>.</p>
+<em>Schur complement trick</em> <a class="reference internal" href="bibliography.html#brown" id="id26">[Brown]</a>.</p>
 <p>This still leaves open the question of solving <a href="#equation-schur">(11)</a>. The
 method of choice for solving symmetric positive definite systems
-exactly is via the Cholesky factorization <a class="reference internal" href="bibliography.html#trefethenbau">[TrefethenBau]</a> and
+exactly is via the Cholesky factorization <a class="reference internal" href="bibliography.html#trefethenbau" id="id27">[TrefethenBau]</a> and
 depending upon the structure of the matrix, there are, in general, two
 options. The first is direct factorization, where we store and factor
-<span class="math">\(S\)</span> as a dense matrix <a class="reference internal" href="bibliography.html#trefethenbau">[TrefethenBau]</a>. This method has
+<span class="math">\(S\)</span> as a dense matrix <a class="reference internal" href="bibliography.html#trefethenbau" id="id28">[TrefethenBau]</a>. This method has
 <span class="math">\(O(p^2)\)</span> space complexity and <span class="math">\(O(p^3)\)</span> time complexity and
 is only practical for problems with up to a few hundred cameras. Ceres
 implements this strategy as the <tt class="docutils literal"><span class="pre">DENSE_SCHUR</span></tt> solver.</p>
@@ -520,7 +519,7 @@ only see a small fraction of the scene. This leads us to the second
 option: Sparse Direct Methods. These methods store <span class="math">\(S\)</span> as a
 sparse matrix, use row and column re-ordering algorithms to maximize
 the sparsity of the Cholesky decomposition, and focus their compute
-effort on the non-zero part of the factorization <a class="reference internal" href="bibliography.html#chen">[Chen]</a>. Sparse
+effort on the non-zero part of the factorization <a class="reference internal" href="bibliography.html#chen" id="id29">[Chen]</a>. Sparse
 direct methods, depending on the exact sparsity structure of the Schur
 complement, allow bundle adjustment algorithms to significantly scale
 up over those based on dense factorization. Ceres implements this
@@ -578,13 +577,13 @@ language of Domain Decomposition, each point in a bundle adjustment
 problem is a domain, and the cameras form the interface between these
 domains. The iterative solution of the Schur complement then falls
 within the sub-category of techniques known as Iterative
-Sub-structuring <a class="reference internal" href="bibliography.html#saad">[Saad]</a> <a class="reference internal" href="bibliography.html#mathew">[Mathew]</a>.</p>
+Sub-structuring <a class="reference internal" href="bibliography.html#saad" id="id30">[Saad]</a> <a class="reference internal" href="bibliography.html#mathew" id="id31">[Mathew]</a>.</p>
 </div>
 <div class="section" id="preconditioner">
 <span id="section-preconditioner"></span><h3>Preconditioner<a class="headerlink" href="#preconditioner" title="Permalink to this headline">¶</a></h3>
 <p>The convergence rate of Conjugate Gradients for
 solving <a href="#equation-normal">(8)</a> depends on the distribution of eigenvalues
-of <span class="math">\(H\)</span> <a class="reference internal" href="bibliography.html#saad">[Saad]</a>. A useful upper bound is
+of <span class="math">\(H\)</span> <a class="reference internal" href="bibliography.html#saad" id="id32">[Saad]</a>. A useful upper bound is
 <span class="math">\(\sqrt{\kappa(H)}\)</span>, where, <span class="math">\(\kappa(H)\)</span> is the condition
 number of the matrix <span class="math">\(H\)</span>. For most bundle adjustment problems,
 <span class="math">\(\kappa(H)\)</span> is high and a direct application of Conjugate
@@ -616,7 +615,7 @@ block structured matrices like <span class="math">\(H\)</span> can be generalize
 block Jacobi preconditioner.</p>
 <p>For <tt class="docutils literal"><span class="pre">ITERATIVE_SCHUR</span></tt> there are two obvious choices for block
 diagonal preconditioners for <span class="math">\(S\)</span>. The block diagonal of the
-matrix <span class="math">\(B\)</span> <a class="reference internal" href="bibliography.html#mandel">[Mandel]</a> and the block diagonal <span class="math">\(S\)</span>, i.e, the
+matrix <span class="math">\(B\)</span> <a class="reference internal" href="bibliography.html#mandel" id="id33">[Mandel]</a> and the block diagonal <span class="math">\(S\)</span>, i.e, the
 block Jacobi preconditioner for <span class="math">\(S\)</span>. Ceres&#8217;s implements both of
 these preconditioners and refers to them as <tt class="docutils literal"><span class="pre">JACOBI</span></tt> and
 <tt class="docutils literal"><span class="pre">SCHUR_JACOBI</span></tt> respectively.</p>
@@ -687,7 +686,7 @@ all the 3d points, and the second containing the all the cameras
 parameter blocks.</p>
 <p>If the user leaves the choice to Ceres, then the solver uses an
 approximate maximum independent set algorithm to identify the first
-elimination group <a class="reference internal" href="bibliography.html#lisaad">[LiSaad]</a>.</p>
+elimination group <a class="reference internal" href="bibliography.html#lisaad" id="id34">[LiSaad]</a>.</p>
 </div>
 <div class="section" id="solver-options">
 <span id="section-solver-options"></span><h3><a class="reference internal" href="#Solver::Options" title="Solver::Options"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Solver::Options</span></tt></a><a class="headerlink" href="#solver-options" title="Permalink to this headline">¶</a></h3>
@@ -765,7 +764,7 @@ bool <tt class="descclassname">Solver::Options::</tt><tt class="descname">use_ap
 <div><p>Default: <tt class="docutils literal"><span class="pre">false</span></tt></p>
 <p>As part of the <tt class="docutils literal"><span class="pre">BFGS</span></tt> update step / <tt class="docutils literal"><span class="pre">LBFGS</span></tt> right-multiply
 step, the initial inverse Hessian approximation is taken to be the
-Identity.  However, <a class="reference internal" href="bibliography.html#oren">[Oren]</a> showed that using instead <span class="math">\(I *
+Identity.  However, <a class="reference internal" href="bibliography.html#oren" id="id35">[Oren]</a> showed that using instead <span class="math">\(I *
 \gamma\)</span>, where <span class="math">\(\gamma\)</span> is a scalar chosen to approximate an
 eigenvalue of the true inverse Hessian can result in improved
 convergence in a wide variety of cases.  Setting
@@ -782,7 +781,7 @@ iteration).</p>
 <div class="math">
 \[s_k = x_{k+1} - x_k\]</div>
 <p>Where <span class="math">\(f()\)</span> is the line search objective and <span class="math">\(x\)</span> the
-vector of parameter values <a class="reference internal" href="bibliography.html#nocedalwright">[NocedalWright]</a>.</p>
+vector of parameter values <a class="reference internal" href="bibliography.html#nocedalwright" id="id36">[NocedalWright]</a>.</p>
 <p>It is important to note that approximate eigenvalue scaling does
 <strong>not</strong> <em>always</em> improve convergence, and that it can in fact
 <em>significantly</em> degrade performance for certain classes of problem,
@@ -932,7 +931,7 @@ DoglegType <tt class="descclassname">Solver::Options::</tt><tt class="descname">
 <dd><p>Default: <tt class="docutils literal"><span class="pre">TRADITIONAL_DOGLEG</span></tt></p>
 <p>Ceres supports two different dogleg strategies.
 <tt class="docutils literal"><span class="pre">TRADITIONAL_DOGLEG</span></tt> method by Powell and the <tt class="docutils literal"><span class="pre">SUBSPACE_DOGLEG</span></tt>
-method described by <a class="reference internal" href="bibliography.html#byrdschnabel">[ByrdSchnabel]</a> .  See <a class="reference internal" href="#section-dogleg"><em>Dogleg</em></a>
+method described by <a class="reference internal" href="bibliography.html#byrdschnabel" id="id37">[ByrdSchnabel]</a> .  See <a class="reference internal" href="#section-dogleg"><em>Dogleg</em></a>
 for more details.</p>
 </dd></dl>
 
@@ -1090,6 +1089,26 @@ is the block Jacobi preconditioner. Valid values are (in increasing
 order of complexity) <tt class="docutils literal"><span class="pre">IDENTITY</span></tt>, <tt class="docutils literal"><span class="pre">JACOBI</span></tt>, <tt class="docutils literal"><span class="pre">SCHUR_JACOBI</span></tt>,
 <tt class="docutils literal"><span class="pre">CLUSTER_JACOBI</span></tt> and <tt class="docutils literal"><span class="pre">CLUSTER_TRIDIAGONAL</span></tt>. See
 <a class="reference internal" href="#section-preconditioner"><em>Preconditioner</em></a> for more details.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Options::visibility_clustering_type__VisibilityClusteringType">
+VisibilityClusteringType <tt class="descclassname">Solver::Options::</tt><tt class="descname">visibility_clustering_type</tt><a class="headerlink" href="#Solver::Options::visibility_clustering_type__VisibilityClusteringType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default: <tt class="docutils literal"><span class="pre">CANONICAL_VIEWS</span></tt></p>
+<p>Type of clustering algorithm to use when constructing a visibility
+based preconditioner. The original visibility based preconditioning
+paper and implementation only used the canonical views algorithm.</p>
+<p>This algorithm gives high quality results but for large dense
+graphs can be particularly expensive. As its worst case complexity
+is cubic in size of the graph.</p>
+<p>Another option is to use <tt class="docutils literal"><span class="pre">SINGLE_LINKAGE</span></tt> which is a simple
+thresholded single linkage clustering algorithm that only pays
+attention to tightly coupled blocks in the Schur complement. This
+is a fast algorithm that works well.</p>
+<p>The optimal choice of the clustering algorithm depends on the
+sparsity structure of the problem, but generally speaking we
+recommend that you try <tt class="docutils literal"><span class="pre">CANONICAL_VIEWS</span></tt> first and if it is too
+expensive try <tt class="docutils literal"><span class="pre">SINGLE_LINKAGE</span></tt>.</p>
 </dd></dl>
 
 <dl class="member">
@@ -1519,109 +1538,168 @@ int <tt class="descclassname">ParameterBlockOrdering::</tt><tt class="descname">
 <dl class="class">
 <dt id="IterationSummary">
 <em class="property">class </em><tt class="descname">IterationSummary</tt><a class="headerlink" href="#IterationSummary" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="#IterationSummary" title="IterationSummary"><tt class="xref cpp cpp-class docutils literal"><span class="pre">IterationSummary</span></tt></a> describes the state of the optimizer
-after each iteration of the minimization. Note that all times are
-wall times.</p>
-<div class="highlight-c++"><div class="highlight"><pre> <span class="k">struct</span> <span class="n">IterationSummary</span> <span class="p">{</span>
-   <span class="c1">// Current iteration number.</span>
-   <span class="n">int32</span> <span class="n">iteration</span><span class="p">;</span>
+<dd><p><a class="reference internal" href="#IterationSummary" title="IterationSummary"><tt class="xref cpp cpp-class docutils literal"><span class="pre">IterationSummary</span></tt></a> describes the state of the minimizer at
+the end of each iteration.</p>
+</dd></dl>
 
-   <span class="c1">// Step was numerically valid, i.e., all values are finite and the</span>
-   <span class="c1">// step reduces the value of the linearized model.</span>
-   <span class="c1">//</span>
-   <span class="c1">// Note: step_is_valid is false when iteration = 0.</span>
-   <span class="kt">bool</span> <span class="n">step_is_valid</span><span class="p">;</span>
+<dl class="member">
+<dt id="IterationSummary::iteration__int32">
+int32 <tt class="descclassname">IterationSummary::</tt><tt class="descname">iteration</tt><a class="headerlink" href="#IterationSummary::iteration__int32" title="Permalink to this definition">¶</a></dt>
+<dd><p>Current iteration number.</p>
+</dd></dl>
 
-   <span class="c1">// Step did not reduce the value of the objective function</span>
-   <span class="c1">// sufficiently, but it was accepted because of the relaxed</span>
-   <span class="c1">// acceptance criterion used by the non-monotonic trust region</span>
-   <span class="c1">// algorithm.</span>
-   <span class="c1">//</span>
-   <span class="c1">// Note: step_is_nonmonotonic is false when iteration = 0;</span>
-   <span class="kt">bool</span> <span class="n">step_is_nonmonotonic</span><span class="p">;</span>
+<dl class="member">
+<dt id="IterationSummary::step_is_valid__b">
+bool <tt class="descclassname">IterationSummary::</tt><tt class="descname">step_is_valid</tt><a class="headerlink" href="#IterationSummary::step_is_valid__b" title="Permalink to this definition">¶</a></dt>
+<dd><p>Step was numerically valid, i.e., all values are finite and the
+step reduces the value of the linearized model.</p>
+<blockquote>
+<div><strong>Note</strong>: <a class="reference internal" href="#IterationSummary::step_is_valid__b" title="IterationSummary::step_is_valid"><tt class="xref cpp cpp-member docutils literal"><span class="pre">IterationSummary::step_is_valid</span></tt></a> is <cite>false</cite>
+when <a class="reference internal" href="#IterationSummary::iteration__int32" title="IterationSummary::iteration"><tt class="xref cpp cpp-member docutils literal"><span class="pre">IterationSummary::iteration</span></tt></a> = 0.</div></blockquote>
+</dd></dl>
 
-   <span class="c1">// Whether or not the minimizer accepted this step or not. If the</span>
-   <span class="c1">// ordinary trust region algorithm is used, this means that the</span>
-   <span class="c1">// relative reduction in the objective function value was greater</span>
-   <span class="c1">// than Solver::Options::min_relative_decrease. However, if the</span>
-   <span class="c1">// non-monotonic trust region algorithm is used</span>
-   <span class="c1">// (Solver::Options:use_nonmonotonic_steps = true), then even if the</span>
-   <span class="c1">// relative decrease is not sufficient, the algorithm may accept the</span>
-   <span class="c1">// step and the step is declared successful.</span>
-   <span class="c1">//</span>
-   <span class="c1">// Note: step_is_successful is false when iteration = 0.</span>
-   <span class="kt">bool</span> <span class="n">step_is_successful</span><span class="p">;</span>
+<dl class="member">
+<dt id="IterationSummary::step_is_nonmonotonic__b">
+bool <tt class="descclassname">IterationSummary::</tt><tt class="descname">step_is_nonmonotonic</tt><a class="headerlink" href="#IterationSummary::step_is_nonmonotonic__b" title="Permalink to this definition">¶</a></dt>
+<dd><p>Step did not reduce the value of the objective function
+sufficiently, but it was accepted because of the relaxed
+acceptance criterion used by the non-monotonic trust region
+algorithm.</p>
+<p><strong>Note</strong>: <a class="reference internal" href="#IterationSummary::step_is_nonmonotonic__b" title="IterationSummary::step_is_nonmonotonic"><tt class="xref cpp cpp-member docutils literal"><span class="pre">IterationSummary::step_is_nonmonotonic</span></tt></a> is
+<cite>false</cite> when when <a class="reference internal" href="#IterationSummary::iteration__int32" title="IterationSummary::iteration"><tt class="xref cpp cpp-member docutils literal"><span class="pre">IterationSummary::iteration</span></tt></a> = 0.</p>
+</dd></dl>
 
-   <span class="c1">// Value of the objective function.</span>
-   <span class="kt">double</span> <span class="n">cost</span><span class="p">;</span>
+<dl class="member">
+<dt id="IterationSummary::step_is_successful__b">
+bool <tt class="descclassname">IterationSummary::</tt><tt class="descname">step_is_successful</tt><a class="headerlink" href="#IterationSummary::step_is_successful__b" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether or not the minimizer accepted this step or not.</p>
+<p>If the ordinary trust region algorithm is used, this means that the
+relative reduction in the objective function value was greater than
+<a class="reference internal" href="#Solver::Options::min_relative_decrease__double" title="Solver::Options::min_relative_decrease"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::min_relative_decrease</span></tt></a>. However, if the
+non-monotonic trust region algorithm is used
+(<a class="reference internal" href="#Solver::Options::use_nonmonotonic_steps__b" title="Solver::Options::use_nonmonotonic_steps"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::use_nonmonotonic_steps</span></tt></a> = <cite>true</cite>), then
+even if the relative decrease is not sufficient, the algorithm may
+accept the step and the step is declared successful.</p>
+<p><strong>Note</strong>: <a class="reference internal" href="#IterationSummary::step_is_successful__b" title="IterationSummary::step_is_successful"><tt class="xref cpp cpp-member docutils literal"><span class="pre">IterationSummary::step_is_successful</span></tt></a> is <cite>false</cite>
+when when <a class="reference internal" href="#IterationSummary::iteration__int32" title="IterationSummary::iteration"><tt class="xref cpp cpp-member docutils literal"><span class="pre">IterationSummary::iteration</span></tt></a> = 0.</p>
+</dd></dl>
 
-   <span class="c1">// Change in the value of the objective function in this</span>
-   <span class="c1">// iteration. This can be positive or negative.</span>
-   <span class="kt">double</span> <span class="n">cost_change</span><span class="p">;</span>
+<dl class="member">
+<dt id="IterationSummary::cost__double">
+double <tt class="descclassname">IterationSummary::</tt><tt class="descname">cost</tt><a class="headerlink" href="#IterationSummary::cost__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Value of the objective function.</p>
+</dd></dl>
 
-   <span class="c1">// Infinity norm of the gradient vector.</span>
-   <span class="kt">double</span> <span class="n">gradient_max_norm</span><span class="p">;</span>
+<dl class="member">
+<dt id="IterationSummary::cost_change__double">
+double <tt class="descclassname">IterationSummary::</tt><tt class="descname">cost_change</tt><a class="headerlink" href="#IterationSummary::cost_change__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change in the value of the objective function in this
+iteration. This can be positive or negative.</p>
+</dd></dl>
 
-   <span class="c1">// 2-norm of the size of the step computed by the optimization</span>
-   <span class="c1">// algorithm.</span>
-   <span class="kt">double</span> <span class="n">step_norm</span><span class="p">;</span>
+<dl class="member">
+<dt id="IterationSummary::gradient_max_norm__double">
+double <tt class="descclassname">IterationSummary::</tt><tt class="descname">gradient_max_norm</tt><a class="headerlink" href="#IterationSummary::gradient_max_norm__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Infinity norm of the gradient vector.</p>
+</dd></dl>
 
-   <span class="c1">// For trust region algorithms, the ratio of the actual change in</span>
-   <span class="c1">// cost and the change in the cost of the linearized approximation.</span>
-   <span class="kt">double</span> <span class="n">relative_decrease</span><span class="p">;</span>
+<dl class="member">
+<dt id="IterationSummary::gradient_norm__double">
+double <tt class="descclassname">IterationSummary::</tt><tt class="descname">gradient_norm</tt><a class="headerlink" href="#IterationSummary::gradient_norm__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>2-norm of the gradient vector.</p>
+</dd></dl>
 
-   <span class="c1">// Size of the trust region at the end of the current iteration. For</span>
-   <span class="c1">// the Levenberg-Marquardt algorithm, the regularization parameter</span>
-   <span class="c1">// mu = 1.0 / trust_region_radius.</span>
-   <span class="kt">double</span> <span class="n">trust_region_radius</span><span class="p">;</span>
+<dl class="member">
+<dt id="IterationSummary::step_norm__double">
+double <tt class="descclassname">IterationSummary::</tt><tt class="descname">step_norm</tt><a class="headerlink" href="#IterationSummary::step_norm__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>2-norm of the size of the step computed in this iteration.</p>
+</dd></dl>
 
-   <span class="c1">// For the inexact step Levenberg-Marquardt algorithm, this is the</span>
-   <span class="c1">// relative accuracy with which the Newton(LM) step is solved. This</span>
-   <span class="c1">// number affects only the iterative solvers capable of solving</span>
-   <span class="c1">// linear systems inexactly. Factorization-based exact solvers</span>
-   <span class="c1">// ignore it.</span>
-   <span class="kt">double</span> <span class="n">eta</span><span class="p">;</span>
+<dl class="member">
+<dt id="IterationSummary::relative_decrease__double">
+double <tt class="descclassname">IterationSummary::</tt><tt class="descname">relative_decrease</tt><a class="headerlink" href="#IterationSummary::relative_decrease__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>For trust region algorithms, the ratio of the actual change in cost
+and the change in the cost of the linearized approximation.</p>
+<p>This field is not used when a linear search minimizer is used.</p>
+</dd></dl>
 
-   <span class="c1">// Step sized computed by the line search algorithm.</span>
-   <span class="kt">double</span> <span class="n">step_size</span><span class="p">;</span>
+<dl class="member">
+<dt id="IterationSummary::trust_region_radius__double">
+double <tt class="descclassname">IterationSummary::</tt><tt class="descname">trust_region_radius</tt><a class="headerlink" href="#IterationSummary::trust_region_radius__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of the trust region at the end of the current iteration. For
+the Levenberg-Marquardt algorithm, the regularization parameter is
+1.0 / member::<cite>IterationSummary::trust_region_radius</cite>.</p>
+</dd></dl>
 
-   <span class="c1">// Number of function evaluations used by the line search algorithm.</span>
-   <span class="kt">int</span> <span class="n">line_search_function_evaluations</span><span class="p">;</span>
+<dl class="member">
+<dt id="IterationSummary::eta__double">
+double <tt class="descclassname">IterationSummary::</tt><tt class="descname">eta</tt><a class="headerlink" href="#IterationSummary::eta__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>For the inexact step Levenberg-Marquardt algorithm, this is the
+relative accuracy with which the step is solved. This number is
+only applicable to the iterative solvers capable of solving linear
+systems inexactly. Factorization-based exact solvers always have an
+eta of 0.0.</p>
+</dd></dl>
 
-   <span class="c1">// Number of iterations taken by the linear solver to solve for the</span>
-   <span class="c1">// Newton step.</span>
-   <span class="kt">int</span> <span class="n">linear_solver_iterations</span><span class="p">;</span>
+<dl class="member">
+<dt id="IterationSummary::step_size__double">
+double <tt class="descclassname">IterationSummary::</tt><tt class="descname">step_size</tt><a class="headerlink" href="#IterationSummary::step_size__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Step sized computed by the line search algorithm.</p>
+<p>This field is not used when a trust region minimizer is used.</p>
+</dd></dl>
 
-   <span class="c1">// Time (in seconds) spent inside the minimizer loop in the current</span>
-   <span class="c1">// iteration.</span>
-   <span class="kt">double</span> <span class="n">iteration_time_in_seconds</span><span class="p">;</span>
+<dl class="member">
+<dt id="IterationSummary::line_search_function_evaluations__i">
+int <tt class="descclassname">IterationSummary::</tt><tt class="descname">line_search_function_evaluations</tt><a class="headerlink" href="#IterationSummary::line_search_function_evaluations__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of function evaluations used by the line search algorithm.</p>
+<p>This field is not used when a trust region minimizer is used.</p>
+</dd></dl>
 
-   <span class="c1">// Time (in seconds) spent inside the trust region step solver.</span>
-   <span class="kt">double</span> <span class="n">step_solver_time_in_seconds</span><span class="p">;</span>
+<dl class="member">
+<dt id="IterationSummary::linear_solver_iterations__i">
+int <tt class="descclassname">IterationSummary::</tt><tt class="descname">linear_solver_iterations</tt><a class="headerlink" href="#IterationSummary::linear_solver_iterations__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of iterations taken by the linear solver to solve for the
+trust region step.</p>
+<p>Currently this field is not used when a line search minimizer is
+used.</p>
+</dd></dl>
 
-   <span class="c1">// Time (in seconds) since the user called Solve().</span>
-   <span class="kt">double</span> <span class="n">cumulative_time_in_seconds</span><span class="p">;</span>
-<span class="p">};</span>
-</pre></div>
-</div>
+<dl class="member">
+<dt id="IterationSummary::iteration_time_in_seconds__double">
+double <tt class="descclassname">IterationSummary::</tt><tt class="descname">iteration_time_in_seconds</tt><a class="headerlink" href="#IterationSummary::iteration_time_in_seconds__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) spent inside the minimizer loop in the current
+iteration.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="IterationSummary::step_solver_time_in_seconds__double">
+double <tt class="descclassname">IterationSummary::</tt><tt class="descname">step_solver_time_in_seconds</tt><a class="headerlink" href="#IterationSummary::step_solver_time_in_seconds__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) spent inside the trust region step solver.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="IterationSummary::cumulative_time_in_seconds__double">
+double <tt class="descclassname">IterationSummary::</tt><tt class="descname">cumulative_time_in_seconds</tt><a class="headerlink" href="#IterationSummary::cumulative_time_in_seconds__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) since the user called Solve().</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="IterationCallback">
 <em class="property">class </em><tt class="descname">IterationCallback</tt><a class="headerlink" href="#IterationCallback" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
-<div><div class="highlight-c++"><div class="highlight"><pre><span class="k">class</span> <span class="nc">IterationCallback</span> <span class="p">{</span>
- <span class="k">public</span><span class="o">:</span>
+<div><p>Interface for specifying callbacks that are executed at the end of
+each iteration of the minimizer.</p>
+<div class="highlight-c++"><div class="highlight"><pre><span class="k">class</span> <span class="nc">IterationCallback</span> <span class="p">{</span>
+ <span class="nl">public:</span>
   <span class="k">virtual</span> <span class="o">~</span><span class="n">IterationCallback</span><span class="p">()</span> <span class="p">{}</span>
   <span class="k">virtual</span> <span class="n">CallbackReturnType</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="n">IterationSummary</span><span class="o">&amp;</span> <span class="n">summary</span><span class="p">)</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div>
 </div>
 </div></blockquote>
-<p>Interface for specifying callbacks that are executed at the end of
-each iteration of the Minimizer. The solver uses the return value of
-<tt class="docutils literal"><span class="pre">operator()</span></tt> to decide whether to continue solving or to
-terminate. The user can return three values.</p>
+<p>The solver uses the return value of <tt class="docutils literal"><span class="pre">operator()</span></tt> to decide whether
+to continue solving or to terminate. The user can return three
+values.</p>
 <ol class="arabic simple">
 <li><tt class="docutils literal"><span class="pre">SOLVER_ABORT</span></tt> indicates that the callback detected an abnormal
 situation. The solver returns without updating the parameter
@@ -1635,10 +1713,10 @@ has been met). Solver returns with
 <li><tt class="docutils literal"><span class="pre">SOLVER_CONTINUE</span></tt> indicates that the solver should continue
 optimizing.</li>
 </ol>
-<p>For example, the following <tt class="docutils literal"><span class="pre">IterationCallback</span></tt> is used internally
-by Ceres to log the progress of the optimization.</p>
+<p>For example, the following <a class="reference internal" href="#IterationCallback" title="IterationCallback"><tt class="xref cpp cpp-class docutils literal"><span class="pre">IterationCallback</span></tt></a> is used
+internally by Ceres to log the progress of the optimization.</p>
 <div class="highlight-c++"><div class="highlight"><pre><span class="k">class</span> <span class="nc">LoggingCallback</span> <span class="o">:</span> <span class="k">public</span> <span class="n">IterationCallback</span> <span class="p">{</span>
- <span class="k">public</span><span class="o">:</span>
+ <span class="nl">public:</span>
   <span class="k">explicit</span> <span class="n">LoggingCallback</span><span class="p">(</span><span class="kt">bool</span> <span class="n">log_to_stdout</span><span class="p">)</span>
       <span class="o">:</span> <span class="n">log_to_stdout_</span><span class="p">(</span><span class="n">log_to_stdout</span><span class="p">)</span> <span class="p">{}</span>
 
@@ -1666,7 +1744,7 @@ by Ceres to log the progress of the optimization.</p>
     <span class="k">return</span> <span class="n">SOLVER_CONTINUE</span><span class="p">;</span>
   <span class="p">}</span>
 
- <span class="k">private</span><span class="o">:</span>
+ <span class="nl">private:</span>
   <span class="k">const</span> <span class="kt">bool</span> <span class="n">log_to_stdout_</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div>
@@ -1679,27 +1757,49 @@ by Ceres to log the progress of the optimization.</p>
 <dl class="class">
 <dt id="CRSMatrix">
 <em class="property">class </em><tt class="descname">CRSMatrix</tt><a class="headerlink" href="#CRSMatrix" title="Permalink to this definition">¶</a></dt>
-<dd><div class="highlight-c++"><div class="highlight"><pre><span class="k">struct</span> <span class="n">CRSMatrix</span> <span class="p">{</span>
-  <span class="kt">int</span> <span class="n">num_rows</span><span class="p">;</span>
-  <span class="kt">int</span> <span class="n">num_cols</span><span class="p">;</span>
-  <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">cols</span><span class="p">;</span>
-  <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">rows</span><span class="p">;</span>
-  <span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">values</span><span class="p">;</span>
-<span class="p">};</span>
-</pre></div>
-</div>
-<p>A compressed row sparse matrix used primarily for communicating the
+<dd><p>A compressed row sparse matrix used primarily for communicating the
 Jacobian matrix to the user.</p>
-<p>A compressed row matrix stores its contents in three arrays,
-<tt class="docutils literal"><span class="pre">rows</span></tt>, <tt class="docutils literal"><span class="pre">cols</span></tt> and <tt class="docutils literal"><span class="pre">values</span></tt>.</p>
-<p><tt class="docutils literal"><span class="pre">rows</span></tt> is a <tt class="docutils literal"><span class="pre">num_rows</span> <span class="pre">+</span> <span class="pre">1</span></tt> sized array that points into the <tt class="docutils literal"><span class="pre">cols</span></tt> and
-<tt class="docutils literal"><span class="pre">values</span></tt> array. For each row <tt class="docutils literal"><span class="pre">i</span></tt>:</p>
-<p><tt class="docutils literal"><span class="pre">cols[rows[i]]</span></tt> ... <tt class="docutils literal"><span class="pre">cols[rows[i</span> <span class="pre">+</span> <span class="pre">1]</span> <span class="pre">-</span> <span class="pre">1]</span></tt> are the indices of the
-non-zero columns of row <tt class="docutils literal"><span class="pre">i</span></tt>.</p>
-<p><tt class="docutils literal"><span class="pre">values[rows[i]]</span></tt> ... <tt class="docutils literal"><span class="pre">values[rows[i</span> <span class="pre">+</span> <span class="pre">1]</span> <span class="pre">-</span> <span class="pre">1]</span></tt> are the values of the
-corresponding entries.</p>
-<p><tt class="docutils literal"><span class="pre">cols</span></tt> and <tt class="docutils literal"><span class="pre">values</span></tt> contain as many entries as there are
+</dd></dl>
+
+<dl class="member">
+<dt id="CRSMatrix::num_rows__i">
+int <tt class="descclassname">CRSMatrix::</tt><tt class="descname">num_rows</tt><a class="headerlink" href="#CRSMatrix::num_rows__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of rows.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="CRSMatrix::num_cols__i">
+int <tt class="descclassname">CRSMatrix::</tt><tt class="descname">num_cols</tt><a class="headerlink" href="#CRSMatrix::num_cols__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of columns.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="CRSMatrix::rows__vector:i:">
+vector&lt;int&gt; <tt class="descclassname">CRSMatrix::</tt><tt class="descname">rows</tt><a class="headerlink" href="#CRSMatrix::rows__vector:i:" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#CRSMatrix::rows__vector:i:" title="CRSMatrix::rows"><tt class="xref cpp cpp-member docutils literal"><span class="pre">CRSMatrix::rows</span></tt></a> is a <a class="reference internal" href="#CRSMatrix::num_rows__i" title="CRSMatrix::num_rows"><tt class="xref cpp cpp-member docutils literal"><span class="pre">CRSMatrix::num_rows</span></tt></a> + 1
+sized array that points into the <a class="reference internal" href="#CRSMatrix::cols__vector:i:" title="CRSMatrix::cols"><tt class="xref cpp cpp-member docutils literal"><span class="pre">CRSMatrix::cols</span></tt></a> and
+<a class="reference internal" href="#CRSMatrix::values__vector:i:" title="CRSMatrix::values"><tt class="xref cpp cpp-member docutils literal"><span class="pre">CRSMatrix::values</span></tt></a> array.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="CRSMatrix::cols__vector:i:">
+vector&lt;int&gt; <tt class="descclassname">CRSMatrix::</tt><tt class="descname">cols</tt><a class="headerlink" href="#CRSMatrix::cols__vector:i:" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#CRSMatrix::cols__vector:i:" title="CRSMatrix::cols"><tt class="xref cpp cpp-member docutils literal"><span class="pre">CRSMatrix::cols</span></tt></a> contain as many entries as there are
 non-zeros in the matrix.</p>
+<p>For each row <tt class="docutils literal"><span class="pre">i</span></tt>, <tt class="docutils literal"><span class="pre">cols[rows[i]]</span></tt> ... <tt class="docutils literal"><span class="pre">cols[rows[i</span> <span class="pre">+</span> <span class="pre">1]</span> <span class="pre">-</span> <span class="pre">1]</span></tt>
+are the indices of the non-zero columns of row <tt class="docutils literal"><span class="pre">i</span></tt>.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="CRSMatrix::values__vector:i:">
+vector&lt;int&gt; <tt class="descclassname">CRSMatrix::</tt><tt class="descname">values</tt><a class="headerlink" href="#CRSMatrix::values__vector:i:" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#CRSMatrix::values__vector:i:" title="CRSMatrix::values"><tt class="xref cpp cpp-member docutils literal"><span class="pre">CRSMatrix::values</span></tt></a> contain as many entries as there are
+non-zeros in the matrix.</p>
+<p>For each row <tt class="docutils literal"><span class="pre">i</span></tt>,
+<tt class="docutils literal"><span class="pre">values[rows[i]]</span></tt> ... <tt class="docutils literal"><span class="pre">values[rows[i</span> <span class="pre">+</span> <span class="pre">1]</span> <span class="pre">-</span> <span class="pre">1]</span></tt> are the values
+of the non-zero columns of row <tt class="docutils literal"><span class="pre">i</span></tt>.</p>
+</dd></dl>
+
 <p>e.g, consider the 3x4 sparse matrix</p>
 <div class="highlight-c++"><div class="highlight"><pre><span class="mi">0</span> <span class="mi">10</span>  <span class="mi">0</span>  <span class="mi">4</span>
 <span class="mi">0</span>  <span class="mi">2</span> <span class="o">-</span><span class="mi">3</span>  <span class="mi">2</span>
@@ -1707,125 +1807,397 @@ non-zeros in the matrix.</p>
 </pre></div>
 </div>
 <p>The three arrays will be:</p>
-<div class="highlight-c++"><div class="highlight"><pre>          <span class="o">-</span><span class="n">row0</span><span class="o">-</span>  <span class="o">---</span><span class="n">row1</span><span class="o">---</span>  <span class="o">-</span><span class="n">row2</span><span class="o">-</span>
+<div class="highlight-c++"><div class="highlight"><pre>         <span class="o">-</span><span class="n">row0</span><span class="o">-</span>  <span class="o">---</span><span class="n">row1</span><span class="o">---</span>  <span class="o">-</span><span class="n">row2</span><span class="o">-</span>
 <span class="n">rows</span>   <span class="o">=</span> <span class="p">[</span> <span class="mi">0</span><span class="p">,</span>      <span class="mi">2</span><span class="p">,</span>          <span class="mi">5</span><span class="p">,</span>     <span class="mi">7</span><span class="p">]</span>
 <span class="n">cols</span>   <span class="o">=</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span>  <span class="mi">3</span><span class="p">,</span>  <span class="mi">1</span><span class="p">,</span>  <span class="mi">2</span><span class="p">,</span>  <span class="mi">3</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span>  <span class="mi">1</span><span class="p">]</span>
 <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span>  <span class="mi">4</span><span class="p">,</span>  <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span>  <span class="mi">2</span><span class="p">,</span>  <span class="mi">1</span><span class="p">,</span>  <span class="mi">2</span><span class="p">]</span>
 </pre></div>
 </div>
-</dd></dl>
-
 </div>
 <div class="section" id="solver-summary">
 <h3><a class="reference internal" href="#Solver::Summary" title="Solver::Summary"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Solver::Summary</span></tt></a><a class="headerlink" href="#solver-summary" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="Solver::Summary">
 <em class="property">class </em><tt class="descclassname">Solver::</tt><tt class="descname">Summary</tt><a class="headerlink" href="#Solver::Summary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Note that all times reported in this struct are wall times.</p>
-<div class="highlight-c++"><div class="highlight"><pre> <span class="k">struct</span> <span class="n">Summary</span> <span class="p">{</span>
-   <span class="c1">// A brief one line description of the state of the solver after</span>
-   <span class="c1">// termination.</span>
-   <span class="n">string</span> <span class="n">BriefReport</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
+<dd><p>Summary of the various stages of the solver after termination.</p>
+</dd></dl>
 
-   <span class="c1">// A full multiline description of the state of the solver after</span>
-   <span class="c1">// termination.</span>
-   <span class="n">string</span> <span class="n">FullReport</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
+<dl class="function">
+<dt id="Solver::Summary::BriefReportC">
+string <tt class="descclassname">Solver::Summary::</tt><tt class="descname">BriefReport</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Solver::Summary::BriefReportC" title="Permalink to this definition">¶</a></dt>
+<dd><p>A brief one line description of the state of the solver after
+termination.</p>
+</dd></dl>
 
-   <span class="c1">// Minimizer summary -------------------------------------------------</span>
-   <span class="n">MinimizerType</span> <span class="n">minimizer_type</span><span class="p">;</span>
+<dl class="function">
+<dt id="Solver::Summary::FullReportC">
+string <tt class="descclassname">Solver::Summary::</tt><tt class="descname">FullReport</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Solver::Summary::FullReportC" title="Permalink to this definition">¶</a></dt>
+<dd><p>A full multiline description of the state of the solver after
+termination.</p>
+</dd></dl>
 
-   <span class="n">SolverTerminationType</span> <span class="n">termination_type</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::minimizer_type__MinimizerType">
+MinimizerType <tt class="descclassname">Solver::Summary::</tt><tt class="descname">minimizer_type</tt><a class="headerlink" href="#Solver::Summary::minimizer_type__MinimizerType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type of minimization algorithm used.</p>
+</dd></dl>
 
-   <span class="c1">// If the solver did not run, or there was a failure, a</span>
-   <span class="c1">// description of the error.</span>
-   <span class="n">string</span> <span class="n">error</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::termination_type__SolverTerminationType">
+SolverTerminationType <tt class="descclassname">Solver::Summary::</tt><tt class="descname">termination_type</tt><a class="headerlink" href="#Solver::Summary::termination_type__SolverTerminationType" title="Permalink to this definition">¶</a></dt>
+<dd><p>The cause of the minimizer terminating.</p>
+</dd></dl>
 
-   <span class="c1">// Cost of the problem before and after the optimization. See</span>
-   <span class="c1">// problem.h for definition of the cost of a problem.</span>
-   <span class="kt">double</span> <span class="n">initial_cost</span><span class="p">;</span>
-   <span class="kt">double</span> <span class="n">final_cost</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::error__string">
+string <tt class="descclassname">Solver::Summary::</tt><tt class="descname">error</tt><a class="headerlink" href="#Solver::Summary::error__string" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the solver did not run, or there was a failure, a description of
+the error.</p>
+</dd></dl>
 
-   <span class="c1">// The part of the total cost that comes from residual blocks that</span>
-   <span class="c1">// were held fixed by the preprocessor because all the parameter</span>
-   <span class="c1">// blocks that they depend on were fixed.</span>
-   <span class="kt">double</span> <span class="n">fixed_cost</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::initial_cost__double">
+double <tt class="descclassname">Solver::Summary::</tt><tt class="descname">initial_cost</tt><a class="headerlink" href="#Solver::Summary::initial_cost__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cost of the problem (value of the objective function) before the
+optimization.</p>
+</dd></dl>
 
-   <span class="n">vector</span><span class="o">&lt;</span><span class="n">IterationSummary</span><span class="o">&gt;</span> <span class="n">iterations</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::final_cost__double">
+double <tt class="descclassname">Solver::Summary::</tt><tt class="descname">final_cost</tt><a class="headerlink" href="#Solver::Summary::final_cost__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cost of the problem (value of the objective function) after the
+optimization.</p>
+</dd></dl>
 
-   <span class="kt">int</span> <span class="n">num_successful_steps</span><span class="p">;</span>
-   <span class="kt">int</span> <span class="n">num_unsuccessful_steps</span><span class="p">;</span>
-   <span class="kt">int</span> <span class="n">num_inner_iteration_steps</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::fixed_cost__double">
+double <tt class="descclassname">Solver::Summary::</tt><tt class="descname">fixed_cost</tt><a class="headerlink" href="#Solver::Summary::fixed_cost__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>The part of the total cost that comes from residual blocks that
+were held fixed by the preprocessor because all the parameter
+blocks that they depend on were fixed.</p>
+</dd></dl>
 
-   <span class="c1">// When the user calls Solve, before the actual optimization</span>
-   <span class="c1">// occurs, Ceres performs a number of preprocessing steps. These</span>
-   <span class="c1">// include error checks, memory allocations, and reorderings. This</span>
-   <span class="c1">// time is accounted for as preprocessing time.</span>
-   <span class="kt">double</span> <span class="n">preprocessor_time_in_seconds</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::iterations__vector:IterationSummary:">
+vector&lt;IterationSummary&gt; <tt class="descclassname">Solver::Summary::</tt><tt class="descname">iterations</tt><a class="headerlink" href="#Solver::Summary::iterations__vector:IterationSummary:" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#IterationSummary" title="IterationSummary"><tt class="xref cpp cpp-class docutils literal"><span class="pre">IterationSummary</span></tt></a> for each minimizer iteration in order.</p>
+</dd></dl>
 
-   <span class="c1">// Time spent in the TrustRegionMinimizer.</span>
-   <span class="kt">double</span> <span class="n">minimizer_time_in_seconds</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::num_successful_steps__i">
+int <tt class="descclassname">Solver::Summary::</tt><tt class="descname">num_successful_steps</tt><a class="headerlink" href="#Solver::Summary::num_successful_steps__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of minimizer iterations in which the step was
+accepted. Unless <tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::use_non_monotonic_steps</span></tt>
+is <cite>true</cite> this is also the number of steps in which the objective
+function value/cost went down.</p>
+</dd></dl>
 
-   <span class="c1">// After the Minimizer is finished, some time is spent in</span>
-   <span class="c1">// re-evaluating residuals etc. This time is accounted for in the</span>
-   <span class="c1">// postprocessor time.</span>
-   <span class="kt">double</span> <span class="n">postprocessor_time_in_seconds</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::num_unsuccessful_steps__i">
+int <tt class="descclassname">Solver::Summary::</tt><tt class="descname">num_unsuccessful_steps</tt><a class="headerlink" href="#Solver::Summary::num_unsuccessful_steps__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of minimizer iterations in which the step was rejected
+either because it did not reduce the cost enough or the step was
+not numerically valid.</p>
+</dd></dl>
 
-   <span class="c1">// Some total of all time spent inside Ceres when Solve is called.</span>
-   <span class="kt">double</span> <span class="n">total_time_in_seconds</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::num_inner_iteration_steps__i">
+int <tt class="descclassname">Solver::Summary::</tt><tt class="descname">num_inner_iteration_steps</tt><a class="headerlink" href="#Solver::Summary::num_inner_iteration_steps__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of times inner iterations were performed.</p>
+</dd></dl>
 
-   <span class="kt">double</span> <span class="n">linear_solver_time_in_seconds</span><span class="p">;</span>
-   <span class="kt">double</span> <span class="n">residual_evaluation_time_in_seconds</span><span class="p">;</span>
-   <span class="kt">double</span> <span class="n">jacobian_evaluation_time_in_seconds</span><span class="p">;</span>
-   <span class="kt">double</span> <span class="n">inner_iteration_time_in_seconds</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::preprocessor_time_in_seconds__double">
+double <tt class="descclassname">Solver::Summary::</tt><tt class="descname">preprocessor_time_in_seconds</tt><a class="headerlink" href="#Solver::Summary::preprocessor_time_in_seconds__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) spent in the preprocessor.</p>
+</dd></dl>
 
-   <span class="c1">// Preprocessor summary.</span>
-   <span class="kt">int</span> <span class="n">num_parameter_blocks</span><span class="p">;</span>
-   <span class="kt">int</span> <span class="n">num_parameters</span><span class="p">;</span>
-   <span class="kt">int</span> <span class="n">num_effective_parameters</span><span class="p">;</span>
-   <span class="kt">int</span> <span class="n">num_residual_blocks</span><span class="p">;</span>
-   <span class="kt">int</span> <span class="n">num_residuals</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::minimizer_time_in_seconds__double">
+double <tt class="descclassname">Solver::Summary::</tt><tt class="descname">minimizer_time_in_seconds</tt><a class="headerlink" href="#Solver::Summary::minimizer_time_in_seconds__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) spent in the Minimizer.</p>
+</dd></dl>
 
-   <span class="kt">int</span> <span class="n">num_parameter_blocks_reduced</span><span class="p">;</span>
-   <span class="kt">int</span> <span class="n">num_parameters_reduced</span><span class="p">;</span>
-   <span class="kt">int</span> <span class="n">num_effective_parameters_reduced</span><span class="p">;</span>
-   <span class="kt">int</span> <span class="n">num_residual_blocks_reduced</span><span class="p">;</span>
-   <span class="kt">int</span> <span class="n">num_residuals_reduced</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::postprocessor_time_in_seconds__double">
+double <tt class="descclassname">Solver::Summary::</tt><tt class="descname">postprocessor_time_in_seconds</tt><a class="headerlink" href="#Solver::Summary::postprocessor_time_in_seconds__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) spent in the post processor.</p>
+</dd></dl>
 
-   <span class="kt">int</span> <span class="n">num_eliminate_blocks_given</span><span class="p">;</span>
-   <span class="kt">int</span> <span class="n">num_eliminate_blocks_used</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::total_time_in_seconds__double">
+double <tt class="descclassname">Solver::Summary::</tt><tt class="descname">total_time_in_seconds</tt><a class="headerlink" href="#Solver::Summary::total_time_in_seconds__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) spent in the solver.</p>
+</dd></dl>
 
-   <span class="kt">int</span> <span class="n">num_threads_given</span><span class="p">;</span>
-   <span class="kt">int</span> <span class="n">num_threads_used</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::linear_solver_time_in_seconds__double">
+double <tt class="descclassname">Solver::Summary::</tt><tt class="descname">linear_solver_time_in_seconds</tt><a class="headerlink" href="#Solver::Summary::linear_solver_time_in_seconds__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) spent in the linear solver computing the trust
+region step.</p>
+</dd></dl>
 
-   <span class="kt">int</span> <span class="n">num_linear_solver_threads_given</span><span class="p">;</span>
-   <span class="kt">int</span> <span class="n">num_linear_solver_threads_used</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::residual_evaluation_time_in_seconds__double">
+double <tt class="descclassname">Solver::Summary::</tt><tt class="descname">residual_evaluation_time_in_seconds</tt><a class="headerlink" href="#Solver::Summary::residual_evaluation_time_in_seconds__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) spent evaluating the residual vector.</p>
+</dd></dl>
 
-   <span class="n">LinearSolverType</span> <span class="n">linear_solver_type_given</span><span class="p">;</span>
-   <span class="n">LinearSolverType</span> <span class="n">linear_solver_type_used</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::jacobian_evaluation_time_in_seconds__double">
+double <tt class="descclassname">Solver::Summary::</tt><tt class="descname">jacobian_evaluation_time_in_seconds</tt><a class="headerlink" href="#Solver::Summary::jacobian_evaluation_time_in_seconds__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) spent evaluating the Jacobian matrix.</p>
+</dd></dl>
 
-   <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">linear_solver_ordering_given</span><span class="p">;</span>
-   <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">linear_solver_ordering_used</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::inner_iteration_time_in_seconds__double">
+double <tt class="descclassname">Solver::Summary::</tt><tt class="descname">inner_iteration_time_in_seconds</tt><a class="headerlink" href="#Solver::Summary::inner_iteration_time_in_seconds__double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) spent doing inner iterations.</p>
+</dd></dl>
 
-   <span class="kt">bool</span> <span class="n">inner_iterations_given</span><span class="p">;</span>
-   <span class="kt">bool</span> <span class="n">inner_iterations_used</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::num_parameter_blocks__i">
+int <tt class="descclassname">Solver::Summary::</tt><tt class="descname">num_parameter_blocks</tt><a class="headerlink" href="#Solver::Summary::num_parameter_blocks__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of parameter blocks in the problem.</p>
+</dd></dl>
 
-   <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">inner_iteration_ordering_given</span><span class="p">;</span>
-   <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">inner_iteration_ordering_used</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::num_parameters__i">
+int <tt class="descclassname">Solver::Summary::</tt><tt class="descname">num_parameters</tt><a class="headerlink" href="#Solver::Summary::num_parameters__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of parameters in the problem.</p>
+</dd></dl>
 
-   <span class="n">PreconditionerType</span> <span class="n">preconditioner_type</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::num_effective_parameters__i">
+int <tt class="descclassname">Solver::Summary::</tt><tt class="descname">num_effective_parameters</tt><a class="headerlink" href="#Solver::Summary::num_effective_parameters__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dimension of the tangent space of the problem (or the number of
+columns in the Jacobian for the problem). This is different from
+<a class="reference internal" href="#Solver::Summary::num_parameters__i" title="Solver::Summary::num_parameters"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Summary::num_parameters</span></tt></a> if a parameter block is
+associated with a <a class="reference internal" href="modeling.html#LocalParameterization" title="LocalParameterization"><tt class="xref cpp cpp-class docutils literal"><span class="pre">LocalParameterization</span></tt></a>.</p>
+</dd></dl>
 
-   <span class="n">TrustRegionStrategyType</span> <span class="n">trust_region_strategy_type</span><span class="p">;</span>
-   <span class="n">DoglegType</span> <span class="n">dogleg_type</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::num_residual_blocks__i">
+int <tt class="descclassname">Solver::Summary::</tt><tt class="descname">num_residual_blocks</tt><a class="headerlink" href="#Solver::Summary::num_residual_blocks__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of residual blocks in the problem.</p>
+</dd></dl>
 
-   <span class="n">DenseLinearAlgebraLibraryType</span> <span class="n">dense_linear_algebra_library_type</span><span class="p">;</span>
-   <span class="n">SparseLinearAlgebraLibraryType</span> <span class="n">sparse_linear_algebra_library_type</span><span class="p">;</span>
+<dl class="member">
+<dt id="Solver::Summary::num_residuals__i">
+int <tt class="descclassname">Solver::Summary::</tt><tt class="descname">num_residuals</tt><a class="headerlink" href="#Solver::Summary::num_residuals__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of residuals in the problem.</p>
+</dd></dl>
 
-   <span class="n">LineSearchDirectionType</span> <span class="n">line_search_direction_type</span><span class="p">;</span>
-   <span class="n">LineSearchType</span> <span class="n">line_search_type</span><span class="p">;</span>
-   <span class="kt">int</span> <span class="n">max_lbfgs_rank</span><span class="p">;</span>
-<span class="p">};</span>
-</pre></div>
-</div>
+<dl class="member">
+<dt id="Solver::Summary::num_parameter_blocks_reduced__i">
+int <tt class="descclassname">Solver::Summary::</tt><tt class="descname">num_parameter_blocks_reduced</tt><a class="headerlink" href="#Solver::Summary::num_parameter_blocks_reduced__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of parameter blocks in the problem after the inactive and
+constant parameter blocks have been removed. A parameter block is
+inactive if no residual block refers to it.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::num_parameters_reduced__i">
+int <tt class="descclassname">Solver::Summary::</tt><tt class="descname">num_parameters_reduced</tt><a class="headerlink" href="#Solver::Summary::num_parameters_reduced__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of parameters in the reduced problem.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::num_effective_parameters_reduced__i">
+int <tt class="descclassname">Solver::Summary::</tt><tt class="descname">num_effective_parameters_reduced</tt><a class="headerlink" href="#Solver::Summary::num_effective_parameters_reduced__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dimension of the tangent space of the reduced problem (or the
+number of columns in the Jacobian for the reduced problem). This is
+different from <a class="reference internal" href="#Solver::Summary::num_parameters_reduced__i" title="Solver::Summary::num_parameters_reduced"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Summary::num_parameters_reduced</span></tt></a> if
+a parameter block in the reduced problem is associated with a
+<a class="reference internal" href="modeling.html#LocalParameterization" title="LocalParameterization"><tt class="xref cpp cpp-class docutils literal"><span class="pre">LocalParameterization</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::num_residual_blocks_reduced__i">
+int <tt class="descclassname">Solver::Summary::</tt><tt class="descname">num_residual_blocks_reduced</tt><a class="headerlink" href="#Solver::Summary::num_residual_blocks_reduced__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of residual blocks in the reduced problem.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::num_residuals_reduced__i">
+int <tt class="descclassname">Solver::Summary::</tt><tt class="descname">num_residuals_reduced</tt><a class="headerlink" href="#Solver::Summary::num_residuals_reduced__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of residuals in the reduced problem.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::num_threads_given__i">
+int <tt class="descclassname">Solver::Summary::</tt><tt class="descname">num_threads_given</tt><a class="headerlink" href="#Solver::Summary::num_threads_given__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of threads specified by the user for Jacobian and residual
+evaluation.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::num_threads_used__i">
+int <tt class="descclassname">Solver::Summary::</tt><tt class="descname">num_threads_used</tt><a class="headerlink" href="#Solver::Summary::num_threads_used__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of threads actually used by the solver for Jacobian and
+residual evaluation. This number is not equal to
+<a class="reference internal" href="#Solver::Summary::num_threads_given__i" title="Solver::Summary::num_threads_given"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Summary::num_threads_given</span></tt></a> if <cite>OpenMP</cite> is not
+available.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::num_linear_solver_threads_given__i">
+int <tt class="descclassname">Solver::Summary::</tt><tt class="descname">num_linear_solver_threads_given</tt><a class="headerlink" href="#Solver::Summary::num_linear_solver_threads_given__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of threads specified by the user for solving the trust
+region problem.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::num_linear_solver_threads_used__i">
+int <tt class="descclassname">Solver::Summary::</tt><tt class="descname">num_linear_solver_threads_used</tt><a class="headerlink" href="#Solver::Summary::num_linear_solver_threads_used__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of threads actually used by the solver for solving the trust
+region problem. This number is not equal to
+<a class="reference internal" href="#Solver::Summary::num_linear_solver_threads_given__i" title="Solver::Summary::num_linear_solver_threads_given"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Summary::num_linear_solver_threads_given</span></tt></a> if
+<cite>OpenMP</cite> is not available.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::linear_solver_type_given__LinearSolverType">
+LinearSolverType <tt class="descclassname">Solver::Summary::</tt><tt class="descname">linear_solver_type_given</tt><a class="headerlink" href="#Solver::Summary::linear_solver_type_given__LinearSolverType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type of the linear solver requested by the user.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::linear_solver_type_used__LinearSolverType">
+LinearSolverType <tt class="descclassname">Solver::Summary::</tt><tt class="descname">linear_solver_type_used</tt><a class="headerlink" href="#Solver::Summary::linear_solver_type_used__LinearSolverType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type of the linear solver actually used. This may be different from
+<a class="reference internal" href="#Solver::Summary::linear_solver_type_given__LinearSolverType" title="Solver::Summary::linear_solver_type_given"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Summary::linear_solver_type_given</span></tt></a> if Ceres
+determines that the problem structure is not compatible with the
+linear solver requested or if the linear solver requested by the
+user is not available, e.g. The user requested
+<cite>SPARSE_NORMAL_CHOLESKY</cite> but no sparse linear algebra library was
+available.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::linear_solver_ordering_given__vector:i:">
+vector&lt;int&gt; <tt class="descclassname">Solver::Summary::</tt><tt class="descname">linear_solver_ordering_given</tt><a class="headerlink" href="#Solver::Summary::linear_solver_ordering_given__vector:i:" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of the elimination groups given by the user as hints to the
+linear solver.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::linear_solver_ordering_used__vector:i:">
+vector&lt;int&gt; <tt class="descclassname">Solver::Summary::</tt><tt class="descname">linear_solver_ordering_used</tt><a class="headerlink" href="#Solver::Summary::linear_solver_ordering_used__vector:i:" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of the parameter groups used by the solver when ordering the
+columns of the Jacobian.  This maybe different from
+<a class="reference internal" href="#Solver::Summary::linear_solver_ordering_given__vector:i:" title="Solver::Summary::linear_solver_ordering_given"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Summary::linear_solver_ordering_given</span></tt></a> if the user
+left <a class="reference internal" href="#Solver::Summary::linear_solver_ordering_given__vector:i:" title="Solver::Summary::linear_solver_ordering_given"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Summary::linear_solver_ordering_given</span></tt></a> blank
+and asked for an automatic ordering, or if the problem contains
+some constant or inactive parameter blocks.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::inner_iterations_given__b">
+bool <tt class="descclassname">Solver::Summary::</tt><tt class="descname">inner_iterations_given</tt><a class="headerlink" href="#Solver::Summary::inner_iterations_given__b" title="Permalink to this definition">¶</a></dt>
+<dd><p><cite>True</cite> if the user asked for inner iterations to be used as part of
+the optimization.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::inner_iterations_used__b">
+bool <tt class="descclassname">Solver::Summary::</tt><tt class="descname">inner_iterations_used</tt><a class="headerlink" href="#Solver::Summary::inner_iterations_used__b" title="Permalink to this definition">¶</a></dt>
+<dd><p><cite>True</cite> if the user asked for inner iterations to be used as part of
+the optimization and the problem structure was such that they were
+actually performed. e.g., in a problem with just one parameter
+block, inner iterations are not performed.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="inner_iteration_ordering_given__vector:i:">
+vector&lt;int&gt; <tt class="descname">inner_iteration_ordering_given</tt><a class="headerlink" href="#inner_iteration_ordering_given__vector:i:" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of the parameter groups given by the user for performing inner
+iterations.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="inner_iteration_ordering_used__vector:i:">
+vector&lt;int&gt; <tt class="descname">inner_iteration_ordering_used</tt><a class="headerlink" href="#inner_iteration_ordering_used__vector:i:" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of the parameter groups given used by the solver for
+performing inner iterations. This maybe different from
+<tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Summary::inner_iteration_ordering_given</span></tt> if the
+user left <tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Summary::inner_iteration_ordering_given</span></tt>
+blank and asked for an automatic ordering, or if the problem
+contains some constant or inactive parameter blocks.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::preconditioner_type__PreconditionerType">
+PreconditionerType <tt class="descclassname">Solver::Summary::</tt><tt class="descname">preconditioner_type</tt><a class="headerlink" href="#Solver::Summary::preconditioner_type__PreconditionerType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type of preconditioner used for solving the trust region step. Only
+meaningful when an iterative linear solver is used.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::visibility_clustering_type__VisibilityClusteringType">
+VisibilityClusteringType <tt class="descclassname">Solver::Summary::</tt><tt class="descname">visibility_clustering_type</tt><a class="headerlink" href="#Solver::Summary::visibility_clustering_type__VisibilityClusteringType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type of clustering algorithm used for visibility based
+preconditioning. Only meaningful when the
+<a class="reference internal" href="#Solver::Summary::preconditioner_type__PreconditionerType" title="Solver::Summary::preconditioner_type"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Summary::preconditioner_type</span></tt></a> is
+<tt class="docutils literal"><span class="pre">CLUSTER_JACOBI</span></tt> or <tt class="docutils literal"><span class="pre">CLUSTER_TRIDIAGONAL</span></tt>.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::trust_region_strategy_type__TrustRegionStrategyType">
+TrustRegionStrategyType <tt class="descclassname">Solver::Summary::</tt><tt class="descname">trust_region_strategy_type</tt><a class="headerlink" href="#Solver::Summary::trust_region_strategy_type__TrustRegionStrategyType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type of trust region strategy.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::dogleg_type__DoglegType">
+DoglegType <tt class="descclassname">Solver::Summary::</tt><tt class="descname">dogleg_type</tt><a class="headerlink" href="#Solver::Summary::dogleg_type__DoglegType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type of dogleg strategy used for solving the trust region problem.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::dense_linear_algebra_library_type__DenseLinearAlgebraLibraryType">
+DenseLinearAlgebraLibraryType <tt class="descclassname">Solver::Summary::</tt><tt class="descname">dense_linear_algebra_library_type</tt><a class="headerlink" href="#Solver::Summary::dense_linear_algebra_library_type__DenseLinearAlgebraLibraryType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type of the dense linear algebra library used.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::sparse_linear_algebra_library_type__SparseLinearAlgebraLibraryType">
+SparseLinearAlgebraLibraryType <tt class="descclassname">Solver::Summary::</tt><tt class="descname">sparse_linear_algebra_library_type</tt><a class="headerlink" href="#Solver::Summary::sparse_linear_algebra_library_type__SparseLinearAlgebraLibraryType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type of the sparse linear algebra library used.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::line_search_direction_type__LineSearchDirectionType">
+LineSearchDirectionType <tt class="descclassname">Solver::Summary::</tt><tt class="descname">line_search_direction_type</tt><a class="headerlink" href="#Solver::Summary::line_search_direction_type__LineSearchDirectionType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type of line search direction used.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::line_search_type__LineSearchType">
+LineSearchType <tt class="descclassname">Solver::Summary::</tt><tt class="descname">line_search_type</tt><a class="headerlink" href="#Solver::Summary::line_search_type__LineSearchType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type of the line search algorithm used.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::line_search_interpolation_type__LineSearchInterpolationType">
+LineSearchInterpolationType <tt class="descclassname">Solver::Summary::</tt><tt class="descname">line_search_interpolation_type</tt><a class="headerlink" href="#Solver::Summary::line_search_interpolation_type__LineSearchInterpolationType" title="Permalink to this definition">¶</a></dt>
+<dd><p>When performing line search, the degree of the polynomial used to
+approximate the objective function.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::nonlinear_conjugate_gradient_type__NonlinearConjugateGradientType">
+NonlinearConjugateGradientType <tt class="descclassname">Solver::Summary::</tt><tt class="descname">nonlinear_conjugate_gradient_type</tt><a class="headerlink" href="#Solver::Summary::nonlinear_conjugate_gradient_type__NonlinearConjugateGradientType" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the line search direction is <cite>NONLINEAR_CONJUGATE_GRADIENT</cite>,
+then this indicates the particular variant of non-linear conjugate
+gradient used.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Summary::max_lbfgs_rank__i">
+int <tt class="descclassname">Solver::Summary::</tt><tt class="descname">max_lbfgs_rank</tt><a class="headerlink" href="#Solver::Summary::max_lbfgs_rank__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the type of the line search direction is <cite>LBFGS</cite>, then this
+indicates the rank of the Hessian approximation.</p>
 </dd></dl>
 
 </div>
@@ -1884,7 +2256,7 @@ reconstruction is ambiguous upto a similarity transform. This is
 known as a <em>Gauge Ambiguity</em>. Handling Gauges correctly requires the
 use of SVD or custom inversion algorithms. For small problems the
 user can use the dense algorithm. For more details see the work of
-Kanatani &amp; Morris <a class="reference internal" href="bibliography.html#kanatanimorris">[KanataniMorris]</a>.</p>
+Kanatani &amp; Morris <a class="reference internal" href="bibliography.html#kanatanimorris" id="id38">[KanataniMorris]</a>.</p>
 </div>
 <div class="section" id="covariance">
 <h3><a class="reference internal" href="#Covariance" title="Covariance"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Covariance</span></tt></a><a class="headerlink" href="#covariance" title="Permalink to this headline">¶</a></h3>
@@ -2171,7 +2543,7 @@ returned covariance will be a row-major matrix.</p>
 <span class="o">&lt;</span><span class="n">Solve</span> <span class="n">Problem</span><span class="o">&gt;</span>
 
 <span class="n">Covariance</span><span class="o">::</span><span class="n">Options</span> <span class="n">options</span><span class="p">;</span>
-<span class="n">Covariance</span> <span class="n">covariance</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="n">Covariance</span> <span class="nf">covariance</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
 
 <span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="k">const</span> <span class="kt">double</span><span class="o">*</span><span class="p">,</span> <span class="k">const</span> <span class="kt">double</span><span class="o">*&gt;</span> <span class="o">&gt;</span> <span class="n">covariance_blocks</span><span class="p">;</span>
 <span class="n">covariance_blocks</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">make_pair</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">));</span>
@@ -2201,7 +2573,7 @@ returned covariance will be a row-major matrix.</p>
 <h3><a href="index.html">Ceres Solver</a></h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="building.html">Building Ceres Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="building.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Solving</a></li>

@@ -35,6 +35,7 @@
 #endif
 
 #include <algorithm>
+#include <cstdlib>
 #include <utility>
 #include <vector>
 #include "Eigen/SVD"
@@ -684,7 +685,7 @@ bool CovarianceImpl::ComputeCovarianceValuesUsingSparseQR() {
     LOG(WARNING) << "Jacobian matrix is rank deficient."
                  << "Number of columns: " << cholmod_jacobian.ncol
                  << " rank: " << rank;
-    delete []permutation;
+    free(permutation);
     cholmod_l_free_sparse(&R, &cc);
     cholmod_l_finish(&cc);
     return false;
@@ -739,7 +740,7 @@ bool CovarianceImpl::ComputeCovarianceValuesUsingSparseQR() {
     }
   }
 
-  delete []permutation;
+  free(permutation);
   cholmod_l_free_sparse(&R, &cc);
   cholmod_l_finish(&cc);
   event_logger.AddEvent("Inversion");

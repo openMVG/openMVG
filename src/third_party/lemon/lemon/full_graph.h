@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -619,6 +619,460 @@ namespace lemon {
     /// \brief Number of edges.
     int edgeNum() const { return Parent::edgeNum(); }
 
+  };
+
+  class FullBpGraphBase {
+
+  protected:
+
+    int _red_num, _blue_num;
+    int _node_num, _edge_num;
+
+  public:
+
+    typedef FullBpGraphBase Graph;
+
+    class Node;
+    class Arc;
+    class Edge;
+
+    class Node {
+      friend class FullBpGraphBase;
+    protected:
+
+      int _id;
+      explicit Node(int id) { _id = id;}
+
+    public:
+      Node() {}
+      Node (Invalid) { _id = -1; }
+      bool operator==(const Node& node) const {return _id == node._id;}
+      bool operator!=(const Node& node) const {return _id != node._id;}
+      bool operator<(const Node& node) const {return _id < node._id;}
+    };
+
+    class RedNode : public Node {
+      friend class FullBpGraphBase;
+    protected:
+
+      explicit RedNode(int pid) : Node(pid) {}
+
+    public:
+      RedNode() {}
+      RedNode(const RedNode& node) : Node(node) {}
+      RedNode(Invalid) : Node(INVALID){}
+    };
+
+    class BlueNode : public Node {
+      friend class FullBpGraphBase;
+    protected:
+
+      explicit BlueNode(int pid) : Node(pid) {}
+
+    public:
+      BlueNode() {}
+      BlueNode(const BlueNode& node) : Node(node) {}
+      BlueNode(Invalid) : Node(INVALID){}
+    };
+
+    class Edge {
+      friend class FullBpGraphBase;
+    protected:
+
+      int _id;
+      explicit Edge(int id) { _id = id;}
+
+    public:
+      Edge() {}
+      Edge (Invalid) { _id = -1; }
+      bool operator==(const Edge& arc) const {return _id == arc._id;}
+      bool operator!=(const Edge& arc) const {return _id != arc._id;}
+      bool operator<(const Edge& arc) const {return _id < arc._id;}
+    };
+
+    class Arc {
+      friend class FullBpGraphBase;
+    protected:
+
+      int _id;
+      explicit Arc(int id) { _id = id;}
+
+    public:
+      operator Edge() const {
+        return _id != -1 ? edgeFromId(_id / 2) : INVALID;
+      }
+
+      Arc() {}
+      Arc (Invalid) { _id = -1; }
+      bool operator==(const Arc& arc) const {return _id == arc._id;}
+      bool operator!=(const Arc& arc) const {return _id != arc._id;}
+      bool operator<(const Arc& arc) const {return _id < arc._id;}
+    };
+
+
+  protected:
+
+    FullBpGraphBase()
+      : _red_num(0), _blue_num(0), _node_num(0), _edge_num(0) {}
+
+    void construct(int redNum, int blueNum) {
+      _red_num = redNum; _blue_num = blueNum;
+      _node_num = redNum + blueNum; _edge_num = redNum * blueNum;
+    }
+
+  public:
+
+    typedef True NodeNumTag;
+    typedef True EdgeNumTag;
+    typedef True ArcNumTag;
+
+    int nodeNum() const { return _node_num; }
+    int redNum() const { return _red_num; }
+    int blueNum() const { return _blue_num; }
+    int edgeNum() const { return _edge_num; }
+    int arcNum() const { return 2 * _edge_num; }
+
+    int maxNodeId() const { return _node_num - 1; }
+    int maxRedId() const { return _red_num - 1; }
+    int maxBlueId() const { return _blue_num - 1; }
+    int maxEdgeId() const { return _edge_num - 1; }
+    int maxArcId() const { return 2 * _edge_num - 1; }
+
+    bool red(Node n) const { return n._id < _red_num; }
+    bool blue(Node n) const { return n._id >= _red_num; }
+
+    static RedNode asRedNodeUnsafe(Node n) { return RedNode(n._id); }
+    static BlueNode asBlueNodeUnsafe(Node n) { return BlueNode(n._id); }
+
+    Node source(Arc a) const {
+      if (a._id & 1) {
+        return Node((a._id >> 1) % _red_num);
+      } else {
+        return Node((a._id >> 1) / _red_num + _red_num);
+      }
+    }
+    Node target(Arc a) const {
+      if (a._id & 1) {
+        return Node((a._id >> 1) / _red_num + _red_num);
+      } else {
+        return Node((a._id >> 1) % _red_num);
+      }
+    }
+
+    RedNode redNode(Edge e) const {
+      return RedNode(e._id % _red_num);
+    }
+    BlueNode blueNode(Edge e) const {
+      return BlueNode(e._id / _red_num + _red_num);
+    }
+
+    static bool direction(Arc a) {
+      return (a._id & 1) == 1;
+    }
+
+    static Arc direct(Edge e, bool d) {
+      return Arc(e._id * 2 + (d ? 1 : 0));
+    }
+
+    void first(Node& node) const {
+      node._id = _node_num - 1;
+    }
+
+    static void next(Node& node) {
+      --node._id;
+    }
+
+    void first(RedNode& node) const {
+      node._id = _red_num - 1;
+    }
+
+    static void next(RedNode& node) {
+      --node._id;
+    }
+
+    void first(BlueNode& node) const {
+      if (_red_num == _node_num) node._id = -1;
+      else node._id = _node_num - 1;
+    }
+
+    void next(BlueNode& node) const {
+      if (node._id == _red_num) node._id = -1;
+      else --node._id;
+    }
+
+    void first(Arc& arc) const {
+      arc._id = 2 * _edge_num - 1;
+    }
+
+    static void next(Arc& arc) {
+      --arc._id;
+    }
+
+    void first(Edge& arc) const {
+      arc._id = _edge_num - 1;
+    }
+
+    static void next(Edge& arc) {
+      --arc._id;
+    }
+
+    void firstOut(Arc &a, const Node& v) const {
+      if (v._id < _red_num) {
+        a._id = 2 * (v._id + _red_num * (_blue_num - 1)) + 1;
+      } else {
+        a._id = 2 * (_red_num - 1 + _red_num * (v._id - _red_num));
+      }
+    }
+    void nextOut(Arc &a) const {
+      if (a._id & 1) {
+        a._id -= 2 * _red_num;
+        if (a._id < 0) a._id = -1;
+      } else {
+        if (a._id % (2 * _red_num) == 0) a._id = -1;
+        else a._id -= 2;
+      }
+    }
+
+    void firstIn(Arc &a, const Node& v) const {
+      if (v._id < _red_num) {
+        a._id = 2 * (v._id + _red_num * (_blue_num - 1));
+      } else {
+        a._id = 2 * (_red_num - 1 + _red_num * (v._id - _red_num)) + 1;
+      }
+    }
+    void nextIn(Arc &a) const {
+      if (a._id & 1) {
+        if (a._id % (2 * _red_num) == 1) a._id = -1;
+        else a._id -= 2;
+      } else {
+        a._id -= 2 * _red_num;
+        if (a._id < 0) a._id = -1;
+      }
+    }
+
+    void firstInc(Edge &e, bool& d, const Node& v) const {
+      if (v._id < _red_num) {
+        d = true;
+        e._id = v._id + _red_num * (_blue_num - 1);
+      } else {
+        d = false;
+        e._id = _red_num - 1 + _red_num * (v._id - _red_num);
+      }
+    }
+    void nextInc(Edge &e, bool& d) const {
+      if (d) {
+        e._id -= _red_num;
+        if (e._id < 0) e._id = -1;
+      } else {
+        if (e._id % _red_num == 0) e._id = -1;
+        else --e._id;
+      }
+    }
+
+    static int id(const Node& v) { return v._id; }
+    int id(const RedNode& v) const { return v._id; }
+    int id(const BlueNode& v) const { return v._id - _red_num; }
+    static int id(Arc e) { return e._id; }
+    static int id(Edge e) { return e._id; }
+
+    static Node nodeFromId(int id) { return Node(id);}
+    static Arc arcFromId(int id) { return Arc(id);}
+    static Edge edgeFromId(int id) { return Edge(id);}
+
+    bool valid(Node n) const {
+      return n._id >= 0 && n._id < _node_num;
+    }
+    bool valid(Arc a) const {
+      return a._id >= 0 && a._id < 2 * _edge_num;
+    }
+    bool valid(Edge e) const {
+      return e._id >= 0 && e._id < _edge_num;
+    }
+
+    RedNode redNode(int index) const {
+      return RedNode(index);
+    }
+
+    int index(RedNode n) const {
+      return n._id;
+    }
+
+    BlueNode blueNode(int index) const {
+      return BlueNode(index + _red_num);
+    }
+
+    int index(BlueNode n) const {
+      return n._id - _red_num;
+    }
+
+    void clear() {
+      _red_num = 0; _blue_num = 0;
+      _node_num = 0; _edge_num = 0;
+    }
+
+    Edge edge(const Node& u, const Node& v) const {
+      if (u._id < _red_num) {
+        if (v._id < _red_num) {
+          return Edge(-1);
+        } else {
+          return Edge(u._id + _red_num * (v._id - _red_num));
+        }
+      } else {
+        if (v._id < _red_num) {
+          return Edge(v._id + _red_num * (u._id - _red_num));
+        } else {
+          return Edge(-1);
+        }
+      }
+    }
+
+    Arc arc(const Node& u, const Node& v) const {
+      if (u._id < _red_num) {
+        if (v._id < _red_num) {
+          return Arc(-1);
+        } else {
+          return Arc(2 * (u._id + _red_num * (v._id - _red_num)) + 1);
+        }
+      } else {
+        if (v._id < _red_num) {
+          return Arc(2 * (v._id + _red_num * (u._id - _red_num)));
+        } else {
+          return Arc(-1);
+        }
+      }
+    }
+
+    typedef True FindEdgeTag;
+    typedef True FindArcTag;
+
+    Edge findEdge(Node u, Node v, Edge prev = INVALID) const {
+      return prev != INVALID ? INVALID : edge(u, v);
+    }
+
+    Arc findArc(Node s, Node t, Arc prev = INVALID) const {
+      return prev != INVALID ? INVALID : arc(s, t);
+    }
+
+  };
+
+  typedef BpGraphExtender<FullBpGraphBase> ExtendedFullBpGraphBase;
+
+  /// \ingroup graphs
+  ///
+  /// \brief An undirected full bipartite graph class.
+  ///
+  /// FullBpGraph is a simple and fast implmenetation of undirected
+  /// full bipartite graphs. It contains an edge between every
+  /// red-blue pairs of nodes, therefore the number of edges is
+  /// <tt>nr*nb</tt>.  This class is completely static and it needs
+  /// constant memory space.  Thus you can neither add nor delete
+  /// nodes or edges, however the structure can be resized using
+  /// resize().
+  ///
+  /// This type fully conforms to the \ref concepts::BpGraph "BpGraph concept".
+  /// Most of its member functions and nested classes are documented
+  /// only in the concept class.
+  ///
+  /// This class provides constant time counting for nodes, edges and arcs.
+  ///
+  /// \sa FullGraph
+  class FullBpGraph : public ExtendedFullBpGraphBase {
+  public:
+
+    typedef ExtendedFullBpGraphBase Parent;
+
+    /// \brief Default constructor.
+    ///
+    /// Default constructor. The number of nodes and edges will be zero.
+    FullBpGraph() { construct(0, 0); }
+
+    /// \brief Constructor
+    ///
+    /// Constructor.
+    /// \param redNum The number of the red nodes.
+    /// \param blueNum The number of the blue nodes.
+    FullBpGraph(int redNum, int blueNum) { construct(redNum, blueNum); }
+
+    /// \brief Resizes the graph
+    ///
+    /// This function resizes the graph. It fully destroys and
+    /// rebuilds the structure, therefore the maps of the graph will be
+    /// reallocated automatically and the previous values will be lost.
+    void resize(int redNum, int blueNum) {
+      Parent::notifier(Arc()).clear();
+      Parent::notifier(Edge()).clear();
+      Parent::notifier(Node()).clear();
+      Parent::notifier(BlueNode()).clear();
+      Parent::notifier(RedNode()).clear();
+      construct(redNum, blueNum);
+      Parent::notifier(RedNode()).build();
+      Parent::notifier(BlueNode()).build();
+      Parent::notifier(Node()).build();
+      Parent::notifier(Edge()).build();
+      Parent::notifier(Arc()).build();
+    }
+
+    using Parent::redNode;
+    using Parent::blueNode;
+
+    /// \brief Returns the red node with the given index.
+    ///
+    /// Returns the red node with the given index. Since this
+    /// structure is completely static, the red nodes can be indexed
+    /// with integers from the range <tt>[0..redNum()-1]</tt>.
+    /// \sa redIndex()
+    RedNode redNode(int index) const { return Parent::redNode(index); }
+
+    /// \brief Returns the index of the given red node.
+    ///
+    /// Returns the index of the given red node. Since this structure
+    /// is completely static, the red nodes can be indexed with
+    /// integers from the range <tt>[0..redNum()-1]</tt>.
+    ///
+    /// \sa operator()()
+    int index(RedNode node) const { return Parent::index(node); }
+
+    /// \brief Returns the blue node with the given index.
+    ///
+    /// Returns the blue node with the given index. Since this
+    /// structure is completely static, the blue nodes can be indexed
+    /// with integers from the range <tt>[0..blueNum()-1]</tt>.
+    /// \sa blueIndex()
+    BlueNode blueNode(int index) const { return Parent::blueNode(index); }
+
+    /// \brief Returns the index of the given blue node.
+    ///
+    /// Returns the index of the given blue node. Since this structure
+    /// is completely static, the blue nodes can be indexed with
+    /// integers from the range <tt>[0..blueNum()-1]</tt>.
+    ///
+    /// \sa operator()()
+    int index(BlueNode node) const { return Parent::index(node); }
+
+    /// \brief Returns the edge which connects the given nodes.
+    ///
+    /// Returns the edge which connects the given nodes.
+    Edge edge(const Node& u, const Node& v) const {
+      return Parent::edge(u, v);
+    }
+
+    /// \brief Returns the arc which connects the given nodes.
+    ///
+    /// Returns the arc which connects the given nodes.
+    Arc arc(const Node& u, const Node& v) const {
+      return Parent::arc(u, v);
+    }
+
+    /// \brief Number of nodes.
+    int nodeNum() const { return Parent::nodeNum(); }
+    /// \brief Number of red nodes.
+    int redNum() const { return Parent::redNum(); }
+    /// \brief Number of blue nodes.
+    int blueNum() const { return Parent::blueNum(); }
+    /// \brief Number of arcs.
+    int arcNum() const { return Parent::arcNum(); }
+    /// \brief Number of edges.
+    int edgeNum() const { return Parent::edgeNum(); }
   };
 
 

@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2009
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -587,13 +587,13 @@ namespace lemon {
     //
     // Returns the base node of the iterator
     Node baseNode(const IncEdgeIt &edge) const {
-      return edge._direction ? u(edge) : v(edge);
+      return edge._direction ? this->u(edge) : this->v(edge);
     }
     // Running node of the iterator
     //
     // Returns the running node of the iterator
     Node runningNode(const IncEdgeIt &edge) const {
-      return edge._direction ? v(edge) : u(edge);
+      return edge._direction ? this->v(edge) : this->u(edge);
     }
 
     // Mappable extension
@@ -742,6 +742,587 @@ namespace lemon {
       edge_notifier.clear();
       arc_notifier.clear();
       node_notifier.clear();
+    }
+
+  };
+
+  // \ingroup _graphbits
+  //
+  // \brief Extender for the BpGraphs
+  template <typename Base>
+  class BpGraphExtender : public Base {
+    typedef Base Parent;
+
+  public:
+
+    typedef BpGraphExtender BpGraph;
+
+    typedef True UndirectedTag;
+
+    typedef typename Parent::Node Node;
+    typedef typename Parent::RedNode RedNode;
+    typedef typename Parent::BlueNode BlueNode;
+    typedef typename Parent::Arc Arc;
+    typedef typename Parent::Edge Edge;
+
+    // BpGraph extension
+
+    using Parent::first;
+    using Parent::next;
+    using Parent::id;
+
+    int maxId(Node) const {
+      return Parent::maxNodeId();
+    }
+
+    int maxId(RedNode) const {
+      return Parent::maxRedId();
+    }
+
+    int maxId(BlueNode) const {
+      return Parent::maxBlueId();
+    }
+
+    int maxId(Arc) const {
+      return Parent::maxArcId();
+    }
+
+    int maxId(Edge) const {
+      return Parent::maxEdgeId();
+    }
+
+    static Node fromId(int id, Node) {
+      return Parent::nodeFromId(id);
+    }
+
+    static Arc fromId(int id, Arc) {
+      return Parent::arcFromId(id);
+    }
+
+    static Edge fromId(int id, Edge) {
+      return Parent::edgeFromId(id);
+    }
+
+    Node u(Edge e) const { return this->redNode(e); }
+    Node v(Edge e) const { return this->blueNode(e); }
+
+    Node oppositeNode(const Node &n, const Edge &e) const {
+      if( n == u(e))
+        return v(e);
+      else if( n == v(e))
+        return u(e);
+      else
+        return INVALID;
+    }
+
+    Arc oppositeArc(const Arc &arc) const {
+      return Parent::direct(arc, !Parent::direction(arc));
+    }
+
+    using Parent::direct;
+    Arc direct(const Edge &edge, const Node &node) const {
+      return Parent::direct(edge, Parent::redNode(edge) == node);
+    }
+
+    RedNode asRedNode(const Node& node) const {
+      if (node == INVALID || Parent::blue(node)) {
+        return INVALID;
+      } else {
+        return Parent::asRedNodeUnsafe(node);
+      }
+    }
+
+    BlueNode asBlueNode(const Node& node) const {
+      if (node == INVALID || Parent::red(node)) {
+        return INVALID;
+      } else {
+        return Parent::asBlueNodeUnsafe(node);
+      }
+    }
+
+    // Alterable extension
+
+    typedef AlterationNotifier<BpGraphExtender, Node> NodeNotifier;
+    typedef AlterationNotifier<BpGraphExtender, RedNode> RedNodeNotifier;
+    typedef AlterationNotifier<BpGraphExtender, BlueNode> BlueNodeNotifier;
+    typedef AlterationNotifier<BpGraphExtender, Arc> ArcNotifier;
+    typedef AlterationNotifier<BpGraphExtender, Edge> EdgeNotifier;
+
+
+  protected:
+
+    mutable NodeNotifier node_notifier;
+    mutable RedNodeNotifier red_node_notifier;
+    mutable BlueNodeNotifier blue_node_notifier;
+    mutable ArcNotifier arc_notifier;
+    mutable EdgeNotifier edge_notifier;
+
+  public:
+
+    NodeNotifier& notifier(Node) const {
+      return node_notifier;
+    }
+
+    RedNodeNotifier& notifier(RedNode) const {
+      return red_node_notifier;
+    }
+
+    BlueNodeNotifier& notifier(BlueNode) const {
+      return blue_node_notifier;
+    }
+
+    ArcNotifier& notifier(Arc) const {
+      return arc_notifier;
+    }
+
+    EdgeNotifier& notifier(Edge) const {
+      return edge_notifier;
+    }
+
+
+
+    class NodeIt : public Node {
+      const BpGraph* _graph;
+    public:
+
+      NodeIt() {}
+
+      NodeIt(Invalid i) : Node(i) { }
+
+      explicit NodeIt(const BpGraph& graph) : _graph(&graph) {
+        _graph->first(static_cast<Node&>(*this));
+      }
+
+      NodeIt(const BpGraph& graph, const Node& node)
+        : Node(node), _graph(&graph) {}
+
+      NodeIt& operator++() {
+        _graph->next(*this);
+        return *this;
+      }
+
+    };
+
+    class RedNodeIt : public RedNode {
+      const BpGraph* _graph;
+    public:
+
+      RedNodeIt() {}
+
+      RedNodeIt(Invalid i) : RedNode(i) { }
+
+      explicit RedNodeIt(const BpGraph& graph) : _graph(&graph) {
+        _graph->first(static_cast<RedNode&>(*this));
+      }
+
+      RedNodeIt(const BpGraph& graph, const RedNode& node)
+        : RedNode(node), _graph(&graph) {}
+
+      RedNodeIt& operator++() {
+        _graph->next(static_cast<RedNode&>(*this));
+        return *this;
+      }
+
+    };
+
+    class BlueNodeIt : public BlueNode {
+      const BpGraph* _graph;
+    public:
+
+      BlueNodeIt() {}
+
+      BlueNodeIt(Invalid i) : BlueNode(i) { }
+
+      explicit BlueNodeIt(const BpGraph& graph) : _graph(&graph) {
+        _graph->first(static_cast<BlueNode&>(*this));
+      }
+
+      BlueNodeIt(const BpGraph& graph, const BlueNode& node)
+        : BlueNode(node), _graph(&graph) {}
+
+      BlueNodeIt& operator++() {
+        _graph->next(static_cast<BlueNode&>(*this));
+        return *this;
+      }
+
+    };
+
+
+    class ArcIt : public Arc {
+      const BpGraph* _graph;
+    public:
+
+      ArcIt() { }
+
+      ArcIt(Invalid i) : Arc(i) { }
+
+      explicit ArcIt(const BpGraph& graph) : _graph(&graph) {
+        _graph->first(static_cast<Arc&>(*this));
+      }
+
+      ArcIt(const BpGraph& graph, const Arc& arc) :
+        Arc(arc), _graph(&graph) { }
+
+      ArcIt& operator++() {
+        _graph->next(*this);
+        return *this;
+      }
+
+    };
+
+
+    class OutArcIt : public Arc {
+      const BpGraph* _graph;
+    public:
+
+      OutArcIt() { }
+
+      OutArcIt(Invalid i) : Arc(i) { }
+
+      OutArcIt(const BpGraph& graph, const Node& node)
+        : _graph(&graph) {
+        _graph->firstOut(*this, node);
+      }
+
+      OutArcIt(const BpGraph& graph, const Arc& arc)
+        : Arc(arc), _graph(&graph) {}
+
+      OutArcIt& operator++() {
+        _graph->nextOut(*this);
+        return *this;
+      }
+
+    };
+
+
+    class InArcIt : public Arc {
+      const BpGraph* _graph;
+    public:
+
+      InArcIt() { }
+
+      InArcIt(Invalid i) : Arc(i) { }
+
+      InArcIt(const BpGraph& graph, const Node& node)
+        : _graph(&graph) {
+        _graph->firstIn(*this, node);
+      }
+
+      InArcIt(const BpGraph& graph, const Arc& arc) :
+        Arc(arc), _graph(&graph) {}
+
+      InArcIt& operator++() {
+        _graph->nextIn(*this);
+        return *this;
+      }
+
+    };
+
+
+    class EdgeIt : public Parent::Edge {
+      const BpGraph* _graph;
+    public:
+
+      EdgeIt() { }
+
+      EdgeIt(Invalid i) : Edge(i) { }
+
+      explicit EdgeIt(const BpGraph& graph) : _graph(&graph) {
+        _graph->first(static_cast<Edge&>(*this));
+      }
+
+      EdgeIt(const BpGraph& graph, const Edge& edge) :
+        Edge(edge), _graph(&graph) { }
+
+      EdgeIt& operator++() {
+        _graph->next(*this);
+        return *this;
+      }
+
+    };
+
+    class IncEdgeIt : public Parent::Edge {
+      friend class BpGraphExtender;
+      const BpGraph* _graph;
+      bool _direction;
+    public:
+
+      IncEdgeIt() { }
+
+      IncEdgeIt(Invalid i) : Edge(i), _direction(false) { }
+
+      IncEdgeIt(const BpGraph& graph, const Node &node) : _graph(&graph) {
+        _graph->firstInc(*this, _direction, node);
+      }
+
+      IncEdgeIt(const BpGraph& graph, const Edge &edge, const Node &node)
+        : _graph(&graph), Edge(edge) {
+        _direction = (_graph->source(edge) == node);
+      }
+
+      IncEdgeIt& operator++() {
+        _graph->nextInc(*this, _direction);
+        return *this;
+      }
+    };
+
+    // \brief Base node of the iterator
+    //
+    // Returns the base node (ie. the source in this case) of the iterator
+    Node baseNode(const OutArcIt &arc) const {
+      return Parent::source(static_cast<const Arc&>(arc));
+    }
+    // \brief Running node of the iterator
+    //
+    // Returns the running node (ie. the target in this case) of the
+    // iterator
+    Node runningNode(const OutArcIt &arc) const {
+      return Parent::target(static_cast<const Arc&>(arc));
+    }
+
+    // \brief Base node of the iterator
+    //
+    // Returns the base node (ie. the target in this case) of the iterator
+    Node baseNode(const InArcIt &arc) const {
+      return Parent::target(static_cast<const Arc&>(arc));
+    }
+    // \brief Running node of the iterator
+    //
+    // Returns the running node (ie. the source in this case) of the
+    // iterator
+    Node runningNode(const InArcIt &arc) const {
+      return Parent::source(static_cast<const Arc&>(arc));
+    }
+
+    // Base node of the iterator
+    //
+    // Returns the base node of the iterator
+    Node baseNode(const IncEdgeIt &edge) const {
+      return edge._direction ? this->u(edge) : this->v(edge);
+    }
+    // Running node of the iterator
+    //
+    // Returns the running node of the iterator
+    Node runningNode(const IncEdgeIt &edge) const {
+      return edge._direction ? this->v(edge) : this->u(edge);
+    }
+
+    // Mappable extension
+
+    template <typename _Value>
+    class NodeMap
+      : public MapExtender<DefaultMap<BpGraph, Node, _Value> > {
+      typedef MapExtender<DefaultMap<BpGraph, Node, _Value> > Parent;
+
+    public:
+      explicit NodeMap(const BpGraph& bpgraph)
+        : Parent(bpgraph) {}
+      NodeMap(const BpGraph& bpgraph, const _Value& value)
+        : Parent(bpgraph, value) {}
+
+    private:
+      NodeMap& operator=(const NodeMap& cmap) {
+        return operator=<NodeMap>(cmap);
+      }
+
+      template <typename CMap>
+      NodeMap& operator=(const CMap& cmap) {
+        Parent::operator=(cmap);
+        return *this;
+      }
+
+    };
+
+    template <typename _Value>
+    class RedNodeMap
+      : public MapExtender<DefaultMap<BpGraph, RedNode, _Value> > {
+      typedef MapExtender<DefaultMap<BpGraph, RedNode, _Value> > Parent;
+
+    public:
+      explicit RedNodeMap(const BpGraph& bpgraph)
+        : Parent(bpgraph) {}
+      RedNodeMap(const BpGraph& bpgraph, const _Value& value)
+        : Parent(bpgraph, value) {}
+
+    private:
+      RedNodeMap& operator=(const RedNodeMap& cmap) {
+        return operator=<RedNodeMap>(cmap);
+      }
+
+      template <typename CMap>
+      RedNodeMap& operator=(const CMap& cmap) {
+        Parent::operator=(cmap);
+        return *this;
+      }
+
+    };
+
+    template <typename _Value>
+    class BlueNodeMap
+      : public MapExtender<DefaultMap<BpGraph, BlueNode, _Value> > {
+      typedef MapExtender<DefaultMap<BpGraph, BlueNode, _Value> > Parent;
+
+    public:
+      explicit BlueNodeMap(const BpGraph& bpgraph)
+        : Parent(bpgraph) {}
+      BlueNodeMap(const BpGraph& bpgraph, const _Value& value)
+        : Parent(bpgraph, value) {}
+
+    private:
+      BlueNodeMap& operator=(const BlueNodeMap& cmap) {
+        return operator=<BlueNodeMap>(cmap);
+      }
+
+      template <typename CMap>
+      BlueNodeMap& operator=(const CMap& cmap) {
+        Parent::operator=(cmap);
+        return *this;
+      }
+
+    };
+
+    template <typename _Value>
+    class ArcMap
+      : public MapExtender<DefaultMap<BpGraph, Arc, _Value> > {
+      typedef MapExtender<DefaultMap<BpGraph, Arc, _Value> > Parent;
+
+    public:
+      explicit ArcMap(const BpGraph& graph)
+        : Parent(graph) {}
+      ArcMap(const BpGraph& graph, const _Value& value)
+        : Parent(graph, value) {}
+
+    private:
+      ArcMap& operator=(const ArcMap& cmap) {
+        return operator=<ArcMap>(cmap);
+      }
+
+      template <typename CMap>
+      ArcMap& operator=(const CMap& cmap) {
+        Parent::operator=(cmap);
+        return *this;
+      }
+    };
+
+
+    template <typename _Value>
+    class EdgeMap
+      : public MapExtender<DefaultMap<BpGraph, Edge, _Value> > {
+      typedef MapExtender<DefaultMap<BpGraph, Edge, _Value> > Parent;
+
+    public:
+      explicit EdgeMap(const BpGraph& graph)
+        : Parent(graph) {}
+
+      EdgeMap(const BpGraph& graph, const _Value& value)
+        : Parent(graph, value) {}
+
+    private:
+      EdgeMap& operator=(const EdgeMap& cmap) {
+        return operator=<EdgeMap>(cmap);
+      }
+
+      template <typename CMap>
+      EdgeMap& operator=(const CMap& cmap) {
+        Parent::operator=(cmap);
+        return *this;
+      }
+
+    };
+
+    // Alteration extension
+
+    RedNode addRedNode() {
+      RedNode node = Parent::addRedNode();
+      notifier(RedNode()).add(node);
+      notifier(Node()).add(node);
+      return node;
+    }
+
+    BlueNode addBlueNode() {
+      BlueNode node = Parent::addBlueNode();
+      notifier(BlueNode()).add(node);
+      notifier(Node()).add(node);
+      return node;
+    }
+
+    Edge addEdge(const RedNode& from, const BlueNode& to) {
+      Edge edge = Parent::addEdge(from, to);
+      notifier(Edge()).add(edge);
+      std::vector<Arc> av;
+      av.push_back(Parent::direct(edge, true));
+      av.push_back(Parent::direct(edge, false));
+      notifier(Arc()).add(av);
+      return edge;
+    }
+
+    void clear() {
+      notifier(Arc()).clear();
+      notifier(Edge()).clear();
+      notifier(Node()).clear();
+      notifier(BlueNode()).clear();
+      notifier(RedNode()).clear();
+      Parent::clear();
+    }
+
+    template <typename BpGraph, typename NodeRefMap, typename EdgeRefMap>
+    void build(const BpGraph& graph, NodeRefMap& nodeRef,
+               EdgeRefMap& edgeRef) {
+      Parent::build(graph, nodeRef, edgeRef);
+      notifier(RedNode()).build();
+      notifier(BlueNode()).build();
+      notifier(Node()).build();
+      notifier(Edge()).build();
+      notifier(Arc()).build();
+    }
+
+    void erase(const Node& node) {
+      Arc arc;
+      Parent::firstOut(arc, node);
+      while (arc != INVALID ) {
+        erase(arc);
+        Parent::firstOut(arc, node);
+      }
+
+      Parent::firstIn(arc, node);
+      while (arc != INVALID ) {
+        erase(arc);
+        Parent::firstIn(arc, node);
+      }
+
+      if (Parent::red(node)) {
+        notifier(RedNode()).erase(this->asRedNodeUnsafe(node));
+      } else {
+        notifier(BlueNode()).erase(this->asBlueNodeUnsafe(node));
+      }
+
+      notifier(Node()).erase(node);
+      Parent::erase(node);
+    }
+
+    void erase(const Edge& edge) {
+      std::vector<Arc> av;
+      av.push_back(Parent::direct(edge, true));
+      av.push_back(Parent::direct(edge, false));
+      notifier(Arc()).erase(av);
+      notifier(Edge()).erase(edge);
+      Parent::erase(edge);
+    }
+
+    BpGraphExtender() {
+      red_node_notifier.setContainer(*this);
+      blue_node_notifier.setContainer(*this);
+      node_notifier.setContainer(*this);
+      arc_notifier.setContainer(*this);
+      edge_notifier.setContainer(*this);
+    }
+
+    ~BpGraphExtender() {
+      edge_notifier.clear();
+      arc_notifier.clear();
+      node_notifier.clear();
+      blue_node_notifier.clear();
+      red_node_notifier.clear();
     }
 
   };

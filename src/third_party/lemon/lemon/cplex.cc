@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -40,6 +40,7 @@ namespace lemon {
   CplexEnv::CplexEnv() {
     int status;
     _cnt = new int;
+    (*_cnt) = 1;
     _env = CPXopenCPLEX(&status);
     if (_env == 0) {
       delete _cnt;
@@ -470,8 +471,6 @@ namespace lemon {
     CPXfreeprob(cplexEnv(),&_prob);
     int status;
     _prob = CPXcreateprob(cplexEnv(), &status, "Cplex problem");
-    rows.clear();
-    cols.clear();
   }
 
   void CplexBase::_messageLevel(MessageLevel level) {
@@ -492,6 +491,17 @@ namespace lemon {
     CPXsetintparam(cplexEnv(), CPX_PARAM_SCRIND,
                    _message_enabled ? CPX_ON : CPX_OFF);
   }
+
+  void CplexBase::_write(std::string file, std::string format) const
+  {
+    if(format == "MPS" || format == "LP")
+      CPXwriteprob(cplexEnv(), cplexLp(), file.c_str(), format.c_str());
+    else if(format == "SOL")
+      CPXsolwrite(cplexEnv(), cplexLp(), file.c_str());
+    else throw UnsupportedFormatError(format);
+  }
+
+
 
   // CplexLp members
 

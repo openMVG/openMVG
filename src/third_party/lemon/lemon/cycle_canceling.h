@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -35,6 +35,7 @@
 #include <lemon/circulation.h>
 #include <lemon/bellman_ford.h>
 #include <lemon/howard_mmc.h>
+#include <lemon/hartmann_orlin_mmc.h>
 
 namespace lemon {
 
@@ -46,13 +47,14 @@ namespace lemon {
   ///
   /// \ref CycleCanceling implements three different cycle-canceling
   /// algorithms for finding a \ref min_cost_flow "minimum cost flow"
-  /// \ref amo93networkflows, \ref klein67primal,
-  /// \ref goldberg89cyclecanceling.
-  /// The most efficent one (both theoretically and practically)
-  /// is the \ref CANCEL_AND_TIGHTEN "Cancel and Tighten" algorithm,
-  /// thus it is the default method.
-  /// It is strongly polynomial, but in practice, it is typically much
-  /// slower than the scaling algorithms and NetworkSimplex.
+  /// \cite amo93networkflows, \cite klein67primal,
+  /// \cite goldberg89cyclecanceling.
+  /// The most efficent one is the \ref CANCEL_AND_TIGHTEN
+  /// "Cancel-and-Tighten" algorithm, thus it is the default method.
+  /// It runs in strongly polynomial time \f$O(n^2 m^2 \log n)\f$,
+  /// but in practice, it is typically orders of magnitude slower than
+  /// the scaling algorithms and \ref NetworkSimplex.
+  /// (For more information, see \ref min_cost_flow_algs "the module page".)
   ///
   /// Most of the parameters of the problem (except for the digraph)
   /// can be given using separate functions, and the algorithm can be
@@ -65,10 +67,11 @@ namespace lemon {
   /// \tparam C The number type used for costs and potentials in the
   /// algorithm. By default, it is the same as \c V.
   ///
-  /// \warning Both number types must be signed and all input data must
+  /// \warning Both \c V and \c C must be signed number types.
+  /// \warning All input data (capacities, supply values, and costs) must
   /// be integer.
-  /// \warning This algorithm does not support negative costs for such
-  /// arcs that have infinite upper bound.
+  /// \warning This algorithm does not support negative costs for
+  /// arcs having infinite upper bound.
   ///
   /// \note For more information about the three available methods,
   /// see \ref Method.
@@ -115,27 +118,28 @@ namespace lemon {
     /// for the \ref run() function.
     ///
     /// \ref CycleCanceling provides three different cycle-canceling
-    /// methods. By default, \ref CANCEL_AND_TIGHTEN "Cancel and Tighten"
-    /// is used, which proved to be the most efficient and the most robust
-    /// on various test inputs.
+    /// methods. By default, \ref CANCEL_AND_TIGHTEN "Cancel-and-Tighten"
+    /// is used, which is by far the most efficient and the most robust.
     /// However, the other methods can be selected using the \ref run()
     /// function with the proper parameter.
     enum Method {
       /// A simple cycle-canceling method, which uses the
-      /// \ref BellmanFord "Bellman-Ford" algorithm with limited iteration
-      /// number for detecting negative cycles in the residual network.
+      /// \ref BellmanFord "Bellman-Ford" algorithm for detecting negative
+      /// cycles in the residual network.
+      /// The number of Bellman-Ford iterations is bounded by a successively
+      /// increased limit.
       SIMPLE_CYCLE_CANCELING,
       /// The "Minimum Mean Cycle-Canceling" algorithm, which is a
       /// well-known strongly polynomial method
-      /// \ref goldberg89cyclecanceling. It improves along a
+      /// \cite goldberg89cyclecanceling. It improves along a
       /// \ref min_mean_cycle "minimum mean cycle" in each iteration.
-      /// Its running time complexity is O(n<sup>2</sup>m<sup>3</sup>log(n)).
+      /// Its running time complexity is \f$O(n^2 m^3 \log n)\f$.
       MINIMUM_MEAN_CYCLE_CANCELING,
-      /// The "Cancel And Tighten" algorithm, which can be viewed as an
+      /// The "Cancel-and-Tighten" algorithm, which can be viewed as an
       /// improved version of the previous method
-      /// \ref goldberg89cyclecanceling.
+      /// \cite goldberg89cyclecanceling.
       /// It is faster both in theory and in practice, its running time
-      /// complexity is O(n<sup>2</sup>m<sup>2</sup>log(n)).
+      /// complexity is \f$O(n^2 m^2 \log n)\f$.
       CANCEL_AND_TIGHTEN
     };
 
@@ -349,7 +353,7 @@ namespace lemon {
     /// calling \ref run(), the supply of each node will be set to zero.
     ///
     /// Using this function has the same effect as using \ref supplyMap()
-    /// with such a map in which \c k is assigned to \c s, \c -k is
+    /// with a map in which \c k is assigned to \c s, \c -k is
     /// assigned to \c t and all other nodes have zero supply value.
     ///
     /// \param s The source node.
@@ -572,7 +576,7 @@ namespace lemon {
     /// \brief Return the total cost of the found flow.
     ///
     /// This function returns the total cost of the found flow.
-    /// Its complexity is O(e).
+    /// Its complexity is O(m).
     ///
     /// \note The return type of the function can be specified as a
     /// template parameter. For example,
@@ -610,7 +614,8 @@ namespace lemon {
       return _res_cap[_arc_idb[a]];
     }
 
-    /// \brief Return the flow map (the primal solution).
+    /// \brief Copy the flow values (the primal solution) into the
+    /// given map.
     ///
     /// This function copies the flow value on each arc into the given
     /// map. The \c Value type of the algorithm must be convertible to
@@ -634,7 +639,8 @@ namespace lemon {
       return static_cast<Cost>(_pi[_node_id[n]]);
     }
 
-    /// \brief Return the potential map (the dual solution).
+    /// \brief Copy the potential values (the dual solution) into the
+    /// given map.
     ///
     /// This function copies the potential (dual value) of each node
     /// into the given map.
@@ -663,6 +669,10 @@ namespace lemon {
         _sum_supply += _supply[i];
       }
       if (_sum_supply > 0) return INFEASIBLE;
+
+      // Check lower and upper bounds
+      LEMON_DEBUG(checkBoundMaps(),
+          "Upper bounds must be greater or equal to the lower bounds");
 
 
       // Initialize vectors
@@ -772,6 +782,15 @@ namespace lemon {
       }
 
       return OPTIMAL;
+    }
+
+    // Check if the upper bound is greater or equal to the lower bound
+    // on each arc.
+    bool checkBoundMaps() {
+      for (int j = 0; j != _res_arc_num; ++j) {
+        if (_upper[j] < _lower[j]) return false;
+      }
+      return true;
     }
 
     // Build a StaticDigraph structure containing the current
@@ -922,18 +941,41 @@ namespace lemon {
 
     // Execute the "Minimum Mean Cycle Canceling" method
     void startMinMeanCycleCanceling() {
-      typedef SimplePath<StaticDigraph> SPath;
+      typedef Path<StaticDigraph> SPath;
       typedef typename SPath::ArcIt SPathArcIt;
       typedef typename HowardMmc<StaticDigraph, CostArcMap>
-        ::template SetPath<SPath>::Create MMC;
+        ::template SetPath<SPath>::Create HwMmc;
+      typedef typename HartmannOrlinMmc<StaticDigraph, CostArcMap>
+        ::template SetPath<SPath>::Create HoMmc;
+
+      const double HW_ITER_LIMIT_FACTOR = 1.0;
+      const int HW_ITER_LIMIT_MIN_VALUE = 5;
+
+      const int hw_iter_limit =
+          std::max(static_cast<int>(HW_ITER_LIMIT_FACTOR * _node_num),
+                   HW_ITER_LIMIT_MIN_VALUE);
 
       SPath cycle;
-      MMC mmc(_sgr, _cost_map);
-      mmc.cycle(cycle);
+      HwMmc hw_mmc(_sgr, _cost_map);
+      hw_mmc.cycle(cycle);
       buildResidualNetwork();
-      while (mmc.findCycleMean() && mmc.cycleCost() < 0) {
-        // Find the cycle
-        mmc.findCycle();
+      while (true) {
+
+        typename HwMmc::TerminationCause hw_tc =
+            hw_mmc.findCycleMean(hw_iter_limit);
+        if (hw_tc == HwMmc::ITERATION_LIMIT) {
+          // Howard's algorithm reached the iteration limit, start a
+          // strongly polynomial algorithm instead
+          HoMmc ho_mmc(_sgr, _cost_map);
+          ho_mmc.cycle(cycle);
+          // Find a minimum mean cycle (Hartmann-Orlin algorithm)
+          if (!(ho_mmc.findCycleMean() && ho_mmc.cycleCost() < 0)) break;
+          ho_mmc.findCycle();
+        } else {
+          // Find a minimum mean cycle (Howard algorithm)
+          if (!(hw_tc == HwMmc::OPTIMAL && hw_mmc.cycleCost() < 0)) break;
+          hw_mmc.findCycle();
+        }
 
         // Compute delta value
         Value delta = INF;
@@ -954,11 +996,17 @@ namespace lemon {
       }
     }
 
-    // Execute the "Cancel And Tighten" method
+    // Execute the "Cancel-and-Tighten" method
     void startCancelAndTighten() {
       // Constants for the min mean cycle computations
       const double LIMIT_FACTOR = 1.0;
       const int MIN_LIMIT = 5;
+      const double HW_ITER_LIMIT_FACTOR = 1.0;
+      const int HW_ITER_LIMIT_MIN_VALUE = 5;
+
+      const int hw_iter_limit =
+          std::max(static_cast<int>(HW_ITER_LIMIT_FACTOR * _node_num),
+                   HW_ITER_LIMIT_MIN_VALUE);
 
       // Contruct auxiliary data vectors
       DoubleVector pi(_res_node_num, 0.0);
@@ -1132,17 +1180,30 @@ namespace lemon {
             }
           }
         } else {
-          typedef HowardMmc<StaticDigraph, CostArcMap> MMC;
+          typedef HowardMmc<StaticDigraph, CostArcMap> HwMmc;
+          typedef HartmannOrlinMmc<StaticDigraph, CostArcMap> HoMmc;
           typedef typename BellmanFord<StaticDigraph, CostArcMap>
             ::template SetDistMap<CostNodeMap>::Create BF;
 
           // Set epsilon to the minimum cycle mean
+          Cost cycle_cost = 0;
+          int cycle_size = 1;
           buildResidualNetwork();
-          MMC mmc(_sgr, _cost_map);
-          mmc.findCycleMean();
-          epsilon = -mmc.cycleMean();
-          Cost cycle_cost = mmc.cycleCost();
-          int cycle_size = mmc.cycleSize();
+          HwMmc hw_mmc(_sgr, _cost_map);
+          if (hw_mmc.findCycleMean(hw_iter_limit) == HwMmc::ITERATION_LIMIT) {
+            // Howard's algorithm reached the iteration limit, start a
+            // strongly polynomial algorithm instead
+            HoMmc ho_mmc(_sgr, _cost_map);
+            ho_mmc.findCycleMean();
+            epsilon = -ho_mmc.cycleMean();
+            cycle_cost = ho_mmc.cycleCost();
+            cycle_size = ho_mmc.cycleSize();
+          } else {
+            // Set epsilon
+            epsilon = -hw_mmc.cycleMean();
+            cycle_cost = hw_mmc.cycleCost();
+            cycle_size = hw_mmc.cycleSize();
+          }
 
           // Compute feasible potentials for the current epsilon
           for (int i = 0; i != int(_cost_vec.size()); ++i) {

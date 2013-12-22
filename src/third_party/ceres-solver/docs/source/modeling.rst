@@ -164,7 +164,7 @@ residuals and their derivatives. This is done using
    .. code-block:: c++
 
      template <typename CostFunctor,
-            int M,        // Number of residuals, or ceres::DYNAMIC.
+            int kNumResiduals,  // Number of residuals, or ceres::DYNAMIC.
             int N0,       // Number of parameters in block 0.
             int N1 = 0,   // Number of parameters in block 1.
             int N2 = 0,   // Number of parameters in block 2.
@@ -176,7 +176,7 @@ residuals and their derivatives. This is done using
             int N8 = 0,   // Number of parameters in block 8.
             int N9 = 0>   // Number of parameters in block 9.
      class AutoDiffCostFunction : public
-     SizedCostFunction<M, N0, N1, N2, N3, N4, N5, N6, N7, N8, N9> {
+     SizedCostFunction<kNumResiduals, N0, N1, N2, N3, N4, N5, N6, N7, N8, N9> {
      };
 
    To get an auto differentiated cost function, you must define a
@@ -254,6 +254,22 @@ residuals and their derivatives. This is done using
    computing a 1-dimensional output from two arguments, both
    2-dimensional.
 
+   :class:`AutoDiffCostFunction` also supports cost functions with a
+   runtime-determined number of residuals. For example:
+
+   .. code-block:: c++
+
+     CostFunction* cost_function
+         = new AutoDiffCostFunction<MyScalarCostFunctor, DYNAMIC, 2, 2>(
+             new CostFunctorWithDynamicNumResiduals(1.0),   ^     ^  ^
+             runtime_number_of_residuals); <----+           |     |  |
+                                                |           |     |  |
+                                                |           |     |  |
+               Actual number of residuals ------+           |     |  |
+               Indicate dynamic number of residuals --------+     |  |
+               Dimension of x ------------------------------------+  |
+               Dimension of y ---------------------------------------+
+
    The framework can currently accommodate cost functions of up to 10
    independent variables, and there is no limit on the dimensionality
    of each of them.
@@ -279,10 +295,10 @@ residuals and their derivatives. This is done using
 .. class:: DynamicAutoDiffCostFunction
 
    :class:`AutoDiffCostFunction` requires that the number of parameter
-   blocks and their sizes be known at compile time, e.g., Bezier curve
-   fitting, Neural Network training etc. It also has an upper limit of
-   10 parameter blocks. In a number of applications, this is not
-   enough.
+   blocks and their sizes be known at compile time. It also has an
+   upper limit of 10 parameter blocks. In a number of applications,
+   this is not enough e.g., Bezier curve fitting, Neural Network
+   training etc.
 
      .. code-block:: c++
 
@@ -342,12 +358,21 @@ residuals and their derivatives. This is done using
 
     .. code-block:: c++
 
-      template <typename CostFunctionNoJacobian,
-                NumericDiffMethod method = CENTRAL, int M = 0,
-                int N0 = 0, int N1 = 0, int N2 = 0, int N3 = 0, int N4 = 0,
-                int N5 = 0, int N6 = 0, int N7 = 0, int N8 = 0, int N9 = 0>
-      class NumericDiffCostFunction
-        : public SizedCostFunction<M, N0, N1, N2, N3, N4, N5, N6, N7, N8, N9> {
+      template <typename CostFunctor,
+                NumericDiffMethod method = CENTRAL,
+                int kNumResiduals,  // Number of residuals, or ceres::DYNAMIC.
+                int N0,       // Number of parameters in block 0.
+                int N1 = 0,   // Number of parameters in block 1.
+                int N2 = 0,   // Number of parameters in block 2.
+                int N3 = 0,   // Number of parameters in block 3.
+                int N4 = 0,   // Number of parameters in block 4.
+                int N5 = 0,   // Number of parameters in block 5.
+                int N6 = 0,   // Number of parameters in block 6.
+                int N7 = 0,   // Number of parameters in block 7.
+                int N8 = 0,   // Number of parameters in block 8.
+                int N9 = 0>   // Number of parameters in block 9.
+      class NumericDiffCostFunction : public
+      SizedCostFunction<kNumResiduals, N0, N1, N2, N3, N4, N5, N6, N7, N8, N9> {
       };
 
    To get a numerically differentiated :class:`CostFunction`, you must
@@ -426,6 +451,24 @@ residuals and their derivatives. This is done using
    computing a 1-dimensional output from two arguments, both
    2-dimensional.
 
+   NumericDiffCostFunction also supports cost functions with a
+   runtime-determined number of residuals. For example:
+
+   .. code-block:: c++
+
+     CostFunction* cost_function
+         = new NumericDiffCostFunction<MyScalarCostFunctor, CENTRAL, DYNAMIC, 2, 2>(
+             new CostFunctorWithDynamicNumResiduals(1.0),               ^     ^  ^
+             TAKE_OWNERSHIP,                                            |     |  |
+             runtime_number_of_residuals); <----+                       |     |  |
+                                                |                       |     |  |
+                                                |                       |     |  |
+               Actual number of residuals ------+                       |     |  |
+               Indicate dynamic number of residuals --------------------+     |  |
+               Dimension of x ------------------------------------------------+  |
+               Dimension of y ---------------------------------------------------+
+
+
    The framework can currently accommodate cost functions of up to 10
    independent variables, and there is no limit on the dimensionality
    of each of them.
@@ -474,6 +517,52 @@ residuals and their derivatives. This is done using
    where ``MyCostFunction`` has 1 residual and 2 parameter blocks with
    sizes 4 and 8 respectively. Look at the tests for a more detailed
    example.
+
+:class:`DynamicNumericDiffCostFunction`
+---------------------------------------
+
+.. class:: DynamicNumericDiffCostFunction
+
+   Like :class:`AutoDiffCostFunction` :class:`NumericDiffCostFunction`
+   requires that the number of parameter blocks and their sizes be
+   known at compile time. It also has an upper limit of 10 parameter
+   blocks. In a number of applications, this is not enough.
+
+     .. code-block:: c++
+
+      template <typename CostFunctor, NumericDiffMethod method = CENTRAL>
+      class DynamicNumericDiffCostFunction : public CostFunction {
+      };
+
+   In such cases when numeric differentiation is desired,
+   :class:`DynamicNumericDiffCostFunction` can be used.
+
+   Like :class:`NumericDiffCostFunction` the user must define a
+   functor, but the signature of the functor differs slightly. The
+   expected interface for the cost functors is:
+
+     .. code-block:: c++
+
+       struct MyCostFunctor {
+         bool operator()(double const* const* parameters, double* residuals) const {
+         }
+       }
+
+   Since the sizing of the parameters is done at runtime, you must
+   also specify the sizes after creating the dynamic numeric diff cost
+   function. For example:
+
+     .. code-block:: c++
+
+       DynamicNumericDiffCostFunction<MyCostFunctor> cost_function(
+           new MyCostFunctor());
+       cost_function.AddParameterBlock(5);
+       cost_function.AddParameterBlock(10);
+       cost_function.SetNumResiduals(21);
+
+   As a rule of thumb, try using :class:`NumericDiffCostFunction` before
+   you use :class:`DynamicNumericDiffCostFunction`.
+
 
 :class:`NumericDiffFunctor`
 ---------------------------
@@ -1335,22 +1424,43 @@ Instances
    The size of the residual vector obtained by summing over the sizes
    of all of the residual blocks.
 
-.. function int Problem::ParameterBlockSize(const double* values) const;
+.. function:: int Problem::ParameterBlockSize(const double* values) const
 
    The size of the parameter block.
 
-.. function int Problem::ParameterBlockLocalSize(const double* values) const;
+.. function:: int Problem::ParameterBlockLocalSize(const double* values) const
 
   The size of local parameterization for the parameter block. If
   there is no local parameterization associated with this parameter
   block, then ``ParameterBlockLocalSize`` = ``ParameterBlockSize``.
 
+.. function:: void Problem::GetParameterBlocks(vector<double*>* parameter_blocks) const
 
-.. function void Problem::GetParameterBlocks(vector<double*>* parameter_blocks) const;
+   Fills the passed ``parameter_blocks`` vector with pointers to the
+   parameter blocks currently in the problem. After this call,
+   ``parameter_block.size() == NumParameterBlocks``.
 
-  Fills the passed ``parameter_blocks`` vector with pointers to the
-  parameter blocks currently in the problem. After this call,
-  ``parameter_block.size() == NumParameterBlocks``.
+.. function:: void Problem::GetResidualBlocks(vector<ResidualBlockId>* residual_blocks) const
+
+   Fills the passed `residual_blocks` vector with pointers to the
+   residual blocks currently in the problem. After this call,
+   `residual_blocks.size() == NumResidualBlocks`.
+
+.. function:: void Problem::GetParameterBlocksForResidualBlock(const ResidualBlockId residual_block, vector<double*>* parameter_blocks) const
+
+   Get all the parameter blocks that depend on the given residual
+   block.
+
+.. function:: void Problem::GetResidualBlocksForParameterBlock(const double* values, vector<ResidualBlockId>* residual_blocks) const
+
+   Get all the residual blocks that depend on the given parameter
+   block.
+
+   If `Problem::Options::enable_fast_parameter_block_removal` is
+   `true`, then getting the residual blocks is fast and depends only
+   on the number of residual blocks. Otherwise, getting the residual
+   blocks for a parameter block will incur a scan of the entire
+   :class:`Problem` object.
 
 .. function:: bool Problem::Evaluate(const Problem::EvaluateOptions& options, double* cost, vector<double>* residuals, vector<double>* gradient, CRSMatrix* jacobian)
 

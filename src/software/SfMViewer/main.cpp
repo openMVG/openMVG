@@ -274,7 +274,7 @@ int main(int argc, char *argv[]) {
   else{
     exit( EXIT_FAILURE);
   }
-  
+
   //-- Create the GL window context
   GLFWwindow* window;
   int width, height;
@@ -317,7 +317,7 @@ int main(int argc, char *argv[]) {
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
-  
+
   // Terminate GLFW
   glfwTerminate();
 

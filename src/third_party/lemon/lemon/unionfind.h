@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -100,7 +100,7 @@ namespace lemon {
     /// The method returns the index of the element's component.
     /// This is an integer between zero and the number of inserted elements.
     ///
-    int find(const Item& a) const {
+    int find(const Item& a) {
       return repIndex(index[a]);
     }
 
@@ -149,7 +149,7 @@ namespace lemon {
     /// \brief Returns the size of the component of element \e a.
     ///
     /// Returns the size of the component of element \e a.
-    int size(const Item& a) const {
+    int size(const Item& a) {
       int k = repIndex(index[a]);
       return - items[k];
     }

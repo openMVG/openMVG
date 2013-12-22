@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -556,8 +556,6 @@ namespace lemon {
 
   void GlpkBase::_clear() {
     glp_erase_prob(lp);
-    rows.clear();
-    cols.clear();
   }
 
   void GlpkBase::freeEnv() {
@@ -582,6 +580,15 @@ namespace lemon {
       _message_level = GLP_MSG_ALL;
       break;
     }
+  }
+
+  void GlpkBase::_write(std::string file, std::string format) const
+  {
+    if(format == "MPS")
+      glp_write_mps(lp, GLP_MPS_FILE, 0, file.c_str());
+    else if(format == "LP")
+      glp_write_lp(lp, 0, file.c_str());
+    else throw UnsupportedFormatError(format);
   }
 
   GlpkBase::FreeEnvHelper GlpkBase::freeEnvHelper;
@@ -999,5 +1006,7 @@ namespace lemon {
   GlpkMip* GlpkMip::cloneSolver() const {return new GlpkMip(*this); }
 
   const char* GlpkMip::_solverName() const { return "GlpkMip"; }
+
+
 
 } //END OF NAMESPACE LEMON

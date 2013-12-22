@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -66,9 +66,16 @@ namespace lemon {
   ///
   /// \ref CapacityScaling implements the capacity scaling version
   /// of the successive shortest path algorithm for finding a
-  /// \ref min_cost_flow "minimum cost flow" \ref amo93networkflows,
-  /// \ref edmondskarp72theoretical. It is an efficient dual
-  /// solution method.
+  /// \ref min_cost_flow "minimum cost flow" \cite amo93networkflows,
+  /// \cite edmondskarp72theoretical. It is an efficient dual
+  /// solution method, which runs in polynomial time
+  /// \f$O(m\log U (n+m)\log n)\f$, where <i>U</i> denotes the maximum
+  /// of node supply and arc capacity values.
+  ///
+  /// This algorithm is typically slower than \ref CostScaling and
+  /// \ref NetworkSimplex, but in special cases, it can be more
+  /// efficient than them.
+  /// (For more information, see \ref min_cost_flow_algs "the module page".)
   ///
   /// Most of the parameters of the problem (except for the digraph)
   /// can be given using separate functions, and the algorithm can be
@@ -86,10 +93,11 @@ namespace lemon {
   /// In most cases, this parameter should not be set directly,
   /// consider to use the named template parameters instead.
   ///
-  /// \warning Both number types must be signed and all input data must
-  /// be integer.
-  /// \warning This algorithm does not support negative costs for such
-  /// arcs that have infinite upper bound.
+  /// \warning Both \c V and \c C must be signed number types.
+  /// \warning Capacity bounds and supply values must be integer, but
+  /// arc costs can be arbitrary real numbers.
+  /// \warning This algorithm does not support negative costs for
+  /// arcs having infinite upper bound.
 #ifdef DOXYGEN
   template <typename GR, typename V, typename C, typename TR>
 #else
@@ -110,7 +118,8 @@ namespace lemon {
     /// The type of the heap used for internal Dijkstra computations
     typedef typename TR::Heap Heap;
 
-    /// The \ref CapacityScalingDefaultTraits "traits class" of the algorithm
+    /// \brief The \ref lemon::CapacityScalingDefaultTraits "traits class"
+    /// of the algorithm
     typedef TR Traits;
 
   public:
@@ -422,7 +431,7 @@ namespace lemon {
     /// calling \ref run(), the supply of each node will be set to zero.
     ///
     /// Using this function has the same effect as using \ref supplyMap()
-    /// with such a map in which \c k is assigned to \c s, \c -k is
+    /// with a map in which \c k is assigned to \c s, \c -k is
     /// assigned to \c t and all other nodes have zero supply value.
     ///
     /// \param s The source node.
@@ -637,7 +646,7 @@ namespace lemon {
     /// \brief Return the total cost of the found flow.
     ///
     /// This function returns the total cost of the found flow.
-    /// Its complexity is O(e).
+    /// Its complexity is O(m).
     ///
     /// \note The return type of the function can be specified as a
     /// template parameter. For example,
@@ -675,7 +684,8 @@ namespace lemon {
       return _res_cap[_arc_idb[a]];
     }
 
-    /// \brief Return the flow map (the primal solution).
+    /// \brief Copy the flow values (the primal solution) into the
+    /// given map.
     ///
     /// This function copies the flow value on each arc into the given
     /// map. The \c Value type of the algorithm must be convertible to
@@ -699,7 +709,8 @@ namespace lemon {
       return _pi[_node_id[n]];
     }
 
-    /// \brief Return the potential map (the dual solution).
+    /// \brief Copy the potential values (the dual solution) into the
+    /// given map.
     ///
     /// This function copies the potential (dual value) of each node
     /// into the given map.
@@ -728,6 +739,11 @@ namespace lemon {
         _sum_supply += _supply[i];
       }
       if (_sum_supply > 0) return INFEASIBLE;
+
+      // Check lower and upper bounds
+      LEMON_DEBUG(checkBoundMaps(),
+          "Upper bounds must be greater or equal to the lower bounds");
+
 
       // Initialize vectors
       for (int i = 0; i != _root; ++i) {
@@ -821,6 +837,15 @@ namespace lemon {
       }
 
       return OPTIMAL;
+    }
+
+    // Check if the upper bound is greater or equal to the lower bound
+    // on each arc.
+    bool checkBoundMaps() {
+      for (int j = 0; j != _res_arc_num; ++j) {
+        if (_upper[j] < _lower[j]) return false;
+      }
+      return true;
     }
 
     ProblemType start() {

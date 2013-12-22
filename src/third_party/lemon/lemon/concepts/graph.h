@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -72,10 +72,10 @@ namespace lemon {
     /// \sa Digraph
     class Graph {
     private:
-      /// Graphs are \e not copy constructible. Use DigraphCopy instead.
+      /// Graphs are \e not copy constructible. Use GraphCopy instead.
       Graph(const Graph&) {}
       /// \brief Assignment of a graph to another one is \e not allowed.
-      /// Use DigraphCopy instead.
+      /// Use GraphCopy instead.
       void operator=(const Graph&) {}
 
     public:
@@ -396,7 +396,9 @@ namespace lemon {
 
         /// Sets the iterator to the first arc of the given graph.
         ///
-        explicit ArcIt(const Graph &g) { ignore_unused_variable_warning(g); }
+        explicit ArcIt(const Graph &g) {
+          ::lemon::ignore_unused_variable_warning(g);
+        }
         /// Sets the iterator to the given arc.
 
         /// Sets the iterator to the given arc of the given graph.
@@ -442,8 +444,8 @@ namespace lemon {
         /// Sets the iterator to the first outgoing arc of the given node.
         ///
         OutArcIt(const Graph& n, const Node& g) {
-          ignore_unused_variable_warning(n);
-          ignore_unused_variable_warning(g);
+          ::lemon::ignore_unused_variable_warning(n);
+          ::lemon::ignore_unused_variable_warning(g);
         }
         /// Sets the iterator to the given arc.
 
@@ -490,8 +492,8 @@ namespace lemon {
         /// Sets the iterator to the first incoming arc of the given node.
         ///
         InArcIt(const Graph& g, const Node& n) {
-          ignore_unused_variable_warning(n);
-          ignore_unused_variable_warning(g);
+          ::lemon::ignore_unused_variable_warning(n);
+          ::lemon::ignore_unused_variable_warning(g);
         }
         /// Sets the iterator to the given arc.
 
@@ -757,13 +759,13 @@ namespace lemon {
 
       /// \brief The base node of the iterator.
       ///
-      /// Returns the base node of the given incomming arc iterator
+      /// Returns the base node of the given incoming arc iterator
       /// (i.e. the target node of the corresponding arc).
       Node baseNode(InArcIt) const { return INVALID; }
 
       /// \brief The running node of the iterator.
       ///
-      /// Returns the running node of the given incomming arc iterator
+      /// Returns the running node of the given incoming arc iterator
       /// (i.e. the source node of the corresponding arc).
       Node runningNode(InArcIt) const { return INVALID; }
 

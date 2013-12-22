@@ -184,5 +184,18 @@ TEST(NumericDiffCostFunction, EigenRowMajorColMajorTest) {
           new SizeTestingCostFunction<2,2>, ceres::TAKE_OWNERSHIP));
 }
 
+TEST(NumericDiffCostFunction, EasyCaseFunctorCentralDifferencesAndDynamicNumResiduals) {
+  internal::scoped_ptr<CostFunction> cost_function;
+  cost_function.reset(
+      new NumericDiffCostFunction<EasyFunctor,
+                                  CENTRAL,
+                                  ceres::DYNAMIC,
+                                  5,  /* size of x1 */
+                                  5   /* size of x2 */>(
+                                      new EasyFunctor, TAKE_OWNERSHIP, 3));
+  EasyFunctor functor;
+  functor.ExpectCostFunctionEvaluationIsNearlyCorrect(*cost_function, CENTRAL);
+}
+
 }  // namespace internal
 }  // namespace ceres

@@ -27,11 +27,18 @@ int main(int argc, char **argv)
   std::string sMatchesDir;
   std::string sOutDir = "";
   bool bPmvsExport = false;
+  bool bRefinePPandDisto = true;
+  //bool bBlenderExport = false;
+  std::pair<size_t,size_t> initialPair(0,0);
 
   cmd.add( make_option('i', sImaDirectory, "imadir") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
   cmd.add( make_option('o', sOutDir, "outdir") );
   cmd.add( make_option('p', bPmvsExport, "pmvs") );
+  //cmd.add( make_option('b', bBlenderExport, "blender") );
+  cmd.add( make_option('a', initialPair.first, "initialPairA") );
+  cmd.add( make_option('b', initialPair.second, "initialPairB") );
+  cmd.add( make_option('d', bRefinePPandDisto, "refinePPandDisto") );
 
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -42,6 +49,9 @@ int main(int argc, char **argv)
     << "[-m|--matchdir path] "
     << "[-o|--outdir path] "
     << "[-p|--pmvs 0 or 1] "
+    << "[-a|--initialPairA number] "
+    << "[-b|--initialPairB number] "
+    << "[-d|--refinePPandDisto 0-> refine only the Focal, 1-> refine Focal, Principal point and radial distortion factors.] "
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -65,6 +75,9 @@ int main(int argc, char **argv)
                                             sMatchesDir,
                                             sOutDir,
                                             true);
+
+  to3DEngine.setInitialPair(initialPair);
+  to3DEngine.setIfRefinePrincipalPointAndRadialDisto(bRefinePPandDisto);
 
   if (to3DEngine.Process())
   {

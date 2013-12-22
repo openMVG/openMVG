@@ -15,7 +15,7 @@ using namespace openMVG;
 /// Compute putative matches between a collection of pictures
 /// Suppose a symmetric matching results : Will compare the
 ///  upper matrix index for image matching.
-/// For descriptor matching betwen two image indexes :
+/// For descriptor matching between two image indexes :
 ///  The distance ratio of the 2 neighbours points is used
 ///   to discard spurious correspondences.
 template <typename KeypointSetT, typename MatcherT>
@@ -24,23 +24,13 @@ class ImageCollectionMatcher_AllInMemory : public ImageCollectionMatcher
   // Alias to internal stored Feature and Descriptor type
   typedef typename KeypointSetT::FeatureT FeatureT;
   typedef typename KeypointSetT::DescriptorT DescriptorT;
-  // Alia to Descriptor value type
+  typedef std::vector<DescriptorT > DescsT; // A collection of descriptors
+  // Alias to Descriptor value type
   typedef typename DescriptorT::bin_type DescBin_typeT;
 
   public:
   ImageCollectionMatcher_AllInMemory(float distRatio) :ImageCollectionMatcher(), fDistRatio(distRatio)
   {
-  }
-
-  ~ImageCollectionMatcher_AllInMemory()
-  {
-    //-- Free descriptor memory:
-    for (typename std::map<size_t, DescBin_typeT *>::const_iterator itDesc = map_Desc.begin();
-      itDesc != map_Desc.end(); ++itDesc)
-    {
-      delete [] itDesc->second;
-    }
-    map_Desc.clear();
   }
 
   /// Load all features and descriptors in memory
@@ -63,20 +53,14 @@ class ImageCollectionMatcher_AllInMemory : public ImageCollectionMatcher
       bOk &= loadFeatsFromFile(sFeatJ, map_Feat[j]);
 
       KeypointSetT kpSetI;
-      bOk &= loadDescsFromBinFile(sDescJ, kpSetI.descriptors());
-      map_Desc[j] = new DescBin_typeT[kpSetI.descriptors().size() *  static_size];
-      for(size_t k=0; k < kpSetI.descriptors().size(); ++k)
-        memcpy(
-          &map_Desc[j][k* static_size],
-          kpSetI.descriptors()[k].getData(),
-           static_size*sizeof(DescBin_typeT));
+      bOk &= loadDescsFromBinFile(sDescJ, map_Desc[j]);
     }
     return bOk;
   }
 
   void Match(
     const std::vector<std::string> & vec_fileNames, // input filenames,
-    IndexedMatchPerPair & map_PutativesMatches)const // the parwise photometric corresponding points
+    IndexedMatchPerPair & map_PutativesMatches)const // the pairwise photometric corresponding points
   {
 #ifdef USE_OPENMP
     std::cout << "Using the OPENMP thread interface" << std::endl;
@@ -87,13 +71,14 @@ class ImageCollectionMatcher_AllInMemory : public ImageCollectionMatcher
     {
       // Load features and descriptors of Inth image
       typename std::map<size_t, std::vector<FeatureT> >::const_iterator iter_FeaturesI = map_Feat.begin();
-      typename std::map<size_t, DescBin_typeT * >::const_iterator iter_DescriptorI = map_Desc.begin();
+      typename std::map<size_t, DescsT >::const_iterator iter_DescriptorI = map_Desc.begin();
       std::advance(iter_FeaturesI, i);
       std::advance(iter_DescriptorI, i);
 
       const std::vector<FeatureT> & featureSetI = iter_FeaturesI->second;
       const size_t featureSetI_Size = iter_FeaturesI->second.size();
-      const DescBin_typeT * tab0 = iter_DescriptorI->second;
+      const DescBin_typeT * tab0 =
+        reinterpret_cast<const DescBin_typeT *>(&iter_DescriptorI->second[0]);
 
       MatcherT matcher10;
       ( matcher10.Build(tab0, featureSetI_Size, DescriptorT::static_size) );
@@ -105,13 +90,14 @@ class ImageCollectionMatcher_AllInMemory : public ImageCollectionMatcher
       {
         // Load descriptor of Jnth image
         typename std::map<size_t, std::vector<FeatureT> >::const_iterator iter_FeaturesJ = map_Feat.begin();
-        typename std::map<size_t, DescBin_typeT * >::const_iterator iter_DescriptorJ = map_Desc.begin();
+        typename std::map<size_t, DescsT >::const_iterator iter_DescriptorJ = map_Desc.begin();
         std::advance(iter_FeaturesJ, j);
         std::advance(iter_DescriptorJ, j);
 
         const std::vector<FeatureT> & featureSetJ = iter_FeaturesJ->second;
         const size_t featureSetJ_Size = iter_FeaturesJ->second.size();
-        const DescBin_typeT * tab1 = iter_DescriptorJ->second;
+        const DescBin_typeT * tab1 =
+          reinterpret_cast<const DescBin_typeT *>(&iter_DescriptorJ->second[0]);
 
         const size_t NNN__ = 2;
         std::vector<int> vec_nIndice10;
@@ -158,8 +144,8 @@ class ImageCollectionMatcher_AllInMemory : public ImageCollectionMatcher
   // Features per image
   std::map<size_t, std::vector<FeatureT> > map_Feat;
   // Descriptors per image as contiguous memory
-  std::map<size_t, typename DescriptorT::bin_type * > map_Desc;
-  // Distance ratio used to discard spurious correspondance
+  std::map<size_t, DescsT > map_Desc;
+  // Distance ratio used to discard spurious correspondence
   float fDistRatio;
 };
 

@@ -11,7 +11,7 @@ Ceres Solver is a portable C++ library for solving non-linear least
 squares problems.
 
 * Download the latest stable `release
-  <https://ceres-solver.googlecode.com/files/ceres-solver-1.6.0.tar.gz>`_
+  <https://ceres-solver.googlecode.com/files/ceres-solver-1.8.0.tar.gz>`_
   or clone the `repository
   <https://ceres-solver.googlesource.com/ceres-solver>`_
 

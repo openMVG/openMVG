@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -152,7 +152,7 @@ namespace lemon {
     ///The type of the paths.
     typedef PredMapPath<Digraph, PredMap> Path;
 
-    ///The \ref BfsDefaultTraits "traits class" of the algorithm.
+    ///The \ref lemon::BfsDefaultTraits "traits class" of the algorithm.
     typedef TR Traits;
 
   private:
@@ -1251,6 +1251,7 @@ namespace lemon {
         visitor.examine(arc);
       }
       _Visitor& visitor;
+      Constraints() {}
     };
   };
 #endif

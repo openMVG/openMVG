@@ -52,10 +52,10 @@ namespace openMVG {
   typedef Eigen::NumTraits<double> EigenDoubleTraits;
 
   typedef Eigen::Vector3d Vec3;
-  typedef Eigen::Vector4d Vec4;
   typedef Eigen::Vector2i Vec2i;
   typedef Eigen::Vector2f Vec2f;
   typedef Eigen::Vector3f Vec3f;
+  typedef Eigen::Matrix<double, 6, 1> Vec6;
   typedef Eigen::Matrix<double, 9, 1> Vec9;
 
   typedef Eigen::Quaternion<double> Quaternion;
@@ -63,15 +63,19 @@ namespace openMVG {
   typedef Eigen::Matrix<double, 3, 3> Mat3;
 
 #if defined(_WIN32) || defined(WIN32)
-  // Handle alignment issue with Mat34, Vec2 on win32 with old compiler
+  // Handle alignment issue with Mat34, Vec2, Vec4 on win32 with old compiler
   enum { NeedsToAlignMat34 = (sizeof(Eigen::Matrix<double, 3, 4>)%16)==0 };
   typedef Eigen::Matrix<double, 3, 4, ((NeedsToAlignMat34)==0 ? Eigen::Aligned : Eigen::DontAlign)> Mat34;
 
   enum { NeedsToAlignVec2= (sizeof(Eigen::Vector2d)%16)==0 };
   typedef Eigen::Matrix<double, 2, 1, ((NeedsToAlignVec2)==0 ? Eigen::Aligned : Eigen::DontAlign)> Vec2;
+
+  enum { NeedsToAlignVec4= (sizeof(Eigen::Vector4d)%16)==0 };
+  typedef Eigen::Matrix<double, 4, 1, ((NeedsToAlignVec4)==0 ? Eigen::Aligned : Eigen::DontAlign)> Vec4;
 #else // defined(_WIN32) || defined(WIN32)
   typedef Eigen::Matrix<double, 3, 4> Mat34;
   typedef Eigen::Vector2d Vec2;
+  typedef Eigen::Vector4d Vec4;
 #endif // defined(_WIN32) || defined(WIN32)
 
   typedef Eigen::Matrix<double, 4, 4> Mat4;
@@ -125,6 +129,10 @@ namespace openMVG {
   // Radian to degree
   inline double R2D(double radian)  {
     return radian / M_PI * 180.0;
+  }
+
+  inline double SIGN(double x) {
+    return x < 0.0 ? -1.0 : 1.0;
   }
 
   // L1 norm = Sum (|x0| + |x1| + |xn|)

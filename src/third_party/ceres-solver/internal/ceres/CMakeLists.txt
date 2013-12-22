@@ -36,6 +36,7 @@ SET(CERES_INTERNAL_SRC
     block_jacobian_writer.cc
     block_random_access_crs_matrix.cc
     block_random_access_dense_matrix.cc
+    block_random_access_diagonal_matrix.cc
     block_random_access_matrix.cc
     block_random_access_sparse_matrix.cc
     block_sparse_matrix.cc
@@ -86,11 +87,11 @@ SET(CERES_INTERNAL_SRC
     program.cc
     residual_block.cc
     residual_block_utils.cc
-    runtime_numeric_diff_cost_function.cc
     schur_complement_solver.cc
     schur_eliminator.cc
     schur_jacobi_preconditioner.cc
     scratch_evaluate_preparer.cc
+    single_linkage_clustering.cc
     solver.cc
     solver_impl.cc
     sparse_matrix.cc
@@ -128,12 +129,13 @@ IF (SCHUR_SPECIALIZATIONS)
   FILE(GLOB CERES_INTERNAL_SCHUR_FILES generated/*.cc)
 ELSE (SCHUR_SPECIALIZATIONS)
   # Only the fully dynamic solver. The build is much faster this way.
-  FILE(GLOB CERES_INTERNAL_SCHUR_FILES generated/schur_eliminator_d_d_d.cc)
+  FILE(GLOB CERES_INTERNAL_SCHUR_FILES generated/*_d_d_d.cc)
 ENDIF (SCHUR_SPECIALIZATIONS)
 
-# For Android, use the internal Glog implementation.
+# Primarily for Android, but optionally for others, use the minimal internal
+# Glog implementation.
 IF (MINIGLOG)
-  ADD_LIBRARY(miniglog STATIC miniglog/glog/logging.cc)
+  ADD_LIBRARY(miniglog miniglog/glog/logging.cc)
   INSTALL(TARGETS miniglog
           EXPORT  CeresExport
           RUNTIME DESTINATION bin
@@ -141,45 +143,20 @@ IF (MINIGLOG)
           ARCHIVE DESTINATION lib${LIB_SUFFIX})
 ENDIF (MINIGLOG)
 
-SET(CERES_LIBRARY_DEPENDENCIES ${GLOG_LIB})
+SET(CERES_LIBRARY_DEPENDENCIES ${GLOG_LIBRARIES})
 
-IF (GFLAGS)
-  LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${GFLAGS_LIB})
-ENDIF (GFLAGS)
+IF (SUITESPARSE AND SUITESPARSE_FOUND)
+  LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${SUITESPARSE_LIBRARIES})
+ENDIF (SUITESPARSE AND SUITESPARSE_FOUND)
 
-IF (SUITESPARSE_FOUND)
-  LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${SUITESPARSEQR_LIB})
-  LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${CHOLMOD_LIB})
-  LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${CCOLAMD_LIB})
-  LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${CAMD_LIB})
-  LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${COLAMD_LIB})
-  LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${AMD_LIB})
-  IF (EXISTS ${SUITESPARSE_CONFIG_LIB})
-    LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${SUITESPARSE_CONFIG_LIB})
-  ENDIF (EXISTS ${SUITESPARSE_CONFIG_LIB})
+IF (CXSPARSE AND CXSPARSE_FOUND)
+  LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${CXSPARSE_LIBRARIES})
+ENDIF (CXSPARSE AND CXSPARSE_FOUND)
 
-  IF (EXISTS ${METIS_LIB})
-    LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${METIS_LIB})
-  ENDIF (EXISTS ${METIS_LIB})
-
-  IF (TBB_FOUND)
-    LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${TBB_LIB})
-    LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${TBB_MALLOC_LIB})
-  ENDIF (TBB_FOUND)
-ENDIF (SUITESPARSE_FOUND)
-
-IF (CXSPARSE_FOUND)
-  LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${CXSPARSE_LIB})
-ENDIF (CXSPARSE_FOUND)
-
-IF (BLAS_AND_LAPACK_FOUND)
+IF (BLAS_FOUND AND LAPACK_FOUND)
   LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${LAPACK_LIBRARIES})
   LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${BLAS_LIBRARIES})
-ENDIF (BLAS_AND_LAPACK_FOUND)
-
-IF (CXSPARSE_FOUND)
-  LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${CXSPARSE_LIB})
-ENDIF (CXSPARSE_FOUND)
+ENDIF (BLAS_FOUND AND LAPACK_FOUND)
 
 IF (OPENMP_FOUND)
   IF (NOT MSVC)
@@ -212,8 +189,8 @@ IF (BUILD_TESTING AND GFLAGS)
               numeric_diff_test_utils.cc
               test_util.cc)
 
-  TARGET_LINK_LIBRARIES(gtest ${GFLAGS_LIB} ${GLOG_LIB})
-  TARGET_LINK_LIBRARIES(test_util ceres gtest ${GLOG_LIB})
+  TARGET_LINK_LIBRARIES(gtest ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES})
+  TARGET_LINK_LIBRARIES(test_util ceres gtest ${GLOG_LIBRARIES})
 
   MACRO (CERES_TEST NAME)
     ADD_EXECUTABLE(${NAME}_test ${NAME}_test.cc)
@@ -230,6 +207,7 @@ IF (BUILD_TESTING AND GFLAGS)
   CERES_TEST(autodiff_local_parameterization)
   CERES_TEST(block_random_access_crs_matrix)
   CERES_TEST(block_random_access_dense_matrix)
+  CERES_TEST(block_random_access_diagonal_matrix)
   CERES_TEST(block_random_access_sparse_matrix)
   CERES_TEST(block_sparse_matrix)
   CERES_TEST(c_api)
@@ -241,6 +219,7 @@ IF (BUILD_TESTING AND GFLAGS)
   CERES_TEST(covariance)
   CERES_TEST(dense_sparse_matrix)
   CERES_TEST(dynamic_autodiff_cost_function)
+  CERES_TEST(dynamic_numeric_diff_cost_function)
   CERES_TEST(evaluator)
   CERES_TEST(gradient_checker)
   CERES_TEST(gradient_checking_cost_function)
@@ -267,17 +246,17 @@ IF (BUILD_TESTING AND GFLAGS)
   CERES_TEST(residual_block)
   CERES_TEST(residual_block_utils)
   CERES_TEST(rotation)
-  CERES_TEST(runtime_numeric_diff_cost_function)
   CERES_TEST(schur_complement_solver)
   CERES_TEST(schur_eliminator)
+  CERES_TEST(single_linkage_clustering)
   CERES_TEST(small_blas)
   CERES_TEST(solver_impl)
 
   # TODO(sameeragarwal): This test should ultimately be made
   # independent of SuiteSparse.
-  IF (SUITESPARSE_FOUND)
+  IF (SUITESPARSE AND SUITESPARSE_FOUND)
     CERES_TEST(compressed_col_sparse_matrix_utils)
-  ENDIF (SUITESPARSE_FOUND)
+  ENDIF (SUITESPARSE AND SUITESPARSE_FOUND)
 
   CERES_TEST(symmetric_linear_solver)
   CERES_TEST(triplet_sparse_matrix)

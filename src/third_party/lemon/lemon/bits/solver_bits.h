@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -44,6 +44,7 @@ namespace lemon {
 
       void clear() {
         first_item = -1;
+        last_item = -1;
         first_free_item = -1;
         items.clear();
         cross.clear();

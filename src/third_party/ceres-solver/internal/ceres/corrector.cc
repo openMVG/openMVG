@@ -32,12 +32,13 @@
 
 #include <cstddef>
 #include <cmath>
+#include "ceres/internal/eigen.h"
 #include "glog/logging.h"
 
 namespace ceres {
 namespace internal {
 
-Corrector::Corrector(double sq_norm, const double rho[3]) {
+Corrector::Corrector(const double sq_norm, const double rho[3]) {
   CHECK_GE(sq_norm, 0.0);
   CHECK_GT(rho[1], 0.0);
   sqrt_rho1_ = sqrt(rho[1]);
@@ -101,20 +102,25 @@ Corrector::Corrector(double sq_norm, const double rho[3]) {
   alpha_sq_norm_ = alpha / sq_norm;
 }
 
-void Corrector::CorrectResiduals(int num_rows, double* residuals) {
+void Corrector::CorrectResiduals(const int num_rows, double* residuals) {
   DCHECK(residuals != NULL);
   // Equation 11 in BANS.
-  for (int r = 0; r < num_rows; ++r) {
-    residuals[r] *= residual_scaling_;
-  }
+  VectorRef(residuals, num_rows) *= residual_scaling_;
 }
 
-void Corrector::CorrectJacobian(int num_rows,
-                                int num_cols,
+void Corrector::CorrectJacobian(const int num_rows,
+                                const int num_cols,
                                 double* residuals,
                                 double* jacobian) {
   DCHECK(residuals != NULL);
   DCHECK(jacobian != NULL);
+
+  // The common case (rho[2] <= 0).
+  if (alpha_sq_norm_ == 0.0) {
+    VectorRef(jacobian, num_rows * num_cols) *= sqrt_rho1_;
+   return;
+  }
+
   // Equation 11 in BANS.
   //
   //  J = sqrt(rho) * (J - alpha^2 r * r' J)

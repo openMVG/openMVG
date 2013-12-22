@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2009
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -34,6 +34,12 @@ namespace lemon {
 
   namespace _radix_sort_bits {
 
+    template <typename Iterator>
+    bool unitRange(Iterator first, Iterator last) {
+      ++first;
+      return first == last;
+    }
+
     template <typename Value>
     struct Identity {
       const Value& operator()(const Value& val) {
@@ -60,9 +66,6 @@ namespace lemon {
       }
       std::iter_swap(first, last);
       ++first;
-      if (!(first < last)) {
-        return first;
-      }
       while (true) {
         while (!(functor(*first) & mask)) {
           ++first;
@@ -71,7 +74,7 @@ namespace lemon {
         while (functor(*last) & mask) {
           --last;
         }
-        if (!(first < last)) {
+        if (unitRange(last, first)) {
           return first;
         }
         std::iter_swap(first, last);
@@ -97,9 +100,6 @@ namespace lemon {
       }
       std::iter_swap(first, last);
       ++first;
-      if (!(first < last)) {
-        return first;
-      }
       while (true) {
         while (functor(*first) < 0) {
           ++first;
@@ -108,7 +108,7 @@ namespace lemon {
         while (functor(*last) >= 0) {
           --last;
         }
-        if (!(first < last)) {
+        if (unitRange(last, first)) {
           return first;
         }
         std::iter_swap(first, last);
@@ -119,7 +119,7 @@ namespace lemon {
     template <typename Value, typename Iterator, typename Functor>
     void radixIntroSort(Iterator first, Iterator last,
                         Functor functor, Value mask) {
-      while (mask != 0 && last - first > 1) {
+      while (mask != 0 && first != last && !unitRange(first, last)) {
         Iterator cut = radixSortPartition(first, last, functor, mask);
         mask >>= 1;
         radixIntroSort(first, cut, functor, mask);

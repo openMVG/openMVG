@@ -49,6 +49,7 @@ const double kEpsilon = 1e-14;
 class PartitionedMatrixViewTest : public ::testing::Test {
  protected :
   virtual void SetUp() {
+    srand(5);
     scoped_ptr<LinearLeastSquaresProblem> problem(
         CreateLinearLeastSquaresProblemFromId(2));
     CHECK_NOTNULL(problem.get());
@@ -57,108 +58,93 @@ class PartitionedMatrixViewTest : public ::testing::Test {
     num_cols_ = A_->num_cols();
     num_rows_ = A_->num_rows();
     num_eliminate_blocks_ = problem->num_eliminate_blocks;
+    LinearSolver::Options options;
+    options.elimination_groups.push_back(num_eliminate_blocks_);
+    pmv_.reset(PartitionedMatrixViewBase::Create(
+                   options,
+                   *down_cast<BlockSparseMatrix*>(A_.get())));
   }
 
   int num_rows_;
   int num_cols_;
   int num_eliminate_blocks_;
-
   scoped_ptr<SparseMatrix> A_;
+  scoped_ptr<PartitionedMatrixViewBase> pmv_;
 };
 
 TEST_F(PartitionedMatrixViewTest, DimensionsTest) {
-  PartitionedMatrixView m(*down_cast<BlockSparseMatrix*>(A_.get()),
-                          num_eliminate_blocks_);
-  EXPECT_EQ(m.num_col_blocks_e(), num_eliminate_blocks_);
-  EXPECT_EQ(m.num_col_blocks_f(), num_cols_ - num_eliminate_blocks_);
-  EXPECT_EQ(m.num_cols_e(), num_eliminate_blocks_);
-  EXPECT_EQ(m.num_cols_f(), num_cols_ - num_eliminate_blocks_);
-  EXPECT_EQ(m.num_cols(), A_->num_cols());
-  EXPECT_EQ(m.num_rows(), A_->num_rows());
+  EXPECT_EQ(pmv_->num_col_blocks_e(), num_eliminate_blocks_);
+  EXPECT_EQ(pmv_->num_col_blocks_f(), num_cols_ - num_eliminate_blocks_);
+  EXPECT_EQ(pmv_->num_cols_e(), num_eliminate_blocks_);
+  EXPECT_EQ(pmv_->num_cols_f(), num_cols_ - num_eliminate_blocks_);
+  EXPECT_EQ(pmv_->num_cols(), A_->num_cols());
+  EXPECT_EQ(pmv_->num_rows(), A_->num_rows());
 }
 
 TEST_F(PartitionedMatrixViewTest, RightMultiplyE) {
-  PartitionedMatrixView m(*down_cast<BlockSparseMatrix*>(A_.get()),
-                          num_eliminate_blocks_);
-
-  srand(5);
-
-  Vector x1(m.num_cols_e());
-  Vector x2(m.num_cols());
+  Vector x1(pmv_->num_cols_e());
+  Vector x2(pmv_->num_cols());
   x2.setZero();
 
-  for (int i = 0; i < m.num_cols_e(); ++i) {
+  for (int i = 0; i < pmv_->num_cols_e(); ++i) {
     x1(i) = x2(i) = RandDouble();
   }
 
-  Vector y1 = Vector::Zero(m.num_rows());
-  m.RightMultiplyE(x1.data(), y1.data());
+  Vector y1 = Vector::Zero(pmv_->num_rows());
+  pmv_->RightMultiplyE(x1.data(), y1.data());
 
-  Vector y2 = Vector::Zero(m.num_rows());
+  Vector y2 = Vector::Zero(pmv_->num_rows());
   A_->RightMultiply(x2.data(), y2.data());
 
-  for (int i = 0; i < m.num_rows(); ++i) {
+  for (int i = 0; i < pmv_->num_rows(); ++i) {
     EXPECT_NEAR(y1(i), y2(i), kEpsilon);
   }
 }
 
 TEST_F(PartitionedMatrixViewTest, RightMultiplyF) {
-  PartitionedMatrixView m(*down_cast<BlockSparseMatrix*>(A_.get()),
-                          num_eliminate_blocks_);
+  Vector x1(pmv_->num_cols_f());
+  Vector x2 = Vector::Zero(pmv_->num_cols());
 
-  srand(5);
-
-  Vector x1(m.num_cols_f());
-  Vector x2 = Vector::Zero(m.num_cols());
-
-  for (int i = 0; i < m.num_cols_f(); ++i) {
+  for (int i = 0; i < pmv_->num_cols_f(); ++i) {
     x1(i) = RandDouble();
-    x2(i + m.num_cols_e()) = x1(i);
+    x2(i + pmv_->num_cols_e()) = x1(i);
   }
 
-  Vector y1 = Vector::Zero(m.num_rows());
-  m.RightMultiplyF(x1.data(), y1.data());
+  Vector y1 = Vector::Zero(pmv_->num_rows());
+  pmv_->RightMultiplyF(x1.data(), y1.data());
 
-  Vector y2 = Vector::Zero(m.num_rows());
+  Vector y2 = Vector::Zero(pmv_->num_rows());
   A_->RightMultiply(x2.data(), y2.data());
 
-  for (int i = 0; i < m.num_rows(); ++i) {
+  for (int i = 0; i < pmv_->num_rows(); ++i) {
     EXPECT_NEAR(y1(i), y2(i), kEpsilon);
   }
 }
 
 TEST_F(PartitionedMatrixViewTest, LeftMultiply) {
-  PartitionedMatrixView m(*down_cast<BlockSparseMatrix*>(A_.get()),
-                          num_eliminate_blocks_);
-
-  srand(5);
-
-  Vector x = Vector::Zero(m.num_rows());
-  for (int i = 0; i < m.num_rows(); ++i) {
+  Vector x = Vector::Zero(pmv_->num_rows());
+  for (int i = 0; i < pmv_->num_rows(); ++i) {
     x(i) = RandDouble();
   }
 
-  Vector y = Vector::Zero(m.num_cols());
-  Vector y1 = Vector::Zero(m.num_cols_e());
-  Vector y2 = Vector::Zero(m.num_cols_f());
+  Vector y = Vector::Zero(pmv_->num_cols());
+  Vector y1 = Vector::Zero(pmv_->num_cols_e());
+  Vector y2 = Vector::Zero(pmv_->num_cols_f());
 
   A_->LeftMultiply(x.data(), y.data());
-  m.LeftMultiplyE(x.data(), y1.data());
-  m.LeftMultiplyF(x.data(), y2.data());
+  pmv_->LeftMultiplyE(x.data(), y1.data());
+  pmv_->LeftMultiplyF(x.data(), y2.data());
 
-  for (int i = 0; i < m.num_cols(); ++i) {
+  for (int i = 0; i < pmv_->num_cols(); ++i) {
     EXPECT_NEAR(y(i),
-                (i < m.num_cols_e()) ? y1(i) : y2(i - m.num_cols_e()),
+                (i < pmv_->num_cols_e()) ? y1(i) : y2(i - pmv_->num_cols_e()),
                 kEpsilon);
   }
 }
 
 TEST_F(PartitionedMatrixViewTest, BlockDiagonalEtE) {
-  PartitionedMatrixView m(*down_cast<BlockSparseMatrix*>(A_.get()),
-                          num_eliminate_blocks_);
-
   scoped_ptr<BlockSparseMatrix>
-      block_diagonal_ee(m.CreateBlockDiagonalEtE());
+      block_diagonal_ee(pmv_->CreateBlockDiagonalEtE());
   const CompressedRowBlockStructure* bs  = block_diagonal_ee->block_structure();
 
   EXPECT_EQ(block_diagonal_ee->num_rows(), 2);
@@ -171,11 +157,8 @@ TEST_F(PartitionedMatrixViewTest, BlockDiagonalEtE) {
 }
 
 TEST_F(PartitionedMatrixViewTest, BlockDiagonalFtF) {
-  PartitionedMatrixView m(*down_cast<BlockSparseMatrix*>(A_.get()),
-                          num_eliminate_blocks_);
-
   scoped_ptr<BlockSparseMatrix>
-      block_diagonal_ff(m.CreateBlockDiagonalFtF());
+      block_diagonal_ff(pmv_->CreateBlockDiagonalFtF());
   const CompressedRowBlockStructure* bs  = block_diagonal_ff->block_structure();
 
   EXPECT_EQ(block_diagonal_ff->num_rows(), 3);
