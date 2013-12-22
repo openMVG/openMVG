@@ -37,7 +37,7 @@ Setup the required external library.
  $ cmake -DCMAKE_BUILD_TYPE=RELEASE . ../openMVG/src/
 
 If you want have an IDE openable project with codeblocks:
- $ cmake -G "CodeBlocks - Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE . ../openmvg/src/
+ $ cmake -G "CodeBlocks - Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE . ../openMVG/src/
 
 Compile the project
  $ make
@@ -77,6 +77,6 @@ Mac compilation
  $ cd ..
  $ mkdir openMVG_Build
  $ cd openMVG_Build
- $ cmake -DCMAKE_BUILD_TYPE=RELEASE -G "Xcode" . ../openmvg/src/
+ $ cmake -DCMAKE_BUILD_TYPE=RELEASE -G "Xcode" . ../openMVG/src/
  $ xcodebuild -configuration Release
 
