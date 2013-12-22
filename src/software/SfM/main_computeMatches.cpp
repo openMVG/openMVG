@@ -110,7 +110,7 @@ int main(int argc, char **argv)
   if (!stlplus::is_file(sListsFile) )
   {
     std::cerr << std::endl
-      << "The input matching/lists.txt is missing" << std::endl;
+      << "The input file \""<< sListsFile << "\" is missing" << std::endl;
     return false;
   }
 
@@ -188,7 +188,7 @@ int main(int argc, char **argv)
         SIFTDetector(imageGray,
           kpSet.features(), kpSet.descriptors(),
           bOctMinus1, true, dPeakThreshold);
-        
+
         kpSet.saveToBinFile(sFeat, sDesc);
         vec_imagesSize[i] = make_pair(imageGray.Width(), imageRGB.Height());
       }
