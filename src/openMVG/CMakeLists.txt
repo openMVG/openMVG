@@ -10,3 +10,5 @@ ADD_SUBDIRECTORY(bundle_adjustment)
 
 ADD_SUBDIRECTORY(exif_IO)
 ADD_SUBDIRECTORY(split)
+
+ADD_SUBDIRECTORY(linearProgramming)

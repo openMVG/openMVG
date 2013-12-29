@@ -37,9 +37,11 @@
 #include <Eigen/Geometry>
 #include <Eigen/LU>
 #include <Eigen/QR>
+#include <Eigen/SparseCore>
 #include <Eigen/SVD>
 
 #include <cmath>
+#include <numeric>
 #include <string>
 #include <iostream>
 #include <vector>
@@ -95,6 +97,10 @@ namespace openMVG {
   typedef Eigen::Matrix<double, 4, Eigen::Dynamic> Mat4X;
 
   typedef Eigen::Matrix<double, Eigen::Dynamic, 9> MatX9;
+
+  //-- Sparse Matrix (Column major, and row major)
+  typedef Eigen::SparseMatrix<double> sMat;
+  typedef Eigen::SparseMatrix<double,Eigen::RowMajor> sRMat;
 
   //--------------
   //-- Function --
