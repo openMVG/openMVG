@@ -40,7 +40,7 @@ See [Authors](https://github.com/openMVG/openMVG/raw/master/AUTHORS) text file
 Documentation
 -------
 
-See [./docs/openmvg.pdf](https://github.com/openMVG/openMVG/raw/master/docs/openmvg.pdf)
+See [documentation](http://openmvg.readthedocs.org/en/latest)
 
 ----------------
 Acknowledgements
