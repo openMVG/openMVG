@@ -19,8 +19,7 @@
 #include "openMVG_Samples/siftPutativeMatches/two_view_matches.hpp"
 
 // Bundle Adjustment includes
-#include "openMVG/bundle_adjustment/pinhole_Rtf_ceres_functor.hpp"
-#include "openMVG/bundle_adjustment/pinhole_f_Rt_ceres_functor.hpp"
+#include "openMVG/bundle_adjustment/pinhole_ceres_functor.hpp"
 #include "openMVG/bundle_adjustment/pinhole_brown_Rt_ceres_functor.hpp"
 #include "openMVG/bundle_adjustment/problem_data_container.hpp"
 
@@ -514,10 +513,9 @@ void do_bundle_adjustment(
     // dimensional residual. Internally, the cost function stores the observed
     // image location and compares the reprojection against the observation.
     ceres::CostFunction* cost_function =
-        new ceres::AutoDiffCostFunction<Pinhole_Rtf_ReprojectionError, 2, 7, 3>(
-            new Pinhole_Rtf_ReprojectionError(
-                ba_problem.observations()[2 * i + 0],
-                ba_problem.observations()[2 * i + 1]));
+        new ceres::AutoDiffCostFunction<pinhole_reprojectionError::ErrorFunc_Refine_Camera_3DPoints, 2, 7, 3>(
+            new pinhole_reprojectionError::ErrorFunc_Refine_Camera_3DPoints(
+                & ba_problem.observations()[2 * i]));
 
     problem.AddResidualBlock(cost_function,
                              NULL, // squared loss
@@ -688,10 +686,9 @@ void do_bundle_adjustment_common_focal(
     // dimensional residual. Internally, the cost function stores the observed
     // image location and compares the reprojection against the observation.
     ceres::CostFunction* cost_function =
-        new ceres::AutoDiffCostFunction<Pinhole_f_Rt_ReprojectionError, 2, 1, 6, 3>(
-            new Pinhole_f_Rt_ReprojectionError(
-                ba_problem.observations()[2 * i + 0],
-                ba_problem.observations()[2 * i + 1]));
+        new ceres::AutoDiffCostFunction<pinhole_reprojectionError::ErrorFunc_Refine_Camera_3DPoints_focal, 2, 1, 6, 3>(
+            new pinhole_reprojectionError::ErrorFunc_Refine_Camera_3DPoints_focal(
+                & ba_problem.observations()[2 * i]));
 
     problem.AddResidualBlock(cost_function,
                              NULL, // squared loss
@@ -874,10 +871,9 @@ void do_bundle_adjustment_common_intrinsics(
     // dimensional residual. Internally, the cost function stores the observed
     // image location and compares the reprojection against the observation.
     ceres::CostFunction* cost_function =
-        new ceres::AutoDiffCostFunction<Pinhole_brown_Rt_ReprojectionError, 2, 6, 6, 3>(
-            new Pinhole_brown_Rt_ReprojectionError(
-                ba_problem.observations()[2 * i + 0],
-                ba_problem.observations()[2 * i + 1]));
+        new ceres::AutoDiffCostFunction<pinhole_brown_reprojectionError::ErrorFunc_Refine_Camera_3DPoints, 2, 6, 6, 3>(
+            new pinhole_brown_reprojectionError::ErrorFunc_Refine_Camera_3DPoints(
+                & ba_problem.observations()[2 * i + 0]));
 
     problem.AddResidualBlock(cost_function,
                              NULL, // squared loss
@@ -945,6 +941,7 @@ void do_bundle_adjustment_common_intrinsics(
       ceres::AngleAxisToRotationMatrix(cam, R.data());
       Vec3 t(cam[3], cam[4], cam[5]);
 
+      using namespace pinhole_brown_reprojectionError;
       // Update the camera
       PinholeCamera & sCam = vec_cam[cpt];
       const double * camIntrinsics = ba_problem.mutable_cameras_intrinsic();

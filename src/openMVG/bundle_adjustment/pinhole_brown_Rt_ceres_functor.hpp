@@ -21,6 +21,8 @@
 namespace openMVG{
 namespace bundle_adjustment{
 
+namespace pinhole_brown_reprojectionError {
+
 // Enum to order the intrinsics parameters into a single parameter block
 enum {
   OFFSET_FOCAL_LENGTH,
@@ -33,48 +35,64 @@ enum {
 //  OFFSET_P2,
 };
 
-/// Templated functor for pinhole camera model to be used with Ceres.
-/// The camera is parameterized using two blocks :
-///   - first a block of intrinsic values [focal;ppx;ppy;k1;k2;k3]
-///   - second for camera position and orientation [R;t]
-///     - 3 for rotation(angle axis), 3 for translation.
-///   Principal point is assumed being applied on observed points.
-///
-struct Pinhole_brown_Rt_ReprojectionError {
-  Pinhole_brown_Rt_ReprojectionError(double observed_x, double observed_y)
-      : m_observed_x(observed_x), m_observed_y(observed_y) {}
+/**
+ * @brief Ceres functor to refine a pinhole camera using a brown radial
+ *  distortion model, 3D points and focal.
+ * 
+ *  - first the intrinsic data block [focal;ppx;ppy;k1;k2;k3]
+ *  - second the camera extrinsic block(camera orientation and position) [R;t]
+ *    - 3 for rotation (angle axis), 3 for translation.
+ *  - third the 3D point data block
+ * 
+ * @see ApplyRadialDistortionIntrinsics
+ */
+
+struct ErrorFunc_Refine_Camera_3DPoints
+{
+  ErrorFunc_Refine_Camera_3DPoints(const double* const pos_2dpoint)
+  {
+    m_pos_2dpoint[0] = pos_2dpoint[0];
+    m_pos_2dpoint[1] = pos_2dpoint[1];
+  }
 
   /// Compute the residual error after reprojection
   /// residual = observed - BrownDistortion([R|t] X)
+  /**
+   * @param[in] cam_intrinsics: Camera intrinsics
+   * @param[in] cam_Rt: Camera extrinsics using one block of 6 parameters [R;t]:
+   *   - 3 for rotation(angle axis), 3 for translation
+   * @param[in] pos_3dpoint
+   * @param[out] out_residuals
+   */
   template <typename T>
   bool operator()(
-    const T* const intrinsics,
-    const T* const Rt,
-    const T* const X,
-    T* residuals) const
+    const T* const cam_intrinsics,
+    const T* const cam_Rt,
+    const T* const pos_3dpoint,
+    T* out_residuals) const
   {
     // Rt[0,1,2] : angle-axis camera rotation.
     T x[3];
-    ceres::AngleAxisRotatePoint(Rt, X, x);
+    ceres::AngleAxisRotatePoint(cam_Rt, pos_3dpoint, x);
 
     // Rt[3,4,5] : the camera translation.
-    x[0] += Rt[3];
-    x[1] += Rt[4];
-    x[2] += Rt[5];
+    x[0] += cam_Rt[3];
+    x[1] += cam_Rt[4];
+    x[2] += cam_Rt[5];
 
     // Point from homogeneous to euclidean.
     T xe = x[0] / x[2];
     T ye = x[1] / x[2];
 
     // Unpack the intrinsics.
-    const T& focal_length      = intrinsics[OFFSET_FOCAL_LENGTH];
-    const T& principal_point_x = intrinsics[OFFSET_PRINCIPAL_POINT_X];
-    const T& principal_point_y = intrinsics[OFFSET_PRINCIPAL_POINT_Y];
-    const T& k1                = intrinsics[OFFSET_K1];
-    const T& k2                = intrinsics[OFFSET_K2];
-    const T& k3                = intrinsics[OFFSET_K3];
-//    const T& p1                = intrinsics[OFFSET_P1];
-//    const T& p2                = intrinsics[OFFSET_P2];
+    const T& focal_length      = cam_intrinsics[OFFSET_FOCAL_LENGTH];
+    const T& principal_point_x = cam_intrinsics[OFFSET_PRINCIPAL_POINT_X];
+    const T& principal_point_y = cam_intrinsics[OFFSET_PRINCIPAL_POINT_Y];
+    const T& k1                = cam_intrinsics[OFFSET_K1];
+    const T& k2                = cam_intrinsics[OFFSET_K2];
+    const T& k3                = cam_intrinsics[OFFSET_K3];
+//  const T& p1                = cam_intrinsics[OFFSET_P1];
+//  const T& p2                = cam_intrinsics[OFFSET_P2];
 
     T predicted_x, predicted_y;
 
@@ -90,15 +108,16 @@ struct Pinhole_brown_Rt_ReprojectionError {
       &predicted_y);
 
     // The error is the difference between the predicted and observed position.
-    residuals[0] = predicted_x - T(m_observed_x);
-    residuals[1] = predicted_y - T(m_observed_y);
+    out_residuals[0] = predicted_x - T(m_pos_2dpoint[0]);
+    out_residuals[1] = predicted_y - T(m_pos_2dpoint[1]);
 
     return true;
   }
 
-  double m_observed_x, m_observed_y;
+  double m_pos_2dpoint[2]; // The 2D observation
 };
 
+} // namespace pinhole_brown_reprojectionError
 } // namespace bundle_adjustment
 } // namespace openMVG
 

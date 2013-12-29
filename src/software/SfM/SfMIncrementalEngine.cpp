@@ -11,8 +11,6 @@
 #include "openMVG/matching/indMatch_utils.hpp"
 // Bundle Adjustment includes
 #include "openMVG/bundle_adjustment/pinhole_brown_Rt_ceres_functor.hpp"
-#include "openMVG/bundle_adjustment/pinhole_Rtf_ceres_functor.hpp"
-#include "openMVG/bundle_adjustment/pinhole_f_Rt_ceres_functor.hpp"
 #include "openMVG/bundle_adjustment/problem_data_container.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -1403,10 +1401,9 @@ void IncrementalReconstructionEngine::BundleAdjustment()
     // dimensional residual. Internally, the cost function stores the observed
     // image location and compares the reprojection against the observation.
     ceres::CostFunction* cost_function =
-      new ceres::AutoDiffCostFunction<Pinhole_brown_Rt_ReprojectionError, 2, 6, 6, 3>(
-            new Pinhole_brown_Rt_ReprojectionError(
-                ba_problem.observations()[2 * i + 0],
-                ba_problem.observations()[2 * i + 1]));
+      new ceres::AutoDiffCostFunction<pinhole_brown_reprojectionError::ErrorFunc_Refine_Camera_3DPoints, 2, 6, 6, 3>(
+            new pinhole_brown_reprojectionError::ErrorFunc_Refine_Camera_3DPoints(
+                & ba_problem.observations()[2 * i + 0]));
 
     problem.AddResidualBlock(cost_function,
                              //NULL, // squared loss
@@ -1495,6 +1492,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
       size_t intrinsicId = map_camIndexToNumber_intrinsic[imageId];
       const double * camIntrinsics = ba_problem.mutable_cameras_intrinsic() + intrinsicId * 6;
       // Update the camera with update intrinsic and extrinsic parameters
+      using namespace pinhole_brown_reprojectionError;
       BrownPinholeCamera & sCam = iter->second;
       sCam = BrownPinholeCamera(
         camIntrinsics[OFFSET_FOCAL_LENGTH],
@@ -1515,6 +1513,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
     {
       const double * camIntrinsics = ba_problem.mutable_cameras_intrinsic() + cpt * 6;
       Vec6 & intrinsic = iterIntrinsicGroup->second;
+      using namespace pinhole_brown_reprojectionError;
       intrinsic << camIntrinsics[OFFSET_FOCAL_LENGTH],
         camIntrinsics[OFFSET_PRINCIPAL_POINT_X],
         camIntrinsics[OFFSET_PRINCIPAL_POINT_Y],

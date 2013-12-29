@@ -17,7 +17,7 @@
 #include "openMVG/multiview/projection.hpp"
 
 // Bundle Adjustment includes
-#include "openMVG/bundle_adjustment/pinhole_Rtf_ceres_functor.hpp"
+#include "openMVG/bundle_adjustment/pinhole_ceres_functor.hpp"
 #include "openMVG/bundle_adjustment/problem_data_container.hpp"
 
 using namespace openMVG;
@@ -96,10 +96,9 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_RTf) {
     // dimensional residual. Internally, the cost function stores the observed
     // image location and compares the reprojection against the observation.
     ceres::CostFunction* cost_function =
-        new ceres::AutoDiffCostFunction<Pinhole_Rtf_ReprojectionError, 2, 7, 3>(
-            new Pinhole_Rtf_ReprojectionError(
-                ba_problem.observations()[2 * i + 0],
-                ba_problem.observations()[2 * i + 1]));
+        new ceres::AutoDiffCostFunction<pinhole_reprojectionError::ErrorFunc_Refine_Camera_3DPoints, 2, 7, 3>(
+            new pinhole_reprojectionError::ErrorFunc_Refine_Camera_3DPoints(
+                & ba_problem.observations()[2 * i]));
 
     problem.AddResidualBlock(cost_function,
                              NULL, // squared loss
