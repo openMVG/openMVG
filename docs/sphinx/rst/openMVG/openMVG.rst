@@ -5,8 +5,17 @@ openMVG
 The openMVG library core module
 ====================================
 
-.. The main contribution of the openMVG library is the multiview and robust_estimation libraries allowing to handle easily Multiple View Geometry related task.
-.. Other libraries provide a common framework to use the multiview modules from images data.
+The core openMVG library provides data-structure and functionnalities to:
+ - open, write, manipulate images,
+ - manipulate and match local descriptions of images (features, descriptors, matching),
+ - compute corresponding points between image pairs and collections,
+ - estimate Multiple View Geometry relations between image pairs,
+ - refine camera and structure parameters (Bundle Adjustment),
+ - handle points, cameras and projections matrices.
+
+Use within the robust_estimation libraries it allows estimation of Multiple View Geometry relations from point matches.
+
+Here the list of libraries that:
 
 .. toctree::
   :maxdepth: 1
