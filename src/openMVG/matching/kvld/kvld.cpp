@@ -509,5 +509,3 @@ void writeResult( const string output,
   kvldScore.close();
 }
 
-}
-
