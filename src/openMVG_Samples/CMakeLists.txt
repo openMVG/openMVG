@@ -8,3 +8,5 @@ ADD_SUBDIRECTORY(undisto_Brown)
 
 ADD_SUBDIRECTORY(exifParsing)
 ADD_SUBDIRECTORY(sensorWidthDatabase)
+
+ADD_SUBDIRECTORY(kvld_filter)
