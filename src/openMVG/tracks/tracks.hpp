@@ -197,7 +197,7 @@ struct TracksBuilder
   }
 
   /// Remove the pair that have too few correspondences.
-  bool FilterPairWiseMinimumMatches(size_t minMatchesOccurences)
+  bool FilterPairWiseMinimumMatches(size_t minMatchesOccurences, bool bVerbose = false)
   {
     std::vector<size_t> vec_tracksToRemove;
     std::map< size_t, set<size_t> > map_tracksIdPerImages;
@@ -233,7 +233,8 @@ struct TracksBuilder
     sort(vec_tracksToRemove.begin(), vec_tracksToRemove.end());
     std::vector<size_t>::iterator it = unique (vec_tracksToRemove.begin(), vec_tracksToRemove.end());
     vec_tracksToRemove.resize( std::distance(vec_tracksToRemove.begin(), it) );
-    cout << endl << endl <<vec_tracksToRemove.size() << " Tracks will be removed"<< endl;
+    if (bVerbose)
+      cout << endl << endl <<vec_tracksToRemove.size() << " Tracks will be removed"<< endl;
     for_each (vec_tracksToRemove.begin(), vec_tracksToRemove.end(),
       std::bind1st( std::mem_fun( &UnionFindObject::eraseClass ), myTracksUF.get() ));
     return false;

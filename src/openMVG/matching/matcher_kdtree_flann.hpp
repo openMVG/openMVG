@@ -95,8 +95,8 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
    *
    * \param[in]   query     The query array
    * \param[in]   nbQuery   The number of query rows
-   * \param[out]  indice    The indices of arrays in the dataset that
-   *  have been computed as the nearest arrays.
+   * \param[out]  indice    For each "query" it save the index of the "NN"
+   * nearest entry in the dataset (provided in Build).
    * \param[out]  distance  The distances between the matched arrays.
    * \param[out]  NN        The number of maximal neighbor that could
    *  will be searched.
