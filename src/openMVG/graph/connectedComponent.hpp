@@ -12,7 +12,7 @@
 
 namespace openMVG
 {
-namespace graph
+namespace graphUtils
 {
 
 /// Export node of each CC (Connected Component) in a map
@@ -36,7 +36,7 @@ std::map<size_t, std::set<lemon::ListGraph::Node> >  exportGraphToMapSubgraphs(
   return map_subgraphs;
 }
 
-} // namespace graph
+} // namespace graphUtils
 } // namespace openMVG
 
 #endif // OPENMVG_GRAPH_CONNECTED_COMPONENT_H_
