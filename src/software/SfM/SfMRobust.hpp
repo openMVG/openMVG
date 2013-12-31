@@ -59,7 +59,7 @@ bool robustEssential(const Mat3 & K1, const Mat3 & K2,
 
   // Robustly estimation of the Essential matrix and it's precision
   std::pair<double,double> ACRansacOut = ACRANSAC(kernel, *pvec_inliers,
-    ACRANSAC_ITER, pE, precision, true);
+    ACRANSAC_ITER, pE, precision, false);
   *errorMax = ACRansacOut.first;
 
   return pvec_inliers->size() > 2.5 * SolverType::MINIMUM_SAMPLES;
@@ -110,10 +110,7 @@ bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
       }
     }
   }
-  // Check the solution :
-  std::cout << std::endl << "bundlerHelp::estimate_Rt_fromE" << std::endl;
-  std::cout << "\t Number of points in front of both cameras:"
-    << f[0] << " " << f[1] << " " << f[2] << " " << f[3] << std::endl;
+  // Check the solution:
   std::vector<size_t>::iterator iter = max_element(f.begin(), f.end());
   if(*iter != 0)  {
     size_t index = std::distance(f.begin(),iter);

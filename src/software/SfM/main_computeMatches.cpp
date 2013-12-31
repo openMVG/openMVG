@@ -19,12 +19,6 @@
 #include "openMVG/matching/matcher_kdtree_flann.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
 
-/// Generic Image Collection image matching
-#include "software/SfM/ImageCollectionMatcher_AllInMemory.hpp"
-#include "software/SfM/ImageCollectionGeometricFilter.hpp"
-#include "software/SfM/ImageCollection_F_ACRobust.hpp"
-#include "software/SfM/pairwiseAdjacencyDisplay.hpp"
-
 /// Feature detector and descriptor interface
 #include "patented/sift/SIFT.hpp"
 
@@ -52,7 +46,6 @@ int main(int argc, char **argv)
   std::string sOutDir = "";
   float fDistRatio = .6f;
   bool bOctMinus1 = false;
-  size_t coefZoom = 1;
   float dPeakThreshold = 0.04f;
 
   cmd.add( make_option('i', sImaDirectory, "imadir") );
@@ -164,7 +157,7 @@ int main(int argc, char **argv)
       std::string sDesc = stlplus::create_filespec(sOutDir,
         stlplus::basename_part(vec_fileNames[i]), "desc");
 
-      //Test if descriptor and feature was already computed
+      //Test if descriptors and features was already computed
       if (stlplus::file_exists(sFeat) && stlplus::file_exists(sDesc)) {
 
         if (ReadImage(vec_fileNames[i].c_str(), &imageRGB)) {
