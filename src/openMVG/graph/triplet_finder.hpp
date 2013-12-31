@@ -94,7 +94,7 @@ bool List_Triplets(const GraphT & g, std::vector< Triplet > & vec_triplets)
         if (cycleEdge!= INVALID && !map_edge[cycleEdge])
         {
           // Elementary cycle found (make value follow a monotonic ascending serie)
-          double triplet[3] = {
+          int triplet[3] = {
             g.id(itNode),
             g.id(g.target(itPrev)),
             g.id(g.target(vec_edges[i]))};

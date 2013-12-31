@@ -5,7 +5,7 @@
 
 #include "openMVG/multiview/essential.hpp"
 
-#include "openMVG/graph/graph_triplet_finder.hpp"
+#include "openMVG/graph/triplet_finder.hpp"
 using namespace openMVG::graphUtils;
 
 #include "third_party/vectorGraphics/svgDrawer.hpp"
@@ -90,12 +90,12 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
 
   // List sucessives triplets of the large loop of camera
   std::vector< graphUtils::Triplet > vec_triplets;
-  for (int i = 0; i < iNviews; ++i)
+  for (size_t i = 0; i < iNviews; ++i)
   {
-    const int iPlus1 = modifiedMod(i+1,iNviews);
-    const int iPlus2 = modifiedMod(i+2,iNviews);
+    const size_t iPlus1 = modifiedMod(i+1,iNviews);
+    const size_t iPlus2 = modifiedMod(i+2,iNviews);
     //-- sort the triplet index to have a monotic ascending series of value
-    double triplet[3] = {i, iPlus1, iPlus2};
+    size_t triplet[3] = {i, iPlus1, iPlus2};
     std::sort(&triplet[0], &triplet[3]);
     vec_triplets.push_back(Triplet(triplet[0],triplet[1],triplet[2]));
   }

@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/graph/graph_triplet_finder.hpp"
+#include "openMVG/graph/triplet_finder.hpp"
 using namespace openMVG::graphUtils;
 
 #include "CppUnitLite/TestHarness.h"
