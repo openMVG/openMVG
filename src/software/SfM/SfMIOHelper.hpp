@@ -11,12 +11,13 @@
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/split/split.hpp"
 
-#include <vector>
-#include <set>
-#include <string>
 #include <fstream>
 #include <iterator>
+#include <set>
 #include <sstream>
+#include <string>
+#include <vector>
+
 namespace openMVG{
 namespace SfMIO{
 
@@ -71,8 +72,8 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
                            std::string sFileName,
                            bool bVerbose = true )
 {
-
-  std::set<IntrinsicCameraInfo, IntrinsicCameraInfo> set_focalGroup;
+  typedef std::set<IntrinsicCameraInfo, IntrinsicCameraInfo> setIntrinsicCameraInfo;
+  setIntrinsicCameraInfo set_focalGroup;
 
   std::ifstream in(sFileName.c_str());
   if(!in.is_open())  {
@@ -174,8 +175,7 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
       }
     }
 
-    std::pair<std::set<IntrinsicCameraInfo>::iterator, bool> ret = set_focalGroup.insert(intrinsicCamInfo);
-
+    std::pair<setIntrinsicCameraInfo::iterator, bool> ret = set_focalGroup.insert(intrinsicCamInfo);
     if ( ret.second )
     {
       vec_focalGroup.push_back(intrinsicCamInfo);
