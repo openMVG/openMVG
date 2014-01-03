@@ -8,7 +8,7 @@
 #include "CppUnitLite/TestHarness.h"
 #include "testing/testing.h"
 
-#include "openMVG/linearProgramming/lInfinitycomputervision/resection_kernel.hpp"
+#include "openMVG/linearProgramming/lInfinityCV/resection_kernel.hpp"
 #include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
 #include "openMVG/robust_estimation/score_evaluator.hpp"
 #include "openMVG/multiview/projection.hpp"
@@ -36,7 +36,7 @@ TEST(Resection_L_Infinity, Robust_OutlierFree) {
 
   // Solve the problem and check that fitted value are good enough
   {
-    typedef  lInfinitycomputervision::kernel::l1PoseResectionKernel KernelType;
+    typedef  lInfinityCV::kernel::l1PoseResectionKernel KernelType;
     const Mat & pt2D = d2._x[nResectionCameraIndex];
     const Mat & pt3D = d2._X;
     KernelType kernel(pt2D, pt3D);
@@ -90,7 +90,7 @@ TEST(Resection_L_Infinity, Robust_OneOutlier) {
 
   // Solve the problem and check that fitted value are good enough
   {
-    typedef  lInfinitycomputervision::kernel::l1PoseResectionKernel KernelType;
+    typedef  lInfinityCV::kernel::l1PoseResectionKernel KernelType;
     const Mat & pt2D = d2._x[nResectionCameraIndex];
     const Mat & pt3D = d2._X;
     KernelType kernel(pt2D, pt3D);

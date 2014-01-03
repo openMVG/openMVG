@@ -24,7 +24,7 @@
 //--
 
 namespace openMVG   {
-namespace lInfinitycomputervision  {
+namespace lInfinityCV  {
 
 using namespace linearProgramming;
 
@@ -120,7 +120,7 @@ struct Triangulation_L1_ConstraintBuilder
 };
 
 
-} // namespace lInfinitycomputervision
+} // namespace lInfinityCV
 } // namespace openMVG
 
 #endif // OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_H_
