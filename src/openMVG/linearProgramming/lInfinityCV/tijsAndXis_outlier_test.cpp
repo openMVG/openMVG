@@ -15,7 +15,7 @@
 #include "openMVG/linearProgramming/linearProgrammingMOSEK.hpp"
 
 #include "openMVG/linearProgramming/bisectionLP.hpp"
-#include "openMVG/linearProgramming/lInfinitycomputervision/translationAndStructureFrom_xi_Ri_noise.hpp"
+#include "openMVG/linearProgramming/lInfinityCV/tijsAndXis_From_xi_Ri_noise.hpp"
 
 #include <iostream>
 #include <vector>
@@ -23,7 +23,7 @@
 using namespace openMVG;
 
 using namespace linearProgramming;
-using namespace lInfinitycomputervision;
+using namespace lInfinityCV;
 
 TEST(Translation_Structure_L_Infinity_Noisy, Outlier_OSICLP_SOLVER) {
 

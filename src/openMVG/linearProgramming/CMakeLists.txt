@@ -32,4 +32,4 @@ ENDIF (MOSEK_FOUND)
 
 UNIT_TEST(openMVG_linearProgramming linearProgramming "openMVG_linearProgramming")
 
-ADD_SUBDIRECTORY(lInfinitycomputervision)
+ADD_SUBDIRECTORY(lInfinityCV)

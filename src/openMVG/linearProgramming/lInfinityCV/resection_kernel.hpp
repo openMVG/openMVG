@@ -13,7 +13,7 @@
 #include "openMVG/numeric/numeric.h"
 
 namespace openMVG {
-namespace lInfinitycomputervision {
+namespace lInfinityCV {
 namespace kernel {
 
 using namespace std;
@@ -44,7 +44,7 @@ typedef two_view::kernel::Kernel<l1SixPointResectionSolver,
   l1SixPointResectionSolver, Mat34>  l1PoseResectionKernel;
 
 }  // namespace kernel
-}  // namespace lInfinitycomputervision
+}  // namespace lInfinityCV
 }  // namespace openMVG
 
 #endif  // OPENMVG_RESECTION_L1_KERNEL_H_

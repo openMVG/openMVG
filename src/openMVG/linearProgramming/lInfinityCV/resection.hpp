@@ -25,7 +25,7 @@
 //--
 
 namespace openMVG   {
-namespace lInfinitycomputervision  {
+namespace lInfinityCV  {
 
 using namespace linearProgramming;
 
@@ -186,7 +186,7 @@ struct Resection_L1_ConstraintBuilder
   Mat3X _3DPt;
 };
 
-} // namespace lInfinitycomputervision
+} // namespace lInfinityCV
 } // namespace openMVG
 
 #endif // OPENMVG_LINFINITY_COMPUTER_VISION_RESECTION_H_

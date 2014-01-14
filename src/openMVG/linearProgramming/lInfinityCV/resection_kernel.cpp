@@ -8,13 +8,13 @@
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
 #include "openMVG/linearProgramming/bisectionLP.hpp"
 
-#include "openMVG/linearProgramming/lInfinitycomputervision/resection.hpp"
-#include "openMVG/linearProgramming/lInfinitycomputervision/resection_kernel.hpp"
+#include "openMVG/linearProgramming/lInfinityCV/resection.hpp"
+#include "openMVG/linearProgramming/lInfinityCV/resection_kernel.hpp"
 
 #include <cassert>
 
 namespace openMVG {
-namespace lInfinitycomputervision {
+namespace lInfinityCV {
 namespace kernel {
 
 using namespace std;
@@ -22,7 +22,7 @@ using namespace std;
 void translate(const Mat3X & X, const Vec3 & vecTranslation,
                Mat3X * XPoints) {
   XPoints->resize(X.rows(), X.cols());
-  for (typename Mat3::Index i=0; i<X.cols(); ++i)  {
+  for (size_t i=0; i<X.cols(); ++i)  {
     XPoints->col(i) = X.col(i) + vecTranslation;
   }
 }
@@ -64,5 +64,5 @@ void l1SixPointResectionSolver::Solve(const Mat &pt2D, const Mat &pt3d, vector<M
 }
 
 }  // namespace kernel
-}  // namespace lInfinitycomputervision
+}  // namespace lInfinityCV
 }  // namespace openMVG

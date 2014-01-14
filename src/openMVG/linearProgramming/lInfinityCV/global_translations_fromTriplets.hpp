@@ -23,7 +23,7 @@
 //- Conference: ICCV.
 
 namespace openMVG   {
-namespace lInfinitycomputervision  {
+namespace lInfinityCV  {
 
 using namespace linearProgramming;
 
@@ -202,7 +202,7 @@ struct Tifromtij_ConstraintBuilder_OneLambdaPerTrif
   const std::vector< relativeInfo > & _vec_relative; // /!\ memory Alias
 };
 
-} // namespace lInfinitycomputervision
+} // namespace lInfinityCV
 } // namespace openMVG
 
 #endif // OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMTRIPLETS_H_

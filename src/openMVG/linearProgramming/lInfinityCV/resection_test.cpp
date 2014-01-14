@@ -16,17 +16,17 @@
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
 #include "openMVG/linearProgramming/linearProgrammingMOSEK.hpp"
 #include "openMVG/linearProgramming/bisectionLP.hpp"
-#include "openMVG/linearProgramming/lInfinitycomputervision/resection.hpp"
+#include "openMVG/linearProgramming/lInfinityCV/resection.hpp"
 
 using namespace openMVG;
 
 using namespace linearProgramming;
-using namespace lInfinitycomputervision;
+using namespace lInfinityCV;
 
 void translate(const Mat3X & X, const Vec3 & vecTranslation,
   Mat3X * XPoints)  {
     XPoints->resize(X.rows(), X.cols());
-    for (typename Mat3::Index i=0; i<X.cols(); ++i) {
+    for (size_t i=0; i<(size_t)X.cols(); ++i) {
       XPoints->col(i) = X.col(i) + vecTranslation;
     }
 }

@@ -18,13 +18,13 @@
 #include "openMVG/linearProgramming/linearProgrammingMOSEK.hpp"
 
 #include "openMVG/linearProgramming/bisectionLP.hpp"
-#include "openMVG/linearProgramming/lInfinitycomputervision/triangulation.hpp"
+#include "openMVG/linearProgramming/lInfinityCV/triangulation.hpp"
 
 using namespace openMVG;
 using namespace linearProgramming;
-using namespace lInfinitycomputervision;
+using namespace lInfinityCV;
 
-TEST(lInfinitycomputervision, Triangulation_OSICLPSOLVER) {
+TEST(lInfinityCV, Triangulation_OSICLPSOLVER) {
 
   NViewDataSet d = NRealisticCamerasRing(6, 10,
     nViewDatasetConfigurator(1,1,0,0,5,0)); // Suppose a camera with Unit matrix as K

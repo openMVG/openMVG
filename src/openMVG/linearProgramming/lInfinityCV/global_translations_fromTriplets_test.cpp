@@ -1,7 +1,7 @@
 
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
-#include "openMVG/linearProgramming/lInfinitycomputervision/global_translations_fromTriplets.hpp"
+#include "openMVG/linearProgramming/lInfinityCV/global_translations_fromTriplets.hpp"
 
 #include "openMVG/multiview/essential.hpp"
 
@@ -21,7 +21,7 @@ using namespace svg;
 
 using namespace openMVG;
 using namespace openMVG::linearProgramming;
-using namespace lInfinitycomputervision;
+using namespace lInfinityCV;
 using namespace std;
 
 int modifiedMod(int number, int modulus)
@@ -101,7 +101,7 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
   }
 
   //- For each triplet compute relative translations and rotations motions
-  std::vector<openMVG::lInfinitycomputervision::relativeInfo > vec_initialEstimates;
+  std::vector<openMVG::lInfinityCV::relativeInfo > vec_initialEstimates;
 
   for (size_t i = 0; i < vec_triplets.size(); ++i)
   {

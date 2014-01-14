@@ -16,7 +16,7 @@
 #include "openMVG/linearProgramming/linearProgrammingMOSEK.hpp"
 
 #include "openMVG/linearProgramming/bisectionLP.hpp"
-#include "openMVG/linearProgramming/lInfinitycomputervision/translationAndStructureFrom_xi_Ri.hpp"
+#include "openMVG/linearProgramming/lInfinityCV/tijsAndXis_From_xi_Ri.hpp"
 
 #include <iostream>
 #include <vector>
@@ -24,7 +24,7 @@
 using namespace openMVG;
 
 using namespace linearProgramming;
-using namespace lInfinitycomputervision;
+using namespace lInfinityCV;
 
 TEST(Translation_Structure_L_Infinity, OSICLP_SOLVER) {
 
@@ -129,10 +129,10 @@ TEST(Translation_Structure_L_Infinity, OSICLP_SOLVER_K) {
   Mat megaMat(4, d._n*d._x[0].cols());
   {
     size_t cpt = 0;
-    for (size_t i=0; i<d._n;++i)
+    for (size_t i=0; i < d._n;++i)
     {
       const size_t camIndex = i;
-      for (size_t j=0; j < d._x[0].cols(); ++j)
+      for (size_t j=0; j < (size_t)d._x[0].cols(); ++j)
       {
         megaMat(0,cpt) = d._x[camIndex].col(j)(0);
         megaMat(1,cpt) = d._x[camIndex].col(j)(1);
@@ -183,7 +183,7 @@ TEST(Translation_Structure_L_Infinity, OSICLP_SOLVER_K) {
     // Compute residuals L2 from estimated parameter values :
     Vec2 xk, xsum(0.0,0.0);
     for (size_t i = 0; i < d2._n; ++i) {
-      for(size_t k = 0; k < d._x[0].cols(); ++k)
+      for(size_t k = 0; k < (size_t)d._x[0].cols(); ++k)
       {
         xk = Project(d2.P(i), Vec3(d2._X.col(k)));
         xsum += Vec2(( xk - d2._x[i].col(k)).array().pow(2));

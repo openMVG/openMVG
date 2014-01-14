@@ -50,6 +50,7 @@ Contents:
    patented/patented.rst
    software/SfM/SfM.rst
    testing/testing.rst
+   dependencies/external_libs.rst
    third_party/third_party.rst
    FAQ/FAQ.rst
 
