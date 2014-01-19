@@ -263,6 +263,109 @@ void DrawLine(int xa, int ya, int xb, int yb, const Color& col, Image *pim)
   SafePutPixel( y, x, col, pim);
 }
 
+// Draw a serie of circle along the line, the algorithm is slow but accurate
+template <typename Image, typename Color>
+void DrawLineTickness(int xa, int ya, int xb, int yb, const Color& col, int thickness, Image *pim)
+{
+  Image &im = *pim;
+  int halfThickness = (thickness+1)/2;
+
+  // If one point is outside the image
+  // Replace the outside point by the intersection of the line and
+  // the limit (either x=width or y=height).
+  if (!im.Contains(ya, xa) || !im.Contains(yb, xb)) {
+
+    int width = pim->Width(), height = pim->Height();
+    const bool xdir = xa<xb, ydir = ya<yb;
+    float nx0 = float(xa), nx1 = float(xb), ny0 = float(ya), ny1 = float(yb),
+        &xleft = xdir?nx0:nx1,  &yleft = xdir?ny0:ny1,
+        &xright = xdir?nx1:nx0, &yright = xdir?ny1:ny0,
+        &xup = ydir?nx0:nx1,    &yup = ydir?ny0:ny1,
+        &xdown = ydir?nx1:nx0,  &ydown = ydir?ny1:ny0;
+
+    if (xright<0 || xleft>=width) return;
+    if (xleft<0) {
+      yleft -= xleft*(yright - yleft)/(xright - xleft);
+      xleft  = 0;
+    }
+    if (xright>=width) {
+      yright -= (xright - width)*(yright - yleft)/(xright - xleft);
+      xright  = float(width) - 1;
+    }
+    if (ydown<0 || yup>=height) return;
+    if (yup<0) {
+      xup -= yup*(xdown - xup)/(ydown - yup);
+      yup  =  0;
+    }
+    if (ydown>=height) {
+      xdown -= (ydown - height)*(xdown - xup)/(ydown - yup);
+      ydown  =  float(height) - 1;
+    }
+
+    xa = (int) xleft;    xb = (int) xright;
+    ya = (int) yleft;    yb = (int) yright;
+  }
+
+  int xbas, xhaut, ybas, yhaut;
+  // Check the condition ybas < yhaut.
+  if (ya <= yb) {
+    xbas = xa;    ybas = ya;
+    xhaut = xb;   yhaut = yb;
+  } else {
+    xbas = xb;    ybas = yb;
+    xhaut = xa;   yhaut = ya;
+  }
+  // Initialize slope.
+  int x, y, dx, dy, incrmX, incrmY, dp, N, S;
+  dx = xhaut - xbas;
+  dy = yhaut - ybas;
+  if (dx > 0) { // If xhaut > xbas we will increment X.
+    incrmX = 1;
+  } else {
+    incrmX = -1; // else we will decrement X.
+    dx *= -1;
+  }
+  if (dy > 0) { // Positive slope will increment X.
+    incrmY = 1;
+  } else {      // Negative slope.
+    incrmY = -1;
+  }
+  if (dx >= dy) {
+    dp = 2 * dy - dx;
+    S = 2 * dy;
+    N = 2 * (dy - dx);
+    y = ybas;
+    x = xbas;
+    while (x != xhaut) {
+      DrawCircle(x, y, halfThickness, col, pim);
+      x += incrmX;
+      if (dp <= 0) { // Go in direction of the South Pixel.
+        dp += S;
+      } else {       // Go to the North.
+        dp += N;
+        y+=incrmY;
+      }
+    }
+  } else {
+    dp = 2 * dx - dy;
+    S = 2 * dx;
+    N = 2 * (dx - dy);
+    x = xbas;
+    y = ybas;
+    while (y < yhaut) {
+      DrawCircle(x, y, halfThickness, col, pim);
+      y += incrmY;
+      if (dp <= 0) { // Go in direction of the South Pixel.
+        dp += S;
+      } else {       // Go to the North.
+        dp += N;
+        x += incrmX;
+      }
+    }
+  }
+  DrawCircle(x, y, halfThickness, col, pim);
+}
+
 } //namespace openMVG
 
 #endif  // OPENMVG_IMAGE_IMAGE_DRAWING_HPP

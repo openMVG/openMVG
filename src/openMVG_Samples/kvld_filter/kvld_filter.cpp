@@ -36,6 +36,8 @@ using namespace svg;
 using namespace std;
 
 #include "openMVG/matching/kvld/kvld.h"
+#include "openMVG/matching/kvld/kvld_draw.h"
+
 #include "third_party/cmdLine/cmdLine.h"
 
 int main(int argc, char **argv) {
@@ -173,8 +175,6 @@ int main(int argc, char **argv) {
 
 
   //K-VLD filter
-  std::vector<IndMatch> vec_KVLDMatches;
-
   Image<float> imgA (imageL.GetMat().cast<float>());
   Image<float> imgB (imageR.GetMat().cast<float>());
 
@@ -272,5 +272,27 @@ int main(int argc, char **argv) {
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
   }
+
+  Image <unsigned char> imageOutL = imageL;
+  Image <unsigned char> imageOutR = imageR;
+
+  getKVLDMask(
+  &imageOutL, &imageOutR,
+  featsL, featsR,
+  matchesPair,
+  valide,
+  E);
+
+  {
+    string out_filename = "07_Left-K-VLD-MASK.jpg";
+    out_filename = stlplus::create_filespec(sOutDir, out_filename);
+    WriteImage(out_filename.c_str(), imageOutL);
+  }
+    {
+    string out_filename = "08_Right-K-VLD-MASK.jpg";
+    out_filename = stlplus::create_filespec(sOutDir, out_filename);
+    WriteImage(out_filename.c_str(), imageOutR);
+  }
+
   return EXIT_SUCCESS;
 }
