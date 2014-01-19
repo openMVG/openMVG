@@ -28,9 +28,17 @@ namespace lInfinityCV  {
 
 using namespace linearProgramming;
 
-//-- Estimate the translation and the structure.
-//    from image points coordinates (observations).
-//--
+//-- Estimate the translation and the structure
+//    from image points coordinates and camera rotations.
+//    - Estimation of Ci from Ri and xij
+// [1] -> 6.1 Cameras with Known Rotation
+//
+//    - This implementation Use L1 norm instead of the L2 norm of
+//      the paper, it allows to use standard standard LP
+//      (simplex) instead of using SOCP (second order cone programming).
+//      Implementation by Pierre Moulon
+//
+//
 //  This implementation handle noisy measurement by adding a slack
 //   variables for each x,y,z residual.
 //  Based on idea expressed in (See Algorithm 2.0 of [1]):

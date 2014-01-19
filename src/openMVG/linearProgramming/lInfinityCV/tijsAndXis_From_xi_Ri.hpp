@@ -28,8 +28,8 @@ namespace lInfinityCV  {
 
 using namespace linearProgramming;
 
-//-- Estimate the translation and the structure.
-//    from image points coordinates (observations).
+//-- Estimate the translation and the structure
+//    from image points coordinates and camera rotations.
 //    - Estimation of Ci from Ri and xij
 // [1] -> 6.1 Cameras with Known Rotation
 //
