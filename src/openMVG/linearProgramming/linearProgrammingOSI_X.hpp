@@ -81,6 +81,7 @@ template<typename SOLVERINTERFACE>
 OSI_X_SolverWrapper<SOLVERINTERFACE>::OSI_X_SolverWrapper(int nbParams) : LP_Solver(nbParams)
 {
   si = new SOLVERINTERFACE;
+  si->setLogLevel(0);
 }
 
 template<typename SOLVERINTERFACE>
