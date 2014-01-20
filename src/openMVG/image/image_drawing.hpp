@@ -265,7 +265,7 @@ void DrawLine(int xa, int ya, int xb, int yb, const Color& col, Image *pim)
 
 // Draw a serie of circle along the line, the algorithm is slow but accurate
 template <typename Image, typename Color>
-void DrawLineTickness(int xa, int ya, int xb, int yb, const Color& col, int thickness, Image *pim)
+void DrawLineThickness(int xa, int ya, int xb, int yb, const Color& col, int thickness, Image *pim)
 {
   Image &im = *pim;
   int halfThickness = (thickness+1)/2;

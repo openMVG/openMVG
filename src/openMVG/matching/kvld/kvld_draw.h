@@ -32,14 +32,14 @@ void getKVLDMask(
         float l = ( l1.coords() - l2.coords() ).norm();
         int widthL = max( 1.f, l / ( dimension + 1.f ) );
 
-        DrawLineTickness(l1.x(), l1.y(), l2.x(), l2.y(), 255, widthL, maskL);
+        DrawLineThickness(l1.x(), l1.y(), l2.x(), l2.y(), 255, widthL, maskL);
 
         const openMVG::SIOPointFeature & r1 = vec_F2[ vec_matches[ it1 ].second ];
         const openMVG::SIOPointFeature & r2 = vec_F2[ vec_matches[ it2 ].second ];
         float r = ( r1.coords() - r2.coords() ).norm();
         int widthR = max( 1.f, r / ( dimension + 1.f ) );  
 
-        DrawLineTickness(r1.x(), r1.y(), r2.x(), r2.y(), 255, widthR, maskR);
+        DrawLineThickness(r1.x(), r1.y(), r2.x(), r2.y(), 255, widthR, maskR);
       }
     }
   }
