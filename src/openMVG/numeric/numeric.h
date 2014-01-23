@@ -311,7 +311,7 @@ namespace openMVG {
 #ifdef _WIN32
     return _finite(val);
 #else
-    return finite(val);
+    return isfinite(val);
 #endif
   }
 
