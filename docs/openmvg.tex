@@ -704,7 +704,7 @@ The first step consists in computing relative image matches~(i.e algorithm~\ref{
 You have to use the \textit{openMVG\_main\_computeMatches} software in the software/SfM openMVG module.
 \vspace{-.5cm}
 \begin{lstlisting}
-$ openMVG_main_computeMatches -i /home/pierre/Pictures/Dataset/images -e *.JPG -o /home/pierre/Pictures/Dataset/matches
+$ openMVG_main_computeMatches -i Dataset/images/ -e *.JPG -o Dataset/matches/
 \end{lstlisting}
 Arguments are the following:
 \begin{description}
@@ -731,7 +731,7 @@ Three softwares are available to display:
 The main binary in order to run the SfM process is \textit{openMVG\_main\_IncrementalSfM}, it use previous computed data and is implemented as explained in algorithm~\ref{algo:incremsfm}.
 \vspace{-.5cm}
 \begin{lstlisting}
-$ openMVG_main_IncrementalSfM -i /home/pierre/Pictures/Dataset/images/ -m /home/pierre/Pictures/Dataset/matches/ -o /home/pierre/Pictures/Dataset/outReconstruction/
+$ openMVG_main_IncrementalSfM -i Dataset/images/ -m Dataset/matches/ -o Dataset/outReconstruction/
 \end{lstlisting}
 
 \textit{openMVG\_main\_IncrementalSfM} displays to you some initial pairs that share an important number of common point. Please select two image index and the 3D reconstruction will start.
