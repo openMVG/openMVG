@@ -74,6 +74,7 @@ class LinearSolver {
     Options()
         : type(SPARSE_NORMAL_CHOLESKY),
           preconditioner_type(JACOBI),
+          visibility_clustering_type(CANONICAL_VIEWS),
           dense_linear_algebra_library_type(EIGEN),
           sparse_linear_algebra_library_type(SUITE_SPARSE),
           use_postordering(false),
@@ -89,6 +90,7 @@ class LinearSolver {
     LinearSolverType type;
 
     PreconditionerType preconditioner_type;
+    VisibilityClusteringType visibility_clustering_type;
 
     DenseLinearAlgebraLibraryType dense_linear_algebra_library_type;
     SparseLinearAlgebraLibraryType sparse_linear_algebra_library_type;

@@ -10,7 +10,7 @@
 #include <cmath>
 #include <iterator>
 
-#include <GL/glfw3.h>
+#include <GLFW/glfw3.h>
 
 #include "software/SfMViewer/document.h"
 #include "openMVG/multiview/projection.hpp"
@@ -32,10 +32,9 @@ struct GLWImage {
 static GLWImage m_cur_image;
 
 /* close callback */
-static int window_close_callback(GLFWwindow* window)
+void window_close_callback(GLFWwindow* window)
 {
     running = 0;
-    return GL_TRUE;
 }
 
 /* new window size */
@@ -54,11 +53,11 @@ void reshape( GLFWwindow* window, int width, int height )
   glLoadIdentity();
 }
 
-void key( GLFWwindow* window, int k, int action)
+void key(GLFWwindow* window, int k, int scancode, int action, int mod)
 {
   if( action != GLFW_PRESS ) return;
 
-  bool bTextureChange = false;
+bool bTextureChange = false;
 
   switch (k) {
   case GLFW_KEY_ESCAPE:
@@ -274,7 +273,7 @@ int main(int argc, char *argv[]) {
   else{
     exit( EXIT_FAILURE);
   }
-  
+
   //-- Create the GL window context
   GLFWwindow* window;
   int width, height;
@@ -317,7 +316,7 @@ int main(int argc, char *argv[]) {
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
-  
+
   // Terminate GLFW
   glfwTerminate();
 

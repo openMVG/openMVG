@@ -297,11 +297,16 @@ class LoggerVoidify {
 #  define LOG(n)  LOG_IF(n, n <= MAX_LOG_LEVEL)
 #  define VLOG(n) LOG_IF(n, n <= MAX_LOG_LEVEL)
 #  define LG      LOG_IF(INFO, INFO <= MAX_LOG_LEVEL)
+#  define VLOG_IF(n, condition) LOG_IF(n, (n <= MAX_LOG_LEVEL) && condition)
 #else
 #  define LOG(n)  MessageLogger((char *)__FILE__, __LINE__, "native", n).stream()    // NOLINT
 #  define VLOG(n) MessageLogger((char *)__FILE__, __LINE__, "native", n).stream()    // NOLINT
 #  define LG      MessageLogger((char *)__FILE__, __LINE__, "native", INFO).stream() // NOLINT
+#  define VLOG_IF(n, condition) LOG_IF(n, condition)
 #endif
+
+// define a default LOG severity
+#define MAX_LOG_LEVEL (INFO) // openMVG
 
 // Currently, VLOG is always on for levels below MAX_LOG_LEVEL.
 #ifndef MAX_LOG_LEVEL

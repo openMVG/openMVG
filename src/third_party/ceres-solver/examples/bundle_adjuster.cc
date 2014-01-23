@@ -82,6 +82,9 @@ DEFINE_string(linear_solver, "sparse_schur", "Options are: "
 DEFINE_string(preconditioner, "jacobi", "Options are: "
               "identity, jacobi, schur_jacobi, cluster_jacobi, "
               "cluster_tridiagonal.");
+DEFINE_string(visibility_clustering, "canonical_views",
+              "single_linkage, canonical_views");
+
 DEFINE_string(sparse_linear_algebra_library, "suite_sparse",
               "Options are: suite_sparse and cx_sparse.");
 DEFINE_string(dense_linear_algebra_library, "eigen",
@@ -125,6 +128,8 @@ void SetLinearSolver(Solver::Options* options) {
                                  &options->linear_solver_type));
   CHECK(StringToPreconditionerType(FLAGS_preconditioner,
                                    &options->preconditioner_type));
+  CHECK(StringToVisibilityClusteringType(FLAGS_visibility_clustering,
+                                         &options->visibility_clustering_type));
   CHECK(StringToSparseLinearAlgebraLibraryType(
             FLAGS_sparse_linear_algebra_library,
             &options->sparse_linear_algebra_library_type));

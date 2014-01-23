@@ -128,7 +128,7 @@ int main(int argc, char ** argv)
     const vector<IndMatch> & vec_FilteredMatches = iter->second;
 
     if (!vec_FilteredMatches.empty()) {
-      // Load the features for the file
+      // Load the features from the features files
       std::vector<SIOPointFeature> vec_featI, vec_featJ;
       loadFeatsFromFile(
         stlplus::create_filespec(sMatchesDir, stlplus::basename_part(vec_fileNames[I]), ".feat"),

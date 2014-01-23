@@ -197,7 +197,7 @@ bool PGMImage<Real>::WriteToFile(std::string filename) const {
     outputfile << static_cast<int>(data_[i] + 0.5) << ' ';
   }
 
-  return outputfile;  // Returns true/false
+  return bool(outputfile);  // Returns true/false
 }
 
 namespace  {

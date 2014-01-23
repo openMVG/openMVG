@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -149,7 +149,7 @@ namespace lemon {
   /// \ingroup shortest_path
   /// This class provides an efficient implementation of the Bellman-Ford
   /// algorithm. The maximum time complexity of the algorithm is
-  /// <tt>O(ne)</tt>.
+  /// <tt>O(nm)</tt>.
   ///
   /// The Bellman-Ford algorithm solves the single-source shortest path
   /// problem when the arcs can have negative lengths, but the digraph
@@ -200,11 +200,12 @@ namespace lemon {
     typedef typename TR::DistMap DistMap;
     /// The type of the paths.
     typedef PredMapPath<Digraph, PredMap> Path;
-    ///\brief The \ref BellmanFordDefaultOperationTraits
+    ///\brief The \ref lemon::BellmanFordDefaultOperationTraits
     /// "operation traits class" of the algorithm.
     typedef typename TR::OperationTraits OperationTraits;
 
-    ///The \ref BellmanFordDefaultTraits "traits class" of the algorithm.
+    ///\brief The \ref lemon::BellmanFordDefaultTraits "traits class"
+    ///of the algorithm.
     typedef TR Traits;
 
   private:

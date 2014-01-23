@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -98,8 +98,8 @@ namespace lemon {
   ///
   /// This class implements Karp's algorithm for finding a directed
   /// cycle of minimum mean cost in a digraph
-  /// \ref amo93networkflows, \ref dasdan98minmeancycle.
-  /// It runs in time O(ne) and uses space O(n<sup>2</sup>+e).
+  /// \cite karp78characterization, \cite dasdan98minmeancycle.
+  /// It runs in time O(nm) and uses space O(n<sup>2</sup>+m).
   ///
   /// \tparam GR The type of the digraph the algorithm runs on.
   /// \tparam CM The type of the cost map. The default
@@ -140,11 +140,11 @@ namespace lemon {
     /// \brief The path type of the found cycles
     ///
     /// The path type of the found cycles.
-    /// Using the \ref KarpMmcDefaultTraits "default traits class",
+    /// Using the \ref lemon::KarpMmcDefaultTraits "default traits class",
     /// it is \ref lemon::Path "Path<Digraph>".
     typedef typename TR::Path Path;
 
-    /// The \ref KarpMmcDefaultTraits "traits class" of the algorithm
+    /// The \ref lemon::KarpMmcDefaultTraits "traits class" of the algorithm
     typedef TR Traits;
 
   private:
@@ -270,8 +270,8 @@ namespace lemon {
     /// found cycle.
     ///
     /// If you don't call this function before calling \ref run() or
-    /// \ref findCycleMean(), it will allocate a local \ref Path "path"
-    /// structure. The destuctor deallocates this automatically
+    /// \ref findCycleMean(), a local \ref Path "path" structure
+    /// will be allocated. The destuctor deallocates this automatically
     /// allocated object, of course.
     ///
     /// \note The algorithm calls only the \ref lemon::Path::addFront()

@@ -8,7 +8,7 @@
 #ifndef DOCUMENT
 #define DOCUMENT
 
-#include "software/SfM/SfMPinholeCamera.hpp"
+#include "openMVG/cameras/PinholeCamera.hpp"
 using namespace openMVG;
 
 #include "software/SfMViewer/Ply.h"
@@ -160,12 +160,6 @@ struct Document
             _vec_points.push_back(pos[0]);
             _vec_points.push_back(pos[1]);
             _vec_points.push_back(pos[2]);
-
-            /*std::cout << '\n'
-              << pos[0] <<' ' << pos[1] << ' ' << pos[2] << ' ';
-            using namespace std;
-            std::copy(visibility.begin(), visibility.end(), ostream_iterator<size_t>(std::cout, " "));
-            */
           }
         }
       }
@@ -178,9 +172,7 @@ struct Document
 
     // Read cameras
     std::string sDirectoryCam = stlplus::folder_append_separator(_sDirectory) + "cameras";
-    //std::vector<std::string> vec_cameraNames = stlplus::folder_wildcard(sDirectoryCam,
-    //  "*.bin", false, true);
-
+  
     size_t camIndex = 0;
     //Read views file
     {

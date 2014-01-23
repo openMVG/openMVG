@@ -63,8 +63,7 @@
 #
 #   -DCERES_RESTRICT_SCHUR_SPECIALIZATION
 #
-# to the LOCAL_CFLAGS variable below, and commenting out all the
-# generated/schur_eliminator_2_2_2.cc-alike files, leaving only the _d_d_d one.
+# to the LOCAL_CFLAGS variable below.
 #
 # Similarly if you do not need the line search minimizer, consider adding
 #
@@ -104,7 +103,7 @@ LOCAL_CFLAGS := $(CERES_EXTRA_DEFINES) \
                 -DCERES_NO_GFLAGS \
                 -DCERES_NO_THREADS \
                 -DCERES_NO_CXSPARSE \
-                -DCERES_NO_TR1 \
+                -DCERES_NO_UNORDERED_MAP \
                 -DCERES_WORK_AROUND_ANDROID_NDK_COMPILER_BUG
 
 # On Android NDK 8b, GCC gives spurrious warnings about ABI incompatibility for
@@ -117,6 +116,7 @@ LOCAL_SRC_FILES := $(CERES_SRC_PATH)/array_utils.cc \
                    $(CERES_SRC_PATH)/block_jacobian_writer.cc \
                    $(CERES_SRC_PATH)/block_jacobi_preconditioner.cc \
                    $(CERES_SRC_PATH)/block_random_access_dense_matrix.cc \
+                   $(CERES_SRC_PATH)/block_random_access_diagonal_matrix.cc \
                    $(CERES_SRC_PATH)/block_random_access_matrix.cc \
                    $(CERES_SRC_PATH)/block_random_access_sparse_matrix.cc \
                    $(CERES_SRC_PATH)/block_sparse_matrix.cc \
@@ -161,7 +161,6 @@ LOCAL_SRC_FILES := $(CERES_SRC_PATH)/array_utils.cc \
                    $(CERES_SRC_PATH)/program.cc \
                    $(CERES_SRC_PATH)/residual_block.cc \
                    $(CERES_SRC_PATH)/residual_block_utils.cc \
-                   $(CERES_SRC_PATH)/runtime_numeric_diff_cost_function.cc \
                    $(CERES_SRC_PATH)/schur_complement_solver.cc \
                    $(CERES_SRC_PATH)/schur_eliminator.cc \
                    $(CERES_SRC_PATH)/schur_jacobi_preconditioner.cc \
@@ -195,7 +194,23 @@ LOCAL_SRC_FILES := $(CERES_SRC_PATH)/array_utils.cc \
                    $(CERES_SRC_PATH)/generated/schur_eliminator_4_4_2.cc \
                    $(CERES_SRC_PATH)/generated/schur_eliminator_4_4_3.cc \
                    $(CERES_SRC_PATH)/generated/schur_eliminator_4_4_4.cc \
-                   $(CERES_SRC_PATH)/generated/schur_eliminator_4_4_d.cc
+                   $(CERES_SRC_PATH)/generated/schur_eliminator_4_4_d.cc \
+                   $(CERES_SRC_PATH)/generated/partitioned_matrix_view_d_d_d.cc \
+                   $(CERES_SRC_PATH)/generated/partitioned_matrix_view_2_2_2.cc \
+                   $(CERES_SRC_PATH)/generated/partitioned_matrix_view_2_2_3.cc \
+                   $(CERES_SRC_PATH)/generated/partitioned_matrix_view_2_2_4.cc \
+                   $(CERES_SRC_PATH)/generated/partitioned_matrix_view_2_2_d.cc \
+                   $(CERES_SRC_PATH)/generated/partitioned_matrix_view_2_3_3.cc \
+                   $(CERES_SRC_PATH)/generated/partitioned_matrix_view_2_3_4.cc \
+                   $(CERES_SRC_PATH)/generated/partitioned_matrix_view_2_3_9.cc \
+                   $(CERES_SRC_PATH)/generated/partitioned_matrix_view_2_3_d.cc \
+                   $(CERES_SRC_PATH)/generated/partitioned_matrix_view_2_4_3.cc \
+                   $(CERES_SRC_PATH)/generated/partitioned_matrix_view_2_4_4.cc \
+                   $(CERES_SRC_PATH)/generated/partitioned_matrix_view_2_4_d.cc \
+                   $(CERES_SRC_PATH)/generated/partitioned_matrix_view_4_4_2.cc \
+                   $(CERES_SRC_PATH)/generated/partitioned_matrix_view_4_4_3.cc \
+                   $(CERES_SRC_PATH)/generated/partitioned_matrix_view_4_4_4.cc \
+                   $(CERES_SRC_PATH)/generated/partitioned_matrix_view_4_4_d.cc
 
 ifndef CERES_GLOG_DIR
 LOCAL_SRC_FILES += $(CERES_SRC_PATH)/miniglog/glog/logging.cc

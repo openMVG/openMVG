@@ -278,6 +278,25 @@ bool StringToCovarianceAlgorithmType(
   return false;
 }
 
+const char* VisibilityClusteringTypeToString(
+    VisibilityClusteringType type) {
+  switch (type) {
+    CASESTR(CANONICAL_VIEWS);
+    CASESTR(SINGLE_LINKAGE);
+    default:
+      return "UNKNOWN";
+  }
+}
+
+bool StringToVisibilityClusteringType(
+    string value,
+    VisibilityClusteringType* type) {
+  UpperCase(&value);
+  STRENUM(CANONICAL_VIEWS);
+  STRENUM(SINGLE_LINKAGE);
+  return false;
+}
+
 const char* SolverTerminationTypeToString(SolverTerminationType type) {
   switch (type) {
     CASESTR(NO_CONVERGENCE);

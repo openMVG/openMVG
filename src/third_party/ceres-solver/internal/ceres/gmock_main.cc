@@ -52,11 +52,17 @@ int _tmain(int argc, TCHAR** argv) {
 #else
 int main(int argc, char** argv) {
 #endif  // GTEST_OS_WINDOWS_MOBILE
-  google::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
   // Since Google Mock depends on Google Test, InitGoogleMock() is
   // also responsible for initializing Google Test.  Therefore there's
   // no need for calling testing::InitGoogleTest() separately.
   testing::InitGoogleMock(&argc, argv);
+  // On Windows, gtest passes additional non-gflags command line flags to
+  // death-tests, specifically --gtest_filter & --gtest_internal_run_death_test
+  // in order that these unknown (to gflags) flags do not invoke an error in
+  // gflags, InitGoogleTest() (called by InitGoogleMock()) must be called
+  // before ParseCommandLineFlags() to handle & remove them before gflags
+  // parses the remaining flags.
+  google::ParseCommandLineFlags(&argc, &argv, true);
   return RUN_ALL_TESTS();
 }

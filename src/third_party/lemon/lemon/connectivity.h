@@ -2,7 +2,7 @@
  *
  * This file is a part of LEMON, a generic C++ optimization library.
  *
- * Copyright (C) 2003-2010
+ * Copyright (C) 2003-2013
  * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
  * (Egervary Research Group on Combinatorial Optimization, EGRES).
  *
@@ -745,14 +745,37 @@ namespace lemon {
   /// \brief Check whether an undirected graph is bi-node-connected.
   ///
   /// This function checks whether the given undirected graph is
-  /// bi-node-connected, i.e. any two edges are on same circle.
+  /// bi-node-connected, i.e. a connected graph without articulation
+  /// node.
   ///
   /// \return \c true if the graph bi-node-connected.
-  /// \note By definition, the empty graph is bi-node-connected.
+  ///
+  /// \note By definition,
+  /// \li a graph consisting of zero or one node is bi-node-connected,
+  /// \li a graph consisting of two isolated nodes
+  /// is \e not bi-node-connected and
+  /// \li a graph consisting of two nodes connected by an edge
+  /// is bi-node-connected.
   ///
   /// \see countBiNodeConnectedComponents(), biNodeConnectedComponents()
   template <typename Graph>
   bool biNodeConnected(const Graph& graph) {
+    bool hasNonIsolated = false, hasIsolated = false;
+    for (typename Graph::NodeIt n(graph); n != INVALID; ++n) {
+      if (typename Graph::OutArcIt(graph, n) == INVALID) {
+        if (hasIsolated || hasNonIsolated) {
+          return false;
+        } else {
+          hasIsolated = true;
+        }
+      } else {
+        if (hasIsolated) {
+          return false;
+        } else {
+          hasNonIsolated = true;
+        }
+      }
+    }
     return countBiNodeConnectedComponents(graph) <= 1;
   }
 

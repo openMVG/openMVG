@@ -4,6 +4,58 @@
 Version History
 ===============
 
+1.8.0
+=====
+
+New Features
+------------
+#. Significant improved ``CMake`` files with better robustness,
+   dependency checking and GUI support. (Alex Stewart)
+#. ``DynamicNumericDiffCostFunction`` for numerically differentiated
+   cost functions whose sizing is determined at run time.
+#. ``NumericDiffCostFunction`` now supports a dynamic number of
+   residuals just like ``AutoDiffCostFunction``.
+#. ``Problem`` exposes more of its structure in its API.
+#. Faster Automatic differentiation (Tim Langlois)
+#. Added the commonly occuring ``2_d_d`` template specialization for
+   the Schur Eliminator.
+#. Faster ``ITERATIVE_SCHUR`` solver using template specializations.
+#. Faster ``SCHUR_JACOBI`` preconditioner construction.
+#. Faster ``AngleAxisRotatePoint``.
+#. Faster Jacobian evaluation when a loss function is used.
+#. Added support for multiple clustering algorithms in visibility
+   based preconditioning, including a new fast single linkage
+   clustering algorithm.
+
+Bug Fixes
+---------
+#. Fix ordering of ParseCommandLineFlags() & InitGoogleTest() for
+   Windows. (Alex Stewart)
+#. Remove DCHECK_GE checks from fixed_array.h.
+#. Fix build on MSVC 2013 (Petter Strandmark)
+#. Fixed ``AngleAxisToRotationMatrix`` near zero.
+#. Move ``CERES_HASH_NAMESPACE`` macros to ``collections_port.h``.
+#. Fix handling of unordered_map/unordered_set on OSX 10.9.0.
+#. Explicitly link to libm for ``curve_fitting_c.c``. (Alex Stewart)
+#. Minor type conversion fix to autodiff.h
+#. Remove RuntimeNumericDiffCostFunction.
+#. Fix operator= ambiguity on some versions of Clang. (Alex Stewart)
+#. Various Lint cleanups (William Rucklidge & Jim Roseborough)
+#. Modified installation folders for Windows. (Pablo Speciale)
+#. Added librt to link libraries for SuiteSparse_config on Linux. (Alex Stewart)
+#. Check for presence of return-type-c-linkage option with
+   Clang. (Alex Stewart)
+#. Fix Problem::RemoveParameterBlock after calling solve. (Simon Lynen)
+#. Fix a free/delete bug in covariance_impl.cc
+#. Fix two build errors. (Dustin Lang)
+#. Add RequireInitialization = 1 to NumTraits::Jet.
+#. Update gmock/gtest to 1.7.0
+#. Added IterationSummary::gradient_norm.
+#. Reduced verbosity of the inner iteration minimizer.
+#. Fixed a bug in TrustRegionMinimizer. (Michael Vitus)
+#. Removed android/build_android.sh.
+
+
 1.7.0
 =====
 

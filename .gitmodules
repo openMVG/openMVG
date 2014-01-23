@@ -1,3 +1,6 @@
 [submodule "src/dependencies/glfw"]
 	path = src/dependencies/glfw
 	url = git://github.com/elmindreda/glfw.git
+[submodule "src/dependencies/OpenExif"]
+	path = src/dependencies/OpenExif
+	url = https://github.com/openMVG-thirdparty/OpenExif.git

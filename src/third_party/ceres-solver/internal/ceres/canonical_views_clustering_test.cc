@@ -69,7 +69,7 @@ class CanonicalViewsTest : public ::testing::Test {
   }
 
   void ComputeClustering() {
-    ComputeCanonicalViewsClustering(graph_, options_, &centers_, &membership_);
+    ComputeCanonicalViewsClustering(options_, graph_, &centers_, &membership_);
   }
 
   Graph<int> graph_;

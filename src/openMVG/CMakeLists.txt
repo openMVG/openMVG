@@ -6,3 +6,7 @@ ADD_SUBDIRECTORY(numeric)
 ADD_SUBDIRECTORY(tracks)
 
 ADD_SUBDIRECTORY(robust_estimation)
+ADD_SUBDIRECTORY(bundle_adjustment)
+
+ADD_SUBDIRECTORY(exif_IO)
+ADD_SUBDIRECTORY(split)
