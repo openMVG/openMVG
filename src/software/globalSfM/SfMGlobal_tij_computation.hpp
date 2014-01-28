@@ -72,7 +72,7 @@ bool estimate_T_triplet(
   TrifocalTensorModel T;
   Mat3 Kinv = K.inverse();
   dPrecision = dPrecision * Kinv(0,0) * Kinv(0,0);//std::numeric_limits<double>::infinity();
-  std::pair<double,double> acStat = ACRANSAC(kernel, vec_inliers, ORSA_ITER, &T, dPrecision, false);
+  std::pair<double,double> acStat = robust::ACRANSAC(kernel, vec_inliers, ORSA_ITER, &T, dPrecision, false);
   dPrecision = acStat.first;
 
   //-- Export data in order to have an idea of the precision of the estimates
