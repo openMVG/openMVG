@@ -4,3 +4,8 @@
 *.toc
 *.bbl
 *.blg
+*.cbp*
+*.layout*
+*~
+*.pyc
+*.db
