@@ -11,10 +11,8 @@
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 
-using namespace openMVG;
-using namespace openMVG::robust;
-
 #include <limits>
+
 
 //-- A contrario Functor to filter putative corresponding points
 struct GeometricFilter_FMatrix_AC
@@ -32,6 +30,8 @@ struct GeometricFilter_FMatrix_AC
     const std::pair<size_t, size_t> & imgSizeB,
     std::vector<size_t> & vec_inliers) const
   {
+    using namespace openMVG;
+    using namespace openMVG::robust;
     vec_inliers.resize(0);
     // Define the AContrario adapted Fundamental matrix solver
     typedef ACKernelAdaptor<
@@ -60,3 +60,4 @@ struct GeometricFilter_FMatrix_AC
   double m_dPrecision;  //upper_bound of the precision
   size_t m_stIteration; //maximal number of iteration used
 };
+
