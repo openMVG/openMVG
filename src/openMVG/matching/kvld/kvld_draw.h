@@ -8,6 +8,7 @@
 
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/feature.hpp"
+#include <vector>
 
 namespace openMVG {
 
@@ -15,10 +16,10 @@ namespace openMVG {
 void getKVLDMask(
   Image< unsigned char > *maskL,
   Image< unsigned char > *maskR,
-  const vector< openMVG::SIOPointFeature > &vec_F1,
-  const vector< openMVG::SIOPointFeature > &vec_F2,
-  const vector< Pair >& vec_matches,
-  const vector< bool >& vec_valide,
+  const std::vector< openMVG::SIOPointFeature > &vec_F1,
+  const std::vector< openMVG::SIOPointFeature > &vec_F2,
+  const std::vector< Pair >& vec_matches,
+  const std::vector< bool >& vec_valide,
   const openMVG::Mat& mat_E)
 {
   for( int it1 = 0; it1 < vec_matches.size() - 1; it1++ )
@@ -30,14 +31,14 @@ void getKVLDMask(
         const openMVG::SIOPointFeature & l1 = vec_F1[ vec_matches[ it1 ].first ];
         const openMVG::SIOPointFeature & l2 = vec_F1[ vec_matches[ it2 ].first ];
         float l = ( l1.coords() - l2.coords() ).norm();
-        int widthL = max( 1.f, l / ( dimension + 1.f ) );
+        int widthL = std::max( 1.f, l / ( dimension + 1.f ) );
 
         DrawLineTickness(l1.x(), l1.y(), l2.x(), l2.y(), 255, widthL, maskL);
 
         const openMVG::SIOPointFeature & r1 = vec_F2[ vec_matches[ it1 ].second ];
         const openMVG::SIOPointFeature & r2 = vec_F2[ vec_matches[ it2 ].second ];
         float r = ( r1.coords() - r2.coords() ).norm();
-        int widthR = max( 1.f, r / ( dimension + 1.f ) );  
+        int widthR = std::max( 1.f, r / ( dimension + 1.f ) );  
 
         DrawLineTickness(r1.x(), r1.y(), r2.x(), r2.y(), 255, widthR, maskR);
       }
