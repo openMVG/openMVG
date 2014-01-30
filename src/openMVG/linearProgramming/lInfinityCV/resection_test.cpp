@@ -14,7 +14,9 @@
 
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
+#ifdef OPENMVG_HAVE_MOSEK
 #include "openMVG/linearProgramming/linearProgrammingMOSEK.hpp"
+#endif // OPENMVG_HAVE_MOSEK
 #include "openMVG/linearProgramming/bisectionLP.hpp"
 #include "openMVG/linearProgramming/lInfinityCV/resection.hpp"
 

@@ -38,7 +38,6 @@
 using namespace lemon;
 
 #include "openMVG/matching/indMatch.hpp"
-using namespace openMVG::matching;
 
 #include <algorithm>
 #include <iostream>
@@ -46,6 +45,10 @@ using namespace openMVG::matching;
 #include <vector>
 #include <set>
 #include <map>
+
+namespace openMVG  {
+
+using namespace openMVG::matching;
 
 /// Lightweight copy of the flat_map of BOOST library
 /// Use a vector to speed up insertion (preallocated array)
@@ -75,13 +78,12 @@ private:
   static bool superiorToFirst(const P &a, const T1 &b) {return a.first<b;}
 };
 
-
-namespace openMVG  {
 namespace tracks  {
   using namespace std;
 
 // Pairwise matches (indexed matches for a pair <I,J>)
 typedef std::map< std::pair<size_t,size_t>, std::vector<IndMatch> > mapPairWiseMatches;
+typedef tracks::mapPairWiseMatches STLPairWiseMatches;
 
 // Data structure to store a track: collection of {ImageId,FeatureId}
 //  The corresponding image points with their imageId and FeatureId.

@@ -13,6 +13,11 @@
 #include "openMVG/bundle_adjustment/pinhole_brown_Rt_ceres_functor.hpp"
 #include "openMVG/bundle_adjustment/problem_data_container.hpp"
 
+//-- Feature tracking
+#include "openMVG/tracks/tracks.hpp"
+#include "openMVG/matching/indMatch.hpp"
+using namespace openMVG::tracks;
+
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 #include "third_party/stlAddition/stlMap.hpp"
@@ -339,7 +344,7 @@ bool IncrementalReconstructionEngine::InitialPairChoice( std::pair<size_t, size_
 
     // Display to the user the 10 top Fundamental matches pair
     std::vector< size_t > vec_NbMatchesPerPair;
-    for (STLPairWiseMatches::const_iterator iter = _map_Matches_F.begin();
+    for (openMVG::tracks::STLPairWiseMatches::const_iterator iter = _map_Matches_F.begin();
       iter != _map_Matches_F.end(); ++iter)
     {
       vec_NbMatchesPerPair.push_back(iter->second.size());
@@ -351,7 +356,7 @@ bool IncrementalReconstructionEngine::InitialPairChoice( std::pair<size_t, size_
 
     for (size_t i = 0; i < std::min((size_t)10, _map_Matches_F.size()); ++i) {
       size_t index = packet_vec[i].index;
-      STLPairWiseMatches::const_iterator iter = _map_Matches_F.begin();
+      openMVG::tracks::STLPairWiseMatches::const_iterator iter = _map_Matches_F.begin();
       std::advance(iter, index);
       std::cout << "(" << iter->first.first << "," << iter->first.second <<")\t\t"
         << iter->second.size() << " matches" << std::endl;
@@ -371,7 +376,7 @@ bool IncrementalReconstructionEngine::InitialPairChoice( std::pair<size_t, size_
 
   // Check validity of the initial pair indices:
   if (_map_feats.find(initialPairIndex.first) == _map_feats.end() ||
-       _map_feats.find(initialPairIndex.second) == _map_feats.end())
+      _map_feats.find(initialPairIndex.second) == _map_feats.end())
   {
     std::cerr << "At least one of the initial pair indices is invalid."
       << std::endl;
@@ -397,7 +402,7 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
   }
 
   // a.coords Get common tracks between the two images
-  STLMAPTracks map_tracksCommon;
+  openMVG::tracks::STLMAPTracks map_tracksCommon;
   std::set<size_t> set_imageIndex;
   set_imageIndex.insert(I);
   set_imageIndex.insert(J);
@@ -411,8 +416,10 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
   const size_t n = map_tracksCommon.size();
   Mat x1(2,n), x2(2,n);
   size_t cptIndex = 0;
-  for (STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
-    iterT != map_tracksCommon.end(); ++iterT)
+  for (openMVG::tracks::STLMAPTracks::const_iterator
+    iterT = map_tracksCommon.begin();
+    iterT != map_tracksCommon.end();
+    ++iterT)
   {
     //Get corresponding point
     tracks::submapTrack::const_iterator iter = iterT->second.begin();
@@ -498,8 +505,10 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
   _set_remainingImageId.erase(J);
 
   std::vector<IndMatch> vec_index;
-  for (STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
-    iterT != map_tracksCommon.end(); ++iterT)
+  for (openMVG::tracks::STLMAPTracks::const_iterator
+    iterT = map_tracksCommon.begin();
+    iterT != map_tracksCommon.end();
+    ++iterT)
   {
     tracks::submapTrack::const_iterator iter = iterT->second.begin();
     tracks::submapTrack::const_iterator iter2 = iterT->second.begin();
@@ -516,7 +525,8 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
   //- Add reconstructed point to the reconstruction data
   //- Write corresponding that the track have a corresponding 3D point
   cptIndex = 0;
-  for (STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
+  for (openMVG::tracks::STLMAPTracks::const_iterator
+    iterT = map_tracksCommon.begin();
     iterT != map_tracksCommon.end();
     ++iterT, cptIndex++)
   {
@@ -654,7 +664,7 @@ bool IncrementalReconstructionEngine::FindImagesWithPossibleResection(std::vecto
     const size_t imageIndex = *iter;
 
     // Compute 2D - 3D possible content
-    STLMAPTracks map_tracksCommon;
+    openMVG::tracks::STLMAPTracks map_tracksCommon;
     std::set<size_t> set_imageIndex;
     set_imageIndex.insert(imageIndex);
     TracksUtilsMap::GetTracksInImages(set_imageIndex, _map_tracks, map_tracksCommon);
@@ -727,7 +737,7 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
     << "-------------------------------" << std::endl;
 
   // Compute 2D - 3D possible content
-  STLMAPTracks map_tracksCommon;
+  openMVG::tracks::STLMAPTracks map_tracksCommon;
   std::set<size_t> set_imageIndex;
   set_imageIndex.insert(imageIndex);
   TracksUtilsMap::GetTracksInImages(set_imageIndex, _map_tracks, map_tracksCommon);
@@ -790,13 +800,11 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
   const openMVG::SfMIO::IntrinsicCameraInfo & intrinsicCam = _vec_intrinsicGroups[_vec_camImageNames[imageIndex].m_intrinsicId];
 
   bool bResection = SfMRobust::robustResection(
-    std::make_pair( intrinsicCam.m_w,
-                    intrinsicCam.m_h ),
+    std::make_pair( intrinsicCam.m_w, intrinsicCam.m_h ),
     pt2D, pt3D,
     &vec_inliers,
-    // If intrinsics guess exist use it, else use standard 6 points pose resection
+    // If intrinsics guess exist use it, else use a standard 6 points pose resection
     (intrinsicCam.m_bKnownIntrinsic == true) ? & intrinsicCam.m_K : NULL,
-    //NULL,
     &P, &errorMax);
 
   std::cout << std::endl
@@ -1145,9 +1153,9 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_col
     vec_color.resize(_map_reconstructed.size());
 
     // The track list that will be colored (point removed during the process)
-    STLMAPTracks mapTrackToColorRef(_map_reconstructed);
-    STLMAPTracks::iterator iterTBegin = mapTrackToColorRef.begin();
-    STLMAPTracks mapTrackToColor(_map_reconstructed);
+    openMVG::tracks::STLMAPTracks mapTrackToColorRef(_map_reconstructed);
+    openMVG::tracks::STLMAPTracks::iterator iterTBegin = mapTrackToColorRef.begin();
+    openMVG::tracks::STLMAPTracks mapTrackToColor(_map_reconstructed);
     while( !mapTrackToColor.empty() )
     {
       // Find the most representative image
@@ -1155,8 +1163,10 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_col
       //  b. Sort to find the most representative image
 
       std::map<size_t, size_t> map_IndexCardinal; // ImageIndex, Cardinal
-      for (STLMAPTracks::const_iterator iterT = mapTrackToColor.begin();
-       iterT != mapTrackToColor.end(); ++iterT)
+      for (openMVG::tracks::STLMAPTracks::const_iterator
+        iterT = mapTrackToColor.begin();
+       iterT != mapTrackToColor.end();
+        ++iterT)
       {
         const size_t trackId = iterT->first;
         const tracks::submapTrack & track = mapTrackToColor[trackId];
@@ -1194,8 +1204,10 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_col
 
       // Iterate through the track
       std::set<size_t> set_toRemove;
-      for (STLMAPTracks::const_iterator iterT = mapTrackToColor.begin();
-       iterT != mapTrackToColor.end(); ++iterT)
+      for (openMVG::tracks::STLMAPTracks::const_iterator
+        iterT = mapTrackToColor.begin();
+        iterT != mapTrackToColor.end();
+        ++iterT)
       {
         const size_t trackId = iterT->first;
         const tracks::submapTrack & track = mapTrackToColor[trackId];
@@ -1249,7 +1261,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
   }
 
   std::cout << "nbCams: " << nbCams << std::endl
-    << "nbIntrinsics:" << nbIntrinsics << std::endl
+    << "nbIntrinsics: " << nbIntrinsics << std::endl
     << "nbPoints3D: " << nbPoints3D << std::endl
     << "measurements: " << nbmeasurements << std::endl;
 
