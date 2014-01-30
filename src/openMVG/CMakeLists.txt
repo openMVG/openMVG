@@ -11,4 +11,5 @@ ADD_SUBDIRECTORY(numeric)
 ADD_SUBDIRECTORY(robust_estimation)
 ADD_SUBDIRECTORY(split)
 ADD_SUBDIRECTORY(tracks)
+ADD_SUBDIRECTORY(color_harmonization)
 

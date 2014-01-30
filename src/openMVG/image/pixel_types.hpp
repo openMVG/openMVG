@@ -66,6 +66,7 @@ public:
   }
 };
 typedef Rgb<unsigned char> RGBColor;
+typedef Rgb<float> RGBfColor;
 
 /// RGBA templated pixel type
 template <typename T>
