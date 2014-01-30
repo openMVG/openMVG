@@ -1,5 +1,5 @@
 
-// Copyright (c) 2012, 2013 Pierre MOULON.
+// Copyright (c) 2012, 2013, 2014 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,26 +8,25 @@
 
 #pragma once
 
-#include "software/SfM/ImageCollectionMatcher.hpp"
 #include "openMVG/features/features.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
 #include "openMVG/matching/matching_filters.hpp"
-
-
-using namespace openMVG;
+#include "openMVG/matching_image_collection/Matcher.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/progress/progress.hpp"
 
+namespace openMVG {
+
+using namespace openMVG::matching;
+
 /// Implementation of an Image Collection Matcher
 /// Compute putative matches between a collection of pictures
-/// Suppose a symmetric matching results : Will compare the
-///  upper matrix index for image matching.
-/// For descriptor matching between two image indexes :
-///  The distance ratio of the 2 neighbours points is used
-///   to discard spurious correspondences.
+/// Spurious correspondences are discarded by using the 
+///  a threshold over the distance ratio of the 2 neighbours points.
+/// 
 template <typename KeypointSetT, typename MatcherT>
-class ImageCollectionMatcher_AllInMemory : public ImageCollectionMatcher
+class Matcher_AllInMemory : public Matcher
 {
   // Alias to internal stored Feature and Descriptor type
   typedef typename KeypointSetT::FeatureT FeatureT;
@@ -37,7 +36,9 @@ class ImageCollectionMatcher_AllInMemory : public ImageCollectionMatcher
   typedef typename DescriptorT::bin_type DescBin_typeT;
 
   public:
-  ImageCollectionMatcher_AllInMemory(float distRatio) :ImageCollectionMatcher(), fDistRatio(distRatio)
+  Matcher_AllInMemory(float distRatio):
+    Matcher(),
+    fDistRatio(distRatio)
   {
   }
 
@@ -55,12 +56,10 @@ class ImageCollectionMatcher_AllInMemory : public ImageCollectionMatcher
       // Load descriptor of Jnth image
       const std::string sFeatJ = stlplus::create_filespec(sMatchDir,
         stlplus::basename_part(vec_fileNames[j]), "feat");
-
       const std::string sDescJ = stlplus::create_filespec(sMatchDir,
         stlplus::basename_part(vec_fileNames[j]), "desc");
-      bOk &= loadFeatsFromFile(sFeatJ, map_Feat[j]);
 
-      KeypointSetT kpSetI;
+      bOk &= loadFeatsFromFile(sFeatJ, map_Feat[j]);
       bOk &= loadDescsFromBinFile(sDescJ, map_Desc[j]);
     }
     return bOk;
@@ -157,3 +156,4 @@ class ImageCollectionMatcher_AllInMemory : public ImageCollectionMatcher
   float fDistRatio;
 };
 
+}; // namespace openMVG

@@ -10,9 +10,9 @@
 #include "openMVG/features/features.hpp"
 
 /// Generic Image Collection image matching
-#include "software/SfM/ImageCollectionMatcher_AllInMemory.hpp"
-#include "software/SfM/ImageCollectionGeometricFilter.hpp"
-#include "software/globalSfM/ImageCollection_E_ACRobust.hpp"
+#include "openMVG/matching_image_collection/Matcher_AllInMemory.hpp"
+#include "openMVG/matching_image_collection/GeometricFilter.hpp"
+#include "openMVG/matching_image_collection/E_ACRobust.hpp"
 #include "software/SfM/pairwiseAdjacencyDisplay.hpp"
 #include "software/SfM/SfMIOHelper.hpp"
 #include "openMVG/matching/matcher_brute_force.hpp"
@@ -142,8 +142,6 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-// Using UNIQUE with a special functor and distance == (1) ?
-
   std::vector<std::string> vec_fileNames;
   std::vector<std::pair<size_t, size_t> > vec_imagesSize;
   for ( std::vector<openMVG::SfMIO::CameraInfo>::const_iterator iter_camInfo = vec_camImageName.begin();
@@ -238,7 +236,7 @@ int main(int argc, char **argv)
   }
   else // Compute the putatives matches
   {
-    ImageCollectionMatcher_AllInMemory<KeypointSetT, MatcherT> collectionMatcher(fDistRatio);
+    Matcher_AllInMemory<KeypointSetT, MatcherT> collectionMatcher(fDistRatio);
     if (collectionMatcher.loadData(vec_fileNames, sOutDir))
     {
       std::cout  << std::endl << "PUTATIVE MATCHES" << std::endl;
@@ -265,14 +263,12 @@ int main(int argc, char **argv)
   //      acontrario estimated threshold
   //---------------------------------------
   IndexedMatchPerPair map_GeometricMatches_E;
-
-  GeometricFilter_EMatrix_AC geomFilter_E_AC(vec_focalGroup[0].m_K, 4.0);
-  ImageCollectionGeometricFilter<FeatureT, GeometricFilter_EMatrix_AC> collectionGeomFilter;
+  ImageCollectionGeometricFilter<FeatureT> collectionGeomFilter;
   if (collectionGeomFilter.loadData(vec_fileNames, sOutDir))
   {
     std::cout << std::endl << " - GEOMETRIC FILTERING - " << std::endl;
     collectionGeomFilter.Filter(
-      geomFilter_E_AC,
+      GeometricFilter_EMatrix_AC(vec_focalGroup[0].m_K, 4.0),
       map_PutativesMatches,
       map_GeometricMatches_E,
       vec_imagesSize);
