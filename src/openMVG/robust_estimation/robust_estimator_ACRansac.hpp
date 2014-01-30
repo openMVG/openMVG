@@ -95,7 +95,7 @@ static ErrorIndex bestNFA(
   ErrorIndex bestIndex(std::numeric_limits<double>::infinity(), startIndex);
   const size_t n = e.size();
   for(size_t k=startIndex+1; k<=n && e[k-1].first<=maxThreshold; ++k) {
-    double logalpha = logalpha0 + multError *log10(e[k-1].first + std::numeric_limits<double>::min());
+    double logalpha = logalpha0 + multError * log10(e[k-1].first + std::numeric_limits<float>::min());
     ErrorIndex index(loge0 +
       logalpha * (double)(k-startIndex) +
       logc_n[k] +
