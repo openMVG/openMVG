@@ -31,6 +31,8 @@ struct GeometricFilter_FMatrix_AC
     const std::pair<size_t, size_t> & imgSizeB,
     std::vector<size_t> & vec_inliers) const
   {
+    using namespace openMVG;
+    using namespace openMVG::robust;
     vec_inliers.resize(0);
     // Define the AContrario adapted Fundamental matrix solver
     typedef ACKernelAdaptor<
@@ -61,3 +63,4 @@ struct GeometricFilter_FMatrix_AC
 };
 
 }; // namespace openMVG
+

@@ -146,7 +146,7 @@ class fast_mutex {
   #endif
 #endif
     }
-
+    
     /// Try to lock the mutex.
     /// The method will try to lock the mutex. If it fails, the function will
     /// return immediately (non-blocking).

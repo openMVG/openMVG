@@ -226,19 +226,20 @@ struct TracksBuilder
         const set<size_t> & setB = iter2->second;
         vector<size_t> inter;
 
-        set_intersection (setA.begin(), setA.end(), setB.begin(), setB.end(), back_inserter(inter));
+        set_intersection(setA.begin(), setA.end(), setB.begin(), setB.end(), back_inserter(inter));
 
         if (inter.size() < minMatchesOccurences)
           copy(inter.begin(), inter.end(), back_inserter(vec_tracksToRemove));
       }
     }
     sort(vec_tracksToRemove.begin(), vec_tracksToRemove.end());
-    std::vector<size_t>::iterator it = unique (vec_tracksToRemove.begin(), vec_tracksToRemove.end());
+    std::vector<size_t>::iterator it = std::unique(vec_tracksToRemove.begin(), vec_tracksToRemove.end());
     vec_tracksToRemove.resize( std::distance(vec_tracksToRemove.begin(), it) );
     if (bVerbose)
-      cout << endl << endl <<vec_tracksToRemove.size() << " Tracks will be removed"<< endl;
-    for_each (vec_tracksToRemove.begin(), vec_tracksToRemove.end(),
-      std::bind1st( std::mem_fun( &UnionFindObject::eraseClass ), myTracksUF.get() ));
+      std::cout << std::endl << std::endl << vec_tracksToRemove.size()
+        << " Tracks will be removed"<< std::endl;
+    std::for_each(vec_tracksToRemove.begin(), vec_tracksToRemove.end(),
+      std::bind1st(std::mem_fun(&UnionFindObject::eraseClass), myTracksUF.get()));
     return false;
   }
 

@@ -29,7 +29,6 @@ using namespace openMVG::tracks;
 #include <functional>
 #include <sstream>
 
-using namespace openMVG;
 
 namespace openMVG{
 
@@ -88,93 +87,89 @@ bool IncrementalReconstructionEngine::Process()
   //-------------------
   //-- Incremental reconstruction
   //-------------------
-  bool bOk = true;
   std::pair<size_t,size_t> initialPairIndex;
-  if (InitialPairChoice(initialPairIndex))
+  if(! InitialPairChoice(initialPairIndex))
+    return false;
+  
+  // Initial pair Essential Matrix and [R|t] estimation.
+  if(! MakeInitialPair3D(initialPairIndex))
+    return false;
+
+  _vec_added_order.push_back(initialPairIndex.first);
+  _vec_added_order.push_back(initialPairIndex.second);
+
+  BundleAdjustment(); // Adjust 3D point and camera parameters.
+
+  size_t round = 0;
+  bool bImageAdded = false;
+  // Compute robust Resection of remaining image
+  std::vector<size_t> vec_possible_resection_indexes;
+  while (FindImagesWithPossibleResection(vec_possible_resection_indexes))
   {
-    // Initial pair Essential Matrix and [R|t] estimation.
-    if(MakeInitialPair3D(initialPairIndex))
+    if (Resection(vec_possible_resection_indexes))
     {
-      _vec_added_order.push_back(initialPairIndex.first);
-      _vec_added_order.push_back(initialPairIndex.second);
-
-      BundleAdjustment(); // Adjust 3D point and camera parameters.
-
-      size_t round = 0;
-      bool bImageAdded = false;
-      // Compute robust Resection of remaining image
-      std::vector<size_t> vec_possible_resection_indexes;
-      while (FindImagesWithPossibleResection(vec_possible_resection_indexes))
-      {
-        if (Resection(vec_possible_resection_indexes))
-        {
-          std::ostringstream os;
-          os << std::setw(8) << std::setfill('0') << round << "_Resection";
-          _reconstructorData.exportToPly( stlplus::create_filespec(_sOutDirectory, os.str(), ".ply"));
-          bImageAdded = true;
-        }
-        ++round;
-        if (bImageAdded && _bUseBundleAdjustment)
-        {
-          // Perform BA until all point are under the given precision
-          do
-          {
-            BundleAdjustment();
-          }
-          while (badTrackRejector(4.0) != 0);
-        }
-      }
-
-      //-- Reconstruction done.
-      //-- Display some statistics
-      std::cout << "\n\n-------------------------------" << "\n"
-        << "-- Structure from Motion (statistics):\n"
-        << "-- #Camera calibrated: " << _reconstructorData.map_Camera.size()
-        << " from " << _vec_camImageNames.size() << " input images.\n"
-        << "-- #Tracks, #3D points: " << _reconstructorData.map_3DPoints.size() << "\n"
-        << "-------------------------------" << "\n";
-
-      Histogram<double> h;
-      ComputeResidualsHistogram(&h);
-      std::cout << "\nHistogram of residuals:" << h.ToString() << std::endl;
-
-      if (_bHtmlReport)
-      {
-        using namespace htmlDocument;
-        std::ostringstream os;
-        os << "Structure from Motion process finished.";
-        _htmlDocStream->pushInfo("<hr>");
-        _htmlDocStream->pushInfo(htmlMarkup("h1",os.str()));
-
-        os.str("");
-        os << "-------------------------------" << "<br>"
-          << "-- Structure from Motion (statistics):<br>"
-          << "-- #Camera calibrated: " << _reconstructorData.map_Camera.size()
-          << " from " <<_vec_camImageNames.size() << " input images.<br>"
-          << "-- #Tracks, #3D points: " << _reconstructorData.map_3DPoints.size() << "<br>"
-          << "-------------------------------" << "<br>";
-        _htmlDocStream->pushInfo(os.str());
-
-        _htmlDocStream->pushInfo(htmlMarkup("h2","Histogram of reprojection-residuals"));
-
-        std::vector<double> xBin = h.GetXbinsValue();
-        std::pair< std::pair<double,double>, std::pair<double,double> > range;
-        range = autoJSXGraphViewport<double>(xBin, h.GetHist());
-
-        htmlDocument::JSXGraphWrapper jsxGraph;
-        jsxGraph.init("3DtoImageResiduals",600,300);
-        jsxGraph.addXYChart(xBin, h.GetHist(), "line,point");
-        jsxGraph.UnsuspendUpdate();
-        jsxGraph.setViewport(range);
-        jsxGraph.close();
-        _htmlDocStream->pushInfo(jsxGraph.toStr());
-      }
+      std::ostringstream os;
+      os << std::setw(8) << std::setfill('0') << round << "_Resection";
+      _reconstructorData.exportToPly( stlplus::create_filespec(_sOutDirectory, os.str(), ".ply"));
+      bImageAdded = true;
     }
-    else  { // (MakeInitialPair3D(initialPairIndex)) failed
-      bOk = false;
+    ++round;
+    if (bImageAdded && _bUseBundleAdjustment)
+    {
+      // Perform BA until all point are under the given precision
+      do
+      {
+        BundleAdjustment();
+      }
+      while (badTrackRejector(4.0) != 0);
     }
   }
-  return bOk;
+
+  //-- Reconstruction done.
+  //-- Display some statistics
+  std::cout << "\n\n-------------------------------" << "\n"
+    << "-- Structure from Motion (statistics):\n"
+    << "-- #Camera calibrated: " << _reconstructorData.map_Camera.size()
+    << " from " << _vec_camImageNames.size() << " input images.\n"
+    << "-- #Tracks, #3D points: " << _reconstructorData.map_3DPoints.size() << "\n"
+    << "-------------------------------" << "\n";
+
+  Histogram<double> h;
+  ComputeResidualsHistogram(&h);
+  std::cout << "\nHistogram of residuals:" << h.ToString() << std::endl;
+
+  if (_bHtmlReport)
+  {
+    using namespace htmlDocument;
+    std::ostringstream os;
+    os << "Structure from Motion process finished.";
+    _htmlDocStream->pushInfo("<hr>");
+    _htmlDocStream->pushInfo(htmlMarkup("h1",os.str()));
+
+    os.str("");
+    os << "-------------------------------" << "<br>"
+      << "-- Structure from Motion (statistics):<br>"
+      << "-- #Camera calibrated: " << _reconstructorData.map_Camera.size()
+      << " from " <<_vec_camImageNames.size() << " input images.<br>"
+      << "-- #Tracks, #3D points: " << _reconstructorData.map_3DPoints.size() << "<br>"
+      << "-------------------------------" << "<br>";
+    _htmlDocStream->pushInfo(os.str());
+
+    _htmlDocStream->pushInfo(htmlMarkup("h2","Histogram of reprojection-residuals"));
+
+    std::vector<double> xBin = h.GetXbinsValue();
+    std::pair< std::pair<double,double>, std::pair<double,double> > range;
+    range = autoJSXGraphViewport<double>(xBin, h.GetHist());
+
+    htmlDocument::JSXGraphWrapper jsxGraph;
+    jsxGraph.init("3DtoImageResiduals",600,300);
+    jsxGraph.addXYChart(xBin, h.GetHist(), "line,point");
+    jsxGraph.UnsuspendUpdate();
+    jsxGraph.setViewport(range);
+    jsxGraph.close();
+    _htmlDocStream->pushInfo(jsxGraph.toStr());
+  }
+  return true;
 }
 
 bool IncrementalReconstructionEngine::ReadInputData()

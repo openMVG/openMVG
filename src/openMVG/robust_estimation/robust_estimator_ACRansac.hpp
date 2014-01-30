@@ -121,7 +121,18 @@ static void UniformSample(int sizeSample,
     (*sample)[i] = vec_index[ (*sample)[i] ];
 }
 
-/// ACRANSAC routine (ErrorThreshold, NFA)
+/**
+ * @brief ACRANSAC routine (ErrorThreshold, NFA)
+ * 
+ * @param[in] kernel model and metric object
+ * @param[out] vec_inliers points that fit the estimated model
+ * @param[in] nIter maximum number of consecutive iterations
+ * @param[out] model returned model if found
+ * @param[in] precision upper bound of the precision (squared error)
+ * @param[in] bVerbose display console log
+ * 
+ * @return (errorMax, minNFA)
+ */
 template<typename Kernel>
 std::pair<double, double> ACRANSAC(const Kernel &kernel,
   std::vector<size_t> & vec_inliers,

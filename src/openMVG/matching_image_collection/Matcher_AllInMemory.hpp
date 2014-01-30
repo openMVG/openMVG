@@ -123,9 +123,9 @@ class Matcher_AllInMemory : public Matcher
 
         for (size_t k=0; k < vec_NNRatioIndexes.size()-1&& vec_NNRatioIndexes.size()>0; ++k)
         {
+          const size_t index = vec_NNRatioIndexes[k];
           vec_FilteredMatches.push_back(
-            IndMatch(vec_nIndice10[vec_NNRatioIndexes[k]*NNN__],
-                     vec_NNRatioIndexes[k]) );
+            IndMatch(vec_nIndice10[index*NNN__], index) );
         }
 
         // Remove duplicates

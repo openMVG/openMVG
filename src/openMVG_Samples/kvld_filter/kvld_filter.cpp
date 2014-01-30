@@ -277,11 +277,11 @@ int main(int argc, char **argv) {
   Image <unsigned char> imageOutR = imageR;
 
   getKVLDMask(
-  &imageOutL, &imageOutR,
-  featsL, featsR,
-  matchesPair,
-  valide,
-  E);
+    &imageOutL, &imageOutR,
+    featsL, featsR,
+    matchesPair,
+    valide,
+    E);
 
   {
     string out_filename = "07_Left-K-VLD-MASK.jpg";
