@@ -250,7 +250,6 @@ float KVLD( const Image< float >& I1,
 //============main iteration formatch verification==========//
 //    cout<<"main iteration";
   bool change = true;
-  bool initial = true;
 
   while( change )
   {
@@ -436,7 +435,7 @@ float KVLD( const Image< float >& I1,
 }
 
 
-void writeResult( const string output,
+void writeResult( const std::string & output,
                   const vector< openMVG::SIOPointFeature >& vec_F1,
                   const vector< openMVG::SIOPointFeature >& vec_F2,
                   const vector< Pair >& vec_matches,
@@ -451,7 +450,7 @@ void writeResult( const string output,
   feature1 << vec_F1.size() << endl;
   for( vector< openMVG::SIOPointFeature >::const_iterator it = vec_F1.begin();
           it != vec_F1.end();
-          it++ )
+          ++it )
   {
     writeDetector( feature1, ( *it ) );
   }
@@ -463,7 +462,7 @@ void writeResult( const string output,
   feature2 << vec_F2.size() << endl;
   for( vector< openMVG::SIOPointFeature >::const_iterator it = vec_F2.begin();
           it != vec_F2.end();
-          it++ )
+          ++it )
   {
     writeDetector( feature2, ( *it ) );
   }
@@ -474,7 +473,7 @@ void writeResult( const string output,
   if( !initialmatches.is_open() )
     cout << "error while writing initial_matches.txt" << endl;
   initialmatches << vec_matches.size() << endl;
-  for( vector< Pair >::const_iterator it = vec_matches.begin(); it != vec_matches.end(); it++ )
+  for( vector< Pair >::const_iterator it = vec_matches.begin(); it != vec_matches.end(); ++it )
   {
     initialmatches << it->first << " " << it->second << endl;
   }
@@ -488,7 +487,7 @@ void writeResult( const string output,
   filteredmatches << vec_matchesFiltered.size() << endl;
   for( vector< Pair >::const_iterator it = vec_matchesFiltered.begin();
             it != vec_matchesFiltered.end();
-            it++ )
+            ++it )
   {
     filteredmatches << it->first << " " << it->second << endl;
 
@@ -502,7 +501,7 @@ void writeResult( const string output,
 
   for( vector< double >::const_iterator it = vec_score.begin();
           it != vec_score.end();
-          it++ )
+          ++it )
   {
     filteredmatches << *it << endl;
   }

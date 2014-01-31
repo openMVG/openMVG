@@ -31,13 +31,13 @@ the terms of the BSD license (see the COPYING file).
   const float maxContrast     = 300.0f;
 
 //===inner parameters of VLD, usually not to change
-  const int dimension         = 10; //number of simplified SIFT-like chaines used in a single vld
-  const int subdirection      = 8; // number of bins in a SIFT-like chaine's histogramme
-  const int binNum            = 24;//number of bins for SIFT-like chaines' main direction. Must be a pair number
+  const int dimension         = 10; //number of simplified SIFT-like chain used in a single vld
+  const int subdirection      = 8; // number of bins in a SIFT-like chain histogram
+  const int binNum            = 24;//number of bins for SIFT-like chain main direction. Must be a pair number
 
 //===== initialize parameters for a KVLD process ====//
 // inlierRate: the minimum rate down to which the KVLD should be reprocessed with a lower number of inlierRate, initially set to 0.04
-// K: the minumum number of gvld-consistent (or vld-consistent) neighbors to select a match as correct one
+// K: the minimum number of gvld-consistent (or vld-consistent) neighbors to select a match as correct one
 // geometry: if true, KVLD will also take geometric verification into account. c.f. paper
 //           if false, KVLD execute a pure photometric verification
 struct KvldParameters
@@ -48,12 +48,12 @@ struct KvldParameters
   KvldParameters(): inlierRate( 0.04 ), K( 3 ), geometry( true ){};
 };
 
-//====== Pyramide of scale images ======//
-// elements as angles[0] and magnitudes[0] presents orientations and gradient normes of the original scale (biggest), and the following elements
+//====== Pyramid of scale images ======//
+// elements as angles[0] and magnitudes[0] presents orientations and gradient norms of the original scale (biggest), and the following elements
 // are scaled down by a step of sqrt(2.0) in size
 //
-// angles: strore orientations of pixels of each scale image into a vector of images, which varies from 0 to 2*PI for each pixel
-// magnitudes: strore gradient normes of pixels of each scale image into a vector of images
+// angles: store orientations of pixels of each scale image into a vector of images, which varies from 0 to 2*PI for each pixel
+// magnitudes: store gradient norms of pixels of each scale image into a vector of images
 struct ImageScale
 {
 	std::vector< Image< float > > angles;
@@ -62,7 +62,7 @@ struct ImageScale
 	double radius_size;
 	double step;
 
-        ImageScale( const Image< float >& I,double r = 5.0 );
+  ImageScale( const Image< float >& I,double r = 5.0 );
 	int getIndex( const double r )const;
 
 private:
@@ -156,10 +156,10 @@ public:
 //matches: initial possible matches containing pairs of INDEX of matches features from F1 and F2. An element of matches as (1,3) present the 1st feature in F1
 //           and the 3rd feature in F2
 //
-//matchesFiltered: the output list of matches filled by KVLD processe.(it will be cleared to empty at the beginning of KVLD).
+//matchesFiltered: the output list of matches filled by KVLD process.(it will be cleared to empty at the beginning of KVLD).
 //
 //score: list of score for output matches. If geometric verification is set to true, each element presents the geometric consistancy score of the corresponding match with its neighbor matches
-//        otherwise, it presents the average photometric consistancy score with its neighbor matches.
+//        otherwise, it presents the average photometric consistency score with its neighbor matches.
 //
 //E: gvld(or vld)-consistency matrix, for illustration reason, it has been externalized as an input of KVLD. it should be initialized to be a matches.size*matche.sizes table with all equal to -1
 //   e.g.  libNumerics::matrix<int> E = libNumerics::matrix<int>::ones(matchesPair.size(),matchesPair.size())*(-1);
@@ -167,7 +167,7 @@ public:
 //valide: indices of whether the i th match in the initial match list is selected, for illustration reason, it has been externalized as an input of KVLD. it should be initialized to be a
 //    matches.size vector with all equal to true.  e.g.  std::vector<bool> valide(size, true);
 //
-//kvldParameters: container of miminum inlier rate, the value of K (=3 initially) and geometric verification flag (true initially)
+//kvldParameters: container of minimum inlier rate, the value of K (=3 initially) and geometric verification flag (true initially)
 
 float KVLD( const Image< float >& I1,
             const Image< float >& I2,
@@ -182,7 +182,7 @@ float KVLD( const Image< float >& I1,
 
 
 //====================KVLD interface======================//
-void writeResult( const std::string output,
+void writeResult( const std::string & output,
                   const std::vector< openMVG::SIOPointFeature >& F1,
                   const std::vector< openMVG::SIOPointFeature >& F2,
                   const std::vector< Pair >& matches,
