@@ -76,7 +76,6 @@ private:
   Mat x1_;
   Mat3 N1_;
   double logalpha0_;
-  bool bPointToLine_;
 };
 
 // Test ACRANSAC with the AC-adapted Line kernel in a noise/outlier free dataset

@@ -109,7 +109,7 @@ struct my_error_mgr {
 METHODDEF(void)
 jpeg_error (j_common_ptr cinfo)
 {
-  my_error_mgr *myerr = (my_error_mgr*) cinfo->err;
+  my_error_mgr *myerr = (my_error_mgr*) (cinfo->err);
   (*cinfo->err->output_message) (cinfo);
   longjmp(myerr->setjmp_buffer, 1);
 }

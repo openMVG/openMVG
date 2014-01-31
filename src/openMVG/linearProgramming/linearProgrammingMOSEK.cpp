@@ -81,7 +81,6 @@ bool MOSEK_SolveWrapper::setup(const LP_Constraints & cstraints) //cstraints <->
 {
   assert(_nbParams == cstraints._nbParams);
 
-  bool bOk = true;
   MSK_deletetask(&task);
 
   int NUMVAR = cstraints._constraintMat.cols();
@@ -204,7 +203,6 @@ bool MOSEK_SolveWrapper::setup(const LP_Constraints_Sparse & cstraints) //cstrai
 {
   assert(_nbParams == cstraints._nbParams);
 
-  bool bOk = true;
   MSK_deletetask(&task);
 
   int NUMVAR = this->_nbParams;
@@ -359,7 +357,6 @@ bool MOSEK_SolveWrapper::solve()
   if ( r== MSK_RES_OK )
   {
     MSKsolstae solsta;
-    int j;
     MSK_getsolutionstatus (task,
                            MSK_SOL_BAS,
                            NULL,
@@ -377,7 +374,6 @@ bool MOSEK_SolveWrapper::solve()
       case MSK_SOL_STA_NEAR_PRIM_INFEAS_CER:
         //printf("Primal or dual infeasibility certificate found.\n");
         break;
-
       case MSK_SOL_STA_UNKNOWN:
         //printf("The status of the solution could not be determined.\n");
         break;

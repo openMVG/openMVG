@@ -55,9 +55,9 @@ void visibleCamPosToSVGSurface(
     out[i](2) = ((out[i](2) * yfactor) + -yfactor * mean(2)) * 30 + 100;
   }
 
-  double size = 200;
   if (!fileName.empty())
   {
+    const double size = 200;
     svgDrawer svgSurface_GT(size,size);
     for(size_t i = 0; i  < vec_Ci.size(); ++i)
     {

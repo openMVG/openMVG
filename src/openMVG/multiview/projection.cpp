@@ -113,12 +113,8 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
   }
 
   // Compute translation.
-  Vec p(3);
-  p << P(0,3), P(1,3), P(2,3);
-  Vec3 t = K.inverse() * p;
-
   Eigen::PartialPivLU<Mat3> lu(K);
-  t = lu.solve(P.col(3));
+  Vec3 t = lu.solve(P.col(3));
 
   if(R.determinant()<0) {
     R = -R;

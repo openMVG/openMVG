@@ -122,7 +122,7 @@ class Exif_IO_OpenExif: public Exif_IO
         std::cout << "\nApp1 - \"Exif\" entries:" << std::endl;
       for (ExifPathsTags::const_iterator crntPathsTags = app1PathsTags_.begin();
            crntPathsTags != app1PathsTags_.end();
-           crntPathsTags++ )
+           ++crntPathsTags )
       {
         ExifIFDPath::const_iterator crntPath = (*crntPathsTags).first.begin();
         ExifIFDPath::const_iterator endPath = (*crntPathsTags).first.end();
@@ -130,7 +130,7 @@ class Exif_IO_OpenExif: public Exif_IO
         {
           std::cout << "IFD: " << (*crntPath).first
                << "  Idx: " << (*crntPath).second << std::endl;
-          crntPath++;
+          ++crntPath;
         }
 
         ExifTags::const_iterator crnt = (*crntPathsTags).second.begin();
@@ -142,7 +142,7 @@ class Exif_IO_OpenExif: public Exif_IO
           ExifTagEntry* tag = *(crnt);
           tag->print();
           std::cout << std::endl;
-          crnt++;
+          ++crnt;
         }
       }
 
@@ -151,7 +151,7 @@ class Exif_IO_OpenExif: public Exif_IO
         std::cout << "\nApp3 - \"Meta\" entries:" << std::endl;
       for (ExifPathsTags::const_iterator crntPathsTags = app3PathsTags_.begin();
            crntPathsTags != app3PathsTags_.end();
-           crntPathsTags++ )
+           ++crntPathsTags )
       {
         ExifIFDPath::const_iterator crntPath = (*crntPathsTags).first.begin();
         ExifIFDPath::const_iterator endPath = (*crntPathsTags).first.end();
@@ -159,7 +159,7 @@ class Exif_IO_OpenExif: public Exif_IO
         {
           std::cout << "IFD: " << (*crntPath).first
                << "  Idx: " << (*crntPath).second << std::endl;
-          crntPath++;
+          ++crntPath;
         }
 
         ExifTags::const_iterator crnt = (*crntPathsTags).second.begin();
@@ -170,7 +170,7 @@ class Exif_IO_OpenExif: public Exif_IO
           ExifTagEntry* tag = *(crnt);
           tag->print();
           std::cout << std::endl;
-          crnt++;
+          ++crnt;
         }
       }
 

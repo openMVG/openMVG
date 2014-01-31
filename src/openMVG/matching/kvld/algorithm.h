@@ -40,7 +40,7 @@ struct PointS
 	float angle; // point orientation
 
 	PointS( float x = (0.f), float y = (0.f)):
-      x( x ), y( y ){}
+      x( x ), y( y ), scale(0.f), angle(0.f){}
 	PointS( const float& x, const float& y,const float& angle,const float& scale):
       x( x ), y( y ), angle( angle ), scale( scale ){}
 };
