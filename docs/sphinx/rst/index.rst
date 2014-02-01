@@ -48,8 +48,7 @@ Contents:
    openMVG/openMVG.rst
    openMVG_Samples/openMVG_Samples.rst
    patented/patented.rst
-   software/SfM/SfM.rst
-   testing/testing.rst
+   software/softwares.rst
    dependencies/external_libs.rst
    third_party/third_party.rst
    FAQ/FAQ.rst
