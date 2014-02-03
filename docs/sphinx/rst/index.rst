@@ -10,7 +10,7 @@ Introduction
 ==================
 OpenMVG (Multiple View Geometry) is a library for computer-vision scientists and especially
 targeted to the Multiple View Geometry community. It is designed to provide an easy access to the
-classical problem solvers in Multiple View Geometry and solve them accurately..
+classical problem solvers in Multiple View Geometry and solve them accurately.
 
 ############################
 Why another library
@@ -28,7 +28,7 @@ openMVG library overview
 
 The openMVG library is cut in various modules:
 
-* **Libraries**,
+* **Libraries, core**,
 
   * comes with unit tests that assert algorithms results and show how use the code.
   
@@ -38,7 +38,11 @@ The openMVG library is cut in various modules:
   
 * **Binaries**,
 
-  * softwares build to perform toolchain processing (features matching, Structure from Motion ...).
+  * softwares build to perform toolchain processing
+
+    * features matching in un-ordered photo collection,
+    * SfM: Structure from Motion,
+    * color harmonization of photo collection.
 
 Contents:
   
@@ -47,21 +51,20 @@ Contents:
    
    openMVG/openMVG.rst
    openMVG_Samples/openMVG_Samples.rst
+   software/softwares.rst
    patented/patented.rst
-   software/SfM/SfM.rst
-   testing/testing.rst
    dependencies/external_libs.rst
    third_party/third_party.rst
    FAQ/FAQ.rst
 
 
-
 ############################
 Acknowledgements
 ############################
-openMVG authors would like to thank libmv authors for providing an inspiring base to design the
-openMVG library. Authors also would like to thank Mikros Image and LIGM-Imagine laboratory
-for support and authorization to make this library as an open-source project.
+openMVG authors would like to thank:
+
+- libmv authors for providing an inspiring base to design the openMVG library.
+- Mikros Image and LIGM-Imagine laboratory for support and authorization to make this library as an open-source project.
 
 ############################
 License
@@ -74,8 +77,8 @@ Please refer to the license file contained in the source for complete license de
 Dependencies
 ############################
 OpenMVG come as a standalone distribution, you don't need to install libraries to make it compiles
-and run. Exception for the Linux library is made for the png, zlib and jpeg library in order to use
-the one of the system.
+and run.
+On Linux the library will use if available the local png, zlib and jpeg libraries.
    
 Indices and tables
 ==================

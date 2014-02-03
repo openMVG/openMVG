@@ -41,8 +41,8 @@ using namespace linearProgramming;
 //
 //  This implementation handle noisy measurement by adding a slack
 //   variables for each x,y,z residual.
-//  Based on idea expressed in (See Algorithm 2.0 of [1]):
-// [1] Outlier Removal Using Duality.
+//  Based on idea expressed in (See Algorithm 2.0 of [3]):
+// [3] Outlier Removal Using Duality.
 //      Carl Olsson, Anders Eriksson and Richard Hartley, Richard.
 //      CVPR 2010.
 
