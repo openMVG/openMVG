@@ -48,7 +48,7 @@ N-View geometry estimation
 Homography matrix:
 ---------------------
 
-The homography matrix map the relation between two projection of a plane: :ref:`Figure <homographyFigure>`.
+The homography matrix maps the relation between two projections of a plane: :ref:`Figure <homographyFigure>`.
 
 :math:`H` is a (3 x 3) matrix that links coordinates in left and right images with the following relation.
 
@@ -67,15 +67,15 @@ OpenMVG implementation follows the DLT (Direct Linear Transform) explained in [H
 Fundamental matrix:
 ---------------------
 
-The fundamental matrix is a relation between two image viewing the same scene where points
-projection are visible in the two images. Given a point correspondence between two view :math:`(x_i,x'_i)`:
+The fundamental matrix is a relation between two images viewing the same scene where points
+projection are visible in the two images. Given a point correspondence between two views :math:`(x_i,x'_i)`:
 
 We obtain the following relation:
 
 .. math:: x'^T_i Fx_i = 0
 
-:math:`F` is the (3 x 3) Fundamental matrix, it put in relation a point x to a line where belong the projection of the 3D X point.
-:math:`l'_i = Fx_i` design the epipolar line on which the point :math:`x'_i` could be.
+:math:`F` is the (3 x 3) Fundamental matrix, it puts in relation a point x to a line where belong the projection of the 3D X point.
+:math:`l'_i = Fx_i` designq the epipolar line on which the point :math:`x'_i` could be.
 The relation :math:`x'^T_i Fx_i = 0` exists for all corresponding point belonging to a stereo pair.
 
 .. figure:: fundamentalMatrix.png
@@ -84,13 +84,13 @@ The relation :math:`x'^T_i Fx_i = 0` exists for all corresponding point belongin
    The fundamental matrix and the point to line constraint.
 
 The fundamental matrix is sometime called bifocal-tensor, it is a 3 x 3 matrix of rank 2
-with 7 degree of freedom. 8 ou 7 correspondences are sufficient to computes the :math:`F` matrix.
-Implementation follows the DLT (Direct Linear Transform) explain in [HZ]_ book.
+with 7 degree of freedom. 8 ou 7 correspondences are sufficient to compute the :math:`F` matrix.
+Implementation follows the DLT (Direct Linear Transform) explained in [HZ]_ book.
 
 Essential matrix
 ---------------------
 
-Adding intrinsic parameter to the fundamental matrix gives a metric "object" that provide the following relation
+Adding intrinsic parameters to the fundamental matrix gives a metric "object" that provides the following relation
 :math:`E = K'^T FK` , this is the Essential relation explained by Longuet-Higgins in 1981 [Longuet]_.
 This essential matrix links the relative position of the camera to the fundamental matrix relation.
 
@@ -104,8 +104,8 @@ This essential matrix links the relative position of the camera to the fundament
 Camera resection/pose estimation
 ===================================
 
-Given a serie of 3D-2D image plane correspondences it's possible to compute a camera pose estimation.
-It consists in estimating the camera parameter of the right camera that minimize the residual error of the 3D points re-projections, it's an optimization problem that trying to solve P parameter in order to minimize 
+Given a serie of 3D-2D image plane correspondences it is possible to compute a camera pose estimation.
+It consists in estimating the camera parameters of the right camera that minimizes the residual error of the 3D points re-projections, it's an optimization problem that trying to solve P parameters in order to minimize 
 
 .. math:: 
 	min \sum^n_{i=1} x_i - P(X_i).

@@ -158,12 +158,12 @@ Using a 3 directories based data organisation structure is suggested:
   The main binary in order to run the SfM process is openMVG_main_IncrementalSfM, it use previous
   computed data and is implemented as explained in algorithm 2.
 
-  - If you want refine intrinsics (focal, principal point and radial distortion) for each focal group
+  - If you want to refine intrinsics (focal, principal point and radial distortion) for each focal group
   .. code-block:: c++
   
     $ openMVG_main_IncrementalSfM -i /home/pierre/Pictures/Dataset/images/ -m /home/pierre/Pictures/Dataset/matches/ -o /home/pierre/Pictures/Dataset/outReconstruction/
   
-  - If you want only refine the focal (to use with image were the distortion have been already removed)
+  - If you only want to refine the focal (to use with image were the distortion have been already removed)
   .. code-block:: c++
   
   

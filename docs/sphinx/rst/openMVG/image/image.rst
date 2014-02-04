@@ -18,7 +18,7 @@ Single channel image:
 * a 8-bit gray image: ``Image<unsigned char>``
 * a 32-bit gray image: ``Image<double>``
 
-Multiple channel image: (In order to ease usage for color images some types are already available to handle RGB and RGBA images)
+Multiple channels image: (In order to ease usage for color images some types are already available to handle RGB and RGBA images)
 
 * a 8-bit RGB image: ``Image<RGBColor> <=> Image<Rgb<unsigned char> >``
 * a 8-bit RGBA image: ``Image<RGBAColor> <=> Image<Rgba<unsigned char> >``

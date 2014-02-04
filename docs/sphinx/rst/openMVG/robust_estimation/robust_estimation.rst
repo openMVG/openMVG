@@ -21,7 +21,7 @@ Max-Consensus
 ====================
 
 The idea of Max-Consensus is to use a random picked subset of data to find a model and test if
-this model is good or not the whole dataset. At the end you keep the model that best fit your cost
+this model is good or not the whole dataset. At the end you keep the model that best fits your cost
 function. Best fit defined as the number of data correspondences to the model under your specified
 threshold T.
 
@@ -66,7 +66,7 @@ Ransac
 ====================
 
 Ransac [RANSAC] is an evolution of Max-Consensus with a-priori information about the noise and corrupted
-data amount of the data. Those informations allow to reduce the number of iteration in order to be
+data amount of the data. That information allows to reduce the number of iterations in order to be
 sure to have made sufficient random sampling steps in order to find the model for the given data
 confidence. The number of remaining steps is so iteratively updated given the inlier/outlier ratio of
 the current found model.
@@ -97,8 +97,8 @@ RANSAC requires the choice of a threshold T, which must be balanced:
 - Too large: Models are contaminated by outliers (false data).
 
 AC-Ransac [ACRANSAC] uses the a contrario methodology in order to find a model that best fits the
-data with a confidence threshold T that adapts automatically to noise. It so find a model and it's
-associated noise. If there is too much noise, the a contrario methods return that no model was
+data with a confidence threshold T that adapts automatically to noise. It so finds a model and its
+associated noise. If there is too much noise, the a contrario method returns that no model was
 found.
 
 .. figure:: ACRansac.png
@@ -106,8 +106,8 @@ found.
 	
    A contrario robust estimation, noise adaptivity.
 
-Here an example of how find a best fit line, by using the a contrario robust estimation framework:
-It's a bit more complex, we use a class in order to perform the a contrario required task.
+Here an example of how to find a best fit line, by using the a contrario robust estimation framework:
+It is a bit more complex, we use a class in order to perform the a contrario required task.
 
 .. code-block:: c++
 	
