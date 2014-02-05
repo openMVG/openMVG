@@ -34,12 +34,18 @@ class Exif_IO_OpenExif: public Exif_IO
 
     std::string getBrand() const
     {
-      std::string *s; return (s = getTag<std::string>(EXIFTAG_MAKE)) == NULL ? "Not found" : *s;
+      std::string *s = getTag<std::string>(EXIFTAG_MAKE);
+      if (s != NULL)
+        return s->substr(0, strlen(s->c_str()));
+      return "Not found";
     }
 
     std::string getModel() const
     {
-      std::string *s; return (s = getTag<std::string>(EXIFTAG_MODEL)) == NULL ? "Not found" : *s;
+      std::string *s = getTag<std::string>(EXIFTAG_MODEL);
+      if (s != NULL)
+        return s->substr(0, strlen(s->c_str()));
+      return "Not found";
     }
 
     std::string getLensModel() const
