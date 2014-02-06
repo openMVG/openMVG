@@ -5,6 +5,7 @@ SET(LIBS ${EXTRA_LIBS}
   vlsift
   lemon
   stlplus
+  JsonBox
   ${OPENMVG_LIBRARY_DEPENDENCIES})
 
 

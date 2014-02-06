@@ -1,0 +1,315 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		24BDA7C514D03B8E00D73B22 /* Escaper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24BDA7C114D03B8E00D73B22 /* Escaper.cpp */; };
+		24BDA7C614D03B8E00D73B22 /* IndentCanceller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24BDA7C214D03B8E00D73B22 /* IndentCanceller.cpp */; };
+		24BDA7C714D03B8E00D73B22 /* Indenter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24BDA7C314D03B8E00D73B22 /* Indenter.cpp */; };
+		24BDA7C814D03B8E00D73B22 /* SolidusEscaper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24BDA7C414D03B8E00D73B22 /* SolidusEscaper.cpp */; };
+		24BDA7CE14D03BB700D73B22 /* Escaper.h in Headers */ = {isa = PBXBuildFile; fileRef = 24BDA7C914D03BB700D73B22 /* Escaper.h */; };
+		24BDA7CF14D03BB700D73B22 /* IndentCanceller.h in Headers */ = {isa = PBXBuildFile; fileRef = 24BDA7CA14D03BB700D73B22 /* IndentCanceller.h */; };
+		24BDA7D014D03BB700D73B22 /* Indenter.h in Headers */ = {isa = PBXBuildFile; fileRef = 24BDA7CB14D03BB700D73B22 /* Indenter.h */; };
+		24BDA7D114D03BB700D73B22 /* OutputFilter.h in Headers */ = {isa = PBXBuildFile; fileRef = 24BDA7CC14D03BB700D73B22 /* OutputFilter.h */; };
+		24BDA7D214D03BB700D73B22 /* SolidusEscaper.h in Headers */ = {isa = PBXBuildFile; fileRef = 24BDA7CD14D03BB700D73B22 /* SolidusEscaper.h */; };
+		51856C671427E71F0061B071 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51856C661427E71F0061B071 /* Foundation.framework */; };
+		51856C7F1427E74F0061B071 /* Array.h in Headers */ = {isa = PBXBuildFile; fileRef = 51856C781427E74F0061B071 /* Array.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		51856C801427E74F0061B071 /* Convert.h in Headers */ = {isa = PBXBuildFile; fileRef = 51856C791427E74F0061B071 /* Convert.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		51856C811427E74F0061B071 /* Grammar.h in Headers */ = {isa = PBXBuildFile; fileRef = 51856C7A1427E74F0061B071 /* Grammar.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		51856C821427E74F0061B071 /* Object.h in Headers */ = {isa = PBXBuildFile; fileRef = 51856C7B1427E74F0061B071 /* Object.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		51856C841427E74F0061B071 /* Value.h in Headers */ = {isa = PBXBuildFile; fileRef = 51856C7D1427E74F0061B071 /* Value.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		51856C851427E74F0061B071 /* JsonBox.h in Headers */ = {isa = PBXBuildFile; fileRef = 51856C7E1427E74F0061B071 /* JsonBox.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		51856C951427E7650061B071 /* Array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 51856C911427E7650061B071 /* Array.cpp */; };
+		51856C961427E7650061B071 /* Convert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 51856C921427E7650061B071 /* Convert.cpp */; };
+		51856C971427E7650061B071 /* Object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 51856C931427E7650061B071 /* Object.cpp */; };
+		51856C981427E7650061B071 /* Value.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 51856C941427E7650061B071 /* Value.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		24BDA7C114D03B8E00D73B22 /* Escaper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Escaper.cpp; sourceTree = "<group>"; };
+		24BDA7C214D03B8E00D73B22 /* IndentCanceller.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IndentCanceller.cpp; sourceTree = "<group>"; };
+		24BDA7C314D03B8E00D73B22 /* Indenter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Indenter.cpp; sourceTree = "<group>"; };
+		24BDA7C414D03B8E00D73B22 /* SolidusEscaper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SolidusEscaper.cpp; sourceTree = "<group>"; };
+		24BDA7C914D03BB700D73B22 /* Escaper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Escaper.h; sourceTree = "<group>"; };
+		24BDA7CA14D03BB700D73B22 /* IndentCanceller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IndentCanceller.h; sourceTree = "<group>"; };
+		24BDA7CB14D03BB700D73B22 /* Indenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Indenter.h; sourceTree = "<group>"; };
+		24BDA7CC14D03BB700D73B22 /* OutputFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OutputFilter.h; sourceTree = "<group>"; };
+		24BDA7CD14D03BB700D73B22 /* SolidusEscaper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SolidusEscaper.h; sourceTree = "<group>"; };
+		51856C631427E71F0061B071 /* libJsonBox.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libJsonBox.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		51856C661427E71F0061B071 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		51856C781427E74F0061B071 /* Array.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Array.h; sourceTree = "<group>"; };
+		51856C791427E74F0061B071 /* Convert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Convert.h; sourceTree = "<group>"; };
+		51856C7A1427E74F0061B071 /* Grammar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Grammar.h; sourceTree = "<group>"; };
+		51856C7B1427E74F0061B071 /* Object.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Object.h; sourceTree = "<group>"; };
+		51856C7D1427E74F0061B071 /* Value.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Value.h; sourceTree = "<group>"; };
+		51856C7E1427E74F0061B071 /* JsonBox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JsonBox.h; sourceTree = "<group>"; };
+		51856C911427E7650061B071 /* Array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Array.cpp; sourceTree = "<group>"; };
+		51856C921427E7650061B071 /* Convert.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Convert.cpp; sourceTree = "<group>"; };
+		51856C931427E7650061B071 /* Object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Object.cpp; sourceTree = "<group>"; };
+		51856C941427E7650061B071 /* Value.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Value.cpp; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		51856C601427E71F0061B071 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				51856C671427E71F0061B071 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		51856C581427E71F0061B071 = {
+			isa = PBXGroup;
+			children = (
+				51856C901427E7650061B071 /* src */,
+				51856C761427E74F0061B071 /* include */,
+				51856C651427E71F0061B071 /* Frameworks */,
+				51856C641427E71F0061B071 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		51856C641427E71F0061B071 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				51856C631427E71F0061B071 /* libJsonBox.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		51856C651427E71F0061B071 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				51856C661427E71F0061B071 /* Foundation.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		51856C761427E74F0061B071 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				51856C771427E74F0061B071 /* JsonBox */,
+				51856C7E1427E74F0061B071 /* JsonBox.h */,
+			);
+			name = include;
+			path = ../../include;
+			sourceTree = "<group>";
+		};
+		51856C771427E74F0061B071 /* JsonBox */ = {
+			isa = PBXGroup;
+			children = (
+				51856C781427E74F0061B071 /* Array.h */,
+				51856C791427E74F0061B071 /* Convert.h */,
+				24BDA7C914D03BB700D73B22 /* Escaper.h */,
+				51856C7A1427E74F0061B071 /* Grammar.h */,
+				24BDA7CA14D03BB700D73B22 /* IndentCanceller.h */,
+				24BDA7CB14D03BB700D73B22 /* Indenter.h */,
+				51856C7B1427E74F0061B071 /* Object.h */,
+				24BDA7CC14D03BB700D73B22 /* OutputFilter.h */,
+				24BDA7CD14D03BB700D73B22 /* SolidusEscaper.h */,
+				51856C7D1427E74F0061B071 /* Value.h */,
+			);
+			path = JsonBox;
+			sourceTree = "<group>";
+		};
+		51856C901427E7650061B071 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				51856C911427E7650061B071 /* Array.cpp */,
+				51856C921427E7650061B071 /* Convert.cpp */,
+				24BDA7C114D03B8E00D73B22 /* Escaper.cpp */,
+				24BDA7C214D03B8E00D73B22 /* IndentCanceller.cpp */,
+				24BDA7C314D03B8E00D73B22 /* Indenter.cpp */,
+				51856C931427E7650061B071 /* Object.cpp */,
+				24BDA7C414D03B8E00D73B22 /* SolidusEscaper.cpp */,
+				51856C941427E7650061B071 /* Value.cpp */,
+			);
+			name = src;
+			path = ../../src;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		51856C611427E71F0061B071 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				51856C851427E74F0061B071 /* JsonBox.h in Headers */,
+				51856C7F1427E74F0061B071 /* Array.h in Headers */,
+				51856C801427E74F0061B071 /* Convert.h in Headers */,
+				51856C811427E74F0061B071 /* Grammar.h in Headers */,
+				51856C821427E74F0061B071 /* Object.h in Headers */,
+				51856C841427E74F0061B071 /* Value.h in Headers */,
+				24BDA7CE14D03BB700D73B22 /* Escaper.h in Headers */,
+				24BDA7CF14D03BB700D73B22 /* IndentCanceller.h in Headers */,
+				24BDA7D014D03BB700D73B22 /* Indenter.h in Headers */,
+				24BDA7D114D03BB700D73B22 /* OutputFilter.h in Headers */,
+				24BDA7D214D03BB700D73B22 /* SolidusEscaper.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		51856C621427E71F0061B071 /* JsonBox */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 51856C701427E71F0061B071 /* Build configuration list for PBXNativeTarget "JsonBox" */;
+			buildPhases = (
+				51856C5F1427E71F0061B071 /* Sources */,
+				51856C601427E71F0061B071 /* Frameworks */,
+				51856C611427E71F0061B071 /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = JsonBox;
+			productName = JsonBox;
+			productReference = 51856C631427E71F0061B071 /* libJsonBox.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		51856C5A1427E71F0061B071 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0420;
+				ORGANIZATIONNAME = "Anhero Inc.";
+			};
+			buildConfigurationList = 51856C5D1427E71F0061B071 /* Build configuration list for PBXProject "JsonBox" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 51856C581427E71F0061B071;
+			productRefGroup = 51856C641427E71F0061B071 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				51856C621427E71F0061B071 /* JsonBox */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		51856C5F1427E71F0061B071 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				51856C951427E7650061B071 /* Array.cpp in Sources */,
+				51856C961427E7650061B071 /* Convert.cpp in Sources */,
+				51856C971427E7650061B071 /* Object.cpp in Sources */,
+				51856C981427E7650061B071 /* Value.cpp in Sources */,
+				24BDA7C514D03B8E00D73B22 /* Escaper.cpp in Sources */,
+				24BDA7C614D03B8E00D73B22 /* IndentCanceller.cpp in Sources */,
+				24BDA7C714D03B8E00D73B22 /* Indenter.cpp in Sources */,
+				24BDA7C814D03B8E00D73B22 /* SolidusEscaper.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		51856C6E1427E71F0061B071 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		51856C6F1427E71F0061B071 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				COPY_PHASE_STRIP = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		51856C711427E71F0061B071 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DSTROOT = /tmp/JsonBox.dst;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "";
+				OTHER_LDFLAGS = "-ObjC";
+				PRIVATE_HEADERS_FOLDER_PATH = /include/JsonBox;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PUBLIC_HEADERS_FOLDER_PATH = /include;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		51856C721427E71F0061B071 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DSTROOT = /tmp/JsonBox.dst;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "";
+				OTHER_LDFLAGS = "-ObjC";
+				PRIVATE_HEADERS_FOLDER_PATH = /include/JsonBox;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PUBLIC_HEADERS_FOLDER_PATH = /include;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		51856C5D1427E71F0061B071 /* Build configuration list for PBXProject "JsonBox" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				51856C6E1427E71F0061B071 /* Debug */,
+				51856C6F1427E71F0061B071 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		51856C701427E71F0061B071 /* Build configuration list for PBXNativeTarget "JsonBox" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				51856C711427E71F0061B071 /* Debug */,
+				51856C721427E71F0061B071 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 51856C5A1427E71F0061B071 /* Project object */;
+}

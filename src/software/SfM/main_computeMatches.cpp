@@ -106,7 +106,7 @@ int main(int argc, char **argv)
   // a. List images
   //---------------------------------------
   std::string sListsFile = stlplus::create_filespec( sOutDir,
-                                                     "lists.txt" ).c_str();
+                                                     "imageParams.json" ).c_str();
   if (!stlplus::is_file(sListsFile) )
   {
     std::cerr << std::endl

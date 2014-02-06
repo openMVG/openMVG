@@ -183,13 +183,13 @@ bool IncrementalReconstructionEngine::ReadInputData()
     return false;
   }
 
-  std::string sListsFile = stlplus::create_filespec(_sMatchesPath,"lists","txt");
+  std::string sListsFile = stlplus::create_filespec(_sMatchesPath,"imageParams","json");
   std::string sComputedMatchesFile_F = stlplus::create_filespec(_sMatchesPath,"matches.f","txt");
   if (!stlplus::is_file(sListsFile)||
     !stlplus::is_file(sComputedMatchesFile_F) )
   {
     std::cerr << std::endl
-      << "One of the input required file is not a present (lists.txt, matches.f.txt)" << std::endl;
+      << "One of the input required file is not a present (imageParams.json, matches.f.txt)" << std::endl;
     return false;
   }
 

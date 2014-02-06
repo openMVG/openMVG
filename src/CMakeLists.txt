@@ -122,6 +122,7 @@ INCLUDE_DIRECTORIES(./
   ./third_party/ceres-solver/include
   ./third_party/ceres-solver/internal/ceres/miniglog
   ./third_party/flann/src/cpp
+  ./third_party/JsonBox/include
 )
 
 # ==============================================================================
