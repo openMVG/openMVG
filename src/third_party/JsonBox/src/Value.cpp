@@ -369,23 +369,17 @@ namespace JsonBox {
 	}
 
 	Value &Value::operator[](Array::size_type index) {
+		// We make sure it's an array.
 		if (type != ARRAY) {
 			clear();
 			type = ARRAY;
 			data.arrayValue = new Array(index + 1);
+		} else if (index >= (*data.arrayValue).size()) {
+			// We make sure the array is big enough.
+			data.arrayValue->resize(index + 1);
 		}
-        
-        assert(index <= (*data.arrayValue).size());
-        
-        if(index == (*data.arrayValue).size())
-        {
-            (*data.arrayValue).push_back(Value());
-            return  (*data.arrayValue).back();
-        }
-        else
-        {
-            return (*data.arrayValue)[index];
-        }
+		
+		return (*data.arrayValue)[index];
 	}
 
 	Value::Type Value::getType() const {
@@ -396,12 +390,20 @@ namespace JsonBox {
 		return type == STRING;
 	}
 
+	bool Value::isStringable() const {
+		return type != ARRAY && type != OBJECT;
+	}
+
 	bool Value::isInteger() const {
 		return type == INTEGER;
 	}
 
 	bool Value::isDouble() const {
 		return type == DOUBLE;
+	}
+
+	bool Value::isNumeric() const {
+		return type == INTEGER || type == DOUBLE;
 	}
 
 	bool Value::isObject() const {
@@ -424,6 +426,36 @@ namespace JsonBox {
 		return (type == STRING) ? (*data.stringValue) : (EMPTY_STRING);
 	}
 
+	const std::string Value::getToString() const {
+		if (type == STRING) {
+			return  *data.stringValue;
+
+		} else {
+			switch (type) {
+			case INTEGER: {
+				std::stringstream ss;
+				ss << *data.intValue;
+				return ss.str();
+			}
+
+			case DOUBLE: {
+				std::stringstream ss;
+				ss << *data.doubleValue;
+				return ss.str();
+			}
+
+			case BOOLEAN:
+				return (*data.boolValue) ? (Literals::TRUE_STRING) : (Literals::FALSE_STRING);
+
+			case NULL_VALUE:
+				return Literals::NULL_STRING;
+
+			default:
+				return std::string();
+			}
+		}
+	}
+
 	void Value::setString(std::string const &newString) {
 		if (type == STRING) {
 			*data.stringValue = newString;
@@ -436,7 +468,7 @@ namespace JsonBox {
 	}
 
 	int Value::getInt() const {
-		return (type == INTEGER) ? (*data.intValue) : (EMPTY_INT);
+		return (type == INTEGER) ? (*data.intValue) : ((type == DOUBLE) ? (static_cast<int>(*data.doubleValue)) : (EMPTY_INT));
 	}
 
 	void Value::setInt(int newInt) {
@@ -451,7 +483,11 @@ namespace JsonBox {
 	}
 
 	double Value::getDouble() const {
-		return (type == DOUBLE) ? (*data.doubleValue) : (EMPTY_DOUBLE);
+		return (type == DOUBLE) ? (*data.doubleValue) : ((type == INTEGER) ? (static_cast<double>(*data.intValue)) : (EMPTY_DOUBLE));
+	}
+
+	float Value::getFloat() const {
+		return static_cast<float>(getDouble());
 	}
 
 	void Value::setDouble(double newDouble) {

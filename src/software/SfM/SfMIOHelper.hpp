@@ -100,15 +100,23 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
       intrinsicCamInfo.m_sCameraModel = images[i]["camera"]["model"].getString();
 
     //known focal
-    if(images[i]["camera"]["focal"].getDouble() > 0.0)
+    if(images[i]["focalLength"].getFloat() > 0.0)
     {
       intrinsicCamInfo.m_bKnownIntrinsic = true;
-      intrinsicCamInfo.m_focal = images[i]["camera"]["focal"].getDouble();
+      float focal = images[i]["focalLength"].getFloat();
+
+      intrinsicCamInfo.m_focal = focal;
       Mat3 K;
-      K << intrinsicCamInfo.m_focal, 0, intrinsicCamInfo.m_w / 2,
-          0, intrinsicCamInfo.m_focal, intrinsicCamInfo.m_h / 2,
+      K << focal, 0, intrinsicCamInfo.m_w / 2,
+          0, focal, intrinsicCamInfo.m_h / 2,
           0, 0, 1;
       intrinsicCamInfo.m_K = K;
+      // Also known principal point
+      if(images[i]["principalPoint"].isObject())
+      {
+        K(0,2) = images[i]["principalPoint"]["x"].getFloat();
+        K(1,2) = images[i]["principalPoint"]["y"].getFloat();
+      }
     }
 
     //if you knew K explicitly you could set it here too...
@@ -116,18 +124,19 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
     // f 0 w/2
     // 0 f h/2
     // 0 0 1
-    if(images[i]["camera"]["K"].isArray())
+    if(images[i]["K"].isArray())
     {
+      intrinsicCamInfo.m_bKnownIntrinsic = true;
       Mat3 K;
-      K << images[i]["camera"]["K"][size_t(0)].getDouble(),
-           images[i]["camera"]["K"][size_t(1)].getDouble(),
-           images[i]["camera"]["K"][size_t(2)].getDouble(),
-           images[i]["camera"]["K"][size_t(3)].getDouble(),
-           images[i]["camera"]["K"][size_t(4)].getDouble(),
-           images[i]["camera"]["K"][size_t(5)].getDouble(),
-           images[i]["camera"]["K"][size_t(6)].getDouble(),
-           images[i]["camera"]["K"][size_t(7)].getDouble(),
-           images[i]["camera"]["K"][size_t(8)].getDouble();
+      K << images[i]["K"][size_t(0)].getFloat(),
+           images[i]["K"][size_t(1)].getFloat(),
+           images[i]["K"][size_t(2)].getFloat(),
+           images[i]["K"][size_t(3)].getFloat(),
+           images[i]["K"][size_t(4)].getFloat(),
+           images[i]["K"][size_t(5)].getFloat(),
+           images[i]["K"][size_t(6)].getFloat(),
+           images[i]["K"][size_t(7)].getFloat(),
+           images[i]["K"][size_t(8)].getFloat();
       intrinsicCamInfo.m_K = K;
     }
 
