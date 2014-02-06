@@ -15,6 +15,8 @@
 #include "third_party/progress/progress.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
+#include "JsonBox.h"
+
 #include <cstdlib>
 #include <string>
 #include <vector>
@@ -64,15 +66,14 @@ int main(int argc, char ** argv)
 
   std::vector<std::string> vec_fileNames;
   {
-    std::ifstream in(stlplus::create_filespec(sMatchesDir, "lists", "txt").c_str());
-    std::string sValue;
-    while(in>>sValue)
+    JsonBox::Value imageParams;
+    imageParams.loadFromFile(stlplus::create_filespec(sMatchesDir, "imageParams", "json"));
+    JsonBox::Array images;
+    images = imageParams["images"].getArray();
+    for(int i = 0; i < images.size(); i++)
     {
-      int n = sValue.find_first_of(';');
-      sValue = sValue.substr(0,n);
-      vec_fileNames.push_back(sValue);
+      vec_fileNames.push_back(images[i]["filename"].getString());
     }
-    in.close();
   }
   if (vec_fileNames.empty()) {
     std::cerr << "\nEmpty input image list" << std::endl;
