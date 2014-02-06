@@ -22,6 +22,8 @@
 #include <string>
 #include <vector>
 
+#include "JsonBox.h"
+
 int main(int argc, char **argv)
 {
   CmdLine cmd;
@@ -70,99 +72,144 @@ int main(int argc, char **argv)
   }
 
   std::vector<std::string> vec_image = stlplus::folder_all( sImageDir );
-  // Write the new file
-  std::ofstream listTXT( stlplus::create_filespec( sOutputDir,
-                                                   "lists.txt" ).c_str() );
-  if ( listTXT )
-  {
-    std::sort(vec_image.begin(), vec_image.end());
-    for ( std::vector<std::string>::const_iterator iter_image = vec_image.begin();
-      iter_image != vec_image.end();
-      iter_image++ )
-    {
-      // Read meta data to fill width height and focalPixPermm
-      std::string sImageFilename = stlplus::create_filespec( sImageDir, *iter_image );
 
-      size_t width = -1;
-      size_t height = -1;
+  // Create the new file
+  JsonBox::Object imageParams;
+  JsonBox::Array images;
+  std::ofstream imageParamsFile( stlplus::create_filespec( sOutputDir,
+                                                   "imageParams.json" ).c_str() );
+  if ( !imageParamsFile )
+  {
+    std::cerr << "\nCould not create imageParams.json" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  std::sort(vec_image.begin(), vec_image.end());
+  for ( std::vector<std::string>::const_iterator iter_image = vec_image.begin();
+    iter_image != vec_image.end();
+    iter_image++ )
+  {
+    // Read meta data to fill width height and focalPixPermm
+    std::string sImageFilename = stlplus::create_filespec( sImageDir, *iter_image );
+
+    size_t width = -1;
+    size_t height = -1;
 
 #ifdef USE_EXIV2
-      std::auto_ptr<Exif_IO> exifReader (new Exif_IO_Exiv2() );
+    std::auto_ptr<Exif_IO> exifReader (new Exif_IO_Exiv2() );
 #else
-      std::auto_ptr<Exif_IO> exifReader (new Exif_IO_OpenExif() );
+    std::auto_ptr<Exif_IO> exifReader (new Exif_IO_OpenExif() );
 #endif
-      exifReader->open( sImageFilename );
+    exifReader->open( sImageFilename );
 
-      // Consider the case where focal is provided
+    // Consider the case where focal is provided
 
-      std::ostringstream os;
-      //If image do not contains meta data
-      if ( !exifReader->doesHaveExifInfo() || focalPixPermm != -1)
+    std::ostringstream os;
+    //If image do not contains meta data
+    if ( !exifReader->doesHaveExifInfo() || focalPixPermm != -1)
+    {
+      Image<unsigned char> image;
+      if (openMVG::ReadImage( sImageFilename.c_str(), &image))
       {
-        Image<unsigned char> image;
-        if (openMVG::ReadImage( sImageFilename.c_str(), &image))
-        {
-          width = image.Width();
-          height = image.Height();
-        }
-        else
-        {
-          Image<RGBColor> imageRGB;
-          if (openMVG::ReadImage( sImageFilename.c_str(), &imageRGB))
-          {
-            width = imageRGB.Width();
-            height = imageRGB.Height();
-          }
-          else
-          {
-            continue; // image is not considered, cannot be read
-          }
-        }
-        if ( focalPixPermm == -1)
-          os << *iter_image << ";" << width << ";" << height << std::endl;
-        else
-          os << *iter_image << ";" << width << ";" << height << ";"
-            << focalPixPermm << ";" << 0 << ";" << width/2.0 << ";"
-            << 0 << ";" << focalPixPermm << ";" << height/2.0 << ";"
-            << 0 << ";" << 0 << ";" << 1 << std::endl;
-
+        width = image.Width();
+        height = image.Height();
       }
-      else // If image contains meta data
+      else
       {
-        double focal = focalPixPermm;
-        width = exifReader->getWidth();
-        height = exifReader->getHeight();
-        std::string sCamName = exifReader->getBrand();
-        std::string sCamModel = exifReader->getModel();
-
-          std::vector<Datasheet> vec_database;
-          Datasheet datasheet;
-          if ( parseDatabase( sfileDatabase, vec_database ) )
-          {
-            if ( getInfo( sCamName, sCamModel, vec_database, datasheet ) )
-            {
-              // The camera model was found in the database so we can compute it's approximated focal length
-              double ccdw = datasheet._sensorSize;
-              focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
-              os << *iter_image << ";" << width << ";" << height << ";" << focal << ";" << sCamName << ";" << sCamModel << std::endl;
-            }
-            else
-            {
-              std::cout << "Camera \"" << sCamName << "\" model \"" << sCamModel << "\" doesn't exist in the database" << std::endl;
-              os << *iter_image << ";" << width << ";" << height << ";" << sCamName << ";" << sCamModel << std::endl;
-            }
-          }
-          else
-          {
-            std::cout << "Sensor width database \"" << sfileDatabase << "\" doesn't exist." << std::endl;
-            std::cout << "Please consider add your camera model in the database." << std::endl;
-            os << *iter_image << ";" << width << ";" << height << ";" << sCamName << ";" << sCamModel << std::endl;
-          }
+        Image<RGBColor> imageRGB;
+        if (openMVG::ReadImage( sImageFilename.c_str(), &imageRGB))
+        {
+          width = imageRGB.Width();
+          height = imageRGB.Height();
         }
-      std::cout << os.str();
-      listTXT << os.str();
+        else
+        {
+          continue; // image is not considered, cannot be read
+        }
+      }
+      if ( focalPixPermm == -1)
+      {
+        JsonBox::Object image;
+        image["filename"] = JsonBox::Value(*iter_image);
+        image["width"] = JsonBox::Value(int(width));
+        image["height"] = JsonBox::Value(int(height));
+        images.push_back(image);
+      }
+      else
+      {
+        JsonBox::Object image;
+        image["filename"] = JsonBox::Value(*iter_image);
+        image["width"] = JsonBox::Value(int(width));
+        image["height"] = JsonBox::Value(int(height));
+        image["focalLength"] = JsonBox::Value(focalPixPermm);
+        JsonBox::Object principalPoint;
+        principalPoint["x"] = JsonBox::Value(width/2.0);
+        principalPoint["y"] = JsonBox::Value(height/2.0);
+        image["principalPoint"] = principalPoint;
+        images.push_back(image);
+      }
+
+    }
+    else // If image contains meta data
+    {
+      double focal = focalPixPermm;
+      width = exifReader->getWidth();
+      height = exifReader->getHeight();
+      std::string sCamName = exifReader->getBrand();
+      std::string sCamModel = exifReader->getModel();
+
+      std::vector<Datasheet> vec_database;
+      Datasheet datasheet;
+      if ( parseDatabase( sfileDatabase, vec_database ) )
+      {
+        if ( getInfo( sCamName, sCamModel, vec_database, datasheet ) )
+        {
+          // The camera model was found in the database so we can compute it's approximated focal length
+          double ccdw = datasheet._sensorSize;
+          focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
+          JsonBox::Object image;
+          image["filename"] = JsonBox::Value(*iter_image);
+          image["width"] = JsonBox::Value(int(width));
+          image["height"] = JsonBox::Value(int(height));
+          image["focalLength"] = JsonBox::Value(focal);
+          JsonBox::Object camera;
+          camera["name"] = JsonBox::Value(sCamName);
+          camera["model"] = JsonBox::Value(sCamModel);
+          image["camera"] = camera;
+          images.push_back(image);
+        }
+        else
+        {
+          std::cout << "Camera \"" << sCamName << "\" model \"" << sCamModel << "\" doesn't exist in the database" << std::endl;
+          JsonBox::Object image;
+          image["filename"] = JsonBox::Value(*iter_image);
+          image["width"] = JsonBox::Value(int(width));
+          image["height"] = JsonBox::Value(int(height));
+          JsonBox::Object camera;
+          camera["name"] = JsonBox::Value(sCamName);
+          camera["model"] = JsonBox::Value(sCamModel);
+          image["camera"] = camera;
+          images.push_back(image);
+        }
+      }
+      else
+      {
+        std::cout << "Sensor width database \"" << sfileDatabase << "\" doesn't exist." << std::endl;
+        std::cout << "Please consider add your camera model in the database." << std::endl;
+        JsonBox::Object image;
+        image["filename"] = JsonBox::Value(*iter_image);
+        image["width"] = JsonBox::Value(int(width));
+        image["height"] = JsonBox::Value(int(height));
+        JsonBox::Object camera;
+        camera["name"] = JsonBox::Value(sCamName);
+        camera["model"] = JsonBox::Value(sCamModel);
+        image["camera"] = camera;
+        images.push_back(image);
+      }
     }
   }
-  listTXT.close();
+  imageParams["images"] = images;
+  imageParamsFile << imageParams;
+  imageParamsFile.close();
   return EXIT_SUCCESS;
 }
