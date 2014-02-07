@@ -56,13 +56,13 @@ TARGET_LINK_LIBRARIES(openMVG_main_exportTracks
 
 # - Export a computed SfM_Ouput scene to PMVS format
 #
-ADD_EXECUTABLE(openMVG_main_openMVG2PMVS main_openMVG2PMVS.cpp ../SfMViewer/Ply.cpp)
+ADD_EXECUTABLE(openMVG_main_openMVG2PMVS main_openMVG2PMVS.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_openMVG2PMVS
                      ${LIBS})
 
 # - Export a computed SfM_Ouput scene to CMPMVS format
 #
-ADD_EXECUTABLE(openMVG_main_openMVG2CMPMVS main_openMVG2CMPMVS.cpp ../SfMViewer/Ply.cpp)
+ADD_EXECUTABLE(openMVG_main_openMVG2CMPMVS main_openMVG2CMPMVS.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_openMVG2CMPMVS
                      ${LIBS})
 
@@ -86,6 +86,6 @@ ENDIF(USE_OPENCV)
 # -
 # Export a SfM openMVG scene to meshlab scene with rasters
 # -
-ADD_EXECUTABLE(openMVG_main_openMVG2MESHLAB main_openMVG2MESHLAB.cpp ../SfMViewer/Ply.cpp)
+ADD_EXECUTABLE(openMVG_main_openMVG2MESHLAB main_openMVG2MESHLAB.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MESHLAB
                      ${LIBS})

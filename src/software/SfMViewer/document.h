@@ -9,21 +9,25 @@
 #define DOCUMENT
 
 #include "openMVG/cameras/PinholeCamera.hpp"
+#include "openMVG/tracks/tracks.hpp"
 using namespace openMVG;
-
-#include "software/SfMViewer/Ply.h"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <vector>
 #include <map>
 #include <string>
+#include <algorithm>
+#include <iostream>
+#include <fstream>
 #include <iterator>
 
 struct Document
 {
   std::vector<float> _vec_points;
   std::map<size_t, std::vector<size_t> > _map_visibility; //Inth camera see the Inth 3D point
+  tracks::STLMAPTracks _tracks;
+
   std::map<size_t, PinholeCamera > _map_camera;
   std::vector<std::string> _vec_imageNames;
   std::map<size_t, std::pair<size_t,size_t> > _map_imageSize;
@@ -74,102 +78,42 @@ struct Document
     //-- Check if the required file are present.
     _sDirectory = spath;
     std::string sDirectoryPly = stlplus::folder_append_separator(_sDirectory) + "clouds";
-    if (stlplus::is_file(stlplus::create_filespec(sDirectoryPly,"calib","ply"))
+    if (stlplus::is_file(stlplus::create_filespec(sDirectoryPly,"visibility","txt"))
       && stlplus::is_file(stlplus::create_filespec(_sDirectory,"views","txt")))
     {
-      //-- Read the ply file:
-      Ply ply;
-      size_t num_vertices = 0;
-      // Read PLY header
-      if (ply.open(stlplus::create_filespec(sDirectoryPly,"calib","ply")))
+      // Read visibility file (3Dpoint, NbVisbility, [(imageId, featId); ... )
+      std::ifstream iFilein(stlplus::create_filespec(sDirectoryPly,"visibility","txt").c_str());
+      if (iFilein.is_open())
       {
-        // ...
-        std::cout << "PLY file opened";
-
-        // Iterate over elements
-        for (Ply::ElementsIterator it = ply.elements_begin();
-          it != ply.elements_end(); ++it)
+        size_t trackId = 0;
+        while (!iFilein.eof())
         {
-          const Ply::Element& element = *it;
-          if (element.name() != "vertex")
+          // read one line at a time
+          std::string temp;
+          std::getline(iFilein, temp);
+          std::stringstream sStream(temp);
+          float pt[3];
+          sStream >> pt[0] >> pt[1] >> pt[2];
+          int count;
+          sStream >> count;
+          size_t imaId, featId;
+          for (int i = 0; i < count; ++i)
           {
-            if (!ply.skip(element))
-            {
-              std::cerr << "Cannot skip element \"" << element.name() << '"' << std::endl;
-              ply.close();
-              return false;
-            }
-            continue;
+            sStream >> imaId >> featId;
+            _tracks[trackId].insert(std::make_pair(imaId, featId));
+            _map_visibility[imaId].push_back(trackId); //imaId camera see the point indexed trackId
           }
-          num_vertices = element.count();
 
-          //Reserve memory
-          _vec_points.reserve(3*num_vertices);
-
-          const size_t & num_elements = element.count();
-
-          for (size_t i = 0; i != num_elements; ++i)
-          {
-            float pos[3];
-            unsigned char color[3];
-            float weight;
-            std::vector<size_t> visibility;
-
-            ply.read_begin(element);
-            for (Ply::PropertiesIterator it2 =
-              element.properties_begin();
-              it2 != element.properties_end(); ++it2)
-            {
-              const Ply::Property& property = *it2;
-              if (property.name() == "x")
-                ply.read(property, pos[0]);
-              else if (property.name() == "y")
-                ply.read(property, pos[1]);
-              else if (property.name() == "z")
-                ply.read(property, pos[2]);
-              else if (property.name() == "red")
-                ply.read(property, color[0]);
-              else if (property.name() == "green")
-                ply.read(property, color[1]);
-              else if (property.name() == "blue")
-                ply.read(property, color[2]);
-              else if (property.name() == "weight" || property.name() == "confidence")
-                ply.read(property, weight);
-              else if (property.name() == "visibility")
-              {
-                size_t visibility_count;
-                ply.read_count(property, visibility_count);
-                visibility.reserve(visibility_count);
-                while (visibility_count--)
-                {
-                  int visibility_value;
-                  ply.read_value(property, visibility_value);
-                  visibility.push_back(visibility_value);
-                  _map_visibility[visibility_value].push_back(i); //Jnth camera see the Inth point
-                }
-              }
-              else if (!ply.skip(property))
-              {
-                std::cerr << "Cannot skip property \"" << property.name() << '"' << std::endl;
-                ply.close();
-                return false;
-              }
-            }
-            ply.read_end();
-
-            _vec_points.push_back(pos[0]);
-            _vec_points.push_back(pos[1]);
-            _vec_points.push_back(pos[2]);
-
-            /*std::cout << '\n'
-              << pos[0] <<' ' << pos[1] << ' ' << pos[2] << ' ';
-            using namespace std;
-            std::copy(visibility.begin(), visibility.end(), ostream_iterator<size_t>(std::cout, " "));
-            */
-          }
+          _vec_points.push_back(pt[0]);
+          _vec_points.push_back(pt[1]);
+          _vec_points.push_back(pt[2]);
+          trackId++;
         }
       }
-      ply.close();
+      else
+      {
+        std::cerr << "Cannot open the visibility file" << std::endl;
+      }
     }
     else
     {

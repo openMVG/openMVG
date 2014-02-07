@@ -26,7 +26,6 @@ INCLUDE_DIRECTORIES(
 
 SET(SOURCES
   main.cpp
-  Ply.cpp
 )
 
 ADD_EXECUTABLE(openMVG_main_sfmViewer ${SOURCES} )
