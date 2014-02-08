@@ -2,9 +2,9 @@
 dependencies
 ############################
 
-OpenMVG library use the git submodule idea to make its repository lighter.
+OpenMVG library uses the git submodule idea to make its repository lighter.
 
-Here the list of the library used through the submodule concept:
+Here the list of the libraries used through the submodule concept:
 
 
 .. toctree::

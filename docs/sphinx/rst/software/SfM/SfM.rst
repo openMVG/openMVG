@@ -24,7 +24,7 @@ openMVG proposes a customizable implementation of an Incremental Structure from 
    Figure: Structure from Motion illustration, from pictures to 3D.
 
 The incremental pipeline is a growing reconstruction process (i.e algorithm 2).
-It starts from an initial two-views reconstruction (the seed) that is iteratively extended by adding new views and 3D points, using pose estimation and triangulation.
+It starts from an initial two-view reconstruction (the seed) that is iteratively extended by adding new views and 3D points, using pose estimation and triangulation.
 Due to the incremental nature of the process, successive steps of non-linear refinement, like Bundle Adjustment (BA) and Levenberg-Marquardt steps, are performed to minimize the accumulated error (drift).
 
 The general features correspondence and SfM processes are described in algorithms 1 and 2.
