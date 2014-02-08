@@ -67,15 +67,15 @@ OpenMVG implementation follows the DLT (Direct Linear Transform) explained in [H
 Fundamental matrix:
 ---------------------
 
-The fundamental matrix is a relation between two images viewing the same scene where points
-projection are visible in the two images. Given a point correspondence between two views :math:`(x_i,x'_i)`:
+The fundamental matrix is a relation between two images viewing the same scene where those point's
+projections are visible in the two images. Given a point correspondence between two views :math:`(x_i,x'_i)`:
 
 We obtain the following relation:
 
 .. math:: x'^T_i Fx_i = 0
 
 :math:`F` is the (3 x 3) Fundamental matrix, it puts in relation a point x to a line where belong the projection of the 3D X point.
-:math:`l'_i = Fx_i` designq the epipolar line on which the point :math:`x'_i` could be.
+:math:`l'_i = Fx_i` designs the epipolar line on which the point :math:`x'_i` could be.
 The relation :math:`x'^T_i Fx_i = 0` exists for all corresponding point belonging to a stereo pair.
 
 .. figure:: fundamentalMatrix.png
