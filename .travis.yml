@@ -3,13 +3,14 @@ language: cpp
 compiler:
   - gcc
 
-install: sudo apt-get install libpng-dev libjpeg8-dev libxxf86vm1 libxxf86vm1 libxxf86vm-dev x11proto-xf86vidmode-dev libxrandr-dev
+install: sudo apt-get install cmake libpng-dev libjpeg8-dev libxxf86vm1 libxxf86vm1 libxxf86vm-dev x11proto-xf86vidmode-dev libxrandr-dev
+
+before_script:
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=release . ../openMVG/src
 
 script:
-  - git clean -f
-  - git submodule update --init --recursive
-  - cd build
-  - cmake -DCMAKE_BUILD_TYPE=release . ../src
   - make
   - make test
 
