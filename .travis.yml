@@ -8,7 +8,7 @@ install: sudo apt-get install cmake libpng-dev libjpeg8-dev libxxf86vm1 libxxf86
 before_script:
   - mkdir build
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE=release . ../openMVG/src
+  - cmake -DCMAKE_BUILD_TYPE=release . ../openMVG/openMVG/src
 
 script:
   - make
