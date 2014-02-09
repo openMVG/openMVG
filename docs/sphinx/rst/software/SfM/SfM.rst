@@ -27,7 +27,7 @@ The incremental pipeline is a growing reconstruction process (i.e algorithm 2).
 It starts from an initial two-view reconstruction (the seed) that is iteratively extended by adding new views and 3D points, using pose estimation and triangulation.
 Due to the incremental nature of the process, successive steps of non-linear refinement, like Bundle Adjustment (BA) and Levenberg-Marquardt steps, are performed to minimize the accumulated error (drift).
 
-The general feature correspondence and SfM processes are described in algorithms 1 and 2.
+The general features correspondence and SfM processes are described in algorithms 1 and 2.
 The first algorithm outputs pairwise correspondences that are consistent with the estimated fundamental matrix.
 The initial pair must be choosen with numerous correspondences while keeping a wide enough baseline.
 The second algorithm takes these correspondences as input and yields a 3D point cloud as well as the camera poses.
@@ -118,13 +118,13 @@ Using a 3 directories based data organisation structure is suggested:
   
   .. code-block:: c++
   
-    $ ./openMVG_main_CreateList /home/pierre/Pictures/Dataset/images -o /home/pierre/Pictures/Dataset/matches -d ./openMVG/src/software/SfM/cameraSensorWidth/cameraGenerated.txt
+    $ ./openMVG_main_CreateList -i /home/pierre/Pictures/Dataset/images -o /home/pierre/Pictures/Dataset/matches -d ./openMVG/src/software/SfM/cameraSensorWidth/cameraGenerated.txt
 
   - If all the camera have the same focal length and you know it exactly
   
   .. code-block:: c++
   
-    $ ./openMVG_main_CreateList /home/pierre/Pictures/Dataset/images -o /home/pierre/Pictures/Dataset/matches -f YOURFOCAL(i.e 2750)
+    $ ./openMVG_main_CreateList -i /home/pierre/Pictures/Dataset/images -o /home/pierre/Pictures/Dataset/matches -f YOURFOCAL(i.e 2750)
 
 2. Point matching:
 
@@ -158,18 +158,18 @@ Using a 3 directories based data organisation structure is suggested:
   The main binary in order to run the SfM process is openMVG_main_IncrementalSfM, it use previous
   computed data and is implemented as explained in algorithm 2.
 
-  - If you want refine intrinsics (focal, principal point and radial distortion) for each focal group
+  - If you want to refine intrinsics (focal, principal point and radial distortion) for each focal group
   .. code-block:: c++
   
     $ openMVG_main_IncrementalSfM -i /home/pierre/Pictures/Dataset/images/ -m /home/pierre/Pictures/Dataset/matches/ -o /home/pierre/Pictures/Dataset/outReconstruction/
   
-  - If you want only refine the focal (to use with image were the distortion have been already removed)
+  - If you only want to refine the focal (to use with images were the distortion has already been removed)
   .. code-block:: c++
   
   
     $ openMVG_main_IncrementalSfM -i /home/pierre/Pictures/Dataset/images/ -m /home/pierre/Pictures/Dataset/matches/ -o /home/pierre/Pictures/Dataset/outReconstruction/ -d 0
 
-  openMVG_main_IncrementalSfM displays to you some initial pairs that share an important number of common point.
+  openMVG_main_IncrementalSfM displays to you some initial pairs that share an important number of common points.
   Please select two image indexes that are convergent and the 3D reconstruction will start.
 
 
