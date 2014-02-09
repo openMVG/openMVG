@@ -15,13 +15,14 @@
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG_Samples/robust_essential/essential_estimation.hpp"
 
-#include "patented/sift/SIFT.hpp"
 #include "openMVG_Samples/siftPutativeMatches/two_view_matches.hpp"
 
 // Bundle Adjustment includes
+#include "openMVG/bundle_adjustment/problem_data_container.hpp"
 #include "openMVG/bundle_adjustment/pinhole_ceres_functor.hpp"
 #include "openMVG/bundle_adjustment/pinhole_brown_Rt_ceres_functor.hpp"
-#include "openMVG/bundle_adjustment/problem_data_container.hpp"
+
+#include "patented/sift/SIFT.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"

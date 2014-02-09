@@ -110,11 +110,20 @@ Using a 3 directories based data organisation structure is suggested:
   double ccdw = datasheet._sensorSize; // In mm
   focal = max ( width, height ) * focalmm / ccdw;
 
-  $ ./openMVG_main_CreateList [-i|--imageDirectory] [-d|--sensorWidthDatabase] [-o|--outputDirectory] [-f|--focal]
+  .. code-block:: c++
+  
+    $ ./openMVG_main_CreateList [-i|--imageDirectory] [-d|--sensorWidthDatabase] [-o|--outputDirectory] [-f|--focal]
 
-  // Usage of the automatic chain (with JPEG images)
-  $ ./openMVG_main_CreateList /home/pierre/Pictures/Dataset/images -o /home/pierre/Pictures/Dataset/matches -d ./openMVG/src/software/SfM/cameraSensorWidth/cameraGenerated.txt
-  // If all the camera have the same focal length and you know it exactly
+  - Usage of the automatic chain (with JPEG images)
+  
+  .. code-block:: c++
+  
+    $ ./openMVG_main_CreateList /home/pierre/Pictures/Dataset/images -o /home/pierre/Pictures/Dataset/matches -d ./openMVG/src/software/SfM/cameraSensorWidth/cameraGenerated.txt
+
+  - If all the camera have the same focal length and you know it exactly
+  
+  .. code-block:: c++
+  
     $ ./openMVG_main_CreateList /home/pierre/Pictures/Dataset/images -o /home/pierre/Pictures/Dataset/matches -f YOURFOCAL(i.e 2750)
 
 2. Point matching:
@@ -149,11 +158,15 @@ Using a 3 directories based data organisation structure is suggested:
   The main binary in order to run the SfM process is openMVG_main_IncrementalSfM, it use previous
   computed data and is implemented as explained in algorithm 2.
 
+  - If you want refine intrinsics (focal, principal point and radial distortion) for each focal group
   .. code-block:: c++
-
-    // If you want refine intrinsics (focal, principal point and radial distortion) for each focal group
+  
     $ openMVG_main_IncrementalSfM -i /home/pierre/Pictures/Dataset/images/ -m /home/pierre/Pictures/Dataset/matches/ -o /home/pierre/Pictures/Dataset/outReconstruction/
-    // If you want only refine the focal (to use with image were the distortion have been already removed)
+  
+  - If you want only refine the focal (to use with image were the distortion have been already removed)
+  .. code-block:: c++
+  
+  
     $ openMVG_main_IncrementalSfM -i /home/pierre/Pictures/Dataset/images/ -m /home/pierre/Pictures/Dataset/matches/ -o /home/pierre/Pictures/Dataset/outReconstruction/ -d 0
 
   openMVG_main_IncrementalSfM displays to you some initial pairs that share an important number of common point.

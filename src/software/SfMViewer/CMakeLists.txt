@@ -13,7 +13,9 @@ endif()
 #
 # GLFW
 #
+if(!APPLE)
 add_definitions(-DGLFW_NO_GLU)
+endif()
 
 FIND_FILE(GL3HEADER gl3.h)
 if(NOT ${GL3HEADER} MATCHES NOTFOUND)
