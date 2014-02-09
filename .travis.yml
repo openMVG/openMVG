@@ -1,0 +1,19 @@
+language: cpp
+
+compiler:
+  - gcc
+
+install: sudo apt-get install libpng-dev libjpeg8-dev libxxf86vm1 libxxf86vm1 libxxf86vm-dev x11proto-xf86vidmode-dev libxrandr-dev
+
+script:
+  - git clean -f
+  - git submodule update --init --recursive
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=release . ../src
+  - make
+  - make test
+
+branches:
+  only:
+    - develop
+
