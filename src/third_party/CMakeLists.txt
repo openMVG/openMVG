@@ -39,3 +39,6 @@ ADD_SUBDIRECTORY(ceres-solver)
 # Add an Approximate Nearest Neighbor library
 ADD_SUBDIRECTORY(flann)
 
+# Add JSON support
+ADD_SUBDIRECTORY(JsonBox)
+

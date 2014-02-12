@@ -1,0 +1,53 @@
+#Generated Doc
+meta/documentation/generated/
+
+#Mac OSX file
+.DS_Store
+
+#XCode file
+*.swp
+*~.nib
+*.xcworkspace/
+xcuserdata/
+
+build
+
+*.pbxuser
+*.perspective
+*.perspectivev3
+
+*.mode1v3
+*.mode2v3
+*.mpkg
+*.framework
+*.orig
+
+
+#Windows file
+Thumbs.db
+
+#Visual Studio file
+Debug
+Release
+*.suo
+*.ncb
+*.opensdf
+*.sdf
+ipch
+
+*.user
+#*.csproj.user
+#/obj/*
+#/bin/*
+
+#/libraries/*
+
+#vim-style save file
+*~
+
+#SVN repo add to our project
+.svn
+
+#Misc
+*.autosave
+docs
