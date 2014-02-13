@@ -32,6 +32,28 @@
 
 namespace openMVG {
 
+  // Linear ressample image 
+  template <typename T>
+  void Ressample( const Image<T> & image , const int new_width , const int new_height , Image<T> & res )
+  {
+    res = Image<T>( new_width , new_height ) ; 
+
+    const double scale_w = (double) image.Width() / (double) new_width ; 
+    const double scale_h = (double) image.Height() / (double) new_height ; 
+
+    // Ressample 
+    for( int i = 0 ; i < new_height ; ++i )
+    {
+      for( int j = 0 ; j < new_width ; ++j )
+      {
+        const double new_idx = j * scale_w ;
+        const double new_idy = i * scale_h ; 
+
+        res( i , j ) = image( new_idy , new_idx ) ; 
+      }
+    }
+  }
+
 /// Nearest neighbor interpolation.
 template<typename T>
 inline T sampleNearest(const Image<T>& image,

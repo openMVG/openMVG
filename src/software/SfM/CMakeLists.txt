@@ -1,4 +1,9 @@
 
+IF(APPLE)
+ADD_DEFINITIONS(-std=c++11)
+endif(APPLE)
+
+
 SET(LIBS ${EXTRA_LIBS}
   openMVG_multiview
   openMVG_image
@@ -6,6 +11,14 @@ SET(LIBS ${EXTRA_LIBS}
   lemon
   stlplus
   ${OPENMVG_LIBRARY_DEPENDENCIES})
+
+ADD_EXECUTABLE( openMVG_main_openMVG2WebGL main_openMVG2WebGL.cpp ../SfmViewer/Ply.cpp )
+TARGET_LINK_LIBRARIES( openMVG_main_openMVG2WebGL 
+                       ${LIBS} )
+
+#ADD_EXECUTABLE( openMVG_main_openMVG2Dense main_openMVG2Dense.cpp ../SfMViewer/Ply.cpp depthImage.cpp )
+#TARGET_LINK_LIBRARIES( openMVG_main_openMVG2Dense 
+#                      ${LIBS} )
 
 
 ADD_EXECUTABLE(openMVG_main_CreateList main_CreateList.cpp)
