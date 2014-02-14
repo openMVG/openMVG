@@ -131,6 +131,7 @@ static inline void RessamplingSize( int & newWidth , int & newHeight , const int
   "\n" 
   "    void main( )\n"
   "    {\n"
+  "      gl_PointSize = 1.0;\n"
   "      gl_Position = uProjectionMatrix * uModelViewMatrix * vec4( aPosition , 1.0 ) ;\n"
   "      vColor = vec4( aColor , 1.0 ) ;\n" 
   "    }\n"
