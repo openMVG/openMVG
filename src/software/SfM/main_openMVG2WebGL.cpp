@@ -1,3 +1,21 @@
+/*
+ * This script export a full website using WebGL for visualization of openMVG output 
+ * 
+ * it only needs the user to provide input folder (ie SfM_Output folder of openMVG)
+ * and an output folder (that will be created ou overwrited so be careful)
+ *
+ * If you want custom web site for your project please do as follow :
+ * 1 - use this script to generate a standard website
+ * 2 - customize anything you want (hmtl/css/js) except sceneData.js
+ *    ( dont change variables names or directory structure)  
+ * 3 - save your site directory structure in a location (ex A)
+ * 4 - export a new openMVG project 
+ * 5 - copy sceneData.js to your folder (ie A/scripts)
+ * 6 - copy images folder content into your images folder (ie A/images)
+ * 7 Enjoy ! 
+ */
+
+
 #include <iostream>
 #include <cstdlib>
 #include <iomanip>
@@ -8,232 +26,252 @@
 #include "openMVG/image/image.hpp"
 
 
+
+
 /**
-  *
-  * Prepare WebGL folder 
+  * Prepare WebGL output folder 
   * {WebGL}/style              -- CSS Style file 
   * {WebGL}/scripts            -- js scripts
   * {WebGL}/images             -- pictures 
   * @param sOutputDir base folder where project will be saved  
-  */
+*/
+
 void prepareFolders( const std::string & sOutputDir )
 {
-	// Create initial folder 
-	if( ! stlplus::folder_exists(sOutputDir) )
-	{
-		stlplus::folder_create( sOutputDir ) ;
-	}
+  // Create initial folder 
+  if( ! stlplus::folder_exists(sOutputDir) )
+  {
+    stlplus::folder_create( sOutputDir ) ;
+  }
 
 	// Create style folder
-	if( ! stlplus::folder_exists( stlplus::folder_append_separator( sOutputDir ) + "style" ) )
-	{
-		stlplus::folder_create( stlplus::folder_append_separator( sOutputDir ) + "style" ) ;
-	}
+  if( ! stlplus::folder_exists( stlplus::folder_append_separator( sOutputDir ) + "style" ) )
+  {
+    stlplus::folder_create( stlplus::folder_append_separator( sOutputDir ) + "style" ) ;
+  }
 
 	// Create scripts folder 
-	if( ! stlplus::folder_exists( stlplus::folder_append_separator( sOutputDir ) + "scripts" ) )
-	{
-		stlplus::folder_create( stlplus::folder_append_separator( sOutputDir ) + "scripts" ) ;
-	}
+  if( ! stlplus::folder_exists( stlplus::folder_append_separator( sOutputDir ) + "scripts" ) )
+  {
+    stlplus::folder_create( stlplus::folder_append_separator( sOutputDir ) + "scripts" ) ;
+  }
 
 	// Create image folder
-	if( ! stlplus::folder_exists( stlplus::folder_append_separator( sOutputDir ) + "images" ) )
-	{
-		stlplus::folder_create( stlplus::folder_append_separator( sOutputDir ) + "images" ) ;
-	}
+  if( ! stlplus::folder_exists( stlplus::folder_append_separator( sOutputDir ) + "images" ) )
+  {
+    stlplus::folder_create( stlplus::folder_append_separator( sOutputDir ) + "images" ) ;
+  }
 
 
 	// Check validity 
-	if( ! stlplus::folder_exists( sOutputDir ) || 
-		! stlplus::folder_exists( stlplus::folder_append_separator( sOutputDir) + "style" ) || 
-		! stlplus::folder_exists( stlplus::folder_append_separator( sOutputDir) + "scripts" ) ||
-		! stlplus::folder_exists( stlplus::folder_append_separator( sOutputDir) + "images" ) )
-	{
-		std::cerr << "Cannot create project folder" << std::endl ; 
-		exit( EXIT_FAILURE ) ; 
-	}	
+  if( ! stlplus::folder_exists( sOutputDir ) || 
+    ! stlplus::folder_exists( stlplus::folder_append_separator( sOutputDir) + "style" ) || 
+    ! stlplus::folder_exists( stlplus::folder_append_separator( sOutputDir) + "scripts" ) ||
+    ! stlplus::folder_exists( stlplus::folder_append_separator( sOutputDir) + "images" ) )
+  {
+    std::cerr << "Cannot create project folder" << std::endl ; 
+    exit( EXIT_FAILURE ) ; 
+  }	
 }
 
 
-// given a new_width and a new_height 
-// recompute new_width and new_height in order to conserve initial ratio.  
-static inline void RessamplingSize( int & new_width , int & new_height , const int oldWidth , const int oldHeight )
+/**
+  * Compute new width and height in order to respect original ratio 
+  * @param newWidth (in: max new width) ( out: computed new width)
+  * @param newHeight (in : max new height) ( out: computed new height)
+  * @param oldWidth original image width 
+  * @param oldHeight original image height 
+  */
+static inline void RessamplingSize( int & newWidth , int & newHeight , const int oldWidth , const int oldHeight )
 {
 	if( oldWidth > oldHeight )
 	{
-		const double ratio = (double) new_width / (double) oldWidth ; 
-		new_height = ratio * (double) oldHeight ; 
+		const double ratio = (double) newWidth / (double) oldWidth ; 
+		newHeight = ratio * (double) oldHeight ; 
 	}
 	else
 	{
-		const double ratio = (double) new_height / (double) oldHeight ;
-		new_width = ratio * (double) oldWidth ; 
+		const double ratio = (double) newHeight / (double) oldHeight ;
+		newWidth = ratio * (double) oldWidth ; 
 	}
 }
 
 /**
- * Write standard html5 index file  
+ * Write standard html5 index file
+ * @param file_name output file name 
  */
-void writeIndexHtmlFile( const std::string & file_name )
-{
-	std::ofstream file( file_name.c_str() ) ;
-	if( ! file.good() )
-	{
-		std::cerr << "Error writing file : \"" << file_name << "\"" << std::endl ; 
-		exit( EXIT_FAILURE ) ; 
-	}
+ void writeIndexHtmlFile( const std::string & file_name )
+ {
+   std::ofstream file( file_name.c_str() ) ;
+   if( ! file.good() )
+   {
+    std::cerr << "Error writing file : \"" << file_name << "\"" << std::endl ; 
+    exit( EXIT_FAILURE ) ; 
+  }
 
-	// header 
-	file << "<!DOCTYPE html>" << std::endl ; 
-	file << "<html lang=\"en\">" << std::endl ; 
-	file << "  <head>" << std::endl ; 
-	file << "    <meta charset=\"utf-8\">" << std::endl ; 
-	file << "    <title>WebGL viewer</title>" << std::endl ; 
-	file << "    <link rel=\"stylesheet\" href=\"style/style.css\">" << std::endl ; 
+  const char * const kHtmlHeader = 
+  "<!DOCTYPE html>\n"
+  "<html lang=\"en\">\n"
+  "  <head>\n"
+  "    <meta charset=\"utf-8\">\n"
+  "    <title>WebGL viewer</title>\n"
+  "    <link rel=\"stylesheet\" href=\"style/style.css\">\n"
+  "\n"
+  "    <!-- Point and line shaders -->\n"
+  "    <script id=\"point_vShader\" type=\"x-shader/x-vertex\">\n"
+  "    uniform mat4 uModelViewMatrix ;\n"
+  "    uniform mat4 uProjectionMatrix ;\n"
+  "    uniform mat4 uNormalMatrix;\n"
+  "\n"
+  "    attribute vec3 aNormal;\n"
+  "    attribute vec3 aPosition;\n"
+  "    attribute vec3 aColor;\n"
+  "\n"
+  "    varying vec4 vColor;\n"
+  "\n" 
+  "    void main( )\n"
+  "    {\n"
+  "      gl_Position = uProjectionMatrix * uModelViewMatrix * vec4( aPosition , 1.0 ) ;\n"
+  "      vColor = vec4( aColor , 1.0 ) ;\n" 
+  "    }\n"
+  "    </script>\n"
+  "\n"
+  "    <script id=\"point_fShader\" type=\"x-shader/x-fragment\">\n"
+  "    precision mediump float;\n"
+  "    varying vec4 vColor ;\n"
+  "\n"
+  "    void main( )\n"
+  "    {\n"
+  "      gl_FragColor = vColor ;\n"
+  "    }\n"
+  "    </script>\n"
+  "\n"
+  "    <!-- Image (texture) shader -->\n"
+  "    <script id=\"image_vShader\" type=\"x-shader/x-vertex\">\n"
+  "    uniform mat4 uModelViewMatrix ;\n" 
+  "    uniform mat4 uProjectionMatrix ;\n"
+  "\n"
+  "    attribute vec3 aPosition;\n"
+  "    attribute vec2 aTexCoord;\n"
+  "\n"
+  "    varying highp vec2 vTexCoord;\n"
+  "\n"
+  "    void main( )\n"
+  "    {\n"
+  "      gl_Position = uProjectionMatrix * uModelViewMatrix * vec4( aPosition , 1.0 ) ;\n"
+  "      vTexCoord = aTexCoord;\n"
+  "    }\n"
+  "    </script>\n"
+  "\n"
+  "    <script id=\"image_fShader\" type=\"x-shader/x-fragment\">\n"
+  "    varying highp vec2 vTexCoord;\n" 
+  "\n"
+  "    uniform sampler2D uSampler ;\n" 
+  "\n"
+  "    void main( )\n"
+  "    {\n"
+  "      gl_FragColor = texture2D( uSampler , vec2(vTexCoord.s,vTexCoord.t));\n" 
+  "    }\n" 
+  "    </script>\n"
+  "\n"
+  "    <!-- other scripts -->\n"
+  "    <script src=\"scripts/util.js\"></script>\n"
+  "    <script src=\"scripts/matrix.js\"></script>\n"
+  "    <script src=\"scripts/cloud.js\"></script>\n"
+  "    <script src=\"scripts/shader.js\"></script>\n"
+  "    <script src=\"scripts/cameras.js\"></script>\n"
+  "    <script src=\"scripts/sceneData.js\"></script>\n"
+  "    <script src=\"scripts/main.js\"></script>\n"
+  "  </head>\n" ;
 
-	// shaders 
-	file << "    <script id=\"point_vShader\" type=\"x-shader/x-vertex\">" << std::endl ; 
-	file << "    uniform mat4 uModelViewMatrix ;" << std::endl ; 
-	file << "    uniform mat4 uProjectionMatrix ;" << std::endl ; 
-	file << "    uniform mat4 uNormalMatrix;" << std::endl ; 
-	file << std::endl ; 
-	file << "    attribute vec3 aNormal;" << std::endl ; 
-	file << "    attribute vec3 aPosition;" << std::endl ; 
-	file << "    attribute vec3 aColor;" << std::endl ; 
-	file << std::endl ; 
-	file << "    varying vec4 vColor;" << std::endl ; 
-	file << std::endl ; 
-	file << "    void main( )" << std::endl;
-	file << "    {" << std::endl;
-	file << "      gl_Position = uProjectionMatrix * uModelViewMatrix * vec4( aPosition , 1.0 ) ;" << std::endl ;
-	file << "      vColor = vec4( aColor , 1.0 ) ;" << std::endl ; 
-	file << "    }" << std::endl ; 
-	file << "    </script>" << std::endl ; 
+  const char * const kHtmlBody = 
+  "  <body onload=\"initGL()\">\n" 
+  "    <header>\n"
+  "      <h1>WebGL viewer</h1>\n" 
+  "    </header>\n"
+  "\n"
+  "    <canvas id=\"glCanvas\" width=\"1024\" height=\"768\">\n"
+  "      Your browser does not support HTML5 canvas\n"
+  "    </canvas>\n"
+  "\n"
+  "    <footer>\n"
+  "      <p>OpenMVG WebGL viewer by Romuald PERROT</p>\n"
+  "    </footer>\n"
+  "  </body>\n"
+  "</html>\n" ;
 
-	file << "    <script id=\"point_fShader\" type=\"x-shader/x-fragment\">" << std::endl ; 
-	file << "    precision mediump float;" << std::endl ; 
-	file << "    varying vec4 vColor ; " << std::endl ; 
-	file << std::endl ; 
-	file << "    void main( )" << std::endl ; 
-	file << "    {" << std::endl ; 
-	file << "      gl_FragColor = vColor ;" << std::endl ; 
-	file << "    }" << std::endl ; 
-	file << "    </script>" << std::endl ; 
+  file << kHtmlHeader ; 
+  file << kHtmlBody ; 
 
-	file << "    <script id=\"image_vShader\" type=\"x-shader/x-vertex\">" << std::endl ; 
-	file << "    uniform mat4 uModelViewMatrix ;" << std::endl ; 
-	file << "    uniform mat4 uProjectionMatrix ;" << std::endl ; 
-	file << std::endl ; 
-	file << "    attribute vec3 aPosition;" << std::endl ; 
-	file << "    attribute vec2 aTexCoord;" << std::endl ; 
-	file << std::endl ; 
-	file << "    varying highp vec2 vTexCoord;" << std::endl ; 
-	file << std::endl ; 
-	file << "    void main( )" << std::endl ;
-	file << "    {" << std::endl ; 
-	file << "      gl_Position = uProjectionMatrix * uModelViewMatrix * vec4( aPosition , 1.0 ) ;" << std::endl ; 
-	file << "      vTexCoord = aTexCoord;" << std::endl;
-	file << "    }" << std::endl ; 
-	file << "    </script>" << std::endl ; 
-
-	file << "    <script id=\"image_fShader\" type=\"x-shader/x-fragment\">" << std::endl ; 
-	file << "    varying highp vec2 vTexCoord;" << std::endl ; 
-	file << std::endl ; 
-	file << "    uniform sampler2D uSampler ;" << std::endl ; 
-	file << std::endl ; 
-	file << "    void main( )" << std::endl ; 
-	file << "    {" << std::endl ; 
-	file << "      gl_FragColor = texture2D( uSampler , vec2(vTexCoord.s,vTexCoord.t));" << std::endl ; 
-	file << "    }" << std::endl ; 
-	file << "    </script>" << std::endl ; 
-
-	file << "    <script src=\"scripts/util.js\"></script>" << std::endl ; 
-	file << "    <script src=\"scripts/matrix.js\"></script>" << std::endl ; 
-	file << "    <script src=\"scripts/cloud.js\"></script>" << std::endl ; 
-	file << "    <script src=\"scripts/shader.js\"></script>" << std::endl ; 
-	file << "    <script src=\"scripts/cameras.js\"></script>" << std::endl ; 
-	file << "    <script src=\"scripts/sceneData.js\"></script>" << std::endl ; 
-	file << "    <script src=\"scripts/main.js\"></script>" << std::endl ; 
-	file << "  </head>" << std::endl ; 
-
-	// body 
-	file << "  <body onload=\"initGL()\">" << std::endl ; 
-	file << "    <header>" << std::endl ; 
-	file << "      <h1>WebGL viewer</h1>" << std::endl ; 
-	file << "    </header>" << std::endl ; 
-	file << std::endl ; 
-	file << "    <canvas id=\"glCanvas\" width=\"1024\" height=\"768\">" << std::endl ; 
-	file << "      Your browser does not support HTML5 canvas" << std::endl ; 
-	file << "    </canvas>" << std::endl ; 
-	file << std::endl ; 
-	file << "    <footer>" << std::endl ; 
-	file << "      <p>OpenMVG WebGL viewer by Romuald PERROT</p>" << std::endl ;
-	file << "    </footer>" << std::endl ; 
-	file << "  </body>" << std::endl ; 
-
-	file << "</html>" << std::endl ; 
-
-	file.close() ; 
+  file.close() ; 
 }
 
 /**
  * write standard css file 
+ * @param file_name output file name 
  */
-void writeCSSFile( const std::string & file_name )
-{
-	std::ofstream file( file_name.c_str() ) ;
-	if( ! file.good() )
-	{
-		std::cerr << "Error writing file : \"" << file_name << "\"" << std::endl ; 
-		exit( EXIT_FAILURE ) ; 
-	}
+ void writeCSSFile( const std::string & file_name )
+ {
+   std::ofstream file( file_name.c_str() ) ;
+   if( ! file.good() )
+   {
+    std::cerr << "Error writing file : \"" << file_name << "\"" << std::endl ; 
+    exit( EXIT_FAILURE ) ; 
+  }
 
-	file << "*" << std::endl ; 
-	file << "{" << std::endl ; 
-	file << "  color: rgb(146,146,146) ;" << std::endl ;
-	file << "  margin: 0px ;" << std::endl ;
-	file << "  padding: 0px ;" << std::endl ; 
-	file << "}" << std::endl ; 
-	file << std::endl ;
-	file << "body" << std::endl ; 
-	file << "{" << std::endl ; 
-	file << "  background-color: rgb(68,68,68) ;" << std::endl ; 
-	file << "}" << std::endl ; 
-	file << std::endl ; 
-	file << "#glCanvas" << std::endl ; 
-	file << "{" << std::endl ; 
-	file << "  display: block ;" << std::endl ; 
-	file << "  width: 1024px ;" << std::endl ; 
-	file << "  margin-left: auto ;" << std::endl ; 
-	file << "  margin-right: auto ;" << std::endl ; 
-	file << "  margin-top: 20px ;" << std::endl ;  
-	file << "}" << std::endl ; 
-	file << std::endl ; 
-	file << "header" << std::endl ; 
-	file << "{" << std::endl ; 
-	file << "  background-color: rgb(40,40,40) ;" << std::endl ; 
-	file << "  width: 100% ;" << std::endl ;
-	file << "  height: 60px ;" << std::endl ; 
-	file << "  line-height: 60px ;" << std::endl ; 
-	file << "  text-align: center ;" << std::endl ; 
-	file << "  box-shadow: 0 0px 15px 15px rgb(40,40,40) ;" << std::endl ;
-	file << "}" << std::endl ; 
-	file << std::endl ; 
-	file << "footer" << std::endl ; 
-	file << "{" << std::endl ; 
-	file << "  background-color: rgb(40,40,40) ;" << std::endl ; 
-	file << "  position: fixed ;" << std::endl ; 
-	file << "  bottom: 0px ;" << std::endl ; 
-	file << "  width: 100% ;" << std::endl ; 
-	file << "  height: 60px ;" << std::endl ; 
-	file << "  line-height: 60px ;" << std::endl ; 
-	file << "  text-align: center ;" << std::endl ; 
-	file << "  box-shadow: 0 0px 15px 15px rgb(40,40,40) ;" << std::endl ; 
-	file << "}" << std::endl ; 
+  const char * const kCSSContent = 
+  "*\n"
+  "{\n"
+  "  color: rgb(146,146,146) ;\n"
+  "  margin: 0px ;\n"
+  "  padding: 0px ;\n"
+  "}\n"
+  "\n"
+  "body\n"
+  "{\n"
+  "  background-color: rgb(68,68,68) ;\n"
+  "}\n"
+  "\n"
+  "#glCanvas\n"
+  "{\n"
+  "  display: block ;\n"
+  "  width: 1024px ;\n"
+  "  margin-left: auto ;\n"
+  "  margin-right: auto ;\n"
+  "  margin-top: 20px ;\n"
+  "}\n" 
+  "\n"
+  "header\n"
+  "{\n"
+  "  background-color: rgb(40,40,40) ;\n"
+  "  width: 100% ;\n"
+  "  height: 60px ;\n"
+  "  line-height: 60px ;\n"
+  "  text-align: center ;\n"
+  "  box-shadow: 0 0px 15px 15px rgb(40,40,40) ;\n"
+  "}\n"
+  "\n"
+  "footer\n"
+  "{\n"
+  "  background-color: rgb(40,40,40) ;\n"
+  "  position: fixed ;\n"
+  "  bottom: 0px ;\n"
+  "  width: 100% ;\n"
+  "  height: 60px ;\n"
+  "  line-height: 60px ;\n"
+  "  text-align: center ;\n"
+  "  box-shadow: 0 0px 15px 15px rgb(40,40,40) ;\n"
+  "}\n" ;
 
-	file.close() ; 
+  file << kCSSContent ; 
+  file.close() ;
 }
 
+/**
+  * Write project scene specific data
+  * @param doc the document containing scene data 
+  * @param file_name output file name 
+  */
 void writeSceneDataFile( Document & doc , const std::string & file_name )
 {
 	std::ofstream file( file_name.c_str() ) ;
@@ -243,17 +281,21 @@ void writeSceneDataFile( Document & doc , const std::string & file_name )
 		exit( EXIT_FAILURE ) ; 
 	}
 
+  // export sparse point cloud data 
 	file << "cloud_data = new Float32Array( " << doc._vec_points.size() * 2 /* ie / 3 * 6 */ << ");" << std::endl;
 	for( int i = 0 ; i < doc._vec_points.size() / 3 ; ++i )
 	{
+    // position 
 		file << "cloud_data[" << 6 * i << "] = " << doc._vec_points[ 3 * i ] << ";" ;
 		file << " cloud_data[" << 6 * i + 1 << "] = " << doc._vec_points[ 3 * i + 1 ] << ";" ;
 		file << " cloud_data[" << 6 * i + 2 << "] = " << doc._vec_points[ 3 * i + 2 ] << ";" << std::endl ;
+    // color (default : white)
 		file << "cloud_data[" << 6 * i + 3 << "] = " << 1.0 << ";" ;
 		file << " cloud_data[" << 6 * i + 4 << "] = " << 1.0 << ";" ;
 		file << " cloud_data[" << 6 * i + 5 << "] = " << 1.0 << ";" << std::endl ;
 	}
 
+  // Compute camera distance in order to see point cloud 
 	float center[3] = { 0 , 0 , 0 };
 	float min_x =   std::numeric_limits<float>::max() ;
 	float max_x = - std::numeric_limits<float>::max() ; 
@@ -283,7 +325,7 @@ void writeSceneDataFile( Document & doc , const std::string & file_name )
 	const float d_x = max_x - min_x ;
 	const float d_y = max_y - min_y ;
 	const float delta = std::max( d_x , d_y ) ;  
-	const float dist  = delta / ( 2.0 * tan( D2R(60.0) / 2.0 ) ) ;
+	const float dist  = delta / ( 2.0 * tan( D2R(60.0) / 2.0 ) ) ; // assume camera fov is 60 degrees
 
 	const float center_cam[3] = { center[0] , center[1] , center[2] - dist } ; 
 
@@ -300,7 +342,7 @@ void writeSceneDataFile( Document & doc , const std::string & file_name )
 	file << "var cameraModelView  = mat44.createLookAtMatrix( cam_center[0] , cam_center[1] , cam_center[2] , scene_center[0] , scene_center[1] , scene_center[2] , 0 , 1 , 0 );" << std::endl ; 
 	file << "var cameraProjection = mat44.createPerspectiveMatrix( 40.0 , 1024.0 / 768.0 , 0.1 , 1000.0 ) ;" << std::endl ; 
 
-	// Export Cameras
+	// Export Cameras data
 	file << "var cameras = new Array(" << doc._map_camera.size() << ") ;" << std::endl ; 
 	for( int i = 0 ; i < doc._map_camera.size() ; ++i )
 	{
@@ -310,10 +352,13 @@ void writeSceneDataFile( Document & doc , const std::string & file_name )
 
 		file << "cameras[" << i << "] = new Object() ;" << std::endl ; 
 		file << "cameras[" << i << "].position = new Float32Array( 3 ) ;" << std::endl ; 
+    // position 
 		file << "cameras[" << i << "].position[0] = " << C(0) << " ;" << std::endl ;
 		file << "cameras[" << i << "].position[1] = " << C(1) << " ;" << std::endl ; 
 		file << "cameras[" << i << "].position[2] = " << C(2) << " ;" << std::endl ; 
+    // associated image 
 		file << "cameras[" << i << "].imageName = \"./images/\" + (\"00000000\" +" << i << ").slice(-8) + \".jpg\"" << std::endl ; 
+    // extremal points of iamge plane  
 		file << "cameras[" << i << "].imagePlane = new Float32Array( 12 ) ;" << std::endl ; 
 		const Vec3 p0 = R.transpose() * K.inverse() * Vec3( 0.0 , 0.0 , 1.0 ) + C ;
 		const Vec3 p1 = R.transpose() * K.inverse() * Vec3( doc._map_imageSize[i].first , 0.0 , 1.0 ) + C ; 
@@ -340,6 +385,10 @@ void writeSceneDataFile( Document & doc , const std::string & file_name )
 	file.close() ; 
 }
 
+/**
+* Write minimal matrix class file 
+* @param file_name output file name 
+*/
 void writeMatrixWebGLFile( const std::string & file_name )
 {
 	std::ofstream file( file_name.c_str() ) ;
@@ -349,280 +398,310 @@ void writeMatrixWebGLFile( const std::string & file_name )
 		exit( EXIT_FAILURE ) ; 
 	}
 
-	file << "function norm( x , y , z )" << std::endl ;
-	file << "{" << std::endl ;
-	file << "  return Math.sqrt( x * x + y * y + z * z ) ;" << std::endl;
-	file << "}" << std::endl ; 
-	file << std::endl ; 
-	file << "function dot( x1 , y1 , z1 , x2 , y2 , z2 )" << std::endl ;
-	file << "{" << std::endl ;
-	file << "  return x1 * x2 + y1 * y2 + z1 * z2 ;" << std::endl ; 
-	file << "}" << std::endl ;
-	file << std::endl ; 
-	file << "var mat44 = {} ; " << std::endl ; 
-	file << std::endl ; 
+  const char * const kStandardVectorOperations = 
+  "/* L2 norm of a vector */\n"
+  "function norm( x , y , z )\n"
+  "{\n"
+  "  return Math.sqrt( x * x + y * y + z * z ) ;\n" 
+  "}\n"
+  "\n"
+  "/* dot product of two vectors */\n"
+  "function dot( x1 , y1 , z1 , x2 , y2 , z2 )\n"
+  "{\n;"
+  "  return x1 * x2 + y1 * y2 + z1 * z2 ;"
+  "}"
+  "\n" ;
+  
+  const char * const kMatrixClass = 
+  "/* Matrix class */\n"
+  "var mat44 = {} ;\n"
+  "\n";
 
-	// look at 
-	file << "mat44.createLookAtMatrix = function( eyex , eyey , eyez , centerx , centery , centerz , _upx , _upy , _upz )" << std::endl ;
-	file << "{" << std::endl ; 
-	file << "  var dstx = eyex - centerx ;" << std::endl ;
-	file << "  var dsty = eyey - centery ;" << std::endl ; 
-	file << "  var dstz = eyez - centerz ;" << std::endl ; 
-	file << std::endl ; 
-	file << "  var inv_norm = 1.0 / norm( dstx , dsty , dstz ) ;" << std::endl;
-	file << "  dstx *= inv_norm ;" << std::endl ; 
-	file << "  dsty *= inv_norm ;" << std::endl ; 
-	file << "  dstz *= inv_norm ;" << std::endl ; 
-	file << std::endl ;
-	file << "  var upx = _upx ;" << std::endl ; 
-	file << "  var upy = _upy ;" << std::endl ; 
-	file << "  var upz = _upz ;" << std::endl ; 
-	file << std::endl ; 
-	file << "  inv_norm = 1.0 / norm( upx , upy , upz ) ;" << std::endl ; 
-	file << "  upx *= inv_norm ;" << std::endl ; 
-	file << "  upy *= inv_norm ;" << std::endl ; 
-	file << "  upz *= inv_norm ;" << std::endl ;
-	file << std::endl ; 
-	file << "  var rightx ;" << std::endl ; 
-	file << "  var righty ;" << std::endl ; 
-	file << "  var rightz ;" << std::endl ; 
-	file << std::endl ; 
-	file << "  rightx = upy * dstz - dsty * upz ;" << std::endl ; 
-	file << "  righty = upz * dstx - dstz * upx ;" << std::endl ; 
-	file << "  rightz = upx * dsty - dstx * upy ;" << std::endl ;
-	file << std::endl ; 
-	file << "  inv_norm = 1.0 / norm( rightx , righty , rightz ) ;" << std::endl ; 
-	file << "  rightx *= inv_norm ;" << std::endl ;
-	file << "  righty *= inv_norm ;" << std::endl ; 
-	file << "  rightz *= inv_norm ;" << std::endl ; 
-	file << std::endl ; 
-	file << "  upx = righty * dstz - rightz * dsty ;" << std::endl ;
-	file << "  upy = rightz * dstx - rightx * dstz ;" << std::endl ; 
-	file << "  upz = rightx * dsty - righty * dstx ;" << std::endl ; 
-	file << std::endl ; 
-	file << "  var res = new Float32Array( 16 ) ;" << std::endl ; 
-	file << "  res[0] = rightx ;" << std::endl ; 
-	file << "  res[1] = upx ;" << std::endl ; 
-	file << "  res[2] = dstx ;" << std::endl ; 
-	file << "  res[3] = 0.0 ;" << std::endl ; 
-	file << "  res[4] = righty ;" << std::endl ; 
-	file << "  res[5] = upy ;" << std::endl ; 
-	file << "  res[6] = dsty ;" << std::endl ; 
-	file << "  res[7] = 0.0 ;" << std::endl ; 
-	file << "  res[8] = rightz ;" << std::endl ; 
-	file << "  res[9] = upz ;" << std::endl ; 
-	file << "  res[10] = dstz ;" << std::endl ;
-	file << "  res[11] = 0.0 ;" << std::endl ; 
-	file << "  res[12] = - dot( rightx , righty , rightz , eyex , eyey , eyez ) ;" << std::endl ; 
-	file << "  res[13] = - dot( upx , upy , upz , eyex , eyey , eyez ) ;" << std::endl ; 
-	file << "  res[14] = - dot( dstx , dsty , dstz , eyex , eyey , eyez ) ;" << std::endl ;
-	file << "  res[15] = 1.0 ;" << std::endl; 
-	file << std::endl ;
-	file << "  return res ;" << std::endl;
-	file << "};" << std::endl ;
-	file << std::endl ; 
+  const char * const kLookAtMatrix = 
+  "/* OpenGL like look at function */\n"
+  "mat44.createLookAtMatrix = function( eyex , eyey , eyez , centerx , centery , centerz , _upx , _upy , _upz )\n"
+  "{\n"
+  "  var dstx = eyex - centerx ;\n"
+  "  var dsty = eyey - centery ;\n"
+  "  var dstz = eyez - centerz ;\n"
+  "\n"
+  "  var inv_norm = 1.0 / norm( dstx , dsty , dstz ) ;\n"
+  "  dstx *= inv_norm ;\n"
+  "  dsty *= inv_norm ;\n"
+  "  dstz *= inv_norm ;\n"
+  "\n"
+  "  var upx = _upx ;\n"
+  "  var upy = _upy ;\n"
+  "  var upz = _upz ;\n"
+  "\n"
+  "  inv_norm = 1.0 / norm( upx , upy , upz ) ;\n"
+  "  upx *= inv_norm ;\n"
+  "  upy *= inv_norm ;\n"
+  "  upz *= inv_norm ;\n"
+  "\n"
+  "  var rightx ;\n"
+  "  var righty ;\n"
+  "  var rightz ;\n"
+  "\n"
+  "  rightx = upy * dstz - dsty * upz ;\n"
+  "  righty = upz * dstx - dstz * upx ;\n"
+  "  rightz = upx * dsty - dstx * upy ;\n"
+  "\n"
+  "  inv_norm = 1.0 / norm( rightx , righty , rightz ) ;\n"
+  "  rightx *= inv_norm ;\n"
+  "  righty *= inv_norm ;\n"
+  "  rightz *= inv_norm ;\n"
+  "\n"
+  "  upx = righty * dstz - rightz * dsty ;\n"
+  "  upy = rightz * dstx - rightx * dstz ;\n"
+  "  upz = rightx * dsty - righty * dstx ;\n"
+  "\n"
+  "  var res = new Float32Array( 16 ) ;\n"
+  "  res[0] = rightx ;\n"
+  "  res[1] = upx ;\n"
+  "  res[2] = dstx ;\n"
+  "  res[3] = 0.0 ;\n"
+  "  res[4] = righty ;\n"
+  "  res[5] = upy ;\n"
+  "  res[6] = dsty ;\n"
+  "  res[7] = 0.0 ;\n"
+  "  res[8] = rightz ;\n"
+  "  res[9] = upz ;\n"
+  "  res[10] = dstz ;\n"
+  "  res[11] = 0.0 ;\n" 
+  "  res[12] = - dot( rightx , righty , rightz , eyex , eyey , eyez ) ;\n"
+  "  res[13] = - dot( upx , upy , upz , eyex , eyey , eyez ) ;\n"
+  "  res[14] = - dot( dstx , dsty , dstz , eyex , eyey , eyez ) ;\n"
+  "  res[15] = 1.0 ;\n" 
+  "\n"
+  "  return res ;\n"
+  "};\n"
+  "\n" ;
 
-	// perspective 
-	file << "mat44.createPerspectiveMatrix = function( fov , aspect , near , far )" << std::endl ; 
-	file << "{" << std::endl ;
-	file << "  var range  = Math.tan( fov * Math.PI / 360.0 ) * near ;" << std::endl ; 
-	file << "  var left   = -range * aspect ;" << std::endl ; 
-	file << "  var right  = range * aspect ;" << std::endl ; 
-	file << "  var bottom = - range ;" << std::endl ; 
-	file << "  var top   = range ;" << std::endl ; 
-	file << std::endl ; 
-	file << "  var out = new Float32Array( 16 ) ;" << std::endl ; 
-	file << std::endl ; 
-	file << "  out[0] =  ( 2.0 * near ) / ( right - left ) ;" << std::endl ; 
-	file << "  out[1] = 0.0 ;" << std::endl ; 
-	file << "  out[2] = 0.0 ;" << std::endl ; 
-	file << "  out[3] = 0.0 ;" << std::endl ; 
-	file << "  out[4] = 0.0 ;" << std::endl ; 
-	file << "  out[5] = ( 2.0 * near) / (top- bottom) ;" << std::endl ; 
-	file << "  out[6] = 0.0 ;" << std::endl ; 
-	file << "  out[7] = 0.0 ;" << std::endl ; 
-	file << "  out[8] = (right + left) / ( right - left );" << std::endl ; 
-	file << "  out[9] = (top + bottom) / ( top - bottom ) ;" << std::endl ; 
-	file << "  out[10] = - (far + near ) / ( far - near ) ;" << std::endl ; 
-	file << "  out[11] = -1.0 ;" << std::endl ; 
-	file << "  out[12] = 0.0 ;" << std::endl ; 
-	file << "  out[13] = 0.0 ;" << std::endl ; 
-	file << "  out[14] = - ( 2.0 * far * near ) / ( far - near ) ;" << std::endl ; 
-	file << "  out[15] = 0.0 ;" << std::endl ; 
-	file << std::endl ; 
-	file << "  return out ;" << std::endl ; 
-	file << "};" << std::endl ; 
+  const char * const kPerspectiveMatrix =
+  "/* OpenGL (glu)perspective like matrix */\n"
+  "mat44.createPerspectiveMatrix = function( fov , aspect , near , far )\n"
+  "{\n"
+  "  var range  = Math.tan( fov * Math.PI / 360.0 ) * near ;\n"
+  "  var left   = -range * aspect ;\n"
+  "  var right  = range * aspect ;\n"
+  "  var bottom = - range ;\n"
+  "  var top   = range ;\n"
+  "\n"
+  "  var out = new Float32Array( 16 ) ;\n"
+  "\n"
+  "  out[0] =  ( 2.0 * near ) / ( right - left ) ;\n"
+  "  out[1] = 0.0 ;\n"
+  "  out[2] = 0.0 ;\n"
+  "  out[3] = 0.0 ;\n"
+  "  out[4] = 0.0 ;\n"
+  "  out[5] = ( 2.0 * near) / (top - bottom) ;\n"
+  "  out[6] = 0.0 ;\n"
+  "  out[7] = 0.0 ;\n"
+  "  out[8] = (right + left) / ( right - left );\n"
+  "  out[9] = (top + bottom) / ( top - bottom ) ;\n"
+  "  out[10] = - (far + near ) / ( far - near ) ;\n"
+  "  out[11] = -1.0 ;\n"
+  "  out[12] = 0.0 ;\n"
+  "  out[13] = 0.0 ;\n"
+  "  out[14] = - ( 2.0 * far * near ) / ( far - near ) ;\n"
+  "  out[15] = 0.0 ;\n"
+  "\n"
+  "  return out ;\n"
+  "};\n"
+  "\n" ;
 
-	// multiplication 
-	file << "mat44.mul = function( a , b )" << std::endl ; 
-	file << "{" << std::endl ; 
-	file << "  var out = new Float32Array(16) ;" << std::endl ; 
-	file << "  for( var i = 0 ; i < 4 ; ++i )" << std::endl ; 
-	file << "  {" << std::endl ; 
-	file << "    for( var j = 0 ; j < 4 ; ++j )" << std::endl ; 
-	file << "    {" << std::endl ; 
-	file << "      var idx = i * 4 + j ;" << std::endl ; 
-	file << "      out[idx] = 0.0 ;" << std::endl ; 
-	file << std::endl ; 
-	file << "        for( var k = 0 ; k < 4 ; ++k )" << std::endl ; 
-	file << "        {" << std::endl ; 
-	file << "          out[idx] += a[i*4+k] * b[k*4+j];" << std::endl ; 
-	file << "        }" << std::endl ; 
-	file << "      }" << std::endl ; 
-	file << "    }" << std::endl ; 
-	file << std::endl ; 
-	file << "  return out ;" << std::endl ; 
-	file << "};" << std::endl ;
+  const char * const kMatrixMultiplication = 
+  "/* Matrix multiplication */\n"
+  "mat44.mul = function( a , b )\n"
+  "{\n"
+  "  var out = new Float32Array(16) ;\n"
+  "  for( var i = 0 ; i < 4 ; ++i )\n" 
+  "  {\n"
+  "    for( var j = 0 ; j < 4 ; ++j )\n"
+  "    {\n"
+  "      var idx = i * 4 + j ;\n"
+  "      out[idx] = 0.0 ;\n"
+  "\n"
+  "        for( var k = 0 ; k < 4 ; ++k )\n"
+  "        {\n"
+  "          out[idx] += a[i*4+k] * b[k*4+j];\n"
+  "        }\n"
+  "      }\n"
+  "    }\n"
+  "\n"
+  "  return out ;\n"
+  "};\n"
+  "\n" ;
 
-	// inverse (really still needed  ?)
-	file << "mat44.invert = function( a )" << std::endl ; 
-	file << "{" << std::endl ; 
-	file << "  // /* intel : streaming SIMD Extensions - Inverse of 4x4 matrix */" << std::endl ; 
-	file << "  var  tmp = new Float32Array( 16 ) ; /* temp array for pairs                      */ " << std::endl ; 
-	file << "  var  src = new Float32Array( 16 ) ; /* array of transpose source matrix */" << std::endl ; 
-	file << "  var out = new Float32Array( 16 ) ;" << std::endl ; 
-	file << std::endl ; 
-	file << "  /* transpose matrix */" << std::endl ; 
-	file << "  for (var i = 0; i < 4; ++i) " << std::endl ;
-	file << "  {" << std::endl ; 
-	file << "    src[i]        = a[i*4]; " << std::endl ; 
-	file << "    src[i + 4]    = a[i*4 + 1];" << std::endl ; 
-	file << "    src[i + 8]    = a[i*4 + 2];" << std::endl ; 
-	file << "    src[i + 12]   = a[i*4 + 3];" << std::endl ; 
-	file << "  }" << std::endl ; 
-	file << std::endl ; 
-	file << "/* calculate pairs for first 8 elements (cofactors) */" << std::endl ; 
-	file << "  tmp[0]  = src[10] * src[15];" << std::endl ; 
-	file << "  tmp[1]  = src[11] * src[14];" << std::endl ; 
-	file << "  tmp[2]  = src[9]  * src[15];" << std::endl ; 
-	file << "  tmp[3]  = src[11] * src[13];" << std::endl ;
-	file << "  tmp[4]  = src[9]  * src[14];" << std::endl ; 
-	file << "  tmp[5]  = src[10] * src[13];" << std::endl ; 
-	file << "  tmp[6]  = src[8]  * src[15];" << std::endl ;  
-	file << "  tmp[7]  = src[11] * src[12];" << std::endl ;
-	file << "  tmp[8]  = src[8]  * src[14];" << std::endl ; 
-	file << "  tmp[9]  = src[10] * src[12];" << std::endl ; 
-	file << "  tmp[10] = src[8]  * src[13];" << std::endl ; 
-	file << "  tmp[11] = src[9]  * src[12];" << std::endl ; 
-	file << "  /* calculate first 8 elements (cofactors) */" << std::endl ; 
-	file << "  out[0]  = tmp[0]*src[5] + tmp[3]*src[6] + tmp[4]*src[7];" << std::endl ; 
-	file << "  out[0] -= tmp[1]*src[5] + tmp[2]*src[6] + tmp[5]*src[7];" << std::endl ; 
-	file << "  out[1]  = tmp[1]*src[4] + tmp[6]*src[6] + tmp[9]*src[7];" << std::endl ; 
-	file << "  out[1] -= tmp[0]*src[4] + tmp[7]*src[6] + tmp[8]*src[7];" << std::endl ;
-	file << "  out[2]  = tmp[2]*src[4] + tmp[7]*src[5] + tmp[10]*src[7];" << std::endl ; 
-	file << "  out[2] -= tmp[3]*src[4] + tmp[6]*src[5] + tmp[11]*src[7];" << std::endl ; 
-	file << "  out[3]  = tmp[5]*src[4] + tmp[8]*src[5] + tmp[11]*src[6];" << std::endl ; 
-	file << "  out[3] -= tmp[4]*src[4] + tmp[9]*src[5] + tmp[10]*src[6];" << std::endl ; 
-	file << "  out[4]  = tmp[1]*src[1] + tmp[2]*src[2] + tmp[5]*src[3];" << std::endl ; 
-	file << "  out[4] -= tmp[0]*src[1] + tmp[3]*src[2] + tmp[4]*src[3];" << std::endl ; 
-	file << "  out[5]  = tmp[0]*src[0] + tmp[7]*src[2] + tmp[8]*src[3];" << std::endl ; 
-	file << "  out[5] -= tmp[1]*src[0] + tmp[6]*src[2] + tmp[9]*src[3];" << std::endl ; 
-	file << "  out[6]  = tmp[3]*src[0] + tmp[6]*src[1] + tmp[11]*src[3];" << std::endl ; 
-	file << "  out[6] -= tmp[2]*src[0] + tmp[7]*src[1] + tmp[10]*src[3];" << std::endl ; 
-	file << "  out[7]  = tmp[4]*src[0] + tmp[9]*src[1] + tmp[10]*src[2];" << std::endl ; 
-	file << "  out[7] -= tmp[5]*src[0] + tmp[8]*src[1] + tmp[11]*src[2];" << std::endl ; 
-	file << "  /* calculate pairs for second 8 elements (cofactors) */" << std::endl ;
-	file << "  tmp[0]  = src[2]*src[7];" << std::endl ; 
-	file << "  tmp[1]  = src[3]*src[6];" << std::endl ;
-	file << "  tmp[2]  = src[1]*src[7];" << std::endl ; 
-	file << "  tmp[3]  = src[3]*src[5];" << std::endl ; 
-	file << "  tmp[4]  = src[1]*src[6];" << std::endl ; 
-	file << "  tmp[5]  = src[2]*src[5];" << std::endl ;
-	file << "  tmp[6]  = src[0]*src[7];" << std::endl ; 
-	file << "  tmp[7]  = src[3]*src[4];" << std::endl ; 
-	file << "  tmp[8]  = src[0]*src[6];" << std::endl ; 
-	file << "  tmp[9]  = src[2]*src[4];" << std::endl ; 
-	file << "  tmp[10] = src[0]*src[5];" << std::endl ; 
-	file << "  tmp[11] = src[1]*src[4];" << std::endl ;
-	file << "  /* calculate second 8 elements (cofactors) */" << std::endl ; 
-	file << "  out[8]  = tmp[0]*src[13] + tmp[3]*src[14] + tmp[4]*src[15]; " << std::endl ;
-	file << "  out[8] -= tmp[1]*src[13] + tmp[2]*src[14] + tmp[5]*src[15]; " << std::endl ;
-	file << "  out[9]  = tmp[1]*src[12] + tmp[6]*src[14] + tmp[9]*src[15]; " << std::endl ;
-	file << "  out[9] -= tmp[0]*src[12] + tmp[7]*src[14] + tmp[8]*src[15]; " << std::endl ;
-	file << "  out[10] = tmp[2]*src[12] + tmp[7]*src[13] + tmp[10]*src[15]; " << std::endl ;
-	file << "  out[10]-= tmp[3]*src[12] + tmp[6]*src[13] + tmp[11]*src[15]; " << std::endl ;
-	file << "  out[11] = tmp[5]*src[12] + tmp[8]*src[13] + tmp[11]*src[14]; " << std::endl ;
-	file << "  out[11]-= tmp[4]*src[12] + tmp[9]*src[13] + tmp[10]*src[14]; " << std::endl ;
-	file << "  out[12] = tmp[2]*src[10] + tmp[5]*src[11] + tmp[1]*src[9]; " << std::endl ;
-	file << "  out[12]-= tmp[4]*src[11] + tmp[0]*src[9] + tmp[3]*src[10]; " << std::endl ;
-	file << "  out[13] = tmp[8]*src[11] + tmp[0]*src[8] + tmp[7]*src[10]; " << std::endl ;
-	file << "  out[13]-= tmp[6]*src[10] + tmp[9]*src[11] + tmp[1]*src[8]; " << std::endl ;
-	file << "  out[14] = tmp[6]*src[9] + tmp[11]*src[11] + tmp[3]*src[8]; " << std::endl ;
-	file << "  out[14]-= tmp[10]*src[11] + tmp[2]*src[8] + tmp[7]*src[9]; " << std::endl ;
-	file << "  out[15] = tmp[10]*src[10] + tmp[4]*src[8] + tmp[9]*src[9]; " << std::endl ;
-	file << "  out[15]-= tmp[8]*src[9] + tmp[11]*src[10] + tmp[5]*src[8]; " << std::endl ;
-	file << "  /* calculate determinant */ " << std::endl ;
-	file << "  var det=src[0]*out[0]+src[1]*out[1]+src[2]*out[2]+src[3]*out[3]; " << std::endl ;
-	file << "  /* calculate matrix inverse */ " << std::endl ;
-	file << "  det = 1 / det; " << std::endl ;
-	file << "  for (var j = 0; j < 16; ++j ) " << std::endl ;
-	file << "  	out[j] *= det; " << std::endl ;
-	file << std::endl; 
-	file << "  return out ; " << std::endl ;
-    file << "};" << std::endl ;
+  const char * const kMatrixInversion = 
+  "/* Matrix inversion */\n"
+  "mat44.invert = function( a )\n"
+  "{\n"
+  "  /* see intel paper: streaming SIMD Extensions - Inverse of 4x4 matrix   */\n"
+  "  var  tmp = new Float32Array( 16 ) ; /* temp array for pairs             */\n"
+  "  var  src = new Float32Array( 16 ) ; /* array of transpose source matrix */\n"
+  "  var out = new Float32Array( 16 ) ;\n"
+  "\n"
+  "  /* transpose matrix */\n"
+  "  for (var i = 0; i < 4; ++i)\n"
+  "  {\n"
+  "    src[i]        = a[i*4];\n"
+  "    src[i + 4]    = a[i*4 + 1];\n"
+  "    src[i + 8]    = a[i*4 + 2];\n"
+  "    src[i + 12]   = a[i*4 + 3];\n"
+  "  }\n"
+  "\n"
+  "/* calculate pairs for first 8 elements (cofactors) */\n"
+  "  tmp[0]  = src[10] * src[15];\n"
+  "  tmp[1]  = src[11] * src[14];\n"
+  "  tmp[2]  = src[9]  * src[15];\n"
+  "  tmp[3]  = src[11] * src[13];\n"
+  "  tmp[4]  = src[9]  * src[14];\n"
+  "  tmp[5]  = src[10] * src[13];\n"
+  "  tmp[6]  = src[8]  * src[15];\n"
+  "  tmp[7]  = src[11] * src[12];\n"
+  "  tmp[8]  = src[8]  * src[14];\n"
+  "  tmp[9]  = src[10] * src[12];\n"
+  "  tmp[10] = src[8]  * src[13];\n"
+  "  tmp[11] = src[9]  * src[12];\n"
+  "  /* calculate first 8 elements (cofactors) */\n"
+  "  out[0]  = tmp[0]*src[5] + tmp[3]*src[6] + tmp[4]*src[7];\n"
+  "  out[0] -= tmp[1]*src[5] + tmp[2]*src[6] + tmp[5]*src[7];\n"
+  "  out[1]  = tmp[1]*src[4] + tmp[6]*src[6] + tmp[9]*src[7];\n"
+  "  out[1] -= tmp[0]*src[4] + tmp[7]*src[6] + tmp[8]*src[7];\n"
+  "  out[2]  = tmp[2]*src[4] + tmp[7]*src[5] + tmp[10]*src[7];\n"
+  "  out[2] -= tmp[3]*src[4] + tmp[6]*src[5] + tmp[11]*src[7];\n"
+  "  out[3]  = tmp[5]*src[4] + tmp[8]*src[5] + tmp[11]*src[6];\n"
+  "  out[3] -= tmp[4]*src[4] + tmp[9]*src[5] + tmp[10]*src[6];\n"
+  "  out[4]  = tmp[1]*src[1] + tmp[2]*src[2] + tmp[5]*src[3];\n"
+  "  out[4] -= tmp[0]*src[1] + tmp[3]*src[2] + tmp[4]*src[3];\n"
+  "  out[5]  = tmp[0]*src[0] + tmp[7]*src[2] + tmp[8]*src[3];\n"
+  "  out[5] -= tmp[1]*src[0] + tmp[6]*src[2] + tmp[9]*src[3];\n"
+  "  out[6]  = tmp[3]*src[0] + tmp[6]*src[1] + tmp[11]*src[3];\n"
+  "  out[6] -= tmp[2]*src[0] + tmp[7]*src[1] + tmp[10]*src[3];\n"
+  "  out[7]  = tmp[4]*src[0] + tmp[9]*src[1] + tmp[10]*src[2];\n"
+  "  out[7] -= tmp[5]*src[0] + tmp[8]*src[1] + tmp[11]*src[2];\n"
+  "  /* calculate pairs for second 8 elements (cofactors) */\n"
+  "  tmp[0]  = src[2]*src[7];\n"
+  "  tmp[1]  = src[3]*src[6];\n"
+  "  tmp[2]  = src[1]*src[7];\n"
+  "  tmp[3]  = src[3]*src[5];\n"
+  "  tmp[4]  = src[1]*src[6];\n"
+  "  tmp[5]  = src[2]*src[5];\n"
+  "  tmp[6]  = src[0]*src[7];\n"
+  "  tmp[7]  = src[3]*src[4];\n"
+  "  tmp[8]  = src[0]*src[6];\n"
+  "  tmp[9]  = src[2]*src[4];\n"
+  "  tmp[10] = src[0]*src[5];\n"
+  "  tmp[11] = src[1]*src[4];\n"
+  "  /* calculate second 8 elements (cofactors) */\n"
+  "  out[8]  = tmp[0]*src[13] + tmp[3]*src[14] + tmp[4]*src[15];\n"
+  "  out[8] -= tmp[1]*src[13] + tmp[2]*src[14] + tmp[5]*src[15];\n"
+  "  out[9]  = tmp[1]*src[12] + tmp[6]*src[14] + tmp[9]*src[15];\n"
+  "  out[9] -= tmp[0]*src[12] + tmp[7]*src[14] + tmp[8]*src[15];\n"
+  "  out[10] = tmp[2]*src[12] + tmp[7]*src[13] + tmp[10]*src[15];\n"
+  "  out[10]-= tmp[3]*src[12] + tmp[6]*src[13] + tmp[11]*src[15];\n"
+  "  out[11] = tmp[5]*src[12] + tmp[8]*src[13] + tmp[11]*src[14];\n"
+  "  out[11]-= tmp[4]*src[12] + tmp[9]*src[13] + tmp[10]*src[14];\n"
+  "  out[12] = tmp[2]*src[10] + tmp[5]*src[11] + tmp[1]*src[9];\n"
+  "  out[12]-= tmp[4]*src[11] + tmp[0]*src[9] + tmp[3]*src[10];\n"
+  "  out[13] = tmp[8]*src[11] + tmp[0]*src[8] + tmp[7]*src[10];\n"
+  "  out[13]-= tmp[6]*src[10] + tmp[9]*src[11] + tmp[1]*src[8];\n"
+  "  out[14] = tmp[6]*src[9] + tmp[11]*src[11] + tmp[3]*src[8];\n"
+  "  out[14]-= tmp[10]*src[11] + tmp[2]*src[8] + tmp[7]*src[9];\n"
+  "  out[15] = tmp[10]*src[10] + tmp[4]*src[8] + tmp[9]*src[9];\n"
+  "  out[15]-= tmp[8]*src[9] + tmp[11]*src[10] + tmp[5]*src[8];\n"
+  "  /* calculate determinant */\n"
+  "  var det=src[0]*out[0]+src[1]*out[1]+src[2]*out[2]+src[3]*out[3];\n"
+  "  /* calculate matrix inverse */\n"
+  "  det = 1 / det;\n"
+  "  for (var j = 0; j < 16; ++j )\n"
+  "   out[j] *= det;\n"
+  "\n"
+  "  return out ;\n"
+  "};\n"
+  "\n" ;
 
-    // translation
-    file << "mat44.createTranslationMatrix = function( dx , dy , dz )" << std::endl ; 
-    file << "{" << std::endl ; 
-    file << "  var out = new Float32Array( 16 ) ; " << std::endl ; 
-    file << std::endl ; 
-    file << "  out[0] = 1 ;" << std::endl ; 
-    file << "  out[1] = 0 ;" << std::endl ; 
-    file << "  out[2] = 0 ; " << std::endl ; 
-    file << "  out[3] = 0 ; " << std::endl ; 
-    file << std::endl ; 
-    file << "  out[4] = 0 ;" << std::endl ; 
-    file << "  out[5] = 1 ;" << std::endl ; 
-    file << "  out[6] = 0 ;" << std::endl ; 
-    file << "  out[7] = 0 ;" << std::endl ; 
-    file << std::endl ; 
-    file << "  out[8] = 0 ;" << std::endl ; 
-    file << "  out[9] = 0 ;" << std::endl ; 
-    file << "  out[10] = 1 ;" << std::endl ; 
-    file << "  out[11] = 0 ; " << std::endl ; 
-    file << std::endl ; 
-    file << "  out[12] = dx ;" << std::endl ; 
-    file << "  out[13] = dy ;" << std::endl ; 
-    file << "  out[14] = dz ;" << std::endl ; 
-    file << "  out[15] = 1 ; " << std::endl ; 
-    file << std::endl ; 
-    file << "  return out ; " << std::endl ; 
-    file << "  };" << std::endl ; 
+  const char * const kTranslationMatrix =
+  "/* Translation matrix */\n"
+  "mat44.createTranslationMatrix = function( dx , dy , dz )\n"
+  "{\n"
+  "  var out = new Float32Array( 16 ) ;\n"
+  "\n"
+  "  out[0] = 1.0 ;\n"
+  "  out[1] = 0.0 ;\n"
+  "  out[2] = 0.0 ;\n"
+  "  out[3] = 0.0 ;\n"
+  "\n"
+  "  out[4] = 0.0 ;\n"
+  "  out[5] = 1.0 ;\n"
+  "  out[6] = 0.0 ;\n"
+  "  out[7] = 0.0 ;\n"
+  "\n"
+  "  out[8] = 0.0 ;\n"
+  "  out[9] = 0.0 ;\n"
+  "  out[10] = 1.0 ;\n"
+  "  out[11] = 0.0 ;\n"
+  "\n"
+  "  out[12] = dx ;\n"
+  "  out[13] = dy ;\n"
+  "  out[14] = dz ;\n"
+  "  out[15] = 1.0 ;\n"
+  "\n"
+  "  return out ;\n"
+  "};\n"
+  "\n" ;
 
-    // rotation Y
-    file << "mat44.createRotateYMatrix = function( angle_rad )" << std::endl ; 
-	file << "{" << std::endl ; 
-	file << "  var angle = deg_to_rad( angle_rad ) ;" << std::endl ; 
-	file << "  var s = Math.sin( angle_rad ) ;" << std::endl ; 
-	file << "  var c = Math.cos( angle_rad ) ; " << std::endl ; 
-	file << "  var out = new Float32Array( 16 ) ;" << std::endl ; 
-	file << std::endl ; 
-	file << "  out[0] = c ;" << std::endl ; 
-	file << "  out[1] = 0 ;" << std::endl ; 
-	file << "  out[2] = s ;" << std::endl ; 
-	file << "  out[3] = 0 ;" << std::endl ; 
-	file << std::endl ;
-	file << "  out[4] = 0 ;" << std::endl ; 
-	file << "  out[5] = 1 ;" << std::endl ; 
-	file << "  out[6] = 0 ;" << std::endl ;  
-	file << "  out[7] = 0 ;" << std::endl ; 
-	file << std::endl ;
-	file << "  out[8] = -s ;" << std::endl ;  
-	file << "  out[9] = 0 ;" << std::endl ; 
-	file << "  out[10] = c ;" << std::endl ; 
-	file << "  out[11] = 0 ;" << std::endl ;  
-	file << std::endl ;
-	file << "  out[12] = 0 ;" << std::endl ; 
-	file << "  out[13] = 0 ;" << std::endl ; 
-	file << "  out[14] = 0 ;" << std::endl ; 
-	file << "  out[15] = 1 ;" << std::endl ;  
-	file << std::endl ;
-	file << "  return out ;" << std::endl ;  
-	file << "};" << std::endl ; 
+  const char * const kRotationYMatrix = 
+  "/* Rotation about y axis - angle_rad is rotation angle in radian*/\n"
+  "mat44.createRotateYMatrix = function( angle_rad )\n"
+  "{\n"
+  "  var s = Math.sin( angle_rad ) ;\n"
+  "  var c = Math.cos( angle_rad ) ;\n"
+  "  var out = new Float32Array( 16 ) ;\n"
+  "\n"
+  "  out[0] = c ;\n"
+  "  out[1] = 0 ;\n"
+  "  out[2] = s ;\n"
+  "  out[3] = 0 ;\n"
+  "\n"
+  "  out[4] = 0.0 ;\n"
+  "  out[5] = 1.0 ;\n"
+  "  out[6] = 0.0 ;\n"
+  "  out[7] = 0.0 ;\n"
+  "\n"
+  "  out[8] = -s ;\n"
+  "  out[9] = 0.0 ;\n"
+  "  out[10] = c ;\n"
+  "  out[11] = 0.0 ;\n"
+  "\n"
+  "  out[12] = 0.0 ;\n"
+  "  out[13] = 0.0 ;\n"
+  "  out[14] = 0.0 ;\n"
+  "  out[15] = 1.0 ;\n"
+  "\n"
+  "  return out ;\n"
+  "};\n"
+  "\n" ;
 
-	file.close() ; 
+  file << kStandardVectorOperations ;
+  file << kMatrixClass ;
+  file << kLookAtMatrix ; 
+  file << kPerspectiveMatrix ; 
+  file << kMatrixMultiplication ; 
+  file << kMatrixInversion ; 
+  file << kTranslationMatrix ; 
+  file << kRotationYMatrix ; 
+
+  file.close() ; 
 }
 
+
+/** 
+  * Write main WebGL script code 
+  * @param file_name output file name 
+  */
 void writeMainWebGLFile( const std::string & file_name )
 {
 	std::ofstream file( file_name.c_str() ) ;
@@ -632,92 +711,114 @@ void writeMainWebGLFile( const std::string & file_name )
 		exit( EXIT_FAILURE ) ; 
 	}
 
-	file << "var gl ;" << std::endl;
-	file << std::endl ; 
-	file << "var pointShaderProgram ;" << std::endl ; 
-	file << "var lineShaderProgram ;" << std::endl ; 
-	file << "var surfaceShaderProgram ;" << std::endl ; 
-	file << std::endl ; 
-	file << "var pCloud ;" << std::endl	;
-	file << std::endl ; 
+  const char * const kGlobalVariables = 
+  "/* WebGL Context */\n"
+  "var gl ;\n"
+  "\n"
+  "/* Shaders */\n"
+  "var pointShaderProgram ;\n"
+  "var surfaceShaderProgram ;\n"
+  "\n"
+  "/* Scene objects : point cloud and cameras */\n"
+  "var pCloud ;\n"
+  "var cams ;\n"
+  "\n" ;
 
-	// init canvas 	
-	file << "function initGL()" << std::endl ; 
-	file << "{" << std::endl ;
-	file << "  var canvas = document.getElementById(\"glCanvas\") ;" << std::endl ; 
-	file << "  gl         = canvas.getContext(\"webgl\") || canvas.getContext(\"experimental-webgl\") ;" << std::endl ;  
-	file << "  if( ! gl )" << std::endl ;
-	file << "  {" << std::endl ; 
-	file << "    alert(\"could not load WebGL context\");" << std::endl ; 
-	file << "    return ;" << std::endl ; 
-	file << "  }" << std::endl ;
-	file << "  setup( ) ;" << std::endl ;  
-	file << "  update( ) ;" << std::endl ; 
-	file << "}" << std::endl ; 
-	file << std::endl ; 
+  const char * const kWebGLInitialization = 
+  "/* WebGL init */\n"
+  "function initGL()\n"
+  "{\n" 
+  "  var canvas = document.getElementById(\"glCanvas\") ;\n"
+  "  gl         = canvas.getContext(\"webgl\") || canvas.getContext(\"experimental-webgl\") ;\n"
+  "  if( ! gl )\n"
+  "  {\n"
+  "    alert(\"could not load WebGL context\");\n"
+  "    return ;\n"
+  "  }\n"
+  "  setup( ) ; /* setup scene */\n"
+  "  update( ) ; /* launch main loop */\n"
+  "}\n"
+  "\n" ;
 
-	// setup rendering 
-	file << "function setup( )" << std::endl ; 
-	file << "{" << std::endl ; 
-	file << "  gl.clearColor( 0.0 , 0.0 , 0.0 , 1.0 ) ;" << std::endl ; 
-	file << "  gl.enable( gl.DEPTH_TEST ) ;" << std::endl ; 
-	file << "  gl.depthFunc( gl.LEQUAL ) ;" << std::endl ; 
-	file << std::endl ;
-	file << "  pointShaderProgram = new Shader( gl , \"point_vShader\" , \"point_fShader\" ) ;" << std::endl ; 
-	file << "  pCloud = new PointCloud( gl , pointShaderProgram , cloud_data ) ;" << std::endl ; 
-	file << "  surfaceShaderProgram = new Shader( gl , \"image_vShader\" , \"image_fShader\" ) ;" << std::endl ; 
-	file << "  cams   = new Array( cameras.length ) ;" << std::endl ; 
-	file << "  for( var i = 0 ; i < cameras.length ; ++i )" << std::endl ; 
-	file << "  {" << std::endl; 
-	file << "    cams[i] = new Camera( gl , surfaceShaderProgram , pointShaderProgram , cameras[i].position , cameras[i].imagePlane , cameras[i].imageName ) ;" << std::endl ; 
-	file << "  }" << std::endl ; 
-	file << std::endl ; 
-	file << "}" << std::endl ; 
-	file << std::endl ; 
+  const char * const kSetupWebGL = 
+  "/* setup scene */\n"
+  "function setup( )\n"
+  "{\n"
+  "  gl.clearColor( 0.0 , 0.0 , 0.0 , 1.0 ) ;\n"
+  "  gl.enable( gl.DEPTH_TEST ) ;\n"
+  "  gl.depthFunc( gl.LEQUAL ) ;\n"
+  "\n"
+  "  pointShaderProgram = new Shader( gl , \"point_vShader\" , \"point_fShader\" ) ;\n"
+  "  pCloud = new PointCloud( gl , pointShaderProgram , cloud_data ) ;\n"
+  "  surfaceShaderProgram = new Shader( gl , \"image_vShader\" , \"image_fShader\" ) ;\n"
+  "  cams   = new Array( cameras.length ) ;\n"
+  "  for( var i = 0 ; i < cameras.length ; ++i )\n"
+  "  {\n"
+  "    cams[i] = new Camera( gl , surfaceShaderProgram , pointShaderProgram , cameras[i].position , cameras[i].imagePlane , cameras[i].imageName ) ;\n"
+  "  }\n"
+  "}\n"
+  "\n" ;
 
-	// update scene (moving camera lights ...)
-	file << "function update()" << std::endl ; 
-	file << "{" << std::endl;
-	file << "  requestAnimFrame( update );" << std::endl ; 
-	file << "  var tra     = mat44.createTranslationMatrix( - scene_center[0] , - scene_center[1] , - scene_center[2] ) ;" << std::endl ; 
-	file << "  var inv_tra = mat44.createTranslationMatrix( scene_center[0] , scene_center[1] , scene_center[2] );" << std::endl;
-	file << "  var rot     = mat44.createRotateYMatrix( 0.005 ) ;" << std::endl ; 
-	file << "  var geom    = mat44.mul( tra , mat44.mul( rot , inv_tra ) );" << std::endl ; 
-	file << "  cameraModelView = mat44.mul( geom , cameraModelView ) ;" << std::endl ; 
-	file << "  render() ;" << std::endl; 
-	file << "}" << std::endl ; 
+  const char * const kMainLoop = 
+  "/* Main loop : animate then render scene */\n"
+  "function update()\n"
+  "{\n"
+  "  requestAnimFrame( update );\n"
+  "\n"
+  "  /* Rotate about center of scene */\n"
+  "  var tra     = mat44.createTranslationMatrix( - scene_center[0] , - scene_center[1] , - scene_center[2] ) ;\n"
+  "  var inv_tra = mat44.createTranslationMatrix( scene_center[0] , scene_center[1] , scene_center[2] );\n"
+  "  var rot     = mat44.createRotateYMatrix( 0.005 ) ;\n"
+  "  var geom    = mat44.mul( tra , mat44.mul( rot , inv_tra ) );\n"
+  "  cameraModelView = mat44.mul( geom , cameraModelView ) ;\n"
+  "\n"
+  "  render() ;\n"
+  "}\n"
+  "\n" ;
 
-	// render scene 
-	file << "function render( )" << std::endl ; 
-	file << "{" << std::endl ; 
-	file << "  gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT ) ;" << std::endl ;
-	file << "  pointShaderProgram.Enable( gl ) ;" << std::endl ; 
-	file << "  var mv_loc = gl.getUniformLocation( pointShaderProgram.shad , \"uModelViewMatrix\" ) ;" << std::endl ; 
-	file << "  var pj_loc = gl.getUniformLocation( pointShaderProgram.shad , \"uProjectionMatrix\" ) ;" << std::endl ; 
-	file << "  gl.uniformMatrix4fv( mv_loc , false , cameraModelView ) ;" << std::endl ; 
-	file << "  gl.uniformMatrix4fv( pj_loc , false , cameraProjection ) ;" << std::endl ;
-	file << "  pCloud.render( gl ) ; " << std::endl ; 
-	file << "  for( var i = 0 ; i < cameras.length ; ++i )" << std::endl ; 
-	file << "  {" << std::endl ; 
-	file << "    cams[i].renderLines( gl );" << std::endl;
-	file << "  }" << std::endl; 
-	file << "  surfaceShaderProgram.Enable( gl ) ; " << std::endl ;
-	file << "  var mv_loc = gl.getUniformLocation( surfaceShaderProgram.shad , \"uModelViewMatrix\" ) ;" << std::endl ; 
-	file << "  var pj_loc = gl.getUniformLocation( surfaceShaderProgram.shad , \"uProjectionMatrix\" ) ;" << std::endl ; 
-	file << "  gl.uniformMatrix4fv( mv_loc , false , cameraModelView ) ;" << std::endl ; 
-	file << "  gl.uniformMatrix4fv( pj_loc , false , cameraProjection ) ;" << std::endl ;	 
-	file << "  for( var i = 0 ; i < cameras.length ; ++i )" << std::endl ; 
-	file << "  {" << std::endl; 
-	file << "    cams[i].render( gl ) ;" << std::endl ; 
-	file << "  }" << std::endl ; 
-	file << "}" << std::endl ; 
+  const char * const kRenderFunction = 
+  "/* Rendering function */\n"
+  "function render( )\n"
+  "{\n" 
+  "  gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT ) ;\n"
+  "\n"
+  "  pointShaderProgram.Enable( gl ) ;\n"
+  "  var mv_loc = gl.getUniformLocation( pointShaderProgram.shad , \"uModelViewMatrix\" ) ;\n"
+  "  var pj_loc = gl.getUniformLocation( pointShaderProgram.shad , \"uProjectionMatrix\" ) ;\n"
+  "  gl.uniformMatrix4fv( mv_loc , false , cameraModelView ) ;\n"
+  "  gl.uniformMatrix4fv( pj_loc , false , cameraProjection ) ;\n"
+  "  pCloud.render( gl ) ;\n"
+  "  for( var i = 0 ; i < cameras.length ; ++i )\n"
+  "  {\n"
+  "    cams[i].renderLines( gl );\n"
+  "  }\n"
+  "  surfaceShaderProgram.Enable( gl ) ; \n"
+  "  var mv_loc = gl.getUniformLocation( surfaceShaderProgram.shad , \"uModelViewMatrix\" ) ;\n"
+  "  var pj_loc = gl.getUniformLocation( surfaceShaderProgram.shad , \"uProjectionMatrix\" ) ;\n"
+  "  gl.uniformMatrix4fv( mv_loc , false , cameraModelView ) ;\n"
+  "  gl.uniformMatrix4fv( pj_loc , false , cameraProjection ) ;\n"
+  "  for( var i = 0 ; i < cameras.length ; ++i )\n"
+  "  {\n"
+  "    cams[i].render( gl ) ;\n"
+  "  }\n"
+  "}\n"
+  "\n" ;
 
-
+  file << kGlobalVariables ; 
+  file << kWebGLInitialization ; 
+  file << kSetupWebGL ; 
+  file << kMainLoop ; 
+  file << kRenderFunction ; 
 
 	file.close() ;
 }
 
-void WriteCameraFile( Document & doc , const std::string & file_name ) 
+
+/** 
+ * Write camera object class file 
+ * @param file_name output file name 
+ */
+void WriteCameraFile( const std::string & file_name ) 
 {
 	std::ofstream file( file_name.c_str() ) ;
 	if( ! file.good() )
@@ -726,155 +827,163 @@ void WriteCameraFile( Document & doc , const std::string & file_name )
 		exit( EXIT_FAILURE ) ; 
 	}
 
-	// camera class 
-	file<< "function Camera( aGLContext , aShader , aShaderLine , aPosition , aPlanePos , aFileName )" << std::endl ; 
-	file<< "{" << std::endl ; 
-	file<< "  this.pos           = aPosition ;" << std::endl ; 
-	file<< "  this.planePos      = aPlanePos ;" << std::endl ;  
-	file<< "  this.shader        = aShader ;" << std::endl ;
-	file<< "  this.shaderLines   = aShaderLine;" << std::endl ;  
-	file<< "  this.imageFileName = aFileName ;" << std::endl ; 
-	file<< std::endl ; 
-	file<< "  // array = 2 triangles : 0 1 2 - 0 2 3" << std::endl ; 
-	file<< "  var buff_img = new Float32Array( 30 ) ;" << std::endl ; 
-	file<< std::endl ; 
-	file<< "  // 0 " << std::endl ; 
-	file<< "  buff_img[0] = aPlanePos[0] ;" << std::endl ; 
-	file<< "  buff_img[1] = aPlanePos[1] ;" << std::endl ; 
-	file<< "  buff_img[2] = aPlanePos[2] ;" << std::endl ; 
-	file<< "  buff_img[3] = 0.0 ;" << std::endl ; 
-	file<< "  buff_img[4] = 0.0 ;" << std::endl ; 
-	file<< std::endl ; 
-	file<< "  // 1 " << std::endl ; 
-	file<< "  buff_img[5] = aPlanePos[3] ;" << std::endl ; 
-	file<< "  buff_img[6] = aPlanePos[4] ;" << std::endl ; 
-	file<< "  buff_img[7] = aPlanePos[5] ;" << std::endl ; 
-	file<< "  buff_img[8] = 1.0 ;" << std::endl ; 
-	file<< "  buff_img[9] = 0.0 ;" << std::endl ; 
-	file<< std::endl ; 
-	file<< "  // 2" << std::endl ; 
-	file<< "  buff_img[10] = aPlanePos[6] ;" << std::endl ; 
-	file<< "  buff_img[11] = aPlanePos[7] ;" << std::endl ; 
-	file<< "  buff_img[12] = aPlanePos[8] ;" << std::endl ; 
-	file<< "  buff_img[13] = 1.0 ;" << std::endl ; 
-	file<< "  buff_img[14] = 1.0 ;" << std::endl ; 
-	file<< std::endl ; 
-	file<< "  // 0 " << std::endl ; 
-	file<< "  buff_img[15] = aPlanePos[0] ;" << std::endl ; 
-	file<< "  buff_img[16] = aPlanePos[1] ;" << std::endl ; 
-	file<< "  buff_img[17] = aPlanePos[2] ;" << std::endl ; 
-	file<< "  buff_img[18] = 0.0 ;" << std::endl ; 
-	file<< "  buff_img[19] = 0.0 ;" << std::endl ; 
-	file<< std::endl ; 
-	file<< "  // 2" << std::endl ; 
-	file<< "  buff_img[20] = aPlanePos[6] ;" << std::endl ; 
-	file<< "  buff_img[21] = aPlanePos[7] ;" << std::endl ; 
-	file<< "  buff_img[22] = aPlanePos[8] ;" << std::endl ; 
-	file<< "  buff_img[23] = 1.0 ;" << std::endl ; 
-	file<< "  buff_img[24] = 1.0 ;" << std::endl ; 
-	file<< std::endl ; 
-	file<< "  // 3 " << std::endl ; 
-	file<< "  buff_img[25] = aPlanePos[9] ;" << std::endl ; 
-	file<< "  buff_img[26] = aPlanePos[10] ;" << std::endl ; 
-	file<< "  buff_img[27] = aPlanePos[11] ;" << std::endl ; 
-	file<< "  buff_img[28] = 0.0 ;" << std::endl ; 
-	file<< "  buff_img[29] = 1.0 ;" << std::endl ; 
-	file<< std::endl ; 
-	file<< "  var buff_lines = new Float32Array( 24 )" << std::endl ; 
-	file<< "  buff_lines[0] = aPosition[0] ;" << std::endl ; 
-	file<< "  buff_lines[1] = aPosition[1] ;" << std::endl ; 
-	file<< "  buff_lines[2] = aPosition[2] ;" << std::endl ; 
+  const char * const kCameraConstructor = 
+  "function Camera( aGLContext , aShader , aShaderLine , aPosition , aPlanePos , aFileName )\n"
+  "{\n" 
+  "  this.pos           = aPosition ;\n"
+  "  this.planePos      = aPlanePos ;\n"
+  "  this.shader        = aShader ;\n"
+  "  this.shaderLines   = aShaderLine;\n"
+  "  this.imageFileName = aFileName ;\n"
+  "\n"
+  "  /* Build Image plane geometry */\n"
+  "  // array = 2 triangles : 0 1 2 - 0 2 3\n"
+  "  var buff_img = new Float32Array( 30 ) ;\n"
+  "\n"
+  "  // 0\n"
+  "  buff_img[0] = aPlanePos[0] ;\n"
+  "  buff_img[1] = aPlanePos[1] ;\n"
+  "  buff_img[2] = aPlanePos[2] ;\n"
+  "  buff_img[3] = 0.0 ;\n"
+  "  buff_img[4] = 0.0 ;\n"
+  "\n"
+  "  // 1\n"
+  "  buff_img[5] = aPlanePos[3] ;\n"
+  "  buff_img[6] = aPlanePos[4] ;\n"
+  "  buff_img[7] = aPlanePos[5] ;\n"
+  "  buff_img[8] = 1.0 ;\n"
+  "  buff_img[9] = 0.0 ;\n"
+  "\n"
+  "  // 2\n"
+  "  buff_img[10] = aPlanePos[6] ;\n"
+  "  buff_img[11] = aPlanePos[7] ;\n"
+  "  buff_img[12] = aPlanePos[8] ;\n"
+  "  buff_img[13] = 1.0 ;\n"
+  "  buff_img[14] = 1.0 ;\n"
+  "\n"
+  "  // 0\n"
+  "  buff_img[15] = aPlanePos[0] ;\n"
+  "  buff_img[16] = aPlanePos[1] ;\n"
+  "  buff_img[17] = aPlanePos[2] ;\n"
+  "  buff_img[18] = 0.0 ;\n"
+  "  buff_img[19] = 0.0 ;\n"
+  "\n"
+  "  // 2\n"
+  "  buff_img[20] = aPlanePos[6] ;\n" 
+  "  buff_img[21] = aPlanePos[7] ;\n"
+  "  buff_img[22] = aPlanePos[8] ;\n"
+  "  buff_img[23] = 1.0 ;\n"
+  "  buff_img[24] = 1.0 ;\n"
+  "\n"
+  "  // 3\n"
+  "  buff_img[25] = aPlanePos[9] ;\n"
+  "  buff_img[26] = aPlanePos[10] ;\n"
+  "  buff_img[27] = aPlanePos[11] ;\n"
+  "  buff_img[28] = 0.0 ;\n"
+  "  buff_img[29] = 1.0 ;\n"
+  "\n"
+  "  var buff_lines = new Float32Array( 24 ) ;\n"
+  "  buff_lines[0] = aPosition[0] ;\n"
+  "  buff_lines[1] = aPosition[1] ;\n"
+  "  buff_lines[2] = aPosition[2] ;\n"
+  "  buff_lines[3] = aPlanePos[0] ;\n"
+  "  buff_lines[4] = aPlanePos[1] ;\n"
+  "  buff_lines[5] = aPlanePos[2] ;\n"
+  "  buff_lines[6] = aPosition[0] ;\n"
+  "  buff_lines[7] = aPosition[1] ;\n"
+  "  buff_lines[8] = aPosition[2] ;\n"
+  "  buff_lines[9] = aPlanePos[3] ;\n"
+  "  buff_lines[10] = aPlanePos[4] ;\n"
+  "  buff_lines[11] = aPlanePos[5] ;\n"
+  "  buff_lines[12] = aPosition[0] ;\n"
+  "  buff_lines[13] = aPosition[1] ;\n"
+  "  buff_lines[14] = aPosition[2] ;\n"
+  "  buff_lines[15] = aPlanePos[6] ;\n"
+  "  buff_lines[16] = aPlanePos[7] ;\n"
+  "  buff_lines[17] = aPlanePos[8] ;\n"
+  "  buff_lines[18] = aPosition[0] ;\n"
+  "  buff_lines[19] = aPosition[1] ;\n"
+  "  buff_lines[20] = aPosition[2] ;\n"
+  "  buff_lines[21] = aPlanePos[9] ;\n"
+  "  buff_lines[22] = aPlanePos[10] ;\n"
+  "  buff_lines[23] = aPlanePos[11] ;\n"
+  "  // create vbo\n"
+  "  this.vbo = aGLContext.createBuffer() ;\n"
+  "  aGLContext.bindBuffer( aGLContext.ARRAY_BUFFER , this.vbo ) ;\n"
+  "  aGLContext.bufferData( aGLContext.ARRAY_BUFFER , buff_img , aGLContext.STATIC_DRAW ) ;\n"
+  "\n"
+  "  this.vboLines = aGLContext.createBuffer() ;\n"
+  "  aGLContext.bindBuffer( aGLContext.ARRAY_BUFFER , this.vboLines ) ;\n"
+  "  aGLContext.bufferData( aGLContext.ARRAY_BUFFER , buff_lines , aGLContext.STATIC_DRAW ) ;\n"
+  "  // create texture file\n"
+  "  var tex       = gl.createTexture() ;\n"
+  "  var img = new Image() ;\n"
+  "  this.tex = tex ;\n"
+  "  this.img = img ;\n"
+  "  img.onload    = function() { handleTexture( aGLContext , img , tex ); } ;"
+  "  img.src       = aFileName ;\n"
+  "  this.nbelt     = 6 ;\n"
+  "}\n"
+  "\n";
 
-	file<< "  buff_lines[3] = aPlanePos[0] ;" << std::endl ; 
-	file<< "  buff_lines[4] = aPlanePos[1] ;" << std::endl ; 
-	file<< "  buff_lines[5] = aPlanePos[2] ;" << std::endl ; 
+  const char * const kTextureHandling =
+  "/* texture handling */\n"
+  "function handleTexture( aGLContext , anImage , aTexture )\n" 
+  "{\n" 
+  "  aGLContext.bindTexture(aGLContext.TEXTURE_2D, aTexture);\n"
+  "  aGLContext.texImage2D(aGLContext.TEXTURE_2D, 0, aGLContext.RGBA, aGLContext.RGBA, aGLContext.UNSIGNED_BYTE, anImage);\n"
+  "  aGLContext.texParameteri(aGLContext.TEXTURE_2D, aGLContext.TEXTURE_MAG_FILTER, aGLContext.LINEAR);\n"
+  "  aGLContext.texParameteri(aGLContext.TEXTURE_2D, aGLContext.TEXTURE_MIN_FILTER, aGLContext.LINEAR);\n"
+  "  aGLContext.texParameteri(aGLContext.TEXTURE_2D, aGLContext.TEXTURE_WRAP_S, aGLContext.CLAMP_TO_EDGE);\n"
+  "  aGLContext.texParameteri(aGLContext.TEXTURE_2D, aGLContext.TEXTURE_WRAP_T, aGLContext.CLAMP_TO_EDGE);\n"
+  "  aGLContext.bindTexture(aGLContext.TEXTURE_2D, null);\n"
+  "}\n"
+  "\n" ;
 
-	file<< "  buff_lines[6] = aPosition[0] ;" << std::endl ; 
-	file<< "  buff_lines[7] = aPosition[1] ;" << std::endl ; 
-	file<< "  buff_lines[8] = aPosition[2] ;" << std::endl ; 
+  const char * const kRenderImage = 
+  "/* Main rendering function (ie render image plane) */\n"
+  "Camera.prototype.render = function( aGLContext )\n" 
+  "{\n"
+  "  aGLContext.bindBuffer( aGLContext.ARRAY_BUFFER , this.vbo ) ;\n"
+  "\n"
+  "  aGLContext.enableVertexAttribArray( this.shader.attribPos ) ;\n"
+  "  aGLContext.enableVertexAttribArray( this.shader.attribTex ) ;\n"
+  "\n"
+  "  aGLContext.vertexAttribPointer( this.shader.attribPos , 3 , aGLContext.FLOAT , false , 20 , 0 ) ;\n"
+  "  aGLContext.vertexAttribPointer( this.shader.attribTex , 2 , aGLContext.FLOAT , false , 20 , 12 ) ;\n"
+  "\n"
+  "  aGLContext.activeTexture(aGLContext.TEXTURE0);\n"
+  "  aGLContext.bindTexture(aGLContext.TEXTURE_2D, this.tex);\n"
+  "  aGLContext.uniform1i(aGLContext.getUniformLocation(this.shader.shad, \"uSampler\"), 0);\n"
+  "\n"
+  "  aGLContext.drawArrays( aGLContext.TRIANGLES , 0 , this.nbelt ) ;\n"
+  "}\n"
+  "\n";
 
-	file<< "  buff_lines[9] = aPlanePos[3] ;" << std::endl ; 
-	file<< "  buff_lines[10] = aPlanePos[4] ;" << std::endl ; 
-	file<< "  buff_lines[11] = aPlanePos[5] ;" << std::endl ; 
+  const char * const kRenderLines = 
+  "/* Render camera structure (ie support lines)*/\n"
+  "Camera.prototype.renderLines = function( aGLContext )\n"
+  "{\n" 
+  "  aGLContext.bindBuffer( aGLContext.ARRAY_BUFFER , this.vboLines ) ;\n"
+  "  aGLContext.enableVertexAttribArray( this.shaderLines.attribPos ) ;\n" 
+  "  aGLContext.vertexAttribPointer( this.shaderLines.attribPos , 3 , aGLContext.FLOAT , false , 12 , 0 ) ;\n"
+  "\n"
+  "  aGLContext.drawArrays( aGLContext.LINES , 0 , 8 ) ;\n"
+  "}\n"
+  "\n" ;
 
-	file<< "  buff_lines[12] = aPosition[0] ;" << std::endl ; 
-	file<< "  buff_lines[13] = aPosition[1] ;" << std::endl ; 
-	file<< "  buff_lines[14] = aPosition[2] ;" << std::endl ; 
+  file << kCameraConstructor ;
+  file << kTextureHandling ; 
+  file << kRenderImage ; 
+  file << kRenderLines ; 
 
-	file<< "  buff_lines[15] = aPlanePos[6] ;" << std::endl ; 
-	file<< "  buff_lines[16] = aPlanePos[7] ;" << std::endl ; 
-	file<< "  buff_lines[17] = aPlanePos[8] ;" << std::endl ; 
-
-
-	file<< "  buff_lines[18] = aPosition[0] ;" << std::endl ; 
-	file<< "  buff_lines[19] = aPosition[1] ;" << std::endl ; 
-	file<< "  buff_lines[20] = aPosition[2] ;" << std::endl ; 
-
-	file<< "  buff_lines[21] = aPlanePos[9] ;" << std::endl ; 
-	file<< "  buff_lines[22] = aPlanePos[10] ;" << std::endl ; 
-	file<< "  buff_lines[23] = aPlanePos[11] ;" << std::endl ; 
-
-	file<< "  // create shader" << std::endl ; 
-	file<< "  this.vbo = aGLContext.createBuffer() ; " << std::endl ; 
-	file<< "  aGLContext.bindBuffer( aGLContext.ARRAY_BUFFER , this.vbo ) ;" << std::endl ; 
-	file<< "  aGLContext.bufferData( aGLContext.ARRAY_BUFFER , buff_img , aGLContext.STATIC_DRAW ) ;" << std::endl ; 
-	file<< std::endl ; 
-	file<< "  this.vboLines = aGLContext.createBuffer() ; " << std::endl ; 
-	file<< "  aGLContext.bindBuffer( aGLContext.ARRAY_BUFFER , this.vboLines ) ;" << std::endl;
-	file<< "  aGLContext.bufferData( aGLContext.ARRAY_BUFFER , buff_lines , aGLContext.STATIC_DRAW ) ;" << std::endl ; 
-	file<< "  // create texture file " << std::endl ; 
-	file<< "  var tex       = gl.createTexture() ; " << std::endl ; 
-	file<< "  var img = new Image() ;" << std::endl ; 
-	file<< "  this.tex = tex ; " << std::endl ; 
-	file<< "  this.img = img ; " << std::endl ; 
-	file<< "  img.onload    = function() { handleTexture( aGLContext , img , tex ); } ;" << std::endl ;
-  	file<< "  img.src       = aFileName ;" << std::endl ; 
-  	file<< "  this.nbelt     = 6 ; " << std::endl ; 
-  	file<< "}" << std::endl ; 
-  	file<< std::endl ; 
-  	file<< "function handleTexture( aGLContext , anImage , aTexture )" << std::endl ; 
-  	file<< "{" << std::endl ; 
-  	file<< "  aGLContext.bindTexture(aGLContext.TEXTURE_2D, aTexture);" << std::endl ; 
-	file<< "  aGLContext.texImage2D(aGLContext.TEXTURE_2D, 0, aGLContext.RGBA, aGLContext.RGBA, aGLContext.UNSIGNED_BYTE, anImage);" << std::endl ; 
-	file<< "  aGLContext.texParameteri(aGLContext.TEXTURE_2D, aGLContext.TEXTURE_MAG_FILTER, aGLContext.LINEAR);" << std::endl ; 
-	file<< "  aGLContext.texParameteri(aGLContext.TEXTURE_2D, aGLContext.TEXTURE_MIN_FILTER, aGLContext.LINEAR);" << std::endl ; 
-	file<< "  aGLContext.texParameteri(aGLContext.TEXTURE_2D, aGLContext.TEXTURE_WRAP_S, aGLContext.CLAMP_TO_EDGE);" << std::endl ; 
-	file<< "  aGLContext.texParameteri(aGLContext.TEXTURE_2D, aGLContext.TEXTURE_WRAP_T, aGLContext.CLAMP_TO_EDGE);" << std::endl ; 
-//	file<< "  aGLContext.texParameteri(aGLContext.TEXTURE_2D, aGLContext.TEXTURE_MIN_FILTER, aGLContext.LINEAR_MIPMAP_NEAREST);" << std::endl ; 
-//	file<< "  aGLContext.generateMipmap(aGLContext.TEXTURE_2D);" << std::endl ; 
-	file<< "  aGLContext.bindTexture(aGLContext.TEXTURE_2D, null);" << std::endl ; 
-	file<< "}" << std::endl ; 
-	file<< std::endl ; 
-	file<< "Camera.prototype.render = function( aGLContext )" << std::endl ; 
-	file<< "{" << std::endl ; 
-	file<< "  aGLContext.bindBuffer( aGLContext.ARRAY_BUFFER , this.vbo ) ;" << std::endl ; 
-	file<< std::endl ; 
-	file<< "  aGLContext.enableVertexAttribArray( this.shader.attribPos ) ;" << std::endl ; 
-	file<< "  aGLContext.enableVertexAttribArray( this.shader.attribTex ) ;" << std::endl ; 
-	file<< std::endl ; 
-	file<< "  aGLContext.vertexAttribPointer( this.shader.attribPos , 3 , aGLContext.FLOAT , false , 20 , 0 ) ;" << std::endl ; 
-	file<< "  aGLContext.vertexAttribPointer( this.shader.attribTex , 2 , aGLContext.FLOAT , false , 20 , 12 ) ;" << std::endl ; 
-	file<< std::endl ; 
-	file << "  aGLContext.activeTexture(aGLContext.TEXTURE0);" << std::endl ; 
-	file << "  aGLContext.bindTexture(aGLContext.TEXTURE_2D, this.tex);" << std::endl ; 
-  	file << "  aGLContext.uniform1i(aGLContext.getUniformLocation(this.shader.shad, \"uSampler\"), 0);" << std::endl ; 
-  	file << std::endl ; 
-	file<< "  aGLContext.drawArrays( aGLContext.TRIANGLES , 0 , this.nbelt ) ;" << std::endl ; 
-	file<< "}" << std::endl ; 
-	file<< std::endl ; 
-	file<< "Camera.prototype.renderLines = function( aGLContext )" << std::endl ; 
-	file<< "{" << std::endl ; 
-	file<< "  aGLContext.bindBuffer( aGLContext.ARRAY_BUFFER , this.vboLines ) ;" << std::endl ;
-	file<< "  aGLContext.enableVertexAttribArray( this.shaderLines.attribPos ) ;" << std::endl ; 
-	file<< "  aGLContext.vertexAttribPointer( this.shaderLines.attribPos , 3 , aGLContext.FLOAT , false , 12 , 0 ) ;" << std::endl ; 
-	file<< "  aGLContext.drawArrays( aGLContext.LINES , 0 , 8 ) ;" << std::endl ; 
-	file<< "}" << std::endl ;
-
-
-
-	file.close() ; 
+  file.close() ; 
 }
 
+/**
+* Write shader file 
+* @param file_name output file name 
+*/
 void writeShaderFile( const std::string & file_name )
 {
 	std::ofstream file( file_name.c_str() ) ;
@@ -884,73 +993,97 @@ void writeShaderFile( const std::string & file_name )
 		exit( EXIT_FAILURE ) ; 
 	}
 
-	file << "function Shader( aGLContext , aVertexID , aFragID )" << std::endl ; 
-	file << "{" << std::endl ; 
-	file << "  this.shad = setupShader( aGLContext , aVertexID , aFragID ) ; " << std::endl ; 
-	file << std::endl ; 
-	file << "  this.attribPos = aGLContext.getAttribLocation( this.shad , \"aPosition\" ) ;" << std::endl ; 
-	file << "  this.attribTex = aGLContext.getAttribLocation( this.shad , \"aTexCoord\" ) ;" << std::endl ; 
-    file << "  this.attribNor = aGLContext.getAttribLocation( this.shad , \"aNormal\" ) ;" << std::endl ;  
-  	file << "  this.attribCol = aGLContext.getAttribLocation( this.shad , \"aColor\" ) ;" << std::endl ; 
-  	file << "}" << std::endl ; 
-  	file << std::endl ; 
-  	file << "Shader.prototype.Enable = function( aGLContext )" << std::endl ; 
-  	file << "{" << std::endl ; 
-  	file << "  aGLContext.useProgram( this.shad ) ;" << std::endl ; 
-  	file << "}" << std::endl ; 
-  	file << std::endl ; 
-  	file << "Shader.prototype.Disable = function( aGLContext )" << std::endl ;
-  	file << "{" << std::endl ; 
-  	file << "  aGLContext.useProgram( 0 ) ;" << std::endl ; 
-  	file << "}" << std::endl ;  
-  	file << std::endl ; 
-	file << "function compileShader( aGLContext , aShaderSource , aShaderType )" << std::endl ; 
-	file << "{" << std::endl ; 
-	file << "  var shad = aGLContext.createShader( aShaderType ) ;" << std::endl ; 
-	file << "  aGLContext.shaderSource( shad , aShaderSource ) ;" << std::endl ; 
-	file << "  aGLContext.compileShader( shad ) ;" << std::endl ; 
-	file << std::endl ; 
-	file << "  var ok = aGLContext.getShaderParameter( shad , aGLContext.COMPILE_STATUS ) ;" << std::endl ;
-	file << "  if( ! ok )" << std::endl ; 
-	file << "  {" << std::endl ; 
-	file << "    throw \"could not compile shader : \" + aGLContext.getShaderInfoLog( shad ) ;" << std::endl ; 
-	file << "  }" << std::endl ; 
-	file << std::endl ; 
-	file << "  return shad ;" << std::endl ; 
-	file << "}" << std::endl ; 
-	file << std::endl ; 
-	file << "function setupShader( aGLContext , aVertexID , aFragID )" << std::endl ; 
-	file << "{" << std::endl ;
-	file << "  var vElt = document.getElementById( aVertexID ) ;" << std::endl ; 
-	file << "  if( ! vElt )" << std::endl ; 
-	file << "  {" << std::endl ;
-	file << "    throw \"could not find vertex shader\" + aVertexID ;" << std::endl ; 
-	file << "  }" << std::endl ; 
-	file << "  var vStr  = vElt.text ;" << std::endl ;
-	file << "  var vShad = compileShader( aGLContext , vStr , aGLContext.VERTEX_SHADER ) ;" << std::endl ; 
-	file << "  var fElt = document.getElementById( aFragID ) ;" << std::endl ; 
-	file << "  if( ! fElt )" << std::endl ; 
-	file << "  {" << std::endl ; 
-	file << "    throw \"could not find fragment shader \" + aFragID ;" << std::endl ; 
-	file << "  }" << std::endl ; 
-	file << "  var fStr  = fElt.text ;" << std::endl ; 
-	file << "  var fShad = compileShader( aGLContext , fStr , aGLContext.FRAGMENT_SHADER ) ;" << std::endl ; 
-	file << "  var pgm = aGLContext.createProgram( ) ;" << std::endl ; 
-	file << "  aGLContext.attachShader( pgm , vShad ) ;" << std::endl ; 
-	file << "  aGLContext.attachShader( pgm , fShad ) ;" << std::endl ; 
-	file << "  aGLContext.linkProgram( pgm ) ;" << std::endl ; 
-	file << "  var ok = aGLContext.getProgramParameter( pgm , aGLContext.LINK_STATUS ) ;" << std::endl ; 
-	file << "  if( ! ok )" << std::endl ; 
-	file << "  {" << std::endl ; 
-	file << "    throw \"pgm failed to link\" + aGLContext.getProgramInfoLog( pgm ) ;" << std::endl ; 
-	file << "  }" << std::endl ; 
-	file << "  return pgm ;" << std::endl; 
-	file << "}" << std::endl ; 
+  const char * const kShaderConstructor = 
+  "function Shader( aGLContext , aVertexID , aFragID )\n"  
+  "{\n" 
+  "  this.shad = setupShader( aGLContext , aVertexID , aFragID ) ;\n" 
+  "\n"
+  "  this.attribPos = aGLContext.getAttribLocation( this.shad , \"aPosition\" ) ;\n"
+  "  this.attribTex = aGLContext.getAttribLocation( this.shad , \"aTexCoord\" ) ;\n"
+  "  this.attribNor = aGLContext.getAttribLocation( this.shad , \"aNormal\" ) ;\n"
+  "  this.attribCol = aGLContext.getAttribLocation( this.shad , \"aColor\" ) ;\n"
+  "}\n"
+  "\n";
 
-	file.close() ; 
+  const char * const kShaderEnable = 
+  "/* Activate shader */\n"
+  "Shader.prototype.Enable = function( aGLContext )\n" 
+  "{\n"
+  "  aGLContext.useProgram( this.shad ) ;\n"
+  "}\n"
+  "\n" ;
+
+  const char * const kShaderDisable = 
+  "/* deactivate shader */\n"
+  "Shader.prototype.Disable = function( aGLContext )\n"
+  "{\n"
+  "  aGLContext.useProgram( 0 ) ;\n"
+  "}\n"
+  "\n" ;
+
+  const char * const kCompileShader =
+  "/* shader compilation (vertex of fragment)*/\n"
+  "function compileShader( aGLContext , aShaderSource , aShaderType )\n"
+  "{\n"  
+  "  var shad = aGLContext.createShader( aShaderType ) ;\n"
+  "  aGLContext.shaderSource( shad , aShaderSource ) ;\n"
+  "  aGLContext.compileShader( shad ) ;\n"
+  "\n"
+  "  var ok = aGLContext.getShaderParameter( shad , aGLContext.COMPILE_STATUS ) ;\n"
+  "  if( ! ok )\n"
+  "  {\n"
+  "    throw \"could not compile shader : \" + aGLContext.getShaderInfoLog( shad ) ;\n"
+  "  }\n"
+  "\n"
+  "  return shad ;\n"
+  "}\n"
+  "\n";
+
+  const char * const kSetupShader = 
+  "/* Setup shader program (compiles both vertex and fragment and link) */\n"
+  "function setupShader( aGLContext , aVertexID , aFragID )\n"  
+  "{\n" 
+  "  var vElt = document.getElementById( aVertexID ) ;\n"
+  "  if( ! vElt )\n"
+  "  {\n" 
+  "    throw \"could not find vertex shader\" + aVertexID ;\n" 
+  "  }\n" 
+  "  var vStr  = vElt.text ;\n" 
+  "  var vShad = compileShader( aGLContext , vStr , aGLContext.VERTEX_SHADER ) ;\n" 
+  "  var fElt = document.getElementById( aFragID ) ;\n"
+  "  if( ! fElt )\n"
+  "  {\n" 
+  "    throw \"could not find fragment shader \" + aFragID ;\n"
+  "  }\n" 
+  "  var fStr  = fElt.text ;\n" 
+  "  var fShad = compileShader( aGLContext , fStr , aGLContext.FRAGMENT_SHADER ) ;\n"
+  "  var pgm = aGLContext.createProgram( ) ;\n"
+  "  aGLContext.attachShader( pgm , vShad ) ;\n"
+  "  aGLContext.attachShader( pgm , fShad ) ;\n"
+  "  aGLContext.linkProgram( pgm ) ;\n" 
+  "  var ok = aGLContext.getProgramParameter( pgm , aGLContext.LINK_STATUS ) ;\n"
+  "  if( ! ok )\n"
+  "  {\n" 
+  "    throw \"pgm failed to link\" + aGLContext.getProgramInfoLog( pgm ) ;\n"
+  "  }\n"
+  "  return pgm ;\n"
+  "}\n" 
+  "\n" ;
+
+  file << kShaderConstructor ; 
+  file << kShaderEnable ; 
+  file << kShaderDisable ; 
+  file << kCompileShader ; 
+  file << kSetupShader ; 
+
+  file.close() ; 
 }
 
-void writePointCloudFile( Document & doc , const std::string & file_name )
+/**
+  * Write Point cloud class file 
+  * @param file_name output file name 
+  */
+void writePointCloudFile( const std::string & file_name )
 {
 	std::ofstream file( file_name.c_str() ) ;
 	if( ! file.good() )
@@ -959,33 +1092,46 @@ void writePointCloudFile( Document & doc , const std::string & file_name )
 		exit( EXIT_FAILURE ) ; 
 	}
 
-	file << "function PointCloud( aGLContext , aShader , aPointData )" << std::endl ; 
-	file << "{" << std::endl ; 
-	file << "  this.pointData = aPointData ;" << std::endl ; 
-	file << "  this.shader    = aShader ;" << std::endl ; 
-	file << "  this.nbelt     = aPointData.length / 6 ;" << std::endl ; 
-	file << std::endl ; 
-	file << "  this.vbo = aGLContext.createBuffer( ) ;" << std::endl ; 
-	file << "  aGLContext.bindBuffer( aGLContext.ARRAY_BUFFER , this.vbo ) ;" << std::endl ; 
-	file << "  aGLContext.bufferData( aGLContext.ARRAY_BUFFER , aPointData , aGLContext.STATIC_DRAW ) ;" << std::endl ; 
-	file << "}" << std::endl ; 
-	file << std::endl ; 
-	file << "PointCloud.prototype.render = function( aGLContext )" << std::endl ; 
-	file << "{" << std::endl ; 
-	file << "  aGLContext.bindBuffer( aGLContext.ARRAY_BUFFER , this.vbo ) ;" << std::endl ; 
-	file << std::endl ; 
-	file << "  aGLContext.enableVertexAttribArray( this.shader.attribPos ) ;" << std::endl ; 
-	file << "  aGLContext.enableVertexAttribArray( this.shader.attribCol ) ;" << std::endl ; 
-	file << std::endl ;
-	file << "  aGLContext.vertexAttribPointer( this.shader.attribPos , 3 , aGLContext.FLOAT , false , 24 , 0 ) ;" << std::endl ;
-	file << "  aGLContext.vertexAttribPointer( this.shader.attribCol , 3 , aGLContext.FLOAT , false , 24 , 12 ) ;" << std::endl ; 
-	file << std::endl ; 
-	file << "  aGLContext.drawArrays( aGLContext.POINTS , 0 , this.nbelt ) ;" << std::endl ; 
-	file << "}" << std::endl ; 
+  const char * const kPointCloudConstructor = 
+  "function PointCloud( aGLContext , aShader , aPointData )\n" 
+  "{\n" 
+  "  this.pointData = aPointData ;\n"
+  "  this.shader    = aShader ;\n" 
+  "  this.nbelt     = aPointData.length / 6 ; /* 6 = 3 position + 3 color*/\n"
+  "\n"
+  "  this.vbo = aGLContext.createBuffer( ) ;\n" 
+  "  aGLContext.bindBuffer( aGLContext.ARRAY_BUFFER , this.vbo ) ;\n"
+  "  aGLContext.bufferData( aGLContext.ARRAY_BUFFER , aPointData , aGLContext.STATIC_DRAW ) ;\n"
+  "}\n"
+  "\n" ;
+
+  const char * const kRenderFunction = 
+  "/* Render point cloud */\n"
+  "PointCloud.prototype.render = function( aGLContext )\n"  
+  "{\n" 
+  "  aGLContext.bindBuffer( aGLContext.ARRAY_BUFFER , this.vbo ) ;\n" 
+  "\n"
+  "  aGLContext.enableVertexAttribArray( this.shader.attribPos ) ;\n"
+  "  aGLContext.enableVertexAttribArray( this.shader.attribCol ) ;\n" 
+  "\n"
+  "  aGLContext.vertexAttribPointer( this.shader.attribPos , 3 , aGLContext.FLOAT , false , 24 , 0 ) ;\n"
+  "  aGLContext.vertexAttribPointer( this.shader.attribCol , 3 , aGLContext.FLOAT , false , 24 , 12 ) ;\n" 
+  "\n"
+  "  aGLContext.drawArrays( aGLContext.POINTS , 0 , this.nbelt ) ;\n" 
+  "}\n"
+  "\n" ; 
+
+  file << kPointCloudConstructor ; 
+  file << kRenderFunction ; 
 
 	file.close() ; 
 }
 
+
+/** 
+ * Write javascript util file 
+ * @param file_name output file name 
+ */
 void writeUtilFile( const std::string & file_name )
 {
 	std::ofstream file( file_name.c_str() ) ;
@@ -995,28 +1141,32 @@ void writeUtilFile( const std::string & file_name )
 		exit( EXIT_FAILURE ) ; 
 	}
 
-	// requestAnimFrame 
-	file << "requestAnimFrame = (function()" << std::endl ; 
-	file << "{" << std::endl ;
-	file << "  return window.requestAnimationFrame ||" << std::endl ; 
-	file << "   window.webkitRequestAnimationFrame ||" << std::endl ;
-	file << "   window.mozRequestAnimationFrame ||" << std::endl ; 
-	file << "   window.oRequestAnimationFrame ||" << std::endl ; 
-	file << "   window.msRequestAnimationFrame ||" << std::endl ; 
-	file << "   function(/* function FrameRequestCallback */ callback, /* DOMElement Element */ element) {" << std::endl ; 
-	file << "   window.setTimeout(callback, 1000/60);" << std::endl ; 
-	file << " };" << std::endl ; 
-	file << "})();" << std::endl ; 
+  const char * const kRequestAnimFunction = 
+  "/* Portable requestAnimFrame fonction */\n"
+  "requestAnimFrame = (function()\n" 
+  "{\n" 
+  "  return window.requestAnimationFrame ||\n"
+  "   window.webkitRequestAnimationFrame ||\n"
+  "   window.mozRequestAnimationFrame ||\n"
+  "   window.oRequestAnimationFrame ||\n"
+  "   window.msRequestAnimationFrame ||\n" 
+  "   function(/* function FrameRequestCallback */ callback, /* DOMElement Element */ element) {\n"
+  "   window.setTimeout(callback, 1000/60);\n"
+  " };\n"
+  "})();\n"
+  "\n" ;
 
-	// deg_to_rad
-	file << "function deg_to_rad( arad )" << std::endl ; 
-	file << "{" << std::endl ; 
-	file << "  return ((arad) * 0.017453292519943295769236907684886127134428718885417254560971914401710091146034494436822415696345094823 ) ;" << std::endl ; 
-	file << "}" << std::endl ; 
-	
-	file.close() ; 
+  file << kRequestAnimFunction ;  
+
+  file.close() ; 
 }
 
+/**
+ * Export images to image folder 
+ * @param doc openSFM document 
+ * @param sSfMDir openSFM output folder (for locating input images)
+ * @param folder_image output location 
+ */
 void writeImagesFiles( Document & doc , const std::string & sSfMDir , const std::string & folder_image )
 {
 	// Initial Image folder 
@@ -1027,26 +1177,32 @@ void writeImagesFiles( Document & doc , const std::string & sSfMDir , const std:
 	for( int i = 0 ; i < doc._vec_imageNames.size() ; ++i )
 	{
 		const std::string & sImageName = doc._vec_imageNames[i];
-      	ReadImage( stlplus::create_filespec( sImagePath, sImageName).c_str(), &image );
+   ReadImage( stlplus::create_filespec( sImagePath, sImageName).c_str(), &image );
 
 	    // Need to redimension image to max 2048x2048 
-		
-		std::ostringstream os;
-    	os << std::setw(8) << std::setfill('0') << i ;
+
+   std::ostringstream os;
+   os << std::setw(8) << std::setfill('0') << i ;
 
 
-    	int nw = 1024 ;
-    	int nh = 1024 ;
-    	RessamplingSize( nw , nh , doc._map_imageSize[i].first , doc._map_imageSize[i].second ) ;
-    	Ressample( image , nw , nh , ressamp ) ; 
+   int nw = 1024 ;
+   int nh = 1024 ;
+   RessamplingSize( nw , nh , doc._map_imageSize[i].first , doc._map_imageSize[i].second ) ;
+   Ressample( image , nw , nh , ressamp ) ; 
 
-	    const std::string & file_name = stlplus::folder_append_separator( folder_image ) + os.str() + ".jpg" ; 
-    	WriteImage( file_name.c_str() , ressamp ) ;
-	}
+   const std::string & file_name = stlplus::folder_append_separator( folder_image ) + os.str() + ".jpg" ; 
+   WriteImage( file_name.c_str() , ressamp ) ;
+ }
 }
 
 
-void exportProjectToWebGL( Document & doc , const std::string & SfM_outputDir , const std::string & outFolder )
+/**
+ * Export project to a fully functionnal WebGL site
+ * @param doc openSFM document containing project to export 
+ * @param sSfMDir openSFM project directory 
+ * @param outFolder output directory 
+ */
+void exportProjectToWebGL( Document & doc , const std::string & sSfMDir , const std::string & outFolder )
 {
 	// Create output's directory structure 
 	prepareFolders( outFolder ) ; 
@@ -1071,11 +1227,11 @@ void exportProjectToWebGL( Document & doc , const std::string & SfM_outputDir , 
 
 	// write camera webgl file
 	const std::string camera_js_file_name = stlplus::folder_append_separator(stlplus::folder_append_separator( outFolder ) + "scripts" ) + "cameras.js" ; 
-	WriteCameraFile( doc , camera_js_file_name ) ; 
+	WriteCameraFile( camera_js_file_name ) ; 
 
 	// write pointcloud webgl file 
 	const std::string pcloud_js_file_name = stlplus::folder_append_separator(stlplus::folder_append_separator( outFolder ) + "scripts" ) + "cloud.js" ; 
-	writePointCloudFile( doc , pcloud_js_file_name ) ; 
+	writePointCloudFile( pcloud_js_file_name ) ; 
 
 	const std::string scene_data_file_name = stlplus::folder_append_separator(stlplus::folder_append_separator( outFolder ) + "scripts" ) + "sceneData.js" ; 
 	writeSceneDataFile( doc , scene_data_file_name ) ; 
@@ -1086,7 +1242,7 @@ void exportProjectToWebGL( Document & doc , const std::string & SfM_outputDir , 
 
 	// write images files
 	const std::string image_folder = stlplus::folder_append_separator(stlplus::folder_append_separator( outFolder ) + "images" );
-	writeImagesFiles( doc , SfM_outputDir , image_folder ) ;
+	writeImagesFiles( doc , sSfMDir , image_folder ) ;
 
 }
 
@@ -1104,36 +1260,31 @@ int main( int argc, char ** argv )
 
   try 
   {
-      if (argc == 1) throw std::string("Invalid command line parameter.");
-      cmd.process(argc, argv);
+    if (argc == 1) throw std::string("Invalid command line parameter.");
+    cmd.process(argc, argv);
   }
   catch(const std::string& s)
   {
-		std::cerr << "Usage : " << argv[0] << " " 
-			<< "[-i|--sfmdir, the SfM_output path] " 
-			<< "[-o|--output, the output directory] " 
-			<< std::endl ; 
+    std::cerr << "Usage : " << argv[0] << " " 
+    << "[-i|--sfmdir, the SfM_output path] " 
+    << "[-o|--output, the output directory] " 
+    << std::endl ; 
 
-			std::cerr << s << std::endl ; 
+    std::cerr << s << std::endl ; 
 
-		return EXIT_FAILURE ; 
-	}
+    return EXIT_FAILURE ; 
+  }
 
-	Document m_doc ;
+  Document m_doc ;
 
-	
-	if( m_doc.load( sSfmDir ) )
-	{
-		exportProjectToWebGL( m_doc , sSfmDir , sOutDir ) ; 
-	}
-	else
-	{
-		return EXIT_FAILURE ; 
-	}
+  if( m_doc.load( sSfmDir ) )
+  {
+    exportProjectToWebGL( m_doc , sSfmDir , sOutDir ) ; 
+  }
+  else
+  {
+    return EXIT_FAILURE ; 
+  }
 
-	return EXIT_SUCCESS ;
-
-
-	
-	return EXIT_SUCCESS ; 
+  return EXIT_SUCCESS ; 
 }
