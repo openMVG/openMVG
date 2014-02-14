@@ -747,6 +747,7 @@ void writeMainWebGLFile( const std::string & file_name )
   "{\n"
   "  gl.clearColor( 0.0 , 0.0 , 0.0 , 1.0 ) ;\n"
   "  gl.enable( gl.DEPTH_TEST ) ;\n"
+  "  gl.enable( gl.VERTEX_PROGRAM_POINT_SIZE);\n"
   "  gl.depthFunc( gl.LEQUAL ) ;\n"
   "\n"
   "  pointShaderProgram = new Shader( gl , \"point_vShader\" , \"point_fShader\" ) ;\n"
