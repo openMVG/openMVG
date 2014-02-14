@@ -178,10 +178,12 @@ static inline void RessamplingSize( int & newWidth , int & newHeight , const int
   "    <!-- other scripts -->\n"
   "    <script src=\"scripts/util.js\"></script>\n"
   "    <script src=\"scripts/matrix.js\"></script>\n"
+  "    <script src=\"scripts/quaternion.js\"></script>\n"
   "    <script src=\"scripts/cloud.js\"></script>\n"
   "    <script src=\"scripts/shader.js\"></script>\n"
   "    <script src=\"scripts/cameras.js\"></script>\n"
   "    <script src=\"scripts/sceneData.js\"></script>\n"
+  "    <script src=\"scripts/eventHandling.js\"></script>\n"
   "    <script src=\"scripts/main.js\"></script>\n"
   "  </head>\n" ;
 
@@ -190,11 +192,38 @@ static inline void RessamplingSize( int & newWidth , int & newHeight , const int
   "    <header>\n"
   "      <h1>WebGL viewer</h1>\n" 
   "    </header>\n"
+  "    <div id=\"container\">\n"
+  "      <div id=\"divParams\">\n"
+  "        <div class=\"divParamsHeader\">\n"
+  "          <p>Display</p>\n"
+  "        </div>\n"
+  "        <div class=\"divParams\">\n"
+  "          <div id=\"chkCams\" class=\"checkbox checked\">\n"
+  "            <p>Cameras</p>\n"
+  "          </div>\n"
+  "          <div id=\"chkPcloud\" class=\"checkbox checked\">\n"
+  "            <p>Point cloud</p>\n"
+  "          </div>\n"
+  "        </div>\n"
+  "        <div class=\"divParamsFooter\"></div>\n"
+  "        <div class=\"divParamsHeader\">\n"
+  "          <p>Camera</p>\n"
+  "        </div>\n"
+  "        <div class=\"divParams\">\n"
+  "          <div id=\"butResetCam\" class=\"button\">\n"
+  "            <p>Reset</p>\n"
+  "          </div>\n"
+  "          <div id=\"chkAnimateCam\" class=\"checkbox checked\">\n"
+  "            <p>Toggle animation</p>\n"
+  "          </div>\n"
+  "        </div>\n"
+  "        <div class=\"divParamsFooter\"></div>\n"
+  "      </div>\n"
   "\n"
-  "    <canvas id=\"glCanvas\" width=\"1024\" height=\"768\">\n"
-  "      Your browser does not support HTML5 canvas\n"
-  "    </canvas>\n"
-  "\n"
+  "      <canvas id=\"glCanvas\" width=\"1024\" height=\"768\">\n"
+  "        Your browser does not support HTML5 canvas\n"
+  "      </canvas>\n"
+  "    </div>\n"
   "    <footer>\n"
   "      <p>OpenMVG WebGL viewer by Romuald PERROT</p>\n"
   "    </footer>\n"
@@ -203,6 +232,237 @@ static inline void RessamplingSize( int & newWidth , int & newHeight , const int
 
   file << kHtmlHeader ; 
   file << kHtmlBody ; 
+
+  file.close() ; 
+}
+
+/**
+* write event handling file 
+* @param file_name output file name 
+*/
+void writeEventHandlingFile( const std::string & file_name )
+{
+  std::ofstream file( file_name.c_str() ) ;
+  if( ! file.good() )
+  {
+    std::cerr << "Error writing file : \"" << file_name << "\"" << std::endl ; 
+    exit( EXIT_FAILURE ) ; 
+  }
+
+  const char * const kTogglePointCloudVisibleFunction =
+  "function togglePointCloudVisible( )\n"
+  "{\n"
+  "  pCloud.ToggleVisible() ;\n"
+  "\n"
+  "  var elt = document.getElementById( \"chkPcloud\" ) ;\n"
+  "  SwitchClass( elt , \"checked\" , \"unchecked\" ) ;\n"
+  "}\n"
+  "\n";
+
+  const char * const kToggleCameraVisibleFunction =
+  "function toggleCameraVisible( )\n"
+  "{\n"
+  "  for( var i = 0 ; i < cameras.length ; ++i )\n"
+  "  {\n"
+  "    cams[i].ToggleVisible() ; \n"
+  "  }\n"
+  "  var elt = document.getElementById( \"chkCams\" ) ;\n"
+  "  SwitchClass( elt , \"checked\" , \"unchecked\" ) ;\n"
+  "}\n"
+  "\n";
+
+  const char * const kToggleAnimation =
+  "function ToggleAnimation()\n"
+  "{\n"
+  "  if( animateCam == true )\n"
+  "  {\n"
+  "    animateCam = false ;\n"
+  "  }\n"
+  "  else\n"
+  "  {\n"
+  "    animateCam = true ;\n"
+  "  }\n"
+  "  var elt = document.getElementById(\"chkAnimateCam\") ;\n"
+  "  SwitchClass( elt , \"checked\" , \"unchecked\" ) ;\n"
+  "}\n"
+  "\n" ;
+
+  const char * const kStopAnimation =
+  "function StopAnimation()\n"
+  "{\n"
+  "  animateCam = false ; \n"
+  "  var elt = document.getElementById(\"chkAnimateCam\") ;\n"
+  "  if( HasClass( elt , \"checked\" ) )\n"
+  "  {\n"
+  "    RemoveClass( elt , \"checked\" ) ;\n"
+  "    AddClass( elt , \"unchecked\" ) ;\n" 
+  "  }\n"
+  "}\n"
+  "\n" ;
+
+  const char * const kResetCamera =
+  "function resetCamera()\n"
+  "{\n"
+  "  cameraModelView  = mat44.createLookAtMatrix( cam_center[0] , cam_center[1] , cam_center[2] , scene_center[0] , scene_center[1] , scene_center[2] , 0 , 1 , 0 );\n"
+  "}\n"
+  "\n" ;
+
+  const char * const kKeyEvent =
+  "function keyEvent( anEvent )\n"
+  "{\n"
+  "  var keyCode = anEvent.keyCode ;\n"
+  "  var isValidKey = false ;\n"
+  "\n"
+  "  var camDir   = mat44.ExtractCameraForward( cameraModelView ) ; \n"
+  "  var camRight = mat44.ExtractCameraRight( cameraModelView ) ;\n"
+  "\n"
+  "  if( keyCode == 90 ) // z\n"
+  "  {\n"
+  "    // Move forward \n"
+  "    isValidKey = true ; \n"
+  "\n"
+  "    var tra = mat44.createTranslationMatrix( camDir[0] , camDir[1] , camDir[2] ) ; \n"
+  "    cameraModelView = mat44.mul( tra , cameraModelView ) ; \n"
+  "  }\n"
+  "  if( keyCode == 81 ) // q\n"
+  "  {\n"
+  "    // move left\n"
+  "    isValidKey = true ; \n"
+  "\n"
+  "    var tra = mat44.createTranslationMatrix( camRight[0] , camRight[1] , camRight[2] ) ; \n"
+  "    cameraModelView = mat44.mul( tra , cameraModelView ) ;\n" 
+  "  }\n"
+  "  if( keyCode == 68 ) // d\n"
+  "  {\n"
+  "    // move right \n"
+  "    isValidKey = true ; \n"
+  "\n"
+  "    var tra = mat44.createTranslationMatrix( -camRight[0] , -camRight[1] , -camRight[2] ) ; \n"
+  "    cameraModelView = mat44.mul( tra , cameraModelView ) ; \n"
+  "  }\n"
+  "  if( keyCode == 83 ) // s\n"
+  "  {\n"
+  "    // move backward\n"
+  "    isValidKey = true ; \n"
+  "\n"
+  "    var tra = mat44.createTranslationMatrix( -camDir[0] , -camDir[1] , -camDir[2] ) ; \n"
+  "    cameraModelView = mat44.mul( tra , cameraModelView ) ; \n"
+  "  }\n"
+  "\n"
+  "  if( isValidKey )\n"
+  "  {\n"
+  "    StopAnimation() ;\n"
+  "  }\n"
+  "}\n"
+  "\n" ;
+
+  const char * const kMouseVariables = 
+  "/* Global variables handling mouse mouvement */\n"
+  "var oldMouseX ;\n"
+  "var oldMouseY ;\n"
+  "var isMouseClicked = false ;\n"
+  "\n" ;
+
+  const char * const kMouseDown = 
+  "/* Handle mouse click : start of dragging */\n"
+  "function mouseDown( anEvent )\n"
+  "{\n"
+  "  var e = anEvent ? anEvent : window.event ; \n"
+  "\n"
+  "  oldMouseX = e.screenX ;\n"
+  "  oldMouseY = e.screenY ;\n"
+  "\n"
+  "  isMouseClicked = true ; \n"
+  "}\n"
+  "\n";
+
+  const char * const kMouseUp =
+  "/* Handle mouse click : end of dragging */\n"
+  "function mouseUp( anEvent )\n"
+  "{\n"
+  "  isMouseClicked = false ; \n"
+  "}"
+  "\n" ;
+
+  const char * const kMouseOut =
+  "/* Handle mouse moving outside gl canvas */\n"
+  "function mouseOut( anEvent )\n"
+  "{\n"
+  "  isMouseClicked = false ; \n"
+  "}\n"
+  "\n" ;
+
+  const char * const kMouseDrag = 
+  "/* Main mouse gesture : change camera orientation */\n"
+  "function mouseDrag( anEvent )\n"
+  "{\n"
+  "  if( isMouseClicked == false )\n"
+  "    return ;\n"
+  "\n"
+  "  StopAnimation() ; \n"
+  "\n"
+  "  var e = anEvent ? anEvent : window.event ; \n"
+  "\n"
+  "  var deltaX = e.screenX - oldMouseX ;\n"
+  "  var deltaY = e.screenY - oldMouseY ; \n"
+  "\n"
+  "  var camRight = mat44.ExtractCameraRight( cameraModelView ) ;\n"
+  "  var camUp    = mat44.ExtractCameraUp( cameraModelView ) ; \n"
+  "  var camPos   = mat44.ExtractCameraPos( cameraModelView ) ; \n"
+  "\n"
+  "  var tra     = mat44.createTranslationMatrix( -camPos[0] , - camPos[1] , - camPos[2] ) ;\n"
+  "  var invtra  = mat44.createTranslationMatrix( camPos[0] , camPos[1] , camPos[2] ) ;\n"
+  "\n"
+  "  var q1 = quat.createRotation( camRight , -0.001 * deltaY ) ;\n"
+  "  var q2 = quat.createRotation( camUp , -0.001 * deltaX ) ; \n"
+  "  var q = quat.mul( q2 , q1 ) ; \n"
+  "  var rot = quat.ToMatrix( q ) ; \n"
+  "\n"
+  "  var geom    = mat44.mul( tra , mat44.mul( rot , invtra ) ) ;\n"
+  "\n"
+  "  cameraModelView = mat44.mul( geom , cameraModelView ) ; \n"
+  "\n"
+  "  oldMouseX = e.screenX ;\n"
+  "  oldMouseY = e.screenY ; \n"
+  "}\n"
+  "\n" ; 
+
+  const char * const kSetupListeners =
+  "function setupListeners()\n"
+  "{\n"
+  "  var chkCams   = document.getElementById( \"chkCams\" ) ;\n"
+  "  var chkPcloud = document.getElementById( \"chkPcloud\" ) ;\n"
+  "  var butResetCam = document.getElementById( \"butResetCam\" ) ;\n"
+  "  var chkCamsAnim = document.getElementById( \"chkAnimateCam\" ) ;\n"
+  "  var glWindow    = document.getElementById( \"glCanvas\" ) ; \n"
+  "\n"
+  "  window.addEventListener(\"keydown\", this.keyEvent , false ) ;\n"
+  "\n"
+  "  chkPcloud.onclick = togglePointCloudVisible ; \n"
+  "  chkCams.onclick   = toggleCameraVisible ;\n"
+  "  butResetCam.onclick = resetCamera ;\n"
+  "  chkAnimateCam.onclick = ToggleAnimation ;\n"
+  "\n"
+  "  glWindow.onmousedown = mouseDown ;\n"
+  "  glWindow.onmouseup = mouseUp ; \n"
+  "  glWindow.onmousemove = mouseDrag ;\n"
+  "  glWindow.onmouseout = mouseOut ; \n"
+  "}\n"
+  "\n";
+
+  file << kTogglePointCloudVisibleFunction ;
+  file << kToggleCameraVisibleFunction ;
+  file << kResetCamera ; 
+  file << kToggleAnimation ; 
+  file << kStopAnimation ; 
+  file << kKeyEvent ; 
+  file << kMouseVariables ;
+  file << kMouseDown ;
+  file << kMouseUp ; 
+  file << kMouseOut ;
+  file << kMouseDown ;
+  file << kMouseDrag ; 
+  file << kSetupListeners ; 
 
   file.close() ; 
 }
@@ -264,7 +524,100 @@ static inline void RessamplingSize( int & newWidth , int & newHeight , const int
   "  box-shadow: 0 0px 15px 15px rgb(40,40,40) ;\n"
   "}\n" ;
 
-  file << kCSSContent ; 
+  const char * const kCSSMenuParams =
+  "#divParams\n"
+  "{\n"
+  "  position: absolute;\n"
+  "  margin-left:10px;\n"
+  "  margin-top:20px;\n"
+  "  width:250px ;\n"
+  "}\n"
+  "\n"
+  ".divParamsHeader\n"
+  "{\n"
+  "  background-color: rgb(40,40,40) ;\n"
+  "  color: rgb(190,190,190);\n"
+  "  text-align: center;\n"
+  "  font-size: 1.5em;\n"
+  "  border-top-left-radius: 15px;\n"
+  "  border-top-right-radius: 15px;\n"
+  "}\n"
+  "\n"
+  ".divParamsFooter\n"
+  "{\n"
+  "  background-color: rgb(40,40,40) ;\n"
+  "  height: 0.7em;\n"
+  "  margin-bottom: 10px;\n"
+  "  border-bottom-right-radius: 15px;\n"
+  "  border-bottom-left-radius: 15px;\n"
+  "}\n"
+  "\n"
+  ".divParams\n"
+  "{\n"
+  "  border-left: 1px solid black;\n"
+  "  border-right: 1px solid black ;\n"
+  "  font-size: 1em;\n"
+  "}\n"
+  "\n"
+  ".checkbox\n"
+  "{\n"
+  "  margin-right: 0.2em;\n"
+  "  text-align: right;\n"
+  "  cursor: pointer;\n"
+  "  font-size: 1.1em;\n"
+  "  background-color: rgb(68,68,68);\n"
+  "\n"
+  "  -webkit-touch-callout: none;\n"
+  "  -webkit-user-select: none;\n"
+  "  -khtml-user-select: none;\n"
+  "  -moz-user-select: none;\n"
+  "  -ms-user-select: none;\n"
+  "  user-select: none;\n"
+  "}\n"
+  "\n"
+  ".checkbox:hover\n"
+  "{\n"
+  "  background-color: rgb(80,80,80);\n"
+  "}\n"
+  "\n"
+  ".checked p\n"
+  "{\n"
+  "  color:lightgreen;\n"
+  "}\n"
+  "\n"
+  ".unchecked p\n"
+  "{\n"
+  "  color:red;\n"
+  "}\n"
+  "\n"
+  ".button\n"
+  "{\n"
+  "  margin-right: 0.2em ; \n"
+  "  text-align: right ;\n" 
+  "  cursor: pointer;\n"
+  "  font-size: 1.1em;\n"
+  "  background-color: rgb(68,68,68);\n"
+  "\n"
+  "  -webkit-touch-callout: none;\n"
+  "  -webkit-user-select: none;\n"
+  "  -khtml-user-select: none;\n"
+  "  -moz-user-select: none;\n"
+  "  -ms-user-select: none;\n"
+  "  user-select: none;\n"
+  "}\n"
+  "\n"
+  ".button:hover p\n"
+  "{\n"
+  "  background-color: rgb(80,80,80);\n"
+  "  font-weight: bold;\n"
+  "  color:red;\n"
+  "}\n"
+  "\n";
+
+
+  file << kCSSContent ;
+  file << kCSSMenuParams ; 
+
   file.close() ;
 }
 
@@ -686,6 +1039,52 @@ void writeMatrixWebGLFile( const std::string & file_name )
   "};\n"
   "\n" ;
 
+
+  const char * const kExtractCameraPos = 
+  "mat44.ExtractCameraPos = function( aMatrix )\n"
+  "{\n"
+  "  var inve = mat44.invert( aMatrix ) ;\n"
+  "  var res = new Float32Array( 3 ) ;\n"
+  "  res[0] = inve[12] ;\n"
+  "  res[1] = inve[13] ;\n"
+  "  res[2] = inve[14] ;\n" 
+  "  return res ;\n" 
+  "}\n"
+  "\n" ;
+
+  const char * const kExtractCameraUp = 
+  "mat44.ExtractCameraUp = function( aMatrix )\n"
+  "{\n"
+  "  var res = new Float32Array( 3 ) ;\n"
+  "  res[0] = aMatrix[1] ;\n"
+  "  res[1] = aMatrix[5] ;\n"
+  "  res[2] = aMatrix[9] ;\n"
+  "  return res ;\n" 
+  "}\n"
+  "\n";
+
+  const char * const kExtractCameraForward = 
+  "mat44.ExtractCameraForward = function( aMatrix )\n"
+  "{\n"
+  "  var res = new Float32Array( 3 ) ;\n"
+  "  res[0] = aMatrix[2] ;\n"
+  "  res[1] = aMatrix[6] ;\n"
+  "  res[2] = aMatrix[10] ;\n"
+  "  return res ;\n"
+  "}\n"
+  "\n";
+
+  const char * const kExtractCameraRight = 
+  "mat44.ExtractCameraRight = function( aMatrix )\n"
+  "{\n"
+  "  var res = new Float32Array( 3 ) ;\n"
+  "  res[0] = aMatrix[0] ;\n"
+  "  res[1] = aMatrix[4] ;\n"
+  "  res[2] = aMatrix[8] ;\n"
+  "  return res ;\n"
+  "}\n"
+  "\n" ;
+
   file << kStandardVectorOperations ;
   file << kMatrixClass ;
   file << kLookAtMatrix ; 
@@ -694,9 +1093,134 @@ void writeMatrixWebGLFile( const std::string & file_name )
   file << kMatrixInversion ; 
   file << kTranslationMatrix ; 
   file << kRotationYMatrix ; 
+  file << kExtractCameraPos ;
+  file << kExtractCameraUp ;
+  file << kExtractCameraForward ;
+  file << kExtractCameraRight ; 
 
   file.close() ; 
 }
+
+/**
+ * write quaternion class 
+ * @param file_name output file name  
+ */
+void writeQuaternionFile( const std::string & file_name )
+{
+  std::ofstream file( file_name.c_str() ) ;
+  if( ! file.good() )
+  {
+    std::cerr << "Error writing file : \"" << file_name << "\"" << std::endl ; 
+    exit( EXIT_FAILURE ) ; 
+  }
+
+  const char * const kQuaternionConstructor = 
+  "/* minimum quaternion class */\n"
+  "var quat = {} ;\n"
+  "\n" ;
+
+  const char * const kQuaternionCreateRotation =
+  "/* Create a rotation quaternion from an axis and an angle */\n"
+  "quat.createRotation = function( anAxis , anAngle )\n"
+  "{\n"
+  "  var inv_norm = 1.0 / norm( anAxis[0] , anAxis[1] , anAxis[2] ) ;\n"
+  "  var axis = new Float32Array( 3 ) ;\n"
+  "  axis[0] = anAxis[0] * inv_norm ;\n"
+  "  axis[1] = anAxis[1] * inv_norm ;\n"
+  "  axis[2] = anAxis[2] * inv_norm ;\n"
+  "\n"
+  "  var theta = anAngle / 2.0 ;\n"
+  "  var c = Math.cos( theta ) ;\n"
+  "  var s = Math.sin( theta ) ;\n"
+  "\n"
+  "  var res = new Float32Array( 4 ) ;\n"
+  "  res[0] = c ;\n"
+  "  res[1] = s * axis[0] ;\n"
+  "  res[2] = s * axis[1] ;\n"
+  "  res[3] = s * axis[2] ;\n"
+  "  return res ; \n"
+  "}\n"
+  "\n" ;
+
+  const char * const kQuaternionMultiplication =
+  "/* Quaternion rotation */\n"
+  "quat.mul = function( aQuat1 , aQuat2 )\n"
+  "{\n"
+  "  var a = aQuat1[0] ;\n"
+  "  var b = aQuat1[1] ;\n"
+  "  var c = aQuat1[2] ;\n"
+  "  var d = aQuat1[3] ;\n"
+  "\n"
+  "  var ap = aQuat2[0] ;\n"
+  "  var bp = aQuat2[1] ;\n"
+  "  var cp = aQuat2[2] ;\n"
+  "  var dp = aQuat2[3] ;\n"
+  "\n"
+  "  var res = new Float32Array( 4 ) ;\n"
+  "  res[0] = a * ap - b * bp - c * cp - d * dp ;\n"
+  "  res[1] = a * bp + b * ap + c * dp - d * cp ;\n"
+  "  res[2] = a * cp - b * dp + c * ap + d * bp ;\n"
+  "  res[3] = a * dp + b * cp - c * bp + d * ap ; \n"
+  "\n"
+  "  return res ; \n"
+  "}\n"
+  "\n" ;
+
+  const char * const kQuaternionToMatrix =
+  "/* Convert quaternion to rotation matrix */\n"
+  "quat.ToMatrix = function( aQuaternion )\n"
+  "{\n"
+  "  var a = aQuaternion[0] ;\n"
+  "  var b = aQuaternion[1] ;\n"
+  "  var c = aQuaternion[2] ;\n"
+  "  var d = aQuaternion[3] ;\n"
+  "\n"
+  "  var a2 = a * a ;\n"
+  "  var b2 = b * b ;\n"
+  "  var c2 = c * c ;\n"
+  "  var d2 = d * d ; \n"
+  "\n"
+  "  var ab = a * b ;\n"
+  "  var ac = a * c ; \n"
+  "  var ad = a * d ; \n"
+  "  var bc = b * c ; \n"
+  "  var bd = b * d ;\n"
+  "  var cd = c * d ; \n"
+  "\n"
+  "  var res = new Float32Array( 16 ) ;\n"
+  "\n"
+  "  res[0] = a2 + b2 - c2 - d2 ;\n"
+  "  res[1] = 2.0 * ( bc - ad ) ;\n"
+  "  res[2] = 2.0 * ( bd + ac ) ;\n"
+  "  res[3] = 0.0 ;\n"
+  "\n"
+  "  res[4] = 2.0 * ( bc + ad ) ;\n"
+  "  res[5] = a2 - b2 + c2 - d2 ;\n"
+  "  res[6] = 2.0 * ( cd - ab ) ;\n"
+  "  res[7] = 0.0 ;\n"
+  "\n"
+  "  res[8] = 2.0 * ( bd - ac ) ;\n"
+  "  res[9] = 2.0 * ( cd + ab ) ;\n"
+  "  res[10] = a2 - b2 - c2 + d2 ;\n"
+  "  res[11] = 0.0 ;\n"
+  "\n"
+  "  res[12] = 0.0 ;\n"
+  "  res[13] = 0.0 ;\n"
+  "  res[14] = 0.0 ;\n"
+  "  res[15] = 1.0 ;\n"
+  "\n"
+  "  return res ;\n"   
+  "}\n"
+  "\n" ;
+
+  file << kQuaternionConstructor ;
+  file << kQuaternionMultiplication ;
+  file << kQuaternionCreateRotation ;
+  file << kQuaternionToMatrix ; 
+
+  file.close() ; 
+}
+
 
 
 /** 
@@ -723,7 +1247,10 @@ void writeMainWebGLFile( const std::string & file_name )
   "/* Scene objects : point cloud and cameras */\n"
   "var pCloud ;\n"
   "var cams ;\n"
-  "\n" ;
+  "\n"
+  "/* Animation */\n"
+  "var animateCam ;\n"
+  "\n";
 
   const char * const kWebGLInitialization = 
   "/* WebGL init */\n"
@@ -737,6 +1264,7 @@ void writeMainWebGLFile( const std::string & file_name )
   "    return ;\n"
   "  }\n"
   "  setup( ) ; /* setup scene */\n"
+  "  setupListeners() ; /* setup interface event */\n"
   "  update( ) ; /* launch main loop */\n"
   "}\n"
   "\n" ;
@@ -747,7 +1275,7 @@ void writeMainWebGLFile( const std::string & file_name )
   "{\n"
   "  gl.clearColor( 0.0 , 0.0 , 0.0 , 1.0 ) ;\n"
   "  gl.enable( gl.DEPTH_TEST ) ;\n"
-  "  gl.enable( gl.VERTEX_PROGRAM_POINT_SIZE);\n"
+//  "  gl.enable( gl.VERTEX_PROGRAM_POINT_SIZE);\n"
   "  gl.depthFunc( gl.LEQUAL ) ;\n"
   "\n"
   "  pointShaderProgram = new Shader( gl , \"point_vShader\" , \"point_fShader\" ) ;\n"
@@ -758,6 +1286,7 @@ void writeMainWebGLFile( const std::string & file_name )
   "  {\n"
   "    cams[i] = new Camera( gl , surfaceShaderProgram , pointShaderProgram , cameras[i].position , cameras[i].imagePlane , cameras[i].imageName ) ;\n"
   "  }\n"
+  "  animateCam = true ; \n"
   "}\n"
   "\n" ;
 
@@ -768,11 +1297,14 @@ void writeMainWebGLFile( const std::string & file_name )
   "  requestAnimFrame( update );\n"
   "\n"
   "  /* Rotate about center of scene */\n"
-  "  var tra     = mat44.createTranslationMatrix( - scene_center[0] , - scene_center[1] , - scene_center[2] ) ;\n"
-  "  var inv_tra = mat44.createTranslationMatrix( scene_center[0] , scene_center[1] , scene_center[2] );\n"
-  "  var rot     = mat44.createRotateYMatrix( 0.005 ) ;\n"
-  "  var geom    = mat44.mul( tra , mat44.mul( rot , inv_tra ) );\n"
-  "  cameraModelView = mat44.mul( geom , cameraModelView ) ;\n"
+  "  if( animateCam )\n"
+  "  {\n"
+  "    var tra     = mat44.createTranslationMatrix( - scene_center[0] , - scene_center[1] , - scene_center[2] ) ;\n"
+  "    var inv_tra = mat44.createTranslationMatrix( scene_center[0] , scene_center[1] , scene_center[2] );\n"
+  "    var rot     = mat44.createRotateYMatrix( 0.005 ) ;\n"
+  "    var geom    = mat44.mul( tra , mat44.mul( rot , inv_tra ) );\n"
+  "    cameraModelView = mat44.mul( geom , cameraModelView ) ;\n"
+  "  }\n"
   "\n"
   "  render() ;\n"
   "}\n"
@@ -884,31 +1416,55 @@ void WriteCameraFile( const std::string & file_name )
   "  buff_img[28] = 0.0 ;\n"
   "  buff_img[29] = 1.0 ;\n"
   "\n"
-  "  var buff_lines = new Float32Array( 24 ) ;\n"
+  "  var buff_lines = new Float32Array( 48 ) ;\n"
   "  buff_lines[0] = aPosition[0] ;\n"
   "  buff_lines[1] = aPosition[1] ;\n"
   "  buff_lines[2] = aPosition[2] ;\n"
-  "  buff_lines[3] = aPlanePos[0] ;\n"
-  "  buff_lines[4] = aPlanePos[1] ;\n"
-  "  buff_lines[5] = aPlanePos[2] ;\n"
-  "  buff_lines[6] = aPosition[0] ;\n"
-  "  buff_lines[7] = aPosition[1] ;\n"
-  "  buff_lines[8] = aPosition[2] ;\n"
-  "  buff_lines[9] = aPlanePos[3] ;\n"
-  "  buff_lines[10] = aPlanePos[4] ;\n"
-  "  buff_lines[11] = aPlanePos[5] ;\n"
+  "  buff_lines[3] = 1.0 ;\n"
+  "  buff_lines[4] = 1.0 ;\n"
+  "  buff_lines[5] = 1.0 ;\n"
+  "  buff_lines[6] = aPlanePos[0] ;\n"
+  "  buff_lines[7] = aPlanePos[1] ;\n"
+  "  buff_lines[8] = aPlanePos[2] ;\n"
+  "  buff_lines[9] = 1.0 ;\n"
+  "  buff_lines[10] = 1.0 ;\n"
+  "  buff_lines[11] = 1.0 ;\n"
   "  buff_lines[12] = aPosition[0] ;\n"
   "  buff_lines[13] = aPosition[1] ;\n"
   "  buff_lines[14] = aPosition[2] ;\n"
-  "  buff_lines[15] = aPlanePos[6] ;\n"
-  "  buff_lines[16] = aPlanePos[7] ;\n"
-  "  buff_lines[17] = aPlanePos[8] ;\n"
-  "  buff_lines[18] = aPosition[0] ;\n"
-  "  buff_lines[19] = aPosition[1] ;\n"
-  "  buff_lines[20] = aPosition[2] ;\n"
-  "  buff_lines[21] = aPlanePos[9] ;\n"
-  "  buff_lines[22] = aPlanePos[10] ;\n"
-  "  buff_lines[23] = aPlanePos[11] ;\n"
+  "  buff_lines[15] = 1.0 ;\n"
+  "  buff_lines[16] = 1.0 ;\n"
+  "  buff_lines[17] = 1.0 ;\n"
+  "  buff_lines[18] = aPlanePos[3] ;\n"
+  "  buff_lines[19] = aPlanePos[4] ;\n"
+  "  buff_lines[20] = aPlanePos[5] ;\n"
+  "  buff_lines[21] = 1.0 ;\n"
+  "  buff_lines[22] = 1.0 ;\n"
+  "  buff_lines[23] = 1.0 ;\n"
+  "  buff_lines[24] = aPosition[0] ;\n"
+  "  buff_lines[25] = aPosition[1] ;\n"
+  "  buff_lines[26] = aPosition[2] ;\n"
+  "  buff_lines[27] = 1.0 ;\n"
+  "  buff_lines[28] = 1.0 ;\n"
+  "  buff_lines[29] = 1.0 ;\n"
+  "  buff_lines[30] = aPlanePos[6] ;\n"
+  "  buff_lines[31] = aPlanePos[7] ;\n"
+  "  buff_lines[32] = aPlanePos[8] ;\n"
+  "  buff_lines[33] = 1.0 ;\n"
+  "  buff_lines[34] = 1.0 ;\n"
+  "  buff_lines[35] = 1.0 ;\n"
+  "  buff_lines[36] = aPosition[0] ;\n"
+  "  buff_lines[37] = aPosition[1] ;\n"
+  "  buff_lines[38] = aPosition[2] ;\n"
+  "  buff_lines[39] = 1.0 ;\n"
+  "  buff_lines[40] = 1.0 ;\n"
+  "  buff_lines[41] = 1.0 ;\n"
+  "  buff_lines[42] = aPlanePos[9] ;\n"
+  "  buff_lines[43] = aPlanePos[10] ;\n"
+  "  buff_lines[44] = aPlanePos[11] ;\n"
+  "  buff_lines[45] = 1.0 ;\n"
+  "  buff_lines[46] = 1.0 ;\n"
+  "  buff_lines[47] = 1.0 ;\n"
   "  // create vbo\n"
   "  this.vbo = aGLContext.createBuffer() ;\n"
   "  aGLContext.bindBuffer( aGLContext.ARRAY_BUFFER , this.vbo ) ;\n"
@@ -925,6 +1481,17 @@ void WriteCameraFile( const std::string & file_name )
   "  img.onload    = function() { handleTexture( aGLContext , img , tex ); } ;"
   "  img.src       = aFileName ;\n"
   "  this.nbelt     = 6 ;\n"
+  "  this.visible   = true ;\n"
+  "}\n"
+  "\n";
+
+  const char * const kToggleVisible =
+  "Camera.prototype.ToggleVisible = function()\n"
+  "{\n"
+  "  if( this.visible == false )\n"
+  "    this.visible = true ;\n"
+  "  else\n"
+  "    this.visible = false ;\n"
   "}\n"
   "\n";
 
@@ -946,6 +1513,8 @@ void WriteCameraFile( const std::string & file_name )
   "/* Main rendering function (ie render image plane) */\n"
   "Camera.prototype.render = function( aGLContext )\n" 
   "{\n"
+  "  if( this.visible == false )\n"
+  "    return ;\n"
   "  aGLContext.bindBuffer( aGLContext.ARRAY_BUFFER , this.vbo ) ;\n"
   "\n"
   "  aGLContext.enableVertexAttribArray( this.shader.attribPos ) ;\n"
@@ -965,16 +1534,23 @@ void WriteCameraFile( const std::string & file_name )
   const char * const kRenderLines = 
   "/* Render camera structure (ie support lines)*/\n"
   "Camera.prototype.renderLines = function( aGLContext )\n"
-  "{\n" 
+  "{\n"
+  "  if( this.visible == false )\n"
+  "    return ;\n"
   "  aGLContext.bindBuffer( aGLContext.ARRAY_BUFFER , this.vboLines ) ;\n"
-  "  aGLContext.enableVertexAttribArray( this.shaderLines.attribPos ) ;\n" 
-  "  aGLContext.vertexAttribPointer( this.shaderLines.attribPos , 3 , aGLContext.FLOAT , false , 12 , 0 ) ;\n"
+  "\n"
+  "  aGLContext.enableVertexAttribArray( this.shaderLines.attribPos ) ;\n"
+  "  aGLContext.enableVertexAttribArray( this.shaderLines.attribCol ) ;\n"
+  "\n"
+  "  aGLContext.vertexAttribPointer( this.shaderLines.attribPos , 3 , aGLContext.FLOAT , false , 24 , 0 ) ;\n"
+  "  aGLContext.vertexAttribPointer( this.shaderLines.attribCol , 3 , aGLContext.FLOAT , false , 24 , 12 ) ;\n"
   "\n"
   "  aGLContext.drawArrays( aGLContext.LINES , 0 , 8 ) ;\n"
   "}\n"
   "\n" ;
 
   file << kCameraConstructor ;
+  file << kToggleVisible ; 
   file << kTextureHandling ; 
   file << kRenderImage ; 
   file << kRenderLines ; 
@@ -1100,6 +1676,7 @@ void writePointCloudFile( const std::string & file_name )
   "  this.pointData = aPointData ;\n"
   "  this.shader    = aShader ;\n" 
   "  this.nbelt     = aPointData.length / 6 ; /* 6 = 3 position + 3 color*/\n"
+  "  this.visible   = true ;\n"
   "\n"
   "  this.vbo = aGLContext.createBuffer( ) ;\n" 
   "  aGLContext.bindBuffer( aGLContext.ARRAY_BUFFER , this.vbo ) ;\n"
@@ -1107,10 +1684,22 @@ void writePointCloudFile( const std::string & file_name )
   "}\n"
   "\n" ;
 
+  const char * const kToggleVisible = 
+  "PointCloud.prototype.ToggleVisible = function( )\n"
+  "{\n"
+  "  if( this.visible == false )\n"
+  "    this.visible = true ;\n" 
+  "  else\n"
+  "    this.visible = false ;\n"
+  "}\n"
+  "\n";
+
   const char * const kRenderFunction = 
   "/* Render point cloud */\n"
   "PointCloud.prototype.render = function( aGLContext )\n"  
-  "{\n" 
+  "{\n"
+  "  if( this.visible == false )\n"
+  "    return ;\n"
   "  aGLContext.bindBuffer( aGLContext.ARRAY_BUFFER , this.vbo ) ;\n" 
   "\n"
   "  aGLContext.enableVertexAttribArray( this.shader.attribPos ) ;\n"
@@ -1124,6 +1713,7 @@ void writePointCloudFile( const std::string & file_name )
   "\n" ; 
 
   file << kPointCloudConstructor ; 
+  file << kToggleVisible ; 
   file << kRenderFunction ; 
 
 	file.close() ; 
@@ -1158,8 +1748,63 @@ void writeUtilFile( const std::string & file_name )
   "})();\n"
   "\n" ;
 
-  file << kRequestAnimFunction ;  
+  const char * const kHasClassFunction =
+  "/* Check if DOM element has a class property */\n"
+  "function HasClass( aNode , aClassName )\n"
+  "{\n"
+  "  if( aNode.className )\n"
+  "  {\n"
+  "    return aNode.className.match( new RegExp( '(\\\\s|^)' + aClassName + '(\\\\s|$)') ) ;\n"
+  "  }\n"
+  "  else\n"
+  "  {\n"
+  "    return false ;\n"
+  "  }\n"
+  "}\n"
+  "\n" ;
 
+  const char * const kAddClassFunction =
+  "/* Add a classname to a DOM element */\n"
+  "function AddClass( aNode , aClassName )\n"
+  "{\n"
+  "  aNode.className += \" \" + aClassName ;\n"
+  "}\n"
+  "\n" ;
+
+  const char * const kRemoveClassFunction = 
+  "/* Remove a classname to a DOM element */\n"
+  "function RemoveClass( aNode , aClassName )\n"
+  "{\n"
+  "  if( HasClass( aNode , aClassName ) )\n"
+  "  {\n"
+  "    var reg = new RegExp('(\\\\s|^)' + aClassName + '(\\\\s|$)');\n"
+  "    aNode.className = aNode.className.replace(reg, ' ');\n"
+  "  }\n"
+  "}\n"
+  "\n" ;
+
+  const char * const kSwitchClassFunction = 
+  "/* Switch two class in a DOM element */\n"
+  "function SwitchClass( aNode , aValue1 , aValue2 )\n"
+  "{\n"
+  "  if( HasClass( aNode , aValue1 ) )\n"
+  "  {\n"
+  "    RemoveClass( aNode , aValue1 ) ;\n"
+  "    AddClass( aNode , aValue2 ) ;\n"
+  "  }\n"
+  "  else if( HasClass( aNode , aValue2 ) )\n"
+  "  {\n"
+  "    RemoveClass( aNode , aValue2 ) ;\n"
+  "    AddClass( aNode , aValue1 ) ;\n"
+  "  }\n"
+  "}\n"
+  "\n" ;
+
+  file << kRequestAnimFunction ;  
+  file << kHasClassFunction ;
+  file << kAddClassFunction ;
+  file << kRemoveClassFunction ;
+  file << kSwitchClassFunction ;
   file.close() ; 
 }
 
@@ -1223,6 +1868,9 @@ void exportProjectToWebGL( Document & doc , const std::string & sSfMDir , const 
 	const std::string matrix_js_file_name = stlplus::folder_append_separator(stlplus::folder_append_separator( outFolder ) + "scripts" ) + "matrix.js" ; 
 	writeMatrixWebGLFile( matrix_js_file_name ) ; 
 
+  const std::string quaternion_js_file_name = stlplus::folder_append_separator(stlplus::folder_append_separator( outFolder ) + "scripts" ) + "quaternion.js" ; 
+  writeQuaternionFile( quaternion_js_file_name ) ; 
+
 	// write shader js file
 	const std::string shader_js_file_name = stlplus::folder_append_separator(stlplus::folder_append_separator( outFolder ) + "scripts" ) + "shader.js" ; 
 	writeShaderFile( shader_js_file_name ) ; 
@@ -1235,6 +1883,11 @@ void exportProjectToWebGL( Document & doc , const std::string & sSfMDir , const 
 	const std::string pcloud_js_file_name = stlplus::folder_append_separator(stlplus::folder_append_separator( outFolder ) + "scripts" ) + "cloud.js" ; 
 	writePointCloudFile( pcloud_js_file_name ) ; 
 
+  // write event handling 
+  const std::string event_handling_file_name = stlplus::folder_append_separator(stlplus::folder_append_separator( outFolder ) + "scripts" ) + "eventHandling.js" ; 
+  writeEventHandlingFile( event_handling_file_name );
+
+  // write scene data
 	const std::string scene_data_file_name = stlplus::folder_append_separator(stlplus::folder_append_separator( outFolder ) + "scripts" ) + "sceneData.js" ; 
 	writeSceneDataFile( doc , scene_data_file_name ) ; 
 
