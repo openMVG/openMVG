@@ -303,7 +303,7 @@ void writeEventHandlingFile( const std::string & file_name )
   const char * const kResetCamera =
   "function resetCamera()\n"
   "{\n"
-  "  cameraModelView  = mat44.createLookAtMatrix( cam_center[0] , cam_center[1] , cam_center[2] , scene_center[0] , scene_center[1] , scene_center[2] , 0 , 1 , 0 );\n"
+  "  cameraModelView  = mat44.createLookAtMatrix( cam_center[0] , cam_center[1] , cam_center[2] , scene_center[0] , scene_center[1] , scene_center[2] , 0 , -1 , 0 );\n"
   "}\n"
   "\n" ;
 
@@ -693,8 +693,8 @@ void writeSceneDataFile( Document & doc , const std::string & file_name )
 	file << "cam_center[1] = " << center_cam[1] + 0.1 << " ;" << std::endl ; 
 	file << "cam_center[2] = " << center_cam[2] << " ;" << std::endl ;  
 
-	file << "var cameraModelView  = mat44.createLookAtMatrix( cam_center[0] , cam_center[1] , cam_center[2] , scene_center[0] , scene_center[1] , scene_center[2] , 0 , 1 , 0 );" << std::endl ; 
-	file << "var cameraProjection = mat44.createPerspectiveMatrix( 40.0 , 1024.0 / 768.0 , 0.1 , 1000.0 ) ;" << std::endl ; 
+	file << "var cameraModelView  = mat44.createLookAtMatrix( cam_center[0] , cam_center[1] , cam_center[2] , scene_center[0] , scene_center[1] , scene_center[2] , 0 , -1 , 0 );" << std::endl ; 
+	file << "var cameraProjection = mat44.createPerspectiveMatrix( 60.0 , 1024.0 / 768.0 , 0.1 , 1000.0 ) ;" << std::endl ; 
 
 	// Export Cameras data
 	file << "var cameras = new Array(" << doc._map_camera.size() << ") ;" << std::endl ; 
@@ -806,9 +806,9 @@ void writeMatrixWebGLFile( const std::string & file_name )
   "  righty *= inv_norm ;\n"
   "  rightz *= inv_norm ;\n"
   "\n"
-  "  upx = righty * dstz - rightz * dsty ;\n"
-  "  upy = rightz * dstx - rightx * dstz ;\n"
-  "  upz = rightx * dsty - righty * dstx ;\n"
+  "  upx = -righty * dstz + rightz * dsty ;\n"
+  "  upy = -rightz * dstx + rightx * dstz ;\n"
+  "  upz = -rightx * dsty + righty * dstx ;\n"
   "\n"
   "  var res = new Float32Array( 16 ) ;\n"
   "  res[0] = rightx ;\n"
