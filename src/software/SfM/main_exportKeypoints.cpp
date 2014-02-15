@@ -66,7 +66,7 @@ int main(int argc, char ** argv)
   {
     std::ifstream in(stlplus::create_filespec(sMatchesDir, "lists", "txt").c_str());
     std::string sValue;
-    while(in>>sValue)
+    while(std::getline(in, sValue))
     {
       int n = sValue.find_first_of(';');
       sValue = sValue.substr(0,n);
