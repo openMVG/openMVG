@@ -267,10 +267,10 @@ struct reconstructorHelper
         Vec3 pos = map_3DPoints.find(trackId)->second;
 
         f_cloud << pos.transpose() << " " << "255 255 255" << " " << 3.14;
-        
-        
-        ostringstream s_visibility;
-        
+
+
+        std::ostringstream s_visibility;
+
         std::set< size_t > set_imageIndex;
         for( tracks::submapTrack::const_iterator iterTrack = track.begin();
           iterTrack != track.end();
@@ -286,15 +286,15 @@ struct reconstructorHelper
             znear[map_cameratoIndex[imageId]] = std::min(znear[map_cameratoIndex[imageId]], z );
             zfar[map_cameratoIndex[imageId]] = std::max(zfar[map_cameratoIndex[imageId]], z );
           }
-          
+
           s_visibility << iterTrack->first << " " << iterTrack->second << " ";
         }
-        
+
         //export images indexes
         f_cloud << " " << set_imageIndex.size() << " ";
         copy(set_imageIndex.begin(), set_imageIndex.end(), std::ostream_iterator<size_t>(f_cloud, " "));
         f_cloud << std::endl;
-        
+
         f_visibility << pos.transpose() << " " << set_imageIndex.size() << " ";
         f_visibility << s_visibility.str() << std::endl;
       }

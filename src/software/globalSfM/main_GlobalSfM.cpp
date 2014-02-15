@@ -16,11 +16,18 @@ using namespace openMVG;
 int main(int argc, char **argv)
 {
   using namespace std;
-  std::cout << "Global Structure from Motion :"
-            << " open Source implementation of: \n"
-            << "\"Global Fusion of Relative Motions for Robust, Accurate and Scalable Structure from Motion.\""
-            << " ICCV 2013 paper. Pierre Moulon, Pascal Monasse and Renaud Marlet." << std::endl
-            << std::endl;
+  std::cout << std::endl
+    << "-----------------------------------------------------------\n"
+    << "Global Structure from Motion:\n"
+    << "-----------------------------------------------------------\n"
+    << "Open Source implementation of the paper:\n"
+    << "\"Global Fusion of Relative Motions for "
+    << "Robust, Accurate and Scalable Structure from Motion.\"\n"
+    << "Pierre Moulon, Pascal Monasse and Renaud Marlet. "
+    << " ICCV 2013." << std::endl
+    << "------------------------------------------------------------"
+    << std::endl;
+
 
   CmdLine cmd;
 
