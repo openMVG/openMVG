@@ -271,6 +271,7 @@ bool GlobalReconstructionEngine::Process()
   //----------------------------
 
   std::map<std::size_t, Mat3> map_globalR;
+  std::cout << "Compute " << map_cameraIndexTocameraNode.size() << "global rotations." << std::endl;
 
   {
     // Build relative information for only the largest considered Connected Component
@@ -1445,7 +1446,7 @@ void GlobalReconstructionEngine::tripletRotationRejection(
     sg);
 
   {
-    std::cout << "\nTriplets filtering based on error on cycle \n";
+    std::cout << "\nTriplets filtering based on error on cycles \n";
     std::cout << "Before : " << vec_triplets.size() << " triplets \n"
     << "After : " << vec_triplets_validated.size() << std::endl;
     std::cout << "There is " << lemon::countConnectedComponents (sg)
