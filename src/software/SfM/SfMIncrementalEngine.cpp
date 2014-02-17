@@ -95,9 +95,6 @@ bool IncrementalReconstructionEngine::Process()
   if(! MakeInitialPair3D(initialPairIndex))
     return false;
 
-  _vec_added_order.push_back(initialPairIndex.first);
-  _vec_added_order.push_back(initialPairIndex.second);
-
   BundleAdjustment(); // Adjust 3D point and camera parameters.
 
   size_t round = 0;
@@ -475,30 +472,9 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
   //-> Triangulate the common tracks
   //--> Triangulate the point
 
-  // Add information related to the View (I,J) to the reconstruction data
-  _reconstructorData.set_imagedId.insert(I);
-  _reconstructorData.set_imagedId.insert(J);
-
   BrownPinholeCamera camI(intrinsicCamI.m_focal, intrinsicCamI.m_K(0,2), intrinsicCamI.m_K(1,2), Mat3::Identity(), Vec3::Zero());
   BrownPinholeCamera camJ(intrinsicCamJ.m_focal, intrinsicCamJ.m_K(0,2), intrinsicCamJ.m_K(1,2), RJ, tJ);
-  _reconstructorData.map_Camera.insert(std::make_pair(I, camI));
-  _reconstructorData.map_Camera.insert(std::make_pair(J, camJ));
-
-  // Add the images to the reconstructed intrinsic group
-  _map_ImagesIdPerIntrinsicGroup[_map_IntrinsicIdPerImageId[I]].push_back(I);
-  _map_ImagesIdPerIntrinsicGroup[_map_IntrinsicIdPerImageId[J]].push_back(J);
-  // Initialize the first intrinsics groups:
-  Vec6 & intrinsicI = _map_IntrinsicsPerGroup[_map_IntrinsicIdPerImageId[I]];
-  intrinsicI<< camI._f, camI._ppx, camI._ppy, camI._k1, camI._k2, camI._k3;
-  Vec6 & intrinsicJ = _map_IntrinsicsPerGroup[_map_IntrinsicIdPerImageId[J]];
-  intrinsicJ<< camJ._f, camJ._ppx, camJ._ppy, camJ._k1, camJ._k2, camJ._k3;
-
-  _reconstructorData.map_ACThreshold.insert(std::make_pair(I, errorMax));
-  _reconstructorData.map_ACThreshold.insert(std::make_pair(J, errorMax));
-
-  _set_remainingImageId.erase(I);
-  _set_remainingImageId.erase(J);
-
+  
   std::vector<IndMatch> vec_index;
   for (openMVG::tracks::STLMAPTracks::const_iterator
     iterT = map_tracksCommon.begin();
@@ -559,6 +535,35 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
   std::cout << "--Triangulated 3D points count: " << vec_inliers.size() << "\n";
   std::cout << "--Triangulated 3D points count under threshold: " << _reconstructorData.map_3DPoints.size()  << "\n";
   std::cout << "--Putative correspondences: " << x1.cols()  << "\n";
+  
+  _set_remainingImageId.erase(I);
+  _set_remainingImageId.erase(J);
+
+  if (!_reconstructorData.map_3DPoints.empty())
+  {
+    // Add information related to the View (I,J) to the reconstruction data
+    _reconstructorData.set_imagedId.insert(I);
+    _reconstructorData.set_imagedId.insert(J);
+
+    _reconstructorData.map_Camera.insert(std::make_pair(I, camI));
+    _reconstructorData.map_Camera.insert(std::make_pair(J, camJ));
+
+    // Add the images to the reconstructed intrinsic group
+    _map_ImagesIdPerIntrinsicGroup[_map_IntrinsicIdPerImageId[I]].push_back(I);
+    _map_ImagesIdPerIntrinsicGroup[_map_IntrinsicIdPerImageId[J]].push_back(J);
+    // Initialize the first intrinsics groups:
+    Vec6 & intrinsicI = _map_IntrinsicsPerGroup[_map_IntrinsicIdPerImageId[I]];
+    intrinsicI<< camI._f, camI._ppx, camI._ppy, camI._k1, camI._k2, camI._k3;
+    Vec6 & intrinsicJ = _map_IntrinsicsPerGroup[_map_IntrinsicIdPerImageId[J]];
+    intrinsicJ<< camJ._f, camJ._ppx, camJ._ppy, camJ._k1, camJ._k2, camJ._k3;
+
+    _reconstructorData.map_ACThreshold.insert(std::make_pair(I, errorMax));
+    _reconstructorData.map_ACThreshold.insert(std::make_pair(J, errorMax));
+    
+    _vec_added_order.push_back(I);
+    _vec_added_order.push_back(J);
+  }
+  
 
   _reconstructorData.exportToPly(stlplus::create_filespec(_sOutDirectory,"sceneStart","ply"));
 
@@ -622,7 +627,7 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
       "Reconstruction_Report.html").c_str());
     htmlFileStream << _htmlDocStream->getDoc();
   }
-  return true;
+  return !_reconstructorData.map_3DPoints.empty();
 }
 
 /// Functor to sort a vector of pair given the pair's second value
@@ -640,7 +645,8 @@ struct sort_pair_second {
 bool IncrementalReconstructionEngine::FindImagesWithPossibleResection(std::vector<size_t> & vec_possible_indexes)
 {
   vec_possible_indexes.clear();
-  if (_set_remainingImageId.empty())  {
+
+  if (_set_remainingImageId.empty() || _map_reconstructed.empty())  {
     return false;
   }
 
@@ -664,18 +670,21 @@ bool IncrementalReconstructionEngine::FindImagesWithPossibleResection(std::vecto
     set_imageIndex.insert(imageIndex);
     TracksUtilsMap::GetTracksInImages(set_imageIndex, _map_tracks, map_tracksCommon);
 
-    std::set<size_t> set_tracksIds;
-    TracksUtilsMap::GetTracksIdVector(map_tracksCommon, &set_tracksIds);
+    if (! map_tracksCommon.empty())
+    {
+      std::set<size_t> set_tracksIds;
+      TracksUtilsMap::GetTracksIdVector(map_tracksCommon, &set_tracksIds);
 
-    // Count the common possible putative point
-    //  with the already 3D reconstructed trackId
-    std::vector<size_t> vec_trackIdForResection;
-    set_intersection(set_tracksIds.begin(), set_tracksIds.end(),
-      _reconstructorData.set_trackId.begin(),
-      _reconstructorData.set_trackId.end(),
-      std::back_inserter(vec_trackIdForResection));
+      // Count the common possible putative point
+      //  with the already 3D reconstructed trackId
+      std::vector<size_t> vec_trackIdForResection;
+      set_intersection(set_tracksIds.begin(), set_tracksIds.end(),
+        _reconstructorData.set_trackId.begin(),
+        _reconstructorData.set_trackId.end(),
+        std::back_inserter(vec_trackIdForResection));
 
-    vec_putative.push_back( make_pair(imageIndex, vec_trackIdForResection.size()));
+      vec_putative.push_back( make_pair(imageIndex, vec_trackIdForResection.size()));
+    }
   }
 
   if (vec_putative.empty()) {
@@ -1426,6 +1435,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
   }
 
   //-- Lock the first camera to better deal with scene orientation ambiguity
+  if (_vec_added_order.size()>0 && map_camIndexToNumber_extrinsic.size()>0)
   {
     // First camera is the first one that have been used
     problem.SetParameterBlockConstant(
@@ -1445,7 +1455,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
       options.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
     else
     {
-      // No sparse backend for Ceres.
+      // No sparse back end for Ceres.
       // Use dense solving
       options.linear_solver_type = ceres::DENSE_SCHUR;
     }
