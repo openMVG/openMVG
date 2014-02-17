@@ -22,6 +22,9 @@
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 
+#include "openMVG/bundle_adjustment/problem_data_container.hpp"
+#include "openMVG/bundle_adjustment/pinhole_ceres_functor.hpp"
+
 namespace openMVG{
 namespace SfMRobust{
 
@@ -257,9 +260,120 @@ bool robustResection(
   {
     // Re-estimate the model from the inlier data
     // and/or LM to Refine f R|t
+    
+    Mat3 K_, R_;
+    Vec3 t_;
+    KRt_From_P(*P, &K_, &R_, &t_);
+
+    using namespace openMVG::bundle_adjustment;
+    // Setup a BA problem
+    BA_Problem_data<7> ba_problem;
+
+    // Configure the size of the problem
+    ba_problem.num_cameras_ = 1;
+    ba_problem.num_points_ = pvec_inliers->size();
+    ba_problem.num_observations_ = pvec_inliers->size();
+
+    ba_problem.point_index_.reserve(ba_problem.num_observations_);
+    ba_problem.camera_index_.reserve(ba_problem.num_observations_);
+    ba_problem.observations_.reserve(2 * ba_problem.num_observations_);
+
+    ba_problem.num_parameters_ = 7 * ba_problem.num_cameras_;
+    ba_problem.parameters_.reserve(ba_problem.num_parameters_);
+
+    double ppx = K_(0,2);
+    double ppy = K_(1,2);
+    // Fill it with data (tracks and points coords)
+    for (int i = 0; i < ba_problem.num_points_; ++i) {
+      // Collect the image of point i in each frame.
+
+      ba_problem.camera_index_.push_back(0);
+      ba_problem.point_index_.push_back(i);
+      const Vec2 & pt = pt2D.col((*pvec_inliers)[i]);
+      ba_problem.observations_.push_back( pt(0) - ppx );
+      ba_problem.observations_.push_back( pt(1) - ppy );
+    }
+
+    // Add camera parameters (R, t, focal)
+    {
+      // Rotation matrix to angle axis
+      std::vector<double> angleAxis(3);
+      ceres::RotationMatrixToAngleAxis((const double*) R_.data(), &angleAxis[0]);
+      ba_problem.parameters_.push_back(angleAxis[0]);
+      ba_problem.parameters_.push_back(angleAxis[1]);
+      ba_problem.parameters_.push_back(angleAxis[2]);
+      ba_problem.parameters_.push_back(t_[0]);
+      ba_problem.parameters_.push_back(t_[1]);
+      ba_problem.parameters_.push_back(t_[2]);
+      ba_problem.parameters_.push_back(K_(0,0)); //focal
+    }
+
+    // Create residuals for each observation in the bundle adjustment problem. The
+    // parameters for cameras and points are added automatically.
+    ceres::Problem problem;
+    const double * pt3D_Array = pt3D.data();
+    for (int i = 0; i < ba_problem.num_points_; ++i) {
+      // Each Residual block takes a point and a camera as input and outputs a 2
+      // dimensional residual. Internally, the cost function stores the observed
+      // image location and compares the reprojection against the observation.
+
+      ceres::CostFunction* cost_function =
+        new ceres::AutoDiffCostFunction<pinhole_reprojectionError::ErrorFunc_Refine_Camera, 2, 7>(
+        new pinhole_reprojectionError::ErrorFunc_Refine_Camera(
+        & ba_problem.observations()[2 * i],
+        pt3D.col((*pvec_inliers)[i]).data()));
+
+      problem.AddResidualBlock(cost_function,
+        NULL, // squared loss
+        ba_problem.mutable_camera_for_observation(0));
+    }
+
+    ceres::Solver::Options options;
+    options.linear_solver_type = ceres::SPARSE_SCHUR;
+    if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
+      options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
+    else
+      if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
+        options.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
+      else
+      {
+        // No sparse back end for Ceres.
+        // Use dense solving
+        options.linear_solver_type = ceres::DENSE_SCHUR;
+      }
+    options.minimizer_progress_to_stdout = false;
+    options.logging_type = ceres::SILENT;
+#ifdef USE_OPENMP
+    options.num_threads = omp_get_num_threads();
+#endif // USE_OPENMP
+
+    ceres::Solver::Summary summary;
+    ceres::Solve(options, &problem, &summary);
+    
+    // If no error, get back refined parameters
+    if (summary.termination_type != ceres::DID_NOT_RUN &&
+      summary.termination_type != ceres::USER_ABORT &&
+      summary.termination_type != ceres::NUMERICAL_FAILURE)
+    {
+      const double * Rtf = ba_problem.mutable_camera_for_observation(0);
+
+      // angle axis to rotation matrix
+      ceres::AngleAxisToRotationMatrix(Rtf, R_.data());
+      t_ = Vec3(Rtf[3], Rtf[4], Rtf[5]);
+      double focal = Rtf[6];
+
+      Mat3 KRefined;
+      KRefined << focal,0, ppx,
+        0, focal, ppy,
+        0, 0, 1;
+
+      PinholeCamera camRefined(KRefined,R_,t_);
+      *P = camRefined._P;
+    }
+
     return true;
   }
-  else{
+  else  {
     P = NULL;
     return false;
   }

@@ -129,7 +129,7 @@ struct BrownPinholeCamera
       (cam1._K.inverse() * Vec3(x1(0), x1(1), 1.))).normalized();
     Vec3 ray2 = (cam2._R.transpose() *
       (cam2._K.inverse() * Vec3(x2(0), x2(1), 1.))).normalized();
-    double mag = ray1.norm() * ray2.norm();
+    double mag = std::sqrt(ray1.squaredNorm() * ray2.squaredNorm());
     double dotAngle = ray1.dot(ray2);
     return R2D(acos(clamp(dotAngle/mag, -1.0 + 1.e-8, 1.0 - 1.e-8)));
   }
