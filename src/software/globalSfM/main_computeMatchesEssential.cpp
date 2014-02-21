@@ -160,7 +160,7 @@ int main(int argc, char **argv)
   //    - else save features and descriptors on disk
   //---------------------------------------
 
-  typedef Descriptor<float, 128> DescriptorT;
+  typedef Descriptor<unsigned char, 128> DescriptorT;
   typedef SIOPointFeature FeatureT;
   typedef std::vector<FeatureT> FeatsT;
   typedef vector<DescriptorT > DescsT;
