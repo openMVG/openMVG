@@ -121,7 +121,11 @@ bool exportToBundlerFormat(
 {
   std::ofstream os(sOutFile.c_str()	);
   std::ofstream osList(sOutListFile.c_str()	);
-  if (os.is_open() && osList.is_open())
+  if (! os.is_open() || ! osList.is_open())
+  {
+    return false;
+  }
+  else
   {
     os << "# Bundle file v0.3" << std::endl
       << doc._map_camera.size()
@@ -176,10 +180,6 @@ bool exportToBundlerFormat(
     }
     os.close();
     osList.close();
-  }
-  else
-  {
-    return false;
   }
   return true;
 }
