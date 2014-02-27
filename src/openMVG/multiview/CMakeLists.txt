@@ -33,4 +33,4 @@ UNIT_TEST(openMVG solver_essential_kernel "openMVG_multiview;openMVG_multiview_t
 UNIT_TEST(openMVG solver_homography_kernel "openMVG_multiview;openMVG_multiview_test_data")
 UNIT_TEST(openMVG solver_essential_five_point "openMVG_multiview;openMVG_multiview_test_data")
 UNIT_TEST(openMVG solver_resection_kernel "openMVG_multiview;openMVG_multiview_test_data")
-
+UNIT_TEST(openMVG solver_affine_fund_kernel "openMVG_multiview;openMVG_multiview_test_data")
