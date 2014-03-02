@@ -271,7 +271,7 @@ bool GlobalReconstructionEngine::Process()
   //----------------------------
 
   std::map<std::size_t, Mat3> map_globalR;
-  std::cout << "Compute " << map_cameraIndexTocameraNode.size() << "global rotations." << std::endl;
+  std::cout << "Compute " << map_cameraIndexTocameraNode.size() << " global rotations." << std::endl;
 
   {
     // Build relative information for only the largest considered Connected Component
@@ -682,11 +682,12 @@ bool GlobalReconstructionEngine::Process()
 
   //-- Export data to openMVG format:
   {
+    std::cout << "\n Export calibration data and image data." << std::endl;
     const std::string & sOutDirectory = stlplus::folder_append_separator(_sOutDirectory) + "SfM_Output";  //Export directory
     const std::vector<std::string> & vec_fileNames = _vec_fileNames; // vector of image filenames
     const std::string & sImagePath = _sImagePath;  // The images path
     const openMVG::tracks::STLMAPTracks & map_reconstructed = map_tracksSelected; // Tracks (Visibility)
-    bool bExportImage = false;
+    bool bExportImage = true;
 
     bool bOk = true;
     if (!stlplus::is_folder(sOutDirectory))
@@ -911,7 +912,7 @@ bool GlobalReconstructionEngine::ReadInputData()
 
       for (size_t i = 0; i < _vec_camImageNames.size(); ++i)
       {
-        _vec_fileNames.push_back( stlplus::create_filespec( _sImagePath, _vec_camImageNames[i].m_sImageName) );
+        _vec_fileNames.push_back(_vec_camImageNames[i].m_sImageName);
       }
     }
   }
