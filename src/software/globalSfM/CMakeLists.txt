@@ -16,10 +16,3 @@ TARGET_LINK_LIBRARIES(
     ${LIBS}
     openMVG_linearProgramming
     openMVG_lInftyComputerVision)
-
-ADD_EXECUTABLE(
-  openMVG_main_computeMatchesEssential
-  main_computeMatchesEssential.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_computeMatchesEssential
-                     ${LIBS})
-
