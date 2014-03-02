@@ -47,7 +47,7 @@ See intrinsic SfM entry.
 2. Geometric features correspondences computation
 --------------------------------------------------
 
-As approximative or precise focal length is know we can use the essential matrix to filter putative matches.
+An approximative or precise focal length is know we can use the essential matrix to filter putative matches.
 
 .. code-block:: c++
 
