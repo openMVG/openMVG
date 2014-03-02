@@ -6,6 +6,7 @@ Structure from Motion computes an external camera pose per image (the motion) an
 Inputs are images and internal camera calibration information (intrinsic parameters).
 Feature points are detected in each image (e.g., SIFT) and matched between image pairs and then the SfM pipeline compute the scene and camera motion.
 There are three main approaches to solve the SfM problem:
+
   - the incremental/sequential pipeline,
   - the hierarchical pipeline,
   - the global one.
@@ -73,22 +74,9 @@ Using a 3 directories based data organisation structure is suggested:
 
 * **matches**
 
-<<<<<<< HEAD
-  - If you want refine intrinsics (focal, principal point and radial distortion) for each focal group
-  .. code-block:: c++
-  
-    $ openMVG_main_IncrementalSfM -i /home/pierre/Pictures/Dataset/images/ -m /home/pierre/Pictures/Dataset/matches/ -o /home/pierre/Pictures/Dataset/outReconstruction/
-  
-  - If you want only refine the focal (to use with image were the distortion have been already removed)
-  .. code-block:: c++
-  
-  
-    $ openMVG_main_IncrementalSfM -i /home/pierre/Pictures/Dataset/images/ -m /home/pierre/Pictures/Dataset/matches/ -o /home/pierre/Pictures/Dataset/outReconstruction/ -d 0
-=======
   * the image information (lists.txt), images points and matches information will be saved here
 
 * **outReconstruction**
->>>>>>> LInfinityCV
 
   * directory where result and log of the 3D reconstruction will be exported
 
