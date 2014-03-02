@@ -1,3 +1,10 @@
+
+// Copyright (c) 2012, 2013 Pierre MOULON.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #pragma once
 
 #include "openMVG/features/features.hpp"
@@ -10,7 +17,7 @@ using namespace openMVG;
 #include <vector>
 #include <map>
 
-template <typename FeatureT, typename GeometricFilterT>
+template <typename FeatureT>
 class ImageCollectionGeometricFilter
 {
   public:
@@ -18,14 +25,14 @@ class ImageCollectionGeometricFilter
   {
   }
 
-  /// Load all features and descriptors in memory
+  /// Load all features in memory
   bool loadData(
     const std::vector<std::string> & vec_fileNames, // input filenames
     const std::string & sMatchDir) // where the data are saved
   {
     bool bOk = true;
     for (size_t j = 0; j < vec_fileNames.size(); ++j)  {
-      // Load descriptor of Jnth image
+      // Load features of Jnth image
       const std::string sFeatJ = stlplus::create_filespec(sMatchDir,
         stlplus::basename_part(vec_fileNames[j]), "feat");
       bOk &= loadFeatsFromFile(sFeatJ, map_Feat[j]);
@@ -33,7 +40,8 @@ class ImageCollectionGeometricFilter
     return bOk;
   }
 
-  /// Filter all putatives correspondances according the Template filter
+  /// Filter all putative correspondences according the templated geometric filter
+  template <typename GeometricFilterT>
   void Filter(
     const GeometricFilterT & geometricFilter,
     IndexedMatchPerPair & map_PutativesMatchesPair, // putative correspondences to filter

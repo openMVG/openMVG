@@ -107,7 +107,7 @@ bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
     bOk = true;
   }
   else  {
-    std::cout << std::endl << "/!\\There is no right solution,"
+    std::cerr << std::endl << "/!\\There is no right solution,"
       <<" probably intermediate results are not correct or no points"
       <<" in front of both cameras" << std::endl;
     bOk = false;

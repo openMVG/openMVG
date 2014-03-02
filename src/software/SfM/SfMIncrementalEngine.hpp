@@ -14,10 +14,7 @@
 #include "software/SfM/SfMReconstructionData.hpp"
 #include "software/SfM/SfMIOHelper.hpp"
 #include "openMVG/features/features.hpp"
-
-#include "openMVG/tracks/tracks.hpp"
-#include "openMVG/matching/indMatch.hpp"
-using namespace openMVG::tracks;
+#include <openMVG/tracks/tracks.hpp>
 
 #include <memory>
 
@@ -133,10 +130,8 @@ private:
   // Intrinsic Id per imageId
   std::map<size_t, size_t> _map_IntrinsicIdPerImageId;
 
-
-  typedef tracks::mapPairWiseMatches STLPairWiseMatches;
-  STLPairWiseMatches _map_Matches_F; // pairwise matches for Fundamental model
-
+  //-- Visibility information
+  openMVG::tracks::STLPairWiseMatches _map_Matches_F; // pairwise matches for Fundamental model
   openMVG::tracks::STLMAPTracks _map_tracks; // reconstructed track (visibility per 3D point)
 
   //-- configuration of the reconstruction
@@ -158,7 +153,6 @@ private:
   /// List of images that belong to a common intrinsic group
   std::map<size_t, std::vector<size_t> > _map_ImagesIdPerIntrinsicGroup;
   std::map<size_t, Vec6 > _map_IntrinsicsPerGroup;
-  //std::map<size_t, BrownPinholeCamera> _map_Camera;
 
   // -----
   // Reporting ..

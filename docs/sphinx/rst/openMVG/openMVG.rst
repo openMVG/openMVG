@@ -1,5 +1,5 @@
 ############################
-openMVG
+openMVG core
 ############################
   
 The openMVG library core module
@@ -29,4 +29,5 @@ Here the list of libraries that:
   tracks/tracks.rst
   robust_estimation/robust_estimation.rst
   bundle_adjustment/bundle_adjustment.rst
+  linear_programming/lp.rst
 

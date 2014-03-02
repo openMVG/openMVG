@@ -36,6 +36,15 @@ Setup the required external library.
  $ cd openMVG_Build
  $ cmake -DCMAKE_BUILD_TYPE=RELEASE . ../openMVG/src/
 
+=> In order to use the MOSEK backend for the linear programming oepnMVG module
+  - Check that you have an uptodate MOSEK licence, else openMVG MOSEK unit test will fail.
+
+ $ cmake -DCMAKE_BUILD_TYPE=RELEASE
+    -DMOSEK_SEARCH_HEADER="~/Documents/Lib/mosek/6/tools/platform/linux64x86/h"
+    -DMOSEK_SEARCH_LIB="~/Documents/Lib/mosek/6/tools/platform/linux64x86/bin"
+    . ../openMVG/src/
+
+
 If you want have an IDE openable project with codeblocks:
  $ cmake -G "CodeBlocks - Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE . ../openMVG/src/
 

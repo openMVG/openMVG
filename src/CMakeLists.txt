@@ -85,6 +85,36 @@ IF (UNIX)
   ENDIF (EXIV2_FOUND)
 ENDIF (UNIX)
 
+#===============================
+#---- LINEAR PROGRAMMING SOLVER
+#===============================
+
+#- Mosek (linear programming interface)
+#===============================================================================
+FIND_PACKAGE(Mosek)
+IF(MOSEK_FOUND)
+  ADD_DEFINITIONS(-DOPENMVG_HAVE_MOSEK)
+  INCLUDE_DIRECTORIES(
+    ${MOSEK_INCLUDE}
+    ./dependencies/osi_clp/Osi/src/OsiMsk/
+  )
+ENDIF(MOSEK_FOUND)
+
+#- osi_clp (linear programming interface)
+# ==============================================================================
+ADD_SUBDIRECTORY(dependencies/osi_clp)
+INCLUDE_DIRECTORIES(
+  ./dependencies/osi_clp/CoinUtils/src/
+  ./dependencies/osi_clp/Clp/src/
+  ./dependencies/osi_clp/Osi/src/Osi/
+  ./dependencies/osi_clp/Clp/src/OsiClp/
+)
+
+#===============================
+#--END-- LINEAR PROGRAMMING SOLVER
+#===============================
+
+
 # ==============================================================================
 # Opencv is not used by openMVG but some samples show how to use openCV
 #  and openMVG simultaneously

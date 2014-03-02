@@ -124,7 +124,7 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
       case  6 : // a camera with exif data not found in the database
       {
          oss.clear(); oss.str(vec_str[3]);
-         double focal;
+         float focal;
          oss >> focal;
          intrinsicCamInfo.m_focal = focal;
          intrinsicCamInfo.m_bKnownIntrinsic = true;
@@ -190,6 +190,30 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
   }
   in.close();
   return !(vec_camImageName.empty());
+}
+
+//-- Load an image list file but only return camera image names
+static bool loadImageList( std::vector<std::string> & vec_camImageName,
+                           std::string sListFileName,
+                           bool bVerbose = true )
+{
+  vec_camImageName.clear();
+  std::vector<openMVG::SfMIO::CameraInfo> vec_camImageIntrinsicInfo;
+  std::vector<openMVG::SfMIO::IntrinsicCameraInfo> vec_focalGroup;
+  if (loadImageList( vec_camImageIntrinsicInfo,
+                      vec_focalGroup,
+                      sListFileName,
+                      bVerbose) )
+  {
+    for ( std::vector<openMVG::SfMIO::CameraInfo>::const_iterator
+      iter_camInfo = vec_camImageIntrinsicInfo.begin();
+      iter_camInfo != vec_camImageIntrinsicInfo.end();
+      iter_camInfo++ )
+    {
+      vec_camImageName.push_back( iter_camInfo->m_sImageName );
+    }
+  }
+  return (!vec_camImageName.empty());
 }
 
 } // namespace SfMIO
