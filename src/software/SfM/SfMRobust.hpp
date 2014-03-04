@@ -19,21 +19,37 @@
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/cameras/PinholeCamera.hpp"
 
-using namespace openMVG;
-
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
+
+#include "openMVG/bundle_adjustment/problem_data_container.hpp"
+#include "openMVG/bundle_adjustment/pinhole_ceres_functor.hpp"
+
+namespace openMVG{
+namespace SfMRobust{
 
 using namespace openMVG::matching;
 using namespace openMVG::robust;
 
 static const size_t ACRANSAC_ITER = 4096;
 
-namespace openMVG{
-namespace SfMRobust{
 
-/// Estimate the essential matrix from point matches and K matrices.
-bool robustEssential(const Mat3 & K1, const Mat3 & K2,
+/**
+ * @brief Estimate the essential matrix from point matches and K matrices.
+ * 
+ * @param[in] K1 camera 1 intrinsics
+ * @param[in] K2 camera 2 intrinsics
+ * @param[in] x1 camera 1 image points
+ * @param[in] x2 camera 2 image points
+ * @param[out] pE essential matrix (can be NULL)
+ * @param[out] pvec_inliers inliers indices (can be empty)
+ * @param[in] size_ima1 width, height of image 1
+ * @param[in] size_ima2 width, height of image 2
+ * @param[out] errorMax upper bound of the reprojection error of the found solution
+ * @param[in] precision upper bound of the desired solution
+ */
+bool robustEssential(
+  const Mat3 & K1, const Mat3 & K2,
   const Mat & x1, const Mat & x2,
   Mat3 * pE, std::vector<size_t> * pvec_inliers,
   const std::pair<size_t, size_t> & size_ima1,
@@ -58,22 +74,31 @@ bool robustEssential(const Mat3 & K1, const Mat3 & K2,
                     x2, size_ima2.first, size_ima2.second, K1, K2);
 
   // Robustly estimation of the Essential matrix and it's precision
-  std::pair<double,double> ACRansacOut = ACRANSAC(kernel, *pvec_inliers,
-    ACRANSAC_ITER, pE, precision, true);
-  *errorMax = ACRansacOut.first;
+  std::pair<double,double> acRansacOut = ACRANSAC(kernel, *pvec_inliers,
+    ACRANSAC_ITER, pE, precision, false);
+  *errorMax = acRansacOut.first;
 
   return pvec_inliers->size() > 2.5 * SolverType::MINIMUM_SAMPLES;
 }
 
-/// Estimate the best possible Rotation/Translation from E
-/// Four are possible, keep the one with most of the point in front.
+/**
+ * @brief Estimate the best possible Rotation/Translation from E.
+ *  Four are possible, keep the one with most of the point in front.
+ * 
+ * @param[in] K1 camera 1 intrinsics
+ * @param[in] K2 camera 2 intrinsics
+ * @param[in] x1 camera 1 image points
+ * @param[in] x2 camera 2 image points
+ * @param[in] E essential matrix
+ * @param[in] vec_inliers inliers indices
+ * @param[out] R estimated rotation
+ * @param[out] t estimated translation
+ */
 bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
   const Mat & x1, const Mat & x2,
   const Mat3 & E, const std::vector<size_t> & vec_inliers,
   Mat3 * R, Vec3 * t)
 {
-  bool bOk = false;
-
   // Accumulator to find the best solution
   std::vector<size_t> f(4, 0);
 
@@ -94,40 +119,39 @@ bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
   Vec3 t1 = Vec3::Zero();
   P_From_KRt(K1, R1, t1, &P1);
 
-  for (int i = 0; i < 4; ++i) {
+  for (int i = 0; i < 4; ++i)
+  {
     const Mat3 &R2 = Rs[i];
     const Vec3 &t2 = ts[i];
     P_From_KRt(K2, R2, t2, &P2);
     Vec3 X;
 
-    for (size_t k = 0; k < vec_inliers.size(); ++k) {
+    for (size_t k = 0; k < vec_inliers.size(); ++k)
+    {
       const Vec2 & x1_ = x1.col(vec_inliers[k]),
         & x2_ = x2.col(vec_inliers[k]);
       TriangulateDLT(P1, x1_, P2, x2_, &X);
       // Test if point is front to the two cameras.
-      if (Depth(R1, t1, X) > 0 && Depth(R2, t2, X) > 0) {
+      if (Depth(R1, t1, X) > 0 && Depth(R2, t2, X) > 0)
+      {
           ++f[i];
       }
     }
   }
-  // Check the solution :
-  std::cout << std::endl << "bundlerHelp::estimate_Rt_fromE" << std::endl;
-  std::cout << "\t Number of points in front of both cameras:"
-    << f[0] << " " << f[1] << " " << f[2] << " " << f[3] << std::endl;
+  // Check the solution:
   std::vector<size_t>::iterator iter = max_element(f.begin(), f.end());
-  if(*iter != 0)  {
-    size_t index = std::distance(f.begin(),iter);
-    (*R) = Rs[index];
-    (*t) = ts[index];
-    bOk = true;
-  }
-  else  {
+  if(*iter == 0)
+  {
     std::cerr << std::endl << "/!\\There is no right solution,"
       <<" probably intermediate results are not correct or no points"
       <<" in front of both cameras" << std::endl;
-    bOk = false;
+    return false;
   }
-  return bOk;
+  size_t index = std::distance(f.begin(),iter);
+  (*R) = Rs[index];
+  (*t) = ts[index];
+  
+  return true;
 }
 
 /// Triangulate a set of points between two view
@@ -236,9 +260,120 @@ bool robustResection(
   {
     // Re-estimate the model from the inlier data
     // and/or LM to Refine f R|t
+    
+    Mat3 K_, R_;
+    Vec3 t_;
+    KRt_From_P(*P, &K_, &R_, &t_);
+
+    using namespace openMVG::bundle_adjustment;
+    // Setup a BA problem
+    BA_Problem_data<7> ba_problem;
+
+    // Configure the size of the problem
+    ba_problem.num_cameras_ = 1;
+    ba_problem.num_points_ = pvec_inliers->size();
+    ba_problem.num_observations_ = pvec_inliers->size();
+
+    ba_problem.point_index_.reserve(ba_problem.num_observations_);
+    ba_problem.camera_index_.reserve(ba_problem.num_observations_);
+    ba_problem.observations_.reserve(2 * ba_problem.num_observations_);
+
+    ba_problem.num_parameters_ = 7 * ba_problem.num_cameras_;
+    ba_problem.parameters_.reserve(ba_problem.num_parameters_);
+
+    double ppx = K_(0,2);
+    double ppy = K_(1,2);
+    // Fill it with data (tracks and points coords)
+    for (int i = 0; i < ba_problem.num_points_; ++i) {
+      // Collect the image of point i in each frame.
+
+      ba_problem.camera_index_.push_back(0);
+      ba_problem.point_index_.push_back(i);
+      const Vec2 & pt = pt2D.col((*pvec_inliers)[i]);
+      ba_problem.observations_.push_back( pt(0) - ppx );
+      ba_problem.observations_.push_back( pt(1) - ppy );
+    }
+
+    // Add camera parameters (R, t, focal)
+    {
+      // Rotation matrix to angle axis
+      std::vector<double> angleAxis(3);
+      ceres::RotationMatrixToAngleAxis((const double*) R_.data(), &angleAxis[0]);
+      ba_problem.parameters_.push_back(angleAxis[0]);
+      ba_problem.parameters_.push_back(angleAxis[1]);
+      ba_problem.parameters_.push_back(angleAxis[2]);
+      ba_problem.parameters_.push_back(t_[0]);
+      ba_problem.parameters_.push_back(t_[1]);
+      ba_problem.parameters_.push_back(t_[2]);
+      ba_problem.parameters_.push_back(K_(0,0)); //focal
+    }
+
+    // Create residuals for each observation in the bundle adjustment problem. The
+    // parameters for cameras and points are added automatically.
+    ceres::Problem problem;
+    const double * pt3D_Array = pt3D.data();
+    for (int i = 0; i < ba_problem.num_points_; ++i) {
+      // Each Residual block takes a point and a camera as input and outputs a 2
+      // dimensional residual. Internally, the cost function stores the observed
+      // image location and compares the reprojection against the observation.
+
+      ceres::CostFunction* cost_function =
+        new ceres::AutoDiffCostFunction<pinhole_reprojectionError::ErrorFunc_Refine_Camera, 2, 7>(
+        new pinhole_reprojectionError::ErrorFunc_Refine_Camera(
+        & ba_problem.observations()[2 * i],
+        pt3D.col((*pvec_inliers)[i]).data()));
+
+      problem.AddResidualBlock(cost_function,
+        NULL, // squared loss
+        ba_problem.mutable_camera_for_observation(0));
+    }
+
+    ceres::Solver::Options options;
+    options.linear_solver_type = ceres::SPARSE_SCHUR;
+    if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
+      options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
+    else
+      if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
+        options.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
+      else
+      {
+        // No sparse back end for Ceres.
+        // Use dense solving
+        options.linear_solver_type = ceres::DENSE_SCHUR;
+      }
+    options.minimizer_progress_to_stdout = false;
+    options.logging_type = ceres::SILENT;
+#ifdef USE_OPENMP
+    options.num_threads = omp_get_num_threads();
+#endif // USE_OPENMP
+
+    ceres::Solver::Summary summary;
+    ceres::Solve(options, &problem, &summary);
+    
+    // If no error, get back refined parameters
+    if (summary.termination_type != ceres::DID_NOT_RUN &&
+      summary.termination_type != ceres::USER_ABORT &&
+      summary.termination_type != ceres::NUMERICAL_FAILURE)
+    {
+      const double * Rtf = ba_problem.mutable_camera_for_observation(0);
+
+      // angle axis to rotation matrix
+      ceres::AngleAxisToRotationMatrix(Rtf, R_.data());
+      t_ = Vec3(Rtf[3], Rtf[4], Rtf[5]);
+      double focal = Rtf[6];
+
+      Mat3 KRefined;
+      KRefined << focal,0, ppx,
+        0, focal, ppy,
+        0, 0, 1;
+
+      PinholeCamera camRefined(KRefined,R_,t_);
+      *P = camRefined._P;
+    }
+
     return true;
   }
-  else{
+  else  {
     P = NULL;
     return false;
   }

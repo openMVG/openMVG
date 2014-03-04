@@ -213,9 +213,8 @@ TEST(FivePointsRelativePose, Random) {
   Rs.resize(Es.size());
   ts.resize(Es.size());
   for (size_t s = 0; s < Es.size(); ++s) {
-    Vec2 x1Col, x2Col;
-    x1Col <<  d.x1.col(0)(0), d.x1.col(0)(1);
-    x2Col <<  d.x2.col(0)(0), d.x2.col(0)(1);
+    Vec2 x1Col = d.x1.col(0);
+    Vec2 x2Col = d.x2.col(0);
     CHECK(
       MotionFromEssentialAndCorrespondence(Es[s],
                                          Mat3::Identity(),
@@ -248,24 +247,24 @@ TEST(FivePointsRelativePose, test_data_sets) {
   NViewDataSet d = NRealisticCamerasRing(iNviews, 5,
     nViewDatasetConfigurator(1,1,0,0,5,0)); // Suppose a camera with Unit matrix as K
 
-  for(int i=0; i <iNviews; ++i)
+  // Compute pose [R|t] from 0 to [1;..;iNviews]
+  for(int i=1; i <iNviews; ++i)
   {
     vector<Mat3> Es, Rs;  // Essential, Rotation matrix.
     vector<Vec3> ts;      // Translation matrix.
-    FivePointsRelativePose(d._x[0], d._x[1], &Es);
+    FivePointsRelativePose(d._x[0], d._x[i], &Es);
 
     // Recover rotation and translation from E.
     Rs.resize(Es.size());
     ts.resize(Es.size());
     for (size_t s = 0; s < Es.size(); ++s) {
-      Vec2 x1Col, x2Col;
-      x1Col << d._x[0].col(i)(0), d._x[0].col((i+1)%iNviews)(1);
-      x2Col << d._x[1].col(i)(0), d._x[1].col((i+1)%iNviews)(1);
+      Vec2 x1Col = d._x[0].col(0);
+      Vec2 x2Col = d._x[i].col(0);
       CHECK(
         MotionFromEssentialAndCorrespondence(Es[s],
         d._K[0],
         x1Col,
-        d._K[1],
+        d._K[i],
         x2Col,
         &Rs[s],
         &ts[s]));
@@ -273,7 +272,7 @@ TEST(FivePointsRelativePose, test_data_sets) {
     //-- Compute Ground Truth motion
     Mat3 R;
     Vec3 t, t0 = Vec3::Zero(), t1 = Vec3::Zero();
-    RelativeCameraMotion(d._R[i], d._t[i], d._R[(i+1)%iNviews], d._t[(i+1)%iNviews], &R, &t);
+    RelativeCameraMotion(d._R[0], d._t[0], d._R[i], d._t[i], &R, &t);
 
     // Assert that found relative motion is correct for almost one model.
     bool bsolution_found = false;

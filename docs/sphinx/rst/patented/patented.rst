@@ -15,6 +15,7 @@ The used code is a subset of the [VLFEAT]_ library.
 
 You can replace this keypoints and descriptors provided by any version of your choice to use openMVG in a non-research context.
 Suggestions for features points:
+
   - CORNERS: HARRIS, FAST,
   - REGIONS: MSER,
   - BLOBS: AKAZE.

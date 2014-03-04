@@ -37,9 +37,11 @@
 #include <Eigen/Geometry>
 #include <Eigen/LU>
 #include <Eigen/QR>
+#include <Eigen/SparseCore>
 #include <Eigen/SVD>
 
 #include <cmath>
+#include <numeric>
 #include <string>
 #include <iostream>
 #include <vector>
@@ -55,7 +57,6 @@ namespace openMVG {
   typedef Eigen::Vector2i Vec2i;
   typedef Eigen::Vector2f Vec2f;
   typedef Eigen::Vector3f Vec3f;
-  typedef Eigen::Matrix<double, 6, 1> Vec6;
   typedef Eigen::Matrix<double, 9, 1> Vec9;
 
   typedef Eigen::Quaternion<double> Quaternion;
@@ -63,7 +64,7 @@ namespace openMVG {
   typedef Eigen::Matrix<double, 3, 3> Mat3;
 
 #if defined(_WIN32) || defined(WIN32)
-  // Handle alignment issue with Mat34, Vec2, Vec4 on win32 with old compiler
+  // Handle alignment issue with Mat34, Vec2, Vec4, Vec6 on win32 with old compiler
   enum { NeedsToAlignMat34 = (sizeof(Eigen::Matrix<double, 3, 4>)%16)==0 };
   typedef Eigen::Matrix<double, 3, 4, ((NeedsToAlignMat34)==0 ? Eigen::Aligned : Eigen::DontAlign)> Mat34;
 
@@ -72,10 +73,14 @@ namespace openMVG {
 
   enum { NeedsToAlignVec4= (sizeof(Eigen::Vector4d)%16)==0 };
   typedef Eigen::Matrix<double, 4, 1, ((NeedsToAlignVec4)==0 ? Eigen::Aligned : Eigen::DontAlign)> Vec4;
+
+  enum { NeedsToAlignVec6= (sizeof(Eigen::Matrix<double, 6, 1>)%16)==0 };
+  typedef Eigen::Matrix<double, 6, 1, ((NeedsToAlignVec6)==0 ? Eigen::Aligned : Eigen::DontAlign)> Vec6;
 #else // defined(_WIN32) || defined(WIN32)
   typedef Eigen::Matrix<double, 3, 4> Mat34;
   typedef Eigen::Vector2d Vec2;
   typedef Eigen::Vector4d Vec4;
+  typedef Eigen::Matrix<double, 6, 1> Vec6;
 #endif // defined(_WIN32) || defined(WIN32)
 
   typedef Eigen::Matrix<double, 4, 4> Mat4;
@@ -95,6 +100,10 @@ namespace openMVG {
   typedef Eigen::Matrix<double, 4, Eigen::Dynamic> Mat4X;
 
   typedef Eigen::Matrix<double, Eigen::Dynamic, 9> MatX9;
+
+  //-- Sparse Matrix (Column major, and row major)
+  typedef Eigen::SparseMatrix<double> sMat;
+  typedef Eigen::SparseMatrix<double,Eigen::RowMajor> sRMat;
 
   //--------------
   //-- Function --
@@ -311,7 +320,7 @@ namespace openMVG {
 #ifdef _WIN32
     return _finite(val);
 #else
-    return finite(val);
+    return std::isfinite(val);
 #endif
   }
 

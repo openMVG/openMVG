@@ -9,6 +9,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 PROJECT(openMVG C CXX)
 
+# Multithreading using OpenMP
+OPTION(USE_OPENMP "Enable OpenMP thread" ON)
+
 # By default build in Release mode
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE "Release")
@@ -26,23 +29,30 @@ SET(CMAKE_MODULE_PATH
 INCLUDE(OptimizeForArchitecture)
 OptimizeForArchitecture()
 IF (SSE2_FOUND)
+  IF (MSVC AND NOT ${CMAKE_CL_64})
+    ADD_DEFINITIONS(/arch:SSE2)
+  ENDIF (MSVC AND NOT ${CMAKE_CL_64})
   ADD_DEFINITIONS(-DUSE_SSE)
 ENDIF (SSE2_FOUND)
 
 # ==============================================================================
 # OpenMP detection
 # ==============================================================================
-FIND_PACKAGE(OpenMP)
-IF (OPENMP_FOUND)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  OPTION(USE_OPENMP "Use OpenMP for parallelization" ON)
-  ADD_DEFINITIONS(-DUSE_OPENMP)
-  IF (NOT MSVC)
-    LIST(APPEND OPENMVG_LIBRARY_DEPENDENCIES gomp)
-  ENDIF (NOT MSVC)
-ELSE (OPENMP_FOUND)
-  OPTION(USE_OPENMP "Use OpenMP for parallelization" OFF)
-ENDIF (OPENMP_FOUND)
+IF (USE_OPENMP)
+  FIND_PACKAGE(OpenMP)
+  IF (OPENMP_FOUND)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    OPTION(USE_OPENMP "Use OpenMP for parallelization" ON)
+    ADD_DEFINITIONS(-DUSE_OPENMP)
+    IF (NOT MSVC)
+      LIST(APPEND OPENMVG_LIBRARY_DEPENDENCIES gomp)
+    ENDIF (NOT MSVC)
+ELSE (USE_OPENMP)
+    OPTION(USE_OPENMP "Use OpenMP for parallelization" OFF)
+    SET(USE_OPENMP OFF CACHE BOOL "Use OpenMP for parallelization" FORCE)
+    REMOVE_DEFINITIONS(-DUSE_OPENMP)
+  ENDIF (OPENMP_FOUND)
+ENDIF (USE_OPENMP)
 
 # ==============================================================================
 # IMAGE IO detection
@@ -74,6 +84,36 @@ IF (UNIX)
     ADD_DEFINITIONS(-DUSE_EXIV2)
   ENDIF (EXIV2_FOUND)
 ENDIF (UNIX)
+
+#===============================
+#---- LINEAR PROGRAMMING SOLVER
+#===============================
+
+#- Mosek (linear programming interface)
+#===============================================================================
+FIND_PACKAGE(Mosek)
+IF(MOSEK_FOUND)
+  ADD_DEFINITIONS(-DOPENMVG_HAVE_MOSEK)
+  INCLUDE_DIRECTORIES(
+    ${MOSEK_INCLUDE}
+    ./dependencies/osi_clp/Osi/src/OsiMsk/
+  )
+ENDIF(MOSEK_FOUND)
+
+#- osi_clp (linear programming interface)
+# ==============================================================================
+ADD_SUBDIRECTORY(dependencies/osi_clp)
+INCLUDE_DIRECTORIES(
+  ./dependencies/osi_clp/CoinUtils/src/
+  ./dependencies/osi_clp/Clp/src/
+  ./dependencies/osi_clp/Osi/src/Osi/
+  ./dependencies/osi_clp/Clp/src/OsiClp/
+)
+
+#===============================
+#--END-- LINEAR PROGRAMMING SOLVER
+#===============================
+
 
 # ==============================================================================
 # Opencv is not used by openMVG but some samples show how to use openCV

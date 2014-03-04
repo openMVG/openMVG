@@ -95,7 +95,7 @@ static ErrorIndex bestNFA(
   ErrorIndex bestIndex(std::numeric_limits<double>::infinity(), startIndex);
   const size_t n = e.size();
   for(size_t k=startIndex+1; k<=n && e[k-1].first<=maxThreshold; ++k) {
-    float logalpha = logalpha0 + multError *log10(e[k-1].first + std::numeric_limits<float>::min());
+    double logalpha = logalpha0 + multError * log10(e[k-1].first + std::numeric_limits<float>::min());
     ErrorIndex index(loge0 +
       logalpha * (double)(k-startIndex) +
       logc_n[k] +
@@ -121,7 +121,18 @@ static void UniformSample(int sizeSample,
     (*sample)[i] = vec_index[ (*sample)[i] ];
 }
 
-/// ACRANSAC routine (ErrorThreshold, NFA)
+/**
+ * @brief ACRANSAC routine (ErrorThreshold, NFA)
+ * 
+ * @param[in] kernel model and metric object
+ * @param[out] vec_inliers points that fit the estimated model
+ * @param[in] nIter maximum number of consecutive iterations
+ * @param[out] model returned model if found
+ * @param[in] precision upper bound of the precision (squared error)
+ * @param[in] bVerbose display console log
+ * 
+ * @return (errorMax, minNFA)
+ */
 template<typename Kernel>
 std::pair<double, double> ACRANSAC(const Kernel &kernel,
   std::vector<size_t> & vec_inliers,

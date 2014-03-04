@@ -38,7 +38,6 @@
 using namespace lemon;
 
 #include "openMVG/matching/indMatch.hpp"
-using namespace openMVG::matching;
 
 #include <algorithm>
 #include <iostream>
@@ -46,6 +45,10 @@ using namespace openMVG::matching;
 #include <vector>
 #include <set>
 #include <map>
+
+namespace openMVG  {
+
+using namespace openMVG::matching;
 
 /// Lightweight copy of the flat_map of BOOST library
 /// Use a vector to speed up insertion (preallocated array)
@@ -75,13 +78,12 @@ private:
   static bool superiorToFirst(const P &a, const T1 &b) {return a.first<b;}
 };
 
-
-namespace openMVG  {
 namespace tracks  {
   using namespace std;
 
 // Pairwise matches (indexed matches for a pair <I,J>)
 typedef std::map< std::pair<size_t,size_t>, std::vector<IndMatch> > mapPairWiseMatches;
+typedef tracks::mapPairWiseMatches STLPairWiseMatches;
 
 // Data structure to store a track: collection of {ImageId,FeatureId}
 //  The corresponding image points with their imageId and FeatureId.
@@ -197,7 +199,7 @@ struct TracksBuilder
   }
 
   /// Remove the pair that have too few correspondences.
-  bool FilterPairWiseMinimumMatches(size_t minMatchesOccurences)
+  bool FilterPairWiseMinimumMatches(size_t minMatchesOccurences, bool bVerbose = false)
   {
     std::vector<size_t> vec_tracksToRemove;
     std::map< size_t, set<size_t> > map_tracksIdPerImages;
@@ -224,18 +226,20 @@ struct TracksBuilder
         const set<size_t> & setB = iter2->second;
         vector<size_t> inter;
 
-        set_intersection (setA.begin(), setA.end(), setB.begin(), setB.end(), back_inserter(inter));
+        set_intersection(setA.begin(), setA.end(), setB.begin(), setB.end(), back_inserter(inter));
 
         if (inter.size() < minMatchesOccurences)
           copy(inter.begin(), inter.end(), back_inserter(vec_tracksToRemove));
       }
     }
     sort(vec_tracksToRemove.begin(), vec_tracksToRemove.end());
-    std::vector<size_t>::iterator it = unique (vec_tracksToRemove.begin(), vec_tracksToRemove.end());
+    std::vector<size_t>::iterator it = std::unique(vec_tracksToRemove.begin(), vec_tracksToRemove.end());
     vec_tracksToRemove.resize( std::distance(vec_tracksToRemove.begin(), it) );
-    cout << endl << endl <<vec_tracksToRemove.size() << " Tracks will be removed"<< endl;
-    for_each (vec_tracksToRemove.begin(), vec_tracksToRemove.end(),
-      std::bind1st( std::mem_fun( &UnionFindObject::eraseClass ), myTracksUF.get() ));
+    if (bVerbose)
+      std::cout << std::endl << std::endl << vec_tracksToRemove.size()
+        << " Tracks will be removed"<< std::endl;
+    std::for_each(vec_tracksToRemove.begin(), vec_tracksToRemove.end(),
+      std::bind1st(std::mem_fun(&UnionFindObject::eraseClass), myTracksUF.get()));
     return false;
   }
 

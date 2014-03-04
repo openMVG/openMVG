@@ -1,0 +1,21 @@
+language: cpp
+
+compiler:
+  - gcc
+
+install: sudo apt-get install cmake libpng-dev libjpeg8-dev libxxf86vm1 libxxf86vm1 libxxf86vm-dev x11proto-xf86vidmode-dev libxrandr-dev
+
+before_script:
+  - cd ..
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=release . ../openMVG/src
+
+script:
+  - make
+  - make test
+
+branches:
+  only:
+    - develop
+

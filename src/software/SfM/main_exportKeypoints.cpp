@@ -10,6 +10,7 @@
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/features.hpp"
 
+#include "software/SfM/SfMIOHelper.hpp"
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/progress/progress.hpp"
@@ -62,15 +63,9 @@ int main(int argc, char ** argv)
   // Read images names
   //---------------------------------------
 
-  std::vector<std::string> vec_fileNames;
-  {
-    std::ifstream in(stlplus::create_filespec(sMatchesDir, "lists", "txt").c_str());
-    std::string sValue;
-    while(in>>sValue)
-      vec_fileNames.push_back(sValue);
-    in.close();
-  }
-  if (vec_fileNames.empty()) {
+  std::vector<std::string> vec_fileNames;  
+  if (!SfMIO::loadImageList( vec_fileNames,
+      stlplus::create_filespec(sMatchesDir, "lists", "txt"),false)) {
     std::cerr << "\nEmpty input image list" << std::endl;
     return EXIT_FAILURE;
   }
@@ -79,20 +74,6 @@ int main(int argc, char ** argv)
   // ------------
   // For each image, export visually the keypoints
   // ------------
-
-  //--
-  //- Preprocess the images size
-  Image<RGBColor> image;
-  std::map< std::string, std::pair<size_t, size_t> > map_imageSize;
-  for (std::vector<std::string>::const_iterator iterFilename = vec_fileNames.begin();
-    iterFilename != vec_fileNames.end();
-    ++iterFilename)
-  {
-    ReadImage( stlplus::create_filespec(sImaDirectory,*iterFilename).c_str() , &image);
-    map_imageSize.insert(
-      std::make_pair(*iterFilename,
-      std::make_pair(image.Width(), image.Height())));
-  }
 
   stlplus::folder_create(sOutDir);
   std::cout << "\n Export extracted keypoints for all images" << std::endl;
@@ -105,7 +86,11 @@ int main(int argc, char ** argv)
       (std::vector<std::string>::const_iterator)vec_fileNames.begin(),
       iterFilename);
 
-    const std::pair<size_t, size_t> dimImage = map_imageSize.find(*iterFilename)->second;
+    //--
+    //- Read the image size
+    Image<RGBColor> image;
+    ReadImage( stlplus::create_filespec(sImaDirectory,*iterFilename).c_str() , &image);
+    const std::pair<size_t, size_t> dimImage (image.Width(),image.Height());
 
     svgDrawer svgStream( dimImage.first, dimImage.second);
     svgStream.drawImage(stlplus::create_filespec(sImaDirectory,*iterFilename),

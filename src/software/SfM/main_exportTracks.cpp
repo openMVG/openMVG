@@ -11,6 +11,7 @@
 #include "openMVG/features/features.hpp"
 #include "openMVG/tracks/tracks.hpp"
 
+#include "software/SfM/SfMIOHelper.hpp"
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/progress/progress.hpp"
@@ -67,15 +68,9 @@ int main(int argc, char ** argv)
   // Read images names
   //---------------------------------------
 
-  std::vector<std::string> vec_fileNames;
-  {
-    std::ifstream in(stlplus::create_filespec(sMatchesDir, "lists", "txt").c_str());
-    std::string sValue;
-    while(in>>sValue)
-      vec_fileNames.push_back(sValue);
-    in.close();
-  }
-  if (vec_fileNames.empty()) {
+  std::vector<std::string> vec_fileNames;  
+  if (!SfMIO::loadImageList( vec_fileNames,
+      stlplus::create_filespec(sMatchesDir, "lists", "txt"),false)) {
     std::cerr << "\nEmpty input image list" << std::endl;
     return EXIT_FAILURE;
   }
