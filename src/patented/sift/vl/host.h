@@ -18,6 +18,10 @@ the terms of the BSD license (see the COPYING file).
  ** @name Configuration options
  ** @{ */
 
+ #if defined __clang__
+#define VL_DISABLE_THREADS
+#endif
+
 #if defined(__DOXYGEN__)
 #define VL_DISABLE_THREADS
 #define VL_DISABLE_SSE2
