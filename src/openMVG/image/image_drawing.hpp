@@ -161,42 +161,6 @@ void DrawCircle(int x, int y, int radius, const Color& col, Image *pim)
   }
 }
 
-// Filled circle
-// Exterior point computed with bresenham approach
-// i.e: DrawCircle
-template <typename Image, typename Color>
-void FilledCircle(int x, int y, int radius, const Color& col, Image *pim)
-{
-  Image &im = *pim;
-  if (  im.Contains(y + radius, x + radius)
-     || im.Contains(y + radius, x - radius)
-     || im.Contains(y - radius, x + radius)
-     || im.Contains(y - radius, x - radius)) {
-    int x1 = 0;
-    int y1 = radius;
-    int d = radius - 1;
-    while (y1 >= x1) {
-      DrawLine(x1 + x, y1 + y, x1 + x, -y1 + y, col, pim);
-      DrawLine(y1 + x, x1 + y, y1 + x, -x1 + y, col, pim);
-      DrawLine(-x1 + x, y1 + y, -x1 + x, -y1 + y, col, pim);
-      DrawLine(-y1 + x, x1 + y, -y1 + x, -x1 + y, col, pim);
-      if (d >= 2 * x1) {
-        d = d - 2 * x1 - 1;
-        x1 += 1;
-      } else {
-        if (d <= 2 * (radius - y1)) {
-          d = d + 2 * y1 - 1;
-          y1 -= 1;
-        } else  {
-          d = d + 2 * (y1 - x1 - 1);
-          y1 -= 1;
-          x1 += 1;
-        }
-      }
-    }
-  }
-}
-
 // Bresenham algorithm
 template <typename Image, typename Color>
 void DrawLine(int xa, int ya, int xb, int yb, const Color& col, Image *pim)
@@ -299,7 +263,43 @@ void DrawLine(int xa, int ya, int xb, int yb, const Color& col, Image *pim)
   SafePutPixel( y, x, col, pim);
 }
 
-// Draw a serie of circle along the line, the algorithm is slow but accurate
+// Filled circle
+// Exterior point computed with bresenham approach
+// i.e: DrawCircle
+template <typename Image, typename Color>
+void FilledCircle(int x, int y, int radius, const Color& col, Image *pim)
+{
+  Image &im = *pim;
+  if (  im.Contains(y + radius, x + radius)
+     || im.Contains(y + radius, x - radius)
+     || im.Contains(y - radius, x + radius)
+     || im.Contains(y - radius, x - radius)) {
+    int x1 = 0;
+    int y1 = radius;
+    int d = radius - 1;
+    while (y1 >= x1) {
+      DrawLine(x1 + x, y1 + y, x1 + x, -y1 + y, col, pim);
+      DrawLine(y1 + x, x1 + y, y1 + x, -x1 + y, col, pim);
+      DrawLine(-x1 + x, y1 + y, -x1 + x, -y1 + y, col, pim);
+      DrawLine(-y1 + x, x1 + y, -y1 + x, -x1 + y, col, pim);
+      if (d >= 2 * x1) {
+        d = d - 2 * x1 - 1;
+        x1 += 1;
+      } else {
+        if (d <= 2 * (radius - y1)) {
+          d = d + 2 * y1 - 1;
+          y1 -= 1;
+        } else  {
+          d = d + 2 * (y1 - x1 - 1);
+          y1 -= 1;
+          x1 += 1;
+        }
+      }
+    }
+  }
+}
+
+// Draw a serie of circles along the line, the algorithm is slow but accurate
 template <typename Image, typename Color>
 void DrawLineThickness(int xa, int ya, int xb, int yb, const Color& col, int thickness, Image *pim)
 {
