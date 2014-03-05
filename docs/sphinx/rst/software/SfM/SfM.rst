@@ -16,6 +16,7 @@ There are three main approaches to solve the SfM problem:
 
    Figure: From point observation and internal knowledge of camera parameter, the 3D **structure** of the scene is computed **from** the estimated **motion** of the camera.
 
+
 In a nutshell
 ===================
 
@@ -79,7 +80,6 @@ Using a 3 directories based data organisation structure is suggested:
 * **outReconstruction**
 
   * directory where result and log of the 3D reconstruction will be exported
-
 
 .. [ACSfM] Adaptive structure from motion with a contrario model estimation.
     Pierre Moulon, Pascal Monasse, and Renaud Marlet.

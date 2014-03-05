@@ -25,7 +25,7 @@ Linux compilation
 -----------------
 
 Setup the required external library.
-* sudo apt-get install libpng-dev libjpeg-dev libxxf86vm1 libxxf86vm-dev
+* sudo apt-get install libpng-dev libjpeg-dev libxxf86vm1 libxxf86vm-dev libxi-dev libxrandr-dev
 
  $ git clone --recursive https://github.com/openMVG/openMVG.git
  $ cd openMVG

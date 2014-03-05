@@ -16,7 +16,7 @@ An iterative algorithm *Levenberg-Marquardt* updates the parameters vector accor
 .. math::
   \underset{ \{P_i\}_i, \{X_j\}_j}{minimize} \left\| \sum_{j=0}^{m} \sum_{i=0}^{n} x_j^i - P_i X_j \right\|_2
 
-When subtle change are observed on the cost function of on the norm of the parameters vector the algorithm is stop.
+When subtle changes are observed on the cost function or on the norm of the parameters vector the algorithm is stopped.
 
 * Pros :
 
@@ -30,16 +30,16 @@ openMVG bundle_adjustment framework
 =====================================
 
 OpenMVG relies on the [Ceres-solver]_ Google library to perform the Bundle Adjustment.
-In order to ease it's usage openMVG provides:
+In order to ease its usage openMVG provides:
 
 * data container to setup the problem,
 * functor (metric for various camera models),
-* samples to show how uses them.
+* samples to show how to use them.
 
 bundle_adjustment container
 ______________________________
 
-Two container are defined in order to refine :
+Two containers are defined in order to refine :
 
 * Cameras that have nothing in common:
 
