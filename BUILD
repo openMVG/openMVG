@@ -58,7 +58,7 @@ Launch test
  $ make test
 
 Have fun with the samples
- $ cd opengMVG_Samples
+ $ cd openMVG_Samples
 
 -------------------
 Windows compilation
