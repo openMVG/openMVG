@@ -11,11 +11,13 @@
 #include <mutex>
 using namespace std;
 typedef std::mutex mutexT;
+typedef std::lock_guard<mutexT> lock_guardT;
 #else
 #include "third_party/tinythread/fast_mutex.h"
 #include "third_party/tinythread/tinythread.h"
 using namespace tthread;
 typedef tthread::fast_mutex mutexT;
+typedef tthread::lock_guard<mutexT> lock_guardT;
 #endif
 
 namespace openMVG {
@@ -26,17 +28,17 @@ class MutexSet {
 
 public:
     void discard(const T & value) {
-      lock_guard<mutexT> guard(m_Mutex);
+      lock_guardT guard(m_Mutex);
       m_Set.insert(value);
     }
 
     bool isDiscarded(const T & value) const {
-      lock_guard<mutexT> guard(m_Mutex);
+      lock_guardT guard(m_Mutex);
       return m_Set.find(value) != m_Set.end();
     }
 
     size_t size() const {
-      lock_guard<mutexT> guard(m_Mutex);
+      lock_guardT guard(m_Mutex);
       return m_Set.size();
     }
 
