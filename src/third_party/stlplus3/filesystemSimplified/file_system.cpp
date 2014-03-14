@@ -707,7 +707,7 @@ namespace stlplus
     bool result = true;
 #ifdef MSWINDOWS
     std::string wildcard = create_filespec(dir, "*.*");
-    long handle = -1;
+    intptr_t handle = -1;
     _finddata_t fileinfo;
     for (bool OK = (handle = _findfirst((char*)wildcard.c_str(), &fileinfo)) != -1; OK; OK = (_findnext(handle, &fileinfo)==0))
     {
@@ -814,7 +814,7 @@ namespace stlplus
     std::vector<std::string> results;
 #ifdef MSWINDOWS
     std::string wildcard = create_filespec(dir, wild);
-    long handle = -1;
+    intptr_t handle = -1;
     _finddata_t fileinfo;
     for (bool OK = (handle = _findfirst((char*)wildcard.c_str(), &fileinfo)) != -1; OK; OK = (_findnext(handle, &fileinfo)==0))
     {

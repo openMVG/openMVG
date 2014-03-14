@@ -1420,7 +1420,7 @@ void GlobalReconstructionEngine::tripletRotationRejection(
 
   svgHisto histosvg;
   histosvg.draw(histo.GetHist(),
-                std::make_pair<float,float>(0.0, *max_element(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end())),
+                std::make_pair<float,float>(0.0f, *max_element(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end())),
                 stlplus::create_filespec(this->_sOutDirectory, "Triplet_Rotation_Residual_180.svg"),
                 600,300);
 
@@ -1428,7 +1428,7 @@ void GlobalReconstructionEngine::tripletRotationRejection(
   histo.Add(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end());
 
   histosvg.draw(histo.GetHist(),
-                std::make_pair<float,float>(0.0, *max_element(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end())),
+                std::make_pair<float,float>(0.0f, *max_element(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end())),
                 stlplus::create_filespec(this->_sOutDirectory, "Triplet_Rotation_Residual_20.svg"),
                 600,300);
 
