@@ -34,6 +34,10 @@ IF (SSE2_FOUND)
   ENDIF (MSVC AND NOT ${CMAKE_CL_64})
   ADD_DEFINITIONS(-DUSE_SSE)
 ENDIF (SSE2_FOUND)
+IF (UNIX)
+  SET(CMAKE_C_FLAGS_RELEASE "-O3")
+  SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
+ENDIF (UNIX)
 
 # ==============================================================================
 # OpenMP detection
