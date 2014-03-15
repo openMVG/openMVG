@@ -22,5 +22,6 @@ set_source_files_properties(${matching_files_cpp} PROPERTIES LANGUAGE CXX)
 UNIT_TEST(openMVG matching "flann_cpp_s")
 UNIT_TEST(openMVG matching_filters "")
 UNIT_TEST(openMVG indMatch "")
+UNIT_TEST(openMVG metric "")
 
 ADD_SUBDIRECTORY(kvld)

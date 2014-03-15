@@ -8,6 +8,8 @@
 #ifndef OPENMVG_MATCHING_METRIC_H
 #define OPENMVG_MATCHING_METRIC_H
 
+#include "openMVG/matching/metric_hamming.hpp"
+
 namespace openMVG {
 namespace matching {
 
