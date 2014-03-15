@@ -1652,6 +1652,7 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
   // Configure a BA engine and run it
   //  Make Ceres automatically detect the bundle structure.
   ceres::Solver::Options options;
+  options.preconditioner_type = ceres::JACOBI;
   options.linear_solver_type = ceres::SPARSE_SCHUR;
   if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
     options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
@@ -1668,6 +1669,7 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
   options.logging_type = ceres::SILENT;
 #ifdef USE_OPENMP
   options.num_threads = omp_get_num_threads();
+  options.num_linear_solver_threads = omp_get_num_threads();
 #endif // USE_OPENMP
 
   // Solve BA
@@ -1861,6 +1863,7 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
   // Configure a BA engine and run it
   //  Make Ceres automatically detect the bundle structure.
   ceres::Solver::Options options;
+  options.preconditioner_type = ceres::JACOBI;
   options.linear_solver_type = ceres::SPARSE_SCHUR;
   if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
     options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
@@ -1877,6 +1880,7 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
   options.logging_type = ceres::SILENT;
 #ifdef USE_OPENMP
   options.num_threads = omp_get_num_threads();
+  options.num_linear_solver_threads = omp_get_num_threads();
 #endif // USE_OPENMP
 
   // Solve BA

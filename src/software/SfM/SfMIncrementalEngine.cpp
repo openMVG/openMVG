@@ -90,7 +90,7 @@ bool IncrementalReconstructionEngine::Process()
   std::pair<size_t,size_t> initialPairIndex;
   if(! InitialPairChoice(initialPairIndex))
     return false;
-  
+
   // Initial pair Essential Matrix and [R|t] estimation.
   if(! MakeInitialPair3D(initialPairIndex))
     return false;
@@ -474,7 +474,7 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
 
   BrownPinholeCamera camI(intrinsicCamI.m_focal, intrinsicCamI.m_K(0,2), intrinsicCamI.m_K(1,2), Mat3::Identity(), Vec3::Zero());
   BrownPinholeCamera camJ(intrinsicCamJ.m_focal, intrinsicCamJ.m_K(0,2), intrinsicCamJ.m_K(1,2), RJ, tJ);
-  
+
   std::vector<IndMatch> vec_index;
   for (openMVG::tracks::STLMAPTracks::const_iterator
     iterT = map_tracksCommon.begin();
@@ -535,7 +535,7 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
   std::cout << "--Triangulated 3D points count: " << vec_inliers.size() << "\n";
   std::cout << "--Triangulated 3D points count under threshold: " << _reconstructorData.map_3DPoints.size()  << "\n";
   std::cout << "--Putative correspondences: " << x1.cols()  << "\n";
-  
+
   _set_remainingImageId.erase(I);
   _set_remainingImageId.erase(J);
 
@@ -559,11 +559,11 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
 
     _reconstructorData.map_ACThreshold.insert(std::make_pair(I, errorMax));
     _reconstructorData.map_ACThreshold.insert(std::make_pair(J, errorMax));
-    
+
     _vec_added_order.push_back(I);
     _vec_added_order.push_back(J);
   }
-  
+
 
   _reconstructorData.exportToPly(stlplus::create_filespec(_sOutDirectory,"sceneStart","ply"));
 
@@ -1446,8 +1446,8 @@ void IncrementalReconstructionEngine::BundleAdjustment()
   // Configure a BA engine and run it
   //  Make Ceres automatically detect the bundle structure.
   ceres::Solver::Options options;
-  options.preconditioner_type = ceres::SCHUR_JACOBI;
-  options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+  options.preconditioner_type = ceres::JACOBI;
+  options.linear_solver_type = ceres::SPARSE_SCHUR;
   if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
     options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
   else
@@ -1463,6 +1463,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
   options.logging_type = ceres::SILENT;
 #ifdef USE_OPENMP
   options.num_threads = omp_get_num_threads();
+  options.num_linear_solver_threads = omp_get_num_threads();
 #endif // USE_OPENMP
 
   // Solve BA
