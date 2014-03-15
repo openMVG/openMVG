@@ -145,38 +145,41 @@ bool exportToBundlerFormat(
       double focal = PMat._K(0,0);
       double k1 = 0.0, k2 = 0.0; // distortion already removed
 
-      os << focal << " " << k1 << " " << k2 << std::endl //f k1 k2
-        << R(0,0) << " " << R(0, 1) << " " << R(0, 2) << std::endl   //R[0]
-        << R(1,0) << " " << R(1, 1) << " " << R(1, 2) << std::endl   //R[1]
-        << R(2,0) << " " << R(2, 1) << " " << R(2, 2) << std::endl   //R[2]
-        << t(0)  << " " << t(1)   << " " << t(2)   << std::endl;     //t
+      os << focal << " " << k1 << " " << k2 << os.widen('\n') //f k1 k2
+        << R(0,0) << " " << R(0, 1) << " " << R(0, 2) << os.widen('\n')   //R[0]
+        << R(1,0) << " " << R(1, 1) << " " << R(1, 2) << os.widen('\n')   //R[1]
+        << R(2,0) << " " << R(2, 1) << " " << R(2, 2) << os.widen('\n')  //R[2]
+        << t(0)  << " " << t(1)   << " " << t(2)   << os.widen('\n') ;     //t
 
       osList << doc._vec_imageNames[iter->first] << " 0 " << focal << std::endl;
     }
 
+    size_t trackIndex = 0 ; 
+
     for (std::map< size_t, tracks::submapTrack >::const_iterator
       iterTracks = doc._tracks.begin();
       iterTracks != doc._tracks.end();
-      ++iterTracks)
+      ++iterTracks,++trackIndex)
     {
+
       const size_t trackId = iterTracks->first;
       const tracks::submapTrack & map_track = iterTracks->second;
-      const size_t trackIndex =
-        std::distance<std::map< size_t, tracks::submapTrack >::const_iterator>(doc._tracks.begin(), iterTracks);
 
       const float * ptr3D = & doc._vec_points[trackIndex*3];
-      os << ptr3D[0] << " " << ptr3D[1] << " " << ptr3D[2] << std::endl;
-      os <<  "255 255 255" << std::endl;
+      os << ptr3D[0] << " " << ptr3D[1] << " " << ptr3D[2] << os.widen('\n') ;
+      os <<  "255 255 255" << os.widen('\n');
       os << map_track.size() << " ";
+      const Vec3 vec(ptr3D[0],ptr3D[1],ptr3D[2]) ;
       for (tracks::submapTrack::const_iterator iterTrack = map_track.begin();
         iterTrack != map_track.end();
         ++iterTrack)
       {
         const PinholeCamera & PMat = doc._map_camera.find(iterTrack->first)->second;
-        Vec2 pt = PMat.Project(Vec3(ptr3D[0], ptr3D[1], ptr3D[2]));
+        Vec2 pt = PMat.Project(vec);
         os << iterTrack->first << " " << iterTrack->second << " " << pt(0) << " " << pt(1) << " ";
       }
-      os << std::endl;
+      os << os.widen('\n') ;
+
     }
     os.close();
     osList.close();
