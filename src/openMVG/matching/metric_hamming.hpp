@@ -9,9 +9,10 @@
 #define OPENMVG_MATCHING_METRIC_HAMMING_H
 
 #include "openMVG/matching/metric.hpp"
+#include <bitset>
 
 // Brief:
-// Hamming distance count the number of bits in commong between descriptors
+// Hamming distance count the number of bits in common between descriptors
 //  by using a XOR operation + a count.
 // For maximal performance SSE4 must be enable for builtin popcount activation.
 
