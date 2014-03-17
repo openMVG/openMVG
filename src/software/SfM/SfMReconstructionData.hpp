@@ -296,7 +296,7 @@ struct reconstructorHelper
         f_cloud << std::endl;
 
         f_visibility << pos.transpose() << " " << set_imageIndex.size() << " ";
-        f_visibility << s_visibility.str() << std::endl;
+        f_visibility << s_visibility.str() << "\n";
       }
       f_cloud.close();
       f_visibility.close();
@@ -308,7 +308,7 @@ struct reconstructorHelper
         std::cerr << "Cannot write views" << endl;
         return false;
       }
-      f_cloud << "images\ncameras\n" << nc << endl;
+      f_cloud << "images\ncameras\n" << nc << "\n";
 
       count = 0;
       for (std::map<size_t, BrownPinholeCamera>::const_iterator iter = map_Camera.begin();
@@ -322,7 +322,7 @@ struct reconstructorHelper
           << ' ' << stlplus::basename_part(vec_fileNames[camIndex]) << ".bin"
           << ' ' << znear[count]/2
           << ' ' << zfar[count]*2
-          << std::endl;
+          << "\n";
           ++count;
       }
       f_cloud.close();
