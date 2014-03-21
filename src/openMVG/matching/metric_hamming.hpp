@@ -19,6 +19,10 @@ typedef unsigned __int64 uint64_t;
 #include <stdint.h>
 #endif
 
+#ifdef __ARM_NEON__
+#include "arm_neon.h"
+#endif
+
 // Brief:
 // Hamming distance count the number of bits in common between descriptors
 //  by using a XOR operation + a count.
