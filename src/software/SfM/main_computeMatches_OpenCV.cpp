@@ -157,6 +157,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('i', sImaDirectory, "imadir") );
   cmd.add( make_option('o', sOutDir, "outdir") );
   cmd.add( make_option('r', fDistRatio, "distratio") );
+  cmd.add( make_option('g', sGeometricModel, "f") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
