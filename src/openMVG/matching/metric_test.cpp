@@ -55,6 +55,80 @@ TEST(Metric, HAMMING_BITSET)
   EXPECT_EQ(2, metricHamming(&a,&c,1));
 }
 
+TEST(Metric, HAMMING_BITSET_RAW_MEMORY_64BITS)
+{
+  const int COUNT = 4;
+  std::bitset<64> tab[COUNT];
+  // Zeros
+  for(int i = 0; i < 64; ++i) {  tab[0][i] = 0;  }
+  // 0101 ...
+  for(int i = 0; i < 64; ++i) {  tab[1][i] = i%2 == 0;  }
+  // 00110011...
+  for(int i = 0; i < 64; ++i) {  tab[2][i] = (i/2)%2 == 0;  }
+  // 000111000111...
+  for(int i = 0; i < 64; ++i) {  tab[3][i] = (i/3)%2 == 0;  }
+
+  // ground truth hamming distances between bit array
+  const double gtDist[] =
+  {0, 32, 32, 33, 32,
+   0, 32, 21, 32, 32,
+   0, 31, 33, 21, 31, 0};
+
+  HammingBitSet<std::bitset<8> > metricHammingBitSet;
+  Hamming< unsigned char > metricHamming;
+  size_t cpt = 0;
+  for (size_t i = 0; i < COUNT; ++i)
+  {
+    for (size_t j = 0; j < COUNT; ++j)
+    {
+      EXPECT_EQ(gtDist[cpt], metricHammingBitSet(&tab[i],&tab[j], 1));
+      EXPECT_EQ(gtDist[cpt], metricHamming((uint64_t*)&tab[i],(uint64_t*)&tab[j], sizeof(uint64_t)));
+      //Check distance symmetry
+      EXPECT_EQ(gtDist[cpt], metricHammingBitSet(&tab[j],&tab[i], 1));
+      EXPECT_EQ(gtDist[cpt], metricHamming((uint64_t*)&tab[j],(uint64_t*)&tab[i], sizeof(uint64_t)));
+      ++cpt;
+    }
+  }
+}
+
+TEST(Metric, HAMMING_BITSET_RAW_MEMORY_32BITS)
+{
+  const int COUNT = 4;
+  std::bitset<32> tab[COUNT];
+  // Zeros
+  for(int i = 0; i < 32; ++i) {  tab[0][i] = 0;  }
+  // 0101 ...
+  for(int i = 0; i < 32; ++i) {  tab[1][i] = i%2 == 0;  }
+  // 00110011...
+  for(int i = 0; i < 32; ++i) {  tab[2][i] = (i/2)%2 == 0;  }
+  // 000111000111...
+  for(int i = 0; i < 32; ++i) {  tab[3][i] = (i/3)%2 == 0;  }
+
+  // ground truth hamming distances between bit array
+  const double gtDist[] =
+  {0, 16, 16, 17, 16,
+  0, 16, 11, 16, 16,
+  0, 17, 17, 11, 17, 0};
+
+  HammingBitSet<std::bitset<8> > metricHammingBitSet;
+  Hamming< unsigned char > metricHamming;
+  size_t cpt = 0;
+  for (size_t i = 0; i < COUNT; ++i)
+  {
+    for (size_t j = 0; j < COUNT; ++j)
+    {
+      EXPECT_EQ(gtDist[cpt], metricHammingBitSet(&tab[i],&tab[j], 1));
+      EXPECT_EQ(gtDist[cpt], metricHamming((uint32_t*)&tab[i],(uint32_t*)&tab[j], sizeof(uint32_t)));
+      //Check distance symmetry
+      EXPECT_EQ(gtDist[cpt], metricHammingBitSet(&tab[j],&tab[i], 1));
+      EXPECT_EQ(gtDist[cpt], metricHamming((uint32_t*)&tab[j],(uint32_t*)&tab[i], sizeof(uint32_t)));
+      ++cpt;
+    }
+  }
+}
+
+
+
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
 /* ************************************************************************* */
