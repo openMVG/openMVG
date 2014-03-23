@@ -83,8 +83,8 @@ static bool L2RotationAveraging( size_t nCamera,
     const std::pair<std::pair<size_t, size_t>, Mat3> & Elem = *iter;
 
     //-- Encode rj - Rij * ri = 0
-    int i = Elem.first.first;
-    int j = Elem.first.second;
+    size_t i = Elem.first.first;
+    size_t j = Elem.first.second;
 
     A.block<3,3>(3 * cpt, 3 * i) = - Elem.second;
     A.block<3,3>(3 * cpt, 3 * j) =   Id;
@@ -128,3 +128,4 @@ static bool L2RotationAveraging( size_t nCamera,
 } // namespace openMVG
 
 #endif //OPENMVG_MULTIVIEW_ROTATION_AVERAGING_H_
+
