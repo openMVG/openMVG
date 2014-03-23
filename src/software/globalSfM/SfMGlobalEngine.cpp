@@ -48,6 +48,7 @@
 
 // Rotation
 #include "openMVG/multiview/rotation_averaging.hpp"
+#include "openMVG/multiview/rotation_averaging_l1.hpp"
 
 #include "third_party/progress/progress.hpp"
 #include "third_party/stlplus3/subsystems/timer.hpp"
@@ -126,24 +127,107 @@ void GlobalReconstructionEngine::rotationInference(
 }
 
 bool GlobalReconstructionEngine::computeGlobalRotations(
-  const std::vector<std::pair<std::pair<size_t, size_t>, Mat3> > & vec_relativeRotEstimate,
+  ERotationAveragingMethod eRotationAveragingMethod,
+  const std::map<size_t, size_t> & map_cameraNodeToCameraIndex,
+  const std::map<size_t, size_t> & map_cameraIndexTocameraNode,
+  const std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > & map_relatives,
   std::map<size_t, Mat3> & map_globalR) const
 {
-  std::vector<Mat3> vec_ApprRotMatrix;
-  if (!rotation_averaging::L2RotationAveraging(map_cameraIndexTocameraNode.size(),
-    vec_relativeRotEstimate,
-    vec_ApprRotMatrix))
-  {
-    return false;
-  }
+  // Build relative information for only the largest considered Connected Component
+  // - it requires to change the camera indexes, because RotationAveraging is working only with
+  //   index ranging in [0 - nbCam], (map_cameraNodeToCameraIndex utility)
 
-  //-- Setup the averaged rotation
-  for (int i = 0; i < vec_ApprRotMatrix.size(); ++i)
+  switch(eRotationAveragingMethod)
   {
-    map_globalR[map_cameraIndexTocameraNode.find(i)->second] = vec_ApprRotMatrix[i];
-  }
+    case ROTATION_AVERAGING_L2:
+    {
+      using namespace openMVG::rotation_averaging;
+      std::vector<std::pair<std::pair<size_t, size_t>, Mat3> > vec_relativeRotEstimate;
+      for(std::map<std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::const_iterator iter = map_relatives.begin();
+        iter != map_relatives.end(); ++iter)
+      {
+        const openMVG::lInfinityCV::relativeInfo & rel = *iter;
+        std::pair<size_t,size_t> newPair(
+          map_cameraNodeToCameraIndex.find(rel.first.first)->second,
+          map_cameraNodeToCameraIndex.find(rel.first.second)->second);
+        vec_relativeRotEstimate.push_back(std::make_pair(newPair, rel.second.first));
+      }
 
-  return true;
+      std::vector<Mat3> vec_ApprRotMatrix;
+      if (!rotation_averaging::L2RotationAveraging(map_cameraIndexTocameraNode.size(),
+        vec_relativeRotEstimate,
+        vec_ApprRotMatrix))
+      {
+        return false;
+      }
+
+      //-- Setup the averaged rotation
+      for (int i = 0; i < vec_ApprRotMatrix.size(); ++i)  {
+        map_globalR[map_cameraIndexTocameraNode.find(i)->second] = vec_ApprRotMatrix[i];
+      }
+
+      return true;
+    }
+    break;
+    case ROTATION_AVERAGING_L1:
+    {
+      using namespace openMVG::rotation_averaging::l1;
+
+      //-- Compute the mean number of matches to prepare weight computation
+      std::vector<double> vec_count;
+      for(std::map<std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::const_iterator iter = map_relatives.begin();
+        iter != map_relatives.end(); ++iter)
+      {
+        const openMVG::lInfinityCV::relativeInfo & rel = *iter;
+        // Find the number of support point for this pair
+        float weight = 0.f; // the relative rotation correspondence point support
+        std::map< std::pair<size_t, size_t>, vector<IndMatch> >::const_iterator iterMatches = _map_Matches_F.find(rel.first);
+        if (iterMatches != _map_Matches_F.end())
+        {
+          vec_count.push_back(iterMatches->second.size());
+        }
+      }
+      float thTrustPair = (std::accumulate(vec_count.begin(), vec_count.end(), 0.0f) / vec_count.size()) / 2.0;
+
+      std::vector<RelRotationData> vec_relativeRotEstimate;
+      for(std::map<std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::const_iterator iter = map_relatives.begin();
+        iter != map_relatives.end(); ++iter)
+      {
+        const openMVG::lInfinityCV::relativeInfo & rel = *iter;
+        // Find the number of support point for this pair
+        float weight = 0.f; // the relative rotation correspondence point support
+        std::map< std::pair<size_t, size_t>, vector<IndMatch> >::const_iterator iterMatches = _map_Matches_F.find(rel.first);
+        if (iterMatches != _map_Matches_F.end())
+        {
+          weight = std::min((float)iterMatches->second.size()/thTrustPair, 1.f);
+        }
+        vec_relativeRotEstimate.push_back(RelRotationData(
+            map_cameraNodeToCameraIndex.find(rel.first.first)->second,
+            map_cameraNodeToCameraIndex.find(rel.first.second)->second,
+            rel.second.first, weight));
+      }
+
+      //- Solve the global rotation estimation problem:
+      Matrix3x3Arr vec_globalR(map_cameraIndexTocameraNode.size());
+      size_t nMainViewID = 0;
+      std::vector<bool> vec_inliers;
+      bool bRotAveraging = GlobalRotationsRobust(vec_relativeRotEstimate, vec_globalR, nMainViewID, 0.0f, &vec_inliers);
+
+      std::cout << "\ninliers : " << std::endl;
+      std::copy(vec_inliers.begin(), vec_inliers.end(), ostream_iterator<bool>(std::cout, " "));
+      std::cout << std::endl;
+
+      //-- Setup the averaged rotation
+      for (int i = 0; i < vec_globalR.size(); ++i)  {
+        map_globalR[map_cameraIndexTocameraNode.find(i)->second] = vec_globalR[i];
+      }
+      return bRotAveraging;
+    }
+    break;
+    default:
+    std::cerr << "Unknow rotation averaging method: " << (int) eRotationAveragingMethod << std::endl;
+  }
+  return false;
 }
 
 bool GlobalReconstructionEngine::Process()
@@ -267,35 +351,32 @@ bool GlobalReconstructionEngine::Process()
   }
 
   //----------------------------
-  // Rotation averaging (dense)
+  // Rotation averaging
   //----------------------------
 
   std::map<std::size_t, Mat3> map_globalR;
-  std::cout << "Compute " << map_cameraIndexTocameraNode.size() << " global rotations." << std::endl;
-
   {
-    // Build relative information for only the largest considered Connected Component
-    // - it requires to change the index also, because RotationAveraging is working only with
-    //   index ranging in [0 - nbCam]:
-    std::vector<std::pair<std::pair<size_t, size_t>, Mat3> > vec_relativeRotEstimate;
-    for(std::map<std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::const_iterator iter = map_relatives.begin();
-      iter != map_relatives.end(); ++iter)
-    {
-      const openMVG::lInfinityCV::relativeInfo & rel = *iter;
-      //---
-      //-- TODO CHANGE INDEXES OF THE CAMERA (from node Ids, to 0->nCam ids) --
-      //----------
-      if (map_cameraNodeToCameraIndex.find(rel.first.first) != map_cameraNodeToCameraIndex.end() &&
-          map_cameraNodeToCameraIndex.find(rel.first.second) != map_cameraNodeToCameraIndex.end())
-      {
-        std::pair<size_t,size_t> newPair(
-          map_cameraNodeToCameraIndex[rel.first.first],
-          map_cameraNodeToCameraIndex[rel.first.second]);
-        vec_relativeRotEstimate.push_back(std::make_pair(newPair, rel.second.first));
-      }
-    }
+    std::cout << "\n-------------------------------" << "\n"
+      << " Global rotations computation: " << "\n"
+      << "   - Ready to compute " << map_cameraIndexTocameraNode.size() << " global rotations." << "\n"
+      << "     from " << map_relatives.size() << " relative rotations\n" << std::endl;
 
-    if (!computeGlobalRotations(vec_relativeRotEstimate, map_globalR))
+    int iChoice = 0;
+    do
+    {
+      std::cout
+      << "-------------------------------" << "\n"
+      << " Choose your rotation averaging method: " << "\n"
+      << "   - 1 -> MST based rotation + L1 rotation averaging" << "\n"
+      << "   - 2 -> dense L2 global rotation computation" << "\n";
+    }while( !( std::cin >> iChoice ) || iChoice < 0 || iChoice > ROTATION_AVERAGING_L2 );
+
+    if (!computeGlobalRotations(
+            ERotationAveragingMethod(iChoice),
+            map_cameraNodeToCameraIndex,
+            map_cameraIndexTocameraNode,
+            map_relatives,
+            map_globalR))
     {
       std::cerr << "Failed to compute the global rotations." << std::endl;
       return false;
@@ -308,6 +389,10 @@ bool GlobalReconstructionEngine::Process()
   std::vector<openMVG::lInfinityCV::relativeInfo > vec_initialRijTijEstimates;
   STLPairWiseMatches newpairMatches;
   {
+    std::cout << "\n-------------------------------" << "\n"
+      << " Relative translations computation: " << "\n"
+      << "-------------------------------" << std::endl;
+
     // Compute putative translations with an edge coverage algorithm
 
     stlplus::timer timerLP_triplet;
@@ -373,8 +458,8 @@ bool GlobalReconstructionEngine::Process()
       map_cameraNodeToCameraIndex[*iterSet] = std::distance(set_representedImageIndex.begin(), iterSet);
     }
 
-  std::cout << "\n Remaining cameras after inference filter : \n"
-    << map_cameraIndexTocameraNode.size() << " from a total of " << _vec_fileNames.size() << std::endl;
+    std::cout << "\nRemaining cameras after inference filter : \n"
+      << map_cameraIndexTocameraNode.size() << " from a total of " << _vec_fileNames.size() << std::endl;
   }
 
   //-------------------
@@ -385,9 +470,10 @@ bool GlobalReconstructionEngine::Process()
   {
     const int iNview = map_cameraNodeToCameraIndex.size(); // The cound of remaining nodes in the graph
 
-    std::cout << "\n There is : " << vec_initialRijTijEstimates.size()
-      << " Initial estimates.\n"
-      << " For " << iNview << " cameras."<< std::endl;
+    std::cout << "\n-------------------------------" << "\n"
+      << " Global translations computation: " << "\n"
+      << "   - Ready to compute " << iNview << " global translations." << "\n"
+      << "     from " << vec_initialRijTijEstimates.size() << " relative translations\n" << std::endl;
 
     //-- Update initial estimates in range [0->Ncam]
     for(size_t i = 0; i < vec_initialRijTijEstimates.size(); ++i)
@@ -676,7 +762,7 @@ bool GlobalReconstructionEngine::Process()
     << "-- The scene contain " << map_tracksSelected.size() << " 3D points.\n"
     << "-- Total reconstruction time (Inference, global rot, translation fusion, Ba1, Ba2): "
     << total_reconstruction_timer.elapsed() << " seconds.\n"
-    << "Relative rotations time is excluded\n"
+    << "Relative rotations time was excluded\n"
     << "-------------------------------" << std::endl;
 
 
