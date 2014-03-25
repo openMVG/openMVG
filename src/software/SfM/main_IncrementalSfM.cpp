@@ -28,30 +28,34 @@ int main(int argc, char **argv)
   std::string sOutDir = "";
   bool bPmvsExport = false;
   bool bRefinePPandDisto = true;
-  //bool bBlenderExport = false;
+  bool bColoredPointCloud = false;
   std::pair<size_t,size_t> initialPair(0,0);
 
   cmd.add( make_option('i', sImaDirectory, "imadir") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
   cmd.add( make_option('o', sOutDir, "outdir") );
   cmd.add( make_option('p', bPmvsExport, "pmvs") );
-  //cmd.add( make_option('b', bBlenderExport, "blender") );
   cmd.add( make_option('a', initialPair.first, "initialPairA") );
   cmd.add( make_option('b', initialPair.second, "initialPairB") );
+  cmd.add( make_option('c', bColoredPointCloud, "coloredPointCloud") );
   cmd.add( make_option('d', bRefinePPandDisto, "refinePPandDisto") );
+
 
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
     cmd.process(argc, argv);
   } catch(const std::string& s) {
-    std::cerr << "Usage: " << argv[0] << ' '
-    << "[-i|--imadir path] "
-    << "[-m|--matchdir path] "
-    << "[-o|--outdir path] "
-    << "[-p|--pmvs 0 or 1] "
-    << "[-a|--initialPairA number] "
-    << "[-b|--initialPairB number] "
-    << "[-d|--refinePPandDisto 0-> refine only the Focal, 1-> refine Focal, Principal point and radial distortion factors.] "
+    std::cerr << "Usage: " << argv[0] << '\n'
+    << "[-i|--imadir path] \n"
+    << "[-m|--matchdir path] \n"
+    << "[-o|--outdir path] \n"
+    << "[-p|--pmvs 0 or 1] \n"
+    << "[-a|--initialPairA number] \n"
+    << "[-b|--initialPairB number] \n"
+    << "[-c|--coloredPointCloud 0(default) or 1]\n"
+    << "[-d|--refinePPandDisto \n"
+    << "\t 0-> refine only the Focal,\n"
+    << "\t 1-> refine Focal, Principal point and radial distortion factors.] \n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -85,12 +89,17 @@ int main(int argc, char **argv)
     std::cout << std::endl << " Ac-Sfm took : " << (timeEnd - timeStart) / CLOCKS_PER_SEC << " seconds." << std::endl;
 
     std::cout << std::endl << "Compute and export colorized point cloud" << std::endl;
-    std::vector<Vec3> colortracks;
-    to3DEngine.ColorizeTracks(colortracks);
+
     const reconstructorHelper & reconstructorHelperRef = to3DEngine.refToReconstructorHelper();
+    std::vector<Vec3> colortracks;
+    if (bColoredPointCloud)
+    {
+      // Compute the color of each track
+      to3DEngine.ColorizeTracks(colortracks);
+    }
     reconstructorHelperRef.exportToPly(
       stlplus::create_filespec(sOutDir, "FinalColorized", ".ply"),
-      &colortracks);
+      bColoredPointCloud ? &colortracks : NULL);
 
     // Export to openMVG format
     std::cout << std::endl << "Export 3D scene to openMVG format" << std::endl;
