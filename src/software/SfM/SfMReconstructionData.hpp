@@ -90,12 +90,12 @@ Image undistortImage(
     offset = Vec2(cx,cy) - d.m_disto_center;
 
   Image J ( w,h );
-  double xu, yu, xd,yd;
 #ifdef USE_OPENMP
   #pragma omp parallel for
 #endif
   for (int j=0; j<h; j++ ) {
     for (int i=0; i<w; i++) {
+      double xu, yu, xd,yd;
       xu = double (i);
       yu = double (j);
       d.ComputeUndistortedCoordinates(xu, yu, xd, yd);
