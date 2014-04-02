@@ -65,7 +65,7 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
       //matrix representation of the input data;
       Eigen::Map<BaseMat> mat_query((Scalar*)query, 1, (*memMapping).cols() );
       Metric metric;
-      vector<double> vec_dist((*memMapping).rows(), 0.0);
+      vector<DistanceType> vec_dist((*memMapping).rows(), 0.0);
       for (int i = 0; i < (*memMapping).rows(); ++i)  {
         // Compute Distance Metric
         vec_dist[i] = metric( (Scalar*)query, (*memMapping).row(i).data(), (*memMapping).cols() );
@@ -73,9 +73,10 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
       if (!vec_dist.empty())
       {
         // Find the minimum distance :
-        vector<double>::const_iterator min_iter =
+        typename vector<DistanceType>::const_iterator min_iter =
           min_element( vec_dist.begin(), vec_dist.end());
-        *indice =std::distance(vector<double>::const_iterator(vec_dist.begin()),
+        *indice =std::distance(
+          typename vector<DistanceType>::const_iterator(vec_dist.begin()),
           min_iter);
         *distance = static_cast<DistanceType>(*min_iter);
       }
