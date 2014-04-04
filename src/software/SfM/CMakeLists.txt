@@ -21,13 +21,13 @@ ADD_EXECUTABLE(openMVG_main_computeMatches main_computeMatches.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_computeMatches
                      ${LIBS} flann_cpp_s)
 
-#Add executable that perform SfM:
+#Add library and executable that perform SfM:
 # - the required input is matches computed by openMVG_main_computeMatches
 #
-ADD_EXECUTABLE(openMVG_main_IncrementalSfM main_IncrementalSfM.cpp
-	SfMEngine.hpp SfMIncrementalEngine.cpp)
+ADD_LIBRARY(openMVG_SequentialSfM SfMIncrementalEngine.cpp)
+ADD_EXECUTABLE(openMVG_main_IncrementalSfM main_IncrementalSfM.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_IncrementalSfM
-                      ${LIBS} ceres)
+                      openMVG_SequentialSfM  ${LIBS}  ceres)
 
 #---------
 # Tools to visualize feature tracking data
