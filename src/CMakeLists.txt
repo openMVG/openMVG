@@ -58,6 +58,12 @@ ELSE (USE_OPENMP)
   ENDIF (OPENMP_FOUND)
 ENDIF (USE_OPENMP)
 
+
+# ==============================================================================
+# OpenMVG build options
+# ==============================================================================
+SET(OpenMVG_BUILD_TESTS ON CACHE BOOL "Do not build openMVG tests" FORCE)
+
 # ==============================================================================
 # IMAGE IO detection
 # ==============================================================================
@@ -76,6 +82,7 @@ SET(GLFW_BUILD_TESTS    OFF CACHE BOOL "Do not build the GLFW tests programs"   
 ADD_SUBDIRECTORY(dependencies/glfw)
 INCLUDE_DIRECTORIES(SYSTEM dependencies/glfw/include)
 
+# ==============================================================================
 #- OpenExif
 # ==============================================================================
 ADD_SUBDIRECTORY(dependencies/OpenExif)
@@ -135,15 +142,20 @@ ENDIF (USE_OPENCV)
 # ==============================================================================
 # Enable cmake UNIT TEST framework
 # ==============================================================================
-ENABLE_TESTING()
+IF (OpenMVG_BUILD_TESTS)
+  ENABLE_TESTING()
+ENDIF (OpenMVG_BUILD_TESTS)
 # MACRO to ease UnitTesting
 MACRO (UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
-  ADD_EXECUTABLE(${NAMESPACE}_test_${NAME} ${NAME}_test.cpp)
-  TARGET_LINK_LIBRARIES(${NAMESPACE}_test_${NAME}
-                        ${EXTRA_LIBS} # Extra libs MUST be first.
-                        CppUnitLite ${OPENMVG_LIBRARY_DEPENDENCIES})
-  ADD_TEST(${NAMESPACE}_test_${NAME} ${NAMESPACE}_test_${NAME})
+  IF (OpenMVG_BUILD_TESTS)
+    ADD_EXECUTABLE(${NAMESPACE}_test_${NAME} ${NAME}_test.cpp)
+    TARGET_LINK_LIBRARIES(${NAMESPACE}_test_${NAME}
+                          ${EXTRA_LIBS} # Extra libs MUST be first.
+                          CppUnitLite ${OPENMVG_LIBRARY_DEPENDENCIES})
+    ADD_TEST(${NAMESPACE}_test_${NAME} ${NAMESPACE}_test_${NAME})
+  ENDIF (OpenMVG_BUILD_TESTS)
 ENDMACRO (UNIT_TEST)
+
 
 # Configure Eigen to use only MPL2 licensed code
 ADD_DEFINITIONS(-DEIGEN_MPL2_ONLY)
