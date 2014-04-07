@@ -36,7 +36,7 @@ Setup the required external library.
  $ cd openMVG_Build
  $ cmake -DCMAKE_BUILD_TYPE=RELEASE . ../openMVG/src/
 
-=> In order to use the MOSEK backend for the linear programming oepnMVG module
+=> In order to use the MOSEK 6 backend for the linear programming oepnMVG module
   - Check that you have an uptodate MOSEK licence, else openMVG MOSEK unit test will fail.
 
  $ cmake -DCMAKE_BUILD_TYPE=RELEASE
