@@ -32,12 +32,30 @@ inline void Convert<RGBColor, unsigned char>(
   valOut = static_cast<unsigned char>(0.3 * valin.r() + 0.59 * valin.g() + 0.11 * valin.b());
 }
 
-template<typename ImageIn, typename ImageOut>
-void Rgb2Gray(const ImageIn& imaIn, ImageOut *imaOut)
+template<>
+inline void Convert<RGBAColor, unsigned char>(
+  const RGBAColor& valin, unsigned char& valOut)
 {
-  assert( imaIn.Depth() == 3 );
+  valOut = static_cast<unsigned char>(
+    (valin.a()/255.f) *
+    (0.3 * valin.r() + 0.59 * valin.g() + 0.11 * valin.b()));
+}
+
+template<>
+inline void Convert<RGBAColor, RGBColor>(
+  const RGBAColor& valin, RGBColor& valOut)
+{
+  valOut = RGBColor(
+    (valin.a()/255.f) * valin.r(),
+    (valin.a()/255.f) * valin.g(),
+    (valin.a()/255.f) * valin.b());
+}
+
+template<typename ImageIn, typename ImageOut>
+void ConvertPixelType(const ImageIn& imaIn, ImageOut *imaOut)
+{
   (*imaOut) = ImageOut(imaIn.Width(), imaIn.Height());
-  // Convert each RGB pixel into Grey value (luminance)
+  // Convert each input pixel to destination pixel
   for(int j = 0; j < imaIn.Height(); ++j)
     for(int i = 0; i < imaIn.Width(); ++i)
       Convert(imaIn(j,i), (*imaOut)(j,i));

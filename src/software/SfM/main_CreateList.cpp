@@ -100,22 +100,26 @@ int main(int argc, char **argv)
       if ( !exifReader->doesHaveExifInfo() || focalPixPermm != -1)
       {
         Image<unsigned char> image;
-        if (openMVG::ReadImage( sImageFilename.c_str(), &image))
-        {
+        if (openMVG::ReadImage( sImageFilename.c_str(), &image))  {
           width = image.Width();
           height = image.Height();
         }
         else
         {
           Image<RGBColor> imageRGB;
-          if (openMVG::ReadImage( sImageFilename.c_str(), &imageRGB))
-          {
+          if (openMVG::ReadImage( sImageFilename.c_str(), &imageRGB)) {
             width = imageRGB.Width();
             height = imageRGB.Height();
           }
           else
           {
-            continue; // image is not considered, cannot be read
+            Image<RGBAColor> imageRGBA;
+            if (openMVG::ReadImage( sImageFilename.c_str(), &imageRGBA))  {
+              width = imageRGBA.Width();
+              height = imageRGBA.Height();
+            }
+            else
+              continue; // image is not considered, cannot be read
           }
         }
         if ( focalPixPermm == -1)

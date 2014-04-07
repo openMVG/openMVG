@@ -208,7 +208,6 @@ int main(int argc, char **argv)
     std::cout << "\n\nEXTRACT FEATURES" << std::endl;
     vec_imagesSize.resize(vec_fileNames.size());
 
-    Image<RGBColor> imageRGB;
     Image<unsigned char> imageGray;
 
     C_Progress_display my_progress_bar( vec_fileNames.size() );
@@ -222,12 +221,8 @@ int main(int argc, char **argv)
       //If descriptors or features file are missing, compute them
       if (!stlplus::file_exists(sFeat) || !stlplus::file_exists(sDesc)) {
 
-        if (ReadImage(vec_fileNames[i].c_str(), &imageRGB)) {
-          Rgb2Gray(imageRGB, &imageGray);
-        }
-        else  {
-          ReadImage(vec_fileNames[i].c_str(), &imageGray);
-        }
+        if (!ReadImage(vec_fileNames[i].c_str(), &imageGray))
+          continue;
 
         // Compute features and descriptors and export them to files
         KeypointSetT kpSet;

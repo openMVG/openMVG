@@ -53,18 +53,12 @@ int main() {
 
   std::string sInputDir = stlplus::folder_up(string(THIS_SOURCE_DIR))
     + "/imageData/SceauxCastle/";
-  Image<RGBColor> image;
   string jpg_filenameL = sInputDir + "100_7101.jpg";
-  ReadImage(jpg_filenameL.c_str(), &image);
-
-  Image<unsigned char> imageL;
-  Rgb2Gray(image, &imageL);
-
   string jpg_filenameR = sInputDir + "100_7102.jpg";
-  ReadImage(jpg_filenameR.c_str(), &image);
 
-  Image<unsigned char> imageR;
-  Rgb2Gray(image, &imageR);
+  Image<unsigned char> imageL, imageR;
+  ReadImage(jpg_filenameL.c_str(), &imageL);
+  ReadImage(jpg_filenameR.c_str(), &imageR);
 
   // Define the used descriptor (SIFT : 128 float value)
   typedef float descType;

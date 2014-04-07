@@ -9,9 +9,6 @@
 
 #include "openMVG/robust_estimation/robust_estimator_lineKernel_test.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
-#include "openMVG/image/image_container.hpp"
-#include "openMVG/image/image_drawing.hpp"
-#include "openMVG/image/image_io.hpp"
 #include "testing/testing.h"
 
 #include "third_party/vectorGraphics/svgDrawer.hpp"

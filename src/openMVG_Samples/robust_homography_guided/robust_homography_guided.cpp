@@ -35,17 +35,12 @@ int main() {
   Image<RGBColor> image;
   string jpg_filenameL = stlplus::folder_up(string(THIS_SOURCE_DIR))
     + "/imageData/StanfordMobileVisualSearch/Ace_0.png";
-  ReadImage(jpg_filenameL.c_str(), &image);
-
-  Image<unsigned char> imageL;
-  Rgb2Gray(image, &imageL);
-
   string jpg_filenameR = stlplus::folder_up(string(THIS_SOURCE_DIR))
     + "/imageData/StanfordMobileVisualSearch/Ace_1.png";
-  ReadImage(jpg_filenameR.c_str(), &image);
 
-  Image<unsigned char> imageR;
-  Rgb2Gray(image, &imageR);
+  Image<unsigned char> imageL, imageR;
+  ReadImage(jpg_filenameL.c_str(), &imageL);
+  ReadImage(jpg_filenameR.c_str(), &imageR);
 
   // Define the used descriptor (SIFT : 128 float value)
   typedef float descType;
