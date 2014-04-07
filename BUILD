@@ -58,6 +58,7 @@ Setup the required external library.
 If you want enable unit tests and examples to the build:
  $ cmake -DCMAKE_BUILD_TYPE=RELEASE -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src/
 
+
 => In order to use the MOSEK 6 back-end for the linear programming openMVG module
   - Check that you have an up-to-date MOSEK licence, else openMVG MOSEK unit test will fail.
 
@@ -113,3 +114,9 @@ If you want enable unit tests and examples to the build:
  $ cmake -DCMAKE_BUILD_TYPE=RELEASE -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -G "Xcode" . ../openMVG/src/
  $ xcodebuild -configuration Release
 
+ 
+ --------------------
+ Using openCV sample
+ --------------------
+ Add -DUSE_OPENCV=ON and set OpenCV_DIR variable to your openCV build directory
+ 
