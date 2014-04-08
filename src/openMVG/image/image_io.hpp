@@ -96,6 +96,7 @@ inline int ReadImage(const char * path, Image<RGBColor> * im)
     //convert raw array to Image
     (*im) = Eigen::Map<Image<RGBColor>::Base>(ptrCol, h, w);
   }
+  else
   if (res == 1 && depth == 4) {
     //-- Must convert RGBA to RGB
     RGBAColor * ptrCol = (RGBAColor*) &ptr[0];
