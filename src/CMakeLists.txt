@@ -200,6 +200,21 @@ ADD_SUBDIRECTORY(openMVG_Samples)
 # Complete software build on openMVG
 ADD_SUBDIRECTORY(software)
 
+
+# ==============================================================================
+# openMVG libraries
+# ==============================================================================
+SET(OpenMVG_LIBS
+  openMVG_image
+  openMVG_multiview
+  vlsift
+  stlplus
+  flann_cpp_s
+  ceres
+  ${OPENMVG_LIBRARY_DEPENDENCIES}
+  CACHE STRING "openMVG library names"
+)
+
 # ==============================================================================
 # Documentation
 # --------------------------
