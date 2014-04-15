@@ -168,17 +168,21 @@ ADD_SUBDIRECTORY(third_party)
 # ==============================================================================
 # Include directories
 # ==============================================================================
-INCLUDE_DIRECTORIES(./
-  ./third_party/
+SET(OpenMVG_INCLUDES
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/
   ${JPEG_INCLUDE_DIR}
   ${PNG_INCLUDE_DIRS}
-  ./third_party/eigen
-  ./third_party/lemon
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon
   ${PROJECT_BINARY_DIR}/third_party/lemon
-  ./third_party/ceres-solver/include
-  ./third_party/ceres-solver/internal/ceres/miniglog
-  ./third_party/flann/src/cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/internal/ceres/miniglog
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp
+  CACHE PATH "include directories for openMVG and its dependencies"
 )
+
+INCLUDE_DIRECTORIES(${OpenMVG_INCLUDES})
 
 # ==============================================================================
 # openMVG modules
