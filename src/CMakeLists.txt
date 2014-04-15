@@ -53,7 +53,7 @@ IF (USE_OPENMP)
     ENDIF (NOT MSVC)
 ELSE (USE_OPENMP)
     OPTION(USE_OPENMP "Use OpenMP for parallelization" OFF)
-    SET(USE_OPENMP OFF CACHE BOOL "Use OpenMP for parallelization" FORCE)
+    SET(USE_OPENMP OFF CACHE BOOL "Use OpenMP for parallelization")
     REMOVE_DEFINITIONS(-DUSE_OPENMP)
   ENDIF (OPENMP_FOUND)
 ENDIF (USE_OPENMP)
@@ -62,7 +62,7 @@ ENDIF (USE_OPENMP)
 # ==============================================================================
 # OpenMVG build options
 # ==============================================================================
-SET(OpenMVG_BUILD_TESTS ON CACHE BOOL "Do not build openMVG tests" FORCE)
+SET(OpenMVG_BUILD_TESTS ON CACHE BOOL "Do not build openMVG tests")
 
 # ==============================================================================
 # IMAGE IO detection
@@ -77,8 +77,8 @@ ENDIF (NOT APPLE)
 # ==============================================================================
 #- glfw
 # ==============================================================================
-SET(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Do not build the GLFW example programs" FORCE)
-SET(GLFW_BUILD_TESTS    OFF CACHE BOOL "Do not build the GLFW tests programs"   FORCE)
+SET(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Do not build the GLFW example programs")
+SET(GLFW_BUILD_TESTS    OFF CACHE BOOL "Do not build the GLFW tests programs")
 ADD_SUBDIRECTORY(dependencies/glfw)
 INCLUDE_DIRECTORIES(SYSTEM dependencies/glfw/include)
 
@@ -130,7 +130,7 @@ INCLUDE_DIRECTORIES(
 # Opencv is not used by openMVG but some samples show how to use openCV
 #  and openMVG simultaneously
 # ==============================================================================
-SET(USE_OPENCV OFF CACHE BOOL "Do not build opencv+openMVG samples programs" FORCE)
+SET(USE_OPENCV OFF CACHE BOOL "Do not build opencv+openMVG samples programs")
 IF (USE_OPENCV)
 # In order use openMVG+openCV samples set USE_OPENCV to ON and set the OpenCV_DIR
 #  to the build directory of openCV. Prefer use static version of openCV libraries.
