@@ -9,8 +9,12 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 PROJECT(openMVG C CXX)
 
-# Multithreading using OpenMP
-OPTION(USE_OPENMP "Enable OpenMP thread" ON)
+# ==============================================================================
+# OpenMVG build options
+# ==============================================================================
+OPTION(OpenMVG_BUILD_TESTS "Build OpenMVG tests" OFF)
+OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG example applications. Does not affect binaries under 'software'" OFF)
+OPTION(USE_OPENMP "Enable OpenMP parallelization" ON)
 
 # By default build in Release mode
 IF(NOT CMAKE_BUILD_TYPE)
@@ -58,11 +62,6 @@ ELSE (USE_OPENMP)
   ENDIF (OPENMP_FOUND)
 ENDIF (USE_OPENMP)
 
-
-# ==============================================================================
-# OpenMVG build options
-# ==============================================================================
-SET(OpenMVG_BUILD_TESTS ON CACHE BOOL "Do not build openMVG tests")
 
 # ==============================================================================
 # IMAGE IO detection
@@ -195,11 +194,12 @@ ADD_SUBDIRECTORY(openMVG)
 ADD_SUBDIRECTORY(patented)
 
 # openMVG tutorial examples
-ADD_SUBDIRECTORY(openMVG_Samples)
+IF (OpenMVG_BUILD_EXAMPLES)
+  ADD_SUBDIRECTORY(openMVG_Samples)
+ENDIF (OpenMVG_BUILD_EXAMPLES)
 
 # Complete software build on openMVG
 ADD_SUBDIRECTORY(software)
-
 
 # ==============================================================================
 # openMVG libraries
