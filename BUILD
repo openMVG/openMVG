@@ -18,7 +18,18 @@ $ cd openMVG
 $ git submodule init
 $ git submodule update
 
-Depending of your platform :
+------------------------------------
+Using as library dependency in cmake
+------------------------------------
+Adding following lines to your CMakeLists.txt should provide OpenMVG usable as
+static library:
+
+ add_subdirectory(openMVG/src)
+ include_directories(${OpenMVG_INCLUDES})
+ target_link_libraries(target ${OpenMVG_LIBS})
+
+Information about required dependencies and standalone build can be found below.
+
 
 -----------------
 Linux compilation

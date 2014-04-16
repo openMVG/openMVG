@@ -9,7 +9,7 @@ before_script:
   - cd ..
   - mkdir build
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE=release . ../openMVG/src
+  - cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
 
 script:
   - make
