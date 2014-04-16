@@ -3,6 +3,9 @@ language: cpp
 compiler:
   - gcc
 
+before_install:
+ - export NUM_CPU="`grep processor /proc/cpuinfo | wc -l`"; echo $NUM_CPU
+ 
 install: sudo apt-get install cmake libpng-dev libjpeg8-dev libxxf86vm1 libxxf86vm1 libxxf86vm-dev x11proto-xf86vidmode-dev libxrandr-dev
 
 before_script:
@@ -12,7 +15,7 @@ before_script:
   - cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
 
 script:
-  - make
+  - make -j$NUM_CPU
   - make test
 
 branches:
