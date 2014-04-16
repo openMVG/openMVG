@@ -15,7 +15,7 @@ before_script:
   - cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
 
 script:
-  - make -j$NUM_CPU
+  - make
   - make test
 
 branches:
