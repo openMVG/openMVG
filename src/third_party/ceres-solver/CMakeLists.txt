@@ -110,9 +110,9 @@ OPTION(OPENMP "Enable threaded solving in Ceres (requires OpenMP)" ON)
 # binary size or compiler performance is an issue, consider disabling
 # this.
 OPTION(LINE_SEARCH_MINIMIZER "Enable the line search minimizer." ON)
-OPTION(BUILD_TESTING "Enable tests" ON)
+OPTION(BUILD_TESTING "Enable tests" OFF)
 OPTION(BUILD_DOCUMENTATION "Build User's Guide (html)" OFF)
-OPTION(BUILD_EXAMPLES "Build examples" ON)
+OPTION(BUILD_EXAMPLES "Build examples" OFF)
 OPTION(BUILD_SHARED_LIBS "Build Ceres as a shared library." OFF)
 IF (MSVC)
   OPTION(MSVC_USE_STATIC_CRT

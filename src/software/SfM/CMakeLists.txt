@@ -24,10 +24,10 @@ TARGET_LINK_LIBRARIES(openMVG_main_computeMatches
 #Add library and executable that perform SfM:
 # - the required input is matches computed by openMVG_main_computeMatches
 #
-ADD_LIBRARY(openMVG_SequentialSfM SfMIncrementalEngine.cpp)
+ADD_LIBRARY(openMVG_SfM_Sequential SfMIncrementalEngine.cpp)
 ADD_EXECUTABLE(openMVG_main_IncrementalSfM main_IncrementalSfM.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_IncrementalSfM
-                      openMVG_SequentialSfM  ${LIBS}  ceres)
+                      openMVG_SfM_Sequential  ${LIBS}  ceres)
 
 #---------
 # Tools to visualize feature tracking data

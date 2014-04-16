@@ -14,7 +14,7 @@ PROJECT(openMVG C CXX)
 # ==============================================================================
 OPTION(OpenMVG_BUILD_TESTS "Build OpenMVG tests" OFF)
 OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG example applications. Does not affect binaries under 'software'" OFF)
-OPTION(USE_OPENMP "Enable OpenMP parallelization" ON)
+OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
 
 # By default build in Release mode
 IF(NOT CMAKE_BUILD_TYPE)
@@ -46,21 +46,21 @@ ENDIF (UNIX)
 # ==============================================================================
 # OpenMP detection
 # ==============================================================================
-IF (USE_OPENMP)
+IF (OpenMVG_USE_OPENMP)
   FIND_PACKAGE(OpenMP)
   IF (OPENMP_FOUND)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    OPTION(USE_OPENMP "Use OpenMP for parallelization" ON)
+    OPTION(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" ON)
     ADD_DEFINITIONS(-DUSE_OPENMP)
     IF (NOT MSVC)
       LIST(APPEND OPENMVG_LIBRARY_DEPENDENCIES gomp)
     ENDIF (NOT MSVC)
-ELSE (USE_OPENMP)
-    OPTION(USE_OPENMP "Use OpenMP for parallelization" OFF)
-    SET(USE_OPENMP OFF CACHE BOOL "Use OpenMP for parallelization")
+ELSE (OpenMVG_USE_OPENMP)
+    OPTION(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" OFF)
+    SET(OpenMVG_USE_OPENMP OFF CACHE BOOL "Use OpenMP for parallelization")
     REMOVE_DEFINITIONS(-DUSE_OPENMP)
   ENDIF (OPENMP_FOUND)
-ENDIF (USE_OPENMP)
+ENDIF (OpenMVG_USE_OPENMP)
 
 
 # ==============================================================================
@@ -78,6 +78,7 @@ ENDIF (NOT APPLE)
 # ==============================================================================
 SET(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Do not build the GLFW example programs")
 SET(GLFW_BUILD_TESTS    OFF CACHE BOOL "Do not build the GLFW tests programs")
+SET(GLFW_BUILD_DOCS     OFF CACHE BOOL "Do not build the GLFW documentation")
 ADD_SUBDIRECTORY(dependencies/glfw)
 INCLUDE_DIRECTORIES(SYSTEM dependencies/glfw/include)
 
@@ -207,10 +208,14 @@ ADD_SUBDIRECTORY(software)
 SET(OpenMVG_LIBS
   openMVG_image
   openMVG_multiview
+  openMVG_linearProgramming
+  openMVG_lInftyComputerVision
+  #third_party libs
   vlsift
   stlplus
   flann_cpp_s
   ceres
+  lemon
   ${OPENMVG_LIBRARY_DEPENDENCIES}
   CACHE STRING "openMVG library names"
 )

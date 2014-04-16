@@ -9,6 +9,7 @@ Build instruction
 Required tools:
 * Cmake 
 * Git
+* c/c++ compiler (gcc or visual studio or clang)
 
 Getting the sources:
 $ git clone --recursive https://github.com/openMVG/openMVG.git
@@ -28,8 +29,16 @@ static library:
  include_directories(${OpenMVG_INCLUDES})
  target_link_libraries(target ${OpenMVG_LIBS})
 
-Information about required dependencies and standalone build can be found below.
+Information about required dependencies, standalone build and platform 
+specificity can be found below.
 
+--------------------------
+General informations
+for openMVG cmake options
+--------------------------
+OpenMVG_BUILD_TESTS (ON/OFF(default))=> Build openMVG unit tests
+OpenMVG_BUILD_EXAMPLES (ON/OFF(default))=> Build OpenMVG example applications.
+  Does not affect binaries under 'software'
 
 -----------------
 Linux compilation
@@ -47,8 +56,8 @@ Setup the required external library.
  $ cd openMVG_Build
  $ cmake -DCMAKE_BUILD_TYPE=RELEASE . ../openMVG/src/
 
-=> In order to use the MOSEK 6 backend for the linear programming oepnMVG module
-  - Check that you have an uptodate MOSEK licence, else openMVG MOSEK unit test will fail.
+=> In order to use the MOSEK 6 back-end for the linear programming oepnMVG module
+  - Check that you have an up-to-date MOSEK licence, else openMVG MOSEK unit test will fail.
 
  $ cmake -DCMAKE_BUILD_TYPE=RELEASE
     -DMOSEK_SEARCH_HEADER="~/Documents/Lib/mosek/6/tools/platform/linux64x86/h"
@@ -65,7 +74,7 @@ Compile the project
 For a multi-core compilation (Replace NBcore with the number of threads)
  $ make -j NBcore
 
-Launch test
+Launch test (if asked at cmake step)
  $ make test
 
 Have fun with the samples
