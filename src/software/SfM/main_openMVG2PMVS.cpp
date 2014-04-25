@@ -68,8 +68,8 @@ bool exportToPMVSFormat(
       std::ofstream file(
         stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "txt",
         os.str() ,"txt").c_str());
-      file << "CONTOUR\n"
-        << PMat.row(0) <<"\n"<< PMat.row(1) <<"\n"<< PMat.row(2) << std::endl;
+      file << "CONTOUR" << os.widen('\n')
+        << PMat.row(0) <<"\n"<< PMat.row(1) <<"\n"<< PMat.row(2) << os.widen('\n');
       file.close();
     }
 
@@ -83,28 +83,37 @@ bool exportToPMVSFormat(
       const std::string & sImageName = doc._vec_imageNames[imageIndex];
       std::ostringstream os;
       os << std::setw(8) << std::setfill('0') << count;
-      ReadImage( stlplus::create_filespec( sImagePath, sImageName).c_str(), &image );
-      std::string sCompleteImageName = stlplus::create_filespec(
+      std::string srcImage = stlplus::create_filespec( sImagePath, sImageName);
+      std::string dstImage = stlplus::create_filespec(
         stlplus::folder_append_separator(sOutDirectory) + "visualize", os.str(),"jpg");
-      WriteImage( sCompleteImageName.c_str(), image);
+      if (stlplus::extension_part(srcImage) == "JPG" ||
+          stlplus::extension_part(srcImage) == "jpg")
+      {
+        stlplus::file_copy(srcImage, dstImage);
+      }
+      else
+      {
+        ReadImage( srcImage.c_str(), &image );       
+        WriteImage( dstImage.c_str(), image);
+      }      
     }
 
     //pmvs_options.txt
     std::ostringstream os;
-    os << "level " << resolution << "\n"
-     << "csize 2" << "\n"
-     << "threshold 0.7" << "\n"
-     << "wsize 7" << "\n"
-     << "minImageNum 3" << "\n"
-     << "CPU " << CPU << "\n"
-     << "setEdge 0" << "\n"
-     << "useBound 0" << "\n"
-     << "useVisData 0" << "\n"
-     << "sequence -1" << "\n"
-     << "maxAngle 10" << "\n"
-     << "quad 2.0" << "\n"
-     << "timages -1 0 " << doc._map_camera.size() << "\n"
-     << "oimages 0" << "\n"; // ?
+    os << "level " << resolution << os.widen('\n')
+     << "csize 2" << os.widen('\n')
+     << "threshold 0.7" << os.widen('\n')
+     << "wsize 7" << os.widen('\n')
+     << "minImageNum 3" << os.widen('\n')
+     << "CPU " << CPU << os.widen('\n')
+     << "setEdge 0" << os.widen('\n')
+     << "useBound 0" << os.widen('\n')
+     << "useVisData 0" << os.widen('\n')
+     << "sequence -1" << os.widen('\n')
+     << "maxAngle 10" << os.widen('\n')
+     << "quad 2.0" << os.widen('\n')
+     << "timages -1 0 " << doc._map_camera.size() << os.widen('\n')
+     << "oimages 0" << os.widen('\n'); // ?
 
     std::ofstream file(stlplus::create_filespec(sOutDirectory, "pmvs_options", "txt").c_str());
     file << os.str();
@@ -127,9 +136,9 @@ bool exportToBundlerFormat(
   }
   else
   {
-    os << "# Bundle file v0.3" << std::endl
+    os << "# Bundle file v0.3" << os.widen('\n')
       << doc._map_camera.size()
-      << " " << doc._tracks.size() << std::endl;
+      << " " << doc._tracks.size() << os.widen('\n');
 
     size_t count = 0;
     for (std::map<size_t, PinholeCamera>::const_iterator iter = doc._map_camera.begin();
@@ -149,12 +158,12 @@ bool exportToBundlerFormat(
         << R(0,0) << " " << R(0, 1) << " " << R(0, 2) << os.widen('\n')   //R[0]
         << R(1,0) << " " << R(1, 1) << " " << R(1, 2) << os.widen('\n')   //R[1]
         << R(2,0) << " " << R(2, 1) << " " << R(2, 2) << os.widen('\n')  //R[2]
-        << t(0)  << " " << t(1)   << " " << t(2)   << os.widen('\n') ;     //t
+        << t(0)  << " " << t(1)   << " " << t(2)   << os.widen('\n');     //t
 
-      osList << doc._vec_imageNames[iter->first] << " 0 " << focal << std::endl;
+      osList << doc._vec_imageNames[iter->first] << " 0 " << focal << os.widen('\n');
     }
 
-    size_t trackIndex = 0 ; 
+    size_t trackIndex = 0; 
 
     for (std::map< size_t, tracks::submapTrack >::const_iterator
       iterTracks = doc._tracks.begin();
@@ -166,10 +175,10 @@ bool exportToBundlerFormat(
       const tracks::submapTrack & map_track = iterTracks->second;
 
       const float * ptr3D = & doc._vec_points[trackIndex*3];
-      os << ptr3D[0] << " " << ptr3D[1] << " " << ptr3D[2] << os.widen('\n') ;
+      os << ptr3D[0] << " " << ptr3D[1] << " " << ptr3D[2] << os.widen('\n');
       os <<  "255 255 255" << os.widen('\n');
       os << map_track.size() << " ";
-      const Vec3 vec(ptr3D[0],ptr3D[1],ptr3D[2]) ;
+      const Vec3 vec(ptr3D[0],ptr3D[1],ptr3D[2]);
       for (tracks::submapTrack::const_iterator iterTrack = map_track.begin();
         iterTrack != map_track.end();
         ++iterTrack)
@@ -178,7 +187,7 @@ bool exportToBundlerFormat(
         Vec2 pt = PMat.Project(vec);
         os << iterTrack->first << " " << iterTrack->second << " " << pt(0) << " " << pt(1) << " ";
       }
-      os << os.widen('\n') ;
+      os << os.widen('\n');
 
     }
     os.close();
