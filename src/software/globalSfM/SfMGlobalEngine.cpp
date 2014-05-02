@@ -225,7 +225,7 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
     }
     break;
     default:
-    std::cerr << "Unknow rotation averaging method: " << (int) eRotationAveragingMethod << std::endl;
+    std::cerr << "Unknown rotation averaging method: " << (int) eRotationAveragingMethod << std::endl;
   }
   return false;
 }
@@ -423,7 +423,7 @@ bool GlobalReconstructionEngine::Process()
 
   //--Check relative translation graph :
   //--> Consider only the connected component compound by the translation graph
-  //-- Robust translation estimation can perform inference and remove some bad conditionned triplets
+  //-- Robust translation estimation can perform inference and remove some bad conditioned triplets
 
   {
     std::set<size_t> set_representedImageIndex;
@@ -468,7 +468,7 @@ bool GlobalReconstructionEngine::Process()
 
   std::map<size_t, PinholeCamera> map_camera;
   {
-    const int iNview = map_cameraNodeToCameraIndex.size(); // The cound of remaining nodes in the graph
+    const int iNview = map_cameraNodeToCameraIndex.size(); // The remaining camera nodes count in the graph
 
     std::cout << "\n-------------------------------" << "\n"
       << " Global translations computation: " << "\n"
@@ -1042,35 +1042,29 @@ bool GlobalReconstructionEngine::CleanGraph()
 
   if (lemon::biEdgeConnectedCutEdges(putativeGraph.g, cutMap) > 0)
   {
+    // Some edges must be removed because they don't follow the biEdge condition.
     typedef Graph::EdgeIt EdgeIterator;
     EdgeIterator itEdge(putativeGraph.g);
     for (EdgeMapAlias::MapIt it(cutMap); it!=INVALID; ++it, ++itEdge)
     {
-      if (*it)  // we have to remove an edge
-      {
-        putativeGraph.g.erase(itEdge);
-        size_t Idu = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.u(itEdge)];
-        size_t Idv = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.v(itEdge)];
-        STLPairWiseMatches::iterator iterF = _map_Matches_F.find(std::make_pair(Idu,Idv));
-        if( iterF != _map_Matches_F.end())
-        {
-          _map_Matches_F.erase(iterF);
-        }
-        iterF = _map_Matches_F.find(std::make_pair(Idv,Idu));
-        if( iterF != _map_Matches_F.end())
-        {
-          _map_Matches_F.erase(iterF);
-        }
-      }
+      if (*it)  
+        putativeGraph.g.erase(itEdge); // remove the not bi-edge element
     }
   }
+
   // Graph is bi-edge connected, but still many connected components can exist
+  // Keep only the largest one
+  STLPairWiseMatches matches_filtered;
   int connectedComponentCount = lemon::countConnectedComponents(putativeGraph.g);
   std::cout << "\n"
-    << "GlobalReconstructionEngine::CleanGraph() :: => connected Component : " << connectedComponentCount << std::endl;
+    << "GlobalReconstructionEngine::CleanGraph() :: => connected Component : "
+    << connectedComponentCount << std::endl;
   if (connectedComponentCount > 1)
   {
     // Keep only the largest connected component
+    // - list all CC size
+    // - if the largest one is meet, keep all the edges that belong to this node
+
     const std::map<size_t, std::set<lemon::ListGraph::Node> > map_subgraphs = exportGraphToMapSubgraphs(putativeGraph.g);
     size_t count = std::numeric_limits<size_t>::min();
     std::map<size_t, std::set<lemon::ListGraph::Node> >::const_iterator iterLargestCC = map_subgraphs.end();
@@ -1089,32 +1083,47 @@ bool GlobalReconstructionEngine::CleanGraph()
         iter != map_subgraphs.end(); ++iter)
     {
       if (iter == iterLargestCC)
-        continue;
-
-      const std::set<lemon::ListGraph::Node> & ccSet = iter->second;
-      for (std::set<lemon::ListGraph::Node>::const_iterator iter2 = ccSet.begin();
-        iter2 != ccSet.end(); ++iter2)
       {
-        //putativeGraph.g.erase(*iter2);
-        // Remove all outgoing edges
-        typedef Graph::OutArcIt OutArcIt;
-        for (OutArcIt e(putativeGraph.g, *iter2); e!=INVALID; ++e)
+        // list all nodes and outgoing edges and update the matching list
+        const std::set<lemon::ListGraph::Node> & ccSet = iter->second;
+        for (std::set<lemon::ListGraph::Node>::const_iterator iter2 = ccSet.begin();
+          iter2 != ccSet.end(); ++iter2)
         {
-          putativeGraph.g.erase(e);
-          size_t Idu = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.target(e)];
-          size_t Idv = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.source(e)];
-          STLPairWiseMatches::iterator iterF = _map_Matches_F.find(std::make_pair(Idu,Idv));
-          if( iterF != _map_Matches_F.end())
+          typedef Graph::OutArcIt OutArcIt;
+          for (OutArcIt e(putativeGraph.g, *iter2); e!=INVALID; ++e)
           {
-            _map_Matches_F.erase(iterF);
-          }
-          iterF = _map_Matches_F.find(std::make_pair(Idv,Idu));
-          if( iterF != _map_Matches_F.end())
-          {
-            _map_Matches_F.erase(iterF);
+            size_t Idu = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.target(e)];
+            size_t Idv = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.source(e)];
+            STLPairWiseMatches::iterator iterF = _map_Matches_F.find(std::make_pair(Idu,Idv));
+            if( iterF != _map_Matches_F.end())
+            {
+              matches_filtered.insert(*iterF);
+            }
+            iterF = _map_Matches_F.find(std::make_pair(Idv,Idu));
+            if( iterF != _map_Matches_F.end())
+            {
+              matches_filtered.insert(*iterF);
+            }
           }
         }
+        // update the matching list
+        _map_Matches_F = matches_filtered;
       }
+      else
+      {
+        // remove the edges from the graph
+        const std::set<lemon::ListGraph::Node> & ccSet = iter->second;
+        for (std::set<lemon::ListGraph::Node>::const_iterator iter2 = ccSet.begin();
+          iter2 != ccSet.end(); ++iter2)
+        {
+          typedef Graph::OutArcIt OutArcIt;
+          for (OutArcIt e(putativeGraph.g, *iter2); e!=INVALID; ++e)
+          {
+            putativeGraph.g.erase(e);
+          }
+          //putativeGraph.g.erase(*iter2);
+        }
+      }      
     }
   }
 
