@@ -20,7 +20,12 @@
 
 static int running = 1;
 static Document m_doc;
-static int cur_cam = -1;
+static int current_cam = -1;
+
+static float x_offset=0;
+static float y_offset=0;
+static float z_offset=0;
+static float normalized_focal = 1;
 
 struct GLWImage {
     int width, height;
@@ -29,12 +34,45 @@ struct GLWImage {
     int camera;
  };
 
-static GLWImage m_cur_image;
+//static GLWImage m_cur_image;
+static std::vector< GLWImage > m_image_vector;
 
 /* close callback */
 void window_close_callback(GLFWwindow* window)
 {
     running = 0;
+}
+
+void load_textures()
+{
+	int nbCams = m_doc._vec_imageNames.size();
+	m_image_vector.resize(nbCams);
+
+	for ( int i_cam=0; i_cam<nbCams; ++i_cam) {
+		std::string sImageName = stlplus::create_filespec( stlplus::folder_append_separator(m_doc._sDirectory)+"images",
+			m_doc._vec_imageNames[i_cam]);
+
+		std::vector<unsigned char> img;
+		int w,h,depth;
+		if (ReadImage(sImageName.c_str(),	&img,	&w,	&h,	&depth)) {
+			glEnable(GL_TEXTURE_2D);
+			//std::cout << "Read image : " << sImageName << "\n" << std::endl;
+			glDeleteTextures(1, &m_image_vector[i_cam].texture);
+
+			// Create texture
+			glGenTextures( 1, &m_image_vector[i_cam].texture);
+			// select our current texture
+		  glBindTexture(GL_TEXTURE_2D, m_image_vector[i_cam].texture);
+
+		  m_image_vector[i_cam].width = w;
+		  m_image_vector[i_cam].height = h;
+		  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,  m_image_vector[i_cam].width,
+		  		m_image_vector[i_cam].height, 0, GL_RGB, GL_UNSIGNED_BYTE,
+				  &img[0]);
+
+		  glBindTexture(GL_TEXTURE_2D, m_image_vector[i_cam].texture);
+	  }
+  }
 }
 
 /* new window size */
@@ -55,63 +93,58 @@ void reshape( GLFWwindow* window, int width, int height )
 
 void key(GLFWwindow* window, int k, int scancode, int action, int mod)
 {
-  if( action != GLFW_PRESS ) return;
-
-bool bTextureChange = false;
+  if( action != GLFW_PRESS ) {
+  	return;
+  }
 
   switch (k) {
   case GLFW_KEY_ESCAPE:
     running = 0;
     break;
   case GLFW_KEY_LEFT:
-    cur_cam--;
-    if (cur_cam<0)  {
-      cur_cam = m_doc._map_camera.size()-1;
+  	current_cam--;
+    if (current_cam<0)  {
+    	current_cam = m_doc._map_camera.size()-1;
     }
-    bTextureChange = true;
     break;
   case GLFW_KEY_RIGHT:
-    cur_cam++;
-    if (cur_cam >= m_doc._map_camera.size())  {
-      cur_cam = 0;
+  	current_cam++;
+    if (current_cam >= m_doc._map_camera.size())  {
+    	current_cam = 0;
     }
-    bTextureChange = true;
     break;
+  case GLFW_KEY_R:
+  	x_offset=0;
+  	y_offset= 0;
+  	z_offset= 0;
+  	normalized_focal = 1;
+  	break;
+  case GLFW_KEY_Q:
+  	z_offset-= 0.1;
+  	break;
+  case GLFW_KEY_E:
+  	z_offset+= 0.1;
+    break;
+  case GLFW_KEY_W:
+  	y_offset+= 0.1;
+  	break;
+  case GLFW_KEY_S:
+  	y_offset-= 0.1;
+  	break;
+  case GLFW_KEY_A:
+  	x_offset+= 0.1;
+  	break;
+  case GLFW_KEY_D:
+  	x_offset-= 0.1;
+  	break;
+  case GLFW_KEY_Z:
+  	normalized_focal-= 0.1;
+  	break;
+  case GLFW_KEY_X:
+  	normalized_focal+= 0.1;
+  	break;
   default:
     return;
-  }
-
-  if (bTextureChange)
-  {
-    std::string sImageName =
-      stlplus::create_filespec(
-        stlplus::folder_append_separator(m_doc._sDirectory)+"images",
-        m_doc._vec_imageNames[cur_cam]);
-    std::vector<unsigned char> img;
-    int w,h,depth;
-    if (ReadImage(sImageName.c_str(),
-              &img,
-              &w,
-              &h,
-              &depth))
-    {
-      glEnable(GL_TEXTURE_2D);
-      std::cout << "Read image : " << sImageName << "\n" << std::endl;
-      glDeleteTextures(1, &m_cur_image.texture);
-
-      // Create texture
-      glGenTextures( 1, &m_cur_image.texture);
-      // select our current texture
-      glBindTexture(GL_TEXTURE_2D, m_cur_image.texture);
-
-      m_cur_image.width = w;
-      m_cur_image.height = h;
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,  m_cur_image.width,
-                m_cur_image.height, 0, GL_RGB, GL_UNSIGNED_BYTE,
-                &img[0]);
-
-      glBindTexture(GL_TEXTURE_2D, m_cur_image.texture);
-    }
   }
 }
 
@@ -153,96 +186,128 @@ static void draw(void)
   glLoadIdentity();
 
   {
-    const PinholeCamera & camera = m_doc._map_camera.find(cur_cam)->second;
+    // convert opengl coordinates into the document information coordinates
+    glPushMatrix();
+    glMultMatrixf((GLfloat*)m_convert);
+
+    // apply view offset
+    openMVG::Mat4 offset_w = l2w_Camera(Mat3::Identity(), Vec3(x_offset,y_offset,z_offset));
+    glMultMatrixd((GLdouble*)offset_w.data());
+
+    // then apply current camera transformation
+    const PinholeCamera & camera = m_doc._map_camera.find(current_cam)->second;
+    openMVG::Mat4 l2w = l2w_Camera(camera._R, camera._t);
 
     glPushMatrix();
-    openMVG::Mat4 l2w = l2w_Camera(camera._R, camera._t);
-    glMultMatrixf((GLfloat*)m_convert); // second, convert the camera coordinates to the opengl camera coordinates
     glMultMatrixd((GLdouble*)l2w.data());
 
     glPointSize(3);
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_LIGHTING);
-    //glCallList(m_pointcloud);
 
-    //Draw Structure
+    //Draw Structure in GREEN (as seen from the current camera)
     size_t nbPoint = m_doc._vec_points.size()/3;
     size_t cpt = 0;
     glBegin(GL_POINTS);
+    glColor3f(0.f,1.f,0.f);
     for(size_t i = 0; i < nbPoint; i++,cpt+=3) {
-      glColor3f(0.f,1.f,0.f);
       glVertex3f(m_doc._vec_points[cpt], m_doc._vec_points[cpt+1], m_doc._vec_points[cpt+2]);
     }
     glEnd();
 
-
-/*
-    //-- Draw other cameras:
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_BLEND); glDisable(GL_DEPTH_TEST);
-
     glDisable(GL_CULL_FACE);
-    for (std::map<size_t, SimpleCamera >::const_iterator iterCam = m_doc->map_camera.begin();
-      iterCam != m_doc->map_camera.end(); ++iterCam)
+
+    for (int i_cam=0; i_cam<m_doc._vec_imageNames.size(); ++i_cam)
     {
-      glPushMatrix();
+    		const PinholeCamera & camera_i = m_doc._map_camera.find(i_cam)->second;
 
-      if (std::distance(m_doc->map_camera.begin(),iterCam) != cur_cam)
-      {
-        Mat4 l2w = iterCam->second.l2w();
-        //glMultMatrixd(l2w.data());
-        glMultMatrixf((GLfloat*)m_convert); // second, convert the camera coordinates to the opengl camera coordinates
-        //glMultMatrixf((GLfloat*)prj);       // first, project the points in the world coordinates to the camera coorrdinates
-        glMultMatrixd((GLdouble*)l2w.data());
-        int w = m_doc->map_imageSize.find(std::distance(m_doc->map_camera.begin(),iterCam))->second.first;
-        int h = m_doc->map_imageSize.find(std::distance(m_doc->map_camera.begin(),iterCam))->second.second;
-        double focal = iterCam->second.K(0,0);
-        double maxx = 0.5*w/focal;
-        double maxy = 0.5*h/focal;
+    		// Move frame to draw the camera i_cam by appliyin its inverse transformation
+    		// Warning: translation has to be "fixed" to remove the current camera rotation
 
-        glBegin(GL_QUADS);
-        glColor4f(0.5f,0.5f,0.5f,0.6f);
-        glTexCoord2d(0.0,0.0);        glVertex3d(-maxx,-maxy,-1.0);
-        glTexCoord2d(1.0,0.0);        glVertex3d(+maxx,-maxy,-1.0);
-        glTexCoord2d(1.0,1.0);        glVertex3d(+maxx,+maxy,-1.0);
-        glTexCoord2d(0.0,1.0);        glVertex3d(-maxx,+maxy,-1.0);
-        glEnd();
+    		// Fix camera_i translation with current camera rotation inverse
+    		Vec3 trans = camera._R.transpose() * camera_i._t;
 
-      }
-      glPopMatrix();
-    }
+    		// compute inverse transformation matrix from local to world
+    		openMVG::Mat4 l2w_i = l2w_Camera(camera_i._R.transpose(), -trans);
 
-    glDisable(GL_BLEND); glEnable(GL_DEPTH_TEST);
-*/
+        // stack it and use it
+    		glPushMatrix();
+    		glMultMatrixd((GLdouble*)l2w_i.data());
 
-    glPopMatrix();
+    		// 1. Draw optical center (RED) and image center (BLUE)
+    		glPointSize(3);
+    		glDisable(GL_TEXTURE_2D);
+    		glDisable(GL_LIGHTING);
 
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_BLEND); glDisable(GL_DEPTH_TEST);
+    		glBegin(GL_POINTS);
+    		glColor3f(1.f,0.f,0.f);
+      	glVertex3f(0, 0, 0); // optical center
+      	glColor3f(0.f,0.f,1.f);
+      	glVertex3f(0, 0, normalized_focal); // image center
+   	    glEnd();
 
-    //Draw the image
+   	    // compute image corners coordinated with normalized focal (f=normalized_focal)
+   	    int w = m_doc._map_imageSize.find(i_cam)->second.first;
+   	    int h = m_doc._map_imageSize.find(i_cam)->second.second;
 
-    int w = m_doc._map_imageSize.find(cur_cam)->second.first;
-    int h = m_doc._map_imageSize.find(cur_cam)->second.second;
-    double focal = camera._K(0,0);
+   	    double focal = camera_i._K(0,0);
+   	    // use principal point to adjust image center
+   	    Vec2 pp(camera._K(0,2) , camera._K(1,2));
 
-    double maxx = 0.5 * w / focal;
-    double maxy = 0.5 * h / focal;
-    glEnable(GL_TEXTURE_2D);
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+   	    Vec3 c1(    -pp[0]/focal * normalized_focal, (-pp[1]+h)/focal * normalized_focal, normalized_focal);
+   	    Vec3 c2((-pp[0]+w)/focal * normalized_focal, (-pp[1]+h)/focal * normalized_focal, normalized_focal);
+   	    Vec3 c3((-pp[0]+w)/focal * normalized_focal,     -pp[1]/focal * normalized_focal, normalized_focal);
+   	    Vec3 c4(    -pp[0]/focal * normalized_focal,     -pp[1]/focal * normalized_focal, normalized_focal);
 
-    glBindTexture(GL_TEXTURE_2D, m_cur_image.texture);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glColor4f(0.5f,0.5f,0.5f,0.6f);
-    glBegin(GL_QUADS);
-    glTexCoord2d(0.0,1.0);    glVertex3d(-maxx,-maxy,-1.0);
-    glTexCoord2d(1.0,1.0);    glVertex3d(+maxx,-maxy,-1.0);
-    glTexCoord2d(1.0,0.0);    glVertex3d(+maxx,+maxy,-1.0);
-    glTexCoord2d(0.0,0.0);    glVertex3d(-maxx,+maxy,-1.0);
-    glEnd();
-    glDisable(GL_TEXTURE_2D);
-    glDisable(GL_BLEND); glEnable(GL_DEPTH_TEST);
+   	    // 2. Draw imagette
+   	    glEnable(GL_TEXTURE_2D);
+   	    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+   	    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+   	    glBindTexture(GL_TEXTURE_2D, m_image_vector[i_cam].texture);
+
+   	    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   	    glEnable(GL_BLEND);
+   	    glDisable(GL_DEPTH_TEST);
+
+   	    if (i_cam == current_cam) {
+   	      glColor4f(0.5f,0.5f,0.5f, 0.7f);
+   	    } else {
+   	    	glColor4f(0.5f,0.5f,0.5f, 0.5f);
+   	    }
+
+   	    glBegin(GL_QUADS);
+   	    glTexCoord2d(0.0,1.0);    glVertex3d(c1[0], c1[1], c1[2]);
+   	    glTexCoord2d(1.0,1.0);    glVertex3d(c2[0], c2[1], c2[2]);
+   	    glTexCoord2d(1.0,0.0);    glVertex3d(c3[0], c3[1], c3[2]);
+   	    glTexCoord2d(0.0,0.0);    glVertex3d(c4[0], c4[1], c4[2]);
+   	    glEnd();
+
+   	    glDisable(GL_TEXTURE_2D);
+   	    glDisable(GL_BLEND); glEnable(GL_DEPTH_TEST);
+
+   	   // 3. Draw camera cone
+   	    if (i_cam == current_cam) {
+   	    	glColor3f(1.f,1.f,0.f);
+   	    } else {
+   	    	glColor3f(1.f,0.f,0.f);
+   	    }
+   	    glBegin(GL_LINES);
+   	    glVertex3d(0.0,0.0,0.0); glVertex3d(c1[0], c1[1], c1[2]);
+   	    glVertex3d(0.0,0.0,0.0); glVertex3d(c2[0], c2[1], c2[2]);
+   	    glVertex3d(0.0,0.0,0.0); glVertex3d(c3[0], c3[1], c3[2]);
+   	    glVertex3d(0.0,0.0,0.0); glVertex3d(c4[0], c4[1], c4[2]);
+   	    glVertex3d(c1[0], c1[1], c1[2]); glVertex3d(c2[0], c2[1], c2[2]);
+   	    glVertex3d(c2[0], c2[1], c2[2]); glVertex3d(c3[0], c3[1], c3[2]);
+   	    glVertex3d(c3[0], c3[1], c3[2]); glVertex3d(c4[0], c4[1], c4[2]);
+   	    glVertex3d(c4[0], c4[1], c4[2]); glVertex3d(c1[0], c1[1], c1[2]);
+   	    glEnd();
+
+   	    glPopMatrix(); // go back to current camera frame
+   	}
+
+    glPopMatrix(); // go back to (document +offset) frame
+    glPopMatrix(); // go back to identity
   }
 }
 
@@ -266,11 +331,15 @@ int main(int argc, char *argv[]) {
 
   if (m_doc.load(sSfM_Dir))
   {
-    cur_cam = 0;
-    std::cout << "Press left or right key to navigate ;-)" << std::endl;
+  	current_cam = 0;
+    std::cout << "Press left or right key to navigate cameras ;-)" << std::endl;
+    std::cout << "Move viewpoint with Q,W,E,A,S,D" << std::endl;
+    std::cout << "Change Normalized focal with Z and X" << std::endl;
+    std::cout << "Reset viewpoint position with R" << std::endl;
     std::cout << "Esc to quit" << std::endl;
+
   }
-  else{
+  else {
     exit( EXIT_FAILURE);
   }
 
@@ -286,7 +355,7 @@ int main(int argc, char *argv[]) {
 
   glfwWindowHint(GLFW_DEPTH_BITS, 16);
 
-  window = glfwCreateWindow( 600, 300, "SfmViewer", NULL, NULL );
+  window = glfwCreateWindow( 1000, 600, "SfmViewer", NULL, NULL );
   if (!window)
   {
     fprintf( stderr, "Failed to open GLFW window\n" );
@@ -305,7 +374,8 @@ int main(int argc, char *argv[]) {
   glfwGetWindowSize(window, &width, &height);
   reshape(window, width, height);
 
-  m_cur_image.camera = -1;
+  load_textures();
+
   // Main loop
   while( running )
   {
