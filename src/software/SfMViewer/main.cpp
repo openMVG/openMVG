@@ -339,10 +339,10 @@ int main(int argc, char *argv[]) {
   if (m_doc.load(sSfM_Dir))
   {
   	current_cam = 0;
-    std::cout << "Press left or right key to navigate cameras ;-)" << std::endl;
-     << "Move viewpoint with Q,W,E,A,S,D" << std::endl;
-      << "Change Normalized focal with Z and X" << std::endl;
-      << "Reset viewpoint position with R" << std::endl;
+    std::cout << "Press left or right key to navigate between cameras ;-)" << std::endl
+      << "Move viewpoint with Q,W,E,A,S,D" << std::endl
+      << "Change Normalized focal with Z and X" << std::endl
+      << "Reset viewpoint position with R" << std::endl
       << "Esc to quit" << std::endl;
 
   }
