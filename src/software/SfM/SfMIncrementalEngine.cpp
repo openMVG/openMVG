@@ -1412,6 +1412,9 @@ void IncrementalReconstructionEngine::BundleAdjustment()
   // Create residuals for each observation in the bundle adjustment problem. The
   // parameters for cameras and points are added automatically.
   ceres::Problem problem;
+  // Set a LossFunction to be less penalized by false measurements
+  //  - set it to NULL if you don't want use a lossFunction.
+  ceres::LossFunction * p_LossFunction = new ceres::HuberLoss(4.0);
   for (size_t i = 0; i < ba_problem.num_observations(); ++i) {
     // Each Residual block takes a point and a camera as input and outputs a 2
     // dimensional residual. Internally, the cost function stores the observed
@@ -1422,8 +1425,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
                 & ba_problem.observations()[2 * i + 0]));
 
     problem.AddResidualBlock(cost_function,
-                             //NULL, // squared loss
-                             new ceres::HuberLoss(4.0),
+                             p_LossFunction, // replaced by NULL if you don't want a LossFunction
                              ba_problem.mutable_camera_intrisic_for_observation(i),
                              ba_problem.mutable_camera_extrinsic_for_observation(i),
                              ba_problem.mutable_point_for_observation(i));

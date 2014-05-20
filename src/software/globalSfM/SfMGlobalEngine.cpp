@@ -1308,6 +1308,9 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
           // Create residuals for each observation in the bundle adjustment problem. The
           // parameters for cameras and points are added automatically.
           ceres::Problem problem;
+          // Set a LossFunction to be less penalized by false measurements
+          //  - set it to NULL if you don't want use a lossFunction.
+          ceres::LossFunction * p_LossFunction = new ceres::HuberLoss(Square(2.0));
           for (size_t i = 0; i < ba_problem.num_observations(); ++i) {
             // Each Residual block takes a point and a camera as input and outputs a 2
             // dimensional residual. Internally, the cost function stores the observed
@@ -1319,8 +1322,7 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
                         &ba_problem.observations()[2 * i + 0],  K(0,0)));
 
             problem.AddResidualBlock(cost_function,
-                                     new ceres::HuberLoss(Square(2.0)),
-                                     //NULL, // squared loss
+                                     p_LossFunction,
                                      ba_problem.mutable_camera_for_observation(i),
                                      ba_problem.mutable_point_for_observation(i));
           }
@@ -1328,18 +1330,8 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
           // Configure a BA engine and run it
           //  Make Ceres automatically detect the bundle structure.
           ceres::Solver::Options options;
-          options.linear_solver_type = ceres::SPARSE_SCHUR;
-          if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
-            options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
-          else
-            if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
-              options.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
-            else
-            {
-              // No sparse backend for Ceres.
-              // Use dense solving
-              options.linear_solver_type = ceres::DENSE_SCHUR;
-            }
+          // Use a dense back-end since we only consider a two view problem
+          options.linear_solver_type = ceres::DENSE_SCHUR;
           options.minimizer_progress_to_stdout = false;
           options.logging_type = ceres::SILENT;
 
@@ -1726,6 +1718,9 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
   // Create residuals for each observation in the bundle adjustment problem. The
   // parameters for cameras and points are added automatically.
   ceres::Problem problem;
+  // Set a LossFunction to be less penalized by false measurements
+  //  - set it to NULL if you don't want use a lossFunction.
+  ceres::LossFunction * p_LossFunction = new ceres::HuberLoss(Square(4.0));
   for (size_t i = 0; i < ba_problem.num_observations(); ++i) {
     // Each Residual block takes a point and a camera as input and outputs a 2
     // dimensional residual. Internally, the cost function stores the observed
@@ -1739,8 +1734,7 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
                 &vec_Rot[ba_problem.camera_index_[i]*3]));
 
     problem.AddResidualBlock(cost_function,
-                             //NULL, // squared loss
-                             new ceres::HuberLoss(Square(4.0)),
+                             p_LossFunction,
                              ba_problem.mutable_camera_for_observation(i),
                              ba_problem.mutable_point_for_observation(i));
   }
@@ -1939,6 +1933,9 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
   // Create residuals for each observation in the bundle adjustment problem. The
   // parameters for cameras and points are added automatically.
   ceres::Problem problem;
+  // Set a LossFunction to be less penalized by false measurements
+  //  - set it to NULL if you don't want use a lossFunction.
+  ceres::LossFunction * p_LossFunction = new ceres::HuberLoss(Square(2.0));
   for (size_t k = 0; k < ba_problem.num_observations(); ++k) {
     // Each Residual block takes a point and a camera as input and outputs a 2
     // dimensional residual. Internally, the cost function stores the observed
@@ -1950,8 +1947,7 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
           &ba_problem.observations()[2 * k + 0], _K(0,0)));
 
       problem.AddResidualBlock(cost_function,
-        new ceres::HuberLoss(Square(2.0)),
-        //NULL, // squared loss
+        p_LossFunction,
         ba_problem.mutable_camera_for_observation(k),
         ba_problem.mutable_point_for_observation(k));
   }
