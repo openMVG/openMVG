@@ -15,6 +15,7 @@
 #include "software/SfMViewer/document.h"
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/image/image.hpp"
+#include "third_party/progress/progress.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 
@@ -48,7 +49,9 @@ void load_textures()
 	int nbCams = m_doc._vec_imageNames.size();
 	m_image_vector.resize(nbCams);
 
-	for ( int i_cam=0; i_cam<nbCams; ++i_cam) {
+  std::cout << "**\Textures loading, Please wait...\n";
+  C_Progress_display my_progress_bar( nbCams );
+	for ( int i_cam=0; i_cam<nbCams; ++i_cam, ++my_progress_bar) {
 		std::string sImageName = stlplus::create_filespec( stlplus::folder_append_separator(m_doc._sDirectory)+"images",
 			m_doc._vec_imageNames[i_cam]);
 
@@ -66,13 +69,14 @@ void load_textures()
 
 		  m_image_vector[i_cam].width = w;
 		  m_image_vector[i_cam].height = h;
-		  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,  m_image_vector[i_cam].width,
-		  		m_image_vector[i_cam].height, 0, GL_RGB, GL_UNSIGNED_BYTE,
+		  glTexImage2D(GL_TEXTURE_2D, 0, (depth == 1) ? GL_LUMINANCE : GL_RGB,  m_image_vector[i_cam].width,
+		  		m_image_vector[i_cam].height, 0, (depth == 1) ? GL_LUMINANCE : GL_RGB, GL_UNSIGNED_BYTE,
 				  &img[0]);
 
 		  glBindTexture(GL_TEXTURE_2D, m_image_vector[i_cam].texture);
 	  }
   }
+   std::cout << "**\Textures loading, Done" << std::endl;
 }
 
 /* new window size */
@@ -221,7 +225,7 @@ static void draw(void)
     {
     		const PinholeCamera & camera_i = m_doc._map_camera.find(i_cam)->second;
 
-    		// Move frame to draw the camera i_cam by appliyin its inverse transformation
+    		// Move frame to draw the camera i_cam by applying its inverse transformation
     		// Warning: translation has to be "fixed" to remove the current camera rotation
 
     		// Fix camera_i translation with current camera rotation inverse
@@ -259,32 +263,35 @@ static void draw(void)
    	    Vec3 c3((-pp[0]+w)/focal * normalized_focal,     -pp[1]/focal * normalized_focal, normalized_focal);
    	    Vec3 c4(    -pp[0]/focal * normalized_focal,     -pp[1]/focal * normalized_focal, normalized_focal);
 
-   	    // 2. Draw imagette
-   	    glEnable(GL_TEXTURE_2D);
-   	    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-   	    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+   	    // 2. Draw thumbnail
+        if (i_cam == current_cam)
+        {
+          glEnable(GL_TEXTURE_2D);
+          glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-   	    glBindTexture(GL_TEXTURE_2D, m_image_vector[i_cam].texture);
+          glBindTexture(GL_TEXTURE_2D, m_image_vector[i_cam].texture);
 
-   	    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-   	    glEnable(GL_BLEND);
-   	    glDisable(GL_DEPTH_TEST);
+          glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+          glEnable(GL_BLEND);
+          glDisable(GL_DEPTH_TEST);
 
-   	    if (i_cam == current_cam) {
-   	      glColor4f(0.5f,0.5f,0.5f, 0.7f);
-   	    } else {
-   	    	glColor4f(0.5f,0.5f,0.5f, 0.5f);
-   	    }
+          if (i_cam == current_cam) {
+            glColor4f(0.5f,0.5f,0.5f, 0.7f);
+          } else {
+            glColor4f(0.5f,0.5f,0.5f, 0.5f);
+          }
 
-   	    glBegin(GL_QUADS);
-   	    glTexCoord2d(0.0,1.0);    glVertex3d(c1[0], c1[1], c1[2]);
-   	    glTexCoord2d(1.0,1.0);    glVertex3d(c2[0], c2[1], c2[2]);
-   	    glTexCoord2d(1.0,0.0);    glVertex3d(c3[0], c3[1], c3[2]);
-   	    glTexCoord2d(0.0,0.0);    glVertex3d(c4[0], c4[1], c4[2]);
-   	    glEnd();
+          glBegin(GL_QUADS);
+          glTexCoord2d(0.0,1.0);    glVertex3d(c1[0], c1[1], c1[2]);
+          glTexCoord2d(1.0,1.0);    glVertex3d(c2[0], c2[1], c2[2]);
+          glTexCoord2d(1.0,0.0);    glVertex3d(c3[0], c3[1], c3[2]);
+          glTexCoord2d(0.0,0.0);    glVertex3d(c4[0], c4[1], c4[2]);
+          glEnd();
 
-   	    glDisable(GL_TEXTURE_2D);
-   	    glDisable(GL_BLEND); glEnable(GL_DEPTH_TEST);
+          glDisable(GL_TEXTURE_2D);
+          glDisable(GL_BLEND); glEnable(GL_DEPTH_TEST);
+        }
 
    	   // 3. Draw camera cone
    	    if (i_cam == current_cam) {
@@ -321,8 +328,8 @@ int main(int argc, char *argv[]) {
     if (argc == 1) throw std::string("Invalid command line parameter.");
     cmd.process(argc, argv);
   } catch(const std::string& s) {
-    std::cerr << "Usage: " << argv[0] << ' '
-    << "[-i|--sfmdir SfM_Output path] "
+    std::cerr << "Usage: " << argv[0] << '\n'
+    << "[-i|--sfmdir SfM_Output path]\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -333,10 +340,10 @@ int main(int argc, char *argv[]) {
   {
   	current_cam = 0;
     std::cout << "Press left or right key to navigate cameras ;-)" << std::endl;
-    std::cout << "Move viewpoint with Q,W,E,A,S,D" << std::endl;
-    std::cout << "Change Normalized focal with Z and X" << std::endl;
-    std::cout << "Reset viewpoint position with R" << std::endl;
-    std::cout << "Esc to quit" << std::endl;
+     << "Move viewpoint with Q,W,E,A,S,D" << std::endl;
+      << "Change Normalized focal with Z and X" << std::endl;
+      << "Reset viewpoint position with R" << std::endl;
+      << "Esc to quit" << std::endl;
 
   }
   else {
