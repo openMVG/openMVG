@@ -25,6 +25,7 @@
 #include "openMVG/cameras/BrownPinholeCamera.hpp"
 
 #include "software/SfM/SfMPlyHelper.hpp"
+#include "third_party/progress/progress.hpp"
 #include "third_party/stlAddition/stlMap.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
@@ -95,16 +96,16 @@ Image undistortImage(
 #endif
   for (int j=0; j<h; j++ ) {
     for (int i=0; i<w; i++) {
-      double xu, yu, xd,yd;
+      double xu, yu, xd, yd;
       xu = double (i);
       yu = double (j);
       d.ComputeUndistortedCoordinates(xu, yu, xd, yd);
       xd -= offset(0);
       yd -= offset(1);
-      if (!J.Contains(yd, xd))
+      if (!J.Contains((int)yd, (int)xd))
         J(j, i) = fillcolor;
       else
-        J(j, i) = SampleLinear(I, yd, xd);
+        J(j, i) = SampleLinear(I, (float)yd, (float)xd);
     }
   }
   return J;
@@ -124,7 +125,7 @@ struct reconstructorHelper
   // Per camera confidence (A contrario estimated threshold error)
   std::map<size_t, double> map_ACThreshold;
 
-  bool exportToPly(const std::string & sFileName, std::vector<Vec3> * pvec_color = NULL) const
+  bool exportToPly(const std::string & sFileName, const std::vector<Vec3> * pvec_color = NULL) const
   {
     // get back 3D point into a vector (map value to vector transformation)
     std::vector<Vec3> vec_Reconstructed3DPoints;
@@ -148,7 +149,8 @@ struct reconstructorHelper
     const std::string & sImagePath,  // The images path
     const std::vector< std::pair<size_t, size_t> > & vec_imageSize, // Size of each image
     const openMVG::tracks::STLMAPTracks & map_reconstructed, // Tracks (Visibility)
-    bool bExportImage = true //Export image ?
+    const std::vector<Vec3> * pvec_color = NULL, // Tracks color
+    bool bExportImage = true //Export image ?    
   ) const
   {
     bool bOk = true;
@@ -258,9 +260,10 @@ struct reconstructorHelper
       f_cloud << "property float confidence\nproperty list uchar int visibility" << "\n";
       f_cloud << "element face 0\nproperty list uchar int vertex_index" << "\n";
       f_cloud << "end_header" << "\n";
+      size_t pointCount = 0;
       for (std::set<size_t>::const_iterator iter = set_trackId.begin();
         iter != set_trackId.end();
-        ++iter)
+        ++iter, ++pointCount)
       {
         const size_t trackId = *iter;
 
@@ -269,8 +272,13 @@ struct reconstructorHelper
 
         Vec3 pos = map_3DPoints.find(trackId)->second;
 
-        f_cloud << pos.transpose() << " " << "255 255 255" << " " << 3.14;
-
+        if (pvec_color)
+        {
+          const Vec3 & color = (*pvec_color)[pointCount];
+          f_cloud << pos.transpose() << " " << color.transpose() << " " << 3.14;
+        }
+        else
+          f_cloud << pos.transpose() << " 255 255 255 " << 3.14;
 
         std::ostringstream s_visibility;
 
@@ -333,33 +341,43 @@ struct reconstructorHelper
       // EXPORT un-distorted IMAGES
       if (bExportImage)
       {
+        std::cout << " -- Export the undistorted image set, can take some time ..." << std::endl;
+        C_Progress_display my_progress_bar(map_Camera.size());
         for (std::map<size_t, BrownPinholeCamera>::const_iterator iter = map_Camera.begin();
           iter != map_Camera.end();
-          ++iter)
+          ++iter, ++my_progress_bar)
         {
+          // Get distortion information of the image
+          const BrownPinholeCamera & cam = iter->second;
+          BrownDistoModel distoModel;
+          distoModel.m_disto_center = Vec2(cam._ppx, cam._ppy);
+          distoModel.m_radial_distortion = Vec3(cam._k1, cam._k2, cam._k3);
+          distoModel.m_f = cam._f;
+
+          // Build the output filename from the input one
           size_t imageIndex = iter->first;
           std::string sImageName = vec_fileNames[imageIndex];
-          Image<RGBColor > image;
-          if (ReadImage(stlplus::create_filespec(sImagePath, sImageName).c_str(), &image))
+          std::string sOutImagePath =
+            stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "images",
+            stlplus::basename_part(sImageName),
+            stlplus::extension_part(sImageName));
+
+          if (distoModel.m_radial_distortion.norm() == 0)
           {
-            // Get disto info of the image
-
-            const BrownPinholeCamera & cam = iter->second;
-            BrownDistoModel distoModel;
-            distoModel.m_disto_center = Vec2(cam._ppx, cam._ppy);
-            distoModel.m_radial_distortion = Vec3(cam._k1, cam._k2, cam._k3);
-            distoModel.m_f = cam._f;
-
-            Image<RGBColor > imageU;
-            imageU = undistortImage (image, distoModel);
-
-            std::string sOutImagePath =
-              stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "images",
-              stlplus::basename_part(sImageName),
-              stlplus::extension_part(sImageName));
-
-            WriteImage(sOutImagePath.c_str(), imageU);
+            // Distortion is null, perform a direct copy of the image
+            stlplus::file_copy(stlplus::create_filespec(sImagePath, sImageName), sOutImagePath);
           }
+          else
+          {
+            // Image with no null distortion
+            // - Open the image, undistort it and export it
+            Image<RGBColor > image;
+            if (ReadImage(stlplus::create_filespec(sImagePath, sImageName).c_str(), &image))
+            {
+              Image<RGBColor> imageU = undistortImage (image, distoModel);
+              WriteImage(sOutImagePath.c_str(), imageU);
+            }
+          }          
         }
       }
     }

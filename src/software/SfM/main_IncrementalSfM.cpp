@@ -88,8 +88,6 @@ int main(int argc, char **argv)
     clock_t timeEnd = clock();
     std::cout << std::endl << " Ac-Sfm took : " << (timeEnd - timeStart) / CLOCKS_PER_SEC << " seconds." << std::endl;
 
-    std::cout << std::endl << "Compute and export colorized point cloud" << std::endl;
-
     const reconstructorHelper & reconstructorHelperRef = to3DEngine.refToReconstructorHelper();
     std::vector<Vec3> colortracks;
     if (bColoredPointCloud)
@@ -102,13 +100,17 @@ int main(int argc, char **argv)
       bColoredPointCloud ? &colortracks : NULL);
 
     // Export to openMVG format
-    std::cout << std::endl << "Export 3D scene to openMVG format" << std::endl;
-      reconstructorHelperRef.ExportToOpenMVGFormat(
-        stlplus::folder_append_separator(sOutDir) + "SfM_output",
-        to3DEngine.getFilenamesVector(),
-        sImaDirectory,
-        to3DEngine.getImagesSize(),
-        to3DEngine.getTracks());
+    std::cout << std::endl << "Export 3D scene to openMVG format" << std::endl
+      << " -- Point cloud color: " << (bColoredPointCloud ? "ON" : "OFF") << std::endl;
+
+    reconstructorHelperRef.ExportToOpenMVGFormat(
+      stlplus::folder_append_separator(sOutDir) + "SfM_output",
+      to3DEngine.getFilenamesVector(),
+      sImaDirectory,
+      to3DEngine.getImagesSize(),
+      to3DEngine.getTracks(),
+      bColoredPointCloud ? &colortracks : NULL
+      );
 
     // Manage export data to desired format
     // -> PMVS

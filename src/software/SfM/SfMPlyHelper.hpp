@@ -49,7 +49,7 @@ static bool exportToPly(const std::vector<Vec3> & vec_points,
 static bool exportToPly(const std::vector<Vec3> & vec_points,
   const std::vector<Vec3> & vec_camPos,
   const std::string & sFileName,
-  std::vector<Vec3> * vec_coloredPoints = NULL)
+  const std::vector<Vec3> * vec_coloredPoints = NULL)
 {
   std::ofstream outfile;
   outfile.open(sFileName.c_str(), std::ios_base::out);
