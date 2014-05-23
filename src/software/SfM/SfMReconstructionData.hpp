@@ -341,7 +341,7 @@ struct reconstructorHelper
       // EXPORT un-distorted IMAGES
       if (bExportImage)
       {
-        std::cout << " -- Export the undistorted image set, can take some time ..." << std::endl;
+        std::cout << " -- Export the undistorted image set, it can take some time ..." << std::endl;
         C_Progress_display my_progress_bar(map_Camera.size());
         for (std::map<size_t, BrownPinholeCamera>::const_iterator iter = map_Camera.begin();
           iter != map_Camera.end();

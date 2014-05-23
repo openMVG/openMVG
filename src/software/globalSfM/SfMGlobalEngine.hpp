@@ -74,6 +74,14 @@ public:
 
   virtual bool Process();
 
+  /// Give a color to all the 3D points
+  void ColorizeTracks(
+    const STLMAPTracks & map_tracks, // tracks to be colorized
+    std::vector<Vec3> & vec_tracksColor // output associated color
+    ) const;
+
+  bool ExportToOpenMVGFormat(bool bColoredPointCloud) const;
+
 private:
   /// Read input data (point correspondences, K matrix)
   bool ReadInputData();
@@ -145,6 +153,17 @@ private:
   std::map<size_t, size_t> map_cameraIndexTocameraNode; // 0->Ncam correspondance to graph node Id
   //--
   //----
+
+  //-----
+  //-- Reconstruction data
+  //-----
+  // Cameras (Motion)
+  std::map<size_t, PinholeCamera> _map_camera;
+  // Structure 
+  std::vector<Vec3> _vec_allScenes;
+  // Structure visibility
+  STLMAPTracks _map_selectedTracks; // reconstructed track (visibility per 3D point)
+  //-----
 
 
   // -----

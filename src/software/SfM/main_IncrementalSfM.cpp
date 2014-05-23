@@ -89,15 +89,15 @@ int main(int argc, char **argv)
     std::cout << std::endl << " Ac-Sfm took : " << (timeEnd - timeStart) / CLOCKS_PER_SEC << " seconds." << std::endl;
 
     const reconstructorHelper & reconstructorHelperRef = to3DEngine.refToReconstructorHelper();
-    std::vector<Vec3> colortracks;
+    std::vector<Vec3> vec_tracksColor;
     if (bColoredPointCloud)
     {
       // Compute the color of each track
-      to3DEngine.ColorizeTracks(colortracks);
+      to3DEngine.ColorizeTracks(vec_tracksColor);
     }
     reconstructorHelperRef.exportToPly(
       stlplus::create_filespec(sOutDir, "FinalColorized", ".ply"),
-      bColoredPointCloud ? &colortracks : NULL);
+      bColoredPointCloud ? &vec_tracksColor : NULL);
 
     // Export to openMVG format
     std::cout << std::endl << "Export 3D scene to openMVG format" << std::endl
@@ -109,7 +109,7 @@ int main(int argc, char **argv)
       sImaDirectory,
       to3DEngine.getImagesSize(),
       to3DEngine.getTracks(),
-      bColoredPointCloud ? &colortracks : NULL
+      bColoredPointCloud ? &vec_tracksColor : NULL
       );
 
     // Manage export data to desired format

@@ -61,7 +61,7 @@ private:
 
 public:
   /// Give a color to all the 3D points
-  void ColorizeTracks(std::vector<Vec3> & vec_color);
+  void ColorizeTracks(std::vector<Vec3> & vec_tracksColor) const;
 
   const reconstructorHelper & refToReconstructorHelper() const
   {

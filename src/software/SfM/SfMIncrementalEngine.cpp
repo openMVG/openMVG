@@ -1148,17 +1148,16 @@ size_t IncrementalReconstructionEngine::badTrackRejector(double dPrecision)
   return rejectedTrack + rejectedMeasurement;
 }
 
-void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_color)
+void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_tracksColor) const
 {
   // Colorize each track
   //  Start with the most representative image
   //    and iterate to provide a color to each 3D point
   {
-    vec_color.resize(_map_reconstructed.size());
+    vec_tracksColor.resize(_map_reconstructed.size());
 
     // The track list that will be colored (point removed during the process)
-    openMVG::tracks::STLMAPTracks mapTrackToColorRef(_map_reconstructed);
-    openMVG::tracks::STLMAPTracks::iterator iterTBegin = mapTrackToColorRef.begin();
+    openMVG::tracks::STLMAPTracks::const_iterator iterTBegin = _map_reconstructed.begin();
     openMVG::tracks::STLMAPTracks mapTrackToColor(_map_reconstructed);
     while( !mapTrackToColor.empty() )
     {
@@ -1177,7 +1176,7 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_col
         for( tracks::submapTrack::const_iterator iterTrack = track.begin();
           iterTrack != track.end(); ++iterTrack)
         {
-          size_t imageId = iterTrack->first;
+          const size_t imageId = iterTrack->first;
           if (map_IndexCardinal.find(imageId) == map_IndexCardinal.end())
             map_IndexCardinal[imageId] = 1;
           else
@@ -1195,10 +1194,10 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_col
       std::vector< sort_index_packet_descend< size_t, size_t> > packet_vec(vec_cardinal.size());
       sort_index_helper(packet_vec, &vec_cardinal[0]);
 
-      //First index is the image with the most matches
+      //First index is the image with the most of matches
       std::map<size_t, size_t>::const_iterator iterTT = map_IndexCardinal.begin();
       std::advance(iterTT, packet_vec[0].index);
-      size_t indexImage = iterTT->first;
+      const size_t indexImage = iterTT->first;
       Image<RGBColor> image;
       ReadImage(
         stlplus::create_filespec(
@@ -1221,10 +1220,10 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_col
         {
           // Color the track
           size_t featId = iterF->second;
-          const SIOPointFeature & feat = _map_feats[indexImage][featId];
+          const SIOPointFeature & feat = _map_feats.find(indexImage)->second[featId];
           RGBColor color = image(feat.y(), feat.x());
 
-          vec_color[std::distance ( iterTBegin, mapTrackToColorRef.find(trackId) )] = Vec3(color.r(), color.g(), color.b());
+          vec_tracksColor[std::distance ( iterTBegin, _map_reconstructed.find(trackId) )] = Vec3(color.r(), color.g(), color.b());
           set_toRemove.insert(trackId);
         }
       }
