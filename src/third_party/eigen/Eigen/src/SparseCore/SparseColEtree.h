@@ -63,6 +63,7 @@ int coletree(const MatrixType& mat, IndexVector& parent, IndexVector& firstRowEl
   typedef typename MatrixType::Index Index;
   Index nc = mat.cols(); // Number of columns 
   Index m = mat.rows();
+  Index diagSize = (std::min)(nc,m);
   IndexVector root(nc); // root of subtree of etree 
   root.setZero();
   IndexVector pp(nc); // disjoint sets 
@@ -72,7 +73,7 @@ int coletree(const MatrixType& mat, IndexVector& parent, IndexVector& firstRowEl
   Index row,col; 
   firstRowElt.resize(m);
   firstRowElt.setConstant(nc);
-  firstRowElt.segment(0, nc).setLinSpaced(nc, 0, nc-1);
+  firstRowElt.segment(0, diagSize).setLinSpaced(diagSize, 0, diagSize-1);
   bool found_diag;
   for (col = 0; col < nc; col++)
   {
@@ -91,7 +92,7 @@ int coletree(const MatrixType& mat, IndexVector& parent, IndexVector& firstRowEl
   Index rset, cset, rroot; 
   for (col = 0; col < nc; col++) 
   {
-    found_diag = false;
+    found_diag = col>=m;
     pp(col) = col; 
     cset = col; 
     root(cset) = col; 
@@ -105,6 +106,7 @@ int coletree(const MatrixType& mat, IndexVector& parent, IndexVector& firstRowEl
       Index i = col;
       if(it) i = it.index();
       if (i == col) found_diag = true;
+      
       row = firstRowElt(i);
       if (row >= col) continue; 
       rset = internal::etree_find(row, pp); // Find the name of the set containing row

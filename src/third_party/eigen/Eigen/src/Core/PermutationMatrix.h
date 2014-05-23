@@ -553,7 +553,8 @@ struct permut_matrix_product_retval
     template<typename Dest> inline void evalTo(Dest& dst) const
     {
       const Index n = Side==OnTheLeft ? rows() : cols();
-
+      // FIXME we need an is_same for expression that is not sensitive to constness. For instance
+      // is_same_xpr<Block<const Matrix>, Block<Matrix> >::value should be true.
       if(is_same<MatrixTypeNestedCleaned,Dest>::value && extract_data(dst) == extract_data(m_matrix))
       {
         // apply the permutation inplace

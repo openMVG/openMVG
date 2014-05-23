@@ -16,9 +16,6 @@ std::complex<T> RandomCpx() { return std::complex<T>( (T)(rand()/(T)RAND_MAX - .
 using namespace std;
 using namespace Eigen;
 
-float norm(float x) {return x*x;}
-double norm(double x) {return x*x;}
-long double norm(long double x) {return x*x;}
 
 template < typename T>
 complex<long double>  promote(complex<T> x) { return complex<long double>(x.real(),x.imag()); }
@@ -40,11 +37,11 @@ complex<long double>  promote(long double x) { return complex<long double>( x); 
             for (size_t k1=0;k1<(size_t)timebuf.size();++k1) {
                 acc +=  promote( timebuf[k1] ) * exp( complex<long double>(0,k1*phinc) );
             }
-            totalpower += norm(acc);
+            totalpower += numext::abs2(acc);
             complex<long double> x = promote(fftbuf[k0]); 
             complex<long double> dif = acc - x;
-            difpower += norm(dif);
-            //cerr << k0 << "\t" << acc << "\t" <<  x << "\t" << sqrt(norm(dif)) << endl;
+            difpower += numext::abs2(dif);
+            //cerr << k0 << "\t" << acc << "\t" <<  x << "\t" << sqrt(numext::abs2(dif)) << endl;
         }
         cerr << "rmse:" << sqrt(difpower/totalpower) << endl;
         return sqrt(difpower/totalpower);
@@ -57,8 +54,8 @@ complex<long double>  promote(long double x) { return complex<long double>( x); 
         long double difpower=0;
         size_t n = (min)( buf1.size(),buf2.size() );
         for (size_t k=0;k<n;++k) {
-            totalpower += (norm( buf1[k] ) + norm(buf2[k]) )/2.;
-            difpower += norm(buf1[k] - buf2[k]);
+            totalpower += (numext::abs2( buf1[k] ) + numext::abs2(buf2[k]) )/2.;
+            difpower += numext::abs2(buf1[k] - buf2[k]);
         }
         return sqrt(difpower/totalpower);
     }

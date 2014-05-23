@@ -17,16 +17,29 @@ namespace internal {
 template<typename ExpressionType, typename Scalar>
 inline void stable_norm_kernel(const ExpressionType& bl, Scalar& ssq, Scalar& scale, Scalar& invScale)
 {
-  Scalar max = bl.cwiseAbs().maxCoeff();
-  if (max>scale)
+  using std::max;
+  Scalar maxCoeff = bl.cwiseAbs().maxCoeff();
+  
+  if (maxCoeff>scale)
   {
-    ssq = ssq * numext::abs2(scale/max);
-    scale = max;
-    invScale = Scalar(1)/scale;
+    ssq = ssq * numext::abs2(scale/maxCoeff);
+    Scalar tmp = Scalar(1)/maxCoeff;
+    if(tmp > NumTraits<Scalar>::highest())
+    {
+      invScale = NumTraits<Scalar>::highest();
+      scale = Scalar(1)/invScale;
+    }
+    else
+    {
+      scale = maxCoeff;
+      invScale = tmp;
+    }
   }
-  // TODO if the max is much much smaller than the current scale,
+  
+  // TODO if the maxCoeff is much much smaller than the current scale,
   // then we can neglect this sub vector
-  ssq += (bl*invScale).squaredNorm();
+  if(scale>Scalar(0)) // if scale==0, then bl is 0 
+    ssq += (bl*invScale).squaredNorm();
 }
 
 template<typename Derived>

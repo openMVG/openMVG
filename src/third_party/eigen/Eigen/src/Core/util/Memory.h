@@ -578,7 +578,7 @@ template<typename T> class aligned_stack_memory_handler
   */
 #ifdef EIGEN_ALLOCA
 
-  #ifdef __arm__
+  #if defined(__arm__) || defined(_WIN32)
     #define EIGEN_ALIGNED_ALLOCA(SIZE) reinterpret_cast<void*>((reinterpret_cast<size_t>(EIGEN_ALLOCA(SIZE+16)) & ~(size_t(15))) + 16)
   #else
     #define EIGEN_ALIGNED_ALLOCA EIGEN_ALLOCA
@@ -634,7 +634,9 @@ template<typename T> class aligned_stack_memory_handler
       /* memory allocated we can safely let the default implementation handle */ \
       /* this particular case. */ \
       static void *operator new(size_t size, void *ptr) { return ::operator new(size,ptr); } \
+      static void *operator new[](size_t size, void* ptr) { return ::operator new[](size,ptr); } \
       void operator delete(void * memory, void *ptr) throw() { return ::operator delete(memory,ptr); } \
+      void operator delete[](void * memory, void *ptr) throw() { return ::operator delete[](memory,ptr); } \
       /* nothrow-new (returns zero instead of std::bad_alloc) */ \
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW_NOTHROW(NeedsToAlign) \
       void operator delete(void *ptr, const std::nothrow_t&) throw() { \
@@ -728,15 +730,6 @@ public:
     {
         ::new( p ) T( value );
     }
-
-    // Support for c++11
-#if (__cplusplus >= 201103L)
-    template<typename... Args>
-    void  construct(pointer p, Args&&... args)
-    {
-      ::new(p) T(std::forward<Args>(args)...);
-    }
-#endif
 
     void destroy( pointer p )
     {

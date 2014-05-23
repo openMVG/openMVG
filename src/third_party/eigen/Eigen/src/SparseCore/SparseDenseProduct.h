@@ -125,7 +125,7 @@ class SparseDenseOuterProduct<Lhs,Rhs,Transpose>::InnerIterator : public _LhsNes
     inline Scalar value() const { return Base::value() * m_factor; }
 
   protected:
-    int m_outer;
+    Index m_outer;
     Scalar m_factor;
 };
 
@@ -155,7 +155,7 @@ struct sparse_time_dense_product_impl<SparseLhsType,DenseRhsType,DenseResType, R
   {
     for(Index c=0; c<rhs.cols(); ++c)
     {
-      int n = lhs.outerSize();
+      Index n = lhs.outerSize();
       for(Index j=0; j<n; ++j)
       {
         typename Res::Scalar tmp(0);

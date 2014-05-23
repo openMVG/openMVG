@@ -442,8 +442,11 @@ Packet4f pcos<Packet4f>(const Packet4f& _x)
   return _mm_xor_ps(y, sign_bit);
 }
 
+#if EIGEN_FAST_MATH
+
 // This is based on Quake3's fast inverse square root.
 // For detail see here: http://www.beyond3d.com/content/articles/8/
+// It lacks 1 (or 2 bits in some rare cases) of precision, and does not handle negative, +inf, or denormalized numbers correctly.
 template<> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED
 Packet4f psqrt<Packet4f>(const Packet4f& _x)
 {
@@ -456,6 +459,14 @@ Packet4f psqrt<Packet4f>(const Packet4f& _x)
   x = pmul(x, psub(pset1<Packet4f>(1.5f), pmul(half, pmul(x,x))));
   return pmul(_x,x);
 }
+
+#else
+
+template<> EIGEN_STRONG_INLINE Packet4f psqrt<Packet4f>(const Packet4f& x) { return _mm_sqrt_ps(x); }
+
+#endif
+
+template<> EIGEN_STRONG_INLINE Packet2d psqrt<Packet2d>(const Packet2d& x) { return _mm_sqrt_pd(x); }
 
 } // end namespace internal
 

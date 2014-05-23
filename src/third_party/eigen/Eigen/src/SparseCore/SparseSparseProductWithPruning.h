@@ -27,7 +27,7 @@ static void sparse_sparse_product_with_pruning_impl(const Lhs& lhs, const Rhs& r
   // make sure to call innerSize/outerSize since we fake the storage order.
   Index rows = lhs.innerSize();
   Index cols = rhs.outerSize();
-  //int size = lhs.outerSize();
+  //Index size = lhs.outerSize();
   eigen_assert(lhs.outerSize() == rhs.innerSize());
 
   // allocate a temporary buffer
@@ -100,7 +100,7 @@ struct sparse_sparse_product_with_pruning_selector<Lhs,Rhs,ResultType,ColMajor,C
   static void run(const Lhs& lhs, const Rhs& rhs, ResultType& res, const RealScalar& tolerance)
   {
     // we need a col-major matrix to hold the result
-    typedef SparseMatrix<typename ResultType::Scalar> SparseTemporaryType;
+    typedef SparseMatrix<typename ResultType::Scalar,ColMajor,typename ResultType::Index> SparseTemporaryType;
     SparseTemporaryType _res(res.rows(), res.cols());
     internal::sparse_sparse_product_with_pruning_impl<Lhs,Rhs,SparseTemporaryType>(lhs, rhs, _res, tolerance);
     res = _res;
@@ -126,10 +126,11 @@ struct sparse_sparse_product_with_pruning_selector<Lhs,Rhs,ResultType,RowMajor,R
   typedef typename ResultType::RealScalar RealScalar;
   static void run(const Lhs& lhs, const Rhs& rhs, ResultType& res, const RealScalar& tolerance)
   {
-    typedef SparseMatrix<typename ResultType::Scalar,ColMajor> ColMajorMatrix;
-    ColMajorMatrix colLhs(lhs);
-    ColMajorMatrix colRhs(rhs);
-    internal::sparse_sparse_product_with_pruning_impl<ColMajorMatrix,ColMajorMatrix,ResultType>(colLhs, colRhs, res, tolerance);
+    typedef SparseMatrix<typename ResultType::Scalar,ColMajor,typename Lhs::Index> ColMajorMatrixLhs;
+    typedef SparseMatrix<typename ResultType::Scalar,ColMajor,typename Lhs::Index> ColMajorMatrixRhs;
+    ColMajorMatrixLhs colLhs(lhs);
+    ColMajorMatrixRhs colRhs(rhs);
+    internal::sparse_sparse_product_with_pruning_impl<ColMajorMatrixLhs,ColMajorMatrixRhs,ResultType>(colLhs, colRhs, res, tolerance);
 
     // let's transpose the product to get a column x column product
 //     typedef SparseMatrix<typename ResultType::Scalar> SparseTemporaryType;

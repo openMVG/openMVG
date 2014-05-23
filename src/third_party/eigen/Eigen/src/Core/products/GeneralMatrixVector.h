@@ -52,11 +52,7 @@ EIGEN_DONT_INLINE static void run(
   Index rows, Index cols,
   const LhsScalar* lhs, Index lhsStride,
   const RhsScalar* rhs, Index rhsIncr,
-  ResScalar* res, Index
-  #ifdef EIGEN_INTERNAL_DEBUGGING
-    resIncr
-  #endif
-  , RhsScalar alpha);
+  ResScalar* res, Index resIncr, RhsScalar alpha);
 };
 
 template<typename Index, typename LhsScalar, bool ConjugateLhs, typename RhsScalar, bool ConjugateRhs, int Version>
@@ -64,12 +60,9 @@ EIGEN_DONT_INLINE void general_matrix_vector_product<Index,LhsScalar,ColMajor,Co
   Index rows, Index cols,
   const LhsScalar* lhs, Index lhsStride,
   const RhsScalar* rhs, Index rhsIncr,
-  ResScalar* res, Index
-  #ifdef EIGEN_INTERNAL_DEBUGGING
-    resIncr
-  #endif
-  , RhsScalar alpha)
+  ResScalar* res, Index resIncr, RhsScalar alpha)
 {
+  EIGEN_UNUSED_VARIABLE(resIncr)
   eigen_internal_assert(resIncr==1);
   #ifdef _EIGEN_ACCUMULATE_PACKETS
   #error _EIGEN_ACCUMULATE_PACKETS has already been defined
@@ -265,7 +258,7 @@ EIGEN_DONT_INLINE void general_matrix_vector_product<Index,LhsScalar,ColMajor,Co
         // process aligned result's coeffs
         if ((size_t(lhs0+alignedStart)%sizeof(LhsPacket))==0)
           for (Index i = alignedStart;i<alignedSize;i+=ResPacketSize)
-            pstore(&res[i], pcj.pmadd(ploadu<LhsPacket>(&lhs0[i]), ptmp0, pload<ResPacket>(&res[i])));
+            pstore(&res[i], pcj.pmadd(pload<LhsPacket>(&lhs0[i]), ptmp0, pload<ResPacket>(&res[i])));
         else
           for (Index i = alignedStart;i<alignedSize;i+=ResPacketSize)
             pstore(&res[i], pcj.pmadd(ploadu<LhsPacket>(&lhs0[i]), ptmp0, pload<ResPacket>(&res[i])));

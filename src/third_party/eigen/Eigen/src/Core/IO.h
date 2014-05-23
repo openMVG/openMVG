@@ -185,21 +185,22 @@ std::ostream & print_matrix(std::ostream & s, const Derived& _m, const IOFormat&
     explicit_precision = fmt.precision;
   }
 
+  std::streamsize old_precision = 0;
+  if(explicit_precision) old_precision = s.precision(explicit_precision);
+
   bool align_cols = !(fmt.flags & DontAlignCols);
   if(align_cols)
   {
     // compute the largest width
-    for(Index j = 1; j < m.cols(); ++j)
+    for(Index j = 0; j < m.cols(); ++j)
       for(Index i = 0; i < m.rows(); ++i)
       {
         std::stringstream sstr;
-        if(explicit_precision) sstr.precision(explicit_precision);
+        sstr.copyfmt(s);
         sstr << m.coeff(i,j);
         width = std::max<Index>(width, Index(sstr.str().length()));
       }
   }
-  std::streamsize old_precision = 0;
-  if(explicit_precision) old_precision = s.precision(explicit_precision);
   s << fmt.matPrefix;
   for(Index i = 0; i < m.rows(); ++i)
   {

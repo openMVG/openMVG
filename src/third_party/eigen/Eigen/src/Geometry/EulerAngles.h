@@ -28,7 +28,7 @@ namespace Eigen {
   *      * AngleAxisf(ea[2], Vector3f::UnitZ()); \endcode
   * This corresponds to the right-multiply conventions (with right hand side frames).
   * 
-  * The returned angles are in the ranges [0:pi]x[0:pi]x[-pi:pi].
+  * The returned angles are in the ranges [0:pi]x[-pi:pi]x[-pi:pi].
   * 
   * \sa class AngleAxis
   */

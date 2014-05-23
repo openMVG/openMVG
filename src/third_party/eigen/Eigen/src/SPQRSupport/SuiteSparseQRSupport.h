@@ -64,7 +64,8 @@ class SPQR
     typedef PermutationMatrix<Dynamic, Dynamic> PermutationType;
   public:
     SPQR() 
-    : m_ordering(SPQR_ORDERING_DEFAULT),
+      : m_isInitialized(false),
+      m_ordering(SPQR_ORDERING_DEFAULT),
       m_allow_tol(SPQR_DEFAULT_TOL),
       m_tolerance (NumTraits<Scalar>::epsilon())
     { 
@@ -72,7 +73,8 @@ class SPQR
     }
     
     SPQR(const _MatrixType& matrix) 
-    : m_ordering(SPQR_ORDERING_DEFAULT),
+    : m_isInitialized(false),
+      m_ordering(SPQR_ORDERING_DEFAULT),
       m_allow_tol(SPQR_DEFAULT_TOL),
       m_tolerance (NumTraits<Scalar>::epsilon())
     {
@@ -82,16 +84,22 @@ class SPQR
     
     ~SPQR()
     {
-      // Calls SuiteSparseQR_free()
+      SPQR_free();
+      cholmod_l_finish(&m_cc);
+    }
+    void SPQR_free()
+    {
       cholmod_l_free_sparse(&m_H, &m_cc);
       cholmod_l_free_sparse(&m_cR, &m_cc);
       cholmod_l_free_dense(&m_HTau, &m_cc);
       std::free(m_E);
       std::free(m_HPinv);
-      cholmod_l_finish(&m_cc);
     }
+
     void compute(const _MatrixType& matrix)
     {
+      if(m_isInitialized) SPQR_free();
+
       MatrixType mat(matrix);
       cholmod_sparse A; 
       A = viewAsCholmod(mat);
@@ -139,7 +147,7 @@ class SPQR
       eigen_assert(b.cols()==1 && "This method is for vectors only");
       
       //Compute Q^T * b
-      Dest y; 
+      typename Dest::PlainObject y;
       y = matrixQ().transpose() * b;
         // Solves with the triangular matrix R
       Index rk = this->rank();

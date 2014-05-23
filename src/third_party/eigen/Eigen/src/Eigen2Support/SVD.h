@@ -512,8 +512,7 @@ template<typename MatrixType>
 template<typename OtherDerived, typename ResultType>
 bool SVD<MatrixType>::solve(const MatrixBase<OtherDerived> &b, ResultType* result) const
 {
-  const int rows = m_matU.rows();
-  ei_assert(b.rows() == rows);
+  ei_assert(b.rows() == m_matU.rows());
 
   Scalar maxVal = m_sigma.cwise().abs().maxCoeff();
   for (int j=0; j<b.cols(); ++j)
