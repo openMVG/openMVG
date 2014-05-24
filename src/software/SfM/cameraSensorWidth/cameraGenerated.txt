@@ -280,6 +280,8 @@ Canon;Canon PowerShot D10;6.16
 Canon;Canon Digital IXUS 95 IS;6.16
 Canon;Canon Digital IXUS 110 IS;6.16
 Canon;Canon EOS 7D;22.3
+Canon;Canon EOS 70D;22.5
+Canon;Canon EOS Rebel T5i / 700D;22.3
 Canon;Canon Digital IXUS 200 IS;6.16
 Canon;Canon PowerShot SX20 IS;6.16
 Canon;Canon EOS 500D;22.3

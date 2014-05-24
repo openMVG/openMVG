@@ -219,9 +219,9 @@ class SparseLU : public internal::SparseLUImpl<typename _MatrixType::Scalar, typ
     }
 
     template<typename Rhs, typename Dest>
-    bool _solve(const MatrixBase<Rhs> &B, MatrixBase<Dest> &_X) const
+    bool _solve(const MatrixBase<Rhs> &B, MatrixBase<Dest> &X_base) const
     {
-      Dest& X(_X.derived());
+      Dest& X(X_base.derived());
       eigen_assert(m_factorizationIsOk && "The matrix should be factorized first");
       EIGEN_STATIC_ASSERT((Dest::Flags&RowMajorBit)==0,
                         THIS_METHOD_IS_ONLY_FOR_COLUMN_MAJOR_MATRICES);
@@ -229,8 +229,10 @@ class SparseLU : public internal::SparseLUImpl<typename _MatrixType::Scalar, typ
       // Permute the right hand side to form X = Pr*B
       // on return, X is overwritten by the computed solution
       X.resize(B.rows(),B.cols());
+
+      // this ugly const_cast_derived() helps to detect aliasing when applying the permutations
       for(Index j = 0; j < B.cols(); ++j)
-        X.col(j) = rowsPermutation() * B.col(j);
+        X.col(j) = rowsPermutation() * B.const_cast_derived().col(j);
       
       //Forward substitution with L
       this->matrixL().solveInPlace(X);

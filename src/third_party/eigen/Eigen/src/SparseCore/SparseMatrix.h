@@ -223,7 +223,7 @@ class SparseMatrix
       
       if(isCompressed())
       {
-        reserve(VectorXi::Constant(outerSize(), 2));
+        reserve(Matrix<Index,Dynamic,1>::Constant(outerSize(), 2));
       }
       return insertUncompressed(row,col);
     }
@@ -402,7 +402,7 @@ class SparseMatrix
       * \sa insertBack, insertBackByOuterInner */
     inline void startVec(Index outer)
     {
-      eigen_assert(m_outerIndex[outer]==int(m_data.size()) && "You must call startVec for each inner vector sequentially");
+      eigen_assert(m_outerIndex[outer]==Index(m_data.size()) && "You must call startVec for each inner vector sequentially");
       eigen_assert(m_outerIndex[outer+1]==0 && "You must call startVec for each inner vector sequentially");
       m_outerIndex[outer+1] = m_outerIndex[outer];
     }
@@ -480,7 +480,7 @@ class SparseMatrix
       if(m_innerNonZeros != 0)
         return; 
       m_innerNonZeros = static_cast<Index*>(std::malloc(m_outerSize * sizeof(Index)));
-      for (int i = 0; i < m_outerSize; i++)
+      for (Index i = 0; i < m_outerSize; i++)
       {
         m_innerNonZeros[i] = m_outerIndex[i+1] - m_outerIndex[i]; 
       }
@@ -752,8 +752,8 @@ class SparseMatrix
         else
           for (Index i=0; i<m.outerSize(); ++i)
           {
-            int p = m.m_outerIndex[i];
-            int pe = m.m_outerIndex[i]+m.m_innerNonZeros[i];
+            Index p = m.m_outerIndex[i];
+            Index pe = m.m_outerIndex[i]+m.m_innerNonZeros[i];
             Index k=p;
             for (; k<pe; ++k)
               s << "(" << m.m_data.value(k) << "," << m.m_data.index(k) << ") ";
@@ -939,12 +939,13 @@ void set_from_triplets(const InputIterator& begin, const InputIterator& end, Spa
   EIGEN_UNUSED_VARIABLE(Options);
   enum { IsRowMajor = SparseMatrixType::IsRowMajor };
   typedef typename SparseMatrixType::Scalar Scalar;
+  typedef typename SparseMatrixType::Index Index;
   SparseMatrix<Scalar,IsRowMajor?ColMajor:RowMajor> trMat(mat.rows(),mat.cols());
 
-  if(begin<end)
+  if(begin!=end)
   {
     // pass 1: count the nnz per inner-vector
-    VectorXi wi(trMat.outerSize());
+    Matrix<Index,Dynamic,1> wi(trMat.outerSize());
     wi.setZero();
     for(InputIterator it(begin); it!=end; ++it)
     {
@@ -1018,11 +1019,11 @@ void SparseMatrix<Scalar,_Options,_Index>::sumupDuplicates()
 {
   eigen_assert(!isCompressed());
   // TODO, in practice we should be able to use m_innerNonZeros for that task
-  VectorXi wi(innerSize());
+  Matrix<Index,Dynamic,1> wi(innerSize());
   wi.fill(-1);
   Index count = 0;
   // for each inner-vector, wi[inner_index] will hold the position of first element into the index/value buffers
-  for(int j=0; j<outerSize(); ++j)
+  for(Index j=0; j<outerSize(); ++j)
   {
     Index start   = count;
     Index oldEnd  = m_outerIndex[j]+m_innerNonZeros[j];
@@ -1081,7 +1082,7 @@ EIGEN_DONT_INLINE SparseMatrix<Scalar,_Options,_Index>& SparseMatrix<Scalar,_Opt
 
     // prefix sum
     Index count = 0;
-    VectorXi positions(dest.outerSize());
+    Matrix<Index,Dynamic,1> positions(dest.outerSize());
     for (Index j=0; j<dest.outerSize(); ++j)
     {
       Index tmp = dest.m_outerIndex[j];

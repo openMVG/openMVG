@@ -16,6 +16,7 @@ template<typename Lhs, typename Rhs>
 struct SparseSparseProductReturnType
 {
   typedef typename internal::traits<Lhs>::Scalar Scalar;
+  typedef typename internal::traits<Lhs>::Index Index;
   enum {
     LhsRowMajor = internal::traits<Lhs>::Flags & RowMajorBit,
     RhsRowMajor = internal::traits<Rhs>::Flags & RowMajorBit,
@@ -24,11 +25,11 @@ struct SparseSparseProductReturnType
   };
 
   typedef typename internal::conditional<TransposeLhs,
-    SparseMatrix<Scalar,0>,
+    SparseMatrix<Scalar,0,Index>,
     typename internal::nested<Lhs,Rhs::RowsAtCompileTime>::type>::type LhsNested;
 
   typedef typename internal::conditional<TransposeRhs,
-    SparseMatrix<Scalar,0>,
+    SparseMatrix<Scalar,0,Index>,
     typename internal::nested<Rhs,Lhs::RowsAtCompileTime>::type>::type RhsNested;
 
   typedef SparseSparseProduct<LhsNested, RhsNested> Type;

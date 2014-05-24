@@ -55,9 +55,6 @@ bool IsZeroOrInfinity(double x) {
   return ((x == 0.0) || (IsInfinite(x)));
 }
 
-// Constant used in the MATLAB implementation ~ 2 * eps.
-const double kEpsilon = 2.2204e-16;
-
 }  // namespace
 
 ConjugateGradientsSolver::ConjugateGradientsSolver(

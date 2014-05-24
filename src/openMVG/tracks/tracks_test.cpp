@@ -26,7 +26,6 @@ TEST(Tracks, Simple) {
   */
 
   // Create the input pairwise correspondences
-  typedef std::map< std::pair<size_t,size_t>, std::vector<IndMatch> > mapPairWiseMatches;
   mapPairWiseMatches map_pairwisematches;
 
   IndMatch testAB[] = {IndMatch(0,0), IndMatch(1,1), IndMatch(2,3)};
@@ -89,7 +88,6 @@ TEST(Tracks, filter_3viewAtLeast) {
   */
 
   // Create the input pairwise correspondences
-  typedef std::map< std::pair<size_t,size_t>, std::vector<IndMatch> > mapPairWiseMatches;
   mapPairWiseMatches map_pairwisematches;
 
   IndMatch testAB[] = {IndMatch(0,0), IndMatch(1,1), IndMatch(2,3)};
@@ -123,7 +121,6 @@ TEST(Tracks, Conflict) {
   */
 
   // Create the input pairwise correspondences
-  typedef std::map< std::pair<size_t,size_t>, std::vector<IndMatch> > mapPairWiseMatches;
   mapPairWiseMatches map_pairwisematches;
 
   IndMatch testAB[] = {IndMatch(0,0), IndMatch(1,1), IndMatch(2,3)};

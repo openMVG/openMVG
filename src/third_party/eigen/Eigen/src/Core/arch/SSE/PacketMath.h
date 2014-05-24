@@ -83,7 +83,8 @@ template<> struct packet_traits<double> : default_packet_traits
     size=2,
 
     HasDiv  = 1,
-    HasExp  = 1
+    HasExp  = 1,
+    HasSqrt = 1
   };
 };
 template<> struct packet_traits<int>    : default_packet_traits
@@ -507,8 +508,8 @@ template<> EIGEN_STRONG_INLINE int predux_min<Packet4i>(const Packet4i& a)
   // for GCC (eg., it does not like using std::min after the pstore !!)
   EIGEN_ALIGN16 int aux[4];
   pstore(aux, a);
-  register int aux0 = aux[0]<aux[1] ? aux[0] : aux[1];
-  register int aux2 = aux[2]<aux[3] ? aux[2] : aux[3];
+  int aux0 = aux[0]<aux[1] ? aux[0] : aux[1];
+  int aux2 = aux[2]<aux[3] ? aux[2] : aux[3];
   return aux0<aux2 ? aux0 : aux2;
 }
 
@@ -528,8 +529,8 @@ template<> EIGEN_STRONG_INLINE int predux_max<Packet4i>(const Packet4i& a)
   // for GCC (eg., it does not like using std::min after the pstore !!)
   EIGEN_ALIGN16 int aux[4];
   pstore(aux, a);
-  register int aux0 = aux[0]>aux[1] ? aux[0] : aux[1];
-  register int aux2 = aux[2]>aux[3] ? aux[2] : aux[3];
+  int aux0 = aux[0]>aux[1] ? aux[0] : aux[1];
+  int aux2 = aux[2]>aux[3] ? aux[2] : aux[3];
   return aux0>aux2 ? aux0 : aux2;
 }
 

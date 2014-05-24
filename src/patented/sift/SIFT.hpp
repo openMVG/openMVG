@@ -67,7 +67,7 @@ static bool SIFTDetector(const Image<unsigned char>& I,
   // First Octave Index.
   int firstOctave = (bDezoom == true) ? -1 : 0;
   // Number of octaves.
-  int numOctaves = -1;
+  int numOctaves = 6;
   // Number of scales per octave.
   int numScales = 3;
   // Max ratio of Hessian eigenvalues.

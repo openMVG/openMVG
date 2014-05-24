@@ -40,11 +40,11 @@ int main(int argc, char **argv)
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
   } catch(const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << ' '
-      << "[-i|--imageDirectory] "
-      << "[-d|--sensorWidthDatabase] "
-      << "[-o|--outputDirectory] "
-      << "[-f|--focal] "
+      std::cerr << "Usage: " << argv[0] << '\n'
+      << "[-i|--imageDirectory]\n"
+      << "[-d|--sensorWidthDatabase]\n"
+      << "[-o|--outputDirectory]\n"
+      << "[-f|--focal]\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -100,22 +100,26 @@ int main(int argc, char **argv)
       if ( !exifReader->doesHaveExifInfo() || focalPixPermm != -1)
       {
         Image<unsigned char> image;
-        if (openMVG::ReadImage( sImageFilename.c_str(), &image))
-        {
+        if (openMVG::ReadImage( sImageFilename.c_str(), &image))  {
           width = image.Width();
           height = image.Height();
         }
         else
         {
           Image<RGBColor> imageRGB;
-          if (openMVG::ReadImage( sImageFilename.c_str(), &imageRGB))
-          {
+          if (openMVG::ReadImage( sImageFilename.c_str(), &imageRGB)) {
             width = imageRGB.Width();
             height = imageRGB.Height();
           }
           else
           {
-            continue; // image is not considered, cannot be read
+            Image<RGBAColor> imageRGBA;
+            if (openMVG::ReadImage( sImageFilename.c_str(), &imageRGBA))  {
+              width = imageRGBA.Width();
+              height = imageRGBA.Height();
+            }
+            else
+              continue; // image is not considered, cannot be read
           }
         }
         if ( focalPixPermm == -1)

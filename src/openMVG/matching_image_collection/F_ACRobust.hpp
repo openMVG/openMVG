@@ -8,6 +8,7 @@
 #pragma once
 
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
+#include "openMVG/multiview/essential.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 #include <limits>

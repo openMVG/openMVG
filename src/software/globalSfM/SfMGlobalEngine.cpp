@@ -48,6 +48,7 @@
 
 // Rotation
 #include "openMVG/multiview/rotation_averaging.hpp"
+#include "openMVG/multiview/rotation_averaging_l1.hpp"
 
 #include "third_party/progress/progress.hpp"
 #include "third_party/stlplus3/subsystems/timer.hpp"
@@ -126,24 +127,107 @@ void GlobalReconstructionEngine::rotationInference(
 }
 
 bool GlobalReconstructionEngine::computeGlobalRotations(
-  const std::vector<std::pair<std::pair<size_t, size_t>, Mat3> > & vec_relativeRotEstimate,
+  ERotationAveragingMethod eRotationAveragingMethod,
+  const std::map<size_t, size_t> & map_cameraNodeToCameraIndex,
+  const std::map<size_t, size_t> & map_cameraIndexTocameraNode,
+  const std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > & map_relatives,
   std::map<size_t, Mat3> & map_globalR) const
 {
-  std::vector<Mat3> vec_ApprRotMatrix;
-  if (!rotation_averaging::L2RotationAveraging(map_cameraIndexTocameraNode.size(),
-    vec_relativeRotEstimate,
-    vec_ApprRotMatrix))
-  {
-    return false;
-  }
+  // Build relative information for only the largest considered Connected Component
+  // - it requires to change the camera indexes, because RotationAveraging is working only with
+  //   index ranging in [0 - nbCam], (map_cameraNodeToCameraIndex utility)
 
-  //-- Setup the averaged rotation
-  for (int i = 0; i < vec_ApprRotMatrix.size(); ++i)
+  switch(eRotationAveragingMethod)
   {
-    map_globalR[map_cameraIndexTocameraNode.find(i)->second] = vec_ApprRotMatrix[i];
-  }
+    case ROTATION_AVERAGING_L2:
+    {
+      using namespace openMVG::rotation_averaging;
+      std::vector<std::pair<std::pair<size_t, size_t>, Mat3> > vec_relativeRotEstimate;
+      for(std::map<std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::const_iterator iter = map_relatives.begin();
+        iter != map_relatives.end(); ++iter)
+      {
+        const openMVG::lInfinityCV::relativeInfo & rel = *iter;
+        std::pair<size_t,size_t> newPair(
+          map_cameraNodeToCameraIndex.find(rel.first.first)->second,
+          map_cameraNodeToCameraIndex.find(rel.first.second)->second);
+        vec_relativeRotEstimate.push_back(std::make_pair(newPair, rel.second.first));
+      }
 
-  return true;
+      std::vector<Mat3> vec_ApprRotMatrix;
+      if (!rotation_averaging::L2RotationAveraging(map_cameraIndexTocameraNode.size(),
+        vec_relativeRotEstimate,
+        vec_ApprRotMatrix))
+      {
+        return false;
+      }
+
+      //-- Setup the averaged rotation
+      for (int i = 0; i < vec_ApprRotMatrix.size(); ++i)  {
+        map_globalR[map_cameraIndexTocameraNode.find(i)->second] = vec_ApprRotMatrix[i];
+      }
+
+      return true;
+    }
+    break;
+    case ROTATION_AVERAGING_L1:
+    {
+      using namespace openMVG::rotation_averaging::l1;
+
+      //-- Compute the mean number of matches to prepare weight computation
+      std::vector<double> vec_count;
+      for(std::map<std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::const_iterator iter = map_relatives.begin();
+        iter != map_relatives.end(); ++iter)
+      {
+        const openMVG::lInfinityCV::relativeInfo & rel = *iter;
+        // Find the number of support point for this pair
+        float weight = 0.f; // the relative rotation correspondence point support
+        std::map< std::pair<size_t, size_t>, vector<IndMatch> >::const_iterator iterMatches = _map_Matches_F.find(rel.first);
+        if (iterMatches != _map_Matches_F.end())
+        {
+          vec_count.push_back(iterMatches->second.size());
+        }
+      }
+      float thTrustPair = (std::accumulate(vec_count.begin(), vec_count.end(), 0.0f) / vec_count.size()) / 2.0;
+
+      std::vector<RelRotationData> vec_relativeRotEstimate;
+      for(std::map<std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::const_iterator iter = map_relatives.begin();
+        iter != map_relatives.end(); ++iter)
+      {
+        const openMVG::lInfinityCV::relativeInfo & rel = *iter;
+        // Find the number of support point for this pair
+        float weight = 0.f; // the relative rotation correspondence point support
+        std::map< std::pair<size_t, size_t>, vector<IndMatch> >::const_iterator iterMatches = _map_Matches_F.find(rel.first);
+        if (iterMatches != _map_Matches_F.end())
+        {
+          weight = std::min((float)iterMatches->second.size()/thTrustPair, 1.f);
+        }
+        vec_relativeRotEstimate.push_back(RelRotationData(
+            map_cameraNodeToCameraIndex.find(rel.first.first)->second,
+            map_cameraNodeToCameraIndex.find(rel.first.second)->second,
+            rel.second.first, weight));
+      }
+
+      //- Solve the global rotation estimation problem:
+      Matrix3x3Arr vec_globalR(map_cameraIndexTocameraNode.size());
+      size_t nMainViewID = 0;
+      std::vector<bool> vec_inliers;
+      bool bRotAveraging = GlobalRotationsRobust(vec_relativeRotEstimate, vec_globalR, nMainViewID, 0.0f, &vec_inliers);
+
+      std::cout << "\ninliers : " << std::endl;
+      std::copy(vec_inliers.begin(), vec_inliers.end(), ostream_iterator<bool>(std::cout, " "));
+      std::cout << std::endl;
+
+      //-- Setup the averaged rotation
+      for (int i = 0; i < vec_globalR.size(); ++i)  {
+        map_globalR[map_cameraIndexTocameraNode.find(i)->second] = vec_globalR[i];
+      }
+      return bRotAveraging;
+    }
+    break;
+    default:
+    std::cerr << "Unknown rotation averaging method: " << (int) eRotationAveragingMethod << std::endl;
+  }
+  return false;
 }
 
 bool GlobalReconstructionEngine::Process()
@@ -267,35 +351,32 @@ bool GlobalReconstructionEngine::Process()
   }
 
   //----------------------------
-  // Rotation averaging (dense)
+  // Rotation averaging
   //----------------------------
 
   std::map<std::size_t, Mat3> map_globalR;
-  std::cout << "Compute " << map_cameraIndexTocameraNode.size() << " global rotations." << std::endl;
-
   {
-    // Build relative information for only the largest considered Connected Component
-    // - it requires to change the index also, because RotationAveraging is working only with
-    //   index ranging in [0 - nbCam]:
-    std::vector<std::pair<std::pair<size_t, size_t>, Mat3> > vec_relativeRotEstimate;
-    for(std::map<std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::const_iterator iter = map_relatives.begin();
-      iter != map_relatives.end(); ++iter)
-    {
-      const openMVG::lInfinityCV::relativeInfo & rel = *iter;
-      //---
-      //-- TODO CHANGE INDEXES OF THE CAMERA (from node Ids, to 0->nCam ids) --
-      //----------
-      if (map_cameraNodeToCameraIndex.find(rel.first.first) != map_cameraNodeToCameraIndex.end() &&
-          map_cameraNodeToCameraIndex.find(rel.first.second) != map_cameraNodeToCameraIndex.end())
-      {
-        std::pair<size_t,size_t> newPair(
-          map_cameraNodeToCameraIndex[rel.first.first],
-          map_cameraNodeToCameraIndex[rel.first.second]);
-        vec_relativeRotEstimate.push_back(std::make_pair(newPair, rel.second.first));
-      }
-    }
+    std::cout << "\n-------------------------------" << "\n"
+      << " Global rotations computation: " << "\n"
+      << "   - Ready to compute " << map_cameraIndexTocameraNode.size() << " global rotations." << "\n"
+      << "     from " << map_relatives.size() << " relative rotations\n" << std::endl;
 
-    if (!computeGlobalRotations(vec_relativeRotEstimate, map_globalR))
+    int iChoice = 0;
+    do
+    {
+      std::cout
+      << "-------------------------------" << "\n"
+      << " Choose your rotation averaging method: " << "\n"
+      << "   - 1 -> MST based rotation + L1 rotation averaging" << "\n"
+      << "   - 2 -> dense L2 global rotation computation" << "\n";
+    }while( !( std::cin >> iChoice ) || iChoice < 0 || iChoice > ROTATION_AVERAGING_L2 );
+
+    if (!computeGlobalRotations(
+            ERotationAveragingMethod(iChoice),
+            map_cameraNodeToCameraIndex,
+            map_cameraIndexTocameraNode,
+            map_relatives,
+            map_globalR))
     {
       std::cerr << "Failed to compute the global rotations." << std::endl;
       return false;
@@ -308,6 +389,10 @@ bool GlobalReconstructionEngine::Process()
   std::vector<openMVG::lInfinityCV::relativeInfo > vec_initialRijTijEstimates;
   STLPairWiseMatches newpairMatches;
   {
+    std::cout << "\n-------------------------------" << "\n"
+      << " Relative translations computation: " << "\n"
+      << "-------------------------------" << std::endl;
+
     // Compute putative translations with an edge coverage algorithm
 
     stlplus::timer timerLP_triplet;
@@ -336,9 +421,9 @@ bool GlobalReconstructionEngine::Process()
     }
   }
 
-  //--Check relative translation graph :
+  //--Check the relative translation graph:
   //--> Consider only the connected component compound by the translation graph
-  //-- Robust translation estimation can perform inference and remove some bad conditionned triplets
+  //-- Robust translation estimation can perform inference and remove some bad conditioned triplets
 
   {
     std::set<size_t> set_representedImageIndex;
@@ -373,21 +458,21 @@ bool GlobalReconstructionEngine::Process()
       map_cameraNodeToCameraIndex[*iterSet] = std::distance(set_representedImageIndex.begin(), iterSet);
     }
 
-  std::cout << "\n Remaining cameras after inference filter : \n"
-    << map_cameraIndexTocameraNode.size() << " from a total of " << _vec_fileNames.size() << std::endl;
+    std::cout << "\nRemaining cameras after inference filter : \n"
+      << map_cameraIndexTocameraNode.size() << " from a total of " << _vec_fileNames.size() << std::endl;
   }
 
   //-------------------
   //-- GLOBAL TRANSLATIONS ESTIMATION from initial triplets t_ij guess
   //-------------------
 
-  std::map<size_t, PinholeCamera> map_camera;
   {
-    const int iNview = map_cameraNodeToCameraIndex.size(); // The cound of remaining nodes in the graph
+    const int iNview = map_cameraNodeToCameraIndex.size(); // The remaining camera nodes count in the graph
 
-    std::cout << "\n There is : " << vec_initialRijTijEstimates.size()
-      << " Initial estimates.\n"
-      << " For " << iNview << " cameras."<< std::endl;
+    std::cout << "\n-------------------------------" << "\n"
+      << " Global translations computation: " << "\n"
+      << "   - Ready to compute " << iNview << " global translations." << "\n"
+      << "     from " << vec_initialRijTijEstimates.size() << " relative translations\n" << std::endl;
 
     //-- Update initial estimates in range [0->Ncam]
     for(size_t i = 0; i < vec_initialRijTijEstimates.size(); ++i)
@@ -474,27 +559,25 @@ bool GlobalReconstructionEngine::Process()
       const size_t camNodeId = map_cameraIndexTocameraNode[i];
       const Mat3 & Ri = map_globalR[camNodeId];
       const Mat3 & _K = _vec_intrinsicGroups[0].m_K;   // The same K matrix is used by all the camera
-      map_camera[camNodeId] = PinholeCamera(_K, Ri, t);
+      _map_camera[camNodeId] = PinholeCamera(_K, Ri, t);
       //-- Export camera center
-      vec_C.push_back(map_camera[camNodeId]._C);
+      vec_C.push_back(_map_camera[camNodeId]._C);
     }
     plyHelper::exportToPly(vec_C, stlplus::create_filespec(_sOutDirectory, "cameraPath", "ply"));
   }
 
   //-------------------
-  //-- Initial triangulation
+  //-- Initial triangulation of the scene from the computed global motions
   //-------------------
-  std::vector<Vec3> vec_allScenes;
-  STLMAPTracks map_tracksSelected;
   {
     // Build tracks from selected triplets (Union of all the validated triplet tracks (newpairMatches))
     //  triangulate tracks
-    //  refine translation
+    //  refine translations
     {
       TracksBuilder tracksBuilder;
       tracksBuilder.Build(newpairMatches);
       tracksBuilder.Filter(3);
-      tracksBuilder.ExportToSTL(map_tracksSelected);
+      tracksBuilder.ExportToSTL(_map_selectedTracks);
 
       std::cout << std::endl << "Track stats" << std::endl;
       {
@@ -503,7 +586,7 @@ bool GlobalReconstructionEngine::Process()
         //    - number of images
         //    - number of tracks
         std::set<size_t> set_imagesId;
-        TracksUtilsMap::ImageIdInTracks(map_tracksSelected, set_imagesId);
+        TracksUtilsMap::ImageIdInTracks(_map_selectedTracks, set_imagesId);
         osTrack << "------------------" << "\n"
           << "-- Tracks Stats --" << "\n"
           << " Tracks number: " << tracksBuilder.NbTracks() << "\n"
@@ -514,7 +597,7 @@ bool GlobalReconstructionEngine::Process()
         osTrack << "\n------------------" << "\n";
 
         std::map<size_t, size_t> map_Occurence_TrackLength;
-        TracksUtilsMap::TracksLength(map_tracksSelected, map_Occurence_TrackLength);
+        TracksUtilsMap::TracksLength(_map_selectedTracks, map_Occurence_TrackLength);
         osTrack << "TrackLength, Occurrence" << "\n";
         for (std::map<size_t, size_t>::const_iterator iter = map_Occurence_TrackLength.begin();
           iter != map_Occurence_TrackLength.end(); ++iter)  {
@@ -526,22 +609,22 @@ bool GlobalReconstructionEngine::Process()
     }
 
     // Triangulation of all the tracks
-    vec_allScenes.resize(map_tracksSelected.size());
+    _vec_allScenes.resize(_map_selectedTracks.size());
     {
       std::vector<double> vec_residuals;
-      vec_residuals.resize(map_tracksSelected.size());
+      vec_residuals.resize(_map_selectedTracks.size());
       std::set<size_t> set_idx_to_remove;
 
-      C_Progress_display my_progress_bar_triangulation( map_tracksSelected.size(),
+      C_Progress_display my_progress_bar_triangulation( _map_selectedTracks.size(),
        std::cout,
        "Initial triangulation:\n");
 
 #ifdef USE_OPENMP
   #pragma omp parallel for //schedule(dynamic, 1)
 #endif
-      for (int idx = 0; idx < map_tracksSelected.size(); ++idx)
+      for (int idx = 0; idx < _map_selectedTracks.size(); ++idx)
       {
-        STLMAPTracks::const_iterator iterTracks = map_tracksSelected.begin();
+        STLMAPTracks::const_iterator iterTracks = _map_selectedTracks.begin();
         std::advance(iterTracks, idx);
 
         const submapTrack & subTrack = iterTracks->second;
@@ -555,12 +638,12 @@ bool GlobalReconstructionEngine::Process()
           const size_t featIndex = iter->second;
           const SIOPointFeature & pt = _map_feats[imaIndex][featIndex];
           // Build the P matrix
-          trianObj.add(map_camera[imaIndex]._P, pt.coords().cast<double>());
+          trianObj.add(_map_camera[imaIndex]._P, pt.coords().cast<double>());
         }
 
-        // Compute the 3D point
+        // Compute the 3D point and keep point index with negative depth
         const Vec3 Xs = trianObj.compute();
-        vec_allScenes[idx] = Xs;
+        _vec_allScenes[idx] = Xs;
         if (trianObj.minDepth() < 0)  {
           set_idx_to_remove.insert(idx);
         }
@@ -570,7 +653,7 @@ bool GlobalReconstructionEngine::Process()
           const size_t imaIndex = iter->first;
           const size_t featIndex = iter->second;
           const SIOPointFeature & pt = _map_feats[imaIndex][featIndex];
-          vec_residuals[idx] = map_camera[imaIndex].Residual(Xs, pt.coords().cast<double>());
+          vec_residuals[idx] = _map_camera[imaIndex].Residual(Xs, pt.coords().cast<double>());
         }
 
 #ifdef USE_OPENMP
@@ -584,23 +667,23 @@ bool GlobalReconstructionEngine::Process()
       //-- Remove useless tracks and 3D points
       {
         std::vector<Vec3> vec_allScenes_cleaned;
-        for(size_t i = 0; i < vec_allScenes.size(); ++i)
+        for(size_t i = 0; i < _vec_allScenes.size(); ++i)
         {
           if (find(set_idx_to_remove.begin(), set_idx_to_remove.end(), i) == set_idx_to_remove.end())
           {
-            vec_allScenes_cleaned.push_back(vec_allScenes[i]);
+            vec_allScenes_cleaned.push_back(_vec_allScenes[i]);
           }
         }
-        vec_allScenes = vec_allScenes_cleaned;
+        _vec_allScenes = vec_allScenes_cleaned;
 
         for( std::set<size_t>::const_iterator iter = set_idx_to_remove.begin();
           iter != set_idx_to_remove.end(); ++iter)
         {
-          map_tracksSelected.erase(*iter);
+          _map_selectedTracks.erase(*iter);
         }
         std::cout << "\n Tracks have been removed : " << set_idx_to_remove.size() << std::endl;
       }
-      plyHelper::exportToPly(vec_allScenes, stlplus::create_filespec(_sOutDirectory, "raw_pointCloud_LP", "ply"));
+      plyHelper::exportToPly(_vec_allScenes, stlplus::create_filespec(_sOutDirectory, "raw_pointCloud_LP", "ply"));
 
       {
         // Display some statistics of reprojection errors
@@ -632,7 +715,7 @@ bool GlobalReconstructionEngine::Process()
 
           os.str("");
           os << "-------------------------------" << "<br>"
-            << "-- #tracks: " << map_tracksSelected.size() << ".<br>"
+            << "-- #tracks: " << _map_selectedTracks.size() << ".<br>"
             << "-- #observation: " << vec_residuals.size() << ".<br>"
             << "-- residual mean (RMSE): " << std::sqrt(mean) << ".<br>"
             << "-------------------------------" << "<br>";
@@ -646,8 +729,8 @@ bool GlobalReconstructionEngine::Process()
   //-- Bundle Adjustment on translation and structure
   //-------------------
 
-  bundleAdjustment_t_Xi(map_camera, vec_allScenes, map_tracksSelected);
-  bundleAdjustment_Rt_Xi(map_camera, vec_allScenes, map_tracksSelected);
+  bundleAdjustment_t_Xi(_map_camera, _vec_allScenes, _map_selectedTracks);
+  bundleAdjustment_Rt_Xi(_map_camera, _vec_allScenes, _map_selectedTracks);
 
   //-- Export statistics about the global process
   if (_bHtmlReport)
@@ -660,9 +743,9 @@ bool GlobalReconstructionEngine::Process()
 
     os.str("");
     os << "-------------------------------" << "<br>"
-      << "-- Have calibrated: " << map_camera.size() << " from "
+      << "-- Have calibrated: " << _map_camera.size() << " from "
       << _vec_fileNames.size() << " input images.<br>"
-      << "-- The scene contain " << map_tracksSelected.size() << " 3D points.<br>"
+      << "-- The scene contains " << _map_selectedTracks.size() << " 3D points.<br>"
       << "-- Total reconstruction time (Inference, global rot, translation fusion, Ba1, Ba2): "
       << total_reconstruction_timer.elapsed() << " seconds.<br>"
       << "-------------------------------" << "<br>";
@@ -671,187 +754,208 @@ bool GlobalReconstructionEngine::Process()
 
   std::cout << std::endl
     << "-------------------------------" << "\n"
-    << "-- Have calibrated: " << map_camera.size() << " from "
+    << "-- Have calibrated: " << _map_camera.size() << " from "
     << _vec_fileNames.size() << " input images.\n"
-    << "-- The scene contain " << map_tracksSelected.size() << " 3D points.\n"
+    << "-- The scene contains " << _map_selectedTracks.size() << " 3D points.\n"
     << "-- Total reconstruction time (Inference, global rot, translation fusion, Ba1, Ba2): "
     << total_reconstruction_timer.elapsed() << " seconds.\n"
-    << "Relative rotations time is excluded\n"
+    << "Relative rotations time was excluded\n"
     << "-------------------------------" << std::endl;
 
+  return true;
+}
 
-  //-- Export data to openMVG format:
+//-- Export data to openMVG format:
+bool GlobalReconstructionEngine::ExportToOpenMVGFormat(bool bColoredPointCloud) const
+{
+  // Export to openMVG format
+  std::cout << std::endl << "Export 3D scene to openMVG format" << std::endl
+    << " -- Point cloud color: " << (bColoredPointCloud ? "ON" : "OFF") << std::endl;
+
+  std::vector<Vec3> vec_tracksColor;
+  if (bColoredPointCloud)
   {
-    std::cout << "\n Export calibration data and image data." << std::endl;
-    const std::string & sOutDirectory = stlplus::folder_append_separator(_sOutDirectory) + "SfM_Output";  //Export directory
-    const std::vector<std::string> & vec_fileNames = _vec_fileNames; // vector of image filenames
-    const std::string & sImagePath = _sImagePath;  // The images path
-    const openMVG::tracks::STLMAPTracks & map_reconstructed = map_tracksSelected; // Tracks (Visibility)
-    bool bExportImage = true;
+    std::cout << std::endl << "Compute the color of each track..." << std::endl;
+    ColorizeTracks(_map_selectedTracks, vec_tracksColor);
+  }
 
-    bool bOk = true;
-    if (!stlplus::is_folder(sOutDirectory))
-    {
-      stlplus::folder_create(sOutDirectory);
-      bOk = stlplus::is_folder(sOutDirectory);
-    }
+  const std::string & sOutDirectory = stlplus::folder_append_separator(_sOutDirectory) + "SfM_Output";  //Export directory
+  const std::vector<std::string> & vec_fileNames = _vec_fileNames; // vector of image filenames
+  const std::string & sImagePath = _sImagePath;  // The images path
+  const openMVG::tracks::STLMAPTracks & map_reconstructed = _map_selectedTracks; // Tracks (Visibility)
+  bool bExportImage = true;
 
-    // Create basis directory structure
-    stlplus::folder_create( stlplus::folder_append_separator(sOutDirectory) + "cameras");
-    stlplus::folder_create( stlplus::folder_append_separator(sOutDirectory) + "clouds");
-    stlplus::folder_create( stlplus::folder_append_separator(sOutDirectory) + "images");
+  bool bOk = true;
+  if (!stlplus::is_folder(sOutDirectory))
+  {
+    stlplus::folder_create(sOutDirectory);
+    bOk = stlplus::is_folder(sOutDirectory);
+  }
 
-    if (bOk &&
-      stlplus::is_folder(stlplus::folder_append_separator(sOutDirectory) + "cameras") &&
-      stlplus::is_folder( stlplus::folder_append_separator(sOutDirectory) + "clouds") &&
-      stlplus::is_folder( stlplus::folder_append_separator(sOutDirectory) + "images")
+  // Create basis directory structure
+  stlplus::folder_create( stlplus::folder_append_separator(sOutDirectory) + "cameras");
+  stlplus::folder_create( stlplus::folder_append_separator(sOutDirectory) + "clouds");
+  stlplus::folder_create( stlplus::folder_append_separator(sOutDirectory) + "images");
+
+  if (bOk &&
+    stlplus::is_folder(stlplus::folder_append_separator(sOutDirectory) + "cameras") &&
+    stlplus::is_folder( stlplus::folder_append_separator(sOutDirectory) + "clouds") &&
+    stlplus::is_folder( stlplus::folder_append_separator(sOutDirectory) + "images")
     )
+  {
+    bOk = true;
+  }
+  else  {
+    std::cerr << "Cannot access to one of the desired output directory" << std::endl;
+  }
+
+  if (bOk)
+  {
+    //Export Camera as binary files
+    std::map<size_t, size_t> map_cameratoIndex;
+    size_t count = 0;
+    for (std::map<size_t, PinholeCamera>::const_iterator iter =
+      _map_camera.begin();
+      iter != _map_camera.end();
+    ++iter)
     {
-      bOk = true;
-    }
-    else  {
-      std::cerr << "Cannot access to one of the desired output directory" << std::endl;
+      map_cameratoIndex[iter->first] = count;
+      const Mat34 & PMat = iter->second._P;
+      std::ofstream file(
+        stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "cameras",
+        stlplus::basename_part(vec_fileNames[iter->first])
+        ,"bin").c_str(),std::ios::out|std::ios::binary);
+      file.write((const char*)PMat.data(),(std::streamsize)(3*4)*sizeof(double));
+      bOk &= (!file.fail());
+      file.close();
+      ++count;
     }
 
-    if (bOk)
+    //Export 3D point and tracks
+
+    size_t nc = _map_camera.size();
+
+    // Clipping planes (near and far Z depth per view)
+    std::vector<double> znear(nc, numeric_limits<double>::max()), zfar(nc, 0);
+    // Cloud
+    std::ofstream f_cloud(
+      stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "clouds",
+      "calib", "ply").c_str());
+    std::ofstream f_visibility(
+      stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "clouds",
+      "visibility", "txt").c_str());
+
+    if (!f_cloud.is_open()) {
+      std::cerr << "cannot save cloud" << std::endl;
+      return false;
+    }
+
+    if (!f_visibility.is_open()) {
+      std::cerr << "cannot save cloud desc" << std::endl;
+      return false;
+    }
+
+    f_cloud << "ply\nformat ascii 1.0\ncomment generated by the Global OpenMVG Calibration Engine" << "\n";
+    f_cloud << "element vertex " << _vec_allScenes.size() << "\n";
+    f_cloud << "property float x\nproperty float y\nproperty float z" << "\n";
+    f_cloud << "property uchar red\nproperty uchar green\nproperty uchar blue" << "\n";
+    f_cloud << "property float confidence\nproperty list uchar int visibility" << "\n";
+    f_cloud << "element face 0\nproperty list uchar int vertex_index" << "\n";
+    f_cloud << "end_header" << "\n";
+    size_t i = 0;
+    for (openMVG::tracks::STLMAPTracks::const_iterator iter = map_reconstructed.begin();
+      iter != map_reconstructed.end(); ++iter, ++i)
     {
-      //Export Camera as binary files
-      std::map<size_t, size_t> map_cameratoIndex;
-      size_t count = 0;
-      for (std::map<size_t, PinholeCamera>::const_iterator iter =
-        map_camera.begin();
-        iter != map_camera.end();
-        ++iter)
+      // Look through the track and add point position
+      const tracks::submapTrack & track = iter->second;
+
+      const Vec3 & pos = _vec_allScenes[i];
+
+      if (bColoredPointCloud)
       {
-        map_cameratoIndex[iter->first] = count;
-        const Mat34 & PMat = iter->second._P;
-        std::ofstream file(
-          stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "cameras",
-          stlplus::basename_part(vec_fileNames[iter->first])
-          ,"bin").c_str(),std::ios::out|std::ios::binary);
-        file.write((const char*)PMat.data(),(std::streamsize)(3*4)*sizeof(double));
-        bOk &= (!file.fail());
-        file.close();
-        ++count;
+        const Vec3 & color = vec_tracksColor[i];
+        f_cloud << pos.transpose() << " " << color.transpose() << " " << 3.14;
       }
+      else
+        f_cloud << pos.transpose() << " 255 255 255 " << 3.14;
 
-      //Export 3D point and tracks
-
-      size_t nc = map_camera.size();
-
-      // Clipping planes (near and far Z depth per view)
-      std::vector<double> znear(nc, numeric_limits<double>::max()), zfar(nc, 0);
-      // Cloud
-      std::ofstream f(
-        stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "clouds",
-        "calib", "ply").c_str());
-      std::ofstream f_visibility(
-        stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "clouds",
-        "visibility", "txt").c_str());
-
-      if (!f.is_open()) {
-        std::cerr << "cannot save cloud" << std::endl;
-        return false;
-      }
-
-       if (!f_visibility.is_open()) {
-        std::cerr << "cannot save cloud desc" << std::endl;
-        return false;
-      }
-
-      f << "ply\nformat ascii 1.0\ncomment generated by the Global OpenMVG Calibration Engine" << "\n";
-      f << "element vertex " << vec_allScenes.size() << "\n";
-      f << "property float x\nproperty float y\nproperty float z" << "\n";
-      f << "property uchar red\nproperty uchar green\nproperty uchar blue" << "\n";
-      f << "property float confidence\nproperty list uchar int visibility" << "\n";
-      f << "element face 0\nproperty list uchar int vertex_index" << "\n";
-      f << "end_header" << "\n";
-      size_t i = 0;
-      for (openMVG::tracks::STLMAPTracks::const_iterator iter = map_reconstructed.begin();
-        iter != map_reconstructed.end(); ++iter, ++i)
+      std::ostringstream s_visibility;
+      std::set< size_t > set_imageIndex;
+      for( tracks::submapTrack::const_iterator iterTrack = track.begin();
+        iterTrack != track.end();
+        ++iterTrack)
       {
-        // Look through the track and add point position
-        const tracks::submapTrack & track = iter->second;
+        size_t imageId = iterTrack->first;
 
-        const Vec3 & pos = vec_allScenes[i];
-
-        f << pos.transpose() << " " << "255 255 255" << " " << 3.14;
-
-        std::ostringstream s_visibility;
-        std::set< size_t > set_imageIndex;
-        for( tracks::submapTrack::const_iterator iterTrack = track.begin();
-          iterTrack != track.end();
-          ++iterTrack)
+        if ( map_cameratoIndex.find(imageId) != map_cameratoIndex.end())
         {
-          size_t imageId = iterTrack->first;
-
-          if ( map_cameratoIndex.find(imageId) != map_cameratoIndex.end())
-          {
-            set_imageIndex.insert(map_cameratoIndex[imageId]);
-            const PinholeCamera & cam = (map_camera.find(imageId))->second;
-            double z = Depth(cam._R, cam._t, pos);
-            znear[map_cameratoIndex[imageId]] = std::min(znear[map_cameratoIndex[imageId]], z );
-            zfar[map_cameratoIndex[imageId]] = std::max(zfar[map_cameratoIndex[imageId]], z );
-          }
-          s_visibility << iterTrack->first << " " << iterTrack->second << " ";
+          set_imageIndex.insert(map_cameratoIndex[imageId]);
+          const PinholeCamera & cam = (_map_camera.find(imageId))->second;
+          double z = Depth(cam._R, cam._t, pos);
+          znear[map_cameratoIndex[imageId]] = std::min(znear[map_cameratoIndex[imageId]], z );
+          zfar[map_cameratoIndex[imageId]] = std::max(zfar[map_cameratoIndex[imageId]], z );
         }
-
-
-        //export images indexes
-        f << " " << set_imageIndex.size() << " ";
-        copy(set_imageIndex.begin(), set_imageIndex.end(), std::ostream_iterator<size_t>(f, " "));
-        f << std::endl;
-
-        f_visibility << pos.transpose() << " " << set_imageIndex.size() << " ";
-        f_visibility << s_visibility.str() << std::endl;
+        s_visibility << iterTrack->first << " " << iterTrack->second << " ";
       }
-      f.close();
-      f_visibility.close();
 
-      // Views
-      f.open(stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory),
+
+      //export images indexes
+      f_cloud << " " << set_imageIndex.size() << " ";
+      copy(set_imageIndex.begin(), set_imageIndex.end(), std::ostream_iterator<size_t>(f_cloud, " "));
+      f_cloud << std::endl;
+
+      f_visibility << pos.transpose() << " " << set_imageIndex.size() << " ";
+      f_visibility << s_visibility.str() << "\n";
+    }
+    f_cloud.close();
+    f_visibility.close();
+
+    // Views
+    std::ofstream f(
+      stlplus::create_filespec(
+        stlplus::folder_append_separator(sOutDirectory),
         "views", "txt").c_str());
-      if (!f.is_open()) {
-        std::cerr << "Cannot write views" << endl;
-        return false;
-      }
-      f << "images\ncameras\n" << nc << endl;
+    if (!f.is_open()) {
+      std::cerr << "Cannot write views" << std::endl;
+      return false;
+    }
+    f << "images\ncameras\n" << nc << "\n";
 
-      count = 0;
-      for (std::map<size_t, PinholeCamera>::const_iterator iter = map_camera.begin();
-        iter != map_camera.end();
-        ++iter)
-      {
-        size_t camIndex = iter->first;
-        f << vec_fileNames[camIndex]
-          << ' ' << _vec_intrinsicGroups[_vec_camImageNames[camIndex].m_intrinsicId].m_w
-          << ' ' << _vec_intrinsicGroups[_vec_camImageNames[camIndex].m_intrinsicId].m_h
-          << ' ' << stlplus::basename_part(vec_fileNames[camIndex]) << ".bin"
-          << ' ' << znear[count]/2
-          << ' ' << zfar[count]*2
-          << std::endl;
-          ++count;
-      }
-      f.close();
+    count = 0;
+    for (std::map<size_t, PinholeCamera>::const_iterator iter = _map_camera.begin();
+      iter != _map_camera.end();
+      ++iter)
+    {
+      size_t camIndex = iter->first;
+      f << vec_fileNames[camIndex]
+        << ' ' << _vec_intrinsicGroups[_vec_camImageNames[camIndex].m_intrinsicId].m_w
+        << ' ' << _vec_intrinsicGroups[_vec_camImageNames[camIndex].m_intrinsicId].m_h
+        << ' ' << stlplus::basename_part(vec_fileNames[camIndex]) << ".bin"
+        << ' ' << znear[count]/2
+        << ' ' << zfar[count]*2
+        << "\n";
+      ++count;
+    }
+    f.close();
 
-      // EXPORT IMAGES
-      if (bExportImage)
+    // EXPORT IMAGES
+    if (bExportImage)
+    {
+      std::cout << " -- Export the calibrated image set, it can take some time ..." << std::endl;
+      C_Progress_display my_progress_bar(_map_camera.size());
+      for (std::map<size_t, PinholeCamera>::const_iterator iter = _map_camera.begin();
+        iter != _map_camera.end();
+        ++iter, ++my_progress_bar)
       {
-        for (std::map<size_t, PinholeCamera>::const_iterator iter = map_camera.begin();
-          iter != map_camera.end();
-          ++iter)
-        {
-          size_t imageIndex = iter->first;
-          std::string sImageName = vec_fileNames[imageIndex];
-          stlplus::file_copy(stlplus::create_filespec(sImagePath,sImageName),
-            stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "images",
-            stlplus::basename_part(sImageName),
-            stlplus::extension_part(sImageName)));
-        }
+        size_t imageIndex = iter->first;
+        std::string sImageName = vec_fileNames[imageIndex];
+        stlplus::file_copy(stlplus::create_filespec(sImagePath,sImageName),
+          stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "images",
+          stlplus::basename_part(sImageName),
+          stlplus::extension_part(sImageName)));
       }
     }
   }
-  return true;
 }
 
 bool testIntrinsicsEquality(
@@ -956,35 +1060,29 @@ bool GlobalReconstructionEngine::CleanGraph()
 
   if (lemon::biEdgeConnectedCutEdges(putativeGraph.g, cutMap) > 0)
   {
+    // Some edges must be removed because they don't follow the biEdge condition.
     typedef Graph::EdgeIt EdgeIterator;
     EdgeIterator itEdge(putativeGraph.g);
     for (EdgeMapAlias::MapIt it(cutMap); it!=INVALID; ++it, ++itEdge)
     {
-      if (*it)  // we have to remove an edge
-      {
-        putativeGraph.g.erase(itEdge);
-        size_t Idu = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.u(itEdge)];
-        size_t Idv = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.v(itEdge)];
-        STLPairWiseMatches::iterator iterF = _map_Matches_F.find(std::make_pair(Idu,Idv));
-        if( iterF != _map_Matches_F.end())
-        {
-          _map_Matches_F.erase(iterF);
-        }
-        iterF = _map_Matches_F.find(std::make_pair(Idv,Idu));
-        if( iterF != _map_Matches_F.end())
-        {
-          _map_Matches_F.erase(iterF);
-        }
-      }
+      if (*it)  
+        putativeGraph.g.erase(itEdge); // remove the not bi-edge element
     }
   }
+
   // Graph is bi-edge connected, but still many connected components can exist
+  // Keep only the largest one
+  STLPairWiseMatches matches_filtered;
   int connectedComponentCount = lemon::countConnectedComponents(putativeGraph.g);
   std::cout << "\n"
-    << "GlobalReconstructionEngine::CleanGraph() :: => connected Component : " << connectedComponentCount << std::endl;
+    << "GlobalReconstructionEngine::CleanGraph() :: => connected Component : "
+    << connectedComponentCount << std::endl;
   if (connectedComponentCount > 1)
   {
     // Keep only the largest connected component
+    // - list all CC size
+    // - if the largest one is meet, keep all the edges that belong to this node
+
     const std::map<size_t, std::set<lemon::ListGraph::Node> > map_subgraphs = exportGraphToMapSubgraphs(putativeGraph.g);
     size_t count = std::numeric_limits<size_t>::min();
     std::map<size_t, std::set<lemon::ListGraph::Node> >::const_iterator iterLargestCC = map_subgraphs.end();
@@ -1003,32 +1101,47 @@ bool GlobalReconstructionEngine::CleanGraph()
         iter != map_subgraphs.end(); ++iter)
     {
       if (iter == iterLargestCC)
-        continue;
-
-      const std::set<lemon::ListGraph::Node> & ccSet = iter->second;
-      for (std::set<lemon::ListGraph::Node>::const_iterator iter2 = ccSet.begin();
-        iter2 != ccSet.end(); ++iter2)
       {
-        //putativeGraph.g.erase(*iter2);
-        // Remove all outgoing edges
-        typedef Graph::OutArcIt OutArcIt;
-        for (OutArcIt e(putativeGraph.g, *iter2); e!=INVALID; ++e)
+        // list all nodes and outgoing edges and update the matching list
+        const std::set<lemon::ListGraph::Node> & ccSet = iter->second;
+        for (std::set<lemon::ListGraph::Node>::const_iterator iter2 = ccSet.begin();
+          iter2 != ccSet.end(); ++iter2)
         {
-          putativeGraph.g.erase(e);
-          size_t Idu = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.target(e)];
-          size_t Idv = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.source(e)];
-          STLPairWiseMatches::iterator iterF = _map_Matches_F.find(std::make_pair(Idu,Idv));
-          if( iterF != _map_Matches_F.end())
+          typedef Graph::OutArcIt OutArcIt;
+          for (OutArcIt e(putativeGraph.g, *iter2); e!=INVALID; ++e)
           {
-            _map_Matches_F.erase(iterF);
-          }
-          iterF = _map_Matches_F.find(std::make_pair(Idv,Idu));
-          if( iterF != _map_Matches_F.end())
-          {
-            _map_Matches_F.erase(iterF);
+            size_t Idu = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.target(e)];
+            size_t Idv = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.source(e)];
+            STLPairWiseMatches::iterator iterF = _map_Matches_F.find(std::make_pair(Idu,Idv));
+            if( iterF != _map_Matches_F.end())
+            {
+              matches_filtered.insert(*iterF);
+            }
+            iterF = _map_Matches_F.find(std::make_pair(Idv,Idu));
+            if( iterF != _map_Matches_F.end())
+            {
+              matches_filtered.insert(*iterF);
+            }
           }
         }
+        // update the matching list
+        _map_Matches_F = matches_filtered;
       }
+      else
+      {
+        // remove the edges from the graph
+        const std::set<lemon::ListGraph::Node> & ccSet = iter->second;
+        for (std::set<lemon::ListGraph::Node>::const_iterator iter2 = ccSet.begin();
+          iter2 != ccSet.end(); ++iter2)
+        {
+          typedef Graph::OutArcIt OutArcIt;
+          for (OutArcIt e(putativeGraph.g, *iter2); e!=INVALID; ++e)
+          {
+            putativeGraph.g.erase(e);
+          }
+          //putativeGraph.g.erase(*iter2);
+        }
+      }      
     }
   }
 
@@ -1213,6 +1326,9 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
           // Create residuals for each observation in the bundle adjustment problem. The
           // parameters for cameras and points are added automatically.
           ceres::Problem problem;
+          // Set a LossFunction to be less penalized by false measurements
+          //  - set it to NULL if you don't want use a lossFunction.
+          ceres::LossFunction * p_LossFunction = new ceres::HuberLoss(Square(2.0));
           for (size_t i = 0; i < ba_problem.num_observations(); ++i) {
             // Each Residual block takes a point and a camera as input and outputs a 2
             // dimensional residual. Internally, the cost function stores the observed
@@ -1224,8 +1340,7 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
                         &ba_problem.observations()[2 * i + 0],  K(0,0)));
 
             problem.AddResidualBlock(cost_function,
-                                     new ceres::HuberLoss(Square(2.0)),
-                                     //NULL, // squared loss
+                                     p_LossFunction,
                                      ba_problem.mutable_camera_for_observation(i),
                                      ba_problem.mutable_point_for_observation(i));
           }
@@ -1233,18 +1348,8 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
           // Configure a BA engine and run it
           //  Make Ceres automatically detect the bundle structure.
           ceres::Solver::Options options;
-          options.linear_solver_type = ceres::SPARSE_SCHUR;
-          if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
-            options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
-          else
-            if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
-              options.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
-            else
-            {
-              // No sparse backend for Ceres.
-              // Use dense solving
-              options.linear_solver_type = ceres::DENSE_SCHUR;
-            }
+          // Use a dense back-end since we only consider a two view problem
+          options.linear_solver_type = ceres::DENSE_SCHUR;
           options.minimizer_progress_to_stdout = false;
           options.logging_type = ceres::SILENT;
 
@@ -1420,7 +1525,7 @@ void GlobalReconstructionEngine::tripletRotationRejection(
 
   svgHisto histosvg;
   histosvg.draw(histo.GetHist(),
-                std::make_pair<float,float>(0.0, *max_element(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end())),
+                std::make_pair<float,float>(0.0f, *max_element(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end())),
                 stlplus::create_filespec(this->_sOutDirectory, "Triplet_Rotation_Residual_180.svg"),
                 600,300);
 
@@ -1428,7 +1533,7 @@ void GlobalReconstructionEngine::tripletRotationRejection(
   histo.Add(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end());
 
   histosvg.draw(histo.GetHist(),
-                std::make_pair<float,float>(0.0, *max_element(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end())),
+                std::make_pair<float,float>(0.0f, *max_element(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end())),
                 stlplus::create_filespec(this->_sOutDirectory, "Triplet_Rotation_Residual_20.svg"),
                 600,300);
 
@@ -1631,6 +1736,9 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
   // Create residuals for each observation in the bundle adjustment problem. The
   // parameters for cameras and points are added automatically.
   ceres::Problem problem;
+  // Set a LossFunction to be less penalized by false measurements
+  //  - set it to NULL if you don't want use a lossFunction.
+  ceres::LossFunction * p_LossFunction = new ceres::HuberLoss(Square(4.0));
   for (size_t i = 0; i < ba_problem.num_observations(); ++i) {
     // Each Residual block takes a point and a camera as input and outputs a 2
     // dimensional residual. Internally, the cost function stores the observed
@@ -1644,14 +1752,14 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
                 &vec_Rot[ba_problem.camera_index_[i]*3]));
 
     problem.AddResidualBlock(cost_function,
-                             //NULL, // squared loss
-                             new ceres::HuberLoss(Square(4.0)),
+                             p_LossFunction,
                              ba_problem.mutable_camera_for_observation(i),
                              ba_problem.mutable_point_for_observation(i));
   }
   // Configure a BA engine and run it
   //  Make Ceres automatically detect the bundle structure.
   ceres::Solver::Options options;
+  options.preconditioner_type = ceres::JACOBI;
   options.linear_solver_type = ceres::SPARSE_SCHUR;
   if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
     options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
@@ -1668,6 +1776,7 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
   options.logging_type = ceres::SILENT;
 #ifdef USE_OPENMP
   options.num_threads = omp_get_num_threads();
+  options.num_linear_solver_threads = omp_get_num_threads();
 #endif // USE_OPENMP
 
   // Solve BA
@@ -1842,6 +1951,9 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
   // Create residuals for each observation in the bundle adjustment problem. The
   // parameters for cameras and points are added automatically.
   ceres::Problem problem;
+  // Set a LossFunction to be less penalized by false measurements
+  //  - set it to NULL if you don't want use a lossFunction.
+  ceres::LossFunction * p_LossFunction = new ceres::HuberLoss(Square(2.0));
   for (size_t k = 0; k < ba_problem.num_observations(); ++k) {
     // Each Residual block takes a point and a camera as input and outputs a 2
     // dimensional residual. Internally, the cost function stores the observed
@@ -1853,14 +1965,14 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
           &ba_problem.observations()[2 * k + 0], _K(0,0)));
 
       problem.AddResidualBlock(cost_function,
-        new ceres::HuberLoss(Square(2.0)),
-        //NULL, // squared loss
+        p_LossFunction,
         ba_problem.mutable_camera_for_observation(k),
         ba_problem.mutable_point_for_observation(k));
   }
   // Configure a BA engine and run it
   //  Make Ceres automatically detect the bundle structure.
   ceres::Solver::Options options;
+  options.preconditioner_type = ceres::JACOBI;
   options.linear_solver_type = ceres::SPARSE_SCHUR;
   if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
     options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
@@ -1877,6 +1989,7 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
   options.logging_type = ceres::SILENT;
 #ifdef USE_OPENMP
   options.num_threads = omp_get_num_threads();
+  options.num_linear_solver_threads = omp_get_num_threads();
 #endif // USE_OPENMP
 
   // Solve BA
@@ -1947,6 +2060,100 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
         << "-- Nb Steps required until convergence : " <<  summary.num_successful_steps + summary.num_unsuccessful_steps << ".\n"
         << "-------------------------------" << std::endl;
 
+    }
+  }
+}
+
+void GlobalReconstructionEngine::ColorizeTracks(
+  const STLMAPTracks & map_tracks,
+  std::vector<Vec3> & vec_tracksColor) const
+{
+  // Colorize each track
+  //  Start with the most representative image
+  //    and iterate to provide a color to each 3D point
+  {
+    C_Progress_display my_progress_bar(map_tracks.size());
+
+    vec_tracksColor.resize(map_tracks.size());
+
+    // The track list that will be colored (point removed during the process)
+    openMVG::tracks::STLMAPTracks::const_iterator iterTBegin = map_tracks.begin();
+    openMVG::tracks::STLMAPTracks mapTrackToColor(map_tracks);
+    while( !mapTrackToColor.empty() )
+    {
+      // Find the most representative image
+      //  a. Count the number of visible point for each image
+      //  b. Sort to find the most representative image
+
+      std::map<size_t, size_t> map_IndexCardinal; // ImageIndex, Cardinal
+      for (openMVG::tracks::STLMAPTracks::const_iterator
+        iterT = mapTrackToColor.begin();
+        iterT != mapTrackToColor.end();
+      ++iterT)
+      {
+        const size_t trackId = iterT->first;
+        const tracks::submapTrack & track = mapTrackToColor[trackId];
+        for( tracks::submapTrack::const_iterator iterTrack = track.begin();
+          iterTrack != track.end(); ++iterTrack)
+        {
+          const size_t imageId = iterTrack->first;
+          if (map_IndexCardinal.find(imageId) == map_IndexCardinal.end())
+            map_IndexCardinal[imageId] = 1;
+          else
+            ++map_IndexCardinal[imageId];
+        }
+      }
+
+      // Find the image that is the most represented
+      std::vector<size_t> vec_cardinal;
+      std::transform(map_IndexCardinal.begin(),
+        map_IndexCardinal.end(),
+        std::back_inserter(vec_cardinal),
+        RetrieveValue());
+      using namespace indexed_sort;
+      std::vector< sort_index_packet_descend< size_t, size_t> > packet_vec(vec_cardinal.size());
+      sort_index_helper(packet_vec, &vec_cardinal[0]);
+
+      //First index is the image with the most of matches
+      std::map<size_t, size_t>::const_iterator iterTT = map_IndexCardinal.begin();
+      std::advance(iterTT, packet_vec[0].index);
+      const size_t indexImage = iterTT->first;
+      Image<RGBColor> image;
+      ReadImage(
+        stlplus::create_filespec(
+        _sImagePath,
+        stlplus::basename_part(_vec_camImageNames[indexImage].m_sImageName),
+        stlplus::extension_part(_vec_camImageNames[indexImage].m_sImageName) ).c_str(), &image);
+
+      // Iterate through the track
+      std::set<size_t> set_toRemove;
+      for (openMVG::tracks::STLMAPTracks::const_iterator
+        iterT = mapTrackToColor.begin();
+        iterT != mapTrackToColor.end();
+      ++iterT)
+      {
+        const size_t trackId = iterT->first;
+        const tracks::submapTrack & track = mapTrackToColor[trackId];
+        tracks::submapTrack::const_iterator iterF = track.find(indexImage);
+
+        if (iterF != track.end())
+        {
+          // Color the track
+          size_t featId = iterF->second;
+          const SIOPointFeature & feat = _map_feats.find(indexImage)->second[featId];
+          RGBColor color = image(feat.y(), feat.x());
+
+          vec_tracksColor[std::distance ( iterTBegin, map_tracks.find(trackId) )] = Vec3(color.r(), color.g(), color.b());
+          set_toRemove.insert(trackId);
+          ++my_progress_bar;
+        }
+      }
+      // Remove colored track
+      for (std::set<size_t>::const_iterator iter = set_toRemove.begin();
+        iter != set_toRemove.end(); ++iter)
+      {
+        mapTrackToColor.erase(*iter);
+      }
     }
   }
 }

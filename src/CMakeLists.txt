@@ -9,8 +9,12 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 PROJECT(openMVG C CXX)
 
-# Multithreading using OpenMP
-OPTION(USE_OPENMP "Enable OpenMP thread" ON)
+# ==============================================================================
+# OpenMVG build options
+# ==============================================================================
+OPTION(OpenMVG_BUILD_TESTS "Build OpenMVG tests" OFF)
+OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG example applications. Does not affect binaries under 'software'" OFF)
+OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
 
 # By default build in Release mode
 IF(NOT CMAKE_BUILD_TYPE)
@@ -34,25 +38,30 @@ IF (SSE2_FOUND)
   ENDIF (MSVC AND NOT ${CMAKE_CL_64})
   ADD_DEFINITIONS(-DUSE_SSE)
 ENDIF (SSE2_FOUND)
+IF (UNIX)
+  SET(CMAKE_C_FLAGS_RELEASE "-O3")
+  SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
+ENDIF (UNIX)
 
 # ==============================================================================
 # OpenMP detection
 # ==============================================================================
-IF (USE_OPENMP)
+IF (OpenMVG_USE_OPENMP)
   FIND_PACKAGE(OpenMP)
   IF (OPENMP_FOUND)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    OPTION(USE_OPENMP "Use OpenMP for parallelization" ON)
+    OPTION(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" ON)
     ADD_DEFINITIONS(-DUSE_OPENMP)
     IF (NOT MSVC)
       LIST(APPEND OPENMVG_LIBRARY_DEPENDENCIES gomp)
     ENDIF (NOT MSVC)
-ELSE (USE_OPENMP)
-    OPTION(USE_OPENMP "Use OpenMP for parallelization" OFF)
-    SET(USE_OPENMP OFF CACHE BOOL "Use OpenMP for parallelization" FORCE)
+ELSE (OpenMVG_USE_OPENMP)
+    OPTION(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" OFF)
+    SET(OpenMVG_USE_OPENMP OFF CACHE BOOL "Use OpenMP for parallelization")
     REMOVE_DEFINITIONS(-DUSE_OPENMP)
   ENDIF (OPENMP_FOUND)
-ENDIF (USE_OPENMP)
+ENDIF (OpenMVG_USE_OPENMP)
+
 
 # ==============================================================================
 # IMAGE IO detection
@@ -67,11 +76,13 @@ ENDIF (NOT APPLE)
 # ==============================================================================
 #- glfw
 # ==============================================================================
-SET(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Do not build the GLFW example programs" FORCE)
-SET(GLFW_BUILD_TESTS    OFF CACHE BOOL "Do not build the GLFW tests programs"   FORCE)
+SET(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Do not build the GLFW example programs")
+SET(GLFW_BUILD_TESTS    OFF CACHE BOOL "Do not build the GLFW tests programs")
+SET(GLFW_BUILD_DOCS     OFF CACHE BOOL "Do not build the GLFW documentation")
 ADD_SUBDIRECTORY(dependencies/glfw)
 INCLUDE_DIRECTORIES(SYSTEM dependencies/glfw/include)
 
+# ==============================================================================
 #- OpenExif
 # ==============================================================================
 ADD_SUBDIRECTORY(dependencies/OpenExif)
@@ -119,7 +130,7 @@ INCLUDE_DIRECTORIES(
 # Opencv is not used by openMVG but some samples show how to use openCV
 #  and openMVG simultaneously
 # ==============================================================================
-SET(USE_OPENCV OFF CACHE BOOL "Do not build opencv+openMVG samples programs" FORCE)
+SET(USE_OPENCV OFF CACHE BOOL "Do not build opencv+openMVG samples programs")
 IF (USE_OPENCV)
 # In order use openMVG+openCV samples set USE_OPENCV to ON and set the OpenCV_DIR
 #  to the build directory of openCV. Prefer use static version of openCV libraries.
@@ -131,15 +142,20 @@ ENDIF (USE_OPENCV)
 # ==============================================================================
 # Enable cmake UNIT TEST framework
 # ==============================================================================
-ENABLE_TESTING()
+IF (OpenMVG_BUILD_TESTS)
+  ENABLE_TESTING()
+ENDIF (OpenMVG_BUILD_TESTS)
 # MACRO to ease UnitTesting
 MACRO (UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
-  ADD_EXECUTABLE(${NAMESPACE}_test_${NAME} ${NAME}_test.cpp)
-  TARGET_LINK_LIBRARIES(${NAMESPACE}_test_${NAME}
-                        ${EXTRA_LIBS} # Extra libs MUST be first.
-                        CppUnitLite ${OPENMVG_LIBRARY_DEPENDENCIES})
-  ADD_TEST(${NAMESPACE}_test_${NAME} ${NAMESPACE}_test_${NAME})
+  IF (OpenMVG_BUILD_TESTS)
+    ADD_EXECUTABLE(${NAMESPACE}_test_${NAME} ${NAME}_test.cpp)
+    TARGET_LINK_LIBRARIES(${NAMESPACE}_test_${NAME}
+                          ${EXTRA_LIBS} # Extra libs MUST be first.
+                          CppUnitLite ${OPENMVG_LIBRARY_DEPENDENCIES})
+    ADD_TEST(${NAMESPACE}_test_${NAME} ${NAMESPACE}_test_${NAME})
+  ENDIF (OpenMVG_BUILD_TESTS)
 ENDMACRO (UNIT_TEST)
+
 
 # Configure Eigen to use only MPL2 licensed code
 ADD_DEFINITIONS(-DEIGEN_MPL2_ONLY)
@@ -152,17 +168,21 @@ ADD_SUBDIRECTORY(third_party)
 # ==============================================================================
 # Include directories
 # ==============================================================================
-INCLUDE_DIRECTORIES(./
-  ./third_party/
+SET(OpenMVG_INCLUDES
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/
   ${JPEG_INCLUDE_DIR}
   ${PNG_INCLUDE_DIRS}
-  ./third_party/eigen
-  ./third_party/lemon
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon
   ${PROJECT_BINARY_DIR}/third_party/lemon
-  ./third_party/ceres-solver/include
-  ./third_party/ceres-solver/internal/ceres/miniglog
-  ./third_party/flann/src/cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/internal/ceres/miniglog
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp
+  CACHE PATH "include directories for openMVG and its dependencies"
 )
+
+INCLUDE_DIRECTORIES(${OpenMVG_INCLUDES})
 
 # ==============================================================================
 # openMVG modules
@@ -175,10 +195,30 @@ ADD_SUBDIRECTORY(openMVG)
 ADD_SUBDIRECTORY(patented)
 
 # openMVG tutorial examples
-ADD_SUBDIRECTORY(openMVG_Samples)
+IF (OpenMVG_BUILD_EXAMPLES)
+  ADD_SUBDIRECTORY(openMVG_Samples)
+ENDIF (OpenMVG_BUILD_EXAMPLES)
 
 # Complete software build on openMVG
 ADD_SUBDIRECTORY(software)
+
+# ==============================================================================
+# openMVG libraries
+# ==============================================================================
+SET(OpenMVG_LIBS
+  openMVG_image
+  openMVG_multiview
+  openMVG_linearProgramming
+  openMVG_lInftyComputerVision
+  #third_party libs
+  vlsift
+  stlplus
+  flann_cpp_s
+  ceres
+  lemon
+  ${OPENMVG_LIBRARY_DEPENDENCIES}
+  CACHE STRING "openMVG library names"
+)
 
 # ==============================================================================
 # Documentation

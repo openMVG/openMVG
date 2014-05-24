@@ -380,7 +380,10 @@ struct svd_precondition_2x2_block_to_be_real<MatrixType, QRPreconditioner, true>
       z = abs(work_matrix.coeff(p,q)) / work_matrix.coeff(p,q);
       work_matrix.row(p) *= z;
       if(svd.computeU()) svd.m_matrixU.col(p) *= conj(z);
-      z = abs(work_matrix.coeff(q,q)) / work_matrix.coeff(q,q);
+      if(work_matrix.coeff(q,q)!=Scalar(0))
+        z = abs(work_matrix.coeff(q,q)) / work_matrix.coeff(q,q);
+      else
+        z = Scalar(0);
       work_matrix.row(q) *= z;
       if(svd.computeU()) svd.m_matrixU.col(q) *= conj(z);
     }

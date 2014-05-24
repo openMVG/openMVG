@@ -90,7 +90,7 @@ bool IncrementalReconstructionEngine::Process()
   std::pair<size_t,size_t> initialPairIndex;
   if(! InitialPairChoice(initialPairIndex))
     return false;
-  
+
   // Initial pair Essential Matrix and [R|t] estimation.
   if(! MakeInitialPair3D(initialPairIndex))
     return false;
@@ -474,7 +474,7 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
 
   BrownPinholeCamera camI(intrinsicCamI.m_focal, intrinsicCamI.m_K(0,2), intrinsicCamI.m_K(1,2), Mat3::Identity(), Vec3::Zero());
   BrownPinholeCamera camJ(intrinsicCamJ.m_focal, intrinsicCamJ.m_K(0,2), intrinsicCamJ.m_K(1,2), RJ, tJ);
-  
+
   std::vector<IndMatch> vec_index;
   for (openMVG::tracks::STLMAPTracks::const_iterator
     iterT = map_tracksCommon.begin();
@@ -535,7 +535,7 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
   std::cout << "--Triangulated 3D points count: " << vec_inliers.size() << "\n";
   std::cout << "--Triangulated 3D points count under threshold: " << _reconstructorData.map_3DPoints.size()  << "\n";
   std::cout << "--Putative correspondences: " << x1.cols()  << "\n";
-  
+
   _set_remainingImageId.erase(I);
   _set_remainingImageId.erase(J);
 
@@ -559,11 +559,11 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
 
     _reconstructorData.map_ACThreshold.insert(std::make_pair(I, errorMax));
     _reconstructorData.map_ACThreshold.insert(std::make_pair(J, errorMax));
-    
+
     _vec_added_order.push_back(I);
     _vec_added_order.push_back(J);
   }
-  
+
 
   _reconstructorData.exportToPly(stlplus::create_filespec(_sOutDirectory,"sceneStart","ply"));
 
@@ -1148,17 +1148,16 @@ size_t IncrementalReconstructionEngine::badTrackRejector(double dPrecision)
   return rejectedTrack + rejectedMeasurement;
 }
 
-void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_color)
+void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_tracksColor) const
 {
   // Colorize each track
   //  Start with the most representative image
   //    and iterate to provide a color to each 3D point
   {
-    vec_color.resize(_map_reconstructed.size());
+    vec_tracksColor.resize(_map_reconstructed.size());
 
     // The track list that will be colored (point removed during the process)
-    openMVG::tracks::STLMAPTracks mapTrackToColorRef(_map_reconstructed);
-    openMVG::tracks::STLMAPTracks::iterator iterTBegin = mapTrackToColorRef.begin();
+    openMVG::tracks::STLMAPTracks::const_iterator iterTBegin = _map_reconstructed.begin();
     openMVG::tracks::STLMAPTracks mapTrackToColor(_map_reconstructed);
     while( !mapTrackToColor.empty() )
     {
@@ -1177,7 +1176,7 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_col
         for( tracks::submapTrack::const_iterator iterTrack = track.begin();
           iterTrack != track.end(); ++iterTrack)
         {
-          size_t imageId = iterTrack->first;
+          const size_t imageId = iterTrack->first;
           if (map_IndexCardinal.find(imageId) == map_IndexCardinal.end())
             map_IndexCardinal[imageId] = 1;
           else
@@ -1195,10 +1194,10 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_col
       std::vector< sort_index_packet_descend< size_t, size_t> > packet_vec(vec_cardinal.size());
       sort_index_helper(packet_vec, &vec_cardinal[0]);
 
-      //First index is the image with the most matches
+      //First index is the image with the most of matches
       std::map<size_t, size_t>::const_iterator iterTT = map_IndexCardinal.begin();
       std::advance(iterTT, packet_vec[0].index);
-      size_t indexImage = iterTT->first;
+      const size_t indexImage = iterTT->first;
       Image<RGBColor> image;
       ReadImage(
         stlplus::create_filespec(
@@ -1221,10 +1220,10 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_col
         {
           // Color the track
           size_t featId = iterF->second;
-          const SIOPointFeature & feat = _map_feats[indexImage][featId];
+          const SIOPointFeature & feat = _map_feats.find(indexImage)->second[featId];
           RGBColor color = image(feat.y(), feat.x());
 
-          vec_color[std::distance ( iterTBegin, mapTrackToColorRef.find(trackId) )] = Vec3(color.r(), color.g(), color.b());
+          vec_tracksColor[std::distance ( iterTBegin, _map_reconstructed.find(trackId) )] = Vec3(color.r(), color.g(), color.b());
           set_toRemove.insert(trackId);
         }
       }
@@ -1412,6 +1411,9 @@ void IncrementalReconstructionEngine::BundleAdjustment()
   // Create residuals for each observation in the bundle adjustment problem. The
   // parameters for cameras and points are added automatically.
   ceres::Problem problem;
+  // Set a LossFunction to be less penalized by false measurements
+  //  - set it to NULL if you don't want use a lossFunction.
+  ceres::LossFunction * p_LossFunction = new ceres::HuberLoss(4.0);
   for (size_t i = 0; i < ba_problem.num_observations(); ++i) {
     // Each Residual block takes a point and a camera as input and outputs a 2
     // dimensional residual. Internally, the cost function stores the observed
@@ -1422,8 +1424,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
                 & ba_problem.observations()[2 * i + 0]));
 
     problem.AddResidualBlock(cost_function,
-                             //NULL, // squared loss
-                             new ceres::HuberLoss(4.0),
+                             p_LossFunction, // replaced by NULL if you don't want a LossFunction
                              ba_problem.mutable_camera_intrisic_for_observation(i),
                              ba_problem.mutable_camera_extrinsic_for_observation(i),
                              ba_problem.mutable_point_for_observation(i));
@@ -1446,8 +1447,8 @@ void IncrementalReconstructionEngine::BundleAdjustment()
   // Configure a BA engine and run it
   //  Make Ceres automatically detect the bundle structure.
   ceres::Solver::Options options;
-  options.preconditioner_type = ceres::SCHUR_JACOBI;
-  options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+  options.preconditioner_type = ceres::JACOBI;
+  options.linear_solver_type = ceres::SPARSE_SCHUR;
   if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
     options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
   else
@@ -1463,6 +1464,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
   options.logging_type = ceres::SILENT;
 #ifdef USE_OPENMP
   options.num_threads = omp_get_num_threads();
+  options.num_linear_solver_threads = omp_get_num_threads();
 #endif // USE_OPENMP
 
   // Solve BA

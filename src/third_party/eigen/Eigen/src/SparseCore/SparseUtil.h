@@ -143,7 +143,7 @@ template<typename T> struct plain_matrix_type<T,Sparse>
   *
   * \sa SparseMatrix::setFromTriplets()
   */
-template<typename Scalar, typename Index=unsigned int>
+template<typename Scalar, typename Index=typename SparseMatrix<Scalar>::Index >
 class Triplet
 {
 public:

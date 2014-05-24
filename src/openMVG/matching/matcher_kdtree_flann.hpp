@@ -77,11 +77,11 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
   {
     if (_index.get() != NULL)  {
       int * indicePTR = indice;
-      float * distancePTR = distance;
+      DistanceType * distancePTR = distance;
       flann::Matrix<Scalar> queries((Scalar*)query, 1, _dimension);
 
       flann::Matrix<int> indices(indicePTR, 1, 1);
-      flann::Matrix<float> dists(distancePTR, 1, 1);
+      flann::Matrix<DistanceType> dists(distancePTR, 1, 1);
       // do a knn search, using 128 checks
       (*_index).knnSearch(queries, indices, dists, 1, flann::SearchParams(128));
 
@@ -117,11 +117,11 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
       pvec_distance->resize(nbQuery * NN);
 
       int * indicePTR = &((*pvec_indice)[0]);
-      float * distancePTR = &(*pvec_distance)[0];
+      DistanceType * distancePTR = &(*pvec_distance)[0];
       flann::Matrix<Scalar> queries((Scalar*)query, nbQuery, _dimension);
 
       flann::Matrix<int> indices(indicePTR, nbQuery, NN);
-      flann::Matrix<float> dists(distancePTR, nbQuery, NN);
+      flann::Matrix<DistanceType> dists(distancePTR, nbQuery, NN);
       // do a knn search, using 128 checks
       (*_index).knnSearch(queries, indices, dists, NN, flann::SearchParams(128));
       return true;

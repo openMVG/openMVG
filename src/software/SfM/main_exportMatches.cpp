@@ -45,11 +45,11 @@ int main(int argc, char ** argv)
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
   } catch(const std::string& s) {
-      std::cerr << "Export pairwise matches.\nUsage: " << argv[0] << ' '
-      << "[-i|--imadir path] "
-      << "[-d|--matchdir path] "
-      << "[-m|--sMatchFile filename] "
-      << "[-o|--outdir path] "
+      std::cerr << "Export pairwise matches.\nUsage: " << argv[0] << "\n"
+      << "[-i|--imadir path]\n"
+      << "[-d|--matchdir path]\n"
+      << "[-m|--sMatchFile filename]\n"
+      << "[-o|--outdir path]\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -66,11 +66,15 @@ int main(int argc, char ** argv)
   // Read images names
   //---------------------------------------
 
-  std::vector<std::string> vec_fileNames;  
-  if (!SfMIO::loadImageList( vec_fileNames,
-      stlplus::create_filespec(sMatchesDir, "lists", "txt"),false)) {
-    std::cerr << "\nEmpty input image list" << std::endl;
-    return EXIT_FAILURE;
+  std::vector<SfMIO::CameraInfo> vec_camImageName;
+  std::vector<SfMIO::IntrinsicCameraInfo> vec_focalGroup;
+  if (!SfMIO::loadImageList(
+    vec_camImageName,
+    vec_focalGroup,
+    stlplus::create_filespec(sMatchesDir, "lists", "txt")))
+  {
+    std::cerr << "\nEmpty image list." << std::endl;
+    return false;
   }
 
   //---------------------------------------
@@ -85,20 +89,6 @@ int main(int argc, char ** argv)
   // For each pair, export the matches
   // ------------
 
-  //--
-  //- Preprocess the images size
-  Image<RGBColor> image;
-  std::map< std::string, std::pair<size_t, size_t> > map_imageSize;
-  for (std::vector<std::string>::const_iterator iterFilename = vec_fileNames.begin();
-    iterFilename != vec_fileNames.end();
-    ++iterFilename)
-  {
-    ReadImage( stlplus::create_filespec(sImaDirectory,*iterFilename).c_str() , &image);
-    map_imageSize.insert(
-      std::make_pair(*iterFilename,
-      std::make_pair(image.Width(), image.Height())));
-  }
-
   stlplus::folder_create(sOutDir);
   std::cout << "\n Export pairwise matches" << std::endl;
   C_Progress_display my_progress_bar( map_Matches.size() );
@@ -109,14 +99,16 @@ int main(int argc, char ** argv)
     const size_t I = iter->first.first;
     const size_t J = iter->first.second;
 
-    const std::pair<size_t, size_t> dimImage0 = map_imageSize.find(vec_fileNames[I])->second,
-      dimImage1 = map_imageSize.find(vec_fileNames[J])->second;
+    const std::pair<size_t, size_t>
+      dimImage0 = std::make_pair(vec_focalGroup[I].m_w, vec_focalGroup[I].m_h),
+      dimImage1 = std::make_pair(vec_focalGroup[J].m_w, vec_focalGroup[J].m_h);
+
 
     svgDrawer svgStream( dimImage0.first + dimImage1.first, max(dimImage0.second, dimImage1.second));
-    svgStream.drawImage(stlplus::create_filespec(sImaDirectory,vec_fileNames[I]),
+    svgStream.drawImage(stlplus::create_filespec(sImaDirectory,vec_camImageName[I].m_sImageName),
       dimImage0.first,
       dimImage0.second);
-    svgStream.drawImage(stlplus::create_filespec(sImaDirectory,vec_fileNames[J]),
+    svgStream.drawImage(stlplus::create_filespec(sImaDirectory,vec_camImageName[J].m_sImageName),
       dimImage1.first,
       dimImage1.second, dimImage0.first);
 
@@ -126,10 +118,10 @@ int main(int argc, char ** argv)
       // Load the features from the features files
       std::vector<SIOPointFeature> vec_featI, vec_featJ;
       loadFeatsFromFile(
-        stlplus::create_filespec(sMatchesDir, stlplus::basename_part(vec_fileNames[I]), ".feat"),
+        stlplus::create_filespec(sMatchesDir, stlplus::basename_part(vec_camImageName[I].m_sImageName), ".feat"),
         vec_featI);
       loadFeatsFromFile(
-        stlplus::create_filespec(sMatchesDir, stlplus::basename_part(vec_fileNames[J]), ".feat"),
+        stlplus::create_filespec(sMatchesDir, stlplus::basename_part(vec_camImageName[J].m_sImageName), ".feat"),
         vec_featJ);
 
       //-- Draw link between features :

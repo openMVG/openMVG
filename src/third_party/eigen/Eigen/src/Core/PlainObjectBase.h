@@ -47,7 +47,10 @@ template<> struct check_rows_cols_for_overflow<Dynamic> {
   }
 };
 
-template <typename Derived, typename OtherDerived = Derived, bool IsVector = bool(Derived::IsVectorAtCompileTime)> struct conservative_resize_like_impl;
+template <typename Derived,
+          typename OtherDerived = Derived,
+          bool IsVector = bool(Derived::IsVectorAtCompileTime) && bool(OtherDerived::IsVectorAtCompileTime)>
+struct conservative_resize_like_impl;
 
 template<typename MatrixTypeA, typename MatrixTypeB, bool SwapPointers> struct matrix_swap_impl;
 
@@ -668,8 +671,10 @@ private:
     enum { ThisConstantIsPrivateInPlainObjectBase };
 };
 
+namespace internal {
+
 template <typename Derived, typename OtherDerived, bool IsVector>
-struct internal::conservative_resize_like_impl
+struct conservative_resize_like_impl
 {
   typedef typename Derived::Index Index;
   static void run(DenseBase<Derived>& _this, Index rows, Index cols)
@@ -729,11 +734,14 @@ struct internal::conservative_resize_like_impl
   }
 };
 
-namespace internal {
-
+// Here, the specialization for vectors inherits from the general matrix case
+// to allow calling .conservativeResize(rows,cols) on vectors.
 template <typename Derived, typename OtherDerived>
 struct conservative_resize_like_impl<Derived,OtherDerived,true>
+  : conservative_resize_like_impl<Derived,OtherDerived,false>
 {
+  using conservative_resize_like_impl<Derived,OtherDerived,false>::run;
+  
   typedef typename Derived::Index Index;
   static void run(DenseBase<Derived>& _this, Index size)
   {

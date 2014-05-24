@@ -111,8 +111,8 @@ const int ERROR   = -2;
 const int WARNING = -1;
 const int INFO    =  0;
 
-// Define a default LOG severity
-#define MAX_LOG_LEVEL (INFO)
+// define a default LOG severity
+#define MAX_LOG_LEVEL (ERROR) // openMVG
 
 // ------------------------- Glog compatibility ------------------------------
 
@@ -304,9 +304,6 @@ class LoggerVoidify {
 #  define LG      MessageLogger((char *)__FILE__, __LINE__, "native", INFO).stream() // NOLINT
 #  define VLOG_IF(n, condition) LOG_IF(n, condition)
 #endif
-
-// define a default LOG severity
-#define MAX_LOG_LEVEL (INFO) // openMVG
 
 // Currently, VLOG is always on for levels below MAX_LOG_LEVEL.
 #ifndef MAX_LOG_LEVEL

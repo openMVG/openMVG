@@ -1,4 +1,3 @@
-
 *****************************
 Intrinsic groups
 *****************************
@@ -37,7 +36,8 @@ The process exports in outputDirectory/**lists.txt** file the extracted camera i
       \text{double ccdw}_\text{mm} = \text{sensorSizeWidth};\\
       \text{focal}_{pix} = max( w_\text{pix}, h_\text{pix} ) * \text{focal}_\text{mm} / \text{ccdw}_\text{mm};
 
-    - :math:`\text{focal}_{pix}` the EXIF focal length in mm,
+    - :math:`\text{focal}_{pix}` the EXIF focal length in pixel,
+    - :math:`\text{focal}_{mm}` the EXIF focal length in mm,
     - :math:`w_\text{pix}, h_\text{pix}` the image of width and height,
     - :math:`\text{ccdw}_\text{mm}` the known sensor size 
 

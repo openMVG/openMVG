@@ -34,19 +34,22 @@ int main(int argc, char **argv)
   std::string sImaDirectory;
   std::string sMatchesDir;
   std::string sOutDir = "";
+  bool bColoredPointCloud = false;
 
   cmd.add( make_option('i', sImaDirectory, "imadir") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
   cmd.add( make_option('o', sOutDir, "outdir") );
+  cmd.add( make_option('c', bColoredPointCloud, "coloredPointCloud") );
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
     cmd.process(argc, argv);
   } catch(const std::string& s) {
-    std::cerr << "Usage: " << argv[0] << ' '
-    << "[-i|--imadir path] "
-    << "[-m|--matchdir path] "
-    << "[-o|--outdir path] "
+    std::cerr << "Usage: " << argv[0] << '\n'
+    << "[-i|--imadir path]\n"
+    << "[-m|--matchdir path]\n"
+    << "[-o|--outdir path]\n"
+    << "[-c|--coloredPointCloud 0(default) or 1]\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -75,6 +78,10 @@ int main(int argc, char **argv)
   {
     clock_t timeEnd = clock();
     std::cout << std::endl << " Total Ac-Global-Sfm took : " << (timeEnd - timeStart) / CLOCKS_PER_SEC << std::endl;
+    
+    //-- Export computed data to disk
+    to3DEngine.ExportToOpenMVGFormat(bColoredPointCloud);
+
     return EXIT_SUCCESS;
   }
 

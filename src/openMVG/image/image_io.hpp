@@ -58,9 +58,27 @@ inline int ReadImage(const char * path, Image<unsigned char> * im)
   std::vector<unsigned char> ptr;
   int w, h, depth;
   int res = ReadImage(path, &ptr, &w, &h, &depth);
-  if (res == 1) {
+  if (res == 1 && depth == 1) {
     //convert raw array to Image
     (*im) = Eigen::Map<Image<unsigned char>::Base>(&ptr[0], h, w);
+  }
+  else
+  if (res == 1 && depth == 3) {
+    //-- Must convert RGB to gray
+    RGBColor * ptrCol = (RGBColor*) &ptr[0];
+    Image<RGBColor> rgbColIm;
+    rgbColIm = Eigen::Map<Image<RGBColor>::Base>(ptrCol, h, w);
+    //convert RGB to gray
+    ConvertPixelType(rgbColIm, im);
+  }
+  else
+  if (res == 1 && depth == 4) {
+    //-- Must convert RGBA to gray
+    RGBAColor * ptrCol = (RGBAColor*) &ptr[0];
+    Image<RGBAColor> rgbaColIm;
+    rgbaColIm = Eigen::Map<Image<RGBAColor>::Base>(ptrCol, h, w);
+    //convert RGBA to gray
+    ConvertPixelType(rgbaColIm, im);
   }
   else if (depth!=1)
     return 0;
@@ -78,7 +96,16 @@ inline int ReadImage(const char * path, Image<RGBColor> * im)
     //convert raw array to Image
     (*im) = Eigen::Map<Image<RGBColor>::Base>(ptrCol, h, w);
   }
-  else if (depth!=3)
+  else
+  if (res == 1 && depth == 4) {
+    //-- Must convert RGBA to RGB
+    RGBAColor * ptrCol = (RGBAColor*) &ptr[0];
+    Image<RGBAColor> rgbaColIm;
+    rgbaColIm = Eigen::Map<Image<RGBAColor>::Base>(ptrCol, h, w);
+    //convert RGBA to RGB
+    ConvertPixelType(rgbaColIm, im);
+  }
+  else
     return 0;
   return res;
 }

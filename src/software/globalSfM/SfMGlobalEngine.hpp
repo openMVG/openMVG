@@ -39,15 +39,29 @@ namespace openMVG{
 //- Autors: Christopher ZACH, Manfred KLOPSCHITZ and Marc POLLEFEYS.
 //- Date: 2010
 //- Conference : CVPR.
+//- [3] "Efficient and Robust Large-Scale Rotation Averaging"
+//- Authors: Avishek Chatterjee and Venu Madhav Govindu
+//- Date: December 2013.
+//- Conference: ICCV.
 
 // Implementation of [1]
 // Some points differs from the [1] paper to ease open source port:
 //-- Relative rotation inference:
 //   - only the triplet rejection is performed (in [1] a Bayesian inference on cycle error is performed [2])
 //-- Global rotation computation:
-//   - in [1] they are computed by a sparse least square formulation, here a simple dense least square is used.
+//   - in [1] they are computed by a sparse least square formulation
+//   - here, can be used:
+//    - a simple dense least square,
+//    - or, the L1 averaging method of [3].
 //-- Linear Programming solver:
 //   - in order to have the best performance it is advised to used the MOSEK LP backend.
+
+enum ERotationAveragingMethod
+{
+  ROTATION_AVERAGING_NONE = 0,
+  ROTATION_AVERAGING_L1 = 1,
+  ROTATION_AVERAGING_L2 = 2
+};
 
 class GlobalReconstructionEngine : public ReconstructionEngine
 {
@@ -60,6 +74,14 @@ public:
 
   virtual bool Process();
 
+  /// Give a color to all the 3D points
+  void ColorizeTracks(
+    const STLMAPTracks & map_tracks, // tracks to be colorized
+    std::vector<Vec3> & vec_tracksColor // output associated color
+    ) const;
+
+  bool ExportToOpenMVGFormat(bool bColoredPointCloud) const;
+
 private:
   /// Read input data (point correspondences, K matrix)
   bool ReadInputData();
@@ -71,9 +93,12 @@ private:
   // Detect and remove the outlier relative rotations
   void rotationInference(std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > & map_relatives);
 
-  // Compute the global rotations
+  // Compute the global rotations from relative rotations
   bool computeGlobalRotations(
-    const std::vector<std::pair<std::pair<size_t, size_t>, Mat3> > & vec_relativeRotEstimate,
+    ERotationAveragingMethod eRotationAveragingMethod,
+    const std::map<size_t, size_t> & map_cameraNodeToCameraIndex,
+    const std::map<size_t, size_t> & map_cameraIndexTocameraNode,
+    const std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > & map_relatives,
     std::map<size_t, Mat3> & map_globalR) const;
 
   // List the triplet of the image connection graph (_map_Matches_F)
@@ -128,6 +153,17 @@ private:
   std::map<size_t, size_t> map_cameraIndexTocameraNode; // 0->Ncam correspondance to graph node Id
   //--
   //----
+
+  //-----
+  //-- Reconstruction data
+  //-----
+  // Cameras (Motion)
+  std::map<size_t, PinholeCamera> _map_camera;
+  // Structure 
+  std::vector<Vec3> _vec_allScenes;
+  // Structure visibility
+  STLMAPTracks _map_selectedTracks; // reconstructed track (visibility per 3D point)
+  //-----
 
 
   // -----

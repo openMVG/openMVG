@@ -94,15 +94,12 @@ int main(int argc, char **argv) {
   if (!stlplus::folder_exists(sOutDir))
     stlplus::folder_create( sOutDir );
 
-  Image<RGBColor> image;
-  Image<unsigned char> imageL, imageR;
   string jpg_filenameL = sImg1;
   string jpg_filenameR = sImg2;
 
-  ReadImage(jpg_filenameL.c_str(), &image);
-  Rgb2Gray(image, &imageL);
-  ReadImage(jpg_filenameR.c_str(), &image);
-  Rgb2Gray(image, &imageR);
+  Image<unsigned char> imageL, imageR;
+  ReadImage(jpg_filenameL.c_str(), &imageL);
+  ReadImage(jpg_filenameR.c_str(), &imageR);
 
   // Define the used descriptor (SIFT: 128 float)
   typedef float descType;

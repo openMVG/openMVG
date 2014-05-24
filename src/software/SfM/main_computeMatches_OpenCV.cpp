@@ -10,20 +10,17 @@
 #include "openMVG/features/features.hpp"
 
 /// Generic Image Collection image matching
-#include "software/SfM/ImageCollectionMatcher_AllInMemory.hpp"
-#include "software/SfM/ImageCollectionGeometricFilter.hpp"
-#include "software/SfM/ImageCollection_F_ACRobust.hpp"
+#include "openMVG/matching_image_collection/Matcher_AllInMemory.hpp"
+#include "openMVG/matching_image_collection/GeometricFilter.hpp"
+#include "openMVG/matching_image_collection/F_ACRobust.hpp"
+#include "openMVG/matching_image_collection/E_ACRobust.hpp"
+#include "openMVG/matching_image_collection/H_ACRobust.hpp"
 #include "software/SfM/pairwiseAdjacencyDisplay.hpp"
 #include "software/SfM/SfMIOHelper.hpp"
 #include "openMVG/matching/matcher_brute_force.hpp"
 #include "openMVG/matching/matcher_kdtree_flann.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
-
-/// Generic Image Collection image matching
-#include "software/SfM/ImageCollectionMatcher_AllInMemory.hpp"
-#include "software/SfM/ImageCollectionGeometricFilter.hpp"
-#include "software/SfM/ImageCollection_F_ACRobust.hpp"
-#include "software/SfM/pairwiseAdjacencyDisplay.hpp"
+#include "openMVG/matching/metric_hamming.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 
@@ -44,6 +41,21 @@ using namespace openMVG;
 using namespace openMVG::matching;
 using namespace openMVG::robust;
 using namespace std;
+
+enum eGeometricModel
+{
+  FUNDAMENTAL_MATRIX = 0,
+  ESSENTIAL_MATRIX = 1,
+  HOMOGRAPHY_MATRIX = 2
+};
+
+// Equality functor to count the number of similar K matrices in the essential matrix case.
+bool testIntrinsicsEquality(
+  SfMIO::IntrinsicCameraInfo const &ci1,
+  SfMIO::IntrinsicCameraInfo const &ci2)
+{
+  return ci1.m_K == ci2.m_K;
+}
 
 /// Extract OpenCV features and convert them to openMVG features/descriptor data
 template <class DescriptorT, class cvFeature2DInterfaceT>
@@ -118,12 +130,9 @@ void extractFeaturesAndDescriptors(
     }
     else  { //Not already computed, so compute and save
 
-      if (ReadImage(vec_fileNames[i].c_str(), &imageRGB)) {
-        Rgb2Gray(imageRGB, &imageGray);
-      }
-      else{
-        ReadImage(vec_fileNames[i].c_str(), &imageGray);
-      }
+      if (!ReadImage(vec_fileNames[i].c_str(), &imageGray))
+        continue;
+
       // Compute features and descriptors and export them to file
       ComputeCVFeatAndDesc<DescriptorT, cvFeature2DInterfaceT>(imageGray,  kpSet.features(), kpSet.descriptors());
       kpSet.saveToBinFile(sFeat, sDesc);
@@ -139,20 +148,23 @@ int main(int argc, char **argv)
 
   std::string sImaDirectory;
   std::string sOutDir = "";
+  std::string sGeometricModel = "f";
   float fDistRatio = .6f;
 
   cmd.add( make_option('i', sImaDirectory, "imadir") );
   cmd.add( make_option('o', sOutDir, "outdir") );
   cmd.add( make_option('r', fDistRatio, "distratio") );
+  cmd.add( make_option('g', sGeometricModel, "f") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
   } catch(const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << ' '
-      << "[-i|--imadir path] "
-      << "[-o|--outdir path] "
-      << "[-r|--distratio 0.6] "
+      std::cerr << "Usage: " << argv[0] << '\n'
+      << "[-i|--imadir path] \n"
+      << "[-o|--outdir path] \n"
+      << "\n[Optional]\n"
+      << "[-g]--geometricModel f, e or h]"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -163,18 +175,39 @@ int main(int argc, char **argv)
             << argv[0] << std::endl
             << "--imadir " << sImaDirectory << std::endl
             << "--outdir " << sOutDir << std::endl
-            << "--distratio " << fDistRatio << std::endl;
+            << "--geometricModel " << sGeometricModel << std::endl;
 
   if (sOutDir.empty())  {
     std::cerr << "\nIt is an invalid output directory" << std::endl;
     return EXIT_FAILURE;
   }
 
+  eGeometricModel eGeometricModelToCompute = FUNDAMENTAL_MATRIX;
+  std::string sGeometricMatchesFilename = "";
+  switch(sGeometricModel[0])
+  {
+    case 'f': case 'F':
+      eGeometricModelToCompute = FUNDAMENTAL_MATRIX;
+      sGeometricMatchesFilename = "matches.f.txt";
+    break;
+    case 'e': case 'E':
+      eGeometricModelToCompute = ESSENTIAL_MATRIX;
+      sGeometricMatchesFilename = "matches.e.txt";
+    break;
+    case 'h': case 'H':
+      eGeometricModelToCompute = HOMOGRAPHY_MATRIX;
+      sGeometricMatchesFilename = "matches.h.txt";
+    break;
+    default:
+      std::cerr << "Unknown geometric model" << std::endl;
+      return EXIT_FAILURE;
+  }
+
   // -----------------------------
   // a. List images
-  // b. Compute features and descriptor
-  // c. Compute putatives descriptor matches
-  // d. Geometric filtering of putatives matches
+  // b. Compute features and descriptors
+  // c. Compute putative descriptor matches
+  // d. Geometric filtering of putative matches
   // e. Export some statistics
   // -----------------------------
 
@@ -185,10 +218,8 @@ int main(int argc, char **argv)
   //---------------------------------------
   // a. List images
   //---------------------------------------
-  std::string sListsFile = stlplus::create_filespec( sOutDir,
-                                                     "lists.txt" ).c_str();
-  if (!stlplus::is_file(sListsFile) )
-  {
+  std::string sListsFile = stlplus::create_filespec(sOutDir, "lists.txt" );
+  if (!stlplus::is_file(sListsFile)) {
     std::cerr << std::endl
       << "The input file \""<< sListsFile << "\" is missing" << std::endl;
     return false;
@@ -204,11 +235,33 @@ int main(int argc, char **argv)
     return false;
   }
 
+  if (eGeometricModelToCompute == ESSENTIAL_MATRIX)
+  {
+    //-- In the case of the essential matrix we check if only one K matrix is present.
+    //-- Due to the fact that the generic framework allows only one K matrix for the
+    // robust essential matrix estimation in image collection.
+    std::vector<openMVG::SfMIO::IntrinsicCameraInfo>::iterator iterF =
+    std::unique(vec_focalGroup.begin(), vec_focalGroup.end(), testIntrinsicsEquality);
+    vec_focalGroup.resize( std::distance(vec_focalGroup.begin(), iterF) );
+    if (vec_focalGroup.size() == 1) {
+      // Set all the intrinsic ID to 0
+      for (size_t i = 0; i < vec_camImageName.size(); ++i)
+        vec_camImageName[i].m_intrinsicId = 0;
+    }
+    else  {
+      std::cerr << "There is more than one focal group in the lists.txt file." << std::endl
+        << "Only one focal group is supported for the image collection robust essential matrix estimation." << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
+
+  //-- Two alias to ease access to image filenames and image sizes
   std::vector<std::string> vec_fileNames;
   std::vector<std::pair<size_t, size_t> > vec_imagesSize;
-  for ( std::vector<openMVG::SfMIO::CameraInfo>::const_iterator iter_camInfo = vec_camImageName.begin();
-     iter_camInfo != vec_camImageName.end();
-     iter_camInfo++ )
+  for ( std::vector<openMVG::SfMIO::CameraInfo>::const_iterator
+    iter_camInfo = vec_camImageName.begin();
+    iter_camInfo != vec_camImageName.end();
+    iter_camInfo++ )
   {
     vec_imagesSize.push_back( std::make_pair( vec_focalGroup[iter_camInfo->m_intrinsicId].m_w,
                                               vec_focalGroup[iter_camInfo->m_intrinsicId].m_h ) );
@@ -249,7 +302,7 @@ int main(int argc, char **argv)
     vec_imagesSize);
 
   //---------------------------------------
-  // c. Compute putatives descriptor matches
+  // c. Compute putative descriptor matches
   //    - L2 descriptor matching
   //    - Keep correspondences only if NearestNeighbor ratio is ok
   //---------------------------------------
@@ -258,7 +311,7 @@ int main(int argc, char **argv)
   // ANN matcher could be defined as follow:
   typedef flann::L2<DescriptorT::bin_type> MetricT;
   typedef ArrayMatcher_Kdtree_Flann<DescriptorT::bin_type, MetricT> MatcherT;
-  // Brute force matcher is defined as following:
+  // Brute force matcher can be defined as following:
   //typedef L2_Vectorized<DescriptorT::bin_type> MetricT;
   //typedef ArrayMatcherBruteForce<DescriptorT::bin_type, MetricT> MatcherT;
 
@@ -270,7 +323,7 @@ int main(int argc, char **argv)
   }
   else // Compute the putatives matches
   {
-    ImageCollectionMatcher_AllInMemory<KeypointSetT, MatcherT> collectionMatcher(fDistRatio);
+    Matcher_AllInMemory<KeypointSetT, MatcherT> collectionMatcher(fDistRatio);
     if (collectionMatcher.loadData(vec_fileNames, sOutDir))
     {
       std::cout  << std::endl << "PUTATIVE MATCHES" << std::endl;
@@ -291,38 +344,83 @@ int main(int argc, char **argv)
 
 
   //---------------------------------------
-  // d. Geometric filtering of putatives matches
-  //    - AContrario Estimation of the Fundamental matrix
-  //    - Use a upper bound for the plausible F matrix
-  //      acontrario estimated threshold
+  // d. Geometric filtering of putative matches
+  //    - AContrario Estimation of the desired geometric model
+  //    - Use an upper bound for the a contrario estimated threshold
   //---------------------------------------
-  IndexedMatchPerPair map_GeometricMatches_F;
+  IndexedMatchPerPair map_GeometricMatches;
 
-  GeometricFilter_FMatrix_AC geomFilter_F_AC(4.0);
-  ImageCollectionGeometricFilter<FeatureT, GeometricFilter_FMatrix_AC> collectionGeomFilter;
+  ImageCollectionGeometricFilter<FeatureT> collectionGeomFilter;
+  const double maxResidualError = 4.0;
   if (collectionGeomFilter.loadData(vec_fileNames, sOutDir))
   {
     std::cout << std::endl << " - GEOMETRIC FILTERING - " << std::endl;
-    collectionGeomFilter.Filter(
-      geomFilter_F_AC,
-      map_PutativesMatches,
-      map_GeometricMatches_F,
-      vec_imagesSize);
+    switch (eGeometricModelToCompute)
+    {
+      case FUNDAMENTAL_MATRIX:
+      {
+       collectionGeomFilter.Filter(
+          GeometricFilter_FMatrix_AC(maxResidualError),
+          map_PutativesMatches,
+          map_GeometricMatches,
+          vec_imagesSize);
+      }
+      break;
+      case ESSENTIAL_MATRIX:
+      {
+        collectionGeomFilter.Filter(
+          GeometricFilter_EMatrix_AC(vec_focalGroup[0].m_K, maxResidualError),
+          map_PutativesMatches,
+          map_GeometricMatches,
+          vec_imagesSize);
+
+        //-- Perform an additional check to remove pairs with poor overlap
+        std::vector<IndexedMatchPerPair::key_type> vec_toRemove;
+        for (IndexedMatchPerPair::const_iterator iterMap = map_GeometricMatches.begin();
+          iterMap != map_GeometricMatches.end(); ++iterMap)
+        {
+          size_t putativePhotometricCount = map_PutativesMatches.find(iterMap->first)->second.size();
+          size_t putativeGeometricCount = iterMap->second.size();
+          float ratio = putativeGeometricCount / (float)putativePhotometricCount;
+          if (putativeGeometricCount < 50 || ratio < .3f)  {
+            // the pair will be removed
+            vec_toRemove.push_back(iterMap->first);
+          }
+        }
+        //-- remove discarded pairs
+        for (std::vector<IndexedMatchPerPair::key_type>::const_iterator
+          iter =  vec_toRemove.begin(); iter != vec_toRemove.end(); ++iter)
+        {
+          map_GeometricMatches.erase(*iter);
+        }
+      }
+      break;
+      case HOMOGRAPHY_MATRIX:
+      {
+
+        collectionGeomFilter.Filter(
+          GeometricFilter_HMatrix_AC(maxResidualError),
+          map_PutativesMatches,
+          map_GeometricMatches,
+          vec_imagesSize);
+      }
+      break;
+    }
 
     //---------------------------------------
     //-- Export geometric filtered matches
     //---------------------------------------
-    std::ofstream file (string(sOutDir + "/matches.f.txt").c_str());
+    std::ofstream file (string(sOutDir + "/" + sGeometricMatchesFilename).c_str());
     if (file.is_open())
-      PairedIndMatchToStream(map_GeometricMatches_F, file);
+      PairedIndMatchToStream(map_GeometricMatches, file);
     file.close();
 
     //-- export Adjacency matrix
-    std::cout << "\n Export Adjacency Matrix of the pairwise's Epipolar matches"
+    std::cout << "\n Export Adjacency Matrix of the pairwise's geometric matches"
       << std::endl;
     PairWiseMatchingToAdjacencyMatrixSVG(vec_fileNames.size(),
-      map_GeometricMatches_F,
-      stlplus::create_filespec(sOutDir, "EpipolarAdjacencyMatrix", "svg"));
+      map_GeometricMatches,
+      stlplus::create_filespec(sOutDir, "GeometricAdjacencyMatrix", "svg"));
   }
   return EXIT_SUCCESS;
 }

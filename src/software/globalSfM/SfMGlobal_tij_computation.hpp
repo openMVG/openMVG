@@ -306,7 +306,10 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
 
   //-- Prepare tracks count per triplets:
   std::map<size_t, size_t> map_tracksPerTriplets;
-  for (size_t i = 0; i < vec_triplets.size(); ++i)
+#ifdef USE_OPENMP
+  #pragma omp parallel for schedule(dynamic)
+#endif
+  for (int i = 0; i < (int)vec_triplets.size(); ++i)
   {
     const graphUtils::Triplet & triplet = vec_triplets[i];
     const size_t I = triplet.i, J = triplet.j , K = triplet.k;
@@ -338,6 +341,9 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
       tracksBuilder.Filter(3);
       tracksBuilder.ExportToSTL(map_tracks);
     }
+#ifdef USE_OPENMP
+  #pragma omp critical
+#endif
     map_tracksPerTriplets[i] = map_tracks.size();
   }
 
@@ -409,7 +415,7 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
     }
     vec_possibleTriplets = vec_possibleTripletsSorted;
 
-    // Try to solve the triplet
+    // Try to solve the triplets
     // Search the possible triplet:
     for (size_t i = 0; i < vec_possibleTriplets.size(); ++i)
     {
@@ -444,7 +450,7 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
           tracksBuilder.ExportToSTL(map_tracksCommon);
         }
 
-        // Try to estimate this triplets:
+        // Try to estimate this triplet:
         size_t w = _vec_intrinsicGroups[_vec_camImageNames[I].m_intrinsicId].m_w;
         size_t h = _vec_intrinsicGroups[_vec_camImageNames[I].m_intrinsicId].m_h;
 

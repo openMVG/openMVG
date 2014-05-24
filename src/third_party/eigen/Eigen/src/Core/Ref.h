@@ -94,7 +94,8 @@ struct traits<Ref<_PlainObjectType, _Options, _StrideType> >
   typedef _PlainObjectType PlainObjectType;
   typedef _StrideType StrideType;
   enum {
-    Options = _Options
+    Options = _Options,
+    Flags = traits<Map<_PlainObjectType, _Options, _StrideType> >::Flags | NestByRefBit
   };
 
   template<typename Derived> struct match {
@@ -111,7 +112,7 @@ struct traits<Ref<_PlainObjectType, _Options, _StrideType> >
     };
     typedef typename internal::conditional<MatchAtCompileTime,internal::true_type,internal::false_type>::type type;
   };
-
+  
 };
 
 template<typename Derived>

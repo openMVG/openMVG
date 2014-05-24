@@ -29,9 +29,9 @@ struct all_unroller
 };
 
 template<typename Derived>
-struct all_unroller<Derived, 1>
+struct all_unroller<Derived, 0>
 {
-  static inline bool run(const Derived &mat) { return mat.coeff(0, 0); }
+  static inline bool run(const Derived &/*mat*/) { return true; }
 };
 
 template<typename Derived>
@@ -55,9 +55,9 @@ struct any_unroller
 };
 
 template<typename Derived>
-struct any_unroller<Derived, 1>
+struct any_unroller<Derived, 0>
 {
-  static inline bool run(const Derived &mat) { return mat.coeff(0, 0); }
+  static inline bool run(const Derived & /*mat*/) { return false; }
 };
 
 template<typename Derived>

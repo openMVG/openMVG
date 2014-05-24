@@ -44,14 +44,10 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
     Image< unsigned char > & maskRight )
   {
     std::vector< matching::IndMatch > vec_KVLDMatches;
-    Image< RGBColor > image;
+
     Image< unsigned char > imageL, imageR;
-
-    ReadImage( _sLeftImage.c_str(), &image );
-    Rgb2Gray( image, &imageL );
-
-    ReadImage( _sRightImage.c_str(), &image );
-    Rgb2Gray( image, &imageR );
+    ReadImage( _sLeftImage.c_str(), &imageL );
+    ReadImage( _sRightImage.c_str(), &imageR );
 
     Image< float > imgA ( imageL.GetMat().cast< float >() );
     Image< float > imgB ( imageR.GetMat().cast< float >() );

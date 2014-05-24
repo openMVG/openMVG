@@ -37,6 +37,10 @@ macro(AddCompilerFlag _flag)
       endforeach()
    endif()
 
+   #overload the ARGC configuration of _c_flags and _cxx_flags variables
+   set(_c_flags "CMAKE_C_FLAGS")
+   set(_cxx_flags "CMAKE_CXX_FLAGS")
+
    if(check_c_compiler_flag_${_flag_esc} AND DEFINED _c_flags)
       set(${_c_flags} "${${_c_flags}} ${_flag}")
    endif()
