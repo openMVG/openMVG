@@ -1,10 +1,8 @@
-#ifdef USE_EXIV2 
-#include "openMVG/exif_IO/exif_IO_Exiv2.hpp"
-#else
-#include "openMVG/exif_IO/exif_IO_openExif.hpp"
-#endif 
+#include "openMVG/exif_IO/exif_IO_EasyExif.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
+
+#include <memory>
 
 int main(int argc, char **argv)
 {
@@ -29,17 +27,14 @@ int main(int argc, char **argv)
   std::cout << " You called : " <<std::endl
             << argv[0] << std::endl
             << "--imafile " << sInputImage << std::endl;
-#ifdef USE_EXIV2 
-  Exif_IO* exif_io = new Exif_IO_Exiv2( sInputImage );
-#else
-  Exif_IO* exif_io = new Exif_IO_OpenExif( sInputImage );
-#endif 
+  
+  std::auto_ptr<Exif_IO> exif_io( new Exif_IO_EasyExif( sInputImage ) );
+
   std::cout << "width : " << exif_io->getWidth() << std::endl;
   std::cout << "height : " << exif_io->getHeight() << std::endl;
   std::cout << "focal : " << exif_io->getFocal() << std::endl;
   std::cout << "brand : " << exif_io->getBrand() << std::endl;
   std::cout << "model : " << exif_io->getModel() << std::endl;
-  delete exif_io;
   return EXIT_SUCCESS;
 }
 

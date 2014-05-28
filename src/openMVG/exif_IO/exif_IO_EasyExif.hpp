@@ -7,6 +7,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <vector>
 
 class Exif_IO_EasyExif : public Exif_IO
 {

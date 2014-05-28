@@ -82,20 +82,6 @@ SET(GLFW_BUILD_DOCS     OFF CACHE BOOL "Do not build the GLFW documentation")
 ADD_SUBDIRECTORY(dependencies/glfw)
 INCLUDE_DIRECTORIES(SYSTEM dependencies/glfw/include)
 
-# ==============================================================================
-#- OpenExif
-# ==============================================================================
-ADD_SUBDIRECTORY(dependencies/OpenExif)
-
-#- EXIV 2
-# ==============================================================================
-IF (UNIX)
-  FIND_PACKAGE( Exiv2 QUIET)
-  IF (EXIV2_FOUND)
-    ADD_DEFINITIONS(-DUSE_EXIV2)
-  ENDIF (EXIV2_FOUND)
-ENDIF (UNIX)
-
 #===============================
 #---- LINEAR PROGRAMMING SOLVER
 #===============================
