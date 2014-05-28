@@ -39,6 +39,7 @@
 #include "ceres/cost_function.h"
 #include "ceres/internal/scoped_ptr.h"
 #include "ceres/types.h"
+#include "ceres/internal/disable_warnings.h"
 
 namespace ceres {
 
@@ -70,7 +71,7 @@ namespace ceres {
 //   ccf_residual[i] = f_i(my_cost_function_residual[i])
 //
 // and the Jacobian will be affected appropriately.
-class ConditionedCostFunction : public CostFunction {
+class CERES_EXPORT ConditionedCostFunction : public CostFunction {
  public:
   // Builds a cost function based on a wrapped cost function, and a
   // per-residual conditioner. Takes ownership of all of the wrapped cost
@@ -93,5 +94,6 @@ class ConditionedCostFunction : public CostFunction {
 
 }  // namespace ceres
 
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_PUBLIC_CONDITIONED_COST_FUNCTION_H_

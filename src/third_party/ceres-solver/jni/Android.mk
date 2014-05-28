@@ -29,48 +29,44 @@
 # Author: settinger@google.com (Scott Ettinger)
 #         keir@google.com (Keir Mierle)
 #
-# Builds Ceres for Android, using the standard toolchain (not standalone). It
-# uses STLPort instead of GNU C++. This is useful for anyone wishing to ship
-# GPL-free code. This cannot build the tests or other parts of Ceres; only the
-# core libraries. If you need a more complete Ceres build, consider using the
-# CMake toolchain (noting that the standalone toolchain doesn't work with
-# STLPort).
+# Builds Ceres for Android, using the standard toolchain (not
+# standalone). It uses LLVM's libc++ as the standard library. It is a
+# modern BSD licensed implementation of the standard c++ library. We
+# do this to avoid any licensing issues that may arise from using
+# GCC's libstdc++ which is licensed under GPL3.
 #
-# You will have to specify the environment EIGEN_PATH to point to the Eigen
-# sources when building. For example:
+# Building
+# --------
+#
+# You will have to specify the environment EIGEN_PATH to point to the
+# Eigen sources when building. For example:
 #
 #   EIGEN_PATH=/home/keir/src/eigen-3.0.5 ndk-build -j
 #
-# It is also possible to specify CERES_EXTRA_DEFINES, in case you need to pass
-# more definitions to the C compiler.
+# It is also possible to specify CERES_EXTRA_DEFINES, in case you need
+# to pass more definitions to the C compiler.
 #
-# IMPORTANT:
-#
-# The shared library built at the bottom is fake, broken, and empty. It exists
-# only to force ndk-build to build the shared library. This shouldn't be
-# necessary, but if it is missing, then ndk-build will do nothing when asked to
-# build. The produced .so library is NON-FUNCTIONAL since it has no Ceres
-# function-level dependencies. Instead, copy the static library:
+# Using the library
+# -----------------
+# Copy the static library:
 #
 #   ../obj/local/armeabi-v7a/libceres.a
 #
-# into your own project, then link it into your binary in your Android.mk file.
+# into your own project, then link it into your binary in your
+# Android.mk file.
 #
-# Reducing binary size:
-#
-# This build includes the Schur specializations, which cause binary bloat. If
-# you don't need them for your application, consider adding:
+# Reducing binary size
+# --------------------
+# This build includes the Schur specializations, which increase the
+# size of the binary. If you don't need them for your application,
+# consider adding:
 #
 #   -DCERES_RESTRICT_SCHUR_SPECIALIZATION
 #
 # to the LOCAL_CFLAGS variable below.
 #
-# Similarly if you do not need the line search minimizer, consider adding
-#
-#   -DCERES_NO_LINE_SEARCH_MINIMIZER
-#
-# Changing the logging library:
-#
+# Changing the logging library
+# ----------------------------
 # Ceres Solver ships with a replacement for glog that provides a
 # simple and small implementation that builds on Android. However, if
 # you wish to supply a header only version yourself, then you may
@@ -83,6 +79,7 @@ CERES_INCLUDE_PATHS := $(CERES_EXTRA_INCLUDES)
 CERES_INCLUDE_PATHS += $(LOCAL_PATH)/../internal
 CERES_INCLUDE_PATHS += $(LOCAL_PATH)/../internal/ceres
 CERES_INCLUDE_PATHS += $(LOCAL_PATH)/../include
+CERES_INCLUDE_PATHS += $(LOCAL_PATH)/../config
 
 # Use the alternate glog implementation if provided by the user.
 ifdef CERES_GLOG_DIR
@@ -100,15 +97,10 @@ LOCAL_CPP_EXTENSION := .cc
 LOCAL_CFLAGS := $(CERES_EXTRA_DEFINES) \
                 -DCERES_NO_LAPACK \
                 -DCERES_NO_SUITESPARSE \
-                -DCERES_NO_GFLAGS \
                 -DCERES_NO_THREADS \
                 -DCERES_NO_CXSPARSE \
-                -DCERES_NO_UNORDERED_MAP \
+                -DCERES_STD_UNORDERED_MAP \
                 -DCERES_WORK_AROUND_ANDROID_NDK_COMPILER_BUG
-
-# On Android NDK 8b, GCC gives spurrious warnings about ABI incompatibility for
-# which there is no solution. Hide the warning instead.
-LOCAL_CFLAGS += -Wno-psabi
 
 LOCAL_SRC_FILES := $(CERES_SRC_PATH)/array_utils.cc \
                    $(CERES_SRC_PATH)/blas.cc \
@@ -134,6 +126,8 @@ LOCAL_SRC_FILES := $(CERES_SRC_PATH)/array_utils.cc \
                    $(CERES_SRC_PATH)/dense_sparse_matrix.cc \
                    $(CERES_SRC_PATH)/detect_structure.cc \
                    $(CERES_SRC_PATH)/dogleg_strategy.cc \
+                   $(CERES_SRC_PATH)/dynamic_compressed_row_jacobian_writer.cc \
+                   $(CERES_SRC_PATH)/dynamic_compressed_row_sparse_matrix.cc \
                    $(CERES_SRC_PATH)/evaluator.cc \
                    $(CERES_SRC_PATH)/file.cc \
                    $(CERES_SRC_PATH)/gradient_checking_cost_function.cc \
@@ -190,7 +184,9 @@ LOCAL_SRC_FILES := $(CERES_SRC_PATH)/array_utils.cc \
                    $(CERES_SRC_PATH)/generated/schur_eliminator_2_3_d.cc \
                    $(CERES_SRC_PATH)/generated/schur_eliminator_2_4_3.cc \
                    $(CERES_SRC_PATH)/generated/schur_eliminator_2_4_4.cc \
+		   $(CERES_SRC_PATH)/generated/schur_eliminator_2_4_9.cc \
                    $(CERES_SRC_PATH)/generated/schur_eliminator_2_4_d.cc \
+                   $(CERES_SRC_PATH)/generated/schur_eliminator_2_d_d.cc \
                    $(CERES_SRC_PATH)/generated/schur_eliminator_4_4_2.cc \
                    $(CERES_SRC_PATH)/generated/schur_eliminator_4_4_3.cc \
                    $(CERES_SRC_PATH)/generated/schur_eliminator_4_4_4.cc \
@@ -206,7 +202,9 @@ LOCAL_SRC_FILES := $(CERES_SRC_PATH)/array_utils.cc \
                    $(CERES_SRC_PATH)/generated/partitioned_matrix_view_2_3_d.cc \
                    $(CERES_SRC_PATH)/generated/partitioned_matrix_view_2_4_3.cc \
                    $(CERES_SRC_PATH)/generated/partitioned_matrix_view_2_4_4.cc \
+                   $(CERES_SRC_PATH)/generated/partitioned_matrix_view_2_4_9.cc \
                    $(CERES_SRC_PATH)/generated/partitioned_matrix_view_2_4_d.cc \
+                   $(CERES_SRC_PATH)/generated/partitioned_matrix_view_2_d_d.cc \
                    $(CERES_SRC_PATH)/generated/partitioned_matrix_view_4_4_2.cc \
                    $(CERES_SRC_PATH)/generated/partitioned_matrix_view_4_4_3.cc \
                    $(CERES_SRC_PATH)/generated/partitioned_matrix_view_4_4_4.cc \
@@ -218,11 +216,3 @@ endif
 
 LOCAL_MODULE := ceres
 include $(BUILD_STATIC_LIBRARY)
-
-# This is a fake library; see the file header comments.
-include $(CLEAR_VARS)
-LOCAL_C_INCLUDES := $(CERES_INCLUDE_PATHS)
-LOCAL_C_INCLUDES += $(EIGEN_PATH)
-LOCAL_MODULE := forces_static_ceres_build_do_not_use
-LOCAL_STATIC_LIBRARIES := ceres
-include $(BUILD_SHARED_LIBRARY)

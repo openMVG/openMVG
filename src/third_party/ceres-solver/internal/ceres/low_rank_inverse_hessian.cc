@@ -28,12 +28,49 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
+#include <list>
+
 #include "ceres/internal/eigen.h"
 #include "ceres/low_rank_inverse_hessian.h"
 #include "glog/logging.h"
 
 namespace ceres {
 namespace internal {
+
+// The (L)BFGS algorithm explicitly requires that the secant equation:
+//
+//   B_{k+1} * s_k = y_k
+//
+// Is satisfied at each iteration, where B_{k+1} is the approximated
+// Hessian at the k+1-th iteration, s_k = (x_{k+1} - x_{k}) and
+// y_k = (grad_{k+1} - grad_{k}). As the approximated Hessian must be
+// positive definite, this is equivalent to the condition:
+//
+//   s_k^T * y_k > 0     [s_k^T * B_{k+1} * s_k = s_k^T * y_k > 0]
+//
+// This condition would always be satisfied if the function was strictly
+// convex, alternatively, it is always satisfied provided that a Wolfe line
+// search is used (even if the function is not strictly convex).  See [1]
+// (p138) for a proof.
+//
+// Although Ceres will always use a Wolfe line search when using (L)BFGS,
+// practical implementation considerations mean that the line search
+// may return a point that satisfies only the Armijo condition, and thus
+// could violate the Secant equation.  As such, we will only use a step
+// to update the Hessian approximation if:
+//
+//   s_k^T * y_k > tolerance
+//
+// It is important that tolerance is very small (and >=0), as otherwise we
+// might skip the update too often and fail to capture important curvature
+// information in the Hessian.  For example going from 1e-10 -> 1e-14 improves
+// the NIST benchmark score from 43/54 to 53/54.
+//
+// [1] Nocedal J., Wright S., Numerical Optimization, 2nd Ed. Springer, 1999.
+//
+// TODO(alexs.mac): Consider using Damped BFGS update instead of
+// skipping update.
+const double kLBFGSSecantConditionHessianUpdateTolerance = 1e-14;
 
 LowRankInverseHessian::LowRankInverseHessian(
     int num_parameters,
@@ -42,7 +79,6 @@ LowRankInverseHessian::LowRankInverseHessian(
     : num_parameters_(num_parameters),
       max_num_corrections_(max_num_corrections),
       use_approximate_eigenvalue_scaling_(use_approximate_eigenvalue_scaling),
-      num_corrections_(0),
       approximate_eigenvalue_scale_(1.0),
       delta_x_history_(num_parameters, max_num_corrections),
       delta_gradient_history_(num_parameters, max_num_corrections),
@@ -52,35 +88,29 @@ LowRankInverseHessian::LowRankInverseHessian(
 bool LowRankInverseHessian::Update(const Vector& delta_x,
                                    const Vector& delta_gradient) {
   const double delta_x_dot_delta_gradient = delta_x.dot(delta_gradient);
-  if (delta_x_dot_delta_gradient <= 1e-10) {
-    VLOG(2) << "Skipping LBFGS Update, delta_x_dot_delta_gradient too small: "
-            << delta_x_dot_delta_gradient;
+  if (delta_x_dot_delta_gradient <=
+      kLBFGSSecantConditionHessianUpdateTolerance) {
+    VLOG(2) << "Skipping L-BFGS Update, delta_x_dot_delta_gradient too "
+            << "small: " << delta_x_dot_delta_gradient << ", tolerance: "
+            << kLBFGSSecantConditionHessianUpdateTolerance
+            << " (Secant condition).";
     return false;
   }
 
-  if (num_corrections_ == max_num_corrections_) {
-    // TODO(sameeragarwal): This can be done more efficiently using
-    // a circular buffer/indexing scheme, but for simplicity we will
-    // do the expensive copy for now.
-    delta_x_history_.block(0, 0, num_parameters_, max_num_corrections_ - 1) =
-        delta_x_history_
-        .block(0, 1, num_parameters_, max_num_corrections_ - 1);
 
-    delta_gradient_history_
-        .block(0, 0, num_parameters_, max_num_corrections_ - 1) =
-        delta_gradient_history_
-        .block(0, 1, num_parameters_, max_num_corrections_ - 1);
-
-    delta_x_dot_delta_gradient_.head(num_corrections_ - 1) =
-        delta_x_dot_delta_gradient_.tail(num_corrections_ - 1);
-  } else {
-    ++num_corrections_;
+  int next = indices_.size();
+  // Once the size of the list reaches max_num_corrections_, simulate
+  // a circular buffer by removing the first element of the list and
+  // making it the next position where the LBFGS history is stored.
+  if (next == max_num_corrections_) {
+    next = indices_.front();
+    indices_.pop_front();
   }
 
-  delta_x_history_.col(num_corrections_ - 1) = delta_x;
-  delta_gradient_history_.col(num_corrections_ - 1) = delta_gradient;
-  delta_x_dot_delta_gradient_(num_corrections_ - 1) =
-      delta_x_dot_delta_gradient;
+  indices_.push_back(next);
+  delta_x_history_.col(next) = delta_x;
+  delta_gradient_history_.col(next) = delta_gradient;
+  delta_x_dot_delta_gradient_(next) = delta_x_dot_delta_gradient;
   approximate_eigenvalue_scale_ =
       delta_x_dot_delta_gradient / delta_gradient.squaredNorm();
   return true;
@@ -93,12 +123,16 @@ void LowRankInverseHessian::RightMultiply(const double* x_ptr,
 
   search_direction = gradient;
 
-  Vector alpha(num_corrections_);
+  const int num_corrections = indices_.size();
+  Vector alpha(num_corrections);
 
-  for (int i = num_corrections_ - 1; i >= 0; --i) {
-    alpha(i) = delta_x_history_.col(i).dot(search_direction) /
-        delta_x_dot_delta_gradient_(i);
-    search_direction -= alpha(i) * delta_gradient_history_.col(i);
+  for (std::list<int>::const_reverse_iterator it = indices_.rbegin();
+       it != indices_.rend();
+       ++it) {
+    const double alpha_i = delta_x_history_.col(*it).dot(search_direction) /
+        delta_x_dot_delta_gradient_(*it);
+    search_direction -= alpha_i * delta_gradient_history_.col(*it);
+    alpha(*it) = alpha_i;
   }
 
   if (use_approximate_eigenvalue_scaling_) {
@@ -133,12 +167,18 @@ void LowRankInverseHessian::RightMultiply(const double* x_ptr,
     //     20(5), 863-874, 1974.
     // [2] Nocedal J., Wright S., Numerical Optimization, Springer, 1999.
     search_direction *= approximate_eigenvalue_scale_;
+
+    VLOG(4) << "Applying approximate_eigenvalue_scale: "
+            << approximate_eigenvalue_scale_ << " to initial inverse Hessian "
+            << "approximation.";
   }
 
-  for (int i = 0; i < num_corrections_; ++i) {
-    const double beta = delta_gradient_history_.col(i).dot(search_direction) /
-        delta_x_dot_delta_gradient_(i);
-    search_direction += delta_x_history_.col(i) * (alpha(i) - beta);
+  for (std::list<int>::const_iterator it = indices_.begin();
+       it != indices_.end();
+       ++it) {
+    const double beta = delta_gradient_history_.col(*it).dot(search_direction) /
+        delta_x_dot_delta_gradient_(*it);
+    search_direction += delta_x_history_.col(*it) * (alpha(*it) - beta);
   }
 }
 

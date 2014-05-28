@@ -75,14 +75,15 @@
 #ifndef CERES_PUBLIC_LOSS_FUNCTION_H_
 #define CERES_PUBLIC_LOSS_FUNCTION_H_
 
+#include "glog/logging.h"
 #include "ceres/internal/macros.h"
 #include "ceres/internal/scoped_ptr.h"
 #include "ceres/types.h"
-#include "glog/logging.h"
+#include "ceres/internal/disable_warnings.h"
 
 namespace ceres {
 
-class LossFunction {
+class CERES_EXPORT LossFunction {
  public:
   virtual ~LossFunction() {}
 
@@ -128,7 +129,7 @@ class LossFunction {
 // It is not normally necessary to use this, as passing NULL for the
 // loss function when building the problem accomplishes the same
 // thing.
-class TrivialLoss : public LossFunction {
+class CERES_EXPORT TrivialLoss : public LossFunction {
  public:
   virtual void Evaluate(double, double*) const;
 };
@@ -171,7 +172,7 @@ class TrivialLoss : public LossFunction {
 //
 // The scaling parameter 'a' corresponds to 'delta' on this page:
 //   http://en.wikipedia.org/wiki/Huber_Loss_Function
-class HuberLoss : public LossFunction {
+class CERES_EXPORT HuberLoss : public LossFunction {
  public:
   explicit HuberLoss(double a) : a_(a), b_(a * a) { }
   virtual void Evaluate(double, double*) const;
@@ -187,7 +188,7 @@ class HuberLoss : public LossFunction {
 //   rho(s) = 2 (sqrt(1 + s) - 1).
 //
 // At s = 0: rho = [0, 1, -1/2].
-class SoftLOneLoss : public LossFunction {
+class CERES_EXPORT SoftLOneLoss : public LossFunction {
  public:
   explicit SoftLOneLoss(double a) : b_(a * a), c_(1 / b_) { }
   virtual void Evaluate(double, double*) const;
@@ -204,7 +205,7 @@ class SoftLOneLoss : public LossFunction {
 //   rho(s) = log(1 + s).
 //
 // At s = 0: rho = [0, 1, -1].
-class CauchyLoss : public LossFunction {
+class CERES_EXPORT CauchyLoss : public LossFunction {
  public:
   explicit CauchyLoss(double a) : b_(a * a), c_(1 / b_) { }
   virtual void Evaluate(double, double*) const;
@@ -225,7 +226,7 @@ class CauchyLoss : public LossFunction {
 //   rho(s) = a atan(s / a).
 //
 // At s = 0: rho = [0, 1, 0].
-class ArctanLoss : public LossFunction {
+class CERES_EXPORT ArctanLoss : public LossFunction {
  public:
   explicit ArctanLoss(double a) : a_(a), b_(1 / (a * a)) { }
   virtual void Evaluate(double, double*) const;
@@ -264,7 +265,7 @@ class ArctanLoss : public LossFunction {
 // concentrated in the range a - b to a + b.
 //
 // At s = 0: rho = [0, ~0, ~0].
-class TolerantLoss : public LossFunction {
+class CERES_EXPORT TolerantLoss : public LossFunction {
  public:
   explicit TolerantLoss(double a, double b);
   virtual void Evaluate(double, double*) const;
@@ -305,7 +306,7 @@ class ComposedLoss : public LossFunction {
 // function, rho = NULL is a valid input and will result in the input
 // being scaled by a. This provides a simple way of implementing a
 // scaled ResidualBlock.
-class ScaledLoss : public LossFunction {
+class CERES_EXPORT ScaledLoss : public LossFunction {
  public:
   // Constructs a ScaledLoss wrapping another loss function. Takes
   // ownership of the wrapped loss function or not depending on the
@@ -362,7 +363,7 @@ class ScaledLoss : public LossFunction {
 //
 //  Solve(options, &problem, &summary)
 //
-class LossFunctionWrapper : public LossFunction {
+class CERES_EXPORT LossFunctionWrapper : public LossFunction {
  public:
   LossFunctionWrapper(LossFunction* rho, Ownership ownership)
       : rho_(rho), ownership_(ownership) {
@@ -394,5 +395,7 @@ class LossFunctionWrapper : public LossFunction {
 };
 
 }  // namespace ceres
+
+#include "ceres/internal/disable_warnings.h"
 
 #endif  // CERES_PUBLIC_LOSS_FUNCTION_H_

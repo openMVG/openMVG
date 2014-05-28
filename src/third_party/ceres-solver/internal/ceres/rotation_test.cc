@@ -576,7 +576,8 @@ TEST(Rotation, AngleAxisToRotationMatrixAndBackNearZero) {
     RotationMatrixToAngleAxis(matrix, round_trip);
 
     for (int i = 0; i < 3; ++i) {
-      EXPECT_NEAR(round_trip[i], axis_angle[i], std::numeric_limits<double>::epsilon());
+      EXPECT_NEAR(round_trip[i], axis_angle[i],
+                  std::numeric_limits<double>::epsilon());
     }
   }
 }

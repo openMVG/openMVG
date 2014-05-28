@@ -26,7 +26,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 #
-# Author: keir@google.com (Keir Mierle)
+# Authors: keir@google.com (Keir Mierle)
+#          alexs.mac@gmail.com (Alex Stewart)
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.0)
 CMAKE_POLICY(VERSION 2.8)
@@ -37,34 +38,11 @@ ENDIF (COMMAND cmake_policy)
 
 PROJECT(CERES C CXX)
 
-# Set up the git hook to make Gerrit Change-Id: lines in commit messages.
-SET (LOCAL_GIT_DIRECTORY)
-IF (EXISTS ${CMAKE_SOURCE_DIR}/.git)
-  # .git directory can be found on Unix based system, or on Windows with
-  # Git Bash (shipped with msysgit)
-  SET (LOCAL_GIT_DIRECTORY ${CMAKE_SOURCE_DIR}/.git)
-ELSE (EXISTS ${CMAKE_SOURCE_DIR}/.git)
-  # TODO(keir) Add proper Windows support
-ENDIF (EXISTS ${CMAKE_SOURCE_DIR}/.git)
-
-IF (EXISTS ${LOCAL_GIT_DIRECTORY})
-  IF (NOT EXISTS ${LOCAL_GIT_DIRECTORY}/hooks/commit-msg)
-    # Download the hook only if it is not already present
-    FILE(DOWNLOAD https://ceres-solver-review.googlesource.com/tools/hooks/commit-msg
-         ${CMAKE_BINARY_DIR}/commit-msg)
-
-    # Make the downloaded file executable, since it is not by default.
-    FILE(COPY ${CMAKE_BINARY_DIR}/commit-msg
-         DESTINATION ${LOCAL_GIT_DIRECTORY}/hooks/
-         FILE_PERMISSIONS
-           OWNER_READ OWNER_WRITE OWNER_EXECUTE
-           GROUP_READ GROUP_WRITE GROUP_EXECUTE
-           WORLD_READ WORLD_EXECUTE)
-  ENDIF (NOT EXISTS ${LOCAL_GIT_DIRECTORY}/hooks/commit-msg)
-ENDIF (EXISTS ${LOCAL_GIT_DIRECTORY})
-
-# Make CMake aware of the cmake folder for local FindXXX scripts.
-SET (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+# Make CMake aware of the cmake folder for local FindXXX scripts,
+# append rather than set in case the user has passed their own
+# additional paths via -D.
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+INCLUDE(UpdateCacheVariable)
 
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -81,11 +59,11 @@ SET(CMAKE_DEBUG_POSTFIX "-debug")
 # For versions without ABI changes, bump the smallest number in CERES_VERSION,
 # but leave the CERES_ABI_VERSION unchanged.
 SET(CERES_VERSION_MAJOR 1)
-SET(CERES_VERSION_MINOR 8)
+SET(CERES_VERSION_MINOR 9)
 SET(CERES_VERSION_PATCH 0)
 SET(CERES_VERSION
     ${CERES_VERSION_MAJOR}.${CERES_VERSION_MINOR}.${CERES_VERSION_PATCH})
-SET(CERES_ABI_VERSION 1.8.0)
+SET(CERES_ABI_VERSION 1.9.0)
 
 ENABLE_TESTING()
 
@@ -103,13 +81,8 @@ OPTION(CUSTOM_BLAS
        ON)
 # Multithreading using OpenMP
 OPTION(OPENMP "Enable threaded solving in Ceres (requires OpenMP)" ON)
-# TODO(sameeragarwal): Replace this with a positive option instead?
 
-# Line search minimizer is useful for large scale problems or when
-# sparse linear algebra libraries are not available. If compile time,
-# binary size or compiler performance is an issue, consider disabling
-# this.
-OPTION(LINE_SEARCH_MINIMIZER "Enable the line search minimizer." ON)
+
 OPTION(BUILD_TESTING "Enable tests" OFF)
 OPTION(BUILD_DOCUMENTATION "Build User's Guide (html)" OFF)
 OPTION(BUILD_EXAMPLES "Build examples" OFF)
@@ -117,7 +90,61 @@ OPTION(BUILD_SHARED_LIBS "Build Ceres as a shared library." OFF)
 IF (MSVC)
   OPTION(MSVC_USE_STATIC_CRT
     "MS Visual Studio: Use static C-Run Time Library in place of shared." OFF)
+
+  IF (BUILD_TESTING AND BUILD_SHARED_LIBS)
+    MESSAGE(
+      "-- Disabling tests. The flags BUILD_TESTING and BUILD_SHARED_LIBS"
+      " are incompatible with MSVC."
+      )
+    UPDATE_CACHE_VARIABLE(BUILD_TESTING OFF)
+  ENDIF (BUILD_TESTING AND BUILD_SHARED_LIBS)
 ENDIF (MSVC)
+
+# Use ios-cmake to build a static library for iOS
+#
+# We need to add isysroot to force cmake to find the toolchains from the iOS SDK
+# instead of using the standard ones. And add flag mios-simulator-version so clang
+# knows we are building for ios simulator but not mac.
+#
+# You can build for OS (armv7, armv7s, arm64), SIMULATOR (i386) or SIMULATOR64 (x86_64)
+# separately and use lipo to merge them into one static library.
+#
+# There are some features/algorithms are not available in iOS version and the
+# minimum supported iOS version is 6.0 now.
+#
+# Use cmake ../ceres-solver -DCMAKE_TOOLCHAIN_FILE=../ceres-solver/cmake/iOS.cmake \
+# -DIOS_PLATFORM=PLATFORM -DEIGEN_INCLUDE_DIR=/path/to/eigen/header
+# to config the cmake. The PLATFORM can be one of OS, SIMULATOR and SIMULATOR64.
+# Check the documentation in iOS.cmake to find more options.
+#
+# After building, you will get libceres.a and libminiglog.a
+# You need to add these two libraries into your xcode project.
+#
+# If you use the lapack and blas, then you also need to add Accelerate.framework
+# to your xcode project's linking dependency.
+IF (IOS)
+  MESSAGE(STATUS "Building Ceres for iOS platform: ${IOS_PLATFORM}")
+
+  UPDATE_CACHE_VARIABLE(MINIGLOG ON)
+  MESSAGE(STATUS "Building for iOS, forcing use of miniglog instead of glog.")
+
+  UPDATE_CACHE_VARIABLE(SUITESPARSE OFF)
+  UPDATE_CACHE_VARIABLE(CXSPARSE ON)
+  UPDATE_CACHE_VARIABLE(GFLAGS OFF)
+  UPDATE_CACHE_VARIABLE(OPENMP OFF)
+
+  MESSAGE(STATUS "Building for iOS: SuiteSparse, CXSparse, gflags and OpenMP are not available.")
+
+  UPDATE_CACHE_VARIABLE(BUILD_EXAMPLES OFF)
+  MESSAGE(STATUS "Building for iOS, will not build examples.")
+
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-abi-version=2 -fobjc-arc -isysroot ${CMAKE_OSX_SYSROOT}")
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fobjc-abi-version=2 -fobjc-arc -isysroot ${CMAKE_OSX_SYSROOT}")
+
+  IF (${IOS_PLATFORM} STREQUAL "SIMULATOR" OR ${IOS_PLATFORM} STREQUAL "SIMULATOR64")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mios-simulator-version-min=6.0")
+  ENDIF()
+ENDIF (IOS)
 
 # Prior to October 2013, Ceres used some non-CMake standardised variables to
 # hold user-specified (as opposed to FindPackage found) include directory and
@@ -174,15 +201,17 @@ MACRO(HANDLE_LEGACY_LIBRARY_DEPENDENCY_HINT
   ENDIF (DEFINED ${LEGACY_VAR})
 ENDMACRO(HANDLE_LEGACY_LIBRARY_DEPENDENCY_HINT)
 
+UNSET(CERES_COMPILE_OPTIONS)
+
 # Eigen.
 #HANDLE_LEGACY_INCLUDE_DEPENDENCY_HINT(EIGEN_INCLUDE EIGEN_INCLUDE_DIR_HINTS)
 LIST(APPEND CMAKE_INCLUDE_PATH ../eigen) # OpenMVG
 SET(EIGEN_INCLUDE_DIRS ../eigen) # OpenMVG
 FIND_PATH(EIGEN_INCLUDE NAMES Eigen/Core) # OpenMVG
-#FIND_PACKAGE(Eigen REQUIRED)
-#IF (EIGEN_FOUND)
-#  MESSAGE("-- Found Eigen version ${EIGEN_VERSION}: ${EIGEN_INCLUDE_DIRS}")
-#ENDIF (EIGEN_FOUND)
+FIND_PACKAGE(Eigen REQUIRED)
+IF (EIGEN_FOUND)
+  MESSAGE("-- Found Eigen version ${EIGEN_VERSION}: ${EIGEN_INCLUDE_DIRS}")
+ENDIF (EIGEN_FOUND)
 
 # LAPACK (& BLAS).
 IF (LAPACK)
@@ -201,15 +230,12 @@ IF (LAPACK)
   ENDIF (BLAS_FOUND)
 
   IF (NOT (LAPACK_FOUND AND BLAS_FOUND))
-    # Retain the help string associated with the LAPACK option
-    # when updating it to disable use of LAPACK.
-    GET_PROPERTY(HELP_STRING CACHE LAPACK PROPERTY HELPSTRING)
-    SET(LAPACK OFF CACHE BOOL "${HELP_STRING}" FORCE)
-    ADD_DEFINITIONS(-DCERES_NO_LAPACK)
+    UPDATE_CACHE_VARIABLE(LAPACK OFF)
+    LIST(APPEND CERES_COMPILE_OPTIONS CERES_NO_LAPACK)
   ENDIF (NOT (LAPACK_FOUND AND BLAS_FOUND))
 ELSE (LAPACK)
   MESSAGE("-- Building without LAPACK.")
-  ADD_DEFINITIONS(-DCERES_NO_LAPACK)
+  LIST(APPEND CERES_COMPILE_OPTIONS CERES_NO_LAPACK)
 ENDIF (LAPACK)
 
 # SuiteSparse.
@@ -219,10 +245,7 @@ IF (SUITESPARSE AND NOT LAPACK)
   # via SuiteSparse to LAPACK.
   MESSAGE("-- Disabling SuiteSparse as use of LAPACK has been disabled, "
     "turn ON LAPACK to enable (optional) building with SuiteSparse.")
-  # Retain the help string associated with the SUITESPARSE option
-  # when updating it to disable use of SuiteSparse.
-  GET_PROPERTY(HELP_STRING CACHE SUITESPARSE PROPERTY HELPSTRING)
-  SET(SUITESPARSE OFF CACHE BOOL "${HELP_STRING}" FORCE)
+  UPDATE_CACHE_VARIABLE(SUITESPARSE OFF)
 ENDIF (SUITESPARSE AND NOT LAPACK)
 IF (SUITESPARSE)
   # By default, if SuiteSparse and all dependencies are found, Ceres is
@@ -256,15 +279,12 @@ IF (SUITESPARSE)
     # Disable use of SuiteSparse if it cannot be found and continue.
     MESSAGE("-- Did not find all SuiteSparse dependencies, disabling "
       "SuiteSparse support.")
-    # Retain the help string associated with the SUITESPARSE option
-    # when updating it to disable use of SuiteSparse.
-    GET_PROPERTY(HELP_STRING CACHE SUITESPARSE PROPERTY HELPSTRING)
-    SET(SUITESPARSE OFF CACHE BOOL "${HELP_STRING}" FORCE)
-    ADD_DEFINITIONS(-DCERES_NO_SUITESPARSE)
+    UPDATE_CACHE_VARIABLE(SUITESPARSE OFF)
+    LIST(APPEND CERES_COMPILE_OPTIONS CERES_NO_SUITESPARSE)
   ENDIF (SUITESPARSE_FOUND)
 ELSE (SUITESPARSE)
   MESSAGE("-- Building without SuiteSparse.")
-  ADD_DEFINITIONS(-DCERES_NO_SUITESPARSE)
+  LIST(APPEND CERES_COMPILE_OPTIONS CERES_NO_SUITESPARSE)
 ENDIF (SUITESPARSE)
 
 # CXSparse.
@@ -272,10 +292,9 @@ IF (CXSPARSE)
   SET(CXSPARSE_INCLUDE_DIRS ../cxsparse/Include) # OpenMVG
   SET(CXSPARSE_FOUND ON)
   # openMVG: cxsparse already exists
-  SET(CXSPARSE_LIBRARIES cxsparse)  
+  SET(CXSPARSE_LIBRARIES cxsparse)
   # Don't search with REQUIRED as we can continue without CXSparse.
-
-  #FIND_PACKAGE(CXSparse)
+#  FIND_PACKAGE(CXSparse)
 #  IF (CXSPARSE_FOUND)
 #    # By default, if CXSparse and all dependencies are found, Ceres is
 #    # built with CXSparse support.
@@ -284,15 +303,12 @@ IF (CXSPARSE)
 #  ELSE (CXSPARSE_FOUND)
 #    # Disable use of CXSparse if it cannot be found and continue.
 #    MESSAGE("-- Did not find CXSparse, Building without CXSparse.")
-#    # Retain the help string associated with the CXSPARSE option
-#    # when updating it to disable use of CXSparse.
-#    GET_PROPERTY(HELP_STRING CACHE CXSPARSE PROPERTY HELPSTRING)
-#    SET(CXSPARSE OFF CACHE BOOL "${HELP_STRING}" FORCE)
-#    ADD_DEFINITIONS(-DCERES_NO_CXSPARSE)
+#    UPDATE_CACHE_VARIABLE(CXSPARSE OFF)
+#    LIST(APPEND CERES_COMPILE_OPTIONS CERES_NO_CXSPARSE)
 #  ENDIF (CXSPARSE_FOUND)
 ELSE (CXSPARSE)
   MESSAGE("-- Building without CXSparse.")
-  ADD_DEFINITIONS(-DCERES_NO_CXSPARSE)
+  LIST(APPEND CERES_COMPILE_OPTIONS CERES_NO_CXSPARSE)
   # Mark as advanced (remove from default GUI view) the CXSparse search
   # variables in case user enabled CXSPARSE, FindCXSparse did not find it, so
   # made search variables visible in GUI for user to set, but then user disables
@@ -313,15 +329,10 @@ IF (GFLAGS)
   ELSE (GFLAGS_FOUND)
     MESSAGE("-- Did not find Google Flags (gflags), Building without gflags "
       "- no tests or tools will be built!")
-    # Retain the help string associated with the GFLAGS option
-    # when updating it to disable use of gflags.
-    GET_PROPERTY(HELP_STRING CACHE GFLAGS PROPERTY HELPSTRING)
-    SET(GFLAGS OFF CACHE BOOL "${HELP_STRING}" FORCE)
-    ADD_DEFINITIONS(-DCERES_NO_GFLAGS)
+    UPDATE_CACHE_VARIABLE(GFLAGS OFF)
   ENDIF (GFLAGS_FOUND)
 ELSE (GFLAGS)
   MESSAGE("-- Google Flags disabled; no tests or tools will be built!")
-  ADD_DEFINITIONS(-DCERES_NO_GFLAGS)
   # Mark as advanced (remove from default GUI view) the gflags search
   # variables in case user enabled GFLAGS, FindGflags did not find it, so
   # made search variables visible in GUI for user to set, but then user disables
@@ -360,75 +371,106 @@ ELSE (MINIGLOG)
 ENDIF (MINIGLOG)
 
 IF (NOT SCHUR_SPECIALIZATIONS)
-  ADD_DEFINITIONS(-DCERES_RESTRICT_SCHUR_SPECIALIZATION)
+  LIST(APPEND CERES_COMPILE_OPTIONS CERES_RESTRICT_SCHUR_SPECIALIZATION)
   MESSAGE("-- Disabling Schur specializations (faster compiles)")
 ENDIF (NOT SCHUR_SPECIALIZATIONS)
 
-IF (NOT LINE_SEARCH_MINIMIZER)
-  ADD_DEFINITIONS(-DCERES_NO_LINE_SEARCH_MINIMIZER)
-  MESSAGE("-- Disabling line search minimizer")
-ENDIF (NOT LINE_SEARCH_MINIMIZER)
-
 IF (NOT CUSTOM_BLAS)
-  ADD_DEFINITIONS(-DCERES_NO_CUSTOM_BLAS)
+  LIST(APPEND CERES_COMPILE_OPTIONS CERES_NO_CUSTOM_BLAS)
   MESSAGE("-- Disabling custom blas")
 ENDIF (NOT CUSTOM_BLAS)
 
 IF (OPENMP)
   # Clang does not (yet) support OpenMP.
   IF (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    # Retain the help string associated with the OPENMP option
-    # when updating it to disable use of OPENMP.
-    GET_PROPERTY(HELP_STRING CACHE OPENMP PROPERTY HELPSTRING)
-    SET(OPENMP OFF CACHE BOOL "${HELP_STRING}" FORCE)
+    UPDATE_CACHE_VARIABLE(OPENMP OFF)
     MESSAGE("-- Compiler is Clang, disabling OpenMP.")
-    ADD_DEFINITIONS(-DCERES_NO_THREADS)
+    LIST(APPEND CERES_COMPILE_OPTIONS CERES_NO_THREADS)
   ELSE (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     # Find quietly s/t as we can continue without OpenMP if it is not found.
     FIND_PACKAGE(OpenMP QUIET)
     IF (OPENMP_FOUND)
       MESSAGE("-- Building with OpenMP.")
-      ADD_DEFINITIONS(-DCERES_USE_OPENMP)
+      LIST(APPEND CERES_COMPILE_OPTIONS CERES_USE_OPENMP)
       SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
       IF (UNIX)
         # At least on Linux, we need pthreads to be enabled for mutex to
         # compile.  This may not work on Windows or Android.
         FIND_PACKAGE(Threads REQUIRED)
-        SET(STATIC_LIBRARY_FLAGS
-          "${STATIC_LIBRARY_FLAGS} ${CMAKE_THREAD_LIBS_INIT}")
-        SET(CMAKE_SHARED_LINKER_FLAGS
-          "${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_THREAD_LIBS_INIT}")
-        ADD_DEFINITIONS(-DCERES_HAVE_PTHREAD)
-        ADD_DEFINITIONS(-DCERES_HAVE_RWLOCK)
+        LIST(APPEND CERES_COMPILE_OPTIONS CERES_HAVE_PTHREAD)
+        LIST(APPEND CERES_COMPILE_OPTIONS CERES_HAVE_RWLOCK)
       ENDIF (UNIX)
     ELSE (OPENMP_FOUND)
       MESSAGE("-- Failed to find OpenMP, disabling.")
-      # Retain the help string associated with the OPENMP option
-      # when updating it to disable use of OPENMP.
-      GET_PROPERTY(HELP_STRING CACHE OPENMP PROPERTY HELPSTRING)
-      SET(OPENMP OFF CACHE BOOL "${HELP_STRING}" FORCE)
-      ADD_DEFINITIONS(-DCERES_NO_THREADS)
+      UPDATE_CACHE_VARIABLE(OPENMP OFF)
+      LIST(APPEND CERES_COMPILE_OPTIONS CERES_NO_THREADS)
     ENDIF (OPENMP_FOUND)
   ENDIF (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 ELSE (OPENMP)
   MESSAGE("-- Building without OpenMP (disabling multithreading).")
-  ADD_DEFINITIONS(-DCERES_NO_THREADS)
+  LIST(APPEND CERES_COMPILE_OPTIONS CERES_NO_THREADS)
 ENDIF (OPENMP)
 
-Include(CheckIncludeFileCXX)
-CHECK_INCLUDE_FILE_CXX(unordered_map UNORDERED_MAP_IN_STD_NAMESPACE)
-If (UNORDERED_MAP_IN_STD_NAMESPACE)
-  ADD_DEFINITIONS(-DCERES_STD_UNORDERED_MAP)
-ELSE (UNORDERED_MAP_IN_STD_NAMESPACE)
-  CHECK_INCLUDE_FILE_CXX("tr1/unordered_map" UNORDERED_MAP_IN_TR1_NAMESPACE)
-  IF (UNORDERED_MAP_IN_TR1_NAMESPACE)
-    ADD_DEFINITIONS(-DCERES_TR1_UNORDERED_MAP)
-  ELSE (UNORDERED_MAP_IN_TR1_NAMESPACE)
+INCLUDE(CheckIncludeFileCXX)
+CHECK_INCLUDE_FILE_CXX(unordered_map HAVE_STD_UNORDERED_MAP_HEADER)
+IF (HAVE_STD_UNORDERED_MAP_HEADER)
+  # Finding the unordered_map header doesn't mean that unordered_map
+  # is in std namespace.
+  #
+  # In particular, MSVC 2008 has unordered_map declared in std::tr1.
+  # In order to support this, we do an extra check to see which
+  # namespace should be used.
+  INCLUDE(CheckCXXSourceCompiles)
+  CHECK_CXX_SOURCE_COMPILES("#include <unordered_map>
+                             int main() {
+                               std::unordered_map<int, int> map;
+                               return 0;
+                             }"
+                            HAVE_UNORDERED_MAP_IN_STD_NAMESPACE)
+  IF (HAVE_UNORDERED_MAP_IN_STD_NAMESPACE)
+    LIST(APPEND CERES_COMPILE_OPTIONS CERES_STD_UNORDERED_MAP)
+    MESSAGE("-- Found unordered_map/set in std namespace.")
+  ELSE (HAVE_UNORDERED_MAP_IN_STD_NAMESPACE)
+    CHECK_CXX_SOURCE_COMPILES("#include <unordered_map>
+                               int main() {
+                                 std::tr1::unordered_map<int, int> map;
+                                 return 0;
+                               }"
+                              HAVE_UNORDERED_MAP_IN_TR1_NAMESPACE)
+    IF (HAVE_UNORDERED_MAP_IN_TR1_NAMESPACE)
+      LIST(APPEND CERES_COMPILE_OPTIONS CERES_STD_UNORDERED_MAP_IN_TR1_NAMESPACE)
+      MESSAGE("-- Found unordered_map/set in std::tr1 namespace.")
+    ELSE (HAVE_UNORDERED_MAP_IN_TR1_NAMESPACE)
+      MESSAGE("-- Found <unordered_map> but cannot find either std::unordered_map "
+              "or std::tr1::unordered_map.")
+      MESSAGE("-- Replacing unordered_map/set with map/set (warning: slower!)")
+      LIST(APPEND CERES_COMPILE_OPTIONS CERES_NO_UNORDERED_MAP)
+    ENDIF (HAVE_UNORDERED_MAP_IN_TR1_NAMESPACE)
+  ENDIF (HAVE_UNORDERED_MAP_IN_STD_NAMESPACE)
+ELSE (HAVE_STD_UNORDERED_MAP_HEADER)
+  CHECK_INCLUDE_FILE_CXX("tr1/unordered_map" HAVE_TR1_UNORDERED_MAP_HEADER)
+  IF (HAVE_TR1_UNORDERED_MAP_HEADER)
+    LIST(APPEND CERES_COMPILE_OPTIONS CERES_TR1_UNORDERED_MAP)
+    MESSAGE("-- Found tr1/unordered_map/set in std::tr1 namespace.")
+  ELSE (HAVE_TR1_UNORDERED_MAP_HEADE)
     MESSAGE("-- Unable to find <unordered_map> or <tr1/unordered_map>. ")
     MESSAGE("-- Replacing unordered_map/set with map/set (warning: slower!)")
-    ADD_DEFINITIONS(-DCERES_NO_UNORDERED_MAP)
-  ENDIF (UNORDERED_MAP_IN_TR1_NAMESPACE)
-ENDIF (UNORDERED_MAP_IN_STD_NAMESPACE)
+    LIST(APPEND CERES_COMPILE_OPTIONS CERES_NO_UNORDERED_MAP)
+  ENDIF (HAVE_TR1_UNORDERED_MAP_HEADER)
+ENDIF (HAVE_STD_UNORDERED_MAP_HEADER)
+
+INCLUDE(FindSharedPtr)
+FIND_SHARED_PTR()
+IF (SHARED_PTR_FOUND)
+  IF (SHARED_PTR_TR1_MEMORY_HEADER)
+    LIST(APPEND CERES_COMPILE_OPTIONS CERES_TR1_MEMORY_HEADER)
+  ENDIF (SHARED_PTR_TR1_MEMORY_HEADER)
+  IF (SHARED_PTR_TR1_NAMESPACE)
+    LIST(APPEND CERES_COMPILE_OPTIONS CERES_TR1_SHARED_PTR)
+  ENDIF (SHARED_PTR_TR1_NAMESPACE)
+ELSE (SHARED_PTR_FOUND)
+  MESSAGE(FATAL_ERROR "Unable to find shared_ptr.")
+ENDIF (SHARED_PTR_FOUND)
 
 INCLUDE_DIRECTORIES(
   include
@@ -451,6 +493,12 @@ ENDIF (GFLAGS)
 
 IF (BUILD_SHARED_LIBS)
   MESSAGE("-- Building Ceres as a shared library.")
+  # The CERES_BUILDING_SHARED_LIBRARY compile definition is NOT stored in
+  # CERES_COMPILE_OPTIONS as it must only be defined when Ceres is compiled
+  # not when it is used as it controls the CERES_EXPORT macro which provides
+  # dllimport/export support in MSVC.
+  ADD_DEFINITIONS(-DCERES_BUILDING_SHARED_LIBRARY)
+  LIST(APPEND CERES_COMPILE_OPTIONS CERES_USING_SHARED_LIBRARY)
 ELSE (BUILD_SHARED_LIBS)
   MESSAGE("-- Building Ceres as a static library.")
 ENDIF (BUILD_SHARED_LIBS)
@@ -500,16 +548,16 @@ IF (CMAKE_BUILD_TYPE STREQUAL "Release")
     ENDIF (CMAKE_SYSTEM_NAME MATCHES "Darwin")
   ENDIF (CMAKE_COMPILER_IS_GNUCXX)
   IF (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    # Use of -O4 requires use of gold linker & LLVM-gold plugin, which might
+    # Use of -flto requires use of gold linker & LLVM-gold plugin, which might
     # well not be present / in use and without which files will compile, but
     # not link ('file not recognized') so explicitly check for support
     INCLUDE(CheckCXXCompilerFlag)
-    CHECK_CXX_COMPILER_FLAG("-O4" HAVE_LTO_SUPPORT)
+    CHECK_CXX_COMPILER_FLAG("-flto" HAVE_LTO_SUPPORT)
     IF (HAVE_LTO_SUPPORT)
-      MESSAGE(STATUS "Enabling link-time optimization (-O4)")
-      SET(CERES_CXX_FLAGS "${CERES_CXX_FLAGS} -O4")
+      MESSAGE(STATUS "Enabling link-time optimization (-flto)")
+      SET(CERES_CXX_FLAGS "${CERES_CXX_FLAGS} -flto")
     ELSE ()
-      MESSAGE(STATUS "Compiler/linker does not support link-time optimization (-O4), disabling.")
+      MESSAGE(STATUS "Compiler/linker does not support link-time optimization (-flto), disabling.")
     ENDIF (HAVE_LTO_SUPPORT)
   ENDIF ()
 ENDIF (CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -612,6 +660,18 @@ IF (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     CLANG_VERSION VERSION_LESS 4.2)
 ENDIF (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 
+# Configure the Ceres config.h compile options header using the current
+# compile options and put the configured header into the Ceres build
+# directory.  Note that the ceres/internal subdir in <build>/config where
+# the configured config.h is placed is important, because Ceres will be
+# built against this configured header, it needs to have the same relative
+# include path as it would if it were in the source tree (or installed).
+LIST(REMOVE_DUPLICATES CERES_COMPILE_OPTIONS)
+INCLUDE(CreateCeresConfig)
+CREATE_CERES_CONFIG("${CERES_COMPILE_OPTIONS}"
+  ${CMAKE_CURRENT_BINARY_DIR}/config/ceres/internal)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/config)
+
 ADD_SUBDIRECTORY(internal/ceres)
 
 IF (BUILD_DOCUMENTATION)
@@ -628,4 +688,3 @@ IF (BUILD_EXAMPLES)
 ELSE (BUILD_EXAMPLES)
   MESSAGE("-- Do not build any example.")
 ENDIF (BUILD_EXAMPLES)
-

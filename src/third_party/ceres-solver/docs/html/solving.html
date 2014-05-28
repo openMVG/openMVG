@@ -1,66 +1,168 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Solving &mdash; Ceres Solver</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
     
 
-    <title>Solving &mdash; Ceres Solver</title>
+  
 
-<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
 
+  
+    <link rel="top" title="Ceres Solver" href="index.html"/>
+        <link rel="next" title="FAQS, Tips &amp; Tricks" href="faqs.html"/>
+        <link rel="prev" title="Modeling" href="modeling.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
 
     
-    <link rel="stylesheet" href="_static/rtd.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '1.8.0',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
-  MathJax.Hub.Config({
-    "HTML-CSS": {
-      availableFonts: ["TeX"]
-    }
-  });
-</script>
-    <script type="text/javascript" src="_static/searchtools.js"></script>
-    <link rel="top" title="Ceres Solver" href="index.html" />
-    <link rel="next" title="Further Reading" href="reading.html" />
-    <link rel="prev" title="Modeling" href="modeling.html" /> 
-  </head>
-  <body>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="reading.html" title="Further Reading"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="modeling.html" title="Modeling"
-             accesskey="P">previous</a> |</li>
-        <li><a href="index.html">Ceres Solver</a> &raquo;</li> 
-      </ul>
-    </div>  
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="index.html" class="fa fa-home"> Ceres Solver</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body">
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="building.html">Building &amp; Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="building.html#getting-the-source-code">Getting the source code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-linux">Building on Linux</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-mac-os-x">Building on Mac OS X</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-windows-with-visual-studio">Building on Windows with Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-android">Building on Android</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-ios">Building on iOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#customizing-the-build">Customizing the build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#using-ceres-with-cmake">Using Ceres with CMake</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#hello-world">Hello World!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#derivatives">Derivatives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#powell-s-function">Powell&#8217;s Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#curve-fitting">Curve Fitting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#robust-curve-fitting">Robust Curve Fitting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#bundle-adjustment">Bundle Adjustment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#other-examples">Other Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#costfunction"><tt class="docutils literal"><span class="pre">CostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#sizedcostfunction"><tt class="docutils literal"><span class="pre">SizedCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#autodiffcostfunction"><tt class="docutils literal"><span class="pre">AutoDiffCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#dynamicautodiffcostfunction"><tt class="docutils literal"><span class="pre">DynamicAutoDiffCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#numericdiffcostfunction"><tt class="docutils literal"><span class="pre">NumericDiffCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#dynamicnumericdiffcostfunction"><tt class="docutils literal"><span class="pre">DynamicNumericDiffCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#numericdifffunctor"><tt class="docutils literal"><span class="pre">NumericDiffFunctor</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#costfunctiontofunctor"><tt class="docutils literal"><span class="pre">CostFunctionToFunctor</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#conditionedcostfunction"><tt class="docutils literal"><span class="pre">ConditionedCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#normalprior"><tt class="docutils literal"><span class="pre">NormalPrior</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#lossfunction"><tt class="docutils literal"><span class="pre">LossFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#localparameterization"><tt class="docutils literal"><span class="pre">LocalParameterization</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#autodifflocalparameterization"><tt class="docutils literal"><span class="pre">AutoDiffLocalParameterization</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#problem"><tt class="docutils literal"><span class="pre">Problem</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#rotation-h"><tt class="docutils literal"><span class="pre">rotation.h</span></tt></a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Solving</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#trust-region-methods">Trust Region Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#line-search-methods">Line Search Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#linearsolver">LinearSolver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#covariance-estimation">Covariance Estimation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faqs.html">FAQS, Tips &amp; Tricks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="faqs.html#building">Building</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faqs.html#modeling">Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faqs.html#solving">Solving</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faqs.html#further-reading">Further Reading</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#setting-up-your-development-environment">Setting up your Development Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#submitting-a-change-to-ceres-solver">Submitting a change to Ceres Solver</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="version_history.html">Releases</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id1">1.9.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id2">1.8.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id5">1.7.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id9">1.6.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id12">1.5.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id16">1.4.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id20">1.3.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id23">1.2.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id25">1.2.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id27">1.2.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id30">1.2.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id33">1.1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id35">1.1.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id38">1.0.0</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="history.html#origin-of-the-name">Origin of the name</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Ceres Solver</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+          <div role="main">
             
   <div class="section" id="solving">
 <span id="chapter-solving"></span><h1>Solving<a class="headerlink" href="#solving" title="Permalink to this headline">¶</a></h1>
@@ -76,13 +178,17 @@ variables, and
 <span class="math">\(m\)</span>-dimensional function of <span class="math">\(x\)</span>.  We are interested in
 solving the following optimization problem <a class="footnote-reference" href="#f1" id="id1">[1]</a> .</p>
 <div class="math" id="equation-nonlinsq">
-<span class="eqno">(1)</span>\[\arg \min_x \frac{1}{2}\|F(x)\|^2\ .\]</div>
-<p>Here, the Jacobian <span class="math">\(J(x)\)</span> of <span class="math">\(F(x)\)</span> is an <span class="math">\(m\times
-n\)</span> matrix, where <span class="math">\(J_{ij}(x) = \partial_j f_i(x)\)</span> and the
-gradient vector <span class="math">\(g(x) = \nabla \frac{1}{2}\|F(x)\|^2 = J(x)^\top
-F(x)\)</span>. Since the efficient global minimization of <a href="#equation-nonlinsq">(1)</a> for
+<span class="eqno">(1)</span>\[\begin{split}\arg \min_x \frac{1}{2}\|F(x)\|^2\ . \\
+        L \le x \le U\end{split}\]</div>
+<p>Where, <span class="math">\(L\)</span> and <span class="math">\(U\)</span> are lower and upper bounds on the
+parameter vector <span class="math">\(x\)</span>.</p>
+<p>Since the efficient global minimization of <a href="#equation-nonlinsq">(1)</a> for
 general <span class="math">\(F(x)\)</span> is an intractable problem, we will have to settle
 for finding a local minimum.</p>
+<p>In the following, the Jacobian <span class="math">\(J(x)\)</span> of <span class="math">\(F(x)\)</span> is an
+<span class="math">\(m\times n\)</span> matrix, where <span class="math">\(J_{ij}(x) = \partial_j f_i(x)\)</span>
+and the gradient vector is <span class="math">\(g(x) = \nabla \frac{1}{2}\|F(x)\|^2
+= J(x)^\top F(x)\)</span>.</p>
 <p>The general strategy when solving non-linear optimization problems is
 to solve a sequence of approximations to the original problem
 <a class="reference internal" href="bibliography.html#nocedalwright" id="id2">[NocedalWright]</a>. At each iteration, the approximation is solved to
@@ -123,17 +229,27 @@ multiple algorithms in both categories.</p>
 <span id="section-trust-region-methods"></span><h2>Trust Region Methods<a class="headerlink" href="#trust-region-methods" title="Permalink to this headline">¶</a></h2>
 <p>The basic trust region algorithm looks something like this.</p>
 <blockquote>
-<div><ol class="arabic simple">
-<li>Given an initial point <span class="math">\(x\)</span> and a trust region radius <span class="math">\(\mu\)</span>.</li>
-<li><span class="math">\(\arg \min_{\Delta x} \frac{1}{2}\|J(x)\Delta
-x + F(x)\|^2\)</span> s.t. <span class="math">\(\|D(x)\Delta x\|^2 \le \mu\)</span></li>
-<li><span class="math">\(\rho = \frac{\displaystyle \|F(x + \Delta x)\|^2 -
+<div><ol class="arabic">
+<li><p class="first">Given an initial point <span class="math">\(x\)</span> and a trust region radius <span class="math">\(\mu\)</span>.</p>
+</li>
+<li><p class="first">Solve</p>
+<div class="math">
+\[\begin{split}\arg \min_{\Delta x}&amp; \frac{1}{2}\|J(x)\Delta x + F(x)\|^2 \\
+\text{such that} &amp;\|D(x)\Delta x\|^2 \le \mu\\
+&amp;L \le x + \Delta x \le U.\end{split}\]</div>
+</li>
+<li><p class="first"><span class="math">\(\rho = \frac{\displaystyle \|F(x + \Delta x)\|^2 -
 \|F(x)\|^2}{\displaystyle \|J(x)\Delta x + F(x)\|^2 -
-\|F(x)\|^2}\)</span></li>
-<li>if <span class="math">\(\rho &gt; \epsilon\)</span> then  <span class="math">\(x = x + \Delta x\)</span>.</li>
-<li>if <span class="math">\(\rho &gt; \eta_1\)</span> then <span class="math">\(\rho = 2  \rho\)</span></li>
-<li>else if <span class="math">\(\rho &lt; \eta_2\)</span> then <span class="math">\(\rho = 0.5 * \rho\)</span></li>
-<li>Goto 2.</li>
+\|F(x)\|^2}\)</span></p>
+</li>
+<li><p class="first">if <span class="math">\(\rho &gt; \epsilon\)</span> then  <span class="math">\(x = x + \Delta x\)</span>.</p>
+</li>
+<li><p class="first">if <span class="math">\(\rho &gt; \eta_1\)</span> then <span class="math">\(\rho = 2  \rho\)</span></p>
+</li>
+<li><p class="first">else if <span class="math">\(\rho &lt; \eta_2\)</span> then <span class="math">\(\rho = 0.5 * \rho\)</span></p>
+</li>
+<li><p class="first">Go to 2.</p>
+</li>
 </ol>
 </div></blockquote>
 <p>Here, <span class="math">\(\mu\)</span> is the trust region radius, <span class="math">\(D(x)\)</span> is some
@@ -147,30 +263,35 @@ in the value of <span class="math">\(\rho\)</span>.</p>
 <p>The key computational step in a trust-region algorithm is the solution
 of the constrained optimization problem</p>
 <div class="math" id="equation-trp">
-<span class="eqno">(3)</span>\[\arg\min_{\Delta x} \frac{1}{2}\|J(x)\Delta x +  F(x)\|^2\quad \text{such that}\quad  \|D(x)\Delta x\|^2 \le \mu\]</div>
+<span class="eqno">(3)</span>\[\begin{split}\arg \min_{\Delta x}&amp; \frac{1}{2}\|J(x)\Delta x + F(x)\|^2 \\
+\text{such that} &amp;\|D(x)\Delta x\|^2 \le \mu\\
+ &amp;L \le x + \Delta x \le U.\end{split}\]</div>
 <p>There are a number of different ways of solving this problem, each
 giving rise to a different concrete trust-region algorithm. Currently
 Ceres, implements two trust-region algorithms - Levenberg-Marquardt
-and Dogleg. The user can choose between them by setting
-<a class="reference internal" href="#Solver::Options::trust_region_strategy_type__TrustRegionStrategyType" title="Solver::Options::trust_region_strategy_type"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::trust_region_strategy_type</span></tt></a>.</p>
+and Dogleg, each of which is augmented with a line search if bounds
+constraints are present <a class="reference internal" href="bibliography.html#kanzow" id="id4">[Kanzow]</a>. The user can choose between them by
+setting <a class="reference internal" href="#Solver::Options::trust_region_strategy_type__TrustRegionStrategyType" title="Solver::Options::trust_region_strategy_type"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::trust_region_strategy_type</span></tt></a>.</p>
 <p class="rubric">Footnotes</p>
 <table class="docutils footnote" frame="void" id="f1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>At the level of the non-linear solver, the block
-structure is not relevant, therefore our discussion here is
-in terms of an optimization problem defined over a state
-vector of size <span class="math">\(n\)</span>.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>At the level of the non-linear solver, the block structure is
+not relevant, therefore our discussion here is in terms of an
+optimization problem defined over a state vector of size
+<span class="math">\(n\)</span>. Similarly the presence of loss functions is also
+ignored as the problem is internally converted into a pure
+non-linear least squares problem.</td></tr>
 </tbody>
 </table>
 <div class="section" id="levenberg-marquardt">
 <span id="section-levenberg-marquardt"></span><h3>Levenberg-Marquardt<a class="headerlink" href="#levenberg-marquardt" title="Permalink to this headline">¶</a></h3>
-<p>The Levenberg-Marquardt algorithm <a class="reference internal" href="bibliography.html#levenberg" id="id4">[Levenberg]</a> <a class="reference internal" href="bibliography.html#marquardt" id="id5">[Marquardt]</a> is the
+<p>The Levenberg-Marquardt algorithm <a class="reference internal" href="bibliography.html#levenberg" id="id5">[Levenberg]</a> <a class="reference internal" href="bibliography.html#marquardt" id="id6">[Marquardt]</a> is the
 most popular algorithm for solving non-linear least squares problems.
 It was also the first trust region algorithm to be developed
-<a class="reference internal" href="bibliography.html#levenberg" id="id6">[Levenberg]</a> <a class="reference internal" href="bibliography.html#marquardt" id="id7">[Marquardt]</a>. Ceres implements an exact step <a class="reference internal" href="bibliography.html#madsen" id="id8">[Madsen]</a>
+<a class="reference internal" href="bibliography.html#levenberg" id="id7">[Levenberg]</a> <a class="reference internal" href="bibliography.html#marquardt" id="id8">[Marquardt]</a>. Ceres implements an exact step <a class="reference internal" href="bibliography.html#madsen" id="id9">[Madsen]</a>
 and an inexact step variant of the Levenberg-Marquardt algorithm
-<a class="reference internal" href="bibliography.html#wrightholt" id="id9">[WrightHolt]</a> <a class="reference internal" href="bibliography.html#nashsofer" id="id10">[NashSofer]</a>.</p>
+<a class="reference internal" href="bibliography.html#wrightholt" id="id10">[WrightHolt]</a> <a class="reference internal" href="bibliography.html#nashsofer" id="id11">[NashSofer]</a>.</p>
 <p>It can be shown, that the solution to <a href="#equation-trp">(3)</a> can be obtained by
 solving an unconstrained optimization of the form</p>
 <div class="math">
@@ -203,17 +324,17 @@ that this may not be the case, as <a href="#equation-lsqr">(4)</a> is itself a r
 version of <a href="#equation-linearapprox">(2)</a>. Indeed, it is possible to
 construct non-linear optimization algorithms in which the linearized
 problem is solved approximately. These algorithms are known as inexact
-Newton or truncated Newton methods <a class="reference internal" href="bibliography.html#nocedalwright" id="id11">[NocedalWright]</a>.</p>
+Newton or truncated Newton methods <a class="reference internal" href="bibliography.html#nocedalwright" id="id12">[NocedalWright]</a>.</p>
 <p>An inexact Newton method requires two ingredients. First, a cheap
 method for approximately solving systems of linear
 equations. Typically an iterative linear solver like the Conjugate
 Gradients method is used for this
-purpose <a class="reference internal" href="bibliography.html#nocedalwright" id="id12">[NocedalWright]</a>. Second, a termination rule for
+purpose <a class="reference internal" href="bibliography.html#nocedalwright" id="id13">[NocedalWright]</a>. Second, a termination rule for
 the iterative solver. A typical termination rule is of the form</p>
 <div class="math" id="equation-inexact">
 <span class="eqno">(6)</span>\[\|H(x) \Delta x + g(x)\| \leq \eta_k \|g(x)\|.\]</div>
 <p>Here, <span class="math">\(k\)</span> indicates the Levenberg-Marquardt iteration number and
-<span class="math">\(0 &lt; \eta_k &lt;1\)</span> is known as the forcing sequence.  <a class="reference internal" href="bibliography.html#wrightholt" id="id13">[WrightHolt]</a>
+<span class="math">\(0 &lt; \eta_k &lt;1\)</span> is known as the forcing sequence.  <a class="reference internal" href="bibliography.html#wrightholt" id="id14">[WrightHolt]</a>
 prove that a truncated Levenberg-Marquardt algorithm that uses an
 inexact Newton step based on <a href="#equation-inexact">(6)</a> converges for any
 sequence <span class="math">\(\eta_k \leq \eta_0 &lt; 1\)</span> and the rate of convergence
@@ -245,11 +366,11 @@ supports two variants that can be chose by setting
 segments using the Gauss-Newton and Cauchy vectors and finds the point
 farthest along this line shaped like a dogleg (hence the name) that is
 contained in the trust-region. For more details on the exact reasoning
-and computations, please see Madsen et al <a class="reference internal" href="bibliography.html#madsen" id="id14">[Madsen]</a>.</p>
+and computations, please see Madsen et al <a class="reference internal" href="bibliography.html#madsen" id="id15">[Madsen]</a>.</p>
 <p><tt class="docutils literal"><span class="pre">SUBSPACE_DOGLEG</span></tt> is a more sophisticated method that considers the
 entire two dimensional subspace spanned by these two vectors and finds
 the point that minimizes the trust region problem in this subspace
-<a class="reference internal" href="bibliography.html#byrdschnabel" id="id15">[ByrdSchnabel]</a>.</p>
+<a class="reference internal" href="bibliography.html#byrdschnabel" id="id16">[ByrdSchnabel]</a>.</p>
 <p>The key advantage of the Dogleg over Levenberg Marquardt is that if
 the step computation for a particular choice of <span class="math">\(\mu\)</span> does not
 result in sufficient decrease in the value of the objective function,
@@ -277,13 +398,13 @@ of <span class="math">\(a_1\)</span> and <span class="math">\(a_2\)</span>. It&#
 eliminate the variables <span class="math">\(a_1\)</span> and <span class="math">\(a_2\)</span> from the problem
 entirely. Problems like these are known as separable least squares
 problem and the most famous algorithm for solving them is the Variable
-Projection algorithm invented by Golub &amp; Pereyra <a class="reference internal" href="bibliography.html#golubpereyra" id="id16">[GolubPereyra]</a>.</p>
+Projection algorithm invented by Golub &amp; Pereyra <a class="reference internal" href="bibliography.html#golubpereyra" id="id17">[GolubPereyra]</a>.</p>
 <p>Similar structure can be found in the matrix factorization with
 missing data problem. There the corresponding algorithm is known as
-Wiberg&#8217;s algorithm <a class="reference internal" href="bibliography.html#wiberg" id="id17">[Wiberg]</a>.</p>
+Wiberg&#8217;s algorithm <a class="reference internal" href="bibliography.html#wiberg" id="id18">[Wiberg]</a>.</p>
 <p>Ruhe &amp; Wedin present an analysis of various algorithms for solving
 separable non-linear least squares problems and refer to <em>Variable
-Projection</em> as Algorithm I in their paper <a class="reference internal" href="bibliography.html#ruhewedin" id="id18">[RuheWedin]</a>.</p>
+Projection</em> as Algorithm I in their paper <a class="reference internal" href="bibliography.html#ruhewedin" id="id19">[RuheWedin]</a>.</p>
 <p>Implementing Variable Projection is tedious and expensive. Ruhe &amp;
 Wedin present a simpler algorithm with comparable convergence
 properties, which they call Algorithm II.  Algorithm II performs an
@@ -297,9 +418,10 @@ linear in <span class="math">\(a_1\)</span> and <span class="math">\(a_2\)</span
 and then use it as the starting point to further optimize just <cite>a_1</cite>
 and <cite>a_2</cite>. For the linear case, this amounts to doing a single linear
 least squares solve. For non-linear problems, any method for solving
-the <cite>a_1</cite> and <cite>a_2</cite> optimization problems will do. The only constraint
-on <cite>a_1</cite> and <cite>a_2</cite> (if they are two different parameter block) is that
-they do not co-occur in a residual block.</p>
+the <span class="math">\(a_1\)</span> and <span class="math">\(a_2\)</span> optimization problems will do. The
+only constraint on <span class="math">\(a_1\)</span> and <span class="math">\(a_2\)</span> (if they are two
+different parameter block) is that they do not co-occur in a residual
+block.</p>
 <p>This idea can be further generalized, by not just optimizing
 <span class="math">\((a_1, a_2)\)</span>, but decomposing the graph corresponding to the
 Hessian matrix&#8217;s sparsity structure into a collection of
@@ -315,7 +437,7 @@ possible is highly recommended.</p>
 <div class="section" id="non-monotonic-steps">
 <span id="section-non-monotonic-steps"></span><h3>Non-monotonic Steps<a class="headerlink" href="#non-monotonic-steps" title="Permalink to this headline">¶</a></h3>
 <p>Note that the basic trust-region algorithm described in
-Algorithm~ref{alg:trust-region} is a descent algorithm in that they
+<a class="reference internal" href="#section-trust-region-methods"><em>Trust Region Methods</em></a> is a descent algorithm in that it
 only accepts a point if it strictly reduces the value of the objective
 function.</p>
 <p>Relaxing this requirement allows the algorithm to be more efficient in
@@ -327,7 +449,7 @@ the method is not restricted to move into narrow valleys while
 preserving its convergence properties.</p>
 <p>Setting <a class="reference internal" href="#Solver::Options::use_nonmonotonic_steps__b" title="Solver::Options::use_nonmonotonic_steps"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::use_nonmonotonic_steps</span></tt></a> to <tt class="docutils literal"><span class="pre">true</span></tt>
 enables the non-monotonic trust region algorithm as described by Conn,
-Gould &amp; Toint in <a class="reference internal" href="bibliography.html#conn" id="id19">[Conn]</a>.</p>
+Gould &amp; Toint in <a class="reference internal" href="bibliography.html#conn" id="id20">[Conn]</a>.</p>
 <p>Even though the value of the objective function may be larger
 than the minimum value encountered over the course of the
 optimization, the final parameters returned to the user are the
@@ -338,10 +460,9 @@ region strategies.</p>
 </div>
 <div class="section" id="line-search-methods">
 <span id="section-line-search-methods"></span><h2>Line Search Methods<a class="headerlink" href="#line-search-methods" title="Permalink to this headline">¶</a></h2>
-<p><strong>The implementation of line search algorithms in Ceres Solver is
-fairly new and not very well tested, so for now this part of the
-solver should be considered beta quality. We welcome reports of your
-experiences both good and bad on the mailinglist.</strong></p>
+<p>The line search method in Ceres Solver cannot handle bounds
+constraints right now, so it can only be used for solving
+unconstrained problems.</p>
 <p>Line search algorithms</p>
 <blockquote>
 <div><ol class="arabic simple">
@@ -355,7 +476,7 @@ experiences both good and bad on the mailinglist.</strong></p>
 <p>Here <span class="math">\(H(x)\)</span> is some approximation to the Hessian of the
 objective function, and <span class="math">\(g(x)\)</span> is the gradient at
 <span class="math">\(x\)</span>. Depending on the choice of <span class="math">\(H(x)\)</span> we get a variety of
-different search directions -<cite>Delta x</cite>.</p>
+different search directions <span class="math">\(\Delta x\)</span>.</p>
 <p>Step 4, which is a one dimensional optimization or <cite>Line Search</cite> along
 <span class="math">\(\Delta x\)</span> is what gives this class of methods its name.</p>
 <p>Different line search algorithms differ in their choice of the search
@@ -378,12 +499,12 @@ directions.</li>
 <li><tt class="docutils literal"><span class="pre">BFGS</span></tt> A generalization of the Secant method to multiple
 dimensions in which a full, dense approximation to the inverse
 Hessian is maintained and used to compute a quasi-Newton step
-<a class="reference internal" href="bibliography.html#nocedalwright" id="id20">[NocedalWright]</a>.  BFGS is currently the best known general
+<a class="reference internal" href="bibliography.html#nocedalwright" id="id21">[NocedalWright]</a>.  BFGS is currently the best known general
 quasi-Newton algorithm.</li>
 <li><tt class="docutils literal"><span class="pre">LBFGS</span></tt> A limited memory approximation to the full <tt class="docutils literal"><span class="pre">BFGS</span></tt>
 method in which the last <cite>M</cite> iterations are used to approximate the
-inverse Hessian used to compute a quasi-Newton step <a class="reference internal" href="bibliography.html#nocedal" id="id21">[Nocedal]</a>,
-<a class="reference internal" href="bibliography.html#byrdnocedal" id="id22">[ByrdNocedal]</a>.</li>
+inverse Hessian used to compute a quasi-Newton step <a class="reference internal" href="bibliography.html#nocedal" id="id22">[Nocedal]</a>,
+<a class="reference internal" href="bibliography.html#byrdnocedal" id="id23">[ByrdNocedal]</a>.</li>
 </ol>
 <p>Currently Ceres Solver supports both a backtracking and interpolation
 based Armijo line search algorithm, and a sectioning / zoom
@@ -410,9 +531,9 @@ equivalent to solving the <em>normal equations</em>.</p>
 <span id="section-qr"></span><h3><tt class="docutils literal"><span class="pre">DENSE_QR</span></tt><a class="headerlink" href="#dense-qr" title="Permalink to this headline">¶</a></h3>
 <p>For small problems (a couple of hundred parameters and a few thousand
 residuals) with relatively dense Jacobians, <tt class="docutils literal"><span class="pre">DENSE_QR</span></tt> is the method
-of choice <a class="reference internal" href="bibliography.html#bjorck" id="id23">[Bjorck]</a>. Let <span class="math">\(J = QR\)</span> be the QR-decomposition of
+of choice <a class="reference internal" href="bibliography.html#bjorck" id="id24">[Bjorck]</a>. Let <span class="math">\(J = QR\)</span> be the QR-decomposition of
 <span class="math">\(J\)</span>, where <span class="math">\(Q\)</span> is an orthonormal matrix and <span class="math">\(R\)</span> is
-an upper triangular matrix <a class="reference internal" href="bibliography.html#trefethenbau" id="id24">[TrefethenBau]</a>. Then it can be shown that
+an upper triangular matrix <a class="reference internal" href="bibliography.html#trefethenbau" id="id25">[TrefethenBau]</a>. Then it can be shown that
 the solution to <a href="#equation-normal">(8)</a> is given by</p>
 <div class="math">
 \[\Delta x^* = -R^{-1}Q^\top f\]</div>
@@ -440,7 +561,7 @@ Cholesky factorization of the normal equations. Ceres uses
 Cholesky factorization of the normal equations. This leads to
 substantial savings in time and memory for large sparse
 problems. Ceres uses the sparse Cholesky factorization routines in
-Professor Tim Davis&#8217; <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt> or <tt class="docutils literal"><span class="pre">CXSparse</span></tt> packages <a class="reference internal" href="bibliography.html#chen" id="id25">[Chen]</a>.</p>
+Professor Tim Davis&#8217; <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt> or <tt class="docutils literal"><span class="pre">CXSparse</span></tt> packages <a class="reference internal" href="bibliography.html#chen" id="id26">[Chen]</a>.</p>
 </div>
 <div class="section" id="dense-schur-sparse-schur">
 <span id="section-schur"></span><h3><tt class="docutils literal"><span class="pre">DENSE_SCHUR</span></tt> &amp; <tt class="docutils literal"><span class="pre">SPARSE_SCHUR</span></tt><a class="headerlink" href="#dense-schur-sparse-schur" title="Permalink to this headline">¶</a></h3>
@@ -504,13 +625,13 @@ and matrix-vector multiplies, and the solution of block sparse
 problems, the number of cameras is much smaller than the number of
 points, <span class="math">\(p \ll q\)</span>, thus solving <a href="#equation-schur">(11)</a> is
 significantly cheaper than solving <a href="#equation-linear2">(10)</a>. This is the
-<em>Schur complement trick</em> <a class="reference internal" href="bibliography.html#brown" id="id26">[Brown]</a>.</p>
+<em>Schur complement trick</em> <a class="reference internal" href="bibliography.html#brown" id="id27">[Brown]</a>.</p>
 <p>This still leaves open the question of solving <a href="#equation-schur">(11)</a>. The
 method of choice for solving symmetric positive definite systems
-exactly is via the Cholesky factorization <a class="reference internal" href="bibliography.html#trefethenbau" id="id27">[TrefethenBau]</a> and
+exactly is via the Cholesky factorization <a class="reference internal" href="bibliography.html#trefethenbau" id="id28">[TrefethenBau]</a> and
 depending upon the structure of the matrix, there are, in general, two
 options. The first is direct factorization, where we store and factor
-<span class="math">\(S\)</span> as a dense matrix <a class="reference internal" href="bibliography.html#trefethenbau" id="id28">[TrefethenBau]</a>. This method has
+<span class="math">\(S\)</span> as a dense matrix <a class="reference internal" href="bibliography.html#trefethenbau" id="id29">[TrefethenBau]</a>. This method has
 <span class="math">\(O(p^2)\)</span> space complexity and <span class="math">\(O(p^3)\)</span> time complexity and
 is only practical for problems with up to a few hundred cameras. Ceres
 implements this strategy as the <tt class="docutils literal"><span class="pre">DENSE_SCHUR</span></tt> solver.</p>
@@ -519,7 +640,7 @@ only see a small fraction of the scene. This leads us to the second
 option: Sparse Direct Methods. These methods store <span class="math">\(S\)</span> as a
 sparse matrix, use row and column re-ordering algorithms to maximize
 the sparsity of the Cholesky decomposition, and focus their compute
-effort on the non-zero part of the factorization <a class="reference internal" href="bibliography.html#chen" id="id29">[Chen]</a>. Sparse
+effort on the non-zero part of the factorization <a class="reference internal" href="bibliography.html#chen" id="id30">[Chen]</a>. Sparse
 direct methods, depending on the exact sparsity structure of the Schur
 complement, allow bundle adjustment algorithms to significantly scale
 up over those based on dense factorization. Ceres implements this
@@ -577,13 +698,13 @@ language of Domain Decomposition, each point in a bundle adjustment
 problem is a domain, and the cameras form the interface between these
 domains. The iterative solution of the Schur complement then falls
 within the sub-category of techniques known as Iterative
-Sub-structuring <a class="reference internal" href="bibliography.html#saad" id="id30">[Saad]</a> <a class="reference internal" href="bibliography.html#mathew" id="id31">[Mathew]</a>.</p>
+Sub-structuring <a class="reference internal" href="bibliography.html#saad" id="id31">[Saad]</a> <a class="reference internal" href="bibliography.html#mathew" id="id32">[Mathew]</a>.</p>
 </div>
 <div class="section" id="preconditioner">
 <span id="section-preconditioner"></span><h3>Preconditioner<a class="headerlink" href="#preconditioner" title="Permalink to this headline">¶</a></h3>
 <p>The convergence rate of Conjugate Gradients for
 solving <a href="#equation-normal">(8)</a> depends on the distribution of eigenvalues
-of <span class="math">\(H\)</span> <a class="reference internal" href="bibliography.html#saad" id="id32">[Saad]</a>. A useful upper bound is
+of <span class="math">\(H\)</span> <a class="reference internal" href="bibliography.html#saad" id="id33">[Saad]</a>. A useful upper bound is
 <span class="math">\(\sqrt{\kappa(H)}\)</span>, where, <span class="math">\(\kappa(H)\)</span> is the condition
 number of the matrix <span class="math">\(H\)</span>. For most bundle adjustment problems,
 <span class="math">\(\kappa(H)\)</span> is high and a direct application of Conjugate
@@ -615,7 +736,7 @@ block structured matrices like <span class="math">\(H\)</span> can be generalize
 block Jacobi preconditioner.</p>
 <p>For <tt class="docutils literal"><span class="pre">ITERATIVE_SCHUR</span></tt> there are two obvious choices for block
 diagonal preconditioners for <span class="math">\(S\)</span>. The block diagonal of the
-matrix <span class="math">\(B\)</span> <a class="reference internal" href="bibliography.html#mandel" id="id33">[Mandel]</a> and the block diagonal <span class="math">\(S\)</span>, i.e, the
+matrix <span class="math">\(B\)</span> <a class="reference internal" href="bibliography.html#mandel" id="id34">[Mandel]</a> and the block diagonal <span class="math">\(S\)</span>, i.e, the
 block Jacobi preconditioner for <span class="math">\(S\)</span>. Ceres&#8217;s implements both of
 these preconditioners and refers to them as <tt class="docutils literal"><span class="pre">JACOBI</span></tt> and
 <tt class="docutils literal"><span class="pre">SCHUR_JACOBI</span></tt> respectively.</p>
@@ -686,7 +807,7 @@ all the 3d points, and the second containing the all the cameras
 parameter blocks.</p>
 <p>If the user leaves the choice to Ceres, then the solver uses an
 approximate maximum independent set algorithm to identify the first
-elimination group <a class="reference internal" href="bibliography.html#lisaad" id="id34">[LiSaad]</a>.</p>
+elimination group <a class="reference internal" href="bibliography.html#lisaad" id="id35">[LiSaad]</a>.</p>
 </div>
 <div class="section" id="solver-options">
 <span id="section-solver-options"></span><h3><a class="reference internal" href="#Solver::Options" title="Solver::Options"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Solver::Options</span></tt></a><a class="headerlink" href="#solver-options" title="Permalink to this headline">¶</a></h3>
@@ -764,7 +885,7 @@ bool <tt class="descclassname">Solver::Options::</tt><tt class="descname">use_ap
 <div><p>Default: <tt class="docutils literal"><span class="pre">false</span></tt></p>
 <p>As part of the <tt class="docutils literal"><span class="pre">BFGS</span></tt> update step / <tt class="docutils literal"><span class="pre">LBFGS</span></tt> right-multiply
 step, the initial inverse Hessian approximation is taken to be the
-Identity.  However, <a class="reference internal" href="bibliography.html#oren" id="id35">[Oren]</a> showed that using instead <span class="math">\(I *
+Identity.  However, <a class="reference internal" href="bibliography.html#oren" id="id36">[Oren]</a> showed that using instead <span class="math">\(I *
 \gamma\)</span>, where <span class="math">\(\gamma\)</span> is a scalar chosen to approximate an
 eigenvalue of the true inverse Hessian can result in improved
 convergence in a wide variety of cases.  Setting
@@ -781,7 +902,7 @@ iteration).</p>
 <div class="math">
 \[s_k = x_{k+1} - x_k\]</div>
 <p>Where <span class="math">\(f()\)</span> is the line search objective and <span class="math">\(x\)</span> the
-vector of parameter values <a class="reference internal" href="bibliography.html#nocedalwright" id="id36">[NocedalWright]</a>.</p>
+vector of parameter values <a class="reference internal" href="bibliography.html#nocedalwright" id="id37">[NocedalWright]</a>.</p>
 <p>It is important to note that approximate eigenvalue scaling does
 <strong>not</strong> <em>always</em> improve convergence, and that it can in fact
 <em>significantly</em> degrade performance for certain classes of problem,
@@ -931,7 +1052,7 @@ DoglegType <tt class="descclassname">Solver::Options::</tt><tt class="descname">
 <dd><p>Default: <tt class="docutils literal"><span class="pre">TRADITIONAL_DOGLEG</span></tt></p>
 <p>Ceres supports two different dogleg strategies.
 <tt class="docutils literal"><span class="pre">TRADITIONAL_DOGLEG</span></tt> method by Powell and the <tt class="docutils literal"><span class="pre">SUBSPACE_DOGLEG</span></tt>
-method described by <a class="reference internal" href="bibliography.html#byrdschnabel" id="id37">[ByrdSchnabel]</a> .  See <a class="reference internal" href="#section-dogleg"><em>Dogleg</em></a>
+method described by <a class="reference internal" href="bibliography.html#byrdschnabel" id="id38">[ByrdSchnabel]</a> .  See <a class="reference internal" href="#section-dogleg"><em>Dogleg</em></a>
 for more details.</p>
 </dd></dl>
 
@@ -1053,9 +1174,11 @@ double <tt class="descclassname">Solver::Options::</tt><tt class="descname">grad
 <dd><p>Default: <tt class="docutils literal"><span class="pre">1e-10</span></tt></p>
 <p>Solver terminates if</p>
 <div class="math">
-\[\begin{split}\frac{\|g(x)\|_\infty}{\|g(x_0)\|_\infty} &lt; \text{gradient_tolerance}\end{split}\]</div>
-<p>where <span class="math">\(\|\cdot\|_\infty\)</span> refers to the max norm, and <span class="math">\(x_0\)</span> is
-the vector of initial parameter values.</p>
+\[\begin{split}\|x - \Pi \boxplus(x, -g(x))\|_\infty &lt; \text{gradient_tolerance}\end{split}\]</div>
+<p>where <span class="math">\(\|\cdot\|_\infty\)</span> refers to the max norm, <span class="math">\(\Pi\)</span>
+is projection onto the bounds constraints and <span class="math">\(\boxplus\)</span> is
+Plus operation for the overall local parameterization associated
+with the parameter vector.</p>
 </dd></dl>
 
 <dl class="member">
@@ -1151,8 +1274,8 @@ int <tt class="descclassname">Solver::Options::</tt><tt class="descname">num_lin
 </dd></dl>
 
 <dl class="member">
-<dt id="Solver::Options::linear_solver_ordering__ParameterBlockOrderingP">
-ParameterBlockOrdering* <tt class="descclassname">Solver::Options::</tt><tt class="descname">linear_solver_ordering</tt><a class="headerlink" href="#Solver::Options::linear_solver_ordering__ParameterBlockOrderingP" title="Permalink to this definition">¶</a></dt>
+<dt id="Solver::Options::linear_solver_ordering__shared_ptr:ParameterBlockOrdering:">
+shared_ptr&lt;ParameterBlockOrdering&gt; <tt class="descclassname">Solver::Options::</tt><tt class="descname">linear_solver_ordering</tt><a class="headerlink" href="#Solver::Options::linear_solver_ordering__shared_ptr:ParameterBlockOrdering:" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default: <tt class="docutils literal"><span class="pre">NULL</span></tt></p>
 <p>An instance of the ordering object informs the solver about the
 desired order in which parameter blocks should be eliminated by the
@@ -1183,6 +1306,22 @@ so.</p>
 algorithm which has slightly better runtime performance at the
 expense of an extra copy of the Jacobian matrix. Setting
 <tt class="docutils literal"><span class="pre">use_postordering</span></tt> to <tt class="docutils literal"><span class="pre">true</span></tt> enables this tradeoff.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="Solver::Options::dynamic_sparsity__b">
+bool <tt class="descclassname">Solver::Options::</tt><tt class="descname">dynamic_sparsity</tt><a class="headerlink" href="#Solver::Options::dynamic_sparsity__b" title="Permalink to this definition">¶</a></dt>
+<dd><p>Some non-linear least squares problems are symbolically dense but
+numerically sparse. i.e. at any given state only a small number of
+Jacobian entries are non-zero, but the position and number of
+non-zeros is different depending on the state. For these problems
+it can be useful to factorize the sparse jacobian at each solver
+iteration instead of including all of the zero entries in a single
+general factorization.</p>
+<p>If your problem does not have this property (or you do not know),
+then it is probably best to keep this false, otherwise it will
+likely lead to worse performance.</p>
+<p>This settings affects the <cite>SPARSE_NORMAL_CHOLESKY</cite> solver.</p>
 </dd></dl>
 
 <dl class="member">
@@ -1250,15 +1389,15 @@ disabled.</p>
 </dd></dl>
 
 <dl class="member">
-<dt id="Solver::Options::inner_iteration_ordering__ParameterBlockOrderingP">
-ParameterBlockOrdering* <tt class="descclassname">Solver::Options::</tt><tt class="descname">inner_iteration_ordering</tt><a class="headerlink" href="#Solver::Options::inner_iteration_ordering__ParameterBlockOrderingP" title="Permalink to this definition">¶</a></dt>
+<dt id="Solver::Options::inner_iteration_ordering__shared_ptr:ParameterBlockOrdering:">
+shared_ptr&lt;ParameterBlockOrdering&gt; <tt class="descclassname">Solver::Options::</tt><tt class="descname">inner_iteration_ordering</tt><a class="headerlink" href="#Solver::Options::inner_iteration_ordering__shared_ptr:ParameterBlockOrdering:" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default: <tt class="docutils literal"><span class="pre">NULL</span></tt></p>
 <p>If <a class="reference internal" href="#Solver::Options::use_inner_iterations__b" title="Solver::Options::use_inner_iterations"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::use_inner_iterations</span></tt></a> true, then the
 user has two choices.</p>
 <ol class="arabic simple">
 <li>Let the solver heuristically decide which parameter blocks to
 optimize in each inner iteration. To do this, set
-<a class="reference internal" href="#Solver::Options::inner_iteration_ordering__ParameterBlockOrderingP" title="Solver::Options::inner_iteration_ordering"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::inner_iteration_ordering</span></tt></a> to <tt class="docutils literal"><span class="pre">NULL</span></tt>.</li>
+<a class="reference internal" href="#Solver::Options::inner_iteration_ordering__shared_ptr:ParameterBlockOrdering:" title="Solver::Options::inner_iteration_ordering"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::inner_iteration_ordering</span></tt></a> to <tt class="docutils literal"><span class="pre">NULL</span></tt>.</li>
 <li>Specify a collection of of ordered independent sets. The lower
 numbered groups are optimized before the higher number groups
 during the inner optimization phase. Each group must be an
@@ -1705,7 +1844,7 @@ values.</p>
 situation. The solver returns without updating the parameter
 blocks (unless <tt class="docutils literal"><span class="pre">Solver::Options::update_state_every_iteration</span></tt> is
 set true). Solver returns with <tt class="docutils literal"><span class="pre">Solver::Summary::termination_type</span></tt>
-set to <tt class="docutils literal"><span class="pre">USER_ABORT</span></tt>.</li>
+set to <tt class="docutils literal"><span class="pre">USER_FAILURE</span></tt>.</li>
 <li><tt class="docutils literal"><span class="pre">SOLVER_TERMINATE_SUCCESSFULLY</span></tt> indicates that there is no need
 to optimize anymore (some user specified termination criterion
 has been met). Solver returns with
@@ -1836,6 +1975,18 @@ string <tt class="descclassname">Solver::Summary::</tt><tt class="descname">Full
 termination.</p>
 </dd></dl>
 
+<dl class="function">
+<dt id="Solver::Summary::IsSolutionUsableC">
+bool <tt class="descclassname">Solver::Summary::</tt><tt class="descname">IsSolutionUsable</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Solver::Summary::IsSolutionUsableC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether the solution returned by the optimization algorithm can be
+relied on to be numerically sane. This will be the case if
+<cite>Solver::Summary:termination_type</cite> is set to <cite>CONVERGENCE</cite>,
+<cite>USER_SUCCESS</cite> or <cite>NO_CONVERGENCE</cite>, i.e., either the solver
+converged by meeting one of the convergence tolerances or because
+the user indicated that it had converged or it ran to the maximum
+number of iterations or time.</p>
+</dd></dl>
+
 <dl class="member">
 <dt id="Solver::Summary::minimizer_type__MinimizerType">
 MinimizerType <tt class="descclassname">Solver::Summary::</tt><tt class="descname">minimizer_type</tt><a class="headerlink" href="#Solver::Summary::minimizer_type__MinimizerType" title="Permalink to this definition">¶</a></dt>
@@ -1843,16 +1994,15 @@ MinimizerType <tt class="descclassname">Solver::Summary::</tt><tt class="descnam
 </dd></dl>
 
 <dl class="member">
-<dt id="Solver::Summary::termination_type__SolverTerminationType">
-SolverTerminationType <tt class="descclassname">Solver::Summary::</tt><tt class="descname">termination_type</tt><a class="headerlink" href="#Solver::Summary::termination_type__SolverTerminationType" title="Permalink to this definition">¶</a></dt>
+<dt id="Solver::Summary::termination_type__TerminationType">
+TerminationType <tt class="descclassname">Solver::Summary::</tt><tt class="descname">termination_type</tt><a class="headerlink" href="#Solver::Summary::termination_type__TerminationType" title="Permalink to this definition">¶</a></dt>
 <dd><p>The cause of the minimizer terminating.</p>
 </dd></dl>
 
 <dl class="member">
-<dt id="Solver::Summary::error__string">
-string <tt class="descclassname">Solver::Summary::</tt><tt class="descname">error</tt><a class="headerlink" href="#Solver::Summary::error__string" title="Permalink to this definition">¶</a></dt>
-<dd><p>If the solver did not run, or there was a failure, a description of
-the error.</p>
+<dt id="Solver::Summary::message__string">
+string <tt class="descclassname">Solver::Summary::</tt><tt class="descname">message</tt><a class="headerlink" href="#Solver::Summary::message__string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reason why the solver terminated.</p>
 </dd></dl>
 
 <dl class="member">
@@ -2256,7 +2406,7 @@ reconstruction is ambiguous upto a similarity transform. This is
 known as a <em>Gauge Ambiguity</em>. Handling Gauges correctly requires the
 use of SVD or custom inversion algorithms. For small problems the
 user can use the dense algorithm. For more details see the work of
-Kanatani &amp; Morris <a class="reference internal" href="bibliography.html#kanatanimorris" id="id38">[KanataniMorris]</a>.</p>
+Kanatani &amp; Morris <a class="reference internal" href="bibliography.html#kanatanimorris" id="id39">[KanataniMorris]</a>.</p>
 </div>
 <div class="section" id="covariance">
 <h3><a class="reference internal" href="#Covariance" title="Covariance"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Covariance</span></tt></a><a class="headerlink" href="#covariance" title="Permalink to this headline">¶</a></h3>
@@ -2566,70 +2716,84 @@ returned covariance will be a row-major matrix.</p>
 
 
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper">
-<h3><a href="index.html">Ceres Solver</a></h3>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="building.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Solving</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reading.html">Further Reading</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="acknowledgements.html">Acknowledgements</a></li>
-<li class="toctree-l1"><a class="reference internal" href="version_history.html">Version History</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
-</ul>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="faqs.html" class="btn btn-neutral float-right" title="FAQS, Tips &amp; Tricks"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="modeling.html" class="btn btn-neutral" title="Modeling"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="modeling.html"
-                        title="previous chapter">Modeling</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="reading.html"
-                        title="next chapter">Further Reading</a></p>
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014 Google Inc.
     </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="reading.html" title="Further Reading"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="modeling.html" title="Modeling"
-             >previous</a> |</li>
-        <li><a href="index.html">Ceres Solver</a> &raquo;</li> 
-      </ul>
-    </div>
-<div class="footer">
-    &copy; Copyright 2013, Google Inc..
-</div>
+
+    </section>
+
+  </div>
+  
 
 
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.9.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
+      MathJax.Hub.Config({
+          "HTML-CSS": {
+            availableFonts: ["TeX"]
+          }
+        });
+      </script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+  
+ 
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-49769510-1', 'ceres-solver.org');
+  ga('send', 'pageview');
+</script>
 
 
-
-  </body>
+</body>
 </html>

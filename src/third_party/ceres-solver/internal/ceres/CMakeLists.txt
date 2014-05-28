@@ -34,7 +34,6 @@ SET(CERES_INTERNAL_SRC
     block_evaluate_preparer.cc
     block_jacobi_preconditioner.cc
     block_jacobian_writer.cc
-    block_random_access_crs_matrix.cc
     block_random_access_dense_matrix.cc
     block_random_access_diagonal_matrix.cc
     block_random_access_matrix.cc
@@ -59,6 +58,8 @@ SET(CERES_INTERNAL_SRC
     dense_sparse_matrix.cc
     detect_structure.cc
     dogleg_strategy.cc
+    dynamic_compressed_row_jacobian_writer.cc
+    dynamic_compressed_row_sparse_matrix.cc
     evaluator.cc
     file.cc
     gradient_checking_cost_function.cc
@@ -135,7 +136,7 @@ ENDIF (SCHUR_SPECIALIZATIONS)
 # Primarily for Android, but optionally for others, use the minimal internal
 # Glog implementation.
 IF (MINIGLOG)
-  ADD_LIBRARY(miniglog miniglog/glog/logging.cc)
+  ADD_LIBRARY(miniglog STATIC miniglog/glog/logging.cc)
   INSTALL(TARGETS miniglog
           EXPORT  CeresExport
           RUNTIME DESTINATION bin
@@ -143,24 +144,25 @@ IF (MINIGLOG)
           ARCHIVE DESTINATION lib${LIB_SUFFIX})
 ENDIF (MINIGLOG)
 
-SET(CERES_LIBRARY_DEPENDENCIES ${GLOG_LIBRARIES})
+SET(CERES_LIBRARY_PUBLIC_DEPENDENCIES ${GLOG_LIBRARIES})
 
 IF (SUITESPARSE AND SUITESPARSE_FOUND)
-  LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${SUITESPARSE_LIBRARIES})
+  LIST(APPEND CERES_LIBRARY_PRIVATE_DEPENDENCIES ${SUITESPARSE_LIBRARIES})
 ENDIF (SUITESPARSE AND SUITESPARSE_FOUND)
 
 IF (CXSPARSE AND CXSPARSE_FOUND)
-  LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${CXSPARSE_LIBRARIES})
+  LIST(APPEND CERES_LIBRARY_PRIVATE_DEPENDENCIES ${CXSPARSE_LIBRARIES})
 ENDIF (CXSPARSE AND CXSPARSE_FOUND)
 
 IF (BLAS_FOUND AND LAPACK_FOUND)
-  LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${LAPACK_LIBRARIES})
-  LIST(APPEND CERES_LIBRARY_DEPENDENCIES ${BLAS_LIBRARIES})
+  LIST(APPEND CERES_LIBRARY_PRIVATE_DEPENDENCIES ${LAPACK_LIBRARIES})
+  LIST(APPEND CERES_LIBRARY_PRIVATE_DEPENDENCIES ${BLAS_LIBRARIES})
 ENDIF (BLAS_FOUND AND LAPACK_FOUND)
 
 IF (OPENMP_FOUND)
   IF (NOT MSVC)
-    LIST(APPEND CERES_LIBRARY_DEPENDENCIES gomp)
+    LIST(APPEND CERES_LIBRARY_PRIVATE_DEPENDENCIES gomp)
+    LIST(APPEND CERES_LIBRARY_PRIVATE_DEPENDENCIES ${CMAKE_THREAD_LIBS_INIT})
   ENDIF (NOT MSVC)
 ENDIF (OPENMP_FOUND)
 
@@ -174,7 +176,22 @@ SET_TARGET_PROPERTIES(ceres PROPERTIES
   VERSION ${CERES_VERSION}
   SOVERSION ${CERES_VERSION_MAJOR}
 )
-TARGET_LINK_LIBRARIES(ceres ${CERES_LIBRARY_DEPENDENCIES})
+
+IF (BUILD_SHARED_LIBS)
+  # When building a shared library, mark all external libraries as
+  # PRIVATE so they don't show up as a dependency.
+  TARGET_LINK_LIBRARIES(ceres
+        LINK_PUBLIC ${CERES_LIBRARY_PUBLIC_DEPENDENCIES}
+        LINK_PRIVATE ${CERES_LIBRARY_PRIVATE_DEPENDENCIES})
+ELSE (BUILD_SHARED_LIBS)
+  # When building a static library, all external libraries are
+  # PUBLIC(default) since the user needs to link to them.
+  # They will be listed in CeresTargets.cmake.
+  SET(CERES_LIBRARY_DEPENDENCIES
+        ${CERES_LIBRARY_PUBLIC_DEPENDENCIES}
+        ${CERES_LIBRARY_PRIVATE_DEPENDENCIES})
+  TARGET_LINK_LIBRARIES(ceres ${CERES_LIBRARY_DEPENDENCIES})
+ENDIF (BUILD_SHARED_LIBS)
 
 INSTALL(TARGETS ceres
         EXPORT  CeresExport
@@ -205,7 +222,6 @@ IF (BUILD_TESTING AND GFLAGS)
   CERES_TEST(autodiff)
   CERES_TEST(autodiff_cost_function)
   CERES_TEST(autodiff_local_parameterization)
-  CERES_TEST(block_random_access_crs_matrix)
   CERES_TEST(block_random_access_dense_matrix)
   CERES_TEST(block_random_access_diagonal_matrix)
   CERES_TEST(block_random_access_sparse_matrix)
@@ -219,6 +235,7 @@ IF (BUILD_TESTING AND GFLAGS)
   CERES_TEST(covariance)
   CERES_TEST(dense_sparse_matrix)
   CERES_TEST(dynamic_autodiff_cost_function)
+  CERES_TEST(dynamic_compressed_row_sparse_matrix)
   CERES_TEST(dynamic_numeric_diff_cost_function)
   CERES_TEST(evaluator)
   CERES_TEST(gradient_checker)

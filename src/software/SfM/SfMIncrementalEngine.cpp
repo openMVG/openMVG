@@ -1473,9 +1473,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
   std::cout << summary.FullReport() << std::endl;
 
   // If no error, get back refined parameters
-  if (summary.termination_type != ceres::DID_NOT_RUN &&
-      summary.termination_type != ceres::USER_ABORT &&
-      summary.termination_type != ceres::NUMERICAL_FAILURE)
+  if (summary.IsSolutionUsable())
   {
     // Display statistics about the minimization
     std::cout << std::endl

@@ -1,153 +1,296 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Ceres Solver &mdash; A Nonlinear Least Squares Minimizer</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
     
 
-    <title>Ceres Solver &mdash; Ceres Solver</title>
+  
 
-<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
 
+  
+    <link rel="top" title="Ceres Solver" href="#"/>
+        <link rel="next" title="Features" href="features.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
 
     
-    <link rel="stylesheet" href="_static/rtd.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '1.8.0',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
-  MathJax.Hub.Config({
-    "HTML-CSS": {
-      availableFonts: ["TeX"]
-    }
-  });
-</script>
-    <script type="text/javascript" src="_static/searchtools.js"></script>
-    <link rel="top" title="Ceres Solver" href="#" />
-    <link rel="next" title="Introduction" href="introduction.html" /> 
-  </head>
-  <body>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="introduction.html" title="Introduction"
-             accesskey="N">next</a> |</li>
-        <li><a href="#">Ceres Solver</a> &raquo;</li> 
-      </ul>
-    </div>  
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="#" class="fa fa-home"> Ceres Solver</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body">
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="building.html">Building &amp; Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="building.html#getting-the-source-code">Getting the source code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-linux">Building on Linux</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-mac-os-x">Building on Mac OS X</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-windows-with-visual-studio">Building on Windows with Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-android">Building on Android</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-ios">Building on iOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#customizing-the-build">Customizing the build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#using-ceres-with-cmake">Using Ceres with CMake</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#hello-world">Hello World!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#derivatives">Derivatives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#powell-s-function">Powell&#8217;s Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#curve-fitting">Curve Fitting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#robust-curve-fitting">Robust Curve Fitting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#bundle-adjustment">Bundle Adjustment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#other-examples">Other Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#costfunction"><tt class="docutils literal"><span class="pre">CostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#sizedcostfunction"><tt class="docutils literal"><span class="pre">SizedCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#autodiffcostfunction"><tt class="docutils literal"><span class="pre">AutoDiffCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#dynamicautodiffcostfunction"><tt class="docutils literal"><span class="pre">DynamicAutoDiffCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#numericdiffcostfunction"><tt class="docutils literal"><span class="pre">NumericDiffCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#dynamicnumericdiffcostfunction"><tt class="docutils literal"><span class="pre">DynamicNumericDiffCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#numericdifffunctor"><tt class="docutils literal"><span class="pre">NumericDiffFunctor</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#costfunctiontofunctor"><tt class="docutils literal"><span class="pre">CostFunctionToFunctor</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#conditionedcostfunction"><tt class="docutils literal"><span class="pre">ConditionedCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#normalprior"><tt class="docutils literal"><span class="pre">NormalPrior</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#lossfunction"><tt class="docutils literal"><span class="pre">LossFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#localparameterization"><tt class="docutils literal"><span class="pre">LocalParameterization</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#autodifflocalparameterization"><tt class="docutils literal"><span class="pre">AutoDiffLocalParameterization</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#problem"><tt class="docutils literal"><span class="pre">Problem</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#rotation-h"><tt class="docutils literal"><span class="pre">rotation.h</span></tt></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="solving.html">Solving</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="solving.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solving.html#trust-region-methods">Trust Region Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solving.html#line-search-methods">Line Search Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solving.html#linearsolver">LinearSolver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solving.html#covariance-estimation">Covariance Estimation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faqs.html">FAQS, Tips &amp; Tricks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="faqs.html#building">Building</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faqs.html#modeling">Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faqs.html#solving">Solving</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faqs.html#further-reading">Further Reading</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#setting-up-your-development-environment">Setting up your Development Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#submitting-a-change-to-ceres-solver">Submitting a change to Ceres Solver</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="version_history.html">Releases</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id1">1.9.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id2">1.8.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id5">1.7.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id9">1.6.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id12">1.5.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id16">1.4.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id20">1.3.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id23">1.2.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id25">1.2.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id27">1.2.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id30">1.2.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id33">1.1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id35">1.1.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id38">1.0.0</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="history.html#origin-of-the-name">Origin of the name</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="#">Ceres Solver</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+          <div role="main">
             
   <div class="section" id="ceres-solver">
 <h1>Ceres Solver<a class="headerlink" href="#ceres-solver" title="Permalink to this headline">¶</a></h1>
-<p>Ceres Solver is a portable C++ library for solving non-linear least
-squares problems.</p>
+<div class="toctree-wrapper compound">
+</div>
+<p>Ceres Solver is an open source C++ library for modeling and solving
+large complicated <a class="reference external" href="http://en.wikipedia.org/wiki/Non-linear_least_squares">nonlinear least squares</a> problems. It is a feature
+rich, mature and performant library which has been used in production
+since 2010. At Google, Ceres Solver is used to:</p>
+<ul class="simple">
+<li>Estimate the pose of <a class="reference external" href="http://youtu.be/z00ORu4bU-A">Street View</a> cars, aircrafts, and satellites.</li>
+<li>Build 3D models for <a class="reference external" href="http://google-latlong.blogspot.com/2012/04/visit-global-landmarks-with-photo-tours.html">PhotoTours</a>.</li>
+<li>Estmate satellite image sensor characteristics.</li>
+<li>Stitch <a class="reference external" href="http://www.google.com/maps/about/contribute/photosphere/">panoramas</a> or apply <a class="reference external" href="http://googleresearch.blogspot.com/2014/04/lens-blur-in-new-google-camera-app.html">Lens Blur</a> on Android.</li>
+<li>Solve <a class="reference external" href="http://en.wikipedia.org/wiki/Structure_from_motion">bundle adjustment</a> and SLAM problems in <a class="reference external" href="https://www.google.com/atap/projecttango/">Project Tango</a>.</li>
+</ul>
+<p>Outside Google, Ceres is used for solving problems in computer vision,
+computer graphics, astronomy and physics. e.g., <a class="reference external" href="https://www.willowgarage.com/blog/2013/08/09/enabling-robots-see-better-through-improved-camera-calibration">Willow Garage</a> uses
+it to solve SLAM problems and <a class="reference external" href="http://mango.blender.org/development/planar-tracking-preview/">Blender</a> uses it for for planar
+tracking and bundle adjustment.</p>
+<div class="section" id="getting-started">
+<h2>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
 <ul>
-<li><p class="first">Download the latest stable <a class="reference external" href="https://ceres-solver.googlecode.com/files/ceres-solver-1.8.0.tar.gz">release</a>
-or clone the <a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver">repository</a></p>
+<li><p class="first">Download the <a class="reference external" href="http://ceres-solver.org/ceres-solver-1.9.0.tar.gz">latest stable release</a> or clone the
+Git repository for the latest development version.</p>
+<div class="highlight-bash"><div class="highlight"><pre>git clone https://ceres-solver.googlesource.com/ceres-solver
+</pre></div>
+</div>
 </li>
-<li><p class="first">Read the <a class="reference internal" href="tutorial.html#chapter-tutorial"><em>Tutorial</em></a></p>
-</li>
-<li><p class="first">Browse the <a class="reference internal" href="modeling.html#chapter-modeling"><em>Modeling</em></a> API and <a class="reference internal" href="solving.html#chapter-solving"><em>Solving</em></a> API.</p>
+<li><p class="first">Read the <a class="reference internal" href="tutorial.html#chapter-tutorial"><em>Tutorial</em></a>, browse the chapters on the
+<a class="reference internal" href="modeling.html#chapter-modeling"><em>Modeling</em></a> API and the <a class="reference internal" href="solving.html#chapter-solving"><em>Solving</em></a> API.</p>
 </li>
 <li><p class="first">Join the <a class="reference external" href="https://groups.google.com/forum/?fromgroups#!forum/ceres-solver">mailing list</a>
 and ask questions.</p>
 </li>
 <li><p class="first">File bugs, feature requests in the <a class="reference external" href="https://code.google.com/p/ceres-solver/issues/list">issue tracker</a>.</p>
 </li>
-<li><p class="first">If you use Ceres Solver for a publication, you must cite it as:</p>
+</ul>
+</div>
+<div class="section" id="cite-us">
+<h2>Cite Us<a class="headerlink" href="#cite-us" title="Permalink to this headline">¶</a></h2>
+<p>If you use Ceres Solver for a publication, please cite it as:</p>
 <div class="highlight-python"><pre>@misc{ceres-solver,
   author = "Sameer Agarwal and Keir Mierle and Others",
   title = "Ceres Solver",
-  howpublished = "\url{https://code.google.com/p/ceres-solver/}",
+  howpublished = "\url{http://ceres-solver.org}",
 }</pre>
 </div>
-</li>
-</ul>
-<div class="toctree-wrapper compound">
 </div>
 </div>
 
 
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper">
-<h3><a href="#">Ceres Solver</a></h3>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="building.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="solving.html">Solving</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reading.html">Further Reading</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="acknowledgements.html">Acknowledgements</a></li>
-<li class="toctree-l1"><a class="reference internal" href="version_history.html">Version History</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
-</ul>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="features.html" class="btn btn-neutral float-right" title="Features"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
 
-  <h4>Next topic</h4>
-  <p class="topless"><a href="introduction.html"
-                        title="next chapter">Introduction</a></p>
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014 Google Inc.
     </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="introduction.html" title="Introduction"
-             >next</a> |</li>
-        <li><a href="#">Ceres Solver</a> &raquo;</li> 
-      </ul>
-    </div>
-<div class="footer">
-    &copy; Copyright 2013, Google Inc..
-</div>
+
+    </section>
+
+  </div>
+  
 
 
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.9.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
+      MathJax.Hub.Config({
+          "HTML-CSS": {
+            availableFonts: ["TeX"]
+          }
+        });
+      </script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+  
+ 
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-49769510-1', 'ceres-solver.org');
+  ga('send', 'pageview');
+</script>
 
 
-
-  </body>
+</body>
 </html>

@@ -54,5 +54,22 @@ TEST(ArrayUtils, IsArrayValid) {
   EXPECT_FALSE(IsArrayValid(3, x));
 }
 
+TEST(ArrayUtils, FindInvalidIndex) {
+  double x[3];
+  x[0] = 0.0;
+  x[1] = 1.0;
+  x[2] = 2.0;
+  EXPECT_EQ(FindInvalidValue(3, x), 3);
+  x[1] = std::numeric_limits<double>::infinity();
+  EXPECT_EQ(FindInvalidValue(3, x), 1);
+  x[1] = std::numeric_limits<double>::quiet_NaN();
+  EXPECT_EQ(FindInvalidValue(3, x), 1);
+  x[1] = std::numeric_limits<double>::signaling_NaN();
+  EXPECT_EQ(FindInvalidValue(3, x), 1);
+  EXPECT_EQ(FindInvalidValue(1, NULL), 1);
+  InvalidateArray(3, x);
+  EXPECT_EQ(FindInvalidValue(3, x), 0);
+}
+
 }  // namespace internal
 }  // namespace ceres

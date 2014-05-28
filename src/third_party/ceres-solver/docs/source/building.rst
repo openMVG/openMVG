@@ -1,13 +1,20 @@
 .. _chapter-building:
 
-============
-Installation
-============
+=======================
+Building & Installation
+=======================
 
-Stable Ceres Solver releases are available for download at
-`code.google.com <http://code.google.com/p/ceres-solver/>`_. For the
-more adventurous, the git repository is hosted on `Gerrit
-<https://ceres-solver-review.googlesource.com/>`_.
+Getting the source code
+=======================
+.. _section-source:
+
+You can start with the `latest stable release
+<http://ceres-solver.org/ceres-solver-1.9.0.tar.gz>`_ . Or if you want
+the latest version, you can clone the git repository
+
+.. code-block:: bash
+
+       git clone https://ceres-solver.googlesource.com/ceres-solver
 
 .. _section-dependencies:
 
@@ -18,49 +25,45 @@ Ceres relies on a number of open source libraries, some of which are
 optional. For details on customizing the build process, see
 :ref:`section-customizing` .
 
-1. `CMake <http://www.cmake.org>`_ is a cross platform build
-system. Ceres needs a relatively recent version of CMake (version
-2.8.0 or better).
+- `Eigen <http://eigen.tuxfamily.org/index.php?title=Main_Page>`_ 3.0 or later.
+  **Required**
 
-2. `eigen3 <http://eigen.tuxfamily.org/index.php?title=Main_Page>`_ is
-used for doing all the low level matrix and linear algebra operations.
+- `CMake <http://www.cmake.org>`_ 2.8.0 or later.
+  **Required on all platforms except for Android.**
 
-3. `google-glog <http://code.google.com/p/google-glog>`_ is
-used for error checking and logging. Ceres needs glog version 0.3.1 or
-later. Version 0.3 (which ships with Fedora 16) has a namespace bug
-which prevents Ceres from building. Ceres contains a stripped-down,
-minimal version of ``glog`` called ``miniglog``, which can be enabled
-with the ``MINIGLOG`` build option. If enabled, it replaces the
-requirement for ``glog``. However, in general it is recommended that
-you use the full ``glog``.
+- `Google Log <http://code.google.com/p/google-glog>`_ 0.3.1 or
+  later. **Recommended**
 
-4. `gflags <http://code.google.com/p/gflags>`_ is a library for
-processing command line flags. It is used by some of the examples and
-tests. While it is not strictly necessary to build the library, we
-strongly recommend building the library with gflags.
+  Ceres has a minimal replacement of ``glog`` called ``miniglog``,
+  enabled with the ``MINIGLOG`` build option. ``miniglog`` replaces
+  the requirement for ``glog``. We advise using full ``glog`` due to
+  performance compromises in ``miniglog``. ``miniglog`` is needed on
+  Android.
 
-5. `SuiteSparse
-<http://www.cise.ufl.edu/research/sparse/SuiteSparse/>`_ is used for
-sparse matrix analysis, ordering and factorization. In particular
-Ceres uses the AMD, CAMD, COLAMD and CHOLMOD libraries. This is an optional
-dependency.
+- `Google Flags <http://code.google.com/p/gflags>`_. Needed to build
+  examples and tests.
 
-6. `CXSparse <http://www.cise.ufl.edu/research/sparse/CXSparse/>`_ is
-a sparse matrix library similar in scope to ``SuiteSparse`` but with
-no dependencies on ``LAPACK`` and ``BLAS``. This makes for a simpler
-build process and a smaller binary.  The simplicity comes at a cost --
-for all but the most trivial matrices, ``SuiteSparse`` is
-significantly faster than ``CXSparse``. This is an optional dependency.
+- `SuiteSparse
+  <http://www.cise.ufl.edu/research/sparse/SuiteSparse/>`_. Needed for
+  analyzing and solving sparse systems. Ceres useses the AMD, CAMD,
+  COLAMD and CHOLMOD libraries.
+  **Optional; strongly recomended for bundle adjustment**
 
-7. `BLAS <http://www.netlib.org/blas/>`_ and `LAPACK
-<http://www.netlib.org/lapack/>`_ routines are needed by
-SuiteSparse, and optionally used by Ceres directly for some operations.
-We recommend `ATLAS <http://math-atlas.sourceforge.net/>`_,
-which includes BLAS and LAPACK routines. It is also possible to use
-`OpenBLAS <https://github.com/xianyi/OpenBLAS>`_ . However, one needs
-to be careful to `turn off the threading
-<https://github.com/xianyi/OpenBLAS/wiki/faq#wiki-multi-threaded>`_
-inside ``OpenBLAS`` as it conflicts with use of threads in Ceres.
+- `CXSparse <http://www.cise.ufl.edu/research/sparse/CXSparse/>`_.
+  Similar to ``SuiteSparse`` but simpler and slower. CXSparse has
+  no dependencies on ``LAPACK`` and ``BLAS``. This makes for a simpler
+  build process and a smaller binary. **Optional**
+
+- `BLAS <http://www.netlib.org/blas/>`_ and `LAPACK
+  <http://www.netlib.org/lapack/>`_ routines are needed by
+  SuiteSparse, and optionally used by Ceres directly for some operations.
+  We recommend `ATLAS <http://math-atlas.sourceforge.net/>`_,
+  which includes BLAS and LAPACK routines. It is also possible to use
+  `OpenBLAS <https://github.com/xianyi/OpenBLAS>`_ . However, one needs
+  to be careful to `turn off the threading
+  <https://github.com/xianyi/OpenBLAS/wiki/faq#wiki-multi-threaded>`_
+  inside ``OpenBLAS`` as it conflicts with use of threads in Ceres.
+  **Optional but required for SuiteSparse**
 
 .. _section-linux:
 
@@ -111,10 +114,10 @@ We are now ready to build and test Ceres.
 
 .. code-block:: bash
 
- tar zxf ceres-solver-1.8.0.tar.gz
+ tar zxf ceres-solver-1.9.0.tar.gz
  mkdir ceres-bin
  cd ceres-bin
- cmake ../ceres-solver-1.8.0
+ cmake ../ceres-solver-1.9.0
  make -j3
  make test
 
@@ -124,7 +127,7 @@ dataset [Agarwal]_.
 
 .. code-block:: bash
 
- bin/simple_bundle_adjuster ../ceres-solver-1.8.0/data/problem-16-22106-pre.txt
+ bin/simple_bundle_adjuster ../ceres-solver-1.9.0/data/problem-16-22106-pre.txt
 
 This runs Ceres for a maximum of 10 iterations using the
 ``DENSE_SCHUR`` linear solver. The output should look something like
@@ -132,71 +135,88 @@ this.
 
 .. code-block:: bash
 
-    0: f: 4.185660e+06 d: 0.00e+00 g: 1.09e+08 h: 0.00e+00 rho: 0.00e+00 mu: 1.00e+04 li:  0 it: 1.16e-01 tt: 3.39e-01
-    1: f: 1.062590e+05 d: 4.08e+06 g: 8.99e+06 h: 5.36e+02 rho: 9.82e-01 mu: 3.00e+04 li:  1 it: 3.90e-01 tt: 7.29e-01
-    2: f: 4.992817e+04 d: 5.63e+04 g: 8.32e+06 h: 3.19e+02 rho: 6.52e-01 mu: 3.09e+04 li:  1 it: 3.52e-01 tt: 1.08e+00
-    3: f: 1.899774e+04 d: 3.09e+04 g: 1.60e+06 h: 1.24e+02 rho: 9.77e-01 mu: 9.26e+04 li:  1 it: 3.60e-01 tt: 1.44e+00
-    4: f: 1.808729e+04 d: 9.10e+02 g: 3.97e+05 h: 6.39e+01 rho: 9.51e-01 mu: 2.78e+05 li:  1 it: 3.62e-01 tt: 1.80e+00
-    5: f: 1.803399e+04 d: 5.33e+01 g: 1.48e+04 h: 1.23e+01 rho: 9.99e-01 mu: 8.33e+05 li:  1 it: 3.54e-01 tt: 2.16e+00
-    6: f: 1.803390e+04 d: 9.02e-02 g: 6.35e+01 h: 8.00e-01 rho: 1.00e+00 mu: 2.50e+06 li:  1 it: 3.59e-01 tt: 2.52e+00
+   0: f: 4.185660e+06 d: 0.00e+00 g: 1.09e+08 h: 0.00e+00 rho: 0.00e+00 mu: 1.00e+04 li:  0 it: 8.73e-02 tt: 2.61e-01
+   1: f: 1.062590e+05 d: 4.08e+06 g: 8.99e+06 h: 5.36e+02 rho: 9.82e-01 mu: 3.00e+04 li:  1 it: 1.85e-01 tt: 4.46e-01
+   2: f: 4.992817e+04 d: 5.63e+04 g: 8.32e+06 h: 3.19e+02 rho: 6.52e-01 mu: 3.09e+04 li:  1 it: 1.74e-01 tt: 6.20e-01
+   3: f: 1.899774e+04 d: 3.09e+04 g: 1.60e+06 h: 1.24e+02 rho: 9.77e-01 mu: 9.26e+04 li:  1 it: 1.74e-01 tt: 7.94e-01
+   4: f: 1.808729e+04 d: 9.10e+02 g: 3.97e+05 h: 6.39e+01 rho: 9.51e-01 mu: 2.78e+05 li:  1 it: 1.73e-01 tt: 9.67e-01
+   5: f: 1.803399e+04 d: 5.33e+01 g: 1.48e+04 h: 1.23e+01 rho: 9.99e-01 mu: 8.33e+05 li:  1 it: 1.75e-01 tt: 1.14e+00
+   6: f: 1.803390e+04 d: 9.02e-02 g: 6.35e+01 h: 8.00e-01 rho: 1.00e+00 mu: 2.50e+06 li:  1 it: 1.75e-01 tt: 1.32e+00
 
- Ceres Solver Report
- -------------------
-                                      Original                  Reduced
- Parameter blocks                        22122                    22122
- Parameters                              66462                    66462
- Residual blocks                         83718                    83718
- Residual                               167436                   167436
- Trust Region Strategy     LEVENBERG_MARQUARDT
+   Ceres Solver Report
+   -------------------
+                                        Original                  Reduced
+   Parameter blocks                        22122                    22122
+   Parameters                              66462                    66462
+   Residual blocks                         83718                    83718
+   Residual                               167436                   167436
 
-                                         Given                     Used
- Linear solver                     DENSE_SCHUR              DENSE_SCHUR
- Preconditioner                            N/A                      N/A
- Threads:                                    1                        1
- Linear solver threads                       1                        1
- Linear solver ordering              AUTOMATIC                 22106,16
+   Minimizer                        TRUST_REGION
 
- Cost:
- Initial                          4.185660e+06
- Final                            1.803390e+04
- Change                           4.167626e+06
+   Dense linear algebra library            EIGEN
+   Trust region strategy     LEVENBERG_MARQUARDT
 
- Number of iterations:
- Successful                                  6
- Unsuccessful                                0
- Total                                       6
+                                           Given                     Used
+   Linear solver                     DENSE_SCHUR              DENSE_SCHUR
+   Threads                                     1                        1
+   Linear solver threads                       1                        1
+   Linear solver ordering              AUTOMATIC                22106, 16
 
- Time (in seconds):
- Preprocessor                        2.229e-01
+   Cost:
+   Initial                          4.185660e+06
+   Final                            1.803390e+04
+   Change                           4.167626e+06
 
-   Evaluator::Residuals              7.438e-02
-   Evaluator::Jacobians              6.790e-01
-   Linear Solver                     1.681e+00
- Minimizer                           2.547e+00
+   Minimizer iterations                        6
+   Successful steps                            6
+   Unsuccessful steps                          0
 
- Postprocessor                       1.920e-02
- Total                               2.823e+00
+   Time (in seconds):
+   Preprocessor                            0.173
 
- Termination:               FUNCTION_TOLERANCE
+     Residual evaluation                   0.115
+     Jacobian evaluation                   0.498
+     Linear solver                         0.517
+   Minimizer                               1.242
+
+   Postprocessor                           0.003
+   Total                                   1.437
+
+   Termination:                      CONVERGENCE (Function tolerance reached. |cost_change|/cost: 1.769750e-09 <= 1.000000e-06)
 
 .. section-osx:
 
 Building on Mac OS X
 ====================
-
-On OS X, we recommend using the `homebrew
-<http://mxcl.github.com/homebrew/>`_ package manager to install the
-dependencies. There is no need to install ``BLAS`` or ``LAPACK``
-separately as OS X ships with optimized ``BLAS`` and ``LAPACK``
-routines as part of the `vecLib
-<https://developer.apple.com/library/mac/#documentation/Performance/Conceptual/vecLib/Reference/reference.html>`_
-framework.
-
 .. NOTE::
 
  Ceres will not compile using Xcode 4.5.x (Clang version 4.1) due to a bug in that version of
  Clang.  If you are running Xcode 4.5.x, please update to Xcode >= 4.6.x before attempting to
  build Ceres.
+
+
+On OS X, we recommend using the `homebrew
+<http://mxcl.github.com/homebrew/>`_ package manager to install Ceres.
+
+.. code-block:: bash
+
+      brew install ceres-solver
+
+will install the latest stable version along with all the required
+dependencies and
+
+.. code-block:: bash
+
+      brew install ceres-solver --HEAD
+
+will install the latest version in the git repo.
+
+You can also install each of the dependencies by hand using `homebrew
+<http://mxcl.github.com/homebrew/>`_. There is no need to install
+``BLAS`` or ``LAPACK`` separately as OS X ships with optimized
+``BLAS`` and ``LAPACK`` routines as part of the `vecLib
+<https://developer.apple.com/library/mac/#documentation/Performance/Conceptual/vecLib/Reference/reference.html>`_
+framework.
 
 .. code-block:: bash
 
@@ -209,18 +229,16 @@ framework.
       # SuiteSparse and CXSparse
       brew install suite-sparse
 
-
 We are now ready to build and test Ceres.
 
 .. code-block:: bash
 
-   tar zxf ceres-solver-1.8.0.tar.gz
+   tar zxf ceres-solver-1.9.0.tar.gz
    mkdir ceres-bin
    cd ceres-bin
-   cmake ../ceres-solver-1.8.0
+   cmake ../ceres-solver-1.9.0
    make -j3
    make test
-
 
 Like the Linux build, you should now be able to run
 ``bin/simple_bundle_adjuster``.
@@ -231,10 +249,11 @@ Building on Windows with Visual Studio
 ======================================
 
 On Windows, we support building with Visual Studio 2010 or newer. Note
-that the Windows port is less featureful and less tested than the
-Linux or Mac OS X versions due to the unavailability of SuiteSparse
-and ``CXSparse``. Building is also more involved since there is no
-automated way to install the dependencies.
+that the Windows port is less featureful and less tested than the Linux or
+Mac OS X versions due to the lack of an officially supported way of building
+SuiteSparse and CXSparse.  There are however a number of unofficial ways of
+building these libraries. Building on Windows also a bit more involved since
+there is no automated way to install dependencies.
 
 #. Make a toplevel directory for deps & build & src somewhere: ``ceres/``
 #. Get dependencies; unpack them as subdirectories in ``ceres/``
@@ -245,6 +264,18 @@ automated way to install the dependencies.
 
    #. ``google-glog`` Open up the Visual Studio solution and build it.
    #. ``gflags`` Open up the Visual Studio solution and build it.
+
+   #. (Experimental) ``SuiteSparse`` Previously SuiteSparse was not available
+      on Windows, recently it has become possible to build it on Windows using
+      the `suitesparse-metis-for-windows <https://github.com/jlblancoc/suitesparse-metis-for-windows>`_
+      project.  If you wish to use ``SuiteSparse``, follow their instructions
+      for obtaining and building it.
+
+   #. (Experimental) ``CXSparse`` Previously CXSparse was not available on
+      Windows, there are now several ports that enable it to be, including:
+      `[1] <https://github.com/PetterS/CXSparse>`_ and
+      `[2] <https://github.com/TheFrenchLeaf/CXSparse>`_.  If you wish to use
+      ``CXSparse``, follow their instructions for obtaining and building it.
 
 #. Unpack the Ceres tarball into ``ceres``. For the tarball, you
    should get a directory inside ``ceres`` similar to
@@ -262,15 +293,22 @@ automated way to install the dependencies.
 #. Try running ``Configure``. It won't work. It'll show a bunch of options.
    You'll need to set:
 
-   #. ``EIGEN_INCLUDE_DIR``
-   #. ``GLOG_INCLUDE_DIR``
-   #. ``GLOG_LIBRARY``
-   #. ``GFLAGS_INCLUDE_DIR``
-   #. ``GFLAGS_LIBRARY``
+   #. ``EIGEN_INCLUDE_DIR_HINTS``
+   #. ``GLOG_INCLUDE_DIR_HINTS``
+   #. ``GLOG_LIBRARY_DIR_HINTS``
+   #. ``GFLAGS_INCLUDE_DIR_HINTS``
+   #. ``GFLAGS_LIBRARY_DIR_HINTS``
+   #. (Optional) ``SUITESPARSE_INCLUDE_DIR_HINTS``
+   #. (Optional) ``SUITESPARSE_LIBRARY_DIR_HINTS``
+   #. (Optional) ``CXSPARSE_INCLUDE_DIR_HINTS``
+   #. (Optional) ``CXSPARSE_LIBRARY_DIR_HINTS``
 
-   to the appropriate place where you unpacked/built them. If any of the
-   variables are not visible in the ``CMake`` GUI, toggle to the
-   *Advanced View* with ``<t>``.
+   to the appropriate directories where you unpacked/built them. If any of
+   the variables are not visible in the ``CMake`` GUI, create a new entry
+   for them.  We recommend using the ``<NAME>_(INCLUDE/LIBRARY)_DIR_HINTS``
+   variables rather than setting the ``<NAME>_INCLUDE_DIR`` &
+   ``<NAME>_LIBRARY`` variables directly to keep all of the validity
+   checking, and to avoid having to specify the library files manually.
 
 #. You may have to tweak some more settings to generate a MSVC
    project.  After each adjustment, try pressing Configure & Generate
@@ -289,14 +327,13 @@ Notes:
 
 #. The default build is Debug; consider switching it to release mode.
 #. Currently ``system_test`` is not working properly.
-#. Building Ceres as a DLL is not supported; patches welcome.
 #. CMake puts the resulting test binaries in ``ceres-bin/examples/Debug``
    by default.
 #. The solvers supported on Windows are ``DENSE_QR``, ``DENSE_SCHUR``,
    ``CGNR``, and ``ITERATIVE_SCHUR``.
 #. We're looking for someone to work with upstream ``SuiteSparse`` to
    port their build system to something sane like ``CMake``, and get a
-   supported Windows port.
+   fully supported Windows port.
 
 
 .. _section-android:
@@ -304,9 +341,44 @@ Notes:
 Building on Android
 ===================
 
+Download the ``Android NDK`` version ``r9d`` or later. Run
+``ndk-build`` from inside the ``jni`` directory. Use the
+``libceres.a`` that gets created.
 
-Download the ``Android NDK``. Run ``ndk-build`` from inside the
-``jni`` directory. Use the ``libceres.a`` that gets created.
+.. _section-ios:
+
+Building on iOS
+===============
+.. NOTE::
+
+   You need iOS version 6.0 or higher to build Ceres Solver.
+
+To build Ceres for iOS, we need to force ``CMake`` to find the toolchains from
+the iOS SDK instead of using the standard ones. For example:
+
+.. code-block:: bash
+
+   cmake ../ceres-solver \
+   -DCMAKE_TOOLCHAIN_FILE=../ceres-solver/cmake/iOS.cmake \
+   -DEIGEN_INCLUDE_DIR=/path/to/eigen/header \
+   -DIOS_PLATFORM=<PLATFORM>
+
+``PLATFORM`` can be one of ``OS``, ``SIMULATOR`` and ``SIMULATOR64``. You can
+build for ``OS`` (``armv7``, ``armv7s``, ``arm64``), ``SIMULATOR`` (``i386``) or
+``SIMULATOR64`` (``x86_64``) separately and use ``LIPO`` to merge them into
+one static library.  See ``cmake/iOS.cmake`` for more options.
+
+After building, you will get ``libceres.a`` and ``libminiglog.a``
+You need to add these two libraries into your XCode project.
+
+The default CMake configuration builds a bare bones version of Ceres
+Solver that only depends on Eigen and MINIGLOG, this should be
+sufficient for solving small to moderate sized problems (No
+``SPARSE_SCHUR``, ``SPARSE_NORMAL_CHOLESKY`` linear solvers and no
+``CLUSTER_JACOBI`` and ``CLUSTER_TRIDIAGONAL`` preconditioners).
+
+If you decide to use ``LAPACK`` and ``BLAS``, then you also need to add
+``Accelerate.framework`` to your XCode project's linking dependency.
 
 .. _section-customizing:
 
@@ -370,12 +442,6 @@ Options controlling Ceres configuration
    gains in the ``SPARSE_SCHUR`` solver, you can disable some of the
    template specializations by turning this ``OFF``.
 
-#. ``LINE_SEARCH_MINIMIZER [Default: ON]``: The line search based
-   minimizer is mostly suitable for large scale optimization problems,
-   or when sparse linear algebra libraries are not available. You can
-   further save on some compile time and binary size by turning this
-   ``OFF``.
-
 #. ``OPENMP [Default: ON]``: On certain platforms like Android,
    multi-threading with ``OpenMP`` is not supported. Turn this ``OFF``
    to disable multithreading.
@@ -385,9 +451,10 @@ Options controlling Ceres configuration
    shared library.
 
 #. ``BUILD_DOCUMENTATION [Default: OFF]``: Use this to enable building
-   the documentation, requires `Sphinx <http://sphinx-doc.org/>`_. In
-   addition, ``make ceres_docs`` can be used to build only the
-   documentation.
+   the documentation, requires `Sphinx <http://sphinx-doc.org/>`_ and the
+   `sphinx_rtd_theme <https://pypi.python.org/pypi/sphinx_rtd_theme>`_
+   package available from the Python package index. In addition,
+   ``make ceres_docs`` can be used to build only the documentation.
 
 #. ``MSVC_USE_STATIC_CRT [Default: OFF]`` *Windows Only*: By default
    Ceres will use the Visual Studio default, *shared* C-Run Time (CRT) library.
@@ -433,6 +500,20 @@ scripts shipped with Ceres support two ways for you to do this:
    found (but the current Ceres configuration requires it), but
    are always visible in the *Advanced View*.  They can also be
    set directly via ``-D<VAR>=<VALUE>`` arguments to ``CMake``.
+
+Building using custom BLAS & LAPACK installs
+----------------------------------------------
+
+If you are building on an exotic system, then the standard find package
+scripts for ``BLAS`` & ``LAPACK`` which ship with ``CMake`` might not
+work.  In this case, one option would be to write your own custom versions for
+your environment and then set ``CMAKE_MODULE_PATH`` to the directory
+containing these custom scripts when invoking ``CMake`` to build Ceres and they
+will be used in preference to the default versions.  However, in order for this
+to work, your scripts must provide the full set of variables provided by the
+default scripts.  Also, if you are building Ceres with ``SuiteSparse``, the
+versions of ``BLAS`` & ``LAPACK`` used by ``SuiteSparse`` and Ceres should be
+the same.
 
 .. _section-using-ceres:
 
@@ -487,4 +568,3 @@ the **PATHS** option to the ``FIND_PACKAGE()`` command. e.g.,
 
 Note that this can be used to have multiple versions of Ceres
 installed.
-

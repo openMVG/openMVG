@@ -48,6 +48,12 @@ Bibliography
    preconditioning for bundle adjustment**, *In Proceedings of the
    IEEE Conference on Computer Vision and Pattern Recognition*, 2012.
 
+.. [Kanzow] C. Kanzow, N. Yamashita and M. Fukushima,
+   **Levenberg–Marquardt methods with strong local convergence
+   properties for solving nonlinear equations with convex
+   constraints**, *Journal of Computational and Applied Mathematics*,
+   177(2):375–397, 2005.
+
 .. [Levenberg] K. Levenberg, **A method for the solution of certain
    nonlinear problems in least squares**, *Quart. Appl.  Math*,
    2(2):164–168, 1944.
@@ -113,7 +119,3 @@ Bibliography
    Levenberg Marquardt Method for Large Sparse Nonlinear Least
    Squares**, *Journal of the Australian Mathematical Society Series
    B*, 26(4):387–403, 1985.
-
-
-
-
