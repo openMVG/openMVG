@@ -1,32 +1,28 @@
-PROJECT(jpeg)
+PROJECT(jpeg C)
+cmake_minimum_required (VERSION 2.8)
 
-SET(LIBJPEG_SYSDEP jmemnobs.c)
+INCLUDE (CheckIncludeFile)
+check_include_file (stddef.h HAVE_STDDEF_H)
+check_include_file (stdlib.h HAVE_STDLIB_H)
+if (WIN32 AND NOT CYGWIN)
+  SET (TWO_FILE_COMMANDLINE true)
+endif ()
+CONFIGURE_FILE (jconfig.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config/jconfig.h)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/config/)
 
-SET(LIBJPEG_COMMON jaricom.c jcomapi.c jutils.c jerror.c jmemmgr.c)
+SET (HEADERS jerror.h jmorecfg.h jpeglib.h ${CMAKE_CURRENT_BINARY_DIR}/config/jconfig.h)
 
-SET(LIBJPEG_CLIB
-  jcapimin.c jcapistd.c jcarith.c  jctrans.c  jcparam.c 
-  jdatadst.c jcinit.c   jcmaster.c jcmarker.c jcmainct.c 
-  jcprepct.c jccoefct.c jccolor.c  jcsample.c jchuff.c 
-  jcdctmgr.c jfdctfst.c jfdctflt.c jfdctint.c
-)
-
-SET(LIBJPEG_DLIB
-  jdapimin.c jdapistd.c jdarith.c  jdtrans.c  jdatasrc.c 
-  jdmaster.c jdinput.c  jdmarker.c jdhuff.c   jdmainct.c 
-  jdcoefct.c jdpostct.c jddctmgr.c jidctfst.c jidctflt.c 
-  jidctint.c jdsample.c jdcolor.c  jquant1.c  jquant2.c 
-  jdmerge.c
-)
+SET (SRC jmemnobs.c jaricom.c jcapimin.c jcapistd.c jcarith.c jccoefct.c jccolor.c 
+  jcdctmgr.c jchuff.c jcinit.c jcmainct.c jcmarker.c jcmaster.c jcomapi.c jcparam.c 
+  jcprepct.c jcsample.c jctrans.c jdapimin.c jdapistd.c jdarith.c jdatadst.c jdatasrc.c 
+  jdcoefct.c jdcolor.c jddctmgr.c jdhuff.c jdinput.c jdmainct.c jdmarker.c jdmaster.c 
+  jdmerge.c jdpostct.c jdsample.c jdtrans.c jerror.c jfdctflt.c jfdctfst.c jfdctint.c 
+  jidctflt.c jidctfst.c jidctint.c jquant1.c jquant2.c jutils.c jmemmgr.c jdct.h 
+  jinclude.h jmemsys.h jpegint.h jversion.h)
 
 IF(WIN32)
   ADD_DEFINITIONS( -DJPEGSTATIC -D_CRT_SECURE_NO_WARNINGS)
-  # TODO(keir): CMake ignores this, but it should disable the following:
-  # C:\...\basetsd.h(78): warning C4142: benign redefinition of type
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4142")
 ENDIF(WIN32)
 
-FILE(GLOB LIBJPEG_H *.h )
-
-ADD_LIBRARY(jpeg ${LIBJPEG_SYSDEP} ${LIBJPEG_COMMON} ${LIBJPEG_CLIB} ${LIBJPEG_DLIB} ${LIBJPEG_H} )
+ADD_LIBRARY (jpeg ${SRC} ${HEADERS})
 
