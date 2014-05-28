@@ -132,7 +132,7 @@ class Exif_IO_Exiv2 : public Exif_IO
       image = Exiv2::ImageFactory::open( sFileName.c_str() );
       Exiv2::IptcData &iptcData = image->iptcData();
       if (!iptcData.empty())
-	isOpen = true;
+	      isOpen = true;
 
       image->readMetadata();
       return isOpen;

@@ -40,3 +40,6 @@ ADD_SUBDIRECTORY(ceres-solver)
 # Add an Approximate Nearest Neighbor library
 ADD_SUBDIRECTORY(flann)
 
+# Exif data parsing
+ADD_SUBDIRECTORY(easyexif)
+
