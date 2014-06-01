@@ -267,9 +267,7 @@ bool estimate_T_triplet(
     ceres::Solve(options, &problem, &summary);
 
     // If convergence and no error, get back refined parameters
-    if (summary.termination_type != ceres::DID_NOT_RUN &&
-      summary.termination_type != ceres::USER_ABORT &&
-      summary.termination_type != ceres::NUMERICAL_FAILURE)
+    if (summary.IsSolutionUsable())
     {
       size_t i = 0;
       // Get back updated cameras

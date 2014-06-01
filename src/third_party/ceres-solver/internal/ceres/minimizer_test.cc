@@ -44,7 +44,7 @@ class FakeIterationCallback : public IterationCallback {
   }
 };
 
-TEST(MinimizerTest, InitializationCopiesCallbacks) {
+TEST(Minimizer, InitializationCopiesCallbacks) {
   FakeIterationCallback callback0;
   FakeIterationCallback callback1;
 
@@ -57,6 +57,43 @@ TEST(MinimizerTest, InitializationCopiesCallbacks) {
 
   EXPECT_EQ(minimizer_options.callbacks[0], &callback0);
   EXPECT_EQ(minimizer_options.callbacks[1], &callback1);
+}
+
+class AbortingIterationCallback : public IterationCallback {
+ public:
+  virtual ~AbortingIterationCallback() {}
+  virtual CallbackReturnType operator()(const IterationSummary& summary) {
+    return SOLVER_ABORT;
+  }
+};
+
+TEST(Minimizer, UserAbortUpdatesSummaryMessage) {
+  AbortingIterationCallback callback;
+  Solver::Options solver_options;
+  solver_options.callbacks.push_back(&callback);
+  Minimizer::Options minimizer_options(solver_options);
+  Solver::Summary summary;
+  Minimizer::RunCallbacks(minimizer_options, IterationSummary(), &summary);
+  EXPECT_EQ(summary.message, "User callback returned SOLVER_ABORT.");
+}
+
+class SucceedingIterationCallback : public IterationCallback {
+ public:
+  virtual ~SucceedingIterationCallback() {}
+  virtual CallbackReturnType operator()(const IterationSummary& summary) {
+    return SOLVER_TERMINATE_SUCCESSFULLY;
+  }
+};
+
+TEST(Minimizer, UserSuccessUpdatesSummaryMessage) {
+  SucceedingIterationCallback callback;
+  Solver::Options solver_options;
+  solver_options.callbacks.push_back(&callback);
+  Minimizer::Options minimizer_options(solver_options);
+  Solver::Summary summary;
+  Minimizer::RunCallbacks(minimizer_options, IterationSummary(), &summary);
+  EXPECT_EQ(summary.message,
+            "User callback returned SOLVER_TERMINATE_SUCCESSFULLY.");
 }
 
 }  // namespace internal

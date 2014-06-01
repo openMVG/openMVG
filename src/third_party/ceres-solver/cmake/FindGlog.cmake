@@ -39,10 +39,10 @@
 #
 # The following variables control the behaviour of this module:
 #
-# GLOG_INCLUDE_DIRS_HINTS: List of additional directories in which to
-#                          search for glog includes, e.g: /timbuktu/include.
-# GLOG_LIBRARY_DIRS_HINTS: List of additional directories in which to
-#                          search for glog libraries, e.g: /timbuktu/lib.
+# GLOG_INCLUDE_DIR_HINTS: List of additional directories in which to
+#                         search for glog includes, e.g: /timbuktu/include.
+# GLOG_LIBRARY_DIR_HINTS: List of additional directories in which to
+#                         search for glog libraries, e.g: /timbuktu/lib.
 #
 # The following variables are also defined by this module, but in line with
 # CMake recommended FindPackage() module style should NOT be referenced directly

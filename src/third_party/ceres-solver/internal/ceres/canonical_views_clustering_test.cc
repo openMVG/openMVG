@@ -29,6 +29,9 @@
 // Author: Sameer Agarwal (sameeragarwal@google.com)
 //         David Gallup (dgallup@google.com)
 
+// This include must come before any #ifndef check on Ceres compile options.
+#include "ceres/internal/port.h"
+
 #ifndef CERES_NO_SUITESPARSE
 
 #include "ceres/canonical_views_clustering.h"

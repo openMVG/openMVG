@@ -1358,9 +1358,7 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
           ceres::Solve(options, &problem, &summary);
 
           // If no error, get back refined parameters
-          if (summary.termination_type != ceres::DID_NOT_RUN &&
-              summary.termination_type != ceres::USER_ABORT &&
-              summary.termination_type != ceres::NUMERICAL_FAILURE)
+          if (summary.IsSolutionUsable())
           {
             // Get back 3D points
             size_t k = 0;
@@ -1785,9 +1783,7 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
   std::cout << summary.FullReport() << std::endl;
 
   // If no error, get back refined parameters
-  if (summary.termination_type != ceres::DID_NOT_RUN &&
-      summary.termination_type != ceres::USER_ABORT &&
-      summary.termination_type != ceres::NUMERICAL_FAILURE)
+  if (summary.IsSolutionUsable())
   {
     // Get back 3D points
     i = 0;
@@ -1998,9 +1994,7 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
   std::cout << summary.FullReport() << std::endl;
 
   // If no error, get back refined parameters
-  if (summary.termination_type != ceres::DID_NOT_RUN &&
-      summary.termination_type != ceres::USER_ABORT &&
-      summary.termination_type != ceres::NUMERICAL_FAILURE)
+  if (summary.IsSolutionUsable())
   {
     // Get back 3D points
     i = 0;

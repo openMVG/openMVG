@@ -95,6 +95,8 @@
 #ifndef CERES_INTERNAL_MUTEX_H_
 #define CERES_INTERNAL_MUTEX_H_
 
+#include "ceres/internal/port.h"
+
 #if defined(CERES_NO_THREADS)
   typedef int MutexType;      // to keep a lock-count
 #elif defined(_WIN32) || defined(__CYGWIN32__) || defined(__CYGWIN64__)
@@ -112,9 +114,9 @@
 // To avoid macro definition of ERROR.
 # define NOGDI
 // To avoid macro definition of min/max.
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
+# ifndef NOMINMAX
+#   define NOMINMAX
+# endif
 # include <windows.h>
   typedef CRITICAL_SECTION MutexType;
 #elif defined(CERES_HAVE_PTHREAD) && defined(CERES_HAVE_RWLOCK)

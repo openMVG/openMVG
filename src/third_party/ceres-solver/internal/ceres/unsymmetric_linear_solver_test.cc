@@ -57,7 +57,7 @@ class UnsymmetricLinearSolverTest : public ::testing::Test {
   }
 
   void TestSolver(const LinearSolver::Options& options) {
-    scoped_ptr<LinearSolver> solver(LinearSolver::Create(options));
+
 
     LinearSolver::PerSolveOptions per_solve_options;
     LinearSolver::Summary unregularized_solve_summary;
@@ -84,13 +84,17 @@ class UnsymmetricLinearSolverTest : public ::testing::Test {
     } else {
       LOG(FATAL) << "Unknown linear solver : " << options.type;
     }
+
     // Unregularized
+    scoped_ptr<LinearSolver> solver(LinearSolver::Create(options));
     unregularized_solve_summary =
         solver->Solve(transformed_A.get(),
                       b_.get(),
                       per_solve_options,
                       x_unregularized.data());
 
+    // Sparsity structure is changing, reset the solver.
+    solver.reset(LinearSolver::Create(options));
     // Regularized solution
     per_solve_options.D = D_.get();
     regularized_solve_summary =
@@ -99,13 +103,15 @@ class UnsymmetricLinearSolverTest : public ::testing::Test {
                       per_solve_options,
                       x_regularized.data());
 
-    EXPECT_EQ(unregularized_solve_summary.termination_type, TOLERANCE);
+    EXPECT_EQ(unregularized_solve_summary.termination_type,
+              LINEAR_SOLVER_SUCCESS);
 
     for (int i = 0; i < A_->num_cols(); ++i) {
       EXPECT_NEAR(sol_unregularized_[i], x_unregularized[i], 1e-8);
     }
 
-    EXPECT_EQ(regularized_solve_summary.termination_type, TOLERANCE);
+    EXPECT_EQ(regularized_solve_summary.termination_type,
+              LINEAR_SOLVER_SUCCESS);
     for (int i = 0; i < A_->num_cols(); ++i) {
       EXPECT_NEAR(sol_regularized_[i], x_regularized[i], 1e-8);
     }
@@ -166,6 +172,15 @@ TEST_F(UnsymmetricLinearSolverTest,
   options.use_postordering = true;
   TestSolver(options);
 }
+
+TEST_F(UnsymmetricLinearSolverTest,
+       SparseNormalCholeskyUsingSuiteSparseDynamicSparsity) {
+  LinearSolver::Options options;
+  options.sparse_linear_algebra_library_type = SUITE_SPARSE;
+  options.type = SPARSE_NORMAL_CHOLESKY;
+  options.dynamic_sparsity = true;
+  TestSolver(options);
+}
 #endif
 
 #ifndef CERES_NO_CXSPARSE
@@ -184,6 +199,15 @@ TEST_F(UnsymmetricLinearSolverTest,
   options.sparse_linear_algebra_library_type = CX_SPARSE;
   options.type = SPARSE_NORMAL_CHOLESKY;
   options.use_postordering = true;
+  TestSolver(options);
+}
+
+TEST_F(UnsymmetricLinearSolverTest,
+       SparseNormalCholeskyUsingCXSparseDynamicSparsity) {
+  LinearSolver::Options options;
+  options.sparse_linear_algebra_library_type = CX_SPARSE;
+  options.type = SPARSE_NORMAL_CHOLESKY;
+  options.dynamic_sparsity = true;
   TestSolver(options);
 }
 #endif

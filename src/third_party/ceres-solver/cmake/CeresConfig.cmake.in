@@ -37,17 +37,29 @@
 #
 # This module defines the following variables:
 #
-# CERES_VERSION
-# CERES_INCLUDE_DIRS: Include directories for Ceres and the dependencies which
-#                     appear in the Ceres public API and are thus required to
-#                     use Ceres.
-# CERES_LIBRARIES: Libraries for Ceres and all dependencies against which Ceres
-#                  was compiled. This will not include any optional dependencies
-#                  that were disabled when Ceres was compiled.
+# Ceres_FOUND / CERES_FOUND: True iff Ceres has been successfully
+#                            found. Both variables are set as although
+#                            FindPackage() only references Ceres_FOUND
+#                            in Config mode, given the conventions for
+#                            <package>_FOUND when FindPackage() is
+#                            called in Module mode, users could
+#                            reasonably expect to use CERES_FOUND
+#                            instead.
 #
-# The following variables are also defined for legacy compatibility only.
-# Any new code should not use them as they do not conform to the standard CMake
-# FindPackage naming conventions.
+# CERES_VERSION: Version of Ceres found.
+#
+# CERES_INCLUDE_DIRS: Include directories for Ceres and the
+#                     dependencies which appear in the Ceres public
+#                     API and are thus required to use Ceres.
+#                     CERES_LIBRARIES: Libraries for Ceres and all
+#                     dependencies against which Ceres was
+#                     compiled. This will not include any optional
+#                     dependencies that were disabled when Ceres was
+#                     compiled.
+#
+# The following variables are also defined for legacy compatibility
+# only.  Any new code should not use them as they do not conform to
+# the standard CMake FindPackage naming conventions.
 #
 # CERES_INCLUDES = ${CERES_INCLUDE_DIRS}.
 
@@ -55,15 +67,18 @@
 # unsets all public (designed to be used externally) variables and reports
 # error message at priority depending upon [REQUIRED/QUIET/<NONE>] argument.
 MACRO(CERES_REPORT_NOT_FOUND REASON_MSG)
-  UNSET(CERES_FOUND)
+  # FindPackage() only references Ceres_FOUND, and requires it to be
+  # explicitly set FALSE to denote not found (not merely undefined).
+  SET(Ceres_FOUND FALSE)
+  SET(CERES_FOUND FALSE)
   UNSET(CERES_INCLUDE_DIRS)
   UNSET(CERES_LIBRARIES)
 
   # Reset the CMake module path to its state when this script was called.
   SET(CMAKE_MODULE_PATH ${CALLERS_CMAKE_MODULE_PATH})
 
-  # Note <package>_FIND_[REQUIRED/QUIETLY] variables defined by FindPackage()
-  # use the camelcase library name, not uppercase.
+  # Note <package>_FIND_[REQUIRED/QUIETLY] variables defined by
+  # FindPackage() use the camelcase library name, not uppercase.
   IF (Ceres_FIND_QUIETLY)
     MESSAGE(STATUS "Failed to find Ceres - " ${REASON_MSG} ${ARGN})
   ELSE (Ceres_FIND_REQUIRED)
@@ -77,22 +92,23 @@ MACRO(CERES_REPORT_NOT_FOUND REASON_MSG)
 ENDMACRO(CERES_REPORT_NOT_FOUND)
 
 # Get the (current, i.e. installed) directory containing this file.
-SET(CURRENT_CONFIG_INSTALL_DIR ${CMAKE_CURRENT_LIST_DIR})
+GET_FILENAME_COMPONENT(CURRENT_CONFIG_INSTALL_DIR
+  "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
-# Record the state of the CMake module path when this script was called so
-# that we can ensure that we leave it in the same state on exit as it was
-# on entry, but modify it locally.
+# Record the state of the CMake module path when this script was
+# called so that we can ensure that we leave it in the same state on
+# exit as it was on entry, but modify it locally.
 SET(CALLERS_CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
-# Reset CMake module path to the installation directory of this script,
-# thus we will use the FindPackage() scripts shipped with Ceres to find
-# Ceres' dependencies, even if the user has equivalently named FindPackage()
-# scripts in their project.
+# Reset CMake module path to the installation directory of this
+# script, thus we will use the FindPackage() scripts shipped with
+# Ceres to find Ceres' dependencies, even if the user has equivalently
+# named FindPackage() scripts in their project.
 SET(CMAKE_MODULE_PATH ${CURRENT_CONFIG_INSTALL_DIR})
 
-# Build the absolute root install directory as a relative path (determined when
-# Ceres was configured & built) from the current install directory for this
-# this file.  This allows for the install tree to be relocated, after Ceres was
-# built, outside of CMake.
+# Build the absolute root install directory as a relative path
+# (determined when Ceres was configured & built) from the current
+# install directory for this this file.  This allows for the install
+# tree to be relocated, after Ceres was built, outside of CMake.
 GET_FILENAME_COMPONENT(CURRENT_ROOT_INSTALL_DIR
   ${CURRENT_CONFIG_INSTALL_DIR}/@INSTALL_ROOT_REL_CONFIG_INSTALL_DIR@ ABSOLUTE)
 IF (NOT EXISTS ${CURRENT_ROOT_INSTALL_DIR})
@@ -108,7 +124,7 @@ ENDIF (NOT EXISTS ${CURRENT_ROOT_INSTALL_DIR})
 SET(CERES_VERSION @CERES_VERSION@ )
 
 # Set the include directories for Ceres (itself).
-SET(CERES_INCLUDE_DIR "${CURRENT_ROOT_INSTALL_DIR}/@INCLUDE_INSTALL_DIR@")
+SET(CERES_INCLUDE_DIR "${CURRENT_ROOT_INSTALL_DIR}/include")
 IF (NOT EXISTS ${CERES_INCLUDE_DIR}/ceres/ceres.h)
   CERES_REPORT_NOT_FOUND(
     "Ceres install root: ${CURRENT_ROOT_INSTALL_DIR}, "
@@ -118,14 +134,17 @@ IF (NOT EXISTS ${CERES_INCLUDE_DIR}/ceres/ceres.h)
     "partially relocated outside of CMake after Ceres was built.")
 ENDIF (NOT EXISTS ${CERES_INCLUDE_DIR}/ceres/ceres.h)
 
-# Append the include directories for all (potentially optional) dependencies
-# with which Ceres was compiled, the libraries themselves come in via
-# CeresTargets-<release/debug>.cmake as link libraries for Ceres target.
+# Append the include directories for all (potentially optional)
+# dependencies with which Ceres was compiled, the libraries themselves
+# come in via CeresTargets-<release/debug>.cmake as link libraries for
+# Ceres target.
 SET(CERES_INCLUDE_DIRS ${CERES_INCLUDE_DIR})
 
 # Eigen.
 # Flag set during configuration and build of Ceres.
 SET(CERES_EIGEN_VERSION @EIGEN_VERSION@)
+# Append the locations of Eigen when Ceres was built to the search path hints.
+LIST(APPEND EIGEN_INCLUDE_DIR_HINTS @EIGEN_INCLUDE_DIR@)
 # Search quietly s/t we control the timing of the error message if not found.
 FIND_PACKAGE(Eigen ${CERES_EIGEN_VERSION} EXACT QUIET)
 IF (EIGEN_FOUND)
@@ -141,6 +160,10 @@ LIST(APPEND CERES_INCLUDE_DIRS ${EIGEN_INCLUDE_DIRS})
 # Glog.
 # Flag set during configuration and build of Ceres.
 SET(CERES_USES_MINIGLOG @MINIGLOG@)
+# Append the locations of glog when Ceres was built to the search path hints.
+LIST(APPEND GLOG_INCLUDE_DIR_HINTS @GLOG_INCLUDE_DIR@)
+GET_FILENAME_COMPONENT(CERES_BUILD_GLOG_LIBRARY_DIR @GLOG_LIBRARY@ PATH)
+LIST(APPEND GLOG_LIBRARY_DIR_HINTS ${CERES_BUILD_GLOG_LIBRARY_DIR})
 IF (CERES_USES_MINIGLOG)
   SET(MINIGLOG_INCLUDE_DIR ${CERES_INCLUDE_DIR}/ceres/internal/miniglog)
   IF (NOT EXISTS ${MINIGLOG_INCLUDE_DIR})
@@ -184,3 +207,9 @@ SET(CMAKE_MODULE_PATH ${CALLERS_CMAKE_MODULE_PATH})
 # found Ceres and all required dependencies.
 MESSAGE(STATUS "Found Ceres version: ${CERES_VERSION} "
     "installed in: ${CURRENT_ROOT_INSTALL_DIR}")
+
+# Set CERES_FOUND to be equivalent to Ceres_FOUND, which is set to
+# TRUE by FindPackage() if this file is found and run, and after which
+# Ceres_FOUND is not (explicitly, i.e. undefined does not count) set
+# to FALSE.
+SET(CERES_FOUND TRUE)

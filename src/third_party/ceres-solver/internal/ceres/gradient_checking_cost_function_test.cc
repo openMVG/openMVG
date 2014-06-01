@@ -264,7 +264,7 @@ TEST(GradientCheckingCostFunction, SmokeTest) {
 // Trivial cost function that accepts a single argument.
 class UnaryCostFunction : public CostFunction {
  public:
-  UnaryCostFunction(int num_residuals, int16 parameter_block_size) {
+  UnaryCostFunction(int num_residuals, int32 parameter_block_size) {
     set_num_residuals(num_residuals);
     mutable_parameter_block_sizes()->push_back(parameter_block_size);
   }
@@ -284,8 +284,8 @@ class UnaryCostFunction : public CostFunction {
 class BinaryCostFunction: public CostFunction {
  public:
   BinaryCostFunction(int num_residuals,
-                     int16 parameter_block1_size,
-                     int16 parameter_block2_size) {
+                     int32 parameter_block1_size,
+                     int32 parameter_block2_size) {
     set_num_residuals(num_residuals);
     mutable_parameter_block_sizes()->push_back(parameter_block1_size);
     mutable_parameter_block_sizes()->push_back(parameter_block2_size);
@@ -305,9 +305,9 @@ class BinaryCostFunction: public CostFunction {
 class TernaryCostFunction: public CostFunction {
  public:
   TernaryCostFunction(int num_residuals,
-                      int16 parameter_block1_size,
-                      int16 parameter_block2_size,
-                      int16 parameter_block3_size) {
+                      int32 parameter_block1_size,
+                      int32 parameter_block2_size,
+                      int32 parameter_block3_size) {
     set_num_residuals(num_residuals);
     mutable_parameter_block_sizes()->push_back(parameter_block1_size);
     mutable_parameter_block_sizes()->push_back(parameter_block2_size);

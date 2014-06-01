@@ -13,7 +13,7 @@ PROJECT(openMVG C CXX)
 # OpenMVG build options
 # ==============================================================================
 OPTION(OpenMVG_BUILD_TESTS "Build OpenMVG tests" OFF)
-OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG example applications. Does not affect binaries under 'software'" OFF)
+OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG example applications. Does not affect binaries under 'software'" ON)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
 
 # By default build in Release mode
@@ -81,20 +81,6 @@ SET(GLFW_BUILD_TESTS    OFF CACHE BOOL "Do not build the GLFW tests programs")
 SET(GLFW_BUILD_DOCS     OFF CACHE BOOL "Do not build the GLFW documentation")
 ADD_SUBDIRECTORY(dependencies/glfw)
 INCLUDE_DIRECTORIES(SYSTEM dependencies/glfw/include)
-
-# ==============================================================================
-#- OpenExif
-# ==============================================================================
-ADD_SUBDIRECTORY(dependencies/OpenExif)
-
-#- EXIV 2
-# ==============================================================================
-IF (UNIX)
-  FIND_PACKAGE( Exiv2 QUIET)
-  IF (EXIV2_FOUND)
-    ADD_DEFINITIONS(-DUSE_EXIV2)
-  ENDIF (EXIV2_FOUND)
-ENDIF (UNIX)
 
 #===============================
 #---- LINEAR PROGRAMMING SOLVER
@@ -178,6 +164,7 @@ SET(OpenMVG_INCLUDES
   ${PROJECT_BINARY_DIR}/third_party/lemon
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/include
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/internal/ceres/miniglog
+  ${PROJECT_BINARY_DIR}/third_party/ceres-solver/config
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp
   CACHE PATH "include directories for openMVG and its dependencies"
 )

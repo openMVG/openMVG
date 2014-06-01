@@ -33,6 +33,8 @@
 #ifndef CERES_INTERNAL_SUITESPARSE_H_
 #define CERES_INTERNAL_SUITESPARSE_H_
 
+// This include must come before any #ifndef check on Ceres compile options.
+#include "ceres/internal/port.h"
 
 #ifndef CERES_NO_SUITESPARSE
 
@@ -41,6 +43,7 @@
 #include <vector>
 
 #include "ceres/internal/port.h"
+#include "ceres/linear_solver.h"
 #include "cholmod.h"
 #include "glog/logging.h"
 #include "SuiteSparseQR.hpp"
@@ -138,12 +141,15 @@ class SuiteSparse {
   // A is not modified, only the pattern of non-zeros of A is used,
   // the actual numerical values in A are of no consequence.
   //
+  // message contains an explanation of the failures if any.
+  //
   // Caller owns the result.
-  cholmod_factor* AnalyzeCholesky(cholmod_sparse* A);
+  cholmod_factor* AnalyzeCholesky(cholmod_sparse* A, string* message);
 
   cholmod_factor* BlockAnalyzeCholesky(cholmod_sparse* A,
                                        const vector<int>& row_blocks,
-                                       const vector<int>& col_blocks);
+                                       const vector<int>& col_blocks,
+                                       string* message);
 
   // If A is symmetric, then compute the symbolic Cholesky
   // factorization of A(ordering, ordering). If A is unsymmetric, then
@@ -153,33 +159,38 @@ class SuiteSparse {
   // A is not modified, only the pattern of non-zeros of A is used,
   // the actual numerical values in A are of no consequence.
   //
+  // message contains an explanation of the failures if any.
+  //
   // Caller owns the result.
   cholmod_factor* AnalyzeCholeskyWithUserOrdering(cholmod_sparse* A,
-                                                  const vector<int>& ordering);
+                                                  const vector<int>& ordering,
+                                                  string* message);
 
   // Perform a symbolic factorization of A without re-ordering A. No
   // postordering of the elimination tree is performed. This ensures
   // that the symbolic factor does not introduce an extra permutation
   // on the matrix. See the documentation for CHOLMOD for more details.
-  cholmod_factor* AnalyzeCholeskyWithNaturalOrdering(cholmod_sparse* A);
+  //
+  // message contains an explanation of the failures if any.
+  cholmod_factor* AnalyzeCholeskyWithNaturalOrdering(cholmod_sparse* A,
+                                                     string* message);
 
   // Use the symbolic factorization in L, to find the numerical
   // factorization for the matrix A or AA^T. Return true if
   // successful, false otherwise. L contains the numeric factorization
   // on return.
-  bool Cholesky(cholmod_sparse* A, cholmod_factor* L);
+  //
+  // message contains an explanation of the failures if any.
+  LinearSolverTerminationType Cholesky(cholmod_sparse* A,
+                                       cholmod_factor* L,
+                                       string* message);
 
   // Given a Cholesky factorization of a matrix A = LL^T, solve the
   // linear system Ax = b, and return the result. If the Solve fails
   // NULL is returned. Caller owns the result.
-  cholmod_dense* Solve(cholmod_factor* L, cholmod_dense* b);
-
-  // Combine the calls to Cholesky and Solve into a single call. If
-  // the cholesky factorization or the solve fails, return
-  // NULL. Caller owns the result.
-  cholmod_dense* SolveCholesky(cholmod_sparse* A,
-                               cholmod_factor* L,
-                               cholmod_dense* b);
+  //
+  // message contains an explanation of the failures if any.
+  cholmod_dense* Solve(cholmod_factor* L, cholmod_dense* b, string* message);
 
   // By virtue of the modeling layer in Ceres being block oriented,
   // all the matrices used by Ceres are also block oriented. When
@@ -211,7 +222,7 @@ class SuiteSparse {
   // Find a fill reducing approximate minimum degree
   // ordering. ordering is expected to be large enough to hold the
   // ordering.
-  void ApproximateMinimumDegreeOrdering(cholmod_sparse* matrix, int* ordering);
+  bool ApproximateMinimumDegreeOrdering(cholmod_sparse* matrix, int* ordering);
 
 
   // Before SuiteSparse version 4.2.0, cholmod_camd was only enabled
@@ -241,7 +252,7 @@ class SuiteSparse {
   //
   // If CERES_NO_CAMD is defined then calling this function will
   // result in a crash.
-  void ConstrainedApproximateMinimumDegreeOrdering(cholmod_sparse* matrix,
+  bool ConstrainedApproximateMinimumDegreeOrdering(cholmod_sparse* matrix,
                                                    int* constraints,
                                                    int* ordering);
 

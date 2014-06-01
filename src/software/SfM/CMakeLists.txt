@@ -10,7 +10,7 @@ SET(LIBS ${EXTRA_LIBS}
 
 ADD_EXECUTABLE(openMVG_main_CreateList main_CreateList.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_CreateList
-                     ${LIBS} ${EXIV2_LIBRARIES} OpenExif)
+                     ${LIBS} easyexif)
 
 #Add executable that computes:
 # - features and descriptors

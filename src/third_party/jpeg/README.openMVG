@@ -1,11 +1,8 @@
 Project: JPEG
 URL: http://www.ijg.org/
 License: No general name, project specific, see README ("LEGAL ISSUES")
-Upstream version: release 8c of 16-Jan-2011.
+Upstream version: release 9 of 13-Jan-2013.
 Local modifications: 
 
 * Removed all files, except for *.c, *.h and license-relevant.
 * Created CMakeLists.txt for CMake build
-* Undefined the USE_MAC_MEMMGR flag in jconfig.mac
-* Moved jconfig.vc and jconfig.mac to jconfig_mac.h and jconfig_windows.h; made
-  jconfig.h which redirects to the appropriate place on each platform.

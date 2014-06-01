@@ -351,9 +351,8 @@ bool robustResection(
     ceres::Solve(options, &problem, &summary);
     
     // If no error, get back refined parameters
-    if (summary.termination_type != ceres::DID_NOT_RUN &&
-      summary.termination_type != ceres::USER_ABORT &&
-      summary.termination_type != ceres::NUMERICAL_FAILURE)
+    
+    if (summary.IsSolutionUsable())
     {
       const double * Rtf = ba_problem.mutable_camera_for_observation(0);
 

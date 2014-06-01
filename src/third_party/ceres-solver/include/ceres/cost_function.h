@@ -48,6 +48,7 @@
 #include "ceres/internal/macros.h"
 #include "ceres/internal/port.h"
 #include "ceres/types.h"
+#include "ceres/internal/disable_warnings.h"
 
 namespace ceres {
 
@@ -60,7 +61,7 @@ namespace ceres {
 // code inheriting from this class is expected to set these two members with the
 // corresponding accessors. This information will be verified by the Problem
 // when added with AddResidualBlock().
-class CostFunction {
+class CERES_EXPORT CostFunction {
  public:
   CostFunction() : num_residuals_(0) {}
 
@@ -115,7 +116,7 @@ class CostFunction {
                         double* residuals,
                         double** jacobians) const = 0;
 
-  const vector<int16>& parameter_block_sizes() const {
+  const vector<int32>& parameter_block_sizes() const {
     return parameter_block_sizes_;
   }
 
@@ -124,7 +125,7 @@ class CostFunction {
   }
 
  protected:
-  vector<int16>* mutable_parameter_block_sizes() {
+  vector<int32>* mutable_parameter_block_sizes() {
     return &parameter_block_sizes_;
   }
 
@@ -135,11 +136,13 @@ class CostFunction {
  private:
   // Cost function signature metadata: number of inputs & their sizes,
   // number of outputs (residuals).
-  vector<int16> parameter_block_sizes_;
+  vector<int32> parameter_block_sizes_;
   int num_residuals_;
   CERES_DISALLOW_COPY_AND_ASSIGN(CostFunction);
 };
 
 }  // namespace ceres
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_PUBLIC_COST_FUNCTION_H_

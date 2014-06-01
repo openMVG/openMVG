@@ -44,6 +44,7 @@
 #include "ceres/program.h"
 #include "ceres/sized_cost_function.h"
 #include "ceres/sparse_matrix.h"
+#include "ceres/stringprintf.h"
 #include "ceres/types.h"
 #include "gtest/gtest.h"
 
@@ -91,18 +92,42 @@ class ParameterIgnoringCostFunction
   }
 };
 
+struct EvaluatorTestOptions {
+  EvaluatorTestOptions(LinearSolverType linear_solver_type,
+                       int num_eliminate_blocks,
+                       bool dynamic_sparsity = false)
+    : linear_solver_type(linear_solver_type),
+      num_eliminate_blocks(num_eliminate_blocks),
+      dynamic_sparsity(dynamic_sparsity) {}
+
+  LinearSolverType linear_solver_type;
+  int num_eliminate_blocks;
+  bool dynamic_sparsity;
+};
+
 struct EvaluatorTest
-    : public ::testing::TestWithParam<pair<LinearSolverType, int> > {
+    : public ::testing::TestWithParam<EvaluatorTestOptions> {
   Evaluator* CreateEvaluator(Program* program) {
     // This program is straight from the ProblemImpl, and so has no index/offset
     // yet; compute it here as required by the evalutor implementations.
     program->SetParameterOffsetsAndIndex();
 
-    VLOG(1) << "Creating evaluator with type: " << GetParam().first
-            << " and num_eliminate_blocks: " << GetParam().second;
+    if (VLOG_IS_ON(1)) {
+      string report;
+      StringAppendF(&report, "Creating evaluator with type: %d",
+                    GetParam().linear_solver_type);
+      if (GetParam().linear_solver_type == SPARSE_NORMAL_CHOLESKY) {
+        StringAppendF(&report, ", dynamic_sparsity: %d",
+                      GetParam().dynamic_sparsity);
+      }
+      StringAppendF(&report, " and num_eliminate_blocks: %d",
+                    GetParam().num_eliminate_blocks);
+      VLOG(1) << report;
+    }
     Evaluator::Options options;
-    options.linear_solver_type = GetParam().first;
-    options.num_eliminate_blocks = GetParam().second;
+    options.linear_solver_type = GetParam().linear_solver_type;
+    options.num_eliminate_blocks = GetParam().num_eliminate_blocks;
+    options.dynamic_sparsity = GetParam().dynamic_sparsity;
     string error;
     return Evaluator::Create(options, program, &error);
   }
@@ -517,23 +542,25 @@ TEST_P(EvaluatorTest, EvaluatorAbortsForResidualsThatFailToEvaluate) {
 INSTANTIATE_TEST_CASE_P(
     LinearSolvers,
     EvaluatorTest,
-    ::testing::Values(make_pair(DENSE_QR, 0),
-                      make_pair(DENSE_SCHUR, 0),
-                      make_pair(DENSE_SCHUR, 1),
-                      make_pair(DENSE_SCHUR, 2),
-                      make_pair(DENSE_SCHUR, 3),
-                      make_pair(DENSE_SCHUR, 4),
-                      make_pair(SPARSE_SCHUR, 0),
-                      make_pair(SPARSE_SCHUR, 1),
-                      make_pair(SPARSE_SCHUR, 2),
-                      make_pair(SPARSE_SCHUR, 3),
-                      make_pair(SPARSE_SCHUR, 4),
-                      make_pair(ITERATIVE_SCHUR, 0),
-                      make_pair(ITERATIVE_SCHUR, 1),
-                      make_pair(ITERATIVE_SCHUR, 2),
-                      make_pair(ITERATIVE_SCHUR, 3),
-                      make_pair(ITERATIVE_SCHUR, 4),
-                      make_pair(SPARSE_NORMAL_CHOLESKY, 0)));
+    ::testing::Values(
+      EvaluatorTestOptions(DENSE_QR, 0),
+      EvaluatorTestOptions(DENSE_SCHUR, 0),
+      EvaluatorTestOptions(DENSE_SCHUR, 1),
+      EvaluatorTestOptions(DENSE_SCHUR, 2),
+      EvaluatorTestOptions(DENSE_SCHUR, 3),
+      EvaluatorTestOptions(DENSE_SCHUR, 4),
+      EvaluatorTestOptions(SPARSE_SCHUR, 0),
+      EvaluatorTestOptions(SPARSE_SCHUR, 1),
+      EvaluatorTestOptions(SPARSE_SCHUR, 2),
+      EvaluatorTestOptions(SPARSE_SCHUR, 3),
+      EvaluatorTestOptions(SPARSE_SCHUR, 4),
+      EvaluatorTestOptions(ITERATIVE_SCHUR, 0),
+      EvaluatorTestOptions(ITERATIVE_SCHUR, 1),
+      EvaluatorTestOptions(ITERATIVE_SCHUR, 2),
+      EvaluatorTestOptions(ITERATIVE_SCHUR, 3),
+      EvaluatorTestOptions(ITERATIVE_SCHUR, 4),
+      EvaluatorTestOptions(SPARSE_NORMAL_CHOLESKY, 0, false),
+      EvaluatorTestOptions(SPARSE_NORMAL_CHOLESKY, 0, true)));
 
 // Simple cost function used to check if the evaluator is sensitive to
 // state changes.

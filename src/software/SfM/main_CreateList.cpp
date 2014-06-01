@@ -3,11 +3,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-#ifdef USE_EXIV2
-#include "openMVG/exif_IO/exif_IO_Exiv2.hpp"
-#else
-#include "openMVG/exif_IO/exif_IO_openExif.hpp"
-#endif
+#include "openMVG/exif_IO/exif_IO_EasyExif.hpp"
 
 #include "openMVG_Samples/sensorWidthDatabase/ParseDatabase.hpp"
 
@@ -86,11 +82,7 @@ int main(int argc, char **argv)
       size_t width = -1;
       size_t height = -1;
 
-#ifdef USE_EXIV2
-      std::auto_ptr<Exif_IO> exifReader (new Exif_IO_Exiv2() );
-#else
-      std::auto_ptr<Exif_IO> exifReader (new Exif_IO_OpenExif() );
-#endif
+      std::auto_ptr<Exif_IO> exifReader (new Exif_IO_EasyExif() );
       exifReader->open( sImageFilename );
 
       // Consider the case where focal is provided

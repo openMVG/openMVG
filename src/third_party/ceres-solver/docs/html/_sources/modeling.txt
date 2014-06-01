@@ -8,41 +8,64 @@
 Modeling
 ========
 
-Recall that Ceres solves robustified non-linear least squares problems
-of the form
+Ceres solver consists of two distinct parts. A modeling API which
+provides a rich set of tools to construct an optimization problem one
+term at a time and a solver API that controls the minimization
+algorithm. This chapter is devoted to the task of modeling
+optimization problems using Ceres. :ref:`chapter-solving` discusses
+the various ways in which an optimization problem can be solved using
+Ceres.
 
-.. math:: \frac{1}{2}\sum_{i=1} \rho_i\left(\left\|f_i\left(x_{i_1}, ... ,x_{i_k}\right)\right\|^2\right).
-   :label: ceresproblem
+Ceres solves robustified bounds constrained non-linear least squares
+problems of the form:
 
-The expression
+.. math:: :label: ceresproblem
+
+   \min_{\mathbf{x}} &\quad \frac{1}{2}\sum_{i}
+   \rho_i\left(\left\|f_i\left(x_{i_1},
+   ... ,x_{i_k}\right)\right\|^2\right)  \\
+   \text{s.t.} &\quad l_j \le x_j \le u_j
+
+In Ceres parlance, the expression
 :math:`\rho_i\left(\left\|f_i\left(x_{i_1},...,x_{i_k}\right)\right\|^2\right)`
-is known as a ``ResidualBlock``, where :math:`f_i(\cdot)` is a
-:class:`CostFunction` that depends on the parameter blocks
-:math:`\left[x_{i_1},... , x_{i_k}\right]`. In most optimization
-problems small groups of scalars occur together. For example the three
-components of a translation vector and the four components of the
-quaternion that define the pose of a camera. We refer to such a group
-of small scalars as a ``ParameterBlock``. Of course a
-``ParameterBlock`` can just be a single parameter. :math:`\rho_i` is a
-:class:`LossFunction`. A :class:`LossFunction` is a scalar function
-that is used to reduce the influence of outliers on the solution of
-non-linear least squares problems.
+is known as a **residual block**, where :math:`f_i(\cdot)` is a
+:class:`CostFunction` that depends on the **parameter blocks**
+:math:`\left\{x_{i_1},... , x_{i_k}\right\}`.
 
-In this chapter we will describe the various classes that are part of
-Ceres Solver's modeling API, and how they can be used to construct an
-optimization problem. Once a problem has been constructed, various
-methods for solving them will be discussed in
-:ref:`chapter-solving`. It is by design that the modeling and the
-solving APIs are orthogonal to each other. This enables
-switching/tweaking of various solver parameters without having to
-touch the problem once it has been successfully modeled.
+In most optimization problems small groups of scalars occur
+together. For example the three components of a translation vector and
+the four components of the quaternion that define the pose of a
+camera. We refer to such a group of scalars as a **parameter block**. Of
+course a parameter block can be just a single scalar too.
+
+:math:`\rho_i` is a :class:`LossFunction`. A :class:`LossFunction` is
+a scalar valued function that is used to reduce the influence of
+outliers on the solution of non-linear least squares problems.
+
+:math:`l_j` and :math:`u_j` are lower and upper bounds on the
+parameter block :math:`x_j`.
+
+As a special case, when :math:`\rho_i(x) = x`, i.e., the identity
+function, and :math:`l_j = -\infty` and :math:`u_j = \infty` we get
+the more familiar unconstrained `non-linear least squares problem
+<http://en.wikipedia.org/wiki/Non-linear_least_squares>`_.
+
+.. math:: :label: ceresproblemunconstrained
+
+   \frac{1}{2}\sum_{i} \left\|f_i\left(x_{i_1}, ... ,x_{i_k}\right)\right\|^2.
 
 :class:`CostFunction`
 ---------------------
 
-The single biggest task when modeling a problem is specifying the
-residuals and their derivatives. This is done using
-:class:`CostFunction` objects.
+For each term in the objective function, a :class:`CostFunction` is
+responsible for computing a vector of residuals and if asked a vector
+of Jacobian matrices, i.e., given :math:`\left[x_{i_1}, ... ,
+x_{i_k}\right]`, compute the vector
+:math:`f_i\left(x_{i_1},...,x_{i_k}\right)` and the matrices
+
+ .. math:: J_{ij} = \frac{\partial}{\partial
+	   x_{i_j}}f_i\left(x_{i_1},...,x_{i_k}\right),\quad \forall j
+	   \in \{1, \ldots, k\}
 
 .. class:: CostFunction
 
@@ -53,30 +76,22 @@ residuals and their derivatives. This is done using
       virtual bool Evaluate(double const* const* parameters,
                             double* residuals,
                             double** jacobians) = 0;
-      const vector<int16>& parameter_block_sizes();
+      const vector<int32>& parameter_block_sizes();
       int num_residuals() const;
 
      protected:
-      vector<int16>* mutable_parameter_block_sizes();
+      vector<int32>* mutable_parameter_block_sizes();
       void set_num_residuals(int num_residuals);
     };
 
-   Given parameter blocks :math:`\left[x_{i_1}, ... , x_{i_k}\right]`,
-   a :class:`CostFunction` is responsible for computing a vector of
-   residuals and if asked a vector of Jacobian matrices, i.e., given
-   :math:`\left[x_{i_1}, ... , x_{i_k}\right]`, compute the vector
-   :math:`f_i\left(x_{i_1},...,x_{i_k}\right)` and the matrices
 
-   .. math:: J_{ij} = \frac{\partial}{\partial x_{i_j}}f_i\left(x_{i_1},...,x_{i_k}\right),\quad \forall j \in \{i_1,..., i_k\}
-
-   The signature of the :class:`CostFunction` (number and sizes of
-   input parameter blocks and number of outputs) is stored in
-   :member:`CostFunction::parameter_block_sizes_` and
-   :member:`CostFunction::num_residuals_` respectively. User code
-   inheriting from this class is expected to set these two members
-   with the corresponding accessors. This information will be verified
-   by the :class:`Problem` when added with
-   :func:`Problem::AddResidualBlock`.
+The signature of the :class:`CostFunction` (number and sizes of input
+parameter blocks and number of outputs) is stored in
+:member:`CostFunction::parameter_block_sizes_` and
+:member:`CostFunction::num_residuals_` respectively. User code
+inheriting from this class is expected to set these two members with
+the corresponding accessors. This information will be verified by the
+:class:`Problem` when added with :func:`Problem::AddResidualBlock`.
 
 .. function:: bool CostFunction::Evaluate(double const* const* parameters, double* residuals, double** jacobians)
 
@@ -113,19 +128,6 @@ residuals and their derivatives. This is done using
 
    This can be used to communicate numerical failures in Jacobian
    computations for instance.
-
-   A more interesting and common use is to impose constraints on the
-   parameters. If the initial values of the parameter blocks satisfy
-   the constraints, then returning false whenever the constraints are
-   not satisfied will prevent the solver from moving into the
-   infeasible region. This is not a very sophisticated mechanism for
-   enforcing constraints, but is often good enough for things like
-   non-negativity constraints.
-
-   Note that it is important that the initial values of the parameter
-   block must be feasible, otherwise the solver will declare a
-   numerical problem at iteration 0.
-
 
 :class:`SizedCostFunction`
 --------------------------
@@ -177,7 +179,12 @@ residuals and their derivatives. This is done using
             int N9 = 0>   // Number of parameters in block 9.
      class AutoDiffCostFunction : public
      SizedCostFunction<kNumResiduals, N0, N1, N2, N3, N4, N5, N6, N7, N8, N9> {
-     };
+      public:
+       explicit AutoDiffCostFunction(CostFunctor* functor);
+       // Ignore the template parameter kNumResiduals and use
+       // num_residuals instead.
+       AutoDiffCostFunction(CostFunctor* functor, int num_residuals);
+     }
 
    To get an auto differentiated cost function, you must define a
    class with a templated ``operator()`` (a functor) that computes the
@@ -189,9 +196,6 @@ residuals and their derivatives. This is done using
 
    The function must write the computed value in the last argument
    (the only non-``const`` one) and return true to indicate success.
-   Please see :class:`CostFunction` for details on how the return
-   value may be used to impose simple constraints on the parameter
-   block.
 
    For example, consider a scalar error :math:`e = k - x^\top y`,
    where both :math:`x` and :math:`y` are two-dimensional vector
@@ -802,6 +806,8 @@ residuals and their derivatives. This is done using
 
 
 
+.. _`section-loss_function`:
+
 :class:`LossFunction`
 ---------------------
 
@@ -1228,10 +1234,10 @@ Instances
 
 .. class:: Problem
 
-   :class:`Problem` holds the robustified non-linear least squares
-   problem :eq:`ceresproblem`. To create a least squares problem, use
-   the :func:`Problem::AddResidualBlock` and
-   :func:`Problem::AddParameterBlock` methods.
+   :class:`Problem` holds the robustified bounds constrained
+   non-linear least squares problem :eq:`ceresproblem`. To create a
+   least squares problem, use the :func:`Problem::AddResidualBlock`
+   and :func:`Problem::AddParameterBlock` methods.
 
    For example a problem containing 3 parameter blocks of sizes 3, 4
    and 5 respectively and two residual blocks of size 2 and 6:
@@ -1363,7 +1369,10 @@ Instances
    Remove a residual block from the problem. Any parameters that the residual
    block depends on are not removed. The cost and loss functions for the
    residual block will not get deleted immediately; won't happen until the
-   problem itself is deleted.
+   problem itself is deleted.  If Problem::Options::enable_fast_removal is
+   true, then the removal is fast (almost constant time). Otherwise, removing a
+   residual block will incur a scan of the entire Problem object to verify that
+   the residual_block represents a valid residual in the problem.
 
    **WARNING:** Removing a residual or parameter block will destroy
    the implicit ordering, rendering the jacobian or residuals returned
@@ -1378,7 +1387,7 @@ Instances
    of the problem (similar to cost/loss functions in residual block
    removal). Any residual blocks that depend on the parameter are also
    removed, as described above in RemoveResidualBlock().  If
-   Problem::Options::enable_fast_parameter_block_removal is true, then
+   Problem::Options::enable_fast_removal is true, then
    the removal is fast (almost constant time). Otherwise, removing a
    parameter block will incur a scan of the entire Problem object.
 
@@ -1404,65 +1413,87 @@ Instances
    parameterizations only once. The local parameterization can only be
    set once per parameter, and cannot be changed once set.
 
-.. function:: int Problem::NumParameterBlocks() const
+.. function LocalParameterization* Problem::GetParameterization(double* values) const;
+
+   Get the local parameterization object associated with this
+   parameter block. If there is no parameterization object associated
+   then `NULL` is returned
+
+.. function void Problem::SetParameterLowerBound(double* values, int index, double lower_bound);
+
+   Set the lower bound for the parameter at position `index` in the
+   parameter block corresponding to `values`. By default the lower
+   bound is :math:`-\infty`.
+
+.. function void Problem::SetParameterUpperBound(double* values, int index, double upper_bound);
+
+   Set the upper bound for the parameter at position `index` in the
+   parameter block corresponding to `values`. By default the value is
+   :math:`\infty`.
+
+.. function int Problem::NumParameterBlocks() const
 
    Number of parameter blocks in the problem. Always equals
    parameter_blocks().size() and parameter_block_sizes().size().
 
-.. function:: int Problem::NumParameters() const
+.. function int Problem::NumParameters() const
 
    The size of the parameter vector obtained by summing over the sizes
    of all the parameter blocks.
 
-.. function:: int Problem::NumResidualBlocks() const
+.. function int Problem::NumResidualBlocks() const
 
    Number of residual blocks in the problem. Always equals
    residual_blocks().size().
 
-.. function:: int Problem::NumResiduals() const
+.. function int Problem::NumResiduals() const
 
    The size of the residual vector obtained by summing over the sizes
    of all of the residual blocks.
 
-.. function:: int Problem::ParameterBlockSize(const double* values) const
+.. function int Problem::ParameterBlockSize(const double* values) const
 
    The size of the parameter block.
 
-.. function:: int Problem::ParameterBlockLocalSize(const double* values) const
+.. function int Problem::ParameterBlockLocalSize(const double* values) const
 
-  The size of local parameterization for the parameter block. If
-  there is no local parameterization associated with this parameter
-  block, then ``ParameterBlockLocalSize`` = ``ParameterBlockSize``.
+   The size of local parameterization for the parameter block. If
+   there is no local parameterization associated with this parameter
+   block, then ``ParameterBlockLocalSize`` = ``ParameterBlockSize``.
 
-.. function:: void Problem::GetParameterBlocks(vector<double*>* parameter_blocks) const
+.. function bool Problem::HasParameterBlock(const double* values) const;
+
+   Is the given parameter block present in the problem or not?
+
+.. function void Problem::GetParameterBlocks(vector<double*>* parameter_blocks) const
 
    Fills the passed ``parameter_blocks`` vector with pointers to the
    parameter blocks currently in the problem. After this call,
    ``parameter_block.size() == NumParameterBlocks``.
 
-.. function:: void Problem::GetResidualBlocks(vector<ResidualBlockId>* residual_blocks) const
+.. function void Problem::GetResidualBlocks(vector<ResidualBlockId>* residual_blocks) const
 
    Fills the passed `residual_blocks` vector with pointers to the
    residual blocks currently in the problem. After this call,
    `residual_blocks.size() == NumResidualBlocks`.
 
-.. function:: void Problem::GetParameterBlocksForResidualBlock(const ResidualBlockId residual_block, vector<double*>* parameter_blocks) const
+.. function void Problem::GetParameterBlocksForResidualBlock(const ResidualBlockId residual_block, vector<double*>* parameter_blocks) const
 
    Get all the parameter blocks that depend on the given residual
    block.
 
-.. function:: void Problem::GetResidualBlocksForParameterBlock(const double* values, vector<ResidualBlockId>* residual_blocks) const
+.. function void Problem::GetResidualBlocksForParameterBlock(const double* values, vector<ResidualBlockId>* residual_blocks) const
 
    Get all the residual blocks that depend on the given parameter
    block.
 
-   If `Problem::Options::enable_fast_parameter_block_removal` is
+   If `Problem::Options::enable_fast_removal` is
    `true`, then getting the residual blocks is fast and depends only
    on the number of residual blocks. Otherwise, getting the residual
    blocks for a parameter block will incur a scan of the entire
    :class:`Problem` object.
 
-.. function:: bool Problem::Evaluate(const Problem::EvaluateOptions& options, double* cost, vector<double>* residuals, vector<double>* gradient, CRSMatrix* jacobian)
+.. function bool Problem::Evaluate(const Problem::EvaluateOptions& options, double* cost, vector<double>* residuals, vector<double>* gradient, CRSMatrix* jacobian)
 
    Evaluate a :class:`Problem`. Any of the output pointers can be
    `NULL`. Which residual blocks and parameter blocks are used is

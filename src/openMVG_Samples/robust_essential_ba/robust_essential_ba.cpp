@@ -553,9 +553,7 @@ void do_bundle_adjustment(
     << " Final RMSE : " << dResidual_after << std::endl;
 
   // If no error, get back refined parameters
-  if (summary.termination_type != ceres::DID_NOT_RUN &&
-      summary.termination_type != ceres::USER_ABORT &&
-      summary.termination_type != ceres::NUMERICAL_FAILURE)
+  if (summary.IsSolutionUsable())
   {
     // Get back 3D points
     size_t cpt = 0;
@@ -728,9 +726,7 @@ void do_bundle_adjustment_common_focal(
     << "Initial focal : " << focal << std::endl;
 
   // If no error, get back refined parameters
-  if (summary.termination_type != ceres::DID_NOT_RUN &&
-      summary.termination_type != ceres::USER_ABORT &&
-      summary.termination_type != ceres::NUMERICAL_FAILURE)
+  if (summary.IsSolutionUsable())
   {
     // Get back 3D points
     size_t cpt = 0;
@@ -915,9 +911,7 @@ void do_bundle_adjustment_common_intrinsics(
     << "Refined intrinsics : " << std::endl;
 
   // If no error, get back refined parameters
-  if (summary.termination_type != ceres::DID_NOT_RUN &&
-      summary.termination_type != ceres::USER_ABORT &&
-      summary.termination_type != ceres::NUMERICAL_FAILURE)
+  if (summary.IsSolutionUsable())
   {
     // Get back 3D points
     size_t cpt = 0;

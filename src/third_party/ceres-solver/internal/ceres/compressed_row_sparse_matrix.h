@@ -115,6 +115,9 @@ class CompressedRowSparseMatrix : public SparseMatrix {
   const vector<int>& col_blocks() const { return col_blocks_; }
   vector<int>* mutable_col_blocks() { return &col_blocks_; }
 
+  // Destructive array resizing method.
+  void SetMaxNumNonZeros(int num_nonzeros);
+
   // Non-destructive array resizing method.
   void set_num_rows(const int num_rows) { num_rows_ = num_rows; }
   void set_num_cols(const int num_cols) { num_cols_ = num_cols; }
@@ -127,6 +130,32 @@ class CompressedRowSparseMatrix : public SparseMatrix {
   static CompressedRowSparseMatrix* CreateBlockDiagonalMatrix(
       const double* diagonal,
       const vector<int>& blocks);
+
+  // Compute the sparsity structure of the product m.transpose() * m
+  // and create a CompressedRowSparseMatrix corresponding to it.
+  //
+  // Also compute a "program" vector, which for every term in the
+  // outer product points to the entry in the values array of the
+  // result matrix where it should be accumulated.
+  //
+  // This program is used by the ComputeOuterProduct function below to
+  // compute the outer product.
+  //
+  // Since the entries of the program are the same for rows with the
+  // same sparsity structure, the program only stores the result for
+  // one row per row block. The ComputeOuterProduct function reuses
+  // this information for each row in the row block.
+  static CompressedRowSparseMatrix* CreateOuterProductMatrixAndProgram(
+      const CompressedRowSparseMatrix& m,
+      vector<int>* program);
+
+  // Compute the values array for the expression m.transpose() * m,
+  // where the matrix used to store the result and a program have been
+  // created using the CreateOuterProductMatrixAndProgram function
+  // above.
+  static void ComputeOuterProduct(const CompressedRowSparseMatrix& m,
+                                  const vector<int>& program,
+                                  CompressedRowSparseMatrix* result);
 
  private:
   int num_rows_;

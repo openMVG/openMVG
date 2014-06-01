@@ -43,14 +43,14 @@ namespace internal {
 
 // If rho[1] is zero, the Corrector constructor should crash.
 TEST(Corrector, ZeroGradientDeathTest) {
-  const double kRho[] = {0.0, 0.0, 0.0};
+  const double kRho[] = {0.0, 0.0, 1.0};
   EXPECT_DEATH_IF_SUPPORTED({Corrector c(1.0, kRho);},
                ".*");
 }
 
 // If rho[1] is negative, the Corrector constructor should crash.
 TEST(Corrector, NegativeGradientDeathTest) {
-  const double kRho[] = {0.0, -0.1, 0.0};
+  const double kRho[] = {0.0, -0.1, 1.0};
   EXPECT_DEATH_IF_SUPPORTED({Corrector c(1.0, kRho);},
                ".*");
 }

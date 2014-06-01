@@ -36,6 +36,7 @@
 #include "ceres/internal/port.h"
 #include "ceres/internal/scoped_ptr.h"
 #include "ceres/types.h"
+#include "ceres/internal/disable_warnings.h"
 
 namespace ceres {
 
@@ -196,9 +197,9 @@ class CovarianceImpl;
 //  covariance.GetCovarianceBlock(y, y, covariance_yy)
 //  covariance.GetCovarianceBlock(x, y, covariance_xy)
 //
-class Covariance {
+class CERES_EXPORT Covariance {
  public:
-  struct Options {
+  struct CERES_EXPORT Options {
     Options()
 #ifndef CERES_NO_SUITESPARSE
         : algorithm_type(SPARSE_QR),
@@ -418,5 +419,7 @@ class Covariance {
 };
 
 }  // namespace ceres
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_PUBLIC_COVARIANCE_H_

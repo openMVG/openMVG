@@ -7,10 +7,27 @@
 ========
 Tutorial
 ========
-Ceres solves robustified non-linear least squares problems of the form
 
-.. math:: \frac{1}{2}\sum_{i=1} \rho_i\left(\left\|f_i\left(x_{i_1}, ... ,x_{i_k}\right)\right\|^2\right).
-   :label: ceresproblem
+Ceres solves robustified non-linear bounds constrained least squares
+problems of the form
+
+.. math:: :label: ceresproblem
+
+   \min_{\mathbf{x}} &\quad \frac{1}{2}\sum_{i} \rho_i\left(\left\|f_i\left(x_{i_1}, ... ,x_{i_k}\right)\right\|^2\right) \\
+   \text{s.t.} &\quad l_j \le x_j \le u_j
+
+Problems of this form comes up in a broad range of areas across
+science and engineering - from `fitting curves`_ in statistics, to
+constructing `3D models from photographs`_ in computer vision.
+
+.. _fitting curves: http://en.wikipedia.org/wiki/Nonlinear_regression
+.. _3D models from photographs: http://en.wikipedia.org/wiki/Bundle_adjustment
+
+In this chapter we will learn how to solve :eq:`ceresproblem` using
+Ceres Solver. Full working code for all the examples described in this
+chapter and more can be found in the `examples
+<https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/>`_
+directory.
 
 The expression
 :math:`\rho_i\left(\left\|f_i\left(x_{i_1},...,x_{i_k}\right)\right\|^2\right)`
@@ -21,23 +38,20 @@ problems small groups of scalars occur together. For example the three
 components of a translation vector and the four components of the
 quaternion that define the pose of a camera. We refer to such a group
 of small scalars as a ``ParameterBlock``. Of course a
-``ParameterBlock`` can just be a single parameter.
+``ParameterBlock`` can just be a single parameter. :math:`l_j` and
+:math:`u_j` are bounds on the parameter block :math:`x_j`.
 
 :math:`\rho_i` is a :class:`LossFunction`. A :class:`LossFunction` is
 a scalar function that is used to reduce the influence of outliers on
-the solution of non-linear least squares problems. As a special case,
-when :math:`\rho_i(x) = x`, i.e., the identity function, we get the
-more familiar `non-linear least squares problem
+the solution of non-linear least squares problems.
+
+As a special case, when :math:`\rho_i(x) = x`, i.e., the identity
+function, and :math:`l_j = -\infty` and :math:`u_j = \infty` we get
+the more familiar `non-linear least squares problem
 <http://en.wikipedia.org/wiki/Non-linear_least_squares>`_.
 
-.. math:: \frac{1}{2}\sum_{i=1} \left\|f_i\left(x_{i_1}, ... ,x_{i_k}\right)\right\|^2.
+.. math:: \frac{1}{2}\sum_{i} \left\|f_i\left(x_{i_1}, ... ,x_{i_k}\right)\right\|^2.
    :label: ceresproblem2
-
-In this chapter we will learn how to solve :eq:`ceresproblem` using
-Ceres Solver. Full working code for all the examples described in this
-chapter and more can be found in the `examples
-<https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/>`_
-directory.
 
 .. _section-hello-world:
 
@@ -68,10 +82,10 @@ function :math:`f(x) = 10 - x`:
 
 The important thing to note here is that ``operator()`` is a templated
 method, which assumes that all its inputs and outputs are of some type
-``T``. The reason for using templates here is because Ceres will call
-``CostFunctor::operator<T>()``, with ``T=double`` when just the
-residual is needed, and with a special type ``T=Jet`` when the
-Jacobians are needed. In :ref:`section-derivatives` we discuss the
+``T``. The use of templating here allows Ceres to call
+``CostFunctor::operator<T>()``, with ``T=double`` when just the value
+of the residual is needed, and with a special type ``T=Jet`` when the
+Jacobians are needed. In :ref:`section-derivatives` we will discuss the
 various ways of supplying derivatives to Ceres in more detail.
 
 Once we have a way of computing the residual function, it is now time
@@ -122,7 +136,7 @@ gives us
       0: f: 1.250000e+01 d: 0.00e+00 g: 5.00e+00 h: 0.00e+00 rho: 0.00e+00 mu: 1.00e+04 li:  0 it: 6.91e-06 tt: 1.91e-03
       1: f: 1.249750e-07 d: 1.25e+01 g: 5.00e-04 h: 5.00e+00 rho: 1.00e+00 mu: 3.00e+04 li:  1 it: 2.81e-05 tt: 1.99e-03
       2: f: 1.388518e-16 d: 1.25e-07 g: 1.67e-08 h: 5.00e-04 rho: 1.00e+00 mu: 9.00e+04 li:  1 it: 1.00e-05 tt: 2.01e-03
-   Ceres Solver Report: Iterations: 2, Initial cost: 1.250000e+01, Final cost: 1.388518e-16, Termination: PARAMETER_TOLERANCE.
+   Ceres Solver Report: Iterations: 2, Initial cost: 1.250000e+01, Final cost: 1.388518e-16, Termination: CONVERGENCE.
    x : 5 -> 10
 
 Starting from a :math:`x=5`, the solver in two iterations goes to 10
@@ -372,7 +386,7 @@ gives us:
     9: f: 1.173223e-09 d: 1.76e-08 g: 1.19e-06 h: 4.81e-03 rho: 9.37e-01 mu: 1.97e+08 li:  1 it: 0.00e+00 tt: 0.00e+00
    10: f: 7.333425e-11 d: 1.10e-09 g: 1.49e-07 h: 2.40e-03 rho: 9.37e-01 mu: 5.90e+08 li:  1 it: 0.00e+00 tt: 0.00e+00
    11: f: 4.584044e-12 d: 6.88e-11 g: 1.86e-08 h: 1.20e-03 rho: 9.37e-01 mu: 1.77e+09 li:  1 it: 0.00e+00 tt: 0.00e+00
- Ceres Solver Report: Iterations: 12, Initial cost: 1.075000e+02, Final cost: 4.584044e-12, Termination: GRADIENT_TOLERANCE.
+ Ceres Solver Report: Iterations: 12, Initial cost: 1.075000e+02, Final cost: 4.584044e-12, Termination: CONVERGENCE.
  Final x1 = 0.00116741, x2 = -0.000116741, x3 = 0.000190535, x4 = 0.000190535
 
 It is easy to see that the optimal solution to this problem is at
@@ -461,7 +475,7 @@ gives us:
    11: f: 1.063265e+00 d: 1.48e-01 g: 1.44e+00 h: 6.06e-02 rho: 9.97e-01 mu: 2.22e+02 li:  1 it: 0.00e+00 tt: 0.00e+00
    12: f: 1.056795e+00 d: 6.47e-03 g: 1.18e-01 h: 1.47e-02 rho: 1.00e+00 mu: 6.67e+02 li:  1 it: 0.00e+00 tt: 0.00e+00
    13: f: 1.056751e+00 d: 4.39e-05 g: 3.79e-03 h: 1.28e-03 rho: 1.00e+00 mu: 2.00e+03 li:  1 it: 0.00e+00 tt: 0.00e+00
- Ceres Solver Report: Iterations: 13, Initial cost: 1.211734e+02, Final cost: 1.056751e+00, Termination: FUNCTION_TOLERANCE.
+ Ceres Solver Report: Iterations: 13, Initial cost: 1.211734e+02, Final cost: 1.056751e+00, Termination: CONVERGENCE.
  Initial m: 0 c: 0
  Final   m: 0.291861 c: 0.131439
 
@@ -635,10 +649,9 @@ as follows:
  ceres::Problem problem;
  for (int i = 0; i < bal_problem.num_observations(); ++i) {
    ceres::CostFunction* cost_function =
-       new ceres::AutoDiffCostFunction<SnavelyReprojectionError, 2, 9, 3>(
-           new SnavelyReprojectionError(
-               bal_problem.observations()[2 * i + 0],
-               bal_problem.observations()[2 * i + 1]));
+       SnavelyReprojectionError::Create(
+            bal_problem.observations()[2 * i + 0],
+            bal_problem.observations()[2 * i + 1]);
    problem.AddResidualBlock(cost_function,
                             NULL /* squared loss */,
                             bal_problem.mutable_camera_for_observation(i),
@@ -713,5 +726,3 @@ directory contains a number of other examples:
 #. `libmv_bundle_adjuster.cc
    <https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/libmv_bundle_adjuster.cc>`_
    is the bundle adjustment algorithm used by `Blender <www.blender.org>`_/libmv.
-
-
