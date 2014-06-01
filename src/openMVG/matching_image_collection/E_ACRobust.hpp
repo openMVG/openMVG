@@ -54,8 +54,6 @@ struct GeometricFilter_EMatrix_AC
     double upper_bound_precision = m_dPrecision;
     std::pair<double,double> ACRansacOut =
       ACRANSAC(kernel, vec_inliers, m_stIteration, &E, upper_bound_precision);
-    const double & threshold = ACRansacOut.first;
-    const double & NFA = ACRansacOut.second;
 
     if (vec_inliers.size() < KernelType::MINIMUM_SAMPLES *2.5)  {
       vec_inliers.clear();

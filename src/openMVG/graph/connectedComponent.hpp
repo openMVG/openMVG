@@ -22,7 +22,7 @@ std::map<size_t, std::set<lemon::ListGraph::Node> >  exportGraphToMapSubgraphs(
 {
   typedef lemon::ListGraph::NodeMap<size_t> IndexMap;
   IndexMap connectedNodeMap(g);
-  int connectedComponentCount =  lemon::connectedComponents(g, connectedNodeMap);
+  lemon::connectedComponents(g, connectedNodeMap);
 
   std::map<size_t, std::set<lemon::ListGraph::Node> > map_subgraphs;
 

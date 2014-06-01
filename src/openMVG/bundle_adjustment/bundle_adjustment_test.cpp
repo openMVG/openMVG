@@ -82,7 +82,6 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_RTf) {
   // Add 3D points coordinates parameters
   for (int i = 0; i < npoints; ++i) {
     Vec3 pt3D = d._X.col(i);
-    double * ptr3D = ba_problem.mutable_points()+i*3;
     ba_problem.parameters_.push_back(pt3D[0]);
     ba_problem.parameters_.push_back(pt3D[1]);
     ba_problem.parameters_.push_back(pt3D[2]);

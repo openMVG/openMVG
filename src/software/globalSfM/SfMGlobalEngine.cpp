@@ -180,7 +180,6 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
       {
         const openMVG::lInfinityCV::relativeInfo & rel = *iter;
         // Find the number of support point for this pair
-        float weight = 0.f; // the relative rotation correspondence point support
         std::map< std::pair<size_t, size_t>, vector<IndMatch> >::const_iterator iterMatches = _map_Matches_F.find(rel.first);
         if (iterMatches != _map_Matches_F.end())
         {
@@ -487,7 +486,6 @@ bool GlobalReconstructionEngine::Process()
     stlplus::timer timerLP_translation;
     clock_t start_timeLP = clock();
 
-    bool bNormal = false;
     double gamma = -1.0;
     std::vector<double> vec_solution;
     {
@@ -1065,7 +1063,7 @@ bool GlobalReconstructionEngine::CleanGraph()
     EdgeIterator itEdge(putativeGraph.g);
     for (EdgeMapAlias::MapIt it(cutMap); it!=INVALID; ++it, ++itEdge)
     {
-      if (*it)  
+      if (*it)
         putativeGraph.g.erase(itEdge); // remove the not bi-edge element
     }
   }
@@ -1141,7 +1139,7 @@ bool GlobalReconstructionEngine::CleanGraph()
           }
           //putativeGraph.g.erase(*iter2);
         }
-      }      
+      }
     }
   }
 
@@ -1378,7 +1376,6 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
               ceres::AngleAxisToRotationMatrix(cam, R.data());
 
               Vec3 t(cam[3], cam[4], cam[5]);
-              double focal = cam[6];
 
               // Update the camera
               Mat3 K = cam1._K;
@@ -1393,7 +1390,6 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
               ceres::AngleAxisToRotationMatrix(cam, R.data());
 
               Vec3 t(cam[3], cam[4], cam[5]);
-              double focal = cam[6];
 
               // Update the camera
               Mat3 K = cam2._K;
@@ -1696,7 +1692,6 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
   for (STLMAPTracks::const_iterator iterTracks = map_tracksSelected.begin();
     iterTracks != map_tracksSelected.end(); ++iterTracks, ++i)
   {
-    const size_t trackId = iterTracks->first;
     // Look through the track and add point position
     const tracks::submapTrack & track = iterTracks->second;
 
@@ -1909,7 +1904,6 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
   for (STLMAPTracks::const_iterator iterTracks = map_tracksSelected.begin();
     iterTracks != map_tracksSelected.end(); ++iterTracks, ++i)
   {
-    const size_t trackId = iterTracks->first;
     // Look through the track and add point position
     const tracks::submapTrack & track = iterTracks->second;
 
@@ -2018,7 +2012,6 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
       ceres::AngleAxisToRotationMatrix(cam, R.data());
 
       Vec3 t(cam[3], cam[4], cam[5]);
-      double focal = cam[6];
 
       // Update the camera
       Mat3 K = iter->second._K;

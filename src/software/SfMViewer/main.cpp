@@ -49,7 +49,7 @@ void load_textures()
 	int nbCams = m_doc._vec_imageNames.size();
 	m_image_vector.resize(nbCams);
 
-  std::cout << "**\Textures loading, Please wait...\n";
+  std::cout << "** Textures loading, Please wait...\n";
   C_Progress_display my_progress_bar( nbCams );
 	for ( int i_cam=0; i_cam<nbCams; ++i_cam, ++my_progress_bar) {
 		std::string sImageName = stlplus::create_filespec( stlplus::folder_append_separator(m_doc._sDirectory)+"images",
@@ -76,7 +76,7 @@ void load_textures()
 		  glBindTexture(GL_TEXTURE_2D, m_image_vector[i_cam].texture);
 	  }
   }
-   std::cout << "**\Textures loading, Done" << std::endl;
+   std::cout << "** Textures loading, Done" << std::endl;
 }
 
 /* new window size */

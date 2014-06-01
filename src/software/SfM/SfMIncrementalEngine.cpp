@@ -894,7 +894,6 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
     jsxGraph.close();
     _htmlDocStream->pushInfo(jsxGraph.toStr());
 
-    double maxi = 0.0;
     if(bResection)  {
 
       Histogram<double> histo(0, 2*errorMax, 10);
@@ -1075,22 +1074,18 @@ size_t IncrementalReconstructionEngine::badTrackRejector(double dPrecision)
     for( tracks::submapTrack::const_iterator iterTrack = track.begin();
       iterTrack != track.end(); ++iterTrack)
     {
-      size_t imageId = iterTrack->first;
-      size_t featId = iterTrack->second;
+      const size_t imageId = iterTrack->first;
+      const size_t featId = iterTrack->second;
       const BrownPinholeCamera & cam = _reconstructorData.map_Camera.find(imageId)->second;
 
       if ( set_camIndex.find(imageId) != set_camIndex.end())  {
         const std::vector<SIOPointFeature> & vec_feats = _map_feats[imageId];
         const SIOPointFeature & ptFeat = vec_feats[featId];
 
-        const std::pair<size_t, size_t> & imageDim = std::make_pair(
-            _vec_intrinsicGroups[_vec_camImageNames[imageId].m_intrinsicId].m_w,
-            _vec_intrinsicGroups[_vec_camImageNames[imageId].m_intrinsicId].m_h );
-
         double dResidual2D = cam.Residual(pt3D, ptFeat.coords().cast<double>());
 
-        Vec3 camPos = cam._C;
-        Vec3 dir = (pt3D - camPos).normalized();
+        const Vec3 camPos = cam._C;
+        const Vec3 dir = (pt3D - camPos).normalized();
         if (iterTrack == track.begin())
         {
           originRay = dir;
@@ -1112,7 +1107,7 @@ size_t IncrementalReconstructionEngine::badTrackRejector(double dPrecision)
     {
       for( tracks::submapTrack::const_iterator iterTrack = track.begin();
         iterTrack != track.end(); ++iterTrack)  {
-          size_t imageId = iterTrack->first;
+          const size_t imageId = iterTrack->first;
           map_trackToErase[trackId].insert(imageId);
       }
     }
@@ -1584,8 +1579,6 @@ double IncrementalReconstructionEngine::ComputeResidualsHistogram(Histogram<doub
       {
         const std::vector<SIOPointFeature> & vec_feats = _map_feats[imageId];
         const SIOPointFeature & ptFeat = vec_feats[featId];
-        const std::pair<size_t, size_t> & imageDim = std::make_pair(_vec_intrinsicGroups[_vec_camImageNames[imageId].m_intrinsicId ].m_w,
-                                                                    _vec_intrinsicGroups[_vec_camImageNames[imageId].m_intrinsicId ].m_h );
         const BrownPinholeCamera & cam = _reconstructorData.map_Camera.find(imageId)->second;
 
         double dResidual = cam.Residual(pt3D, ptFeat.coords().cast<double>());
