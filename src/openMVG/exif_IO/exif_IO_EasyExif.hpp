@@ -12,11 +12,11 @@
 class Exif_IO_EasyExif : public Exif_IO
 {
   public:
-    Exif_IO_EasyExif()
+    Exif_IO_EasyExif(): bHaveExifInfo_(false)
     {
     }
 
-    Exif_IO_EasyExif( const std::string & sFileName  )
+    Exif_IO_EasyExif( const std::string & sFileName ): bHaveExifInfo_(false)
     {
       open(sFileName);
     }
