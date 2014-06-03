@@ -170,7 +170,7 @@ inline bool TRobustRegressionL1PD(
     }
     s *= REAL(0.99);
 
-    // backtrack 
+    // backtrack
     lamu1 += s*dlamu1;  lamu2 += s*dlamu2;
     rdual = (-lamu1-lamu2).array() + REAL(1);
     rdualNormSq = rdual.squaredNorm();
@@ -367,7 +367,7 @@ size_t FindMaximumSpanningTree(const std::vector<RelRotationData>& RelRs, graph_
   const size_t nEdges = spanningTree.size();
   return nEdges;
 #else
-  
+
   //A-- Compute the number of node we need
   std::set<size_t> setNodes;
   for (size_t p = 0; p < RelRs.size(); ++p) {
@@ -517,11 +517,6 @@ bool GlobalRotationsRobust(
   NodeArr minGraph;
   // find the Maximum Spanning Tree
   FindMaximumSpanningTree(RelRs, g, mapIJ2R, minGraph);
-#ifdef HAVE_BOOST
-  const size_t nViews = boost::num_vertices(g);
-#else
-  const size_t nViews = lemon::countNodes(g);
-#endif
   g.clear();
 
   // start from the main view and link all views using the relative rotation estimates
@@ -623,7 +618,7 @@ inline void _CorrectMatrix(
     const size_t i = (r<nMainViewID ? r : r-1);
     openMVG::Vec3 eRid = openMVG::Vec3(x.block<3,1>(3*i,0));
     const Mat3 eRi;
-    ceres::AngleAxisToRotationMatrix((const double*)eRid.data(), (double*)eRi.data());		
+    ceres::AngleAxisToRotationMatrix((const double*)eRid.data(), (double*)eRi.data());
     Ri = Ri*eRi;
   }
 }

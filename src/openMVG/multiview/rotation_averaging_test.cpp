@@ -65,7 +65,6 @@ TEST ( rotation_averaging, RotationLeastSquare_3_Camera)
   // Set Z axis as UP Vector for the rotation
   // They are in the same plane and looking in O={0,0,0}
   //--
-  const int nCamera = 3;
   Mat3 R01 = RotationAroundZ(2.*M_PI/3.0); //120°
   Mat3 R12 = RotationAroundZ(2.*M_PI/3.0); //120°
   Mat3 R20 = RotationAroundZ(2.*M_PI/3.0); //120°
@@ -165,7 +164,7 @@ bool TestRobustRegressionL1PD()
     << "Test robust regression " << (bPassed?"passed":"FAILED")
     << " : " << nIters << " " << nTotalCorrectSolutions
     << " iterations (" << (float)nTotalCorrectSolutions/nIters << " correct) "
-    << std::endl; 
+    << std::endl;
   return bPassed;
 
 }
@@ -185,7 +184,6 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_SimpleTriplet)
   // Set Z axis as UP Vector for the rotation
   // They are in the same plane and looking in O={0,0,0}
   //--
-  const int nCamera = 3;
   Mat3 R01 = RotationAroundZ(2.*M_PI/3.0); //120°
   Mat3 R12 = RotationAroundZ(2.*M_PI/3.0); //120°
   Mat3 R20 = RotationAroundZ(2.*M_PI/3.0); //120°
@@ -196,11 +194,11 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_SimpleTriplet)
   vec_relativeRotEstimate.push_back(RelRotationData(0, 1, R01, 1));
   vec_relativeRotEstimate.push_back(RelRotationData(1, 2, R12, 1));
   vec_relativeRotEstimate.push_back(RelRotationData(2, 0, R20, 1));
-  
+
   //- Solve the global rotation estimation problem :
   Matrix3x3Arr vec_globalR(3);
   size_t nMainViewID = 0;
-  bool bTest = GlobalRotationsRobust(vec_relativeRotEstimate, vec_globalR, nMainViewID, 0.0f, NULL);
+  EXPECT_TRUE(GlobalRotationsRobust(vec_relativeRotEstimate, vec_globalR, nMainViewID, 0.0f, NULL));
 
   // Check that the loop is closing
   EXPECT_MATRIX_NEAR(Mat3::Identity(), (vec_globalR[0]*vec_globalR[1]*vec_globalR[2]), 1e-4);
@@ -313,7 +311,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
       vec_relativeRotEstimate.push_back(RelRotationData(index0, index1, Rrel, 1));
       vec_unique.push_back(make_pair(index0, index1));
     }
-    
+
     if ( std::find(vec_unique.begin(), vec_unique.end(), std::make_pair(index1, index2)) == vec_unique.end()
       && std::find(vec_unique.begin(), vec_unique.end(), std::make_pair(index2, index1)) == vec_unique.end())
     {
@@ -330,7 +328,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
       vec_unique.push_back(make_pair(index0, index2));
     }
   }
-  
+
   // Add 2 outliers rotations between (0->1), (2->3)
   // (use a smaller weight since those rotations are less accurate)
   for (size_t i = 0; i < vec_relativeRotEstimate.size(); ++i)
@@ -340,7 +338,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
     if( vec_relativeRotEstimate[i].i == 2 && vec_relativeRotEstimate[i].j == 3)
       vec_relativeRotEstimate[i] = RelRotationData(2, 3, RotationAroundX(D2R(0.6)), 0.5);
   }
-  
+
   //- Solve the global rotation estimation problem :
   Matrix3x3Arr vec_globalR(iNviews);
   vec_globalR = d._R;
@@ -368,7 +366,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
   }
   vec_relativeRotEstimate.swap(vec_relativeRotEstimateTemp);
   EXPECT_TRUE( GlobalRotationsRobust(vec_relativeRotEstimate, vec_globalR, nMainViewID, 0.0f, &vec_inliers));
-  
+
   // Check that the loop is closing
   Mat3 rotCumul = vec_globalR[0];
   for (size_t i = 1; i < iNviews; ++i)

@@ -36,7 +36,7 @@ static const size_t ACRANSAC_ITER = 4096;
 
 /**
  * @brief Estimate the essential matrix from point matches and K matrices.
- * 
+ *
  * @param[in] K1 camera 1 intrinsics
  * @param[in] K2 camera 2 intrinsics
  * @param[in] x1 camera 1 image points
@@ -84,7 +84,7 @@ bool robustEssential(
 /**
  * @brief Estimate the best possible Rotation/Translation from E.
  *  Four are possible, keep the one with most of the point in front.
- * 
+ *
  * @param[in] K1 camera 1 intrinsics
  * @param[in] K2 camera 2 intrinsics
  * @param[in] x1 camera 1 image points
@@ -150,7 +150,7 @@ bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
   size_t index = std::distance(f.begin(),iter);
   (*R) = Rs[index];
   (*t) = ts[index];
-  
+
   return true;
 }
 
@@ -260,7 +260,7 @@ bool robustResection(
   {
     // Re-estimate the model from the inlier data
     // and/or LM to Refine f R|t
-    
+
     Mat3 K_, R_;
     Vec3 t_;
     KRt_From_P(*P, &K_, &R_, &t_);
@@ -311,7 +311,6 @@ bool robustResection(
     // Create residuals for each observation in the bundle adjustment problem. The
     // parameters for cameras and points are added automatically.
     ceres::Problem problem;
-    const double * pt3D_Array = pt3D.data();
     for (int i = 0; i < ba_problem.num_points_; ++i) {
       // Each Residual block takes a point and a camera as input and outputs a 2
       // dimensional residual. Internally, the cost function stores the observed
@@ -349,9 +348,9 @@ bool robustResection(
 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
-    
+
     // If no error, get back refined parameters
-    
+
     if (summary.IsSolutionUsable())
     {
       const double * Rtf = ba_problem.mutable_camera_for_observation(0);

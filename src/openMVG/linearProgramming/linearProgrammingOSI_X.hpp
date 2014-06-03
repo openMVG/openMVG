@@ -43,7 +43,7 @@
 
 namespace openMVG   {
 namespace linearProgramming  {
-  
+
 
 /// OSI_X wrapper for the LP_Solver
 template<typename SOLVERINTERFACE>
@@ -92,7 +92,7 @@ OSI_X_SolverWrapper<SOLVERINTERFACE>::~OSI_X_SolverWrapper()
   {
     delete si;
     si = NULL;
-  }  
+  }
 }
 
 template<typename SOLVERINTERFACE>
@@ -105,43 +105,41 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints & cstraint
   }
   assert(_nbParams == cstraints._nbParams);
 
-  
+
   int NUMVAR = cstraints._constraintMat.cols();
-  int NUMCON = cstraints._constraintMat.rows();
-  int NUMANZ = cstraints._constraintMat.cols() * cstraints._constraintMat.rows(); //DENSE MATRIX
-  
+
   std::vector<double> col_lb(NUMVAR);//the column lower bounds
   std::vector<double> col_ub(NUMVAR);//the column upper bounds
-  
+
   this->_nbParams = NUMVAR;
 
-  if (cstraints._bminimize) 
+  if (cstraints._bminimize)
   {
     si->setObjSense( 1 );
   }
-  else  
+  else
   {
     si->setObjSense( -1 );
   }
 
   const Mat & A = cstraints._constraintMat;
 
-  //Equality constraint will be handked by two constraintsdue to the API limitation. 
+  //Equality constraint will be handked by two constraintsdue to the API limitation.
   size_t nbLine = A.rows() + std::count(cstraints._vec_sign.begin(), cstraints._vec_sign.end(), EQ);
-  
+
   std::vector<double> row_lb(nbLine);//the row lower bounds
   std::vector<double> row_ub(nbLine);//the row upper bounds
-  
+
   CoinPackedMatrix * matrix = new CoinPackedMatrix(false,0,0);
   matrix->setDimensions(0, NUMVAR);
 
-  
+
   //-- Add row-wise constraint
   size_t indexRow = 0;
-  for (int i=0; i < A.rows(); ++i) 
+  for (int i=0; i < A.rows(); ++i)
   {
     Vec temp = A.row(i);
-    
+
     CoinPackedVector row;
     if ( cstraints._vec_sign[i] == EQ || cstraints._vec_sign[i] == LE )
     {
@@ -164,13 +162,13 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints & cstraint
       }
       row_lb[indexRow] = -1.0 * si->getInfinity();
       row_ub[indexRow] = coef * cstraints._Cst_objective(i);
-      matrix->appendRow(row);      
+      matrix->appendRow(row);
       indexRow++;
     }
   }
-  
+
   //-- Setup bounds
-  if (cstraints._vec_bounds.size() == 1) 
+  if (cstraints._vec_bounds.size() == 1)
   {
     // Setup the same bound for all the parameter
     for (int i=0; i < this->_nbParams; ++i)
@@ -179,20 +177,20 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints & cstraint
       col_ub[i] = cstraints._vec_bounds[0].second;
     }
   }
-  else  
+  else
   {
 
     for (int i=0; i < this->_nbParams; ++i)
-    {      
+    {
       col_lb[i] = cstraints._vec_bounds[i].first;
       col_ub[i] = cstraints._vec_bounds[i].second;
     }
-  }  
- 
+  }
+
   si->loadProblem(*matrix, &col_lb[0], &col_ub[0], cstraints._vec_cost.empty() ? NULL : &cstraints._vec_cost[0], &row_lb[0], &row_ub[0] );
-  
+
   delete matrix;
-  
+
   return bOk;
 }
 
@@ -206,38 +204,36 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints_Sparse & c
   }
   assert(_nbParams == cstraints._nbParams);
 
-  
+
   int NUMVAR = cstraints._constraintMat.cols();
-  int NUMCON = cstraints._constraintMat.rows();
-  int NUMANZ = cstraints._constraintMat.cols() * cstraints._constraintMat.rows(); //DENSE MATRIX
   std::vector<double> col_lb(NUMVAR);//the column lower bounds
   std::vector<double> col_ub(NUMVAR);//the column upper bounds
-  
+
   this->_nbParams = NUMVAR;
 
-  if (cstraints._bminimize) 
+  if (cstraints._bminimize)
   {
     si->setObjSense( 1 );
   }
-  else  
+  else
   {
     si->setObjSense( -1 );
   }
 
   const sRMat & A = cstraints._constraintMat;
-  
-  //Equality constraint will be handked by two constraintsdue to the API limitation. 
+
+  //Equality constraint will be handked by two constraintsdue to the API limitation.
   size_t nbLine = A.rows() + std::count(cstraints._vec_sign.begin(), cstraints._vec_sign.end(), EQ);
-  
+
   std::vector<double> row_lb(nbLine);//the row lower bounds
   std::vector<double> row_ub(nbLine);//the row upper bounds
-  
+
   CoinPackedMatrix * matrix = new CoinPackedMatrix(false,0,0);
   matrix->setDimensions(0, NUMVAR);
 
   //-- Add row-wise constraint
   size_t rowindex = 0;
-  for (int i=0; i < A.rows(); ++i)  
+  for (int i=0; i < A.rows(); ++i)
   {
     std::vector<int> vec_colno;
     std::vector<double> vec_value;
@@ -246,8 +242,8 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints_Sparse & c
       vec_colno.push_back(it.col());
       vec_value.push_back(it.value());
     }
-      
-    
+
+
     if ( cstraints._vec_sign[i] == EQ || cstraints._vec_sign[i] == LE )
     {
       int coef = 1;
@@ -258,12 +254,12 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints_Sparse & c
 	                 &vec_value[0] );
       rowindex++;
     }
-    
+
     if ( cstraints._vec_sign[i] == EQ || cstraints._vec_sign[i] == GE )
     {
-      int coef = -1;      
-      for ( std::vector<double>::iterator iter_val = vec_value.begin(); 
-	      iter_val != vec_value.end(); 
+      int coef = -1;
+      for ( std::vector<double>::iterator iter_val = vec_value.begin();
+	      iter_val != vec_value.end();
 	      iter_val++)
       {
   	    *iter_val *= coef;
@@ -272,13 +268,13 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints_Sparse & c
       row_ub[rowindex] = coef * cstraints._Cst_objective(i);;
       matrix->appendRow( vec_colno.size(),
 	                 &vec_colno[0],
-	                 &vec_value[0] );     
+	                 &vec_value[0] );
       rowindex++;
     }
   }
-  
+
   //-- Setup bounds
-  if (cstraints._vec_bounds.size() == 1) 
+  if (cstraints._vec_bounds.size() == 1)
   {
     // Setup the same bound for all the parameter
     for (int i=0; i < this->_nbParams; ++i)
@@ -290,12 +286,12 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints_Sparse & c
   else  {
     // Set the required bound per constraint
     for (int i=0; i < this->_nbParams; ++i)
-    {      
+    {
       col_lb[i] = cstraints._vec_bounds[i].first;
       col_ub[i] = cstraints._vec_bounds[i].second;
     }
   }
-  
+
   si->loadProblem(
     *matrix,
     &col_lb[0],
@@ -303,16 +299,16 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints_Sparse & c
     cstraints._vec_cost.empty() ? NULL : &cstraints._vec_cost[0],
     &row_lb[0],
     &row_ub[0]);
-  
+
   delete matrix;
-  
+
   return bOk;
 }
 
 template<typename SOLVERINTERFACE>
 bool OSI_X_SolverWrapper<SOLVERINTERFACE>::solve()
 {
-  //-- Compute solution 
+  //-- Compute solution
   if ( si != NULL )
   {
     si->initialSolve();

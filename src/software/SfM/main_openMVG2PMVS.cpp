@@ -93,9 +93,9 @@ bool exportToPMVSFormat(
       }
       else
       {
-        ReadImage( srcImage.c_str(), &image );       
+        ReadImage( srcImage.c_str(), &image );
         WriteImage( dstImage.c_str(), image);
-      }      
+      }
     }
 
     //pmvs_options.txt
@@ -140,7 +140,6 @@ bool exportToBundlerFormat(
       << doc._map_camera.size()
       << " " << doc._tracks.size() << os.widen('\n');
 
-    size_t count = 0;
     for (std::map<size_t, PinholeCamera>::const_iterator iter = doc._map_camera.begin();
       iter != doc._map_camera.end(); ++iter)
     {
@@ -163,15 +162,13 @@ bool exportToBundlerFormat(
       osList << doc._vec_imageNames[iter->first] << " 0 " << focal << os.widen('\n');
     }
 
-    size_t trackIndex = 0; 
+    size_t trackIndex = 0;
 
     for (std::map< size_t, tracks::submapTrack >::const_iterator
       iterTracks = doc._tracks.begin();
       iterTracks != doc._tracks.end();
       ++iterTracks,++trackIndex)
     {
-
-      const size_t trackId = iterTracks->first;
       const tracks::submapTrack & map_track = iterTracks->second;
 
       const float * ptr3D = & doc._vec_points[trackIndex*3];

@@ -55,8 +55,10 @@ Setup the required external library.
  $ mkdir openMVG_Build
  $ cd openMVG_Build
  $ cmake -DCMAKE_BUILD_TYPE=RELEASE . ../openMVG/src/
+If you want enable unit tests and examples to the build:
+ $ cmake -DCMAKE_BUILD_TYPE=RELEASE -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src/
 
-=> In order to use the MOSEK 6 back-end for the linear programming oepnMVG module
+=> In order to use the MOSEK 6 back-end for the linear programming openMVG module
   - Check that you have an up-to-date MOSEK licence, else openMVG MOSEK unit test will fail.
 
  $ cmake -DCMAKE_BUILD_TYPE=RELEASE
@@ -107,5 +109,7 @@ Mac compilation
  $ mkdir openMVG_Build
  $ cd openMVG_Build
  $ cmake -DCMAKE_BUILD_TYPE=RELEASE -G "Xcode" . ../openMVG/src/
+If you want enable unit tests and examples to the build:
+ $ cmake -DCMAKE_BUILD_TYPE=RELEASE -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -G "Xcode" . ../openMVG/src/
  $ xcodebuild -configuration Release
 

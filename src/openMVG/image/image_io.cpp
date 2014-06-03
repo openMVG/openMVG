@@ -121,7 +121,6 @@ int ReadJpgStream(FILE * file,
                   int * depth) {
   jpeg_decompress_struct cinfo;
   struct my_error_mgr jerr;
-  JSAMPARRAY buffer = NULL;
   cinfo.err = jpeg_std_error(&jerr.pub);
   jerr.pub.error_exit = &jpeg_error;
 

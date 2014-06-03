@@ -396,7 +396,6 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
     std::vector<size_t> vec_commonTracksPerTriplets;
     for (size_t i = 0; i < vec_possibleTriplets.size(); ++i)
     {
-      const graphUtils::Triplet & triplet = vec_triplets[vec_possibleTriplets[i]];
       vec_commonTracksPerTriplets.push_back(map_tracksPerTriplets[vec_possibleTriplets[i]]);
     }
     //-- If current edge already computed continue
@@ -513,7 +512,6 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
               STLMAPTracks::const_iterator iterTracks = map_tracksCommon.begin();
               std::advance(iterTracks, *iterInliers);
               const submapTrack & subTrack = iterTracks->second;
-              size_t iTriplet = 0;
               submapTrack::const_iterator iterI, iterJ, iterK;
               iterI = iterJ = iterK = subTrack.begin();
               std::advance(iterJ,1);
