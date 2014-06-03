@@ -140,7 +140,7 @@ int ReadJpgStream(FILE * file,
   *h = cinfo.output_height;
   *w = cinfo.output_width;
   *depth = cinfo.output_components;
-  (*ptr) = vector<unsigned char>((*h)*(*w)*(*depth));
+  ptr->resize((*h)*(*w)*(*depth));
 
   unsigned char *ptrCpy = &(*ptr)[0];
 
@@ -242,63 +242,109 @@ int ReadPng(const char *filename,
   return res;
 }
 
-// The writing and reading functions using libpng are based on
-// http://www.libpng.org/pub/png/book
 int ReadPngStream(FILE *file,
                   vector<unsigned char> * ptr,
                   int * w,
                   int * h,
                   int * depth)  {
-  png_byte header[8];
-
-  if (fread(header, 1, 8, file) != 8) {
-    cerr << "fread failed.";
-  }
-  if (png_sig_cmp(header, 0, 8))
+  
+  // first check the eight byte PNG signature
+  png_byte  pbSig[8];
+  fread(pbSig, 1, 8, file);
+  if (png_sig_cmp(pbSig, 0, 8))
+  {
     return 0;
+  }
 
-  png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,
-                                               NULL, NULL, NULL);
-
+  // create the two png(-info) structures
+  png_structp png_ptr = NULL;
+  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL,
+    (png_error_ptr)NULL, (png_error_ptr)NULL);
   if (!png_ptr)
+  {
     return 0;
-
-  png_infop info_ptr = png_create_info_struct(png_ptr);
-  if (!info_ptr)  {
-    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+  }
+  png_infop info_ptr = NULL;
+  info_ptr = png_create_info_struct(png_ptr);
+  if (!info_ptr)
+  {
+    png_destroy_read_struct(&png_ptr, NULL, NULL);
     return 0;
   }
 
+  // initialize the png structure
   png_init_io(png_ptr, file);
   png_set_sig_bytes(png_ptr, 8);
 
+  // read all PNG info up to image data
+
   png_read_info(png_ptr, info_ptr);
 
-  png_uint_32 pngWidth, pngHeight;
-  int bitDepth, colorType, interlaceType;
-  png_get_IHDR(png_ptr, info_ptr, &pngWidth, &pngHeight, &bitDepth, &colorType,
-    &interlaceType, (int*)NULL, (int*)NULL);
+  // get width, height, bit-depth and color-type
+  png_uint_32 wPNG, hPNG;
+  int                 iBitDepth;
+  int                 iColorType;
+  png_get_IHDR(png_ptr, info_ptr, &wPNG, &hPNG, &iBitDepth,
+    &iColorType, NULL, NULL, NULL);
+
+  // expand images of all color-type to 8-bit
+
+  if (iColorType == PNG_COLOR_TYPE_PALETTE)
+    png_set_expand(png_ptr);
+  if (iBitDepth < 8)
+    png_set_expand(png_ptr);
+  if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
+    png_set_expand(png_ptr);
+  if (iBitDepth == 16) // convert 16-bit to 8-bit on the fly
+    png_set_strip_16(png_ptr);
+
+  double dGamma;
+  // if required set gamma conversion
+  if (png_get_gAMA(png_ptr, info_ptr, &dGamma))
+    png_set_gamma(png_ptr, (double) 2.2, dGamma);
+
+  // after the transformations are registered, update info_ptr data
 
   png_read_update_info(png_ptr, info_ptr);
-  png_uint_32 rowbytes = png_get_rowbytes(png_ptr, info_ptr);
-  int channels = (int)png_get_channels(png_ptr, info_ptr);
 
-  *h = pngHeight;
-  *w = pngWidth;
-  *depth = channels;
-  (*ptr) = std::vector<unsigned char>((*h)*(*w)*(*depth));
+  // get again width, height and the new bit-depth and color-type
 
-  png_bytep *row_pointers =
-    (png_bytep*)malloc(sizeof(png_bytep) * channels * (*h));
+  png_get_IHDR(png_ptr, info_ptr, &wPNG, &hPNG, &iBitDepth,
+    &iColorType, NULL, NULL, NULL);
 
-  unsigned char * ptrArray = &((*ptr)[0]);
-  for (int y = 0; y < (*h); ++y)
-    row_pointers[y] = (png_byte*) (ptrArray) + rowbytes*y;
+  // Get number of byte along a tow
+  png_uint_32         ulRowBytes;
+  ulRowBytes = png_get_rowbytes(png_ptr, info_ptr);
+ 
+  // and allocate memory for an array of row-pointers
+  png_byte   **ppbRowPointers = NULL;
+  if ((ppbRowPointers = (png_bytepp) malloc(hPNG
+    * sizeof(png_bytep))) == NULL)
+  {
+    std::cerr << "PNG: out of memory" << std::endl;
+    return 0;
+  }
 
-  png_read_image(png_ptr, row_pointers);
+  *w = wPNG;
+  *h = hPNG;
+  *depth = png_get_channels(png_ptr, info_ptr);
+
+  // now we can allocate memory to store the image
+  ptr->resize((*h)*(*w)*(*depth));
+  
+  // set the individual row-pointers to point at the correct offsets
+  for (int i = 0; i < hPNG; i++)
+    ppbRowPointers[i] = &((*ptr)[0]) + i * ulRowBytes;
+
+  // now we can go ahead and just read the whole image
+  png_read_image(png_ptr, ppbRowPointers);
+
+  // read the additional chunks in the PNG file (not really needed)
   png_read_end(png_ptr, NULL);
+
+  free (ppbRowPointers);
+  
   png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-  free(row_pointers);
   return 1;
 }
 
@@ -334,7 +380,7 @@ int WritePngStream(FILE * file,
 
   png_init_io(png_ptr, file);
 
-  // Colour types are defined at png.h:841+.
+  // color types are defined at png.h:841+.
   char colour;
   switch(depth)
   {

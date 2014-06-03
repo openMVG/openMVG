@@ -1,11 +1,11 @@
-README for libpng version 1.5.1 - February 3, 2011 (shared library 15.0)
+README for libpng version 1.6.6 - September 16, 2013 (shared library 16.0)
 See the note about version numbers near the top of png.h
 
 See INSTALL for instructions on how to install libpng.
 
-Libpng comes in several distribution formats.  Get libpng-*.tar.gz,
-libpng-*.tar.xz or libpng-*.tar.bz2 if you want UNIX-style line endings
-in the text files, or lpng*.zip if you want DOS-style line endings.
+Libpng comes in several distribution formats.  Get libpng-*.tar.gz or
+libpng-*.tar.xz or if you want UNIX-style line endings in the text files,
+or lpng*.7z or lpng*.zip if you want DOS-style line endings.
 
 Version 0.89 was the first official release of libpng.  Don't let the
 fact that it's the first release fool you.  The libpng library has been in
@@ -77,17 +77,15 @@ compression library that is useful for more things than just PNG files.
 You can use zlib as a drop-in replacement for fread() and fwrite() if
 you are so inclined.
 
-zlib should be available at the same place that libpng is, or at.
-ftp://ftp.info-zip.org/pub/infozip/zlib
+zlib should be available at the same place that libpng is, or at zlib.net.
 
 You may also want a copy of the PNG specification.  It is available
 as an RFC, a W3C Recommendation, and an ISO/IEC Standard.  You can find
 these at http://www.libpng.org/pub/png/documents/
 
 This code is currently being archived at libpng.sf.net in the
-[DOWNLOAD] area, and on CompuServe, Lib 20 (PNG SUPPORT)
-at GO GRAPHSUP.  If you can't find it in any of those places,
-e-mail me, and I'll help you find it.
+[DOWNLOAD] area, and at ftp://ftp.simplesystems.org.  If you can't find it
+in any of those places, e-mail me, and I'll help you find it.
 
 If you have any code changes, requests, problems, etc., please e-mail
 them to me.  Also, I'd appreciate any make files or project files,
@@ -105,7 +103,7 @@ based in a large way on Guy's and Andreas' earlier work), and the PNG
 development group.
 
 Send comments/corrections/commendations to png-mng-implement at
-lists.sourceforge.net (subscription required; visit 
+lists.sourceforge.net (subscription required; visit
 https://lists.sourceforge.net/lists/listinfo/png-mng-implement
 to subscribe) or to glennrp at users.sourceforge.net
 
@@ -114,19 +112,16 @@ given in previous versions of this document.  He and Andreas will
 read mail addressed to the png-implement list, however.
 
 Please do not send general questions about PNG.  Send them to
-the (png-list at ccrc.wustl.edu, subscription required, write to
-majordomo at ccrc.wustl.edu with "subscribe png-list" in your message).
-On the other hand,
-please do not send libpng questions to that address, send them to me
-or to the png-implement list.  I'll
-get them in the end anyway.  If you have a question about something
+png-mng-misc at lists.sf.net (subscription required; visit
+https://lists.sourceforge.net/lists/listinfo/png-mng-misc to
+subscribe).  If you have a question about something
 in the PNG specification that is related to using libpng, send it
 to me.  Send me any questions that start with "I was using libpng,
 and ...".  If in doubt, send questions to me.  I'll bounce them
 to others, if necessary.
 
 Please do not send suggestions on how to change PNG.  We have
-been discussing PNG for nine years now, and it is official and
+been discussing PNG for eighteen years now, and it is official and
 finished.  If you have suggestions for libpng, however, I'll
 gladly listen.  Even if your suggestion is not used immediately,
 it may be used later.
@@ -170,23 +165,25 @@ Files in this distribution:
       pngwrite.c    =>  High-level write functions
       pngwtran.c    =>  Write data transformations
       pngwutil.c    =>  Write utility functions
+      arm           =>  Contains optimized code for the ARM platform
       contrib       =>  Contributions
+       examples         =>  Example programs
        gregbook         =>  source code for PNG reading and writing, from
                             Greg Roelofs' "PNG: The Definitive Guide",
                             O'Reilly, 1999
-       msvctest     =>  Builds and runs pngtest using a MSVC workspace
-       pngminus     =>  Simple pnm2png and png2pnm programs
-       pngsuite     =>  Test images
+       libtests         =>  Test programs
+       pngminim         =>  Minimal decoder, encoder, and progressive decoder
+                            programs demonstrating use of pngusr.dfa
+       pngminus         =>  Simple pnm2png and png2pnm programs
+       pngsuite         =>  Test images
+       tools            =>  Various tools
        visupng      =>  Contains a MSVC workspace for VisualPng
       projects      =>  Contains project files and workspaces for
                         building a DLL
-       cbuilder5        =>  Contains a Borland workspace for building
-                            libpng and zlib
-       visualc6         =>  Contains a Microsoft Visual C++ (MSVC)
-                            workspace for building libpng and zlib
+       owatcom          =>  Contains a WATCOM project for building libpng
        visualc71        =>  Contains a Microsoft Visual C++ (MSVC)
                             workspace for building libpng and zlib
-       xcode            =>  Contains an Apple xcode
+       vstudio          =>  Contains a Microsoft Visual C++ (MSVC)
                             workspace for building libpng and zlib
       scripts       =>  Directory containing scripts for building libpng:
                             (see scripts/README.txt for the list of scripts)
