@@ -65,7 +65,7 @@ int main(int argc, char **argv)
     stlplus::folder_create( sOutputDir );
   }
 
-  std::vector<std::string> vec_image = stlplus::folder_all( sImageDir );
+  std::vector<std::string> vec_image = stlplus::folder_files( sImageDir );
   // Write the new file
   std::ofstream listTXT( stlplus::create_filespec( sOutputDir,
                                                    "lists.txt" ).c_str() );
