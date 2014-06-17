@@ -1444,7 +1444,7 @@ void GlobalReconstructionEngine::tripletRotationRejection(
   // DETECTION OF ROTATION OUTLIERS
   std::vector< graphUtils::Triplet > vec_triplets_validated;
 
-  std::vector<double> vec_errToIdentityPerTriplet;
+  std::vector<float> vec_errToIdentityPerTriplet;
   vec_errToIdentityPerTriplet.reserve(vec_triplets.size());
   // Compute for each length 3 cycles: the composition error
   //  Error to identity rotation.
@@ -1482,7 +1482,7 @@ void GlobalReconstructionEngine::tripletRotationRejection(
       RKI = map_relatives.find(ik)->second.first.transpose();
 
     Mat3 Rot_To_Identity = RIJ * RJK * RKI; // motion composition
-    double angularErrorDegree = R2D(getRotationMagnitude(Rot_To_Identity));
+    float angularErrorDegree = R2D(getRotationMagnitude(Rot_To_Identity));
     vec_errToIdentityPerTriplet.push_back(angularErrorDegree);
 
     if (angularErrorDegree < 2.0)
@@ -1510,11 +1510,11 @@ void GlobalReconstructionEngine::tripletRotationRejection(
 
   // Display statistics about rotation triplets error:
   std::cout << "\nStatistics about rotation triplets:" << std::endl;
-  minMaxMeanMedian<double>(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end());
+  minMaxMeanMedian<float>(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end());
 
   std::sort(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end());
 
-  Histogram<double> histo(0.0, *max_element(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end()), 180);
+  Histogram<float> histo(0.0f, *max_element(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end()), 180);
   histo.Add(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end());
 
   svgHisto histosvg;
@@ -1523,7 +1523,7 @@ void GlobalReconstructionEngine::tripletRotationRejection(
                 stlplus::create_filespec(this->_sOutDirectory, "Triplet_Rotation_Residual_180.svg"),
                 600,300);
 
-  histo = Histogram<double>(0.0, *max_element(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end()), 20);
+  histo = Histogram<float>(0.0f, *max_element(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end()), 20);
   histo.Add(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end());
 
   histosvg.draw(histo.GetHist(),
