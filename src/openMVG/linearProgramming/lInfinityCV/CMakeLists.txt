@@ -17,6 +17,12 @@ FILE(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 # Remove the future main files
 LIST(REMOVE_ITEM lInftycomputervision_cpp ${REMOVEFILESUNITTEST})
 
+# Disable some warnings on MSVC.
+IF (MSVC)
+  # Disable Warning	C4267: conversion from 'size_t' to 'int', possible loss of data
+  ADD_DEFINITIONS("/wd4267")
+ENDIF (MSVC)
+
 ADD_LIBRARY(openMVG_lInftyComputerVision  ${lInftycomputervision_headers} ${lInftycomputervision_cpp})
 
 # Linfinity Triangulation
