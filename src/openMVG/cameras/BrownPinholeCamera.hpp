@@ -50,9 +50,9 @@ inline void ApplyRadialDistortionIntrinsics(
 struct BrownPinholeCamera
 {
   BrownPinholeCamera(
-    double focal,
-    double ppx,
-    double ppy,
+    double focal = 1,
+    double ppx = 0,
+    double ppy = 0,
     const Mat3 & R = Mat3::Identity(),
     const Vec3 & t = Vec3::Zero(),
     double k1 = 0.0,
@@ -66,6 +66,15 @@ struct BrownPinholeCamera
           0, _f, _ppy,
           0, 0,  1;
     P_From_KRt(_K, _R, _t, &_P);
+  }
+
+  BrownPinholeCamera(const PinholeCamera & P):
+    _P(P._P), _R(P._R), _t(P._t), _K(P._K), _k1(0.0), _k2(0.0), _k3(0.0)
+  {
+    _f = _K(0,0);
+    _ppx = _K(0,2);
+    _ppy = _K(1,2);
+    _C = -_R.transpose() * _t;
   }
 
   /// Intrinsic parameters (Focal, principal point and radial distortion)

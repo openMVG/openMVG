@@ -557,8 +557,8 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
     Vec6 & intrinsicJ = _map_IntrinsicsPerGroup[_map_IntrinsicIdPerImageId[J]];
     intrinsicJ<< camJ._f, camJ._ppx, camJ._ppy, camJ._k1, camJ._k2, camJ._k3;
 
-    _reconstructorData.map_ACThreshold.insert(std::make_pair(I, errorMax));
-    _reconstructorData.map_ACThreshold.insert(std::make_pair(J, errorMax));
+    _map_ACThreshold.insert(std::make_pair(I, errorMax));
+    _map_ACThreshold.insert(std::make_pair(J, errorMax));
 
     _vec_added_order.push_back(I);
     _vec_added_order.push_back(J);
@@ -868,7 +868,7 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
       intrinsic << cam._f, cam._ppx, cam._ppy, cam._k1, cam._k2, cam._k3;
     }
   }
-  _reconstructorData.map_ACThreshold.insert(std::make_pair(imageIndex, errorMax));
+  _map_ACThreshold.insert(std::make_pair(imageIndex, errorMax));
   _set_remainingImageId.erase(imageIndex);
 
   // Evaluate residuals:
@@ -1006,8 +1006,8 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
           if ( _reconstructorData.set_trackId.find(trackId) == _reconstructorData.set_trackId.end())
           {
             //Use error related to the current view with a max value of 4 pixels
-            double maxTh = std::max(4.0, _reconstructorData.map_ACThreshold[I]);
-            maxTh = std::max(4.0, _reconstructorData.map_ACThreshold[J]);
+            double maxTh = std::max(4.0, _map_ACThreshold[I]);
+            maxTh = std::max(4.0, _map_ACThreshold[J]);
 
             Vec2 x1 = vec_featI[vec_index[i]._i].coords().cast<double>();
             Vec2 x2 = vec_featJ[vec_index[i]._j].coords().cast<double>();

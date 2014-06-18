@@ -13,6 +13,7 @@
 #include "openMVG/cameras/PinholeCamera.hpp"
 #include "software/SfM/SfMEngine.hpp"
 #include "software/SfM/SfMIOHelper.hpp"
+#include "software/SfM/SfMReconstructionData.hpp"
 class SIOPointFeature;
 
 #include "openMVG/tracks/tracks.hpp"
@@ -80,7 +81,32 @@ public:
     std::vector<Vec3> & vec_tracksColor // output associated color
     ) const;
 
-  bool ExportToOpenMVGFormat(bool bColoredPointCloud) const;
+  //--
+  // Accessors
+  //--
+
+  const reconstructorHelper & refToReconstructorHelper() const
+  { return _reconstructorData;  }
+
+  const openMVG::tracks::STLMAPTracks & getTracks() const
+  { return _map_selectedTracks; }
+
+  const std::vector<std::string> getFilenamesVector() const
+  { return _vec_fileNames;  }
+
+  const std::vector< std::pair<size_t, size_t> > getImagesSize() const
+  {
+    std::vector< std::pair<size_t, size_t> > vec_imageSize;
+    for ( std::vector<openMVG::SfMIO::CameraInfo>::const_iterator iter_camInfo = _vec_camImageNames.begin();
+      iter_camInfo != _vec_camImageNames.end();
+      iter_camInfo++ )
+    {
+      std::vector<openMVG::SfMIO::IntrinsicCameraInfo>::const_iterator it_intrinsic = _vec_intrinsicGroups.begin();
+      std::advance(it_intrinsic, iter_camInfo->m_intrinsicId);
+      vec_imageSize.push_back( std::make_pair( it_intrinsic->m_w, it_intrinsic->m_h ) );
+    }
+    return vec_imageSize;
+  }
 
 private:
   /// Read input data (point correspondences, K matrix)
@@ -163,6 +189,8 @@ private:
   std::vector<Vec3> _vec_allScenes;
   // Structure visibility
   STLMAPTracks _map_selectedTracks; // reconstructed track (visibility per 3D point)
+  // Scene and structure container (for disk output)
+  reconstructorHelper _reconstructorData;
   //-----
 
 
