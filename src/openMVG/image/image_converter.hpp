@@ -46,9 +46,9 @@ inline void Convert<RGBAColor, RGBColor>(
   const RGBAColor& valin, RGBColor& valOut)
 {
   valOut = RGBColor(
-    (valin.a()/255.f) * valin.r(),
-    (valin.a()/255.f) * valin.g(),
-    (valin.a()/255.f) * valin.b());
+    static_cast<unsigned char> ((valin.a()/255.f) * valin.r()),
+    static_cast<unsigned char> ((valin.a()/255.f) * valin.g()),
+    static_cast<unsigned char> ((valin.a()/255.f) * valin.b()));
 }
 
 template<typename ImageIn, typename ImageOut>
