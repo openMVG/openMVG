@@ -15,6 +15,12 @@ SET_SOURCE_FILES_PROPERTIES(${linearProgramming_headers} PROPERTIES LANGUAGE CXX
 #Remove the future main files
 LIST(REMOVE_ITEM linearProgramming_cpp ${REMOVEFILESUNITTEST})
 
+IF(NOT MOSEK_FOUND)
+  FILE(GLOB_RECURSE REMOVEFILESMOSEK *MOSEK*)
+  LIST(REMOVE_ITEM linearProgramming_cpp ${REMOVEFILESMOSEK})
+  LIST(REMOVE_ITEM linearProgramming_headers ${REMOVEFILESMOSEK})
+ENDIF (NOT MOSEK_FOUND)
+
 ADD_LIBRARY(openMVG_linearProgramming ${linearProgramming_headers} ${linearProgramming_cpp})
 TARGET_LINK_LIBRARIES(openMVG_linearProgramming
     lib_OsiClpSolver # solver wrapper
