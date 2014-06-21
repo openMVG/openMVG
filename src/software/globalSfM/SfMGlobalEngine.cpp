@@ -46,9 +46,8 @@
 #include "lemon/list_graph.h"
 #include <lemon/connectivity.h>
 
-// Rotation
+// Rotation averaging
 #include "openMVG/multiview/rotation_averaging.hpp"
-#include "openMVG/multiview/rotation_averaging_l1.hpp"
 
 #include "third_party/progress/progress.hpp"
 #include "third_party/stlplus3/subsystems/timer.hpp"
@@ -137,50 +136,22 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
   // - it requires to change the camera indexes, because RotationAveraging is working only with
   //   index ranging in [0 - nbCam], (map_cameraNodeToCameraIndex utility)
 
-  switch(eRotationAveragingMethod)
+  //- A. weight computation
+  //- B. solve global rotation computation
+
+  //- A. weight computation: for each pair w = min(1, (#PairMatches/Median(#PairsMatches)))
+  std::vector<double> vec_relativeRotWeight;
   {
-    case ROTATION_AVERAGING_L2:
+    vec_relativeRotWeight.reserve(map_relatives.size());
     {
-      using namespace openMVG::rotation_averaging;
-      std::vector<std::pair<std::pair<size_t, size_t>, Mat3> > vec_relativeRotEstimate;
-      for(std::map<std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::const_iterator iter = map_relatives.begin();
-        iter != map_relatives.end(); ++iter)
-      {
-        const openMVG::lInfinityCV::relativeInfo & rel = *iter;
-        std::pair<size_t,size_t> newPair(
-          map_cameraNodeToCameraIndex.find(rel.first.first)->second,
-          map_cameraNodeToCameraIndex.find(rel.first.second)->second);
-        vec_relativeRotEstimate.push_back(std::make_pair(newPair, rel.second.first));
-      }
-
-      std::vector<Mat3> vec_ApprRotMatrix;
-      if (!rotation_averaging::L2RotationAveraging(map_cameraIndexTocameraNode.size(),
-        vec_relativeRotEstimate,
-        vec_ApprRotMatrix))
-      {
-        return false;
-      }
-
-      //-- Setup the averaged rotation
-      for (int i = 0; i < vec_ApprRotMatrix.size(); ++i)  {
-        map_globalR[map_cameraIndexTocameraNode.find(i)->second] = vec_ApprRotMatrix[i];
-      }
-
-      return true;
-    }
-    break;
-    case ROTATION_AVERAGING_L1:
-    {
-      using namespace openMVG::rotation_averaging::l1;
-
-      //-- Compute the mean number of matches to prepare weight computation
+      //-- Compute the median number of matches
       std::vector<double> vec_count;
       for(std::map<std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::const_iterator iter = map_relatives.begin();
         iter != map_relatives.end(); ++iter)
       {
         const openMVG::lInfinityCV::relativeInfo & rel = *iter;
         // Find the number of support point for this pair
-        std::map< std::pair<size_t, size_t>, vector<IndMatch> >::const_iterator iterMatches = _map_Matches_F.find(rel.first);
+        STLPairWiseMatches::const_iterator iterMatches = _map_Matches_F.find(rel.first);
         if (iterMatches != _map_Matches_F.end())
         {
           vec_count.push_back(iterMatches->second.size());
@@ -188,45 +159,84 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
       }
       float thTrustPair = (std::accumulate(vec_count.begin(), vec_count.end(), 0.0f) / vec_count.size()) / 2.0;
 
-      std::vector<RelRotationData> vec_relativeRotEstimate;
       for(std::map<std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::const_iterator iter = map_relatives.begin();
         iter != map_relatives.end(); ++iter)
       {
         const openMVG::lInfinityCV::relativeInfo & rel = *iter;
-        // Find the number of support point for this pair
-        float weight = 0.f; // the relative rotation correspondence point support
-        std::map< std::pair<size_t, size_t>, vector<IndMatch> >::const_iterator iterMatches = _map_Matches_F.find(rel.first);
+        float weight = 1.f; // the relative rotation correspondence point support
+        STLPairWiseMatches::const_iterator iterMatches = _map_Matches_F.find(rel.first);
         if (iterMatches != _map_Matches_F.end())
         {
           weight = std::min((float)iterMatches->second.size()/thTrustPair, 1.f);
+          vec_relativeRotWeight.push_back(weight);
         }
-        vec_relativeRotEstimate.push_back(RelRotationData(
-            map_cameraNodeToCameraIndex.find(rel.first.first)->second,
-            map_cameraNodeToCameraIndex.find(rel.first.second)->second,
-            rel.second.first, weight));
       }
+    }
+  }
+
+  using namespace openMVG::rotation_averaging;
+  // Setup input data for global rotation computation
+  std::vector<RelRotationData> vec_relativeRotEstimate;
+  std::vector<double>::const_iterator iterW = vec_relativeRotWeight.begin();
+  for(std::map<std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::const_iterator iter = map_relatives.begin();
+    iter != map_relatives.end(); ++iter)
+  {
+    const openMVG::lInfinityCV::relativeInfo & rel = *iter;
+    STLPairWiseMatches::const_iterator iterMatches = _map_Matches_F.find(rel.first);
+    if (iterMatches != _map_Matches_F.end())
+    {
+      vec_relativeRotEstimate.push_back(RelRotationData(
+        map_cameraNodeToCameraIndex.find(rel.first.first)->second,
+        map_cameraNodeToCameraIndex.find(rel.first.second)->second,
+        rel.second.first, *iterW));
+      ++iterW;
+    }
+  }
+
+  //- B. solve global rotation computation
+  bool bSuccess = false;
+  std::vector<Mat3> vec_globalR(map_cameraIndexTocameraNode.size());
+  switch(eRotationAveragingMethod)
+  {
+    case ROTATION_AVERAGING_L2:
+    {
+      //- Solve the global rotation estimation problem:
+      bSuccess = rotation_averaging::l2::L2RotationAveraging(map_cameraIndexTocameraNode.size(),
+        vec_relativeRotEstimate,
+        vec_globalR);
+    }
+    break;
+    case ROTATION_AVERAGING_L1:
+    {
+      using namespace openMVG::rotation_averaging::l1;
 
       //- Solve the global rotation estimation problem:
-      Matrix3x3Arr vec_globalR(map_cameraIndexTocameraNode.size());
       size_t nMainViewID = 0;
       std::vector<bool> vec_inliers;
-      bool bRotAveraging = GlobalRotationsRobust(vec_relativeRotEstimate, vec_globalR, nMainViewID, 0.0f, &vec_inliers);
+      bSuccess = rotation_averaging::l1::GlobalRotationsRobust(
+        vec_relativeRotEstimate, vec_globalR, nMainViewID, 0.0f, &vec_inliers);
 
       std::cout << "\ninliers : " << std::endl;
       std::copy(vec_inliers.begin(), vec_inliers.end(), ostream_iterator<bool>(std::cout, " "));
       std::cout << std::endl;
-
-      //-- Setup the averaged rotation
-      for (int i = 0; i < vec_globalR.size(); ++i)  {
-        map_globalR[map_cameraIndexTocameraNode.find(i)->second] = vec_globalR[i];
-      }
-      return bRotAveraging;
     }
     break;
     default:
     std::cerr << "Unknown rotation averaging method: " << (int) eRotationAveragingMethod << std::endl;
   }
-  return false;
+
+  if (bSuccess)
+  {
+    //-- Setup the averaged rotation
+    for (int i = 0; i < vec_globalR.size(); ++i)  {
+      map_globalR[map_cameraIndexTocameraNode.find(i)->second] = vec_globalR[i];
+    }
+  }
+  else{
+    std::cerr << "Global rotation solving failed." << std::endl;
+  }
+
+  return bSuccess;
 }
 
 bool GlobalReconstructionEngine::Process()
@@ -768,7 +778,7 @@ bool GlobalReconstructionEngine::Process()
     {
       const PinholeCamera & cam = iter->second;
       _reconstructorData.map_Camera[iter->first] = BrownPinholeCamera(cam._P);
-      
+
       // reconstructed camera
       _reconstructorData.set_imagedId.insert(iter->first);
     }

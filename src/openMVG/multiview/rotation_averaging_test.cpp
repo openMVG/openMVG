@@ -6,7 +6,6 @@
 
 #include "CppUnitLite/TestHarness.h"
 #include "openMVG/multiview/rotation_averaging.hpp"
-#include "openMVG/multiview/rotation_averaging_l1.hpp"
 #include "openMVG/multiview/essential.hpp"
 #include "testing/testing.h"
 
@@ -18,14 +17,15 @@
 #include <iterator>
 
 using namespace openMVG;
-using namespace rotation_averaging;
-using namespace rotation_averaging::l1;
+using namespace openMVG::rotation_averaging;
+using namespace openMVG::rotation_averaging::l1;
+using namespace openMVG::rotation_averaging::l2;
 
 TEST ( rotation_averaging, ClosestSVDRotationMatrix )
 {
   Mat3 rotx = RotationAroundX(0.3);
 
-  Mat3 Approximative_rotx = rotation_averaging::ClosestSVDRotationMatrix(rotx);
+  Mat3 Approximative_rotx = rotation_averaging::l2::ClosestSVDRotationMatrix(rotx);
 
   // Check that SVD have rebuilt the matrix correctly
   EXPECT_MATRIX_NEAR( rotx, Approximative_rotx, 1e-8);
@@ -42,7 +42,7 @@ TEST ( rotation_averaging, ClosestSVDRotationMatrixNoisy )
 
   //-- Set a little of noise in the rotMatrix :
   rotx(2,2) -= 0.02;
-  Mat3 Approximative_rotx = rotation_averaging::ClosestSVDRotationMatrix(rotx);
+  Mat3 Approximative_rotx = rotation_averaging::l2::ClosestSVDRotationMatrix(rotx);
 
   // Check the Frobenius distance between the approximated rot matrix and the GT
   CHECK( FrobeniusDistance( rotx, Approximative_rotx) < 0.02);
@@ -70,10 +70,10 @@ TEST ( rotation_averaging, RotationLeastSquare_3_Camera)
   Mat3 R20 = RotationAroundZ(2.*M_PI/3.0); //120°
   Mat3 Id = Mat3::Identity();
 
-  std::vector<std::pair<std::pair<size_t, size_t>, Mat3> > vec_relativeRotEstimate;
-  vec_relativeRotEstimate.push_back( make_pair(make_pair(0,1), R01));
-  vec_relativeRotEstimate.push_back( make_pair(make_pair(1,2), R12));
-  vec_relativeRotEstimate.push_back( make_pair(make_pair(2,0), R20));
+  std::vector<RelRotationData > vec_relativeRotEstimate;
+  vec_relativeRotEstimate.push_back( RelRotationData(0,1, R01));
+  vec_relativeRotEstimate.push_back( RelRotationData(1,2, R12));
+  vec_relativeRotEstimate.push_back( RelRotationData(2,0, R20));
 
   //- Solve the global rotation estimation problem :
   std::vector<Mat3> vec_globalR;
@@ -98,82 +98,6 @@ TEST ( rotation_averaging, RotationLeastSquare_3_Camera)
   RelativeCameraMotion(vec_globalR[2], t0, vec_globalR[0], t1, &R, &t);
   EXPECT_NEAR( 0, FrobeniusDistance( R20, R), 1e-2);
 }
-
-template<typename TYPE, int N>
-inline REAL ComputePSNR(const Eigen::Matrix<REAL, N,1>& x0, const Eigen::Matrix<REAL, N,1>& x)
-{
-  REAL ret = std::numeric_limits<REAL>::infinity();
-
-  REAL err = (x0 - x).squaredNorm() / N;
-
-  TYPE max1 = 0;
-  TYPE max2 = 0;
-  for (unsigned i=0; i<N; ++i) {
-    max1 = std::max(max1, x0(i));
-    max2 = std::max(max2, x(i));
-  }
-  TYPE maxBoth = std::max(max1, max2);
-
-  if ((maxBoth<1e-8) && err > 0) ret = 0;
-  else if (err > 0)               ret = 10.0 * std::log10(static_cast<REAL>(maxBoth*maxBoth) / err);
-
-  return ret;
-} // ComputePSNR
-
-bool TestRunRobustRegressionL1PD()
-{
-  typedef Eigen::Matrix<REAL, Eigen::Dynamic, Eigen::Dynamic> Matrix;
-  typedef Eigen::Matrix<REAL, Eigen::Dynamic, 1> Vector;
-
-  // source length
-  const unsigned N = 256;
-  // codeword length
-  const unsigned M = 4*N;
-  // number of perturbations
-  const unsigned T = int(0.2f*M);
-  // coding matrix
-  const Matrix G = Matrix::Random(M,N);
-  // source word
-  const Vector x = Vector::Random(N);
-  // code word
-  Vector y = G*x;
-  // channel: perturb T randomly chosen entries
-  for (unsigned i=0; i<T; ++i)
-    y((int) ((rand()/RAND_MAX)* (M-1))) = Vector::Random(1)(0);
-  // recover
-  Vector x0 = (G.transpose()*G).inverse()*G.transpose()*y;
-
-  Vector& xp(x0);
-  RobustRegressionL1PD(G, y, x0, 1e-4, 30);
-
-  REAL psnr = ComputePSNR<REAL,N>(*((Eigen::Matrix<REAL, N,1>*)x.data()), *((Eigen::Matrix<REAL, N,1>*)xp.data()));
-  bool bPassed = (psnr > 100);
-  return bPassed;
-}
-
-bool TestRobustRegressionL1PD()
-{
-  unsigned nIters = 12;
-  unsigned nTotalCorrectSolutions = 0;
-  for (unsigned i=0; i<nIters; ++i) {
-    if (TestRunRobustRegressionL1PD())
-      nTotalCorrectSolutions++;
-  }
-  const bool bPassed = (nTotalCorrectSolutions >= nIters);
-  std::cout
-    << "Test robust regression " << (bPassed?"passed":"FAILED")
-    << " : " << nIters << " " << nTotalCorrectSolutions
-    << " iterations (" << (float)nTotalCorrectSolutions/nIters << " correct) "
-    << std::endl;
-  return bPassed;
-
-}
-
-TEST ( rotation_averaging, RobustRegressionL1PD)
-{
-  TestRobustRegressionL1PD();
-}
-
 
 TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_SimpleTriplet)
 {
@@ -392,7 +316,82 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
   }
 }
 
+template<typename TYPE, int N>
+inline REAL ComputePSNR(const Eigen::Matrix<REAL, N,1>& x0, const Eigen::Matrix<REAL, N,1>& x)
+{
+  REAL ret = std::numeric_limits<REAL>::infinity();
 
+  REAL err = (x0 - x).squaredNorm() / N;
+
+  TYPE max1 = 0;
+  TYPE max2 = 0;
+  for (unsigned i=0; i<N; ++i) {
+    max1 = std::max(max1, x0(i));
+    max2 = std::max(max2, x(i));
+  }
+  TYPE maxBoth = std::max(max1, max2);
+
+  if ((maxBoth<1e-8) && err > 0)
+    ret = 0;
+  else if (err > 0)
+    ret = 10.0 * std::log10(static_cast<REAL>(maxBoth*maxBoth) / err);
+
+  return ret;
+} // ComputePSNR
+
+bool TestRunRobustRegressionL1PD()
+{
+  typedef Eigen::Matrix<REAL, Eigen::Dynamic, Eigen::Dynamic> Matrix;
+  typedef Eigen::Matrix<REAL, Eigen::Dynamic, 1> Vector;
+
+  // source length
+  const unsigned N = 256;
+  // codeword length
+  const unsigned M = 4*N;
+  // number of perturbations
+  const unsigned T = int(0.2f*M);
+  // coding matrix
+  const Matrix G = Matrix::Random(M,N);
+  // source word
+  const Vector x = Vector::Random(N);
+  // code word
+  Vector y = G*x;
+  // channel: perturb T randomly chosen entries
+  for (unsigned i=0; i<T; ++i)
+    y((int) ((rand()/RAND_MAX)* (M-1))) = Vector::Random(1)(0);
+  // recover
+  Vector x0 = (G.transpose()*G).inverse()*G.transpose()*y;
+
+  Vector& xp(x0);
+  RobustRegressionL1PD(G, y, x0, 1e-4, 30);
+
+  REAL psnr = ComputePSNR<REAL,N>(*((Eigen::Matrix<REAL, N,1>*)x.data()), *((Eigen::Matrix<REAL, N,1>*)xp.data()));
+  bool bPassed = (psnr > 100);
+  return bPassed;
+}
+
+bool TestRobustRegressionL1PD()
+{
+  unsigned nIters = 12;
+  unsigned nTotalCorrectSolutions = 0;
+  for (unsigned i=0; i<nIters; ++i) {
+    if (TestRunRobustRegressionL1PD())
+      nTotalCorrectSolutions++;
+  }
+  const bool bPassed = (nTotalCorrectSolutions >= nIters);
+  std::cout
+    << "Test robust regression " << (bPassed?"passed":"FAILED")
+    << " : " << nIters << " " << nTotalCorrectSolutions
+    << " iterations (" << (float)nTotalCorrectSolutions/nIters << " correct) "
+    << std::endl;
+  return bPassed;
+
+}
+
+TEST ( rotation_averaging, RobustRegressionL1PD)
+{
+  TestRobustRegressionL1PD();
+}
 
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
