@@ -249,7 +249,8 @@ int ReadPngStream(FILE *file,
   
   // first check the eight byte PNG signature
   png_byte  pbSig[8];
-  fread(pbSig, 1, 8, file);
+  size_t readcnt = fread(pbSig, 1, 8, file);
+  (void) readcnt;
   if (png_sig_cmp(pbSig, 0, 8))
   {
     return 0;

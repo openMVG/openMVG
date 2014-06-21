@@ -137,7 +137,8 @@ void exportToGraphvizData(const std::string& sfile, const GraphT & graph){
 
   //Use Graphviz
   const std::string cmd = "neato -Tsvg -O -Goverlap=scale -Gsplines=false " + sfile;
-  system(cmd.c_str());
+  int ret = system(cmd.c_str());
+  (void)ret;
 }
 
 } // namespace imageGraph
