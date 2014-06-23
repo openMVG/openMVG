@@ -40,7 +40,7 @@ int main(int argc, char **argv)
       << "[-i|--imageDirectory]\n"
       << "[-d|--sensorWidthDatabase]\n"
       << "[-o|--outputDirectory]\n"
-      << "[-f|--focal]\n"
+      << "[-f|--focal] (pixels)\n"
       << std::endl;
 
       std::cerr << s << std::endl;
