@@ -96,8 +96,7 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
    * \param[out]  indice    The indices of arrays in the dataset that
    *  have been computed as the nearest arrays.
    * \param[out]  distance  The distances between the matched arrays.
-   * \param[out]  NN        The number of maximal neighbor that could
-   *  will be searched.
+   * \param[out]  NN        The number of maximal neighbor that will be searched.
    *
    * \return True if success.
    */

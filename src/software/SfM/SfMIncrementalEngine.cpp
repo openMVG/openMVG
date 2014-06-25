@@ -336,19 +336,20 @@ bool IncrementalReconstructionEngine::InitialPairChoice( std::pair<size_t, size_
 
     // Display to the user the 10 top Fundamental matches pair
     std::vector< size_t > vec_NbMatchesPerPair;
-    for (openMVG::tracks::STLPairWiseMatches::const_iterator iter = _map_Matches_F.begin();
+    for (openMVG::matching::PairWiseMatches::const_iterator
+      iter = _map_Matches_F.begin();
       iter != _map_Matches_F.end(); ++iter)
     {
       vec_NbMatchesPerPair.push_back(iter->second.size());
     }
     // sort in descending order
     using namespace indexed_sort;
-    std::vector< sort_index_packet_descend< double, int> > packet_vec(vec_NbMatchesPerPair.size());
+    std::vector< sort_index_packet_descend< size_t, size_t> > packet_vec(vec_NbMatchesPerPair.size());
     sort_index_helper(packet_vec, &vec_NbMatchesPerPair[0], std::min((size_t)10, _map_Matches_F.size()));
 
     for (size_t i = 0; i < std::min((size_t)10, _map_Matches_F.size()); ++i) {
       size_t index = packet_vec[i].index;
-      openMVG::tracks::STLPairWiseMatches::const_iterator iter = _map_Matches_F.begin();
+      openMVG::matching::PairWiseMatches::const_iterator iter = _map_Matches_F.begin();
       std::advance(iter, index);
       std::cout << "(" << iter->first.first << "," << iter->first.second <<")\t\t"
         << iter->second.size() << " matches" << std::endl;
@@ -1000,7 +1001,7 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
         size_t cardPointsBefore = _reconstructorData.map_3DPoints.size();
         for (size_t i = 0; i < vec_tracksToAdd.size(); ++i)
         {
-          size_t trackId = vec_tracksToAdd[i];
+          const size_t trackId = vec_tracksToAdd[i];
           const Vec3 & cur3DPt = vec_3dPoint[i];
 
           if ( _reconstructorData.set_trackId.find(trackId) == _reconstructorData.set_trackId.end())
@@ -1118,7 +1119,7 @@ size_t IncrementalReconstructionEngine::badTrackRejector(double dPrecision)
   for (std::map<size_t, std::set<size_t> >::const_iterator iterT = map_trackToErase.begin();
     iterT != map_trackToErase.end(); ++iterT)
   {
-    size_t trackId = iterT->first;
+    const size_t trackId = iterT->first;
 
     const std::set<size_t> setI = iterT->second;
     // Erase the image index reference
@@ -1289,7 +1290,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
   std::set<size_t> set_camIndex;
   std::map<size_t,size_t> map_camIndexToNumber_extrinsic, map_camIndexToNumber_intrinsic;
   size_t cpt = 0;
-  for (std::map<size_t, BrownPinholeCamera >::const_iterator iter = _reconstructorData.map_Camera.begin();
+  for (reconstructorHelper::Map_BrownPinholeCamera::const_iterator iter = _reconstructorData.map_Camera.begin();
     iter != _reconstructorData.map_Camera.end();  ++iter, ++cpt)
   {
     // in order to map camera index to contiguous number
@@ -1363,8 +1364,8 @@ void IncrementalReconstructionEngine::BundleAdjustment()
       iterTrack != track.end();
       ++iterTrack)
     {
-      size_t imageId = iterTrack->first;
-      size_t featId = iterTrack->second;
+      const size_t imageId = iterTrack->first;
+      const size_t featId = iterTrack->second;
 
       // If imageId reconstructed:
       //  - Add measurements (the feature position)
@@ -1488,11 +1489,11 @@ void IncrementalReconstructionEngine::BundleAdjustment()
     }
 
     // Get back camera external and intrinsic parameters
-    for (std::map<size_t, BrownPinholeCamera >::iterator iter = _reconstructorData.map_Camera.begin();
+    for (reconstructorHelper::Map_BrownPinholeCamera::iterator iter = _reconstructorData.map_Camera.begin();
       iter != _reconstructorData.map_Camera.end(); ++iter)
     {
       const size_t imageId = iter->first;
-      size_t extrinsicId = map_camIndexToNumber_extrinsic[imageId];
+      const size_t extrinsicId = map_camIndexToNumber_extrinsic[imageId];
       // Get back extrinsic pointer
       const double * camE = ba_problem.mutable_cameras_extrinsic() + extrinsicId * 6;
       Mat3 R;
@@ -1501,7 +1502,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
       Vec3 t(camE[3], camE[4], camE[5]);
 
       // Get back the intrinsic group of the camera
-      size_t intrinsicId = map_camIndexToNumber_intrinsic[imageId];
+      const size_t intrinsicId = map_camIndexToNumber_intrinsic[imageId];
       const double * camIntrinsics = ba_problem.mutable_cameras_intrinsic() + intrinsicId * 6;
       // Update the camera with update intrinsic and extrinsic parameters
       using namespace pinhole_brown_reprojectionError;
@@ -1547,7 +1548,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
 double IncrementalReconstructionEngine::ComputeResidualsHistogram(Histogram<double> * histo)
 {
   std::set<size_t> set_camIndex;
-  for (std::map<size_t, BrownPinholeCamera>::const_iterator iter = _reconstructorData.map_Camera.begin();
+  for (reconstructorHelper::Map_BrownPinholeCamera::const_iterator iter = _reconstructorData.map_Camera.begin();
     iter != _reconstructorData.map_Camera.end();
     ++iter)
   {
@@ -1572,8 +1573,8 @@ double IncrementalReconstructionEngine::ComputeResidualsHistogram(Histogram<doub
       iterTrack != track.end();
       ++iterTrack)
     {
-      size_t imageId = iterTrack->first;
-      size_t featId = iterTrack->second;
+      const size_t imageId = iterTrack->first;
+      const size_t featId = iterTrack->second;
 
       if ( set_camIndex.find(imageId) != set_camIndex.end())
       {

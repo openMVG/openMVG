@@ -42,7 +42,7 @@ struct indexedImageGraph
   auto_ptr<map_NodeMapName> map_codeMapName; // Association of data to graph Node
   auto_ptr<map_EdgeMap> map_edgeMap; // Number of point matches between the source and the target
 
-  indexedImageGraph( const map< std::pair<size_t, size_t>, std::vector<IndMatch> > & map_indexedMatches,
+  indexedImageGraph( const PairWiseMatches & map_indexedMatches,
     const std::vector<string> &vec_fileNames)
   {
     map_nodeMapIndex =  auto_ptr<map_NodeMapIndex>( new map_NodeMapIndex(g) );
@@ -51,7 +51,7 @@ struct indexedImageGraph
 
     //A-- Compute the number of node we need
     set<size_t> setNodes;
-    for (map< std::pair<size_t, size_t>, vector<IndMatch> >::const_iterator iter = map_indexedMatches.begin();
+    for (PairWiseMatches::const_iterator iter = map_indexedMatches.begin();
       iter != map_indexedMatches.end();
       ++iter)
     {
@@ -70,7 +70,7 @@ struct indexedImageGraph
     }
 
     //C-- Add weighted edges from the "map_indexedMatches" object
-    for (map< std::pair<size_t, size_t>, vector<IndMatch> >::const_iterator iter = map_indexedMatches.begin();
+    for (PairWiseMatches::const_iterator iter = map_indexedMatches.begin();
       iter != map_indexedMatches.end();
       ++iter)
     {

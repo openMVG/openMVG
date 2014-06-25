@@ -83,8 +83,7 @@ int main(int argc, char ** argv)
   // Read matches
   //---------------------------------------
 
-  typedef std::map< std::pair<size_t, size_t>, std::vector<IndMatch> > map_pairWiseMatches;
-  map_pairWiseMatches map_Matches;
+  matching::PairWiseMatches map_Matches;
   PairedIndMatchImport(sMatchFile, map_Matches);
 
   //---------------------------------------

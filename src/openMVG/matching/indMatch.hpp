@@ -10,12 +10,13 @@
 
 #include <iostream>
 #include <set>
+#include <map>
 #include <vector>
 
 namespace openMVG {
 namespace matching {
 
-/// Structure in order to save paiwise indexed references.
+/// Structure in order to save pairwise indexed references.
 /// A sort operator exist in order to remove duplicates of IndMatch series.
 struct IndMatch
 {
@@ -43,7 +44,7 @@ struct IndMatch
   }
 
   /// Remove duplicates (same _i or _j that appears multiple times)
-  static size_t getDeduplicated(std::vector<IndMatch> & vec_match){
+  static bool getDeduplicated(std::vector<IndMatch> & vec_match){
 
     size_t sizeBefore = vec_match.size();
     std::set<IndMatch> set_deduplicated( vec_match.begin(), vec_match.end());
@@ -61,6 +62,11 @@ static std::ostream& operator<<(std::ostream & out, const IndMatch & obj) {
 static inline std::istream& operator>>(std::istream & in, IndMatch & obj) {
   return in >> obj._i >> obj._j;
 }
+
+//--
+// Pairwise matches (indexed matches for a pair <I,J>)
+/// The structure used to store corresponding point indexes per images pairs
+typedef std::map< std::pair<size_t, size_t>, std::vector<matching::IndMatch> > PairWiseMatches;
 
 }  // namespace matching
 }  // namespace openMVG

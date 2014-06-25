@@ -20,11 +20,10 @@ namespace matching {
 
 /// Export vector of IndMatch to a stream
 static bool PairedIndMatchToStream(
-  const std::map< std::pair<size_t, size_t>,std::vector<IndMatch> > & map_indexedMatches,
+  const PairWiseMatches & map_indexedMatches,
   std::ostream & os)
 {
-  for (std::map< std::pair<size_t, size_t>, std::vector<IndMatch> >
-       ::const_iterator iter = map_indexedMatches.begin();
+  for (PairWiseMatches::const_iterator iter = map_indexedMatches.begin();
     iter != map_indexedMatches.end();
     ++iter)
   {
@@ -41,7 +40,7 @@ static bool PairedIndMatchToStream(
 /// Import vector of IndMatch from a file
 static bool PairedIndMatchImport(
   const std::string & fileName,
-  std::map< std::pair<size_t, size_t>, std::vector<IndMatch> > & map_indexedMatches)
+  PairWiseMatches & map_indexedMatches)
 {
   bool bOk = false;
   std::ifstream in(fileName.c_str());

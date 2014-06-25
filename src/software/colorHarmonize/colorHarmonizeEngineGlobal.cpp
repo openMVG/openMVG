@@ -100,7 +100,7 @@ bool ColorHarmonizationEngineGlobal::Process()
 
   //-- Remove EG with poor support:
 
-  for (map< std::pair<size_t, size_t>, vector<IndMatch> >::iterator iter = _map_Matches.begin();
+  for (matching::PairWiseMatches::iterator iter = _map_Matches.begin();
     iter != _map_Matches.end();
     ++iter)
   {
@@ -169,7 +169,7 @@ bool ColorHarmonizationEngineGlobal::Process()
   std::set<size_t> set_indeximage;
   for (size_t i = 0; i < _map_Matches.size(); ++i)
   {
-    map< std::pair<size_t, size_t>, vector<IndMatch> >::const_iterator iter = _map_Matches.begin();
+    matching::PairWiseMatches::const_iterator iter = _map_Matches.begin();
     std::advance(iter, i);
 
     const size_t I = iter->first.first;
@@ -200,7 +200,7 @@ bool ColorHarmonizationEngineGlobal::Process()
 
   for (size_t i = 0; i < _map_Matches.size(); ++i)
   {
-    map< std::pair<size_t, size_t>, vector<IndMatch> >::const_iterator iter = _map_Matches.begin();
+    matching::PairWiseMatches::const_iterator iter = _map_Matches.begin();
     std::advance(iter, i);
 
     const size_t I = iter->first.first;
@@ -574,7 +574,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
           putativeGraph.g.erase(e);
           size_t Idu = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.target(e)];
           size_t Idv = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.source(e)];
-          openMVG::tracks::STLPairWiseMatches::iterator iterM = _map_Matches.find(std::make_pair(Idu,Idv));
+          matching::PairWiseMatches::iterator iterM = _map_Matches.find(std::make_pair(Idu,Idv));
           if( iterM != _map_Matches.end())
           {
             _map_Matches.erase(iterM);

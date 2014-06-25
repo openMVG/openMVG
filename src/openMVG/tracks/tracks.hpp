@@ -17,8 +17,7 @@
 // From map< [imageI,ImageJ], [indexed matches array] > it builds tracks.
 //
 // Usage :
-//  typedef std::map< std::pair<size_t, size_t>, std::vector<IndMatch> > map_pairWiseMatches;
-//  map_pairWiseMatches map_Matches;
+//  PairWiseMatches map_Matches;
 //  PairedIndMatchImport(sMatchFile, map_Matches); // Load series of pairwise matches
 //  //---------------------------------------
 //  // Compute tracks from matches
@@ -81,10 +80,6 @@ private:
 namespace tracks  {
   using namespace std;
 
-// Pairwise matches (indexed matches for a pair <I,J>)
-typedef std::map< std::pair<size_t,size_t>, std::vector<IndMatch> > mapPairWiseMatches;
-typedef tracks::mapPairWiseMatches STLPairWiseMatches;
-
 // Data structure to store a track: collection of {ImageId,FeatureId}
 //  The corresponding image points with their imageId and FeatureId.
 typedef std::map<size_t,size_t> submapTrack;
@@ -109,11 +104,11 @@ struct TracksBuilder
   const MapNodeIndex & getReverseMap() const {return reverse_my_Map;}
 
   /// Build tracks for a given series of pairWise matches
-  bool Build( const mapPairWiseMatches &  map_pair_wise_matches)
+  bool Build( const PairWiseMatches &  map_pair_wise_matches)
   {
     typedef std::set<indexedFeaturePair> SetIndexedPair;
     SetIndexedPair myset;
-    for (mapPairWiseMatches::const_iterator iter = map_pair_wise_matches.begin();
+    for (PairWiseMatches::const_iterator iter = map_pair_wise_matches.begin();
       iter != map_pair_wise_matches.end();
       ++iter)
     {
@@ -155,7 +150,7 @@ struct TracksBuilder
     }
 
     // Make the union according the pair matches
-    for (mapPairWiseMatches::const_iterator iter = map_pair_wise_matches.begin();
+    for (PairWiseMatches::const_iterator iter = map_pair_wise_matches.begin();
       iter != map_pair_wise_matches.end();
       ++iter)
     {

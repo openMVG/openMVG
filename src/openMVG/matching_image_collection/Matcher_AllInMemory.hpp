@@ -63,7 +63,7 @@ class Matcher_AllInMemory : public Matcher
 
   void Match(
     const std::vector<std::string> & vec_fileNames, // input filenames,
-    IndexedMatchPerPair & map_PutativesMatches)const // the pairwise photometric corresponding points
+    PairWiseMatches & map_PutativesMatches)const // the pairwise photometric corresponding points
   {
 #ifdef USE_OPENMP
     std::cout << "Using the OPENMP thread interface" << std::endl;

@@ -35,7 +35,7 @@ struct GeometricFilter_EMatrix_AC
     const std::pair<size_t, size_t> & imgSizeB,
     std::vector<size_t> & vec_inliers) const
   {
-    vec_inliers.resize(0);
+    vec_inliers.clear();
 
     // Define the AContrario adapted Essential matrix solver
     typedef ACKernelAdaptorEssential<

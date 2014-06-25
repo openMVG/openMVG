@@ -63,7 +63,7 @@ bool List_Triplets(const GraphT & g, std::vector< Triplet > & vec_triplets)
   //    - list the outgoing not visited edge
   //    -  for each tuple of edge
   //       - if their end are connected
-  //          Detected cyle of length 3
+  //          Detected cycle of length 3
   //          Mark first edge as visited
 
   typedef typename GraphT::OutArcIt OutArcIt;

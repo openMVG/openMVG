@@ -26,7 +26,7 @@ TEST(Tracks, Simple) {
   */
 
   // Create the input pairwise correspondences
-  mapPairWiseMatches map_pairwisematches;
+  PairWiseMatches map_pairwisematches;
 
   IndMatch testAB[] = {IndMatch(0,0), IndMatch(1,1), IndMatch(2,3)};
   IndMatch testBC[] = {IndMatch(0,0), IndMatch(1,6)};
@@ -88,7 +88,7 @@ TEST(Tracks, filter_3viewAtLeast) {
   */
 
   // Create the input pairwise correspondences
-  mapPairWiseMatches map_pairwisematches;
+  PairWiseMatches map_pairwisematches;
 
   IndMatch testAB[] = {IndMatch(0,0), IndMatch(1,1), IndMatch(2,3)};
   IndMatch testBC[] = {IndMatch(0,0), IndMatch(1,6)};
@@ -121,7 +121,7 @@ TEST(Tracks, Conflict) {
   */
 
   // Create the input pairwise correspondences
-  mapPairWiseMatches map_pairwisematches;
+  PairWiseMatches map_pairwisematches;
 
   IndMatch testAB[] = {IndMatch(0,0), IndMatch(1,1), IndMatch(2,3)};
   IndMatch testBC[] = {IndMatch(0,0), IndMatch(1,6), IndMatch(3,2), IndMatch(3,8)};

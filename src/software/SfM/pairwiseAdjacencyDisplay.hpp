@@ -11,14 +11,14 @@
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 using namespace svg;
 
-#include "openMVG/tracks/tracks.hpp"
-using namespace openMVG::tracks;
+#include "openMVG/matching/indMatch.hpp"
+using namespace openMVG::matching;
 
 namespace openMVG  {
 
 /// Display pair wises matches as an Adjacency matrix in svg format
 void PairWiseMatchingToAdjacencyMatrixSVG(const size_t NbImages,
-  const tracks::mapPairWiseMatches & map_Matches,
+  const matching::PairWiseMatches & map_Matches,
   const std::string & sOutName)
 {
   if ( !map_Matches.empty())
@@ -29,7 +29,7 @@ void PairWiseMatchingToAdjacencyMatrixSVG(const size_t NbImages,
     for (size_t I = 0; I < NbImages; ++I) {
       for (size_t J = 0; J < NbImages; ++J) {
         // If the pair have matches display a blue boxes at I,J position.
-        tracks::mapPairWiseMatches::const_iterator iterSearch =
+        matching::PairWiseMatches::const_iterator iterSearch =
           map_Matches.find(make_pair(I,J));
         if (iterSearch != map_Matches.end() && !iterSearch->second.empty())
         {

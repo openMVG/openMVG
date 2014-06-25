@@ -131,7 +131,7 @@ private:
   std::map<size_t, size_t> _map_IntrinsicIdPerImageId;
 
   //-- Visibility information
-  openMVG::tracks::STLPairWiseMatches _map_Matches_F; // pairwise matches for Fundamental model
+  openMVG::matching::PairWiseMatches _map_Matches_F; // pairwise matches for Fundamental model
   openMVG::tracks::STLMAPTracks _map_tracks; // reconstructed track (visibility per 3D point)
 
   //-- configuration of the reconstruction

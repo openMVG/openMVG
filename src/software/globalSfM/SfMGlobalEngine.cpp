@@ -104,7 +104,7 @@ GlobalReconstructionEngine::~GlobalReconstructionEngine()
 }
 
 void GlobalReconstructionEngine::rotationInference(
-  std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > & map_relatives)
+  Map_RelativeRT & map_relatives)
 {
   std::cout
         << "---------------\n"
@@ -129,7 +129,7 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
   ERotationAveragingMethod eRotationAveragingMethod,
   const std::map<size_t, size_t> & map_cameraNodeToCameraIndex,
   const std::map<size_t, size_t> & map_cameraIndexTocameraNode,
-  const std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > & map_relatives,
+  const Map_RelativeRT & map_relatives,
   std::map<size_t, Mat3> & map_globalR) const
 {
   // Build relative information for only the largest considered Connected Component
@@ -146,12 +146,12 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
     {
       //-- Compute the median number of matches
       std::vector<double> vec_count;
-      for(std::map<std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::const_iterator iter = map_relatives.begin();
+      for(Map_RelativeRT::const_iterator iter = map_relatives.begin();
         iter != map_relatives.end(); ++iter)
       {
         const openMVG::lInfinityCV::relativeInfo & rel = *iter;
         // Find the number of support point for this pair
-        STLPairWiseMatches::const_iterator iterMatches = _map_Matches_F.find(rel.first);
+        PairWiseMatches::const_iterator iterMatches = _map_Matches_F.find(rel.first);
         if (iterMatches != _map_Matches_F.end())
         {
           vec_count.push_back(iterMatches->second.size());
@@ -159,12 +159,12 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
       }
       float thTrustPair = (std::accumulate(vec_count.begin(), vec_count.end(), 0.0f) / vec_count.size()) / 2.0;
 
-      for(std::map<std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::const_iterator iter = map_relatives.begin();
+      for(Map_RelativeRT::const_iterator iter = map_relatives.begin();
         iter != map_relatives.end(); ++iter)
       {
         const openMVG::lInfinityCV::relativeInfo & rel = *iter;
         float weight = 1.f; // the relative rotation correspondence point support
-        STLPairWiseMatches::const_iterator iterMatches = _map_Matches_F.find(rel.first);
+        PairWiseMatches::const_iterator iterMatches = _map_Matches_F.find(rel.first);
         if (iterMatches != _map_Matches_F.end())
         {
           weight = std::min((float)iterMatches->second.size()/thTrustPair, 1.f);
@@ -178,11 +178,11 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
   // Setup input data for global rotation computation
   std::vector<RelRotationData> vec_relativeRotEstimate;
   std::vector<double>::const_iterator iterW = vec_relativeRotWeight.begin();
-  for(std::map<std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::const_iterator iter = map_relatives.begin();
+  for(Map_RelativeRT::const_iterator iter = map_relatives.begin();
     iter != map_relatives.end(); ++iter)
   {
     const openMVG::lInfinityCV::relativeInfo & rel = *iter;
-    STLPairWiseMatches::const_iterator iterMatches = _map_Matches_F.find(rel.first);
+    PairWiseMatches::const_iterator iterMatches = _map_Matches_F.find(rel.first);
     if (iterMatches != _map_Matches_F.end())
     {
       vec_relativeRotEstimate.push_back(RelRotationData(
@@ -280,7 +280,7 @@ bool GlobalReconstructionEngine::Process()
   // Compute relative R|t
   //-------------------
 
-  std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > map_relatives;
+  Map_RelativeRT map_relatives;
   {
     ComputeRelativeRt(map_relatives);
   }
@@ -319,7 +319,7 @@ bool GlobalReconstructionEngine::Process()
     // List remaining camera node Id
     //-------------------
     std::set<size_t> set_indeximage;
-    for (map< std::pair<size_t, size_t>, vector<IndMatch> >::const_iterator
+    for (PairWiseMatches::const_iterator
          iter = _map_Matches_F.begin();
          iter != _map_Matches_F.end();
          ++iter)
@@ -396,7 +396,7 @@ bool GlobalReconstructionEngine::Process()
   // Relative translations estimation (Triplet based translation computation)
   //-------------------
   std::vector<openMVG::lInfinityCV::relativeInfo > vec_initialRijTijEstimates;
-  STLPairWiseMatches newpairMatches;
+  PairWiseMatches newpairMatches;
   {
     std::cout << "\n-------------------------------" << "\n"
       << " Relative translations computation: " << "\n"
@@ -476,7 +476,7 @@ bool GlobalReconstructionEngine::Process()
   //-------------------
 
   {
-    const int iNview = map_cameraNodeToCameraIndex.size(); // The remaining camera nodes count in the graph
+    const size_t iNview = map_cameraNodeToCameraIndex.size(); // The remaining camera nodes count in the graph
 
     std::cout << "\n-------------------------------" << "\n"
       << " Global translations computation: " << "\n"
@@ -700,14 +700,14 @@ bool GlobalReconstructionEngine::Process()
         double min, max, mean, median;
         minMaxMeanMedian<double>(vec_residuals.begin(), vec_residuals.end(), min, max, mean, median);
 
-        Histogram<float> histo(0, *max_element(vec_residuals.begin(),vec_residuals.end())*1.1);
+        Histogram<float> histo(0.f, *max_element(vec_residuals.begin(),vec_residuals.end())*1.1f);
         histo.Add(vec_residuals.begin(), vec_residuals.end());
         std::cout << std::endl << "Residual Error pixels : " << std::endl << histo.ToString() << std::endl;
 
         // Histogram between 0 and 10 pixels
         {
           std::cout << "\n Histogram between 0 and 10 pixels: \n";
-          Histogram<float> histo(0, 10, 20);
+          Histogram<float> histo(0.f, 10.f, 20);
           histo.Add(vec_residuals.begin(), vec_residuals.end());
           std::cout << std::endl << "Residual Error pixels : " << std::endl << histo.ToString() << std::endl;
         }
@@ -912,7 +912,7 @@ bool GlobalReconstructionEngine::CleanGraph()
 
   // Graph is bi-edge connected, but still many connected components can exist
   // Keep only the largest one
-  STLPairWiseMatches matches_filtered;
+  PairWiseMatches matches_filtered;
   int connectedComponentCount = lemon::countConnectedComponents(putativeGraph.g);
   std::cout << "\n"
     << "GlobalReconstructionEngine::CleanGraph() :: => connected Component : "
@@ -952,7 +952,7 @@ bool GlobalReconstructionEngine::CleanGraph()
           {
             size_t Idu = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.target(e)];
             size_t Idv = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.source(e)];
-            STLPairWiseMatches::iterator iterF = _map_Matches_F.find(std::make_pair(Idu,Idv));
+            PairWiseMatches::iterator iterF = _map_Matches_F.find(std::make_pair(Idu,Idv));
             if( iterF != _map_Matches_F.end())
             {
               matches_filtered.insert(*iterF);
@@ -999,7 +999,7 @@ bool GlobalReconstructionEngine::CleanGraph()
 }
 
 void GlobalReconstructionEngine::ComputeRelativeRt(
-  std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > & vec_relatives)
+  Map_RelativeRT & vec_relatives)
 {
   // For each pair, compute the rotation from pairwise point matches:
 
@@ -1009,7 +1009,7 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
 #endif
   for (int i = 0; i < _map_Matches_F.size(); ++i)
   {
-    map< std::pair<size_t, size_t>, vector<IndMatch> >::const_iterator iter = _map_Matches_F.begin();
+    PairWiseMatches::const_iterator iter = _map_Matches_F.begin();
     std::advance(iter, i);
 
     const size_t I = iter->first.first;
@@ -1279,9 +1279,9 @@ void GlobalReconstructionEngine::tripletListing(std::vector< graphUtils::Triplet
 
 void GlobalReconstructionEngine::tripletRotationRejection(
   std::vector< graphUtils::Triplet > & vec_triplets,
-  std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > & map_relatives)
+  Map_RelativeRT & map_relatives)
 {
-  std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > map_relatives_validated;
+  Map_RelativeRT map_relatives_validated;
 
   // DETECTION OF ROTATION OUTLIERS
   std::vector< graphUtils::Triplet > vec_triplets_validated;
@@ -1324,10 +1324,10 @@ void GlobalReconstructionEngine::tripletRotationRejection(
       RKI = map_relatives.find(ik)->second.first.transpose();
 
     Mat3 Rot_To_Identity = RIJ * RJK * RKI; // motion composition
-    float angularErrorDegree = R2D(getRotationMagnitude(Rot_To_Identity));
+    float angularErrorDegree = static_cast<float>(R2D(getRotationMagnitude(Rot_To_Identity)));
     vec_errToIdentityPerTriplet.push_back(angularErrorDegree);
 
-    if (angularErrorDegree < 2.0)
+    if (angularErrorDegree < 2.0f)
     {
       vec_triplets_validated.push_back(triplet);
 
@@ -1428,7 +1428,7 @@ void GlobalReconstructionEngine::tripletRotationRejection(
         size_t Idv = (*putativeGraph.map_nodeMapIndex)[sg.v(iter)];
 
         //-- Clean relatives matches
-        STLPairWiseMatches::iterator iterF = _map_Matches_F.find(std::make_pair(Idu,Idv));
+        PairWiseMatches::iterator iterF = _map_Matches_F.find(std::make_pair(Idu,Idv));
         if (iterF != _map_Matches_F.end())
         {
           _map_Matches_F.erase(iterF);
@@ -1441,7 +1441,7 @@ void GlobalReconstructionEngine::tripletRotationRejection(
         }
 
         //-- Clean relative motions
-        std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::iterator iterF2 = map_relatives.find(std::make_pair(Idu,Idv));
+        Map_RelativeRT::iterator iterF2 = map_relatives.find(std::make_pair(Idu,Idv));
         if (iterF2 != map_relatives.end())
         {
           map_relatives.erase(iterF2);
@@ -1498,7 +1498,7 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
   std::vector<double> vec_Rot(map_camera.size()*3, 0.0);
   size_t i = 0;
   std::map<size_t,size_t> map_camIndexToNumber;
-  for (std::map<size_t,PinholeCamera >::const_iterator iter = map_camera.begin();
+  for (Map_Camera::const_iterator iter = map_camera.begin();
     iter != map_camera.end();  ++iter, ++i)
   {
     // in order to map camera index to contiguous number
@@ -1635,7 +1635,7 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
 
     // Get back camera
     i = 0;
-    for (std::map<size_t,PinholeCamera >::iterator iter = map_camera.begin();
+    for (Map_Camera::iterator iter = map_camera.begin();
       iter != map_camera.end(); ++iter, ++i)
     {
       const double * cam = ba_problem.mutable_cameras() + i*3;
@@ -1672,7 +1672,7 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
 }
 
 void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
-    std::map<size_t, PinholeCamera> & map_camera,
+    Map_Camera & map_camera,
     std::vector<Vec3> & vec_allScenes,
     const STLMAPTracks & map_tracksSelected)
 {
@@ -1709,7 +1709,7 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
   // Fill camera
   size_t i = 0;
   std::map<size_t,size_t> map_camIndexToNumber;
-  for (std::map<size_t,PinholeCamera >::const_iterator iter = map_camera.begin();
+  for (Map_Camera::const_iterator iter = map_camera.begin();
     iter != map_camera.end();  ++iter, ++i)
   {
     // in order to map camera index to contiguous number
@@ -1753,8 +1753,8 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
       iterTrack != track.end();
       ++iterTrack)
     {
-      size_t imageId = iterTrack->first;
-      size_t featId = iterTrack->second;
+      const size_t imageId = iterTrack->first;
+      const size_t featId = iterTrack->second;
 
       // If imageId reconstructed :
       //  - Add measurements (the feature position)
@@ -1845,7 +1845,7 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
 
     // Get back camera
     i = 0;
-    for (std::map<size_t,PinholeCamera >::iterator iter = map_camera.begin();
+    for (Map_Camera::iterator iter = map_camera.begin();
       iter != map_camera.end(); ++iter, ++i)
     {
       const double * cam = ba_problem.mutable_cameras() + i*6;

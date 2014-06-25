@@ -114,13 +114,19 @@ Image undistortImage(
 /// Represent data in order to make 3D reconstruction process easier
 struct reconstructorHelper
 {
+  //--
+  // TYPEDEF
+  //--
+
+  typedef std::map<size_t, BrownPinholeCamera> Map_BrownPinholeCamera;
+
   // Reconstructed tracks (updated during the process)
   std::set<size_t> set_trackId;
   std::map<size_t, Vec3> map_3DPoints; // Associated 3D point
 
   // Reconstructed camera information
   std::set<size_t> set_imagedId;
-  std::map<size_t, BrownPinholeCamera> map_Camera;
+  Map_BrownPinholeCamera map_Camera;
 
   bool exportToPly(const std::string & sFileName, const std::vector<Vec3> * pvec_color = NULL) const
   {
@@ -133,7 +139,7 @@ struct reconstructorHelper
       RetrieveValue());
     //-- Add camera position to the Point cloud
     std::vector<Vec3> vec_camPos;
-    for (std::map<size_t, BrownPinholeCamera>::const_iterator iter = map_Camera.begin();
+    for (Map_BrownPinholeCamera::const_iterator iter = map_Camera.begin();
       iter != map_Camera.end(); ++ iter) {
       vec_camPos.push_back(iter->second._C);
     }
@@ -182,7 +188,7 @@ struct reconstructorHelper
       //Export Camera as binary files
       std::map<size_t, size_t> map_cameratoIndex;
       size_t count = 0;
-      for (std::map<size_t, BrownPinholeCamera>::const_iterator iter =
+      for (Map_BrownPinholeCamera::const_iterator iter =
         map_Camera.begin();
         iter != map_Camera.end();
         ++iter)
@@ -201,7 +207,7 @@ struct reconstructorHelper
       }
 
       //-- Export the camera with disto
-      for (std::map<size_t, BrownPinholeCamera>::const_iterator iter =
+      for (Map_BrownPinholeCamera::const_iterator iter =
         map_Camera.begin();
         iter != map_Camera.end();
         ++iter)
@@ -286,7 +292,7 @@ struct reconstructorHelper
           iterTrack != track.end();
           ++iterTrack)
         {
-          size_t imageId = iterTrack->first;
+          const size_t imageId = iterTrack->first;
 
           if ( map_cameratoIndex.find(imageId) != map_cameratoIndex.end())
           {
@@ -321,11 +327,11 @@ struct reconstructorHelper
       f_cloud << "images\ncameras\n" << nc << "\n";
 
       count = 0;
-      for (std::map<size_t, BrownPinholeCamera>::const_iterator iter = map_Camera.begin();
+      for (Map_BrownPinholeCamera::const_iterator iter = map_Camera.begin();
         iter != map_Camera.end();
         ++iter)
       {
-        size_t camIndex = iter->first;
+        const size_t camIndex = iter->first;
         f_cloud << vec_fileNames[camIndex]
           << ' ' << vec_imageSize[camIndex].first
           << ' ' << vec_imageSize[camIndex].second
@@ -341,8 +347,8 @@ struct reconstructorHelper
       if (bExportImage)
       {
         std::cout << " -- Export the undistorted image set, it can take some time ..." << std::endl;
-        C_Progress_display my_progress_bar(map_Camera.size());
-        for (std::map<size_t, BrownPinholeCamera>::const_iterator iter = map_Camera.begin();
+        C_Progress_display my_progress_bar(static_cast<unsigned long>(map_Camera.size()));
+        for (Map_BrownPinholeCamera::const_iterator iter = map_Camera.begin();
           iter != map_Camera.end();
           ++iter, ++my_progress_bar)
         {
@@ -376,7 +382,7 @@ struct reconstructorHelper
               Image<RGBColor> imageU = undistortImage (image, distoModel);
               WriteImage(sOutImagePath.c_str(), imageU);
             }
-          }          
+          }
         }
       }
     }
@@ -424,7 +430,7 @@ struct reconstructorHelper
       //Camera
 
       size_t count = 0;
-      for (std::map<size_t, BrownPinholeCamera>::const_iterator iter = map_Camera.begin();
+      for (Map_BrownPinholeCamera::const_iterator iter = map_Camera.begin();
         iter != map_Camera.end(); ++iter, ++count)
       {
         const Mat34 & PMat = iter->second._P;
@@ -441,7 +447,7 @@ struct reconstructorHelper
       // Image
       count = 0;
       Image<RGBColor> image;
-      for (std::map<size_t, BrownPinholeCamera>::const_iterator iter = map_Camera.begin();
+      for (Map_BrownPinholeCamera::const_iterator iter = map_Camera.begin();
         iter != map_Camera.end();  ++iter, ++count)
       {
         size_t imageIndex = iter->first;

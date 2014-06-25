@@ -119,7 +119,7 @@ bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
   Vec3 t1 = Vec3::Zero();
   P_From_KRt(K1, R1, t1, &P1);
 
-  for (int i = 0; i < 4; ++i)
+  for (unsigned int i = 0; i < 4; ++i)
   {
     const Mat3 &R2 = Rs[i];
     const Vec3 &t2 = ts[i];
@@ -139,7 +139,7 @@ bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
     }
   }
   // Check the solution:
-  std::vector<size_t>::iterator iter = max_element(f.begin(), f.end());
+  const std::vector<size_t>::iterator iter = max_element(f.begin(), f.end());
   if(*iter == 0)
   {
     std::cerr << std::endl << "/!\\There is no right solution,"
@@ -147,7 +147,7 @@ bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
       <<" in front of both cameras" << std::endl;
     return false;
   }
-  size_t index = std::distance(f.begin(),iter);
+  const size_t index = std::distance(f.begin(),iter);
   (*R) = Rs[index];
   (*t) = ts[index];
 
@@ -284,7 +284,7 @@ bool robustResection(
     double ppx = K_(0,2);
     double ppy = K_(1,2);
     // Fill it with data (tracks and points coords)
-    for (int i = 0; i < ba_problem.num_points_; ++i) {
+    for (size_t i = 0; i < ba_problem.num_points_; ++i) {
       // Collect the image of point i in each frame.
 
       ba_problem.camera_index_.push_back(0);
@@ -311,7 +311,7 @@ bool robustResection(
     // Create residuals for each observation in the bundle adjustment problem. The
     // parameters for cameras and points are added automatically.
     ceres::Problem problem;
-    for (int i = 0; i < ba_problem.num_points_; ++i) {
+    for (size_t i = 0; i < ba_problem.num_points_; ++i) {
       // Each Residual block takes a point and a camera as input and outputs a 2
       // dimensional residual. Internally, the cost function stores the observed
       // image location and compares the reprojection against the observation.

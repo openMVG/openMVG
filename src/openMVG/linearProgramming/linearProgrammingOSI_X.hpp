@@ -106,7 +106,7 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints & cstraint
   assert(_nbParams == cstraints._nbParams);
 
 
-  int NUMVAR = cstraints._constraintMat.cols();
+  const unsigned int NUMVAR = cstraints._constraintMat.cols();
 
   std::vector<double> col_lb(NUMVAR);//the column lower bounds
   std::vector<double> col_ub(NUMVAR);//the column upper bounds
@@ -248,7 +248,7 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints_Sparse & c
     {
       int coef = 1;
       row_lb[rowindex] = -1.0 * si->getInfinity();
-      row_ub[rowindex] = coef * cstraints._Cst_objective(i);;
+      row_ub[rowindex] = coef * cstraints._Cst_objective(i);
       matrix->appendRow( vec_colno.size(),
 	                 &vec_colno[0],
 	                 &vec_value[0] );
@@ -265,7 +265,7 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints_Sparse & c
   	    *iter_val *= coef;
       }
       row_lb[rowindex] = -1.0 * si->getInfinity();
-      row_ub[rowindex] = coef * cstraints._Cst_objective(i);;
+      row_ub[rowindex] = coef * cstraints._Cst_objective(i);
       matrix->appendRow( vec_colno.size(),
 	                 &vec_colno[0],
 	                 &vec_value[0] );

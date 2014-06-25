@@ -108,23 +108,29 @@ public:
     return vec_imageSize;
   }
 
+  //--
+  // TYPEDEF
+  //--
+  typedef std::map< std::pair<size_t, size_t>, std::pair<Mat3, Vec3> > Map_RelativeRT;
+  typedef std::map<size_t, PinholeCamera > Map_Camera;
+
 private:
   /// Read input data (point correspondences, K matrix)
   bool ReadInputData();
 
   bool CleanGraph();
 
-  void ComputeRelativeRt(std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > & vec_relatives);
+  void ComputeRelativeRt(Map_RelativeRT & vec_relatives);
 
   // Detect and remove the outlier relative rotations
-  void rotationInference(std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > & map_relatives);
+  void rotationInference(Map_RelativeRT & map_relatives);
 
   // Compute the global rotations from relative rotations
   bool computeGlobalRotations(
     ERotationAveragingMethod eRotationAveragingMethod,
     const std::map<size_t, size_t> & map_cameraNodeToCameraIndex,
     const std::map<size_t, size_t> & map_cameraIndexTocameraNode,
-    const std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > & map_relatives,
+    const Map_RelativeRT & map_relatives,
     std::map<size_t, Mat3> & map_globalR) const;
 
   // List the triplet of the image connection graph (_map_Matches_F)
@@ -133,24 +139,24 @@ private:
   // Relative rotations inference on relative rotations composition error along 3 length cycles (triplets).
   void tripletRotationRejection(
     std::vector< graphUtils::Triplet > & vec_triplets,
-    std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > & map_relatives);
+    Map_RelativeRT & map_relatives);
 
   // Compute relative translations over the graph of putative triplets
   void computePutativeTranslation_EdgesCoverage(
     const std::map<std::size_t, Mat3> & map_globalR,
     const std::vector< graphUtils::Triplet > & vec_triplets,
     std::vector<openMVG::lInfinityCV::relativeInfo > & vec_initialEstimates,
-    tracks::mapPairWiseMatches & newpairMatches) const;
+    matching::PairWiseMatches & newpairMatches) const;
 
   // Bundle adjustment : refine structure Xis and camera translations
   void bundleAdjustment_t_Xi(
-    std::map<size_t, PinholeCamera> & map_camera,
+    Map_Camera & map_camera,
     std::vector<Vec3> & vec_allScenes,
     const STLMAPTracks & map_tracksSelected);
 
   // Bundle adjustment : refine structure Xis and camera rotations and translations
   void bundleAdjustment_Rt_Xi(
-    std::map<size_t, PinholeCamera> & map_camera,
+    Map_Camera & map_camera,
     std::vector<Vec3> & vec_allScenes,
     const STLMAPTracks & map_tracksSelected);
 
@@ -166,8 +172,8 @@ private:
   std::vector<openMVG::SfMIO::IntrinsicCameraInfo> _vec_intrinsicGroups;
   std::map< size_t, std::vector<SIOPointFeature> > _map_feats; // feature per images
 
-  typedef tracks::mapPairWiseMatches STLPairWiseMatches;
-  STLPairWiseMatches _map_Matches_F; // pairwise matches for Essential matrix model
+  typedef matching::PairWiseMatches PairWiseMatches;
+  PairWiseMatches _map_Matches_F; // pairwise matches for Essential matrix model
 
 
   //------
@@ -184,7 +190,7 @@ private:
   //-- Reconstruction data
   //-----
   // Cameras (Motion)
-  std::map<size_t, PinholeCamera> _map_camera;
+  Map_Camera _map_camera;
   // Structure 
   std::vector<Vec3> _vec_allScenes;
   // Structure visibility

@@ -34,7 +34,7 @@ struct GeometricFilter_FMatrix_AC
   {
     using namespace openMVG;
     using namespace openMVG::robust;
-    vec_inliers.resize(0);
+    vec_inliers.clear();
     // Define the AContrario adapted Fundamental matrix solver
     typedef ACKernelAdaptor<
       openMVG::fundamental::kernel::SevenPointSolver,

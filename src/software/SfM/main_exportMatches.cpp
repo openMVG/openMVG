@@ -81,8 +81,7 @@ int main(int argc, char ** argv)
   // Read matches
   //---------------------------------------
 
-  typedef std::map< std::pair<size_t, size_t>, std::vector<IndMatch> > map_pairWiseMatches;
-  map_pairWiseMatches map_Matches;
+  PairWiseMatches map_Matches;
   PairedIndMatchImport(sMatchFile, map_Matches);
 
   // ------------
@@ -92,7 +91,7 @@ int main(int argc, char ** argv)
   stlplus::folder_create(sOutDir);
   std::cout << "\n Export pairwise matches" << std::endl;
   C_Progress_display my_progress_bar( map_Matches.size() );
-  for (map< std::pair<size_t, size_t>, std::vector<IndMatch> >::const_iterator iter = map_Matches.begin();
+  for (PairWiseMatches::const_iterator iter = map_Matches.begin();
     iter != map_Matches.end();
     ++iter, ++my_progress_bar)
   {

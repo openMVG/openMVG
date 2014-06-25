@@ -79,7 +79,7 @@ bool exportToPMVSFormat(
     for (std::map<size_t, PinholeCamera>::const_iterator iter = doc._map_camera.begin();
       iter != doc._map_camera.end();  ++iter, ++count, ++my_progress_bar)
     {
-      size_t imageIndex = iter->first;
+      const size_t imageIndex = iter->first;
       const std::string & sImageName = doc._vec_imageNames[imageIndex];
       std::ostringstream os;
       os << std::setw(8) << std::setfill('0') << count;

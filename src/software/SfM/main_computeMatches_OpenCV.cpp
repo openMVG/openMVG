@@ -306,7 +306,7 @@ int main(int argc, char **argv)
   //    - L2 descriptor matching
   //    - Keep correspondences only if NearestNeighbor ratio is ok
   //---------------------------------------
-  IndexedMatchPerPair map_PutativesMatches;
+  PairWiseMatches map_PutativesMatches;
   // Define the matcher and the used metric (Squared L2)
   // ANN matcher could be defined as follow:
   typedef flann::L2<DescriptorT::bin_type> MetricT;
