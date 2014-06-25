@@ -127,16 +127,16 @@ design-matlab).
 @section design-objects Objects
 <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  -->
 
-Many VLFeat algorithms are availale in the form of
+Many VLFeat algorithms are available in the form of
 &ldquo;objects&rdquo;. Notice that the C language, used by VLFeat,
 does not support objects explicitly. Here an object indicates an
 opaque data structure along with a number of functions (methods)
 operationg on it.
 
-Object names are captilaised and start with the <code>Vl</code>
+Object names are capitalised and start with the <code>Vl</code>
 prefix (for example ::VlSiftFilt). Object methods are lowercase and
 start with the <code>vl_<object_name>_</code> suffix
-(e.g. ::vl_sift_new). Object methods typraically include a constructor
+(e.g. ::vl_sift_new). Object methods typically include a constructor
 (e.g. ::vl_sift_new), a destructor (::vl_sift_delete), some getter
 methods (::vl_sift_get_octave_index), and some setter methods
 (::vl_sift_set_magnif).
@@ -202,7 +202,7 @@ available at run time.
 The VLFeat C library is designed to integrate seamlessly with MATLAB.
 Binary compatibility is simplified by the use of the C language
 (rather than C++). In addition, the library design follows certain
-restrictons that make it compatible with the MATLAB MEX interface.
+restrictions that make it compatible with the MATLAB MEX interface.
 
 The main issue in calling a library function from a MATLAB MEX
 function is that MATLAB can abort the execution of the MEX function
@@ -229,11 +229,11 @@ an exception). Because of the restrictions of the library design
 illustrated in @ref design-resources, this operation is safe and
 correctly dispose of VLFeat local state. As a consequence, it is
 possible to call @c mexErrMsgTxt at any point in the MEX function
-without worring about leaking resources.
+without worrying about leaking resources.
 
 This however comes at the price of some limitations. Beyond the
-restrictions illustred in @ref design-resources, here we note that no
-VLFeat local resoruce (memory blocks or objects) can persist across
+restrictions illustrated in @ref design-resources, here we note that no
+VLFeat local resource (memory blocks or objects) can persist across
 MEX file invocations. This implies that any result produced by a
 VLFeat MEX function must be converted back to a MATLAB object such as
 a vector or a structure. In particular, there is no direct way of
@@ -292,7 +292,7 @@ user, as it is used only internally.
 <ul>
 
 <li><b>Develop a sensibility for good-looking code.</b> The coding
-style should be as uniform as possible throughoug the library. The
+style should be as uniform as possible throughout the library. The
 style is specified by this set of rules. However, the quality of the
 code can only be guaranteed by a reasonable application of the rules
 and combined with one's eye for good code.</li>
@@ -328,7 +328,7 @@ The VLFeat C library code contains its own in documentation <a
 href='http://www.stack.nl/~dimitri/doxygen/'>Doxygen</a> format. The
 documentation consists in generic pages, such as the @ref index
 "index" and the page you are reading, and documentations for each
-specifid library module, usually corresponding to a certain heaader
+specified library module, usually corresponding to a certain header
 file.
 
 <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  -->
@@ -336,7 +336,7 @@ file.
 <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  -->
 
 A library module groups a number of data types and functions that
-implement a certain functionaltiy of VLFeat. Consider a module called
+implement a certain functionality of VLFeat. Consider a module called
 <em>Example Module</em>. Then one would typically have:
 
 <ul>
@@ -358,7 +358,7 @@ has an heading of the type:
 
 @verbinclude example-module-doc.c
 
-This is similar to the declearation file, except for the content of the
+This is similar to the declaration file, except for the content of the
 brief comment.
 </li>
 </ul>
@@ -397,7 +397,7 @@ entry in the bibliography.
 @file generic.h
 
 <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  -->
-@page generic Preprocssor, library state, etc.
+@page generic Preprocessor, library state, etc.
 @author Andrea Vedaldi
 <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  -->
 
