@@ -10,6 +10,7 @@ compiler:
 
 before_install:
  - export NUM_CPU="`grep processor /proc/cpuinfo | wc -l`"; echo $NUM_CPU
+ - gem install coveralls-lcov
  
 install: sudo apt-get install cmake libpng-dev libjpeg8-dev libxxf86vm1 libxxf86vm1 libxxf86vm-dev x11proto-xf86vidmode-dev libxrandr-dev
 
@@ -17,7 +18,7 @@ before_script:
   - cd ..
   - mkdir build
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
+  - cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -DOpenMVG_BUILD_COVERAGE=ON . ../openMVG/src
 
 script:
   - make -j 4
@@ -28,3 +29,8 @@ branches:
   only:
     - develop
 
+after_success:
+  - lcov --directory openMVG --base-directory=.. --capture --output-file=coverage.info
+  - lcov --remove coverage.info '/usr*' -o coverage.info
+  - cd ..
+  - coveralls-lcov build/coverage.info

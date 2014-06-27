@@ -14,6 +14,7 @@ PROJECT(openMVG C CXX)
 # ==============================================================================
 OPTION(OpenMVG_BUILD_TESTS "Build OpenMVG tests" OFF)
 OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG example applications. Does not affect binaries under 'software'" ON)
+option(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
 
 # By default build in Release mode
