@@ -11,7 +11,8 @@ compiler:
 before_install:
  - export NUM_CPU="`grep processor /proc/cpuinfo | wc -l`"; echo $NUM_CPU
  - sudo apt-get install lcov
- - gem install coveralls-lcov
+ #- gem install coveralls-lcov
+ - sudo pip install cpp-coveralls
  
 install: sudo apt-get install cmake libpng-dev libjpeg8-dev libxxf86vm1 libxxf86vm1 libxxf86vm-dev x11proto-xf86vidmode-dev libxrandr-dev
 
@@ -31,7 +32,8 @@ branches:
     - develop
 
 after_success:
-  - lcov --directory openMVG --base-directory=.. --capture --output-file=coverage.info
-  - lcov --remove coverage.info '/usr*' -o coverage.info
-  - cd ..
-  - coveralls-lcov build/coverage.info
+  - coveralls
+  #- lcov --directory openMVG --base-directory=.. --capture --output-file=coverage.info
+  #- lcov --remove coverage.info '/usr*' -o coverage.info
+  #- cd ..
+  #- coveralls-lcov build/coverage.info
