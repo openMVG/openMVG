@@ -39,10 +39,10 @@ IF (SSE2_FOUND)
   ENDIF (MSVC AND NOT ${CMAKE_CL_64})
   ADD_DEFINITIONS(-DUSE_SSE)
 ENDIF (SSE2_FOUND)
-IF (UNIX)
+IF (UNIX AND NOT OpenMVG_BUILD_COVERAGE)
   SET(CMAKE_C_FLAGS_RELEASE "-O3")
   SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
-ENDIF (UNIX)
+ENDIF ()
 
 # ==============================================================================
 # OpenMP detection
@@ -63,6 +63,16 @@ ELSE (OpenMVG_USE_OPENMP)
   ENDIF (OPENMP_FOUND)
 ENDIF (OpenMVG_USE_OPENMP)
 
+# ==============================================================================
+# enable code coverage generation (only with GCC)
+# ==============================================================================
+IF(OpenMVG_BUILD_COVERAGE AND CMAKE_COMPILER_IS_GNUCXX)
+  MESSAGE("OpenMVG_BUILD_COVERAGE enabled")
+  SET(CMAKE_BUILD_TYPE "Debug")
+  ADD_DEFINITIONS(--coverage -fprofile-arcs -ftest-coverage)
+  SET(CMAKE_EXE_LINKER_FLAGS
+    "${CMAKE_EXE_LINKER_FLAGS} -fprofile-arcs -ftest-coverage")
+ENDIF()
 
 # ==============================================================================
 # IMAGE IO detection

@@ -1,9 +1,3 @@
-
-# enable code coverage generation (only with GCC)
-IF(${OpenMVG_USE_OPENMP} AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  ADD_DEFINITIONS(-fprofile-arcs -ftest-coverage)
-ENDIF()
-
 ADD_SUBDIRECTORY(bundle_adjustment)
 ADD_SUBDIRECTORY(exif_IO)
 ADD_SUBDIRECTORY(features)

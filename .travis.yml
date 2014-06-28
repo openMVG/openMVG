@@ -9,10 +9,10 @@ compiler:
   - clang
 
 before_install:
+ - sudo apt-get update -qq
  - export NUM_CPU="`grep processor /proc/cpuinfo | wc -l`"; echo $NUM_CPU
  - sudo apt-get install lcov
- #- gem install coveralls-lcov
- - sudo pip install cpp-coveralls
+ - gem install coveralls-lcov
  
 install: sudo apt-get install cmake libpng-dev libjpeg8-dev libxxf86vm1 libxxf86vm1 libxxf86vm-dev x11proto-xf86vidmode-dev libxrandr-dev
 
@@ -20,7 +20,10 @@ before_script:
   - cd ..
   - mkdir build
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -DOpenMVG_BUILD_COVERAGE=ON . ../openMVG/src
+  # Classic release build
+  #- cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
+  # Build for code coverage evaluation
+  - cmake -DOpenMVG_BUILD_COVERAGE=ON -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
 
 script:
   - make -j 4
@@ -32,8 +35,15 @@ branches:
     - develop
 
 after_success:
-  - coveralls
-  #- lcov --directory openMVG --base-directory=.. --capture --output-file=coverage.info
-  #- lcov --remove coverage.info '/usr*' -o coverage.info
-  #- cd ..
-  #- coveralls-lcov build/coverage.info
+  - cd ../openMVG
+  # If GCC: compute code coverage and export it to coveralls
+  - if [ "$CC" = "gcc" ];
+    then
+      lcov --directory ../build/openMVG --base-directory=./src --capture --output-file=coverage.info;
+      lcov --remove coverage.info '/usr*' -o coverage.info;
+      lcov --remove coverage.info '*_test.cpp*' -o coverage.info;
+      lcov --remove coverage.info '*/third_party/*' -o coverage.info;
+      lcov --remove coverage.info '*/src/dependencies/*' -o coverage.info;
+      coveralls-lcov coverage.info;
+    fi
+  
