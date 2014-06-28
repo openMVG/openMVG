@@ -316,6 +316,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
   }
 }
 
+/*
 template<typename TYPE, int N>
 inline REAL ComputePSNR(const Eigen::Matrix<REAL, N,1>& x0, const Eigen::Matrix<REAL, N,1>& x)
 {
@@ -391,7 +392,7 @@ bool TestRobustRegressionL1PD()
 TEST ( rotation_averaging, RobustRegressionL1PD)
 {
   TestRobustRegressionL1PD();
-}
+}*/
 
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
