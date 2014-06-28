@@ -36,8 +36,7 @@ namespace openMVG {
       Mat2X::Index nviews = x.cols();
       assert(nviews == Ps.size());
 
-      Mat design(3*nviews, 4 + nviews);
-      design.setConstant(0.0);
+      Mat design = Mat::Zero(3*nviews, 4 + nviews);
       for (int i = 0; i < nviews; i++) {
         design.block<3, 4>(3*i, 0) = -Ps[i];
         design(3*i + 0, 4 + i) = x(0, i);
@@ -52,7 +51,8 @@ namespace openMVG {
   typedef Eigen::Matrix<double, 2, 3> Mat23;
   inline Mat23 SkewMatMinimal(const Vec2 &x) {
     Mat23 skew;
-    skew << 0,-1, x(1),
+    skew <<
+      0, -1,  x(1),
       1, 0, -x(0);
     return skew;
   }
