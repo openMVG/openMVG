@@ -1897,13 +1897,24 @@ void GlobalReconstructionEngine::ColorizeTracks(
   // Colorize each track
   //  Start with the most representative image
   //    and iterate to provide a color to each 3D point
+
   {
-    C_Progress_display my_progress_bar(map_tracks.size());
+    C_Progress_display my_progress_bar(map_tracks.size(),
+                                       std::cout,
+                                       "\nCompute scene structure color\n");
 
     vec_tracksColor.resize(map_tracks.size());
 
+    //Build a list of contiguous index for the trackIds
+    std::map<size_t, size_t> trackIds_to_contiguousIndexes;
+    size_t cpt = 0;
+    for (openMVG::tracks::STLMAPTracks::const_iterator it = map_tracks.begin();
+      it != map_tracks.end(); ++it, ++cpt)
+    {
+      trackIds_to_contiguousIndexes[it->first] = cpt;
+    }
+
     // The track list that will be colored (point removed during the process)
-    openMVG::tracks::STLMAPTracks::const_iterator iterTBegin = map_tracks.begin();
     openMVG::tracks::STLMAPTracks mapTrackToColor(map_tracks);
     while( !mapTrackToColor.empty() )
     {
@@ -1956,7 +1967,7 @@ void GlobalReconstructionEngine::ColorizeTracks(
       for (openMVG::tracks::STLMAPTracks::const_iterator
         iterT = mapTrackToColor.begin();
         iterT != mapTrackToColor.end();
-      ++iterT)
+        ++iterT)
       {
         const size_t trackId = iterT->first;
         const tracks::submapTrack & track = mapTrackToColor[trackId];
@@ -1969,7 +1980,7 @@ void GlobalReconstructionEngine::ColorizeTracks(
           const SIOPointFeature & feat = _map_feats.find(indexImage)->second[featId];
           const RGBColor color = image(feat.y(), feat.x());
 
-          vec_tracksColor[std::distance ( iterTBegin, map_tracks.find(trackId) )] = Vec3(color.r(), color.g(), color.b());
+          vec_tracksColor[ trackIds_to_contiguousIndexes[trackId] ] = Vec3(color.r(), color.g(), color.b());
           set_toRemove.insert(trackId);
           ++my_progress_bar;
         }

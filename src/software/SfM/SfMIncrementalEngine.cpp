@@ -1150,10 +1150,22 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_tra
   //  Start with the most representative image
   //    and iterate to provide a color to each 3D point
   {
+    C_Progress_display my_progress_bar(_map_reconstructed.size(),
+                                       std::cout,
+                                       "\nCompute scene structure color\n");
+
     vec_tracksColor.resize(_map_reconstructed.size());
 
+    //Build a list of contiguous index for the trackIds
+    std::map<size_t, size_t> trackIds_to_contiguousIndexes;
+    size_t cpt = 0;
+    for (openMVG::tracks::STLMAPTracks::const_iterator it = _map_reconstructed.begin();
+      it != _map_reconstructed.end(); ++it, ++cpt)
+    {
+      trackIds_to_contiguousIndexes[it->first] = cpt;
+    }
+
     // The track list that will be colored (point removed during the process)
-    openMVG::tracks::STLMAPTracks::const_iterator iterTBegin = _map_reconstructed.begin();
     openMVG::tracks::STLMAPTracks mapTrackToColor(_map_reconstructed);
     while( !mapTrackToColor.empty() )
     {
@@ -1215,12 +1227,13 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_tra
         if (iterF != track.end())
         {
           // Color the track
-          size_t featId = iterF->second;
+          const size_t featId = iterF->second;
           const SIOPointFeature & feat = _map_feats.find(indexImage)->second[featId];
           RGBColor color = image(feat.y(), feat.x());
 
-          vec_tracksColor[std::distance ( iterTBegin, _map_reconstructed.find(trackId) )] = Vec3(color.r(), color.g(), color.b());
+          vec_tracksColor[ trackIds_to_contiguousIndexes[trackId] ] = Vec3(color.r(), color.g(), color.b());
           set_toRemove.insert(trackId);
+          ++my_progress_bar;
         }
       }
       // Remove colored track
