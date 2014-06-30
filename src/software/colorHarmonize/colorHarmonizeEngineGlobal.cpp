@@ -29,6 +29,8 @@
 //-- Color harmonization solver
 #include "openMVG/color_harmonization/global_quantile_gain_offset_alignment.hpp"
 
+#include "openMVG/system/timer.hpp"
+
 #include "openMVG/graph/connectedComponent.hpp"
 #include "lemon/list_graph.h"
 
@@ -329,7 +331,7 @@ bool ColorHarmonizationEngineGlobal::Process()
   std::vector<double> vec_solution_g(_vec_fileNames.size() * 2 + 1);
   std::vector<double> vec_solution_b(_vec_fileNames.size() * 2 + 1);
 
-  clock_t timeStart = clock();
+  openMVG::Timer timer;
 
   #ifdef OPENMVG_HAVE_MOSEK
   typedef MOSEK_SolveWrapper SOLVER_LP_T;
@@ -370,10 +372,9 @@ bool ColorHarmonizationEngineGlobal::Process()
     lpSolver.getSolution(vec_solution_b);
   }
 
-  clock_t timeEnd = clock();
   std::cout << std::endl
-    << " ColorHarmonization solving on a graph with: " << _map_Matches.size() << " edges took : "
-    << (timeEnd - timeStart) / (double)CLOCKS_PER_SEC << " seconds." << std::endl
+    << " ColorHarmonization solving on a graph with: " << _map_Matches.size() << " edges took (s): "
+    << timer.elapsed() << std::endl
     << "LInfinity fitting error: \n"
     << "- for the red channel is: " << vec_solution_r.back() << " gray level(s)" <<std::endl
     << "- for the green channel is: " << vec_solution_g.back() << " gray level(s)" << std::endl

@@ -197,9 +197,6 @@ IF (OpenMVG_BUILD_EXAMPLES)
   ADD_SUBDIRECTORY(openMVG_Samples)
 ENDIF (OpenMVG_BUILD_EXAMPLES)
 
-# Complete software build on openMVG
-ADD_SUBDIRECTORY(software)
-
 # ==============================================================================
 # openMVG libraries
 # ==============================================================================
@@ -208,6 +205,7 @@ SET(OpenMVG_LIBS
   openMVG_multiview
   openMVG_linearProgramming
   openMVG_lInftyComputerVision
+  openMVG_system
   #third_party libs
   vlsift
   stlplus
@@ -217,6 +215,9 @@ SET(OpenMVG_LIBS
   ${OPENMVG_LIBRARY_DEPENDENCIES}
   CACHE STRING "openMVG library names"
 )
+
+# Complete software build on openMVG
+ADD_SUBDIRECTORY(software)
 
 # ==============================================================================
 # Documentation

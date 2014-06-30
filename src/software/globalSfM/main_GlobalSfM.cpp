@@ -12,6 +12,7 @@ using namespace openMVG;
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+#include "openMVG/system/timer.hpp"
 
 int main(int argc, char **argv)
 {
@@ -68,7 +69,7 @@ int main(int argc, char **argv)
   // Incremental reconstruction process
   //---------------------------------------
 
-  clock_t timeStart = clock();
+  openMVG::Timer timer;
   GlobalReconstructionEngine to3DEngine(sImaDirectory,
                                             sMatchesDir,
                                             sOutDir,
@@ -76,9 +77,8 @@ int main(int argc, char **argv)
 
   if (to3DEngine.Process())
   {
-    clock_t timeEnd = clock();
-    std::cout << std::endl << " Total Ac-Global-Sfm took : " << (timeEnd - timeStart) / CLOCKS_PER_SEC << std::endl;
-    
+    std::cout << std::endl << " Total Ac-Global-Sfm took (s): " << timer.elapsed() << std::endl;
+
     //-- Compute color if requested
     const reconstructorHelper & reconstructorHelperRef = to3DEngine.refToReconstructorHelper();
     std::vector<Vec3> vec_tracksColor;

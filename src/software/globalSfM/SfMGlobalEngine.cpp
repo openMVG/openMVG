@@ -50,7 +50,7 @@
 #include "openMVG/multiview/rotation_averaging.hpp"
 
 #include "third_party/progress/progress.hpp"
-#include "third_party/stlplus3/subsystems/timer.hpp"
+#include "openMVG/system/timer.hpp"
 
 #include <numeric>
 #include <iomanip>
@@ -267,7 +267,7 @@ bool GlobalReconstructionEngine::Process()
   }
 
 
-  stlplus::timer total_reconstruction_timer;
+  openMVG::Timer total_reconstruction_timer;
 
   //-------------------
   // Only keep the largest biedge connected subgraph
@@ -292,7 +292,7 @@ bool GlobalReconstructionEngine::Process()
   //-- Putative triplets for relative translations computation
   std::vector< graphUtils::Triplet > vec_triplets;
   {
-    stlplus::timer timer_Inference;
+    openMVG::Timer timer_Inference;
 
     rotationInference(map_relatives);
 
@@ -404,7 +404,7 @@ bool GlobalReconstructionEngine::Process()
 
     // Compute putative translations with an edge coverage algorithm
 
-    stlplus::timer timerLP_triplet;
+    openMVG::Timer timerLP_triplet;
 
     computePutativeTranslation_EdgesCoverage(map_globalR, vec_triplets, vec_initialRijTijEstimates, newpairMatches);
     double timeLP_triplet = timerLP_triplet.elapsed();
@@ -493,8 +493,7 @@ bool GlobalReconstructionEngine::Process()
       rel.first = newPair;
     }
 
-    stlplus::timer timerLP_translation;
-    clock_t start_timeLP = clock();
+    openMVG::Timer timerLP_translation;
 
     double gamma = -1.0;
     std::vector<double> vec_solution;
@@ -526,7 +525,6 @@ bool GlobalReconstructionEngine::Process()
     }
 
     double timeLP_translation = timerLP_translation.elapsed();
-    double timeLP_translation_clock =  double(clock() - start_timeLP) / CLOCKS_PER_SEC;
 
     //-- Export triplet statistics:
     if (_bHtmlReport)
@@ -541,8 +539,7 @@ bool GlobalReconstructionEngine::Process()
       os << "-------------------------------" << "<br>"
         << "-- #relative estimates: " << vec_initialRijTijEstimates.size()
         << " converge with gamma: " << gamma << ".<br>"
-        << " timing: " << timeLP_translation << ".<br>"
-        << " timing clocks (s): " << timeLP_translation_clock << ".<br>"
+        << " timing (s): " << timeLP_translation << ".<br>"
         << "-------------------------------" << "<br>";
       _htmlDocStream->pushInfo(os.str());
     }
