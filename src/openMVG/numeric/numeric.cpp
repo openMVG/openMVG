@@ -112,7 +112,7 @@ void MeanAndVarianceAlongRows(const Mat &A,
     Vec &mean = *mean_pointer;
     Vec &variance = *variance_pointer;
     Mat::Index n = A.rows();
-    Mat::Index m = A.cols();
+    double m = static_cast<double>(A.cols());
     mean = variance = Vec::Zero(n);
 
     for (Mat::Index i = 0; i < n; ++i) {
