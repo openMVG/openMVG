@@ -60,9 +60,19 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  if (sOutputDir.empty())
+  {
+    std::cerr << "\nInvalid output directory" << std::endl;
+    return EXIT_FAILURE;
+  }
+
   if ( !stlplus::folder_exists( sOutputDir ) )
   {
-    stlplus::folder_create( sOutputDir );
+    if ( !stlplus::folder_create( sOutputDir ))
+    {
+      std::cerr << "\nCannot create output directory" << std::endl;
+      return EXIT_FAILURE;
+    }
   }
 
   std::vector<std::string> vec_image = stlplus::folder_files( sImageDir );
