@@ -98,10 +98,12 @@ int main(int argc, char ** argv)
     const size_t I = iter->first.first;
     const size_t J = iter->first.second;
 
-    const std::pair<size_t, size_t>
-      dimImage0 = std::make_pair(vec_focalGroup[I].m_w, vec_focalGroup[I].m_h),
-      dimImage1 = std::make_pair(vec_focalGroup[J].m_w, vec_focalGroup[J].m_h);
+    std::vector<SfMIO::CameraInfo>::const_iterator camInfoI = vec_camImageName.begin() + I;
+    std::vector<SfMIO::CameraInfo>::const_iterator camInfoJ = vec_camImageName.begin() + J;
 
+    const std::pair<size_t, size_t>
+      dimImage0 = std::make_pair(vec_focalGroup[camInfoI->m_intrinsicId].m_w, vec_focalGroup[camInfoI->m_intrinsicId].m_h),
+      dimImage1 = std::make_pair(vec_focalGroup[camInfoJ->m_intrinsicId].m_w, vec_focalGroup[camInfoJ->m_intrinsicId].m_h);
 
     svgDrawer svgStream( dimImage0.first + dimImage1.first, max(dimImage0.second, dimImage1.second));
     svgStream.drawImage(stlplus::create_filespec(sImaDirectory,vec_camImageName[I].m_sImageName),

@@ -111,9 +111,12 @@ int main(int argc, char ** argv)
   for (size_t I = 0; I < vec_camImageName.size(); ++I) {
     for (size_t J = I+1; J < vec_camImageName.size(); ++J, ++my_progress_bar) {
 
+      std::vector<SfMIO::CameraInfo>::const_iterator camInfoI = vec_camImageName.begin() + I;
+      std::vector<SfMIO::CameraInfo>::const_iterator camInfoJ = vec_camImageName.begin() + J;
+
       const std::pair<size_t, size_t>
-        dimImage0 = std::make_pair(vec_focalGroup[I].m_w, vec_focalGroup[I].m_h),
-        dimImage1 = std::make_pair(vec_focalGroup[J].m_w, vec_focalGroup[J].m_h);
+        dimImage0 = std::make_pair(vec_focalGroup[camInfoI->m_intrinsicId].m_w, vec_focalGroup[camInfoI->m_intrinsicId].m_h),
+        dimImage1 = std::make_pair(vec_focalGroup[camInfoJ->m_intrinsicId].m_w, vec_focalGroup[camInfoJ->m_intrinsicId].m_h);
 
       //Get common tracks between view I and J
       tracks::STLMAPTracks map_tracksCommon;
