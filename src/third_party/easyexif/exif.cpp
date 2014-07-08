@@ -405,6 +405,8 @@ int EXIFInfo::parseFromEXIFSegment(const unsigned char *buf, unsigned len) {
             this->ImageWidth = result.val_32;
           if (result.format == 3)
             this->ImageWidth = result.val_16;
+          else
+            this->ImageWidth = result.data;
           break;
 
         case 0xa003:
@@ -413,6 +415,8 @@ int EXIFInfo::parseFromEXIFSegment(const unsigned char *buf, unsigned len) {
             this->ImageHeight = result.val_32;
           if (result.format == 3)
             this->ImageHeight = result.val_16;
+          else
+            this->ImageHeight = result.data;
           break;
 
         case 0xa405:
