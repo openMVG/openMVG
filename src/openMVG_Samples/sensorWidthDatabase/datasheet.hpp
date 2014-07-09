@@ -63,7 +63,7 @@ struct Datasheet
           }
           if ( hasDigit )
           {
-             std::string modellower1 = *iter_model1;
+            std::string modellower1 = *iter_model1;
             for ( int index = 0; index < modellower1.length(); index++ )
             {
               modellower1[index] = tolower(modellower1[index]);

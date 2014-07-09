@@ -403,6 +403,7 @@ int EXIFInfo::parseFromEXIFSegment(const unsigned char *buf, unsigned len) {
           // EXIF Image width
           if (result.format == 4)
             this->ImageWidth = result.val_32;
+          else
           if (result.format == 3)
             this->ImageWidth = result.val_16;
           else
@@ -413,6 +414,7 @@ int EXIFInfo::parseFromEXIFSegment(const unsigned char *buf, unsigned len) {
           // EXIF Image height
           if (result.format == 4)
             this->ImageHeight = result.val_32;
+          else
           if (result.format == 3)
             this->ImageHeight = result.val_16;
           else
