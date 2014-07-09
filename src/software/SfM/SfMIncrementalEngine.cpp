@@ -698,8 +698,8 @@ bool IncrementalReconstructionEngine::FindImagesWithPossibleResection(std::vecto
     vec_possible_indexes.push_back(vec_putative[0].first);
 
     // TEMPORARY
-    std::cout << std::endl << std::endl << "TEMPORARY return only the best image" << std::endl;
-    return true;
+    // std::cout << std::endl << std::endl << "TEMPORARY return only the best image" << std::endl;
+    // return true;
     // END TEMPORARY
 
     const size_t threshold = static_cast<size_t>(dPourcent * M);
@@ -991,7 +991,7 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
             stlplus::create_filespec(_sOutDirectory, os.str(), "ply"));
         }
 
-        // Analyse 3D reconstructed point
+        // Analyze 3D reconstructed point
         //  - Check positive depth
         //  - Check angle (small angle leads imprecise triangulation)
         const BrownPinholeCamera & cam1 = _reconstructorData.map_Camera.find(I)->second;
@@ -1006,12 +1006,11 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
 
           if ( _reconstructorData.set_trackId.find(trackId) == _reconstructorData.set_trackId.end())
           {
-            //Use error related to the current view with a max value of 4 pixels
-            double maxTh = std::max(4.0, _map_ACThreshold[I]);
-            maxTh = std::max(4.0, _map_ACThreshold[J]);
+            //Use error related to the current views with a max value of 4 pixels
+            const double maxTh = std::min(std::max(4.0, _map_ACThreshold[I]), _map_ACThreshold[J]);
 
-            Vec2 x1 = vec_featI[vec_index[i]._i].coords().cast<double>();
-            Vec2 x2 = vec_featJ[vec_index[i]._j].coords().cast<double>();
+            const Vec2 x1 = vec_featI[vec_index[i]._i].coords().cast<double>();
+            const Vec2 x2 = vec_featJ[vec_index[i]._j].coords().cast<double>();
 
             bool bReproj =
               cam1.Residual(cur3DPt, x1) < maxTh &&
