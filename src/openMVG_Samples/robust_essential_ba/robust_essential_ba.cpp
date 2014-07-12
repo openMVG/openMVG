@@ -535,9 +535,6 @@ void do_bundle_adjustment(
     }
   options.minimizer_progress_to_stdout = false;
   options.logging_type = ceres::SILENT;
-#ifdef USE_OPENMP
-  options.num_threads = omp_get_num_threads();
-#endif // USE_OPENMP
 
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
@@ -706,9 +703,6 @@ void do_bundle_adjustment_common_focal(
     }
   options.minimizer_progress_to_stdout = false;
   options.logging_type = ceres::SILENT;
-#ifdef USE_OPENMP
-  options.num_threads = omp_get_num_threads();
-#endif // USE_OPENMP
 
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
@@ -889,9 +883,6 @@ void do_bundle_adjustment_common_intrinsics(
     }
   options.minimizer_progress_to_stdout = false;
   options.logging_type = ceres::SILENT;
-#ifdef USE_OPENMP
-  options.num_threads = omp_get_num_threads();
-#endif // USE_OPENMP
 
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);

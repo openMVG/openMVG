@@ -123,9 +123,6 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_RTf) {
     }
   options.minimizer_progress_to_stdout = false;
   options.logging_type = ceres::SILENT;
-#ifdef USE_OPENMP
-  options.num_threads = omp_get_num_threads();
-#endif // USE_OPENMP
 
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);

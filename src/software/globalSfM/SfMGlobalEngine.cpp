@@ -1607,8 +1607,8 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
   options.minimizer_progress_to_stdout = false;
   options.logging_type = ceres::SILENT;
 #ifdef USE_OPENMP
-  options.num_threads = omp_get_num_threads();
-  options.num_linear_solver_threads = omp_get_num_threads();
+  options.num_threads = omp_get_max_threads();
+  options.num_linear_solver_threads = omp_get_max_threads();
 #endif // USE_OPENMP
 
   // Solve BA
@@ -1817,8 +1817,8 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
   options.minimizer_progress_to_stdout = false;
   options.logging_type = ceres::SILENT;
 #ifdef USE_OPENMP
-  options.num_threads = omp_get_num_threads();
-  options.num_linear_solver_threads = omp_get_num_threads();
+  options.num_threads = omp_get_max_threads();
+  options.num_linear_solver_threads = omp_get_max_threads();
 #endif // USE_OPENMP
 
   // Solve BA

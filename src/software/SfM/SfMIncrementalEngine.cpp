@@ -329,7 +329,7 @@ bool IncrementalReconstructionEngine::InitialPairChoice( std::pair<size_t, size_
       << "---------------------------------------------------\n"
       << "IncrementalReconstructionEngine::InitialPairChoice\n"
       << "---------------------------------------------------\n"
-      << " The best F matrix validated pair are displayed\n"
+      << " The best F matrix validated pairs are displayed\n"
       << " Choose one pair manually by typing the two integer indexes\n"
       << "---------------------------------------------------\n"
       << std::endl;
@@ -453,8 +453,8 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
 
   std::cout << std::endl
     << "-- Robust Essential Matrix estimation " << std::endl
-    << "-- " << x1.cols() << " / " << vec_inliers.size() << " tentative/inliers" << std::endl
-    << "-- Threshold: " << errorMax << std::endl;
+    << "--  #tentative/#inliers: " << x1.cols() << " / " << vec_inliers.size() << std::endl
+    << "--  Threshold: " << errorMax << std::endl;
 
   //--> Estimate the best possible Rotation/Translation from E
   Mat3 RJ;
@@ -533,9 +533,9 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
     }
   }
 
-  std::cout << "--Triangulated 3D points count: " << vec_inliers.size() << "\n";
-  std::cout << "--Triangulated 3D points count under threshold: " << _reconstructorData.map_3DPoints.size()  << "\n";
-  std::cout << "--Putative correspondences: " << x1.cols()  << "\n";
+  std::cout << "--#Triangulated 3D points: " << vec_inliers.size() << "\n";
+  std::cout << "--#Triangulated 3D points under threshold: " << _reconstructorData.map_3DPoints.size()  << "\n";
+  std::cout << "--#Putative correspondences: " << x1.cols()  << "\n";
 
   _set_remainingImageId.erase(I);
   _set_remainingImageId.erase(J);
@@ -770,9 +770,9 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
   std::cout << std::endl << std::endl
     << " Tracks in: " << imageIndex << std::endl
     << " \t" << map_tracksCommon.size() << std::endl
-    << " Reconstructed tracks:" << std::endl
+    << " #Reconstructed tracks:" << std::endl
     << " \t" << _reconstructorData.set_trackId.size() << std::endl
-    << " Tracks Valid for resection:" << std::endl
+    << " #Tracks Valid for resection:" << std::endl
     << " \t" << set_trackIdForResection.size() << std::endl;
 
   // Normally it must not crash even if it have 0 matches
@@ -816,8 +816,8 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
     << "-------------------------------" << std::endl
     << "-- Robust Resection of camera index: " << imageIndex << std::endl
     << "-- Resection status: " << bResection << std::endl
-    << "-- Nb points used for Resection: " << vec_featIdForResection.size() << std::endl
-    << "-- Nb points validated by robust Resection: " << vec_inliers.size() << std::endl
+    << "-- #Points used for Resection: " << vec_featIdForResection.size() << std::endl
+    << "-- #Points validated by robust Resection: " << vec_inliers.size() << std::endl
     << "-- Threshold: " << errorMax << std::endl
     << "-------------------------------" << std::endl;
 
@@ -997,6 +997,10 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
         const BrownPinholeCamera & cam1 = _reconstructorData.map_Camera.find(I)->second;
         const BrownPinholeCamera & cam2 = _reconstructorData.map_Camera.find(J)->second;
 
+        // Threshold associated to each camera (min value of 4 pixels, to let BA refine if necessary)
+        const double maxThI = std::max(4.0, _map_ACThreshold[I]);
+        const double maxThJ = std::max(4.0, _map_ACThreshold[J]);
+
         //- Add reconstructed point to the reconstruction data
         size_t cardPointsBefore = _reconstructorData.map_3DPoints.size();
         for (size_t i = 0; i < vec_tracksToAdd.size(); ++i)
@@ -1006,15 +1010,12 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
 
           if ( _reconstructorData.set_trackId.find(trackId) == _reconstructorData.set_trackId.end())
           {
-            //Use error related to the current views with a max value of 4 pixels
-            const double maxTh = std::min(std::max(4.0, _map_ACThreshold[I]), _map_ACThreshold[J]);
-
             const Vec2 x1 = vec_featI[vec_index[i]._i].coords().cast<double>();
             const Vec2 x2 = vec_featJ[vec_index[i]._j].coords().cast<double>();
 
             bool bReproj =
-              cam1.Residual(cur3DPt, x1) < maxTh &&
-              cam2.Residual(cur3DPt, x2) < maxTh;
+              cam1.Residual(cur3DPt, x1) < maxThI &&
+              cam2.Residual(cur3DPt, x2) < maxThJ;
 
             if ( bReproj
                 && cam1.Depth(cur3DPt) > 0
@@ -1031,11 +1032,10 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
           }
         }
 
-        std::cout << "--Triangulated 3D points [" << I << "-" << J <<"] count: " << vec_3dPoint.size()
-          << "\t Validated/Possible: " << _reconstructorData.map_3DPoints.size() - cardPointsBefore
+        std::cout << "--Triangulated 3D points [" << I << "-" << J <<"]: "
+          << "\t #Validated/#Possible: " << _reconstructorData.map_3DPoints.size() - cardPointsBefore
           << "/" << vec_3dPoint.size() << std::endl
-          << "to Add: " << vec_tracksToAdd.size() << std::endl
-        << std::endl <<"Size after " << _reconstructorData.set_trackId.size() << std::endl;
+          <<" #3DPoint for the entire scene: " << _reconstructorData.set_trackId.size() << std::endl;
 
         if(bVisual) {
           ostringstream sFileName;
@@ -1137,9 +1137,9 @@ size_t IncrementalReconstructionEngine::badTrackRejector(double dPrecision)
     }
   }
 
-  std::cout << "\nrejected track: " << set_trackToErase.size() << std::endl
-    << "rejected Entire track: " << rejectedTrack << std::endl
-    << "rejected Measurement: " << rejectedMeasurement << std::endl;
+  std::cout << "\n#rejected track: " << set_trackToErase.size() << std::endl
+    << "#rejected Entire track: " << rejectedTrack << std::endl
+    << "#rejected Measurement: " << rejectedMeasurement << std::endl;
   return rejectedTrack + rejectedMeasurement;
 }
 
@@ -1271,10 +1271,10 @@ void IncrementalReconstructionEngine::BundleAdjustment()
     nbmeasurements += track.size();
   }
 
-  std::cout << "nbCams: " << nbCams << std::endl
-    << "nbIntrinsics: " << nbIntrinsics << std::endl
-    << "nbPoints3D: " << nbPoints3D << std::endl
-    << "measurements: " << nbmeasurements << std::endl;
+  std::cout << "#Cams: " << nbCams << std::endl
+    << "#Intrinsics: " << nbIntrinsics << std::endl
+    << "#Points3D: " << nbPoints3D << std::endl
+    << "#measurements: " << nbmeasurements << std::endl;
 
   // Setup a BA problem
   using namespace openMVG::bundle_adjustment;
@@ -1471,8 +1471,8 @@ void IncrementalReconstructionEngine::BundleAdjustment()
   options.minimizer_progress_to_stdout = false;
   options.logging_type = ceres::SILENT;
 #ifdef USE_OPENMP
-  options.num_threads = omp_get_num_threads();
-  options.num_linear_solver_threads = omp_get_num_threads();
+  options.num_threads = omp_get_max_threads();
+  options.num_linear_solver_threads = omp_get_max_threads();
 #endif // USE_OPENMP
 
   // Solve BA
@@ -1614,7 +1614,7 @@ double IncrementalReconstructionEngine::ComputeResidualsHistogram(Histogram<doub
     std::cout << std::endl << std::endl;
     std::cout << std::endl
       << "IncrementalReconstructionEngine::ComputeResidualsMSE." << "\n"
-      << "\t-- nbTracks:\t" << _map_reconstructed.size() << std::endl
+      << "\t-- #Tracks:\t" << _map_reconstructed.size() << std::endl
       << "\t-- Residual min:\t" << dMin << std::endl
       << "\t-- Residual median:\t" << dMedian << std::endl
       << "\t-- Residual max:\t "  << dMax << std::endl
