@@ -203,18 +203,19 @@ ENDIF (OpenMVG_BUILD_EXAMPLES)
 SET(OpenMVG_LIBS
   openMVG_image
   openMVG_multiview
-  openMVG_linearProgramming
-  openMVG_lInftyComputerVision
+  openMVG_lInftyComputerVision)
+# concat lists
+SET(OpenMVG_LIBS "${OpenMVG_LIBS}" ${openMVG_linearProgramming})
+SET(OpenMVG_LIBS "${OpenMVG_LIBS}"
   openMVG_system
   #third_party libs
   vlsift
   stlplus
   flann_cpp_s
   ceres
-  lemon
-  ${OPENMVG_LIBRARY_DEPENDENCIES}
-  CACHE STRING "openMVG library names"
-)
+  lemon)
+SET(OpenMVG_LIBS "${OpenMVG_LIBS}"
+  ${OPENMVG_LIBRARY_DEPENDENCIES} CACHE STRING "openMVG library names")
 
 # Complete software build on openMVG
 ADD_SUBDIRECTORY(software)

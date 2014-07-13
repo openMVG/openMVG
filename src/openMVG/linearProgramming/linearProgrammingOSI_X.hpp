@@ -84,6 +84,15 @@ OSI_X_SolverWrapper<SOLVERINTERFACE>::OSI_X_SolverWrapper(int nbParams) : LP_Sol
   si->setLogLevel(0);
 }
 
+#ifdef OPENMVG_HAVE_MOSEK
+template<>
+OSI_X_SolverWrapper<OsiMskSolverInterface>::OSI_X_SolverWrapper(int nbParams) : LP_Solver(nbParams)
+{
+  si = new OsiMskSolverInterface();
+  //si->setLogLevel(0);
+}
+#endif // OPENMVG_HAVE_MOSEK
+
 template<typename SOLVERINTERFACE>
 OSI_X_SolverWrapper<SOLVERINTERFACE>::~OSI_X_SolverWrapper()
 {
