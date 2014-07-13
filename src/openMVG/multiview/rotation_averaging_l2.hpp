@@ -25,6 +25,12 @@ namespace openMVG   {
 namespace rotation_averaging  {
 namespace l2  {
 
+// <eigenvalue, eigenvector> pair comparator
+bool compare_first_abs(std::pair<double, Vec> const &x, std::pair<double, Vec> const &y)
+{
+ return fabs(x.first) < fabs(y.first);
+}
+
 // [1] 6.7.2 Consistent Rotation page 89
 // Closest Rotation Estimation R = U*transpose(V)
 //  approximate rotation in the Frobenius norm using SVD
@@ -32,8 +38,8 @@ inline Mat3 ClosestSVDRotationMatrix(const Mat3 & rotMat)
 {
   // Closest orthogonal matrix
   Eigen::JacobiSVD<Mat3> svd(rotMat,Eigen::ComputeFullV|Eigen::ComputeFullU);
-  Mat3 U = svd.matrixU();
-  Mat3 V = svd.matrixV();
+  const Mat3 U = svd.matrixU();
+  const Mat3 V = svd.matrixV();
   return U*V.transpose();
 }
 
@@ -65,13 +71,12 @@ static bool L2RotationAveraging( size_t nCamera,
   // Output
   std::vector<Mat3> & vec_ApprRotMatrix)
 {
-  const Mat3 Id = Mat3::Identity();
   const size_t nRotationEstimation = vec_relativeRot.size();
   //--
   // Setup the Action Matrix
   //--
-  // nCamera * 3 because each columns have 3 elements.
-  Mat A = Mat::Zero(nRotationEstimation*3, 3*nCamera);
+  std::vector<Eigen::Triplet<double> > tripletList;
+  tripletList.reserve(nRotationEstimation*12); // 3*3 + 3
   //-- Encode constraint (6.62 Martinec Thesis page 100):
   size_t cpt = 0;
   for(std::vector<RelRotationData>::const_iterator
@@ -79,21 +84,60 @@ static bool L2RotationAveraging( size_t nCamera,
     iter != vec_relativeRot.end();
     iter++, cpt++)
   {
-    const RelRotationData & Elem = *iter;
+   const RelRotationData & Elem = *iter;
 
-    //-- Encode rj - Rij * ri = 0
-    const size_t i = iter->i;
-    const size_t j = iter->j;
+   //-- Encode rj - Rij * ri = 0
+   const size_t i = iter->i;
+   const size_t j = iter->j;
 
-    A.block<3,3>(3 * cpt, 3 * i) = - iter->Rij * iter->weight;
-    A.block<3,3>(3 * cpt, 3 * j) =   Id * iter->weight;
+   // A.block<3,3>(3 * cpt, 3 * i) = - Rij * weight;
+   tripletList.push_back(Eigen::Triplet<double>(3 * cpt, 3 * i, - iter->Rij(0,0) * iter->weight));
+   tripletList.push_back(Eigen::Triplet<double>(3 * cpt, 3 * i + 1, - iter->Rij(0,1) * iter->weight));
+   tripletList.push_back(Eigen::Triplet<double>(3 * cpt, 3 * i + 2, - iter->Rij(0,2) * iter->weight));
+   tripletList.push_back(Eigen::Triplet<double>(3 * cpt + 1, 3 * i, - iter->Rij(1,0) * iter->weight));
+   tripletList.push_back(Eigen::Triplet<double>(3 * cpt + 1, 3 * i + 1, - iter->Rij(1,1) * iter->weight));
+   tripletList.push_back(Eigen::Triplet<double>(3 * cpt + 1, 3 * i + 2, - iter->Rij(1,2) * iter->weight));
+   tripletList.push_back(Eigen::Triplet<double>(3 * cpt + 2, 3 * i, - iter->Rij(2,0) * iter->weight));
+   tripletList.push_back(Eigen::Triplet<double>(3 * cpt + 2, 3 * i + 1, - iter->Rij(2,1) * iter->weight));
+   tripletList.push_back(Eigen::Triplet<double>(3 * cpt + 2, 3 * i + 2, - iter->Rij(2,2) * iter->weight));
+
+   // A.block<3,3>(3 * cpt, 3 * j) = Id * weight;
+   tripletList.push_back(Eigen::Triplet<double>(3 * cpt, 3 * j, 1.0 * iter->weight));
+   tripletList.push_back(Eigen::Triplet<double>(3 * cpt + 1, 3 * j + 1, 1.0 * iter->weight));
+   tripletList.push_back(Eigen::Triplet<double>(3 * cpt + 2, 3 * j + 2, 1.0 * iter->weight));
   }
 
+  // nCamera * 3 because each columns have 3 elements.
+  Eigen::SparseMatrix<double> A(nRotationEstimation*3, 3*nCamera);
+  A.setFromTriplets(tripletList.begin(), tripletList.end());
+  tripletList.clear();
+
+  Eigen::SparseMatrix<double> AtAsparse = A.transpose() * A;
+  const Mat AtA = Mat(AtAsparse); // convert to dense
+
+  // You can use either SVD or eigen solver (eigen solver will be faster) to solve Ax=0
+
   // Solve Ax=0 => SVD
-  Eigen::JacobiSVD<Mat> svd(A,Eigen::ComputeFullV);
-  const Vec & NullspaceVector0 = svd.matrixV().col(A.cols()-1);
-  const Vec & NullspaceVector1 = svd.matrixV().col(A.cols()-2);
-  const Vec & NullspaceVector2 = svd.matrixV().col(A.cols()-3);
+  //Eigen::JacobiSVD<Mat> svd(A,Eigen::ComputeFullV);
+  //const Vec & NullspaceVector0 = svd.matrixV().col(A.cols()-1);
+  //const Vec & NullspaceVector1 = svd.matrixV().col(A.cols()-2);
+  //const Vec & NullspaceVector2 = svd.matrixV().col(A.cols()-3);
+
+  // Solve Ax=0 => eigen vectors
+  Eigen::SelfAdjointEigenSolver<Mat> es(AtA, Eigen::ComputeEigenvectors);
+
+  // Sort abs(eigenvalues)
+  std::vector<std::pair<double, Vec> > eigs;
+  eigs.resize(AtA.cols());
+  for (size_t i = 0; i < AtA.cols(); ++i)
+  {
+    eigs[i] = std::make_pair(es.eigenvalues()[i], es.eigenvectors().col(i));
+  }
+  std::stable_sort(eigs.begin(), eigs.end(), &compare_first_abs);
+
+  const Vec & NullspaceVector0 = eigs[0].second;
+  const Vec & NullspaceVector1 = eigs[1].second;
+  const Vec & NullspaceVector2 = eigs[2].second;
 
   //--
   // Search the closest matrix :
