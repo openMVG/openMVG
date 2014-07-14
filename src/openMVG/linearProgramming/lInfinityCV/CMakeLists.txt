@@ -10,7 +10,6 @@ FILE(
 	lInftycomputervision_cpp
 	*.cpp
 )
-SET_SOURCE_FILES_PROPERTIES(${lInftycomputervision_headers} PROPERTIES LANGUAGE CXX)
 
 FILE(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 
