@@ -42,8 +42,14 @@ N-View geometry estimation
 ============================
 
 * Triangulation
+
   * 2 to n view (Direct Linear Transform),
   * 2 to n view (Iterated least square).
+  
+* Rotation averaging
+
+  * L2 (sparse) [Martinec]_,
+  * L1 (sparse) [Chatterjee]_.
  
 Homography matrix:
 ---------------------
@@ -124,7 +130,7 @@ It consists in estimating the camera parameters of the right camera that minimiz
 Kernel concept
 ---------------------
 
-A kernel is an association :
+A kernel is an association:
 
 * data points (the set that is used for a robust estimation problem),
 * a model solver/estimator
@@ -145,25 +151,3 @@ Kernel:
 	Embed data (putative), the model estimator and the error model.
 	This kernel is core brick used in the openMVG robust estimator framework.
 
-.. [Kneip] A Novel Parametrization of the P3P-Problem for a Direct Computation of Absolute Camera Position and Orientation.
-    Kneip, L.; Scaramuzza, D. ; Siegwart, R.
-    CVPR 2011
-    
-.. [EPnP] EPnP: An Accurate O(n) Solution to the PnP Problem.
-    V. Lepetit and F. Moreno-Noguer and P. Fua, IJCV 2009. vol. 81, no. 2.
-    
-.. [HZ] Multiple view geometry in computer vision.
-    Hartley, Richard, and Andrew Zisserman. 
-    Vol. 2. Cambridge, 2000.
-    
-.. [Stewenius] Recent Developments on Direct Relative Orientation.
-      H. Stewenius, C. Engels and D. Nister.
-      ISPRS 2006
-
-.. [Nister] An Efficient Solution to the Five-Point Relative Pose.
-    D. Nister
-    PAMI 2004
-    
-.. [Longuet] A computer algorithm for reconstructing a scene from two projections.
-    Longuet-Higgins, H. C.
-    Readings in Computer Vision: Issues, Problems, Principles, and Paradigms, MA Fischler and O. Firschein, eds (1987): 61-62.

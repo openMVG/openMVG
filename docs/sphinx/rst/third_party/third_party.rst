@@ -87,9 +87,3 @@ Image Input/Ouput
  - png
  - zlib
 
-.. [Ceres] http://code.google.com/p/ceres-solver/
-.. [CppUnitLite] http://c2.com/cgi/wiki?CppUnitLite
-.. [Eigen] http://eigen.tuxfamily.org/index.php?title=Main_Page
-
-.. [LEMON] http://lemon.cs.elte.hu/trac/lemon
-.. [STLplus] http://stlplus.sourceforge.net/

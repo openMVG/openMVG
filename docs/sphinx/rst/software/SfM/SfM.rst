@@ -81,11 +81,4 @@ Using a 3 directories based data organisation structure is suggested:
 
   * directory where result and log of the 3D reconstruction will be exported
 
-.. [ACSfM] Adaptive structure from motion with a contrario model estimation.
-    Pierre Moulon, Pascal Monasse, and Renaud Marlet.
-    In ACCV, 2012.
-
-.. [GlobalACSfM] "Global Fusion of Relative Motions for Robust, Accurate and Scalable Structure from Motion."
-    Pierre Moulon, Pascal Monasse and Renaud Marlet.
-    In ICCV, 2013.
 

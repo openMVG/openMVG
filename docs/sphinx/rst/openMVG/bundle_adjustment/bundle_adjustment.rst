@@ -29,7 +29,7 @@ When subtle changes are observed on the cost function or on the norm of the para
 openMVG bundle_adjustment framework
 =====================================
 
-OpenMVG relies on the [Ceres-solver]_ Google library to perform the Bundle Adjustment.
+OpenMVG relies on the [Ceres]_ Google library to perform the Bundle Adjustment.
 In order to ease its usage openMVG provides:
 
 * data container to setup the problem,
@@ -57,4 +57,3 @@ Two containers are defined in order to refine :
     * The number intrinsic parameters ``NIntrinsicParam`` (i.e. 1): [focal]
     * ``template<unsigned char NExternalParam = 6,unsigned char NIntrinsicParam = 1> class BA_Problem_data_camMotionAndIntrinsic``
 
-.. [Ceres-solver] Sameer Agarwal and Keir Mierle. Ceres Solver: Tutorial & Reference. Google Inc.

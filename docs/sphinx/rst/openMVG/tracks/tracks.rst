@@ -20,7 +20,7 @@ Considering n pairwise feature correspondences as input we want sets of correspo
 
 
 The openMVG library provides an efficient solution to solve the union of all the pairwise correspondences.
-It is the implementation of the CVMP12 paper "Unordered feature tracking made fast and easy" [Tracks]_.
+It is the implementation of the CVMP12 paper "Unordered feature tracking made fast and easy" [TracksCVMP12]_.
 
 .. _tracks2Figure:
 .. figure:: featureBasedTracking.png
@@ -62,4 +62,4 @@ Some comments about the data structure:
 		}
 	}
 
-.. [Tracks] Pierre Moulon and Pascal Monasse, "Unordered feature tracking made fast and easy" CVMP 2012.
+
