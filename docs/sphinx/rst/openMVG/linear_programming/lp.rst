@@ -148,6 +148,3 @@ Optimization of this upper bound parameter can be done by iterating over all the
     } while (k < maxIteration && gammaUp - gammaLow > eps);
   }
 
-
-
-.. [LP] http://en.wikipedia.org/wiki/Linear_programming

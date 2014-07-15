@@ -52,6 +52,4 @@ To know more
 
 Please visit: http://eigen.tuxfamily.org/dox/group__QuickRefPage.html
 
-  
-.. [Eigen] http://eigen.tuxfamily.org/
 

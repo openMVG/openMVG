@@ -65,7 +65,7 @@ Here an example of how find a best fit line:
 Ransac
 ====================
 
-Ransac [RANSAC] is an evolution of Max-Consensus with a-priori information about the noise and corrupted
+Ransac [RANSAC]_ is an evolution of Max-Consensus with a-priori information about the noise and corrupted
 data amount of the data. That information allows to reduce the number of iterations in order to be
 sure to have made sufficient random sampling steps in order to find the model for the given data
 confidence. The number of remaining steps is so iteratively updated given the inlier/outlier ratio of
@@ -96,7 +96,7 @@ RANSAC requires the choice of a threshold T, which must be balanced:
 - Too small: Too few inliers, leading to model imprecision,
 - Too large: Models are contaminated by outliers (false data).
 
-AC-Ransac [ACRANSAC] uses the a contrario methodology in order to find a model that best fits the
+AC-Ransac [ACRANSAC]_ uses the a contrario methodology in order to find a model that best fits the
 data with a confidence threshold T that adapts automatically to noise. It so finds a model and its
 associated noise. If there is too much noise, the a contrario method returns that no model was
 found.
@@ -127,10 +127,3 @@ It is a bit more complex, we use a class in order to perform the a contrario req
 	double dPrecision = res.first;
 	double dNfa = res.second;
 
-.. [RANSAC] Random sample consensus: a paradigm for model fitting with applications to image analysis and automated cartography.
-    Fischler, Martin A., and Robert C. Bolles. 
-    Communications of the ACM 24.6 (1981): 381-395.
-    
-.. [ACRANSAC] Automatic homographic registration of a pair of images, with a contrario elimination of outliers.
-    Moisan, Lionel, Pierre Moulon, and Pascal Monasse.
-    Image Processing On Line 10 (2012)

@@ -65,4 +65,4 @@ Once putatives matches have been found they can be filtered thanks to filters:
 
   * when K>=2 nearest points are asked by query points.
 
-.. [FLANN] Muja, Marius, and David G. Lowe. "Fast Approximate Nearest Neighbors with Automatic Algorithm Configuration." VISAPP (1). 2009.
+

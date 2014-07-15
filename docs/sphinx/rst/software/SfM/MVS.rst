@@ -47,11 +47,3 @@ OpenMVG exports [CMPMVS]_ ready to use project (images, projection matrices and 
 
   $ openMVG_main_openMVG2CMPMVS -i Dataset/outReconstruction/SfM_Output/ -o Dataset/outReconstruction/SfM_Output/
 
-
-.. [PMVS] Accurate, dense, and robust multi-view stereopsis.
-    Yasutaka Furukawa and Jean Ponce.
-    IEEE Trans. on Pattern Analysis and Machine Intelligence, 32(8):1362-1376, 2010.
-
-.. [CMPMVS] Multi-View Reconstruction Preserving Weakly-Supported Surfaces, M. Jancosek, T. Pajdla, IEEE Conference on Computer Vision and Pattern Recognition 2011.
-
-
