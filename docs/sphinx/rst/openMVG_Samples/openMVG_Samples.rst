@@ -57,7 +57,7 @@ Show how:
 kvld_filter
 --------------------
 Show how:
-  - filter putative matches with the K-VLD filter.
+  - filter putative matches with the K-VLD filter [KVLD12]_.
 
 exifParsing
 --------------------
