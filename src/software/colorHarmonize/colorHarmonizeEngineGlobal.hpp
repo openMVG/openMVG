@@ -59,7 +59,7 @@ private:
 
   std::vector< std::pair< size_t, size_t > > _vec_imageSize; // Size of each image
 
-  openMVG::tracks::STLPairWiseMatches _map_Matches; // pairwise geometric matches
+  openMVG::matching::PairWiseMatches _map_Matches; // pairwise geometric matches
 };
 
 

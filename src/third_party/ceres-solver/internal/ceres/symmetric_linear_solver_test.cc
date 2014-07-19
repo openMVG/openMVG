@@ -71,7 +71,7 @@ TEST(ConjugateGradientTest, Solves3x3IdentitySystem) {
   LinearSolver::Summary summary =
       solver.Solve(A.get(), b.data(), per_solve_options, x.data());
 
-  EXPECT_EQ(summary.termination_type, TOLERANCE);
+  EXPECT_EQ(summary.termination_type, LINEAR_SOLVER_SUCCESS);
   ASSERT_EQ(summary.num_iterations, 1);
 
   ASSERT_DOUBLE_EQ(1, x(0));
@@ -128,7 +128,7 @@ TEST(ConjuateGradientTest, Solves3x3SymmetricSystem) {
   LinearSolver::Summary summary =
       solver.Solve(A.get(), b.data(), per_solve_options, x.data());
 
-  EXPECT_EQ(summary.termination_type, TOLERANCE);
+  EXPECT_EQ(summary.termination_type, LINEAR_SOLVER_SUCCESS);
 
   ASSERT_DOUBLE_EQ(0, x(0));
   ASSERT_DOUBLE_EQ(1, x(1));

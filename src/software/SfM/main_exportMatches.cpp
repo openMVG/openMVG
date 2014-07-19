@@ -81,8 +81,7 @@ int main(int argc, char ** argv)
   // Read matches
   //---------------------------------------
 
-  typedef std::map< std::pair<size_t, size_t>, std::vector<IndMatch> > map_pairWiseMatches;
-  map_pairWiseMatches map_Matches;
+  PairWiseMatches map_Matches;
   PairedIndMatchImport(sMatchFile, map_Matches);
 
   // ------------
@@ -92,17 +91,19 @@ int main(int argc, char ** argv)
   stlplus::folder_create(sOutDir);
   std::cout << "\n Export pairwise matches" << std::endl;
   C_Progress_display my_progress_bar( map_Matches.size() );
-  for (map< std::pair<size_t, size_t>, std::vector<IndMatch> >::const_iterator iter = map_Matches.begin();
+  for (PairWiseMatches::const_iterator iter = map_Matches.begin();
     iter != map_Matches.end();
     ++iter, ++my_progress_bar)
   {
     const size_t I = iter->first.first;
     const size_t J = iter->first.second;
 
-    const std::pair<size_t, size_t>
-      dimImage0 = std::make_pair(vec_focalGroup[I].m_w, vec_focalGroup[I].m_h),
-      dimImage1 = std::make_pair(vec_focalGroup[J].m_w, vec_focalGroup[J].m_h);
+    std::vector<SfMIO::CameraInfo>::const_iterator camInfoI = vec_camImageName.begin() + I;
+    std::vector<SfMIO::CameraInfo>::const_iterator camInfoJ = vec_camImageName.begin() + J;
 
+    const std::pair<size_t, size_t>
+      dimImage0 = std::make_pair(vec_focalGroup[camInfoI->m_intrinsicId].m_w, vec_focalGroup[camInfoI->m_intrinsicId].m_h),
+      dimImage1 = std::make_pair(vec_focalGroup[camInfoJ->m_intrinsicId].m_w, vec_focalGroup[camInfoJ->m_intrinsicId].m_h);
 
     svgDrawer svgStream( dimImage0.first + dimImage1.first, max(dimImage0.second, dimImage1.second));
     svgStream.drawImage(stlplus::create_filespec(sImaDirectory,vec_camImageName[I].m_sImageName),

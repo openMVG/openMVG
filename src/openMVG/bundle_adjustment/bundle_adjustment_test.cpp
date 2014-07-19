@@ -82,7 +82,6 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_RTf) {
   // Add 3D points coordinates parameters
   for (int i = 0; i < npoints; ++i) {
     Vec3 pt3D = d._X.col(i);
-    double * ptr3D = ba_problem.mutable_points()+i*3;
     ba_problem.parameters_.push_back(pt3D[0]);
     ba_problem.parameters_.push_back(pt3D[1]);
     ba_problem.parameters_.push_back(pt3D[2]);
@@ -124,9 +123,6 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_RTf) {
     }
   options.minimizer_progress_to_stdout = false;
   options.logging_type = ceres::SILENT;
-#ifdef USE_OPENMP
-  options.num_threads = omp_get_num_threads();
-#endif // USE_OPENMP
 
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
@@ -140,9 +136,7 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_RTf) {
     << " Final RMSE : " << dResidual_after << "\n"
     << std::endl;
 
-  CHECK(summary.termination_type != ceres::DID_NOT_RUN &&
-      summary.termination_type != ceres::USER_ABORT &&
-      summary.termination_type != ceres::NUMERICAL_FAILURE);
+  CHECK(summary.IsSolutionUsable());
 
   EXPECT_TRUE( dResidual_before > dResidual_after);
 }

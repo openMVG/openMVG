@@ -13,7 +13,8 @@ PROJECT(openMVG C CXX)
 # OpenMVG build options
 # ==============================================================================
 OPTION(OpenMVG_BUILD_TESTS "Build OpenMVG tests" OFF)
-OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG example applications. Does not affect binaries under 'software'" OFF)
+OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG example applications. Does not affect binaries under 'software'" ON)
+option(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
 
 # By default build in Release mode
@@ -38,10 +39,10 @@ IF (SSE2_FOUND)
   ENDIF (MSVC AND NOT ${CMAKE_CL_64})
   ADD_DEFINITIONS(-DUSE_SSE)
 ENDIF (SSE2_FOUND)
-IF (UNIX)
+IF (UNIX AND NOT OpenMVG_BUILD_COVERAGE)
   SET(CMAKE_C_FLAGS_RELEASE "-O3")
   SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
-ENDIF (UNIX)
+ENDIF ()
 
 # ==============================================================================
 # OpenMP detection
@@ -62,6 +63,16 @@ ELSE (OpenMVG_USE_OPENMP)
   ENDIF (OPENMP_FOUND)
 ENDIF (OpenMVG_USE_OPENMP)
 
+# ==============================================================================
+# enable code coverage generation (only with GCC)
+# ==============================================================================
+IF(OpenMVG_BUILD_COVERAGE AND CMAKE_COMPILER_IS_GNUCXX)
+  MESSAGE("OpenMVG_BUILD_COVERAGE enabled")
+  SET(CMAKE_BUILD_TYPE "Debug")
+  ADD_DEFINITIONS(--coverage -fprofile-arcs -ftest-coverage)
+  SET(CMAKE_EXE_LINKER_FLAGS
+    "${CMAKE_EXE_LINKER_FLAGS} -fprofile-arcs -ftest-coverage")
+ENDIF()
 
 # ==============================================================================
 # IMAGE IO detection
@@ -81,20 +92,6 @@ SET(GLFW_BUILD_TESTS    OFF CACHE BOOL "Do not build the GLFW tests programs")
 SET(GLFW_BUILD_DOCS     OFF CACHE BOOL "Do not build the GLFW documentation")
 ADD_SUBDIRECTORY(dependencies/glfw)
 INCLUDE_DIRECTORIES(SYSTEM dependencies/glfw/include)
-
-# ==============================================================================
-#- OpenExif
-# ==============================================================================
-ADD_SUBDIRECTORY(dependencies/OpenExif)
-
-#- EXIV 2
-# ==============================================================================
-IF (UNIX)
-  FIND_PACKAGE( Exiv2 QUIET)
-  IF (EXIV2_FOUND)
-    ADD_DEFINITIONS(-DUSE_EXIV2)
-  ENDIF (EXIV2_FOUND)
-ENDIF (UNIX)
 
 #===============================
 #---- LINEAR PROGRAMMING SOLVER
@@ -178,6 +175,7 @@ SET(OpenMVG_INCLUDES
   ${PROJECT_BINARY_DIR}/third_party/lemon
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/include
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/internal/ceres/miniglog
+  ${PROJECT_BINARY_DIR}/third_party/ceres-solver/config
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp
   CACHE PATH "include directories for openMVG and its dependencies"
 )
@@ -199,26 +197,28 @@ IF (OpenMVG_BUILD_EXAMPLES)
   ADD_SUBDIRECTORY(openMVG_Samples)
 ENDIF (OpenMVG_BUILD_EXAMPLES)
 
-# Complete software build on openMVG
-ADD_SUBDIRECTORY(software)
-
 # ==============================================================================
 # openMVG libraries
 # ==============================================================================
 SET(OpenMVG_LIBS
   openMVG_image
   openMVG_multiview
-  openMVG_linearProgramming
-  openMVG_lInftyComputerVision
+  openMVG_lInftyComputerVision)
+# concat lists
+SET(OpenMVG_LIBS "${OpenMVG_LIBS}" ${openMVG_linearProgramming})
+SET(OpenMVG_LIBS "${OpenMVG_LIBS}"
+  openMVG_system
   #third_party libs
   vlsift
   stlplus
   flann_cpp_s
   ceres
-  lemon
-  ${OPENMVG_LIBRARY_DEPENDENCIES}
-  CACHE STRING "openMVG library names"
-)
+  lemon)
+SET(OpenMVG_LIBS "${OpenMVG_LIBS}"
+  ${OPENMVG_LIBRARY_DEPENDENCIES} CACHE STRING "openMVG library names")
+
+# Complete software build on openMVG
+ADD_SUBDIRECTORY(software)
 
 # ==============================================================================
 # Documentation

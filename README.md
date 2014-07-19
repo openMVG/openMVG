@@ -20,7 +20,7 @@ Building
 
 See [BUILD](https://github.com/openMVG/openMVG/raw/master/BUILD) text file
 
-Continuous integration [![Build Status](https://travis-ci.org/openMVG/openMVG.png?branch=develop)](https://travis-ci.org/openMVG/openMVG):
+Continuous integration [![Build Status](https://travis-ci.org/openMVG/openMVG.png?branch=develop)](https://travis-ci.org/openMVG/openMVG) [![Coverage Status](https://coveralls.io/repos/openMVG/openMVG/badge.png?branch=develop)](https://coveralls.io/r/openMVG/openMVG?branch=develop):
  - develop branch: BUILD + UNIT TESTING
  - linux 64 bits (GCC + clang).
 

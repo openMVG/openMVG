@@ -12,6 +12,7 @@
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+#include "openMVG/system/timer.hpp"
 
 using namespace openMVG;
 
@@ -67,8 +68,8 @@ int main( int argc, char **argv )
   // Harmonization process
   //---------------------------------------
 
-  clock_t timeStart = clock();
-  
+  openMVG::Timer timer;
+
   sMatchesDir = stlplus::folder_part(sMatchesFile);
   std::auto_ptr<ReconstructionEngine> m_colorHarmonizeEngine;
   {
@@ -85,8 +86,8 @@ int main( int argc, char **argv )
   {
     clock_t timeEnd = clock();
     std::cout << std::endl
-      << " ColorHarmonization took : "
-      << (timeEnd - timeStart) / CLOCKS_PER_SEC << " seconds." << std::endl;
+      << " ColorHarmonization took (s): "
+      << timer.elapsed() << std::endl;
 
     return EXIT_SUCCESS;
   }

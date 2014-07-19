@@ -163,7 +163,7 @@ template< typename ARRAY >
 inline void normalize_weight( ARRAY & weight )
 {
   double total = weight.array().sum();
-	if( !total == 0 )
+	if( total != 0 )
   	for( int i = 0; i < weight.size(); i++ )
 	  	weight[ i ] /= total;
 }

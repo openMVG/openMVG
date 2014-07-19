@@ -143,7 +143,6 @@ int main() {
       std::numeric_limits<double>::infinity(),
       true);
     const double & thresholdH = ACRansacOut.first;
-    const double & NFAH = ACRansacOut.second;
 
     // Check the homography support some point to be considered as valid
     if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5) {
@@ -160,7 +159,6 @@ int main() {
       svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
       svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
       for ( size_t i = 0; i < vec_inliers.size(); ++i)  {
-        size_t idx = vec_inliers[i];
         const SIOPointFeature & LL = featsL[vec_PutativeMatches[vec_inliers[i]]._i];
         const SIOPointFeature & RR = featsR[vec_PutativeMatches[vec_inliers[i]]._j];
         const Vec2f L = LL.coords();

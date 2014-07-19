@@ -132,8 +132,8 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
          intrinsicCamInfo.m_sCameraModel = vec_str[5];
 
          Mat3 K;
-         K << focal, 0, width / 2,
-              0, focal, height / 2,
+         K << focal, 0, float(width) / 2.f,
+              0, focal, float(height) / 2.f,
               0, 0, 1;
          intrinsicCamInfo.m_K = K;
 
@@ -166,7 +166,7 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
         oss >> K(2,2);
 
         intrinsicCamInfo.m_K = K;
-        intrinsicCamInfo.m_focal = K(0,0); // unkown sensor size;
+        intrinsicCamInfo.m_focal = static_cast<float>(K(0,0)); // unkown sensor size;
       }
       break;
       default :

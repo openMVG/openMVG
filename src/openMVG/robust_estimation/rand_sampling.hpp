@@ -86,8 +86,6 @@ static void random_sample(size_t X, size_t n, std::vector<size_t> *samples)
   }
 }
 
-
-
 } // namespace robust
 } // namespace openMVG
 #endif // OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_H_

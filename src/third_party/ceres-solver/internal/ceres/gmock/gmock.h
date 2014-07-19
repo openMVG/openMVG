@@ -219,8 +219,11 @@
 // Author: vadimb@google.com (Vadim Berman)
 //
 // Low-level types and utilities for porting Google Mock to various
-// platforms.  They are subject to change without notice.  DO NOT USE
-// THEM IN USER CODE.
+// platforms.  All macros ending with _ and symbols defined in an
+// internal namespace are subject to change without notice.  Code
+// outside Google Mock MUST NOT USE THEM DIRECTLY.  Macros that don't
+// end with _ are part of Google Mock's public API and can be used by
+// code outside Google Mock.
 
 #ifndef GMOCK_INCLUDE_GMOCK_INTERNAL_GMOCK_PORT_H_
 #define GMOCK_INCLUDE_GMOCK_INTERNAL_GMOCK_PORT_H_
@@ -229,8 +232,13 @@
 #include <stdlib.h>
 #include <iostream>
 
-// Most of the types needed for porting Google Mock are also required
-// for Google Test and are defined in gtest-port.h.
+// Most of the utilities needed for porting Google Mock are also
+// required for Google Test and are defined in gtest-port.h.
+//
+// Note to maintainers: to reduce code duplication, prefer adding
+// portability utilities to Google Test's gtest-port.h instead of
+// here, as Google Mock depends on Google Test.  Only add a utility
+// here if it's truly specific to Google Mock.
 #include "gtest/gtest.h"
 
 // To avoid conditional compilation everywhere, we make it
@@ -815,17 +823,30 @@ template <typename T> struct DecayArray<T[]> {
   typedef const T* type;
 };
 
-// Invalid<T>() returns an invalid value of type T.  This is useful
+// Disable MSVC warnings for infinite recursion, since in this case the
+// the recursion is unreachable.
+#ifdef _MSC_VER
+# pragma warning(push)
+# pragma warning(disable:4717)
+#endif
+
+// Invalid<T>() is usable as an expression of type T, but will terminate
+// the program with an assertion failure if actually run.  This is useful
 // when a value of type T is needed for compilation, but the statement
 // will not really be executed (or we don't care if the statement
 // crashes).
 template <typename T>
 inline T Invalid() {
-  return const_cast<typename remove_reference<T>::type&>(
-      *static_cast<volatile typename remove_reference<T>::type*>(NULL));
+  Assert(false, "", -1, "Internal error: attempt to return invalid value");
+  // This statement is unreachable, and would never terminate even if it
+  // could be reached. It is provided only to placate compiler warnings
+  // about missing return statements.
+  return Invalid<T>();
 }
-template <>
-inline void Invalid<void>() {}
+
+#ifdef _MSC_VER
+# pragma warning(pop)
+#endif
 
 // Given a raw type (i.e. having no top-level reference or const
 // modifier) RawContainer that's either an STL-style container or a
@@ -1068,18 +1089,27 @@ class DefaultValue {
   // Sets the default value for type T; requires T to be
   // copy-constructable and have a public destructor.
   static void Set(T x) {
-    delete value_;
-    value_ = new T(x);
+    delete producer_;
+    producer_ = new FixedValueProducer(x);
+  }
+
+  // Provides a factory function to be called to generate the default value.
+  // This method can be used even if T is only move-constructible, but it is not
+  // limited to that case.
+  typedef T (*FactoryFunction)();
+  static void SetFactory(FactoryFunction factory) {
+    delete producer_;
+    producer_ = new FactoryValueProducer(factory);
   }
 
   // Unsets the default value for type T.
   static void Clear() {
-    delete value_;
-    value_ = NULL;
+    delete producer_;
+    producer_ = NULL;
   }
 
   // Returns true iff the user has set the default value for type T.
-  static bool IsSet() { return value_ != NULL; }
+  static bool IsSet() { return producer_ != NULL; }
 
   // Returns true if T has a default return value set by the user or there
   // exists a built-in default value.
@@ -1088,15 +1118,42 @@ class DefaultValue {
   }
 
   // Returns the default value for type T if the user has set one;
-  // otherwise returns the built-in default value if there is one;
-  // otherwise aborts the process.
+  // otherwise returns the built-in default value. Requires that Exists()
+  // is true, which ensures that the return value is well-defined.
   static T Get() {
-    return value_ == NULL ?
-        internal::BuiltInDefaultValue<T>::Get() : *value_;
+    return producer_ == NULL ?
+        internal::BuiltInDefaultValue<T>::Get() : producer_->Produce();
   }
 
  private:
-  static const T* value_;
+  class ValueProducer {
+   public:
+    virtual ~ValueProducer() {}
+    virtual T Produce() = 0;
+  };
+
+  class FixedValueProducer : public ValueProducer {
+   public:
+    explicit FixedValueProducer(T value) : value_(value) {}
+    virtual T Produce() { return value_; }
+
+   private:
+    const T value_;
+    GTEST_DISALLOW_COPY_AND_ASSIGN_(FixedValueProducer);
+  };
+
+  class FactoryValueProducer : public ValueProducer {
+   public:
+    explicit FactoryValueProducer(FactoryFunction factory)
+        : factory_(factory) {}
+    virtual T Produce() { return factory_(); }
+
+   private:
+    const FactoryFunction factory_;
+    GTEST_DISALLOW_COPY_AND_ASSIGN_(FactoryValueProducer);
+  };
+
+  static ValueProducer* producer_;
 };
 
 // This partial specialization allows a user to set default values for
@@ -1146,7 +1203,7 @@ class DefaultValue<void> {
 
 // Points to the user-set default value for type T.
 template <typename T>
-const T* DefaultValue<T>::value_ = NULL;
+typename DefaultValue<T>::ValueProducer* DefaultValue<T>::producer_ = NULL;
 
 // Points to the user-set default value for type T&.
 template <typename T>
@@ -4704,8 +4761,8 @@ ACTION_TEMPLATE(ReturnNew,
 #include <vector>
 
 
-#if GTEST_LANG_CXX11
-#include <initializer_list>  // NOLINT -- must be after gtest.h
+#if GTEST_HAS_STD_INITIALIZER_LIST_
+# include <initializer_list>  // NOLINT -- must be after gtest.h
 #endif
 
 namespace testing {
@@ -5141,7 +5198,7 @@ namespace internal {
 template <typename T, typename M>
 class MatcherCastImpl {
  public:
-  static Matcher<T> Cast(M polymorphic_matcher_or_value) {
+  static Matcher<T> Cast(const M& polymorphic_matcher_or_value) {
     // M can be a polymorhic matcher, in which case we want to use
     // its conversion operator to create Matcher<T>.  Or it can be a value
     // that should be passed to the Matcher<T>'s constructor.
@@ -5162,14 +5219,14 @@ class MatcherCastImpl {
   }
 
  private:
-  static Matcher<T> CastImpl(M value, BooleanConstant<false>) {
+  static Matcher<T> CastImpl(const M& value, BooleanConstant<false>) {
     // M can't be implicitly converted to Matcher<T>, so M isn't a polymorphic
     // matcher.  It must be a value then.  Use direct initialization to create
     // a matcher.
     return Matcher<T>(ImplicitCast_<T>(value));
   }
 
-  static Matcher<T> CastImpl(M polymorphic_matcher_or_value,
+  static Matcher<T> CastImpl(const M& polymorphic_matcher_or_value,
                              BooleanConstant<true>) {
     // M is implicitly convertible to Matcher<T>, which means that either
     // M is a polymorhpic matcher or Matcher<T> has an implicit constructor
@@ -5234,7 +5291,7 @@ class MatcherCastImpl<T, Matcher<T> > {
 // matcher m and returns a Matcher<T>.  It compiles only when T can be
 // statically converted to the argument type of m.
 template <typename T, typename M>
-inline Matcher<T> MatcherCast(M matcher) {
+inline Matcher<T> MatcherCast(const M& matcher) {
   return internal::MatcherCastImpl<T, M>::Cast(matcher);
 }
 
@@ -5251,7 +5308,7 @@ class SafeMatcherCastImpl {
   // This overload handles polymorphic matchers and values only since
   // monomorphic matchers are handled by the next one.
   template <typename M>
-  static inline Matcher<T> Cast(M polymorphic_matcher_or_value) {
+  static inline Matcher<T> Cast(const M& polymorphic_matcher_or_value) {
     return internal::MatcherCastImpl<T, M>::Cast(polymorphic_matcher_or_value);
   }
 
@@ -8002,7 +8059,7 @@ inline internal::ElementsAreArrayMatcher<T> ElementsAreArray(
   return ElementsAreArray(vec.begin(), vec.end());
 }
 
-#if GTEST_LANG_CXX11
+#if GTEST_HAS_STD_INITIALIZER_LIST_
 template <typename T>
 inline internal::ElementsAreArrayMatcher<T>
 ElementsAreArray(::std::initializer_list<T> xs) {
@@ -8044,7 +8101,7 @@ UnorderedElementsAreArray(const ::std::vector<T, A>& vec) {
   return UnorderedElementsAreArray(vec.begin(), vec.end());
 }
 
-#if GTEST_LANG_CXX11
+#if GTEST_HAS_STD_INITIALIZER_LIST_
 template <typename T>
 inline internal::UnorderedElementsAreArrayMatcher<T>
 UnorderedElementsAreArray(::std::initializer_list<T> xs) {
@@ -8771,7 +8828,7 @@ class GTEST_API_ UntypedFunctionMockerBase {
   // arguments.  This function can be safely called from multiple
   // threads concurrently.  The caller is responsible for deleting the
   // result.
-  const UntypedActionResultHolderBase* UntypedInvokeWith(
+  UntypedActionResultHolderBase* UntypedInvokeWith(
       const void* untyped_args)
           GTEST_LOCK_EXCLUDED_(g_gmock_mutex);
 
@@ -9849,6 +9906,58 @@ class MockSpec {
   GTEST_DISALLOW_ASSIGN_(MockSpec);
 };  // class MockSpec
 
+// Wrapper type for generically holding an ordinary value or lvalue reference.
+// If T is not a reference type, it must be copyable or movable.
+// ReferenceOrValueWrapper<T> is movable, and will also be copyable unless
+// T is a move-only value type (which means that it will always be copyable
+// if the current platform does not support move semantics).
+//
+// The primary template defines handling for values, but function header
+// comments describe the contract for the whole template (including
+// specializations).
+template <typename T>
+class ReferenceOrValueWrapper {
+ public:
+  // Constructs a wrapper from the given value/reference.
+  explicit ReferenceOrValueWrapper(T value)
+      : value_(GTEST_MOVE_(value)) {}
+
+  // Unwraps and returns the underlying value/reference, exactly as
+  // originally passed. The behavior of calling this more than once on
+  // the same object is unspecified.
+  T Unwrap() {
+    return GTEST_MOVE_(value_);
+  }
+
+  // Provides nondestructive access to the underlying value/reference.
+  // Always returns a const reference (more precisely,
+  // const RemoveReference<T>&). The behavior of calling this after
+  // calling Unwrap on the same object is unspecified.
+  const T& Peek() const {
+    return value_;
+  }
+
+ private:
+  T value_;
+};
+
+// Specialization for lvalue reference types. See primary template
+// for documentation.
+template <typename T>
+class ReferenceOrValueWrapper<T&> {
+ public:
+  // Workaround for debatable pass-by-reference lint warning (c-library-team
+  // policy precludes NOLINT in this context)
+  typedef T& reference;
+  explicit ReferenceOrValueWrapper(reference ref)
+      : value_ptr_(&ref) {}
+  T& Unwrap() { return *value_ptr_; }
+  const T& Peek() const { return *value_ptr_; }
+
+ private:
+  T* value_ptr_;
+};
+
 // MSVC warns about using 'this' in base member initializer list, so
 // we need to temporarily disable the warning.  We have to do it for
 // the entire class to suppress the warning, even though it's about
@@ -9880,23 +9989,16 @@ class UntypedActionResultHolderBase {
 template <typename T>
 class ActionResultHolder : public UntypedActionResultHolderBase {
  public:
-  explicit ActionResultHolder(T a_value) : value_(a_value) {}
-
-  // The compiler-generated copy constructor and assignment operator
-  // are exactly what we need, so we don't need to define them.
-
-  // Returns the held value and deletes this object.
-  T GetValueAndDelete() const {
-    T retval(value_);
-    delete this;
-    return retval;
+  // Returns the held value. Must not be called more than once.
+  T Unwrap() {
+    return result_.Unwrap();
   }
 
   // Prints the held value as an action's result to os.
   virtual void PrintAsActionResult(::std::ostream* os) const {
     *os << "\n          Returns: ";
     // T may be a reference type, so we don't use UniversalPrint().
-    UniversalPrinter<T>::Print(value_, os);
+    UniversalPrinter<T>::Print(result_.Peek(), os);
   }
 
   // Performs the given mock function's default action and returns the
@@ -9906,8 +10008,8 @@ class ActionResultHolder : public UntypedActionResultHolderBase {
       const FunctionMockerBase<F>* func_mocker,
       const typename Function<F>::ArgumentTuple& args,
       const string& call_description) {
-    return new ActionResultHolder(
-        func_mocker->PerformDefaultAction(args, call_description));
+    return new ActionResultHolder(Wrapper(
+        func_mocker->PerformDefaultAction(args, call_description)));
   }
 
   // Performs the given action and returns the result in a new-ed
@@ -9916,42 +10018,52 @@ class ActionResultHolder : public UntypedActionResultHolderBase {
   static ActionResultHolder*
   PerformAction(const Action<F>& action,
                 const typename Function<F>::ArgumentTuple& args) {
-    return new ActionResultHolder(action.Perform(args));
+    return new ActionResultHolder(Wrapper(action.Perform(args)));
   }
 
  private:
-  T value_;
+  typedef ReferenceOrValueWrapper<T> Wrapper;
 
-  // T could be a reference type, so = isn't supported.
-  GTEST_DISALLOW_ASSIGN_(ActionResultHolder);
+  explicit ActionResultHolder(Wrapper result)
+      : result_(GTEST_MOVE_(result)) {}
+
+  Wrapper result_;
+
+  GTEST_DISALLOW_COPY_AND_ASSIGN_(ActionResultHolder);
 };
 
 // Specialization for T = void.
 template <>
 class ActionResultHolder<void> : public UntypedActionResultHolderBase {
  public:
-  void GetValueAndDelete() const { delete this; }
+  void Unwrap() { }
 
   virtual void PrintAsActionResult(::std::ostream* /* os */) const {}
 
-  // Performs the given mock function's default action and returns NULL;
+  // Performs the given mock function's default action and returns ownership
+  // of an empty ActionResultHolder*.
   template <typename F>
   static ActionResultHolder* PerformDefaultAction(
       const FunctionMockerBase<F>* func_mocker,
       const typename Function<F>::ArgumentTuple& args,
       const string& call_description) {
     func_mocker->PerformDefaultAction(args, call_description);
-    return NULL;
+    return new ActionResultHolder;
   }
 
-  // Performs the given action and returns NULL.
+  // Performs the given action and returns ownership of an empty
+  // ActionResultHolder*.
   template <typename F>
   static ActionResultHolder* PerformAction(
       const Action<F>& action,
       const typename Function<F>::ArgumentTuple& args) {
     action.Perform(args);
-    return NULL;
+    return new ActionResultHolder;
   }
+
+ private:
+  ActionResultHolder() {}
+  GTEST_DISALLOW_COPY_AND_ASSIGN_(ActionResultHolder);
 };
 
 // The base of the function mocker class for the given function type.
@@ -10086,8 +10198,9 @@ class FunctionMockerBase : public UntypedFunctionMockerBase {
   // threads concurrently.
   Result InvokeWith(const ArgumentTuple& args)
         GTEST_LOCK_EXCLUDED_(g_gmock_mutex) {
-    return static_cast<const ResultHolder*>(
-        this->UntypedInvokeWith(&args))->GetValueAndDelete();
+    scoped_ptr<ResultHolder> holder(
+        DownCast_<ResultHolder*>(this->UntypedInvokeWith(&args)));
+    return holder->Unwrap();
   }
 
   // Adds and returns a default action spec for this mock function.
@@ -13968,6 +14081,20 @@ class InvokeMethodAction {
   GTEST_DISALLOW_ASSIGN_(InvokeMethodAction);
 };
 
+// An internal replacement for std::copy which mimics its behavior. This is
+// necessary because Visual Studio deprecates ::std::copy, issuing warning 4996.
+// However Visual Studio 2010 and later do not honor #pragmas which disable that
+// warning.
+template<typename InputIterator, typename OutputIterator>
+inline OutputIterator CopyElements(InputIterator first,
+                                   InputIterator last,
+                                   OutputIterator output) {
+  for (; first != last; ++first, ++output) {
+    *output = *first;
+  }
+  return output;
+}
+
 }  // namespace internal
 
 // Various overloads for Invoke().
@@ -14066,15 +14193,11 @@ ACTION_TEMPLATE(SetArgReferee,
 ACTION_TEMPLATE(SetArrayArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_2_VALUE_PARAMS(first, last)) {
-  // Microsoft compiler deprecates ::std::copy, so we want to suppress warning
-  // 4996 (Function call with parameters that may be unsafe) there.
+  // Visual Studio deprecates ::std::copy, so we use our own copy in that case.
 #ifdef _MSC_VER
-# pragma warning(push)          // Saves the current warning state.
-# pragma warning(disable:4996)  // Temporarily disables warning 4996.
-#endif
+  internal::CopyElements(first, last, ::std::tr1::get<k>(args));
+#else
   ::std::copy(first, last, ::std::tr1::get<k>(args));
-#ifdef _MSC_VER
-# pragma warning(pop)           // Restores the warning state.
 #endif
 }
 

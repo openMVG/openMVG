@@ -215,6 +215,7 @@ TEST(linearProgramming, osi_mosek_sparse_sample) {
 #endif // #ifdef OPENMVG_HAVE_MOSEK
 
 
+
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
 /* ************************************************************************* */

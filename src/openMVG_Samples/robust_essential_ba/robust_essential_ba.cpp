@@ -223,7 +223,6 @@ int main() {
       svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
       svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
       for ( size_t i = 0; i < vec_inliers.size(); ++i)  {
-        size_t idx = vec_inliers[i];
         const SIOPointFeature & LL = featsL[vec_PutativeMatches[vec_inliers[i]]._i];
         const SIOPointFeature & RR = featsR[vec_PutativeMatches[vec_inliers[i]]._j];
         const Vec2f L = LL.coords();
@@ -494,7 +493,6 @@ void do_bundle_adjustment(
   // Add 3D points coordinates parameters
   for (int i = 0; i < n3Dpoints; ++i) {
     Vec3 pt3D = vec_3DPoints[i];
-    double * ptr3D = ba_problem.mutable_points() + i * 3;
     ba_problem.parameters_.push_back(pt3D[0]);
     ba_problem.parameters_.push_back(pt3D[1]);
     ba_problem.parameters_.push_back(pt3D[2]);
@@ -537,9 +535,6 @@ void do_bundle_adjustment(
     }
   options.minimizer_progress_to_stdout = false;
   options.logging_type = ceres::SILENT;
-#ifdef USE_OPENMP
-  options.num_threads = omp_get_num_threads();
-#endif // USE_OPENMP
 
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
@@ -553,9 +548,7 @@ void do_bundle_adjustment(
     << " Final RMSE : " << dResidual_after << std::endl;
 
   // If no error, get back refined parameters
-  if (summary.termination_type != ceres::DID_NOT_RUN &&
-      summary.termination_type != ceres::USER_ABORT &&
-      summary.termination_type != ceres::NUMERICAL_FAILURE)
+  if (summary.IsSolutionUsable())
   {
     // Get back 3D points
     size_t cpt = 0;
@@ -667,7 +660,6 @@ void do_bundle_adjustment_common_focal(
   // Add 3D points coordinates parameters
   for (int i = 0; i < n3Dpoints; ++i) {
     Vec3 pt3D = vec_3DPoints[i];
-    double * ptr3D = ba_problem.mutable_points() + i * 3;
     ba_problem.parameters_.push_back(pt3D[0]);
     ba_problem.parameters_.push_back(pt3D[1]);
     ba_problem.parameters_.push_back(pt3D[2]);
@@ -711,9 +703,6 @@ void do_bundle_adjustment_common_focal(
     }
   options.minimizer_progress_to_stdout = false;
   options.logging_type = ceres::SILENT;
-#ifdef USE_OPENMP
-  options.num_threads = omp_get_num_threads();
-#endif // USE_OPENMP
 
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
@@ -728,9 +717,7 @@ void do_bundle_adjustment_common_focal(
     << "Initial focal : " << focal << std::endl;
 
   // If no error, get back refined parameters
-  if (summary.termination_type != ceres::DID_NOT_RUN &&
-      summary.termination_type != ceres::USER_ABORT &&
-      summary.termination_type != ceres::NUMERICAL_FAILURE)
+  if (summary.IsSolutionUsable())
   {
     // Get back 3D points
     size_t cpt = 0;
@@ -896,9 +883,6 @@ void do_bundle_adjustment_common_intrinsics(
     }
   options.minimizer_progress_to_stdout = false;
   options.logging_type = ceres::SILENT;
-#ifdef USE_OPENMP
-  options.num_threads = omp_get_num_threads();
-#endif // USE_OPENMP
 
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
@@ -915,9 +899,7 @@ void do_bundle_adjustment_common_intrinsics(
     << "Refined intrinsics : " << std::endl;
 
   // If no error, get back refined parameters
-  if (summary.termination_type != ceres::DID_NOT_RUN &&
-      summary.termination_type != ceres::USER_ABORT &&
-      summary.termination_type != ceres::NUMERICAL_FAILURE)
+  if (summary.IsSolutionUsable())
   {
     // Get back 3D points
     size_t cpt = 0;

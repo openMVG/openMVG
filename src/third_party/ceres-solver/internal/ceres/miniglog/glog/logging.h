@@ -347,7 +347,7 @@ void LogMessageFatal(const char *file, int line, const T &message) {
 
 // Generic binary operator check macro. This should not be directly invoked,
 // instead use the binary comparison macros defined below.
-#define CHECK_OP(val1, val2, op) LOG_IF_FALSE(FATAL, (val1 op val2)) \
+#define CHECK_OP(val1, val2, op) LOG_IF_FALSE(FATAL, ((val1) op (val2))) \
   << "Check failed: " #val1 " " #op " " #val2 " "
 
 // Check_op macro definitions

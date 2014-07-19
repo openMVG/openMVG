@@ -46,12 +46,11 @@
 #include "lemon/list_graph.h"
 #include <lemon/connectivity.h>
 
-// Rotation
+// Rotation averaging
 #include "openMVG/multiview/rotation_averaging.hpp"
-#include "openMVG/multiview/rotation_averaging_l1.hpp"
 
 #include "third_party/progress/progress.hpp"
-#include "third_party/stlplus3/subsystems/timer.hpp"
+#include "openMVG/system/timer.hpp"
 
 #include <numeric>
 #include <iomanip>
@@ -105,7 +104,7 @@ GlobalReconstructionEngine::~GlobalReconstructionEngine()
 }
 
 void GlobalReconstructionEngine::rotationInference(
-  std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > & map_relatives)
+  Map_RelativeRT & map_relatives)
 {
   std::cout
         << "---------------\n"
@@ -130,58 +129,29 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
   ERotationAveragingMethod eRotationAveragingMethod,
   const std::map<size_t, size_t> & map_cameraNodeToCameraIndex,
   const std::map<size_t, size_t> & map_cameraIndexTocameraNode,
-  const std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > & map_relatives,
+  const Map_RelativeRT & map_relatives,
   std::map<size_t, Mat3> & map_globalR) const
 {
   // Build relative information for only the largest considered Connected Component
   // - it requires to change the camera indexes, because RotationAveraging is working only with
   //   index ranging in [0 - nbCam], (map_cameraNodeToCameraIndex utility)
 
-  switch(eRotationAveragingMethod)
+  //- A. weight computation
+  //- B. solve global rotation computation
+
+  //- A. weight computation: for each pair w = min(1, (#PairMatches/Median(#PairsMatches)))
+  std::vector<double> vec_relativeRotWeight;
   {
-    case ROTATION_AVERAGING_L2:
+    vec_relativeRotWeight.reserve(map_relatives.size());
     {
-      using namespace openMVG::rotation_averaging;
-      std::vector<std::pair<std::pair<size_t, size_t>, Mat3> > vec_relativeRotEstimate;
-      for(std::map<std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::const_iterator iter = map_relatives.begin();
-        iter != map_relatives.end(); ++iter)
-      {
-        const openMVG::lInfinityCV::relativeInfo & rel = *iter;
-        std::pair<size_t,size_t> newPair(
-          map_cameraNodeToCameraIndex.find(rel.first.first)->second,
-          map_cameraNodeToCameraIndex.find(rel.first.second)->second);
-        vec_relativeRotEstimate.push_back(std::make_pair(newPair, rel.second.first));
-      }
-
-      std::vector<Mat3> vec_ApprRotMatrix;
-      if (!rotation_averaging::L2RotationAveraging(map_cameraIndexTocameraNode.size(),
-        vec_relativeRotEstimate,
-        vec_ApprRotMatrix))
-      {
-        return false;
-      }
-
-      //-- Setup the averaged rotation
-      for (int i = 0; i < vec_ApprRotMatrix.size(); ++i)  {
-        map_globalR[map_cameraIndexTocameraNode.find(i)->second] = vec_ApprRotMatrix[i];
-      }
-
-      return true;
-    }
-    break;
-    case ROTATION_AVERAGING_L1:
-    {
-      using namespace openMVG::rotation_averaging::l1;
-
-      //-- Compute the mean number of matches to prepare weight computation
+      //-- Compute the median number of matches
       std::vector<double> vec_count;
-      for(std::map<std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::const_iterator iter = map_relatives.begin();
+      for(Map_RelativeRT::const_iterator iter = map_relatives.begin();
         iter != map_relatives.end(); ++iter)
       {
         const openMVG::lInfinityCV::relativeInfo & rel = *iter;
         // Find the number of support point for this pair
-        float weight = 0.f; // the relative rotation correspondence point support
-        std::map< std::pair<size_t, size_t>, vector<IndMatch> >::const_iterator iterMatches = _map_Matches_F.find(rel.first);
+        PairWiseMatches::const_iterator iterMatches = _map_Matches_F.find(rel.first);
         if (iterMatches != _map_Matches_F.end())
         {
           vec_count.push_back(iterMatches->second.size());
@@ -189,45 +159,84 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
       }
       float thTrustPair = (std::accumulate(vec_count.begin(), vec_count.end(), 0.0f) / vec_count.size()) / 2.0;
 
-      std::vector<RelRotationData> vec_relativeRotEstimate;
-      for(std::map<std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::const_iterator iter = map_relatives.begin();
+      for(Map_RelativeRT::const_iterator iter = map_relatives.begin();
         iter != map_relatives.end(); ++iter)
       {
         const openMVG::lInfinityCV::relativeInfo & rel = *iter;
-        // Find the number of support point for this pair
-        float weight = 0.f; // the relative rotation correspondence point support
-        std::map< std::pair<size_t, size_t>, vector<IndMatch> >::const_iterator iterMatches = _map_Matches_F.find(rel.first);
+        float weight = 1.f; // the relative rotation correspondence point support
+        PairWiseMatches::const_iterator iterMatches = _map_Matches_F.find(rel.first);
         if (iterMatches != _map_Matches_F.end())
         {
           weight = std::min((float)iterMatches->second.size()/thTrustPair, 1.f);
+          vec_relativeRotWeight.push_back(weight);
         }
-        vec_relativeRotEstimate.push_back(RelRotationData(
-            map_cameraNodeToCameraIndex.find(rel.first.first)->second,
-            map_cameraNodeToCameraIndex.find(rel.first.second)->second,
-            rel.second.first, weight));
       }
+    }
+  }
+
+  using namespace openMVG::rotation_averaging;
+  // Setup input data for global rotation computation
+  std::vector<RelRotationData> vec_relativeRotEstimate;
+  std::vector<double>::const_iterator iterW = vec_relativeRotWeight.begin();
+  for(Map_RelativeRT::const_iterator iter = map_relatives.begin();
+    iter != map_relatives.end(); ++iter)
+  {
+    const openMVG::lInfinityCV::relativeInfo & rel = *iter;
+    PairWiseMatches::const_iterator iterMatches = _map_Matches_F.find(rel.first);
+    if (iterMatches != _map_Matches_F.end())
+    {
+      vec_relativeRotEstimate.push_back(RelRotationData(
+        map_cameraNodeToCameraIndex.find(rel.first.first)->second,
+        map_cameraNodeToCameraIndex.find(rel.first.second)->second,
+        rel.second.first, *iterW));
+      ++iterW;
+    }
+  }
+
+  //- B. solve global rotation computation
+  bool bSuccess = false;
+  std::vector<Mat3> vec_globalR(map_cameraIndexTocameraNode.size());
+  switch(eRotationAveragingMethod)
+  {
+    case ROTATION_AVERAGING_L2:
+    {
+      //- Solve the global rotation estimation problem:
+      bSuccess = rotation_averaging::l2::L2RotationAveraging(map_cameraIndexTocameraNode.size(),
+        vec_relativeRotEstimate,
+        vec_globalR);
+    }
+    break;
+    case ROTATION_AVERAGING_L1:
+    {
+      using namespace openMVG::rotation_averaging::l1;
 
       //- Solve the global rotation estimation problem:
-      Matrix3x3Arr vec_globalR(map_cameraIndexTocameraNode.size());
       size_t nMainViewID = 0;
       std::vector<bool> vec_inliers;
-      bool bRotAveraging = GlobalRotationsRobust(vec_relativeRotEstimate, vec_globalR, nMainViewID, 0.0f, &vec_inliers);
+      bSuccess = rotation_averaging::l1::GlobalRotationsRobust(
+        vec_relativeRotEstimate, vec_globalR, nMainViewID, 0.0f, &vec_inliers);
 
       std::cout << "\ninliers : " << std::endl;
       std::copy(vec_inliers.begin(), vec_inliers.end(), ostream_iterator<bool>(std::cout, " "));
       std::cout << std::endl;
-
-      //-- Setup the averaged rotation
-      for (int i = 0; i < vec_globalR.size(); ++i)  {
-        map_globalR[map_cameraIndexTocameraNode.find(i)->second] = vec_globalR[i];
-      }
-      return bRotAveraging;
     }
     break;
     default:
     std::cerr << "Unknown rotation averaging method: " << (int) eRotationAveragingMethod << std::endl;
   }
-  return false;
+
+  if (bSuccess)
+  {
+    //-- Setup the averaged rotation
+    for (int i = 0; i < vec_globalR.size(); ++i)  {
+      map_globalR[map_cameraIndexTocameraNode.find(i)->second] = vec_globalR[i];
+    }
+  }
+  else{
+    std::cerr << "Global rotation solving failed." << std::endl;
+  }
+
+  return bSuccess;
 }
 
 bool GlobalReconstructionEngine::Process()
@@ -258,7 +267,7 @@ bool GlobalReconstructionEngine::Process()
   }
 
 
-  stlplus::timer total_reconstruction_timer;
+  openMVG::Timer total_reconstruction_timer;
 
   //-------------------
   // Only keep the largest biedge connected subgraph
@@ -271,7 +280,7 @@ bool GlobalReconstructionEngine::Process()
   // Compute relative R|t
   //-------------------
 
-  std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > map_relatives;
+  Map_RelativeRT map_relatives;
   {
     ComputeRelativeRt(map_relatives);
   }
@@ -283,7 +292,7 @@ bool GlobalReconstructionEngine::Process()
   //-- Putative triplets for relative translations computation
   std::vector< graphUtils::Triplet > vec_triplets;
   {
-    stlplus::timer timer_Inference;
+    openMVG::Timer timer_Inference;
 
     rotationInference(map_relatives);
 
@@ -310,7 +319,7 @@ bool GlobalReconstructionEngine::Process()
     // List remaining camera node Id
     //-------------------
     std::set<size_t> set_indeximage;
-    for (map< std::pair<size_t, size_t>, vector<IndMatch> >::const_iterator
+    for (PairWiseMatches::const_iterator
          iter = _map_Matches_F.begin();
          iter != _map_Matches_F.end();
          ++iter)
@@ -387,7 +396,7 @@ bool GlobalReconstructionEngine::Process()
   // Relative translations estimation (Triplet based translation computation)
   //-------------------
   std::vector<openMVG::lInfinityCV::relativeInfo > vec_initialRijTijEstimates;
-  STLPairWiseMatches newpairMatches;
+  PairWiseMatches newpairMatches;
   {
     std::cout << "\n-------------------------------" << "\n"
       << " Relative translations computation: " << "\n"
@@ -395,7 +404,7 @@ bool GlobalReconstructionEngine::Process()
 
     // Compute putative translations with an edge coverage algorithm
 
-    stlplus::timer timerLP_triplet;
+    openMVG::Timer timerLP_triplet;
 
     computePutativeTranslation_EdgesCoverage(map_globalR, vec_triplets, vec_initialRijTijEstimates, newpairMatches);
     double timeLP_triplet = timerLP_triplet.elapsed();
@@ -467,7 +476,7 @@ bool GlobalReconstructionEngine::Process()
   //-------------------
 
   {
-    const int iNview = map_cameraNodeToCameraIndex.size(); // The remaining camera nodes count in the graph
+    const size_t iNview = map_cameraNodeToCameraIndex.size(); // The remaining camera nodes count in the graph
 
     std::cout << "\n-------------------------------" << "\n"
       << " Global translations computation: " << "\n"
@@ -484,10 +493,8 @@ bool GlobalReconstructionEngine::Process()
       rel.first = newPair;
     }
 
-    stlplus::timer timerLP_translation;
-    clock_t start_timeLP = clock();
+    openMVG::Timer timerLP_translation;
 
-    bool bNormal = false;
     double gamma = -1.0;
     std::vector<double> vec_solution;
     {
@@ -518,7 +525,6 @@ bool GlobalReconstructionEngine::Process()
     }
 
     double timeLP_translation = timerLP_translation.elapsed();
-    double timeLP_translation_clock =  double(clock() - start_timeLP) / CLOCKS_PER_SEC;
 
     //-- Export triplet statistics:
     if (_bHtmlReport)
@@ -533,8 +539,7 @@ bool GlobalReconstructionEngine::Process()
       os << "-------------------------------" << "<br>"
         << "-- #relative estimates: " << vec_initialRijTijEstimates.size()
         << " converge with gamma: " << gamma << ".<br>"
-        << " timing: " << timeLP_translation << ".<br>"
-        << " timing clocks (s): " << timeLP_translation_clock << ".<br>"
+        << " timing (s): " << timeLP_translation << ".<br>"
         << "-------------------------------" << "<br>";
       _htmlDocStream->pushInfo(os.str());
     }
@@ -692,14 +697,14 @@ bool GlobalReconstructionEngine::Process()
         double min, max, mean, median;
         minMaxMeanMedian<double>(vec_residuals.begin(), vec_residuals.end(), min, max, mean, median);
 
-        Histogram<float> histo(0, *max_element(vec_residuals.begin(),vec_residuals.end())*1.1);
+        Histogram<float> histo(0.f, *max_element(vec_residuals.begin(),vec_residuals.end())*1.1f);
         histo.Add(vec_residuals.begin(), vec_residuals.end());
         std::cout << std::endl << "Residual Error pixels : " << std::endl << histo.ToString() << std::endl;
 
         // Histogram between 0 and 10 pixels
         {
           std::cout << "\n Histogram between 0 and 10 pixels: \n";
-          Histogram<float> histo(0, 10, 20);
+          Histogram<float> histo(0.f, 10.f, 20);
           histo.Add(vec_residuals.begin(), vec_residuals.end());
           std::cout << std::endl << "Residual Error pixels : " << std::endl << histo.ToString() << std::endl;
         }
@@ -762,200 +767,32 @@ bool GlobalReconstructionEngine::Process()
     << "Relative rotations time was excluded\n"
     << "-------------------------------" << std::endl;
 
-  return true;
-}
-
-//-- Export data to openMVG format:
-bool GlobalReconstructionEngine::ExportToOpenMVGFormat(bool bColoredPointCloud) const
-{
-  // Export to openMVG format
-  std::cout << std::endl << "Export 3D scene to openMVG format" << std::endl
-    << " -- Point cloud color: " << (bColoredPointCloud ? "ON" : "OFF") << std::endl;
-
-  std::vector<Vec3> vec_tracksColor;
-  if (bColoredPointCloud)
+  //-- Export the scene (cameras and structures) to a container
   {
-    std::cout << std::endl << "Compute the color of each track..." << std::endl;
-    ColorizeTracks(_map_selectedTracks, vec_tracksColor);
-  }
-
-  const std::string & sOutDirectory = stlplus::folder_append_separator(_sOutDirectory) + "SfM_Output";  //Export directory
-  const std::vector<std::string> & vec_fileNames = _vec_fileNames; // vector of image filenames
-  const std::string & sImagePath = _sImagePath;  // The images path
-  const openMVG::tracks::STLMAPTracks & map_reconstructed = _map_selectedTracks; // Tracks (Visibility)
-  bool bExportImage = true;
-
-  bool bOk = true;
-  if (!stlplus::is_folder(sOutDirectory))
-  {
-    stlplus::folder_create(sOutDirectory);
-    bOk = stlplus::is_folder(sOutDirectory);
-  }
-
-  // Create basis directory structure
-  stlplus::folder_create( stlplus::folder_append_separator(sOutDirectory) + "cameras");
-  stlplus::folder_create( stlplus::folder_append_separator(sOutDirectory) + "clouds");
-  stlplus::folder_create( stlplus::folder_append_separator(sOutDirectory) + "images");
-
-  if (bOk &&
-    stlplus::is_folder(stlplus::folder_append_separator(sOutDirectory) + "cameras") &&
-    stlplus::is_folder( stlplus::folder_append_separator(sOutDirectory) + "clouds") &&
-    stlplus::is_folder( stlplus::folder_append_separator(sOutDirectory) + "images")
-    )
-  {
-    bOk = true;
-  }
-  else  {
-    std::cerr << "Cannot access to one of the desired output directory" << std::endl;
-  }
-
-  if (bOk)
-  {
-    //Export Camera as binary files
-    std::map<size_t, size_t> map_cameratoIndex;
-    size_t count = 0;
-    for (std::map<size_t, PinholeCamera>::const_iterator iter =
-      _map_camera.begin();
-      iter != _map_camera.end();
-    ++iter)
+    // Cameras
+    for (std::map<size_t,PinholeCamera >::const_iterator iter = _map_camera.begin();
+      iter != _map_camera.end();  ++iter)
     {
-      map_cameratoIndex[iter->first] = count;
-      const Mat34 & PMat = iter->second._P;
-      std::ofstream file(
-        stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "cameras",
-        stlplus::basename_part(vec_fileNames[iter->first])
-        ,"bin").c_str(),std::ios::out|std::ios::binary);
-      file.write((const char*)PMat.data(),(std::streamsize)(3*4)*sizeof(double));
-      bOk &= (!file.fail());
-      file.close();
-      ++count;
+      const PinholeCamera & cam = iter->second;
+      _reconstructorData.map_Camera[iter->first] = BrownPinholeCamera(cam._P);
+
+      // reconstructed camera
+      _reconstructorData.set_imagedId.insert(iter->first);
     }
 
-    //Export 3D point and tracks
-
-    size_t nc = _map_camera.size();
-
-    // Clipping planes (near and far Z depth per view)
-    std::vector<double> znear(nc, numeric_limits<double>::max()), zfar(nc, 0);
-    // Cloud
-    std::ofstream f_cloud(
-      stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "clouds",
-      "calib", "ply").c_str());
-    std::ofstream f_visibility(
-      stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "clouds",
-      "visibility", "txt").c_str());
-
-    if (!f_cloud.is_open()) {
-      std::cerr << "cannot save cloud" << std::endl;
-      return false;
-    }
-
-    if (!f_visibility.is_open()) {
-      std::cerr << "cannot save cloud desc" << std::endl;
-      return false;
-    }
-
-    f_cloud << "ply\nformat ascii 1.0\ncomment generated by the Global OpenMVG Calibration Engine" << "\n";
-    f_cloud << "element vertex " << _vec_allScenes.size() << "\n";
-    f_cloud << "property float x\nproperty float y\nproperty float z" << "\n";
-    f_cloud << "property uchar red\nproperty uchar green\nproperty uchar blue" << "\n";
-    f_cloud << "property float confidence\nproperty list uchar int visibility" << "\n";
-    f_cloud << "element face 0\nproperty list uchar int vertex_index" << "\n";
-    f_cloud << "end_header" << "\n";
+    // Structure
     size_t i = 0;
-    for (openMVG::tracks::STLMAPTracks::const_iterator iter = map_reconstructed.begin();
-      iter != map_reconstructed.end(); ++iter, ++i)
+    for (std::vector<Vec3>::const_iterator iter = _vec_allScenes.begin();
+      iter != _vec_allScenes.end();
+      ++iter, ++i)
     {
-      // Look through the track and add point position
-      const tracks::submapTrack & track = iter->second;
-
-      const Vec3 & pos = _vec_allScenes[i];
-
-      if (bColoredPointCloud)
-      {
-        const Vec3 & color = vec_tracksColor[i];
-        f_cloud << pos.transpose() << " " << color.transpose() << " " << 3.14;
-      }
-      else
-        f_cloud << pos.transpose() << " 255 255 255 " << 3.14;
-
-      std::ostringstream s_visibility;
-      std::set< size_t > set_imageIndex;
-      for( tracks::submapTrack::const_iterator iterTrack = track.begin();
-        iterTrack != track.end();
-        ++iterTrack)
-      {
-        size_t imageId = iterTrack->first;
-
-        if ( map_cameratoIndex.find(imageId) != map_cameratoIndex.end())
-        {
-          set_imageIndex.insert(map_cameratoIndex[imageId]);
-          const PinholeCamera & cam = (_map_camera.find(imageId))->second;
-          double z = Depth(cam._R, cam._t, pos);
-          znear[map_cameratoIndex[imageId]] = std::min(znear[map_cameratoIndex[imageId]], z );
-          zfar[map_cameratoIndex[imageId]] = std::max(zfar[map_cameratoIndex[imageId]], z );
-        }
-        s_visibility << iterTrack->first << " " << iterTrack->second << " ";
-      }
-
-
-      //export images indexes
-      f_cloud << " " << set_imageIndex.size() << " ";
-      copy(set_imageIndex.begin(), set_imageIndex.end(), std::ostream_iterator<size_t>(f_cloud, " "));
-      f_cloud << std::endl;
-
-      f_visibility << pos.transpose() << " " << set_imageIndex.size() << " ";
-      f_visibility << s_visibility.str() << "\n";
-    }
-    f_cloud.close();
-    f_visibility.close();
-
-    // Views
-    std::ofstream f(
-      stlplus::create_filespec(
-        stlplus::folder_append_separator(sOutDirectory),
-        "views", "txt").c_str());
-    if (!f.is_open()) {
-      std::cerr << "Cannot write views" << std::endl;
-      return false;
-    }
-    f << "images\ncameras\n" << nc << "\n";
-
-    count = 0;
-    for (std::map<size_t, PinholeCamera>::const_iterator iter = _map_camera.begin();
-      iter != _map_camera.end();
-      ++iter)
-    {
-      size_t camIndex = iter->first;
-      f << vec_fileNames[camIndex]
-        << ' ' << _vec_intrinsicGroups[_vec_camImageNames[camIndex].m_intrinsicId].m_w
-        << ' ' << _vec_intrinsicGroups[_vec_camImageNames[camIndex].m_intrinsicId].m_h
-        << ' ' << stlplus::basename_part(vec_fileNames[camIndex]) << ".bin"
-        << ' ' << znear[count]/2
-        << ' ' << zfar[count]*2
-        << "\n";
-      ++count;
-    }
-    f.close();
-
-    // EXPORT IMAGES
-    if (bExportImage)
-    {
-      std::cout << " -- Export the calibrated image set, it can take some time ..." << std::endl;
-      C_Progress_display my_progress_bar(_map_camera.size());
-      for (std::map<size_t, PinholeCamera>::const_iterator iter = _map_camera.begin();
-        iter != _map_camera.end();
-        ++iter, ++my_progress_bar)
-      {
-        size_t imageIndex = iter->first;
-        std::string sImageName = vec_fileNames[imageIndex];
-        stlplus::file_copy(stlplus::create_filespec(sImagePath,sImageName),
-          stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "images",
-          stlplus::basename_part(sImageName),
-          stlplus::extension_part(sImageName)));
-      }
+      const Vec3 & pt3D = *iter;
+      _reconstructorData.map_3DPoints[i] = pt3D;
+      _reconstructorData.set_trackId.insert(i);
     }
   }
+
+  return true;
 }
 
 bool testIntrinsicsEquality(
@@ -1065,14 +902,14 @@ bool GlobalReconstructionEngine::CleanGraph()
     EdgeIterator itEdge(putativeGraph.g);
     for (EdgeMapAlias::MapIt it(cutMap); it!=INVALID; ++it, ++itEdge)
     {
-      if (*it)  
+      if (*it)
         putativeGraph.g.erase(itEdge); // remove the not bi-edge element
     }
   }
 
   // Graph is bi-edge connected, but still many connected components can exist
   // Keep only the largest one
-  STLPairWiseMatches matches_filtered;
+  PairWiseMatches matches_filtered;
   int connectedComponentCount = lemon::countConnectedComponents(putativeGraph.g);
   std::cout << "\n"
     << "GlobalReconstructionEngine::CleanGraph() :: => connected Component : "
@@ -1112,7 +949,7 @@ bool GlobalReconstructionEngine::CleanGraph()
           {
             size_t Idu = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.target(e)];
             size_t Idv = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.source(e)];
-            STLPairWiseMatches::iterator iterF = _map_Matches_F.find(std::make_pair(Idu,Idv));
+            PairWiseMatches::iterator iterF = _map_Matches_F.find(std::make_pair(Idu,Idv));
             if( iterF != _map_Matches_F.end())
             {
               matches_filtered.insert(*iterF);
@@ -1141,7 +978,7 @@ bool GlobalReconstructionEngine::CleanGraph()
           }
           //putativeGraph.g.erase(*iter2);
         }
-      }      
+      }
     }
   }
 
@@ -1159,7 +996,7 @@ bool GlobalReconstructionEngine::CleanGraph()
 }
 
 void GlobalReconstructionEngine::ComputeRelativeRt(
-  std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > & vec_relatives)
+  Map_RelativeRT & vec_relatives)
 {
   // For each pair, compute the rotation from pairwise point matches:
 
@@ -1169,7 +1006,7 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
 #endif
   for (int i = 0; i < _map_Matches_F.size(); ++i)
   {
-    map< std::pair<size_t, size_t>, vector<IndMatch> >::const_iterator iter = _map_Matches_F.begin();
+    PairWiseMatches::const_iterator iter = _map_Matches_F.begin();
     std::advance(iter, i);
 
     const size_t I = iter->first.first;
@@ -1358,9 +1195,7 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
           ceres::Solve(options, &problem, &summary);
 
           // If no error, get back refined parameters
-          if (summary.termination_type != ceres::DID_NOT_RUN &&
-              summary.termination_type != ceres::USER_ABORT &&
-              summary.termination_type != ceres::NUMERICAL_FAILURE)
+          if (summary.IsSolutionUsable())
           {
             // Get back 3D points
             size_t k = 0;
@@ -1380,7 +1215,6 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
               ceres::AngleAxisToRotationMatrix(cam, R.data());
 
               Vec3 t(cam[3], cam[4], cam[5]);
-              double focal = cam[6];
 
               // Update the camera
               Mat3 K = cam1._K;
@@ -1395,7 +1229,6 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
               ceres::AngleAxisToRotationMatrix(cam, R.data());
 
               Vec3 t(cam[3], cam[4], cam[5]);
-              double focal = cam[6];
 
               // Update the camera
               Mat3 K = cam2._K;
@@ -1443,14 +1276,14 @@ void GlobalReconstructionEngine::tripletListing(std::vector< graphUtils::Triplet
 
 void GlobalReconstructionEngine::tripletRotationRejection(
   std::vector< graphUtils::Triplet > & vec_triplets,
-  std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > & map_relatives)
+  Map_RelativeRT & map_relatives)
 {
-  std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> > map_relatives_validated;
+  Map_RelativeRT map_relatives_validated;
 
   // DETECTION OF ROTATION OUTLIERS
   std::vector< graphUtils::Triplet > vec_triplets_validated;
 
-  std::vector<double> vec_errToIdentityPerTriplet;
+  std::vector<float> vec_errToIdentityPerTriplet;
   vec_errToIdentityPerTriplet.reserve(vec_triplets.size());
   // Compute for each length 3 cycles: the composition error
   //  Error to identity rotation.
@@ -1488,10 +1321,10 @@ void GlobalReconstructionEngine::tripletRotationRejection(
       RKI = map_relatives.find(ik)->second.first.transpose();
 
     Mat3 Rot_To_Identity = RIJ * RJK * RKI; // motion composition
-    double angularErrorDegree = R2D(getRotationMagnitude(Rot_To_Identity));
+    float angularErrorDegree = static_cast<float>(R2D(getRotationMagnitude(Rot_To_Identity)));
     vec_errToIdentityPerTriplet.push_back(angularErrorDegree);
 
-    if (angularErrorDegree < 2.0)
+    if (angularErrorDegree < 2.0f)
     {
       vec_triplets_validated.push_back(triplet);
 
@@ -1516,11 +1349,11 @@ void GlobalReconstructionEngine::tripletRotationRejection(
 
   // Display statistics about rotation triplets error:
   std::cout << "\nStatistics about rotation triplets:" << std::endl;
-  minMaxMeanMedian<double>(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end());
+  minMaxMeanMedian<float>(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end());
 
   std::sort(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end());
 
-  Histogram<double> histo(0.0, *max_element(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end()), 180);
+  Histogram<float> histo(0.0f, *max_element(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end()), 180);
   histo.Add(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end());
 
   svgHisto histosvg;
@@ -1529,7 +1362,7 @@ void GlobalReconstructionEngine::tripletRotationRejection(
                 stlplus::create_filespec(this->_sOutDirectory, "Triplet_Rotation_Residual_180.svg"),
                 600,300);
 
-  histo = Histogram<double>(0.0, *max_element(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end()), 20);
+  histo = Histogram<float>(0.0f, *max_element(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end()), 20);
   histo.Add(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end());
 
   histosvg.draw(histo.GetHist(),
@@ -1592,7 +1425,7 @@ void GlobalReconstructionEngine::tripletRotationRejection(
         size_t Idv = (*putativeGraph.map_nodeMapIndex)[sg.v(iter)];
 
         //-- Clean relatives matches
-        STLPairWiseMatches::iterator iterF = _map_Matches_F.find(std::make_pair(Idu,Idv));
+        PairWiseMatches::iterator iterF = _map_Matches_F.find(std::make_pair(Idu,Idv));
         if (iterF != _map_Matches_F.end())
         {
           _map_Matches_F.erase(iterF);
@@ -1605,7 +1438,7 @@ void GlobalReconstructionEngine::tripletRotationRejection(
         }
 
         //-- Clean relative motions
-        std::map< std::pair<size_t,size_t>, std::pair<Mat3, Vec3> >::iterator iterF2 = map_relatives.find(std::make_pair(Idu,Idv));
+        Map_RelativeRT::iterator iterF2 = map_relatives.find(std::make_pair(Idu,Idv));
         if (iterF2 != map_relatives.end())
         {
           map_relatives.erase(iterF2);
@@ -1662,7 +1495,7 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
   std::vector<double> vec_Rot(map_camera.size()*3, 0.0);
   size_t i = 0;
   std::map<size_t,size_t> map_camIndexToNumber;
-  for (std::map<size_t,PinholeCamera >::const_iterator iter = map_camera.begin();
+  for (Map_Camera::const_iterator iter = map_camera.begin();
     iter != map_camera.end();  ++iter, ++i)
   {
     // in order to map camera index to contiguous number
@@ -1698,7 +1531,6 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
   for (STLMAPTracks::const_iterator iterTracks = map_tracksSelected.begin();
     iterTracks != map_tracksSelected.end(); ++iterTracks, ++i)
   {
-    const size_t trackId = iterTracks->first;
     // Look through the track and add point position
     const tracks::submapTrack & track = iterTracks->second;
 
@@ -1739,7 +1571,7 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
   // Set a LossFunction to be less penalized by false measurements
   //  - set it to NULL if you don't want use a lossFunction.
   ceres::LossFunction * p_LossFunction = new ceres::HuberLoss(Square(4.0));
-  for (size_t i = 0; i < ba_problem.num_observations(); ++i) {
+  for (i = 0; i < ba_problem.num_observations(); ++i) {
     // Each Residual block takes a point and a camera as input and outputs a 2
     // dimensional residual. Internally, the cost function stores the observed
     // image location and compares the reprojection against the observation.
@@ -1775,8 +1607,8 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
   options.minimizer_progress_to_stdout = false;
   options.logging_type = ceres::SILENT;
 #ifdef USE_OPENMP
-  options.num_threads = omp_get_num_threads();
-  options.num_linear_solver_threads = omp_get_num_threads();
+  options.num_threads = omp_get_max_threads();
+  options.num_linear_solver_threads = omp_get_max_threads();
 #endif // USE_OPENMP
 
   // Solve BA
@@ -1785,9 +1617,7 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
   std::cout << summary.FullReport() << std::endl;
 
   // If no error, get back refined parameters
-  if (summary.termination_type != ceres::DID_NOT_RUN &&
-      summary.termination_type != ceres::USER_ABORT &&
-      summary.termination_type != ceres::NUMERICAL_FAILURE)
+  if (summary.IsSolutionUsable())
   {
     // Get back 3D points
     i = 0;
@@ -1802,7 +1632,7 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
 
     // Get back camera
     i = 0;
-    for (std::map<size_t,PinholeCamera >::iterator iter = map_camera.begin();
+    for (Map_Camera::iterator iter = map_camera.begin();
       iter != map_camera.end(); ++iter, ++i)
     {
       const double * cam = ba_problem.mutable_cameras() + i*3;
@@ -1839,7 +1669,7 @@ void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
 }
 
 void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
-    std::map<size_t, PinholeCamera> & map_camera,
+    Map_Camera & map_camera,
     std::vector<Vec3> & vec_allScenes,
     const STLMAPTracks & map_tracksSelected)
 {
@@ -1876,7 +1706,7 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
   // Fill camera
   size_t i = 0;
   std::map<size_t,size_t> map_camIndexToNumber;
-  for (std::map<size_t,PinholeCamera >::const_iterator iter = map_camera.begin();
+  for (Map_Camera::const_iterator iter = map_camera.begin();
     iter != map_camera.end();  ++iter, ++i)
   {
     // in order to map camera index to contiguous number
@@ -1913,7 +1743,6 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
   for (STLMAPTracks::const_iterator iterTracks = map_tracksSelected.begin();
     iterTracks != map_tracksSelected.end(); ++iterTracks, ++i)
   {
-    const size_t trackId = iterTracks->first;
     // Look through the track and add point position
     const tracks::submapTrack & track = iterTracks->second;
 
@@ -1921,8 +1750,8 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
       iterTrack != track.end();
       ++iterTrack)
     {
-      size_t imageId = iterTrack->first;
-      size_t featId = iterTrack->second;
+      const size_t imageId = iterTrack->first;
+      const size_t featId = iterTrack->second;
 
       // If imageId reconstructed :
       //  - Add measurements (the feature position)
@@ -1988,8 +1817,8 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
   options.minimizer_progress_to_stdout = false;
   options.logging_type = ceres::SILENT;
 #ifdef USE_OPENMP
-  options.num_threads = omp_get_num_threads();
-  options.num_linear_solver_threads = omp_get_num_threads();
+  options.num_threads = omp_get_max_threads();
+  options.num_linear_solver_threads = omp_get_max_threads();
 #endif // USE_OPENMP
 
   // Solve BA
@@ -1998,9 +1827,7 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
   std::cout << summary.FullReport() << std::endl;
 
   // If no error, get back refined parameters
-  if (summary.termination_type != ceres::DID_NOT_RUN &&
-      summary.termination_type != ceres::USER_ABORT &&
-      summary.termination_type != ceres::NUMERICAL_FAILURE)
+  if (summary.IsSolutionUsable())
   {
     // Get back 3D points
     i = 0;
@@ -2015,7 +1842,7 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
 
     // Get back camera
     i = 0;
-    for (std::map<size_t,PinholeCamera >::iterator iter = map_camera.begin();
+    for (Map_Camera::iterator iter = map_camera.begin();
       iter != map_camera.end(); ++iter, ++i)
     {
       const double * cam = ba_problem.mutable_cameras() + i*6;
@@ -2024,7 +1851,6 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
       ceres::AngleAxisToRotationMatrix(cam, R.data());
 
       Vec3 t(cam[3], cam[4], cam[5]);
-      double focal = cam[6];
 
       // Update the camera
       Mat3 K = iter->second._K;
@@ -2071,13 +1897,24 @@ void GlobalReconstructionEngine::ColorizeTracks(
   // Colorize each track
   //  Start with the most representative image
   //    and iterate to provide a color to each 3D point
+
   {
-    C_Progress_display my_progress_bar(map_tracks.size());
+    C_Progress_display my_progress_bar(map_tracks.size(),
+                                       std::cout,
+                                       "\nCompute scene structure color\n");
 
     vec_tracksColor.resize(map_tracks.size());
 
+    //Build a list of contiguous index for the trackIds
+    std::map<size_t, size_t> trackIds_to_contiguousIndexes;
+    size_t cpt = 0;
+    for (openMVG::tracks::STLMAPTracks::const_iterator it = map_tracks.begin();
+      it != map_tracks.end(); ++it, ++cpt)
+    {
+      trackIds_to_contiguousIndexes[it->first] = cpt;
+    }
+
     // The track list that will be colored (point removed during the process)
-    openMVG::tracks::STLMAPTracks::const_iterator iterTBegin = map_tracks.begin();
     openMVG::tracks::STLMAPTracks mapTrackToColor(map_tracks);
     while( !mapTrackToColor.empty() )
     {
@@ -2130,7 +1967,7 @@ void GlobalReconstructionEngine::ColorizeTracks(
       for (openMVG::tracks::STLMAPTracks::const_iterator
         iterT = mapTrackToColor.begin();
         iterT != mapTrackToColor.end();
-      ++iterT)
+        ++iterT)
       {
         const size_t trackId = iterT->first;
         const tracks::submapTrack & track = mapTrackToColor[trackId];
@@ -2139,11 +1976,11 @@ void GlobalReconstructionEngine::ColorizeTracks(
         if (iterF != track.end())
         {
           // Color the track
-          size_t featId = iterF->second;
+          const size_t featId = iterF->second;
           const SIOPointFeature & feat = _map_feats.find(indexImage)->second[featId];
-          RGBColor color = image(feat.y(), feat.x());
+          const RGBColor color = image(feat.y(), feat.x());
 
-          vec_tracksColor[std::distance ( iterTBegin, map_tracks.find(trackId) )] = Vec3(color.r(), color.g(), color.b());
+          vec_tracksColor[ trackIds_to_contiguousIndexes[trackId] ] = Vec3(color.r(), color.g(), color.b());
           set_toRemove.insert(trackId);
           ++my_progress_bar;
         }

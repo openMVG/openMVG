@@ -267,9 +267,7 @@ bool estimate_T_triplet(
     ceres::Solve(options, &problem, &summary);
 
     // If convergence and no error, get back refined parameters
-    if (summary.termination_type != ceres::DID_NOT_RUN &&
-      summary.termination_type != ceres::USER_ABORT &&
-      summary.termination_type != ceres::NUMERICAL_FAILURE)
+    if (summary.IsSolutionUsable())
     {
       size_t i = 0;
       // Get back updated cameras
@@ -291,7 +289,7 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
   const std::map<size_t, Mat3> & map_globalR,
   const std::vector< graphUtils::Triplet > & vec_triplets,
   std::vector<openMVG::lInfinityCV::relativeInfo > & vec_initialEstimates,
-  tracks::mapPairWiseMatches & newpairMatches) const
+  matching::PairWiseMatches & newpairMatches) const
 {
   // The same K matrix is used by all the camera
   const Mat3 _K = _vec_intrinsicGroups[0].m_K;
@@ -314,7 +312,7 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
     const graphUtils::Triplet & triplet = vec_triplets[i];
     const size_t I = triplet.i, J = triplet.j , K = triplet.k;
 
-    STLPairWiseMatches map_matchesIJK;
+    PairWiseMatches map_matchesIJK;
     if(_map_Matches_F.find(std::make_pair(I,J)) != _map_Matches_F.end())
       map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(I,J)));
     else
@@ -398,7 +396,6 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
     std::vector<size_t> vec_commonTracksPerTriplets;
     for (size_t i = 0; i < vec_possibleTriplets.size(); ++i)
     {
-      const graphUtils::Triplet & triplet = vec_triplets[vec_possibleTriplets[i]];
       vec_commonTracksPerTriplets.push_back(map_tracksPerTriplets[vec_possibleTriplets[i]]);
     }
     //-- If current edge already computed continue
@@ -410,7 +407,7 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
     sort_index_helper(packet_vec, &vec_commonTracksPerTriplets[0]);
 
     std::vector<size_t> vec_possibleTripletsSorted;
-    for (int i = 0; i < vec_commonTracksPerTriplets.size(); ++i) {
+    for (size_t i = 0; i < vec_commonTracksPerTriplets.size(); ++i) {
       vec_possibleTripletsSorted.push_back( vec_possibleTriplets[packet_vec[i].index] );
     }
     vec_possibleTriplets = vec_possibleTripletsSorted;
@@ -420,9 +417,9 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
     for (size_t i = 0; i < vec_possibleTriplets.size(); ++i)
     {
       const graphUtils::Triplet & triplet = vec_triplets[vec_possibleTriplets[i]];
-      size_t I = triplet.i, J = triplet.j , K = triplet.k;
+      const size_t I = triplet.i, J = triplet.j , K = triplet.k;
       {
-        STLPairWiseMatches map_matchesIJK;
+        PairWiseMatches map_matchesIJK;
         if(_map_Matches_F.find(std::make_pair(I,J)) != _map_Matches_F.end())
           map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(I,J)));
         else
@@ -515,7 +512,6 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
               STLMAPTracks::const_iterator iterTracks = map_tracksCommon.begin();
               std::advance(iterTracks, *iterInliers);
               const submapTrack & subTrack = iterTracks->second;
-              size_t iTriplet = 0;
               submapTrack::const_iterator iterI, iterJ, iterK;
               iterI = iterJ = iterK = subTrack.begin();
               std::advance(iterJ,1);

@@ -85,9 +85,9 @@ struct tisXisTrifocalSolver {
     using namespace openMVG::lInfinityCV;
 
 #ifdef OPENMVG_HAVE_MOSEK
-    MOSEK_SolveWrapper LPsolver(vec_solution.size());
+    MOSEK_SolveWrapper LPsolver(static_cast<int>(vec_solution.size()));
 #else
-    OSI_CLP_SolverWrapper LPsolver(vec_solution.size());
+    OSI_CLP_SolverWrapper LPsolver(static_cast<int>(vec_solution.size()));
 #endif
 
     Translation_Structure_L1_ConstraintBuilder cstBuilder(vec_KR, megaMat);

@@ -50,7 +50,7 @@ typename Kernel::Model RANSAC(
   double best_inlier_ratio = 0.0;
   typename Kernel::Model best_model;
 
-  // Test if we have sufficient points to for the kernel.
+  // Test if we have sufficient points for the kernel.
   if (total_samples < min_samples) {
     if (best_inliers) {
       best_inliers->resize(0);

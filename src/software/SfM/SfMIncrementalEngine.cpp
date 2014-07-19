@@ -329,26 +329,27 @@ bool IncrementalReconstructionEngine::InitialPairChoice( std::pair<size_t, size_
       << "---------------------------------------------------\n"
       << "IncrementalReconstructionEngine::InitialPairChoice\n"
       << "---------------------------------------------------\n"
-      << " The best F matrix validated pair are displayed\n"
+      << " The best F matrix validated pairs are displayed\n"
       << " Choose one pair manually by typing the two integer indexes\n"
       << "---------------------------------------------------\n"
       << std::endl;
 
     // Display to the user the 10 top Fundamental matches pair
     std::vector< size_t > vec_NbMatchesPerPair;
-    for (openMVG::tracks::STLPairWiseMatches::const_iterator iter = _map_Matches_F.begin();
+    for (openMVG::matching::PairWiseMatches::const_iterator
+      iter = _map_Matches_F.begin();
       iter != _map_Matches_F.end(); ++iter)
     {
       vec_NbMatchesPerPair.push_back(iter->second.size());
     }
     // sort in descending order
     using namespace indexed_sort;
-    std::vector< sort_index_packet_descend< double, int> > packet_vec(vec_NbMatchesPerPair.size());
+    std::vector< sort_index_packet_descend< size_t, size_t> > packet_vec(vec_NbMatchesPerPair.size());
     sort_index_helper(packet_vec, &vec_NbMatchesPerPair[0], std::min((size_t)10, _map_Matches_F.size()));
 
     for (size_t i = 0; i < std::min((size_t)10, _map_Matches_F.size()); ++i) {
       size_t index = packet_vec[i].index;
-      openMVG::tracks::STLPairWiseMatches::const_iterator iter = _map_Matches_F.begin();
+      openMVG::matching::PairWiseMatches::const_iterator iter = _map_Matches_F.begin();
       std::advance(iter, index);
       std::cout << "(" << iter->first.first << "," << iter->first.second <<")\t\t"
         << iter->second.size() << " matches" << std::endl;
@@ -452,8 +453,8 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
 
   std::cout << std::endl
     << "-- Robust Essential Matrix estimation " << std::endl
-    << "-- " << x1.cols() << " / " << vec_inliers.size() << " tentative/inliers" << std::endl
-    << "-- Threshold: " << errorMax << std::endl;
+    << "--  #tentative/#inliers: " << x1.cols() << " / " << vec_inliers.size() << std::endl
+    << "--  Threshold: " << errorMax << std::endl;
 
   //--> Estimate the best possible Rotation/Translation from E
   Mat3 RJ;
@@ -532,9 +533,9 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
     }
   }
 
-  std::cout << "--Triangulated 3D points count: " << vec_inliers.size() << "\n";
-  std::cout << "--Triangulated 3D points count under threshold: " << _reconstructorData.map_3DPoints.size()  << "\n";
-  std::cout << "--Putative correspondences: " << x1.cols()  << "\n";
+  std::cout << "--#Triangulated 3D points: " << vec_inliers.size() << "\n";
+  std::cout << "--#Triangulated 3D points under threshold: " << _reconstructorData.map_3DPoints.size()  << "\n";
+  std::cout << "--#Putative correspondences: " << x1.cols()  << "\n";
 
   _set_remainingImageId.erase(I);
   _set_remainingImageId.erase(J);
@@ -557,8 +558,8 @@ bool IncrementalReconstructionEngine::MakeInitialPair3D(const std::pair<size_t,s
     Vec6 & intrinsicJ = _map_IntrinsicsPerGroup[_map_IntrinsicIdPerImageId[J]];
     intrinsicJ<< camJ._f, camJ._ppx, camJ._ppy, camJ._k1, camJ._k2, camJ._k3;
 
-    _reconstructorData.map_ACThreshold.insert(std::make_pair(I, errorMax));
-    _reconstructorData.map_ACThreshold.insert(std::make_pair(J, errorMax));
+    _map_ACThreshold.insert(std::make_pair(I, errorMax));
+    _map_ACThreshold.insert(std::make_pair(J, errorMax));
 
     _vec_added_order.push_back(I);
     _vec_added_order.push_back(J);
@@ -697,8 +698,8 @@ bool IncrementalReconstructionEngine::FindImagesWithPossibleResection(std::vecto
     vec_possible_indexes.push_back(vec_putative[0].first);
 
     // TEMPORARY
-    std::cout << std::endl << std::endl << "TEMPORARY return only the best image" << std::endl;
-    return true;
+    // std::cout << std::endl << std::endl << "TEMPORARY return only the best image" << std::endl;
+    // return true;
     // END TEMPORARY
 
     const size_t threshold = static_cast<size_t>(dPourcent * M);
@@ -769,9 +770,9 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
   std::cout << std::endl << std::endl
     << " Tracks in: " << imageIndex << std::endl
     << " \t" << map_tracksCommon.size() << std::endl
-    << " Reconstructed tracks:" << std::endl
+    << " #Reconstructed tracks:" << std::endl
     << " \t" << _reconstructorData.set_trackId.size() << std::endl
-    << " Tracks Valid for resection:" << std::endl
+    << " #Tracks Valid for resection:" << std::endl
     << " \t" << set_trackIdForResection.size() << std::endl;
 
   // Normally it must not crash even if it have 0 matches
@@ -815,8 +816,8 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
     << "-------------------------------" << std::endl
     << "-- Robust Resection of camera index: " << imageIndex << std::endl
     << "-- Resection status: " << bResection << std::endl
-    << "-- Nb points used for Resection: " << vec_featIdForResection.size() << std::endl
-    << "-- Nb points validated by robust Resection: " << vec_inliers.size() << std::endl
+    << "-- #Points used for Resection: " << vec_featIdForResection.size() << std::endl
+    << "-- #Points validated by robust Resection: " << vec_inliers.size() << std::endl
     << "-- Threshold: " << errorMax << std::endl
     << "-------------------------------" << std::endl;
 
@@ -868,7 +869,7 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
       intrinsic << cam._f, cam._ppx, cam._ppy, cam._k1, cam._k2, cam._k3;
     }
   }
-  _reconstructorData.map_ACThreshold.insert(std::make_pair(imageIndex, errorMax));
+  _map_ACThreshold.insert(std::make_pair(imageIndex, errorMax));
   _set_remainingImageId.erase(imageIndex);
 
   // Evaluate residuals:
@@ -894,7 +895,6 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
     jsxGraph.close();
     _htmlDocStream->pushInfo(jsxGraph.toStr());
 
-    double maxi = 0.0;
     if(bResection)  {
 
       Histogram<double> histo(0, 2*errorMax, 10);
@@ -991,31 +991,31 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
             stlplus::create_filespec(_sOutDirectory, os.str(), "ply"));
         }
 
-        // Analyse 3D reconstructed point
+        // Analyze 3D reconstructed point
         //  - Check positive depth
         //  - Check angle (small angle leads imprecise triangulation)
         const BrownPinholeCamera & cam1 = _reconstructorData.map_Camera.find(I)->second;
         const BrownPinholeCamera & cam2 = _reconstructorData.map_Camera.find(J)->second;
 
+        // Threshold associated to each camera (min value of 4 pixels, to let BA refine if necessary)
+        const double maxThI = std::max(4.0, _map_ACThreshold[I]);
+        const double maxThJ = std::max(4.0, _map_ACThreshold[J]);
+
         //- Add reconstructed point to the reconstruction data
         size_t cardPointsBefore = _reconstructorData.map_3DPoints.size();
         for (size_t i = 0; i < vec_tracksToAdd.size(); ++i)
         {
-          size_t trackId = vec_tracksToAdd[i];
+          const size_t trackId = vec_tracksToAdd[i];
           const Vec3 & cur3DPt = vec_3dPoint[i];
 
           if ( _reconstructorData.set_trackId.find(trackId) == _reconstructorData.set_trackId.end())
           {
-            //Use error related to the current view with a max value of 4 pixels
-            double maxTh = std::max(4.0, _reconstructorData.map_ACThreshold[I]);
-            maxTh = std::max(4.0, _reconstructorData.map_ACThreshold[J]);
-
-            Vec2 x1 = vec_featI[vec_index[i]._i].coords().cast<double>();
-            Vec2 x2 = vec_featJ[vec_index[i]._j].coords().cast<double>();
+            const Vec2 x1 = vec_featI[vec_index[i]._i].coords().cast<double>();
+            const Vec2 x2 = vec_featJ[vec_index[i]._j].coords().cast<double>();
 
             bool bReproj =
-              cam1.Residual(cur3DPt, x1) < maxTh &&
-              cam2.Residual(cur3DPt, x2) < maxTh;
+              cam1.Residual(cur3DPt, x1) < maxThI &&
+              cam2.Residual(cur3DPt, x2) < maxThJ;
 
             if ( bReproj
                 && cam1.Depth(cur3DPt) > 0
@@ -1032,11 +1032,10 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
           }
         }
 
-        std::cout << "--Triangulated 3D points [" << I << "-" << J <<"] count: " << vec_3dPoint.size()
-          << "\t Validated/Possible: " << _reconstructorData.map_3DPoints.size() - cardPointsBefore
+        std::cout << "--Triangulated 3D points [" << I << "-" << J <<"]: "
+          << "\t #Validated/#Possible: " << _reconstructorData.map_3DPoints.size() - cardPointsBefore
           << "/" << vec_3dPoint.size() << std::endl
-          << "to Add: " << vec_tracksToAdd.size() << std::endl
-        << std::endl <<"Size after " << _reconstructorData.set_trackId.size() << std::endl;
+          <<" #3DPoint for the entire scene: " << _reconstructorData.set_trackId.size() << std::endl;
 
         if(bVisual) {
           ostringstream sFileName;
@@ -1075,22 +1074,18 @@ size_t IncrementalReconstructionEngine::badTrackRejector(double dPrecision)
     for( tracks::submapTrack::const_iterator iterTrack = track.begin();
       iterTrack != track.end(); ++iterTrack)
     {
-      size_t imageId = iterTrack->first;
-      size_t featId = iterTrack->second;
+      const size_t imageId = iterTrack->first;
+      const size_t featId = iterTrack->second;
       const BrownPinholeCamera & cam = _reconstructorData.map_Camera.find(imageId)->second;
 
       if ( set_camIndex.find(imageId) != set_camIndex.end())  {
         const std::vector<SIOPointFeature> & vec_feats = _map_feats[imageId];
         const SIOPointFeature & ptFeat = vec_feats[featId];
 
-        const std::pair<size_t, size_t> & imageDim = std::make_pair(
-            _vec_intrinsicGroups[_vec_camImageNames[imageId].m_intrinsicId].m_w,
-            _vec_intrinsicGroups[_vec_camImageNames[imageId].m_intrinsicId].m_h );
-
         double dResidual2D = cam.Residual(pt3D, ptFeat.coords().cast<double>());
 
-        Vec3 camPos = cam._C;
-        Vec3 dir = (pt3D - camPos).normalized();
+        const Vec3 camPos = cam._C;
+        const Vec3 dir = (pt3D - camPos).normalized();
         if (iterTrack == track.begin())
         {
           originRay = dir;
@@ -1112,7 +1107,7 @@ size_t IncrementalReconstructionEngine::badTrackRejector(double dPrecision)
     {
       for( tracks::submapTrack::const_iterator iterTrack = track.begin();
         iterTrack != track.end(); ++iterTrack)  {
-          size_t imageId = iterTrack->first;
+          const size_t imageId = iterTrack->first;
           map_trackToErase[trackId].insert(imageId);
       }
     }
@@ -1123,7 +1118,7 @@ size_t IncrementalReconstructionEngine::badTrackRejector(double dPrecision)
   for (std::map<size_t, std::set<size_t> >::const_iterator iterT = map_trackToErase.begin();
     iterT != map_trackToErase.end(); ++iterT)
   {
-    size_t trackId = iterT->first;
+    const size_t trackId = iterT->first;
 
     const std::set<size_t> setI = iterT->second;
     // Erase the image index reference
@@ -1142,9 +1137,9 @@ size_t IncrementalReconstructionEngine::badTrackRejector(double dPrecision)
     }
   }
 
-  std::cout << "\nrejected track: " << set_trackToErase.size() << std::endl
-    << "rejected Entire track: " << rejectedTrack << std::endl
-    << "rejected Measurement: " << rejectedMeasurement << std::endl;
+  std::cout << "\n#rejected track: " << set_trackToErase.size() << std::endl
+    << "#rejected Entire track: " << rejectedTrack << std::endl
+    << "#rejected Measurement: " << rejectedMeasurement << std::endl;
   return rejectedTrack + rejectedMeasurement;
 }
 
@@ -1154,10 +1149,22 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_tra
   //  Start with the most representative image
   //    and iterate to provide a color to each 3D point
   {
+    C_Progress_display my_progress_bar(_map_reconstructed.size(),
+                                       std::cout,
+                                       "\nCompute scene structure color\n");
+
     vec_tracksColor.resize(_map_reconstructed.size());
 
+    //Build a list of contiguous index for the trackIds
+    std::map<size_t, size_t> trackIds_to_contiguousIndexes;
+    size_t cpt = 0;
+    for (openMVG::tracks::STLMAPTracks::const_iterator it = _map_reconstructed.begin();
+      it != _map_reconstructed.end(); ++it, ++cpt)
+    {
+      trackIds_to_contiguousIndexes[it->first] = cpt;
+    }
+
     // The track list that will be colored (point removed during the process)
-    openMVG::tracks::STLMAPTracks::const_iterator iterTBegin = _map_reconstructed.begin();
     openMVG::tracks::STLMAPTracks mapTrackToColor(_map_reconstructed);
     while( !mapTrackToColor.empty() )
     {
@@ -1219,12 +1226,13 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_tra
         if (iterF != track.end())
         {
           // Color the track
-          size_t featId = iterF->second;
+          const size_t featId = iterF->second;
           const SIOPointFeature & feat = _map_feats.find(indexImage)->second[featId];
           RGBColor color = image(feat.y(), feat.x());
 
-          vec_tracksColor[std::distance ( iterTBegin, _map_reconstructed.find(trackId) )] = Vec3(color.r(), color.g(), color.b());
+          vec_tracksColor[ trackIds_to_contiguousIndexes[trackId] ] = Vec3(color.r(), color.g(), color.b());
           set_toRemove.insert(trackId);
+          ++my_progress_bar;
         }
       }
       // Remove colored track
@@ -1263,10 +1271,10 @@ void IncrementalReconstructionEngine::BundleAdjustment()
     nbmeasurements += track.size();
   }
 
-  std::cout << "nbCams: " << nbCams << std::endl
-    << "nbIntrinsics: " << nbIntrinsics << std::endl
-    << "nbPoints3D: " << nbPoints3D << std::endl
-    << "measurements: " << nbmeasurements << std::endl;
+  std::cout << "#Cams: " << nbCams << std::endl
+    << "#Intrinsics: " << nbIntrinsics << std::endl
+    << "#Points3D: " << nbPoints3D << std::endl
+    << "#measurements: " << nbmeasurements << std::endl;
 
   // Setup a BA problem
   using namespace openMVG::bundle_adjustment;
@@ -1294,7 +1302,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
   std::set<size_t> set_camIndex;
   std::map<size_t,size_t> map_camIndexToNumber_extrinsic, map_camIndexToNumber_intrinsic;
   size_t cpt = 0;
-  for (std::map<size_t, BrownPinholeCamera >::const_iterator iter = _reconstructorData.map_Camera.begin();
+  for (reconstructorHelper::Map_BrownPinholeCamera::const_iterator iter = _reconstructorData.map_Camera.begin();
     iter != _reconstructorData.map_Camera.end();  ++iter, ++cpt)
   {
     // in order to map camera index to contiguous number
@@ -1368,8 +1376,8 @@ void IncrementalReconstructionEngine::BundleAdjustment()
       iterTrack != track.end();
       ++iterTrack)
     {
-      size_t imageId = iterTrack->first;
-      size_t featId = iterTrack->second;
+      const size_t imageId = iterTrack->first;
+      const size_t featId = iterTrack->second;
 
       // If imageId reconstructed:
       //  - Add measurements (the feature position)
@@ -1463,8 +1471,8 @@ void IncrementalReconstructionEngine::BundleAdjustment()
   options.minimizer_progress_to_stdout = false;
   options.logging_type = ceres::SILENT;
 #ifdef USE_OPENMP
-  options.num_threads = omp_get_num_threads();
-  options.num_linear_solver_threads = omp_get_num_threads();
+  options.num_threads = omp_get_max_threads();
+  options.num_linear_solver_threads = omp_get_max_threads();
 #endif // USE_OPENMP
 
   // Solve BA
@@ -1473,9 +1481,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
   std::cout << summary.FullReport() << std::endl;
 
   // If no error, get back refined parameters
-  if (summary.termination_type != ceres::DID_NOT_RUN &&
-      summary.termination_type != ceres::USER_ABORT &&
-      summary.termination_type != ceres::NUMERICAL_FAILURE)
+  if (summary.IsSolutionUsable())
   {
     // Display statistics about the minimization
     std::cout << std::endl
@@ -1495,11 +1501,11 @@ void IncrementalReconstructionEngine::BundleAdjustment()
     }
 
     // Get back camera external and intrinsic parameters
-    for (std::map<size_t, BrownPinholeCamera >::iterator iter = _reconstructorData.map_Camera.begin();
+    for (reconstructorHelper::Map_BrownPinholeCamera::iterator iter = _reconstructorData.map_Camera.begin();
       iter != _reconstructorData.map_Camera.end(); ++iter)
     {
       const size_t imageId = iter->first;
-      size_t extrinsicId = map_camIndexToNumber_extrinsic[imageId];
+      const size_t extrinsicId = map_camIndexToNumber_extrinsic[imageId];
       // Get back extrinsic pointer
       const double * camE = ba_problem.mutable_cameras_extrinsic() + extrinsicId * 6;
       Mat3 R;
@@ -1508,7 +1514,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
       Vec3 t(camE[3], camE[4], camE[5]);
 
       // Get back the intrinsic group of the camera
-      size_t intrinsicId = map_camIndexToNumber_intrinsic[imageId];
+      const size_t intrinsicId = map_camIndexToNumber_intrinsic[imageId];
       const double * camIntrinsics = ba_problem.mutable_cameras_intrinsic() + intrinsicId * 6;
       // Update the camera with update intrinsic and extrinsic parameters
       using namespace pinhole_brown_reprojectionError;
@@ -1554,7 +1560,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
 double IncrementalReconstructionEngine::ComputeResidualsHistogram(Histogram<double> * histo)
 {
   std::set<size_t> set_camIndex;
-  for (std::map<size_t, BrownPinholeCamera>::const_iterator iter = _reconstructorData.map_Camera.begin();
+  for (reconstructorHelper::Map_BrownPinholeCamera::const_iterator iter = _reconstructorData.map_Camera.begin();
     iter != _reconstructorData.map_Camera.end();
     ++iter)
   {
@@ -1579,15 +1585,13 @@ double IncrementalReconstructionEngine::ComputeResidualsHistogram(Histogram<doub
       iterTrack != track.end();
       ++iterTrack)
     {
-      size_t imageId = iterTrack->first;
-      size_t featId = iterTrack->second;
+      const size_t imageId = iterTrack->first;
+      const size_t featId = iterTrack->second;
 
       if ( set_camIndex.find(imageId) != set_camIndex.end())
       {
         const std::vector<SIOPointFeature> & vec_feats = _map_feats[imageId];
         const SIOPointFeature & ptFeat = vec_feats[featId];
-        const std::pair<size_t, size_t> & imageDim = std::make_pair(_vec_intrinsicGroups[_vec_camImageNames[imageId].m_intrinsicId ].m_w,
-                                                                    _vec_intrinsicGroups[_vec_camImageNames[imageId].m_intrinsicId ].m_h );
         const BrownPinholeCamera & cam = _reconstructorData.map_Camera.find(imageId)->second;
 
         double dResidual = cam.Residual(pt3D, ptFeat.coords().cast<double>());
@@ -1610,7 +1614,7 @@ double IncrementalReconstructionEngine::ComputeResidualsHistogram(Histogram<doub
     std::cout << std::endl << std::endl;
     std::cout << std::endl
       << "IncrementalReconstructionEngine::ComputeResidualsMSE." << "\n"
-      << "\t-- nbTracks:\t" << _map_reconstructed.size() << std::endl
+      << "\t-- #Tracks:\t" << _map_reconstructed.size() << std::endl
       << "\t-- Residual min:\t" << dMin << std::endl
       << "\t-- Residual median:\t" << dMedian << std::endl
       << "\t-- Residual max:\t "  << dMax << std::endl

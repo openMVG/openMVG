@@ -169,5 +169,45 @@ TEST(ParameterBlock, DetectBadLocalParameterization) {
   EXPECT_FALSE(parameter_block.SetState(&y));
 }
 
+TEST(ParameterBlock, DefaultBounds) {
+  double x[2];
+  ParameterBlock parameter_block(x, 2, -1, NULL);
+  EXPECT_EQ(parameter_block.UpperBoundForParameter(0),
+            std::numeric_limits<double>::max());
+  EXPECT_EQ(parameter_block.UpperBoundForParameter(1),
+            std::numeric_limits<double>::max());
+  EXPECT_EQ(parameter_block.LowerBoundForParameter(0),
+            -std::numeric_limits<double>::max());
+  EXPECT_EQ(parameter_block.LowerBoundForParameter(1),
+            -std::numeric_limits<double>::max());
+}
+
+TEST(ParameterBlock, SetBounds) {
+  double x[2];
+  ParameterBlock parameter_block(x, 2, -1, NULL);
+  parameter_block.SetLowerBound(0, 1);
+  parameter_block.SetUpperBound(1, 1);
+
+  EXPECT_EQ(parameter_block.LowerBoundForParameter(0), 1.0);
+  EXPECT_EQ(parameter_block.LowerBoundForParameter(1),
+            -std::numeric_limits<double>::max());
+
+  EXPECT_EQ(parameter_block.UpperBoundForParameter(0),
+            std::numeric_limits<double>::max());
+  EXPECT_EQ(parameter_block.UpperBoundForParameter(1), 1.0);
+}
+
+TEST(ParameterBlock, PlusWithBoundsConstraints) {
+  double x[] = {1.0, 0.0};
+  double delta[] = {2.0, -10.0};
+  ParameterBlock parameter_block(x, 2, -1, NULL);
+  parameter_block.SetUpperBound(0, 2.0);
+  parameter_block.SetLowerBound(1, -1.0);
+  double x_plus_delta[2];
+  parameter_block.Plus(x, delta, x_plus_delta);
+  EXPECT_EQ(x_plus_delta[0], 2.0);
+  EXPECT_EQ(x_plus_delta[1], -1.0);
+}
+
 }  // namespace internal
 }  // namespace ceres

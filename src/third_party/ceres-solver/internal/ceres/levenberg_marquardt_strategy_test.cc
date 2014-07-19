@@ -150,7 +150,7 @@ TEST(LevenbergMarquardtStrategy, CorrectDiagonalToLinearSolver) {
 
     TrustRegionStrategy::Summary summary =
         lms.ComputeStep(pso, &dsm, &residual, x);
-    EXPECT_EQ(summary.termination_type, FAILURE);
+    EXPECT_EQ(summary.termination_type, LINEAR_SOLVER_FAILURE);
   }
 }
 

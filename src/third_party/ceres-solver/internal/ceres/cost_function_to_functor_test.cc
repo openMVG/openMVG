@@ -42,9 +42,9 @@ void ExpectCostFunctionsAreEqual(const CostFunction& cost_function,
   EXPECT_EQ(cost_function.num_residuals(),
             actual_cost_function.num_residuals());
   const int num_residuals = cost_function.num_residuals();
-  const vector<int16>& parameter_block_sizes =
+  const vector<int32>& parameter_block_sizes =
       cost_function.parameter_block_sizes();
-  const vector<int16>& actual_parameter_block_sizes =
+  const vector<int32>& actual_parameter_block_sizes =
       actual_cost_function.parameter_block_sizes();
   EXPECT_EQ(parameter_block_sizes.size(),
             actual_parameter_block_sizes.size());

@@ -194,7 +194,7 @@ static void Refine_RTS(const Mat &x1,
     lm.parameters.maxfev = 1000;
     Vec xlm = Vec::Zero(7); // The deviation vector {tx,ty,tz,rotX,rotY,rotZ,S}
 
-    int info = lm.minimize(xlm);
+    lm.minimize(xlm);
 
     Vec3 transAdd = xlm.block<3,1>(0,0);
     Vec3 rot = xlm.block<3,1>(3,0);
@@ -221,7 +221,7 @@ static void Refine_RTS(const Mat &x1,
     lm.parameters.maxfev = 1000;
     Vec xlm = Vec::Zero(3); // The deviation vector {rotX,rotY,rotZ}
 
-    int info = lm.minimize(xlm);
+    lm.minimize(xlm);
 
     Vec3 rot = xlm.block<3,1>(0,0);
 

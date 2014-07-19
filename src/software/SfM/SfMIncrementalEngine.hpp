@@ -131,7 +131,7 @@ private:
   std::map<size_t, size_t> _map_IntrinsicIdPerImageId;
 
   //-- Visibility information
-  openMVG::tracks::STLPairWiseMatches _map_Matches_F; // pairwise matches for Fundamental model
+  openMVG::matching::PairWiseMatches _map_Matches_F; // pairwise matches for Fundamental model
   openMVG::tracks::STLMAPTracks _map_tracks; // reconstructed track (visibility per 3D point)
 
   //-- configuration of the reconstruction
@@ -142,13 +142,21 @@ private:
   // -----
   // Future reconstructed data
   // ----
-  reconstructorHelper _reconstructorData; // helper to save reconstructed data (Camera and 3D points)
+  
+  // helper to save reconstructed data (Camera and 3D points)
+  reconstructorHelper _reconstructorData; 
 
+  // tracks that are reconstructed during the sequential SfM process
   openMVG::tracks::STLMAPTracks _map_reconstructed;
 
-  std::set<size_t> _set_remainingImageId;  // Remaining image index that could be sequentially added
+  // Remaining image indexes that could be sequentially added
+  std::set<size_t> _set_remainingImageId;
 
-  std::vector<size_t> _vec_added_order; //store in which order image have been added
+  //store in which order image have been added
+  std::vector<size_t> _vec_added_order; 
+
+  // Per camera confidence (A contrario estimated threshold error)
+  std::map<size_t, double> _map_ACThreshold;
 
   /// List of images that belong to a common intrinsic group
   std::map<size_t, std::vector<size_t> > _map_ImagesIdPerIntrinsicGroup;

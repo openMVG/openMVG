@@ -29,6 +29,8 @@
 //-- Color harmonization solver
 #include "openMVG/color_harmonization/global_quantile_gain_offset_alignment.hpp"
 
+#include "openMVG/system/timer.hpp"
+
 #include "openMVG/graph/connectedComponent.hpp"
 #include "lemon/list_graph.h"
 
@@ -100,7 +102,7 @@ bool ColorHarmonizationEngineGlobal::Process()
 
   //-- Remove EG with poor support:
 
-  for (map< std::pair<size_t, size_t>, vector<IndMatch> >::iterator iter = _map_Matches.begin();
+  for (matching::PairWiseMatches::iterator iter = _map_Matches.begin();
     iter != _map_Matches.end();
     ++iter)
   {
@@ -169,7 +171,7 @@ bool ColorHarmonizationEngineGlobal::Process()
   std::set<size_t> set_indeximage;
   for (size_t i = 0; i < _map_Matches.size(); ++i)
   {
-    map< std::pair<size_t, size_t>, vector<IndMatch> >::const_iterator iter = _map_Matches.begin();
+    matching::PairWiseMatches::const_iterator iter = _map_Matches.begin();
     std::advance(iter, i);
 
     const size_t I = iter->first.first;
@@ -200,7 +202,7 @@ bool ColorHarmonizationEngineGlobal::Process()
 
   for (size_t i = 0; i < _map_Matches.size(); ++i)
   {
-    map< std::pair<size_t, size_t>, vector<IndMatch> >::const_iterator iter = _map_Matches.begin();
+    matching::PairWiseMatches::const_iterator iter = _map_Matches.begin();
     std::advance(iter, i);
 
     const size_t I = iter->first.first;
@@ -329,7 +331,7 @@ bool ColorHarmonizationEngineGlobal::Process()
   std::vector<double> vec_solution_g(_vec_fileNames.size() * 2 + 1);
   std::vector<double> vec_solution_b(_vec_fileNames.size() * 2 + 1);
 
-  clock_t timeStart = clock();
+  openMVG::Timer timer;
 
   #ifdef OPENMVG_HAVE_MOSEK
   typedef MOSEK_SolveWrapper SOLVER_LP_T;
@@ -370,10 +372,9 @@ bool ColorHarmonizationEngineGlobal::Process()
     lpSolver.getSolution(vec_solution_b);
   }
 
-  clock_t timeEnd = clock();
   std::cout << std::endl
-    << " ColorHarmonization solving on a graph with: " << _map_Matches.size() << " edges took : "
-    << (timeEnd - timeStart) / (double)CLOCKS_PER_SEC << " seconds." << std::endl
+    << " ColorHarmonization solving on a graph with: " << _map_Matches.size() << " edges took (s): "
+    << timer.elapsed() << std::endl
     << "LInfinity fitting error: \n"
     << "- for the red channel is: " << vec_solution_r.back() << " gray level(s)" <<std::endl
     << "- for the green channel is: " << vec_solution_g.back() << " gray level(s)" << std::endl
@@ -574,7 +575,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
           putativeGraph.g.erase(e);
           size_t Idu = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.target(e)];
           size_t Idv = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.source(e)];
-          openMVG::tracks::STLPairWiseMatches::iterator iterM = _map_Matches.find(std::make_pair(Idu,Idv));
+          matching::PairWiseMatches::iterator iterM = _map_Matches.find(std::make_pair(Idu,Idv));
           if( iterM != _map_Matches.end())
           {
             _map_Matches.erase(iterM);

@@ -3,11 +3,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-#ifdef USE_EXIV2
-#include "openMVG/exif_IO/exif_IO_Exiv2.hpp"
-#else
-#include "openMVG/exif_IO/exif_IO_openExif.hpp"
-#endif
+#include "openMVG/exif_IO/exif_IO_EasyExif.hpp"
 
 #include "openMVG_Samples/sensorWidthDatabase/ParseDatabase.hpp"
 
@@ -44,7 +40,7 @@ int main(int argc, char **argv)
       << "[-i|--imageDirectory]\n"
       << "[-d|--sensorWidthDatabase]\n"
       << "[-o|--outputDirectory]\n"
-      << "[-f|--focal]\n"
+      << "[-f|--focal] (pixels)\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -64,12 +60,22 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  if ( !stlplus::folder_exists( sOutputDir ) )
+  if (sOutputDir.empty())
   {
-    stlplus::folder_create( sOutputDir );
+    std::cerr << "\nInvalid output directory" << std::endl;
+    return EXIT_FAILURE;
   }
 
-  std::vector<std::string> vec_image = stlplus::folder_all( sImageDir );
+  if ( !stlplus::folder_exists( sOutputDir ) )
+  {
+    if ( !stlplus::folder_create( sOutputDir ))
+    {
+      std::cerr << "\nCannot create output directory" << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
+
+  std::vector<std::string> vec_image = stlplus::folder_files( sImageDir );
   // Write the new file
   std::ofstream listTXT( stlplus::create_filespec( sOutputDir,
                                                    "lists.txt" ).c_str() );
@@ -86,11 +92,7 @@ int main(int argc, char **argv)
       size_t width = -1;
       size_t height = -1;
 
-#ifdef USE_EXIV2
-      std::auto_ptr<Exif_IO> exifReader (new Exif_IO_Exiv2() );
-#else
-      std::auto_ptr<Exif_IO> exifReader (new Exif_IO_OpenExif() );
-#endif
+      std::auto_ptr<Exif_IO> exifReader (new Exif_IO_EasyExif() );
       exifReader->open( sImageFilename );
 
       // Consider the case where focal is provided

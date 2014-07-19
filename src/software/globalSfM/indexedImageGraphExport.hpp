@@ -51,7 +51,7 @@ bool exportToGraphvizFormat_Nodal(
       map_arcs.end() == map_arcs.find(std::make_pair(size_t (g.id(g.target(e))), size_t (g.id(g.source(e))))))
     {
       map_arcs[std::pair<size_t,size_t>(size_t (g.id(g.source(e))),
-        size_t (g.id(g.target(e)))) ] = 1.0;
+        size_t (g.id(g.target(e)))) ] = 1;
     }
   }
   //os << "edge [style=bold]" << endl;
@@ -137,7 +137,8 @@ void exportToGraphvizData(const std::string& sfile, const GraphT & graph){
 
   //Use Graphviz
   const std::string cmd = "neato -Tsvg -O -Goverlap=scale -Gsplines=false " + sfile;
-  const int value = system(cmd.c_str());
+  int ret = system(cmd.c_str());
+  (void)ret;
 }
 
 } // namespace imageGraph

@@ -35,7 +35,7 @@ struct GeometricFilter_EMatrix_AC
     const std::pair<size_t, size_t> & imgSizeB,
     std::vector<size_t> & vec_inliers) const
   {
-    vec_inliers.resize(0);
+    vec_inliers.clear();
 
     // Define the AContrario adapted Essential matrix solver
     typedef ACKernelAdaptorEssential<
@@ -54,8 +54,6 @@ struct GeometricFilter_EMatrix_AC
     double upper_bound_precision = m_dPrecision;
     std::pair<double,double> ACRansacOut =
       ACRANSAC(kernel, vec_inliers, m_stIteration, &E, upper_bound_precision);
-    const double & threshold = ACRansacOut.first;
-    const double & NFA = ACRansacOut.second;
 
     if (vec_inliers.size() < KernelType::MINIMUM_SAMPLES *2.5)  {
       vec_inliers.clear();

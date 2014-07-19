@@ -24,4 +24,4 @@ Descriptors:
   - BINARY: M-LDB (see AKAZE paper), BRIEF, Nested shape descriptor,
   - FLOATING POINT: DAISY, LIOP descriptors.
 
-.. [VLFEAT] A. Vedaldi and B. Fulkerson, VLFeat: An Open and Portable Library of Computer Vision Algorithms, 2008, http://www.vlfeat.org/, http://www.vlfeat.org/overview/sift.html.
+

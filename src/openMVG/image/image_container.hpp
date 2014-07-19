@@ -40,7 +40,7 @@ public:
   inline Image(int width, int height, bool fInit=true, const T val = T())
   {
     Base::resize(height, width);
-    Base::fill(val);
+    if (fInit) Base::fill(val);
   };
 
   inline Image(const Base& I)  { (*this) = I; }
@@ -53,7 +53,7 @@ public:
   inline void resize(int width, int height, bool fInit=true, const T val = T())
   {
     Base::resize(height, width);
-    Base::fill(val);
+    if (fInit) Base::fill(val);
   }
 
   //------------------------------

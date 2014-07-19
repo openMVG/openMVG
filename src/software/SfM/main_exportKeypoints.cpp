@@ -91,7 +91,8 @@ int main(int argc, char ** argv)
       iterFilename);
 
     const std::pair<size_t, size_t>
-      dimImage = std::make_pair(vec_focalGroup[I].m_w, vec_focalGroup[I].m_h);
+      dimImage = std::make_pair(vec_focalGroup[iterFilename->m_intrinsicId].m_w,
+                                vec_focalGroup[iterFilename->m_intrinsicId].m_h);
 
     svgDrawer svgStream( dimImage.first, dimImage.second);
     svgStream.drawImage(stlplus::create_filespec(sImaDirectory,iterFilename->m_sImageName),

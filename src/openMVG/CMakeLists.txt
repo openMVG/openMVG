@@ -12,4 +12,7 @@ ADD_SUBDIRECTORY(robust_estimation)
 ADD_SUBDIRECTORY(split)
 ADD_SUBDIRECTORY(tracks)
 ADD_SUBDIRECTORY(color_harmonization)
+ADD_SUBDIRECTORY(system)
 
+# set the variable in the parent_scope
+SET(openMVG_linearProgramming ${openMVG_linearProgramming} PARENT_SCOPE)

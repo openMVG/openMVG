@@ -44,8 +44,8 @@ class ImageCollectionGeometricFilter
   template <typename GeometricFilterT>
   void Filter(
     const GeometricFilterT & geometricFilter,
-    IndexedMatchPerPair & map_PutativesMatchesPair, // putative correspondences to filter
-    IndexedMatchPerPair & map_GeometricMatches,
+    PairWiseMatches & map_PutativesMatchesPair, // putative correspondences to filter
+    PairWiseMatches & map_GeometricMatches,
     const std::vector<std::pair<size_t, size_t> > & vec_imagesSize) const
   {
     C_Progress_display my_progress_bar( map_PutativesMatchesPair.size() );
@@ -55,7 +55,7 @@ class ImageCollectionGeometricFilter
 #endif
     for (int i = 0; i < (int)map_PutativesMatchesPair.size(); ++i)
     {
-      IndexedMatchPerPair::const_iterator iter = map_PutativesMatchesPair.begin();
+      PairWiseMatches::const_iterator iter = map_PutativesMatchesPair.begin();
       advance(iter,i);
 
       const size_t iIndex = iter->first.first;

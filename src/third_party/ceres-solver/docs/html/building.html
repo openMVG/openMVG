@@ -1,111 +1,222 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Building &amp; Installation &mdash; Ceres Solver</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
     
 
-    <title>Installation &mdash; Ceres Solver</title>
+  
 
-<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
 
+  
+    <link rel="top" title="Ceres Solver" href="index.html"/>
+        <link rel="next" title="Tutorial" href="tutorial.html"/>
+        <link rel="prev" title="Features" href="features.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
 
     
-    <link rel="stylesheet" href="_static/rtd.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '1.8.0',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
-  MathJax.Hub.Config({
-    "HTML-CSS": {
-      availableFonts: ["TeX"]
-    }
-  });
-</script>
-    <script type="text/javascript" src="_static/searchtools.js"></script>
-    <link rel="top" title="Ceres Solver" href="index.html" />
-    <link rel="next" title="Tutorial" href="tutorial.html" />
-    <link rel="prev" title="Introduction" href="introduction.html" /> 
-  </head>
-  <body>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="tutorial.html" title="Tutorial"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="introduction.html" title="Introduction"
-             accesskey="P">previous</a> |</li>
-        <li><a href="index.html">Ceres Solver</a> &raquo;</li> 
-      </ul>
-    </div>  
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="index.html" class="fa fa-home"> Ceres Solver</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body">
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Building &amp; Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#getting-the-source-code">Getting the source code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building-on-linux">Building on Linux</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building-on-mac-os-x">Building on Mac OS X</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building-on-windows-with-visual-studio">Building on Windows with Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building-on-android">Building on Android</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building-on-ios">Building on iOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#customizing-the-build">Customizing the build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-ceres-with-cmake">Using Ceres with CMake</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#hello-world">Hello World!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#derivatives">Derivatives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#powell-s-function">Powell&#8217;s Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#curve-fitting">Curve Fitting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#robust-curve-fitting">Robust Curve Fitting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#bundle-adjustment">Bundle Adjustment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#other-examples">Other Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#costfunction"><tt class="docutils literal"><span class="pre">CostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#sizedcostfunction"><tt class="docutils literal"><span class="pre">SizedCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#autodiffcostfunction"><tt class="docutils literal"><span class="pre">AutoDiffCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#dynamicautodiffcostfunction"><tt class="docutils literal"><span class="pre">DynamicAutoDiffCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#numericdiffcostfunction"><tt class="docutils literal"><span class="pre">NumericDiffCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#dynamicnumericdiffcostfunction"><tt class="docutils literal"><span class="pre">DynamicNumericDiffCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#numericdifffunctor"><tt class="docutils literal"><span class="pre">NumericDiffFunctor</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#costfunctiontofunctor"><tt class="docutils literal"><span class="pre">CostFunctionToFunctor</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#conditionedcostfunction"><tt class="docutils literal"><span class="pre">ConditionedCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#normalprior"><tt class="docutils literal"><span class="pre">NormalPrior</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#lossfunction"><tt class="docutils literal"><span class="pre">LossFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#localparameterization"><tt class="docutils literal"><span class="pre">LocalParameterization</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#autodifflocalparameterization"><tt class="docutils literal"><span class="pre">AutoDiffLocalParameterization</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#problem"><tt class="docutils literal"><span class="pre">Problem</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#rotation-h"><tt class="docutils literal"><span class="pre">rotation.h</span></tt></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="solving.html">Solving</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="solving.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solving.html#trust-region-methods">Trust Region Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solving.html#line-search-methods">Line Search Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solving.html#linearsolver">LinearSolver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solving.html#covariance-estimation">Covariance Estimation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faqs.html">FAQS, Tips &amp; Tricks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="faqs.html#building">Building</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faqs.html#modeling">Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faqs.html#solving">Solving</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faqs.html#further-reading">Further Reading</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#setting-up-your-development-environment">Setting up your Development Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#submitting-a-change-to-ceres-solver">Submitting a change to Ceres Solver</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="version_history.html">Releases</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id1">1.9.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id2">1.8.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id5">1.7.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id9">1.6.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id12">1.5.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id16">1.4.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id20">1.3.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id23">1.2.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id25">1.2.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id27">1.2.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id30">1.2.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id33">1.1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id35">1.1.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id38">1.0.0</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="history.html#origin-of-the-name">Origin of the name</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Ceres Solver</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+          <div role="main">
             
-  <div class="section" id="installation">
-<span id="chapter-building"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p>Stable Ceres Solver releases are available for download at
-<a class="reference external" href="http://code.google.com/p/ceres-solver/">code.google.com</a>. For the
-more adventurous, the git repository is hosted on <a class="reference external" href="https://ceres-solver-review.googlesource.com/">Gerrit</a>.</p>
+  <div class="section" id="building-installation">
+<span id="chapter-building"></span><h1>Building &amp; Installation<a class="headerlink" href="#building-installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="getting-the-source-code">
+<h2>Getting the source code<a class="headerlink" href="#getting-the-source-code" title="Permalink to this headline">¶</a></h2>
+<p id="section-source">You can start with the <a class="reference external" href="http://ceres-solver.org/ceres-solver-1.9.0.tar.gz">latest stable release</a> . Or if you want
+the latest version, you can clone the git repository</p>
+<div class="highlight-bash"><div class="highlight"><pre>git clone https://ceres-solver.googlesource.com/ceres-solver
+</pre></div>
+</div>
+</div>
 <div class="section" id="dependencies">
 <span id="section-dependencies"></span><h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
 <p>Ceres relies on a number of open source libraries, some of which are
 optional. For details on customizing the build process, see
 <a class="reference internal" href="#section-customizing"><em>Customizing the build</em></a> .</p>
-<p>1. <a class="reference external" href="http://www.cmake.org">CMake</a> is a cross platform build
-system. Ceres needs a relatively recent version of CMake (version
-2.8.0 or better).</p>
-<p>2. <a class="reference external" href="http://eigen.tuxfamily.org/index.php?title=Main_Page">eigen3</a> is
-used for doing all the low level matrix and linear algebra operations.</p>
-<p>3. <a class="reference external" href="http://code.google.com/p/google-glog">google-glog</a> is
-used for error checking and logging. Ceres needs glog version 0.3.1 or
-later. Version 0.3 (which ships with Fedora 16) has a namespace bug
-which prevents Ceres from building. Ceres contains a stripped-down,
-minimal version of <tt class="docutils literal"><span class="pre">glog</span></tt> called <tt class="docutils literal"><span class="pre">miniglog</span></tt>, which can be enabled
-with the <tt class="docutils literal"><span class="pre">MINIGLOG</span></tt> build option. If enabled, it replaces the
-requirement for <tt class="docutils literal"><span class="pre">glog</span></tt>. However, in general it is recommended that
-you use the full <tt class="docutils literal"><span class="pre">glog</span></tt>.</p>
-<p>4. <a class="reference external" href="http://code.google.com/p/gflags">gflags</a> is a library for
-processing command line flags. It is used by some of the examples and
-tests. While it is not strictly necessary to build the library, we
-strongly recommend building the library with gflags.</p>
-<p>5. <a class="reference external" href="http://www.cise.ufl.edu/research/sparse/SuiteSparse/">SuiteSparse</a> is used for
-sparse matrix analysis, ordering and factorization. In particular
-Ceres uses the AMD, CAMD, COLAMD and CHOLMOD libraries. This is an optional
-dependency.</p>
-<p>6. <a class="reference external" href="http://www.cise.ufl.edu/research/sparse/CXSparse/">CXSparse</a> is
-a sparse matrix library similar in scope to <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt> but with
+<ul>
+<li><p class="first"><a class="reference external" href="http://eigen.tuxfamily.org/index.php?title=Main_Page">Eigen</a> 3.0 or later.
+<strong>Required</strong></p>
+</li>
+<li><p class="first"><a class="reference external" href="http://www.cmake.org">CMake</a> 2.8.0 or later.
+<strong>Required on all platforms except for Android.</strong></p>
+</li>
+<li><p class="first"><a class="reference external" href="http://code.google.com/p/google-glog">Google Log</a> 0.3.1 or
+later. <strong>Recommended</strong></p>
+<p>Ceres has a minimal replacement of <tt class="docutils literal"><span class="pre">glog</span></tt> called <tt class="docutils literal"><span class="pre">miniglog</span></tt>,
+enabled with the <tt class="docutils literal"><span class="pre">MINIGLOG</span></tt> build option. <tt class="docutils literal"><span class="pre">miniglog</span></tt> replaces
+the requirement for <tt class="docutils literal"><span class="pre">glog</span></tt>. We advise using full <tt class="docutils literal"><span class="pre">glog</span></tt> due to
+performance compromises in <tt class="docutils literal"><span class="pre">miniglog</span></tt>. <tt class="docutils literal"><span class="pre">miniglog</span></tt> is needed on
+Android.</p>
+</li>
+<li><p class="first"><a class="reference external" href="http://code.google.com/p/gflags">Google Flags</a>. Needed to build
+examples and tests.</p>
+</li>
+<li><p class="first"><a class="reference external" href="http://www.cise.ufl.edu/research/sparse/SuiteSparse/">SuiteSparse</a>. Needed for
+analyzing and solving sparse systems. Ceres useses the AMD, CAMD,
+COLAMD and CHOLMOD libraries.
+<strong>Optional; strongly recomended for bundle adjustment</strong></p>
+</li>
+<li><p class="first"><a class="reference external" href="http://www.cise.ufl.edu/research/sparse/CXSparse/">CXSparse</a>.
+Similar to <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt> but simpler and slower. CXSparse has
 no dependencies on <tt class="docutils literal"><span class="pre">LAPACK</span></tt> and <tt class="docutils literal"><span class="pre">BLAS</span></tt>. This makes for a simpler
-build process and a smaller binary.  The simplicity comes at a cost &#8211;
-for all but the most trivial matrices, <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt> is
-significantly faster than <tt class="docutils literal"><span class="pre">CXSparse</span></tt>. This is an optional dependency.</p>
-<p>7. <a class="reference external" href="http://www.netlib.org/blas/">BLAS</a> and <a class="reference external" href="http://www.netlib.org/lapack/">LAPACK</a> routines are needed by
+build process and a smaller binary. <strong>Optional</strong></p>
+</li>
+<li><p class="first"><a class="reference external" href="http://www.netlib.org/blas/">BLAS</a> and <a class="reference external" href="http://www.netlib.org/lapack/">LAPACK</a> routines are needed by
 SuiteSparse, and optionally used by Ceres directly for some operations.
 We recommend <a class="reference external" href="http://math-atlas.sourceforge.net/">ATLAS</a>,
 which includes BLAS and LAPACK routines. It is also possible to use
 <a class="reference external" href="https://github.com/xianyi/OpenBLAS">OpenBLAS</a> . However, one needs
 to be careful to <a class="reference external" href="https://github.com/xianyi/OpenBLAS/wiki/faq#wiki-multi-threaded">turn off the threading</a>
-inside <tt class="docutils literal"><span class="pre">OpenBLAS</span></tt> as it conflicts with use of threads in Ceres.</p>
+inside <tt class="docutils literal"><span class="pre">OpenBLAS</span></tt> as it conflicts with use of threads in Ceres.
+<strong>Optional but required for SuiteSparse</strong></p>
+</li>
+</ul>
 </div>
 <div class="section" id="building-on-linux">
 <span id="section-linux"></span><h2>Building on Linux<a class="headerlink" href="#building-on-linux" title="Permalink to this headline">¶</a></h2>
@@ -149,10 +260,10 @@ sudo apt-get install libsuitesparse-dev
 </pre></div>
 </div>
 <p>We are now ready to build and test Ceres.</p>
-<div class="highlight-bash"><div class="highlight"><pre>tar zxf ceres-solver-1.8.0.tar.gz
+<div class="highlight-bash"><div class="highlight"><pre>tar zxf ceres-solver-1.9.0.tar.gz
 mkdir ceres-bin
 <span class="nb">cd </span>ceres-bin
-cmake ../ceres-solver-1.8.0
+cmake ../ceres-solver-1.9.0
 make -j3
 make <span class="nb">test</span>
 </pre></div>
@@ -160,19 +271,19 @@ make <span class="nb">test</span>
 <p>You can also try running the command line bundling application with one of the
 included problems, which comes from the University of Washington&#8217;s BAL
 dataset <a class="reference internal" href="bibliography.html#agarwal" id="id1">[Agarwal]</a>.</p>
-<div class="highlight-bash"><div class="highlight"><pre>bin/simple_bundle_adjuster ../ceres-solver-1.8.0/data/problem-16-22106-pre.txt
+<div class="highlight-bash"><div class="highlight"><pre>bin/simple_bundle_adjuster ../ceres-solver-1.9.0/data/problem-16-22106-pre.txt
 </pre></div>
 </div>
 <p>This runs Ceres for a maximum of 10 iterations using the
 <tt class="docutils literal"><span class="pre">DENSE_SCHUR</span></tt> linear solver. The output should look something like
 this.</p>
-<div class="highlight-bash"><div class="highlight"><pre>   0: f: 4.185660e+06 d: 0.00e+00 g: 1.09e+08 h: 0.00e+00 rho: 0.00e+00 mu: 1.00e+04 li:  0 it: 1.16e-01 tt: 3.39e-01
-   1: f: 1.062590e+05 d: 4.08e+06 g: 8.99e+06 h: 5.36e+02 rho: 9.82e-01 mu: 3.00e+04 li:  1 it: 3.90e-01 tt: 7.29e-01
-   2: f: 4.992817e+04 d: 5.63e+04 g: 8.32e+06 h: 3.19e+02 rho: 6.52e-01 mu: 3.09e+04 li:  1 it: 3.52e-01 tt: 1.08e+00
-   3: f: 1.899774e+04 d: 3.09e+04 g: 1.60e+06 h: 1.24e+02 rho: 9.77e-01 mu: 9.26e+04 li:  1 it: 3.60e-01 tt: 1.44e+00
-   4: f: 1.808729e+04 d: 9.10e+02 g: 3.97e+05 h: 6.39e+01 rho: 9.51e-01 mu: 2.78e+05 li:  1 it: 3.62e-01 tt: 1.80e+00
-   5: f: 1.803399e+04 d: 5.33e+01 g: 1.48e+04 h: 1.23e+01 rho: 9.99e-01 mu: 8.33e+05 li:  1 it: 3.54e-01 tt: 2.16e+00
-   6: f: 1.803390e+04 d: 9.02e-02 g: 6.35e+01 h: 8.00e-01 rho: 1.00e+00 mu: 2.50e+06 li:  1 it: 3.59e-01 tt: 2.52e+00
+<div class="highlight-bash"><div class="highlight"><pre>0: f: 4.185660e+06 d: 0.00e+00 g: 1.09e+08 h: 0.00e+00 rho: 0.00e+00 mu: 1.00e+04 li:  0 it: 8.73e-02 tt: 2.61e-01
+1: f: 1.062590e+05 d: 4.08e+06 g: 8.99e+06 h: 5.36e+02 rho: 9.82e-01 mu: 3.00e+04 li:  1 it: 1.85e-01 tt: 4.46e-01
+2: f: 4.992817e+04 d: 5.63e+04 g: 8.32e+06 h: 3.19e+02 rho: 6.52e-01 mu: 3.09e+04 li:  1 it: 1.74e-01 tt: 6.20e-01
+3: f: 1.899774e+04 d: 3.09e+04 g: 1.60e+06 h: 1.24e+02 rho: 9.77e-01 mu: 9.26e+04 li:  1 it: 1.74e-01 tt: 7.94e-01
+4: f: 1.808729e+04 d: 9.10e+02 g: 3.97e+05 h: 6.39e+01 rho: 9.51e-01 mu: 2.78e+05 li:  1 it: 1.73e-01 tt: 9.67e-01
+5: f: 1.803399e+04 d: 5.33e+01 g: 1.48e+04 h: 1.23e+01 rho: 9.99e-01 mu: 8.33e+05 li:  1 it: 1.75e-01 tt: 1.14e+00
+6: f: 1.803390e+04 d: 9.02e-02 g: 6.35e+01 h: 8.00e-01 rho: 1.00e+00 mu: 2.50e+06 li:  1 it: 1.75e-01 tt: 1.32e+00
 
 Ceres Solver Report
 -------------------
@@ -181,53 +292,64 @@ Parameter blocks                        22122                    22122
 Parameters                              66462                    66462
 Residual blocks                         83718                    83718
 Residual                               167436                   167436
-Trust Region Strategy     LEVENBERG_MARQUARDT
+
+Minimizer                        TRUST_REGION
+
+Dense linear algebra library            EIGEN
+Trust region strategy     LEVENBERG_MARQUARDT
 
                                         Given                     Used
 Linear solver                     DENSE_SCHUR              DENSE_SCHUR
-Preconditioner                            N/A                      N/A
-Threads:                                    1                        1
+Threads                                     1                        1
 Linear solver threads                       1                        1
-Linear solver ordering              AUTOMATIC                 22106,16
+Linear solver ordering              AUTOMATIC                22106, 16
 
 Cost:
 Initial                          4.185660e+06
 Final                            1.803390e+04
 Change                           4.167626e+06
 
-Number of iterations:
-Successful                                  6
-Unsuccessful                                0
-Total                                       6
+Minimizer iterations                        6
+Successful steps                            6
+Unsuccessful steps                          0
 
 Time <span class="o">(</span>in seconds<span class="o">)</span>:
-Preprocessor                        2.229e-01
+Preprocessor                            0.173
 
-  Evaluator::Residuals              7.438e-02
-  Evaluator::Jacobians              6.790e-01
-  Linear Solver                     1.681e+00
-Minimizer                           2.547e+00
+  Residual evaluation                   0.115
+  Jacobian evaluation                   0.498
+  Linear solver                         0.517
+Minimizer                               1.242
 
-Postprocessor                       1.920e-02
-Total                               2.823e+00
+Postprocessor                           0.003
+Total                                   1.437
 
-Termination:               FUNCTION_TOLERANCE
+Termination:                      CONVERGENCE <span class="o">(</span>Function tolerance reached. |cost_change|/cost: 1.769750e-09 &lt;<span class="o">=</span> 1.000000e-06<span class="o">)</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="building-on-mac-os-x">
 <h2>Building on Mac OS X<a class="headerlink" href="#building-on-mac-os-x" title="Permalink to this headline">¶</a></h2>
-<p>On OS X, we recommend using the <a class="reference external" href="http://mxcl.github.com/homebrew/">homebrew</a> package manager to install the
-dependencies. There is no need to install <tt class="docutils literal"><span class="pre">BLAS</span></tt> or <tt class="docutils literal"><span class="pre">LAPACK</span></tt>
-separately as OS X ships with optimized <tt class="docutils literal"><span class="pre">BLAS</span></tt> and <tt class="docutils literal"><span class="pre">LAPACK</span></tt>
-routines as part of the <a class="reference external" href="https://developer.apple.com/library/mac/#documentation/Performance/Conceptual/vecLib/Reference/reference.html">vecLib</a>
-framework.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Ceres will not compile using Xcode 4.5.x (Clang version 4.1) due to a bug in that version of
 Clang.  If you are running Xcode 4.5.x, please update to Xcode &gt;= 4.6.x before attempting to
 build Ceres.</p>
 </div>
+<p>On OS X, we recommend using the <a class="reference external" href="http://mxcl.github.com/homebrew/">homebrew</a> package manager to install Ceres.</p>
+<div class="highlight-bash"><div class="highlight"><pre>brew install ceres-solver
+</pre></div>
+</div>
+<p>will install the latest stable version along with all the required
+dependencies and</p>
+<div class="highlight-bash"><div class="highlight"><pre>brew install ceres-solver --HEAD
+</pre></div>
+</div>
+<p>will install the latest version in the git repo.</p>
+<p>You can also install each of the dependencies by hand using <a class="reference external" href="http://mxcl.github.com/homebrew/">homebrew</a>. There is no need to install
+<tt class="docutils literal"><span class="pre">BLAS</span></tt> or <tt class="docutils literal"><span class="pre">LAPACK</span></tt> separately as OS X ships with optimized
+<tt class="docutils literal"><span class="pre">BLAS</span></tt> and <tt class="docutils literal"><span class="pre">LAPACK</span></tt> routines as part of the <a class="reference external" href="https://developer.apple.com/library/mac/#documentation/Performance/Conceptual/vecLib/Reference/reference.html">vecLib</a>
+framework.</p>
 <div class="highlight-bash"><div class="highlight"><pre><span class="c"># CMake</span>
 brew install cmake
 <span class="c"># google-glog and gflags</span>
@@ -239,10 +361,10 @@ brew install suite-sparse
 </pre></div>
 </div>
 <p>We are now ready to build and test Ceres.</p>
-<div class="highlight-bash"><div class="highlight"><pre>tar zxf ceres-solver-1.8.0.tar.gz
+<div class="highlight-bash"><div class="highlight"><pre>tar zxf ceres-solver-1.9.0.tar.gz
 mkdir ceres-bin
 <span class="nb">cd </span>ceres-bin
-cmake ../ceres-solver-1.8.0
+cmake ../ceres-solver-1.9.0
 make -j3
 make <span class="nb">test</span>
 </pre></div>
@@ -253,10 +375,11 @@ make <span class="nb">test</span>
 <div class="section" id="building-on-windows-with-visual-studio">
 <span id="section-windows"></span><h2>Building on Windows with Visual Studio<a class="headerlink" href="#building-on-windows-with-visual-studio" title="Permalink to this headline">¶</a></h2>
 <p>On Windows, we support building with Visual Studio 2010 or newer. Note
-that the Windows port is less featureful and less tested than the
-Linux or Mac OS X versions due to the unavailability of SuiteSparse
-and <tt class="docutils literal"><span class="pre">CXSparse</span></tt>. Building is also more involved since there is no
-automated way to install the dependencies.</p>
+that the Windows port is less featureful and less tested than the Linux or
+Mac OS X versions due to the lack of an officially supported way of building
+SuiteSparse and CXSparse.  There are however a number of unofficial ways of
+building these libraries. Building on Windows also a bit more involved since
+there is no automated way to install dependencies.</p>
 <ol class="arabic">
 <li><p class="first">Make a toplevel directory for deps &amp; build &amp; src somewhere: <tt class="docutils literal"><span class="pre">ceres/</span></tt></p>
 </li>
@@ -267,6 +390,16 @@ automated way to install the dependencies.</p>
 no need to build anything; just unpack the source tarball.</li>
 <li><tt class="docutils literal"><span class="pre">google-glog</span></tt> Open up the Visual Studio solution and build it.</li>
 <li><tt class="docutils literal"><span class="pre">gflags</span></tt> Open up the Visual Studio solution and build it.</li>
+<li>(Experimental) <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt> Previously SuiteSparse was not available
+on Windows, recently it has become possible to build it on Windows using
+the <a class="reference external" href="https://github.com/jlblancoc/suitesparse-metis-for-windows">suitesparse-metis-for-windows</a>
+project.  If you wish to use <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt>, follow their instructions
+for obtaining and building it.</li>
+<li>(Experimental) <tt class="docutils literal"><span class="pre">CXSparse</span></tt> Previously CXSparse was not available on
+Windows, there are now several ports that enable it to be, including:
+<a class="reference external" href="https://github.com/PetterS/CXSparse">[1]</a> and
+<a class="reference external" href="https://github.com/TheFrenchLeaf/CXSparse">[2]</a>.  If you wish to use
+<tt class="docutils literal"><span class="pre">CXSparse</span></tt>, follow their instructions for obtaining and building it.</li>
 </ol>
 </li>
 <li><p class="first">Unpack the Ceres tarball into <tt class="docutils literal"><span class="pre">ceres</span></tt>. For the tarball, you
@@ -285,15 +418,22 @@ get <tt class="docutils literal"><span class="pre">ceres-solver.git</span></tt> 
 <li><p class="first">Try running <tt class="docutils literal"><span class="pre">Configure</span></tt>. It won&#8217;t work. It&#8217;ll show a bunch of options.
 You&#8217;ll need to set:</p>
 <ol class="arabic simple">
-<li><tt class="docutils literal"><span class="pre">EIGEN_INCLUDE_DIR</span></tt></li>
-<li><tt class="docutils literal"><span class="pre">GLOG_INCLUDE_DIR</span></tt></li>
-<li><tt class="docutils literal"><span class="pre">GLOG_LIBRARY</span></tt></li>
-<li><tt class="docutils literal"><span class="pre">GFLAGS_INCLUDE_DIR</span></tt></li>
-<li><tt class="docutils literal"><span class="pre">GFLAGS_LIBRARY</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">EIGEN_INCLUDE_DIR_HINTS</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">GLOG_INCLUDE_DIR_HINTS</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">GLOG_LIBRARY_DIR_HINTS</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">GFLAGS_INCLUDE_DIR_HINTS</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">GFLAGS_LIBRARY_DIR_HINTS</span></tt></li>
+<li>(Optional) <tt class="docutils literal"><span class="pre">SUITESPARSE_INCLUDE_DIR_HINTS</span></tt></li>
+<li>(Optional) <tt class="docutils literal"><span class="pre">SUITESPARSE_LIBRARY_DIR_HINTS</span></tt></li>
+<li>(Optional) <tt class="docutils literal"><span class="pre">CXSPARSE_INCLUDE_DIR_HINTS</span></tt></li>
+<li>(Optional) <tt class="docutils literal"><span class="pre">CXSPARSE_LIBRARY_DIR_HINTS</span></tt></li>
 </ol>
-<p>to the appropriate place where you unpacked/built them. If any of the
-variables are not visible in the <tt class="docutils literal"><span class="pre">CMake</span></tt> GUI, toggle to the
-<em>Advanced View</em> with <tt class="docutils literal"><span class="pre">&lt;t&gt;</span></tt>.</p>
+<p>to the appropriate directories where you unpacked/built them. If any of
+the variables are not visible in the <tt class="docutils literal"><span class="pre">CMake</span></tt> GUI, create a new entry
+for them.  We recommend using the <tt class="docutils literal"><span class="pre">&lt;NAME&gt;_(INCLUDE/LIBRARY)_DIR_HINTS</span></tt>
+variables rather than setting the <tt class="docutils literal"><span class="pre">&lt;NAME&gt;_INCLUDE_DIR</span></tt> &amp;
+<tt class="docutils literal"><span class="pre">&lt;NAME&gt;_LIBRARY</span></tt> variables directly to keep all of the validity
+checking, and to avoid having to specify the library files manually.</p>
 </li>
 <li><p class="first">You may have to tweak some more settings to generate a MSVC
 project.  After each adjustment, try pressing Configure &amp; Generate
@@ -310,20 +450,48 @@ RUN_TESTS</strong> from the build menu.</p>
 <ol class="arabic simple">
 <li>The default build is Debug; consider switching it to release mode.</li>
 <li>Currently <tt class="docutils literal"><span class="pre">system_test</span></tt> is not working properly.</li>
-<li>Building Ceres as a DLL is not supported; patches welcome.</li>
 <li>CMake puts the resulting test binaries in <tt class="docutils literal"><span class="pre">ceres-bin/examples/Debug</span></tt>
 by default.</li>
 <li>The solvers supported on Windows are <tt class="docutils literal"><span class="pre">DENSE_QR</span></tt>, <tt class="docutils literal"><span class="pre">DENSE_SCHUR</span></tt>,
 <tt class="docutils literal"><span class="pre">CGNR</span></tt>, and <tt class="docutils literal"><span class="pre">ITERATIVE_SCHUR</span></tt>.</li>
 <li>We&#8217;re looking for someone to work with upstream <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt> to
 port their build system to something sane like <tt class="docutils literal"><span class="pre">CMake</span></tt>, and get a
-supported Windows port.</li>
+fully supported Windows port.</li>
 </ol>
 </div>
 <div class="section" id="building-on-android">
 <span id="section-android"></span><h2>Building on Android<a class="headerlink" href="#building-on-android" title="Permalink to this headline">¶</a></h2>
-<p>Download the <tt class="docutils literal"><span class="pre">Android</span> <span class="pre">NDK</span></tt>. Run <tt class="docutils literal"><span class="pre">ndk-build</span></tt> from inside the
-<tt class="docutils literal"><span class="pre">jni</span></tt> directory. Use the <tt class="docutils literal"><span class="pre">libceres.a</span></tt> that gets created.</p>
+<p>Download the <tt class="docutils literal"><span class="pre">Android</span> <span class="pre">NDK</span></tt> version <tt class="docutils literal"><span class="pre">r9d</span></tt> or later. Run
+<tt class="docutils literal"><span class="pre">ndk-build</span></tt> from inside the <tt class="docutils literal"><span class="pre">jni</span></tt> directory. Use the
+<tt class="docutils literal"><span class="pre">libceres.a</span></tt> that gets created.</p>
+</div>
+<div class="section" id="building-on-ios">
+<span id="section-ios"></span><h2>Building on iOS<a class="headerlink" href="#building-on-ios" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You need iOS version 6.0 or higher to build Ceres Solver.</p>
+</div>
+<p>To build Ceres for iOS, we need to force <tt class="docutils literal"><span class="pre">CMake</span></tt> to find the toolchains from
+the iOS SDK instead of using the standard ones. For example:</p>
+<div class="highlight-bash"><div class="highlight"><pre>cmake ../ceres-solver <span class="se">\</span>
+-DCMAKE_TOOLCHAIN_FILE<span class="o">=</span>../ceres-solver/cmake/iOS.cmake <span class="se">\</span>
+-DEIGEN_INCLUDE_DIR<span class="o">=</span>/path/to/eigen/header <span class="se">\</span>
+-DIOS_PLATFORM<span class="o">=</span>&lt;PLATFORM&gt;
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">PLATFORM</span></tt> can be one of <tt class="docutils literal"><span class="pre">OS</span></tt>, <tt class="docutils literal"><span class="pre">SIMULATOR</span></tt> and <tt class="docutils literal"><span class="pre">SIMULATOR64</span></tt>. You can
+build for <tt class="docutils literal"><span class="pre">OS</span></tt> (<tt class="docutils literal"><span class="pre">armv7</span></tt>, <tt class="docutils literal"><span class="pre">armv7s</span></tt>, <tt class="docutils literal"><span class="pre">arm64</span></tt>), <tt class="docutils literal"><span class="pre">SIMULATOR</span></tt> (<tt class="docutils literal"><span class="pre">i386</span></tt>) or
+<tt class="docutils literal"><span class="pre">SIMULATOR64</span></tt> (<tt class="docutils literal"><span class="pre">x86_64</span></tt>) separately and use <tt class="docutils literal"><span class="pre">LIPO</span></tt> to merge them into
+one static library.  See <tt class="docutils literal"><span class="pre">cmake/iOS.cmake</span></tt> for more options.</p>
+<p>After building, you will get <tt class="docutils literal"><span class="pre">libceres.a</span></tt> and <tt class="docutils literal"><span class="pre">libminiglog.a</span></tt>
+You need to add these two libraries into your XCode project.</p>
+<p>The default CMake configuration builds a bare bones version of Ceres
+Solver that only depends on Eigen and MINIGLOG, this should be
+sufficient for solving small to moderate sized problems (No
+<tt class="docutils literal"><span class="pre">SPARSE_SCHUR</span></tt>, <tt class="docutils literal"><span class="pre">SPARSE_NORMAL_CHOLESKY</span></tt> linear solvers and no
+<tt class="docutils literal"><span class="pre">CLUSTER_JACOBI</span></tt> and <tt class="docutils literal"><span class="pre">CLUSTER_TRIDIAGONAL</span></tt> preconditioners).</p>
+<p>If you decide to use <tt class="docutils literal"><span class="pre">LAPACK</span></tt> and <tt class="docutils literal"><span class="pre">BLAS</span></tt>, then you also need to add
+<tt class="docutils literal"><span class="pre">Accelerate.framework</span></tt> to your XCode project&#8217;s linking dependency.</p>
 </div>
 <div class="section" id="customizing-the-build">
 <span id="section-customizing"></span><h2>Customizing the build<a class="headerlink" href="#customizing-the-build" title="Permalink to this headline">¶</a></h2>
@@ -375,11 +543,6 @@ implementation.</li>
 binary size/compilation time over some small (10-20%) performance
 gains in the <tt class="docutils literal"><span class="pre">SPARSE_SCHUR</span></tt> solver, you can disable some of the
 template specializations by turning this <tt class="docutils literal"><span class="pre">OFF</span></tt>.</li>
-<li><tt class="docutils literal"><span class="pre">LINE_SEARCH_MINIMIZER</span> <span class="pre">[Default:</span> <span class="pre">ON]</span></tt>: The line search based
-minimizer is mostly suitable for large scale optimization problems,
-or when sparse linear algebra libraries are not available. You can
-further save on some compile time and binary size by turning this
-<tt class="docutils literal"><span class="pre">OFF</span></tt>.</li>
 <li><tt class="docutils literal"><span class="pre">OPENMP</span> <span class="pre">[Default:</span> <span class="pre">ON]</span></tt>: On certain platforms like Android,
 multi-threading with <tt class="docutils literal"><span class="pre">OpenMP</span></tt> is not supported. Turn this <tt class="docutils literal"><span class="pre">OFF</span></tt>
 to disable multithreading.</li>
@@ -387,9 +550,10 @@ to disable multithreading.</li>
 a static library, turn this <tt class="docutils literal"><span class="pre">ON</span></tt> to instead build Ceres as a
 shared library.</li>
 <li><tt class="docutils literal"><span class="pre">BUILD_DOCUMENTATION</span> <span class="pre">[Default:</span> <span class="pre">OFF]</span></tt>: Use this to enable building
-the documentation, requires <a class="reference external" href="http://sphinx-doc.org/">Sphinx</a>. In
-addition, <tt class="docutils literal"><span class="pre">make</span> <span class="pre">ceres_docs</span></tt> can be used to build only the
-documentation.</li>
+the documentation, requires <a class="reference external" href="http://sphinx-doc.org/">Sphinx</a> and the
+<a class="reference external" href="https://pypi.python.org/pypi/sphinx_rtd_theme">sphinx_rtd_theme</a>
+package available from the Python package index. In addition,
+<tt class="docutils literal"><span class="pre">make</span> <span class="pre">ceres_docs</span></tt> can be used to build only the documentation.</li>
 <li><tt class="docutils literal"><span class="pre">MSVC_USE_STATIC_CRT</span> <span class="pre">[Default:</span> <span class="pre">OFF]</span></tt> <em>Windows Only</em>: By default
 Ceres will use the Visual Studio default, <em>shared</em> C-Run Time (CRT) library.
 Turn this <tt class="docutils literal"><span class="pre">ON</span></tt> to use the <em>static</em> C-Run Time library instead.</li>
@@ -434,6 +598,19 @@ are always visible in the <em>Advanced View</em>.  They can also be
 set directly via <tt class="docutils literal"><span class="pre">-D&lt;VAR&gt;=&lt;VALUE&gt;</span></tt> arguments to <tt class="docutils literal"><span class="pre">CMake</span></tt>.</p>
 </li>
 </ol>
+</div>
+<div class="section" id="building-using-custom-blas-lapack-installs">
+<h3>Building using custom BLAS &amp; LAPACK installs<a class="headerlink" href="#building-using-custom-blas-lapack-installs" title="Permalink to this headline">¶</a></h3>
+<p>If you are building on an exotic system, then the standard find package
+scripts for <tt class="docutils literal"><span class="pre">BLAS</span></tt> &amp; <tt class="docutils literal"><span class="pre">LAPACK</span></tt> which ship with <tt class="docutils literal"><span class="pre">CMake</span></tt> might not
+work.  In this case, one option would be to write your own custom versions for
+your environment and then set <tt class="docutils literal"><span class="pre">CMAKE_MODULE_PATH</span></tt> to the directory
+containing these custom scripts when invoking <tt class="docutils literal"><span class="pre">CMake</span></tt> to build Ceres and they
+will be used in preference to the default versions.  However, in order for this
+to work, your scripts must provide the full set of variables provided by the
+default scripts.  Also, if you are building Ceres with <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt>, the
+versions of <tt class="docutils literal"><span class="pre">BLAS</span></tt> &amp; <tt class="docutils literal"><span class="pre">LAPACK</span></tt> used by <tt class="docutils literal"><span class="pre">SuiteSparse</span></tt> and Ceres should be
+the same.</p>
 </div>
 </div>
 <div class="section" id="using-ceres-with-cmake">
@@ -481,70 +658,84 @@ installed.</p>
 
 
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper">
-<h3><a href="index.html">Ceres Solver</a></h3>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="solving.html">Solving</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reading.html">Further Reading</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="acknowledgements.html">Acknowledgements</a></li>
-<li class="toctree-l1"><a class="reference internal" href="version_history.html">Version History</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
-</ul>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tutorial.html" class="btn btn-neutral float-right" title="Tutorial"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="features.html" class="btn btn-neutral" title="Features"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="introduction.html"
-                        title="previous chapter">Introduction</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="tutorial.html"
-                        title="next chapter">Tutorial</a></p>
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014 Google Inc.
     </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="tutorial.html" title="Tutorial"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="introduction.html" title="Introduction"
-             >previous</a> |</li>
-        <li><a href="index.html">Ceres Solver</a> &raquo;</li> 
-      </ul>
-    </div>
-<div class="footer">
-    &copy; Copyright 2013, Google Inc..
-</div>
+
+    </section>
+
+  </div>
+  
 
 
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.9.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
+      MathJax.Hub.Config({
+          "HTML-CSS": {
+            availableFonts: ["TeX"]
+          }
+        });
+      </script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+  
+ 
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-49769510-1', 'ceres-solver.org');
+  ga('send', 'pageview');
+</script>
 
 
-
-  </body>
+</body>
 </html>

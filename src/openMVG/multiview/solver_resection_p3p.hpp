@@ -326,16 +326,16 @@ class P3P_ResectionKernel_K {
   typedef Mat34 Model;
   enum { MINIMUM_SAMPLES = 3 };
 
-  P3P_ResectionKernel_K(const Mat2X &x_camera, const Mat3X &X) : x_image_(x_camera), X_(X) {
+  P3P_ResectionKernel_K(const Mat2X &x_camera, const Mat3X &X)
+    :x_image_(x_camera), X_(X), K_(Mat3::Identity())
+  {
     assert(x_camera.cols() == X.cols());
-    K_ = Mat3::Identity();
     // Conversion from image coordinates to normalized camera coordinates
     Mat3X x_image_h;
     EuclideanToHomogeneous(x_image_, &x_image_h);
     x_camera_ = K_.inverse() * x_image_h;
-    x_camera_.col(0).normalize();
-    x_camera_.col(1).normalize();
-    x_camera_.col(2).normalize();
+    for(size_t i = 0; i < x_camera_.cols(); ++i)
+      x_camera_.col(i).normalize();
   }
 
   P3P_ResectionKernel_K(const Mat2X &x_image, const Mat3X &X, const Mat3 &K)
@@ -346,9 +346,8 @@ class P3P_ResectionKernel_K {
     Mat3X x_image_h;
     EuclideanToHomogeneous(x_image, &x_image_h);
     x_camera_ = K_.inverse() * x_image_h;
-    x_camera_.col(0).normalize();
-    x_camera_.col(1).normalize();
-    x_camera_.col(2).normalize();
+    for(size_t i = 0; i < x_camera_.cols(); ++i)
+      x_camera_.col(i).normalize();
   }
 
   void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
@@ -383,9 +382,9 @@ class P3P_ResectionKernel_K {
   }
 
  private:
-  Mat2X  x_image_;
-  Mat3 x_camera_; // intrinsic normalized camera coordinates
-  Mat3 X_;
+  Mat2X  x_image_; // camera coordinates
+  Mat3X x_camera_; // camera coordinates (normalized)
+  Mat3X X_;        // 3D points
   Mat3 K_;
 };
 

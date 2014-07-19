@@ -240,7 +240,7 @@ int main(int argc, char **argv)
   //    - L2 descriptor matching
   //    - Keep correspondences only if NearestNeighbor ratio is ok
   //---------------------------------------
-  IndexedMatchPerPair map_PutativesMatches;
+  PairWiseMatches map_PutativesMatches;
   // Define the matcher and the used metric (Squared L2)
   // ANN matcher could be defined as follow:
   typedef flann::L2<DescriptorT::bin_type> MetricT;
@@ -282,7 +282,7 @@ int main(int argc, char **argv)
   //    - AContrario Estimation of the desired geometric model
   //    - Use an upper bound for the a contrario estimated threshold
   //---------------------------------------
-  IndexedMatchPerPair map_GeometricMatches;
+  PairWiseMatches map_GeometricMatches;
 
   ImageCollectionGeometricFilter<FeatureT> collectionGeomFilter;
   const double maxResidualError = 4.0;
@@ -309,8 +309,8 @@ int main(int argc, char **argv)
           vec_imagesSize);
 
         //-- Perform an additional check to remove pairs with poor overlap
-        std::vector<IndexedMatchPerPair::key_type> vec_toRemove;
-        for (IndexedMatchPerPair::const_iterator iterMap = map_GeometricMatches.begin();
+        std::vector<PairWiseMatches::key_type> vec_toRemove;
+        for (PairWiseMatches::const_iterator iterMap = map_GeometricMatches.begin();
           iterMap != map_GeometricMatches.end(); ++iterMap)
         {
           size_t putativePhotometricCount = map_PutativesMatches.find(iterMap->first)->second.size();
@@ -322,7 +322,7 @@ int main(int argc, char **argv)
           }
         }
         //-- remove discarded pairs
-        for (std::vector<IndexedMatchPerPair::key_type>::const_iterator
+        for (std::vector<PairWiseMatches::key_type>::const_iterator
           iter =  vec_toRemove.begin(); iter != vec_toRemove.end(); ++iter)
         {
           map_GeometricMatches.erase(*iter);

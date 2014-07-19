@@ -48,7 +48,6 @@ struct IdentityPlus {
   }
 };
 
-
 TEST(AutoDiffLocalParameterizationTest, IdentityParameterization) {
   AutoDiffLocalParameterization<IdentityPlus, 3, 3>
       parameterization;
@@ -68,6 +67,47 @@ TEST(AutoDiffLocalParameterizationTest, IdentityParameterization) {
   for (int i = 0; i < 3; ++i) {
     for (int j = 0; j < 3; ++j, ++k) {
       EXPECT_EQ(jacobian[k], (i == j) ? 1.0 : 0.0);
+    }
+  }
+}
+
+struct ScaledPlus {
+  ScaledPlus(const double &scale_factor)
+     : scale_factor_(scale_factor)
+  {}
+
+  template <typename T>
+  bool operator()(const T* x, const T* delta, T* x_plus_delta) const {
+    for (int i = 0; i < 3; ++i) {
+      x_plus_delta[i] = x[i] + T(scale_factor_) * delta[i];
+    }
+    return true;
+  }
+
+  const double scale_factor_;
+};
+
+TEST(AutoDiffLocalParameterizationTest, ScaledParameterization) {
+  const double kTolerance = 1e-14;
+
+  AutoDiffLocalParameterization<ScaledPlus, 3, 3>
+      parameterization(new ScaledPlus(1.2345));
+
+  double x[3] = {1.0, 2.0, 3.0};
+  double delta[3] = {0.0, 1.0, 2.0};
+  double x_plus_delta[3] = {0.0, 0.0, 0.0};
+  parameterization.Plus(x, delta, x_plus_delta);
+
+  EXPECT_NEAR(x_plus_delta[0], 1.0, kTolerance);
+  EXPECT_NEAR(x_plus_delta[1], 3.2345, kTolerance);
+  EXPECT_NEAR(x_plus_delta[2], 5.469, kTolerance);
+
+  double jacobian[9];
+  parameterization.ComputeJacobian(x, jacobian);
+  int k = 0;
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 3; ++j, ++k) {
+      EXPECT_NEAR(jacobian[k], (i == j) ? 1.2345 : 0.0, kTolerance);
     }
   }
 }

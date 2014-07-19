@@ -50,6 +50,26 @@
 namespace ceres {
 namespace internal {
 
+enum LinearSolverTerminationType {
+  // Termination criterion was met.
+  LINEAR_SOLVER_SUCCESS,
+
+  // Solver ran for max_num_iterations and terminated before the
+  // termination tolerance could be satisfied.
+  LINEAR_SOLVER_NO_CONVERGENCE,
+
+  // Solver was terminated due to numerical problems, generally due to
+  // the linear system being poorly conditioned.
+  LINEAR_SOLVER_FAILURE,
+
+  // Solver failed with a fatal error that cannot be recovered from,
+  // e.g. CHOLMOD ran out of memory when computing the symbolic or
+  // numeric factorization or an underlying library was called with
+  // the wrong arguments.
+  LINEAR_SOLVER_FATAL_ERROR
+};
+
+
 class LinearOperator;
 
 // Abstract base class for objects that implement algorithms for
@@ -78,6 +98,7 @@ class LinearSolver {
           dense_linear_algebra_library_type(EIGEN),
           sparse_linear_algebra_library_type(SUITE_SPARSE),
           use_postordering(false),
+          dynamic_sparsity(false),
           min_num_iterations(1),
           max_num_iterations(1),
           num_threads(1),
@@ -88,15 +109,14 @@ class LinearSolver {
     }
 
     LinearSolverType type;
-
     PreconditionerType preconditioner_type;
     VisibilityClusteringType visibility_clustering_type;
-
     DenseLinearAlgebraLibraryType dense_linear_algebra_library_type;
     SparseLinearAlgebraLibraryType sparse_linear_algebra_library_type;
 
     // See solver.h for information about this flag.
     bool use_postordering;
+    bool dynamic_sparsity;
 
     // Number of internal iterations that the solver uses. This
     // parameter only makes sense for iterative solvers like CG.
@@ -245,12 +265,13 @@ class LinearSolver {
     Summary()
         : residual_norm(0.0),
           num_iterations(-1),
-          termination_type(FAILURE) {
+          termination_type(LINEAR_SOLVER_FAILURE) {
     }
 
     double residual_norm;
     int num_iterations;
     LinearSolverTerminationType termination_type;
+    string message;
   };
 
   virtual ~LinearSolver();

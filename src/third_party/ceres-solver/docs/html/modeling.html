@@ -1,99 +1,218 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Modeling &mdash; Ceres Solver</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
     
 
-    <title>Modeling &mdash; Ceres Solver</title>
+  
 
-<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
 
+  
+    <link rel="top" title="Ceres Solver" href="index.html"/>
+        <link rel="next" title="Solving" href="solving.html"/>
+        <link rel="prev" title="Tutorial" href="tutorial.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
 
     
-    <link rel="stylesheet" href="_static/rtd.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '1.8.0',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
-  MathJax.Hub.Config({
-    "HTML-CSS": {
-      availableFonts: ["TeX"]
-    }
-  });
-</script>
-    <script type="text/javascript" src="_static/searchtools.js"></script>
-    <link rel="top" title="Ceres Solver" href="index.html" />
-    <link rel="next" title="Solving" href="solving.html" />
-    <link rel="prev" title="Tutorial" href="tutorial.html" /> 
-  </head>
-  <body>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="solving.html" title="Solving"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="tutorial.html" title="Tutorial"
-             accesskey="P">previous</a> |</li>
-        <li><a href="index.html">Ceres Solver</a> &raquo;</li> 
-      </ul>
-    </div>  
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="index.html" class="fa fa-home"> Ceres Solver</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body">
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="building.html">Building &amp; Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="building.html#getting-the-source-code">Getting the source code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-linux">Building on Linux</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-mac-os-x">Building on Mac OS X</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-windows-with-visual-studio">Building on Windows with Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-android">Building on Android</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-ios">Building on iOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#customizing-the-build">Customizing the build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#using-ceres-with-cmake">Using Ceres with CMake</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#hello-world">Hello World!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#derivatives">Derivatives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#powell-s-function">Powell&#8217;s Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#curve-fitting">Curve Fitting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#robust-curve-fitting">Robust Curve Fitting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#bundle-adjustment">Bundle Adjustment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#other-examples">Other Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Modeling</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#costfunction"><tt class="docutils literal"><span class="pre">CostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sizedcostfunction"><tt class="docutils literal"><span class="pre">SizedCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#autodiffcostfunction"><tt class="docutils literal"><span class="pre">AutoDiffCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dynamicautodiffcostfunction"><tt class="docutils literal"><span class="pre">DynamicAutoDiffCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#numericdiffcostfunction"><tt class="docutils literal"><span class="pre">NumericDiffCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dynamicnumericdiffcostfunction"><tt class="docutils literal"><span class="pre">DynamicNumericDiffCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#numericdifffunctor"><tt class="docutils literal"><span class="pre">NumericDiffFunctor</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#costfunctiontofunctor"><tt class="docutils literal"><span class="pre">CostFunctionToFunctor</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#conditionedcostfunction"><tt class="docutils literal"><span class="pre">ConditionedCostFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#normalprior"><tt class="docutils literal"><span class="pre">NormalPrior</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lossfunction"><tt class="docutils literal"><span class="pre">LossFunction</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#localparameterization"><tt class="docutils literal"><span class="pre">LocalParameterization</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#autodifflocalparameterization"><tt class="docutils literal"><span class="pre">AutoDiffLocalParameterization</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#problem"><tt class="docutils literal"><span class="pre">Problem</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rotation-h"><tt class="docutils literal"><span class="pre">rotation.h</span></tt></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="solving.html">Solving</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="solving.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solving.html#trust-region-methods">Trust Region Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solving.html#line-search-methods">Line Search Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solving.html#linearsolver">LinearSolver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solving.html#covariance-estimation">Covariance Estimation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faqs.html">FAQS, Tips &amp; Tricks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="faqs.html#building">Building</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faqs.html#modeling">Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faqs.html#solving">Solving</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faqs.html#further-reading">Further Reading</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#setting-up-your-development-environment">Setting up your Development Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#submitting-a-change-to-ceres-solver">Submitting a change to Ceres Solver</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="version_history.html">Releases</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id1">1.9.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id2">1.8.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id5">1.7.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id9">1.6.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id12">1.5.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id16">1.4.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id20">1.3.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id23">1.2.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id25">1.2.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id27">1.2.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id30">1.2.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id33">1.1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id35">1.1.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id38">1.0.0</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="history.html#origin-of-the-name">Origin of the name</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Ceres Solver</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+          <div role="main">
             
   <div class="section" id="modeling">
 <span id="chapter-modeling"></span><h1>Modeling<a class="headerlink" href="#modeling" title="Permalink to this headline">¶</a></h1>
-<p>Recall that Ceres solves robustified non-linear least squares problems
-of the form</p>
+<p>Ceres solver consists of two distinct parts. A modeling API which
+provides a rich set of tools to construct an optimization problem one
+term at a time and a solver API that controls the minimization
+algorithm. This chapter is devoted to the task of modeling
+optimization problems using Ceres. <a class="reference internal" href="solving.html#chapter-solving"><em>Solving</em></a> discusses
+the various ways in which an optimization problem can be solved using
+Ceres.</p>
+<p>Ceres solves robustified bounds constrained non-linear least squares
+problems of the form:</p>
 <div class="math" id="equation-ceresproblem">
-<span class="eqno">(1)</span>\[\frac{1}{2}\sum_{i=1} \rho_i\left(\left\|f_i\left(x_{i_1}, ... ,x_{i_k}\right)\right\|^2\right).\]</div>
-<p>The expression
+<span class="eqno">(1)</span>\[\begin{split}\min_{\mathbf{x}} &amp;\quad \frac{1}{2}\sum_{i}
+\rho_i\left(\left\|f_i\left(x_{i_1},
+... ,x_{i_k}\right)\right\|^2\right)  \\
+\text{s.t.} &amp;\quad l_j \le x_j \le u_j\end{split}\]</div>
+<p>In Ceres parlance, the expression
 <span class="math">\(\rho_i\left(\left\|f_i\left(x_{i_1},...,x_{i_k}\right)\right\|^2\right)\)</span>
-is known as a <tt class="docutils literal"><span class="pre">ResidualBlock</span></tt>, where <span class="math">\(f_i(\cdot)\)</span> is a
-<a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> that depends on the parameter blocks
-<span class="math">\(\left[x_{i_1},... , x_{i_k}\right]\)</span>. In most optimization
-problems small groups of scalars occur together. For example the three
-components of a translation vector and the four components of the
-quaternion that define the pose of a camera. We refer to such a group
-of small scalars as a <tt class="docutils literal"><span class="pre">ParameterBlock</span></tt>. Of course a
-<tt class="docutils literal"><span class="pre">ParameterBlock</span></tt> can just be a single parameter. <span class="math">\(\rho_i\)</span> is a
-<a class="reference internal" href="#LossFunction" title="LossFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">LossFunction</span></tt></a>. A <a class="reference internal" href="#LossFunction" title="LossFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">LossFunction</span></tt></a> is a scalar function
-that is used to reduce the influence of outliers on the solution of
-non-linear least squares problems.</p>
-<p>In this chapter we will describe the various classes that are part of
-Ceres Solver&#8217;s modeling API, and how they can be used to construct an
-optimization problem. Once a problem has been constructed, various
-methods for solving them will be discussed in
-<a class="reference internal" href="solving.html#chapter-solving"><em>Solving</em></a>. It is by design that the modeling and the
-solving APIs are orthogonal to each other. This enables
-switching/tweaking of various solver parameters without having to
-touch the problem once it has been successfully modeled.</p>
+is known as a <strong>residual block</strong>, where <span class="math">\(f_i(\cdot)\)</span> is a
+<a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> that depends on the <strong>parameter blocks</strong>
+<span class="math">\(\left\{x_{i_1},... , x_{i_k}\right\}\)</span>.</p>
+<p>In most optimization problems small groups of scalars occur
+together. For example the three components of a translation vector and
+the four components of the quaternion that define the pose of a
+camera. We refer to such a group of scalars as a <strong>parameter block</strong>. Of
+course a parameter block can be just a single scalar too.</p>
+<p><span class="math">\(\rho_i\)</span> is a <a class="reference internal" href="#LossFunction" title="LossFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">LossFunction</span></tt></a>. A <a class="reference internal" href="#LossFunction" title="LossFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">LossFunction</span></tt></a> is
+a scalar valued function that is used to reduce the influence of
+outliers on the solution of non-linear least squares problems.</p>
+<p><span class="math">\(l_j\)</span> and <span class="math">\(u_j\)</span> are lower and upper bounds on the
+parameter block <span class="math">\(x_j\)</span>.</p>
+<p>As a special case, when <span class="math">\(\rho_i(x) = x\)</span>, i.e., the identity
+function, and <span class="math">\(l_j = -\infty\)</span> and <span class="math">\(u_j = \infty\)</span> we get
+the more familiar unconstrained <a class="reference external" href="http://en.wikipedia.org/wiki/Non-linear_least_squares">non-linear least squares problem</a>.</p>
+<div class="math" id="equation-ceresproblemunconstrained">
+<span class="eqno">(2)</span>\[\frac{1}{2}\sum_{i} \left\|f_i\left(x_{i_1}, ... ,x_{i_k}\right)\right\|^2.\]</div>
 <div class="section" id="costfunction">
 <h2><a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a><a class="headerlink" href="#costfunction" title="Permalink to this headline">¶</a></h2>
-<p>The single biggest task when modeling a problem is specifying the
-residuals and their derivatives. This is done using
-<a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> objects.</p>
+<p>For each term in the objective function, a <a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> is
+responsible for computing a vector of residuals and if asked a vector
+of Jacobian matrices, i.e., given <span class="math">\(\left[x_{i_1}, ... ,
+x_{i_k}\right]\)</span>, compute the vector
+<span class="math">\(f_i\left(x_{i_1},...,x_{i_k}\right)\)</span> and the matrices</p>
+<blockquote>
+<div><div class="math">
+\[J_{ij} = \frac{\partial}{\partial
+x_{i_j}}f_i\left(x_{i_1},...,x_{i_k}\right),\quad \forall j
+\in \{1, \ldots, k\}\]</div>
+</div></blockquote>
 <dl class="class">
 <dt id="CostFunction">
 <em class="property">class </em><tt class="descname">CostFunction</tt><a class="headerlink" href="#CostFunction" title="Permalink to this definition">¶</a></dt>
@@ -102,32 +221,24 @@ residuals and their derivatives. This is done using
   <span class="k">virtual</span> <span class="kt">bool</span> <span class="n">Evaluate</span><span class="p">(</span><span class="kt">double</span> <span class="k">const</span><span class="o">*</span> <span class="k">const</span><span class="o">*</span> <span class="n">parameters</span><span class="p">,</span>
                         <span class="kt">double</span><span class="o">*</span> <span class="n">residuals</span><span class="p">,</span>
                         <span class="kt">double</span><span class="o">**</span> <span class="n">jacobians</span><span class="p">)</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-  <span class="k">const</span> <span class="n">vector</span><span class="o">&lt;</span><span class="n">int16</span><span class="o">&gt;&amp;</span> <span class="n">parameter_block_sizes</span><span class="p">();</span>
+  <span class="k">const</span> <span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;&amp;</span> <span class="n">parameter_block_sizes</span><span class="p">();</span>
   <span class="kt">int</span> <span class="n">num_residuals</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
 
  <span class="nl">protected:</span>
-  <span class="n">vector</span><span class="o">&lt;</span><span class="n">int16</span><span class="o">&gt;*</span> <span class="n">mutable_parameter_block_sizes</span><span class="p">();</span>
+  <span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;*</span> <span class="n">mutable_parameter_block_sizes</span><span class="p">();</span>
   <span class="kt">void</span> <span class="nf">set_num_residuals</span><span class="p">(</span><span class="kt">int</span> <span class="n">num_residuals</span><span class="p">);</span>
 <span class="p">};</span>
 </pre></div>
 </div>
-<p>Given parameter blocks <span class="math">\(\left[x_{i_1}, ... , x_{i_k}\right]\)</span>,
-a <a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> is responsible for computing a vector of
-residuals and if asked a vector of Jacobian matrices, i.e., given
-<span class="math">\(\left[x_{i_1}, ... , x_{i_k}\right]\)</span>, compute the vector
-<span class="math">\(f_i\left(x_{i_1},...,x_{i_k}\right)\)</span> and the matrices</p>
-<div class="math">
-\[J_{ij} = \frac{\partial}{\partial x_{i_j}}f_i\left(x_{i_1},...,x_{i_k}\right),\quad \forall j \in \{i_1,..., i_k\}\]</div>
-<p>The signature of the <a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> (number and sizes of
-input parameter blocks and number of outputs) is stored in
-<tt class="xref cpp cpp-member docutils literal"><span class="pre">CostFunction::parameter_block_sizes_</span></tt> and
-<tt class="xref cpp cpp-member docutils literal"><span class="pre">CostFunction::num_residuals_</span></tt> respectively. User code
-inheriting from this class is expected to set these two members
-with the corresponding accessors. This information will be verified
-by the <a class="reference internal" href="#Problem" title="Problem"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Problem</span></tt></a> when added with
-<a class="reference internal" href="#Problem::AddResidualBlock__CostFunctionP.LossFunctionP.vector:doubleP:C" title="Problem::AddResidualBlock"><tt class="xref cpp cpp-func docutils literal"><span class="pre">Problem::AddResidualBlock()</span></tt></a>.</p>
 </dd></dl>
 
+<p>The signature of the <a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> (number and sizes of input
+parameter blocks and number of outputs) is stored in
+<tt class="xref cpp cpp-member docutils literal"><span class="pre">CostFunction::parameter_block_sizes_</span></tt> and
+<tt class="xref cpp cpp-member docutils literal"><span class="pre">CostFunction::num_residuals_</span></tt> respectively. User code
+inheriting from this class is expected to set these two members with
+the corresponding accessors. This information will be verified by the
+<a class="reference internal" href="#Problem" title="Problem"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Problem</span></tt></a> when added with <a class="reference internal" href="#Problem::AddResidualBlock__CostFunctionP.LossFunctionP.vector:doubleP:C" title="Problem::AddResidualBlock"><tt class="xref cpp cpp-func docutils literal"><span class="pre">Problem::AddResidualBlock()</span></tt></a>.</p>
 <dl class="function">
 <dt id="CostFunction::Evaluate__doubleCPCP.doubleP.doublePP">
 bool <tt class="descclassname">CostFunction::</tt><tt class="descname">Evaluate</tt><big>(</big>double const* const* <em>parameters</em>, double* <em>residuals</em>, double** <em>jacobians</em><big>)</big><a class="headerlink" href="#CostFunction::Evaluate__doubleCPCP.doubleP.doublePP" title="Permalink to this definition">¶</a></dt>
@@ -157,16 +268,6 @@ is the case when a parameter block is marked constant.</p>
 residuals and/or jacobians was successful or not.</p>
 <p>This can be used to communicate numerical failures in Jacobian
 computations for instance.</p>
-<p>A more interesting and common use is to impose constraints on the
-parameters. If the initial values of the parameter blocks satisfy
-the constraints, then returning false whenever the constraints are
-not satisfied will prevent the solver from moving into the
-infeasible region. This is not a very sophisticated mechanism for
-enforcing constraints, but is often good enough for things like
-non-negativity constraints.</p>
-<p>Note that it is important that the initial values of the parameter
-block must be feasible, otherwise the solver will declare a
-numerical problem at iteration 0.</p>
 </dd></dl>
 
 </div>
@@ -216,7 +317,12 @@ derivatives.  To this end Ceres provides <a class="reference external" href="htt
        <span class="kt">int</span> <span class="n">N9</span> <span class="o">=</span> <span class="mi">0</span><span class="o">&gt;</span>   <span class="c1">// Number of parameters in block 9.</span>
 <span class="k">class</span> <span class="nc">AutoDiffCostFunction</span> <span class="o">:</span> <span class="k">public</span>
 <span class="n">SizedCostFunction</span><span class="o">&lt;</span><span class="n">kNumResiduals</span><span class="p">,</span> <span class="n">N0</span><span class="p">,</span> <span class="n">N1</span><span class="p">,</span> <span class="n">N2</span><span class="p">,</span> <span class="n">N3</span><span class="p">,</span> <span class="n">N4</span><span class="p">,</span> <span class="n">N5</span><span class="p">,</span> <span class="n">N6</span><span class="p">,</span> <span class="n">N7</span><span class="p">,</span> <span class="n">N8</span><span class="p">,</span> <span class="n">N9</span><span class="o">&gt;</span> <span class="p">{</span>
-<span class="p">};</span>
+ <span class="nl">public:</span>
+  <span class="k">explicit</span> <span class="n">AutoDiffCostFunction</span><span class="p">(</span><span class="n">CostFunctor</span><span class="o">*</span> <span class="n">functor</span><span class="p">);</span>
+  <span class="c1">// Ignore the template parameter kNumResiduals and use</span>
+  <span class="c1">// num_residuals instead.</span>
+  <span class="n">AutoDiffCostFunction</span><span class="p">(</span><span class="n">CostFunctor</span><span class="o">*</span> <span class="n">functor</span><span class="p">,</span> <span class="kt">int</span> <span class="n">num_residuals</span><span class="p">);</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 <p>To get an auto differentiated cost function, you must define a
@@ -227,10 +333,7 @@ autodiff framework substitutes appropriate <tt class="docutils literal"><span cl
 is hidden, and you should write the function as if <tt class="docutils literal"><span class="pre">T</span></tt> were a
 scalar type (e.g. a double-precision floating point number).</p>
 <p>The function must write the computed value in the last argument
-(the only non-<tt class="docutils literal"><span class="pre">const</span></tt> one) and return true to indicate success.
-Please see <a class="reference internal" href="#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> for details on how the return
-value may be used to impose simple constraints on the parameter
-block.</p>
+(the only non-<tt class="docutils literal"><span class="pre">const</span></tt> one) and return true to indicate success.</p>
 <p>For example, consider a scalar error <span class="math">\(e = k - x^\top y\)</span>,
 where both <span class="math">\(x\)</span> and <span class="math">\(y\)</span> are two-dimensional vector
 parameters and <span class="math">\(k\)</span> is a constant. The form of this error,
@@ -785,7 +888,7 @@ the covariance matrix <span class="math">\(S\)</span> is rank deficient.</p>
 
 </div>
 <div class="section" id="lossfunction">
-<h2><a class="reference internal" href="#LossFunction" title="LossFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">LossFunction</span></tt></a><a class="headerlink" href="#lossfunction" title="Permalink to this headline">¶</a></h2>
+<span id="section-loss-function"></span><h2><a class="reference internal" href="#LossFunction" title="LossFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">LossFunction</span></tt></a><a class="headerlink" href="#lossfunction" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="LossFunction">
 <em class="property">class </em><tt class="descname">LossFunction</tt><a class="headerlink" href="#LossFunction" title="Permalink to this definition">¶</a></dt>
@@ -1110,12 +1213,12 @@ that 4-vector defining the quaternion. One way to do this is to let
 <span class="math">\(\boxplus\)</span> to be</p>
 <blockquote>
 <div><div class="math" id="equation-quaternion">
-<span class="eqno">(2)</span>\[\boxplus(x, \Delta x) = \left[ \cos(|\Delta x|), \frac{\sin\left(|\Delta x|\right)}{|\Delta x|} \Delta x \right] * x\]</div>
+<span class="eqno">(3)</span>\[\boxplus(x, \Delta x) = \left[ \cos(|\Delta x|), \frac{\sin\left(|\Delta x|\right)}{|\Delta x|} \Delta x \right] * x\]</div>
 </div></blockquote>
 <p>The multiplication between the two 4-vectors on the right hand side
 is the standard quaternion
 product. <a class="reference internal" href="#QuaternionParameterization" title="QuaternionParameterization"><tt class="xref cpp cpp-class docutils literal"><span class="pre">QuaternionParameterization</span></tt></a> is an implementation
-of <a href="#equation-quaternion">(2)</a>.</p>
+of <a href="#equation-quaternion">(3)</a>.</p>
 </dd></dl>
 
 </div>
@@ -1196,10 +1299,10 @@ types for <tt class="docutils literal"><span class="pre">T</span></tt>, you must
 <dl class="class">
 <dt id="Problem">
 <em class="property">class </em><tt class="descname">Problem</tt><a class="headerlink" href="#Problem" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="#Problem" title="Problem"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Problem</span></tt></a> holds the robustified non-linear least squares
-problem <a href="#equation-ceresproblem">(1)</a>. To create a least squares problem, use
-the <a class="reference internal" href="#Problem::AddResidualBlock__CostFunctionP.LossFunctionP.vector:doubleP:C" title="Problem::AddResidualBlock"><tt class="xref cpp cpp-func docutils literal"><span class="pre">Problem::AddResidualBlock()</span></tt></a> and
-<a class="reference internal" href="#Problem::AddParameterBlock__doubleP.i.LocalParameterizationP" title="Problem::AddParameterBlock"><tt class="xref cpp cpp-func docutils literal"><span class="pre">Problem::AddParameterBlock()</span></tt></a> methods.</p>
+<dd><p><a class="reference internal" href="#Problem" title="Problem"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Problem</span></tt></a> holds the robustified bounds constrained
+non-linear least squares problem <a href="#equation-ceresproblem">(1)</a>. To create a
+least squares problem, use the <a class="reference internal" href="#Problem::AddResidualBlock__CostFunctionP.LossFunctionP.vector:doubleP:C" title="Problem::AddResidualBlock"><tt class="xref cpp cpp-func docutils literal"><span class="pre">Problem::AddResidualBlock()</span></tt></a>
+and <a class="reference internal" href="#Problem::AddParameterBlock__doubleP.i.LocalParameterizationP" title="Problem::AddParameterBlock"><tt class="xref cpp cpp-func docutils literal"><span class="pre">Problem::AddParameterBlock()</span></tt></a> methods.</p>
 <p>For example a problem containing 3 parameter blocks of sizes 3, 4
 and 5 respectively and two residual blocks of size 2 and 6:</p>
 <div class="highlight-c++"><div class="highlight"><pre><span class="kt">double</span> <span class="n">x1</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span> <span class="p">};</span>
@@ -1322,7 +1425,10 @@ void <tt class="descclassname">Problem::</tt><tt class="descname">RemoveResidual
 <dd><p>Remove a residual block from the problem. Any parameters that the residual
 block depends on are not removed. The cost and loss functions for the
 residual block will not get deleted immediately; won&#8217;t happen until the
-problem itself is deleted.</p>
+problem itself is deleted.  If Problem::Options::enable_fast_removal is
+true, then the removal is fast (almost constant time). Otherwise, removing a
+residual block will incur a scan of the entire Problem object to verify that
+the residual_block represents a valid residual in the problem.</p>
 <p><strong>WARNING:</strong> Removing a residual or parameter block will destroy
 the implicit ordering, rendering the jacobian or residuals returned
 from the solver uninterpretable. If you depend on the evaluated
@@ -1338,7 +1444,7 @@ the parameter block, if it exists, will persist until the deletion
 of the problem (similar to cost/loss functions in residual block
 removal). Any residual blocks that depend on the parameter are also
 removed, as described above in RemoveResidualBlock().  If
-Problem::Options::enable_fast_parameter_block_removal is true, then
+Problem::Options::enable_fast_removal is true, then
 the removal is fast (almost constant time). Otherwise, removing a
 parameter block will incur a scan of the entire Problem object.</p>
 <p><strong>WARNING:</strong> Removing a residual or parameter block will destroy
@@ -1370,114 +1476,10 @@ parameterizations only once. The local parameterization can only be
 set once per parameter, and cannot be changed once set.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="Problem::NumParameterBlocksC">
-int <tt class="descclassname">Problem::</tt><tt class="descname">NumParameterBlocks</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Problem::NumParameterBlocksC" title="Permalink to this definition">¶</a></dt>
-<dd><p>Number of parameter blocks in the problem. Always equals
-parameter_blocks().size() and parameter_block_sizes().size().</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="Problem::NumParametersC">
-int <tt class="descclassname">Problem::</tt><tt class="descname">NumParameters</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Problem::NumParametersC" title="Permalink to this definition">¶</a></dt>
-<dd><p>The size of the parameter vector obtained by summing over the sizes
-of all the parameter blocks.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="Problem::NumResidualBlocksC">
-int <tt class="descclassname">Problem::</tt><tt class="descname">NumResidualBlocks</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Problem::NumResidualBlocksC" title="Permalink to this definition">¶</a></dt>
-<dd><p>Number of residual blocks in the problem. Always equals
-residual_blocks().size().</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="Problem::NumResidualsC">
-int <tt class="descclassname">Problem::</tt><tt class="descname">NumResiduals</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Problem::NumResidualsC" title="Permalink to this definition">¶</a></dt>
-<dd><p>The size of the residual vector obtained by summing over the sizes
-of all of the residual blocks.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="Problem::ParameterBlockSize__doubleCPC">
-int <tt class="descclassname">Problem::</tt><tt class="descname">ParameterBlockSize</tt><big>(</big>const double* <em>values</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Problem::ParameterBlockSize__doubleCPC" title="Permalink to this definition">¶</a></dt>
-<dd><p>The size of the parameter block.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="Problem::ParameterBlockLocalSize__doubleCPC">
-int <tt class="descclassname">Problem::</tt><tt class="descname">ParameterBlockLocalSize</tt><big>(</big>const double* <em>values</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Problem::ParameterBlockLocalSize__doubleCPC" title="Permalink to this definition">¶</a></dt>
-<dd><p>The size of local parameterization for the parameter block. If
-there is no local parameterization associated with this parameter
-block, then <tt class="docutils literal"><span class="pre">ParameterBlockLocalSize</span></tt> = <tt class="docutils literal"><span class="pre">ParameterBlockSize</span></tt>.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="Problem::GetParameterBlocks__vector:doubleP:PC">
-void <tt class="descclassname">Problem::</tt><tt class="descname">GetParameterBlocks</tt><big>(</big>vector&lt;double*&gt;* <em>parameter_blocks</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Problem::GetParameterBlocks__vector:doubleP:PC" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fills the passed <tt class="docutils literal"><span class="pre">parameter_blocks</span></tt> vector with pointers to the
-parameter blocks currently in the problem. After this call,
-<tt class="docutils literal"><span class="pre">parameter_block.size()</span> <span class="pre">==</span> <span class="pre">NumParameterBlocks</span></tt>.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="Problem::GetResidualBlocks__vector:ResidualBlockId:PC">
-void <tt class="descclassname">Problem::</tt><tt class="descname">GetResidualBlocks</tt><big>(</big>vector&lt;ResidualBlockId&gt;* <em>residual_blocks</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Problem::GetResidualBlocks__vector:ResidualBlockId:PC" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fills the passed <cite>residual_blocks</cite> vector with pointers to the
-residual blocks currently in the problem. After this call,
-<cite>residual_blocks.size() == NumResidualBlocks</cite>.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="Problem::GetParameterBlocksForResidualBlock__ResidualBlockIdC.vector:doubleP:PC">
-void <tt class="descclassname">Problem::</tt><tt class="descname">GetParameterBlocksForResidualBlock</tt><big>(</big>const ResidualBlockId <em>residual_block</em>, vector&lt;double*&gt;* <em>parameter_blocks</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Problem::GetParameterBlocksForResidualBlock__ResidualBlockIdC.vector:doubleP:PC" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get all the parameter blocks that depend on the given residual
-block.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="Problem::GetResidualBlocksForParameterBlock__doubleCP.vector:ResidualBlockId:PC">
-void <tt class="descclassname">Problem::</tt><tt class="descname">GetResidualBlocksForParameterBlock</tt><big>(</big>const double* <em>values</em>, vector&lt;ResidualBlockId&gt;* <em>residual_blocks</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Problem::GetResidualBlocksForParameterBlock__doubleCP.vector:ResidualBlockId:PC" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get all the residual blocks that depend on the given parameter
-block.</p>
-<p>If <cite>Problem::Options::enable_fast_parameter_block_removal</cite> is
-<cite>true</cite>, then getting the residual blocks is fast and depends only
-on the number of residual blocks. Otherwise, getting the residual
-blocks for a parameter block will incur a scan of the entire
-<a class="reference internal" href="#Problem" title="Problem"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Problem</span></tt></a> object.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="Problem::Evaluate__Problem::EvaluateOptionsCR.doubleP.vector:double:P.vector:double:P.CRSMatrixP">
-bool <tt class="descclassname">Problem::</tt><tt class="descname">Evaluate</tt><big>(</big>const Problem::EvaluateOptions&amp; <em>options</em>, double* <em>cost</em>, vector&lt;double&gt;* <em>residuals</em>, vector&lt;double&gt;* <em>gradient</em>, CRSMatrix* <em>jacobian</em><big>)</big><a class="headerlink" href="#Problem::Evaluate__Problem::EvaluateOptionsCR.doubleP.vector:double:P.vector:double:P.CRSMatrixP" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluate a <a class="reference internal" href="#Problem" title="Problem"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Problem</span></tt></a>. Any of the output pointers can be
-<cite>NULL</cite>. Which residual blocks and parameter blocks are used is
-controlled by the <a class="reference internal" href="#Problem::EvaluateOptions" title="Problem::EvaluateOptions"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Problem::EvaluateOptions</span></tt></a> struct below.</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="n">Problem</span> <span class="n">problem</span><span class="p">;</span>
-<span class="kt">double</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="n">problem</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="k">new</span> <span class="n">MyCostFunction</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">x</span><span class="p">);</span>
-
-<span class="kt">double</span> <span class="n">cost</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
-<span class="n">problem</span><span class="p">.</span><span class="n">Evaluate</span><span class="p">(</span><span class="n">Problem</span><span class="o">::</span><span class="n">EvaluateOptions</span><span class="p">(),</span> <span class="o">&amp;</span><span class="n">cost</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>The cost is evaluated at <cite>x = 1</cite>. If you wish to evaluate the
-problem at <cite>x = 2</cite>, then</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="n">x</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-<span class="n">problem</span><span class="p">.</span><span class="n">Evaluate</span><span class="p">(</span><span class="n">Problem</span><span class="o">::</span><span class="n">EvaluateOptions</span><span class="p">(),</span> <span class="o">&amp;</span><span class="n">cost</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>is the way to do so.</p>
-<p><strong>NOTE</strong> If no local parameterizations are used, then the size of
-the gradient vector is the sum of the sizes of all the parameter
-blocks. If a parameter block has a local parameterization, then
-it contributes &#8220;LocalSize&#8221; entries to the gradient vector.</p>
-</dd></dl>
-
 <dl class="class">
 <dt id="Problem::EvaluateOptions">
 <em class="property">class </em><tt class="descclassname">Problem::</tt><tt class="descname">EvaluateOptions</tt><a class="headerlink" href="#Problem::EvaluateOptions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Options struct that is used to control <a class="reference internal" href="#Problem::Evaluate__Problem::EvaluateOptionsCR.doubleP.vector:double:P.vector:double:P.CRSMatrixP" title="Problem::Evaluate"><tt class="xref cpp cpp-func docutils literal"><span class="pre">Problem::Evaluate()</span></tt></a>.</p>
+<dd><p>Options struct that is used to control <tt class="xref cpp cpp-func docutils literal"><span class="pre">Problem::Evaluate()</span></tt>.</p>
 </dd></dl>
 
 <dl class="member">
@@ -1664,70 +1666,84 @@ void <tt class="descname">AngleAxisRotatePoint&lt;T&gt;</tt><big>(</big>const T 
 
 
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper">
-<h3><a href="index.html">Ceres Solver</a></h3>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="building.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Modeling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="solving.html">Solving</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reading.html">Further Reading</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="acknowledgements.html">Acknowledgements</a></li>
-<li class="toctree-l1"><a class="reference internal" href="version_history.html">Version History</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
-</ul>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="solving.html" class="btn btn-neutral float-right" title="Solving"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tutorial.html" class="btn btn-neutral" title="Tutorial"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="tutorial.html"
-                        title="previous chapter">Tutorial</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="solving.html"
-                        title="next chapter">Solving</a></p>
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014 Google Inc.
     </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="solving.html" title="Solving"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="tutorial.html" title="Tutorial"
-             >previous</a> |</li>
-        <li><a href="index.html">Ceres Solver</a> &raquo;</li> 
-      </ul>
-    </div>
-<div class="footer">
-    &copy; Copyright 2013, Google Inc..
-</div>
+
+    </section>
+
+  </div>
+  
 
 
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.9.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
+      MathJax.Hub.Config({
+          "HTML-CSS": {
+            availableFonts: ["TeX"]
+          }
+        });
+      </script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+  
+ 
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-49769510-1', 'ceres-solver.org');
+  ga('send', 'pageview');
+</script>
 
 
-
-  </body>
+</body>
 </html>

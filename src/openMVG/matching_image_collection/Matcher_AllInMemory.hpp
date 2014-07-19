@@ -22,9 +22,9 @@ using namespace openMVG::matching;
 
 /// Implementation of an Image Collection Matcher
 /// Compute putative matches between a collection of pictures
-/// Spurious correspondences are discarded by using the 
+/// Spurious correspondences are discarded by using the
 ///  a threshold over the distance ratio of the 2 neighbours points.
-/// 
+///
 template <typename KeypointSetT, typename MatcherT>
 class Matcher_AllInMemory : public Matcher
 {
@@ -47,10 +47,6 @@ class Matcher_AllInMemory : public Matcher
     const std::vector<std::string> & vec_fileNames, // input filenames
     const std::string & sMatchDir) // where the data are saved
   {
-    // Alias for descriptor internal data type and length
-
-    const int static_size = DescriptorT::static_size;
-
     bool bOk = true;
     for (size_t j = 0; j < vec_fileNames.size(); ++j)  {
       // Load descriptor of Jnth image
@@ -67,7 +63,7 @@ class Matcher_AllInMemory : public Matcher
 
   void Match(
     const std::vector<std::string> & vec_fileNames, // input filenames,
-    IndexedMatchPerPair & map_PutativesMatches)const // the pairwise photometric corresponding points
+    PairWiseMatches & map_PutativesMatches)const // the pairwise photometric corresponding points
   {
 #ifdef USE_OPENMP
     std::cout << "Using the OPENMP thread interface" << std::endl;
@@ -102,7 +98,6 @@ class Matcher_AllInMemory : public Matcher
         std::advance(iter_DescriptorJ, j);
 
         const std::vector<FeatureT> & featureSetJ = iter_FeaturesJ->second;
-        const size_t featureSetJ_Size = iter_FeaturesJ->second.size();
         const DescBin_typeT * tab1 =
           reinterpret_cast<const DescBin_typeT *>(&iter_DescriptorJ->second[0]);
 

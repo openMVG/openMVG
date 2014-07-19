@@ -9,7 +9,6 @@
 Solving
 =======
 
-
 Introduction
 ============
 
@@ -24,15 +23,21 @@ variables, and
 :math:`m`-dimensional function of :math:`x`.  We are interested in
 solving the following optimization problem [#f1]_ .
 
-.. math:: \arg \min_x \frac{1}{2}\|F(x)\|^2\ .
+.. math:: \arg \min_x \frac{1}{2}\|F(x)\|^2\ . \\
+          L \le x \le U
   :label: nonlinsq
 
-Here, the Jacobian :math:`J(x)` of :math:`F(x)` is an :math:`m\times
-n` matrix, where :math:`J_{ij}(x) = \partial_j f_i(x)` and the
-gradient vector :math:`g(x) = \nabla \frac{1}{2}\|F(x)\|^2 = J(x)^\top
-F(x)`. Since the efficient global minimization of :eq:`nonlinsq` for
+Where, :math:`L` and :math:`U` are lower and upper bounds on the
+parameter vector :math:`x`.
+
+Since the efficient global minimization of :eq:`nonlinsq` for
 general :math:`F(x)` is an intractable problem, we will have to settle
 for finding a local minimum.
+
+In the following, the Jacobian :math:`J(x)` of :math:`F(x)` is an
+:math:`m\times n` matrix, where :math:`J_{ij}(x) = \partial_j f_i(x)`
+and the gradient vector is :math:`g(x) = \nabla \frac{1}{2}\|F(x)\|^2
+= J(x)^\top F(x)`.
 
 The general strategy when solving non-linear optimization problems is
 to solve a sequence of approximations to the original problem
@@ -81,15 +86,20 @@ Trust Region Methods
 The basic trust region algorithm looks something like this.
 
    1. Given an initial point :math:`x` and a trust region radius :math:`\mu`.
-   2. :math:`\arg \min_{\Delta x} \frac{1}{2}\|J(x)\Delta
-      x + F(x)\|^2` s.t. :math:`\|D(x)\Delta x\|^2 \le \mu`
+   2. Solve
+
+      .. math::
+         \arg \min_{\Delta x}& \frac{1}{2}\|J(x)\Delta x + F(x)\|^2 \\
+         \text{such that} &\|D(x)\Delta x\|^2 \le \mu\\
+         &L \le x + \Delta x \le U.
+
    3. :math:`\rho = \frac{\displaystyle \|F(x + \Delta x)\|^2 -
       \|F(x)\|^2}{\displaystyle \|J(x)\Delta x + F(x)\|^2 -
       \|F(x)\|^2}`
    4. if :math:`\rho > \epsilon` then  :math:`x = x + \Delta x`.
    5. if :math:`\rho > \eta_1` then :math:`\rho = 2  \rho`
    6. else if :math:`\rho < \eta_2` then :math:`\rho = 0.5 * \rho`
-   7. Goto 2.
+   7. Go to 2.
 
 Here, :math:`\mu` is the trust region radius, :math:`D(x)` is some
 matrix used to define a metric on the domain of :math:`F(x)` and
@@ -103,21 +113,27 @@ in the value of :math:`\rho`.
 The key computational step in a trust-region algorithm is the solution
 of the constrained optimization problem
 
-.. math:: \arg\min_{\Delta x} \frac{1}{2}\|J(x)\Delta x +  F(x)\|^2\quad \text{such that}\quad  \|D(x)\Delta x\|^2 \le \mu
+.. math::
+   \arg \min_{\Delta x}& \frac{1}{2}\|J(x)\Delta x + F(x)\|^2 \\
+   \text{such that} &\|D(x)\Delta x\|^2 \le \mu\\
+    &L \le x + \Delta x \le U.
    :label: trp
 
 There are a number of different ways of solving this problem, each
 giving rise to a different concrete trust-region algorithm. Currently
 Ceres, implements two trust-region algorithms - Levenberg-Marquardt
-and Dogleg. The user can choose between them by setting
-:member:`Solver::Options::trust_region_strategy_type`.
+and Dogleg, each of which is augmented with a line search if bounds
+constraints are present [Kanzow]_. The user can choose between them by
+setting :member:`Solver::Options::trust_region_strategy_type`.
 
 .. rubric:: Footnotes
 
-.. [#f1] At the level of the non-linear solver, the block
-         structure is not relevant, therefore our discussion here is
-         in terms of an optimization problem defined over a state
-         vector of size :math:`n`.
+.. [#f1] At the level of the non-linear solver, the block structure is
+         not relevant, therefore our discussion here is in terms of an
+         optimization problem defined over a state vector of size
+         :math:`n`. Similarly the presence of loss functions is also
+         ignored as the problem is internally converted into a pure
+         non-linear least squares problem.
 
 
 .. _section-levenberg-marquardt:
@@ -291,9 +307,10 @@ In this case, we solve for the trust region step for the full problem,
 and then use it as the starting point to further optimize just `a_1`
 and `a_2`. For the linear case, this amounts to doing a single linear
 least squares solve. For non-linear problems, any method for solving
-the `a_1` and `a_2` optimization problems will do. The only constraint
-on `a_1` and `a_2` (if they are two different parameter block) is that
-they do not co-occur in a residual block.
+the :math:`a_1` and :math:`a_2` optimization problems will do. The
+only constraint on :math:`a_1` and :math:`a_2` (if they are two
+different parameter block) is that they do not co-occur in a residual
+block.
 
 This idea can be further generalized, by not just optimizing
 :math:`(a_1, a_2)`, but decomposing the graph corresponding to the
@@ -315,7 +332,7 @@ Non-monotonic Steps
 -------------------
 
 Note that the basic trust-region algorithm described in
-Algorithm~\ref{alg:trust-region} is a descent algorithm in that they
+:ref:`section-trust-region-methods` is a descent algorithm in that it
 only accepts a point if it strictly reduces the value of the objective
 function.
 
@@ -346,10 +363,9 @@ region strategies.
 Line Search Methods
 ===================
 
-**The implementation of line search algorithms in Ceres Solver is
-fairly new and not very well tested, so for now this part of the
-solver should be considered beta quality. We welcome reports of your
-experiences both good and bad on the mailinglist.**
+The line search method in Ceres Solver cannot handle bounds
+constraints right now, so it can only be used for solving
+unconstrained problems.
 
 Line search algorithms
 
@@ -362,7 +378,7 @@ Line search algorithms
 Here :math:`H(x)` is some approximation to the Hessian of the
 objective function, and :math:`g(x)` is the gradient at
 :math:`x`. Depending on the choice of :math:`H(x)` we get a variety of
-different search directions -`\Delta x`.
+different search directions :math:`\Delta x`.
 
 Step 4, which is a one dimensional optimization or `Line Search` along
 :math:`\Delta x` is what gives this class of methods its name.
@@ -1111,10 +1127,12 @@ elimination group [LiSaad]_.
 
    Solver terminates if
 
-   .. math:: \frac{\|g(x)\|_\infty}{\|g(x_0)\|_\infty} < \text{gradient_tolerance}
+   .. math:: \|x - \Pi \boxplus(x, -g(x))\|_\infty < \text{gradient_tolerance}
 
-   where :math:`\|\cdot\|_\infty` refers to the max norm, and :math:`x_0` is
-   the vector of initial parameter values.
+   where :math:`\|\cdot\|_\infty` refers to the max norm, :math:`\Pi`
+   is projection onto the bounds constraints and :math:`\boxplus` is
+   Plus operation for the overall local parameterization associated
+   with the parameter vector.
 
 .. member:: double Solver::Options::parameter_tolerance
 
@@ -1206,7 +1224,7 @@ elimination group [LiSaad]_.
 
    Number of threads used by the linear solver.
 
-.. member:: ParameterBlockOrdering* Solver::Options::linear_solver_ordering
+.. member:: shared_ptr<ParameterBlockOrdering> Solver::Options::linear_solver_ordering
 
    Default: ``NULL``
 
@@ -1242,6 +1260,22 @@ elimination group [LiSaad]_.
    algorithm which has slightly better runtime performance at the
    expense of an extra copy of the Jacobian matrix. Setting
    ``use_postordering`` to ``true`` enables this tradeoff.
+
+.. member:: bool Solver::Options::dynamic_sparsity
+
+   Some non-linear least squares problems are symbolically dense but
+   numerically sparse. i.e. at any given state only a small number of
+   Jacobian entries are non-zero, but the position and number of
+   non-zeros is different depending on the state. For these problems
+   it can be useful to factorize the sparse jacobian at each solver
+   iteration instead of including all of the zero entries in a single
+   general factorization.
+
+   If your problem does not have this property (or you do not know),
+   then it is probably best to keep this false, otherwise it will
+   likely lead to worse performance.
+
+   This settings affects the `SPARSE_NORMAL_CHOLESKY` solver.
 
 .. member:: int Solver::Options::min_linear_solver_iterations
 
@@ -1302,7 +1336,7 @@ elimination group [LiSaad]_.
    inner iterations in subsequent trust region minimizer iterations is
    disabled.
 
-.. member:: ParameterBlockOrdering*  Solver::Options::inner_iteration_ordering
+.. member:: shared_ptr<ParameterBlockOrdering> Solver::Options::inner_iteration_ordering
 
    Default: ``NULL``
 
@@ -1702,7 +1736,7 @@ elimination group [LiSaad]_.
      situation. The solver returns without updating the parameter
      blocks (unless ``Solver::Options::update_state_every_iteration`` is
      set true). Solver returns with ``Solver::Summary::termination_type``
-     set to ``USER_ABORT``.
+     set to ``USER_FAILURE``.
 
   #. ``SOLVER_TERMINATE_SUCCESSFULLY`` indicates that there is no need
      to optimize anymore (some user specified termination criterion
@@ -1827,18 +1861,27 @@ The three arrays will be:
    A full multiline description of the state of the solver after
    termination.
 
+.. function:: bool Solver::Summary::IsSolutionUsable() const
+
+   Whether the solution returned by the optimization algorithm can be
+   relied on to be numerically sane. This will be the case if
+   `Solver::Summary:termination_type` is set to `CONVERGENCE`,
+   `USER_SUCCESS` or `NO_CONVERGENCE`, i.e., either the solver
+   converged by meeting one of the convergence tolerances or because
+   the user indicated that it had converged or it ran to the maximum
+   number of iterations or time.
+
 .. member:: MinimizerType Solver::Summary::minimizer_type
 
    Type of minimization algorithm used.
 
-.. member:: SolverTerminationType Solver::Summary::termination_type
+.. member:: TerminationType Solver::Summary::termination_type
 
    The cause of the minimizer terminating.
 
-.. member:: string Solver::Summary::error
+.. member:: string Solver::Summary::message
 
-   If the solver did not run, or there was a failure, a description of
-   the error.
+   Reason why the solver terminated.
 
 .. member:: double Solver::Summary::initial_cost
 
@@ -2470,4 +2513,3 @@ Example Usage
  covariance.GetCovarianceBlock(x, x, covariance_xx)
  covariance.GetCovarianceBlock(y, y, covariance_yy)
  covariance.GetCovarianceBlock(x, y, covariance_xy)
-
