@@ -33,21 +33,20 @@ The process exports in outputDirectory/**lists.txt** file the extracted camera i
 
     .. math::
       
-      \text{double ccdw}_\text{mm} = \text{sensorSizeWidth};\\
-      \text{focal}_{pix} = max( w_\text{pix}, h_\text{pix} ) * \text{focal}_\text{mm} / \text{ccdw}_\text{mm};
+      \text{focal}_{pix} = \frac{max( w_\text{pix}, h_\text{pix} ) * \text{focal}_\text{mm}} {\text{ccdw}_\text{mm}}
 
-    - :math:`\text{focal}_{pix}` the EXIF focal length in pixel,
-    - :math:`\text{focal}_{mm}` the EXIF focal length in mm,
-    - :math:`w_\text{pix}, h_\text{pix}` the image of width and height,
-    - :math:`\text{ccdw}_\text{mm}` the known sensor size 
+    - :math:`\text{focal}_{pix}` the EXIF focal length (pixels),
+    - :math:`\text{focal}_{mm}` the EXIF focal length (mm),
+    - :math:`w_\text{pix}, h_\text{pix}` the image of width and height (pixels),
+    - :math:`\text{ccdw}_\text{mm}` the known sensor width size (mm)
 
-      - if the EXIF camera model and maker is found the sensorWidthDatabase database openMVG/src/software/SfM/cameraSensorWidth/cameraGenerated.txt
+      - used if the EXIF camera model and maker is found in the sensorWidthDatabase database openMVG/src/software/SfM/cameraSensorWidth/cameraGenerated.txt
 
   - If all the camera have the same focal length or no EXIF info, you can set the pixel focal length directly
   
   .. code-block:: c++
   
-    $ openMVG_main_CreateList -f 2750(i.e in pixel) -i Dataset/images/ -o Dataset/matches/
+    $ openMVG_main_CreateList -f 2750(i.e in pixels) -i Dataset/images/ -o Dataset/matches/
 
 Depending if EXIF data and if the camera model and make is registered in the camera databset, per lines the following information are displayed:
 

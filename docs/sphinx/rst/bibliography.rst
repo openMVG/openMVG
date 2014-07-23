@@ -44,6 +44,12 @@ Bibliography
 .. [TracksCVMP12] **Unordered feature tracking made fast and easy**
     Pierre Moulon and Pascal Monasse, CVMP 2012.
     
+.. [KVLD12] **Virtual Line Descriptor and Semi-Local Graph Matching Method for Reliable Feature Correspondence.**
+    Zhe LIU and Renaud MARLET, BMVC 2012.
+    
+.. [Moulon13] **Global Multiple-View Color Consistency.**
+    Pierre Moulon, Bruno Duisit and Pascal Monasse, CVMP 2013.
+    
 .. [PMVS] **Accurate, dense, and robust multi-view stereopsis.**
     Yasutaka Furukawa and Jean Ponce.
     IEEE Trans. on Pattern Analysis and Machine Intelligence, 32(8):1362-1376, 2010.

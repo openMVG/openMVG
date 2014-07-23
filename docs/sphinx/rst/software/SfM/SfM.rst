@@ -62,10 +62,10 @@ To know more about each tool visit the following link and read the doc below:
    ./MVS.rst
 
 
-Structure from Motion chain usage
+Structure from Motion chains usage
 =====================================
 
-The a contrario Structure from Motion chain take as input an image collection.
+The Structure from Motion chains take as input an image collection.
 
 Using a 3 directories based data organisation structure is suggested:
 
@@ -75,10 +75,10 @@ Using a 3 directories based data organisation structure is suggested:
 
 * **matches**
 
-  * the image information (lists.txt), images points and matches information will be saved here
+  * the image information (lists.txt), images points and matches information will be saved here.
 
 * **outReconstruction**
 
-  * directory where result and log of the 3D reconstruction will be exported
+  * directory where result and log of the 3D reconstruction will be exported.
 
 
