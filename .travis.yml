@@ -1,49 +1,72 @@
 #
-# http://travis-ci.org configuration file for openMVG
+# Travis configuration file for openMVG
+# http://travis-ci.org/openMVG/openMVG
 #
 
 language: cpp
+
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "JyzTqfd9WLDJyaE4zIwM0II/rlfzEmMOI2V69KNWtJEE0Fl9Tiz1pTvyLdUJoZMicSACm+p3RiFHfOypjEhCncSJ8p2lv8a/qmzgF92xMS8JVar+Q0RqHlVHTR0O2hVlN7jc5fUdAzxFjCGAawh3Pmkq6hLw+zjfUsxdENwGPUA="
 
 compiler:
   - gcc
   - clang
 
 before_install:
- - sudo apt-get update -qq
- - export NUM_CPU="`grep processor /proc/cpuinfo | wc -l`"; echo $NUM_CPU
- - sudo apt-get install lcov
- - gem install coveralls-lcov
- 
+  - sudo apt-get update -qq
+  - export NUM_CPU="`grep processor /proc/cpuinfo | wc -l`"; echo $NUM_CPU
+  - sudo apt-get install lcov
+  - gem install coveralls-lcov
+
 install: sudo apt-get install cmake libpng-dev libjpeg8-dev libxxf86vm1 libxxf86vm1 libxxf86vm-dev x11proto-xf86vidmode-dev libxrandr-dev
 
 before_script:
-  - cd ..
   - mkdir build
   - cd build
-  # Classic release build
-  #- cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
-  # Build for code coverage evaluation
-  - cmake -DOpenMVG_BUILD_COVERAGE=ON -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
+  - if [[ "$CC" == "gcc" && "${COVERITY_SCAN_BRANCH}" != 1 ]];
+    then
+      echo "Debug build with coverage";
+      cmake -DOpenMVG_BUILD_COVERAGE=ON -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON ../src;
+    else
+      echo "Classic release build";
+      cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON ../src;
+    fi
+  - cd ..
 
 script:
-  - make -j 4
-# Perform unit tests only on GCC builds
-  - if [ "$CC" = "gcc" ]; then make test; fi
-
-branches:
-  only:
-    - develop
+  - if [[ "${COVERITY_SCAN_BRANCH}" == 1 ]];
+    then
+      echo "Don't build on coverty_scan branch.";
+      exit 0;
+    fi
+  - make -C build -j4 VERBOSE=1 CC=$CC CXX=$CXX
+  - if [[ "$CC" == "gcc" ]];
+    then
+      echo "Perform unit tests only on GCC builds";
+      make -C build test;
+    fi
 
 after_success:
-  - cd ../openMVG
   # If GCC: compute code coverage and export it to coveralls
-  - if [ "$CC" = "gcc" ];
+  - if [[ "$CC" == "gcc" && "${COVERITY_SCAN_BRANCH}" != 1 ]];
     then
-      lcov --directory ../build/openMVG --base-directory=./src --capture --output-file=coverage.info;
+      lcov --directory ./build/openMVG --base-directory=./src --capture --output-file=coverage.info;
       lcov --remove coverage.info '/usr*' -o coverage.info;
       lcov --remove coverage.info '*_test.cpp*' -o coverage.info;
       lcov --remove coverage.info '*/third_party/*' -o coverage.info;
       lcov --remove coverage.info '*/src/dependencies/*' -o coverage.info;
       coveralls-lcov coverage.info;
     fi
-  
+
+addons:
+  coverity_scan:
+    project:
+      name: "openMVG/openMVG"
+      description: "OpenMVG Build submitted via Travis CI"
+    notification_email: openmvg-team@googlegroups.com
+    build_command: "make -C build -j4 VERBOSE=1 CC=$CC CXX=$CXX"
+    branch_pattern: coverity_scan
+
