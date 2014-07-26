@@ -171,7 +171,9 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
       break;
       default :
       {
-        std::cerr << "Invalid line : wrong number of arguments" << std::endl;
+        std::cerr << "Invalid image list line: wrong number of arguments" << std::endl;
+        in.close();
+        return false;
       }
     }
 
