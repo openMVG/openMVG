@@ -210,11 +210,11 @@ int main(int argc, char *argv[]) {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
   } catch(const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << ' '
-      << "[-i|--sfmdir path, the SfM_output path] "
-      << "[-o|--outdir path] "
-      << "[-r|--resolution: divide image coefficient] "
-      << "[-c|--nb core] "
+      std::cerr << "Usage: " << argv[0] << '\n'
+      << "[-i|--sfmdir path, the SfM_output path]\n"
+      << "[-o|--outdir path]\n"
+      << "[-r|--resolution: divide image coefficient]\n"
+      << "[-c|--nb core]\n"
       << std::endl;
 
       std::cerr << s << std::endl;
