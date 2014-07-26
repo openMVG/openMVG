@@ -43,7 +43,7 @@ class ImageCollectionGeometricFilter
   /// Filter all putative correspondences according the templated geometric filter
   template <typename GeometricFilterT>
   void Filter(
-    const GeometricFilterT & geometricFilter,
+    const GeometricFilterT & geometricFilter,  // geometric filter functor
     PairWiseMatches & map_PutativesMatchesPair, // putative correspondences to filter
     PairWiseMatches & map_GeometricMatches,
     const std::vector<std::pair<size_t, size_t> > & vec_imagesSize) const
@@ -82,10 +82,11 @@ class ImageCollectionGeometricFilter
       //-- Apply the geometric filter
       {
         std::vector<size_t> vec_inliers;
-        // Use a copy in order to copy use internal functor parameters
-        // and use it safely in multi-thread environment
-        GeometricFilterT filter = geometricFilter;
-        filter.Fit(xI, vec_imagesSize[iIndex], xJ, vec_imagesSize[jIndex], vec_inliers);
+        geometricFilter.Fit(
+          iter->first,
+          xI, vec_imagesSize[iIndex],
+          xJ, vec_imagesSize[jIndex],
+          vec_inliers);
 
         if(!vec_inliers.empty())
         {

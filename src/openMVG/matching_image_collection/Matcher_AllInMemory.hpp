@@ -63,20 +63,28 @@ class Matcher_AllInMemory : public Matcher
 
   void Match(
     const std::vector<std::string> & vec_fileNames, // input filenames,
+    const PairsT & pairs,
     PairWiseMatches & map_PutativesMatches)const // the pairwise photometric corresponding points
   {
 #ifdef USE_OPENMP
     std::cout << "Using the OPENMP thread interface" << std::endl;
 #endif
-    C_Progress_display my_progress_bar( vec_fileNames.size()*(vec_fileNames.size()-1) / 2.0 );
+    C_Progress_display my_progress_bar( pairs.size() );
 
-    for (size_t i = 0; i < vec_fileNames.size(); ++i)
+    // Sort pairs according the first index to minimize the MatcherT build operations
+    std::map<size_t, std::vector<size_t> > map_Pairs;
+    for (PairsT::const_iterator iter = pairs.begin(); iter != pairs.end(); ++iter)
     {
+      map_Pairs[iter->first].push_back(iter->second);
+    }
+
+    for (std::map<size_t, std::vector<size_t> >::const_iterator iter = map_Pairs.begin();
+      iter != map_Pairs.end(); ++iter)
+    {
+      const size_t I = iter->first;
       // Load features and descriptors of Inth image
-      typename std::map<size_t, std::vector<FeatureT> >::const_iterator iter_FeaturesI = map_Feat.begin();
-      typename std::map<size_t, DescsT >::const_iterator iter_DescriptorI = map_Desc.begin();
-      std::advance(iter_FeaturesI, i);
-      std::advance(iter_DescriptorI, i);
+      typename std::map<size_t, std::vector<FeatureT> >::const_iterator iter_FeaturesI = map_Feat.find(I);
+      typename std::map<size_t, DescsT >::const_iterator iter_DescriptorI = map_Desc.find(I);
 
       const std::vector<FeatureT> & featureSetI = iter_FeaturesI->second;
       const size_t featureSetI_Size = iter_FeaturesI->second.size();
@@ -86,16 +94,16 @@ class Matcher_AllInMemory : public Matcher
       MatcherT matcher10;
       ( matcher10.Build(tab0, featureSetI_Size, DescriptorT::static_size) );
 
+      const std::vector<size_t> & indexToCompare = iter->second;
 #ifdef USE_OPENMP
   #pragma omp parallel for schedule(dynamic, 1)
 #endif
-      for (int j = i+1; j < (int)vec_fileNames.size(); ++j)
+      for (int j = 0; j < (int)indexToCompare.size(); ++j)
       {
-        // Load descriptor of Jnth image
-        typename std::map<size_t, std::vector<FeatureT> >::const_iterator iter_FeaturesJ = map_Feat.begin();
-        typename std::map<size_t, DescsT >::const_iterator iter_DescriptorJ = map_Desc.begin();
-        std::advance(iter_FeaturesJ, j);
-        std::advance(iter_DescriptorJ, j);
+        const size_t J = indexToCompare[j];
+        // Load descriptors of Jnth image
+        typename std::map<size_t, std::vector<FeatureT> >::const_iterator iter_FeaturesJ = map_Feat.find(J);
+        typename std::map<size_t, DescsT >::const_iterator iter_DescriptorJ = map_Desc.find(J);
 
         const std::vector<FeatureT> & featureSetJ = iter_FeaturesJ->second;
         const DescBin_typeT * tab1 =
@@ -134,10 +142,9 @@ class Matcher_AllInMemory : public Matcher
   #pragma omp critical
 #endif
         {
-          map_PutativesMatches.insert( make_pair( make_pair(i,j), vec_FilteredMatches ));
-        }
-
+          map_PutativesMatches.insert( make_pair( make_pair(I,J), vec_FilteredMatches ));
         ++my_progress_bar;
+        }
       }
     }
   }

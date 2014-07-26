@@ -26,6 +26,7 @@ struct GeometricFilter_FMatrix_AC
 
   /// Robust fitting of the FUNDAMENTAL matrix
   void Fit(
+    const std::pair<size_t, size_t> pairIndex,
     const Mat & xA,
     const std::pair<size_t, size_t> & imgSizeA,
     const Mat & xB,
@@ -35,6 +36,7 @@ struct GeometricFilter_FMatrix_AC
     using namespace openMVG;
     using namespace openMVG::robust;
     vec_inliers.clear();
+
     // Define the AContrario adapted Fundamental matrix solver
     typedef ACKernelAdaptor<
       openMVG::fundamental::kernel::SevenPointSolver,
