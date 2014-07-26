@@ -26,6 +26,7 @@ struct GeometricFilter_HMatrix_AC
 
   /// Robust fitting of the HOMOGRAPHY matrix
   void Fit(
+    const std::pair<size_t, size_t> pairIndex,
     const Mat & xA,
     const std::pair<size_t, size_t> & imgSizeA,
     const Mat & xB,
