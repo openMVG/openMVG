@@ -56,7 +56,7 @@ struct IndMatch
 };
 
 static std::ostream& operator<<(std::ostream & out, const IndMatch & obj) {
-  return out << obj._i << " " << obj._j << std::endl;
+  return out << obj._i << " " << obj._j;
 }
 
 static inline std::istream& operator>>(std::istream & in, IndMatch & obj) {

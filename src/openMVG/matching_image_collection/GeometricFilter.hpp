@@ -63,10 +63,8 @@ class ImageCollectionGeometricFilter
       const std::vector<IndMatch> & vec_PutativeMatches = iter->second;
 
       // Load features of Inth and Jnth images
-      typename std::map<size_t, std::vector<FeatureT> >::const_iterator iterFeatsI = map_Feat.begin();
-      typename std::map<size_t, std::vector<FeatureT> >::const_iterator iterFeatsJ = map_Feat.begin();
-      std::advance(iterFeatsI, iIndex);
-      std::advance(iterFeatsJ, jIndex);
+      typename std::map<size_t, std::vector<FeatureT> >::const_iterator iterFeatsI = map_Feat.find(iIndex);
+      typename std::map<size_t, std::vector<FeatureT> >::const_iterator iterFeatsJ = map_Feat.find(jIndex);
       const std::vector<FeatureT> & kpSetI = iterFeatsI->second;
       const std::vector<FeatureT> & kpSetJ = iterFeatsJ->second;
 
@@ -104,7 +102,12 @@ class ImageCollectionGeometricFilter
           }
         }
       }
-      ++my_progress_bar;
+#ifdef USE_OPENMP
+#pragma omp critical
+#endif
+      {
+        ++my_progress_bar;
+      }
     }
   }
 
