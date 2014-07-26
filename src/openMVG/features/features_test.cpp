@@ -16,15 +16,45 @@ using namespace openMVG;
 using namespace std;
 using std::string;
 
-static const int CARD_DESCS = 12;
+//-- Test features
+static const int CARD = 12;
+
+typedef SIOPointFeature Feature_T;
+typedef std::vector<Feature_T> Feats_T;
+
+TEST(featureIO, ASCII) {
+  Feats_T vec_feats;
+  for(int i = 0; i < CARD; ++i)  {
+    vec_feats.push_back(Feature_T(i, i*2, i*3, i*4));
+  }
+
+  //Save them to a file
+  saveDescsToFile("tempFeats.feat", vec_feats);
+
+  //Read the saved data and compare to input (to check write/read IO)
+  Feats_T vec_feats_read;
+  loadFeatsFromFile("tempFeats.feat", vec_feats_read);
+  EXPECT_EQ(CARD, vec_feats_read.size());
+
+  for(int i = 0; i < CARD; ++i) {
+    EXPECT_EQ(vec_feats[i], vec_feats_read[i]);
+    EXPECT_EQ(vec_feats[i].coords(), vec_feats_read[i].coords());
+    EXPECT_EQ(vec_feats[i].scale(), vec_feats_read[i].scale());
+    EXPECT_EQ(vec_feats[i].orientation(), vec_feats_read[i].orientation());
+  }
+}
+
+//-- Test descriptors
+
 static const int DESC_LENGTH = 128;
-typedef Descriptor<float, DESC_LENGTH> Desc_t;
+typedef Descriptor<float, DESC_LENGTH> Desc_T;
+typedef std::vector<Desc_T> Descs_T;
 
 TEST(descriptorIO, ASCII) {
   // Create an input series of descriptor
-  std::vector<Desc_t > vec_descs;
-  for(int i = 0; i < CARD_DESCS; ++i)  {
-    Desc_t desc;
+  Descs_T vec_descs;
+  for(int i = 0; i < CARD; ++i)  {
+    Desc_T desc;
     for (int j = 0; j < DESC_LENGTH; ++j)
       desc[j] = i*DESC_LENGTH+j;
     vec_descs.push_back(desc);
@@ -34,11 +64,11 @@ TEST(descriptorIO, ASCII) {
   saveDescsToFile("tempDescs.desc", vec_descs);
 
   //Read the saved data and compare to input (to check write/read IO)
-  std::vector<Desc_t > vec_descs_read;
+  Descs_T vec_descs_read;
   loadDescsFromFile("tempDescs.desc", vec_descs_read);
-  EXPECT_EQ(CARD_DESCS, vec_descs_read.size());
+  EXPECT_EQ(CARD, vec_descs_read.size());
 
-  for(int i = 0; i < CARD_DESCS; ++i) {
+  for(int i = 0; i < CARD; ++i) {
     for (int j = 0; j < DESC_LENGTH; ++j)
       EXPECT_EQ(vec_descs[i][j], vec_descs_read[i][j]);
   }
@@ -47,10 +77,10 @@ TEST(descriptorIO, ASCII) {
 //Test binary export of descriptor
 TEST(descriptorIO, BINARY) {
   // Create an input series of descriptor
-  std::vector<Desc_t > vec_descs;
-  for(int i = 0; i < CARD_DESCS; ++i)
+  Descs_T vec_descs;
+  for(int i = 0; i < CARD; ++i)
   {
-    Desc_t desc;
+    Desc_T desc;
     for (int j = 0; j < DESC_LENGTH; ++j)
       desc[j] = i*DESC_LENGTH+j;
     vec_descs.push_back(desc);
@@ -60,11 +90,11 @@ TEST(descriptorIO, BINARY) {
   saveDescsToBinFile("tempDescsBin.desc", vec_descs);
 
   //Read the saved data and compare to input (to check write/read IO)
-  std::vector<Desc_t > vec_descs_read;
+  Descs_T vec_descs_read;
   loadDescsFromBinFile("tempDescsBin.desc", vec_descs_read);
-  EXPECT_EQ(CARD_DESCS, vec_descs_read.size());
+  EXPECT_EQ(CARD, vec_descs_read.size());
 
-  for(int i = 0; i < CARD_DESCS; ++i) {
+  for(int i = 0; i < CARD; ++i) {
     for (int j = 0; j < DESC_LENGTH; ++j)
       EXPECT_EQ(vec_descs[i][j], vec_descs_read[i][j]);
   }

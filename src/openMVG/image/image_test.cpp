@@ -50,6 +50,12 @@ TEST(Image, Basis)
   Image<RGBAColor> imaRGBA(10,10);
   imaRGBA(0,0) = RGBAColor(0,1,2,1);
   imaRGBA(1,0) = RGBAColor(1,1,1);
+
+  // Image resizing
+  Image<unsigned char> imaToResize;
+  imaToResize.resize(5,10);
+  EXPECT_EQ(10, imaToResize.Height());
+  EXPECT_EQ(5, imaToResize.Width());
 }
 
 TEST(Image, PixelTypes)
@@ -59,6 +65,19 @@ TEST(Image, PixelTypes)
   // The following issue must used : (at your own risk)
   RGBColor  b(static_cast<unsigned char>(0));
   RGBAColor d(BLACK);
+}
+
+TEST(Image, ImageConverter)
+{
+  Image<RGBColor> imaColorRGB(5,5);
+  imaColorRGB.fill(RGBColor(10,10,10));
+  Image<unsigned char> imaGray;
+  openMVG::ConvertPixelType(imaColorRGB, &imaGray);
+
+  //RGBA
+  Image<RGBAColor> imaColorRGBA(5,5);
+  imaColorRGBA.fill(RGBAColor(10,10,10, 255));
+  openMVG::ConvertPixelType(imaColorRGBA, &imaGray);
 }
 
 /* ************************************************************************* */
