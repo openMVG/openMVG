@@ -96,6 +96,10 @@ public:
            (x() == b.x()) && (y() == b.y()) ;
   };
 
+  bool operator !=(const SIOPointFeature& b) const {
+    return !((*this)==b);
+  };
+
   virtual std::ostream& print(std::ostream& os) const
   {
     return PointFeature::print(os) << " " << _scale << " " << _orientation;
