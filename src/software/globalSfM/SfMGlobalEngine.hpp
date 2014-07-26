@@ -50,9 +50,8 @@ namespace openMVG{
 //-- Relative rotation inference:
 //   - only the triplet rejection is performed (in [1] a Bayesian inference on cycle error is performed [2])
 //-- Global rotation computation:
-//   - in [1] they are computed by a sparse least square formulation
 //   - here, can be used:
-//    - a simple dense least square,
+//    - a sparse least square,
 //    - or, the L1 averaging method of [3].
 //-- Linear Programming solver:
 //   - in order to have the best performance it is advised to used the MOSEK LP backend.
@@ -68,9 +67,11 @@ class GlobalReconstructionEngine : public ReconstructionEngine
 {
 public:
   GlobalReconstructionEngine(const std::string & sImagePath,
-    const std::string & sMatchesPath, const std::string & sOutDirectory,
-    bool bHtmlReport = false, int averagingRotationMethod=1);  
-  
+    const std::string & sMatchesPath,
+    const std::string & sOutDirectory,
+    const ERotationAveragingMethod & eRotationAveragingMethod,
+    bool bHtmlReport = false);
+
   ~GlobalReconstructionEngine();
 
   virtual bool Process();
@@ -174,9 +175,9 @@ private:
 
   typedef matching::PairWiseMatches PairWiseMatches;
   PairWiseMatches _map_Matches_F; // pairwise matches for Essential matrix model
-  
-  // method used to compute rotation
-  int averagingMethod;
+
+  // Parameter
+  ERotationAveragingMethod _eRotationAveragingMethod;
 
   //------
   //-- Mapping between camera node Ids and cameraIndex:
