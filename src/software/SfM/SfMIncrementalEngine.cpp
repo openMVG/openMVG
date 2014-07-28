@@ -38,7 +38,7 @@ typedef std::vector<FeatureT> featsT;
 IncrementalReconstructionEngine::IncrementalReconstructionEngine(const std::string & sImagePath,
   const std::string & sMatchesPath, const std::string & sOutDirectory, bool bHtmlReport)
   : ReconstructionEngine(sImagePath, sMatchesPath, sOutDirectory),
-  _initialpair(std::make_pair<size_t,size_t>(0,0)),
+  _initialpair(std::pair<size_t,size_t>(0,0)),
   _bRefinePPandDisto(true),
   _bUseBundleAdjustment(true)
 {
@@ -319,7 +319,7 @@ bool IncrementalReconstructionEngine::ReadInputData()
 /// Find the best initial pair
 bool IncrementalReconstructionEngine::InitialPairChoice( std::pair<size_t, size_t> & initialPairIndex)
 {
-  if (_initialpair != std::make_pair<size_t,size_t>(0,0))
+  if (_initialpair != std::pair<size_t,size_t>(0,0))
   {
     initialPairIndex = _initialpair;
   }
