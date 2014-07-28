@@ -71,6 +71,10 @@ public:
     const std::string & sMatchesPath, const std::string & sOutDirectory,
     bool bHtmlReport = false);
 
+  GlobalReconstructionEngine(const std::string & sImagePath,
+    const std::string & sMatchesPath, const std::string & sOutDirectory,
+    bool bHtmlReport = false, int averagingRotationMethod=1);  
+  
   ~GlobalReconstructionEngine();
 
   virtual bool Process();
@@ -174,7 +178,9 @@ private:
 
   typedef matching::PairWiseMatches PairWiseMatches;
   PairWiseMatches _map_Matches_F; // pairwise matches for Essential matrix model
-
+  
+  // method used to compute rotation
+  int averagingMethod;
 
   //------
   //-- Mapping between camera node Ids and cameraIndex:

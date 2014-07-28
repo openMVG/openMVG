@@ -36,11 +36,13 @@ int main(int argc, char **argv)
   std::string sMatchesDir;
   std::string sOutDir = "";
   bool bColoredPointCloud = false;
+  int  averagingMethod(1);
 
   cmd.add( make_option('i', sImaDirectory, "imadir") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
   cmd.add( make_option('o', sOutDir, "outdir") );
   cmd.add( make_option('c', bColoredPointCloud, "coloredPointCloud") );
+  cmd.add( make_option('a', averagingMethod, "averagingMethod") );
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -51,6 +53,7 @@ int main(int argc, char **argv)
     << "[-m|--matchdir path]\n"
     << "[-o|--outdir path]\n"
     << "[-c|--coloredPointCloud 0(default) or 1]\n"
+    << "[-a|--averagingMethod 1(default) or 2]\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -65,6 +68,12 @@ int main(int argc, char **argv)
   if (!stlplus::folder_exists(sOutDir))
     stlplus::folder_create(sOutDir);
 
+   if (averagingMethod < 0 || averagingMethod > ROTATION_AVERAGING_L2 )  {
+    std::cerr << "\n Rotation averaging method is invalid" << std::endl;
+    return EXIT_FAILURE;
+  }
+  
+  
   //---------------------------------------
   // Incremental reconstruction process
   //---------------------------------------
@@ -73,7 +82,7 @@ int main(int argc, char **argv)
   GlobalReconstructionEngine to3DEngine(sImaDirectory,
                                             sMatchesDir,
                                             sOutDir,
-                                            true);
+                                            true, averagingMethod);
 
   if (to3DEngine.Process())
   {

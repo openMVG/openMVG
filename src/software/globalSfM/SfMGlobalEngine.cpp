@@ -96,6 +96,29 @@ GlobalReconstructionEngine::GlobalReconstructionEngine(const std::string & sImag
   }
 }
 
+GlobalReconstructionEngine::GlobalReconstructionEngine(const std::string & sImagePath,
+  const std::string & sMatchesPath, const std::string & sOutDirectory, bool bHtmlReport, int averagingRotationMethod )
+  : ReconstructionEngine(sImagePath, sMatchesPath, sOutDirectory)
+{
+  _bHtmlReport = bHtmlReport;
+  if (!stlplus::folder_exists(sOutDirectory)) {
+    stlplus::folder_create(sOutDirectory);
+  }
+  if (_bHtmlReport)
+  {
+    _htmlDocStream = auto_ptr<htmlDocument::htmlDocumentStream>(
+      new htmlDocument::htmlDocumentStream("GlobalReconstructionEngine SFM report."));
+    _htmlDocStream->pushInfo(
+      htmlDocument::htmlMarkup("h1", std::string("Current directory: ") +
+      sImagePath));
+    _htmlDocStream->pushInfo("<hr>");
+  }
+  
+  // initialize rotation averaging method
+  averagingMethod = averagingRotationMethod;
+}
+
+
 GlobalReconstructionEngine::~GlobalReconstructionEngine()
 {
   ofstream htmlFileStream( string(stlplus::folder_append_separator(_sOutDirectory) +
