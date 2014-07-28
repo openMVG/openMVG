@@ -69,10 +69,6 @@ class GlobalReconstructionEngine : public ReconstructionEngine
 public:
   GlobalReconstructionEngine(const std::string & sImagePath,
     const std::string & sMatchesPath, const std::string & sOutDirectory,
-    bool bHtmlReport = false);
-
-  GlobalReconstructionEngine(const std::string & sImagePath,
-    const std::string & sMatchesPath, const std::string & sOutDirectory,
     bool bHtmlReport = false, int averagingRotationMethod=1);  
   
   ~GlobalReconstructionEngine();

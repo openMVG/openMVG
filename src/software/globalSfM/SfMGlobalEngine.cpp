@@ -78,25 +78,6 @@ getRotationMagnitude(const Mat & R)
 }
 
 GlobalReconstructionEngine::GlobalReconstructionEngine(const std::string & sImagePath,
-  const std::string & sMatchesPath, const std::string & sOutDirectory, bool bHtmlReport)
-  : ReconstructionEngine(sImagePath, sMatchesPath, sOutDirectory)
-{
-  _bHtmlReport = bHtmlReport;
-  if (!stlplus::folder_exists(sOutDirectory)) {
-    stlplus::folder_create(sOutDirectory);
-  }
-  if (_bHtmlReport)
-  {
-    _htmlDocStream = auto_ptr<htmlDocument::htmlDocumentStream>(
-      new htmlDocument::htmlDocumentStream("GlobalReconstructionEngine SFM report."));
-    _htmlDocStream->pushInfo(
-      htmlDocument::htmlMarkup("h1", std::string("Current directory: ") +
-      sImagePath));
-    _htmlDocStream->pushInfo("<hr>");
-  }
-}
-
-GlobalReconstructionEngine::GlobalReconstructionEngine(const std::string & sImagePath,
   const std::string & sMatchesPath, const std::string & sOutDirectory, bool bHtmlReport, int averagingRotationMethod )
   : ReconstructionEngine(sImagePath, sMatchesPath, sOutDirectory)
 {
@@ -393,19 +374,9 @@ bool GlobalReconstructionEngine::Process()
       << "   - Ready to compute " << map_cameraIndexTocameraNode.size() << " global rotations." << "\n"
       << "     from " << map_relatives.size() << " relative rotations\n" << std::endl;
 
-    int iChoice = 0;
-    do
-    {
-      std::cout
-      << "-------------------------------" << "\n"
-      << " Choose your rotation averaging method: " << "\n"
-      << "   - 1 -> MST based rotation + L1 rotation averaging" << "\n"
-      << "   - 2 -> dense L2 global rotation computation" << "\n";
-    }while( !( std::cin >> iChoice ) || iChoice < 0 || iChoice > ROTATION_AVERAGING_L2 );
-
     if (!computeGlobalRotations(
-            ERotationAveragingMethod(iChoice),
-            map_cameraNodeToCameraIndex,
+            ERotationAveragingMethod(averagingMethod),
+	    map_cameraNodeToCameraIndex,
             map_cameraIndexTocameraNode,
             map_relatives,
             map_globalR))
