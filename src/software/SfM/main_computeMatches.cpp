@@ -24,6 +24,8 @@
 /// Feature detector and descriptor interface
 #include "patented/sift/SIFT.hpp"
 
+#include "openMVG/system/timer.hpp"
+
 #include "third_party/cmdLine/cmdLine.h"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -185,7 +187,8 @@ int main(int argc, char **argv)
   typedef KeypointSet<FeatsT, DescsT > KeypointSetT;
 
   {
-    std::cout << "\n\nEXTRACT FEATURES" << std::endl;
+    Timer timer;
+    std::cout << "\n\n - EXTRACT FEATURES - " << std::endl;
     vec_imagesSize.resize(vec_fileNames.size());
 
     Image<unsigned char> imageGray;
@@ -213,6 +216,7 @@ int main(int argc, char **argv)
       }
       ++my_progress_bar;
     }
+    std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
   }
 
   //---------------------------------------
@@ -229,18 +233,19 @@ int main(int argc, char **argv)
   //typedef L2_Vectorized<DescriptorT::bin_type> MetricT;
   //typedef ArrayMatcherBruteForce<DescriptorT::bin_type, MetricT> MatcherT;
 
+  std::cout << std::endl << " - PUTATIVE MATCHES - " << std::endl;
   // If the matches already exists, reload them
   if (stlplus::file_exists(sOutDir + "/matches.putative.txt"))
   {
     PairedIndMatchImport(sOutDir + "/matches.putative.txt", map_PutativesMatches);
-    std::cout << std::endl << "PUTATIVE MATCHES -- PREVIOUS RESULTS LOADED" << std::endl;
+    std::cout << "\t PREVIOUS RESULTS LOADED" << std::endl;
   }
   else // Compute the putatives matches
   {
+    Timer timer;
     Matcher_AllInMemory<KeypointSetT, MatcherT> collectionMatcher(fDistRatio);
     if (collectionMatcher.loadData(vec_fileNames, sOutDir))
     {
-      std::cout  << std::endl << "PUTATIVE MATCHES" << std::endl;
       const PairsT pairs = exhaustivePairs(vec_fileNames.size());
       collectionMatcher.Match(vec_fileNames, pairs, map_PutativesMatches);
       //---------------------------------------
@@ -251,6 +256,7 @@ int main(int argc, char **argv)
         PairedIndMatchToStream(map_PutativesMatches, file);
       file.close();
     }
+    std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
   }
   //-- export putative matches Adjacency matrix
   PairWiseMatchingToAdjacencyMatrixSVG(vec_fileNames.size(),
@@ -269,6 +275,7 @@ int main(int argc, char **argv)
   const double maxResidualError = 4.0;
   if (collectionGeomFilter.loadData(vec_fileNames, sOutDir))
   {
+    Timer timer;
     std::cout << std::endl << " - GEOMETRIC FILTERING - " << std::endl;
     switch (eGeometricModelToCompute)
     {
@@ -340,6 +347,8 @@ int main(int argc, char **argv)
     if (file.is_open())
       PairedIndMatchToStream(map_GeometricMatches, file);
     file.close();
+
+    std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
 
     //-- export Adjacency matrix
     std::cout << "\n Export Adjacency Matrix of the pairwise's geometric matches"
