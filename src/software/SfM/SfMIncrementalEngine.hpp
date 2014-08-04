@@ -118,6 +118,11 @@ public:
     _bRefinePPandDisto = bRefinePPandDisto;
   }
 
+  void setIfRefineFocal(bool bRefineFocal)
+  {
+    _bRefineFocal = bRefineFocal;
+  }
+
 private:
 
   // -----
@@ -138,6 +143,7 @@ private:
   std::pair<size_t,size_t> _initialpair;
   bool _bUseBundleAdjustment;
   bool _bRefinePPandDisto; // Boolean used to know if Principal point and Radial disto is refined
+  bool _bRefineFocal;      // Boolean used to know if we refine focal or not
 
   // -----
   // Future reconstructed data

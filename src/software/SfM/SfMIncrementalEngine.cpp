@@ -810,7 +810,7 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
     &vec_inliers,
     // If intrinsics guess exist use it, else use a standard 6 points pose resection
     (intrinsicCam.m_bKnownIntrinsic == true) ? & intrinsicCam.m_K : NULL,
-    &P, &errorMax);
+    &P, &errorMax, _bRefineFocal );
 
   std::cout << std::endl
     << "-------------------------------" << std::endl
@@ -1416,6 +1416,18 @@ void IncrementalReconstructionEngine::BundleAdjustment()
         new ceres::SubsetParameterization(6, vec_constant_PPAndRadialDisto);
   }
 
+  // Parameterization used to restrict camera intrinsics (focal length).
+  ceres::SubsetParameterization *constant_transform_parameterization_focal = NULL;
+  if (!_bRefineFocal) {
+      std::vector<int> vec_constant_focal;
+
+      // first elements is focal length
+      vec_constant_focal.push_back(0); // FOCAL LENGTH FIXED
+
+      constant_transform_parameterization_focal =
+        new ceres::SubsetParameterization(6, vec_constant_focal);
+  }
+
   // Create residuals for each observation in the bundle adjustment problem. The
   // parameters for cameras and points are added automatically.
   ceres::Problem problem;
@@ -1437,10 +1449,21 @@ void IncrementalReconstructionEngine::BundleAdjustment()
                              ba_problem.mutable_camera_extrinsic_for_observation(i),
                              ba_problem.mutable_point_for_observation(i));
 
-    if (!_bRefinePPandDisto) {
-      problem.SetParameterization(ba_problem.mutable_camera_intrisic_for_observation(i),
-                                  constant_transform_parameterization);
+    if( ! _bRefinePPandDisto && ! _bRefineFocal ){
+      problem.SetParameterBlockConstant(ba_problem.mutable_camera_intrisic_for_observation(i) );
+    } 
+    else{
+        if (!_bRefinePPandDisto) {
+          problem.SetParameterization(ba_problem.mutable_camera_intrisic_for_observation(i),
+                                      constant_transform_parameterization);
+        }
+
+        if (!_bRefineFocal) {
+          problem.SetParameterization(ba_problem.mutable_camera_intrisic_for_observation(i),
+                                      constant_transform_parameterization_focal);
+        }
     }
+
   }
 
   //-- Lock the first camera to better deal with scene orientation ambiguity
