@@ -217,7 +217,8 @@ bool robustResection(
   std::vector<size_t> * pvec_inliers,
   const Mat3 * K = NULL,
   Mat34 * P = NULL,
-  double * maxError = NULL)
+  double * maxError = NULL,
+  bool refineFocal = true )
 {
   double dPrecision = std::numeric_limits<double>::infinity();
   size_t MINIMUM_SAMPLES = 0;
@@ -308,6 +309,19 @@ bool robustResection(
       ba_problem.parameters_.push_back(K_(0,0)); //focal
     }
 
+  // Parameterization used to restrict camera intrinsics (i.e. focal length).
+  ceres::SubsetParameterization *constant_transform_parameterization = NULL;
+
+  if ( ! refineFocal ) {
+      std::vector<int> vec_constant_focal;
+
+      // Last elements is focal length
+      vec_constant_focal.push_back(6); // FOCAL LENGTH
+
+      constant_transform_parameterization =
+        new ceres::SubsetParameterization(7, vec_constant_focal);
+  }
+
     // Create residuals for each observation in the bundle adjustment problem. The
     // parameters for cameras and points are added automatically.
     ceres::Problem problem;
@@ -325,6 +339,11 @@ bool robustResection(
       problem.AddResidualBlock(cost_function,
         NULL, // squared loss
         ba_problem.mutable_camera_for_observation(0));
+        
+        if ( ! refineFocal ) {
+          problem.SetParameterization(ba_problem.mutable_camera_for_observation(0),
+                                      constant_transform_parameterization);
+        }
     }
 
     ceres::Solver::Options options;
