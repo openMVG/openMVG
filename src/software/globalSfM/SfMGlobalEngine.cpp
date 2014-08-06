@@ -420,7 +420,7 @@ bool GlobalReconstructionEngine::Process()
 
       os.str("");
       os << "-------------------------------" << "<br>"
-        << "-- #Effective triplet estimates: " << vec_initialRijTijEstimates.size()/3
+        << "-- #Effective translations estimates: " << vec_initialRijTijEstimates.size()/3
         << " from " <<vec_triplets.size() << " triplets.<br>"
         << "-- resulting in " <<vec_initialRijTijEstimates.size() << " translation estimation.<br>"
         << "-- timing to obtain the relative translations : " << timeLP_triplet << " seconds.<br>"
@@ -678,14 +678,14 @@ bool GlobalReconstructionEngine::Process()
             vec_allScenes_cleaned.push_back(_vec_allScenes[i]);
           }
         }
-        _vec_allScenes = vec_allScenes_cleaned;
+        _vec_allScenes.swap(vec_allScenes_cleaned);
 
         for( std::set<size_t>::const_iterator iter = set_idx_to_remove.begin();
           iter != set_idx_to_remove.end(); ++iter)
         {
           _map_selectedTracks.erase(*iter);
         }
-        std::cout << "\n Tracks have been removed : " << set_idx_to_remove.size() << std::endl;
+        std::cout << "\n #Tracks removed: " << set_idx_to_remove.size() << std::endl;
       }
       plyHelper::exportToPly(_vec_allScenes, stlplus::create_filespec(_sOutDirectory, "raw_pointCloud_LP", "ply"));
 

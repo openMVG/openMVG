@@ -55,6 +55,7 @@ namespace openMVG{
 //    - or, the L1 averaging method of [3].
 //-- Linear Programming solver:
 //   - in order to have the best performance it is advised to used the MOSEK LP backend.
+<<<<<<< HEAD
 
 enum ERotationAveragingMethod
 {
@@ -62,6 +63,14 @@ enum ERotationAveragingMethod
   ROTATION_AVERAGING_L1 = 1,
   ROTATION_AVERAGING_L2 = 2
 };
+=======
+
+enum ERotationAveragingMethod
+{
+  ROTATION_AVERAGING_L1 = 1,
+  ROTATION_AVERAGING_L2 = 2
+};
+>>>>>>> 0f6fcc7... Fix some log and fix some compilation warning
 
 class GlobalReconstructionEngine : public ReconstructionEngine
 {
@@ -173,8 +182,7 @@ private:
   std::vector<openMVG::SfMIO::IntrinsicCameraInfo> _vec_intrinsicGroups;
   std::map< size_t, std::vector<SIOPointFeature> > _map_feats; // feature per images
 
-  typedef matching::PairWiseMatches PairWiseMatches;
-  PairWiseMatches _map_Matches_F; // pairwise matches for Essential matrix model
+  matching::PairWiseMatches _map_Matches_F; // pairwise matches for Essential matrix model
 
   // Parameter
   ERotationAveragingMethod _eRotationAveragingMethod;

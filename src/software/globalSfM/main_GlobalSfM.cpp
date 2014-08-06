@@ -60,6 +60,12 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  if (iRotationAveragingMethod < ROTATION_AVERAGING_L1 ||
+      iRotationAveragingMethod > ROTATION_AVERAGING_L2 )  {
+    std::cerr << "\n Rotation averaging method is invalid" << std::endl;
+    return EXIT_FAILURE;
+  }
+
   if (sOutDir.empty())  {
     std::cerr << "\nIt is an invalid output directory" << std::endl;
     return EXIT_FAILURE;
