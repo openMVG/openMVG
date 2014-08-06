@@ -43,7 +43,7 @@ Format GetFormat(const char *c) {
   if (CmpFormatExt(p, ".jpg")) return Jpg;
   if (CmpFormatExt(p, ".jpeg")) return Jpg;
 
-  cerr << "Error: Couldn't open " << c << " Unknown file format";
+  cerr << "Error: Couldn't open " << c << " Unknown file format" << std::endl;
   return Unknown;
 }
 
@@ -246,7 +246,7 @@ int ReadPngStream(FILE *file,
                   int * w,
                   int * h,
                   int * depth)  {
-  
+
   // first check the eight byte PNG signature
   png_byte  pbSig[8];
   size_t readcnt = fread(pbSig, 1, 8, file);
@@ -315,7 +315,7 @@ int ReadPngStream(FILE *file,
   // Get number of byte along a tow
   png_uint_32         ulRowBytes;
   ulRowBytes = png_get_rowbytes(png_ptr, info_ptr);
- 
+
   // and allocate memory for an array of row-pointers
   png_byte   **ppbRowPointers = NULL;
   if ((ppbRowPointers = (png_bytepp) malloc(hPNG
@@ -331,7 +331,7 @@ int ReadPngStream(FILE *file,
 
   // now we can allocate memory to store the image
   ptr->resize((*h)*(*w)*(*depth));
-  
+
   // set the individual row-pointers to point at the correct offsets
   for (int i = 0; i < hPNG; i++)
     ppbRowPointers[i] = &((*ptr)[0]) + i * ulRowBytes;
@@ -343,7 +343,7 @@ int ReadPngStream(FILE *file,
   png_read_end(png_ptr, NULL);
 
   free (ppbRowPointers);
-  
+
   png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
   return 1;
 }

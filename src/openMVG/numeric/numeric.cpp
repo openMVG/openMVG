@@ -52,6 +52,13 @@ Mat3 RotationAroundZ(double angle) {
   return Eigen::AngleAxisd(angle, Vec3::UnitZ()).toRotationMatrix();
 }
 
+double getRotationMagnitude(const Mat3 & R2) {
+  const Mat3 R1 = Mat3::Identity();
+  double cos_theta = (R1.array() * R2.array()).sum() / 3.0;
+  cos_theta = clamp(cos_theta, -1.0, 1.0);
+  return std::acos(cos_theta);
+}
+
 Mat3 LookAt(const Vec3 &center, const Vec3 & up) {
   Vec3 zc = center.normalized();
   Vec3 xc = up.cross(zc).normalized();

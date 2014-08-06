@@ -67,16 +67,6 @@ namespace openMVG{
 typedef SIOPointFeature FeatureT;
 typedef std::vector<FeatureT> featsT;
 
-/// Return in radian the rotation amplitude of the given rotation matrix
-template <typename Mat>
-inline double
-getRotationMagnitude(const Mat & R)
-{
-  double cos_theta = 0.5 * (R.trace() - 1.0);
-  cos_theta = clamp(cos_theta, -1.0, 1.0);
-  return std::acos(cos_theta);
-}
-
 GlobalReconstructionEngine::GlobalReconstructionEngine(
   const std::string & sImagePath,
   const std::string & sMatchesPath,
