@@ -8,29 +8,57 @@
 #include "openMVG_Samples/sensorWidthDatabase/ParseDatabase.hpp"
 
 #include "openMVG/image/image.hpp"
+#include "openMVG/split/split.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <memory>
 #include <string>
 #include <vector>
+
+/// Check that Kmatrix is a string like "f;0;ppx;0;f;ppy;0;0;1"
+/// With f,ppx,ppy as valid numerical value
+bool checkIntrinsicStringValidity(const std::string & Kmatrix)
+{
+  std::vector<std::string> vec_str;
+  split( Kmatrix, ";", vec_str );
+  if (vec_str.size() != 9)  {
+    std::cerr << "\n Missing ';' character" << std::endl;
+    return false;
+  }
+  // Check that all K matrix value are valid numbers
+  for (size_t i = 0; i < vec_str.size(); ++i) {
+    double readvalue = 0.0;
+    std::stringstream ss;
+    ss.str(vec_str[i]);
+    if (! (ss >> readvalue) )  {
+      std::cerr << "\n Used an invalid not a number character" << std::endl;
+      return false;
+    }
+  }
+  return true;
+}
 
 int main(int argc, char **argv)
 {
   CmdLine cmd;
 
-  std::string sImageDir;
-  std::string sfileDatabase = "";
-  std::string sOutputDir = "";
+  std::string sImageDir,
+    sfileDatabase = "",
+    sOutputDir = "",
+    sKmatrix;
+
   double focalPixPermm = -1.0;
 
   cmd.add( make_option('i', sImageDir, "imageDirectory") );
   cmd.add( make_option('d', sfileDatabase, "sensorWidthDatabase") );
   cmd.add( make_option('o', sOutputDir, "outputDirectory") );
   cmd.add( make_option('f', focalPixPermm, "focal") );
+  cmd.add( make_option('k', sKmatrix, "intrinsics") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -41,6 +69,7 @@ int main(int argc, char **argv)
       << "[-d|--sensorWidthDatabase]\n"
       << "[-o|--outputDirectory]\n"
       << "[-f|--focal] (pixels)\n"
+      << "[-k|--intrinsics] Kmatrix: \"f;0;ppx;0;f;ppy;0;0;1\""
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -52,7 +81,8 @@ int main(int argc, char **argv)
             << "--imageDirectory " << sImageDir << std::endl
             << "--sensorWidthDatabase " << sfileDatabase << std::endl
             << "--outputDirectory " << sOutputDir << std::endl
-            << "--focal " << focalPixPermm << std::endl;
+            << "--focal " << focalPixPermm << std::endl
+            << "--intrinsics " << sKmatrix << std::endl;
 
   if ( !stlplus::folder_exists( sImageDir ) )
   {
@@ -73,6 +103,18 @@ int main(int argc, char **argv)
       std::cerr << "\nCannot create output directory" << std::endl;
       return EXIT_FAILURE;
     }
+  }
+
+  if (sKmatrix.size() > 0 && !checkIntrinsicStringValidity(sKmatrix) )
+  {
+    std::cerr << "\nInvalid K matrix input" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  if (sKmatrix.size() > 0 && focalPixPermm != -1.0)
+  {
+    std::cerr << "\nCannot combine -f and -k options" << std::endl;
+    return EXIT_FAILURE;
   }
 
   std::vector<std::string> vec_image = stlplus::folder_files( sImageDir );
@@ -124,13 +166,21 @@ int main(int argc, char **argv)
               continue; // image is not considered, cannot be read
           }
         }
-        if ( focalPixPermm == -1)
-          os << *iter_image << ";" << width << ";" << height << std::endl;
+        os << *iter_image << ";" << width << ";" << height;
+        if ( focalPixPermm == -1 && sKmatrix.size() == 0)
+          os << std::endl;
         else
-          os << *iter_image << ";" << width << ";" << height << ";"
-            << focalPixPermm << ";" << 0 << ";" << width/2.0 << ";"
-            << 0 << ";" << focalPixPermm << ";" << height/2.0 << ";"
-            << 0 << ";" << 0 << ";" << 1 << std::endl;
+        {
+          if (sKmatrix.size() > 0) // Known intrinsic matrix
+          {
+            os << ";" << sKmatrix << std::endl;
+          }
+          else
+            os << ";"
+              << focalPixPermm << ";" << 0 << ";" << width/2.0 << ";"
+              << 0 << ";" << focalPixPermm << ";" << height/2.0 << ";"
+              << 0 << ";" << 0 << ";" << 1 << std::endl;
+        }
 
       }
       else // If image contains meta data
