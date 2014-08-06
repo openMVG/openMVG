@@ -98,17 +98,16 @@ bool IncrementalReconstructionEngine::Process()
   BundleAdjustment(); // Adjust 3D point and camera parameters.
 
   size_t round = 0;
-  bool bImageAdded = false;
   // Compute robust Resection of remaining image
   std::vector<size_t> vec_possible_resection_indexes;
   while (FindImagesWithPossibleResection(vec_possible_resection_indexes))
   {
-    if (Resection(vec_possible_resection_indexes))
+    bool bImageAdded = Resection(vec_possible_resection_indexes);
+    if (bImageAdded)
     {
       std::ostringstream os;
       os << std::setw(8) << std::setfill('0') << round << "_Resection";
       _reconstructorData.exportToPly( stlplus::create_filespec(_sOutDirectory, os.str(), ".ply"));
-      bImageAdded = true;
     }
     ++round;
     if (bImageAdded && _bUseBundleAdjustment)
