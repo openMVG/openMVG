@@ -78,7 +78,7 @@ static bool L2RotationAveraging( size_t nCamera,
   std::vector<Eigen::Triplet<double> > tripletList;
   tripletList.reserve(nRotationEstimation*12); // 3*3 + 3
   //-- Encode constraint (6.62 Martinec Thesis page 100):
-  size_t cpt = 0;
+  sMat::Index cpt = 0;
   for(std::vector<RelRotationData>::const_iterator
     iter = vec_relativeRot.begin();
     iter != vec_relativeRot.end();
@@ -108,11 +108,11 @@ static bool L2RotationAveraging( size_t nCamera,
   }
 
   // nCamera * 3 because each columns have 3 elements.
-  Eigen::SparseMatrix<double> A(nRotationEstimation*3, 3*nCamera);
+  sMat A(nRotationEstimation*3, 3*nCamera);
   A.setFromTriplets(tripletList.begin(), tripletList.end());
   tripletList.clear();
 
-  Eigen::SparseMatrix<double> AtAsparse = A.transpose() * A;
+  sMat AtAsparse = A.transpose() * A;
   const Mat AtA = Mat(AtAsparse); // convert to dense
 
   // You can use either SVD or eigen solver (eigen solver will be faster) to solve Ax=0
