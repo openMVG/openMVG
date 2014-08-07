@@ -313,10 +313,8 @@ bool robustResection(
   ceres::SubsetParameterization *constant_transform_parameterization = NULL;
 
   if ( ! refineFocal ) {
-      std::vector<int> vec_constant_focal;
-
       // Last elements is focal length
-      vec_constant_focal.push_back(6); // FOCAL LENGTH
+      std::vector<int> vec_constant_focal(1,6);
 
       constant_transform_parameterization =
         new ceres::SubsetParameterization(7, vec_constant_focal);

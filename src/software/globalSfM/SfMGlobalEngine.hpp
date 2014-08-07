@@ -59,7 +59,6 @@ namespace openMVG{
 
 enum ERotationAveragingMethod
 {
-  ROTATION_AVERAGING_NONE = 0,
   ROTATION_AVERAGING_L1 = 1,
   ROTATION_AVERAGING_L2 = 2
 };
@@ -68,12 +67,10 @@ class GlobalReconstructionEngine : public ReconstructionEngine
 {
 public:
   GlobalReconstructionEngine(const std::string & sImagePath,
-
     const std::string & sMatchesPath,
     const std::string & sOutDirectory,
     const ERotationAveragingMethod & eRotationAveragingMethod,
     bool bHtmlReport = false);
-
 
   ~GlobalReconstructionEngine();
 

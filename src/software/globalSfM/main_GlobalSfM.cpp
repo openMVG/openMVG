@@ -44,7 +44,6 @@ int main(int argc, char **argv)
   cmd.add( make_option('c', bColoredPointCloud, "coloredPointCloud") );
   cmd.add( make_option('r', iRotationAveragingMethod, "rotationAveraging") );
 
-
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
     cmd.process(argc, argv);
@@ -74,12 +73,6 @@ int main(int argc, char **argv)
 
   if (!stlplus::folder_exists(sOutDir))
     stlplus::folder_create(sOutDir);
-
-   if (iRotationAveragingMethod < 0 || iRotationAveragingMethod > ROTATION_AVERAGING_L2 )  {
-    std::cerr << "\n Rotation averaging method is invalid" << std::endl;
-    return EXIT_FAILURE;
-  }
-  
   
   //---------------------------------------
   // Incremental reconstruction process

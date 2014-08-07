@@ -29,8 +29,8 @@ int main(int argc, char **argv)
   std::string sOutDir = "";
   bool bPmvsExport = false;
   bool bRefinePPandDisto = true;
+  bool bRefineFocal = true;
   bool bColoredPointCloud = false;
-  bool bRefineFocal = true ;
   std::pair<size_t,size_t> initialPair(0,0);
 
   cmd.add( make_option('i', sImaDirectory, "imadir") );

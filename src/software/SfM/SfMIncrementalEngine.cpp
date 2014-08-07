@@ -1399,7 +1399,15 @@ void IncrementalReconstructionEngine::BundleAdjustment()
     ++cpt;
   }
 
-  // Parameterization used to restrict camera intrinsics (Brown model or Pinhole Model).
+  // Parameterization used to restrict camera intrinsics 
+  //-- Optional:
+  //  - bRefinePPandDisto 
+  //   -> true: Pinhole camera model with Brown distortion model may vary
+  //   -> false: only the focal lenght may vary
+  //
+  //  - _bRefineFocal
+  //   -> true: refine focal length, Principal point and radial distortion
+  //   -> false: fixed focal length (refine Principal point and radial distortion)
   ceres::SubsetParameterization *constant_transform_parameterization = NULL;
   if (!_bRefinePPandDisto) {
       std::vector<int> vec_constant_PPAndRadialDisto;
@@ -1415,13 +1423,11 @@ void IncrementalReconstructionEngine::BundleAdjustment()
         new ceres::SubsetParameterization(6, vec_constant_PPAndRadialDisto);
   }
 
-  // Parameterization used to restrict camera intrinsics (focal length).
+  // Parameterization used to restrict camera intrinsics (fixed focal length)
   ceres::SubsetParameterization *constant_transform_parameterization_focal = NULL;
   if (!_bRefineFocal) {
-      std::vector<int> vec_constant_focal;
-
-      // first elements is focal length
-      vec_constant_focal.push_back(0); // FOCAL LENGTH FIXED
+      // first elements is focal length // FOCAL LENGTH FIXED
+      std::vector<int> vec_constant_focal(1,0);
 
       constant_transform_parameterization_focal =
         new ceres::SubsetParameterization(6, vec_constant_focal);
