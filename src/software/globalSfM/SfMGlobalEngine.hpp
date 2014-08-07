@@ -176,8 +176,7 @@ private:
   std::vector<openMVG::SfMIO::IntrinsicCameraInfo> _vec_intrinsicGroups;
   std::map< size_t, std::vector<SIOPointFeature> > _map_feats; // feature per images
 
-  typedef matching::PairWiseMatches PairWiseMatches;
-  PairWiseMatches _map_Matches_F; // pairwise matches for Essential matrix model
+  matching::PairWiseMatches _map_Matches_F; // pairwise matches for Essential matrix model
 
 
   // Parameter

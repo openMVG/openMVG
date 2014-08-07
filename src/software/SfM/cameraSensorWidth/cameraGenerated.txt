@@ -268,6 +268,7 @@ Canon;Canon PowerShot SD940 IS;6.16
 Canon;Canon PowerShot SD980 IS;6.16
 Canon;Canon PowerShot SD960 IS;6.16
 Canon;Canon Digital IXUS 100 IS;6.16
+Canon;Canon Digital IXUS 120 IS;6.17
 Canon;Canon PowerShot SD780 IS;6.16
 Canon;Canon PowerShot SD970 IS;6.16
 Canon;Canon EOS-1D Mark IV;27.9

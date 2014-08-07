@@ -82,3 +82,9 @@ ENDIF(USE_OPENCV)
 ADD_EXECUTABLE(openMVG_main_openMVG2MESHLAB main_openMVG2MESHLAB.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MESHLAB
                      ${OpenMVG_LIBS})
+
+# - Quality comparison against a GT camera path (MultiView Evaluation dataset)
+#
+ADD_EXECUTABLE(openMVG_main_evalQuality main_evalQuality.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_evalQuality
+                     ${OpenMVG_LIBS})
