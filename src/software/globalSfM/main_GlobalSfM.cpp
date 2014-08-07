@@ -73,7 +73,7 @@ int main(int argc, char **argv)
 
   if (!stlplus::folder_exists(sOutDir))
     stlplus::folder_create(sOutDir);
-
+  
   //---------------------------------------
   // Incremental reconstruction process
   //---------------------------------------

@@ -29,6 +29,7 @@ int main(int argc, char **argv)
   std::string sOutDir = "";
   bool bPmvsExport = false;
   bool bRefinePPandDisto = true;
+  bool bRefineFocal = true;
   bool bColoredPointCloud = false;
   std::pair<size_t,size_t> initialPair(0,0);
 
@@ -40,7 +41,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('b', initialPair.second, "initialPairB") );
   cmd.add( make_option('c', bColoredPointCloud, "coloredPointCloud") );
   cmd.add( make_option('d', bRefinePPandDisto, "refinePPandDisto") );
-
+  cmd.add( make_option('f', bRefineFocal, "refineFocal") );
 
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -57,6 +58,9 @@ int main(int argc, char **argv)
     << "[-d|--refinePPandDisto \n"
     << "\t 0-> refine only the Focal,\n"
     << "\t 1-> refine Focal, Principal point and radial distortion factors.] \n"
+    << "[-f|--refineFocal \n"
+    << "\t 0-> refine only Principal point and radial distortion,\n"
+    << "\t 1-> refine Focal, Principal point and radial distortion ] \n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -83,6 +87,7 @@ int main(int argc, char **argv)
 
   to3DEngine.setInitialPair(initialPair);
   to3DEngine.setIfRefinePrincipalPointAndRadialDisto(bRefinePPandDisto);
+  to3DEngine.setIfRefineFocal(bRefineFocal);
 
   if (to3DEngine.Process())
   {
