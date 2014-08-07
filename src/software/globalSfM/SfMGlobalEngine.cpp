@@ -77,9 +77,15 @@ getRotationMagnitude(const Mat & R)
   return std::acos(cos_theta);
 }
 
-GlobalReconstructionEngine::GlobalReconstructionEngine(const std::string & sImagePath,
-  const std::string & sMatchesPath, const std::string & sOutDirectory, bool bHtmlReport, int averagingRotationMethod )
-  : ReconstructionEngine(sImagePath, sMatchesPath, sOutDirectory)
+
+GlobalReconstructionEngine::GlobalReconstructionEngine(
+  const std::string & sImagePath,
+  const std::string & sMatchesPath,
+  const std::string & sOutDirectory,
+  const ERotationAveragingMethod & eRotationAveragingMethod,
+  bool bHtmlReport)
+  : ReconstructionEngine(sImagePath, sMatchesPath, sOutDirectory),
+    _eRotationAveragingMethod(eRotationAveragingMethod)
 {
   _bHtmlReport = bHtmlReport;
   if (!stlplus::folder_exists(sOutDirectory)) {
@@ -95,8 +101,6 @@ GlobalReconstructionEngine::GlobalReconstructionEngine(const std::string & sImag
     _htmlDocStream->pushInfo("<hr>");
   }
   
-  // initialize rotation averaging method
-  averagingMethod = averagingRotationMethod;
 }
 
 
@@ -375,8 +379,8 @@ bool GlobalReconstructionEngine::Process()
       << "     from " << map_relatives.size() << " relative rotations\n" << std::endl;
 
     if (!computeGlobalRotations(
-            ERotationAveragingMethod(averagingMethod),
-	    map_cameraNodeToCameraIndex,
+            _eRotationAveragingMethod,
+            map_cameraNodeToCameraIndex,
             map_cameraIndexTocameraNode,
             map_relatives,
             map_globalR))
@@ -829,19 +833,19 @@ bool GlobalReconstructionEngine::ReadInputData()
     }
     else
     {
-      // Check there is only one intrinsic group
+      //-- The global SfM pipeline assume there is only one intrinsic group
+      //- Count the number of intrinsic group and if many return an error message
       std::vector<openMVG::SfMIO::IntrinsicCameraInfo>::iterator iterF =
         std::unique(_vec_intrinsicGroups.begin(), _vec_intrinsicGroups.end(), testIntrinsicsEquality);
       _vec_intrinsicGroups.resize( std::distance(_vec_intrinsicGroups.begin(), iterF) );
-      if (_vec_intrinsicGroups.size() == 1)
-      {
+      if (_vec_intrinsicGroups.size() == 1) {
+        // Set all the intrinsic ID to 0
         for (size_t i = 0; i < _vec_camImageNames.size(); ++i)
           _vec_camImageNames[i].m_intrinsicId = 0;
       }
-      else
-      {
-        std::cout << "There is more than one focal group in the lists.txt file." << std::endl
-          << "Only one focal group is supported for the global calibration chain" << std::endl;
+      else  {
+        std::cerr << "There is more than one focal group in the lists.txt file." << std::endl
+          << "Only one focal group is supported for the global calibration chain." << std::endl;
         return false;
       }
 

@@ -154,28 +154,8 @@ int main(int argc, char **argv)
                                       vec_focalGroup,
                                       sListsFile) )
   {
-    std::cerr << "\nEmpty image list." << std::endl;
+    std::cerr << "\nEmpty or invalid image list." << std::endl;
     return false;
-  }
-
-  if (eGeometricModelToCompute == ESSENTIAL_MATRIX)
-  {
-    //-- In the case of the essential matrix we check if only one K matrix is present.
-    //-- Due to the fact that the generic framework allows only one K matrix for the
-    // robust essential matrix estimation in image collection.
-    std::vector<openMVG::SfMIO::IntrinsicCameraInfo>::iterator iterF =
-    std::unique(vec_focalGroup.begin(), vec_focalGroup.end(), testIntrinsicsEquality);
-    vec_focalGroup.resize( std::distance(vec_focalGroup.begin(), iterF) );
-    if (vec_focalGroup.size() == 1) {
-      // Set all the intrinsic ID to 0
-      for (size_t i = 0; i < vec_camImageName.size(); ++i)
-        vec_camImageName[i].m_intrinsicId = 0;
-    }
-    else  {
-      std::cerr << "There is more than one focal group in the lists.txt file." << std::endl
-        << "Only one focal group is supported for the image collection robust essential matrix estimation." << std::endl;
-      return EXIT_FAILURE;
-    }
   }
 
   //-- Two alias to ease access to image filenames and image sizes
@@ -261,7 +241,8 @@ int main(int argc, char **argv)
     if (collectionMatcher.loadData(vec_fileNames, sOutDir))
     {
       std::cout  << std::endl << "PUTATIVE MATCHES" << std::endl;
-      collectionMatcher.Match(vec_fileNames, map_PutativesMatches);
+      const PairsT pairs = exhaustivePairs(vec_fileNames.size());
+      collectionMatcher.Match(vec_fileNames, pairs, map_PutativesMatches);
       //---------------------------------------
       //-- Export putative matches
       //---------------------------------------
@@ -302,8 +283,20 @@ int main(int argc, char **argv)
       break;
       case ESSENTIAL_MATRIX:
       {
+        // Build the intrinsic parameter map for each image
+        std::map<size_t, Mat3> map_K;
+        size_t cpt = 0;
+        for ( std::vector<openMVG::SfMIO::CameraInfo>::const_iterator
+          iter_camInfo = vec_camImageName.begin();
+          iter_camInfo != vec_camImageName.end();
+          ++iter_camInfo, ++cpt )
+        {
+          if (vec_focalGroup[iter_camInfo->m_intrinsicId].m_bKnownIntrinsic)
+            map_K[cpt] = vec_focalGroup[iter_camInfo->m_intrinsicId].m_K;
+        }
+
         collectionGeomFilter.Filter(
-          GeometricFilter_EMatrix_AC(vec_focalGroup[0].m_K, maxResidualError),
+          GeometricFilter_EMatrix_AC(map_K, maxResidualError),
           map_PutativesMatches,
           map_GeometricMatches,
           vec_imagesSize);
@@ -331,7 +324,6 @@ int main(int argc, char **argv)
       break;
       case HOMOGRAPHY_MATRIX:
       {
-
         collectionGeomFilter.Filter(
           GeometricFilter_HMatrix_AC(maxResidualError),
           map_PutativesMatches,
