@@ -218,7 +218,7 @@ bool robustResection(
   const Mat3 * K = NULL,
   Mat34 * P = NULL,
   double * maxError = NULL,
-  bool refineFocal = true )
+  bool bRefineFocal = true )
 {
   double dPrecision = std::numeric_limits<double>::infinity();
   size_t MINIMUM_SAMPLES = 0;
@@ -241,9 +241,8 @@ bool robustResection(
   }
   else
   {
-    // If K is available use the Epnp solver
-    //typedef openMVG::euclidean_resection::kernel::EpnpSolver SolverType;
-    typedef openMVG::euclidean_resection::P3PSolver SolverType;
+    //typedef openMVG::euclidean_resection::kernel::EpnpSolver SolverType; // If K is available use the Epnp solver
+    typedef openMVG::euclidean_resection::P3PSolver SolverType; // If K is available use the P3P solver
     MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
 
     typedef ACKernelAdaptorResection_K<
@@ -295,7 +294,7 @@ bool robustResection(
       ba_problem.observations_.push_back( pt(1) - ppy );
     }
 
-    // Add camera parameters (R, t, focal)
+    // Add camera parameters (R [3x1], t [3x1], focal [1])
     {
       // Rotation matrix to angle axis
       std::vector<double> angleAxis(3);
@@ -308,17 +307,6 @@ bool robustResection(
       ba_problem.parameters_.push_back(t_[2]);
       ba_problem.parameters_.push_back(K_(0,0)); //focal
     }
-
-  // Parameterization used to restrict camera intrinsics (i.e. focal length).
-  ceres::SubsetParameterization *constant_transform_parameterization = NULL;
-
-  if ( ! refineFocal ) {
-      // Last elements is focal length
-      std::vector<int> vec_constant_focal(1,6);
-
-      constant_transform_parameterization =
-        new ceres::SubsetParameterization(7, vec_constant_focal);
-  }
 
     // Create residuals for each observation in the bundle adjustment problem. The
     // parameters for cameras and points are added automatically.
@@ -337,11 +325,16 @@ bool robustResection(
       problem.AddResidualBlock(cost_function,
         NULL, // squared loss
         ba_problem.mutable_camera_for_observation(0));
-        
-        if ( ! refineFocal ) {
-          problem.SetParameterization(ba_problem.mutable_camera_for_observation(0),
-                                      constant_transform_parameterization);
-        }
+    }
+
+    // Parameterization used to restrict camera intrinsics if desired (fixed focal length)
+    ceres::SubsetParameterization *constant_transform_parameterization = NULL;
+    if ( ! bRefineFocal ) {
+      std::vector<int> vec_constant_focal(1,6); // Set last element camera parameter as fixed (the focal)
+      constant_transform_parameterization =
+        new ceres::SubsetParameterization(7, vec_constant_focal);
+      problem.SetParameterization(ba_problem.mutable_camera_for_observation(0),
+        constant_transform_parameterization);
     }
 
     ceres::Solver::Options options;
@@ -361,6 +354,7 @@ bool robustResection(
     options.logging_type = ceres::SILENT;
 #ifdef USE_OPENMP
     options.num_threads = omp_get_num_threads();
+    options.num_linear_solver_threads = omp_get_max_threads();
 #endif // USE_OPENMP
 
     ceres::Solver::Summary summary;

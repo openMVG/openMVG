@@ -1282,7 +1282,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
 
     // Configure the size of the problem
   ba_problem.num_cameras_ = nbCams;
-  ba_problem.num_intrinsic_ = nbIntrinsics;
+  ba_problem.num_intrinsics_ = nbIntrinsics;
   ba_problem.num_points_ = nbPoints3D;
   ba_problem.num_observations_ = nbmeasurements;
 
@@ -1292,9 +1292,9 @@ void IncrementalReconstructionEngine::BundleAdjustment()
   ba_problem.observations_.reserve(2 * ba_problem.num_observations_);
 
   ba_problem.num_parameters_ =
-    6 * ba_problem.num_cameras_ // #[Rotation|translation]
-    + 6 * ba_problem.num_intrinsic_ // #[f,ppx,ppy,k1,k2,k3]
-    + 3 * ba_problem.num_points_; // #[X]
+    6 * ba_problem.num_cameras_ // #[Rotation|translation] = [3x1]|[3x1]
+    + 6 * ba_problem.num_intrinsics_ // #[f,ppx,ppy,k1,k2,k3] = [6x1]
+    + 3 * ba_problem.num_points_; // #[X] = [3x1]
   ba_problem.parameters_.reserve(ba_problem.num_parameters_);
 
   // Setup extrinsic parameters
@@ -1399,40 +1399,6 @@ void IncrementalReconstructionEngine::BundleAdjustment()
     ++cpt;
   }
 
-  // Parameterization used to restrict camera intrinsics 
-  //-- Optional:
-  //  - bRefinePPandDisto 
-  //   -> true: Pinhole camera model with Brown distortion model may vary
-  //   -> false: only the focal lenght may vary
-  //
-  //  - _bRefineFocal
-  //   -> true: refine focal length, Principal point and radial distortion
-  //   -> false: fixed focal length (refine Principal point and radial distortion)
-  ceres::SubsetParameterization *constant_transform_parameterization = NULL;
-  if (!_bRefinePPandDisto) {
-      std::vector<int> vec_constant_PPAndRadialDisto;
-
-      // Last five elements are ppx,ppy and radial disto factors.
-      vec_constant_PPAndRadialDisto.push_back(1); // PRINCIPAL_POINT_X FIXED
-      vec_constant_PPAndRadialDisto.push_back(2); // PRINCIPAL_POINT_Y FIXED
-      vec_constant_PPAndRadialDisto.push_back(3); // K1 FIXED
-      vec_constant_PPAndRadialDisto.push_back(4); // K2 FIXED
-      vec_constant_PPAndRadialDisto.push_back(5); // K3 FIXED
-
-      constant_transform_parameterization =
-        new ceres::SubsetParameterization(6, vec_constant_PPAndRadialDisto);
-  }
-
-  // Parameterization used to restrict camera intrinsics (fixed focal length)
-  ceres::SubsetParameterization *constant_transform_parameterization_focal = NULL;
-  if (!_bRefineFocal) {
-      // first elements is focal length // FOCAL LENGTH FIXED
-      std::vector<int> vec_constant_focal(1,0);
-
-      constant_transform_parameterization_focal =
-        new ceres::SubsetParameterization(6, vec_constant_focal);
-  }
-
   // Create residuals for each observation in the bundle adjustment problem. The
   // parameters for cameras and points are added automatically.
   ceres::Problem problem;
@@ -1453,22 +1419,6 @@ void IncrementalReconstructionEngine::BundleAdjustment()
                              ba_problem.mutable_camera_intrisic_for_observation(i),
                              ba_problem.mutable_camera_extrinsic_for_observation(i),
                              ba_problem.mutable_point_for_observation(i));
-
-    if( ! _bRefinePPandDisto && ! _bRefineFocal ){
-      problem.SetParameterBlockConstant(ba_problem.mutable_camera_intrisic_for_observation(i) );
-    } 
-    else{
-        if (!_bRefinePPandDisto) {
-          problem.SetParameterization(ba_problem.mutable_camera_intrisic_for_observation(i),
-                                      constant_transform_parameterization);
-        }
-
-        if (!_bRefineFocal) {
-          problem.SetParameterization(ba_problem.mutable_camera_intrisic_for_observation(i),
-                                      constant_transform_parameterization_focal);
-        }
-    }
-
   }
 
   //-- Lock the first camera to better deal with scene orientation ambiguity
@@ -1478,6 +1428,55 @@ void IncrementalReconstructionEngine::BundleAdjustment()
     problem.SetParameterBlockConstant(
       ba_problem.mutable_camera_extrinsic_for_observation(
         map_camIndexToNumber_extrinsic[_vec_added_order[0]]));
+  }
+
+  // Parameterization used to restrict camera intrinsics
+  {
+    //-- Optional:
+    //  - bRefinePPandDisto 
+    //   -> true: Pinhole camera model with Brown distortion model may vary
+    //   -> false: only the focal lenght may vary
+    //
+    //  - _bRefineFocal
+    //   -> true: refine focal length, Principal point and radial distortion
+    //   -> false: fixed focal length (refine Principal point and radial distortion)
+    ceres::SubsetParameterization *constant_transform_parameterization = NULL;
+    std::vector<int> vec_constant_intrinsic;
+    if ( !_bRefinePPandDisto ) {
+      // Parameterization used to set as constant principal point and radial distortion
+      // Last five elements are ppx,ppy and radial disto factors.
+      vec_constant_intrinsic.push_back(1); // PRINCIPAL_POINT_X FIXED
+      vec_constant_intrinsic.push_back(2); // PRINCIPAL_POINT_Y FIXED
+      vec_constant_intrinsic.push_back(3); // K1 FIXED
+      vec_constant_intrinsic.push_back(4); // K2 FIXED
+      vec_constant_intrinsic.push_back(5); // K3 FIXED
+    }
+
+    if ( !_bRefineFocal ) {
+      // Parameterization used to set as constant the camera focal length (fixed focal length)
+      vec_constant_intrinsic.push_back(0);
+    }
+
+    if ( !vec_constant_intrinsic.empty() &&
+         vec_constant_intrinsic.size() != ba_problem.NINTRINSICPARAM
+         // if all parameters are set as constant, better to use the SetParameterBlockConstant
+       )
+      constant_transform_parameterization =
+        new ceres::SubsetParameterization(6, vec_constant_intrinsic);
+    
+    // Loop over intrinsics (to configure varying and fix parameters)
+    for (size_t iIntrinsicGroupId = 0; iIntrinsicGroupId < ba_problem.num_intrinsics(); ++iIntrinsicGroupId)
+    {
+      if ( !_bRefinePPandDisto && !_bRefineFocal ){
+        problem.SetParameterBlockConstant(ba_problem.mutable_cameras_intrinsic(iIntrinsicGroupId) );
+      } 
+      else{
+        if ( !vec_constant_intrinsic.empty() ) {
+          problem.SetParameterization(ba_problem.mutable_cameras_intrinsic(iIntrinsicGroupId),
+            constant_transform_parameterization);
+        }
+      }
+    }    
   }
 
   // Configure a BA engine and run it

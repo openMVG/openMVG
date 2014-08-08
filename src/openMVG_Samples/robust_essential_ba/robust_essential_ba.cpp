@@ -598,7 +598,7 @@ void do_bundle_adjustment_common_focal(
 
   // Configure the size of the problem
   ba_problem.num_cameras_ = nCameraMotion;
-  ba_problem.num_intrinsic_ = nCameraIntrinsic;
+  ba_problem.num_intrinsics_ = nCameraIntrinsic;
   ba_problem.num_points_ = n3Dpoints;
   ba_problem.num_observations_ = nCameraMotion * n3Dpoints;
 
@@ -608,7 +608,7 @@ void do_bundle_adjustment_common_focal(
   ba_problem.observations_.reserve(2 * ba_problem.num_observations_);
 
   ba_problem.num_parameters_ =
-    6 * ba_problem.num_cameras_ + ba_problem.num_intrinsic_ + 3 * ba_problem.num_points_;
+    6 * ba_problem.num_cameras_ + ba_problem.num_intrinsics_ + 3 * ba_problem.num_points_;
   ba_problem.parameters_.reserve(ba_problem.num_parameters_);
 
   // Fill it with data (For each 3D point setup the tracks : the 2D visbility)
@@ -767,7 +767,7 @@ void do_bundle_adjustment_common_intrinsics(
 
   // Configure the size of the problem
   ba_problem.num_cameras_ = nCameraMotion;
-  ba_problem.num_intrinsic_ = nCameraIntrinsic;
+  ba_problem.num_intrinsics_ = nCameraIntrinsic;
   ba_problem.num_points_ = n3Dpoints;
   ba_problem.num_observations_ = nCameraMotion * n3Dpoints;
 
@@ -777,10 +777,10 @@ void do_bundle_adjustment_common_intrinsics(
   ba_problem.observations_.reserve(2 * ba_problem.num_observations_);
 
   ba_problem.num_parameters_ =
-    6 * ba_problem.num_cameras_ + 6 * ba_problem.num_intrinsic_ + 3 * ba_problem.num_points_;
+    6 * ba_problem.num_cameras_ + 6 * ba_problem.num_intrinsics_ + 3 * ba_problem.num_points_;
   ba_problem.parameters_.reserve(ba_problem.num_parameters_);
 
-  // Fill it with data (For each 3D point setup the tracks : the 2D visbility)
+  // Fill it with data (For each 3D point setup the tracks : the 2D visibility)
   // The two camera share the same intrinsic
   PinholeCamera vec_cam[2] = {camL, camR};
   for (int i = 0; i < n3Dpoints; ++i) {
