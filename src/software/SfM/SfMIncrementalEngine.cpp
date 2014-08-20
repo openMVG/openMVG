@@ -1308,11 +1308,11 @@ void IncrementalReconstructionEngine::BundleAdjustment()
     set_camIndex.insert(iter->first);
     map_camIndexToNumber_extrinsic.insert(std::make_pair(iter->first, cpt));
 
-    Mat3 R = iter->second._R;
+    const Mat3 R = iter->second._R;
     double angleAxis[3];
     ceres::RotationMatrixToAngleAxis((const double*)R.data(), angleAxis);
     // translation
-    Vec3 t = iter->second._t;
+    const Vec3 t = iter->second._t;
     ba_problem.parameters_.push_back(angleAxis[0]);
     ba_problem.parameters_.push_back(angleAxis[1]);
     ba_problem.parameters_.push_back(angleAxis[2]);
@@ -1416,7 +1416,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
 
     problem.AddResidualBlock(cost_function,
                              p_LossFunction, // replaced by NULL if you don't want a LossFunction
-                             ba_problem.mutable_camera_intrisic_for_observation(i),
+                             ba_problem.mutable_camera_intrinsic_for_observation(i),
                              ba_problem.mutable_camera_extrinsic_for_observation(i),
                              ba_problem.mutable_point_for_observation(i));
   }
@@ -1433,7 +1433,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
   // Parameterization used to restrict camera intrinsics
   {
     //-- Optional:
-    //  - bRefinePPandDisto 
+    //  - bRefinePPandDisto
     //   -> true: Pinhole camera model with Brown distortion model may vary
     //   -> false: only the focal lenght may vary
     //
@@ -1463,20 +1463,20 @@ void IncrementalReconstructionEngine::BundleAdjustment()
        )
       constant_transform_parameterization =
         new ceres::SubsetParameterization(6, vec_constant_intrinsic);
-    
+
     // Loop over intrinsics (to configure varying and fix parameters)
     for (size_t iIntrinsicGroupId = 0; iIntrinsicGroupId < ba_problem.num_intrinsics(); ++iIntrinsicGroupId)
     {
       if ( !_bRefinePPandDisto && !_bRefineFocal ){
-        problem.SetParameterBlockConstant(ba_problem.mutable_cameras_intrinsic(iIntrinsicGroupId) );
-      } 
+        problem.SetParameterBlockConstant(ba_problem.mutable_cameras_intrinsic(iIntrinsicGroupId));
+      }
       else{
         if ( !vec_constant_intrinsic.empty() ) {
           problem.SetParameterization(ba_problem.mutable_cameras_intrinsic(iIntrinsicGroupId),
             constant_transform_parameterization);
         }
       }
-    }    
+    }
   }
 
   // Configure a BA engine and run it
@@ -1534,7 +1534,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
       const size_t imageId = iter->first;
       const size_t extrinsicId = map_camIndexToNumber_extrinsic[imageId];
       // Get back extrinsic pointer
-      const double * camE = ba_problem.mutable_cameras_extrinsic() + extrinsicId * 6;
+      const double * camE = ba_problem.mutable_cameras_extrinsic(extrinsicId);
       Mat3 R;
       // angle axis to rotation matrix
       ceres::AngleAxisToRotationMatrix(camE, R.data());
@@ -1542,19 +1542,19 @@ void IncrementalReconstructionEngine::BundleAdjustment()
 
       // Get back the intrinsic group of the camera
       const size_t intrinsicId = map_camIndexToNumber_intrinsic[imageId];
-      const double * camIntrinsics = ba_problem.mutable_cameras_intrinsic() + intrinsicId * 6;
+      const double * camIntrinsics = ba_problem.mutable_cameras_intrinsic(intrinsicId);
       // Update the camera with update intrinsic and extrinsic parameters
       using namespace pinhole_brown_reprojectionError;
       BrownPinholeCamera & sCam = iter->second;
       sCam = BrownPinholeCamera(
-        camIntrinsics[OFFSET_FOCAL_LENGTH],
-        camIntrinsics[OFFSET_PRINCIPAL_POINT_X],
-        camIntrinsics[OFFSET_PRINCIPAL_POINT_Y],
+        camIntrinsics[pinhole_brown_reprojectionError::OFFSET_FOCAL_LENGTH],
+        camIntrinsics[pinhole_brown_reprojectionError::OFFSET_PRINCIPAL_POINT_X],
+        camIntrinsics[pinhole_brown_reprojectionError::OFFSET_PRINCIPAL_POINT_Y],
         R,
         t,
-        camIntrinsics[OFFSET_K1],
-        camIntrinsics[OFFSET_K2],
-        camIntrinsics[OFFSET_K3]);
+        camIntrinsics[pinhole_brown_reprojectionError::OFFSET_K1],
+        camIntrinsics[pinhole_brown_reprojectionError::OFFSET_K2],
+        camIntrinsics[pinhole_brown_reprojectionError::OFFSET_K3]);
     }
 
     //-- Update each intrinsic parameters group
@@ -1566,20 +1566,20 @@ void IncrementalReconstructionEngine::BundleAdjustment()
       const double * camIntrinsics = ba_problem.mutable_cameras_intrinsic() + cpt * 6;
       Vec6 & intrinsic = iterIntrinsicGroup->second;
       using namespace pinhole_brown_reprojectionError;
-      intrinsic << camIntrinsics[OFFSET_FOCAL_LENGTH],
-        camIntrinsics[OFFSET_PRINCIPAL_POINT_X],
-        camIntrinsics[OFFSET_PRINCIPAL_POINT_Y],
-        camIntrinsics[OFFSET_K1],
-        camIntrinsics[OFFSET_K2],
-        camIntrinsics[OFFSET_K3];
+      intrinsic << camIntrinsics[pinhole_brown_reprojectionError::OFFSET_FOCAL_LENGTH],
+        camIntrinsics[pinhole_brown_reprojectionError::OFFSET_PRINCIPAL_POINT_X],
+        camIntrinsics[pinhole_brown_reprojectionError::OFFSET_PRINCIPAL_POINT_Y],
+        camIntrinsics[pinhole_brown_reprojectionError::OFFSET_K1],
+        camIntrinsics[pinhole_brown_reprojectionError::OFFSET_K2],
+        camIntrinsics[pinhole_brown_reprojectionError::OFFSET_K3];
 
        std::cout << " for camera Idx=[" << cpt << "]: " << std::endl
-        << "\t focal: " << camIntrinsics[OFFSET_FOCAL_LENGTH] << std::endl
-        << "\t ppx: " << camIntrinsics[OFFSET_PRINCIPAL_POINT_X] << std::endl
-        << "\t ppy: " << camIntrinsics[OFFSET_PRINCIPAL_POINT_Y] << std::endl
-        << "\t k1: " << camIntrinsics[OFFSET_K1] << std::endl
-        << "\t k2: " << camIntrinsics[OFFSET_K2] << std::endl
-        << "\t k3: " << camIntrinsics[OFFSET_K3] << std::endl;
+        << "\t focal: " << camIntrinsics[pinhole_brown_reprojectionError::OFFSET_FOCAL_LENGTH] << std::endl
+        << "\t ppx: " << camIntrinsics[pinhole_brown_reprojectionError::OFFSET_PRINCIPAL_POINT_X] << std::endl
+        << "\t ppy: " << camIntrinsics[pinhole_brown_reprojectionError::OFFSET_PRINCIPAL_POINT_Y] << std::endl
+        << "\t k1: " << camIntrinsics[pinhole_brown_reprojectionError::OFFSET_K1] << std::endl
+        << "\t k2: " << camIntrinsics[pinhole_brown_reprojectionError::OFFSET_K2] << std::endl
+        << "\t k3: " << camIntrinsics[pinhole_brown_reprojectionError::OFFSET_K3] << std::endl;
     }
   }
 }

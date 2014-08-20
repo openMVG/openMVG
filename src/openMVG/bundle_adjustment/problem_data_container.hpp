@@ -75,6 +75,8 @@ class BA_Problem_data_camMotionAndIntrinsic {
   /// Return a pointer to observed points [X_0, ... ,X_n]
   const double* observations() const { return &observations_[0]; }
 
+  /// Return the number of extrinsic groups
+  size_t num_extrinsics()  const { return num_cameras_ ;}
   /// Return the number of intrinsic groups
   size_t num_intrinsics()  const { return num_intrinsics_;}
 
@@ -95,7 +97,7 @@ class BA_Problem_data_camMotionAndIntrinsic {
     return mutable_cameras_extrinsic() + camera_index_extrinsic[i] * NExternalParam;
   }
   /// Return a pointer to the camera intrinsic that observe the Inth observation
-  double* mutable_camera_intrisic_for_observation(size_t i) {
+  double* mutable_camera_intrinsic_for_observation(size_t i) {
     return mutable_cameras_intrinsic() + camera_index_intrinsic[i] * NIntrinsicParam;
   }
 
@@ -103,6 +105,11 @@ class BA_Problem_data_camMotionAndIntrinsic {
   double* mutable_cameras_intrinsic(size_t i) {
     return mutable_cameras_intrinsic() + i * NIntrinsicParam;
   }
+  /// Return a pointer to the Inth extrinsic parameters
+  double* mutable_cameras_extrinsic(size_t i) {
+    return mutable_cameras_extrinsic() + i * NExternalParam;
+  }
+
 
   /// Return a pointer to the point that observe the Inth observation
   double* mutable_point_for_observation(size_t i) {

@@ -149,17 +149,14 @@ private:
     std::vector<openMVG::lInfinityCV::relativeInfo > & vec_initialEstimates,
     matching::PairWiseMatches & newpairMatches) const;
 
-  // Bundle adjustment : refine structure Xis and camera translations
-  void bundleAdjustment_t_Xi(
+  // Bundle adjustment : refine structure Xis and camera parameters (with optional refined parameters)
+  void bundleAdjustment(
     Map_Camera & map_camera,
     std::vector<Vec3> & vec_allScenes,
-    const STLMAPTracks & map_tracksSelected);
-
-  // Bundle adjustment : refine structure Xis and camera rotations and translations
-  void bundleAdjustment_Rt_Xi(
-    Map_Camera & map_camera,
-    std::vector<Vec3> & vec_allScenes,
-    const STLMAPTracks & map_tracksSelected);
+    const STLMAPTracks & map_tracksSelected,
+    bool bRefineRotation = true,
+    bool bRefineTranslation = true,
+    bool bRefineIntrinsics = false);
 
 private:
 
@@ -194,7 +191,7 @@ private:
   //-----
   // Cameras (Motion)
   Map_Camera _map_camera;
-  // Structure 
+  // Structure
   std::vector<Vec3> _vec_allScenes;
   // Structure visibility
   STLMAPTracks _map_selectedTracks; // reconstructed track (visibility per 3D point)

@@ -284,8 +284,6 @@ bool GlobalReconstructionEngine::Process()
   // Rotation inference
   //-------------------
 
-  //-- Putative triplets for relative translations computation
-  std::vector< graphUtils::Triplet > vec_triplets;
   {
     openMVG::Timer timer_Inference;
 
@@ -296,9 +294,6 @@ bool GlobalReconstructionEngine::Process()
     //-------------------
     if(!CleanGraph())
       return false;
-
-    // recompute possible triplets since some nodes have been possibly removed
-    tripletListing(vec_triplets);
 
     double time_Inference = timer_Inference.elapsed();
 
@@ -387,6 +382,10 @@ bool GlobalReconstructionEngine::Process()
       << " Relative translations computation: " << "\n"
       << "-------------------------------" << std::endl;
 
+    // List putative triplets
+    std::vector< graphUtils::Triplet > vec_triplets;
+    tripletListing(vec_triplets);
+
     // Compute putative translations with an edge coverage algorithm
 
     openMVG::Timer timerLP_triplet;
@@ -431,16 +430,18 @@ bool GlobalReconstructionEngine::Process()
       << "We targeting to estimates : " << map_globalR.size()
       << " and we have estimation for : " << set_representedImageIndex.size() << " images" << std::endl;
 
-    //-- PRINT IMAGE THAT ARE NOT INSIDE THE TRIPLET GRAPH
+    //-- Clean global rotation that are not in the TRIPLET GRAPH
+    std::map<size_t,Mat3> map_globalR_clean = map_globalR;
     for(std::map<size_t,Mat3>::const_iterator iter = map_globalR.begin();
       iter != map_globalR.end(); ++iter)
     {
       if (set_representedImageIndex.find(iter->first) == set_representedImageIndex.end())
       {
         std::cout << "Missing image index: " << iter->first << std::endl;
-        map_globalR.erase(map_cameraIndexTocameraNode[iter->first]);
+        map_globalR_clean.erase(map_cameraIndexTocameraNode[iter->first]);
       }
     }
+    map_globalR.swap(map_globalR_clean);
 
     //- Build the map of camera index and node Ids that are listed by the triplets of translations
     map_cameraIndexTocameraNode.clear();
@@ -719,8 +720,13 @@ bool GlobalReconstructionEngine::Process()
   //-- Bundle Adjustment on translation and structure
   //-------------------
 
-  bundleAdjustment_t_Xi(_map_camera, _vec_allScenes, _map_selectedTracks);
-  bundleAdjustment_Rt_Xi(_map_camera, _vec_allScenes, _map_selectedTracks);
+  // Refine only Structure and translations
+  bundleAdjustment(_map_camera, _vec_allScenes, _map_selectedTracks, false, true, false);
+  plyHelper::exportToPly(_vec_allScenes, stlplus::create_filespec(_sOutDirectory, "raw_pointCloud_BA_T_Xi", "ply"));
+
+  // Refine Structure, rotations and translations
+  bundleAdjustment(_map_camera, _vec_allScenes, _map_selectedTracks, true, true, false);
+  plyHelper::exportToPly(_vec_allScenes, stlplus::create_filespec(_sOutDirectory, "raw_pointCloud_BA_RT_Xi", "ply"));
 
   //-- Export statistics about the global process
   if (_bHtmlReport)
@@ -1070,7 +1076,7 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
 
           // Setup a BA problem
           using namespace openMVG::bundle_adjustment;
-          BA_Problem_data<6> ba_problem; // Will refine translation and 3D points
+          BA_Problem_data<6> ba_problem; // Will refine [Rotations|Translations] and 3D points
 
           // Configure the size of the problem
           ba_problem.num_cameras_ = nbCams;
@@ -1081,7 +1087,9 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
           ba_problem.camera_index_.reserve(ba_problem.num_observations_);
           ba_problem.observations_.reserve(2 * ba_problem.num_observations_);
 
-          ba_problem.num_parameters_ = 6 * ba_problem.num_cameras_ + 3 * ba_problem.num_points_;
+          ba_problem.num_parameters_ =
+            6 * ba_problem.num_cameras_ // #[Rotation|translation] = [3x1]|[3x1]
+            + 3 * ba_problem.num_points_; // 3DPoints = [3x1]
           ba_problem.parameters_.reserve(ba_problem.num_parameters_);
 
           // Fill camera
@@ -1441,222 +1449,13 @@ void GlobalReconstructionEngine::tripletRotationRejection(
   std::cout << "\n Relatives edges removed by triplet checking : " << removedEdgesCount << std::endl;
 }
 
-void GlobalReconstructionEngine::bundleAdjustment_t_Xi(
-    std::map<size_t, PinholeCamera> & map_camera,
-    std::vector<Vec3> & vec_allScenes,
-    const STLMAPTracks & map_tracksSelected)
-{
-  using namespace std;
-
-  const size_t nbCams = map_camera.size();
-  const size_t nbPoints3D = vec_allScenes.size();
-
-  // Count the number of measurement (sum of the reconstructed track length)
-  size_t nbmeasurements = 0;
-  for (STLMAPTracks::const_iterator iterTracks = map_tracksSelected.begin();
-    iterTracks != map_tracksSelected.end(); ++iterTracks)
-  {
-    const submapTrack & subTrack = iterTracks->second;
-    nbmeasurements += subTrack.size();
-  }
-
-  // Setup a BA problem
-  using namespace openMVG::bundle_adjustment;
-  BA_Problem_data<3> ba_problem; // Will refine translation and 3D points
-
-  // Configure the size of the problem
-  ba_problem.num_cameras_ = nbCams;
-  ba_problem.num_points_ = nbPoints3D;
-  ba_problem.num_observations_ = nbmeasurements;
-
-  ba_problem.point_index_.reserve(ba_problem.num_observations_);
-  ba_problem.camera_index_.reserve(ba_problem.num_observations_);
-  ba_problem.observations_.reserve(2 * ba_problem.num_observations_);
-
-  ba_problem.num_parameters_ = 3 * ba_problem.num_cameras_ + 3 * ba_problem.num_points_;
-  ba_problem.parameters_.reserve(ba_problem.num_parameters_);
-
-  // Fill camera
-  std::vector<double> vec_Rot(map_camera.size()*3, 0.0);
-  size_t i = 0;
-  std::map<size_t,size_t> map_camIndexToNumber;
-  for (Map_Camera::const_iterator iter = map_camera.begin();
-    iter != map_camera.end();  ++iter, ++i)
-  {
-    // in order to map camera index to contiguous number
-    map_camIndexToNumber.insert(std::make_pair(iter->first, i));
-
-    Mat3 R = iter->second._R;
-    double angleAxis[3];
-    ceres::RotationMatrixToAngleAxis((const double*)R.data(), angleAxis);
-    vec_Rot[i*3]   = angleAxis[0];
-    vec_Rot[i*3+1] = angleAxis[1];
-    vec_Rot[i*3+2] = angleAxis[2];
-
-    // translation
-    const Vec3 & t = iter->second._t;
-    ba_problem.parameters_.push_back(t[0]);
-    ba_problem.parameters_.push_back(t[1]);
-    ba_problem.parameters_.push_back(t[2]);
-  }
-
-  // Fill 3D points
-  for (std::vector<Vec3>::const_iterator iter = vec_allScenes.begin();
-    iter != vec_allScenes.end();
-    ++iter)
-  {
-    const Vec3 & pt3D = *iter;
-    ba_problem.parameters_.push_back(pt3D[0]);
-    ba_problem.parameters_.push_back(pt3D[1]);
-    ba_problem.parameters_.push_back(pt3D[2]);
-  }
-
-  // Fill the measurements
-  i = 0;
-  for (STLMAPTracks::const_iterator iterTracks = map_tracksSelected.begin();
-    iterTracks != map_tracksSelected.end(); ++iterTracks, ++i)
-  {
-    // Look through the track and add point position
-    const tracks::submapTrack & track = iterTracks->second;
-
-    for( tracks::submapTrack::const_iterator iterTrack = track.begin();
-      iterTrack != track.end();
-      ++iterTrack)
-    {
-      size_t imageId = iterTrack->first;
-      size_t featId = iterTrack->second;
-
-      // If imageId reconstructed :
-      //  - Add measurements (the feature position)
-      //  - Add camidx (map the image number to the camera index)
-      //  - Add ptidx (the 3D corresponding point index) (must be increasing)
-
-      //if ( set_camIndex.find(imageId) != set_camIndex.end())
-      {
-        const std::vector<SIOPointFeature> & vec_feats = _map_feats[imageId];
-        const SIOPointFeature & ptFeat = vec_feats[featId];
-        const PinholeCamera & cam = map_camera[imageId];
-
-        double ppx = cam._K(0,2), ppy = cam._K(1,2);
-        ba_problem.observations_.push_back( ptFeat.x() - ppx );
-        ba_problem.observations_.push_back( ptFeat.y() - ppy );
-
-        ba_problem.point_index_.push_back(i);
-        ba_problem.camera_index_.push_back(map_camIndexToNumber[imageId]);
-      }
-    }
-  }
-
-  // The same K matrix is used by all the camera
-  const Mat3 _K = _vec_intrinsicGroups[0].m_K;
-
-  // Create residuals for each observation in the bundle adjustment problem. The
-  // parameters for cameras and points are added automatically.
-  ceres::Problem problem;
-  // Set a LossFunction to be less penalized by false measurements
-  //  - set it to NULL if you don't want use a lossFunction.
-  ceres::LossFunction * p_LossFunction = new ceres::HuberLoss(Square(4.0));
-  for (i = 0; i < ba_problem.num_observations(); ++i) {
-    // Each Residual block takes a point and a camera as input and outputs a 2
-    // dimensional residual. Internally, the cost function stores the observed
-    // image location and compares the reprojection against the observation.
-
-    ceres::CostFunction* cost_function =
-        new ceres::AutoDiffCostFunction<PinholeReprojectionError_t, 2, 3, 3>(
-            new PinholeReprojectionError_t(
-                &ba_problem.observations()[2 * i + 0],
-                _K(0,0),
-                &vec_Rot[ba_problem.camera_index_[i]*3]));
-
-    problem.AddResidualBlock(cost_function,
-                             p_LossFunction,
-                             ba_problem.mutable_camera_for_observation(i),
-                             ba_problem.mutable_point_for_observation(i));
-  }
-  // Configure a BA engine and run it
-  //  Make Ceres automatically detect the bundle structure.
-  ceres::Solver::Options options;
-  options.preconditioner_type = ceres::JACOBI;
-  options.linear_solver_type = ceres::SPARSE_SCHUR;
-  if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
-    options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
-  else
-    if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
-      options.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
-    else
-    {
-      // No sparse backend for Ceres.
-      // Use dense solving
-      options.linear_solver_type = ceres::DENSE_SCHUR;
-    }
-  options.minimizer_progress_to_stdout = false;
-  options.logging_type = ceres::SILENT;
-#ifdef USE_OPENMP
-  options.num_threads = omp_get_max_threads();
-  options.num_linear_solver_threads = omp_get_max_threads();
-#endif // USE_OPENMP
-
-  // Solve BA
-  ceres::Solver::Summary summary;
-  ceres::Solve(options, &problem, &summary);
-  std::cout << summary.FullReport() << std::endl;
-
-  // If no error, get back refined parameters
-  if (summary.IsSolutionUsable())
-  {
-    // Get back 3D points
-    i = 0;
-    for (std::vector<Vec3>::iterator iter = vec_allScenes.begin();
-      iter != vec_allScenes.end(); ++iter, ++i)
-    {
-      const double * pt = ba_problem.mutable_points() + i*3;
-      Vec3 & pt3D = *iter;
-      pt3D = Vec3(pt[0], pt[1], pt[2]);
-    }
-    plyHelper::exportToPly(vec_allScenes, stlplus::create_filespec(_sOutDirectory, "raw_pointCloud_BA_T_Xi", "ply"));
-
-    // Get back camera
-    i = 0;
-    for (Map_Camera::iterator iter = map_camera.begin();
-      iter != map_camera.end(); ++iter, ++i)
-    {
-      const double * cam = ba_problem.mutable_cameras() + i*3;
-
-      Vec3 t(cam[0], cam[1], cam[2]);
-      PinholeCamera & sCam = iter->second;
-      Mat3 K = sCam._K;
-      Mat3 R = sCam._R;
-      sCam = PinholeCamera(K, R, t);
-    }
-
-    {
-      //-- Export First bundle adjustment statistics
-      if (_bHtmlReport)
-      {
-        using namespace htmlDocument;
-        std::ostringstream os;
-        os << "First Bundle Adjustment (Ti, Xjs) statistics.";
-        _htmlDocStream->pushInfo("<hr>");
-        _htmlDocStream->pushInfo(htmlMarkup("h1",os.str()));
-
-        os.str("");
-        os << "-------------------------------" << "<br>"
-          << "-- #tracks: " << map_tracksSelected.size() << ".<br>"
-          << "-- #observation: " << ba_problem.num_observations_ << ".<br>"
-          << "-- initial residual mean (RMSE): " << std::sqrt(summary.initial_cost/ba_problem.num_observations_) << ".<br>"
-          << "-- residual mean (RMSE): " << std::sqrt(summary.final_cost/ba_problem.num_observations_) << ".<br>"
-          << "-- Nb Steps required until convergence : " <<  summary.num_successful_steps + summary.num_unsuccessful_steps << ".<br>"
-          << "-------------------------------" << "<br>";
-        _htmlDocStream->pushInfo(os.str());
-      }
-    }
-  }
-}
-
-void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
+void GlobalReconstructionEngine::bundleAdjustment(
     Map_Camera & map_camera,
     std::vector<Vec3> & vec_allScenes,
-    const STLMAPTracks & map_tracksSelected)
+    const STLMAPTracks & map_tracksSelected,
+    bool bRefineRotation,
+    bool bRefineTranslation,
+    bool bRefineIntrinsics)
 {
   using namespace std;
 
@@ -1674,36 +1473,42 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
 
   // Setup a BA problem
   using namespace openMVG::bundle_adjustment;
-  BA_Problem_data<6> ba_problem; // Will refine translation and 3D points
+  BA_Problem_data_camMotionAndIntrinsic<6,3> ba_problem; // Refine [Rotation|Translation]|[Intrinsics]
 
   // Configure the size of the problem
   ba_problem.num_cameras_ = nbCams;
+  ba_problem.num_intrinsics_ = 1;
   ba_problem.num_points_ = nbPoints3D;
   ba_problem.num_observations_ = nbmeasurements;
 
   ba_problem.point_index_.reserve(ba_problem.num_observations_);
-  ba_problem.camera_index_.reserve(ba_problem.num_observations_);
+  ba_problem.camera_index_extrinsic.reserve(ba_problem.num_observations_);
+  ba_problem.camera_index_intrinsic.reserve(ba_problem.num_observations_);
   ba_problem.observations_.reserve(2 * ba_problem.num_observations_);
 
-  ba_problem.num_parameters_ = 6 * ba_problem.num_cameras_ + 3 * ba_problem.num_points_;
+  ba_problem.num_parameters_ =
+    6 * ba_problem.num_cameras_ // #[Rotation|translation] = [3x1]|[3x1]
+    + 3 * ba_problem.num_intrinsics_ // #[f,ppx,ppy] = [3x1]
+    + 3 * ba_problem.num_points_; // #[X] = [3x1]
   ba_problem.parameters_.reserve(ba_problem.num_parameters_);
 
-  // Fill camera
-  size_t i = 0;
-  std::map<size_t,size_t> map_camIndexToNumber;
+  // Setup extrinsic parameters
+  std::set<size_t> set_camIndex;
+  std::map<size_t,size_t> map_camIndexToNumber_extrinsic, map_camIndexToNumber_intrinsic;
+  size_t cpt = 0;
   for (Map_Camera::const_iterator iter = map_camera.begin();
-    iter != map_camera.end();  ++iter, ++i)
+    iter != map_camera.end();  ++iter, ++cpt)
   {
     // in order to map camera index to contiguous number
-    map_camIndexToNumber.insert(std::make_pair(iter->first, i));
+    set_camIndex.insert(iter->first);
+    map_camIndexToNumber_extrinsic.insert(std::make_pair(iter->first, cpt));
+    map_camIndexToNumber_intrinsic.insert(std::make_pair(iter->first, 0)); // all camera have the same intrinsics data
 
-    const Mat3 & R = iter->second._R;
+    const Mat3 R = iter->second._R;
     double angleAxis[3];
     ceres::RotationMatrixToAngleAxis((const double*)R.data(), angleAxis);
-
     // translation
-    const Vec3 & t = iter->second._t;
-
+    const Vec3 t = iter->second._t;
     ba_problem.parameters_.push_back(angleAxis[0]);
     ba_problem.parameters_.push_back(angleAxis[1]);
     ba_problem.parameters_.push_back(angleAxis[2]);
@@ -1712,6 +1517,16 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
     ba_problem.parameters_.push_back(t[2]);
   }
 
+  // Setup intrinsic parameters
+  // Only one group here
+  {
+    // The same K matrix is used by all the camera
+    const Mat3 _K = _vec_intrinsicGroups[0].m_K;
+    ba_problem.parameters_.push_back(_K(0,0)); // FOCAL_LENGTH
+    ba_problem.parameters_.push_back(_K(0,2)); // PRINCIPAL_POINT_X
+    ba_problem.parameters_.push_back(_K(1,2)); // PRINCIPAL_POINT_Y
+  }
+
   // Fill 3D points
   for (std::vector<Vec3>::const_iterator iter = vec_allScenes.begin();
     iter != vec_allScenes.end();
@@ -1724,7 +1539,7 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
   }
 
   // Fill the measurements
-  i = 0;
+  size_t i = 0;
   for (STLMAPTracks::const_iterator iterTracks = map_tracksSelected.begin();
     iterTracks != map_tracksSelected.end(); ++iterTracks, ++i)
   {
@@ -1747,20 +1562,16 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
       {
         const std::vector<SIOPointFeature> & vec_feats = _map_feats[imageId];
         const SIOPointFeature & ptFeat = vec_feats[featId];
-        const PinholeCamera & cam = map_camera[imageId];
 
-        double ppx = cam._K(0,2), ppy = cam._K(1,2);
-        ba_problem.observations_.push_back( ptFeat.x() - ppx );
-        ba_problem.observations_.push_back( ptFeat.y() - ppy );
+        ba_problem.observations_.push_back( ptFeat.x() );
+        ba_problem.observations_.push_back( ptFeat.y() );
 
         ba_problem.point_index_.push_back(i);
-        ba_problem.camera_index_.push_back(map_camIndexToNumber[imageId]);
+        ba_problem.camera_index_extrinsic.push_back(map_camIndexToNumber_extrinsic[imageId]);
+        ba_problem.camera_index_intrinsic.push_back(map_camIndexToNumber_intrinsic[imageId]);
       }
     }
   }
-
-  // The same K matrix is used by all the camera
-  const Mat3 _K = _vec_intrinsicGroups[0].m_K;
 
   // Create residuals for each observation in the bundle adjustment problem. The
   // parameters for cameras and points are added automatically.
@@ -1774,15 +1585,17 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
     // image location and compares the reprojection against the observation.
 
       ceres::CostFunction* cost_function =
-        new ceres::AutoDiffCostFunction<PinholeReprojectionError_Rt, 2, 6, 3>(
-          new PinholeReprojectionError_Rt(
-          &ba_problem.observations()[2 * k + 0], _K(0,0)));
+        new ceres::AutoDiffCostFunction<pinhole_reprojectionError::ErrorFunc_Refine_Intrinsic_Motion_3DPoints, 2, 3, 6, 3>(
+          new pinhole_reprojectionError::ErrorFunc_Refine_Intrinsic_Motion_3DPoints(
+            &ba_problem.observations()[2 * k]));
 
       problem.AddResidualBlock(cost_function,
         p_LossFunction,
-        ba_problem.mutable_camera_for_observation(k),
+        ba_problem.mutable_camera_intrinsic_for_observation(k),
+        ba_problem.mutable_camera_extrinsic_for_observation(k),
         ba_problem.mutable_point_for_observation(k));
   }
+
   // Configure a BA engine and run it
   //  Make Ceres automatically detect the bundle structure.
   ceres::Solver::Options options;
@@ -1806,6 +1619,44 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
   options.num_linear_solver_threads = omp_get_max_threads();
 #endif // USE_OPENMP
 
+  // Configure constant parameters (if any)
+  {
+    std::vector<int> vec_constant_extrinsic; // [R|t]
+    if (!bRefineRotation)
+    {
+      vec_constant_extrinsic.push_back(0);
+      vec_constant_extrinsic.push_back(1);
+      vec_constant_extrinsic.push_back(2);
+    }
+    if (!bRefineTranslation)
+    {
+      vec_constant_extrinsic.push_back(3);
+      vec_constant_extrinsic.push_back(4);
+      vec_constant_extrinsic.push_back(5);
+    }
+
+    for (size_t iExtrinsicId = 0; iExtrinsicId < ba_problem.num_extrinsics(); ++iExtrinsicId)
+    {
+      if (!vec_constant_extrinsic.empty())
+      {
+        ceres::SubsetParameterization *subset_parameterization =
+          new ceres::SubsetParameterization(6, vec_constant_extrinsic);
+        problem.SetParameterization(ba_problem.mutable_cameras_extrinsic(iExtrinsicId),
+          subset_parameterization);
+      }
+    }
+
+    if (!bRefineIntrinsics)
+    {
+      // No camera intrinsics are being refined,
+      // set the whole parameter block as constant for best performance.
+      for (size_t iIntrinsicGroupId = 0; iIntrinsicGroupId < ba_problem.num_intrinsics(); ++iIntrinsicGroupId)
+      {
+        problem.SetParameterBlockConstant(ba_problem.mutable_cameras_intrinsic(iIntrinsicGroupId));
+      }
+    }
+  }
+
   // Solve BA
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
@@ -1814,6 +1665,13 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
   // If no error, get back refined parameters
   if (summary.IsSolutionUsable())
   {
+    // Display statistics about the minimization
+    std::cout << std::endl
+      << "Bundle Adjustment statistics:\n"
+      << " Initial RMSE: " << std::sqrt( summary.initial_cost / (ba_problem.num_observations_*2.)) << "\n"
+      << " Final RMSE: " << std::sqrt( summary.final_cost / (ba_problem.num_observations_*2.)) << "\n"
+      << std::endl;
+
     // Get back 3D points
     i = 0;
     for (std::vector<Vec3>::iterator iter = vec_allScenes.begin();
@@ -1823,22 +1681,27 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
       Vec3 & pt3D = *iter;
       pt3D = Vec3(pt[0], pt[1], pt[2]);
     }
-    plyHelper::exportToPly(vec_allScenes, stlplus::create_filespec(_sOutDirectory, "raw_pointCloud_BA_RT_Xi", "ply"));
 
     // Get back camera
     i = 0;
     for (Map_Camera::iterator iter = map_camera.begin();
       iter != map_camera.end(); ++iter, ++i)
     {
-      const double * cam = ba_problem.mutable_cameras() + i*6;
+      // camera motion [R|t]
+      const double * cam = ba_problem.mutable_cameras_extrinsic(i);
       Mat3 R;
       // angle axis to rotation matrix
       ceres::AngleAxisToRotationMatrix(cam, R.data());
-
       Vec3 t(cam[3], cam[4], cam[5]);
 
-      // Update the camera
+      // camera intrinsics [f,ppx,ppy]
+      const size_t intrinsicId = map_camIndexToNumber_intrinsic[i];
+      double * intrinsics = ba_problem.mutable_cameras_intrinsic(intrinsicId);
       Mat3 K = iter->second._K;
+      K << intrinsics[0], 0, intrinsics[1],
+           0, intrinsics[0], intrinsics[2],
+           0, 0, 1;
+      // Update the camera
       PinholeCamera & sCam = iter->second;
       sCam = PinholeCamera(K, R, t);
     }
@@ -1849,7 +1712,7 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
       {
         using namespace htmlDocument;
         std::ostringstream os;
-        os << "Second Bundle Adjustment (Ri, Ti, Xjs) statistics.";
+        os << "Bundle Adjustment statistics.";
         _htmlDocStream->pushInfo("<hr>");
         _htmlDocStream->pushInfo(htmlMarkup("h1",os.str()));
 
@@ -1870,7 +1733,6 @@ void GlobalReconstructionEngine::bundleAdjustment_Rt_Xi(
         << "-- residual mean (RMSE): " << std::sqrt(summary.final_cost/ba_problem.num_observations_) << ".\n"
         << "-- Nb Steps required until convergence : " <<  summary.num_successful_steps + summary.num_unsuccessful_steps << ".\n"
         << "-------------------------------" << std::endl;
-
     }
   }
 }

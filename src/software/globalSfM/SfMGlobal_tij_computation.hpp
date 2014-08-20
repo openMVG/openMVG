@@ -122,7 +122,7 @@ bool estimate_T_triplet(
     const size_t nbPoints3D = vec_Xis.size();
 
     // Count the number of measurement (sum of the reconstructed track length)
-    size_t nbmeasurements = nbPoints3D*3;
+    const size_t nbmeasurements = nbPoints3D * 3;
 
     // Setup a BA problem
     using namespace openMVG::bundle_adjustment;
@@ -137,7 +137,9 @@ bool estimate_T_triplet(
     ba_problem.camera_index_.reserve(ba_problem.num_observations_);
     ba_problem.observations_.reserve(2 * ba_problem.num_observations_);
 
-    ba_problem.num_parameters_ = 3 * ba_problem.num_cameras_ + 3 * ba_problem.num_points_;
+    ba_problem.num_parameters_ =
+      3 * ba_problem.num_cameras_ // camera translations [3x1]
+      + 3 * ba_problem.num_points_; // 3D points [3x1]
     ba_problem.parameters_.reserve(ba_problem.num_parameters_);
 
     // Fill camera
@@ -259,7 +261,8 @@ bool estimate_T_triplet(
     options.minimizer_progress_to_stdout = false;
     options.logging_type = ceres::SILENT;
 #ifdef USE_OPENMP
-    options.num_threads = omp_get_num_threads();
+    options.num_threads = omp_get_max_threads();
+    options.num_linear_solver_threads = omp_get_max_threads();
 #endif // USE_OPENMP
 
     // Solve BA

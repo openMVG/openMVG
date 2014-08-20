@@ -65,9 +65,9 @@ void do_bundle_adjustment(
   const std::vector<size_t> & vec_inliers,
   std::vector<Vec3> & vec_3DPoints);
 
-/// Perform a Bundle Adjustment: Refine the cameras [R|t]
-///  a common [focal] and the structure
-void do_bundle_adjustment_common_focal(
+/// Perform a Bundle Adjustment: Refine the cameras [R|t],
+///  and common pinhole intrinsic [focal,ppx,ppy] and the structure
+void do_bundle_adjustment_common_intrinsic_pinhole(
   PinholeCamera & camL,
   PinholeCamera & camR,
   const Mat & xL,
@@ -77,7 +77,7 @@ void do_bundle_adjustment_common_focal(
 
 /// Perform a Bundle Adjustment: Refine the cameras [R|t]
 ///  and common intrinsics [focal,ppx,ppy,k1,k2,k3] and the structure
-void do_bundle_adjustment_common_intrinsics(
+void do_bundle_adjustment_common_intrinsics_brown_pinhole(
   PinholeCamera & camL,
   PinholeCamera & camR,
   const Mat & xL,
@@ -265,7 +265,7 @@ int main() {
       //D. Refine the computed structure and cameras
       std::cout << "Which BA do you want ? " << std::endl
         << "\t 1: Refine [X],[f,R|t] (individual cameras)\n"
-        << "\t 2: Refine [X],[R|t], shared [f]\n"
+        << "\t 2: Refine [X],[R|t], shared [f, ppx, ppy]\n"
         << "\t 3: Refine [X],[R|t], shared brown disto models [f,ppx,ppy,k1,k2,k3]\n" << std::endl;
       int iBAType = -1;
       std::cin >> iBAType;
@@ -283,7 +283,7 @@ int main() {
 
         case 2:
         {
-          do_bundle_adjustment_common_focal(
+          do_bundle_adjustment_common_intrinsic_pinhole(
             camL, camR,
             xL, xR,
             vec_inliers,
@@ -293,7 +293,7 @@ int main() {
 
         case 3:
         {
-          do_bundle_adjustment_common_intrinsics(
+          do_bundle_adjustment_common_intrinsics_brown_pinhole(
             camL, camR,
             xL, xR,
             vec_inliers,
@@ -579,9 +579,9 @@ void do_bundle_adjustment(
   }
 }
 
-/// Perform a Bundle Adjustment: Refine the cameras [R|t]
-///  a common [focal] and the structure
-void do_bundle_adjustment_common_focal(
+/// Perform a Bundle Adjustment: Refine the cameras [R|t],
+///  common intrinsic [focal,ppx,ppy] and the structure
+void do_bundle_adjustment_common_intrinsic_pinhole(
   PinholeCamera & camL,
   PinholeCamera & camR,
   const Mat & xL,
@@ -594,7 +594,7 @@ void do_bundle_adjustment_common_focal(
   int n3Dpoints = vec_inliers.size();
 
   // Setup a BA problem
-  BA_Problem_data_camMotionAndIntrinsic<6,1> ba_problem;
+  BA_Problem_data_camMotionAndIntrinsic<6,3> ba_problem;
 
   // Configure the size of the problem
   ba_problem.num_cameras_ = nCameraMotion;
@@ -608,7 +608,7 @@ void do_bundle_adjustment_common_focal(
   ba_problem.observations_.reserve(2 * ba_problem.num_observations_);
 
   ba_problem.num_parameters_ =
-    6 * ba_problem.num_cameras_ + ba_problem.num_intrinsics_ + 3 * ba_problem.num_points_;
+    6 * ba_problem.num_cameras_ + 3 * ba_problem.num_intrinsics_ + 3 * ba_problem.num_points_;
   ba_problem.parameters_.reserve(ba_problem.num_parameters_);
 
   // Fill it with data (For each 3D point setup the tracks : the 2D visbility)
@@ -620,21 +620,19 @@ void do_bundle_adjustment_common_focal(
     const Vec2 & xR_ = xR.col(vec_inliers[i]);
 
     // Left 2D observations
-    double ppx = vec_cam[0]._K(0,2), ppy = vec_cam[0]._K(1,2);
+
     ba_problem.camera_index_extrinsic.push_back(0);
     ba_problem.camera_index_intrinsic.push_back(0);
     ba_problem.point_index_.push_back(i);
-    ba_problem.observations_.push_back( xL_(0) - ppx);
-    ba_problem.observations_.push_back( xL_(1) - ppy);
+    ba_problem.observations_.push_back(xL_(0));
+    ba_problem.observations_.push_back(xL_(1));
 
     // Right 2D observations
-    ppx = vec_cam[1]._K(0,2);
-    ppy = vec_cam[1]._K(1,2);
     ba_problem.camera_index_extrinsic.push_back(1);
     ba_problem.camera_index_intrinsic.push_back(0); // same intrinsic group
     ba_problem.point_index_.push_back(i);
-    ba_problem.observations_.push_back( xR_(0) - ppx);
-    ba_problem.observations_.push_back( xR_(1) - ppy);
+    ba_problem.observations_.push_back(xR_(0));
+    ba_problem.observations_.push_back(xR_(1));
   }
 
   // Add camera extrinsics [R,t]
@@ -652,10 +650,15 @@ void do_bundle_adjustment_common_focal(
     ba_problem.parameters_.push_back(t[2]);
   }
   // Add camera intrinsic (focal)
-  double focal = (vec_cam[0]._K(0,0) + vec_cam[0]._K(1,1)
+  double
+    focal = (vec_cam[0]._K(0,0) + vec_cam[0]._K(1,1)
      + vec_cam[1]._K(1,1) + vec_cam[1]._K(0,0)) / 4.0;
-  // Setup the focal in the ba_problem
+  double ppx = (vec_cam[0]._K(0,2) + vec_cam[1]._K(0,2)) / 2.0;
+  double ppy = (vec_cam[0]._K(1,2) + vec_cam[1]._K(1,2)) / 2.0;
+  // Setup the intrinsic in the ba_problem
   ba_problem.parameters_.push_back(focal);
+  ba_problem.parameters_.push_back(ppx);
+  ba_problem.parameters_.push_back(ppy);
 
   // Add 3D points coordinates parameters
   for (int i = 0; i < n3Dpoints; ++i) {
@@ -674,13 +677,13 @@ void do_bundle_adjustment_common_focal(
     // dimensional residual. Internally, the cost function stores the observed
     // image location and compares the reprojection against the observation.
     ceres::CostFunction* cost_function =
-        new ceres::AutoDiffCostFunction<pinhole_reprojectionError::ErrorFunc_Refine_Camera_3DPoints_focal, 2, 1, 6, 3>(
-            new pinhole_reprojectionError::ErrorFunc_Refine_Camera_3DPoints_focal(
+        new ceres::AutoDiffCostFunction<pinhole_reprojectionError::ErrorFunc_Refine_Intrinsic_Motion_3DPoints, 2, 3, 6, 3>(
+            new pinhole_reprojectionError::ErrorFunc_Refine_Intrinsic_Motion_3DPoints(
                 & ba_problem.observations()[2 * i]));
 
     problem.AddResidualBlock(cost_function,
                              NULL, // squared loss
-                             ba_problem.mutable_camera_intrisic_for_observation(i),
+                             ba_problem.mutable_camera_intrinsic_for_observation(i),
                              ba_problem.mutable_camera_extrinsic_for_observation(i),
                              ba_problem.mutable_point_for_observation(i));
   }
@@ -714,7 +717,9 @@ void do_bundle_adjustment_common_focal(
     << "Bundle Adjustment of cameras [R|t], shared [f] and Structure : \n"
     << " Initial RMSE : " << dResidual_before << "\n"
     << " Final RMSE : " << dResidual_after << "\n"
-    << "Initial focal : " << focal << std::endl;
+    << "Initial focal : " << focal << "\n"
+    << "Initial ppx : " << ppx << "\n"
+    << "Initial ppy : " << ppy << std::endl;
 
   // If no error, get back refined parameters
   if (summary.IsSolutionUsable())
@@ -740,8 +745,10 @@ void do_bundle_adjustment_common_focal(
       // Update the camera
       PinholeCamera & sCam = vec_cam[cpt];
       Mat3 K = sCam._K;
-      double focal = *ba_problem.mutable_cameras_intrinsic();
-      std::cout << "Refined focal[" << cpt << "]: " << focal << std::endl;
+      double * intrinsics = ba_problem.mutable_cameras_intrinsic();
+      std::cout << "Refined focal[" << cpt << "]: " << intrinsics[pinhole_reprojectionError::OFFSET_FOCAL_LENGTH] << std::endl;
+      std::cout << "Refined ppx[" << cpt << "]: " << intrinsics[pinhole_reprojectionError::OFFSET_PRINCIPAL_POINT_X] << std::endl;
+      std::cout << "Refined ppy[" << cpt << "]: " << intrinsics[pinhole_reprojectionError::OFFSET_PRINCIPAL_POINT_Y] << std::endl;
       K(0,0) = K(1,1) = focal;
       sCam = PinholeCamera(K, R, t);
     }
@@ -750,7 +757,7 @@ void do_bundle_adjustment_common_focal(
 
 /// Perform a Bundle Adjustment: Refine the cameras [R|t]
 ///  and common intrinsics [focal,ppx,ppy,k1,k2,k3] and the structure
-void do_bundle_adjustment_common_intrinsics(
+void do_bundle_adjustment_common_intrinsics_brown_pinhole(
   PinholeCamera & camL,
   PinholeCamera & camR,
   const Mat & xL,
@@ -860,7 +867,7 @@ void do_bundle_adjustment_common_intrinsics(
 
     problem.AddResidualBlock(cost_function,
                              NULL, // squared loss
-                             ba_problem.mutable_camera_intrisic_for_observation(i),
+                             ba_problem.mutable_camera_intrinsic_for_observation(i),
                              ba_problem.mutable_camera_extrinsic_for_observation(i),
                              ba_problem.mutable_point_for_observation(i));
   }
@@ -930,7 +937,7 @@ void do_bundle_adjustment_common_intrinsics(
         << "\t k1: " << camIntrinsics[OFFSET_K1] << std::endl
         << "\t k2: " << camIntrinsics[OFFSET_K2] << std::endl
         << "\t k3: " << camIntrinsics[OFFSET_K3] << std::endl
-        << "\t initial : focal: " << sCam._K(0,0) << ", ppx: " << sCam._K(0,2)
+        << "\t initial: focal: " << sCam._K(0,0) << ", ppx: " << sCam._K(0,2)
         << ", ppy: " << sCam._K(1,2) <<std::endl;
       Mat3 K = sCam._K;
       K(0,0) = K(1,1) = camIntrinsics[OFFSET_FOCAL_LENGTH];

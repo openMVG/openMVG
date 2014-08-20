@@ -34,7 +34,7 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_RTf) {
   NViewDataSet d = NRealisticCamerasRing(nviews, npoints);
 
   // Setup a BA problem
-  BA_Problem_data<7> ba_problem;
+  BA_Problem_data<9> ba_problem;
 
   // Configure the size of the problem
   ba_problem.num_cameras_ = nviews;
@@ -45,7 +45,9 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_RTf) {
   ba_problem.camera_index_.reserve(ba_problem.num_observations_);
   ba_problem.observations_.reserve(2 * ba_problem.num_observations_);
 
-  ba_problem.num_parameters_ = 7 * ba_problem.num_cameras_ + 3 * ba_problem.num_points_;
+  ba_problem.num_parameters_ =
+    9 * ba_problem.num_cameras_ // #[Rotation|translation|K] = [3x1]|[3x1]|[3x1]
+    + 3 * ba_problem.num_points_; // #[X] = [3x1]
   ba_problem.parameters_.reserve(ba_problem.num_parameters_);
 
   double ppx = 500, ppy = 500;
@@ -62,7 +64,7 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_RTf) {
     }
   }
 
-  // Add camera parameters (R, t, focal)
+  // Add camera parameters (R, t, K)
   for (int j = 0; j < nviews; ++j) {
     // Rotation matrix to angle axis
     std::vector<double> angleAxis(3);
@@ -77,6 +79,8 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_RTf) {
     ba_problem.parameters_.push_back(t[1]);
     ba_problem.parameters_.push_back(t[2]);
     ba_problem.parameters_.push_back(focal);
+    ba_problem.parameters_.push_back(ppx);
+    ba_problem.parameters_.push_back(ppy);
   }
 
   // Add 3D points coordinates parameters
@@ -95,7 +99,7 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_RTf) {
     // dimensional residual. Internally, the cost function stores the observed
     // image location and compares the reprojection against the observation.
     ceres::CostFunction* cost_function =
-        new ceres::AutoDiffCostFunction<pinhole_reprojectionError::ErrorFunc_Refine_Camera_3DPoints, 2, 7, 3>(
+        new ceres::AutoDiffCostFunction<pinhole_reprojectionError::ErrorFunc_Refine_Camera_3DPoints, 2, 9, 3>(
             new pinhole_reprojectionError::ErrorFunc_Refine_Camera_3DPoints(
                 & ba_problem.observations()[2 * i]));
 

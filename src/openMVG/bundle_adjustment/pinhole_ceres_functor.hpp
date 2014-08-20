@@ -23,15 +23,22 @@ namespace bundle_adjustment{
  */
 namespace pinhole_reprojectionError {
 
+// Enum to order the intrinsics parameters into a single parameter block
+enum {
+  OFFSET_FOCAL_LENGTH = 0,
+  OFFSET_PRINCIPAL_POINT_X = 1,
+  OFFSET_PRINCIPAL_POINT_Y = 2
+};
+
 /**
  * @brief Compute the residual error after reprojection.
- * residual = observed - euclidean( f * [R|t] X)
- * 
+ * residual = observed - euclidean( K * [R|t] X)
+ *
  * @warning Principal point is assumed being applied on observed points.
- * 
+ *
  * @param[in] cam_R Angle-axis camera rotation
  * @param[in] cam_t (x, y, z) Camera translation
- * @param[in] cam_f (f) Focal length
+ * @param[in] cam_K (f, ppx, ppy) Intrinsic data: (Focal length, principal point x and principal point y)
  * @param[in] pos_3dpoint The observed 3D point
  * @param[in] pos_2dpoint The image plane observation
  * @param[out] out_residuals The residuals along the x and y axis
@@ -40,14 +47,14 @@ template <typename T>
 void computeResidual(
   const T* const cam_R,
   const T* const cam_t,
-  const T* const cam_f,
+  const T* const cam_K,
   const T* const pos_3dpoint,
   const double* pos_2dpoint,
   T* out_residuals )
 {
   T pos_proj[3];
-  
-  // Appply the angle-axis camera rotation
+
+  // Apply the angle-axis camera rotation
   ceres::AngleAxisRotatePoint(cam_R, pos_3dpoint, pos_proj);
 
   // Apply the camera translation
@@ -60,38 +67,41 @@ void computeResidual(
   T ye = pos_proj[1] / pos_proj[2];
 
   // Apply the focal length
-  const T& focal = cam_f[0];
-  T predicted_x = focal * xe;
-  T predicted_y = focal * ye;
+  const T& focal = cam_K[OFFSET_FOCAL_LENGTH];
+  const T& principal_point_x = cam_K[OFFSET_PRINCIPAL_POINT_X];
+  const T& principal_point_y = cam_K[OFFSET_PRINCIPAL_POINT_Y];
 
-  // Compute and return the error is the difference between the predicted 
+  T predicted_x = focal * xe + principal_point_x;
+  T predicted_y = focal * ye + principal_point_y;
+
+  // Compute and return the error is the difference between the predicted
   //  and observed position
   out_residuals[0] = predicted_x - T(pos_2dpoint[0]);
   out_residuals[1] = predicted_y - T(pos_2dpoint[1]);
 }
 
 /**
- * @brief Ceres functor to refine a pinhole camera model, 3D points and focal.
- * 
- *  - first the intrinsic data block [focal]
+ * @brief Ceres functor to refine a pinhole camera model and 3D points.
+ *
+ *  - first the intrinsic data block [focal, principal point x, principal point y]
  *  - second the camera extrinsic block (camera orientation and position) [R;t]
  *    - 3 for rotation(angle axis), 3 for translation.
  *  - third the 3D point data block
- * 
+ *
  * @warning Principal point is assumed being applied on observed points.
- * 
+ *
  * @see computeResidual
  */
-struct ErrorFunc_Refine_Camera_3DPoints_focal
+struct ErrorFunc_Refine_Intrinsic_Motion_3DPoints
 {
-  ErrorFunc_Refine_Camera_3DPoints_focal(const double* const pos_2dpoint)
+  ErrorFunc_Refine_Intrinsic_Motion_3DPoints(const double* const pos_2dpoint)
   {
     m_pos_2dpoint[0] = pos_2dpoint[0];
     m_pos_2dpoint[1] = pos_2dpoint[1];
   }
 
   /**
-   * @param[in] cam_f: Camera focal
+   * @param[in] cam_K: Camera intrinsics( focal, principal point [x,y] )
    * @param[in] cam_Rt: Camera parameterized using one block of 6 parameters [R;t]:
    *   - 3 for rotation(angle axis), 3 for translation
    * @param[in] pos_3dpoint
@@ -99,7 +109,7 @@ struct ErrorFunc_Refine_Camera_3DPoints_focal
    */
   template <typename T>
   bool operator()(
-    const T* const cam_f,
+    const T* const cam_K,
     const T* const cam_Rt,
     const T* const pos_3dpoint,
     T* out_residuals) const
@@ -107,7 +117,7 @@ struct ErrorFunc_Refine_Camera_3DPoints_focal
     computeResidual(
       cam_Rt, // => cam_R
       & cam_Rt[3], // => cam_t
-      cam_f,
+      cam_K,
       pos_3dpoint,
       m_pos_2dpoint,
       out_residuals );
@@ -120,7 +130,7 @@ struct ErrorFunc_Refine_Camera_3DPoints_focal
 
 /**
  * @brief Ceres functor to refine a pinhole camera model and 3D points.
- * 
+ *
  * @see computeResidual
  */
 struct ErrorFunc_Refine_Camera_3DPoints
@@ -130,27 +140,27 @@ struct ErrorFunc_Refine_Camera_3DPoints
     m_pos_2dpoint[0] = pos_2dpoint[0];
     m_pos_2dpoint[1] = pos_2dpoint[1];
   }
-  
+
   /**
-   * @param[in] cam_Rtf: Camera parameterized using one block of 7 parameters [R;t;f]:
-   *   - 3 for rotation(angle axis), 3 for translation, 1 for the focal length.
+   * @param[in] cam_Rtf: Camera parameterized using one block of 9 parameters [R;t;K]:
+   *   - 3 for rotation(angle axis), 3 for translation, 3 for intrinsics.
    * @param[in] pos_3dpoint
    * @param[out] out_residuals
    */
   template <typename T>
   bool operator()(
-    const T* const cam_Rtf, // [R;t;f]
+    const T* const cam_RtK, // [R;t;K]
     const T* const pos_3dpoint,
     T* out_residuals) const
   {
     computeResidual(
-      cam_Rtf, // => cam_R
-      & cam_Rtf[3], // => cam_t
-      & cam_Rtf[6], // => cam_f
+      cam_RtK, // => cam_R
+      & cam_RtK[3], // => cam_t
+      & cam_RtK[6], // => cam_K
       pos_3dpoint,
       m_pos_2dpoint,
       out_residuals);
-    
+
     return true;
   }
 
@@ -158,7 +168,7 @@ struct ErrorFunc_Refine_Camera_3DPoints
 };
 
 /**
- * @brief Ceres functor to refine a pinhole camera model with static 
+ * @brief Ceres functor to refine a pinhole camera model with static
  *  2D 3D observation.
  *
  * @see computeResidual
@@ -174,26 +184,26 @@ struct ErrorFunc_Refine_Camera
     m_pos_3dpoint[1] = pos_3dpoint[1];
     m_pos_3dpoint[2] = pos_3dpoint[2];
   }
-  
+
   /**
-   * @param[in] cam_Rtf: Camera parameterized using one block of 7 parameters [R;t;f]:
-   *   - 3 for rotation(angle axis), 3 for translation, 1 for the focal length.
+   * @param[in] cam_Rtf: Camera parameterized using one block of 9 parameters [R;t;f]:
+   *   - 3 for rotation(angle axis), 3 for translation, 3 for the intrinsics.
    * @param[out] out_residuals
    */
   template <typename T>
   bool operator()(
-    const T* const cam_Rtf, // [R;t;f]
+    const T* const cam_RtK, // [R;t;K]
     T* out_residuals) const
   {
     T pos_3dpoint[3];
     pos_3dpoint[0] = T(m_pos_3dpoint[0]);
     pos_3dpoint[1] = T(m_pos_3dpoint[1]);
     pos_3dpoint[2] = T(m_pos_3dpoint[2]);
-    
+
     computeResidual(
-      cam_Rtf, // => cam_R
-      & cam_Rtf[3], // => cam_t
-      & cam_Rtf[6], // => cam_f
+      cam_RtK, // => cam_R
+      & cam_RtK[3], // => cam_t
+      & cam_RtK[6], // => cam_K [f,ppx,ppy]
       pos_3dpoint,
       m_pos_2dpoint,
       out_residuals);
@@ -206,7 +216,7 @@ struct ErrorFunc_Refine_Camera
 };
 
 } // namespace pinhole_reprojectionError
-/// @} 
+/// @}
 } // namespace bundle_adjustment
 } // namespace openMVG
 
