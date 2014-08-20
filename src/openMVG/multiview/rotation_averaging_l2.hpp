@@ -126,45 +126,52 @@ static bool L2RotationAveraging( size_t nCamera,
   // Solve Ax=0 => eigen vectors
   Eigen::SelfAdjointEigenSolver<Mat> es(AtA, Eigen::ComputeEigenvectors);
 
-  // Sort abs(eigenvalues)
-  std::vector<std::pair<double, Vec> > eigs;
-  eigs.resize(AtA.cols());
-  for (size_t i = 0; i < AtA.cols(); ++i)
+  if (es.info() != Eigen::Success)
   {
-    eigs[i] = std::make_pair(es.eigenvalues()[i], es.eigenvectors().col(i));
+    return false;
   }
-  std::stable_sort(eigs.begin(), eigs.end(), &compare_first_abs);
-
-  const Vec & NullspaceVector0 = eigs[0].second;
-  const Vec & NullspaceVector1 = eigs[1].second;
-  const Vec & NullspaceVector2 = eigs[2].second;
-
-  //--
-  // Search the closest matrix :
-  //  - From solution of SVD get back column and reconstruct Rotation matrix
-  //  - Enforce the orthogonality constraint
-  //     (approximate rotation in the Frobenius norm using SVD).
-  //--
-  vec_ApprRotMatrix.clear();
-  vec_ApprRotMatrix.reserve(nCamera);
-  for(size_t i=0; i < nCamera; ++i)
+  else
   {
-    Mat3 Rotation;
-    Rotation << NullspaceVector0.segment(3 * i, 3),
-                NullspaceVector1.segment(3 * i, 3),
-                NullspaceVector2.segment(3 * i, 3);
+    // Sort abs(eigenvalues)
+    std::vector<std::pair<double, Vec> > eigs;
+    eigs.resize(AtA.cols());
+    for (size_t i = 0; i < AtA.cols(); ++i)
+    {
+      eigs[i] = std::make_pair(es.eigenvalues()[i], es.eigenvectors().col(i));
+    }
+    std::stable_sort(eigs.begin(), eigs.end(), &compare_first_abs);
 
-    //-- Compute the closest SVD rotation matrix
-    Rotation = ClosestSVDRotationMatrix(Rotation);
-    vec_ApprRotMatrix.push_back(Rotation);
-  }
-  // Force R0 to be Identity
-  Mat3 R0T = vec_ApprRotMatrix[0].transpose();
-  for(size_t i = 0; i < nCamera; ++i) {
-    vec_ApprRotMatrix[i] *= R0T;
-  }
+    const Vec & NullspaceVector0 = eigs[0].second;
+    const Vec & NullspaceVector1 = eigs[1].second;
+    const Vec & NullspaceVector2 = eigs[2].second;
 
-  return true;
+    //--
+    // Search the closest matrix :
+    //  - From solution of SVD get back column and reconstruct Rotation matrix
+    //  - Enforce the orthogonality constraint
+    //     (approximate rotation in the Frobenius norm using SVD).
+    //--
+    vec_ApprRotMatrix.clear();
+    vec_ApprRotMatrix.reserve(nCamera);
+    for(size_t i=0; i < nCamera; ++i)
+    {
+      Mat3 Rotation;
+      Rotation << NullspaceVector0.segment(3 * i, 3),
+                  NullspaceVector1.segment(3 * i, 3),
+                  NullspaceVector2.segment(3 * i, 3);
+
+      //-- Compute the closest SVD rotation matrix
+      Rotation = ClosestSVDRotationMatrix(Rotation);
+      vec_ApprRotMatrix.push_back(Rotation);
+    }
+    // Force R0 to be Identity
+    Mat3 R0T = vec_ApprRotMatrix[0].transpose();
+    for(size_t i = 0; i < nCamera; ++i) {
+      vec_ApprRotMatrix[i] *= R0T;
+    }
+
+    return true;
+  }
 }
 
 } // namespace l2
