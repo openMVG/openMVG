@@ -24,6 +24,7 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 
 IF (WIN32)
   ADD_DEFINITIONS(-DNOMINMAX)
+  ADD_DEFINITIONS(/bigobj)
 ENDIF (WIN32)
 
 # ==============================================================================
