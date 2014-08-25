@@ -168,7 +168,7 @@ ADD_SUBDIRECTORY(third_party)
 # ==============================================================================
 SET(OpenMVG_INCLUDES
   ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party
   ${JPEG_INCLUDE_DIR}
   ${PNG_INCLUDE_DIRS}
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen
@@ -178,7 +178,11 @@ SET(OpenMVG_INCLUDES
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/internal/ceres/miniglog
   ${PROJECT_BINARY_DIR}/third_party/ceres-solver/config
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp
-  CACHE PATH "include directories for openMVG and its dependencies"
+)
+
+set(OpenMVG_INCLUDES 
+    ${OpenMVG_INCLUDES}
+    CACHE PATH "include directories for openMVG and its dependencies"
 )
 
 INCLUDE_DIRECTORIES(${OpenMVG_INCLUDES})
@@ -195,7 +199,7 @@ ADD_SUBDIRECTORY(patented)
 
 # openMVG tutorial examples
 IF (OpenMVG_BUILD_EXAMPLES)
-  ADD_SUBDIRECTORY(openMVG_Samples)
+   ADD_SUBDIRECTORY(openMVG_Samples)
 ENDIF (OpenMVG_BUILD_EXAMPLES)
 
 # ==============================================================================
@@ -245,4 +249,3 @@ IF (EXISTS ${SPHINX_EXECUTABLE})
 ELSE (EXISTS ${SPHINX_EXECUTABLE})
   MESSAGE("Sphinx need to be installed to generate the documentation")
 ENDIF (EXISTS ${SPHINX_EXECUTABLE})
-
