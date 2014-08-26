@@ -18,9 +18,9 @@ option(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
 
 # By default build in Release mode
-IF(NOT CMAKE_BUILD_TYPE)
+IF(NOT CMAKE_BUILD_TYPE AND NOT MSVC)
   SET(CMAKE_BUILD_TYPE "Release")
-ENDIF(NOT CMAKE_BUILD_TYPE)
+ENDIF(NOT CMAKE_BUILD_TYPE AND NOT MSVC)
 
 IF (WIN32)
   ADD_DEFINITIONS(-DNOMINMAX)
