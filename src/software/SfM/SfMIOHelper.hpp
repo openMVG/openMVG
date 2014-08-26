@@ -17,7 +17,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <cctype>
+#include <algorithm>    // std::lexicographical_compare
+#include <cctype>       // std::tolower
 
 namespace openMVG{
 namespace SfMIO{
@@ -36,31 +37,28 @@ struct IntrinsicCameraInfo
   bool m_bKnownIntrinsic; // true if 11 or 6, else false
   std::string m_sCameraMaker, m_sCameraModel;
 
-
   // a case-insensitive comparison function:
-  static bool mycomp(char c1, char c2)
+  static bool mycomp (char c1, char c2)
   {
-      if (std::isdigit(c1) || std::isdigit(c2))
-          return c1 < c2;
-      else
-          return std::tolower(c1) < std::tolower(c2);
+    if (std::isdigit(c1) || std::isdigit(c2))
+      return c1 < c2;
+    else
+      return std::tolower(c1) < std::tolower(c2);
   }
 
   /// Functor used for having a strict weak ordering of IntrinsicCameraInfo
   /// return false (when elements are equivalent).
   bool operator() (IntrinsicCameraInfo const &ci1, IntrinsicCameraInfo const &ci2)const
   {
-      return std::lexicographical_compare(
-          ci1.m_sCameraMaker.c_str(), ci1.m_sCameraMaker.c_str() + ci1.m_sCameraMaker.length(),
-          ci2.m_sCameraMaker.c_str(), ci2.m_sCameraMaker.c_str() + ci2.m_sCameraMaker.length(), mycomp) &&
-          std::lexicographical_compare(
-          ci1.m_sCameraModel.c_str(), ci1.m_sCameraModel.c_str() + ci1.m_sCameraModel.length(),
-          ci2.m_sCameraModel.c_str(), ci2.m_sCameraModel.c_str() + ci2.m_sCameraModel.length(), mycomp) &&
-          std::lexicographical_compare(ci1.m_K.data(), ci1.m_K.data() + 9, ci2.m_K.data(), ci2.m_K.data() + 9);
+    return std::lexicographical_compare(
+        ci1.m_sCameraMaker.c_str(),ci1.m_sCameraMaker.c_str()+ci1.m_sCameraMaker.length(),
+        ci2.m_sCameraMaker.c_str(),ci2.m_sCameraMaker.c_str()+ci2.m_sCameraMaker.length(),mycomp) &&
+      std::lexicographical_compare(
+        ci1.m_sCameraModel.c_str(),ci1.m_sCameraModel.c_str()+ci1.m_sCameraModel.length(),
+        ci2.m_sCameraModel.c_str(),ci2.m_sCameraModel.c_str()+ci2.m_sCameraModel.length(),mycomp) &&
+      std::lexicographical_compare(ci1.m_K.data(),ci1.m_K.data()+9,ci2.m_K.data(),ci2.m_K.data()+9);
   }
 };
-
-
 
 // Load an image file list
 // One basename per line.
