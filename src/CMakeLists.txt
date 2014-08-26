@@ -177,11 +177,7 @@ SET(OpenMVG_INCLUDES
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/internal/ceres/miniglog
   ${PROJECT_BINARY_DIR}/third_party/ceres-solver/config
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp
-)
-
-set(OpenMVG_INCLUDES 
-    ${OpenMVG_INCLUDES}
-    CACHE PATH "include directories for openMVG and its dependencies"
+  CACHE PATH "include directories for openMVG and its dependencies"
 )
 
 INCLUDE_DIRECTORIES(${OpenMVG_INCLUDES})
