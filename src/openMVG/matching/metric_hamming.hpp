@@ -49,7 +49,7 @@ struct HammingBitSet
 
   // Returns the Hamming Distance between two binary descriptors
   template <typename Iterator1, typename Iterator2>
-  ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
+  inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
   {
     return (*a ^ *b).count();
   }
@@ -65,7 +65,7 @@ struct Hamming
 
   /** This is popcount_3() from:
    * http://en.wikipedia.org/wiki/Hamming_weight */
-  unsigned int popcnt32(uint32_t n) const
+  inline unsigned int popcnt32(uint32_t n) const
   {
 #ifdef _MSC_VER
     return __popcnt(n);
@@ -76,7 +76,7 @@ struct Hamming
 #endif
   }
 
-  unsigned int popcnt64(uint64_t n) const
+  inline unsigned int popcnt64(uint64_t n) const
   {
 #ifdef _MSC_VER
     return __popcnt64(n);
@@ -88,7 +88,7 @@ struct Hamming
   }
 
   template <typename Iterator1, typename Iterator2>
-  ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
+  inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
   {
     ResultType result = 0;
 #if (defined __GNUC__ || defined __clang__) && defined USE_SSE 
