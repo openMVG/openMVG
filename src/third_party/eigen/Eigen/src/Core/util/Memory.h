@@ -272,12 +272,12 @@ inline void* aligned_realloc(void *ptr, size_t new_size, size_t old_size)
   // The defined(_mm_free) is just here to verify that this MSVC version
   // implements _mm_malloc/_mm_free based on the corresponding _aligned_
   // functions. This may not always be the case and we just try to be safe.
-  #if defined(_MSC_VER) && defined(_mm_free)
+  #if defined(_MSC_VER) && (!defined(_WIN32_WCE)) && defined(_mm_free)
     result = _aligned_realloc(ptr,new_size,16);
   #else
     result = generic_aligned_realloc(ptr,new_size,old_size);
   #endif
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) && (!defined(_WIN32_WCE))
   result = _aligned_realloc(ptr,new_size,16);
 #else
   result = handmade_aligned_realloc(ptr,new_size,old_size);
@@ -777,9 +777,9 @@ namespace internal {
 
 #ifdef EIGEN_CPUID
 
-inline bool cpuid_is_vendor(int abcd[4], const char* vendor)
+inline bool cpuid_is_vendor(int abcd[4], const int vendor[3])
 {
-  return abcd[1]==(reinterpret_cast<const int*>(vendor))[0] && abcd[3]==(reinterpret_cast<const int*>(vendor))[1] && abcd[2]==(reinterpret_cast<const int*>(vendor))[2];
+  return abcd[1]==vendor[0] && abcd[3]==vendor[1] && abcd[2]==vendor[2];
 }
 
 inline void queryCacheSizes_intel_direct(int& l1, int& l2, int& l3)
@@ -921,13 +921,16 @@ inline void queryCacheSizes(int& l1, int& l2, int& l3)
 {
   #ifdef EIGEN_CPUID
   int abcd[4];
+  const int GenuineIntel[] = {0x756e6547, 0x49656e69, 0x6c65746e};
+  const int AuthenticAMD[] = {0x68747541, 0x69746e65, 0x444d4163};
+  const int AMDisbetter_[] = {0x69444d41, 0x74656273, 0x21726574}; // "AMDisbetter!"
 
   // identify the CPU vendor
   EIGEN_CPUID(abcd,0x0,0);
   int max_std_funcs = abcd[1];
-  if(cpuid_is_vendor(abcd,"GenuineIntel"))
+  if(cpuid_is_vendor(abcd,GenuineIntel))
     queryCacheSizes_intel(l1,l2,l3,max_std_funcs);
-  else if(cpuid_is_vendor(abcd,"AuthenticAMD") || cpuid_is_vendor(abcd,"AMDisbetter!"))
+  else if(cpuid_is_vendor(abcd,AuthenticAMD) || cpuid_is_vendor(abcd,AMDisbetter_))
     queryCacheSizes_amd(l1,l2,l3);
   else
     // by default let's use Intel's API

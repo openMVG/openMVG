@@ -84,8 +84,10 @@ template<typename Lhs, typename Rhs>        class DenseTimeSparseProduct;
 template<typename Lhs, typename Rhs, bool Transpose> class SparseDenseOuterProduct;
 
 template<typename Lhs, typename Rhs> struct SparseSparseProductReturnType;
-template<typename Lhs, typename Rhs, int InnerSize = internal::traits<Lhs>::ColsAtCompileTime> struct DenseSparseProductReturnType;
-template<typename Lhs, typename Rhs, int InnerSize = internal::traits<Lhs>::ColsAtCompileTime> struct SparseDenseProductReturnType;
+template<typename Lhs, typename Rhs,
+         int InnerSize = EIGEN_SIZE_MIN_PREFER_FIXED(internal::traits<Lhs>::ColsAtCompileTime,internal::traits<Rhs>::RowsAtCompileTime)> struct DenseSparseProductReturnType;         
+template<typename Lhs, typename Rhs,
+         int InnerSize = EIGEN_SIZE_MIN_PREFER_FIXED(internal::traits<Lhs>::ColsAtCompileTime,internal::traits<Rhs>::RowsAtCompileTime)> struct SparseDenseProductReturnType;
 template<typename MatrixType,int UpLo> class SparseSymmetricPermutationProduct;
 
 namespace internal {

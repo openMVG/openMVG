@@ -76,7 +76,8 @@ template<typename _MatrixType> class ColPivHouseholderQR
         m_colsTranspositions(),
         m_temp(),
         m_colSqNorms(),
-        m_isInitialized(false) {}
+        m_isInitialized(false),
+        m_usePrescribedThreshold(false) {}
 
     /** \brief Default Constructor with memory preallocation
       *
