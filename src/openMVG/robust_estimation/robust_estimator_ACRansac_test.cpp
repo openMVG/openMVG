@@ -117,8 +117,8 @@ TEST(RansacLineFitter, OneOutlier) {
 
   Mat2X xy(2, 6);
   // y = 2x + 1 with an outlier
-  xy << 1, 2, 3, 4,  5, 100, // outlier!
-        3, 5, 7, 9, 11, -123; // outlier!
+  xy << 1, 2, 3, 4,  5, 100, // (100,-123) is the outlier
+        3, 5, 7, 9, 11, -123;
 
   // The base estimator
   ACRANSACOneViewKernel<LineSolver, pointToLineError, Vec2> lineKernel(xy, 12, 12);
@@ -142,7 +142,7 @@ TEST(RansacLineFitter, TooFewPoints) {
   Mat2X xy(2, 1);
   // y = 2x + 1
   xy << 1,
-        3;
+    3;
   ACRANSACOneViewKernel<LineSolver, pointToLineError, Vec2> lineKernel(xy, 12, 12);
   std::vector<size_t> vec_inliers;
   ACRANSAC(lineKernel, vec_inliers);
@@ -156,11 +156,11 @@ TEST(RansacLineFitter, TooFewPoints) {
 //  Check that the number of inliers and the model are correct.
 TEST(RansacLineFitter, RealisticCase) {
 
-  const int NbPoints = 30;
-  const int inlierPourcentAmount = 30; //works with 40
+  const int NbPoints = 100;
+  const int inlierPourcentAmount = 30;
   Mat2X xy(2, NbPoints);
 
-  Vec2 GTModel; // y = 2x + 1
+  Vec2 GTModel;
   GTModel <<  -2.0, 6.3;
 
   //-- Build the point list according the given model
@@ -176,8 +176,7 @@ TEST(RansacLineFitter, RealisticCase) {
   {
     const size_t randomIndex = vec_samples[i];
     //Additive random noise
-    xy.col(randomIndex) << xy.col(randomIndex)(0)+rand()%2-3,
-                           xy.col(randomIndex)(1)+rand()%8-6;
+    xy.col(randomIndex) += Vec2::Random()/10.;
   }
 
   // The base estimator
@@ -190,8 +189,8 @@ TEST(RansacLineFitter, RealisticCase) {
   ACRANSAC(lineKernel, vec_inliers, 300, &line);
 
   CHECK_EQUAL(NbPoints-nbPtToNoise, vec_inliers.size());
-  EXPECT_NEAR(-2.0, line[0], 1e-9);
-  EXPECT_NEAR( 6.3, line[1], 1e-9);
+  EXPECT_NEAR(GTModel(0), line[0], 1e-9);
+  EXPECT_NEAR(GTModel(1), line[1], 1e-9);
 }
 
 // Generate a random value between [0;1]
