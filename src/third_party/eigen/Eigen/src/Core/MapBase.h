@@ -237,6 +237,8 @@ template<typename Derived> class MapBase<Derived, WriteAccessors>
     using Base::Base::operator=;
 };
 
+#undef EIGEN_STATIC_ASSERT_INDEX_BASED_ACCESS
+
 } // end namespace Eigen
 
 #endif // EIGEN_MAPBASE_H
