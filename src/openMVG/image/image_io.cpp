@@ -11,8 +11,9 @@
 #include <cmath>
 
 extern "C" {
-  #include "jpeglib.h"
   #include "png.h"
+  #include "tiffio.h"
+  #include "jpeglib.h"
 }
 
 using namespace std;
@@ -42,6 +43,8 @@ Format GetFormat(const char *c) {
   if (CmpFormatExt(p, ".pnm")) return Pnm;
   if (CmpFormatExt(p, ".jpg")) return Jpg;
   if (CmpFormatExt(p, ".jpeg")) return Jpg;
+  if (CmpFormatExt(p, ".tif")) return Tiff;
+  if (CmpFormatExt(p, ".tiff")) return Tiff;
 
   cerr << "Error: Couldn't open " << c << " Unknown file format" << std::endl;
   return Unknown;
@@ -61,6 +64,8 @@ int ReadImage(const char *filename,
       return ReadPng(filename, ptr, w, h, depth);
     case Jpg:
       return ReadJpg(filename, ptr, w, h, depth);
+  	case Tiff:
+      return ReadTiff(filename, ptr, w, h, depth);
     default:
       return 0;
   };
@@ -80,6 +85,8 @@ int WriteImage(const char * filename,
       return WritePng(filename, ptr, w, h, depth);
     case Jpg:
       return WriteJpg(filename, ptr, w, h, depth);
+    case Tiff:
+      return WriteTiff(filename, ptr, w, h, depth);
     default:
       return 0;
   };
@@ -549,6 +556,76 @@ int WritePnmStream(FILE * file,
   if (res != array.size()) {
     return 0;
   }
+  return 1;
+}
+
+int ReadTiff(const char * filename,
+  vector<unsigned char> * ptr,
+  int * w,
+  int * h,
+  int * depth)
+{
+  TIFF* tiff = TIFFOpen(filename, "r");
+  if (!tiff) {
+    std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+    return 0;
+  }
+  uint16 bps, spp;
+
+  TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, w);
+  TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, h);
+  TIFFGetField(tiff, TIFFTAG_BITSPERSAMPLE, &bps);
+  TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &spp);
+  *depth = bps * spp / 8;
+
+  ptr->resize((*h)*(*w)*(*depth));
+
+  if (*depth==4) {
+    if (ptr != NULL) {
+      if (!TIFFReadRGBAImageOriented(tiff, *w, *h, (uint32*)&((*ptr)[0]), ORIENTATION_TOPLEFT, 0)) {
+        TIFFClose(tiff);
+        return 0;
+      }
+    }
+  } else {
+    for (size_t i=0; i<TIFFNumberOfStrips(tiff); ++i) {
+      if (TIFFReadEncodedStrip(tiff, i, ((uint8*)&((*ptr)[0]))+i*TIFFStripSize(tiff),(tsize_t)-1)<0) {
+        TIFFClose(tiff);
+        return 0;
+      }
+    }
+  }
+  TIFFClose(tiff);
+  return 1;
+}
+
+int WriteTiff(const char * filename,
+  const vector<unsigned char> & ptr,
+  int w,
+  int h,
+  int depth)
+{
+  TIFF* tiff = TIFFOpen(filename, "w");
+  if (!tiff) {
+    std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+    return 0;
+  }
+  TIFFSetField(tiff, TIFFTAG_IMAGEWIDTH, w);
+  TIFFSetField(tiff, TIFFTAG_IMAGELENGTH, h);
+  TIFFSetField(tiff, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+  TIFFSetField(tiff, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB);
+  TIFFSetField(tiff, TIFFTAG_BITSPERSAMPLE, 8);
+  TIFFSetField(tiff, TIFFTAG_SAMPLESPERPIXEL, depth);
+  TIFFSetField(tiff, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
+  TIFFSetField(tiff, TIFFTAG_COMPRESSION,COMPRESSION_NONE);
+  TIFFSetField(tiff, TIFFTAG_ROWSPERSTRIP, 16);
+  for (uint32 y=0; y < h ; ++y) {
+    if (TIFFWriteScanline(tiff,(tdata_t)(((uint8*)(&ptr[0]))+depth*w*y),y)<0) {
+      TIFFClose(tiff);
+      return 0;
+    }
+  }
+  TIFFClose(tiff);
   return 1;
 }
 
