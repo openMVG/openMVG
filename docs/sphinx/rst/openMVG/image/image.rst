@@ -31,7 +31,8 @@ Loading and writing of 8 bits (gray and color) images are supported in the follo
 
 * ppm/pgm,
 * jpeg,
-* png.
+* png,
+* tiff.
 
 Drawing operations
 ===================
