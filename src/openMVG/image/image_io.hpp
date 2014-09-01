@@ -13,7 +13,7 @@
 namespace openMVG {
 
 enum Format {
-  Pnm, Png, Jpg, Unknown
+  Pnm, Png, Jpg, Tiff, Unknown
 };
 
 Format GetFormat(const char *c);
@@ -51,6 +51,9 @@ int ReadPnmStream(FILE *, std::vector<unsigned char> *, int * w, int * h, int * 
 
 int WritePnm(const char *, const std::vector<unsigned char>& array, int w, int h, int depth);
 int WritePnmStream(FILE *,  const std::vector<unsigned char>& array, int w, int h, int depth);
+
+int ReadTiff(const char *, std::vector<unsigned char> *, int * w, int * h, int * depth);
+int WriteTiff(const char *, const std::vector<unsigned char>& array, int w, int h, int depth);
 
 template<>
 inline int ReadImage(const char * path, Image<unsigned char> * im)

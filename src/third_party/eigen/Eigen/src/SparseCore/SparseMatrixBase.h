@@ -358,7 +358,8 @@ template<typename Derived> class SparseMatrixBase : public EigenBase<Derived>
     /** sparse * dense (returns a dense object unless it is an outer product) */
     template<typename OtherDerived>
     const typename SparseDenseProductReturnType<Derived,OtherDerived>::Type
-    operator*(const MatrixBase<OtherDerived> &other) const;
+    operator*(const MatrixBase<OtherDerived> &other) const
+    { return typename SparseDenseProductReturnType<Derived,OtherDerived>::Type(derived(), other.derived()); }
     
      /** \returns an expression of P H P^-1 where H is the matrix represented by \c *this */
     SparseSymmetricPermutationProduct<Derived,Upper|Lower> twistedBy(const PermutationMatrix<Dynamic,Dynamic,Index>& perm) const

@@ -24,6 +24,14 @@ namespace internal {
 
 struct constructor_without_unaligned_array_assert {};
 
+template<typename T, int Size> void check_static_allocation_size()
+{
+  // if EIGEN_STACK_ALLOCATION_LIMIT is defined to 0, then no limit
+  #if EIGEN_STACK_ALLOCATION_LIMIT
+  EIGEN_STATIC_ASSERT(Size * sizeof(T) <= EIGEN_STACK_ALLOCATION_LIMIT, OBJECT_ALLOCATED_ON_STACK_IS_TOO_BIG);
+  #endif
+}
+
 /** \internal
   * Static array. If the MatrixOrArrayOptions require auto-alignment, the array will be automatically aligned:
   * to 16 bytes boundary if the total size is a multiple of 16 bytes.
@@ -38,12 +46,12 @@ struct plain_array
 
   plain_array() 
   { 
-    EIGEN_STATIC_ASSERT(Size * sizeof(T) <= 128 * 128 * 8, OBJECT_ALLOCATED_ON_STACK_IS_TOO_BIG);
+    check_static_allocation_size<T,Size>();
   }
 
   plain_array(constructor_without_unaligned_array_assert) 
   { 
-    EIGEN_STATIC_ASSERT(Size * sizeof(T) <= 128 * 128 * 8, OBJECT_ALLOCATED_ON_STACK_IS_TOO_BIG);
+    check_static_allocation_size<T,Size>();
   }
 };
 
@@ -76,12 +84,12 @@ struct plain_array<T, Size, MatrixOrArrayOptions, 16>
   plain_array() 
   { 
     EIGEN_MAKE_UNALIGNED_ARRAY_ASSERT(0xf);
-    EIGEN_STATIC_ASSERT(Size * sizeof(T) <= 128 * 128 * 8, OBJECT_ALLOCATED_ON_STACK_IS_TOO_BIG);
+    check_static_allocation_size<T,Size>();
   }
 
   plain_array(constructor_without_unaligned_array_assert) 
   { 
-    EIGEN_STATIC_ASSERT(Size * sizeof(T) <= 128 * 128 * 8, OBJECT_ALLOCATED_ON_STACK_IS_TOO_BIG);
+    check_static_allocation_size<T,Size>();
   }
 };
 

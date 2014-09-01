@@ -66,12 +66,12 @@ public:
   }
 
   /// Mutable and non-mutable FeatureT getters.
-  FeaturesT & features() { return _feats; }
-  const FeaturesT & features() const { return _feats; }
+  inline FeaturesT & features() { return _feats; }
+  inline const FeaturesT & features() const { return _feats; }
 
   /// Mutable and non-mutable DescriptorT getters.
-  DescriptorsT & descriptors() { return _descs; }
-  const DescriptorsT & descriptors() const { return _descs; }
+  inline DescriptorsT & descriptors() { return _descs; }
+  inline const DescriptorsT & descriptors() const { return _descs; }
 
 private:
   FeaturesT _feats;

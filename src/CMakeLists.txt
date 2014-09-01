@@ -18,12 +18,13 @@ option(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
 
 # By default build in Release mode
-IF(NOT CMAKE_BUILD_TYPE)
+IF(NOT CMAKE_BUILD_TYPE AND NOT MSVC)
   SET(CMAKE_BUILD_TYPE "Release")
-ENDIF(NOT CMAKE_BUILD_TYPE)
+ENDIF(NOT CMAKE_BUILD_TYPE AND NOT MSVC)
 
 IF (WIN32)
   ADD_DEFINITIONS(-DNOMINMAX)
+  ADD_DEFINITIONS(/bigobj)
 ENDIF (WIN32)
 
 # ==============================================================================
@@ -80,6 +81,7 @@ ENDIF()
 IF (NOT APPLE)
   FIND_PACKAGE(JPEG QUIET)
   FIND_PACKAGE(PNG QUIET)
+  FIND_PACKAGE(TIFF QUIET)
 ENDIF (NOT APPLE)
 
 # ==============================================================================
@@ -167,9 +169,10 @@ ADD_SUBDIRECTORY(third_party)
 # ==============================================================================
 SET(OpenMVG_INCLUDES
   ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party
   ${JPEG_INCLUDE_DIR}
   ${PNG_INCLUDE_DIRS}
+  ${TIFF_INCLUDE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon
   ${PROJECT_BINARY_DIR}/third_party/lemon
@@ -194,7 +197,7 @@ ADD_SUBDIRECTORY(patented)
 
 # openMVG tutorial examples
 IF (OpenMVG_BUILD_EXAMPLES)
-  ADD_SUBDIRECTORY(openMVG_Samples)
+   ADD_SUBDIRECTORY(openMVG_Samples)
 ENDIF (OpenMVG_BUILD_EXAMPLES)
 
 # ==============================================================================
@@ -244,4 +247,3 @@ IF (EXISTS ${SPHINX_EXECUTABLE})
 ELSE (EXISTS ${SPHINX_EXECUTABLE})
   MESSAGE("Sphinx need to be installed to generate the documentation")
 ENDIF (EXISTS ${SPHINX_EXECUTABLE})
-

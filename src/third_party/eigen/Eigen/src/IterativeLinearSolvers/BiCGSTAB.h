@@ -61,6 +61,7 @@ bool bicgstab(const MatrixType& mat, const Rhs& rhs, Dest& x,
   VectorType s(n), t(n);
 
   RealScalar tol2 = tol*tol;
+  RealScalar eps2 = NumTraits<Scalar>::epsilon()*NumTraits<Scalar>::epsilon();
   int i = 0;
   int restarts = 0;
 
@@ -69,7 +70,7 @@ bool bicgstab(const MatrixType& mat, const Rhs& rhs, Dest& x,
     Scalar rho_old = rho;
 
     rho = r0.dot(r);
-    if (internal::isMuchSmallerThan(rho,r0_sqnorm))
+    if (abs(rho) < eps2*r0_sqnorm)
     {
       // The new residual vector became too orthogonal to the arbitrarily choosen direction r0
       // Let's restart with a new r0:

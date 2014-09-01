@@ -64,12 +64,15 @@ TEST(GetFormat, filenames) {
   EXPECT_EQ(GetFormat("something.jpg"), openMVG::Jpg);
   EXPECT_EQ(GetFormat("something.png"), openMVG::Png);
   EXPECT_EQ(GetFormat("something.pnm"), openMVG::Pnm);
+  EXPECT_EQ(GetFormat("something.tif"), openMVG::Tiff);
   EXPECT_EQ(GetFormat("/some/thing.JpG"), openMVG::Jpg);
   EXPECT_EQ(GetFormat("/some/thing.pNG"), openMVG::Png);
   EXPECT_EQ(GetFormat("some/thing.PNm"), openMVG::Pnm);
+  EXPECT_EQ(GetFormat("some/thing.TIf"), openMVG::Tiff);
   EXPECT_EQ(GetFormat(".s/o.m/e.t/h.i/n.g.JPG"), openMVG::Jpg);
   EXPECT_EQ(GetFormat(".s/o.m/e.t/h.i/n.g.PNG"), openMVG::Png);
   EXPECT_EQ(GetFormat(".s/o.m/e.t/h.i/n.g.PNM"), openMVG::Pnm);
+  EXPECT_EQ(GetFormat(".s/o.m/e.t/h.i/n.g.TIF"), openMVG::Tiff);
 }
 
 TEST(ImageIOTest, Png_Out) {
@@ -179,6 +182,44 @@ TEST(ImageIOTest, Ppm) {
   remove(out_filename.c_str());
 }
 
+TEST(ImageIOTest, Tiff_Gray) {
+  Image<unsigned char> image(1,2);
+  image(0,0) = 255;
+  image(1,0) = 0;
+  string filename = ("test_write_tiff.tif");
+  EXPECT_TRUE(WriteImage(filename.c_str(), image));
+
+  Image<unsigned char> read_image;
+  EXPECT_TRUE(ReadImage(filename.c_str(), &read_image));
+  EXPECT_TRUE(read_image == image);
+  remove(filename.c_str());
+}
+
+TEST(ImageIOTest, Tiff_RGB) {
+  Image<RGBColor> image(1,2);
+  image(0,0) = RGBColor((unsigned char)255);
+  image(1,0) = RGBColor((unsigned char)0);
+  string filename = ("test_write_tiff.tif");
+  EXPECT_TRUE(WriteImage(filename.c_str(), image));
+
+  Image<RGBColor> read_image;
+  EXPECT_TRUE(ReadImage(filename.c_str(), &read_image));
+  EXPECT_TRUE(read_image == image);
+  remove(filename.c_str());
+}
+
+TEST(ImageIOTest, Tiff_RGBA) {
+  Image<RGBAColor> image(1,2);
+  image(0,0) = RGBAColor(255, 125, 10, 255);
+  image(1,0) = RGBAColor(2, 3, 4, 255);
+  string filename = ("test_write_tiff.tif");
+  EXPECT_TRUE(WriteImage(filename.c_str(), image));
+
+  Image<RGBAColor> read_image;
+  EXPECT_TRUE(ReadImage(filename.c_str(), &read_image));
+  EXPECT_TRUE(read_image == image);
+  remove(filename.c_str());
+}
 
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}

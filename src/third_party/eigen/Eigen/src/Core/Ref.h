@@ -101,7 +101,7 @@ struct traits<Ref<_PlainObjectType, _Options, _StrideType> >
   template<typename Derived> struct match {
     enum {
       HasDirectAccess = internal::has_direct_access<Derived>::ret,
-      StorageOrderMatch = PlainObjectType::IsVectorAtCompileTime || ((PlainObjectType::Flags&RowMajorBit)==(Derived::Flags&RowMajorBit)),
+      StorageOrderMatch = PlainObjectType::IsVectorAtCompileTime || Derived::IsVectorAtCompileTime || ((PlainObjectType::Flags&RowMajorBit)==(Derived::Flags&RowMajorBit)),
       InnerStrideMatch = int(StrideType::InnerStrideAtCompileTime)==int(Dynamic)
                       || int(StrideType::InnerStrideAtCompileTime)==int(Derived::InnerStrideAtCompileTime)
                       || (int(StrideType::InnerStrideAtCompileTime)==0 && int(Derived::InnerStrideAtCompileTime)==1),
@@ -172,8 +172,12 @@ protected:
     }
     else
       ::new (static_cast<Base*>(this)) Base(expr.data(), expr.rows(), expr.cols());
-    ::new (&m_stride) StrideBase(StrideType::OuterStrideAtCompileTime==0?0:expr.outerStride(),
-                                 StrideType::InnerStrideAtCompileTime==0?0:expr.innerStride());    
+    
+    if(Expression::IsVectorAtCompileTime && (!PlainObjectType::IsVectorAtCompileTime) && ((Expression::Flags&RowMajorBit)!=(PlainObjectType::Flags&RowMajorBit)))
+      ::new (&m_stride) StrideBase(expr.innerStride(), StrideType::InnerStrideAtCompileTime==0?0:1);
+    else
+      ::new (&m_stride) StrideBase(StrideType::OuterStrideAtCompileTime==0?0:expr.outerStride(),
+                                   StrideType::InnerStrideAtCompileTime==0?0:expr.innerStride());    
   }
 
   StrideBase m_stride;
