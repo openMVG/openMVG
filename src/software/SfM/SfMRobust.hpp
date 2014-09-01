@@ -243,7 +243,7 @@ bool robustResection(
   {
     //typedef openMVG::euclidean_resection::kernel::EpnpSolver SolverType; // If K is available use the Epnp solver
     typedef openMVG::euclidean_resection::P3PSolver SolverType; // If K is available use the P3P solver
-    MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
+    MINIMUM_SAMPLES = std::min(static_cast<size_t>(SolverType::MINIMUM_SAMPLES), size_t(6));
 
     typedef ACKernelAdaptorResection_K<
       SolverType,  ResectionSquaredResidualError,  UnnormalizerResection, Mat34>  KernelType;
