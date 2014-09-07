@@ -88,3 +88,5 @@ TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MESHLAB
 ADD_EXECUTABLE(openMVG_main_evalQuality main_evalQuality.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_evalQuality
                      ${OpenMVG_LIBS})
+                     
+UNIT_TEST(openMVG SfMIOHelper "stlplus")

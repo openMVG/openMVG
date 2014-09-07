@@ -130,6 +130,10 @@ int main(int argc, char **argv)
     {
       // Read meta data to fill width height and focalPixPermm
       std::string sImageFilename = stlplus::create_filespec( sImageDir, *iter_image );
+      
+      // Test if the image format is supported:
+      if (openMVG::GetFormat(sImageFilename.c_str()) == openMVG::Unknown)
+        continue; // image cannot be opened
 
       size_t width = -1;
       size_t height = -1;
@@ -181,15 +185,14 @@ int main(int argc, char **argv)
               << 0 << ";" << focalPixPermm << ";" << height/2.0 << ";"
               << 0 << ";" << 0 << ";" << 1 << std::endl;
         }
-
       }
       else // If image contains meta data
       {
         double focal = focalPixPermm;
         width = exifReader->getWidth();
         height = exifReader->getHeight();
-        std::string sCamName = exifReader->getBrand();
-        std::string sCamModel = exifReader->getModel();
+        const std::string sCamName = exifReader->getBrand();
+        const std::string sCamModel = exifReader->getModel();
 
           std::vector<Datasheet> vec_database;
           Datasheet datasheet;
@@ -198,7 +201,7 @@ int main(int argc, char **argv)
             if ( getInfo( sCamName, sCamModel, vec_database, datasheet ) )
             {
               // The camera model was found in the database so we can compute it's approximated focal length
-              double ccdw = datasheet._sensorSize;
+              const double ccdw = datasheet._sensorSize;
               focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
               os << *iter_image << ";" << width << ";" << height << ";" << focal << ";" << sCamName << ";" << sCamModel << std::endl;
             }
