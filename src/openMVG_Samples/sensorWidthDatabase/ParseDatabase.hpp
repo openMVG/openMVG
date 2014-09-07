@@ -31,9 +31,9 @@ bool parseDatabase( const std::string& sfileDatabase, std::vector<Datasheet>& ve
           split( line, ";", values );
           if ( values.size() == 3 )
           {
-            std::string brand = values[0];
-            std::string model = values[1];
-            double sensorSize = atof( values[2].c_str() );
+            const std::string brand = values[0];
+            const std::string model = values[1];
+            const double sensorSize = atof( values[2].c_str() );
             vec_database.push_back( Datasheet( brand, model, sensorSize ) );
           }
         }
@@ -43,7 +43,7 @@ bool parseDatabase( const std::string& sfileDatabase, std::vector<Datasheet>& ve
   }
   else
   {
-    std::cerr<< "Cannot open the database file : "
+    std::cerr<< "Cannot open the database file: "
       << sfileDatabase << std::endl;
   }
 
@@ -51,7 +51,7 @@ bool parseDatabase( const std::string& sfileDatabase, std::vector<Datasheet>& ve
 }
 
 // Get information for the given camera model
-bool getInfo( const std::string& sBrand, const std::string& sModel, const std::vector<Datasheet>& vec_database, Datasheet& datasheetription )
+bool getInfo( const std::string& sBrand, const std::string& sModel, const std::vector<Datasheet>& vec_database, Datasheet& datasheetContent )
 {
   bool existInDatabase = false;
 
@@ -59,7 +59,7 @@ bool getInfo( const std::string& sBrand, const std::string& sModel, const std::v
   std::vector<Datasheet>::const_iterator datasheet = std::find( vec_database.begin(), vec_database.end(), refDatasheet );
   if ( datasheet != vec_database.end() )
   {
-    datasheetription = *datasheet;
+    datasheetContent = *datasheet;
     existInDatabase = true;
   }
 
