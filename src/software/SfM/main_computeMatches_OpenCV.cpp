@@ -152,11 +152,13 @@ int main(int argc, char **argv)
   std::string sOutDir = "";
   std::string sGeometricModel = "f";
   float fDistRatio = .6f;
+  int iMatchingVideoMode = -1;
 
   cmd.add( make_option('i', sImaDirectory, "imadir") );
   cmd.add( make_option('o', sOutDir, "outdir") );
   cmd.add( make_option('r', fDistRatio, "distratio") );
   cmd.add( make_option('g', sGeometricModel, "geometricModel") );
+  cmd.add( make_option('v', iMatchingVideoMode, "videoModeMatching") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -167,6 +169,8 @@ int main(int argc, char **argv)
       << "[-o|--outdir path] \n"
       << "\n[Optional]\n"
       << "[-g]--geometricModel f, e or h]"
+      << "[-v|--videoModeMatching 2 -> X] \n"
+      << "\t sequence matching with an overlap of X images"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -177,7 +181,8 @@ int main(int argc, char **argv)
             << argv[0] << std::endl
             << "--imadir " << sImaDirectory << std::endl
             << "--outdir " << sOutDir << std::endl
-            << "--geometricModel " << sGeometricModel << std::endl;
+            << "--geometricModel " << sGeometricModel << std::endl
+            << "--videoModeMatching " << iMatchingVideoMode << std::endl;
 
   if (sOutDir.empty())  {
     std::cerr << "\nIt is an invalid output directory" << std::endl;
@@ -310,11 +315,18 @@ int main(int argc, char **argv)
   }
   else // Compute the putatives matches
   {
+    std::cout << "Use: "
+      << ((iMatchingVideoMode > 0) ? "sequence matching" : "exhaustive matching") << std::endl;
+
     Timer timer;
     Matcher_AllInMemory<KeypointSetT, MatcherT> collectionMatcher(fDistRatio);
     if (collectionMatcher.loadData(vec_fileNames, sOutDir))
     {
-      const PairsT pairs = exhaustivePairs(vec_fileNames.size());
+      // Get pair to match according the matching mode:
+      const PairsT pairs =
+        (iMatchingVideoMode > 0) ?
+        contiguousWithOverlap(vec_fileNames.size(), iMatchingVideoMode) : exhaustivePairs(vec_fileNames.size());
+      // Photometric matching of putative pairs
       collectionMatcher.Match(vec_fileNames, pairs, map_PutativesMatches);
       //---------------------------------------
       //-- Export putative matches
