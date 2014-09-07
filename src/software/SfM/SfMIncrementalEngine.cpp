@@ -179,8 +179,8 @@ bool IncrementalReconstructionEngine::ReadInputData()
     return false;
   }
 
-  std::string sListsFile = stlplus::create_filespec(_sMatchesPath,"lists","txt");
-  std::string sComputedMatchesFile_F = stlplus::create_filespec(_sMatchesPath,"matches.f","txt");
+  const std::string sListsFile = stlplus::create_filespec(_sMatchesPath,"lists","txt");
+  const std::string sComputedMatchesFile_F = stlplus::create_filespec(_sMatchesPath,"matches.f","txt");
   if (!stlplus::is_file(sListsFile)||
     !stlplus::is_file(sComputedMatchesFile_F) )
   {
