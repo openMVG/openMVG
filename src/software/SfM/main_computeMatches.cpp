@@ -67,6 +67,7 @@ int main(int argc, char **argv)
   float fDistRatio = .6f;
   bool bOctMinus1 = false;
   float dPeakThreshold = 0.04f;
+  int iMatchingVideoMode = -1;
 
   cmd.add( make_option('i', sImaDirectory, "imadir") );
   cmd.add( make_option('o', sOutDir, "outdir") );
@@ -74,6 +75,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('s', bOctMinus1, "octminus1") );
   cmd.add( make_option('p', dPeakThreshold, "peakThreshold") );
   cmd.add( make_option('g', sGeometricModel, "geometricModel") );
+  cmd.add( make_option('v', iMatchingVideoMode, "videoModeMatching") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -86,7 +88,9 @@ int main(int argc, char **argv)
       << "[-r|--distratio 0.6] \n"
       << "[-s|--octminus1 0 or 1] \n"
       << "[-p|--peakThreshold 0.04 -> 0.01] \n"
-      << "[-g]--geometricModel f, e or h]"
+      << "[-g|--geometricModel f, e or h] \n"
+      << "[-v|--videoModeMatching 2 -> X] \n"
+      << "\t sequence matching with an overlap of X images"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -100,7 +104,8 @@ int main(int argc, char **argv)
             << "--distratio " << fDistRatio << std::endl
             << "--octminus1 " << bOctMinus1 << std::endl
             << "--peakThreshold " << dPeakThreshold << std::endl
-            << "--geometricModel " << sGeometricModel << std::endl;
+            << "--geometricModel " << sGeometricModel << std::endl
+            << "--videoModeMatching " << iMatchingVideoMode << std::endl;
 
   if (sOutDir.empty())  {
     std::cerr << "\nIt is an invalid output directory" << std::endl;
@@ -242,11 +247,18 @@ int main(int argc, char **argv)
   }
   else // Compute the putatives matches
   {
+    std::cout << "Use: "
+      << ((iMatchingVideoMode > 0) ? "sequence matching" : "exhaustive matching") << std::endl;
+
     Timer timer;
     Matcher_AllInMemory<KeypointSetT, MatcherT> collectionMatcher(fDistRatio);
     if (collectionMatcher.loadData(vec_fileNames, sOutDir))
     {
-      const PairsT pairs = exhaustivePairs(vec_fileNames.size());
+      // Get pair to match according the matching mode:
+      const PairsT pairs =
+        (iMatchingVideoMode > 0) ?
+        contiguousWithOverlap(vec_fileNames.size(), iMatchingVideoMode) : exhaustivePairs(vec_fileNames.size());
+      // Photometric matching of putative pairs
       collectionMatcher.Match(vec_fileNames, pairs, map_PutativesMatches);
       //---------------------------------------
       //-- Export putative matches

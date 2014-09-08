@@ -1,6 +1,5 @@
 
 ADD_DEFINITIONS(-DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
-set(OpenCV_DIR "/home/pierre/Documents/Dev_OpenCV/OpenCV-2.4.2_Build2")
 
 find_package( OpenCV )
 

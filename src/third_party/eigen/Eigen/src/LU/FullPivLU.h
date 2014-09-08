@@ -20,10 +20,11 @@ namespace Eigen {
   *
   * \param MatrixType the type of the matrix of which we are computing the LU decomposition
   *
-  * This class represents a LU decomposition of any matrix, with complete pivoting: the matrix A
-  * is decomposed as A = PLUQ where L is unit-lower-triangular, U is upper-triangular, and P and Q
-  * are permutation matrices. This is a rank-revealing LU decomposition. The eigenvalues (diagonal
-  * coefficients) of U are sorted in such a way that any zeros are at the end.
+  * This class represents a LU decomposition of any matrix, with complete pivoting: the matrix A is
+  * decomposed as \f$ A = P^{-1} L U Q^{-1} \f$ where L is unit-lower-triangular, U is
+  * upper-triangular, and P and Q are permutation matrices. This is a rank-revealing LU
+  * decomposition. The eigenvalues (diagonal coefficients) of U are sorted in such a way that any
+  * zeros are at the end.
   *
   * This decomposition provides the generic approach to solving systems of linear equations, computing
   * the rank, invertibility, inverse, kernel, and determinant.
@@ -511,8 +512,8 @@ typename internal::traits<MatrixType>::Scalar FullPivLU<MatrixType>::determinant
 }
 
 /** \returns the matrix represented by the decomposition,
- * i.e., it returns the product: P^{-1} L U Q^{-1}.
- * This function is provided for debug purpose. */
+ * i.e., it returns the product: \f$ P^{-1} L U Q^{-1} \f$.
+ * This function is provided for debug purposes. */
 template<typename MatrixType>
 MatrixType FullPivLU<MatrixType>::reconstructedMatrix() const
 {

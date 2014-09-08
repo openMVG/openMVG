@@ -36,7 +36,7 @@ struct L2_Simple
     typedef typename Accumulator<T>::Type ResultType;
 
     template <typename Iterator1, typename Iterator2>
-    ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
+    inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
     {
         ResultType result = ResultType();
         ResultType diff;
@@ -56,7 +56,7 @@ struct L2_Vectorized
     typedef typename Accumulator<T>::Type ResultType;
 
     template <typename Iterator1, typename Iterator2>
-    ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
+    inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
     {
       ResultType result = ResultType();
       ResultType diff0, diff1, diff2, diff3;
@@ -95,8 +95,8 @@ namespace optim_ss2{
       float f[4];
   };
 
-  // Euclidian distance (SSE method) (squared result)
-  float l2_sse(float * b1, float * b2, int size)
+  // Euclidean distance (SSE method) (squared result)
+  inline float l2_sse(float * b1, float * b2, int size)
   {
     float* b1Pt = (float*)b1;
     float* b2Pt = (float*)b2;
@@ -109,7 +109,7 @@ namespace optim_ss2{
       {
         srcA = _mm_load_ps(b1Pt+i);
         srcB = _mm_load_ps(b2Pt+i);
-        //-- Substract
+        //-- Subtract
         temp = _mm_sub_ps( srcA, srcB );
         //-- Multiply
         temp =  _mm_mul_ps( temp, temp );
@@ -122,7 +122,7 @@ namespace optim_ss2{
     }
     else
     {
-      std::cout<<"\n/!\\ size is not modulus 4,"
+      std::cout <<"\n/!\\ size is not modulus 4,"
         << " distance cannot be performed in SSE"<< std::endl;
       return 0.0f;
     }
@@ -138,7 +138,7 @@ struct L2_Vectorized<float>
     typedef Accumulator<float>::Type ResultType;
 
     template <typename Iterator1, typename Iterator2>
-    ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
+    inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
     {
       return optim_ss2::l2_sse(a,b,size);
     }

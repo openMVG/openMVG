@@ -243,7 +243,7 @@ bool robustResection(
   {
     //typedef openMVG::euclidean_resection::kernel::EpnpSolver SolverType; // If K is available use the Epnp solver
     typedef openMVG::euclidean_resection::P3PSolver SolverType; // If K is available use the P3P solver
-    MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
+    MINIMUM_SAMPLES = std::min(static_cast<size_t>(SolverType::MINIMUM_SAMPLES), size_t(6));
 
     typedef ACKernelAdaptorResection_K<
       SolverType,  ResectionSquaredResidualError,  UnnormalizerResection, Mat34>  KernelType;
@@ -332,7 +332,7 @@ bool robustResection(
     if ( ! bRefineFocal ) {
       std::vector<int> vec_constant_focal(1,6); // Set last element camera parameter as fixed (the focal)
       constant_transform_parameterization =
-        new ceres::SubsetParameterization(7, vec_constant_focal);
+        new ceres::SubsetParameterization(9, vec_constant_focal);
       problem.SetParameterization(ba_problem.mutable_camera_for_observation(0),
         constant_transform_parameterization);
     }
@@ -394,4 +394,3 @@ bool robustResection(
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_ROBUST_H
-

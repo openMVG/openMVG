@@ -278,21 +278,21 @@ template<typename _MatrixType, unsigned int _Mode> class TriangularView
 
     /** Efficient triangular matrix times vector/matrix product */
     template<typename OtherDerived>
-    TriangularProduct<Mode,true,MatrixType,false,OtherDerived, OtherDerived::IsVectorAtCompileTime>
+    TriangularProduct<Mode, true, MatrixType, false, OtherDerived, OtherDerived::ColsAtCompileTime==1>
     operator*(const MatrixBase<OtherDerived>& rhs) const
     {
       return TriangularProduct
-              <Mode,true,MatrixType,false,OtherDerived,OtherDerived::IsVectorAtCompileTime>
+              <Mode, true, MatrixType, false, OtherDerived, OtherDerived::ColsAtCompileTime==1>
               (m_matrix, rhs.derived());
     }
 
     /** Efficient vector/matrix times triangular matrix product */
     template<typename OtherDerived> friend
-    TriangularProduct<Mode,false,OtherDerived,OtherDerived::IsVectorAtCompileTime,MatrixType,false>
+    TriangularProduct<Mode, false, OtherDerived, OtherDerived::RowsAtCompileTime==1, MatrixType, false>
     operator*(const MatrixBase<OtherDerived>& lhs, const TriangularView& rhs)
     {
       return TriangularProduct
-              <Mode,false,OtherDerived,OtherDerived::IsVectorAtCompileTime,MatrixType,false>
+              <Mode, false, OtherDerived, OtherDerived::RowsAtCompileTime==1, MatrixType, false>
               (lhs.derived(),rhs.m_matrix);
     }
 
