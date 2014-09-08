@@ -50,8 +50,7 @@ TEST(SfMIOHelper, UniqueIntrinsicGroup) {
   EXPECT_TRUE(
     openMVG::SfMIO::loadImageList( vec_camImageNames, vec_intrinsicGroups, sListsFile));
   
-  EXPECT_EQ(1, vec_intrinsicGroups.size());
-    
+  EXPECT_EQ(1, vec_intrinsicGroups.size());    
 }
 
 TEST(SfMIOHelper, SameCameraDifferentFocal) {
@@ -105,6 +104,11 @@ TEST(SfMIOHelper, ManyCameraDifferentFocal) {
     openMVG::SfMIO::loadImageList( vec_camImageNames, vec_intrinsicGroups, sListsFile));
   
   EXPECT_EQ(9, vec_intrinsicGroups.size());
+  // Check intrinsic group Ids correctness
+  const size_t intrinsicGTIDs [] = {0,1,0,2,3,4,5,6,7,6,8};
+  for (size_t i =0; i < 9; ++i) {
+    EXPECT_EQ(intrinsicGTIDs[i], vec_camImageNames[i].m_intrinsicId);
+  }
 }
 
 TEST(SfMIOHelper, KnowAndUnknowCamera) {
@@ -113,8 +117,7 @@ TEST(SfMIOHelper, KnowAndUnknowCamera) {
   os   //ImaName;W;H;FocalPix;CamMaker;CamName
     << "DSC00402.JPG;4912;3264;3344.34;SONY;NEX-3N" <<'\n'
     << "0.jpg;4912;3264;3344.34;0;2456;0;3344.34;1632;0;0;1";
-
-    
+      
   const std::string sListsFile = stlplus::create_filespec("./","lists","txt");
   std::ofstream file(sListsFile.c_str());
   file << os.str();
