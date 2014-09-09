@@ -94,8 +94,8 @@ Image undistortImage(
 #ifdef USE_OPENMP
   #pragma omp parallel for
 #endif
-  for (int j=0; j<h; j++ ) {
-    for (int i=0; i<w; i++) {
+  for (int j=0; j<h; ++j ) {
+    for (int i=0; i<w; ++i) {
       double xu, yu, xd, yd;
       xu = double (i);
       yu = double (j);
@@ -260,10 +260,10 @@ struct reconstructorHelper
       f_cloud << "ply\nformat ascii 1.0\n"
         << "comment " << sComment << "\n"
         << "element vertex " << nt << "\n"
-        << "property float x\nproperty float y\nproperty float z" << "\n"
-        << "property uchar red\nproperty uchar green\nproperty uchar blue" << "\n"
-        << "property float confidence\nproperty list uchar int visibility" << "\n"
-        << "element face 0\nproperty list uchar int vertex_index" << "\n"
+        << "property float x\nproperty float y\nproperty float z\n"
+        << "property uchar red\nproperty uchar green\nproperty uchar blue\n" 
+        << "property float confidence\n"
+        << "property list int int visibility\n"
         << "end_header" << "\n";
       size_t pointCount = 0;
       for (std::set<size_t>::const_iterator iter = set_trackId.begin();
@@ -360,7 +360,7 @@ struct reconstructorHelper
           distoModel.m_f = cam._f;
 
           // Build the output filename from the input one
-          size_t imageIndex = iter->first;
+          const size_t imageIndex = iter->first;
           std::string sImageName = vec_fileNames[imageIndex];
           std::string sOutImagePath =
             stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "images",
@@ -450,7 +450,7 @@ struct reconstructorHelper
       for (Map_BrownPinholeCamera::const_iterator iter = map_Camera.begin();
         iter != map_Camera.end();  ++iter, ++count)
       {
-        size_t imageIndex = iter->first;
+        const size_t imageIndex = iter->first;
         const std::string & sImageName = vec_fileNames[imageIndex];
         std::ostringstream os;
         os << std::setw(8) << std::setfill('0') << count;
