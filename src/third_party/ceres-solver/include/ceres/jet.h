@@ -197,7 +197,7 @@ struct Jet {
   // to be passed in without being fully evaluated until
   // they are assigned to v
   template<typename Derived>
-  Jet(const T& value, const Eigen::DenseBase<Derived> &vIn)
+  EIGEN_STRONG_INLINE Jet(const T& value, const Eigen::DenseBase<Derived> &vIn)
     : a(value),
       v(vIn)
   {
