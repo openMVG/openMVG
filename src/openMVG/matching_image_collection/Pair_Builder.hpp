@@ -10,8 +10,6 @@
 
 namespace openMVG {
   
-typedef std::set<std::pair<size_t, size_t> > PairsT;
-  
 /// Generate all the (I,J) pairs of the upper diagonal of the NxN matrix
 static PairsT exhaustivePairs(const size_t N)
 {

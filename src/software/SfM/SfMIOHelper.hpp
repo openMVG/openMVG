@@ -20,8 +20,9 @@
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/split/split.hpp"
 
-// loadPairList definition is needed in Pair_Builder.hpp (included below) which include SfMIOHelper.hpp (this file)
+// PairsT and loadPairList definitions are needed in Pair_Builder.hpp (included below) which include SfMIOHelper.hpp (this file)
 namespace openMVG {
+typedef std::set<std::pair<size_t, size_t> > PairsT;
 namespace SfMIO {
   static bool loadPairList( PairsT &pairs,
                             const std::string & sFileName );
