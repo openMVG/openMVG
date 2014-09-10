@@ -6,12 +6,14 @@
 
 #pragma once
 
+#include "software/SfM/SfMIOHelper.hpp"
+
 namespace openMVG {
   
 typedef std::set<std::pair<size_t, size_t> > PairsT;
   
 /// Generate all the (I,J) pairs of the upper diagonal of the NxN matrix
-PairsT exhaustivePairs(const size_t N)
+static PairsT exhaustivePairs(const size_t N)
 {
   PairsT pairs;
   for(size_t I = 0; I < N; ++I)
@@ -23,7 +25,7 @@ PairsT exhaustivePairs(const size_t N)
 
 /// Generate the pairs that have a distance inferior to the overlapSize
 /// Usable to match videos sequence
-PairsT contiguousWithOverlap(const size_t N, const size_t overlapSize)
+static PairsT contiguousWithOverlap(const size_t N, const size_t overlapSize)
 {
   PairsT pairs;
   for(int I = 0; I < N; ++I)
@@ -32,6 +34,13 @@ PairsT contiguousWithOverlap(const size_t N, const size_t overlapSize)
       pairs.insert(std::make_pair(I,J));
     }
   return pairs;
+}
+
+static PairsT predefinedPairs(const std::string sFileName)
+{
+  PairsT pairs;
+  SfMIO::loadPairList(pairs,sFileName);
+	return pairs;
 }
 
 }; // namespace openMVG

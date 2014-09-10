@@ -68,6 +68,7 @@ int main(int argc, char **argv)
   bool bOctMinus1 = false;
   float dPeakThreshold = 0.04f;
   int iMatchingVideoMode = -1;
+  std::string sPredefinedPairList = "";
 
   cmd.add( make_option('i', sImaDirectory, "imadir") );
   cmd.add( make_option('o', sOutDir, "outdir") );
@@ -76,6 +77,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('p', dPeakThreshold, "peakThreshold") );
   cmd.add( make_option('g', sGeometricModel, "geometricModel") );
   cmd.add( make_option('v', iMatchingVideoMode, "videoModeMatching") );
+  cmd.add( make_option('l', sPredefinedPairList, "pairList") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -90,7 +92,8 @@ int main(int argc, char **argv)
       << "[-p|--peakThreshold 0.04 -> 0.01] \n"
       << "[-g|--geometricModel f, e or h] \n"
       << "[-v|--videoModeMatching 2 -> X] \n"
-      << "\t sequence matching with an overlap of X images"
+      << "\t sequence matching with an overlap of X images\n"
+      << "[-l]--pairList file"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -106,6 +109,14 @@ int main(int argc, char **argv)
             << "--peakThreshold " << dPeakThreshold << std::endl
             << "--geometricModel " << sGeometricModel << std::endl
             << "--videoModeMatching " << iMatchingVideoMode << std::endl;
+
+  if (sPredefinedPairList.length()) {
+	std::cout << "--pairList " << sPredefinedPairList << std::endl;
+	if (iMatchingVideoMode>0) {
+      std::cerr << "\nIncompatible options: --videoModeMatching and --pairList" << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
 
   if (sOutDir.empty())  {
     std::cerr << "\nIt is an invalid output directory" << std::endl;
@@ -248,7 +259,7 @@ int main(int argc, char **argv)
   else // Compute the putatives matches
   {
     std::cout << "Use: "
-      << ((iMatchingVideoMode > 0) ? "sequence matching" : "exhaustive matching") << std::endl;
+      << ((iMatchingVideoMode > 0) ? "sequence matching" : ((sPredefinedPairList.length()) ? sPredefinedPairList : "exhaustive matching" ) ) << std::endl;
 
     Timer timer;
     Matcher_AllInMemory<KeypointSetT, MatcherT> collectionMatcher(fDistRatio);
@@ -257,7 +268,13 @@ int main(int argc, char **argv)
       // Get pair to match according the matching mode:
       const PairsT pairs =
         (iMatchingVideoMode > 0) ?
-        contiguousWithOverlap(vec_fileNames.size(), iMatchingVideoMode) : exhaustivePairs(vec_fileNames.size());
+        contiguousWithOverlap(vec_fileNames.size(), iMatchingVideoMode) :
+        (sPredefinedPairList.length()) ?
+        predefinedPairs(sPredefinedPairList) : exhaustivePairs(vec_fileNames.size());
+      if (pairs.empty()) {
+        std::cerr << "Empty pair list" << std::endl;
+        return EXIT_FAILURE;
+      }
       // Photometric matching of putative pairs
       collectionMatcher.Match(vec_fileNames, pairs, map_PutativesMatches);
       //---------------------------------------

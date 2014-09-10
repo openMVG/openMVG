@@ -8,9 +8,6 @@
 #ifndef OPENMVG_SFM_IO_H
 #define OPENMVG_SFM_IO_H
 
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/split/split.hpp"
-
 #include <fstream>
 #include <iterator>
 #include <set>
@@ -19,6 +16,19 @@
 #include <vector>
 #include <algorithm>    // std::lexicographical_compare
 #include <cctype>       // std::tolower
+
+#include "openMVG/numeric/numeric.h"
+#include "openMVG/split/split.hpp"
+
+// loadPairList definition is needed in Pair_Builder.hpp (included below) which include SfMIOHelper.hpp (this file)
+namespace openMVG {
+namespace SfMIO {
+  static bool loadPairList( PairsT &pairs,
+                            const std::string & sFileName );
+}
+}
+
+#include "openMVG/matching_image_collection/Pair_Builder.hpp"
 
 namespace openMVG{
 namespace SfMIO{
@@ -207,6 +217,42 @@ static bool loadImageList( std::vector<std::string> & vec_camImageName,
     }
   }
   return (!vec_camImageName.empty());
+}
+
+static bool loadPairList( PairsT &pairs,
+                          const std::string & sFileName )
+{
+  std::ifstream in(sFileName.c_str());
+  if(!in.is_open())  {
+    std::cerr << std::endl
+      << "Impossible to read the specified file." << std::endl;
+    return false;
+  }
+  std::string sValue;
+  std::vector<std::string> vec_str;
+  while(getline( in, sValue ) )
+  {
+    vec_str.clear();
+    split( sValue, ";", vec_str );
+    size_t str_size=vec_str.size();
+    if (str_size < 2)
+    {
+      std::cerr << "Invalid input file" << std::endl;
+      in.close();
+      return false;
+    }
+    std::stringstream oss;
+    oss.clear(); oss.str(vec_str[0]);
+    size_t I, J;
+    oss >> I;
+    for(size_t i=1; i<str_size ; ++i) {
+      oss.clear(); oss.str(vec_str[i]);
+      oss >> J;
+      pairs.insert(std::make_pair(I,J));
+    }
+  }
+  in.close();
+  return !(pairs.empty());
 }
 
 } // namespace SfMIO
