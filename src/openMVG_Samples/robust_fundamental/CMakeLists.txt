@@ -10,3 +10,4 @@ TARGET_LINK_LIBRARIES(openMVG_sample_robustFundamental
   flann_cpp_s
   ${OPENMVG_LIBRARY_DEPENDENCIES})
 
+SET_PROPERTY(TARGET openMVG_sample_robustFundamental PROPERTY FOLDER OpenMVG/Samples)
