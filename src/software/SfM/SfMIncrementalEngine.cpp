@@ -1430,12 +1430,12 @@ void IncrementalReconstructionEngine::BundleAdjustment()
         map_camIndexToNumber_extrinsic[_vec_added_order[0]]));
   }
 
-  // Parameterization used to restrict camera intrinsics
+  // Parametrization used to restrict camera intrinsics
   {
     //-- Optional:
     //  - bRefinePPandDisto
     //   -> true: Pinhole camera model with Brown distortion model may vary
-    //   -> false: only the focal lenght may vary
+    //   -> false: only the focal length may vary
     //
     //  - _bRefineFocal
     //   -> true: refine focal length, Principal point and radial distortion
@@ -1443,7 +1443,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
     ceres::SubsetParameterization *constant_transform_parameterization = NULL;
     std::vector<int> vec_constant_intrinsic;
     if ( !_bRefinePPandDisto ) {
-      // Parameterization used to set as constant principal point and radial distortion
+      // Parametrization used to set as constant principal point and radial distortion
       // Last five elements are ppx,ppy and radial disto factors.
       vec_constant_intrinsic.push_back(1); // PRINCIPAL_POINT_X FIXED
       vec_constant_intrinsic.push_back(2); // PRINCIPAL_POINT_Y FIXED
@@ -1453,7 +1453,7 @@ void IncrementalReconstructionEngine::BundleAdjustment()
     }
 
     if ( !_bRefineFocal ) {
-      // Parameterization used to set as constant the camera focal length (fixed focal length)
+      // Parametrization used to set as constant the camera focal length (fixed focal length)
       vec_constant_intrinsic.push_back(0);
     }
 

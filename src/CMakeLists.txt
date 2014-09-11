@@ -14,7 +14,7 @@ PROJECT(openMVG C CXX)
 # ==============================================================================
 OPTION(OpenMVG_BUILD_TESTS "Build OpenMVG tests" OFF)
 OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG example applications. Does not affect binaries under 'software'" ON)
-option(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
+OPTION(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
 
 # By default build in Release mode
@@ -83,6 +83,9 @@ IF (NOT APPLE)
   FIND_PACKAGE(PNG QUIET)
   FIND_PACKAGE(TIFF QUIET)
 ENDIF (NOT APPLE)
+
+# Folders
+SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # ==============================================================================
 # SUBMODULE CONFIGURATION
@@ -209,21 +212,15 @@ ENDIF (OpenMVG_BUILD_EXAMPLES)
 SET(OpenMVG_LIBS
   openMVG_image
   openMVG_multiview
-  openMVG_lInftyComputerVision)
+  openMVG_lInftyComputerVision
+  openMVG_system)
 
-foreach(omvglib ${OpenMVG_LIBS})
-    set_property(TARGET ${omvglib} PROPERTY FOLDER OpenMVG/OpenMVG)
-endforeach()
+FOREACH(omvglib ${OpenMVG_LIBS})
+    SET_PROPERTY(TARGET ${omvglib} PROPERTY FOLDER OpenMVG/OpenMVG)
+ENDFOREACH()
   
 # concat lists
 SET(OpenMVG_LIBS "${OpenMVG_LIBS}" ${openMVG_linearProgramming})
-SET(OpenMVG_LIBS "${OpenMVG_LIBS}" openMVG_system)
-
-set_property(TARGET openMVG_system PROPERTY FOLDER OpenMVG/OpenMVG)
-set_property(TARGET openMVG_kvld PROPERTY FOLDER OpenMVG/OpenMVG)
-set_property(TARGET openMVG_numeric PROPERTY FOLDER OpenMVG/OpenMVG)
-set_property(TARGET openMVG_multiview_test_data PROPERTY FOLDER OpenMVG/OpenMVG)
-
 #third_party libs
 SET(OpenMVG_LIBS "${OpenMVG_LIBS}" 
   vlsift

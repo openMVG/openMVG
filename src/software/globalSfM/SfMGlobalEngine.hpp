@@ -50,8 +50,6 @@ namespace openMVG{
 //-- Relative rotation inference:
 //   - only the triplet rejection is performed (in [1] a Bayesian inference on cycle error is performed [2])
 //-- Global rotation computation:
-//   - in [1] they are computed by a sparse least square formulation
-//   - here, can be used:
 //    - a sparse least square,
 //    - or, the L1 averaging method of [3].
 //-- Linear Programming solver:
@@ -171,7 +169,6 @@ private:
   std::map< size_t, std::vector<SIOPointFeature> > _map_feats; // feature per images
 
   matching::PairWiseMatches _map_Matches_F; // pairwise matches for Essential matrix model
-
 
   // Parameter
   ERotationAveragingMethod _eRotationAveragingMethod;

@@ -13,4 +13,4 @@ file(
 ADD_LIBRARY(openMVG_system
 	${sytem_files_header}
 	${system_files_cpp})
-
+SET_PROPERTY(TARGET openMVG_system PROPERTY FOLDER OpenMVG/OpenMVG)

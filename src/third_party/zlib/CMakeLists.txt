@@ -8,4 +8,4 @@ ADD_LIBRARY(zlib STATIC
   zutil.c      crc32.h      deflate.h    inffast.h    inffixed.h   inflate.h
   inftrees.h   trees.h      zconf.h      zconf.in.h   zlib.h       zutil.h
 )
-set_property(TARGET zlib PROPERTY FOLDER OpenMVG/3rdParty)
+SET_PROPERTY(TARGET zlib PROPERTY FOLDER OpenMVG/3rdParty)

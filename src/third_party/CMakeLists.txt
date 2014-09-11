@@ -15,9 +15,9 @@ ADD_SUBDIRECTORY(stlplus3)
 
 # Add graph library
 ADD_SUBDIRECTORY(lemon)
-set_property(TARGET lemon PROPERTY FOLDER OpenMVG/3rdParty/lemon)
-set_property(TARGET check PROPERTY FOLDER OpenMVG/3rdParty/lemon)
-set_property(TARGET dist PROPERTY FOLDER OpenMVG/3rdParty/lemon)
+SET_PROPERTY(TARGET lemon PROPERTY FOLDER OpenMVG/3rdParty/lemon)
+SET_PROPERTY(TARGET check PROPERTY FOLDER OpenMVG/3rdParty/lemon)
+SET_PROPERTY(TARGET dist PROPERTY FOLDER OpenMVG/3rdParty/lemon)
 
 # Image I/O
 IF(NOT JPEG_FOUND)
@@ -57,14 +57,14 @@ ADD_SUBDIRECTORY(vectorGraphics)
 # Add ceres-solver (A Nonlinear Least Squares Minimizer)
 ADD_SUBDIRECTORY(cxsparse)
 ADD_SUBDIRECTORY(ceres-solver)
-set_property(TARGET cxsparse PROPERTY FOLDER OpenMVG/3rdParty/ceres)
-set_property(TARGET ceres PROPERTY FOLDER OpenMVG/3rdParty/ceres)
-set_property(TARGET miniglog PROPERTY FOLDER OpenMVG/3rdParty/ceres)
+SET_PROPERTY(TARGET cxsparse PROPERTY FOLDER OpenMVG/3rdParty/ceres)
+SET_PROPERTY(TARGET ceres PROPERTY FOLDER OpenMVG/3rdParty/ceres)
+SET_PROPERTY(TARGET miniglog PROPERTY FOLDER OpenMVG/3rdParty/ceres)
 
 # Add an Approximate Nearest Neighbor library
 ADD_SUBDIRECTORY(flann)
-set_property(TARGET flann_cpp PROPERTY FOLDER OpenMVG/3rdParty)
-set_property(TARGET flann_cpp_s PROPERTY FOLDER OpenMVG/3rdParty)
+SET_PROPERTY(TARGET flann_cpp PROPERTY FOLDER OpenMVG/3rdParty)
+SET_PROPERTY(TARGET flann_cpp_s PROPERTY FOLDER OpenMVG/3rdParty)
 
 # Exif data parsing
 ADD_SUBDIRECTORY(easyexif)

@@ -93,4 +93,4 @@ endif()
 
 add_library(tiff STATIC ${lib_srcs})
 target_link_libraries(tiff zlib)
-set_property(TARGET tiff PROPERTY FOLDER OpenMVG/3rdParty)
+SET_PROPERTY(TARGET tiff PROPERTY FOLDER OpenMVG/3rdParty)
