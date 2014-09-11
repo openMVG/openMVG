@@ -13,6 +13,9 @@ ADD_SUBDIRECTORY(stlplus3)
 
 # Add graph library
 ADD_SUBDIRECTORY(lemon)
+set_property(TARGET lemon PROPERTY FOLDER OpenMVG/3rdParty/lemon)
+set_property(TARGET check PROPERTY FOLDER OpenMVG/3rdParty/lemon)
+set_property(TARGET dist PROPERTY FOLDER OpenMVG/3rdParty/lemon)
 
 # Image I/O
 IF(NOT JPEG_FOUND)
@@ -55,6 +58,8 @@ ADD_SUBDIRECTORY(ceres-solver)
 
 # Add an Approximate Nearest Neighbor library
 ADD_SUBDIRECTORY(flann)
+set_property(TARGET flann_cpp PROPERTY FOLDER OpenMVG/3rdParty)
+set_property(TARGET flann_cpp_s PROPERTY FOLDER OpenMVG/3rdParty)
 
 # Exif data parsing
 ADD_SUBDIRECTORY(easyexif)
