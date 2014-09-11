@@ -8,3 +8,5 @@ TARGET_LINK_LIBRARIES(openMVG_main_ParseDatabase
 
 UNIT_TEST(openMVG ParseDatabase "stlplus")
 
+SET_PROPERTY(TARGET openMVG_main_ParseDatabase PROPERTY FOLDER OpenMVG/Samples)
+

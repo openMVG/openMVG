@@ -11,3 +11,4 @@ TARGET_LINK_LIBRARIES(openMVG_sample_robustEssential_ba
   ceres
   ${OPENMVG_LIBRARY_DEPENDENCIES})
 
+SET_PROPERTY(TARGET openMVG_sample_robustEssential_ba PROPERTY FOLDER OpenMVG/Samples)
