@@ -94,6 +94,8 @@ SET(GLFW_BUILD_TESTS    OFF CACHE BOOL "Do not build the GLFW tests programs")
 SET(GLFW_BUILD_DOCS     OFF CACHE BOOL "Do not build the GLFW documentation")
 ADD_SUBDIRECTORY(dependencies/glfw)
 INCLUDE_DIRECTORIES(SYSTEM dependencies/glfw/include)
+SET_PROPERTY(TARGET glfw PROPERTY FOLDER OpenMVG/3rdParty/glfw)
+SET_PROPERTY(TARGET uninstall PROPERTY FOLDER OpenMVG/3rdParty/glfw)
 
 #===============================
 #---- LINEAR PROGRAMMING SOLVER
@@ -119,6 +121,10 @@ INCLUDE_DIRECTORIES(
   ./dependencies/osi_clp/Osi/src/Osi/
   ./dependencies/osi_clp/Clp/src/OsiClp/
 )
+SET_PROPERTY(TARGET lib_CoinUtils PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
+SET_PROPERTY(TARGET lib_Osi PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
+SET_PROPERTY(TARGET lib_OsiClpSolver PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
+SET_PROPERTY(TARGET lib_clp PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
 
 #===============================
 #--END-- LINEAR PROGRAMMING SOLVER
@@ -204,16 +210,28 @@ SET(OpenMVG_LIBS
   openMVG_image
   openMVG_multiview
   openMVG_lInftyComputerVision)
+
+foreach(omvglib ${OpenMVG_LIBS})
+    set_property(TARGET ${omvglib} PROPERTY FOLDER OpenMVG/OpenMVG)
+endforeach()
+  
 # concat lists
 SET(OpenMVG_LIBS "${OpenMVG_LIBS}" ${openMVG_linearProgramming})
-SET(OpenMVG_LIBS "${OpenMVG_LIBS}"
-  openMVG_system
-  #third_party libs
+SET(OpenMVG_LIBS "${OpenMVG_LIBS}" openMVG_system)
+
+set_property(TARGET openMVG_system PROPERTY FOLDER OpenMVG/OpenMVG)
+set_property(TARGET openMVG_kvld PROPERTY FOLDER OpenMVG/OpenMVG)
+set_property(TARGET openMVG_numeric PROPERTY FOLDER OpenMVG/OpenMVG)
+set_property(TARGET openMVG_multiview_test_data PROPERTY FOLDER OpenMVG/OpenMVG)
+
+#third_party libs
+SET(OpenMVG_LIBS "${OpenMVG_LIBS}" 
   vlsift
   stlplus
   flann_cpp_s
   ceres
   lemon)
+
 SET(OpenMVG_LIBS "${OpenMVG_LIBS}"
   ${OPENMVG_LIBRARY_DEPENDENCIES} CACHE STRING "openMVG library names")
 

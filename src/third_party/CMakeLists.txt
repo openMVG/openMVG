@@ -57,6 +57,9 @@ ADD_SUBDIRECTORY(vectorGraphics)
 # Add ceres-solver (A Nonlinear Least Squares Minimizer)
 ADD_SUBDIRECTORY(cxsparse)
 ADD_SUBDIRECTORY(ceres-solver)
+set_property(TARGET cxsparse PROPERTY FOLDER OpenMVG/3rdParty/ceres)
+set_property(TARGET ceres PROPERTY FOLDER OpenMVG/3rdParty/ceres)
+set_property(TARGET miniglog PROPERTY FOLDER OpenMVG/3rdParty/ceres)
 
 # Add an Approximate Nearest Neighbor library
 ADD_SUBDIRECTORY(flann)
