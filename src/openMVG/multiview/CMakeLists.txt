@@ -22,12 +22,13 @@ ADD_LIBRARY(openMVG_multiview
 
 #Make multiview library integrate numeric library
 ADD_LIBRARY(openMVG_multiview_test_data ${MULTIVIEWTESTDATA})
+SET_PROPERTY(TARGET openMVG_multiview_test_data PROPERTY FOLDER OpenMVG/OpenMVG)
 TARGET_LINK_LIBRARIES(openMVG_multiview openMVG_numeric)
 
 UNIT_TEST(openMVG triangulation "openMVG_multiview;openMVG_multiview_test_data")
 UNIT_TEST(openMVG triangulation_nview "openMVG_multiview;openMVG_multiview_test_data")
 
-UNIT_TEST(openMVG solver_affine "openMVG_multiview;")
+UNIT_TEST(openMVG solver_affine "openMVG_multiview")
 UNIT_TEST(openMVG solver_fundamental_kernel "openMVG_multiview")
 UNIT_TEST(openMVG solver_essential_kernel "openMVG_multiview;openMVG_multiview_test_data")
 UNIT_TEST(openMVG solver_homography_kernel "openMVG_multiview;openMVG_multiview_test_data")

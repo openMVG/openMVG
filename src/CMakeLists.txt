@@ -14,7 +14,7 @@ PROJECT(openMVG C CXX)
 # ==============================================================================
 OPTION(OpenMVG_BUILD_TESTS "Build OpenMVG tests" OFF)
 OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG example applications. Does not affect binaries under 'software'" ON)
-option(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
+OPTION(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
 
 # By default build in Release mode
@@ -84,6 +84,9 @@ IF (NOT APPLE)
   FIND_PACKAGE(TIFF QUIET)
 ENDIF (NOT APPLE)
 
+# Folders
+SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
+
 # ==============================================================================
 # SUBMODULE CONFIGURATION
 # ==============================================================================
@@ -94,6 +97,8 @@ SET(GLFW_BUILD_TESTS    OFF CACHE BOOL "Do not build the GLFW tests programs")
 SET(GLFW_BUILD_DOCS     OFF CACHE BOOL "Do not build the GLFW documentation")
 ADD_SUBDIRECTORY(dependencies/glfw)
 INCLUDE_DIRECTORIES(SYSTEM dependencies/glfw/include)
+SET_PROPERTY(TARGET glfw PROPERTY FOLDER OpenMVG/3rdParty/glfw)
+SET_PROPERTY(TARGET uninstall PROPERTY FOLDER OpenMVG/3rdParty/glfw)
 
 #===============================
 #---- LINEAR PROGRAMMING SOLVER
@@ -119,6 +124,10 @@ INCLUDE_DIRECTORIES(
   ./dependencies/osi_clp/Osi/src/Osi/
   ./dependencies/osi_clp/Clp/src/OsiClp/
 )
+SET_PROPERTY(TARGET lib_CoinUtils PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
+SET_PROPERTY(TARGET lib_Osi PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
+SET_PROPERTY(TARGET lib_OsiClpSolver PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
+SET_PROPERTY(TARGET lib_clp PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
 
 #===============================
 #--END-- LINEAR PROGRAMMING SOLVER
@@ -130,12 +139,6 @@ INCLUDE_DIRECTORIES(
 #  and openMVG simultaneously
 # ==============================================================================
 SET(USE_OPENCV OFF CACHE BOOL "Do not build opencv+openMVG samples programs")
-IF (USE_OPENCV)
-# In order use openMVG+openCV samples set USE_OPENCV to ON and set the OpenCV_DIR
-#  to the build directory of openCV. Prefer use static version of openCV libraries.
-  SET(OpenCV_DIR "/home/pierre/Documents/Dev_OpenCV/opencv_Build")
-ENDIF (USE_OPENCV)
-
 
 
 # ==============================================================================
@@ -148,6 +151,9 @@ ENDIF (OpenMVG_BUILD_TESTS)
 MACRO (UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
   IF (OpenMVG_BUILD_TESTS)
     ADD_EXECUTABLE(${NAMESPACE}_test_${NAME} ${NAME}_test.cpp)
+    
+    SET_PROPERTY(TARGET ${NAMESPACE}_test_${NAME} PROPERTY FOLDER OpenMVG/test)
+
     TARGET_LINK_LIBRARIES(${NAMESPACE}_test_${NAME}
                           ${EXTRA_LIBS} # Extra libs MUST be first.
                           CppUnitLite ${OPENMVG_LIBRARY_DEPENDENCIES})
@@ -206,12 +212,17 @@ ENDIF (OpenMVG_BUILD_EXAMPLES)
 SET(OpenMVG_LIBS
   openMVG_image
   openMVG_multiview
-  openMVG_lInftyComputerVision)
+  openMVG_lInftyComputerVision
+  openMVG_system)
+
+FOREACH(omvglib ${OpenMVG_LIBS})
+    SET_PROPERTY(TARGET ${omvglib} PROPERTY FOLDER OpenMVG/OpenMVG)
+ENDFOREACH()
+  
 # concat lists
 SET(OpenMVG_LIBS "${OpenMVG_LIBS}" ${openMVG_linearProgramming})
-SET(OpenMVG_LIBS "${OpenMVG_LIBS}"
-  openMVG_system
-  #third_party libs
+#third_party libs
+SET(OpenMVG_LIBS "${OpenMVG_LIBS}" 
   vlsift
   stlplus
   flann_cpp_s

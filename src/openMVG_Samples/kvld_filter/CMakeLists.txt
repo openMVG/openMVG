@@ -9,3 +9,4 @@ TARGET_LINK_LIBRARIES(openMVG_sample_kvld
   openMVG_kvld
   )
 
+SET_PROPERTY(TARGET openMVG_sample_kvld PROPERTY FOLDER OpenMVG/Samples)

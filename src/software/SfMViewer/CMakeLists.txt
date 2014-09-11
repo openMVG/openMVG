@@ -38,3 +38,4 @@ TARGET_LINK_LIBRARIES(openMVG_main_sfmViewer
   openMVG_multiview
   openMVG_image
 )
+SET_PROPERTY(TARGET openMVG_main_sfmViewer PROPERTY FOLDER OpenMVG/software)

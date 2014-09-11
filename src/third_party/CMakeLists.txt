@@ -3,7 +3,9 @@
 #---------------------
 
 # Unit test library
-ADD_SUBDIRECTORY(CppUnitLite)
+IF (OpenMVG_BUILD_TESTS)
+    ADD_SUBDIRECTORY(CppUnitLite)
+ENDIF()
 
 # Basic filesystem utils
 ADD_SUBDIRECTORY(stlplus3)
@@ -13,6 +15,9 @@ ADD_SUBDIRECTORY(stlplus3)
 
 # Add graph library
 ADD_SUBDIRECTORY(lemon)
+SET_PROPERTY(TARGET lemon PROPERTY FOLDER OpenMVG/3rdParty/lemon)
+SET_PROPERTY(TARGET check PROPERTY FOLDER OpenMVG/3rdParty/lemon)
+SET_PROPERTY(TARGET dist PROPERTY FOLDER OpenMVG/3rdParty/lemon)
 
 # Image I/O
 IF(NOT JPEG_FOUND)
@@ -52,9 +57,14 @@ ADD_SUBDIRECTORY(vectorGraphics)
 # Add ceres-solver (A Nonlinear Least Squares Minimizer)
 ADD_SUBDIRECTORY(cxsparse)
 ADD_SUBDIRECTORY(ceres-solver)
+SET_PROPERTY(TARGET cxsparse PROPERTY FOLDER OpenMVG/3rdParty/ceres)
+SET_PROPERTY(TARGET ceres PROPERTY FOLDER OpenMVG/3rdParty/ceres)
+SET_PROPERTY(TARGET miniglog PROPERTY FOLDER OpenMVG/3rdParty/ceres)
 
 # Add an Approximate Nearest Neighbor library
 ADD_SUBDIRECTORY(flann)
+SET_PROPERTY(TARGET flann_cpp PROPERTY FOLDER OpenMVG/3rdParty)
+SET_PROPERTY(TARGET flann_cpp_s PROPERTY FOLDER OpenMVG/3rdParty)
 
 # Exif data parsing
 ADD_SUBDIRECTORY(easyexif)
