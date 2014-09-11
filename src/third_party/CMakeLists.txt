@@ -3,7 +3,9 @@
 #---------------------
 
 # Unit test library
-ADD_SUBDIRECTORY(CppUnitLite)
+IF (OpenMVG_BUILD_TESTS)
+    ADD_SUBDIRECTORY(CppUnitLite)
+ENDIF()
 
 # Basic filesystem utils
 ADD_SUBDIRECTORY(stlplus3)
