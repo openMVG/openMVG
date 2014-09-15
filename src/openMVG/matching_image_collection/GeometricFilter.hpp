@@ -40,6 +40,10 @@ class ImageCollectionGeometricFilter
     return bOk;
   }
 
+  void setData(const size_t image_id, const std::vector<FeatureT>& features ) {
+      map_Feat[image_id] = features;
+  }
+
   /// Filter all putative correspondences according the templated geometric filter
   template <typename GeometricFilterT>
   void Filter(
