@@ -27,7 +27,7 @@ before_script:
 
 script:
 # limit GCC builds to a reduced number of thread for the virtual machine
-  - if [ "$CC" = "gcc" ]; then make -j 2; else make -j 4; fi
+  - if [ "$CC" = "gcc" ]; then make; else make -j 4; fi
 # Perform unit tests only on GCC builds
   - if [ "$CC" = "gcc" ]; then make test; fi
 
