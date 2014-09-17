@@ -47,8 +47,15 @@ using namespace std;
 enum eGeometricModel
 {
   FUNDAMENTAL_MATRIX = 0,
-  ESSENTIAL_MATRIX = 1,
-  HOMOGRAPHY_MATRIX = 2
+  ESSENTIAL_MATRIX   = 1,
+  HOMOGRAPHY_MATRIX  = 2
+};
+
+enum ePairMode
+{
+  PAIR_EXHAUSTIVE = 0,
+  PAIR_CONTIGUOUS = 1,
+  PAIR_FROM_FILE  = 2
 };
 
 // Equality functor to count the number of similar K matrices in the essential matrix case.
@@ -187,8 +194,11 @@ int main(int argc, char **argv)
             << "--geometricModel " << sGeometricModel << std::endl
             << "--videoModeMatching " << iMatchingVideoMode << std::endl;
 
+  ePairMode ePairmode = (iMatchingVideoMode == -1 ) ? PAIR_EXHAUSTIVE : PAIR_CONTIGUOUS;
+
   if (sPredefinedPairList.length()) {
     std::cout << "--pairList " << sPredefinedPairList << std::endl;
+    ePairmode = PAIR_FROM_FILE;
     if (iMatchingVideoMode>0) {
       std::cerr << "\nIncompatible options: --videoModeMatching and --pairList" << std::endl;
       return EXIT_FAILURE;
@@ -324,25 +334,27 @@ int main(int argc, char **argv)
     PairedIndMatchImport(sOutDir + "/matches.putative.txt", map_PutativesMatches);
     std::cout << "\t PREVIOUS RESULTS LOADED" << std::endl;
   }
-  else // Compute the putatives matches
+  else // Compute the putative matches
   {
-    std::cout << "Use: "
-      << ((iMatchingVideoMode > 0) ? "sequence matching" : ((sPredefinedPairList.length()) ? sPredefinedPairList : "exhaustive matching" ) ) << std::endl;
+    std::cout << "Use: ";
+    switch (ePairmode)
+    {
+      case PAIR_EXHAUSTIVE: std::cout << "exhaustive pairwise matching" << std::endl; break;
+      case PAIR_CONTIGUOUS: std::cout << "sequence pairwise matching" << std::endl; break;
+      case PAIR_FROM_FILE:  std::cout << "user defined pairwise matching" << std::endl; break;
+    }
 
     Timer timer;
     Matcher_AllInMemory<KeypointSetT, MatcherT> collectionMatcher(fDistRatio);
     if (collectionMatcher.loadData(vec_fileNames, sOutDir))
     {
       // Get pair to match according the matching mode:
-      const PairsT pairs =
-        (iMatchingVideoMode > 0) ?
-        contiguousWithOverlap(vec_fileNames.size(), iMatchingVideoMode) :
-        (sPredefinedPairList.length()) ?
-        predefinedPairs(sPredefinedPairList) : exhaustivePairs(vec_fileNames.size());
-
-      if (pairs.empty()) {
-        std::cerr << "Empty pair list" << std::endl;
-        return EXIT_FAILURE;
+      PairsT pairs;
+      switch (ePairmode)
+      {
+        case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(vec_fileNames.size()); break;
+        case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(vec_fileNames.size(), iMatchingVideoMode); break;
+        case PAIR_FROM_FILE:  loadPairs(sPredefinedPairList, pairs); break;
       }
       // Photometric matching of putative pairs
       collectionMatcher.Match(vec_fileNames, pairs, map_PutativesMatches);
