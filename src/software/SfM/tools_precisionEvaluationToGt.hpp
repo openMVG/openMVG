@@ -167,7 +167,7 @@ void EvaluteToGT(
   {
     using namespace htmlDocument;
     _htmlDocStream->pushInfo("<hr>");
-    _htmlDocStream->pushInfo(htmlMarkup("h1", "Compare GT camera positition and looking direction."));
+    _htmlDocStream->pushInfo(htmlMarkup("h1", "Compare GT camera position and looking direction."));
     _htmlDocStream->pushInfo(" Display per camera after a 3D similarity estimation:<br>");
     _htmlDocStream->pushInfo("<ul><li>Baseline_Residual -> localization error of camera center to GT (in GT unit),</li>");
     _htmlDocStream->pushInfo("<li>Angular_residuals -> direction error as an angular degree error.</li></ul>");
