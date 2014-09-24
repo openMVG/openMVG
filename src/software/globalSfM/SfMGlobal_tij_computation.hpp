@@ -32,7 +32,11 @@ bool estimate_T_triplet(
   const Mat3 & K,
   std::vector<Vec3> & vec_tis,
   double & dPrecision,
-  std::vector<size_t> & vec_inliers)
+  std::vector<size_t> & vec_inliers,
+  const size_t nI,
+  const size_t nJ,
+  const size_t nK,
+  const std::string & sOutDirectory)
 {
   using namespace linearProgramming;
   using namespace lInfinityCV;
@@ -281,6 +285,32 @@ bool estimate_T_triplet(
 
         (*tt[i]) = Vec3(cam[0], cam[1], cam[2]);
       }
+
+      // Get back 3D points
+      size_t k = 0;
+      std::vector<Vec3>  finalPoint;
+
+      for (std::vector<Vec3>::iterator iter = vec_Xis.begin();
+        iter != vec_Xis.end(); ++iter, ++k)
+      {
+        const double * pt = ba_problem.mutable_points() + k*3;
+        Vec3 & pt3D = *iter;
+        pt3D = Vec3(pt[0], pt[1], pt[2]);
+        finalPoint.push_back(pt3D);
+      }
+
+      // export point cloud (for debug purpose only)
+      char * pairIJK;
+      pairIJK = (char*)malloc(sizeof(char) * 100);
+      memset(pairIJK, 0x00, 100);
+
+      snprintf(pairIJK, sizeof(pairIJK), "%lu_%lu_%lu", nI, nJ, nK);
+
+      plyHelper::exportToPly(finalPoint, stlplus::create_filespec(sOutDirectory,
+                       "pointCloud_triplet_t_"+std::string(pairIJK), "ply") );
+
+      free(pairIJK);
+
     }
   }
   return bTest;
@@ -295,7 +325,7 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
   matching::PairWiseMatches & newpairMatches) const
 {
   // The same K matrix is used by all the camera
-  const Mat3 _K = _vec_intrinsicGroups[0].m_K;
+  const Mat3 _K = Mat3::Identity();
 
   //-- Prepare global rotations
   std::map<size_t, Mat3> map_global_KR;
@@ -462,15 +492,23 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
         vec_global_KR_Triplet.push_back(map_global_KR[J]);
         vec_global_KR_Triplet.push_back(map_global_KR[K]);
 
-        double dPrecision = 4.0;
+
+        // update precision to have good value for normalized coordinates
+        const Mat3 KI = _vec_intrinsicGroups[_vec_camImageNames[I].m_intrinsicId].m_K;
+        const Mat3 KJ = _vec_intrinsicGroups[_vec_camImageNames[J].m_intrinsicId].m_K;
+        const Mat3 KK = _vec_intrinsicGroups[_vec_camImageNames[K].m_intrinsicId].m_K;
+
+        const double averageFocal = ( KI(0,0) + KJ(0,0) + KK(0,0) ) / 3.0 ;
+
+        double dPrecision = 4.0 ;
 
         std::vector<size_t> vec_inliers;
 
         if (map_tracksCommon.size() > 50 &&
             estimate_T_triplet(
               w, h,
-              map_tracksCommon, _map_feats,  vec_global_KR_Triplet, _K,
-              vec_tis, dPrecision, vec_inliers))
+              map_tracksCommon, _map_feats_normalized,  vec_global_KR_Triplet, _K,
+              vec_tis, dPrecision, vec_inliers, I, J, K, _sOutDirectory))
         {
           std::cout << dPrecision << "\t" << vec_inliers.size() << std::endl;
 
