@@ -887,9 +887,8 @@ bool GlobalReconstructionEngine::ReadInputData()
     const size_t intrinsicId = _map_IntrinsicIdPerImageId[camIndex];
 
     // load camera matrix
-    const Mat3 _K = _vec_intrinsicGroups[intrinsicId].m_K;
-    double ppx = _K(0,2), ppy = _K(1,2);
-    double focal = _K(0,0);
+    const Mat3 _K    = _vec_intrinsicGroups[intrinsicId].m_K;
+    const Mat3 _Kinv = _K.inverse();
 
     // array containing normalized feature of image
     std::vector<SIOPointFeature>  normalizedFeatureImageI;
@@ -898,12 +897,14 @@ bool GlobalReconstructionEngine::ReadInputData()
     //normalize features
     for( size_t j=0; j < _map_feats[camIndex].size(); ++j)
     {
-      float x = _map_feats[camIndex][j].x();
-      float y = _map_feats[camIndex][j].y();
+      Vec3 x(_map_feats[camIndex][j].x(), _map_feats[camIndex][j].y(), 1.0);
+      Vec3 xBearingVector = _Kinv * x;
+      Vec2 xBearingVectorNormalized = xBearingVector.head(2) / xBearingVector(2);
+
       float scale = _map_feats[camIndex][j].scale();
       float orientation = _map_feats[camIndex][j].orientation();
 
-      SIOPointFeature  normalized( (x - ppx)/focal, (y - ppy)/focal, scale, orientation);
+      SIOPointFeature  normalized( xBearingVectorNormalized(0), xBearingVectorNormalized(1), scale, orientation);
 
       normalizedFeatureImageI.push_back(normalized);
     }
