@@ -58,6 +58,9 @@
 #include <functional>
 #include <sstream>
 
+#include <stdio.h>
+#include <stdlib.h>
+
 using namespace openMVG;
 using namespace openMVG::graphUtils;
 using namespace svg;
@@ -826,20 +829,32 @@ bool GlobalReconstructionEngine::ReadInputData()
     }
     else
     {
-      //-- The global SfM pipeline assume there is only one intrinsic group
-      //- Count the number of intrinsic group and if many return an error message
-      std::vector<openMVG::SfMIO::IntrinsicCameraInfo>::iterator iterF =
-        std::unique(_vec_intrinsicGroups.begin(), _vec_intrinsicGroups.end(), testIntrinsicsEquality);
-      _vec_intrinsicGroups.resize( std::distance(_vec_intrinsicGroups.begin(), iterF) );
-      if (_vec_intrinsicGroups.size() == 1) {
-        // Set all the intrinsic ID to 0
-        for (size_t i = 0; i < _vec_camImageNames.size(); ++i)
-          _vec_camImageNames[i].m_intrinsicId = 0;
-      }
-      else  {
-        std::cerr << "There is more than one focal group in the lists.txt file." << std::endl
-          << "Only one focal group is supported for the global calibration chain." << std::endl;
-        return false;
+/*      //-- The global SfM pipeline assume there is only one intrinsic group
+*      //- Count the number of intrinsic group and if many return an error message
+*      std::vector<openMVG::SfMIO::IntrinsicCameraInfo>::iterator iterF =
+*        std::unique(_vec_intrinsicGroups.begin(), _vec_intrinsicGroups.end(), testIntrinsicsEquality);
+*      _vec_intrinsicGroups.resize( std::distance(_vec_intrinsicGroups.begin(), iterF) );
+*
+*      if (_vec_intrinsicGroups.size() == 1) {
+*        // Set all the intrinsic ID to 0
+*        for (size_t i = 0; i < _vec_camImageNames.size(); ++i)
+*          _vec_camImageNames[i].m_intrinsicId = 0;
+*      }
+*      else  {
+*        std::cerr << "There is more than one focal group in the lists.txt file." << std::endl
+*          << "Only one focal group is supported for the global calibration chain." << std::endl;
+*        return false;
+*      }
+*/
+
+      // Find to which intrinsic groups each image belong
+      for (std::vector<openMVG::SfMIO::CameraInfo>::const_iterator iter = _vec_camImageNames.begin();
+        iter != _vec_camImageNames.end(); ++iter)
+      {
+        const openMVG::SfMIO::CameraInfo & camInfo = *iter;
+        // Find the index of the camera
+        size_t idx = std::distance((std::vector<openMVG::SfMIO::CameraInfo>::const_iterator)_vec_camImageNames.begin(), iter);
+        _map_IntrinsicIdPerImageId[idx] = camInfo.m_intrinsicId;
       }
 
       for (size_t i = 0; i < _vec_camImageNames.size(); ++i)
@@ -865,6 +880,38 @@ bool GlobalReconstructionEngine::ReadInputData()
       return false;
     }
   }
+
+  // Normalize features:
+  for (size_t i = 0; i < _vec_fileNames.size(); ++i)  {
+    const size_t camIndex = i;
+    const size_t intrinsicId = _map_IntrinsicIdPerImageId[camIndex];
+
+    // load camera matrix
+    const Mat3 _K = _vec_intrinsicGroups[intrinsicId].m_K;
+    double ppx = _K(0,2), ppy = _K(1,2);
+    double focal = _K(0,0);
+
+    // array containing normalized feature of image
+    std::vector<SIOPointFeature>  normalizedFeatureImageI;
+    normalizedFeatureImageI.clear();
+
+    //normalize features
+    for( size_t j=0; j < _map_feats[camIndex].size(); ++j)
+    {
+      float x = _map_feats[camIndex][j].x();
+      float y = _map_feats[camIndex][j].y();
+      float scale = _map_feats[camIndex][j].scale();
+      float orientation = _map_feats[camIndex][j].orientation();
+
+      SIOPointFeature  normalized( (x - ppx)/focal, (y - ppy)/focal, scale, orientation);
+
+      normalizedFeatureImageI.push_back(normalized);
+    }
+
+    _map_feats_normalized.insert(std::make_pair(camIndex,normalizedFeatureImageI) );
+
+  }
+
   return true;
 }
 
@@ -1008,8 +1055,8 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
     Mat x1(2, vec_matchesInd.size()), x2(2, vec_matchesInd.size());
     for (size_t k = 0; k < vec_matchesInd.size(); ++k)
     {
-      x1.col(k) = _map_feats[I][vec_matchesInd[k]._i].coords().cast<double>();
-      x2.col(k) = _map_feats[J][vec_matchesInd[k]._j].coords().cast<double>();
+      x1.col(k) = _map_feats_normalized[I][vec_matchesInd[k]._i].coords().cast<double>();
+      x2.col(k) = _map_feats_normalized[J][vec_matchesInd[k]._j].coords().cast<double>();
     }
 
     Mat3 E;
@@ -1023,10 +1070,12 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
       _vec_intrinsicGroups[_vec_camImageNames[J].m_intrinsicId].m_w,
       _vec_intrinsicGroups[_vec_camImageNames[J].m_intrinsicId].m_h);
 
-    const Mat3 K = _vec_intrinsicGroups[_vec_camImageNames[I].m_intrinsicId].m_K;
+    const Mat3 K1 = _vec_intrinsicGroups[_vec_camImageNames[I].m_intrinsicId].m_K;
+    const Mat3 K2 = _vec_intrinsicGroups[_vec_camImageNames[J].m_intrinsicId].m_K;
+    const Mat3 K  = Mat3::Identity();
 
     double errorMax = std::numeric_limits<double>::max();
-    double maxExpectedError = 2.5;
+    double maxExpectedError = 2.5 / sqrt( K1(0,0) * K2(0,0)) ;
     if (!SfMRobust::robustEssential(K, K,
       x1, x2,
       &E, &vec_inliers,
@@ -1192,13 +1241,30 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
           {
             // Get back 3D points
             size_t k = 0;
+            std::vector<Vec3>  finalPoint;
+
             for (std::vector<Vec3>::iterator iter = vec_allScenes.begin();
               iter != vec_allScenes.end(); ++iter, ++k)
             {
               const double * pt = ba_problem.mutable_points() + k*3;
               Vec3 & pt3D = *iter;
               pt3D = Vec3(pt[0], pt[1], pt[2]);
+              finalPoint.push_back(pt3D);
             }
+
+/*
+*            // export point cloud associated to pair (I,J). Only for debug purpose
+*            char * pairIJ;
+*            pairIJ = (char*)malloc(sizeof(char) * 100);
+*            memset(pairIJ, 0x00, 100);
+*
+*            snprintf(pairIJ, sizeof(pairIJ), "%lu_%lu", I, J);
+*
+*            plyHelper::exportToPly(finalPoint, stlplus::create_filespec(_sOutDirectory,
+*                   "pointCloud_rot_"+std::string(pairIJ), "ply") );
+*
+*            free(pairIJ);
+*/
 
             // Get back camera 1
             {

@@ -167,8 +167,12 @@ private:
   std::vector<openMVG::SfMIO::CameraInfo> _vec_camImageNames;
   std::vector<openMVG::SfMIO::IntrinsicCameraInfo> _vec_intrinsicGroups;
   std::map< size_t, std::vector<SIOPointFeature> > _map_feats; // feature per images
+  std::map< size_t, std::vector<SIOPointFeature> > _map_feats_normalized; // normalized features per images
 
   matching::PairWiseMatches _map_Matches_F; // pairwise matches for Essential matrix model
+
+  // Intrinsic Id per imageId
+  std::map<size_t, size_t> _map_IntrinsicIdPerImageId;
 
   // Parameter
   ERotationAveragingMethod _eRotationAveragingMethod;
