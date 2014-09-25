@@ -154,7 +154,7 @@ int main(int argc, char ** argv)
 
           svgStream.drawLine(imaA.x(), imaA.y(),
             imaB.x()+dimImage0.first, imaB.y(),
-            svgStyle().stroke("green", 2.0));
+            svgStyle().id("pl"+std::to_string(iterT->first)).stroke("green", 2.0));
         }
 
         //-- Draw features (in two loop, in order to have the features upper the link, svg layer order):
@@ -166,9 +166,9 @@ int main(int argc, char ** argv)
           const SIOPointFeature & imaB = vec_featJ[ iter->second];
 
           svgStream.drawCircle(imaA.x(), imaA.y(), imaA.scale(),
-            svgStyle().stroke("yellow", 2.0));
+                               svgStyle().stroke("yellow", 2.0).mouse_over_id("pl" + std::to_string(iterT->first)));
           svgStream.drawCircle(imaB.x() + dimImage0.first,imaB.y(),
-            imaB.scale(), svgStyle().stroke("yellow", 2.0));
+                               imaB.scale(), svgStyle().stroke("yellow", 2.0).mouse_over_id("pl" + std::to_string(iterT->first)));
         }
         std::ostringstream os;
         os << stlplus::folder_append_separator(sOutDir)
