@@ -130,7 +130,7 @@ int main(int argc, char ** argv)
         const SIOPointFeature & imaA = vec_featI[vec_FilteredMatches[i]._i];
         const SIOPointFeature & imaB = vec_featJ[vec_FilteredMatches[i]._j];
         svgStream.drawLine(imaA.x(), imaA.y(),
-          imaB.x()+dimImage0.first, imaB.y(), svgStyle().stroke("green", 2.0));
+          imaB.x()+dimImage0.first, imaB.y(), svgStyle().id("pl"+std::to_string(i)).stroke("green", 2.0));
       }
 
       //-- Draw features (in two loop, in order to have the features upper the link, svg layer order):
@@ -138,9 +138,9 @@ int main(int argc, char ** argv)
         const SIOPointFeature & imaA = vec_featI[vec_FilteredMatches[i]._i];
         const SIOPointFeature & imaB = vec_featJ[vec_FilteredMatches[i]._j];
         svgStream.drawCircle(imaA.x(), imaA.y(), imaA.scale(),
-          svgStyle().stroke("yellow", 2.0));
+          svgStyle().stroke("yellow", 2.0).mouse_over_id("pl"+std::to_string(i)));
         svgStream.drawCircle(imaB.x() + dimImage0.first, imaB.y(), imaB.scale(),
-          svgStyle().stroke("yellow", 2.0));
+          svgStyle().stroke("yellow", 2.0).mouse_over_id("pl"+std::to_string(i)));
       }
     }
     std::ostringstream os;
