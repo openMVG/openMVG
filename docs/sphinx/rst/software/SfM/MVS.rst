@@ -6,8 +6,8 @@ Multiple View Stereovision
 Once camera position and orientation have been computed, Multiple View Stereo-vision algorithms could be used 
 to compute a dense scene representation, such as:
 
-- dense point cloud,
-- surface and texture.
+- dense point cloud (PMVS),
+- surface and texture (UMVS, CMPMVS).
 
 
 Export to PMVS/CMVS
@@ -38,6 +38,23 @@ In order to use CMVS for large scene openMVG2PMVS export also the scene in the B
   $ sh Dataset/outReconstruction/SfM_Output/PMVS/pmvs.sh
 
 
+Export to MVE (Multi-View Environment)
+=========================================
+
+`MVE <http://www.gris.informatik.tu-darmstadt.de/projects/multiview-environment>`_ can import an openMVG SfM scene and use it to create dense depth map and complete dense 3D models.
+
+.. code-block:: c++
+
+  $ makescene SfmOutput_DIR MVE_SCENE_DIR
+  $ dmrecon -s2 MVE_SCENE_DIR
+  $ scene2pset -ddepth-L2 -iundist-L2 -n -s -c MVE_SCENE_DIR OUTPUT.ply
+  $ fssr_octree OUTPUT.ply OUTPUT.fssr
+  $ fssr_surface -t10 -c100000 OUTPUT.fssr surface.ply
+  
+  Call any tool without arguments to see the help.
+  
+You will need to compile MVE tools and `FSSR <http://www.gris.informatik.tu-darmstadt.de/projects/floating-scale-surface-reco/>`_.
+
 Export to CMPMVS
 ========================
 
@@ -46,4 +63,3 @@ OpenMVG exports [CMPMVS]_ ready to use project (images, projection matrices and 
 .. code-block:: c++
 
   $ openMVG_main_openMVG2CMPMVS -i Dataset/outReconstruction/SfM_Output/ -o Dataset/outReconstruction/SfM_Output/
-

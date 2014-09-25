@@ -26,7 +26,8 @@ before_script:
   - cmake -DOpenMVG_BUILD_COVERAGE=ON -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
 
 script:
-  - make -j 4
+# limit GCC builds to a reduced number of thread for the virtual machine
+  - if [ "$CC" = "gcc" ]; then make; else make -j 4; fi
 # Perform unit tests only on GCC builds
   - if [ "$CC" = "gcc" ]; then make test; fi
 
