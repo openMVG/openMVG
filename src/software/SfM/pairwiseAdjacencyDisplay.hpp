@@ -37,7 +37,7 @@ void PairWiseMatchingToAdjacencyMatrixSVG(const size_t NbImages,
           std::ostringstream os;
           os << "(" << J << "," << I << " " << iterSearch->second.size() <<")";
           svgStream.drawSquare(J*scaleFactor, I*scaleFactor, scaleFactor/2.0f,
-            svgStyle().fill("blue").noStroke());
+            svgStyle().fill("blue").noStroke().tooltip(os.str()));
         } // HINT : THINK ABOUT OPACITY [0.4 -> 1.0] TO EXPRESS MATCH COUNT
       }
     }
