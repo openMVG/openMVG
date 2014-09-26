@@ -130,7 +130,7 @@ public:
   {
     svgStream <<
       "<polyline points=\""<< ax << "," << ay << "," << bx << "," << by <<"\""
-      << style.getSvgStream() +  (style.bTooltip() ? "</polyline>" : "/>\n");
+      << style.getSvgStream() +  (style.bAdditional() ? "</polyline>\n" : "/>\n");
   }
 
   ///Reference to an image (path must be relative to the svg file)
@@ -159,7 +159,7 @@ public:
       << " y=\"" << cy << "\""
       << " width=\"" << W << "\""
       << " height=\"" << H << "\""
-      << style.getSvgStream() + (style.bTooltip() ? "</rect>" : "/>\n");
+      << style.getSvgStream() + (style.bAdditional() ? "</rect>\n" : "/>\n");
   }
 
   ///Text display -> x,y position, font size
