@@ -552,7 +552,7 @@ bool GlobalReconstructionEngine::Process()
       Vec3 t(vec_camTranslation[i*3], vec_camTranslation[i*3+1], vec_camTranslation[i*3+2]);
       const size_t camNodeId = map_cameraIndexTocameraNode[i];
       const Mat3 & Ri = map_globalR[camNodeId];
-      const Mat3 & _K = _vec_intrinsicGroups[0].m_K;   // The same K matrix is used by all the camera
+      const Mat3 & _K = Mat3::Identity();   // The same K matrix is used by all the camera
       _map_camera[camNodeId] = PinholeCamera(_K, Ri, t);
       //-- Export camera center
       vec_C.push_back(_map_camera[camNodeId]._C);
@@ -630,7 +630,7 @@ bool GlobalReconstructionEngine::Process()
 
           const size_t imaIndex = iter->first;
           const size_t featIndex = iter->second;
-          const SIOPointFeature & pt = _map_feats[imaIndex][featIndex];
+          const SIOPointFeature & pt = _map_feats_normalized[imaIndex][featIndex];
           // Build the P matrix
           trianObj.add(_map_camera[imaIndex]._P, pt.coords().cast<double>());
         }
@@ -646,7 +646,7 @@ bool GlobalReconstructionEngine::Process()
         for (submapTrack::const_iterator iter = subTrack.begin(); iter != subTrack.end(); ++iter) {
           const size_t imaIndex = iter->first;
           const size_t featIndex = iter->second;
-          const SIOPointFeature & pt = _map_feats[imaIndex][featIndex];
+          const SIOPointFeature & pt = _map_feats_normalized[imaIndex][featIndex];
           vec_residuals[idx] = _map_camera[imaIndex].Residual(Xs, pt.coords().cast<double>());
         }
 
@@ -897,14 +897,14 @@ bool GlobalReconstructionEngine::ReadInputData()
     //normalize features
     for( size_t j=0; j < _map_feats[camIndex].size(); ++j)
     {
-      Vec3 x(_map_feats[camIndex][j].x(), _map_feats[camIndex][j].y(), 1.0);
-      Vec3 xBearingVector = _Kinv * x;
-      Vec2 xBearingVectorNormalized = xBearingVector.head(2) / xBearingVector(2);
+      const Vec3 x(_map_feats[camIndex][j].x(), _map_feats[camIndex][j].y(), 1.0);
+      const Vec3 xBearingVector = _Kinv * x;
+      const Vec2 xBearingVectorNormalized = xBearingVector.head(2) / xBearingVector(2);
 
-      float scale = _map_feats[camIndex][j].scale();
-      float orientation = _map_feats[camIndex][j].orientation();
+      const float scale = _map_feats[camIndex][j].scale();
+      const float orientation = _map_feats[camIndex][j].orientation();
 
-      SIOPointFeature  normalized( xBearingVectorNormalized(0), xBearingVectorNormalized(1), scale, orientation);
+      const SIOPointFeature  normalized( xBearingVectorNormalized(0), xBearingVectorNormalized(1), scale, orientation);
 
       normalizedFeatureImageI.push_back(normalized);
     }
@@ -1065,7 +1065,7 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
 
     std::pair<size_t, size_t> imageSize_I(
       _vec_intrinsicGroups[_vec_camImageNames[I].m_intrinsicId].m_w,
-      _vec_intrinsicGroups[_vec_camImageNames[I].m_intrinsicId].m_h);
+      _vec_intrinsicGroups[_vec_camImageNames[I].m_intrinsicId].m_h );
 
     std::pair<size_t, size_t> imageSize_J(
       _vec_intrinsicGroups[_vec_camImageNames[J].m_intrinsicId].m_w,
@@ -1076,7 +1076,7 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
     const Mat3 K  = Mat3::Identity();
 
     double errorMax = std::numeric_limits<double>::max();
-    double maxExpectedError = 2.5 / sqrt( K1(0,0) * K2(0,0)) ;
+    double maxExpectedError = 5.0 / ( K1(0,0) + K2(0,0) ) ;
     if (!SfMRobust::robustEssential(K, K,
       x1, x2,
       &E, &vec_inliers,
@@ -1253,19 +1253,14 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
               finalPoint.push_back(pt3D);
             }
 
-/*
-*            // export point cloud associated to pair (I,J). Only for debug purpose
-*            char * pairIJ;
-*            pairIJ = (char*)malloc(sizeof(char) * 100);
-*            memset(pairIJ, 0x00, 100);
-*
-*            snprintf(pairIJ, sizeof(pairIJ), "%lu_%lu", I, J);
-*
-*            plyHelper::exportToPly(finalPoint, stlplus::create_filespec(_sOutDirectory,
-*                   "pointCloud_rot_"+std::string(pairIJ), "ply") );
-*
-*            free(pairIJ);
-*/
+
+            // export point cloud associated to pair (I,J). Only for debug purpose
+            std::ostringstream pairIJ;
+            pairIJ << I << "_" << J << ".ply";
+
+            plyHelper::exportToPly(finalPoint, stlplus::create_filespec(_sOutDirectory,
+                   "pointCloud_rot_"+pairIJ.str()) );
+
 
             // Get back camera 1
             {

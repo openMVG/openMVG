@@ -300,16 +300,11 @@ bool estimate_T_triplet(
       }
 
       // export point cloud (for debug purpose only)
-      char * pairIJK;
-      pairIJK = (char*)malloc(sizeof(char) * 100);
-      memset(pairIJK, 0x00, 100);
-
-      snprintf(pairIJK, sizeof(pairIJK), "%lu_%lu_%lu", nI, nJ, nK);
+      std::ostringstream pairIJK;
+      pairIJK << nI << "_" << nJ << "_" << nK << ".ply";
 
       plyHelper::exportToPly(finalPoint, stlplus::create_filespec(sOutDirectory,
-                       "pointCloud_triplet_t_"+std::string(pairIJK), "ply") );
-
-      free(pairIJK);
+                       "pointCloud_triplet_t_"+pairIJK.str()) );
 
     }
   }
@@ -500,7 +495,7 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
 
         const double averageFocal = ( KI(0,0) + KJ(0,0) + KK(0,0) ) / 3.0 ;
 
-        double dPrecision = 4.0 ;
+        double dPrecision = 4.0 / averageFocal / averageFocal;
 
         std::vector<size_t> vec_inliers;
 
@@ -510,7 +505,7 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
               map_tracksCommon, _map_feats_normalized,  vec_global_KR_Triplet, _K,
               vec_tis, dPrecision, vec_inliers, I, J, K, _sOutDirectory))
         {
-          std::cout << dPrecision << "\t" << vec_inliers.size() << std::endl;
+          std::cout << dPrecision * averageFocal << "\t" << vec_inliers.size() << std::endl;
 
           //-- Build the three camera:
           const Mat3 RI = map_globalR.find(I)->second;
