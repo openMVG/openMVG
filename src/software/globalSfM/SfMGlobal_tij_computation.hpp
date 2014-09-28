@@ -13,6 +13,9 @@
 #include "software/globalSfM/SfMGlobalEngine.hpp"
 #include "software/globalSfM/SfMGlobalEngine_triplet_t_estimator.hpp"
 
+#include "openMVG/multiview/essential.hpp"
+#include "openMVG/multiview/translation_averaging_common.hpp"
+
 #undef DYNAMIC
 #include "openMVG/bundle_adjustment/problem_data_container.hpp"
 #include "software/globalSfM/SfMBundleAdjustmentHelper_tonly.hpp"
@@ -291,7 +294,7 @@ bool estimate_T_triplet(
 void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
   const std::map<size_t, Mat3> & map_globalR,
   const std::vector< graphUtils::Triplet > & vec_triplets,
-  std::vector<openMVG::lInfinityCV::relativeInfo > & vec_initialEstimates,
+  std::vector<openMVG::relativeInfo > & vec_initialEstimates,
   matching::PairWiseMatches & newpairMatches) const
 {
   // The same K matrix is used by all the camera

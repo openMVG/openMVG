@@ -21,7 +21,7 @@ class SIOPointFeature;
 using namespace openMVG::tracks;
 
 #include "openMVG/graph/triplet_finder.hpp"
-#include "openMVG/linearProgramming/lInfinityCV/global_translations_fromTriplets.hpp"
+#include "openMVG/multiview/translation_averaging_common.hpp"
 
 #include "third_party/htmlDoc/htmlDoc.hpp"
 
@@ -61,6 +61,12 @@ enum ERotationAveragingMethod
   ROTATION_AVERAGING_L2 = 2
 };
 
+enum ETranslationAveragingMethod
+{
+  TRANSLATION_AVERAGING_L1 = 1,
+  TRANSLATION_AVERAGING_L2 = 2
+};
+
 class GlobalReconstructionEngine : public ReconstructionEngine
 {
 public:
@@ -68,6 +74,7 @@ public:
     const std::string & sMatchesPath,
     const std::string & sOutDirectory,
     const ERotationAveragingMethod & eRotationAveragingMethod,
+    const ETranslationAveragingMethod & eTranslationAveragingMethod,
     bool bHtmlReport = false);
 
   ~GlobalReconstructionEngine();
@@ -144,7 +151,7 @@ private:
   void computePutativeTranslation_EdgesCoverage(
     const std::map<std::size_t, Mat3> & map_globalR,
     const std::vector< graphUtils::Triplet > & vec_triplets,
-    std::vector<openMVG::lInfinityCV::relativeInfo > & vec_initialEstimates,
+    std::vector<openMVG::relativeInfo > & vec_initialEstimates,
     matching::PairWiseMatches & newpairMatches) const;
 
   // Bundle adjustment : refine structure Xis and camera parameters (with optional refined parameters)
@@ -172,6 +179,7 @@ private:
 
   // Parameter
   ERotationAveragingMethod _eRotationAveragingMethod;
+  ETranslationAveragingMethod _eTranslationAveragingMethod;
 
   //------
   //-- Mapping between camera node Ids and cameraIndex:

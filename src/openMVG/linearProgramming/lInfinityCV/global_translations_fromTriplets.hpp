@@ -8,6 +8,7 @@
 #define OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMTRIPLETS_H_
 
 #include "openMVG/numeric/numeric.h"
+#include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include <fstream>
 #include <utility>
@@ -26,8 +27,6 @@ namespace openMVG   {
 namespace lInfinityCV  {
 
 using namespace linearProgramming;
-
-typedef std::pair<std::pair<size_t,size_t>, std::pair<Mat3,Vec3> > relativeInfo;
 
 // Setup the linear program to solve the union of trifocal tensors heading
 //  directions in a common global coordinate system.

@@ -37,12 +37,14 @@ int main(int argc, char **argv)
   std::string sOutDir = "";
   bool bColoredPointCloud = false;
   int iRotationAveragingMethod = 2;
+  int iTranslationAveragingMethod = 1;
 
   cmd.add( make_option('i', sImaDirectory, "imadir") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
   cmd.add( make_option('o', sOutDir, "outdir") );
   cmd.add( make_option('c', bColoredPointCloud, "coloredPointCloud") );
   cmd.add( make_option('r', iRotationAveragingMethod, "rotationAveraging") );
+  cmd.add( make_option('t', iTranslationAveragingMethod, "translationAveraging") );
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -54,6 +56,9 @@ int main(int argc, char **argv)
     << "[-o|--outdir path]\n"
     << "[-c|--coloredPointCloud 0(default) or 1]\n"
     << "[-r|--rotationAveraging 2(default L2) or 1 (L1)]\n"
+    << "[-t|--translationAveraging 1(default L1) or 2 (L2)]\n"
+    << "\n"
+    << " ICCV 2013: => -r 2 -t 1"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -63,6 +68,12 @@ int main(int argc, char **argv)
   if (iRotationAveragingMethod < ROTATION_AVERAGING_L1 ||
       iRotationAveragingMethod > ROTATION_AVERAGING_L2 )  {
     std::cerr << "\n Rotation averaging method is invalid" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+    if (iTranslationAveragingMethod < TRANSLATION_AVERAGING_L1 ||
+      iTranslationAveragingMethod > TRANSLATION_AVERAGING_L2 )  {
+    std::cerr << "\n Translation averaging method is invalid" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -79,11 +90,13 @@ int main(int argc, char **argv)
   //---------------------------------------
 
   openMVG::Timer timer;
-  GlobalReconstructionEngine to3DEngine(sImaDirectory,
-                                            sMatchesDir,
-                                            sOutDir,
-                                            ERotationAveragingMethod(iRotationAveragingMethod),
-                                            true);
+  GlobalReconstructionEngine to3DEngine(
+    sImaDirectory,
+    sMatchesDir,
+    sOutDir,
+    ERotationAveragingMethod(iRotationAveragingMethod),
+    ETranslationAveragingMethod(iTranslationAveragingMethod),
+    true);
 
   if (to3DEngine.Process())
   {
