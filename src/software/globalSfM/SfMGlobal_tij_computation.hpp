@@ -316,23 +316,23 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
     const size_t I = triplet.i, J = triplet.j , K = triplet.k;
 
     PairWiseMatches map_matchesIJK;
-    if(_map_Matches_F.find(std::make_pair(I,J)) != _map_Matches_F.end())
-      map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(I,J)));
+    if(_map_Matches_E.find(std::make_pair(I,J)) != _map_Matches_E.end())
+      map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(I,J)));
     else
-    if(_map_Matches_F.find(std::make_pair(J,I)) != _map_Matches_F.end())
-      map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(J,I)));
+    if(_map_Matches_E.find(std::make_pair(J,I)) != _map_Matches_E.end())
+      map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(J,I)));
 
-    if(_map_Matches_F.find(std::make_pair(I,K)) != _map_Matches_F.end())
-      map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(I,K)));
+    if(_map_Matches_E.find(std::make_pair(I,K)) != _map_Matches_E.end())
+      map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(I,K)));
     else
-    if(_map_Matches_F.find(std::make_pair(K,I)) != _map_Matches_F.end())
-      map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(K,I)));
+    if(_map_Matches_E.find(std::make_pair(K,I)) != _map_Matches_E.end())
+      map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(K,I)));
 
-    if(_map_Matches_F.find(std::make_pair(J,K)) != _map_Matches_F.end())
-      map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(J,K)));
+    if(_map_Matches_E.find(std::make_pair(J,K)) != _map_Matches_E.end())
+      map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(J,K)));
     else
-    if(_map_Matches_F.find(std::make_pair(K,J)) != _map_Matches_F.end())
-      map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(K,J)));
+    if(_map_Matches_E.find(std::make_pair(K,J)) != _map_Matches_E.end())
+      map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(K,J)));
 
     // Compute tracks:
     openMVG::tracks::STLMAPTracks map_tracks;
@@ -423,23 +423,23 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
       const size_t I = triplet.i, J = triplet.j , K = triplet.k;
       {
         PairWiseMatches map_matchesIJK;
-        if(_map_Matches_F.find(std::make_pair(I,J)) != _map_Matches_F.end())
-          map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(I,J)));
+        if(_map_Matches_E.find(std::make_pair(I,J)) != _map_Matches_E.end())
+          map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(I,J)));
         else
-        if(_map_Matches_F.find(std::make_pair(J,I)) != _map_Matches_F.end())
-          map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(J,I)));
+        if(_map_Matches_E.find(std::make_pair(J,I)) != _map_Matches_E.end())
+          map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(J,I)));
 
-        if(_map_Matches_F.find(std::make_pair(I,K)) != _map_Matches_F.end())
-          map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(I,K)));
+        if(_map_Matches_E.find(std::make_pair(I,K)) != _map_Matches_E.end())
+          map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(I,K)));
         else
-        if(_map_Matches_F.find(std::make_pair(K,I)) != _map_Matches_F.end())
-          map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(K,I)));
+        if(_map_Matches_E.find(std::make_pair(K,I)) != _map_Matches_E.end())
+          map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(K,I)));
 
-        if(_map_Matches_F.find(std::make_pair(J,K)) != _map_Matches_F.end())
-          map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(J,K)));
+        if(_map_Matches_E.find(std::make_pair(J,K)) != _map_Matches_E.end())
+          map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(J,K)));
         else
-        if(_map_Matches_F.find(std::make_pair(K,J)) != _map_Matches_F.end())
-          map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(K,J)));
+        if(_map_Matches_E.find(std::make_pair(K,J)) != _map_Matches_E.end())
+          map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(K,J)));
 
         // Select common point:
         STLMAPTracks map_tracksCommon;

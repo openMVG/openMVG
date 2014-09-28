@@ -132,7 +132,7 @@ private:
     const Map_RelativeRT & map_relatives,
     std::map<size_t, Mat3> & map_globalR) const;
 
-  // List the triplet of the image connection graph (_map_Matches_F)
+  // List the triplet of the image connection graph (_map_Matches_E)
   void tripletListing(std::vector< graphUtils::Triplet > & vec_triplets) const;
 
   // Relative rotations inference on relative rotations composition error along 3 length cycles (triplets).
@@ -162,13 +162,13 @@ private:
   // Input data
   // ----
 
-  // Image considered for the reconstruction
+  // Images considered for the reconstruction
   std::vector<std::string> _vec_fileNames;
   std::vector<openMVG::SfMIO::CameraInfo> _vec_camImageNames;
   std::vector<openMVG::SfMIO::IntrinsicCameraInfo> _vec_intrinsicGroups;
   std::map< size_t, std::vector<SIOPointFeature> > _map_feats; // feature per images
 
-  matching::PairWiseMatches _map_Matches_F; // pairwise matches for Essential matrix model
+  matching::PairWiseMatches _map_Matches_E; // pairwise matches for Essential matrix model
 
   // Parameter
   ERotationAveragingMethod _eRotationAveragingMethod;

@@ -103,7 +103,7 @@ void GlobalReconstructionEngine::rotationInference(
 {
   std::cout
         << "---------------\n"
-        << "-- INFERENCE on " << _map_Matches_F.size() << " EGs count.\n"
+        << "-- INFERENCE on " << _map_Matches_E.size() << " EGs count.\n"
         << "---------------" << std::endl
         << " /!\\  /!\\  /!\\  /!\\  /!\\  /!\\  /!\\ \n"
         << "--- ITERATED BAYESIAN INFERENCE IS NOT RELEASED, SEE C.ZACH CODE FOR MORE INFORMATION" << std::endl
@@ -146,8 +146,8 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
       {
         const openMVG::lInfinityCV::relativeInfo & rel = *iter;
         // Find the number of support point for this pair
-        PairWiseMatches::const_iterator iterMatches = _map_Matches_F.find(rel.first);
-        if (iterMatches != _map_Matches_F.end())
+        PairWiseMatches::const_iterator iterMatches = _map_Matches_E.find(rel.first);
+        if (iterMatches != _map_Matches_E.end())
         {
           vec_count.push_back(iterMatches->second.size());
         }
@@ -159,8 +159,8 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
       {
         const openMVG::lInfinityCV::relativeInfo & rel = *iter;
         float weight = 1.f; // the relative rotation correspondence point support
-        PairWiseMatches::const_iterator iterMatches = _map_Matches_F.find(rel.first);
-        if (iterMatches != _map_Matches_F.end())
+        PairWiseMatches::const_iterator iterMatches = _map_Matches_E.find(rel.first);
+        if (iterMatches != _map_Matches_E.end())
         {
           weight = std::min((float)iterMatches->second.size()/thTrustPair, 1.f);
           vec_relativeRotWeight.push_back(weight);
@@ -177,8 +177,8 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
     iter != map_relatives.end(); ++iter)
   {
     const openMVG::lInfinityCV::relativeInfo & rel = *iter;
-    PairWiseMatches::const_iterator iterMatches = _map_Matches_F.find(rel.first);
-    if (iterMatches != _map_Matches_F.end())
+    PairWiseMatches::const_iterator iterMatches = _map_Matches_E.find(rel.first);
+    if (iterMatches != _map_Matches_E.end())
     {
       vec_relativeRotEstimate.push_back(RelRotationData(
         map_cameraNodeToCameraIndex.find(rel.first.first)->second,
@@ -253,7 +253,7 @@ bool GlobalReconstructionEngine::Process()
   //-- Export input graph
   {
     typedef lemon::ListGraph Graph;
-    imageGraph::indexedImageGraph putativeGraph(_map_Matches_F, _vec_fileNames);
+    imageGraph::indexedImageGraph putativeGraph(_map_Matches_E, _vec_fileNames);
 
     // Save the graph before cleaning:
     imageGraph::exportToGraphvizData(
@@ -295,14 +295,14 @@ bool GlobalReconstructionEngine::Process()
     if(!CleanGraph())
       return false;
 
-    double time_Inference = timer_Inference.elapsed();
+    const double time_Inference = timer_Inference.elapsed();
 
     //---------------------------------------
     //-- Export geometric filtered matches
     //---------------------------------------
     std::ofstream file (string(_sMatchesPath + "/matches.filtered.txt").c_str());
     if (file.is_open())
-      PairedIndMatchToStream(_map_Matches_F, file);
+      PairedIndMatchToStream(_map_Matches_E, file);
     file.close();
 
     //-------------------
@@ -310,8 +310,8 @@ bool GlobalReconstructionEngine::Process()
     //-------------------
     std::set<size_t> set_indeximage;
     for (PairWiseMatches::const_iterator
-         iter = _map_Matches_F.begin();
-         iter != _map_Matches_F.end();
+         iter = _map_Matches_E.begin();
+         iter != _map_Matches_E.end();
          ++iter)
     {
       const size_t I = iter->first.first;
@@ -391,7 +391,7 @@ bool GlobalReconstructionEngine::Process()
     openMVG::Timer timerLP_triplet;
 
     computePutativeTranslation_EdgesCoverage(map_globalR, vec_triplets, vec_initialRijTijEstimates, newpairMatches);
-    double timeLP_triplet = timerLP_triplet.elapsed();
+    const double timeLP_triplet = timerLP_triplet.elapsed();
     std::cout << "TRIPLET COVERAGE TIMING : " << timeLP_triplet << " seconds" << std::endl;
 
     //-- Export triplet statistics:
@@ -510,7 +510,7 @@ bool GlobalReconstructionEngine::Process()
       }
     }
 
-    double timeLP_translation = timerLP_translation.elapsed();
+    const double timeLP_translation = timerLP_translation.elapsed();
 
     //-- Export triplet statistics:
     if (_bHtmlReport)
@@ -850,7 +850,7 @@ bool GlobalReconstructionEngine::ReadInputData()
   }
 
   // b. Read matches (Essential)
-  if (!matching::PairedIndMatchImport(sComputedMatchesFile_E, _map_Matches_F)) {
+  if (!matching::PairedIndMatchImport(sComputedMatchesFile_E, _map_Matches_E)) {
     std::cerr<< "Unable to read the Essential matrix matches" << std::endl;
     return false;
   }
@@ -875,7 +875,7 @@ bool GlobalReconstructionEngine::CleanGraph()
   // - keep the largest connected component.
 
   typedef lemon::ListGraph Graph;
-  imageGraph::indexedImageGraph putativeGraph(_map_Matches_F, _vec_fileNames);
+  imageGraph::indexedImageGraph putativeGraph(_map_Matches_E, _vec_fileNames);
 
   // Save the graph before cleaning:
   imageGraph::exportToGraphvizData(
@@ -940,20 +940,20 @@ bool GlobalReconstructionEngine::CleanGraph()
           {
             size_t Idu = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.target(e)];
             size_t Idv = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.source(e)];
-            PairWiseMatches::iterator iterF = _map_Matches_F.find(std::make_pair(Idu,Idv));
-            if( iterF != _map_Matches_F.end())
+            PairWiseMatches::iterator iterF = _map_Matches_E.find(std::make_pair(Idu,Idv));
+            if( iterF != _map_Matches_E.end())
             {
               matches_filtered.insert(*iterF);
             }
-            iterF = _map_Matches_F.find(std::make_pair(Idv,Idu));
-            if( iterF != _map_Matches_F.end())
+            iterF = _map_Matches_E.find(std::make_pair(Idv,Idu));
+            if( iterF != _map_Matches_E.end())
             {
               matches_filtered.insert(*iterF);
             }
           }
         }
         // update the matching list
-        _map_Matches_F = matches_filtered;
+        _map_Matches_E = matches_filtered;
       }
       else
       {
@@ -991,13 +991,13 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
 {
   // For each pair, compute the rotation from pairwise point matches:
 
-  C_Progress_display my_progress_bar( _map_Matches_F.size(), std::cout, "\n", " " , "ComputeRelativeRt\n" );
+  C_Progress_display my_progress_bar( _map_Matches_E.size(), std::cout, "\n", " " , "ComputeRelativeRt\n" );
 #ifdef USE_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
-  for (int i = 0; i < _map_Matches_F.size(); ++i)
+  for (int i = 0; i < _map_Matches_E.size(); ++i)
   {
-    PairWiseMatches::const_iterator iter = _map_Matches_F.begin();
+    PairWiseMatches::const_iterator iter = _map_Matches_E.begin();
     std::advance(iter, i);
 
     const size_t I = iter->first.first;
@@ -1249,7 +1249,7 @@ void GlobalReconstructionEngine::tripletListing(std::vector< graphUtils::Triplet
 {
   vec_triplets.clear();
 
-  imageGraph::indexedImageGraph putativeGraph(_map_Matches_F, _vec_fileNames);
+  imageGraph::indexedImageGraph putativeGraph(_map_Matches_E, _vec_fileNames);
 
   List_Triplets<imageGraph::indexedImageGraph::GraphT>(putativeGraph.g, vec_triplets);
 
@@ -1364,7 +1364,7 @@ void GlobalReconstructionEngine::tripletRotationRejection(
                 600,300);
 
   typedef lemon::ListGraph Graph;
-  imageGraph::indexedImageGraph putativeGraph(_map_Matches_F, _vec_fileNames);
+  imageGraph::indexedImageGraph putativeGraph(_map_Matches_E, _vec_fileNames);
 
   Graph::EdgeMap<bool> edge_filter(putativeGraph.g, false);
   Graph::NodeMap<bool> node_filter(putativeGraph.g, true);
@@ -1418,16 +1418,16 @@ void GlobalReconstructionEngine::tripletRotationRejection(
         size_t Idv = (*putativeGraph.map_nodeMapIndex)[sg.v(iter)];
 
         //-- Clean relatives matches
-        PairWiseMatches::iterator iterF = _map_Matches_F.find(std::make_pair(Idu,Idv));
-        if (iterF != _map_Matches_F.end())
+        PairWiseMatches::iterator iterF = _map_Matches_E.find(std::make_pair(Idu,Idv));
+        if (iterF != _map_Matches_E.end())
         {
-          _map_Matches_F.erase(iterF);
+          _map_Matches_E.erase(iterF);
         }
         else
         {
-          iterF = _map_Matches_F.find(std::make_pair(Idv,Idu));
-          if (iterF != _map_Matches_F.end())
-            _map_Matches_F.erase(iterF);
+          iterF = _map_Matches_E.find(std::make_pair(Idv,Idu));
+          if (iterF != _map_Matches_E.end())
+            _map_Matches_E.erase(iterF);
         }
 
         //-- Clean relative motions
