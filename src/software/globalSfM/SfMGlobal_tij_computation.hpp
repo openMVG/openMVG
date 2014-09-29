@@ -36,6 +36,7 @@ bool estimate_T_triplet(
   std::vector<Vec3> & vec_tis,
   double & dPrecision,
   std::vector<size_t> & vec_inliers,
+  const double focal,
   const size_t nI,
   const size_t nJ,
   const size_t nK,
@@ -72,7 +73,7 @@ bool estimate_T_triplet(
     tisXisTrifocalSolver,
     tisXisTrifocalSolver,
     TrifocalTensorModel> KernelType;
-  KernelType kernel(x1, x2, x3, w, h, vec_global_KR_Triplet, K);
+  KernelType kernel(x1, x2, x3, w, h, vec_global_KR_Triplet, K, focal);
 
   const size_t ORSA_ITER = 320;
 
@@ -506,7 +507,7 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
             estimate_T_triplet(
               w, h,
               map_tracksCommon, _map_feats_normalized,  vec_global_KR_Triplet, _K,
-              vec_tis, dPrecision, vec_inliers, I, J, K, _sOutDirectory))
+              vec_tis, dPrecision, vec_inliers, averageFocal, I, J, K, _sOutDirectory))
         {
           std::cout << dPrecision * averageFocal << "\t" << vec_inliers.size() << std::endl;
 

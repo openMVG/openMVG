@@ -64,7 +64,8 @@ struct tisXisTrifocalSolver {
   // Solve the computation of the tensor.
   static void Solve(
     const Mat &pt0, const Mat & pt1, const Mat & pt2,
-    const std::vector<Mat3> & vec_KR, const Mat3 & K, std::vector<TrifocalTensorModel> *P)
+    const std::vector<Mat3> & vec_KR, const Mat3 & K, std::vector<TrifocalTensorModel> *P,
+    const double focal)
   {
     //Build the megaMatMatrix
     const int n_obs = pt0.cols();
@@ -100,7 +101,7 @@ struct tisXisTrifocalSolver {
           LPsolver,
           cstBuilder,
           &vec_solution,
-          .5/K(0,0),//admissibleResidual,
+          .5/focal,//admissibleResidual,
           0.0, 1e-8, 2, &gamma, false))
     {
       std::vector<Vec3> vec_tis(3);
@@ -135,8 +136,8 @@ public:
 
 
   TrifocalKernel_ACRansac_N_tisXis(const Mat & x1, const Mat & x2, const Mat & x3,
-    int w, int h, const std::vector<Mat3> & vec_KRi, const Mat3 & K)
-    : x1_(x1), x2_(x2), x3_(x3), logalpha0_(0.0), vec_KR_(vec_KRi), K_(K)
+    int w, int h, const std::vector<Mat3> & vec_KRi, const Mat3 & K, const double focal)
+    : x1_(x1), x2_(x2), x3_(x3), logalpha0_(0.0), vec_KR_(vec_KRi), K_(K), focal_(focal)
   {
     // Normalize points by inverse(K)
 
@@ -162,7 +163,7 @@ public:
                   ExtractColumns(x1n_, samples),
                   ExtractColumns(x2n_, samples),
                   ExtractColumns(x3n_, samples),
-                  vec_KR_, K_, models);
+                  vec_KR_, K_, models, focal_);
   }
 
   double Error(size_t sample, const Model &model) const {
@@ -193,6 +194,7 @@ private:
   Mat x1n_, x2n_, x3n_;
   Mat3 N_;
   double logalpha0_;
+  double focal_;
   std::vector<Mat3> vec_KR_;
   Mat3 K_;
 };
