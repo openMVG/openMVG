@@ -622,7 +622,7 @@ bool GlobalReconstructionEngine::Process()
           const Vec3 C(X[i*3], X[i*3+1], X[i*3+2]);
           const size_t camNodeId = map_cameraIndexTocameraNode[i];
           const Mat3 & Ri = map_globalR[camNodeId];
-          const Mat3 & _K = _vec_intrinsicGroups[0].m_K;   // The same K matrix is used by all the camera
+          const Mat3 & _K = Mat3::Identity();   // The same K matrix is used by all the camera
           const Vec3 t = - Ri * C;
           _map_camera[camNodeId] = PinholeCamera(_K, Ri, t);
           //-- Export camera center
