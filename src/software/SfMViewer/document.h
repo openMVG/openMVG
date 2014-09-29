@@ -9,6 +9,7 @@
 #define DOCUMENT
 
 #include "openMVG/cameras/PinholeCamera.hpp"
+#include "openMVG/cameras/Camera_IO.hpp"
 #include "openMVG/tracks/tracks.hpp"
 using namespace openMVG;
 
@@ -33,44 +34,6 @@ struct Document
   std::map<size_t, std::pair<size_t,size_t> > _map_imageSize;
 
   std::string _sDirectory;
-
-
-  static bool readCamera(const std::string & sCam, PinholeCamera & cam)
-  {
-    std::vector<double> val;
-
-    if (stlplus::extension_part(sCam) == "bin")
-    {
-      std::ifstream in(sCam.c_str(),
-        std::ios::in|std::ios::binary);
-      if (!in.is_open())	{
-        std::cerr << "Error: failed to open file '" << sCam << "' for reading" << std::endl;
-        return false;
-      }
-      val.resize(12);
-      in.read((char*)&val[0],(std::streamsize)12*sizeof(double));
-      if (in.fail())  {
-        val.clear();
-      }
-    }
-    else
-      return false;
-
-    if (val.size() == 3*4) //P Matrix
-    {
-      Mat34 P;
-      P << val[0], val[3], val[6], val[9],
-        val[1], val[4], val[7], val[10],
-        val[2], val[5], val[8], val[11];
-
-      Mat3 R,K;
-      Vec3 t;
-      KRt_From_P(P, &K, &R, &t);
-      cam = PinholeCamera(K, R, t);
-      return true;
-    }
-    return false;
-  }
 
 
   bool load(const std::string & spath)
@@ -122,7 +85,7 @@ struct Document
 
     // Read cameras
     std::string sDirectoryCam = stlplus::folder_append_separator(_sDirectory) + "cameras";
-  
+
     size_t camIndex = 0;
     //Read views file
     {
@@ -146,13 +109,16 @@ struct Document
             sStream >> sImageName >> w >> h >> sCamName >> znear >> zfar;
             // Read the corresponding camera
             PinholeCamera cam;
-            if (!readCamera(stlplus::folder_append_separator(sDirectoryCam) + sCamName, cam))
+            if (!openMVG::load(stlplus::folder_append_separator(sDirectoryCam) + sCamName, cam))
+            {
               std::cerr << "Cannot read camera" << std::endl;
+              return false;
+            }
             _map_camera[camIndex] = cam;
 
             _vec_imageNames.push_back(sImageName);
             _map_imageSize[camIndex] = std::make_pair(w,h);
-            camIndex++;
+            ++camIndex;
           }
           temp.clear();
         }

@@ -21,8 +21,7 @@
 
 #include "openMVG/image/image.hpp"
 #include "openMVG/tracks/tracks.hpp"
-#include "openMVG/cameras/PinholeCamera.hpp"
-#include "openMVG/cameras/BrownPinholeCamera.hpp"
+#include "openMVG/cameras/Camera_IO.hpp"
 
 #include "software/SfM/SfMPlyHelper.hpp"
 #include "third_party/progress/progress.hpp"
@@ -185,7 +184,7 @@ struct reconstructorHelper
 
     if (bOk)
     {
-      //Export Camera as binary files
+      //Export Pinhole Camera equivalent as binary files
       std::map<size_t, size_t> map_cameratoIndex;
       size_t count = 0;
       for (Map_BrownPinholeCamera::const_iterator iter =
@@ -193,51 +192,39 @@ struct reconstructorHelper
         iter != map_Camera.end();
         ++iter)
       {
+        const BrownPinholeCamera & cam = iter->second;
+        const PinholeCamera camPinhole(cam._K, cam._R, cam._t);
         map_cameratoIndex[iter->first] = count;
-        const Mat34 & PMat = iter->second._P;
-        std::ofstream file(
+        const std::string sCamName =
           stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "cameras",
-          stlplus::basename_part(vec_fileNames[iter->first])
-          ,"bin").c_str(),std::ios::out|std::ios::binary);
-        file.write((const char*)PMat.data(),(std::streamsize)(3*4)*sizeof(double));
-
-        bOk &= (!file.fail());
-        file.close();
+          stlplus::basename_part(vec_fileNames[iter->first]), "bin");
+        bOk &= save(sCamName, camPinhole);
         ++count;
       }
 
-      //-- Export the camera with disto
+      if (!bOk)
+        return false;
+
+      //-- Export the BrownPinholeCameras
       for (Map_BrownPinholeCamera::const_iterator iter =
         map_Camera.begin();
         iter != map_Camera.end();
         ++iter)
       {
         const BrownPinholeCamera & cam = iter->second;
-        std::ofstream file(
+        const std::string sCamName =
           stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "cameras_disto",
-          stlplus::basename_part(vec_fileNames[iter->first])
-          ,"txt").c_str(),std::ios::out);
-        // Save intrinsic data:
-        file << cam._f << " "
-          << cam._ppx << " "
-          << cam._ppy << " "
-          << cam._k1 << " "
-          << cam._k2 << " "
-          << cam._k3 << "\n";
-        // Save extrinsic data
-        const Mat3 & R = cam._R;
-        file << R(0,0) << " " << R(0,1) << " " << R(0,2) << "\n"
-          << R(1,0) << " " << R(1,1) << " " << R(1,2) << "\n"
-          << R(2,0) << " " << R(2,1) << " " << R(2,2) << "\n";
-        file << cam._t(0) << " " << cam._t(1) << " " << cam._t(2) << "\n";
-        bOk &= (!file.fail());
-        file.close();
+          stlplus::basename_part(vec_fileNames[iter->first]), "txt");
+        bOk &= save(sCamName, cam);
       }
+
+      if (!bOk)
+        return false;
 
       //Export 3D point and tracks
 
-      size_t nc = map_Camera.size();
-      size_t nt = set_trackId.size();
+      const size_t nc = map_Camera.size();
+      const size_t nt = set_trackId.size();
 
       // Clipping planes (near and far Z depth per view)
       std::vector<double> znear(nc, numeric_limits<double>::max()), zfar(nc, 0);
@@ -261,7 +248,7 @@ struct reconstructorHelper
         << "comment " << sComment << "\n"
         << "element vertex " << nt << "\n"
         << "property float x\nproperty float y\nproperty float z\n"
-        << "property uchar red\nproperty uchar green\nproperty uchar blue\n" 
+        << "property uchar red\nproperty uchar green\nproperty uchar blue\n"
         << "property float confidence\n"
         << "property list int int visibility\n"
         << "end_header" << "\n";
@@ -275,7 +262,7 @@ struct reconstructorHelper
         // Look through the track and add point position
         const tracks::submapTrack & track = (map_reconstructed.find(trackId))->second;
 
-        Vec3 pos = map_3DPoints.find(trackId)->second;
+        const Vec3 pos = map_3DPoints.find(trackId)->second;
 
         if (pvec_color)
         {
@@ -298,7 +285,7 @@ struct reconstructorHelper
           {
             set_imageIndex.insert(map_cameratoIndex[imageId]);
             const BrownPinholeCamera & cam = (map_Camera.find(imageId))->second;
-            double z = Depth(cam._R, cam._t, pos);
+            const double z = Depth(cam._R, cam._t, pos);
             znear[map_cameratoIndex[imageId]] = std::min(znear[map_cameratoIndex[imageId]], z );
             zfar[map_cameratoIndex[imageId]] = std::max(zfar[map_cameratoIndex[imageId]], z );
           }

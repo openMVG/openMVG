@@ -1,4 +1,5 @@
 ADD_SUBDIRECTORY(bundle_adjustment)
+ADD_SUBDIRECTORY(cameras)
 ADD_SUBDIRECTORY(exif_IO)
 ADD_SUBDIRECTORY(features)
 ADD_SUBDIRECTORY(geometry)

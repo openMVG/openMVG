@@ -10,11 +10,15 @@
 
 #include "openMVG/numeric/numeric.h"
 
+#include "openMVG/multiview/conditioning.hpp"
+
+// Linear programming solver(s)
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
 #ifdef OPENMVG_HAVE_MOSEK
 #include "openMVG/linearProgramming/linearProgrammingMOSEK.hpp"
 #endif
+
 #include "openMVG/linearProgramming/bisectionLP.hpp"
 #include "openMVG/linearProgramming/lInfinityCV/tijsAndXis_From_xi_Ri.hpp"
 
