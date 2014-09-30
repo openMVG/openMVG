@@ -936,16 +936,6 @@ bool GlobalReconstructionEngine::ReadInputData()
 
         // to which intrinsic group each image belongs
         _map_IntrinsicIdPerImageId[idx] = camInfo.m_intrinsicId;
-        _map_ImagesIdPerIntrinsicGroup[_map_IntrinsicIdPerImageId[idx]].push_back(idx);
-
-        // if intrinsic groups is empty fill a new:
-        if (_map_IntrinsicsPerGroup.find(_map_IntrinsicIdPerImageId[idx])  == _map_IntrinsicsPerGroup.end())
-        {
-          size_t intrinsicId = _map_IntrinsicIdPerImageId[idx];
-          Vec3 & intrinsic = _map_IntrinsicsPerGroup[intrinsicId];
-          const Mat3 _K    = _vec_intrinsicGroups[intrinsicId].m_K;
-          intrinsic << _K(0,0), _K(0,2), _K(1,2);
-        }
       }
 
       for (size_t i = 0; i < _vec_camImageNames.size(); ++i)
@@ -1612,6 +1602,24 @@ void GlobalReconstructionEngine::bundleAdjustment(
 {
   using namespace std;
 
+  // find in which intrinsic group each remaining cameras belong
+  for (Map_Camera::const_iterator iter = map_camera.begin();
+    iter != map_camera.end();  ++iter)
+  {
+    const size_t idx = iter->first;
+    _map_ImagesIdPerIntrinsicGroup[_map_IntrinsicIdPerImageId[idx]].push_back(idx);
+
+    // if intrinsic groups is empty fill a new:
+    if (_map_IntrinsicsPerGroup.find(_map_IntrinsicIdPerImageId[idx])  == _map_IntrinsicsPerGroup.end())
+    {
+      size_t intrinsicId = _map_IntrinsicIdPerImageId[idx];
+      Vec3 & intrinsic = _map_IntrinsicsPerGroup[intrinsicId];
+      const Mat3 _K    = _vec_intrinsicGroups[intrinsicId].m_K;
+      intrinsic << _K(0,0), _K(0,2), _K(1,2);
+    }
+  }
+
+  // initialize number of cam, 3D point and number of intrinsics
   const size_t nbCams = map_camera.size();
   const size_t nbPoints3D = vec_allScenes.size();
   const size_t nbIntrinsics = _map_ImagesIdPerIntrinsicGroup.size();
