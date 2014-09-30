@@ -303,12 +303,13 @@ bool estimate_T_triplet(
         finalPoint.push_back(pt3D);
       }
 
-      // export point cloud (for debug purpose only)
-      std::ostringstream pairIJK;
-      pairIJK << nI << "_" << nJ << "_" << nK << ".ply";
-
-      plyHelper::exportToPly(finalPoint, stlplus::create_filespec(sOutDirectory,
-                       "pointCloud_triplet_t_"+pairIJK.str()) );
+/*      // export point cloud (for debug purpose only)
+*      std::ostringstream pairIJK;
+*      pairIJK << nI << "_" << nJ << "_" << nK << ".ply";
+*
+*      plyHelper::exportToPly(finalPoint, stlplus::create_filespec(sOutDirectory,
+*                       "pointCloud_triplet_t_"+pairIJK.str()) );
+*/
 
     }
   }

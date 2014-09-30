@@ -1345,13 +1345,13 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
             }
 
 
-            // export point cloud associated to pair (I,J). Only for debug purpose
-            std::ostringstream pairIJ;
-            pairIJ << I << "_" << J << ".ply";
-
-            plyHelper::exportToPly(finalPoint, stlplus::create_filespec(_sOutDirectory,
-                   "pointCloud_rot_"+pairIJ.str()) );
-
+/*            // export point cloud associated to pair (I,J). Only for debug purpose
+*            std::ostringstream pairIJ;
+*            pairIJ << I << "_" << J << ".ply";
+*
+*            plyHelper::exportToPly(finalPoint, stlplus::create_filespec(_sOutDirectory,
+*                   "pointCloud_rot_"+pairIJ.str()) );
+*/
 
             // Get back camera 1
             {
