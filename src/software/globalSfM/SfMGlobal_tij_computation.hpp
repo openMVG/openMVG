@@ -13,6 +13,9 @@
 #include "software/globalSfM/SfMGlobalEngine.hpp"
 #include "software/globalSfM/SfMGlobalEngine_triplet_t_estimator.hpp"
 
+#include "openMVG/multiview/essential.hpp"
+#include "openMVG/multiview/translation_averaging_common.hpp"
+
 #undef DYNAMIC
 #include "openMVG/bundle_adjustment/problem_data_container.hpp"
 #include "software/globalSfM/SfMBundleAdjustmentHelper_tonly.hpp"
@@ -291,7 +294,7 @@ bool estimate_T_triplet(
 void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
   const std::map<size_t, Mat3> & map_globalR,
   const std::vector< graphUtils::Triplet > & vec_triplets,
-  std::vector<openMVG::lInfinityCV::relativeInfo > & vec_initialEstimates,
+  std::vector<openMVG::relativeInfo > & vec_initialEstimates,
   matching::PairWiseMatches & newpairMatches) const
 {
   // The same K matrix is used by all the camera
@@ -316,23 +319,23 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
     const size_t I = triplet.i, J = triplet.j , K = triplet.k;
 
     PairWiseMatches map_matchesIJK;
-    if(_map_Matches_F.find(std::make_pair(I,J)) != _map_Matches_F.end())
-      map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(I,J)));
+    if(_map_Matches_E.find(std::make_pair(I,J)) != _map_Matches_E.end())
+      map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(I,J)));
     else
-    if(_map_Matches_F.find(std::make_pair(J,I)) != _map_Matches_F.end())
-      map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(J,I)));
+    if(_map_Matches_E.find(std::make_pair(J,I)) != _map_Matches_E.end())
+      map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(J,I)));
 
-    if(_map_Matches_F.find(std::make_pair(I,K)) != _map_Matches_F.end())
-      map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(I,K)));
+    if(_map_Matches_E.find(std::make_pair(I,K)) != _map_Matches_E.end())
+      map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(I,K)));
     else
-    if(_map_Matches_F.find(std::make_pair(K,I)) != _map_Matches_F.end())
-      map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(K,I)));
+    if(_map_Matches_E.find(std::make_pair(K,I)) != _map_Matches_E.end())
+      map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(K,I)));
 
-    if(_map_Matches_F.find(std::make_pair(J,K)) != _map_Matches_F.end())
-      map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(J,K)));
+    if(_map_Matches_E.find(std::make_pair(J,K)) != _map_Matches_E.end())
+      map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(J,K)));
     else
-    if(_map_Matches_F.find(std::make_pair(K,J)) != _map_Matches_F.end())
-      map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(K,J)));
+    if(_map_Matches_E.find(std::make_pair(K,J)) != _map_Matches_E.end())
+      map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(K,J)));
 
     // Compute tracks:
     openMVG::tracks::STLMAPTracks map_tracks;
@@ -423,23 +426,23 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
       const size_t I = triplet.i, J = triplet.j , K = triplet.k;
       {
         PairWiseMatches map_matchesIJK;
-        if(_map_Matches_F.find(std::make_pair(I,J)) != _map_Matches_F.end())
-          map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(I,J)));
+        if(_map_Matches_E.find(std::make_pair(I,J)) != _map_Matches_E.end())
+          map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(I,J)));
         else
-        if(_map_Matches_F.find(std::make_pair(J,I)) != _map_Matches_F.end())
-          map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(J,I)));
+        if(_map_Matches_E.find(std::make_pair(J,I)) != _map_Matches_E.end())
+          map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(J,I)));
 
-        if(_map_Matches_F.find(std::make_pair(I,K)) != _map_Matches_F.end())
-          map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(I,K)));
+        if(_map_Matches_E.find(std::make_pair(I,K)) != _map_Matches_E.end())
+          map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(I,K)));
         else
-        if(_map_Matches_F.find(std::make_pair(K,I)) != _map_Matches_F.end())
-          map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(K,I)));
+        if(_map_Matches_E.find(std::make_pair(K,I)) != _map_Matches_E.end())
+          map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(K,I)));
 
-        if(_map_Matches_F.find(std::make_pair(J,K)) != _map_Matches_F.end())
-          map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(J,K)));
+        if(_map_Matches_E.find(std::make_pair(J,K)) != _map_Matches_E.end())
+          map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(J,K)));
         else
-        if(_map_Matches_F.find(std::make_pair(K,J)) != _map_Matches_F.end())
-          map_matchesIJK.insert(*_map_Matches_F.find(std::make_pair(K,J)));
+        if(_map_Matches_E.find(std::make_pair(K,J)) != _map_Matches_E.end())
+          map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(K,J)));
 
         // Select common point:
         STLMAPTracks map_tracksCommon;

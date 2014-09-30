@@ -14,24 +14,30 @@
 #include "software/globalSfM/indexedImageGraph.hpp"
 #include "software/globalSfM/indexedImageGraphExport.hpp"
 #include "software/globalSfM/SfMGlobalEngine.hpp"
+#include "software/globalSfM/SfMGlobal_tij_computation.hpp"
 #include "software/SfM/SfMIOHelper.hpp"
 #include "software/SfM/SfMRobust.hpp"
 #include "software/SfM/SfMPlyHelper.hpp"
 
-#include "openMVG/graph/connectedComponent.hpp"
+// Rotation averaging
+#include "openMVG/multiview/rotation_averaging.hpp"
+// Translation averaging
+#include "openMVG/linearProgramming/lInfinityCV/global_translations_fromTriplets.hpp"
+#include "openMVG/multiview/translation_averaging_solver.hpp"
 
-#include "software/globalSfM/SfMGlobal_tij_computation.hpp"
-
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
-#include "third_party/stlAddition/stlMap.hpp"
-#include "third_party/histogram/histogram.hpp"
-
+// Linear programming solver(s)
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
 #ifdef OPENMVG_HAVE_MOSEK
 #include "openMVG/linearProgramming/linearProgrammingMOSEK.hpp"
 #endif
+
+#include "openMVG/graph/connectedComponent.hpp"
+
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+#include "third_party/vectorGraphics/svgDrawer.hpp"
+#include "third_party/stlAddition/stlMap.hpp"
+#include "third_party/histogram/histogram.hpp"
 
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
@@ -41,13 +47,8 @@
 #include "openMVG/bundle_adjustment/pinhole_ceres_functor.hpp"
 #include "software/globalSfM/SfMBundleAdjustmentHelper_tonly.hpp"
 
-#include "software/globalSfM/SfMGlobalEngine_triplet_t_estimator.hpp"
-
 #include "lemon/list_graph.h"
 #include <lemon/connectivity.h>
-
-// Rotation averaging
-#include "openMVG/multiview/rotation_averaging.hpp"
 
 #include "third_party/progress/progress.hpp"
 #include "openMVG/system/timer.hpp"
@@ -72,9 +73,11 @@ GlobalReconstructionEngine::GlobalReconstructionEngine(
   const std::string & sMatchesPath,
   const std::string & sOutDirectory,
   const ERotationAveragingMethod & eRotationAveragingMethod,
+  const ETranslationAveragingMethod & eTranslationAveragingMethod,
   bool bHtmlReport)
   : ReconstructionEngine(sImagePath, sMatchesPath, sOutDirectory),
-    _eRotationAveragingMethod(eRotationAveragingMethod)
+    _eRotationAveragingMethod(eRotationAveragingMethod),
+    _eTranslationAveragingMethod(eTranslationAveragingMethod)
 {
   _bHtmlReport = bHtmlReport;
   if (!stlplus::folder_exists(sOutDirectory)) {
@@ -103,7 +106,7 @@ void GlobalReconstructionEngine::rotationInference(
 {
   std::cout
         << "---------------\n"
-        << "-- INFERENCE on " << _map_Matches_F.size() << " EGs count.\n"
+        << "-- INFERENCE on " << _map_Matches_E.size() << " EGs count.\n"
         << "---------------" << std::endl
         << " /!\\  /!\\  /!\\  /!\\  /!\\  /!\\  /!\\ \n"
         << "--- ITERATED BAYESIAN INFERENCE IS NOT RELEASED, SEE C.ZACH CODE FOR MORE INFORMATION" << std::endl
@@ -144,10 +147,10 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
       for(Map_RelativeRT::const_iterator iter = map_relatives.begin();
         iter != map_relatives.end(); ++iter)
       {
-        const openMVG::lInfinityCV::relativeInfo & rel = *iter;
+        const openMVG::relativeInfo & rel = *iter;
         // Find the number of support point for this pair
-        PairWiseMatches::const_iterator iterMatches = _map_Matches_F.find(rel.first);
-        if (iterMatches != _map_Matches_F.end())
+        PairWiseMatches::const_iterator iterMatches = _map_Matches_E.find(rel.first);
+        if (iterMatches != _map_Matches_E.end())
         {
           vec_count.push_back(iterMatches->second.size());
         }
@@ -157,10 +160,10 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
       for(Map_RelativeRT::const_iterator iter = map_relatives.begin();
         iter != map_relatives.end(); ++iter)
       {
-        const openMVG::lInfinityCV::relativeInfo & rel = *iter;
+        const openMVG::relativeInfo & rel = *iter;
         float weight = 1.f; // the relative rotation correspondence point support
-        PairWiseMatches::const_iterator iterMatches = _map_Matches_F.find(rel.first);
-        if (iterMatches != _map_Matches_F.end())
+        PairWiseMatches::const_iterator iterMatches = _map_Matches_E.find(rel.first);
+        if (iterMatches != _map_Matches_E.end())
         {
           weight = std::min((float)iterMatches->second.size()/thTrustPair, 1.f);
           vec_relativeRotWeight.push_back(weight);
@@ -176,9 +179,9 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
   for(Map_RelativeRT::const_iterator iter = map_relatives.begin();
     iter != map_relatives.end(); ++iter)
   {
-    const openMVG::lInfinityCV::relativeInfo & rel = *iter;
-    PairWiseMatches::const_iterator iterMatches = _map_Matches_F.find(rel.first);
-    if (iterMatches != _map_Matches_F.end())
+    const openMVG::relativeInfo & rel = *iter;
+    PairWiseMatches::const_iterator iterMatches = _map_Matches_E.find(rel.first);
+    if (iterMatches != _map_Matches_E.end())
     {
       vec_relativeRotEstimate.push_back(RelRotationData(
         map_cameraNodeToCameraIndex.find(rel.first.first)->second,
@@ -253,7 +256,7 @@ bool GlobalReconstructionEngine::Process()
   //-- Export input graph
   {
     typedef lemon::ListGraph Graph;
-    imageGraph::indexedImageGraph putativeGraph(_map_Matches_F, _vec_fileNames);
+    imageGraph::indexedImageGraph putativeGraph(_map_Matches_E, _vec_fileNames);
 
     // Save the graph before cleaning:
     imageGraph::exportToGraphvizData(
@@ -295,14 +298,14 @@ bool GlobalReconstructionEngine::Process()
     if(!CleanGraph())
       return false;
 
-    double time_Inference = timer_Inference.elapsed();
+    const double time_Inference = timer_Inference.elapsed();
 
     //---------------------------------------
     //-- Export geometric filtered matches
     //---------------------------------------
     std::ofstream file (string(_sMatchesPath + "/matches.filtered.txt").c_str());
     if (file.is_open())
-      PairedIndMatchToStream(_map_Matches_F, file);
+      PairedIndMatchToStream(_map_Matches_E, file);
     file.close();
 
     //-------------------
@@ -310,8 +313,8 @@ bool GlobalReconstructionEngine::Process()
     //-------------------
     std::set<size_t> set_indeximage;
     for (PairWiseMatches::const_iterator
-         iter = _map_Matches_F.begin();
-         iter != _map_Matches_F.end();
+         iter = _map_Matches_E.begin();
+         iter != _map_Matches_E.end();
          ++iter)
     {
       const size_t I = iter->first.first;
@@ -375,7 +378,7 @@ bool GlobalReconstructionEngine::Process()
   //-------------------
   // Relative translations estimation (Triplet based translation computation)
   //-------------------
-  std::vector<openMVG::lInfinityCV::relativeInfo > vec_initialRijTijEstimates;
+  std::vector<openMVG::relativeInfo > vec_initialRijTijEstimates;
   PairWiseMatches newpairMatches;
   {
     std::cout << "\n-------------------------------" << "\n"
@@ -391,7 +394,7 @@ bool GlobalReconstructionEngine::Process()
     openMVG::Timer timerLP_triplet;
 
     computePutativeTranslation_EdgesCoverage(map_globalR, vec_triplets, vec_initialRijTijEstimates, newpairMatches);
-    double timeLP_triplet = timerLP_triplet.elapsed();
+    const double timeLP_triplet = timerLP_triplet.elapsed();
     std::cout << "TRIPLET COVERAGE TIMING : " << timeLP_triplet << " seconds" << std::endl;
 
     //-- Export triplet statistics:
@@ -422,7 +425,7 @@ bool GlobalReconstructionEngine::Process()
     std::set<size_t> set_representedImageIndex;
     for(size_t i = 0; i < vec_initialRijTijEstimates.size(); ++i)
     {
-      const openMVG::lInfinityCV::relativeInfo & rel = vec_initialRijTijEstimates[i];
+      const openMVG::relativeInfo & rel = vec_initialRijTijEstimates[i];
       set_representedImageIndex.insert(rel.first.first);
       set_representedImageIndex.insert(rel.first.second);
     }
@@ -472,7 +475,7 @@ bool GlobalReconstructionEngine::Process()
     //-- Update initial estimates in range [0->Ncam]
     for(size_t i = 0; i < vec_initialRijTijEstimates.size(); ++i)
     {
-      lInfinityCV::relativeInfo & rel = vec_initialRijTijEstimates[i];
+      openMVG::relativeInfo & rel = vec_initialRijTijEstimates[i];
       std::pair<size_t,size_t> newPair(
           map_cameraNodeToCameraIndex[rel.first.first],
           map_cameraNodeToCameraIndex[rel.first.second]);
@@ -481,80 +484,150 @@ bool GlobalReconstructionEngine::Process()
 
     openMVG::Timer timerLP_translation;
 
-    double gamma = -1.0;
-    std::vector<double> vec_solution;
+    switch(_eTranslationAveragingMethod)
     {
-      vec_solution.resize(iNview*3 + vec_initialRijTijEstimates.size()/3 + 1);
-      using namespace openMVG::linearProgramming;
-#ifdef OPENMVG_HAVE_MOSEK
-      MOSEK_SolveWrapper solverLP(vec_solution.size());
-#else
-      OSI_CLP_SolverWrapper solverLP(vec_solution.size());
-#endif
-
-      lInfinityCV::Tifromtij_ConstraintBuilder_OneLambdaPerTrif cstBuilder(vec_initialRijTijEstimates);
-
-      LP_Constraints_Sparse constraint;
-      //-- Setup constraint and solver
-      cstBuilder.Build(constraint);
-      solverLP.setup( constraint );
-      //--
-      // Solving
-      bool bFeasible = solverLP.solve();
-      std::cout << " \n Feasibility " << bFeasible << std::endl;
-      //--
-      if (bFeasible)
+      case TRANSLATION_AVERAGING_L1:
       {
-        solverLP.getSolution(vec_solution);
-        gamma = vec_solution[vec_solution.size()-1];
+        double gamma = -1.0;
+        std::vector<double> vec_solution;
+        {
+          vec_solution.resize(iNview*3 + vec_initialRijTijEstimates.size()/3 + 1);
+          using namespace openMVG::linearProgramming;
+          #ifdef OPENMVG_HAVE_MOSEK
+            MOSEK_SolveWrapper solverLP(vec_solution.size());
+          #else
+            OSI_CLP_SolverWrapper solverLP(vec_solution.size());
+          #endif
+
+          lInfinityCV::Tifromtij_ConstraintBuilder_OneLambdaPerTrif cstBuilder(vec_initialRijTijEstimates);
+
+          LP_Constraints_Sparse constraint;
+          //-- Setup constraint and solver
+          cstBuilder.Build(constraint);
+          solverLP.setup(constraint);
+          //--
+          // Solving
+          bool bFeasible = solverLP.solve();
+          std::cout << " \n Feasibility " << bFeasible << std::endl;
+          //--
+          if (bFeasible)  {
+            solverLP.getSolution(vec_solution);
+            gamma = vec_solution[vec_solution.size()-1];
+          }
+          else  {
+            std::cerr << "Compute global translations: failed" << std::endl;
+            return false;
+          }
+        }
+
+        const double timeLP_translation = timerLP_translation.elapsed();
+        //-- Export triplet statistics:
+        if (_bHtmlReport)
+        {
+          using namespace htmlDocument;
+          std::ostringstream os;
+          os << "Translation fusion statistics.";
+          _htmlDocStream->pushInfo("<hr>");
+          _htmlDocStream->pushInfo(htmlMarkup("h1",os.str()));
+
+          os.str("");
+          os << "-------------------------------" << "<br>"
+            << "-- #relative estimates: " << vec_initialRijTijEstimates.size()
+            << " converge with gamma: " << gamma << ".<br>"
+            << " timing (s): " << timeLP_translation << ".<br>"
+            << "-------------------------------" << "<br>";
+          _htmlDocStream->pushInfo(os.str());
+        }
+
+        std::cout << "Found solution:\n";
+        std::copy(vec_solution.begin(), vec_solution.end(), std::ostream_iterator<double>(std::cout, " "));
+
+        std::vector<double> vec_camTranslation(iNview*3,0);
+        std::copy(&vec_solution[0], &vec_solution[iNview*3], &vec_camTranslation[0]);
+
+        std::vector<double> vec_camRelLambdas(&vec_solution[iNview*3], &vec_solution[iNview*3 + vec_initialRijTijEstimates.size()/3]);
+        std::cout << "\ncam position: " << std::endl;
+        std::copy(vec_camTranslation.begin(), vec_camTranslation.end(), std::ostream_iterator<double>(std::cout, " "));
+        std::cout << "\ncam Lambdas: " << std::endl;
+        std::copy(vec_camRelLambdas.begin(), vec_camRelLambdas.end(), std::ostream_iterator<double>(std::cout, " "));
+
+        // Build a Pinhole camera for each considered Id
+        std::vector<Vec3>  vec_C;
+        for (size_t i = 0; i < iNview; ++i)
+        {
+          Vec3 t(vec_camTranslation[i*3], vec_camTranslation[i*3+1], vec_camTranslation[i*3+2]);
+          const size_t camNodeId = map_cameraIndexTocameraNode[i];
+          const Mat3 & Ri = map_globalR[camNodeId];
+          const Mat3 & _K = _vec_intrinsicGroups[0].m_K;   // The same K matrix is used by all the camera
+          _map_camera[camNodeId] = PinholeCamera(_K, Ri, t);
+          //-- Export camera center
+          vec_C.push_back(_map_camera[camNodeId]._C);
+        }
+        plyHelper::exportToPly(vec_C, stlplus::create_filespec(_sOutDirectory, "cameraPath", "ply"));
       }
+      break;
+
+      case TRANSLATION_AVERAGING_L2:
+      {
+        std::vector<int> vec_edges;
+        vec_edges.reserve(vec_initialRijTijEstimates.size() * 2);
+        std::vector<double> vec_poses;
+        vec_poses.reserve(vec_initialRijTijEstimates.size() * 3);
+        std::vector<double> vec_weights;
+        vec_weights.reserve(vec_initialRijTijEstimates.size());
+
+        for(int i=0; i < vec_initialRijTijEstimates.size(); ++i)
+        {
+          const openMVG::relativeInfo & rel = vec_initialRijTijEstimates[i];
+          vec_edges.push_back(rel.first.first);
+          vec_edges.push_back(rel.first.second);
+
+          const Vec3 direction = -(map_globalR[rel.first.second].transpose() * rel.second.second.normalized());
+
+          vec_poses.push_back(direction(0));
+          vec_poses.push_back(direction(1));
+          vec_poses.push_back(direction(2));
+
+          vec_weights.push_back(1.0);
+        }
+
+        const double function_tolerance = 1e-7, parameter_tolerance = 1e-8;
+        const int max_iterations = 500;
+
+        const double loss_width = 0.0;
+
+        std::vector<double> X(iNview*3);
+
+        if(!solve_translations_problem(
+          &vec_edges[0],
+          &vec_poses[0],
+          &vec_weights[0],
+          vec_initialRijTijEstimates.size(),
+          loss_width,
+          &X[0],
+          function_tolerance,
+          parameter_tolerance,
+          max_iterations))  {
+            std::cerr << "Compute global translations: failed" << std::endl;
+            return false;
+        }
+
+        std::vector<Vec3>  vec_C;
+        for (size_t i = 0; i < iNview; ++i)
+        {
+          const Vec3 C(X[i*3], X[i*3+1], X[i*3+2]);
+          const size_t camNodeId = map_cameraIndexTocameraNode[i];
+          const Mat3 & Ri = map_globalR[camNodeId];
+          const Mat3 & _K = _vec_intrinsicGroups[0].m_K;   // The same K matrix is used by all the camera
+          const Vec3 t = - Ri * C;
+          _map_camera[camNodeId] = PinholeCamera(_K, Ri, t);
+          //-- Export camera center
+          vec_C.push_back(_map_camera[camNodeId]._C);
+        }
+        plyHelper::exportToPly(vec_C, stlplus::create_filespec(_sOutDirectory, "cameraPath", "ply"));
+      }
+      break;
     }
-
-    double timeLP_translation = timerLP_translation.elapsed();
-
-    //-- Export triplet statistics:
-    if (_bHtmlReport)
-    {
-      using namespace htmlDocument;
-      std::ostringstream os;
-      os << "Translation fusion statistics.";
-      _htmlDocStream->pushInfo("<hr>");
-      _htmlDocStream->pushInfo(htmlMarkup("h1",os.str()));
-
-      os.str("");
-      os << "-------------------------------" << "<br>"
-        << "-- #relative estimates: " << vec_initialRijTijEstimates.size()
-        << " converge with gamma: " << gamma << ".<br>"
-        << " timing (s): " << timeLP_translation << ".<br>"
-        << "-------------------------------" << "<br>";
-      _htmlDocStream->pushInfo(os.str());
-    }
-
-    std::cout << "Found solution:\n";
-    std::copy(vec_solution.begin(), vec_solution.end(), std::ostream_iterator<double>(std::cout, " "));
-
-    std::vector<double> vec_camTranslation(iNview*3,0);
-    std::copy(&vec_solution[0], &vec_solution[iNview*3], &vec_camTranslation[0]);
-
-    std::vector<double> vec_camRelLambdas(&vec_solution[iNview*3], &vec_solution[iNview*3 + vec_initialRijTijEstimates.size()/3]);
-    std::cout << "\ncam position: " << std::endl;
-    std::copy(vec_camTranslation.begin(), vec_camTranslation.end(), std::ostream_iterator<double>(std::cout, " "));
-    std::cout << "\ncam Lambdas: " << std::endl;
-    std::copy(vec_camRelLambdas.begin(), vec_camRelLambdas.end(), std::ostream_iterator<double>(std::cout, " "));
-
-    // Build a Pinhole camera for each considered Id
-    std::vector<Vec3>  vec_C;
-    for (size_t i = 0; i < iNview; ++i)
-    {
-      Vec3 t(vec_camTranslation[i*3], vec_camTranslation[i*3+1], vec_camTranslation[i*3+2]);
-      const size_t camNodeId = map_cameraIndexTocameraNode[i];
-      const Mat3 & Ri = map_globalR[camNodeId];
-      const Mat3 & _K = _vec_intrinsicGroups[0].m_K;   // The same K matrix is used by all the camera
-      _map_camera[camNodeId] = PinholeCamera(_K, Ri, t);
-      //-- Export camera center
-      vec_C.push_back(_map_camera[camNodeId]._C);
-    }
-    plyHelper::exportToPly(vec_C, stlplus::create_filespec(_sOutDirectory, "cameraPath", "ply"));
   }
 
   //-------------------
@@ -850,7 +923,7 @@ bool GlobalReconstructionEngine::ReadInputData()
   }
 
   // b. Read matches (Essential)
-  if (!matching::PairedIndMatchImport(sComputedMatchesFile_E, _map_Matches_F)) {
+  if (!matching::PairedIndMatchImport(sComputedMatchesFile_E, _map_Matches_E)) {
     std::cerr<< "Unable to read the Essential matrix matches" << std::endl;
     return false;
   }
@@ -875,7 +948,7 @@ bool GlobalReconstructionEngine::CleanGraph()
   // - keep the largest connected component.
 
   typedef lemon::ListGraph Graph;
-  imageGraph::indexedImageGraph putativeGraph(_map_Matches_F, _vec_fileNames);
+  imageGraph::indexedImageGraph putativeGraph(_map_Matches_E, _vec_fileNames);
 
   // Save the graph before cleaning:
   imageGraph::exportToGraphvizData(
@@ -940,20 +1013,20 @@ bool GlobalReconstructionEngine::CleanGraph()
           {
             size_t Idu = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.target(e)];
             size_t Idv = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.source(e)];
-            PairWiseMatches::iterator iterF = _map_Matches_F.find(std::make_pair(Idu,Idv));
-            if( iterF != _map_Matches_F.end())
+            PairWiseMatches::iterator iterF = _map_Matches_E.find(std::make_pair(Idu,Idv));
+            if( iterF != _map_Matches_E.end())
             {
               matches_filtered.insert(*iterF);
             }
-            iterF = _map_Matches_F.find(std::make_pair(Idv,Idu));
-            if( iterF != _map_Matches_F.end())
+            iterF = _map_Matches_E.find(std::make_pair(Idv,Idu));
+            if( iterF != _map_Matches_E.end())
             {
               matches_filtered.insert(*iterF);
             }
           }
         }
         // update the matching list
-        _map_Matches_F = matches_filtered;
+        _map_Matches_E = matches_filtered;
       }
       else
       {
@@ -991,13 +1064,13 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
 {
   // For each pair, compute the rotation from pairwise point matches:
 
-  C_Progress_display my_progress_bar( _map_Matches_F.size(), std::cout, "\n", " " , "ComputeRelativeRt\n" );
+  C_Progress_display my_progress_bar( _map_Matches_E.size(), std::cout, "\n", " " , "ComputeRelativeRt\n" );
 #ifdef USE_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
-  for (int i = 0; i < _map_Matches_F.size(); ++i)
+  for (int i = 0; i < _map_Matches_E.size(); ++i)
   {
-    PairWiseMatches::const_iterator iter = _map_Matches_F.begin();
+    PairWiseMatches::const_iterator iter = _map_Matches_E.begin();
     std::advance(iter, i);
 
     const size_t I = iter->first.first;
@@ -1249,7 +1322,7 @@ void GlobalReconstructionEngine::tripletListing(std::vector< graphUtils::Triplet
 {
   vec_triplets.clear();
 
-  imageGraph::indexedImageGraph putativeGraph(_map_Matches_F, _vec_fileNames);
+  imageGraph::indexedImageGraph putativeGraph(_map_Matches_E, _vec_fileNames);
 
   List_Triplets<imageGraph::indexedImageGraph::GraphT>(putativeGraph.g, vec_triplets);
 
@@ -1364,7 +1437,7 @@ void GlobalReconstructionEngine::tripletRotationRejection(
                 600,300);
 
   typedef lemon::ListGraph Graph;
-  imageGraph::indexedImageGraph putativeGraph(_map_Matches_F, _vec_fileNames);
+  imageGraph::indexedImageGraph putativeGraph(_map_Matches_E, _vec_fileNames);
 
   Graph::EdgeMap<bool> edge_filter(putativeGraph.g, false);
   Graph::NodeMap<bool> node_filter(putativeGraph.g, true);
@@ -1418,16 +1491,16 @@ void GlobalReconstructionEngine::tripletRotationRejection(
         size_t Idv = (*putativeGraph.map_nodeMapIndex)[sg.v(iter)];
 
         //-- Clean relatives matches
-        PairWiseMatches::iterator iterF = _map_Matches_F.find(std::make_pair(Idu,Idv));
-        if (iterF != _map_Matches_F.end())
+        PairWiseMatches::iterator iterF = _map_Matches_E.find(std::make_pair(Idu,Idv));
+        if (iterF != _map_Matches_E.end())
         {
-          _map_Matches_F.erase(iterF);
+          _map_Matches_E.erase(iterF);
         }
         else
         {
-          iterF = _map_Matches_F.find(std::make_pair(Idv,Idu));
-          if (iterF != _map_Matches_F.end())
-            _map_Matches_F.erase(iterF);
+          iterF = _map_Matches_E.find(std::make_pair(Idv,Idu));
+          if (iterF != _map_Matches_E.end())
+            _map_Matches_E.erase(iterF);
         }
 
         //-- Clean relative motions

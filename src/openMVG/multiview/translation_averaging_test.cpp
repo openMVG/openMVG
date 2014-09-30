@@ -1,9 +1,12 @@
+// Copyright (c) 2014 Pierre MOULON.
 
-#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
-#include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
-#include "openMVG/linearProgramming/lInfinityCV/global_translations_fromTriplets.hpp"
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/multiview/essential.hpp"
+#include "openMVG/multiview/translation_averaging_common.hpp"
+#include "openMVG/multiview/translation_averaging_solver.hpp"
 
 #include "openMVG/graph/triplet_finder.hpp"
 using namespace openMVG::graphUtils;
@@ -20,8 +23,6 @@ using namespace svg;
 #include <vector>
 
 using namespace openMVG;
-using namespace openMVG::linearProgramming;
-using namespace lInfinityCV;
 using namespace std;
 
 int modifiedMod(int number, int modulus)
@@ -71,30 +72,30 @@ void visibleCamPosToSVGSurface(
   }
 }
 
-TEST(translation_averaging, globalTi_from_tijs_Triplets) {
+TEST(translation_averaging, globalTi_from_tijs_Triplets_ECCV14) {
 
   int focal = 1000;
   int principal_Point = 500;
-  //-- Setup a circular camera rig or "cardiod".
+  //-- Setup a circular camera rig or "cardioid".
   const int iNviews = 12;
   const int iNbPoints = 6;
   NViewDataSet d =
     //NRealisticCamerasRing(
-      NRealisticCamerasCardioid(
-      iNviews, iNbPoints,
-      nViewDatasetConfigurator(focal,focal,principal_Point,principal_Point,5,0));
+    NRealisticCamerasCardioid(
+    iNviews, iNbPoints,
+    nViewDatasetConfigurator(focal,focal,principal_Point,principal_Point,5,0));
 
   d.ExportToPLY("global_translations_from_triplets_GT.ply");
 
   visibleCamPosToSVGSurface(d._C, "global_translations_from_triplets_GT.svg");
 
-  // List sucessives triplets of the large loop of camera
+  // List successive triplets of the large loop of camera
   std::vector< graphUtils::Triplet > vec_triplets;
   for (size_t i = 0; i < iNviews; ++i)
   {
     const size_t iPlus1 = modifiedMod(i+1,iNviews);
     const size_t iPlus2 = modifiedMod(i+2,iNviews);
-    //-- sort the triplet index to have a monotic ascending series of value
+    //-- sort the triplet index to have a monotonic ascending series of value
     size_t triplet[3] = {i, iPlus1, iPlus2};
     std::sort(&triplet[0], &triplet[3]);
     vec_triplets.push_back(Triplet(triplet[0],triplet[1],triplet[2]));
@@ -139,64 +140,69 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
   }
 
   //-- Compute the global translations from the triplets of heading directions
-  //-   with the L_infinity optimization
+  //-   with the Kyle method
+  std::vector<int> vec_edges;
+  vec_edges.reserve(vec_initialEstimates.size() * 2);
+  std::vector<double> vec_poses;
+  vec_poses.reserve(vec_initialEstimates.size() * 3);
+  std::vector<double> vec_weights;
+  vec_weights.reserve(vec_initialEstimates.size());
 
-  std::vector<double> vec_solution(iNviews*3 + vec_initialEstimates.size()/3 + 1);
-  double gamma = -1.0;
+  for(int i=0; i < vec_initialEstimates.size(); ++i)
+  {
+    const openMVG::relativeInfo & rel = vec_initialEstimates[i];
+    vec_edges.push_back(rel.first.first);
+    vec_edges.push_back(rel.first.second);
 
-  //- a. Setup the LP solver,
-  //- b. Setup the constraints generator (for the dedicated L_inf problem),
-  //- c. Build constraints and solve the problem,
-  //- d. Get back the estimated parameters.
+    const Vec3 EdgeDirection = -(d._R[rel.first.second].transpose() * rel.second.second.normalized());
 
-  //- a. Setup the LP solver,
-  OSI_CLP_SolverWrapper solverLP(vec_solution.size());
+    vec_poses.push_back(EdgeDirection(0));
+    vec_poses.push_back(EdgeDirection(1));
+    vec_poses.push_back(EdgeDirection(2));
 
-  //- b. Setup the constraints generator (for the dedicated L_inf problem),
-  Tifromtij_ConstraintBuilder_OneLambdaPerTrif cstBuilder(vec_initialEstimates);
+    vec_weights.push_back(1.0);
+  }
 
-  //- c. Build constraints and solve the problem (Setup constraints and solver)
-  LP_Constraints_Sparse constraint;
-  cstBuilder.Build(constraint);
-  solverLP.setup(constraint);
-  //-- Solving
-  EXPECT_TRUE(solverLP.solve()); // the linear program must have a solution
+  const double function_tolerance=1e-7, parameter_tolerance=1e-8;
+  const int max_iterations = 500;
 
-  //- d. Get back the estimated parameters.
-  solverLP.getSolution(vec_solution);
-  gamma = vec_solution[vec_solution.size()-1];
+  const double loss_width = 0.0;
 
-  //--
-  //-- Unit test checking about the found solution
-  //--
-  EXPECT_NEAR(0.0, gamma, 1e-6); // Gamma must be 0, no noise, perfect data have been sent
+  std::vector<double> X(iNviews*3);
 
-  std::cout << "Found solution with gamma = " << gamma << std::endl;
-
-  //-- Get back computed camera translations
-  std::vector<double> vec_camTranslation(iNviews*3,0);
-  std::copy(&vec_solution[0], &vec_solution[iNviews*3], &vec_camTranslation[0]);
-
-  //-- Get back computed lambda factors
-  std::vector<double> vec_camRelLambdas(&vec_solution[iNviews*3], &vec_solution[iNviews*3 + vec_initialEstimates.size()/3]);
-  // lambda factors must be equal to 1.0 (no compression, no dilation);
-  EXPECT_NEAR(vec_initialEstimates.size()/3, std::accumulate (vec_camRelLambdas.begin(), vec_camRelLambdas.end(), 0.0), 1e-6);
+  EXPECT_TRUE(
+    solve_translations_problem(
+      &vec_edges[0],
+      &vec_poses[0],
+      &vec_weights[0],
+      vec_initialEstimates.size(),
+      loss_width,
+      &X[0],
+      function_tolerance,
+      parameter_tolerance,
+      max_iterations));
 
   // Get back the camera translations in the global frame:
-  std::cout << std::endl << "Camera centers (Computed): " << std::endl;
   for (size_t i = 0; i < iNviews; ++i)
   {
-    const Vec3 C_GT = d._C[i].transpose() - d._C[0].transpose(); //First camera supposed to be at Identity
+    if (i==0) {  //First camera supposed to be at Identity
+      const Vec3 C0(X[0], X[1], X[2]);
+      EXPECT_NEAR(0.0, DistanceLInfinity(C0, Vec3(0,0,0)), 1e-6);
+    }
+    else  {
+      const Vec3 t_GT = (d._C[i] - d._C[0]);
 
-    Vec3 t(vec_camTranslation[i*3], vec_camTranslation[i*3+1], vec_camTranslation[i*3+2]);
-    const Mat3 & Ri = d._R[i];
-    const Vec3 C_computed = - Ri.transpose() * t;
+      const Vec3 CI(X[i*3], X[i*3+1], X[i*3+2]);
+      const Vec3 C0(X[0], X[1], X[2]);
+      const Vec3 t_computed = CI - C0;
 
-    //-- Check that found camera position is equal to GT value
-    EXPECT_NEAR(0.0, DistanceLInfinity(C_computed, C_GT), 1e-6);
+      //-- Check that vector are colinear
+      EXPECT_NEAR(0.0, DistanceLInfinity(t_computed.normalized(), t_GT.normalized()), 1e-6);
+    }
   }
 }
 
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
 /* ************************************************************************* */
+

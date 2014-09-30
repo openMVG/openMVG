@@ -105,6 +105,10 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
                           vector<DistanceType> * pvec_distance,
                           size_t NN)
   {
+    if (memMapping.get() == NULL)  {
+      return false;
+    }
+    
     if (NN > (*memMapping).rows() || nbQuery < 1) {
       std::cerr << "Too much asked nearest neighbors" << std::endl;
       return false;
