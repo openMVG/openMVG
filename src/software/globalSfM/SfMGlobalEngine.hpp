@@ -178,6 +178,10 @@ private:
 
   matching::PairWiseMatches _map_Matches_E; // pairwise matches for Essential matrix model
 
+  /// List of images that belong to a common intrinsic group
+  std::map<size_t, std::vector<size_t> > _map_ImagesIdPerIntrinsicGroup;
+  std::map<size_t, Vec3 > _map_IntrinsicsPerGroup;
+
   // Intrinsic Id per imageId
   std::map<size_t, size_t> _map_IntrinsicIdPerImageId;
 

@@ -562,7 +562,7 @@ bool GlobalReconstructionEngine::Process()
       Vec3 t(vec_camTranslation[i*3], vec_camTranslation[i*3+1], vec_camTranslation[i*3+2]);
       const size_t camNodeId = map_cameraIndexTocameraNode[i];
       const Mat3 & Ri = map_globalR[camNodeId];
-      const Mat3 & _K = Mat3::Identity();   // The same K matrix is used by all the camera
+      const Mat3 & _K = _vec_intrinsicGroups[_map_IntrinsicIdPerImageId[camNodeId]].m_K;   // The same K matrix is used by all the camera
       _map_camera[camNodeId] = PinholeCamera(_K, Ri, t);
       //-- Export camera center
       vec_C.push_back(_map_camera[camNodeId]._C);
@@ -622,7 +622,7 @@ bool GlobalReconstructionEngine::Process()
           const Vec3 C(X[i*3], X[i*3+1], X[i*3+2]);
           const size_t camNodeId = map_cameraIndexTocameraNode[i];
           const Mat3 & Ri = map_globalR[camNodeId];
-          const Mat3 & _K = Mat3::Identity();   // The same K matrix is used by all the camera
+          const Mat3 & _K = _vec_intrinsicGroups[_map_IntrinsicIdPerImageId[camNodeId]].m_K;// The same K matrix is used by all the camera
           const Vec3 t = - Ri * C;
           _map_camera[camNodeId] = PinholeCamera(_K, Ri, t);
           //-- Export camera center
@@ -704,7 +704,7 @@ bool GlobalReconstructionEngine::Process()
 
           const size_t imaIndex = iter->first;
           const size_t featIndex = iter->second;
-          const SIOPointFeature & pt = _map_feats_normalized[imaIndex][featIndex];
+          const SIOPointFeature & pt = _map_feats[imaIndex][featIndex];
           // Build the P matrix
           trianObj.add(_map_camera[imaIndex]._P, pt.coords().cast<double>());
         }
@@ -720,7 +720,7 @@ bool GlobalReconstructionEngine::Process()
         for (submapTrack::const_iterator iter = subTrack.begin(); iter != subTrack.end(); ++iter) {
           const size_t imaIndex = iter->first;
           const size_t featIndex = iter->second;
-          const SIOPointFeature & pt = _map_feats_normalized[imaIndex][featIndex];
+          const SIOPointFeature & pt = _map_feats[imaIndex][featIndex];
           vec_residuals[idx] = _map_camera[imaIndex].Residual(Xs, pt.coords().cast<double>());
         }
 
@@ -804,6 +804,10 @@ bool GlobalReconstructionEngine::Process()
   // Refine Structure, rotations and translations
   bundleAdjustment(_map_camera, _vec_allScenes, _map_selectedTracks, true, true, false);
   plyHelper::exportToPly(_vec_allScenes, stlplus::create_filespec(_sOutDirectory, "raw_pointCloud_BA_RT_Xi", "ply"));
+
+  // Refine Structure, rotations and translations
+  bundleAdjustment(_map_camera, _vec_allScenes, _map_selectedTracks, true, true, true);
+  plyHelper::exportToPly(_vec_allScenes, stlplus::create_filespec(_sOutDirectory, "raw_pointCloud_BA_KRT_Xi", "ply"));
 
   //-- Export statistics about the global process
   if (_bHtmlReport)
@@ -926,9 +930,22 @@ bool GlobalReconstructionEngine::ReadInputData()
         iter != _vec_camImageNames.end(); ++iter)
       {
         const openMVG::SfMIO::CameraInfo & camInfo = *iter;
+
         // Find the index of the camera
         size_t idx = std::distance((std::vector<openMVG::SfMIO::CameraInfo>::const_iterator)_vec_camImageNames.begin(), iter);
+
+        // to which intrinsic group each image belongs
         _map_IntrinsicIdPerImageId[idx] = camInfo.m_intrinsicId;
+        _map_ImagesIdPerIntrinsicGroup[_map_IntrinsicIdPerImageId[idx]].push_back(idx);
+
+        // if intrinsic groups is empty fill a new:
+        if (_map_IntrinsicsPerGroup.find(_map_IntrinsicIdPerImageId[idx])  == _map_IntrinsicsPerGroup.end())
+        {
+          size_t intrinsicId = _map_IntrinsicIdPerImageId[idx];
+          Vec3 & intrinsic = _map_IntrinsicsPerGroup[intrinsicId];
+          const Mat3 _K    = _vec_intrinsicGroups[intrinsicId].m_K;
+          intrinsic << _K(0,0), _K(0,2), _K(1,2);
+        }
       }
 
       for (size_t i = 0; i < _vec_camImageNames.size(); ++i)
@@ -1597,6 +1614,7 @@ void GlobalReconstructionEngine::bundleAdjustment(
 
   const size_t nbCams = map_camera.size();
   const size_t nbPoints3D = vec_allScenes.size();
+  const size_t nbIntrinsics = _map_ImagesIdPerIntrinsicGroup.size();
 
   // Count the number of measurement (sum of the reconstructed track length)
   size_t nbmeasurements = 0;
@@ -1613,7 +1631,7 @@ void GlobalReconstructionEngine::bundleAdjustment(
 
   // Configure the size of the problem
   ba_problem.num_cameras_ = nbCams;
-  ba_problem.num_intrinsics_ = 1;
+  ba_problem.num_intrinsics_ = nbIntrinsics;
   ba_problem.num_points_ = nbPoints3D;
   ba_problem.num_observations_ = nbmeasurements;
 
@@ -1638,7 +1656,6 @@ void GlobalReconstructionEngine::bundleAdjustment(
     // in order to map camera index to contiguous number
     set_camIndex.insert(iter->first);
     map_camIndexToNumber_extrinsic.insert(std::make_pair(iter->first, cpt));
-    map_camIndexToNumber_intrinsic.insert(std::make_pair(iter->first, 0)); // all camera have the same intrinsics data
 
     const Mat3 R = iter->second._R;
     double angleAxis[3];
@@ -1653,14 +1670,30 @@ void GlobalReconstructionEngine::bundleAdjustment(
     ba_problem.parameters_.push_back(t[2]);
   }
 
-  // Setup intrinsic parameters
-  // Only one group here
+  // Setup intrinsic parameters groups
+  cpt = 0;
+  for (std::map<size_t, Vec3 >::const_iterator iterIntrinsicGroup = _map_IntrinsicsPerGroup.begin();
+    iterIntrinsicGroup != _map_IntrinsicsPerGroup.end();
+    ++iterIntrinsicGroup, ++cpt)
   {
-    // The same K matrix is used by all the camera
-    const Mat3 _K = _vec_intrinsicGroups[0].m_K;
-    ba_problem.parameters_.push_back(_K(0,0)); // FOCAL_LENGTH
-    ba_problem.parameters_.push_back(_K(0,2)); // PRINCIPAL_POINT_X
-    ba_problem.parameters_.push_back(_K(1,2)); // PRINCIPAL_POINT_Y
+    const Vec3 & intrinsic = iterIntrinsicGroup->second;
+    ba_problem.parameters_.push_back(intrinsic(0)); // FOCAL_LENGTH
+    ba_problem.parameters_.push_back(intrinsic(1)); // PRINCIPAL_POINT_X
+    ba_problem.parameters_.push_back(intrinsic(2)); // PRINCIPAL_POINT_Y
+  }
+
+  cpt = 0;
+  // Link each camera to it's intrinsic group
+  for (std::map<size_t, std::vector<size_t> >::const_iterator iterIntrinsicGroup = _map_ImagesIdPerIntrinsicGroup.begin();
+    iterIntrinsicGroup != _map_ImagesIdPerIntrinsicGroup.end(); ++ iterIntrinsicGroup, ++cpt)
+  {
+    const std::vector<size_t> vec_imagesId = iterIntrinsicGroup->second;
+    for (std::vector<size_t>::const_iterator iter_vec = vec_imagesId.begin();
+      iter_vec != vec_imagesId.end(); ++iter_vec)
+    {
+      const size_t camIndex = *iter_vec;
+      map_camIndexToNumber_intrinsic.insert(std::make_pair(camIndex, cpt));
+    }
   }
 
   // Fill 3D points
