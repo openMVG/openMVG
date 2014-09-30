@@ -1727,7 +1727,7 @@ void GlobalReconstructionEngine::bundleAdjustment(
       //  - Add camidx (map the image number to the camera index)
       //  - Add ptidx (the 3D corresponding point index) (must be increasing)
 
-      //if ( set_camIndex.find(imageId) != set_camIndex.end())
+      if ( set_camIndex.find(imageId) != set_camIndex.end())
       {
         const std::vector<SIOPointFeature> & vec_feats = _map_feats[imageId];
         const SIOPointFeature & ptFeat = vec_feats[featId];
