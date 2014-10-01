@@ -12,6 +12,11 @@
 #include <fstream>
 #include <utility>
 #include <vector>
+
+#ifdef _MSC_VER
+#pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
+#endif
+
 //--
 //- Implementation of algorithm from Paper titled :
 //- [1] "Multiple-View Geometry under the L_\infty Norm."
@@ -55,11 +60,11 @@ void EncodeTiXi(const Mat & M, //Scene representation
 
   assert(Ncam == Ri.size());
 
-  A.resize(5*Nobs, 3 * (N3D + Ncam));
+  A.resize(5 * Nobs, 3 * (N3D + Ncam));
 
-  C.resize(5*Nobs, 1);
+  C.resize(5 * Nobs, 1);
   C.fill(0.0);
-  vec_sign.resize(5*Nobs + 3);
+  vec_sign.resize(5 * Nobs + 3);
 
   const size_t transStart  = 0;
   const size_t pointStart  = transStart + 3*Ncam;

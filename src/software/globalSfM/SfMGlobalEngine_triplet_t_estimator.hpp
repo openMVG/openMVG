@@ -74,13 +74,13 @@ struct tisXisTrifocalSolver {
       size_t cpt = 0;
       for (size_t i = 0; i  < n_obs; ++i) {
 
-        megaMat.col(cpt) << pt0.col(i)(0), pt0.col(i)(1), i, 0;
+        megaMat.col(cpt) << pt0.col(i)(0), pt0.col(i)(1), (double)i, 0.0;
         ++cpt;
 
-        megaMat.col(cpt) << pt1.col(i)(0), pt1.col(i)(1), i, 1;
+        megaMat.col(cpt) << pt1.col(i)(0), pt1.col(i)(1), (double)i, 1.0;
         ++cpt;
 
-        megaMat.col(cpt) << pt2.col(i)(0), pt2.col(i)(1), i, 2;
+        megaMat.col(cpt) << pt2.col(i)(0), pt2.col(i)(1), (double)i, 2.0;
         ++cpt;
         }
     }
@@ -136,23 +136,21 @@ public:
 
 
   TrifocalKernel_ACRansac_N_tisXis(const Mat & x1, const Mat & x2, const Mat & x3,
-    int w, int h, const std::vector<Mat3> & vec_KRi, const Mat3 & K,
+    const std::vector<Mat3> & vec_KRi, const Mat3 & K,
     const double ThresholdUpperBound)
-    : x1_(x1), x2_(x2), x3_(x3), logalpha0_(0.0), vec_KR_(vec_KRi),
-      K_(K), ThresholdUpperBound_(ThresholdUpperBound)
+    : x1_(x1), x2_(x2), x3_(x3), vec_KR_(vec_KRi),
+      K_(K), ThresholdUpperBound_(ThresholdUpperBound),
+      logalpha0_(log10(M_PI)),
+      Kinv_(K.inverse())
   {
     // Normalize points by inverse(K)
+    ApplyTransformationToPoints(x1_, Kinv_, &x1n_);
+    ApplyTransformationToPoints(x2_, Kinv_, &x2n_);
+    ApplyTransformationToPoints(x3_, Kinv_, &x3n_);
 
-    N_ = K_.inverse();
-    ApplyTransformationToPoints(x1_, N_, &x1n_);
-    ApplyTransformationToPoints(x2_, N_, &x2n_);
-    ApplyTransformationToPoints(x3_, N_, &x3n_);
-
-    vec_KR_[0] = N_ * vec_KR_[0];
-    vec_KR_[1] = N_ * vec_KR_[1];
-    vec_KR_[2] = N_ * vec_KR_[2];
-
-    logalpha0_ = log10(M_PI);
+    vec_KR_[0] = Kinv_ * vec_KR_[0];
+    vec_KR_[1] = Kinv_ * vec_KR_[1];
+    vec_KR_[2] = Kinv_ * vec_KR_[2];
   }
 
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
@@ -187,18 +185,18 @@ public:
 
   double multError() const {return 1.0;}
 
-  Mat3 normalizer1() const {return N_;}
+  Mat3 normalizer1() const {return Kinv_;}
   Mat3 normalizer2() const {return Mat3::Identity();}
-  double unormalizeError(double val) const { return sqrt(val) / N_(0,0);}
+  double unormalizeError(double val) const { return sqrt(val) / Kinv_(0,0);}
 
 private:
   const Mat & x1_, & x2_, & x3_;
   Mat x1n_, x2n_, x3n_;
-  Mat3 N_;
-  double logalpha0_;
-  double ThresholdUpperBound_;
+  const Mat3 Kinv_, K_;
+  const double logalpha0_;
+  const double ThresholdUpperBound_;
   std::vector<Mat3> vec_KR_;
-  Mat3 K_;
+  
 };
 
 } // namespace openMVG

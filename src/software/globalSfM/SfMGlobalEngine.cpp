@@ -158,7 +158,7 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
           vec_count.push_back(iterMatches->second.size());
         }
       }
-      float thTrustPair = (std::accumulate(vec_count.begin(), vec_count.end(), 0.0f) / vec_count.size()) / 2.0;
+      const float thTrustPair = (std::accumulate(vec_count.begin(), vec_count.end(), 0.0f) / vec_count.size()) / 2.0;
 
       for(Map_RelativeRT::const_iterator iter = map_relatives.begin();
         iter != map_relatives.end(); ++iter)
@@ -212,7 +212,7 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
       using namespace openMVG::rotation_averaging::l1;
 
       //- Solve the global rotation estimation problem:
-      size_t nMainViewID = 0;
+      const size_t nMainViewID = 0;
       std::vector<bool> vec_inliers;
       bSuccess = rotation_averaging::l1::GlobalRotationsRobust(
         vec_relativeRotEstimate, vec_globalR, nMainViewID, 0.0f, &vec_inliers);
