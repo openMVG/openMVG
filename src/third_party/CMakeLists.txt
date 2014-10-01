@@ -68,3 +68,6 @@ SET_PROPERTY(TARGET flann_cpp_s PROPERTY FOLDER OpenMVG/3rdParty)
 
 # Exif data parsing
 ADD_SUBDIRECTORY(easyexif)
+
+# FAST corner detector
+ADD_SUBDIRECTORY(fast)
