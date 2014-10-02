@@ -85,8 +85,7 @@ void PairWiseMatchingToAdjacencyMatrixSVG(const size_t NbImages,
           std::ostringstream os;
           os << "(" << J << "," << I << " " << iterSearch->second.size() <<")";
           size_t color_index = index_scale * (iterSearch->second.size() - min_size) - 1;
-          if (color_index < 0) color_index = 0;
-          else if (color_index >= n_colors) color_index = n_colors - 1;
+          if (color_index >= n_colors) color_index = n_colors - 1;
           svgStream.drawSquare(J*scaleFactor, I*scaleFactor, scaleFactor/2.0f,
             svgStyle().fill(palette[color_index]).noStroke().tooltip(os.str()));
         } // HINT : THINK ABOUT OPACITY [0.4 -> 1.0] TO EXPRESS MATCH COUNT
