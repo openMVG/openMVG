@@ -28,12 +28,22 @@ endif()
 
 # - VO (WIP)
 #
-ADD_EXECUTABLE(openMVG_main_VO main_VO.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_VO
-  ${OPENGL_gl_LIBRARY}
-  glfw
-  ${GLFW_LIBRARIES}
-  ${OpenMVG_LIBS}
-  fast)
-SET_PROPERTY(TARGET openMVG_main_VO PROPERTY FOLDER OpenMVG/software)
+
+IF(USE_OPENCV)
+  FIND_PACKAGE( OpenCV )
+
+  IF(NOT OpenCV_FOUND)
+    MESSAGE(STATUS "WARNING: OpenCV was not found. ")
+  ELSE(NOT OpenCV_FOUND)
+    ADD_EXECUTABLE(openMVG_main_VO main_VO.cpp)
+    TARGET_LINK_LIBRARIES(openMVG_main_VO
+      ${OPENGL_gl_LIBRARY}
+      glfw
+      ${GLFW_LIBRARIES}
+      ${OpenMVG_LIBS}
+      fast
+      ${OpenCV_LIBS})
+    SET_PROPERTY(TARGET openMVG_main_VO PROPERTY FOLDER OpenMVG/software)
+  ENDIF(NOT OpenCV_FOUND)
+ENDIF(USE_OPENCV)
 
