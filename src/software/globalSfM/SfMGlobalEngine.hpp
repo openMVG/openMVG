@@ -124,8 +124,6 @@ private:
   /// Read input data (point correspondences, K matrix)
   bool ReadInputData();
 
-  bool CleanGraph();
-
   void ComputeRelativeRt(Map_RelativeRT & vec_relatives);
 
   // Detect and remove the outlier relative rotations
@@ -134,8 +132,6 @@ private:
   // Compute the global rotations from relative rotations
   bool computeGlobalRotations(
     ERotationAveragingMethod eRotationAveragingMethod,
-    const std::map<size_t, size_t> & map_cameraNodeToCameraIndex,
-    const std::map<size_t, size_t> & map_cameraIndexTocameraNode,
     const Map_RelativeRT & map_relatives,
     std::map<size_t, Mat3> & map_globalR) const;
 

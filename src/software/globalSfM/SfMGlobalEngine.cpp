@@ -71,6 +71,200 @@ namespace openMVG{
 typedef SIOPointFeature FeatureT;
 typedef std::vector<FeatureT> featsT;
 
+template<typename T>
+void KeepOnlyReferencedElement(
+  const std::set<size_t> & Ids,
+  T & toFilter)
+{
+  std::cout << "Must be specialized for your type" << std::endl;
+}
+
+// Specialization for Map_RelativeRT
+template<>
+void KeepOnlyReferencedElement(
+  const std::set<size_t> & set_remainingIds,
+  GlobalReconstructionEngine::Map_RelativeRT& map_relatives)
+{
+  GlobalReconstructionEngine::Map_RelativeRT map_relatives_infered;
+  for (GlobalReconstructionEngine::Map_RelativeRT::const_iterator
+    iter = map_relatives.begin();
+    iter != map_relatives.end(); ++iter)
+  {
+    if (set_remainingIds.find(iter->first.first) != set_remainingIds.end() &&
+        set_remainingIds.find(iter->first.second) != set_remainingIds.end())
+    {
+      map_relatives_infered.insert(*iter);
+    }
+  }
+  map_relatives.swap(map_relatives_infered);
+}
+
+// Specialization for PairWiseMatches
+template<>
+void KeepOnlyReferencedElement(
+  const std::set<size_t> & set_remainingIds,
+  PairWiseMatches& map_matches)
+{
+  PairWiseMatches map_matches_E_infered;
+  for (PairWiseMatches::const_iterator iter = map_matches.begin();
+    iter != map_matches.end(); ++iter)
+  {
+    if (set_remainingIds.find(iter->first.first) != set_remainingIds.end() &&
+        set_remainingIds.find(iter->first.second) != set_remainingIds.end())
+    {
+      map_matches_E_infered.insert(*iter);
+    }
+  }
+  map_matches.swap(map_matches_E_infered);
+}
+
+// Specialization for std::map<size_t,Mat3>
+template<>
+void KeepOnlyReferencedElement(
+  const std::set<size_t> & set_remainingIds,
+  std::map<size_t,Mat3>& map_Mat3)
+{
+  std::map<size_t,Mat3> map_infered;
+  for (std::map<size_t,Mat3>::const_iterator iter = map_Mat3.begin();
+    iter != map_Mat3.end(); ++iter)
+  {
+    if (set_remainingIds.find(iter->first) != set_remainingIds.end())
+    {
+      map_infered.insert(*iter);
+    }
+  }
+  map_Mat3.swap(map_infered);
+}
+
+// Specialization for std::vector<openMVG::relativeInfo>
+template<>
+void KeepOnlyReferencedElement(
+  const std::set<size_t> & set_remainingIds,
+  std::vector<openMVG::relativeInfo> & map_relativeInfo)
+{
+  std::vector<openMVG::relativeInfo> map_infered;
+  for (std::vector<openMVG::relativeInfo>::const_iterator iter = map_relativeInfo.begin();
+    iter != map_relativeInfo.end(); ++iter)
+  {
+    if (set_remainingIds.find(iter->first.first) != set_remainingIds.end() &&
+        set_remainingIds.find(iter->first.second) != set_remainingIds.end())
+    {
+      map_infered.push_back(*iter);
+    }
+  }
+  map_relativeInfo.swap(map_infered);
+}
+
+/// Return imageIds that belongs to the largest bi-edge connected component
+template<typename EdgesInterface_T>
+std::set<size_t> CleanGraph_Node(
+  const EdgesInterface_T & edges,
+  const std::vector<std::string> & vec_fileNames,
+  const std::string & _sOutDirectory)
+{
+  std::set<size_t> largestBiEdgeCC;
+
+    // Create a graph from pairwise correspondences:
+  // - remove not biedge connected component,
+  // - keep the largest connected component.
+
+  typedef lemon::ListGraph Graph;
+  imageGraph::indexedImageGraph putativeGraph(edges, vec_fileNames);
+
+  // Save the graph before cleaning:
+  imageGraph::exportToGraphvizData(
+    stlplus::create_filespec(_sOutDirectory, "initialGraph"),
+    putativeGraph.g);
+
+  // Remove not bi-edge connected edges
+  typedef Graph::EdgeMap<bool> EdgeMapAlias;
+  EdgeMapAlias cutMap(putativeGraph.g);
+
+  if (lemon::biEdgeConnectedCutEdges(putativeGraph.g, cutMap) > 0)
+  {
+    // Some edges must be removed because they don't follow the biEdge condition.
+    typedef Graph::EdgeIt EdgeIterator;
+    EdgeIterator itEdge(putativeGraph.g);
+    for (EdgeMapAlias::MapIt it(cutMap); it!=INVALID; ++it, ++itEdge)
+    {
+      if (*it)
+        putativeGraph.g.erase(itEdge); // remove the not bi-edge element
+    }
+  }
+
+  // Graph is bi-edge connected, but still many connected components can exist
+  // Keep only the largest one
+  const int connectedComponentCount = lemon::countConnectedComponents(putativeGraph.g);
+  std::cout << "\n"
+    << "GlobalReconstructionEngine::CleanGraph() :: => connected Component: "
+    << connectedComponentCount << std::endl;
+  if (connectedComponentCount >= 1)
+  {
+    // Keep only the largest connected component
+    // - list all CC size
+    // - if the largest one is meet, keep all the edges that belong to this node
+
+    const std::map<size_t, std::set<lemon::ListGraph::Node> > map_subgraphs = exportGraphToMapSubgraphs(putativeGraph.g);
+    size_t count = std::numeric_limits<size_t>::min();
+    std::map<size_t, std::set<lemon::ListGraph::Node> >::const_iterator iterLargestCC = map_subgraphs.end();
+    for(std::map<size_t, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
+        iter != map_subgraphs.end(); ++iter)
+    {
+      if (iter->second.size() > count)  {
+        count = iter->second.size();
+        iterLargestCC = iter;
+      }
+      std::cout << "Connected component of size: " << iter->second.size() << std::endl;
+    }
+
+    //-- Keep only the nodes that are in the largest CC
+    for(std::map<size_t, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
+        iter != map_subgraphs.end(); ++iter)
+    {
+      if (iter == iterLargestCC)
+      {
+        // list all nodes that belong to the current CC and update the Node Ids list
+        const std::set<lemon::ListGraph::Node> & ccSet = iter->second;
+        for (std::set<lemon::ListGraph::Node>::const_iterator iter2 = ccSet.begin();
+          iter2 != ccSet.end(); ++iter2)
+        {
+          const size_t Id = (*putativeGraph.map_nodeMapIndex)[*iter2];
+          largestBiEdgeCC.insert(Id);
+
+        }
+      }
+      else
+      {
+        // remove the edges from the graph
+        const std::set<lemon::ListGraph::Node> & ccSet = iter->second;
+        for (std::set<lemon::ListGraph::Node>::const_iterator iter2 = ccSet.begin();
+          iter2 != ccSet.end(); ++iter2)
+        {
+          typedef Graph::OutArcIt OutArcIt;
+          for (OutArcIt e(putativeGraph.g, *iter2); e!=INVALID; ++e)
+          {
+            putativeGraph.g.erase(e);
+          }
+        }
+      }
+    }
+  }
+
+  // Save the graph after cleaning:
+  imageGraph::exportToGraphvizData(
+    stlplus::create_filespec(_sOutDirectory, "cleanedGraph"),
+    putativeGraph.g);
+
+  std::cout << "\n"
+    << "Cardinal of nodes: " << lemon::countNodes(putativeGraph.g) << "\n"
+    << "Cardinal of edges: " << lemon::countEdges(putativeGraph.g) << std::endl
+    << std::endl;
+
+  return largestBiEdgeCC;
+}
+
+
+
 GlobalReconstructionEngine::GlobalReconstructionEngine(
   const std::string & sImagePath,
   const std::string & sMatchesPath,
@@ -114,7 +308,7 @@ void GlobalReconstructionEngine::rotationInference(
         << " /!\\  /!\\  /!\\  /!\\  /!\\  /!\\  /!\\ \n"
         << "--- ITERATED BAYESIAN INFERENCE IS NOT RELEASED, SEE C.ZACH CODE FOR MORE INFORMATION" << std::endl
         << " /!\\  /!\\  /!\\  /!\\  /!\\  /!\\  /!\\ \n" << std::endl
-        << " A simple inference scheme is used here :" << std::endl
+        << " A simple inference scheme is used here:" << std::endl
         << "\t only the relative error composition to identity on cycle of length 3 is used." << std::endl;
 
   //-------------------
@@ -126,16 +320,61 @@ void GlobalReconstructionEngine::rotationInference(
   tripletRotationRejection(vec_triplets, map_relatives);
 }
 
+/// Association of Ids to a contiguous set of Ids
+template<typename T>
+void reindex(
+  const std::vector< std::pair<T,T> > & vec_pairs,
+  std::map<T, T> & _reindexForward,
+  std::map<T, T> & _reindexBackward)
+{
+  // get an unique set of Ids
+  std::set<size_t> _uniqueId;
+  for(typename std::vector< typename std::pair<T,T> >::const_iterator iter = vec_pairs.begin();
+        iter != vec_pairs.end(); ++iter)
+  {
+    _uniqueId.insert(iter->first);
+    _uniqueId.insert(iter->second);
+  }
+
+  // Build the Forward and Backward mapping
+  for(typename std::vector< typename std::pair<T,T> >::const_iterator iter = vec_pairs.begin();
+        iter != vec_pairs.end(); ++iter)
+  {
+    if (_reindexForward.find(iter->first) == _reindexForward.end())
+    {
+      const size_t dist = std::distance(_uniqueId.begin(), _uniqueId.find(iter->first));
+      _reindexForward[iter->first] = dist;
+      _reindexBackward[dist] = iter->first;
+    }
+    if (_reindexForward.find(iter->second) == _reindexForward.end())
+    {
+      const size_t dist = std::distance(_uniqueId.begin(), _uniqueId.find(iter->second));
+      _reindexForward[iter->second] = dist;
+      _reindexBackward[dist] = iter->second;
+    }
+  }
+}
+
 bool GlobalReconstructionEngine::computeGlobalRotations(
   ERotationAveragingMethod eRotationAveragingMethod,
-  const std::map<size_t, size_t> & map_cameraNodeToCameraIndex,
-  const std::map<size_t, size_t> & map_cameraIndexTocameraNode,
   const Map_RelativeRT & map_relatives,
   std::map<size_t, Mat3> & map_globalR) const
 {
   // Build relative information for only the largest considered Connected Component
   // - it requires to change the camera indexes, because RotationAveraging is working only with
-  //   index ranging in [0 - nbCam], (map_cameraNodeToCameraIndex utility)
+  //   index ranging in [0 - nbCam]
+
+  std::map<size_t, size_t> _reindexForward, _reindexBackward;
+
+  std::vector< std::pair<size_t,size_t> > vec_pairs;
+  for(Map_RelativeRT::const_iterator iter = map_relatives.begin();
+        iter != map_relatives.end(); ++iter)
+  {
+    const openMVG::relativeInfo & rel = *iter;
+    vec_pairs.push_back(rel.first);
+  }
+
+  reindex(vec_pairs, _reindexForward, _reindexBackward);
 
   //- A. weight computation
   //- B. solve global rotation computation
@@ -187,8 +426,8 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
     if (iterMatches != _map_Matches_E.end())
     {
       vec_relativeRotEstimate.push_back(RelRotationData(
-        map_cameraNodeToCameraIndex.find(rel.first.first)->second,
-        map_cameraNodeToCameraIndex.find(rel.first.second)->second,
+        _reindexForward[rel.first.first],
+        _reindexForward[rel.first.second],
         rel.second.first, *iterW));
       ++iterW;
     }
@@ -196,13 +435,14 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
 
   //- B. solve global rotation computation
   bool bSuccess = false;
-  std::vector<Mat3> vec_globalR(map_cameraIndexTocameraNode.size());
+  std::vector<Mat3> vec_globalR(_reindexForward.size());
   switch(eRotationAveragingMethod)
   {
     case ROTATION_AVERAGING_L2:
     {
       //- Solve the global rotation estimation problem:
-      bSuccess = rotation_averaging::l2::L2RotationAveraging(map_cameraIndexTocameraNode.size(),
+      bSuccess = rotation_averaging::l2::L2RotationAveraging(
+        _reindexForward.size(),
         vec_relativeRotEstimate,
         vec_globalR);
     }
@@ -217,7 +457,7 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
       bSuccess = rotation_averaging::l1::GlobalRotationsRobust(
         vec_relativeRotEstimate, vec_globalR, nMainViewID, 0.0f, &vec_inliers);
 
-      std::cout << "\ninliers : " << std::endl;
+      std::cout << "\ninliers: " << std::endl;
       std::copy(vec_inliers.begin(), vec_inliers.end(), ostream_iterator<bool>(std::cout, " "));
       std::cout << std::endl;
     }
@@ -230,7 +470,7 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
   {
     //-- Setup the averaged rotation
     for (int i = 0; i < vec_globalR.size(); ++i)  {
-      map_globalR[map_cameraIndexTocameraNode.find(i)->second] = vec_globalR[i];
+      map_globalR[_reindexBackward[i]] = vec_globalR[i];
     }
   }
   else{
@@ -273,9 +513,15 @@ bool GlobalReconstructionEngine::Process()
   //-------------------
   // Only keep the largest biedge connected subgraph
   //-------------------
-
-  if(!CleanGraph())
+  {
+    const std::set<size_t> set_remainingIds = CleanGraph_Node(_map_Matches_E, _vec_fileNames, _sOutDirectory);
+    if(set_remainingIds.empty())
+    {
+      std::cout << "Invalid input image graph for global SfM" << std::endl;
     return false;
+    }
+    KeepOnlyReferencedElement(set_remainingIds, _map_Matches_E);
+  }
 
   //-------------------
   // Compute relative R|t
@@ -298,10 +544,15 @@ bool GlobalReconstructionEngine::Process()
     //-------------------
     // keep the largest biedge connected subgraph
     //-------------------
-    if(!CleanGraph())
+    const std::set<size_t> set_remainingIds = CleanGraph_Node(_map_Matches_E, _vec_fileNames, _sOutDirectory);
+    if(set_remainingIds.empty())
       return false;
 
     const double time_Inference = timer_Inference.elapsed();
+
+    // Clean Map_RelativeRT and relative matches
+    KeepOnlyReferencedElement(set_remainingIds, map_relatives);
+    KeepOnlyReferencedElement(set_remainingIds, _map_Matches_E);
 
     //---------------------------------------
     //-- Export geometric filtered matches
@@ -311,30 +562,8 @@ bool GlobalReconstructionEngine::Process()
       PairedIndMatchToStream(_map_Matches_E, file);
     file.close();
 
-    //-------------------
-    // List remaining camera node Id
-    //-------------------
-    std::set<size_t> set_indeximage;
-    for (PairWiseMatches::const_iterator
-         iter = _map_Matches_E.begin();
-         iter != _map_Matches_E.end();
-         ++iter)
-    {
-      const size_t I = iter->first.first;
-      const size_t J = iter->first.second;
-      set_indeximage.insert(I);
-      set_indeximage.insert(J);
-    }
-    // Build correspondences tables (cameraIds <=> GraphIds)
-    for (std::set<size_t>::const_iterator iterSet = set_indeximage.begin();
-      iterSet != set_indeximage.end(); ++iterSet)
-    {
-      map_cameraIndexTocameraNode[std::distance(set_indeximage.begin(), iterSet)] = *iterSet;
-      map_cameraNodeToCameraIndex[*iterSet] = std::distance(set_indeximage.begin(), iterSet);
-    }
-
-    std::cout << "\n Remaining cameras after inference filter : \n"
-      << map_cameraIndexTocameraNode.size() << " from a total of " << _vec_fileNames.size() << std::endl;
+    std::cout << "\n Remaining cameras after inference filter: \n"
+      << set_remainingIds.size() << " from a total of " << _vec_fileNames.size() << std::endl;
 
     //-- Export statistics about the rotation inference step:
     if (_bHtmlReport)
@@ -347,9 +576,9 @@ bool GlobalReconstructionEngine::Process()
 
       os.str("");
       os << "-------------------------------" << "<br>"
-        << "-- #Camera count: " << set_indeximage.size() << " remains "
+        << "-- #Camera count: " << set_remainingIds.size() << " remains "
         << "-- from " <<_vec_fileNames.size() << " input images.<br>"
-        << "-- timing : " << time_Inference << " second <br>"
+        << "-- timing: " << time_Inference << " second <br>"
         << "-------------------------------" << "<br>";
       _htmlDocStream->pushInfo(os.str());
     }
@@ -361,15 +590,25 @@ bool GlobalReconstructionEngine::Process()
 
   std::map<std::size_t, Mat3> map_globalR;
   {
+    std::set<size_t> set_indeximage;
+    for (PairWiseMatches::const_iterator
+         iter = _map_Matches_E.begin();
+         iter != _map_Matches_E.end();
+         ++iter)
+    {
+      const size_t I = iter->first.first;
+      const size_t J = iter->first.second;
+      set_indeximage.insert(I);
+      set_indeximage.insert(J);
+    }
+
     std::cout << "\n-------------------------------" << "\n"
       << " Global rotations computation: " << "\n"
-      << "   - Ready to compute " << map_cameraIndexTocameraNode.size() << " global rotations." << "\n"
+      << "   - Ready to compute " << set_indeximage.size() << " global rotations." << "\n"
       << "     from " << map_relatives.size() << " relative rotations\n" << std::endl;
 
     if (!computeGlobalRotations(
             _eRotationAveragingMethod,
-            map_cameraNodeToCameraIndex,
-            map_cameraIndexTocameraNode,
             map_relatives,
             map_globalR))
     {
@@ -398,7 +637,7 @@ bool GlobalReconstructionEngine::Process()
 
     computePutativeTranslation_EdgesCoverage(map_globalR, vec_triplets, vec_initialRijTijEstimates, newpairMatches);
     const double timeLP_triplet = timerLP_triplet.elapsed();
-    std::cout << "TRIPLET COVERAGE TIMING : " << timeLP_triplet << " seconds" << std::endl;
+    std::cout << "TRIPLET COVERAGE TIMING: " << timeLP_triplet << " seconds" << std::endl;
 
     //-- Export triplet statistics:
     if (_bHtmlReport)
@@ -414,7 +653,7 @@ bool GlobalReconstructionEngine::Process()
         << "-- #Effective translations estimates: " << vec_initialRijTijEstimates.size()/3
         << " from " <<vec_triplets.size() << " triplets.<br>"
         << "-- resulting in " <<vec_initialRijTijEstimates.size() << " translation estimation.<br>"
-        << "-- timing to obtain the relative translations : " << timeLP_triplet << " seconds.<br>"
+        << "-- timing to obtain the relative translations: " << timeLP_triplet << " seconds.<br>"
         << "-------------------------------" << "<br>";
       _htmlDocStream->pushInfo(os.str());
     }
@@ -425,42 +664,27 @@ bool GlobalReconstructionEngine::Process()
   //-- Robust translation estimation can perform inference and remove some bad conditioned triplets
 
   {
-    std::set<size_t> set_representedImageIndex;
+    // Build the list of Pairs used by the translations
+    std::vector<std::pair<size_t, size_t> > map_pairs_tij;
     for(size_t i = 0; i < vec_initialRijTijEstimates.size(); ++i)
     {
       const openMVG::relativeInfo & rel = vec_initialRijTijEstimates[i];
-      set_representedImageIndex.insert(rel.first.first);
-      set_representedImageIndex.insert(rel.first.second);
+      map_pairs_tij.push_back(std::make_pair(rel.first.first,rel.first.second));
     }
+
+    const std::set<size_t> set_representedImageIndex = CleanGraph_Node(map_pairs_tij, _vec_fileNames, _sOutDirectory);
     std::cout << "\n\n"
-      << "We targeting to estimates : " << map_globalR.size()
-      << " and we have estimation for : " << set_representedImageIndex.size() << " images" << std::endl;
+      << "We targeting to estimates: " << map_globalR.size()
+      << " and we have estimation for: " << set_representedImageIndex.size() << " images" << std::endl;
 
-    //-- Clean global rotation that are not in the TRIPLET GRAPH
-    std::map<size_t,Mat3> map_globalR_clean = map_globalR;
-    for(std::map<size_t,Mat3>::const_iterator iter = map_globalR.begin();
-      iter != map_globalR.end(); ++iter)
-    {
-      if (set_representedImageIndex.find(iter->first) == set_representedImageIndex.end())
-      {
-        std::cout << "Missing image index: " << iter->first << std::endl;
-        map_globalR_clean.erase(map_cameraIndexTocameraNode[iter->first]);
-      }
-    }
-    map_globalR.swap(map_globalR_clean);
+    //-- Clean global rotations that are not in the TRIPLET GRAPH
+    KeepOnlyReferencedElement(set_representedImageIndex, map_globalR);
+    KeepOnlyReferencedElement(set_representedImageIndex, vec_initialRijTijEstimates);
+    KeepOnlyReferencedElement(set_representedImageIndex, newpairMatches);
+    // clean _map_matches_E?
 
-    //- Build the map of camera index and node Ids that are listed by the triplets of translations
-    map_cameraIndexTocameraNode.clear();
-    map_cameraNodeToCameraIndex.clear();
-    for (std::set<size_t>::const_iterator iterSet = set_representedImageIndex.begin();
-      iterSet != set_representedImageIndex.end(); ++iterSet)
-    {
-      map_cameraIndexTocameraNode[std::distance(set_representedImageIndex.begin(), iterSet)] = *iterSet;
-      map_cameraNodeToCameraIndex[*iterSet] = std::distance(set_representedImageIndex.begin(), iterSet);
-    }
-
-    std::cout << "\nRemaining cameras after inference filter : \n"
-      << map_cameraIndexTocameraNode.size() << " from a total of " << _vec_fileNames.size() << std::endl;
+    std::cout << "\nRemaining cameras after inference filter: \n"
+      << map_globalR.size() << " from a total of " << _vec_fileNames.size() << std::endl;
   }
 
   //-------------------
@@ -468,22 +692,35 @@ bool GlobalReconstructionEngine::Process()
   //-------------------
 
   {
-    const size_t iNview = map_cameraNodeToCameraIndex.size(); // The remaining camera nodes count in the graph
-
+    const size_t iNview = map_globalR.size();
     std::cout << "\n-------------------------------" << "\n"
       << " Global translations computation: " << "\n"
       << "   - Ready to compute " << iNview << " global translations." << "\n"
       << "     from " << vec_initialRijTijEstimates.size() << " relative translations\n" << std::endl;
 
     //-- Update initial estimates in range [0->Ncam]
+    std::map<size_t, size_t> _reindexForward, _reindexBackward;
+
+    std::vector< std::pair<size_t,size_t> > vec_pairs;
+        for(size_t i = 0; i < vec_initialRijTijEstimates.size(); ++i)
+    {
+      const openMVG::relativeInfo & rel = vec_initialRijTijEstimates[i];
+      std::pair<size_t,size_t> newPair(rel.first.first, rel.first.second);
+      vec_pairs.push_back(newPair);
+    }
+
+    reindex( vec_pairs, _reindexForward, _reindexBackward);
+
+    //-- Update initial estimates in range [0->Ncam]
     for(size_t i = 0; i < vec_initialRijTijEstimates.size(); ++i)
     {
       openMVG::relativeInfo & rel = vec_initialRijTijEstimates[i];
       std::pair<size_t,size_t> newPair(
-          map_cameraNodeToCameraIndex[rel.first.first],
-          map_cameraNodeToCameraIndex[rel.first.second]);
+          _reindexForward[rel.first.first],
+          _reindexForward[rel.first.second]);
       rel.first = newPair;
     }
+
 
     openMVG::Timer timerLP_translation;
 
@@ -510,7 +747,7 @@ bool GlobalReconstructionEngine::Process()
           solverLP.setup(constraint);
           //--
           // Solving
-          bool bFeasible = solverLP.solve();
+          const bool bFeasible = solverLP.solve();
           std::cout << " \n Feasibility " << bFeasible << std::endl;
           //--
           if (bFeasible)  {
@@ -554,13 +791,12 @@ bool GlobalReconstructionEngine::Process()
         std::cout << "\ncam Lambdas: " << std::endl;
         std::copy(vec_camRelLambdas.begin(), vec_camRelLambdas.end(), std::ostream_iterator<double>(std::cout, " "));
 
-
     // Build a Pinhole camera for each considered Id
     std::vector<Vec3>  vec_C;
     for (size_t i = 0; i < iNview; ++i)
     {
       Vec3 t(vec_camTranslation[i*3], vec_camTranslation[i*3+1], vec_camTranslation[i*3+2]);
-      const size_t camNodeId = map_cameraIndexTocameraNode[i];
+      const size_t camNodeId = _reindexBackward[i];
       const Mat3 & Ri = map_globalR[camNodeId];
       const Mat3 & _K = _vec_intrinsicGroups[_map_IntrinsicIdPerImageId[camNodeId]].m_K;   // The same K matrix is used by all the camera
       _map_camera[camNodeId] = PinholeCamera(_K, Ri, t);
@@ -598,10 +834,9 @@ bool GlobalReconstructionEngine::Process()
         const double function_tolerance = 1e-7, parameter_tolerance = 1e-8;
         const int max_iterations = 500;
 
-        const double loss_width = 0.0;
+        const double loss_width = 0.0; // No loss in order to compare with TRANSLATION_AVERAGING_L1
 
         std::vector<double> X(iNview*3);
-
         if(!solve_translations_problem(
           &vec_edges[0],
           &vec_poses[0],
@@ -620,7 +855,7 @@ bool GlobalReconstructionEngine::Process()
         for (size_t i = 0; i < iNview; ++i)
         {
           const Vec3 C(X[i*3], X[i*3+1], X[i*3+2]);
-          const size_t camNodeId = map_cameraIndexTocameraNode[i];
+          const size_t camNodeId = _reindexBackward[i]; // undo the reindexing
           const Mat3 & Ri = map_globalR[camNodeId];
           const Mat3 & _K = _vec_intrinsicGroups[_map_IntrinsicIdPerImageId[camNodeId]].m_K;// The same K matrix is used by all the camera
           const Vec3 t = - Ri * C;
@@ -639,8 +874,7 @@ bool GlobalReconstructionEngine::Process()
   //-------------------
   {
     // Build tracks from selected triplets (Union of all the validated triplet tracks (newpairMatches))
-    //  triangulate tracks
-    //  refine translations
+    //  triangulate tracks    //  refine translations
     {
       TracksBuilder tracksBuilder;
       tracksBuilder.Build(newpairMatches);
@@ -650,7 +884,7 @@ bool GlobalReconstructionEngine::Process()
       std::cout << std::endl << "Track stats" << std::endl;
       {
         std::ostringstream osTrack;
-        //-- Display stats :
+        //-- Display stats:
         //    - number of images
         //    - number of tracks
         std::set<size_t> set_imagesId;
@@ -680,15 +914,14 @@ bool GlobalReconstructionEngine::Process()
     _vec_allScenes.resize(_map_selectedTracks.size());
     {
       std::vector<double> vec_residuals;
-      vec_residuals.resize(_map_selectedTracks.size());
+      vec_residuals.reserve(_map_selectedTracks.size());
       std::set<size_t> set_idx_to_remove;
 
       C_Progress_display my_progress_bar_triangulation( _map_selectedTracks.size(),
-       std::cout,
-       "Initial triangulation:\n");
+       std::cout, "Initial triangulation:\n");
 
 #ifdef USE_OPENMP
-  #pragma omp parallel for //schedule(dynamic, 1)
+//  #pragma omp parallel for schedule(dynamic)
 #endif
       for (int idx = 0; idx < _map_selectedTracks.size(); ++idx)
       {
@@ -698,9 +931,8 @@ bool GlobalReconstructionEngine::Process()
         const submapTrack & subTrack = iterTracks->second;
 
         // Look to the features required for the triangulation task
-        size_t index = 0;
         Triangulation trianObj;
-        for (submapTrack::const_iterator iter = subTrack.begin(); iter != subTrack.end(); ++iter, ++index) {
+        for (submapTrack::const_iterator iter = subTrack.begin(); iter != subTrack.end(); ++iter) {
 
           const size_t imaIndex = iter->first;
           const size_t featIndex = iter->second;
@@ -712,22 +944,23 @@ bool GlobalReconstructionEngine::Process()
         // Compute the 3D point and keep point index with negative depth
         const Vec3 Xs = trianObj.compute();
         _vec_allScenes[idx] = Xs;
-        if (trianObj.minDepth() < 0)  {
-          set_idx_to_remove.insert(idx);
-        }
-
-        //-- Compute residual over all the projections
-        for (submapTrack::const_iterator iter = subTrack.begin(); iter != subTrack.end(); ++iter) {
-          const size_t imaIndex = iter->first;
-          const size_t featIndex = iter->second;
-          const SIOPointFeature & pt = _map_feats[imaIndex][featIndex];
-          vec_residuals[idx] = _map_camera[imaIndex].Residual(Xs, pt.coords().cast<double>());
-        }
 
 #ifdef USE_OPENMP
   #pragma omp critical
 #endif
         {
+          if (trianObj.minDepth() < 0)  {
+            set_idx_to_remove.insert(idx);
+          }
+        
+          //-- Compute residual over all the projections
+          for (submapTrack::const_iterator iter = subTrack.begin(); iter != subTrack.end(); ++iter) {
+            const size_t imaIndex = iter->first;
+            const size_t featIndex = iter->second;
+            const SIOPointFeature & pt = _map_feats[imaIndex][featIndex];
+            vec_residuals.push_back(_map_camera[imaIndex].Residual(Xs, pt.coords().cast<double>()));
+            // no ordering in vec_residuals since there is parallelism
+          }
           ++my_progress_bar_triangulation;
         }
       }
@@ -762,14 +995,14 @@ bool GlobalReconstructionEngine::Process()
 
         Histogram<float> histo(0.f, *max_element(vec_residuals.begin(),vec_residuals.end())*1.1f);
         histo.Add(vec_residuals.begin(), vec_residuals.end());
-        std::cout << std::endl << "Residual Error pixels : " << std::endl << histo.ToString() << std::endl;
+        std::cout << std::endl << "Residual Error pixels: " << std::endl << histo.ToString() << std::endl;
 
         // Histogram between 0 and 10 pixels
         {
           std::cout << "\n Histogram between 0 and 10 pixels: \n";
           Histogram<float> histo(0.f, 10.f, 20);
           histo.Add(vec_residuals.begin(), vec_residuals.end());
-          std::cout << std::endl << "Residual Error pixels : " << std::endl << histo.ToString() << std::endl;
+          std::cout << std::endl << "Residual Error pixels: " << std::endl << histo.ToString() << std::endl;
         }
 
         //-- Export initial triangulation statistics
@@ -805,7 +1038,7 @@ bool GlobalReconstructionEngine::Process()
   bundleAdjustment(_map_camera, _vec_allScenes, _map_selectedTracks, true, true, false);
   plyHelper::exportToPly(_vec_allScenes, stlplus::create_filespec(_sOutDirectory, "raw_pointCloud_BA_RT_Xi", "ply"));
 
-  // Refine Structure, rotations and translations
+  // Refine Structure, rotations, translations and intrinsics
   bundleAdjustment(_map_camera, _vec_allScenes, _map_selectedTracks, true, true, true);
   plyHelper::exportToPly(_vec_allScenes, stlplus::create_filespec(_sOutDirectory, "raw_pointCloud_BA_KRT_Xi", "ply"));
 
@@ -823,7 +1056,7 @@ bool GlobalReconstructionEngine::Process()
       << "-- Have calibrated: " << _map_camera.size() << " from "
       << _vec_fileNames.size() << " input images.<br>"
       << "-- The scene contains " << _map_selectedTracks.size() << " 3D points.<br>"
-      << "-- Total reconstruction time (Inference, global rot, translation fusion, Ba1, Ba2): "
+      << "-- Total reconstruction time (Inference, global rot, translation fusion, Ba1, Ba2, Ba3): "
       << total_reconstruction_timer.elapsed() << " seconds.<br>"
       << "-------------------------------" << "<br>";
     _htmlDocStream->pushInfo(os.str());
@@ -834,12 +1067,12 @@ bool GlobalReconstructionEngine::Process()
     << "-- Have calibrated: " << _map_camera.size() << " from "
     << _vec_fileNames.size() << " input images.\n"
     << "-- The scene contains " << _map_selectedTracks.size() << " 3D points.\n"
-    << "-- Total reconstruction time (Inference, global rot, translation fusion, Ba1, Ba2): "
+    << "-- Total reconstruction time (Inference, global rot, translation fusion, Ba1, Ba2, Ba3): "
     << total_reconstruction_timer.elapsed() << " seconds.\n"
     << "Relative rotations time was excluded\n"
     << "-------------------------------" << std::endl;
 
-  //-- Export the scene (cameras and structures) to a container
+  //-- Export the scene (cameras and structures) to the SfM Data container
   {
     // Cameras
     for (std::map<size_t,PinholeCamera >::const_iterator iter = _map_camera.begin();
@@ -847,8 +1080,6 @@ bool GlobalReconstructionEngine::Process()
     {
       const PinholeCamera & cam = iter->second;
       _reconstructorData.map_Camera[iter->first] = BrownPinholeCamera(cam._P);
-
-      // reconstructed camera
       _reconstructorData.set_imagedId.insert(iter->first);
     }
 
@@ -907,24 +1138,6 @@ bool GlobalReconstructionEngine::ReadInputData()
     }
     else
     {
-/*      //-- The global SfM pipeline assume there is only one intrinsic group
-*      //- Count the number of intrinsic group and if many return an error message
-*      std::vector<openMVG::SfMIO::IntrinsicCameraInfo>::iterator iterF =
-*        std::unique(_vec_intrinsicGroups.begin(), _vec_intrinsicGroups.end(), testIntrinsicsEquality);
-*      _vec_intrinsicGroups.resize( std::distance(_vec_intrinsicGroups.begin(), iterF) );
-*
-*      if (_vec_intrinsicGroups.size() == 1) {
-*        // Set all the intrinsic ID to 0
-*        for (size_t i = 0; i < _vec_camImageNames.size(); ++i)
-*          _vec_camImageNames[i].m_intrinsicId = 0;
-*      }
-*      else  {
-*        std::cerr << "There is more than one focal group in the lists.txt file." << std::endl
-*          << "Only one focal group is supported for the global calibration chain." << std::endl;
-*        return false;
-*      }
-*/
-
       // Find to which intrinsic groups each image belong
       for (std::vector<openMVG::SfMIO::CameraInfo>::const_iterator iter = _vec_camImageNames.begin();
         iter != _vec_camImageNames.end(); ++iter)
@@ -932,7 +1145,7 @@ bool GlobalReconstructionEngine::ReadInputData()
         const openMVG::SfMIO::CameraInfo & camInfo = *iter;
 
         // Find the index of the camera
-        size_t idx = std::distance((std::vector<openMVG::SfMIO::CameraInfo>::const_iterator)_vec_camImageNames.begin(), iter);
+        const size_t idx = std::distance((std::vector<openMVG::SfMIO::CameraInfo>::const_iterator)_vec_camImageNames.begin(), iter);
 
         // to which intrinsic group each image belongs
         _map_IntrinsicIdPerImageId[idx] = camInfo.m_intrinsicId;
@@ -993,124 +1206,6 @@ bool GlobalReconstructionEngine::ReadInputData()
     _map_feats_normalized.insert(std::make_pair(camIndex,normalizedFeatureImageI) );
 
   }
-
-  return true;
-}
-
-bool GlobalReconstructionEngine::CleanGraph()
-{
-  // Create a graph from pairwise correspondences:
-  // - remove not biedge connected component,
-  // - keep the largest connected component.
-
-  typedef lemon::ListGraph Graph;
-  imageGraph::indexedImageGraph putativeGraph(_map_Matches_E, _vec_fileNames);
-
-  // Save the graph before cleaning:
-  imageGraph::exportToGraphvizData(
-    stlplus::create_filespec(_sOutDirectory, "initialGraph"),
-    putativeGraph.g);
-
-  // Remove not bi-edge connected edges
-  typedef Graph::EdgeMap<bool> EdgeMapAlias;
-  EdgeMapAlias cutMap(putativeGraph.g);
-
-  if (lemon::biEdgeConnectedCutEdges(putativeGraph.g, cutMap) > 0)
-  {
-    // Some edges must be removed because they don't follow the biEdge condition.
-    typedef Graph::EdgeIt EdgeIterator;
-    EdgeIterator itEdge(putativeGraph.g);
-    for (EdgeMapAlias::MapIt it(cutMap); it!=INVALID; ++it, ++itEdge)
-    {
-      if (*it)
-        putativeGraph.g.erase(itEdge); // remove the not bi-edge element
-    }
-  }
-
-  // Graph is bi-edge connected, but still many connected components can exist
-  // Keep only the largest one
-  PairWiseMatches matches_filtered;
-  int connectedComponentCount = lemon::countConnectedComponents(putativeGraph.g);
-  std::cout << "\n"
-    << "GlobalReconstructionEngine::CleanGraph() :: => connected Component : "
-    << connectedComponentCount << std::endl;
-  if (connectedComponentCount > 1)
-  {
-    // Keep only the largest connected component
-    // - list all CC size
-    // - if the largest one is meet, keep all the edges that belong to this node
-
-    const std::map<size_t, std::set<lemon::ListGraph::Node> > map_subgraphs = exportGraphToMapSubgraphs(putativeGraph.g);
-    size_t count = std::numeric_limits<size_t>::min();
-    std::map<size_t, std::set<lemon::ListGraph::Node> >::const_iterator iterLargestCC = map_subgraphs.end();
-    for(std::map<size_t, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
-        iter != map_subgraphs.end(); ++iter)
-    {
-      if (iter->second.size() > count)  {
-        count = iter->second.size();
-        iterLargestCC = iter;
-      }
-      std::cout << "Connected component of size : " << iter->second.size() << std::endl;
-    }
-
-    //-- Remove all nodes that are not listed in the largest CC
-    for(std::map<size_t, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
-        iter != map_subgraphs.end(); ++iter)
-    {
-      if (iter == iterLargestCC)
-      {
-        // list all nodes and outgoing edges and update the matching list
-        const std::set<lemon::ListGraph::Node> & ccSet = iter->second;
-        for (std::set<lemon::ListGraph::Node>::const_iterator iter2 = ccSet.begin();
-          iter2 != ccSet.end(); ++iter2)
-        {
-          typedef Graph::OutArcIt OutArcIt;
-          for (OutArcIt e(putativeGraph.g, *iter2); e!=INVALID; ++e)
-          {
-            size_t Idu = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.target(e)];
-            size_t Idv = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.source(e)];
-            PairWiseMatches::iterator iterF = _map_Matches_E.find(std::make_pair(Idu,Idv));
-            if( iterF != _map_Matches_E.end())
-            {
-              matches_filtered.insert(*iterF);
-            }
-            iterF = _map_Matches_E.find(std::make_pair(Idv,Idu));
-            if( iterF != _map_Matches_E.end())
-            {
-              matches_filtered.insert(*iterF);
-            }
-          }
-        }
-        // update the matching list
-        _map_Matches_E = matches_filtered;
-      }
-      else
-      {
-        // remove the edges from the graph
-        const std::set<lemon::ListGraph::Node> & ccSet = iter->second;
-        for (std::set<lemon::ListGraph::Node>::const_iterator iter2 = ccSet.begin();
-          iter2 != ccSet.end(); ++iter2)
-        {
-          typedef Graph::OutArcIt OutArcIt;
-          for (OutArcIt e(putativeGraph.g, *iter2); e!=INVALID; ++e)
-          {
-            putativeGraph.g.erase(e);
-          }
-          //putativeGraph.g.erase(*iter2);
-        }
-      }
-    }
-  }
-
-  // Save the graph after cleaning:
-  imageGraph::exportToGraphvizData(
-    stlplus::create_filespec(_sOutDirectory, "cleanedGraph"),
-    putativeGraph.g);
-
-  std::cout << "\n"
-    << "Cardinal of nodes: " << lemon::countNodes(putativeGraph.g) << "\n"
-    << "Cardinal of edges: " << lemon::countEdges(putativeGraph.g) << std::endl
-    << std::endl;
 
   return true;
 }
@@ -1321,21 +1416,21 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
           // If no error, get back refined parameters
           if (summary.IsSolutionUsable())
           {
-            // Get back 3D points
-            size_t k = 0;
-            std::vector<Vec3>  finalPoint;
-
-            for (std::vector<Vec3>::iterator iter = vec_allScenes.begin();
-              iter != vec_allScenes.end(); ++iter, ++k)
-            {
-              const double * pt = ba_problem.mutable_points() + k*3;
-              Vec3 & pt3D = *iter;
-              pt3D = Vec3(pt[0], pt[1], pt[2]);
-              finalPoint.push_back(pt3D);
-            }
-
-
-/*            // export point cloud associated to pair (I,J). Only for debug purpose
+/*            // Get back 3D points
+*            size_t k = 0;
+*            std::vector<Vec3>  finalPoint;
+*
+*            for (std::vector<Vec3>::iterator iter = vec_allScenes.begin();
+*              iter != vec_allScenes.end(); ++iter, ++k)
+*            {
+*              const double * pt = ba_problem.mutable_points() + k*3;
+*              Vec3 & pt3D = *iter;
+*              pt3D = Vec3(pt[0], pt[1], pt[2]);
+*              finalPoint.push_back(pt3D);
+*            }
+*
+*
+*            // export point cloud associated to pair (I,J). Only for debug purpose
 *            std::ostringstream pairIJ;
 *            pairIJ << I << "_" << J << ".ply";
 *
@@ -1481,7 +1576,7 @@ void GlobalReconstructionEngine::tripletRotationRejection(
     }
   }
 
-  map_relatives = map_relatives_validated;
+  map_relatives.swap(map_relatives_validated);
 
   // Display statistics about rotation triplets error:
   std::cout << "\nStatistics about rotation triplets:" << std::endl;
@@ -1518,8 +1613,8 @@ void GlobalReconstructionEngine::tripletRotationRejection(
   // Look all edges of the graph and look if exist in one triplet
   for (Graph::EdgeIt iter(putativeGraph.g); iter!=INVALID; ++iter)
   {
-    size_t Idu = (*putativeGraph.map_nodeMapIndex)[sg.u(iter)];
-    size_t Idv = (*putativeGraph.map_nodeMapIndex)[sg.v(iter)];
+    const size_t Idu = (*putativeGraph.map_nodeMapIndex)[sg.u(iter)];
+    const size_t Idv = (*putativeGraph.map_nodeMapIndex)[sg.v(iter)];
     //-- Look if the edge Idu,Idv exists in the trifocal tensor list
     for (size_t i = 0; i < vec_triplets_validated.size(); ++i)
     {
@@ -1538,8 +1633,8 @@ void GlobalReconstructionEngine::tripletRotationRejection(
 
   {
     std::cout << "\nTriplets filtering based on error on cycles \n";
-    std::cout << "Before : " << vec_triplets.size() << " triplets \n"
-    << "After : " << vec_triplets_validated.size() << std::endl;
+    std::cout << "Before: " << vec_triplets.size() << " triplets \n"
+    << "After: " << vec_triplets_validated.size() << std::endl;
     std::cout << "There is " << lemon::countConnectedComponents (sg)
       << " Connected Component in the filtered graph" << std::endl;
   }
@@ -1589,7 +1684,7 @@ void GlobalReconstructionEngine::tripletRotationRejection(
     }
   }
 
-  std::cout << "\n Relatives edges removed by triplet checking : " << removedEdgesCount << std::endl;
+  std::cout << "\n Relatives edges removed by triplet checking: " << removedEdgesCount << std::endl;
 }
 
 void GlobalReconstructionEngine::bundleAdjustment(
@@ -1730,12 +1825,12 @@ void GlobalReconstructionEngine::bundleAdjustment(
       const size_t imageId = iterTrack->first;
       const size_t featId = iterTrack->second;
 
-      // If imageId reconstructed :
+      // If imageId reconstructed:
       //  - Add measurements (the feature position)
       //  - Add camidx (map the image number to the camera index)
       //  - Add ptidx (the 3D corresponding point index) (must be increasing)
 
-      if ( set_camIndex.find(imageId) != set_camIndex.end())
+      //if ( set_camIndex.find(imageId) != set_camIndex.end())
       {
         const std::vector<SIOPointFeature> & vec_feats = _map_feats[imageId];
         const SIOPointFeature & ptFeat = vec_feats[featId];
@@ -1898,7 +1993,7 @@ void GlobalReconstructionEngine::bundleAdjustment(
           << "-- #tracks: " << map_tracksSelected.size() << ".<br>"
           << "-- #observation: " << ba_problem.num_observations_ << ".<br>"
           << "-- residual mean (RMSE): " << std::sqrt(summary.final_cost/ba_problem.num_observations_) << ".<br>"
-          << "-- Nb Steps required until convergence : " <<  summary.num_successful_steps + summary.num_unsuccessful_steps << ".<br>"
+          << "-- Nb Steps required until convergence: " <<  summary.num_successful_steps + summary.num_unsuccessful_steps << ".<br>"
           << "-------------------------------" << "<br>";
         _htmlDocStream->pushInfo(os.str());
       }
@@ -1908,7 +2003,7 @@ void GlobalReconstructionEngine::bundleAdjustment(
         << "-- #tracks: " << map_tracksSelected.size() << ".\n"
         << "-- #observation: " << ba_problem.num_observations_ << ".\n"
         << "-- residual mean (RMSE): " << std::sqrt(summary.final_cost/ba_problem.num_observations_) << ".\n"
-        << "-- Nb Steps required until convergence : " <<  summary.num_successful_steps + summary.num_unsuccessful_steps << ".\n"
+        << "-- Nb Steps required until convergence: " <<  summary.num_successful_steps + summary.num_unsuccessful_steps << ".\n"
         << "-------------------------------" << std::endl;
     }
   }

@@ -288,21 +288,21 @@ bool estimate_T_triplet(
 
         (*tt[i]) = Vec3(cam[0], cam[1], cam[2]);
       }
-
-      // Get back 3D points
-      size_t k = 0;
-      std::vector<Vec3>  finalPoint;
-
-      for (std::vector<Vec3>::iterator iter = vec_Xis.begin();
-        iter != vec_Xis.end(); ++iter, ++k)
-      {
-        const double * pt = ba_problem.mutable_points() + k*3;
-        Vec3 & pt3D = *iter;
-        pt3D = Vec3(pt[0], pt[1], pt[2]);
-        finalPoint.push_back(pt3D);
-      }
-
-/*      // export point cloud (for debug purpose only)
+/*
+*      // Get back 3D points
+*      size_t k = 0;
+*      std::vector<Vec3>  finalPoint;
+*
+*      for (std::vector<Vec3>::iterator iter = vec_Xis.begin();
+*        iter != vec_Xis.end(); ++iter, ++k)
+*      {
+*        const double * pt = ba_problem.mutable_points() + k*3;
+*        Vec3 & pt3D = *iter;
+*        pt3D = Vec3(pt[0], pt[1], pt[2]);
+*        finalPoint.push_back(pt3D);
+*      }
+*
+*      // export point cloud (for debug purpose only)
 *      std::ostringstream pairIJK;
 *      pairIJK << nI << "_" << nJ << "_" << nK << ".ply";
 *
