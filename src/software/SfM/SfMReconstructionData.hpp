@@ -281,7 +281,7 @@ struct reconstructorHelper
         {
           const size_t imageId = iterTrack->first;
 
-          if ( map_cameratoIndex.find(imageId) != map_cameratoIndex.end())
+          if (map_cameratoIndex.find(imageId) != map_cameratoIndex.end())
           {
             set_imageIndex.insert(map_cameratoIndex[imageId]);
             const BrownPinholeCamera & cam = (map_Camera.find(imageId))->second;
@@ -290,7 +290,7 @@ struct reconstructorHelper
             zfar[map_cameratoIndex[imageId]] = std::max(zfar[map_cameratoIndex[imageId]], z );
           }
 
-          s_visibility << iterTrack->first << " " << iterTrack->second << " ";
+          s_visibility << map_cameratoIndex[iterTrack->first] << " " << iterTrack->second << " ";
         }
 
         //export images indexes
