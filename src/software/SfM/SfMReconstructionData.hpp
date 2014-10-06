@@ -227,7 +227,7 @@ struct reconstructorHelper
       const size_t nt = set_trackId.size();
 
       // Clipping planes (near and far Z depth per view)
-      std::vector<double> znear(nc, numeric_limits<double>::max()), zfar(nc, 0);
+      std::vector<double> znear(nc, (std::numeric_limits<double>::max)()), zfar(nc, 0);
       // Cloud
       std::ofstream f_cloud(
         stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "clouds",
