@@ -117,8 +117,8 @@ namespace openMVG {
 
   /// Clamp return the number if inside range, else min or max range.
   template<typename T>
-  inline T clamp(const T & val, const T& min, const T & max)  {
-    return std::max(min, std::min(val, max));
+  inline T clamp(const T & val, const T& _min, const T & _max)  {
+    return (std::max)(_min, (std::min)(val, _max));
     //(val < min) ? val : ((val>max) ? val : max);
   }
 

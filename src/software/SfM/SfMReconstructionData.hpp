@@ -30,8 +30,6 @@
 
 namespace openMVG{
 
-using namespace std;
-
 // A simple container and undistort function for the Brown's distortion model [1]
 // Variables:
 // (x,y): 2D point in the image (pixel)
@@ -286,8 +284,8 @@ struct reconstructorHelper
             set_imageIndex.insert(map_cameratoIndex[imageId]);
             const BrownPinholeCamera & cam = (map_Camera.find(imageId))->second;
             const double z = Depth(cam._R, cam._t, pos);
-            znear[map_cameratoIndex[imageId]] = std::min(znear[map_cameratoIndex[imageId]], z );
-            zfar[map_cameratoIndex[imageId]] = std::max(zfar[map_cameratoIndex[imageId]], z );
+            znear[map_cameratoIndex[imageId]] = (std::min)(znear[map_cameratoIndex[imageId]], z );
+            zfar[map_cameratoIndex[imageId]] = (std::max)(zfar[map_cameratoIndex[imageId]], z );
           }
 
           s_visibility << iterTrack->first << " " << iterTrack->second << " ";
