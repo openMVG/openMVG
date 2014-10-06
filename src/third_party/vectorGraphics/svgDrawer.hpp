@@ -24,12 +24,15 @@ namespace svg {
 /// Basic svg style
 class svgStyle
 {
-  std::string _sFillCol, _sStrokeCol, _sToolTip;
-  float _strokeW;
+    std::string _id;
+    std::string _sFillCol, _sStrokeCol, _sToolTip;
+    float _strokeW;
+    std::string _id_mouse_over;
 public:
 
-  svgStyle():_sFillCol(""), _sStrokeCol("black"), _sToolTip(""),
-    _strokeW(1.0f) {}
+  svgStyle():_id(""), _sFillCol(""), _sStrokeCol("black"), _sToolTip(""),
+    _strokeW(1.0f),
+    _id_mouse_over("") {}
 
   // Configure fill color
   svgStyle & fill(const std::string & sFillCol)
@@ -47,23 +50,46 @@ public:
   svgStyle & tooltip(const std::string & sTooltip)
   { _sToolTip = sTooltip; return * this;}
 
+  svgStyle & mouse_over_id(const std::string& id) 
+  { _id_mouse_over = id; return *this; }
+
+  svgStyle & id(const std::string& new_id)
+  { _id = new_id; return *this; }
+
   const std::string getSvgStream() const {
     std::ostringstream os;
 
+    if (!_id.empty())
+        os << " id=\"" << _id << "\"";
     if (!_sStrokeCol.empty())
       os << " stroke=\"" << _sStrokeCol << "\" stroke-width=\"" << _strokeW << "\"";
     if (_sFillCol.empty())
       os << " fill=\"none\"";
     else
       os << " fill=\"" << _sFillCol << "\"";
-    if (!_sToolTip.empty())
-      os << " tooltip=\"enable\">"
-      << "<title>" << _sToolTip << "</title>";
+
+    bool closed_tag = false;
+
+    if (!_sToolTip.empty()) {
+        os << " tooltip=\"enable\">"
+            << "<title>" << _sToolTip << "</title>";
+        closed_tag = true;
+    }
+    if (!_id_mouse_over.empty()) {
+        if (!closed_tag) {
+            os << ">";
+            closed_tag = true;
+        }
+
+        os << "<set attributeName=\"stroke\" to=\"red\" begin=\"" << _id_mouse_over << ".mouseover\" end=\"" << _id_mouse_over << ".mouseout\"/>";
+    }
 
     return os.str();
   }
 
-  bool bTooltip() const { return !_sToolTip.empty();}
+  bool bTooltip() const { return !_sToolTip.empty(); }
+
+  bool bAdditional() const { return !(_id_mouse_over.empty() && _sToolTip.empty()); }
 };
 
 
@@ -85,15 +111,18 @@ public:
       << " preserveAspectRatio=\"xMinYMin meet\""
       << " viewBox=\"0 0 " << W << ' ' << H <<"\"";
 
-    svgStream <<" version=\"1.1\">" << std::endl;
+    svgStream <<" version=\"1.1\">" << std::endl
+        << "<style>polyline:hover { stroke:red; } </style>"
+        << std::endl;
   }
   ///Circle draw -> x,y position and radius
   void drawCircle(float cx, float cy, float r,
     const svgStyle & style)
   {
-    svgStream << "<circle cx=\"" << cx << "\"" << " cy=\"" << cy << "\""
-      << " r=\"" << r << "\""
-      << style.getSvgStream() + (style.bTooltip() ? "</circle>" : "/>\n");  }
+      svgStream << "<circle cx=\"" << cx << "\"" << " cy=\"" << cy << "\""
+          << " r=\"" << r << "\""
+          << style.getSvgStream() + (style.bAdditional() ? "</circle>\n" : "/>\n");
+  }
 
   ///Line draw -> start and end point
   void drawLine(float ax, float ay, float bx, float by,
@@ -101,7 +130,7 @@ public:
   {
     svgStream <<
       "<polyline points=\""<< ax << "," << ay << "," << bx << "," << by <<"\""
-      << style.getSvgStream() +  (style.bTooltip() ? "</polyline>" : "/>\n");
+      << style.getSvgStream() +  (style.bAdditional() ? "</polyline>\n" : "/>\n");
   }
 
   ///Reference to an image (path must be relative to the svg file)
@@ -130,7 +159,7 @@ public:
       << " y=\"" << cy << "\""
       << " width=\"" << W << "\""
       << " height=\"" << H << "\""
-      << style.getSvgStream() + (style.bTooltip() ? "</rect>" : "/>\n");
+      << style.getSvgStream() + (style.bAdditional() ? "</rect>\n" : "/>\n");
   }
 
   ///Text display -> x,y position, font size

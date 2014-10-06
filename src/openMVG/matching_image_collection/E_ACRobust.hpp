@@ -26,6 +26,12 @@ struct GeometricFilter_EMatrix_AC
     size_t iteration = 4096)
     : m_dPrecision(dPrecision), m_stIteration(iteration), m_K(K) {};
 
+  GeometricFilter_EMatrix_AC(
+      const Mat3 & mK,
+      double dPrecision = std::numeric_limits<double>::infinity(),
+      size_t iteration = 4096)
+      : m_dPrecision(dPrecision), m_stIteration(iteration), m_common_K(mK) {};
+
   /// Robust fitting of the ESSENTIAL matrix
   void Fit(
     const std::pair<size_t, size_t> pairIndex,
@@ -37,11 +43,19 @@ struct GeometricFilter_EMatrix_AC
   {
     vec_inliers.clear();
 
-    std::map<size_t, Mat3>::const_iterator iterK_I = m_K.find(pairIndex.first);
-    std::map<size_t, Mat3>::const_iterator iterK_J = m_K.find(pairIndex.second);
-    // Check that intrinsic parameters exist for this pair
-    if (iterK_I == m_K.end() || iterK_J == m_K.end() )
-      return;
+    const openMVG::Mat3 *intrMat_I = NULL;
+    const openMVG::Mat3 *intrMat_J = NULL;
+    if (!m_K.empty()) {
+        std::map<size_t, Mat3>::const_iterator iterK_I = m_K.find(pairIndex.first);
+        std::map<size_t, Mat3>::const_iterator iterK_J = m_K.find(pairIndex.second);
+        // Check that intrinsic parameters exist for this pair
+        if (iterK_I == m_K.end() || iterK_J == m_K.end() )
+          return;
+        intrMat_I = &iterK_I->second;
+        intrMat_J = &iterK_J->second;
+    } else {
+        intrMat_I = intrMat_J = &m_common_K;
+    }
 
     // Define the AContrario adapted Essential matrix solver
     typedef ACKernelAdaptorEssential<
@@ -53,7 +67,7 @@ struct GeometricFilter_EMatrix_AC
 
     KernelType kernel(xA, imgSizeA.first, imgSizeA.second,
                       xB, imgSizeB.first, imgSizeB.second,
-                      iterK_I->second, iterK_J->second);
+                      *intrMat_I, *intrMat_J);
 
     // Robustly estimate the Essential matrix with A Contrario ransac
     Mat3 E;
@@ -69,6 +83,7 @@ struct GeometricFilter_EMatrix_AC
   double m_dPrecision;  //upper_bound of the precision
   size_t m_stIteration; //maximal number of used iterations
   std::map<size_t, Mat3> m_K; // K intrinsic matrix per image index
+  Mat3 m_common_K; //single intrinsic matrix for all images, if exists
 };
 
 }; // namespace openMVG

@@ -361,9 +361,9 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
     const graphUtils::Triplet & triplet = vec_triplets[i];
     size_t I = triplet.i, J = triplet.j , K = triplet.k;
     // Add three edges
-    set_edges.insert(std::make_pair(std::min(I,J), std::max(I,J)));
-    set_edges.insert(std::make_pair(std::min(I,K), std::max(I,K)));
-    set_edges.insert(std::make_pair(std::min(J,K), std::max(J,K)));
+    set_edges.insert(std::make_pair((std::min)(I,J), (std::max)(I,J)));
+    set_edges.insert(std::make_pair((std::min)(I,K), (std::max)(I,K)));
+    set_edges.insert(std::make_pair((std::min)(J,K), (std::max)(J,K)));
   }
 
   // Copy them in vector in order to try to compute them in parallel
@@ -530,9 +530,9 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
           }
 
           //-- Remove the 3 edges validated by the trifocal tensor
-          m_mutexSet.discard(std::make_pair(std::min(I,J), std::max(I,J)));
-          m_mutexSet.discard(std::make_pair(std::min(I,K), std::max(I,K)));
-          m_mutexSet.discard(std::make_pair(std::min(J,K), std::max(J,K)));
+          m_mutexSet.discard(std::make_pair((std::min)(I,J), (std::max)(I,J)));
+          m_mutexSet.discard(std::make_pair((std::min)(I,K), (std::max)(I,K)));
+          m_mutexSet.discard(std::make_pair((std::min)(J,K), (std::max)(J,K)));
           break;
         }
       }
