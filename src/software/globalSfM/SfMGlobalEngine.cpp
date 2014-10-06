@@ -949,10 +949,11 @@ bool GlobalReconstructionEngine::Process()
   #pragma omp critical
 #endif
         {
-          if (trianObj.minDepth() < 0)  {
+          if (trianObj.minDepth() < 0 || std::isnan(Xs[0]) || std::isnan(Xs[1])
+               || std::isnan(Xs[2]) )  {
             set_idx_to_remove.insert(idx);
           }
-        
+
           //-- Compute residual over all the projections
           for (submapTrack::const_iterator iter = subTrack.begin(); iter != subTrack.end(); ++iter) {
             const size_t imaIndex = iter->first;
