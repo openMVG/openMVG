@@ -77,7 +77,7 @@ class Kernel {
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
   /// Extract required sample and fit model(s) to the sample
-  void Fit(const vector<size_t> &samples, vector<Model, Eigen::aligned_allocator<Model> > *models) const {
+  void Fit(const vector<size_t> &samples, vector<ModelArg, Eigen::aligned_allocator<ModelArg> > *models) const {
     Mat x1 = ExtractColumns(x1_, samples),
         x2 = ExtractColumns(x2_, samples);
     Solver::Solve(x1, x2, models);
