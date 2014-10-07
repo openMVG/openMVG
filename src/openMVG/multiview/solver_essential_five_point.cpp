@@ -185,7 +185,7 @@ void FivePointsGaussJordan(Mat *Mp) {
 
 void FivePointsRelativePose(const Mat2X &x1,
                             const Mat2X &x2,
-                            vector<Mat3> *Es) {
+                            vector<Mat3, Eigen::aligned_allocator<Mat3> > *Es) {
   // Step 1: Nullspace Extraction.
   Mat E_basis = FivePointsNullspaceBasis(x1, x2);
 

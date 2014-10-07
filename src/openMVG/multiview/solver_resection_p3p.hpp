@@ -288,7 +288,7 @@ struct P3PSolver {
   enum { MINIMUM_SAMPLES = 3 };
   enum { MAX_MODELS = 4};
   // Solve the problem of camera pose.
-  static void Solve(const Mat &pt2D, const Mat &pt3D, std::vector<Mat34> *models)
+  static void Solve(const Mat &pt2D, const Mat &pt3D, std::vector<Mat34, Eigen::aligned_allocator<Mat34> > *models)
   {
     Mat3 R;
     Vec3 t;

@@ -52,7 +52,7 @@ struct FourPointSolver {
    *
    * The estimated homography should approximatelly hold the condition y = H x.
    */
-  static void Solve(const Mat &x, const Mat &y, vector<Mat3> *Hs);
+  static void Solve(const Mat &x, const Mat &y, vector<Mat3, Eigen::aligned_allocator<Mat3> > *Hs);
 };
 
 // Should be distributed as Chi-squared with k = 2.

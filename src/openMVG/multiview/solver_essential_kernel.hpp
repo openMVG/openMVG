@@ -49,7 +49,7 @@ using namespace std;
 struct EightPointRelativePoseSolver {
   enum { MINIMUM_SAMPLES = 8 };
   enum { MAX_MODELS = 1 };
-  static void Solve(const Mat &x1, const Mat &x2, vector<Mat3> *E);
+  static void Solve(const Mat &x1, const Mat &x2, vector<Mat3, Eigen::aligned_allocator<Mat3> > *E);
 };
 
 /**
@@ -60,7 +60,7 @@ struct EightPointRelativePoseSolver {
 struct FivePointSolver {
   enum { MINIMUM_SAMPLES = 5 };
   enum { MAX_MODELS = 10 };
-  static void Solve(const Mat &x1, const Mat &x2, vector<Mat3> *E);
+  static void Solve(const Mat &x1, const Mat &x2, vector<Mat3, Eigen::aligned_allocator<Mat3> > *E);
 };
 
 //-- Generic Solver for the 5pt Essential Matrix Estimation.
@@ -103,6 +103,9 @@ public:
   }
 protected:
   Mat3 K1_, K2_; // The two camera calibrated camera matrix
+
+public: 
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
 //-- Solver kernel for the 8pt Essential Matrix Estimation

@@ -41,7 +41,7 @@ using namespace linearProgramming;
 
 /// Encode translation and structure linear program
 void EncodeTiXi(const Mat & M, //Scene representation
-                           const std::vector<Mat3> Ri,
+                           const std::vector<Mat3, Eigen::aligned_allocator<Mat3>> Ri,
                            double sigma, // Start upper bound
                            sRMat & A, Vec & C,
                            std::vector<LP_Constraints::eLP_SIGN> & vec_sign,
@@ -152,7 +152,7 @@ void EncodeTiXi(const Mat & M, //Scene representation
 struct Translation_Structure_L1_ConstraintBuilder
 {
   Translation_Structure_L1_ConstraintBuilder(
-    const std::vector<Mat3> & vec_Ri,
+    const std::vector<Mat3, Eigen::aligned_allocator<Mat3> > & vec_Ri,
     const Mat & M)
   {
     _M = M;
@@ -181,8 +181,10 @@ struct Translation_Structure_L1_ConstraintBuilder
     return true;
   }
 
-  std::vector<Mat3> _vec_Ri;  // Rotation matrix
+  std::vector<Mat3, Eigen::aligned_allocator<Mat3> > _vec_Ri;  // Rotation matrix
   Mat _M; // M contains (X,Y,index3dPoint, indexCam)^T
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
 } // namespace lInfinityCV

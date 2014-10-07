@@ -97,7 +97,7 @@ void BuildActionMatrix(Matrix & A, const Mat &pt2D, const Mat &XPoints)  {
 void SixPointResectionSolver::Solve(
   const Mat &pt2D,
   const Mat &pt3d,
-  vector<Mat34> *Ps,
+  vector<Mat34, Eigen::aligned_allocator<Mat34>> *Ps,
   bool bcheck)
 {
   assert(2 == pt2D.rows());

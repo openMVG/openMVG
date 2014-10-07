@@ -54,7 +54,7 @@ namespace openMVG {
  * \param E  A list of at most 10 candidate essential matrix solutions.
  */
 void FivePointsRelativePose(const Mat2X &x1, const Mat2X &x2,
-                            vector<Mat3> *E);
+                            vector<Mat3, Eigen::aligned_allocator<Mat3> > *E);
 
 // Compute the nullspace of the linear constraints given by the matches.
 Mat FivePointsNullspaceBasis(const Mat2X &x1, const Mat2X &x2);

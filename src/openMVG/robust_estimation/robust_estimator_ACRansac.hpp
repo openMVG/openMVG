@@ -178,7 +178,7 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
   for (size_t iter=0; iter < nIter; ++iter) {
     UniformSample(sizeSample, vec_index, &vec_sample); // Get random sample
 
-    std::vector<typename Kernel::Model> vec_models; // Up to max_models solutions
+    std::vector<typename Kernel::Model, Eigen::aligned_allocator <Kernel::Model> > vec_models; // Up to max_models solutions
     kernel.Fit(vec_sample, &vec_models);
 
     // Evaluate models

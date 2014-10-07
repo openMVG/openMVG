@@ -49,7 +49,7 @@ struct SixPointResectionSolver {
   enum { MAX_MODELS = 1 };
   // Solve the problem of camera pose.
   // First 3d point will be translated in order to have X0 = (0,0,0,1)
-  static void Solve(const Mat &pt2D, const Mat &pt3D, std::vector<Mat34> *P, bool bcheck = true);
+  static void Solve(const Mat &pt2D, const Mat &pt3D, std::vector<Mat34, Eigen::aligned_allocator<Mat34> > *P, bool bcheck = true);
 
   // Compute the residual of the projection distance(pt2D, Project(P,pt3D))
   static double Error(const Mat34 & P, const Vec2 & pt2D, const Vec3 & pt3D){

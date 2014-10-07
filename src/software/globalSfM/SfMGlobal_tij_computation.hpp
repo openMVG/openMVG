@@ -31,9 +31,9 @@ bool estimate_T_triplet(
   size_t w, size_t h,
   const openMVG::tracks::STLMAPTracks & map_tracksCommon,
   const std::map<size_t, std::vector<SIOPointFeature> > & map_feats,
-  const std::vector<Mat3> & vec_global_KR_Triplet,
+  const std::vector<Mat3, Eigen::aligned_allocator<Mat3> > & vec_global_KR_Triplet,
   const Mat3 & K,
-  std::vector<Vec3> & vec_tis,
+  std::vector<Vec3, Eigen::aligned_allocator<Vec3> > & vec_tis,
   double & dPrecision,
   std::vector<size_t> & vec_inliers)
 {
@@ -457,10 +457,10 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
         size_t w = _vec_intrinsicGroups[_vec_camImageNames[I].m_intrinsicId].m_w;
         size_t h = _vec_intrinsicGroups[_vec_camImageNames[I].m_intrinsicId].m_h;
 
-        std::vector<Vec3> vec_tis(3);
+        std::vector<Vec3, Eigen::aligned_allocator<Vec3> > vec_tis(3);
 
         // Get rotation:
-        std::vector<Mat3> vec_global_KR_Triplet;
+        std::vector<Mat3, Eigen::aligned_allocator<Mat3> > vec_global_KR_Triplet;
         vec_global_KR_Triplet.push_back(map_global_KR[I]);
         vec_global_KR_Triplet.push_back(map_global_KR[J]);
         vec_global_KR_Triplet.push_back(map_global_KR[K]);

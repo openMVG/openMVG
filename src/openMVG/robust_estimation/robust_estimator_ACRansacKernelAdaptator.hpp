@@ -69,7 +69,7 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<size_t> &samples, std::vector<ModelArg, Eigen::aligned_allocator<ModelArg> > *models) const {
     Mat x1 = ExtractColumns(x1_, samples);
     Mat x2 = ExtractColumns(x2_, samples);
     Solver::Solve(x1, x2, models);
@@ -101,6 +101,9 @@ private:
   Mat3 N1_, N2_;      // Matrix used to normalize data
   double logalpha0_; // Alpha0 is used to make the error adaptive to the image size
   bool bPointToLine_;// Store if error model is pointToLine or point to point
+
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
 struct UnnormalizerResection {
@@ -135,7 +138,7 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<size_t> &samples, std::vector<ModelArg, Eigen::aligned_allocator<ModelArg> > *models) const {
     Mat x1 = ExtractColumns(x2d_, samples);
     Mat x2 = ExtractColumns(x3D_, samples);
     Solver::Solve(x1, x2, models);
@@ -162,6 +165,9 @@ private:
   Mat x2d_, x3D_;
   Mat3 N1_;      // Matrix used to normalize data
   double logalpha0_; // Alpha0 is used to make the error adaptive to the image size
+
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
 /// Pose/Resection Kernel adaptator for the A contrario model estimator with
@@ -193,7 +199,7 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<size_t> &samples, std::vector<Model, Eigen::aligned_allocator<Model> > *models) const {
     Mat x1 = ExtractColumns(x2d_, samples);
     Mat x2 = ExtractColumns(x3D_, samples);
     Solver::Solve(x1, x2, models);
@@ -221,6 +227,9 @@ private:
   Mat3 N1_;      // Matrix used to normalize data
   double logalpha0_; // Alpha0 is used to make the error adaptive to the image size
   Mat3 K_;            // Intrinsic camera parameter
+
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
 /// Essential matrix Kernel adaptator for the A contrario model estimator
@@ -259,7 +268,7 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<size_t> &samples, std::vector<Model, Eigen::aligned_allocator<Model> > *models) const {
     Mat x1 = ExtractColumns(x1k_, samples);
     Mat x2 = ExtractColumns(x2k_, samples);
     Solver::Solve(x1, x2, models);
@@ -284,6 +293,9 @@ private:
   Mat3 N1_, N2_;      // Matrix used to normalize data
   double logalpha0_; // Alpha0 is used to make the error adaptive to the image size
   Mat3 K1_, K2_;      // Intrinsic camera parameter
+
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
 } // namespace robust

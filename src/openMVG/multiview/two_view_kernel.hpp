@@ -37,7 +37,7 @@ namespace openMVG {
 namespace two_view {
 namespace kernel {
 
-using namespace std;
+    using namespace std;
 
 // This is one example (targeted at solvers that operate on correspondences
 // between two views) that shows the "kernel" part of a robust fitting
@@ -77,7 +77,7 @@ class Kernel {
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
   /// Extract required sample and fit model(s) to the sample
-  void Fit(const vector<size_t> &samples, vector<Model> *models) const {
+  void Fit(const vector<size_t> &samples, vector<Model, Eigen::aligned_allocator<Model> > *models) const {
     Mat x1 = ExtractColumns(x1_, samples),
         x2 = ExtractColumns(x2_, samples);
     Solver::Solve(x1, x2, models);
@@ -91,12 +91,15 @@ class Kernel {
     return x1_.cols();
   }
   /// Compute a model on sampled point
-  static void Solve(const Mat &x1, const Mat &x2, vector<Model> *models) {
+  static void Solve(const Mat &x1, const Mat &x2, vector<Model, Eigen::aligned_allocator<Model> > *models) {
     // By offering this, Kernel types can be passed to templates.
     Solver::Solve(x1, x2, models);
   }
  protected:
   const Mat & x1_, & x2_; // Left/Right corresponding point
+
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
 // Analog Normalized version of the previous Kernel.
@@ -108,7 +111,7 @@ public:
   enum { MINIMUM_SAMPLES = SolverArg::MINIMUM_SAMPLES };
   enum { MAX_MODELS = SolverArg::MAX_MODELS };
 
-  static void Solve(const Mat &x1, const Mat &x2, vector<ModelArg> *models) {
+  static void Solve(const Mat &x1, const Mat &x2, vector<ModelArg, Eigen::aligned_allocator<ModelArg> > *models) {
     assert(2 == x1.rows());
     assert(MINIMUM_SAMPLES <= x1.cols());
     assert(x1.rows() == x2.rows());

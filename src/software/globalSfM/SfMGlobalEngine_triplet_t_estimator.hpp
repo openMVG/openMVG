@@ -48,6 +48,8 @@ struct TrifocalTensorModel {
 
     return std::max(pt1ReProj, std::max(pt2ReProj,pt3ReProj));
   }
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
 }  // namespace kernel
@@ -64,7 +66,7 @@ struct tisXisTrifocalSolver {
   // Solve the computation of the tensor.
   static void Solve(
     const Mat &pt0, const Mat & pt1, const Mat & pt2,
-    const std::vector<Mat3> & vec_KR, const Mat3 & K, std::vector<TrifocalTensorModel> *P)
+    const std::vector<Mat3, Eigen::aligned_allocator<Mat3> > & vec_KR, const Mat3 & K, std::vector<TrifocalTensorModel> *P)
   {
     //Build the megaMatMatrix
     const int n_obs = pt0.cols();
@@ -135,7 +137,7 @@ public:
 
 
   TrifocalKernel_ACRansac_N_tisXis(const Mat & x1, const Mat & x2, const Mat & x3,
-    int w, int h, const std::vector<Mat3> & vec_KRi, const Mat3 & K)
+    int w, int h, const std::vector<Mat3, Eigen::aligned_allocator<Mat3> > & vec_KRi, const Mat3 & K)
     : x1_(x1), x2_(x2), x3_(x3), logalpha0_(0.0), vec_KR_(vec_KRi), K_(K)
   {
     // Normalize points by inverse(K)
@@ -193,8 +195,11 @@ private:
   Mat x1n_, x2n_, x3n_;
   Mat3 N_;
   double logalpha0_;
-  std::vector<Mat3> vec_KR_;
+  std::vector<Mat3, Eigen::aligned_allocator<Mat3> > vec_KR_;
   Mat3 K_;
+
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 } // namespace openMVG

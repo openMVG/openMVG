@@ -34,7 +34,7 @@ namespace fundamental {
 namespace kernel {
 
 using namespace std;
-void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *F) {
+void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3, Eigen::aligned_allocator<Mat3> > *F) {
   assert(2 == x1.rows());
   assert(7 <= x1.cols());
   assert(x1.rows() == x2.rows());
@@ -94,7 +94,7 @@ void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *F) {
   }
 }
 
-void EightPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Fs) {
+void EightPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3, Eigen::aligned_allocator<Mat3> > *Fs) {
   assert(2 == x1.rows());
   assert(8 <= x1.cols());
   assert(x1.rows() == x2.rows());
