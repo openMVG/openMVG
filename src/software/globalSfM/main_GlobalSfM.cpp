@@ -38,6 +38,7 @@ int main(int argc, char **argv)
   bool bColoredPointCloud = false;
   int iRotationAveragingMethod = 2;
   int iTranslationAveragingMethod = 1;
+  bool bRefineIntrinsic = true;
 
   cmd.add( make_option('i', sImaDirectory, "imadir") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
@@ -45,6 +46,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('c', bColoredPointCloud, "coloredPointCloud") );
   cmd.add( make_option('r', iRotationAveragingMethod, "rotationAveraging") );
   cmd.add( make_option('t', iTranslationAveragingMethod, "translationAveraging") );
+  cmd.add( make_option('f', bRefineIntrinsic, "refineIntrinsic") );
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -57,6 +59,9 @@ int main(int argc, char **argv)
     << "[-c|--coloredPointCloud 0(default) or 1]\n"
     << "[-r|--rotationAveraging 2(default L2) or 1 (L1)]\n"
     << "[-t|--translationAveraging 1(default L1) or 2 (L2)]\n"
+    << "[-f|--refineIntrinsic \n"
+    << "\t 0-> keep provided intrinsic,\n"
+    << "\t 1-> refine provided intrinsics: (focal, principal point) ] \n"
     << "\n"
     << " ICCV 2013: => -r 2 -t 1"
     << std::endl;
@@ -97,6 +102,8 @@ int main(int argc, char **argv)
     ERotationAveragingMethod(iRotationAveragingMethod),
     ETranslationAveragingMethod(iTranslationAveragingMethod),
     true);
+
+  to3DEngine.setRefineIntrinsics(bRefineIntrinsic);
 
   if (to3DEngine.Process())
   {

@@ -114,6 +114,9 @@ public:
     return vec_imageSize;
   }
 
+  /// Tell if the final BA must refine Intrinsics data or not
+  void setRefineIntrinsics(bool bStatus) { _bRefineIntrinsics = bStatus; }
+
   //--
   // TYPEDEF
   //--
@@ -208,6 +211,10 @@ private:
   reconstructorHelper _reconstructorData;
   //-----
 
+  // ---
+  // Final Bundle Adjustment parameter
+  // ----
+  bool _bRefineIntrinsics;
 
   // -----
   // Reporting ..

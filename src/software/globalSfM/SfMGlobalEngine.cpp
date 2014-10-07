@@ -274,7 +274,8 @@ GlobalReconstructionEngine::GlobalReconstructionEngine(
   bool bHtmlReport)
   : ReconstructionEngine(sImagePath, sMatchesPath, sOutDirectory),
     _eRotationAveragingMethod(eRotationAveragingMethod),
-    _eTranslationAveragingMethod(eTranslationAveragingMethod)
+    _eTranslationAveragingMethod(eTranslationAveragingMethod),
+    _bRefineIntrinsics(true)
 {
   _bHtmlReport = bHtmlReport;
   if (!stlplus::folder_exists(sOutDirectory)) {
@@ -921,7 +922,7 @@ bool GlobalReconstructionEngine::Process()
        std::cout, "Initial triangulation:\n");
 
 #ifdef USE_OPENMP
-//  #pragma omp parallel for schedule(dynamic)
+      #pragma omp parallel for schedule(dynamic)
 #endif
       for (int idx = 0; idx < _map_selectedTracks.size(); ++idx)
       {
@@ -949,8 +950,8 @@ bool GlobalReconstructionEngine::Process()
   #pragma omp critical
 #endif
         {
-          if (trianObj.minDepth() < 0 || std::isnan(Xs[0]) || std::isnan(Xs[1])
-               || std::isnan(Xs[2]) )  {
+          if (trianObj.minDepth() < 0 || !is_finite(Xs[0]) || !is_finite(Xs[1])
+               || !is_finite(Xs[2]) )  {
             set_idx_to_remove.insert(idx);
           }
 
@@ -1039,9 +1040,12 @@ bool GlobalReconstructionEngine::Process()
   bundleAdjustment(_map_camera, _vec_allScenes, _map_selectedTracks, true, true, false);
   plyHelper::exportToPly(_vec_allScenes, stlplus::create_filespec(_sOutDirectory, "raw_pointCloud_BA_RT_Xi", "ply"));
 
-  // Refine Structure, rotations, translations and intrinsics
-  bundleAdjustment(_map_camera, _vec_allScenes, _map_selectedTracks, true, true, true);
-  plyHelper::exportToPly(_vec_allScenes, stlplus::create_filespec(_sOutDirectory, "raw_pointCloud_BA_KRT_Xi", "ply"));
+  if (_bRefineIntrinsics)
+  {
+    // Refine Structure, rotations, translations and intrinsics
+    bundleAdjustment(_map_camera, _vec_allScenes, _map_selectedTracks, true, true, true);
+    plyHelper::exportToPly(_vec_allScenes, stlplus::create_filespec(_sOutDirectory, "raw_pointCloud_BA_KRT_Xi", "ply"));
+  }
 
   //-- Export statistics about the global process
   if (_bHtmlReport)
@@ -1095,7 +1099,6 @@ bool GlobalReconstructionEngine::Process()
       _reconstructorData.set_trackId.insert(i);
     }
   }
-
   return true;
 }
 
@@ -1253,7 +1256,8 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
     const Mat3 K  = Mat3::Identity();
 
     double errorMax = std::numeric_limits<double>::max();
-    double maxExpectedError = 5.0 / ( K1(0,0) + K2(0,0) ) ;
+
+    double maxExpectedError = std::pow( 2.5 / K1(0,0) + 2.5 / K2(0,0), 1./2.); // geometric mean
     if (!SfMRobust::robustEssential(K, K,
       x1, x2,
       &E, &vec_inliers,
