@@ -84,6 +84,46 @@ struct indexedImageGraph
       }
     }
   }
+
+  indexedImageGraph( const std::vector<std::pair<size_t, size_t> > & map_pairs,
+    const std::vector<string> &vec_fileNames)
+  {
+    typedef std::vector<std::pair<size_t, size_t> > Pairs_T;
+    map_nodeMapIndex =  auto_ptr<map_NodeMapIndex>( new map_NodeMapIndex(g) );
+    map_codeMapName =  auto_ptr<map_NodeMapName>( new map_NodeMapName(g) );
+    map_edgeMap = auto_ptr<map_EdgeMap>( new map_EdgeMap(g) );
+
+    //A-- Compute the number of node we need
+    set<size_t> setNodes;
+    for (Pairs_T::const_iterator iter = map_pairs.begin();
+      iter != map_pairs.end();
+      ++iter)
+    {
+      setNodes.insert(iter->first);
+      setNodes.insert(iter->second);
+    }
+
+    //B-- Create a node graph for each element of the set
+    for (set<size_t>::const_iterator iter = setNodes.begin();
+      iter != setNodes.end();
+      ++iter)
+    {
+      map_size_t_to_node[*iter] = g.addNode();
+      (*map_nodeMapIndex) [map_size_t_to_node[*iter]] = *iter;
+      (*map_codeMapName) [map_size_t_to_node[*iter]] = vec_fileNames[*iter];
+    }
+
+    //C-- Add weighted edges from the pairs object
+    for (Pairs_T::const_iterator iter = map_pairs.begin();
+      iter != map_pairs.end();
+      ++iter)
+    {
+      const size_t i = iter->first;
+      const size_t j = iter->second;
+      GraphT::Edge edge =  g.addEdge(map_size_t_to_node[i], map_size_t_to_node[j]);
+      (*map_edgeMap)[ edge ] = 1;
+    }
+  }
 };
 
 } // namespace imageGraph

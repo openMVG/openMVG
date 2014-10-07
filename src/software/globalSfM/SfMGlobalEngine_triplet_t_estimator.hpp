@@ -64,7 +64,8 @@ struct tisXisTrifocalSolver {
   // Solve the computation of the tensor.
   static void Solve(
     const Mat &pt0, const Mat & pt1, const Mat & pt2,
-    const std::vector<Mat3> & vec_KR, const Mat3 & K, std::vector<TrifocalTensorModel> *P)
+    const std::vector<Mat3> & vec_KR, const Mat3 & K, std::vector<TrifocalTensorModel> *P,
+    const double ThresholdUpperBound)
   {
     //Build the megaMatMatrix
     const int n_obs = pt0.cols();
@@ -73,13 +74,13 @@ struct tisXisTrifocalSolver {
       size_t cpt = 0;
       for (size_t i = 0; i  < n_obs; ++i) {
 
-        megaMat.col(cpt) << pt0.col(i)(0), pt0.col(i)(1), i, 0;
+        megaMat.col(cpt) << pt0.col(i)(0), pt0.col(i)(1), (double)i, 0.0;
         ++cpt;
 
-        megaMat.col(cpt) << pt1.col(i)(0), pt1.col(i)(1), i, 1;
+        megaMat.col(cpt) << pt1.col(i)(0), pt1.col(i)(1), (double)i, 1.0;
         ++cpt;
 
-        megaMat.col(cpt) << pt2.col(i)(0), pt2.col(i)(1), i, 2;
+        megaMat.col(cpt) << pt2.col(i)(0), pt2.col(i)(1), (double)i, 2.0;
         ++cpt;
         }
     }
@@ -100,7 +101,7 @@ struct tisXisTrifocalSolver {
           LPsolver,
           cstBuilder,
           &vec_solution,
-          .5/K(0,0),//admissibleResidual,
+          ThresholdUpperBound,//admissibleResidual,
           0.0, 1e-8, 2, &gamma, false))
     {
       std::vector<Vec3> vec_tis(3);
@@ -135,21 +136,21 @@ public:
 
 
   TrifocalKernel_ACRansac_N_tisXis(const Mat & x1, const Mat & x2, const Mat & x3,
-    int w, int h, const std::vector<Mat3> & vec_KRi, const Mat3 & K)
-    : x1_(x1), x2_(x2), x3_(x3), logalpha0_(0.0), vec_KR_(vec_KRi), K_(K)
+    const std::vector<Mat3> & vec_KRi, const Mat3 & K,
+    const double ThresholdUpperBound)
+    : x1_(x1), x2_(x2), x3_(x3), vec_KR_(vec_KRi),
+      K_(K), ThresholdUpperBound_(ThresholdUpperBound),
+      logalpha0_(log10(M_PI)),
+      Kinv_(K.inverse())
   {
     // Normalize points by inverse(K)
+    ApplyTransformationToPoints(x1_, Kinv_, &x1n_);
+    ApplyTransformationToPoints(x2_, Kinv_, &x2n_);
+    ApplyTransformationToPoints(x3_, Kinv_, &x3n_);
 
-    N_ = K_.inverse();
-    ApplyTransformationToPoints(x1_, N_, &x1n_);
-    ApplyTransformationToPoints(x2_, N_, &x2n_);
-    ApplyTransformationToPoints(x3_, N_, &x3n_);
-
-    vec_KR_[0] = N_ * vec_KR_[0];
-    vec_KR_[1] = N_ * vec_KR_[1];
-    vec_KR_[2] = N_ * vec_KR_[2];
-
-    logalpha0_ = log10(M_PI);
+    vec_KR_[0] = Kinv_ * vec_KR_[0];
+    vec_KR_[1] = Kinv_ * vec_KR_[1];
+    vec_KR_[2] = Kinv_ * vec_KR_[2];
   }
 
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
@@ -162,7 +163,7 @@ public:
                   ExtractColumns(x1n_, samples),
                   ExtractColumns(x2n_, samples),
                   ExtractColumns(x3n_, samples),
-                  vec_KR_, K_, models);
+                  vec_KR_, K_, models, ThresholdUpperBound_);
   }
 
   double Error(size_t sample, const Model &model) const {
@@ -184,17 +185,18 @@ public:
 
   double multError() const {return 1.0;}
 
-  Mat3 normalizer1() const {return N_;}
+  Mat3 normalizer1() const {return Kinv_;}
   Mat3 normalizer2() const {return Mat3::Identity();}
-  double unormalizeError(double val) const { return sqrt(val) / N_(0,0);}
+  double unormalizeError(double val) const { return sqrt(val) / Kinv_(0,0);}
 
 private:
   const Mat & x1_, & x2_, & x3_;
   Mat x1n_, x2n_, x3n_;
-  Mat3 N_;
-  double logalpha0_;
+  const Mat3 Kinv_, K_;
+  const double logalpha0_;
+  const double ThresholdUpperBound_;
   std::vector<Mat3> vec_KR_;
-  Mat3 K_;
+  
 };
 
 } // namespace openMVG

@@ -28,14 +28,18 @@ namespace openMVG{
 
 // Robust estimation and refinement of a translation and 3D points of an image triplets.
 bool estimate_T_triplet(
-  size_t w, size_t h,
   const openMVG::tracks::STLMAPTracks & map_tracksCommon,
   const std::map<size_t, std::vector<SIOPointFeature> > & map_feats,
   const std::vector<Mat3> & vec_global_KR_Triplet,
   const Mat3 & K,
   std::vector<Vec3> & vec_tis,
-  double & dPrecision,
-  std::vector<size_t> & vec_inliers)
+  double & dPrecision, // UpperBound of the precision found by the AContrario estimator
+  std::vector<size_t> & vec_inliers,
+  const double ThresholdUpperBound, //Threshold used for the trifocal tensor estimation solver used in AContrario Ransac
+  const size_t nI,
+  const size_t nJ,
+  const size_t nK,
+  const std::string & sOutDirectory)
 {
   using namespace linearProgramming;
   using namespace lInfinityCV;
@@ -68,12 +72,12 @@ bool estimate_T_triplet(
     tisXisTrifocalSolver,
     tisXisTrifocalSolver,
     TrifocalTensorModel> KernelType;
-  KernelType kernel(x1, x2, x3, w, h, vec_global_KR_Triplet, K);
+  KernelType kernel(x1, x2, x3, vec_global_KR_Triplet, K, ThresholdUpperBound);
 
   const size_t ORSA_ITER = 320;
 
   TrifocalTensorModel T;
-  Mat3 Kinv = K.inverse();
+  const Mat3 Kinv = K.inverse();
   dPrecision = dPrecision * Kinv(0,0) * Kinv(0,0);//std::numeric_limits<double>::infinity();
   std::pair<double,double> acStat = robust::ACRANSAC(kernel, vec_inliers, ORSA_ITER, &T, dPrecision, false);
   dPrecision = acStat.first;
@@ -284,6 +288,28 @@ bool estimate_T_triplet(
 
         (*tt[i]) = Vec3(cam[0], cam[1], cam[2]);
       }
+/*
+*      // Get back 3D points
+*      size_t k = 0;
+*      std::vector<Vec3>  finalPoint;
+*
+*      for (std::vector<Vec3>::iterator iter = vec_Xis.begin();
+*        iter != vec_Xis.end(); ++iter, ++k)
+*      {
+*        const double * pt = ba_problem.mutable_points() + k*3;
+*        Vec3 & pt3D = *iter;
+*        pt3D = Vec3(pt[0], pt[1], pt[2]);
+*        finalPoint.push_back(pt3D);
+*      }
+*
+*      // export point cloud (for debug purpose only)
+*      std::ostringstream pairIJK;
+*      pairIJK << nI << "_" << nJ << "_" << nK << ".ply";
+*
+*      plyHelper::exportToPly(finalPoint, stlplus::create_filespec(sOutDirectory,
+*                       "pointCloud_triplet_t_"+pairIJK.str()) );
+*/
+
     }
   }
   return bTest;
@@ -298,7 +324,7 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
   matching::PairWiseMatches & newpairMatches) const
 {
   // The same K matrix is used by all the camera
-  const Mat3 _K = _vec_intrinsicGroups[0].m_K;
+  const Mat3 _K = Mat3::Identity();
 
   //-- Prepare global rotations
   std::map<size_t, Mat3> map_global_KR;
@@ -359,7 +385,7 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
   for (size_t i = 0; i < vec_triplets.size(); ++i)
   {
     const graphUtils::Triplet & triplet = vec_triplets[i];
-    size_t I = triplet.i, J = triplet.j , K = triplet.k;
+    const size_t I = triplet.i, J = triplet.j , K = triplet.k;
     // Add three edges
     set_edges.insert(std::make_pair(std::min(I,J), std::max(I,J)));
     set_edges.insert(std::make_pair(std::min(I,K), std::max(I,K)));
@@ -374,8 +400,7 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
   std::cout << std::endl
     << "Computation of the relative translations over the graph with an edge coverage algorithm" << std::endl;
 #ifdef USE_OPENMP
-//#pragma omp parallel for schedule(dynamic)
-#pragma omp parallel for schedule(static, 6)
+#pragma omp parallel for schedule(dynamic)
 #endif
   for (int k = 0; k < vec_edges.size(); ++k)
   {
@@ -416,7 +441,7 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
     for (size_t i = 0; i < vec_commonTracksPerTriplets.size(); ++i) {
       vec_possibleTripletsSorted.push_back( vec_possibleTriplets[packet_vec[i].index] );
     }
-    vec_possibleTriplets = vec_possibleTripletsSorted;
+    vec_possibleTriplets.swap(vec_possibleTripletsSorted);
 
     // Try to solve the triplets
     // Search the possible triplet:
@@ -453,29 +478,36 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
           tracksBuilder.ExportToSTL(map_tracksCommon);
         }
 
-        // Try to estimate this triplet:
-        size_t w = _vec_intrinsicGroups[_vec_camImageNames[I].m_intrinsicId].m_w;
-        size_t h = _vec_intrinsicGroups[_vec_camImageNames[I].m_intrinsicId].m_h;
+        //--
+        // Try to estimate this triplet.
+        //--
 
-        std::vector<Vec3> vec_tis(3);
-
-        // Get rotation:
+        // Get rotations:
         std::vector<Mat3> vec_global_KR_Triplet;
         vec_global_KR_Triplet.push_back(map_global_KR[I]);
         vec_global_KR_Triplet.push_back(map_global_KR[J]);
         vec_global_KR_Triplet.push_back(map_global_KR[K]);
 
-        double dPrecision = 4.0;
+        // update precision to have good value for normalized coordinates
+        const Mat3 KI = _vec_intrinsicGroups[_vec_camImageNames[I].m_intrinsicId].m_K;
+        const Mat3 KJ = _vec_intrinsicGroups[_vec_camImageNames[J].m_intrinsicId].m_K;
+        const Mat3 KK = _vec_intrinsicGroups[_vec_camImageNames[K].m_intrinsicId].m_K;
 
+        const double averageFocal = ( KI(0,0) + KJ(0,0) + KK(0,0) ) / 3.0 ;
+
+        double dPrecision = 4.0 / averageFocal / averageFocal;
+        const double ThresholdUpperBound = 0.5 / averageFocal;
+
+        std::vector<Vec3> vec_tis(3);
         std::vector<size_t> vec_inliers;
 
         if (map_tracksCommon.size() > 50 &&
             estimate_T_triplet(
-              w, h,
-              map_tracksCommon, _map_feats,  vec_global_KR_Triplet, _K,
-              vec_tis, dPrecision, vec_inliers))
+              map_tracksCommon, _map_feats_normalized,  vec_global_KR_Triplet, _K,
+              vec_tis, dPrecision, vec_inliers, ThresholdUpperBound,
+              I, J, K, _sOutDirectory))
         {
-          std::cout << dPrecision << "\t" << vec_inliers.size() << std::endl;
+          std::cout << dPrecision * averageFocal << "\t" << vec_inliers.size() << std::endl;
 
           //-- Build the three camera:
           const Mat3 RI = map_globalR.find(I)->second;
