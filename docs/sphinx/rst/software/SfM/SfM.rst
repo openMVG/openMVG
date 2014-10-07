@@ -59,6 +59,7 @@ To know more about each tool visit the following link and read the doc below:
    ./geometricMatches.rst
    ./incrementalSfM.rst
    ./globalSfM.rst
+   ./SfM_OutputFormat.rst
    ./MVS.rst
 
 

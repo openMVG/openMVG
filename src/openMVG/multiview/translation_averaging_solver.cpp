@@ -147,6 +147,7 @@ bool solve_translations_problem(
       X[3*j+2] = x[3*i+2];
     }
   }
+  delete [] x;
   return summary.IsSolutionUsable();
 }
 
