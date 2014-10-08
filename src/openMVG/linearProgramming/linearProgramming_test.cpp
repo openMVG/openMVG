@@ -49,7 +49,7 @@ void BuildLinearProblem(LP_Constraints & cstraint)
   std::fill_n(cstraint._vec_sign.begin(), 3, LP_Constraints::LP_LESS_OR_EQUAL);
   std::fill_n(cstraint._vec_sign.begin()+3, 2, LP_Constraints::LP_GREATER_OR_EQUAL);
 
-  cstraint._vec_bounds = std::vector< std::pair<double,double> >(5);
+  cstraint._vec_bounds = std::vector< std::pair<double,double> >(cstraint._nbParams);
   fill(cstraint._vec_bounds.begin(),cstraint._vec_bounds.end(),
       std::make_pair((double)-1e+30, (double)1e+30));
 }
