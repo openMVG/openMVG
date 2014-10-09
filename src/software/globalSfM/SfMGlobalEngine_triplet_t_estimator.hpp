@@ -66,7 +66,8 @@ struct tisXisTrifocalSolver {
   // Solve the computation of the tensor.
   static void Solve(
     const Mat &pt0, const Mat & pt1, const Mat & pt2,
-    const std::vector<Mat3, Eigen::aligned_allocator<Mat3> > & vec_KR, const Mat3 & K, std::vector<TrifocalTensorModel> *P)
+    const std::vector<Mat3, Eigen::aligned_allocator<Mat3> > & vec_KR, const Mat3 & K, 
+    std::vector<TrifocalTensorModel, Eigen::aligned_allocator<TrifocalTensorModel> > *P)
   {
     //Build the megaMatMatrix
     const int n_obs = pt0.cols();
@@ -157,7 +158,7 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<size_t> &samples, std::vector<ModelArg, Eigen::aligned_allocator<ModelArg> > *models) const {
 
     // Create a model from the points
     Solver::Solve(
