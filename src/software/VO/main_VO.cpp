@@ -16,9 +16,8 @@
 
 // OpenCV Includes
 #include <opencv2/core/eigen.hpp> //To Convert Eigen matrix to cv matrix
-#include <opencv2/features2d.hpp>
+#include <opencv2/features2d/features2d.hpp>
 #include <opencv2/video/tracking.hpp>
-#include <cv.h>
 
 #include <stdlib.h>
 #include <deque>
