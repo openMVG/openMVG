@@ -55,7 +55,8 @@ bool robustEssential(
   const std::pair<size_t, size_t> & size_ima1,
   const std::pair<size_t, size_t> & size_ima2,
   double * errorMax,
-  double precision = std::numeric_limits<double>::infinity())
+  double precision = std::numeric_limits<double>::infinity(), 
+  const size_t iterations = ACRANSAC_ITER )
 {
   assert(pvec_inliers != NULL);
   assert(pE != NULL);
@@ -75,7 +76,7 @@ bool robustEssential(
 
   // Robustly estimation of the Essential matrix and it's precision
   std::pair<double,double> acRansacOut = ACRANSAC(kernel, *pvec_inliers,
-    ACRANSAC_ITER, pE, precision, false);
+    iterations, pE, precision, false);
   *errorMax = acRansacOut.first;
 
   return pvec_inliers->size() > 2.5 * SolverType::MINIMUM_SAMPLES;
