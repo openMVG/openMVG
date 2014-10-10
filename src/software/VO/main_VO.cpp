@@ -15,8 +15,9 @@
 #include "openMVG/system/timer.hpp"
 
 // OpenCV Includes
-#include "opencv2/core/eigen.hpp" //To Convert Eigen matrix to cv matrix
-#include <cv.h>
+#include <opencv2/core/eigen.hpp> //To Convert Eigen matrix to cv matrix
+#include <opencv2/features2d/features2d.hpp>
+#include <opencv2/video/tracking.hpp>
 
 #include <stdlib.h>
 #include <deque>

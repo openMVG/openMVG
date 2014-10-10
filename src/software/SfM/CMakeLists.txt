@@ -83,6 +83,7 @@ IF(USE_OPENCV)
                         ${OpenCV_LIBS})
 
   SET_PROPERTY(TARGET openMVG_main_computeMatches_OpenCV PROPERTY FOLDER OpenMVG/software)
+  INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
   ENDIF(NOT OpenCV_FOUND)
 ENDIF(USE_OPENCV)
 
