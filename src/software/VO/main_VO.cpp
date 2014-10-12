@@ -114,7 +114,7 @@ int main(int argc, char **argv)
   Image<unsigned char> currentImage;
 
   using namespace openMVG::VO;
-  VO_Monocular<Tracker_opencv_KLT> monocular_vo;
+  VO_Monocular<Tracker_opencv_KLT> monocular_vo(K);
 
   size_t frameId = 0;
   for (std::vector<std::string>::const_iterator iterFile = vec_image.begin();

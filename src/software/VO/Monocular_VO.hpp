@@ -35,15 +35,22 @@ struct Landmark
 template <typename Tracker_T>
 struct VO_Monocular
 {
+  // Structure and visibility
   std::deque<Landmark> _landmark;
   std::vector<size_t> _trackedLandmarkIds;
 
+  // Tracking
   Tracker_T _tracker;
   int _maxTrackedFeatures ;
   std::vector<PointFeature> _pt_to_track, _pt_tracked;
   std::vector<unsigned char> _tracking_status;
 
-  VO_Monocular(const int maxTrackedFeatures = 500) : _maxTrackedFeatures(maxTrackedFeatures)
+  // Camera intrinsic
+  Mat3 _K;
+
+  VO_Monocular(const Mat3 & K, const int maxTrackedFeatures = 500):
+    _maxTrackedFeatures(maxTrackedFeatures),
+    _K(K)
   {
   }
 
