@@ -35,7 +35,7 @@ IF(USE_OPENCV)
   IF(NOT OpenCV_FOUND)
     MESSAGE(STATUS "WARNING: OpenCV was not found. ")
   ELSE(NOT OpenCV_FOUND)
-    ADD_EXECUTABLE(openMVG_main_VO main_VO.cpp)
+    ADD_EXECUTABLE(openMVG_main_VO main_VO.cpp Monocular_VO.hpp CGlWindow.hpp)
     TARGET_LINK_LIBRARIES(openMVG_main_VO
       ${OPENGL_gl_LIBRARY}
       glfw

@@ -9,31 +9,41 @@
 #include "openMVG/features/feature.hpp"
 
 #include "software/VO/CGlWindow.hpp"
+#include "software/VO/Monocular_VO.hpp"
+#include "software/VO/Tracker.hpp"
 
+#include "openMVG/split/split.hpp"
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "openMVG/system/timer.hpp"
-
-// OpenCV Includes
-#include <opencv2/core/eigen.hpp> //To Convert Eigen matrix to cv matrix
-#include <opencv2/features2d/features2d.hpp>
-#include <opencv2/video/tracking.hpp>
 
 #include <stdlib.h>
-#include <deque>
 #include <iostream>
 
 using namespace openMVG;
 
-// Struct to store a partial PointFeature trajectory
-struct STrajectory
+/// Check that Kmatrix is a string like "f;0;ppx;0;f;ppy;0;0;1"
+/// With f,ppx,ppy as valid numerical value
+bool checkIntrinsicStringValidity(const std::string & Kmatrix, Mat3 & K)
 {
-  STrajectory() : _bAlive(false) {}
-  STrajectory(const PointFeature & pos) : _bAlive(true) { _history.push_back(pos); }
-
-  std::deque<PointFeature> _history;
-  bool _bAlive;
-};
+  std::vector<std::string> vec_str;
+  split( Kmatrix, ";", vec_str );
+  if (vec_str.size() != 9)  {
+    std::cerr << "\n Missing ';' character" << std::endl;
+    return false;
+  }
+  // Check that all K matrix value are valid numbers
+  for (size_t i = 0; i < vec_str.size(); ++i) {
+    double readvalue = 0.0;
+    std::stringstream ss;
+    ss.str(vec_str[i]);
+    if (! (ss >> readvalue) )  {
+      std::cerr << "\n Used an invalid not a number character" << std::endl;
+      return false;
+    }
+    *(K.data()+i) = readvalue;
+  }
+  return true;
+}
 
 int main(int argc, char **argv)
 {
@@ -42,8 +52,12 @@ int main(int argc, char **argv)
 
   CmdLine cmd;
 
-  std::string sImaDirectory = "";
+  std::string
+    sImaDirectory = "",
+    sKmatrix = "";
+
   cmd.add( make_option('i', sImaDirectory, "imadir") );
+  cmd.add( make_option('k', sKmatrix, "intrinsics") );
 
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -51,14 +65,27 @@ int main(int argc, char **argv)
   } catch(const std::string& s) {
     std::cerr << "Usage: " << argv[0] << '\n'
     << "[-i|--imadir path] \n"
+    << "[-k|--intrinsics] Kmatrix: \"f;0;ppx;0;f;ppy;0;0;1\""
     << std::endl;
 
     std::cerr << s << std::endl;
     return EXIT_FAILURE;
   }
 
+   std::cout << " You called : " <<std::endl
+            << argv[0] << std::endl
+            << "--imageDirectory " << sImaDirectory << std::endl
+            << "--intrinsics " << sKmatrix << std::endl;
+
   if (sImaDirectory.empty() || !stlplus::is_folder(sImaDirectory))  {
     std::cerr << "\nIt is an invalid input directory" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  Mat3 K;
+  if (!checkIntrinsicStringValidity(sKmatrix, K))
+  {
+    std::cerr << "\nInvalid K matrix input" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -86,16 +113,12 @@ int main(int argc, char **argv)
 
   Image<unsigned char> currentImage;
 
-  // OpenCV Data (required for KLT tracking):
-  cv::Mat current_img, prev_img;
-  std::vector<cv::Point2f> _prevPts, _nextPts;
-  cv::Ptr<cv::FeatureDetector> m_detector = cv::FeatureDetector::create("GridFAST");
-  const size_t cardinalFeature = 500;
-  std::vector<STrajectory> vec_trajectory(cardinalFeature);
+  using namespace openMVG::VO;
+  VO_Monocular<Tracker_opencv_KLT> monocular_vo;
 
-  size_t iterCount = 0;
+  size_t frameId = 0;
   for (std::vector<std::string>::const_iterator iterFile = vec_image.begin();
-    iterFile != vec_image.end(); ++iterFile, ++iterCount)
+    iterFile != vec_image.end(); ++iterFile, ++frameId)
   {
     const std::string sImageFilename = stlplus::create_filespec( sImaDirectory, *iterFile );
     if (openMVG::ReadImage( sImageFilename.c_str(), &currentImage))
@@ -133,93 +156,38 @@ int main(int argc, char **argv)
 	    //    . if some track are cut, detect and insert new features
       //--
 
-      //Convert image to OpenCV data
-
-      cv::eigen2cv(currentImage.GetMat(), current_img);
-
-      std::vector<unsigned char> status;
-      std::vector<float> error;
-
-      if (_prevPts.size() > 0)  {
-        cv::calcOpticalFlowPyrLK(prev_img, current_img, _prevPts, _nextPts, status, error);
-      }
-
-      // Count the number of tracked features
-      const size_t countTracked = accumulate(status.begin(), status.end(), 0);
-
-      // Update the list of tracked features (the not tracked one will be updated with new feature later)
-      std::vector<cv::Point2f> trackedPts(cardinalFeature);
-      for (size_t i=0; i<status.size(); ++i)  {
-        if (status[i])  trackedPts[i] = _nextPts[i];
-      }
-
-      // Update trajectories
-      for(unsigned i = 0; i < status.size(); ++i) {
-        if (status[i])  {
-          // if tracked
-          const PointFeature a(_prevPts[i].x, _prevPts[i].y);
-          const PointFeature b(_nextPts[i].x, _nextPts[i].y);
-          //std::cout << DistanceL2(a.coords(), b.coords()) << " ";
-
-          vec_trajectory[i]._history.push_back(b);
-          vec_trajectory[i]._bAlive = true;
-          if (vec_trajectory[i]._history.size() > 10) vec_trajectory[i]._history.pop_front();
-        }
-        else  {
-          // feature was not re-detected
-          vec_trajectory[i]._history.clear();
-          vec_trajectory[i]._bAlive = false;
-        }
-      }
+      monocular_vo.nextFrame(currentImage, frameId);
 
       //--
       // Draw feature trajectories
       //--
       glColor3f(0.f, 1.f, 0.f);
       glLineWidth(2.f);
-      for(size_t i = 0; i < vec_trajectory.size(); ++i)
+
+      for (size_t idx = 0; idx < monocular_vo._landmark.size(); ++idx)
       {
-        if (vec_trajectory[i]._bAlive && vec_trajectory[i]._history.size() > 1)
+        if (std::find(monocular_vo._trackedLandmarkIds.begin(), monocular_vo._trackedLandmarkIds.end(), idx) == monocular_vo._trackedLandmarkIds.end())
+          continue;
+
+        const Landmark & landmark = monocular_vo._landmark[idx];
+        if (landmark._obs.back()._frameId == frameId && landmark._obs.size() > 1 )
         {
+          const std::deque<Measurement> & obs = landmark._obs;
           glBegin(GL_LINE_STRIP);
-          for (unsigned j=0; j<vec_trajectory[i]._history.size(); j++)
+          std::deque<Measurement>::const_reverse_iterator iter = obs.rbegin();
+          std::deque<Measurement>::const_reverse_iterator iterEnd = obs.rend();
+
+          int limit = 10;
+          for (; iter != iterEnd && limit>=0; ++iter, --limit)
           {
-            const PointFeature & p0 = vec_trajectory[i]._history[j];
-            glVertex2f(p0.x(), p0.y());
+            const Vec2f & p0 = iter->_pos;
+            glVertex2f(p0(0), p0(1));
           }
           glEnd();
         }
+
       }
       glFlush();
-
-      // Do we have to add new feature (if some track have been cut)
-      const bool bTooFewFeature = countTracked < cardinalFeature;
-      if (bTooFewFeature)
-      {
-        std::vector<cv::KeyPoint> m_nextKeypoints;
-        m_detector->detect(current_img, m_nextKeypoints);
-        const size_t pointsToDetect = cardinalFeature - countTracked;
-        if (m_nextKeypoints.size() > pointsToDetect)
-        {
-          // shuffle to avoid to sample only in one bucket
-          std::random_shuffle(m_nextKeypoints.begin(), m_nextKeypoints.end());
-          m_nextKeypoints.resize(pointsToDetect);
-        }
-        std::cout << "#features added: " << m_nextKeypoints.size() << std::endl;
-        size_t j = 0;
-        for(size_t i = 0; i < vec_trajectory.size(); ++i)
-        {
-          if (!vec_trajectory[i]._bAlive) // update the feature
-          {
-            trackedPts[i] = m_nextKeypoints[j].pt;
-            vec_trajectory[i] = STrajectory(PointFeature(m_nextKeypoints[j].pt.x, m_nextKeypoints[j].pt.y));
-            ++j;
-          }
-        }
-      }
-      // Swap image and tracked point for future iteration
-      _prevPts.swap(trackedPts);
-      current_img.copyTo(prev_img);
 
       window.Swap(); // Swap openGL buffer
     }
