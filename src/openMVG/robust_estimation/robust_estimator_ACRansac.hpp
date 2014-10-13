@@ -172,7 +172,9 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
   nIter -= nIterReserve;
 
   // Main estimation loop.
+#ifdef USE_OPENMP
 #pragma omp parallel for
+#endif
   for (long long iter=0; iter < nIter; ++iter) {
     std::vector<size_t> vec_sample(sizeSample); // Sample indices
     UniformSample(sizeSample, vec_index, &vec_sample); // Get random sample
@@ -180,7 +182,9 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
     std::vector<typename Kernel::Model, Eigen::aligned_allocator <Kernel::Model> > vec_models; // Up to max_models solutions
     kernel.Fit(vec_sample, &vec_models);
 
+#ifdef USE_OPENMP
 #pragma omp critical 
+#endif
      {
         // Evaluate models
         bool better = false;
