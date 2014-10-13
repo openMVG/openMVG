@@ -152,9 +152,6 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
     std::numeric_limits<double>::infinity() :
     precision * kernel.normalizer2()(0,0) * kernel.normalizer2()(0,0);
 
-  std::vector<ErrorIndex> vec_residuals(nData); // [residual,index]
-  std::vector<size_t> vec_sample(sizeSample); // Sample indices
-
   // Possible sampling indices (could change in the optimization phase)
   std::vector<size_t> vec_index(nData);
   for (size_t i = 0; i < nData; ++i)
@@ -176,6 +173,7 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
 
   // Main estimation loop.
   for (size_t iter=0; iter < nIter; ++iter) {
+    std::vector<size_t> vec_sample(sizeSample); // Sample indices
     UniformSample(sizeSample, vec_index, &vec_sample); // Get random sample
 
     std::vector<typename Kernel::Model, Eigen::aligned_allocator <Kernel::Model> > vec_models; // Up to max_models solutions
@@ -184,8 +182,9 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
     // Evaluate models
     bool better = false;
     for (size_t k = 0; k < vec_models.size(); ++k)  {
-      // Residuals computation and ordering
-      for (size_t i = 0; i < nData; ++i)  {
+        // Residuals computation and ordering
+      std::vector<ErrorIndex> vec_residuals(nData); // [residual,index]
+      for (size_t i = 0; i < nData; ++i) {
         double error = kernel.Error(i, vec_models[k]);
         vec_residuals[i] = ErrorIndex(error, i);
       }
