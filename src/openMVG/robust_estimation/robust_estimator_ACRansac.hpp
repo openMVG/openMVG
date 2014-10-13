@@ -172,72 +172,76 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
   nIter -= nIterReserve;
 
   // Main estimation loop.
-  for (size_t iter=0; iter < nIter; ++iter) {
+#pragma omp parallel for
+  for (long long iter=0; iter < nIter; ++iter) {
     std::vector<size_t> vec_sample(sizeSample); // Sample indices
     UniformSample(sizeSample, vec_index, &vec_sample); // Get random sample
 
     std::vector<typename Kernel::Model, Eigen::aligned_allocator <Kernel::Model> > vec_models; // Up to max_models solutions
     kernel.Fit(vec_sample, &vec_models);
 
-    // Evaluate models
-    bool better = false;
-    for (size_t k = 0; k < vec_models.size(); ++k)  {
-        // Residuals computation and ordering
-      std::vector<ErrorIndex> vec_residuals(nData); // [residual,index]
-      for (size_t i = 0; i < nData; ++i) {
-        double error = kernel.Error(i, vec_models[k]);
-        vec_residuals[i] = ErrorIndex(error, i);
-      }
-      std::sort(vec_residuals.begin(), vec_residuals.end());
+#pragma omp critical 
+     {
+        // Evaluate models
+        bool better = false;
+        for (size_t k = 0; k < vec_models.size(); ++k) {
+            // Residuals computation and ordering
+            std::vector<ErrorIndex> vec_residuals(nData); // [residual,index]
+            for (size_t i = 0; i < nData; ++i) {
+                double error = kernel.Error(i, vec_models[k]);
+                vec_residuals[i] = ErrorIndex(error, i);
+            }
+            std::sort(vec_residuals.begin(), vec_residuals.end());
 
-      // Most meaningful discrimination inliers/outliers
-      ErrorIndex best = bestNFA(sizeSample,
-                                kernel.logalpha0(),
-                                vec_residuals,
-                                loge0,
-                                maxThreshold,
-                                vec_logc_n,
-                                vec_logc_k,
-                                kernel.multError());
+            // Most meaningful discrimination inliers/outliers
+            ErrorIndex best = bestNFA(sizeSample,
+                                      kernel.logalpha0(),
+                                      vec_residuals,
+                                      loge0,
+                                      maxThreshold,
+                                      vec_logc_n,
+                                      vec_logc_k,
+                                      kernel.multError());
 
-      if (best.first < minNFA /*&& vec_residuals[best.second-1].first < errorMax*/)  {
-        // A better model was found
-        better = true;
-        minNFA = best.first;
-        vec_inliers.resize(best.second);
-        for (size_t i=0; i<best.second; ++i)
-          vec_inliers[i] = vec_residuals[i].second;
-        errorMax = vec_residuals[best.second-1].first; // Error threshold
-        if(model) *model = vec_models[k];
+            if (best.first < minNFA /*&& vec_residuals[best.second-1].first < errorMax*/) {
+                // A better model was found
+                better = true;
+                minNFA = best.first;
+                vec_inliers.resize(best.second);
+                for (size_t i = 0; i < best.second; ++i)
+                    vec_inliers[i] = vec_residuals[i].second;
+                errorMax = vec_residuals[best.second - 1].first; // Error threshold
+                if (model) *model = vec_models[k];
 
-        if(bVerbose)  {
-          std::cout << "  nfa=" << minNFA
-            << " inliers=" << best.second
-            << " precisionNormalized=" << errorMax
-            << " precision=" << kernel.unormalizeError(errorMax)
-            << " (iter=" << iter;
-          std::cout << ",sample=";
-          std::copy(vec_sample.begin(), vec_sample.end(),
-            std::ostream_iterator<size_t>(std::cout, ","));
-          std::cout << ")" <<std::endl;
+                if (bVerbose) {
+                    std::cout << "  nfa=" << minNFA
+                        << " inliers=" << best.second
+                        << " precisionNormalized=" << errorMax
+                        << " precision=" << kernel.unormalizeError(errorMax)
+                        << " (iter=" << iter;
+                    std::cout << ",sample=";
+                    std::copy(vec_sample.begin(), vec_sample.end(),
+                              std::ostream_iterator<size_t>(std::cout, ","));
+                    std::cout << ")" << std::endl;
+                }
+            }
         }
-      }
-    }
 
-    // ACRANSAC optimization: draw samples among best set of inliers so far
-    if((better && minNFA<0) || (iter+1==nIter && nIterReserve)) {
-      if(vec_inliers.empty()) { // No model found at all so far
-        nIter++; // Continue to look for any model, even not meaningful
-        nIterReserve--;
-      } else {
         // ACRANSAC optimization: draw samples among best set of inliers so far
-        vec_index = vec_inliers;
-        if(nIterReserve) {
-            nIter = iter+1+nIterReserve;
-            nIterReserve=0;
+        if ((better && minNFA < 0) || (iter + 1 == nIter && nIterReserve)) {
+            if (vec_inliers.empty()) { // No model found at all so far
+                nIter++; // Continue to look for any model, even not meaningful
+                nIterReserve--;
+            } else {
+                // ACRANSAC optimization: draw samples among best set of inliers so far
+                vec_index = vec_inliers;
+                if (nIterReserve) {
+                    nIter = iter + 1 + nIterReserve;
+                    nIterReserve = 0;
+                }
+            }
         }
-      }
-    }
+     }
   }
 
   if(minNFA >= 0)
