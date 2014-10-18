@@ -85,7 +85,7 @@ struct EightPointRelativePoseSolver {
     for (int i = 0; i < x1.cols(); ++i) {
       (*A)(i, 0) = x2(0, i) * x1(0, i);  // 0 represents x coords,
       (*A)(i, 1) = x2(0, i) * x1(1, i);  // 1 represents y coords,
-      (*A)(i, 2) = x2(0, i) * x1(2, i);  // 2 represents y coords.
+      (*A)(i, 2) = x2(0, i) * x1(2, i);  // 2 represents z coords.
       (*A)(i, 3) = x2(1, i) * x1(0, i);
       (*A)(i, 4) = x2(1, i) * x1(1, i);
       (*A)(i, 5) = x2(1, i) * x1(2, i);
