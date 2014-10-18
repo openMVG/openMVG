@@ -39,6 +39,8 @@ UNIT_TEST(openMVG_lInftyCV resection_robust "${LOCAL_LIBS}")
 
 # Linfinity Global translations from triplets of heading directions
 UNIT_TEST(openMVG_lInftyCV global_translations_fromTriplets "${LOCAL_LIBS}")
+# Linfinity Global translations from heading directions
+UNIT_TEST(openMVG_lInftyCV global_translations_fromTij "${LOCAL_LIBS}")
 
 # Linfinity Translation and Structure 
 UNIT_TEST(openMVG_lInftyCV tijsAndXis "${LOCAL_LIBS}")
