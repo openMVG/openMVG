@@ -73,8 +73,8 @@ void visibleCamPosToSVGSurface(
 
 TEST(translation_averaging, globalTi_from_tijs_Triplets) {
 
-  int focal = 1000;
-  int principal_Point = 500;
+  const int focal = 1000;
+  const int principal_Point = 500;
   //-- Setup a circular camera rig or "cardiod".
   const int iNviews = 12;
   const int iNbPoints = 6;
@@ -186,9 +186,9 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
   std::cout << std::endl << "Camera centers (Computed): " << std::endl;
   for (size_t i = 0; i < iNviews; ++i)
   {
-    const Vec3 C_GT = d._C[i].transpose() - d._C[0].transpose(); //First camera supposed to be at Identity
+    const Vec3 C_GT = d._C[i] - d._C[0]; //First camera supposed to be at Identity
 
-    Vec3 t(vec_camTranslation[i*3], vec_camTranslation[i*3+1], vec_camTranslation[i*3+2]);
+    const Vec3 t(vec_camTranslation[i*3], vec_camTranslation[i*3+1], vec_camTranslation[i*3+2]);
     const Mat3 & Ri = d._R[i];
     const Vec3 C_computed = - Ri.transpose() * t;
 

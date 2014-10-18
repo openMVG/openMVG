@@ -792,17 +792,17 @@ bool GlobalReconstructionEngine::Process()
         std::cout << "\ncam Lambdas: " << std::endl;
         std::copy(vec_camRelLambdas.begin(), vec_camRelLambdas.end(), std::ostream_iterator<double>(std::cout, " "));
 
-    // Build a Pinhole camera for each considered Id
-    std::vector<Vec3>  vec_C;
-    for (size_t i = 0; i < iNview; ++i)
-    {
-      Vec3 t(vec_camTranslation[i*3], vec_camTranslation[i*3+1], vec_camTranslation[i*3+2]);
-      const size_t camNodeId = _reindexBackward[i];
-      const Mat3 & Ri = map_globalR[camNodeId];
-      const Mat3 & _K = _vec_intrinsicGroups[_map_IntrinsicIdPerImageId[camNodeId]].m_K;   // The same K matrix is used by all the camera
-      _map_camera[camNodeId] = PinholeCamera(_K, Ri, t);
-      //-- Export camera center
-      vec_C.push_back(_map_camera[camNodeId]._C);
+        // Build a Pinhole camera for each considered Id
+        std::vector<Vec3>  vec_C;
+        for (size_t i = 0; i < iNview; ++i)
+        {
+          const Vec3 t(vec_camTranslation[i*3], vec_camTranslation[i*3+1], vec_camTranslation[i*3+2]);
+          const size_t camNodeId = _reindexBackward[i];
+          const Mat3 & Ri = map_globalR[camNodeId];
+          const Mat3 & _K = _vec_intrinsicGroups[_map_IntrinsicIdPerImageId[camNodeId]].m_K;   // The same K matrix is used by all the camera
+          _map_camera[camNodeId] = PinholeCamera(_K, Ri, t);
+          //-- Export camera center
+          vec_C.push_back(_map_camera[camNodeId]._C);
         }
         plyHelper::exportToPly(vec_C, stlplus::create_filespec(_sOutDirectory, "cameraPath", "ply"));
       }
@@ -837,7 +837,7 @@ bool GlobalReconstructionEngine::Process()
 
         const double loss_width = 0.0; // No loss in order to compare with TRANSLATION_AVERAGING_L1
 
-        std::vector<double> X(iNview*3);
+        std::vector<double> X(iNview*3, 0.0);
         if(!solve_translations_problem(
           &vec_edges[0],
           &vec_poses[0],
@@ -852,7 +852,7 @@ bool GlobalReconstructionEngine::Process()
             return false;
         }
 
-        std::vector<Vec3>  vec_C;
+        std::vector<Vec3> vec_C;
         for (size_t i = 0; i < iNview; ++i)
         {
           const Vec3 C(X[i*3], X[i*3+1], X[i*3+2]);
