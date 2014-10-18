@@ -17,7 +17,7 @@ using namespace std;
 using namespace openMVG;
 
 extern "C" {
-#include "patented/sift/vl/sift.h"
+#include "nonFree/sift/vl/sift.h"
 }
 
 namespace openMVG {

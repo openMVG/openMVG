@@ -14,7 +14,7 @@
 
 using namespace openMVG::matching;
 
-#include "patented/sift/SIFT.hpp"
+#include "nonFree/sift/SIFT.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include "openMVG/multiview/solver_homography_kernel.hpp"

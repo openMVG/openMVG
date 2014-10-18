@@ -22,7 +22,7 @@
 #include "openMVG/matching/indMatch_utils.hpp"
 
 /// Feature detector and descriptor interface
-#include "patented/sift/SIFT.hpp"
+#include "nonFree/sift/SIFT.hpp"
 
 #include "openMVG/system/timer.hpp"
 

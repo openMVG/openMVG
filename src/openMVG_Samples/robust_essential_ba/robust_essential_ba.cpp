@@ -22,7 +22,7 @@
 #include "openMVG/bundle_adjustment/pinhole_ceres_functor.hpp"
 #include "openMVG/bundle_adjustment/pinhole_brown_Rt_ceres_functor.hpp"
 
-#include "patented/sift/SIFT.hpp"
+#include "nonFree/sift/SIFT.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"

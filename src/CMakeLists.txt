@@ -197,9 +197,9 @@ INCLUDE_DIRECTORIES(${OpenMVG_INCLUDES})
 # The openMVG library itself
 ADD_SUBDIRECTORY(openMVG)
 
-# software under patent
+# software under patent or commercial licence
 # Included for research purpose only
-ADD_SUBDIRECTORY(patented)
+ADD_SUBDIRECTORY(nonFree)
 
 # openMVG tutorial examples
 IF (OpenMVG_BUILD_EXAMPLES)

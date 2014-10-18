@@ -15,7 +15,7 @@
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG_Samples/robust_essential/essential_estimation.hpp"
 
-#include "patented/sift/SIFT.hpp"
+#include "nonFree/sift/SIFT.hpp"
 #include "openMVG_Samples/siftPutativeMatches/two_view_matches.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"

@@ -15,7 +15,7 @@
 #include "openMVG/multiview/conditioning.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 
-#include "patented/sift/SIFT.hpp"
+#include "nonFree/sift/SIFT.hpp"
 #include "openMVG_Samples/siftPutativeMatches/two_view_matches.hpp"
 #include "openMVG_Samples/robust_essential_spherical/spherical_cam.hpp"
 
