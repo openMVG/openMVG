@@ -8,6 +8,7 @@
 #pragma once
 
 #include "openMVG/features/features.hpp"
+#include "openMVG/matching/indMatch.hpp"
 
 using namespace openMVG;
 
@@ -16,6 +17,8 @@ using namespace openMVG;
 
 #include <vector>
 #include <map>
+
+using namespace openMVG::matching;
 
 template <typename FeatureT>
 class ImageCollectionGeometricFilter
@@ -51,7 +54,7 @@ class ImageCollectionGeometricFilter
     C_Progress_display my_progress_bar( map_PutativesMatchesPair.size() );
 
 #ifdef USE_OPENMP
-  #pragma omp parallel for schedule(dynamic, 1)
+  #pragma omp parallel for schedule(dynamic)
 #endif
     for (int i = 0; i < (int)map_PutativesMatchesPair.size(); ++i)
     {
