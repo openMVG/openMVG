@@ -53,31 +53,33 @@ const int kCntCandidateTopMin = 6; // the minimal number of top-ranked candidate
 const int kCntCandidateTopMax = 10; // the maximal number of top-ranked candidates
 
 typedef int16_t SiftData; // SIFT feature components are represented with <int16_t> type
-struct HashData { uint8_t hash[kDimHashData]; }; // Hash code is represented with <uint8_t> type; only the lowest bit is used
+struct HashData {
+  uint8_t hash[kDimHashData];
+}; // Hash code is represented with <uint8_t> type; only the lowest bit is used
 typedef uint64_t* CompHashDataPtr; // CompHash code is represented with <uint64_t> type
 typedef int* BucketElePtr; // index list of points in a specific bucket
 
 // all information needed for an image to perform CasHash-Matching
 struct ImageFeatures {
-	int cntPoint; // the number of SIFT points
-	CompHashDataPtr* compHashDataPtrList; // CompHash code for each SIFT point
-	uint16_t* bucketIDList[kCntBucketGroup]; // bucket entries for each SIFT point
-	int cntEleInBucket[kCntBucketGroup][kCntBucketPerGroup]; // the number of SIFT points in each bucket
-	BucketElePtr bucketList[kCntBucketGroup][kCntBucketPerGroup]; // SIFT point index list for all buckets
+  int cntPoint; // the number of SIFT points
+  CompHashDataPtr* compHashDataPtrList; // CompHash code for each SIFT point
+  uint16_t* bucketIDList[kCntBucketGroup]; // bucket entries for each SIFT point
+  int cntEleInBucket[kCntBucketGroup][kCntBucketPerGroup]; // the number of SIFT points in each bucket
+  BucketElePtr bucketList[kCntBucketGroup][kCntBucketPerGroup]; // SIFT point index list for all buckets
 
-	ImageFeatures() {
-		memset(this, 0, sizeof(ImageFeatures));
-	}
-	~ImageFeatures() {
-		for (int groupIndex = 0; groupIndex < kCntBucketGroup; ++groupIndex) {
-			delete[] bucketIDList[groupIndex];
-			for (int bucketID = 0; bucketID < kCntBucketPerGroup; ++bucketID)
-				delete[] bucketList[groupIndex][bucketID];
-		}
-		for (int dataIndex = 0; dataIndex < cntPoint; ++dataIndex)
-			delete[] compHashDataPtrList[dataIndex];
-		delete[] compHashDataPtrList;
-	}
+  ImageFeatures() {
+    memset(this, 0, sizeof(ImageFeatures));
+  }
+  ~ImageFeatures() {
+    for (int groupIndex = 0; groupIndex < kCntBucketGroup; ++groupIndex) {
+      delete[] bucketIDList[groupIndex];
+      for (int bucketID = 0; bucketID < kCntBucketPerGroup; ++bucketID)
+        delete[] bucketList[groupIndex][bucketID];
+    }
+    for (int dataIndex = 0; dataIndex < cntPoint; ++dataIndex)
+      delete[] compHashDataPtrList[dataIndex];
+    delete[] compHashDataPtrList;
+  }
 };
 /*----------------------------------------------------------------*/
 
@@ -96,27 +98,27 @@ size_t ImportFeatures(const map_DescT& map_Desc, std::vector<ImageFeatures>& ima
 class HashConvertor
 {
 public:
-	// constructor function; to initialize private data member variables
-	HashConvertor();
-	// convert SIFT feature vectors to Hash codes and CompHash codes
-	// also, the bucket index for each SIFT point will be determined (different bucket groups correspond to different indexes)
-	void SiftDataToHashData(
+  // constructor function; to initialize private data member variables
+  HashConvertor();
+  // convert SIFT feature vectors to Hash codes and CompHash codes
+  // also, the bucket index for each SIFT point will be determined (different bucket groups correspond to different indexes)
+  void SiftDataToHashData(
     ImageFeatures& imageData,
     const DescsT & descs,
     std::vector<int16_t> & averageDescriptor) const;
 
 private:
-	int projMatPriTr[kDimHashData][kDimSiftData]; // projection matrix of the primary hashing function
-	#ifdef Bucket_SecHash
-	int projMatSecTr[kCntBucketGroup][kCntBucketBit][kDimSiftData]; // projection matrix of the secondary hashing function
-	#endif // Bucket_SecHash
-	#ifdef Bucket_PriHashSel
-	int bucketBitList[kCntBucketGroup][kCntBucketBit]; // selected bits in the result of primary hashing function for bucket construction
-	#endif // Bucket_PriHashSel
+  int projMatPriTr[kDimHashData][kDimSiftData]; // projection matrix of the primary hashing function
+#ifdef Bucket_SecHash
+  int projMatSecTr[kCntBucketGroup][kCntBucketBit][kDimSiftData]; // projection matrix of the secondary hashing function
+#endif // Bucket_SecHash
+#ifdef Bucket_PriHashSel
+  int bucketBitList[kCntBucketGroup][kCntBucketBit]; // selected bits in the result of primary hashing function for bucket construction
+#endif // Bucket_PriHashSel
 
 private:
-	// generate random number which follows normal distribution, with <mean = 0> and <variance = 1>
-	static double GetNormRand();
+  // generate random number which follows normal distribution, with <mean = 0> and <variance = 1>
+  static double GetNormRand();
 };
 /*----------------------------------------------------------------*/
 
@@ -125,18 +127,18 @@ private:
 class CasHashMatcher
 {
 public:
-	// return a list of matched SIFT points between two input images (ratiomax - maximum distance ratio)
-	template<typename Desc>
-	void MatchSpFast(
+  // return a list of matched SIFT points between two input images (ratiomax - maximum distance ratio)
+  template<typename Desc>
+  void MatchSpFast(
     std::vector<matching::IndMatch>& matchList,
     const ImageFeatures& imageData_1,
     const Desc & descriptors1,
     const ImageFeatures& imageData_2,
     const Desc & descriptors2,
     float ratiomax = 0.8f) const
-    {
-      std::cout << "Not implemented for this Descriptor type" << std::endl;
-    }
+  {
+    std::cout << "Not implemented for this Descriptor type" << std::endl;
+  }
 };
 
 template<>
