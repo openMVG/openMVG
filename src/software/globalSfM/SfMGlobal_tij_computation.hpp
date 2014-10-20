@@ -483,7 +483,7 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
         //--
 
         // Get rotations:
-        std::vector<Mat3, Eigen::aligned_allocator<Vec3> > vec_global_KR_Triplet;
+        std::vector<Mat3, Eigen::aligned_allocator<Mat3> > vec_global_KR_Triplet;
         vec_global_KR_Triplet.push_back(map_global_KR[I]);
         vec_global_KR_Triplet.push_back(map_global_KR[J]);
         vec_global_KR_Triplet.push_back(map_global_KR[K]);
@@ -498,7 +498,7 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
         double dPrecision = 4.0 / averageFocal / averageFocal;
         const double ThresholdUpperBound = 0.5 / averageFocal;
 
-        std::vector<Vec3> vec_tis(3);
+        std::vector<Vec3, Eigen::aligned_allocator<Vec3> > vec_tis(3);
         std::vector<size_t> vec_inliers;
 
         if (map_tracksCommon.size() > 50 &&

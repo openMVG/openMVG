@@ -67,7 +67,8 @@ struct tisXisTrifocalSolver {
   static void Solve(
     const Mat &pt0, const Mat & pt1, const Mat & pt2,
     const std::vector<Mat3, Eigen::aligned_allocator<Mat3> > & vec_KR, const Mat3 & K, 
-    std::vector<TrifocalTensorModel, Eigen::aligned_allocator<TrifocalTensorModel> > *P)
+    std::vector<TrifocalTensorModel, Eigen::aligned_allocator<TrifocalTensorModel> > *P,
+    const double ThresholdUpperBound)
   {
     //Build the megaMatMatrix
     const int n_obs = pt0.cols();
@@ -138,7 +139,7 @@ public:
 
 
   TrifocalKernel_ACRansac_N_tisXis(const Mat & x1, const Mat & x2, const Mat & x3,
-    const std::vector<Mat3> & vec_KRi, const Mat3 & K,
+    const std::vector<Mat3, Eigen::aligned_allocator <Mat3> > & vec_KRi, const Mat3 & K,
     const double ThresholdUpperBound)
     : x1_(x1), x2_(x2), x3_(x3), vec_KR_(vec_KRi),
       K_(K), ThresholdUpperBound_(ThresholdUpperBound),

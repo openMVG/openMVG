@@ -52,7 +52,7 @@ using namespace std;
 struct EightPointRelativePoseSolver {
   enum { MINIMUM_SAMPLES = 8 };
   enum { MAX_MODELS = 1 };
-  static void Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *pvec_E)
+  static void Solve(const Mat &x1, const Mat &x2, std::vector<Mat3, Eigen::aligned_allocator<Mat3> > *pvec_E)
   {
     assert(3 == x1.rows());
     assert(8 <= x1.cols());
@@ -114,7 +114,7 @@ public:
 
   EssentialKernel_spherical(const Mat &x1, const Mat &x2) : x1_(x1), x2_(x2) {}
 
-  void Fit(const vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const vector<size_t> &samples, std::vector<Model, Eigen::aligned_allocator<Model> > *models) const {
     const Mat x1 = ExtractColumns(x1_, samples);
     const Mat x2 = ExtractColumns(x2_, samples);
 

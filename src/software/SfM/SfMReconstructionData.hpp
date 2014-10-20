@@ -292,9 +292,7 @@ struct reconstructorHelper
             znear[map_cameratoIndex[imageId]] = (std::min)(znear[map_cameratoIndex[imageId]], z );
             zfar[map_cameratoIndex[imageId]] = (std::max)(zfar[map_cameratoIndex[imageId]], z );
           }
-
-            s_visibility << map_cameratoIndex[iterTrack->first] << " " << iterTrack->second << " ";
-          }
+          s_visibility << map_cameratoIndex[iterTrack->first] << " " << iterTrack->second << " ";
         }
         //export images indexes
         f_cloud << " " << set_imageIndex.size() << " ";

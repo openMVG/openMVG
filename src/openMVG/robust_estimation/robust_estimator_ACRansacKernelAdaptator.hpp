@@ -331,7 +331,7 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<size_t> &samples, std::vector<Model, Eigen::aligned_allocator<Model> > *models) const {
     const Mat x1 = ExtractColumns(x1_, samples);
     const Mat x2 = ExtractColumns(x2_, samples);
     Solver::Solve(x1, x2, models);
@@ -360,6 +360,9 @@ public:
 private:
   Mat x1_, x2_;       // Normalized input data
   double logalpha0_; // Alpha0 is used to make the error scale invariant
+
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
 } // namespace robust
