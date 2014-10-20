@@ -91,10 +91,10 @@ int ImageScale::getIndex( const double r )const
     int index = 0;
     while( r > range_low * step )
     {
-      index++;
+      ++index;
       range_low *= step;
     }
-    return index;
+    return std::min(int(angles.size()-1), index);
   }
 }
 
@@ -111,40 +111,38 @@ VLD::VLD( const ImageScale& series, T const& P1, T const& P2 ) : contrast( 0.0 )
   end_point[ 0 ]   = P2.x();
   end_point[ 1 ]   = P2.y();
 
-  float dy = float( end_point[ 1 ] - begin_point[ 1 ] );
-  float dx = float( end_point[ 0 ] - begin_point[ 0 ] );
+  const float dy = float( end_point[ 1 ] - begin_point[ 1 ] );
+  const float dx = float( end_point[ 0 ] - begin_point[ 0 ] );
   distance = sqrt( dy * dy + dx * dx );
 
   if( distance == 0 )
     cerr<<"Two SIFT points have the same coordinate"<<endl;
 
-  float radius = max( distance / float( dimension + 1 ), 2.0f );//at least 2
+  const float radius = max( distance / float( dimension + 1 ), 2.0f );//at least 2
 
-  double mainAngle = get_orientation();//absolute angle
+  const double mainAngle = get_orientation();//absolute angle
 
-  int image_index = series.getIndex( radius );
+  const int image_index = series.getIndex( radius );
 
   const Image< float > & ang = series.angles[ image_index ];
   const Image< float > & m   = series.magnitudes[ image_index ];
-  double ratio = series.ratios[ image_index ];
+  const double ratio = series.ratios[ image_index ];
 
-// cout<<endl<<"index of image "<<radius<<" "<<image_index<<" "<<ratio<<endl;
-
-  int w = m.Width();
-  int h = m.Height();
-  float r = float( radius / ratio );//series.radius_size;
-  float sigma2 = r * r;
+  const int w = m.Width();
+  const int h = m.Height();
+  const float r = float( radius / ratio );
+  const float sigma2 = r * r;
   //======calculating the descriptor=====//
 
+  double statistic[ binNum ];
   for( int i = 0; i < dimension; i++ )
   {
-    double statistic[ binNum ];
     fill_n( statistic, binNum, 0.0);
 
     float xi = float( begin_point[ 0 ] + float( i + 1 ) / ( dimension + 1 ) * ( dx ) );
     float yi = float( begin_point[ 1 ] + float( i + 1 ) / ( dimension + 1 ) * ( dy ) );
-    yi /= float( ratio );
     xi /= float( ratio );
+    yi /= float( ratio );
 
     for( int y = int( yi - r ); y <= int( yi + r + 0.5 ); y++ )
     {
@@ -166,17 +164,16 @@ VLD::VLD( const ImageScale& series, T const& P1, T const& P2 ) : contrast( 0.0 )
             angle -= 2 * PI_;
 
           //===============principle angle==============================//
-          int index = int( angle * binNum / ( 2 * PI_ ) + 0.5 );
+          const int index = int( angle * binNum / ( 2 * PI_ ) + 0.5 );
 
           double Gweight = exp( -d * d / 4.5 / sigma2 ) * ( m( y, x ) );
-          // cout<<"in number "<<image_index<<" "<<x<<" "<<y<<" "<<m(y,x)<<endl;
           if( index < binNum )
             statistic[ index ] += Gweight;
           else // possible since the 0.5
             statistic[ 0 ] += Gweight;
 
           //==============the descriptor===============================//
-          int index2 = int( angle * subdirection / ( 2 * PI_ ) + 0.5 );
+          const int index2 = int( angle * subdirection / ( 2 * PI_ ) + 0.5 );
           assert( index2 >= 0 && index2 <= subdirection );
 
           if( index2 < subdirection )
@@ -217,10 +214,10 @@ float KVLD( const Image< float >& I1,
 
   cout << "Image scale-space complete..." << endl;
 
-  float range1 = getRange( I1, min( F1.size(), matches.size() ), kvldParameters.inlierRate );
-  float range2 = getRange( I2, min( F2.size(), matches.size() ), kvldParameters.inlierRate );
+  const float range1 = getRange( I1, min( F1.size(), matches.size() ), kvldParameters.inlierRate );
+  const float range2 = getRange( I2, min( F2.size(), matches.size() ), kvldParameters.inlierRate );
 
-  size_t size = matches.size();
+  const size_t size = matches.size();
 
   //================distance map construction, foruse of selecting neighbors===============//
   cout << "computing distance maps" << endl;

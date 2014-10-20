@@ -1,5 +1,5 @@
 
-// Copyright (c) 2012, 2013, 2014 Pierre MOULON.
+// Copyright (c) 2014 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,20 +13,24 @@
 #include "openMVG/matching/matching_filters.hpp"
 #include "openMVG/matching_image_collection/Matcher.hpp"
 
+#include "nonFree/matching_cascade_hashing/CasHash.hpp"
+
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/progress/progress.hpp"
+
+// [1] Fast and Accurate Image Matching with Cascade Hashing for 3D Reconstruction.
+// Authors: Jian Cheng, Cong Leng, Jiaxiang Wu, Hainan Cui, Hanqing Lu.
+// Conference: CVPR 2014.
 
 namespace openMVG {
 
 using namespace openMVG::matching;
 
 /// Implementation of an Image Collection Matcher
-/// Compute putative matches between a collection of pictures
-/// Spurious correspondences are discarded by using the
-///  a threshold over the distance ratio of the 2 neighbours points.
+/// - Cascade Hashing matching [1]
 ///
-template <typename KeypointSetT, typename MatcherT>
-class Matcher_AllInMemory : public Matcher
+template <typename KeypointSetT>
+class Matcher_CascadeHashing_AllInMemory
 {
   // Alias to internal stored Feature and Descriptor type
   typedef typename KeypointSetT::FeatureT FeatureT;
@@ -36,8 +40,7 @@ class Matcher_AllInMemory : public Matcher
   typedef typename DescriptorT::bin_type DescBin_typeT;
 
   public:
-  Matcher_AllInMemory(float distRatio):
-    Matcher(),
+  Matcher_CascadeHashing_AllInMemory(float distRatio):
     fDistRatio(distRatio)
   {
   }
@@ -58,20 +61,21 @@ class Matcher_AllInMemory : public Matcher
       bOk &= loadFeatsFromFile(sFeatJ, map_Feat[j]);
       bOk &= loadDescsFromBinFile(sDescJ, map_Desc[j]);
     }
+    if (bOk)
+    {
+      nonFree::CASHASH::ImportFeatures(map_Desc, vec_hashing);
+    }
     return bOk;
   }
 
   void Match(
     const std::vector<std::string> & vec_fileNames, // input filenames,
     const PairsT & pairs,
-    PairWiseMatches & map_PutativesMatches)const // the pairwise photometric corresponding points
+    PairWiseMatches & map_PutativesMatches) // the pairwise photometric corresponding points
   {
-#ifdef USE_OPENMP
-    std::cout << "Using the OPENMP thread interface" << std::endl;
-#endif
     C_Progress_display my_progress_bar( pairs.size() );
 
-    // Sort pairs according the first index to minimize the MatcherT build operations
+    // Sort pairs according the first index to minimize memory exchange
     std::map<size_t, std::vector<size_t> > map_Pairs;
     for (PairsT::const_iterator iter = pairs.begin(); iter != pairs.end(); ++iter)
     {
@@ -82,17 +86,7 @@ class Matcher_AllInMemory : public Matcher
       iter != map_Pairs.end(); ++iter)
     {
       const size_t I = iter->first;
-      // Load features and descriptors of Inth image
-      typename std::map<size_t, std::vector<FeatureT> >::const_iterator iter_FeaturesI = map_Feat.find(I);
-      typename std::map<size_t, DescsT >::const_iterator iter_DescriptorI = map_Desc.find(I);
-
-      const std::vector<FeatureT> & featureSetI = iter_FeaturesI->second;
-      const size_t featureSetI_Size = iter_FeaturesI->second.size();
-      const DescBin_typeT * tab0 =
-        reinterpret_cast<const DescBin_typeT *>(&iter_DescriptorI->second[0]);
-
-      MatcherT matcher10;
-      ( matcher10.Build(tab0, featureSetI_Size, DescriptorT::static_size) );
+      const std::vector<FeatureT> & featureSetI = map_Feat[I];
 
       const std::vector<size_t> & indexToCompare = iter->second;
 #ifdef USE_OPENMP
@@ -101,35 +95,14 @@ class Matcher_AllInMemory : public Matcher
       for (int j = 0; j < (int)indexToCompare.size(); ++j)
       {
         const size_t J = indexToCompare[j];
-        // Load descriptors of Jnth image
-        typename std::map<size_t, std::vector<FeatureT> >::const_iterator iter_FeaturesJ = map_Feat.find(J);
-        typename std::map<size_t, DescsT >::const_iterator iter_DescriptorJ = map_Desc.find(J);
-
-        const std::vector<FeatureT> & featureSetJ = iter_FeaturesJ->second;
-        const DescBin_typeT * tab1 =
-          reinterpret_cast<const DescBin_typeT *>(&iter_DescriptorJ->second[0]);
-
-        const size_t NNN__ = 2;
-        std::vector<int> vec_nIndice10;
-        std::vector<typename MatcherT::DistanceType> vec_fDistance10;
-
-        //Find left->right
-        matcher10.SearchNeighbours(tab1, featureSetJ.size(), &vec_nIndice10, &vec_fDistance10, NNN__);
+        const std::vector<FeatureT> & featureSetJ = map_Feat[J];
 
         std::vector<IndMatch> vec_FilteredMatches;
-        std::vector<int> vec_NNRatioIndexes;
-        NNdistanceRatio( vec_fDistance10.begin(), // distance start
-          vec_fDistance10.end(),  // distance end
-          NNN__, // Number of neighbor in iterator sequence (minimum required 2)
-          vec_NNRatioIndexes, // output (index that respect Lowe Ratio)
-          Square(fDistRatio)); // squared dist ratio due to usage of a squared metric
-
-        for (size_t k=0; k < vec_NNRatioIndexes.size()-1&& vec_NNRatioIndexes.size()>0; ++k)
-        {
-          const size_t index = vec_NNRatioIndexes[k];
-          vec_FilteredMatches.push_back(
-            IndMatch(vec_nIndice10[index*NNN__], index) );
-        }
+        cascadeHashing.MatchSpFast(
+          vec_FilteredMatches,
+          vec_hashing[I], map_Desc[I],
+          vec_hashing[J], map_Desc[J],
+          fDistRatio);
 
         // Remove duplicates
         IndMatch::getDeduplicated(vec_FilteredMatches);
@@ -142,8 +115,9 @@ class Matcher_AllInMemory : public Matcher
   #pragma omp critical
 #endif
         {
-          map_PutativesMatches.insert( make_pair( make_pair(I,J), vec_FilteredMatches ));
-        ++my_progress_bar;
+          if (!vec_FilteredMatches.empty())
+            map_PutativesMatches.insert( make_pair( make_pair(I,J), vec_FilteredMatches ));
+          ++my_progress_bar;
         }
       }
     }
@@ -156,6 +130,10 @@ class Matcher_AllInMemory : public Matcher
   std::map<size_t, DescsT > map_Desc;
   // Distance ratio used to discard spurious correspondence
   float fDistRatio;
+
+  // CascadeHashing object
+  nonFree::CASHASH::CasHashMatcher cascadeHashing;
+  std::vector<nonFree::CASHASH::ImageFeatures> vec_hashing;
 };
 
 }; // namespace openMVG

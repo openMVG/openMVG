@@ -12,7 +12,7 @@
 #include "openMVG/matching/matching_filters.hpp"
 #include "openMVG_Samples/siftPutativeMatches/two_view_matches.hpp"
 
-#include "patented/sift/SIFT.hpp"
+#include "nonFree/sift/SIFT.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include "third_party/vectorGraphics/svgDrawer.hpp"

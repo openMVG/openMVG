@@ -257,6 +257,11 @@ struct reconstructorHelper
       {
         const size_t trackId = *iter;
 
+        if (map_reconstructed.find(trackId) == map_reconstructed.end())
+        {
+          continue; //Invalid 3D point
+        }
+
         // Look through the track and add point position
         const tracks::submapTrack & track = (map_reconstructed.find(trackId))->second;
 
@@ -288,13 +293,13 @@ struct reconstructorHelper
             zfar[map_cameratoIndex[imageId]] = (std::max)(zfar[map_cameratoIndex[imageId]], z );
           }
 
-          s_visibility << map_cameratoIndex[iterTrack->first] << " " << iterTrack->second << " ";
+            s_visibility << map_cameratoIndex[iterTrack->first] << " " << iterTrack->second << " ";
+          }
         }
-
         //export images indexes
         f_cloud << " " << set_imageIndex.size() << " ";
         copy(set_imageIndex.begin(), set_imageIndex.end(), std::ostream_iterator<size_t>(f_cloud, " "));
-        f_cloud << std::endl;
+        f_cloud << "\n";
 
         f_visibility << pos.transpose() << " " << set_imageIndex.size() << " ";
         f_visibility << s_visibility.str() << "\n";
@@ -310,7 +315,7 @@ struct reconstructorHelper
         return false;
       }
       f_cloud << "images\ncameras\n" << nc << "\n";
-
+      
       count = 0;
       for (Map_BrownPinholeCamera::const_iterator iter = map_Camera.begin();
         iter != map_Camera.end();

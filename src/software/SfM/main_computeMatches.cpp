@@ -22,7 +22,7 @@
 #include "openMVG/matching/indMatch_utils.hpp"
 
 /// Feature detector and descriptor interface
-#include "patented/sift/SIFT.hpp"
+#include "nonFree/sift/SIFT.hpp"
 
 #include "openMVG/system/timer.hpp"
 
@@ -355,9 +355,9 @@ int main(int argc, char **argv)
         for (PairWiseMatches::const_iterator iterMap = map_GeometricMatches.begin();
           iterMap != map_GeometricMatches.end(); ++iterMap)
         {
-          size_t putativePhotometricCount = map_PutativesMatches.find(iterMap->first)->second.size();
-          size_t putativeGeometricCount = iterMap->second.size();
-          float ratio = putativeGeometricCount / (float)putativePhotometricCount;
+          const size_t putativePhotometricCount = map_PutativesMatches.find(iterMap->first)->second.size();
+          const size_t putativeGeometricCount = iterMap->second.size();
+          const float ratio = putativeGeometricCount / (float)putativePhotometricCount;
           if (putativeGeometricCount < 50 || ratio < .3f)  {
             // the pair will be removed
             vec_toRemove.push_back(iterMap->first);

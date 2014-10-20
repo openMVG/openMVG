@@ -65,7 +65,7 @@ struct Hamming
 
   /** This is popcount_3() from:
    * http://en.wikipedia.org/wiki/Hamming_weight */
-  inline unsigned int popcnt32(uint32_t n) const
+  static inline unsigned int popcnt32(uint32_t n)
   {
 #ifdef _MSC_VER
     return __popcnt(n);
@@ -76,11 +76,14 @@ struct Hamming
 #endif
   }
 
-  inline unsigned int popcnt64(uint64_t n) const
+  static inline unsigned int popcnt64(uint64_t n)
   {
 #ifdef _MSC_VER
     return __popcnt64(n);
 #else
+#if (defined __GNUC__ || defined __clang__) && defined USE_SSE
+    return __builtin_popcountll(n);
+#endif
     n -= ((n >> 1) & 0x5555555555555555LL);
     n = (n & 0x3333333333333333LL) + ((n >> 2) & 0x3333333333333333LL);
     return (((n + (n >> 4))& 0x0f0f0f0f0f0f0f0fLL)* 0x0101010101010101LL) >> 56;

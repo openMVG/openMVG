@@ -114,6 +114,9 @@ public:
     return vec_imageSize;
   }
 
+  /// Tell if the final BA must refine Intrinsics data or not
+  void setRefineIntrinsics(bool bStatus) { _bRefineIntrinsics = bStatus; }
+
   //--
   // TYPEDEF
   //--
@@ -124,8 +127,6 @@ private:
   /// Read input data (point correspondences, K matrix)
   bool ReadInputData();
 
-  bool CleanGraph();
-
   void ComputeRelativeRt(Map_RelativeRT & vec_relatives);
 
   // Detect and remove the outlier relative rotations
@@ -134,8 +135,6 @@ private:
   // Compute the global rotations from relative rotations
   bool computeGlobalRotations(
     ERotationAveragingMethod eRotationAveragingMethod,
-    const std::map<size_t, size_t> & map_cameraNodeToCameraIndex,
-    const std::map<size_t, size_t> & map_cameraIndexTocameraNode,
     const Map_RelativeRT & map_relatives,
     std::map<size_t, Mat3> & map_globalR) const;
 
@@ -174,8 +173,16 @@ private:
   std::vector<openMVG::SfMIO::CameraInfo> _vec_camImageNames;
   std::vector<openMVG::SfMIO::IntrinsicCameraInfo> _vec_intrinsicGroups;
   std::map< size_t, std::vector<SIOPointFeature> > _map_feats; // feature per images
+  std::map< size_t, std::vector<SIOPointFeature> > _map_feats_normalized; // normalized features per images
 
   matching::PairWiseMatches _map_Matches_E; // pairwise matches for Essential matrix model
+
+  /// List of images that belong to a common intrinsic group
+  std::map<size_t, std::vector<size_t> > _map_ImagesIdPerIntrinsicGroup;
+  std::map<size_t, Vec3 > _map_IntrinsicsPerGroup;
+
+  // Intrinsic Id per imageId
+  std::map<size_t, size_t> _map_IntrinsicIdPerImageId;
 
   // Parameter
   ERotationAveragingMethod _eRotationAveragingMethod;
@@ -204,6 +211,10 @@ private:
   reconstructorHelper _reconstructorData;
   //-----
 
+  // ---
+  // Final Bundle Adjustment parameter
+  // ----
+  bool _bRefineIntrinsics;
 
   // -----
   // Reporting ..

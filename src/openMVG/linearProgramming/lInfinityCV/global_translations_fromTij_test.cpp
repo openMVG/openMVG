@@ -1,7 +1,7 @@
 
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
-#include "openMVG/linearProgramming/lInfinityCV/global_translations_fromTriplets.hpp"
+#include "openMVG/linearProgramming/lInfinityCV/global_translations_fromTij.hpp"
 
 #include "openMVG/multiview/essential.hpp"
 
@@ -71,7 +71,7 @@ void visibleCamPosToSVGSurface(
   }
 }
 
-TEST(translation_averaging, globalTi_from_tijs_Triplets) {
+TEST(translation_averaging, globalTi_from_tijs) {
 
   const int focal = 1000;
   const int principal_Point = 500;
@@ -80,69 +80,58 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
   const int iNbPoints = 6;
   NViewDataSet d =
     //NRealisticCamerasRing(
-      NRealisticCamerasCardioid(
-      iNviews, iNbPoints,
-      nViewDatasetConfigurator(focal,focal,principal_Point,principal_Point,5,0));
+    NRealisticCamerasCardioid(
+        iNviews, iNbPoints,
+        nViewDatasetConfigurator(focal,focal,principal_Point,principal_Point,5,0));
 
-  d.ExportToPLY("global_translations_from_triplets_GT.ply");
+  d.ExportToPLY("global_translations_from_Tij_GT.ply");
 
-  visibleCamPosToSVGSurface(d._C, "global_translations_from_triplets_GT.svg");
+  visibleCamPosToSVGSurface(d._C, "global_translations_from_Tij_GT.svg");
 
-  // List sucessives triplets of the large loop of camera
-  std::vector< graphUtils::Triplet > vec_triplets;
-  for (size_t i = 0; i < iNviews; ++i)
-  {
-    const size_t iPlus1 = modifiedMod(i+1,iNviews);
-    const size_t iPlus2 = modifiedMod(i+2,iNviews);
-    //-- sort the triplet index to have a monotic ascending series of value
-    size_t triplet[3] = {i, iPlus1, iPlus2};
-    std::sort(&triplet[0], &triplet[3]);
-    vec_triplets.push_back(Triplet(triplet[0],triplet[1],triplet[2]));
-  }
-
-  //- For each triplet compute relative translations and rotations motions
+  //- For each relative translations and rotations motions
   std::vector<openMVG::relativeInfo > vec_initialEstimates;
 
-  for (size_t i = 0; i < vec_triplets.size(); ++i)
+  //-- Setup initial pair that will be considered (link each camera to the two next)
+  std::vector< std::pair<size_t,size_t> > map_pairs;
+  for (size_t i = 0; i < iNviews; ++i)  {
+    for (size_t j=i; j<=i+2; ++j)
+    {
+      const size_t jj = modifiedMod(j,iNviews);
+      if (i != jj)
+        map_pairs.push_back(make_pair(i,jj));
+    }
+  }
+  
+  for (std::vector< std::pair<size_t,size_t> >::const_iterator
+    iter = map_pairs.begin();
+    iter != map_pairs.end();
+    ++iter)
   {
-    const graphUtils::Triplet & triplet = vec_triplets[i];
-    size_t I = triplet.i, J = triplet.j , K = triplet.k;
-
+    const size_t I = (*iter).first;
+    const size_t J = (*iter).second;
+   
     //-- Build camera alias over GT translations and rotations:
     const Mat3 & RI = d._R[I];
     const Mat3 & RJ = d._R[J];
-    const Mat3 & RK = d._R[K];
     const Vec3 & ti = d._t[I];
     const Vec3 & tj = d._t[J];
-    const Vec3 & tk = d._t[K];
 
-    //-- Build relatives motions (that feeds the Linear program formulation)
+    //-- Build relative motions (that feeds the Linear program formulation)
     {
       Mat3 RijGt;
       Vec3 tij;
       RelativeCameraMotion(RI, ti, RJ, tj, &RijGt, &tij);
+      //-- normalize tij (keep only direction)
+      tij.normalize();
       vec_initialEstimates.push_back(
         std::make_pair(std::make_pair(I, J), std::make_pair(RijGt, tij)));
-
-      Mat3 RjkGt;
-      Vec3 tjk;
-      RelativeCameraMotion(RJ, tj, RK, tk, &RjkGt, &tjk);
-      vec_initialEstimates.push_back(
-        std::make_pair(std::make_pair(J, K), std::make_pair(RjkGt, tjk)));
-
-      Mat3 RikGt;
-      Vec3 tik;
-      RelativeCameraMotion(RI, ti, RK, tk, &RikGt, &tik);
-      vec_initialEstimates.push_back(
-        std::make_pair(std::make_pair(I, K), std::make_pair(RikGt, tik)));
     }
   }
-
-  //-- Compute the global translations from the triplets of heading directions
+  
+  //-- Compute the global translations from the translation heading directions
   //-   with the L_infinity optimization
-
-  std::vector<double> vec_solution(iNviews*3 + vec_initialEstimates.size()/3 + 1);
-  double gamma = -1.0;
+  // 3*NCam*[X,Y,Z] ; Ncam*[Lambda], [gamma]
+  std::vector<double> vec_solution(iNviews*3 + vec_initialEstimates.size() + 1);
 
   //- a. Setup the LP solver,
   //- b. Setup the constraints generator (for the dedicated L_inf problem),
@@ -153,7 +142,7 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
   OSI_CLP_SolverWrapper solverLP(vec_solution.size());
 
   //- b. Setup the constraints generator (for the dedicated L_inf problem),
-  Tifromtij_ConstraintBuilder_OneLambdaPerTrif cstBuilder(vec_initialEstimates);
+  Tifromtij_ConstraintBuilder cstBuilder(vec_initialEstimates);
 
   //- c. Build constraints and solve the problem (Setup constraints and solver)
   LP_Constraints_Sparse constraint;
@@ -164,7 +153,7 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
 
   //- d. Get back the estimated parameters.
   solverLP.getSolution(vec_solution);
-  gamma = vec_solution[vec_solution.size()-1];
+  const double gamma = vec_solution[vec_solution.size()-1];
 
   //--
   //-- Unit test checking about the found solution
@@ -178,25 +167,29 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
   std::copy(&vec_solution[0], &vec_solution[iNviews*3], &vec_camTranslation[0]);
 
   //-- Get back computed lambda factors
-  std::vector<double> vec_camRelLambdas(&vec_solution[iNviews*3], &vec_solution[iNviews*3 + vec_initialEstimates.size()/3]);
-  // lambda factors must be equal to 1.0 (no compression, no dilation);
-  EXPECT_NEAR(vec_initialEstimates.size()/3, std::accumulate (vec_camRelLambdas.begin(), vec_camRelLambdas.end(), 0.0), 1e-6);
+  std::vector<double> vec_camRelLambdas(&vec_solution[iNviews*3], &vec_solution[iNviews*3 + vec_initialEstimates.size()]);
 
-  // Get back the camera translations in the global frame:
-  std::cout << std::endl << "Camera centers (Computed): " << std::endl;
+  // Check validity of the camera centers:
+  // Check the direction since solution if found up to a scale
   for (size_t i = 0; i < iNviews; ++i)
   {
-    const Vec3 C_GT = d._C[i] - d._C[0]; //First camera supposed to be at Identity
-
     const Vec3 t(vec_camTranslation[i*3], vec_camTranslation[i*3+1], vec_camTranslation[i*3+2]);
     const Mat3 & Ri = d._R[i];
     const Vec3 C_computed = - Ri.transpose() * t;
 
+    const Vec3 C_GT = d._C[i] - d._C[0];
+
     //-- Check that found camera position is equal to GT value
-    EXPECT_NEAR(0.0, DistanceLInfinity(C_computed, C_GT), 1e-6);
+    if (i==0)  {
+      EXPECT_MATRIX_NEAR(C_computed, C_GT, 1e-6);
+    }
+    else  {
+     EXPECT_NEAR(0.0, DistanceLInfinity(C_computed.normalized(), C_GT.normalized()), 1e-6);
+    }
   }
 }
 
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
 /* ************************************************************************* */
+

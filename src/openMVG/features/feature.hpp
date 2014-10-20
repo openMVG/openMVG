@@ -55,7 +55,7 @@ public:
 
   inline float x() const { return _coords(0); }
   inline float y() const { return _coords(1); }
-  inline Vec2f coords() const { return _coords;}
+  inline const Vec2f & coords() const { return _coords;}
 
   inline float& x() { return _coords(0); }
   inline float& y() { return _coords(1); }

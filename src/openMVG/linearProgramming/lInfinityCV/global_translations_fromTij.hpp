@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMTRIPLETS_H_
-#define OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMTRIPLETS_H_
+#ifndef OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMTIJ_H_
+#define OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMTIJ_H_
 
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/multiview/translation_averaging_common.hpp"
@@ -32,11 +32,11 @@ namespace lInfinityCV  {
 
 using namespace linearProgramming;
 
-// Setup the linear program to solve the union of trifocal tensors heading
+// Setup the linear program to solve the union of relative translation heading
 //  directions in a common global coordinate system.
-//- Implementation of the LINEAR PROGRAM (9) page 5 of [1]:
+//- Implementation of the LINEAR PROGRAM (8) page 5 of [1]:
 //--
-static void EncodeTi_from_tij_OneLambdaPerTrif(
+static void EncodeTi_from_tij(
     const size_t nTranslation,
     const std::vector<relativeInfo > & vec_relative,
     sRMat & A, Vec & C,
@@ -51,17 +51,17 @@ static void EncodeTi_from_tij_OneLambdaPerTrif(
 
   const size_t transStart  = 0;
   const size_t lambdaStart = 3 * Ncam;
-  const size_t gammaStart = lambdaStart + Nrelative/3;
+  const size_t gammaStart = lambdaStart + Nrelative;
 
 #undef TVAR
 #undef LAMBDAVAR
 #undef GAMMAVAR
 # define TVAR(i, el) (transStart + 3*(i) + (el))  // translation (X,Y,Z)
-# define LAMBDAVAR(j) (lambdaStart + (int)((j)/3)) // One per relative translation
+# define LAMBDAVAR(j) (lambdaStart + (int)(j)) // One per relative translation
 # define GAMMAVAR gammaStart
 
   const size_t Nconstraint = Nrelative * 6;
-  const size_t NVar = 3 * Ncam + Nrelative/3 + 1;
+  const size_t NVar = 3 * Ncam + Nrelative + 1; // { {X,Y,Z}; {Lambdas}; Gamma }
 
   A.resize(Nconstraint, NVar);
 
@@ -78,7 +78,7 @@ static void EncodeTi_from_tij_OneLambdaPerTrif(
   vec_bounds[TVAR(0,1)].first = vec_bounds[TVAR(0,1)].second = 0;
   vec_bounds[TVAR(0,2)].first = vec_bounds[TVAR(0,2)].second = 0;
   // Make lambda variables between 1 and large number => constraint that lambda_ij > 1
-  for (size_t k = 0; k < Nrelative/3; ++k)
+  for (size_t k = 0; k < Nrelative; ++k)
     vec_bounds[lambdaStart + k].first = 1;
 
   // Setup gamma >= 0
@@ -97,7 +97,8 @@ static void EncodeTi_from_tij_OneLambdaPerTrif(
     const size_t i = vec_relative[k].first.first;
     const size_t j  = vec_relative[k].first.second;
     const Mat3 & Rij = vec_relative[k].second.first;
-    const Vec3 & tij = vec_relative[k].second.second;
+    Vec3 tij = vec_relative[k].second.second;
+    tij.normalize(); //Be sure that tij is normalized
 
     // | T_j - R_ij T_i - Lambda_ij t_ij | < Gamma
     // Absolute constraint transformed in two sign constraints
@@ -156,12 +157,10 @@ static void EncodeTi_from_tij_OneLambdaPerTrif(
 #undef GAMMAVAR
 }
 
-//-- Estimate the translation from heading relative translations of triplets.
-//- Translation directions must not be normalized (in this way relative scale
-//-  of relative motions is kept and colinear motion is supported).
-struct Tifromtij_ConstraintBuilder_OneLambdaPerTrif
+//-- Estimate the translation from heading relative translations.
+struct Tifromtij_ConstraintBuilder
 {
-  Tifromtij_ConstraintBuilder_OneLambdaPerTrif(
+  Tifromtij_ConstraintBuilder(
     const std::vector< relativeInfo > & vec_relative)
   :_vec_relative(vec_relative)
   {
@@ -173,13 +172,13 @@ struct Tifromtij_ConstraintBuilder_OneLambdaPerTrif
       countSet.insert(vec_relative[i].first.second);
     }
     _Ncam = countSet.size();
-  }
+}
 
   /// Setup constraints for the global translations problem,
   ///  in the LP_Constraints_Sparse object.
   bool Build(LP_Constraints_Sparse & constraint)
   {
-    EncodeTi_from_tij_OneLambdaPerTrif(
+    EncodeTi_from_tij(
       _Ncam,
       _vec_relative,
       constraint._constraintMat,
@@ -194,9 +193,9 @@ struct Tifromtij_ConstraintBuilder_OneLambdaPerTrif
     //-- Setup additional information about the Linear Program constraint.
     // We look for :
     //  - #translations parameters,
-    //  - #relative lambda factors (one per triplet),
+    //  - #relative lambda factors,
     //  - one gamma parameter.
-    constraint._nbParams = _Ncam * 3 + _vec_relative.size()/3 + 1;
+    constraint._nbParams = _Ncam * 3 + _vec_relative.size() + 1;
     return true;
   }
 
@@ -208,5 +207,5 @@ struct Tifromtij_ConstraintBuilder_OneLambdaPerTrif
 } // namespace lInfinityCV
 } // namespace openMVG
 
-#endif // OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMTRIPLETS_H_
+#endif // OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMTIJ_H_
 
