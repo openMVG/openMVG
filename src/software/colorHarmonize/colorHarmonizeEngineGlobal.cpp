@@ -42,6 +42,7 @@
 #include <algorithm>
 #include <functional>
 #include <sstream>
+#include <string>
 
 
 namespace openMVG{
@@ -49,14 +50,15 @@ namespace openMVG{
 using namespace lemon;
 using namespace openMVG::matching;
 using namespace openMVG::lInfinity;
+using namespace std;
 
 typedef SIOPointFeature FeatureT;
-typedef vector< FeatureT > featsT;
+typedef std::vector< FeatureT > featsT;
 
-ColorHarmonizationEngineGlobal::ColorHarmonizationEngineGlobal( const string & sImagePath,
-                                                    const string & sMatchesPath,
+ColorHarmonizationEngineGlobal::ColorHarmonizationEngineGlobal( const std::string & sImagePath,
+                                                               const std::string & sMatchesPath,
                                                     const std::string & sMatchesFile,
-                                                    const string & sOutDirectory,
+                                                    const std::string & sOutDirectory,
                                                     const int selectionMethod,
                                                     const int imgRef):
           ReconstructionEngine( sImagePath, sMatchesPath, sOutDirectory ),
@@ -77,7 +79,7 @@ ColorHarmonizationEngineGlobal::~ColorHarmonizationEngineGlobal()
 static void pauseProcess()
 {
   unsigned char i;
-  cout << "\nPause : type key and press enter: ";
+  std::cout << "\nPause : type key and press enter: ";
   std::cin >> i;
 }
 
@@ -96,7 +98,7 @@ bool ColorHarmonizationEngineGlobal::Process()
     return false;
   if( _map_Matches.size() == 0 )
   {
-    cout << endl << "Matches file is empty" << endl;
+    std::cout << std::endl << "Matches file is empty" << std::endl;
     return false;
   }
 

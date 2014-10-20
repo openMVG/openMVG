@@ -133,7 +133,7 @@ struct reconstructorHelper
     std::transform(map_3DPoints.begin(),
       map_3DPoints.end(),
       std::back_inserter(vec_Reconstructed3DPoints),
-      RetrieveValue());
+      std::RetrieveValue());
     //-- Add camera position to the Point cloud
     std::vector<Vec3> vec_camPos;
     for (Map_BrownPinholeCamera::const_iterator iter = map_Camera.begin();
@@ -309,7 +309,7 @@ struct reconstructorHelper
       f_cloud.open(stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory),
         "views", "txt").c_str());
       if (!f_cloud.is_open()) {
-        std::cerr << "Cannot write views" << endl;
+        std::cerr << "Cannot write views" << std::endl;
         return false;
       }
       f_cloud << "images\ncameras\n" << nc << "\n";

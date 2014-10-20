@@ -63,7 +63,7 @@ class ImageCollectionGeometricFilter
     for (int i = 0; i < (int)map_PutativesMatchesPair.size(); ++i)
     {
       PairWiseMatches::const_iterator iter = map_PutativesMatchesPair.begin();
-      advance(iter,i);
+      std::advance(iter,i);
 
       const size_t iIndex = iter->first.first;
       const size_t jIndex = iter->first.second;

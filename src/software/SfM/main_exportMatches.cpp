@@ -105,7 +105,7 @@ int main(int argc, char ** argv)
       dimImage0 = std::make_pair(vec_focalGroup[camInfoI->m_intrinsicId].m_w, vec_focalGroup[camInfoI->m_intrinsicId].m_h),
       dimImage1 = std::make_pair(vec_focalGroup[camInfoJ->m_intrinsicId].m_w, vec_focalGroup[camInfoJ->m_intrinsicId].m_h);
 
-    svgDrawer svgStream( dimImage0.first + dimImage1.first, max(dimImage0.second, dimImage1.second));
+    svgDrawer svgStream( dimImage0.first + dimImage1.first, (std::max)(dimImage0.second, dimImage1.second));
     svgStream.drawImage(stlplus::create_filespec(sImaDirectory,vec_camImageName[I].m_sImageName),
       dimImage0.first,
       dimImage0.second);
@@ -113,7 +113,7 @@ int main(int argc, char ** argv)
       dimImage1.first,
       dimImage1.second, dimImage0.first);
 
-    const vector<IndMatch> & vec_FilteredMatches = iter->second;
+    const std::vector<IndMatch> & vec_FilteredMatches = iter->second;
 
     if (!vec_FilteredMatches.empty()) {
       // Load the features from the features files
@@ -147,7 +147,7 @@ int main(int argc, char ** argv)
     os << stlplus::folder_append_separator(sOutDir)
       << iter->first.first << "_" << iter->first.second
       << "_" << iter->second.size() << "_.svg";
-    ofstream svgFile( os.str().c_str() );
+    std::ofstream svgFile( os.str().c_str() );
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
   }

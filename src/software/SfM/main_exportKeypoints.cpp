@@ -117,7 +117,7 @@ int main(int argc, char ** argv)
     os << stlplus::folder_append_separator(sOutDir)
       << stlplus::basename_part(iterFilename->m_sImageName)
       << "_" << vec_feat.size() << "_.svg";
-    ofstream svgFile( os.str().c_str() );
+    std::ofstream svgFile( os.str().c_str() );
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
   }
