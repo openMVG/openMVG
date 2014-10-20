@@ -18,7 +18,6 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
-using namespace std;
 
 /**
   * @brief C_Progress manage the appropriate count_step of progress
@@ -85,7 +84,7 @@ class C_Progress
       }
       else
       {
-        long unsigned int iModulusStep = max(_expected_count / iModulus, (long unsigned int)1);  //1 prevent divide per 0
+        long unsigned int iModulusStep = (std::max)(_expected_count / iModulus, (long unsigned int)1);  //1 prevent divide per 0
         bResult=((_count % iModulusStep) == (iModulusStep-1));
       }
 
