@@ -20,30 +20,23 @@
 
 #include <vector>
 
-/* Constraint type codes  (internal) */
+namespace openMVG   {
+namespace linearProgramming  {
+
+// Constraint type codes
+// (to make OSI_CLP internals match LinearProgrammingInterface LP_Constraints::eLP_SIGN)
 #define ROWTYPE_EMPTY            0
 #define ROWTYPE_LE               1
 #define ROWTYPE_GE               2
 #define ROWTYPE_EQ               3
-#define ROWTYPE_CONSTRAINT       ROWTYPE_EQ  /* This is the mask for modes */
 #define ROWTYPE_OF               4
-#define ROWTYPE_INACTIVE         8
-#define ROWTYPE_RELAX           16
-#define ROWTYPE_GUB             32
-#define ROWTYPE_OFMAX            (ROWTYPE_OF + ROWTYPE_GE)
-#define ROWTYPE_OFMIN            (ROWTYPE_OF + ROWTYPE_LE)
-#define ROWTYPE_CHSIGN           ROWTYPE_GE
 
-/* Public constraint codes */
+// Public constraint codes
 #define FR                       ROWTYPE_EMPTY
 #define LE                       ROWTYPE_LE
 #define GE                       ROWTYPE_GE
 #define EQ                       ROWTYPE_EQ
 #define OF                       ROWTYPE_OF
-
-namespace openMVG   {
-namespace linearProgramming  {
-
 
 /// OSI_X wrapper for the LP_Solver
 template<typename SOLVERINTERFACE>
@@ -155,7 +148,7 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints & cstraint
       int coef = 1;
       for ( int j = 0; j < A.cols() ; j++ )
       {
-	row.insert(j, coef * temp.data()[j]);
+        row.insert(j, coef * temp.data()[j]);
       }
       row_lb[indexRow] = -1.0 * si->getInfinity();
       row_ub[indexRow] = coef * cstraints._Cst_objective(i);
