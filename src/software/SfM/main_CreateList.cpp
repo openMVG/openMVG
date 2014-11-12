@@ -117,6 +117,16 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  std::vector<Datasheet> vec_database;
+  if (!sfileDatabase.empty())
+  {
+    if ( !parseDatabase( sfileDatabase, vec_database ) )
+    {
+      std::cerr << "\nInvalid input database" << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
+
   std::vector<std::string> vec_image = stlplus::folder_files( sImageDir );
   // Write the new file
   std::ofstream listTXT( stlplus::create_filespec( sOutputDir,
@@ -129,7 +139,7 @@ int main(int argc, char **argv)
       iter_image++ )
     {
       // Read meta data to fill width height and focalPixPermm
-      std::string sImageFilename = stlplus::create_filespec( sImageDir, *iter_image );
+      const std::string sImageFilename = stlplus::create_filespec( sImageDir, *iter_image );
       
       // Test if the image format is supported:
       if (openMVG::GetFormat(sImageFilename.c_str()) == openMVG::Unknown)
@@ -151,25 +161,11 @@ int main(int argc, char **argv)
         if (openMVG::ReadImage( sImageFilename.c_str(), &image))  {
           width = image.Width();
           height = image.Height();
-        }
+        } // Since read image perform an explicit image conversion
+          //(we do not have to test RGB/A formats)
         else
-        {
-          Image<RGBColor> imageRGB;
-          if (openMVG::ReadImage( sImageFilename.c_str(), &imageRGB)) {
-            width = imageRGB.Width();
-            height = imageRGB.Height();
-          }
-          else
-          {
-            Image<RGBAColor> imageRGBA;
-            if (openMVG::ReadImage( sImageFilename.c_str(), &imageRGBA))  {
-              width = imageRGBA.Width();
-              height = imageRGBA.Height();
-            }
-            else
-              continue; // image is not considered, cannot be read
-          }
-        }
+          continue; // image is not considered, cannot be read
+  
         os << *iter_image << ";" << width << ";" << height;
         if ( focalPixPermm == -1 && sKmatrix.size() == 0)
           os << std::endl;
@@ -188,36 +184,49 @@ int main(int argc, char **argv)
       }
       else // If image contains meta data
       {
-        double focal = focalPixPermm;
-        width = exifReader->getWidth();
-        height = exifReader->getHeight();
         const std::string sCamName = exifReader->getBrand();
         const std::string sCamModel = exifReader->getModel();
 
-          std::vector<Datasheet> vec_database;
+        width = exifReader->getWidth();
+        height = exifReader->getHeight();
+
+        // Handle case where EXIF height or width is not present
+        if (width == 0 || height == 0)
+        {
+          Image<unsigned char> image;
+          if (openMVG::ReadImage( sImageFilename.c_str(), &image))  {
+            width = image.Width();
+            height = image.Height();
+          }
+          else
+            continue;  // image is not considered, cannot be read
+        }
+        // Handle case where focal length is equal to 0
+        if (exifReader->getFocal() == 0.0f)
+        {
+          std::cerr << stlplus::basename_part(sImageFilename) << ": Focal length is missing." << std::endl;
+          continue;
+        }
+
+        // Create the image entry in the list file
+        {
           Datasheet datasheet;
-          if ( parseDatabase( sfileDatabase, vec_database ) )
+          if ( getInfo( sCamName, sCamModel, vec_database, datasheet ))
           {
-            if ( getInfo( sCamName, sCamModel, vec_database, datasheet ) )
-            {
-              // The camera model was found in the database so we can compute it's approximated focal length
-              const double ccdw = datasheet._sensorSize;
-              focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
-              os << *iter_image << ";" << width << ";" << height << ";" << focal << ";" << sCamName << ";" << sCamModel << std::endl;
-            }
-            else
-            {
-              std::cout << "Camera \"" << sCamName << "\" model \"" << sCamModel << "\" doesn't exist in the database" << std::endl;
-              os << *iter_image << ";" << width << ";" << height << ";" << sCamName << ";" << sCamModel << std::endl;
-            }
+            // The camera model was found in the database so we can compute it's approximated focal length
+            const double ccdw = datasheet._sensorSize;
+            const double focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
+            os << *iter_image << ";" << width << ";" << height << ";" << focal << ";" << sCamName << ";" << sCamModel << std::endl;
           }
           else
           {
-            std::cout << "Sensor width database \"" << sfileDatabase << "\" doesn't exist." << std::endl;
-            std::cout << "Please consider add your camera model in the database." << std::endl;
+            std::cout << stlplus::basename_part(sImageFilename) << ": Camera \"" 
+              << sCamName << "\" model \"" << sCamModel << "\" doesn't exist in the database" << std::endl
+              << "Please consider add your camera model and sensor width in the database." << std::endl;
             os << *iter_image << ";" << width << ";" << height << ";" << sCamName << ";" << sCamModel << std::endl;
           }
         }
+      }
       std::cout << os.str();
       listTXT << os.str();
     }
