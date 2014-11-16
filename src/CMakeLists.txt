@@ -46,6 +46,27 @@ IF (UNIX AND NOT OpenMVG_BUILD_COVERAGE)
 ENDIF ()
 
 # ==============================================================================
+# Check C++11 support
+# ==============================================================================
+INCLUDE(CXX11)
+check_for_cxx11_compiler(CXX11_COMPILER)
+# If a C++11 compiler is available, then set the appropriate flags
+IF(CXX11_COMPILER)
+  ADD_DEFINITIONS(-DUSE_CPP11)
+  enable_cxx11()
+  INCLUDE(CheckIncludeFileCXX)
+  CHECK_INCLUDE_FILE_CXX(thread HAVE_CXX11_THREAD)
+  IF (HAVE_CXX11_THREAD)
+    ADD_DEFINITIONS(-DHAVE_CXX11_THREAD)
+  ENDIF(HAVE_CXX11_THREAD)
+    CHECK_INCLUDE_FILE_CXX(chrono HAVE_CXX11_CHRONO)
+  IF (HAVE_CXX11_CHRONO)
+    ADD_DEFINITIONS(-DHAVE_CXX11_CHRONO)
+  ENDIF(HAVE_CXX11_CHRONO)
+ENDIF(CXX11_COMPILER)
+
+
+# ==============================================================================
 # OpenMP detection
 # ==============================================================================
 IF (OpenMVG_USE_OPENMP)
@@ -211,6 +232,7 @@ ENDIF (OpenMVG_BUILD_EXAMPLES)
 # ==============================================================================
 SET(OpenMVG_LIBS
   openMVG_image
+  openMVG_features
   openMVG_multiview
   openMVG_lInftyComputerVision
   openMVG_system)

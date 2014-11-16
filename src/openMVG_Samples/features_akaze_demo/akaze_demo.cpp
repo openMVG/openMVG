@@ -6,15 +6,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
+#include "openMVG/features/akaze/AKAZE.hpp"
+
 #include "openMVG/matching/matcher_brute_force.hpp"
-#include "openMVG/matching/matcher_kdtree_flann.hpp"
 #include "openMVG/matching/matching_filters.hpp"
 #include "openMVG_Samples/siftPutativeMatches/two_view_matches.hpp"
 
-#include "nonFree/sift/SIFT.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
 #include <string>
@@ -37,18 +35,26 @@ int main() {
   ReadImage(jpg_filenameL.c_str(), &imageL);
   ReadImage(jpg_filenameR.c_str(), &imageR);
 
-  // Define the used descriptor (SIFT : 128 float value)
-  typedef unsigned char descType;
-  typedef Descriptor<descType,128> SIFTDescriptor;
-
   // Prepare vector to store detected feature and associated descriptor
   vector<SIOPointFeature> featsL, featsR;
-  vector<SIFTDescriptor > descsL, descsR;
-  // Call SIFT detector
-  bool bOctaveMinus1 = false;
-  bool bRootSift = true;
-  SIFTDetector(imageL, featsL, descsL, bOctaveMinus1, bRootSift);
-  SIFTDetector(imageR, featsR, descsR, bOctaveMinus1, bRootSift);
+  // Call AKAZE detector
+  AKAZEConfig options;
+
+#define AKAZE_MSURF 1
+#if defined AKAZE_MSURF
+  typedef float descType;
+  typedef Descriptor<descType,64> Descriptor_T;
+  vector<Descriptor_T > descsL, descsR;
+  AKAZEDetector<descType, 64>(imageL, featsL, descsL, options);
+  AKAZEDetector<descType, 64>(imageR, featsR, descsR, options);
+#else
+  // MLDB
+  typedef bool descType;
+  typedef Descriptor<descType,486> Descriptor_T;
+  vector<Descriptor_T > descsL, descsR;
+  AKAZEDetector<descType, 486>(imageL, featsL, descsL, options);
+  AKAZEDetector<descType, 486>(imageR, featsR, descsR, options);
+#endif
 
   // Show both images side by side
   {
@@ -79,17 +85,12 @@ int main() {
   //-- Perform matching -> find Nearest neighbor, filtered with Distance ratio
   std::vector<IndMatch> vec_PutativeMatches;
   {
-    // Define the matcher
-    //  and the used metric (Squared L2)
-    typedef L2_Vectorized<SIFTDescriptor::bin_type> Metric;
-    // Brute force matcher is defined as following:
-    typedef ArrayMatcherBruteForce<SIFTDescriptor::bin_type, Metric> MatcherT;
-    // ANN matcher could be defined as follow:
-    //typedef flann::L2<SIFTDescriptor::bin_type> MetricT;
-    //typedef ArrayMatcher_Kdtree_Flann<SIFTDescriptor::bin_type, MetricT> MatcherT;
+    // Define the matcher (BruteForce) and the used metric (Squared L2)
+    typedef L2_Vectorized<Descriptor_T::bin_type> Metric;
+    typedef ArrayMatcherBruteForce<Descriptor_T::bin_type, Metric> MatcherT;
 
     // Distance ratio squared due to squared metric
-    getPutativesMatches<SIFTDescriptor, MatcherT>(descsL, descsR, Square(0.6), vec_PutativeMatches);
+    getPutativesMatches<Descriptor_T, MatcherT>(descsL, descsR, Square(0.8), vec_PutativeMatches);
 
     // Draw correspondences after Nearest Neighbor ratio filter
     svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
@@ -103,16 +104,17 @@ int main() {
       svgStream.drawCircle(L.x(), L.y(), L.scale(), svgStyle().stroke("yellow", 2.0));
       svgStream.drawCircle(R.x()+imageL.Width(), R.y(), R.scale(),svgStyle().stroke("yellow", 2.0));
     }
-    string out_filename = "02_siftMatches.svg";
+    string out_filename = "02_akaze_Matches.svg";
     ofstream svgFile( out_filename.c_str() );
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
   }
 
   // Display some statistics
-  std::cout << featsL.size() << " Features on image A" << std::endl
-   << featsR.size() << " Features on image B" << std::endl
-   << vec_PutativeMatches.size() << " matches after matching with Distance Ratio filter" << std::endl;
+  std::cout
+    << featsL.size() << " Features on image A" << std::endl
+    << featsR.size() << " Features on image B" << std::endl
+    << vec_PutativeMatches.size() << " matches after matching with Distance Ratio filter" << std::endl;
 
   return EXIT_SUCCESS;
 }

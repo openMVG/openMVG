@@ -27,6 +27,8 @@ template<>
 struct Accumulator<short>  { typedef float Type; };
 template<>
 struct Accumulator<int> { typedef float Type; };
+template<>
+struct Accumulator<bool> { typedef unsigned int Type; };
 
 /// Squared Euclidean distance functor.
 template<class T>

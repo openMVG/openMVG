@@ -39,6 +39,7 @@
 #include <Eigen/QR>
 #include <Eigen/SparseCore>
 #include <Eigen/SVD>
+#include<Eigen/StdVector>
 
 #include <cmath>
 #include <numeric>
@@ -359,6 +360,43 @@ namespace openMVG {
       << "\t median: " << median << std::endl
       << "\t max: " << max << std::endl;
   }
+
+  /**
+   ** Split a range [ a ; b [ into a set of n ranges :
+   [ a ; c1 [ U [ c1 ; c2 [ U ... U [ c(n-1) ; b [
+    **
+    Output range vector only store [ a , c1 , c2 , ... , b ]
+
+   ** if input range can't be split (range [a;b[ size is less than nb_split, only return [a;b[ range
+   **
+   ** @param range_start Start of range to split
+   ** @param range_end End of range to split
+   ** @param nb_split Number of desired split
+   ** @param d_range Output splitted range
+   **/
+  template < typename T >
+  void SplitRange( const T range_start , const T range_end , const int nb_split ,
+                                 std::vector< T > & d_range )
+  {
+    const T range_length = range_end - range_start ;
+    if( range_length < nb_split )
+    {
+      d_range.push_back( range_start ) ;
+      d_range.push_back( range_end ) ;
+    }
+    else
+    {
+      const T delta_range = range_length / nb_split ;
+
+      d_range.push_back( range_start ) ;
+      for( int i = 1 ; i < nb_split ; ++i )
+      {
+        d_range.push_back( range_start + i * delta_range ) ;
+      }
+      d_range.push_back( range_end ) ;
+    }
+  }
+
 
 } // namespace openMVG
 

@@ -11,3 +11,4 @@ ADD_SUBDIRECTORY(exifParsing)
 ADD_SUBDIRECTORY(sensorWidthDatabase)
 
 ADD_SUBDIRECTORY(kvld_filter)
+ADD_SUBDIRECTORY(features_akaze_demo)
