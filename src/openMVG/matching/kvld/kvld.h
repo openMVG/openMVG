@@ -56,17 +56,17 @@ struct KvldParameters
 // magnitudes: store gradient norms of pixels of each scale image into a vector of images
 struct ImageScale
 {
-	std::vector< Image< float > > angles;
-	std::vector< Image< float > > magnitudes;
+	std::vector< openMVG::Image< float > > angles;
+	std::vector< openMVG::Image< float > > magnitudes;
 	std::vector< double > ratios;
 	double radius_size;
 	double step;
 
-  ImageScale( const Image< float >& I,double r = 5.0 );
+  ImageScale( const openMVG::Image< float >& I,double r = 5.0 );
 	int getIndex( const double r )const;
 
 private:
-  void GradAndNorm( const Image< float >& I,  Image< float >& angle, Image< float >& m );
+  void GradAndNorm( const openMVG::Image< float >& I,  openMVG::Image< float >& angle, openMVG::Image< float >& m );
 };
 
 //====== VLD structures ======//
@@ -169,8 +169,8 @@ public:
 //
 //kvldParameters: container of minimum inlier rate, the value of K (=3 initially) and geometric verification flag (true initially)
 
-float KVLD( const Image< float >& I1,
-            const Image< float >& I2,
+float KVLD( const openMVG::Image< float >& I1,
+            const openMVG::Image< float >& I2,
             std::vector< openMVG::SIOPointFeature >& F1,
             std::vector< openMVG::SIOPointFeature >& F2,
             const std::vector< Pair >& matches,

@@ -12,7 +12,7 @@ the terms of the BSD license (see the COPYING file).
 
 #include "algorithm.h"
 
-IntegralImages::IntegralImages( const Image< float >& I )
+IntegralImages::IntegralImages( const openMVG::Image< float >& I )
 {
   map.resize( I.Width() + 1, I.Height() + 1 );
   map.fill( 0 );
@@ -25,7 +25,7 @@ IntegralImages::IntegralImages( const Image< float >& I )
   }
 }
 
-float getRange( const Image< float >& I,
+float getRange( const openMVG::Image< float >& I,
                 int a,
                 const float p )
 {

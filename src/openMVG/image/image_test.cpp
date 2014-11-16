@@ -9,6 +9,7 @@
 
 #include <iostream>
 using namespace std;
+using namespace openMVG;
 
 TEST(Image, Basis)
 {

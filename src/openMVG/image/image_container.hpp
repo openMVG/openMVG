@@ -24,6 +24,7 @@
 //-- Pixel access is done with operator(y,x)
 //  [2/3/2011 pierre MOULON]
 //---------------------------
+namespace openMVG {
 
 template <typename T>
 class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
@@ -86,5 +87,7 @@ public:
 protected :
   //-- Image data are stored by inheritance of a matrix
 };
+
+} // namespace openMVG
 
 #endif // OPENMVG_IMAGE_IMAGE_HPP

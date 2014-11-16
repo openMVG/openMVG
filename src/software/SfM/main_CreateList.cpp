@@ -20,6 +20,8 @@
 #include <string>
 #include <vector>
 
+using namespace openMVG;
+
 /// Check that Kmatrix is a string like "f;0;ppx;0;f;ppy;0;0;1"
 /// With f,ppx,ppy as valid numerical value
 bool checkIntrinsicStringValidity(const std::string & Kmatrix)

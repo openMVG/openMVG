@@ -18,6 +18,7 @@ the terms of the BSD license ( see the COPYING file).
 #include <openMVG/image/image.hpp>
 
 using namespace std;
+using namespace openMVG;
 
 ImageScale::ImageScale( const Image< float >& I, double r )
 {
@@ -66,12 +67,12 @@ void ImageScale::GradAndNorm( const Image< float >& I, Image< float >& angle, Im
 #ifdef USE_OPENMP
 #pragma omp parallel for
 #endif
+  for( int y = 1; y < I.Height() - 1; y++ )
+  {
   for( int x = 1; x < I.Width() - 1; x++ )
   {
-    for( int y = 1; y < I.Height() - 1; y++ )
-    {
-      float gx = I( y, x + 1 ) - I( y, x - 1 );
-      float gy = I( y + 1, x ) - I( y - 1, x );
+      const float gx = I( y, x + 1 ) - I( y, x - 1 );
+      const float gy = I( y + 1, x ) - I( y - 1, x );
 
       if( !anglefrom( gx, gy, angle( y, x ) ) )
         angle( y, x ) = -1;

@@ -49,9 +49,9 @@ struct PointS
 //It is used to efficiently construct the pyramid of scale images in KVLD
 struct IntegralImages
 {
-	Image< double > map;
+	openMVG::Image< double > map;
 
-	IntegralImages( const Image< float >& I );
+	IntegralImages( const openMVG::Image< float >& I );
 
   inline double operator()( double x1, double y1, double x2, double y2 )const
   {
@@ -196,6 +196,6 @@ inline float consistent( const T& a1, const T& a2, const T& b1, const T& b2 )
 	float d = std::min( d1_error / std::min( d1, point_distance( b1, b2 ) ), d2_error / std::min( d2, point_distance( b1, b2 ) ) );
 	return d;
 }
-float getRange( const Image< float >& I, int a, const float p );
+float getRange( const openMVG::Image< float >& I, int a, const float p );
 
 #endif //KVLD_ALGORITHM_H
