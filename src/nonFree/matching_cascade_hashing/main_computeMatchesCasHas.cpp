@@ -283,7 +283,7 @@ int main(int argc, char **argv)
         case PAIR_FROM_FILE:
           if(!loadPairs(vec_fileNames.size(), sPredefinedPairList, pairs))
           {
-              return false;
+              return EXIT_FAILURE;
           };
           break;
       }

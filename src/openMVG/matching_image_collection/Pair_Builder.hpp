@@ -41,7 +41,10 @@ PairsT contiguousWithOverlap(const size_t N, const size_t overlapSize)
 
 /// Load a set of Pairs from a file
 /// I J K L (pair that link I)
-bool loadPairs(const size_t N, const std::string &sFileName, PairsT & pairs)
+bool loadPairs(
+     const size_t N,  // number of image in the current project (to check index validity)
+     const std::string &sFileName, // filename of the list file,
+     PairsT & pairs)  // output pairs read from the list file
 {
   std::ifstream in(sFileName.c_str());
   if(!in.is_open())  {
