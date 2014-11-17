@@ -63,7 +63,7 @@ TEST(matching_image_collection, IO)
   EXPECT_TRUE( savePairs("pairsT_IO.txt", pairSetGT));
 
   PairsT loaded_Pairs;
-  EXPECT_TRUE( loadPairs("pairsT_IO.txt", loaded_Pairs));
+  EXPECT_TRUE( loadPairs(pairSetGT.size(), "pairsT_IO.txt", loaded_Pairs));
   EXPECT_TRUE( loaded_Pairs == pairSetGT);
 }
 
