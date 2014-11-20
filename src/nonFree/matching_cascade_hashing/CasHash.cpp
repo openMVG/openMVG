@@ -96,7 +96,7 @@ size_t ImportFeatures(const map_DescT& map_Desc, std::vector<ImageFeatures>& ima
   // init feature descriptors for each image
   imageDataList.resize(map_Desc.size());
   const HashConvertor stHashConvertor;
-#ifdef _USE_OPENMP
+#ifdef USE_OPENMP
 #pragma omp parallel for
 #endif
   for (int i = 0; i < map_Desc.size(); ++i)
@@ -223,18 +223,18 @@ void HashConvertor::SiftDataToHashData(
     for (int dimCompHashIndex = 0; dimCompHashIndex < kDimCompHashData; dimCompHashIndex++)
     {
       uint64_t compHashBitVal = 0;
-      int dimHashIndexLBound = dimCompHashIndex * kBitInCompHash;
-      int dimHashIndexUBound = (dimCompHashIndex + 1) * kBitInCompHash;
-      for (int dimHashIndex = dimHashIndexLBound; dimHashIndex < dimHashIndexUBound; dimHashIndex++)
+      const int dimHashIndexLBound = dimCompHashIndex * kBitInCompHash;
+      const int dimHashIndexUBound = (dimCompHashIndex + 1) * kBitInCompHash;
+      for (int dimHashIndex = dimHashIndexLBound; dimHashIndex < dimHashIndexUBound; ++dimHashIndex)
         compHashBitVal = (compHashBitVal << 1) + hashData.hash[dimHashIndex]; // set the corresponding bit to 1/0
       compHashDataPtr[dimCompHashIndex] = compHashBitVal;
     }
 
     // determine the bucket index for each bucket group
-    for (int groupIndex = 0; groupIndex < kCntBucketGroup; groupIndex++)
+    for (int groupIndex = 0; groupIndex < kCntBucketGroup; ++groupIndex)
     {
       uint16_t bucketID = 0;
-      for (int bitIndex = 0; bitIndex < kCntBucketBit; bitIndex++)
+      for (int bitIndex = 0; bitIndex < kCntBucketBit; ++bitIndex)
       {
 #ifdef Bucket_SecHash
         int sum = 0;
@@ -289,7 +289,7 @@ void CasHashMatcher::MatchSpFast<DescsT>(
   std::vector<int> linkList[kDimHashData+1]; // re-assign candidate SIFT points according to their Hamming distance (the number of candidates with Hamming distance of [0, 1, ..., 128])
 
   // reserve some memory for the temporary arrays
-  size_t maxCount = std::max(descriptors1.size(), descriptors2.size());
+  const size_t maxCount = std::max(descriptors1.size(), descriptors2.size());
   candidateIndexList.reserve(maxCount);
   distList.reserve(maxCount);
 
