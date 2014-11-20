@@ -195,8 +195,7 @@ std::set<size_t> CleanGraph_Node(
   // Graph is bi-edge connected, but still many connected components can exist
   // Keep only the largest one
   const int connectedComponentCount = lemon::countConnectedComponents(putativeGraph.g);
-  std::cout << "\n"
-    << "GlobalReconstructionEngine::CleanGraph() :: => connected Component: "
+  std::cout << "\n" << "CleanGraph_Node():: => connected Component: "
     << connectedComponentCount << std::endl;
   if (connectedComponentCount >= 1)
   {
@@ -230,7 +229,6 @@ std::set<size_t> CleanGraph_Node(
         {
           const size_t Id = (*putativeGraph.map_nodeMapIndex)[*iter2];
           largestBiEdgeCC.insert(Id);
-
         }
       }
       else
