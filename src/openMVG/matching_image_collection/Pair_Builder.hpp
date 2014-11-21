@@ -80,7 +80,9 @@ bool loadPairs(
       else
       {
         if( I != J )
-           pairs.insert(std::make_pair(std::min(I,J), std::max(I,J)));
+        {
+          pairs.insert( (I < J) ? std::make_pair(I, J) : std::make_pair(J, I) );
+        }
         else
         {
           std::cerr << "--loadPairs: Invalid input file. Image see herself " << std::endl;
