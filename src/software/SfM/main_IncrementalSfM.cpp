@@ -15,7 +15,11 @@
 
 using namespace openMVG;
 
-bool computeIndexFromImageNames(const std::string& sMatchesDir, const std::pair<std::string,std::string>& initialPairName, std::pair<size_t, size_t>& initialPairIndex)
+/// From 2 given image file-names, find the two corresponding index in the openMVG 'lists.txt' file.
+bool computeIndexFromImageNames(
+  const std::string& sMatchesDir,
+  const std::pair<std::string,std::string>& initialPairName,
+  std::pair<size_t, size_t>& initialPairIndex)
 {
   const std::string sListsFile = stlplus::create_filespec(sMatchesDir, "lists.txt" );
   if (!stlplus::is_file(sListsFile)) {
@@ -30,22 +34,27 @@ bool computeIndexFromImageNames(const std::string& sMatchesDir, const std::pair<
     return false;
   }
 
-  std::vector<std::string>::const_iterator imageName;
-  imageName = find(vec_camImageName.begin(), vec_camImageName.end(), initialPairName.first);
+  if (initialPairName.first == initialPairName.second)
+  {
+    std::cerr << "\nInvalid image names. You cannot use the same image to create a pair." << std::endl;
+    return false;
+  }
+
+  std::vector<std::string>::const_iterator imageName = find(vec_camImageName.begin(), vec_camImageName.end(), initialPairName.first);
   if(imageName == vec_camImageName.end())
   {
-      std::cerr << "\nCannot access image \""<< *imageName << "\"" << std::endl;
+      std::cerr << "\nCannot access to the specified image: \""<< initialPairName.first << "\"" << std::endl;
       return false;
   }
   initialPairIndex.first = std::distance<std::vector<std::string>::const_iterator>(vec_camImageName.begin(), imageName);  
   imageName = find(vec_camImageName.begin(), vec_camImageName.end(), initialPairName.second);
   if(imageName == vec_camImageName.end())
   {
-      std::cerr << "\nCannot access image \""<< *imageName << "\"" << std::endl;
+      std::cerr << "\nCannot access to the specified image: \""<< initialPairName.second << "\"" << std::endl;
       return false;
   }
   initialPairIndex.second = std::distance<std::vector<std::string>::const_iterator>(vec_camImageName.begin(), imageName);
-  return true; 
+  return true;
 }
 
 
@@ -65,7 +74,7 @@ int main(int argc, char **argv)
   bool bRefinePPandDisto = true;
   bool bRefineFocal = true;
   bool bColoredPointCloud = false;
-  std::pair<std::string,std::string> initialPair;
+  std::pair<std::string,std::string> initialPair("","");
 
   cmd.add( make_option('i', sImaDirectory, "imadir") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
@@ -119,11 +128,14 @@ int main(int argc, char **argv)
                                             sOutDir,
                                             true);
 
-  std::pair<size_t, size_t> initialPairIndex;
-  if(!computeIndexFromImageNames(sMatchesDir, initialPair, initialPairIndex))
-    return EXIT_FAILURE;
-
-  to3DEngine.setInitialPair(initialPairIndex);
+  // Handle Initial pair parameter
+  if (!initialPair.first.empty() && !initialPair.second.empty())
+  {
+    std::pair<size_t, size_t> initialPairIndex(0,0);
+    if(!computeIndexFromImageNames(sMatchesDir, initialPair, initialPairIndex))
+      return EXIT_FAILURE;
+    to3DEngine.setInitialPair(initialPairIndex);
+  }  
   to3DEngine.setIfRefinePrincipalPointAndRadialDisto(bRefinePPandDisto);
   to3DEngine.setIfRefineFocal(bRefineFocal);
 
