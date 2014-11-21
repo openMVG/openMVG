@@ -19,7 +19,7 @@ bool computeIndexFromImageNames(const std::string& sMatchesDir, const std::pair<
 {
   const std::string sListsFile = stlplus::create_filespec(sMatchesDir, "lists.txt" );
   if (!stlplus::is_file(sListsFile)) {
-    std::cerr << "Cannont access input file \""<< sListsFile << "\"" << std::endl;
+    std::cerr << "\nCannot access input file \""<< sListsFile << "\"" << std::endl;
     return false;
   }
 
