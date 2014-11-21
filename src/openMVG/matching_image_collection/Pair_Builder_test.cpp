@@ -57,14 +57,20 @@ TEST(matching_image_collection, contiguousWithOverlap)
 TEST(matching_image_collection, IO)
 {
   PairsT pairSetGT;
-  pairSetGT.insert( std::make_pair(0,2) );
-  pairSetGT.insert( std::make_pair(2,4) );
+  pairSetGT.insert( std::make_pair(0,1) );
+  pairSetGT.insert( std::make_pair(1,2) );
+  pairSetGT.insert( std::make_pair(2,0) );
+
+  PairsT pairSetGTsorted;
+  pairSetGTsorted.insert( std::make_pair(0,1) );
+  pairSetGTsorted.insert( std::make_pair(0,2) );
+  pairSetGTsorted.insert( std::make_pair(1,2) );
 
   EXPECT_TRUE( savePairs("pairsT_IO.txt", pairSetGT));
 
   PairsT loaded_Pairs;
-  EXPECT_TRUE( loadPairs("pairsT_IO.txt", loaded_Pairs));
-  EXPECT_TRUE( loaded_Pairs == pairSetGT);
+  EXPECT_TRUE( loadPairs(pairSetGT.size(), "pairsT_IO.txt", loaded_Pairs));
+  EXPECT_TRUE( loaded_Pairs == pairSetGTsorted);
 }
 
 /* ************************************************************************* */
