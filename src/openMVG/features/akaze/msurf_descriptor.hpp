@@ -7,6 +7,7 @@
 #ifndef OPENMVG_IMAGE_DESCRIPTION_MSURF_DESCRIPTOR_H
 #define OPENMVG_IMAGE_DESCRIPTION_MSURF_DESCRIPTOR_H
 
+#include "openMVG/features/descriptor.hpp"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/numeric/math_trait.hpp"
 
