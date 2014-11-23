@@ -41,7 +41,7 @@ float AKAZE::ComputeAutomaticContrastFactor( const Image<float> & src , const fl
   // Compute gradient
   Image<float> Lx, Ly ;
   ImageScharrXDerivative( smoothed , Lx , false ) ;
-  ImageScharrYDerivative( smoothed , Ly , false ) ; 
+  ImageScharrYDerivative( smoothed , Ly , false ) ;
 
   Image<float> & grad = smoothed; // reuse smoothed to avoid new allocation
   // grad = sqrt(Lx^2 + Ly^2)
@@ -113,7 +113,7 @@ void AKAZE::ComputeAKAZESlice( const Image<float> & src , const int p , const in
   if( p == 0 && q == 0 )
   {
     // Compute new image
-    ImageGaussianFilter( src , sigma0 , Li, 0, 0) ; 
+    ImageGaussianFilter( src , sigma0 , Li, 0, 0) ;
   }
   else
   {
@@ -134,7 +134,7 @@ void AKAZE::ComputeAKAZESlice( const Image<float> & src , const int p , const in
     const float total_cycle_time = t_cur - t_prev ;
 
     // Compute first derivatives (Scharr scale 1, non normalized) for diffusion coef
-    ImageGaussianFilter( in , 1.f , smoothed, 0, 0 ) ; 
+    ImageGaussianFilter( in , 1.f , smoothed, 0, 0 ) ;
 
     ImageScharrXDerivative( smoothed , Lx , false ) ;
     ImageScharrYDerivative( smoothed , Ly , false ) ;
@@ -150,7 +150,7 @@ void AKAZE::ComputeAKAZESlice( const Image<float> & src , const int p , const in
     Li = in ; // evolution image
   }
 
-  // Compute Hessian response 
+  // Compute Hessian response
   if( p == 0 && q == 0 )
   {
     smoothed = Li ;
@@ -158,7 +158,7 @@ void AKAZE::ComputeAKAZESlice( const Image<float> & src , const int p , const in
   else
   {
     // Add a little smooth to image (for robustness of Scharr derivatives)
-    ImageGaussianFilter( Li , 1.f , smoothed, 0, 0 ); 
+    ImageGaussianFilter( Li , 1.f , smoothed, 0, 0 );
   }
 
   // Compute true first derivatives
@@ -194,7 +194,7 @@ void convert_scale(Image &src)
 /// log2 of a number
 static double Log2( double n )
 {
-  return log( n ) / log( 2.0 );  
+  return log( n ) / log( 2.0 );
 }
 
 /// Constructor with input arguments
@@ -247,9 +247,7 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
 {
   bool is_extremum = false, is_repeated = false;
   int id_repeated = 0;
-  int npoints = 0;
 
-  size_t cpt = 0;
   for( int p = 0 ; p < options_.iNbOctave ; ++p )
   {
     const float ratio = (float) (1 << p);
@@ -257,14 +255,14 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
     for( int q = 0 ; q < options_.iNbSlicePerOctave ; ++q )
     {
       const float sigma_cur = Sigma( options_.fSigma0 , p , q , options_.iNbSlicePerOctave ) ;
-      const Image<float> & LDetHess = evolution_[cpt++].Lhess;
+      const Image<float> & LDetHess = evolution_[options_.iNbOctave * p + q].Lhess;
 
       // Check that the point is under the image limits for the descriptor computation
       const float borderLimit =
         MathTrait<float>::round(options_.fDesc_factor*sigma_cur*fderivative_factor/ratio)+1;
 
-      for (int jx = borderLimit; jx < LDetHess.Height()-borderLimit; jx++)
-      for (int ix = borderLimit; ix < LDetHess.Width()-borderLimit; ix++) {
+      for (int jx = borderLimit; jx < LDetHess.Height()-borderLimit; ++jx)
+      for (int ix = borderLimit; ix < LDetHess.Width()-borderLimit; ++ix) {
 
         is_extremum = true;
         is_repeated = false;
@@ -295,8 +293,8 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
             if( point.class_id -1 == kpts[ik].class_id ||
               point.class_id == kpts[ik].class_id  )
             {
-              const float dist = sqrt(Square(point.x-kpts[ik].x)+Square(point.y-kpts[ik].y));
-              if (dist <= point.size)
+              const float dist = Square(point.x-kpts[ik].x)+Square(point.y-kpts[ik].y);
+              if (dist <= Square(point.size))
               {
                 if( point.response > kpts[ik].response )
                 {
@@ -316,14 +314,12 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
             if( is_repeated == false)
             {
               kpts.push_back(point);
-              npoints++;
             }
             else
             {
               kpts[id_repeated] = point;
             }
           }
-
         }
       }
     }
@@ -331,6 +327,9 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
 
   std::vector<AKAZEKeypoint > vec_kp;
   vec_kp.reserve(kpts.size());
+#ifdef USE_OPENMP
+  #pragma omp parallel for
+#endif
   // Now filter points (keep the best along the pyramid)
   for (size_t i = 0; i < kpts.size(); i++)
   {
@@ -343,8 +342,8 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
       const AKAZEKeypoint& ptJ = kpts[j];
       if ( best_kp.class_id + 1 == ptJ.class_id )
       {
-        const float dist = sqrt(Square(best_kp.x-ptJ.x)+Square(best_kp.y-ptJ.y));
-        if (dist <= best_kp.size) {
+        const float dist = Square(best_kp.x-ptJ.x)+Square(best_kp.y-ptJ.y);
+        if (dist <= Square(best_kp.size)) {
           if (best_kp.response < ptJ.response) {
             is_repeated = true;
             break ;
@@ -352,6 +351,9 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
         }
       }
     }
+#ifdef USE_OPENMP
+  #pragma omp critical
+#endif
     if (!is_repeated)
       vec_kp.push_back(best_kp);
   }

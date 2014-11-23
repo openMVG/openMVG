@@ -55,15 +55,6 @@ TEST(Image, Convolution_MeanBoxFilter)
   ImageConvolution(in, meanBoxFilterKernel, out);
 }
 
-TEST(Image, Convolution_MeanBoxFilter_Inplace)
-{
-  Image<unsigned char> in(40,40);
-  in.block(10,10,20,20).fill(255.f);
-  Mat3 meanBoxFilterKernel;
-  meanBoxFilterKernel.fill(1.f/9.f);
-  ImageConvolution(in, meanBoxFilterKernel);
-}
-
 TEST(Image, Convolution_Scharr_X_Y)
 {
   Image<float> in(40,40);

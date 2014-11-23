@@ -26,22 +26,9 @@
 #include "openMVG/image/sample.hpp"
 
 #include "openMVG/image/image_convolution_base.hpp"
-
-#if defined(USE_CPP11) && defined(HAVE_CXX11_THREAD)
-#include "openMVG/image/image_convolution_cpp_thread.hpp"
-#else
-#if defined(USE_OPENMP)
-#include "openMVG/image/image_convolution_cpp_openmp.hpp"
-#endif
-#endif
-
 #include "openMVG/image/image_convolution.hpp"
 #include "openMVG/image/image_filtering.hpp"
 #include "openMVG/image/image_resampling.hpp"
-
-#if defined(USE_CPP11) && defined(HAVE_CXX11_THREAD)
-#include "openMVG/image/image_diffusion_cpp_thread.hpp"
-#endif
 #include "openMVG/image/image_diffusion.hpp"
 
 #endif /* OPENMVG_IMAGE_HPP */
