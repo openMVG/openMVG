@@ -170,7 +170,7 @@ static bool AKAZEDetector(
 
 /// Compute AKAZE keypoints and their associated MSURF descriptors
 template<>
-bool AKAZEDetector<float,64>(
+static bool AKAZEDetector<float,64>(
   const Image<unsigned char>& I,
   std::vector<SIOPointFeature>& vec_feat,
   std::vector<Descriptor<float,64> >& vec_desc,
@@ -208,7 +208,7 @@ bool AKAZEDetector<float,64>(
 
 /// Compute AKAZE keypoints and their associated MLDB descriptors
 template<>
-bool AKAZEDetector<bool,486>(
+static bool AKAZEDetector<bool,486>(
   const Image<unsigned char>& I,
   std::vector<SIOPointFeature>& vec_feat,
   std::vector<Descriptor<bool,486> >& vec_desc,

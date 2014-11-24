@@ -99,7 +99,7 @@ void ImageFEDCentralCPPThread( const Image & src , const Image & diff , const ty
 #ifdef USE_OPENMP
 #pragma omp parallel for
 #endif
-  for( size_t i = 1 ; i < range.size() ; ++i ) {
+  for( int i = 1 ; i < static_cast<int>(range.size()) ; ++i ) {
     ImageFEDCentral( src, diff, half_t, out, range[i-1] , range[i]) ;
   }
 }

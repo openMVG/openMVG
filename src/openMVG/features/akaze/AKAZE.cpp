@@ -331,7 +331,7 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
   #pragma omp parallel for
 #endif
   // Now filter points (keep the best along the pyramid)
-  for (size_t i = 0; i < kpts.size(); i++)
+  for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
   {
     // For all point that fall inside the area of influence, keep the strongest one
     bool is_repeated = false;
