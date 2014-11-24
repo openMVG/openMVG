@@ -182,72 +182,6 @@ void ImageSeparableConvolution( const ImageType & img ,
 
 typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMatrixXf;
 
-/// Specialization for Float based image (for a fixed sized convolution)
-template <int sigma>
-void SeparableConvolution2d(const RowMatrixXf& image,
-                            const Eigen::Matrix<float, 1, sigma>& kernel_x,
-                            const Eigen::Matrix<float, 1, sigma>& kernel_y,
-                            RowMatrixXf* out) {
-  const int half_sigma = sigma / 2;
-
-  // Convolving a vertical filter across rows is the same thing as transpose
-  // multiply i.e. kernel_y^t * rows. This will give us the convoled value for
-  // each row. However, care must be taken at the top and bottom borders.
-  const Eigen::Matrix<float, 1, sigma> reverse_kernel_y = kernel_y.reverse();
-#ifdef USE_OPENMP
-#pragma omp parallel for
-#endif
-  for (int i = 0; i < half_sigma; i++) {
-    const int forward_size = i + half_sigma + 1;
-    const int reverse_size = sigma - forward_size;
-    out->row(i) = kernel_y.tail(forward_size) *
-                  image.block(0, 0, forward_size, image.cols()) +
-                  reverse_kernel_y.tail(reverse_size) *
-                  image.block(1, 0, reverse_size, image.cols());
-
-    // Apply the same technique for the end rows.
-    out->row(image.rows() - i - 1) =
-      kernel_y.head(forward_size) *
-      image.block(image.rows() - forward_size, 0, forward_size, image.cols())
-      +
-      reverse_kernel_y.head(reverse_size) *
-      image.block(image.rows() - reverse_size - 1, 0, reverse_size, image.cols());
-  }
-
-  // Applying the rest of the y filter.
-#ifdef USE_OPENMP
-#pragma omp parallel for
-#endif
-  for (int row = half_sigma; row < image.rows() - half_sigma; row++) {
-    out->row(row) =  kernel_y * image.block(row - half_sigma, 0, sigma, out->cols());
-  }
-
-  // Convolving with the horizontal filter is easy. Rather than using the kernel
-  // as a sliding indow, we use the row pixels as a sliding window around the
-  // filter. We prepend and append the proper border values so that we are sure
-  // to end up with the correct convolved values.
-  Eigen::RowVectorXf temp_row(image.cols() + sigma - 1);
-#ifdef USE_OPENMP
-#pragma omp parallel for firstprivate(temp_row)
-#endif
-  for (int row = 0; row < out->rows(); row++) {
-    temp_row.head<half_sigma>() =
-      out->row(row).segment(1, half_sigma).reverse();
-    temp_row.segment(half_sigma, image.cols()) = out->row(row);
-    temp_row.tail<half_sigma>() =
-      out->row(row)
-      .segment(image.cols() - 2 - half_sigma, half_sigma)
-      .reverse();
-
-    // Convolve the row. We perform the first step here explicitly so that we
-    // avoid setting the row equal to zero.
-    out->row(row) = kernel_x(0) * temp_row.head(image.cols());
-    for (int i = 1; i < sigma; i++) {
-      out->row(row) += kernel_x(i) * temp_row.segment(i, image.cols());
-    }
-  }
-}
-
 /// Specialization for Float based image (for arbitrary sized kernel)
 static void SeparableConvolution2d(const RowMatrixXf& image,
                             const Eigen::Matrix<float, 1, Eigen::Dynamic>& kernel_x,
@@ -292,7 +226,7 @@ static void SeparableConvolution2d(const RowMatrixXf& image,
   const int half_sigma_x = kernel_x.cols() / 2;
 
   // Convolving with the horizontal filter is easy. Rather than using the kernel
-  // as a sliding indow, we use the row pixels as a sliding window around the
+  // as a sliding window, we use the row pixels as a sliding window around the
   // filter. We prepend and append the proper border values so that we are sure
   // to end up with the correct convolved values.
   Eigen::RowVectorXf temp_row(image.cols() + sigma_x - 1);
@@ -331,34 +265,7 @@ void ImageSeparableConvolution( const Image<float> & img ,
   const VecKernel vert_k_cast = vert_k.template cast< typename Accumulator<pix_t>::Type >();
 
   out.resize(img.Width(), img.Height());
-  if (horiz_k_cast.rows() == vert_k_cast.rows())
-  {
-    switch(horiz_k_cast.rows()) {
-    case 3:
-      SeparableConvolution2d<3>(img.GetMat(), horiz_k_cast, vert_k_cast, &((Image<float>::Base&)out));
-      break;
-    case 5:
-      SeparableConvolution2d<5>(img.GetMat(), horiz_k_cast, vert_k_cast, &((Image<float>::Base&)out));
-      break;
-    case 7:
-      SeparableConvolution2d<7>(img.GetMat(), horiz_k_cast, vert_k_cast, &((Image<float>::Base&)out));
-      break;
-    case 9:
-      SeparableConvolution2d<9>(img.GetMat(), horiz_k_cast, vert_k_cast, &((Image<float>::Base&)out));
-      break;
-    case 11:
-      SeparableConvolution2d<11>(img.GetMat(), horiz_k_cast, vert_k_cast, &((Image<float>::Base&)out));
-      break;
-    default:
-      SeparableConvolution2d(img.GetMat(), horiz_k_cast, vert_k_cast, &((Image<float>::Base&)out));
-    }
-  }
-  else
-  {
-    Image<float> tmp ;
-    ImageHorizontalConvolution( img , horiz_k_cast , tmp ) ;
-    ImageVerticalConvolution( tmp , vert_k_cast , out ) ;
-  }
+  SeparableConvolution2d(img.GetMat(), horiz_k_cast, vert_k_cast, &((Image<float>::Base&)out));
 }
 
 } // namespace openMVG
