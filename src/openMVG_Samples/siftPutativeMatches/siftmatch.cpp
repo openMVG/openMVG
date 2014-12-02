@@ -79,15 +79,15 @@ int main() {
   //-- Perform matching -> find Nearest neighbor, filtered with Distance ratio
   std::vector<IndMatch> vec_PutativeMatches;
   {
-       // Define the matcher
-    //  and the used metric (Squared L2)
+    // Define the matcher and the used metric (Squared L2)
     typedef L2_Vectorized<SIFTDescriptor::bin_type> Metric;
     // Brute force matcher is defined as following:
     typedef ArrayMatcherBruteForce<SIFTDescriptor::bin_type, Metric> MatcherT;
     // ANN matcher could be defined as follow:
-    //typedef ArrayMatcher_Kdtree_nanoflann<SIFTDescriptor::bin_type,
-    //  Metric // Metric to compare two descriptor
-    //  > MatcherT;
+    // typedef flann::L2<SIFTDescriptor::bin_type> Metric;
+    // typedef ArrayMatcher_Kdtree_Flann<SIFTDescriptor::bin_type,
+    //   Metric // Metric to compare two descriptor
+    // > MatcherT;
 
     // Distance ratio squared due to squared metric
     getPutativesMatches<SIFTDescriptor, MatcherT>(descsL, descsR, Square(0.6), vec_PutativeMatches);
