@@ -85,7 +85,8 @@ int main() {
     // Brute force matcher is defined as following:
     typedef ArrayMatcherBruteForce<SIFTDescriptor::bin_type, Metric> MatcherT;
     // ANN matcher could be defined as follow:
-    //typedef ArrayMatcher_Kdtree_nanoflann<SIFTDescriptor::bin_type,
+    // typedef flann::L2<SIFTDescriptor::bin_type> Metric;
+    //typedef ArrayMatcher_Kdtree_Flann<SIFTDescriptor::bin_type,
     //  Metric // Metric to compare two descriptor
     //  > MatcherT;
 
