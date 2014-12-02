@@ -187,15 +187,15 @@ static void SeparableConvolution2d(const RowMatrixXf& image,
                             const Eigen::Matrix<float, 1, Eigen::Dynamic>& kernel_x,
                             const Eigen::Matrix<float, 1, Eigen::Dynamic>& kernel_y,
                             RowMatrixXf* out) {
-  const int sigma_y = kernel_y.cols();
-  const int half_sigma_y = kernel_y.cols() / 2;
+  const int sigma_y = static_cast<int>( kernel_y.cols() );
+  const int half_sigma_y = static_cast<int>( kernel_y.cols() ) / 2;
 
   // Convolving a vertical filter across rows is the same thing as transpose
   // multiply i.e. kernel_y^t * rows. This will give us the convoled value for
   // each row. However, care must be taken at the top and bottom borders.
   const Eigen::Matrix<float, 1, Eigen::Dynamic> reverse_kernel_y = kernel_y.reverse();
 #if defined(USE_OPENMP)
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic)
 #endif
   for (int i = 0; i < half_sigma_y; i++) {
     const int forward_size = i + half_sigma_y + 1;
@@ -216,13 +216,13 @@ static void SeparableConvolution2d(const RowMatrixXf& image,
 
   // Applying the rest of the y filter.
 #if defined(USE_OPENMP)
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic)
 #endif
   for (int row = half_sigma_y; row < image.rows() - half_sigma_y; row++) {
     out->row(row) =  kernel_y * image.block(row - half_sigma_y, 0, sigma_y, out->cols());
   }
 
-  const int sigma_x = kernel_x.cols();
+  const int sigma_x = static_cast<int>(kernel_x.cols());
   const int half_sigma_x = kernel_x.cols() / 2;
 
   // Convolving with the horizontal filter is easy. Rather than using the kernel
@@ -231,7 +231,7 @@ static void SeparableConvolution2d(const RowMatrixXf& image,
   // to end up with the correct convolved values.
   Eigen::RowVectorXf temp_row(image.cols() + sigma_x - 1);
 #if defined(USE_OPENMP)
-#pragma omp parallel for firstprivate(temp_row)
+#pragma omp parallel for firstprivate(temp_row), schedule(dynamic)
 #endif
   for (int row = 0; row < out->rows(); row++) {
     temp_row.head(half_sigma_x) =

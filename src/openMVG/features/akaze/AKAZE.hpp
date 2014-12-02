@@ -174,39 +174,39 @@ template<>
 static 
 #endif //WIN32
 bool AKAZEDetector<float,64>(
-	const Image<unsigned char>& I,
-	std::vector<SIOPointFeature>& vec_feat,
-	std::vector<Descriptor<float,64> >& vec_desc,
-	AKAZEConfig options)
-{
-	options.fDesc_factor = 10.f*sqrtf(2.f);
+  const Image<unsigned char>& I,
+  std::vector<SIOPointFeature>& vec_feat,
+  std::vector<Descriptor<float,64> >& vec_desc,
+  AKAZEConfig options)
+  {
+  options.fDesc_factor = 10.f*sqrtf(2.f);
 
-	AKAZE akaze(I, options);
-	akaze.Compute_AKAZEScaleSpace();
-	std::vector<AKAZEKeypoint> kpts;
-	kpts.reserve(5000);
-	akaze.Feature_Detection(kpts);
-	akaze.Do_Subpixel_Refinement(kpts);
+  AKAZE akaze(I, options);
+  akaze.Compute_AKAZEScaleSpace();
+  std::vector<AKAZEKeypoint> kpts;
+  kpts.reserve(5000);
+  akaze.Feature_Detection(kpts);
+  akaze.Do_Subpixel_Refinement(kpts);
 
-	vec_feat.resize(kpts.size());
-	vec_desc.resize(kpts.size());
-#ifdef USE_OPENMP
-#pragma omp parallel for
-#endif
-	for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
-	{
-		AKAZEKeypoint ptAkaze = kpts[i];
-		const TEvolution & cur_slice = akaze.getSlices()[ ptAkaze.class_id ] ;
+  vec_feat.resize(kpts.size());
+  vec_desc.resize(kpts.size());
+  #ifdef USE_OPENMP
+  #pragma omp parallel for schedule(dynamic)
+  #endif
+  for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
+  {
+    AKAZEKeypoint ptAkaze = kpts[i];
+    const TEvolution & cur_slice = akaze.getSlices()[ ptAkaze.class_id ] ;
 
-		// Compute point orientation
-		akaze.Compute_Main_Orientation(ptAkaze, cur_slice.Lx, cur_slice.Ly);
+    // Compute point orientation
+    akaze.Compute_Main_Orientation(ptAkaze, cur_slice.Lx, cur_slice.Ly);
 
-		vec_feat[i] = SIOPointFeature(ptAkaze.x, ptAkaze.y, ptAkaze.size, ptAkaze.angle);
+    vec_feat[i] = SIOPointFeature(ptAkaze.x, ptAkaze.y, ptAkaze.size, ptAkaze.angle);
 
-		// Compute descriptor (MSURF)
-		ComputeMSURFDescriptor( cur_slice.Lx , cur_slice.Ly , ptAkaze.octave , vec_feat[ i ] , vec_desc[ i ] ) ;
-	}
-	return true;
+    // Compute descriptor (MSURF)
+    ComputeMSURFDescriptor( cur_slice.Lx , cur_slice.Ly , ptAkaze.octave , vec_feat[ i ] , vec_desc[ i ] ) ;
+  }
+  return true;
 }
 
 /// Compute AKAZE keypoints and their associated MLDB descriptors
@@ -215,39 +215,39 @@ template<>
 static 
 #endif //WIN32
 bool AKAZEDetector<bool,486>(
-	const Image<unsigned char>& I,
-	std::vector<SIOPointFeature>& vec_feat,
-	std::vector<Descriptor<bool,486> >& vec_desc,
-	AKAZEConfig options)
-{
-	options.fDesc_factor = 10.f*sqrtf(2.f);
+  const Image<unsigned char>& I,
+  std::vector<SIOPointFeature>& vec_feat,
+  std::vector<Descriptor<bool,486> >& vec_desc,
+  AKAZEConfig options)
+  {
+  options.fDesc_factor = 10.f*sqrtf(2.f);
 
-	AKAZE akaze(I, options);
-	akaze.Compute_AKAZEScaleSpace();
-	std::vector<AKAZEKeypoint> kpts;
-	kpts.reserve(5000);
-	akaze.Feature_Detection(kpts);
-	akaze.Do_Subpixel_Refinement(kpts);
+  AKAZE akaze(I, options);
+  akaze.Compute_AKAZEScaleSpace();
+  std::vector<AKAZEKeypoint> kpts;
+  kpts.reserve(5000);
+  akaze.Feature_Detection(kpts);
+  akaze.Do_Subpixel_Refinement(kpts);
 
-	vec_feat.resize(kpts.size());
-	vec_desc.resize(kpts.size());
-#ifdef USE_OPENMP
-#pragma omp parallel for
-#endif
-	for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
-	{
-		AKAZEKeypoint ptAkaze = kpts[i];
-		const TEvolution & cur_slice = akaze.getSlices()[ ptAkaze.class_id ] ;
+  vec_feat.resize(kpts.size());
+  vec_desc.resize(kpts.size());
+  #ifdef USE_OPENMP
+  #pragma omp parallel for schedule(dynamic)
+  #endif
+  for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
+  {
+    AKAZEKeypoint ptAkaze = kpts[i];
+    const TEvolution & cur_slice = akaze.getSlices()[ ptAkaze.class_id ] ;
 
-		// Compute point orientation
-		akaze.Compute_Main_Orientation(ptAkaze, cur_slice.Lx, cur_slice.Ly);
+    // Compute point orientation
+    akaze.Compute_Main_Orientation(ptAkaze, cur_slice.Lx, cur_slice.Ly);
 
-		vec_feat[i] = SIOPointFeature(ptAkaze.x, ptAkaze.y, ptAkaze.size, ptAkaze.angle);
+    vec_feat[i] = SIOPointFeature(ptAkaze.x, ptAkaze.y, ptAkaze.size, ptAkaze.angle);
 
-		// Compute descriptor (FULL MLDB)
-		ComputeMLDBDescriptor( cur_slice.cur , cur_slice.Lx , cur_slice.Ly , ptAkaze.octave , vec_feat[i] , vec_desc[i] ) ;
-	}
-	return true;
+    // Compute descriptor (FULL MLDB)
+    ComputeMLDBDescriptor( cur_slice.cur , cur_slice.Lx , cur_slice.Ly , ptAkaze.octave , vec_feat[i] , vec_desc[i] ) ;
+  }
+  return true;
 }
 
 }; // namespace openMVG

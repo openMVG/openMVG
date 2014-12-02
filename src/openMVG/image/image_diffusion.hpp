@@ -97,7 +97,7 @@ void ImageFEDCentralCPPThread( const Image & src , const Image & diff , const ty
   SplitRange( 1 , (int) ( src.rows() - 1 ) , nb_thread , range ) ;
 
 #ifdef USE_OPENMP
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic)
 #endif
   for( int i = 1 ; i < static_cast<int>(range.size()) ; ++i ) {
     ImageFEDCentral( src, diff, half_t, out, range[i-1] , range[i]) ;
