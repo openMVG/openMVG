@@ -79,7 +79,7 @@ int main() {
   //-- Perform matching -> find Nearest neighbor, filtered with Distance ratio
   std::vector<IndMatch> vec_PutativeMatches;
   {
-    // Define the and the used metric (Squared L2)
+    // Define the matcher and the used metric (Squared L2)
     typedef L2_Vectorized<SIFTDescriptor::bin_type> Metric;
     // Brute force matcher is defined as following:
     typedef ArrayMatcherBruteForce<SIFTDescriptor::bin_type, Metric> MatcherT;
