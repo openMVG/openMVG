@@ -130,6 +130,13 @@ TEST(LossFunction, TolerantLoss) {
   AssertLossFunctionIsValid(TolerantLoss(20.0, 1.0), 20.0 + 1000.0);
 }
 
+TEST(LossFunction, TukeyLoss) {
+  AssertLossFunctionIsValid(TukeyLoss(0.7), 0.357);
+  AssertLossFunctionIsValid(TukeyLoss(0.7), 1.792);
+  AssertLossFunctionIsValid(TukeyLoss(1.3), 0.357);
+  AssertLossFunctionIsValid(TukeyLoss(1.3), 1.792);
+}
+
 TEST(LossFunction, ComposedLoss) {
   {
     HuberLoss f(0.7);

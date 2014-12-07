@@ -29,7 +29,7 @@
 
   
     <link rel="top" title="Ceres Solver" href="index.html"/>
-        <link rel="next" title="Modeling" href="modeling.html"/>
+        <link rel="next" title="Non-linear Least Squares" href="nnls_tutorial.html"/>
         <link rel="prev" title="Building &amp; Installation" href="building.html"/> 
 
   
@@ -62,49 +62,24 @@
 <li class="toctree-l1"><a class="reference internal" href="building.html">Building &amp; Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="building.html#getting-the-source-code">Getting the source code</a></li>
 <li class="toctree-l2"><a class="reference internal" href="building.html#dependencies">Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-linux">Building on Linux</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-mac-os-x">Building on Mac OS X</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-windows-with-visual-studio">Building on Windows with Visual Studio</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-android">Building on Android</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-ios">Building on iOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#linux">Linux</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#mac-os-x">Mac OS X</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#windows">Windows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#android">Android</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#ios">iOS</a></li>
 <li class="toctree-l2"><a class="reference internal" href="building.html#customizing-the-build">Customizing the build</a></li>
 <li class="toctree-l2"><a class="reference internal" href="building.html#using-ceres-with-cmake">Using Ceres with CMake</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Tutorial</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#hello-world">Hello World!</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#derivatives">Derivatives</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#powell-s-function">Powell&#8217;s Function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#curve-fitting">Curve Fitting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#robust-curve-fitting">Robust Curve Fitting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#bundle-adjustment">Bundle Adjustment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#other-examples">Other Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nnls_tutorial.html">Non-linear Least Squares</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gradient_tutorial.html">General Unconstrained Minimization</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#costfunction"><tt class="docutils literal"><span class="pre">CostFunction</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#sizedcostfunction"><tt class="docutils literal"><span class="pre">SizedCostFunction</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#autodiffcostfunction"><tt class="docutils literal"><span class="pre">AutoDiffCostFunction</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#dynamicautodiffcostfunction"><tt class="docutils literal"><span class="pre">DynamicAutoDiffCostFunction</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#numericdiffcostfunction"><tt class="docutils literal"><span class="pre">NumericDiffCostFunction</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#dynamicnumericdiffcostfunction"><tt class="docutils literal"><span class="pre">DynamicNumericDiffCostFunction</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#numericdifffunctor"><tt class="docutils literal"><span class="pre">NumericDiffFunctor</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#costfunctiontofunctor"><tt class="docutils literal"><span class="pre">CostFunctionToFunctor</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#conditionedcostfunction"><tt class="docutils literal"><span class="pre">ConditionedCostFunction</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#normalprior"><tt class="docutils literal"><span class="pre">NormalPrior</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#lossfunction"><tt class="docutils literal"><span class="pre">LossFunction</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#localparameterization"><tt class="docutils literal"><span class="pre">LocalParameterization</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#autodifflocalparameterization"><tt class="docutils literal"><span class="pre">AutoDiffLocalParameterization</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#problem"><tt class="docutils literal"><span class="pre">Problem</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#rotation-h"><tt class="docutils literal"><span class="pre">rotation.h</span></tt></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="solving.html">Solving</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="solving.html#introduction">Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="solving.html#trust-region-methods">Trust Region Methods</a></li>
-<li class="toctree-l2"><a class="reference internal" href="solving.html#line-search-methods">Line Search Methods</a></li>
-<li class="toctree-l2"><a class="reference internal" href="solving.html#linearsolver">LinearSolver</a></li>
-<li class="toctree-l2"><a class="reference internal" href="solving.html#covariance-estimation">Covariance Estimation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nnls_modeling.html">Modeling Non-linear Least Squares</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nnls_solving.html">Solving Non-linear Least Squares</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gradient_solver.html">General Unconstrained Minimization</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="faqs.html">FAQS, Tips &amp; Tricks</a><ul>
@@ -114,30 +89,32 @@
 <li class="toctree-l2"><a class="reference internal" href="faqs.html#further-reading">Further Reading</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="users.html">Users</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="users.html#publications">Publications</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#setting-up-your-development-environment">Setting up your Development Environment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#submitting-a-change-to-ceres-solver">Submitting a change to Ceres Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#setting-up-your-environment">Setting up your Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#submitting-a-change">Submitting a change</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="version_history.html">Releases</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id1">1.9.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id2">1.8.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id5">1.7.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id9">1.6.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id12">1.5.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id16">1.4.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id20">1.3.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id23">1.2.3</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id25">1.2.2</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id27">1.2.1</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id30">1.2.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id33">1.1.1</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id35">1.1.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id38">1.0.0</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="history.html">History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#origin-of-the-name">Origin of the name</a></li>
+<li class="toctree-l1"><a class="reference internal" href="version_history.html">Version History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id1">1.10.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id2">1.9.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id6">1.8.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id9">1.7.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id13">1.6.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id16">1.5.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id20">1.4.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id24">1.3.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id27">1.2.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id29">1.2.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id31">1.2.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id34">1.2.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id37">1.1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id39">1.1.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id42">1.0.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#origins">Origins</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
@@ -166,607 +143,29 @@
             
   <div class="section" id="tutorial">
 <span id="chapter-tutorial"></span><h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
-<p>Ceres solves robustified non-linear bounds constrained least squares
-problems of the form</p>
-<div class="math" id="equation-ceresproblem">
-<span class="eqno">(1)</span>\[\begin{split}\min_{\mathbf{x}} &amp;\quad \frac{1}{2}\sum_{i} \rho_i\left(\left\|f_i\left(x_{i_1}, ... ,x_{i_k}\right)\right\|^2\right) \\
-\text{s.t.} &amp;\quad l_j \le x_j \le u_j\end{split}\]</div>
-<p>Problems of this form comes up in a broad range of areas across
-science and engineering - from <a class="reference external" href="http://en.wikipedia.org/wiki/Nonlinear_regression">fitting curves</a> in statistics, to
-constructing <a class="reference external" href="http://en.wikipedia.org/wiki/Bundle_adjustment">3D models from photographs</a> in computer vision.</p>
-<p>In this chapter we will learn how to solve <a href="#equation-ceresproblem">(1)</a> using
-Ceres Solver. Full working code for all the examples described in this
-chapter and more can be found in the <a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/">examples</a>
-directory.</p>
-<p>The expression
-<span class="math">\(\rho_i\left(\left\|f_i\left(x_{i_1},...,x_{i_k}\right)\right\|^2\right)\)</span>
-is known as a <tt class="docutils literal"><span class="pre">ResidualBlock</span></tt>, where <span class="math">\(f_i(\cdot)\)</span> is a
-<a class="reference internal" href="modeling.html#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> that depends on the parameter blocks
-<span class="math">\(\left[x_{i_1},... , x_{i_k}\right]\)</span>. In most optimization
-problems small groups of scalars occur together. For example the three
-components of a translation vector and the four components of the
-quaternion that define the pose of a camera. We refer to such a group
-of small scalars as a <tt class="docutils literal"><span class="pre">ParameterBlock</span></tt>. Of course a
-<tt class="docutils literal"><span class="pre">ParameterBlock</span></tt> can just be a single parameter. <span class="math">\(l_j\)</span> and
-<span class="math">\(u_j\)</span> are bounds on the parameter block <span class="math">\(x_j\)</span>.</p>
-<p><span class="math">\(\rho_i\)</span> is a <a class="reference internal" href="modeling.html#LossFunction" title="LossFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">LossFunction</span></tt></a>. A <a class="reference internal" href="modeling.html#LossFunction" title="LossFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">LossFunction</span></tt></a> is
-a scalar function that is used to reduce the influence of outliers on
-the solution of non-linear least squares problems.</p>
-<p>As a special case, when <span class="math">\(\rho_i(x) = x\)</span>, i.e., the identity
-function, and <span class="math">\(l_j = -\infty\)</span> and <span class="math">\(u_j = \infty\)</span> we get
-the more familiar <a class="reference external" href="http://en.wikipedia.org/wiki/Non-linear_least_squares">non-linear least squares problem</a>.</p>
-<div class="math" id="equation-ceresproblem2">
-<span class="eqno">(2)</span>\[\frac{1}{2}\sum_{i} \left\|f_i\left(x_{i_1}, ... ,x_{i_k}\right)\right\|^2.\]</div>
-<div class="section" id="hello-world">
-<span id="section-hello-world"></span><h2>Hello World!<a class="headerlink" href="#hello-world" title="Permalink to this headline">¶</a></h2>
-<p>To get started, consider the problem of finding the minimum of the
-function</p>
-<div class="math">
-\[\frac{1}{2}(10 -x)^2.\]</div>
-<p>This is a trivial problem, whose minimum is located at <span class="math">\(x = 10\)</span>,
-but it is a good place to start to illustrate the basics of solving a
-problem with Ceres <a class="footnote-reference" href="#f1" id="id1">[1]</a>.</p>
-<p>The first step is to write a functor that will evaluate this the
-function <span class="math">\(f(x) = 10 - x\)</span>:</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="k">struct</span> <span class="n">CostFunctor</span> <span class="p">{</span>
-   <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
-   <span class="kt">bool</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="k">const</span> <span class="n">x</span><span class="p">,</span> <span class="n">T</span><span class="o">*</span> <span class="n">residual</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
-     <span class="n">residual</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">T</span><span class="p">(</span><span class="mf">10.0</span><span class="p">)</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-     <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
-   <span class="p">}</span>
-<span class="p">};</span>
-</pre></div>
-</div>
-<p>The important thing to note here is that <tt class="docutils literal"><span class="pre">operator()</span></tt> is a templated
-method, which assumes that all its inputs and outputs are of some type
-<tt class="docutils literal"><span class="pre">T</span></tt>. The use of templating here allows Ceres to call
-<tt class="docutils literal"><span class="pre">CostFunctor::operator&lt;T&gt;()</span></tt>, with <tt class="docutils literal"><span class="pre">T=double</span></tt> when just the value
-of the residual is needed, and with a special type <tt class="docutils literal"><span class="pre">T=Jet</span></tt> when the
-Jacobians are needed. In <a class="reference internal" href="#section-derivatives"><em>Derivatives</em></a> we will discuss the
-various ways of supplying derivatives to Ceres in more detail.</p>
-<p>Once we have a way of computing the residual function, it is now time
-to construct a non-linear least squares problem using it and have
-Ceres solve it.</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
-  <span class="n">google</span><span class="o">::</span><span class="n">InitGoogleLogging</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
-
-  <span class="c1">// The variable to solve for with its initial value.</span>
-  <span class="kt">double</span> <span class="n">initial_x</span> <span class="o">=</span> <span class="mf">5.0</span><span class="p">;</span>
-  <span class="kt">double</span> <span class="n">x</span> <span class="o">=</span> <span class="n">initial_x</span><span class="p">;</span>
-
-  <span class="c1">// Build the problem.</span>
-  <span class="n">Problem</span> <span class="n">problem</span><span class="p">;</span>
-
-  <span class="c1">// Set up the only cost function (also known as residual). This uses</span>
-  <span class="c1">// auto-differentiation to obtain the derivative (jacobian).</span>
-  <span class="n">CostFunction</span><span class="o">*</span> <span class="n">cost_function</span> <span class="o">=</span>
-      <span class="k">new</span> <span class="n">AutoDiffCostFunction</span><span class="o">&lt;</span><span class="n">CostFunctor</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">&gt;</span><span class="p">(</span><span class="k">new</span> <span class="n">CostFunctor</span><span class="p">);</span>
-  <span class="n">problem</span><span class="p">.</span><span class="n">AddResidualBlock</span><span class="p">(</span><span class="n">cost_function</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">x</span><span class="p">);</span>
-
-  <span class="c1">// Run the solver!</span>
-  <span class="n">Solver</span><span class="o">::</span><span class="n">Options</span> <span class="n">options</span><span class="p">;</span>
-  <span class="n">options</span><span class="p">.</span><span class="n">linear_solver_type</span> <span class="o">=</span> <span class="n">ceres</span><span class="o">::</span><span class="n">DENSE_QR</span><span class="p">;</span>
-  <span class="n">options</span><span class="p">.</span><span class="n">minimizer_progress_to_stdout</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
-  <span class="n">Solver</span><span class="o">::</span><span class="n">Summary</span> <span class="n">summary</span><span class="p">;</span>
-  <span class="n">Solve</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">problem</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">summary</span><span class="p">);</span>
-
-  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">summary</span><span class="p">.</span><span class="n">BriefReport</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;x : &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">initial_x</span>
-            <span class="o">&lt;&lt;</span> <span class="s">&quot; -&gt; &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p><a class="reference internal" href="modeling.html#AutoDiffCostFunction" title="AutoDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">AutoDiffCostFunction</span></tt></a> takes a <tt class="docutils literal"><span class="pre">CostFunctor</span></tt> as input,
-automatically differentiates it and gives it a <a class="reference internal" href="modeling.html#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a>
-interface.</p>
-<p>Compiling and running <a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/helloworld.cc">examples/helloworld.cc</a>
-gives us</p>
-<div class="highlight-bash"><div class="highlight"><pre>   0: f: 1.250000e+01 d: 0.00e+00 g: 5.00e+00 h: 0.00e+00 rho: 0.00e+00 mu: 1.00e+04 li:  0 it: 6.91e-06 tt: 1.91e-03
-   1: f: 1.249750e-07 d: 1.25e+01 g: 5.00e-04 h: 5.00e+00 rho: 1.00e+00 mu: 3.00e+04 li:  1 it: 2.81e-05 tt: 1.99e-03
-   2: f: 1.388518e-16 d: 1.25e-07 g: 1.67e-08 h: 5.00e-04 rho: 1.00e+00 mu: 9.00e+04 li:  1 it: 1.00e-05 tt: 2.01e-03
-Ceres Solver Report: Iterations: 2, Initial cost: 1.250000e+01, Final cost: 1.388518e-16, Termination: CONVERGENCE.
-x : 5 -&gt; 10
-</pre></div>
-</div>
-<p>Starting from a <span class="math">\(x=5\)</span>, the solver in two iterations goes to 10
-<a class="footnote-reference" href="#f2" id="id2">[2]</a>. The careful reader will note that this is a linear problem and
-one linear solve should be enough to get the optimal value.  The
-default configuration of the solver is aimed at non-linear problems,
-and for reasons of simplicity we did not change it in this example. It
-is indeed possible to obtain the solution to this problem using Ceres
-in one iteration. Also note that the solver did get very close to the
-optimal function value of 0 in the very first iteration. We will
-discuss these issues in greater detail when we talk about convergence
-and parameter settings for Ceres.</p>
-<p class="rubric">Footnotes</p>
-<table class="docutils footnote" frame="void" id="f1" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td><a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/helloworld.cc">examples/helloworld.cc</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="f2" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>Actually the solver ran for three iterations, and it was
-by looking at the value returned by the linear solver in the third
-iteration, it observed that the update to the parameter block was too
-small and declared convergence. Ceres only prints out the display at
-the end of an iteration, and terminates as soon as it detects
-convergence, which is why you only see two iterations here and not
-three.</td></tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="derivatives">
-<span id="section-derivatives"></span><h2>Derivatives<a class="headerlink" href="#derivatives" title="Permalink to this headline">¶</a></h2>
-<p>Ceres Solver like most optimization packages, depends on being able to
-evaluate the value and the derivatives of each term in the objective
-function at arbitrary parameter values. Doing so correctly and
-efficiently is essential to getting good results.  Ceres Solver
-provides a number of ways of doing so. You have already seen one of
-them in action &#8211;
-Automatic Differentiation in <a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/helloworld.cc">examples/helloworld.cc</a></p>
-<p>We now consider the other two possibilities. Analytic and numeric
-derivatives.</p>
-<div class="section" id="numeric-derivatives">
-<h3>Numeric Derivatives<a class="headerlink" href="#numeric-derivatives" title="Permalink to this headline">¶</a></h3>
-<p>In some cases, its not possible to define a templated cost functor,
-for example when the evaluation of the residual involves a call to a
-library function that you do not have control over.  In such a
-situation, numerical differentiation can be used. The user defines a
-functor which computes the residual value and construct a
-<a class="reference internal" href="modeling.html#NumericDiffCostFunction" title="NumericDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">NumericDiffCostFunction</span></tt></a> using it. e.g., for <span class="math">\(f(x) = 10 - x\)</span>
-the corresponding functor would be</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="k">struct</span> <span class="n">NumericDiffCostFunctor</span> <span class="p">{</span>
-  <span class="kt">bool</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="kt">double</span><span class="o">*</span> <span class="k">const</span> <span class="n">x</span><span class="p">,</span> <span class="kt">double</span><span class="o">*</span> <span class="n">residual</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
-    <span class="n">residual</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">10.0</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-</pre></div>
-</div>
-<p>Which is added to the <a class="reference internal" href="modeling.html#Problem" title="Problem"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Problem</span></tt></a> as:</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="n">CostFunction</span><span class="o">*</span> <span class="n">cost_function</span> <span class="o">=</span>
-  <span class="k">new</span> <span class="n">NumericDiffCostFunction</span><span class="o">&lt;</span><span class="n">NumericDiffCostFunctor</span><span class="p">,</span> <span class="n">ceres</span><span class="o">::</span><span class="n">CENTRAL</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">&gt;</span><span class="p">(</span>
-      <span class="k">new</span> <span class="n">NumericDiffCostFunctor</span><span class="p">)</span>
-<span class="n">problem</span><span class="p">.</span><span class="n">AddResidualBlock</span><span class="p">(</span><span class="n">cost_function</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">x</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>Notice the parallel from when we were using automatic differentiation</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="n">CostFunction</span><span class="o">*</span> <span class="n">cost_function</span> <span class="o">=</span>
-    <span class="k">new</span> <span class="n">AutoDiffCostFunction</span><span class="o">&lt;</span><span class="n">CostFunctor</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">&gt;</span><span class="p">(</span><span class="k">new</span> <span class="n">CostFunctor</span><span class="p">);</span>
-<span class="n">problem</span><span class="p">.</span><span class="n">AddResidualBlock</span><span class="p">(</span><span class="n">cost_function</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">x</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>The construction looks almost identical to the one used for automatic
-differentiation, except for an extra template parameter that indicates
-the kind of finite differencing scheme to be used for computing the
-numerical derivatives <a class="footnote-reference" href="#f3" id="id5">[3]</a>. For more details see the documentation
-for <a class="reference internal" href="modeling.html#NumericDiffCostFunction" title="NumericDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">NumericDiffCostFunction</span></tt></a>.</p>
-<p><strong>Generally speaking we recommend automatic differentiation instead of
-numeric differentiation. The use of C++ templates makes automatic
-differentiation efficient, whereas numeric differentiation is
-expensive, prone to numeric errors, and leads to slower convergence.</strong></p>
-</div>
-<div class="section" id="analytic-derivatives">
-<h3>Analytic Derivatives<a class="headerlink" href="#analytic-derivatives" title="Permalink to this headline">¶</a></h3>
-<p>In some cases, using automatic differentiation is not possible. For
-example, it may be the case that it is more efficient to compute the
-derivatives in closed form instead of relying on the chain rule used
-by the automatic differentiation code.</p>
-<p>In such cases, it is possible to supply your own residual and jacobian
-computation code. To do this, define a subclass of
-<a class="reference internal" href="modeling.html#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> or <a class="reference internal" href="modeling.html#SizedCostFunction" title="SizedCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">SizedCostFunction</span></tt></a> if you know the
-sizes of the parameters and residuals at compile time. Here for
-example is <tt class="docutils literal"><span class="pre">SimpleCostFunction</span></tt> that implements <span class="math">\(f(x) = 10 -
-x\)</span>.</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="k">class</span> <span class="nc">QuadraticCostFunction</span> <span class="o">:</span> <span class="k">public</span> <span class="n">ceres</span><span class="o">::</span><span class="n">SizedCostFunction</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">&gt;</span> <span class="p">{</span>
- <span class="nl">public:</span>
-  <span class="k">virtual</span> <span class="o">~</span><span class="n">QuadraticCostFunction</span><span class="p">()</span> <span class="p">{}</span>
-  <span class="k">virtual</span> <span class="kt">bool</span> <span class="n">Evaluate</span><span class="p">(</span><span class="kt">double</span> <span class="k">const</span><span class="o">*</span> <span class="k">const</span><span class="o">*</span> <span class="n">parameters</span><span class="p">,</span>
-                        <span class="kt">double</span><span class="o">*</span> <span class="n">residuals</span><span class="p">,</span>
-                        <span class="kt">double</span><span class="o">**</span> <span class="n">jacobians</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
-    <span class="k">const</span> <span class="kt">double</span> <span class="n">x</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">];</span>
-    <span class="n">residuals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">-</span> <span class="n">x</span><span class="p">;</span>
-
-    <span class="c1">// Compute the Jacobian if asked for.</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">jacobians</span> <span class="o">!=</span> <span class="nb">NULL</span> <span class="o">&amp;&amp;</span> <span class="n">jacobians</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
-      <span class="n">jacobians</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-</pre></div>
-</div>
-<p><tt class="docutils literal"><span class="pre">SimpleCostFunction::Evaluate</span></tt> is provided with an input array of
-<tt class="docutils literal"><span class="pre">parameters</span></tt>, an output array <tt class="docutils literal"><span class="pre">residuals</span></tt> for residuals and an
-output array <tt class="docutils literal"><span class="pre">jacobians</span></tt> for Jacobians. The <tt class="docutils literal"><span class="pre">jacobians</span></tt> array is
-optional, <tt class="docutils literal"><span class="pre">Evaluate</span></tt> is expected to check when it is non-null, and
-if it is the case then fill it with the values of the derivative of
-the residual function. In this case since the residual function is
-linear, the Jacobian is constant <a class="footnote-reference" href="#f4" id="id6">[4]</a> .</p>
-<p>As can be seen from the above code fragments, implementing
-<a class="reference internal" href="modeling.html#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> objects is a bit tedious. We recommend that
-unless you have a good reason to manage the jacobian computation
-yourself, you use <a class="reference internal" href="modeling.html#AutoDiffCostFunction" title="AutoDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">AutoDiffCostFunction</span></tt></a> or
-<a class="reference internal" href="modeling.html#NumericDiffCostFunction" title="NumericDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">NumericDiffCostFunction</span></tt></a> to construct your residual blocks.</p>
-</div>
-<div class="section" id="more-about-derivatives">
-<h3>More About Derivatives<a class="headerlink" href="#more-about-derivatives" title="Permalink to this headline">¶</a></h3>
-<p>Computing derivatives is by far the most complicated part of using
-Ceres, and depending on the circumstance the user may need more
-sophisticated ways of computing derivatives. This section just
-scratches the surface of how derivatives can be supplied to
-Ceres. Once you are comfortable with using
-<a class="reference internal" href="modeling.html#NumericDiffCostFunction" title="NumericDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">NumericDiffCostFunction</span></tt></a> and <a class="reference internal" href="modeling.html#AutoDiffCostFunction" title="AutoDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">AutoDiffCostFunction</span></tt></a> we
-recommend taking a look at <a class="reference internal" href="modeling.html#DynamicAutoDiffCostFunction" title="DynamicAutoDiffCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">DynamicAutoDiffCostFunction</span></tt></a>,
-<a class="reference internal" href="modeling.html#CostFunctionToFunctor" title="CostFunctionToFunctor"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunctionToFunctor</span></tt></a>, <a class="reference internal" href="modeling.html#NumericDiffFunctor" title="NumericDiffFunctor"><tt class="xref cpp cpp-class docutils literal"><span class="pre">NumericDiffFunctor</span></tt></a> and
-<a class="reference internal" href="modeling.html#ConditionedCostFunction" title="ConditionedCostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">ConditionedCostFunction</span></tt></a> for more advanced ways of
-constructing and computing cost functions.</p>
-<p class="rubric">Footnotes</p>
-<table class="docutils footnote" frame="void" id="f3" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id5">[3]</a></td><td><a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/helloworld_numeric_diff.cc">examples/helloworld_numeric_diff.cc</a>.</td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="f4" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id6">[4]</a></td><td><a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/helloworld_analytic_diff.cc">examples/helloworld_analytic_diff.cc</a>.</td></tr>
-</tbody>
-</table>
-</div>
-</div>
-<div class="section" id="powell-s-function">
-<span id="section-powell"></span><h2>Powell&#8217;s Function<a class="headerlink" href="#powell-s-function" title="Permalink to this headline">¶</a></h2>
-<p>Consider now a slightly more complicated example &#8211; the minimization
-of Powell&#8217;s function. Let <span class="math">\(x = \left[x_1, x_2, x_3, x_4 \right]\)</span>
-and</p>
-<div class="math">
-\[\begin{split}\begin{align}
-   f_1(x) &amp;= x_1 + 10x_2 \\
-   f_2(x) &amp;= \sqrt{5}  (x_3 - x_4)\\
-   f_3(x) &amp;= (x_2 - 2x_3)^2\\
-   f_4(x) &amp;= \sqrt{10}  (x_1 - x_4)^2\\
-     F(x) &amp;= \left[f_1(x),\ f_2(x),\ f_3(x),\ f_4(x) \right]
-\end{align}\end{split}\]</div>
-<p><span class="math">\(F(x)\)</span> is a function of four parameters, has four residuals
-and we wish to find <span class="math">\(x\)</span> such that <span class="math">\(\frac{1}{2}\|F(x)\|^2\)</span>
-is minimized.</p>
-<p>Again, the first step is to define functors that evaluate of the terms
-in the objective functor. Here is the code for evaluating
-<span class="math">\(f_4(x_1, x_4)\)</span>:</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="k">struct</span> <span class="n">F4</span> <span class="p">{</span>
-  <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
-  <span class="kt">bool</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="k">const</span> <span class="n">x1</span><span class="p">,</span> <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="k">const</span> <span class="n">x4</span><span class="p">,</span> <span class="n">T</span><span class="o">*</span> <span class="n">residual</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
-    <span class="n">residual</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">T</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">10.0</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">x1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x4</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">x1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x4</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
-    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-</pre></div>
-</div>
-<p>Similarly, we can define classes <tt class="docutils literal"><span class="pre">F1</span></tt>, <tt class="docutils literal"><span class="pre">F2</span></tt> and <tt class="docutils literal"><span class="pre">F4</span></tt> to evaluate
-<span class="math">\(f_1(x_1, x_2)\)</span>, <span class="math">\(f_2(x_3, x_4)\)</span> and <span class="math">\(f_3(x_2, x_3)\)</span>
-respectively. Using these, the problem can be constructed as follows:</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="kt">double</span> <span class="n">x1</span> <span class="o">=</span>  <span class="mf">3.0</span><span class="p">;</span> <span class="kt">double</span> <span class="n">x2</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">;</span> <span class="kt">double</span> <span class="n">x3</span> <span class="o">=</span>  <span class="mf">0.0</span><span class="p">;</span> <span class="kt">double</span> <span class="n">x4</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
-
-<span class="n">Problem</span> <span class="n">problem</span><span class="p">;</span>
-
-<span class="c1">// Add residual terms to the problem using the using the autodiff</span>
-<span class="c1">// wrapper to get the derivatives automatically.</span>
-<span class="n">problem</span><span class="p">.</span><span class="n">AddResidualBlock</span><span class="p">(</span>
-  <span class="k">new</span> <span class="n">AutoDiffCostFunction</span><span class="o">&lt;</span><span class="n">F1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">&gt;</span><span class="p">(</span><span class="k">new</span> <span class="n">F1</span><span class="p">),</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">x1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">x2</span><span class="p">);</span>
-<span class="n">problem</span><span class="p">.</span><span class="n">AddResidualBlock</span><span class="p">(</span>
-  <span class="k">new</span> <span class="n">AutoDiffCostFunction</span><span class="o">&lt;</span><span class="n">F2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">&gt;</span><span class="p">(</span><span class="k">new</span> <span class="n">F2</span><span class="p">),</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">x3</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">x4</span><span class="p">);</span>
-<span class="n">problem</span><span class="p">.</span><span class="n">AddResidualBlock</span><span class="p">(</span>
-  <span class="k">new</span> <span class="n">AutoDiffCostFunction</span><span class="o">&lt;</span><span class="n">F3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">&gt;</span><span class="p">(</span><span class="k">new</span> <span class="n">F3</span><span class="p">),</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">x2</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">x3</span><span class="p">)</span>
-<span class="n">problem</span><span class="p">.</span><span class="n">AddResidualBlock</span><span class="p">(</span>
-  <span class="k">new</span> <span class="n">AutoDiffCostFunction</span><span class="o">&lt;</span><span class="n">F4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">&gt;</span><span class="p">(</span><span class="k">new</span> <span class="n">F4</span><span class="p">),</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">x1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">x4</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>Note that each <tt class="docutils literal"><span class="pre">ResidualBlock</span></tt> only depends on the two parameters
-that the corresponding residual object depends on and not on all four
-parameters. Compiling and running <a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/powell.cc">examples/powell.cc</a>
-gives us:</p>
-<div class="highlight-bash"><div class="highlight"><pre>Initial <span class="nv">x1</span> <span class="o">=</span> 3, <span class="nv">x2</span> <span class="o">=</span> -1, <span class="nv">x3</span> <span class="o">=</span> 0, <span class="nv">x4</span> <span class="o">=</span> 1
-   0: f: 1.075000e+02 d: 0.00e+00 g: 1.55e+02 h: 0.00e+00 rho: 0.00e+00 mu: 1.00e+04 li:  0 it: 0.00e+00 tt: 0.00e+00
-   1: f: 5.036190e+00 d: 1.02e+02 g: 2.00e+01 h: 2.16e+00 rho: 9.53e-01 mu: 3.00e+04 li:  1 it: 0.00e+00 tt: 0.00e+00
-   2: f: 3.148168e-01 d: 4.72e+00 g: 2.50e+00 h: 6.23e-01 rho: 9.37e-01 mu: 9.00e+04 li:  1 it: 0.00e+00 tt: 0.00e+00
-   3: f: 1.967760e-02 d: 2.95e-01 g: 3.13e-01 h: 3.08e-01 rho: 9.37e-01 mu: 2.70e+05 li:  1 it: 0.00e+00 tt: 0.00e+00
-   4: f: 1.229900e-03 d: 1.84e-02 g: 3.91e-02 h: 1.54e-01 rho: 9.37e-01 mu: 8.10e+05 li:  1 it: 0.00e+00 tt: 0.00e+00
-   5: f: 7.687123e-05 d: 1.15e-03 g: 4.89e-03 h: 7.69e-02 rho: 9.37e-01 mu: 2.43e+06 li:  1 it: 0.00e+00 tt: 0.00e+00
-   6: f: 4.804625e-06 d: 7.21e-05 g: 6.11e-04 h: 3.85e-02 rho: 9.37e-01 mu: 7.29e+06 li:  1 it: 0.00e+00 tt: 0.00e+00
-   7: f: 3.003028e-07 d: 4.50e-06 g: 7.64e-05 h: 1.92e-02 rho: 9.37e-01 mu: 2.19e+07 li:  1 it: 0.00e+00 tt: 0.00e+00
-   8: f: 1.877006e-08 d: 2.82e-07 g: 9.54e-06 h: 9.62e-03 rho: 9.37e-01 mu: 6.56e+07 li:  1 it: 0.00e+00 tt: 0.00e+00
-   9: f: 1.173223e-09 d: 1.76e-08 g: 1.19e-06 h: 4.81e-03 rho: 9.37e-01 mu: 1.97e+08 li:  1 it: 0.00e+00 tt: 0.00e+00
-  10: f: 7.333425e-11 d: 1.10e-09 g: 1.49e-07 h: 2.40e-03 rho: 9.37e-01 mu: 5.90e+08 li:  1 it: 0.00e+00 tt: 0.00e+00
-  11: f: 4.584044e-12 d: 6.88e-11 g: 1.86e-08 h: 1.20e-03 rho: 9.37e-01 mu: 1.77e+09 li:  1 it: 0.00e+00 tt: 0.00e+00
-Ceres Solver Report: Iterations: 12, Initial cost: 1.075000e+02, Final cost: 4.584044e-12, Termination: CONVERGENCE.
-Final <span class="nv">x1</span> <span class="o">=</span> 0.00116741, <span class="nv">x2</span> <span class="o">=</span> -0.000116741, <span class="nv">x3</span> <span class="o">=</span> 0.000190535, <span class="nv">x4</span> <span class="o">=</span> 0.000190535
-</pre></div>
-</div>
-<p>It is easy to see that the optimal solution to this problem is at
-<span class="math">\(x_1=0, x_2=0, x_3=0, x_4=0\)</span> with an objective function value of
-<span class="math">\(0\)</span>. In 10 iterations, Ceres finds a solution with an objective
-function value of <span class="math">\(4\times 10^{-12}\)</span>.</p>
-<p class="rubric">Footnotes</p>
-<table class="docutils footnote" frame="void" id="f5" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[5]</td><td><a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/powell.cc">examples/powell.cc</a>.</td></tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="curve-fitting">
-<span id="section-fitting"></span><h2>Curve Fitting<a class="headerlink" href="#curve-fitting" title="Permalink to this headline">¶</a></h2>
-<p>The examples we have seen until now are simple optimization problems
-with no data. The original purpose of least squares and non-linear
-least squares analysis was fitting curves to data. It is only
-appropriate that we now consider an example of such a problem
-<a class="footnote-reference" href="#f6" id="id8">[6]</a>. It contains data generated by sampling the curve <span class="math">\(y =
-e^{0.3x + 0.1}\)</span> and adding Gaussian noise with standard deviation
-<span class="math">\(\sigma = 0.2\)</span>. Let us fit some data to the curve</p>
-<div class="math">
-\[y = e^{mx + c}.\]</div>
-<p>We begin by defining a templated object to evaluate the
-residual. There will be a residual for each observation.</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="k">struct</span> <span class="n">ExponentialResidual</span> <span class="p">{</span>
-  <span class="n">ExponentialResidual</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">,</span> <span class="kt">double</span> <span class="n">y</span><span class="p">)</span>
-      <span class="o">:</span> <span class="n">x_</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">y_</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="p">{}</span>
-
-  <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
-  <span class="kt">bool</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="k">const</span> <span class="n">m</span><span class="p">,</span> <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="k">const</span> <span class="n">c</span><span class="p">,</span> <span class="n">T</span><span class="o">*</span> <span class="n">residual</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
-    <span class="n">residual</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">T</span><span class="p">(</span><span class="n">y_</span><span class="p">)</span> <span class="o">-</span> <span class="n">exp</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">T</span><span class="p">(</span><span class="n">x_</span><span class="p">)</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
-    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
-  <span class="p">}</span>
-
- <span class="nl">private:</span>
-  <span class="c1">// Observations for a sample.</span>
-  <span class="k">const</span> <span class="kt">double</span> <span class="n">x_</span><span class="p">;</span>
-  <span class="k">const</span> <span class="kt">double</span> <span class="n">y_</span><span class="p">;</span>
-<span class="p">};</span>
-</pre></div>
-</div>
-<p>Assuming the observations are in a <span class="math">\(2n\)</span> sized array called
-<tt class="docutils literal"><span class="pre">data</span></tt> the problem construction is a simple matter of creating a
-<a class="reference internal" href="modeling.html#CostFunction" title="CostFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CostFunction</span></tt></a> for every observation.</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="kt">double</span> <span class="n">m</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
-<span class="kt">double</span> <span class="n">c</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
-
-<span class="n">Problem</span> <span class="n">problem</span><span class="p">;</span>
-<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">kNumObservations</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-  <span class="n">CostFunction</span><span class="o">*</span> <span class="n">cost_function</span> <span class="o">=</span>
-       <span class="k">new</span> <span class="n">AutoDiffCostFunction</span><span class="o">&lt;</span><span class="n">ExponentialResidual</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">&gt;</span><span class="p">(</span>
-           <span class="k">new</span> <span class="n">ExponentialResidual</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]));</span>
-  <span class="n">problem</span><span class="p">.</span><span class="n">AddResidualBlock</span><span class="p">(</span><span class="n">cost_function</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">m</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">c</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>Compiling and running <a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/curve_fitting.cc">examples/curve_fitting.cc</a>
-gives us:</p>
-<div class="highlight-bash"><div class="highlight"><pre>   0: f: 1.211734e+02 d: 0.00e+00 g: 3.61e+02 h: 0.00e+00 rho: 0.00e+00 mu: 1.00e+04 li:  0 it: 0.00e+00 tt: 0.00e+00
-   1: f: 1.211734e+02 d:-2.21e+03 g: 3.61e+02 h: 7.52e-01 rho:-1.87e+01 mu: 5.00e+03 li:  1 it: 0.00e+00 tt: 0.00e+00
-   2: f: 1.211734e+02 d:-2.21e+03 g: 3.61e+02 h: 7.51e-01 rho:-1.86e+01 mu: 1.25e+03 li:  1 it: 0.00e+00 tt: 0.00e+00
-   3: f: 1.211734e+02 d:-2.19e+03 g: 3.61e+02 h: 7.48e-01 rho:-1.85e+01 mu: 1.56e+02 li:  1 it: 0.00e+00 tt: 0.00e+00
-   4: f: 1.211734e+02 d:-2.02e+03 g: 3.61e+02 h: 7.22e-01 rho:-1.70e+01 mu: 9.77e+00 li:  1 it: 0.00e+00 tt: 0.00e+00
-   5: f: 1.211734e+02 d:-7.34e+02 g: 3.61e+02 h: 5.78e-01 rho:-6.32e+00 mu: 3.05e-01 li:  1 it: 0.00e+00 tt: 0.00e+00
-   6: f: 3.306595e+01 d: 8.81e+01 g: 4.10e+02 h: 3.18e-01 rho: 1.37e+00 mu: 9.16e-01 li:  1 it: 0.00e+00 tt: 0.00e+00
-   7: f: 6.426770e+00 d: 2.66e+01 g: 1.81e+02 h: 1.29e-01 rho: 1.10e+00 mu: 2.75e+00 li:  1 it: 0.00e+00 tt: 0.00e+00
-   8: f: 3.344546e+00 d: 3.08e+00 g: 5.51e+01 h: 3.05e-02 rho: 1.03e+00 mu: 8.24e+00 li:  1 it: 0.00e+00 tt: 0.00e+00
-   9: f: 1.987485e+00 d: 1.36e+00 g: 2.33e+01 h: 8.87e-02 rho: 9.94e-01 mu: 2.47e+01 li:  1 it: 0.00e+00 tt: 0.00e+00
-  10: f: 1.211585e+00 d: 7.76e-01 g: 8.22e+00 h: 1.05e-01 rho: 9.89e-01 mu: 7.42e+01 li:  1 it: 0.00e+00 tt: 0.00e+00
-  11: f: 1.063265e+00 d: 1.48e-01 g: 1.44e+00 h: 6.06e-02 rho: 9.97e-01 mu: 2.22e+02 li:  1 it: 0.00e+00 tt: 0.00e+00
-  12: f: 1.056795e+00 d: 6.47e-03 g: 1.18e-01 h: 1.47e-02 rho: 1.00e+00 mu: 6.67e+02 li:  1 it: 0.00e+00 tt: 0.00e+00
-  13: f: 1.056751e+00 d: 4.39e-05 g: 3.79e-03 h: 1.28e-03 rho: 1.00e+00 mu: 2.00e+03 li:  1 it: 0.00e+00 tt: 0.00e+00
-Ceres Solver Report: Iterations: 13, Initial cost: 1.211734e+02, Final cost: 1.056751e+00, Termination: CONVERGENCE.
-Initial m: 0 c: 0
-Final   m: 0.291861 c: 0.131439
-</pre></div>
-</div>
-<p>Starting from parameter values <span class="math">\(m = 0, c=0\)</span> with an initial
-objective function value of <span class="math">\(121.173\)</span> Ceres finds a solution
-<span class="math">\(m= 0.291861, c = 0.131439\)</span> with an objective function value of
-<span class="math">\(1.05675\)</span>. These values are a a bit different than the
-parameters of the original model <span class="math">\(m=0.3, c= 0.1\)</span>, but this is
-expected. When reconstructing a curve from noisy data, we expect to
-see such deviations. Indeed, if you were to evaluate the objective
-function for <span class="math">\(m=0.3, c=0.1\)</span>, the fit is worse with an objective
-function value of <span class="math">\(1.082425\)</span>.  The figure below illustrates the fit.</p>
-<div class="figure align-center" style="width: 500px">
-<a class="reference internal image-reference" href="_images/least_squares_fit.png"><img alt="_images/least_squares_fit.png" src="_images/least_squares_fit.png" style="height: 400px;" /></a>
-<p class="caption">Least squares curve fitting.</p>
-</div>
-<p class="rubric">Footnotes</p>
-<table class="docutils footnote" frame="void" id="f6" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id8">[6]</a></td><td><a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/curve_fitting.cc">examples/curve_fitting.cc</a></td></tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="robust-curve-fitting">
-<h2>Robust Curve Fitting<a class="headerlink" href="#robust-curve-fitting" title="Permalink to this headline">¶</a></h2>
-<p>Now suppose the data we are given has some outliers, i.e., we have
-some points that do not obey the noise model. If we were to use the
-code above to fit such data, we would get a fit that looks as
-below. Notice how the fitted curve deviates from the ground truth.</p>
-<div class="figure align-center" style="width: 500px">
-<a class="reference internal image-reference" href="_images/non_robust_least_squares_fit.png"><img alt="_images/non_robust_least_squares_fit.png" src="_images/non_robust_least_squares_fit.png" style="height: 400px;" /></a>
-</div>
-<p>To deal with outliers, a standard technique is to use a
-<a class="reference internal" href="modeling.html#LossFunction" title="LossFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">LossFunction</span></tt></a>. Loss functions, reduce the influence of
-residual blocks with high residuals, usually the ones corresponding to
-outliers. To associate a loss function in a residual block, we change</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="n">problem</span><span class="p">.</span><span class="n">AddResidualBlock</span><span class="p">(</span><span class="n">cost_function</span><span class="p">,</span> <span class="nb">NULL</span> <span class="p">,</span> <span class="o">&amp;</span><span class="n">m</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">c</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>to</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="n">problem</span><span class="p">.</span><span class="n">AddResidualBlock</span><span class="p">(</span><span class="n">cost_function</span><span class="p">,</span> <span class="k">new</span> <span class="n">CauchyLoss</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span> <span class="p">,</span> <span class="o">&amp;</span><span class="n">m</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">c</span><span class="p">);</span>
-</pre></div>
-</div>
-<p><a class="reference internal" href="modeling.html#CauchyLoss" title="CauchyLoss"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CauchyLoss</span></tt></a> is one of the loss functions that ships with Ceres
-Solver. The argument <span class="math">\(0.5\)</span> specifies the scale of the loss
-function. As a result, we get the fit below <a class="footnote-reference" href="#f7" id="id10">[7]</a>. Notice how the
-fitted curve moves back closer to the ground truth curve.</p>
-<div class="figure align-center" style="width: 500px">
-<a class="reference internal image-reference" href="_images/robust_least_squares_fit.png"><img alt="_images/robust_least_squares_fit.png" src="_images/robust_least_squares_fit.png" style="height: 400px;" /></a>
-<p class="caption">Using <a class="reference internal" href="modeling.html#LossFunction" title="LossFunction"><tt class="xref cpp cpp-class docutils literal"><span class="pre">LossFunction</span></tt></a> to reduce the effect of outliers on a
-least squares fit.</p>
-</div>
-<p class="rubric">Footnotes</p>
-<table class="docutils footnote" frame="void" id="f7" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id10">[7]</a></td><td><a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/robust_curve_fitting.cc">examples/robust_curve_fitting.cc</a></td></tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="bundle-adjustment">
-<h2>Bundle Adjustment<a class="headerlink" href="#bundle-adjustment" title="Permalink to this headline">¶</a></h2>
-<p>One of the main reasons for writing Ceres was our need to solve large
-scale bundle adjustment problems <a class="reference internal" href="bibliography.html#hartleyzisserman" id="id11">[HartleyZisserman]</a>, <a class="reference internal" href="bibliography.html#triggs" id="id12">[Triggs]</a>.</p>
-<p>Given a set of measured image feature locations and correspondences,
-the goal of bundle adjustment is to find 3D point positions and camera
-parameters that minimize the reprojection error. This optimization
-problem is usually formulated as a non-linear least squares problem,
-where the error is the squared <span class="math">\(L_2\)</span> norm of the difference between
-the observed feature location and the projection of the corresponding
-3D point on the image plane of the camera. Ceres has extensive support
-for solving bundle adjustment problems.</p>
-<p>Let us solve a problem from the <a class="reference external" href="http://grail.cs.washington.edu/projects/bal/">BAL</a> dataset <a class="footnote-reference" href="#f8" id="id13">[8]</a>.</p>
-<p>The first step as usual is to define a templated functor that computes
-the reprojection error/residual. The structure of the functor is
-similar to the <tt class="docutils literal"><span class="pre">ExponentialResidual</span></tt>, in that there is an
-instance of this object responsible for each image observation.</p>
-<p>Each residual in a BAL problem depends on a three dimensional point
-and a nine parameter camera. The nine parameters defining the camera
-are: three for rotation as a Rodriques&#8217; axis-angle vector, three
-for translation, one for focal length and two for radial distortion.
-The details of this camera model can be found the <a class="reference external" href="http://phototour.cs.washington.edu/bundler/">Bundler homepage</a> and the <a class="reference external" href="http://grail.cs.washington.edu/projects/bal/">BAL homepage</a>.</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="k">struct</span> <span class="n">SnavelyReprojectionError</span> <span class="p">{</span>
-  <span class="n">SnavelyReprojectionError</span><span class="p">(</span><span class="kt">double</span> <span class="n">observed_x</span><span class="p">,</span> <span class="kt">double</span> <span class="n">observed_y</span><span class="p">)</span>
-      <span class="o">:</span> <span class="n">observed_x</span><span class="p">(</span><span class="n">observed_x</span><span class="p">),</span> <span class="n">observed_y</span><span class="p">(</span><span class="n">observed_y</span><span class="p">)</span> <span class="p">{}</span>
-
-  <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
-  <span class="kt">bool</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="k">const</span> <span class="n">camera</span><span class="p">,</span>
-                  <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="k">const</span> <span class="n">point</span><span class="p">,</span>
-                  <span class="n">T</span><span class="o">*</span> <span class="n">residuals</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
-    <span class="c1">// camera[0,1,2] are the angle-axis rotation.</span>
-    <span class="n">T</span> <span class="n">p</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
-    <span class="n">ceres</span><span class="o">::</span><span class="n">AngleAxisRotatePoint</span><span class="p">(</span><span class="n">camera</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">p</span><span class="p">);</span>
-    <span class="c1">// camera[3,4,5] are the translation.</span>
-    <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">camera</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">camera</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span> <span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">camera</span><span class="p">[</span><span class="mi">5</span><span class="p">];</span>
-
-    <span class="c1">// Compute the center of distortion. The sign change comes from</span>
-    <span class="c1">// the camera model that Noah Snavely&#39;s Bundler assumes, whereby</span>
-    <span class="c1">// the camera coordinate system has a negative z axis.</span>
-    <span class="n">T</span> <span class="n">xp</span> <span class="o">=</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
-    <span class="n">T</span> <span class="n">yp</span> <span class="o">=</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
-
-    <span class="c1">// Apply second and fourth order radial distortion.</span>
-    <span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">l1</span> <span class="o">=</span> <span class="n">camera</span><span class="p">[</span><span class="mi">7</span><span class="p">];</span>
-    <span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">l2</span> <span class="o">=</span> <span class="n">camera</span><span class="p">[</span><span class="mi">8</span><span class="p">];</span>
-    <span class="n">T</span> <span class="n">r2</span> <span class="o">=</span> <span class="n">xp</span><span class="o">*</span><span class="n">xp</span> <span class="o">+</span> <span class="n">yp</span><span class="o">*</span><span class="n">yp</span><span class="p">;</span>
-    <span class="n">T</span> <span class="n">distortion</span> <span class="o">=</span> <span class="n">T</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">+</span> <span class="n">r2</span>  <span class="o">*</span> <span class="p">(</span><span class="n">l1</span> <span class="o">+</span> <span class="n">l2</span>  <span class="o">*</span> <span class="n">r2</span><span class="p">);</span>
-
-    <span class="c1">// Compute final projected point position.</span>
-    <span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">focal</span> <span class="o">=</span> <span class="n">camera</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span>
-    <span class="n">T</span> <span class="n">predicted_x</span> <span class="o">=</span> <span class="n">focal</span> <span class="o">*</span> <span class="n">distortion</span> <span class="o">*</span> <span class="n">xp</span><span class="p">;</span>
-    <span class="n">T</span> <span class="n">predicted_y</span> <span class="o">=</span> <span class="n">focal</span> <span class="o">*</span> <span class="n">distortion</span> <span class="o">*</span> <span class="n">yp</span><span class="p">;</span>
-
-    <span class="c1">// The error is the difference between the predicted and observed position.</span>
-    <span class="n">residuals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">predicted_x</span> <span class="o">-</span> <span class="n">T</span><span class="p">(</span><span class="n">observed_x</span><span class="p">);</span>
-    <span class="n">residuals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">predicted_y</span> <span class="o">-</span> <span class="n">T</span><span class="p">(</span><span class="n">observed_y</span><span class="p">);</span>
-    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
-  <span class="p">}</span>
-
-   <span class="c1">// Factory to hide the construction of the CostFunction object from</span>
-   <span class="c1">// the client code.</span>
-   <span class="k">static</span> <span class="n">ceres</span><span class="o">::</span><span class="n">CostFunction</span><span class="o">*</span> <span class="n">Create</span><span class="p">(</span><span class="k">const</span> <span class="kt">double</span> <span class="n">observed_x</span><span class="p">,</span>
-                                      <span class="k">const</span> <span class="kt">double</span> <span class="n">observed_y</span><span class="p">)</span> <span class="p">{</span>
-     <span class="k">return</span> <span class="p">(</span><span class="k">new</span> <span class="n">ceres</span><span class="o">::</span><span class="n">AutoDiffCostFunction</span><span class="o">&lt;</span><span class="n">SnavelyReprojectionError</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">3</span><span class="o">&gt;</span><span class="p">(</span>
-                 <span class="k">new</span> <span class="n">SnavelyReprojectionError</span><span class="p">(</span><span class="n">observed_x</span><span class="p">,</span> <span class="n">observed_y</span><span class="p">)));</span>
-   <span class="p">}</span>
-
-  <span class="kt">double</span> <span class="n">observed_x</span><span class="p">;</span>
-  <span class="kt">double</span> <span class="n">observed_y</span><span class="p">;</span>
-<span class="p">};</span>
-</pre></div>
-</div>
-<p>Note that unlike the examples before, this is a non-trivial function
-and computing its analytic Jacobian is a bit of a pain. Automatic
-differentiation makes life much simpler. The function
-<tt class="xref cpp cpp-func docutils literal"><span class="pre">AngleAxisRotatePoint()</span></tt> and other functions for manipulating
-rotations can be found in <tt class="docutils literal"><span class="pre">include/ceres/rotation.h</span></tt>.</p>
-<p>Given this functor, the bundle adjustment problem can be constructed
-as follows:</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="n">ceres</span><span class="o">::</span><span class="n">Problem</span> <span class="n">problem</span><span class="p">;</span>
-<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">bal_problem</span><span class="p">.</span><span class="n">num_observations</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-  <span class="n">ceres</span><span class="o">::</span><span class="n">CostFunction</span><span class="o">*</span> <span class="n">cost_function</span> <span class="o">=</span>
-      <span class="n">SnavelyReprojectionError</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span>
-           <span class="n">bal_problem</span><span class="p">.</span><span class="n">observations</span><span class="p">()[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">0</span><span class="p">],</span>
-           <span class="n">bal_problem</span><span class="p">.</span><span class="n">observations</span><span class="p">()[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]);</span>
-  <span class="n">problem</span><span class="p">.</span><span class="n">AddResidualBlock</span><span class="p">(</span><span class="n">cost_function</span><span class="p">,</span>
-                           <span class="nb">NULL</span> <span class="cm">/* squared loss */</span><span class="p">,</span>
-                           <span class="n">bal_problem</span><span class="p">.</span><span class="n">mutable_camera_for_observation</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
-                           <span class="n">bal_problem</span><span class="p">.</span><span class="n">mutable_point_for_observation</span><span class="p">(</span><span class="n">i</span><span class="p">));</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>Notice that the problem construction for bundle adjustment is very
-similar to the curve fitting example &#8211; one term is added to the
-objective function per observation.</p>
-<p>Since this large sparse problem (well large for <tt class="docutils literal"><span class="pre">DENSE_QR</span></tt> anyways),
-one way to solve this problem is to set
-<a class="reference internal" href="solving.html#Solver::Options::linear_solver_type__LinearSolverType" title="Solver::Options::linear_solver_type"><tt class="xref cpp cpp-member docutils literal"><span class="pre">Solver::Options::linear_solver_type</span></tt></a> to
-<tt class="docutils literal"><span class="pre">SPARSE_NORMAL_CHOLESKY</span></tt> and call <tt class="xref cpp cpp-member docutils literal"><span class="pre">Solve</span></tt>. And while this is
-a reasonable thing to do, bundle adjustment problems have a special
-sparsity structure that can be exploited to solve them much more
-efficiently. Ceres provides three specialized solvers (collectively
-known as Schur-based solvers) for this task. The example code uses the
-simplest of them <tt class="docutils literal"><span class="pre">DENSE_SCHUR</span></tt>.</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="n">ceres</span><span class="o">::</span><span class="n">Solver</span><span class="o">::</span><span class="n">Options</span> <span class="n">options</span><span class="p">;</span>
-<span class="n">options</span><span class="p">.</span><span class="n">linear_solver_type</span> <span class="o">=</span> <span class="n">ceres</span><span class="o">::</span><span class="n">DENSE_SCHUR</span><span class="p">;</span>
-<span class="n">options</span><span class="p">.</span><span class="n">minimizer_progress_to_stdout</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
-<span class="n">ceres</span><span class="o">::</span><span class="n">Solver</span><span class="o">::</span><span class="n">Summary</span> <span class="n">summary</span><span class="p">;</span>
-<span class="n">ceres</span><span class="o">::</span><span class="n">Solve</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">problem</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">summary</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">summary</span><span class="p">.</span><span class="n">FullReport</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</pre></div>
-</div>
-<p>For a more sophisticated bundle adjustment example which demonstrates
-the use of Ceres&#8217; more advanced features including its various linear
-solvers, robust loss functions and local parameterizations see
-<a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/bundle_adjuster.cc">examples/bundle_adjuster.cc</a></p>
-<p class="rubric">Footnotes</p>
-<table class="docutils footnote" frame="void" id="f8" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id13">[8]</a></td><td><a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/simple_bundle_adjuster.cc">examples/simple_bundle_adjuster.cc</a></td></tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="other-examples">
-<h2>Other Examples<a class="headerlink" href="#other-examples" title="Permalink to this headline">¶</a></h2>
-<p>Besides the examples in this chapter, the  <a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/">example</a>
-directory contains a number of other examples:</p>
-<ol class="arabic simple">
-<li><a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/bundle_adjuster.cc">bundle_adjuster.cc</a>
-shows how to use the various features of Ceres to solve bundle
-adjustment problems.</li>
-<li><a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/circle_fit.cc">circle_fit.cc</a>
-shows how to fit data to a circle.</li>
-<li><a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/denoising.cc">denoising.cc</a>
-implements image denoising using the <a class="reference external" href="http://www.gris.informatik.tu-darmstadt.de/~sroth/research/foe/index.html">Fields of Experts</a>
-model.</li>
-<li><a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/nist.cc">nist.cc</a>
-implements and attempts to solves the <a class="reference external" href="http://www.itl.nist.gov/div898/strd/nls/nls_main.shtm">NIST</a>
-non-linear regression problems.</li>
-<li><a class="reference external" href="https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/libmv_bundle_adjuster.cc">libmv_bundle_adjuster.cc</a>
-is the bundle adjustment algorithm used by <a class="reference external" href="www.blender.org">Blender</a>/libmv.</li>
-</ol>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="nnls_tutorial.html">Non-linear Least Squares</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nnls_tutorial.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nnls_tutorial.html#hello-world">Hello World!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nnls_tutorial.html#derivatives">Derivatives</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="nnls_tutorial.html#numeric-derivatives">Numeric Derivatives</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nnls_tutorial.html#analytic-derivatives">Analytic Derivatives</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nnls_tutorial.html#more-about-derivatives">More About Derivatives</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="nnls_tutorial.html#powell-s-function">Powell&#8217;s Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nnls_tutorial.html#curve-fitting">Curve Fitting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nnls_tutorial.html#robust-curve-fitting">Robust Curve Fitting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nnls_tutorial.html#bundle-adjustment">Bundle Adjustment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nnls_tutorial.html#other-examples">Other Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gradient_tutorial.html">General Unconstrained Minimization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gradient_tutorial.html#rosenbrock-s-function">Rosenbrock&#8217;s Function</a></li>
+</ul>
+</li>
+</ul>
 </div>
 </div>
 
@@ -776,7 +175,7 @@ is the bundle adjustment algorithm used by <a class="reference external" href="w
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="modeling.html" class="btn btn-neutral float-right" title="Modeling"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="nnls_tutorial.html" class="btn btn-neutral float-right" title="Non-linear Least Squares"/>Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="building.html" class="btn btn-neutral" title="Building &amp; Installation"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -808,7 +207,7 @@ is the bundle adjustment algorithm used by <a class="reference external" href="w
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.9.0',
+            VERSION:'1.10.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

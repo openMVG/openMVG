@@ -99,7 +99,8 @@
 #  define close _close
 typedef unsigned __int32 uint32_t;
 #else
-# include <stdint.h>
+#include <stdint.h>
+#include <unistd.h>
 
 // O_BINARY is not defined on unix like platforms, as there is no
 // difference between binary and text files.
@@ -779,7 +780,7 @@ void EuclideanBundleCommonIntrinsics(const vector<Marker> &all_markers,
 }  // namespace
 
 int main(int argc, char **argv) {
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  CERES_GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
 
   if (FLAGS_input.empty()) {

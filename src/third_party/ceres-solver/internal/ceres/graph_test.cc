@@ -44,6 +44,51 @@ TEST(Graph, EmptyGraph) {
 
 TEST(Graph, AddVertexAndEdge) {
   Graph<int> graph;
+  graph.AddVertex(0);
+  graph.AddVertex(1);
+  graph.AddEdge(0, 1);
+
+  const HashSet<int>& vertices = graph.vertices();
+  EXPECT_EQ(vertices.size(), 2);
+  EXPECT_EQ(graph.Neighbors(0).size(), 1);
+  EXPECT_EQ(graph.Neighbors(1).size(), 1);
+}
+
+TEST(Graph, AddVertexIdempotence) {
+  Graph<int> graph;
+  graph.AddVertex(0);
+  graph.AddVertex(1);
+  graph.AddEdge(0, 1);
+
+  const HashSet<int>& vertices = graph.vertices();
+
+  EXPECT_EQ(vertices.size(), 2);
+
+  // Try adding the vertex again with a new weight.
+  graph.AddVertex(0);
+  EXPECT_EQ(vertices.size(), 2);
+
+  // Rest of the graph remains the same.
+  EXPECT_EQ(graph.Neighbors(0).size(), 1);
+  EXPECT_EQ(graph.Neighbors(1).size(), 1);
+}
+
+TEST(Graph, DieOnNonExistentVertex) {
+  Graph<int> graph;
+  graph.AddVertex(0);
+  graph.AddVertex(1);
+  graph.AddEdge(0, 1);
+
+  EXPECT_DEATH_IF_SUPPORTED(graph.Neighbors(2), "key not found");
+}
+
+TEST(WeightedGraph, EmptyGraph) {
+  WeightedGraph<int> graph;
+  EXPECT_EQ(graph.vertices().size(), 0);
+}
+
+TEST(WeightedGraph, AddVertexAndEdge) {
+  WeightedGraph<int> graph;
   graph.AddVertex(0, 1.0);
   graph.AddVertex(1, 2.0);
   graph.AddEdge(0, 1, 0.5);
@@ -58,8 +103,8 @@ TEST(Graph, AddVertexAndEdge) {
   EXPECT_EQ(graph.EdgeWeight(1, 0), 0.5);
 }
 
-TEST(Graph, AddVertexIdempotence) {
-  Graph<int> graph;
+TEST(WeightedGraph, AddVertexIdempotence) {
+  WeightedGraph<int> graph;
   graph.AddVertex(0, 1.0);
   graph.AddVertex(1, 2.0);
   graph.AddEdge(0, 1, 0.5);
@@ -83,8 +128,8 @@ TEST(Graph, AddVertexIdempotence) {
   EXPECT_EQ(graph.EdgeWeight(1, 0), 0.5);
 }
 
-TEST(Graph, DieOnNonExistentVertex) {
-  Graph<int> graph;
+TEST(WeightedGraph, DieOnNonExistentVertex) {
+  WeightedGraph<int> graph;
   graph.AddVertex(0, 1.0);
   graph.AddVertex(1, 2.0);
   graph.AddEdge(0, 1, 0.5);
@@ -93,8 +138,8 @@ TEST(Graph, DieOnNonExistentVertex) {
   EXPECT_DEATH_IF_SUPPORTED(graph.Neighbors(2), "key not found");
 }
 
-TEST(Graph, NonExistentEdge) {
-  Graph<int> graph;
+TEST(WeightedGraph, NonExistentEdge) {
+  WeightedGraph<int> graph;
   graph.AddVertex(0, 1.0);
   graph.AddVertex(1, 2.0);
   graph.AddEdge(0, 1, 0.5);

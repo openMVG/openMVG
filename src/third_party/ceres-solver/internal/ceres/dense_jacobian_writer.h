@@ -70,7 +70,7 @@ class DenseJacobianWriter {
              int residual_offset,
              double **jacobians,
              SparseMatrix* jacobian) {
-    DenseSparseMatrix* dense_jacobian = NULL;
+    DenseSparseMatrix* dense_jacobian;
     if (jacobian != NULL) {
       dense_jacobian = down_cast<DenseSparseMatrix*>(jacobian);
     }

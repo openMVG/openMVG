@@ -300,6 +300,19 @@ TEST_BODY(TenParameterBlock)
 
 #undef TEST_BODY
 
+TEST(CostFunctionToFunctor, DynamicNumberOfResiduals) {
+  scoped_ptr<CostFunction> cost_function(
+      new AutoDiffCostFunction<
+      CostFunctionToFunctor<ceres::DYNAMIC, 2, 2 >, ceres::DYNAMIC, 2, 2>(
+          new CostFunctionToFunctor<ceres::DYNAMIC, 2, 2 >(
+              new AutoDiffCostFunction<TwoParameterBlockFunctor, 2, 2, 2 >(
+                  new TwoParameterBlockFunctor)), 2));
+
+  scoped_ptr<CostFunction> actual_cost_function(
+      new AutoDiffCostFunction<TwoParameterBlockFunctor, 2, 2, 2 >(
+          new TwoParameterBlockFunctor));
+  ExpectCostFunctionsAreEqual(*cost_function, *actual_cost_function);
+}
 
 }  // namespace internal
 }  // namespace ceres

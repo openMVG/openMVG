@@ -3,17 +3,17 @@
 
 .. cpp:namespace:: ceres
 
-.. _chapter-solving:
+.. _chapter-nnls_solving:
 
-=======
-Solving
-=======
+================================
+Solving Non-linear Least Squares
+================================
 
 Introduction
 ============
 
 Effective use of Ceres requires some familiarity with the basic
-components of a nonlinear least squares solver, so before we describe
+components of a non-linear least squares solver, so before we describe
 how to configure and use the solver, we will take a brief look at how
 some of the core optimization algorithms in Ceres work.
 
@@ -21,7 +21,7 @@ Let :math:`x \in \mathbb{R}^n` be an :math:`n`-dimensional vector of
 variables, and
 :math:`F(x) = \left[f_1(x), ... ,  f_{m}(x) \right]^{\top}` be a
 :math:`m`-dimensional function of :math:`x`.  We are interested in
-solving the following optimization problem [#f1]_ .
+solving the optimization problem [#f1]_
 
 .. math:: \arg \min_x \frac{1}{2}\|F(x)\|^2\ . \\
           L \le x \le U
@@ -120,8 +120,8 @@ of the constrained optimization problem
    :label: trp
 
 There are a number of different ways of solving this problem, each
-giving rise to a different concrete trust-region algorithm. Currently
-Ceres, implements two trust-region algorithms - Levenberg-Marquardt
+giving rise to a different concrete trust-region algorithm. Currently,
+Ceres implements two trust-region algorithms - Levenberg-Marquardt
 and Dogleg, each of which is augmented with a line search if bounds
 constraints are present [Kanzow]_. The user can choose between them by
 setting :member:`Solver::Options::trust_region_strategy_type`.
@@ -247,7 +247,7 @@ entire two dimensional subspace spanned by these two vectors and finds
 the point that minimizes the trust region problem in this subspace
 [ByrdSchnabel]_.
 
-The key advantage of the Dogleg over Levenberg Marquardt is that if
+The key advantage of the Dogleg over Levenberg-Marquardt is that if
 the step computation for a particular choice of :math:`\mu` does not
 result in sufficient decrease in the value of the objective function,
 Levenberg-Marquardt solves the linear approximation from scratch with
@@ -265,7 +265,7 @@ Inner Iterations
 
 Some non-linear least squares problems have additional structure in
 the way the parameter blocks interact that it is beneficial to modify
-the way the trust region step is computed. e.g., consider the
+the way the trust region step is computed. For example, consider the
 following regression problem
 
 .. math::   y = a_1 e^{b_1 x} + a_2 e^{b_3 x^2 + c_1}
@@ -399,7 +399,7 @@ directions, all aimed at large scale problems.
    Gradient method to non-linear functions. The generalization can be
    performed in a number of different ways, resulting in a variety of
    search directions. Ceres Solver currently supports
-   ``FLETCHER_REEVES``, ``POLAK_RIBIRERE`` and ``HESTENES_STIEFEL``
+   ``FLETCHER_REEVES``, ``POLAK_RIBIERE`` and ``HESTENES_STIEFEL``
    directions.
 
 3. ``BFGS`` A generalization of the Secant method to multiple
@@ -490,7 +490,9 @@ Cholesky factorization of the normal equations. Ceres uses
 Cholesky factorization of the normal equations. This leads to
 substantial savings in time and memory for large sparse
 problems. Ceres uses the sparse Cholesky factorization routines in
-Professor Tim Davis' ``SuiteSparse`` or ``CXSparse`` packages [Chen]_.
+Professor Tim Davis' ``SuiteSparse`` or ``CXSparse`` packages [Chen]_
+or the sparse Cholesky factorization algorithm in ``Eigen`` (which
+incidently is a port of the algorithm implemented inside ``CXSparse``)
 
 .. _section-schur:
 
@@ -519,7 +521,7 @@ turn implies that the matrix :math:`H` is of the form
 .. math:: H = \left[ \begin{matrix} B & E\\ E^\top & C \end{matrix} \right]\ ,
    :label: hblock
 
-where, :math:`B \in \mathbb{R}^{pc\times pc}` is a block sparse matrix
+where :math:`B \in \mathbb{R}^{pc\times pc}` is a block sparse matrix
 with :math:`p` blocks of size :math:`c\times c` and :math:`C \in
 \mathbb{R}^{qs\times qs}` is a block diagonal matrix with :math:`q` blocks
 of size :math:`s\times s`. :math:`E \in \mathbb{R}^{pc\times qs}` is a
@@ -558,7 +560,7 @@ c`. The block :math:`S_{ij}` corresponding to the pair of images
 observe at least one common point.
 
 
-Now, eq-linear2 can be solved by first forming :math:`S`, solving for
+Now, :eq:`linear2` can be solved by first forming :math:`S`, solving for
 :math:`\Delta y`, and then back-substituting :math:`\Delta y` to
 obtain the value of :math:`\Delta z`.  Thus, the solution of what was
 an :math:`n\times n`, :math:`n=pc+qs` linear system is reduced to the
@@ -616,44 +618,68 @@ step algorithm.
 ``ITERATIVE_SCHUR``
 -------------------
 
-Another option for bundle adjustment problems is to apply PCG to the
-reduced camera matrix :math:`S` instead of :math:`H`. One reason to do
-this is that :math:`S` is a much smaller matrix than :math:`H`, but
-more importantly, it can be shown that :math:`\kappa(S)\leq
-\kappa(H)`.  Cseres implements PCG on :math:`S` as the
+Another option for bundle adjustment problems is to apply
+Preconditioned Conjugate Gradients to the reduced camera matrix
+:math:`S` instead of :math:`H`. One reason to do this is that
+:math:`S` is a much smaller matrix than :math:`H`, but more
+importantly, it can be shown that :math:`\kappa(S)\leq \kappa(H)`.
+Ceres implements Conjugate Gradients on :math:`S` as the
 ``ITERATIVE_SCHUR`` solver. When the user chooses ``ITERATIVE_SCHUR``
 as the linear solver, Ceres automatically switches from the exact step
 algorithm to an inexact step algorithm.
 
-The cost of forming and storing the Schur complement :math:`S` can be
-prohibitive for large problems. Indeed, for an inexact Newton solver
-that computes :math:`S` and runs PCG on it, almost all of its time is
-spent in constructing :math:`S`; the time spent inside the PCG
-algorithm is negligible in comparison. Because PCG only needs access
-to :math:`S` via its product with a vector, one way to evaluate
-:math:`Sx` is to observe that
+The key computational operation when using Conjuagate Gradients is the
+evaluation of the matrix vector product :math:`Sx` for an arbitrary
+vector :math:`x`. There are two ways in which this product can be
+evaluated, and this can be controlled using
+``Solver::Options::use_explicit_schur_complement``. Depending on the
+problem at hand, the performance difference between these two methods
+can be quite substantial.
 
-.. math::  x_1 &= E^\top x
-.. math::  x_2 &= C^{-1} x_1
-.. math::  x_3 &= Ex_2\\
-.. math::  x_4 &= Bx\\
-.. math::   Sx &= x_4 - x_3
-   :label: schurtrick1
+  1. **Implicit** This is default. Implicit evaluation is suitable for
+     large problems where the cost of computing and storing the Schur
+     Complement :math:`S` is prohibitive. Because PCG only needs
+     access to :math:`S` via its product with a vector, one way to
+     evaluate :math:`Sx` is to observe that
 
-Thus, we can run PCG on :math:`S` with the same computational effort
-per iteration as PCG on :math:`H`, while reaping the benefits of a
-more powerful preconditioner. In fact, we do not even need to compute
-:math:`H`, :eq:`schurtrick1` can be implemented using just the columns
-of :math:`J`.
+     .. math::  x_1 &= E^\top x
+     .. math::  x_2 &= C^{-1} x_1
+     .. math::  x_3 &= Ex_2\\
+     .. math::  x_4 &= Bx\\
+     .. math::   Sx &= x_4 - x_3
+        :label: schurtrick1
 
-Equation :eq:`schurtrick1` is closely related to *Domain
-Decomposition methods* for solving large linear systems that arise in
-structural engineering and partial differential equations. In the
-language of Domain Decomposition, each point in a bundle adjustment
-problem is a domain, and the cameras form the interface between these
-domains. The iterative solution of the Schur complement then falls
-within the sub-category of techniques known as Iterative
-Sub-structuring [Saad]_ [Mathew]_.
+     Thus, we can run PCG on :math:`S` with the same computational
+     effort per iteration as PCG on :math:`H`, while reaping the
+     benefits of a more powerful preconditioner. In fact, we do not
+     even need to compute :math:`H`, :eq:`schurtrick1` can be
+     implemented using just the columns of :math:`J`.
+
+     Equation :eq:`schurtrick1` is closely related to *Domain
+     Decomposition methods* for solving large linear systems that
+     arise in structural engineering and partial differential
+     equations. In the language of Domain Decomposition, each point in
+     a bundle adjustment problem is a domain, and the cameras form the
+     interface between these domains. The iterative solution of the
+     Schur complement then falls within the sub-category of techniques
+     known as Iterative Sub-structuring [Saad]_ [Mathew]_.
+
+  2. **Explicit** The complexity of implicit matrix-vector product
+     evaluation scales with the number of non-zeros in the
+     Jacobian. For small to medium sized problems, the cost of
+     constructing the Schur Complement is small enough that it is
+     better to construct it explicitly in memory and use it to
+     evaluate the product :math:`Sx`.
+
+
+  .. NOTE::
+
+     In exact arithmetic, the choice of implicit versus explicit Schur
+     complement would have no impact on solution quality. However, in
+     practice if the Jacobian is poorly conditioned, one may observe
+     (usually small) differences in solution quality. This is a
+     natural consequence of performing computations in finite arithmetic.
+
 
 .. _section-preconditioner:
 
@@ -707,7 +733,7 @@ these preconditioners and refers to them as ``JACOBI`` and
 For bundle adjustment problems arising in reconstruction from
 community photo collections, more effective preconditioners can be
 constructed by analyzing and exploiting the camera-point visibility
-structure of the scene [KushalAgarwal]. Ceres implements the two
+structure of the scene [KushalAgarwal]_. Ceres implements the two
 visibility based preconditioners described by Kushal & Agarwal as
 ``CLUSTER_JACOBI`` and ``CLUSTER_TRIDIAGONAL``. These are fairly new
 preconditioners and Ceres' implementation of them is in its early
@@ -745,14 +771,14 @@ Given such an ordering, Ceres ensures that the parameter blocks in the
 lowest numbered elimination group are eliminated first, and then the
 parameter blocks in the next lowest numbered elimination group and so
 on. Within each elimination group, Ceres is free to order the
-parameter blocks as it chooses. e.g. Consider the linear system
+parameter blocks as it chooses. For example, consider the linear system
 
 .. math::
   x + y &= 3\\
   2x + 3y &= 7
 
 There are two ways in which it can be solved. First eliminating
-:math:`x` from the two equations, solving for y and then back
+:math:`x` from the two equations, solving for :math:`y` and then back
 substituting for :math:`x`, or first eliminating :math:`y`, solving
 for :math:`x` and back substituting for :math:`y`. The user can
 construct three orderings here.
@@ -787,13 +813,18 @@ elimination group [LiSaad]_.
 .. _section-solver-options:
 
 :class:`Solver::Options`
-------------------------
+========================
 
 .. class:: Solver::Options
 
-  :class:`Solver::Options` controls the overall behavior of the
-  solver. We list the various settings and their default values below.
+   :class:`Solver::Options` controls the overall behavior of the
+   solver. We list the various settings and their default values below.
 
+.. function:: bool Solver::Options::IsValid(string* error) const
+
+   Validate the values in the options struct and returns true on
+   success. If there is a problem, the method returns false with
+   ``error`` containing a textual description of the cause.
 
 .. member:: MinimizerType Solver::Options::minimizer_type
 
@@ -823,7 +854,7 @@ elimination group [LiSaad]_.
 
    Default: ``FLETCHER_REEVES``
 
-   Choices are ``FLETCHER_REEVES``, ``POLAK_RIBIRERE`` and
+   Choices are ``FLETCHER_REEVES``, ``POLAK_RIBIERE`` and
    ``HESTENES_STIEFEL``.
 
 .. member:: int Solver::Options::max_lbfs_rank
@@ -994,7 +1025,7 @@ elimination group [LiSaad]_.
 
    During the bracketing phase of a Wolfe line search, the step size
    is increased until either a point satisfying the Wolfe conditions
-   is found, or an upper bound for a bracket containinqg a point
+   is found, or an upper bound for a bracket containing a point
    satisfying the conditions is found.  Precisely, at each iteration
    of the expansion:
 
@@ -1087,7 +1118,7 @@ elimination group [LiSaad]_.
    Default: ``1e6``
 
    The ``LEVENBERG_MARQUARDT`` strategy, uses a diagonal matrix to
-   regularize the the trust region step. This is the lower bound on
+   regularize the trust region step. This is the lower bound on
    the values of this diagonal matrix.
 
 .. member:: double Solver::Options::max_lm_diagonal
@@ -1095,7 +1126,7 @@ elimination group [LiSaad]_.
    Default:  ``1e32``
 
    The ``LEVENBERG_MARQUARDT`` strategy, uses a diagonal matrix to
-   regularize the the trust region step. This is the upper bound on
+   regularize the trust region step. This is the upper bound on
    the values of this diagonal matrix.
 
 .. member:: int Solver::Options::max_num_consecutive_invalid_steps
@@ -1115,7 +1146,7 @@ elimination group [LiSaad]_.
 
    Solver terminates if
 
-   .. math:: \frac{|\Delta \text{cost}|}{\text{cost} < \text{function_tolerance}}
+   .. math:: \frac{|\Delta \text{cost}|}{\text{cost}} < \text{function_tolerance}
 
    where, :math:`\Delta \text{cost}` is the change in objective
    function value (up or down) in the current iteration of
@@ -1151,8 +1182,9 @@ elimination group [LiSaad]_.
 
    Type of linear solver used to compute the solution to the linear
    least squares problem in each iteration of the Levenberg-Marquardt
-   algorithm. If Ceres is build with ``SuiteSparse`` linked in then
-   the default is ``SPARSE_NORMAL_CHOLESKY``, it is ``DENSE_QR``
+   algorithm. If Ceres is built with support for ``SuiteSparse`` or
+   ``CXSparse`` or ``Eigen``'s sparse Cholesky factorization, the
+   default is ``SPARSE_NORMAL_CHOLESKY``, it is ``DENSE_QR``
    otherwise.
 
 .. member:: PreconditionerType Solver::Options::preconditioner_type
@@ -1207,16 +1239,33 @@ elimination group [LiSaad]_.
 
    Default:``SUITE_SPARSE``
 
-   Ceres supports the use of two sparse linear algebra libraries,
+   Ceres supports the use of three sparse linear algebra libraries,
    ``SuiteSparse``, which is enabled by setting this parameter to
-   ``SUITE_SPARSE`` and ``CXSparse``, which can be selected by setting
-   this parameter to ```CX_SPARSE``. ``SuiteSparse`` is a
-   sophisticated and complex sparse linear algebra library and should
-   be used in general. If your needs/platforms prevent you from using
-   ``SuiteSparse``, consider using ``CXSparse``, which is a much
-   smaller, easier to build library. As can be expected, its
-   performance on large problems is not comparable to that of
-   ``SuiteSparse``.
+   ``SUITE_SPARSE``, ``CXSparse``, which can be selected by setting
+   this parameter to ```CX_SPARSE`` and ``Eigen`` which is enabled by
+   setting this parameter to ``EIGEN_SPARSE``.
+
+   ``SuiteSparse`` is a sophisticated and complex sparse linear
+   algebra library and should be used in general.
+
+   If your needs/platforms prevent you from using ``SuiteSparse``,
+   consider using ``CXSparse``, which is a much smaller, easier to
+   build library. As can be expected, its performance on large
+   problems is not comparable to that of ``SuiteSparse``.
+
+   Last but not the least you can use the sparse linear algebra
+   routines in ``Eigen``. Currently the performance of this library is
+   the poorest of the three. But this should change in the near
+   future.
+
+   Another thing to consider here is that the sparse Cholesky
+   factorization libraries in Eigen are licensed under ``LGPL`` and
+   building Ceres with support for ``EIGEN_SPARSE`` will result in an
+   LGPL licensed library (since the corresponding code from Eigen is
+   compiled into the library).
+
+   The upside is that you do not need to build and link to an external
+   library to use ``EIGEN_SPARSE``.
 
 .. member:: int Solver::Options::num_linear_solver_threads
 
@@ -1236,6 +1285,35 @@ elimination group [LiSaad]_.
    thinks is best.
 
    See :ref:`section-ordering` for more details.
+
+.. member:: bool Solver::Options::use_explicit_schur_complement
+
+   Default: ``false``
+
+   Use an explicitly computed Schur complement matrix with
+   ``ITERATIVE_SCHUR``.
+
+   By default this option is disabled and ``ITERATIVE_SCHUR``
+   evaluates evaluates matrix-vector products between the Schur
+   complement and a vector implicitly by exploiting the algebraic
+   expression for the Schur complement.
+
+   The cost of this evaluation scales with the number of non-zeros in
+   the Jacobian.
+
+   For small to medium sized problems there is a sweet spot where
+   computing the Schur complement is cheap enough that it is much more
+   efficient to explicitly compute it and use it for evaluating the
+   matrix-vector products.
+
+   Enabling this option tells ``ITERATIVE_SCHUR`` to use an explicitly
+   computed Schur complement. This can improve the performance of the
+   ``ITERATIVE_SCHUR`` solver significantly.
+
+   .. NOTE:
+
+     This option can only be used with the ``SCHUR_JACOBI``
+     preconditioner.
 
 .. member:: bool Solver::Options::use_post_ordering
 
@@ -1275,11 +1353,11 @@ elimination group [LiSaad]_.
    then it is probably best to keep this false, otherwise it will
    likely lead to worse performance.
 
-   This settings affects the `SPARSE_NORMAL_CHOLESKY` solver.
+   This setting only affects the `SPARSE_NORMAL_CHOLESKY` solver.
 
 .. member:: int Solver::Options::min_linear_solver_iterations
 
-   Default: ``1``
+   Default: ``0``
 
    Minimum number of iterations used by the linear solver. This only
    makes sense when the linear solver is an iterative solver, e.g.,
@@ -1322,7 +1400,7 @@ elimination group [LiSaad]_.
    on each Newton/Trust region step using a coordinate descent
    algorithm.  For more details, see :ref:`section-inner-iterations`.
 
-.. member:: double Solver::Options::inner_itearation_tolerance
+.. member:: double Solver::Options::inner_iteration_tolerance
 
    Default: ``1e-3``
 
@@ -1372,28 +1450,29 @@ elimination group [LiSaad]_.
 
    .. code-block:: bash
 
-      0: f: 1.250000e+01 d: 0.00e+00 g: 5.00e+00 h: 0.00e+00 rho: 0.00e+00 mu: 1.00e+04 li:  0 it: 6.91e-06 tt: 1.91e-03
-      1: f: 1.249750e-07 d: 1.25e+01 g: 5.00e-04 h: 5.00e+00 rho: 1.00e+00 mu: 3.00e+04 li:  1 it: 2.81e-05 tt: 1.99e-03
-      2: f: 1.388518e-16 d: 1.25e-07 g: 1.67e-08 h: 5.00e-04 rho: 1.00e+00 mu: 9.00e+04 li:  1 it: 1.00e-05 tt: 2.01e-03
+      iter      cost      cost_change  |gradient|   |step|    tr_ratio  tr_radius  ls_iter  iter_time  total_time
+         0  4.185660e+06    0.00e+00    1.09e+08   0.00e+00   0.00e+00  1.00e+04       0    7.59e-02    3.37e-01
+         1  1.062590e+05    4.08e+06    8.99e+06   5.36e+02   9.82e-01  3.00e+04       1    1.65e-01    5.03e-01
+         2  4.992817e+04    5.63e+04    8.32e+06   3.19e+02   6.52e-01  3.09e+04       1    1.45e-01    6.48e-01
 
    Here
 
-   #. ``f`` is the value of the objective function.
-   #. ``d`` is the change in the value of the objective function if
-      the step computed in this iteration is accepted.
-   #. ``g`` is the max norm of the gradient.
-   #. ``h`` is the change in the parameter vector.
-   #. ``rho`` is the ratio of the actual change in the objective
-      function value to the change in the the value of the trust
+   #. ``cost`` is the value of the objective function.
+   #. ``cost_change`` is the change in the value of the objective
+      function if the step computed in this iteration is accepted.
+   #. ``|gradient|`` is the max norm of the gradient.
+   #. ``|step|`` is the change in the parameter vector.
+   #. ``tr_ratio`` is the ratio of the actual change in the objective
+      function value to the change in the value of the trust
       region model.
-   #. ``mu`` is the size of the trust region radius.
-   #. ``li`` is the number of linear solver iterations used to compute
-      the trust region step. For direct/factorization based solvers it
-      is always 1, for iterative solvers like ``ITERATIVE_SCHUR`` it
-      is the number of iterations of the Conjugate Gradients
-      algorithm.
-   #. ``it`` is the time take by the current iteration.
-   #. ``tt`` is the the total time taken by the minimizer.
+   #. ``tr_radius`` is the size of the trust region radius.
+   #. ``ls_iter`` is the number of linear solver iterations used to
+      compute the trust region step. For direct/factorization based
+      solvers it is always 1, for iterative solvers like
+      ``ITERATIVE_SCHUR`` it is the number of iterations of the
+      Conjugate Gradients algorithm.
+   #. ``iter_time`` is the time take by the current iteration.
+   #. ``total_time`` is the total time taken by the minimizer.
 
    For ``LINE_SEARCH_MINIMIZER`` the progress display looks like
 
@@ -1412,7 +1491,7 @@ elimination group [LiSaad]_.
    #. ``h`` is the change in the parameter vector.
    #. ``s`` is the optimal step length computed by the line search.
    #. ``it`` is the time take by the current iteration.
-   #. ``tt`` is the the total time taken by the minimizer.
+   #. ``tt`` is the total time taken by the minimizer.
 
 .. member:: vector<int> Solver::Options::trust_region_minimizer_iterations_to_dump
 
@@ -1504,7 +1583,7 @@ elimination group [LiSaad]_.
    Callbacks that are executed at the end of each iteration of the
    :class:`Minimizer`. They are executed in the order that they are
    specified in this vector. By default, parameter blocks are updated
-   only at the end of the optimization, i.e when the
+   only at the end of the optimization, i.e., when the
    :class:`Minimizer` terminates. This behavior is controlled by
    :member:`Solver::Options::update_state_every_variable`. If the user
    wishes to have access to the update parameter blocks when his/her
@@ -1522,19 +1601,8 @@ elimination group [LiSaad]_.
    iteration. This setting is useful when building an interactive
    application using Ceres and using an :class:`IterationCallback`.
 
-.. member:: string Solver::Options::solver_log
-
-   Default: ``empty``
-
-   If non-empty, a summary of the execution of the solver is recorded
-   to this file.  This file is used for recording and Ceres'
-   performance. Currently, only the iteration number, total time and
-   the objective function value are logged. The format of this file is
-   expected to change over time as the performance evaluation
-   framework is fleshed out.
-
 :class:`ParameterBlockOrdering`
--------------------------------
+===============================
 
 .. class:: ParameterBlockOrdering
 
@@ -1594,7 +1662,7 @@ elimination group [LiSaad]_.
 
 
 :class:`IterationCallback`
---------------------------
+==========================
 
 .. class:: IterationSummary
 
@@ -1787,7 +1855,7 @@ elimination group [LiSaad]_.
 
 
 :class:`CRSMatrix`
-------------------
+==================
 
 .. class:: CRSMatrix
 
@@ -1825,7 +1893,7 @@ elimination group [LiSaad]_.
    ``values[rows[i]]`` ... ``values[rows[i + 1] - 1]`` are the values
    of the non-zero columns of row ``i``.
 
-e.g, consider the 3x4 sparse matrix
+e.g., consider the 3x4 sparse matrix
 
 .. code-block:: c++
 
@@ -1844,12 +1912,11 @@ The three arrays will be:
 
 
 :class:`Solver::Summary`
-------------------------
+========================
 
 .. class:: Solver::Summary
 
    Summary of the various stages of the solver after termination.
-
 
 .. function:: string Solver::Summary::BriefReport() const
 
@@ -2063,7 +2130,7 @@ The three arrays will be:
 
    `True` if the user asked for inner iterations to be used as part of
    the optimization and the problem structure was such that they were
-   actually performed. e.g., in a problem with just one parameter
+   actually performed. For example, in a problem with just one parameter
    block, inner iterations are not performed.
 
 .. member:: vector<int> inner_iteration_ordering_given
@@ -2080,10 +2147,17 @@ The three arrays will be:
    blank and asked for an automatic ordering, or if the problem
    contains some constant or inactive parameter blocks.
 
-.. member:: PreconditionerType Solver::Summary::preconditioner_type
+.. member:: PreconditionerType Solver::Summary::preconditioner_type_given
 
-   Type of preconditioner used for solving the trust region step. Only
-   meaningful when an iterative linear solver is used.
+   Type of the preconditioner requested by the user.
+
+.. member:: PreconditionerType Solver::Summary::preconditioner_type_used
+
+   Type of the preconditioner actually used. This may be different
+   from :member:`Solver::Summary::linear_solver_type_given` if Ceres
+   determines that the problem structure is not compatible with the
+   linear solver requested or if the linear solver requested by the
+   user is not available.
 
 .. member:: VisibilityClusteringType Solver::Summary::visibility_clustering_type
 
@@ -2267,7 +2341,8 @@ cases.
 
 .. member:: CovarianceAlgorithmType Covariance::Options::algorithm_type
 
-   Default: ``SPARSE_QR`` or ``DENSE_SVD``
+   Default: ``SUITE_SPARSE_QR`` if ``SuiteSparseQR`` is installed and
+   ``EIGEN_SPARSE_QR`` otherwise.
 
    Ceres supports three different algorithms for covariance
    estimation, which represent different tradeoffs in speed, accuracy
@@ -2286,47 +2361,23 @@ cases.
       small to moderate sized problems. It can handle full-rank as
       well as rank deficient Jacobians.
 
-   2. ``SPARSE_CHOLESKY`` uses the ``CHOLMOD`` sparse Cholesky
-      factorization library to compute the decomposition :
-
-      .. math::   R^\top R = J^\top J
-
-      and then
-
-      .. math::   \left(J^\top J\right)^{-1}  = \left(R^\top R\right)^{-1}
-
-      It a fast algorithm for sparse matrices that should be used when
-      the Jacobian matrix J is well conditioned. For ill-conditioned
-      matrices, this algorithm can fail unpredictabily. This is
-      because Cholesky factorization is not a rank-revealing
-      factorization, i.e., it cannot reliably detect when the matrix
-      being factorized is not of full
-      rank. ``SuiteSparse``/``CHOLMOD`` supplies a heuristic for
-      checking if the matrix is rank deficient (cholmod_rcond), but it
-      is only a heuristic and can have both false positive and false
-      negatives.
-
-      Recent versions of ``SuiteSparse`` (>= 4.2.0) provide a much more
-      efficient method for solving for rows of the covariance
-      matrix. Therefore, if you are doing ``SPARSE_CHOLESKY``, we strongly
-      recommend using a recent version of ``SuiteSparse``.
-
-   3. ``SPARSE_QR`` uses the ``SuiteSparseQR`` sparse QR factorization
-      library to compute the decomposition
+   2. ``EIGEN_SPARSE_QR`` uses the sparse QR factorization algorithm
+      in ``Eigen`` to compute the decomposition
 
        .. math::
 
           QR &= J\\
           \left(J^\top J\right)^{-1} &= \left(R^\top R\right)^{-1}
 
-      It is a moderately fast algorithm for sparse matrices, which at
-      the price of more time and memory than the ``SPARSE_CHOLESKY``
-      algorithm is numerically better behaved and is rank revealing,
-      i.e., it can reliably detect when the Jacobian matrix is rank
-      deficient.
+      It is a moderately fast algorithm for sparse matrices.
 
-   Neither ``SPARSE_CHOLESKY`` or ``SPARSE_QR`` are capable of computing
-   the covariance if the Jacobian is rank deficient.
+   3. ``SUITE_SPARSE_QR`` uses the sparse QR factorization algorithm
+      in ``SuiteSparse``. It uses dense linear algebra and is multi
+      threaded, so for large sparse sparse matrices it is
+      significantly faster than ``EIGEN_SPARSE_QR``.
+
+   Neither ``EIGEN_SPARSE_QR`` nor ``SUITE_SPARSE_QR`` are capable of
+   computing the covariance if the Jacobian is rank deficient.
 
 .. member:: int Covariance::Options::min_reciprocal_condition_number
 
@@ -2365,29 +2416,14 @@ cases.
       :math:`\sigma_{\text{max}}` are the minimum and maxiumum
       singular values of :math:`J` respectively.
 
-    2. ``SPARSE_CHOLESKY``
-
-       .. math::  \text{cholmod_rcond} < \text{min_reciprocal_conditioner_number}
-
-      Here cholmod_rcond is a crude estimate of the reciprocal
-      condition number of :math:`J^\top J` by using the maximum and
-      minimum diagonal entries of the Cholesky factor :math:`R`. There
-      are no theoretical guarantees associated with this test. It can
-      give false positives and negatives. Use at your own risk. The
-      default value of ``min_reciprocal_condition_number`` has been
-      set to a conservative value, and sometimes the
-      :func:`Covariance::Compute` may return false even if it is
-      possible to estimate the covariance reliably. In such cases, the
-      user should exercise their judgement before lowering the value
-      of ``min_reciprocal_condition_number``.
-
-    3. ``SPARSE_QR``
+   2. ``EIGEN_SPARSE_QR`` and ``SUITE_SPARSE_QR``
 
        .. math:: \operatorname{rank}(J) < \operatorname{num\_col}(J)
 
        Here :\math:`\operatorname{rank}(J)` is the estimate of the
-       rank of `J` returned by the ``SuiteSparseQR`` algorithm. It is
-       a fairly reliable indication of rank deficiency.
+       rank of `J` returned by the sparse QR factorization
+       algorithm. It is a fairly reliable indication of rank
+       deficiency.
 
 .. member:: int Covariance::Options::null_space_rank
 
@@ -2422,8 +2458,8 @@ cases.
 
     .. math::  \frac{\lambda_i}{\lambda_{\textrm{max}}} < \textrm{min_reciprocal_condition_number}
 
-    This option has no effect on ``SPARSE_QR`` and ``SPARSE_CHOLESKY``
-      algorithms.
+    This option has no effect on ``EIGEN_SPARSE_QR`` and
+    ``SUITE_SPARSE_QR``.
 
 .. member:: bool Covariance::Options::apply_loss_function
 

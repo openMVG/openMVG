@@ -368,6 +368,15 @@ class CERES_EXPORT Problem {
       const ResidualBlockId residual_block,
       vector<double*>* parameter_blocks) const;
 
+  // Get the CostFunction for the given residual block.
+  const CostFunction* GetCostFunctionForResidualBlock(
+      const ResidualBlockId residual_block) const;
+
+  // Get the LossFunction for the given residual block. Returns NULL
+  // if no loss function is associated with this residual block.
+  const LossFunction* GetLossFunctionForResidualBlock(
+      const ResidualBlockId residual_block) const;
+
   // Get all the residual blocks that depend on the given parameter block.
   //
   // If Problem::Options::enable_fast_removal is true, then
@@ -404,12 +413,11 @@ class CERES_EXPORT Problem {
     // The set of residual blocks to evaluate. This vector determines
     // the order in which the residuals occur, and how the rows of the
     // jacobian are ordered. If residual_blocks is empty, then it is
-    // assumed to be equal to the vector containing all the residual
-    // blocks. If this vector is empty, then it is assumed to be equal
-    // to a vector containing ALL the residual blocks. Generally
-    // speaking the residual blocks will occur in the order in which
-    // they were added to the problem. But, this may change if the
-    // user removes any residual blocks from the problem.
+    // assumed to be equal to the vector containing ALL the residual
+    // blocks. Generally speaking the residual blocks will occur in
+    // the order in which they were added to the problem. But, this
+    // may change if the user removes any residual blocks from the
+    // problem.
     vector<ResidualBlockId> residual_blocks;
 
     // Even though the residual blocks in the problem may contain loss

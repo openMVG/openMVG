@@ -59,7 +59,7 @@ ADD_SUBDIRECTORY(cxsparse)
 ADD_SUBDIRECTORY(ceres-solver)
 SET_PROPERTY(TARGET cxsparse PROPERTY FOLDER OpenMVG/3rdParty/ceres)
 SET_PROPERTY(TARGET ceres PROPERTY FOLDER OpenMVG/3rdParty/ceres)
-SET_PROPERTY(TARGET miniglog PROPERTY FOLDER OpenMVG/3rdParty/ceres)
+#SET_PROPERTY(TARGET glog PROPERTY FOLDER OpenMVG/3rdParty/ceres)
 
 # Add an Approximate Nearest Neighbor library
 ADD_SUBDIRECTORY(flann)
