@@ -591,19 +591,19 @@ IF (CMAKE_BUILD_TYPE STREQUAL "Release")
       ENDIF (GCC_VERSION VERSION_LESS 4.3)
     ENDIF (CMAKE_SYSTEM_NAME MATCHES "Darwin")
   ENDIF (CMAKE_COMPILER_IS_GNUCXX)
-  IF (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    # Use of -flto requires use of gold linker & LLVM-gold plugin, which might
-    # well not be present / in use and without which files will compile, but
-    # not link ('file not recognized') so explicitly check for support
-    INCLUDE(CheckCXXCompilerFlag)
-    CHECK_CXX_COMPILER_FLAG("-flto" HAVE_LTO_SUPPORT)
-    IF (HAVE_LTO_SUPPORT)
-      MESSAGE(STATUS "Enabling link-time optimization (-flto)")
-      SET(CERES_CXX_FLAGS "${CERES_CXX_FLAGS} -flto")
-    ELSE ()
-      MESSAGE(STATUS "Compiler/linker does not support link-time optimization (-flto), disabling.")
-    ENDIF (HAVE_LTO_SUPPORT)
-  ENDIF ()
+#  IF (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+#    # Use of -flto requires use of gold linker & LLVM-gold plugin, which might
+#    # well not be present / in use and without which files will compile, but
+#    # not link ('file not recognized') so explicitly check for support
+#    INCLUDE(CheckCXXCompilerFlag)
+#    CHECK_CXX_COMPILER_FLAG("-flto" HAVE_LTO_SUPPORT)
+#    IF (HAVE_LTO_SUPPORT)
+#      MESSAGE(STATUS "Enabling link-time optimization (-flto)")
+#      SET(CERES_CXX_FLAGS "${CERES_CXX_FLAGS} -flto")
+#    ELSE ()
+#      MESSAGE(STATUS "Compiler/linker does not support link-time optimization (-flto), disabling.")
+#    ENDIF (HAVE_LTO_SUPPORT)
+#  ENDIF ()
 ENDIF (CMAKE_BUILD_TYPE STREQUAL "Release")
 
 SET (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${CERES_CXX_FLAGS}")
