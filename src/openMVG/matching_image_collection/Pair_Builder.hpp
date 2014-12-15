@@ -28,6 +28,16 @@ PairsT exhaustivePairs(const size_t N)
   return pairs;
 }
 
+/// Generate all the (I,J) pairs with fixed I
+PairsT imagePairs(const size_t I, const std::vector<size_t>& indexes)
+{
+  PairsT pairs;
+  for(std::vector<size_t>::const_iterator it = indexes.begin(); it != indexes.end(); ++it)
+    if(I < *it)
+      pairs.insert(std::make_pair(I, *it));
+  return pairs;
+}
+
 /// Generate the pairs that have a distance inferior to the overlapSize
 /// Usable to match video sequence
 PairsT contiguousWithOverlap(const size_t N, const size_t overlapSize)
