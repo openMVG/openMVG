@@ -41,6 +41,7 @@
 
 #include "openMVG/features/akaze/mldb_descriptor.hpp"
 #include "openMVG/features/akaze/msurf_descriptor.hpp"
+#include "openMVG/features/liop/liop_descriptor.hpp"
 
 namespace openMVG {
 
@@ -246,6 +247,52 @@ bool AKAZEDetector<bool,486>(
 
     // Compute descriptor (FULL MLDB)
     ComputeMLDBDescriptor( cur_slice.cur , cur_slice.Lx , cur_slice.Ly , ptAkaze.octave , vec_feat[i] , vec_desc[i] ) ;
+  }
+  return true;
+}
+
+/// Compute AKAZE keypoints and their associated LIOP descriptors
+template<>
+#if (WIN32)
+static 
+#endif //WIN32
+  bool AKAZEDetector<unsigned char,144>(
+  const Image<unsigned char>& I,
+  std::vector<SIOPointFeature>& vec_feat,
+  std::vector<Descriptor<unsigned char,144> >& vec_desc,
+  AKAZEConfig options)
+  {
+  options.fDesc_factor = 10.f*sqrtf(2.f);
+
+  AKAZE akaze(I, options);
+  akaze.Compute_AKAZEScaleSpace();
+  std::vector<AKAZEKeypoint> kpts;
+  kpts.reserve(5000);
+  akaze.Feature_Detection(kpts);
+  akaze.Do_Subpixel_Refinement(kpts);
+
+  vec_feat.resize(kpts.size());
+  vec_desc.resize(kpts.size());
+
+  LIOP::Liop_Descriptor_Extractor liop_extractor;
+
+  #ifdef USE_OPENMP
+  #pragma omp parallel for schedule(dynamic)
+  #endif
+  for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
+  {
+    AKAZEKeypoint ptAkaze = kpts[i];
+    const TEvolution & cur_slice = akaze.getSlices()[ ptAkaze.class_id ] ;
+
+    vec_feat[i] = SIOPointFeature(ptAkaze.x, ptAkaze.y, ptAkaze.size, 0.f);
+
+    // Compute LIOP descriptor
+    SIOPointFeature fp = vec_feat[i];
+    fp.scale() = fp.scale() / 2.0; //rescale for LIOP patch extraction
+    float desc[144];
+    liop_extractor.extract(I, fp, desc);
+    for(int j=0; j < 144; ++j)
+      vec_desc[i][j] = static_cast<unsigned char>(desc[j] * 255.f +.5f);
   }
   return true;
 }
