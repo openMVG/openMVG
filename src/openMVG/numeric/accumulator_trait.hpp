@@ -8,6 +8,7 @@
 #define _OPENMVG_NUMERIC_ACCUMULATOR_TRAIT_HPP_
 
 /// Accumulator trait to perform safe summation over a specified type
+namespace openMVG {
 
 template<typename T>
 struct Accumulator { typedef T Type; };
@@ -23,5 +24,7 @@ template<>
 struct Accumulator<short>  { typedef float Type; };
 template<>
 struct Accumulator<int> { typedef float Type; };
+
+} // namespace openMVG
 
 #endif //_OPENMVG_NUMERIC_ACCUMULATOR_TRAIT_HPP_

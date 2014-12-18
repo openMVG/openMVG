@@ -260,9 +260,9 @@ void ImageSeparableConvolution( const Image<float> & img ,
 {
   // Cast the Kernel to the appropriate type
   typedef Image<float>::Tpixel pix_t;
-  typedef Eigen::Matrix<typename Accumulator<pix_t>::Type, Eigen::Dynamic, 1> VecKernel;
-  const VecKernel horiz_k_cast = horiz_k.template cast< typename Accumulator<pix_t>::Type >();
-  const VecKernel vert_k_cast = vert_k.template cast< typename Accumulator<pix_t>::Type >();
+  typedef Eigen::Matrix<typename openMVG::Accumulator<pix_t>::Type, Eigen::Dynamic, 1> VecKernel;
+  const VecKernel horiz_k_cast = horiz_k.template cast< typename openMVG::Accumulator<pix_t>::Type >();
+  const VecKernel vert_k_cast = vert_k.template cast< typename openMVG::Accumulator<pix_t>::Type >();
 
   out.resize(img.Width(), img.Height());
   SeparableConvolution2d(img.GetMat(), horiz_k_cast, vert_k_cast, &((Image<float>::Base&)out));
