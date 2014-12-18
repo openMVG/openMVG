@@ -26,10 +26,10 @@ using namespace std;
 int main() {
 
   Image<RGBColor> image;
-  string jpg_filenameL = stlplus::folder_up(string(THIS_SOURCE_DIR))
-    + "/imageData/StanfordMobileVisualSearch/Ace_0.png";
-  string jpg_filenameR = stlplus::folder_up(string(THIS_SOURCE_DIR))
-    + "/imageData/StanfordMobileVisualSearch/Ace_1.png";
+  const std::string jpg_filenameL =
+  stlplus::folder_up(string(THIS_SOURCE_DIR))  + "/imageData/StanfordMobileVisualSearch/Ace_0.png";
+  const std::string jpg_filenameR = 
+  stlplus::folder_up(string(THIS_SOURCE_DIR))  + "/imageData/StanfordMobileVisualSearch/Ace_1.png";
 
   Image<unsigned char> imageL, imageR;
   ReadImage(jpg_filenameL.c_str(), &imageL);
@@ -41,20 +41,24 @@ int main() {
   AKAZEConfig options;
 
 #define AKAZE_MSURF 1
+//#define AKAZE_LIOP 1
+
 #if defined AKAZE_MSURF
   typedef float descType;
   typedef Descriptor<descType,64> Descriptor_T;
   vector<Descriptor_T > descsL, descsR;
   AKAZEDetector<descType, 64>(imageL, featsL, descsL, options);
   AKAZEDetector<descType, 64>(imageR, featsR, descsR, options);
-#else
-  // MLDB
-  typedef bool descType;
-  typedef Descriptor<descType,486> Descriptor_T;
-  vector<Descriptor_T > descsL, descsR;
-  AKAZEDetector<descType, 486>(imageL, featsL, descsL, options);
-  AKAZEDetector<descType, 486>(imageR, featsR, descsR, options);
 #endif
+#if defined AKAZE_LIOP
+  // LIOP
+  typedef unsigned char descType;
+  typedef Descriptor<descType,144> Descriptor_T;
+  vector<Descriptor_T > descsL, descsR;
+  AKAZEDetector<descType, 144>(imageL, featsL, descsL, options);
+  AKAZEDetector<descType, 144>(imageR, featsR, descsR, options);
+#endif
+
 
   // Show both images side by side
   {
