@@ -297,7 +297,7 @@ int FEDCycleTimings( const Real T , const Real Tmax , std::vector< Real > & tau 
   const Real glo_fact = scale * Tmax / 2.0 ;
 
   // Compute cycle timings
-  tau.reserve( n ) ;
+  tau.resize( n ) ;
   for( int j = 0 ; j < n ; ++j )
   {
     const Real cos_j = cos( M_PI * ( static_cast<Real>( 2 * j + 1 ) ) * cos_fact ) ;
