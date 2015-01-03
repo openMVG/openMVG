@@ -34,6 +34,7 @@
 // Program and Problem machinery.
 
 #include <cmath>
+#include "ceres/autodiff_cost_function.h"
 #include "ceres/cost_function.h"
 #include "ceres/dense_qr_solver.h"
 #include "ceres/dense_sparse_matrix.h"
@@ -223,15 +224,14 @@ void IsTrustRegionSolveSuccessful(TrustRegionStrategyType strategy_type) {
   parameters[2] = (col3 ? parameters[2] : 0.0);
   parameters[3] = (col4 ? parameters[3] : 0.0);
 
-  PowellEvaluator2<col1, col2, col3, col4> powell_evaluator;
-  scoped_ptr<SparseMatrix> jacobian(powell_evaluator.CreateJacobian());
-
   Minimizer::Options minimizer_options(solver_options);
   minimizer_options.gradient_tolerance = 1e-26;
   minimizer_options.function_tolerance = 1e-26;
   minimizer_options.parameter_tolerance = 1e-26;
-  minimizer_options.evaluator = &powell_evaluator;
-  minimizer_options.jacobian = jacobian.get();
+  minimizer_options.evaluator.reset(
+      new PowellEvaluator2<col1, col2, col3, col4>);
+  minimizer_options.jacobian.reset(
+      minimizer_options.evaluator->CreateJacobian());
 
   TrustRegionStrategy::Options trust_region_strategy_options;
   trust_region_strategy_options.trust_region_strategy_type = strategy_type;
@@ -240,9 +240,8 @@ void IsTrustRegionSolveSuccessful(TrustRegionStrategyType strategy_type) {
   trust_region_strategy_options.max_radius = 1e20;
   trust_region_strategy_options.min_lm_diagonal = 1e-6;
   trust_region_strategy_options.max_lm_diagonal = 1e32;
-  scoped_ptr<TrustRegionStrategy> strategy(
+  minimizer_options.trust_region_strategy.reset(
       TrustRegionStrategy::Create(trust_region_strategy_options));
-  minimizer_options.trust_region_strategy = strategy.get();
 
   TrustRegionMinimizer minimizer;
   Solver::Summary summary;
@@ -394,6 +393,32 @@ TEST(TrustRegionMinimizer, JacobiScalingTest) {
   for (int i = 0; i < N; i++) {
     delete []y[i];
   }
+}
+
+struct ExpCostFunctor {
+  template <typename T>
+  bool operator()(const T* const x, T* residual) const {
+    residual[0] = T(10.0) - exp(x[0]);
+    return true;
+  }
+
+  static CostFunction* Create() {
+    return new AutoDiffCostFunction<ExpCostFunctor, 1, 1>(
+        new ExpCostFunctor);
+  }
+};
+
+TEST(TrustRegionMinimizer, GradientToleranceConvergenceUpdatesStep) {
+  double x = 5;
+  Problem problem;
+  problem.AddResidualBlock(ExpCostFunctor::Create(), NULL, &x);
+  problem.SetParameterLowerBound(&x, 0, 3.0);
+  Solver::Options options;
+  Solver::Summary summary;
+  Solve(options, &problem, &summary);
+  EXPECT_NEAR(3.0, x, 1e-12);
+  const double expected_final_cost = 0.5 * pow(10.0 - exp(3.0), 2);
+  EXPECT_NEAR(expected_final_cost, summary.final_cost, 1e-12);
 }
 
 }  // namespace internal

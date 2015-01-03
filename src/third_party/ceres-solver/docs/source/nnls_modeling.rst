@@ -2,17 +2,20 @@
 
 .. cpp:namespace:: ceres
 
-.. _`chapter-modeling`:
+.. _`chapter-nnls_modeling`:
 
-========
-Modeling
-========
+=================================
+Modeling Non-linear Least Squares
+=================================
+
+Introduction
+============
 
 Ceres solver consists of two distinct parts. A modeling API which
 provides a rich set of tools to construct an optimization problem one
 term at a time and a solver API that controls the minimization
 algorithm. This chapter is devoted to the task of modeling
-optimization problems using Ceres. :ref:`chapter-solving` discusses
+optimization problems using Ceres. :ref:`chapter-nnls_solving` discusses
 the various ways in which an optimization problem can be solved using
 Ceres.
 
@@ -55,7 +58,7 @@ the more familiar unconstrained `non-linear least squares problem
    \frac{1}{2}\sum_{i} \left\|f_i\left(x_{i_1}, ... ,x_{i_k}\right)\right\|^2.
 
 :class:`CostFunction`
----------------------
+=====================
 
 For each term in the objective function, a :class:`CostFunction` is
 responsible for computing a vector of residuals and if asked a vector
@@ -130,7 +133,7 @@ the corresponding accessors. This information will be verified by the
    computations for instance.
 
 :class:`SizedCostFunction`
---------------------------
+==========================
 
 .. class:: SizedCostFunction
 
@@ -154,7 +157,7 @@ the corresponding accessors. This information will be verified by the
 
 
 :class:`AutoDiffCostFunction`
------------------------------
+=============================
 
 .. class:: AutoDiffCostFunction
 
@@ -184,7 +187,7 @@ the corresponding accessors. This information will be verified by the
        // Ignore the template parameter kNumResiduals and use
        // num_residuals instead.
        AutoDiffCostFunction(CostFunctor* functor, int num_residuals);
-     }
+     }g
 
    To get an auto differentiated cost function, you must define a
    class with a templated ``operator()`` (a functor) that computes the
@@ -294,7 +297,7 @@ the corresponding accessors. This information will be verified by the
 
 
 :class:`DynamicAutoDiffCostFunction`
-------------------------------------
+====================================
 
 .. class:: DynamicAutoDiffCostFunction
 
@@ -349,7 +352,7 @@ the corresponding accessors. This information will be verified by the
    you use :class:`DynamicAutoDiffCostFunction`.
 
 :class:`NumericDiffCostFunction`
---------------------------------
+================================
 
 .. class:: NumericDiffCostFunction
 
@@ -523,7 +526,7 @@ the corresponding accessors. This information will be verified by the
    example.
 
 :class:`DynamicNumericDiffCostFunction`
----------------------------------------
+=======================================
 
 .. class:: DynamicNumericDiffCostFunction
 
@@ -567,105 +570,15 @@ the corresponding accessors. This information will be verified by the
    As a rule of thumb, try using :class:`NumericDiffCostFunction` before
    you use :class:`DynamicNumericDiffCostFunction`.
 
-
-:class:`NumericDiffFunctor`
----------------------------
-
-.. class:: NumericDiffFunctor
-
-   Sometimes parts of a cost function can be differentiated
-   automatically or analytically but others require numeric
-   differentiation. :class:`NumericDiffFunctor` is a wrapper class
-   that takes a variadic functor evaluating a function, numerically
-   differentiates it and makes it available as a templated functor so
-   that it can be easily used as part of Ceres' automatic
-   differentiation framework.
-
-   For example, let us assume that
-
-   .. code-block:: c++
-
-     struct IntrinsicProjection
-       IntrinsicProjection(const double* observations);
-       bool operator()(const double* calibration,
-                       const double* point,
-                       double* residuals);
-     };
-
-   is a functor that implements the projection of a point in its local
-   coordinate system onto its image plane and subtracts it from the
-   observed point projection.
-
-   Now we would like to compose the action of this functor with the
-   action of camera extrinsics, i.e., rotation and translation, which
-   is given by the following templated function
-
-   .. code-block:: c++
-
-     template<typename T>
-     void RotateAndTranslatePoint(const T* rotation,
-                                  const T* translation,
-                                  const T* point,
-                                  T* result);
-
-   To compose the extrinsics and intrinsics, we can construct a
-   ``CameraProjection`` functor as follows.
-
-   .. code-block:: c++
-
-    struct CameraProjection {
-       typedef NumericDiffFunctor<IntrinsicProjection, CENTRAL, 2, 5, 3>
-          IntrinsicProjectionFunctor;
-
-      CameraProjection(double* observation) {
-        intrinsic_projection_.reset(
-            new IntrinsicProjectionFunctor(observation)) {
-      }
-
-      template <typename T>
-      bool operator()(const T* rotation,
-                      const T* translation,
-                      const T* intrinsics,
-                      const T* point,
-                      T* residuals) const {
-        T transformed_point[3];
-        RotateAndTranslatePoint(rotation, translation, point, transformed_point);
-        return (*intrinsic_projection_)(intrinsics, transformed_point, residual);
-      }
-
-     private:
-      scoped_ptr<IntrinsicProjectionFunctor> intrinsic_projection_;
-    };
-
-   Here, we made the choice of using ``CENTRAL`` differences to compute
-   the jacobian of ``IntrinsicProjection``.
-
-   Now, we are ready to construct an automatically differentiated cost
-   function as
-
-   .. code-block:: c++
-
-    CostFunction* cost_function =
-        new AutoDiffCostFunction<CameraProjection, 2, 3, 3, 5>(
-           new CameraProjection(observations));
-
-   ``cost_function`` now seamlessly integrates automatic
-   differentiation of ``RotateAndTranslatePoint`` with a numerically
-   differentiated version of ``IntrinsicProjection``.
-
-
 :class:`CostFunctionToFunctor`
-------------------------------
+==============================
 
 .. class:: CostFunctionToFunctor
 
-   Just like :class:`NumericDiffFunctor` allows numeric
-   differentiation to be mixed with automatic differentiation,
-   :class:`CostFunctionToFunctor` provides an even more general
-   mechanism.  :class:`CostFunctionToFunctor` is an adapter class that
-   allows users to use :class:`CostFunction` objects in templated
-   functors which are to be used for automatic differentiation.  This
-   allows the user to seamlessly mix analytic, numeric and automatic
+   :class:`CostFunctionToFunctor` is an adapter class that allows
+   users to use :class:`CostFunction` objects in templated functors
+   which are to be used for automatic differentiation. This allows
+   the user to seamlessly mix analytic, numeric and automatic
    differentiation.
 
    For example, let us assume that
@@ -704,10 +617,10 @@ the corresponding accessors. This information will be verified by the
    .. code-block:: c++
 
     struct CameraProjection {
-      CameraProjection(double* observation) {
-        intrinsic_projection_.reset(
-            new CostFunctionToFunctor<2, 5, 3>(new IntrinsicProjection(observation_)));
+      CameraProjection(double* observation)
+      : intrinsic_projection_(new IntrinsicProjection(observation_)) {
       }
+
       template <typename T>
       bool operator()(const T* rotation,
                       const T* translation,
@@ -719,17 +632,74 @@ the corresponding accessors. This information will be verified by the
 
         // Note that we call intrinsic_projection_, just like it was
         // any other templated functor.
-        return (*intrinsic_projection_)(intrinsics, transformed_point, residual);
+        return intrinsic_projection_(intrinsics, transformed_point, residual);
       }
 
      private:
-      scoped_ptr<CostFunctionToFunctor<2,5,3> > intrinsic_projection_;
+      CostFunctionToFunctor<2,5,3> intrinsic_projection_;
     };
 
 
+   In the above example, we assumed that ``IntrinsicProjection`` is a
+   ``CostFunction`` capable of evaluating its value and its
+   derivatives. Suppose, if that were not the case and
+   ``IntrinsicProjection`` was defined as follows:
+
+   .. code-block:: c++
+
+    struct IntrinsicProjection
+      IntrinsicProjection(const double* observations) {
+        observations_[0] = observations[0];
+        observations_[1] = observations[1];
+      }
+
+      bool operator()(const double* calibration,
+                      const double* point,
+                      double* residuals) {
+        double projection[2];
+        ThirdPartyProjectionFunction(calibration, point, projection);
+        residuals[0] = observations_[0] - projection[0];
+        residuals[1] = observations_[1] - projection[1];
+        return true;
+      }
+     double observations_[2];
+    };
+
+
+  Here ``ThirdPartyProjectionFunction`` is some third party library
+  function that we have no control over. So this function can compute
+  its value and we would like to use numeric differentiation to
+  compute its derivatives. In this case we can use a combination of
+  ``NumericDiffCostFunction`` and ``CostFunctionToFunctor`` to get the
+  job done.
+
+  .. code-block:: c++
+
+   struct CameraProjection {
+     CameraProjection(double* observation)
+       intrinsic_projection_(
+         new NumericDiffCostFunction<IntrinsicProjection, CENTRAL, 2, 5, 3>(
+           new IntrinsicProjection(observations)) {
+     }
+
+     template <typename T>
+     bool operator()(const T* rotation,
+                     const T* translation,
+                     const T* intrinsics,
+                     const T* point,
+                     T* residuals) const {
+       T transformed_point[3];
+       RotateAndTranslatePoint(rotation, translation, point, transformed_point);
+       return intrinsic_projection_(intrinsics, transformed_point, residual);
+     }
+
+    private:
+     CostFunctionToFunctor<2,5,3> intrinsic_projection_;
+   };
+
 
 :class:`ConditionedCostFunction`
---------------------------------
+================================
 
 .. class:: ConditionedCostFunction
 
@@ -770,7 +740,7 @@ the corresponding accessors. This information will be verified by the
 
 
 :class:`NormalPrior`
---------------------
+====================
 
 .. class:: NormalPrior
 
@@ -791,8 +761,8 @@ the corresponding accessors. This information will be verified by the
 
    .. math::  cost(x) = ||A(x - b)||^2
 
-   where, the matrix A and the vector b are fixed and x is the
-   variable. In case the user is interested in implementing a cost
+   where, the matrix :math:`A` and the vector :math:`b` are fixed and :math:`x`
+   is the variable. In case the user is interested in implementing a cost
    function of the form
 
   .. math::  cost(x) = (x - \mu)^T S^{-1} (x - \mu)
@@ -809,7 +779,7 @@ the corresponding accessors. This information will be verified by the
 .. _`section-loss_function`:
 
 :class:`LossFunction`
----------------------
+=====================
 
 .. class:: LossFunction
 
@@ -883,7 +853,7 @@ the corresponding accessors. This information will be verified by the
    its square.
 
 Instances
-^^^^^^^^^
+---------
 
 Ceres includes a number of predefined loss functions. For simplicity
 we described their unscaled versions. The figure below illustrates
@@ -946,7 +916,7 @@ their shape graphically. More details can be found in
    Given a loss function :math:`\rho(s)` and a scalar :math:`a`, :class:`ScaledLoss`
    implements the function :math:`a \rho(s)`.
 
-   Since we treat the a ``NULL`` Loss function as the Identity loss
+   Since we treat a ``NULL`` Loss function as the Identity loss
    function, :math:`rho` = ``NULL``: is a valid input and will result
    in the input being scaled by :math:`a`. This provides a simple way
    of implementing a scaled ResidualBlock.
@@ -963,7 +933,7 @@ their shape graphically. More details can be found in
 
    This templated class allows the user to implement a loss function
    whose scale can be mutated after an optimization problem has been
-   constructed. e.g,
+   constructed, e.g,
 
    .. code-block:: c++
 
@@ -987,7 +957,7 @@ their shape graphically. More details can be found in
 
 
 Theory
-^^^^^^
+------
 
 Let us consider a problem with a single problem and a single parameter
 block.
@@ -1036,7 +1006,7 @@ problems.
 
 
 :class:`LocalParameterization`
-------------------------------
+==============================
 
 .. class:: LocalParameterization
 
@@ -1049,6 +1019,10 @@ problems.
                          const double* delta,
                          double* x_plus_delta) const = 0;
        virtual bool ComputeJacobian(const double* x, double* jacobian) const = 0;
+       virtual bool MultiplyByJacobian(const double* x,
+                                       const int num_rows,
+                                       const double* global_matrix,
+                                       double* local_matrix) const;
        virtual int GlobalSize() const = 0;
        virtual int LocalSize() const = 0;
      };
@@ -1113,8 +1087,19 @@ problems.
 
    in row major form.
 
+.. function:: bool MultiplyByJacobian(const double* x, const int num_rows, const double* global_matrix, double* local_matrix) const
+
+   local_matrix = global_matrix * jacobian
+
+   global_matrix is a num_rows x GlobalSize  row major matrix.
+   local_matrix is a num_rows x LocalSize row major matrix.
+   jacobian is the matrix returned by :func:`LocalParameterization::ComputeJacobian` at :math:`x`.
+
+   This is only used by GradientProblem. For most normal uses, it is
+   okay to use the default implementation.
+
 Instances
-^^^^^^^^^
+---------
 
 .. class:: IdentityParameterization
 
@@ -1157,7 +1142,7 @@ Instances
 
 
 :class:`AutoDiffLocalParameterization`
---------------------------------------
+======================================
 
 .. class:: AutoDiffLocalParameterization
 
@@ -1174,9 +1159,9 @@ Instances
      .. math:: x' = \boxplus(x, \Delta x),
 
   For example, Quaternions have a three dimensional local
-  parameterization. It's plus operation can be implemented as (taken
-  from `internal/ceres/auto_diff_local_parameterization_test.cc
-  <https://ceres-solver.googlesource.com/ceres-solver/+/master/include/ceres/local_parameterization.h>`_
+  parameterization. Its plus operation can be implemented as (taken
+  from `internal/ceres/autodiff_local_parameterization_test.cc
+  <https://ceres-solver.googlesource.com/ceres-solver/+/master/internal/ceres/autodiff_local_parameterization_test.cc>`_
   )
 
     .. code-block:: c++
@@ -1211,7 +1196,7 @@ Instances
         }
       };
 
-  Then given this struct, the auto differentiated local
+  Given this struct, the auto differentiated local
   parameterization can now be constructed as
 
   .. code-block:: c++
@@ -1230,7 +1215,7 @@ Instances
 
 
 :class:`Problem`
-----------------
+================
 
 .. class:: Problem
 
@@ -1413,76 +1398,76 @@ Instances
    parameterizations only once. The local parameterization can only be
    set once per parameter, and cannot be changed once set.
 
-.. function LocalParameterization* Problem::GetParameterization(double* values) const;
+.. function:: LocalParameterization* Problem::GetParameterization(double* values) const
 
    Get the local parameterization object associated with this
    parameter block. If there is no parameterization object associated
    then `NULL` is returned
 
-.. function void Problem::SetParameterLowerBound(double* values, int index, double lower_bound);
+.. function:: void Problem::SetParameterLowerBound(double* values, int index, double lower_bound)
 
    Set the lower bound for the parameter at position `index` in the
    parameter block corresponding to `values`. By default the lower
    bound is :math:`-\infty`.
 
-.. function void Problem::SetParameterUpperBound(double* values, int index, double upper_bound);
+.. function:: void Problem::SetParameterUpperBound(double* values, int index, double upper_bound)
 
    Set the upper bound for the parameter at position `index` in the
    parameter block corresponding to `values`. By default the value is
    :math:`\infty`.
 
-.. function int Problem::NumParameterBlocks() const
+.. function:: int Problem::NumParameterBlocks() const
 
    Number of parameter blocks in the problem. Always equals
    parameter_blocks().size() and parameter_block_sizes().size().
 
-.. function int Problem::NumParameters() const
+.. function:: int Problem::NumParameters() const
 
    The size of the parameter vector obtained by summing over the sizes
    of all the parameter blocks.
 
-.. function int Problem::NumResidualBlocks() const
+.. function:: int Problem::NumResidualBlocks() const
 
    Number of residual blocks in the problem. Always equals
    residual_blocks().size().
 
-.. function int Problem::NumResiduals() const
+.. function:: int Problem::NumResiduals() const
 
    The size of the residual vector obtained by summing over the sizes
    of all of the residual blocks.
 
-.. function int Problem::ParameterBlockSize(const double* values) const
+.. function:: int Problem::ParameterBlockSize(const double* values) const
 
    The size of the parameter block.
 
-.. function int Problem::ParameterBlockLocalSize(const double* values) const
+.. function:: int Problem::ParameterBlockLocalSize(const double* values) const
 
    The size of local parameterization for the parameter block. If
    there is no local parameterization associated with this parameter
    block, then ``ParameterBlockLocalSize`` = ``ParameterBlockSize``.
 
-.. function bool Problem::HasParameterBlock(const double* values) const;
+.. function:: bool Problem::HasParameterBlock(const double* values) const
 
    Is the given parameter block present in the problem or not?
 
-.. function void Problem::GetParameterBlocks(vector<double*>* parameter_blocks) const
+.. function:: void Problem::GetParameterBlocks(vector<double*>* parameter_blocks) const
 
    Fills the passed ``parameter_blocks`` vector with pointers to the
    parameter blocks currently in the problem. After this call,
    ``parameter_block.size() == NumParameterBlocks``.
 
-.. function void Problem::GetResidualBlocks(vector<ResidualBlockId>* residual_blocks) const
+.. function:: void Problem::GetResidualBlocks(vector<ResidualBlockId>* residual_blocks) const
 
    Fills the passed `residual_blocks` vector with pointers to the
    residual blocks currently in the problem. After this call,
    `residual_blocks.size() == NumResidualBlocks`.
 
-.. function void Problem::GetParameterBlocksForResidualBlock(const ResidualBlockId residual_block, vector<double*>* parameter_blocks) const
+.. function:: void Problem::GetParameterBlocksForResidualBlock(const ResidualBlockId residual_block, vector<double*>* parameter_blocks) const
 
    Get all the parameter blocks that depend on the given residual
    block.
 
-.. function void Problem::GetResidualBlocksForParameterBlock(const double* values, vector<ResidualBlockId>* residual_blocks) const
+.. function:: void Problem::GetResidualBlocksForParameterBlock(const double* values, vector<ResidualBlockId>* residual_blocks) const
 
    Get all the residual blocks that depend on the given parameter
    block.
@@ -1493,7 +1478,15 @@ Instances
    blocks for a parameter block will incur a scan of the entire
    :class:`Problem` object.
 
-.. function bool Problem::Evaluate(const Problem::EvaluateOptions& options, double* cost, vector<double>* residuals, vector<double>* gradient, CRSMatrix* jacobian)
+.. function:: const CostFunction* GetCostFunctionForResidualBlock(const ResidualBlockId residual_block) const
+
+   Get the :class:`CostFunction` for the given residual block.
+
+.. function:: const LossFunction* GetLossFunctionForResidualBlock(const ResidualBlockId residual_block) const
+
+   Get the :class:`LossFunction` for the given residual block.
+
+.. function:: bool Problem::Evaluate(const Problem::EvaluateOptions& options, double* cost, vector<double>* residuals, vector<double>* gradient, CRSMatrix* jacobian)
 
    Evaluate a :class:`Problem`. Any of the output pointers can be
    `NULL`. Which residual blocks and parameter blocks are used is
@@ -1552,7 +1545,7 @@ Instances
    vector containing all the parameter blocks.
 
 ``rotation.h``
---------------
+==============
 
 Many applications of Ceres Solver involve optimization problems where
 some of the variables correspond to rotations. To ease the pain of
@@ -1652,7 +1645,7 @@ within Ceres Solver's automatic differentiation framework.
 
 .. function:: void QuaternionRotatePoint<T>(const T q[4], const T pt[3], T result[3])
 
-   With this function you do not need to assume that q has unit norm.
+   With this function you do not need to assume that :math:`q` has unit norm.
    It does assume that the norm is non-zero.
 
 .. function:: void QuaternionProduct<T>(const T z[4], const T w[4], T zw[4])

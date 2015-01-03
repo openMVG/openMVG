@@ -15,6 +15,8 @@ docs/html
 *.bbl
 *.log
 *.synctex.gz
+ceres.pdf
+ceres-solver.pdf
 docs/minted.sty
 obj/
 jni/libs/

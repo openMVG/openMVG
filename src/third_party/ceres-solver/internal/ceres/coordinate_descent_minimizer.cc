@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2012 Google Inc. All rights reserved.
+// Copyright 2014 Google Inc. All rights reserved.
 // http://code.google.com/p/ceres-solver/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -40,15 +40,15 @@
 #include "ceres/evaluator.h"
 #include "ceres/linear_solver.h"
 #include "ceres/minimizer.h"
-#include "ceres/ordered_groups.h"
 #include "ceres/parameter_block.h"
+#include "ceres/parameter_block_ordering.h"
 #include "ceres/problem_impl.h"
 #include "ceres/program.h"
 #include "ceres/residual_block.h"
 #include "ceres/solver.h"
-#include "ceres/solver_impl.h"
 #include "ceres/trust_region_minimizer.h"
 #include "ceres/trust_region_strategy.h"
+#include "ceres/parameter_block_ordering.h"
 
 namespace ceres {
 namespace internal {
@@ -140,15 +140,24 @@ void CoordinateDescentMinimizer::Minimize(
   }
 
   for (int i = 0; i < independent_set_offsets_.size() - 1; ++i) {
-    // No point paying the price for an OpemMP call if the set if of
+    const int num_problems =
+        independent_set_offsets_[i + 1] - independent_set_offsets_[i];
+    // No point paying the price for an OpemMP call if the set is of
     // size zero.
-    if (independent_set_offsets_[i] ==  independent_set_offsets_[i + 1]) {
+    if (num_problems == 0) {
       continue;
     }
 
+#ifdef CERES_USE_OPENMP
+    const int num_inner_iteration_threads =
+        min(options.num_threads, num_problems);
+    evaluator_options_.num_threads =
+        max(1, options.num_threads / num_inner_iteration_threads);
+
     // The parameter blocks in each independent set can be optimized
     // in parallel, since they do not co-occur in any residual block.
-#pragma omp parallel for num_threads(options.num_threads)
+#pragma omp parallel for num_threads(num_inner_iteration_threads)
+#endif
     for (int j = independent_set_offsets_[i];
          j < independent_set_offsets_[i + 1];
          ++j) {
@@ -210,27 +219,53 @@ void CoordinateDescentMinimizer::Solve(Program* program,
   summary->final_cost = 0.0;
   string error;
 
-  scoped_ptr<Evaluator> evaluator(
-      Evaluator::Create(evaluator_options_, program,  &error));
-  CHECK_NOTNULL(evaluator.get());
-
-  scoped_ptr<SparseMatrix> jacobian(evaluator->CreateJacobian());
-  CHECK_NOTNULL(jacobian.get());
+  Minimizer::Options minimizer_options;
+  minimizer_options.evaluator.reset(
+      CHECK_NOTNULL(Evaluator::Create(evaluator_options_, program,  &error)));
+  minimizer_options.jacobian.reset(
+      CHECK_NOTNULL(minimizer_options.evaluator->CreateJacobian()));
 
   TrustRegionStrategy::Options trs_options;
   trs_options.linear_solver = linear_solver;
-
-  scoped_ptr<TrustRegionStrategy>trust_region_strategy(
+  minimizer_options.trust_region_strategy.reset(
       CHECK_NOTNULL(TrustRegionStrategy::Create(trs_options)));
-
-  Minimizer::Options minimizer_options;
-  minimizer_options.evaluator = evaluator.get();
-  minimizer_options.jacobian = jacobian.get();
-  minimizer_options.trust_region_strategy = trust_region_strategy.get();
   minimizer_options.is_silent = true;
 
   TrustRegionMinimizer minimizer;
   minimizer.Minimize(minimizer_options, parameter, summary);
+}
+
+bool CoordinateDescentMinimizer::IsOrderingValid(
+    const Program& program,
+    const ParameterBlockOrdering& ordering,
+    string* message) {
+  const map<int, set<double*> >& group_to_elements =
+      ordering.group_to_elements();
+
+  // Verify that each group is an independent set
+  map<int, set<double*> >::const_iterator it = group_to_elements.begin();
+  for ( ; it != group_to_elements.end(); ++it) {
+    if (!program.IsParameterBlockSetIndependent(it->second)) {
+      *message =
+          StringPrintf("The user-provided "
+                       "parameter_blocks_for_inner_iterations does not "
+                       "form an independent set. Group Id: %d", it->first);
+      return false;
+    }
+  }
+  return true;
+}
+
+// Find a recursive decomposition of the Hessian matrix as a set
+// of independent sets of decreasing size and invert it. This
+// seems to work better in practice, i.e., Cameras before
+// points.
+ParameterBlockOrdering* CoordinateDescentMinimizer::CreateOrdering(
+    const Program& program) {
+  scoped_ptr<ParameterBlockOrdering> ordering(new ParameterBlockOrdering);
+  ComputeRecursiveIndependentSetOrdering(program, ordering.get());
+  ordering->Reverse();
+  return ordering.release();
 }
 
 }  // namespace internal

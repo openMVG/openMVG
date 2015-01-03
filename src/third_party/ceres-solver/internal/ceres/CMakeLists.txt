@@ -43,6 +43,7 @@ SET(CERES_INTERNAL_SRC
     c_api.cc
     canonical_views_clustering.cc
     cgnr_solver.cc
+    callbacks.cc
     compressed_col_sparse_matrix_utils.cc
     compressed_row_jacobian_writer.cc
     compressed_row_sparse_matrix.cc
@@ -63,6 +64,8 @@ SET(CERES_INTERNAL_SRC
     evaluator.cc
     file.cc
     gradient_checking_cost_function.cc
+    gradient_problem.cc
+    gradient_problem_solver.cc
     implicit_schur_complement.cc
     incomplete_lq_factorization.cc
     iterative_schur_complement_solver.cc
@@ -71,6 +74,7 @@ SET(CERES_INTERNAL_SRC
     line_search.cc
     line_search_direction.cc
     line_search_minimizer.cc
+    line_search_preprocessor.cc
     linear_least_squares_problems.cc
     linear_operator.cc
     linear_solver.cc
@@ -83,9 +87,11 @@ SET(CERES_INTERNAL_SRC
     partitioned_matrix_view.cc
     polynomial.cc
     preconditioner.cc
+    preprocessor.cc
     problem.cc
     problem_impl.cc
     program.cc
+    reorder_program.cc
     residual_block.cc
     residual_block_utils.cc
     schur_complement_solver.cc
@@ -94,13 +100,14 @@ SET(CERES_INTERNAL_SRC
     scratch_evaluate_preparer.cc
     single_linkage_clustering.cc
     solver.cc
-    solver_impl.cc
+    solver_utils.cc
     sparse_matrix.cc
     sparse_normal_cholesky_solver.cc
     split.cc
     stringprintf.cc
     suitesparse.cc
     triplet_sparse_matrix.cc
+    trust_region_preprocessor.cc
     trust_region_minimizer.cc
     trust_region_strategy.cc
     types.cc
@@ -133,18 +140,10 @@ ELSE (SCHUR_SPECIALIZATIONS)
   FILE(GLOB CERES_INTERNAL_SCHUR_FILES generated/*_d_d_d.cc)
 ENDIF (SCHUR_SPECIALIZATIONS)
 
-# Primarily for Android, but optionally for others, use the minimal internal
-# Glog implementation.
-IF (MINIGLOG)
-  ADD_LIBRARY(miniglog STATIC miniglog/glog/logging.cc)
-  INSTALL(TARGETS miniglog
-          EXPORT  CeresExport
-          RUNTIME DESTINATION bin
-          LIBRARY DESTINATION lib${LIB_SUFFIX}
-          ARCHIVE DESTINATION lib${LIB_SUFFIX})
-ENDIF (MINIGLOG)
-
-SET(CERES_LIBRARY_PUBLIC_DEPENDENCIES ${GLOG_LIBRARIES})
+# Build the list of dependencies for Ceres based on the current configuration.
+IF (NOT MINIGLOG AND GLOG_FOUND)
+  LIST(APPEND CERES_LIBRARY_PUBLIC_DEPENDENCIES ${GLOG_LIBRARIES})
+ENDIF (NOT MINIGLOG AND GLOG_FOUND)
 
 IF (SUITESPARSE AND SUITESPARSE_FOUND)
   LIST(APPEND CERES_LIBRARY_PRIVATE_DEPENDENCIES ${SUITESPARSE_LIBRARIES})
@@ -170,6 +169,12 @@ SET(CERES_LIBRARY_SOURCE
     ${CERES_INTERNAL_SRC}
     ${CERES_INTERNAL_HDRS}
     ${CERES_INTERNAL_SCHUR_FILES})
+
+# Primarily for Android, but optionally for others, compile the minimal
+# glog implementation into Ceres.
+IF (MINIGLOG)
+  LIST(APPEND CERES_LIBRARY_SOURCE miniglog/glog/logging.cc)
+ENDIF (MINIGLOG)
 
 ADD_LIBRARY(ceres ${CERES_LIBRARY_SOURCE})
 SET_TARGET_PROPERTIES(ceres PROPERTIES
@@ -200,14 +205,26 @@ INSTALL(TARGETS ceres
         ARCHIVE DESTINATION lib${LIB_SUFFIX})
 
 IF (BUILD_TESTING AND GFLAGS)
+  # The CERES_GFLAGS_NAMESPACE compile definition is NOT stored in
+  # CERES_COMPILE_OPTIONS (and thus config.h) as Ceres itself does not
+  # require gflags, only the tests and examples do.
+  ADD_DEFINITIONS(-DCERES_GFLAGS_NAMESPACE=${GFLAGS_NAMESPACE})
+
   ADD_LIBRARY(gtest gmock_gtest_all.cc gmock_main.cc)
   ADD_LIBRARY(test_util
               evaluator_test_utils.cc
               numeric_diff_test_utils.cc
               test_util.cc)
 
-  TARGET_LINK_LIBRARIES(gtest ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES})
-  TARGET_LINK_LIBRARIES(test_util ceres gtest ${GLOG_LIBRARIES})
+  IF (MINIGLOG)
+    # When using miniglog, it is compiled into Ceres, thus Ceres becomes
+    # the library against which other libraries should link for logging.
+    TARGET_LINK_LIBRARIES(gtest ${GFLAGS_LIBRARIES} ceres)
+    TARGET_LINK_LIBRARIES(test_util ceres gtest)
+  ELSE (MINIGLOG)
+    TARGET_LINK_LIBRARIES(gtest ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES})
+    TARGET_LINK_LIBRARIES(test_util ceres gtest ${GLOG_LIBRARIES})
+  ENDIF (MINIGLOG)
 
   MACRO (CERES_TEST NAME)
     ADD_EXECUTABLE(${NAME}_test ${NAME}_test.cc)
@@ -222,6 +239,7 @@ IF (BUILD_TESTING AND GFLAGS)
   CERES_TEST(autodiff)
   CERES_TEST(autodiff_cost_function)
   CERES_TEST(autodiff_local_parameterization)
+  CERES_TEST(block_jacobi_preconditioner)
   CERES_TEST(block_random_access_dense_matrix)
   CERES_TEST(block_random_access_diagonal_matrix)
   CERES_TEST(block_random_access_sparse_matrix)
@@ -248,18 +266,20 @@ IF (BUILD_TESTING AND GFLAGS)
   CERES_TEST(jet)
   CERES_TEST(levenberg_marquardt_strategy)
   CERES_TEST(dogleg_strategy)
+  CERES_TEST(line_search_preprocessor)
   CERES_TEST(local_parameterization)
   CERES_TEST(loss_function)
   CERES_TEST(minimizer)
   CERES_TEST(normal_prior)
   CERES_TEST(numeric_diff_cost_function)
-  CERES_TEST(numeric_diff_functor)
   CERES_TEST(ordered_groups)
   CERES_TEST(parameter_block)
   CERES_TEST(parameter_block_ordering)
   CERES_TEST(partitioned_matrix_view)
   CERES_TEST(polynomial)
   CERES_TEST(problem)
+  CERES_TEST(program)
+  CERES_TEST(reorder_program)
   CERES_TEST(residual_block)
   CERES_TEST(residual_block_utils)
   CERES_TEST(rotation)
@@ -267,7 +287,7 @@ IF (BUILD_TESTING AND GFLAGS)
   CERES_TEST(schur_eliminator)
   CERES_TEST(single_linkage_clustering)
   CERES_TEST(small_blas)
-  CERES_TEST(solver_impl)
+  CERES_TEST(solver)
 
   # TODO(sameeragarwal): This test should ultimately be made
   # independent of SuiteSparse.
@@ -278,6 +298,7 @@ IF (BUILD_TESTING AND GFLAGS)
   CERES_TEST(symmetric_linear_solver)
   CERES_TEST(triplet_sparse_matrix)
   CERES_TEST(trust_region_minimizer)
+  CERES_TEST(trust_region_preprocessor)
   CERES_TEST(unsymmetric_linear_solver)
   CERES_TEST(visibility)
   CERES_TEST(visibility_based_preconditioner)

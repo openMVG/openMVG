@@ -9,6 +9,7 @@
 #include "testing/testing.h"
 
 #include <iostream>
+#include <algorithm>
 using namespace std;
 
 using namespace openMVG;
@@ -57,14 +58,40 @@ TEST(matching_image_collection, contiguousWithOverlap)
 TEST(matching_image_collection, IO)
 {
   PairsT pairSetGT;
-  pairSetGT.insert( std::make_pair(0,2) );
-  pairSetGT.insert( std::make_pair(2,4) );
+  pairSetGT.insert( std::make_pair(0,1) );
+  pairSetGT.insert( std::make_pair(1,2) );
+  pairSetGT.insert( std::make_pair(2,0) );
+
+  PairsT pairSetGTsorted;
+  pairSetGTsorted.insert( std::make_pair(0,1) );
+  pairSetGTsorted.insert( std::make_pair(0,2) );
+  pairSetGTsorted.insert( std::make_pair(1,2) );
 
   EXPECT_TRUE( savePairs("pairsT_IO.txt", pairSetGT));
 
   PairsT loaded_Pairs;
-  EXPECT_TRUE( loadPairs("pairsT_IO.txt", loaded_Pairs));
-  EXPECT_TRUE( loaded_Pairs == pairSetGT);
+  EXPECT_TRUE( loadPairs(3, "pairsT_IO.txt", loaded_Pairs));
+  EXPECT_TRUE( std::equal(loaded_Pairs.begin(), loaded_Pairs.end(), pairSetGTsorted.begin()) );
+}
+
+TEST(matching_image_collection, IO_InvalidInput)
+{
+  // A pair with index superior to the expected picture count
+  PairsT pairSetGT;
+  pairSetGT.insert( std::make_pair(0,1) );
+  pairSetGT.insert( std::make_pair(10,20) );
+
+  EXPECT_TRUE( savePairs("pairsT_IO_InvalidInput.txt", pairSetGT));
+
+  PairsT loaded_Pairs;
+  const int expectedPicCount = 2;
+  EXPECT_FALSE( loadPairs(expectedPicCount, "pairsT_IO_InvalidInput.txt", loaded_Pairs));
+
+  // A pair with equal index
+  pairSetGT.clear();
+  pairSetGT.insert( std::make_pair(0,1) );
+  pairSetGT.insert( std::make_pair(0,0) );
+  EXPECT_FALSE( loadPairs(expectedPicCount, "pairsT_IO_InvalidInput.txt", loaded_Pairs));
 }
 
 /* ************************************************************************* */

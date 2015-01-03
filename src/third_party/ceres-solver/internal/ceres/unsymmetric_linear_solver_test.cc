@@ -107,13 +107,19 @@ class UnsymmetricLinearSolverTest : public ::testing::Test {
               LINEAR_SOLVER_SUCCESS);
 
     for (int i = 0; i < A_->num_cols(); ++i) {
-      EXPECT_NEAR(sol_unregularized_[i], x_unregularized[i], 1e-8);
+      EXPECT_NEAR(sol_unregularized_[i], x_unregularized[i], 1e-8)
+          << "\nExpected: "
+          << ConstVectorRef(sol_unregularized_.get(), A_->num_cols()).transpose()
+          << "\nActual: " << x_unregularized.transpose();
     }
 
     EXPECT_EQ(regularized_solve_summary.termination_type,
               LINEAR_SOLVER_SUCCESS);
     for (int i = 0; i < A_->num_cols(); ++i) {
-      EXPECT_NEAR(sol_regularized_[i], x_regularized[i], 1e-8);
+      EXPECT_NEAR(sol_regularized_[i], x_regularized[i], 1e-8)
+          << "\nExpected: "
+          << ConstVectorRef(sol_regularized_.get(), A_->num_cols()).transpose()
+          << "\nActual: " << x_regularized.transpose();
     }
   }
 
@@ -211,6 +217,36 @@ TEST_F(UnsymmetricLinearSolverTest,
   TestSolver(options);
 }
 #endif
+
+#ifdef CERES_USE_EIGEN_SPARSE
+TEST_F(UnsymmetricLinearSolverTest,
+       SparseNormalCholeskyUsingEigenPreOrdering) {
+  LinearSolver::Options options;
+  options.sparse_linear_algebra_library_type = EIGEN_SPARSE;
+  options.type = SPARSE_NORMAL_CHOLESKY;
+  options.use_postordering = false;
+  TestSolver(options);
+}
+
+TEST_F(UnsymmetricLinearSolverTest,
+       SparseNormalCholeskyUsingEigenPostOrdering) {
+  LinearSolver::Options options;
+  options.sparse_linear_algebra_library_type = EIGEN_SPARSE;
+  options.type = SPARSE_NORMAL_CHOLESKY;
+  options.use_postordering = true;
+  TestSolver(options);
+}
+
+TEST_F(UnsymmetricLinearSolverTest,
+       SparseNormalCholeskyUsingEigenDynamicSparsity) {
+  LinearSolver::Options options;
+  options.sparse_linear_algebra_library_type = EIGEN_SPARSE;
+  options.type = SPARSE_NORMAL_CHOLESKY;
+  options.dynamic_sparsity = true;
+  TestSolver(options);
+}
+
+#endif  // CERES_USE_EIGEN_SPARSE
 
 }  // namespace internal
 }  // namespace ceres

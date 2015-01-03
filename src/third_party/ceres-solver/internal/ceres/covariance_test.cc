@@ -400,14 +400,14 @@ TEST_F(CovarianceTest, NormalBehavior) {
   Covariance::Options options;
 
 #ifndef CERES_NO_SUITESPARSE
-  options.algorithm_type = SPARSE_CHOLESKY;
-  ComputeAndCompareCovarianceBlocks(options, expected_covariance);
-
-  options.algorithm_type = SPARSE_QR;
+  options.algorithm_type = SUITE_SPARSE_QR;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 #endif
 
   options.algorithm_type = DENSE_SVD;
+  ComputeAndCompareCovarianceBlocks(options, expected_covariance);
+
+  options.algorithm_type = EIGEN_SPARSE_QR;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 }
 
@@ -448,14 +448,14 @@ TEST_F(CovarianceTest, ThreadedNormalBehavior) {
   options.num_threads = 4;
 
 #ifndef CERES_NO_SUITESPARSE
-  options.algorithm_type = SPARSE_CHOLESKY;
-  ComputeAndCompareCovarianceBlocks(options, expected_covariance);
-
-  options.algorithm_type = SPARSE_QR;
+  options.algorithm_type = SUITE_SPARSE_QR;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 #endif
 
   options.algorithm_type = DENSE_SVD;
+  ComputeAndCompareCovarianceBlocks(options, expected_covariance);
+
+  options.algorithm_type = EIGEN_SPARSE_QR;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 }
 
@@ -497,14 +497,14 @@ TEST_F(CovarianceTest, ConstantParameterBlock) {
   Covariance::Options options;
 
 #ifndef CERES_NO_SUITESPARSE
-  options.algorithm_type = SPARSE_CHOLESKY;
-  ComputeAndCompareCovarianceBlocks(options, expected_covariance);
-
-  options.algorithm_type = SPARSE_QR;
+  options.algorithm_type = SUITE_SPARSE_QR;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 #endif
 
   options.algorithm_type = DENSE_SVD;
+  ComputeAndCompareCovarianceBlocks(options, expected_covariance);
+
+  options.algorithm_type = EIGEN_SPARSE_QR;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 }
 
@@ -553,14 +553,14 @@ TEST_F(CovarianceTest, LocalParameterization) {
   Covariance::Options options;
 
 #ifndef CERES_NO_SUITESPARSE
-  options.algorithm_type = SPARSE_CHOLESKY;
-  ComputeAndCompareCovarianceBlocks(options, expected_covariance);
-
-  options.algorithm_type = SPARSE_QR;
+  options.algorithm_type = SUITE_SPARSE_QR;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 #endif
 
   options.algorithm_type = DENSE_SVD;
+  ComputeAndCompareCovarianceBlocks(options, expected_covariance);
+
+  options.algorithm_type = EIGEN_SPARSE_QR;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 }
 
@@ -781,8 +781,7 @@ class LargeScaleCovarianceTest : public ::testing::Test {
 #if !defined(CERES_NO_SUITESPARSE) && defined(CERES_USE_OPENMP)
 
 TEST_F(LargeScaleCovarianceTest, Parallel) {
-  ComputeAndCompare(SPARSE_CHOLESKY, 4);
-  ComputeAndCompare(SPARSE_QR, 4);
+  ComputeAndCompare(SUITE_SPARSE_QR, 4);
 }
 
 #endif  // !defined(CERES_NO_SUITESPARSE) && defined(CERES_USE_OPENMP)

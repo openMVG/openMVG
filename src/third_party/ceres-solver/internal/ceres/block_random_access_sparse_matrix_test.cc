@@ -56,7 +56,7 @@ TEST(BlockRandomAccessSparseMatrix, GetCell) {
   block_pairs.insert(make_pair(1, 2));
   num_nonzeros += blocks[1] * blocks[2];
 
-  block_pairs.insert(make_pair(2, 0));
+  block_pairs.insert(make_pair(0, 2));
   num_nonzeros += blocks[2] * blocks[0];
 
   BlockRandomAccessSparseMatrix m(blocks, block_pairs);
@@ -97,26 +97,37 @@ TEST(BlockRandomAccessSparseMatrix, GetCell) {
 
   double kTolerance = 1e-14;
 
-  // (0,0)
+  // (0, 0)
   EXPECT_NEAR((dense.block(0, 0, 3, 3) - Matrix::Ones(3, 3)).norm(),
               0.0,
               kTolerance);
-  // (1,1)
+  // (1, 1)
   EXPECT_NEAR((dense.block(3, 3, 4, 4) - 2 * 2 * Matrix::Ones(4, 4)).norm(),
               0.0,
               kTolerance);
-  // (1,2)
+  // (1, 2)
   EXPECT_NEAR((dense.block(3, 3 + 4, 4, 5) - 2 * 3 * Matrix::Ones(4, 5)).norm(),
               0.0,
               kTolerance);
-  // (2,0)
-  EXPECT_NEAR((dense.block(3 + 4, 0, 5, 3) - 3 * 1 * Matrix::Ones(5, 3)).norm(),
+  // (0, 2)
+  EXPECT_NEAR((dense.block(0, 3 + 4, 3, 5) - 3 * 1 * Matrix::Ones(3, 5)).norm(),
               0.0,
               kTolerance);
 
   // There is nothing else in the matrix besides these four blocks.
   EXPECT_NEAR(dense.norm(), sqrt(9. + 16. * 16. + 36. * 20. + 9. * 15.),
               kTolerance);
+
+  Vector x = Vector::Ones(dense.rows());
+  Vector actual_y = Vector::Zero(dense.rows());
+  Vector expected_y = Vector::Zero(dense.rows());
+
+  expected_y += dense.selfadjointView<Eigen::Upper>() * x;
+  m.SymmetricRightMultiply(x.data(), actual_y.data());
+  EXPECT_NEAR((expected_y - actual_y).norm(), 0.0, kTolerance)
+      << "actual: " << actual_y.transpose() << "\n"
+      << "expected: " << expected_y.transpose()
+      << "matrix: \n " << dense;
 }
 
 // IntPairToLong is private, thus this fixture is needed to access and
@@ -131,11 +142,26 @@ class BlockRandomAccessSparseMatrixTest : public ::testing::Test {
     m_.reset(new BlockRandomAccessSparseMatrix(blocks, block_pairs));
   }
 
-  void CheckIntPair(int a, int b) {
+  void CheckIntPairToLong(int a, int b) {
     int64 value = m_->IntPairToLong(a, b);
     EXPECT_GT(value, 0) << "Overflow a = " << a << " b = " << b;
     EXPECT_GT(value, a) << "Overflow a = " << a << " b = " << b;
     EXPECT_GT(value, b) << "Overflow a = " << a << " b = " << b;
+  }
+
+  void CheckLongToIntPair() {
+    uint64 max_rows =  m_->kMaxRowBlocks;
+    for (int row = max_rows - 10; row < max_rows; ++row) {
+      for (int col = 0; col < 10; ++col) {
+        int row_computed;
+        int col_computed;
+        m_->LongToIntPair(m_->IntPairToLong(row, col),
+                          &row_computed,
+                          &col_computed);
+        EXPECT_EQ(row, row_computed);
+        EXPECT_EQ(col, col_computed);
+      }
+    }
   }
 
  private:
@@ -143,7 +169,11 @@ class BlockRandomAccessSparseMatrixTest : public ::testing::Test {
 };
 
 TEST_F(BlockRandomAccessSparseMatrixTest, IntPairToLongOverflow) {
-  CheckIntPair(numeric_limits<int>::max(), numeric_limits<int>::max());
+  CheckIntPairToLong(numeric_limits<int>::max(), numeric_limits<int>::max());
+}
+
+TEST_F(BlockRandomAccessSparseMatrixTest, LongToIntPair) {
+  CheckLongToIntPair();
 }
 
 }  // namespace internal

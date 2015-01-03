@@ -41,7 +41,10 @@ PairsT contiguousWithOverlap(const size_t N, const size_t overlapSize)
 
 /// Load a set of Pairs from a file
 /// I J K L (pair that link I)
-bool loadPairs(const std::string &sFileName, PairsT & pairs)
+bool loadPairs(
+     const size_t N,  // number of image in the current project (to check index validity)
+     const std::string &sFileName, // filename of the list file,
+     PairsT & pairs)  // output pairs read from the list file
 {
   std::ifstream in(sFileName.c_str());
   if(!in.is_open())  {
@@ -69,7 +72,23 @@ bool loadPairs(const std::string &sFileName, PairsT & pairs)
     {
       oss.clear(); oss.str(vec_str[i]);
       oss >> J;
-      pairs.insert(std::make_pair(I,J));
+      if( I < 0 || I > N-1 || J < 0 || J > N-1)
+      {
+        std::cerr << "--loadPairs: Invalid input file. Image out of range" << std::endl;
+        return false;
+      }
+      else
+      {
+        if( I != J )
+        {
+          pairs.insert( (I < J) ? std::make_pair(I, J) : std::make_pair(J, I) );
+        }
+        else
+        {
+          std::cerr << "--loadPairs: Invalid input file. Image see herself " << std::endl;
+          return false;
+        }
+      }
     }
   }
   in.close();

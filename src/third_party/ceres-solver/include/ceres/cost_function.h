@@ -106,8 +106,7 @@ class CERES_EXPORT CostFunction {
   // the constraints, then returning false whenever the constraints
   // are not satisfied will prevent the solver from moving into the
   // infeasible region. This is not a very sophisticated mechanism for
-  // enforcing constraints, but is often good enough for things like
-  // non-negativity constraints.
+  // enforcing constraints, but is often good enough.
   //
   // Note that it is important that the initial values of the
   // parameter block must be feasible, otherwise the solver will

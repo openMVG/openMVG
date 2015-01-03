@@ -79,6 +79,8 @@ DEFINE_string(blocks_for_inner_iterations, "automatic", "Options are: "
 DEFINE_string(linear_solver, "sparse_schur", "Options are: "
               "sparse_schur, dense_schur, iterative_schur, sparse_normal_cholesky, "
               "dense_qr, dense_normal_cholesky and cgnr.");
+DEFINE_bool(explicit_schur_complement, false, "If using ITERATIVE_SCHUR "
+            "then explicitly compute the Schur complement.");
 DEFINE_string(preconditioner, "jacobi", "Options are: "
               "identity, jacobi, schur_jacobi, cluster_jacobi, "
               "cluster_tridiagonal.");
@@ -116,7 +118,6 @@ DEFINE_double(point_sigma, 0.0, "Standard deviation of the point "
 DEFINE_int32(random_seed, 38401, "Random seed used to set the state "
              "of the pseudo random number generator used to generate "
              "the pertubations.");
-DEFINE_string(solver_log, "", "File to record the solver execution to.");
 DEFINE_bool(line_search, false, "Use a line search instead of trust region "
             "algorithm.");
 
@@ -137,6 +138,7 @@ void SetLinearSolver(Solver::Options* options) {
             FLAGS_dense_linear_algebra_library,
             &options->dense_linear_algebra_library_type));
   options->num_linear_solver_threads = FLAGS_num_threads;
+  options->use_explicit_schur_complement = FLAGS_explicit_schur_complement;
 }
 
 void SetOrdering(BALProblem* bal_problem, Solver::Options* options) {
@@ -320,7 +322,6 @@ void SolveProblem(const char* filename) {
   BuildProblem(&bal_problem, &problem);
   Solver::Options options;
   SetSolverOptionsFromFlags(&bal_problem, &options);
-  options.solver_log = FLAGS_solver_log;
   options.gradient_tolerance = 1e-16;
   options.function_tolerance = 1e-16;
   Solver::Summary summary;
@@ -332,7 +333,7 @@ void SolveProblem(const char* filename) {
 }  // namespace ceres
 
 int main(int argc, char** argv) {
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  CERES_GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
   if (FLAGS_input.empty()) {
     LOG(ERROR) << "Usage: bundle_adjustment_example --input=bal_problem";

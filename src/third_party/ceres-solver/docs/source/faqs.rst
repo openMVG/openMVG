@@ -64,7 +64,7 @@ Modeling
 
    To this end, Ceres has extensive support for mixing analytic,
    automatic and numeric differentiation. See
-   :class:`NumericDiffFunctor` and :class:`CostFunctionToFunctor`.
+   :class:`CostFunctionToFunctor`.
 
 #. Putting `Inverse Function Theorem
    <http://en.wikipedia.org/wiki/Inverse_function_theorem>`_ to use.
@@ -142,8 +142,12 @@ Solving
 
    4. For larger bundle adjustment problems with sparse Schur
       Complement/Reduced camera matrices use ``SPARSE_SCHUR``. This
-      requires that you have ``SuiteSparse`` or ``CXSparse``
-      installed.
+      requires that you build Ceres with support for ``SuiteSparse``,
+      ``CXSparse`` or Eigen's sparse linear algebra libraries.
+
+      If you do not have access to these libraries for whatever
+      reason, ``ITERATIVE_SCHUR`` with ``SCHUR_JACOBI`` is an
+      excellent alternative.
 
    5. For large bundle adjustment problems (a few thousand cameras or
       more) use the ``ITERATIVE_SCHUR`` solver. There are a number of
@@ -153,13 +157,19 @@ Solving
       which ``DENSE_SCHUR`` is too slow but ``SuiteSparse`` is not
       available.
 
+      .. NOTE::
+
+        If you are solving small to medium sized problems, consider
+        setting ``Solver::Options::use_explicit_schur_complement`` to
+        ``true``, it can result in a substantial performance boost.
+
       If you are not satisfied with ``SCHUR_JACOBI``'s performance try
       ``CLUSTER_JACOBI`` and ``CLUSTER_TRIDIAGONAL`` in that
       order. They require that you have ``SuiteSparse``
       installed. Both of these preconditioners use a clustering
       algorithm. Use ``SINGLE_LINKAGE`` before ``CANONICAL_VIEWS``.
 
-#. Use `Solver::Summary::FullReport` to diagnose performance problems.
+#. Use :func:`Solver::Summary::FullReport` to diagnose performance problems.
 
    When diagnosing Ceres performance issues - runtime and convergence,
    the first place to start is by looking at the output of
@@ -169,16 +179,16 @@ Solving
 
      ./bin/bundle_adjuster --input ../data/problem-16-22106-pre.txt
 
+     iter      cost      cost_change  |gradient|   |step|    tr_ratio  tr_radius  ls_iter  iter_time  total_time
+        0  4.185660e+06    0.00e+00    2.16e+07   0.00e+00   0.00e+00  1.00e+04       0    7.50e-02    3.58e-01
+        1  1.980525e+05    3.99e+06    5.34e+06   2.40e+03   9.60e-01  3.00e+04       1    1.84e-01    5.42e-01
+        2  5.086543e+04    1.47e+05    2.11e+06   1.01e+03   8.22e-01  4.09e+04       1    1.53e-01    6.95e-01
+        3  1.859667e+04    3.23e+04    2.87e+05   2.64e+02   9.85e-01  1.23e+05       1    1.71e-01    8.66e-01
+        4  1.803857e+04    5.58e+02    2.69e+04   8.66e+01   9.93e-01  3.69e+05       1    1.61e-01    1.03e+00
+        5  1.803391e+04    4.66e+00    3.11e+02   1.02e+01   1.00e+00  1.11e+06       1    1.49e-01    1.18e+00
 
-     0: f: 4.185660e+06 d: 0.00e+00 g: 2.16e+07 h: 0.00e+00 rho: 0.00e+00 mu: 1.00e+04 li:  0 it: 9.20e-02 tt: 3.35e-01
-     1: f: 1.980525e+05 d: 3.99e+06 g: 5.34e+06 h: 2.40e+03 rho: 9.60e-01 mu: 3.00e+04 li:  1 it: 1.99e-01 tt: 5.34e-01
-     2: f: 5.086543e+04 d: 1.47e+05 g: 2.11e+06 h: 1.01e+03 rho: 8.22e-01 mu: 4.09e+04 li:  1 it: 1.61e-01 tt: 6.95e-01
-     3: f: 1.859667e+04 d: 3.23e+04 g: 2.87e+05 h: 2.64e+02 rho: 9.85e-01 mu: 1.23e+05 li:  1 it: 1.63e-01 tt: 8.58e-01
-     4: f: 1.803857e+04 d: 5.58e+02 g: 2.69e+04 h: 8.66e+01 rho: 9.93e-01 mu: 3.69e+05 li:  1 it: 1.62e-01 tt: 1.02e+00
-     5: f: 1.803391e+04 d: 4.66e+00 g: 3.11e+02 h: 1.02e+01 rho: 1.00e+00 mu: 1.11e+06 li:  1 it: 1.61e-01 tt: 1.18e+00
-
-     Ceres Solver Report
-     -------------------
+     Ceres Solver v1.10.0 Solve Report
+     ----------------------------------
                                           Original                  Reduced
      Parameter blocks                        22122                    22122
      Parameters                              66462                    66462
@@ -190,7 +200,7 @@ Solving
      Sparse linear algebra library    SUITE_SPARSE
      Trust region strategy     LEVENBERG_MARQUARDT
 
-                                              Given                     Used
+                                             Given                     Used
      Linear solver                    SPARSE_SCHUR             SPARSE_SCHUR
      Threads                                     1                        1
      Linear solver threads                       1                        1
@@ -206,15 +216,15 @@ Solving
      Unsuccessful steps                          0
 
      Time (in seconds):
-     Preprocessor                            0.243
+     Preprocessor                            0.283
 
-       Residual evaluation                   0.053
-       Jacobian evaluation                   0.435
-       Linear solver                         0.371
-     Minimizer                               0.940
+       Residual evaluation                   0.061
+       Jacobian evaluation                   0.361
+       Linear solver                         0.382
+     Minimizer                               0.895
 
      Postprocessor                           0.002
-     Total                                   1.221
+     Total                                   1.220
 
      Termination:                   NO_CONVERGENCE (Maximum number of iterations reached.)
 
@@ -225,17 +235,18 @@ Solving
    .. code-block:: bash
 
      Time (in seconds):
-     Preprocessor                            0.243
+     Preprocessor                            0.283
 
-       Residual evaluation                   0.053
-       Jacobian evaluation                   0.435
-       Linear solver                         0.371
-     Minimizer                               0.940
+       Residual evaluation                   0.061
+       Jacobian evaluation                   0.361
+       Linear solver                         0.382
+     Minimizer                               0.895
 
      Postprocessor                           0.002
-     Total                                   1.221
+     Total                                   1.220
 
-  Which tell us that of the total 1.2 seconds, about .4 seconds was
+
+  Which tell us that of the total 1.2 seconds, about .3 seconds was
   spent in the linear solver and the rest was mostly spent in
   preprocessing and jacobian evaluation.
 
@@ -256,17 +267,19 @@ Solving
    .. code-block:: bash
 
      Time (in seconds):
-     Preprocessor                            0.058
+     Preprocessor                            0.051
 
-       Residual evaluation                   0.050
-       Jacobian evaluation                   0.416
-       Linear solver                         0.360
-     Minimizer                               0.903
+       Residual evaluation                   0.053
+       Jacobian evaluation                   0.344
+       Linear solver                         0.372
+     Minimizer                               0.854
 
      Postprocessor                           0.002
-     Total                                   0.998
+     Total                                   0.935
 
-  The preprocessor time has gone down by more than 4x!.
+
+
+  The preprocessor time has gone down by more than 5.5x!.
 
 Further Reading
 ===============
