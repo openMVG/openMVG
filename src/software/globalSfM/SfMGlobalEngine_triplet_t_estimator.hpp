@@ -170,6 +170,11 @@ public:
     return ErrorArg::Error(model, x1n_.col(sample), x2n_.col(sample), x3n_.col(sample));
   }
 
+  void Errors(const Model &model, std::vector<double> & vec_errors) const {
+    for (size_t sample = 0; sample < x1n_.cols(); ++sample)
+      vec_errors[sample] = ErrorArg::Error(model, x1n_.col(sample), x2n_.col(sample), x3n_.col(sample));
+  }
+
   size_t NumSamples() const {
     return x1n_.cols();
   }

@@ -153,6 +153,7 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
     precision * kernel.normalizer2()(0,0) * kernel.normalizer2()(0,0);
 
   std::vector<ErrorIndex> vec_residuals(nData); // [residual,index]
+  std::vector<double> vec_residuals_(nData);
   std::vector<size_t> vec_sample(sizeSample); // Sample indices
 
   // Possible sampling indices (could change in the optimization phase)
@@ -185,21 +186,23 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
     bool better = false;
     for (size_t k = 0; k < vec_models.size(); ++k)  {
       // Residuals computation and ordering
+      kernel.Errors(vec_models[k], vec_residuals_);
       for (size_t i = 0; i < nData; ++i)  {
-        double error = kernel.Error(i, vec_models[k]);
+        const double error = vec_residuals_[i];
         vec_residuals[i] = ErrorIndex(error, i);
       }
       std::sort(vec_residuals.begin(), vec_residuals.end());
 
       // Most meaningful discrimination inliers/outliers
-      ErrorIndex best = bestNFA(sizeSample,
-                                kernel.logalpha0(),
-                                vec_residuals,
-                                loge0,
-                                maxThreshold,
-                                vec_logc_n,
-                                vec_logc_k,
-                                kernel.multError());
+      const ErrorIndex best = bestNFA(
+        sizeSample,
+        kernel.logalpha0(),
+        vec_residuals,
+        loge0,
+        maxThreshold,
+        vec_logc_n,
+        vec_logc_k,
+        kernel.multError());
 
       if (best.first < minNFA /*&& vec_residuals[best.second-1].first < errorMax*/)  {
         // A better model was found
@@ -253,7 +256,6 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
 
   return std::make_pair(errorMax, minNFA);
 }
-
 
 } // namespace robust
 } // namespace openMVG
