@@ -42,7 +42,8 @@ ELSE (NOT MOSEK_FOUND)
     openMVG_linearProgrammingMSK # openMVG Mosek wrapper
     ${MOSEK_LIB}    # Mosek lib
   )
-  
+
+  INSTALL(TARGETS openMVG_linearProgrammingMSK DESTINATION lib/)
 ENDIF (NOT MOSEK_FOUND)
 
 # set the variable in the parent_scope

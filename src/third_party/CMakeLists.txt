@@ -9,9 +9,24 @@ ENDIF()
 
 # Basic filesystem utils
 ADD_SUBDIRECTORY(stlplus3)
+INSTALL(
+  DIRECTORY stlplus3
+  DESTINATION include
+  COMPONENT headers
+)
 
 # Add linear algebra library
 #  Eigen is used as header only
+INSTALL(
+  DIRECTORY eigen/Eigen
+  DESTINATION include
+  COMPONENT headers
+)
+INSTALL(
+  DIRECTORY eigen/unsupported/Eigen
+  DESTINATION include/unsupported
+  COMPONENT headers
+)
 
 # Add graph library
 ADD_SUBDIRECTORY(lemon)
