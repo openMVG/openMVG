@@ -8,7 +8,8 @@
 #pragma once
 
 #include "openMVG/matching/indMatch.hpp"
-#include <map>
+//#include "openMVG/matching_image_collection/Pair_Builder.hpp"
+
 #include <string>
 #include <vector>
 
@@ -23,9 +24,14 @@ class Matcher
 
   virtual ~Matcher() {};
 
+  // Visidyn shit
+  //virtual void Match(
+    
+
   /// Build point indexes correspondences lists between images ids
   virtual void Match(
     const std::vector<std::string> & vec_filenames,
+    //const PairsT & pairs, // list of pair to consider for matching
     matching::PairWiseMatches & map_putatives_matches // the output pairwise photometric corresponding points
     )const = 0;
 };
