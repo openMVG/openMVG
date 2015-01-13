@@ -61,6 +61,180 @@ class Matcher_AllInMemory : public Matcher
     return bOk;
   }
 
+  
+///// ** VISIDYN SHIT!!! YOUNG JEEZY!!!!!!! ////
+  void Match(
+      std::map<size_t, std::vector<FeatureT> >& mapfeatures,
+      std::map<size_t, DescsT>& mapdescriptors,
+      PairWiseMatches& map_PutativesMatches,
+      int size
+      )
+  {
+#ifdef USE_OPENMP
+    std::cout << "Using the OPENMP thread interface" << std::endl;
+#endif
+    C_Progress_display my_progress_bar( size*(size-1) / 2.0 );
+
+    for (size_t i = 0; i < size; ++i)
+    {
+      // Load features and descriptors of Inth image
+      typename std::map<size_t, std::vector<FeatureT> >::const_iterator iter_FeaturesI = mapfeatures.begin();
+      typename std::map<size_t, DescsT >::const_iterator iter_DescriptorI = mapdescriptors.begin();
+      std::advance(iter_FeaturesI, i);
+      std::advance(iter_DescriptorI, i);
+
+      const std::vector<FeatureT> & featureSetI = iter_FeaturesI->second;
+      const size_t featureSetI_Size = iter_FeaturesI->second.size();
+      const DescBin_typeT * tab0 =
+        reinterpret_cast<const DescBin_typeT *>(&iter_DescriptorI->second[0]);
+
+      MatcherT matcher10;
+      ( matcher10.Build(tab0, featureSetI_Size, DescriptorT::static_size) );
+#ifdef USE_OPENMP
+  #pragma omp parallel for schedule(dynamic, 1)
+#endif
+      for (int j = i+1; j < size; ++j)
+      {
+        // Load descriptor of Jnth image
+        typename std::map<size_t, std::vector<FeatureT> >::const_iterator iter_FeaturesJ = mapfeatures.begin();
+        typename std::map<size_t, DescsT >::const_iterator iter_DescriptorJ = mapdescriptors.begin();
+        std::advance(iter_FeaturesJ, j);
+        std::advance(iter_DescriptorJ, j);
+
+        const std::vector<FeatureT> & featureSetJ = iter_FeaturesJ->second;
+        const DescBin_typeT * tab1 =
+          reinterpret_cast<const DescBin_typeT *>(&iter_DescriptorJ->second[0]);
+
+        const size_t NNN__ = 2;
+        std::vector<int> vec_nIndice10;
+        std::vector<typename MatcherT::DistanceType> vec_fDistance10;
+
+        //Find left->right
+        matcher10.SearchNeighbours(tab1, featureSetJ.size(), &vec_nIndice10, &vec_fDistance10, NNN__);
+
+        std::vector<IndMatch> vec_FilteredMatches;
+
+        std::vector<int> vec_NNRatioIndexes;
+
+        NNdistanceRatio( vec_fDistance10.begin(), // distance start
+          vec_fDistance10.end(),  // distance end
+          NNN__, // Number of neighbor in iterator sequence (minimum required 2)
+          vec_NNRatioIndexes, // output (index that respect Lowe Ratio)
+          Square(fDistRatio)); // squared dist ratio due to usage of a squared metric
+        for (size_t k=0; k < vec_NNRatioIndexes.size()-1&& vec_NNRatioIndexes.size()>0; ++k)
+        {
+          const size_t index = vec_NNRatioIndexes[k];
+          vec_FilteredMatches.push_back(
+            IndMatch(vec_nIndice10[index*NNN__], index) );
+        }
+
+        // Remove duplicates
+        IndMatch::getDeduplicated(vec_FilteredMatches);
+
+        // Remove matches that have the same X,Y coordinates
+        IndMatchDecorator<float> matchDeduplicator(vec_FilteredMatches, featureSetI, featureSetJ);
+        matchDeduplicator.getDeduplicated(vec_FilteredMatches);
+
+#ifdef USE_OPENMP
+  #pragma omp critical
+#endif
+        {
+          map_PutativesMatches.insert( make_pair( make_pair(i,j), vec_FilteredMatches ));
+        }
+
+        ++my_progress_bar;
+      }
+    }
+  }
+
+
+//   void Match(
+//     const std::vector<std::string> & vec_fileNames, // input filenames,
+//     PairWiseMatches & map_PutativesMatches)const // the pairwise photometric corresponding points
+//   {
+// #ifdef USE_OPENMP
+//     std::cout << "Using the OPENMP thread interface" << std::endl;
+// #endif
+//     C_Progress_display my_progress_bar( vec_fileNames.size()*(vec_fileNames.size()-1) / 2.0 );
+
+//     // Sort pairs according the first index to minimize the MatcherT build operations
+//     std::map<size_t, std::vector<size_t> > map_Pairs;
+//     for (PairsT::const_iterator iter = pairs.begin(); iter != pairs.end(); ++iter)
+//     {
+//       map_Pairs[iter->first].push_back(iter->second);
+//     }
+
+//     for (std::map<size_t, std::vector<size_t> >::const_iterator iter = map_Pairs.begin();
+//       iter != map_Pairs.end(); ++iter)
+//     {
+//       const size_t I = iter->first;
+//       // Load features and descriptors of Inth image
+//       typename std::map<size_t, std::vector<FeatureT> >::const_iterator iter_FeaturesI = map_Feat.find(I);
+//       typename std::map<size_t, DescsT >::const_iterator iter_DescriptorI = map_Desc.find(I);
+
+//       const std::vector<FeatureT> & featureSetI = iter_FeaturesI->second;
+//       const size_t featureSetI_Size = iter_FeaturesI->second.size();
+//       const DescBin_typeT * tab0 =
+//         reinterpret_cast<const DescBin_typeT *>(&iter_DescriptorI->second[0]);
+
+//       MatcherT matcher10;
+//       ( matcher10.Build(tab0, featureSetI_Size, DescriptorT::static_size) );
+
+//       const std::vector<size_t> & indexToCompare = iter->second;
+// #ifdef USE_OPENMP
+//   #pragma omp parallel for schedule(dynamic)
+// #endif
+//       for (int j = 0; j < (int)indexToCompare.size(); ++j)
+//       {
+//         const size_t J = indexToCompare[j];
+//         // Load descriptors of Jnth image
+//         typename std::map<size_t, std::vector<FeatureT> >::const_iterator iter_FeaturesJ = map_Feat.find(J);
+//         typename std::map<size_t, DescsT >::const_iterator iter_DescriptorJ = map_Desc.find(J);
+
+//         const std::vector<FeatureT> & featureSetJ = iter_FeaturesJ->second;
+//         const DescBin_typeT * tab1 =
+//           reinterpret_cast<const DescBin_typeT *>(&iter_DescriptorJ->second[0]);
+
+//         const size_t NNN__ = 2;
+//         std::vector<int> vec_nIndice10;
+//         std::vector<typename MatcherT::DistanceType> vec_fDistance10;
+
+//         //Find left->right
+//         matcher10.SearchNeighbours(tab1, featureSetJ.size(), &vec_nIndice10, &vec_fDistance10, NNN__);
+
+//         std::vector<IndMatch> vec_FilteredMatches;
+//         std::vector<int> vec_NNRatioIndexes;
+//         NNdistanceRatio( vec_fDistance10.begin(), // distance start
+//           vec_fDistance10.end(),  // distance end
+//           NNN__, // Number of neighbor in iterator sequence (minimum required 2)
+//           vec_NNRatioIndexes, // output (index that respect Lowe Ratio)
+//           Square(fDistRatio)); // squared dist ratio due to usage of a squared metric
+
+//         for (size_t k=0; k < vec_NNRatioIndexes.size()-1&& vec_NNRatioIndexes.size()>0; ++k)
+//         {
+//           const size_t index = vec_NNRatioIndexes[k];
+//           vec_FilteredMatches.push_back(
+//             IndMatch(vec_nIndice10[index*NNN__], index) );
+//         }
+
+//         // Remove duplicates
+//         IndMatch::getDeduplicated(vec_FilteredMatches);
+
+//         // Remove matches that have the same X,Y coordinates
+//         IndMatchDecorator<float> matchDeduplicator(vec_FilteredMatches, featureSetI, featureSetJ);
+//         matchDeduplicator.getDeduplicated(vec_FilteredMatches);
+
+// #ifdef USE_OPENMP
+//   #pragma omp critical
+// #endif
+//         {
+//           map_PutativesMatches.insert( make_pair( make_pair(I,J), vec_FilteredMatches ));
+//         ++my_progress_bar;
+//         }
+//       }
+//     }
+//   }
+
   void Match(
     const std::vector<std::string> & vec_fileNames, // input filenames,
     PairWiseMatches & map_PutativesMatches)const // the pairwise photometric corresponding points
@@ -141,6 +315,7 @@ class Matcher_AllInMemory : public Matcher
       }
     }
   }
+
 
   private:
   // Features per image

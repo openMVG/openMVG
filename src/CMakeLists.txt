@@ -14,16 +14,17 @@ PROJECT(openMVG C CXX)
 # ==============================================================================
 OPTION(OpenMVG_BUILD_TESTS "Build OpenMVG tests" OFF)
 OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG example applications. Does not affect binaries under 'software'" ON)
-option(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
+OPTION(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
 
 # By default build in Release mode
-IF(NOT CMAKE_BUILD_TYPE)
+IF(NOT CMAKE_BUILD_TYPE AND NOT MSVC)
   SET(CMAKE_BUILD_TYPE "Release")
-ENDIF(NOT CMAKE_BUILD_TYPE)
+ENDIF(NOT CMAKE_BUILD_TYPE AND NOT MSVC)
 
 IF (WIN32)
   ADD_DEFINITIONS(-DNOMINMAX)
+  ADD_DEFINITIONS(/bigobj)
 ENDIF (WIN32)
 
 # ==============================================================================
@@ -40,9 +41,11 @@ IF (SSE2_FOUND)
   ADD_DEFINITIONS(-DUSE_SSE)
 ENDIF (SSE2_FOUND)
 IF (UNIX AND NOT OpenMVG_BUILD_COVERAGE)
-  SET(CMAKE_C_FLAGS_RELEASE "-O3")
-  SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
+  SET(CMAKE_C_FLAGS_RELEASE "-O3 -fPIC")
+  SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -fPIC")
 ENDIF ()
+SET(CMAKE_C_CFLAGS_RELEASE "-O3 -fPIC")
+SET(CMAKE_CXX_CFLAGS_RELEASE "-O3 -fPIC")
 
 # ==============================================================================
 # OpenMP detection
@@ -80,7 +83,11 @@ ENDIF()
 IF (NOT APPLE)
   FIND_PACKAGE(JPEG QUIET)
   FIND_PACKAGE(PNG QUIET)
+  FIND_PACKAGE(TIFF QUIET)
 ENDIF (NOT APPLE)
+
+# Folders
+SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # ==============================================================================
 # SUBMODULE CONFIGURATION
@@ -92,6 +99,8 @@ SET(GLFW_BUILD_TESTS    OFF CACHE BOOL "Do not build the GLFW tests programs")
 SET(GLFW_BUILD_DOCS     OFF CACHE BOOL "Do not build the GLFW documentation")
 ADD_SUBDIRECTORY(dependencies/glfw)
 INCLUDE_DIRECTORIES(SYSTEM dependencies/glfw/include)
+SET_PROPERTY(TARGET glfw PROPERTY FOLDER OpenMVG/3rdParty/glfw)
+SET_PROPERTY(TARGET uninstall PROPERTY FOLDER OpenMVG/3rdParty/glfw)
 
 #===============================
 #---- LINEAR PROGRAMMING SOLVER
@@ -117,6 +126,10 @@ INCLUDE_DIRECTORIES(
   ./dependencies/osi_clp/Osi/src/Osi/
   ./dependencies/osi_clp/Clp/src/OsiClp/
 )
+SET_PROPERTY(TARGET lib_CoinUtils PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
+SET_PROPERTY(TARGET lib_Osi PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
+SET_PROPERTY(TARGET lib_OsiClpSolver PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
+SET_PROPERTY(TARGET lib_clp PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
 
 #===============================
 #--END-- LINEAR PROGRAMMING SOLVER
@@ -128,12 +141,6 @@ INCLUDE_DIRECTORIES(
 #  and openMVG simultaneously
 # ==============================================================================
 SET(USE_OPENCV OFF CACHE BOOL "Do not build opencv+openMVG samples programs")
-IF (USE_OPENCV)
-# In order use openMVG+openCV samples set USE_OPENCV to ON and set the OpenCV_DIR
-#  to the build directory of openCV. Prefer use static version of openCV libraries.
-  SET(OpenCV_DIR "/home/pierre/Documents/Dev_OpenCV/opencv_Build")
-ENDIF (USE_OPENCV)
-
 
 
 # ==============================================================================
@@ -146,6 +153,9 @@ ENDIF (OpenMVG_BUILD_TESTS)
 MACRO (UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
   IF (OpenMVG_BUILD_TESTS)
     ADD_EXECUTABLE(${NAMESPACE}_test_${NAME} ${NAME}_test.cpp)
+    
+    SET_PROPERTY(TARGET ${NAMESPACE}_test_${NAME} PROPERTY FOLDER OpenMVG/test)
+
     TARGET_LINK_LIBRARIES(${NAMESPACE}_test_${NAME}
                           ${EXTRA_LIBS} # Extra libs MUST be first.
                           CppUnitLite ${OPENMVG_LIBRARY_DEPENDENCIES})
@@ -167,9 +177,10 @@ ADD_SUBDIRECTORY(third_party)
 # ==============================================================================
 SET(OpenMVG_INCLUDES
   ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party
   ${JPEG_INCLUDE_DIR}
   ${PNG_INCLUDE_DIRS}
+  ${TIFF_INCLUDE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon
   ${PROJECT_BINARY_DIR}/third_party/lemon
@@ -188,13 +199,13 @@ INCLUDE_DIRECTORIES(${OpenMVG_INCLUDES})
 # The openMVG library itself
 ADD_SUBDIRECTORY(openMVG)
 
-# software under patent
+# software under patent or commercial licence
 # Included for research purpose only
-ADD_SUBDIRECTORY(patented)
+ADD_SUBDIRECTORY(nonFree)
 
 # openMVG tutorial examples
 IF (OpenMVG_BUILD_EXAMPLES)
-  ADD_SUBDIRECTORY(openMVG_Samples)
+   ADD_SUBDIRECTORY(openMVG_Samples)
 ENDIF (OpenMVG_BUILD_EXAMPLES)
 
 # ==============================================================================
@@ -203,12 +214,18 @@ ENDIF (OpenMVG_BUILD_EXAMPLES)
 SET(OpenMVG_LIBS
   openMVG_image
   openMVG_multiview
-  openMVG_lInftyComputerVision)
+  openMVG_lInftyComputerVision
+  openMVG_system
+)
+
+FOREACH(omvglib ${OpenMVG_LIBS})
+    SET_PROPERTY(TARGET ${omvglib} PROPERTY FOLDER OpenMVG/OpenMVG)
+ENDFOREACH()
+  
 # concat lists
 SET(OpenMVG_LIBS "${OpenMVG_LIBS}" ${openMVG_linearProgramming})
-SET(OpenMVG_LIBS "${OpenMVG_LIBS}"
-  openMVG_system
-  #third_party libs
+#third_party libs
+SET(OpenMVG_LIBS "${OpenMVG_LIBS}" 
   vlsift
   stlplus
   flann_cpp_s
@@ -244,4 +261,3 @@ IF (EXISTS ${SPHINX_EXECUTABLE})
 ELSE (EXISTS ${SPHINX_EXECUTABLE})
   MESSAGE("Sphinx need to be installed to generate the documentation")
 ENDIF (EXISTS ${SPHINX_EXECUTABLE})
-
