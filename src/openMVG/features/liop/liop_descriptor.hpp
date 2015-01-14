@@ -16,8 +16,14 @@
 //- Date: 2011, ICCV, IEEE International Conference on Computer Vision
 
 #pragma once
+
+#include <openMVG/image/image.hpp>
+#include <openMVG/features/features.hpp>
+
 #include <float.h>
 #include <algorithm>
+#include <map>
+#include <vector>
 
 namespace openMVG {
 namespace LIOP    {
