@@ -245,6 +245,7 @@ Canon;Canon PowerShot SD1400 IS;6.16
 Canon;Canon IXUS 130;6.16
 Canon;Canon PowerShot SD3500 IS;6.16
 Canon;Canon EOS Rebel T2i / 550D;22.3
+Canon;Canon EOS Rebel T1i / 500D;22.3
 Canon;Canon IXUS 210;6.16
 Canon;Canon PowerShot SX30 IS;6.16
 Canon;Canon PowerShot SX210 IS;6.16
