@@ -1,4 +1,4 @@
-// Copyright (c) 2012, 2013 Pierre MOULON.
+// Copyright (c) 2012, 2013, 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -147,8 +147,14 @@ int main(int argc, char **argv)
       if (openMVG::GetFormat(sImageFilename.c_str()) == openMVG::Unknown)
         continue; // image cannot be opened
 
-      size_t width = -1;
-      size_t height = -1;
+      size_t width = -1, height = -1;
+      Image<unsigned char> image;
+      if (openMVG::ReadImage( sImageFilename.c_str(), &image))  {
+        width = image.Width();
+        height = image.Height();
+      }
+      else
+        continue; // image cannot be read
 
       std::auto_ptr<Exif_IO> exifReader (new Exif_IO_EasyExif() );
       exifReader->open( sImageFilename );
@@ -159,15 +165,6 @@ int main(int argc, char **argv)
       //If image do not contains meta data
       if ( !exifReader->doesHaveExifInfo() || focalPixPermm != -1)
       {
-        Image<unsigned char> image;
-        if (openMVG::ReadImage( sImageFilename.c_str(), &image))  {
-          width = image.Width();
-          height = image.Height();
-        } // Since read image perform an explicit image conversion
-          //(we do not have to test RGB/A formats)
-        else
-          continue; // image is not considered, cannot be read
-  
         os << *iter_image << ";" << width << ";" << height;
         if ( focalPixPermm == -1 && sKmatrix.size() == 0)
           os << std::endl;
@@ -189,20 +186,6 @@ int main(int argc, char **argv)
         const std::string sCamName = exifReader->getBrand();
         const std::string sCamModel = exifReader->getModel();
 
-        width = exifReader->getWidth();
-        height = exifReader->getHeight();
-
-        // Handle case where EXIF height or width is not present
-        if (width == 0 || height == 0)
-        {
-          Image<unsigned char> image;
-          if (openMVG::ReadImage( sImageFilename.c_str(), &image))  {
-            width = image.Width();
-            height = image.Height();
-          }
-          else
-            continue;  // image is not considered, cannot be read
-        }
         // Handle case where focal length is equal to 0
         if (exifReader->getFocal() == 0.0f)
         {
