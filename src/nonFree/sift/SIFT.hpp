@@ -32,7 +32,7 @@ inline void siftDescToFloat(vl_sift_pix descr[128],
 {
   //rootsift= sqrt( sift / sum(sift) );
   if (brootSift)  {
-    float sum = accumulate(descr, descr+128, 0.0f);
+    const float sum = accumulate(descr, descr+128, 0.0f);
     for (int k=0;k<128;++k)
       descriptor[k] = sqrt(descr[k]/sum);
   }
@@ -47,7 +47,7 @@ inline void siftDescToFloat(vl_sift_pix descr[128],
 {
   //rootsift= sqrt( sift / sum(sift) );
   if (brootSift)  {
-    float sum = accumulate(descr, descr+128, 0.0f);
+    const float sum = accumulate(descr, descr+128, 0.0f);
     for (int k=0;k<128;++k)
       descriptor[k] = static_cast<unsigned char>(512.f*sqrt(descr[k]/sum));
   }
@@ -65,20 +65,19 @@ static bool SIFTDetector(const Image<unsigned char>& I,
   float dPeakThreshold = 0.04f)
 {
   // First Octave Index.
-  int firstOctave = (bDezoom == true) ? -1 : 0;
+  const int firstOctave = (bDezoom == true) ? -1 : 0;
   // Number of octaves.
-  int numOctaves = 6;
+  const int numOctaves = 6;
   // Number of scales per octave.
-  int numScales = 3;
+  const int numScales = 3;
   // Max ratio of Hessian eigenvalues.
-  float edgeThresh = 10.0f;
+  const float edgeThresh = 10.0f;
   // Min contrast.
-  float peakThresh = dPeakThreshold;
+  const float peakThresh = dPeakThreshold;
 
-  int w=I.Width(), h=I.Height();
+  const int w=I.Width(), h=I.Height();
   //Convert to float
-  Image<float> If( I.GetMat().cast<float>() );
-
+  const Image<float> If( I.GetMat().cast<float>() );
 
   vl_constructor();
 
@@ -90,30 +89,38 @@ static bool SIFTDetector(const Image<unsigned char>& I,
 
   vl_sift_process_first_octave(filt, If.data());
 
-  vl_sift_pix descr[128];
+  Descriptor<vl_sift_pix, 128> descr;
   Descriptor<type, 128> descriptor;
 
   while (true) {
     vl_sift_detect(filt);
 
     VlSiftKeypoint const *keys  = vl_sift_get_keypoints(filt);
-    int nkeys = vl_sift_get_nkeypoints(filt);
+    const int nkeys = vl_sift_get_nkeypoints(filt);
 
+    // Update gradient before launching parallel extraction
+    vl_sift_update_gradient(filt);
+
+  #ifdef USE_OPENMP
+  #pragma omp parallel for private(descr, descriptor)
+  #endif 
     for (int i=0;i<nkeys;++i) {
       double angles [4];
-      int	nangles=vl_sift_calc_keypoint_orientations(filt,angles,keys+i);
+      const int	nangles=vl_sift_calc_keypoint_orientations(filt,angles,keys+i);
 
       for (int q=0 ; q < nangles ; ++q) {
-        vl_sift_calc_keypoint_descriptor(filt,descr, keys+i, angles [q]);
-        SIOPointFeature fp;
-        fp.x() = keys[i].x;
-        fp.y() = keys[i].y;
-        fp.scale() = keys[i].sigma;
-        fp.orientation() = static_cast<float>(angles[q]);
+        vl_sift_calc_keypoint_descriptor(filt,&descr[0], keys+i, angles [q]);
+        const SIOPointFeature fp(keys[i].x, keys[i].y,
+          keys[i].sigma, static_cast<float>(angles[q]));
 
-        siftDescToFloat(descr, descriptor, bRootSift);
-        descs.push_back(descriptor);
-        feats.push_back(fp);
+        siftDescToFloat(&descr[0], descriptor, bRootSift);
+#ifdef USE_OPENMP
+  #pragma omp critical
+#endif
+        {
+          descs.push_back(descriptor);
+          feats.push_back(fp);
+        }
       }
     }
     if (vl_sift_process_next_octave(filt))

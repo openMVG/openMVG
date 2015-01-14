@@ -1446,7 +1446,6 @@ vl_sift_detect (VlSiftFilt * f)
 
 
 /** ------------------------------------------------------------------
- ** @internal
  ** @brief Update gradients to current GSS octave
  **
  ** @param f SIFT filter.
@@ -1457,8 +1456,8 @@ vl_sift_detect (VlSiftFilt * f)
  ** @remark The minimum octave size is 2x2xS.
  **/
 
-static void
-update_gradient (VlSiftFilt *f)
+void
+vl_sift_update_gradient (VlSiftFilt *f)
 {
   int       s_min = f->s_min ;
   int       s_max = f->s_max ;
@@ -1616,7 +1615,7 @@ vl_sift_calc_keypoint_orientations (VlSiftFilt *f,
   }
 
   /* make gradient up to date */
-  update_gradient (f) ;
+  vl_sift_update_gradient (f) ;
 
   /* clear histogram */
   memset (hist, 0, sizeof(double) * nbins) ;
@@ -1997,7 +1996,7 @@ vl_sift_calc_keypoint_descriptor (VlSiftFilt *f,
     return ;
 
   /* synchronize gradient buffer */
-  update_gradient (f) ;
+  vl_sift_update_gradient (f) ;
 
   /* VL_PRINTF("W = %d ; magnif = %g ; SBP = %g\n", W,magnif,SBP) ; */
 
