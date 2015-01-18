@@ -8,7 +8,7 @@
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/features.hpp"
 #include "openMVG/matching/matcher_brute_force.hpp"
-#include "openMVG/multiview/solver_homography_kernel.hpp"
+#include "openMVG/multiview/solver_fundamental_kernel.hpp"
 #include "openMVG/multiview/conditioning.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
@@ -32,11 +32,11 @@ using namespace std;
 
 int main() {
 
+  const std::string sInputDir = stlplus::folder_up(string(THIS_SOURCE_DIR))
+    + "/imageData/SceauxCastle/";
   Image<RGBColor> image;
-  string jpg_filenameL = stlplus::folder_up(string(THIS_SOURCE_DIR))
-    + "/imageData/StanfordMobileVisualSearch/Ace_0.png";
-  string jpg_filenameR = stlplus::folder_up(string(THIS_SOURCE_DIR))
-    + "/imageData/StanfordMobileVisualSearch/Ace_1.png";
+  const string jpg_filenameL = sInputDir + "100_7101.jpg";
+  const string jpg_filenameR = sInputDir + "100_7102.jpg";
 
   Image<unsigned char> imageL, imageR;
   ReadImage(jpg_filenameL.c_str(), &imageL);
@@ -50,7 +50,7 @@ int main() {
   vector<SIOPointFeature> featsL, featsR;
   vector<SIFTDescriptor > descsL, descsR;
   // Call SIFT detector
-  bool bOctaveMinus1 = true;
+  bool bOctaveMinus1 = false;
   bool bRootSift = true;
   SIFTDetector(imageL, featsL, descsL, bOctaveMinus1, bRootSift);
   SIFTDetector(imageR, featsR, descsR, bOctaveMinus1, bRootSift);
@@ -105,13 +105,13 @@ int main() {
       svgStream.drawCircle(L.x(), L.y(), L.scale(), svgStyle().stroke("yellow", 2.0));
       svgStream.drawCircle(R.x()+imageL.Width(), R.y(), R.scale(),svgStyle().stroke("yellow", 2.0));
     }
-    string out_filename = "03_siftMatches.svg";
+    const string out_filename = "03_siftMatches.svg";
     ofstream svgFile( out_filename.c_str() );
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
   }
 
-  // Homography geometry filtering of putative matches
+  // Fundamental geometry filtering of putative matches
   {
     //A. get back interest point and send it to the robust estimation framework
     Mat xL(2, vec_PutativeMatches.size());
@@ -124,36 +124,36 @@ int main() {
       xR.col(k) = imaR.coords().cast<double>();
     }
 
-    //-- Homography robust estimation
+    //-- Fundamental robust estimation
     std::vector<size_t> vec_inliers;
     typedef ACKernelAdaptor<
-      openMVG::homography::kernel::FourPointSolver,
-      openMVG::homography::kernel::AsymmetricError,
-      UnnormalizerI,
+      openMVG::fundamental::kernel::SevenPointSolver,
+      openMVG::fundamental::kernel::EpipolarDistanceError,
+      UnnormalizerT,
       Mat3>
       KernelType;
 
     KernelType kernel(
       xL, imageL.Width(), imageL.Height(),
       xR, imageR.Width(), imageR.Height(),
-      false); // configure as point to point error model.
+      true); // configure as point to line error model.
 
-    Mat3 H;
-    std::pair<double,double> ACRansacOut = ACRANSAC(kernel, vec_inliers, 1024, &H,
-      std::numeric_limits<double>::infinity(),
+    Mat3 F;
+    std::pair<double,double> ACRansacOut = ACRANSAC(kernel, vec_inliers, 1024, &F,
+      4.0, // Upper bound of authorized threshold
       true);
-    const double & thresholdH = ACRansacOut.first;
+    const double & thresholdF = ACRansacOut.first;
 
-    // Check the homography support some point to be considered as valid
+    // Check the fundamental support some point to be considered as valid
     if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5) {
 
-      std::cout << "\nFound a homography under the confidence threshold of: "
-        << thresholdH << " pixels\n\twith: " << vec_inliers.size() << " inliers"
+      std::cout << "\nFound a fundamental under the confidence threshold of: "
+        << thresholdF << " pixels\n\twith: " << vec_inliers.size() << " inliers"
         << " from: " << vec_PutativeMatches.size()
          << " putatives correspondences"
         << std::endl;
 
-      //Show homography validated point and compute residuals
+      //Show fundamental validated point and compute residuals
       std::vector<double> vec_residuals(vec_inliers.size(), 0.0);
       svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
       svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
@@ -167,11 +167,11 @@ int main() {
         svgStream.drawCircle(L.x(), L.y(), LL.scale(), svgStyle().stroke("yellow", 2.0));
         svgStream.drawCircle(R.x()+imageL.Width(), R.y(), RR.scale(),svgStyle().stroke("yellow", 2.0));
         // residual computation
-        vec_residuals[i] = std::sqrt(KernelType::ErrorT::Error(H,
+        vec_residuals[i] = std::sqrt(KernelType::ErrorT::Error(F,
                                        LL.coords().cast<double>(),
                                        RR.coords().cast<double>()));
       }
-      string out_filename = "04_ACRansacHomography.svg";
+      const string out_filename = "04_ACRansacFundamental.svg";
       ofstream svgFile( out_filename.c_str() );
       svgFile << svgStream.closeSvgFile().str();
       svgFile.close();
@@ -182,7 +182,7 @@ int main() {
                             dMin, dMax, dMean, dMedian);
 
       std::cout << std::endl
-        << "Homography matrix estimation, residuals statistics:" << "\n"
+        << "Fundamental matrix estimation, residuals statistics:" << "\n"
         << "\t-- Residual min:\t" << dMin << std::endl
         << "\t-- Residual median:\t" << dMedian << std::endl
         << "\t-- Residual max:\t "  << dMax << std::endl
@@ -202,21 +202,21 @@ int main() {
 
       //a. by considering only the geometric error
 
-      GuidedMatching<Mat3, openMVG::homography::kernel::AsymmetricError>(
-        H, xL, xR, Square(thresholdH), vec_corresponding_indexes[0]);
-      std::cout << "\nGuided homography matching (geometric error) found "
+      GuidedMatching<Mat3, openMVG::fundamental::kernel::EpipolarDistanceError>(
+        F, xL, xR, Square(thresholdF), vec_corresponding_indexes[0]);
+      std::cout << "\nGuided Fundamental matching (geometric error) found "
         << vec_corresponding_indexes[0].size() << " correspondences."
         << std::endl;
 
       // b. by considering geometric error and descriptor distance ratio
       GuidedMatching
-        <Mat3, openMVG::homography::kernel::AsymmetricError,
+        <Mat3, openMVG::fundamental::kernel::EpipolarDistanceError,
         SIFTDescriptor, L2_Vectorized<SIFTDescriptor::bin_type> >(
-        H, xL, descsL, xR, descsR,
-        Square(thresholdH), Square(0.8),
+        F, xL, descsL, xR, descsR,
+        Square(thresholdF), Square(0.8),
         vec_corresponding_indexes[1]);
 
-      std::cout << "\nGuided homography matching "
+      std::cout << "\nGuided fundamental matching "
         << "(geometric + descriptor distance ratio) found "
         << vec_corresponding_indexes[1].size() << " correspondences."
         << std::endl;
@@ -224,7 +224,7 @@ int main() {
       for (size_t idx = 0; idx < 2; ++idx)
       {
         const std::vector<IndMatch> & vec_corresponding_index = vec_corresponding_indexes[idx];
-        //Show homography validated correspondences
+        //Show fundamental validated correspondences
         svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
         svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
         svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
@@ -239,15 +239,15 @@ int main() {
           svgStream.drawCircle(R.x()+imageL.Width(), R.y(), RR.scale(),svgStyle().stroke("yellow", 2.0));
         }
         const string out_filename =
-          (idx == 0) ? "04_ACRansacHomography_guided_geom.svg"
-            : "04_ACRansacHomography_guided_geom_distratio.svg";
+          (idx == 0) ? "04_ACRansacFundamental_guided_geom.svg"
+            : "04_ACRansacFundamental_guided_geom_distratio.svg";
         ofstream svgFile( out_filename.c_str() );
         svgFile << svgStream.closeSvgFile().str();
         svgFile.close();
       }
     }
     else  {
-      std::cout << "ACRANSAC was unable to estimate a rigid homography"
+      std::cout << "ACRANSAC was unable to estimate a rigid fundamental"
         << std::endl;
     }
   }
