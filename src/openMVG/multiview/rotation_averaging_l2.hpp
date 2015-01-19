@@ -55,7 +55,7 @@ inline Mat3 ClosestSVDRotationMatrix(const Mat3 & rotMat)
 //- vec_ApprRotMatrix:     The output global rotation
 
 // Minimization of the norm of:
-// => || rj - Rij * ri ||= 0
+// => || wij * (rj - Rij * ri) ||= 0
 // With rj et rj the global rotation and Rij the relative rotation from i to j.
 //
 // Example:
@@ -90,7 +90,7 @@ static bool L2RotationAveraging( size_t nCamera,
   {
    const RelRotationData & Elem = *iter;
 
-   //-- Encode rj - Rij * ri = 0
+   //-- Encode weight * ( rj - Rij * ri ) = 0
    const size_t i = iter->i;
    const size_t j = iter->j;
 
@@ -137,8 +137,7 @@ static bool L2RotationAveraging( size_t nCamera,
   else
   {
     // Sort abs(eigenvalues)
-    std::vector<std::pair<double, Vec> > eigs;
-    eigs.resize(AtA.cols());
+    std::vector<std::pair<double, Vec> > eigs(AtA.cols());
     for (size_t i = 0; i < AtA.cols(); ++i)
     {
       eigs[i] = std::make_pair(es.eigenvalues()[i], es.eigenvectors().col(i));
@@ -169,7 +168,7 @@ static bool L2RotationAveraging( size_t nCamera,
       vec_ApprRotMatrix.push_back(Rotation);
     }
     // Force R0 to be Identity
-    Mat3 R0T = vec_ApprRotMatrix[0].transpose();
+    const Mat3 R0T = vec_ApprRotMatrix[0].transpose();
     for(size_t i = 0; i < nCamera; ++i) {
       vec_ApprRotMatrix[i] *= R0T;
     }
