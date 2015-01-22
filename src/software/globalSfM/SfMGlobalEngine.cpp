@@ -292,9 +292,12 @@ GlobalReconstructionEngine::GlobalReconstructionEngine(
 
 GlobalReconstructionEngine::~GlobalReconstructionEngine()
 {
-  ofstream htmlFileStream( string(stlplus::folder_append_separator(_sOutDirectory) +
-    "Reconstruction_Report.html").c_str());
-  htmlFileStream << _htmlDocStream->getDoc();
+  if (_bHtmlReport)
+  {
+    ofstream htmlFileStream( string(stlplus::folder_append_separator(_sOutDirectory) +
+      "Reconstruction_Report.html").c_str());
+    htmlFileStream << _htmlDocStream->getDoc();
+  }
 }
 
 void GlobalReconstructionEngine::rotationInference(

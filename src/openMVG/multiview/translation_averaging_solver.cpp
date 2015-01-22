@@ -92,14 +92,14 @@ bool solve_translations_problem(
   const int num_nodes = reindex_lookup.size();
 
   // Init with a random guess solution
-  double *x = new double[3*num_nodes];
+  std::vector<double> x(3*num_nodes);
   for (int i=0; i<3*num_nodes; ++i)
     x[i] = (double)rand() / RAND_MAX;
 
   // add the parameter blocks (a 3-vector for each node)
   Problem problem;
   for (int i=0; i<num_nodes; ++i)
-    problem.AddParameterBlock(x+3*i, 3);
+    problem.AddParameterBlock(&x[3*i], 3);
 
   // set the residual function (chordal distance for each edge)
   for (int i=0; i<num_edges; ++i) {
@@ -109,15 +109,15 @@ bool solve_translations_problem(
 
     if (loss_width == 0.0) {
       // No robust loss function
-      problem.AddResidualBlock(cost_function, NULL, x+3*_edges[2*i+0], x+3*_edges[2*i+1]);
+      problem.AddResidualBlock(cost_function, NULL, &x[3*_edges[2*i+0]], &x[3*_edges[2*i+1]]);
     } else {
-      problem.AddResidualBlock(cost_function, new ceres::HuberLoss(loss_width), x+3*_edges[2*i+0], x+3*_edges[2*i+1]);
+      problem.AddResidualBlock(cost_function, new ceres::HuberLoss(loss_width), &x[3*_edges[2*i+0]], &x[3*_edges[2*i+1]]);
     }
   }
 
   // Fix first camera in {0,0,0}: fix the translation ambiguity
   x[0] = x[1] = x[2] = 0.0;
-  problem.SetParameterBlockConstant(x);
+  problem.SetParameterBlockConstant(&x[0]);
 
   // solve
   Solver::Options options;
@@ -147,7 +147,6 @@ bool solve_translations_problem(
       X[3*j+2] = x[3*i+2];
     }
   }
-  delete [] x;
   return summary.IsSolutionUsable();
 }
 

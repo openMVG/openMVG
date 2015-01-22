@@ -63,9 +63,12 @@ IncrementalReconstructionEngine::IncrementalReconstructionEngine(const std::stri
 
 IncrementalReconstructionEngine::~IncrementalReconstructionEngine()
 {
-  ofstream htmlFileStream( string(stlplus::folder_append_separator(_sOutDirectory) +
-    "Reconstruction_Report.html").c_str());
-  htmlFileStream << _htmlDocStream->getDoc();
+  if (_bHtmlReport)
+  {
+    ofstream htmlFileStream( string(stlplus::folder_append_separator(_sOutDirectory) +
+      "Reconstruction_Report.html").c_str());
+    htmlFileStream << _htmlDocStream->getDoc();
+  }
 }
 
 void pauseProcess()
