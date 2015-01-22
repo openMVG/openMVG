@@ -6,13 +6,21 @@ SET_PROPERTY(TARGET openMVG_main_CreateList PROPERTY FOLDER OpenMVG/software)
 
 #Add executable that computes:
 # - features and descriptors
-# - putatives matches
-# - geometric filtered matches
 #
 ADD_EXECUTABLE(openMVG_main_computeMatches main_computeMatches.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_computeMatches
                      ${OpenMVG_LIBS})
 SET_PROPERTY(TARGET openMVG_main_computeMatches PROPERTY FOLDER OpenMVG/software)
+
+#Add executable that computes:
+# - features and descriptors
+# - putatives matches
+# - geometric filtered matches
+#
+ADD_EXECUTABLE(openMVG_main_extractFeatures main_extractFeatures.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_extractFeatures
+                     ${OpenMVG_LIBS})
+SET_PROPERTY(TARGET openMVG_main_extractFeatures PROPERTY FOLDER OpenMVG/software)
 
 #Add library and executable that perform SfM:
 # - the required input is matches computed by openMVG_main_computeMatches

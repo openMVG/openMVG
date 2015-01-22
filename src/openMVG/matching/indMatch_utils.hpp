@@ -9,6 +9,7 @@
 #define OPENMVG_MATCHING_IND_MATCH_UTILS_H
 
 #include "openMVG/matching/indMatch.hpp"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include <map>
 #include <fstream>
 #include <iterator>
@@ -44,23 +45,79 @@ static bool PairedIndMatchImport(
 {
   bool bOk = false;
   std::ifstream in(fileName.c_str());
-  if (in.is_open()) {
-    map_indexedMatches.clear();
+    if (in.is_open()) {
+      map_indexedMatches.clear();
 
-    size_t I, J, number;
-    while (in >> I >> J >> number)  {
-      std::vector<IndMatch> matches(number);
-      for (size_t i = 0; i < number; ++i) {
-        in >> matches[i];
+      size_t I, J, number;
+      while (in >> I >> J >> number)  {
+        std::vector<IndMatch> matches(number);
+        for (size_t i = 0; i < number; ++i) {
+          in >> matches[i];
+        }
+        map_indexedMatches[std::make_pair(I,J)] = matches;
       }
-      map_indexedMatches[std::make_pair(I,J)] = matches;
+      bOk = true;
     }
-    bOk = true;
-  }
-  else  {
-    std::cout << std::endl << "ERROR indexedMatchesUtils::import(...)" << std::endl
+    else  {
+      std::cout << std::endl << "ERROR indexedMatchesUtils::import(...)" << std::endl
       << "with : " << fileName << std::endl;
-    bOk = false;
+      bOk = false;
+    }
+  return bOk;
+}
+
+/// Import vector of IndMatch from a file
+static bool PairedIndMatchImportAdd(
+  const std::string & fileName,
+  PairWiseMatches & map_indexedMatches)
+{
+  bool bOk = false;
+  std::ifstream in(fileName.c_str());
+    if (in.is_open()) {
+      size_t I, J, number;
+      while (in >> I >> J >> number)  {
+        std::vector<IndMatch> matches(number);
+        for (size_t i = 0; i < number; ++i) {
+          in >> matches[i];
+        }
+        map_indexedMatches[std::make_pair(I,J)] = matches;
+      }
+      bOk = true;
+    }
+    else  {
+      std::cout << std::endl << "ERROR indexedMatchesUtils::import(...)" << std::endl
+      << "with : " << fileName << std::endl;
+      bOk = false;
+    }
+  return bOk;
+}
+
+/// Import vector of IndMatch from a directory
+static bool PairedIndMatchImport(
+  const std::string& matchesDir,
+  const std::vector<std::string>& vec_imageNameList,
+  PairWiseMatches & map_indexedMatches)
+{
+  bool bOk = false;
+
+  // TODO : check pairs
+  if(vec_imageNameList.empty())
+  {
+    std::cout << "Empty image list" << std::endl;
+    return false;
+  }
+  
+  map_indexedMatches.clear();
+  for(std::vector<std::string>::const_iterator it = vec_imageNameList.begin(); it != vec_imageNameList.end(); ++it)
+  {
+    const std::string imageMatchePath = stlplus::create_filespec(matchesDir, stlplus::basename_part(*it) + ".matches.f.txt");  
+    std::cout << imageMatchePath << std::endl;
+    bOk = PairedIndMatchImportAdd(imageMatchePath, map_indexedMatches);
+    if(!bOk)
+    {
+      std::cout << "Error with import for image " << *it << std::endl;
+      return bOk;
+    }
   }
   return bOk;
 }

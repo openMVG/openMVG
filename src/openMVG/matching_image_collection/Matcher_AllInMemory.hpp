@@ -60,8 +60,49 @@ class Matcher_AllInMemory : public Matcher
     }
     return bOk;
   }
+  
+  void Match(const std::vector<FeatureT>& featureSetI, const DescsT& descriptorSetI, const std::vector<FeatureT>& featureSetJ, const DescsT& descriptorSetJ, std::vector<matching::IndMatch>& matches) const
+  {          
+    // Load features and descriptors of Inth image
+    const DescBin_typeT * tab0 = reinterpret_cast<const DescBin_typeT *>(&descriptorSetI[0]);
+    const DescBin_typeT * tab1 = reinterpret_cast<const DescBin_typeT *>(&descriptorSetJ[0]);
+
+    MatcherT matcher10;
+    ( matcher10.Build(tab0, featureSetI.size(), DescriptorT::static_size) );
+      
+    // Compute
+    const size_t NNN__ = 2;
+    std::vector<int> vec_nIndice10;
+    std::vector<typename MatcherT::DistanceType> vec_fDistance10;
+
+    //Find left->right
+    matcher10.SearchNeighbours(tab1, featureSetJ.size(), &vec_nIndice10, &vec_fDistance10, NNN__);
+
+    std::vector<int> vec_NNRatioIndexes;
+    NNdistanceRatio( vec_fDistance10.begin(), // distance start
+      vec_fDistance10.end(),  // distance end
+      NNN__, // Number of neighbor in iterator sequence (minimum required 2)
+      vec_NNRatioIndexes, // output (index that respect Lowe Ratio)
+      Square(fDistRatio)); // squared dist ratio due to usage of a squared metric
+
+    for (size_t k=0; k < vec_NNRatioIndexes.size()-1&& vec_NNRatioIndexes.size()>0; ++k)
+    {
+      const size_t index = vec_NNRatioIndexes[k];
+      matches.push_back(
+        IndMatch(vec_nIndice10[index*NNN__], index) );
+    }
+
+    // Remove duplicates
+    IndMatch::getDeduplicated(matches);
+
+    // Remove matches that have the same X,Y coordinates
+    IndMatchDecorator<float> matchDeduplicator(matches, featureSetI, featureSetJ);
+    matchDeduplicator.getDeduplicated(matches);
+  }
+  
 
   void Match(
+    // TODO : remove since not used
     const std::vector<std::string> & vec_fileNames, // input filenames,
     const PairsT & pairs,
     PairWiseMatches & map_PutativesMatches)const // the pairwise photometric corresponding points
@@ -87,13 +128,6 @@ class Matcher_AllInMemory : public Matcher
       typename std::map<size_t, DescsT >::const_iterator iter_DescriptorI = map_Desc.find(I);
 
       const std::vector<FeatureT> & featureSetI = iter_FeaturesI->second;
-      const size_t featureSetI_Size = iter_FeaturesI->second.size();
-      const DescBin_typeT * tab0 =
-        reinterpret_cast<const DescBin_typeT *>(&iter_DescriptorI->second[0]);
-
-      MatcherT matcher10;
-      ( matcher10.Build(tab0, featureSetI_Size, DescriptorT::static_size) );
-
       const std::vector<size_t> & indexToCompare = iter->second;
 #ifdef USE_OPENMP
   #pragma omp parallel for schedule(dynamic)
@@ -106,38 +140,9 @@ class Matcher_AllInMemory : public Matcher
         typename std::map<size_t, DescsT >::const_iterator iter_DescriptorJ = map_Desc.find(J);
 
         const std::vector<FeatureT> & featureSetJ = iter_FeaturesJ->second;
-        const DescBin_typeT * tab1 =
-          reinterpret_cast<const DescBin_typeT *>(&iter_DescriptorJ->second[0]);
-
-        const size_t NNN__ = 2;
-        std::vector<int> vec_nIndice10;
-        std::vector<typename MatcherT::DistanceType> vec_fDistance10;
-
-        //Find left->right
-        matcher10.SearchNeighbours(tab1, featureSetJ.size(), &vec_nIndice10, &vec_fDistance10, NNN__);
 
         std::vector<IndMatch> vec_FilteredMatches;
-        std::vector<int> vec_NNRatioIndexes;
-        NNdistanceRatio( vec_fDistance10.begin(), // distance start
-          vec_fDistance10.end(),  // distance end
-          NNN__, // Number of neighbor in iterator sequence (minimum required 2)
-          vec_NNRatioIndexes, // output (index that respect Lowe Ratio)
-          Square(fDistRatio)); // squared dist ratio due to usage of a squared metric
-
-        for (size_t k=0; k < vec_NNRatioIndexes.size()-1&& vec_NNRatioIndexes.size()>0; ++k)
-        {
-          const size_t index = vec_NNRatioIndexes[k];
-          vec_FilteredMatches.push_back(
-            IndMatch(vec_nIndice10[index*NNN__], index) );
-        }
-
-        // Remove duplicates
-        IndMatch::getDeduplicated(vec_FilteredMatches);
-
-        // Remove matches that have the same X,Y coordinates
-        IndMatchDecorator<float> matchDeduplicator(vec_FilteredMatches, featureSetI, featureSetJ);
-        matchDeduplicator.getDeduplicated(vec_FilteredMatches);
-
+        Match(featureSetI, iter_DescriptorI->second, featureSetJ, iter_DescriptorJ->second, vec_FilteredMatches);
 #ifdef USE_OPENMP
   #pragma omp critical
 #endif

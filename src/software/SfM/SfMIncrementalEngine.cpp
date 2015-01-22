@@ -22,6 +22,7 @@ using namespace openMVG::tracks;
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 #include "third_party/stlAddition/stlMap.hpp"
 #include "openMVG/matching/indexed_sort.hpp"
+#include "third_party/eigen/Eigen/src/StlSupport/StdVector.h"
 
 #include <numeric>
 #include <iomanip>
@@ -179,10 +180,9 @@ bool IncrementalReconstructionEngine::ReadInputData()
     return false;
   }
 
-  const std::string sListsFile = stlplus::create_filespec(_sMatchesPath,"lists","txt");
-  const std::string sComputedMatchesFile_F = stlplus::create_filespec(_sMatchesPath,"matches.f","txt");
-  if (!stlplus::is_file(sListsFile)||
-    !stlplus::is_file(sComputedMatchesFile_F) )
+  const std::string sListsFile = stlplus::create_filespec(_sMatchesPath, "lists","txt");
+  // TODO : check for at least one matches.f.txt file
+  if (!stlplus::is_file(sListsFile))
   {
     std::cerr << std::endl
       << "One of the input required file is not a present (lists.txt, matches.f.txt)" << std::endl;
@@ -214,7 +214,9 @@ bool IncrementalReconstructionEngine::ReadInputData()
   }
 
   // b. Read matches (Fundamental)
-  if (!matching::PairedIndMatchImport(sComputedMatchesFile_F, _map_Matches_F)) {
+  // TODO check format
+  std::vector<std::string> vec_imageFiles = stlplus::folder_files(_sImagePath);
+  if (!matching::PairedIndMatchImport(_sMatchesPath, vec_imageFiles, _map_Matches_F)) {
     std::cerr<< "Unable to read the Fundamental matrix matches" << std::endl;
     return false;
   }
