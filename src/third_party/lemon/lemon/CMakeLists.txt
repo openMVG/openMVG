@@ -66,21 +66,21 @@ INSTALL(
   COMPONENT library
 )
 
-INSTALL(
-  DIRECTORY . bits concepts
-  DESTINATION include/lemon
-  COMPONENT headers
-  FILES_MATCHING PATTERN "*.h"
-)
+#INSTALL(
+#  DIRECTORY . bits concepts
+#  DESTINATION include/lemon
+#  COMPONENT headers
+#  FILES_MATCHING PATTERN "*.h"
+#)
 
-INSTALL(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h
-  DESTINATION include/lemon
-  COMPONENT headers
-)
+#INSTALL(
+#  FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h
+#  DESTINATION include/openMVG_third_party/lemon
+#  COMPONENT headers
+#)
 
-INSTALL(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/lemon.pc
-  DESTINATION lib/pkgconfig
-)
+#INSTALL(
+#  FILES ${CMAKE_CURRENT_BINARY_DIR}/lemon.pc
+#  DESTINATION lib/pkgconfig
+#)
 

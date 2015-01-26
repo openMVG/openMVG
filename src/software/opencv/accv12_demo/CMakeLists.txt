@@ -10,5 +10,7 @@ else(NOT OpenCV_FOUND)
 add_executable( opencv_fitting main.cpp )
 target_link_libraries( opencv_fitting ${OpenCV_LIBS} openMVG_multiview) 
 
+INSTALL(TARGETS opencv_fitting DESTINATION bin/)
+
 endif(NOT OpenCV_FOUND)
 

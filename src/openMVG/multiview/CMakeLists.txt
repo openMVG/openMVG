@@ -1,13 +1,13 @@
 
 file(
-	GLOB_RECURSE
-	multiview_files_header
-	*.hpp
+  GLOB_RECURSE
+  multiview_files_header
+  *.hpp
 )
 file(
-	GLOB_RECURSE
-	multiview_files_cpp
-	*.cpp
+  GLOB_RECURSE
+  multiview_files_cpp
+  *.cpp
 )
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 file(GLOB_RECURSE MULTIVIEWTESTDATA *_data_sets*)
@@ -17,8 +17,10 @@ list(REMOVE_ITEM multiview_files_cpp ${REMOVEFILESUNITTEST})
 list(REMOVE_ITEM multiview_files_cpp ${MULTIVIEWTESTDATA})
 
 ADD_LIBRARY(openMVG_multiview
-	${multiview_files_header}
-	${multiview_files_cpp})
+  ${multiview_files_header}
+  ${multiview_files_cpp})
+SET_PROPERTY(TARGET openMVG_multiview PROPERTY FOLDER OpenMVG)
+INSTALL(TARGETS openMVG_multiview DESTINATION lib/)
 
 #Make multiview library integrate numeric library
 ADD_LIBRARY(openMVG_multiview_test_data ${MULTIVIEWTESTDATA})
