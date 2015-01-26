@@ -1,7 +1,7 @@
 
 ADD_EXECUTABLE(openMVG_main_CreateList main_CreateList.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_CreateList
-                     ${OpenMVG_LIBS} easyexif)
+                     ${OpenMVG_LIBS})
 SET_PROPERTY(TARGET openMVG_main_CreateList PROPERTY FOLDER OpenMVG/software)
 
 #Add executable that computes:

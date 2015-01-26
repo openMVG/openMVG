@@ -18,3 +18,11 @@ ADD_SUBDIRECTORY(system)
 
 # set the variable in the parent_scope
 SET(openMVG_linearProgramming ${openMVG_linearProgramming} PARENT_SCOPE)
+
+#INSTALL RULES
+INSTALL(
+  DIRECTORY .
+  DESTINATION include/openMVG
+  COMPONENT headers
+  FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+)
