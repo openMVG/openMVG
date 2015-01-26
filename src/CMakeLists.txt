@@ -161,7 +161,6 @@ MACRO (UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
   ENDIF (OpenMVG_BUILD_TESTS)
 ENDMACRO (UNIT_TEST)
 
-
 # Configure Eigen to use only MPL2 licensed code
 ADD_DEFINITIONS(-DEIGEN_MPL2_ONLY)
 
@@ -216,7 +215,7 @@ SET(OpenMVG_LIBS
   openMVG_system)
 
 FOREACH(omvglib ${OpenMVG_LIBS})
-    SET_PROPERTY(TARGET ${omvglib} PROPERTY FOLDER OpenMVG/OpenMVG)
+  SET_PROPERTY(TARGET ${omvglib} PROPERTY FOLDER OpenMVG/OpenMVG)
 ENDFOREACH()
   
 # concat lists
@@ -227,7 +226,8 @@ SET(OpenMVG_LIBS "${OpenMVG_LIBS}"
   stlplus
   flann_cpp_s
   ceres
-  lemon)
+  lemon
+  easyexif)
 SET(OpenMVG_LIBS "${OpenMVG_LIBS}"
   ${OPENMVG_LIBRARY_DEPENDENCIES} CACHE STRING "openMVG library names")
 

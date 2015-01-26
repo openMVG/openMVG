@@ -11,5 +11,8 @@ INCLUDE_DIRECTORIES(./filesystemSimplified)
 ADD_LIBRARY(stlplus ${LIBSLTPLUS_SRCS})
 SET_PROPERTY(TARGET stlplus PROPERTY FOLDER OpenMVG/3rdParty)
 
-
+INSTALL(
+  TARGETS stlplus
+  DESTINATION lib
+)
 

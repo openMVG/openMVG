@@ -6,3 +6,5 @@ TARGET_LINK_LIBRARIES(openMVG_main_ColHarmonize
   openMVG_kvld)
 
 SET_PROPERTY(TARGET openMVG_main_ColHarmonize PROPERTY FOLDER OpenMVG/software)
+
+INSTALL(TARGETS openMVG_main_ColHarmonize DESTINATION bin/)

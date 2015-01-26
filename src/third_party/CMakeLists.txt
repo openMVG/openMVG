@@ -10,14 +10,10 @@ ENDIF()
 # Basic filesystem utils
 ADD_SUBDIRECTORY(stlplus3)
 
-# Add linear algebra library
-#  Eigen is used as header only
-
 # Add graph library
 ADD_SUBDIRECTORY(lemon)
 SET_PROPERTY(TARGET lemon PROPERTY FOLDER OpenMVG/3rdParty/lemon)
 SET_PROPERTY(TARGET check PROPERTY FOLDER OpenMVG/3rdParty/lemon)
-SET_PROPERTY(TARGET dist PROPERTY FOLDER OpenMVG/3rdParty/lemon)
 
 # Image I/O
 IF(NOT JPEG_FOUND)
@@ -59,7 +55,6 @@ ADD_SUBDIRECTORY(cxsparse)
 ADD_SUBDIRECTORY(ceres-solver)
 SET_PROPERTY(TARGET cxsparse PROPERTY FOLDER OpenMVG/3rdParty/ceres)
 SET_PROPERTY(TARGET ceres PROPERTY FOLDER OpenMVG/3rdParty/ceres)
-#SET_PROPERTY(TARGET glog PROPERTY FOLDER OpenMVG/3rdParty/ceres)
 
 # Add an Approximate Nearest Neighbor library
 ADD_SUBDIRECTORY(flann)
@@ -68,3 +63,16 @@ SET_PROPERTY(TARGET flann_cpp_s PROPERTY FOLDER OpenMVG/3rdParty)
 
 # Exif data parsing
 ADD_SUBDIRECTORY(easyexif)
+
+#INSTALL RULES
+INSTALL(
+  DIRECTORY .
+  DESTINATION include/openMVG_third_party
+  COMPONENT headers
+  FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+)
+INSTALL(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/lemon/lemon/config.h
+  DESTINATION include/openMVG_third_party/lemon/lemon
+  COMPONENT headers
+)
