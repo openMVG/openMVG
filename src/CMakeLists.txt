@@ -9,6 +9,11 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 PROJECT(openMVG C CXX)
 
+# guard against in-source builds
+IF(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+  message(FATAL_ERROR "In-source builds not allowed.")
+ENDIF()
+
 # ==============================================================================
 # OpenMVG build options
 # ==============================================================================
