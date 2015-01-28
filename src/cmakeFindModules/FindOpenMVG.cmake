@@ -25,7 +25,7 @@ FIND_PATH(OPENMVG_INCLUDE_DIR openMVG/version.h
 
 IF(OPENMVG_INCLUDE_DIR)
   MESSAGE(STATUS "OpenMVG headers found in ${OPENMVG_INCLUDE_DIRS}")
-  ELSE()
+ELSE()
   MESSAGE(STATUS "NOT FOUND")
 ENDIF (OPENMVG_INCLUDE_DIR)
 
@@ -38,9 +38,16 @@ SET(OPENMVG_LIBRARIES_NAMES
   openMVG_multiview
   #third_party libraries
   ceres
+  flann_cpp_s
+  lemon
   stlplus
   easyexif
-  lemon)
+  #optional third_party
+  vlsift
+  jpeg
+  png
+  tiff
+  zlib)
 
 FIND_LIBRARY(OPENMVG_LIBRARY NAMES ${OPENMVG_LIBRARIES_NAMES}
   HINTS

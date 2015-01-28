@@ -259,6 +259,8 @@ IF (EXISTS ${SPHINX_EXECUTABLE})
     "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst"
     "${SPHINX_HTML_DIR}"
     COMMENT "Building HTML documentation with Sphinx")
+    
+  SET_PROPERTY(TARGET doc PROPERTY FOLDER OpenMVG)
 
 ELSE (EXISTS ${SPHINX_EXECUTABLE})
   MESSAGE("Sphinx need to be installed to generate the documentation")
