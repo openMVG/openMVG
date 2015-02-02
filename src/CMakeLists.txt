@@ -19,6 +19,7 @@ ENDIF()
 # ==============================================================================
 OPTION(OpenMVG_BUILD_TESTS "Build OpenMVG tests" OFF)
 OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG example applications. Does not affect binaries under 'software'" ON)
+OPTION(OpenMVG_BUILD_OPENGL_EXAMPLES "Build OpenMVG openGL examples" OFF)
 OPTION(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
 
@@ -97,14 +98,15 @@ SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 # ==============================================================================
 #- glfw
 # ==============================================================================
-SET(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Do not build the GLFW example programs")
-SET(GLFW_BUILD_TESTS    OFF CACHE BOOL "Do not build the GLFW tests programs")
-SET(GLFW_BUILD_DOCS     OFF CACHE BOOL "Do not build the GLFW documentation")
-ADD_SUBDIRECTORY(dependencies/glfw)
-INCLUDE_DIRECTORIES(SYSTEM dependencies/glfw/include)
-SET_PROPERTY(TARGET glfw PROPERTY FOLDER OpenMVG/3rdParty/glfw)
-SET_PROPERTY(TARGET uninstall PROPERTY FOLDER OpenMVG/3rdParty/glfw)
-
+IF (OpenMVG_BUILD_OPENGL_EXAMPLES)
+  SET(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Do not build the GLFW example programs")
+  SET(GLFW_BUILD_TESTS    OFF CACHE BOOL "Do not build the GLFW tests programs")
+  SET(GLFW_BUILD_DOCS     OFF CACHE BOOL "Do not build the GLFW documentation")
+  ADD_SUBDIRECTORY(dependencies/glfw)
+  INCLUDE_DIRECTORIES(SYSTEM dependencies/glfw/include)
+  SET_PROPERTY(TARGET glfw PROPERTY FOLDER OpenMVG/3rdParty/glfw)
+  SET_PROPERTY(TARGET uninstall PROPERTY FOLDER OpenMVG/3rdParty/glfw)
+ENDIF (OpenMVG_BUILD_OPENGL_EXAMPLES)
 #===============================
 #---- LINEAR PROGRAMMING SOLVER
 #===============================
