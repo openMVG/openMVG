@@ -234,7 +234,8 @@ SET(OpenMVG_LIBS "${OpenMVG_LIBS}"
   flann_cpp_s
   ceres
   lemon
-  easyexif)
+  easyexif
+  tiff)
 SET(OpenMVG_LIBS "${OpenMVG_LIBS}"
   ${OPENMVG_LIBRARY_DEPENDENCIES} CACHE STRING "openMVG library names")
 
