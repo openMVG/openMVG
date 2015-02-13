@@ -5,6 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/features/akaze/AKAZE.hpp"
+#include <deque>
 
 namespace openMVG {
 
@@ -243,8 +244,102 @@ void AKAZE::Compute_AKAZEScaleSpace(void)
   }
 }
 
+void detectDuplicates(
+  std::vector<std::pair<AKAZEKeypoint, bool> > & previous,
+  std::vector<std::pair<AKAZEKeypoint, bool> > & current)
+{
+  // mark duplicates - using a full search algorithm
+  for(std::vector<std::pair<AKAZEKeypoint, bool> >::iterator p1=previous.begin(); p1<previous.end(); ++p1)
+  {
+    for(std::vector<std::pair<AKAZEKeypoint, bool> >::iterator p2 = current.begin(); p2<current.end(); ++p2)
+    {
+      if (p2->second == true) continue;
+
+      // Check spatial distance
+      const float dist = Square(p1->first.x-p2->first.x)+Square(p1->first.y-p2->first.y);
+      if (dist <= Square(p1->first.size) && dist != 0.f)
+      {
+        if (p1->first.response < p2->first.response)
+          p1->second = true; // mark as duplicate key point
+        else
+          p2->second = true; // mark as duplicate key point
+        break; // no other point can be so close, so skip to the next iteration
+      }
+    }
+  }
+}
+
 void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
 {
+#define OPENMVG_REMOVE_DUPLICATES 1
+#ifdef OPENMVG_REMOVE_DUPLICATES
+  std::deque< std::vector< std::pair<AKAZEKeypoint, bool> > > vec_kpts_perSlice(options_.iNbOctave*options_.iNbSlicePerOctave);
+
+#ifdef USE_OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
+  for( int p = 0 ; p < options_.iNbOctave ; ++p )
+  {
+    const float ratio = (float) (1 << p);
+
+    for( int q = 0 ; q < options_.iNbSlicePerOctave ; ++q )
+    {
+      const float sigma_cur = Sigma( options_.fSigma0 , p , q , options_.iNbSlicePerOctave ) ;
+      const Image<float> & LDetHess = evolution_[options_.iNbOctave * p + q].Lhess;
+
+      // Check that the point is under the image limits for the descriptor computation
+      const float borderLimit =
+        MathTrait<float>::round(options_.fDesc_factor*sigma_cur*fderivative_factor/ratio)+1;
+
+      for (int jx = borderLimit; jx < LDetHess.Height()-borderLimit; ++jx)
+      for (int ix = borderLimit; ix < LDetHess.Width()-borderLimit; ++ix) {
+
+        const float value = LDetHess(jx, ix);
+
+        // Filter the points with the detector threshold
+        if (value > options_.fThreshold &&
+          value > LDetHess(jx-1, ix) &&
+          value > LDetHess(jx-1, ix+1) &&
+          value > LDetHess(jx-1, ix-1) &&
+          value > LDetHess(jx  , ix-1) &&
+          value > LDetHess(jx  , ix+1) &&
+          value > LDetHess(jx+1, ix-1) &&
+          value > LDetHess(jx+1, ix) &&
+          value > LDetHess(jx+1, ix+1))
+        {
+          AKAZEKeypoint point;
+          point.size = sigma_cur * fderivative_factor ;
+          point.octave = p;
+          point.response = fabs(value);
+          point.x = ix * ratio;
+          point.y = jx * ratio;
+          point.angle = 0.0f;
+          point.class_id = p * options_.iNbSlicePerOctave + q;
+          vec_kpts_perSlice[options_.iNbOctave * p + q].push_back( std::make_pair(point,false) );
+        }
+      }
+    }
+  }
+
+  //-- Filter duplicates
+  detectDuplicates(vec_kpts_perSlice[0], vec_kpts_perSlice[0]);
+  for (int k = 1; k < vec_kpts_perSlice.size(); ++k)
+  {
+    detectDuplicates(vec_kpts_perSlice[k], vec_kpts_perSlice[k]);    // detect inter scale duplicates
+    detectDuplicates(vec_kpts_perSlice[k-1], vec_kpts_perSlice[k]);  // detect duplicates using previous octave
+  }
+   
+  // Keep only the one marked as not duplicated
+  for (int k = 0; k < vec_kpts_perSlice.size(); ++k)
+  {
+    const std::vector< std::pair<AKAZEKeypoint, bool> > & vec_kp = vec_kpts_perSlice[k];
+    for (int i = 0; i < vec_kp.size(); ++i)
+      if (!vec_kp[i].second)
+        kpts.push_back(vec_kp[i].first);
+  }
+
+#else
+  // Native AKAZE duplicate removal
   bool is_extremum = false, is_repeated = false;
   int id_repeated = 0;
 
@@ -285,7 +380,7 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
           point.response = fabs(value);
           point.x = ix * ratio;
           point.y = jx * ratio;
-          point.angle = 0.0;
+          point.angle = 0.0f;
           point.class_id = p * options_.iNbSlicePerOctave + q;
 
           for( size_t ik = 0; ik < kpts.size(); ik++ )
@@ -328,7 +423,7 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
   std::vector<AKAZEKeypoint > vec_kp;
   vec_kp.reserve(kpts.size());
 #ifdef USE_OPENMP
-  #pragma omp parallel for
+  #pragma omp parallel for schedule(dynamic)
 #endif
   // Now filter points (keep the best along the pyramid)
   for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
@@ -358,6 +453,7 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
       vec_kp.push_back(best_kp);
   }
   vec_kp.swap(kpts);
+#endif
 }
 
 /// This method performs sub pixel refinement of a keypoint
@@ -401,7 +497,7 @@ void AKAZE::Do_Subpixel_Refinement(std::vector<AKAZEKeypoint>& kpts) const
   kpts.reserve(kpts_cpy.size());
 
 #ifdef USE_OPENMP
-  #pragma omp parallel for
+  #pragma omp parallel for schedule(dynamic)
 #endif
   for (int i = 0; i < static_cast<int>(kpts_cpy.size()); ++i)
   {

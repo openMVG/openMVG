@@ -26,10 +26,10 @@ using namespace std;
 int main() {
 
   Image<RGBColor> image;
-  string jpg_filenameL = stlplus::folder_up(string(THIS_SOURCE_DIR))
-    + "/imageData/StanfordMobileVisualSearch/Ace_0.png";
-  string jpg_filenameR = stlplus::folder_up(string(THIS_SOURCE_DIR))
-    + "/imageData/StanfordMobileVisualSearch/Ace_1.png";
+  const std::string jpg_filenameL =
+  stlplus::folder_up(string(THIS_SOURCE_DIR))  + "/imageData/StanfordMobileVisualSearch/Ace_0.png";
+  const std::string jpg_filenameR = 
+  stlplus::folder_up(string(THIS_SOURCE_DIR))  + "/imageData/StanfordMobileVisualSearch/Ace_1.png";
 
   Image<unsigned char> imageL, imageR;
   ReadImage(jpg_filenameL.c_str(), &imageL);
@@ -42,6 +42,8 @@ int main() {
 
 #define AKAZE_MSURF 1
 //#define AKAZE_MLBD 1
+//#define AKAZE_LIOP 1
+
 #if defined AKAZE_MSURF
   typedef Descriptor<float,64> Descriptor_T;
   vector<Descriptor_T > descsL, descsR;
@@ -54,6 +56,15 @@ int main() {
   AKAZEDetector<Descriptor_T::bin_type, 1>(imageL, featsL, descsL, options);
   AKAZEDetector<Descriptor_T::bin_type, 1>(imageR, featsR, descsR, options);
 #endif
+#if defined AKAZE_LIOP
+  // LIOP
+  typedef unsigned char descType;
+  typedef Descriptor<descType,144> Descriptor_T;
+  vector<Descriptor_T > descsL, descsR;
+  AKAZEDetector<descType, 144>(imageL, featsL, descsL, options);
+  AKAZEDetector<descType, 144>(imageR, featsR, descsR, options);
+#endif
+
 
   // Show both images side by side
   {
@@ -85,7 +96,7 @@ int main() {
   std::vector<IndMatch> vec_PutativeMatches;
   {
     // Define the matcher (BruteForce) and the used metric (Squared L2)
-    #if defined AKAZE_MSURF
+    #if defined AKAZE_MSURF || AKAZE_LIOP
     typedef L2_Vectorized<Descriptor_T::bin_type> Metric;
     #endif
     #if defined AKAZE_MLBD // Binary based descriptor use the Hamming metric

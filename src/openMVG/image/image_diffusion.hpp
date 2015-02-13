@@ -97,7 +97,7 @@ void ImageFEDCentralCPPThread( const Image & src , const Image & diff , const ty
   SplitRange( 1 , (int) ( src.rows() - 1 ) , nb_thread , range ) ;
 
 #ifdef USE_OPENMP
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic)
 #endif
   for( int i = 1 ; i < static_cast<int>(range.size()) ; ++i ) {
     ImageFEDCentral( src, diff, half_t, out, range[i-1] , range[i]) ;
@@ -297,7 +297,7 @@ int FEDCycleTimings( const Real T , const Real Tmax , std::vector< Real > & tau 
   const Real glo_fact = scale * Tmax / 2.0 ;
 
   // Compute cycle timings
-  tau.reserve( n ) ;
+  tau.resize( n ) ;
   for( int j = 0 ; j < n ; ++j )
   {
     const Real cos_j = cos( M_PI * ( static_cast<Real>( 2 * j + 1 ) ) * cos_fact ) ;

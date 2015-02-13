@@ -41,6 +41,7 @@
 
 #include "openMVG/features/akaze/mldb_descriptor.hpp"
 #include "openMVG/features/akaze/msurf_descriptor.hpp"
+#include "openMVG/features/liop/liop_descriptor.hpp"
 #include <bitset>
 
 namespace openMVG {
@@ -175,39 +176,39 @@ template<>
 static 
 #endif //WIN32
 bool AKAZEDetector<float,64>(
-	const Image<unsigned char>& I,
-	std::vector<SIOPointFeature>& vec_feat,
-	std::vector<Descriptor<float,64> >& vec_desc,
-	AKAZEConfig options)
-{
-	options.fDesc_factor = 10.f*sqrtf(2.f);
+  const Image<unsigned char>& I,
+  std::vector<SIOPointFeature>& vec_feat,
+  std::vector<Descriptor<float,64> >& vec_desc,
+  AKAZEConfig options)
+  {
+  options.fDesc_factor = 10.f*sqrtf(2.f);
 
-	AKAZE akaze(I, options);
-	akaze.Compute_AKAZEScaleSpace();
-	std::vector<AKAZEKeypoint> kpts;
-	kpts.reserve(5000);
-	akaze.Feature_Detection(kpts);
-	akaze.Do_Subpixel_Refinement(kpts);
+  AKAZE akaze(I, options);
+  akaze.Compute_AKAZEScaleSpace();
+  std::vector<AKAZEKeypoint> kpts;
+  kpts.reserve(5000);
+  akaze.Feature_Detection(kpts);
+  akaze.Do_Subpixel_Refinement(kpts);
 
-	vec_feat.resize(kpts.size());
-	vec_desc.resize(kpts.size());
-#ifdef USE_OPENMP
-#pragma omp parallel for
-#endif
-	for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
-	{
-		AKAZEKeypoint ptAkaze = kpts[i];
-		const TEvolution & cur_slice = akaze.getSlices()[ ptAkaze.class_id ] ;
+  vec_feat.resize(kpts.size());
+  vec_desc.resize(kpts.size());
+  #ifdef USE_OPENMP
+  #pragma omp parallel for schedule(dynamic)
+  #endif
+  for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
+  {
+    AKAZEKeypoint ptAkaze = kpts[i];
+    const TEvolution & cur_slice = akaze.getSlices()[ ptAkaze.class_id ] ;
 
-		// Compute point orientation
-		akaze.Compute_Main_Orientation(ptAkaze, cur_slice.Lx, cur_slice.Ly);
+    // Compute point orientation
+    akaze.Compute_Main_Orientation(ptAkaze, cur_slice.Lx, cur_slice.Ly);
 
-		vec_feat[i] = SIOPointFeature(ptAkaze.x, ptAkaze.y, ptAkaze.size, ptAkaze.angle);
+    vec_feat[i] = SIOPointFeature(ptAkaze.x, ptAkaze.y, ptAkaze.size, ptAkaze.angle);
 
-		// Compute descriptor (MSURF)
-		ComputeMSURFDescriptor( cur_slice.Lx , cur_slice.Ly , ptAkaze.octave , vec_feat[ i ] , vec_desc[ i ] ) ;
-	}
-	return true;
+    // Compute descriptor (MSURF)
+    ComputeMSURFDescriptor( cur_slice.Lx , cur_slice.Ly , ptAkaze.octave , vec_feat[ i ] , vec_desc[ i ] ) ;
+  }
+  return true;
 }
 
 /// Compute AKAZE keypoints and their associated MLDB descriptors
@@ -240,10 +241,10 @@ bool AKAZEDetector<std::bitset<486>,1>(
 		AKAZEKeypoint ptAkaze = kpts[i];
 		const TEvolution & cur_slice = akaze.getSlices()[ ptAkaze.class_id ] ;
 
-		// Compute point orientation
-		akaze.Compute_Main_Orientation(ptAkaze, cur_slice.Lx, cur_slice.Ly);
+    // Compute point orientation
+    akaze.Compute_Main_Orientation(ptAkaze, cur_slice.Lx, cur_slice.Ly);
 
-		vec_feat[i] = SIOPointFeature(ptAkaze.x, ptAkaze.y, ptAkaze.size, ptAkaze.angle);
+    vec_feat[i] = SIOPointFeature(ptAkaze.x, ptAkaze.y, ptAkaze.size, ptAkaze.angle);
 
 		// Compute descriptor (FULL MLDB)
 		Descriptor<bool,486> desc;
@@ -252,6 +253,53 @@ bool AKAZEDetector<std::bitset<486>,1>(
       vec_desc[i][0][j] = desc[j];
 	}
 	return true;
+}
+
+/// Compute AKAZE keypoints and their associated LIOP descriptors
+template<>
+#if (WIN32)
+static 
+#endif //WIN32
+  bool AKAZEDetector<unsigned char,144>(
+  const Image<unsigned char>& I,
+  std::vector<SIOPointFeature>& vec_feat,
+  std::vector<Descriptor<unsigned char,144> >& vec_desc,
+  AKAZEConfig options)
+  {
+  options.fDesc_factor = 10.f*sqrtf(2.f);
+
+  AKAZE akaze(I, options);
+  akaze.Compute_AKAZEScaleSpace();
+  std::vector<AKAZEKeypoint> kpts;
+  kpts.reserve(5000);
+  akaze.Feature_Detection(kpts);
+  akaze.Do_Subpixel_Refinement(kpts);
+
+  vec_feat.resize(kpts.size());
+  vec_desc.resize(kpts.size());
+
+  LIOP::Liop_Descriptor_Extractor liop_extractor;
+
+  #ifdef USE_OPENMP
+  #pragma omp parallel for schedule(dynamic)
+  #endif
+  for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
+  {
+    AKAZEKeypoint ptAkaze = kpts[i];
+    const TEvolution & cur_slice = akaze.getSlices()[ ptAkaze.class_id ] ;
+
+    vec_feat[i] = SIOPointFeature(ptAkaze.x, ptAkaze.y, ptAkaze.size, 0.f);
+
+    // Compute LIOP descriptor (do not need rotation computation, since
+    //  LIOP descriptor is rotation invariant).
+    SIOPointFeature fp = vec_feat[i];
+    fp.scale() = fp.scale() / 2.0; //rescale for LIOP patch extraction
+    float desc[144];
+    liop_extractor.extract(I, fp, desc);
+    for(int j=0; j < 144; ++j)
+      vec_desc[i][j] = static_cast<unsigned char>(desc[j] * 255.f +.5f);
+  }
+  return true;
 }
 
 }; // namespace openMVG

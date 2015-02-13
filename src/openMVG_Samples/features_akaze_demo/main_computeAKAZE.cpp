@@ -86,20 +86,21 @@ int main( int argc , char ** argv )
   std::vector<AKAZEKeypoint> kpts;
   kpts.reserve(5000);
   akaze.Feature_Detection(kpts);
+  
+  std::cout << "in "
+    << t.elapsedMs() << " msec." << std::endl 
+    << t.elapsed() << " sec." << std::endl;
+
   akaze.Do_Subpixel_Refinement(kpts);
 
   for (size_t i = 0; i < kpts.size(); ++i)
   {
     AKAZEKeypoint & pt = kpts[i];
     akaze.Compute_Main_Orientation(pt,
-        akaze.getSlices()[pt.class_id].Lx,
-        akaze.getSlices()[pt.class_id].Ly);
+      akaze.getSlices()[pt.class_id].Lx,
+      akaze.getSlices()[pt.class_id].Ly);
   }
   std::cout << "Found " << kpts.size() << " keypoints" << std::endl;
-
-  std::cout << "in "
-    << t.elapsedMs() << " msec." << std::endl 
-    << t.elapsed() << " sec." << std::endl;
 
   for (size_t i = 0; i < kpts.size(); ++i)
   {
