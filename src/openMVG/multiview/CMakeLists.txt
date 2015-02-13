@@ -36,5 +36,5 @@ UNIT_TEST(openMVG solver_essential_kernel "openMVG_multiview;openMVG_multiview_t
 UNIT_TEST(openMVG solver_homography_kernel "openMVG_multiview;openMVG_multiview_test_data")
 UNIT_TEST(openMVG solver_essential_five_point "openMVG_multiview;openMVG_multiview_test_data")
 UNIT_TEST(openMVG solver_resection_kernel "openMVG_multiview;openMVG_multiview_test_data")
-UNIT_TEST(openMVG rotation_averaging "lemon;openMVG_multiview;openMVG_multiview_test_data")
+UNIT_TEST(openMVG rotation_averaging "lemon;openMVG_multiview;openMVG_multiview_test_data;ceres")
 UNIT_TEST(openMVG translation_averaging "lemon;openMVG_multiview;openMVG_multiview_test_data;ceres")

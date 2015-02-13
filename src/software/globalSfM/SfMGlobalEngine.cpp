@@ -447,6 +447,11 @@ bool GlobalReconstructionEngine::computeGlobalRotations(
         _reindexForward.size(),
         vec_relativeRotEstimate,
         vec_globalR);
+      //- Refine global rotation
+      if (bSuccess)
+        bSuccess = rotation_averaging::l2::L2RotationAveraging_Refine(
+        vec_relativeRotEstimate,
+        vec_globalR);
     }
     break;
     case ROTATION_AVERAGING_L1:

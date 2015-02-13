@@ -12,6 +12,9 @@
 #include <vector>
 #include <map>
 
+#include <ceres/ceres.h>
+#include <ceres/rotation.h>
+
 #ifdef _MSC_VER
 #pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
 #endif
@@ -175,6 +178,107 @@ static bool L2RotationAveraging( size_t nCamera,
 
     return true;
   }
+}
+
+// Ceres Functor to minimize global rotation regarding fixed relative rotation
+struct CeresPairRotationError {
+  CeresPairRotationError(const openMVG::Vec3& relative_rotation,    const double weight)
+  :relative_rotation_(relative_rotation), weight_(weight) {}
+
+  // The error is given by the rotation cycle error (R2 * R1.t) * RRel.t
+  template <typename T>
+  bool operator() (const T* angleAxis1, const T* angleAxis2, T* residuals) const
+  {
+    const T relative_rotation[3] = {
+      T(relative_rotation_[0]),
+      T(relative_rotation_[1]),
+      T(relative_rotation_[2])};
+
+    // Convert angle axis rotations to rotation matrices
+    Eigen::Matrix<T, 3, 3> RRel, R1, R2;
+    ceres::AngleAxisToRotationMatrix( relative_rotation, RRel.data());
+    ceres::AngleAxisToRotationMatrix( angleAxis1, R1.data());
+    ceres::AngleAxisToRotationMatrix( angleAxis2, R2.data());
+
+    // Compute the "cycle" rotation error for the given edge:
+    //  relative error between two given global rotations and the relative one
+    const Eigen::Matrix<T, 3, 3> cycle_rotation_mat = (R2 * R1.transpose()) * RRel.transpose();
+    Eigen::Matrix<T, 3, 1> cycle_rotation;
+    ceres::RotationMatrixToAngleAxis( cycle_rotation_mat.data(), cycle_rotation.data());
+
+    residuals[0] = T(weight_) * cycle_rotation(0);
+    residuals[1] = T(weight_) * cycle_rotation(1);
+    residuals[2] = T(weight_) * cycle_rotation(2);
+
+    return true;
+  }
+
+  const openMVG::Vec3 relative_rotation_;
+  const double weight_;
+};
+
+bool L2RotationAveraging_Refine(
+  const std::vector<openMVG::rotation_averaging::RelRotationData>& vec_relativeRot,
+  std::vector<openMVG::Mat3> & vec_ApprRotMatrix)
+{
+  if (vec_relativeRot.size() == 0 ||vec_ApprRotMatrix.size() == 0 ) {
+    std::cout << "Skip nonlinear rotation optimization, no sufficient data provided " << std::endl;
+    return false;
+}
+
+  // Convert global rotation to AngleAxis representation
+  std::vector<openMVG::Vec3> vec_Rot_AngleAxis(vec_ApprRotMatrix.size());
+  for (int i=0; i < vec_ApprRotMatrix.size(); ++i)
+  {
+    ceres::RotationMatrixToAngleAxis((const double*)vec_ApprRotMatrix[i].data(), vec_Rot_AngleAxis[i].data());
+  }
+
+  // Setup the problem and a robust loss function.
+  ceres::Problem problem;
+  const double robust_loss_width = 0.03; // 2° error along one axis (perhaps a bit too strict)
+  
+  for (size_t ii = 0; ii < vec_relativeRot.size(); ++ii)
+  {
+    const int i = vec_relativeRot[ii].i;
+    const int j = vec_relativeRot[ii].j;
+    const openMVG::Mat3& Rrel = vec_relativeRot[ii].Rij;
+    const double w = vec_relativeRot[ii].weight;
+
+    openMVG::Vec3 rotAngleAxis;
+    ceres::RotationMatrixToAngleAxis((const double*)Rrel.data(), rotAngleAxis.data());
+
+    ceres::CostFunction* cost_function =
+      new ceres::AutoDiffCostFunction<CeresPairRotationError, 3, 3, 3>(
+      new CeresPairRotationError(rotAngleAxis, w));
+
+    ceres::LossFunction* loss_function = new ceres::SoftLOneLoss(w * robust_loss_width);
+    problem.AddResidualBlock(cost_function,
+      loss_function,
+      vec_Rot_AngleAxis[i].data(),
+      vec_Rot_AngleAxis[j].data());
+  }
+  ceres::Solver::Options solverOptions;
+  // Since the problem is sparse, use a sparse solver
+  solverOptions.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+#ifdef USE_OPENMP
+  solverOptions.num_threads = omp_get_max_threads();
+  solverOptions.num_linear_solver_threads = omp_get_max_threads();
+#endif // USE_OPENMP
+
+  ceres::Solver::Summary summary;
+  ceres::Solve(solverOptions, &problem, &summary);
+  std::cout << summary.FullReport();
+
+  if (summary.IsSolutionUsable())
+  {
+    // Convert back the AngleAxis rotations to rotations matrices
+    for (int i=0; i < vec_ApprRotMatrix.size(); ++i)
+    {
+      ceres::AngleAxisToRotationMatrix(vec_Rot_AngleAxis[i].data(), vec_ApprRotMatrix[i].data());
+    }
+    return true;
+  }
+  return false;
 }
 
 } // namespace l2
