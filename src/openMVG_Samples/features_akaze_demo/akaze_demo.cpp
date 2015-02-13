@@ -41,19 +41,18 @@ int main() {
   AKAZEConfig options;
 
 #define AKAZE_MSURF 1
+//#define AKAZE_MLBD 1
 #if defined AKAZE_MSURF
-  typedef float descType;
-  typedef Descriptor<descType,64> Descriptor_T;
+  typedef Descriptor<float,64> Descriptor_T;
   vector<Descriptor_T > descsL, descsR;
-  AKAZEDetector<descType, 64>(imageL, featsL, descsL, options);
-  AKAZEDetector<descType, 64>(imageR, featsR, descsR, options);
-#else
-  // MLDB
-  typedef bool descType;
-  typedef Descriptor<descType,486> Descriptor_T;
+  AKAZEDetector<Descriptor_T::bin_type, 64>(imageL, featsL, descsL, options);
+  AKAZEDetector<Descriptor_T::bin_type, 64>(imageR, featsR, descsR, options);
+#endif
+#if defined AKAZE_MLBD
+  typedef Descriptor<std::bitset<486>, 1> Descriptor_T;
   vector<Descriptor_T > descsL, descsR;
-  AKAZEDetector<descType, 486>(imageL, featsL, descsL, options);
-  AKAZEDetector<descType, 486>(imageR, featsR, descsR, options);
+  AKAZEDetector<Descriptor_T::bin_type, 1>(imageL, featsL, descsL, options);
+  AKAZEDetector<Descriptor_T::bin_type, 1>(imageR, featsR, descsR, options);
 #endif
 
   // Show both images side by side
@@ -86,7 +85,12 @@ int main() {
   std::vector<IndMatch> vec_PutativeMatches;
   {
     // Define the matcher (BruteForce) and the used metric (Squared L2)
+    #if defined AKAZE_MSURF
     typedef L2_Vectorized<Descriptor_T::bin_type> Metric;
+    #endif
+    #if defined AKAZE_MLBD // Binary based descriptor use the Hamming metric
+    typedef HammingBitSet<Descriptor_T::bin_type> Metric;
+    #endif
     typedef ArrayMatcherBruteForce<Descriptor_T::bin_type, Metric> MatcherT;
 
     // Distance ratio squared due to squared metric

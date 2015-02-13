@@ -9,26 +9,10 @@
 #define OPENMVG_MATCHING_METRIC_H
 
 #include "openMVG/matching/metric_hamming.hpp"
+#include "openMVG/numeric/accumulator_trait.hpp"
 
 namespace openMVG {
 namespace matching {
-
-template<typename T>
-struct Accumulator { typedef T Type; };
-template<>
-struct Accumulator<unsigned char>  { typedef float Type; };
-template<>
-struct Accumulator<unsigned short> { typedef float Type; };
-template<>
-struct Accumulator<unsigned int> { typedef float Type; };
-template<>
-struct Accumulator<char>   { typedef float Type; };
-template<>
-struct Accumulator<short>  { typedef float Type; };
-template<>
-struct Accumulator<int> { typedef float Type; };
-template<>
-struct Accumulator<bool> { typedef unsigned int Type; };
 
 /// Squared Euclidean distance functor.
 template<class T>

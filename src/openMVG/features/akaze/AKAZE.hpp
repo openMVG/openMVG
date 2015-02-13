@@ -41,6 +41,7 @@
 
 #include "openMVG/features/akaze/mldb_descriptor.hpp"
 #include "openMVG/features/akaze/msurf_descriptor.hpp"
+#include <bitset>
 
 namespace openMVG {
 
@@ -214,13 +215,13 @@ template<>
 #if (WIN32)
 static 
 #endif //WIN32
-bool AKAZEDetector<bool,486>(
+bool AKAZEDetector<std::bitset<486>,1>(
 	const Image<unsigned char>& I,
 	std::vector<SIOPointFeature>& vec_feat,
-	std::vector<Descriptor<bool,486> >& vec_desc,
+	std::vector<Descriptor<std::bitset<486>,1> >& vec_desc,
 	AKAZEConfig options)
 {
-	options.fDesc_factor = 10.f*sqrtf(2.f);
+	options.fDesc_factor = 11.f*sqrtf(2.f);
 
 	AKAZE akaze(I, options);
 	akaze.Compute_AKAZEScaleSpace();
@@ -245,7 +246,10 @@ bool AKAZEDetector<bool,486>(
 		vec_feat[i] = SIOPointFeature(ptAkaze.x, ptAkaze.y, ptAkaze.size, ptAkaze.angle);
 
 		// Compute descriptor (FULL MLDB)
-		ComputeMLDBDescriptor( cur_slice.cur , cur_slice.Lx , cur_slice.Ly , ptAkaze.octave , vec_feat[i] , vec_desc[i] ) ;
+		Descriptor<bool,486> desc;
+		ComputeMLDBDescriptor(cur_slice.cur, cur_slice.Lx, cur_slice.Ly, ptAkaze.octave, vec_feat[i], desc);
+    for (int j = 0; j < 486; ++j) // convert vector bool to std::bitset
+      vec_desc[i][0][j] = desc[j];
 	}
 	return true;
 }

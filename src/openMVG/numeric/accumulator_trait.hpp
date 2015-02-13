@@ -23,5 +23,7 @@ template<>
 struct Accumulator<short>  { typedef float Type; };
 template<>
 struct Accumulator<int> { typedef float Type; };
+template<>
+struct Accumulator<bool>  { typedef unsigned int Type; };
 
 #endif //_OPENMVG_NUMERIC_ACCUMULATOR_TRAIT_HPP_
