@@ -363,18 +363,17 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
     if(_map_Matches_E.find(std::make_pair(K,J)) != _map_Matches_E.end())
       map_matchesIJK.insert(*_map_Matches_E.find(std::make_pair(K,J)));
 
-    // Compute tracks:
-    openMVG::tracks::STLMAPTracks map_tracks;
-    TracksBuilder tracksBuilder;
-    {
-      tracksBuilder.Build(map_matchesIJK);
-      tracksBuilder.Filter(3);
-      tracksBuilder.ExportToSTL(map_tracks);
-    }
-#ifdef USE_OPENMP
-  #pragma omp critical
-#endif
-    map_tracksPerTriplets[i] = map_tracks.size();
+      // Compute tracks:
+      openMVG::tracks::STLMAPTracks map_tracks;
+      openMVG::tracks::TracksBuilder tracksBuilder;
+      {
+        tracksBuilder.Build(map_matchesIJK);
+        tracksBuilder.Filter(3);
+  #ifdef USE_OPENMP
+    #pragma omp critical
+  #endif
+        map_tracksPerTriplets[i] = tracksBuilder.NbTracks(); //count the # of matches in the UF tree
+      }
   }
 
   typedef std::pair<size_t,size_t> myEdge;
@@ -507,7 +506,8 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
               vec_tis, dPrecision, vec_inliers, ThresholdUpperBound,
               I, J, K, _sOutDirectory))
         {
-          std::cout << dPrecision * averageFocal << "\t" << vec_inliers.size() << std::endl;
+          std::cout << I << " " << J << " " << K << ":"
+            << dPrecision * averageFocal << "\t" << vec_inliers.size() << std::endl;
 
           //-- Build the three camera:
           const Mat3 RI = map_globalR.find(I)->second;
