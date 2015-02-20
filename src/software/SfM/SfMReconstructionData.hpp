@@ -25,7 +25,7 @@
 
 #include "software/SfM/SfMPlyHelper.hpp"
 #include "third_party/progress/progress.hpp"
-#include "third_party/stlAddition/stlMap.hpp"
+#include "openMVG/stl/stlMap.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 namespace openMVG{

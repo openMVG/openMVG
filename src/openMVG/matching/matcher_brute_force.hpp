@@ -10,7 +10,7 @@
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/matching/matching_interface.hpp"
 #include "openMVG/matching/metric.hpp"
-#include "openMVG/matching/indexed_sort.hpp"
+#include "openMVG/stl/indexed_sort.hpp"
 #include <memory>
 #include <iostream>
 
@@ -127,7 +127,7 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
       }
 
       // Find the N minimum distances:
-      int maxMinFound = (int) min( size_t(NN), vec_distance.size());
+      const int maxMinFound = (int) min( size_t(NN), vec_distance.size());
       using namespace indexed_sort;
       vector< sort_index_packet_ascend< DistanceType, int> > packet_vec(vec_distance.size());
       sort_index_helper(packet_vec, &vec_distance[0], maxMinFound);

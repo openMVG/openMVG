@@ -8,7 +8,7 @@
 #include "openMVG/features/features.hpp"
 #include "openMVG/image/image.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
-#include "openMVG/matching/indexed_sort.hpp"
+#include "openMVG/stl/stl.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
 
 #include "software/globalSfM/indexedImageGraph.hpp"
@@ -36,7 +36,6 @@
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
-#include "third_party/stlAddition/stlMap.hpp"
 #include "third_party/histogram/histogram.hpp"
 
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"

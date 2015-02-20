@@ -1,6 +1,6 @@
 #include "./CasHash.hpp"
 #include "openMVG/matching/metric.hpp"
-#include "openMVG/matching/indexed_sort.hpp"
+#include "openMVG/stl/stl.hpp"
 
 // Adapted from author source code:
 //

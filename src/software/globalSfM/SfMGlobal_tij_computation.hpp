@@ -20,7 +20,7 @@
 #include "openMVG/bundle_adjustment/problem_data_container.hpp"
 #include "software/globalSfM/SfMBundleAdjustmentHelper_tonly.hpp"
 
-#include "openMVG/matching/indexed_sort.hpp"
+#include "openMVG/stl/stl.hpp"
 
 #include "software/globalSfM/mutexSet.hpp"
 

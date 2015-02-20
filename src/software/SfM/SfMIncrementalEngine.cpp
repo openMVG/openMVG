@@ -18,10 +18,10 @@
 #include "openMVG/matching/indMatch.hpp"
 using namespace openMVG::tracks;
 
+#include "openMVG/stl/stl.hpp"
+
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
-#include "third_party/stlAddition/stlMap.hpp"
-#include "openMVG/matching/indexed_sort.hpp"
 
 #include <numeric>
 #include <iomanip>

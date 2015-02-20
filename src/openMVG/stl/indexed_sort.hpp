@@ -5,9 +5,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MATCHING_INDEXED_SORT_H
-#define OPENMVG_MATCHING_INDEXED_SORT_H
+#ifndef OPENMVG_STL_INDEXED_SORT_H
+#define OPENMVG_STL_INDEXED_SORT_H
 
+namespace std
+{
 namespace indexed_sort
 {
   template<typename T1, typename T2>
@@ -58,6 +60,7 @@ namespace indexed_sort
         packet_vec.end());
   }
 
-}; // indexed_sort
+}; // namespace indexed_sort
+}; // namespace std
 
-#endif  // OPENMVG_MATCHING_INDEXED_SORT_H
+#endif  // OPENMVG_STL_INDEXED_SORT_H
