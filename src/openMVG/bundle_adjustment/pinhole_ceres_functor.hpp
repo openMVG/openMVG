@@ -100,6 +100,12 @@ struct ErrorFunc_Refine_Intrinsic_Motion_3DPoints
     m_pos_2dpoint[1] = pos_2dpoint[1];
   }
 
+  ErrorFunc_Refine_Intrinsic_Motion_3DPoints(const float* const pos_2dpoint)
+  {
+    m_pos_2dpoint[0] = (double)pos_2dpoint[0];
+    m_pos_2dpoint[1] = (double)pos_2dpoint[1];
+  }
+
   /**
    * @param[in] cam_K: Camera intrinsics( focal, principal point [x,y] )
    * @param[in] cam_Rt: Camera parameterized using one block of 6 parameters [R;t]:
