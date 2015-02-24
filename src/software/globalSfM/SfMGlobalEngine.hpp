@@ -180,7 +180,7 @@ private:
 
   /// List of images that belong to a common intrinsic group
   std::map<size_t, std::vector<size_t> > _map_ImagesIdPerIntrinsicGroup;
-  std::map<size_t, Vec3 > _map_IntrinsicsPerGroup;
+  std::map<size_t, Vec6 > _map_IntrinsicsPerGroup; // @L radial distortion as optional
 
   // Intrinsic Id per imageId
   std::map<size_t, size_t> _map_IntrinsicIdPerImageId;
