@@ -121,7 +121,8 @@ public:
   // TYPEDEF
   //--
   typedef std::map< std::pair<size_t, size_t>, std::pair<Mat3, Vec3> > Map_RelativeRT;
-  typedef std::map<size_t, PinholeCamera > Map_Camera;
+  typedef std::map<size_t, PinholeCamera > Map_Camera; // @L --
+  typedef std::map<size_t, BrownPinholeCamera> Map_BrownPinholeCamera;
 
 private:
   /// Read input data (point correspondences, K matrix)
@@ -155,7 +156,7 @@ private:
 
   // Bundle adjustment : refine structure Xis and camera parameters (with optional refined parameters)
   void bundleAdjustment(
-    Map_Camera & map_camera,
+    Map_BrownPinholeCamera & map_camera,
     std::vector<Vec3> & vec_allScenes,
     const STLMAPTracks & map_tracksSelected,
     bool bRefineRotation = true,
@@ -202,7 +203,9 @@ private:
   //-- Reconstruction data
   //-----
   // Cameras (Motion)
-  Map_Camera _map_camera;
+  //Map_Camera _map_camera; //@L --
+  Map_BrownPinholeCamera _map_camera;
+  
   // Structure
   std::vector<Vec3> _vec_allScenes;
   // Structure visibility

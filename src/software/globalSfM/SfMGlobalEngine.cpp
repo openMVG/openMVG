@@ -805,7 +805,7 @@ bool GlobalReconstructionEngine::Process()
           const size_t camNodeId = _reindexBackward[i];
           const Mat3 & Ri = map_globalR[camNodeId];
           const Mat3 & _K = _vec_intrinsicGroups[_map_IntrinsicIdPerImageId[camNodeId]].m_K;   // The same K matrix is used by all the camera
-          _map_camera[camNodeId] = PinholeCamera(_K, Ri, t);
+          _map_camera[camNodeId] = BrownPinholeCamera(_K, Ri, t);
           //-- Export camera center
           vec_C.push_back(_map_camera[camNodeId]._C);
         }
@@ -865,7 +865,7 @@ bool GlobalReconstructionEngine::Process()
           const Mat3 & Ri = map_globalR[camNodeId];
           const Mat3 & _K = _vec_intrinsicGroups[_map_IntrinsicIdPerImageId[camNodeId]].m_K;// The same K matrix is used by all the camera
           const Vec3 t = - Ri * C;
-          _map_camera[camNodeId] = PinholeCamera(_K, Ri, t);
+          _map_camera[camNodeId] = BrownPinholeCamera(_K, Ri, t);
           //-- Export camera center
           vec_C.push_back(_map_camera[camNodeId]._C);
         }
@@ -1085,10 +1085,10 @@ bool GlobalReconstructionEngine::Process()
   //-- Export the scene (cameras and structures) to the SfM Data container
   {
     // Cameras
-    for (std::map<size_t,PinholeCamera >::const_iterator iter = _map_camera.begin();
+    for (std::map<size_t,BrownPinholeCamera >::const_iterator iter = _map_camera.begin();
       iter != _map_camera.end();  ++iter)
     {
-      const PinholeCamera & cam = iter->second;
+      const BrownPinholeCamera & cam = iter->second;
       _reconstructorData.map_Camera[iter->first] = BrownPinholeCamera(cam._P);
       _reconstructorData.set_imagedId.insert(iter->first);
     }
@@ -1698,7 +1698,7 @@ void GlobalReconstructionEngine::tripletRotationRejection(
 }
 
 void GlobalReconstructionEngine::bundleAdjustment(
-    Map_Camera & map_camera,
+    Map_BrownPinholeCamera & map_camera,
     std::vector<Vec3> & vec_allScenes,
     const STLMAPTracks & map_tracksSelected,
     bool bRefineRotation,
@@ -1708,7 +1708,7 @@ void GlobalReconstructionEngine::bundleAdjustment(
   using namespace std;
 
   // find in which intrinsic group each remaining cameras belong
-  for (Map_Camera::const_iterator iter = map_camera.begin();
+  for (Map_BrownPinholeCamera::const_iterator iter = map_camera.begin();
     iter != map_camera.end();  ++iter)
   {
     const size_t idx = iter->first;
@@ -1763,7 +1763,7 @@ void GlobalReconstructionEngine::bundleAdjustment(
   std::set<size_t> set_camIndex;
   std::map<size_t,size_t> map_camIndexToNumber_extrinsic, map_camIndexToNumber_intrinsic;
   size_t cpt = 0;
-  for (Map_Camera::const_iterator iter = map_camera.begin();
+  for (Map_BrownPinholeCamera::const_iterator iter = map_camera.begin();
     iter != map_camera.end();  ++iter, ++cpt)
   {
     // in order to map camera index to contiguous number
@@ -1971,7 +1971,7 @@ void GlobalReconstructionEngine::bundleAdjustment(
 
     // Get back camera
     i = 0;
-    for (Map_Camera::iterator iter = map_camera.begin();
+    for (Map_BrownPinholeCamera::iterator iter = map_camera.begin();
       iter != map_camera.end(); ++iter, ++i)
     {
       // camera motion [R|t]
@@ -1989,8 +1989,8 @@ void GlobalReconstructionEngine::bundleAdjustment(
            0, intrinsics[0], intrinsics[2],
            0, 0, 1;
       // Update the camera
-      PinholeCamera & sCam = iter->second;
-      sCam = PinholeCamera(K, R, t);
+      BrownPinholeCamera & sCam = iter->second;
+      sCam = BrownPinholeCamera(K, R, t);
     }
 
     {
