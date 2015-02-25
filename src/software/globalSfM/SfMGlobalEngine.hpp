@@ -114,9 +114,12 @@ public:
     return vec_imageSize;
   }
 
-  /// Tell if the final BA must refine Intrinsics data or not
-  void setRefineIntrinsics(bool bStatus) { _bRefineIntrinsics = bStatus; }
+  /// Tell if the final BA must refine focal and principal point data or not
+  void setRefineFocalAndPP(bool bStatus) { _bRefineFocalAndPP = bStatus; }
 
+  /// Tell if the final BA must refine radial distortion factors
+  void setRefineDistor(bool bStatus) { _bRefineDisto = bStatus; }
+  
   //--
   // TYPEDEF
   //--
@@ -161,7 +164,8 @@ private:
     const STLMAPTracks & map_tracksSelected,
     bool bRefineRotation = true,
     bool bRefineTranslation = true,
-    bool bRefineIntrinsics = false);
+    bool bRefineFocalAndPP = false,
+    bool bRefineDisto = false);
 
 private:
 
@@ -180,7 +184,7 @@ private:
 
   /// List of images that belong to a common intrinsic group
   std::map<size_t, std::vector<size_t> > _map_ImagesIdPerIntrinsicGroup;
-  std::map<size_t, Vec6 > _map_IntrinsicsPerGroup; // @L radial distortion as optional
+  std::map<size_t, Vec6 > _map_IntrinsicsPerGroup;
 
   // Intrinsic Id per imageId
   std::map<size_t, size_t> _map_IntrinsicIdPerImageId;
@@ -217,7 +221,8 @@ private:
   // ---
   // Final Bundle Adjustment parameter
   // ----
-  bool _bRefineIntrinsics;
+  bool _bRefineFocalAndPP;
+  bool _bRefineDisto;
 
   // -----
   // Reporting ..
