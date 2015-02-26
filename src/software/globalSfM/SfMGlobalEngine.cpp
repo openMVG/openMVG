@@ -43,8 +43,7 @@
 
 #undef DYNAMIC
 #include "openMVG/bundle_adjustment/problem_data_container.hpp"
-#include "openMVG/bundle_adjustment/pinhole_ceres_functor.hpp"
-#include "openMVG/bundle_adjustment/pinhole_brown_Rt_ceres_functor.hpp" // @L should we keep the pinhole_ceres_functor.hpp
+#include "openMVG/bundle_adjustment/pinhole_brown_Rt_ceres_functor.hpp"
 #include "software/globalSfM/SfMBundleAdjustmentHelper_tonly.hpp"
 
 #include "lemon/list_graph.h"
@@ -1798,7 +1797,7 @@ void GlobalReconstructionEngine::bundleAdjustment(
 
   // Setup intrinsic parameters groups
   cpt = 0;
-  for (std::map<size_t, Vec6 >::const_iterator iterIntrinsicGroup = _map_IntrinsicsPerGroup.begin(); // @L
+  for (std::map<size_t, Vec6 >::const_iterator iterIntrinsicGroup = _map_IntrinsicsPerGroup.begin();
     iterIntrinsicGroup != _map_IntrinsicsPerGroup.end();
     ++iterIntrinsicGroup, ++cpt)
   {

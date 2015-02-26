@@ -124,7 +124,6 @@ public:
   // TYPEDEF
   //--
   typedef std::map< std::pair<size_t, size_t>, std::pair<Mat3, Vec3> > Map_RelativeRT;
-  typedef std::map<size_t, PinholeCamera > Map_Camera; // @L --
   typedef std::map<size_t, BrownPinholeCamera> Map_BrownPinholeCamera;
 
 private:
@@ -207,7 +206,6 @@ private:
   //-- Reconstruction data
   //-----
   // Cameras (Motion)
-  //Map_Camera _map_camera; //@L --
   Map_BrownPinholeCamera _map_camera;
   
   // Structure
