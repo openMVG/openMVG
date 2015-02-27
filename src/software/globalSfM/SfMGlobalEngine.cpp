@@ -626,6 +626,7 @@ bool GlobalReconstructionEngine::Process()
   //-------------------
   // Relative translations estimation (Triplet based translation computation)
   //-------------------
+  RelativeInfo_Vec vec_initialRijTijEstimates;
   PairWiseMatches newpairMatches;
   {
     std::cout << "\n-------------------------------" << "\n"
