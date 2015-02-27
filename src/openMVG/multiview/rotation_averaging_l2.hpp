@@ -182,7 +182,7 @@ static bool L2RotationAveraging( size_t nCamera,
 
 // Ceres Functor to minimize global rotation regarding fixed relative rotation
 struct CeresPairRotationError {
-  CeresPairRotationError(const openMVG::Vec3& relative_rotation,    const double weight)
+  CeresPairRotationError(const openMVG::Vec3& relative_rotation,  const double weight)
   :relative_rotation_(relative_rotation), weight_(weight) {}
 
   // The error is given by the rotation cycle error (R2 * R1.t) * RRel.t

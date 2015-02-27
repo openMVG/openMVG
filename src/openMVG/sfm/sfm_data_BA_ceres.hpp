@@ -94,7 +94,7 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
       {
         case PINHOLE_CAMERA:
         {
-          std::vector<double> vec_params = itIntrinsic->second->getParams();
+          const std::vector<double> vec_params = itIntrinsic->second->getParams();
           map_intrinsics[indexCam].reserve(3);
           map_intrinsics[indexCam].push_back(vec_params[0]);
           map_intrinsics[indexCam].push_back(vec_params[1]);
@@ -136,13 +136,13 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
 
         ceres::CostFunction* cost_function =
          new ceres::AutoDiffCostFunction<pinhole_reprojectionError::ErrorFunc_Refine_Intrinsic_Motion_3DPoints, 2, 3, 6, 3>(
-            new pinhole_reprojectionError::ErrorFunc_Refine_Intrinsic_Motion_3DPoints(itObs->second.pos.data()));
+            new pinhole_reprojectionError::ErrorFunc_Refine_Intrinsic_Motion_3DPoints(itObs->second.x.data()));
 
         problem.AddResidualBlock(cost_function,
           p_LossFunction,
-          &map_intrinsics[view.id_cam][0],
+          &map_intrinsics[view.id_intrinsic][0],
           &map_poses[view.id_pose][0],
-          iterTracks->second.pt3.data()); //Do we need to copy 3D point to avoid false motion, if failure ?
+          iterTracks->second.X.data()); //Do we need to copy 3D point to avoid false motion, if failure ?
       }
     }
 
@@ -192,7 +192,8 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
         << std::endl;
 
       // Update camera poses with refined data
-      for (Poses::iterator itPose = sfm_data.poses.begin(); itPose != sfm_data.poses.end(); ++itPose)
+      for (Poses::iterator itPose = sfm_data.poses.begin();
+        itPose != sfm_data.poses.end(); ++itPose)
       {
         const IndexT indexPose = itPose->first;
 
@@ -205,13 +206,13 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
       }
 
       // Update camera intrinsics with refined data
-      for (Intrinsics::iterator itIntrinsic = sfm_data.intrinsics.begin(); itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
+      for (Intrinsics::iterator itIntrinsic = sfm_data.intrinsics.begin();
+        itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
       {
         const IndexT indexCam = itIntrinsic->first;
 
         const std::vector<double> & vec_params = map_intrinsics[indexCam];
-        Intrinsic * cam = itIntrinsic->second;
-        cam->updateFromParams(vec_params);
+        itIntrinsic->second.get()->updateFromParams(vec_params);
       }
       return true;
     }

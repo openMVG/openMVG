@@ -626,7 +626,6 @@ bool GlobalReconstructionEngine::Process()
   //-------------------
   // Relative translations estimation (Triplet based translation computation)
   //-------------------
-  std::vector<openMVG::relativeInfo > vec_initialRijTijEstimates;
   PairWiseMatches newpairMatches;
   {
     std::cout << "\n-------------------------------" << "\n"
@@ -1561,8 +1560,8 @@ void GlobalReconstructionEngine::tripletRotationRejection(
     else
       RKI = map_relatives.find(ik)->second.first.transpose();
 
-    Mat3 Rot_To_Identity = RIJ * RJK * RKI; // motion composition
-    float angularErrorDegree = static_cast<float>(R2D(getRotationMagnitude(Rot_To_Identity)));
+    const Mat3 Rot_To_Identity = RIJ * RJK * RKI; // motion composition
+    const float angularErrorDegree = static_cast<float>(R2D(getRotationMagnitude(Rot_To_Identity)));
     vec_errToIdentityPerTriplet.push_back(angularErrorDegree);
 
     if (angularErrorDegree < 2.0f)

@@ -8,7 +8,16 @@
 #define OPENMVG_SFM_HPP
 
 #include "openMVG/types.hpp"
+#include "openMVG/numeric/numeric.h"
+
+// Serialization
+#include <cereal/cereal.hpp>
+
+#include "openMVG/sfm/sfm_view.hpp"
+#include "openMVG/sfm/sfm_landmark.hpp"
+
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_BA.hpp"
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 

@@ -8,6 +8,8 @@
 #define OPENMVG_GEOMETRY_POSE3_H_
 
 #include "openMVG/multiview/projection.hpp"
+#include <cereal/cereal.hpp>
+
 namespace openMVG {
 namespace geometry {
 
@@ -48,6 +50,39 @@ class Pose3
     Pose3 inverse() const
     {
       return Pose3(_rotation.transpose(),  -(_rotation * _center));
+    }
+
+    // Serialization
+    template <class Archive>
+    void save( Archive & ar) const
+    {
+      const std::vector<std::vector<double>> mat =
+        {
+          { _rotation(0,0), _rotation(0,1), _rotation(0,2) },
+          { _rotation(1,0), _rotation(1,1), _rotation(1,2) },
+          { _rotation(2,0), _rotation(2,1), _rotation(2,2) }
+        };
+
+      ar(cereal::make_nvp("rotation", mat));
+
+      const std::vector<double> vec = { _center(0), _center(1), _center(2) };
+      ar(cereal::make_nvp("center", vec ));
+    }
+
+    template <class Archive>
+    void load( Archive & ar)
+    {
+      std::vector<std::vector<double>> mat(3, std::vector<double>(3));
+      ar(cereal::make_nvp("rotation", mat));
+      // copy back to the rotation
+      _rotation <<
+        mat[0][0], mat[0][1], mat[0][2],
+        mat[1][0], mat[1][1], mat[1][2],
+        mat[2][0], mat[2][1], mat[2][2];
+
+      std::vector<double> vec(3);
+      ar(cereal::make_nvp("center", vec));
+      _center << vec[0], vec[1], vec[2];
     }
 };
 } // namespace geometry

@@ -7,13 +7,17 @@
 #ifndef OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_COMMON_H_
 #define OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_COMMON_H_
 
+#include "openMVG/types.hpp"
 #include "openMVG/numeric/numeric.h"
 #include <utility>
 
 namespace openMVG {
 
-/// Relative information [Rij[tij] for a pair
-typedef std::pair<std::pair<std::size_t,std::size_t>, std::pair<Mat3,Vec3> > relativeInfo;
+/// Relative information [Rij|tij] for a pair
+typedef std::pair< Pair, std::pair<Mat3,Vec3> > relativeInfo;
+
+typedef std::vector< relativeInfo > RelativeInfo_Vec;
+typedef std::map< Pair, std::pair<Mat3,Vec3> > RelativeInfo_Map;
 
 } // namespace openMVG
 

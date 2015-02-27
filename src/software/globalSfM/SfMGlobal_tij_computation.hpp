@@ -398,6 +398,7 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
 
   std::cout << std::endl
     << "Computation of the relative translations over the graph with an edge coverage algorithm" << std::endl;
+  std::cout << "#triplets: " << vec_triplets.size() << std::endl;
 #ifdef USE_OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
