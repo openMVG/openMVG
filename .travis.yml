@@ -5,8 +5,10 @@
 language: cpp
 
 compiler:
-  - gcc
-  - clang
+  - gcc:
+    - "4.8"
+  - clang:
+    - "3.2"
 
 before_install:
  - sudo apt-get update -qq
