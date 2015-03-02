@@ -35,6 +35,24 @@ struct IntrinsicBase
 
   /// Data wrapper for non linear optimization (update from data)
   virtual bool updateFromParams(const std::vector<double> & params) = 0;
+
+  /// Get bearing vector of p point (image coord)
+  virtual Vec3 operator () (const Vec2& p) const = 0;
+
+  /// Transform a point from the camera plane to the image plane
+  virtual Vec2 cam2ima(const Vec2& p) const = 0;
+
+  /// Transform a point from the image plane to the camera plane
+  virtual Vec2 ima2cam(const Vec2& p) const = 0;
+
+  /// Does the camera model handle a distortion field?
+  virtual bool have_disto() const =0;
+
+  /// Apply the distortion field to a point (that is in normalized camera frame)
+  virtual Vec2 apply(const Vec2& p) const  =0;
+
+  /// Remove the distortion to a camera point (that is in normalized camera frame)
+  virtual Vec2 remove(const Vec2& p) const  =0;
 };
 
 /// Define a classic Pinhole camera (store a K 3x3 matrix)

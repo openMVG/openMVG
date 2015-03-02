@@ -46,6 +46,7 @@ struct SfM_Data
   const Views & getViews() const {return views;}
   const Poses & getPoses() const {return poses;}
   const Intrinsics & getIntrinsics() const {return intrinsics;}
+  const Landmarks & getLandmarks() const {return structure;}
 
   /// Structure (3D points with their 2D observations)
   Landmarks structure;
