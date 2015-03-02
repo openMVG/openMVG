@@ -32,7 +32,7 @@ void Warp(const Image &im, const Mat3 & H, Image &out)
   const int hOut = static_cast<int>(out.Height());
 
   for (int j = 0; j < hOut; ++j)
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for
 #endif
     for (int i = 0; i < wOut; ++i)

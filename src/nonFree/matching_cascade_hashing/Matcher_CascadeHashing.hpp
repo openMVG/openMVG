@@ -89,7 +89,7 @@ class Matcher_CascadeHashing_AllInMemory
       const std::vector<FeatureT> & featureSetI = map_Feat[I];
 
       const std::vector<size_t> & indexToCompare = iter->second;
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
       for (int j = 0; j < (int)indexToCompare.size(); ++j)
@@ -111,7 +111,7 @@ class Matcher_CascadeHashing_AllInMemory
         IndMatchDecorator<float> matchDeduplicator(vec_FilteredMatches, featureSetI, featureSetJ);
         matchDeduplicator.getDeduplicated(vec_FilteredMatches);
 
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
 #endif
         {

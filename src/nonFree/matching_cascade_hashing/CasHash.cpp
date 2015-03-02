@@ -96,7 +96,7 @@ size_t ImportFeatures(const map_DescT& map_Desc, std::vector<ImageFeatures>& ima
   // init feature descriptors for each image
   imageDataList.resize(map_Desc.size());
   const HashConvertor stHashConvertor;
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for
 #endif
   for (int i = 0; i < map_Desc.size(); ++i)

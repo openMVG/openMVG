@@ -90,7 +90,7 @@ Image undistortImage(
     offset = Vec2(cx,cy) - d.m_disto_center;
 
   Image J ( w,h );
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for
 #endif
   for (int j=0; j<h; ++j ) {
@@ -316,7 +316,7 @@ struct reconstructorHelper
         return false;
       }
       f_cloud << "images\ncameras\n" << nc << "\n";
-      
+
       count = 0;
       for (Map_BrownPinholeCamera::const_iterator iter = map_Camera.begin();
         iter != map_Camera.end();

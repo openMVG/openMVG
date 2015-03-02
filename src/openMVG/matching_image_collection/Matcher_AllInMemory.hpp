@@ -66,7 +66,7 @@ class Matcher_AllInMemory : public Matcher
     const PairsT & pairs,
     PairWiseMatches & map_PutativesMatches)const // the pairwise photometric corresponding points
   {
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
     std::cout << "Using the OPENMP thread interface" << std::endl;
 #endif
     C_Progress_display my_progress_bar( pairs.size() );
@@ -95,7 +95,7 @@ class Matcher_AllInMemory : public Matcher
       ( matcher10.Build(tab0, featureSetI_Size, DescriptorT::static_size) );
 
       const std::vector<size_t> & indexToCompare = iter->second;
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
       for (int j = 0; j < (int)indexToCompare.size(); ++j)
@@ -138,7 +138,7 @@ class Matcher_AllInMemory : public Matcher
         IndMatchDecorator<float> matchDeduplicator(vec_FilteredMatches, featureSetI, featureSetJ);
         matchDeduplicator.getDeduplicated(vec_FilteredMatches);
 
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
 #endif
         {

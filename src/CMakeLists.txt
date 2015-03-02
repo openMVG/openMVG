@@ -58,7 +58,7 @@ INCLUDE(CXX11)
 check_for_cxx11_compiler(CXX11_COMPILER)
 # If a C++11 compiler is available, then set the appropriate flags
 IF(CXX11_COMPILER)
-  ADD_DEFINITIONS(-DUSE_CPP11)
+  ADD_DEFINITIONS(-DOPENMVG_USE_CXX11)
   enable_cxx11()
   INCLUDE(CheckIncludeFileCXX)
   CHECK_INCLUDE_FILE_CXX(thread HAVE_CXX11_THREAD)
@@ -79,14 +79,14 @@ IF (OpenMVG_USE_OPENMP)
   IF (OPENMP_FOUND)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     OPTION(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" ON)
-    ADD_DEFINITIONS(-DUSE_OPENMP)
+    ADD_DEFINITIONS(-DOPENMVG_USE_OPENMP)
     IF (NOT MSVC)
       LIST(APPEND OPENMVG_LIBRARY_DEPENDENCIES gomp)
     ENDIF (NOT MSVC)
 ELSE (OpenMVG_USE_OPENMP)
     OPTION(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" OFF)
     SET(OpenMVG_USE_OPENMP OFF CACHE BOOL "Use OpenMP for parallelization")
-    REMOVE_DEFINITIONS(-DUSE_OPENMP)
+    REMOVE_DEFINITIONS(-DOPENMVG_USE_OPENMP)
   ENDIF (OPENMP_FOUND)
 ENDIF (OpenMVG_USE_OPENMP)
 
@@ -165,7 +165,7 @@ SET_PROPERTY(TARGET lib_clp PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
 # Opencv is not used by openMVG but some samples show how to use openCV
 #  and openMVG simultaneously
 # ==============================================================================
-SET(USE_OPENCV OFF CACHE BOOL "Do not build opencv+openMVG samples programs")
+SET(OPENMVG_USE_OPENCV OFF CACHE BOOL "Do not build opencv+openMVG samples programs")
 
 
 # ==============================================================================
@@ -178,7 +178,7 @@ ENDIF (OpenMVG_BUILD_TESTS)
 MACRO (UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
   IF (OpenMVG_BUILD_TESTS)
     ADD_EXECUTABLE(${NAMESPACE}_test_${NAME} ${NAME}_test.cpp)
-    
+
     SET_PROPERTY(TARGET ${NAMESPACE}_test_${NAME} PROPERTY FOLDER OpenMVG/test)
 
     TARGET_LINK_LIBRARIES(${NAMESPACE}_test_${NAME}
@@ -245,11 +245,11 @@ SET(OpenMVG_LIBS
 FOREACH(omvglib ${OpenMVG_LIBS})
   SET_PROPERTY(TARGET ${omvglib} PROPERTY FOLDER OpenMVG/OpenMVG)
 ENDFOREACH()
-  
+
 # concat lists
 SET(OpenMVG_LIBS "${OpenMVG_LIBS}" ${openMVG_linearProgramming})
 #third_party libs
-SET(OpenMVG_LIBS "${OpenMVG_LIBS}" 
+SET(OpenMVG_LIBS "${OpenMVG_LIBS}"
   vlsift
   stlplus
   flann_cpp_s
@@ -282,7 +282,7 @@ IF (EXISTS ${SPHINX_EXECUTABLE})
     "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst"
     "${SPHINX_HTML_DIR}"
     COMMENT "Building HTML documentation with Sphinx")
-    
+
   SET_PROPERTY(TARGET doc PROPERTY FOLDER OpenMVG)
 
 ELSE (EXISTS ${SPHINX_EXECUTABLE})

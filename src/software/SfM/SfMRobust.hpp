@@ -352,10 +352,10 @@ bool robustResection(
       }
     options.minimizer_progress_to_stdout = false;
     options.logging_type = ceres::SILENT;
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
     options.num_threads = omp_get_max_threads();
     options.num_linear_solver_threads = omp_get_max_threads();
-#endif // USE_OPENMP
+#endif // OPENMVG_USE_OPENMP
 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);

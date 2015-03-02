@@ -101,7 +101,7 @@ static bool SIFTDetector(const Image<unsigned char>& I,
     // Update gradient before launching parallel extraction
     vl_sift_update_gradient(filt);
 
-  #ifdef USE_OPENMP
+  #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for private(descr, descriptor)
   #endif 
     for (int i=0;i<nkeys;++i) {
@@ -114,7 +114,7 @@ static bool SIFTDetector(const Image<unsigned char>& I,
           keys[i].sigma, static_cast<float>(angles[q]));
 
         siftDescToFloat(&descr[0], descriptor, bRootSift);
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
 #endif
         {

@@ -87,7 +87,7 @@ INSTALL(TARGETS openMVG_main_openMVG2CMPMVS DESTINATION bin/)
 # -
 # Use openCV Feature detector with the openMVG matching framework
 # -
-IF(USE_OPENCV)
+IF(OPENMVG_USE_OPENCV)
   FIND_PACKAGE( OpenCV )
 
   IF(NOT OpenCV_FOUND)
@@ -104,7 +104,7 @@ IF(USE_OPENCV)
     INSTALL(TARGETS openMVG_main_computeMatches_OpenCV DESTINATION bin/)
 
   ENDIF(NOT OpenCV_FOUND)
-ENDIF(USE_OPENCV)
+ENDIF(OPENMVG_USE_OPENCV)
 
 # -
 # Export a SfM openMVG scene to meshlab scene with rasters
@@ -125,7 +125,7 @@ SET_PROPERTY(TARGET openMVG_main_evalQuality PROPERTY FOLDER OpenMVG/software)
 
 INSTALL(TARGETS openMVG_main_evalQuality DESTINATION bin/)
 
-                     
+
 UNIT_TEST(openMVG SfMIOHelper "stlplus")
 
 INSTALL(FILES cameraSensorWidth/cameraGenerated.txt DESTINATION resources/)

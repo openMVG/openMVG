@@ -419,7 +419,7 @@ bool ColorHarmonizationEngineGlobal::Process()
     Image< RGBColor > image_c;
     ReadImage( stlplus::create_filespec( _sImagePath, _vec_fileNames[ imaNum ] ).c_str(), &image_c );
 
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for
 #endif
     for( int j = 0; j < image_c.Height(); ++j )

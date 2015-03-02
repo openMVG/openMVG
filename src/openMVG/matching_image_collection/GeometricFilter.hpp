@@ -53,7 +53,7 @@ class ImageCollectionGeometricFilter
   {
     C_Progress_display my_progress_bar( map_PutativesMatchesPair.size() );
 
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
     for (int i = 0; i < (int)map_PutativesMatchesPair.size(); ++i)
@@ -98,7 +98,7 @@ class ImageCollectionGeometricFilter
           for (size_t i=0; i < vec_inliers.size(); ++i)  {
             vec_filteredMatches.push_back( vec_PutativeMatches[vec_inliers[i]] );
           }
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
 #endif
           {
@@ -106,7 +106,7 @@ class ImageCollectionGeometricFilter
           }
         }
       }
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
 #pragma omp critical
 #endif
       {

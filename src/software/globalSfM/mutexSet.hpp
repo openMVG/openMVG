@@ -7,12 +7,12 @@
 
 #pragma once
 
-#ifdef USE_CXX11
+#ifdef OPENMVG_USE_CXX11
 #include <mutex>
 using namespace std;
 typedef std::mutex mutexT;
 typedef std::lock_guard<mutexT> lock_guardT;
-#else
+#else // OPENMVG_USE_CXX11
 #include "third_party/tinythread/fast_mutex.h"
 #include "third_party/tinythread/tinythread.h"
 using namespace tthread;

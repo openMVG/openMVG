@@ -267,10 +267,10 @@ bool estimate_T_triplet(
 
     options.minimizer_progress_to_stdout = false;
     options.logging_type = ceres::SILENT;
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
     options.num_threads = omp_get_max_threads();
     options.num_linear_solver_threads = omp_get_max_threads();
-#endif // USE_OPENMP
+#endif // OPENMVG_USE_OPENMP
 
     // Solve BA
     ceres::Solver::Summary summary;
@@ -336,7 +336,7 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
 
   //-- Prepare tracks count per triplets:
   std::map<size_t, size_t> map_tracksPerTriplets;
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
   for (int i = 0; i < (int)vec_triplets.size(); ++i)
@@ -369,9 +369,9 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
       {
         tracksBuilder.Build(map_matchesIJK);
         tracksBuilder.Filter(3);
-  #ifdef USE_OPENMP
-    #pragma omp critical
-  #endif
+#ifdef OPENMVG_USE_OPENMP
+  #pragma omp critical
+#endif
         map_tracksPerTriplets[i] = tracksBuilder.NbTracks(); //count the # of matches in the UF tree
       }
   }
@@ -399,7 +399,7 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
   std::cout << std::endl
     << "Computation of the relative translations over the graph with an edge coverage algorithm" << std::endl;
   std::cout << "#triplets: " << vec_triplets.size() << std::endl;
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
   for (int k = 0; k < vec_edges.size(); ++k)
@@ -522,7 +522,7 @@ void GlobalReconstructionEngine::computePutativeTranslation_EdgesCoverage(
           // IJ, JK, IK
 
 //--- ATOMIC
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
 #endif
           {

@@ -926,7 +926,7 @@ bool GlobalReconstructionEngine::Process()
       C_Progress_display my_progress_bar_triangulation( _map_selectedTracks.size(),
        std::cout, "Initial triangulation:\n");
 
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
       #pragma omp parallel for schedule(dynamic)
 #endif
       for (int idx = 0; idx < _map_selectedTracks.size(); ++idx)
@@ -951,7 +951,7 @@ bool GlobalReconstructionEngine::Process()
         const Vec3 Xs = trianObj.compute();
         _vec_allScenes[idx] = Xs;
 
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
 #endif
         {
@@ -1225,7 +1225,7 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
   // For each pair, compute the rotation from pairwise point matches:
 
   C_Progress_display my_progress_bar( _map_Matches_E.size(), std::cout, "\n", " " , "ComputeRelativeRt\n" );
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
   for (int i = 0; i < _map_Matches_E.size(); ++i)
@@ -1480,7 +1480,7 @@ void GlobalReconstructionEngine::ComputeRelativeRt(
           }
         }
 
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
 #endif
         {
@@ -1901,10 +1901,10 @@ void GlobalReconstructionEngine::bundleAdjustment(
     }
   options.minimizer_progress_to_stdout = false;
   options.logging_type = ceres::SILENT;
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   options.num_threads = omp_get_max_threads();
   options.num_linear_solver_threads = omp_get_max_threads();
-#endif // USE_OPENMP
+#endif // OPENMVG_USE_OPENMP
 
   // Configure constant parameters (if any)
   {

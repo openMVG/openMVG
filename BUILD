@@ -117,5 +117,5 @@ If you want enable unit tests and examples to the build:
  --------------------
  Using openCV sample
  --------------------
- Add -DUSE_OPENCV=ON to your cmake command line and set OpenCV_DIR variable to your openCV build directory
+ Add -DOPENMVG_USE_OPENCV=ON to your cmake command line and set OpenCV_DIR variable to your openCV build directory
  
