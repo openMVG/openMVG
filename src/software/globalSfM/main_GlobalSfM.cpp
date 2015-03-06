@@ -38,7 +38,8 @@ int main(int argc, char **argv)
   bool bColoredPointCloud = false;
   int iRotationAveragingMethod = 2;
   int iTranslationAveragingMethod = 1;
-  bool bRefineIntrinsic = true;
+  bool bRefineFocalAndPP = true;
+  bool bRefineDisto = true;
 
   cmd.add( make_option('i', sImaDirectory, "imadir") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
@@ -46,7 +47,8 @@ int main(int argc, char **argv)
   cmd.add( make_option('c', bColoredPointCloud, "coloredPointCloud") );
   cmd.add( make_option('r', iRotationAveragingMethod, "rotationAveraging") );
   cmd.add( make_option('t', iTranslationAveragingMethod, "translationAveraging") );
-  cmd.add( make_option('f', bRefineIntrinsic, "refineIntrinsic") );
+  cmd.add( make_option('f', bRefineFocalAndPP, "refineFocalAndPP") );
+  cmd.add( make_option('d', bRefineDisto, "refineDisto") );
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -59,9 +61,12 @@ int main(int argc, char **argv)
     << "[-c|--coloredPointCloud 0(default) or 1]\n"
     << "[-r|--rotationAveraging 2(default L2) or 1 (L1)]\n"
     << "[-t|--translationAveraging 1(default L1) or 2 (L2)]\n"
-    << "[-f|--refineIntrinsic \n"
-    << "\t 0-> keep provided intrinsic,\n"
-    << "\t 1-> refine provided intrinsics: (focal, principal point) ] \n"
+    << "[-f|--refineFocalAndPP \n"
+    << "\t 0-> keep provided focal and principal point,\n"
+    << "\t 1-> refine provided focal and principal point ] \n"
+    << "[-d|--refineDisto \n"
+    << "\t 0-> refine focal and principal point\n"
+    << "\t 1-> refine focal, principal point and radial distortion factors.] \n"
     << "\n"
     << " ICCV 2013: => -r 2 -t 1"
     << std::endl;
@@ -103,7 +108,8 @@ int main(int argc, char **argv)
     ETranslationAveragingMethod(iTranslationAveragingMethod),
     true);
 
-  to3DEngine.setRefineIntrinsics(bRefineIntrinsic);
+  to3DEngine.setRefineFocalAndPP(bRefineFocalAndPP);
+  to3DEngine.setRefineDisto(bRefineDisto);
 
   if (to3DEngine.Process())
   {

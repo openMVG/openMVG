@@ -43,7 +43,7 @@
 
 #undef DYNAMIC
 #include "openMVG/bundle_adjustment/problem_data_container.hpp"
-#include "openMVG/bundle_adjustment/pinhole_ceres_functor.hpp"
+#include "openMVG/bundle_adjustment/pinhole_brown_Rt_ceres_functor.hpp"
 #include "software/globalSfM/SfMBundleAdjustmentHelper_tonly.hpp"
 
 #include "lemon/list_graph.h"
@@ -272,7 +272,8 @@ GlobalReconstructionEngine::GlobalReconstructionEngine(
   : ReconstructionEngine(sImagePath, sMatchesPath, sOutDirectory),
     _eRotationAveragingMethod(eRotationAveragingMethod),
     _eTranslationAveragingMethod(eTranslationAveragingMethod),
-    _bRefineIntrinsics(true)
+    _bRefineFocalAndPP(true),
+    _bRefineDisto(true)
 {
   _bHtmlReport = bHtmlReport;
   if (!stlplus::folder_exists(sOutDirectory)) {
@@ -805,7 +806,7 @@ bool GlobalReconstructionEngine::Process()
           const size_t camNodeId = _reindexBackward[i];
           const Mat3 & Ri = map_globalR[camNodeId];
           const Mat3 & _K = _vec_intrinsicGroups[_map_IntrinsicIdPerImageId[camNodeId]].m_K;   // The same K matrix is used by all the camera
-          _map_camera[camNodeId] = PinholeCamera(_K, Ri, t);
+          _map_camera[camNodeId] = BrownPinholeCamera(_K, Ri, t);
           //-- Export camera center
           vec_C.push_back(_map_camera[camNodeId]._C);
         }
@@ -865,7 +866,7 @@ bool GlobalReconstructionEngine::Process()
           const Mat3 & Ri = map_globalR[camNodeId];
           const Mat3 & _K = _vec_intrinsicGroups[_map_IntrinsicIdPerImageId[camNodeId]].m_K;// The same K matrix is used by all the camera
           const Vec3 t = - Ri * C;
-          _map_camera[camNodeId] = PinholeCamera(_K, Ri, t);
+          _map_camera[camNodeId] = BrownPinholeCamera(_K, Ri, t);
           //-- Export camera center
           vec_C.push_back(_map_camera[camNodeId]._C);
         }
@@ -1038,18 +1039,25 @@ bool GlobalReconstructionEngine::Process()
   //-------------------
 
   // Refine only Structure and translations
-  bundleAdjustment(_map_camera, _vec_allScenes, _map_selectedTracks, false, true, false);
+  bundleAdjustment(_map_camera, _vec_allScenes, _map_selectedTracks, false, true, false, false);
   plyHelper::exportToPly(_vec_allScenes, stlplus::create_filespec(_sOutDirectory, "raw_pointCloud_BA_T_Xi", "ply"));
 
   // Refine Structure, rotations and translations
-  bundleAdjustment(_map_camera, _vec_allScenes, _map_selectedTracks, true, true, false);
+  bundleAdjustment(_map_camera, _vec_allScenes, _map_selectedTracks, true, true, false, false);
   plyHelper::exportToPly(_vec_allScenes, stlplus::create_filespec(_sOutDirectory, "raw_pointCloud_BA_RT_Xi", "ply"));
 
-  if (_bRefineIntrinsics)
+  if (_bRefineFocalAndPP )
   {
     // Refine Structure, rotations, translations and intrinsics
-    bundleAdjustment(_map_camera, _vec_allScenes, _map_selectedTracks, true, true, true);
+    bundleAdjustment(_map_camera, _vec_allScenes, _map_selectedTracks, true, true, true, false);
     plyHelper::exportToPly(_vec_allScenes, stlplus::create_filespec(_sOutDirectory, "raw_pointCloud_BA_KRT_Xi", "ply"));
+  }
+  
+  if (_bRefineDisto)
+  {
+    // Refine Structure, rotations, translations and intrinsics
+    bundleAdjustment(_map_camera, _vec_allScenes, _map_selectedTracks, true, true, true, true);
+    plyHelper::exportToPly(_vec_allScenes, stlplus::create_filespec(_sOutDirectory, "raw_pointCloud_BA_KRT_Xi_k1k2k3", "ply"));
   }
 
   //-- Export statistics about the global process
@@ -1085,10 +1093,10 @@ bool GlobalReconstructionEngine::Process()
   //-- Export the scene (cameras and structures) to the SfM Data container
   {
     // Cameras
-    for (std::map<size_t,PinholeCamera >::const_iterator iter = _map_camera.begin();
+    for (std::map<size_t,BrownPinholeCamera >::const_iterator iter = _map_camera.begin();
       iter != _map_camera.end();  ++iter)
     {
-      const PinholeCamera & cam = iter->second;
+      const BrownPinholeCamera & cam = iter->second;
       _reconstructorData.map_Camera[iter->first] = BrownPinholeCamera(cam._P);
       _reconstructorData.set_imagedId.insert(iter->first);
     }
@@ -1698,17 +1706,18 @@ void GlobalReconstructionEngine::tripletRotationRejection(
 }
 
 void GlobalReconstructionEngine::bundleAdjustment(
-    Map_Camera & map_camera,
+    Map_BrownPinholeCamera & map_camera,
     std::vector<Vec3> & vec_allScenes,
     const STLMAPTracks & map_tracksSelected,
     bool bRefineRotation,
     bool bRefineTranslation,
-    bool bRefineIntrinsics)
+    bool bRefineFocalAndPP,
+    bool bRefineDisto)
 {
   using namespace std;
-
+  
   // find in which intrinsic group each remaining cameras belong
-  for (Map_Camera::const_iterator iter = map_camera.begin();
+  for (Map_BrownPinholeCamera::const_iterator iter = map_camera.begin();
     iter != map_camera.end();  ++iter)
   {
     const size_t idx = iter->first;
@@ -1718,9 +1727,12 @@ void GlobalReconstructionEngine::bundleAdjustment(
     if (_map_IntrinsicsPerGroup.find(_map_IntrinsicIdPerImageId[idx])  == _map_IntrinsicsPerGroup.end())
     {
       size_t intrinsicId = _map_IntrinsicIdPerImageId[idx];
-      Vec3 & intrinsic = _map_IntrinsicsPerGroup[intrinsicId];
+      Vec6 & intrinsic = _map_IntrinsicsPerGroup[intrinsicId];
       const Mat3 _K    = _vec_intrinsicGroups[intrinsicId].m_K;
-      intrinsic << _K(0,0), _K(0,2), _K(1,2);
+      intrinsic << _K(0,0), _K(0,2), _K(1,2),
+                   _vec_intrinsicGroups[intrinsicId].m_k1,
+                   _vec_intrinsicGroups[intrinsicId].m_k2,
+                   _vec_intrinsicGroups[intrinsicId].m_k3;
     }
   }
 
@@ -1740,7 +1752,7 @@ void GlobalReconstructionEngine::bundleAdjustment(
 
   // Setup a BA problem
   using namespace openMVG::bundle_adjustment;
-  BA_Problem_data_camMotionAndIntrinsic<6,3> ba_problem; // Refine [Rotation|Translation]|[Intrinsics]
+  BA_Problem_data_camMotionAndIntrinsic<6,6> ba_problem; // Refine [Rotation|Translation]|[Intrinsics]
 
   // Configure the size of the problem
   ba_problem.num_cameras_ = nbCams;
@@ -1755,7 +1767,7 @@ void GlobalReconstructionEngine::bundleAdjustment(
 
   ba_problem.num_parameters_ =
     6 * ba_problem.num_cameras_ // #[Rotation|translation] = [3x1]|[3x1]
-    + 3 * ba_problem.num_intrinsics_ // #[f,ppx,ppy] = [3x1]
+      + 6 * ba_problem.num_intrinsics_ // #[f,ppx,ppy,k1,k2,k3] = [6x1]    
     + 3 * ba_problem.num_points_; // #[X] = [3x1]
   ba_problem.parameters_.reserve(ba_problem.num_parameters_);
 
@@ -1763,7 +1775,7 @@ void GlobalReconstructionEngine::bundleAdjustment(
   std::set<size_t> set_camIndex;
   std::map<size_t,size_t> map_camIndexToNumber_extrinsic, map_camIndexToNumber_intrinsic;
   size_t cpt = 0;
-  for (Map_Camera::const_iterator iter = map_camera.begin();
+  for (Map_BrownPinholeCamera::const_iterator iter = map_camera.begin();
     iter != map_camera.end();  ++iter, ++cpt)
   {
     // in order to map camera index to contiguous number
@@ -1785,14 +1797,17 @@ void GlobalReconstructionEngine::bundleAdjustment(
 
   // Setup intrinsic parameters groups
   cpt = 0;
-  for (std::map<size_t, Vec3 >::const_iterator iterIntrinsicGroup = _map_IntrinsicsPerGroup.begin();
+  for (std::map<size_t, Vec6 >::const_iterator iterIntrinsicGroup = _map_IntrinsicsPerGroup.begin();
     iterIntrinsicGroup != _map_IntrinsicsPerGroup.end();
     ++iterIntrinsicGroup, ++cpt)
   {
-    const Vec3 & intrinsic = iterIntrinsicGroup->second;
+    const Vec6 & intrinsic = iterIntrinsicGroup->second;
     ba_problem.parameters_.push_back(intrinsic(0)); // FOCAL_LENGTH
     ba_problem.parameters_.push_back(intrinsic(1)); // PRINCIPAL_POINT_X
     ba_problem.parameters_.push_back(intrinsic(2)); // PRINCIPAL_POINT_Y
+    ba_problem.parameters_.push_back(intrinsic(3)); // K1
+    ba_problem.parameters_.push_back(intrinsic(4)); // K2
+    ba_problem.parameters_.push_back(intrinsic(5)); // K3
   }
 
   cpt = 0;
@@ -1866,10 +1881,10 @@ void GlobalReconstructionEngine::bundleAdjustment(
     // dimensional residual. Internally, the cost function stores the observed
     // image location and compares the reprojection against the observation.
 
-      ceres::CostFunction* cost_function =
-        new ceres::AutoDiffCostFunction<pinhole_reprojectionError::ErrorFunc_Refine_Intrinsic_Motion_3DPoints, 2, 3, 6, 3>(
-          new pinhole_reprojectionError::ErrorFunc_Refine_Intrinsic_Motion_3DPoints(
-            &ba_problem.observations()[2 * k]));
+     ceres::CostFunction* cost_function =
+      new ceres::AutoDiffCostFunction<pinhole_brown_reprojectionError::ErrorFunc_Refine_Camera_3DPoints, 2, 6, 6, 3>(
+            new pinhole_brown_reprojectionError::ErrorFunc_Refine_Camera_3DPoints(
+                & ba_problem.observations()[2 * k]));
 
       problem.AddResidualBlock(cost_function,
         p_LossFunction,
@@ -1933,15 +1948,49 @@ void GlobalReconstructionEngine::bundleAdjustment(
       }
     }
 
-    if (!bRefineIntrinsics)
+    // No camera intrinsics are being refined,
+    // set the whole parameter block as constant for best performance.
+    //for (size_t iIntrinsicGroupId = 0; iIntrinsicGroupId < ba_problem.num_intrinsics(); ++iIntrinsicGroupId)
+    //{
+    //  problem.SetParameterBlockConstant(ba_problem.mutable_cameras_intrinsic(iIntrinsicGroupId));
+    //}
+    ceres::SubsetParameterization *constant_transform_parameterization = NULL;
+    std::vector<int> vec_constant_intrinsic;
+    if (!bRefineFocalAndPP)
     {
-      // No camera intrinsics are being refined,
-      // set the whole parameter block as constant for best performance.
-      for (size_t iIntrinsicGroupId = 0; iIntrinsicGroupId < ba_problem.num_intrinsics(); ++iIntrinsicGroupId)
-      {
+      vec_constant_intrinsic.push_back(0);
+      vec_constant_intrinsic.push_back(1);
+      vec_constant_intrinsic.push_back(2);
+    }
+    
+    if (!bRefineDisto)
+    {
+      vec_constant_intrinsic.push_back(3);
+      vec_constant_intrinsic.push_back(4);
+      vec_constant_intrinsic.push_back(5);
+    }
+    
+    if ( !vec_constant_intrinsic.empty() &&
+         vec_constant_intrinsic.size() != ba_problem.NINTRINSICPARAM
+         // if all parameters are set as constant, better to use the SetParameterBlockConstant
+       )
+      constant_transform_parameterization =
+        new ceres::SubsetParameterization(6, vec_constant_intrinsic);
+
+    // Loop over intrinsics (to configure varying and fix parameters)
+    for (size_t iIntrinsicGroupId = 0; iIntrinsicGroupId < ba_problem.num_intrinsics(); ++iIntrinsicGroupId)
+    {
+      if ( !bRefineFocalAndPP && !bRefineDisto ){
         problem.SetParameterBlockConstant(ba_problem.mutable_cameras_intrinsic(iIntrinsicGroupId));
       }
+      else{
+        if ( !vec_constant_intrinsic.empty() ) {
+          problem.SetParameterization(ba_problem.mutable_cameras_intrinsic(iIntrinsicGroupId),
+            constant_transform_parameterization);
+        }
+      }
     }
+    
   }
 
   // Solve BA
@@ -1971,7 +2020,7 @@ void GlobalReconstructionEngine::bundleAdjustment(
 
     // Get back camera
     i = 0;
-    for (Map_Camera::iterator iter = map_camera.begin();
+    for (Map_BrownPinholeCamera::iterator iter = map_camera.begin();
       iter != map_camera.end(); ++iter, ++i)
     {
       // camera motion [R|t]
@@ -1989,8 +2038,8 @@ void GlobalReconstructionEngine::bundleAdjustment(
            0, intrinsics[0], intrinsics[2],
            0, 0, 1;
       // Update the camera
-      PinholeCamera & sCam = iter->second;
-      sCam = PinholeCamera(K, R, t);
+      BrownPinholeCamera & sCam = iter->second;
+      sCam = BrownPinholeCamera(K, R, t, intrinsics[3], intrinsics[4], intrinsics[5]); // ( ..., k1,k2,k3);
     }
 
     {
