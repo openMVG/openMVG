@@ -109,7 +109,7 @@ int main(int argc, char **argv)
     true);
 
   to3DEngine.setRefineFocalAndPP(bRefineFocalAndPP);
-  to3DEngine.setRefineDistor(bRefineDisto);
+  to3DEngine.setRefineDisto(bRefineDisto);
 
   if (to3DEngine.Process())
   {

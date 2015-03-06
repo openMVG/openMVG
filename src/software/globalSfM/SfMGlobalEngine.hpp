@@ -118,8 +118,8 @@ public:
   void setRefineFocalAndPP(bool bStatus) { _bRefineFocalAndPP = bStatus; }
 
   /// Tell if the final BA must refine radial distortion factors
-  void setRefineDistor(bool bStatus) { _bRefineDisto = bStatus; }
-  
+  void setRefineDisto(bool bStatus) { _bRefineDisto = bStatus; }
+
   //--
   // TYPEDEF
   //--
@@ -207,7 +207,7 @@ private:
   //-----
   // Cameras (Motion)
   Map_BrownPinholeCamera _map_camera;
-  
+
   // Structure
   std::vector<Vec3> _vec_allScenes;
   // Structure visibility
