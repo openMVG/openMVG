@@ -20,7 +20,7 @@ namespace openMVG{
 class ColorHarmonizationEngineGlobal : public ReconstructionEngine
 {
 public:
-  ColorHarmonizationEngineGlobal( const std::string & sImagePath,
+  ColorHarmonizationEngineGlobal( const std::string & sSfM_Data_Filename,
                             const std::string & sMatchesPath,
                             const std::string & sMatchesFile,
                             const std::string & sOutDirectory,

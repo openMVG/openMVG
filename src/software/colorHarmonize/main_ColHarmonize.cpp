@@ -24,13 +24,13 @@ int main( int argc, char **argv )
 
   CmdLine cmd;
 
-  std::string sImaDirectory;
+  std::string sSfM_Data_Filename;
   std::string sMatchesDir, sMatchesFile;
   std::string sOutDir = "";
   int selectionMethod = -1;
   int imgRef = -1;
 
-  cmd.add( make_option( 'i', sImaDirectory, "imagesDirectory" ) );
+  cmd.add( make_option( 'i', sSfM_Data_Filename, "input_file" ) );
   cmd.add( make_option( 'm', sMatchesFile, "matchesFile" ) );
   cmd.add( make_option( 'o', sOutDir, "outdir" ) );
   cmd.add( make_option( 's', selectionMethod, "selectionMethod" ) );
@@ -44,7 +44,7 @@ int main( int argc, char **argv )
   catch( const std::string& s )
   {
     std::cerr << "Usage: " << argv[ 0 ] << ' '
-    << "[-i|--imagesDirectory path] "
+    << "[-i|--input_file] path to a SfM_Data scene"
     << "[-m|--sMatchesFile path] "
     << "[-o|--outdir path] "
     << "[-s|--selectionMethod int] "
@@ -55,9 +55,9 @@ int main( int argc, char **argv )
     return EXIT_FAILURE;
   }
 
-  if ( sImaDirectory.empty() )
+  if ( sSfM_Data_Filename.empty() )
   {
-    std::cerr << "\nIt is an invalid output directory" << std::endl;
+    std::cerr << "\nIt is an invalid file input" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -74,7 +74,7 @@ int main( int argc, char **argv )
   std::auto_ptr<ReconstructionEngine> m_colorHarmonizeEngine;
   {
     m_colorHarmonizeEngine = std::auto_ptr<ReconstructionEngine>(
-      new ColorHarmonizationEngineGlobal(sImaDirectory,
+      new ColorHarmonizationEngineGlobal(sSfM_Data_Filename,
       sMatchesDir,
       sMatchesFile,
       sOutDir,

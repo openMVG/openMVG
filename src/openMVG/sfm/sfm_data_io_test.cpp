@@ -23,14 +23,11 @@ SfM_Data create_test_scene(IndexT viewsCount, bool bSharedIntrinsic)
   for(IndexT i = 0; i < viewsCount; ++i)
   {
     // Add views
-    View view;
-    view.id_view = i;
-    view.id_intrinsic = bSharedIntrinsic ? 0 : i;
-    view.id_pose = i;
     std::ostringstream os;
     os << "dataset/" << i << ".jpg";
-    view.s_Img_path = os.str();
-    sfm_data.views[view.id_view] = view;
+    const IndexT id_view = i, id_pose = i;
+    const IndexT id_intrinsic = bSharedIntrinsic ? 0 : i; //(shared or not intrinsics)
+    sfm_data.views[id_view] = View(os.str(),id_view, id_intrinsic, id_pose, 1000,1000);
 
     // Add poses
     sfm_data.poses[i] = Pose3();
@@ -39,11 +36,11 @@ SfM_Data create_test_scene(IndexT viewsCount, bool bSharedIntrinsic)
     if (bSharedIntrinsic)
     {
       if (i == 0)
-        sfm_data.intrinsics[0] = std::make_shared<Intrinsic>();
+        sfm_data.intrinsics[0] = std::make_shared<Pinhole_Intrinsic>();
     }
     else
     {
-      sfm_data.intrinsics[i] = std::make_shared<Intrinsic>();
+      sfm_data.intrinsics[i] = std::make_shared<Pinhole_Intrinsic>();
     }
   }
 

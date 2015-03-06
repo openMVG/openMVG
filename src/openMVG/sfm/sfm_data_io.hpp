@@ -31,8 +31,11 @@ enum ESfM_Data
 namespace openMVG {
 
 ///Check that each pose have a valid intrinsic and pose id in the existing View ids
-bool ValidIds(const SfM_Data & sfm_data)
+bool ValidIds(const SfM_Data & sfm_data, ESfM_Data flags_part)
 {
+  const bool bCheck_Intrinsic = (flags_part & INTRINSICS) == INTRINSICS;
+  const bool bCheck_Extrinsic = (flags_part & EXTRINSICS) == EXTRINSICS;
+
   std::set<IndexT> set_id_intrinsics;
   transform(sfm_data.getIntrinsics().begin(), sfm_data.getIntrinsics().end(),
     std::inserter(set_id_intrinsics, set_id_intrinsics.begin()), std::RetrieveKey());
@@ -55,15 +58,22 @@ bool ValidIds(const SfM_Data & sfm_data)
 
     if (set_id_extrinsics.count(id_pose))
       reallyDefined_id_extrinsics.insert(id_pose); //at least it exists
-    if (set_id_extrinsics.count(id_intrinsic))
+
+    if (set_id_intrinsics.count(id_intrinsic))
       reallyDefined_id_intrinsics.insert(id_intrinsic); //at least it exists
   }
-  // Check if all defined intrinsic & extrinsic are at least connected to a view
-  return
-    (
-    set_id_intrinsics.size() == reallyDefined_id_intrinsics.size() &&
-    set_id_extrinsics.size() == reallyDefined_id_extrinsics.size()
-    );
+  // Check if defined intrinsic & extrinsic are at least connected to views
+  bool bRet = true;
+  if (bCheck_Intrinsic)
+    bRet &= set_id_intrinsics.size() == reallyDefined_id_intrinsics.size();
+
+  if (bCheck_Extrinsic)
+    bRet &= set_id_extrinsics.size() == reallyDefined_id_extrinsics.size();
+
+  if (bRet == false)
+    std::cout << "There is orphan intrinsics data or poses (do not depend on any view)" << std::endl;
+
+  return bRet;
 }
 
 bool Load(SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_part)
@@ -79,12 +89,12 @@ bool Load(SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_par
   else return false;
 
   // Assert that loaded intrinsics | extrinsics are linked to valid view
-  if (
+  if ( bStatus &&
     (flags_part & VIEWS) == VIEWS && (
     (flags_part & INTRINSICS) == INTRINSICS ||
     (flags_part & EXTRINSICS) == EXTRINSICS))
   {
-    return ValidIds(sfm_data);
+    return ValidIds(sfm_data, flags_part);
   }
   return bStatus;
 }

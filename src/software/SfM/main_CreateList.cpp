@@ -10,6 +10,8 @@
 #include "openMVG/image/image.hpp"
 #include "openMVG/split/split.hpp"
 
+#include "openMVG/sfm/sfm.hpp"
+
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
@@ -24,7 +26,7 @@ using namespace openMVG;
 
 /// Check that Kmatrix is a string like "f;0;ppx;0;f;ppy;0;0;1"
 /// With f,ppx,ppy as valid numerical value
-bool checkIntrinsicStringValidity(const std::string & Kmatrix)
+bool checkIntrinsicStringValidity(const std::string & Kmatrix, double & focal, double & ppx, double & ppy)
 {
   std::vector<std::string> vec_str;
   split( Kmatrix, ";", vec_str );
@@ -41,10 +43,17 @@ bool checkIntrinsicStringValidity(const std::string & Kmatrix)
       std::cerr << "\n Used an invalid not a number character" << std::endl;
       return false;
     }
+    if (i==0) focal = readvalue;
+    if (i==2) ppx = readvalue;
+    if (i==5) ppy = readvalue;
   }
   return true;
 }
 
+//
+// Create the description of an input image dataset for OpenMVG toolsuite
+// - Export a SfM_Data file with View & Intrinsic data
+//
 int main(int argc, char **argv)
 {
   CmdLine cmd;
@@ -54,6 +63,10 @@ int main(int argc, char **argv)
     sOutputDir = "",
     sKmatrix;
 
+  int i_User_camera_model = PINHOLE_CAMERA;
+
+  bool b_Group_camera_model = true;
+
   double focalPixPermm = -1.0;
 
   cmd.add( make_option('i', sImageDir, "imageDirectory") );
@@ -61,6 +74,8 @@ int main(int argc, char **argv)
   cmd.add( make_option('o', sOutputDir, "outputDirectory") );
   cmd.add( make_option('f', focalPixPermm, "focal") );
   cmd.add( make_option('k', sKmatrix, "intrinsics") );
+  cmd.add( make_option('c', i_User_camera_model, "camera_model") );
+  cmd.add( make_option('g', b_Group_camera_model, "group_camera_model") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -71,7 +86,14 @@ int main(int argc, char **argv)
       << "[-d|--sensorWidthDatabase]\n"
       << "[-o|--outputDirectory]\n"
       << "[-f|--focal] (pixels)\n"
-      << "[-k|--intrinsics] Kmatrix: \"f;0;ppx;0;f;ppy;0;0;1\""
+      << "[-k|--intrinsics] Kmatrix: \"f;0;ppx;0;f;ppy;0;0;1\"\n"
+      << "[-c|--camera_model] Camera model type:\n"
+      << "\t 1: Pinhole (default)\n"
+      << "\t 2: Pinhole radial 1\n"
+      << "\t 3: Pinhole radial 3\n"
+      << "[-g|--group_camera_model]\n"
+      << "\t 0-> each view have it's own camera intrinsic parameters,\n"
+      << "\t 1-> (default) view can share some camera intrinsic parameters\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -84,7 +106,14 @@ int main(int argc, char **argv)
             << "--sensorWidthDatabase " << sfileDatabase << std::endl
             << "--outputDirectory " << sOutputDir << std::endl
             << "--focal " << focalPixPermm << std::endl
-            << "--intrinsics " << sKmatrix << std::endl;
+            << "--intrinsics " << sKmatrix << std::endl
+            << "--camera_model " << i_User_camera_model << std::endl
+            << "--group_camera_model " << b_Group_camera_model << std::endl;
+
+  // Expected properties for each image
+  double width = -1, height = -1, focal = -1, ppx = -1,  ppy = -1;
+
+  const EINTRINSIC e_User_camera_model = EINTRINSIC(i_User_camera_model);
 
   if ( !stlplus::folder_exists( sImageDir ) )
   {
@@ -107,7 +136,8 @@ int main(int argc, char **argv)
     }
   }
 
-  if (sKmatrix.size() > 0 && !checkIntrinsicStringValidity(sKmatrix) )
+  if (sKmatrix.size() > 0 &&
+    !checkIntrinsicStringValidity(sKmatrix, focal, ppx, ppy) )
   {
     std::cerr << "\nInvalid K matrix input" << std::endl;
     return EXIT_FAILURE;
@@ -130,92 +160,176 @@ int main(int argc, char **argv)
   }
 
   std::vector<std::string> vec_image = stlplus::folder_files( sImageDir );
-  // Write the new file
-  std::ofstream listTXT( stlplus::create_filespec( sOutputDir,
-                                                   "lists.txt" ).c_str() );
-  if ( listTXT )
+  std::sort(vec_image.begin(), vec_image.end());
+
+  // Configure an empty scene with Views and their corresponding cameras
+  SfM_Data sfm_data;
+  sfm_data.s_root_path = sImageDir; // Setup main image root_path
+  Views & views = sfm_data.views;
+  Intrinsics & intrinsics = sfm_data.intrinsics;
+
+  for ( std::vector<std::string>::const_iterator iter_image = vec_image.begin();
+    iter_image != vec_image.end();
+    iter_image++ )
   {
-    std::sort(vec_image.begin(), vec_image.end());
-    for ( std::vector<std::string>::const_iterator iter_image = vec_image.begin();
-      iter_image != vec_image.end();
-      iter_image++ )
+    // Read meta data to fill camera parameter (w,h,focal,ppx,ppy) fields.
+    width = height = ppx = ppy = focal = -1.0;
+
+    const std::string sImageFilename = stlplus::create_filespec( sImageDir, *iter_image );
+
+    // Test if the image format is supported:
+    if (openMVG::GetFormat(sImageFilename.c_str()) == openMVG::Unknown)
+      continue; // image cannot be opened
+
+    Image<unsigned char> image;
+    if (openMVG::ReadImage( sImageFilename.c_str(), &image))  {
+      width = image.Width();
+      height = image.Height();
+      ppx = width / 2.0;
+      ppy = height / 2.0;
+    }
+    else
+      continue; // image cannot be read
+
+    std::shared_ptr<Exif_IO> exifReader = std::make_shared<Exif_IO_EasyExif>();
+    exifReader->open( sImageFilename );
+
+    // Consider the case where focal is provided manually
+    if ( !exifReader->doesHaveExifInfo() || focalPixPermm != -1)
     {
-      // Read meta data to fill width height and focalPixPermm
-      const std::string sImageFilename = stlplus::create_filespec( sImageDir, *iter_image );
-      
-      // Test if the image format is supported:
-      if (openMVG::GetFormat(sImageFilename.c_str()) == openMVG::Unknown)
-        continue; // image cannot be opened
-
-      size_t width = -1, height = -1;
-      Image<unsigned char> image;
-      if (openMVG::ReadImage( sImageFilename.c_str(), &image))  {
-        width = image.Width();
-        height = image.Height();
-      }
-      else
-        continue; // image cannot be read
-
-      std::auto_ptr<Exif_IO> exifReader (new Exif_IO_EasyExif() );
-      exifReader->open( sImageFilename );
-
-      // Consider the case where focal is provided
-
-      std::ostringstream os;
-      //If image do not contains meta data
-      if ( !exifReader->doesHaveExifInfo() || focalPixPermm != -1)
+      if (sKmatrix.size() > 0) // Known user calibration K matrix
       {
-        os << *iter_image << ";" << width << ";" << height;
-        if ( focalPixPermm == -1 && sKmatrix.size() == 0)
-          os << std::endl;
+        if (!checkIntrinsicStringValidity(sKmatrix, focal, ppx, ppy))
+          focal = -1.0;
+      }
+      else // User provided focal lenght value
+        if (focalPixPermm != -1 )
+        focal = focalPixPermm;
+    }
+    else // If image contains meta data
+    {
+      const std::string sCamName = exifReader->getBrand();
+      const std::string sCamModel = exifReader->getModel();
+
+      // Handle case where focal length is equal to 0
+      if (exifReader->getFocal() == 0.0f)
+      {
+        std::cerr << stlplus::basename_part(sImageFilename) << ": Focal length is missing." << std::endl;
+        continue;
+      }
+
+      // Create the image entry in the list file
+      {
+        Datasheet datasheet;
+        if ( getInfo( sCamName, sCamModel, vec_database, datasheet ))
+        {
+          // The camera model was found in the database so we can compute it's approximated focal length
+          const double ccdw = datasheet._sensorSize;
+          focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
+        }
         else
         {
-          if (sKmatrix.size() > 0) // Known intrinsic matrix
-          {
-            os << ";" << sKmatrix << std::endl;
-          }
-          else
-            os << ";"
-              << focalPixPermm << ";" << 0 << ";" << width/2.0 << ";"
-              << 0 << ";" << focalPixPermm << ";" << height/2.0 << ";"
-              << 0 << ";" << 0 << ";" << 1 << std::endl;
+          std::cout << stlplus::basename_part(sImageFilename) << ": Camera \""
+            << sCamName << "\" model \"" << sCamModel << "\" doesn't exist in the database" << std::endl
+            << "Please consider add your camera model and sensor width in the database." << std::endl;
         }
       }
-      else // If image contains meta data
+    }
+
+    // Build intrinsic parameter related to the view
+    std::shared_ptr<IntrinsicBase> intrinsic (NULL);
+
+    if (focal > 0 && ppx > 0 && ppy > 0 && width > 0 && height > 0)
+    {
+      // Create the desired camera type
+      switch(e_User_camera_model)
       {
-        const std::string sCamName = exifReader->getBrand();
-        const std::string sCamModel = exifReader->getModel();
-
-        // Handle case where focal length is equal to 0
-        if (exifReader->getFocal() == 0.0f)
-        {
-          std::cerr << stlplus::basename_part(sImageFilename) << ": Focal length is missing." << std::endl;
-          continue;
-        }
-
-        // Create the image entry in the list file
-        {
-          Datasheet datasheet;
-          if ( getInfo( sCamName, sCamModel, vec_database, datasheet ))
-          {
-            // The camera model was found in the database so we can compute it's approximated focal length
-            const double ccdw = datasheet._sensorSize;
-            const double focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
-            os << *iter_image << ";" << width << ";" << height << ";" << focal << ";" << sCamName << ";" << sCamModel << std::endl;
-          }
-          else
-          {
-            std::cout << stlplus::basename_part(sImageFilename) << ": Camera \"" 
-              << sCamName << "\" model \"" << sCamModel << "\" doesn't exist in the database" << std::endl
-              << "Please consider add your camera model and sensor width in the database." << std::endl;
-            os << *iter_image << ";" << width << ";" << height << ";" << sCamName << ";" << sCamModel << std::endl;
-          }
-        }
+        case PINHOLE_CAMERA:
+          intrinsic = std::make_shared<Pinhole_Intrinsic>(width, height, focal, ppx, ppy);
+        break;
       }
-      std::cout << os.str();
-      listTXT << os.str();
+    }
+
+    // Build the view corresponding to the image
+    View v(*iter_image, views.size(), views.size(), views.size(), width, height);
+
+    // Add intrinsic related to the image (if any)
+    if (intrinsic == NULL)
+    {
+      //Since the view have invalid intrinsic data
+      // (export the view, with an invalid intrinsic field value)
+      v.id_intrinsic = UndefinedIndexT;
+    }
+    else
+    {
+      // Add the intrinsic to the sfm_container
+      intrinsics[v.id_intrinsic] = intrinsic;
+    }
+
+    // Add the view to the sfm_container
+    views[v.id_view] = v;
+  }
+
+  // Group camera that share common properties if desired (leads to more faster & stable BA).
+  if (b_Group_camera_model)
+  {
+    // Group camera model that share common optics camera properties
+    // They must share (camera model, image size, & camera parameters)
+    // Grouping is simplified by using a hash function over the camera intrinsic.
+
+    // Build hash & build a set of the hash in order to maintain unique Ids
+    std::set<size_t> hash_index;
+    std::vector<size_t> hash_value;
+
+    for (Intrinsics::const_iterator iterIntrinsic = intrinsics.begin();
+      iterIntrinsic != intrinsics.end();
+      ++iterIntrinsic)
+    {
+      const IntrinsicBase * intrinsicData = iterIntrinsic->second.get();
+      const size_t hashVal = intrinsicData->hashValue();
+      hash_index.insert(hashVal);
+      hash_value.push_back(hashVal);
+    }
+
+    // From hash_value(s) compute the new index (old to new indexing)
+    Hash_Map<IndexT, IndexT> old_new_reindex;
+    size_t i = 0;
+    for (Intrinsics::const_iterator iterIntrinsic = intrinsics.begin();
+      iterIntrinsic != intrinsics.end();
+      ++iterIntrinsic, ++i)
+    {
+      old_new_reindex[iterIntrinsic->first] = std::distance(hash_index.begin(), hash_index.find(hash_value[i]));
+      //std::cout << hash_value[i] // hash
+      //  << "\t" << iterIntrinsic->first // old reference index
+      // << "\t" << old_new_reindex[iterIntrinsic->first] << std::endl; // new index
+    }
+    //--> Copy & modify Ids & replace
+    //     - for the Intrinsic params
+    //     - for the View
+    Intrinsics intrinsic_updated;
+    for (Intrinsics::const_iterator iterIntrinsic = intrinsics.begin();
+      iterIntrinsic != intrinsics.end();
+      ++iterIntrinsic)
+    {
+      intrinsic_updated[old_new_reindex[iterIntrinsic->first]] = intrinsics[iterIntrinsic->first];
+    }
+    intrinsics.swap(intrinsic_updated); // swap camera intrinsics
+    for (Views::iterator iterView = views.begin();
+      iterView != views.end();
+      ++iterView)
+    {
+      View & v = iterView->second;
+      v.id_intrinsic = old_new_reindex[v.id_intrinsic];
     }
   }
-  listTXT.close();
+
+  // Store SfM_Data views & intrinsic data
+  if (Save(
+    sfm_data,
+    stlplus::create_filespec( sOutputDir, "sfm_data.json" ).c_str(),
+    ESfM_Data(VIEWS|INTRINSICS))
+    )
   return EXIT_SUCCESS;
+    else
+  return EXIT_FAILURE;
 }

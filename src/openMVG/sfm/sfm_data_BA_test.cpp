@@ -44,10 +44,8 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_RTf) {
   // 1. Views
   for (int i = 0; i < nviews; ++i)
   {
-    View v;
-    v.id_intrinsic = 0;
-    v.id_view = v.id_pose = i;
-    sfm_data.views[i] = v;
+    const IndexT id_view = i, id_pose = i, id_intrinsic = 0; //(shared intrinsics)
+    sfm_data.views[i] = View("", id_view, id_intrinsic, id_pose, config._cx *2, config._cy *2);
   }
 
   // 2. Poses
@@ -61,7 +59,7 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_RTf) {
   {
     const unsigned int w = config._cx *2;
     const unsigned int h = config._cy *2;
-    sfm_data.intrinsics[0] = std::make_shared<Intrinsic>(w, h, config._fx, config._cx, config._cy);
+    sfm_data.intrinsics[0] = std::make_shared<Pinhole_Intrinsic>(w, h, config._fx, config._cx, config._cy);
   }
 
   // 4. Landmarks

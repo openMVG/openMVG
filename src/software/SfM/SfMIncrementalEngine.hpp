@@ -29,8 +29,10 @@ namespace openMVG{
 class IncrementalReconstructionEngine : public ReconstructionEngine
 {
 public:
-  IncrementalReconstructionEngine(const std::string & sImagePath,
-    const std::string & sMatchesPath, const std::string & sOutDirectory,
+  IncrementalReconstructionEngine(
+    const std::string & sSfM_Data_Path,
+    const std::string & sMatchesPath,
+    const std::string & sOutDirectory,
     bool bHtmlReport = false);
 
   ~IncrementalReconstructionEngine();
@@ -112,7 +114,7 @@ public:
   {
     _bUseBundleAdjustment = bUseBundleAdjustment;
   }
-  
+
   void setIfRefinePrincipalPointAndRadialDisto(bool bRefinePPandDisto)
   {
     _bRefinePPandDisto = bRefinePPandDisto;
@@ -148,9 +150,9 @@ private:
   // -----
   // Future reconstructed data
   // ----
-  
+
   // helper to save reconstructed data (Camera and 3D points)
-  reconstructorHelper _reconstructorData; 
+  reconstructorHelper _reconstructorData;
 
   // tracks that are reconstructed during the sequential SfM process
   openMVG::tracks::STLMAPTracks _map_reconstructed;
@@ -159,7 +161,7 @@ private:
   std::set<size_t> _set_remainingImageId;
 
   //store in which order image have been added
-  std::vector<size_t> _vec_added_order; 
+  std::vector<size_t> _vec_added_order;
 
   // Per camera confidence (A contrario estimated threshold error)
   std::map<size_t, double> _map_ACThreshold;

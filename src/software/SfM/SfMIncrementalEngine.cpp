@@ -18,6 +18,7 @@
 #include "openMVG/matching/indMatch.hpp"
 using namespace openMVG::tracks;
 
+#include "openMVG/sfm/sfm.hpp"
 #include "openMVG/stl/stl.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -35,9 +36,12 @@ namespace openMVG{
 typedef SIOPointFeature FeatureT;
 typedef std::vector<FeatureT> featsT;
 
-IncrementalReconstructionEngine::IncrementalReconstructionEngine(const std::string & sImagePath,
-  const std::string & sMatchesPath, const std::string & sOutDirectory, bool bHtmlReport)
-  : ReconstructionEngine(sImagePath, sMatchesPath, sOutDirectory),
+IncrementalReconstructionEngine::IncrementalReconstructionEngine(
+  const std::string & sSfM_Data_Path,
+  const std::string & sMatchesPath,
+  const std::string & sOutDirectory,
+  bool bHtmlReport)
+  : ReconstructionEngine(sSfM_Data_Path, sMatchesPath, sOutDirectory),
   _initialpair(std::pair<size_t,size_t>(0,0)),
   _bRefinePPandDisto(true),
   _bUseBundleAdjustment(true)
@@ -55,8 +59,8 @@ IncrementalReconstructionEngine::IncrementalReconstructionEngine(const std::stri
       htmlDocument::htmlMarkup("h1","openMVG A Contrario Incremental SFM report."));
 
     _htmlDocStream->pushInfo(
-      htmlDocument::htmlMarkup("h1", std::string("Current directory: ") +
-      sImagePath));
+    htmlDocument::htmlMarkup("h1", std::string("Current SfM_Data scene: ") +
+      sSfM_Data_Path));
     _htmlDocStream->pushInfo("<hr>");
   }
 }
@@ -105,7 +109,7 @@ bool IncrementalReconstructionEngine::Process()
   std::vector<size_t> vec_possible_resection_indexes;
   while (FindImagesWithPossibleResection(vec_possible_resection_indexes))
   {
-    bool bImageAdded = Resection(vec_possible_resection_indexes);
+    const bool bImageAdded = Resection(vec_possible_resection_indexes);
     if (bImageAdded)
     {
       std::ostringstream os;
@@ -173,8 +177,7 @@ bool IncrementalReconstructionEngine::Process()
 
 bool IncrementalReconstructionEngine::ReadInputData()
 {
-  if (!stlplus::is_folder(_sImagePath) ||
-    !stlplus::is_folder(_sMatchesPath) ||
+  if (!stlplus::is_folder(_sMatchesPath) ||
     !stlplus::is_folder(_sOutDirectory))
   {
     std::cerr << std::endl
@@ -182,44 +185,109 @@ bool IncrementalReconstructionEngine::ReadInputData()
     return false;
   }
 
-  const std::string sListsFile = stlplus::create_filespec(_sMatchesPath,"lists","txt");
-  const std::string sComputedMatchesFile_F = stlplus::create_filespec(_sMatchesPath,"matches.f","txt");
-  if (!stlplus::is_file(sListsFile)||
-    !stlplus::is_file(sComputedMatchesFile_F) )
-  {
+   // a. Read input SfM_Scene
+  SfM_Data sfm_data;
+  if (!Load(sfm_data, _sSfM_Data_Path, ESfM_Data(VIEWS|INTRINSICS))) {
     std::cerr << std::endl
-      << "One of the input required file is not a present (lists.txt, matches.f.txt)" << std::endl;
+      << "The input file \""<< _sSfM_Data_Path << "\" cannot be read" << std::endl;
     return false;
   }
 
-  // a. Read images names
+  // Map intrinsicIds for each view
+  std::map<IndexT,IndexT> map_old_new;
+  IndexT idx = 0;
+  std::set<IndexT> set_toHandle;
+  for (Views::const_iterator iter = sfm_data.getViews().begin();
+    iter != sfm_data.getViews().end(); ++iter, ++idx)
   {
-    if (!openMVG::SfMIO::loadImageList( _vec_camImageNames,
-                                        _vec_intrinsicGroups,
-                                        sListsFile) )
-    {
-      std::cerr << "\nEmpty image list." << std::endl;
-      return false;
-    }
+    IndexT id_intrinsic = iter->second.id_intrinsic;
+
+    if (id_intrinsic == UndefinedIndexT) // undefined camera intrinsic, we have to add a new one
+      set_toHandle.insert(idx);
     else
     {
-      // Find to which intrinsic groups each image belong
-      for (std::vector<openMVG::SfMIO::CameraInfo>::const_iterator iter = _vec_camImageNames.begin();
-        iter != _vec_camImageNames.end(); ++iter)
+      // Camera with valid intrinsic data
+      if (map_old_new.count(id_intrinsic) == 1)
+        id_intrinsic = map_old_new[id_intrinsic];
+      else
       {
-        const openMVG::SfMIO::CameraInfo & camInfo = *iter;
-        // Find the index of the camera
-        size_t idx = std::distance((std::vector<openMVG::SfMIO::CameraInfo>::const_iterator)_vec_camImageNames.begin(), iter);
-        _set_remainingImageId.insert(idx);
-        _map_IntrinsicIdPerImageId[idx] = camInfo.m_intrinsicId;
+        const size_t new_index = map_old_new.size();
+        id_intrinsic = map_old_new[id_intrinsic] = new_index;
       }
+      // Link the View to it's intrinsic data id
+      _map_IntrinsicIdPerImageId[idx] = id_intrinsic;
     }
+
+    SfMIO::CameraInfo camInfo;
+    camInfo.m_sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.s_Img_path);
+    camInfo.m_intrinsicId = id_intrinsic;
+    _vec_camImageNames.push_back( camInfo );
+    _set_remainingImageId.insert(idx);
+  }
+
+  // Build the (valid) intrinsic Groups
+  _vec_intrinsicGroups.resize(map_old_new.size());
+  for (Intrinsics::const_iterator iter = sfm_data.getIntrinsics().begin();
+    iter != sfm_data.getIntrinsics().end(); ++iter)
+  {
+    const IntrinsicBase * ptrIntrinsic = iter->second.get();
+    SfMIO::IntrinsicCameraInfo intrinsicCamInfo;
+    intrinsicCamInfo.m_w = ptrIntrinsic->w();
+    intrinsicCamInfo.m_h = ptrIntrinsic->h();
+
+    switch (ptrIntrinsic->getType())
+    {
+      case PINHOLE_CAMERA:
+      {
+        const Pinhole_Intrinsic * ptrPinhole = (const Pinhole_Intrinsic*)(ptrIntrinsic);
+        intrinsicCamInfo.m_K = ptrPinhole->K();
+        intrinsicCamInfo.m_focal = ptrPinhole->K()(0,0);
+        intrinsicCamInfo.m_bKnownIntrinsic = true;
+        }
+      break;
+      default:
+        std::cout << "This camera model id "
+          << ptrIntrinsic->getType() << " is not handled yet";
+        intrinsicCamInfo.m_bKnownIntrinsic = false;
+        return false;
+    }
+    _vec_intrinsicGroups[map_old_new[iter->first]] = intrinsicCamInfo;
+  }
+
+  // Build intrinsicInfo for View without associated intrinsic data
+  for (std::set<IndexT>::const_iterator iter = set_toHandle.begin();
+    iter != set_toHandle.end(); ++iter)
+  {
+    // For each View without Intrinsic data, add a unknow CamInfo
+    SfMIO::CameraInfo & camInfo = _vec_camImageNames[*iter];
+    SfMIO::IntrinsicCameraInfo intrinsicCamInfo;
+    Views::const_iterator iterView = sfm_data.getViews().begin();
+    std::advance(iterView, *iter);
+    intrinsicCamInfo.m_w = iterView->second.ui_width;
+    intrinsicCamInfo.m_h = iterView->second.ui_height;
+    intrinsicCamInfo.m_bKnownIntrinsic = false;
+
+    // Update the camInfo index
+    camInfo.m_intrinsicId = _vec_intrinsicGroups.size();
+    // Add the new camera Info
+    _vec_intrinsicGroups.push_back(intrinsicCamInfo);
+    // Link the View to it's intrinsic data id
+    _map_IntrinsicIdPerImageId[*iter] = camInfo.m_intrinsicId;
   }
 
   // b. Read matches (Fundamental)
-  if (!matching::PairedIndMatchImport(sComputedMatchesFile_F, _map_Matches_F)) {
-    std::cerr<< "Unable to read the Fundamental matrix matches" << std::endl;
-    return false;
+  {
+    const std::string sComputedMatchesFile_F = stlplus::create_filespec(_sMatchesPath,"matches.f","txt");
+    if (!stlplus::is_file(sComputedMatchesFile_F) )
+    {
+      std::cerr << std::endl
+        << "One of the input required file is not a present (lists.txt, matches.f.txt)" << std::endl;
+      return false;
+    }
+    if (!matching::PairedIndMatchImport(sComputedMatchesFile_F, _map_Matches_F)) {
+      std::cerr<< "Unable to read the Fundamental matrix matches" << std::endl;
+      return false;
+    }
   }
 
   // c. Compute tracks from matches
@@ -1208,11 +1276,7 @@ void IncrementalReconstructionEngine::ColorizeTracks(std::vector<Vec3> & vec_tra
       std::advance(iterTT, packet_vec[0].index);
       const size_t indexImage = iterTT->first;
       Image<RGBColor> image;
-      ReadImage(
-        stlplus::create_filespec(
-          _sImagePath,
-          stlplus::basename_part(_vec_camImageNames[indexImage].m_sImageName),
-          stlplus::extension_part(_vec_camImageNames[indexImage].m_sImageName) ).c_str(), &image);
+      ReadImage(_vec_camImageNames[indexImage].m_sImageName.c_str(), &image);
 
       // Iterate through the track
       std::set<size_t> set_toRemove;

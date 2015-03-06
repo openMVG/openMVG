@@ -70,7 +70,8 @@ enum ETranslationAveragingMethod
 class GlobalReconstructionEngine : public ReconstructionEngine
 {
 public:
-  GlobalReconstructionEngine(const std::string & sImagePath,
+  GlobalReconstructionEngine(
+    const std::string & sSfM_Data_Path,
     const std::string & sMatchesPath,
     const std::string & sOutDirectory,
     const ERotationAveragingMethod & eRotationAveragingMethod,

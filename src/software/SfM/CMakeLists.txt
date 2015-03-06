@@ -6,6 +6,14 @@ SET_PROPERTY(TARGET openMVG_main_CreateList PROPERTY FOLDER OpenMVG/software)
 
 INSTALL(TARGETS openMVG_main_CreateList DESTINATION bin/)
 
+#convert a v0.6 lists.txt file to the new sfm_data.X format
+ADD_EXECUTABLE(openMVG_main_ConvertList main_ConvertList.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_ConvertList
+                     ${OpenMVG_LIBS})
+SET_PROPERTY(TARGET openMVG_main_ConvertList PROPERTY FOLDER OpenMVG/software)
+
+INSTALL(TARGETS openMVG_main_ConvertList DESTINATION bin/)
+
 #Add executable that computes:
 # - features and descriptors
 # - putatives matches

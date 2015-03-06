@@ -14,6 +14,7 @@ namespace openMVG {
 /// A view define an image by a string and unique indexes for the view, the camera intrinsic & the pose
 struct View
 {
+  // image path on disk
   std::string s_Img_path;
 
   // Id of the view
@@ -21,6 +22,20 @@ struct View
 
   // Index of intrinsics and the pose
   IndexT id_intrinsic, id_pose;
+
+  // image size
+  IndexT ui_width, ui_height;
+
+  // Constructor (use unique index for the view_id)
+  View(
+    const std::string & sImgPath = "",
+    IndexT view_id = UndefinedIndexT,
+    IndexT intrinsic_id = UndefinedIndexT,
+    IndexT pose_id = UndefinedIndexT,
+    IndexT width = UndefinedIndexT, IndexT height = UndefinedIndexT)
+    :s_Img_path(sImgPath), id_view(view_id), id_intrinsic(intrinsic_id),
+    id_pose(pose_id), ui_width(width), ui_height(height)
+    {}
 
   // Serialization
   template <class Archive>
@@ -33,6 +48,8 @@ struct View
 
     ar(cereal::make_nvp("local_path", local_path),
        cereal::make_nvp("filename", filename),
+       cereal::make_nvp("width", ui_width),
+       cereal::make_nvp("height", ui_height),
        cereal::make_nvp("id_view", id_view),
        cereal::make_nvp("id_intrinsic", id_intrinsic),
        cereal::make_nvp("id_pose", id_pose));

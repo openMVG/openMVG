@@ -14,6 +14,8 @@
 #include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/stl/stl.hpp"
 
+#include "openMVG/sfm/sfm.hpp"
+
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
@@ -52,16 +54,17 @@ using namespace openMVG::lInfinity;
 typedef SIOPointFeature FeatureT;
 typedef vector< FeatureT > featsT;
 
-ColorHarmonizationEngineGlobal::ColorHarmonizationEngineGlobal( const string & sImagePath,
-                                                    const string & sMatchesPath,
-                                                    const std::string & sMatchesFile,
-                                                    const string & sOutDirectory,
-                                                    const int selectionMethod,
-                                                    const int imgRef):
-          ReconstructionEngine( sImagePath, sMatchesPath, sOutDirectory ),
-          _selectionMethod( selectionMethod ),
-          _imgRef( imgRef ),
-          _sMatchesFile(sMatchesFile)
+ColorHarmonizationEngineGlobal::ColorHarmonizationEngineGlobal(
+  const string & sSfM_Data_Filename,
+  const string & sMatchesPath,
+  const std::string & sMatchesFile,
+  const string & sOutDirectory,
+  const int selectionMethod,
+  const int imgRef):
+  ReconstructionEngine( sSfM_Data_Filename, sMatchesPath, sOutDirectory ),
+  _selectionMethod( selectionMethod ),
+  _imgRef( imgRef ),
+  _sMatchesFile(sMatchesFile)
 {
   if( !stlplus::folder_exists( sOutDirectory ) )
   {
@@ -211,8 +214,7 @@ bool ColorHarmonizationEngineGlobal::Process()
 
     //-- Edges names:
     std::pair< std::string, std::string > p_imaNames;
-    p_imaNames = make_pair( stlplus::create_filespec( _sImagePath, _vec_fileNames[ I ] ),
-                            stlplus::create_filespec( _sImagePath, _vec_fileNames[ J ] ) );
+    p_imaNames = make_pair( _vec_fileNames[ I ], _vec_fileNames[ J ] );
     std::cout << "Current edge : "
       << stlplus::filename_part(p_imaNames.first) << "\t"
       << stlplus::filename_part(p_imaNames.second) << std::endl;
@@ -417,7 +419,7 @@ bool ColorHarmonizationEngineGlobal::Process()
     }
 
     Image< RGBColor > image_c;
-    ReadImage( stlplus::create_filespec( _sImagePath, _vec_fileNames[ imaNum ] ).c_str(), &image_c );
+    ReadImage( _vec_fileNames[ imaNum ].c_str(), &image_c );
 
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for
@@ -445,8 +447,7 @@ bool ColorHarmonizationEngineGlobal::Process()
 
 bool ColorHarmonizationEngineGlobal::ReadInputData()
 {
-  if( !stlplus::is_folder( _sImagePath )  ||
-      !stlplus::is_folder( _sMatchesPath) ||
+  if( !stlplus::is_folder( _sMatchesPath) ||
       !stlplus::is_folder( _sOutDirectory) )
   {
     cerr << endl
@@ -454,37 +455,29 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
     return false;
   }
 
-  string sListsFile = stlplus::create_filespec( _sMatchesPath,"lists","txt" );
-  if( !stlplus::is_file( sListsFile ) ||
+  if( !stlplus::is_file( _sSfM_Data_Path ) ||
       !stlplus::is_file( _sMatchesFile ) )
   {
     cerr << endl
-      << "One of the input required file is not a present (lists.txt,"
+      << "One of the input required file is not a present (sfm_data.X,"
       << stlplus::basename_part(_sMatchesFile) << ")" << endl;
     return false;
   }
 
-  // a. Read images names
+  // a. Read input scenes views
+  SfM_Data sfm_data;
+  if (!Load(sfm_data, _sSfM_Data_Path, ESfM_Data(VIEWS))) {
+    std::cerr << std::endl
+      << "The input file \""<< _sSfM_Data_Path << "\" cannot be read" << std::endl;
+    return false;
+  }
+
+  // Read images names
+  for (Views::const_iterator iter = sfm_data.getViews().begin();
+    iter != sfm_data.getViews().end(); ++iter)
   {
-    std::vector<openMVG::SfMIO::CameraInfo> vec_camImageNames;
-    std::vector<openMVG::SfMIO::IntrinsicCameraInfo> vec_intrinsicGroups;
-    if (!openMVG::SfMIO::loadImageList( vec_camImageNames,
-                                        vec_intrinsicGroups,
-                                        sListsFile) )
-    {
-      cerr << "\nEmpty image list." << endl;
-      return false;
-    }
-
-    for ( std::vector<openMVG::SfMIO::CameraInfo>::const_iterator iter_imageName = vec_camImageNames.begin();
-          iter_imageName != vec_camImageNames.end();
-          iter_imageName++ )
-    {
-      _vec_fileNames.push_back( iter_imageName->m_sImageName );
-
-      _vec_imageSize.push_back( make_pair( vec_intrinsicGroups[iter_imageName->m_intrinsicId].m_w,
-                                           vec_intrinsicGroups[iter_imageName->m_intrinsicId].m_h ) );
-    }
+    _vec_fileNames.push_back( stlplus::create_filespec(sfm_data.s_root_path, iter->second.s_Img_path));
+    _vec_imageSize.push_back( std::make_pair( iter->second.ui_width,iter->second.ui_height ));
   }
 
   // b. Read matches

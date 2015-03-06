@@ -19,10 +19,10 @@ class ReconstructionEngine
 {
 public:
 
-  ReconstructionEngine(const std::string & sImagePath,
+  ReconstructionEngine(const std::string & sSfM_Data_Path,
     const std::string & smatchesPath,
     const std::string & soutDirectory)
-    :_sImagePath(sImagePath),
+    :_sSfM_Data_Path(sSfM_Data_Path),
     _sMatchesPath(smatchesPath),
     _sOutDirectory(soutDirectory)
   {
@@ -31,7 +31,7 @@ public:
   virtual bool Process() = 0;
 
 protected:
-  std::string _sImagePath;    // Path to the images
+  std::string _sSfM_Data_Path;    // Path to the Sfm_Scene
   std::string _sMatchesPath;  // Path to correspondences and features
   std::string _sOutDirectory; // Output path where outputs will be stored
 };

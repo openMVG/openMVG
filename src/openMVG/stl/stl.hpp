@@ -10,5 +10,6 @@
 
 #include "openMVG/stl/stlMap.hpp"
 #include "openMVG/stl/indexed_sort.hpp"
+#include "openMVG/stl/hash.hpp"
 
 #endif  // OPENMVG_STL_HPP

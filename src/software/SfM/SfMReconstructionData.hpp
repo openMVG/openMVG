@@ -361,14 +361,14 @@ struct reconstructorHelper
           if (distoModel.m_radial_distortion.norm() == 0)
           {
             // Distortion is null, perform a direct copy of the image
-            stlplus::file_copy(stlplus::create_filespec(sImagePath, sImageName), sOutImagePath);
+            stlplus::file_copy(sImageName, sOutImagePath);
           }
           else
           {
             // Image with no null distortion
             // - Open the image, undistort it and export it
             Image<RGBColor > image;
-            if (ReadImage(stlplus::create_filespec(sImagePath, sImageName).c_str(), &image))
+            if (ReadImage(sImageName.c_str(), &image))
             {
               Image<RGBColor> imageU = undistortImage (image, distoModel);
               WriteImage(sOutImagePath.c_str(), imageU);

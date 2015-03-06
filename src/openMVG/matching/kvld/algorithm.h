@@ -17,6 +17,7 @@ the terms of the BSD license (see the COPYING file).
 #include <openMVG/image/image_container.hpp>
 #include <openMVG/matching/indMatch.hpp>
 #include <openMVG/features/feature.hpp>
+#include <openMVG/types.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -28,7 +29,6 @@ the terms of the BSD license (see the COPYING file).
 #include <functional>
 
 
-typedef std::pair< size_t, size_t > Pair;
 const float PI_ = 4.0 * atan( 1.0f );
 
 //============================== simplified structure of a point=============================//
