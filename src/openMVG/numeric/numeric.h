@@ -124,10 +124,13 @@ namespace openMVG {
 
   Mat3 CrossProductMatrix(const Vec3 &x);
 
+  // Create a rotation matrix around axis X with the provided radian angle
   Mat3 RotationAroundX(double angle);
 
+  // Create a rotation matrix around axis Y with the provided radian angle
   Mat3 RotationAroundY(double angle);
 
+  // Create a rotation matrix around axis Z with the provided radian angle
   Mat3 RotationAroundZ(double angle);
 
   // Degree to Radian (suppose input in [0;360])
