@@ -144,6 +144,11 @@ ENDIF(MOSEK_FOUND)
 
 #- osi_clp (linear programming interface)
 # ==============================================================================
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/dependencies/osi_clp/Clp)
+    message(FATAL_ERROR
+            "\n'osi_clp' submodule is missing, please update your repository:\n"
+            "  > git submodule update -i\n")
+endif()
 ADD_SUBDIRECTORY(dependencies/osi_clp)
 INCLUDE_DIRECTORIES(
   ./dependencies/osi_clp/CoinUtils/src/
