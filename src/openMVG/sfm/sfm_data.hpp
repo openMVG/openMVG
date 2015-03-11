@@ -8,7 +8,7 @@
 #define OPENMVG_SFM_DATA_HPP
 
 #include "openMVG/geometry/pose3.hpp"
-#include "openMVG/cameras/Camera_Intrinsics.hpp"
+#include "openMVG/cameras/cameras.hpp"
 
 namespace openMVG {
 

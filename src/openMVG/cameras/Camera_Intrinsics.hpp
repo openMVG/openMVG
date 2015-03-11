@@ -9,22 +9,13 @@
 #define OPENMVG_CAMERA_INTRINSICS_H
 
 #include "openMVG/numeric/numeric.h"
-#include "openMVG/multiview/projection.hpp"
-#include "openMVG/stl/hash.hpp"
 #include <cereal/cereal.hpp>
-
+#include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/geometry/pose3.hpp"
+#include "openMVG/stl/hash.hpp"
 #include <vector>
 
 namespace openMVG{
-
-enum EINTRINSIC
-{
-  PINHOLE_UNDEFINED = 0,      // camera with no parameters (only the W & H is known)
-  PINHOLE_CAMERA    = 1,      // No distortion
-  PINHOLE_CAMERA_RADIAL1 = 2, // radial distortion K1
-  PINHOLE_CAMERA_RADIAL3 = 3, // radial distortion K1,K2,K3
-  PINHOLE_CAMERA_BROWN   = 4  // radial + tangential
-};
 
 /// Basis class for all intrinsic parameters of a camera
 /// Store the image size & define all basis optical modelization of a camera
@@ -36,6 +27,28 @@ struct IntrinsicBase
 
   const unsigned int w() const {return _w;}
   const unsigned int h() const {return _h;}
+
+  /// Projection of a 3D point into the camera plane (Apply pose, disto (if any) and Intrinsics)
+  Vec2 project(
+    const geometry::Pose3 & pose,
+    const Vec3 & pt3D) const
+  {
+    const Vec3 X = pose(pt3D); // apply pose
+    if (this->have_disto()) // apply disto & intrinsics
+      return this->cam2ima( this->add_disto(X.head<2>()/X(2)) );
+    else // apply intrinsics
+      return this->cam2ima( X.head<2>()/X(2) );
+  }
+
+  /// Compute the residual between the 3D projected point X and an image observation x
+  Vec2 residual(
+    const geometry::Pose3 & pose,
+    const Vec3 & X,
+    const Vec2 & x) const
+  {
+    const Vec2 proj = this->project(pose, X);
+    return x - proj;
+  }
 
   // --
   // Virtual members
@@ -62,14 +75,11 @@ struct IntrinsicBase
   /// Does the camera model handle a distortion field?
   virtual bool have_disto() const {return false;}
 
-  /// Apply the distortion field to a point (that is in normalized camera frame)
-  virtual Vec2 apply(const Vec2& p) const = 0;
+  /// Add the distortion field to a point (that is in normalized camera frame)
+  virtual Vec2 add_disto(const Vec2& p) const = 0;
 
   /// Remove the distortion to a camera point (that is in normalized camera frame)
-  virtual Vec2 remove(const Vec2& p) const  = 0;
-
-  /// Generate a unique Hash from the camera parameters (used for grouping)
-  virtual std::size_t hashValue() const = 0;
+  virtual Vec2 remove_disto(const Vec2& p) const  = 0;
 
   /// Serialization out
   template <class Archive>
@@ -86,62 +96,8 @@ struct IntrinsicBase
     ar(cereal::make_nvp("width", _w));
     ar(cereal::make_nvp("height", _h));
   }
-};
 
-/// Define a classic Pinhole camera (store a K 3x3 matrix) 
-///  with intrinsic parameters defining the K calibration matrix
-class Pinhole_Intrinsic : public IntrinsicBase
-{
-  protected:
-    // Focal & principal point are embed into the calibration matrix K
-    Mat3 _K, _Kinv;
-
-  public:
-  Pinhole_Intrinsic(
-    unsigned int w = 0, unsigned int h = 0,
-    double focal_length_pix = 0.0,
-    double ppx = 0.0, double ppy = 0.0)
-    :IntrinsicBase(w,h)
-  {
-    _K << focal_length_pix, 0., ppx, 0., focal_length_pix, ppy, 0., 0., 1.;
-    _Kinv = _K.inverse();
-  }
-
-  virtual EINTRINSIC getType() const { return PINHOLE_CAMERA; }
-
-  const Mat3& K() const { return _K; }
-  const Mat3& Kinv() const { return _Kinv; }
-  /// Return the value of the focal in pixels
-  const double focal() const {return _K(0,0);}
-  const Vec2 principal_point() const {return Vec2(_K(0,2), _K(1,2));}
-
-  // Get bearing vector of p point (image coord)
-  Vec3 operator () (const Vec2& p) const
-  {
-    Vec3 p3(p(0),p(1),1.0);
-    return (_Kinv * p3).normalized();
-  }
-
-  // Transform a point from the camera plane to the image plane
-  Vec2 cam2ima(const Vec2& p) const
-  {
-    // (focal * p) + principal point
-    return _K(0,0) * p + Vec2(_K(0,2), _K(1,2));
-  }
-
-  // Transform a point from the image plane to the camera plane
-  Vec2 ima2cam(const Vec2& p) const
-  {
-    // (p - principal_point) / focal
-    return ( p -  Vec2(_K(0,2), _K(1,2)) ) / _K(0,0);
-  }
-
-  virtual bool have_disto() const {  return false; }
-
-  virtual Vec2 apply(const Vec2& p) const  { return p; }
-
-  virtual Vec2 remove(const Vec2& p) const  { return p; }
-
+  /// Generate an unique Hash from the camera parameters (used for grouping)
   virtual std::size_t hashValue() const
   {
     size_t seed;
@@ -153,58 +109,10 @@ class Pinhole_Intrinsic : public IntrinsicBase
       std::hash_combine(seed, params[i]);
     return seed;
   }
-
-  // Data wrapper for non linear optimization (get data)
-  virtual std::vector<double> getParams() const
-  {
-    const std::vector<double> params = {_K(0,0), _K(0,2), _K(1,2)};
-    return params;
-  }
-
-  // Data wrapper for non linear optimization (update from data)
-  virtual bool updateFromParams(const std::vector<double> & params)
-  {
-    if (params.size() == 3) {
-      *this = Pinhole_Intrinsic(_w, _h, params[0], params[1], params[2]);
-      return true;
-    }
-    else  {
-      return false;
-    }
-  }
-
-  // Serialization
-  template <class Archive>
-  void save( Archive & ar) const
-  {
-    IntrinsicBase::save(ar);
-    ar(cereal::make_nvp("focal_length", _K(0,0) ));
-    const std::vector<double> pp = {_K(0,2), _K(1,2)};
-    ar(cereal::make_nvp("principal_point", pp));
-  }
-
-  // Serialization
-  template <class Archive>
-  void load( Archive & ar)
-  {
-    IntrinsicBase::load(ar);
-    double focal_length;
-    ar(cereal::make_nvp("focal_length", focal_length ));
-    std::vector<double> pp(2);
-    ar(cereal::make_nvp("principal_point", pp));
-    *this = Pinhole_Intrinsic(_w, _h, focal_length, pp[0], pp[1]);
-  }
 };
 
 } // namespace openMVG
 
-#include <cereal/types/polymorphic.hpp>
-#include <cereal/archives/portable_binary.hpp>
-#include <cereal/archives/binary.hpp>
-#include <cereal/archives/xml.hpp>
-#include <cereal/archives/json.hpp>
-
-CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::Pinhole_Intrinsic, "pinhole");
 
 #endif // #ifndef OPENMVG_CAMERA_INTRINSICS_H
 

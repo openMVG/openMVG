@@ -7,11 +7,34 @@
 #ifndef OPENMVG_SFM_DATA_BA_CERES_HPP
 #define OPENMVG_SFM_DATA_BA_CERES_HPP
 
-#include "openMVG/bundle_adjustment/pinhole_ceres_functor.hpp"
+#include "openMVG/sfm/sfm_data_BA_ceres_camera_functor.hpp"
+
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
 
 namespace openMVG {
+
+/// Create the appropriate cost functor according the provided input camera intrinsic model
+ceres::CostFunction * IntrinsicsToCostFunction(IntrinsicBase * intrinsic, const Vec2 & observation)
+{
+  switch(intrinsic->getType())
+  {
+    case PINHOLE_CAMERA:
+      return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic, 2, 3, 6, 3>(
+        new ResidualErrorFunctor_Pinhole_Intrinsic(observation.data()));
+    break;
+    case PINHOLE_CAMERA_RADIAL1:
+      return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1, 2, 4, 6, 3>(
+        new ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1(observation.data()));
+    break;
+    case PINHOLE_CAMERA_RADIAL3:
+      return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3, 2, 6, 6, 3>(
+        new ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3(observation.data()));
+    break;
+    default:
+      return NULL;
+  }
+}
 
 class Bundle_Adjustment_Ceres : public Bundle_Adjustment
 {
@@ -22,14 +45,15 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
     bool bRefineTranslations = true, // tell if the pose translation will be refined
     bool bRefineIntrinsics = true) // tell if the camera intrinsic will be refined)
   {
+    //----------
     // Add camera parameters
     // - intrinsics
     // - poses [R|t]
 
-    using namespace openMVG::bundle_adjustment;
-
     // Create residuals for each observation in the bundle adjustment problem. The
     // parameters for cameras and points are added automatically.
+    //----------
+
     ceres::Problem problem;
 
     // Data wrapper for refinement:
@@ -92,25 +116,25 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
     {
       const IndexT indexCam = itIntrinsic->first;
 
-      switch (itIntrinsic->second->getType())
+      if (isValid(itIntrinsic->second->getType()))
       {
-        case PINHOLE_CAMERA:
-        {
-          const std::vector<double> vec_params = itIntrinsic->second->getParams();
-          map_intrinsics[indexCam].reserve(3);
-          map_intrinsics[indexCam].push_back(vec_params[0]);
-          map_intrinsics[indexCam].push_back(vec_params[1]);
-          map_intrinsics[indexCam].push_back(vec_params[2]);
+        const std::vector<double> vec_params = itIntrinsic->second->getParams();
+        map_intrinsics[indexCam].reserve(vec_params.size());
+        map_intrinsics[indexCam].push_back(vec_params[0]);
+        map_intrinsics[indexCam].push_back(vec_params[1]);
+        map_intrinsics[indexCam].push_back(vec_params[2]);
 
-          double * parameter_block = &map_intrinsics[indexCam][0];
-          problem.AddParameterBlock(parameter_block, 3);
-          if (!bRefineIntrinsics)
-          {
-            //set the whole parameter block as constant for best performance.
-            problem.SetParameterBlockConstant(parameter_block);
-          }
+        double * parameter_block = &map_intrinsics[indexCam][0];
+        problem.AddParameterBlock(parameter_block, vec_params.size());
+        if (!bRefineIntrinsics)
+        {
+          //set the whole parameter block as constant for best performance.
+          problem.SetParameterBlockConstant(parameter_block);
         }
-        break;
+      }
+      else
+      {
+        std::cout << "Unsupported camera type." << std::endl;
       }
     }
 
@@ -124,7 +148,7 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
       iterTracks!= sfm_data.structure.end(); ++iterTracks)
     {
       const Observations & obs = iterTracks->second.obs;
-      for(Observations::const_iterator itObs = obs.begin();
+      for (Observations::const_iterator itObs = obs.begin();
         itObs != obs.end(); ++itObs)
       {
         // Build the residual block corresponding to the track observation:
@@ -133,19 +157,9 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
         // Each Residual block takes a point and a camera as input and outputs a 2
         // dimensional residual. Internally, the cost function stores the observed
         // image location and compares the reprojection against the observation.
-        ceres::CostFunction* cost_function = NULL;
-        switch(sfm_data.intrinsics[view.id_intrinsic]->getType())
-        {
-          case PINHOLE_CAMERA:
-          {
-            cost_function =
-             new ceres::AutoDiffCostFunction<pinhole_reprojectionError::ErrorFunc_Refine_Intrinsic_Motion_3DPoints, 2, 3, 6, 3>(
-              new pinhole_reprojectionError::ErrorFunc_Refine_Intrinsic_Motion_3DPoints(itObs->second.x.data()));
-          }
-          break;
-          default:
-            std::cout << "Unsupported camera type: please create the appropriate ceres functor." << std::endl;
-        }
+        ceres::CostFunction* cost_function =
+          IntrinsicsToCostFunction(sfm_data.intrinsics[view.id_intrinsic].get(), itObs->second.x);
+
         if (cost_function)
           problem.AddResidualBlock(cost_function,
             p_LossFunction,

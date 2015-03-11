@@ -88,9 +88,6 @@ void computeResidual(
  *    - 3 for rotation(angle axis), 3 for translation.
  *  - third the 3D point data block
  *
- * @warning Principal point is assumed being applied on observed points.
- *
- * @see computeResidual
  */
 struct ErrorFunc_Refine_Intrinsic_Motion_3DPoints
 {

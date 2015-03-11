@@ -245,8 +245,19 @@ int main(int argc, char **argv)
       switch(e_User_camera_model)
       {
         case PINHOLE_CAMERA:
-          intrinsic = std::make_shared<Pinhole_Intrinsic>(width, height, focal, ppx, ppy);
+          intrinsic = std::make_shared<Pinhole_Intrinsic>
+            (width, height, focal, ppx, ppy);
         break;
+        case PINHOLE_CAMERA_RADIAL1:
+          intrinsic = std::make_shared<Pinhole_Intrinsic_Radial_K1>
+            (width, height, focal, ppx, ppy, 0.0); // setup no distortion as initial guess
+        break;
+        case PINHOLE_CAMERA_RADIAL3:
+          intrinsic = std::make_shared<Pinhole_Intrinsic_Radial_K3>
+            (width, height, focal, ppx, ppy, 0.0, 0.0, 0.0);  // setup no distortion as initial guess
+        break;
+        default:
+          std::cout << "Unknown camera model: " << (int) e_User_camera_model << std::endl;
       }
     }
 
