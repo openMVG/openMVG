@@ -118,14 +118,10 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
 
       if (isValid(itIntrinsic->second->getType()))
       {
-        const std::vector<double> vec_params = itIntrinsic->second->getParams();
-        map_intrinsics[indexCam].reserve(vec_params.size());
-        map_intrinsics[indexCam].push_back(vec_params[0]);
-        map_intrinsics[indexCam].push_back(vec_params[1]);
-        map_intrinsics[indexCam].push_back(vec_params[2]);
+        map_intrinsics[indexCam] = itIntrinsic->second->getParams();
 
         double * parameter_block = &map_intrinsics[indexCam][0];
-        problem.AddParameterBlock(parameter_block, vec_params.size());
+        problem.AddParameterBlock(parameter_block, map_intrinsics[indexCam].size());
         if (!bRefineIntrinsics)
         {
           //set the whole parameter block as constant for best performance.
