@@ -63,7 +63,7 @@ class Matcher_AllInMemory : public Matcher
 
   void Match(
     const std::vector<std::string> & vec_fileNames, // input filenames,
-    const PairsT & pairs,
+    const Pair_Set & pairs,
     PairWiseMatches & map_PutativesMatches)const // the pairwise photometric corresponding points
   {
 #ifdef OPENMVG_USE_OPENMP
@@ -73,7 +73,7 @@ class Matcher_AllInMemory : public Matcher
 
     // Sort pairs according the first index to minimize the MatcherT build operations
     std::map<size_t, std::vector<size_t> > map_Pairs;
-    for (PairsT::const_iterator iter = pairs.begin(); iter != pairs.end(); ++iter)
+    for (Pair_Set::const_iterator iter = pairs.begin(); iter != pairs.end(); ++iter)
     {
       map_Pairs[iter->first].push_back(iter->second);
     }

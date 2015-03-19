@@ -445,7 +445,7 @@ struct reconstructorHelper
         const std::string & sImageName = vec_fileNames[imageIndex];
         std::ostringstream os;
         os << std::setw(8) << std::setfill('0') << count;
-        ReadImage( stlplus::create_filespec( sImagePath, sImageName).c_str(), &image );
+        ReadImage( sImageName.c_str(), &image );
         std::string sCompleteImageName = stlplus::create_filespec(
           stlplus::folder_append_separator(sOutDirectory) + "visualize", os.str(),"jpg");
         WriteImage( sCompleteImageName.c_str(), image);

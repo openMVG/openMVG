@@ -206,9 +206,10 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
       // Display statistics about the minimization
       std::cout << std::endl
         << "Bundle Adjustment statistics (approximated RMSE):\n"
+        << " #tracks: " << sfm_data.structure.size() << ".\n"
+        << " #residuals: " << summary.num_residuals << "\n"
         << " Initial RMSE: " << std::sqrt( summary.initial_cost / summary.num_residuals) << "\n"
         << " Final RMSE: " << std::sqrt( summary.final_cost / summary.num_residuals) << "\n"
-        << " #residuals: " << summary.num_residuals << "\n"
         << std::endl;
 
       // Update camera poses with refined data

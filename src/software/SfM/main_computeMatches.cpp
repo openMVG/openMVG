@@ -67,7 +67,6 @@ int main(int argc, char **argv)
 {
   CmdLine cmd;
 
-  //std::string sImaDirectory;
   std::string sSfM_Data_Filename;
   std::string sOutDir = "";
   std::string sGeometricModel = "f";
@@ -77,7 +76,6 @@ int main(int argc, char **argv)
   int iMatchingVideoMode = -1;
   std::string sPredefinedPairList = "";
 
-  //cmd.add( make_option('i', sImaDirectory, "imadir") );
   cmd.add( make_option('o', sOutDir, "outdir") );
   cmd.add( make_option('r', fDistRatio, "distratio") );
   cmd.add( make_option('s', bOctMinus1, "octminus1") );
@@ -240,15 +238,19 @@ int main(int argc, char **argv)
   //typedef L2_Vectorized<DescriptorT::bin_type> MetricT;
   //typedef ArrayMatcherBruteForce<DescriptorT::bin_type, MetricT> MatcherT;
 
-  // List views as a vector of filenames (alias)
+  // List views as a vector of filenames & imagesizes (alias)
   std::vector<std::string> vec_fileNames;
   vec_fileNames.reserve(sfm_data.getViews().size());
+  std::vector<std::pair<size_t, size_t> > vec_imagesSize;
+  vec_imagesSize.reserve(sfm_data.getViews().size());
   for (Views::const_iterator iter = sfm_data.getViews().begin();
     iter != sfm_data.getViews().end();
     ++iter)
   {
     vec_fileNames.push_back(stlplus::create_filespec(sfm_data.s_root_path,
         iter->second.s_Img_path));
+    vec_imagesSize.push_back( std::make_pair(
+      iter->second.ui_width, iter->second.ui_height) );
   }
 
   std::cout << std::endl << " - PUTATIVE MATCHES - " << std::endl;
@@ -273,7 +275,7 @@ int main(int argc, char **argv)
     if (collectionMatcher.loadData(vec_fileNames, sOutDir))
     {
       // Get pair to match according the matching mode:
-      PairsT pairs;
+      Pair_Set pairs;
       switch (ePairmode)
       {
         case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(sfm_data.getViews().size()); break;
@@ -307,18 +309,6 @@ int main(int argc, char **argv)
   //    - AContrario Estimation of the desired geometric model
   //    - Use an upper bound for the a contrario estimated threshold
   //---------------------------------------
-
-  // Build an alias of the image size per view
-  std::vector<std::pair<size_t, size_t> > vec_imagesSize;
-  vec_imagesSize.reserve(sfm_data.getViews().size());
-  for (Views::const_iterator iter = sfm_data.getViews().begin();
-    iter != sfm_data.getViews().end();
-    ++iter)
-  {
-    vec_imagesSize.push_back(
-      std::make_pair(iter->second.ui_width, iter->second.ui_height));
-  }
-
   PairWiseMatches map_GeometricMatches;
 
   ImageCollectionGeometricFilter<FeatureT> collectionGeomFilter;
@@ -353,6 +343,8 @@ int main(int argc, char **argv)
             switch (ptrIntrinsic->getType())
             {
               case PINHOLE_CAMERA:
+              case PINHOLE_CAMERA_RADIAL1:
+              case PINHOLE_CAMERA_RADIAL3:
                 const Pinhole_Intrinsic * ptrPinhole = (const Pinhole_Intrinsic*)(ptrIntrinsic);
                 map_K[cpt] = ptrPinhole->K();
               break;

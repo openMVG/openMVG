@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "openMVG/types.hpp"
 #include "openMVG/split/split.hpp"
 
 #include <set>
@@ -15,12 +16,10 @@
 
 namespace openMVG {
 
-typedef std::set<std::pair<size_t, size_t> > PairsT;
-
 /// Generate all the (I,J) pairs of the upper diagonal of the NxN matrix
-PairsT exhaustivePairs(const size_t N)
+Pair_Set exhaustivePairs(const size_t N)
 {
-  PairsT pairs;
+  Pair_Set pairs;
   for(size_t I = 0; I < N; ++I)
     for(size_t J = I+1; J < N; ++J)
       pairs.insert(std::make_pair(I,J));
@@ -30,21 +29,21 @@ PairsT exhaustivePairs(const size_t N)
 
 /// Generate the pairs that have a distance inferior to the overlapSize
 /// Usable to match video sequence
-PairsT contiguousWithOverlap(const size_t N, const size_t overlapSize)
+Pair_Set contiguousWithOverlap(const size_t N, const size_t overlapSize)
 {
-  PairsT pairs;
+  Pair_Set pairs;
   for(size_t I = 0; I < N; ++I)
     for(size_t J = I+1; J < I+1+overlapSize && J < N; ++J)
       pairs.insert(std::make_pair(I,J));
   return pairs;
 }
 
-/// Load a set of Pairs from a file
+/// Load a set of Pair_Set from a file
 /// I J K L (pair that link I)
 bool loadPairs(
      const size_t N,  // number of image in the current project (to check index validity)
      const std::string &sFileName, // filename of the list file,
-     PairsT & pairs)  // output pairs read from the list file
+     Pair_Set & pairs)  // output pairs read from the list file
 {
   std::ifstream in(sFileName.c_str());
   if(!in.is_open())  {
@@ -95,11 +94,11 @@ bool loadPairs(
   return true;
 }
 
-/// Save a set of Pairs to a file (one pair per line)
+/// Save a set of Pair_Set to a file (one pair per line)
 /// I J
 /// I K
 /// ...
-bool savePairs(const std::string &sFileName, const PairsT & pairs)
+bool savePairs(const std::string &sFileName, const Pair_Set & pairs)
 {
   std::ofstream outStream(sFileName.c_str());
   if(!outStream.is_open())  {
@@ -107,7 +106,7 @@ bool savePairs(const std::string &sFileName, const PairsT & pairs)
       << "--savePairs: Impossible to open the output specified file." << std::endl;
     return false;
   }
-  for (PairsT::const_iterator iterP = pairs.begin();
+  for (Pair_Set::const_iterator iterP = pairs.begin();
     iterP != pairs.end(); ++iterP)
   {
     outStream << iterP->first << ' ' << iterP->second << '\n';

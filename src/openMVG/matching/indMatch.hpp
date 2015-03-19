@@ -8,6 +8,8 @@
 #ifndef OPENMVG_MATCHING_IND_MATCH_H
 #define OPENMVG_MATCHING_IND_MATCH_H
 
+#include "openMVG/types.hpp"
+
 #include <iostream>
 #include <set>
 #include <map>
@@ -20,7 +22,7 @@ namespace matching {
 /// A sort operator exist in order to remove duplicates of IndMatch series.
 struct IndMatch
 {
-  IndMatch(size_t i = 0, size_t j = 0)  {
+  IndMatch(IndexT i = 0, IndexT j = 0)  {
     _i = i;
     _j = j;
   }
@@ -52,7 +54,7 @@ struct IndMatch
     return sizeBefore != vec_match.size();
   }
 
-  size_t _i, _j;  // Left, right index
+  IndexT _i, _j;  // Left, right index
 };
 
 static std::ostream& operator<<(std::ostream & out, const IndMatch & obj) {
@@ -66,7 +68,15 @@ static inline std::istream& operator>>(std::istream & in, IndMatch & obj) {
 //--
 // Pairwise matches (indexed matches for a pair <I,J>)
 /// The structure used to store corresponding point indexes per images pairs
-typedef std::map< std::pair<size_t, size_t>, std::vector<matching::IndMatch> > PairWiseMatches;
+typedef std::map< Pair, std::vector<matching::IndMatch> > PairWiseMatches;
+
+static Pair_Set getPairs(const PairWiseMatches & matches)
+{
+  Pair_Set pairs;
+  for(PairWiseMatches::const_iterator it = matches.begin(); it != matches.end(); ++it)
+    pairs.insert(it->first);
+  return pairs;
+}
 
 }  // namespace matching
 }  // namespace openMVG

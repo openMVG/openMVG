@@ -536,11 +536,11 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
   if (connectedComponentCount > 1)  // If more than one CC, keep the largest
   {
     // Search the largest CC index
-    const std::map<size_t, std::set<lemon::ListGraph::Node> > map_subgraphs =
-      openMVG::graphUtils::exportGraphToMapSubgraphs(putativeGraph.g);
+    const std::map<IndexT, std::set<lemon::ListGraph::Node> > map_subgraphs =
+      openMVG::graphUtils::exportGraphToMapSubgraphs<Graph, IndexT>(putativeGraph.g);
     size_t count = std::numeric_limits<size_t>::min();
-    std::map<size_t, std::set<lemon::ListGraph::Node> >::const_iterator iterLargestCC = map_subgraphs.end();
-    for(std::map<size_t, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
+    std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iterLargestCC = map_subgraphs.end();
+    for(std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
         iter != map_subgraphs.end(); ++iter)
     {
       if (iter->second.size() > count)  {
@@ -551,7 +551,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
     }
 
     //-- Remove all nodes that are not listed in the largest CC
-    for(std::map<size_t, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
+    for(std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
         iter != map_subgraphs.end(); ++iter)
     {
       if (iter == iterLargestCC) // Skip this CC since it's the one we want to keep
@@ -565,8 +565,8 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
         for (Graph::OutArcIt e(putativeGraph.g, *iter2); e!=INVALID; ++e)
         {
           putativeGraph.g.erase(e);
-          size_t Idu = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.target(e)];
-          size_t Idv = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.source(e)];
+          const IndexT Idu = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.target(e)];
+          const IndexT Idv = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.source(e)];
           matching::PairWiseMatches::iterator iterM = _map_Matches.find(std::make_pair(Idu,Idv));
           if( iterM != _map_Matches.end())
           {

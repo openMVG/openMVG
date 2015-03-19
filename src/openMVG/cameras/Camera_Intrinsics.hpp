@@ -111,6 +111,25 @@ struct IntrinsicBase
   }
 };
 
+/// Return the angle (degree) between two bearing vector rays
+static double AngleBetweenRay(
+  const geometry::Pose3 & pose1,
+  const IntrinsicBase * intrinsic1,
+  const geometry::Pose3 & pose2,
+  const IntrinsicBase * intrinsic2,
+  const Vec2 & x1, const Vec2 & x2)
+{
+  // x = (u, v, 1.0)  // image coordinates
+  // X = R.t() * K.inv() * x + C // Camera world point
+  // getting the ray:
+  // ray = X - C = R.t() * K.inv() * x
+  const Vec3 ray1 = (pose1.rotation().transpose() * intrinsic1->operator()(x1)).normalized();
+  const Vec3 ray2 = (pose2.rotation().transpose() * intrinsic2->operator()(x2)).normalized();
+  const double mag = ray1.norm() * ray2.norm();
+  const double dotAngle = ray1.dot(ray2);
+  return R2D(acos(clamp(dotAngle/mag, -1.0 + 1.e-8, 1.0 - 1.e-8)));
+}
+
 } // namespace openMVG
 
 

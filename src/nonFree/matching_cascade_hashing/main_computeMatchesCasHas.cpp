@@ -275,7 +275,7 @@ int main(int argc, char **argv)
     if (collectionMatcher.loadData(vec_fileNames, sOutDir))
     {
       // Get pair to match according the matching mode:
-      PairsT pairs;
+      Pair_Set pairs;
       switch (ePairmode)
       {
         case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(vec_fileNames.size()); break;

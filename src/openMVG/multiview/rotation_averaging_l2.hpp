@@ -33,7 +33,7 @@ namespace rotation_averaging  {
 namespace l2  {
 
 // <eigenvalue, eigenvector> pair comparator
-bool compare_first_abs(std::pair<double, Vec> const &x, std::pair<double, Vec> const &y)
+static bool compare_first_abs(std::pair<double, Vec> const &x, std::pair<double, Vec> const &y)
 {
  return fabs(x.first) < fabs(y.first);
 }
@@ -69,12 +69,12 @@ inline Mat3 ClosestSVDRotationMatrix(const Mat3 & rotMat)
 //     1
 //
 // nCamera = 3
-// vector.add( RelRotationData(0,1, R01) );
-// vector.add( RelRotationData(1,2, R12) );
-// vector.add( RelRotationData(0,2, R02) );
+// vector.add( RelativeRotation(0,1, R01) );
+// vector.add( RelativeRotation(1,2, R12) );
+// vector.add( RelativeRotation(0,2, R02) );
 //
 static bool L2RotationAveraging( size_t nCamera,
-  const std::vector<RelRotationData>& vec_relativeRot,
+  const RelativeRotations& vec_relativeRot,
   // Output
   std::vector<Mat3> & vec_ApprRotMatrix)
 {
@@ -86,12 +86,12 @@ static bool L2RotationAveraging( size_t nCamera,
   tripletList.reserve(nRotationEstimation*12); // 3*3 + 3
   //-- Encode constraint (6.62 Martinec Thesis page 100):
   sMat::Index cpt = 0;
-  for(std::vector<RelRotationData>::const_iterator
+  for(RelativeRotations::const_iterator
     iter = vec_relativeRot.begin();
     iter != vec_relativeRot.end();
     iter++, cpt++)
   {
-   const RelRotationData & Elem = *iter;
+   const RelativeRotation & Elem = *iter;
 
    //-- Encode weight * ( rj - Rij * ri ) = 0
    const size_t i = iter->i;
@@ -183,7 +183,7 @@ static bool L2RotationAveraging( size_t nCamera,
 // Ceres Functor to minimize global rotation regarding fixed relative rotation
 struct CeresPairRotationError {
   CeresPairRotationError(const openMVG::Vec3& relative_rotation,  const double weight)
-  :relative_rotation_(relative_rotation), weight_(weight) {}
+    :relative_rotation_(relative_rotation), weight_(weight) {}
 
   // The error is given by the rotation cycle error (R2 * R1.t) * RRel.t
   template <typename T>
@@ -217,8 +217,8 @@ struct CeresPairRotationError {
   const double weight_;
 };
 
-bool L2RotationAveraging_Refine(
-  const std::vector<openMVG::rotation_averaging::RelRotationData>& vec_relativeRot,
+static bool L2RotationAveraging_Refine(
+  const RelativeRotations & vec_relativeRot,
   std::vector<openMVG::Mat3> & vec_ApprRotMatrix)
 {
   if (vec_relativeRot.size() == 0 ||vec_ApprRotMatrix.size() == 0 ) {

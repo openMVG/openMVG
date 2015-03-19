@@ -341,8 +341,8 @@ namespace openMVG {
     std::sort(vec_val.begin(), vec_val.end());
     min = vec_val[0];
     max = vec_val[vec_val.size()-1];
-    mean = accumulate(vec_val.begin(), vec_val.end(), 0.0)
-        / static_cast<double>(vec_val.size());
+    mean = accumulate(vec_val.begin(), vec_val.end(), Type(0))
+      / static_cast<Type>(vec_val.size());
     median = vec_val[vec_val.size()/2];
   }
 

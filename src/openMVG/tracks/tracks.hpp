@@ -369,7 +369,7 @@ struct TracksUtilsMap
   /// Be careful image index are sorted (increasing order)
   /// Only track index contained in the filter vector are kept.
   static void TracksToIndexedMatches(const STLMAPTracks & map_tracks,
-    const std::vector<size_t> & vec_filterIndex,
+    const std::vector<IndexT> & vec_filterIndex,
     std::vector<IndMatch> * pvec_index)
   {
 
@@ -381,9 +381,9 @@ struct TracksUtilsMap
         find_if(map_tracks.begin(), map_tracks.end(), FunctorMapFirstEqual(vec_filterIndex[i]));
       const submapTrack & map_ref = itF->second;
       submapTrack::const_iterator iter = map_ref.begin();
-      size_t indexI = iter->second;
+      IndexT indexI = iter->second;
       ++iter;
-      size_t indexJ = iter->second;
+      IndexT indexJ = iter->second;
       vec_indexref.push_back(IndMatch(indexI, indexJ));
     }
   }

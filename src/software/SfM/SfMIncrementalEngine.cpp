@@ -1027,7 +1027,7 @@ bool IncrementalReconstructionEngine::Resection(size_t imageIndex)
       TracksUtilsMap::GetTracksIdVector(map_tracksCommon, &set_tracksIds);
 
       //-- Compute if we have something to add to the scene ?
-      std::vector<size_t> vec_tracksToAdd;
+      std::vector<IndexT> vec_tracksToAdd;
       //-- Do we have new Track to add ?
       set_difference(set_tracksIds.begin(), set_tracksIds.end(),
         _reconstructorData.set_trackId.begin(), _reconstructorData.set_trackId.end(),

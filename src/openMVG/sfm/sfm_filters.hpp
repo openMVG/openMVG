@@ -7,6 +7,7 @@
 #ifndef OPENMVG_SFM_FILTERS_HPP
 #define OPENMVG_SFM_FILTERS_HPP
 
+#include "openMVG/multiview/rotation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/matching/indMatch.hpp"
 
@@ -33,6 +34,9 @@ static void KeepOnlyReferencedElement(
 
 // Specialization for RelativeInfo_Map
 template<>
+#ifdef _MSC_VER
+static
+#endif
 void KeepOnlyReferencedElement(
   const std::set<IndexT> & set_remainingIds,
   RelativeInfo_Map& map_relatives)
@@ -51,8 +55,34 @@ void KeepOnlyReferencedElement(
   map_relatives.swap(map_relatives_infered);
 }
 
+// Specialization for RelativeInfo_Map
+template<>
+#ifdef _MSC_VER
+static
+#endif
+void KeepOnlyReferencedElement(
+  const std::set<IndexT> & set_remainingIds,
+  rotation_averaging::RelativeRotations& relative_info)
+{
+  rotation_averaging::RelativeRotations relatives_infered;
+  for (rotation_averaging::RelativeRotations::const_iterator
+    iter = relative_info.begin();
+    iter != relative_info.end(); ++iter)
+  {
+    if (set_remainingIds.find(iter->i) != set_remainingIds.end() &&
+        set_remainingIds.find(iter->j) != set_remainingIds.end())
+    {
+      relatives_infered.push_back(*iter);
+    }
+  }
+  relative_info.swap(relatives_infered);
+}
+
 // Specialization for PairWiseMatches
 template<>
+#ifdef _MSC_VER
+static
+#endif
 void KeepOnlyReferencedElement(
   const std::set<IndexT> & set_remainingIds,
   openMVG::matching::PairWiseMatches& map_matches)
@@ -72,6 +102,9 @@ void KeepOnlyReferencedElement(
 
 // Specialization for std::map<IndexT,Mat3>
 template<>
+#ifdef _MSC_VER
+static
+#endif
 void KeepOnlyReferencedElement(
   const std::set<IndexT> & set_remainingIds,
   std::map<IndexT,Mat3>& map_Mat3)
@@ -90,6 +123,9 @@ void KeepOnlyReferencedElement(
 
 // Specialization for RelativeInfo_Vec
 template<>
+#ifdef _MSC_VER
+static
+#endif
 void KeepOnlyReferencedElement(
   const std::set<IndexT> & set_remainingIds,
   RelativeInfo_Vec & relativeInfo_vec)
@@ -109,4 +145,4 @@ void KeepOnlyReferencedElement(
 
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_DATA_HPP
+#endif // OPENMVG_SFM_FILTERS_HPP

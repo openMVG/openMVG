@@ -70,14 +70,14 @@ class Matcher_CascadeHashing_AllInMemory
 
   void Match(
     const std::vector<std::string> & vec_fileNames, // input filenames,
-    const PairsT & pairs,
+    const Pair_Set & pairs,
     PairWiseMatches & map_PutativesMatches) // the pairwise photometric corresponding points
   {
     C_Progress_display my_progress_bar( pairs.size() );
 
     // Sort pairs according the first index to minimize memory exchange
     std::map<size_t, std::vector<size_t> > map_Pairs;
-    for (PairsT::const_iterator iter = pairs.begin(); iter != pairs.end(); ++iter)
+    for (Pair_Set::const_iterator iter = pairs.begin(); iter != pairs.end(); ++iter)
     {
       map_Pairs[iter->first].push_back(iter->second);
     }

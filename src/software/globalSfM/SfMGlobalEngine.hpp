@@ -124,22 +124,21 @@ public:
   //--
   // TYPEDEF
   //--
-  typedef std::map< std::pair<size_t, size_t>, std::pair<Mat3, Vec3> > Map_RelativeRT;
   typedef std::map<size_t, BrownPinholeCamera> Map_BrownPinholeCamera;
 
 private:
   /// Read input data (point correspondences, K matrix)
   bool ReadInputData();
 
-  void ComputeRelativeRt(Map_RelativeRT & vec_relatives);
+  void ComputeRelativeRt(RelativeInfo_Map & vec_relatives);
 
   // Detect and remove the outlier relative rotations
-  void rotationInference(Map_RelativeRT & map_relatives);
+  void rotationInference(RelativeInfo_Map & map_relatives);
 
   // Compute the global rotations from relative rotations
   bool computeGlobalRotations(
     ERotationAveragingMethod eRotationAveragingMethod,
-    const Map_RelativeRT & map_relatives,
+    const RelativeInfo_Map & map_relatives,
     std::map<size_t, Mat3> & map_globalR) const;
 
   // List the triplet of the image connection graph (_map_Matches_E)
@@ -148,7 +147,7 @@ private:
   // Relative rotations inference on relative rotations composition error along 3 length cycles (triplets).
   void tripletRotationRejection(
     std::vector< graphUtils::Triplet > & vec_triplets,
-    Map_RelativeRT & map_relatives);
+    RelativeInfo_Map & map_relatives);
 
   // Compute relative translations over the graph of putative triplets
   void computePutativeTranslation_EdgesCoverage(

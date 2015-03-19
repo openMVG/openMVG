@@ -108,7 +108,7 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
     if (memMapping.get() == NULL)  {
       return false;
     }
-    
+
     if (NN > (*memMapping).rows() || nbQuery < 1) {
       std::cerr << "Too much asked nearest neighbors" << std::endl;
       return false;

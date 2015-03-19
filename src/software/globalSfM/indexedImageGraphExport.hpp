@@ -8,6 +8,8 @@
 #ifndef OPENMVG_INDEXED_IMAGE_GRAPH_EXPORT_H_
 #define OPENMVG_INDEXED_IMAGE_GRAPH_EXPORT_H_
 
+#include "software/globalSfM/indexedImageGraph.hpp"
+
 #include <lemon/core.h>
 
 #include <iostream>
