@@ -32,11 +32,12 @@ enum ESfM_Data
 } // namespace openMVG
 
 #include "openMVG/sfm/sfm_data_io_cereal.hpp"
+#include "openMVG/sfm/sfm_data_io_ply.hpp"
 
 namespace openMVG {
 
 ///Check that each pose have a valid intrinsic and pose id in the existing View ids
-bool ValidIds(const SfM_Data & sfm_data, ESfM_Data flags_part)
+static bool ValidIds(const SfM_Data & sfm_data, ESfM_Data flags_part)
 {
   const bool bCheck_Intrinsic = (flags_part & INTRINSICS) == INTRINSICS;
   const bool bCheck_Extrinsic = (flags_part & EXTRINSICS) == EXTRINSICS;
@@ -81,7 +82,7 @@ bool ValidIds(const SfM_Data & sfm_data, ESfM_Data flags_part)
   return bRet;
 }
 
-bool Load(SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_part)
+static bool Load(SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_part)
 {
   bool bStatus = false;
   const std::string ext = stlplus::extension_part(filename);
@@ -104,7 +105,7 @@ bool Load(SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_par
   return bStatus;
 }
 
-bool Save(const SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_part)
+static bool Save(const SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_part)
 {
   const std::string ext = stlplus::extension_part(filename);
   if (ext == "json")
@@ -113,6 +114,8 @@ bool Save(const SfM_Data & sfm_data, const std::string & filename, ESfM_Data fla
     return Save_Cereal<cereal::PortableBinaryOutputArchive>(sfm_data, filename, flags_part);
   else if (ext == "xml")
     return Save_Cereal<cereal::XMLOutputArchive>(sfm_data, filename, flags_part);
+  else if (ext == "ply")
+    return Save_PLY(sfm_data, filename, flags_part);
   return false;
 }
 

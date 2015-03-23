@@ -150,6 +150,22 @@ TEST(SfM_Data_IO, SAVE_LOAD_JSON) {
   }
 }
 
+TEST(SfM_Data_IO, SAVE_PLY) {
+
+  // SAVE as PLY
+  {
+    std::ostringstream os;
+    os << "SAVE_LOAD" << ".ply";
+    const std::string filename = os.str();
+    std::cout << "Testing:" << filename << std::endl;
+
+    const SfM_Data sfm_data = create_test_scene(2, true);
+    ESfM_Data flags_part = ESfM_Data(EXTRINSICS | STRUCTURE);
+    EXPECT_TRUE( Save(sfm_data, filename, flags_part) );
+    EXPECT_TRUE( stlplus::is_file(filename) );
+  }
+}
+
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
 /* ************************************************************************* */
