@@ -146,9 +146,9 @@ int main(int argc, char **argv)
     << distoModel.m_radial_distortion.transpose() << "\n"
     << "  Distortion focal: " << distoModel.m_f << std::endl;
 
-  std::vector<std::string> vec_fileNames = stlplus::folder_wildcard(sPath, "*.JPG", false, true);
+  std::vector<std::string> vec_fileNames = stlplus::folder_wildcard(sPath, "*.tiff", false, true);
 
-  Image<RGBColor > image, imageU;
+  Image<unsigned char > image, imageU;
   C_Progress_display my_progress_bar( vec_fileNames.size() );
   for (size_t j = 0; j < vec_fileNames.size(); ++j, ++my_progress_bar)
   {
