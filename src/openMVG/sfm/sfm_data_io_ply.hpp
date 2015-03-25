@@ -23,7 +23,7 @@ static bool Save_PLY(
   const bool b_structure = (flags_part & STRUCTURE) == STRUCTURE;
   const bool b_extrinsics = (flags_part & EXTRINSICS) == EXTRINSICS;
 
-  if (!b_structure || !b_extrinsics)
+  if (!(b_structure || b_extrinsics))
     return false;
 
   //Create the stream and check it is ok
