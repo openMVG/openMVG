@@ -29,10 +29,13 @@ int main(int argc, char **argv)
     sGTDirectory,
     sComputedDirectory,
     sOutDir = "";
+    int camType; //1: openMVG cam, 2: Strechas cam
+
 
   cmd.add( make_option('i', sGTDirectory, "gt") );
   cmd.add( make_option('c', sComputedDirectory, "computed") );
   cmd.add( make_option('o', sOutDir, "outdir") );
+  cmd.add( make_option('t', camType, "camtype") );
 
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -42,6 +45,7 @@ int main(int argc, char **argv)
       << "[-i|--gt path (where ground truth camera trajectory are saved)] \n"
       << "[-c|--computed path (openMVG SfM_Output directory)] \n"
       << "[-o|--output path (where statistics will be saved)] \n"
+      << "[-t|--camtype Type of the camera. 1: openMVG (bin), 2: Strechas 'png.camera'] \n"
       << std::endl;
 
     std::cerr << s << std::endl;
@@ -56,6 +60,24 @@ int main(int argc, char **argv)
   if (!stlplus::folder_exists(sOutDir))
     stlplus::folder_create(sOutDir);
 
+  //Setup the camera type
+  bool (*fcnReadCamPtr)(const std::string &, PinholeCamera &);
+  std::string suffix;
+  switch (camType)
+  {
+    case 1:
+      std::cout << "\nusing openMVG Camera";
+      fcnReadCamPtr=&read_openMVG_Camera;
+      suffix="bin";
+      break;
+    case 2:
+      std::cout << "\nusing Strechas Camera";
+      fcnReadCamPtr=&read_Strecha_Camera;
+      suffix="png.camera";
+      break;
+
+  }
+
   //---------------------------------------
   // Quality evaluation
   //---------------------------------------
@@ -69,7 +91,7 @@ int main(int argc, char **argv)
     std::cout << "\nTry to read data from GT";
     std::vector<std::string> vec_fileNames;
     std::string sGTPath = sGTDirectory;
-    readGt( sGTPath, vec_fileNames, map_Rt_gt, map_Cam_gt);
+    readGt(fcnReadCamPtr, sGTPath, suffix, vec_fileNames, map_Rt_gt, map_Cam_gt);
     std::cout << map_Cam_gt.size() << " gt cameras have been found" << std::endl;
   }
 

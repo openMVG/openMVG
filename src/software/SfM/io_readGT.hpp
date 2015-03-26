@@ -22,7 +22,7 @@ static bool read_openMVG_Camera(const std::string & camName, PinholeCamera & cam
   if (stlplus::extension_part(camName) == "bin")
   {
     std::ifstream in(camName.c_str(), std::ios::in|std::ios::binary);
-    if (!in.is_open())	{
+    if (!in.is_open())  {
       std::cerr << "Error: failed to open file '" << camName << "' for reading" << std::endl;
       return false;
     }
@@ -37,7 +37,7 @@ static bool read_openMVG_Camera(const std::string & camName, PinholeCamera & cam
   {
     std::ifstream ifs;
     ifs.open( camName.c_str(), std::ifstream::in);
-    if (!ifs.is_open())	{
+    if (!ifs.is_open()) {
       std::cerr << "Error: failed to open file '" << camName << "' for reading" << std::endl;
       return false;
     }
@@ -75,7 +75,7 @@ static bool read_Strecha_Camera(const std::string & camName, PinholeCamera & cam
 {
   std::ifstream ifs;
   ifs.open( camName.c_str(), std::ifstream::in);
-  if (!ifs.is_open())	{
+  if (!ifs.is_open()) {
     std::cerr << "Error: failed to open file '" << camName << "' for reading" << std::endl;
     return false;
   }
@@ -88,7 +88,6 @@ static bool read_Strecha_Camera(const std::string & camName, PinholeCamera & cam
       val.push_back(valT);
   }
 
-  
   if (val.size() == 3*3 +3 +3*3 +3 + 3 || val.size() == 26) //Strecha cam
   {
     Mat3 K, R;
@@ -113,15 +112,26 @@ static bool read_Strecha_Camera(const std::string & camName, PinholeCamera & cam
   return true;
 }
 
+/**
+@brief Reads a set of Pinhole Cameras and its poses from a ground truth dataset.
+@param[in] functorPointer, to the function which can handle the trajectory format. Example: &read_openMVG_Camera
+@param[in] sGTPath, the directory where the camera files are located.
+@param[in] Suffix: use "bin" for openMVG or "png.camera" for Strechas data.
+@param[out] vec_filenames: ? Not used? @Pierre?
+@param[out] map_Rt_gt: Map of poses
+@param[out] map_camerasGT Map of PinholeCameras. 
+**/
 bool readGt(
+  bool (*fcnReadCamPtr)(const std::string &, PinholeCamera &), //pointer to the function reading a camera
   std::string sGTPath,
+  std::string suffix,
   const std::vector<std::string> & vec_filenames,
   std::map< std::string, std::pair<Mat3, Vec3> > & map_Rt_gt,
   std::map< size_t, PinholeCamera> & map_camerasGT)
 {
   // IF GT_Folder exists, perform evaluation of the quality of rotation estimates
   if (!stlplus::is_folder(sGTPath)) {
-    std::cout << std::endl << "There is not valid GT data to read" << std::endl;
+    std::cout << std::endl << "There is not valid GT data to read from " << sGTPath << std::endl;
     return false;
   }
   else
@@ -130,7 +140,7 @@ bool readGt(
     // Load GT
     std::map< std::string, Mat3 > map_R_gt;
     //Try to read .bin camera
-    std::vector<std::string> vec_camfilenames = stlplus::folder_wildcard(sGTPath, "*.bin", false, true);
+    std::vector<std::string> vec_camfilenames = stlplus::folder_wildcard(sGTPath, "*."+suffix, false, true);
     std::sort(vec_camfilenames.begin(), vec_camfilenames.end());
     std::vector<std::string>::const_iterator citerBegin = vec_camfilenames.begin();
     if (!vec_camfilenames.empty())
@@ -138,7 +148,8 @@ bool readGt(
       for (std::vector<std::string>::const_iterator iter = vec_camfilenames.begin();
         iter != vec_camfilenames.end(); ++iter) {
         PinholeCamera cam;
-        read_openMVG_Camera(stlplus::create_filespec(sGTPath, *iter, ""), cam);
+        //read_openMVG_Camera(stlplus::create_filespec(sGTPath, *iter, ""), cam);
+        fcnReadCamPtr(stlplus::create_filespec(sGTPath, *iter, ""), cam);
         map_Rt_gt[ stlplus::basename_part(*iter) ] = std::make_pair(cam._R, cam._t);
         map_camerasGT[ std::distance(std::vector<std::string>::const_iterator(vec_camfilenames.begin()),iter)] = cam;
       }
