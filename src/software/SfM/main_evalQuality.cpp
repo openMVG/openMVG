@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     sGTDirectory,
     sComputedDirectory,
     sOutDir = "";
-    int camType; //1: openMVG cam, 2: Strechas cam
+    int camType = -1; //1: openMVG cam, 2,3: Strechas cam
 
 
   cmd.add( make_option('i', sGTDirectory, "gt") );
@@ -45,7 +45,11 @@ int main(int argc, char **argv)
       << "[-i|--gt path (where ground truth camera trajectory are saved)] \n"
       << "[-c|--computed path (openMVG SfM_Output directory)] \n"
       << "[-o|--output path (where statistics will be saved)] \n"
-      << "[-t|--camtype Type of the camera. 1: openMVG (bin), 2: Strechas 'png.camera'] \n"
+      << "[-t|--camtype Type of the camera:\n"
+      << "  -1: autoguess (try 1,2,3),\n"
+      << "  1: openMVG (bin),\n"
+      << "  2: Strechas 'png.camera' \n"
+      << "  3: Strechas 'jpg.camera' ]\n"
       << std::endl;
 
     std::cerr << s << std::endl;
@@ -60,22 +64,41 @@ int main(int argc, char **argv)
   if (!stlplus::folder_exists(sOutDir))
     stlplus::folder_create(sOutDir);
 
-  //Setup the camera type
+  //Setup the camera type and the appropriate camera reader
   bool (*fcnReadCamPtr)(const std::string &, PinholeCamera &);
   std::string suffix;
+
+  switch (camType)
+  {
+    case -1:  // handle auto guess
+    {
+      if (!stlplus::folder_wildcard(sGTDirectory, "*.bin", false, true).empty())
+        camType = 1;
+      else if (!stlplus::folder_wildcard(sGTDirectory, "*.png.camera", false, true).empty())
+        camType = 2;
+      else if (!stlplus::folder_wildcard(sGTDirectory, "*.jpg.camera", false, true).empty())
+        camType = 3;
+      else
+        camType = std::numeric_limits<int>::infinity();
+    }
+    break;
+  }
   switch (camType)
   {
     case 1:
       std::cout << "\nusing openMVG Camera";
-      fcnReadCamPtr=&read_openMVG_Camera;
-      suffix="bin";
+      fcnReadCamPtr = &read_openMVG_Camera;
+      suffix = "bin";
       break;
     case 2:
+    case 3:
       std::cout << "\nusing Strechas Camera";
-      fcnReadCamPtr=&read_Strecha_Camera;
-      suffix="png.camera";
+      fcnReadCamPtr = &read_Strecha_Camera;
+      suffix = (camType == 2) ? "png.camera" : "jpg.camera";
       break;
-
+    default:
+      std::cerr << "Unsupported camera type. Please write your camera reader." << std::endl;
+      return EXIT_FAILURE;
   }
 
   //---------------------------------------
@@ -90,8 +113,7 @@ int main(int argc, char **argv)
   {
     std::cout << "\nTry to read data from GT";
     std::vector<std::string> vec_fileNames;
-    std::string sGTPath = sGTDirectory;
-    readGt(fcnReadCamPtr, sGTPath, suffix, vec_fileNames, map_Rt_gt, map_Cam_gt);
+    readGt(fcnReadCamPtr, sGTDirectory, suffix, vec_fileNames, map_Rt_gt, map_Cam_gt);
     std::cout << map_Cam_gt.size() << " gt cameras have been found" << std::endl;
   }
 
