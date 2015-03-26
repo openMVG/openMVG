@@ -103,6 +103,8 @@ int main(int argc, char **argv)
   Vec2 c; // distortion center
   Vec3 k; // distortion factor
   double f; // Focal
+  int colorMode=0; //0: RGB, 1: Greyscale
+  std::string suffix="JPG";
 
   cmd.add( make_option('i', sPath, "imadir") );
   cmd.add( make_option('o', sOutPath, "outdir") );
@@ -111,15 +113,18 @@ int main(int argc, char **argv)
   cmd.add( make_option('c', k(0), "k1") );
   cmd.add( make_option('d', k(1), "k2") );
   cmd.add( make_option('e', k(2), "k3") );
-  cmd.add( make_option('f', f, "f") );
+  cmd.add( make_option('f', f, "focal") );
+  cmd.add( make_option('s', suffix, "suffix") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << ' '
-      << "[-i|--imadir path] "
-      << "[-o|--outdir path] "
+      << "[-i|--imadir - Input path]"
+      << "[-o|--outdir - path for the undistorted JPG files]"
+      << "[-f|--focal - focal length]"
+      << "[-s|--suffix - Suffix of the input files. (default: JPG)]"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -146,18 +151,61 @@ int main(int argc, char **argv)
     << distoModel.m_radial_distortion.transpose() << "\n"
     << "  Distortion focal: " << distoModel.m_f << std::endl;
 
-  std::vector<std::string> vec_fileNames = stlplus::folder_wildcard(sPath, "*.tiff", false, true);
+  std::vector<std::string> vec_fileNames = stlplus::folder_wildcard(sPath, "*."+suffix, false, true);
+  std::cout << "\nLocated " << vec_fileNames.size() << " files in " << sPath << " with suffix " << suffix;
 
-  Image<unsigned char > image, imageU;
-  C_Progress_display my_progress_bar( vec_fileNames.size() );
-  for (size_t j = 0; j < vec_fileNames.size(); ++j, ++my_progress_bar)
-  {
-    ReadImage((sPath + "/" + vec_fileNames[j]).c_str(), &image);
-    imageU = undistortImage ( image, distoModel);
-    string sOutFileName = stlplus::create_filespec(sOutPath, stlplus::basename_part(vec_fileNames[j]), "JPG");
-    WriteImage(sOutFileName.c_str(), imageU);
-  }
+    Image<unsigned char > imageGreyIn, imageGreyU;
+    Image<RGBColor> imageRGBIn, imageRGBU;
+    Image<RGBAColor> imageRGBAIn, imageRGBAU;
+    
+    C_Progress_display my_progress_bar( vec_fileNames.size() );
+    for (size_t j = 0; j < vec_fileNames.size(); ++j, ++my_progress_bar)
+    {
+      //read the depth
+      int w,h,depth;
+      vector<unsigned char> tmp_vec; 
+      string sOutFileName = stlplus::create_filespec(sOutPath, stlplus::basename_part(vec_fileNames[j]), "JPG");
+      int res = ReadImage((sPath + "/" + vec_fileNames[j]).c_str(), &tmp_vec, &w, &h, &depth);
+      if (res == 1)
+      {
+        switch(depth)
+        {
+          case 1: //Greyscale
+            {
+              imageGreyIn = Eigen::Map<Image<unsigned char>::Base>(&tmp_vec[0], h, w);
+              imageGreyIn=Eigen::Map<Image<unsigned char>::Base>(&tmp_vec[0], h, w);
+              imageGreyU = undistortImage ( imageGreyIn, distoModel);
+              WriteImage(sOutFileName.c_str(), imageGreyU);
+              break;
+            }
+          case 3: //RGB
+            {
+              RGBColor * ptrCol = (RGBColor*) &tmp_vec[0];
+              imageRGBIn = Eigen::Map<Image<RGBColor>::Base>(ptrCol, h, w);
+              //convert RGB to gray
+              //ConvertPixelType(imageRGBIn, &tmp_vec );
+              imageRGBU = undistortImage ( imageRGBIn, distoModel);
+              WriteImage(sOutFileName.c_str(), imageRGBU);
+              break;
+            }
+          case 4: //RGBA
+            {
+              RGBAColor * ptrCol = (RGBAColor*) &tmp_vec[0];
+              imageRGBAIn = Eigen::Map<Image<RGBAColor>::Base>(ptrCol, h, w);
+              //convert RGBA to gray
+              //ConvertPixelType(imageRGBAIn, &tmp_vec);
+              imageRGBAU = undistortImage ( imageRGBAIn, distoModel);
+              WriteImage(sOutFileName.c_str(), imageRGBAU);
+              break;
+            }
+        }
 
+      }//end if res==1
+      else
+      {
+        std::cerr << "\nThe image contains " << depth << "layers. This depth is not supported!";
+      }
+  } //end loop for each file
   return EXIT_SUCCESS;
 }
 
