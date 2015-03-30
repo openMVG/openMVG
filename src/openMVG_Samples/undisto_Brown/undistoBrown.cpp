@@ -41,20 +41,20 @@ struct BrownDistoModel
 
   inline void ComputeUndistortedCoordinates( double xu, double yu, double &xd, double& yd) const
   {
-    Vec2 point (xu, yu);
-    Vec2 principal_point (m_disto_center);
-    Vec2 point_centered = point - principal_point;
+    const Vec2 point (xu, yu);
+    const Vec2 principal_point (m_disto_center);
+    const Vec2 point_centered = point - principal_point;
 
-    double u = point_centered.x() / m_f;
-    double v = point_centered.y() / m_f;
-    double radius_squared = u * u + v * v;
+    const double u = point_centered.x() / m_f;
+    const double v = point_centered.y() / m_f;
+    const double radius_squared = u * u + v * v;
 
     double coef_radial = 0.0;
     for (int i = m_radial_distortion.size() - 1; i >= 0; --i) {
       coef_radial = (coef_radial + m_radial_distortion[i]) * radius_squared;
     }
 
-    Vec2 undistorted_point = point + point_centered * coef_radial;
+    const Vec2 undistorted_point = point + point_centered * coef_radial;
     xd = undistorted_point(0);
     yd = undistorted_point(1);
   }
@@ -68,12 +68,11 @@ Image undistortImage(
   RGBColor fillcolor = BLACK,
   bool bcenteringPPpoint = true)
 {
-  int w = I.Width();
-  int h = I.Height();
-  double cx = w * .5, cy = h * .5;
+  const int w = I.Width();
+  const int h = I.Height();
   Vec2 offset(0,0);
   if (bcenteringPPpoint)
-    offset = Vec2(cx,cy) - d.m_disto_center;
+    offset = Vec2(w * .5, h * .5) - d.m_disto_center;
 
   Image J ( w,h );
   double xu, yu, xd,yd;
@@ -103,6 +102,7 @@ int main(int argc, char **argv)
   Vec2 c; // distortion center
   Vec3 k; // distortion factor
   double f; // Focal
+  std::string suffix = "JPG";
 
   cmd.add( make_option('i', sPath, "imadir") );
   cmd.add( make_option('o', sOutPath, "outdir") );
@@ -111,15 +111,18 @@ int main(int argc, char **argv)
   cmd.add( make_option('c', k(0), "k1") );
   cmd.add( make_option('d', k(1), "k2") );
   cmd.add( make_option('e', k(2), "k3") );
-  cmd.add( make_option('f', f, "f") );
+  cmd.add( make_option('f', f, "focal") );
+  cmd.add( make_option('s', suffix, "suffix") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << ' '
-      << "[-i|--imadir path] "
-      << "[-o|--outdir path] "
+      << "[-i|--imadir - Input path]"
+      << "[-o|--outdir - path for the undistorted JPG files]"
+      << "[-f|--focal - focal length]"
+      << "[-s|--suffix - Suffix of the input files. (default: JPG)]"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -146,18 +149,58 @@ int main(int argc, char **argv)
     << distoModel.m_radial_distortion.transpose() << "\n"
     << "  Distortion focal: " << distoModel.m_f << std::endl;
 
-  std::vector<std::string> vec_fileNames = stlplus::folder_wildcard(sPath, "*.JPG", false, true);
+  const std::vector<std::string> vec_fileNames =
+    stlplus::folder_wildcard(sPath, "*."+suffix, false, true);
+  std::cout << "\nLocated " << vec_fileNames.size() << " files in " << sPath
+    << " with suffix " << suffix;
 
-  Image<RGBColor > image, imageU;
+  Image<unsigned char > imageGreyIn, imageGreyU;
+  Image<RGBColor> imageRGBIn, imageRGBU;
+  Image<RGBAColor> imageRGBAIn, imageRGBAU;
+  
   C_Progress_display my_progress_bar( vec_fileNames.size() );
   for (size_t j = 0; j < vec_fileNames.size(); ++j, ++my_progress_bar)
   {
-    ReadImage((sPath + "/" + vec_fileNames[j]).c_str(), &image);
-    imageU = undistortImage ( image, distoModel);
-    string sOutFileName = stlplus::create_filespec(sOutPath, stlplus::basename_part(vec_fileNames[j]), "JPG");
-    WriteImage(sOutFileName.c_str(), imageU);
-  }
+    //read the depth
+    int w,h,depth;
+    vector<unsigned char> tmp_vec; 
+    const string sOutFileName =
+      stlplus::create_filespec(sOutPath, stlplus::basename_part(vec_fileNames[j]), "JPG");
+    const string sInFileName = stlplus::create_filespec(sPath, stlplus::basename_part(vec_fileNames[j]));
+    const int res = ReadImage(sInFileName.c_str(), &tmp_vec, &w, &h, &depth);
+    if (res == 1)
+    {
+      switch(depth)
+      {
+        case 1: //Greyscale
+          {
+            imageGreyIn = Eigen::Map<Image<unsigned char>::Base>(&tmp_vec[0], h, w);
+            imageGreyU = undistortImage ( imageGreyIn, distoModel);
+            WriteImage(sOutFileName.c_str(), imageGreyU);
+            break;
+          }
+        case 3: //RGB
+          {
+            imageRGBIn = Eigen::Map<Image<RGBColor>::Base>((RGBColor*) &tmp_vec[0], h, w);
+            imageRGBU = undistortImage ( imageRGBIn, distoModel);
+            WriteImage(sOutFileName.c_str(), imageRGBU);
+            break;
+          }
+        case 4: //RGBA
+          {
+            imageRGBAIn = Eigen::Map<Image<RGBAColor>::Base>((RGBAColor*) &tmp_vec[0], h, w);
+            imageRGBAU = undistortImage ( imageRGBAIn, distoModel);
+            WriteImage(sOutFileName.c_str(), imageRGBAU);
+            break;
+          }
+      }
 
+    }//end if res==1
+    else
+    {
+      std::cerr << "\nThe image contains " << depth << "layers. This depth is not supported!\n";
+    }
+  } //end loop for each file
   return EXIT_SUCCESS;
 }
 
