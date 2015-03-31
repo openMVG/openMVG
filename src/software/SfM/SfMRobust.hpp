@@ -33,7 +33,6 @@ using namespace openMVG::robust;
 
 static const size_t ACRANSAC_ITER = 4096;
 
-
 /**
  * @brief Estimate the essential matrix from point matches and K matrices.
  *
@@ -47,6 +46,7 @@ static const size_t ACRANSAC_ITER = 4096;
  * @param[in] size_ima2 width, height of image 2
  * @param[out] errorMax upper bound of the reprojection error of the found solution
  * @param[in] precision upper bound of the desired solution
+ * @param[in] max iteration count
  */
 bool robustEssential(
   const Mat3 & K1, const Mat3 & K2,
@@ -55,7 +55,8 @@ bool robustEssential(
   const std::pair<size_t, size_t> & size_ima1,
   const std::pair<size_t, size_t> & size_ima2,
   double * errorMax,
-  double precision = std::numeric_limits<double>::infinity())
+  double precision = std::numeric_limits<double>::infinity(),
+  const size_t max_iteration_count = ACRANSAC_ITER)
 {
   assert(pvec_inliers != NULL);
   assert(pE != NULL);
@@ -75,7 +76,7 @@ bool robustEssential(
 
   // Robustly estimation of the Essential matrix and it's precision
   std::pair<double,double> acRansacOut = ACRANSAC(kernel, *pvec_inliers,
-    ACRANSAC_ITER, pE, precision, false);
+    max_iteration_count, pE, precision, false);
   *errorMax = acRansacOut.first;
 
   return pvec_inliers->size() > 2.5 * SolverType::MINIMUM_SAMPLES;

@@ -1,3 +1,22 @@
 
-UNIT_TEST(openMVG sfm_data_io "stlplus;ceres")
+FILE(
+	GLOB_RECURSE
+	sfm_files_header
+	*.hpp
+)
+FILE(
+	GLOB_RECURSE
+	sfm_files_cpp
+	*.cpp
+)
+FILE(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
+
+#Remove the future main files
+list(REMOVE_ITEM sfm_files_cpp ${REMOVEFILESUNITTEST})
+
+ADD_LIBRARY(openMVG_sfm ${sfm_files_header} ${sfm_files_cpp})
+TARGET_LINK_LIBRARIES(openMVG_sfm ceres openMVG_multiview)
+INSTALL(TARGETS openMVG_sfm DESTINATION lib/)
+
+UNIT_TEST(openMVG sfm_data_io "stlplus;ceres;openMVG_multiview")
 UNIT_TEST(openMVG sfm_data_BA "openMVG_multiview_test_data;openMVG_multiview;ceres;stlplus")

@@ -13,7 +13,7 @@ class Bundle_Adjustment
 {
   public:
   // Perform a Bundle Adjustment on the SfM scene with refinement of the requested parameters
-  virtual bool bAdjust(
+  virtual bool Adjust(
     SfM_Data & sfm_data, // the SfM scene to refine
     bool bRefineRotations = true, // tell if pose rotations will be refined
     bool bRefineTranslations = true, // tell if the pose translation will be refined

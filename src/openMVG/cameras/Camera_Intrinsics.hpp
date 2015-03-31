@@ -81,6 +81,12 @@ struct IntrinsicBase
   /// Remove the distortion to a camera point (that is in normalized camera frame)
   virtual Vec2 remove_disto(const Vec2& p) const  = 0;
 
+  /// Normalize a given unit pixel error to the camera plane
+  virtual double imagePlane_toCameraPlaneError(double value) const = 0;
+
+  /// Return the intrinsic (interior & exterior) as a simplified projective projection
+  virtual Mat34 get_projective_equivalent(const geometry::Pose3 & pose) const = 0;
+
   /// Serialization out
   template <class Archive>
   void save( Archive & ar) const

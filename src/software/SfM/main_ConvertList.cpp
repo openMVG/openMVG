@@ -18,7 +18,7 @@
 
 using namespace openMVG;
 
-// COmpatibility binary
+// Compatibility binary
 // Convert an openMVG v0.x=>7 lists.txt file to the new SfM_Data file format (v0.8)
 // - Export a SfM_Data file with View & Intrinsic data
 //
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
       << "\t 3: Pinhole radial 3\n"
       << "[-g|--group_camera_model]\n"
       << "\t 0-> each view have it's own camera intrinsic parameters,\n"
-      << "\t 1-> view can share some camera intrinsic parameters\n"
+      << "\t 1-> views can share some camera intrinsic parameters (default)\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -159,7 +159,7 @@ int main(int argc, char **argv)
     // Build the view corresponding to the image
     View v( iter->m_sImageName, id_view, id_intrinsic, id_pose, width, height);
     // Add the view to the sfm_container
-    views[v.id_view] = v;
+    views[v.id_view] = std::make_shared<View>(v);
 
     // Add intrinsic related to the image (if any)
     if (intrinsic == NULL)

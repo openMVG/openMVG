@@ -1,11 +1,12 @@
 
-// Copyright (c) 2012, 2013, 2014 Pierre MOULON.
+// Copyright (c) 2012, 2013, 2014, 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "software/SfMViewer/document.h"
+#include "openMVG/sfm/sfm.hpp"
+
 #include "software/SfM/io_readGT.hpp"
 #include "software/SfM/tools_precisionEvaluationToGt.hpp"
 #include "software/SfM/SfMPlyHelper.hpp"
@@ -105,7 +106,7 @@ int main(int argc, char **argv)
   // Quality evaluation
   //---------------------------------------
 
-  // Load GT:
+  // Load GT camera rotations & positions [R|C]:
 
   std::map< std::string, std::pair<Mat3, Vec3> > map_Rt_gt;
   std::map< size_t, PinholeCamera> map_Cam_gt;
@@ -117,28 +118,35 @@ int main(int argc, char **argv)
     std::cout << map_Cam_gt.size() << " gt cameras have been found" << std::endl;
   }
 
-  //-- Load the camera of the computed directory
-  Document doc;
-  if (!doc.load(sComputedDirectory))
+  //-- Load the camera that we have to evaluate
+  SfM_Data sfm_data;
+  if (!Load(sfm_data, sComputedDirectory, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS))) {
+    std::cerr << std::endl
+      << "The input SfM_Data file \""<< sComputedDirectory << "\" cannot be read." << std::endl;
+    return EXIT_FAILURE;
+  }
+  // Assert that GT and loaded scene have the same camera count
+  if (map_Cam_gt.size() != sfm_data.getPoses().size())
   {
-    std::cerr << "\nCannot read input calibration." << std::endl;
+    std::cerr << std::endl
+      << "There is missing camera in the loaded scene." << std::endl;
+    return EXIT_FAILURE;
   }
 
   // Prepare data for comparison (corresponding camera centers and rotations)
-  const std::map<size_t, PinholeCamera> & _map_camera = doc._map_camera;
+  Poses::const_iterator iter_loaded_poses = sfm_data.getPoses().begin();
   std::vector<Vec3> vec_camPosGT, vec_C;
   std::vector<Mat3> vec_camRotGT, vec_camRot;
   for(std::map< size_t, PinholeCamera>::const_iterator iterGT = map_Cam_gt.begin();
-    iterGT != map_Cam_gt.end(); ++iterGT)
+    iterGT != map_Cam_gt.end(); ++iterGT, ++iter_loaded_poses)
   {
-    size_t index = iterGT->first;
+    // GT
     vec_camPosGT.push_back(iterGT->second._C);
     vec_camRotGT.push_back(iterGT->second._R);
 
     //-- Computed
-    std::map<size_t, PinholeCamera >::const_iterator iterComputed = _map_camera.find(index);
-    vec_C.push_back(iterComputed->second._C);
-    vec_camRot.push_back(iterComputed->second._R);
+    vec_C.push_back(iter_loaded_poses->second.center());
+    vec_camRot.push_back(iter_loaded_poses->second.rotation());
   }
 
   // Visual output of the camera location

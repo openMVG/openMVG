@@ -8,6 +8,7 @@
 #ifndef IO_READ_GT_HPP
 #define IO_READ_GT_HPP
 
+#include "openMVG/cameras/PinholeCamera.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <fstream>
@@ -119,7 +120,7 @@ static bool read_Strecha_Camera(const std::string & camName, PinholeCamera & cam
 @param[in] Suffix: use "bin" for openMVG or "png.camera" for Strechas data.
 @param[out] vec_filenames: read cameras names
 @param[out] map_Rt_gt: Map of poses
-@param[out] map_camerasGT Map of PinholeCameras. 
+@param[out] map_camerasGT Map of PinholeCameras.
 **/
 bool readGt(
   bool (*fcnReadCamPtr)(const std::string &, PinholeCamera &), //pointer to the function reading a camera

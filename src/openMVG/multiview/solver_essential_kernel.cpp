@@ -56,8 +56,8 @@ void EightPointRelativePoseSolver::Solve(const Mat &x1, const Mat &x2, vector<Ma
   if (x1.cols() > 8) {
     Eigen::JacobiSVD<Mat3> USV(E, Eigen::ComputeFullU | Eigen::ComputeFullV);
     Vec3 d = USV.singularValues();
-    double a = d[0];
-    double b = d[1];
+    const double a = d[0];
+    const double b = d[1];
     d << (a+b)/2., (a+b)/2., 0.0;
     E = USV.matrixU() * d.asDiagonal() * USV.matrixV().transpose();
   }

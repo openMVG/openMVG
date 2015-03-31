@@ -17,7 +17,7 @@
 
 namespace openMVG{
 
-class ColorHarmonizationEngineGlobal : public ReconstructionEngine
+class ColorHarmonizationEngineGlobal : public OldReconstructionEngine
 {
 public:
   ColorHarmonizationEngineGlobal( const std::string & sSfM_Data_Filename,

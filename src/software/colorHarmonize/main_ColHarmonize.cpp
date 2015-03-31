@@ -71,9 +71,9 @@ int main( int argc, char **argv )
   openMVG::Timer timer;
 
   sMatchesDir = stlplus::folder_part(sMatchesFile);
-  std::auto_ptr<ReconstructionEngine> m_colorHarmonizeEngine;
+  std::auto_ptr<OldReconstructionEngine> m_colorHarmonizeEngine;
   {
-    m_colorHarmonizeEngine = std::auto_ptr<ReconstructionEngine>(
+    m_colorHarmonizeEngine = std::auto_ptr<OldReconstructionEngine>(
       new ColorHarmonizationEngineGlobal(sSfM_Data_Filename,
       sMatchesDir,
       sMatchesFile,

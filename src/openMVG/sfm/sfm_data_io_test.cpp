@@ -27,7 +27,7 @@ SfM_Data create_test_scene(IndexT viewsCount, bool bSharedIntrinsic)
     os << "dataset/" << i << ".jpg";
     const IndexT id_view = i, id_pose = i;
     const IndexT id_intrinsic = bSharedIntrinsic ? 0 : i; //(shared or not intrinsics)
-    sfm_data.views[id_view] = View(os.str(),id_view, id_intrinsic, id_pose, 1000,1000);
+    sfm_data.views[id_view] = std::make_shared<View>(os.str(),id_view, id_intrinsic, id_pose, 1000, 1000);
 
     // Add poses
     sfm_data.poses[i] = Pose3();

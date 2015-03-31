@@ -15,12 +15,10 @@
 #include "openMVG/stl/stl.hpp"
 
 #include "openMVG/sfm/sfm.hpp"
+#include "openMVG/graph/graph.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
-
-#include "software/globalSfM/indexedImageGraph.hpp"
-#include "software/globalSfM/indexedImageGraphExport.hpp"
 
 //-- Selection Methods
 #include "openMVG/color_harmonization/selection_fullFrame.hpp"
@@ -31,9 +29,6 @@
 #include "openMVG/color_harmonization/global_quantile_gain_offset_alignment.hpp"
 
 #include "openMVG/system/timer.hpp"
-
-#include "openMVG/graph/connectedComponent.hpp"
-#include "lemon/list_graph.h"
 
 #include "third_party/progress/progress.hpp"
 
@@ -61,7 +56,7 @@ ColorHarmonizationEngineGlobal::ColorHarmonizationEngineGlobal(
   const string & sOutDirectory,
   const int selectionMethod,
   const int imgRef):
-  ReconstructionEngine( sSfM_Data_Filename, sMatchesPath, sOutDirectory ),
+  OldReconstructionEngine( sSfM_Data_Filename, sMatchesPath, sOutDirectory ),
   _selectionMethod( selectionMethod ),
   _imgRef( imgRef ),
   _sMatchesFile(sMatchesFile)
@@ -116,11 +111,10 @@ bool ColorHarmonizationEngineGlobal::Process()
   }
 
   {
-    typedef lemon::ListGraph Graph;
-    imageGraph::indexedImageGraph putativeGraph(_map_Matches, _vec_fileNames);
+    graphUtils::indexedGraph putativeGraph(getPairs(_map_Matches));
 
     // Save the graph before cleaning:
-    imageGraph::exportToGraphvizData(
+    graphUtils::exportToGraphvizData(
       stlplus::create_filespec(_sOutDirectory, "input_graph_poor_supportRemoved"),
       putativeGraph.g);
   }
@@ -476,8 +470,9 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
   for (Views::const_iterator iter = sfm_data.getViews().begin();
     iter != sfm_data.getViews().end(); ++iter)
   {
-    _vec_fileNames.push_back( stlplus::create_filespec(sfm_data.s_root_path, iter->second.s_Img_path));
-    _vec_imageSize.push_back( std::make_pair( iter->second.ui_width,iter->second.ui_height ));
+    const View * v = iter->second.get();
+    _vec_fileNames.push_back( stlplus::create_filespec(sfm_data.s_root_path, v->s_Img_path));
+    _vec_imageSize.push_back( std::make_pair( v->ui_width, v->ui_height ));
   }
 
   // b. Read matches
@@ -502,13 +497,10 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
     }
   }
 
-  using namespace lemon;
-
-  typedef lemon::ListGraph Graph;
-  imageGraph::indexedImageGraph putativeGraph( _map_Matches, _vec_fileNames );
+  graphUtils::indexedGraph putativeGraph(getPairs(_map_Matches));
 
   // Save the graph before cleaning:
-  imageGraph::exportToGraphvizData(
+  graphUtils::exportToGraphvizData(
       stlplus::create_filespec( _sOutDirectory, "initialGraph" ),
       putativeGraph.g );
 
@@ -520,24 +512,23 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
   // Create a graph from pairwise correspondences:
   // - keep the largest connected component.
 
-  typedef lemon::ListGraph Graph;
-  imageGraph::indexedImageGraph putativeGraph(_map_Matches, _vec_fileNames);
+  graphUtils::indexedGraph putativeGraph(getPairs(_map_Matches));
 
   // Save the graph before cleaning:
-  imageGraph::exportToGraphvizData(
+  graphUtils::exportToGraphvizData(
     stlplus::create_filespec(_sOutDirectory, "initialGraph"),
     putativeGraph.g);
 
-  int connectedComponentCount = lemon::countConnectedComponents(putativeGraph.g);
+  const int connectedComponentCount = lemon::countConnectedComponents(putativeGraph.g);
   std::cout << "\n"
     << "ColorHarmonizationEngineGlobal::CleanGraph() :: => connected Component cardinal: "
     << connectedComponentCount << std::endl;
-  using namespace openMVG::imageGraph;
+
   if (connectedComponentCount > 1)  // If more than one CC, keep the largest
   {
     // Search the largest CC index
     const std::map<IndexT, std::set<lemon::ListGraph::Node> > map_subgraphs =
-      openMVG::graphUtils::exportGraphToMapSubgraphs<Graph, IndexT>(putativeGraph.g);
+      openMVG::graphUtils::exportGraphToMapSubgraphs<lemon::ListGraph, IndexT>(putativeGraph.g);
     size_t count = std::numeric_limits<size_t>::min();
     std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iterLargestCC = map_subgraphs.end();
     for(std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
@@ -562,7 +553,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
         iter2 != ccSet.end(); ++iter2)
       {
         // Remove all outgoing edges
-        for (Graph::OutArcIt e(putativeGraph.g, *iter2); e!=INVALID; ++e)
+        for (lemon::ListGraph::OutArcIt e(putativeGraph.g, *iter2); e!=INVALID; ++e)
         {
           putativeGraph.g.erase(e);
           const IndexT Idu = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.target(e)];
@@ -584,7 +575,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
   }
 
   // Save the graph after cleaning:
-  imageGraph::exportToGraphvizData(
+  graphUtils::exportToGraphvizData(
     stlplus::create_filespec(_sOutDirectory, "cleanedGraph"),
     putativeGraph.g);
 

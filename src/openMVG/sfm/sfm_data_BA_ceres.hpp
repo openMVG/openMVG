@@ -15,7 +15,7 @@
 namespace openMVG {
 
 /// Create the appropriate cost functor according the provided input camera intrinsic model
-ceres::CostFunction * IntrinsicsToCostFunction(IntrinsicBase * intrinsic, const Vec2 & observation)
+static ceres::CostFunction * IntrinsicsToCostFunction(IntrinsicBase * intrinsic, const Vec2 & observation)
 {
   switch(intrinsic->getType())
   {
@@ -39,7 +39,38 @@ ceres::CostFunction * IntrinsicsToCostFunction(IntrinsicBase * intrinsic, const 
 class Bundle_Adjustment_Ceres : public Bundle_Adjustment
 {
   public:
-  bool bAdjust(
+  struct BA_options
+  {
+    bool _bVerbose;
+    unsigned int _nbThreads;
+    bool _bCeres_Summary;
+    ceres::LinearSolverType _linear_solver_type;
+    ceres::PreconditionerType _preconditioner_type;
+
+    BA_options(const bool bVerbose = true, bool bmultithreaded = true)
+      :_bVerbose(bVerbose)
+    {
+      #ifdef OPENMVG_USE_OPENMP
+        _nbThreads = omp_get_max_threads();
+      #endif // OPENMVG_USE_OPENMP
+      if (!bmultithreaded)
+        _nbThreads = 1;
+
+      _bCeres_Summary = false;
+
+      _linear_solver_type = ceres::SPARSE_SCHUR;
+      _preconditioner_type = ceres::JACOBI;
+    }
+  };
+  private:
+    BA_options _openMVG_options;
+
+  public:
+  Bundle_Adjustment_Ceres(Bundle_Adjustment_Ceres::BA_options options = BA_options())
+    : _openMVG_options(options)
+  {}
+
+  bool Adjust(
     SfM_Data & sfm_data, // the SfM scene to refine
     bool bRefineRotations = true, // tell if pose rotations will be refined
     bool bRefineTranslations = true, // tell if the pose translation will be refined
@@ -130,7 +161,7 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
       }
       else
       {
-        std::cout << "Unsupported camera type." << std::endl;
+        std::cerr << "Unsupported camera type." << std::endl;
       }
     }
 
@@ -148,19 +179,19 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
         itObs != obs.end(); ++itObs)
       {
         // Build the residual block corresponding to the track observation:
-        const View & view = sfm_data.views[itObs->first];
+        const View * view = sfm_data.views[itObs->first].get();
 
         // Each Residual block takes a point and a camera as input and outputs a 2
         // dimensional residual. Internally, the cost function stores the observed
         // image location and compares the reprojection against the observation.
         ceres::CostFunction* cost_function =
-          IntrinsicsToCostFunction(sfm_data.intrinsics[view.id_intrinsic].get(), itObs->second.x);
+          IntrinsicsToCostFunction(sfm_data.intrinsics[view->id_intrinsic].get(), itObs->second.x);
 
         if (cost_function)
           problem.AddResidualBlock(cost_function,
             p_LossFunction,
-            &map_intrinsics[view.id_intrinsic][0],
-            &map_poses[view.id_pose][0],
+            &map_intrinsics[view->id_intrinsic][0],
+            &map_poses[view->id_pose][0],
             iterTracks->second.X.data()); //Do we need to copy 3D point to avoid false motion, if failure ?
       }
     }
@@ -168,49 +199,42 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
     // Configure a BA engine and run it
     //  Make Ceres automatically detect the bundle structure.
     ceres::Solver::Options options;
-    options.preconditioner_type = ceres::JACOBI;
-    options.linear_solver_type = ceres::SPARSE_SCHUR;
-    if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
-      options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
-    else
-    {
-      if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
-        options.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
-      else
-      {
-        // No sparse backend for Ceres.
-        // Use dense solving
-        options.linear_solver_type = ceres::DENSE_SCHUR;
-      }
-    }
+    options.preconditioner_type = _openMVG_options._preconditioner_type;
+    options.linear_solver_type = _openMVG_options._linear_solver_type;
     options.minimizer_progress_to_stdout = false;
     options.logging_type = ceres::SILENT;
-  #ifdef OPENMVG_USE_OPENMP
-    options.num_threads = omp_get_max_threads();
-    options.num_linear_solver_threads = omp_get_max_threads();
-  #endif // OPENMVG_USE_OPENMP
+    options.num_threads = _openMVG_options._nbThreads;
+    options.num_linear_solver_threads = _openMVG_options._nbThreads;
 
     // Solve BA
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
-    //std::cout << summary.FullReport() << std::endl;
+    if (_openMVG_options._bCeres_Summary)
+      std::cout << summary.FullReport() << std::endl;
 
     // If no error, get back refined parameters
     if (!summary.IsSolutionUsable())
     {
-      std::cout << "Bundle Adjustment failed." << std::endl;
+      if (_openMVG_options._bVerbose)
+        std::cout << "Bundle Adjustment failed." << std::endl;
       return false;
     }
     else // Solution is usable
     {
-      // Display statistics about the minimization
-      std::cout << std::endl
-        << "Bundle Adjustment statistics (approximated RMSE):\n"
-        << " #tracks: " << sfm_data.structure.size() << ".\n"
-        << " #residuals: " << summary.num_residuals << "\n"
-        << " Initial RMSE: " << std::sqrt( summary.initial_cost / summary.num_residuals) << "\n"
-        << " Final RMSE: " << std::sqrt( summary.final_cost / summary.num_residuals) << "\n"
-        << std::endl;
+      if (_openMVG_options._bVerbose)
+      {
+        // Display statistics about the minimization
+        std::cout << std::endl
+          << "Bundle Adjustment statistics (approximated RMSE):\n"
+          << " #views: " << sfm_data.views.size() << "\n"
+          << " #poses: " << sfm_data.poses.size() << "\n"
+          << " #intrinsics: " << sfm_data.intrinsics.size() << "\n"
+          << " #tracks: " << sfm_data.structure.size() << "\n"
+          << " #residuals: " << summary.num_residuals << "\n"
+          << " Initial RMSE: " << std::sqrt( summary.initial_cost / summary.num_residuals) << "\n"
+          << " Final RMSE: " << std::sqrt( summary.final_cost / summary.num_residuals) << "\n"
+          << std::endl;
+      }
 
       // Update camera poses with refined data
       for (Poses::iterator itPose = sfm_data.poses.begin();

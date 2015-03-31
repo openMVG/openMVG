@@ -15,11 +15,11 @@ namespace openMVG{
 /// Basic Reconstruction Engine.
 /// Provide essentially path to the data.
 /// Process Function handle the reconstruction.
-class ReconstructionEngine
+class OldReconstructionEngine
 {
 public:
 
-  ReconstructionEngine(const std::string & sSfM_Data_Path,
+  OldReconstructionEngine(const std::string & sSfM_Data_Path,
     const std::string & smatchesPath,
     const std::string & soutDirectory)
     :_sSfM_Data_Path(sSfM_Data_Path),

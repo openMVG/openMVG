@@ -278,7 +278,7 @@ int main(int argc, char **argv)
     }
 
     // Add the view to the sfm_container
-    views[v.id_view] = v;
+    views[v.id_view] = std::make_shared<View>(v);
   }
 
   // Group camera that share common properties if desired (leads to more faster & stable BA).
@@ -325,12 +325,13 @@ int main(int argc, char **argv)
       intrinsic_updated[old_new_reindex[iterIntrinsic->first]] = intrinsics[iterIntrinsic->first];
     }
     intrinsics.swap(intrinsic_updated); // swap camera intrinsics
+    // Update intrinsic ids
     for (Views::iterator iterView = views.begin();
       iterView != views.end();
       ++iterView)
     {
-      View & v = iterView->second;
-      v.id_intrinsic = old_new_reindex[v.id_intrinsic];
+      View * v = iterView->second.get();
+      v->id_intrinsic = old_new_reindex[v->id_intrinsic];
     }
   }
 

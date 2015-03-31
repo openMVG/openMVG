@@ -5,18 +5,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_INDEXED_IMAGE_GRAPH_EXPORT_H_
-#define OPENMVG_INDEXED_IMAGE_GRAPH_EXPORT_H_
+#ifndef OPENMVG_GRAPH_EXPORT_H_
+#define OPENMVG_GRAPH_EXPORT_H_
 
-#include "software/globalSfM/indexedImageGraph.hpp"
-
-#include <lemon/core.h>
+//#include <lemon/core.h>
 
 #include <iostream>
 #include <fstream>
 
-namespace openMVG  {
-namespace imageGraph  {
+namespace openMVG {
+namespace graphUtils  {
+
   using namespace std;
 
 // Export an Image connection graph
@@ -46,18 +45,17 @@ bool exportToGraphvizFormat_Nodal(
 
   //-- Export arc (as the graph is bi-directional, export arc only one time)
 
-  map< std::pair<size_t,size_t>, size_t > map_arcs;
+  map< std::pair<IndexT,IndexT>, IndexT > map_arcs;
   for(typename GraphT::ArcIt e(g); e!=lemon::INVALID; ++e) {
-    if( map_arcs.end() == map_arcs.find(std::make_pair(size_t (g.id(g.source(e))), size_t (g.id(g.target(e)))))
+    if( map_arcs.end() == map_arcs.find(std::make_pair(IndexT(g.id(g.source(e))), IndexT(g.id(g.target(e)))))
       &&
-      map_arcs.end() == map_arcs.find(std::make_pair(size_t (g.id(g.target(e))), size_t (g.id(g.source(e))))))
+      map_arcs.end() == map_arcs.find(std::make_pair(IndexT(g.id(g.target(e))), IndexT(g.id(g.source(e))))))
     {
-      map_arcs[std::pair<size_t,size_t>(size_t (g.id(g.source(e))),
-        size_t (g.id(g.target(e)))) ] = 1;
+      map_arcs[std::make_pair(IndexT(g.id(g.source(e))),IndexT(g.id(g.target(e)))) ] = 1;
     }
   }
   //os << "edge [style=bold]" << endl;
-  for ( map< std::pair<size_t,size_t>, size_t >::const_iterator iter = map_arcs.begin();
+  for ( map< std::pair<IndexT,IndexT>, IndexT >::const_iterator iter = map_arcs.begin();
     iter != map_arcs.end();
     ++iter)
   {
@@ -99,19 +97,19 @@ bool exportToGraphvizFormat_Image(
   }
 
   //Export arc value
-  map< std::pair<size_t,size_t>, size_t > map_arcs;
+  map< std::pair<IndexT,IndexT>, IndexT > map_arcs;
   for(typename GraphT::ArcIt e(g); e!=lemon::INVALID; ++e) {
-    if( map_arcs.end() == map_arcs.find(std::make_pair(size_t (g.id(g.source(e))), size_t (g.id(g.target(e)))))
+    if( map_arcs.end() == map_arcs.find(std::make_pair(IndexT(g.id(g.source(e))), IndexT(g.id(g.target(e)))))
       &&
-      map_arcs.end() == map_arcs.find(std::make_pair(size_t (g.id(g.target(e))), size_t (g.id(g.source(e))))))
+      map_arcs.end() == map_arcs.find(std::make_pair(IndexT(g.id(g.target(e))), IndexT(g.id(g.source(e))))))
     {
-      map_arcs[std::pair<size_t,size_t>(size_t (g.id(g.source(e))),
-        size_t (g.id(g.target(e)))) ] = edgeMap[e];
+      map_arcs[std::make_pair(IndexT(g.id(g.source(e))),
+        IndexT(g.id(g.target(e)))) ] = edgeMap[e];
     }
   }
 
   os << "edge [style=bold]" << endl;
-  for ( map< std::pair<size_t,size_t>, size_t >::const_iterator iter = map_arcs.begin();
+  for ( map< std::pair<IndexT,IndexT>, IndexT>::const_iterator iter = map_arcs.begin();
     iter != map_arcs.end();
     ++iter)
   {
@@ -134,7 +132,7 @@ void exportToGraphvizData(const std::string& sfile, const GraphT & graph){
   //Prepare Data
 
   std::ofstream file(sfile.c_str());
-  openMVG::imageGraph::exportToGraphvizFormat_Nodal(graph, file);
+  openMVG::graphUtils::exportToGraphvizFormat_Nodal(graph, file);
   file.close();
 
   //Use Graphviz
@@ -143,6 +141,7 @@ void exportToGraphvizData(const std::string& sfile, const GraphT & graph){
   (void)ret;
 }
 
-} // namespace imageGraph
+} // namespace graphUtils
 } // namespace openMVG
-#endif // OPENMVG_INDEXED_IMAGE_GRAPH_EXPORT_H_
+
+#endif // OPENMVG_GRAPH_EXPORT_H_

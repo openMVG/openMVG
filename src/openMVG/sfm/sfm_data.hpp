@@ -7,6 +7,7 @@
 #ifndef OPENMVG_SFM_DATA_HPP
 #define OPENMVG_SFM_DATA_HPP
 
+#include "openMVG/types.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/cameras/cameras.hpp"
 
@@ -15,7 +16,7 @@ namespace openMVG {
 using namespace openMVG::geometry;
 
 /// Define a collection of View
-typedef Hash_Map<IndexT, View> Views;
+typedef Hash_Map<IndexT, std::shared_ptr<View> > Views;
 
 /// Define a collection of Pose (indexed by View::id_pose)
 typedef Hash_Map<IndexT, Pose3> Poses;

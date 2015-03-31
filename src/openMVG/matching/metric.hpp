@@ -82,7 +82,7 @@ struct L2_Vectorized
     }
 };
 
-#ifdef USE_SSE
+#ifdef OPENVMG_USE_SSE
 
 namespace optim_ss2{
 
@@ -144,7 +144,7 @@ struct L2_Vectorized<float>
     }
 };
 
-#endif // USE_SSE
+#endif // OPENVMG_USE_SSE
 
 }  // namespace matching
 }  // namespace openMVG

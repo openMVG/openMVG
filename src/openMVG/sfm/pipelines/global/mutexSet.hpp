@@ -1,5 +1,5 @@
 
-// Copyright (c) 2014 Pierre MOULON.
+// Copyright (c) 2014, 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -27,14 +27,14 @@ template <typename T>
 class MutexSet {
 
 public:
-    void discard(const T & value) {
+    void insert(const T & value) {
       lock_guardT guard(m_Mutex);
       m_Set.insert(value);
     }
 
-    bool isDiscarded(const T & value) const {
+    int count(const T & value) const {
       lock_guardT guard(m_Mutex);
-      return m_Set.find(value) != m_Set.end();
+      return m_Set.count(value);
     }
 
     size_t size() const {

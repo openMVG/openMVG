@@ -199,8 +199,9 @@ int main(int argc, char **argv)
         iterViews != sfm_data.views.end();
         ++iterViews)
     {
+      const View * view = iterViews->second.get();
       const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
-        iterViews->second.s_Img_path);
+        view->s_Img_path);
       const std::string sFeat = stlplus::create_filespec(sOutDir,
         stlplus::basename_part(sView_filename), "feat");
       const std::string sDesc = stlplus::create_filespec(sOutDir,
@@ -247,10 +248,10 @@ int main(int argc, char **argv)
     iter != sfm_data.getViews().end();
     ++iter)
   {
+    const View * v = iter->second.get();
     vec_fileNames.push_back(stlplus::create_filespec(sfm_data.s_root_path,
-        iter->second.s_Img_path));
-    vec_imagesSize.push_back( std::make_pair(
-      iter->second.ui_width, iter->second.ui_height) );
+        v->s_Img_path));
+    vec_imagesSize.push_back( std::make_pair( v->ui_width, v->ui_height) );
   }
 
   std::cout << std::endl << " - PUTATIVE MATCHES - " << std::endl;
@@ -337,9 +338,10 @@ int main(int argc, char **argv)
           iter != sfm_data.getViews().end();
           ++iter, ++cpt)
         {
-          if (sfm_data.getIntrinsics().count(iter->second.id_intrinsic))
+          const View * v = iter->second.get();
+          if (sfm_data.getIntrinsics().count(v->id_intrinsic))
           {
-            const IntrinsicBase * ptrIntrinsic = sfm_data.getIntrinsics().find(iter->second.id_intrinsic)->second.get();
+            const IntrinsicBase * ptrIntrinsic = sfm_data.getIntrinsics().find(v->id_intrinsic)->second.get();
             switch (ptrIntrinsic->getType())
             {
               case PINHOLE_CAMERA:

@@ -26,7 +26,7 @@ namespace openMVG{
 //Estimate E -> So R,t for the first pair
 // Maintain a track list that explain 3D reconstructed scene
 // Add images with Resection with the 3D tracks.
-class IncrementalReconstructionEngine : public ReconstructionEngine
+class IncrementalReconstructionEngine : public OldReconstructionEngine
 {
 public:
   IncrementalReconstructionEngine(

@@ -43,7 +43,7 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole) {
 
   // Call the BA interface and let it refine (Structure and Camera parameters [Intrinsics|Motion])
   std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
-  EXPECT_TRUE( ba_object->bAdjust(sfm_data) );
+  EXPECT_TRUE( ba_object->Adjust(sfm_data) );
 
   const double dResidual_after = RMSE(sfm_data);
   EXPECT_TRUE( dResidual_before > dResidual_after);
@@ -63,7 +63,7 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_Radial_K1) {
 
   // Call the BA interface and let it refine (Structure and Camera parameters [Intrinsics|Motion])
   std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
-  EXPECT_TRUE( ba_object->bAdjust(sfm_data) );
+  EXPECT_TRUE( ba_object->Adjust(sfm_data) );
 
   const double dResidual_after = RMSE(sfm_data);
   EXPECT_TRUE( dResidual_before > dResidual_after);
@@ -83,7 +83,7 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_Radial_K3) {
 
   // Call the BA interface and let it refine (Structure and Camera parameters [Intrinsics|Motion])
   std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
-  EXPECT_TRUE( ba_object->bAdjust(sfm_data) );
+  EXPECT_TRUE( ba_object->Adjust(sfm_data) );
 
   const double dResidual_after = RMSE(sfm_data);
   EXPECT_TRUE( dResidual_before > dResidual_after);
@@ -103,9 +103,9 @@ double RMSE(const SfM_Data & sfm_data)
     for(Observations::const_iterator itObs = obs.begin();
       itObs != obs.end(); ++itObs, ++index)
     {
-      const View & view = sfm_data.getViews().find(itObs->first)->second;
-      const Pose3 & pose = sfm_data.getPoses().find(view.id_pose)->second;
-      const std::shared_ptr<IntrinsicBase> intrinsic = sfm_data.getIntrinsics().find(view.id_intrinsic)->second;
+      const View * view = sfm_data.getViews().find(itObs->first)->second.get();
+      const Pose3 & pose = sfm_data.getPoses().find(view->id_pose)->second;
+      const std::shared_ptr<IntrinsicBase> intrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic)->second;
       const Vec2 residual = intrinsic->residual(pose, iterTracks->second.X, itObs->second.x);
       vec.push_back( residual(0) );
       vec.push_back( residual(1) );
@@ -136,7 +136,7 @@ SfM_Data getInputScene(const NViewDataSet & d, const nViewDatasetConfigurator & 
   for (int i = 0; i < nviews; ++i)
   {
     const IndexT id_view = i, id_pose = i, id_intrinsic = 0; //(shared intrinsics)
-    sfm_data.views[i] = View("", id_view, id_intrinsic, id_pose, config._cx *2, config._cy *2);
+    sfm_data.views[i] = std::make_shared<View>("", id_view, id_intrinsic, id_pose, config._cx *2, config._cy *2);
   }
 
   // 2. Poses

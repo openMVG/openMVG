@@ -61,7 +61,6 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes(
   }
   */
 
-
   // Remove not bi-edge connected edges
   typedef Graph::EdgeMap<bool> EdgeMapAlias;
   EdgeMapAlias cutMap(putativeGraph.g);
@@ -140,8 +139,7 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes(
     imageGraph::exportToGraphvizData(
       stlplus::create_filespec(_sOutDirectory, "cleanedGraph"),
       putativeGraph.g);
-  }
-  */
+  }*/
 
   std::cout << "\n"
     << "Cardinal of nodes: " << lemon::countNodes(putativeGraph.g) << "\n"

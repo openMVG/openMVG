@@ -236,7 +236,7 @@ static bool L2RotationAveraging_Refine(
   // Setup the problem and a robust loss function.
   ceres::Problem problem;
   const double robust_loss_width = 0.03; // 2° error along one axis (perhaps a bit too strict)
-  
+
   for (size_t ii = 0; ii < vec_relativeRot.size(); ++ii)
   {
     const int i = vec_relativeRot[ii].i;
@@ -267,7 +267,7 @@ static bool L2RotationAveraging_Refine(
 
   ceres::Solver::Summary summary;
   ceres::Solve(solverOptions, &problem, &summary);
-  std::cout << summary.FullReport();
+  // std::cout << summary.FullReport() << std::endl;
 
   if (summary.IsSolutionUsable())
   {

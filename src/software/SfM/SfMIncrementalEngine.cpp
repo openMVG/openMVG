@@ -41,7 +41,7 @@ IncrementalReconstructionEngine::IncrementalReconstructionEngine(
   const std::string & sMatchesPath,
   const std::string & sOutDirectory,
   bool bHtmlReport)
-  : ReconstructionEngine(sSfM_Data_Path, sMatchesPath, sOutDirectory),
+  : OldReconstructionEngine(sSfM_Data_Path, sMatchesPath, sOutDirectory),
   _initialpair(std::pair<size_t,size_t>(0,0)),
   _bRefinePPandDisto(true),
   _bUseBundleAdjustment(true)
@@ -200,7 +200,7 @@ bool IncrementalReconstructionEngine::ReadInputData()
   for (Views::const_iterator iter = sfm_data.getViews().begin();
     iter != sfm_data.getViews().end(); ++iter, ++idx)
   {
-    IndexT id_intrinsic = iter->second.id_intrinsic;
+    IndexT id_intrinsic = iter->second.get()->id_intrinsic;
 
     if (id_intrinsic == UndefinedIndexT) // undefined camera intrinsic, we have to add a new one
       set_toHandle.insert(idx);
@@ -219,7 +219,7 @@ bool IncrementalReconstructionEngine::ReadInputData()
     }
 
     SfMIO::CameraInfo camInfo;
-    camInfo.m_sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.s_Img_path);
+    camInfo.m_sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.get()->s_Img_path);
     camInfo.m_intrinsicId = id_intrinsic;
     _vec_camImageNames.push_back( camInfo );
     _set_remainingImageId.insert(idx);
@@ -263,8 +263,9 @@ bool IncrementalReconstructionEngine::ReadInputData()
     SfMIO::IntrinsicCameraInfo intrinsicCamInfo;
     Views::const_iterator iterView = sfm_data.getViews().begin();
     std::advance(iterView, *iter);
-    intrinsicCamInfo.m_w = iterView->second.ui_width;
-    intrinsicCamInfo.m_h = iterView->second.ui_height;
+    const View * view = iterView->second.get();
+    intrinsicCamInfo.m_w = view->ui_width;
+    intrinsicCamInfo.m_h = view->ui_height;
     intrinsicCamInfo.m_bKnownIntrinsic = false;
 
     // Update the camInfo index
