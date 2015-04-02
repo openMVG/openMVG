@@ -172,6 +172,111 @@ bool IncrementalReconstructionEngine::Process()
     jsxGraph.close();
     _htmlDocStream->pushInfo(jsxGraph.toStr());
   }
+
+  //Export the scene as SfM_Data
+  {
+    // Load the input scenes VIEWS
+    SfM_Data sfm_data;
+    if (!Load(sfm_data, _sSfM_Data_Path, ESfM_Data(VIEWS))) {
+      std::cerr << std::endl
+        << "The input file \""<< _sSfM_Data_Path << "\" cannot be read" << std::endl;
+      return false;
+    }
+
+    //--
+    // Convert data to the SfM_Data container
+    //--
+
+    // Poses & intrinsics
+    {
+      for (reconstructorHelper::Map_BrownPinholeCamera::const_iterator iter =
+        _reconstructorData.map_Camera.begin();
+        iter != _reconstructorData.map_Camera.end();
+        ++iter)
+      {
+        const BrownPinholeCamera & cam = iter->second;
+        const std::string basenameImage = stlplus::basename_part(_vec_camImageNames[iter->first].m_sImageName);
+
+        // Go along the views, find the same basename to find the corresponding view
+        for (Views::iterator iterV = sfm_data.views.begin();
+          iterV != sfm_data.views.end(); ++iterV)
+        {
+          View * view = iterV->second.get();
+          const std::string viewName = stlplus::basename_part(view->s_Img_path);
+          if (viewName == basenameImage)
+          {
+            // Export the pose
+            const Pose3 pose(cam._R, cam._C);
+            sfm_data.poses[view->id_pose] = pose;
+
+            // update intrinsic id
+            // (since it can change if the camera was undefined at the start and now defined after pose estimation)
+            view->id_intrinsic = _map_IntrinsicIdPerImageId[iter->first];
+
+            // Export intrinsic if not already filled
+            if (sfm_data.getIntrinsics().find(view->id_intrinsic) == sfm_data.getIntrinsics().end())
+            {
+              const openMVG::SfMIO::IntrinsicCameraInfo & intrinsicCam = _vec_intrinsicGroups[_map_IntrinsicIdPerImageId[iter->first]];
+              sfm_data.intrinsics[view->id_intrinsic] =
+                std::make_shared<Pinhole_Intrinsic_Radial_K3>(
+                  intrinsicCam.m_w, intrinsicCam.m_h, cam._K(0,0), cam._K(0,2), cam._K(1,2), cam._k1, cam._k2, cam._k3);
+            }
+          }
+        }
+      }
+    }
+
+    // Fill the structure
+    {
+      size_t pointCount = 0;
+      for (std::set<size_t>::const_iterator iter = _reconstructorData.set_trackId.begin();
+        iter != _reconstructorData.set_trackId.end();
+        ++iter, ++pointCount)
+      {
+        const size_t trackId = *iter;
+
+        if (_map_reconstructed.find(trackId) == _map_reconstructed.end())
+          continue; //Invalid track (no corresponding 3D points)
+
+        //--
+        // Look through the track and create a landmark
+        //--
+        Landmark landmark;
+        landmark.X = _reconstructorData.map_3DPoints.find(trackId)->second;
+
+        const tracks::submapTrack & track = _map_reconstructed.find(trackId)->second;
+
+        for( tracks::submapTrack::const_iterator iterTrack = track.begin();
+          iterTrack != track.end();
+          ++iterTrack)
+        {
+          Observations obs;
+          const size_t imageId = iterTrack->first;
+          if (_reconstructorData.map_Camera.find(imageId) != _reconstructorData.map_Camera.end())
+          {
+            const size_t imageId = iterTrack->first;
+            const size_t featId = iterTrack->second;
+            const std::vector<SIOPointFeature> & vec_feats = _map_feats[imageId];
+            const SIOPointFeature & ptFeat = vec_feats[featId];
+
+            obs[imageId] = Observation(ptFeat.coords().cast<double>(), iterTrack->second);;
+          }
+          landmark.obs = obs;
+          sfm_data.structure[trackId] = landmark;
+        }
+      }
+    }
+
+    // Save the file
+    Save(sfm_data,
+      stlplus::create_filespec(_sOutDirectory, "sfm_data", ".json"),
+      ESfM_Data(ALL));
+
+    Save(sfm_data,
+      stlplus::create_filespec(_sOutDirectory, "cloud_and_poses", ".ply"),
+      ESfM_Data(ALL));
+
+  }
   return true;
 }
 
@@ -185,7 +290,7 @@ bool IncrementalReconstructionEngine::ReadInputData()
     return false;
   }
 
-   // a. Read input SfM_Scene
+  // a. Read input SfM_Scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, _sSfM_Data_Path, ESfM_Data(VIEWS|INTRINSICS))) {
     std::cerr << std::endl
@@ -238,6 +343,8 @@ bool IncrementalReconstructionEngine::ReadInputData()
     switch (ptrIntrinsic->getType())
     {
       case PINHOLE_CAMERA:
+      case PINHOLE_CAMERA_RADIAL1:
+      case PINHOLE_CAMERA_RADIAL3:
       {
         const Pinhole_Intrinsic * ptrPinhole = (const Pinhole_Intrinsic*)(ptrIntrinsic);
         intrinsicCamInfo.m_K = ptrPinhole->K();

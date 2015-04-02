@@ -11,5 +11,6 @@
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/cameras/Camera_Pinhole.hpp"
 #include "openMVG/cameras/Camera_Pinhole_Radial.hpp"
+#include "openMVG/cameras/Camera_undistort_image.hpp"
 
 #endif // OPENMVG_CAMERAS_HPP

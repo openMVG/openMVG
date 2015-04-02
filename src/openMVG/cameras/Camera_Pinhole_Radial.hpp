@@ -75,7 +75,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     const double k1 = _params[0];
 
     const double r2 = p(0)*p(0) + p(1)*p(1);
-    const double r_coeff = (1 + k1*r2);
+    const double r_coeff = (1. + k1*r2);
 
     return (p * r_coeff);
   }
@@ -175,7 +175,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     const double r2 = p(0)*p(0) + p(1)*p(1);
     const double r4 = r2 * r2;
     const double r6 = r4 * r2;
-    const double r_coeff = (1 + k1*r2 + k2*r4 + k3*r6);
+    const double r_coeff = (1. + k1*r2 + k2*r4 + k3*r6);
 
     return (p * r_coeff);
   }
