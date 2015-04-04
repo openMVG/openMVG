@@ -124,12 +124,9 @@ class Pinhole_Intrinsic : public IntrinsicBase
 
 } // namespace openMVG
 
-#include <cereal/archives/portable_binary.hpp>
-#include <cereal/archives/binary.hpp>
-#include <cereal/archives/xml.hpp>
-#include <cereal/archives/json.hpp>
-#include <cereal/types/vector.hpp>
+
 #include <cereal/types/polymorphic.hpp>
+#include <cereal/types/vector.hpp>
 
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::Pinhole_Intrinsic, "pinhole");
 

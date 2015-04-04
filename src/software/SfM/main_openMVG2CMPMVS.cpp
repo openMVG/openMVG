@@ -11,6 +11,7 @@
 using namespace openMVG;
 
 #include "third_party/cmdLine/cmdLine.h"
+#include "third_party/progress/progress.hpp"
 
 #include <stdlib.h>
 #include <stdio.h>

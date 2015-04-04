@@ -9,7 +9,12 @@
 #include "third_party/htmlDoc/htmlDoc.hpp"
 
 #include "openMVG/multiview/triangulation.hpp"
+#include "openMVG/multiview/triangulation_nview.hpp"
 #include "openMVG/graph/connectedComponent.hpp"
+#include "openMVG/system/timer.hpp"
+#include "openMVG/multiview/essential.hpp"
+
+#include "third_party/progress/progress.hpp"
 
 namespace openMVG{
 

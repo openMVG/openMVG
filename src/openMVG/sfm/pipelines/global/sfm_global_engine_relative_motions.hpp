@@ -8,9 +8,9 @@
 #ifndef OPENMVG_SFM_GLOBAL_ENGINE_RELATIVE_MOTIONS_HPP
 #define OPENMVG_SFM_GLOBAL_ENGINE_RELATIVE_MOTIONS_HPP
 
-#include "openMVG/sfm/pipelines/sfm_engine.hpp"
 #include "openMVG/sfm/pipelines/global/GlobalSfM_rotation_averaging.hpp"
 #include "openMVG/sfm/pipelines/global/GlobalSfM_translation_averaging.hpp"
+#include "openMVG/sfm/pipelines/sfm_engine.hpp"
 #include "third_party/htmlDoc/htmlDoc.hpp"
 
 namespace openMVG{

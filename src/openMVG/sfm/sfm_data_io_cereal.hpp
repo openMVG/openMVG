@@ -10,6 +10,11 @@
 #define OPENMVG_SFM_DATA_IO_CEREAL_HPP
 
 #include "openMVG/sfm/sfm_data_io.hpp"
+
+#include <cereal/archives/portable_binary.hpp>
+#include <cereal/archives/xml.hpp>
+#include <cereal/archives/json.hpp>
+
 #include <cereal/types/map.hpp>
 #include <cereal/types/unordered_map.hpp>
 #include <cereal/types/vector.hpp>

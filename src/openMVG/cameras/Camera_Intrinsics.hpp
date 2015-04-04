@@ -9,11 +9,11 @@
 #define OPENMVG_CAMERA_INTRINSICS_H
 
 #include "openMVG/numeric/numeric.h"
-#include <cereal/cereal.hpp>
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/stl/hash.hpp"
 #include <vector>
+#include <cereal/cereal.hpp>
 
 namespace openMVG{
 

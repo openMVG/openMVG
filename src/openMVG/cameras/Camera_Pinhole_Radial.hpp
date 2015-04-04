@@ -247,10 +247,6 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
 
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/types/vector.hpp>
-#include <cereal/archives/portable_binary.hpp>
-#include <cereal/archives/binary.hpp>
-#include <cereal/archives/xml.hpp>
-#include <cereal/archives/json.hpp>
 
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::Pinhole_Intrinsic_Radial_K1, "pinhole_radial_k1");
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::Pinhole_Intrinsic_Radial_K3, "pinhole_radial_k3");

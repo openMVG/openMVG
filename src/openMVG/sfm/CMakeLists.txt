@@ -18,5 +18,5 @@ ADD_LIBRARY(openMVG_sfm ${sfm_files_header} ${sfm_files_cpp})
 TARGET_LINK_LIBRARIES(openMVG_sfm ceres openMVG_multiview)
 INSTALL(TARGETS openMVG_sfm DESTINATION lib/)
 
-UNIT_TEST(openMVG sfm_data_io "stlplus;ceres;openMVG_multiview")
-UNIT_TEST(openMVG sfm_data_BA "openMVG_multiview_test_data;openMVG_multiview;ceres;stlplus")
+UNIT_TEST(openMVG sfm_data_io "stlplus;ceres;openMVG_multiview;openMVG_sfm")
+UNIT_TEST(openMVG sfm_data_BA "openMVG_multiview_test_data;openMVG_multiview;openMVG_sfm;stlplus")

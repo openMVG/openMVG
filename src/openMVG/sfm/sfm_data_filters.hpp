@@ -8,6 +8,8 @@
 #ifndef OPENMVG_SFM_DATA_FILTERS_HPP
 #define OPENMVG_SFM_DATA_FILTERS_HPP
 
+#include "openMVG/stl/stl.hpp"
+
 namespace openMVG {
 
 // Remove tracks that have a small angle (tracks with tiny angle leads to instable 3D points)
