@@ -48,6 +48,23 @@
 
 namespace openMVG {
 
+// Check MSVC
+#if _WIN32 || _WIN64
+   #if _WIN64
+     #define ENV64BIT
+  #else
+    #define ENV32BIT
+  #endif
+#endif
+
+// Check GCC
+#if __GNUC__
+  #if __x86_64__ || __ppc64__ || _LP64
+    #define ENV64BIT
+  #else
+    #define ENV32BIT
+  #endif
+#endif
 
   using Eigen::Map;
 
@@ -63,25 +80,18 @@ namespace openMVG {
 
   typedef Eigen::Matrix<double, 3, 3> Mat3;
 
-#if defined(_WIN32) || defined(WIN32)
-  // Handle alignment issue with Mat34, Vec2, Vec4, Vec6 on win32 with old compiler
-  enum { NeedsToAlignMat34 = (sizeof(Eigen::Matrix<double, 3, 4>)%16)==0 };
-  typedef Eigen::Matrix<double, 3, 4, ((NeedsToAlignMat34)==0 ? Eigen::Aligned : Eigen::DontAlign)> Mat34;
-
-  enum { NeedsToAlignVec2= (sizeof(Eigen::Vector2d)%16)==0 };
-  typedef Eigen::Matrix<double, 2, 1, ((NeedsToAlignVec2)==0 ? Eigen::Aligned : Eigen::DontAlign)> Vec2;
-
-  enum { NeedsToAlignVec4= (sizeof(Eigen::Vector4d)%16)==0 };
-  typedef Eigen::Matrix<double, 4, 1, ((NeedsToAlignVec4)==0 ? Eigen::Aligned : Eigen::DontAlign)> Vec4;
-
-  enum { NeedsToAlignVec6= (sizeof(Eigen::Matrix<double, 6, 1>)%16)==0 };
-  typedef Eigen::Matrix<double, 6, 1, ((NeedsToAlignVec6)==0 ? Eigen::Aligned : Eigen::DontAlign)> Vec6;
-#else // defined(_WIN32) || defined(WIN32)
+#if defined(ENV32BIT)
+  typedef Eigen::Matrix<double, 3, 4, Eigen::DontAlign> Mat34;
+  typedef Eigen::Matrix<double, 2, 1, Eigen::DontAlign> Vec2;
+  typedef Eigen::Matrix<double, 4, 1, Eigen::DontAlign> Vec4;
+  typedef Eigen::Matrix<double, 6, 1, Eigen::DontAlign> Vec6;
+#else // 64 bits compiler
   typedef Eigen::Matrix<double, 3, 4> Mat34;
   typedef Eigen::Vector2d Vec2;
   typedef Eigen::Vector4d Vec4;
   typedef Eigen::Matrix<double, 6, 1> Vec6;
-#endif // defined(_WIN32) || defined(WIN32)
+#endif
+
 
   typedef Eigen::Matrix<double, 4, 4> Mat4;
   typedef Eigen::Matrix<unsigned int, Eigen::Dynamic, Eigen::Dynamic> Matu;

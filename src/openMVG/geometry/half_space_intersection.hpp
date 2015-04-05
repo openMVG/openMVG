@@ -9,6 +9,8 @@
 
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
 #include <Eigen/Geometry>
+#include <Eigen/StdVector>
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Hyperplane<double,3>)
 
 namespace openMVG {
 namespace geometry {
