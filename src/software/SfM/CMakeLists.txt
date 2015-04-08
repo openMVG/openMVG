@@ -138,3 +138,9 @@ UNIT_TEST(openMVG SfMIOHelper "stlplus")
 
 INSTALL(FILES cameraSensorWidth/cameraGenerated.txt DESTINATION resources/)
 
+
+ADD_EXECUTABLE(openMVG_main_FrustumFiltering main_FrustumFiltering.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_FrustumFiltering
+                     ${OpenMVG_LIBS})
+SET_PROPERTY(TARGET openMVG_main_FrustumFiltering PROPERTY FOLDER OpenMVG/software)
+

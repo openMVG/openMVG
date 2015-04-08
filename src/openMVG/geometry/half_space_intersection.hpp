@@ -23,7 +23,7 @@ typedef std::vector<Half_plane> Half_planes;
 
 // Define a plane passing through the points (p, q, r).
 // The plane is oriented such that p, q and r are oriented in a positive sense (that is counterclockwise).
-Half_plane Half_plane_p(const Vec3 & p, const Vec3 & q, const Vec3 & r)
+static Half_plane Half_plane_p(const Vec3 & p, const Vec3 & q, const Vec3 & r)
 {
   const Vec3 abc = (p-r).cross(q-r);
   const double d = - abc.dot(r);

@@ -19,37 +19,42 @@ class Pose3
   protected:
     Mat3 _rotation;
     Vec3 _center;
- 
+
   public:
     // Constructors
     Pose3() : _rotation(Mat3::Identity()), _center(Vec3::Zero()) {}
     Pose3(const Mat3& r, const Vec3& c) : _rotation(r), _center(c) {}
-    
+
     // Accessors
     const Mat3& rotation() const { return _rotation; }
     Mat3& rotation() { return _rotation; }
     const Vec3& center() const { return _center; }
     Vec3& center() { return _center; }
-    
+
     // Translation vector t = -RC
     inline Vec3 translation() const { return -(_rotation * _center); }
-    
+
     // Apply pose
     inline Vec3 operator () (const Vec3& p) const
     {
       return _rotation * (p - _center);
     }
- 
+
     // Composition
     Pose3 operator * (const Pose3& P) const
     {
       return Pose3(_rotation * P._rotation, P._center + P._rotation.transpose() * _center );
     }
- 
+
     // Inverse
     Pose3 inverse() const
     {
       return Pose3(_rotation.transpose(),  -(_rotation * _center));
+    }
+
+    // Return the depth (distance) of a point respect to the camera center
+    double depth(const Vec3 &X) const {
+      return (_rotation * (X - _center))[2];
     }
 
     // Serialization
