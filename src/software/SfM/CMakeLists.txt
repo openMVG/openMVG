@@ -95,9 +95,9 @@ INSTALL(TARGETS openMVG_main_openMVG2CMPMVS DESTINATION bin/)
 # -
 # Use openCV Feature detector with the openMVG matching framework
 # -
-IF(OPENMVG_USE_OPENCV)
+IF(OpenMVG_USE_OPENCV)
   FIND_PACKAGE( OpenCV )
-
+  INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
   IF(NOT OpenCV_FOUND)
     MESSAGE(STATUS "WARNING: OpenCV was not found. ")
   ELSE(NOT OpenCV_FOUND)
@@ -112,7 +112,7 @@ IF(OPENMVG_USE_OPENCV)
     INSTALL(TARGETS openMVG_main_computeMatches_OpenCV DESTINATION bin/)
 
   ENDIF(NOT OpenCV_FOUND)
-ENDIF(OPENMVG_USE_OPENCV)
+ENDIF(OpenMVG_USE_OPENCV)
 
 # -
 # Export a SfM openMVG scene to meshlab scene with rasters

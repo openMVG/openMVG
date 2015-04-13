@@ -170,7 +170,7 @@ SET_PROPERTY(TARGET lib_clp PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
 # Opencv is not used by openMVG but some samples show how to use openCV
 #  and openMVG simultaneously
 # ==============================================================================
-SET(OPENMVG_USE_OPENCV OFF CACHE BOOL "Do not build opencv+openMVG samples programs")
+OPTION(OpenMVG_USE_OPENCV "Build or not opencv+openMVG samples programs" OFF)
 
 
 # ==============================================================================
