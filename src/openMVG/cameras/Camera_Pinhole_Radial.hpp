@@ -115,6 +115,18 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     }
   }
 
+  /// Return the un-distorted pixel (with removed distortion)
+  virtual Vec2 get_perfect_pixel(const Vec2& p) const
+  {
+    return cam2ima( remove_disto(ima2cam(p)) );
+  }
+
+  /// Return the distorted pixel (with added distortion)
+  virtual Vec2 get_d_pixel(const Vec2& p) const
+  {
+    return cam2ima( add_disto(ima2cam(p)) );
+  }
+
   // Serialization
   template <class Archive>
   void save( Archive & ar) const
@@ -215,6 +227,18 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     else  {
       return false;
     }
+  }
+
+  /// Return the un-distorted pixel (with removed distortion)
+  virtual Vec2 get_perfect_pixel(const Vec2& p) const
+  {
+    return cam2ima( remove_disto(ima2cam(p)) );
+  }
+
+  /// Return the distorted pixel (with added distortion)
+  virtual Vec2 get_d_pixel(const Vec2& p) const
+  {
+    return cam2ima( add_disto(ima2cam(p)) );
   }
 
   // Serialization

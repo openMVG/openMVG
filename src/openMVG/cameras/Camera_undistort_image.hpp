@@ -33,12 +33,12 @@ void UndistortImage(
     for (int j = 0; j < imageIn.Height(); ++j)
     for (int i = 0; i < imageIn.Width(); ++i)
     {
-      const Vec2 distorted(i,j);
+      const Vec2 undisto_pix(i,j);
       // compute coordinates with distortion
-      const Vec2 undistorted = cam->cam2ima( cam->add_disto(cam->ima2cam(distorted)) );
+      const Vec2 disto_pix = cam->get_d_pixel(undisto_pix);
       // pick pixel if it is in the image domain
-      if ( imageIn.Contains(undistorted(1), undistorted(0)) )
-        image_ud( j, i ) = SampleLinear(imageIn, undistorted(1), undistorted(0));
+      if ( imageIn.Contains(disto_pix(1), disto_pix(0)) )
+        image_ud( j, i ) = SampleLinear(imageIn, disto_pix(1), disto_pix(0));
     }
   }
 }

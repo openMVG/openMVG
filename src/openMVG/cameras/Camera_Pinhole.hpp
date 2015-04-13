@@ -99,6 +99,12 @@ class Pinhole_Intrinsic : public IntrinsicBase
     }
   }
 
+  /// Return the un-distorted pixel (with removed distortion)
+  virtual Vec2 get_ud_pixel(const Vec2& p) const {return p;}
+
+  /// Return the distorted pixel (with added distortion)
+  virtual Vec2 get_d_pixel(const Vec2& p) const {return p;}
+
   // Serialization
   template <class Archive>
   void save( Archive & ar) const

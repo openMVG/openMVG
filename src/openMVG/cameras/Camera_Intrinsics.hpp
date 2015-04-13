@@ -81,6 +81,12 @@ struct IntrinsicBase
   /// Remove the distortion to a camera point (that is in normalized camera frame)
   virtual Vec2 remove_disto(const Vec2& p) const  = 0;
 
+  /// Return the un-distorted pixel (with removed distortion)
+  virtual Vec2 get_ud_pixel(const Vec2& p) const = 0;
+
+  /// Return the distorted pixel (with added distortion)
+  virtual Vec2 get_d_pixel(const Vec2& p) const = 0;
+
   /// Normalize a given unit pixel error to the camera plane
   virtual double imagePlane_toCameraPlaneError(double value) const = 0;
 
