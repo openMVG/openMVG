@@ -144,3 +144,9 @@ TARGET_LINK_LIBRARIES(openMVG_main_FrustumFiltering
                      ${OpenMVG_LIBS})
 SET_PROPERTY(TARGET openMVG_main_FrustumFiltering PROPERTY FOLDER OpenMVG/software)
 
+
+ADD_EXECUTABLE(openMVG_main_ConvertSfM_DataFormat main_ConvertSfM_DataFormat.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_ConvertSfM_DataFormat
+                     ${OpenMVG_LIBS})
+SET_PROPERTY(TARGET openMVG_main_ConvertSfM_DataFormat PROPERTY FOLDER OpenMVG/software)
+

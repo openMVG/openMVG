@@ -49,6 +49,7 @@ bool Load_Cereal(
     return false;
 
   // Data serialization
+  try
   {
     archiveType archive(stream);
 
@@ -58,32 +59,41 @@ bool Load_Cereal(
 
     if (b_views)
       archive(cereal::make_nvp("views", data.views));
-    if (bBinary && !b_views) { // Binary file require read all the member
-      Views views;
-      archive(cereal::make_nvp("views", views));
-    }
+    else
+      if (bBinary) { // Binary file require read all the member
+        Views views;
+        archive(cereal::make_nvp("views", views));
+      }
 
     if (b_intrinsics)
       archive(cereal::make_nvp("intrinsics", data.intrinsics));
-    if (bBinary && !b_intrinsics) { // Binary file require read all the member
-      Intrinsics intrinsics;
-      archive(cereal::make_nvp("intrinsics", intrinsics));
-    }
+    else
+      if (bBinary) { // Binary file require read all the member
+        Intrinsics intrinsics;
+        archive(cereal::make_nvp("intrinsics", intrinsics));
+      }
 
     if (b_extrinsics)
       archive(cereal::make_nvp("extrinsics", data.poses));
-    if (bBinary && !b_extrinsics) { // Binary file require read all the member
-      Poses poses;
-      archive(cereal::make_nvp("extrinsics", poses));
-    }
+    else 
+      if (bBinary) { // Binary file require read all the member
+        Poses poses;
+        archive(cereal::make_nvp("extrinsics", poses));
+      }
 
     // Structure -> See for export in another file
     if (b_structure)
       archive(cereal::make_nvp("structure", data.structure));
-    if (bBinary && !b_structure) { // Binary file require read all the member
-      Landmarks structure;
-      archive(cereal::make_nvp("structure", structure));
-    }
+    else 
+      if (bBinary) { // Binary file require read all the member
+        Landmarks structure;
+        archive(cereal::make_nvp("structure", structure));
+      }
+  }
+  catch (const cereal::Exception & e)
+  {
+    std::cerr << e.what();
+    return false;
   }
   return true;
 }
@@ -117,16 +127,24 @@ bool Save_Cereal(
 
     if (b_views)
       archive(cereal::make_nvp("views", data.views));
+    else
+      archive(cereal::make_nvp("views", Views()));
 
     if (b_intrinsics)
       archive(cereal::make_nvp("intrinsics", data.intrinsics));
+    else
+      archive(cereal::make_nvp("intrinsics", Intrinsics()));
 
     if (b_extrinsics)
       archive(cereal::make_nvp("extrinsics", data.poses));
+    else
+      archive(cereal::make_nvp("extrinsics", Poses()));
 
     // Structure -> See for export in another file
     if (b_structure)
       archive(cereal::make_nvp("structure", data.structure));
+    else
+      archive(cereal::make_nvp("structure", Landmarks()));
   }
   return true;
 }

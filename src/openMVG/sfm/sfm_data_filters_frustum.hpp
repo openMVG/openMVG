@@ -13,7 +13,7 @@
 
 namespace openMVG {
 
-class SfM_Data;
+struct SfM_Data;
 
 class Frustum_Filter
 {
