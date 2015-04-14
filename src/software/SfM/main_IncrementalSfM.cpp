@@ -141,7 +141,6 @@ int main(int argc, char **argv)
 
   if (to3DEngine.Process())
   {
-    clock_t timeEnd = clock();
     std::cout << std::endl << " Ac-Sfm took (s): " << timer.elapsed() << "." << std::endl;
 
     const reconstructorHelper & reconstructorHelperRef = to3DEngine.refToReconstructorHelper();

@@ -216,7 +216,7 @@ int main() {
         Square(thresholdF), Square(0.8),
         vec_corresponding_indexes[1]);
 
-      std::cout << "\nGuided fundamental matching "
+      std::cout << "\nGuided Fundamental matching "
         << "(geometric + descriptor distance ratio) found "
         << vec_corresponding_indexes[1].size() << " correspondences."
         << std::endl;

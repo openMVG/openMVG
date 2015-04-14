@@ -144,7 +144,7 @@ void GlobalSfM_Rotation_AveragingSolver::TripletRotationRejection(
   for (size_t i = 0; i < vec_triplets.size(); ++i)
   {
     const graphUtils::Triplet & triplet = vec_triplets[i];
-    IndexT I = triplet.i, J = triplet.j , K = triplet.k;
+    const IndexT I = triplet.i, J = triplet.j , K = triplet.k;
 
     //-- Find the three rotations
     const Pair ij(I,J);
