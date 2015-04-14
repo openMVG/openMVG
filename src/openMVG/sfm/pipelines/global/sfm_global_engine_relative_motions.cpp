@@ -311,19 +311,6 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure()
   {
     IndexT countRemoved = 0;
 
-    //-- Build projection equivalent P matrices for all view poses
-    Hash_Map<IndexT, Mat34> map_P;
-    for(Views::const_iterator vit = _sfm_data.views.begin(); vit != _sfm_data.views.end(); ++vit)
-    {
-      if (_sfm_data.poses.find(vit->second.get()->id_pose) != _sfm_data.poses.end())
-      {
-        const View * view = vit->second.get();
-        const IntrinsicBase * cam = _sfm_data.getIntrinsics().at(view->id_intrinsic).get();
-        const Pose3 & pose = _sfm_data.poses.at(view->id_pose);
-        map_P[view->id_pose] = cam->get_projective_equivalent(pose);
-      }
-    }
-
     openMVG::Timer timer;
     C_Progress_display my_progress_bar(
       _sfm_data.structure.size(),
@@ -334,17 +321,17 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure()
     std::set<IndexT> set_invalidTracks;
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel
-#endif // OPENMVG_USE_OPENMP
+#endif
     for(Landmarks::iterator iterTracks = _sfm_data.structure.begin();
       iterTracks != _sfm_data.structure.end();
       ++iterTracks)
     {
 #ifdef OPENMVG_USE_OPENMP
       #pragma omp single nowait
-#endif // OPENMVG_USE_OPENMP
+#endif
       {
 #ifdef OPENMVG_USE_OPENMP
-          #pragma omp critical
+        #pragma omp critical
 #endif
         {
           ++my_progress_bar;
@@ -356,7 +343,11 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure()
         {
           // Build the corresponding Projection matrix to the View
           const View * view = _sfm_data.views.at(itObs->first).get();
-          trianObj.add(map_P.at(view->id_pose), itObs->second.x); // TODO: must send undistorted point
+          const IntrinsicBase * cam = _sfm_data.getIntrinsics().at(view->id_intrinsic).get();
+          const Pose3 & pose = _sfm_data.poses.at(view->id_pose);
+          trianObj.add(
+            cam->get_projective_equivalent(pose),
+            cam->get_ud_pixel(itObs->second.x));
         }
         // Compute the 3D point
         const Vec3 Xs = trianObj.compute();
