@@ -307,73 +307,18 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure()
     }
   }
 
-  // Triangulation of the tracks (Initialize structure with 3D positions)
+  // Compute 3D position of the landmark of the structure by triangulation of the observations
   {
     IndexT countRemoved = 0;
 
     openMVG::Timer timer;
-    C_Progress_display my_progress_bar(
-      _sfm_data.structure.size(),
-      std::cout,
-      "\n", " " ,
-      "Computation of the initial structure\n" );
 
-    std::set<IndexT> set_invalidTracks;
-#ifdef OPENMVG_USE_OPENMP
-    #pragma omp parallel
-#endif
-    for(Landmarks::iterator iterTracks = _sfm_data.structure.begin();
-      iterTracks != _sfm_data.structure.end();
-      ++iterTracks)
-    {
-#ifdef OPENMVG_USE_OPENMP
-      #pragma omp single nowait
-#endif
-      {
-#ifdef OPENMVG_USE_OPENMP
-        #pragma omp critical
-#endif
-        {
-          ++my_progress_bar;
-        }
-        Triangulation trianObj;
-        const Observations & obs = iterTracks->second.obs;
-        for(Observations::const_iterator itObs = obs.begin();
-          itObs != obs.end(); ++itObs)
-        {
-          // Build the corresponding Projection matrix to the View
-          const View * view = _sfm_data.views.at(itObs->first).get();
-          const IntrinsicBase * cam = _sfm_data.getIntrinsics().at(view->id_intrinsic).get();
-          const Pose3 & pose = _sfm_data.poses.at(view->id_pose);
-          trianObj.add(
-            cam->get_projective_equivalent(pose),
-            cam->get_ud_pixel(itObs->second.x));
-        }
-        // Compute the 3D point
-        const Vec3 Xs = trianObj.compute();
-        if (trianObj.minDepth() > 0) // Keep the point only if it have a positive depth
-        {
-          iterTracks->second.X = Xs;
-        }
-        else
-        {
-#ifdef OPENMVG_USE_OPENMP
-          #pragma omp critical
-#endif
-          {
-            ++ countRemoved;
-            set_invalidTracks.insert(iterTracks->first);
-          }
-        }
-      }
-    }
-    std::cout << "\n#removed tracks (invalid triangulation): " << countRemoved << std::endl;
-    // Remove invalid tracks
-    for (std::set<IndexT>::const_iterator it = set_invalidTracks.begin();
-      it != set_invalidTracks.end(); ++ it)
-    {
-      _sfm_data.structure.erase(*it);
-    }
+    const IndexT trackCountBefore = _sfm_data.getLandmarks().size();
+    SfM_Data_Structure_Computation_Blind structure_estimator(true);
+    structure_estimator.triangulate(_sfm_data);
+
+    std::cout << "\n#removed tracks (invalid triangulation): " <<
+      _sfm_data.getLandmarks().size() - trackCountBefore << std::endl;
     std::cout << std::endl << "  Triangulation took (s): " << timer.elapsed() << std::endl;
 
     // Export initial structure

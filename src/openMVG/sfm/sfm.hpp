@@ -27,6 +27,7 @@
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 
 #include "openMVG/sfm/sfm_filters.hpp"
+#include "openMVG/sfm/sfm_data_triangulation.hpp"
 
 //-----------------
 // SfM pipelines
