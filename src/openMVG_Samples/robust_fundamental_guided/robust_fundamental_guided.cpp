@@ -202,14 +202,14 @@ int main() {
 
       //a. by considering only the geometric error
 
-      GuidedMatching<Mat3, openMVG::fundamental::kernel::EpipolarDistanceError>(
+      geometry_aware::GuidedMatching<Mat3, openMVG::fundamental::kernel::EpipolarDistanceError>(
         F, xL, xR, Square(thresholdF), vec_corresponding_indexes[0]);
       std::cout << "\nGuided Fundamental matching (geometric error) found "
         << vec_corresponding_indexes[0].size() << " correspondences."
         << std::endl;
 
       // b. by considering geometric error and descriptor distance ratio
-      GuidedMatching
+      geometry_aware::GuidedMatching
         <Mat3, openMVG::fundamental::kernel::EpipolarDistanceError,
         SIFTDescriptor, L2_Vectorized<SIFTDescriptor::bin_type> >(
         F, xL, descsL, xR, descsR,

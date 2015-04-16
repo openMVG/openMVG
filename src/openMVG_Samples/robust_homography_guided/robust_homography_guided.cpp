@@ -202,14 +202,14 @@ int main() {
 
       //a. by considering only the geometric error
 
-      GuidedMatching<Mat3, openMVG::homography::kernel::AsymmetricError>(
+      geometry_aware::GuidedMatching<Mat3, openMVG::homography::kernel::AsymmetricError>(
         H, xL, xR, Square(thresholdH), vec_corresponding_indexes[0]);
       std::cout << "\nGuided homography matching (geometric error) found "
         << vec_corresponding_indexes[0].size() << " correspondences."
         << std::endl;
 
       // b. by considering geometric error and descriptor distance ratio
-      GuidedMatching
+      geometry_aware::GuidedMatching
         <Mat3, openMVG::homography::kernel::AsymmetricError,
         SIFTDescriptor, L2_Vectorized<SIFTDescriptor::bin_type> >(
         H, xL, descsL, xR, descsR,
