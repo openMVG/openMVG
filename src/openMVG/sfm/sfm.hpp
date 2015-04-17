@@ -42,4 +42,6 @@
 #include "openMVG/sfm/pipelines/global/sfm_global_reindex.hpp"
 #include "openMVG/sfm/pipelines/global/sfm_global_engine_relative_motions.hpp"
 
+#include "openMVG/sfm/pipelines/structure_from_known_poses/structure_estimator.hpp"
+
 #endif // OPENMVG_SFM_HPP

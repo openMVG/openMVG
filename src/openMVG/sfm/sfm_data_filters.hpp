@@ -12,6 +12,53 @@
 
 namespace openMVG {
 
+/// List the view indexes that have valid camera intrinsic and pose.
+static std::set<IndexT> Get_Valid_Views
+(
+  const SfM_Data & sfm_data
+)
+{
+  std::set<IndexT> valid_idx;
+  for (Views::const_iterator it = sfm_data.getViews().begin();
+    it != sfm_data.getViews().end(); ++it)
+  {
+    const View * v = it->second.get();
+    const IndexT id_view = v->id_view;
+    const IndexT id_intrinsic = v->id_intrinsic;
+    const IndexT id_pose = v->id_pose;
+
+    bool bDefined =
+      id_intrinsic != UndefinedIndexT &&
+      sfm_data.getIntrinsics().find(id_intrinsic) != sfm_data.getIntrinsics().end() &&
+      id_pose != UndefinedIndexT &&
+      sfm_data.getPoses().find(id_pose) != sfm_data.getPoses().end();
+
+    if (bDefined)
+    {
+      valid_idx.insert(id_view);
+    }
+  }
+  return valid_idx;
+}
+
+/// Filter a list of pair: Keep only the pair that are defined in index list
+template <typename IterablePairs, typename IterableIndex>
+static Pair_Set Pair_filter
+(
+  const IterablePairs & pairs,
+  const IterableIndex & index
+)
+{
+  Pair_Set kept_pairs;
+  for (auto& it : pairs)
+  {
+    if (index.count(it.first) > 0 &&
+      index.count(it.second) > 0)
+    kept_pairs.insert(it);
+  }
+  return kept_pairs;
+}
+
 // Remove tracks that have a small angle (tracks with tiny angle leads to instable 3D points)
 // Return the number of removed tracks
 static IndexT RemoveOutliers_PixelResidualError

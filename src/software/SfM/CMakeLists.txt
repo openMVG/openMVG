@@ -149,3 +149,8 @@ TARGET_LINK_LIBRARIES(openMVG_main_ConvertSfM_DataFormat
                      ${OpenMVG_LIBS})
 SET_PROPERTY(TARGET openMVG_main_ConvertSfM_DataFormat PROPERTY FOLDER OpenMVG/software)
 
+ADD_EXECUTABLE(openMVG_main_computeStructureFromKnownPoses main_computeStructureFromKnownPoses.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_computeStructureFromKnownPoses
+                     ${OpenMVG_LIBS})
+SET_PROPERTY(TARGET openMVG_main_computeStructureFromKnownPoses PROPERTY FOLDER OpenMVG/software)
+

@@ -18,35 +18,10 @@
 namespace openMVG {
 
 /**
- * Abstract base class for features.
- */
-class FeatureBase {
-public:
-  virtual inline ~FeatureBase() {};
-
-  //this pure virtual method will be called to print the derived class' object.
-  virtual std::ostream& print(std::ostream& output) const = 0;
-
-  //this pure virtual method will be called to read the derived class' object.
-  virtual std::istream& read(std::istream& input) = 0;
-};
-
-//with overloaded operators:
-inline std::ostream& operator<<(std::ostream& out, const FeatureBase& obj)
-{
-  return obj.print(out); //simply call the print method.
-}
-
-inline std::istream& operator>>(std::istream& in, FeatureBase& obj)
-{
-  return obj.read(in); //simply call the read method.
-}
-
-/**
  * Base class for Point features.
  * Store position of the feature point.
  */
-class PointFeature : public FeatureBase {
+class PointFeature {
 public:
   virtual inline ~PointFeature() {};
 
@@ -70,6 +45,17 @@ public:
 protected:
   Vec2f _coords;  // (x, y).
 };
+
+//with overloaded operators:
+inline std::ostream& operator<<(std::ostream& out, const PointFeature& obj)
+{
+  return obj.print(out); //simply call the print method.
+}
+
+inline std::istream& operator>>(std::istream& in, PointFeature& obj)
+{
+  return obj.read(in); //simply call the read method.
+}
 
 /**
  * Base class for ScaleInvariant Oriented Point features.
@@ -163,8 +149,7 @@ void PointsToMat(
     iter != vec_feats.end(); ++iter, ++i)
   {
     const ValueT & feat = *iter;
-    m.col(i)(0) = Scalar(feat.x());
-    m.col(i)(1) = Scalar(feat.y());
+    m.col(i) << feat.x(), feat.y();
   }
 }
 
