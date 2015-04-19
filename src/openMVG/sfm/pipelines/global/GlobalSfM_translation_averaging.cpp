@@ -536,6 +536,10 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
               iterI = iterJ = iterK = subTrack.begin();
               std::advance(iterJ,1);
               std::advance(iterK,2);
+              /*openMVG::tracks::submapTrack::const_iterator
+                iterI = subTrack.find(I),
+                iterJ = subTrack.find(J),
+                iterK = subTrack.find(K);*/
 
               newpairMatches[std::make_pair(I,J)].push_back(IndMatch(iterI->second, iterJ->second));
               newpairMatches[std::make_pair(J,K)].push_back(IndMatch(iterJ->second, iterK->second));

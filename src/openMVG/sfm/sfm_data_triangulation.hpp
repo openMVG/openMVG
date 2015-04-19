@@ -110,7 +110,7 @@ struct SfM_Data_Structure_Computation_Blind: public SfM_Data_Structure_Computati
 /// Triangulation of track data contained in the structure of a SfM_Data scene.
 // Use a robust estimation:
 // - Triangulate tracks using a RANSAC scheme
-// - Check only cheirality and a pixel residual error (TODO: make it a parameter)
+// - Check cheirality and a pixel residual error (TODO: make it a parameter)
 struct SfM_Data_Structure_Computation_Robust: public SfM_Data_Structure_Computation_Basis
 {
   SfM_Data_Structure_Computation_Robust(bool bConsoleVerbose = false)
