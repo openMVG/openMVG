@@ -7,8 +7,8 @@ These multi-view correspondences are called tracks.
 Track identification in a set of images (ordered, or not) is an important task in computer vision.
 It allows solving geometry-related problems like video stabilization, tracking, match-moving, image-stitching, structure from motion and odometry.
 
-The "track" computation problem
-====================================
+un/ordered feature tracking
+=============================
 
 Considering n pairwise feature correspondences as input we want sets of corresponding matching features across multiple images, as illustrated in the following figures with video frames.
 
@@ -32,10 +32,13 @@ Some comments about the data structure:
 
 .. code-block:: c++
 
+  using namespace openMVG::matching;
+
   // pairwise matches container:
-  typedef std::map< std::pair<size_t, size_t>, std::vector<IndMatch> > map_pairWiseMatches;
-  map_pairWiseMatches map_Matches;
-  PairedIndMatchImport(sMatchFile, map_Matches); // Load a series of pairwise matches
+  PairWiseMatches map_Matches;
+
+  // Fil the pairwise correspondeces or load a series of pairwise matches from a file
+  PairedIndMatchImport("matches.f.txt", map_Matches);
 
   //---------------------------------------
   // Compute tracks from pairwise matches
@@ -50,13 +53,13 @@ Some comments about the data structure:
 	for (tracks::STLMAPTracks::const_iterator iterT = map_tracks.begin();
 		iterT != map_tracks.end(); ++ iterT)
 	{
-		const size_t trackId = iterT->first;
+		const IndexT trackId = iterT->first;
 		const tracks::submapTrack & track = iterT->second;
 		for ( tracks::submapTrack::const_iterator iterTrack = track.begin();
 		  iterTrack != track.end(); ++iterTrack)
 		{
-			size_t imageId = iterTrack->first;
-			size_t featId = iterTrack->second;
+			const IndexT imageId = iterTrack->first;
+			const IndexT featId = iterTrack->second;
 			
 			// Get the feature point
 		}

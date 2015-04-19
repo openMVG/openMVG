@@ -1,33 +1,43 @@
 ############################
-openMVG core
+openMVG libraries
 ############################
-  
-The openMVG library core module
-====================================
 
-The core openMVG library provides data-structure and functionnalities to:
- - open, write, manipulate images,
- - manipulate and match local descriptions of images (features, descriptors, matching),
- - compute corresponding points between image pairs and collections,
- - estimate Multiple View Geometry relations between image pairs,
- - refine camera and structure parameters (Bundle Adjustment),
- - handle points, cameras and projections matrices.
-
-Use within the robust_estimation libraries it allows estimation of Multiple View Geometry relations from point matches.
-
-Here the list of libraries that:
+openMVG provide a collection of tiny librairies that allow to solve computer vision problems and build complete SfM pipeline.
 
 .. toctree::
-  :maxdepth: 1
+  :maxdepth: 2
   
+  image/image.rst
   numeric/numeric.rst
   features/features.rst
   cameras/cameras.rst
   multiview/multiview.rst
-  image/image.rst
+  linear_programming/lp.rst
+  robust_estimation/robust_estimation.rst
   matching/matching.rst
   tracks/tracks.rst
-  robust_estimation/robust_estimation.rst
   bundle_adjustment/bundle_adjustment.rst
-  linear_programming/lp.rst
+
+
+**Structure from Motion core**
+
+.. toctree::
+  :maxdepth: 2
+
+  sfm/sfm.rst
+
+
+Todo:
+
+* **geometry** - Provide geometry tools: 6Dof estimation between 3D points, Camera pose and frustum intersection.
+
+* **system** - Provide access to accurate timer function.
+
+* **graph** - Manipulation of graphs (connected CC, triplet listing...)
+
+* **exif_IO** - Collection of tools to extract and use image EXIF data.
+
+* **matching_image_collection** - Functions to perform local matching and geometric filtering of putative correspondences in image collections.
+
+* **stl** - Enhancement of some STL functionality.
 

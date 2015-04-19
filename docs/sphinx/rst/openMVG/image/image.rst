@@ -2,27 +2,35 @@
 image
 *******************
 
-This module provides generic algorithms for image related tasks:
+Image Container 
+===============
 
-Container 
-=============
+OpenMVG :class:`Image\<T\>` class is a generic image container based on an Eigen aligned row-major matrix of template pixel type `T`. Images can store grayscale, RGB, RGBA or custom data.
 
-An openMVG ``Image<T>`` class is a generic image container:
+:class:`Image\<T\>` provide basic pixel read and write operation.
 
-* an Eigen matrix aligned in row major with a template pixel type T.
+See examples from openMVG/images/image_test.cpp:
 
-  * ``template <typename T> class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>``
+  .. code-block:: c++
 
-Single channel image:
+    // A 8-bit gray image: 
+    Image<unsigned char> grayscale_image_8bit;
 
-* a 8-bit gray image: ``Image<unsigned char>``
-* a 32-bit gray image: ``Image<double>``
+    // A 32-bit gray image: 
+    Image<double> grayscale_image_32bit;
 
-Multichannel image: (In order to ease usage for color images some types are already available to handle RGB and RGBA images)
+    // Multichannel image: (use pre-defined pixel type)
 
-* a 8-bit RGB image: ``Image<RGBColor> <=> Image<Rgb<unsigned char> >``
-* a 8-bit RGBA image: ``Image<RGBAColor> <=> Image<Rgba<unsigned char> >``
-* a 32-bit RGB image: ``Image<Rgb<double> >``
+    // A 8-bit RGB image: 
+    Image<RGBColor> rgb_image_8bit;
+    Image<Rgb<unsigned char> > rgb_image2_8bit;
+
+    // 8-bit RGBA image
+    Image<RGBAColor> rgba_image_8bit;
+    Image<Rgba<unsigned char> > rgba_image2_8bit;
+
+    // 32 bit RGB image:
+    Image<Rgb<double> > rgb_image_32bit;
 
 Image I/O 
 =============
@@ -34,6 +42,18 @@ Loading and writing of 8 bits (gray and color) images are supported in the follo
 * png,
 * tiff.
 
+See examples from openMVG/images/image_IO_test.cpp:
+
+  .. code-block:: c++
+
+    // Read a grayscale image (if conversion need, it is done on the fly)
+    Image<unsigned char> gray_image;
+    bool bRet = ReadImage("Foo.imgExtension", &gray_image);
+
+    // Read a color image
+    Image<RGBColor> rgb_image_gray;
+    bool bRet = ReadImage("Foo.imgExtension", &rgb_image);
+
 Drawing operations
 ===================
 
@@ -43,7 +63,7 @@ The following operations are available:
 * circles,
 * ellipses.
 
-An examples from openMVG/images/image_drawing_test.cpp:
+See examples from openMVG/images/image_drawing_test.cpp:
 
 .. code-block:: c++ 
 
