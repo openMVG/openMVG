@@ -9,7 +9,7 @@
 #define OPENMVG_SFM_FEATURES_PROVIDER_HPP
 
 #include <openMVG/types.hpp>
-#include <openMVG/sfm/sfm.hpp>
+#include <openMVG/sfm/sfm_data.hpp>
 #include <openMVG/features/features.hpp>
 
 namespace openMVG{

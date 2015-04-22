@@ -9,11 +9,11 @@
 
 enum EINTRINSIC
 {
-  PINHOLE_CAMERA_START,
-  PINHOLE_CAMERA, // No distortion
-  PINHOLE_CAMERA_RADIAL1, // radial distortion K1
-  PINHOLE_CAMERA_RADIAL3, // radial distortion K1,K2,K3
-  PINHOLE_CAMERA_BROWN, // radial + tangential
+  PINHOLE_CAMERA_START = 0,
+  PINHOLE_CAMERA = 1,         // No distortion
+  PINHOLE_CAMERA_RADIAL1 = 2, // radial distortion K1
+  PINHOLE_CAMERA_RADIAL3 = 3, // radial distortion K1,K2,K3
+  PINHOLE_CAMERA_BROWN,       // (TODO) radial + tangential
   PINHOLE_CAMERA_END
 };
 

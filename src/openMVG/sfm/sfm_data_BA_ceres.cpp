@@ -46,6 +46,11 @@ Bundle_Adjustment_Ceres::BA_options::BA_options(const bool bVerbose, bool bmulti
 
   _linear_solver_type = ceres::SPARSE_SCHUR;
   _preconditioner_type = ceres::JACOBI;
+   if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
+    _sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
+  else
+    if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
+      _sparse_linear_algebra_library_type = ceres::CX_SPARSE;
 }
 
 
@@ -55,10 +60,11 @@ Bundle_Adjustment_Ceres::Bundle_Adjustment_Ceres(
 {}
 
 bool Bundle_Adjustment_Ceres::Adjust(
-  SfM_Data & sfm_data, // the SfM scene to refine
-  bool bRefineRotations, // tell if pose rotations will be refined
-  bool bRefineTranslations, // tell if the pose translation will be refined
-  bool bRefineIntrinsics) // tell if the camera intrinsic will be refined)
+  SfM_Data & sfm_data,     // the SfM scene to refine
+  bool bRefineRotations,   // tell if pose rotations will be refined
+  bool bRefineTranslations,// tell if the pose translation will be refined
+  bool bRefineIntrinsics,  // tell if the camera intrinsic will be refined
+  bool bRefineStructure)   // tell if the structure will be refined
 {
   //----------
   // Add camera parameters
@@ -151,7 +157,7 @@ bool Bundle_Adjustment_Ceres::Adjust(
 
   // Set a LossFunction to be less penalized by false measurements
   //  - set it to NULL if you don't want use a lossFunction.
-  ceres::LossFunction * p_LossFunction = new ceres::HuberLoss(Square(2.0));
+  ceres::LossFunction * p_LossFunction = new ceres::HuberLoss(Square(4.0));
   // TODO: make the LOSS function and the parameter an option
 
   // For all visibility add reprojections errors:
@@ -159,6 +165,7 @@ bool Bundle_Adjustment_Ceres::Adjust(
     iterTracks!= sfm_data.structure.end(); ++iterTracks)
   {
     const Observations & obs = iterTracks->second.obs;
+
     for (Observations::const_iterator itObs = obs.begin();
       itObs != obs.end(); ++itObs)
     {
@@ -178,6 +185,8 @@ bool Bundle_Adjustment_Ceres::Adjust(
           &map_poses[view->id_pose][0],
           iterTracks->second.X.data()); //Do we need to copy 3D point to avoid false motion, if failure ?
     }
+    if (!bRefineStructure)
+      problem.SetParameterBlockConstant(iterTracks->second.X.data());
   }
 
   // Configure a BA engine and run it
@@ -185,6 +194,7 @@ bool Bundle_Adjustment_Ceres::Adjust(
   ceres::Solver::Options options;
   options.preconditioner_type = _openMVG_options._preconditioner_type;
   options.linear_solver_type = _openMVG_options._linear_solver_type;
+  options.sparse_linear_algebra_library_type = _openMVG_options._sparse_linear_algebra_library_type;
   options.minimizer_progress_to_stdout = false;
   options.logging_type = ceres::SILENT;
   options.num_threads = _openMVG_options._nbThreads;

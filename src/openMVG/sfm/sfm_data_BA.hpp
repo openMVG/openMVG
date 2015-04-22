@@ -14,10 +14,11 @@ class Bundle_Adjustment
   public:
   // Perform a Bundle Adjustment on the SfM scene with refinement of the requested parameters
   virtual bool Adjust(
-    SfM_Data & sfm_data, // the SfM scene to refine
-    bool bRefineRotations = true, // tell if pose rotations will be refined
-    bool bRefineTranslations = true, // tell if the pose translation will be refined
-    bool bRefineIntrinsics = true) // tell if the camera intrinsic will be refined)
+    SfM_Data & sfm_data,            // the SfM scene to refine
+    bool bRefineRotations = true,   // tell if pose rotations will be refined
+    bool bRefineTranslations = true,// tell if the pose translation will be refined
+    bool bRefineIntrinsics = true,  // tell if the camera intrinsic will be refined
+    bool bRefineStructure = true)   // tell if the structure will be refined
   = 0;
 
   // TODO: Use filter to say wich parameter is const or not (allow to refine only a subpart of the intrinsics or the poses)

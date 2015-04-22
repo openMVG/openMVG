@@ -5,10 +5,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_ENGINE_HPP
-#define OPENMVG_SFM_ENGINE_HPP
+#pragma once
 
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
 #include <string>
 
 namespace openMVG{
@@ -49,5 +48,3 @@ protected:
   bool _bFixedIntrinsics;
 };
 } // namespace openMVG
-
-#endif // OPENMVG_SFM_ENGINE_HPP

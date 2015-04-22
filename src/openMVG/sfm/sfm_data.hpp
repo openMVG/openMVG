@@ -8,6 +8,8 @@
 #define OPENMVG_SFM_DATA_HPP
 
 #include "openMVG/types.hpp"
+#include "openMVG/sfm/sfm_view.hpp"
+#include "openMVG/sfm/sfm_landmark.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/cameras/cameras.hpp"
 

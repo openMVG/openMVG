@@ -7,6 +7,9 @@
 #ifndef OPENMVG_SFM_LANDMARK_HPP
 #define OPENMVG_SFM_LANDMARK_HPP
 
+#include "openMVG/numeric/numeric.h"
+#include <cereal/cereal.hpp> // Serialization
+
 namespace openMVG {
 
 /// Define 3D-2D tracking data: 3D landmark with it's 2D observations

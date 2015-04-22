@@ -8,7 +8,7 @@
 #define OPENMVG_GEOMETRY_POSE3_H_
 
 #include "openMVG/multiview/projection.hpp"
-#include <cereal/cereal.hpp>
+#include <cereal/cereal.hpp> // Serialization
 
 namespace openMVG {
 namespace geometry {

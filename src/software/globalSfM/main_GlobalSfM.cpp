@@ -36,7 +36,6 @@ int main(int argc, char **argv)
   std::string sSfM_Data_Filename;
   std::string sMatchesDir;
   std::string sOutDir = "";
-  bool bColoredPointCloud = false;
   int iRotationAveragingMethod = 2;
   int iTranslationAveragingMethod = 1;
   bool bRefineIntrinsics = true;
@@ -44,7 +43,6 @@ int main(int argc, char **argv)
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
   cmd.add( make_option('o', sOutDir, "outdir") );
-  cmd.add( make_option('c', bColoredPointCloud, "coloredPointCloud") );
   cmd.add( make_option('r', iRotationAveragingMethod, "rotationAveraging") );
   cmd.add( make_option('t', iTranslationAveragingMethod, "translationAveraging") );
   cmd.add( make_option('f', bRefineIntrinsics, "refineIntrinsics") );
@@ -57,7 +55,6 @@ int main(int argc, char **argv)
     << "[-i|--input_file] path to a SfM_Data scene\n"
     << "[-m|--matchdir] path to the matches that corresponds to the provided SfM_Data scene\n"
     << "[-o|--outdir] path where the output data will be stored\n"
-    << "[-c|--coloredPointCloud 0(default) or 1]\n"
     << "[-r|--rotationAveraging 2(default L2) or 1 (L1)]\n"
     << "[-t|--translationAveraging 1(default L1) or 2 (L2)]\n"
     << "[-f|--refineIntrinsics \n"
@@ -143,11 +140,6 @@ int main(int argc, char **argv)
     Save(sfmEngine.Get_SfM_Data(),
       stlplus::create_filespec(sOutDir, "cloud_and_poses", ".ply"),
       ESfM_Data(ALL));
-
-    if (bColoredPointCloud)
-    {
-      std::cout << "Point cloud colorization is not yet implemented." << std::endl;
-    }
 
     return EXIT_SUCCESS;
   }

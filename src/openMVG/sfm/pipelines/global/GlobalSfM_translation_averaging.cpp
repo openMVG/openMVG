@@ -6,6 +6,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/sfm/pipelines/global/GlobalSfM_translation_averaging.hpp"
+#include "openMVG/sfm/sfm_filters.hpp"
+#include "openMVG/sfm/pipelines/global/sfm_global_reindex.hpp"
+#include "openMVG/sfm/pipelines/global/mutexSet.hpp"
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_solver.hpp"
 #include "openMVG/graph/graph.hpp"
@@ -289,7 +292,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
   const Features_Provider * normalized_features_provider,
   const matching::PairWiseMatches & map_Matches_E,
   const std::vector< graphUtils::Triplet > & vec_triplets,
-  std::vector<openMVG::relativeInfo > & vec_initialEstimates,
+  RelativeInfo_Vec & vec_initialEstimates,
   matching::PairWiseMatches & newpairMatches)
 {
   //-- Prepare tracks count per triplets:

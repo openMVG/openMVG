@@ -10,15 +10,9 @@
 #include "openMVG/types.hpp"
 #include "openMVG/numeric/numeric.h"
 
-// Serialization
-#include <cereal/cereal.hpp>
-
 //-----------------
 // SfM data
 //-----------------
-#include "openMVG/sfm/sfm_view.hpp"
-#include "openMVG/sfm/sfm_landmark.hpp"
-
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_filters.hpp"
@@ -38,7 +32,8 @@
 
 #include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
 
-#include "openMVG/sfm/pipelines/global/mutexSet.hpp"
+#include "openMVG/sfm/pipelines/sequential/sequential_SfM.hpp"
+
 #include "openMVG/sfm/pipelines/global/sfm_global_reindex.hpp"
 #include "openMVG/sfm/pipelines/global/sfm_global_engine_relative_motions.hpp"
 

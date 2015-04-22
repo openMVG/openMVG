@@ -8,6 +8,7 @@
 #define OPENMVG_SFM_VIEW_HPP
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+#include <cereal/cereal.hpp> // Serialization
 
 namespace openMVG {
 

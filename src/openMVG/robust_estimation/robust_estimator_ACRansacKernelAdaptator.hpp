@@ -174,8 +174,8 @@ public:
 
   double logalpha0() const {return logalpha0_;}
   double multError() const {return 1.0;} // point to point error
-  Mat3 normalizer1() const {return N1_;}
-  Mat3 normalizer2() const {return Mat3::Identity();}
+  Mat3 normalizer1() const {return Mat3::Identity();}
+  Mat3 normalizer2() const {return N1_;}
   double unormalizeError(double val) const {return sqrt(val) / N1_(0,0);}
 
 private:
@@ -239,8 +239,8 @@ public:
 
   double logalpha0() const {return logalpha0_;}
   double multError() const {return 1.0;} // point to point error
-  Mat3 normalizer1() const {return N1_;}
-  Mat3 normalizer2() const {return Mat3::Identity();}
+  Mat3 normalizer1() const {return Mat3::Identity();}
+  Mat3 normalizer2() const {return N1_;}
   double unormalizeError(double val) const {return sqrt(val) / N1_(0,0);}
 
 private:

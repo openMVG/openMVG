@@ -93,7 +93,6 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_Radial_K3) {
 double RMSE(const SfM_Data & sfm_data)
 {
   // Compute residuals for each observation
-  IndexT index = 0;
   std::vector<double> vec;
   for(Landmarks::const_iterator iterTracks = sfm_data.getLandmarks().begin();
       iterTracks != sfm_data.getLandmarks().end();
@@ -101,7 +100,7 @@ double RMSE(const SfM_Data & sfm_data)
   {
     const Observations & obs = iterTracks->second.obs;
     for(Observations::const_iterator itObs = obs.begin();
-      itObs != obs.end(); ++itObs, ++index)
+      itObs != obs.end(); ++itObs)
     {
       const View * view = sfm_data.getViews().find(itObs->first)->second.get();
       const Pose3 & pose = sfm_data.getPoses().find(view->id_pose)->second;

@@ -9,7 +9,7 @@
 #ifndef OPENMVG_SFM_DATA_IO_HPP
 #define OPENMVG_SFM_DATA_IO_HPP
 
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
 
 namespace openMVG
 {

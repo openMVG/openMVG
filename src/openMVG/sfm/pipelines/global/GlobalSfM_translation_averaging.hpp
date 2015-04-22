@@ -20,7 +20,10 @@ enum ETranslationAveragingMethod
 }
 }
 
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/multiview/translation_averaging_common.hpp"
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
 #include "openMVG/tracks/tracks.hpp"
 #include "openMVG/graph/graph.hpp"
 
@@ -66,7 +69,7 @@ private:
     const Features_Provider * normalized_features_provider,
     const matching::PairWiseMatches & map_Matches_E,
     const std::vector< graphUtils::Triplet > & vec_triplets,
-    std::vector<openMVG::relativeInfo > & vec_initialEstimates,
+    RelativeInfo_Vec & vec_initialEstimates,
     matching::PairWiseMatches & newpairMatches);
 
   // Robust estimation and refinement of a translation and 3D points of an image triplets.

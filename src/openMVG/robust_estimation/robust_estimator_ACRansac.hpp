@@ -123,14 +123,14 @@ static void UniformSample(int sizeSample,
 
 /**
  * @brief ACRANSAC routine (ErrorThreshold, NFA)
- * 
+ *
  * @param[in] kernel model and metric object
  * @param[out] vec_inliers points that fit the estimated model
  * @param[in] nIter maximum number of consecutive iterations
  * @param[out] model returned model if found
  * @param[in] precision upper bound of the precision (squared error)
  * @param[in] bVerbose display console log
- * 
+ *
  * @return (errorMax, minNFA)
  */
 template<typename Kernel>

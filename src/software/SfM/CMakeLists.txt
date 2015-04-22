@@ -26,18 +26,10 @@ SET_PROPERTY(TARGET openMVG_main_computeMatches PROPERTY FOLDER OpenMVG/software
 
 INSTALL(TARGETS openMVG_main_computeMatches DESTINATION bin/)
 
-#Add library and executable that perform SfM:
-# - the required input is matches computed by openMVG_main_computeMatches
-#
-ADD_LIBRARY(openMVG_SfM_Sequential SfMIncrementalEngine.cpp)
 ADD_EXECUTABLE(openMVG_main_IncrementalSfM main_IncrementalSfM.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_IncrementalSfM
-                      openMVG_SfM_Sequential
                       ${OpenMVG_LIBS})
 SET_PROPERTY(TARGET openMVG_main_IncrementalSfM PROPERTY FOLDER OpenMVG/software)
-SET_PROPERTY(TARGET openMVG_SfM_Sequential PROPERTY FOLDER OpenMVG/OpenMVG)
-
-INSTALL(TARGETS openMVG_SfM_Sequential DESTINATION lib/)
 INSTALL(TARGETS openMVG_main_IncrementalSfM DESTINATION bin/)
 
 #---------
@@ -132,9 +124,6 @@ TARGET_LINK_LIBRARIES(openMVG_main_evalQuality
 SET_PROPERTY(TARGET openMVG_main_evalQuality PROPERTY FOLDER OpenMVG/software)
 
 INSTALL(TARGETS openMVG_main_evalQuality DESTINATION bin/)
-
-
-UNIT_TEST(openMVG SfMIOHelper "stlplus")
 
 INSTALL(FILES cameraSensorWidth/cameraGenerated.txt DESTINATION resources/)
 

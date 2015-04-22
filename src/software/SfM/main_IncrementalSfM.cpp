@@ -7,61 +7,54 @@
 
 #include <cstdlib>
 
-#include "software/SfM/SfMIncrementalEngine.hpp"
+#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/system/timer.hpp"
+using namespace openMVG;
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "openMVG/system/timer.hpp"
 
-using namespace openMVG;
-
-/// From 2 given image file-names, find the two corresponding index in the openMVG 'lists.txt' file.
+/// From 2 given image file-names, find the two corresponding index in the View list
 bool computeIndexFromImageNames(
-  const std::string& sMatchesDir,
+  const SfM_Data & sfm_data,
   const std::pair<std::string,std::string>& initialPairName,
-  std::pair<size_t, size_t>& initialPairIndex)
+  Pair& initialPairIndex)
 {
-  const std::string sListsFile = stlplus::create_filespec(sMatchesDir, "lists.txt" );
-  if (!stlplus::is_file(sListsFile)) {
-    std::cerr << "\nCannot access input file \""<< sListsFile << "\"" << std::endl;
-    return false;
-  }
-
-  std::vector<std::string> vec_camImageName;
-  if (!openMVG::SfMIO::loadImageList(vec_camImageName, sListsFile, false))
-  {
-    std::cerr << "\nEmpty or invalid image list." << std::endl;
-    return false;
-  }
-
   if (initialPairName.first == initialPairName.second)
   {
-    std::cerr << "\nInvalid image names. You cannot use the same image to create a pair." << std::endl;
+    std::cerr << "\nInvalid image names. You cannot use the same image to initialize a pair." << std::endl;
     return false;
   }
 
-  std::vector<std::string>::const_iterator imageName = find(vec_camImageName.begin(), vec_camImageName.end(), initialPairName.first);
-  if(imageName == vec_camImageName.end())
+  initialPairIndex = Pair(UndefinedIndexT, UndefinedIndexT);
+
+  /// List views filenames and find the one that correspond to the user ones:
+  std::vector<std::string> vec_camImageName;
+  for (Views::const_iterator it = sfm_data.getViews().begin();
+    it != sfm_data.getViews().end(); ++it)
   {
-      std::cerr << "\nCannot access to the specified image: \""<< initialPairName.first << "\"" << std::endl;
-      return false;
+    const View * v = it->second.get();
+    const std::string filename = stlplus::filename_part(v->s_Img_path);
+    if (filename == initialPairName.first)
+    {
+      initialPairIndex.first = v->id_view;
+    }
+    else{
+      if (filename == initialPairName.second)
+      {
+        initialPairIndex.second = v->id_view;
+      }
+    }
   }
-  initialPairIndex.first = std::distance<std::vector<std::string>::const_iterator>(vec_camImageName.begin(), imageName);
-  imageName = find(vec_camImageName.begin(), vec_camImageName.end(), initialPairName.second);
-  if(imageName == vec_camImageName.end())
-  {
-      std::cerr << "\nCannot access to the specified image: \""<< initialPairName.second << "\"" << std::endl;
-      return false;
-  }
-  initialPairIndex.second = std::distance<std::vector<std::string>::const_iterator>(vec_camImageName.begin(), imageName);
-  return true;
+  return (initialPairIndex.first != UndefinedIndexT &&
+      initialPairIndex.second != UndefinedIndexT);
 }
 
 
 int main(int argc, char **argv)
 {
   using namespace std;
-  std::cout << "Incremental reconstruction" << std::endl
+  std::cout << "Sequential/Incremental reconstruction" << std::endl
             << " Perform incremental SfM (Initial Pair Essential + Resection)." << std::endl
             << std::endl;
 
@@ -70,43 +63,63 @@ int main(int argc, char **argv)
   std::string sSfM_Data_Filename;
   std::string sMatchesDir;
   std::string sOutDir = "";
-  bool bPmvsExport = false;
   bool bRefinePPandDisto = true;
   bool bRefineFocal = true;
-  bool bColoredPointCloud = false;
-  std::pair<std::string,std::string> initialPair("","");
+  std::pair<std::string,std::string> initialPairString("","");
+  bool bRefineIntrinsics = true;
+  int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
   cmd.add( make_option('o', sOutDir, "outdir") );
-  cmd.add( make_option('p', bPmvsExport, "pmvs") );
-  cmd.add( make_option('a', initialPair.first, "initialPairA") );
-  cmd.add( make_option('b', initialPair.second, "initialPairB") );
-  cmd.add( make_option('c', bColoredPointCloud, "coloredPointCloud") );
-  cmd.add( make_option('d', bRefinePPandDisto, "refinePPandDisto") );
-  cmd.add( make_option('f', bRefineFocal, "refineFocal") );
+  cmd.add( make_option('a', initialPairString.first, "initialPairA") );
+  cmd.add( make_option('b', initialPairString.second, "initialPairB") );
+  cmd.add( make_option('c', i_User_camera_model, "camera_model") );
+  cmd.add( make_option('f', bRefineIntrinsics, "refineIntrinsics") );
 
   try {
-    if (argc == 1) throw std::string("Invalid command line parameter.");
+    if (argc == 1) throw std::string("Invalid parameter.");
     cmd.process(argc, argv);
   } catch(const std::string& s) {
     std::cerr << "Usage: " << argv[0] << '\n'
     << "[-i|--input_file] path to a SfM_Data scene\n"
     << "[-m|--matchdir] path to the matches that corresponds to the provided SfM_Data scene\n"
     << "[-o|--outdir] path where the output data will be stored\n"
-    << "[-p|--pmvs 0 or 1] \n"
     << "[-a|--initialPairA NAME] \n"
     << "[-b|--initialPairB NAME] \n"
-    << "[-c|--coloredPointCloud 0(default) or 1]\n"
-    << "[-d|--refinePPandDisto \n"
-    << "\t 0-> refine only the Focal,\n"
-    << "\t 1-> refine Focal, Principal point and radial distortion factors.] \n"
-    << "[-f|--refineFocal \n"
-    << "\t 0-> refine only Principal point and radial distortion,\n"
-    << "\t 1-> refine Focal, Principal point and radial distortion ] \n"
+    << "[-c|--camera_model] Camera model type:\n"
+      << "\t 1: Pinhole (default)\n"
+      << "\t 2: Pinhole radial 1\n"
+      << "\t 3: Pinhole radial 3\n"
+    << "[-f|--refineIntrinsics \n"
+    << "\t 0-> intrinsic parameters are kept as constant\n"
+    << "\t 1-> refine intrinsic parameters (default).] \n"
     << std::endl;
 
     std::cerr << s << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  // Load input SfM_Data scene
+  SfM_Data sfm_data;
+  if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
+    std::cerr << std::endl
+      << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  // Prepare the features and matches provider
+  std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
+  if (!feats_provider->load(sfm_data, sMatchesDir)) {
+    std::cerr << std::endl
+      << "Invalid features." << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  std::shared_ptr<Matches_Provider> matches_provider = std::make_shared<Matches_Provider>();
+  if (!matches_provider->load(sfm_data, stlplus::create_filespec(sMatchesDir, "matches.f.txt"))) {
+    std::cerr << std::endl
+      << "Invalid matches file." << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -119,76 +132,46 @@ int main(int argc, char **argv)
     stlplus::folder_create(sOutDir);
 
   //---------------------------------------
-  // Incremental reconstruction process
+  // Sequential reconstruction process
   //---------------------------------------
 
   openMVG::Timer timer;
-  IncrementalReconstructionEngine to3DEngine(sSfM_Data_Filename,
-                                            sMatchesDir,
-                                            sOutDir,
-                                            true);
+  SequentialSfMReconstructionEngine sfmEngine(
+    sfm_data,
+    sOutDir,
+    stlplus::create_filespec(sOutDir, "Reconstruction_Report.html"));
+
+  // Configure the features_provider & the matches_provider
+  sfmEngine.SetFeaturesProvider(feats_provider.get());
+  sfmEngine.SetMatchesProvider(matches_provider.get());
+
+  // Configure reconstruction parameters
+  sfmEngine.Set_bFixedIntrinsics(!bRefineIntrinsics);
+  sfmEngine.SetUnknownCameraType(EINTRINSIC(i_User_camera_model));
 
   // Handle Initial pair parameter
-  if (!initialPair.first.empty() && !initialPair.second.empty())
+  if (!initialPairString.first.empty() && !initialPairString.second.empty())
   {
-    std::pair<size_t, size_t> initialPairIndex(0,0);
-    if(!computeIndexFromImageNames(sMatchesDir, initialPair, initialPairIndex))
+    Pair initialPairIndex;
+    if(!computeIndexFromImageNames(sfm_data, initialPairString, initialPairIndex))
       return EXIT_FAILURE;
-    to3DEngine.setInitialPair(initialPairIndex);
+    sfmEngine.setInitialPair(initialPairIndex);
   }
-  to3DEngine.setIfRefinePrincipalPointAndRadialDisto(bRefinePPandDisto);
-  to3DEngine.setIfRefineFocal(bRefineFocal);
 
-  if (to3DEngine.Process())
+  if (sfmEngine.Process())
   {
-    std::cout << std::endl << " Ac-Sfm took (s): " << timer.elapsed() << "." << std::endl;
+    std::cout << std::endl << " Total Ac-Sfm took (s): " << timer.elapsed() << std::endl;
 
-    const reconstructorHelper & reconstructorHelperRef = to3DEngine.refToReconstructorHelper();
-    std::vector<Vec3> vec_tracksColor;
-    if (bColoredPointCloud)
-    {
-      // Compute the color of each track
-      to3DEngine.ColorizeTracks(vec_tracksColor);
-    }
-    reconstructorHelperRef.exportToPly(
-      stlplus::create_filespec(sOutDir, "FinalColorized", ".ply"),
-      bColoredPointCloud ? &vec_tracksColor : NULL);
+    //-- Export to disk computed scene (data & visualizable results)
+    Save(sfmEngine.Get_SfM_Data(),
+      stlplus::create_filespec(sOutDir, "sfm_data", ".json"),
+      ESfM_Data(ALL));
 
-    // Export to openMVG format
-    std::cout << std::endl << "Export 3D scene to openMVG format" << std::endl
-      << " -- Point cloud color: " << (bColoredPointCloud ? "ON" : "OFF") << std::endl;
+    Save(sfmEngine.Get_SfM_Data(),
+      stlplus::create_filespec(sOutDir, "cloud_and_poses", ".ply"),
+      ESfM_Data(ALL));
 
-    if (!to3DEngine.getFilenamesVector().empty())
-    {
-      const std::string sImaDirectory = stlplus::folder_part(to3DEngine.getFilenamesVector()[0]);
-      if (!reconstructorHelperRef.ExportToOpenMVGFormat(
-        stlplus::folder_append_separator(sOutDir) + "SfM_output",
-        to3DEngine.getFilenamesVector(),
-        sImaDirectory,
-        to3DEngine.getImagesSize(),
-        to3DEngine.getTracks(),
-        bColoredPointCloud ? &vec_tracksColor : NULL,
-        true,
-        std::string("generated by the Sequential OpenMVG Calibration Engine")))
-      {
-        std::cerr << "Error while saving the scene." << std::endl;
-      }
-
-      // Manage export data to desired format
-      // -> PMVS
-      if (bPmvsExport)  {
-        std::cout << std::endl << "Export 3D scene to PMVS format" << std::endl;
-        reconstructorHelperRef.exportToPMVSFormat(
-          stlplus::folder_append_separator(sOutDir) + "PMVS",
-          to3DEngine.getFilenamesVector(),
-          sImaDirectory);
-      }
-    }
     return EXIT_SUCCESS;
-  }
-  else
-  {
-    std::cerr << "\n Something goes wrong in the Structure from Motion process" << std::endl;
   }
   return EXIT_FAILURE;
 }
