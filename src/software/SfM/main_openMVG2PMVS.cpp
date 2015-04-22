@@ -23,7 +23,8 @@ bool exportToPMVSFormat(
   const SfM_Data & sfm_data,
   const std::string & sOutDirectory,  //Output PMVS files directory
   const int downsampling_factor,
-  const int CPU_core_count
+  const int CPU_core_count,
+  const bool b_VisData = true
   )
 {
   bool bOk = true;
@@ -83,6 +84,7 @@ bool exportToPMVSFormat(
     // Export (calibrated) views as undistorted images
     count = 0;
     Image<RGBColor> image, image_ud;
+    Hash_Map<IndexT, IndexT> map_viewIdToContiguous;
     for(Views::const_iterator iter = sfm_data.getViews().begin();
       iter != sfm_data.getViews().end(); ++iter, ++my_progress_bar)
     {
@@ -94,6 +96,7 @@ bool exportToPMVSFormat(
         iterIntrinsic == sfm_data.getIntrinsics().end())
       continue;
 
+      map_viewIdToContiguous[view->id_view] = count;
       // We have a valid view with a corresponding camera & pose
       const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
       std::ostringstream os;
@@ -136,14 +139,58 @@ bool exportToPMVSFormat(
      << "CPU " << CPU_core_count << os.widen('\n')
      << "setEdge 0" << os.widen('\n')
      << "useBound 0" << os.widen('\n')
-     << "useVisData 0" << os.widen('\n')
+     << "useVisData " << (int) b_VisData << os.widen('\n')
      << "sequence -1" << os.widen('\n')
      << "maxAngle 10" << os.widen('\n')
      << "quad 2.0" << os.widen('\n')
      << "timages -1 0 " << count << os.widen('\n')
-     << "oimages 0" << os.widen('\n'); // ?
+     << "oimages 0" << os.widen('\n');
 
-    // TODO: (optional) export visdata and use it!
+    if (b_VisData)
+    {
+      std::map< IndexT, std::set<IndexT> > view_shared;
+      // From the structure observations, list the putatives pairs (symmetric)
+      for (Landmarks::const_iterator itL = sfm_data.getLandmarks().begin();
+        itL != sfm_data.getLandmarks().end(); ++itL)
+      {
+        const Landmark & landmark = itL->second;
+        const Observations & obs = landmark.obs;
+        for (Observations::const_iterator itOb = obs.begin();
+          itOb != obs.end(); ++itOb)
+        {
+          const IndexT viewId = itOb->first;
+          Observations::const_iterator itOb2 = itOb;
+          ++itOb2;
+          for (itOb2; itOb2 != obs.end(); ++itOb2)
+          {
+            const IndexT viewId2 = itOb2->first;
+            view_shared[map_viewIdToContiguous[viewId]].insert(map_viewIdToContiguous[viewId2]);
+            view_shared[map_viewIdToContiguous[viewId2]].insert(map_viewIdToContiguous[viewId]);
+          }
+        }
+      }
+      // Export the vis.dat file
+      std::ostringstream osVisData;
+      osVisData
+        << "VISDATA" << os.widen('\n')
+        << view_shared.size() << os.widen('\n'); // #images
+      // Export view shared visibility
+      for (std::map< IndexT, std::set<IndexT> >::const_iterator it = view_shared.begin();
+        it != view_shared.end(); ++it)
+      {
+        const std::set<IndexT> & setView = it->second;
+        osVisData << it->first << ' ' << setView.size();
+        for (std::set<IndexT>::const_iterator itV = setView.begin();
+          itV != setView.end(); ++itV)
+        {
+          osVisData << ' ' << *itV;
+        }
+        osVisData << os.widen('\n');
+      }
+      std::ofstream file(stlplus::create_filespec(sOutDirectory, "vis", "dat").c_str());
+      file << osVisData.str();
+      file.close();
+    }
 
     std::ofstream file(stlplus::create_filespec(sOutDirectory, "pmvs_options", "txt").c_str());
     file << os.str();
@@ -264,11 +311,13 @@ int main(int argc, char *argv[]) {
   std::string sOutDir = "";
   int resolution = 1;
   int CPU = 8;
+  bool bVisData = true;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "sfmdata") );
   cmd.add( make_option('o', sOutDir, "outdir") );
   cmd.add( make_option('r', resolution, "resolution") );
   cmd.add( make_option('c', CPU, "CPU") );
+  cmd.add( make_option('v', bVisData, "useVisData") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -279,6 +328,7 @@ int main(int argc, char *argv[]) {
       << "[-o|--outdir path]\n"
       << "[-r|--resolution: divide image coefficient]\n"
       << "[-c|--nb core]\n"
+      << "[-v|--useVisData use visibility information]"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -300,7 +350,8 @@ int main(int argc, char *argv[]) {
     exportToPMVSFormat(sfm_data,
       stlplus::folder_append_separator(sOutDir) + "PMVS",
       resolution,
-      CPU );
+      CPU,
+      bVisData);
 
     exportToBundlerFormat(sfm_data,
       stlplus::folder_append_separator(sOutDir) +
