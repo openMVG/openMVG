@@ -119,8 +119,8 @@ struct TracksBuilder
       for( size_t k = 0; k < vec_FilteredMatches.size(); ++k)
       {
         // Look if one of the feature already belong to a track :
-        myset.insert(make_pair(I,vec_FilteredMatches[k]._i));
-        myset.insert(make_pair(J,vec_FilteredMatches[k]._j));
+        myset.insert(std::make_pair(I,vec_FilteredMatches[k]._i));
+        myset.insert(std::make_pair(J,vec_FilteredMatches[k]._j));
       }
     }
 
@@ -142,8 +142,8 @@ struct TracksBuilder
     reverse_my_Map.sort();
 
     // Add the element of myset to the UnionFind insert method.
-    index = auto_ptr<IndexMap>( new IndexMap(g) );
-    myTracksUF = auto_ptr<UnionFindObject>( new UnionFindObject(*index));
+    index = std::auto_ptr<IndexMap>( new IndexMap(g) );
+    myTracksUF = std::auto_ptr<UnionFindObject>( new UnionFindObject(*index));
     for (ListDigraph::NodeIt it(g); it != INVALID; ++it) {
       myTracksUF->insert(it);
     }
@@ -160,8 +160,8 @@ struct TracksBuilder
 
       for( size_t k = 0; k < vec_FilteredMatches.size(); ++k)
       {
-        indexedFeaturePair pairI = make_pair(I,vec_FilteredMatches[k]._i);
-        indexedFeaturePair pairJ = make_pair(J,vec_FilteredMatches[k]._j);
+        indexedFeaturePair pairI(I,vec_FilteredMatches[k]._i);
+        indexedFeaturePair pairJ(J,vec_FilteredMatches[k]._j);
         myTracksUF->join( my_Map[pairI], my_Map[pairJ] );
       }
     }
@@ -214,11 +214,11 @@ struct TracksBuilder
       iter != map_tracksIdPerImages.end();
       ++iter)
     {
-      const set<size_t> & setA = iter->second;
+      const std::set<size_t> & setA = iter->second;
       for (TrackIdPerImageT::const_iterator iter2 = iter;
         iter2 != map_tracksIdPerImages.end();  ++iter2)
       {
-        const set<size_t> & setB = iter2->second;
+        const std::set<size_t> & setB = iter2->second;
         std::vector<size_t> inter;
 
         std::set_intersection(setA.begin(), setA.end(), setB.begin(), setB.end(), std::back_inserter(inter));
@@ -238,7 +238,7 @@ struct TracksBuilder
     return false;
   }
 
-  bool ExportToStream(ostream & os)
+  bool ExportToStream(std::ostream & os)
   {
     size_t cpt = 0;
     for ( lemon::UnionFindEnum< IndexMap >::ClassIt cit(*myTracksUF); cit != INVALID; ++cit) {
@@ -273,7 +273,7 @@ struct TracksBuilder
 
     size_t cptClass = 0;
     for ( lemon::UnionFindEnum< IndexMap >::ClassIt cit(*myTracksUF); cit != INVALID; ++cit, ++cptClass) {
-      pair<STLMAPTracks::iterator, bool> ret =
+      std::pair<STLMAPTracks::iterator, bool> ret =
         map_tracks.insert(std::pair<size_t, submapTrack >(cptClass, submapTrack() ) );
       STLMAPTracks::iterator iterN = ret.first;
 
@@ -381,9 +381,9 @@ struct TracksUtilsMap
         find_if(map_tracks.begin(), map_tracks.end(), FunctorMapFirstEqual(vec_filterIndex[i]));
       const submapTrack & map_ref = itF->second;
       submapTrack::const_iterator iter = map_ref.begin();
-      IndexT indexI = iter->second;
+      const IndexT indexI = iter->second;
       ++iter;
-      IndexT indexJ = iter->second;
+      const IndexT indexJ = iter->second;
       vec_indexref.push_back(IndMatch(indexI, indexJ));
     }
   }
