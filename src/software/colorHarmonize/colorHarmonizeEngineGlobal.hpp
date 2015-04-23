@@ -17,15 +17,16 @@
 
 namespace openMVG{
 
-class ColorHarmonizationEngineGlobal : public OldReconstructionEngine
+class ColorHarmonizationEngineGlobal
 {
 public:
-  ColorHarmonizationEngineGlobal( const std::string & sSfM_Data_Filename,
-                            const std::string & sMatchesPath,
-                            const std::string & sMatchesFile,
-                            const std::string & sOutDirectory,
-                            const int selectionMethod = -1,
-                            const int imgRef = -1);
+  ColorHarmonizationEngineGlobal(
+    const std::string & sSfM_Data_Filename,
+    const std::string & sMatchesPath,
+    const std::string & sMatchesFile,
+    const std::string & sOutDirectory,
+    const int selectionMethod = -1,
+    const int imgRef = -1);
 
   ~ColorHarmonizationEngineGlobal();
 
@@ -60,6 +61,11 @@ private:
   std::vector< std::pair< size_t, size_t > > _vec_imageSize; // Size of each image
 
   openMVG::matching::PairWiseMatches _map_Matches; // pairwise geometric matches
+
+  //
+  std::string _sSfM_Data_Path;// Path to the Sfm_Scene
+  std::string _sMatchesPath;  // Path to correspondences and features
+  std::string _sOutDirectory; // Output path where outputs will be stored
 };
 
 

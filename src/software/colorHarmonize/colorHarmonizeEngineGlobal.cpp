@@ -56,7 +56,9 @@ ColorHarmonizationEngineGlobal::ColorHarmonizationEngineGlobal(
   const string & sOutDirectory,
   const int selectionMethod,
   const int imgRef):
-  OldReconstructionEngine( sSfM_Data_Filename, sMatchesPath, sOutDirectory ),
+  _sSfM_Data_Path(sSfM_Data_Filename),
+  _sMatchesPath(sMatchesPath),
+  _sOutDirectory(sOutDirectory),
   _selectionMethod( selectionMethod ),
   _imgRef( imgRef ),
   _sMatchesFile(sMatchesFile)
