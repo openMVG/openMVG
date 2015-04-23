@@ -143,3 +143,8 @@ TARGET_LINK_LIBRARIES(openMVG_main_computeStructureFromKnownPoses
                      ${OpenMVG_LIBS})
 SET_PROPERTY(TARGET openMVG_main_computeStructureFromKnownPoses PROPERTY FOLDER OpenMVG/software)
 
+ADD_EXECUTABLE(openMVG_main_ComputeSfM_DataColor main_ComputeSfM_DataColor.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_ComputeSfM_DataColor
+                     ${OpenMVG_LIBS})
+SET_PROPERTY(TARGET openMVG_main_ComputeSfM_DataColor PROPERTY FOLDER OpenMVG/software)
+
