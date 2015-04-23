@@ -72,11 +72,36 @@ Pair_Set Frustum_Filter::getFrustumIntersectionPairs() const
   std::transform(z_near_z_far_perView.begin(), z_near_z_far_perView.end(),
     std::back_inserter(viewIds), std::RetrieveKey());
 
+  C_Progress_display my_progress_bar(
+    viewIds.size() * (viewIds.size()-1)/2,
+    std::cout, "\nCompute frustum intersection\n");
+
   // Exhaustive comparison (use the fact that the intersect function is symmetric)
+#ifdef OPENMVG_USE_OPENMP
+  #pragma omp parallel for
+#endif
   for (size_t i = 0; i < viewIds.size(); ++i)
+  {
     for (size_t j = i+1; j < viewIds.size(); ++j)
+    {
       if (frustum_perView.at(viewIds[i]).intersect(frustum_perView.at(viewIds[j])))
-        pairs.insert(std::make_pair(viewIds[i], viewIds[j]));
+      {
+#ifdef OPENMVG_USE_OPENMP
+        #pragma omp critical
+#endif
+        {
+          pairs.insert(std::make_pair(viewIds[i], viewIds[j]));
+        }
+      }
+      // Progress bar update
+#ifdef OPENMVG_USE_OPENMP
+      #pragma omp critical
+#endif
+      {
+        ++my_progress_bar;
+      }
+    }
+  }
   return pairs;
 }
 
