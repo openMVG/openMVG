@@ -9,7 +9,6 @@
 #define OPENMVG_COLOR_HARMONIZATION_ENGINE_GLOBAL_H
 
 #include <openMVG/numeric/numeric.h>
-#include <software/SfM/SfMEngine.hpp>
 #include <openMVG/features/features.hpp>
 #include <openMVG/tracks/tracks.hpp>
 
