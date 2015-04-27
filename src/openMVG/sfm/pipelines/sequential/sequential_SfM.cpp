@@ -847,6 +847,12 @@ bool SequentialSfMReconstructionEngine::Resection(size_t viewIndex)
     }
     else
     {
+      if (view_I->id_intrinsic == UndefinedIndexT)
+      {
+        // Update id_intrinsic to a valid value
+        View * view_I = _sfm_data.getViews().at(viewIndex).get();
+        view_I->id_intrinsic = _sfm_data.getIntrinsics().size();
+      }
       // Create the new camera intrinsic group
       switch (_camType)
       {
