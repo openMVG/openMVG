@@ -13,6 +13,7 @@
 
 #include "openMVG/sfm/sfm_data_io_cereal.hpp"
 #include "openMVG/sfm/sfm_data_io_ply.hpp"
+#include "openMVG/sfm/sfm_data_io_baf.hpp"
 
 namespace openMVG {
 
@@ -96,6 +97,8 @@ bool Save(const SfM_Data & sfm_data, const std::string & filename, ESfM_Data fla
     return Save_Cereal<cereal::XMLOutputArchive>(sfm_data, filename, flags_part);
   else if (ext == "ply")
     return Save_PLY(sfm_data, filename, flags_part);
+  else if (ext == "baf") // Bundle Adjustment file
+    return Save_BAF(sfm_data, filename, flags_part);
   return false;
 }
 

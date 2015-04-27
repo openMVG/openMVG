@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 
   cmd.add(make_option('i', sSfM_Data_Filename_In, "input_file"));
   cmd.add(make_option('o', sSfM_Data_Filename_Out, "output_file"));
-  
+
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
@@ -33,7 +33,7 @@ int main(int argc, char **argv)
       std::cerr << "Usage: " << argv[0] << '\n'
         << "[-i|--input_file] path to the input SfM_Data scene\n"
         << "[-o|--output_file] path to the output SfM_Data scene\n"
-        << "\t .json, .bin, .xml, .ply\n"
+        << "\t .json, .bin, .xml, .ply, .baf\n"
         << std::endl;
 
       std::cerr << s << std::endl;
