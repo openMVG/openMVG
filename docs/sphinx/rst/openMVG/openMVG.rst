@@ -2,7 +2,7 @@
 openMVG libraries
 ############################
 
-openMVG provide a collection of tiny librairies that allow to solve computer vision problems and build complete SfM pipeline.
+openMVG provide a collection of tiny libraries that allow to solve computer vision problems and build complete SfM pipeline.
 
 .. toctree::
   :maxdepth: 2
@@ -17,6 +17,7 @@ openMVG provide a collection of tiny librairies that allow to solve computer vis
   matching/matching.rst
   tracks/tracks.rst
   bundle_adjustment/bundle_adjustment.rst
+  geometry/geometry.rst
 
 
 **Structure from Motion core**
@@ -28,8 +29,6 @@ openMVG provide a collection of tiny librairies that allow to solve computer vis
 
 
 Todo:
-
-* **geometry** - Provide geometry tools: 6Dof estimation between 3D points, Camera pose and frustum intersection.
 
 * **system** - Provide access to accurate timer function.
 

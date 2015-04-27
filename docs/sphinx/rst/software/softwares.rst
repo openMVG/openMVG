@@ -1,9 +1,9 @@
 ############################
-openMVG softwares
+openMVG softwares& tools
 ############################
   
-openMVG provide complete software pipeline
-=======================================
+Tools & SfM pipelines
+=====================
 
 They can perform:
 

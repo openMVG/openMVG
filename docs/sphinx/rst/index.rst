@@ -26,7 +26,7 @@ OpenMVG (Multiple View Geometry) is a library for computer-vision scientists and
 It is designed to provide an easy access to:
 
 * Accurate Multiple View Geometry problem solvers,
-* Tiny libraries to perform task from feature detection/matching to Structure from Motion,
+* Tiny libraries to perform tasks from feature detection/matching to Structure from Motion,
 * Complete Structure from Motion pipelines.
 
 

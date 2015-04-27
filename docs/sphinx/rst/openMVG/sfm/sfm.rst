@@ -133,15 +133,91 @@ SfM Pipelines
 
 OpenMVG provides ready to use and customizable pipelines for:
 
-* solving sequential SfM,
+* solving sequential/incremental SfM,
 * solving global SfM,
 * computing a Structure from known camera poses.
 
 Sequential SfM
 -------------------------
 
+The [ACSfM]_ SfM is based on the implementation used for the paper "Adaptive Structure from Motion with a contrario model estimation"  published at ACCV 2012.
+
+The incremental pipeline is a growing reconstruction process.
+It starts from an initial two-view reconstruction (the seed) that is iteratively extended by adding new views and 3D points, using pose estimation and triangulation.
+Due to the incremental nature of the process, successive steps of non-linear refinement, like Bundle Adjustment (BA), are performed to minimize the accumulated error (drift).
+
+Incremental Structure from Motion
+
+.. code-block:: c++
+
+  Require: internal camera calibration (possibly from EXIF data)
+  Require: pairwise geometry consistent point correspondences
+  Ensure: 3D point cloud
+  Ensure: camera poses
+  compute correspondence tracks t
+  compute connectivity graph G (1 node per view, 1 edge when enough matches)
+  pick an edge e in G with sufficient baseline
+  * robustly estimate essential matrix from images of e
+  triangulate validated tracks, which provides an initial reconstruction
+  contract edge e
+  while G contains an edge do
+    pick edge e in G that maximizes union(track(e),3D points)
+    * robustly estimate pose (external orientation/resection)
+    triangulate new tracks
+    contract edge e
+    perform bundle adjustment
+  end while
+
+Steps marked by a * are robust estimation performed using the a-contrario robust estimation framework.
+
 Global SfM
 -------------------------
 
+[GlobalACSfM]_ is based on the paper "Global Fusion of Relative Motions for Robust, Accurate and Scalable Structure from Motion."  published at ICCV 2013.
+
+Multi-view structure from motion (SfM) estimates the position and orientation of pictures in a common 3D coordinate frame. When views are treated incrementally, this external calibration can be subject to drift, contrary to global methods that distribute residual errors evenly. Here the method propose a new global calibration approach based on the fusion of relative motions between image pairs. 
+
+.. code-block:: c++
+
+  Require: internal camera calibration (possibly from EXIF data)
+  Require: pairwise geometry consistent point correspondences
+  Ensure: 3D point cloud
+  Ensure: camera poses
+
+  compute relative pairwise rotations
+  detect and remove false relative pairwise rotations
+    - using composition error of triplet of relative rotations
+  compute the global rotation
+    - using a least square and approximated rotations
+  compute relative translations
+    - using triplet of views for stability and colinear motion support
+  compute the global translation
+    - integration of the relative translation directions using a l-∞ method
+  final structure and motion
+    - link tracks validated per triplets and compute global structure by triangulation
+    - refine estimated parameters in a 3 step Bundle Adjustment
+      - refine structure and translations
+      - refine structure and camera parameters (rotations, translations)
+      - refine if asked intrinsics parameters
+
 Structure computation from known camera poses
 ----------------------------------------------
+
+This class allows to compute valid 3D triangulation from 2D matches and known camera poses.
+
+.. code-block:: c++
+
+  Require: internal and external camera calibration
+  Require: features and corresponding descriptor per image view
+  Ensure: 3D point cloud
+
+  initialize putatives matches pair from
+    - a provided pair file
+    - or automatic pair computed from camera frustum intersection
+  for each pair
+    - find valid epipolar correspondences
+  for triplets of view
+    - filter 3-view correspondences that leads to invalid triangulation
+  merge 3-view validated correspondences
+    - robustly triangulate them 
+  save the scene with the update structure
