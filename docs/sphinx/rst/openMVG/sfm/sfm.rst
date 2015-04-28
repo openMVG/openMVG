@@ -137,6 +137,12 @@ OpenMVG provides ready to use and customizable pipelines for:
 * solving global SfM,
 * computing a Structure from known camera poses.
 
+
+.. figure:: ../../software/SfM/structureFromMotion.png
+   :align: center
+
+   Figure: From point observation and intrinsic camera parameters, the 3D **structure** of the scene is computed **from** the estimated **motion** of the camera.
+
 Sequential SfM
 -------------------------
 

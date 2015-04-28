@@ -1,5 +1,5 @@
 ############################
-openMVG softwares& tools
+openMVG softwares & tools
 ############################
   
 Tools & SfM pipelines
