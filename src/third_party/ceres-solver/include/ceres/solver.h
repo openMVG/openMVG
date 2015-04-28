@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2010, 2011, 2012 Google Inc. All rights reserved.
+// Copyright 2014 Google Inc. All rights reserved.
 // http://code.google.com/p/ceres-solver/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -92,7 +92,7 @@ class CERES_EXPORT Solver {
       gradient_tolerance = 1e-10;
       parameter_tolerance = 1e-8;
 
-#if defined(CERES_NO_SUITESPARSE) && defined(CERES_NO_CXSPARSE)
+#if defined(CERES_NO_SUITESPARSE) && defined(CERES_NO_CXSPARSE) && !defined(CERES_ENABLE_LGPL_CODE)
       linear_solver_type = DENSE_QR;
 #else
       linear_solver_type = SPARSE_NORMAL_CHOLESKY;
@@ -101,16 +101,27 @@ class CERES_EXPORT Solver {
       preconditioner_type = JACOBI;
       visibility_clustering_type = CANONICAL_VIEWS;
       dense_linear_algebra_library_type = EIGEN;
+
+      // Choose a default sparse linear algebra library in the order:
+      //
+      //   SUITE_SPARSE > CX_SPARSE > EIGEN_SPARSE
+#if !defined(CERES_NO_SUITESPARSE)
       sparse_linear_algebra_library_type = SUITE_SPARSE;
-#if defined(CERES_NO_SUITESPARSE) && !defined(CERES_NO_CXSPARSE)
+#else
+  #if !defined(CERES_NO_CXSPARSE)
       sparse_linear_algebra_library_type = CX_SPARSE;
+  #else
+    #if defined(CERES_USE_EIGEN_SPARSE)
+      sparse_linear_algebra_library_type = EIGEN_SPARSE;
+    #endif
+  #endif
 #endif
 
-
       num_linear_solver_threads = 1;
+      use_explicit_schur_complement = false;
       use_postordering = false;
       dynamic_sparsity = false;
-      min_linear_solver_iterations = 1;
+      min_linear_solver_iterations = 0;
       max_linear_solver_iterations = 500;
       eta = 1e-1;
       jacobi_scaling = true;
@@ -125,6 +136,11 @@ class CERES_EXPORT Solver {
       numeric_derivative_relative_step_size = 1e-6;
       update_state_every_iteration = false;
     }
+
+    // Returns true if the options struct has a valid
+    // configuration. Returns false otherwise, and fills in *error
+    // with a message describing the problem.
+    bool IsValid(string* error) const;
 
     // Minimizer options ----------------------------------------
 
@@ -481,6 +497,29 @@ class CERES_EXPORT Solver {
     // smaller than the group containing cameras.
     shared_ptr<ParameterBlockOrdering> linear_solver_ordering;
 
+    // Use an explicitly computed Schur complement matrix with
+    // ITERATIVE_SCHUR.
+    //
+    // By default this option is disabled and ITERATIVE_SCHUR
+    // evaluates evaluates matrix-vector products between the Schur
+    // complement and a vector implicitly by exploiting the algebraic
+    // expression for the Schur complement.
+    //
+    // The cost of this evaluation scales with the number of non-zeros
+    // in the Jacobian.
+    //
+    // For small to medium sized problems there is a sweet spot where
+    // computing the Schur complement is cheap enough that it is much
+    // more efficient to explicitly compute it and use it for evaluating
+    // the matrix-vector products.
+    //
+    // Enabling this option tells ITERATIVE_SCHUR to use an explicitly
+    // computed Schur complement.
+    //
+    // NOTE: This option can only be used with the SCHUR_JACOBI
+    // preconditioner.
+    bool use_explicit_schur_complement;
+
     // Sparse Cholesky factorization algorithms use a fill-reducing
     // ordering to permute the columns of the Jacobian matrix. There
     // are two ways of doing this.
@@ -708,10 +747,6 @@ class CERES_EXPORT Solver {
     //
     // The solver does NOT take ownership of these pointers.
     vector<IterationCallback*> callbacks;
-
-    // If non-empty, a summary of the execution of the solver is
-    // recorded to this file.
-    string solver_log;
   };
 
   struct CERES_EXPORT Summary {
@@ -797,6 +832,26 @@ class CERES_EXPORT Solver {
     // Time (in seconds) spent doing inner iterations.
     double inner_iteration_time_in_seconds;
 
+    // Cumulative timing information for line searches performed as part of the
+    // solve.  Note that in addition to the case when the Line Search minimizer
+    // is used, the Trust Region minimizer also uses a line search when
+    // solving a constrained problem.
+
+    // Time (in seconds) spent evaluating the univariate cost function as part
+    // of a line search.
+    double line_search_cost_evaluation_time_in_seconds;
+
+    // Time (in seconds) spent evaluating the gradient of the univariate cost
+    // function as part of a line search.
+    double line_search_gradient_evaluation_time_in_seconds;
+
+    // Time (in seconds) spent minimizing the interpolating polynomial
+    // to compute the next candidate step size as part of a line search.
+    double line_search_polynomial_minimization_time_in_seconds;
+
+    // Total time (in seconds) spent performing line searches.
+    double line_search_total_time_in_seconds;
+
     // Number of parameter blocks in the problem.
     int num_parameter_blocks;
 
@@ -835,6 +890,9 @@ class CERES_EXPORT Solver {
 
     //  Number of residuals in the reduced problem.
     int num_residuals_reduced;
+
+    // Is the reduced problem bounds constrained.
+    bool is_constrained;
 
     //  Number of threads specified by the user for Jacobian and
     //  residual evaluation.
@@ -899,9 +957,15 @@ class CERES_EXPORT Solver {
     // parameter blocks.
     vector<int> inner_iteration_ordering_used;
 
-    //  Type of preconditioner used for solving the trust region
-    //  step. Only meaningful when an iterative linear solver is used.
-    PreconditionerType preconditioner_type;
+    // Type of the preconditioner requested by the user.
+    PreconditionerType preconditioner_type_given;
+
+    // Type of the preconditioner actually used. This may be different
+    // from linear_solver_type_given if Ceres determines that the
+    // problem structure is not compatible with the linear solver
+    // requested or if the linear solver requested by the user is not
+    // available.
+    PreconditionerType preconditioner_type_used;
 
     // Type of clustering algorithm used for visibility based
     // preconditioning. Only meaningful when the preconditioner_type

@@ -33,9 +33,9 @@
 using namespace openMVG;
 
 TEST(Triangulate_NView, FiveViews) {
-  int nviews = 5;
-  int npoints = 6;
-  NViewDataSet d = NRealisticCamerasRing(nviews, npoints);
+  const int nviews = 5;
+  const int npoints = 6;
+  const NViewDataSet d = NRealisticCamerasRing(nviews, npoints);
 
   // Collect P matrices together.
   vector<Mat34> Ps(nviews);
@@ -56,16 +56,16 @@ TEST(Triangulate_NView, FiveViews) {
     for (int j = 0; j < nviews; ++j) {
       Vec3 x_reprojected = Ps[j]*X;
       x_reprojected /= x_reprojected(2);
-      double error = (x_reprojected.head(2) - xs.col(j)).norm();
+      const double error = (x_reprojected.head(2) - xs.col(j)).norm();
       EXPECT_NEAR(error, 0.0, 1e-9);
     }
   }
 }
 
 TEST(Triangulate_NViewAlgebraic, FiveViews) {
-  int nviews = 5;
-  int npoints = 6;
-  NViewDataSet d = NRealisticCamerasRing(nviews, npoints);
+  const int nviews = 5;
+  const int npoints = 6;
+  const NViewDataSet d = NRealisticCamerasRing(nviews, npoints);
 
   // Collect P matrices together.
   vector<Mat34> Ps(nviews);
@@ -86,36 +86,30 @@ TEST(Triangulate_NViewAlgebraic, FiveViews) {
     for (int j = 0; j < nviews; ++j) {
       Vec3 x_reprojected = Ps[j]*X;
       x_reprojected /= x_reprojected(2);
-      double error = (x_reprojected.head<2>() - xs.col(j)).norm();
+      const double error = (x_reprojected.head<2>() - xs.col(j)).norm();
       EXPECT_NEAR(error, 0.0, 1e-9);
     }
   }
 }
 
 TEST(Triangulate_NViewIterative, FiveViews) {
-  int nviews = 5;
-  int npoints = 6;
+  const int nviews = 5;
+  const int npoints = 6;
   const NViewDataSet d = NRealisticCamerasRing(nviews, npoints);
-
-  // Collect P matrices together.
-  vector<Mat34> Ps(nviews);
-  for (int j = 0; j < nviews; ++j) {
-    Ps[j] = d.P(j);
-  }
 
   for (int i = 0; i < npoints; ++i) {
 
     Triangulation triangulationObj;
     for (int j = 0; j < nviews; ++j)
-    triangulationObj.add(Ps[j], d._x[j].col(i));
+    triangulationObj.add(d.P(j), d._x[j].col(i));
 
-    Vec3 X = triangulationObj.compute();
+    const Vec3 X = triangulationObj.compute();
     // Check reprojection error. Should be nearly zero.
     EXPECT_NEAR(triangulationObj.error(X), 0.0, 1e-9);
     for (int j = 0; j < nviews; ++j) {
-      Vec3 x_reprojected = Ps[j]* Vec4(X(0), X(1), X(2), 1.0);
+      Vec3 x_reprojected = d.P(j) * Vec4(X(0), X(1), X(2), 1.0);
       x_reprojected /= x_reprojected(2);
-      double error = (x_reprojected.head<2>() - d._x[j].col(i)).norm();
+      const double error = (x_reprojected.head<2>() - d._x[j].col(i)).norm();
       EXPECT_NEAR(error, 0.0, 1e-9);
     }
   }

@@ -9,14 +9,16 @@
 #include "testing/testing.h"
 
 #include <iostream>
+#include <algorithm>
 using namespace std;
 
 using namespace openMVG;
 
 // Check pairs follow a weak ordering pair.first < pair.second
-bool checkPairOrder(const PairsT & pairs)
+template<typename IterablePairs>
+bool checkPairOrder(const IterablePairs & pairs)
 {
-  for (PairsT::const_iterator iterP = pairs.begin(); iterP != pairs.end();
+  for (typename IterablePairs::const_iterator iterP = pairs.begin(); iterP != pairs.end();
     ++iterP)
   {
     if (iterP->first >= iterP->second)
@@ -27,7 +29,7 @@ bool checkPairOrder(const PairsT & pairs)
 
 TEST(matching_image_collection, exhaustivePairs)
 {
-  PairsT pairSet = exhaustivePairs(0);
+  Pair_Set pairSet = exhaustivePairs(0);
   EXPECT_EQ( 0, pairSet.size());
 
   pairSet = exhaustivePairs(4);
@@ -43,7 +45,7 @@ TEST(matching_image_collection, exhaustivePairs)
 
 TEST(matching_image_collection, contiguousWithOverlap)
 {
-  PairsT pairSet = exhaustivePairs(0);
+  Pair_Set pairSet = exhaustivePairs(0);
   EXPECT_EQ( 0, pairSet.size());
 
   pairSet = contiguousWithOverlap(4,1);
@@ -56,15 +58,41 @@ TEST(matching_image_collection, contiguousWithOverlap)
 
 TEST(matching_image_collection, IO)
 {
-  PairsT pairSetGT;
-  pairSetGT.insert( std::make_pair(0,2) );
-  pairSetGT.insert( std::make_pair(2,4) );
+  Pair_Set pairSetGT;
+  pairSetGT.insert( std::make_pair(0,1) );
+  pairSetGT.insert( std::make_pair(1,2) );
+  pairSetGT.insert( std::make_pair(2,0) );
+
+  Pair_Set pairSetGTsorted;
+  pairSetGTsorted.insert( std::make_pair(0,1) );
+  pairSetGTsorted.insert( std::make_pair(0,2) );
+  pairSetGTsorted.insert( std::make_pair(1,2) );
 
   EXPECT_TRUE( savePairs("pairsT_IO.txt", pairSetGT));
 
-  PairsT loaded_Pairs;
-  EXPECT_TRUE( loadPairs("pairsT_IO.txt", loaded_Pairs));
-  EXPECT_TRUE( loaded_Pairs == pairSetGT);
+  Pair_Set loaded_Pairs;
+  EXPECT_TRUE( loadPairs(3, "pairsT_IO.txt", loaded_Pairs));
+  EXPECT_TRUE( std::equal(loaded_Pairs.begin(), loaded_Pairs.end(), pairSetGTsorted.begin()) );
+}
+
+TEST(matching_image_collection, IO_InvalidInput)
+{
+  // A pair with index superior to the expected picture count
+  Pair_Set pairSetGT;
+  pairSetGT.insert( std::make_pair(0,1) );
+  pairSetGT.insert( std::make_pair(10,20) );
+
+  EXPECT_TRUE( savePairs("pairsT_IO_InvalidInput.txt", pairSetGT));
+
+  Pair_Set loaded_Pairs;
+  const int expectedPicCount = 2;
+  EXPECT_FALSE( loadPairs(expectedPicCount, "pairsT_IO_InvalidInput.txt", loaded_Pairs));
+
+  // A pair with equal index
+  pairSetGT.clear();
+  pairSetGT.insert( std::make_pair(0,1) );
+  pairSetGT.insert( std::make_pair(0,0) );
+  EXPECT_FALSE( loadPairs(expectedPicCount, "pairsT_IO_InvalidInput.txt", loaded_Pairs));
 }
 
 /* ************************************************************************* */

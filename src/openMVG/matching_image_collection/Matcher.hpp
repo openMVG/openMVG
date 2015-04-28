@@ -27,7 +27,7 @@ class Matcher
   /// Build point indexes correspondences lists between images ids
   virtual void Match(
     const std::vector<std::string> & vec_filenames,
-    const PairsT & pairs, // list of pair to consider for matching
+    const Pair_Set & pairs, // list of pair to consider for matching
     matching::PairWiseMatches & map_putatives_matches // the output pairwise photometric corresponding points
     )const = 0;
 };

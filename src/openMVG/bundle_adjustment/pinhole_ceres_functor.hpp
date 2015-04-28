@@ -88,9 +88,6 @@ void computeResidual(
  *    - 3 for rotation(angle axis), 3 for translation.
  *  - third the 3D point data block
  *
- * @warning Principal point is assumed being applied on observed points.
- *
- * @see computeResidual
  */
 struct ErrorFunc_Refine_Intrinsic_Motion_3DPoints
 {
@@ -98,6 +95,12 @@ struct ErrorFunc_Refine_Intrinsic_Motion_3DPoints
   {
     m_pos_2dpoint[0] = pos_2dpoint[0];
     m_pos_2dpoint[1] = pos_2dpoint[1];
+  }
+
+  ErrorFunc_Refine_Intrinsic_Motion_3DPoints(const float* const pos_2dpoint)
+  {
+    m_pos_2dpoint[0] = (double)pos_2dpoint[0];
+    m_pos_2dpoint[1] = (double)pos_2dpoint[1];
   }
 
   /**

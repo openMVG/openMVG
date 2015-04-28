@@ -362,7 +362,7 @@ IF (SUITESPARSEQR_FOUND)
       # any CMake generated help string (cache variable).
       LIST(APPEND TBB_LIBRARIES ${TBB_MALLOC_LIB})
       GET_PROPERTY(HELP_STRING CACHE TBB_LIBRARIES PROPERTY HELPSTRING)
-      SET(TBB_LIBRARIES "${TBB_LIBRARIES}" CACHE STRING ${HELP_STRING})
+      SET(TBB_LIBRARIES "${TBB_LIBRARIES}" CACHE STRING "${HELP_STRING}")
 
       # Add the TBB libraries to the SuiteSparseQR libraries (the only
       # libraries to optionally depend on TBB).

@@ -38,7 +38,7 @@ typedef std::vector<openMVG::Mat3> Matrix3x3Arr;
  * @param[out] vec_inliers rotation labelled as inliers or outliers
  */
 bool GlobalRotationsRobust(
-  const std::vector<RelRotationData>& RelRs,
+  const RelativeRotations& RelRs,
   Matrix3x3Arr& Rs,
   const size_t nMainViewID,
   float threshold = 0.f,
@@ -53,7 +53,7 @@ bool GlobalRotationsRobust(
  * @param[in] sigma factor
  */
 bool RefineRotationsAvgL1IRLS(
-  const std::vector<RelRotationData>& RelRs,
+  const RelativeRotations& RelRs,
   Matrix3x3Arr& Rs,
   const size_t nMainViewID,
   REAL sigma=openMVG::D2R(5));
@@ -67,7 +67,7 @@ bool RefineRotationsAvgL1IRLS(
  * @param[in] vec_inliers inlier, outlier labels
  */
 unsigned int FilterRelativeRotations(
-  const std::vector<RelRotationData>& RelRs,
+  const RelativeRotations& RelRs,
   const Matrix3x3Arr& Rs,
   float threshold = 0.f,
   std::vector<bool> * vec_inliers = NULL);

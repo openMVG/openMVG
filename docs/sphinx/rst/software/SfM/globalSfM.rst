@@ -32,8 +32,6 @@ Multi-view structure from motion (SfM) estimates the position and orientation of
 Information and usage
 ========================
 
-The chain is designed for only one intrinsic group, so all the pictures provided to the chain must have the same focal length.
-
 The chain is used in a three step process: 
   1. Intrinsic analysis,
   2. Geometric features correspondences computation,

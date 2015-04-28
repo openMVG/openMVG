@@ -57,8 +57,8 @@ namespace openMVG {
 
 		void clear()  { views.clear();}
 
-		void add(const Mat34& camera, const Vec2 & p) {
-			views.push_back( std::pair<const Mat34*, Vec2>(&camera,p) );
+		void add(const Mat34& projMatrix, const Vec2 & p) {
+			views.push_back( std::pair<Mat34, Vec2>(projMatrix,p) );
 		}
 
     // Return squared L2 sum of error
@@ -81,7 +81,7 @@ namespace openMVG {
 		mutable double zmin; // min depth, mutable since modified in compute(...) const;
     mutable double zmax; // max depth, mutable since modified in compute(...) const;
     mutable double err;  // retprojection error, mutable since modified in compute(...) const;
-		std::vector< std::pair<const Mat34*, Vec2> > views; // Proj matrix and associated image point
+		std::vector< std::pair<Mat34, Vec2> > views; // Proj matrix and associated image point
 	};
 
 }  // namespace openMVG

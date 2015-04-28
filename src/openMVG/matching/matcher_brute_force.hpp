@@ -10,7 +10,7 @@
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/matching/matching_interface.hpp"
 #include "openMVG/matching/metric.hpp"
-#include "openMVG/matching/indexed_sort.hpp"
+#include "openMVG/stl/indexed_sort.hpp"
 #include <memory>
 #include <iostream>
 
@@ -108,7 +108,7 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
     if (memMapping.get() == NULL)  {
       return false;
     }
-    
+
     if (NN > (*memMapping).rows() || nbQuery < 1) {
       std::cerr << "Too much asked nearest neighbors" << std::endl;
       return false;

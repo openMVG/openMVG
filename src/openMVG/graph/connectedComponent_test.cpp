@@ -10,14 +10,13 @@
 #include "CppUnitLite/TestHarness.h"
 #include "testing/testing.h"
 
-#include "openMVG/graph/connectedComponent.hpp"
-#include "lemon/list_graph.h"
+#include "openMVG/graph/graph.hpp"
 using namespace lemon;
 
 TEST(connectedComponents, Empty) {
   lemon::ListGraph graph;
 
-  int connectedComponentCount = lemon::countConnectedComponents(graph);
+  const int connectedComponentCount = lemon::countConnectedComponents(graph);
   EXPECT_EQ(0, connectedComponentCount);
 }
 
@@ -25,7 +24,7 @@ TEST(connectedComponents, OneCC) {
   lemon::ListGraph graph;
   lemon::ListGraph::Node a = graph.addNode(), b = graph.addNode();
   graph.addEdge(a,b);
-  int connectedComponentCount = lemon::countConnectedComponents(graph);
+  const int connectedComponentCount = lemon::countConnectedComponents(graph);
   EXPECT_EQ(1, connectedComponentCount);
 }
 
@@ -36,7 +35,7 @@ TEST(connectedComponents, TwoCC) {
   graph.addEdge(a,b);
   lemon::ListGraph::Node a2 = graph.addNode(), b2 = graph.addNode();
   graph.addEdge(a2,b2);
-  int connectedComponentCount = lemon::countConnectedComponents(graph);
+  const int connectedComponentCount = lemon::countConnectedComponents(graph);
   EXPECT_EQ(2, connectedComponentCount);
 }
 
@@ -51,7 +50,7 @@ TEST(connectedComponents, TwoCC_Parsing) {
 
   typedef ListGraph::NodeMap<size_t> IndexMap;
   IndexMap connectedNodeMap(graph);
-  int connectedComponentCount =  lemon::connectedComponents(graph, connectedNodeMap);
+  const int connectedComponentCount =  lemon::connectedComponents(graph, connectedNodeMap);
   EXPECT_EQ(2, connectedComponentCount);
   for (IndexMap::MapIt it(connectedNodeMap); it != INVALID; ++it)
   {
@@ -100,7 +99,7 @@ TEST(exportGraphToMapSubgraphs, CC_Subgraph) {
   graph.addEdge(j,l);
 
   const std::map<size_t, std::set<lemon::ListGraph::Node> > map_subgraphs =
-    openMVG::graphUtils::exportGraphToMapSubgraphs(graph);
+    openMVG::graphUtils::exportGraphToMapSubgraphs<lemon::ListGraph, size_t>(graph);
 
   EXPECT_EQ(4, map_subgraphs.size());
   EXPECT_EQ(5, map_subgraphs.at(0).size());

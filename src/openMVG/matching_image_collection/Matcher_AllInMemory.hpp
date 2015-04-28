@@ -63,17 +63,17 @@ class Matcher_AllInMemory : public Matcher
 
   void Match(
     const std::vector<std::string> & vec_fileNames, // input filenames,
-    const PairsT & pairs,
+    const Pair_Set & pairs,
     PairWiseMatches & map_PutativesMatches)const // the pairwise photometric corresponding points
   {
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
     std::cout << "Using the OPENMP thread interface" << std::endl;
 #endif
     C_Progress_display my_progress_bar( pairs.size() );
 
     // Sort pairs according the first index to minimize the MatcherT build operations
     std::map<size_t, std::vector<size_t> > map_Pairs;
-    for (PairsT::const_iterator iter = pairs.begin(); iter != pairs.end(); ++iter)
+    for (Pair_Set::const_iterator iter = pairs.begin(); iter != pairs.end(); ++iter)
     {
       map_Pairs[iter->first].push_back(iter->second);
     }
@@ -95,7 +95,7 @@ class Matcher_AllInMemory : public Matcher
       ( matcher10.Build(tab0, featureSetI_Size, DescriptorT::static_size) );
 
       const std::vector<size_t> & indexToCompare = iter->second;
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
       for (int j = 0; j < (int)indexToCompare.size(); ++j)
@@ -138,7 +138,7 @@ class Matcher_AllInMemory : public Matcher
         IndMatchDecorator<float> matchDeduplicator(vec_FilteredMatches, featureSetI, featureSetJ);
         matchDeduplicator.getDeduplicated(vec_FilteredMatches);
 
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
 #endif
         {

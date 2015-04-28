@@ -199,6 +199,7 @@ Canon;Canon EOS 5D Mark III;36
 Canon;Canon IXUS 125 HS;6.16
 Canon;Canon PowerShot SX260 HS;6.16
 Canon;Canon IXUS 240 HS;6.16
+Canon;Canon IXUS 220 HS;6.16
 Canon;Canon IXUS 510 HS;6.16
 Canon;Canon PowerShot ELPH 320 HS;6.16
 Canon;Canon PowerShot Elph 530 HS;6.16
@@ -226,7 +227,6 @@ Canon;Canon Powershot A2200;6.16
 Canon;Canon Powershot A3300 IS;6.16
 Canon;Canon PowerShot A800;6.16
 Canon;Canon IXUS 115 HS;6.16
-Canon;Canon IXUS 220 HS;6.16
 Canon;Canon IXUS 310 HS;6.16
 Canon;Canon PowerShot SX220 HS;6.16
 Canon;Canon PowerShot SX230 HS;6.16
@@ -245,6 +245,8 @@ Canon;Canon PowerShot SD1400 IS;6.16
 Canon;Canon IXUS 130;6.16
 Canon;Canon PowerShot SD3500 IS;6.16
 Canon;Canon EOS Rebel T2i / 550D;22.3
+Canon;Canon EOS Rebel T1i / 500D;22.3
+Canon;Canon IXUS 220HS;6.16
 Canon;Canon IXUS 210;6.16
 Canon;Canon PowerShot SX30 IS;6.16
 Canon;Canon PowerShot SX210 IS;6.16

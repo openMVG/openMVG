@@ -10,7 +10,7 @@ About
 TinyThread++ is a minimalist, portable, threading library for C++, intended to
 make it easy to create multi threaded C++ applications.
 
-The library is closesly modeled after the C++11 standard, but only a subset is
+The library is closely modelled after the C++11 standard, but only a subset is
 implemented at the moment.
 
 See the documentation in the doc/html directory for more information.
@@ -25,7 +25,7 @@ tinythread.h to your project. In your own code, do:
 #include <tinythread.h>
 using namespace tthread;
 
-If you wish to use the fast_mutex class, inlude fast_mutex.h:
+If you wish to use the fast_mutex class, include fast_mutex.h:
 
 #include <fast_mutex.h>
 
@@ -119,7 +119,7 @@ freely, subject to the following restrictions:
 
     1. The origin of this software must not be misrepresented; you must not
     claim that you wrote the original software. If you use this software
-    in a product, an acknowledgment in the product documentation would be
+    in a product, an acknowledgement in the product documentation would be
     appreciated but is not required.
 
     2. Altered source versions must be plainly marked as such, and must not be

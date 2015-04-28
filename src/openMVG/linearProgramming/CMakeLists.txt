@@ -31,7 +31,9 @@ IF (NOT MOSEK_FOUND)
 ELSE (NOT MOSEK_FOUND)
   # MOSEK_FOUND is true
   ADD_LIBRARY(openMVG_linearProgrammingMSK ${linearProgramming_headers} ${linearProgramming_cpp})
- 
+  SET_PROPERTY(TARGET openMVG_linearProgrammingMSK PROPERTY FOLDER OpenMVG/OpenMVG)
+  INSTALL(TARGETS openMVG_linearProgrammingMSK DESTINATION lib/)
+
   SET(openMVG_linearProgramming
     lib_Osi_Msk      # OSI solver wrapper for the Mosek backend
     lib_OsiClpSolver # solver wrapper
@@ -42,7 +44,6 @@ ELSE (NOT MOSEK_FOUND)
     openMVG_linearProgrammingMSK # openMVG Mosek wrapper
     ${MOSEK_LIB}    # Mosek lib
   )
-  
 ENDIF (NOT MOSEK_FOUND)
 
 # set the variable in the parent_scope

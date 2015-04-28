@@ -21,30 +21,33 @@ openMVG documentation!
    bibliography
 
 
-Introduction
---------------
+OpenMVG (Multiple View Geometry) is a library for computer-vision scientists and targeted for the Multiple View Geometry community.
 
-OpenMVG (Multiple View Geometry) is a library for computer-vision scientists and especially
-targeted to the Multiple View Geometry community. It is designed to provide an easy access to the
-classical problem solvers in Multiple View Geometry and solve them accurately.
+It is designed to provide an easy access to:
+
+* Accurate Multiple View Geometry problem solvers,
+* Tiny libraries to perform tasks from feature detection/matching to Structure from Motion,
+* Complete Structure from Motion pipelines.
 
 
 Why another library
---------------
+-------------------
 
-The openMVG credo is **"Keep it simple, keep it maintainable".**
-OpenMVG targets readable code that is easy to use and modify by the community.
+The openMVG credo is **"Keep it simple, keep it maintainable".**.
+It means provide a readable code that is easy to use and modify by the community.
 
-All the features and modules are unit tested. This test driven development ensures that the code
-works as it should and enables more consistent repeatability. Furthermore, it makes it easier for the
-user to understand and learn the given features.
+All the **features and modules are unit-tested**.
+This test driven development ensures:
 
-openMVG library overview
+* more consistent repeatability (assert code works as it should in time),
+* that the code is used in a real context to show how it should be used.
+
+openMVG overview
 -------------------------
 
-The openMVG library is cut in various modules:
+OpenMVG is cut in various modules:
 
-* **Libraries, core**,
+* **Libraries**, core modules,
 
   * comes with unit tests that assert algorithms results and show how use the code.
   
@@ -52,34 +55,46 @@ The openMVG library is cut in various modules:
 
   * show how to use the library to build high_level algorithms.
   
-* **Binaries**,
+* **Softwares**,
 
-  * softwares build to perform toolchain processing
+  *  ready to use tools to perform toolchain processing:
 
     * features matching in un-ordered photo collection,
-    * SfM: Structure from Motion,
+    * SfM: tools and Structure from Motion pipelines,
     * color harmonization of photo collection.
+
+Cite Us
+=======
+
+If you use openMVG for a publication, please cite it as::
+
+    @misc{openMVG,
+      author = "Pierre Moulon and Pascal Monasse and Renaud Marlet and Others",
+      title = "OpenMVG",
+      howpublished = "\url{https://github.com/openMVG/openMVG}",
+    }
 
 
 Acknowledgements
 -----------------
 openMVG authors would like to thank:
 
-- libmv authors for providing an inspiring base to design the openMVG library.
-- Mikros Image and LIGM-Imagine laboratory for support and authorization to make this library as an open-source project.
+- libmv authors for providing an inspiring base to design the openMVG library,
+- Mikros Image, LIGM-Imagine laboratory and Foxel SA for support,
+- Mikros Image, LIGM-Imagine laboratory authorization to make this library an open-source project.
 
 License
 --------------
 openMVG library is release under the MPL2 (Mozilla Public License 2.0). It integrates some sub-part
 under the MIT (Massachusetts Institute of Technology) and the BSD (Berkeley Software Distribution) license.
-Please refer to the license file contained in the source for complete license description.
+Please refer to the copyright.md and license files contained in the source for complete license description.
 
 
 Dependencies
 --------------
-OpenMVG come as a standalone distribution, you don't need to install libraries to make it compiles
+OpenMVG comes as a standalone distribution, you don't need to install libraries to make it compiles
 and run.
-On Linux the library will use if available the local png, zlib and jpeg libraries.
+On Linux openMVG will use the local png, zlib and jpeg libraries if they are availables.
    
 Indices and tables
 ----------------------

@@ -182,6 +182,30 @@ TEST(NumericDiffCostFunction, EigenRowMajorColMajorTest) {
   cost_function.reset(
       new NumericDiffCostFunction<SizeTestingCostFunction<2,2>,  CENTRAL, 2, 2>(
           new SizeTestingCostFunction<2,2>, ceres::TAKE_OWNERSHIP));
+
+  cost_function.reset(
+      new NumericDiffCostFunction<EasyFunctor, CENTRAL, ceres::DYNAMIC, 1, 1>(
+          new EasyFunctor, TAKE_OWNERSHIP, 1));
+
+  cost_function.reset(
+      new NumericDiffCostFunction<EasyFunctor, CENTRAL, ceres::DYNAMIC, 1, 1>(
+          new EasyFunctor, TAKE_OWNERSHIP, 2));
+
+  cost_function.reset(
+      new NumericDiffCostFunction<EasyFunctor, CENTRAL, ceres::DYNAMIC, 1, 2>(
+          new EasyFunctor, TAKE_OWNERSHIP, 1));
+
+  cost_function.reset(
+      new NumericDiffCostFunction<EasyFunctor, CENTRAL, ceres::DYNAMIC, 1, 2>(
+          new EasyFunctor, TAKE_OWNERSHIP, 2));
+
+  cost_function.reset(
+      new NumericDiffCostFunction<EasyFunctor, CENTRAL, ceres::DYNAMIC, 2, 1>(
+          new EasyFunctor, TAKE_OWNERSHIP, 1));
+
+  cost_function.reset(
+      new NumericDiffCostFunction<EasyFunctor, CENTRAL, ceres::DYNAMIC, 2, 1>(
+          new EasyFunctor, TAKE_OWNERSHIP, 2));
 }
 
 TEST(NumericDiffCostFunction, EasyCaseFunctorCentralDifferencesAndDynamicNumResiduals) {

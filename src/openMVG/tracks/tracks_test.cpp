@@ -72,7 +72,7 @@ TEST(Tracks, Simple) {
       iter != iterT->second.end();
       ++iter)
     {
-      CHECK( GT_Tracks[cpt] == make_pair(iter->first, iter->second));
+      CHECK( GT_Tracks[cpt] == std::make_pair(iter->first, iter->second));
       ++cpt;
     }
   }
@@ -165,7 +165,7 @@ TEST(Tracks, Conflict) {
       iter != iterT->second.end();
       ++iter)
     {
-      CHECK( GT_Tracks[cpt] == make_pair(iter->first, iter->second));
+      CHECK( GT_Tracks[cpt] == std::make_pair(iter->first, iter->second));
       ++cpt;
     }
   }

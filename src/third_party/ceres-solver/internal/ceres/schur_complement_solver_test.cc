@@ -187,17 +187,31 @@ TEST_F(SchurComplementSolverTest,
 
 #ifndef CERES_NO_CXSPARSE
 TEST_F(SchurComplementSolverTest,
-       SparseSchurWithSuiteSparseSmallProblem) {
+       SparseSchurWithCXSparseSmallProblem) {
   ComputeAndCompareSolutions(2, false, SPARSE_SCHUR, EIGEN, CX_SPARSE, true);
   ComputeAndCompareSolutions(2, true, SPARSE_SCHUR, EIGEN, CX_SPARSE, true);
 }
 
 TEST_F(SchurComplementSolverTest,
-       SparseSchurWithSuiteSparseLargeProblem) {
+       SparseSchurWithCXSparseLargeProblem) {
   ComputeAndCompareSolutions(3, false, SPARSE_SCHUR, EIGEN, CX_SPARSE, true);
   ComputeAndCompareSolutions(3, true, SPARSE_SCHUR, EIGEN, CX_SPARSE, true);
 }
 #endif  // CERES_NO_CXSPARSE
+
+#ifdef CERES_USE_EIGEN_SPARSE
+TEST_F(SchurComplementSolverTest,
+       SparseSchurWithEigenSparseSmallProblem) {
+  ComputeAndCompareSolutions(2, false, SPARSE_SCHUR, EIGEN, EIGEN_SPARSE, true);
+  ComputeAndCompareSolutions(2, true, SPARSE_SCHUR, EIGEN, EIGEN_SPARSE, true);
+}
+
+TEST_F(SchurComplementSolverTest,
+       SparseSchurWithEigenSparseLargeProblem) {
+  ComputeAndCompareSolutions(3, false, SPARSE_SCHUR, EIGEN, EIGEN_SPARSE, true);
+  ComputeAndCompareSolutions(3, true, SPARSE_SCHUR, EIGEN, EIGEN_SPARSE, true);
+}
+#endif  // CERES_USE_EIGEN_SPARSE
 
 }  // namespace internal
 }  // namespace ceres

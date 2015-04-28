@@ -162,7 +162,7 @@ public:
 //        otherwise, it presents the average photometric consistency score with its neighbor matches.
 //
 //E: gvld(or vld)-consistency matrix, for illustration reason, it has been externalized as an input of KVLD. it should be initialized to be a matches.size*matche.sizes table with all equal to -1
-//   e.g.  libNumerics::matrix<int> E = libNumerics::matrix<int>::ones(matchesPair.size(),matchesPair.size())*(-1);
+//   e.g.  Mat E = Mat::ones(matchesPair.size(),matchesPair.size())*(-1);
 //
 //valide: indices of whether the i th match in the initial match list is selected, for illustration reason, it has been externalized as an input of KVLD. it should be initialized to be a
 //    matches.size vector with all equal to true.  e.g.  std::vector<bool> valide(size, true);
@@ -173,8 +173,8 @@ float KVLD( const openMVG::Image< float >& I1,
             const openMVG::Image< float >& I2,
             std::vector< openMVG::SIOPointFeature >& F1,
             std::vector< openMVG::SIOPointFeature >& F2,
-            const std::vector< Pair >& matches,
-            std::vector< Pair >& matchesFiltered,
+            const std::vector< openMVG::Pair >& matches,
+            std::vector< openMVG::Pair >& matchesFiltered,
             std::vector< double >& score,
             openMVG::Mat& E,
             std::vector< bool >& valide,
@@ -185,8 +185,8 @@ float KVLD( const openMVG::Image< float >& I1,
 void writeResult( const std::string & output,
                   const std::vector< openMVG::SIOPointFeature >& F1,
                   const std::vector< openMVG::SIOPointFeature >& F2,
-                  const std::vector< Pair >& matches,
-                  const std::vector< Pair >& matchesFiltered,
+                  const std::vector< openMVG::Pair >& matches,
+                  const std::vector< openMVG::Pair >& matchesFiltered,
                   const std::vector< double >& score );
 
 

@@ -2,20 +2,23 @@
 matching
 *******************
 
-Method
-=============
+Nearest neighbor search
+========================
 
-A generic interface to perform the **Nearest neighbor search (NNS)** and **K-Nearest Neighbor (K-NN)** search.
+We provide a generic interface to perform:
 
-Two methods can be used:
+* **Nearest neighbor search (NNS)**
+* **K-Nearest Neighbor (K-NN)**
 
-* Brute force,
-* Approximate Nearest Neighbor [FLANN]_.
+Two implementation are available:
 
-This module works for any size of data, it could be use to match:
+* a Brute force,
+* an Approximate Nearest Neighbor [FLANN]_.
+
+This module works for data of any dimensionality, it could be use to match:
 
 * 2 or 3 vector long features (points),
-* 128, 64, vector long features (like SIFT, SURF descriptors).
+* 128, 64, vector long features (like global/local feature descriptors).
 
 Using the **Nearest neighbor search (NNS)** let you find pairs of elements (``(i,j)``) from sets ``A`` and ``B`` that are the closest for a given metric ``d``:
 
@@ -59,26 +62,24 @@ Example of usage:
   
   // vec_nIndice = {2,1};
 
-  
-Metric
-=============
 
-Used metric is customizable and enable matching under:
+Metric customization
+====================
 
 * L2 (used by default):
 
 .. math::
   d(x,y):=\| x-y \|_2
 
-* or an user customized distance (L1, ...),
-
-* i.e L1 for binary descriptor (Hamming distance)
+* i.e L1 for binary descriptor (Hamming distance),
 
 .. math::
   d(x,y) = \sum(x \oplus y)
 
-Filtering
-=============
+* user customized distance (L1, ...).
+
+Image domain, correspondences filtering (KVLD)
+===============================================
 
 When used with descriptors found putatives matches can be filtered thanks to different filters:
 
@@ -93,7 +94,7 @@ When used with descriptors found putatives matches can be filtered thanks to dif
 
 * "Nearest Neighbor Distance Ratio" distance check can be performed to remove repetitive elements.
 
-  * As many nearest points have been asked we can measure the similarity between the N-nearest neighbor. If the ratio of distance is inferior to a threshold ``\delta`` the match is kept else it is rejected (since the risk of confusion is higher). It allows to avoid ambiguous correspondences. ``\delta`` is often choosen between ``0.6`` and ``0.8``.
+  * As many nearest points have been asked we can measure the similarity between the N-nearest neighbor. If the ratio of distance is inferior to a threshold ``\delta`` the match is kept else it is rejected (since the risk of confusion is higher). It allows to avoid ambiguous correspondences. ``\delta`` is often chosen between ``0.6`` and ``0.8``.
     
 .. math::
   \lbrace (P^i_A,P^j_B): j = \underset{k} {\mathrm{argmin}} ~ d(\text{desc}(P^i_A), \text{desc}(P^k_B)) < \delta \underset{k\neq j} \min ~ d(\text{desc}(P^i_A), \text{desc}(P^k_B))

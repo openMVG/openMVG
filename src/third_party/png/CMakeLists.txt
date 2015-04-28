@@ -68,3 +68,15 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ../zlib)
 add_library(png STATIC ${libpng_sources})
 target_link_libraries(png zlib ${M_LIBRARY})
 SET_PROPERTY(TARGET png PROPERTY FOLDER OpenMVG/3rdParty)
+
+if(PNG_INCLUDE_INSTALL_DIR)
+  set(INCLUDE_INSTALL_DIR ${PNG_INCLUDE_INSTALL_DIR})
+else()
+  set(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include/png")
+endif()
+
+install(FILES
+  ${libpng_public_hdrs}
+  DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT Devel
+)
+INSTALL(TARGETS png DESTINATION lib/)

@@ -61,7 +61,8 @@ set(lib_srcs
     tif_warning.c
     tif_write.c
     tif_zip.c
-    tif_stream.cxx
+    tif_stream.cxx)
+set(lib_headers
     t4.h
     tif_dir.h
     tif_fax3.h
@@ -91,6 +92,18 @@ if(UNIX AND (CMAKE_COMPILER_IS_GNUCXX OR CV_ICC))
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 endif()
 
-add_library(tiff STATIC ${lib_srcs})
+add_library(tiff STATIC ${lib_srcs} ${lib_headers})
 target_link_libraries(tiff zlib)
 SET_PROPERTY(TARGET tiff PROPERTY FOLDER OpenMVG/3rdParty)
+
+if(TIFF_INCLUDE_INSTALL_DIR)
+  set(INCLUDE_INSTALL_DIR ${TIFF_INCLUDE_INSTALL_DIR})
+else()
+  set(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include/tiff")
+endif()
+
+install(FILES
+  ${lib_headers}
+  DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT Devel
+)
+INSTALL(TARGETS tiff DESTINATION lib/)

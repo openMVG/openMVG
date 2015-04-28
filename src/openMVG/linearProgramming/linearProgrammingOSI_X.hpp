@@ -313,6 +313,7 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::solve()
   //-- Compute solution
   if ( si != NULL )
   {
+    si->getModelPtr()->setPerturbation(50);
     si->initialSolve();
     return si->isProvenOptimal();
   }

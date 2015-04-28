@@ -2,31 +2,19 @@
 SfM: Structure-from-Motion
 ***************************
 
-Structure from Motion computes an external camera pose per image (the motion) and a 3D point cloud (the structure) representing the pictured scene.
-Inputs are images and internal camera calibration information (intrinsic parameters).
-Feature points are detected in each image (e.g., SIFT) and matched between image pairs and then the SfM pipeline compute the scene and camera motion.
-There are three main approaches to solve the SfM problem:
-
-  - the incremental/sequential pipeline,
-  - the hierarchical pipeline,
-  - the global one.
-
-.. figure:: structureFromMotion.png
-   :align: center
-
-   Figure: From point observation and internal knowledge of camera parameter, the 3D **structure** of the scene is computed **from** the estimated **motion** of the camera.
-
-
-In a nutshell
+SfM in a nutshell
 ===================
 
-From an image sequence and an approximated focal length it is possible to compute the following:
+Structure from Motion computes an external camera pose per image (the motion) and a 3D point cloud (the structure) from:
+
+- images,
+- some intrinsic camera parameters,
+- corresponding geometric valid features accross images.
 
 .. figure:: imagesInput.png
    :align: center
    
    Figure : Input images, estimated camera location and structure.
-
 
 openMVG tools
 ====================
@@ -42,13 +30,48 @@ openMVG tools
     - photometric/geometric matches correspondences,
     - features tracks.
 
-  - **export to existing Multiple View Stereo-vision pipeline**:
+  - **export to existing Multiple View Stereovision pipeline**:
 
     - [PMVS]_, CMPMVS.
 
-  - **tools to build your own SfM pipeline**:
+OpenMVG SfM pipelines
+======================
 
-    - geometric solvers, robust estimators ...
+OpenMVG SfM pipelines are used in a three step process:
+
+1. Intrinsic image analysis & view listing:
+
+  - describe images with internal camera calibration information (intrinsic parameters) if any.
+
+2. features extraction & geometric correspondences computation,
+
+  - Geometric feature matching across photo collection:
+
+    - feature points and corresponding descriptors are detected in each image (e.g., SIFT).
+    - descriptor matching between image pairs allows to build an initial corresponding photometric feature graph.
+    - this graph is then geometrically filtered using robust estimation of fundamental or essential or homography matrix based.
+
+3. SfM solving:
+
+  - the corresponding features graph is send to the chosen SfM pipeline and it computes the scene and camera motion.
+
+
+Structure from Motion chains usage
+=====================================
+
+Using a 3 directories based data organisation structure for openMVG SfM pipeline is suggested:
+
+* **images**
+
+  - your image sequence.
+
+* **matches**
+
+  * directory used to store image information, images features, descriptors and matches information.
+
+* **outReconstruction**
+
+  * directory used to store the SfM result and process log.
 
 To know more about each tool visit the following link and read the doc below:
 
@@ -61,25 +84,3 @@ To know more about each tool visit the following link and read the doc below:
    ./globalSfM.rst
    ./SfM_OutputFormat.rst
    ./MVS.rst
-
-
-Structure from Motion chains usage
-=====================================
-
-The Structure from Motion chains take as input an image collection.
-
-Using a 3 directories based data organisation structure is suggested:
-
-* **images**
-
-  - your image sequence.
-
-* **matches**
-
-  * the image information (lists.txt), images points and matches information will be saved here.
-
-* **outReconstruction**
-
-  * directory where result and log of the 3D reconstruction will be exported.
-
-

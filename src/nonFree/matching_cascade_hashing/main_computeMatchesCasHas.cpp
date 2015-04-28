@@ -275,12 +275,17 @@ int main(int argc, char **argv)
     if (collectionMatcher.loadData(vec_fileNames, sOutDir))
     {
       // Get pair to match according the matching mode:
-      PairsT pairs;
+      Pair_Set pairs;
       switch (ePairmode)
       {
         case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(vec_fileNames.size()); break;
         case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(vec_fileNames.size(), iMatchingVideoMode); break;
-        case PAIR_FROM_FILE:  loadPairs(sPredefinedPairList, pairs); break;
+        case PAIR_FROM_FILE:
+          if(!loadPairs(vec_fileNames.size(), sPredefinedPairList, pairs))
+          {
+              return EXIT_FAILURE;
+          };
+          break;
       }
       // Photometric matching of putative pairs
       collectionMatcher.Match(vec_fileNames, pairs, map_PutativesMatches);

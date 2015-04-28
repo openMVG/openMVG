@@ -84,7 +84,7 @@ struct Document
     }
 
     // Read cameras
-    std::string sDirectoryCam = stlplus::folder_append_separator(_sDirectory) + "cameras";
+    const std::string sDirectoryCam = stlplus::folder_append_separator(_sDirectory) + "cameras";
 
     size_t camIndex = 0;
     //Read views file
@@ -100,7 +100,7 @@ struct Document
         while(iFilein.good())
         {
           getline(iFilein,temp);
-          if (!temp.empty())
+          if (!temp.empty() && temp.length() > 1)
           {
             std::stringstream sStream(temp);
             std::string sImageName, sCamName;

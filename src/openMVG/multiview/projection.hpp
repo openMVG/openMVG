@@ -40,6 +40,9 @@ void P_From_KRt(const Mat3 &K, const Mat3 &R, const Vec3 &t,Mat34 *P);
 /// Decompose using the RQ decomposition HZ A4.1.1 pag.579.
 void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp);
 
+/// Compute a fundamental matrix from projection matrices
+Mat3 F_from_P(const Mat34 & P1, const Mat34 & P2);
+
 // Compute the depth of the X point. R*X[2]+t[2].
 double Depth(const Mat3 &R, const Vec3 &t, const Vec3 &X);
 

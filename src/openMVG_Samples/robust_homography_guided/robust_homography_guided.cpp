@@ -188,38 +188,43 @@ int main() {
         << "\t-- Residual max:\t "  << dMax << std::endl
         << "\t-- Residual mean:\t " << dMean << std::endl;
 
+      // --
       // Perform GUIDED MATCHING
-      // Use the computed model with all possible point couples
-      //  and keep the one that have the error under the AC-RANSAC precision
-      //  value.
+      // --
+      // Use the computed model to check valid correspondences
+      // a. by considering only the geometric error,
+      // b. by considering geometric error and descriptor distance ratio.
+      std::vector< std::vector<IndMatch> > vec_corresponding_indexes(2);
 
       Mat xL, xR;
       PointsToMat(featsL, xL);
       PointsToMat(featsR, xR);
-      std::vector<IndMatch> vec_corresponding_index;
-      GuidedMatching<Mat3, openMVG::homography::kernel::AsymmetricError>(
-        H, xL, xR, Square(thresholdH), vec_corresponding_index);
 
-      std::cout << "\nGuided homography matching found "
-        << vec_corresponding_index.size() << " correspondences."
+      //a. by considering only the geometric error
+
+      geometry_aware::GuidedMatching<Mat3, openMVG::homography::kernel::AsymmetricError>(
+        H, xL, xR, Square(thresholdH), vec_corresponding_indexes[0]);
+      std::cout << "\nGuided homography matching (geometric error) found "
+        << vec_corresponding_indexes[0].size() << " correspondences."
         << std::endl;
 
-      // Merge AC Ransac and H-Guided matches
-      std::set<IndMatch> set_matches(vec_corresponding_index.begin(),
-        vec_corresponding_index.end());
-      for ( size_t i = 0; i < vec_inliers.size(); ++i)  {
-        set_matches.insert(vec_PutativeMatches[vec_inliers[i]]);
-      }
-      std::cout << "\nGuided homography + AC Ransac results matching found "
-        << set_matches.size() << " correspondences."
-        << std::endl;
-      // Update the corresponding index:
-      vec_corresponding_index.clear();
-      vec_corresponding_index.assign(set_matches.begin(), set_matches.end());
+      // b. by considering geometric error and descriptor distance ratio
+      geometry_aware::GuidedMatching
+        <Mat3, openMVG::homography::kernel::AsymmetricError,
+        SIFTDescriptor, L2_Vectorized<SIFTDescriptor::bin_type> >(
+        H, xL, descsL, xR, descsR,
+        Square(thresholdH), Square(0.8),
+        vec_corresponding_indexes[1]);
 
+      std::cout << "\nGuided homography matching "
+        << "(geometric + descriptor distance ratio) found "
+        << vec_corresponding_indexes[1].size() << " correspondences."
+        << std::endl;
+
+      for (size_t idx = 0; idx < 2; ++idx)
       {
-        //Show homography validated correspondences and compute residuals
-        std::vector<double> vec_residuals(vec_corresponding_index.size(), 0.0);
+        const std::vector<IndMatch> & vec_corresponding_index = vec_corresponding_indexes[idx];
+        //Show homography validated correspondences
         svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
         svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
         svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
@@ -232,27 +237,13 @@ int main() {
           svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
           svgStream.drawCircle(L.x(), L.y(), LL.scale(), svgStyle().stroke("yellow", 2.0));
           svgStream.drawCircle(R.x()+imageL.Width(), R.y(), RR.scale(),svgStyle().stroke("yellow", 2.0));
-          // residual computation
-          vec_residuals[i] = std::sqrt(KernelType::ErrorT::Error(H,
-                                         LL.coords().cast<double>(),
-                                         RR.coords().cast<double>()));
         }
-        string out_filename = "04_ACRansacHomography_guided.svg";
+        const string out_filename =
+          (idx == 0) ? "04_ACRansacHomography_guided_geom.svg"
+            : "04_ACRansacHomography_guided_geom_distratio.svg";
         ofstream svgFile( out_filename.c_str() );
         svgFile << svgStream.closeSvgFile().str();
         svgFile.close();
-
-        // Display some statistics of reprojection errors
-        float dMin, dMax, dMean, dMedian;
-        minMaxMeanMedian<float>(vec_residuals.begin(), vec_residuals.end(),
-                              dMin, dMax, dMean, dMedian);
-
-        std::cout << std::endl
-          << "Homography matrix estimation, residuals statistics:" << "\n"
-          << "\t-- Residual min:\t" << dMin << std::endl
-          << "\t-- Residual median:\t" << dMedian << std::endl
-          << "\t-- Residual max:\t "  << dMax << std::endl
-          << "\t-- Residual mean:\t " << dMean << std::endl;
       }
     }
     else  {

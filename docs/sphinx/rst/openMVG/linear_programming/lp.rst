@@ -13,20 +13,12 @@ Linear programming [LP]_ is a technique for the optimization of a linear objecti
 where ``x`` represents the vector of variables (to be determined), ``c`` and ``b`` are vectors of (known) coefficients, ``A`` is a (known) matrix of coefficients.
 
 openMVG linear programming tools
----------------------------------
+==================================
 
 openMVG provides tools to:
 
 - configure Linear programs (LP container),
 - solve Linear Programs (convex or quasi convex ones).
-
-It results in a collection of L infinity based solver for computer vision problems.
-
-.. toctree::
-  :maxdepth: 1
-  
-  linfinityCV.rst
-
 
 openMVG linear program container
 ---------------------------------
@@ -147,4 +139,27 @@ Optimization of this upper bound parameter can be done by iterating over all the
       
     } while (k < maxIteration && gammaUp - gammaLow > eps);
   }
+
+Multiple View Geometry solvers based on L-Infinity minimization
+==================================================================
+
+openMVG provides Linear programming based solvers for various problem in computer vision by minimizing at the same time the maximal error over a series of cost function and some model parameters. It uses a L-Infinity minimization method.
+
+openMVG implements problems introduced by [LinfNorm]_ and generalized by [LinfNormGeneric] to solve multiple view geometry problem.
+
+Rather than considering quadratic constraints that require SOCP (Second Orde Cone Programming) we consider their LP (linear program) equivalent. It makes usage of residual error expressed with absolute error ( ``|a|<b``). Inequalities are transformed in two linear inequalities ``a<b`` and ``-b<-a`` to be used in the LP framework. Using LP rather than SCOP allow to have better solving time and easier constraint to express (see. [Arnak]_ for more explanation).
+
+OpenMVG propose solvers for the following problems:
+
+- N-view triangulation [LinfNorm]_,
+- Resection or pose matrix estimation [LinfNorm]_,
+- Estimation of translations and structure from known rotations,
+
+  - two formulation are implemented,
+
+    - the simple one [LinfNorm]_,
+    - the robust based on slack variables [OlssonDuality]_.
+
+- Translation averaging:
+  - Registration of relative translations to compute global translations [GlobalACSfM]_.
 

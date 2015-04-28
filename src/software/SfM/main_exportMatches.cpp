@@ -1,5 +1,4 @@
-
-// Copyright (c) 2012, 2013 Pierre MOULON.
+// Copyright (c) 2012, 2013, 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -26,6 +25,35 @@ using namespace openMVG;
 using namespace openMVG::matching;
 using namespace svg;
 
+// Convert HUE color to RGB
+inline float hue2rgb(float p, float q, float t){
+  if(t < 0) t += 1;
+  if(t > 1) t -= 1;
+  if(t < 1.f/6.f) return p + (q - p) * 6.f * t;
+  if(t < 1.f/2.f) return q;
+  if(t < 2.f/3.f) return p + (q - p) * (2.f/3.f - t) * 6.f;
+  return p;
+}
+
+ //
+ // Converts an HSL color value to RGB. Conversion formula
+ // adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+ // Assumes h, s, and l are contained in the set [0, 1] and
+ // returns r, g, and b in the set [0, 255].
+ void hslToRgb(
+   float h, float s, float l,
+   unsigned char & r, unsigned char & g, unsigned char & b)
+{
+  if(s == 0){
+    r = g = b = static_cast<unsigned char>(l * 255.f); // achromatic
+  }else{
+    const float q = l < 0.5f ? l * (1 + s) : l + s - l * s;
+    const float p = 2.f * l - q;
+    r = static_cast<unsigned char>(hue2rgb(p, q, h + 1.f/3.f) * 255.f);
+    g = static_cast<unsigned char>(hue2rgb(p, q, h) * 255.f);
+    b = static_cast<unsigned char>(hue2rgb(p, q, h - 1.f/3.f) * 255.f);
+  }   
+}
 
 int main(int argc, char ** argv)
 {
@@ -129,8 +157,13 @@ int main(int argc, char ** argv)
       for (size_t i=0; i< vec_FilteredMatches.size(); ++i)  {
         const SIOPointFeature & imaA = vec_featI[vec_FilteredMatches[i]._i];
         const SIOPointFeature & imaB = vec_featJ[vec_FilteredMatches[i]._j];
+        // Compute a flashy colour for the correspondence
+        unsigned char r,g,b;
+        hslToRgb( (rand()%360) / 360., 1.0, .5, r, g, b);
+        std::ostringstream osCol;
+        osCol << "rgb(" << (int)r <<',' << (int)g << ',' << (int)b <<")";
         svgStream.drawLine(imaA.x(), imaA.y(),
-          imaB.x()+dimImage0.first, imaB.y(), svgStyle().stroke("green", 2.0));
+          imaB.x()+dimImage0.first, imaB.y(), svgStyle().stroke(osCol.str(), 2.0));
       }
 
       //-- Draw features (in two loop, in order to have the features upper the link, svg layer order):

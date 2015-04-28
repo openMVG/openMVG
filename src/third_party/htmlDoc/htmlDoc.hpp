@@ -19,6 +19,7 @@
 #include <iterator>
 #include <sstream>
 #include <fstream>
+#include <vector>
 
 namespace htmlDocument
 {

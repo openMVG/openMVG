@@ -30,11 +30,11 @@ using namespace std;
 
 int main() {
 
-  std::string sInputDir = stlplus::folder_up(string(THIS_SOURCE_DIR))
+  const std::string sInputDir = stlplus::folder_up(string(THIS_SOURCE_DIR))
     + "/imageData/SceauxCastle/";
   Image<RGBColor> image;
-  string jpg_filenameL = sInputDir + "100_7101.jpg";
-  string jpg_filenameR = sInputDir + "100_7102.jpg";
+  const string jpg_filenameL = sInputDir + "100_7101.jpg";
+  const string jpg_filenameR = sInputDir + "100_7102.jpg";
 
   Image<unsigned char> imageL, imageR;
   ReadImage(jpg_filenameL.c_str(), &imageL);
@@ -103,7 +103,7 @@ int main() {
       svgStream.drawCircle(L.x(), L.y(), L.scale(), svgStyle().stroke("yellow", 2.0));
       svgStream.drawCircle(R.x()+imageL.Width(), R.y(), R.scale(),svgStyle().stroke("yellow", 2.0));
     }
-    string out_filename = "03_siftMatches.svg";
+    const string out_filename = "03_siftMatches.svg";
     ofstream svgFile( out_filename.c_str() );
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
@@ -142,7 +142,7 @@ int main() {
       true);
     const double & thresholdF = ACRansacOut.first;
 
-    // Check the fundemantal support some point to be considered as valid
+    // Check the fundamental support some point to be considered as valid
     if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5) {
 
       std::cout << "\nFound a fundamental under the confidence threshold of: "
@@ -169,7 +169,7 @@ int main() {
                                        LL.coords().cast<double>(),
                                        RR.coords().cast<double>()));
       }
-      string out_filename = "04_ACRansacFundamental.svg";
+      const string out_filename = "04_ACRansacFundamental.svg";
       ofstream svgFile( out_filename.c_str() );
       svgFile << svgStream.closeSvgFile().str();
       svgFile.close();

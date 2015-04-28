@@ -50,9 +50,16 @@ public:
     Mat sampled_xs = ExtractColumns(x1_, samples);
     Solver::Solve(sampled_xs, models);
   }
+
   double Error(size_t sample, const Model &model) const {
     return ErrorArg::Error(model, x1_.col(sample));
   }
+
+  void Errors(const Model &model, std::vector<double> & vec_errors) const {
+    for (size_t sample = 0; sample < x1_.cols(); ++sample)
+      vec_errors[sample] = ErrorArg::Error(model, x1_.col(sample));
+  }
+
   size_t NumSamples() const {
     return x1_.cols();
   }

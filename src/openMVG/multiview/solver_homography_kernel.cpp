@@ -39,8 +39,8 @@ template<typename Matrix >
 void BuildActionMatrix(Matrix & L, const Mat &x, const Mat &y)  {
 
   const Mat::Index n = x.cols();
-  for (int i = 0; i < n; ++i) {
-    int j = 2 * i;
+  for (Mat::Index i = 0; i < n; ++i) {
+    Mat::Index j = 2 * i;
     L(j, 0) = x(0, i);
     L(j, 1) = x(1, i);
     L(j, 2) = 1.0;

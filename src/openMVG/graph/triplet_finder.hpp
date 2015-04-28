@@ -7,6 +7,9 @@
 #ifndef OPENMVG_GRAPH_TRIPLET_FINDER_H
 #define OPENMVG_GRAPH_TRIPLET_FINDER_H
 
+#include "openMVG/types.hpp"
+#include "openMVG/graph/graph.hpp"
+
 #include "lemon/list_graph.h"
 using namespace lemon;
 
@@ -20,15 +23,15 @@ namespace graphUtils{
 /// It is used to store the node id of triplets of a graph.
 struct Triplet
 {
-  Triplet(size_t ii, size_t jj, size_t kk)
+  Triplet(IndexT ii, IndexT jj, IndexT kk)
     :i(ii), j(jj), k(kk)
   { }
-  size_t i,j,k;
+  IndexT i,j,k;
 
-  bool contain(const std::pair<size_t,size_t> & edge) const
+  bool contain(const std::pair<IndexT,IndexT> & edge) const
   {
-    size_t It = edge.first;
-    size_t Jt = edge.second;
+    const IndexT It = edge.first;
+    const IndexT Jt = edge.second;
     if ( (It == i || It == j || It == k ) &&
          (Jt == i || Jt == j || Jt == k ) && It != Jt)
       return true;
@@ -75,6 +78,7 @@ bool List_Triplets(const GraphT & g, std::vector< Triplet > & vec_triplets)
   // For each nodes
   for (NodeIterator itNode(g); itNode != INVALID; ++itNode)
   {
+
     // For each edges (list the not visited outgoing edges)
     std::vector<OutArcIt> vec_edges;
     for (OutArcIt e(g, itNode); e!=INVALID; ++e)
@@ -109,6 +113,32 @@ bool List_Triplets(const GraphT & g, std::vector< Triplet > & vec_triplets)
     }
   }
   return (!vec_triplets.empty());
+}
+
+/// Return triplets contained in the graph build from IterablePairs
+template <typename IterablePairs>
+static std::vector< graphUtils::Triplet > tripletListing(
+  const IterablePairs & pairs)
+{
+  std::vector< graphUtils::Triplet > vec_triplets;
+
+  indexedGraph putativeGraph(pairs);
+
+  graphUtils::List_Triplets<indexedGraph::GraphT>(putativeGraph.g, vec_triplets);
+
+  //Change triplets to ImageIds
+  for (size_t i = 0; i < vec_triplets.size(); ++i)
+  {
+    graphUtils::Triplet & triplet = vec_triplets[i];
+    IndexT I = triplet.i, J = triplet.j , K = triplet.k;
+    I = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.nodeFromId(I)];
+    J = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.nodeFromId(J)];
+    K = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.nodeFromId(K)];
+    IndexT triplet_[3] = { I, J, K };
+    std::sort(&triplet_[0], &triplet_[3]);
+    triplet = graphUtils::Triplet(triplet_[0],triplet_[1],triplet_[2]);
+  }
+  return vec_triplets;
 }
 
 } // namespace graphUtils
