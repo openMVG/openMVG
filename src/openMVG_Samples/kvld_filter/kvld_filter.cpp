@@ -14,7 +14,7 @@
 
 using namespace openMVG::matching;
 
-#include "nonFree/sift/SIFT.hpp"
+#include "nonFree/sift/SIFT_describer.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include "openMVG/multiview/solver_homography_kernel.hpp"
@@ -101,55 +101,60 @@ int main(int argc, char **argv) {
   ReadImage(jpg_filenameL.c_str(), &imageL);
   ReadImage(jpg_filenameR.c_str(), &imageR);
 
-  // Define the used descriptor (SIFT: 128 float)
-  typedef float descType;
-  typedef Descriptor<descType,128> SIFTDescriptor;
+//--
+  // Detect regions thanks to an image_describer
+  //--
+  using namespace openMVG::features;
+  std::unique_ptr<Image_describer> image_describer(new SIFT_Image_describer(SiftParams(-1)));
+  std::map<IndexT, std::unique_ptr<features::Regions> > regions_perImage;
+  image_describer->Describe(imageL, regions_perImage[0]);
+  image_describer->Describe(imageR, regions_perImage[1]);
 
-  // Prepare vector to store detected feature and associated descriptor
-  vector<SIOPointFeature> featsL, featsR;
-  vector<SIFTDescriptor > descsL, descsR;
-  // Call SIFT detector
-  bool bOctaveMinus1 = true;
-  bool bRootSift = true;
-  SIFTDetector(imageL, featsL, descsL, bOctaveMinus1, bRootSift);
-  SIFTDetector(imageR, featsR, descsR, bOctaveMinus1, bRootSift);
+  const SIFT_Regions* regionsL = dynamic_cast<SIFT_Regions*>(regions_perImage.at(0).get());
+  const SIFT_Regions* regionsR = dynamic_cast<SIFT_Regions*>(regions_perImage.at(1).get());
+
+  const PointFeatures
+    featsL = regions_perImage.at(0)->GetRegionsPositions(),
+    featsR = regions_perImage.at(1)->GetRegionsPositions();
 
   // Show both images side by side
   {
     Image<unsigned char> concat;
     ConcatH(imageL, imageR, concat);
-    string out_filename = "01_concat.jpg";
-    out_filename = stlplus::create_filespec(sOutDir, out_filename);
+    string out_filename = "00_images.jpg";
     WriteImage(out_filename.c_str(), concat);
   }
 
-  //- Draw features on the two images (side by side)
+  //- Draw features on the two image (side by side)
   {
     Image<unsigned char> concat;
     ConcatH(imageL, imageR, concat);
 
     //-- Draw features :
     for (size_t i=0; i < featsL.size(); ++i )  {
-      const SIOPointFeature & imaA = featsL[i];
-      DrawCircle(imaA.x(), imaA.y(), imaA.scale(), 255, &concat);
+      const SIOPointFeature point = regionsL->Features()[i];
+      DrawCircle(point.x(), point.y(), point.scale(), 255, &concat);
     }
     for (size_t i=0; i < featsR.size(); ++i )  {
-      const SIOPointFeature & imaB = featsR[i];
-      DrawCircle(imaB.x()+imageL.Width(), imaB.y(), imaB.scale(), 255, &concat);
+      const SIOPointFeature point = regionsR->Features()[i];
+      DrawCircle(point.x()+imageL.Width(), point.y(), point.scale(), 255, &concat);
     }
-    string out_filename = "02_features.jpg";
-    out_filename = stlplus::create_filespec(sOutDir, out_filename);
+    string out_filename = "01_features.jpg";
     WriteImage(out_filename.c_str(), concat);
   }
 
   std::vector<IndMatch> vec_PutativeMatches;
   //-- Perform matching -> find Nearest neighbor, filtered with Distance ratio
   {
-    // Define the matcher (ANN)
-    typedef ArrayMatcher_Kdtree_Flann<SIFTDescriptor::bin_type> MatcherT;
-
-    // LoweRatio quite high in order to obtain contamined data. Squared due to squared metric
-    getPutativesMatches<SIFTDescriptor, MatcherT>(descsL, descsR, Square(0.8), vec_PutativeMatches);
+// Define a matcher and a metric to find corresponding points
+    typedef SIFT_Regions::DescriptorT DescriptorT;
+    typedef L2_Vectorized<DescriptorT::bin_type> Metric;
+    typedef ArrayMatcherBruteForce<DescriptorT::bin_type, Metric> MatcherT;
+    // Distance ratio squared due to squared metric
+    getPutativesMatches<DescriptorT, MatcherT>(
+      ((SIFT_Regions*)regions_perImage.at(0).get())->Descriptors(),
+      ((SIFT_Regions*)regions_perImage.at(1).get())->Descriptors(),
+      Square(0.8), vec_PutativeMatches);
 
     // Draw correspondences after Nearest Neighbor ratio filter
     svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
@@ -157,19 +162,17 @@ int main(int argc, char **argv) {
     svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
     for (size_t i = 0; i < vec_PutativeMatches.size(); ++i) {
       //Get back linked feature, draw a circle and link them by a line
-      const SIOPointFeature & L = featsL[vec_PutativeMatches[i]._i];
-      const SIOPointFeature & R = featsR[vec_PutativeMatches[i]._j];
+      const SIOPointFeature L = regionsL->Features()[vec_PutativeMatches[i]._i];
+      const SIOPointFeature R = regionsR->Features()[vec_PutativeMatches[i]._j];
       svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
       svgStream.drawCircle(L.x(), L.y(), L.scale(), svgStyle().stroke("yellow", 2.0));
       svgStream.drawCircle(R.x()+imageL.Width(), R.y(), R.scale(),svgStyle().stroke("yellow", 2.0));
     }
-    string out_filename = "03_siftMatches.svg";
-    out_filename = stlplus::create_filespec(sOutDir, out_filename);
+    string out_filename = "02_siftMatches.svg";
     ofstream svgFile( out_filename.c_str() );
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
   }
-
 
   //K-VLD filter
   Image<float> imgA (imageL.GetMat().cast<float>());
@@ -193,7 +196,8 @@ int main(int argc, char **argv) {
   size_t it_num=0;
   KvldParameters kvldparameters; // initial parameters of KVLD
   while (it_num < 5 &&
-          kvldparameters.inlierRate > KVLD(imgA, imgB, featsL, featsR, matchesPair, matchesFiltered, vec_score,E,valide,kvldparameters)) {
+          kvldparameters.inlierRate > KVLD(imgA, imgB, regionsL->Features(), regionsR->Features(),
+          matchesPair, matchesFiltered, vec_score,E,valide,kvldparameters)) {
     kvldparameters.inlierRate /= 2;
     //std::cout<<"low inlier rate, re-select matches with new rate="<<kvldparameters.inlierRate<<std::endl;
     kvldparameters.K = 2;
@@ -219,11 +223,11 @@ int main(int argc, char **argv) {
       for (int it2=it1+1; it2<matchesPair.size();it2++){
          if (valide[it1] && valide[it2] && E(it1,it2)>=0){
 
-          const SIOPointFeature & l1 = featsL[matchesPair[it1].first];
-          const SIOPointFeature & r1 = featsR[matchesPair[it1].second];
+          const PointFeature & l1 = featsL[matchesPair[it1].first];
+          const PointFeature & r1 = featsR[matchesPair[it1].second];
 
-          const SIOPointFeature & l2 = featsL[matchesPair[it2].first];
-          const SIOPointFeature & r2 = featsR[matchesPair[it2].second];
+          const PointFeature & l2 = featsL[matchesPair[it2].first];
+          const PointFeature & r2 = featsR[matchesPair[it2].second];
 
           // Compute the width of the current VLD segment
           float L = (l1.coords() - l2.coords()).norm();
@@ -255,8 +259,8 @@ int main(int argc, char **argv) {
     for (int it=0; it<matchesPair.size();it++){
        if (valide[it]){
 
-        const SIOPointFeature & l = featsL[matchesPair[it].first];
-        const SIOPointFeature & r = featsR[matchesPair[it].second];
+        const PointFeature & l = featsL[matchesPair[it].first];
+        const PointFeature & r = featsR[matchesPair[it].second];
 
         // ".svg"
         svgStream.drawCircle(l.x(), l.y(), 10, svgStyle().stroke("yellow", 2.0));
@@ -275,7 +279,7 @@ int main(int argc, char **argv) {
 
   getKVLDMask(
     &imageOutL, &imageOutR,
-    featsL, featsR,
+    regionsL->Features(), regionsR->Features(),
     matchesPair,
     valide,
     E);

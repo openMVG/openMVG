@@ -80,7 +80,7 @@ Pair_Set Frustum_Filter::getFrustumIntersectionPairs() const
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for
 #endif
-  for (size_t i = 0; i < viewIds.size(); ++i)
+  for (int i = 0; i < (int)viewIds.size(); ++i)
   {
     for (size_t j = i+1; j < viewIds.size(); ++j)
     {

@@ -199,8 +199,8 @@ VLD::VLD( const ImageScale& series, T const& P1, T const& P2 ) : contrast( 0.0 )
 
 float KVLD( const Image< float >& I1,
             const Image< float >& I2,
-            vector< openMVG::SIOPointFeature >& F1,
-            vector< openMVG::SIOPointFeature >& F2,
+            const std::vector<SIOPointFeature> & F1,
+            const std::vector<SIOPointFeature> & F2,
             const vector< Pair >& matches,
             vector< Pair >& matchesFiltered,
             vector< double >& score,
@@ -420,9 +420,7 @@ float KVLD( const Image< float >& I1,
           valide[ it1 ] = false;
     }
   }
-//    cout<<endl;
-
-//=============== generating output list ===================//
+  //=============== generating output list ===================//
   for( int it = 0; it < size; it++ )
     if( valide[ it ] )
     {
@@ -432,76 +430,3 @@ float KVLD( const Image< float >& I1,
   return float( matchesFiltered.size() ) / matches.size();
 }
 
-
-void writeResult( const std::string & output,
-                  const vector< openMVG::SIOPointFeature >& vec_F1,
-                  const vector< openMVG::SIOPointFeature >& vec_F2,
-                  const vector< Pair >& vec_matches,
-                  const vector< Pair >& vec_matchesFiltered,
-                  const vector< double >& vec_score )
-{
-//========features
-  ofstream feature1( ( output + "Detectors1.txt" ).c_str() );
-  if( !feature1.is_open() )
-    cout << "error while writing Features1.txt" << endl;
-
-  feature1 << vec_F1.size() << endl;
-  for( vector< openMVG::SIOPointFeature >::const_iterator it = vec_F1.begin();
-          it != vec_F1.end();
-          ++it )
-  {
-    writeDetector( feature1, ( *it ) );
-  }
-  feature1.close();
-
-  ofstream feature2( ( output + "Detectors2.txt" ).c_str() );
-  if( !feature2.is_open() )
-    cout << "error while writing Features2.txt" << endl;
-  feature2 << vec_F2.size() << endl;
-  for( vector< openMVG::SIOPointFeature >::const_iterator it = vec_F2.begin();
-          it != vec_F2.end();
-          ++it )
-  {
-    writeDetector( feature2, ( *it ) );
-  }
-  feature2.close();
-
-//========matches
-  ofstream initialmatches( ( output + "initial_matches.txt" ).c_str() );
-  if( !initialmatches.is_open() )
-    cout << "error while writing initial_matches.txt" << endl;
-  initialmatches << vec_matches.size() << endl;
-  for( vector< Pair >::const_iterator it = vec_matches.begin(); it != vec_matches.end(); ++it )
-  {
-    initialmatches << it->first << " " << it->second << endl;
-  }
-  initialmatches.close();
-
-//==========kvld filtered matches
-  ofstream filteredmatches( ( output + "kvld_matches.txt" ).c_str() );
-  if( !filteredmatches.is_open() )
-    cout << "error while writing kvld_filtered_matches.txt" << endl;
-
-  filteredmatches << vec_matchesFiltered.size() << endl;
-  for( vector< Pair >::const_iterator it = vec_matchesFiltered.begin();
-            it != vec_matchesFiltered.end();
-            ++it )
-  {
-    filteredmatches << it->first << " " << it->second << endl;
-
-  }
-  filteredmatches.close();
-
-//====== KVLD score of matches
-  ofstream kvldScore( ( output + "kvld_matches_score.txt" ).c_str() );
-  if( !kvldScore.is_open() )
-    cout << "error while writing kvld_matches_score.txt" << endl;
-
-  for( vector< double >::const_iterator it = vec_score.begin();
-          it != vec_score.end();
-          ++it )
-  {
-    filteredmatches << *it << endl;
-  }
-  kvldScore.close();
-}

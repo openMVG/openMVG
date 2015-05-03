@@ -5,8 +5,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 #include "openMVG/sfm/sfm.hpp"
+#include "nonFree/sift/SIFT_describer.hpp"
+#include <cereal/archives/json.hpp>
 #include "openMVG/system/timer.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
@@ -51,7 +52,7 @@ int main(int argc, char **argv)
     << "[-m|--match_dir] path to the features and descriptor that "
     << " corresponds to the provided SfM_Data scene\n"
     << "[-f|--match_file] (opt.) path to a matches file (used pairs will be used)\n"
-    << "[-o|--output_file] path where the output data will be stored\n"
+    << "[-o|--output_file] file where the output data will be stored\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -66,11 +67,29 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  // Prepare the features provider
-  std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
-  if (!feats_provider->load(sfm_data, sMatchesDir)) {
+  // Init the image describer (used for regions loading)
+  using namespace openMVG::features;
+  std::unique_ptr<Image_describer> image_describer;
+  const std::string sImage_describer = stlplus::create_filespec(sMatchesDir, "image_describer", "json");
+  if (stlplus::is_file(sImage_describer))
+  {
+    // Dynamically load the image_describer from the file (will restore old used settings)
+    std::ifstream stream(sImage_describer.c_str());
+    if (!stream.is_open())
+      return false;
+
+    cereal::JSONInputArchive archive(stream);
+    archive(cereal::make_nvp("image_describer", image_describer));
+  }
+  else // By default init a SIFT_Image_describer (keep compatibility)
+  {
+    image_describer.reset(new SIFT_Image_describer());
+  }
+  // Prepare the Regions provider
+  std::shared_ptr<Regions_Provider> regions_provider = std::make_shared<Regions_Provider>();
+  if (!regions_provider->load(sfm_data, sMatchesDir, image_describer)) {
     std::cerr << std::endl
-      << "Invalid features." << std::endl;
+      << "Invalid regions." << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -99,31 +118,13 @@ int main(int argc, char **argv)
   std::set<IndexT> valid_viewIdx = Get_Valid_Views(sfm_data);
   pairs = Pair_filter(pairs, valid_viewIdx);
 
-  // Collect view features descriptors.
-  typedef Descriptor<unsigned char, 128> DescriptorT;
-  typedef vector<DescriptorT > DescsT;
-
-  Hash_Map<IndexT, DescsT > desc_per_view;
-  for(Views::const_iterator iterViews = sfm_data.views.begin();
-      iterViews != sfm_data.views.end();
-      ++iterViews)
-  {
-    const View * view = iterViews->second.get();
-    const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
-      view->s_Img_path);
-    const std::string sDescJ = stlplus::create_filespec(sMatchesDir,
-      stlplus::basename_part(sView_filename), "desc");
-
-    loadDescsFromBinFile(sDescJ, desc_per_view[view->id_view]);
-  }
-
   openMVG::Timer timer;
 
   //------------------------------------------
   // Compute Structure from known camera poses
   //------------------------------------------
   SfM_Data_Structure_Estimation_From_Known_Poses structure_estimator;
-  structure_estimator.run(sfm_data, pairs, feats_provider.get(), desc_per_view);
+  structure_estimator.run(sfm_data, pairs, regions_provider);
   RemoveOutliers_AngleError(sfm_data, 2.0);
 
   std::cout << "\nStructure estimation took (s): " << timer.elapsed() << "." << std::endl;

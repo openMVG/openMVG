@@ -15,5 +15,5 @@ set_source_files_properties(${features_files} PROPERTIES LANGUAGE CXX)
 ADD_LIBRARY(openMVG_features ${features_files})
 SET_PROPERTY(TARGET openMVG_features PROPERTY FOLDER OpenMVG/OpenMVG)
 
-UNIT_TEST(openMVG features "")
+UNIT_TEST(openMVG features "openMVG_features")
 

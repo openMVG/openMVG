@@ -5,7 +5,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/features/akaze/AKAZE.hpp"
-#include <deque>
 
 namespace openMVG {
 
@@ -273,9 +272,9 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
 {
 #define OPENMVG_REMOVE_DUPLICATES 1
 #ifdef OPENMVG_REMOVE_DUPLICATES
-  std::deque< std::vector< std::pair<AKAZEKeypoint, bool> > > vec_kpts_perSlice(options_.iNbOctave*options_.iNbSlicePerOctave);
+  std::vector< std::vector< std::pair<AKAZEKeypoint, bool> > > vec_kpts_perSlice(options_.iNbOctave*options_.iNbSlicePerOctave);
 
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
   for( int p = 0 ; p < options_.iNbOctave ; ++p )
@@ -328,7 +327,7 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
     detectDuplicates(vec_kpts_perSlice[k], vec_kpts_perSlice[k]);    // detect inter scale duplicates
     detectDuplicates(vec_kpts_perSlice[k-1], vec_kpts_perSlice[k]);  // detect duplicates using previous octave
   }
-   
+
   // Keep only the one marked as not duplicated
   for (int k = 0; k < vec_kpts_perSlice.size(); ++k)
   {
@@ -422,7 +421,7 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
 
   std::vector<AKAZEKeypoint > vec_kp;
   vec_kp.reserve(kpts.size());
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
   // Now filter points (keep the best along the pyramid)
@@ -446,7 +445,7 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
         }
       }
     }
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
 #endif
     if (!is_repeated)
@@ -496,7 +495,7 @@ void AKAZE::Do_Subpixel_Refinement(std::vector<AKAZEKeypoint>& kpts) const
   kpts_cpy.swap(kpts);
   kpts.reserve(kpts_cpy.size());
 
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
   for (int i = 0; i < static_cast<int>(kpts_cpy.size()); ++i)
@@ -504,7 +503,7 @@ void AKAZE::Do_Subpixel_Refinement(std::vector<AKAZEKeypoint>& kpts) const
     AKAZEKeypoint & pt = kpts_cpy[i];
     if (Do_Subpixel_Refinement(pt, this->evolution_[pt.class_id].Lhess))
     {
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
 #endif
       kpts.push_back(pt);

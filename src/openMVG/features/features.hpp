@@ -13,5 +13,8 @@
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/descriptor.hpp"
 #include "openMVG/features/keypointSet.hpp"
+#include "openMVG/features/regions.hpp"
+#include "openMVG/features/image_describer.hpp"
+#include "openMVG/features/image_describer_akaze.hpp"
 
-#endif /* OPENMVG_FEATURES_HPP */
+#endif // OPENMVG_FEATURES_HPP

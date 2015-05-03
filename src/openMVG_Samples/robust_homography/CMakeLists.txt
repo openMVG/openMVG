@@ -5,6 +5,7 @@ ADD_EXECUTABLE(openMVG_sample_robustHomography robust_homography.cpp)
 TARGET_LINK_LIBRARIES(openMVG_sample_robustHomography
   openMVG_image
   openMVG_multiview
+  openMVG_features
   vlsift
   stlplus
   flann_cpp_s

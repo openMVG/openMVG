@@ -7,23 +7,18 @@
 
 
 #include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
-
 #include "openMVG/sfm/sfm.hpp"
+#include "openMVG/features/features.hpp"
+#include <cereal/archives/json.hpp>
 
 /// Generic Image Collection image matching
-#include "openMVG/matching_image_collection/Matcher_AllInMemory.hpp"
+#include "openMVG/matching_image_collection/Matcher_Regions_AllInMemory.hpp"
 #include "openMVG/matching_image_collection/GeometricFilter.hpp"
 #include "openMVG/matching_image_collection/F_ACRobust.hpp"
 #include "openMVG/matching_image_collection/E_ACRobust.hpp"
 #include "openMVG/matching_image_collection/H_ACRobust.hpp"
 #include "software/SfM/pairwiseAdjacencyDisplay.hpp"
-#include "software/SfM/SfMIOHelper.hpp"
-#include "openMVG/matching/matcher_brute_force.hpp"
-#include "openMVG/matching/matcher_kdtree_flann.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
-#include "openMVG/matching/metric_hamming.hpp"
-
 #include "openMVG/system/timer.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
@@ -34,10 +29,7 @@
 #include "opencv2/core/eigen.hpp"
 
 #include <cstdlib>
-#include <iostream>
 #include <fstream>
-#include <iterator>
-#include <vector>
 
 using namespace openMVG;
 using namespace openMVG::matching;
@@ -58,92 +50,81 @@ enum ePairMode
   PAIR_FROM_FILE  = 2
 };
 
-/// Extract OpenCV features and convert them to openMVG features/descriptor data
-template <class DescriptorT>
-static bool ComputeCVFeatAndDesc(
-  cv::Ptr<cv::Feature2D> extractor,
-  const Image<unsigned char>& I,
-  std::vector<SIOPointFeature>& feats,
-  std::vector<DescriptorT >& descs)
+///
+//- Create an Image_describer interface that use an OpenCV feature extraction method
+// i.e. with the AKAZE detector+descriptor
+///-- Later use this class in a header file and connect them in the other binaries
+///
+using namespace openMVG::features;
+typedef Scalar_Regions<SIOPointFeature,float,64> AKAZE_OpenCV_Regions;
+class AKAZE_OCV_Image_describer : public Image_describer
 {
-  //Convert image to OpenCV data
-  cv::Mat img;
-  cv::eigen2cv(I.GetMat(), img);
+public:
+  AKAZE_OCV_Image_describer():Image_describer(){}
 
-  std::vector< cv::KeyPoint > vec_keypoints;
-  cv::Mat m_desc;
-
-  extractor->detectAndCompute(img, cv::Mat(), vec_keypoints, m_desc);
-
-  if (!vec_keypoints.empty())
+  /**
+  @brief Detect regions on the image and compute their attributes (description)
+  @param image Image.
+  @param regions The detected regions and attributes (the caller must delete the allocated data)
+  @param mask 8-bit gray image for keypoint filtering (optional).
+     Non-zero values depict the region of interest.
+  */
+  bool Describe(const Image<unsigned char>& image,
+    std::unique_ptr<Regions> &regions,
+    const Image<unsigned char> * mask = NULL)
   {
-    feats.reserve(vec_keypoints.size());
-    descs.reserve(vec_keypoints.size());
+    cv::Mat img;
+    cv::eigen2cv(image.GetMat(), img);
 
-    DescriptorT descriptor;
-    int cpt = 0;
-    for(std::vector< cv::KeyPoint >::const_iterator i_keypoint = vec_keypoints.begin();
-      i_keypoint != vec_keypoints.end(); ++i_keypoint, ++cpt){
+    std::vector< cv::KeyPoint > vec_keypoints;
+    cv::Mat m_desc;
 
-      SIOPointFeature feat((*i_keypoint).pt.x, (*i_keypoint).pt.y, (*i_keypoint).size, (*i_keypoint).angle);
-      feats.push_back(feat);
+    cv::Ptr<cv::Feature2D> extractor = cv::AKAZE::create(cv::AKAZE::DESCRIPTOR_KAZE);
+    extractor->detectAndCompute(img, cv::Mat(), vec_keypoints, m_desc);
 
-      memcpy(descriptor.getData(),
-             m_desc.ptr<typename DescriptorT::bin_type>(cpt),
-             DescriptorT::static_size*sizeof(typename DescriptorT::bin_type));
-      descs.push_back(descriptor);
+    if (!vec_keypoints.empty())
+    {
+      Allocate(regions);
+
+      // Build alias to cached data
+      AKAZE_OpenCV_Regions * regionsCasted = dynamic_cast<AKAZE_OpenCV_Regions*>(regions.get());
+      // reserve some memory for faster keypoint saving
+      regionsCasted->Features().reserve(vec_keypoints.size());
+      regionsCasted->Descriptors().reserve(vec_keypoints.size());
+
+      typedef Descriptor<float, 64> DescriptorT;
+      DescriptorT descriptor;
+      int cpt = 0;
+      for(std::vector< cv::KeyPoint >::const_iterator i_keypoint = vec_keypoints.begin();
+        i_keypoint != vec_keypoints.end(); ++i_keypoint, ++cpt){
+
+        SIOPointFeature feat((*i_keypoint).pt.x, (*i_keypoint).pt.y, (*i_keypoint).size, (*i_keypoint).angle);
+        regionsCasted->Features().push_back(feat);
+
+        memcpy(descriptor.getData(),
+               m_desc.ptr<typename DescriptorT::bin_type>(cpt),
+               DescriptorT::static_size*sizeof(typename DescriptorT::bin_type));
+        regionsCasted->Descriptors().push_back(descriptor);
+      }
     }
     return true;
+  };
+
+  /// Allocate Regions type depending of the Image_describer
+  void Allocate(std::unique_ptr<Regions> &regions) const
+  {
+    regions.reset( new AKAZE_OpenCV_Regions );
   }
-  return false;
-}
 
-/// Extract features and descriptor and save them to files
-template<class KeypointSetT, class DescriptorT>
-void extractFeaturesAndDescriptors(
-  cv::Ptr<cv::Feature2D> extractor,
-  const std::vector<std::string> & vec_fileNames, // input filenames
-  const std::string & sOutDir,  // Output directory where features and descriptor will be saved
-  std::vector<std::pair<size_t, size_t> > & vec_imagesSize) // input image size (w,h)
-{
-  vec_imagesSize.resize(vec_fileNames.size());
-  Image<RGBColor> imageRGB;
-  Image<unsigned char> imageGray;
-
-  C_Progress_display my_progress_bar( vec_fileNames.size() );
-  for(size_t i=0; i < vec_fileNames.size(); ++i)  {
-    KeypointSetT kpSet;
-
-    std::string sFeat = stlplus::create_filespec(sOutDir,
-      stlplus::basename_part(vec_fileNames[i]), "feat");
-    std::string sDesc = stlplus::create_filespec(sOutDir,
-      stlplus::basename_part(vec_fileNames[i]), "desc");
-
-    //Test if descriptor and feature was already computed
-    if (stlplus::file_exists(sFeat) && stlplus::file_exists(sDesc)) {
-
-      if (ReadImage(vec_fileNames[i].c_str(), &imageRGB)) {
-        vec_imagesSize[i] = make_pair(imageRGB.Width(), imageRGB.Height());
-      }
-      else {
-        ReadImage(vec_fileNames[i].c_str(), &imageGray);
-        vec_imagesSize[i] = make_pair(imageGray.Width(), imageGray.Height());
-      }
-    }
-    else  { //Not already computed, so compute and save
-
-      if (!ReadImage(vec_fileNames[i].c_str(), &imageGray))
-        continue;
-
-      // Compute features and descriptors and export them to file
-      ComputeCVFeatAndDesc<DescriptorT>(extractor, imageGray,
-        kpSet.features(), kpSet.descriptors());
-      kpSet.saveToBinFile(sFeat, sDesc);
-      vec_imagesSize[i] = make_pair(imageGray.Width(), imageGray.Height());
-    }
-    ++my_progress_bar;
+  template<class Archive>
+  void serialize( Archive & ar )
+  {
   }
-}
+};
+#include <cereal/cereal.hpp>
+#include <cereal/types/polymorphic.hpp>
+#include <cereal/archives/json.hpp>
+CEREAL_REGISTER_TYPE_WITH_NAME(AKAZE_OCV_Image_describer, "AKAZE_OCV_Image_describer");
 
 /// Compute between the Views
 /// Compute view image description (feature & descriptor extraction using OpenCV)
@@ -163,7 +144,7 @@ int main(int argc, char **argv)
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('o', sOutDir, "outdir") );
-  cmd.add( make_option('r', fDistRatio, "distratio") );
+  cmd.add( make_option('r', fDistRatio, "ratio") );
   cmd.add( make_option('g', sGeometricModel, "geometricModel") );
   cmd.add( make_option('v', iMatchingVideoMode, "videoModeMatching") );
   cmd.add( make_option('l', sPredefinedPairList, "pairList") );
@@ -176,9 +157,18 @@ int main(int argc, char **argv)
       << "[-i|--input_file]: a SfM_Data file \n"
       << "[-o|--outdir path] \n"
       << "\n[Optional]\n"
-      << "[-g|--geometricModel f, e or h]"
-      << "[-v|--videoModeMatching 2 -> X] \n"
-      << "\t sequence matching with an overlap of X images\n"
+      << "[-r|--ratio Distance ratio to discard non meaningful matches\n"
+      << "   0.6 typical value (you can use 0.8 to have more matches)]"
+      << "[-g|--geometricModel\n"
+      << "  (pairwise correspondences filtering thanks to robust model estimation):\n"
+      << "   f: fundamental matrix,\n"
+      << "   e: essential matrix,\n"
+      << "   h: homography matrix]\n"
+      << "[-v|--videoModeMatching\n"
+      << "  (sequence matching with an overlap of X images)\n"
+      << "   X: with match 0 with (1->X), ...]\n"
+      << "   2: will match 0 with (1,2), 1 with (2,3), ...\n"
+      << "   3: will match 0 with (1,2,3), 1 with (2,3,4), ...]\n"
       << "[-l]--pairList file"
       << std::endl;
 
@@ -190,6 +180,7 @@ int main(int argc, char **argv)
             << argv[0] << std::endl
             << "--input_file " << sSfM_Data_Filename << std::endl
             << "--outdir " << sOutDir << std::endl
+            << "--ratio " << fDistRatio << std::endl
             << "--geometricModel " << sGeometricModel << std::endl
             << "--videoModeMatching " << iMatchingVideoMode << std::endl;
 
@@ -240,7 +231,11 @@ int main(int argc, char **argv)
 
   // Create output dir
   if (!stlplus::folder_exists(sOutDir))
-    stlplus::folder_create( sOutDir );
+    if (!stlplus::folder_create(sOutDir))
+    {
+      std::cerr << "Cannot create output directory" << std::endl;
+      return EXIT_FAILURE;
+    }
 
   //---------------------------------------
   // a. Load input scene
@@ -259,21 +254,79 @@ int main(int argc, char **argv)
   //    - else save features and descriptors on disk
   //---------------------------------------
 
-  //-- Make your choice about the Feature Detector your want to use
-  //--  Make match the openCV + openMVG internal descriptor type
-  //    thanks to the template parameter
+  // Init the image_describer
+  // - retrieve the used one in case of pre-computed features
+  // - else create the desired one
 
-  //-- AKAZE MSURF => default 64 floating point values
-  typedef Descriptor<float, 64> DescriptorT;
-  std::cout << "\nUse the opencv AKAZE interface" << std::endl;
+  using namespace openMVG::features;
+  std::unique_ptr<Image_describer> image_describer;
 
-  cv::Ptr<cv::Feature2D> extractor = cv::AKAZE::create(cv::AKAZE::DESCRIPTOR_KAZE);
+  const std::string sImage_describer = stlplus::create_filespec(sOutDir, "image_describer", "json");
+  if (stlplus::is_file(sImage_describer))
+  {
+    // Dynamically load the image_describer from the file (will restore old used settings)
+    std::ifstream stream(sImage_describer.c_str());
+    if (!stream.is_open())
+      return false;
 
-  typedef SIOPointFeature FeatureT;
-  typedef std::vector<FeatureT> FeatsT;
-  typedef vector<DescriptorT > DescsT;
-  typedef KeypointSet<FeatsT, DescsT > KeypointSetT;
+    cereal::JSONInputArchive archive(stream);
+    archive(cereal::make_nvp("image_describer", image_describer));
+  }
+  else
+  {
+    image_describer.reset(new AKAZE_OCV_Image_describer);
 
+    // Export the used Image_describer to a file for future regions loading
+    {
+      std::ofstream stream(sImage_describer.c_str());
+      if (!stream.is_open())
+        return false;
+
+      cereal::JSONOutputArchive archive(stream);
+      archive(cereal::make_nvp("image_describer", image_describer));
+    }
+  }
+
+
+  {
+    Timer timer;
+    std::cout << "\n\n - EXTRACT FEATURES - " << std::endl;
+
+    Image<unsigned char> imageGray;
+    C_Progress_display my_progress_bar( sfm_data.getViews().size() );
+    for(Views::const_iterator iterViews = sfm_data.views.begin();
+        iterViews != sfm_data.views.end();
+        ++iterViews, ++my_progress_bar)
+    {
+      const View * view = iterViews->second.get();
+      const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
+        view->s_Img_path);
+      const std::string sFeat = stlplus::create_filespec(sOutDir,
+        stlplus::basename_part(sView_filename), "feat");
+      const std::string sDesc = stlplus::create_filespec(sOutDir,
+        stlplus::basename_part(sView_filename), "desc");
+
+      //If features or descriptors file are missing, compute them
+      if (!stlplus::file_exists(sFeat) || !stlplus::file_exists(sDesc))
+      {
+        if (!ReadImage(sView_filename.c_str(), &imageGray))
+          continue;
+
+        // Compute features and descriptors and export them to files
+        std::unique_ptr<Regions> regions;
+        image_describer->Describe(imageGray, regions);
+        image_describer->Save(regions.get(), sFeat, sDesc);
+      }
+    }
+    std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
+  }
+
+  //---------------------------------------
+  // c. Compute putative descriptor matches
+  //    - Descriptor matching (according user method choice)
+  //    - Keep correspondences only if NearestNeighbor ratio is ok
+  //---------------------------------------
+  PairWiseMatches map_PutativesMatches;
 
   // List views as a vector of filenames & imagesizes (alias)
   std::vector<std::string> vec_fileNames;
@@ -290,30 +343,7 @@ int main(int argc, char **argv)
     vec_imagesSize.push_back( std::make_pair( v->ui_width, v->ui_height) );
   }
 
-  std::cout << "\n\n - EXTRACT FEATURES - " << std::endl;
-  {
-    Timer timer;
-    extractFeaturesAndDescriptors<KeypointSetT, DescriptorT>(
-      extractor,
-      vec_fileNames, // input filenames
-      sOutDir,  // Output directory where features and descriptor will be saved
-      vec_imagesSize);
-    std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
-  }
 
-  //---------------------------------------
-  // c. Compute putative descriptor matches
-  //    - L2 descriptor matching
-  //    - Keep correspondences only if NearestNeighbor ratio is ok
-  //---------------------------------------
-  PairWiseMatches map_PutativesMatches;
-  // Define the matcher and the used metric (Squared L2)
-  // ANN matcher could be defined as follow:
-  typedef flann::L2<DescriptorT::bin_type> MetricT;
-  typedef ArrayMatcher_Kdtree_Flann<DescriptorT::bin_type, MetricT> MatcherT;
-  // Brute force matcher can be defined as following:
-  //typedef L2_Vectorized<DescriptorT::bin_type> MetricT;
-  //typedef ArrayMatcherBruteForce<DescriptorT::bin_type, MetricT> MatcherT;
 
   std::cout << std::endl << " - PUTATIVE MATCHES - " << std::endl;
   // If the matches already exists, reload them
@@ -333,8 +363,10 @@ int main(int argc, char **argv)
     }
 
     Timer timer;
-    Matcher_AllInMemory<KeypointSetT, MatcherT> collectionMatcher(fDistRatio);
-    if (collectionMatcher.loadData(vec_fileNames, sOutDir))
+    // TODO: make matching method a parameter
+    Matcher_Regions_AllInMemory collectionMatcher(fDistRatio, ANN_L2);
+    //Matcher_Regions_AllInMemory collectionMatcher(fDistRatio, BRUTE_FORCE_HAMMING);
+    if (collectionMatcher.loadData(*image_describer.get(), vec_fileNames, sOutDir))
     {
       // Get pair to match according the matching mode:
       Pair_Set pairs;
@@ -371,11 +403,18 @@ int main(int argc, char **argv)
   //    - AContrario Estimation of the desired geometric model
   //    - Use an upper bound for the a contrario estimated threshold
   //---------------------------------------
+
+  // Prepare the features and matches provider
+  std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
+  if (!feats_provider->load(sfm_data, sOutDir, image_describer)) {
+    std::cerr << std::endl << "Invalid features." << std::endl;
+    return EXIT_FAILURE;
+  }
+
   PairWiseMatches map_GeometricMatches;
 
-  ImageCollectionGeometricFilter<FeatureT> collectionGeomFilter;
+  ImageCollectionGeometricFilter collectionGeomFilter(feats_provider.get());
   const double maxResidualError = 4.0;
-  if (collectionGeomFilter.loadData(vec_fileNames, sOutDir))
   {
     Timer timer;
     std::cout << std::endl << " - GEOMETRIC FILTERING - " << std::endl;
@@ -393,7 +432,7 @@ int main(int argc, char **argv)
       case ESSENTIAL_MATRIX:
       {
         // Build the intrinsic parameter map for each view
-        std::map<size_t, Mat3> map_K;
+        std::map<IndexT, Mat3> map_K;
         size_t cpt = 0;
         for (Views::const_iterator iter = sfm_data.getViews().begin();
           iter != sfm_data.getViews().end();

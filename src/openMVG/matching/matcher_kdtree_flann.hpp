@@ -50,13 +50,13 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
     {
       _dimension = dimension;
       //-- Build Flann Matrix container (map to already allocated memory)
-      _datasetM = auto_ptr< flann::Matrix<Scalar> >(
+      _datasetM.reset(
           new flann::Matrix<Scalar>((Scalar*)dataset, nbRows, dimension));
 
       //-- Build FLANN index
-      _index = auto_ptr< flann::Index<Metric> > (
-          new flann::Index<Metric> (*_datasetM, flann::KDTreeIndexParams(4)) );
-      (*_index).buildIndex();
+      _index.reset(
+          new flann::Index<Metric> (*_datasetM, flann::KDTreeIndexParams(4)));
+      _index->buildIndex();
 
       return true;
     }
@@ -83,7 +83,7 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
       flann::Matrix<int> indices(indicePTR, 1, 1);
       flann::Matrix<DistanceType> dists(distancePTR, 1, 1);
       // do a knn search, using 128 checks
-      (*_index).knnSearch(queries, indices, dists, 1, flann::SearchParams(128));
+      _index->knnSearch(queries, indices, dists, 1, flann::SearchParams(128));
 
       return true;
     }
@@ -122,7 +122,7 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
       flann::Matrix<int> indices(indicePTR, nbQuery, NN);
       flann::Matrix<DistanceType> dists(distancePTR, nbQuery, NN);
       // do a knn search, using 128 checks
-      (*_index).knnSearch(queries, indices, dists, NN, flann::SearchParams(128));
+      _index->knnSearch(queries, indices, dists, NN, flann::SearchParams(128));
       return true;
     }
     else  {
@@ -132,9 +132,9 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
 
   private :
 
-  auto_ptr< flann::Matrix<Scalar> > _datasetM;
-  auto_ptr< flann::Index<Metric> > _index;
-  size_t _dimension;
+  std::unique_ptr< flann::Matrix<Scalar> > _datasetM;
+  std::unique_ptr< flann::Index<Metric> > _index;
+  std::size_t _dimension;
 };
 
 } // namespace matching

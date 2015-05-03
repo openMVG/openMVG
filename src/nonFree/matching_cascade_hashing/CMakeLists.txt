@@ -10,11 +10,7 @@ ADD_EXECUTABLE(openMVG_main_computeMatchesCasHas
   Matcher_CascadeHashing.hpp
 )
 TARGET_LINK_LIBRARIES(openMVG_main_computeMatchesCasHas
-  openMVG_image
-  openMVG_multiview
-  openMVG_system
-  vlsift
-  stlplus
-  flann_cpp_s)
+  openMVG_features
+  ${OpenMVG_LIBS})
 SET_PROPERTY(TARGET openMVG_main_computeMatchesCasHas PROPERTY FOLDER OpenMVG/nonFree/software)
 

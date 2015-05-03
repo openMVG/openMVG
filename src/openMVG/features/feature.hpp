@@ -46,6 +46,8 @@ protected:
   Vec2f _coords;  // (x, y).
 };
 
+typedef std::vector<PointFeature> PointFeatures;
+
 //with overloaded operators:
 inline std::ostream& operator<<(std::ostream& out, const PointFeature& obj)
 {

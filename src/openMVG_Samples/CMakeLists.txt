@@ -7,9 +7,9 @@ ADD_SUBDIRECTORY(robust_essential)
 ADD_SUBDIRECTORY(robust_essential_spherical)
 ADD_SUBDIRECTORY(robust_essential_ba)
 ADD_SUBDIRECTORY(undisto_Brown)
+ADD_SUBDIRECTORY(image_describer_matches)
 
 ADD_SUBDIRECTORY(exifParsing)
 ADD_SUBDIRECTORY(sensorWidthDatabase)
 
 ADD_SUBDIRECTORY(kvld_filter)
-ADD_SUBDIRECTORY(features_akaze_demo)

@@ -11,7 +11,7 @@
 #include "openMVG/matching/indMatch.hpp"
 using namespace openMVG::matching;
 
-#include "openMVG/features/features.hpp"
+#include "openMVG/features/regions.hpp"
 
 #include <vector>
 
@@ -224,16 +224,13 @@ static bool line_to_endPoints(const Vec3 & line, int W, int H, Vec2 & x0, Vec2 &
 ///  WACV 2015.
 template<
   typename ErrorArg,    // The metric to compute distance to the model
-  typename DescriptorT, // The descriptor type
   typename MetricT >    // The metric to compare two descriptors
 void GuidedMatching_Fundamental_Fast(
   const Mat3 & FMat,    // The fundamental matrix
   const Vec3 & epipole2,// Epipole2 (camera center1 in image plane2; must not be normalized)
-  const Mat & xLeft,    // The left data points
-  const std::vector<DescriptorT > & lDescriptors,
+  const features::Regions * lRegions,
   const int widthR, const int heightR,
-  const Mat & xRight,   // The right data points
-  const std::vector<DescriptorT > & rDescriptors,
+  const features::Regions * rRegions,
   double errorTh,       // Maximal authorized error threshold (consider it's a square threshold)
   double distRatio,     // Maximal authorized distance ratio
   IndMatches & vec_corresponding_index) // Ouput corresponding index
@@ -247,9 +244,8 @@ void GuidedMatching_Fundamental_Fast(
   // - For each right point, compute threshold limited bandwidth and compare only
   //   points that belong to this range (limited buckets).
 
-  assert(xLeft.rows() == xRight.rows());
-  assert(xLeft.cols() == lDescriptors.size());
-  assert(xRight.cols() == rDescriptors.size());
+  const PointFeatures r_pt = rRegions->GetRegionsPositions();
+  const PointFeatures l_pt = lRegions->GetRegionsPositions();
 
   MetricT metric;
   typename MetricT::ResultType MetricDist_T;
@@ -271,10 +267,10 @@ void GuidedMatching_Fundamental_Fast(
 	const int nb_buckets = 2*(widthR + heightR-2);
 
   Buckets_vec buckets(nb_buckets);
-  for (size_t i = 0; i < xLeft.cols(); ++i) {
+  for (size_t i = 0; i < l_pt.size(); ++i) {
 
     // Compute epipolar line
-    const Vec3 line = F * Vec3(xLeft.col(i)(0), xLeft.col(i)(1), 1.);
+    const Vec3 line = F * Vec3(l_pt[i].x(), l_pt[i].y(), 1.);
     // If epipolar line exist in Right image
     Vec2 x0, x1;
     if (line_to_endPoints(line, widthR, heightR, x0, x1))
@@ -286,15 +282,15 @@ void GuidedMatching_Fundamental_Fast(
   }
 
   // For each point in image right, find if there is good candidates.
-  std::vector<distanceRatio<typename MetricT::ResultType > > dR(xLeft.cols());
-  for (size_t j = 0; j < xRight.cols(); ++j)
+  std::vector<distanceRatio<typename MetricT::ResultType > > dR(l_pt.size());
+  for (size_t j = 0; j < r_pt.size(); ++j)
   {
     // According the point:
     // - Compute it's epipolar line from the epipole
     // - compute the range of possible bucket by computing
     //    the epipolar line gauge limitation introduced by the tolerated pixel error
 
-    const Vec2 xR = xRight.col(j);
+    const Vec2 xR = r_pt[j].coords().cast<double>();
     const Vec3 l2 = ep2.cross(Vec3(xR(0), xR(1), 1.));
 		const Vec2 n = l2.head<2>() * (sqrt(errorTh) / l2.head<2>().norm());
 
@@ -321,7 +317,10 @@ void GuidedMatching_Fundamental_Fast(
         const IndexT i = *itB;
         // Compute descriptor distance
         const typename MetricT::ResultType descDist =
-          metric( lDescriptors[i].getData(), rDescriptors[j].getData(), DescriptorT::static_size );
+          metric(
+            ((const typename MetricT::ElementType*) lRegions->DescriptorRawData()) + (i * lRegions->DescriptorLength()),
+            ((const typename MetricT::ElementType*) rRegions->DescriptorRawData()) + (j * rRegions->DescriptorLength()),
+            rRegions->DescriptorLength() );
         // Update the closest distance for later distance ratio computation
         dR[i].update(j, descDist);
       }

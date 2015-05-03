@@ -8,6 +8,9 @@
 #include <cstdlib>
 
 #include "openMVG/sfm/sfm.hpp"
+#include "nonFree/sift/SIFT_describer.hpp"
+#include <cereal/archives/json.hpp>
+
 #include "openMVG/system/timer.hpp"
 using namespace openMVG;
 
@@ -63,8 +66,6 @@ int main(int argc, char **argv)
   std::string sSfM_Data_Filename;
   std::string sMatchesDir;
   std::string sOutDir = "";
-  bool bRefinePPandDisto = true;
-  bool bRefineFocal = true;
   std::pair<std::string,std::string> initialPairString("","");
   bool bRefineIntrinsics = true;
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
@@ -87,10 +88,10 @@ int main(int argc, char **argv)
     << "[-o|--outdir] path where the output data will be stored\n"
     << "[-a|--initialPairA NAME] \n"
     << "[-b|--initialPairB NAME] \n"
-    << "[-c|--camera_model] Camera model type:\n"
-      << "\t 1: Pinhole (default)\n"
+    << "[-c|--camera_model] Camera model type for view with unknown intrinsic:\n"
+      << "\t 1: Pinhole \n"
       << "\t 2: Pinhole radial 1\n"
-      << "\t 3: Pinhole radial 3\n"
+      << "\t 3: Pinhole radial 3 (default)\n"
     << "[-f|--refineIntrinsics \n"
     << "\t 0-> intrinsic parameters are kept as constant\n"
     << "\t 1-> refine intrinsic parameters (default).] \n"
@@ -108,9 +109,27 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  // Init the image describer (used for regions loading)
+  using namespace openMVG::features;
+  std::unique_ptr<Image_describer> image_describer;
+  const std::string sImage_describer = stlplus::create_filespec(sMatchesDir, "image_describer", "json");
+  if (stlplus::is_file(sImage_describer))
+  {
+    // Dynamically load the image_describer from the file (will restore old used settings)
+    std::ifstream stream(sImage_describer.c_str());
+    if (!stream.is_open())
+      return false;
+
+    cereal::JSONInputArchive archive(stream);
+    archive(cereal::make_nvp("image_describer", image_describer));
+  }
+  else // By default init a SIFT_Image_describer (keep compatibility)
+  {
+    image_describer.reset(new SIFT_Image_describer());
+  }
   // Prepare the features and matches provider
   std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
-  if (!feats_provider->load(sfm_data, sMatchesDir)) {
+  if (!feats_provider->load(sfm_data, sMatchesDir, image_describer)) {
     std::cerr << std::endl
       << "Invalid features." << std::endl;
     return EXIT_FAILURE;

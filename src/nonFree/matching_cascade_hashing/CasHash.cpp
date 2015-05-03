@@ -1,6 +1,7 @@
 #include "./CasHash.hpp"
 #include "openMVG/matching/metric.hpp"
 #include "openMVG/stl/indexed_sort.hpp"
+#include "nonFree/sift/SIFT_describer.hpp"
 
 // Adapted from author source code:
 //
@@ -61,7 +62,9 @@ void BuildBuckets(ImageFeatures& imageData)
 /*----------------------------------------------------------------*/
 
 
-size_t ImportFeatures(const map_DescT& map_Desc, std::vector<ImageFeatures>& imageDataList)
+size_t ImportFeatures(
+  const std::map<IndexT, std::unique_ptr<features::Regions> > & regions_perImage,
+  std::vector<ImageFeatures>& imageDataList)
 {
   // accumulator; the number of SIFT feature vectors in <imageDataList>
   size_t cntSiftVec = 0;
@@ -74,10 +77,14 @@ size_t ImportFeatures(const map_DescT& map_Desc, std::vector<ImageFeatures>& ima
   memset(siftVecSum, 0, sizeof(size_t)*kDimSiftData);
 
   // calculate the sum vector by adding up all feature vectors
-  for (map_DescT::const_iterator iterIma = map_Desc.begin();
-       iterIma != map_Desc.end(); ++iterIma)
+  for (std::map<IndexT, std::unique_ptr<features::Regions> >::const_iterator iterIma = regions_perImage.begin();
+       iterIma != regions_perImage.end(); ++iterIma)
   {
-    const DescsT & descriptors = iterIma->second;
+    // Assert we have SIFT regions
+    if( dynamic_cast<features::SIFT_Regions*>(regions_perImage.at(0).get()) == NULL )
+      return false;
+
+    const DescsT & descriptors = ((features::SIFT_Regions*)regions_perImage.at(0).get())->Descriptors();
     cntSiftVec += descriptors.size();
     for (int dataIndex = 0; dataIndex < descriptors.size(); ++dataIndex)
     {
@@ -94,17 +101,17 @@ size_t ImportFeatures(const map_DescT& map_Desc, std::vector<ImageFeatures>& ima
     siftVecAve[dimIndex] = (int16_t)(siftVecSum[dimIndex] / cntSiftVec);
 
   // init feature descriptors for each image
-  imageDataList.resize(map_Desc.size());
+  imageDataList.resize(regions_perImage.size());
   const HashConvertor stHashConvertor;
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for
 #endif
-  for (int i = 0; i < map_Desc.size(); ++i)
+  for (int i = 0; i < regions_perImage.size(); ++i)
   {
-    map_DescT::const_iterator iterDesc = map_Desc.begin();
+    std::map<IndexT, std::unique_ptr<features::Regions> >::const_iterator iterDesc = regions_perImage.begin();
     std::advance(iterDesc, i);
 
-    const DescsT & descriptors = iterDesc->second;
+    const DescsT & descriptors = ((features::SIFT_Regions*)iterDesc->second.get())->Descriptors();
 
     ImageFeatures& imageDataDst = imageDataList[i];
     // substract the average vector from each feature vector

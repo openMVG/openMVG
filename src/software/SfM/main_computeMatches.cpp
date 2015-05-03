@@ -7,37 +7,27 @@
 
 
 #include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
-
 #include "openMVG/sfm/sfm.hpp"
+#include "openMVG/features/features.hpp"
+#include "nonFree/sift/SIFT_describer.hpp"
+#include <cereal/archives/json.hpp>
 
 /// Generic Image Collection image matching
-#include "openMVG/matching_image_collection/Matcher_AllInMemory.hpp"
+#include "openMVG/matching_image_collection/Matcher_Regions_AllInMemory.hpp"
 #include "openMVG/matching_image_collection/GeometricFilter.hpp"
 #include "openMVG/matching_image_collection/F_ACRobust.hpp"
 #include "openMVG/matching_image_collection/E_ACRobust.hpp"
 #include "openMVG/matching_image_collection/H_ACRobust.hpp"
 #include "software/SfM/pairwiseAdjacencyDisplay.hpp"
-#include "software/SfM/SfMIOHelper.hpp"
-#include "openMVG/matching/matcher_brute_force.hpp"
-#include "openMVG/matching/matcher_kdtree_flann.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
-
-/// Feature detector and descriptor interface
-#include "nonFree/sift/SIFT.hpp"
-
 #include "openMVG/system/timer.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/progress/progress.hpp"
 
 #include <cstdlib>
-#include <iostream>
 #include <fstream>
-#include <iterator>
-#include <vector>
 
 using namespace openMVG;
 using namespace openMVG::matching;
@@ -58,11 +48,11 @@ enum ePairMode
   PAIR_FROM_FILE  = 2
 };
 
-/// Compute between the Views
-/// Compute view image description (feature & descriptor extraction)
-/// Compute putative local feature matches (descriptor matching)
-/// Compute geometric coherent feature matches (robust model estimation from putative matches)
-/// Export computed data
+/// Compute corresponding features between a series of views:
+/// - Compute view image description (feature & descriptor extraction)
+/// - Compute putative local feature matches (descriptor matching)
+/// - Compute geometric coherent feature matches (robust model estimation from putative matches)
+/// - Export computed data
 int main(int argc, char **argv)
 {
   CmdLine cmd;
@@ -71,20 +61,17 @@ int main(int argc, char **argv)
   std::string sOutDir = "";
   std::string sGeometricModel = "f";
   float fDistRatio = .6f;
-  bool bOctMinus1 = false;
-  float dPeakThreshold = 0.04f;
   int iMatchingVideoMode = -1;
   std::string sPredefinedPairList = "";
+  bool bUpRight = false;
 
+  cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('o', sOutDir, "outdir") );
-  cmd.add( make_option('r', fDistRatio, "distratio") );
-  cmd.add( make_option('s', bOctMinus1, "octminus1") );
-  cmd.add( make_option('p', dPeakThreshold, "peakThreshold") );
+  cmd.add( make_option('r', fDistRatio, "ratio") );
   cmd.add( make_option('g', sGeometricModel, "geometricModel") );
   cmd.add( make_option('v', iMatchingVideoMode, "videoModeMatching") );
   cmd.add( make_option('l', sPredefinedPairList, "pairList") );
-  cmd.add( make_option('l', sPredefinedPairList, "pairList") );
-  cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
+  cmd.add( make_option('u', bUpRight, "upright") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -94,12 +81,19 @@ int main(int argc, char **argv)
       << "[-i|--input_file]: a SfM_Data file \n"
       << "[-o|--outdir path] \n"
       << "\n[Optional]\n"
-      << "[-r|--distratio 0.6] \n"
-      << "[-s|--octminus1 0 or 1] \n"
-      << "[-p|--peakThreshold 0.04 -> 0.01] \n"
-      << "[-g|--geometricModel f, e or h] \n"
-      << "[-v|--videoModeMatching 2 -> X] \n"
-      << "\t sequence matching with an overlap of X images\n"
+      << "[-r|--ratio Distance ratio to discard non meaningful matches\n"
+      << "   0.6 typical value (you can use 0.8 to have more matches)]"
+      << "[-g|--geometricModel\n"
+      << "  (pairwise correspondences filtering thanks to robust model estimation):\n"
+      << "   f: fundamental matrix,\n"
+      << "   e: essential matrix,\n"
+      << "   h: homography matrix]\n"
+      << "[-u Use Upright feature 0 or 1]\n"
+      << "[-v|--videoModeMatching\n"
+      << "  (sequence matching with an overlap of X images)\n"
+      << "   X: with match 0 with (1->X), ...]\n"
+      << "   2: will match 0 with (1,2), 1 with (2,3), ...\n"
+      << "   3: will match 0 with (1,2,3), 1 with (2,3,4), ...]\n"
       << "[-l]--pairList file"
       << std::endl;
 
@@ -111,9 +105,7 @@ int main(int argc, char **argv)
             << argv[0] << std::endl
             << "--input_file " << sSfM_Data_Filename << std::endl
             << "--outdir " << sOutDir << std::endl
-            << "--distratio " << fDistRatio << std::endl
-            << "--octminus1 " << bOctMinus1 << std::endl
-            << "--peakThreshold " << dPeakThreshold << std::endl
+            << "--ratio " << fDistRatio << std::endl
             << "--geometricModel " << sGeometricModel << std::endl
             << "--videoModeMatching " << iMatchingVideoMode << std::endl;
 
@@ -164,7 +156,11 @@ int main(int argc, char **argv)
 
   // Create output dir
   if (!stlplus::folder_exists(sOutDir))
-    stlplus::folder_create( sOutDir );
+    if (!stlplus::folder_create(sOutDir))
+    {
+      std::cerr << "Cannot create output directory" << std::endl;
+      return EXIT_FAILURE;
+    }
 
   //---------------------------------------
   // a. Load input scene
@@ -183,11 +179,42 @@ int main(int argc, char **argv)
   //    - else save features and descriptors on disk
   //---------------------------------------
 
-  typedef Descriptor<unsigned char, 128> DescriptorT;
-  typedef SIOPointFeature FeatureT;
-  typedef std::vector<FeatureT> FeatsT;
-  typedef vector<DescriptorT > DescsT;
-  typedef KeypointSet<FeatsT, DescsT > KeypointSetT;
+  // Init the image_describer
+  // - retrieve the used one in case of pre-computed features
+  // - else create the desired one
+
+  using namespace openMVG::features;
+  std::unique_ptr<Image_describer> image_describer;
+
+  const std::string sImage_describer = stlplus::create_filespec(sOutDir, "image_describer", "json");
+  if (stlplus::is_file(sImage_describer))
+  {
+    // Dynamically load the image_describer from the file (will restore old used settings)
+    std::ifstream stream(sImage_describer.c_str());
+    if (!stream.is_open())
+      return false;
+
+    cereal::JSONInputArchive archive(stream);
+    archive(cereal::make_nvp("image_describer", image_describer));
+  }
+  else
+  {
+    image_describer.reset(new SIFT_Image_describer(SiftParams(), !bUpRight));
+    //image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_MSURF), !bUpRight));
+    //image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_MLDB), !bUpRight));
+    //image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_LIOP), !bUpRight));
+
+    // Export the used Image_describer to a file for future regions loading
+    {
+      std::ofstream stream(sImage_describer.c_str());
+      if (!stream.is_open())
+        return false;
+
+      cereal::JSONOutputArchive archive(stream);
+      archive(cereal::make_nvp("image_describer", image_describer));
+    }
+  }
+
 
   {
     Timer timer;
@@ -197,7 +224,7 @@ int main(int argc, char **argv)
     C_Progress_display my_progress_bar( sfm_data.getViews().size() );
     for(Views::const_iterator iterViews = sfm_data.views.begin();
         iterViews != sfm_data.views.end();
-        ++iterViews)
+        ++iterViews, ++my_progress_bar)
     {
       const View * view = iterViews->second.get();
       const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
@@ -207,37 +234,27 @@ int main(int argc, char **argv)
       const std::string sDesc = stlplus::create_filespec(sOutDir,
         stlplus::basename_part(sView_filename), "desc");
 
-      //If descriptors or features file are missing, compute them
-      if (!stlplus::file_exists(sFeat) || !stlplus::file_exists(sDesc)) {
-
+      //If features or descriptors file are missing, compute them
+      if (!stlplus::file_exists(sFeat) || !stlplus::file_exists(sDesc))
+      {
         if (!ReadImage(sView_filename.c_str(), &imageGray))
           continue;
 
         // Compute features and descriptors and export them to files
-        KeypointSetT kpSet;
-        SIFTDetector(imageGray,
-          kpSet.features(), kpSet.descriptors(),
-          bOctMinus1, true, dPeakThreshold);
-        kpSet.saveToBinFile(sFeat, sDesc);
+        std::unique_ptr<Regions> regions;
+        image_describer->Describe(imageGray, regions);
+        image_describer->Save(regions.get(), sFeat, sDesc);
       }
-      ++my_progress_bar;
     }
     std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
   }
 
   //---------------------------------------
   // c. Compute putative descriptor matches
-  //    - L2 descriptor matching
+  //    - Descriptor matching (according user method choice)
   //    - Keep correspondences only if NearestNeighbor ratio is ok
   //---------------------------------------
   PairWiseMatches map_PutativesMatches;
-  // Define the matcher and the used metric (Squared L2)
-  // ANN matcher could be defined as follow:
-  typedef flann::L2<DescriptorT::bin_type> MetricT;
-  typedef ArrayMatcher_Kdtree_Flann<DescriptorT::bin_type, MetricT> MatcherT;
-  // Brute force matcher can be defined as following:
-  //typedef L2_Vectorized<DescriptorT::bin_type> MetricT;
-  //typedef ArrayMatcherBruteForce<DescriptorT::bin_type, MetricT> MatcherT;
 
   // List views as a vector of filenames & imagesizes (alias)
   std::vector<std::string> vec_fileNames;
@@ -272,8 +289,10 @@ int main(int argc, char **argv)
     }
 
     Timer timer;
-    Matcher_AllInMemory<KeypointSetT, MatcherT> collectionMatcher(fDistRatio);
-    if (collectionMatcher.loadData(vec_fileNames, sOutDir))
+    // TODO: make matching method a parameter
+    Matcher_Regions_AllInMemory collectionMatcher(fDistRatio, ANN_L2);
+    //Matcher_Regions_AllInMemory collectionMatcher(fDistRatio, BRUTE_FORCE_HAMMING);
+    if (collectionMatcher.loadData(*image_describer.get(), vec_fileNames, sOutDir))
     {
       // Get pair to match according the matching mode:
       Pair_Set pairs;
@@ -310,11 +329,18 @@ int main(int argc, char **argv)
   //    - AContrario Estimation of the desired geometric model
   //    - Use an upper bound for the a contrario estimated threshold
   //---------------------------------------
+
+  // Prepare the features and matches provider
+  std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
+  if (!feats_provider->load(sfm_data, sOutDir, image_describer)) {
+    std::cerr << std::endl << "Invalid features." << std::endl;
+    return EXIT_FAILURE;
+  }
+
   PairWiseMatches map_GeometricMatches;
 
-  ImageCollectionGeometricFilter<FeatureT> collectionGeomFilter;
+  ImageCollectionGeometricFilter collectionGeomFilter(feats_provider.get());
   const double maxResidualError = 4.0;
-  if (collectionGeomFilter.loadData(vec_fileNames, sOutDir))
   {
     Timer timer;
     std::cout << std::endl << " - GEOMETRIC FILTERING - " << std::endl;
@@ -332,7 +358,7 @@ int main(int argc, char **argv)
       case ESSENTIAL_MATRIX:
       {
         // Build the intrinsic parameter map for each view
-        std::map<size_t, Mat3> map_K;
+        std::map<IndexT, Mat3> map_K;
         size_t cpt = 0;
         for (Views::const_iterator iter = sfm_data.getViews().begin();
           iter != sfm_data.getViews().end();

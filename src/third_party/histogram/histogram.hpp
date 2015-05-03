@@ -48,7 +48,7 @@ public:
   // All bins of the histogram are set to zero.
   Histogram(
     const T& Start= T(0),
-    const T& End=T(0),
+    const T& End=T(1),
     const size_t& nBins = 10):
     Start(Start),
     End(End),

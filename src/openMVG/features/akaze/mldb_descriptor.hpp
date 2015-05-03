@@ -60,13 +60,7 @@ namespace openMVG
         const int max_y = std::min( ( i + 1 ) * subdiv_size , max_h ) ;
 
         // Sum every elements of this subdivision
-        // typename slip::Array2d<Real>::const_iterator2d it_Li = samples_Li.upper_left( box ) ;
-        // typename slip::Array2d<Real>::const_iterator2d it_Lx = samples_Lx.upper_left( box ) ;
-        // typename slip::Array2d<Real>::const_iterator2d it_Ly = samples_Ly.upper_left( box ) ;
-
-        mean_Li( i , j ) = 0 ;
-        mean_Lx( i , j ) = 0 ;
-        mean_Ly( i , j ) = 0 ;
+        mean_Li( i , j ) = mean_Lx( i , j ) = mean_Ly( i , j ) = 0 ;
 
         size_t nb_elt = 0 ;
         for( int ii = min_y ; ii < max_y ; ++ii )
@@ -108,15 +102,15 @@ namespace openMVG
   ** @param desc ouput vector (idealy a std::bitset) containing binary description of theses regions
   **/
   template< typename DescriptorType , typename Real>
-  static inline void ComputeBinaryValues( const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> & mean_Li ,
-                                          const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> & mean_Lx ,
-                                          const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> & mean_Ly ,
-                                          const int nb_subdiv ,
-                                          size_t & outIndex ,
-                                          DescriptorType & desc )
+  static inline void ComputeBinaryValues(
+    const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> & mean_Li ,
+    const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> & mean_Lx ,
+    const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> & mean_Ly ,
+    const int nb_subdiv ,
+    size_t & outIndex ,
+    DescriptorType & desc )
   {
     // Binary comparisons (ie (0,0) with (0,1), (O,0) with (0,2), ... )
-    /* This should also work : (keep for testing)
     for( int i = 0 ; i < ( nb_subdiv * nb_subdiv ) ; ++i )
     {
       for( int j = i + 1 ; j < ( nb_subdiv * nb_subdiv ) ; ++j )
@@ -130,49 +124,6 @@ namespace openMVG
         // Compare (src_i,src_j) with (dst_i,dst_j) on the three values
         desc[ outIndex++ ] = mean_Li( src_i , src_j ) > mean_Li( dst_i , dst_j ) ;
         desc[ outIndex++ ] = mean_Lx( src_i , src_j ) > mean_Lx( dst_i , dst_j ) ;
-        desc[ outIndex++ ] = mean_Ly( src_i , src_j ) > mean_Ly( dst_i , dst_j ) ;
-      }
-    }
-    */
-    for( int i = 0 ; i < ( nb_subdiv * nb_subdiv ) ; ++i )
-    {
-      for( int j = i + 1 ; j < ( nb_subdiv * nb_subdiv ) ; ++j )
-      {
-        const int src_i = i / nb_subdiv ;
-        const int src_j = i % nb_subdiv  ;
-
-        const int dst_i = j / nb_subdiv ;
-        const int dst_j = j % nb_subdiv ;
-
-        // Compare (src_i,src_j) with (dst_i,dst_j) on the three values
-        desc[ outIndex++ ] = mean_Li( src_i , src_j ) > mean_Li( dst_i , dst_j ) ;
-      }
-    }
-    for( int i = 0 ; i < ( nb_subdiv * nb_subdiv ) ; ++i )
-    {
-      for( int j = i + 1 ; j < ( nb_subdiv * nb_subdiv ) ; ++j )
-      {
-        const int src_i = i / nb_subdiv ;
-        const int src_j = i % nb_subdiv  ;
-
-        const int dst_i = j / nb_subdiv ;
-        const int dst_j = j % nb_subdiv ;
-
-        // Compare (src_i,src_j) with (dst_i,dst_j) on the three values
-        desc[ outIndex++ ] = mean_Lx( src_i , src_j ) > mean_Lx( dst_i , dst_j ) ;
-      }
-    }
-    for( int i = 0 ; i < ( nb_subdiv * nb_subdiv ) ; ++i )
-    {
-      for( int j = i + 1 ; j < ( nb_subdiv * nb_subdiv ) ; ++j )
-      {
-        const int src_i = i / nb_subdiv ;
-        const int src_j = i % nb_subdiv  ;
-
-        const int dst_i = j / nb_subdiv ;
-        const int dst_j = j % nb_subdiv ;
-
-        // Compare (src_i,src_j) with (dst_i,dst_j) on the three values
         desc[ outIndex++ ] = mean_Ly( src_i , src_j ) > mean_Ly( dst_i , dst_j ) ;
       }
     }
@@ -188,8 +139,13 @@ namespace openMVG
     ** @param desc output descriptor (binary descriptor)
     **/
   template< typename Real>
-  void ComputeMLDBDescriptor( const Image<Real> & Li , const Image<Real> &Lx , const Image<Real> &Ly ,
-                              const int id_octave , const SIOPointFeature & ipt , Descriptor<bool, 486> & desc )
+  void ComputeMLDBDescriptor(
+    const Image<Real> & Li ,
+    const Image<Real> &Lx ,
+    const Image<Real> &Ly ,
+    const int id_octave ,
+    const SIOPointFeature & ipt ,
+    Descriptor<bool, 486> & desc )
   {
     // // Note : in KAZE description we compute descriptor of previous slice and never the current one
 

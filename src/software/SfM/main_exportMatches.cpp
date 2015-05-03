@@ -7,9 +7,9 @@
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
+#include "openMVG/sfm/sfm.hpp"
+#include "nonFree/sift/SIFT_describer.hpp"
 
-#include "software/SfM/SfMIOHelper.hpp"
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/progress/progress.hpp"
@@ -52,19 +52,19 @@ inline float hue2rgb(float p, float q, float t){
     r = static_cast<unsigned char>(hue2rgb(p, q, h + 1.f/3.f) * 255.f);
     g = static_cast<unsigned char>(hue2rgb(p, q, h) * 255.f);
     b = static_cast<unsigned char>(hue2rgb(p, q, h - 1.f/3.f) * 255.f);
-  }   
+  }
 }
 
 int main(int argc, char ** argv)
 {
   CmdLine cmd;
 
-  std::string sImaDirectory;
+  std::string sSfM_Data_Filename;
   std::string sMatchesDir;
   std::string sMatchFile;
   std::string sOutDir = "";
 
-  cmd.add( make_option('i', sImaDirectory, "imadir") );
+  cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('d', sMatchesDir, "matchdir") );
   cmd.add( make_option('m', sMatchFile, "matchfile") );
   cmd.add( make_option('o', sOutDir, "outdir") );
@@ -74,7 +74,7 @@ int main(int argc, char ** argv)
       cmd.process(argc, argv);
   } catch(const std::string& s) {
       std::cerr << "Export pairwise matches.\nUsage: " << argv[0] << "\n"
-      << "[-i|--imadir path]\n"
+      << "[-i|--input_file file] path to a SfM_Data scene\n"
       << "[-d|--matchdir path]\n"
       << "[-m|--sMatchFile filename]\n"
       << "[-o|--outdir path]\n"
@@ -91,26 +91,49 @@ int main(int argc, char ** argv)
 
 
   //---------------------------------------
-  // Read images names
+  // Read SfM Scene (image view names)
   //---------------------------------------
-
-  std::vector<SfMIO::CameraInfo> vec_camImageName;
-  std::vector<SfMIO::IntrinsicCameraInfo> vec_focalGroup;
-  if (!SfMIO::loadImageList(
-    vec_camImageName,
-    vec_focalGroup,
-    stlplus::create_filespec(sMatchesDir, "lists", "txt")))
-  {
-    std::cerr << "\nEmpty image list." << std::endl;
-    return false;
+  SfM_Data sfm_data;
+  if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
+    std::cerr << std::endl
+      << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
+    return EXIT_FAILURE;
   }
 
   //---------------------------------------
-  // Read matches
+  // Load SfM Scene regions
   //---------------------------------------
+  //// Init the image describer (used for regions loading)
+  using namespace openMVG::features;
+  std::unique_ptr<Image_describer> image_describer;
+  const std::string sImage_describer = stlplus::create_filespec(sMatchesDir, "image_describer", "json");
+  if (stlplus::is_file(sImage_describer))
+  {
+    // Dynamically load the image_describer from the file (will restore old used settings)
+    std::ifstream stream(sImage_describer.c_str());
+    if (!stream.is_open())
+      return false;
 
-  PairWiseMatches map_Matches;
-  PairedIndMatchImport(sMatchFile, map_Matches);
+    cereal::JSONInputArchive archive(stream);
+    archive(cereal::make_nvp("image_describer", image_describer));
+  }
+  else // By default init a SIFT_Image_describer (keep compatibility)
+  {
+    image_describer.reset(new SIFT_Image_describer());
+  }
+  // Read the features
+  std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
+  if (!feats_provider->load(sfm_data, sMatchesDir, image_describer)) {
+    std::cerr << std::endl
+      << "Invalid features." << std::endl;
+    return EXIT_FAILURE;
+  }
+  std::shared_ptr<Matches_Provider> matches_provider = std::make_shared<Matches_Provider>();
+  if (!matches_provider->load(sfm_data, sMatchFile)) {
+    std::cerr << std::endl
+      << "Invalid matches file." << std::endl;
+    return EXIT_FAILURE;
+  }
 
   // ------------
   // For each pair, export the matches
@@ -118,68 +141,68 @@ int main(int argc, char ** argv)
 
   stlplus::folder_create(sOutDir);
   std::cout << "\n Export pairwise matches" << std::endl;
-  C_Progress_display my_progress_bar( map_Matches.size() );
-  for (PairWiseMatches::const_iterator iter = map_Matches.begin();
-    iter != map_Matches.end();
+  const Pair_Set pairs = matches_provider->getPairs();
+  C_Progress_display my_progress_bar( pairs.size() );
+  for (Pair_Set::const_iterator iter = pairs.begin();
+    iter != pairs.end();
     ++iter, ++my_progress_bar)
   {
-    const size_t I = iter->first.first;
-    const size_t J = iter->first.second;
+    const size_t I = iter->first;
+    const size_t J = iter->second;
 
-    std::vector<SfMIO::CameraInfo>::const_iterator camInfoI = vec_camImageName.begin() + I;
-    std::vector<SfMIO::CameraInfo>::const_iterator camInfoJ = vec_camImageName.begin() + J;
+    const View * view_I = sfm_data.getViews().at(I).get();
+    const std::string sView_I= stlplus::create_filespec(sfm_data.s_root_path,
+      view_I->s_Img_path);
+    const View * view_J = sfm_data.getViews().at(J).get();
+    const std::string sView_J= stlplus::create_filespec(sfm_data.s_root_path,
+      view_J->s_Img_path);
 
     const std::pair<size_t, size_t>
-      dimImage0 = std::make_pair(vec_focalGroup[camInfoI->m_intrinsicId].m_w, vec_focalGroup[camInfoI->m_intrinsicId].m_h),
-      dimImage1 = std::make_pair(vec_focalGroup[camInfoJ->m_intrinsicId].m_w, vec_focalGroup[camInfoJ->m_intrinsicId].m_h);
+      dimImage_I = std::make_pair(view_I->ui_width, view_I->ui_height),
+      dimImage_J = std::make_pair(view_J->ui_width, view_J->ui_height);
 
-    svgDrawer svgStream( dimImage0.first + dimImage1.first, max(dimImage0.second, dimImage1.second));
-    svgStream.drawImage(stlplus::create_filespec(sImaDirectory,vec_camImageName[I].m_sImageName),
-      dimImage0.first,
-      dimImage0.second);
-    svgStream.drawImage(stlplus::create_filespec(sImaDirectory,vec_camImageName[J].m_sImageName),
-      dimImage1.first,
-      dimImage1.second, dimImage0.first);
+    svgDrawer svgStream( dimImage_I.first + dimImage_J.first, max(dimImage_I.second, dimImage_J.second));
+    svgStream.drawImage(sView_I,
+      dimImage_I.first,
+      dimImage_I.second);
+    svgStream.drawImage(sView_J,
+      dimImage_J.first,
+      dimImage_J.second, dimImage_I.first);
 
-    const vector<IndMatch> & vec_FilteredMatches = iter->second;
+    const vector<IndMatch> & vec_FilteredMatches = matches_provider->_pairWise_matches.at(*iter);
 
     if (!vec_FilteredMatches.empty()) {
-      // Load the features from the features files
-      std::vector<SIOPointFeature> vec_featI, vec_featJ;
-      loadFeatsFromFile(
-        stlplus::create_filespec(sMatchesDir, stlplus::basename_part(vec_camImageName[I].m_sImageName), ".feat"),
-        vec_featI);
-      loadFeatsFromFile(
-        stlplus::create_filespec(sMatchesDir, stlplus::basename_part(vec_camImageName[J].m_sImageName), ".feat"),
-        vec_featJ);
+
+      const PointFeatures & vec_feat_I = feats_provider->getFeatures(view_I->id_view);
+      const PointFeatures & vec_feat_J = feats_provider->getFeatures(view_J->id_view);
 
       //-- Draw link between features :
       for (size_t i=0; i< vec_FilteredMatches.size(); ++i)  {
-        const SIOPointFeature & imaA = vec_featI[vec_FilteredMatches[i]._i];
-        const SIOPointFeature & imaB = vec_featJ[vec_FilteredMatches[i]._j];
+        const PointFeature & imaA = vec_feat_I[vec_FilteredMatches[i]._i];
+        const PointFeature & imaB = vec_feat_J[vec_FilteredMatches[i]._j];
         // Compute a flashy colour for the correspondence
         unsigned char r,g,b;
         hslToRgb( (rand()%360) / 360., 1.0, .5, r, g, b);
         std::ostringstream osCol;
         osCol << "rgb(" << (int)r <<',' << (int)g << ',' << (int)b <<")";
         svgStream.drawLine(imaA.x(), imaA.y(),
-          imaB.x()+dimImage0.first, imaB.y(), svgStyle().stroke(osCol.str(), 2.0));
+          imaB.x()+dimImage_I.first, imaB.y(), svgStyle().stroke(osCol.str(), 2.0));
       }
 
       //-- Draw features (in two loop, in order to have the features upper the link, svg layer order):
       for (size_t i=0; i< vec_FilteredMatches.size(); ++i)  {
-        const SIOPointFeature & imaA = vec_featI[vec_FilteredMatches[i]._i];
-        const SIOPointFeature & imaB = vec_featJ[vec_FilteredMatches[i]._j];
-        svgStream.drawCircle(imaA.x(), imaA.y(), imaA.scale(),
+        const PointFeature & imaA = vec_feat_I[vec_FilteredMatches[i]._i];
+        const PointFeature & imaB = vec_feat_J[vec_FilteredMatches[i]._j];
+        svgStream.drawCircle(imaA.x(), imaA.y(), 3.0,
           svgStyle().stroke("yellow", 2.0));
-        svgStream.drawCircle(imaB.x() + dimImage0.first, imaB.y(), imaB.scale(),
+        svgStream.drawCircle(imaB.x() + dimImage_I.first, imaB.y(), 3.0,
           svgStyle().stroke("yellow", 2.0));
       }
     }
     std::ostringstream os;
     os << stlplus::folder_append_separator(sOutDir)
-      << iter->first.first << "_" << iter->first.second
-      << "_" << iter->second.size() << "_.svg";
+      << iter->first << "_" << iter->second
+      << "_" << vec_FilteredMatches.size() << "_.svg";
     ofstream svgFile( os.str().c_str() );
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();

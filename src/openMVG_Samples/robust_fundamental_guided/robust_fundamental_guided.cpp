@@ -15,7 +15,7 @@
 
 #include "openMVG/robust_estimation/guided_matching.hpp"
 
-#include "nonFree/sift/SIFT.hpp"
+#include "nonFree/sift/SIFT_describer.hpp"
 #include "openMVG_Samples/siftPutativeMatches/two_view_matches.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -42,18 +42,21 @@ int main() {
   ReadImage(jpg_filenameL.c_str(), &imageL);
   ReadImage(jpg_filenameR.c_str(), &imageR);
 
-  // Define the used descriptor (SIFT : 128 float value)
-  typedef float descType;
-  typedef Descriptor<descType,128> SIFTDescriptor;
+  //--
+  // Detect regions thanks to an image_describer
+  //--
+  using namespace openMVG::features;
+  std::unique_ptr<Image_describer> image_describer(new SIFT_Image_describer);
+  std::map<IndexT, std::unique_ptr<features::Regions> > regions_perImage;
+  image_describer->Describe(imageL, regions_perImage[0]);
+  image_describer->Describe(imageR, regions_perImage[1]);
 
-  // Prepare vector to store detected feature and associated descriptor
-  vector<SIOPointFeature> featsL, featsR;
-  vector<SIFTDescriptor > descsL, descsR;
-  // Call SIFT detector
-  bool bOctaveMinus1 = false;
-  bool bRootSift = true;
-  SIFTDetector(imageL, featsL, descsL, bOctaveMinus1, bRootSift);
-  SIFTDetector(imageR, featsR, descsR, bOctaveMinus1, bRootSift);
+  const SIFT_Regions* regionsL = dynamic_cast<SIFT_Regions*>(regions_perImage.at(0).get());
+  const SIFT_Regions* regionsR = dynamic_cast<SIFT_Regions*>(regions_perImage.at(1).get());
+
+  const PointFeatures
+    featsL = regions_perImage.at(0)->GetRegionsPositions(),
+    featsR = regions_perImage.at(1)->GetRegionsPositions();
 
   // Show both images side by side
   {
@@ -70,12 +73,12 @@ int main() {
 
     //-- Draw features :
     for (size_t i=0; i < featsL.size(); ++i )  {
-      const SIOPointFeature & imaA = featsL[i];
-      DrawCircle(imaA.x(), imaA.y(), imaA.scale(), 255, &concat);
+      const SIOPointFeature point = regionsL->Features()[i];
+      DrawCircle(point.x(), point.y(), point.scale(), 255, &concat);
     }
     for (size_t i=0; i < featsR.size(); ++i )  {
-      const SIOPointFeature & imaB = featsR[i];
-      DrawCircle(imaB.x()+imageL.Width(), imaB.y(), imaB.scale(), 255, &concat);
+      const SIOPointFeature point = regionsR->Features()[i];
+      DrawCircle(point.x()+imageL.Width(), point.y(), point.scale(), 255, &concat);
     }
     string out_filename = "02_features.jpg";
     WriteImage(out_filename.c_str(), concat);
@@ -84,14 +87,15 @@ int main() {
   std::vector<IndMatch> vec_PutativeMatches;
   //-- Perform matching -> find Nearest neighbor, filtered with Distance ratio
   {
-    // Define the matcher
-    //  and the used metric (Squared L2)
-    typedef L2_Vectorized<SIFTDescriptor::bin_type> Metric;
-    // Brute force matcher is defined as following:
-    typedef ArrayMatcherBruteForce<SIFTDescriptor::bin_type, Metric> MatcherT;
-
-    // Distance ratio quite high in order to have noise corrupted data. Squared due to squared metric
-    getPutativesMatches<SIFTDescriptor, MatcherT>(descsL, descsR, Square(0.8), vec_PutativeMatches);
+    // Define a matcher and a metric to find corresponding points
+    typedef SIFT_Regions::DescriptorT DescriptorT;
+    typedef L2_Vectorized<DescriptorT::bin_type> Metric;
+    typedef ArrayMatcherBruteForce<DescriptorT::bin_type, Metric> MatcherT;
+    // Distance ratio squared due to squared metric
+    getPutativesMatches<DescriptorT, MatcherT>(
+      ((SIFT_Regions*)regions_perImage.at(0).get())->Descriptors(),
+      ((SIFT_Regions*)regions_perImage.at(1).get())->Descriptors(),
+      Square(0.8), vec_PutativeMatches);
 
     // Draw correspondences after Nearest Neighbor ratio filter
     svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
@@ -99,8 +103,8 @@ int main() {
     svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
     for (size_t i = 0; i < vec_PutativeMatches.size(); ++i) {
       //Get back linked feature, draw a circle and link them by a line
-      const SIOPointFeature & L = featsL[vec_PutativeMatches[i]._i];
-      const SIOPointFeature & R = featsR[vec_PutativeMatches[i]._j];
+      const SIOPointFeature L = regionsL->Features()[vec_PutativeMatches[i]._i];
+      const SIOPointFeature R = regionsR->Features()[vec_PutativeMatches[i]._j];
       svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
       svgStream.drawCircle(L.x(), L.y(), L.scale(), svgStyle().stroke("yellow", 2.0));
       svgStream.drawCircle(R.x()+imageL.Width(), R.y(), R.scale(),svgStyle().stroke("yellow", 2.0));
@@ -118,8 +122,8 @@ int main() {
     Mat xR(2, vec_PutativeMatches.size());
 
     for (size_t k = 0; k < vec_PutativeMatches.size(); ++k)  {
-      const SIOPointFeature & imaL = featsL[vec_PutativeMatches[k]._i];
-      const SIOPointFeature & imaR = featsR[vec_PutativeMatches[k]._j];
+      const PointFeature & imaL = featsL[vec_PutativeMatches[k]._i];
+      const PointFeature & imaR = featsR[vec_PutativeMatches[k]._j];
       xL.col(k) = imaL.coords().cast<double>();
       xR.col(k) = imaR.coords().cast<double>();
     }
@@ -128,7 +132,7 @@ int main() {
     std::vector<size_t> vec_inliers;
     typedef ACKernelAdaptor<
       openMVG::fundamental::kernel::SevenPointSolver,
-      openMVG::fundamental::kernel::EpipolarDistanceError,
+      openMVG::fundamental::kernel::SymmetricEpipolarDistanceError,
       UnnormalizerT,
       Mat3>
       KernelType;
@@ -150,7 +154,7 @@ int main() {
       std::cout << "\nFound a fundamental under the confidence threshold of: "
         << thresholdF << " pixels\n\twith: " << vec_inliers.size() << " inliers"
         << " from: " << vec_PutativeMatches.size()
-         << " putatives correspondences"
+        << " putatives correspondences"
         << std::endl;
 
       //Show fundamental validated point and compute residuals
@@ -159,8 +163,8 @@ int main() {
       svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
       svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
       for ( size_t i = 0; i < vec_inliers.size(); ++i)  {
-        const SIOPointFeature & LL = featsL[vec_PutativeMatches[vec_inliers[i]]._i];
-        const SIOPointFeature & RR = featsR[vec_PutativeMatches[vec_inliers[i]]._j];
+        const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[vec_inliers[i]]._i];
+        const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[vec_inliers[i]]._j];
         const Vec2f L = LL.coords();
         const Vec2f R = RR.coords();
         svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
@@ -209,10 +213,13 @@ int main() {
         << std::endl;
 
       // b. by considering geometric error and descriptor distance ratio
+      typedef SIFT_Regions::DescriptorT DescriptorT;
       geometry_aware::GuidedMatching
         <Mat3, openMVG::fundamental::kernel::EpipolarDistanceError,
-        SIFTDescriptor, L2_Vectorized<SIFTDescriptor::bin_type> >(
-        F, xL, descsL, xR, descsR,
+        DescriptorT, L2_Vectorized<DescriptorT::bin_type> >(
+        F,
+        xL, ((SIFT_Regions*)regions_perImage.at(0).get())->Descriptors(),
+        xR, ((SIFT_Regions*)regions_perImage.at(1).get())->Descriptors(),
         Square(thresholdF), Square(0.8),
         vec_corresponding_indexes[1]);
 
@@ -230,8 +237,8 @@ int main() {
         svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
         for ( size_t i = 0; i < vec_corresponding_index.size(); ++i)  {
 
-          const SIOPointFeature & LL = featsL[vec_corresponding_index[i]._i];
-          const SIOPointFeature & RR = featsR[vec_corresponding_index[i]._j];
+          const SIOPointFeature & LL = regionsL->Features()[vec_corresponding_index[i]._i];
+          const SIOPointFeature & RR = regionsR->Features()[vec_corresponding_index[i]._j];
           const Vec2f L = LL.coords();
           const Vec2f R = RR.coords();
           svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));

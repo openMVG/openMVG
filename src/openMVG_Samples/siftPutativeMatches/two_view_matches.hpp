@@ -17,39 +17,36 @@ void getPutativesMatches(
   const std::vector<DESCRIPTOR_TYPE > & descsL,
   const std::vector<DESCRIPTOR_TYPE > & descsR,
   const float fNearestNeighborDistanceRatio,
-  std::vector<IndMatch> & vec_PutativeMatches)
+  IndMatches & vec_PutativeMatches)
 {
-    //-- Copy to contiguous array for matching
-    //-- In order to be generic as possible, the array matcher use raw pointer.
-    typedef typename DESCRIPTOR_TYPE::bin_type DescTbin;
+  typedef typename DESCRIPTOR_TYPE::bin_type DescTbin;
 
-    const int NNN__ = 2; // look for the two nearest distance for each Left descriptor
-    std::vector<int> vec_nIndice;
-    std::vector<typename MatcherT::MetricT::ResultType> vec_Distance;
+  const int NNN__ = 2; // look for the two nearest distance for each Left descriptor
+  std::vector<int> vec_nIndice;
+  std::vector<typename MatcherT::MetricT::ResultType> vec_Distance;
 
-    MatcherT matcher;
-    const DescTbin* descsLReinterpret =
-      reinterpret_cast<const DescTbin *>(&descsL[0]);
+  MatcherT matcher;
+  const DescTbin* descsLReinterpret =
+    reinterpret_cast<const DescTbin *>(&descsL[0]);
 
-    const DescTbin* descsRReinterpret =
-      reinterpret_cast<const DescTbin *>(&descsR[0]);
+  const DescTbin* descsRReinterpret =
+    reinterpret_cast<const DescTbin *>(&descsR[0]);
 
-    matcher.Build(descsLReinterpret, descsL.size(), DESCRIPTOR_TYPE::static_size);
-    matcher.SearchNeighbours(descsRReinterpret, descsR.size(), &vec_nIndice, &vec_Distance, NNN__);
+  matcher.Build(descsLReinterpret, descsL.size(), DESCRIPTOR_TYPE::static_size);
+  matcher.SearchNeighbours(descsRReinterpret, descsR.size(), &vec_nIndice, &vec_Distance, NNN__);
 
-    // Filter the correspondences with the Ratio of distance
-    std::vector<int> vec_loweRatioIndexes;
-    NNdistanceRatio( vec_Distance.begin(), vec_Distance.end(),
-      NNN__, // Number of neighbor in iterator sequence (minimum required 2)
-      vec_loweRatioIndexes, // output (index that respect Lowe Ratio)
-      fNearestNeighborDistanceRatio);
+  // Filter the correspondences with the Ratio of distance
+  std::vector<int> vec_loweRatioIndexes;
+  NNdistanceRatio( vec_Distance.begin(), vec_Distance.end(),
+    NNN__, // Number of neighbor in iterator sequence (minimum required 2)
+    vec_loweRatioIndexes, // output (index that respect Lowe Ratio)
+    fNearestNeighborDistanceRatio);
 
-    // Get back feature index : (Left, right) index.
-    for (size_t k=0; k < vec_loweRatioIndexes.size()-1
-        && vec_loweRatioIndexes.size()>0; ++k) {
-      vec_PutativeMatches.push_back(
-      IndMatch(vec_nIndice[vec_loweRatioIndexes[k]*NNN__],
-               vec_loweRatioIndexes[k]) );
-    }
+  vec_PutativeMatches.reserve(vec_loweRatioIndexes.size());
+  // Get back feature index : (Left, right) index.
+  for (size_t k=0; k < vec_loweRatioIndexes.size(); ++k) {
+    vec_PutativeMatches.push_back(
+    IndMatch(vec_nIndice[vec_loweRatioIndexes[k]*NNN__],
+             vec_loweRatioIndexes[k]) );
   }
-
+}

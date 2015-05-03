@@ -5,9 +5,9 @@ ADD_EXECUTABLE(openMVG_sample_robustEssential robust_essential.cpp)
 TARGET_LINK_LIBRARIES(openMVG_sample_robustEssential 
   openMVG_image
   openMVG_multiview
+  openMVG_features
   vlsift
   stlplus
-  flann_cpp_s
   ${OPENMVG_LIBRARY_DEPENDENCIES})
 
 SET_PROPERTY(TARGET openMVG_sample_robustEssential PROPERTY FOLDER OpenMVG/Samples)

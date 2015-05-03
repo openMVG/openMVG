@@ -86,11 +86,12 @@ struct ImageFeatures {
 // Define SIFT descriptors
 typedef Descriptor<unsigned char, 128> DescriptorT;
 typedef std::vector<DescriptorT > DescsT;
-typedef std::map<size_t, DescsT > map_DescT;
 
 // fetch and adjust each SIFT feature vector in <imageDataList> to zero-mean
 // returns the total number of features
-size_t ImportFeatures(const map_DescT& map_Desc, std::vector<ImageFeatures>& imageDataList);
+size_t ImportFeatures(
+  const std::map<IndexT, std::unique_ptr<features::Regions> > & regions_perImage,
+  std::vector<ImageFeatures>& imageDataList);
 /*----------------------------------------------------------------*/
 
 

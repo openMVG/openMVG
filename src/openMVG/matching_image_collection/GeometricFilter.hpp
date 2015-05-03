@@ -7,7 +7,8 @@
 
 #pragma once
 
-#include "openMVG/features/features.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/matching/indMatch.hpp"
 
 using namespace openMVG;
@@ -20,28 +21,16 @@ using namespace openMVG;
 
 using namespace openMVG::matching;
 
-template <typename FeatureT>
 class ImageCollectionGeometricFilter
 {
   public:
-  ImageCollectionGeometricFilter()
+    ImageCollectionGeometricFilter() : _feat_provider(NULL)
   {
   }
 
-  /// Load all features in memory
-  bool loadData(
-    const std::vector<std::string> & vec_fileNames, // input filenames
-    const std::string & sMatchDir) // where the data are saved
-  {
-    bool bOk = true;
-    for (size_t j = 0; j < vec_fileNames.size(); ++j)  {
-      // Load features of Jnth image
-      const std::string sFeatJ = stlplus::create_filespec(sMatchDir,
-        stlplus::basename_part(vec_fileNames[j]), "feat");
-      bOk &= loadFeatsFromFile(sFeatJ, map_Feat[j]);
-    }
-    return bOk;
-  }
+  ImageCollectionGeometricFilter(Features_Provider * feat_provider)
+    : _feat_provider(feat_provider)
+  { }
 
   /// Filter all putative correspondences according the templated geometric filter
   template <typename GeometricFilterT>
@@ -66,18 +55,16 @@ class ImageCollectionGeometricFilter
       const std::vector<IndMatch> & vec_PutativeMatches = iter->second;
 
       // Load features of Inth and Jnth images
-      typename std::map<size_t, std::vector<FeatureT> >::const_iterator iterFeatsI = map_Feat.find(iIndex);
-      typename std::map<size_t, std::vector<FeatureT> >::const_iterator iterFeatsJ = map_Feat.find(jIndex);
-      const std::vector<FeatureT> & kpSetI = iterFeatsI->second;
-      const std::vector<FeatureT> & kpSetJ = iterFeatsJ->second;
+      const PointFeatures & kpSetI = _feat_provider->getFeatures(iIndex);
+      const PointFeatures & kpSetJ = _feat_provider->getFeatures(jIndex);
 
       //-- Copy point to array in order to estimate fundamental matrix :
       const size_t n = vec_PutativeMatches.size();
       Mat xI(2,n), xJ(2,n);
 
       for (size_t i=0; i < vec_PutativeMatches.size(); ++i)  {
-        const FeatureT & imaA = kpSetI[vec_PutativeMatches[i]._i];
-        const FeatureT & imaB = kpSetJ[vec_PutativeMatches[i]._j];
+        const PointFeature & imaA = kpSetI[vec_PutativeMatches[i]._i];
+        const PointFeature & imaB = kpSetJ[vec_PutativeMatches[i]._j];
         xI.col(i) = Vec2f(imaA.coords()).cast<double>();
         xJ.col(i) = Vec2f(imaB.coords()).cast<double>();
       }
@@ -117,6 +104,6 @@ class ImageCollectionGeometricFilter
 
   private:
   // Features per image
-  std::map<size_t, std::vector<FeatureT> > map_Feat;
+  Features_Provider * _feat_provider;
 };
 

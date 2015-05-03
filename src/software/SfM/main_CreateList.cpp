@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     sOutputDir = "",
     sKmatrix;
 
-  int i_User_camera_model = PINHOLE_CAMERA;
+  int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
 
   bool b_Group_camera_model = true;
 
@@ -88,9 +88,9 @@ int main(int argc, char **argv)
       << "[-f|--focal] (pixels)\n"
       << "[-k|--intrinsics] Kmatrix: \"f;0;ppx;0;f;ppy;0;0;1\"\n"
       << "[-c|--camera_model] Camera model type:\n"
-      << "\t 1: Pinhole (default)\n"
+      << "\t 1: Pinhole\n"
       << "\t 2: Pinhole radial 1\n"
-      << "\t 3: Pinhole radial 3\n"
+      << "\t 3: Pinhole radial 3 (default)\n"
       << "[-g|--group_camera_model]\n"
       << "\t 0-> each view have it's own camera intrinsic parameters,\n"
       << "\t 1-> (default) view can share some camera intrinsic parameters\n"

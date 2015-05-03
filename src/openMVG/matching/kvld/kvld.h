@@ -171,23 +171,13 @@ public:
 
 float KVLD( const openMVG::Image< float >& I1,
             const openMVG::Image< float >& I2,
-            std::vector< openMVG::SIOPointFeature >& F1,
-            std::vector< openMVG::SIOPointFeature >& F2,
+            const std::vector<openMVG::SIOPointFeature> & F1,
+            const std::vector<openMVG::SIOPointFeature> & F2,
             const std::vector< openMVG::Pair >& matches,
             std::vector< openMVG::Pair >& matchesFiltered,
             std::vector< double >& score,
             openMVG::Mat& E,
             std::vector< bool >& valide,
             KvldParameters& kvldParameters );
-
-
-//====================KVLD interface======================//
-void writeResult( const std::string & output,
-                  const std::vector< openMVG::SIOPointFeature >& F1,
-                  const std::vector< openMVG::SIOPointFeature >& F2,
-                  const std::vector< openMVG::Pair >& matches,
-                  const std::vector< openMVG::Pair >& matchesFiltered,
-                  const std::vector< double >& score );
-
 
 #endif //KVLD_H

@@ -7,6 +7,7 @@
 #pragma once
 
 #include "openMVG/matching/metric.hpp"
+#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 #include "openMVG/robust_estimation/guided_matching.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
 #include "openMVG/matching/indMatch.hpp"
@@ -28,23 +29,20 @@ static Vec3 epipole_from_P(const Mat34& P1, const Pose3& P2)
 
 /// Export point feature based vector to a matrix [(x,y)'T, (x,y)'T]
 /// Use the camera intrinsics in order to get undistorted pixel coordinates
-template< typename FeaturesT, typename MatT >
+template<typename MatT >
 static void PointsToMat(
   const IntrinsicBase * cam,
-  const FeaturesT & vec_feats,
+  const PointFeatures & vec_feats,
   MatT & m)
 {
   m.resize(2, vec_feats.size());
-  typedef typename FeaturesT::value_type ValueT; // Container type
   typedef typename MatT::Scalar Scalar; // Output matrix type
 
   size_t i = 0;
-  for( typename FeaturesT::const_iterator iter = vec_feats.begin();
+  for( PointFeatures::const_iterator iter = vec_feats.begin();
     iter != vec_feats.end(); ++iter, ++i)
   {
-    Vec2 feat;
-    feat << iter->x(), iter->y();
-    m.col(i) = cam->get_ud_pixel(feat);
+    m.col(i) = cam->get_ud_pixel(Vec2(iter->x(), iter->y()));
   }
 }
 
@@ -53,29 +51,25 @@ class SfM_Data_Structure_Estimation_From_Known_Poses
 public:
 
   /// Use geometry of the views to compute a putative structure from features and descriptors.
-  template<typename DescriptorsT>
   void run(
     SfM_Data & sfm_data,
     const Pair_Set & pairs,
-    const Features_Provider * feat_provider,
-    const Hash_Map<IndexT, DescriptorsT > & desc_provider)
+    const std::shared_ptr<Regions_Provider> & regions_provider)
   {
     sfm_data.structure.clear();
 
-    match(sfm_data, pairs, feat_provider, desc_provider);
-    filter(sfm_data, pairs, feat_provider);
-    triangulate(sfm_data, feat_provider);
+    match(sfm_data, pairs, regions_provider);
+    filter(sfm_data, pairs, regions_provider);
+    triangulate(sfm_data, regions_provider);
   }
 
 private:
 
   /// Use guided matching to find corresponding 2-view correspondences
-  template<typename DescriptorsT>
   void match(
     const SfM_Data & sfm_data,
     const Pair_Set & pairs,
-    const Features_Provider * feat_provider,
-    const Hash_Map<IndexT, DescriptorsT > & desc_provider)
+    const std::shared_ptr<Regions_Provider> & regions_provider)
   {
     C_Progress_display my_progress_bar( pairs.size(), std::cout,
       "Compute pairwise fundamental guided matching:\n" );
@@ -103,8 +97,8 @@ private:
       const Intrinsics::const_iterator iterIntrinsicR = sfm_data.getIntrinsics().find(viewR->id_intrinsic);
 
       Mat xL, xR;
-      PointsToMat(iterIntrinsicL->second.get(), feat_provider->feats_per_view.at(it->first), xL);
-      PointsToMat(iterIntrinsicR->second.get(), feat_provider->feats_per_view.at(it->second), xR);
+      PointsToMat(iterIntrinsicL->second.get(), regions_provider->regions_per_view.at(it->first)->GetRegionsPositions(), xL);
+      PointsToMat(iterIntrinsicR->second.get(), regions_provider->regions_per_view.at(it->second)->GetRegionsPositions(), xR);
 
       const Mat34 P_L = iterIntrinsicL->second.get()->get_projective_equivalent(iterPoseL->second);
       const Mat34 P_R = iterIntrinsicR->second.get()->get_projective_equivalent(iterPoseR->second);
@@ -123,18 +117,68 @@ private:
 #else
       const Vec3 epipole2  = epipole_from_P(P_R, iterPoseL->second);
 
-      geometry_aware::GuidedMatching_Fundamental_Fast<
+      const features::Regions * regions = regions_provider->regions_per_view.at(it->first).get();
+      if (regions->IsScalar())
+      {
+        // L2 Metric (Handle descriptor internal type)
+        if(regions->Type_id() == typeid(unsigned char).name())
+        {
+          geometry_aware::GuidedMatching_Fundamental_Fast<
+          openMVG::fundamental::kernel::EpipolarDistanceError,
+          L2_Vectorized<unsigned char> >
+          ( F_lr,
+            epipole2,
+            regions_provider->regions_per_view.at(it->first).get(),
+            iterIntrinsicR->second.get()->w(), iterIntrinsicR->second.get()->h(),
+            regions_provider->regions_per_view.at(it->second).get(),
+            Square(thresholdF), Square(0.8),
+            vec_corresponding_indexes);
+        }
+        else
+        if(regions->Type_id() == typeid(float).name())
+        {
+          geometry_aware::GuidedMatching_Fundamental_Fast<
+          openMVG::fundamental::kernel::EpipolarDistanceError,
+          L2_Vectorized<float> >
+          ( F_lr,
+            epipole2,
+            regions_provider->regions_per_view.at(it->first).get(),
+            iterIntrinsicR->second.get()->w(), iterIntrinsicR->second.get()->h(),
+            regions_provider->regions_per_view.at(it->second).get(),
+            Square(thresholdF), Square(0.8),
+            vec_corresponding_indexes);
+        }
+        else
+        if(regions->Type_id() == typeid(double).name())
+        {
+          geometry_aware::GuidedMatching_Fundamental_Fast<
+          openMVG::fundamental::kernel::EpipolarDistanceError,
+          L2_Vectorized<double> >
+          ( F_lr,
+            epipole2,
+            regions_provider->regions_per_view.at(it->first).get(),
+            iterIntrinsicR->second.get()->w(), iterIntrinsicR->second.get()->h(),
+            regions_provider->regions_per_view.at(it->second).get(),
+            Square(thresholdF), Square(0.8),
+            vec_corresponding_indexes);
+        }
+      }
+      else
+      if (regions->IsBinary() && regions->Type_id() == typeid(unsigned char).name())
+      {
+        // Hamming metric
+        geometry_aware::GuidedMatching_Fundamental_Fast<
         openMVG::fundamental::kernel::EpipolarDistanceError,
-        typename DescriptorsT::value_type,
-        L2_Vectorized<typename DescriptorsT::value_type::bin_type> >
-      (
-        F_lr,
-        epipole2,
-        xL, desc_provider.at(it->first),
-        iterIntrinsicR->second.get()->w(), iterIntrinsicR->second.get()->h(),
-        xR, desc_provider.at(it->second),
-        Square(thresholdF), Square(0.8),
-        vec_corresponding_indexes);
+        Hamming<unsigned char> >
+        ( F_lr,
+          epipole2,
+          regions_provider->regions_per_view.at(it->first).get(),
+          iterIntrinsicR->second.get()->w(), iterIntrinsicR->second.get()->h(),
+          regions_provider->regions_per_view.at(it->second).get(),
+          Square(thresholdF), 0.8,
+          vec_corresponding_indexes);
+      }
+
 #endif
 
   #ifdef OPENMVG_USE_OPENMP
@@ -153,7 +197,7 @@ private:
   void filter(
     const SfM_Data & sfm_data,
     const Pair_Set & pairs,
-    const Features_Provider * feat_provider)
+    const std::shared_ptr<Regions_Provider> & regions_provider)
   {
     // Compute triplets
     // Triangulate triplet tracks
@@ -212,8 +256,8 @@ private:
                 const View * view = sfm_data.getViews().at(imaIndex).get();
                 const IntrinsicBase * cam = sfm_data.getIntrinsics().at(view->id_intrinsic).get();
                 const Pose3 & pose = sfm_data.poses.at(view->id_pose);
-                const PointFeature pt = feat_provider->feats_per_view.at(imaIndex)[featIndex];
-                trianObj.add(cam->get_projective_equivalent(pose), cam->get_ud_pixel(pt.coords().cast<double>()));
+                const Vec2 pt = regions_provider->regions_per_view.at(imaIndex)->GetRegionPosition(featIndex);
+                trianObj.add(cam->get_projective_equivalent(pose), cam->get_ud_pixel(pt));
               }
               const Vec3 Xs = trianObj.compute();
               if (trianObj.minDepth() > 0 && trianObj.error() < 4.0)
@@ -245,7 +289,7 @@ private:
   /// Init & triangulate landmark observations from validated 3-view correspondences
   void triangulate(
     SfM_Data & sfm_data,
-    const Features_Provider * feat_provider)
+    const std::shared_ptr<Regions_Provider> & regions_provider)
   {
     openMVG::tracks::STLMAPTracks map_tracksCommon;
     openMVG::tracks::TracksBuilder tracksBuilder;
@@ -271,8 +315,8 @@ private:
       {
         const size_t imaIndex = it->first;
         const size_t featIndex = it->second;
-        const PointFeature & pt = feat_provider->feats_per_view.at(imaIndex)[featIndex];
-        obs[imaIndex] = Observation(pt.coords().cast<double>(), featIndex);
+        const Vec2 pt = regions_provider->regions_per_view.at(imaIndex)->GetRegionPosition(featIndex);
+        obs[imaIndex] = Observation(pt, featIndex);
       }
     }
 

@@ -28,6 +28,7 @@
 //-----------------
 #include "openMVG/sfm/pipelines/sfm_engine.hpp"
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
 
 #include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"

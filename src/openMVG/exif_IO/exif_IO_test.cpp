@@ -17,14 +17,14 @@ const std::string sImg =
 
 TEST(Matching, Exif_IO_easyexif_ReadData_invalidFile)
 {
-  std::auto_ptr<Exif_IO> exif_io ( new Exif_IO_EasyExif( "tmp.jpg" ) );
+  std::unique_ptr<Exif_IO> exif_io ( new Exif_IO_EasyExif( "tmp.jpg" ) );
 
   EXPECT_FALSE( exif_io->doesHaveExifInfo());
 }
 
 TEST(Matching, Exif_IO_easyexif_ReadData)
 {
-  std::auto_ptr<Exif_IO> exif_io ( new Exif_IO_EasyExif( sImg ) );
+  std::unique_ptr<Exif_IO> exif_io ( new Exif_IO_EasyExif( sImg ) );
 
   EXPECT_TRUE( exif_io->doesHaveExifInfo());
 

@@ -8,6 +8,9 @@
 #include <cstdlib>
 
 #include "openMVG/sfm/pipelines/global/sfm_global_engine_relative_motions.hpp"
+#include "nonFree/sift/SIFT_describer.hpp"
+#include <cereal/archives/json.hpp>
+
 #include "openMVG/system/timer.hpp"
 using namespace openMVG;
 
@@ -88,9 +91,27 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  // Prepare the features and matches provider
+  // Init the image describer (used for regions loading)
+  using namespace openMVG::features;
+  std::unique_ptr<Image_describer> image_describer;
+  const std::string sImage_describer = stlplus::create_filespec(sMatchesDir, "image_describer", "json");
+  if (stlplus::is_file(sImage_describer))
+  {
+    // Dynamically load the image_describer from the file (will restore old used settings)
+    std::ifstream stream(sImage_describer.c_str());
+    if (!stream.is_open())
+      return false;
+
+    cereal::JSONInputArchive archive(stream);
+    archive(cereal::make_nvp("image_describer", image_describer));
+  }
+  else // By default init a SIFT_Image_describer (keep compatibility)
+  {
+    image_describer.reset(new SIFT_Image_describer());
+  }
+  // Prepare the features provider
   std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
-  if (!feats_provider->load(sfm_data, sMatchesDir)) {
+  if (!feats_provider->load(sfm_data, sMatchesDir, image_describer)) {
     std::cerr << std::endl
       << "Invalid features." << std::endl;
     return EXIT_FAILURE;

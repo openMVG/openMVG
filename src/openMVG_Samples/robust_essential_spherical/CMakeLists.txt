@@ -5,6 +5,7 @@ ADD_EXECUTABLE(openMVG_sample_robustEssential_spherical robust_essential_spheric
 TARGET_LINK_LIBRARIES(openMVG_sample_robustEssential_spherical
   openMVG_image
   openMVG_multiview
+  openMVG_features
   vlsift
   stlplus
   flann_cpp_s

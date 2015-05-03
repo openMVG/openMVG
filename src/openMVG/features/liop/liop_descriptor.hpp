@@ -18,7 +18,7 @@
 #pragma once
 
 #include <openMVG/image/image.hpp>
-#include <openMVG/features/features.hpp>
+#include <openMVG/features/feature.hpp>
 
 #include <float.h>
 #include <algorithm>
@@ -100,7 +100,6 @@ public:
     float x, y; // position
     float f_gray; // color value
     float weight;
-    unsigned char i_gray;
     int l_pattern;
   };
 
@@ -143,9 +142,9 @@ public:
         const float nDirX = static_cast<float>(x);
         const float nDirY = static_cast<float>(y);
         float nOri = atan2(nDirY, nDirX);
-        if (fabs(nOri - M_PI) < FLT_EPSILON)	//[-CV_PI, CV_PI)
+        if (fabs(nOri - M_PI) < FLT_EPSILON)	//[-M_PI, M_PI)
         {
-          nOri = -M_PI;
+          nOri = static_cast<float>(-M_PI);
         }
 
         bool isInBound = true;
@@ -184,7 +183,6 @@ public:
           pix.x = x;
           pix.y = y;
           pix.f_gray = cur_gray;
-          pix.i_gray = (unsigned char)(pix.f_gray*255+0.5f);
           pix.weight = 1;
           pix.l_pattern = iter->second;
           pixel[pixelCount++] = pix;

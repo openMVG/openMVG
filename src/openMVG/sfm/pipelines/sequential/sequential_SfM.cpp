@@ -535,6 +535,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
       htmlFileStream << _htmlDocStream->getDoc();
     }
   }
+  return true;
 }
 
 double SequentialSfMReconstructionEngine::ComputeResidualsHistogram(Histogram<double> * histo)
@@ -872,7 +873,7 @@ bool SequentialSfMReconstructionEngine::Resection(size_t viewIndex)
             (view_I->ui_width, view_I->ui_height, K_(0,0), K_(0,2), K_(1,2));
         break;
         default:
-          std:cerr << "Try to create an unknown camera type." << std::endl;
+          std::cerr << "Try to create an unknown camera type." << std::endl;
           return false;
       }
     }

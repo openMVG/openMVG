@@ -32,13 +32,8 @@ SET(SOURCES
 
 ADD_EXECUTABLE(openMVG_main_sfmViewer ${SOURCES} )
 TARGET_LINK_LIBRARIES(openMVG_main_sfmViewer
-     ${OPENGL_gl_LIBRARY} glfw ${GLFW_LIBRARIES}
-  stlplus
-  openMVG_numeric
-  openMVG_multiview
-  openMVG_image
-  openMVG_sfm
+  ${OPENGL_gl_LIBRARY} glfw ${GLFW_LIBRARIES}
+  ${OpenMVG_LIBS}
 )
 SET_PROPERTY(TARGET openMVG_main_sfmViewer PROPERTY FOLDER OpenMVG/software)
-
 INSTALL(TARGETS openMVG_main_sfmViewer DESTINATION bin/)

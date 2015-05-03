@@ -13,6 +13,7 @@
 #include "openMVG/matching/matching_filters.hpp"
 #include "openMVG/matching_image_collection/Matcher.hpp"
 
+#include "nonFree/sift/SIFT_describer.hpp"
 #include "nonFree/matching_cascade_hashing/CasHash.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -29,16 +30,8 @@ using namespace openMVG::matching;
 /// Implementation of an Image Collection Matcher
 /// - Cascade Hashing matching [1]
 ///
-template <typename KeypointSetT>
 class Matcher_CascadeHashing_AllInMemory
 {
-  // Alias to internal stored Feature and Descriptor type
-  typedef typename KeypointSetT::FeatureT FeatureT;
-  typedef typename KeypointSetT::DescriptorT DescriptorT;
-  typedef std::vector<DescriptorT > DescsT; // A collection of descriptors
-  // Alias to Descriptor value type
-  typedef typename DescriptorT::bin_type DescBin_typeT;
-
   public:
   Matcher_CascadeHashing_AllInMemory(float distRatio):
     fDistRatio(distRatio)
@@ -47,23 +40,24 @@ class Matcher_CascadeHashing_AllInMemory
 
   /// Load all features and descriptors in memory
   bool loadData(
+    const features::Image_describer & image_describer, // interface to load computed regions
     const std::vector<std::string> & vec_fileNames, // input filenames
     const std::string & sMatchDir) // where the data are saved
   {
     bool bOk = true;
     for (size_t j = 0; j < vec_fileNames.size(); ++j)  {
-      // Load descriptor of Jnth image
+      // Load regions of Jnth image
       const std::string sFeatJ = stlplus::create_filespec(sMatchDir,
         stlplus::basename_part(vec_fileNames[j]), "feat");
       const std::string sDescJ = stlplus::create_filespec(sMatchDir,
         stlplus::basename_part(vec_fileNames[j]), "desc");
 
-      bOk &= loadFeatsFromFile(sFeatJ, map_Feat[j]);
-      bOk &= loadDescsFromBinFile(sDescJ, map_Desc[j]);
+      image_describer.Allocate(regions_perImage[j]);
+      bOk &= image_describer.Load(regions_perImage[j].get(), sFeatJ, sDescJ);
     }
     if (bOk)
     {
-      nonFree::CASHASH::ImportFeatures(map_Desc, vec_hashing);
+      nonFree::CASHASH::ImportFeatures(regions_perImage, vec_hashing);
     }
     return bOk;
   }
@@ -76,17 +70,20 @@ class Matcher_CascadeHashing_AllInMemory
     C_Progress_display my_progress_bar( pairs.size() );
 
     // Sort pairs according the first index to minimize memory exchange
-    std::map<size_t, std::vector<size_t> > map_Pairs;
+    typedef std::map<size_t, std::vector<size_t> > Map_vectorT;
+    Map_vectorT map_Pairs;
     for (Pair_Set::const_iterator iter = pairs.begin(); iter != pairs.end(); ++iter)
     {
       map_Pairs[iter->first].push_back(iter->second);
     }
 
-    for (std::map<size_t, std::vector<size_t> >::const_iterator iter = map_Pairs.begin();
+    // Perform matching between all the pairs
+    for (Map_vectorT::const_iterator iter = map_Pairs.begin();
       iter != map_Pairs.end(); ++iter)
     {
       const size_t I = iter->first;
-      const std::vector<FeatureT> & featureSetI = map_Feat[I];
+      const features::Regions *regionsI = regions_perImage.at(I).get();
+      const std::vector<PointFeature> pointFeaturesI = regionsI->GetRegionsPositions();
 
       const std::vector<size_t> & indexToCompare = iter->second;
 #ifdef OPENMVG_USE_OPENMP
@@ -95,20 +92,21 @@ class Matcher_CascadeHashing_AllInMemory
       for (int j = 0; j < (int)indexToCompare.size(); ++j)
       {
         const size_t J = indexToCompare[j];
-        const std::vector<FeatureT> & featureSetJ = map_Feat[J];
+        const features::Regions *regionsJ = regions_perImage.at(J).get();
 
         std::vector<IndMatch> vec_FilteredMatches;
         cascadeHashing.MatchSpFast(
           vec_FilteredMatches,
-          vec_hashing[I], map_Desc[I],
-          vec_hashing[J], map_Desc[J],
+          vec_hashing[I], ((features::SIFT_Regions*)regionsI)->Descriptors(),
+          vec_hashing[J], ((features::SIFT_Regions*)regionsJ)->Descriptors(),
           fDistRatio);
 
         // Remove duplicates
         IndMatch::getDeduplicated(vec_FilteredMatches);
 
-        // Remove matches that have the same X,Y coordinates
-        IndMatchDecorator<float> matchDeduplicator(vec_FilteredMatches, featureSetI, featureSetJ);
+        // Remove matches that have the same (X,Y) coordinates
+        const std::vector<PointFeature> pointFeaturesJ = regionsJ->GetRegionsPositions();
+        IndMatchDecorator<float> matchDeduplicator(vec_FilteredMatches, pointFeaturesI, pointFeaturesJ);
         matchDeduplicator.getDeduplicated(vec_FilteredMatches);
 
 #ifdef OPENMVG_USE_OPENMP
@@ -124,14 +122,13 @@ class Matcher_CascadeHashing_AllInMemory
   }
 
   private:
-  // Features per image
-  std::map<size_t, std::vector<FeatureT> > map_Feat;
-  // Descriptors per image as contiguous memory
-  std::map<size_t, DescsT > map_Desc;
+  // Sift features & descriptors per View images
+  std::map<IndexT, std::unique_ptr<features::Regions> > regions_perImage;
+
   // Distance ratio used to discard spurious correspondence
   float fDistRatio;
 
-  // CascadeHashing object
+  // CascadeHashing (data)
   nonFree::CASHASH::CasHashMatcher cascadeHashing;
   std::vector<nonFree::CASHASH::ImageFeatures> vec_hashing;
 };
