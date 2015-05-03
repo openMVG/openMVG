@@ -109,14 +109,14 @@ int main(int argc, char **argv)
   {
     image_describer.reset(new SIFT_Image_describer());
   }
-  // Prepare the features provider
+  // Features reading
   std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
   if (!feats_provider->load(sfm_data, sMatchesDir, image_describer)) {
     std::cerr << std::endl
       << "Invalid features." << std::endl;
     return EXIT_FAILURE;
   }
-
+  // Matches reading
   std::shared_ptr<Matches_Provider> matches_provider = std::make_shared<Matches_Provider>();
   if (!matches_provider->load(sfm_data, stlplus::create_filespec(sMatchesDir, "matches.e.txt"))) {
     std::cerr << std::endl

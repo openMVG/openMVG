@@ -11,6 +11,8 @@ ADD_EXECUTABLE(openMVG_main_computeMatchesCasHas
 )
 TARGET_LINK_LIBRARIES(openMVG_main_computeMatchesCasHas
   openMVG_features
+  vlsift
+  stlplus
   ${OpenMVG_LIBS})
 SET_PROPERTY(TARGET openMVG_main_computeMatchesCasHas PROPERTY FOLDER OpenMVG/nonFree/software)
 

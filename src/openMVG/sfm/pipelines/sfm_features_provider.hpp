@@ -54,7 +54,7 @@ struct Features_Provider
   ///  it return an empty PointFeature array.
   const PointFeatures & getFeatures(const IndexT & id_view) const
   {
-    // Have a empty feature set in order to deal with non existing view_id
+    // Have an empty feature set in order to deal with non existing view_id
     static const PointFeatures emptyFeats = PointFeatures();
 
     Hash_Map<IndexT, PointFeatures>::const_iterator it = feats_per_view.find(id_view);

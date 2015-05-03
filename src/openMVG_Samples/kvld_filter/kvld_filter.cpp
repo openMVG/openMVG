@@ -289,7 +289,7 @@ int main(int argc, char **argv) {
     out_filename = stlplus::create_filespec(sOutDir, out_filename);
     WriteImage(out_filename.c_str(), imageOutL);
   }
-    {
+  {
     string out_filename = "08_Right-K-VLD-MASK.jpg";
     out_filename = stlplus::create_filespec(sOutDir, out_filename);
     WriteImage(out_filename.c_str(), imageOutR);
