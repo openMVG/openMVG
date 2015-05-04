@@ -11,6 +11,7 @@
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/descriptor.hpp"
+#include "cereal/types/vector.hpp"
 #include <string>
 #include <typeinfo>
 
