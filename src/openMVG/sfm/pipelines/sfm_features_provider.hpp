@@ -49,6 +49,31 @@ struct Features_Provider
     return true;
   }
 
+  virtual bool load(
+    const SfM_Data & sfm_data,
+    const std::string & feat_directory,
+    std::unique_ptr<features::Regions>& region_type)
+  {
+    // Read for each view the corresponding features and store them as PointFeatures
+    std::unique_ptr<features::Regions> regions(region_type->EmptyClone());
+    for (Views::const_iterator iter = sfm_data.getViews().begin();
+      iter != sfm_data.getViews().end(); ++iter)
+    {
+      const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.get()->s_Img_path);
+      const std::string basename = stlplus::basename_part(sImageName);
+      const std::string featFile = stlplus::create_filespec(feat_directory, basename, ".feat");
+
+      if (!regions->LoadFeatures(featFile))
+      {
+        std::cerr << "Invalid feature files for the view: " << sImageName << std::endl;
+        return false;
+      }
+      // save loaded Features as PointFeature
+      feats_per_view[iter->second.get()->id_view] = regions->GetRegionsPositions();
+    }
+    return true;
+  }
+
 
   /// Return the PointFeatures belonging to the View, if the view does not exist
   ///  it return an empty PointFeature array.

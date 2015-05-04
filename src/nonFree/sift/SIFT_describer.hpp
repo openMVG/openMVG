@@ -76,9 +76,6 @@ struct SiftParams
   bool _root_sift;        // see [1]
 };
 
-/// Define the classic SIFT Keypoint
-typedef Scalar_Regions<SIOPointFeature,unsigned char,128> SIFT_Regions;
-
 class SIFT_Image_describer : public Image_describer
 {
 public:
@@ -205,7 +202,5 @@ private:
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/archives/json.hpp>
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::SIFT_Image_describer, "SIFT_Image_describer");
-
-
 
 #endif // OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_H

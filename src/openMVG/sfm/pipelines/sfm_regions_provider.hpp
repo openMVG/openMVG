@@ -50,6 +50,31 @@ struct Regions_Provider
     return true;
   }
 
+    // Load Regions related to a provided SfM_Data View container
+  virtual bool load(
+    const SfM_Data & sfm_data,
+    const std::string & feat_directory,
+    std::unique_ptr<features::Regions>& region_type)
+  {
+    // Read for each view the corresponding regions and store them
+    for (Views::const_iterator iter = sfm_data.getViews().begin();
+      iter != sfm_data.getViews().end(); ++iter)
+    {
+      const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.get()->s_Img_path);
+      const std::string basename = stlplus::basename_part(sImageName);
+      const std::string featFile = stlplus::create_filespec(feat_directory, basename, ".feat");
+      const std::string descFile = stlplus::create_filespec(feat_directory, basename, ".desc");
+
+      regions_per_view[iter->second.get()->id_view] = std::unique_ptr<features::Regions>(region_type->EmptyClone());
+      if (!regions_per_view[iter->second.get()->id_view]->Load(featFile, descFile))
+      {
+        std::cerr << "Invalid regions files for the view: " << sImageName << std::endl;
+        return false;
+      }
+    }
+    return true;
+  }
+
 }; // Regions_Provider
 
 } // namespace openMVG

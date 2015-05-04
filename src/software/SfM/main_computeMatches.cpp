@@ -204,7 +204,8 @@ int main(int argc, char **argv)
     //image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_MLDB), !bUpRight));
     //image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_LIOP), !bUpRight));
 
-    // Export the used Image_describer to a file for future regions loading
+    // Export the used Image_describer and region type for:
+    // - dynamic future regions computation and/or loading
     {
       std::ofstream stream(sImage_describer.c_str());
       if (!stream.is_open())
@@ -212,6 +213,9 @@ int main(int argc, char **argv)
 
       cereal::JSONOutputArchive archive(stream);
       archive(cereal::make_nvp("image_describer", image_describer));
+      std::unique_ptr<Regions> regionsType;
+      image_describer->Allocate(regionsType);
+      archive(cereal::make_nvp("regions_type", regionsType));
     }
   }
 

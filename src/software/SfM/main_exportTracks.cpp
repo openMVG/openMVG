@@ -11,7 +11,7 @@
 #include "openMVG/features/features.hpp"
 #include "openMVG/tracks/tracks.hpp"
 #include "openMVG/sfm/sfm.hpp"
-#include "nonFree/sift/SIFT_describer.hpp"
+#include "software/SfM/io_regions_type.hpp"
 
 #include "software/SfM/SfMIOHelper.hpp"
 #include "third_party/cmdLine/cmdLine.h"
@@ -73,28 +73,20 @@ int main(int argc, char ** argv)
   //---------------------------------------
   // Load SfM Scene regions
   //---------------------------------------
-  //// Init the image describer (used for regions loading)
+  // Init the regions_type from the image describer file (used for image regions extraction)
   using namespace openMVG::features;
-  std::unique_ptr<Image_describer> image_describer;
   const std::string sImage_describer = stlplus::create_filespec(sMatchesDir, "image_describer", "json");
-  if (stlplus::is_file(sImage_describer))
+  std::unique_ptr<Regions> regions_type = Init_region_type_from_file(sImage_describer);
+  if (!regions_type)
   {
-    // Dynamically load the image_describer from the file (will restore old used settings)
-    std::ifstream stream(sImage_describer.c_str());
-    if (!stream.is_open())
-      return false;
-
-    cereal::JSONInputArchive archive(stream);
-    archive(cereal::make_nvp("image_describer", image_describer));
-  }
-  else // By default init a SIFT_Image_describer (keep compatibility)
-  {
-    image_describer.reset(new SIFT_Image_describer());
+    std::cerr << "Invalid: "
+      << sImage_describer << " regions type file." << std::endl;
+    return EXIT_FAILURE;
   }
 
   // Read the features
   std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
-  if (!feats_provider->load(sfm_data, sMatchesDir, image_describer)) {
+  if (!feats_provider->load(sfm_data, sMatchesDir, regions_type)) {
     std::cerr << std::endl
       << "Invalid features." << std::endl;
     return EXIT_FAILURE;

@@ -44,7 +44,8 @@ public:
   virtual bool IsScalar() const = 0;
   virtual bool IsBinary() const = 0;
 
-  virtual std::string Type_id() const = 0; // basis element used for description
+  /// basis element used for description
+  virtual std::string Type_id() const = 0;
   virtual size_t DescriptorLength() const = 0;
   //--
 
@@ -58,6 +59,9 @@ public:
   /// Return a pointer to the first value of the descriptor array
   // Used to avoid complex template imbrication
   virtual const void * DescriptorRawData() const = 0;
+
+  virtual Regions * EmptyClone() const = 0;
+
 };
 
 /// Specialization of the abstract Regions class to handle Scalar descriptors
@@ -132,6 +136,18 @@ public:
   inline const std::vector<DescriptorT> & Descriptors() const { return _vec_descs; }
 
   const void * DescriptorRawData() const { return &_vec_descs[0];}
+
+  template<class Archive>
+  void serialize(Archive & ar)
+  {
+    ar(_vec_feats);
+    ar(_vec_descs);
+  }
+
+  virtual Regions * EmptyClone() const
+  {
+    return new Scalar_Regions();
+  }
 private:
   //--
   //-- internal data
@@ -213,6 +229,18 @@ public:
   inline const std::vector<DescriptorT> & Descriptors() const { return _vec_descs; }
 
   const void * DescriptorRawData() const { return &_vec_descs[0];}
+
+  template<class Archive>
+  void serialize(Archive & ar)
+  {
+    ar(_vec_feats);
+    ar(_vec_descs);
+  }
+
+  virtual Regions * EmptyClone() const
+  {
+    return new Binary_Regions();
+  }
 
 private:
   //--

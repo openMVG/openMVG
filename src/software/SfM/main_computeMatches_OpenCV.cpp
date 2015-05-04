@@ -53,10 +53,13 @@ enum ePairMode
 ///
 //- Create an Image_describer interface that use an OpenCV feature extraction method
 // i.e. with the AKAZE detector+descriptor
-///-- Later use this class in a header file and connect them in the other binaries
+//--/!\ If you use a new Regions type you define and register it in
+//   "openMVG/features/regions_factory.hpp" file.
 ///
 using namespace openMVG::features;
-typedef Scalar_Regions<SIOPointFeature,float,64> AKAZE_OpenCV_Regions;
+// Reuse the existing AKAZE floating point Keypoint.
+typedef features::AKAZE_Float_Regions AKAZE_OpenCV_Regions;
+// Define the Interface
 class AKAZE_OCV_Image_describer : public Image_describer
 {
 public:
@@ -284,6 +287,9 @@ int main(int argc, char **argv)
 
       cereal::JSONOutputArchive archive(stream);
       archive(cereal::make_nvp("image_describer", image_describer));
+      std::unique_ptr<Regions> regionsType;
+      image_describer->Allocate(regionsType);
+      archive(cereal::make_nvp("regions_type", regionsType));
     }
   }
 

@@ -6,9 +6,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/sfm/sfm.hpp"
-#include "nonFree/sift/SIFT_describer.hpp"
-#include <cereal/archives/json.hpp>
 #include "openMVG/system/timer.hpp"
+#include "software/SfM/io_regions_type.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -67,27 +66,20 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  // Init the image describer (used for regions loading)
+  // Init the regions_type from the image describer file (used for image regions extraction)
   using namespace openMVG::features;
-  std::unique_ptr<Image_describer> image_describer;
   const std::string sImage_describer = stlplus::create_filespec(sMatchesDir, "image_describer", "json");
-  if (stlplus::is_file(sImage_describer))
+  std::unique_ptr<Regions> regions_type = Init_region_type_from_file(sImage_describer);
+  if (!regions_type)
   {
-    // Dynamically load the image_describer from the file (will restore old used settings)
-    std::ifstream stream(sImage_describer.c_str());
-    if (!stream.is_open())
-      return false;
+    std::cerr << "Invalid: "
+      << sImage_describer << " regions type file." << std::endl;
+    return EXIT_FAILURE;
+  }
 
-    cereal::JSONInputArchive archive(stream);
-    archive(cereal::make_nvp("image_describer", image_describer));
-  }
-  else // By default init a SIFT_Image_describer (keep compatibility)
-  {
-    image_describer.reset(new SIFT_Image_describer());
-  }
   // Prepare the Regions provider
   std::shared_ptr<Regions_Provider> regions_provider = std::make_shared<Regions_Provider>();
-  if (!regions_provider->load(sfm_data, sMatchesDir, image_describer)) {
+  if (!regions_provider->load(sfm_data, sMatchesDir, regions_type)) {
     std::cerr << std::endl
       << "Invalid regions." << std::endl;
     return EXIT_FAILURE;

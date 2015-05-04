@@ -11,6 +11,7 @@
 #include <numeric>
 
 #include "openMVG/features/image_describer.hpp"
+#include "openMVG/features/regions_factory.hpp"
 #include "openMVG/features/akaze/AKAZE.hpp"
 #include "openMVG/features/akaze/msurf_descriptor.hpp"
 #include "openMVG/features/akaze/mldb_descriptor.hpp"
@@ -21,13 +22,6 @@ using namespace openMVG;
 
 namespace openMVG {
 namespace features {
-
-/// Define the AKAZE Keypoint (with a float descriptor)
-typedef Scalar_Regions<SIOPointFeature,float,64> AKAZE_Float_Regions;
-/// Define the AKAZE Keypoint (with a LIOP descriptor)
-typedef Scalar_Regions<SIOPointFeature,unsigned char,144> AKAZE_Liop_Regions;
-/// Define the AKAZE Keypoint (with a binary descriptor saved in an uchar array)
-typedef Binary_Regions<SIOPointFeature,64> AKAZE_Binary_Regions;
 
 enum EAKAZE_DESCRIPTOR
 {
@@ -143,7 +137,7 @@ public:
         for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
         {
           AKAZEKeypoint ptAkaze = kpts[i];
-          
+
           // Feature masking
           if (mask)
           {
@@ -266,6 +260,5 @@ private:
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/archives/json.hpp>
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Image_describer, "AKAZE_Image_describer");
-
 
 #endif // OPENMVG_FEATURES_AKAZE_IMAGE_DESCRIBER_HPP
