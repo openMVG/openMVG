@@ -118,12 +118,16 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
     Eigen::Map<BaseMat> mat_query((Scalar*)query, nbQuery, (*memMapping).cols());
     Metric metric;
 
-    std::vector<DistanceType> vec_distance((*memMapping).rows(), 0.0);
+    pvec_distance->resize(nbQuery * NN);
+    pvec_indice->resize(nbQuery * NN);
     for (int queryIndex=0; queryIndex < nbQuery; ++queryIndex) {
-
+      std::vector<DistanceType> vec_distance((*memMapping).rows(), 0.0);
+      const Scalar * queryPtr = mat_query.row(queryIndex).data();
+      const Scalar * rowPtr = (*memMapping).data();
       for (int i = 0; i < (*memMapping).rows(); ++i)  {
-        vec_distance[i] = metric( mat_query.row(queryIndex).data(),
-          (*memMapping).row(i).data(), (*memMapping).cols() );
+        vec_distance[i] = metric( queryPtr,
+          rowPtr, (*memMapping).cols() );
+        rowPtr += (*memMapping).cols();
       }
 
       // Find the N minimum distances:
@@ -133,8 +137,8 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
       sort_index_helper(packet_vec, &vec_distance[0], maxMinFound);
 
       for (int i = 0; i < maxMinFound; ++i) {
-        pvec_distance->push_back(packet_vec[i].val);
-        pvec_indice->push_back(packet_vec[i].index);
+        (*pvec_distance)[queryIndex*NN+i] = (packet_vec[i].val);
+        (*pvec_indice)[queryIndex*NN+i] = (packet_vec[i].index);
       }
     }
     return true;

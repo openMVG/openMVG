@@ -110,7 +110,7 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
                         vector<DistanceType> * pvec_distance,
                         size_t NN)
   {
-    if (_index.get() != NULL)  {
+    if (_index.get() != NULL && NN < _datasetM->rows)  {
       //-- Check if resultIndices is allocated
       pvec_indice->resize(nbQuery * NN);
       pvec_distance->resize(nbQuery * NN);

@@ -70,6 +70,9 @@ struct Hamming
 #ifdef _MSC_VER
     return __popcnt(n);
 #else
+#if (defined __GNUC__ || defined __clang__) && defined USE_SSE
+    return __builtin_popcountl(n);
+#endif
     n -= ((n >> 1) & 0x55555555);
     n = (n & 0x33333333) + ((n >> 2) & 0x33333333);
     return (((n + (n >> 4))& 0xF0F0F0F)* 0x1010101) >> 24;
@@ -123,7 +126,7 @@ struct Hamming
       for (; a2 != a2_end; ++a2, ++b2) result += __builtin_popcountll((*a2) ^ (*b2));
 
       if (modulo) {
-        //in the case where size is not dividable by sizeof(size_t)
+        //in the case where size is not dividable by sizeof(pop_t)
         //need to mask off the bits at the end
         pop_t a_final = 0, b_final = 0;
         memcpy(&a_final, a2, modulo);

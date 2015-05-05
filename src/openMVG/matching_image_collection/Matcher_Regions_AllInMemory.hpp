@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "openMVG/features/features.hpp"
+#include "openMVG/features/regions.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
 #include "openMVG/matching/matching_filters.hpp"
 #include "openMVG/matching_image_collection/Matcher.hpp"
@@ -47,7 +47,7 @@ class Matcher_Regions_AllInMemory : public Matcher
 
   /// Load all features and descriptors in memory
   bool loadData(
-    const features::Image_describer & image_describer, // interface to load computed regions
+    std::unique_ptr<features::Regions>& region_type, // interface to load computed regions
     const std::vector<std::string> & vec_fileNames, // input filenames
     const std::string & sMatchDir) // where the data are saved
   {
@@ -59,8 +59,8 @@ class Matcher_Regions_AllInMemory : public Matcher
       const std::string sDescJ = stlplus::create_filespec(sMatchDir,
         stlplus::basename_part(vec_fileNames[j]), "desc");
 
-      image_describer.Allocate(regions_perImage[j]);
-      bOk &= image_describer.Load(regions_perImage[j].get(), sFeatJ, sDescJ);
+      regions_perImage[j] = std::unique_ptr<features::Regions>(region_type->EmptyClone());
+      bOk &= regions_perImage[j]->Load(sFeatJ, sDescJ);
     }
     return bOk;
   }
@@ -193,6 +193,21 @@ class Matcher_Regions_AllInMemory : public Matcher
 #ifdef OPENMVG_USE_OPENMP
     std::cout << "Using the OPENMP thread interface" << std::endl;
 #endif
+    switch(_eMatcherType)
+    {
+      case BRUTE_FORCE_L2:
+        std::cout << "Using BRUTE_FORCE_L2 matcher" << std::endl;
+      break;
+      case BRUTE_FORCE_HAMMING:
+        std::cout << "Using BRUTE_FORCE_HAMMING matcher" << std::endl;
+      break;
+      case ANN_L2:
+        std::cout << "Using ANN_L2 matcher" << std::endl;
+      break;
+      default:
+        std::cout << "Using unknown matcher type" << std::endl;
+    }
+
     C_Progress_display my_progress_bar( pairs.size() );
 
     // Sort pairs according the first index to minimize the MatcherT build operations
