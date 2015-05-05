@@ -56,6 +56,26 @@ public:
     bool bOrientation = true
   ):Image_describer(), _params(params), _bOrientation(bOrientation) {}
 
+
+  bool Set_configuration_preset(EDESCRIBER_PRESET preset)
+  {
+    switch(preset)
+    {
+    case NORMAL_PRESET:
+      _params._options.fThreshold = AKAZEConfig().fThreshold;
+    break;
+    case HIGH_PRESET:
+      _params._options.fThreshold = AKAZEConfig().fThreshold/10.;
+    break;
+    case ULTRA_PRESET:
+     _params._options.fThreshold = AKAZEConfig().fThreshold/100.;
+    break;
+    default:
+      return false;
+    }
+    return true;
+  }
+
   /**
   @brief Detect regions on the image and compute their attributes (description)
   @param image Image.

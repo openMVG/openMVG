@@ -84,6 +84,26 @@ public:
 
   ~SIFT_Image_describer() {}
 
+  bool Set_configuration_preset(EDESCRIBER_PRESET preset)
+  {
+    switch(preset)
+    {
+    case NORMAL_PRESET:
+      _params._peak_threshold = 0.04f;
+    break;
+    case HIGH_PRESET:
+      _params._peak_threshold = 0.01f;
+    break;
+    case ULTRA_PRESET:
+      _params._peak_threshold = 0.01f;
+      _params._first_octave = -1;
+    break;
+    default:
+      return false;
+    }
+    return true;
+  }
+
   /**
   @brief Detect regions on the image and compute their attributes (description)
   @param image Image.

@@ -17,12 +17,25 @@
 namespace openMVG {
 namespace features {
 
+enum EDESCRIBER_PRESET
+{
+  NORMAL_PRESET,
+  HIGH_PRESET,
+  ULTRA_PRESET
+};
 /// A pure virtual class for image description computation
 class Image_describer
 {
 public:
   Image_describer() {}
   virtual ~Image_describer() {}
+
+  /**
+  @brief Use a preset to control the number of detected regions
+  @param preset The preset configuration
+  @return True if configuration succeed.
+  */
+  virtual bool Set_configuration_preset(EDESCRIBER_PRESET preset) = 0;
 
   /**
   @brief Detect regions on the image and compute their attributes (description)
