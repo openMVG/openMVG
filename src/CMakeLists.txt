@@ -239,6 +239,7 @@ ADD_SUBDIRECTORY(nonFree)
 SET(OpenMVG_LIBS
   openMVG_image
   openMVG_features
+  openMVG_matching_image_collection
   openMVG_multiview
   openMVG_lInftyComputerVision
   openMVG_system

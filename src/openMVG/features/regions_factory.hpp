@@ -8,12 +8,7 @@
 #ifndef OPENMVG_FEATURES_REGIONS_FACTORY_HPP
 #define OPENMVG_FEATURES_REGIONS_FACTORY_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/features/regions.hpp"
-#include "openMVG/features/feature.hpp"
-#include "openMVG/features/descriptor.hpp"
-#include <string>
-#include <typeinfo>
 
 namespace openMVG {
 namespace features {
