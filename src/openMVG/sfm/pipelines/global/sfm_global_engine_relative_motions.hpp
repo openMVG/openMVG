@@ -32,6 +32,9 @@ public:
   void SetFeaturesProvider(Features_Provider * provider);
   void SetMatchesProvider(Matches_Provider * provider);
 
+  void SetRotationAveragingMethod(globalSfM::ERotationAveragingMethod eRotationAveragingMethod);
+  void SetTranslationAveragingMethod(globalSfM::ETranslationAveragingMethod _eTranslationAveragingMethod);
+
   virtual bool Process();
 
 protected:

@@ -381,6 +381,8 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
   }
   std::cout << "A-Contrario initial pair residual: "
     << relativePose_info.found_residual_precision << std::endl;
+  // Bound min precision at 1 pix.
+  relativePose_info.found_residual_precision = std::max(relativePose_info.found_residual_precision, 1.0);
 
   bool bRefine_using_BA = true;
   if (bRefine_using_BA)

@@ -79,6 +79,22 @@ void GlobalSfMReconstructionEngine_RelativeMotions::SetMatchesProvider(Matches_P
   _matches_provider = provider;
 }
 
+void GlobalSfMReconstructionEngine_RelativeMotions::SetRotationAveragingMethod
+(
+  globalSfM::ERotationAveragingMethod eRotationAveragingMethod
+)
+{
+  _eRotationAveragingMethod = eRotationAveragingMethod;
+}
+
+void GlobalSfMReconstructionEngine_RelativeMotions::SetTranslationAveragingMethod
+(
+  globalSfM::ETranslationAveragingMethod eTranslationAveragingMethod
+)
+{
+  _eTranslationAveragingMethod = eTranslationAveragingMethod;
+}
+
 bool GlobalSfMReconstructionEngine_RelativeMotions::Process() {
 
   //-------------------

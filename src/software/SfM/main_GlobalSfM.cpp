@@ -141,6 +141,12 @@ int main(int argc, char **argv)
   // Configure reconstruction parameters
   sfmEngine.Set_bFixedIntrinsics(!bRefineIntrinsics);
 
+  // Configure motion averaging method
+  sfmEngine.SetRotationAveragingMethod(
+    globalSfM::ERotationAveragingMethod(iRotationAveragingMethod));
+  sfmEngine.SetTranslationAveragingMethod(
+    globalSfM::ETranslationAveragingMethod(iTranslationAveragingMethod));
+
   if (sfmEngine.Process())
   {
     std::cout << std::endl << " Total Ac-Global-Sfm took (s): " << timer.elapsed() << std::endl;

@@ -90,6 +90,11 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
       << "   - Ready to compute " << iNview << " global translations." << "\n"
       << "     from #relative translations: " << vec_initialRijTijEstimates.size() << std::endl;
 
+    if (iNview < 3)
+    {
+      // Too tiny image set to perform motion averaging
+      return false;
+    }
     //-- Update initial estimates from [minId,maxId] to range [0->Ncam]
     const Pair_Set pairs = getPairs(vec_initialRijTijEstimates);
     Hash_Map<IndexT,IndexT> _reindexForward, _reindexBackward;
