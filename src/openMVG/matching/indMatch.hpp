@@ -37,18 +37,13 @@ struct IndMatch
 
   // Lexicographical ordering of matches. Used to remove duplicates.
   friend bool operator<(const IndMatch& m1, const IndMatch& m2) {
-    if (m1._i < m2._i)
-      return m1._j < m2._j;
-    else
-      if (m1._i > m2._i)
-        return m1._j < m2._j;
-    return m1._i < m2._i;
+    return (m1._i < m2._i || (m1._i == m2._i && m1._j < m2._j));
   }
 
-  /// Remove duplicates (same _i or _j that appears multiple times)
+  /// Remove duplicates ((_i, _j) that appears multiple times)
   static bool getDeduplicated(std::vector<IndMatch> & vec_match){
 
-    size_t sizeBefore = vec_match.size();
+    const size_t sizeBefore = vec_match.size();
     std::set<IndMatch> set_deduplicated( vec_match.begin(), vec_match.end());
     vec_match.assign(set_deduplicated.begin(), set_deduplicated.end());
     return sizeBefore != vec_match.size();
