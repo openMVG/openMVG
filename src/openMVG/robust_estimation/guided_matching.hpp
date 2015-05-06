@@ -128,7 +128,6 @@ void GuidedMatching(
   assert(xRight.cols() == rDescriptors.size());
 
   MetricT metric;
-  typename MetricT::ResultType MetricDist_T;
 
   // Looking for the corresponding points that have
   //  the satisfy:
@@ -248,7 +247,6 @@ void GuidedMatching_Fundamental_Fast(
   const PointFeatures l_pt = lRegions->GetRegionsPositions();
 
   MetricT metric;
-  typename MetricT::ResultType MetricDist_T;
 
   // Normalize F and epipole for (ep2->p2) line adequation
   Mat3 F = FMat;
