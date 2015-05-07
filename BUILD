@@ -19,18 +19,9 @@ $ cd openMVG
 $ git submodule init
 $ git submodule update
 
-------------------------------------
-Using as library dependency in cmake
-------------------------------------
-Adding following lines to your CMakeLists.txt should provide OpenMVG usable as
-static library:
-
- add_subdirectory(openMVG/src)
- include_directories(${OpenMVG_INCLUDES})
- target_link_libraries(target ${OpenMVG_LIBS})
-
-Information about required dependencies, standalone build and platform 
-specificity can be found below.
+As openMVG use some C++11 features you must have a c++11 ready compiler:
+- Visual studio >= 2013
+- GCC >= 4.7
 
 --------------------------
 General informations
@@ -118,4 +109,18 @@ If you want enable unit tests and examples to the build:
  Using openCV sample
  --------------------
  Add -DOpenMVG_USE_OPENCV=ON to your cmake command line and set OpenCV_DIR variable to your openCV build directory
+=> i.e.: -DOpenCV_DIR="/home/user/Dev/github/itseez/opencv_Build" -DOpenMVG_USE_OPENCV=ON
  
+------------------------------------
+Using as library dependency in cmake
+------------------------------------
+Adding following lines to your CMakeLists.txt should provide OpenMVG usable as
+static library:
+
+ add_subdirectory(openMVG/src)
+ include_directories(${OpenMVG_INCLUDES})
+ target_link_libraries(target ${OpenMVG_LIBS})
+
+Information about required dependencies, standalone build and platform 
+specificity can be found below.
+
