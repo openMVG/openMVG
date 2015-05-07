@@ -88,7 +88,7 @@ int main(int argc, char **argv)
       << "\n[Optional]\n"
       << "[-f|--force: Force to recompute data]\n"
       << "[-r|--ratio Distance ratio to discard non meaningful matches\n"
-      << "   0.6 typical value (you can use 0.8 to have more matches)]"
+      << "   0.6 typical value (you can use 0.8 to have more matches)]\n"
       << "[-g|--geometricModel\n"
       << "  (pairwise correspondences filtering thanks to robust model estimation):\n"
       << "   f: fundamental matrix,\n"
