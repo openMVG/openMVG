@@ -39,7 +39,6 @@ bool bicgstab(const MatrixType& mat, const Rhs& rhs, Dest& x,
   int maxIters = iters;
 
   int n = mat.cols();
-  x = precond.solve(x);
   VectorType r  = rhs - mat * x;
   VectorType r0 = r;
   
@@ -143,7 +142,7 @@ struct traits<BiCGSTAB<_MatrixType,_Preconditioner> >
   * SparseMatrix<double> A(n,n);
   * // fill A and b
   * BiCGSTAB<SparseMatrix<double> > solver;
-  * solver(A);
+  * solver.compute(A);
   * x = solver.solve(b);
   * std::cout << "#iterations:     " << solver.iterations() << std::endl;
   * std::cout << "estimated error: " << solver.error()      << std::endl;

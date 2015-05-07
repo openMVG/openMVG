@@ -110,7 +110,6 @@ void MatrixPowerAtomic<MatrixType>::compute2x2(MatrixType& res, RealScalar p) co
   using std::abs;
   using std::pow;
   
-  ArrayType logTdiag = m_A.diagonal().array().log();
   res.coeffRef(0,0) = pow(m_A.coeff(0,0), p);
 
   for (Index i=1; i < m_A.cols(); ++i) {

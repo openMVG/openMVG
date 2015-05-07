@@ -442,6 +442,7 @@ LDLT<MatrixType,_UpLo>& LDLT<MatrixType,_UpLo>::compute(const MatrixType& a)
   m_transpositions.resize(size);
   m_isInitialized = false;
   m_temporary.resize(size);
+  m_sign = internal::ZeroSign;
 
   internal::ldlt_inplace<UpLo>::unblocked(m_matrix, m_transpositions, m_temporary, m_sign);
 

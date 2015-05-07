@@ -762,6 +762,7 @@ template<typename _MatrixType, int QRPreconditioner> class JacobiSVD
 
     internal::qr_preconditioner_impl<MatrixType, QRPreconditioner, internal::PreconditionIfMoreColsThanRows> m_qr_precond_morecols;
     internal::qr_preconditioner_impl<MatrixType, QRPreconditioner, internal::PreconditionIfMoreRowsThanCols> m_qr_precond_morerows;
+    MatrixType m_scaledMatrix;
 };
 
 template<typename MatrixType, int QRPreconditioner>
@@ -808,8 +809,9 @@ void JacobiSVD<MatrixType, QRPreconditioner>::allocate(Index rows, Index cols, u
                             : 0);
   m_workMatrix.resize(m_diagSize, m_diagSize);
   
-  if(m_cols>m_rows) m_qr_precond_morecols.allocate(*this);
-  if(m_rows>m_cols) m_qr_precond_morerows.allocate(*this);
+  if(m_cols>m_rows)   m_qr_precond_morecols.allocate(*this);
+  if(m_rows>m_cols)   m_qr_precond_morerows.allocate(*this);
+  if(m_cols!=m_cols)  m_scaledMatrix.resize(rows,cols);
 }
 
 template<typename MatrixType, int QRPreconditioner>
@@ -826,21 +828,26 @@ JacobiSVD<MatrixType, QRPreconditioner>::compute(const MatrixType& matrix, unsig
   // limit for very small denormal numbers to be considered zero in order to avoid infinite loops (see bug 286)
   const RealScalar considerAsZero = RealScalar(2) * std::numeric_limits<RealScalar>::denorm_min();
 
+  // Scaling factor to reduce over/under-flows
+  RealScalar scale = matrix.cwiseAbs().maxCoeff();
+  if(scale==RealScalar(0)) scale = RealScalar(1);
+  
   /*** step 1. The R-SVD step: we use a QR decomposition to reduce to the case of a square matrix */
 
-  if(!m_qr_precond_morecols.run(*this, matrix) && !m_qr_precond_morerows.run(*this, matrix))
+  if(m_rows!=m_cols)
   {
-    m_workMatrix = matrix.block(0,0,m_diagSize,m_diagSize);
+    m_scaledMatrix = matrix / scale;
+    m_qr_precond_morecols.run(*this, m_scaledMatrix);
+    m_qr_precond_morerows.run(*this, m_scaledMatrix);
+  }
+  else
+  {
+    m_workMatrix = matrix.block(0,0,m_diagSize,m_diagSize) / scale;
     if(m_computeFullU) m_matrixU.setIdentity(m_rows,m_rows);
     if(m_computeThinU) m_matrixU.setIdentity(m_rows,m_diagSize);
     if(m_computeFullV) m_matrixV.setIdentity(m_cols,m_cols);
     if(m_computeThinV) m_matrixV.setIdentity(m_cols, m_diagSize);
   }
-  
-  // Scaling factor to reduce over/under-flows
-  RealScalar scale = m_workMatrix.cwiseAbs().maxCoeff();
-  if(scale==RealScalar(0)) scale = RealScalar(1);
-  m_workMatrix /= scale;
 
   /*** step 2. The main Jacobi SVD iteration. ***/
 
@@ -861,7 +868,8 @@ JacobiSVD<MatrixType, QRPreconditioner>::compute(const MatrixType& matrix, unsig
         using std::max;
         RealScalar threshold = (max)(considerAsZero, precision * (max)(abs(m_workMatrix.coeff(p,p)),
                                                                        abs(m_workMatrix.coeff(q,q))));
-        if((max)(abs(m_workMatrix.coeff(p,q)),abs(m_workMatrix.coeff(q,p))) > threshold)
+        // We compare both values to threshold instead of calling max to be robust to NaN (See bug 791)
+        if(abs(m_workMatrix.coeff(p,q))>threshold || abs(m_workMatrix.coeff(q,p)) > threshold)
         {
           finished = false;
 

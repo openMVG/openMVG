@@ -63,7 +63,7 @@
 // Currently, let's include it only on unix systems:
 #if defined(__unix__) || defined(__unix)
   #include <unistd.h>
-  #if ((defined __QNXNTO__) || (defined _GNU_SOURCE) || ((defined _XOPEN_SOURCE) && (_XOPEN_SOURCE >= 600))) && (defined _POSIX_ADVISORY_INFO) && (_POSIX_ADVISORY_INFO > 0)
+  #if ((defined __QNXNTO__) || (defined _GNU_SOURCE) || (defined __PGI) || ((defined _XOPEN_SOURCE) && (_XOPEN_SOURCE >= 600))) && (defined _POSIX_ADVISORY_INFO) && (_POSIX_ADVISORY_INFO > 0)
     #define EIGEN_HAS_POSIX_MEMALIGN 1
   #endif
 #endif
@@ -417,6 +417,8 @@ template<typename T, bool Align> inline T* conditional_aligned_realloc_new(T* pt
 
 template<typename T, bool Align> inline T* conditional_aligned_new_auto(size_t size)
 {
+  if(size==0)
+    return 0; // short-cut. Also fixes Bug 884
   check_size_for_overflow<T>(size);
   T *result = reinterpret_cast<T*>(conditional_aligned_malloc<Align>(sizeof(T)*size));
   if(NumTraits<T>::RequireInitialization)
@@ -464,9 +466,8 @@ template<typename T, bool Align> inline void conditional_aligned_delete_auto(T *
 template<typename Scalar, typename Index>
 static inline Index first_aligned(const Scalar* array, Index size)
 {
-  enum { PacketSize = packet_traits<Scalar>::size,
-         PacketAlignedMask = PacketSize-1
-  };
+  static const Index PacketSize = packet_traits<Scalar>::size;
+  static const Index PacketAlignedMask = PacketSize-1;
 
   if(PacketSize==1)
   {
@@ -612,7 +613,6 @@ template<typename T> class aligned_stack_memory_handler
       void* operator new(size_t size, const std::nothrow_t&) throw() { \
         try { return Eigen::internal::conditional_aligned_malloc<NeedsToAlign>(size); } \
         catch (...) { return 0; } \
-        return 0; \
       }
   #else
     #define EIGEN_MAKE_ALIGNED_OPERATOR_NEW_NOTHROW(NeedsToAlign) \

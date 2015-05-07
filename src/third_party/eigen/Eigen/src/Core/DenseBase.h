@@ -462,8 +462,10 @@ template<typename Derived> class DenseBase
     template<int p> RealScalar lpNorm() const;
 
     template<int RowFactor, int ColFactor>
-    const Replicate<Derived,RowFactor,ColFactor> replicate() const;
-    const Replicate<Derived,Dynamic,Dynamic> replicate(Index rowFacor,Index colFactor) const;
+    inline const Replicate<Derived,RowFactor,ColFactor> replicate() const;
+    
+    typedef Replicate<Derived,Dynamic,Dynamic> ReplicateReturnType;
+    inline const ReplicateReturnType replicate(Index rowFacor,Index colFactor) const;
 
     typedef Reverse<Derived, BothDirections> ReverseReturnType;
     typedef const Reverse<const Derived, BothDirections> ConstReverseReturnType;

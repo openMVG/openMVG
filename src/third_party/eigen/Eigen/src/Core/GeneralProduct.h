@@ -232,7 +232,7 @@ EIGEN_DONT_INLINE void outer_product_selector_run(const ProductType& prod, Dest&
   // FIXME not very good if rhs is real and lhs complex while alpha is real too
   const Index cols = dest.cols();
   for (Index j=0; j<cols; ++j)
-    func(dest.col(j), prod.rhs().coeff(j) * prod.lhs());
+    func(dest.col(j), prod.rhs().coeff(0,j) * prod.lhs());
 }
 
 // Row major
@@ -243,7 +243,7 @@ EIGEN_DONT_INLINE void outer_product_selector_run(const ProductType& prod, Dest&
   // FIXME not very good if lhs is real and rhs complex while alpha is real too
   const Index rows = dest.rows();
   for (Index i=0; i<rows; ++i)
-    func(dest.row(i), prod.lhs().coeff(i) * prod.rhs());
+    func(dest.row(i), prod.lhs().coeff(i,0) * prod.rhs());
 }
 
 template<typename Lhs, typename Rhs>

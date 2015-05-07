@@ -188,6 +188,8 @@ template<typename PlainObjectType, int Options, typename StrideType> class Ref
   : public RefBase<Ref<PlainObjectType, Options, StrideType> >
 {
     typedef internal::traits<Ref> Traits;
+    template<typename Derived>
+    inline Ref(const PlainObjectBase<Derived>& expr);
   public:
 
     typedef RefBase<Ref> Base;
@@ -196,20 +198,21 @@ template<typename PlainObjectType, int Options, typename StrideType> class Ref
 
     #ifndef EIGEN_PARSED_BY_DOXYGEN
     template<typename Derived>
-    inline Ref(PlainObjectBase<Derived>& expr,
-               typename internal::enable_if<bool(Traits::template match<Derived>::MatchAtCompileTime),Derived>::type* = 0)
+    inline Ref(PlainObjectBase<Derived>& expr)
     {
-      Base::construct(expr);
+      EIGEN_STATIC_ASSERT(static_cast<bool>(Traits::template match<Derived>::MatchAtCompileTime), STORAGE_LAYOUT_DOES_NOT_MATCH);
+      Base::construct(expr.derived());
     }
     template<typename Derived>
-    inline Ref(const DenseBase<Derived>& expr,
-               typename internal::enable_if<bool(internal::is_lvalue<Derived>::value&&bool(Traits::template match<Derived>::MatchAtCompileTime)),Derived>::type* = 0,
-               int = Derived::ThisConstantIsPrivateInPlainObjectBase)
+    inline Ref(const DenseBase<Derived>& expr)
     #else
     template<typename Derived>
     inline Ref(DenseBase<Derived>& expr)
     #endif
     {
+      EIGEN_STATIC_ASSERT(static_cast<bool>(internal::is_lvalue<Derived>::value), THIS_EXPRESSION_IS_NOT_A_LVALUE__IT_IS_READ_ONLY);
+      EIGEN_STATIC_ASSERT(static_cast<bool>(Traits::template match<Derived>::MatchAtCompileTime), STORAGE_LAYOUT_DOES_NOT_MATCH);
+      enum { THIS_EXPRESSION_IS_NOT_A_LVALUE__IT_IS_READ_ONLY = Derived::ThisConstantIsPrivateInPlainObjectBase};
       Base::construct(expr.const_cast_derived());
     }
 
