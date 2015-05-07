@@ -77,7 +77,7 @@ int main(int argc, char **argv)
       << "   SIFT,\n"
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
       << "   AKAZE_MLDB:  AKAZE with binary descriptors]\n"
-      << "[-u Use Upright feature 0 or 1]"
+      << "[-u Use Upright feature 0 or 1]\n"
       << "[-p|--describerPreset\n"
       << "  (used to control the Image_describer configuration):\n"
       << "   NORMAL,\n"
