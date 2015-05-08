@@ -20,6 +20,14 @@ Show how:
   - match features descriptors,
   - display the computed matches.
 
+image_describer_matches
+-------------------------
+
+Show how:
+  - use the Image_describer interface to extract features & descriptors
+  - match the detected regions
+  - display detected features & corresponding matches
+
 robust_homography
 --------------------
 
@@ -28,6 +36,7 @@ Show how:
 
 robust_homography_guided
 ---------------------------
+
 Show how:
   - estimate a robust homography between features matches,
   - extent the putative matches with a guided filter,
@@ -35,6 +44,7 @@ Show how:
 
 robust_fundamental
 --------------------
+
 Show how:
   - estimate a robust fundamental matrix between features matches.
 
@@ -46,6 +56,7 @@ Show how:
 
 robust_essential_ba 
 --------------------
+
 Show how:
   - refine with bundle_adjustment the Structure and Motion of a scene
   - for different camera model:
@@ -54,23 +65,34 @@ Show how:
     - Refine ``[X],[R|t]``, shared ``[f]``,
     - Refine ``[X],[R|t]``, shared brown disto models.
 
+robust_essential_spherical
+---------------------------
+
+Show how:
+  - estimate a robust essential matrix between two spherical panorama
+  - triangulate remaning inliers.
+
 kvld_filter
 --------------------
+
 Show how:
   - filter putative matches with the K-VLD filter [KVLD12]_.
 
 exifParsing
 --------------------
+
 Show how:
   - parse JPEG EXIF metadata
 
 sensorWidthDatabase
 --------------------
+
 Show how:
   - use the camera sensor width database
 
 undisto_Brown
 --------------------
+
 Show how:
   - undistord a picture according known Brown radial parameters.
 
