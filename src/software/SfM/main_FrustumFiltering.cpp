@@ -16,7 +16,7 @@
 
 using namespace openMVG;
 
-/// Build a list of pair that share visbility content from the SfM_Data structure
+/// Build a list of pair that share visibility content from the SfM_Data structure
 Pair_Set BuildPairsFromStructureObservations(const SfM_Data & sfm_data)
 {
   Pair_Set pairs;
@@ -46,10 +46,12 @@ Pair_Set BuildPairsFromStructureObservations(const SfM_Data & sfm_data)
 Pair_Set BuildPairsFromFrustumsIntersections(
   const SfM_Data & sfm_data,
   const double z_near = -1., // default near plane
-  const double z_far = -1.)  // default far plane
+  const double z_far = -1.,  // default far plane
+  const string & sOutDirectory = "") // output directory to save frustums as PLY
 {
   const Frustum_Filter frustum_filter(sfm_data, z_near, z_far);
-  frustum_filter.export_Ply("frustums.ply");
+  if (!sOutDirectory.empty())
+    frustum_filter.export_Ply(stlplus::create_filespec(sOutDirectory, "frustums.ply"));
   return frustum_filter.getFrustumIntersectionPairs();
 }
 
@@ -106,7 +108,7 @@ int main(int argc, char **argv)
 
   openMVG::Timer timer;
 
-  const Pair_Set pairs = BuildPairsFromFrustumsIntersections(sfm_data, z_near, z_far);
+  const Pair_Set pairs = BuildPairsFromFrustumsIntersections(sfm_data, z_near, z_far, stlplus::folder_part(sOutFile));
   /*const Pair_Set pairs = BuildPairsFromStructureObservations(sfm_data); */
 
   std::cout << "#pairs: " << pairs.size() << std::endl;
