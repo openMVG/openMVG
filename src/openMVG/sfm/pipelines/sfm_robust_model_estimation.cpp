@@ -110,7 +110,7 @@ bool robustRelativePose(
     max_iteration_count, &relativePose_info.essential_matrix, relativePose_info.initial_residual_tolerance, false);
   relativePose_info.found_residual_precision = acRansacOut.first;
 
-  if (!relativePose_info.vec_inliers.size() > 2.5 * SolverType::MINIMUM_SAMPLES)
+  if (relativePose_info.vec_inliers.size() < 2.5 * SolverType::MINIMUM_SAMPLES )
     return false; // no sufficient coverage (the model does not support enough samples)
 
   // estimation of the relative poses

@@ -39,6 +39,8 @@
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/descriptor.hpp"
 
+#include <cereal/cereal.hpp>
+
 namespace openMVG {
 
 struct AKAZEConfig
@@ -55,11 +57,12 @@ struct AKAZEConfig
   template<class Archive>
   void serialize(Archive & ar)
   {
-    ar(iNbOctave,
-      iNbSlicePerOctave,
-      fSigma0,
-      fThreshold,
-      fDesc_factor);
+    ar(
+      cereal::make_nvp("iNbOctave", iNbOctave),
+      cereal::make_nvp("iNbSlicePerOctave", iNbSlicePerOctave),
+      cereal::make_nvp("fSigma0", fSigma0),
+      cereal::make_nvp("fThreshold", fThreshold),
+      cereal::make_nvp("fDesc_factor", fDesc_factor));
   }
 
   int iNbOctave; ///< Octave to process

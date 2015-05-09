@@ -71,7 +71,7 @@ static bool loadPairs(
     {
       oss.clear(); oss.str(vec_str[i]);
       oss >> J;
-      if( I < 0 || I > N-1 || J < 0 || J > N-1)
+      if( I > N-1 || J > N-1) //I&J always > 0 since we use unsigned type
       {
         std::cerr << "--loadPairs: Invalid input file. Image out of range" << std::endl;
         return false;

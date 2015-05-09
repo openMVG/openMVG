@@ -16,6 +16,7 @@
 #include "openMVG/features/akaze/msurf_descriptor.hpp"
 #include "openMVG/features/akaze/mldb_descriptor.hpp"
 #include "openMVG/features/liop/liop_descriptor.hpp"
+#include <cereal/cereal.hpp>
 
 using namespace std;
 using namespace openMVG;
@@ -263,8 +264,9 @@ public:
   template<class Archive>
   void serialize(Archive & ar)
   {
-    ar(_params);
-    ar(_bOrientation);
+    ar(
+     cereal::make_nvp("params", _params),
+     cereal::make_nvp("bOrientation", _bOrientation));
   }
 
 
@@ -276,7 +278,6 @@ private:
 } // namespace features
 } // namespace openMVG
 
-#include <cereal/cereal.hpp>
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/archives/json.hpp>
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Image_describer, "AKAZE_Image_describer");

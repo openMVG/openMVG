@@ -139,8 +139,17 @@ int main(int argc, char **argv)
     if (!stream.is_open())
       return false;
 
-    cereal::JSONInputArchive archive(stream);
-    archive(cereal::make_nvp("image_describer", image_describer));
+    try
+    {
+      cereal::JSONInputArchive archive(stream);
+      archive(cereal::make_nvp("image_describer", image_describer));
+    }
+    catch (const cereal::Exception & e)
+    {
+      std::cerr << e.what() << std::endl
+        << "Cannot dynamically allocate the Image_describer interface." << std::endl;
+      return EXIT_FAILURE;
+    }
   }
   else
   {

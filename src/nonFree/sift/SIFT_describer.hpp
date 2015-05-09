@@ -7,10 +7,9 @@
 #ifndef OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_H
 #define OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_H
 
+#include <cereal/cereal.hpp>
 #include <iostream>
 #include <numeric>
-
-//#include "openMVG/features/image_describer.hpp"
 
 extern "C" {
 #include "nonFree/sift/vl/sift.h"
@@ -59,12 +58,13 @@ struct SiftParams
   template<class Archive>
   void serialize( Archive & ar )
   {
-    ar(_first_octave,
-      _num_octaves,
-      _num_scales,
-      _edge_threshold,
-      _peak_threshold,
-      _root_sift);
+    ar(
+      cereal::make_nvp("first_octave", _first_octave),
+      cereal::make_nvp("num_octaves",_num_octaves),
+      cereal::make_nvp("num_scales",_num_scales),
+      cereal::make_nvp("edge_threshold",_edge_threshold),
+      cereal::make_nvp("peak_threshold",_peak_threshold),
+      cereal::make_nvp("root_sift",_root_sift));
   }
 
   // Parameters
@@ -206,8 +206,9 @@ public:
   template<class Archive>
   void serialize( Archive & ar )
   {
-    ar(_params);
-    ar(_bOrientation);
+    ar(
+     cereal::make_nvp("params", _params),
+     cereal::make_nvp("bOrientation", _bOrientation));
   }
 
 private:
@@ -218,7 +219,6 @@ private:
 } // namespace features
 } // namespace openMVG
 
-#include <cereal/cereal.hpp>
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/archives/json.hpp>
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::SIFT_Image_describer, "SIFT_Image_describer");

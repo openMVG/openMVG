@@ -1037,7 +1037,6 @@ bool SequentialSfMReconstructionEngine::Resection(size_t viewIndex)
             _sfm_data.structure[trackId].obs[I] = Observation(x1, vec_index[i]._i);
             _sfm_data.structure[trackId].obs[J] = Observation(x2, vec_index[i]._j);
             reconstructed_trackId.insert(trackId);
-            _sfm_data.getLandmarks().at(trackId).X;
           }
         }
         std::cout << "--Triangulated 3D points [" << I << "-" << J <<"]: "

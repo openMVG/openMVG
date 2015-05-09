@@ -75,7 +75,7 @@ bool Load_Cereal(
 
     if (b_extrinsics)
       archive(cereal::make_nvp("extrinsics", data.poses));
-    else 
+    else
       if (bBinary) { // Binary file require read all the member
         Poses poses;
         archive(cereal::make_nvp("extrinsics", poses));
@@ -84,7 +84,7 @@ bool Load_Cereal(
     // Structure -> See for export in another file
     if (b_structure)
       archive(cereal::make_nvp("structure", data.structure));
-    else 
+    else
       if (bBinary) { // Binary file require read all the member
         Landmarks structure;
         archive(cereal::make_nvp("structure", structure));
@@ -92,7 +92,7 @@ bool Load_Cereal(
   }
   catch (const cereal::Exception & e)
   {
-    std::cerr << e.what();
+    std::cerr << e.what() << std::endl;
     return false;
   }
   return true;

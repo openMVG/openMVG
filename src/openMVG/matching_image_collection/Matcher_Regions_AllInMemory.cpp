@@ -146,6 +146,7 @@ void Template_Matcher(
       IndMatchDecorator<float> matchDeduplicator(vec_FilteredMatches, pointFeaturesI, pointFeaturesJ);
       matchDeduplicator.getDeduplicated(vec_FilteredMatches);
 
+      if (!vec_FilteredMatches.empty())
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp critical
 #endif
@@ -203,6 +204,8 @@ void Matcher_Regions_AllInMemory::Match(
               regions_perImage, Square(fDistRatio), _eMatcherType);
           }
           break;
+          default:
+            std::cerr << "Using unknown matcher type" << std::endl;
         }
       }
       else
@@ -228,6 +231,8 @@ void Matcher_Regions_AllInMemory::Match(
               regions_perImage, Square(fDistRatio), _eMatcherType);
           }
           break;
+          default:
+            std::cerr << "Using unknown matcher type" << std::endl;
         }
       }
       else
@@ -254,6 +259,8 @@ void Matcher_Regions_AllInMemory::Match(
               regions_perImage, Square(fDistRatio), _eMatcherType);
           }
           break;
+          default:
+            std::cerr << "Using unknown matcher type" << std::endl;
         }
       }
     }
@@ -270,6 +277,8 @@ void Matcher_Regions_AllInMemory::Match(
            regions_perImage, fDistRatio, _eMatcherType);
         }
         break;
+        default:
+            std::cerr << "Using unknown matcher type" << std::endl;
       }
     }
   }
