@@ -146,13 +146,15 @@ void Template_Matcher(
       IndMatchDecorator<float> matchDeduplicator(vec_FilteredMatches, pointFeaturesI, pointFeaturesJ);
       matchDeduplicator.getDeduplicated(vec_FilteredMatches);
 
-      if (!vec_FilteredMatches.empty())
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp critical
 #endif
       {
-        map_PutativesMatches.insert( make_pair( make_pair(I,J), vec_FilteredMatches ));
         ++my_progress_bar;
+        if (!vec_FilteredMatches.empty())
+        {
+          map_PutativesMatches.insert( make_pair( make_pair(I,J), vec_FilteredMatches ));
+        }
       }
     }
   }

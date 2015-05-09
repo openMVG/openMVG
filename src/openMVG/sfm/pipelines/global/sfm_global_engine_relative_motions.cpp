@@ -437,7 +437,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations(R
   const Pair_Set & pair_set = _matches_provider->getPairs();
   // copy to a vector for use with threading
   const Pair_Vec pair_vec(pair_set.begin(), pair_set.end());
-  C_Progress_display my_progress_bar( pair_vec.size(), std::cout, "\n", " " , "Compute_Relative_Rotations\n" );
+  C_Progress_display my_progress_bar( pair_vec.size(), std::cout, "\nCompute_Relative_Rotations\n" );
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif

@@ -365,8 +365,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
   C_Progress_display my_progress_bar(
     vec_edges.size(),
     std::cout,
-    "\n", " " ,
-    "Computation of the relative translations over the graph with an edge coverage algorithm\n" );
+    "\nComputation of the relative translations over the graph with an edge coverage algorithm\n");
 
   bool bVerbose = false;
 
