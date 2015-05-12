@@ -26,6 +26,7 @@
 //-----------------
 // SfM pipelines
 //-----------------
+#include "openMVG/sfm/sfm_report.hpp"
 #include "openMVG/sfm/pipelines/sfm_engine.hpp"
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
