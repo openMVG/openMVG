@@ -32,7 +32,7 @@ static bool PairedIndMatchToStream(
     const std::vector<IndMatch> & vec_matches = iter->second;
     os << I << " " << J << '\n' << vec_matches.size() << '\n';
     copy(vec_matches.begin(), vec_matches.end(),
-         std::ostream_iterator<IndMatch>(os, ""));
+         std::ostream_iterator<IndMatch>(os, "\n"));
   }
   return os.good();
 }

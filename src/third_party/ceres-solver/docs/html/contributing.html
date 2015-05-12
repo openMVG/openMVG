@@ -29,8 +29,8 @@
 
   
     <link rel="top" title="Ceres Solver" href="index.html"/>
-        <link rel="next" title="Releases" href="version_history.html"/>
-        <link rel="prev" title="FAQS, Tips &amp; Tricks" href="faqs.html"/> 
+        <link rel="next" title="Version History" href="version_history.html"/>
+        <link rel="prev" title="Users" href="users.html"/> 
 
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
@@ -62,49 +62,24 @@
 <li class="toctree-l1"><a class="reference internal" href="building.html">Building &amp; Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="building.html#getting-the-source-code">Getting the source code</a></li>
 <li class="toctree-l2"><a class="reference internal" href="building.html#dependencies">Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-linux">Building on Linux</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-mac-os-x">Building on Mac OS X</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-windows-with-visual-studio">Building on Windows with Visual Studio</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-android">Building on Android</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#building-on-ios">Building on iOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#linux">Linux</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#mac-os-x">Mac OS X</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#windows">Windows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#android">Android</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#ios">iOS</a></li>
 <li class="toctree-l2"><a class="reference internal" href="building.html#customizing-the-build">Customizing the build</a></li>
 <li class="toctree-l2"><a class="reference internal" href="building.html#using-ceres-with-cmake">Using Ceres with CMake</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorial.html#hello-world">Hello World!</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial.html#derivatives">Derivatives</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial.html#powell-s-function">Powell&#8217;s Function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial.html#curve-fitting">Curve Fitting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial.html#robust-curve-fitting">Robust Curve Fitting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial.html#bundle-adjustment">Bundle Adjustment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial.html#other-examples">Other Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nnls_tutorial.html">Non-linear Least Squares</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gradient_tutorial.html">General Unconstrained Minimization</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="modeling.html">Modeling</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#costfunction"><tt class="docutils literal"><span class="pre">CostFunction</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#sizedcostfunction"><tt class="docutils literal"><span class="pre">SizedCostFunction</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#autodiffcostfunction"><tt class="docutils literal"><span class="pre">AutoDiffCostFunction</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#dynamicautodiffcostfunction"><tt class="docutils literal"><span class="pre">DynamicAutoDiffCostFunction</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#numericdiffcostfunction"><tt class="docutils literal"><span class="pre">NumericDiffCostFunction</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#dynamicnumericdiffcostfunction"><tt class="docutils literal"><span class="pre">DynamicNumericDiffCostFunction</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#numericdifffunctor"><tt class="docutils literal"><span class="pre">NumericDiffFunctor</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#costfunctiontofunctor"><tt class="docutils literal"><span class="pre">CostFunctionToFunctor</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#conditionedcostfunction"><tt class="docutils literal"><span class="pre">ConditionedCostFunction</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#normalprior"><tt class="docutils literal"><span class="pre">NormalPrior</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#lossfunction"><tt class="docutils literal"><span class="pre">LossFunction</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#localparameterization"><tt class="docutils literal"><span class="pre">LocalParameterization</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#autodifflocalparameterization"><tt class="docutils literal"><span class="pre">AutoDiffLocalParameterization</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#problem"><tt class="docutils literal"><span class="pre">Problem</span></tt></a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#rotation-h"><tt class="docutils literal"><span class="pre">rotation.h</span></tt></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="solving.html">Solving</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="solving.html#introduction">Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="solving.html#trust-region-methods">Trust Region Methods</a></li>
-<li class="toctree-l2"><a class="reference internal" href="solving.html#line-search-methods">Line Search Methods</a></li>
-<li class="toctree-l2"><a class="reference internal" href="solving.html#linearsolver">LinearSolver</a></li>
-<li class="toctree-l2"><a class="reference internal" href="solving.html#covariance-estimation">Covariance Estimation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nnls_modeling.html">Modeling Non-linear Least Squares</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nnls_solving.html">Solving Non-linear Least Squares</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gradient_solver.html">General Unconstrained Minimization</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="faqs.html">FAQS, Tips &amp; Tricks</a><ul>
@@ -114,30 +89,32 @@
 <li class="toctree-l2"><a class="reference internal" href="faqs.html#further-reading">Further Reading</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="users.html">Users</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="users.html#publications">Publications</a></li>
+</ul>
+</li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Contributing</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#setting-up-your-development-environment">Setting up your Development Environment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#submitting-a-change-to-ceres-solver">Submitting a change to Ceres Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-your-environment">Setting up your Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#submitting-a-change">Submitting a change</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="version_history.html">Releases</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id1">1.9.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id2">1.8.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id5">1.7.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id9">1.6.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id12">1.5.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id16">1.4.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id20">1.3.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id23">1.2.3</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id25">1.2.2</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id27">1.2.1</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id30">1.2.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id33">1.1.1</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id35">1.1.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id38">1.0.0</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="history.html">History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#origin-of-the-name">Origin of the name</a></li>
+<li class="toctree-l1"><a class="reference internal" href="version_history.html">Version History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id1">1.10.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id2">1.9.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id6">1.8.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id9">1.7.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id13">1.6.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id16">1.5.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id20">1.4.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id24">1.3.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id27">1.2.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id29">1.2.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id31">1.2.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id34">1.2.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id37">1.1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id39">1.1.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#id42">1.0.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version_history.html#origins">Origins</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
@@ -183,8 +160,8 @@ Ceres can maintain a linear history with clean, reviewed commits, and
 no merges.</p>
 <p>We now describe how to set up your development environment and submit
 a change list for review via Gerrit.</p>
-<div class="section" id="setting-up-your-development-environment">
-<h2>Setting up your Development Environment<a class="headerlink" href="#setting-up-your-development-environment" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="setting-up-your-environment">
+<h2>Setting up your Environment<a class="headerlink" href="#setting-up-your-environment" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic">
 <li><p class="first">Download and configure <tt class="docutils literal"><span class="pre">git</span></tt>.</p>
 <ul class="simple">
@@ -249,19 +226,20 @@ name.</p>
 </li>
 </ol>
 </div>
-<div class="section" id="submitting-a-change-to-ceres-solver">
-<h2>Submitting a change to Ceres Solver<a class="headerlink" href="#submitting-a-change-to-ceres-solver" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="submitting-a-change">
+<h2>Submitting a change<a class="headerlink" href="#submitting-a-change" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic">
 <li><p class="first">Make your changes against master or whatever branch you
 like. Commit your changes as one patch. When you commit, the Gerrit
 hook will add a <cite>Change-Id:</cite> line as the last line of the commit.</p>
+<p>Make sure that your commit message is formatted in the <a class="reference external" href="http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html">50/72 style</a>.</p>
 </li>
 <li><p class="first">Push your changes to the Ceres Gerrit instance:</p>
 <div class="highlight-bash"><div class="highlight"><pre>git push origin HEAD:refs/for/master
 </pre></div>
 </div>
 <p>When the push succeeds, the console will display a URL showing the
-address of the review. Go to the URL and add atleast one of the
+address of the review. Go to the URL and add at least one of the
 maintainers (Sameer Agarwal, Keir Mierle, or Alex Stewart) as reviewers.</p>
 </li>
 <li><p class="first">Wait for a review.</p>
@@ -294,10 +272,10 @@ of reviews.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="version_history.html" class="btn btn-neutral float-right" title="Releases"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="version_history.html" class="btn btn-neutral float-right" title="Version History"/>Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="faqs.html" class="btn btn-neutral" title="FAQS, Tips &amp; Tricks"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="users.html" class="btn btn-neutral" title="Users"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -326,7 +304,7 @@ of reviews.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.9.0',
+            VERSION:'1.10.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

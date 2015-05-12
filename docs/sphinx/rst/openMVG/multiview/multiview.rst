@@ -2,17 +2,17 @@
 multiview
 *******************
 
-The multiview module consists of a collection of:
+The multiview module consists of:
 
-- solvers for 2 to n-view geometry constraints that arise in multiple view geometry,
+- a collection of solvers for 2 to n-view geometry constraints that arise in multiple view geometry,
 - a generic framework "Kernel" that can embed these solvers for robust estimation.
 
 First accessible solvers are listed and explained and the "Kernel" concept is documented.
 
-Two-view 2d-2d geometric estimation
-=====================================
+2-view solvers (2d-2d correspondences)
+======================================
 
-openMVG provides solver for the following problems:
+openMVG provides solver for the following geometric estimation:
 
 * affine,
 *	homographic,
@@ -25,18 +25,6 @@ openMVG provides solver for the following problems:
 
   * 8 to n pt (Direct Linear Transform) [HZ]_,
   * 5pt + intrinsic [Stewenius]_, [Nister]_.
-    
-One-view 2d-3d geometric estimation
-=====================================
-
-openMVG provides solver for the following problems:
-
-* pose estimation/ camera resection,
-
-  * 6pt Direct Linear Transform [HZ]_,
-  * 4pt with intrinsic EPnP [EPnP]_,  
-  * 3pt with intrinsic P3P [Kneip]_.
-
 
 N-View geometry estimation
 ============================
@@ -50,7 +38,11 @@ N-View geometry estimation
 
   * L2 (sparse) [Martinec]_,
   * L1 (sparse) [Chatterjee]_.
- 
+
+* Translation averaging
+
+  * L2 [Kyle2014]_.
+
 Homography matrix:
 ---------------------
 
@@ -93,8 +85,8 @@ The fundamental matrix is sometime called bifocal-tensor, it is a 3 x 3 matrix o
 with 7 degree of freedom. 8 ou 7 correspondences are sufficient to compute the :math:`F` matrix.
 Implementation follows the DLT (Direct Linear Transform) explained in [HZ]_ book.
 
-Essential matrix
----------------------
+Relative pose estimation (Essential matrix)
+===========================================
 
 Adding intrinsic parameters to the fundamental matrix gives a metric "object" that provides the following relation
 :math:`E = K'^T FK` , this is the Essential relation explained by Longuet-Higgins in 1981 [Longuet]_.
@@ -107,8 +99,8 @@ This essential matrix links the relative position of the camera to the fundament
 
    The essential matrix geometric relation.
 
-Camera resection/pose estimation
-===================================
+Absolute pose estimation/Camera resection (Pose matrix)
+========================================================
 
 Given a serie of 3D-2D image plane correspondences it is possible to compute a camera pose estimation.
 It consists in estimating the camera parameters of the right camera that minimizes the residual error of the 3D points re-projections, it's an optimization problem that trying to solve P parameters in order to minimize 
@@ -127,13 +119,22 @@ It consists in estimating the camera parameters of the right camera that minimiz
 	
    Residual error.
 
+openMVG provides 3 different solvers for this problem:
+
+* 6pt Direct Linear Transform [HZ]_,
+* 4pt with intrinsic EPnP [EPnP]_,  
+* 3pt with intrinsic P3P [Kneip]_.
+
 Kernel concept
 ---------------------
 
-A kernel is an association:
+In order to use the solver in a generic robust estimation framework, we use them in conjuction with the Kernel class that allow to link:
 
-* data points (the set that is used for a robust estimation problem),
-* a model solver/estimator
+* data points,
+
+  * the set of correspondences that are used for a robust estimation problem.
+
+* a model solver/estimator,
 * a metric to measure data fitting to a putative model.
 
 .. figure:: kernelConcept.png

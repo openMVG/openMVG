@@ -271,7 +271,7 @@ void PrintState(const vector<double>& odometry_readings,
 
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  CERES_GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
   // Make sure that the arguments parsed are all positive.
   CHECK_GT(FLAGS_corridor_length, 0.0);
   CHECK_GT(FLAGS_pose_separation, 0.0);

@@ -13,7 +13,7 @@
 
 #define EIGEN_WORLD_VERSION 3
 #define EIGEN_MAJOR_VERSION 2
-#define EIGEN_MINOR_VERSION 1
+#define EIGEN_MINOR_VERSION 4
 
 #define EIGEN_VERSION_AT_LEAST(x,y,z) (EIGEN_WORLD_VERSION>x || (EIGEN_WORLD_VERSION>=x && \
                                       (EIGEN_MAJOR_VERSION>y || (EIGEN_MAJOR_VERSION>=y && \
@@ -94,6 +94,13 @@
 
 #ifndef EIGEN_DEFAULT_DENSE_INDEX_TYPE
 #define EIGEN_DEFAULT_DENSE_INDEX_TYPE std::ptrdiff_t
+#endif
+
+// Cross compiler wrapper around LLVM's __has_builtin
+#ifdef __has_builtin
+#  define EIGEN_HAS_BUILTIN(x) __has_builtin(x)
+#else
+#  define EIGEN_HAS_BUILTIN(x) 0
 #endif
 
 /** Allows to disable some optimizations which might affect the accuracy of the result.
@@ -247,7 +254,7 @@ namespace Eigen {
 
 #if !defined(EIGEN_ASM_COMMENT)
   #if (defined __GNUC__) && ( defined(__i386__) || defined(__x86_64__) )
-    #define EIGEN_ASM_COMMENT(X)  asm("#" X)
+    #define EIGEN_ASM_COMMENT(X)  __asm__("#" X)
   #else
     #define EIGEN_ASM_COMMENT(X)
   #endif
@@ -289,7 +296,8 @@ namespace Eigen {
 #endif
 
 #ifndef EIGEN_STACK_ALLOCATION_LIMIT
-#define EIGEN_STACK_ALLOCATION_LIMIT 20000
+// 131072 == 128 KB
+#define EIGEN_STACK_ALLOCATION_LIMIT 131072
 #endif
 
 #ifndef EIGEN_DEFAULT_IO_FORMAT
@@ -305,7 +313,7 @@ namespace Eigen {
 // just an empty macro !
 #define EIGEN_EMPTY
 
-#if defined(_MSC_VER) && (!defined(__INTEL_COMPILER))
+#if defined(_MSC_VER) && (_MSC_VER < 1900) && (!defined(__INTEL_COMPILER))
 #define EIGEN_INHERIT_ASSIGNMENT_EQUAL_OPERATOR(Derived) \
   using Base::operator =;
 #elif defined(__clang__) // workaround clang bug (see http://forum.kde.org/viewtopic.php?f=74&t=102653)

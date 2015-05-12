@@ -39,6 +39,7 @@
 #include <Eigen/QR>
 #include <Eigen/SparseCore>
 #include <Eigen/SVD>
+#include<Eigen/StdVector>
 
 #include <cmath>
 #include <numeric>
@@ -48,6 +49,23 @@
 
 namespace openMVG {
 
+// Check MSVC
+#if _WIN32 || _WIN64
+   #if _WIN64
+     #define ENV64BIT
+  #else
+    #define ENV32BIT
+  #endif
+#endif
+
+// Check GCC
+#if __GNUC__
+  #if __x86_64__ || __ppc64__ || _LP64
+    #define ENV64BIT
+  #else
+    #define ENV32BIT
+  #endif
+#endif
 
   using Eigen::Map;
 
@@ -63,25 +81,18 @@ namespace openMVG {
 
   typedef Eigen::Matrix<double, 3, 3> Mat3;
 
-#if defined(_WIN32) || defined(WIN32)
-  // Handle alignment issue with Mat34, Vec2, Vec4, Vec6 on win32 with old compiler
-  enum { NeedsToAlignMat34 = (sizeof(Eigen::Matrix<double, 3, 4>)%16)==0 };
-  typedef Eigen::Matrix<double, 3, 4, ((NeedsToAlignMat34)==0 ? Eigen::Aligned : Eigen::DontAlign)> Mat34;
-
-  enum { NeedsToAlignVec2= (sizeof(Eigen::Vector2d)%16)==0 };
-  typedef Eigen::Matrix<double, 2, 1, ((NeedsToAlignVec2)==0 ? Eigen::Aligned : Eigen::DontAlign)> Vec2;
-
-  enum { NeedsToAlignVec4= (sizeof(Eigen::Vector4d)%16)==0 };
-  typedef Eigen::Matrix<double, 4, 1, ((NeedsToAlignVec4)==0 ? Eigen::Aligned : Eigen::DontAlign)> Vec4;
-
-  enum { NeedsToAlignVec6= (sizeof(Eigen::Matrix<double, 6, 1>)%16)==0 };
-  typedef Eigen::Matrix<double, 6, 1, ((NeedsToAlignVec6)==0 ? Eigen::Aligned : Eigen::DontAlign)> Vec6;
-#else // defined(_WIN32) || defined(WIN32)
+#if defined(ENV32BIT)
+  typedef Eigen::Matrix<double, 3, 4, Eigen::DontAlign> Mat34;
+  typedef Eigen::Matrix<double, 2, 1, Eigen::DontAlign> Vec2;
+  typedef Eigen::Matrix<double, 4, 1, Eigen::DontAlign> Vec4;
+  typedef Eigen::Matrix<double, 6, 1, Eigen::DontAlign> Vec6;
+#else // 64 bits compiler
   typedef Eigen::Matrix<double, 3, 4> Mat34;
   typedef Eigen::Vector2d Vec2;
   typedef Eigen::Vector4d Vec4;
   typedef Eigen::Matrix<double, 6, 1> Vec6;
-#endif // defined(_WIN32) || defined(WIN32)
+#endif
+
 
   typedef Eigen::Matrix<double, 4, 4> Mat4;
   typedef Eigen::Matrix<unsigned int, Eigen::Dynamic, Eigen::Dynamic> Matu;
@@ -124,10 +135,13 @@ namespace openMVG {
 
   Mat3 CrossProductMatrix(const Vec3 &x);
 
+  // Create a rotation matrix around axis X with the provided radian angle
   Mat3 RotationAroundX(double angle);
 
+  // Create a rotation matrix around axis Y with the provided radian angle
   Mat3 RotationAroundY(double angle);
 
+  // Create a rotation matrix around axis Z with the provided radian angle
   Mat3 RotationAroundZ(double angle);
 
   // Degree to Radian (suppose input in [0;360])
@@ -139,6 +153,10 @@ namespace openMVG {
   inline double R2D(double radian)  {
     return radian / M_PI * 180.0;
   }
+
+  /// Return in radian the mean rotation amplitude of the given rotation matrix
+  /// Computed as the mean of matrix column dot products to an Identity matrix
+  double  getRotationMagnitude(const Mat3 & R2);
 
   inline double SIGN(double x) {
     return x < 0.0 ? -1.0 : 1.0;
@@ -337,8 +355,8 @@ namespace openMVG {
     std::sort(vec_val.begin(), vec_val.end());
     min = vec_val[0];
     max = vec_val[vec_val.size()-1];
-    mean = accumulate(vec_val.begin(), vec_val.end(), 0.0)
-        / static_cast<double>(vec_val.size());
+    mean = accumulate(vec_val.begin(), vec_val.end(), Type(0))
+      / static_cast<Type>(vec_val.size());
     median = vec_val[vec_val.size()/2];
   }
 
@@ -355,6 +373,43 @@ namespace openMVG {
       << "\t median: " << median << std::endl
       << "\t max: " << max << std::endl;
   }
+
+  /**
+   ** Split a range [ a ; b [ into a set of n ranges :
+   [ a ; c1 [ U [ c1 ; c2 [ U ... U [ c(n-1) ; b [
+    **
+    Output range vector only store [ a , c1 , c2 , ... , b ]
+
+   ** if input range can't be split (range [a;b[ size is less than nb_split, only return [a;b[ range
+   **
+   ** @param range_start Start of range to split
+   ** @param range_end End of range to split
+   ** @param nb_split Number of desired split
+   ** @param d_range Output splitted range
+   **/
+  template < typename T >
+  void SplitRange( const T range_start , const T range_end , const int nb_split ,
+                                 std::vector< T > & d_range )
+  {
+    const T range_length = range_end - range_start ;
+    if( range_length < nb_split )
+    {
+      d_range.push_back( range_start ) ;
+      d_range.push_back( range_end ) ;
+    }
+    else
+    {
+      const T delta_range = range_length / nb_split ;
+
+      d_range.push_back( range_start ) ;
+      for( int i = 1 ; i < nb_split ; ++i )
+      {
+        d_range.push_back( range_start + i * delta_range ) ;
+      }
+      d_range.push_back( range_end ) ;
+    }
+  }
+
 
 } // namespace openMVG
 

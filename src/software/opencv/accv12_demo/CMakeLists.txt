@@ -1,6 +1,5 @@
 
 ADD_DEFINITIONS(-DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
-set(OpenCV_DIR "/home/pierre/Documents/Dev_OpenCV/OpenCV-2.4.2_Build2")
 
 find_package( OpenCV )
 
@@ -10,6 +9,8 @@ else(NOT OpenCV_FOUND)
 
 add_executable( opencv_fitting main.cpp )
 target_link_libraries( opencv_fitting ${OpenCV_LIBS} openMVG_multiview) 
+
+INSTALL(TARGETS opencv_fitting DESTINATION bin/)
 
 endif(NOT OpenCV_FOUND)
 

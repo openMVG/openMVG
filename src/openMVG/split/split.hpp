@@ -7,7 +7,7 @@
 /**
  * Split an input string with a delimiter and fill a string vector
  */
-static bool split ( const std::string & src, const std::string& delim, std::vector<std::string>& vec_value )
+static bool split ( const std::string src, const std::string& delim, std::vector<std::string>& vec_value )
 {
   bool bDelimiterExist = false;
   if ( !delim.empty() )

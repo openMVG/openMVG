@@ -22,7 +22,6 @@ Description
 [CLP]_
   Clp (Coin-or linear programming) is an open-source linear programming solver written in C++.
 
-.. [LP] http://en.wikipedia.org/wiki/Linear_programming
 .. [OSI] https://projects.coin-or.org/Osi
 .. [CLP] https://projects.coin-or.org/Clp/wiki
 .. [CLP_FAQ] https://projects.coin-or.org/Clp/wiki/FAQ

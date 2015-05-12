@@ -8,11 +8,16 @@
 #define OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMTRIPLETS_H_
 
 #include "openMVG/numeric/numeric.h"
+#include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include <fstream>
 #include <utility>
 #include <vector>
 #include <set>
+
+#ifdef _MSC_VER
+#pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
+#endif
 
 //------------------
 //-- Bibliography --
@@ -26,8 +31,6 @@ namespace openMVG   {
 namespace lInfinityCV  {
 
 using namespace linearProgramming;
-
-typedef std::pair<std::pair<size_t,size_t>, std::pair<Mat3,Vec3> > relativeInfo;
 
 // Setup the linear program to solve the union of trifocal tensors heading
 //  directions in a common global coordinate system.

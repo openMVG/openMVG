@@ -38,10 +38,11 @@ using namespace linearProgramming;
 //      Implementation by Pierre Moulon
 //
 
-void EncodeTriangulation(const std::vector<Mat34> & Pi,
-                        const Mat2X & x_ij,
-                        double gamma, // Start upper bound
-                        Mat & A, Vec & C)
+static void EncodeTriangulation(
+  const std::vector<Mat34> & Pi, // Projection matrices
+  const Mat2X & x_ij, // corresponding observations
+  double gamma, // Start upper bound
+  Mat & A, Vec & C)
 {
   // Build A, C matrix.
 

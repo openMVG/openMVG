@@ -8,7 +8,7 @@
 #define OPENMVG_IMAGE_HPP
 
 // Get rid of the specific MSVC compiler warnings.
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
 # define _CRT_SECURE_NO_WARNINGS
 #endif
 
@@ -24,5 +24,11 @@
 #include "openMVG/image/image_concat.hpp"
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/image/sample.hpp"
+
+#include "openMVG/image/image_convolution_base.hpp"
+#include "openMVG/image/image_convolution.hpp"
+#include "openMVG/image/image_filtering.hpp"
+#include "openMVG/image/image_resampling.hpp"
+#include "openMVG/image/image_diffusion.hpp"
 
 #endif /* OPENMVG_IMAGE_HPP */

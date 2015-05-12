@@ -189,8 +189,8 @@ class MappedSuperNodalMatrix<Scalar,Index>::InnerIterator
         m_idval(mat.colIndexPtr()[outer]),
         m_startidval(m_idval),
         m_endidval(mat.colIndexPtr()[outer+1]),
-        m_idrow(mat.rowIndexPtr()[outer]),
-        m_endidrow(mat.rowIndexPtr()[outer+1])
+        m_idrow(mat.rowIndexPtr()[mat.supToCol()[mat.colToSup()[outer]]]),
+        m_endidrow(mat.rowIndexPtr()[mat.supToCol()[mat.colToSup()[outer]]+1])
     {}
     inline InnerIterator& operator++()
     { 

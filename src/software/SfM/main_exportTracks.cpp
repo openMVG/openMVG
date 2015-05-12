@@ -1,5 +1,5 @@
 
-// Copyright (c) 2012, 2013 Pierre MOULON.
+// Copyright (c) 2012, 2013, 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,18 +10,14 @@
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/features.hpp"
 #include "openMVG/tracks/tracks.hpp"
+#include "openMVG/sfm/sfm.hpp"
+#include "software/SfM/io_regions_type.hpp"
 
 #include "software/SfM/SfMIOHelper.hpp"
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/progress/progress.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
-
-#include <cstdlib>
-#include <string>
-#include <vector>
-#include <fstream>
-#include <map>
 
 using namespace openMVG;
 using namespace openMVG::matching;
@@ -33,12 +29,12 @@ int main(int argc, char ** argv)
 {
   CmdLine cmd;
 
-  std::string sImaDirectory;
+  std::string sSfM_Data_Filename;
   std::string sMatchesDir;
   std::string sMatchFile;
   std::string sOutDir = "";
 
-  cmd.add( make_option('i', sImaDirectory, "imadir") );
+  cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('d', sMatchesDir, "matchdir") );
   cmd.add( make_option('m', sMatchFile, "matchfile") );
   cmd.add( make_option('o', sOutDir, "outdir") );
@@ -48,7 +44,7 @@ int main(int argc, char ** argv)
       cmd.process(argc, argv);
   } catch(const std::string& s) {
       std::cerr << "Export pairwise tracks.\nUsage: " << argv[0] << "\n"
-      << "[-i|--imadir path]\n"
+      << "[-i|--input_file file] path to a SfM_Data scene\n"
       << "[-d|--matchdir path]\n"
       << "[-m|--sMatchFile filename]\n"
       << "[-o|--outdir path]\n"
@@ -65,58 +61,80 @@ int main(int argc, char ** argv)
 
 
   //---------------------------------------
-  // Read images names
+  // Read SfM Scene (image view names)
   //---------------------------------------
-
-  std::vector<SfMIO::CameraInfo> vec_camImageName;
-  std::vector<SfMIO::IntrinsicCameraInfo> vec_focalGroup;
-  if (!SfMIO::loadImageList(
-    vec_camImageName,
-    vec_focalGroup,
-    stlplus::create_filespec(sMatchesDir, "lists", "txt")))
-  {
-    std::cerr << "\nEmpty image list." << std::endl;
-    return false;
+  SfM_Data sfm_data;
+  if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
+    std::cerr << std::endl
+      << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
+    return EXIT_FAILURE;
   }
 
   //---------------------------------------
-  // Read matches
+  // Load SfM Scene regions
   //---------------------------------------
+  // Init the regions_type from the image describer file (used for image regions extraction)
+  using namespace openMVG::features;
+  const std::string sImage_describer = stlplus::create_filespec(sMatchesDir, "image_describer", "json");
+  std::unique_ptr<Regions> regions_type = Init_region_type_from_file(sImage_describer);
+  if (!regions_type)
+  {
+    std::cerr << "Invalid: "
+      << sImage_describer << " regions type file." << std::endl;
+    return EXIT_FAILURE;
+  }
 
-  matching::PairWiseMatches map_Matches;
-  PairedIndMatchImport(sMatchFile, map_Matches);
+  // Read the features
+  std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
+  if (!feats_provider->load(sfm_data, sMatchesDir, regions_type)) {
+    std::cerr << std::endl
+      << "Invalid features." << std::endl;
+    return EXIT_FAILURE;
+  }
+  // Read the matches
+  std::shared_ptr<Matches_Provider> matches_provider = std::make_shared<Matches_Provider>();
+  if (!matches_provider->load(sfm_data, sMatchFile)) {
+    std::cerr << std::endl
+      << "Invalid matches file." << std::endl;
+    return EXIT_FAILURE;
+  }
 
   //---------------------------------------
   // Compute tracks from matches
   //---------------------------------------
-
-  TracksBuilder tracksBuilder;
   tracks::STLMAPTracks map_tracks;
   {
+    const openMVG::matching::PairWiseMatches & map_Matches = matches_provider->_pairWise_matches;
+    tracks::TracksBuilder tracksBuilder;
     tracksBuilder.Build(map_Matches);
     tracksBuilder.Filter();
-
-    //-- Build tracks with STL compliant type :
     tracksBuilder.ExportToSTL(map_tracks);
-  }
+}
 
   // ------------
   // For each pair, export the matches
   // ------------
+  const size_t viewCount = sfm_data.getViews().size();
 
   stlplus::folder_create(sOutDir);
   std::cout << "\n Export pairwise tracks" << std::endl;
-  C_Progress_display my_progress_bar( (vec_camImageName.size()*(vec_camImageName.size()-1)) / 2.0 );
+  C_Progress_display my_progress_bar( (viewCount*(viewCount-1)) / 2.0 );
 
-  for (size_t I = 0; I < vec_camImageName.size(); ++I) {
-    for (size_t J = I+1; J < vec_camImageName.size(); ++J, ++my_progress_bar) {
+  for (size_t I = 0; I < viewCount; ++I)
+  {
+    for (size_t J = I+1; J < viewCount; ++J, ++my_progress_bar)
+    {
 
-      std::vector<SfMIO::CameraInfo>::const_iterator camInfoI = vec_camImageName.begin() + I;
-      std::vector<SfMIO::CameraInfo>::const_iterator camInfoJ = vec_camImageName.begin() + J;
+      const View * view_I = sfm_data.getViews().at(I).get();
+      const std::string sView_I= stlplus::create_filespec(sfm_data.s_root_path,
+        view_I->s_Img_path);
+      const View * view_J = sfm_data.getViews().at(J).get();
+      const std::string sView_J= stlplus::create_filespec(sfm_data.s_root_path,
+        view_J->s_Img_path);
 
       const std::pair<size_t, size_t>
-        dimImage0 = std::make_pair(vec_focalGroup[camInfoI->m_intrinsicId].m_w, vec_focalGroup[camInfoI->m_intrinsicId].m_h),
-        dimImage1 = std::make_pair(vec_focalGroup[camInfoJ->m_intrinsicId].m_w, vec_focalGroup[camInfoJ->m_intrinsicId].m_h);
+        dimImage_I = std::make_pair(view_I->ui_width, view_I->ui_height),
+        dimImage_J = std::make_pair(view_J->ui_width, view_J->ui_height);
 
       //Get common tracks between view I and J
       tracks::STLMAPTracks map_tracksCommon;
@@ -125,35 +143,28 @@ int main(int argc, char ** argv)
       set_imageIndex.insert(J);
       TracksUtilsMap::GetTracksInImages(set_imageIndex, map_tracks, map_tracksCommon);
 
-      if (!map_tracksCommon.empty()) {
-        svgDrawer svgStream( dimImage0.first + dimImage1.first, max(dimImage0.second, dimImage1.second));
-        svgStream.drawImage(stlplus::create_filespec(sImaDirectory,vec_camImageName[I].m_sImageName),
-          dimImage0.first,
-          dimImage0.second);
-        svgStream.drawImage(stlplus::create_filespec(sImaDirectory,vec_camImageName[J].m_sImageName),
-          dimImage1.first,
-          dimImage1.second, dimImage0.first);
+      if (!map_tracksCommon.empty())
+      {
+        svgDrawer svgStream( dimImage_I.first + dimImage_J.first, max(dimImage_I.second, dimImage_J.second));
+        svgStream.drawImage(sView_I,
+          dimImage_I.first,
+          dimImage_I.second);
+        svgStream.drawImage(sView_J,
+          dimImage_J.first,
+          dimImage_J.second, dimImage_I.first);
 
-
-        // Load the features from the features files
-        std::vector<SIOPointFeature> vec_featI, vec_featJ;
-        loadFeatsFromFile(
-          stlplus::create_filespec(sMatchesDir, stlplus::basename_part(vec_camImageName[I].m_sImageName), ".feat"),
-          vec_featI);
-        loadFeatsFromFile(
-          stlplus::create_filespec(sMatchesDir, stlplus::basename_part(vec_camImageName[J].m_sImageName), ".feat"),
-          vec_featJ);
-
+        const PointFeatures & vec_feat_I = feats_provider->getFeatures(view_I->id_view);
+        const PointFeatures & vec_feat_J = feats_provider->getFeatures(view_J->id_view);
         //-- Draw link between features :
         for (tracks::STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
           iterT != map_tracksCommon.end(); ++ iterT)  {
 
           tracks::submapTrack::const_iterator iter = iterT->second.begin();
-          const SIOPointFeature & imaA = vec_featI[ iter->second];  ++iter;
-          const SIOPointFeature & imaB = vec_featJ[ iter->second];
+          const PointFeature & imaA = vec_feat_I[ iter->second];  ++iter;
+          const PointFeature& imaB = vec_feat_J[ iter->second];
 
           svgStream.drawLine(imaA.x(), imaA.y(),
-            imaB.x()+dimImage0.first, imaB.y(),
+            imaB.x()+dimImage_I.first, imaB.y(),
             svgStyle().stroke("green", 2.0));
         }
 
@@ -162,13 +173,13 @@ int main(int argc, char ** argv)
           iterT != map_tracksCommon.end(); ++ iterT)  {
 
           tracks::submapTrack::const_iterator iter = iterT->second.begin();
-          const SIOPointFeature & imaA = vec_featI[ iter->second];  ++iter;
-          const SIOPointFeature & imaB = vec_featJ[ iter->second];
+          const PointFeature & imaA = vec_feat_I[ iter->second];  ++iter;
+          const PointFeature& imaB = vec_feat_J[ iter->second];
 
-          svgStream.drawCircle(imaA.x(), imaA.y(), imaA.scale(),
-            svgStyle().stroke("yellow", 2.0));
-          svgStream.drawCircle(imaB.x() + dimImage0.first,imaB.y(),
-            imaB.scale(), svgStyle().stroke("yellow", 2.0));
+          svgStream.drawCircle(imaA.x(), imaA.y(),
+            3.0, svgStyle().stroke("yellow", 2.0));
+          svgStream.drawCircle(imaB.x() + dimImage_I.first,imaB.y(),
+            3.0, svgStyle().stroke("yellow", 2.0));
         }
         std::ostringstream os;
         os << stlplus::folder_append_separator(sOutDir)

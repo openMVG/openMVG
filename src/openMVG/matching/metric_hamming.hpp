@@ -14,7 +14,7 @@
 #ifdef _MSC_VER
 typedef unsigned __int32 uint32_t;
 typedef unsigned __int64 uint64_t;
-#include <intrin.h> 
+#include <intrin.h>
 #else
 #include <stdint.h>
 #endif
@@ -49,7 +49,7 @@ struct HammingBitSet
 
   // Returns the Hamming Distance between two binary descriptors
   template <typename Iterator1, typename Iterator2>
-  ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
+  inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
   {
     return (*a ^ *b).count();
   }
@@ -65,33 +65,39 @@ struct Hamming
 
   /** This is popcount_3() from:
    * http://en.wikipedia.org/wiki/Hamming_weight */
-  unsigned int popcnt32(uint32_t n) const
+  static inline unsigned int popcnt32(uint32_t n)
   {
 #ifdef _MSC_VER
     return __popcnt(n);
 #else
+#if (defined __GNUC__ || defined __clang__) && defined USE_SSE
+    return __builtin_popcountl(n);
+#endif
     n -= ((n >> 1) & 0x55555555);
     n = (n & 0x33333333) + ((n >> 2) & 0x33333333);
     return (((n + (n >> 4))& 0xF0F0F0F)* 0x1010101) >> 24;
 #endif
   }
 
-  unsigned int popcnt64(uint64_t n) const
+  static inline unsigned int popcnt64(uint64_t n)
   {
 #ifdef _MSC_VER
     return __popcnt64(n);
 #else
+#if (defined __GNUC__ || defined __clang__) && defined USE_SSE
+    return __builtin_popcountll(n);
+#endif
     n -= ((n >> 1) & 0x5555555555555555LL);
     n = (n & 0x3333333333333333LL) + ((n >> 2) & 0x3333333333333333LL);
     return (((n + (n >> 4))& 0x0f0f0f0f0f0f0f0fLL)* 0x0101010101010101LL) >> 56;
-#endif     
+#endif
   }
 
   template <typename Iterator1, typename Iterator2>
-  ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
+  inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
   {
     ResultType result = 0;
-#if (defined __GNUC__ || defined __clang__) && defined USE_SSE 
+#if (defined __GNUC__ || defined __clang__) && defined USE_SSE
 #ifdef __ARM_NEON__
     {
       uint32x4_t bits = vmovq_n_u32(0);
@@ -120,7 +126,7 @@ struct Hamming
       for (; a2 != a2_end; ++a2, ++b2) result += __builtin_popcountll((*a2) ^ (*b2));
 
       if (modulo) {
-        //in the case where size is not dividable by sizeof(size_t)
+        //in the case where size is not dividable by sizeof(pop_t)
         //need to mask off the bits at the end
         pop_t a_final = 0, b_final = 0;
         memcpy(&a_final, a2, modulo);
@@ -137,10 +143,8 @@ struct Hamming
       const uint64_t* pa = reinterpret_cast<const uint64_t*>(a);
       const uint64_t* pb = reinterpret_cast<const uint64_t*>(b);
       size /= (sizeof(uint64_t)/sizeof(unsigned char));
-      for(size_t i = 0; i < size; ++i ) {
+      for(size_t i = 0; i < size; ++i, ++pa, ++pb ) {
         result += popcnt64(*pa ^ *pb);
-        ++pa;
-        ++pb;
       }
     }
     else
@@ -148,20 +152,16 @@ struct Hamming
       const uint32_t* pa = reinterpret_cast<const uint32_t*>(a);
       const uint32_t* pb = reinterpret_cast<const uint32_t*>(b);
       size /= (sizeof(uint32_t)/sizeof(unsigned char));
-      for(size_t i = 0; i < size; ++i ) {
+      for(size_t i = 0; i < size; ++i, ++pa, ++pb ) {
         result += popcnt32(*pa ^ *pb);
-        ++pa;
-        ++pb;
       }
-    }    
+    }
 #else
     const uint32_t* pa = reinterpret_cast<const uint32_t*>(a);
     const uint32_t* pb = reinterpret_cast<const uint32_t*>(b);
     size /= (sizeof(uint32_t)/sizeof(unsigned char));
-    for(size_t i = 0; i < size; ++i ) {
+    for(size_t i = 0; i < size; ++i, ++pa, ++pb ) {
       result += popcnt32(*pa ^ *pb);
-      ++pa;
-      ++pb;
     }
 #endif
     return result;

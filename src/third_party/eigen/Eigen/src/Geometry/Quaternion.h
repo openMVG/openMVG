@@ -203,6 +203,8 @@ public:
   * \li \c Quaternionf for \c float
   * \li \c Quaterniond for \c double
   *
+  * \warning Operations interpreting the quaternion as rotation have undefined behavior if the quaternion is not normalized.
+  *
   * \sa  class AngleAxis, class Transform
   */
 
@@ -344,7 +346,7 @@ class Map<const Quaternion<_Scalar>, _Options >
 
     /** Constructs a Mapped Quaternion object from the pointer \a coeffs
       *
-      * The pointer \a coeffs must reference the four coeffecients of Quaternion in the following order:
+      * The pointer \a coeffs must reference the four coefficients of Quaternion in the following order:
       * \code *coeffs == {x, y, z, w} \endcode
       *
       * If the template parameter _Options is set to #Aligned, then the pointer coeffs must be aligned. */
@@ -464,7 +466,7 @@ QuaternionBase<Derived>::_transformVector(Vector3 v) const
     // Note that this algorithm comes from the optimization by hand
     // of the conversion to a Matrix followed by a Matrix/Vector product.
     // It appears to be much faster than the common algorithm found
-    // in the litterature (30 versus 39 flops). It also requires two
+    // in the literature (30 versus 39 flops). It also requires two
     // Vector3 as temporaries.
     Vector3 uv = this->vec().cross(v);
     uv += uv;
@@ -584,7 +586,7 @@ inline Derived& QuaternionBase<Derived>::setFromTwoVectors(const MatrixBase<Deri
   //    which yields a singular value problem
   if (c < Scalar(-1)+NumTraits<Scalar>::dummy_precision())
   {
-    c = max<Scalar>(c,-1);
+    c = (max)(c,Scalar(-1));
     Matrix<Scalar,2,3> m; m << v0.transpose(), v1.transpose();
     JacobiSVD<Matrix<Scalar,2,3> > svd(m, ComputeFullV);
     Vector3 axis = svd.matrixV().col(2);
@@ -667,10 +669,10 @@ QuaternionBase<Derived>::angularDistance(const QuaternionBase<OtherDerived>& oth
 {
   using std::acos;
   using std::abs;
-  double d = abs(this->dot(other));
-  if (d>=1.0)
+  Scalar d = abs(this->dot(other));
+  if (d>=Scalar(1))
     return Scalar(0);
-  return static_cast<Scalar>(2 * acos(d));
+  return Scalar(2) * acos(d);
 }
 
  

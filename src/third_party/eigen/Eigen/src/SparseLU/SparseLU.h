@@ -260,14 +260,13 @@ class SparseLU : public internal::SparseLUImpl<typename _MatrixType::Scalar, typ
       eigen_assert(m_factorizationIsOk && "The matrix should be factorized first.");
       // Initialize with the determinant of the row matrix
       Scalar det = Scalar(1.);
-      //Note that the diagonal blocks of U are stored in supernodes,
+      // Note that the diagonal blocks of U are stored in supernodes,
       // which are available in the  L part :)
       for (Index j = 0; j < this->cols(); ++j)
       {
         for (typename SCMatrix::InnerIterator it(m_Lstore, j); it; ++it)
         {
-          if(it.row() < j) continue;
-          if(it.row() == j)
+          if(it.index() == j)
           {
             det *= (std::abs)(it.value());
             break;

@@ -20,6 +20,7 @@ template < typename Scalar, typename Metric >
 class ArrayMatcher
 {
   public:
+  typedef Scalar ScalarT;
   typedef typename Metric::ResultType DistanceType;
   typedef Metric MetricT;
 

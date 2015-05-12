@@ -59,11 +59,11 @@ SET(CMAKE_DEBUG_POSTFIX "-debug")
 # For versions without ABI changes, bump the smallest number in CERES_VERSION,
 # but leave the CERES_ABI_VERSION unchanged.
 SET(CERES_VERSION_MAJOR 1)
-SET(CERES_VERSION_MINOR 9)
+SET(CERES_VERSION_MINOR 10)
 SET(CERES_VERSION_PATCH 0)
 SET(CERES_VERSION
     ${CERES_VERSION_MAJOR}.${CERES_VERSION_MINOR}.${CERES_VERSION_PATCH})
-SET(CERES_ABI_VERSION 1.9.0)
+SET(CERES_ABI_VERSION 1.10.0)
 
 ENABLE_TESTING()
 
@@ -81,8 +81,15 @@ OPTION(CUSTOM_BLAS
        ON)
 # Multithreading using OpenMP
 OPTION(OPENMP "Enable threaded solving in Ceres (requires OpenMP)" ON)
-
-
+OPTION(EIGENSPARSE
+  "Enable the use of Eigen as a sparse linear algebra library for
+   solving the nonlinear least squares problems. Enabling this
+   option will result in an LGPL licensed version of Ceres Solver
+   as the Simplicial Cholesky factorization in Eigen is licensed under the LGPL.
+   This does not affect the covariance estimation algorithm, as it
+   depends on the sparse QR factorization algorithm, which is licensed
+   under the MPL."
+  OFF)
 OPTION(BUILD_TESTING "Enable tests" OFF)
 OPTION(BUILD_DOCUMENTATION "Build User's Guide (html)" OFF)
 OPTION(BUILD_EXAMPLES "Build examples" OFF)
@@ -117,11 +124,11 @@ ENDIF (MSVC)
 # to config the cmake. The PLATFORM can be one of OS, SIMULATOR and SIMULATOR64.
 # Check the documentation in iOS.cmake to find more options.
 #
-# After building, you will get libceres.a and libminiglog.a
-# You need to add these two libraries into your xcode project.
+# After building, you will get a single library: libceres.a, which
+# you need to add to your Xcode project.
 #
 # If you use the lapack and blas, then you also need to add Accelerate.framework
-# to your xcode project's linking dependency.
+# to your Xcode project's linking dependency.
 IF (IOS)
   MESSAGE(STATUS "Building Ceres for iOS platform: ${IOS_PLATFORM}")
 
@@ -211,6 +218,33 @@ FIND_PATH(EIGEN_INCLUDE NAMES Eigen/Core) # OpenMVG
 FIND_PACKAGE(Eigen REQUIRED)
 IF (EIGEN_FOUND)
   MESSAGE("-- Found Eigen version ${EIGEN_VERSION}: ${EIGEN_INCLUDE_DIRS}")
+  # Ensure that only MPL2 licensed code is part of the default build.
+  MESSAGE("")
+  MESSAGE("   ===============================================================")
+  IF (EIGENSPARSE)
+    LIST(APPEND CERES_COMPILE_OPTIONS CERES_USE_EIGEN_SPARSE)
+    MESSAGE("   Enabling the use of Eigen as a sparse linear algebra library ")
+    MESSAGE("   for solving the nonlinear least squares problems. Enabling ")
+    MESSAGE("   this option will result in an LGPL licensed version of ")
+    MESSAGE("   Ceres Solver as the Simplicial Cholesky factorization in Eigen")
+    MESSAGE("   is licensed under the LGPL. ")
+
+    IF (EIGEN_VERSION VERSION_LESS 3.2.2)
+      MESSAGE("   WARNING:")
+      MESSAGE("")
+      MESSAGE("   Your version of Eigen is older than version 3.2.2.")
+      MESSAGE("   The performance of SPARSE_NORMAL_CHOLESKY and SPARSE_SCHUR")
+      MESSAGE("   linear solvers will suffer. ")
+    ENDIF (EIGEN_VERSION VERSION_LESS 3.2.2)
+
+  ELSE (EIGENSPARSE)
+    MESSAGE("   Disabling the use of Eigen as a sparse linear algebra library.")
+    MESSAGE("   This does not affect the covariance estimation algorithm ")
+    MESSAGE("   which can still use the EIGEN_SPARSE_QR algorithm.")
+    ADD_DEFINITIONS(-DEIGEN_MPL2_ONLY)
+  ENDIF (EIGENSPARSE)
+    MESSAGE("   ===============================================================")
+    MESSAGE("")
 ENDIF (EIGEN_FOUND)
 
 # LAPACK (& BLAS).
@@ -325,7 +359,8 @@ IF (GFLAGS)
   # Don't search with REQUIRED as we can continue without gflags.
   FIND_PACKAGE(Gflags)
   IF (GFLAGS_FOUND)
-    MESSAGE("-- Found Google Flags header in: ${GFLAGS_INCLUDE_DIRS}")
+    MESSAGE("-- Found Google Flags header in: ${GFLAGS_INCLUDE_DIRS}, "
+      "in namespace: ${GFLAGS_NAMESPACE}")
   ELSE (GFLAGS_FOUND)
     MESSAGE("-- Did not find Google Flags (gflags), Building without gflags "
       "- no tests or tools will be built!")
@@ -343,10 +378,9 @@ ENDIF (GFLAGS)
 
 # MiniGLog.
 IF (MINIGLOG)
-  SET(GLOG_LIBRARIES miniglog)
-  MESSAGE("-- Using minimal Glog substitute (library): ${GLOG_LIBRARIES}")
+  MESSAGE("-- Compiling minimal glog substitute into Ceres.")
   SET(GLOG_INCLUDE_DIRS internal/ceres/miniglog)
-  MESSAGE("-- Using minimal Glog substitute (include): ${GLOG_INCLUDE_DIRS}")
+  MESSAGE("-- Using minimal glog substitute (include): ${GLOG_INCLUDE_DIRS}")
 
   # Mark as advanced (remove from default GUI view) the glog search
   # variables in case user disables MINIGLOG, FindGlog did not find it, so
@@ -476,8 +510,18 @@ INCLUDE_DIRECTORIES(
   include
   internal
   internal/ceres
-  ${GLOG_INCLUDE_DIRS}
-  ${EIGEN_INCLUDE_DIRS})
+  ${GLOG_INCLUDE_DIRS})
+# Eigen SparseQR generates various compiler warnings related to unused and
+# uninitialised local variables, which prevents Ceres compilation as we use
+# -Werror.  To avoid having to individually suppress these warnings around
+# the #include statments for Eigen headers across all GCC/Clang versions, we
+# tell CMake to treat Eigen headers as system headers.  This results in all
+# compiler warnings from them being suppressed.
+#
+# Note that this is *not* propagated to clients, ie CERES_INCLUDE_DIRS
+# used by clients after find_package(Ceres) does not identify Eigen as
+# as system headers.
+INCLUDE_DIRECTORIES(SYSTEM ${EIGEN_INCLUDE_DIRS})
 
 IF (SUITESPARSE)
   INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
@@ -622,7 +666,7 @@ ENDIF (MSVC)
 IF (UNIX)
   # GCC is not strict enough by default, so enable most of the warnings.
   SET(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-missing-field-initializers")
+    "${CMAKE_CXX_FLAGS} -Werror=all -Werror=extra -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-missing-field-initializers")
 ENDIF (UNIX)
 
 # Use a larger inlining threshold for Clang, since it hobbles Eigen,

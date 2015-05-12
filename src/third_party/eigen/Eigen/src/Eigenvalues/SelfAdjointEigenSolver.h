@@ -563,7 +563,6 @@ template<typename SolverType> struct direct_selfadjoint_eigenvalues<SolverType,3
     if(computeEigenvectors)
     {
       Scalar safeNorm2 = Eigen::NumTraits<Scalar>::epsilon();
-      safeNorm2 *= safeNorm2;
       if((eivals(2)-eivals(0))<=Eigen::NumTraits<Scalar>::epsilon())
       {
         eivecs.setIdentity();
@@ -577,7 +576,7 @@ template<typename SolverType> struct direct_selfadjoint_eigenvalues<SolverType,3
         Scalar d0 = eivals(2) - eivals(1);
         Scalar d1 = eivals(1) - eivals(0);
         int k =  d0 > d1 ? 2 : 0;
-        d0 = d0 > d1 ? d1 : d0;
+        d0 = d0 > d1 ? d0 : d1;
 
         tmp.diagonal().array () -= eivals(k);
         VectorType cross;
@@ -585,19 +584,25 @@ template<typename SolverType> struct direct_selfadjoint_eigenvalues<SolverType,3
         n = (cross = tmp.row(0).cross(tmp.row(1))).squaredNorm();
 
         if(n>safeNorm2)
+        {
           eivecs.col(k) = cross / sqrt(n);
+        }
         else
         {
           n = (cross = tmp.row(0).cross(tmp.row(2))).squaredNorm();
 
           if(n>safeNorm2)
+          {
             eivecs.col(k) = cross / sqrt(n);
+          }
           else
           {
             n = (cross = tmp.row(1).cross(tmp.row(2))).squaredNorm();
 
             if(n>safeNorm2)
+            {
               eivecs.col(k) = cross / sqrt(n);
+            }
             else
             {
               // the input matrix and/or the eigenvaues probably contains some inf/NaN,
@@ -617,12 +622,16 @@ template<typename SolverType> struct direct_selfadjoint_eigenvalues<SolverType,3
         tmp.diagonal().array() -= eivals(1);
 
         if(d0<=Eigen::NumTraits<Scalar>::epsilon())
+        {
           eivecs.col(1) = eivecs.col(k).unitOrthogonal();
+        }
         else
         {
-          n = (cross = eivecs.col(k).cross(tmp.row(0).normalized())).squaredNorm();
+          n = (cross = eivecs.col(k).cross(tmp.row(0))).squaredNorm();
           if(n>safeNorm2)
+          {
             eivecs.col(1) = cross / sqrt(n);
+          }
           else
           {
             n = (cross = eivecs.col(k).cross(tmp.row(1))).squaredNorm();
@@ -636,13 +645,14 @@ template<typename SolverType> struct direct_selfadjoint_eigenvalues<SolverType,3
               else
               {
                 // we should never reach this point,
-                // if so the last two eigenvalues are likely to ve very closed to each other
+                // if so the last two eigenvalues are likely to be very close to each other
                 eivecs.col(1) = eivecs.col(k).unitOrthogonal();
               }
             }
           }
 
           // make sure that eivecs[1] is orthogonal to eivecs[2]
+          // FIXME: this step should not be needed
           Scalar d = eivecs.col(1).dot(eivecs.col(k));
           eivecs.col(1) = (eivecs.col(1) - d * eivecs.col(k)).normalized();
         }

@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2010, 2011, 2012 Google Inc. All rights reserved.
+// Copyright 2014 Google Inc. All rights reserved.
 // http://code.google.com/p/ceres-solver/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,21 +28,22 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
+#include "ceres/internal/port.h"
+
 #include <algorithm>
 #include <ctime>
 #include <set>
 #include <vector>
 
-#include "Eigen/Dense"
 #include "ceres/block_random_access_dense_matrix.h"
 #include "ceres/block_random_access_matrix.h"
 #include "ceres/block_random_access_sparse_matrix.h"
 #include "ceres/block_sparse_matrix.h"
 #include "ceres/block_structure.h"
+#include "ceres/conjugate_gradients_solver.h"
 #include "ceres/cxsparse.h"
 #include "ceres/detect_structure.h"
 #include "ceres/internal/eigen.h"
-#include "ceres/internal/port.h"
 #include "ceres/internal/scoped_ptr.h"
 #include "ceres/lapack.h"
 #include "ceres/linear_solver.h"
@@ -51,9 +52,66 @@
 #include "ceres/triplet_sparse_matrix.h"
 #include "ceres/types.h"
 #include "ceres/wall_time.h"
+#include "Eigen/Dense"
+#include "Eigen/SparseCore"
 
 namespace ceres {
 namespace internal {
+namespace {
+
+class BlockRandomAccessSparseMatrixAdapter : public LinearOperator {
+  public:
+  explicit BlockRandomAccessSparseMatrixAdapter(
+      const BlockRandomAccessSparseMatrix& m)
+      : m_(m) {
+  }
+
+  virtual ~BlockRandomAccessSparseMatrixAdapter() {}
+
+  // y = y + Ax;
+  virtual void RightMultiply(const double* x, double* y) const {
+    m_.SymmetricRightMultiply(x, y);
+  }
+
+  // y = y + A'x;
+  virtual void LeftMultiply(const double* x, double* y) const {
+    m_.SymmetricRightMultiply(x, y);
+  }
+
+  virtual int num_rows() const { return m_.num_rows(); }
+  virtual int num_cols() const { return m_.num_rows(); }
+
+ private:
+  const BlockRandomAccessSparseMatrix& m_;
+};
+
+class BlockRandomAccessDiagonalMatrixAdapter : public LinearOperator {
+  public:
+  explicit BlockRandomAccessDiagonalMatrixAdapter(
+      const BlockRandomAccessDiagonalMatrix& m)
+      : m_(m) {
+  }
+
+  virtual ~BlockRandomAccessDiagonalMatrixAdapter() {}
+
+  // y = y + Ax;
+  virtual void RightMultiply(const double* x, double* y) const {
+    m_.RightMultiply(x, y);
+  }
+
+  // y = y + A'x;
+  virtual void LeftMultiply(const double* x, double* y) const {
+    m_.RightMultiply(x, y);
+  }
+
+  virtual int num_rows() const { return m_.num_rows(); }
+  virtual int num_cols() const { return m_.num_rows(); }
+
+ private:
+  const BlockRandomAccessDiagonalMatrix& m_;
+};
+
+} // namespace
 
 LinearSolver::Summary SchurComplementSolver::SolveImpl(
     BlockSparseMatrix* A,
@@ -80,7 +138,7 @@ LinearSolver::Summary SchurComplementSolver::SolveImpl(
 
   double* reduced_solution = x + A->num_cols() - lhs_->num_cols();
   const LinearSolver::Summary summary =
-      SolveReducedLinearSystem(reduced_solution);
+      SolveReducedLinearSystem(per_solve_options, reduced_solution);
   event_logger.AddEvent("ReducedSolve");
 
   if (summary.termination_type == LINEAR_SOLVER_SUCCESS) {
@@ -113,7 +171,9 @@ void DenseSchurComplementSolver::InitStorage(
 // BlockRandomAccessDenseMatrix. The linear system is solved using
 // Eigen's Cholesky factorization.
 LinearSolver::Summary
-DenseSchurComplementSolver::SolveReducedLinearSystem(double* solution) {
+DenseSchurComplementSolver::SolveReducedLinearSystem(
+    const LinearSolver::PerSolveOptions& per_solve_options,
+    double* solution) {
   LinearSolver::Summary summary;
   summary.num_iterations = 0;
   summary.termination_type = LINEAR_SOLVER_SUCCESS;
@@ -138,7 +198,8 @@ DenseSchurComplementSolver::SolveReducedLinearSystem(double* solution) {
         .llt();
     if (llt.info() != Eigen::Success) {
       summary.termination_type = LINEAR_SOLVER_FAILURE;
-      summary.message = "Eigen LLT decomposition failed.";
+      summary.message =
+          "Eigen failure. Unable to perform dense Cholesky factorization.";
       return summary;
     }
 
@@ -155,8 +216,6 @@ DenseSchurComplementSolver::SolveReducedLinearSystem(double* solution) {
   return summary;
 }
 
-#if !defined(CERES_NO_SUITESPARSE) || !defined(CERES_NO_CXSPARE)
-
 SparseSchurComplementSolver::SparseSchurComplementSolver(
     const LinearSolver::Options& options)
     : SchurComplementSolver(options),
@@ -165,19 +224,15 @@ SparseSchurComplementSolver::SparseSchurComplementSolver(
 }
 
 SparseSchurComplementSolver::~SparseSchurComplementSolver() {
-#ifndef CERES_NO_SUITESPARSE
   if (factor_ != NULL) {
     ss_.Free(factor_);
     factor_ = NULL;
   }
-#endif  // CERES_NO_SUITESPARSE
 
-#ifndef CERES_NO_CXSPARSE
   if (cxsparse_factor_ != NULL) {
     cxsparse_.Free(cxsparse_factor_);
     cxsparse_factor_ = NULL;
   }
-#endif  // CERES_NO_CXSPARSE
 }
 
 // Determine the non-zero blocks in the Schur Complement matrix, and
@@ -252,12 +307,25 @@ void SparseSchurComplementSolver::InitStorage(
 }
 
 LinearSolver::Summary
-SparseSchurComplementSolver::SolveReducedLinearSystem(double* solution) {
+SparseSchurComplementSolver::SolveReducedLinearSystem(
+          const LinearSolver::PerSolveOptions& per_solve_options,
+          double* solution) {
+  if (options().type == ITERATIVE_SCHUR) {
+    CHECK(options().use_explicit_schur_complement);
+    return SolveReducedLinearSystemUsingConjugateGradients(per_solve_options,
+                                                           solution);
+  }
+
   switch (options().sparse_linear_algebra_library_type) {
     case SUITE_SPARSE:
-      return SolveReducedLinearSystemUsingSuiteSparse(solution);
+      return SolveReducedLinearSystemUsingSuiteSparse(per_solve_options,
+                                                      solution);
     case CX_SPARSE:
-      return SolveReducedLinearSystemUsingCXSparse(solution);
+      return SolveReducedLinearSystemUsingCXSparse(per_solve_options,
+                                                   solution);
+    case EIGEN_SPARSE:
+      return SolveReducedLinearSystemUsingEigen(per_solve_options,
+                                                solution);
     default:
       LOG(FATAL) << "Unknown sparse linear algebra library : "
                  << options().sparse_linear_algebra_library_type;
@@ -266,13 +334,24 @@ SparseSchurComplementSolver::SolveReducedLinearSystem(double* solution) {
   return LinearSolver::Summary();
 }
 
-#ifndef CERES_NO_SUITESPARSE
 // Solve the system Sx = r, assuming that the matrix S is stored in a
 // BlockRandomAccessSparseMatrix.  The linear system is solved using
 // CHOLMOD's sparse cholesky factorization routines.
 LinearSolver::Summary
 SparseSchurComplementSolver::SolveReducedLinearSystemUsingSuiteSparse(
+    const LinearSolver::PerSolveOptions& per_solve_options,
     double* solution) {
+#ifdef CERES_NO_SUITESPARSE
+
+  LinearSolver::Summary summary;
+  summary.num_iterations = 0;
+  summary.termination_type = LINEAR_SOLVER_FATAL_ERROR;
+  summary.message = "Ceres was not built with SuiteSparse support. "
+      "Therefore, SPARSE_SCHUR cannot be used with SUITE_SPARSE";
+  return summary;
+
+#else
+
   LinearSolver::Summary summary;
   summary.num_iterations = 0;
   summary.termination_type = LINEAR_SOLVER_SUCCESS;
@@ -326,6 +405,8 @@ SparseSchurComplementSolver::SolveReducedLinearSystemUsingSuiteSparse(
   if (factor_ == NULL) {
     ss_.Free(cholmod_lhs);
     summary.termination_type = LINEAR_SOLVER_FATAL_ERROR;
+    // No need to set message as it has already been set by the
+    // symbolic analysis routines above.
     return summary;
   }
 
@@ -335,6 +416,8 @@ SparseSchurComplementSolver::SolveReducedLinearSystemUsingSuiteSparse(
   ss_.Free(cholmod_lhs);
 
   if (summary.termination_type != LINEAR_SOLVER_SUCCESS) {
+    // No need to set message as it has already been set by the
+    // numeric factorization routine above.
     return summary;
   }
 
@@ -346,6 +429,8 @@ SparseSchurComplementSolver::SolveReducedLinearSystemUsingSuiteSparse(
   ss_.Free(cholmod_rhs);
 
   if (cholmod_solution == NULL) {
+    summary.message =
+        "SuiteSparse failure. Unable to perform triangular solve.";
     summary.termination_type = LINEAR_SOLVER_FAILURE;
     return summary;
   }
@@ -354,23 +439,27 @@ SparseSchurComplementSolver::SolveReducedLinearSystemUsingSuiteSparse(
       = VectorRef(static_cast<double*>(cholmod_solution->x), num_rows);
   ss_.Free(cholmod_solution);
   return summary;
-}
-#else
-LinearSolver::Summary
-SparseSchurComplementSolver::SolveReducedLinearSystemUsingSuiteSparse(
-    double* solution) {
-  LOG(FATAL) << "No SuiteSparse support in Ceres.";
-  return LinearSolver::Summary();
-}
 #endif  // CERES_NO_SUITESPARSE
+}
 
-#ifndef CERES_NO_CXSPARSE
 // Solve the system Sx = r, assuming that the matrix S is stored in a
 // BlockRandomAccessSparseMatrix.  The linear system is solved using
 // CXSparse's sparse cholesky factorization routines.
 LinearSolver::Summary
 SparseSchurComplementSolver::SolveReducedLinearSystemUsingCXSparse(
+    const LinearSolver::PerSolveOptions& per_solve_options,
     double* solution) {
+#ifdef CERES_NO_CXSPARSE
+
+  LinearSolver::Summary summary;
+  summary.num_iterations = 0;
+  summary.termination_type = LINEAR_SOLVER_FATAL_ERROR;
+  summary.message = "Ceres was not built with CXSparse support. "
+      "Therefore, SPARSE_SCHUR cannot be used with CX_SPARSE";
+  return summary;
+
+#else
+
   LinearSolver::Summary summary;
   summary.num_iterations = 0;
   summary.termination_type = LINEAR_SOLVER_SUCCESS;
@@ -407,16 +496,169 @@ SparseSchurComplementSolver::SolveReducedLinearSystemUsingCXSparse(
 
   cxsparse_.Free(lhs);
   return summary;
-}
-#else
-LinearSolver::Summary
-SparseSchurComplementSolver::SolveReducedLinearSystemUsingCXSparse(
-    double* solution) {
-  LOG(FATAL) << "No CXSparse support in Ceres.";
-  return LinearSolver::Summary();
-}
 #endif  // CERES_NO_CXPARSE
+}
 
-#endif  // !defined(CERES_NO_SUITESPARSE) || !defined(CERES_NO_CXSPARE)
+// Solve the system Sx = r, assuming that the matrix S is stored in a
+// BlockRandomAccessSparseMatrix.  The linear system is solved using
+// Eigen's sparse cholesky factorization routines.
+LinearSolver::Summary
+SparseSchurComplementSolver::SolveReducedLinearSystemUsingEigen(
+    const LinearSolver::PerSolveOptions& per_solve_options,
+    double* solution) {
+#ifndef CERES_USE_EIGEN_SPARSE
+
+  LinearSolver::Summary summary;
+  summary.num_iterations = 0;
+  summary.termination_type = LINEAR_SOLVER_FATAL_ERROR;
+  summary.message =
+      "SPARSE_SCHUR cannot be used with EIGEN_SPARSE. "
+      "Ceres was not built with support for "
+      "Eigen's SimplicialLDLT decomposition. "
+      "This requires enabling building with -DEIGENSPARSE=ON.";
+  return summary;
+
+#else
+  EventLogger event_logger("SchurComplementSolver::EigenSolve");
+  LinearSolver::Summary summary;
+  summary.num_iterations = 0;
+  summary.termination_type = LINEAR_SOLVER_SUCCESS;
+  summary.message = "Success.";
+
+  // Extract the TripletSparseMatrix that is used for actually storing S.
+  TripletSparseMatrix* tsm =
+      const_cast<TripletSparseMatrix*>(
+          down_cast<const BlockRandomAccessSparseMatrix*>(lhs())->matrix());
+  const int num_rows = tsm->num_rows();
+
+  // The case where there are no f blocks, and the system is block
+  // diagonal.
+  if (num_rows == 0) {
+    return summary;
+  }
+
+  // This is an upper triangular matrix.
+  CompressedRowSparseMatrix crsm(*tsm);
+  // Map this to a column major, lower triangular matrix.
+  Eigen::MappedSparseMatrix<double, Eigen::ColMajor> eigen_lhs(
+      crsm.num_rows(),
+      crsm.num_rows(),
+      crsm.num_nonzeros(),
+      crsm.mutable_rows(),
+      crsm.mutable_cols(),
+      crsm.mutable_values());
+  event_logger.AddEvent("ToCompressedRowSparseMatrix");
+
+  // Compute symbolic factorization if one does not exist.
+  if (simplicial_ldlt_.get() == NULL) {
+    simplicial_ldlt_.reset(new SimplicialLDLT);
+    // This ordering is quite bad. The scalar ordering produced by the
+    // AMD algorithm is quite bad and can be an order of magnitude
+    // worse than the one computed using the block version of the
+    // algorithm.
+    simplicial_ldlt_->analyzePattern(eigen_lhs);
+    event_logger.AddEvent("Analysis");
+    if (simplicial_ldlt_->info() != Eigen::Success) {
+      summary.termination_type = LINEAR_SOLVER_FATAL_ERROR;
+      summary.message =
+          "Eigen failure. Unable to find symbolic factorization.";
+      return summary;
+    }
+  }
+
+  simplicial_ldlt_->factorize(eigen_lhs);
+  event_logger.AddEvent("Factorize");
+  if (simplicial_ldlt_->info() != Eigen::Success) {
+    summary.termination_type = LINEAR_SOLVER_FAILURE;
+    summary.message = "Eigen failure. Unable to find numeric factoriztion.";
+    return summary;
+  }
+
+  VectorRef(solution, num_rows) =
+      simplicial_ldlt_->solve(ConstVectorRef(rhs(), num_rows));
+  event_logger.AddEvent("Solve");
+  if (simplicial_ldlt_->info() != Eigen::Success) {
+    summary.termination_type = LINEAR_SOLVER_FAILURE;
+    summary.message = "Eigen failure. Unable to do triangular solve.";
+  }
+
+  return summary;
+#endif  // CERES_USE_EIGEN_SPARSE
+}
+
+LinearSolver::Summary
+SparseSchurComplementSolver::SolveReducedLinearSystemUsingConjugateGradients(
+    const LinearSolver::PerSolveOptions& per_solve_options,
+    double* solution) {
+  const int num_rows = lhs()->num_rows();
+  // The case where there are no f blocks, and the system is block
+  // diagonal.
+  if (num_rows == 0) {
+    LinearSolver::Summary summary;
+    summary.num_iterations = 0;
+    summary.termination_type = LINEAR_SOLVER_SUCCESS;
+    summary.message = "Success.";
+    return summary;
+  }
+
+  // Only SCHUR_JACOBI is supported over here right now.
+  CHECK_EQ(options().preconditioner_type, SCHUR_JACOBI);
+
+  if (preconditioner_.get() == NULL) {
+    preconditioner_.reset(new BlockRandomAccessDiagonalMatrix(blocks_));
+  }
+
+  BlockRandomAccessSparseMatrix* sc =
+      down_cast<BlockRandomAccessSparseMatrix*>(
+          const_cast<BlockRandomAccessMatrix*>(lhs()));
+
+  // Extract block diagonal from the Schur complement to construct the
+  // schur_jacobi preconditioner.
+  for (int i = 0; i  < blocks_.size(); ++i) {
+    const int block_size = blocks_[i];
+
+    int sc_r, sc_c, sc_row_stride, sc_col_stride;
+    CellInfo* sc_cell_info =
+        CHECK_NOTNULL(sc->GetCell(i, i,
+                                  &sc_r, &sc_c,
+                                  &sc_row_stride, &sc_col_stride));
+    MatrixRef sc_m(sc_cell_info->values, sc_row_stride, sc_col_stride);
+
+    int pre_r, pre_c, pre_row_stride, pre_col_stride;
+    CellInfo* pre_cell_info = CHECK_NOTNULL(
+        preconditioner_->GetCell(i, i,
+                                 &pre_r, &pre_c,
+                                 &pre_row_stride, &pre_col_stride));
+    MatrixRef pre_m(pre_cell_info->values, pre_row_stride, pre_col_stride);
+
+    pre_m.block(pre_r, pre_c, block_size, block_size) =
+        sc_m.block(sc_r, sc_c, block_size, block_size);
+  }
+  preconditioner_->Invert();
+
+  VectorRef(solution, num_rows).setZero();
+
+  scoped_ptr<LinearOperator> lhs_adapter(
+      new BlockRandomAccessSparseMatrixAdapter(*sc));
+  scoped_ptr<LinearOperator> preconditioner_adapter(
+      new BlockRandomAccessDiagonalMatrixAdapter(*preconditioner_));
+
+
+  LinearSolver::Options cg_options;
+  cg_options.min_num_iterations = options().min_num_iterations;
+  cg_options.max_num_iterations = options().max_num_iterations;
+  ConjugateGradientsSolver cg_solver(cg_options);
+
+  LinearSolver::PerSolveOptions cg_per_solve_options;
+  cg_per_solve_options.r_tolerance = per_solve_options.r_tolerance;
+  cg_per_solve_options.q_tolerance = per_solve_options.q_tolerance;
+  cg_per_solve_options.preconditioner = preconditioner_adapter.get();
+
+  return cg_solver.Solve(lhs_adapter.get(),
+                         rhs(),
+                         cg_per_solve_options,
+                         solution);
+}
+
 }  // namespace internal
 }  // namespace ceres

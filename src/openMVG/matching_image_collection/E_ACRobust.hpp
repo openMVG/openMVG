@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "openMVG/types.hpp"
 #include "openMVG/multiview/solver_essential_kernel.hpp"
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
@@ -18,17 +19,17 @@ using namespace openMVG::robust;
 
 //-- A contrario Functor to filter putative corresponding points
 //--  thanks estimation of the essential matrix.
-//- Suppose that all image have the same K matrix
 struct GeometricFilter_EMatrix_AC
 {
   GeometricFilter_EMatrix_AC(
-    const Mat3 & K,
+    const std::map<IndexT, Mat3> & K,
     double dPrecision = std::numeric_limits<double>::infinity(),
     size_t iteration = 4096)
     : m_dPrecision(dPrecision), m_stIteration(iteration), m_K(K) {};
 
   /// Robust fitting of the ESSENTIAL matrix
   void Fit(
+    const std::pair<size_t, size_t> pairIndex,
     const Mat & xA,
     const std::pair<size_t, size_t> & imgSizeA,
     const Mat & xB,
@@ -36,6 +37,13 @@ struct GeometricFilter_EMatrix_AC
     std::vector<size_t> & vec_inliers) const
   {
     vec_inliers.clear();
+
+    std::map<IndexT, Mat3>::const_iterator
+      iterK_I = m_K.find(pairIndex.first),
+      iterK_J = m_K.find(pairIndex.second);
+    // Check that intrinsic parameters exist for this pair
+    if (iterK_I == m_K.end() || iterK_J == m_K.end() )
+      return;
 
     // Define the AContrario adapted Essential matrix solver
     typedef ACKernelAdaptorEssential<
@@ -47,7 +55,7 @@ struct GeometricFilter_EMatrix_AC
 
     KernelType kernel(xA, imgSizeA.first, imgSizeA.second,
                       xB, imgSizeB.first, imgSizeB.second,
-                      m_K, m_K);
+                      iterK_I->second, iterK_J->second);
 
     // Robustly estimate the Essential matrix with A Contrario ransac
     Mat3 E;
@@ -62,7 +70,7 @@ struct GeometricFilter_EMatrix_AC
 
   double m_dPrecision;  //upper_bound of the precision
   size_t m_stIteration; //maximal number of used iterations
-  Mat3 m_K; // the considered intrinsic matrix
+  std::map<IndexT, Mat3> m_K; // K intrinsic matrix per image index
 };
 
 }; // namespace openMVG

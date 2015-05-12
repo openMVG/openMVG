@@ -123,7 +123,7 @@ TEST(Translation_Structure_L_Infinity_Noisy, Outlier_OSICLP_SOLVER) {
           //  check were the measurement are noisy, the residual is important
           //if ((i != 0 && k != 0) || (i!=3 && k !=3))
           if ((i != 0 && k != 0) && (i!=3 && k !=3)) {
-            EXPECT_NEAR(0.0, residual, 1e-6);
+            EXPECT_NEAR(0.0, residual, 1e-5);
             xsum += residual;
           }
         }

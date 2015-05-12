@@ -39,7 +39,6 @@ bool bicgstab(const MatrixType& mat, const Rhs& rhs, Dest& x,
   int maxIters = iters;
 
   int n = mat.cols();
-  x = precond.solve(x);
   VectorType r  = rhs - mat * x;
   VectorType r0 = r;
   
@@ -61,6 +60,7 @@ bool bicgstab(const MatrixType& mat, const Rhs& rhs, Dest& x,
   VectorType s(n), t(n);
 
   RealScalar tol2 = tol*tol;
+  RealScalar eps2 = NumTraits<Scalar>::epsilon()*NumTraits<Scalar>::epsilon();
   int i = 0;
   int restarts = 0;
 
@@ -69,7 +69,7 @@ bool bicgstab(const MatrixType& mat, const Rhs& rhs, Dest& x,
     Scalar rho_old = rho;
 
     rho = r0.dot(r);
-    if (internal::isMuchSmallerThan(rho,r0_sqnorm))
+    if (abs(rho) < eps2*r0_sqnorm)
     {
       // The new residual vector became too orthogonal to the arbitrarily choosen direction r0
       // Let's restart with a new r0:
@@ -142,7 +142,7 @@ struct traits<BiCGSTAB<_MatrixType,_Preconditioner> >
   * SparseMatrix<double> A(n,n);
   * // fill A and b
   * BiCGSTAB<SparseMatrix<double> > solver;
-  * solver(A);
+  * solver.compute(A);
   * x = solver.solve(b);
   * std::cout << "#iterations:     " << solver.iterations() << std::endl;
   * std::cout << "estimated error: " << solver.error()      << std::endl;

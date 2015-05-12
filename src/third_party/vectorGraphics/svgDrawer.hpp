@@ -209,8 +209,8 @@ struct svgHisto
       iter != vec_value.end();
       ++iter)
     {
-      size_t dist = std::distance(vec_value.begin(), iter);
-      T val = *iter;
+      const size_t dist = std::distance(vec_value.begin(), iter);
+      const T val = *iter;
       std::ostringstream os;
       os << '(' << range.first + dist/float(n) * (range.second-range.first) << ',' << val << ')';
       svgStyle style = svgStyle().fill("blue").stroke("black", 1.0).tooltip(os.str());

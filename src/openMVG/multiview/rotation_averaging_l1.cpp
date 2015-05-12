@@ -344,12 +344,12 @@ typedef std::map<std::pair<size_t,size_t>, Matrix3x3> MapEdgeIJ2R;
 // Look for the maximum spanning tree along the graph of relative rotations
 // since we look for the maximum spanning tree using a minimum spanning tree algorithm
 // weight are negated.
-size_t FindMaximumSpanningTree(const std::vector<RelRotationData>& RelRs, graph_t& g, MapEdgeIJ2R& mapIJ2R, NodeArr& minGraph)
+size_t FindMaximumSpanningTree(const RelativeRotations& RelRs, graph_t& g, MapEdgeIJ2R& mapIJ2R, NodeArr& minGraph)
 {
   assert(!RelRs.empty());
 #ifdef HAVE_BOOST
   for (size_t p = 0; p < RelRs.size(); ++p) {
-    const RelRotationData& relR = RelRs[p];
+    const RelativeRotation& relR = RelRs[p];
     boost::add_edge(relR.i, relR.j, - relR.weight, g);
     mapIJ2R[std::make_pair(relR.i, relR.j)] = relR.Rij;
     mapIJ2R[std::make_pair(relR.j, relR.i)] = relR.Rij.transpose();
@@ -371,7 +371,7 @@ size_t FindMaximumSpanningTree(const std::vector<RelRotationData>& RelRs, graph_
   //A-- Compute the number of node we need
   std::set<size_t> setNodes;
   for (size_t p = 0; p < RelRs.size(); ++p) {
-    const RelRotationData& relR = RelRs[p];
+    const RelativeRotation& relR = RelRs[p];
     setNodes.insert(relR.i);
     setNodes.insert(relR.j);
   }
@@ -389,7 +389,7 @@ size_t FindMaximumSpanningTree(const std::vector<RelRotationData>& RelRs, graph_
   //C-- Create a graph from RelRs with weighted edges
   map_EdgeMap map_edgeMap(g);
   for (size_t p = 0; p < RelRs.size(); ++p) {
-    const RelRotationData& relR = RelRs[p];
+    const RelativeRotation& relR = RelRs[p];
     mapIJ2R[std::make_pair(relR.i, relR.j)] = relR.Rij;
     mapIJ2R[std::make_pair(relR.j, relR.i)] = relR.Rij.transpose();
 
@@ -420,7 +420,7 @@ size_t FindMaximumSpanningTree(const std::vector<RelRotationData>& RelRs, graph_
 // Filter the given relative rotations using the known global rotations
 // returns the number of inliers
 unsigned int FilterRelativeRotations(
-  const std::vector<RelRotationData>& RelRs,
+  const RelativeRotations& RelRs,
   const Matrix3x3Arr& Rs,
   float threshold,
   std::vector<bool> * vec_inliers)
@@ -430,7 +430,7 @@ unsigned int FilterRelativeRotations(
   // compute errors for each relative rotation
   std::vector<float> errors(RelRs.size());
   for(int r= 0; r<RelRs.size(); ++r) {
-    const RelRotationData& relR = RelRs[r];
+    const RelativeRotation& relR = RelRs[r];
     const Matrix3x3& Ri = Rs[relR.i];
     const Matrix3x3& Rj = Rs[relR.j];
     const Matrix3x3& Rij = relR.Rij;
@@ -461,7 +461,7 @@ unsigned int FilterRelativeRotations(
 //----------------------------------------------------------------
 
 
-REAL RelRotationAvgError(const std::vector<RelRotationData>& RelRs, const Matrix3x3Arr& Rs, REAL* pMin=NULL, REAL* pMax=NULL)
+REAL RelRotationAvgError(const RelativeRotations& RelRs, const Matrix3x3Arr& Rs, REAL* pMin=NULL, REAL* pMax=NULL)
 {
 #ifdef HAVE_BOOST
   boost::accumulators::accumulator_set<REAL,
@@ -471,7 +471,7 @@ REAL RelRotationAvgError(const std::vector<RelRotationData>& RelRs, const Matrix
       boost::accumulators::tag::max> > acc;
 
   for(int i=0; i < RelRs.size(); ++i) {
-    const RelRotationData& relR = RelRs[i];
+    const RelativeRotation& relR = RelRs[i];
     acc(openMVG::FrobeniusNorm(relR.Rij  - (Rs[relR.j]*Rs[relR.i].transpose())));
   }
   if (pMin)
@@ -482,7 +482,7 @@ REAL RelRotationAvgError(const std::vector<RelRotationData>& RelRs, const Matrix
 #else
   std::vector<REAL> vec_err(RelRs.size(), REAL(0.0));
   for(int i=0; i < RelRs.size(); ++i) {
-    const RelRotationData& relR = RelRs[i];
+    const RelativeRotation& relR = RelRs[i];
     vec_err[i] = openMVG::FrobeniusNorm(relR.Rij  - (Rs[relR.j]*Rs[relR.i].transpose()));
   }
   float min, max, mean, median;
@@ -501,7 +501,7 @@ REAL RelRotationAvgError(const std::vector<RelRotationData>& RelRs, const Matrix
 // "Efficient and Robust Large-Scale Rotation Averaging", Chatterjee and Govindu, 2013
 // and detect outliers relative rotations and return them with 0 in arrInliers
 bool GlobalRotationsRobust(
-  const std::vector<RelRotationData>& RelRs,
+  const RelativeRotations& RelRs,
   Matrix3x3Arr& Rs,
   const size_t nMainViewID,
   float threshold,
@@ -562,14 +562,14 @@ bool GlobalRotationsRobust(
 
 // build A in Ax=b
 inline void _FillMappingMatrix(
-  const std::vector<RelRotationData>& RelRs,
+  const RelativeRotations& RelRs,
   const size_t nMainViewID,
   Eigen::SparseMatrix<REAL,Eigen::ColMajor>& A)
 {
   A.reserve(A.rows()*2); // estimate of the number of non-zeros (optional)
   Eigen::SparseMatrix<REAL,Eigen::ColMajor>::Index i = 0, j = 0;
   for(int r=0; r<RelRs.size(); ++r) {
-    const RelRotationData& relR = RelRs[r];
+    const RelativeRotation& relR = RelRs[r];
     if (relR.i != nMainViewID) {
       j = 3*(relR.i<nMainViewID ? relR.i : relR.i-1);
       A.insert(i+0,j+0) = REAL(-1);
@@ -589,12 +589,12 @@ inline void _FillMappingMatrix(
 
 // compute errors for each relative rotation
 inline void _FillErrorMatrix(
-  const std::vector<RelRotationData>& RelRs,
+  const RelativeRotations& RelRs,
   const Matrix3x3Arr& Rs,
   Eigen::Matrix<REAL,Eigen::Dynamic,1>& b)
 {
   for (size_t r = 0; r < RelRs.size(); ++r) {
-    const RelRotationData& relR = RelRs[r];
+    const RelativeRotation& relR = RelRs[r];
     const Matrix3x3& Ri = Rs[relR.i];
     const Matrix3x3& Rj = Rs[relR.j];
     const Matrix3x3& Rij = relR.Rij;
@@ -627,7 +627,7 @@ inline void _CorrectMatrix(
 // "Efficient and Robust Large-Scale Rotation Averaging", Chatterjee and Govindu, 2013
 // L1 Rotation Averaging (L1RA) and Iteratively Reweighted Least Squares (IRLS) implementations combined
 bool RefineRotationsAvgL1IRLS(
-  const std::vector<RelRotationData>& RelRs,
+  const RelativeRotations& RelRs,
   Matrix3x3Arr& Rs,
   const size_t nMainViewID,
   REAL sigma)

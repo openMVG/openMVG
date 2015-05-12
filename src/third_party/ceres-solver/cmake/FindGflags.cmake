@@ -36,6 +36,11 @@
 # GFLAGS_FOUND: TRUE iff gflags is found.
 # GFLAGS_INCLUDE_DIRS: Include directories for gflags.
 # GFLAGS_LIBRARIES: Libraries required to link gflags.
+# GFLAGS_NAMESPACE: The namespace in which gflags is defined.  In versions of
+#                   gflags < 2.1, this was google, for versions >= 2.1 it is
+#                   by default gflags, although can be configured when building
+#                   gflags to be something else (i.e. google for legacy
+#                   compatibility).
 #
 # The following variables control the behaviour of this module:
 #
@@ -67,6 +72,7 @@ MACRO(GFLAGS_REPORT_NOT_FOUND REASON_MSG)
   UNSET(GFLAGS_FOUND)
   UNSET(GFLAGS_INCLUDE_DIRS)
   UNSET(GFLAGS_LIBRARIES)
+  UNSET(GFLAGS_NAMESPACE)
   # Make results of search visible in the CMake GUI if gflags has not
   # been found so that user does not have to toggle to advanced view.
   MARK_AS_ADVANCED(CLEAR GFLAGS_INCLUDE_DIR
@@ -128,6 +134,46 @@ ENDIF (NOT GFLAGS_LIBRARY OR
 # if called.
 SET(GFLAGS_FOUND TRUE)
 
+# Identify what namespace gflags was built with.
+IF (GFLAGS_INCLUDE_DIR)
+  # First try the (older) google namespace.
+  INCLUDE(CheckCXXSourceCompiles)
+  # Setup include path & link library for gflags for CHECK_CXX_SOURCE_COMPILES
+  SET(CMAKE_REQUIRED_INCLUDES ${GFLAGS_INCLUDE_DIR})
+  SET(CMAKE_REQUIRED_LIBRARIES ${GFLAGS_LIBRARY})
+  CHECK_CXX_SOURCE_COMPILES(
+    "#include <gflags/gflags.h>
+     int main(int argc, char * argv[]) {
+       google::ParseCommandLineFlags(&argc, &argv, true);
+       return 0;
+     }"
+     GFLAGS_IN_GOOGLE_NAMESPACE)
+  IF (GFLAGS_IN_GOOGLE_NAMESPACE)
+    SET(GFLAGS_NAMESPACE google)
+  ELSE (GFLAGS_IN_GOOGLE_NAMESPACE)
+    # Try (newer) gflags namespace instead.
+    #
+    # Setup include path & link library for gflags for CHECK_CXX_SOURCE_COMPILES
+    SET(CMAKE_REQUIRED_INCLUDES ${GFLAGS_INCLUDE_DIR})
+    SET(CMAKE_REQUIRED_LIBRARIES ${GFLAGS_LIBRARY})
+    CHECK_CXX_SOURCE_COMPILES(
+      "#include <gflags/gflags.h>
+       int main(int argc, char * argv[]) {
+         gflags::ParseCommandLineFlags(&argc, &argv, true);
+         return 0;
+       }"
+       GFLAGS_IN_GFLAGS_NAMESPACE)
+    IF (GFLAGS_IN_GFLAGS_NAMESPACE)
+      SET(GFLAGS_NAMESPACE gflags)
+    ENDIF (GFLAGS_IN_GFLAGS_NAMESPACE)
+  ENDIF (GFLAGS_IN_GOOGLE_NAMESPACE)
+
+  IF (NOT GFLAGS_NAMESPACE)
+    GFLAGS_REPORT_NOT_FOUND(
+      "Failed to determine gflags namespace, it is not google or gflags.")
+  ENDIF (NOT GFLAGS_NAMESPACE)
+ENDIF (GFLAGS_INCLUDE_DIR)
+
 # gflags does not seem to provide any record of the version in its
 # source tree, thus cannot extract version.
 
@@ -162,11 +208,12 @@ ENDIF (GFLAGS_FOUND)
 # Handle REQUIRED / QUIET optional arguments.
 INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(Gflags DEFAULT_MSG
-  GFLAGS_INCLUDE_DIRS GFLAGS_LIBRARIES)
+  GFLAGS_INCLUDE_DIRS GFLAGS_LIBRARIES GFLAGS_NAMESPACE)
 
 # Only mark internal variables as advanced if we found gflags, otherwise
 # leave them visible in the standard GUI for the user to set manually.
 IF (GFLAGS_FOUND)
   MARK_AS_ADVANCED(FORCE GFLAGS_INCLUDE_DIR
-                         GFLAGS_LIBRARY)
+                         GFLAGS_LIBRARY
+                         GFLAGS_NAMESPACE)
 ENDIF (GFLAGS_FOUND)

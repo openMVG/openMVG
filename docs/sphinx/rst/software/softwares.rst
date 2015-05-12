@@ -1,12 +1,7 @@
 ############################
-openMVG softwares
+openMVG softwares & tools
 ############################
   
-openMVG provide complete software pipeline
-=======================================
-
-They can perform:
-
 .. toctree::
   :maxdepth: 1
   

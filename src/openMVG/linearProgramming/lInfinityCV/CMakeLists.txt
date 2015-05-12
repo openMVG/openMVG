@@ -23,13 +23,14 @@ IF (MSVC)
 ENDIF (MSVC)
 
 ADD_LIBRARY(openMVG_lInftyComputerVision  ${lInftycomputervision_headers} ${lInftycomputervision_cpp})
+INSTALL(TARGETS openMVG_lInftyComputerVision DESTINATION lib/)
 
 SET(LOCAL_LIBS
   openMVG_multiview_test_data
   openMVG_multiview
   openMVG_lInftyComputerVision
   ${openMVG_linearProgramming})
-  
+
 # Linfinity Triangulation
 UNIT_TEST(openMVG_lInftyCV triangulation "${LOCAL_LIBS}")
 
@@ -39,6 +40,8 @@ UNIT_TEST(openMVG_lInftyCV resection_robust "${LOCAL_LIBS}")
 
 # Linfinity Global translations from triplets of heading directions
 UNIT_TEST(openMVG_lInftyCV global_translations_fromTriplets "${LOCAL_LIBS}")
+# Linfinity Global translations from heading directions
+UNIT_TEST(openMVG_lInftyCV global_translations_fromTij "${LOCAL_LIBS}")
 
 # Linfinity Translation and Structure 
 UNIT_TEST(openMVG_lInftyCV tijsAndXis "${LOCAL_LIBS}")

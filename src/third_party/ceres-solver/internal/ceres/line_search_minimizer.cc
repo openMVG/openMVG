@@ -103,7 +103,7 @@ void LineSearchMinimizer::Minimize(const Minimizer::Options& options,
   double start_time = WallTimeInSeconds();
   double iteration_start_time =  start_time;
 
-  Evaluator* evaluator = CHECK_NOTNULL(options.evaluator);
+  Evaluator* evaluator = CHECK_NOTNULL(options.evaluator.get());
   const int num_parameters = evaluator->NumParameters();
   const int num_effective_parameters = evaluator->NumEffectiveParameters();
 
@@ -375,7 +375,14 @@ void LineSearchMinimizer::Minimize(const Minimizer::Options& options,
         WallTimeInSeconds() - start_time
         + summary->preprocessor_time_in_seconds;
 
-    summary->iterations.push_back(iteration_summary);
+    summary->line_search_cost_evaluation_time_in_seconds +=
+        line_search_summary.cost_evaluation_time_in_seconds;
+    summary->line_search_gradient_evaluation_time_in_seconds +=
+        line_search_summary.gradient_evaluation_time_in_seconds;
+    summary->line_search_polynomial_minimization_time_in_seconds +=
+        line_search_summary.polynomial_minimization_time_in_seconds;
+    summary->line_search_total_time_in_seconds +=
+        line_search_summary.total_time_in_seconds;
     ++summary->num_successful_steps;
 
     if (iteration_summary.gradient_max_norm <= options.gradient_tolerance) {
@@ -401,6 +408,8 @@ void LineSearchMinimizer::Minimize(const Minimizer::Options& options,
       VLOG_IF(1, is_not_silent) << "Terminating: " << summary->message;
       break;
     }
+
+    summary->iterations.push_back(iteration_summary);
   }
 }
 

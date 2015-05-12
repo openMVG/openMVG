@@ -30,6 +30,9 @@ Bibliography
 .. [Chatterjee] **Efficient and Robust Large-Scale Rotation Averaging.**
     Avishek Chatterjee and Venu Madhav Govindu, ICCV 2013.
 
+.. [Kyle2014] **Robust Global Translations with 1DSfM.**
+    Kyle Wilson and Noah Snavely, ECCV 2014.
+
 .. [Martinec] **Robust Multiview Reconstruction.**
     Daniel Martinec, 2008.
     

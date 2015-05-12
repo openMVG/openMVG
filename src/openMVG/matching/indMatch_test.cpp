@@ -46,20 +46,24 @@ TEST(IndMatch, DuplicateRemoval)
 {
   std::vector<IndMatch> vec_indMatch;
 
-  vec_indMatch.push_back(IndMatch(0,1)); // 0
-  vec_indMatch.push_back(IndMatch(0,2)); // 1: error with addition 0
+  vec_indMatch.push_back(IndMatch(0,1));
+  vec_indMatch.push_back(IndMatch(0,1)); // Error defined before
 
-  vec_indMatch.push_back(IndMatch(1,1)); // 2: error with addition 0
-
-  vec_indMatch.push_back(IndMatch(2,3)); // 3
-  vec_indMatch.push_back(IndMatch(3,3)); // 4: error with addition 3
+  // Add some other matches
+  vec_indMatch.push_back(IndMatch(0,2));
+  vec_indMatch.push_back(IndMatch(1,1));
+  vec_indMatch.push_back(IndMatch(2,3));
+  vec_indMatch.push_back(IndMatch(3,3));
 
   EXPECT_TRUE(IndMatch::getDeduplicated(vec_indMatch));
-  // Two matches must remain (line 0 and 3)
-  EXPECT_EQ(2, vec_indMatch.size());
+  // Five matches must remain (one (0,1) must disappear)
+  EXPECT_EQ(5, vec_indMatch.size());
 
   EXPECT_EQ(IndMatch(0,1), vec_indMatch[0]);
-  EXPECT_EQ(IndMatch(2,3), vec_indMatch[1]);
+  EXPECT_EQ(IndMatch(0,2), vec_indMatch[1]);
+  EXPECT_EQ(IndMatch(1,1), vec_indMatch[2]);
+  EXPECT_EQ(IndMatch(2,3), vec_indMatch[3]);
+  EXPECT_EQ(IndMatch(3,3), vec_indMatch[4]);
 }
 
 

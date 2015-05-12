@@ -102,13 +102,13 @@ TEST(IndependentSetOrdering, Star) {
 }
 
 TEST(Degree2MaximumSpanningForest, PreserveWeights) {
-  Graph<int> graph;
+  WeightedGraph<int> graph;
   graph.AddVertex(0, 1.0);
   graph.AddVertex(1, 2.0);
   graph.AddEdge(0, 1, 0.5);
   graph.AddEdge(1, 0, 0.5);
 
-  scoped_ptr<Graph<int> > forest(Degree2MaximumSpanningForest(graph));
+  scoped_ptr<WeightedGraph<int> > forest(Degree2MaximumSpanningForest(graph));
 
   const HashSet<int>& vertices = forest->vertices();
   EXPECT_EQ(vertices.size(), 2);
@@ -119,7 +119,7 @@ TEST(Degree2MaximumSpanningForest, PreserveWeights) {
 }
 
 TEST(Degree2MaximumSpanningForest, StarGraph) {
-  Graph<int> graph;
+  WeightedGraph<int> graph;
   graph.AddVertex(0);
   graph.AddVertex(1);
   graph.AddVertex(2);
@@ -131,7 +131,7 @@ TEST(Degree2MaximumSpanningForest, StarGraph) {
   graph.AddEdge(0, 3, 3.0);
   graph.AddEdge(0, 4, 4.0);
 
-  scoped_ptr<Graph<int> > forest(Degree2MaximumSpanningForest(graph));
+  scoped_ptr<WeightedGraph<int> > forest(Degree2MaximumSpanningForest(graph));
   const HashSet<int>& vertices = forest->vertices();
   EXPECT_EQ(vertices.size(), 5);
 
@@ -176,8 +176,8 @@ TEST(VertexTotalOrdering, TotalOrdering) {
   //   |
   // 2-3
   // 0,1 and 2 have degree 1 and 3 has degree 2.
-  graph.AddEdge(0, 1, 1.0);
-  graph.AddEdge(2, 3, 1.0);
+  graph.AddEdge(0, 1);
+  graph.AddEdge(2, 3);
   VertexTotalOrdering<int> less_than(graph);
 
   for (int i = 0; i < 4; ++i) {

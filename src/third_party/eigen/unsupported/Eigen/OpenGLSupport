@@ -178,11 +178,11 @@ template<typename Scalar> void glLoadMatrix(const Transform<Scalar,3,Affine>& t)
 template<typename Scalar> void glLoadMatrix(const Transform<Scalar,3,Projective>& t)    { glLoadMatrix(t.matrix()); }
 template<typename Scalar> void glLoadMatrix(const Transform<Scalar,3,AffineCompact>& t) { glLoadMatrix(Transform<Scalar,3,Affine>(t).matrix()); }
 
-static void glRotate(const Rotation2D<float>& rot)
+inline void glRotate(const Rotation2D<float>& rot)
 {
   glRotatef(rot.angle()*180.f/float(M_PI), 0.f, 0.f, 1.f);
 }
-static void glRotate(const Rotation2D<double>& rot)
+inline void glRotate(const Rotation2D<double>& rot)
 {
   glRotated(rot.angle()*180.0/M_PI, 0.0, 0.0, 1.0);
 }
@@ -246,18 +246,18 @@ EIGEN_GL_FUNC1_SPECIALIZATION_MAT(glGet,GLenum,_,double, 4,4,Doublev)
 
 #ifdef GL_VERSION_2_0
 
-static void glUniform2fv_ei  (GLint loc, const float* v)         { glUniform2fv(loc,1,v); }
-static void glUniform2iv_ei  (GLint loc, const int* v)           { glUniform2iv(loc,1,v); }
+inline void glUniform2fv_ei  (GLint loc, const float* v)         { glUniform2fv(loc,1,v); }
+inline void glUniform2iv_ei  (GLint loc, const int* v)           { glUniform2iv(loc,1,v); }
 
-static void glUniform3fv_ei  (GLint loc, const float* v)         { glUniform3fv(loc,1,v); }
-static void glUniform3iv_ei  (GLint loc, const int* v)           { glUniform3iv(loc,1,v); }
+inline void glUniform3fv_ei  (GLint loc, const float* v)         { glUniform3fv(loc,1,v); }
+inline void glUniform3iv_ei  (GLint loc, const int* v)           { glUniform3iv(loc,1,v); }
 
-static void glUniform4fv_ei  (GLint loc, const float* v)         { glUniform4fv(loc,1,v); }
-static void glUniform4iv_ei  (GLint loc, const int* v)           { glUniform4iv(loc,1,v); }
+inline void glUniform4fv_ei  (GLint loc, const float* v)         { glUniform4fv(loc,1,v); }
+inline void glUniform4iv_ei  (GLint loc, const int* v)           { glUniform4iv(loc,1,v); }
 
-static void glUniformMatrix2fv_ei  (GLint loc, const float* v)         { glUniformMatrix2fv(loc,1,false,v); }
-static void glUniformMatrix3fv_ei  (GLint loc, const float* v)         { glUniformMatrix3fv(loc,1,false,v); }
-static void glUniformMatrix4fv_ei  (GLint loc, const float* v)         { glUniformMatrix4fv(loc,1,false,v); }
+inline void glUniformMatrix2fv_ei  (GLint loc, const float* v)         { glUniformMatrix2fv(loc,1,false,v); }
+inline void glUniformMatrix3fv_ei  (GLint loc, const float* v)         { glUniformMatrix3fv(loc,1,false,v); }
+inline void glUniformMatrix4fv_ei  (GLint loc, const float* v)         { glUniformMatrix4fv(loc,1,false,v); }
 
 
 EIGEN_GL_FUNC1_DECLARATION       (glUniform,GLint,const)
@@ -294,9 +294,9 @@ EIGEN_GL_FUNC1_SPECIALIZATION_MAT(glUniform,GLint,const,float,        4,3,Matrix
 
 #ifdef GL_VERSION_3_0
 
-static void glUniform2uiv_ei (GLint loc, const unsigned int* v)  { glUniform2uiv(loc,1,v); }
-static void glUniform3uiv_ei (GLint loc, const unsigned int* v)  { glUniform3uiv(loc,1,v); }
-static void glUniform4uiv_ei (GLint loc, const unsigned int* v)  { glUniform4uiv(loc,1,v); }
+inline void glUniform2uiv_ei (GLint loc, const unsigned int* v)  { glUniform2uiv(loc,1,v); }
+inline void glUniform3uiv_ei (GLint loc, const unsigned int* v)  { glUniform3uiv(loc,1,v); }
+inline void glUniform4uiv_ei (GLint loc, const unsigned int* v)  { glUniform4uiv(loc,1,v); }
 
 EIGEN_GL_FUNC1_SPECIALIZATION_VEC(glUniform,GLint,const,unsigned int, 2,2uiv_ei)
 EIGEN_GL_FUNC1_SPECIALIZATION_VEC(glUniform,GLint,const,unsigned int, 3,3uiv_ei)
@@ -305,9 +305,9 @@ EIGEN_GL_FUNC1_SPECIALIZATION_VEC(glUniform,GLint,const,unsigned int, 4,4uiv_ei)
 #endif
 
 #ifdef GL_ARB_gpu_shader_fp64
-static void glUniform2dv_ei  (GLint loc, const double* v)        { glUniform2dv(loc,1,v); }
-static void glUniform3dv_ei  (GLint loc, const double* v)        { glUniform3dv(loc,1,v); }
-static void glUniform4dv_ei  (GLint loc, const double* v)        { glUniform4dv(loc,1,v); }
+inline void glUniform2dv_ei  (GLint loc, const double* v)        { glUniform2dv(loc,1,v); }
+inline void glUniform3dv_ei  (GLint loc, const double* v)        { glUniform3dv(loc,1,v); }
+inline void glUniform4dv_ei  (GLint loc, const double* v)        { glUniform4dv(loc,1,v); }
 
 EIGEN_GL_FUNC1_SPECIALIZATION_VEC(glUniform,GLint,const,double,       2,2dv_ei)
 EIGEN_GL_FUNC1_SPECIALIZATION_VEC(glUniform,GLint,const,double,       3,3dv_ei)

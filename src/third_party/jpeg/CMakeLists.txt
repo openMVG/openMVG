@@ -10,6 +10,8 @@ endif ()
 CONFIGURE_FILE (jconfig.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config/jconfig.h)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/config/)
 
+# LINK_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/lib)
+
 SET (HEADERS jerror.h jmorecfg.h jpeglib.h ${CMAKE_CURRENT_BINARY_DIR}/config/jconfig.h)
 
 SET (SRC jmemnobs.c jaricom.c jcapimin.c jcapistd.c jcarith.c jccoefct.c jccolor.c 
@@ -24,5 +26,17 @@ IF(WIN32)
   ADD_DEFINITIONS( -DJPEGSTATIC -D_CRT_SECURE_NO_WARNINGS)
 ENDIF(WIN32)
 
-ADD_LIBRARY (jpeg ${SRC} ${HEADERS})
+ADD_LIBRARY (jpeg STATIC ${SRC} ${HEADERS})
+SET_PROPERTY(TARGET jpeg PROPERTY FOLDER OpenMVG/3rdParty)
 
+if(JPEG_INCLUDE_INSTALL_DIR)
+  set(INCLUDE_INSTALL_DIR ${JPEG_INCLUDE_INSTALL_DIR})
+else()
+  set(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include/jpeg")
+endif()
+
+install(FILES
+  ${HEADERS}
+  DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT Devel
+)
+INSTALL(TARGETS jpeg DESTINATION lib/)

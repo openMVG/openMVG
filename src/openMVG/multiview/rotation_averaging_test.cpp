@@ -70,10 +70,10 @@ TEST ( rotation_averaging, RotationLeastSquare_3_Camera)
   Mat3 R20 = RotationAroundZ(2.*M_PI/3.0); //120°
   Mat3 Id = Mat3::Identity();
 
-  std::vector<RelRotationData > vec_relativeRotEstimate;
-  vec_relativeRotEstimate.push_back( RelRotationData(0,1, R01));
-  vec_relativeRotEstimate.push_back( RelRotationData(1,2, R12));
-  vec_relativeRotEstimate.push_back( RelRotationData(2,0, R20));
+  std::vector<RelativeRotation > vec_relativeRotEstimate;
+  vec_relativeRotEstimate.push_back( RelativeRotation(0,1, R01));
+  vec_relativeRotEstimate.push_back( RelativeRotation(1,2, R12));
+  vec_relativeRotEstimate.push_back( RelativeRotation(2,0, R20));
 
   //- Solve the global rotation estimation problem :
   std::vector<Mat3> vec_globalR;
@@ -114,10 +114,10 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_SimpleTriplet)
   Mat3 Id = Mat3::Identity();
 
   // Setup the relative motions (relative rotations)
-  std::vector<RelRotationData> vec_relativeRotEstimate;
-  vec_relativeRotEstimate.push_back(RelRotationData(0, 1, R01, 1));
-  vec_relativeRotEstimate.push_back(RelRotationData(1, 2, R12, 1));
-  vec_relativeRotEstimate.push_back(RelRotationData(2, 0, R20, 1));
+  RelativeRotations vec_relativeRotEstimate;
+  vec_relativeRotEstimate.push_back(RelativeRotation(0, 1, R01, 1));
+  vec_relativeRotEstimate.push_back(RelativeRotation(1, 2, R12, 1));
+  vec_relativeRotEstimate.push_back(RelativeRotation(2, 0, R20, 1));
 
   //- Solve the global rotation estimation problem :
   Matrix3x3Arr vec_globalR(3);
@@ -153,7 +153,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph)
     nViewDatasetConfigurator(1,1,0,0,5,0)); // Suppose a camera with Unit matrix as K
 
   //Link each camera to the two next ones
-  std::vector<RelRotationData> vec_relativeRotEstimate;
+  RelativeRotations vec_relativeRotEstimate;
   for (size_t i = 0; i < iNviews; ++i)
   {
     size_t index0 = i;
@@ -165,13 +165,13 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph)
     Mat3 Rrel;
     Vec3 trel;
     RelativeCameraMotion(d._R[index0], d._t[index0], d._R[index1], d._t[index1], &Rrel, &trel);
-    vec_relativeRotEstimate.push_back(RelRotationData(index0, index1, Rrel, 1));
+    vec_relativeRotEstimate.push_back(RelativeRotation(index0, index1, Rrel, 1));
 
     RelativeCameraMotion(d._R[index1], d._t[index1], d._R[index2], d._t[index2], &Rrel, &trel);
-    vec_relativeRotEstimate.push_back(RelRotationData(index1, index2, Rrel, 1));
+    vec_relativeRotEstimate.push_back(RelativeRotation(index1, index2, Rrel, 1));
 
     RelativeCameraMotion(d._R[index0], d._t[index0], d._R[index2], d._t[index2], &Rrel, &trel);
-    vec_relativeRotEstimate.push_back(RelRotationData(index0, index2, Rrel, 1));
+    vec_relativeRotEstimate.push_back(RelativeRotation(index0, index2, Rrel, 1));
   }
 
   //- Solve the global rotation estimation problem :
@@ -214,7 +214,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
     nViewDatasetConfigurator(1,1,0,0,5,0)); // Suppose a camera with Unit matrix as K
 
   //Link each camera to the two next ones
-  std::vector<RelRotationData> vec_relativeRotEstimate;
+  RelativeRotations vec_relativeRotEstimate;
   std::vector<std::pair<size_t,size_t> > vec_unique;
   for (size_t i = 0; i < iNviews; ++i)
   {
@@ -232,7 +232,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
       && std::find(vec_unique.begin(), vec_unique.end(), std::make_pair(index1, index0)) == vec_unique.end())
     {
       RelativeCameraMotion(d._R[index0], d._t[index0], d._R[index1], d._t[index1], &Rrel, &trel);
-      vec_relativeRotEstimate.push_back(RelRotationData(index0, index1, Rrel, 1));
+      vec_relativeRotEstimate.push_back(RelativeRotation(index0, index1, Rrel, 1));
       vec_unique.push_back(make_pair(index0, index1));
     }
 
@@ -240,7 +240,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
       && std::find(vec_unique.begin(), vec_unique.end(), std::make_pair(index2, index1)) == vec_unique.end())
     {
       RelativeCameraMotion(d._R[index1], d._t[index1], d._R[index2], d._t[index2], &Rrel, &trel);
-      vec_relativeRotEstimate.push_back(RelRotationData(index1, index2, Rrel, 1));
+      vec_relativeRotEstimate.push_back(RelativeRotation(index1, index2, Rrel, 1));
       vec_unique.push_back(make_pair(index1, index2));
     }
 
@@ -248,7 +248,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
       && std::find(vec_unique.begin(), vec_unique.end(), std::make_pair(index2, index0)) == vec_unique.end())
     {
       RelativeCameraMotion(d._R[index0], d._t[index0], d._R[index2], d._t[index2], &Rrel, &trel);
-      vec_relativeRotEstimate.push_back(RelRotationData(index0, index2, Rrel, 1));
+      vec_relativeRotEstimate.push_back(RelativeRotation(index0, index2, Rrel, 1));
       vec_unique.push_back(make_pair(index0, index2));
     }
   }
@@ -258,9 +258,9 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
   for (size_t i = 0; i < vec_relativeRotEstimate.size(); ++i)
   {
     if( vec_relativeRotEstimate[i].i == 0 && vec_relativeRotEstimate[i].j == 1)
-      vec_relativeRotEstimate[i] = RelRotationData(0, 1, RotationAroundX(D2R(0.1)), 0.5);
+      vec_relativeRotEstimate[i] = RelativeRotation(0, 1, RotationAroundX(D2R(0.1)), 0.5);
     if( vec_relativeRotEstimate[i].i == 2 && vec_relativeRotEstimate[i].j == 3)
-      vec_relativeRotEstimate[i] = RelRotationData(2, 3, RotationAroundX(D2R(0.6)), 0.5);
+      vec_relativeRotEstimate[i] = RelativeRotation(2, 3, RotationAroundX(D2R(0.6)), 0.5);
   }
 
   //- Solve the global rotation estimation problem :
@@ -282,7 +282,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
   CHECK(vec_inliers[3] == 0);
 
   // Remove outliers and refine
-  std::vector<RelRotationData> vec_relativeRotEstimateTemp;
+  RelativeRotations vec_relativeRotEstimateTemp;
   for (size_t i = 0; i < vec_inliers.size(); ++i)
   {
     if( vec_inliers[i] == 1)

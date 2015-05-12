@@ -75,7 +75,7 @@ class CanonicalViewsTest : public ::testing::Test {
     ComputeCanonicalViewsClustering(options_, graph_, &centers_, &membership_);
   }
 
-  Graph<int> graph_;
+  WeightedGraph<int> graph_;
 
   CanonicalViewsClusteringOptions options_;
   vector<int> centers_;

@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2010, 2011, 2012 Google Inc. All rights reserved.
+// Copyright 2014 Google Inc. All rights reserved.
 // http://code.google.com/p/ceres-solver/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -127,8 +127,8 @@ MATCHER_P(IsNearQuaternion, expected, "") {
 }
 
 // Use as:
-// double expected_axis_angle[4];
-// double actual_axis_angle[4];
+// double expected_axis_angle[3];
+// double actual_axis_angle[3];
 // EXPECT_THAT(actual_axis_angle, IsNearAngleAxis(expected_axis_angle));
 MATCHER_P(IsNearAngleAxis, expected, "") {
   if (arg == NULL) {
@@ -136,14 +136,36 @@ MATCHER_P(IsNearAngleAxis, expected, "") {
     return false;
   }
 
-  for (int i = 0; i < 3; i++) {
-    if (fabs(arg[i] - expected[i]) > kTolerance) {
-      *result_listener << "component " << i << " should be " << expected[i];
-      return false;
+  Eigen::Vector3d a(arg[0], arg[1], arg[2]);
+  Eigen::Vector3d e(expected[0], expected[1], expected[2]);
+  const double e_norm = e.norm();
+
+  double delta_norm = std::numeric_limits<double>::max();
+  if (e_norm > 0) {
+    // Deal with the sign ambiguity near PI. Since the sign can flip,
+    // we take the smaller of the two differences.
+    if (fabs(e_norm - kPi) < kLooseTolerance) {
+      delta_norm = std::min((a - e).norm(), (a + e).norm()) / e_norm;
+    } else {
+      delta_norm = (a - e).norm() / e_norm;
     }
+  } else {
+    delta_norm = a.norm();
   }
 
-  return true;
+  if (delta_norm <= kLooseTolerance) {
+    return true;
+  }
+
+  *result_listener << " arg:"
+                   << " " << arg[0]
+                   << " " << arg[1]
+                   << " " << arg[2]
+                   << " was expected to be:"
+                   << " " << expected[0]
+                   << " " << expected[1]
+                   << " " << expected[2];
+  return false;
 }
 
 // Use as:
@@ -432,7 +454,7 @@ TEST(Rotation, NearPiAngleAxisRoundTrip) {
     norm = sqrt(norm);
 
     // Angle in [pi - kMaxSmallAngle, pi).
-    const double kMaxSmallAngle = 1e-2;
+    const double kMaxSmallAngle = 1e-8;
     double theta = kPi - kMaxSmallAngle * RandDouble();
 
     for (int i = 0; i < 3; i++) {
@@ -440,10 +462,7 @@ TEST(Rotation, NearPiAngleAxisRoundTrip) {
     }
     AngleAxisToRotationMatrix(in_axis_angle, matrix);
     RotationMatrixToAngleAxis(matrix, out_axis_angle);
-
-    for (int i = 0; i < 3; ++i) {
-      EXPECT_NEAR(out_axis_angle[i], in_axis_angle[i], kLooseTolerance);
-    }
+    EXPECT_THAT(in_axis_angle, IsNearAngleAxis(out_axis_angle));
   }
 }
 
@@ -480,7 +499,7 @@ TEST(Rotation, AtPiAngleAxisRoundTrip) {
     }
   }
   LOG(INFO) << "Rotation:";
-  LOG(INFO) << "EXPECTED      |        ACTUAL";
+  LOG(INFO) << "EXPECTED        |        ACTUAL";
   for (int i = 0; i < 3; ++i) {
     string line;
     for (int j = 0; j < 3; ++j) {
@@ -1053,6 +1072,56 @@ TEST(MatrixAdapter, ColumnMajor2x4IsCorrect) {
   M(1, 0) = 5; M(1, 1) = 6; M(1, 2) = 7; M(1, 3) = 8;
   for (int k = 0; k < 8; ++k) {
     EXPECT_EQ(array[k], expected[k]);
+  }
+}
+
+TEST(RotationMatrixToAngleAxis, NearPiExampleOneFromTobiasStrauss) {
+  // Example from Tobias Strauss
+  const double rotation_matrix[] = {
+    -0.999807135425239,    -0.0128154391194470,   -0.0148814136745799,
+    -0.0128154391194470,   -0.148441438622958,     0.988838158557669,
+    -0.0148814136745799,    0.988838158557669,     0.148248574048196
+  };
+
+  double angle_axis[3];
+  RotationMatrixToAngleAxis(RowMajorAdapter3x3(rotation_matrix), angle_axis);
+  double round_trip[9];
+  AngleAxisToRotationMatrix(angle_axis, RowMajorAdapter3x3(round_trip));
+  EXPECT_THAT(rotation_matrix, IsNear3x3Matrix(round_trip));
+}
+
+void CheckRotationMatrixToAngleAxisRoundTrip(const double theta,
+                                             const double phi,
+                                             const double angle) {
+  double angle_axis[3];
+  angle_axis[0] = angle * sin(phi) * cos(theta);
+  angle_axis[1] = angle * sin(phi) * sin(theta);
+  angle_axis[2] = angle * cos(phi);
+
+  double rotation_matrix[9];
+  AngleAxisToRotationMatrix(angle_axis, rotation_matrix);
+
+  double angle_axis_round_trip[3];
+  RotationMatrixToAngleAxis(rotation_matrix, angle_axis_round_trip);
+  EXPECT_THAT(angle_axis_round_trip, IsNearAngleAxis(angle_axis));
+}
+
+TEST(RotationMatrixToAngleAxis, ExhaustiveRoundTrip) {
+  const double kMaxSmallAngle = 1e-8;
+  const int kNumSteps = 1000;
+  for (int i = 0; i < kNumSteps; ++i) {
+    const double theta = static_cast<double>(i) / kNumSteps * 2.0 * kPi;
+    for (int j = 0; j < kNumSteps; ++j) {
+      const double phi = static_cast<double>(j) / kNumSteps * kPi;
+      // Rotations of angle Pi.
+      CheckRotationMatrixToAngleAxisRoundTrip(theta, phi, kPi);
+      // Rotation of angle approximately Pi.
+      CheckRotationMatrixToAngleAxisRoundTrip(
+          theta, phi, kPi - kMaxSmallAngle * RandDouble());
+      // Rotations of angle approximately zero.
+      CheckRotationMatrixToAngleAxisRoundTrip(
+          theta, phi, kMaxSmallAngle * 2.0 * RandDouble() - 1.0);
+    }
   }
 }
 

@@ -1,8 +1,137 @@
 .. _chapter-version-history:
 
-========
-Releases
-========
+===============
+Version History
+===============
+
+1.10.0
+======
+
+New Features
+------------
+#. Ceres Solver can now be used to solve general unconstrained
+   optimization problems. See the documentation for
+   ``GradientProblem`` and ``GradientProblemSolver``.
+#. ``Eigen`` can now be as a sparse linear algebra backend. This can
+   be done by setting
+   ``Solver::Options::sparse_linear_algebra_library_type`` to
+   ``EIGEN_SPARSE``. Performance should be comparable to ``CX_SPARSE``.
+
+   .. NOTE::
+
+      Because ``Eigen`` is a header only library, and some of the code
+      related to sparse Cholesky factorization is LGPL, building Ceres
+      with support for Eigen's sparse linear algebra is disabled by
+      default and should be enabled explicitly.
+
+   .. NOTE::
+
+      For good performance, use Eigen version 3.2.2 or later.
+
+#. Added ``EIGEN_SPARSE_QR`` algorithm for covariance estimation using
+   ``Eigen``'s sparse QR factorization. (Michael Vitus)
+#. Faster inner iterations when using multiple threads.
+#. Faster ``ITERATIVE_SCHUR`` + ``SCHUR_JACOBI`` for small to medium
+   sized problems (see documentation for
+   ``Solver::Options::use_explicit_schur_complement``).
+#. Faster automatic Schur ordering.
+#. Reduced memory usage when solving problems with dynamic sparsity.
+#. ``CostFunctionToFunctor`` now supports dynamic number of residuals.
+#. A complete re-write of the problem preprocessing phase.
+#. ``Solver::Summary::FullReport`` now reports the build configuration
+   for Ceres.
+#. When building on Android, the ``NDK`` version detection logic has
+   been improved.
+#. The ``CERES_VERSION`` macro has been improved and replaced with the
+   ``CERES_VERSION_STRING`` macro.
+#. Added ``Solver::Options::IsValid`` which allows users to validate
+   their solver configuration before calling ``Solve``.
+#. Added ``Problem::GetCostFunctionForResidualBlock`` and
+   ``Problem::GetLossFunctionForResidualBlock``.
+#. Added Tukey's loss function. (Michael Vitus)
+#. Added RotationMatrixToQuaternion
+#. Compute & report timing information for line searches.
+#. Autodetect gflags namespace.
+#. Expanded ``more_garbow_hillstrom.cc``.
+#. Added a pointer to Tal Ben-Nun's MSVC wrapper to the docs.
+#. Added the ``<2,3,6>`` Schur template specialization. (Alessandro
+   Dal Grande)
+
+Backward Incompatible API Changes
+---------------------------------
+#. ``NumericDiffFunctor`` has been removed. It's API was broken, and
+   the implementation was an unnecessary layer of abstraction over
+   ``CostFunctionToFunctor``.
+#. ``POLAK_RIBIRERE`` conjugate gradients direction type has been
+   renamed to ``POLAK_RIBIERE``.
+#. ``Solver::Options::solver_log`` has been removed. If needed this
+   iteration callback can easily be implemented in user code.
+#. The ``SPARSE_CHOLESKY`` algorithm for covariance estimation has
+   been removed. It is not rank revealing and numerically poorly
+   behaved. Sparse QR factorization is a much better way to do this.
+#. The ``SPARSE_QR`` algorithm for covariance estimation has been
+   renamed to ``SUITE_SPARSE_QR`` to be consistent with
+   ``EIGEN_SPARSE_QR``.
+#. ``Solver::Summary::preconditioner_type`` has been replaced with
+   ``Solver::Summary::preconditioner_type_given`` and
+   ``Solver::Summary::preconditioner_type_used`` to be more consistent
+   with how information about the linear solver is communicated.
+#. ``CERES_VERSION`` and ``CERES_ABI_VERSION`` macros were not
+   terribly useful. They have been replaced with
+   ``CERES_VERSION_MAJOR``, ``CERES_VERSION_MINOR`` ,
+   ``CERES_VERSION_REVISION`` and ``CERES_VERSION_ABI`` macros. In
+   particular the functionality of ``CERES_VERSION`` is provided by
+   ``CERES_VERSION_STRING`` macro.
+
+Bug Fixes
+---------
+#. Do not try the gradient step if TR step line search fails.
+#. Fix missing include in libmv_bundle_adjuster on OSX.
+#. Conditionally log evaluation failure warnings.
+#. Runtime uses four digits after the decimal in Summary:FullReport.
+#. Better options checking for TrustRegionMinimizer.
+#. Fix RotationMatrixToAngleAxis when the angle of rotation is near
+   PI. (Tobias Strauss)
+#. Sometimes gradient norm based convergence would miss a step with a
+   substantial solution quality improvement. (Rodney Hoskinson)
+#. Ignore warnings from within Eigen/SparseQR (3.2.2).
+#. Fix empty Cache HELPSTRING parsing error on OS X 10.10 Yosemite.
+#. Fix a formatting error TrustRegionMinimizer logging.
+#. Add an explicit include for local_parameterization.h (cooordz)
+#. Fix a number of typos in the documentation (Martin Baeuml)
+#. Made the logging in TrustRegionMinimizer consistent with
+   LineSearchMinimizer.
+#. Fix some obsolete documentation in CostFunction::Evaluate.
+#. Fix CG solver options for ITERATIVE_SCHUR, which did not copy
+   min_num_iterations (Johannes Schönberger)
+#. Remove obsolete include of numeric_diff_functor.h. (Martin Baeuml)
+#. Fix max. linear solver iterations in ConjugateGradientsSolver
+   (Johannes Schönberger)
+#. Expand check for lack of a sparse linear algebra library. (Michael
+   Samples and Domink Reitzle)
+#. Fix Eigen Row/ColMajor bug in NumericDiffCostFunction. (Dominik
+   Reitzle)
+#. Fix crash in Covariance if # threads > 1 requested without OpenMP.
+#. Fixed Malformed regex. (Björn Piltz)
+#. Fixed MSVC error C2124: divide or mod by zero. (Björn Piltz)
+#. Add missing #include of <limits> for loss functions.
+#. Make canned loss functions more robust.
+#. Fix type of suppressed compiler warning for Eigen 3.2.0.
+#. Suppress unused variable warning from Eigen 3.2.0.
+#. Add "make install" to the install instructions.
+#. Correct formula in documentation of
+   Solver::Options::function_tolerance. (Alessandro Gentilini)
+#. Add release flags to iOS toolchain.
+#. Fix a broken hyperlink in the documentation. (Henrique Mendonca)
+#. Add fixes for multiple definitions of ERROR on Windows to docs.
+#. Compile miniglog into Ceres if enabled on all platforms.
+#. Add two missing files to Android.mk (Greg Coombe)
+#. Fix Cmake error when using miniglog. (Greg Coombe)
+#. Don't build miniglog unconditionally as a static library (Björn Piltz)
+#. Added a missing include. (Björn Piltz)
+#. Conditionally disable SparseNormalCholesky.
+#. Fix a memory leak in program_test.cc.
+
 
 1.9.0
 =====
@@ -778,4 +907,16 @@ Bug Fixes
 1.0.0
 =====
 
-Initial Release. Nathan Wiegand contributed to the Mac OSX port.
+Initial open source release. Nathan Wiegand contributed to the Mac OSX
+port.
+
+
+Origins
+=======
+
+Ceres Solver grew out of the need for general least squares solving at
+Google. In early 2010, Sameer Agarwal and Fredrik Schaffalitzky
+started the development of Ceres Solver. Fredrik left Google shortly
+thereafter and Keir Mierle stepped in to take his place. After two
+years of on-and-off development, Ceres Solver was released as open
+source in May of 2012.

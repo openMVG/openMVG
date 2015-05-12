@@ -47,6 +47,9 @@ TARGET_LINK_LIBRARIES(helloworld_analytic_diff ceres)
 ADD_EXECUTABLE(curve_fitting curve_fitting.cc)
 TARGET_LINK_LIBRARIES(curve_fitting ceres)
 
+ADD_EXECUTABLE(rosenbrock rosenbrock.cc)
+TARGET_LINK_LIBRARIES(rosenbrock ceres)
+
 ADD_EXECUTABLE(curve_fitting_c curve_fitting.c)
 TARGET_LINK_LIBRARIES(curve_fitting_c ceres)
 # As this is a C file #including <math.h> we have to explicitly add the math
@@ -67,6 +70,11 @@ ADD_EXECUTABLE(simple_bundle_adjuster
 TARGET_LINK_LIBRARIES(simple_bundle_adjuster ceres)
 
 IF (GFLAGS)
+  # The CERES_GFLAGS_NAMESPACE compile definition is NOT stored in
+  # CERES_COMPILE_OPTIONS (and thus config.h) as Ceres itself does not
+  # require gflags, only the tests and examples do.
+  ADD_DEFINITIONS(-DCERES_GFLAGS_NAMESPACE=${GFLAGS_NAMESPACE})
+
   ADD_EXECUTABLE(powell powell.cc)
   TARGET_LINK_LIBRARIES(powell ceres ${GFLAGS_LIBRARIES})
 

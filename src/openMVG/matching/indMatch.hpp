@@ -8,6 +8,8 @@
 #ifndef OPENMVG_MATCHING_IND_MATCH_H
 #define OPENMVG_MATCHING_IND_MATCH_H
 
+#include "openMVG/types.hpp"
+
 #include <iostream>
 #include <set>
 #include <map>
@@ -20,7 +22,7 @@ namespace matching {
 /// A sort operator exist in order to remove duplicates of IndMatch series.
 struct IndMatch
 {
-  IndMatch(size_t i = 0, size_t j = 0)  {
+  IndMatch(IndexT i = 0, IndexT j = 0)  {
     _i = i;
     _j = j;
   }
@@ -35,38 +37,42 @@ struct IndMatch
 
   // Lexicographical ordering of matches. Used to remove duplicates.
   friend bool operator<(const IndMatch& m1, const IndMatch& m2) {
-    if (m1._i < m2._i)
-      return m1._j < m2._j;
-    else
-      if (m1._i > m2._i)
-        return m1._j < m2._j;
-    return m1._i < m2._i;
+    return (m1._i < m2._i || (m1._i == m2._i && m1._j < m2._j));
   }
 
-  /// Remove duplicates (same _i or _j that appears multiple times)
+  /// Remove duplicates ((_i, _j) that appears multiple times)
   static bool getDeduplicated(std::vector<IndMatch> & vec_match){
 
-    size_t sizeBefore = vec_match.size();
+    const size_t sizeBefore = vec_match.size();
     std::set<IndMatch> set_deduplicated( vec_match.begin(), vec_match.end());
     vec_match.assign(set_deduplicated.begin(), set_deduplicated.end());
     return sizeBefore != vec_match.size();
   }
 
-  size_t _i, _j;  // Left, right index
+  IndexT _i, _j;  // Left, right index
 };
 
 static std::ostream& operator<<(std::ostream & out, const IndMatch & obj) {
-  return out << obj._i << " " << obj._j << std::endl;
+  return out << obj._i << " " << obj._j;
 }
 
 static inline std::istream& operator>>(std::istream & in, IndMatch & obj) {
   return in >> obj._i >> obj._j;
 }
 
+typedef std::vector<matching::IndMatch> IndMatches;
 //--
-// Pairwise matches (indexed matches for a pair <I,J>)
+/// Pairwise matches (indexed matches for a pair <I,J>)
 /// The structure used to store corresponding point indexes per images pairs
-typedef std::map< std::pair<size_t, size_t>, std::vector<matching::IndMatch> > PairWiseMatches;
+typedef std::map< Pair, IndMatches > PairWiseMatches;
+
+static Pair_Set getPairs(const PairWiseMatches & matches)
+{
+  Pair_Set pairs;
+  for(PairWiseMatches::const_iterator it = matches.begin(); it != matches.end(); ++it)
+    pairs.insert(it->first);
+  return pairs;
+}
 
 }  // namespace matching
 }  // namespace openMVG

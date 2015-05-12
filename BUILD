@@ -19,18 +19,9 @@ $ cd openMVG
 $ git submodule init
 $ git submodule update
 
-------------------------------------
-Using as library dependency in cmake
-------------------------------------
-Adding following lines to your CMakeLists.txt should provide OpenMVG usable as
-static library:
-
- add_subdirectory(openMVG/src)
- include_directories(${OpenMVG_INCLUDES})
- target_link_libraries(target ${OpenMVG_LIBS})
-
-Information about required dependencies, standalone build and platform 
-specificity can be found below.
+As openMVG use some C++11 features you must have a c++11 ready compiler:
+- Visual studio >= 2013
+- GCC >= 4.7
 
 --------------------------
 General informations
@@ -45,7 +36,7 @@ Linux compilation
 -----------------
 
 Setup the required external library.
-* sudo apt-get install libpng-dev libjpeg-dev libxxf86vm1 libxxf86vm-dev libxi-dev libxrandr-dev
+* sudo apt-get install libpng-dev libjpeg-dev libtiff-dev libxxf86vm1 libxxf86vm-dev libxi-dev libxrandr-dev
 
  $ git clone --recursive https://github.com/openMVG/openMVG.git
  $ cd openMVG
@@ -58,8 +49,8 @@ Setup the required external library.
 If you want enable unit tests and examples to the build:
  $ cmake -DCMAKE_BUILD_TYPE=RELEASE -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src/
 
-=> In order to use the MOSEK 6 backend for the linear programming openMVG module
-  - Check that you have an uptodate MOSEK licence, else openMVG MOSEK unit test will fail.
+=> In order to use the MOSEK 6 back-end for the linear programming openMVG module
+  - Check that you have an up-to-date MOSEK licence, else openMVG MOSEK unit test will fail.
 
  $ cmake -DCMAKE_BUILD_TYPE=RELEASE
     -DMOSEK_SEARCH_HEADER="~/Documents/Lib/mosek/6/tools/platform/linux64x86/h"
@@ -112,4 +103,24 @@ Mac compilation
 If you want enable unit tests and examples to the build:
  $ cmake -DCMAKE_BUILD_TYPE=RELEASE -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -G "Xcode" . ../openMVG/src/
  $ xcodebuild -configuration Release
+
+ 
+ --------------------
+ Using openCV sample
+ --------------------
+ Add -DOpenMVG_USE_OPENCV=ON to your cmake command line and set OpenCV_DIR variable to your openCV build directory
+=> i.e.: -DOpenCV_DIR="/home/user/Dev/github/itseez/opencv_Build" -DOpenMVG_USE_OPENCV=ON
+ 
+------------------------------------
+Using as library dependency in cmake
+------------------------------------
+Adding following lines to your CMakeLists.txt should provide OpenMVG usable as
+static library:
+
+ add_subdirectory(openMVG/src)
+ include_directories(${OpenMVG_INCLUDES})
+ target_link_libraries(target ${OpenMVG_LIBS})
+
+Information about required dependencies, standalone build and platform 
+specificity can be found below.
 

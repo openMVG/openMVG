@@ -313,7 +313,7 @@ namespace Eigen {
       using std::abs;
       using std::sqrt;
       const Index dim=m_S.cols();
-      if (abs(m_S.coeff(i+1,i)==Scalar(0)))
+      if (abs(m_S.coeff(i+1,i))==Scalar(0))
         return;
       Index z = findSmallDiagEntry(i,i+1);
       if (z==i-1)

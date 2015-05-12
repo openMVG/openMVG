@@ -39,6 +39,7 @@
 #include "ceres/internal/eigen.h"
 #include "ceres/internal/scoped_ptr.h"
 #include "ceres/local_parameterization.h"
+#include "ceres/loss_function.h"
 #include "ceres/map_util.h"
 #include "ceres/parameter_block.h"
 #include "ceres/program.h"
@@ -340,6 +341,30 @@ TEST(Problem, ReusedCostFunctionsAreOnlyDeletedOnce) {
 
   // Check that the destructor was called only once.
   CHECK_EQ(num_destructions, 1);
+}
+
+TEST(Problem, GetCostFunctionForResidualBlock) {
+  double x[3];
+  Problem problem;
+  CostFunction* cost_function = new UnaryCostFunction(2, 3);
+  const ResidualBlockId residual_block =
+      problem.AddResidualBlock(cost_function, NULL, x);
+  EXPECT_EQ(problem.GetCostFunctionForResidualBlock(residual_block),
+            cost_function);
+  EXPECT_TRUE(problem.GetLossFunctionForResidualBlock(residual_block) == NULL);
+}
+
+TEST(Problem, GetLossFunctionForResidualBlock) {
+  double x[3];
+  Problem problem;
+  CostFunction* cost_function = new UnaryCostFunction(2, 3);
+  LossFunction* loss_function = new TrivialLoss();
+  const ResidualBlockId residual_block =
+      problem.AddResidualBlock(cost_function, loss_function, x);
+  EXPECT_EQ(problem.GetCostFunctionForResidualBlock(residual_block),
+            cost_function);
+  EXPECT_EQ(problem.GetLossFunctionForResidualBlock(residual_block),
+            loss_function);
 }
 
 TEST(Problem, CostFunctionsAreDeletedEvenWithRemovals) {

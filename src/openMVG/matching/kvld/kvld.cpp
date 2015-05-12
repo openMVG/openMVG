@@ -18,6 +18,7 @@ the terms of the BSD license ( see the COPYING file).
 #include <openMVG/image/image.hpp>
 
 using namespace std;
+using namespace openMVG;
 
 ImageScale::ImageScale( const Image< float >& I, double r )
 {
@@ -34,7 +35,7 @@ ImageScale::ImageScale( const Image< float >& I, double r )
   GradAndNorm( I, angles[ 0 ], magnitudes[ 0 ] );
   ratios[ 0 ] = 1;
 
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for
 #endif
   for( int k = 1; k < number; k++ )
@@ -63,15 +64,15 @@ void ImageScale::GradAndNorm( const Image< float >& I, Image< float >& angle, Im
   m = Image< float >( I.Width(), I.Height() );
   angle.fill( 0 );
   m.fill( 0 );
-#ifdef USE_OPENMP
+#ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for
 #endif
+  for( int y = 1; y < I.Height() - 1; y++ )
+  {
   for( int x = 1; x < I.Width() - 1; x++ )
   {
-    for( int y = 1; y < I.Height() - 1; y++ )
-    {
-      float gx = I( y, x + 1 ) - I( y, x - 1 );
-      float gy = I( y + 1, x ) - I( y - 1, x );
+      const float gx = I( y, x + 1 ) - I( y, x - 1 );
+      const float gy = I( y + 1, x ) - I( y - 1, x );
 
       if( !anglefrom( gx, gy, angle( y, x ) ) )
         angle( y, x ) = -1;
@@ -91,10 +92,10 @@ int ImageScale::getIndex( const double r )const
     int index = 0;
     while( r > range_low * step )
     {
-      index++;
+      ++index;
       range_low *= step;
     }
-    return index;
+    return std::min(int(angles.size()-1), index);
   }
 }
 
@@ -111,40 +112,38 @@ VLD::VLD( const ImageScale& series, T const& P1, T const& P2 ) : contrast( 0.0 )
   end_point[ 0 ]   = P2.x();
   end_point[ 1 ]   = P2.y();
 
-  float dy = float( end_point[ 1 ] - begin_point[ 1 ] );
-  float dx = float( end_point[ 0 ] - begin_point[ 0 ] );
+  const float dy = float( end_point[ 1 ] - begin_point[ 1 ] );
+  const float dx = float( end_point[ 0 ] - begin_point[ 0 ] );
   distance = sqrt( dy * dy + dx * dx );
 
   if( distance == 0 )
     cerr<<"Two SIFT points have the same coordinate"<<endl;
 
-  float radius = max( distance / float( dimension + 1 ), 2.0f );//at least 2
+  const float radius = max( distance / float( dimension + 1 ), 2.0f );//at least 2
 
-  double mainAngle = get_orientation();//absolute angle
+  const double mainAngle = get_orientation();//absolute angle
 
-  int image_index = series.getIndex( radius );
+  const int image_index = series.getIndex( radius );
 
   const Image< float > & ang = series.angles[ image_index ];
   const Image< float > & m   = series.magnitudes[ image_index ];
-  double ratio = series.ratios[ image_index ];
+  const double ratio = series.ratios[ image_index ];
 
-// cout<<endl<<"index of image "<<radius<<" "<<image_index<<" "<<ratio<<endl;
-
-  int w = m.Width();
-  int h = m.Height();
-  float r = float( radius / ratio );//series.radius_size;
-  float sigma2 = r * r;
+  const int w = m.Width();
+  const int h = m.Height();
+  const float r = float( radius / ratio );
+  const float sigma2 = r * r;
   //======calculating the descriptor=====//
 
+  double statistic[ binNum ];
   for( int i = 0; i < dimension; i++ )
   {
-    double statistic[ binNum ];
     fill_n( statistic, binNum, 0.0);
 
     float xi = float( begin_point[ 0 ] + float( i + 1 ) / ( dimension + 1 ) * ( dx ) );
     float yi = float( begin_point[ 1 ] + float( i + 1 ) / ( dimension + 1 ) * ( dy ) );
-    yi /= float( ratio );
     xi /= float( ratio );
+    yi /= float( ratio );
 
     for( int y = int( yi - r ); y <= int( yi + r + 0.5 ); y++ )
     {
@@ -166,17 +165,16 @@ VLD::VLD( const ImageScale& series, T const& P1, T const& P2 ) : contrast( 0.0 )
             angle -= 2 * PI_;
 
           //===============principle angle==============================//
-          int index = int( angle * binNum / ( 2 * PI_ ) + 0.5 );
+          const int index = int( angle * binNum / ( 2 * PI_ ) + 0.5 );
 
           double Gweight = exp( -d * d / 4.5 / sigma2 ) * ( m( y, x ) );
-          // cout<<"in number "<<image_index<<" "<<x<<" "<<y<<" "<<m(y,x)<<endl;
           if( index < binNum )
             statistic[ index ] += Gweight;
           else // possible since the 0.5
             statistic[ 0 ] += Gweight;
 
           //==============the descriptor===============================//
-          int index2 = int( angle * subdirection / ( 2 * PI_ ) + 0.5 );
+          const int index2 = int( angle * subdirection / ( 2 * PI_ ) + 0.5 );
           assert( index2 >= 0 && index2 <= subdirection );
 
           if( index2 < subdirection )
@@ -201,8 +199,8 @@ VLD::VLD( const ImageScale& series, T const& P1, T const& P2 ) : contrast( 0.0 )
 
 float KVLD( const Image< float >& I1,
             const Image< float >& I2,
-            vector< openMVG::SIOPointFeature >& F1,
-            vector< openMVG::SIOPointFeature >& F2,
+            const std::vector<SIOPointFeature> & F1,
+            const std::vector<SIOPointFeature> & F2,
             const vector< Pair >& matches,
             vector< Pair >& matchesFiltered,
             vector< double >& score,
@@ -217,10 +215,10 @@ float KVLD( const Image< float >& I1,
 
   cout << "Image scale-space complete..." << endl;
 
-  float range1 = getRange( I1, min( F1.size(), matches.size() ), kvldParameters.inlierRate );
-  float range2 = getRange( I2, min( F2.size(), matches.size() ), kvldParameters.inlierRate );
+  const float range1 = getRange( I1, min( F1.size(), matches.size() ), kvldParameters.inlierRate );
+  const float range2 = getRange( I2, min( F2.size(), matches.size() ), kvldParameters.inlierRate );
 
-  size_t size = matches.size();
+  const size_t size = matches.size();
 
   //================distance map construction, foruse of selecting neighbors===============//
   cout << "computing distance maps" << endl;
@@ -422,9 +420,7 @@ float KVLD( const Image< float >& I1,
           valide[ it1 ] = false;
     }
   }
-//    cout<<endl;
-
-//=============== generating output list ===================//
+  //=============== generating output list ===================//
   for( int it = 0; it < size; it++ )
     if( valide[ it ] )
     {
@@ -434,76 +430,3 @@ float KVLD( const Image< float >& I1,
   return float( matchesFiltered.size() ) / matches.size();
 }
 
-
-void writeResult( const std::string & output,
-                  const vector< openMVG::SIOPointFeature >& vec_F1,
-                  const vector< openMVG::SIOPointFeature >& vec_F2,
-                  const vector< Pair >& vec_matches,
-                  const vector< Pair >& vec_matchesFiltered,
-                  const vector< double >& vec_score )
-{
-//========features
-  ofstream feature1( ( output + "Detectors1.txt" ).c_str() );
-  if( !feature1.is_open() )
-    cout << "error while writing Features1.txt" << endl;
-
-  feature1 << vec_F1.size() << endl;
-  for( vector< openMVG::SIOPointFeature >::const_iterator it = vec_F1.begin();
-          it != vec_F1.end();
-          ++it )
-  {
-    writeDetector( feature1, ( *it ) );
-  }
-  feature1.close();
-
-  ofstream feature2( ( output + "Detectors2.txt" ).c_str() );
-  if( !feature2.is_open() )
-    cout << "error while writing Features2.txt" << endl;
-  feature2 << vec_F2.size() << endl;
-  for( vector< openMVG::SIOPointFeature >::const_iterator it = vec_F2.begin();
-          it != vec_F2.end();
-          ++it )
-  {
-    writeDetector( feature2, ( *it ) );
-  }
-  feature2.close();
-
-//========matches
-  ofstream initialmatches( ( output + "initial_matches.txt" ).c_str() );
-  if( !initialmatches.is_open() )
-    cout << "error while writing initial_matches.txt" << endl;
-  initialmatches << vec_matches.size() << endl;
-  for( vector< Pair >::const_iterator it = vec_matches.begin(); it != vec_matches.end(); ++it )
-  {
-    initialmatches << it->first << " " << it->second << endl;
-  }
-  initialmatches.close();
-
-//==========kvld filtered matches
-  ofstream filteredmatches( ( output + "kvld_matches.txt" ).c_str() );
-  if( !filteredmatches.is_open() )
-    cout << "error while writing kvld_filtered_matches.txt" << endl;
-
-  filteredmatches << vec_matchesFiltered.size() << endl;
-  for( vector< Pair >::const_iterator it = vec_matchesFiltered.begin();
-            it != vec_matchesFiltered.end();
-            ++it )
-  {
-    filteredmatches << it->first << " " << it->second << endl;
-
-  }
-  filteredmatches.close();
-
-//====== KVLD score of matches
-  ofstream kvldScore( ( output + "kvld_matches_score.txt" ).c_str() );
-  if( !kvldScore.is_open() )
-    cout << "error while writing kvld_matches_score.txt" << endl;
-
-  for( vector< double >::const_iterator it = vec_score.begin();
-          it != vec_score.end();
-          ++it )
-  {
-    filteredmatches << *it << endl;
-  }
-  kvldScore.close();
-}

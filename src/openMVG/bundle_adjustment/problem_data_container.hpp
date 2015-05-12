@@ -74,26 +74,42 @@ class BA_Problem_data_camMotionAndIntrinsic {
   size_t num_observations()    const { return num_observations_; }
   /// Return a pointer to observed points [X_0, ... ,X_n]
   const double* observations() const { return &observations_[0]; }
-  /// Return pointer to external camera data
+
+  /// Return the number of extrinsic groups
+  size_t num_extrinsics()  const { return num_cameras_ ;}
+  /// Return the number of intrinsic groups
+  size_t num_intrinsics()  const { return num_intrinsics_;}
+
+  /// Return a pointer to external camera data
   double* mutable_cameras_extrinsic() {
     return &parameters_[0];}
-  /// Return a point to intrinsic camera data
+  /// Return a pointer to intrinsic camera data
   double* mutable_cameras_intrinsic() {
     return &parameters_[0] + NExternalParam * num_cameras_;}
-  /// Return point to points data
+  /// Return a pointer to 3D points data
   double* mutable_points()  {
     return &parameters_[0]
       + NExternalParam * num_cameras_
-      + NIntrinsicParam * num_intrinsic_;}
+      + NIntrinsicParam * num_intrinsics_;}
 
   /// Return a pointer to the camera extrinsic that observe the Inth observation
   double* mutable_camera_extrinsic_for_observation(size_t i) {
     return mutable_cameras_extrinsic() + camera_index_extrinsic[i] * NExternalParam;
   }
   /// Return a pointer to the camera intrinsic that observe the Inth observation
-  double* mutable_camera_intrisic_for_observation(size_t i) {
+  double* mutable_camera_intrinsic_for_observation(size_t i) {
     return mutable_cameras_intrinsic() + camera_index_intrinsic[i] * NIntrinsicParam;
   }
+
+  /// Return a pointer to the Inth intrinsic parameters
+  double* mutable_cameras_intrinsic(size_t i) {
+    return mutable_cameras_intrinsic() + i * NIntrinsicParam;
+  }
+  /// Return a pointer to the Inth extrinsic parameters
+  double* mutable_cameras_extrinsic(size_t i) {
+    return mutable_cameras_extrinsic() + i * NExternalParam;
+  }
+
 
   /// Return a pointer to the point that observe the Inth observation
   double* mutable_point_for_observation(size_t i) {
@@ -101,10 +117,10 @@ class BA_Problem_data_camMotionAndIntrinsic {
   }
 
   size_t num_cameras_;      // # of cameras
-  size_t num_intrinsic_;    // # of intrinsic
+  size_t num_intrinsics_;    // # of intrinsic groups
   size_t num_points_;       // # of 3D points
   size_t num_observations_; // # of observations
-  // # of parameters: NIntrinsicParam * num_cameras_ + NIntrinsicParam * num_intrinsic_ + 3 * num_points_
+  // # of parameters: NIntrinsicParam * num_cameras_ + NIntrinsicParam * num_intrinsics_ + 3 * num_points_
   size_t num_parameters_;
 
   std::vector<size_t> point_index_;  // re-projection linked to the Inth 2d point

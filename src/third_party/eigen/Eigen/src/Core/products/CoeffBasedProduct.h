@@ -90,6 +90,7 @@ struct traits<CoeffBasedProduct<LhsNested,RhsNested,NestingFlags> >
             | (SameType && (CanVectorizeLhs || CanVectorizeRhs) ? PacketAccessBit : 0),
 
       CoeffReadCost = InnerSize == Dynamic ? Dynamic
+                    : InnerSize == 0 ? 0
                     : InnerSize * (NumTraits<Scalar>::MulCost + LhsCoeffReadCost + RhsCoeffReadCost)
                       + (InnerSize - 1) * NumTraits<Scalar>::AddCost,
 
@@ -133,7 +134,7 @@ class CoeffBasedProduct
     };
 
     typedef internal::product_coeff_impl<CanVectorizeInner ? InnerVectorizedTraversal : DefaultTraversal,
-                                   Unroll ? InnerSize-1 : Dynamic,
+                                   Unroll ? (InnerSize==0 ? 0 : InnerSize-1) : Dynamic,
                                    _LhsNested, _RhsNested, Scalar> ScalarCoeffImpl;
 
     typedef CoeffBasedProduct<LhsNested,RhsNested,NestByRefBit> LazyCoeffBasedProductType;
@@ -184,7 +185,7 @@ class CoeffBasedProduct
     {
       PacketScalar res;
       internal::product_packet_impl<Flags&RowMajorBit ? RowMajor : ColMajor,
-                              Unroll ? InnerSize-1 : Dynamic,
+                              Unroll ? (InnerSize==0 ? 0 : InnerSize-1) : Dynamic,
                               _LhsNested, _RhsNested, PacketScalar, LoadMode>
         ::run(row, col, m_lhs, m_rhs, res);
       return res;
@@ -262,10 +263,7 @@ struct product_coeff_impl<DefaultTraversal, Dynamic, Lhs, Rhs, RetScalar>
   typedef typename Lhs::Index Index;
   static EIGEN_STRONG_INLINE void run(Index row, Index col, const Lhs& lhs, const Rhs& rhs, RetScalar& res)
   {
-    eigen_assert(lhs.cols()>0 && "you are using a non initialized matrix");
-    res = lhs.coeff(row, 0) * rhs.coeff(0, col);
-      for(Index i = 1; i < lhs.cols(); ++i)
-        res += lhs.coeff(row, i) * rhs.coeff(i, col);
+    res = (lhs.row(row).transpose().cwiseProduct( rhs.col(col) )).sum();
   }
 };
 

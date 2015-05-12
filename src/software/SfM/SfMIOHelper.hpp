@@ -17,6 +17,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <algorithm>    // std::lexicographical_compare
+#include <cctype>       // std::tolower
 
 namespace openMVG{
 namespace SfMIO{
@@ -32,33 +34,23 @@ struct IntrinsicCameraInfo
   size_t m_w, m_h;
   float m_focal;
   Mat3 m_K;
+  double m_k1;
+  double m_k2;
+  double m_k3;
   bool m_bKnownIntrinsic; // true if 11 or 6, else false
   std::string m_sCameraMaker, m_sCameraModel;
 
-  bool operator() (IntrinsicCameraInfo const &ci1, IntrinsicCameraInfo const &ci2)const
+  IntrinsicCameraInfo(): m_w(0), m_h(0), m_K(Mat3::Zero()), m_k1(0), m_k2(0), m_k3(0), m_bKnownIntrinsic(false), m_sCameraModel(""), m_sCameraMaker("")
+  {  }
+
+  /// Functor used to tell if two IntrinsicCameraInfo share the same optical properties
+  friend bool operator== (IntrinsicCameraInfo const &ci1, IntrinsicCameraInfo const &ci2)
   {
-    bool bequal = false;
-    if ( ci1.m_sCameraMaker.compare("") != 0  && ci1.m_sCameraModel.compare("") != 0 )
-    {
-      if ( ci1.m_sCameraMaker.compare(ci2.m_sCameraMaker) == 0
-          && ci1.m_sCameraModel.compare(ci2.m_sCameraModel) == 0
-          && ci1.m_w == ci2.m_w
-          && ci1.m_h == ci2.m_h
-          && ci1.m_focal == ci2.m_focal )
-      {
-        bequal = true;
-      }
-      else
-      {
-        if(m_bKnownIntrinsic)
-          bequal = ci1.m_K == ci2.m_K;
-      }
-    }
-    return !bequal;
+    // Two camera share optical properties if they share the same K matrix (and the same camera name)
+    bool bequal = ci1.m_K == ci2.m_K && ci1.m_sCameraMaker == ci2.m_sCameraMaker && ci1.m_sCameraModel == ci2.m_sCameraModel;
+    return bequal;
   }
 };
-
-
 
 // Load an image file list
 // One basename per line.
@@ -69,12 +61,9 @@ struct IntrinsicCameraInfo
 // - a camera with known intrinsic
 static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
                            std::vector<IntrinsicCameraInfo> & vec_focalGroup,
-                           std::string sFileName,
+                           const std::string & sFileName,
                            bool bVerbose = true )
 {
-  typedef std::set<IntrinsicCameraInfo, IntrinsicCameraInfo> setIntrinsicCameraInfo;
-  setIntrinsicCameraInfo set_focalGroup;
-
   std::ifstream in(sFileName.c_str());
   if(!in.is_open())  {
     std::cerr << std::endl
@@ -85,7 +74,6 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
   while(getline( in, sValue ) )
   {
     vec_str.clear();
-    IntrinsicCameraInfo intrinsicCamInfo;
     split( sValue, ";", vec_str );
     if (vec_str.size() == 1)
     {
@@ -100,6 +88,7 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
     oss.clear(); oss.str(vec_str[2]);
     oss >> height;
 
+    IntrinsicCameraInfo intrinsicCamInfo;
     intrinsicCamInfo.m_w = width;
     intrinsicCamInfo.m_h = height;
 
@@ -113,7 +102,7 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
          intrinsicCamInfo.m_sCameraModel = "";
       }
       break;
-      case 5 : // a camera with exif data found in the database
+      case 5 : // a camera with exif data not found in the database
       {
          intrinsicCamInfo.m_focal = -1;
          intrinsicCamInfo.m_bKnownIntrinsic = false;
@@ -121,7 +110,7 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
          intrinsicCamInfo.m_sCameraModel = vec_str[4];
       }
       break;
-      case  6 : // a camera with exif data not found in the database
+      case  6 : // a camera with exif data found in the database
       {
          oss.clear(); oss.str(vec_str[3]);
          float focal;
@@ -136,7 +125,6 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
               0, focal, float(height) / 2.f,
               0, 0, 1;
          intrinsicCamInfo.m_K = K;
-
       }
       break;
       case 12 : // a camera with known intrinsic
@@ -166,21 +154,29 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
         oss >> K(2,2);
 
         intrinsicCamInfo.m_K = K;
-        intrinsicCamInfo.m_focal = static_cast<float>(K(0,0)); // unkown sensor size;
+        intrinsicCamInfo.m_focal = static_cast<float>(K(0,0)); // unknown sensor size;
       }
       break;
       default :
       {
-        std::cerr << "Invalid line : wrong number of arguments" << std::endl;
+        std::cerr << "Invalid image list line: wrong number of arguments" << std::endl;
+        in.close();
+        return false;
       }
     }
 
-    std::pair<setIntrinsicCameraInfo::iterator, bool> ret = set_focalGroup.insert(intrinsicCamInfo);
-    if ( ret.second )
+    std::vector<IntrinsicCameraInfo>::const_iterator iterIntrinsicGroup = find(vec_focalGroup.begin(), vec_focalGroup.end(), intrinsicCamInfo);
+    size_t id = -1;
+    if ( iterIntrinsicGroup == vec_focalGroup.end())
     {
       vec_focalGroup.push_back(intrinsicCamInfo);
+      id = vec_focalGroup.size()-1;
     }
-    size_t id = std::distance( ret.first, set_focalGroup.end()) - 1;
+    else
+    {
+      id = std::distance( std::vector<IntrinsicCameraInfo>::const_iterator(vec_focalGroup.begin()), iterIntrinsicGroup);
+    }
+    
     CameraInfo camInfo;
     camInfo.m_sImageName = vec_str[0];
     camInfo.m_intrinsicId = id;
@@ -194,7 +190,7 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
 
 //-- Load an image list file but only return camera image names
 static bool loadImageList( std::vector<std::string> & vec_camImageName,
-                           std::string sListFileName,
+                           const std::string & sListFileName,
                            bool bVerbose = true )
 {
   vec_camImageName.clear();
@@ -219,5 +215,5 @@ static bool loadImageList( std::vector<std::string> & vec_camImageName,
 } // namespace SfMIO
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_INCREMENTAL_ENGINE_H
+#endif // OPENMVG_SFM_IO_H
 

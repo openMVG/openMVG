@@ -74,6 +74,20 @@ public:
   }
 
   IndMatchDecorator(const std::vector<IndMatch> & vec_matches,
+    const std::vector<PointFeature> & leftFeat,
+    const std::vector<PointFeature> & rightFeat)
+    :_vec_matches(vec_matches)
+  {
+    for (size_t i = 0; i < vec_matches.size(); ++i) {
+      const size_t I = vec_matches[i]._i;
+      const size_t J = vec_matches[i]._j;
+      _vecDecoredMatches.push_back(
+        IndMatchDecoratorStruct(leftFeat[I].x(),leftFeat[I].y(),
+        rightFeat[J].x(), rightFeat[J].y(), vec_matches[i]));
+    }
+  }
+
+  IndMatchDecorator(const std::vector<IndMatch> & vec_matches,
     const Mat & leftFeat,
     const Mat & rightFeat)
     :_vec_matches(vec_matches)

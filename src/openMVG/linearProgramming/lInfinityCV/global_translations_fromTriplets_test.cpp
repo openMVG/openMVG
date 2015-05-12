@@ -73,8 +73,8 @@ void visibleCamPosToSVGSurface(
 
 TEST(translation_averaging, globalTi_from_tijs_Triplets) {
 
-  int focal = 1000;
-  int principal_Point = 500;
+  const int focal = 1000;
+  const int principal_Point = 500;
   //-- Setup a circular camera rig or "cardiod".
   const int iNviews = 12;
   const int iNbPoints = 6;
@@ -101,7 +101,7 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
   }
 
   //- For each triplet compute relative translations and rotations motions
-  std::vector<openMVG::lInfinityCV::relativeInfo > vec_initialEstimates;
+  std::vector<openMVG::relativeInfo > vec_initialEstimates;
 
   for (size_t i = 0; i < vec_triplets.size(); ++i)
   {
@@ -182,27 +182,18 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
   // lambda factors must be equal to 1.0 (no compression, no dilation);
   EXPECT_NEAR(vec_initialEstimates.size()/3, std::accumulate (vec_camRelLambdas.begin(), vec_camRelLambdas.end(), 0.0), 1e-6);
 
-  // True camera C
-  std::cout << std::endl << "Camera centers (Ground truth): " << std::endl;
-  for (size_t i = 0; i < iNviews; ++i)
-  {
-    std::cout << i << ": " << d._C[i].transpose() - d._C[0].transpose() << std::endl;
-  }
-
   // Get back the camera translations in the global frame:
   std::cout << std::endl << "Camera centers (Computed): " << std::endl;
   for (size_t i = 0; i < iNviews; ++i)
   {
-    const Vec3 C_GT = d._C[i].transpose() - d._C[0].transpose(); //First camera supposed to be at Identity
+    const Vec3 C_GT = d._C[i] - d._C[0]; //First camera supposed to be at Identity
 
-    Vec3 t(vec_camTranslation[i*3], vec_camTranslation[i*3+1], vec_camTranslation[i*3+2]);
+    const Vec3 t(vec_camTranslation[i*3], vec_camTranslation[i*3+1], vec_camTranslation[i*3+2]);
     const Mat3 & Ri = d._R[i];
     const Vec3 C_computed = - Ri.transpose() * t;
 
     //-- Check that found camera position is equal to GT value
     EXPECT_NEAR(0.0, DistanceLInfinity(C_computed, C_GT), 1e-6);
-
-    std::cout << i << ": " << C_computed.transpose() << std::endl;
   }
 }
 
