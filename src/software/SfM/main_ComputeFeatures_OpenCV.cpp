@@ -236,7 +236,7 @@ int main(int argc, char **argv)
     Timer timer;
     Image<unsigned char> imageGray;
     C_Progress_display my_progress_bar( sfm_data.getViews().size(),
-      std::cout, "\n\n", " " , "- EXTRACT FEATURES -\n" );
+      std::cout, "\n- EXTRACT FEATURES -\n" );
     for(Views::const_iterator iterViews = sfm_data.views.begin();
         iterViews != sfm_data.views.end();
         ++iterViews, ++my_progress_bar)
