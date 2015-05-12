@@ -127,6 +127,17 @@ void ColorizeTracks(
   }
 }
 
+/// Export camera poses positions as a Vec3 vector
+void GetCameraPositions(const SfM_Data & sfm_data, std::vector<Vec3> & vec_camPosition)
+{
+  const Poses & poses = sfm_data.getPoses();
+  for (Poses::const_iterator iterPose = poses.begin();
+    iterPose != poses.end(); ++iterPose)
+  {
+    vec_camPosition.push_back(iterPose->second.center());
+  }
+}
+
 // Convert from a SfM_Data format to another
 int main(int argc, char **argv)
 {
@@ -162,11 +173,12 @@ int main(int argc, char **argv)
   }
 
   // Compute the scene structure color
-  std::vector<Vec3> vec_3dPoints, vec_tracksColor;
+  std::vector<Vec3> vec_3dPoints, vec_tracksColor, vec_camPosition;
   ColorizeTracks(sfm_data, vec_3dPoints, vec_tracksColor);
+  GetCameraPositions(sfm_data, vec_camPosition);
 
   // Export the SfM_Data scene in the expected format
-  if (plyHelper::exportToPly(vec_3dPoints,std::vector<Vec3>(), sOutputPLY_Out, &vec_tracksColor))
+  if (plyHelper::exportToPly(vec_3dPoints, vec_camPosition, sOutputPLY_Out, &vec_tracksColor))
   {
     return EXIT_SUCCESS;
   }
