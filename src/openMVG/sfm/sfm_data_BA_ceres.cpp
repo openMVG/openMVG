@@ -34,7 +34,8 @@ ceres::CostFunction * IntrinsicsToCostFunction(IntrinsicBase * intrinsic, const 
 
 
 Bundle_Adjustment_Ceres::BA_options::BA_options(const bool bVerbose, bool bmultithreaded)
-  :_bVerbose(bVerbose)
+  :_bVerbose(bVerbose),
+   _nbThreads(1)
 {
   #ifdef OPENMVG_USE_OPENMP
     _nbThreads = omp_get_max_threads();
