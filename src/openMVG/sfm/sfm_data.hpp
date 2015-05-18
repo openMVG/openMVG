@@ -39,6 +39,8 @@ struct SfM_Data
   Poses poses;
   /// Considered camera intrinsics (indexed by view.id_cam)
   Intrinsics intrinsics;
+  /// Structure (3D points with their 2D observations)
+  Landmarks structure;
 
   /// Root Views path
   std::string s_root_path;
@@ -51,8 +53,17 @@ struct SfM_Data
   const Intrinsics & getIntrinsics() const {return intrinsics;}
   const Landmarks & getLandmarks() const {return structure;}
 
-  /// Structure (3D points with their 2D observations)
-  Landmarks structure;
+  /// Check if the View have defined intrinsic and pose
+  bool IsPoseAndIntrinsicDefined(const View * view) const
+  {
+    if (view == NULL) return false;
+    return (
+      view->id_intrinsic != UndefinedIndexT &&
+      view->id_pose != UndefinedIndexT &&
+      intrinsics.find(view->id_intrinsic) != intrinsics.end() &&
+      poses.find(view->id_pose) != poses.end());
+  }
+
 };
 
 } // namespace openMVG

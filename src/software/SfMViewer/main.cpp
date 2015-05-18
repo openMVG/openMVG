@@ -233,9 +233,7 @@ static void draw(void)
       const View * view = sfm_data.getViews().at(vec_cameras[i_cam]).get();
       const Pose3 pose = sfm_data.getPoses().at(view->id_pose);
       const IntrinsicBase * cam = sfm_data.getIntrinsics().at(view->id_intrinsic).get();
-      if (cam->getType() == PINHOLE_CAMERA ||
-        cam->getType() == PINHOLE_CAMERA_RADIAL1 ||
-        cam->getType() == PINHOLE_CAMERA_RADIAL3 )
+      if (isPinhole(cam->getType()))
       {
         const Pinhole_Intrinsic * camPinhole = dynamic_cast<const Pinhole_Intrinsic*>(cam);
 
@@ -361,12 +359,8 @@ int main(int argc, char *argv[]) {
     iter != sfm_data.getViews().end(); ++iter)
   {
     const View * view = iter->second.get();
-    Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
-    Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
-
-    if (iterPose == sfm_data.getPoses().end() ||
-      iterIntrinsic == sfm_data.getIntrinsics().end())
-    continue;
+    if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+      continue;
 
     vec_cameras.push_back(iter->first);
   }

@@ -83,12 +83,11 @@ int main(int argc, char **argv)
       iter != sfm_data.getViews().end(); ++iter)
   {
     const View * view = iter->second.get();
-    Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
-    Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
+    if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+      continue;
 
-    if (iterPose == sfm_data.getPoses().end() ||
-      iterIntrinsic == sfm_data.getIntrinsics().end())
-    continue;
+    Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
+    Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
 
     // We have a valid view with a corresponding camera & pose
     const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);

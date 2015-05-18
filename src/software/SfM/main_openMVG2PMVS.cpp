@@ -61,12 +61,11 @@ bool exportToPMVSFormat(
       iter != sfm_data.getViews().end(); ++iter, ++my_progress_bar)
     {
       const View * view = iter->second.get();
-      Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
-      Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+        continue;
 
-      if (iterPose == sfm_data.getPoses().end() ||
-        iterIntrinsic == sfm_data.getIntrinsics().end())
-      continue;
+      Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
+      Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
 
       // We have a valid view with a corresponding camera & pose
       const Mat34 P = iterIntrinsic->second.get()->get_projective_equivalent(iterPose->second);
@@ -89,12 +88,11 @@ bool exportToPMVSFormat(
       iter != sfm_data.getViews().end(); ++iter, ++my_progress_bar)
     {
       const View * view = iter->second.get();
-      Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
-      Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+        continue;
 
-      if (iterPose == sfm_data.getPoses().end() ||
-        iterIntrinsic == sfm_data.getIntrinsics().end())
-      continue;
+      Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
+      Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
 
       map_viewIdToContiguous[view->id_view] = count;
       // We have a valid view with a corresponding camera & pose
@@ -218,12 +216,8 @@ bool exportToBundlerFormat(
       iter != sfm_data.getViews().end(); ++iter)
     {
       const View * view = iter->second.get();
-      Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
-      Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
-
-      if (iterPose == sfm_data.getPoses().end() ||
-        iterIntrinsic == sfm_data.getIntrinsics().end())
-      continue;
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+        continue;
 
       ++validCameraCount;
     }
@@ -237,25 +231,20 @@ bool exportToBundlerFormat(
       iter != sfm_data.getViews().end(); ++iter)
     {
       const View * view = iter->second.get();
-      Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
-      Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+        continue;
 
-      if (iterPose == sfm_data.getPoses().end() ||
-        iterIntrinsic == sfm_data.getIntrinsics().end())
-      continue;
+      Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
+      Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
 
       // Must export focal, k1, k2, R, t
 
       Mat3 D;
       D.fill(0.0);
       D .diagonal() = Vec3(1., -1., -1.); // mapping between our pinhole and Bundler convention
-      double k1 = 0.0, k2 = 0.0; // distortion already removed
+      const double k1 = 0.0, k2 = 0.0; // distortion already removed
 
-      switch(iterIntrinsic->second.get()->getType())
-      {
-      case PINHOLE_CAMERA:
-      case PINHOLE_CAMERA_RADIAL1:
-      case PINHOLE_CAMERA_RADIAL3:
+      if(isPinhole(iterIntrinsic->second.get()->getType()))
       {
         const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic->second.get());
         const double focal = cam->focal();
@@ -271,8 +260,8 @@ bool exportToBundlerFormat(
         osList << stlplus::basename_part(view->s_Img_path) + "." + stlplus::extension_part(view->s_Img_path)
           << " 0 " << focal << os.widen('\n');
       }
-      break;
-      default:
+      else
+      {
         std::cerr << "Unsupported camera model for Bundler export." << std::endl;
         return false;
       }

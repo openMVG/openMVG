@@ -94,14 +94,8 @@ static bool Generate_SfM_Report
       << sColBegin << id_view << sColEnd
       << sColBegin + stlplus::basename_part(v->s_Img_path) + sColEnd;
 
-    bool bDefined =
-      id_intrinsic != UndefinedIndexT &&
-      sfm_data.getIntrinsics().find(id_intrinsic) != sfm_data.getIntrinsics().end() &&
-      id_pose != UndefinedIndexT &&
-      sfm_data.getPoses().find(id_pose) != sfm_data.getPoses().end();
-
     // IdView | basename | #Observations | residuals min | residual median | residual max
-    if (bDefined)
+    if (sfm_data.IsPoseAndIntrinsicDefined(v))
     {
       const std::vector<double> & residuals = residuals_per_view.at(id_view);
       if (!residuals.empty())

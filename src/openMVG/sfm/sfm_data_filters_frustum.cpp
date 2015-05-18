@@ -35,12 +35,14 @@ void Frustum_Filter::initFrustum(const SfM_Data & sfm_data)
       it != z_near_z_far_perView.end(); ++it)
   {
     const View * view = sfm_data.getViews().at(it->first).get();
-    Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
-    Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
+    if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+      continue;
 
-    if (iterPose == sfm_data.getPoses().end() ||
-      iterIntrinsic == sfm_data.getIntrinsics().end())
-    continue;
+    Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
+    if (!isPinhole(iterIntrinsic->second.get()->getType()))
+      continue;
+
+    Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
 
     const Pose3 & pose = iterPose->second;
     const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic->second.get());
@@ -199,11 +201,10 @@ void Frustum_Filter::init_z_near_z_far_depth(const SfM_Data & sfm_data,
         const IndexT id_view = iterO->first;
         const Observation & ob = iterO->second;
         const View * view = sfm_data.getViews().at(id_view).get();
-        Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
-        Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
-        if (iterPose == sfm_data.getPoses().end() || iterIntrinsic == sfm_data.getIntrinsics().end())
+        if (!sfm_data.IsPoseAndIntrinsicDefined(view))
           continue;
 
+        Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
         const Pose3 & pose = iterPose->second;
         const double z = pose.depth(X);
         NearFarPlanesT::iterator itZ = z_near_z_far_perView.find(id_view);
@@ -227,10 +228,7 @@ void Frustum_Filter::init_z_near_z_far_depth(const SfM_Data & sfm_data,
     it != sfm_data.getViews().end(); ++it)
     {
       const View * view = it->second.get();
-      Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
-      Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
-
-      if (iterPose == sfm_data.getPoses().end() || iterIntrinsic == sfm_data.getIntrinsics().end())
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
         continue;
       z_near_z_far_perView[view->id_view] = std::make_pair(zNear, zFar);
     }

@@ -362,14 +362,10 @@ int main(int argc, char **argv)
           if (sfm_data.getIntrinsics().count(v->id_intrinsic))
           {
             const IntrinsicBase * ptrIntrinsic = sfm_data.getIntrinsics().find(v->id_intrinsic)->second.get();
-            switch (ptrIntrinsic->getType())
+            if (isPinhole(ptrIntrinsic->getType()))
             {
-              case PINHOLE_CAMERA:
-              case PINHOLE_CAMERA_RADIAL1:
-              case PINHOLE_CAMERA_RADIAL3:
-                const Pinhole_Intrinsic * ptrPinhole = (const Pinhole_Intrinsic*)(ptrIntrinsic);
-                map_K[cpt] = ptrPinhole->K();
-              break;
+              const Pinhole_Intrinsic * ptrPinhole = (const Pinhole_Intrinsic*)(ptrIntrinsic);
+              map_K[cpt] = ptrPinhole->K();
             }
           }
         }

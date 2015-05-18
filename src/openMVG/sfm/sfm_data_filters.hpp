@@ -23,19 +23,9 @@ static std::set<IndexT> Get_Valid_Views
     it != sfm_data.getViews().end(); ++it)
   {
     const View * v = it->second.get();
-    const IndexT id_view = v->id_view;
-    const IndexT id_intrinsic = v->id_intrinsic;
-    const IndexT id_pose = v->id_pose;
-
-    bool bDefined =
-      id_intrinsic != UndefinedIndexT &&
-      sfm_data.getIntrinsics().find(id_intrinsic) != sfm_data.getIntrinsics().end() &&
-      id_pose != UndefinedIndexT &&
-      sfm_data.getPoses().find(id_pose) != sfm_data.getPoses().end();
-
-    if (bDefined)
+    if (sfm_data.IsPoseAndIntrinsicDefined(v))
     {
-      valid_idx.insert(id_view);
+      valid_idx.insert(v->id_view);
     }
   }
   return valid_idx;

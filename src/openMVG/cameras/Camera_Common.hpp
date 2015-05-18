@@ -23,4 +23,9 @@ static bool isValid(EINTRINSIC eintrinsic)
   return eintrinsic > PINHOLE_CAMERA_START && eintrinsic < PINHOLE_CAMERA_END;
 }
 
+static bool isPinhole(EINTRINSIC eintrinsic)
+{
+  return eintrinsic > PINHOLE_CAMERA_START && eintrinsic < PINHOLE_CAMERA_END;
+}
+
 #endif // OPENMVG_CAMERAS_COMMON_HPP
