@@ -199,10 +199,10 @@ int main(int argc, char **argv)
   std::vector<std::string> vec_fileNames;
   std::vector<std::pair<size_t, size_t> > vec_imagesSize;
   {
-    vec_fileNames.reserve(sfm_data.getViews().size());
-    vec_imagesSize.reserve(sfm_data.getViews().size());
-    for (Views::const_iterator iter = sfm_data.getViews().begin();
-      iter != sfm_data.getViews().end();
+    vec_fileNames.reserve(sfm_data.GetViews().size());
+    vec_imagesSize.reserve(sfm_data.GetViews().size());
+    for (Views::const_iterator iter = sfm_data.GetViews().begin();
+      iter != sfm_data.GetViews().end();
       ++iter)
     {
       const View * v = iter->second.get();
@@ -271,10 +271,10 @@ int main(int argc, char **argv)
       Pair_Set pairs;
       switch (ePairmode)
       {
-        case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(sfm_data.getViews().size()); break;
-        case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(sfm_data.getViews().size(), iMatchingVideoMode); break;
+        case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(sfm_data.GetViews().size()); break;
+        case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(sfm_data.GetViews().size(), iMatchingVideoMode); break;
         case PAIR_FROM_FILE:
-          if(!loadPairs(sfm_data.getViews().size(), sPredefinedPairList, pairs))
+          if(!loadPairs(sfm_data.GetViews().size(), sPredefinedPairList, pairs))
           {
               return EXIT_FAILURE;
           };
@@ -333,14 +333,14 @@ int main(int argc, char **argv)
         // Build the intrinsic parameter map for each view
         std::map<IndexT, Mat3> map_K;
         size_t cpt = 0;
-        for (Views::const_iterator iter = sfm_data.getViews().begin();
-          iter != sfm_data.getViews().end();
+        for (Views::const_iterator iter = sfm_data.GetViews().begin();
+          iter != sfm_data.GetViews().end();
           ++iter, ++cpt)
         {
           const View * v = iter->second.get();
-          if (sfm_data.getIntrinsics().count(v->id_intrinsic))
+          if (sfm_data.GetIntrinsics().count(v->id_intrinsic))
           {
-            const IntrinsicBase * ptrIntrinsic = sfm_data.getIntrinsics().find(v->id_intrinsic)->second.get();
+            const IntrinsicBase * ptrIntrinsic = sfm_data.GetIntrinsics().find(v->id_intrinsic)->second.get();
             if (isPinhole(ptrIntrinsic->getType()))
             {
               const Pinhole_Intrinsic * ptrPinhole = (const Pinhole_Intrinsic*)(ptrIntrinsic);

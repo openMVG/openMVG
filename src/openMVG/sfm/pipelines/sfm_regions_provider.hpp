@@ -30,11 +30,11 @@ struct Regions_Provider
     const std::string & feat_directory,
     std::unique_ptr<features::Image_describer>& image_describer)
   {
-    C_Progress_display my_progress_bar( sfm_data.getViews().size(),
+    C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- Regions Loading -\n");
     // Read for each view the corresponding regions and store them
-    for (Views::const_iterator iter = sfm_data.getViews().begin();
-      iter != sfm_data.getViews().end(); ++iter, ++my_progress_bar)
+    for (Views::const_iterator iter = sfm_data.GetViews().begin();
+      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
       const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.get()->s_Img_path);
       const std::string basename = stlplus::basename_part(sImageName);
@@ -60,11 +60,11 @@ struct Regions_Provider
     const std::string & feat_directory,
     std::unique_ptr<features::Regions>& region_type)
   {
-    C_Progress_display my_progress_bar( sfm_data.getViews().size(),
+    C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- Regions Loading -\n");
     // Read for each view the corresponding regions and store them
-    for (Views::const_iterator iter = sfm_data.getViews().begin();
-      iter != sfm_data.getViews().end(); ++iter, ++my_progress_bar)
+    for (Views::const_iterator iter = sfm_data.GetViews().begin();
+      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
       const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.get()->s_Img_path);
       const std::string basename = stlplus::basename_part(sImageName);

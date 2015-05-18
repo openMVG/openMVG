@@ -89,19 +89,19 @@ private:
       // - by considering geometric error and descriptor distance ratio.
       std::vector<IndMatch> vec_corresponding_indexes;
 
-      const View * viewL = sfm_data.getViews().at(it->first).get();
-      const Poses::const_iterator iterPoseL = sfm_data.getPoses().find(viewL->id_pose);
-      const Intrinsics::const_iterator iterIntrinsicL = sfm_data.getIntrinsics().find(viewL->id_intrinsic);
-      const View * viewR = sfm_data.getViews().at(it->second).get();
-      const Poses::const_iterator iterPoseR = sfm_data.getPoses().find(viewR->id_pose);
-      const Intrinsics::const_iterator iterIntrinsicR = sfm_data.getIntrinsics().find(viewR->id_intrinsic);
+      const View * viewL = sfm_data.GetViews().at(it->first).get();
+      const Pose3 poseL = sfm_data.GetPoseOrDie(viewL);
+      const Intrinsics::const_iterator iterIntrinsicL = sfm_data.GetIntrinsics().find(viewL->id_intrinsic);
+      const View * viewR = sfm_data.GetViews().at(it->second).get();
+      const Pose3 poseR = sfm_data.GetPoseOrDie(viewR);
+      const Intrinsics::const_iterator iterIntrinsicR = sfm_data.GetIntrinsics().find(viewR->id_intrinsic);
 
       Mat xL, xR;
       PointsToMat(iterIntrinsicL->second.get(), regions_provider->regions_per_view.at(it->first)->GetRegionsPositions(), xL);
       PointsToMat(iterIntrinsicR->second.get(), regions_provider->regions_per_view.at(it->second)->GetRegionsPositions(), xR);
 
-      const Mat34 P_L = iterIntrinsicL->second.get()->get_projective_equivalent(iterPoseL->second);
-      const Mat34 P_R = iterIntrinsicR->second.get()->get_projective_equivalent(iterPoseR->second);
+      const Mat34 P_L = iterIntrinsicL->second.get()->get_projective_equivalent(poseL);
+      const Mat34 P_R = iterIntrinsicR->second.get()->get_projective_equivalent(poseR);
 
       const Mat3 F_lr = F_from_P(P_L, P_R);
       const double thresholdF = 4.0;
@@ -115,7 +115,7 @@ private:
         Square(thresholdF), Square(0.8),
         vec_corresponding_indexes);
 #else
-      const Vec3 epipole2  = epipole_from_P(P_R, iterPoseL->second);
+      const Vec3 epipole2  = epipole_from_P(P_R, poseL);
 
       const features::Regions * regions = regions_provider->regions_per_view.at(it->first).get();
       if (regions->IsScalar())
@@ -253,9 +253,9 @@ private:
               for (tracks::submapTrack::const_iterator iter = subTrack.begin(); iter != subTrack.end(); ++iter) {
                 const size_t imaIndex = iter->first;
                 const size_t featIndex = iter->second;
-                const View * view = sfm_data.getViews().at(imaIndex).get();
-                const IntrinsicBase * cam = sfm_data.getIntrinsics().at(view->id_intrinsic).get();
-                const Pose3 & pose = sfm_data.poses.at(view->id_pose);
+                const View * view = sfm_data.GetViews().at(imaIndex).get();
+                const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
+                const Pose3 pose = sfm_data.GetPoseOrDie(view);
                 const Vec2 pt = regions_provider->regions_per_view.at(imaIndex)->GetRegionPosition(featIndex);
                 trianObj.add(cam->get_projective_equivalent(pose), cam->get_ud_pixel(pt));
               }

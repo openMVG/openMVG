@@ -9,6 +9,7 @@
 #define OPENMVG_SFM_DATA_FILTERS_HPP
 
 #include "openMVG/stl/stl.hpp"
+#include <iterator>
 
 namespace openMVG {
 
@@ -19,8 +20,8 @@ static std::set<IndexT> Get_Valid_Views
 )
 {
   std::set<IndexT> valid_idx;
-  for (Views::const_iterator it = sfm_data.getViews().begin();
-    it != sfm_data.getViews().end(); ++it)
+  for (Views::const_iterator it = sfm_data.GetViews().begin();
+    it != sfm_data.GetViews().end(); ++it)
   {
     const View * v = it->second.get();
     if (sfm_data.IsPoseAndIntrinsicDefined(v))
@@ -140,8 +141,8 @@ static bool eraseMissingPoses(SfM_Data & sfm_data, const IndexT min_points_per_p
   // Count the observation poses occurence
   Hash_Map<IndexT, IndexT> map_PoseId_Count;
   // Init with 0 count (in order to be able to remove non referenced elements)
-  for (Poses::const_iterator itPoses = sfm_data.getPoses().begin();
-    itPoses != sfm_data.getPoses().end(); ++itPoses)
+  for (Poses::const_iterator itPoses = sfm_data.GetPoses().begin();
+    itPoses != sfm_data.GetPoses().end(); ++itPoses)
   {
     map_PoseId_Count[itPoses->first] = 0;
   }
@@ -155,7 +156,7 @@ static bool eraseMissingPoses(SfM_Data & sfm_data, const IndexT min_points_per_p
       itObs != obs.end(); ++itObs)
     {
       const IndexT ViewId = itObs->first;
-      const View * v = sfm_data.getViews().at(ViewId).get();
+      const View * v = sfm_data.GetViews().at(ViewId).get();
       if (map_PoseId_Count.count(v->id_pose))
         map_PoseId_Count[v->id_pose] += 1;
       else
@@ -194,7 +195,7 @@ static bool eraseObservationsWithMissingPoses(SfM_Data & sfm_data, const IndexT 
     while (itObs != obs.end())
     {
       const IndexT ViewId = itObs->first;
-      const View * v = sfm_data.getViews().at(ViewId).get();
+      const View * v = sfm_data.GetViews().at(ViewId).get();
       if (pose_Index.count(v->id_pose) == 0)
       {
         itObs = obs.erase(itObs);

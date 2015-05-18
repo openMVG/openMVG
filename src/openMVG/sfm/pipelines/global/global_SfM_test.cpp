@@ -74,8 +74,8 @@ TEST(GLOBAL_SFM, RotationAveragingL2_TranslationAveragingL1) {
   const double dResidual = RMSE(sfmEngine.Get_SfM_Data());
   std::cout << "RMSE residual: " << dResidual << std::endl;
   EXPECT_TRUE( dResidual < 0.5);
-  EXPECT_TRUE( sfmEngine.Get_SfM_Data().getPoses().size() == nviews);
-  EXPECT_TRUE( sfmEngine.Get_SfM_Data().getLandmarks().size() == npoints);
+  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
+  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
 }
 
 TEST(GLOBAL_SFM, RotationAveragingL1_TranslationAveragingL1) {
@@ -125,8 +125,8 @@ TEST(GLOBAL_SFM, RotationAveragingL1_TranslationAveragingL1) {
   const double dResidual = RMSE(sfmEngine.Get_SfM_Data());
   std::cout << "RMSE residual: " << dResidual << std::endl;
   EXPECT_TRUE( dResidual < 0.5);
-  EXPECT_TRUE( sfmEngine.Get_SfM_Data().getPoses().size() == nviews);
-  EXPECT_TRUE( sfmEngine.Get_SfM_Data().getLandmarks().size() == npoints);
+  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
+  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
 }
 
 TEST(GLOBAL_SFM, RotationAveragingL2_TranslationAveragingL2) {
@@ -176,8 +176,8 @@ TEST(GLOBAL_SFM, RotationAveragingL2_TranslationAveragingL2) {
   const double dResidual = RMSE(sfmEngine.Get_SfM_Data());
   std::cout << "RMSE residual: " << dResidual << std::endl;
   EXPECT_TRUE( dResidual < 0.5);
-  EXPECT_TRUE( sfmEngine.Get_SfM_Data().getPoses().size() == nviews);
-  EXPECT_TRUE( sfmEngine.Get_SfM_Data().getLandmarks().size() == npoints);
+  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
+  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
 }
 
 

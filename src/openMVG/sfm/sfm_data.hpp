@@ -23,7 +23,7 @@ typedef Hash_Map<IndexT, std::shared_ptr<View> > Views;
 /// Define a collection of Pose (indexed by View::id_pose)
 typedef Hash_Map<IndexT, Pose3> Poses;
 
-/// Define a collection of IntrinsicParameter (indexed by  View::id_intrinsic)
+/// Define a collection of IntrinsicParameter (indexed by View::id_intrinsic)
 typedef Hash_Map<IndexT, std::shared_ptr<IntrinsicBase> > Intrinsics;
 
 /// Define a collection of landmarks are indexed by their TrackId
@@ -48,10 +48,10 @@ struct SfM_Data
   //--
   // Accessors
   //--
-  const Views & getViews() const {return views;}
-  const Poses & getPoses() const {return poses;}
-  const Intrinsics & getIntrinsics() const {return intrinsics;}
-  const Landmarks & getLandmarks() const {return structure;}
+  const Views & GetViews() const {return views;}
+  const Poses & GetPoses() const {return poses;}
+  const Intrinsics & GetIntrinsics() const {return intrinsics;}
+  const Landmarks & GetLandmarks() const {return structure;}
 
   /// Check if the View have defined intrinsic and pose
   bool IsPoseAndIntrinsicDefined(const View * view) const
@@ -64,6 +64,11 @@ struct SfM_Data
       poses.find(view->id_pose) != poses.end());
   }
 
+  /// Get the pose associated to a view
+  const Pose3 GetPoseOrDie(const View * view) const
+  {
+    return poses.at(view->id_pose);
+  }
 };
 
 } // namespace openMVG

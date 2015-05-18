@@ -38,7 +38,7 @@ GlobalSfMReconstructionEngine_RelativeMotions::GlobalSfMReconstructionEngine_Rel
 
     _htmlDocStream->pushInfo( "Dataset info:");
     _htmlDocStream->pushInfo( "Views count: " +
-      htmlDocument::toString( sfm_data.getViews().size()) + "<br>");
+      htmlDocument::toString( sfm_data.GetViews().size()) + "<br>");
   }
 
   // Set default motion Averaging methods
@@ -66,8 +66,8 @@ void GlobalSfMReconstructionEngine_RelativeMotions::SetFeaturesProvider(Features
     iter != _normalized_features_provider->feats_per_view.end(); ++iter)
   {
     // get the related view & camera intrinsic and compute the corresponding bearing vectors
-    const View * view = _sfm_data.getViews().at(iter->first).get();
-    const std::shared_ptr<IntrinsicBase> cam = _sfm_data.getIntrinsics().find(view->id_intrinsic)->second;
+    const View * view = _sfm_data.GetViews().at(iter->first).get();
+    const std::shared_ptr<IntrinsicBase> cam = _sfm_data.GetIntrinsics().find(view->id_intrinsic)->second;
     for (PointFeatures::iterator iterPt = iter->second.begin();
       iterPt != iter->second.end(); ++iterPt)
     {
@@ -149,10 +149,10 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Process() {
 
     os.str("");
     os << "-------------------------------" << "<br>"
-      << "-- View count: " << _sfm_data.getViews().size() << "<br>"
-      << "-- Intrinsic count: " << _sfm_data.getIntrinsics().size() << "<br>"
-      << "-- Pose count: " << _sfm_data.getPoses().size() << "<br>"
-      << "-- Track count: "  << _sfm_data.getLandmarks().size() << "<br>"
+      << "-- View count: " << _sfm_data.GetViews().size() << "<br>"
+      << "-- Intrinsic count: " << _sfm_data.GetIntrinsics().size() << "<br>"
+      << "-- Pose count: " << _sfm_data.GetPoses().size() << "<br>"
+      << "-- Track count: "  << _sfm_data.GetLandmarks().size() << "<br>"
       << "-------------------------------" << "<br>";
     _htmlDocStream->pushInfo(os.str());
   }
@@ -333,12 +333,12 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure()
 
     openMVG::Timer timer;
 
-    const IndexT trackCountBefore = _sfm_data.getLandmarks().size();
+    const IndexT trackCountBefore = _sfm_data.GetLandmarks().size();
     SfM_Data_Structure_Computation_Blind structure_estimator(true);
     structure_estimator.triangulate(_sfm_data);
 
     std::cout << "\n#removed tracks (invalid triangulation): " <<
-      trackCountBefore - IndexT(_sfm_data.getLandmarks().size()) << std::endl;
+      trackCountBefore - IndexT(_sfm_data.GetLandmarks().size()) << std::endl;
     std::cout << std::endl << "  Triangulation took (s): " << timer.elapsed() << std::endl;
 
     // Export initial structure
@@ -453,8 +453,8 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations(R
     const View * view_J = _sfm_data.views[J].get();
 
     // Check that valid camera are existing for the pair index
-    if (_sfm_data.getIntrinsics().find(view_I->id_intrinsic) == _sfm_data.getIntrinsics().end() ||
-      _sfm_data.getIntrinsics().find(view_J->id_intrinsic) == _sfm_data.getIntrinsics().end())
+    if (_sfm_data.GetIntrinsics().find(view_I->id_intrinsic) == _sfm_data.GetIntrinsics().end() ||
+      _sfm_data.GetIntrinsics().find(view_J->id_intrinsic) == _sfm_data.GetIntrinsics().end())
       continue;
 
     const IndMatches & vec_matchesInd = _matches_provider->_pairWise_matches.find(current_pair)->second;
@@ -466,8 +466,8 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations(R
       x2.col(k) = _normalized_features_provider->feats_per_view[J][vec_matchesInd[k]._j].coords().cast<double>();
     }
 
-    const IntrinsicBase * cam_I = _sfm_data.getIntrinsics().at(view_I->id_intrinsic).get();
-    const IntrinsicBase * cam_J = _sfm_data.getIntrinsics().at(view_J->id_intrinsic).get();
+    const IntrinsicBase * cam_I = _sfm_data.GetIntrinsics().at(view_I->id_intrinsic).get();
+    const IntrinsicBase * cam_J = _sfm_data.GetIntrinsics().at(view_J->id_intrinsic).get();
     if ( !isValid(cam_I->getType()) || !isValid(cam_J->getType()))
     {
       continue;
@@ -496,10 +496,10 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations(R
     {
       // Refine the defined scene
       SfM_Data tiny_scene;
-      tiny_scene.views.insert(*_sfm_data.getViews().find(view_I->id_view));
-      tiny_scene.views.insert(*_sfm_data.getViews().find(view_J->id_view));
-      tiny_scene.intrinsics.insert(*_sfm_data.getIntrinsics().find(view_I->id_intrinsic));
-      tiny_scene.intrinsics.insert(*_sfm_data.getIntrinsics().find(view_J->id_intrinsic));
+      tiny_scene.views.insert(*_sfm_data.GetViews().find(view_I->id_view));
+      tiny_scene.views.insert(*_sfm_data.GetViews().find(view_J->id_view));
+      tiny_scene.intrinsics.insert(*_sfm_data.GetIntrinsics().find(view_I->id_intrinsic));
+      tiny_scene.intrinsics.insert(*_sfm_data.GetIntrinsics().find(view_J->id_intrinsic));
 
       // Init poses
       const Pose3 & Pose_I = tiny_scene.poses[view_I->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());

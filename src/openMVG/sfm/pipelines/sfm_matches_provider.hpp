@@ -34,7 +34,7 @@ struct Matches_Provider
     }
     // Filter to keep only the one defined in SfM_Data
     {
-      const Views & views = sfm_data.getViews();
+      const Views & views = sfm_data.GetViews();
       matching::PairWiseMatches matches_saved;
       for (matching::PairWiseMatches::const_iterator iter = _pairWise_matches.begin();
         iter != _pairWise_matches.end();

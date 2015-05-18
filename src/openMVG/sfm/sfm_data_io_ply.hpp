@@ -36,8 +36,8 @@ static bool Save_PLY(
     stream << "ply"
       << '\n' << "format ascii 1.0"
       << '\n' << "element vertex "
-        << ((b_structure ? data.getLandmarks().size() : 0) +
-           (b_extrinsics ? data.getPoses().size() : 0))
+        << ((b_structure ? data.GetLandmarks().size() : 0) +
+           (b_extrinsics ? data.GetPoses().size() : 0))
       << '\n' << "property float x"
       << '\n' << "property float y"
       << '\n' << "property float z"
@@ -48,7 +48,7 @@ static bool Save_PLY(
 
       if (b_extrinsics)
       {
-        const Poses & poses = data.getPoses();
+        const Poses & poses = data.GetPoses();
         for (Poses::const_iterator iterPose = poses.begin();
           iterPose != poses.end(); ++iterPose)  {
             stream << iterPose->second.center().transpose()
@@ -58,7 +58,7 @@ static bool Save_PLY(
 
       if (b_structure)
       {
-        const Landmarks & landmarks = data.getLandmarks();
+        const Landmarks & landmarks = data.GetLandmarks();
         for (Landmarks::const_iterator iterLandmarks = landmarks.begin();
           iterLandmarks != landmarks.end();
           ++iterLandmarks)  {

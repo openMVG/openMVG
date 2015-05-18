@@ -32,8 +32,8 @@ bool computeIndexFromImageNames(
 
   /// List views filenames and find the one that correspond to the user ones:
   std::vector<std::string> vec_camImageName;
-  for (Views::const_iterator it = sfm_data.getViews().begin();
-    it != sfm_data.getViews().end(); ++it)
+  for (Views::const_iterator it = sfm_data.GetViews().begin();
+    it != sfm_data.GetViews().end(); ++it)
   {
     const View * v = it->second.get();
     const std::string filename = stlplus::filename_part(v->s_Img_path);

@@ -35,11 +35,11 @@ static bool Save_BAF(
   bool bOk = false;
   {
     stream
-      << sfm_data.getIntrinsics().size() << '\n'
-      << sfm_data.getPoses().size() << '\n'
-      << sfm_data.getLandmarks().size() << '\n';
+      << sfm_data.GetIntrinsics().size() << '\n'
+      << sfm_data.GetPoses().size() << '\n'
+      << sfm_data.GetLandmarks().size() << '\n';
 
-    const Intrinsics & intrinsics = sfm_data.getIntrinsics();
+    const Intrinsics & intrinsics = sfm_data.GetIntrinsics();
     for (Intrinsics::const_iterator iterIntrinsic = intrinsics.begin();
       iterIntrinsic != intrinsics.end(); ++iterIntrinsic)
     {
@@ -50,7 +50,7 @@ static bool Save_BAF(
         stream << "\n";
     }
 
-    const Poses & poses = sfm_data.getPoses();
+    const Poses & poses = sfm_data.GetPoses();
     for (Poses::const_iterator iterPose = poses.begin();
       iterPose != poses.end(); ++iterPose)
     {
@@ -62,7 +62,7 @@ static bool Save_BAF(
       stream << "\n";
     }
 
-    const Landmarks & landmarks = sfm_data.getLandmarks();
+    const Landmarks & landmarks = sfm_data.GetLandmarks();
     for (Landmarks::const_iterator iterLandmarks = landmarks.begin();
       iterLandmarks != landmarks.end();
       ++iterLandmarks)
@@ -77,7 +77,7 @@ static bool Save_BAF(
         iterOb != obs.end(); ++iterOb)
       {
         const IndexT id_view = iterOb->first;
-        const View * v = sfm_data.getViews().at(id_view).get();
+        const View * v = sfm_data.GetViews().at(id_view).get();
         stream << v->id_intrinsic << ' ' << v->id_pose << ' '
           << iterOb->second.x(0) << ' '
           << iterOb->second.x(1) << ' ';

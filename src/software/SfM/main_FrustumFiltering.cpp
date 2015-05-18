@@ -21,8 +21,8 @@ Pair_Set BuildPairsFromStructureObservations(const SfM_Data & sfm_data)
 {
   Pair_Set pairs;
 
-  for (Landmarks::const_iterator itL = sfm_data.getLandmarks().begin();
-    itL != sfm_data.getLandmarks().end(); ++itL)
+  for (Landmarks::const_iterator itL = sfm_data.GetLandmarks().begin();
+    itL != sfm_data.GetLandmarks().end(); ++itL)
   {
     const Landmark & landmark = itL->second;
     const Vec3 & X = landmark.X;

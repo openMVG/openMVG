@@ -79,20 +79,20 @@ int main(int argc, char **argv)
 
   outfile <<  " <RasterGroup>" << outfile.widen('\n');
 
-  for(Views::const_iterator iter = sfm_data.getViews().begin();
-      iter != sfm_data.getViews().end(); ++iter)
+  for(Views::const_iterator iter = sfm_data.GetViews().begin();
+      iter != sfm_data.GetViews().end(); ++iter)
   {
     const View * view = iter->second.get();
     if (!sfm_data.IsPoseAndIntrinsicDefined(view))
       continue;
 
-    Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
-    Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
+    const Pose3 pose = sfm_data.GetPoseOrDie(view);
+    Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
 
     // We have a valid view with a corresponding camera & pose
     const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
     const IntrinsicBase * cam = iterIntrinsic->second.get();
-    Mat34 P = cam->get_projective_equivalent(iterPose->second);
+    Mat34 P = cam->get_projective_equivalent(pose);
 
     for ( int i = 1; i < 3 ; ++i)
       for ( int j = 0; j < 4; ++j)

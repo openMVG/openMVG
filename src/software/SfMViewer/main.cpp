@@ -56,7 +56,7 @@ void load_textures()
   C_Progress_display my_progress_bar( nbCams, std::cout,
     "\n", " " , "Textures loading, Please wait...\n" );
 	for ( int i_cam=0; i_cam < nbCams; ++i_cam, ++my_progress_bar) {
-    const View * view = sfm_data.getViews().at(vec_cameras[i_cam]).get();
+    const View * view = sfm_data.GetViews().at(vec_cameras[i_cam]).get();
     const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
 
 		std::vector<unsigned char> img;
@@ -202,8 +202,8 @@ static void draw(void)
     glMultMatrixd((GLdouble*)offset_w.data());
 
     // then apply current camera transformation
-    const View * view = sfm_data.getViews().at(vec_cameras[current_cam]).get();
-    const Pose3 pose = sfm_data.getPoses().at(view->id_pose);
+    const View * view = sfm_data.GetViews().at(vec_cameras[current_cam]).get();
+    const Pose3 pose = sfm_data.GetPoseOrDie(view);
     const openMVG::Mat4 l2w = l2w_Camera(pose.rotation(), pose.translation());
 
     glPushMatrix();
@@ -214,12 +214,12 @@ static void draw(void)
     glDisable(GL_LIGHTING);
 
     //Draw Structure in GREEN (as seen from the current camera)
-    size_t nbPoint = sfm_data.getLandmarks().size();
+    size_t nbPoint = sfm_data.GetLandmarks().size();
     size_t cpt = 0;
     glBegin(GL_POINTS);
     glColor3f(0.f,1.f,0.f);
-    for (Landmarks::const_iterator iter = sfm_data.getLandmarks().begin();
-      iter != sfm_data.getLandmarks().end(); ++iter)
+    for (Landmarks::const_iterator iter = sfm_data.GetLandmarks().begin();
+      iter != sfm_data.GetLandmarks().end(); ++iter)
     {
       const Landmark & landmark = iter->second;
       glVertex3d(landmark.X(0), landmark.X(1), landmark.X(2));
@@ -230,9 +230,9 @@ static void draw(void)
 
     for (int i_cam=0; i_cam < vec_cameras.size(); ++i_cam)
     {
-      const View * view = sfm_data.getViews().at(vec_cameras[i_cam]).get();
-      const Pose3 pose = sfm_data.getPoses().at(view->id_pose);
-      const IntrinsicBase * cam = sfm_data.getIntrinsics().at(view->id_intrinsic).get();
+      const View * view = sfm_data.GetViews().at(vec_cameras[i_cam]).get();
+      const Pose3 pose = sfm_data.GetPoseOrDie(view);
+      const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       if (isPinhole(cam->getType()))
       {
         const Pinhole_Intrinsic * camPinhole = dynamic_cast<const Pinhole_Intrinsic*>(cam);
@@ -355,8 +355,8 @@ int main(int argc, char *argv[]) {
   }
 
   // List valid camera (view that have a pose & a valid intrinsic data)
-  for(Views::const_iterator iter = sfm_data.getViews().begin();
-    iter != sfm_data.getViews().end(); ++iter)
+  for(Views::const_iterator iter = sfm_data.GetViews().begin();
+    iter != sfm_data.GetViews().end(); ++iter)
   {
     const View * view = iter->second.get();
     if (!sfm_data.IsPoseAndIntrinsicDefined(view))

@@ -121,7 +121,7 @@ int main(int argc, char **argv)
 
   std::cout << "\nStructure estimation took (s): " << timer.elapsed() << "." << std::endl;
 
-  std::cout << "#landmark found: " << sfm_data.getLandmarks().size() << std::endl;
+  std::cout << "#landmark found: " << sfm_data.GetLandmarks().size() << std::endl;
 
   if (stlplus::extension_part(sOutFile) != "ply") {
     Save(sfm_data,

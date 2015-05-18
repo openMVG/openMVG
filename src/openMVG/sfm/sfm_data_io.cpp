@@ -24,18 +24,18 @@ bool ValidIds(const SfM_Data & sfm_data, ESfM_Data flags_part)
   const bool bCheck_Extrinsic = (flags_part & EXTRINSICS) == EXTRINSICS;
 
   std::set<IndexT> set_id_intrinsics;
-  transform(sfm_data.getIntrinsics().begin(), sfm_data.getIntrinsics().end(),
+  transform(sfm_data.GetIntrinsics().begin(), sfm_data.GetIntrinsics().end(),
     std::inserter(set_id_intrinsics, set_id_intrinsics.begin()), std::RetrieveKey());
 
   std::set<IndexT> set_id_extrinsics; //unique so can use a set
-  transform(sfm_data.getPoses().begin(), sfm_data.getPoses().end(),
+  transform(sfm_data.GetPoses().begin(), sfm_data.GetPoses().end(),
     std::inserter(set_id_extrinsics, set_id_extrinsics.begin()), std::RetrieveKey());
 
   // Collect existing id_intrinsic && id_extrinsic from views
   std::set<IndexT> reallyDefined_id_intrinsics;
   std::set<IndexT> reallyDefined_id_extrinsics;
-  for (Views::const_iterator iter = sfm_data.getViews().begin();
-    iter != sfm_data.getViews().end();
+  for (Views::const_iterator iter = sfm_data.GetViews().begin();
+    iter != sfm_data.GetViews().end();
     ++iter)
   {
     // If a pose is defined, at least the intrinsic must be valid,

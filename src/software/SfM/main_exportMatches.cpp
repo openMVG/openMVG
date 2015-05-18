@@ -143,10 +143,10 @@ int main(int argc, char ** argv)
     const size_t I = iter->first;
     const size_t J = iter->second;
 
-    const View * view_I = sfm_data.getViews().at(I).get();
+    const View * view_I = sfm_data.GetViews().at(I).get();
     const std::string sView_I= stlplus::create_filespec(sfm_data.s_root_path,
       view_I->s_Img_path);
-    const View * view_J = sfm_data.getViews().at(J).get();
+    const View * view_J = sfm_data.GetViews().at(J).get();
     const std::string sView_J= stlplus::create_filespec(sfm_data.s_root_path,
       view_J->s_Img_path);
 

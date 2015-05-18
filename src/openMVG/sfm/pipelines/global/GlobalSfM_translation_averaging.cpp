@@ -466,14 +466,14 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
         vec_global_KR_Triplet[1] = (map_globalR.at(J));
         vec_global_KR_Triplet[2] = (map_globalR.at(K));
 
-        const View * view_I = sfm_data.getViews().at(I).get();
-        const View * view_J = sfm_data.getViews().at(J).get();
-        const View * view_K = sfm_data.getViews().at(K).get();
+        const View * view_I = sfm_data.GetViews().at(I).get();
+        const View * view_J = sfm_data.GetViews().at(J).get();
+        const View * view_K = sfm_data.GetViews().at(K).get();
 
         // update pixel precision (from image to camera coordinate system, since features are normalized)
-        const Pinhole_Intrinsic* cam_I = dynamic_cast<Pinhole_Intrinsic*>(sfm_data.getIntrinsics().at(view_I->id_intrinsic).get());
-        const Pinhole_Intrinsic* cam_J = dynamic_cast<Pinhole_Intrinsic*>(sfm_data.getIntrinsics().at(view_J->id_intrinsic).get());
-        const Pinhole_Intrinsic* cam_K = dynamic_cast<Pinhole_Intrinsic*>(sfm_data.getIntrinsics().at(view_K->id_intrinsic).get());
+        const Pinhole_Intrinsic* cam_I = dynamic_cast<Pinhole_Intrinsic*>(sfm_data.GetIntrinsics().at(view_I->id_intrinsic).get());
+        const Pinhole_Intrinsic* cam_J = dynamic_cast<Pinhole_Intrinsic*>(sfm_data.GetIntrinsics().at(view_J->id_intrinsic).get());
+        const Pinhole_Intrinsic* cam_K = dynamic_cast<Pinhole_Intrinsic*>(sfm_data.GetIntrinsics().at(view_K->id_intrinsic).get());
         if (cam_I == NULL || cam_J == NULL || cam_K == NULL)
         {
           continue;

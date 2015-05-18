@@ -76,8 +76,8 @@ struct SfM_Data_Structure_Computation_Blind: public SfM_Data_Structure_Computati
           itObs != obs.end(); ++itObs)
         {
           const View * view = sfm_data.views.at(itObs->first).get();
-          const IntrinsicBase * cam = sfm_data.getIntrinsics().at(view->id_intrinsic).get();
-          const Pose3 & pose = sfm_data.poses.at(view->id_pose);
+          const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
+          const Pose3 & pose = sfm_data.GetPoseOrDie(view);
           trianObj.add(
             cam->get_projective_equivalent(pose),
             cam->get_ud_pixel(itObs->second.x));
@@ -213,8 +213,8 @@ struct SfM_Data_Structure_Computation_Robust: public SfM_Data_Structure_Computat
         Observations::const_iterator itObs = obs.begin();
         std::advance(itObs, it);
       	const View * view = sfm_data.views.at(itObs->first).get();
-        const IntrinsicBase * cam = sfm_data.getIntrinsics().at(view->id_intrinsic).get();
-        const Pose3 & pose = sfm_data.poses.at(view->id_pose);
+        const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
+        const Pose3 & pose = sfm_data.GetPoseOrDie(view);
         const double z = pose.depth(current_model); // TODO: cam->depth(pose(X));
         bChierality &= z > 0;
       }
@@ -229,8 +229,8 @@ struct SfM_Data_Structure_Computation_Robust: public SfM_Data_Structure_Computat
           itObs != obs.end(); ++itObs)
       {
         const View * view = sfm_data.views.at(itObs->first).get();
-        const IntrinsicBase * intrinsic = sfm_data.getIntrinsics().at(view->id_intrinsic).get();
-        const Pose3 & pose = sfm_data.poses.at(view->id_pose);
+        const IntrinsicBase * intrinsic = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
+        const Pose3 & pose = sfm_data.GetPoseOrDie(view);
         const Vec2 residual = intrinsic->residual(pose, current_model, itObs->second.x);
         const double residual_d = residual.norm();
         if (residual_d < dThresholdPixel)
@@ -268,8 +268,8 @@ private:
       Observations::const_iterator itObs = obs.begin();
       std::advance(itObs, idx);
       const View * view = sfm_data.views.at(itObs->first).get();
-      const IntrinsicBase * cam = sfm_data.getIntrinsics().at(view->id_intrinsic).get();
-      const Pose3 & pose = sfm_data.poses.at(view->id_pose);
+      const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
+      const Pose3 & pose = sfm_data.GetPoseOrDie(view);
       trianObj.add(
         cam->get_projective_equivalent(pose),
         cam->get_ud_pixel(itObs->second.x));
