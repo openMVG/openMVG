@@ -24,12 +24,12 @@ struct indexedGraph
 
   GraphT g;
   map_Size_t_Node map_size_t_to_node; // Original image index to graph node
-  std::auto_ptr<map_NodeMapIndex> map_nodeMapIndex; // Association of data to graph Node
+  std::unique_ptr<map_NodeMapIndex> map_nodeMapIndex; // Association of data to graph Node
 
   template <typename IterablePairs>
   indexedGraph(const IterablePairs & pairs)
   {
-    map_nodeMapIndex = std::auto_ptr<map_NodeMapIndex>( new map_NodeMapIndex(g) );
+    map_nodeMapIndex.reset( new map_NodeMapIndex(g) );
 
     //A-- Compute the number of node we need
     std::set<IndexT> setNodes;
