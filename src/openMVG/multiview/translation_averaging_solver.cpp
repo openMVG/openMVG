@@ -129,8 +129,7 @@ bool solve_translations_problem(
   options.max_num_iterations = max_iterations;
   options.function_tolerance = function_tolerance;
   options.parameter_tolerance = parameter_tolerance;
-  options.linear_solver_type = ceres::ITERATIVE_SCHUR;
-  options.preconditioner_type = ceres::SCHUR_JACOBI;
+  options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
 
   Solver::Summary summary;
   Solve(options, &problem, &summary);
