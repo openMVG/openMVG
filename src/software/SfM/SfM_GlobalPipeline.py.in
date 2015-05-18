@@ -45,7 +45,7 @@ if not os.path.exists(output_dir):
 if not os.path.exists(matches_dir):
   os.mkdir(matches_dir)
 
-print ("1. Intrisics analysis") 
+print ("1. Intrinsics analysis") 
 pIntrisics = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfMInit_ImageListing"),  "-i", input_dir, "-o", matches_dir, "-d", camera_file_params] )
 pIntrisics.wait()
 
