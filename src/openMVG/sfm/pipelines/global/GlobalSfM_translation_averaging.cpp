@@ -96,12 +96,13 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
       return false;
     }
     //-- Update initial estimates from [minId,maxId] to range [0->Ncam]
-    const Pair_Set pairs = getPairs(vec_initialRijTijEstimates);
+    RelativeInfo_Vec vec_initialRijTijEstimates_cpy = vec_initialRijTijEstimates;
+    const Pair_Set pairs = getPairs(vec_initialRijTijEstimates_cpy);
     Hash_Map<IndexT,IndexT> _reindexForward, _reindexBackward;
     openMVG::reindex(pairs, _reindexForward, _reindexBackward);
-    for(size_t i = 0; i < vec_initialRijTijEstimates.size(); ++i)
+    for(size_t i = 0; i < vec_initialRijTijEstimates_cpy.size(); ++i)
     {
-      openMVG::relativeInfo & rel = vec_initialRijTijEstimates[i];
+      openMVG::relativeInfo & rel = vec_initialRijTijEstimates_cpy[i];
       rel.first = Pair(_reindexForward[rel.first.first], _reindexForward[rel.first.second]);
     }
 
@@ -114,7 +115,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
         double gamma = -1.0;
         std::vector<double> vec_solution;
         {
-          vec_solution.resize(iNview*3 + vec_initialRijTijEstimates.size()/3 + 1);
+          vec_solution.resize(iNview*3 + vec_initialRijTijEstimates_cpy.size()/3 + 1);
           using namespace openMVG::linearProgramming;
           #ifdef OPENMVG_HAVE_MOSEK
             MOSEK_SolveWrapper solverLP(vec_solution.size());
@@ -122,7 +123,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
             OSI_CLP_SolverWrapper solverLP(vec_solution.size());
           #endif
 
-          lInfinityCV::Tifromtij_ConstraintBuilder_OneLambdaPerTrif cstBuilder(vec_initialRijTijEstimates);
+          lInfinityCV::Tifromtij_ConstraintBuilder_OneLambdaPerTrif cstBuilder(vec_initialRijTijEstimates_cpy);
 
           LP_Constraints_Sparse constraint;
           //-- Setup constraint and solver
@@ -152,15 +153,11 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
           os << "Translation fusion statistics.";
           os.str("");
           os << "-------------------------------" << "\n"
-            << "-- #relative estimates: " << vec_initialRijTijEstimates.size()
+            << "-- #relative estimates: " << vec_initialRijTijEstimates_cpy.size()
             << " converge with gamma: " << gamma << ".\n"
             << " timing (s): " << timeLP_translation << ".\n"
             << "-------------------------------" << "\n";
           std::cout << os.str() << std::endl;
-          //using namespace htmlDocument;
-          //_htmlDocStream->pushInfo("<hr>");
-          //_htmlDocStream->pushInfo(htmlMarkup("h1",os.str()));
-          //_htmlDocStream->pushInfo(os.str());
         }
 
         std::cout << "Found solution:\n";
@@ -169,7 +166,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
         std::vector<double> vec_camTranslation(iNview*3,0);
         std::copy(&vec_solution[0], &vec_solution[iNview*3], &vec_camTranslation[0]);
 
-        std::vector<double> vec_camRelLambdas(&vec_solution[iNview*3], &vec_solution[iNview*3 + vec_initialRijTijEstimates.size()/3]);
+        std::vector<double> vec_camRelLambdas(&vec_solution[iNview*3], &vec_solution[iNview*3 + vec_initialRijTijEstimates_cpy.size()/3]);
         std::cout << "\ncam position: " << std::endl;
         std::copy(vec_camTranslation.begin(), vec_camTranslation.end(), std::ostream_iterator<double>(std::cout, " "));
         std::cout << "\ncam Lambdas: " << std::endl;
@@ -191,18 +188,22 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
       case TRANSLATION_AVERAGING_L2:
       {
         std::vector<int> vec_edges;
-        vec_edges.reserve(vec_initialRijTijEstimates.size() * 2);
+        vec_edges.reserve(vec_initialRijTijEstimates_cpy.size() * 2);
         std::vector<double> vec_poses;
-        vec_poses.reserve(vec_initialRijTijEstimates.size() * 3);
+        vec_poses.reserve(vec_initialRijTijEstimates_cpy.size() * 3);
         std::vector<double> vec_weights;
-        vec_weights.reserve(vec_initialRijTijEstimates.size());
+        vec_weights.reserve(vec_initialRijTijEstimates_cpy.size());
 
-        for(int i=0; i < vec_initialRijTijEstimates.size(); ++i)
+        for(int i=0; i < vec_initialRijTijEstimates_cpy.size(); ++i)
         {
-          const openMVG::relativeInfo & rel = vec_initialRijTijEstimates[i];
+          const openMVG::relativeInfo & rel = vec_initialRijTijEstimates_cpy[i];
           vec_edges.push_back(rel.first.first);
           vec_edges.push_back(rel.first.second);
-          const Mat3 Ri = map_globalR.at(rel.first.second);
+          // Since index have been remapped
+          // (use the backward indexing to retrieve the second global rotation)
+          const IndexT secondId = _reindexBackward[rel.first.second];
+          const View * view = sfm_data.views.at(secondId).get();
+          const Mat3 & Ri = map_globalR.at(view->id_pose);
           const Vec3 direction = -(Ri.transpose() * rel.second.second.normalized());
 
           vec_poses.push_back(direction(0));
@@ -222,7 +223,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
           &vec_edges[0],
           &vec_poses[0],
           &vec_weights[0],
-          vec_initialRijTijEstimates.size(),
+          vec_initialRijTijEstimates_cpy.size(),
           loss_width,
           &X[0],
           function_tolerance,
@@ -237,8 +238,8 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
         {
           const Vec3 C(X[i*3], X[i*3+1], X[i*3+2]);
           const IndexT camNodeId = _reindexBackward[i]; // undo the reindexing
-          const View * view = sfm_data.views[camNodeId].get();
-          const Mat3 & Ri = map_globalR.find(view->id_pose)->second;
+          const View * view = sfm_data.views.at(camNodeId).get();
+          const Mat3 & Ri = map_globalR.at(view->id_pose);
           sfm_data.poses[view->id_pose] = Pose3(Ri, C);
         }
       }
