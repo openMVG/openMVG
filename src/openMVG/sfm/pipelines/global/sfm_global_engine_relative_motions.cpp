@@ -338,7 +338,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure()
     structure_estimator.triangulate(_sfm_data);
 
     std::cout << "\n#removed tracks (invalid triangulation): " <<
-      IndexT(_sfm_data.getLandmarks().size()) - trackCountBefore << std::endl;
+      trackCountBefore - IndexT(_sfm_data.getLandmarks().size()) << std::endl;
     std::cout << std::endl << "  Triangulation took (s): " << timer.elapsed() << std::endl;
 
     // Export initial structure
