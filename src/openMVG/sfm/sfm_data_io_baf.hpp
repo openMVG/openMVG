@@ -54,7 +54,7 @@ static bool Save_BAF(
     for (Poses::const_iterator iterPose = poses.begin();
       iterPose != poses.end(); ++iterPose)
     {
-      // [Rotation row major 3x3; camera center 3x1]
+      // [Rotation col major 3x3; camera center 3x1]
       const double * rotation = iterPose->second.rotation().data();
       std::copy(rotation, rotation+9, std::ostream_iterator<double>(stream, " "));
       const double * center = iterPose->second.center().data();

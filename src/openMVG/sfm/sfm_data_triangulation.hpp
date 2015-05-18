@@ -26,7 +26,7 @@ struct SfM_Data_Structure_Computation_Basis
     :_bConsoleVerbose(bConsoleVerbose)
   {
   }
-  
+
   virtual void triangulate(SfM_Data & sfm_data) const = 0;
 };
 

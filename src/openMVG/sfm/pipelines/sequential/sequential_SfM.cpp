@@ -477,7 +477,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
         _sfm_data.structure[trackId] = landmarks[trackId];
       }
       else  {
-        // Remove this observation fro the scene tracking data
+        // Remove this observation from the scene tracking data
         _map_tracks[trackId].erase(I);
         _map_tracks[trackId].erase(J);
         if (_map_tracks[trackId].size() < 2)  {
@@ -541,7 +541,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
       htmlFileStream << _htmlDocStream->getDoc();
     }
   }
-  return true;
+  return !_sfm_data.structure.empty();
 }
 
 double SequentialSfMReconstructionEngine::ComputeResidualsHistogram(Histogram<double> * histo)
