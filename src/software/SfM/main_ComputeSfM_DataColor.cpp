@@ -14,6 +14,7 @@
 #include <vector>
 
 using namespace openMVG;
+using namespace openMVG::image;
 
 /// Find the color of the SfM_Data Landmarks/structure
 void ColorizeTracks(

@@ -42,7 +42,7 @@ public:
    *
    * \return True if some pixel have been set to true.
    */
-  virtual bool computeMask( Image< unsigned char > & maskLeft, Image< unsigned char > & maskRight )
+  virtual bool computeMask( image::Image< unsigned char > & maskLeft, image::Image< unsigned char > & maskRight )
   {
     maskLeft.fill(0);
     maskRight.fill(0);
@@ -54,8 +54,8 @@ public:
       const SIOPointFeature & L = _vec_featsL[ iter_putativeMatches->_i ];
       const SIOPointFeature & R = _vec_featsR[ iter_putativeMatches->_j ];
 
-      FilledCircle( L.x(), L.y(), ( int )_radius, ( unsigned char ) 255, &maskLeft );
-      FilledCircle( R.x(), R.y(), ( int )_radius, ( unsigned char ) 255, &maskRight );
+      image::FilledCircle( L.x(), L.y(), ( int )_radius, ( unsigned char ) 255, &maskLeft );
+      image::FilledCircle( R.x(), R.y(), ( int )_radius, ( unsigned char ) 255, &maskRight );
     }
     return _vec_PutativeMatches.size() > 0;
   }

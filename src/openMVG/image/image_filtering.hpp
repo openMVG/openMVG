@@ -23,8 +23,8 @@
 
 #include "openMVG/image/image_convolution.hpp"
 
-namespace openMVG
-{
+namespace openMVG {
+namespace image {
 
   /**
    ** Compute X-derivative using central difference
@@ -338,8 +338,7 @@ namespace openMVG
     ImageSeparableConvolution( img , kernel_horiz , kernel_vert , out) ;
   }
 
-
-
-}
+} // namespace image
+} // namespace openMVG
 
 #endif

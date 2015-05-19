@@ -40,17 +40,17 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
    * \return True.
    */
   virtual bool computeMask(
-    Image< unsigned char > & maskLeft,
-    Image< unsigned char > & maskRight )
+    image::Image< unsigned char > & maskLeft,
+    image::Image< unsigned char > & maskRight )
   {
     std::vector< matching::IndMatch > vec_KVLDMatches;
 
-    Image< unsigned char > imageL, imageR;
-    ReadImage( _sLeftImage.c_str(), &imageL );
-    ReadImage( _sRightImage.c_str(), &imageR );
+    image::Image< unsigned char > imageL, imageR;
+    image::ReadImage( _sLeftImage.c_str(), &imageL );
+    image::ReadImage( _sRightImage.c_str(), &imageR );
 
-    Image< float > imgA ( imageL.GetMat().cast< float >() );
-    Image< float > imgB ( imageR.GetMat().cast< float >() );
+    image::Image< float > imgA ( imageL.GetMat().cast< float >() );
+    image::Image< float > imgB(imageR.GetMat().cast< float >());
 
     std::vector< Pair > matchesFiltered, matchesPair;
 

@@ -19,7 +19,6 @@
 #include <cereal/cereal.hpp>
 
 using namespace std;
-using namespace openMVG;
 
 namespace openMVG {
 namespace features {
@@ -84,9 +83,9 @@ public:
   @param mask 8-bit gray image for keypoint filtering (optional).
      Non-zero values depict the region of interest.
   */
-  bool Describe(const Image<unsigned char>& image,
+  bool Describe(const image::Image<unsigned char>& image,
     std::unique_ptr<Regions> &regions,
-    const Image<unsigned char> * mask = NULL)
+    const image::Image<unsigned char> * mask = NULL)
   {
     _params._options.fDesc_factor =
       (_params._eAkazeDescriptor == AKAZE_MSURF ||
@@ -121,7 +120,7 @@ public:
           // Feature masking
           if (mask)
           {
-            const Image<unsigned char> & maskIma = *mask;
+            const image::Image<unsigned char> & maskIma = *mask;
             if (maskIma(ptAkaze.y, ptAkaze.x) > 0)
               continue;
           }
@@ -162,7 +161,7 @@ public:
           // Feature masking
           if (mask)
           {
-            const Image<unsigned char> & maskIma = *mask;
+            const image::Image<unsigned char> & maskIma = *mask;
             if (maskIma(ptAkaze.y, ptAkaze.x) > 0)
               continue;
           }
@@ -209,7 +208,7 @@ public:
           // Feature masking
           if (mask)
           {
-            const Image<unsigned char> & maskIma = *mask;
+            const image::Image<unsigned char> & maskIma = *mask;
             if (maskIma(ptAkaze.y, ptAkaze.x) > 0)
               continue;
           }

@@ -44,9 +44,9 @@ public:
   @param mask 8-bit gray image for keypoint filtering (optional).
      Non-zero values depict the region of interest.
   */
-  virtual bool Describe(const Image<unsigned char> & image,
+  virtual bool Describe(const image::Image<unsigned char> & image,
     std::unique_ptr<Regions> &regions,
-    const Image<unsigned char> * mask = NULL) = 0;
+    const image::Image<unsigned char> * mask = NULL) = 0;
 
   /// Allocate regions depending of the Image_describer
   virtual void Allocate(std::unique_ptr<Regions> &regions) const = 0;

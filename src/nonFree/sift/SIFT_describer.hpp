@@ -111,13 +111,13 @@ public:
   @param mask 8-bit gray image for keypoint filtering (optional).
      Non-zero values depict the region of interest.
   */
-  bool Describe(const Image<unsigned char>& image,
+  bool Describe(const image::Image<unsigned char>& image,
     std::unique_ptr<Regions> &regions,
-    const Image<unsigned char> * mask = NULL)
+    const image::Image<unsigned char> * mask = NULL)
   {
     const int w = image.Width(), h = image.Height();
     //Convert to float
-    const Image<float> If( image.GetMat().cast<float>() );
+    const image::Image<float> If(image.GetMat().cast<float>());
 
     // Configure VLFeat
     vl_constructor();
@@ -160,7 +160,7 @@ public:
         // Feature masking
         if (mask)
         {
-          const Image<unsigned char> & maskIma = *mask;
+          const image::Image<unsigned char> & maskIma = *mask;
           if (maskIma(keys[i].y, keys[i].x) > 0)
             continue;
         }

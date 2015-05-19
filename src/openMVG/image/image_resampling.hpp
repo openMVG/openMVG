@@ -8,8 +8,9 @@
 #define OPENMVG_IMAGE_IMAGE_RESAMPLING_HPP_
 
 
-namespace openMVG
-{
+namespace openMVG {
+namespace image {
+
 	/** 
    ** Half sample an image (ie reduce it's size by a factor 2) using bilinear interpolation
    ** @param src input image 
@@ -36,6 +37,7 @@ namespace openMVG
 
   // TODO : provide a Double size resampling image 
 
-}
+} // namespace image
+} // namespace openMVG
 
 #endif

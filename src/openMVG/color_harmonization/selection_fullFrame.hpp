@@ -31,10 +31,10 @@ public:
    *
    * \return True.
    */
-  virtual bool computeMask( Image< unsigned char > & maskLeft, Image< unsigned char > & maskRight )
+  virtual bool computeMask( image::Image< unsigned char > & maskLeft, image::Image< unsigned char > & maskRight )
   {
-    maskLeft.fill( WHITE );
-    maskRight.fill( WHITE );
+    maskLeft.fill( image::WHITE );
+    maskRight.fill( image::WHITE );
     return true;
   }
 

@@ -16,6 +16,7 @@
 #include <iostream>
 
 using namespace openMVG;
+using namespace openMVG::image;
 using namespace std;
 
 // A simple container and undistort function for the Brown's distortion model [1]

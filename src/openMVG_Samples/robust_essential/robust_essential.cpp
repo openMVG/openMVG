@@ -26,6 +26,7 @@
 
 using namespace openMVG;
 using namespace openMVG::matching;
+using namespace openMVG::image;
 using namespace svg;
 using namespace std;
 

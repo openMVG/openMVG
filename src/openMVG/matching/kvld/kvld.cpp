@@ -19,6 +19,7 @@ the terms of the BSD license ( see the COPYING file).
 
 using namespace std;
 using namespace openMVG;
+using namespace openMVG::image;
 
 ImageScale::ImageScale( const Image< float >& I, double r )
 {

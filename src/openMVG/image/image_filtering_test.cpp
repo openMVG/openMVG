@@ -8,6 +8,7 @@
 #include "testing/testing.h"
 
 using namespace openMVG;
+using namespace openMVG::image;
 
 #include <iostream>
 using namespace std;

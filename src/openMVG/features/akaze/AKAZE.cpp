@@ -8,6 +8,8 @@
 
 namespace openMVG {
 
+using namespace openMVG::image;
+
 /// Lookup table for 2d gaussian (sigma = 2.5) where (0,0) is top left and (6,6) is bottom right
 const float gauss25[7][7] = {
   {0.02546481f,	0.02350698f,	0.01849125f,	0.01239505f,	0.00708017f,	0.00344629f,	0.00142946f},

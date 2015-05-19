@@ -19,6 +19,7 @@
 #include "third_party/cmdLine/cmdLine.h"
 
 using namespace openMVG;
+using namespace openMVG::image;
 
 static int running = 1;
 static SfM_Data sfm_data;

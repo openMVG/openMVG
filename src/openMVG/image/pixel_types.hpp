@@ -10,6 +10,7 @@
 #include "openMVG/numeric/numeric.h"
 
 namespace openMVG {
+namespace image {
 
 /// RGB template pixel type
 template <typename T>
@@ -142,6 +143,7 @@ const RGBColor YELLOW(255,255,0);
 const RGBColor CYAN(0,255,255);
 const RGBColor MAGENTA(255,0,255);
 
+} // namespace image
 } // namespace openMVG
 
 #endif // OPENMVG_IMAGE_PIXELTYPES_HPP

@@ -23,6 +23,7 @@
 #include <vector>
 
 using namespace openMVG;
+using namespace openMVG::image;
 
 /// Check that Kmatrix is a string like "f;0;ppx;0;f;ppy;0;0;1"
 /// With f,ppx,ppy as valid numerical value
@@ -178,11 +179,11 @@ int main(int argc, char **argv)
     const std::string sImageFilename = stlplus::create_filespec( sImageDir, *iter_image );
 
     // Test if the image format is supported:
-    if (openMVG::GetFormat(sImageFilename.c_str()) == openMVG::Unknown)
+    if (openMVG::image::GetFormat(sImageFilename.c_str()) == openMVG::image::Unknown)
       continue; // image cannot be opened
 
     Image<unsigned char> image;
-    if (openMVG::ReadImage( sImageFilename.c_str(), &image))  {
+    if (openMVG::image::ReadImage( sImageFilename.c_str(), &image))  {
       width = image.Width();
       height = image.Height();
       ppx = width / 2.0;

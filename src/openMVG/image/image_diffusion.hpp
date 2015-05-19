@@ -11,8 +11,9 @@
 #pragma warning(once:4244)
 #endif
 
-namespace openMVG
-{
+namespace openMVG {
+namespace image {
+
 /**
  ** Compute Perona and Malik G2 diffusion coefficient
  ** @param Lx Image of X-derivative
@@ -332,6 +333,7 @@ int FEDCycleTimings( const Real T , const Real Tmax , std::vector< Real > & tau 
   return n ;
 }
 
+}  // namespace image
 }  // namespace openMVG
 
 #endif //  OPENMVG_IMAGE_IMAGE_DIFFUSION_HPP_

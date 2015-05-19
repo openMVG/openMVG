@@ -35,7 +35,7 @@ public:
    *
    * \return True if(mask not empty).
    */
-  virtual bool computeMask( Image< unsigned char > & maskLeft, Image< unsigned char > & maskRight ) = 0;
+  virtual bool computeMask( image::Image< unsigned char > & maskLeft, image::Image< unsigned char > & maskRight ) = 0;
 
   /**
    * Compute Histogram for the color's masked data
@@ -49,9 +49,9 @@ public:
   template< typename ImageType >
   static void computeHisto(
     Histogram< double > & histo,
-    const Image< unsigned char >& mask,
+    const image::Image< unsigned char >& mask,
     size_t channelIndex,
-    const Image< ImageType >& image )
+    const image::Image< ImageType >& image )
   {
     for( int j = 0; j < mask.Height(); ++j )
     {

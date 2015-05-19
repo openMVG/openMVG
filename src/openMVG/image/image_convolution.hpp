@@ -16,8 +16,9 @@
  ** - 2D (using standard 2d kernel of with separable kernels)
  **/
 
-namespace openMVG
-{
+namespace openMVG {
+namespace image {
+
 /**
  ** General image convolution by a kernel
  ** assume kernel has odd size in both dimensions and (border pixel are copied)
@@ -268,7 +269,7 @@ void ImageSeparableConvolution( const Image<float> & img ,
   SeparableConvolution2d(img.GetMat(), horiz_k_cast, vert_k_cast, &((Image<float>::Base&)out));
 }
 
+} // namespace image
 } // namespace openMVG
 
 #endif // OPENMVG_IMAGE_IMAGE_CONVOLUTION_HPP_
-

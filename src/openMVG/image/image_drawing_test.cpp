@@ -8,6 +8,7 @@
 #include "testing/testing.h"
 
 using namespace openMVG;
+using namespace openMVG::image;
 
 // Horizontal / Vertical scanlines
 // Assert that pixels was drawn at the good place

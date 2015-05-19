@@ -19,6 +19,7 @@ extern "C" {
 using namespace std;
 
 namespace openMVG {
+namespace image {
 
 static bool CmpFormatExt(const char *a, const char *b) {
   size_t len_a = strlen(a);
@@ -55,7 +56,7 @@ int ReadImage(const char *filename,
               int * w,
               int * h,
               int * depth){
-  Format f = GetFormat(filename);
+  const Format f = GetFormat(filename);
 
   switch (f) {
     case Pnm:
@@ -629,4 +630,5 @@ int WriteTiff(const char * filename,
   return 1;
 }
 
+}  // namespace image
 }  // namespace openMVG

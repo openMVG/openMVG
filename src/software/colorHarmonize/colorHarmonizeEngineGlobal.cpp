@@ -43,6 +43,7 @@
 namespace openMVG{
 
 using namespace lemon;
+using namespace openMVG::image;
 using namespace openMVG::matching;
 using namespace openMVG::lInfinity;
 

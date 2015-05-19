@@ -14,8 +14,8 @@ namespace openMVG {
 
 //-- A slow but accurate way to draw K-VLD lines
 void getKVLDMask(
-  Image< unsigned char > *maskL,
-  Image< unsigned char > *maskR,
+  image::Image< unsigned char > *maskL,
+  image::Image< unsigned char > *maskR,
   const std::vector< openMVG::SIOPointFeature > &vec_F1,
   const std::vector< openMVG::SIOPointFeature > &vec_F2,
   const std::vector< Pair >& vec_matches,
@@ -33,14 +33,14 @@ void getKVLDMask(
         float l = ( l1.coords() - l2.coords() ).norm();
         int widthL = std::max( 1.f, l / ( dimension + 1.f ) );
 
-        DrawLineThickness(l1.x(), l1.y(), l2.x(), l2.y(), 255, widthL, maskL);
+        image::DrawLineThickness(l1.x(), l1.y(), l2.x(), l2.y(), 255, widthL, maskL);
 
         const openMVG::SIOPointFeature & r1 = vec_F2[ vec_matches[ it1 ].second ];
         const openMVG::SIOPointFeature & r2 = vec_F2[ vec_matches[ it2 ].second ];
         float r = ( r1.coords() - r2.coords() ).norm();
         int widthR = std::max( 1.f, r / ( dimension + 1.f ) );  
 
-        DrawLineThickness(r1.x(), r1.y(), r2.x(), r2.y(), 255, widthR, maskR);
+        image::DrawLineThickness(r1.x(), r1.y(), r2.x(), r2.y(), 255, widthR, maskR);
       }
     }
   }

@@ -56,17 +56,20 @@ struct KvldParameters
 // magnitudes: store gradient norms of pixels of each scale image into a vector of images
 struct ImageScale
 {
-	std::vector< openMVG::Image< float > > angles;
-	std::vector< openMVG::Image< float > > magnitudes;
+	std::vector< openMVG::image::Image< float > > angles;
+  std::vector< openMVG::image::Image< float > > magnitudes;
 	std::vector< double > ratios;
 	double radius_size;
 	double step;
 
-  ImageScale( const openMVG::Image< float >& I,double r = 5.0 );
+  ImageScale(const openMVG::image::Image< float >& I, double r = 5.0);
 	int getIndex( const double r )const;
 
 private:
-  void GradAndNorm( const openMVG::Image< float >& I,  openMVG::Image< float >& angle, openMVG::Image< float >& m );
+  void GradAndNorm(
+    const openMVG::image::Image< float >& I,
+    openMVG::image::Image< float >& angle,
+    openMVG::image::Image< float >& m);
 };
 
 //====== VLD structures ======//
@@ -169,15 +172,15 @@ public:
 //
 //kvldParameters: container of minimum inlier rate, the value of K (=3 initially) and geometric verification flag (true initially)
 
-float KVLD( const openMVG::Image< float >& I1,
-            const openMVG::Image< float >& I2,
-            const std::vector<openMVG::SIOPointFeature> & F1,
-            const std::vector<openMVG::SIOPointFeature> & F2,
-            const std::vector< openMVG::Pair >& matches,
-            std::vector< openMVG::Pair >& matchesFiltered,
-            std::vector< double >& score,
-            openMVG::Mat& E,
-            std::vector< bool >& valide,
-            KvldParameters& kvldParameters );
+float KVLD(const openMVG::image::Image< float >& I1,
+  const openMVG::image::Image< float >& I2,
+  const std::vector<openMVG::SIOPointFeature> & F1,
+  const std::vector<openMVG::SIOPointFeature> & F2,
+  const std::vector< openMVG::Pair >& matches,
+  std::vector< openMVG::Pair >& matchesFiltered,
+  std::vector< double >& score,
+  openMVG::Mat& E,
+  std::vector< bool >& valide,
+  KvldParameters& kvldParameters );
 
 #endif //KVLD_H

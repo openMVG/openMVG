@@ -35,6 +35,7 @@
 #include <fstream>
 
 using namespace openMVG;
+using namespace openMVG::image;
 using namespace openMVG::matching;
 using namespace openMVG::robust;
 using namespace std;

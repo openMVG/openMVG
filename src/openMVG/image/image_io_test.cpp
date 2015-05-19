@@ -13,6 +13,7 @@
 #include "testing/testing.h"
 
 using namespace openMVG;
+using namespace openMVG::image;
 using std::string;
 
 TEST(ReadJpg, Jpg_Color) {
@@ -61,18 +62,18 @@ TEST(ReadPng, Png_Monochrome) {
 }
 
 TEST(GetFormat, filenames) {
-  EXPECT_EQ(GetFormat("something.jpg"), openMVG::Jpg);
-  EXPECT_EQ(GetFormat("something.png"), openMVG::Png);
-  EXPECT_EQ(GetFormat("something.pnm"), openMVG::Pnm);
-  EXPECT_EQ(GetFormat("something.tif"), openMVG::Tiff);
-  EXPECT_EQ(GetFormat("/some/thing.JpG"), openMVG::Jpg);
-  EXPECT_EQ(GetFormat("/some/thing.pNG"), openMVG::Png);
-  EXPECT_EQ(GetFormat("some/thing.PNm"), openMVG::Pnm);
-  EXPECT_EQ(GetFormat("some/thing.TIf"), openMVG::Tiff);
-  EXPECT_EQ(GetFormat(".s/o.m/e.t/h.i/n.g.JPG"), openMVG::Jpg);
-  EXPECT_EQ(GetFormat(".s/o.m/e.t/h.i/n.g.PNG"), openMVG::Png);
-  EXPECT_EQ(GetFormat(".s/o.m/e.t/h.i/n.g.PNM"), openMVG::Pnm);
-  EXPECT_EQ(GetFormat(".s/o.m/e.t/h.i/n.g.TIF"), openMVG::Tiff);
+  EXPECT_EQ(GetFormat("something.jpg"), openMVG::image::Jpg);
+  EXPECT_EQ(GetFormat("something.png"), openMVG::image::Png);
+  EXPECT_EQ(GetFormat("something.pnm"), openMVG::image::Pnm);
+  EXPECT_EQ(GetFormat("something.tif"), openMVG::image::Tiff);
+  EXPECT_EQ(GetFormat("/some/thing.JpG"), openMVG::image::Jpg);
+  EXPECT_EQ(GetFormat("/some/thing.pNG"), openMVG::image::Png);
+  EXPECT_EQ(GetFormat("some/thing.PNm"), openMVG::image::Pnm);
+  EXPECT_EQ(GetFormat("some/thing.TIf"), openMVG::image::Tiff);
+  EXPECT_EQ(GetFormat(".s/o.m/e.t/h.i/n.g.JPG"), openMVG::image::Jpg);
+  EXPECT_EQ(GetFormat(".s/o.m/e.t/h.i/n.g.PNG"), openMVG::image::Png);
+  EXPECT_EQ(GetFormat(".s/o.m/e.t/h.i/n.g.PNM"), openMVG::image::Pnm);
+  EXPECT_EQ(GetFormat(".s/o.m/e.t/h.i/n.g.TIF"), openMVG::image::Tiff);
 }
 
 TEST(ImageIOTest, Png_Out) {

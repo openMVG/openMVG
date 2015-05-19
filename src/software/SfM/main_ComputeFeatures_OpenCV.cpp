@@ -27,6 +27,7 @@
 #include <fstream>
 
 using namespace openMVG;
+using namespace openMVG::image;
 using namespace std;
 
 enum eGeometricModel

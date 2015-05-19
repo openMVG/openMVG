@@ -47,7 +47,7 @@ public:
   }
 
   void extract(
-    const Image<unsigned char> & I,
+    const image::Image<unsigned char> & I,
     const SIOPointFeature & feat,
     float desc[144])
   {
@@ -61,8 +61,8 @@ public:
     const int outRadius2 = outRadius*outRadius;
     const float scale = feat.scale();
 
-    Image<float> outPatch(outPatchWidth,outPatchWidth, true, 0);
-    Image<unsigned char> flagPatch(outPatchWidth,outPatchWidth, true, 0);
+    image::Image<float> outPatch(outPatchWidth,outPatchWidth, true, 0);
+    image::Image<unsigned char> flagPatch(outPatchWidth, outPatchWidth, true, 0);
 
     // pointer alias
     const unsigned char * img_data = I.GetMat().data();
@@ -89,7 +89,7 @@ public:
         flagPatch_data[(y+outRadius)*outPatchWidth+x+outRadius] = 1;
       }
     }
-    ImageGaussianFilter( Image<float>(outPatch), 1.2, outPatch);
+    image::ImageGaussianFilter(image::Image<float>(outPatch), 1.2, outPatch);
 
     //b. creation of the LIOP ordering
     const int inRadius = scalePatchWidth/2;
@@ -104,8 +104,8 @@ public:
   };
 
   void CreateLIOP_GOrder(
-    const Image<float> & outPatch,
-    const Image<unsigned char> & flagPatch,
+    const image::Image<float> & outPatch,
+    const image::Image<unsigned char> & flagPatch,
     const int inRadius,
     float desc[144])
   {
@@ -118,7 +118,7 @@ public:
     const int outRadius = outPatch.Width() / 2;
 
     const int lsRadius = 6;
-    const float theta = 2.0*M_PI/(float)LIOP_NUM;
+    const float theta = 2.0f*M_PI/(float)LIOP_NUM;
 
     Pixel pixel[MAX_PIXEL_NUM];
     int pixelCount = 0;
@@ -238,8 +238,8 @@ public:
   bool BilinearInterpolation_BorderCheck(
     float& val,
     float x, float y,
-    const Image<float> & image,
-    const Image<unsigned char> & flagImage) const
+    const image::Image<float> & image,
+    const image::Image<unsigned char> & flagImage) const
   {
     val = 0.0f;
     if(!(x >= 0 && y >= 0 && x<=image.Width()-1 && y<=image.Height()-1))

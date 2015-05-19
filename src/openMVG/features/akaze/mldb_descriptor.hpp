@@ -140,9 +140,9 @@ namespace openMVG
     **/
   template< typename Real>
   void ComputeMLDBDescriptor(
-    const Image<Real> & Li ,
-    const Image<Real> &Lx ,
-    const Image<Real> &Ly ,
+    const image::Image<Real> & Li,
+    const image::Image<Real> &Lx,
+    const image::Image<Real> &Ly,
     const int id_octave ,
     const SIOPointFeature & ipt ,
     Descriptor<bool, 486> & desc )
