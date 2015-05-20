@@ -207,7 +207,7 @@ int main(int argc, char **argv)
   // - if regions file exist continue,
   // - if no file, compute features
   {
-    Timer timer;
+    system::Timer timer;
     Image<unsigned char> imageGray;
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );

@@ -20,6 +20,7 @@
 #include <iostream>
 
 namespace openMVG {
+namespace system {
 
   //! \brief Timer class with microsecond accuracy.
   class Timer
@@ -48,6 +49,7 @@ namespace openMVG {
   // print the elapsed time
   std::ostream& operator << (std::ostream&, const Timer&);
 
+} // namespace system
 } // namespace openMVG
 
 #endif // OPENMVG_SYSTEM_TIMER_HPP

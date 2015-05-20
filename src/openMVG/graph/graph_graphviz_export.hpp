@@ -8,15 +8,12 @@
 #ifndef OPENMVG_GRAPH_EXPORT_H_
 #define OPENMVG_GRAPH_EXPORT_H_
 
-//#include <lemon/core.h>
-
 #include <iostream>
 #include <fstream>
+#include <cstdlib>
 
 namespace openMVG {
-namespace graphUtils  {
-
-  using namespace std;
+namespace graph {
 
 // Export an Image connection graph
 //   to graphviz file format.
@@ -33,10 +30,10 @@ namespace graphUtils  {
 template <typename GraphT>
 bool exportToGraphvizFormat_Nodal(
   const GraphT & g,
-  ostream & os)
+  std::ostream & os)
 {
-  os << "graph 1 {" << endl;
-  os << "node [shape=circle]" << endl;
+  os << "graph 1 {" << std::endl;
+  os << "node [shape=circle]" << std::endl;
   //Export node label
   for(typename GraphT::NodeIt n(g); n!= lemon::INVALID; ++n)
   {
@@ -45,7 +42,7 @@ bool exportToGraphvizFormat_Nodal(
 
   //-- Export arc (as the graph is bi-directional, export arc only one time)
 
-  map< std::pair<IndexT,IndexT>, IndexT > map_arcs;
+  std::map< std::pair<IndexT, IndexT>, IndexT > map_arcs;
   for(typename GraphT::ArcIt e(g); e!=lemon::INVALID; ++e) {
     if( map_arcs.end() == map_arcs.find(std::make_pair(IndexT(g.id(g.source(e))), IndexT(g.id(g.target(e)))))
       &&
@@ -55,14 +52,14 @@ bool exportToGraphvizFormat_Nodal(
     }
   }
   //os << "edge [style=bold]" << endl;
-  for ( map< std::pair<IndexT,IndexT>, IndexT >::const_iterator iter = map_arcs.begin();
+  for (std::map< std::pair<IndexT, IndexT>, IndexT >::const_iterator iter = map_arcs.begin();
     iter != map_arcs.end();
     ++iter)
   {
-    os << "  n" << iter->first.first << " -- " << " n" << iter->first.second << endl;
+    os << "  n" << iter->first.first << " -- " << " n" << iter->first.second << std::endl;
   }
 
-  os << "}" << endl;
+  os << "}" << std::endl;
   return os.good();
 }
 
@@ -74,22 +71,21 @@ bool exportToGraphvizFormat_Image(
   const GraphT & g,
   const NodeMap & nodeMap,
   const EdgeMap & edgeMap,
-  ostream & os, bool bWeightedEdge=false)
+  std::ostream & os, bool bWeightedEdge = false)
 {
-  os << "graph 1 {" << endl;
-  os << "node [shape=none]" << endl;
+  os << "graph 1 {" << std::endl;
+  os << "node [shape=none]" << std::endl;
   //Export node label
   for(typename GraphT::NodeIt n(g); n!=lemon::INVALID; ++n)
   {
     os << "  n" << g.id(n)
-       << "[ label ="
-      <<
-      "< "<< endl
-      <<"<table>"<< endl
-      <<"<tr><td>" << "\"" << nodeMap[n] <<"\"" <<"</td></tr>"<< endl
-      <<"<tr><td><img src=\"" << nodeMap[n] <<"\"/></td></tr>"<< endl
-      <<"</table>"<< endl
-      <<">, cluster=1];"<< endl;
+      << "[ label ="
+      << "< "<< std::endl
+      << "<table>" << std::endl
+      << "<tr><td>" << "\"" << nodeMap[n] << "\"" << "</td></tr>" << std::endl
+      << "<tr><td><img src=\"" << nodeMap[n] << "\"/></td></tr>" << std::endl
+      << "</table>" << std::endl
+      << ">, cluster=1];" << std::endl;
 
     //os << "  n" << g.id(n)
     //  << " [ "
@@ -97,7 +93,7 @@ bool exportToGraphvizFormat_Image(
   }
 
   //Export arc value
-  map< std::pair<IndexT,IndexT>, IndexT > map_arcs;
+  std::map< std::pair<IndexT, IndexT>, IndexT > map_arcs;
   for(typename GraphT::ArcIt e(g); e!=lemon::INVALID; ++e) {
     if( map_arcs.end() == map_arcs.find(std::make_pair(IndexT(g.id(g.source(e))), IndexT(g.id(g.target(e)))))
       &&
@@ -108,7 +104,7 @@ bool exportToGraphvizFormat_Image(
     }
   }
 
-  os << "edge [style=bold]" << endl;
+  os << "edge [style=bold]" << std::endl;
   for ( map< std::pair<IndexT,IndexT>, IndexT>::const_iterator iter = map_arcs.begin();
     iter != map_arcs.end();
     ++iter)
@@ -116,14 +112,14 @@ bool exportToGraphvizFormat_Image(
     if (bWeightedEdge)
     {
       os << "  n" << iter->first.first << " -- " << " n" << iter->first.second
-        << " [label=\"" << iter->second << "\"]" << endl;
+        << " [label=\"" << iter->second << "\"]" << std::endl;
     }
     else
     {
-      os << "  n" << iter->first.first << " -- " << " n" << iter->first.second << endl;
+      os << "  n" << iter->first.first << " -- " << " n" << iter->first.second << std::endl;
     }
   }
-  os << "}" << endl;
+  os << "}" << std::endl;
   return os.good();
 }
 
@@ -132,16 +128,16 @@ void exportToGraphvizData(const std::string& sfile, const GraphT & graph){
   //Prepare Data
 
   std::ofstream file(sfile.c_str());
-  openMVG::graphUtils::exportToGraphvizFormat_Nodal(graph, file);
+  openMVG::graph::exportToGraphvizFormat_Nodal(graph, file);
   file.close();
 
   //Use Graphviz
   const std::string cmd = "neato -Tsvg -O -Goverlap=scale -Gsplines=false " + sfile;
-  int ret = system(cmd.c_str());
+  int ret = std::system(cmd.c_str());
   (void)ret;
 }
 
-} // namespace graphUtils
+} // namespace graph
 } // namespace openMVG
 
 #endif // OPENMVG_GRAPH_EXPORT_H_

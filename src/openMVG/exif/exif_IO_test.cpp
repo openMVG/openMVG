@@ -8,6 +8,7 @@
 
 using namespace std;
 using namespace openMVG;
+using namespace openMVG::exif;
 
 const std::string sImg =
   stlplus::folder_part(

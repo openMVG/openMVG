@@ -235,8 +235,8 @@ void GuidedMatching_Fundamental_Fast(
   IndMatches & vec_corresponding_index) // Ouput corresponding index
 {
   // Looking for the corresponding points that have
-  //  the satisfy:
-  //   1. an geometric distance below the provided Threshold
+  //  to satisfy:
+  //   1. a geometric distance below the provided Threshold
   //   2. a distance ratio between descriptors of valid geometric correspondencess
   //
   // - Cluster left point according their epipolar line border intersection.

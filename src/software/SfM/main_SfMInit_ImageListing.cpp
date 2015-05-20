@@ -3,7 +3,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-#include "openMVG/exif_IO/exif_IO_EasyExif.hpp"
+#include "openMVG/exif/exif_IO_EasyExif.hpp"
 
 #include "openMVG_Samples/sensorWidthDatabase/ParseDatabase.hpp"
 
@@ -31,7 +31,7 @@ using namespace openMVG::exif;
 bool checkIntrinsicStringValidity(const std::string & Kmatrix, double & focal, double & ppx, double & ppy)
 {
   std::vector<std::string> vec_str;
-  std::split( Kmatrix, ";", vec_str );
+  stl::split(Kmatrix, ";", vec_str);
   if (vec_str.size() != 9)  {
     std::cerr << "\n Missing ';' character" << std::endl;
     return false;

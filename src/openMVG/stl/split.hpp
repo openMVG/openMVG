@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 
+namespace stl
+{
 /**
  * Split an input string with a delimiter and fill a string vector
  */
@@ -26,5 +28,5 @@ static bool split ( const std::string src, const std::string& delim, std::vector
   }
   return bDelimiterExist;
 }
-
+} // namespace stl
 #endif // SPLIT_HPP

@@ -113,12 +113,12 @@ struct IntrinsicBase
   virtual std::size_t hashValue() const
   {
     size_t seed;
-    std::hash_combine(seed, static_cast<int>(this->getType()));
-    std::hash_combine(seed, _w);
-    std::hash_combine(seed, _h);
+    stl::hash_combine(seed, static_cast<int>(this->getType()));
+    stl::hash_combine(seed, _w);
+    stl::hash_combine(seed, _h);
     const std::vector<double> params = this->getParams();
     for (size_t i=0; i < params.size(); ++i)
-      std::hash_combine(seed, params[i]);
+      stl::hash_combine(seed, params[i]);
     return seed;
   }
 };

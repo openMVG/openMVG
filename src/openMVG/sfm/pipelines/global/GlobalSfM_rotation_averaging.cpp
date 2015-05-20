@@ -38,12 +38,12 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
       // Triplet inference (test over the composition error)
       //-------------------
       Pair_Set pairs = getPairs(relativeRotations);
-      std::vector< graphUtils::Triplet > vec_triplets = graphUtils::tripletListing(pairs);
+      std::vector< graph::Triplet > vec_triplets = graph::tripletListing(pairs);
       //-- Rejection triplet that are 'not' identity rotation (error to identity > 5°)
       TripletRotationRejection(5.0f, vec_triplets, relativeRotations);
 
       pairs = getPairs(relativeRotations);
-      const std::set<IndexT> set_remainingIds = graphUtils::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs);
+      const std::set<IndexT> set_remainingIds = graph::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs);
       if(set_remainingIds.empty())
         return false;
       KeepOnlyReferencedElement(set_remainingIds, relativeRotations);
@@ -126,7 +126,7 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
 ///  angular error once rotation composition have been computed.
 void GlobalSfM_Rotation_AveragingSolver::TripletRotationRejection(
   const double max_angular_error,
-  std::vector< graphUtils::Triplet > & vec_triplets,
+  std::vector< graph::Triplet > & vec_triplets,
   RelativeRotations & relativeRotations) const
 {
   const size_t edges_start_count = relativeRotations.size();
@@ -135,7 +135,7 @@ void GlobalSfM_Rotation_AveragingSolver::TripletRotationRejection(
   RelativeRotations_map map_relatives_validated;
 
   // DETECTION OF ROTATION OUTLIERS
-  std::vector< graphUtils::Triplet > vec_triplets_validated;
+  std::vector< graph::Triplet > vec_triplets_validated;
 
   std::vector<float> vec_errToIdentityPerTriplet;
   vec_errToIdentityPerTriplet.reserve(vec_triplets.size());
@@ -143,7 +143,7 @@ void GlobalSfM_Rotation_AveragingSolver::TripletRotationRejection(
   //  Error to identity rotation.
   for (size_t i = 0; i < vec_triplets.size(); ++i)
   {
-    const graphUtils::Triplet & triplet = vec_triplets[i];
+    const graph::Triplet & triplet = vec_triplets[i];
     const IndexT I = triplet.i, J = triplet.j , K = triplet.k;
 
     //-- Find the three rotations
@@ -203,8 +203,8 @@ void GlobalSfM_Rotation_AveragingSolver::TripletRotationRejection(
   // update to keep only useful triplets
   relativeRotations.clear();
   relativeRotations.reserve(map_relatives.size());
-  std::transform(map_relatives.begin(), map_relatives.end(), std::back_inserter(relativeRotations), std::RetrieveValue());
-  std::transform(map_relatives.begin(), map_relatives.end(), std::inserter(used_pairs, used_pairs.begin()), std::RetrieveKey());
+  std::transform(map_relatives.begin(), map_relatives.end(), std::back_inserter(relativeRotations), stl::RetrieveValue());
+  std::transform(map_relatives.begin(), map_relatives.end(), std::inserter(used_pairs, used_pairs.begin()), stl::RetrieveKey());
 
   // Display statistics about rotation triplets error:
   std::cout << "\nStatistics about rotation triplets:" << std::endl;

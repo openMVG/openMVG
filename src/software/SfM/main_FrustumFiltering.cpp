@@ -106,7 +106,7 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  openMVG::Timer timer;
+  openMVG::system::Timer timer;
 
   const Pair_Set pairs = BuildPairsFromFrustumsIntersections(sfm_data, z_near, z_far, stlplus::folder_part(sOutFile));
   /*const Pair_Set pairs = BuildPairsFromStructureObservations(sfm_data); */

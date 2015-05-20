@@ -146,7 +146,7 @@ int main(int argc, char **argv)
   // Sequential reconstruction process
   //---------------------------------------
 
-  openMVG::Timer timer;
+  openMVG::system::Timer timer;
   SequentialSfMReconstructionEngine sfmEngine(
     sfm_data,
     sOutDir,

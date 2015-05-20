@@ -128,7 +128,7 @@ int main(int argc, char **argv)
   // Global SfM reconstruction process
   //---------------------------------------
 
-  openMVG::Timer timer;
+  openMVG::system::Timer timer;
   GlobalSfMReconstructionEngine_RelativeMotions sfmEngine(
     sfm_data,
     sOutDir,

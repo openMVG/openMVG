@@ -74,7 +74,7 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
   while(getline( in, sValue ) )
   {
     vec_str.clear();
-    std::split( sValue, ";", vec_str );
+    stl::split(sValue, ";", vec_str);
     if (vec_str.size() == 1)
     {
       std::cerr << "Invalid input file" << std::endl;

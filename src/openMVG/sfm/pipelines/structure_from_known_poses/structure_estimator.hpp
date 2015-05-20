@@ -203,8 +203,8 @@ private:
     // Triangulate triplet tracks
     //  - keep valid one
 
-    typedef std::vector< graphUtils::Triplet > Triplets;
-    const Triplets triplets = graphUtils::tripletListing(pairs);
+    typedef std::vector< graph::Triplet > Triplets;
+    const Triplets triplets = graph::tripletListing(pairs);
 
     C_Progress_display my_progress_bar( triplets.size(), std::cout,
       "Per triplet tracks validation (discard spurious correspondences):\n" );
@@ -222,7 +222,7 @@ private:
         #endif // OPENMVG_USE_OPENMP
         {++my_progress_bar;}
 
-        const graphUtils::Triplet & triplet = *it;
+        const graph::Triplet & triplet = *it;
         const IndexT I = triplet.i, J = triplet.j , K = triplet.k;
 
         openMVG::tracks::STLMAPTracks map_tracksCommon;

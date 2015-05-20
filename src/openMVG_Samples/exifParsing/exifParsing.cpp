@@ -1,7 +1,7 @@
-#include "openMVG/exif_IO/exif_IO_EasyExif.hpp"
+#include "openMVG/exif/exif_IO_EasyExif.hpp"
+using namespace openMVG::exif;
 
 #include "third_party/cmdLine/cmdLine.h"
-
 #include <memory>
 
 int main(int argc, char **argv)
@@ -28,7 +28,7 @@ int main(int argc, char **argv)
             << argv[0] << std::endl
             << "--imafile " << sInputImage << std::endl;
   
-  std::auto_ptr<Exif_IO> exif_io( new Exif_IO_EasyExif( sInputImage ) );
+  std::unique_ptr<Exif_IO> exif_io( new Exif_IO_EasyExif( sInputImage ) );
 
   std::cout << "width : " << exif_io->getWidth() << std::endl;
   std::cout << "height : " << exif_io->getHeight() << std::endl;

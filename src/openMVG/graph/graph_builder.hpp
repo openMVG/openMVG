@@ -11,7 +11,7 @@
 #include <set>
 
 namespace openMVG {
-namespace graphUtils  {
+namespace graph  {
 
 // Structure used to keep information of an image graph:
 //  - Build a graph (add nodes and connection between nodes)
@@ -62,7 +62,7 @@ struct indexedGraph
   }
 };
 
-} // namespace graphUtils
+} // namespace graph
 } // namespace openMVG
 
 #endif // OPENMVG_GRAPH_BUILDER__H_

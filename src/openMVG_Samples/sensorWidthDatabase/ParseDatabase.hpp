@@ -28,7 +28,7 @@ bool parseDatabase( const std::string& sfileDatabase, std::vector<Datasheet>& ve
         if ( line[0] != '#' )
         {
           std::vector<std::string> values;
-          std::split( line, ";", values );
+          stl::split(line, ";", values);
           if ( values.size() == 3 )
           {
             const std::string brand = values[0];

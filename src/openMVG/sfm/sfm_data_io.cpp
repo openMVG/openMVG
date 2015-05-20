@@ -25,11 +25,11 @@ bool ValidIds(const SfM_Data & sfm_data, ESfM_Data flags_part)
 
   std::set<IndexT> set_id_intrinsics;
   transform(sfm_data.GetIntrinsics().begin(), sfm_data.GetIntrinsics().end(),
-    std::inserter(set_id_intrinsics, set_id_intrinsics.begin()), std::RetrieveKey());
+    std::inserter(set_id_intrinsics, set_id_intrinsics.begin()), stl::RetrieveKey());
 
   std::set<IndexT> set_id_extrinsics; //unique so can use a set
   transform(sfm_data.GetPoses().begin(), sfm_data.GetPoses().end(),
-    std::inserter(set_id_extrinsics, set_id_extrinsics.begin()), std::RetrieveKey());
+    std::inserter(set_id_extrinsics, set_id_extrinsics.begin()), stl::RetrieveKey());
 
   // Collect existing id_intrinsic && id_extrinsic from views
   std::set<IndexT> reallyDefined_id_intrinsics;

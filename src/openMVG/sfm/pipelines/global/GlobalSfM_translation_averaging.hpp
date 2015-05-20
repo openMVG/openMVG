@@ -68,7 +68,7 @@ private:
     const Hash_Map<IndexT, Mat3> & map_globalR,
     const Features_Provider * normalized_features_provider,
     const matching::PairWiseMatches & map_Matches_E,
-    const std::vector< graphUtils::Triplet > & vec_triplets,
+    const std::vector< graph::Triplet > & vec_triplets,
     RelativeInfo_Vec & vec_initialEstimates,
     matching::PairWiseMatches & newpairMatches);
 

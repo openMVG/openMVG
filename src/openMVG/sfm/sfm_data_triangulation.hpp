@@ -77,7 +77,7 @@ struct SfM_Data_Structure_Computation_Blind: public SfM_Data_Structure_Computati
         {
           const View * view = sfm_data.views.at(itObs->first).get();
           const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
-          const Pose3 & pose = sfm_data.GetPoseOrDie(view);
+          const Pose3 pose = sfm_data.GetPoseOrDie(view);
           trianObj.add(
             cam->get_projective_equivalent(pose),
             cam->get_ud_pixel(itObs->second.x));
@@ -214,7 +214,7 @@ struct SfM_Data_Structure_Computation_Robust: public SfM_Data_Structure_Computat
         std::advance(itObs, it);
       	const View * view = sfm_data.views.at(itObs->first).get();
         const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
-        const Pose3 & pose = sfm_data.GetPoseOrDie(view);
+        const Pose3 pose = sfm_data.GetPoseOrDie(view);
         const double z = pose.depth(current_model); // TODO: cam->depth(pose(X));
         bChierality &= z > 0;
       }
@@ -230,7 +230,7 @@ struct SfM_Data_Structure_Computation_Robust: public SfM_Data_Structure_Computat
       {
         const View * view = sfm_data.views.at(itObs->first).get();
         const IntrinsicBase * intrinsic = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
-        const Pose3 & pose = sfm_data.GetPoseOrDie(view);
+        const Pose3 pose = sfm_data.GetPoseOrDie(view);
         const Vec2 residual = intrinsic->residual(pose, current_model, itObs->second.x);
         const double residual_d = residual.norm();
         if (residual_d < dThresholdPixel)
@@ -269,7 +269,7 @@ private:
       std::advance(itObs, idx);
       const View * view = sfm_data.views.at(itObs->first).get();
       const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
-      const Pose3 & pose = sfm_data.GetPoseOrDie(view);
+      const Pose3 pose = sfm_data.GetPoseOrDie(view);
       trianObj.add(
         cam->get_projective_equivalent(pose),
         cam->get_ud_pixel(itObs->second.x));

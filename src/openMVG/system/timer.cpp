@@ -19,6 +19,7 @@
 #endif
 
 namespace openMVG {
+namespace system {
 
   Timer::Timer()
    {
@@ -95,5 +96,5 @@ namespace openMVG {
     return str << t.elapsed() << " s elapsed";
   }
 
+} // namespace system
 } // namespace openMVG
-

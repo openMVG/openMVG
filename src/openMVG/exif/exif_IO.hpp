@@ -3,6 +3,9 @@
 
 #include <string>
 
+namespace openMVG {
+namespace exif  {
+
 class Exif_IO
 {
   public:
@@ -28,5 +31,8 @@ class Exif_IO
     virtual std::string allExifData() const = 0;
 
 };
+
+} // namespace exif
+} // namespace openMVG
 #endif //EXIF_IO_HPP
 

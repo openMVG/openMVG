@@ -6,7 +6,7 @@
 #include "openMVG/multiview/essential.hpp"
 
 #include "openMVG/graph/triplet_finder.hpp"
-using namespace openMVG::graphUtils;
+using namespace openMVG::graph;
 
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 using namespace svg;

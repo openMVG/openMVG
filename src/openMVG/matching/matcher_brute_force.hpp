@@ -132,7 +132,7 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
 
       // Find the N minimum distances:
       const int maxMinFound = (int) min( size_t(NN), vec_distance.size());
-      using namespace indexed_sort;
+      using namespace stl::indexed_sort;
       vector< sort_index_packet_ascend< DistanceType, int> > packet_vec(vec_distance.size());
       sort_index_helper(packet_vec, &vec_distance[0], maxMinFound);
 

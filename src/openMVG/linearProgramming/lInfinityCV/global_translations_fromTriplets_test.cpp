@@ -6,7 +6,7 @@
 #include "openMVG/multiview/essential.hpp"
 
 #include "openMVG/graph/triplet_finder.hpp"
-using namespace openMVG::graphUtils;
+using namespace openMVG::graph;
 
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 using namespace svg;
@@ -89,7 +89,7 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
   visibleCamPosToSVGSurface(d._C, "global_translations_from_triplets_GT.svg");
 
   // List sucessives triplets of the large loop of camera
-  std::vector< graphUtils::Triplet > vec_triplets;
+  std::vector< graph::Triplet > vec_triplets;
   for (size_t i = 0; i < iNviews; ++i)
   {
     const size_t iPlus1 = modifiedMod(i+1,iNviews);
@@ -105,7 +105,7 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
 
   for (size_t i = 0; i < vec_triplets.size(); ++i)
   {
-    const graphUtils::Triplet & triplet = vec_triplets[i];
+    const graph::Triplet & triplet = vec_triplets[i];
     size_t I = triplet.i, J = triplet.j , K = triplet.k;
 
     //-- Build camera alias over GT translations and rotations:

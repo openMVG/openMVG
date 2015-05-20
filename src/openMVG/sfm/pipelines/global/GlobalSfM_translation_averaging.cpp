@@ -43,7 +43,7 @@ bool GlobalSfM_Translation_AveragingSolver::Run(
   // Assert relative matches only share index between the relative poseId defined by the global rotations
   matching::PairWiseMatches map_Matches_Ecpy = matches_provider->_pairWise_matches;
   std::set<IndexT> set_remainingIds;
-  std::transform(map_globalR.begin(), map_globalR.end(), std::inserter(set_remainingIds, set_remainingIds.begin()), RetrieveKey());
+  std::transform(map_globalR.begin(), map_globalR.end(), std::inserter(set_remainingIds, set_remainingIds.begin()), stl::RetrieveKey());
   KeepOnlyReferencedElement(set_remainingIds, map_Matches_Ecpy);
 
   // Compute the translations and save them to vec_initialRijTijEstimates:
@@ -56,8 +56,8 @@ bool GlobalSfM_Translation_AveragingSolver::Run(
 
   // Keep the largest Biedge connected component graph of relative translations
   Pair_Set pairs;
-  std::transform(vec_initialRijTijEstimates.begin(), vec_initialRijTijEstimates.end(), std::inserter(pairs, pairs.begin()), std::RetrieveKey());
-  set_remainingIds = openMVG::graphUtils::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs, "./");
+  std::transform(vec_initialRijTijEstimates.begin(), vec_initialRijTijEstimates.end(), std::inserter(pairs, pairs.begin()), stl::RetrieveKey());
+  set_remainingIds = openMVG::graph::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs, "./");
   KeepOnlyReferencedElement(set_remainingIds, map_Matches_Ecpy);
   KeepOnlyReferencedElement(set_remainingIds, vec_initialRijTijEstimates);
   KeepOnlyReferencedElement(set_remainingIds, tripletWise_matches);
@@ -106,7 +106,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
       rel.first = Pair(_reindexForward[rel.first.first], _reindexForward[rel.first.second]);
     }
 
-    openMVG::Timer timerLP_translation;
+    openMVG::system::Timer timerLP_translation;
 
     switch(eTranslationAveragingMethod)
     {
@@ -262,13 +262,13 @@ void GlobalSfM_Translation_AveragingSolver::Compute_translations(
 
   // List putative triplets
   const Pair_Set pairs = getPairs(map_Matches_E);
-  std::vector< graphUtils::Triplet > vec_triplets = graphUtils::tripletListing(pairs);
+  std::vector< graph::Triplet > vec_triplets = graph::tripletListing(pairs);
 
   std::cout << "#Triplets: " << vec_triplets.size() << std::endl;
 
   // Compute putative translations with an edge coverage algorithm
 
-  openMVG::Timer timerLP_triplet;
+  openMVG::system::Timer timerLP_triplet;
   // Compute relative translations over the graph of putative triplets
 
   ComputePutativeTranslation_EdgesCoverage(
@@ -297,7 +297,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
   const Hash_Map<IndexT, Mat3> & map_globalR,
   const Features_Provider * normalized_features_provider,
   const matching::PairWiseMatches & map_Matches_E,
-  const std::vector< graphUtils::Triplet > & vec_triplets,
+  const std::vector< graph::Triplet > & vec_triplets,
   RelativeInfo_Vec & vec_initialEstimates,
   matching::PairWiseMatches & newpairMatches)
 {
@@ -308,7 +308,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
 #endif
   for (int i = 0; i < (int)vec_triplets.size(); ++i)
   {
-    const graphUtils::Triplet & triplet = vec_triplets[i];
+    const graph::Triplet & triplet = vec_triplets[i];
     const IndexT I = triplet.i, J = triplet.j , K = triplet.k;
 
     PairWiseMatches map_matchesIJK;
@@ -350,7 +350,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
 
   for (size_t i = 0; i < vec_triplets.size(); ++i)
   {
-    const graphUtils::Triplet & triplet = vec_triplets[i];
+    const graph::Triplet & triplet = vec_triplets[i];
     const IndexT I = triplet.i, J = triplet.j , K = triplet.k;
     // Add three edges
     set_edges.insert(std::make_pair(std::min(I,J), std::max(I,J)));
@@ -395,7 +395,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     // Find the triplet that contain the given edge
     for (size_t i = 0; i < vec_triplets.size(); ++i)
     {
-      const graphUtils::Triplet & triplet = vec_triplets[i];
+      const graph::Triplet & triplet = vec_triplets[i];
       if (triplet.contain(edge))
       {
         vec_possibleTriplets.push_back(i);
@@ -412,7 +412,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     if (m_mutexSet.count(edge))
       continue;
 
-    using namespace indexed_sort;
+    using namespace stl::indexed_sort;
     std::vector< sort_index_packet_descend < size_t, size_t> > packet_vec(vec_commonTracksPerTriplets.size());
     sort_index_helper(packet_vec, &vec_commonTracksPerTriplets[0]);
 
@@ -426,7 +426,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     // Search the possible triplet:
     for (size_t i = 0; i < vec_possibleTriplets.size(); ++i)
     {
-      const graphUtils::Triplet & triplet = vec_triplets[vec_possibleTriplets[i]];
+      const graph::Triplet & triplet = vec_triplets[vec_possibleTriplets[i]];
       const IndexT I = triplet.i, J = triplet.j , K = triplet.k;
       {
         PairWiseMatches map_matchesIJK;

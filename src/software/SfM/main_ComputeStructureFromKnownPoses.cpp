@@ -110,7 +110,7 @@ int main(int argc, char **argv)
   std::set<IndexT> valid_viewIdx = Get_Valid_Views(sfm_data);
   pairs = Pair_filter(pairs, valid_viewIdx);
 
-  openMVG::Timer timer;
+  openMVG::system::Timer timer;
 
   //------------------------------------------
   // Compute Structure from known camera poses

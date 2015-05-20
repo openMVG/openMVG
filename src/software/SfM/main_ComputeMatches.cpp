@@ -264,7 +264,7 @@ int main(int argc, char **argv)
       return EXIT_FAILURE;
     }
     // Perform the matching
-    Timer timer;
+    system::Timer timer;
     if (collectionMatcher->loadData(regions_type, vec_fileNames, sMatchesDirectory))
     {
       // From matching mode compute the pair list that have to be matched:
@@ -315,7 +315,7 @@ int main(int argc, char **argv)
   ImageCollectionGeometricFilter collectionGeomFilter(feats_provider.get());
   const double maxResidualError = 4.0;
   {
-    Timer timer;
+    system::Timer timer;
     std::cout << std::endl << " - GEOMETRIC FILTERING - " << std::endl;
     switch (eGeometricModelToCompute)
     {

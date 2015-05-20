@@ -11,10 +11,8 @@
 #include <openMVG/graph/graph.hpp>
 #include <set>
 
-namespace openMVG
-{
-namespace graphUtils
-{
+namespace openMVG {
+namespace graph {
 
 /// Export node of each CC (Connected Component) in a map
 template <typename GraphT, typename IndexT>
@@ -50,7 +48,7 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes(
   // - keep the largest connected component.
 
   typedef lemon::ListGraph Graph;
-  graphUtils::indexedGraph putativeGraph(edges);
+  graph::indexedGraph putativeGraph(edges);
 /*
   if (!_sOutDirectory.empty())
   {
@@ -149,7 +147,7 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes(
   return largestBiEdgeCC;
 }
 
-} // namespace graphUtils
+} // namespace graph
 } // namespace openMVG
 
 #endif // OPENMVG_GRAPH_CONNECTED_COMPONENT_H_

@@ -106,7 +106,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Process() {
   //-------------------
   {
     const Pair_Set pairs = _matches_provider->getPairs();
-    const std::set<IndexT> set_remainingIds = graphUtils::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs, _sOutDirectory);
+    const std::set<IndexT> set_remainingIds = graph::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs, _sOutDirectory);
     if(set_remainingIds.empty())
     {
       std::cout << "Invalid input image graph for global SfM" << std::endl;
@@ -331,7 +331,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure()
   {
     IndexT countRemoved = 0;
 
-    openMVG::Timer timer;
+    openMVG::system::Timer timer;
 
     const IndexT trackCountBefore = _sfm_data.GetLandmarks().size();
     SfM_Data_Structure_Computation_Blind structure_estimator(true);
