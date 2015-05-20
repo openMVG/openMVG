@@ -52,7 +52,7 @@ public:
   //------------------------------
 
   //-- Resize overhead
-  inline void resize(int width, int height, bool fInit=true, const T val = T())
+  inline void resize(int width, int height, bool fInit=true, const T val = T(0))
   {
     Base::resize(height, width);
     if (fInit) Base::fill(val);

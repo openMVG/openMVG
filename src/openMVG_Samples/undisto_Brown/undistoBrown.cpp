@@ -6,7 +6,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/image/image.hpp"
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/cameras/cameras.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -19,79 +19,6 @@ using namespace openMVG;
 using namespace openMVG::image;
 using namespace std;
 
-// A simple container and undistort function for the Brown's distortion model [1]
-// Variables:
-// (x,y): 2D point in the image (pixel)
-// (u,v): the undistorted 2D point (pixel)
-// radial_distortion (k1, k2, k3, ...): vector containing the radial distortion
-// (cx,cy): camera principal point
-// tangential factors are not considered here
-//
-// Equation:
-// u = x + (x - cx) * (k1 * r^2 + k2 * r^4 +...)
-// v = y + (y - cy) * (k1 * r^2 + k2 * r^4 +...)
-//
-// [1] Decentering distortion of lenses.
-//      Brown, Duane C
-//      Photometric Engineering 1966
-struct BrownDistoModel
-{
-  Vec2 m_disto_center; // distortion center
-  Vec m_radial_distortion; // radial distortion factor
-  double m_f; // focal
-
-  inline void ComputeUndistortedCoordinates( double xu, double yu, double &xd, double& yd) const
-  {
-    const Vec2 point (xu, yu);
-    const Vec2 principal_point (m_disto_center);
-    const Vec2 point_centered = point - principal_point;
-
-    const double u = point_centered.x() / m_f;
-    const double v = point_centered.y() / m_f;
-    const double radius_squared = u * u + v * v;
-
-    double coef_radial = 0.0;
-    for (int i = m_radial_distortion.size() - 1; i >= 0; --i) {
-      coef_radial = (coef_radial + m_radial_distortion[i]) * radius_squared;
-    }
-
-    const Vec2 undistorted_point = point + point_centered * coef_radial;
-    xd = undistorted_point(0);
-    yd = undistorted_point(1);
-  }
-};
-
-/// Undistort an image according a given Distortion model
-template <typename Image>
-Image undistortImage(
-  const Image& I,
-  const BrownDistoModel& d,
-  RGBColor fillcolor = BLACK,
-  bool bcenteringPPpoint = true)
-{
-  const int w = I.Width();
-  const int h = I.Height();
-  Vec2 offset(0,0);
-  if (bcenteringPPpoint)
-    offset = Vec2(w * .5, h * .5) - d.m_disto_center;
-
-  Image J ( w,h );
-  double xu, yu, xd,yd;
-  for ( int j=0; j<h; j++ ) {
-    for ( int i=0; i<w; i++ ) {
-      xu = double (i);
-      yu = double (j);
-      d.ComputeUndistortedCoordinates(xu, yu, xd, yd);
-      xd -= offset(0);
-      yd -= offset(1);
-      if ( !J.Contains(yd, xd) )
-        J ( j,i ) = fillcolor;
-      else
-        J ( j,i ) = SampleLinear(I, yd, xd);
-    }
-  }
-  return J;
-}
 
 int main(int argc, char **argv)
 {
@@ -101,7 +28,7 @@ int main(int argc, char **argv)
   std::string sOutPath;
   // Temp storage for the Brown's distortion model
   Vec2 c; // distortion center
-  Vec3 k; // distortion factor
+  Vec3 k; // distortion factors
   double f; // Focal
   std::string suffix = "JPG";
 
@@ -120,10 +47,10 @@ int main(int argc, char **argv)
       cmd.process(argc, argv);
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << ' '
-      << "[-i|--imadir - Input path]"
-      << "[-o|--outdir - path for the undistorted JPG files]"
-      << "[-f|--focal - focal length]"
-      << "[-s|--suffix - Suffix of the input files. (default: JPG)]"
+      << "[-i|--imadir - Input path]\n"
+      << "[-o|--outdir - path for the undistorted JPG files]\n"
+      << "[-f|--focal - focal length]\n"
+      << "[-s|--suffix - Suffix of the input files. (default: JPG)]\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -139,16 +66,11 @@ int main(int argc, char **argv)
   if (!stlplus::folder_exists(sOutPath))
     stlplus::folder_create(sOutPath);
 
-  BrownDistoModel distoModel;
-  distoModel.m_disto_center = Vec2(c(0), c(1));
-  distoModel.m_radial_distortion = k;
-  distoModel.m_f = f;
-
   std::cout << "Used Brown's distortion model values: \n"
-    << "  Distortion center: " << distoModel.m_disto_center.transpose() << "\n"
+    << "  Distortion center: " << c.transpose() << "\n"
     << "  Distortion coefficients (K1,K2,K3): "
-    << distoModel.m_radial_distortion.transpose() << "\n"
-    << "  Distortion focal: " << distoModel.m_f << std::endl;
+    << k.transpose() << "\n"
+    << "  Distortion focal: " << f << std::endl;
 
   const std::vector<std::string> vec_fileNames =
     stlplus::folder_wildcard(sPath, "*."+suffix, false, true);
@@ -169,6 +91,9 @@ int main(int argc, char **argv)
       stlplus::create_filespec(sOutPath, stlplus::basename_part(vec_fileNames[j]), "JPG");
     const string sInFileName = stlplus::create_filespec(sPath, stlplus::basename_part(vec_fileNames[j]));
     const int res = ReadImage(sInFileName.c_str(), &tmp_vec, &w, &h, &depth);
+
+    const Pinhole_Intrinsic_Radial_K3 cam(w, h, f, c(0), c(1), k(0), k(1), k(2));
+
     if (res == 1)
     {
       switch(depth)
@@ -176,21 +101,21 @@ int main(int argc, char **argv)
         case 1: //Greyscale
           {
             imageGreyIn = Eigen::Map<Image<unsigned char>::Base>(&tmp_vec[0], h, w);
-            imageGreyU = undistortImage ( imageGreyIn, distoModel);
+            UndistortImage(imageGreyIn, &cam, imageGreyU);
             WriteImage(sOutFileName.c_str(), imageGreyU);
             break;
           }
         case 3: //RGB
           {
             imageRGBIn = Eigen::Map<Image<RGBColor>::Base>((RGBColor*) &tmp_vec[0], h, w);
-            imageRGBU = undistortImage ( imageRGBIn, distoModel);
+            UndistortImage(imageRGBIn, &cam, imageRGBU);
             WriteImage(sOutFileName.c_str(), imageRGBU);
             break;
           }
         case 4: //RGBA
           {
             imageRGBAIn = Eigen::Map<Image<RGBAColor>::Base>((RGBAColor*) &tmp_vec[0], h, w);
-            imageRGBAU = undistortImage ( imageRGBAIn, distoModel);
+            UndistortImage(imageRGBAIn, &cam, imageRGBAU);
             WriteImage(sOutFileName.c_str(), imageRGBAU);
             break;
           }
