@@ -8,7 +8,7 @@
 #include "openMVG_Samples/sensorWidthDatabase/ParseDatabase.hpp"
 
 #include "openMVG/image/image.hpp"
-#include "openMVG/split/split.hpp"
+#include "openMVG/stl/split.hpp"
 
 #include "openMVG/sfm/sfm.hpp"
 
@@ -24,13 +24,14 @@
 
 using namespace openMVG;
 using namespace openMVG::image;
+using namespace openMVG::exif;
 
 /// Check that Kmatrix is a string like "f;0;ppx;0;f;ppy;0;0;1"
 /// With f,ppx,ppy as valid numerical value
 bool checkIntrinsicStringValidity(const std::string & Kmatrix, double & focal, double & ppx, double & ppy)
 {
   std::vector<std::string> vec_str;
-  split( Kmatrix, ";", vec_str );
+  std::split( Kmatrix, ";", vec_str );
   if (vec_str.size() != 9)  {
     std::cerr << "\n Missing ';' character" << std::endl;
     return false;

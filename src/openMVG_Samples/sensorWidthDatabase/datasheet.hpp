@@ -1,7 +1,7 @@
 #ifndef DATASHEET_HPP
 #define DATASHEET_HPP
 
-#include "openMVG/split/split.hpp"
+#include "openMVG/stl/split.hpp"
 #include <iterator>
 
 // Database structure
@@ -22,7 +22,7 @@ struct Datasheet
   {
     bool isEqual = false;
     std::vector<std::string> vec_brand;
-    split( ds._brand, " ", vec_brand );
+    std::split( ds._brand, " ", vec_brand );
     std::string brandlower = _brand;
 
     for ( int index = 0; index < brandlower.length(); index++ )
@@ -44,9 +44,9 @@ struct Datasheet
       {
 
         std::vector<std::string> vec_model1;
-        split( ds._model, " ", vec_model1 );
+        std::split( ds._model, " ", vec_model1 );
         std::vector<std::string> vec_model2;
-        split( _model, " ", vec_model2 );
+        std::split( _model, " ", vec_model2 );
         bool isAllFind = true;
         for ( std::vector<std::string>::const_iterator iter_model1 = vec_model1.begin();
             iter_model1 != vec_model1.end();

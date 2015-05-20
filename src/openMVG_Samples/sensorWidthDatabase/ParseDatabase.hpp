@@ -1,7 +1,7 @@
 #ifndef PARSE_DATABASE_HPP
 #define PARSE_DATABASE_HPP
 
-#include "openMVG/split/split.hpp"
+#include "openMVG/stl/split.hpp"
 #include "datasheet.hpp"
 
 #include <vector>
@@ -28,7 +28,7 @@ bool parseDatabase( const std::string& sfileDatabase, std::vector<Datasheet>& ve
         if ( line[0] != '#' )
         {
           std::vector<std::string> values;
-          split( line, ";", values );
+          std::split( line, ";", values );
           if ( values.size() == 3 )
           {
             const std::string brand = values[0];
