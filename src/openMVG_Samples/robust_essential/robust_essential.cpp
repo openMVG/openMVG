@@ -6,14 +6,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-#include "openMVG/cameras/PinholeCamera.hpp"
+#include "openMVG/sfm/sfm.hpp"
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/features.hpp"
 #include "openMVG/matching/matcher_brute_force.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
-#include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation.hpp"
-#include "openMVG_Samples/robust_essential/essential_estimation.hpp"
 
 #include "nonFree/sift/SIFT_describer.hpp"
 #include "openMVG_Samples/siftPutativeMatches/two_view_matches.hpp"
@@ -41,18 +39,9 @@ bool exportToPly(const std::vector<Vec3> & vec_points,
   const std::vector<Vec3> & vec_camPos,
   const std::string & sFileName);
 
-/// Triangulate and export valid point as PLY (point in front of the cameras)
-void triangulateAndSaveResult(
-  const PinholeCamera & camL,
-  const PinholeCamera & camR,
-  const std::vector<size_t> & vec_inliers,
-  const Mat & xL,
-  const Mat & xR,
-  std::vector<Vec3> & vec_3DPoints);
-
 int main() {
 
-  std::string sInputDir = stlplus::folder_up(string(THIS_SOURCE_DIR))
+  const std::string sInputDir = stlplus::folder_up(string(THIS_SOURCE_DIR))
     + "/imageData/SceauxCastle/";
   const string jpg_filenameL = sInputDir + "100_7101.jpg";
   const string jpg_filenameR = sInputDir + "100_7102.jpg";
@@ -120,6 +109,11 @@ int main() {
             vec_PutativeMatches, featsL, featsR);
     matchDeduplicator.getDeduplicated(vec_PutativeMatches);
 
+    std::cout
+      << regions_perImage.at(0)->RegionCount() << " #Features on image A" << std::endl
+      << regions_perImage.at(1)->RegionCount() << " #Features on image B" << std::endl
+      << vec_PutativeMatches.size() << " #matches with Distance Ratio filter" << std::endl;
+
     // Draw correspondences after Nearest Neighbor ratio filter
     svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
     svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
@@ -132,8 +126,8 @@ int main() {
       svgStream.drawCircle(L.x(), L.y(), L.scale(), svgStyle().stroke("yellow", 2.0));
       svgStream.drawCircle(R.x()+imageL.Width(), R.y(), R.scale(),svgStyle().stroke("yellow", 2.0));
     }
-    string out_filename = "03_siftMatches.svg";
-    ofstream svgFile( out_filename.c_str() );
+    const std::string out_filename = "03_siftMatches.svg";
+    std::ofstream svgFile( out_filename.c_str() );
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
   }
@@ -158,82 +152,90 @@ int main() {
       xR.col(k) = imaR.coords().cast<double>();
     }
 
-    //B. robust estimation of the essential matrix
-    std::vector<size_t> vec_inliers;
-    Mat3 E;
+    //B. Compute the relative pose thanks to a essential matrix estimation
     std::pair<size_t, size_t> size_imaL(imageL.Width(), imageL.Height());
     std::pair<size_t, size_t> size_imaR(imageR.Width(), imageR.Height());
-    double thresholdE = 0.0, NFA = 0.0;
-    if (robustEssential(
-      K, K,         // intrinsics
-      xL, xR,       // corresponding points
-      &E,           // essential matrix
-      &vec_inliers, // inliers
-      size_imaL,    // Left image size
-      size_imaR,    // Right image size
-      &thresholdE,  // Found AContrario Theshold
-      &NFA,         // Found AContrario NFA
-      std::numeric_limits<double>::infinity()))
+    RelativePose_Info relativePose_info;
+    if (!robustRelativePose(K, K, xL, xR, relativePose_info, size_imaL, size_imaR, 256))
     {
-      std::cout << "\nFound an Essential matrix under the confidence threshold of: "
-        << thresholdE << " pixels\n\twith: " << vec_inliers.size() << " inliers"
-        << " from: " << vec_PutativeMatches.size()
-        << " putatives correspondences"
+      std::cerr << " /!\\ Robust relative pose estimation failure."
         << std::endl;
+      return EXIT_FAILURE;
+    }
 
-      // Show Essential validated point
-      svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
-      svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
-      svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
-      for ( size_t i = 0; i < vec_inliers.size(); ++i)  {
-        const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[vec_inliers[i]]._i];
-        const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[vec_inliers[i]]._j];
-        const Vec2f L = LL.coords();
-        const Vec2f R = RR.coords();
-        svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
-        svgStream.drawCircle(L.x(), L.y(), LL.scale(), svgStyle().stroke("yellow", 2.0));
-        svgStream.drawCircle(R.x()+imageL.Width(), R.y(), RR.scale(),svgStyle().stroke("yellow", 2.0));
-      }
-      string out_filename = "04_ACRansacEssential.svg";
-      ofstream svgFile( out_filename.c_str() );
-      svgFile << svgStream.closeSvgFile().str();
-      svgFile.close();
+    std::cout << "\nFound an Essential matrix:\n"
+      << "\tprecision: " << relativePose_info.found_residual_precision << " pixels\n"
+      << "\t#inliers: " << relativePose_info.vec_inliers.size() << "\n"
+      << "\t#matches: " << vec_PutativeMatches.size()
+      << std::endl;
+     
+    // Show Essential validated point
+    svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
+    svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
+    svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
+    for (size_t i = 0; i < relativePose_info.vec_inliers.size(); ++i)  {
+      const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]]._i];
+      const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]]._j];
+      const Vec2f L = LL.coords();
+      const Vec2f R = RR.coords();
+      svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
+      svgStream.drawCircle(L.x(), L.y(), LL.scale(), svgStyle().stroke("yellow", 2.0));
+      svgStream.drawCircle(R.x()+imageL.Width(), R.y(), RR.scale(),svgStyle().stroke("yellow", 2.0));
+    }
+    const std::string out_filename = "04_ACRansacEssential.svg";
+    std::ofstream svgFile( out_filename.c_str() );
+    svgFile << svgStream.closeSvgFile().str();
+    svgFile.close();
+         
+    //C. Triangulate and export inliers as a PLY scene
+    std::vector<Vec3> vec_3DPoints;
+    
+    // Setup camera intrinsic and poses
+    Pinhole_Intrinsic intrinsic0(imageL.Width(), imageL.Height(), K(0, 0), K(0, 2), K(1, 2));
+    Pinhole_Intrinsic intrinsic1(imageR.Width(), imageR.Height(), K(0, 0), K(0, 2), K(1, 2));
 
-      //C. Extract the rotation and translation of the camera from the essential matrix
-      Mat3 R;
-      Vec3 t;
-      if (!estimate_Rt_fromE(K, K, xL, xR, E, vec_inliers,
-        &R, &t))
-      {
-        std::cerr << " /!\\ Failed to compute initial R|t for the initial pair" << std::endl;
-        return false;
-      }
-      std::cout << std::endl
-        << "-- Rotation|Translation matrices: --" << std::endl
-        << R << std::endl << std::endl << t << std::endl;
+    const Pose3 pose0 = Pose3(Mat3::Identity(), Vec3::Zero());
+    const Pose3 pose1 = relativePose_info.relativePose;
 
-      // Build Left and Right Camera
-      PinholeCamera camL(K, Mat3::Identity(), Vec3::Zero());
-      PinholeCamera camR(K, R, t);
+    // Init structure by inlier triangulation
+    const Mat34 P1 = intrinsic0.get_projective_equivalent(pose0);
+    const Mat34 P2 = intrinsic1.get_projective_equivalent(pose1);
+    std::vector<double> vec_residuals;
+    vec_residuals.reserve(relativePose_info.vec_inliers.size() * 4);
+    for (size_t i = 0; i < relativePose_info.vec_inliers.size(); ++i)  {
+      const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]]._i];
+      const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]]._j];
+      // Point triangulation
+      Vec3 X;
+      TriangulateDLT(P1, LL.coords().cast<double>(), P2, RR.coords().cast<double>(), &X);
+      // Reject point that is behind the camera
+      if (pose0.depth(X) < 0 && pose1.depth(X) < 0)
+        continue;
+      const Vec2 residual0 = intrinsic0.residual(pose0, X, LL.coords().cast<double>());
+      const Vec2 residual1 = intrinsic1.residual(pose1, X, RR.coords().cast<double>());
+      vec_residuals.push_back(fabs(residual0(0)));
+      vec_residuals.push_back(fabs(residual0(1)));
+      vec_residuals.push_back(fabs(residual1(0)));
+      vec_residuals.push_back(fabs(residual1(1)));
+    }
 
-      //C. Triangulate and export inliers as a PLY scene
-      std::vector<Vec3> vec_3DPoints;
-      triangulateAndSaveResult(
-        camL, camR,
-        vec_inliers,
-        xL, xR, vec_3DPoints);
+    // Display some statistics of reprojection errors
+    float dMin, dMax, dMean, dMedian;
+    minMaxMeanMedian<float>(vec_residuals.begin(), vec_residuals.end(),
+      dMin, dMax, dMean, dMedian);
+
+    std::cout << std::endl
+      << "Triangulation residuals statistics:" << "\n"
+      << "\t-- Residual min:\t" << dMin << "\n"
+      << "\t-- Residual median:\t" << dMedian << "\n"
+      << "\t-- Residual max:\t " << dMax << "\n"
+      << "\t-- Residual mean:\t " << dMean << std::endl;
 
       // Export as PLY (camera pos + 3Dpoints)
       std::vector<Vec3> vec_camPos;
-      vec_camPos.push_back( camL._C );
-      vec_camPos.push_back( camR._C );
+      vec_camPos.push_back( pose0.center() );
+      vec_camPos.push_back( pose1.center() );
       exportToPly(vec_3DPoints, vec_camPos, "EssentialGeometry.ply");
-
-    }
-    else  {
-      std::cout << "ACRANSAC was unable to estimate a rigid essential matrix"
-        << std::endl;
-    }
   }
   return EXIT_SUCCESS;
 }
@@ -288,51 +290,4 @@ bool exportToPly(const std::vector<Vec3> & vec_points,
   bool bOk = outfile.good();
   outfile.close();
   return bOk;
-}
-
-/// Triangulate and export valid point as PLY (point in front of the cameras)
-void triangulateAndSaveResult(
-  const PinholeCamera & camL,
-  const PinholeCamera & camR,
-  const std::vector<size_t> & vec_inliers,
-  const Mat & xL,
-  const Mat & xR,
-  std::vector<Vec3> & vec_3DPoints)
-{
-  std::vector<double> vec_residuals;
-  size_t nbPointWithNegativeDepth = 0;
-  for (size_t k = 0; k < vec_inliers.size(); ++k) {
-    const Vec2 & xL_ = xL.col(vec_inliers[k]);
-    const Vec2 & xR_ = xR.col(vec_inliers[k]);
-
-    Vec3 X = Vec3::Zero();
-    TriangulateDLT(camL._P, xL_, camR._P, xR_, &X);
-
-    // Compute residual:
-    double dResidual = (camL.Residual(X, xL_) + camR.Residual(X, xR_))/2.0;
-    vec_residuals.push_back(dResidual);
-    if (camL.Depth(X) < 0 && camR.Depth(X) < 0) {
-      ++nbPointWithNegativeDepth;
-    }
-    else  {
-      vec_3DPoints.push_back(X);
-    }
-  }
-  if (nbPointWithNegativeDepth > 0)
-  {
-    std::cout << nbPointWithNegativeDepth
-      << " correspondence(s) with negative depth have been discarded."
-      << std::endl;
-  }
-  // Display some statistics of reprojection errors
-  float dMin, dMax, dMean, dMedian;
-  minMaxMeanMedian<float>(vec_residuals.begin(), vec_residuals.end(),
-                        dMin, dMax, dMean, dMedian);
-
-  std::cout << std::endl
-    << "Essential matrix estimation, residuals statistics:" << "\n"
-    << "\t-- Residual min:\t" << dMin << std::endl
-    << "\t-- Residual median:\t" << dMedian << std::endl
-    << "\t-- Residual max:\t "  << dMax << std::endl
-    << "\t-- Residual mean:\t " << dMean << std::endl;
 }

@@ -22,8 +22,6 @@
 namespace openMVG
 {
 
-using namespace openMVG::robust;
-
 bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
   const Mat & x1, const Mat & x2,
   const Mat3 & E, const std::vector<size_t> & vec_inliers,
@@ -59,30 +57,32 @@ bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
     for (size_t k = 0; k < vec_inliers.size(); ++k)
     {
       const Vec2 & x1_ = x1.col(vec_inliers[k]),
-        & x2_ = x2.col(vec_inliers[k]);
+        &x2_ = x2.col(vec_inliers[k]);
       TriangulateDLT(P1, x1_, P2, x2_, &X);
       // Test if point is front to the two cameras.
       if (Depth(R1, t1, X) > 0 && Depth(R2, t2, X) > 0)
       {
-          ++f[i];
+        ++f[i];
       }
     }
   }
   // Check the solution:
   const std::vector<size_t>::iterator iter = max_element(f.begin(), f.end());
-  if(*iter == 0)
+  if (*iter == 0)
   {
     std::cerr << std::endl << "/!\\There is no right solution,"
-      <<" probably intermediate results are not correct or no points"
-      <<" in front of both cameras" << std::endl;
+      << " probably intermediate results are not correct or no points"
+      << " in front of both cameras" << std::endl;
     return false;
   }
-  const size_t index = std::distance(f.begin(),iter);
+  const size_t index = std::distance(f.begin(), iter);
   (*R) = Rs[index];
   (*t) = ts[index];
 
   return true;
 }
+
+using namespace openMVG::robust;
 
 bool robustRelativePose(
   const Mat3 & K1, const Mat3 & K2,

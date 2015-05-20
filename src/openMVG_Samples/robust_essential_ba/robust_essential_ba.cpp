@@ -6,21 +6,17 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-#include "openMVG/cameras/PinholeCamera.hpp"
+#include "openMVG/cameras/cameras.hpp"
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/features.hpp"
+#include "openMVG/sfm/sfm.hpp"
+
 #include "openMVG/matching/matcher_brute_force.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
-#include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG_Samples/robust_essential/essential_estimation.hpp"
 
 #include "openMVG_Samples/siftPutativeMatches/two_view_matches.hpp"
-
-// Bundle Adjustment includes
-#include "openMVG/bundle_adjustment/problem_data_container.hpp"
-#include "openMVG/bundle_adjustment/pinhole_ceres_functor.hpp"
-#include "openMVG/bundle_adjustment/pinhole_brown_Rt_ceres_functor.hpp"
 
 #include "nonFree/sift/SIFT_describer.hpp"
 
@@ -33,7 +29,6 @@
 using namespace openMVG;
 using namespace openMVG::image;
 using namespace openMVG::matching;
-using namespace openMVG::bundle_adjustment;
 using namespace svg;
 using namespace std;
 
@@ -43,49 +38,6 @@ using namespace std;
 /// 0 0 1
 bool readIntrinsic(const std::string & fileName, Mat3 & K);
 
-/// Export 3D point vector and camera position to PLY format
-bool exportToPly(const std::vector<Vec3> & vec_points,
-  const std::vector<Vec3> & vec_camPos,
-  const std::string & sFileName);
-
-/// Triangulate and export valid point as PLY (point in front of the cameras)
-void triangulateAndSaveResult(
-  const PinholeCamera & camL,
-  const PinholeCamera & camR,
-  std::vector<size_t> & vec_inliers,
-  const Mat & xL,
-  const Mat & xR,
-  std::vector<Vec3> & vec_3DPoints);
-
-/// Perform a Bundle Adjustment: Refine the camera [R|t|focal] and the structure
-void do_bundle_adjustment(
-  PinholeCamera & camL,
-  PinholeCamera & camR,
-  const Mat & xL,
-  const Mat & xR,
-  const std::vector<size_t> & vec_inliers,
-  std::vector<Vec3> & vec_3DPoints);
-
-/// Perform a Bundle Adjustment: Refine the cameras [R|t],
-///  and common pinhole intrinsic [focal,ppx,ppy] and the structure
-void do_bundle_adjustment_common_intrinsic_pinhole(
-  PinholeCamera & camL,
-  PinholeCamera & camR,
-  const Mat & xL,
-  const Mat & xR,
-  const std::vector<size_t> & vec_inliers,
-  std::vector<Vec3> & vec_3DPoints);
-
-/// Perform a Bundle Adjustment: Refine the cameras [R|t]
-///  and common intrinsics [focal,ppx,ppy,k1,k2,k3] and the structure
-void do_bundle_adjustment_common_intrinsics_brown_pinhole(
-  PinholeCamera & camL,
-  PinholeCamera & camR,
-  const Mat & xL,
-  const Mat & xR,
-  const std::vector<size_t> & vec_inliers,
-  std::vector<Vec3> & vec_3DPoints);
-
 /// Show :
 ///  how computing an essential with know internal calibration matrix K
 ///  how refine the camera motion, focal and structure with Bundle Adjustment
@@ -93,7 +45,7 @@ void do_bundle_adjustment_common_intrinsics_brown_pinhole(
 ///   way 2: independent cameras motion [R|t], shared focal [f] and structure
 int main() {
 
-  std::string sInputDir = stlplus::folder_up(string(THIS_SOURCE_DIR))
+  const std::string sInputDir = stlplus::folder_up(string(THIS_SOURCE_DIR))
     + "/imageData/SceauxCastle/";
   Image<RGBColor> image;
   const string jpg_filenameL = sInputDir + "100_7101.jpg";
@@ -162,6 +114,11 @@ int main() {
             vec_PutativeMatches, featsL, featsR);
     matchDeduplicator.getDeduplicated(vec_PutativeMatches);
 
+    std::cout
+      << regions_perImage.at(0)->RegionCount() << " #Features on image A" << std::endl
+      << regions_perImage.at(1)->RegionCount() << " #Features on image B" << std::endl
+      << vec_PutativeMatches.size() << " #matches with Distance Ratio filter" << std::endl;
+
     // Draw correspondences after Nearest Neighbor ratio filter
     svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
     svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
@@ -200,127 +157,110 @@ int main() {
       xR.col(k) = imaR.coords().cast<double>();
     }
 
-    //B. robust estimation of the essential matrix
-    std::vector<size_t> vec_inliers;
-    Mat3 E;
+    //B. Compute the relative pose thanks to a essential matrix estimation
     std::pair<size_t, size_t> size_imaL(imageL.Width(), imageL.Height());
     std::pair<size_t, size_t> size_imaR(imageR.Width(), imageR.Height());
-    double thresholdE = 0.0, NFA = 0.0;
-    if (robustEssential(
-      K, K,         // intrinsics
-      xL, xR,       // corresponding points
-      &E,           // essential matrix
-      &vec_inliers, // inliers
-      size_imaL,    // Left image size
-      size_imaR,    // Right image size
-      &thresholdE,  // Found AContrario Theshold
-      &NFA,         // Found AContrario NFA
-      std::numeric_limits<double>::infinity()))
+    RelativePose_Info relativePose_info;
+    if (!robustRelativePose(K, K, xL, xR, relativePose_info, size_imaL, size_imaR, 256))
     {
-      std::cout << "\nFound an Essential matrix under the confidence threshold of: "
-        << thresholdE << " pixels\n\twith: " << vec_inliers.size() << " inliers"
-        << " from: " << vec_PutativeMatches.size()
-        << " putatives correspondences"
+      std::cerr << " /!\\ Robust relative pose estimation failure."
         << std::endl;
-
-      // Show Essential validated point
-      svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
-      svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
-      svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
-      for ( size_t i = 0; i < vec_inliers.size(); ++i)  {
-        const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[vec_inliers[i]]._i];
-        const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[vec_inliers[i]]._j];
-        const Vec2f L = LL.coords();
-        const Vec2f R = RR.coords();
-        svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
-        svgStream.drawCircle(L.x(), L.y(), LL.scale(), svgStyle().stroke("yellow", 2.0));
-        svgStream.drawCircle(R.x()+imageL.Width(), R.y(), RR.scale(),svgStyle().stroke("yellow", 2.0));
-      }
-      string out_filename = "04_ACRansacEssential.svg";
-      ofstream svgFile( out_filename.c_str() );
-      svgFile << svgStream.closeSvgFile().str();
-      svgFile.close();
-
-      //C. Extract the rotation and translation of the camera from the essential matrix
-      Mat3 R;
-      Vec3 t;
-      if (!estimate_Rt_fromE(K, K, xL, xR, E, vec_inliers,
-        &R, &t))
-      {
-        std::cerr << " /!\\ Failed to compute initial R|t for the initial pair" << std::endl;
-        return false;
-      }
-      std::cout << std::endl
-        << "-- Rotation|Translation matrices: --" << std::endl
-        << R << std::endl << std::endl << t << std::endl;
-
-      // Build Left and Right Camera
-      PinholeCamera camL(K, Mat3::Identity(), Vec3::Zero());
-      PinholeCamera camR(K, R, t);
-
-      //C. Triangulate and check valid points
-      // invalid point that do not respect cheirality are discarded (removed
-      //  from the list of inliers.
-      std::vector<Vec3> vec_3DPoints;
-      triangulateAndSaveResult(
-        camL, camR,
-        vec_inliers,
-        xL, xR, vec_3DPoints);
-
-      //D. Refine the computed structure and cameras
-      std::cout << "Which BA do you want ? " << std::endl
-        << "\t 1: Refine [X],[f,R|t] (individual cameras)\n"
-        << "\t 2: Refine [X],[R|t], shared [f, ppx, ppy]\n"
-        << "\t 3: Refine [X],[R|t], shared brown disto models [f,ppx,ppy,k1,k2,k3]\n" << std::endl;
-      int iBAType = -1;
-      std::cin >> iBAType;
-      switch(iBAType)
-      {
-        case 1:
-        {
-          do_bundle_adjustment(
-            camL, camR,
-            xL, xR,
-            vec_inliers,
-            vec_3DPoints);
-        }
-        break;
-
-        case 2:
-        {
-          do_bundle_adjustment_common_intrinsic_pinhole(
-            camL, camR,
-            xL, xR,
-            vec_inliers,
-            vec_3DPoints);
-        }
-        break;
-
-        case 3:
-        {
-          do_bundle_adjustment_common_intrinsics_brown_pinhole(
-            camL, camR,
-            xL, xR,
-            vec_inliers,
-            vec_3DPoints);
-        }
-        break;
-        default:
-          std::cerr << "Invalid input number" << std::endl;
-      }
-
-
-      //E. Export as PLY the refined scene (camera pos + 3Dpoints)
-      std::vector<Vec3> vec_camPos;
-      vec_camPos.push_back( camL._C );
-      vec_camPos.push_back( camR._C );
-      exportToPly(vec_3DPoints, vec_camPos, "EssentialGeometry.ply");
-
+      return EXIT_FAILURE;
     }
-    else  {
-      std::cout << "ACRANSAC was unable to estimate a rigid essential matrix"
-        << std::endl;
+
+    std::cout << "\nFound an Essential matrix:\n"
+      << "\tprecision: " << relativePose_info.found_residual_precision << " pixels\n"
+      << "\t#inliers: " << relativePose_info.vec_inliers.size() << "\n"
+      << "\t#matches: " << vec_PutativeMatches.size()
+      << std::endl;
+
+    // Show Essential validated point
+    svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
+    svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
+    svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
+    for (size_t i = 0; i < relativePose_info.vec_inliers.size(); ++i)  {
+      const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]]._i];
+      const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]]._j];
+      const Vec2f L = LL.coords();
+      const Vec2f R = RR.coords();
+      svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
+      svgStream.drawCircle(L.x(), L.y(), LL.scale(), svgStyle().stroke("yellow", 2.0));
+      svgStream.drawCircle(R.x()+imageL.Width(), R.y(), RR.scale(),svgStyle().stroke("yellow", 2.0));
     }
+    const std::string out_filename = "04_ACRansacEssential.svg";
+    std::ofstream svgFile( out_filename.c_str() );
+    svgFile << svgStream.closeSvgFile().str();
+    svgFile.close();
+
+    std::cout << std::endl
+      << "-- Rotation|Translation matrices: --" << "\n"
+      << relativePose_info.relativePose.rotation() << "\n\n"
+      << relativePose_info.relativePose.translation() << "\n" << std::endl;
+
+    //C. Triangulate and check valid points
+    // invalid points that do not respect cheirality are discarded (removed
+    //  from the list of inliers).
+
+    std::cout << "Which BA do you want ?\n"
+      << "\t 1: Refine [X],[f,ppx,ppy,R|t] (individual cameras)\n"
+      << "\t 2: Refine [X],[R|t], shared [f, ppx, ppy]\n"
+      << "\t 3: Refine [X],[R|t], shared brown K3 distortion model [f,ppx,ppy,k1,k2,k3]\n" << std::endl;
+    int iBAType = -1;
+    std::cin >> iBAType;
+    const bool bSharedIntrinsic = (iBAType == 2 || iBAType == 3) ? true : false;
+
+    // Setup a SfM scene with two view corresponding the pictures
+    SfM_Data tiny_scene;
+    tiny_scene.views[0].reset(new View("", 0, bSharedIntrinsic ? 0 : 1, 0, imageL.Width(), imageL.Height()));
+    tiny_scene.views[1].reset(new View("", 1, bSharedIntrinsic ? 0 : 1, 1, imageR.Width(), imageR.Height()));
+    // Setup intrinsics camera data
+    switch (iBAType)
+    {
+      case 1: // Each view use it's own pinhole camera intrinsic
+        tiny_scene.intrinsics[0].reset(new Pinhole_Intrinsic(imageL.Width(), imageL.Height(), K(0, 0), K(0, 2), K(1, 2)));
+        tiny_scene.intrinsics[1].reset(new Pinhole_Intrinsic(imageR.Width(), imageR.Height(), K(0, 0), K(0, 2), K(1, 2)));
+        break;
+      case 2: // Shared pinhole camera intrinsic
+        tiny_scene.intrinsics[0].reset(new Pinhole_Intrinsic(imageL.Width(), imageL.Height(), K(0, 0), K(0, 2), K(1, 2)));
+        break;
+      case 3: // Shared pinhole camera intrinsic with radial K3 distortion
+        tiny_scene.intrinsics[0].reset(new Pinhole_Intrinsic_Radial_K3(imageL.Width(), imageL.Height(), K(0, 0), K(0, 2), K(1, 2)));
+        break;
+      default:
+        std::cerr << "Invalid input number" << std::endl;
+        return EXIT_FAILURE;
+    }
+ 
+    // Setup poses camera data
+    const Pose3 pose0 = tiny_scene.poses[tiny_scene.views[0]->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
+    const Pose3 pose1 = tiny_scene.poses[tiny_scene.views[1]->id_pose] = relativePose_info.relativePose;
+
+    // Init structure by inlier triangulation
+    const Mat34 P1 = tiny_scene.intrinsics[tiny_scene.views[0]->id_intrinsic]->get_projective_equivalent(pose0);
+    const Mat34 P2 = tiny_scene.intrinsics[tiny_scene.views[1]->id_intrinsic]->get_projective_equivalent(pose1);
+    Landmarks & landmarks = tiny_scene.structure;
+    for (size_t i = 0; i < relativePose_info.vec_inliers.size(); ++i)  {
+      const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]]._i];
+      const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]]._j];
+      // Point triangulation
+      Vec3 X;
+      TriangulateDLT(P1, LL.coords().cast<double>(), P2, RR.coords().cast<double>(), &X);
+      // Reject point that is behind the camera
+      if (pose0.depth(X) < 0 && pose1.depth(X) < 0)
+          continue;
+      // Add a new landmark (3D point with it's 2d observations)
+      landmarks[i].obs[tiny_scene.views[0]->id_view] = Observation(LL.coords().cast<double>(), vec_PutativeMatches[relativePose_info.vec_inliers[i]]._i);
+      landmarks[i].obs[tiny_scene.views[1]->id_view] = Observation(RR.coords().cast<double>(), vec_PutativeMatches[relativePose_info.vec_inliers[i]]._j);
+      landmarks[i].X = X;
+    }
+    Save(tiny_scene, "EssentialGeometry_start.ply", ESfM_Data(ALL));
+
+    //D. Perform Bundle Adjustment of the scene
+
+    Bundle_Adjustment_Ceres bundle_adjustment_obj;
+    bundle_adjustment_obj.Adjust(tiny_scene);
+
+    Save(tiny_scene, "EssentialGeometry_refined.ply", ESfM_Data(ALL));
   }
   return EXIT_SUCCESS;
 }
@@ -342,7 +282,7 @@ bool readIntrinsic(const std::string & fileName, Mat3 & K)
   }
   return true;
 }
-
+/*
 /// Export 3D point vector and camera position to PLY format
 bool exportToPly(const std::vector<Vec3> & vec_points,
   const std::vector<Vec3> & vec_camPos,
@@ -952,3 +892,4 @@ void do_bundle_adjustment_common_intrinsics_brown_pinhole(
     }
   }
 }
+*/
