@@ -11,6 +11,7 @@
 #include <openMVG/types.hpp>
 #include <openMVG/sfm/sfm_data.hpp>
 #include <openMVG/features/regions.hpp>
+#include <openMVG/features/image_describer.hpp>
 #include "third_party/progress/progress.hpp"
 
 #include <memory>
