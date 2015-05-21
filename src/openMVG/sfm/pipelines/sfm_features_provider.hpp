@@ -22,7 +22,7 @@ namespace openMVG{
 struct Features_Provider
 {
   /// PointFeature array per ViewId of the considered SfM_Data container
-  Hash_Map<IndexT, PointFeatures> feats_per_view;
+  Hash_Map<IndexT, features::PointFeatures> feats_per_view;
 
   // Load features related to a provided SfM_Data View container
   virtual bool load(
@@ -82,12 +82,12 @@ struct Features_Provider
 
   /// Return the PointFeatures belonging to the View, if the view does not exist
   ///  it return an empty PointFeature array.
-  const PointFeatures & getFeatures(const IndexT & id_view) const
+  const features::PointFeatures & getFeatures(const IndexT & id_view) const
   {
     // Have an empty feature set in order to deal with non existing view_id
-    static const PointFeatures emptyFeats = PointFeatures();
+    static const features::PointFeatures emptyFeats = features::PointFeatures();
 
-    Hash_Map<IndexT, PointFeatures>::const_iterator it = feats_per_view.find(id_view);
+    Hash_Map<IndexT, features::PointFeatures>::const_iterator it = feats_per_view.find(id_view);
     if (it != feats_per_view.end())
       return it->second;
     else

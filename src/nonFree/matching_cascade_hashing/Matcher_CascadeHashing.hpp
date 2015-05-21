@@ -83,7 +83,7 @@ class Matcher_CascadeHashing_AllInMemory
     {
       const size_t I = iter->first;
       const features::Regions *regionsI = regions_perImage.at(I).get();
-      const std::vector<PointFeature> pointFeaturesI = regionsI->GetRegionsPositions();
+      const std::vector<features::PointFeature> pointFeaturesI = regionsI->GetRegionsPositions();
 
       const std::vector<size_t> & indexToCompare = iter->second;
 #ifdef OPENMVG_USE_OPENMP
@@ -105,7 +105,7 @@ class Matcher_CascadeHashing_AllInMemory
         IndMatch::getDeduplicated(vec_FilteredMatches);
 
         // Remove matches that have the same (X,Y) coordinates
-        const std::vector<PointFeature> pointFeaturesJ = regionsJ->GetRegionsPositions();
+        const std::vector<features::PointFeature> pointFeaturesJ = regionsJ->GetRegionsPositions();
         IndMatchDecorator<float> matchDeduplicator(vec_FilteredMatches, pointFeaturesI, pointFeaturesJ);
         matchDeduplicator.getDeduplicated(vec_FilteredMatches);
 

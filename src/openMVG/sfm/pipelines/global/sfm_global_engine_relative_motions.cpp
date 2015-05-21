@@ -22,8 +22,9 @@
 
 namespace openMVG{
 
-using namespace openMVG::geometry;
 using namespace openMVG::cameras;
+using namespace openMVG::geometry;
+using namespace openMVG::features;
 
 GlobalSfMReconstructionEngine_RelativeMotions::GlobalSfMReconstructionEngine_RelativeMotions(
   const SfM_Data & sfm_data,

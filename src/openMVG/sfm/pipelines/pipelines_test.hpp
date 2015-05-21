@@ -29,7 +29,7 @@ struct Synthetic_Features_Provider : public Features_Provider
       {
         const Vec2 pt = synthetic_data._x[j].col(i);
         feats_per_view[j].push_back(
-          PointFeature(pt(0)+noise(generator), pt(1)+noise(generator)));
+          features::PointFeature(pt(0)+noise(generator), pt(1)+noise(generator)));
       }
     }
     return true;
@@ -48,7 +48,6 @@ struct Synthetic_Matches_Provider : public Matches_Provider
     {
       for (int jj = j+1; jj < j+3 ; ++jj)
       {
-        std::cout << j << "\t" << (jj)%synthetic_data._n << std::endl;
         for (int idx = 0; idx < synthetic_data._x[j].cols(); ++idx)
         {
           _pairWise_matches[Pair(j,(jj)%synthetic_data._n)].push_back(IndMatch(idx,idx));

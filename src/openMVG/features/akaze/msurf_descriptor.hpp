@@ -11,8 +11,9 @@
 #include "openMVG/features/feature.hpp"
 #include "openMVG/numeric/math_trait.hpp"
 
-namespace openMVG
-{
+namespace openMVG {
+namespace features {
+
   /**
    * @brief This function computes the value of a 2D Gaussian function
    * @param x X Position
@@ -156,6 +157,8 @@ namespace openMVG
       ipt ,
       descFloat);
   }
-}
+
+} // namespace features
+} // namespace openMVG
 
 #endif

@@ -20,6 +20,7 @@
 namespace openMVG {
 
 using namespace openMVG::matching;
+using namespace openMVG::features;
 
 Matcher_Regions_AllInMemory::Matcher_Regions_AllInMemory(
   float distRatio, EMatcherType eMatcherType)

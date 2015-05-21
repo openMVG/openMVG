@@ -600,7 +600,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
     for (tracks::submapTrack::const_iterator iter = subTrack.begin(); iter != subTrack.end(); ++iter, ++index) {
       const size_t imaIndex = iter->first;
       const size_t featIndex = iter->second;
-      const PointFeature pt = features_provider->getFeatures(imaIndex)[featIndex];
+      const features::PointFeature pt = features_provider->getFeatures(imaIndex)[featIndex];
       xxx[index]->col(cpt) = pt.coords().cast<double>();
     }
   }

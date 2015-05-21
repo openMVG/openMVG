@@ -7,6 +7,7 @@
 #include "openMVG/features/akaze/AKAZE.hpp"
 
 namespace openMVG {
+namespace features {
 
 using namespace openMVG::image;
 
@@ -597,5 +598,6 @@ void AKAZE::Compute_Main_Orientation(
   }
 }
 
-}; // namespace openMVG
+} // namespace features
+} // namespace openMVG
 

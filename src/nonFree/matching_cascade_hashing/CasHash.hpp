@@ -84,7 +84,7 @@ struct ImageFeatures {
 /*----------------------------------------------------------------*/
 
 // Define SIFT descriptors
-typedef Descriptor<unsigned char, 128> DescriptorT;
+typedef features::Descriptor<unsigned char, 128> DescriptorT;
 typedef std::vector<DescriptorT > DescsT;
 
 // fetch and adjust each SIFT feature vector in <imageDataList> to zero-mean

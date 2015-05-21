@@ -174,8 +174,8 @@ public:
 
 float KVLD(const openMVG::image::Image< float >& I1,
   const openMVG::image::Image< float >& I2,
-  const std::vector<openMVG::SIOPointFeature> & F1,
-  const std::vector<openMVG::SIOPointFeature> & F2,
+  const std::vector<openMVG::features::SIOPointFeature> & F1,
+  const std::vector<openMVG::features::SIOPointFeature> & F2,
   const std::vector< openMVG::Pair >& matches,
   std::vector< openMVG::Pair >& matchesFiltered,
   std::vector< double >& score,

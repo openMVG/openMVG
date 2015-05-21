@@ -85,8 +85,8 @@ private :
 
 //=============================IO interface ======================//
 
-std::ofstream& writeDetector( std::ofstream& out, const openMVG::SIOPointFeature& vect );
-std::ifstream& readDetector( std::ifstream& in, openMVG::SIOPointFeature& point );
+std::ofstream& writeDetector( std::ofstream& out, const openMVG::features::SIOPointFeature& vect );
+std::ifstream& readDetector( std::ifstream& in, openMVG::features::SIOPointFeature& point );
 //======================================elemetuary operations================================//
 template < typename T >
 inline T point_distance( const T x1, const T y1, const T x2, const T y2 )

@@ -55,16 +55,16 @@ class ImageCollectionGeometricFilter
       const std::vector<IndMatch> & vec_PutativeMatches = iter->second;
 
       // Load features of Inth and Jnth images
-      const PointFeatures & kpSetI = _feat_provider->getFeatures(iIndex);
-      const PointFeatures & kpSetJ = _feat_provider->getFeatures(jIndex);
+      const features::PointFeatures & kpSetI = _feat_provider->getFeatures(iIndex);
+      const features::PointFeatures & kpSetJ = _feat_provider->getFeatures(jIndex);
 
       //-- Copy point to array in order to estimate fundamental matrix :
       const size_t n = vec_PutativeMatches.size();
       Mat xI(2,n), xJ(2,n);
 
       for (size_t i=0; i < vec_PutativeMatches.size(); ++i)  {
-        const PointFeature & imaA = kpSetI[vec_PutativeMatches[i]._i];
-        const PointFeature & imaB = kpSetJ[vec_PutativeMatches[i]._j];
+        const features::PointFeature & imaA = kpSetI[vec_PutativeMatches[i]._i];
+        const features::PointFeature & imaB = kpSetJ[vec_PutativeMatches[i]._j];
         xI.col(i) = Vec2f(imaA.coords()).cast<double>();
         xJ.col(i) = Vec2f(imaB.coords()).cast<double>();
       }

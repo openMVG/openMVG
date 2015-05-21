@@ -12,8 +12,9 @@
 #include "openMVG/image/image.hpp"
 #include "openMVG/numeric/math_trait.hpp"
 
-namespace openMVG
-{
+namespace openMVG {
+namespace features {
+
   /**
   ** @brief Compute mean values (Li,Lx,Ly) in each subdivisions
   ** @param samples_Li input values on Li
@@ -216,6 +217,8 @@ namespace openMVG
 
     assert( outIndex == 486 ) ; // Just to be sure (and we are sure ! completly sure !)
   }
-}
+
+} // namespace features
+} // namespace openMVG
 
 #endif

@@ -243,8 +243,8 @@ void GuidedMatching_Fundamental_Fast(
   // - For each right point, compute threshold limited bandwidth and compare only
   //   points that belong to this range (limited buckets).
 
-  const PointFeatures r_pt = rRegions->GetRegionsPositions();
-  const PointFeatures l_pt = lRegions->GetRegionsPositions();
+  const features::PointFeatures r_pt = rRegions->GetRegionsPositions();
+  const features::PointFeatures l_pt = lRegions->GetRegionsPositions();
 
   MetricT metric;
 

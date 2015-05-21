@@ -19,6 +19,7 @@
 namespace openMVG {
 
 using namespace openMVG::cameras;
+using namespace openMVG::features;
 using namespace openMVG::geometry;
 
 /// Camera pair epipole (Projection of camera center 2 in the image plane 1)

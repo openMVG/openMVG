@@ -42,6 +42,7 @@
 #include <cereal/cereal.hpp>
 
 namespace openMVG {
+namespace features {
 
 struct AKAZEConfig
 {
@@ -162,6 +163,7 @@ public:
 };
 /* ************************************************************************* */
 
-}; // namespace openMVG
+} // namespace features
+} // namespace openMVG
 
 #endif //OPENMVG_FEATURES_AKAZE_H
