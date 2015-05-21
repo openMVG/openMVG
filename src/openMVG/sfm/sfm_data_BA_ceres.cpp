@@ -9,6 +9,7 @@
 #include "ceres/rotation.h"
 
 namespace openMVG {
+namespace sfm {
 
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
@@ -261,5 +262,6 @@ bool Bundle_Adjustment_Ceres::Adjust(
   }
 }
 
+} // namespace sfm
 } // namespace openMVG
 

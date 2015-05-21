@@ -27,7 +27,8 @@
 #pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
 #endif
 
-namespace openMVG{
+namespace openMVG {
+namespace sfm {
 
 using namespace openMVG::geometry;
 using namespace openMVG::cameras;
@@ -1078,5 +1079,6 @@ size_t SequentialSfMReconstructionEngine::badTrackRejector(double dPrecision)
     RemoveOutliers_AngleError(_sfm_data, 2.0);
 }
 
+} // namespace sfm
 } // namespace openMVG
 

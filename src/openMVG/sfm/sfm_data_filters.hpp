@@ -12,6 +12,7 @@
 #include <iterator>
 
 namespace openMVG {
+namespace sfm {
 
 /// List the view indexes that have valid camera intrinsic and pose.
 static std::set<IndexT> Get_Valid_Views
@@ -235,6 +236,7 @@ static bool eraseUnstablePosesAndObservations(
   return remove_iteration > 0;
 }
 
-}; // namespace openMVG
+} // namespace sfm
+} // namespace openMVG
 
 #endif // OPENMVG_SFM_DATA_FILTERS_HPP

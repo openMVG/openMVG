@@ -46,6 +46,7 @@ using namespace lemon;
 using namespace openMVG::image;
 using namespace openMVG::matching;
 using namespace openMVG::lInfinity;
+using namespace openMVG::sfm;
 
 typedef features::SIOPointFeature FeatureT;
 typedef vector< FeatureT > featsT;

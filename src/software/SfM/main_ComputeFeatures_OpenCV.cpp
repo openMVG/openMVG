@@ -28,6 +28,8 @@
 
 using namespace openMVG;
 using namespace openMVG::image;
+using namespace openMVG::features;
+using namespace openMVG::sfm;
 using namespace std;
 
 enum eGeometricModel
@@ -50,7 +52,6 @@ enum ePairMode
 //--/!\ If you use a new Regions type you define and register it in
 //   "openMVG/features/regions_factory.hpp" file.
 ///
-using namespace openMVG::features;
 // Reuse the existing AKAZE floating point Keypoint.
 typedef features::AKAZE_Float_Regions AKAZE_OpenCV_Regions;
 // Define the Interface

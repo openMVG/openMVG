@@ -17,10 +17,12 @@
 #include "third_party/progress/progress.hpp"
 
 namespace openMVG {
+namespace sfm {
 
 using namespace openMVG::cameras;
 using namespace openMVG::features;
 using namespace openMVG::geometry;
+
 
 /// Camera pair epipole (Projection of camera center 2 in the image plane 1)
 static Vec3 epipole_from_P(const Mat34& P1, const Pose3& P2)
@@ -323,4 +325,6 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::triangulate(
   structure_estimator.triangulate(sfm_data);
 }
 
+} // namespace sfm
 } // namespace openMVG
+

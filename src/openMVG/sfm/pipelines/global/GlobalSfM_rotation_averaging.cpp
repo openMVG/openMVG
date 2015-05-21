@@ -15,7 +15,7 @@
 #include "third_party/histogram/histogram.hpp"
 
 namespace openMVG{
-namespace globalSfM{
+namespace sfm{
 
 using namespace openMVG::rotation_averaging;
 
@@ -56,7 +56,7 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
 
   const Pair_Set pairs = getPairs(relativeRotations);
   Hash_Map<IndexT, IndexT> _reindexForward, _reindexBackward;
-  openMVG::reindex(pairs, _reindexForward, _reindexBackward);
+  reindex(pairs, _reindexForward, _reindexBackward);
 
   for(RelativeRotations::iterator iter = relativeRotations.begin();  iter != relativeRotations.end(); ++iter)
   {
@@ -229,6 +229,6 @@ void GlobalSfM_Rotation_AveragingSolver::TripletRotationRejection(
   std::cout << "\n #Edges removed by triplet inference: " << edges_start_count - edges_end_count << std::endl;
 }
 
-
-} // namespace globalSfM
+} // namespace sfm
 } // namespace openMVG
+

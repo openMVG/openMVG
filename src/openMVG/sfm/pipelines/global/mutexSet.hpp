@@ -21,6 +21,7 @@ typedef tthread::lock_guard<mutexT> lock_guardT;
 #endif
 
 namespace openMVG {
+namespace sfm{
 
 /// ThreadSafe Set thanks to a mutex
 template <typename T>
@@ -47,4 +48,5 @@ private:
     mutable mutexT m_Mutex;
 };
 
-}; // namespace openMVG
+} // namespace sfm
+} // namespace openMVG

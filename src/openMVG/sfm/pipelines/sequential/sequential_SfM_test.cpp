@@ -22,6 +22,7 @@
 using namespace openMVG;
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
+using namespace openMVG::sfm;
 
 #include "testing/testing.h"
 

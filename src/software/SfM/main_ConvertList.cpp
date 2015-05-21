@@ -18,6 +18,7 @@
 
 using namespace openMVG;
 using namespace openMVG::cameras;
+using namespace openMVG::sfm;
 
 // Compatibility binary
 // Convert an openMVG v0.x=>7 lists.txt file to the new SfM_Data file format (v0.8)

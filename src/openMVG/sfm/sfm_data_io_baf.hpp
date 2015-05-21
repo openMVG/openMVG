@@ -11,8 +11,8 @@
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include <fstream>
 
-namespace openMVG
-{
+namespace openMVG {
+namespace sfm {
 
 /// Save SfM_Data in an ASCII BAF (Bundle Adjustment File).
 // --Header
@@ -92,6 +92,7 @@ static bool Save_BAF(
   return bOk;
 }
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_DATA_IO_PLY_HPP

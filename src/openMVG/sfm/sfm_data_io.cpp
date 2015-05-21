@@ -16,6 +16,7 @@
 #include "openMVG/sfm/sfm_data_io_baf.hpp"
 
 namespace openMVG {
+namespace sfm {
 
 ///Check that each pose have a valid intrinsic and pose id in the existing View ids
 bool ValidIds(const SfM_Data & sfm_data, ESfM_Data flags_part)
@@ -102,6 +103,7 @@ bool Save(const SfM_Data & sfm_data, const std::string & filename, ESfM_Data fla
   return false;
 }
 
+} // namespace sfm
 } // namespace openMVG
 
 

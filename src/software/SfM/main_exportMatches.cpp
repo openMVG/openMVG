@@ -22,7 +22,9 @@
 #include <map>
 
 using namespace openMVG;
+using namespace openMVG::features;
 using namespace openMVG::matching;
+using namespace openMVG::sfm;
 using namespace svg;
 
 // Convert HUE color to RGB
@@ -104,7 +106,6 @@ int main(int argc, char ** argv)
   // Load SfM Scene regions
   //---------------------------------------
   // Init the regions_type from the image describer file (used for image regions extraction)
-  using namespace openMVG::features;
   const std::string sImage_describer = stlplus::create_filespec(sMatchesDir, "image_describer", "json");
   std::unique_ptr<Regions> regions_type = Init_region_type_from_file(sImage_describer);
   if (!regions_type)

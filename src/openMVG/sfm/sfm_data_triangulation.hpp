@@ -10,6 +10,7 @@
 #include "openMVG/sfm/sfm_data.hpp"
 
 namespace openMVG {
+namespace sfm {
 
 /// Generic basis struct for triangulation of track data contained
 ///  in the SfM_Data scene structure.
@@ -66,6 +67,7 @@ private:
     const std::set<IndexT> & samples) const;
 };
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_DATA_TRIANGULATION_HPP

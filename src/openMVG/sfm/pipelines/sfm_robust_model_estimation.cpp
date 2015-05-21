@@ -19,8 +19,8 @@
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 
-namespace openMVG
-{
+namespace openMVG {
+namespace sfm {
 
 bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
   const Mat & x1, const Mat & x2,
@@ -187,5 +187,6 @@ bool robustResection(
   return false;
 }
 
+} // namespace sfm
 } // namespace openMVG
 

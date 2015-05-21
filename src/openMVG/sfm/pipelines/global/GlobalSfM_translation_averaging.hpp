@@ -9,7 +9,7 @@
 #define OPENMVG_SFM_GLOBAL_ENGINE_PIPELINES_GLOBAL_TRANSLATION_AVERAGING_HPP
 
 namespace openMVG{
-namespace globalSfM{
+namespace sfm{
 
 enum ETranslationAveragingMethod
 {
@@ -17,8 +17,8 @@ enum ETranslationAveragingMethod
   TRANSLATION_AVERAGING_L2 = 2
 };
 
-}
-}
+} // namespace sfm
+} // namespace openMVG
 
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/multiview/translation_averaging_common.hpp"
@@ -28,7 +28,7 @@ enum ETranslationAveragingMethod
 #include "openMVG/graph/graph.hpp"
 
 namespace openMVG{
-namespace globalSfM{
+namespace sfm{
 
 class GlobalSfM_Translation_AveragingSolver
 {
@@ -87,7 +87,7 @@ private:
     const std::string & sOutDirectory) const;
 };
 
-} // namespace globalSfM
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_GLOBAL_ENGINE_PIPELINES_GLOBAL_TRANSLATION_AVERAGING_HPP

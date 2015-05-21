@@ -15,6 +15,7 @@
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 using namespace openMVG;
+using namespace openMVG::sfm;
 
 /// Build a list of pair that share visibility content from the SfM_Data structure
 Pair_Set BuildPairsFromStructureObservations(const SfM_Data & sfm_data)

@@ -19,6 +19,7 @@
 #include <cstdlib>
 
 using namespace openMVG;
+using namespace openMVG::sfm;
 
 int main(int argc, char **argv)
 {

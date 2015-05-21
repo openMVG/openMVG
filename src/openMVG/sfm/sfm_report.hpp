@@ -13,6 +13,7 @@
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
 namespace openMVG {
+namespace sfm {
 
 static bool Generate_SfM_Report
 (
@@ -172,6 +173,7 @@ static bool Generate_SfM_Report
   return bOk;
 }
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_REPORT_HPP

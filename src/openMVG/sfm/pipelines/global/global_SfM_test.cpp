@@ -22,6 +22,7 @@
 using namespace openMVG;
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
+using namespace openMVG::sfm;
 
 #include "testing/testing.h"
 
@@ -68,8 +69,8 @@ TEST(GLOBAL_SFM, RotationAveragingL2_TranslationAveragingL1) {
   sfmEngine.Set_bFixedIntrinsics(true);
 
   // Configure motion averaging method
-  sfmEngine.SetRotationAveragingMethod(globalSfM::ROTATION_AVERAGING_L2);
-  sfmEngine.SetTranslationAveragingMethod(globalSfM::TRANSLATION_AVERAGING_L1);
+  sfmEngine.SetRotationAveragingMethod(ROTATION_AVERAGING_L2);
+  sfmEngine.SetTranslationAveragingMethod(TRANSLATION_AVERAGING_L1);
 
   EXPECT_TRUE (sfmEngine.Process());
 
@@ -119,8 +120,8 @@ TEST(GLOBAL_SFM, RotationAveragingL1_TranslationAveragingL1) {
   sfmEngine.Set_bFixedIntrinsics(true);
 
   // Configure motion averaging method
-  sfmEngine.SetRotationAveragingMethod(globalSfM::ROTATION_AVERAGING_L1);
-  sfmEngine.SetTranslationAveragingMethod(globalSfM::TRANSLATION_AVERAGING_L1);
+  sfmEngine.SetRotationAveragingMethod(ROTATION_AVERAGING_L1);
+  sfmEngine.SetTranslationAveragingMethod(TRANSLATION_AVERAGING_L1);
 
   EXPECT_TRUE (sfmEngine.Process());
 
@@ -170,8 +171,8 @@ TEST(GLOBAL_SFM, RotationAveragingL2_TranslationAveragingL2) {
   sfmEngine.Set_bFixedIntrinsics(true);
 
   // Configure motion averaging method
-  sfmEngine.SetRotationAveragingMethod(globalSfM::ROTATION_AVERAGING_L2);
-  sfmEngine.SetTranslationAveragingMethod(globalSfM::TRANSLATION_AVERAGING_L2);
+  sfmEngine.SetRotationAveragingMethod(ROTATION_AVERAGING_L2);
+  sfmEngine.SetTranslationAveragingMethod(TRANSLATION_AVERAGING_L2);
 
   EXPECT_TRUE (sfmEngine.Process());
 

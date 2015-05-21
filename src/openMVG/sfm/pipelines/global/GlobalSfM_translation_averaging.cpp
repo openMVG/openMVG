@@ -28,7 +28,7 @@
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 namespace openMVG{
-namespace globalSfM{
+namespace sfm{
 
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
@@ -102,7 +102,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
     RelativeInfo_Vec vec_initialRijTijEstimates_cpy = vec_initialRijTijEstimates;
     const Pair_Set pairs = getPairs(vec_initialRijTijEstimates_cpy);
     Hash_Map<IndexT,IndexT> _reindexForward, _reindexBackward;
-    openMVG::reindex(pairs, _reindexForward, _reindexBackward);
+    reindex(pairs, _reindexForward, _reindexBackward);
     for(size_t i = 0; i < vec_initialRijTijEstimates_cpy.size(); ++i)
     {
       openMVG::relativeInfo & rel = vec_initialRijTijEstimates_cpy[i];
@@ -639,6 +639,6 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
   return bTest;
 }
 
-
-} // namespace globalSfM
+} // namespace sfm
 } // namespace openMVG
+

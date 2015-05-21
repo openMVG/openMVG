@@ -13,6 +13,7 @@
 #include <fstream>
 
 namespace openMVG {
+namespace sfm {
 
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
@@ -234,5 +235,6 @@ void Frustum_Filter::init_z_near_z_far_depth(const SfM_Data & sfm_data,
   }
 }
 
-}; // namespace openMVG
+} // namespace sfm
+} // namespace openMVG
 

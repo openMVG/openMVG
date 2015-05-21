@@ -12,7 +12,8 @@
 #include "openMVG/matching/indMatch.hpp"
 #include <openMVG/matching/indMatch_utils.hpp>
 
-namespace openMVG{
+namespace openMVG {
+namespace sfm {
 
 /// Return the matches loaded from a provided matches file
 struct Matches_Provider
@@ -58,6 +59,7 @@ struct Matches_Provider
   }
 }; // Features_Provider
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_MATCHES_PROVIDER_HPP

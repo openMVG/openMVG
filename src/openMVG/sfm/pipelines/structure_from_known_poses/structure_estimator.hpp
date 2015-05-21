@@ -10,6 +10,7 @@
 #include "openMVG/matching/indMatch.hpp"
 
 namespace openMVG {
+namespace sfm {
 
 class SfM_Data_Structure_Estimation_From_Known_Poses
 {
@@ -48,4 +49,6 @@ private:
   matching::PairWiseMatches triplets_matches;
 };
 
+} // namespace sfm
 } // namespace openMVG
+

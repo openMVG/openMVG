@@ -12,8 +12,8 @@
 #include "openMVG/geometry/pose3.hpp"
 #include <vector>
 
-namespace openMVG
-{
+namespace openMVG {
+namespace sfm {
 
 /**
 * @brief Estimate the best possible Rotation/Translation from E.
@@ -92,6 +92,7 @@ bool robustResection(
   const size_t max_iteration = 4096);
 
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_ROBUST_MODEL_ESTIMATION_HPP

@@ -10,7 +10,8 @@
 #include "openMVG/sfm/sfm_data.hpp"
 #include <string>
 
-namespace openMVG{
+namespace openMVG {
+namespace sfm {
 
 /// Basic Reconstruction Engine.
 /// Process Function handle the reconstruction.
@@ -47,4 +48,6 @@ protected:
   //-----
   bool _bFixedIntrinsics;
 };
+
+} // namespace sfm
 } // namespace openMVG

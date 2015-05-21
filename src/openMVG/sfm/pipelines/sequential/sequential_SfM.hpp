@@ -15,7 +15,8 @@
 #include "third_party/htmlDoc/htmlDoc.hpp"
 #include "third_party/histogram/histogram.hpp"
 
-namespace openMVG{
+namespace openMVG {
+namespace sfm {
 
 /// Sequential SfM Pipeline Reconstruction Engine.
 class SequentialSfMReconstructionEngine : public ReconstructionEngine
@@ -99,4 +100,6 @@ private:
   std::set<size_t> _set_remainingViewId;     // Remaining camera index that can be used for resection
 };
 
+} // namespace sfm
 } // namespace openMVG
+

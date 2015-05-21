@@ -11,8 +11,8 @@
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include <fstream>
 
-namespace openMVG
-{
+namespace openMVG {
+namespace sfm {
 
 /// Save the structure and camera positions of a SfM_Data container as 3D points in a PLY ASCII file.
 static bool Save_PLY(
@@ -72,6 +72,7 @@ static bool Save_PLY(
   return bOk;
 }
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_DATA_IO_PLY_HPP

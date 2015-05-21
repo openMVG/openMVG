@@ -22,6 +22,7 @@ using namespace openMVG;
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 using namespace openMVG::image;
+using namespace openMVG::sfm;
 
 static int running = 1;
 static SfM_Data sfm_data;

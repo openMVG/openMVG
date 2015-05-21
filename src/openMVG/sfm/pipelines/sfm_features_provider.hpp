@@ -15,7 +15,8 @@
 
 #include <memory>
 
-namespace openMVG{
+namespace openMVG {
+namespace sfm {
 
 /// Abstract PointFeature provider (read some feature and store them as PointFeature).
 /// Allow to load and return the features related to a view
@@ -95,6 +96,7 @@ struct Features_Provider
   }
 }; // Features_Provider
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_FEATURES_PROVIDER_HPP

@@ -39,6 +39,7 @@ using namespace openMVG::cameras;
 using namespace openMVG::image;
 using namespace openMVG::matching;
 using namespace openMVG::robust;
+using namespace openMVG::sfm;
 using namespace std;
 
 enum eGeometricModel

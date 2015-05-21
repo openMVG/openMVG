@@ -14,6 +14,7 @@
 #include "openMVG/cameras/cameras.hpp"
 
 namespace openMVG {
+namespace sfm {
 
 /// Define a collection of View
 typedef Hash_Map<IndexT, std::shared_ptr<View> > Views;
@@ -69,6 +70,7 @@ struct SfM_Data
   }
 };
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_DATA_HPP

@@ -24,6 +24,7 @@
 
 using namespace openMVG;
 using namespace openMVG::matching;
+using namespace openMVG::sfm;
 using namespace svg;
 
 

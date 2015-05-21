@@ -28,7 +28,7 @@ class ImageCollectionGeometricFilter
   {
   }
 
-  ImageCollectionGeometricFilter(Features_Provider * feat_provider)
+  ImageCollectionGeometricFilter(sfm::Features_Provider * feat_provider)
     : _feat_provider(feat_provider)
   { }
 
@@ -104,6 +104,6 @@ class ImageCollectionGeometricFilter
 
   private:
   // Features per image
-  Features_Provider * _feat_provider;
+  sfm::Features_Provider * _feat_provider;
 };
 

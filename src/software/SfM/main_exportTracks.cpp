@@ -21,6 +21,7 @@
 
 using namespace openMVG;
 using namespace openMVG::matching;
+using namespace openMVG::sfm;
 using namespace openMVG::tracks;
 using namespace svg;
 
@@ -109,7 +110,7 @@ int main(int argc, char ** argv)
     tracksBuilder.Build(map_Matches);
     tracksBuilder.Filter();
     tracksBuilder.ExportToSTL(map_tracks);
-}
+  }
 
   // ------------
   // For each pair, export the matches

@@ -12,6 +12,7 @@
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 using namespace openMVG;
+using namespace openMVG::sfm;
 
 /// Export camera frustrums as a triangle PLY file
 int main(int argc, char **argv)

@@ -15,6 +15,7 @@
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 
 namespace openMVG{
+namespace sfm{
 
 using namespace openMVG::trifocal::kernel;
 
@@ -98,6 +99,7 @@ private:
 
 };
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_GLOBAL_SFM_ENGINE_TRIPLET_T_ESTIMATOR_H

@@ -13,6 +13,7 @@
 #include <vector>
 
 using namespace openMVG;
+using namespace openMVG::sfm;
 
 // Convert from a SfM_Data format to another
 int main(int argc, char **argv)

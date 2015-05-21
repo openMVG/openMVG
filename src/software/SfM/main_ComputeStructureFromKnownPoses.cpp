@@ -13,6 +13,7 @@
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 using namespace openMVG;
+using namespace openMVG::sfm;
 
 /// Build a list of pair from the camera frusta intersections
 Pair_Set BuildPairsFromFrustumsIntersections(

@@ -8,6 +8,7 @@
 #include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/sfm/sfm.hpp"
 using namespace openMVG;
+using namespace openMVG::sfm;
 
 #include <random>
 #include <iostream>

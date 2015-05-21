@@ -21,6 +21,7 @@
 #endif
 
 namespace openMVG{
+namespace sfm{
 
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
@@ -46,8 +47,8 @@ GlobalSfMReconstructionEngine_RelativeMotions::GlobalSfMReconstructionEngine_Rel
   }
 
   // Set default motion Averaging methods
-  _eRotationAveragingMethod = globalSfM::ROTATION_AVERAGING_L2;
-  _eTranslationAveragingMethod = globalSfM::TRANSLATION_AVERAGING_L1;
+  _eRotationAveragingMethod = ROTATION_AVERAGING_L2;
+  _eTranslationAveragingMethod = TRANSLATION_AVERAGING_L1;
 }
 
 GlobalSfMReconstructionEngine_RelativeMotions::~GlobalSfMReconstructionEngine_RelativeMotions()
@@ -89,7 +90,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::SetMatchesProvider(Matches_P
 
 void GlobalSfMReconstructionEngine_RelativeMotions::SetRotationAveragingMethod
 (
-  globalSfM::ERotationAveragingMethod eRotationAveragingMethod
+  ERotationAveragingMethod eRotationAveragingMethod
 )
 {
   _eRotationAveragingMethod = eRotationAveragingMethod;
@@ -97,7 +98,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::SetRotationAveragingMethod
 
 void GlobalSfMReconstructionEngine_RelativeMotions::SetTranslationAveragingMethod
 (
-  globalSfM::ETranslationAveragingMethod eTranslationAveragingMethod
+  ETranslationAveragingMethod eTranslationAveragingMethod
 )
 {
   _eTranslationAveragingMethod = eTranslationAveragingMethod;
@@ -237,10 +238,9 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations()
   }
 
   // Global Rotation solver:
-  using namespace openMVG::globalSfM;
-  globalSfM::ERelativeRotationInferenceMethod eRelativeRotationInferenceMethod = globalSfM::TRIPLET_ROTATION_INFERENCE_COMPOSITION_ERROR;
+  ERelativeRotationInferenceMethod eRelativeRotationInferenceMethod = TRIPLET_ROTATION_INFERENCE_COMPOSITION_ERROR;
 
-  globalSfM::GlobalSfM_Rotation_AveragingSolver rotation_averaging_solver;
+  GlobalSfM_Rotation_AveragingSolver rotation_averaging_solver;
   const bool bRotationAveraging = rotation_averaging_solver.Run(
     _eRotationAveragingMethod, eRelativeRotationInferenceMethod,
     vec_relativeRotEstimate, _map_globalR);
@@ -252,7 +252,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations()
 bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Translations()
 {
   // Translation averaging (compute translations & update them to a global common coordinates system)
-  globalSfM::GlobalSfM_Translation_AveragingSolver translation_averaging_solver;
+  GlobalSfM_Translation_AveragingSolver translation_averaging_solver;
   const bool bTranslationAveraging = translation_averaging_solver.Run(
     _eTranslationAveragingMethod,
     _sfm_data,
@@ -565,4 +565,6 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations(R
   }
 }
 
+} // namespace sfm
 } // namespace openMVG
+

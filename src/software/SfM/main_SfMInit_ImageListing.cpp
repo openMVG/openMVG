@@ -26,7 +26,7 @@ using namespace openMVG;
 using namespace openMVG::cameras;
 using namespace openMVG::exif;
 using namespace openMVG::image;
-
+using namespace openMVG::sfm;
 
 /// Check that Kmatrix is a string like "f;0;ppx;0;f;ppy;0;0;1"
 /// With f,ppx,ppy as valid numerical value

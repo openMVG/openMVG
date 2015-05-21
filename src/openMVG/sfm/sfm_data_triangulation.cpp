@@ -14,6 +14,7 @@
 #include <memory>
 
 namespace openMVG {
+namespace sfm {
 
 using namespace openMVG::geometry;
 using namespace openMVG::cameras;
@@ -256,4 +257,5 @@ Vec3 SfM_Data_Structure_Computation_Robust::track_sample_triangulation(
   return trianObj.compute();
 }
 
+} // namespace sfm
 } // namespace openMVG
