@@ -110,9 +110,9 @@ Non linear refinement, Bundle Adjustment
 
 OpenMVG provides a generic bundle_adjustment framework to refine or keep as constant the following parameters:
 
-* internal parameters,
-* external parameters,
-* 3D structure.
+* internal orientation parameters (intrinsics: camera projection model),
+* external orientation parameters (extrinsics: camera poses),
+* structure (3D points).
 
 .. code-block:: c++
 
@@ -127,6 +127,21 @@ OpenMVG provides a generic bundle_adjustment framework to refine or keep as cons
   ba_object->Adjust(sfm_data);
 
   const double dResidual_after = RMSE(sfm_data);
+
+Bundle Adjustment (ajustement de faisceaux), is a non linear optimization problem.
+It looks to minimizing the residual error of a series of user cost functions (the reprojection errors of the structure :math:`X_j` to the images measures :math:`x_j^i`).
+According:
+
+* :math:`X_j` the Jnth 3D point of the structure of the scene,
+* :math:`x_j^i` the observation of the projection of the 3D point :math:`X_j` in the image :math:`i`,
+* :math:`P_i` the projection matrix of the image :math:`i`
+
+From a user provided initial guess the vector of parameters: :math:`\{X_j,P_i\}_{i,j}`: camera parameters :math:`\{P_i\}_i` and the scene structure :math:`\{X_j\}_j` are refined in order to minimizes the residual reprojection cost:
+
+.. math::
+  \underset{ \{P_i\}_i, \{X_j\}_j}{minimize} \left\| \sum_{j=0}^{m} \sum_{i=0}^{n} x_j^i - P_i X_j \right\|_2
+
+OpenMVG proposes options in order to tell if a parameter group must be kept as constant or refined during the minimization.
 
 SfM Pipelines
 ==============

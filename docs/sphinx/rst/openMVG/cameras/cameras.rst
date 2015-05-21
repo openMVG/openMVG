@@ -79,22 +79,6 @@ A 3D point is projected in a image with the following formula (homogeneous coord
 OpenMVG Pinhole camera models
 ------------------------------
 
-* Simple pinhole camera models (intrinsic + extrinsic(pose))
-* Pinhole camera models with radial distortion (intrinsic + extrinsic(pose))
-
-.. code-block:: c++ 
-
-  // Setup a simple pinhole camera at origin
-  // Pinhole camera P = K[R|t], t = -RC
-  Mat3 K;
-  K << 1000, 0, 500,
-       0, 1000, 500,
-       0, 0, 1;
-  PinholeCamera cam(K, Mat3::Identity(), Vec3::Zero());
-
-  // Radial distortion (brown model -> polynomial distortion (K1 to k3))
-  BrownPinholeCamera(K, Mat3::Identity(), Vec3::Zero(), k1, k2 , k3);
-
 * Pinhole intrinsic
 
   * :class:`Pinhole_Intrinsic : public IntrinsicBase` 
@@ -111,3 +95,14 @@ OpenMVG Pinhole camera models
     * classic pinhole camera (Focal + principal point and image size) + radial distortion by three factors.
     * can add and remove distortion
 
+* Simple pinhole camera models (intrinsic + extrinsic(pose))
+
+.. code-block:: c++ 
+
+  // Setup a simple pinhole camera at origin
+  // Pinhole camera P = K[R|t], t = -RC
+  Mat3 K;
+  K << 1000, 0, 500,
+       0, 1000, 500,
+       0, 0, 1;
+  PinholeCamera cam(K, Mat3::Identity(), Vec3::Zero());

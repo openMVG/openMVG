@@ -1,4 +1,3 @@
-ADD_SUBDIRECTORY(bundle_adjustment)
 ADD_SUBDIRECTORY(cameras)
 ADD_SUBDIRECTORY(exif)
 ADD_SUBDIRECTORY(features)

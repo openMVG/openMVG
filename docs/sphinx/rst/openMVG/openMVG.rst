@@ -16,7 +16,6 @@ openMVG provide a collection of tiny libraries that allow to solve computer visi
   robust_estimation/robust_estimation.rst
   matching/matching.rst
   tracks/tracks.rst
-  bundle_adjustment/bundle_adjustment.rst
   geometry/geometry.rst
 
 
