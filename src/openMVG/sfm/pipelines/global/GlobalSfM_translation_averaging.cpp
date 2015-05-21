@@ -30,6 +30,9 @@
 namespace openMVG{
 namespace globalSfM{
 
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
+
 /// Use features in normalized camera frames
 bool GlobalSfM_Translation_AveragingSolver::Run(
   ETranslationAveragingMethod eTranslationAveragingMethod,

@@ -29,6 +29,9 @@
 
 namespace openMVG{
 
+using namespace openMVG::geometry;
+using namespace openMVG::cameras;
+
 SequentialSfMReconstructionEngine::SequentialSfMReconstructionEngine(
   const SfM_Data & sfm_data,
   const std::string & soutDirectory,

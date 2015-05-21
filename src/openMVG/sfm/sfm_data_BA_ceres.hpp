@@ -15,7 +15,9 @@
 namespace openMVG {
 
 /// Create the appropriate cost functor according the provided input camera intrinsic model
-ceres::CostFunction * IntrinsicsToCostFunction(IntrinsicBase * intrinsic, const Vec2 & observation);
+ceres::CostFunction * IntrinsicsToCostFunction(
+  cameras::IntrinsicBase * intrinsic,
+  const Vec2 & observation);
 
 class Bundle_Adjustment_Ceres : public Bundle_Adjustment
 {

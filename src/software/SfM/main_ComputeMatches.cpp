@@ -31,6 +31,7 @@
 using namespace openMVG;
 using namespace openMVG::matching;
 using namespace openMVG::robust;
+using namespace openMVG::cameras;
 using namespace std;
 
 enum EGeometricModel

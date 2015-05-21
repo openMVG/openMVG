@@ -6,6 +6,7 @@
 
 #include "openMVG/cameras/Camera_IO.hpp"
 using namespace openMVG;
+using namespace openMVG::cameras;
 
 #include "testing/testing.h"
 
@@ -13,7 +14,7 @@ using std::string;
 
 TEST(Camera_IO, PinholeSaveRead) {
 
-  Mat3 R = Mat3
+  const Mat3 R = Mat3
     (Eigen::AngleAxisd(rand(), Vec3::UnitX())
     * Eigen::AngleAxisd(rand(), Vec3::UnitY())
     * Eigen::AngleAxisd(rand(), Vec3::UnitZ()));

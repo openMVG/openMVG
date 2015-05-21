@@ -28,6 +28,8 @@
 using namespace openMVG;
 using namespace openMVG::image;
 using namespace openMVG::matching;
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
 using namespace svg;
 using namespace std;
 

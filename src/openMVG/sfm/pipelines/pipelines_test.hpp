@@ -73,8 +73,8 @@ static double RMSE(const SfM_Data & sfm_data)
       itObs != obs.end(); ++itObs)
     {
       const View * view = sfm_data.GetViews().find(itObs->first)->second.get();
-      const Pose3 pose = sfm_data.GetPoseOrDie(view);
-      const std::shared_ptr<IntrinsicBase> intrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic)->second;
+      const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view);
+      const std::shared_ptr<cameras::IntrinsicBase> intrinsic = sfm_data.GetIntrinsics().at(view->id_intrinsic);
       const Vec2 residual = intrinsic->residual(pose, iterTracks->second.X, itObs->second.x);
       //std::cout << residual << " ";
       vec.push_back( residual(0) );
@@ -92,7 +92,7 @@ SfM_Data getInputScene
 (
   const NViewDataSet & d,
   const nViewDatasetConfigurator & config,
-  EINTRINSIC eintrinsic)
+  cameras::EINTRINSIC eintrinsic)
 {
   // Translate the input dataset to a SfM_Data scene
   SfM_Data sfm_data;
@@ -116,7 +116,7 @@ SfM_Data getInputScene
   // 2. Poses
   for (int i = 0; i < nviews; ++i)
   {
-    sfm_data.poses[i] = Pose3(d._R[i], d._C[i]);;
+    sfm_data.poses[i] = geometry::Pose3(d._R[i], d._C[i]);;
   }
 
   // 3. Intrinsic data (shared, so only one camera intrinsic is defined)
@@ -125,16 +125,16 @@ SfM_Data getInputScene
     const unsigned int h = config._cy *2;
     switch (eintrinsic)
     {
-      case PINHOLE_CAMERA:
-        sfm_data.intrinsics[0] = std::make_shared<Pinhole_Intrinsic>
+      case cameras::PINHOLE_CAMERA:
+        sfm_data.intrinsics[0] = std::make_shared<cameras::Pinhole_Intrinsic>
           (w, h, config._fx, config._cx, config._cy);
       break;
-      case PINHOLE_CAMERA_RADIAL1:
-        sfm_data.intrinsics[0] = std::make_shared<Pinhole_Intrinsic_Radial_K1>
+      case cameras::PINHOLE_CAMERA_RADIAL1:
+        sfm_data.intrinsics[0] = std::make_shared<cameras::Pinhole_Intrinsic_Radial_K1>
           (w, h, config._fx, config._cx, config._cy, 0.0);
       break;
-      case PINHOLE_CAMERA_RADIAL3:
-        sfm_data.intrinsics[0] = std::make_shared<Pinhole_Intrinsic_Radial_K3>
+      case cameras::PINHOLE_CAMERA_RADIAL3:
+        sfm_data.intrinsics[0] = std::make_shared<cameras::Pinhole_Intrinsic_Radial_K3>
           (w, h, config._fx, config._cx, config._cy, 0., 0., 0.);
       break;
       default:

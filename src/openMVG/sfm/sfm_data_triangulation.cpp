@@ -15,6 +15,9 @@
 
 namespace openMVG {
 
+using namespace openMVG::geometry;
+using namespace openMVG::cameras;
+
 SfM_Data_Structure_Computation_Basis::SfM_Data_Structure_Computation_Basis(bool bConsoleVerbose)
   :_bConsoleVerbose(bConsoleVerbose)
 {

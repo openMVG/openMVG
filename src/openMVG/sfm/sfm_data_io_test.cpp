@@ -12,6 +12,8 @@
 #include <sstream>
 
 using namespace openMVG;
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
 
 // Create a SfM scene with desired count of views & poses & intrinsic (shared or not)
 // Add a 3D point with observation in 2 view (just in order to have non empty data)

@@ -15,16 +15,14 @@
 
 namespace openMVG {
 
-using namespace openMVG::geometry;
-
 /// Define a collection of View
 typedef Hash_Map<IndexT, std::shared_ptr<View> > Views;
 
 /// Define a collection of Pose (indexed by View::id_pose)
-typedef Hash_Map<IndexT, Pose3> Poses;
+typedef Hash_Map<IndexT, geometry::Pose3> Poses;
 
 /// Define a collection of IntrinsicParameter (indexed by View::id_intrinsic)
-typedef Hash_Map<IndexT, std::shared_ptr<IntrinsicBase> > Intrinsics;
+typedef Hash_Map<IndexT, std::shared_ptr<cameras::IntrinsicBase> > Intrinsics;
 
 /// Define a collection of landmarks are indexed by their TrackId
 typedef Hash_Map<IndexT, Landmark> Landmarks;
@@ -65,7 +63,7 @@ struct SfM_Data
   }
 
   /// Get the pose associated to a view
-  const Pose3 GetPoseOrDie(const View * view) const
+  const geometry::Pose3 GetPoseOrDie(const View * view) const
   {
     return poses.at(view->id_pose);
   }

@@ -10,6 +10,9 @@
 
 namespace openMVG {
 
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
+
 /// Create the appropriate cost functor according the provided input camera intrinsic model
 ceres::CostFunction * IntrinsicsToCostFunction(IntrinsicBase * intrinsic, const Vec2 & observation)
 {

@@ -18,6 +18,9 @@
 
 namespace openMVG {
 
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
+
 /// Camera pair epipole (Projection of camera center 2 in the image plane 1)
 static Vec3 epipole_from_P(const Mat34& P1, const Pose3& P2)
 {

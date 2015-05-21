@@ -19,6 +19,8 @@
 #include "third_party/cmdLine/cmdLine.h"
 
 using namespace openMVG;
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
 using namespace openMVG::image;
 
 static int running = 1;

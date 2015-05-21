@@ -15,7 +15,8 @@
 #include <iostream>
 #include <fstream>
 
-namespace openMVG{
+namespace openMVG {
+namespace cameras {
 
 /// Save a Pinhole camera to a file as a P matrix (12 doubles as binary values)
 static bool save(
@@ -74,6 +75,7 @@ static bool load(
   return false;
 }
 
+} // namespace cameras
 } // namespace openMVG
 
 #endif // OPENMVG_CAMERA_IO_H

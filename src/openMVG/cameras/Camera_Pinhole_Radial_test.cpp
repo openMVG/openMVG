@@ -7,6 +7,7 @@
 
 #include "openMVG/cameras/cameras.hpp"
 using namespace openMVG;
+using namespace openMVG::cameras;
 
 #include "testing/testing.h"
 

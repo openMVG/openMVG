@@ -9,13 +9,14 @@
 #include "openMVG/sfm/sfm.hpp"
 #include "openMVG/types.hpp"
 #include "openMVG/geometry/half_space_intersection.hpp"
-using namespace openMVG;
-using namespace openMVG::geometry;
-using namespace openMVG::geometry::halfPlane;
 
 #include <fstream>
 
 namespace openMVG {
+
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
+using namespace openMVG::geometry::halfPlane;
 
 // Constructor
 Frustum_Filter::Frustum_Filter(const SfM_Data & sfm_data,

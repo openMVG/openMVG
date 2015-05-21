@@ -25,6 +25,8 @@
 using namespace openMVG;
 using namespace openMVG::matching;
 using namespace openMVG::image;
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
 using namespace svg;
 using namespace std;
 
@@ -168,7 +170,7 @@ int main() {
       << "\t#inliers: " << relativePose_info.vec_inliers.size() << "\n"
       << "\t#matches: " << vec_PutativeMatches.size()
       << std::endl;
-     
+
     // Show Essential validated point
     svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
     svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
@@ -186,10 +188,10 @@ int main() {
     std::ofstream svgFile( out_filename.c_str() );
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
-         
+
     //C. Triangulate and export inliers as a PLY scene
     std::vector<Vec3> vec_3DPoints;
-    
+
     // Setup camera intrinsic and poses
     Pinhole_Intrinsic intrinsic0(imageL.Width(), imageL.Height(), K(0, 0), K(0, 2), K(1, 2));
     Pinhole_Intrinsic intrinsic1(imageR.Width(), imageR.Height(), K(0, 0), K(0, 2), K(1, 2));

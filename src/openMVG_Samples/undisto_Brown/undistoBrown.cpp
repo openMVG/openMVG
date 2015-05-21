@@ -16,9 +16,9 @@
 #include <iostream>
 
 using namespace openMVG;
+using namespace openMVG::cameras;
 using namespace openMVG::image;
 using namespace std;
-
 
 int main(int argc, char **argv)
 {
@@ -80,13 +80,13 @@ int main(int argc, char **argv)
   Image<unsigned char > imageGreyIn, imageGreyU;
   Image<RGBColor> imageRGBIn, imageRGBU;
   Image<RGBAColor> imageRGBAIn, imageRGBAU;
-  
+
   C_Progress_display my_progress_bar( vec_fileNames.size() );
   for (size_t j = 0; j < vec_fileNames.size(); ++j, ++my_progress_bar)
   {
     //read the depth
     int w,h,depth;
-    vector<unsigned char> tmp_vec; 
+    vector<unsigned char> tmp_vec;
     const string sOutFileName =
       stlplus::create_filespec(sOutPath, stlplus::basename_part(vec_fileNames[j]), "JPG");
     const string sInFileName = stlplus::create_filespec(sPath, stlplus::basename_part(vec_fileNames[j]));

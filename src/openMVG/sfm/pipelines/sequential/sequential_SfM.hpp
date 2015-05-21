@@ -48,7 +48,7 @@ public:
   /// Compute the initial 3D seed (First camera t=0; R=Id, second estimated by 5 point algorithm)
   bool MakeInitialPair3D(const Pair & initialPair);
 
-  void SetUnknownCameraType(const EINTRINSIC camType)
+  void SetUnknownCameraType(const cameras::EINTRINSIC camType)
   {
     _camType = camType;
   }
@@ -86,7 +86,7 @@ private:
 
   // Parameter
   Pair _initialpair;
-  EINTRINSIC _camType; // The camera type for the unknown cameras
+  cameras::EINTRINSIC _camType; // The camera type for the unknown cameras
 
   //-- Data provider
   Features_Provider  * _features_provider;

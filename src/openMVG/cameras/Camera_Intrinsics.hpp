@@ -15,7 +15,8 @@
 #include <vector>
 #include <cereal/cereal.hpp> // Serialization
 
-namespace openMVG{
+namespace openMVG {
+namespace cameras {
 
 /// Basis class for all intrinsic parameters of a camera
 /// Store the image size & define all basis optical modelization of a camera
@@ -142,8 +143,8 @@ static double AngleBetweenRay(
   return R2D(acos(clamp(dotAngle/mag, -1.0 + 1.e-8, 1.0 - 1.e-8)));
 }
 
+} // namespace cameras
 } // namespace openMVG
-
 
 #endif // #ifndef OPENMVG_CAMERA_INTRINSICS_H
 

@@ -11,7 +11,8 @@
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/multiview/projection.hpp"
 
-namespace openMVG{
+namespace openMVG {
+namespace cameras {
 
 /// Pinhole camera P = K[R|t], t = -RC
 struct PinholeCamera
@@ -103,6 +104,7 @@ struct PinholeCamera
 
 };
 
+} // namespace cameras
 } // namespace openMVG
 
 #endif // #ifndef OPENMVG_CAMERA_PINHOLECAMERA_H

@@ -33,8 +33,8 @@ static bool Generate_SfM_Report
       itObs != obs.end(); ++itObs)
     {
       const View * view = sfm_data.GetViews().at(itObs->first).get();
-      const Pose3 pose = sfm_data.GetPoseOrDie(view);
-      const IntrinsicBase * intrinsic = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
+      const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view);
+      const cameras::IntrinsicBase * intrinsic = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       // Use absolute values
       const Vec2 residual = intrinsic->residual(pose, iterTracks->second.X, itObs->second.x).array().abs();
       residuals_per_view[itObs->first].push_back(residual(0));
