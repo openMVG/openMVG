@@ -14,7 +14,6 @@
 #include "openMVG/matching/matcher_brute_force.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
 #include "openMVG/multiview/triangulation.hpp"
-#include "openMVG_Samples/robust_essential/essential_estimation.hpp"
 
 #include "openMVG_Samples/siftPutativeMatches/two_view_matches.hpp"
 
@@ -230,7 +229,7 @@ int main() {
         std::cerr << "Invalid input number" << std::endl;
         return EXIT_FAILURE;
     }
- 
+
     // Setup poses camera data
     const Pose3 pose0 = tiny_scene.poses[tiny_scene.views[0]->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
     const Pose3 pose1 = tiny_scene.poses[tiny_scene.views[1]->id_pose] = relativePose_info.relativePose;

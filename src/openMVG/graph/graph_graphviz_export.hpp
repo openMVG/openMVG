@@ -105,7 +105,7 @@ bool exportToGraphvizFormat_Image(
   }
 
   os << "edge [style=bold]" << std::endl;
-  for ( map< std::pair<IndexT,IndexT>, IndexT>::const_iterator iter = map_arcs.begin();
+  for ( std::map< std::pair<IndexT,IndexT>, IndexT>::const_iterator iter = map_arcs.begin();
     iter != map_arcs.end();
     ++iter)
   {
