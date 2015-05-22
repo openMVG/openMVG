@@ -78,5 +78,16 @@ publications are relevant:
 [5] Moisan Lionel, Moulon Pierre and Monasse Pascal. IPOL 2012.
 [Automatic Homographic Registration of a Pair of Images, with A Contrario Elimination of Outliers.](http://dx.doi.org/10.5201/ipol.2012.mmm-oh)
 
-Please cite [3] if you use openMVG library in your work.
+[6] Moulon Pierre, Monasse Pascal and Marlet Renaud. ICCV 2013.
+[Global Fusion of Relative Motions for Robust, Accurate and Scalable Structure from Motion.](http://imagine.enpc.fr/~moulonp/publis/iccv2013/index.html)
+
+or cite it as:
+
+```
+  @misc{openMVG,
+    author = "Pierre Moulon and Pascal Monasse and Renaud Marlet and Others",
+     title = "OpenMVG",
+    howpublished = "\url{https://github.com/openMVG/openMVG}",
+  }
+```
 
