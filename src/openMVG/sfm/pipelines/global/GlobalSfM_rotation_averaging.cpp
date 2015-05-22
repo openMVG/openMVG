@@ -19,6 +19,11 @@ namespace sfm{
 
 using namespace openMVG::rotation_averaging;
 
+Pair_Set GlobalSfM_Rotation_AveragingSolver::GetUsedPairs() const
+{
+  return used_pairs;
+}
+
 bool GlobalSfM_Rotation_AveragingSolver::Run(
   ERotationAveragingMethod eRotationAveragingMethod,
   ERelativeRotationInferenceMethod eRelativeRotationInferenceMethod,
@@ -27,7 +32,7 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
 ) const
 {
   RelativeRotations relativeRotations = relativeRot_In;
-  // We will work on a copy, since inference can remove some relative motions
+  // We work on a copy, since inference can remove some relative motions
 
   //-> Test there is only one graph and at least 3 camera ?
   switch(eRelativeRotationInferenceMethod)
@@ -82,6 +87,7 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
         bSuccess = rotation_averaging::l2::L2RotationAveraging_Refine(
           relativeRotations,
           vec_globalR);
+      used_pairs = getPairs(relativeRotations);
     }
     break;
     case ROTATION_AVERAGING_L1:

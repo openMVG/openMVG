@@ -2,9 +2,9 @@
 OpenMVG (open Multiple View Geometry)
 =====================================
 
------------------
-Build instruction
------------------
+------------------
+Build instructions
+------------------
 
 Required tools:
 * Cmake 
@@ -31,12 +31,21 @@ OpenMVG_BUILD_TESTS (ON/OFF(default))=> Build openMVG unit tests
 OpenMVG_BUILD_EXAMPLES (ON/OFF(default))=> Build OpenMVG example applications.
   Does not affect binaries under 'software'
 
+--------------------------
+General informations
+for openMVG SfM pipelines
+--------------------------
+OpenMVG can export graphs as graphviz .dot files and render them as SVG files.
+If you want consider this graph visualization feature, please consider to install Graphviz.
+
 -----------------
 Linux compilation
 -----------------
 
 Setup the required external library.
 * sudo apt-get install libpng-dev libjpeg-dev libtiff-dev libxxf86vm1 libxxf86vm-dev libxi-dev libxrandr-dev
+If you want see the view graph svg logs
+* sudo apt-get install graphviz
 
  $ git clone --recursive https://github.com/openMVG/openMVG.git
  $ cd openMVG
@@ -92,6 +101,7 @@ Compile the libraries and binaries samples.
 -------------------
 Mac compilation
 -------------------
+
  $ git clone --recursive https://github.com/openMVG/openMVG.git
  $ cd openMVG
  $ ls
@@ -105,22 +115,21 @@ If you want enable unit tests and examples to the build:
  $ xcodebuild -configuration Release
 
  
- --------------------
- Using openCV sample
- --------------------
+--------------------
+Using openCV sample
+--------------------
+
  Add -DOpenMVG_USE_OPENCV=ON to your cmake command line and set OpenCV_DIR variable to your openCV build directory
 => i.e.: -DOpenCV_DIR="/home/user/Dev/github/itseez/opencv_Build" -DOpenMVG_USE_OPENCV=ON
  
 ------------------------------------
 Using as library dependency in cmake
 ------------------------------------
+
 Adding following lines to your CMakeLists.txt should provide OpenMVG usable as
 static library:
 
  add_subdirectory(openMVG/src)
  include_directories(${OpenMVG_INCLUDES})
  target_link_libraries(target ${OpenMVG_LIBS})
-
-Information about required dependencies, standalone build and platform 
-specificity can be found below.
 

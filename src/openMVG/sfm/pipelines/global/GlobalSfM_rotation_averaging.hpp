@@ -53,6 +53,8 @@ public:
     std::vector< graph::Triplet > & vec_triplets,
     rotation_averaging::RelativeRotations & relativeRotations) const;
 
+  /// Return the pairs validated by the GlobalRotation routine (inference can remove some)
+  Pair_Set GetUsedPairs() const;
 };
 
 } // namespace sfm

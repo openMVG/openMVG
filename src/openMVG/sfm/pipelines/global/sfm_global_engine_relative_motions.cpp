@@ -12,6 +12,7 @@
 #include "openMVG/multiview/triangulation_nview.hpp"
 #include "openMVG/graph/connectedComponent.hpp"
 #include "openMVG/system/timer.hpp"
+#include "openMVG/stl/stl.hpp"
 #include "openMVG/multiview/essential.hpp"
 
 #include "third_party/progress/progress.hpp"
@@ -245,6 +246,32 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations()
     _eRotationAveragingMethod, eRelativeRotationInferenceMethod,
     vec_relativeRotEstimate, _map_globalR);
 
+  if (bRotationAveraging)
+  {
+    // Log input graph to the HTML report
+    if (!_sLoggingFile.empty() && !_sOutDirectory.empty())
+    {
+      // List the plausible remaining edges
+      std::set<IndexT> set_ViewIds;
+        std::transform(_sfm_data.GetViews().begin(), _sfm_data.GetViews().end(),
+          std::inserter(set_ViewIds, set_ViewIds.begin()), stl::RetrieveKey());
+      const std::string sGraph_name = "global_rotation_graph";
+      graph::indexedGraph putativeGraph(set_ViewIds, rotation_averaging_solver.GetUsedPairs());
+      graph::exportToGraphvizData(
+        stlplus::create_filespec(_sOutDirectory, sGraph_name),
+        putativeGraph.g);
+
+      using namespace htmlDocument;
+      std::ostringstream os;
+
+      os << "<br>" << sGraph_name << "<br>"
+         << "<img src=\""
+         << stlplus::create_filespec(_sOutDirectory, sGraph_name, "svg")
+         << "\" height=\"600\">\n";
+
+      _htmlDocStream->pushInfo(os.str());
+    }
+  }
   return bRotationAveraging;
 }
 
@@ -562,6 +589,27 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations(R
       //  relativePose_info.relativePose.rotation(),
       //  relativePose_info.relativePose.translation());
     }
+  }
+  // Log input graph to the HTML report
+  if (!_sLoggingFile.empty() && !_sOutDirectory.empty())
+  {
+    std::set<IndexT> set_ViewIds;
+      std::transform(_sfm_data.GetViews().begin(), _sfm_data.GetViews().end(),
+        std::inserter(set_ViewIds, set_ViewIds.begin()), stl::RetrieveKey());
+    graph::indexedGraph putativeGraph(set_ViewIds, getPairs(_matches_provider->_pairWise_matches));
+    graph::exportToGraphvizData(
+      stlplus::create_filespec(_sOutDirectory, "input_largest_cc_relative_motions_graph"),
+      putativeGraph.g);
+
+    using namespace htmlDocument;
+    std::ostringstream os;
+
+    os << "<br>" << "input_largest_cc_relative_motions_graph" << "<br>"
+       << "<img src=\""
+       << stlplus::create_filespec(_sOutDirectory, "input_largest_cc_relative_motions_graph", "svg")
+       << "\" height=\"600\">\n";
+
+    _htmlDocStream->pushInfo(os.str());
   }
 }
 

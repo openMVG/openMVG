@@ -60,6 +60,33 @@ struct indexedGraph
       g.addEdge(map_size_t_to_node[i], map_size_t_to_node[j]);
     }
   }
+
+  /// Create a graph from node index and pairs (edges)
+  // /!\ pairs must contains valid nodes indexes
+  template <typename IterableNodes, typename IterablePairs>
+  indexedGraph(const IterableNodes & nodes, const IterablePairs & pairs)
+  {
+    map_nodeMapIndex.reset( new map_NodeMapIndex(g) );
+
+    //A-- Create a node graph for each element of the set
+    for (typename IterableNodes::const_iterator iter = nodes.begin();
+      iter != nodes.end();
+      ++iter)
+    {
+      map_size_t_to_node[*iter] = g.addNode();
+      (*map_nodeMapIndex) [map_size_t_to_node[*iter]] = *iter;
+    }
+
+    //B-- Add weighted edges from the pairs object
+    for (typename IterablePairs::const_iterator iter = pairs.begin();
+      iter != pairs.end();
+      ++iter)
+    {
+      const IndexT i = iter->first;
+      const IndexT j = iter->second;
+      g.addEdge(map_size_t_to_node[i], map_size_t_to_node[j]);
+    }
+  }
 };
 
 } // namespace graph
