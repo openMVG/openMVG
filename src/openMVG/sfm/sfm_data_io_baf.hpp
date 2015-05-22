@@ -89,6 +89,26 @@ static bool Save_BAF(
     bOk = stream.good();
     stream.close();
   }
+  // Export View filenames as an imgList.txt file
+  {
+    const std::string sFile = stlplus::create_filespec(
+      stlplus::folder_part(filename), "imgList", "txt");
+
+    stream.open(sFile.c_str());
+    if (!stream.is_open())
+      return false;
+    for (Views::const_iterator iterV = sfm_data.GetViews().begin();
+      iterV != sfm_data.GetViews().end();
+      ++ iterV)
+    {
+      const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
+        iterV->second->s_Img_path);
+      stream << sView_filename << "\n";
+    }
+    stream.flush();
+    bOk = stream.good();
+    stream.close();
+  }
   return bOk;
 }
 
