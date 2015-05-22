@@ -195,7 +195,7 @@ int main(int argc, char **argv)
     else
       continue; // image cannot be read
 
-    std::shared_ptr<Exif_IO> exifReader = std::make_shared<Exif_IO_EasyExif>();
+    std::unique_ptr<Exif_IO> exifReader(new Exif_IO_EasyExif());
     exifReader->open( sImageFilename );
 
     // Consider the case where focal is provided manually
