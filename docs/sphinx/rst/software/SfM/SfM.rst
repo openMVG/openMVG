@@ -82,6 +82,7 @@ OpenMVG SfM pipelines run as a 4 step process:
 
    ./ComputeSfM_DataColor.rst
    ./ComputeStructureFromKnownPoses.rst
+   ./ExportUndistortedImages.rst
 
 
 5. Optional further processing (3rd party)
@@ -131,6 +132,7 @@ To know more about each tool visit the following link and read the doc below:
    ./GlobalSfM.rst
    ./ComputeSfM_DataColor.rst
    ./ComputeStructureFromKnownPoses.rst
+   ./ExportUndistortedImages.rst
 
 .. toctree::
    :maxdepth: 1
