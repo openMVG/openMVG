@@ -96,7 +96,7 @@ int main(int argc, char **argv)
   }
   
   const string sUndistMsg = bOneHaveDisto ? "undistorded" : "";
-  const string sQuitMsg = "Your SfM_Data file was succesfully converted!\n" + 
+  const string sQuitMsg = std::string("Your SfM_Data file was succesfully converted!\n") + 
 	  "Now you can copy your " + sUndistMsg + " images in the \"" + sOutDir + "\" directory and run MVS Texturing";
   std::cout << sQuitMsg << std::endl;
   return EXIT_SUCCESS;
