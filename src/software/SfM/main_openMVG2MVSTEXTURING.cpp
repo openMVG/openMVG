@@ -10,10 +10,12 @@
 #include "openMVG/image/image.hpp"
 
 using namespace openMVG;
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
+using namespace openMVG::sfm;
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "openMVG/numeric/numeric.h"
 
 #include <fstream>
 
@@ -45,6 +47,8 @@ int main(int argc, char **argv)
             << "--sfmdata " << sSfM_Data_Filename << std::endl
             << "--outdir " << sOutDir << std::endl;
 
+  bool bOneHaveDisto = false;
+  
   // Create output dir
   if (!stlplus::folder_exists(sOutDir))
     stlplus::folder_create( sOutDir );
@@ -57,42 +61,43 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-
-  for(Views::const_iterator iter = sfm_data.getViews().begin();
-      iter != sfm_data.getViews().end(); ++iter)
+  for(Views::const_iterator iter = sfm_data.GetViews().begin();
+      iter != sfm_data.GetViews().end(); ++iter)
   {
     const View * view = iter->second.get();
-    std::cout << view->s_Img_path << "\n";
-    std::cout << stlplus::basename_part(view->s_Img_path) << std::endl;
-    std::ofstream outfile( stlplus::create_filespec(
-                sOutDir, stlplus::basename_part(view->s_Img_path), "cam" ).c_str() );
-    Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
-    Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
-
-    if (iterPose == sfm_data.getPoses().end() ||
-      iterIntrinsic == sfm_data.getIntrinsics().end())
+    if (!sfm_data.IsPoseAndIntrinsicDefined(view))
         continue;
-
-    const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
+    
+    // Valid view, we can ask a pose & intrinsic data
+    const Pose3 pose = sfm_data.GetPoseOrDie(view);
+    Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
     const IntrinsicBase * cam = iterIntrinsic->second.get();
-    Mat34 P = cam->get_projective_equivalent(iterPose->second);
-
+    const Mat34 P = cam->get_projective_equivalent(pose);
+  
     Mat3 R, K;
     Vec3 t;
     KRt_From_P(P, &K, &R, &t);
-
-    int largerDim = cam->w() > cam->h() ? cam->w() : cam->h();
-
-    // see https://github.com/nmoehrle/mvs-texturing/blob/master/Arguments.cpp
+    
+    // We can now create the .cam file for the View in the output dir 
+    std::ofstream outfile( stlplus::create_filespec(
+                sOutDir, stlplus::basename_part(view->s_Img_path), "cam" ).c_str() );
+    // See https://github.com/nmoehrle/mvs-texturing/blob/master/Arguments.cpp
     // for full specs
+    const int largerDim = cam->w() > cam->h() ? cam->w() : cam->h();
     outfile << t(0) << " " << t(1) << " " << t(2) << " "
         << R(0,0) << " " << R(0,1) << " " << R(0,2) << " "
         << R(1,0) << " " << R(1,1) << " " << R(1,2) << " "
         << R(2,0) << " " << R(2,1) << " " << R(2,2) << "\n"
         << K(0,0) / largerDim << " 0 0 1 " << K(0,2) / cam->w() << " " << K(1,2) / cam->h();
-    //TODO : undist
     outfile.close();
-
+    
+    if(cam->have_disto())
+      bOneHaveDisto = true;
   }
-    return EXIT_SUCCESS;
+  
+  const string sUndistMsg = bOneHaveDisto ? "undistorded" : "";
+  const string sQuitMsg = "Your SfM_Data file was succesfully converted!\n" + 
+	  "Now you can copy your " + sUndistMsg + " images in the \"" + sOutDir + "\" directory and run MVS Texturing";
+  std::cout << sQuitMsg << std::endl;
+  return EXIT_SUCCESS;
 }
