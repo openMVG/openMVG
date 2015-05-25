@@ -66,7 +66,6 @@ SET_PROPERTY(TARGET ceres PROPERTY FOLDER OpenMVG/3rdParty/ceres)
 
 # Add an Approximate Nearest Neighbor library
 ADD_SUBDIRECTORY(flann)
-SET_PROPERTY(TARGET flann_cpp PROPERTY FOLDER OpenMVG/3rdParty)
 SET_PROPERTY(TARGET flann_cpp_s PROPERTY FOLDER OpenMVG/3rdParty)
 
 # Exif data parsing

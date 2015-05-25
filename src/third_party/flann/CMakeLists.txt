@@ -38,8 +38,8 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
 
 if (NOT CMAKE_BUILD_TYPE)
-    #set(CMAKE_BUILD_TYPE Release)
-    set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
+    set(CMAKE_BUILD_TYPE Release)
+    #set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
     #set(CMAKE_BUILD_TYPE Debug)
 endif()
 
@@ -94,11 +94,3 @@ endif(WIN32)
 add_subdirectory( cmake )
 add_subdirectory( src )
 
-message(STATUS "Install prefix: ${CMAKE_INSTALL_PREFIX}")
-message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "Building C bindings: ${BUILD_C_BINDINGS}")
-message(STATUS "Building python bindings: ${BUILD_PYTHON_BINDINGS}")
-message(STATUS "Building matlab bindings: ${BUILD_MATLAB_BINDINGS}")
-message(STATUS "Building CUDA library: ${BUILD_CUDA_LIB}")
-message(STATUS "Using OpenMP support: ${USE_OPENMP}")
-message(STATUS "Using MPI support: ${USE_MPI}")
