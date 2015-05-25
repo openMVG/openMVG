@@ -93,7 +93,7 @@ namespace std
 // problems with missing functions
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef MSWINDOWS
+#if defined(_MSC_VER)
 unsigned sleep(unsigned seconds);
 #else
 #include <unistd.h>

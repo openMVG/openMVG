@@ -39,7 +39,7 @@
 #include <Eigen/QR>
 #include <Eigen/SparseCore>
 #include <Eigen/SVD>
-#include<Eigen/StdVector>
+#include <Eigen/StdVector>
 
 #include <cmath>
 #include <numeric>
@@ -335,7 +335,7 @@ namespace openMVG {
 
   inline int is_finite(const double val)
   {
-#ifdef _WIN32
+#ifdef _MSC_VER
     return _finite(val);
 #else
     return std::isfinite(val);

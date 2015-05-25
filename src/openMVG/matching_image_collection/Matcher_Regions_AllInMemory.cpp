@@ -98,8 +98,9 @@ void Template_Matcher(
     const features::Regions *regionsI = regions_perImage.at(I).get();
     const size_t regions_countI = regionsI->RegionCount();
     const std::vector<PointFeature> pointFeaturesI = regionsI->GetRegionsPositions();
-    const typename MatcherT::ScalarT * tabI =
-      reinterpret_cast<const typename MatcherT::ScalarT *>(regionsI->DescriptorRawData());
+    const typename MatcherT::ScalarT * tabI = NULL;
+    if(regions_countI > 0)
+      tabI = reinterpret_cast<const typename MatcherT::ScalarT *>(regionsI->DescriptorRawData());
 
     MatcherT matcher10;
     ( matcher10.Build(tabI, regions_countI, regionsI->DescriptorLength()) );
@@ -112,8 +113,9 @@ void Template_Matcher(
 
       const features::Regions *regionsJ = regions_perImage.at(J).get();
       const size_t regions_countJ = regionsJ->RegionCount();
-      const typename MatcherT::ScalarT * tabJ =
-        reinterpret_cast<const typename MatcherT::ScalarT *>(regionsJ->DescriptorRawData());
+      const typename MatcherT::ScalarT * tabJ = NULL;
+      if(regions_countJ > 0)
+        tabJ = reinterpret_cast<const typename MatcherT::ScalarT *>(regionsJ->DescriptorRawData());
 
       const size_t NNN__ = 2;
       std::vector<int> vec_nIndice10;
@@ -149,7 +151,7 @@ void Template_Matcher(
         ++my_progress_bar;
         if (!vec_FilteredMatches.empty())
         {
-          map_PutativesMatches.insert( make_pair( make_pair(I,J), vec_FilteredMatches ));
+          map_PutativesMatches.insert( make_pair( make_pair(I,J), std::move(vec_FilteredMatches) ));
         }
       }
     }

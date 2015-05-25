@@ -89,7 +89,7 @@ class ImageCollectionGeometricFilter
   #pragma omp critical
 #endif
           {
-            map_GeometricMatches[std::make_pair(iIndex,jIndex)] = vec_filteredMatches;
+            map_GeometricMatches.insert(std::make_pair(std::make_pair(iIndex, jIndex), std::move(vec_filteredMatches)));
           }
         }
       }
