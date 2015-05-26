@@ -169,6 +169,9 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Process() {
 /// Compute from relative rotations the global rotations of the camera poses
 bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations()
 {
+  if(_relatives_Rt.empty())
+    return false;
+
   // Convert RelativeInfo_Map to appropriate input for solving the global rotations
   // - store the relative rotations and set a weight
   using namespace openMVG::rotation_averaging;

@@ -30,7 +30,9 @@ ENDIF(NOT CMAKE_BUILD_TYPE AND NOT MSVC)
 
 IF (WIN32)
   ADD_DEFINITIONS(-DNOMINMAX)
-  ADD_DEFINITIONS(/bigobj)
+  IF (MSVC)
+    ADD_DEFINITIONS(/bigobj)
+  ENDIF (MSVC)
 ENDIF (WIN32)
 
 # ==============================================================================
