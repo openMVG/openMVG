@@ -84,8 +84,6 @@ int main(int argc, char **argv)
     const double f = pinhole_cam->focal();
     const Vec2 pp = pinhole_cam->principal_point();
 
-    std::cout << "++++" << pp  << std::endl;
-    
     // Image size in px
     const int w = pinhole_cam->w();
     const int h = pinhole_cam->h();
