@@ -49,13 +49,30 @@ Bundle_Adjustment_Ceres::BA_options::BA_options(const bool bVerbose, bool bmulti
 
   _bCeres_Summary = false;
 
-  _linear_solver_type = ceres::SPARSE_SCHUR;
+  // Default configuration use a DENSE representation
+  _linear_solver_type = ceres::DENSE_SCHUR;
   _preconditioner_type = ceres::JACOBI;
-   if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
+  // If Sparse linear solver are available
+  // Descending priority order by efficiency (SUITE_SPARSE > CX_SPARSE > EIGEN_SPARSE)
+  if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
+  {
     _sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
+    _linear_solver_type = ceres::SPARSE_SCHUR;
+  }
   else
+  {
     if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
+    {
       _sparse_linear_algebra_library_type = ceres::CX_SPARSE;
+      _linear_solver_type = ceres::SPARSE_SCHUR;
+    }
+    else
+    if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+    {
+      _sparse_linear_algebra_library_type = ceres::EIGEN_SPARSE;
+      _linear_solver_type = ceres::SPARSE_SCHUR;
+    }
+  }
 }
 
 

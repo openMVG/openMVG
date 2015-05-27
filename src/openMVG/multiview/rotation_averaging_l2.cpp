@@ -256,7 +256,16 @@ bool L2RotationAveraging_Refine(
   }
   ceres::Solver::Options solverOptions;
   // Since the problem is sparse, use a sparse solver
-  solverOptions.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+  if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE) ||
+      ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE) ||
+      ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+  {
+    solverOptions.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+  }
+  else
+  {
+    solverOptions.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
+  }
 #ifdef OPENMVG_USE_OPENMP
   solverOptions.num_threads = omp_get_max_threads();
   solverOptions.num_linear_solver_threads = omp_get_max_threads();
