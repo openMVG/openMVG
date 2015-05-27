@@ -130,6 +130,6 @@ Adding following lines to your CMakeLists.txt should provide OpenMVG usable as
 static library:
 
  add_subdirectory(openMVG/src)
- include_directories(${OpenMVG_INCLUDES})
- target_link_libraries(target ${OpenMVG_LIBS})
+ include_directories(${OpenMVG_INCLUDE_DIRS})
+ target_link_libraries(target ${OpenMVG_LIBRARIES})
 

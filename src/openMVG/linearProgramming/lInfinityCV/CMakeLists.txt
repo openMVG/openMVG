@@ -23,7 +23,7 @@ IF (MSVC)
 ENDIF (MSVC)
 
 ADD_LIBRARY(openMVG_lInftyComputerVision  ${lInftycomputervision_headers} ${lInftycomputervision_cpp})
-INSTALL(TARGETS openMVG_lInftyComputerVision DESTINATION lib/)
+INSTALL(TARGETS openMVG_lInftyComputerVision DESTINATION lib EXPORT openMVG-targets)
 
 SET(LOCAL_LIBS
   openMVG_multiview_test_data

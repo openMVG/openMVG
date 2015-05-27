@@ -212,9 +212,6 @@ UNSET(CERES_COMPILE_OPTIONS)
 
 # Eigen.
 #HANDLE_LEGACY_INCLUDE_DEPENDENCY_HINT(EIGEN_INCLUDE EIGEN_INCLUDE_DIR_HINTS)
-LIST(APPEND CMAKE_INCLUDE_PATH ../eigen) # OpenMVG
-SET(EIGEN_INCLUDE_DIRS ../eigen) # OpenMVG
-FIND_PATH(EIGEN_INCLUDE NAMES Eigen/Core) # OpenMVG
 FIND_PACKAGE(Eigen REQUIRED)
 IF (EIGEN_FOUND)
   MESSAGE("-- Found Eigen version ${EIGEN_VERSION}: ${EIGEN_INCLUDE_DIRS}")
@@ -732,3 +729,23 @@ IF (BUILD_EXAMPLES)
 ELSE (BUILD_EXAMPLES)
   MESSAGE("-- Do not build any example.")
 ENDIF (BUILD_EXAMPLES)
+
+# Setup installation of Ceres public headers.
+FILE(GLOB CERES_HDRS ${CMAKE_CURRENT_SOURCE_DIR}/include/ceres/*.h)
+INSTALL(FILES ${CERES_HDRS} DESTINATION ${CERES_INCLUDE_INSTALL_DIR})
+
+FILE(GLOB CERES_PUBLIC_INTERNAL_HDRS ${CMAKE_CURRENT_SOURCE_DIR}/include/ceres/internal/*.h)
+INSTALL(FILES ${CERES_PUBLIC_INTERNAL_HDRS} DESTINATION ${CERES_INCLUDE_INSTALL_DIR}/internal)
+
+# Also setup installation of Ceres config.h configured with the current
+# build options into the installed headers directory.
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/config/ceres/internal/config.h
+        DESTINATION ${CERES_INCLUDE_INSTALL_DIR}/internal)
+
+
+IF (MINIGLOG)
+  # Install miniglog header if being used as logging #includes appear in
+  # installed public Ceres headers.
+  INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/internal/ceres/miniglog/glog/logging.h
+          DESTINATION ${CERES_INCLUDE_INSTALL_DIR}/miniglog/glog)
+ENDIF (MINIGLOG)

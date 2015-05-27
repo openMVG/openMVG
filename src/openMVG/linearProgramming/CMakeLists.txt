@@ -32,7 +32,7 @@ ELSE (NOT MOSEK_FOUND)
   # MOSEK_FOUND is true
   ADD_LIBRARY(openMVG_linearProgrammingMSK ${linearProgramming_headers} ${linearProgramming_cpp})
   SET_PROPERTY(TARGET openMVG_linearProgrammingMSK PROPERTY FOLDER OpenMVG/OpenMVG)
-  INSTALL(TARGETS openMVG_linearProgrammingMSK DESTINATION lib/)
+  INSTALL(TARGETS openMVG_linearProgrammingMSK DESTINATION lib EXPORT openMVG-targets)
 
   SET(openMVG_linearProgramming
     lib_Osi_Msk      # OSI solver wrapper for the Mosek backend

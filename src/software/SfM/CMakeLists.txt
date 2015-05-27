@@ -3,13 +3,11 @@
 # Intrinsic image analysis and SfM_Data container initialization
 ###
 ADD_EXECUTABLE(openMVG_main_SfMInit_ImageListing main_SfMInit_ImageListing.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_SfMInit_ImageListing
-                     ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_SfMInit_ImageListing ${OpenMVG_LIBRARIES})
 
 #convert a v0.6 lists.txt file to the new sfm_data.X format
 ADD_EXECUTABLE(openMVG_main_ConvertList main_ConvertList.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_ConvertList
-                     ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_ConvertList ${OpenMVG_LIBRARIES})
 
 # Installation rules
 SET_PROPERTY(TARGET openMVG_main_SfMInit_ImageListing PROPERTY FOLDER OpenMVG/software)
@@ -24,12 +22,10 @@ INSTALL(TARGETS openMVG_main_ConvertList DESTINATION bin/)
 ###
 
 ADD_EXECUTABLE(openMVG_main_ComputeFeatures main_ComputeFeatures.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures
-                     ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures ${OpenMVG_LIBRARIES})
 
 ADD_EXECUTABLE(openMVG_main_ComputeMatches main_ComputeMatches.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_ComputeMatches
-                     ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_ComputeMatches ${OpenMVG_LIBRARIES})
 
 # Installation rules
 SET_PROPERTY(TARGET openMVG_main_ComputeFeatures PROPERTY FOLDER OpenMVG/software)
@@ -48,32 +44,25 @@ INSTALL(TARGETS openMVG_main_ComputeMatches DESTINATION bin/)
 # - Compute structure color
 ###
 ADD_EXECUTABLE(openMVG_main_IncrementalSfM main_IncrementalSfM.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_IncrementalSfM
-                      ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_IncrementalSfM ${OpenMVG_LIBRARIES})
 
 ADD_EXECUTABLE(openMVG_main_GlobalSfM main_GlobalSfM.cpp)
-TARGET_LINK_LIBRARIES(
-  openMVG_main_GlobalSfM
-  ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_GlobalSfM ${OpenMVG_LIBRARIES})
 
 ADD_EXECUTABLE(openMVG_main_ConvertSfM_DataFormat main_ConvertSfM_DataFormat.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_ConvertSfM_DataFormat
-                     ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_ConvertSfM_DataFormat ${OpenMVG_LIBRARIES})
 
 ADD_EXECUTABLE(openMVG_main_FrustumFiltering main_FrustumFiltering.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_FrustumFiltering
-                     ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_FrustumFiltering ${OpenMVG_LIBRARIES})
 
 ADD_EXECUTABLE(openMVG_main_ComputeStructureFromKnownPoses main_ComputeStructureFromKnownPoses.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_ComputeStructureFromKnownPoses
-                     ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_ComputeStructureFromKnownPoses ${OpenMVG_LIBRARIES})
 
 ADD_EXECUTABLE(openMVG_main_ComputeSfM_DataColor main_ComputeSfM_DataColor.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_ComputeSfM_DataColor
-                     ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_ComputeSfM_DataColor ${OpenMVG_LIBRARIES})
 
 # Installation rules
-INSTALL(FILES cameraSensorWidth/cameraGenerated.txt DESTINATION resources/)
+INSTALL(FILES cameraSensorWidth/cameraGenerated.txt DESTINATION share/openMVG)
 SET_PROPERTY(TARGET openMVG_main_IncrementalSfM PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_IncrementalSfM DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_GlobalSfM PROPERTY FOLDER OpenMVG/software)
@@ -94,27 +83,23 @@ INSTALL(TARGETS openMVG_main_ComputeSfM_DataColor DESTINATION bin/)
 # - View extracted Keypoints
 #
 ADD_EXECUTABLE(openMVG_main_exportKeypoints main_exportKeypoints.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_exportKeypoints
-                     ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_exportKeypoints ${OpenMVG_LIBRARIES})
 
 
 # - View computed matches (putatives, geometrics) per image pair
 #
 ADD_EXECUTABLE(openMVG_main_exportMatches main_exportMatches.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_exportMatches
-                     ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_exportMatches ${OpenMVG_LIBRARIES})
 
 # - View tracks per image pair
 #
 ADD_EXECUTABLE(openMVG_main_exportTracks main_exportTracks.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_exportTracks
-                     ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_exportTracks ${OpenMVG_LIBRARIES})
 
 # - Export undistorted images related to a sfm_data file
 #
 ADD_EXECUTABLE(openMVG_main_ExportUndistortedImages main_ExportUndistortedImages.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_ExportUndistortedImages
-                     ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_ExportUndistortedImages ${OpenMVG_LIBRARIES})
 
 # installation rules
 SET_PROPERTY(TARGET openMVG_main_exportKeypoints PROPERTY FOLDER OpenMVG/software)
@@ -136,26 +121,22 @@ INSTALL(TARGETS openMVG_main_ExportUndistortedImages DESTINATION bin/)
 # - Export a SfM openMVG scene to PMVS format
 #
 ADD_EXECUTABLE(openMVG_main_openMVG2PMVS main_openMVG2PMVS.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_openMVG2PMVS
-                     ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_openMVG2PMVS ${OpenMVG_LIBRARIES})
 
 # - Export a SfM openMVG scene to CMPMVS format
 #
 ADD_EXECUTABLE(openMVG_main_openMVG2CMPMVS main_openMVG2CMPMVS.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_openMVG2CMPMVS
-                     ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_openMVG2CMPMVS ${OpenMVG_LIBRARIES})
 
 # - Export a SfM openMVG scene to meshlab scene with rasters
 # -
 ADD_EXECUTABLE(openMVG_main_openMVG2MESHLAB main_openMVG2MESHLAB.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MESHLAB
-                     ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MESHLAB ${OpenMVG_LIBRARIES})
 
 # - Export SfM openMVG camera scene as triangle meshes
 # -
 ADD_EXECUTABLE(openMVG_main_ExportCameraFrustums main_ExportCameraFrustums.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_ExportCameraFrustums
-                     ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_ExportCameraFrustums ${OpenMVG_LIBRARIES})
 
 # installation rules
 SET_PROPERTY(TARGET openMVG_main_openMVG2PMVS PROPERTY FOLDER OpenMVG/software)
@@ -180,7 +161,7 @@ IF(OpenMVG_USE_OPENCV)
     ADD_EXECUTABLE(openMVG_main_ComputeFeatures_OpenCV
       main_ComputeFeatures_OpenCV.cpp)
     TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures_OpenCV
-                          ${OpenMVG_LIBS}
+                          ${OpenMVG_LIBRARIES}
                           ${OpenCV_LIBS})
 
     SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY FOLDER OpenMVG/software)
@@ -196,8 +177,7 @@ ENDIF(OpenMVG_USE_OPENCV)
 # - Quality comparison against a GT camera path (MultiView Evaluation dataset)
 ###
 ADD_EXECUTABLE(openMVG_main_evalQuality main_evalQuality.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_evalQuality
-                     ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_evalQuality ${OpenMVG_LIBRARIES})
 
 #installation rules
 SET_PROPERTY(TARGET openMVG_main_evalQuality PROPERTY FOLDER OpenMVG/software)
