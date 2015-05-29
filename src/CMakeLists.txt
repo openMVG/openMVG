@@ -385,12 +385,20 @@ STRING(REGEX REPLACE
   OpenMVG_INCLUDE_DIRS
   "${OpenMVG_INCLUDE_DIRS}"
 )
-STRING(REGEX REPLACE
-  "ceres-solver"
-  "ceres"
-  OpenMVG_INCLUDE_DIRS
-  "${OpenMVG_INCLUDE_DIRS}"
-)
+IF (OpenMVG_USE_INTERNAL_CERES)
+  STRING(REGEX REPLACE
+    "ceres-solver"
+    "ceres"
+    OpenMVG_INCLUDE_DIRS
+    "${OpenMVG_INCLUDE_DIRS}"
+  )
+  STRING(REGEX REPLACE
+    "internal/ceres/"
+    ""
+    OpenMVG_INCLUDE_DIRS
+    "${OpenMVG_INCLUDE_DIRS}"
+  )
+ENDIF(OpenMVG_USE_INTERNAL_CERES)
 
 # Create a OpenMVGConfig.cmake file. <name>Config.cmake files are searched by
 # FIND_PACKAGE() automatically. We configure that file so that we can put any
