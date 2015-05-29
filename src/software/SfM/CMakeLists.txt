@@ -136,8 +136,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MESHLAB ${OpenMVG_LIBRARIES})
 # - Export a SfM openMVG scene to mvs-texturing scene folder
 # -
 ADD_EXECUTABLE(openMVG_main_openMVG2MVSTEXTURING main_openMVG2MVSTEXTURING.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVSTEXTURING
-                     ${OpenMVG_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVSTEXTURING ${OpenMVG_LIBRARIES})
 
 # - Export SfM openMVG camera scene as triangle meshes
 # -
