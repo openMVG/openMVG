@@ -124,7 +124,7 @@ bool Bundle_Adjustment_Ceres::Adjust(
 
     double * parameter_block = &map_poses[indexPose][0];
     problem.AddParameterBlock(parameter_block, 6);
-    if (!bRefineTranslations && !bRefineIntrinsics)
+    if (!bRefineTranslations && !bRefineRotations)
     {
       //set the whole parameter block as constant for best performance.
       problem.SetParameterBlockConstant(parameter_block);
