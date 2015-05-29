@@ -60,6 +60,9 @@ Bibliography
 .. [CMPMVS] **Multi-View Reconstruction Preserving Weakly-Supported Surfaces.**
     M. Jancosek, T. Pajdla, CVPR 2011.
 
+.. [Waechter2014] **Let There Be Color! Large-Scale Texturing of 3D Reconstructions.**
+    M. Waechter, N. Moehrle, and M. Goesele, ECCV 2014.
+
 .. [FLANN] **Fast Approximate Nearest Neighbors with Automatic Algorithm Configuration.**
     Muja, Marius, and David G. Lowe.  VISAPP (1). 2009.
  
