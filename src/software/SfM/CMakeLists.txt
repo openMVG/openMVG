@@ -151,6 +151,12 @@ ADD_EXECUTABLE(openMVG_main_openMVG2MESHLAB main_openMVG2MESHLAB.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MESHLAB
                      ${OpenMVG_LIBS})
 
+# - Export a SfM openMVG scene to mvs-texturing scene folder
+# -
+ADD_EXECUTABLE(openMVG_main_openMVG2MVSTEXTURING main_openMVG2MVSTEXTURING.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVSTEXTURING
+                     ${OpenMVG_LIBS})
+
 # - Export SfM openMVG camera scene as triangle meshes
 # -
 ADD_EXECUTABLE(openMVG_main_ExportCameraFrustums main_ExportCameraFrustums.cpp)
@@ -164,6 +170,8 @@ SET_PROPERTY(TARGET openMVG_main_openMVG2CMPMVS PROPERTY FOLDER OpenMVG/software
 INSTALL(TARGETS openMVG_main_openMVG2CMPMVS DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_openMVG2MESHLAB PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_openMVG2MESHLAB DESTINATION bin/)
+SET_PROPERTY(TARGET openMVG_main_openMVG2MVSTEXTURING PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_openMVG2MVSTEXTURING DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_ExportCameraFrustums PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ExportCameraFrustums DESTINATION bin/)
 
