@@ -6,10 +6,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/image/image.hpp"
+
+using namespace openMVG::image;
+
 #include "openMVG/features/features.hpp"
 #include "openMVG/matching/matcher_brute_force.hpp"
-#include "openMVG/matching/matcher_kdtree_flann.hpp"
-
 #include "openMVG_Samples/siftPutativeMatches/two_view_matches.hpp"
 
 using namespace openMVG::matching;
@@ -94,8 +95,8 @@ int main(int argc, char **argv) {
   if (!stlplus::folder_exists(sOutDir))
     stlplus::folder_create( sOutDir );
 
-  string jpg_filenameL = sImg1;
-  string jpg_filenameR = sImg2;
+  const string jpg_filenameL = sImg1;
+  const string jpg_filenameR = sImg2;
 
   Image<unsigned char> imageL, imageR;
   ReadImage(jpg_filenameL.c_str(), &imageL);
@@ -146,7 +147,7 @@ int main(int argc, char **argv) {
   std::vector<IndMatch> vec_PutativeMatches;
   //-- Perform matching -> find Nearest neighbor, filtered with Distance ratio
   {
-// Define a matcher and a metric to find corresponding points
+   // Define a matcher and a metric to find corresponding points
     typedef SIFT_Regions::DescriptorT DescriptorT;
     typedef L2_Vectorized<DescriptorT::bin_type> Metric;
     typedef ArrayMatcherBruteForce<DescriptorT::bin_type, Metric> MatcherT;

@@ -11,6 +11,7 @@
 #include <cereal/cereal.hpp> // Serialization
 
 namespace openMVG {
+namespace sfm {
 
 /// A view define an image by a string and unique indexes for the view, the camera intrinsic & the pose
 struct View
@@ -59,6 +60,7 @@ struct View
   }
 };
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_VIEW_HPP

@@ -3,12 +3,12 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-#include "openMVG/exif_IO/exif_IO_EasyExif.hpp"
+#include "openMVG/exif/exif_IO_EasyExif.hpp"
 
 #include "openMVG_Samples/sensorWidthDatabase/ParseDatabase.hpp"
 
 #include "openMVG/image/image.hpp"
-#include "openMVG/split/split.hpp"
+#include "openMVG/stl/split.hpp"
 
 #include "openMVG/sfm/sfm.hpp"
 
@@ -23,13 +23,17 @@
 #include <vector>
 
 using namespace openMVG;
+using namespace openMVG::cameras;
+using namespace openMVG::exif;
+using namespace openMVG::image;
+using namespace openMVG::sfm;
 
 /// Check that Kmatrix is a string like "f;0;ppx;0;f;ppy;0;0;1"
 /// With f,ppx,ppy as valid numerical value
 bool checkIntrinsicStringValidity(const std::string & Kmatrix, double & focal, double & ppx, double & ppy)
 {
   std::vector<std::string> vec_str;
-  split( Kmatrix, ";", vec_str );
+  stl::split(Kmatrix, ";", vec_str);
   if (vec_str.size() != 9)  {
     std::cerr << "\n Missing ';' character" << std::endl;
     return false;
@@ -178,11 +182,11 @@ int main(int argc, char **argv)
     const std::string sImageFilename = stlplus::create_filespec( sImageDir, *iter_image );
 
     // Test if the image format is supported:
-    if (openMVG::GetFormat(sImageFilename.c_str()) == openMVG::Unknown)
+    if (openMVG::image::GetFormat(sImageFilename.c_str()) == openMVG::image::Unknown)
       continue; // image cannot be opened
 
     Image<unsigned char> image;
-    if (openMVG::ReadImage( sImageFilename.c_str(), &image))  {
+    if (openMVG::image::ReadImage( sImageFilename.c_str(), &image))  {
       width = image.Width();
       height = image.Height();
       ppx = width / 2.0;
@@ -191,7 +195,7 @@ int main(int argc, char **argv)
     else
       continue; // image cannot be read
 
-    std::shared_ptr<Exif_IO> exifReader = std::make_shared<Exif_IO_EasyExif>();
+    std::unique_ptr<Exif_IO> exifReader(new Exif_IO_EasyExif());
     exifReader->open( sImageFilename );
 
     // Consider the case where focal is provided manually

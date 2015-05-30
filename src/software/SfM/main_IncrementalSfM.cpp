@@ -8,10 +8,11 @@
 #include <cstdlib>
 
 #include "openMVG/sfm/sfm.hpp"
-#include "software/SfM/io_regions_type.hpp"
-
 #include "openMVG/system/timer.hpp"
+#include "software/SfM/io_regions_type.hpp"
 using namespace openMVG;
+using namespace openMVG::cameras;
+using namespace openMVG::sfm;
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -32,8 +33,8 @@ bool computeIndexFromImageNames(
 
   /// List views filenames and find the one that correspond to the user ones:
   std::vector<std::string> vec_camImageName;
-  for (Views::const_iterator it = sfm_data.getViews().begin();
-    it != sfm_data.getViews().end(); ++it)
+  for (Views::const_iterator it = sfm_data.GetViews().begin();
+    it != sfm_data.GetViews().end(); ++it)
   {
     const View * v = it->second.get();
     const std::string filename = stlplus::filename_part(v->s_Img_path);
@@ -146,7 +147,7 @@ int main(int argc, char **argv)
   // Sequential reconstruction process
   //---------------------------------------
 
-  openMVG::Timer timer;
+  openMVG::system::Timer timer;
   SequentialSfMReconstructionEngine sfmEngine(
     sfm_data,
     sOutDir,

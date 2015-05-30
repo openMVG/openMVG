@@ -31,6 +31,7 @@
 #include "openMVG/image/pixel_types.hpp"
 
 namespace openMVG {
+namespace image {
 
 /// Nearest neighbor interpolation.
 template<typename T>
@@ -102,6 +103,7 @@ inline RGBColor SampleLinear<RGBColor>(const Image<RGBColor>& image, float y, fl
     );
 }
 
-}  // namespace openMVG
+} // namespace image
+} // namespace openMVG
 
 #endif  // OPENMVG_IMAGE_SAMPLE_HPP

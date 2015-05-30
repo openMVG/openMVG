@@ -19,6 +19,7 @@ the terms of the BSD license ( see the COPYING file).
 
 using namespace std;
 using namespace openMVG;
+using namespace openMVG::image;
 
 ImageScale::ImageScale( const Image< float >& I, double r )
 {
@@ -199,8 +200,8 @@ VLD::VLD( const ImageScale& series, T const& P1, T const& P2 ) : contrast( 0.0 )
 
 float KVLD( const Image< float >& I1,
             const Image< float >& I2,
-            const std::vector<SIOPointFeature> & F1,
-            const std::vector<SIOPointFeature> & F2,
+            const std::vector<features::SIOPointFeature> & F1,
+            const std::vector<features::SIOPointFeature> & F2,
             const vector< Pair >& matches,
             vector< Pair >& matchesFiltered,
             vector< double >& score,

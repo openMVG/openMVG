@@ -11,8 +11,8 @@
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include <fstream>
 
-namespace openMVG
-{
+namespace openMVG {
+namespace sfm {
 
 /// Save SfM_Data in an ASCII BAF (Bundle Adjustment File).
 // --Header
@@ -23,6 +23,10 @@ namespace openMVG
 // Intrinsic parameters [foc ppx ppy, ...]
 // Poses [angle axis, camera center]
 // Landmarks [X Y Z #observations id_intrinsic id_pose x y ...]
+//--
+//- Export also a _imgList.txt file with View filename and id_intrinsic & id_pose.
+// filename id_intrinsic id_pose
+// The ids allow to establish a link between 3D point observations & the corresponding views
 static bool Save_BAF(
   const SfM_Data & sfm_data,
   const std::string & filename,
@@ -35,11 +39,11 @@ static bool Save_BAF(
   bool bOk = false;
   {
     stream
-      << sfm_data.getIntrinsics().size() << '\n'
-      << sfm_data.getPoses().size() << '\n'
-      << sfm_data.getLandmarks().size() << '\n';
+      << sfm_data.GetIntrinsics().size() << '\n'
+      << sfm_data.GetPoses().size() << '\n'
+      << sfm_data.GetLandmarks().size() << '\n';
 
-    const Intrinsics & intrinsics = sfm_data.getIntrinsics();
+    const Intrinsics & intrinsics = sfm_data.GetIntrinsics();
     for (Intrinsics::const_iterator iterIntrinsic = intrinsics.begin();
       iterIntrinsic != intrinsics.end(); ++iterIntrinsic)
     {
@@ -50,11 +54,11 @@ static bool Save_BAF(
         stream << "\n";
     }
 
-    const Poses & poses = sfm_data.getPoses();
+    const Poses & poses = sfm_data.GetPoses();
     for (Poses::const_iterator iterPose = poses.begin();
       iterPose != poses.end(); ++iterPose)
     {
-      // [Rotation row major 3x3; camera center 3x1]
+      // [Rotation col major 3x3; camera center 3x1]
       const double * rotation = iterPose->second.rotation().data();
       std::copy(rotation, rotation+9, std::ostream_iterator<double>(stream, " "));
       const double * center = iterPose->second.center().data();
@@ -62,7 +66,7 @@ static bool Save_BAF(
       stream << "\n";
     }
 
-    const Landmarks & landmarks = sfm_data.getLandmarks();
+    const Landmarks & landmarks = sfm_data.GetLandmarks();
     for (Landmarks::const_iterator iterLandmarks = landmarks.begin();
       iterLandmarks != landmarks.end();
       ++iterLandmarks)
@@ -77,7 +81,7 @@ static bool Save_BAF(
         iterOb != obs.end(); ++iterOb)
       {
         const IndexT id_view = iterOb->first;
-        const View * v = sfm_data.getViews().at(id_view).get();
+        const View * v = sfm_data.GetViews().at(id_view).get();
         stream << v->id_intrinsic << ' ' << v->id_pose << ' '
           << iterOb->second.x(0) << ' '
           << iterOb->second.x(1) << ' ';
@@ -89,9 +93,33 @@ static bool Save_BAF(
     bOk = stream.good();
     stream.close();
   }
+
+  // Export View filenames & ids as an imgList.txt file
+  {
+    const std::string sFile = stlplus::create_filespec(
+      stlplus::folder_part(filename), stlplus::basename_part(filename) + std::string("_imgList"), "txt");
+
+    stream.open(sFile.c_str());
+    if (!stream.is_open())
+      return false;
+    for (Views::const_iterator iterV = sfm_data.GetViews().begin();
+      iterV != sfm_data.GetViews().end();
+      ++ iterV)
+    {
+      const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
+        iterV->second->s_Img_path);
+      stream << sView_filename
+        << ' ' << iterV->second->id_intrinsic
+        << ' ' << iterV->second->id_pose << "\n";
+    }
+    stream.flush();
+    bOk = stream.good();
+    stream.close();
+  }
   return bOk;
 }
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_DATA_IO_PLY_HPP

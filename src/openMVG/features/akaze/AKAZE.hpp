@@ -42,6 +42,7 @@
 #include <cereal/cereal.hpp>
 
 namespace openMVG {
+namespace features {
 
 struct AKAZEConfig
 {
@@ -92,7 +93,7 @@ struct AKAZEKeypoint{
 
 struct TEvolution
 {
-  Image<float>
+  image::Image<float>
     cur,    ///< Current gaussian image
     Lx,     ///< Current x derivatives
     Ly,     ///< Current y derivatives
@@ -107,12 +108,12 @@ private:
 
   AKAZEConfig options_;               ///< Configuration options for AKAZE
   std::vector<TEvolution> evolution_;	///< Vector of nonlinear diffusion evolution (Scale Space)
-  Image<float> in_;                  ///< Input image
+  image::Image<float> in_;            ///< Input image
 
 public:
 
   /// Constructor
-  AKAZE(const Image<unsigned char> & in, const AKAZEConfig & options);
+  AKAZE(const image::Image<unsigned char> & in, const AKAZEConfig & options);
 
   /// Compute the AKAZE non linear diffusion scale space per slice
   void Compute_AKAZEScaleSpace(void);
@@ -124,7 +125,7 @@ public:
   void Do_Subpixel_Refinement(std::vector<AKAZEKeypoint>& kpts) const;
 
   /// Sub pixel refinement of a keypoint
-  bool Do_Subpixel_Refinement( AKAZEKeypoint & kpts, const Image<float> & Ldet) const;
+  bool Do_Subpixel_Refinement(AKAZEKeypoint & kpts, const image::Image<float> & Ldet) const;
 
   /// Scale Space accessor
   const std::vector<TEvolution> & getSlices() const {return evolution_;}
@@ -137,31 +138,32 @@ public:
   */
   void Compute_Main_Orientation(
     AKAZEKeypoint& kpt,
-    const Image<float> & Lx,
-    const Image<float> & Ly) const;
+    const image::Image<float> & Lx,
+    const image::Image<float> & Ly) const;
 
   /// Compute an AKAZE slice
   static
   void ComputeAKAZESlice(
-    const Image<float> & src , // Input image for the given octave
+    const image::Image<float> & src, // Input image for the given octave
     const int p , // octave index
     const int q , // slice index
     const int nbSlice , // slices per octave
     const float sigma0 , // first octave initial scale
     const float contrast_factor ,
-    Image<float> & Li , // Diffusion image
-    Image<float> & Lx , // X derivatives
-    Image<float> & Ly , // Y derivatives
-    Image<float> & Lhess // Det(Hessian)
+    image::Image<float> & Li, // Diffusion image
+    image::Image<float> & Lx, // X derivatives
+    image::Image<float> & Ly, // Y derivatives
+    image::Image<float> & Lhess // Det(Hessian)
     );
 
   /// Compute Contrast Factor
   static float ComputeAutomaticContrastFactor(
-    const Image<float> & src,
+    const image::Image<float> & src,
     const float percentile );
 };
 /* ************************************************************************* */
 
-}; // namespace openMVG
+} // namespace features
+} // namespace openMVG
 
 #endif //OPENMVG_FEATURES_AKAZE_H

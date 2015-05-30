@@ -8,10 +8,10 @@
 #include <cstdlib>
 
 #include "openMVG/sfm/pipelines/global/sfm_global_engine_relative_motions.hpp"
-#include "software/SfM/io_regions_type.hpp"
-
 #include "openMVG/system/timer.hpp"
+#include "software/SfM/io_regions_type.hpp"
 using namespace openMVG;
+using namespace openMVG::sfm;
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -70,14 +70,14 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  if (iRotationAveragingMethod < globalSfM::ROTATION_AVERAGING_L1 ||
-      iRotationAveragingMethod > globalSfM::ROTATION_AVERAGING_L2 )  {
+  if (iRotationAveragingMethod < ROTATION_AVERAGING_L1 ||
+      iRotationAveragingMethod > ROTATION_AVERAGING_L2 )  {
     std::cerr << "\n Rotation averaging method is invalid" << std::endl;
     return EXIT_FAILURE;
   }
 
-    if (iTranslationAveragingMethod < globalSfM::TRANSLATION_AVERAGING_L1 ||
-      iTranslationAveragingMethod > globalSfM::TRANSLATION_AVERAGING_L2 )  {
+    if (iTranslationAveragingMethod < TRANSLATION_AVERAGING_L1 ||
+      iTranslationAveragingMethod > TRANSLATION_AVERAGING_L2 )  {
     std::cerr << "\n Translation averaging method is invalid" << std::endl;
     return EXIT_FAILURE;
   }
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
   // Global SfM reconstruction process
   //---------------------------------------
 
-  openMVG::Timer timer;
+  openMVG::system::Timer timer;
   GlobalSfMReconstructionEngine_RelativeMotions sfmEngine(
     sfm_data,
     sOutDir,
@@ -143,9 +143,9 @@ int main(int argc, char **argv)
 
   // Configure motion averaging method
   sfmEngine.SetRotationAveragingMethod(
-    globalSfM::ERotationAveragingMethod(iRotationAveragingMethod));
+    ERotationAveragingMethod(iRotationAveragingMethod));
   sfmEngine.SetTranslationAveragingMethod(
-    globalSfM::ETranslationAveragingMethod(iTranslationAveragingMethod));
+    ETranslationAveragingMethod(iTranslationAveragingMethod));
 
   if (sfmEngine.Process())
   {

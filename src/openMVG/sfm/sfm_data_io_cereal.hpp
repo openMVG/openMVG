@@ -23,8 +23,8 @@
 #include <iomanip>
 #include <fstream>
 
-namespace openMVG
-{
+namespace openMVG {
+namespace sfm {
 
 template <
 // JSONInputArchive/ ...
@@ -149,6 +149,7 @@ bool Save_Cereal(
   return true;
 }
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_DATA_IO_CEREAL_HPP

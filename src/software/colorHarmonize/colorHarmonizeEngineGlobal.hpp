@@ -55,7 +55,7 @@ private:
   // ----
 
   std::vector< std::string > _vec_fileNames; // considered images
-  std::map< size_t, std::vector< SIOPointFeature > > _map_feats; // feature per images
+  std::map< size_t, std::vector< features::SIOPointFeature > > _map_feats; // feature per images
 
   std::vector< std::pair< size_t, size_t > > _vec_imageSize; // Size of each image
 

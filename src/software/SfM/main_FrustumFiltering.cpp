@@ -15,14 +15,15 @@
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 using namespace openMVG;
+using namespace openMVG::sfm;
 
 /// Build a list of pair that share visibility content from the SfM_Data structure
 Pair_Set BuildPairsFromStructureObservations(const SfM_Data & sfm_data)
 {
   Pair_Set pairs;
 
-  for (Landmarks::const_iterator itL = sfm_data.getLandmarks().begin();
-    itL != sfm_data.getLandmarks().end(); ++itL)
+  for (Landmarks::const_iterator itL = sfm_data.GetLandmarks().begin();
+    itL != sfm_data.GetLandmarks().end(); ++itL)
   {
     const Landmark & landmark = itL->second;
     const Vec3 & X = landmark.X;
@@ -106,7 +107,7 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  openMVG::Timer timer;
+  openMVG::system::Timer timer;
 
   const Pair_Set pairs = BuildPairsFromFrustumsIntersections(sfm_data, z_near, z_far, stlplus::folder_part(sOutFile));
   /*const Pair_Set pairs = BuildPairsFromStructureObservations(sfm_data); */

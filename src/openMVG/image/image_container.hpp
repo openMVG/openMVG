@@ -25,6 +25,7 @@
 //  [2/3/2011 pierre MOULON]
 //---------------------------
 namespace openMVG {
+namespace image {
 
 template <typename T>
 class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
@@ -51,7 +52,7 @@ public:
   //------------------------------
 
   //-- Resize overhead
-  inline void resize(int width, int height, bool fInit=true, const T val = T())
+  inline void resize(int width, int height, bool fInit=true, const T val = T(0))
   {
     Base::resize(height, width);
     if (fInit) Base::fill(val);
@@ -88,6 +89,7 @@ protected :
   //-- Image data are stored by inheritance of a matrix
 };
 
+} // namespace image
 } // namespace openMVG
 
 #endif // OPENMVG_IMAGE_IMAGE_HPP

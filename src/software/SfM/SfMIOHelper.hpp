@@ -9,7 +9,7 @@
 #define OPENMVG_SFM_IO_H
 
 #include "openMVG/numeric/numeric.h"
-#include "openMVG/split/split.hpp"
+#include "openMVG/stl/split.hpp"
 
 #include <fstream>
 #include <iterator>
@@ -74,7 +74,7 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
   while(getline( in, sValue ) )
   {
     vec_str.clear();
-    split( sValue, ";", vec_str );
+    stl::split(sValue, ";", vec_str);
     if (vec_str.size() == 1)
     {
       std::cerr << "Invalid input file" << std::endl;

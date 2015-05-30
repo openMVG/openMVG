@@ -11,6 +11,7 @@
 #include "openMVG/image/pixel_types.hpp"
 
 namespace openMVG {
+namespace image {
 
 enum Format {
   Pnm, Png, Jpg, Tiff, Unknown
@@ -153,6 +154,7 @@ int WriteJpg(const char * filename, const Image<T>& im, int quality)
   return WriteJpg(filename, array, w, h, depth, quality);
 }
 
+}  // namespace image
 }  // namespace openMVG
 
 #endif  // OPENMVG_IMAGE_IMAGE_IMAGE_IO_HPP

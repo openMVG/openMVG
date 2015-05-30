@@ -9,6 +9,10 @@
 #include "openMVG/image/image.hpp"
 
 using namespace openMVG;
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
+using namespace openMVG::image;
+using namespace openMVG::sfm;
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/progress/progress.hpp"
@@ -53,23 +57,22 @@ bool exportToPMVSFormat(
 
   if (bOk)
   {
-    C_Progress_display my_progress_bar( sfm_data.getViews().size()*2 );
+    C_Progress_display my_progress_bar( sfm_data.GetViews().size()*2 );
 
     // Export valid views as Projective Cameras:
     size_t count = 0;
-    for(Views::const_iterator iter = sfm_data.getViews().begin();
-      iter != sfm_data.getViews().end(); ++iter, ++my_progress_bar)
+    for(Views::const_iterator iter = sfm_data.GetViews().begin();
+      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
       const View * view = iter->second.get();
-      Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
-      Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+        continue;
 
-      if (iterPose == sfm_data.getPoses().end() ||
-        iterIntrinsic == sfm_data.getIntrinsics().end())
-      continue;
+      const Pose3 pose = sfm_data.GetPoseOrDie(view);
+      Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
 
       // We have a valid view with a corresponding camera & pose
-      const Mat34 P = iterIntrinsic->second.get()->get_projective_equivalent(iterPose->second);
+      const Mat34 P = iterIntrinsic->second.get()->get_projective_equivalent(pose);
       std::ostringstream os;
       os << std::setw(8) << std::setfill('0') << count;
       std::ofstream file(
@@ -85,16 +88,14 @@ bool exportToPMVSFormat(
     count = 0;
     Image<RGBColor> image, image_ud;
     Hash_Map<IndexT, IndexT> map_viewIdToContiguous;
-    for(Views::const_iterator iter = sfm_data.getViews().begin();
-      iter != sfm_data.getViews().end(); ++iter, ++my_progress_bar)
+    for(Views::const_iterator iter = sfm_data.GetViews().begin();
+      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
       const View * view = iter->second.get();
-      Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
-      Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+        continue;
 
-      if (iterPose == sfm_data.getPoses().end() ||
-        iterIntrinsic == sfm_data.getIntrinsics().end())
-      continue;
+      Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
 
       map_viewIdToContiguous[view->id_view] = count;
       // We have a valid view with a corresponding camera & pose
@@ -150,8 +151,8 @@ bool exportToPMVSFormat(
     {
       std::map< IndexT, std::set<IndexT> > view_shared;
       // From the structure observations, list the putatives pairs (symmetric)
-      for (Landmarks::const_iterator itL = sfm_data.getLandmarks().begin();
-        itL != sfm_data.getLandmarks().end(); ++itL)
+      for (Landmarks::const_iterator itL = sfm_data.GetLandmarks().begin();
+        itL != sfm_data.GetLandmarks().end(); ++itL)
       {
         const Landmark & landmark = itL->second;
         const Observations & obs = landmark.obs;
@@ -214,53 +215,44 @@ bool exportToBundlerFormat(
   {
     // Count the number of valid cameras
     IndexT validCameraCount = 0;
-    for(Views::const_iterator iter = sfm_data.getViews().begin();
-      iter != sfm_data.getViews().end(); ++iter)
+    for(Views::const_iterator iter = sfm_data.GetViews().begin();
+      iter != sfm_data.GetViews().end(); ++iter)
     {
       const View * view = iter->second.get();
-      Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
-      Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
-
-      if (iterPose == sfm_data.getPoses().end() ||
-        iterIntrinsic == sfm_data.getIntrinsics().end())
-      continue;
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+        continue;
 
       ++validCameraCount;
     }
 
     // Fill the "Bundle file"
     os << "# Bundle file v0.3" << os.widen('\n')
-      << validCameraCount  << " " << sfm_data.getLandmarks().size() << os.widen('\n');
+      << validCameraCount  << " " << sfm_data.GetLandmarks().size() << os.widen('\n');
 
     // Export camera properties & image filenames
-    for(Views::const_iterator iter = sfm_data.getViews().begin();
-      iter != sfm_data.getViews().end(); ++iter)
+    for(Views::const_iterator iter = sfm_data.GetViews().begin();
+      iter != sfm_data.GetViews().end(); ++iter)
     {
       const View * view = iter->second.get();
-      Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
-      Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+        continue;
 
-      if (iterPose == sfm_data.getPoses().end() ||
-        iterIntrinsic == sfm_data.getIntrinsics().end())
-      continue;
+      const Pose3 pose = sfm_data.GetPoseOrDie(view);
+      Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
 
       // Must export focal, k1, k2, R, t
 
       Mat3 D;
       D.fill(0.0);
       D .diagonal() = Vec3(1., -1., -1.); // mapping between our pinhole and Bundler convention
-      double k1 = 0.0, k2 = 0.0; // distortion already removed
+      const double k1 = 0.0, k2 = 0.0; // distortion already removed
 
-      switch(iterIntrinsic->second.get()->getType())
-      {
-      case PINHOLE_CAMERA:
-      case PINHOLE_CAMERA_RADIAL1:
-      case PINHOLE_CAMERA_RADIAL3:
+      if(isPinhole(iterIntrinsic->second.get()->getType()))
       {
         const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic->second.get());
         const double focal = cam->focal();
-        const Mat3 R = D * iterPose->second.rotation();
-        const Vec3 t = D * iterPose->second.translation();
+        const Mat3 R = D * pose.rotation();
+        const Vec3 t = D * pose.translation();
 
         os << focal << " " << k1 << " " << k2 << os.widen('\n') //f k1 k2
           << R(0,0) << " " << R(0, 1) << " " << R(0, 2) << os.widen('\n')  //R.row(0)
@@ -271,16 +263,16 @@ bool exportToBundlerFormat(
         osList << stlplus::basename_part(view->s_Img_path) + "." + stlplus::extension_part(view->s_Img_path)
           << " 0 " << focal << os.widen('\n');
       }
-      break;
-      default:
+      else
+      {
         std::cerr << "Unsupported camera model for Bundler export." << std::endl;
         return false;
       }
     }
     // Export structure and visibility
     IndexT count = 0;
-    for (Landmarks::const_iterator iter = sfm_data.getLandmarks().begin();
-      iter != sfm_data.getLandmarks().end(); ++iter, ++count)
+    for (Landmarks::const_iterator iter = sfm_data.GetLandmarks().begin();
+      iter != sfm_data.GetLandmarks().end(); ++iter, ++count)
     {
       const Landmark & landmark = iter->second;
       const Observations & obs = landmark.obs;

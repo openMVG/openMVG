@@ -18,6 +18,9 @@
 #include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/sfm/sfm.hpp"
 using namespace openMVG;
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
+using namespace openMVG::sfm;
 
 #include "testing/testing.h"
 
@@ -94,17 +97,17 @@ double RMSE(const SfM_Data & sfm_data)
 {
   // Compute residuals for each observation
   std::vector<double> vec;
-  for(Landmarks::const_iterator iterTracks = sfm_data.getLandmarks().begin();
-      iterTracks != sfm_data.getLandmarks().end();
+  for(Landmarks::const_iterator iterTracks = sfm_data.GetLandmarks().begin();
+      iterTracks != sfm_data.GetLandmarks().end();
       ++iterTracks)
   {
     const Observations & obs = iterTracks->second.obs;
     for(Observations::const_iterator itObs = obs.begin();
       itObs != obs.end(); ++itObs)
     {
-      const View * view = sfm_data.getViews().find(itObs->first)->second.get();
-      const Pose3 & pose = sfm_data.getPoses().find(view->id_pose)->second;
-      const std::shared_ptr<IntrinsicBase> intrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic)->second;
+      const View * view = sfm_data.GetViews().find(itObs->first)->second.get();
+      const Pose3 pose = sfm_data.GetPoseOrDie(view);
+      const std::shared_ptr<IntrinsicBase> intrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic)->second;
       const Vec2 residual = intrinsic->residual(pose, iterTracks->second.X, itObs->second.x);
       vec.push_back( residual(0) );
       vec.push_back( residual(1) );

@@ -7,6 +7,9 @@
 #include "openMVG/features/akaze/AKAZE.hpp"
 
 namespace openMVG {
+namespace features {
+
+using namespace openMVG::image;
 
 /// Lookup table for 2d gaussian (sigma = 2.5) where (0,0) is top left and (6,6) is bottom right
 const float gauss25[7][7] = {
@@ -595,5 +598,6 @@ void AKAZE::Compute_Main_Orientation(
   }
 }
 
-}; // namespace openMVG
+} // namespace features
+} // namespace openMVG
 

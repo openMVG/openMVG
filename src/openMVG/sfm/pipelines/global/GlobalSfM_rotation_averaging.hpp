@@ -9,7 +9,7 @@
 #define OPENMVG_SFM_GLOBAL_ENGINE_PIPELINES_GLOBAL_ROTATION_AVERAGING_HPP
 
 namespace openMVG{
-namespace globalSfM{
+namespace sfm{
 
 enum ERotationAveragingMethod
 {
@@ -23,15 +23,15 @@ enum ERelativeRotationInferenceMethod
   TRIPLET_ROTATION_INFERENCE_COMPOSITION_ERROR = 1
 };
 
-}
-}
+} // namespace sfm
+} // namespace openMVG
 
 #include "openMVG/sfm/sfm.hpp"
 #include "openMVG/graph/graph.hpp"
 #include "openMVG/multiview/rotation_averaging_common.hpp"
 
 namespace openMVG{
-namespace globalSfM{
+namespace sfm{
 
 class GlobalSfM_Rotation_AveragingSolver
 {
@@ -50,12 +50,14 @@ public:
   ///  angular error once rotation composition have been computed.
   void TripletRotationRejection(
     const double max_angular_error,
-    std::vector< graphUtils::Triplet > & vec_triplets,
+    std::vector< graph::Triplet > & vec_triplets,
     rotation_averaging::RelativeRotations & relativeRotations) const;
 
+  /// Return the pairs validated by the GlobalRotation routine (inference can remove some)
+  Pair_Set GetUsedPairs() const;
 };
 
-} // namespace globalSfM
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_GLOBAL_ENGINE_PIPELINES_GLOBAL_ROTATION_AVERAGING_HPP

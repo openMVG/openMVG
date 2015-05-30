@@ -13,6 +13,7 @@
 #include <string>
 
 namespace openMVG {
+namespace features {
 
 /// Association storage of associated feature and descriptor for a given image.
 /// Load, save, R/W accessor operation.
@@ -78,6 +79,7 @@ private:
   DescriptorsT _descs;
 };
 
+} // namespace features
 } // namespace openMVG
 
 #endif // OPENMVG_FEATURES_KEYPOINTSET_HPP

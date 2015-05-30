@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/split/split.hpp"
+#include "openMVG/stl/split.hpp"
 
 #include "openMVG/sfm/sfm.hpp"
 
@@ -17,6 +17,8 @@
 #include <vector>
 
 using namespace openMVG;
+using namespace openMVG::cameras;
+using namespace openMVG::sfm;
 
 // Compatibility binary
 // Convert an openMVG v0.x=>7 lists.txt file to the new SfM_Data file format (v0.8)

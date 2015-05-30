@@ -8,7 +8,7 @@ IF (OpenMVG_BUILD_TESTS)
 ENDIF()
 
 # Basic filesystem utils
-SET(STLPLUS_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG_third_party/stlplus)
+SET(STLPLUS_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/stlplus3)
 ADD_SUBDIRECTORY(stlplus3)
 
 # Add graph library
@@ -20,7 +20,7 @@ SET_PROPERTY(TARGET check PROPERTY FOLDER OpenMVG/3rdParty/lemon)
 # Image I/O
 ##
 IF(NOT JPEG_FOUND)
-  SET(JPEG_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG_third_party/jpeg)
+  SET(JPEG_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/jpeg)
   ADD_SUBDIRECTORY(jpeg)
   LIST(APPEND JPEG_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/jpeg ${CMAKE_CURRENT_BINARY_DIR}/jpeg/config)
   SET(JPEG_INCLUDE_DIR ${JPEG_INCLUDE_DIRECTORIES})
@@ -30,8 +30,8 @@ IF(NOT JPEG_FOUND)
 ENDIF(NOT JPEG_FOUND)
 
 IF (NOT PNG_FOUND)
-  SET(ZLIB_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG_third_party/zlib)
-  SET(PNG_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG_third_party/png)  
+  SET(ZLIB_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/zlib)
+  SET(PNG_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/png)  
   ADD_SUBDIRECTORY(zlib)
   ADD_SUBDIRECTORY(png)
   SET(PNG_LIBRARIES png zlib)
@@ -42,7 +42,7 @@ IF (NOT PNG_FOUND)
 ENDIF (NOT PNG_FOUND)
 
 IF (NOT TIFF_FOUND)
-  SET(TIFF_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG_third_party/tiff)
+  SET(TIFF_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/tiff)
   ADD_SUBDIRECTORY(tiff)  
   LIST(APPEND TIFF_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/tiff ${CMAKE_CURRENT_BINARY_DIR}/tiff)  
   SET(TIFF_INCLUDE_DIR ${TIFF_INCLUDE_DIRECTORIES})
@@ -58,34 +58,38 @@ ENDIF (NOT TIFF_FOUND)
 ADD_SUBDIRECTORY(vectorGraphics)
 
 # Add ceres-solver (A Nonlinear Least Squares Minimizer)
-SET(CXSPARSE_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG_third_party/cxsparse)
-ADD_SUBDIRECTORY(cxsparse)
-ADD_SUBDIRECTORY(ceres-solver)
-SET_PROPERTY(TARGET cxsparse PROPERTY FOLDER OpenMVG/3rdParty/ceres)
-SET_PROPERTY(TARGET ceres PROPERTY FOLDER OpenMVG/3rdParty/ceres)
+IF (DEFINED OpenMVG_USE_INTERNAL_CERES)
+  SET(CXSPARSE_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/cxsparse)
+  ADD_SUBDIRECTORY(cxsparse)
+  SET(CERES_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/ceres)
+  ADD_SUBDIRECTORY(ceres-solver)
+  SET_PROPERTY(TARGET cxsparse PROPERTY FOLDER OpenMVG/3rdParty/ceres)
+  SET_PROPERTY(TARGET ceres PROPERTY FOLDER OpenMVG/3rdParty/ceres)
+ENDIF()
 
 # Add an Approximate Nearest Neighbor library
 ADD_SUBDIRECTORY(flann)
-SET_PROPERTY(TARGET flann_cpp PROPERTY FOLDER OpenMVG/3rdParty)
 SET_PROPERTY(TARGET flann_cpp_s PROPERTY FOLDER OpenMVG/3rdParty)
 
 # Exif data parsing
-SET(EASYEXIF_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG_third_party/easyexif)
+SET(EASYEXIF_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/easyexif)
 ADD_SUBDIRECTORY(easyexif)
 
 ##
-# Install Header only libraries
+# Install Header only libraries if necessary
 ## 
-#Configure Eigen install
-SET(EIGEN_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG_third_party/Eigen)
-ADD_SUBDIRECTORY(eigen)
+IF (DEFINED OpenMVG_USE_INTERNAL_EIGEN)
+  #Configure Eigen install
+  SET(EIGEN_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/eigen)
+  ADD_SUBDIRECTORY(eigen)
+ENDIF()
 
-LIST(APPEND directories cmdLine histogram htmlDoc progress stlAddition tinythread vectorGraphics)
+LIST(APPEND directories cmdLine histogram htmlDoc progress tinythread vectorGraphics)
 FOREACH(inDirectory ${directories}) 
 INSTALL(
   DIRECTORY ./${inDirectory}
-  DESTINATION include/openMVG_third_party/
+  DESTINATION include/openMVG/third_party/
   COMPONENT headers
-  FILES_MATCHING PATTERN "*.hpp"
+  FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
 )
 ENDFOREACH(inDirectory)

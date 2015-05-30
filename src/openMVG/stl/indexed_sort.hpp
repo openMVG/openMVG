@@ -8,7 +8,7 @@
 #ifndef OPENMVG_STL_INDEXED_SORT_H
 #define OPENMVG_STL_INDEXED_SORT_H
 
-namespace std
+namespace stl
 {
 namespace indexed_sort
 {
@@ -61,6 +61,6 @@ namespace indexed_sort
   }
 
 }; // namespace indexed_sort
-}; // namespace std
+}; // namespace stl
 
 #endif  // OPENMVG_STL_INDEXED_SORT_H

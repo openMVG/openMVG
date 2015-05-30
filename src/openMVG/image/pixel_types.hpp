@@ -10,6 +10,7 @@
 #include "openMVG/numeric/numeric.h"
 
 namespace openMVG {
+namespace image {
 
 /// RGB template pixel type
 template <typename T>
@@ -21,11 +22,9 @@ public:
 
   //------------------------------
   //-- construction method
-  inline Rgb() : Base(0,0,0) {}
   inline Rgb(T red,T green,T blue) : Base(red, green, blue){}
   explicit inline Rgb(const Base& val) : Base(val) {}
-  explicit inline Rgb(const T t[3]) : Base(t) {}
-  explicit inline Rgb(const T val) : Base(val,val,val) {}
+  explicit inline Rgb(const T val=0) : Base(val,val,val) {}
   //-- construction method
   //------------------------------
 
@@ -79,12 +78,10 @@ public:
 
   //------------------------------
   //-- construction method
-  inline Rgba() : Base(0,0,0,0) {}
-  inline Rgba(T red,T green,T blue, T alpha=0)
+  inline Rgba(T red,T green,T blue, T alpha=1.0)
     : Base(red, green, blue, alpha){}
   explicit inline Rgba(const Base& val) : Base(val) {}
-  explicit inline Rgba(const T t[4]): Base(t) {}
-  explicit inline Rgba(const T val): Base(val,val,val,1.0) {}
+  explicit inline Rgba(const T val=0): Base(val,val,val,1.0) {}
   inline Rgba(const RGBColor val)
     : Base(val.r(),val.g(),val.b(),static_cast<T>(1)) {}
   //-- construction method
@@ -142,6 +139,7 @@ const RGBColor YELLOW(255,255,0);
 const RGBColor CYAN(0,255,255);
 const RGBColor MAGENTA(255,0,255);
 
+} // namespace image
 } // namespace openMVG
 
 #endif // OPENMVG_IMAGE_PIXELTYPES_HPP

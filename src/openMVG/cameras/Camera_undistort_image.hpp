@@ -10,7 +10,8 @@
 
 #include "openMVG/image/image.hpp"
 
-namespace openMVG{
+namespace openMVG {
+namespace cameras {
 
 /// Undistort an image according a given camera & it's distortion model
 template <typename Image>
@@ -43,6 +44,7 @@ void UndistortImage(
   }
 }
 
+} // namespace cameras
 } // namespace openMVG
 
 #endif // #ifndef OPENMVG_CAMERA_UNDISTORT_IMAGE_HPP

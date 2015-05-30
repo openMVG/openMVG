@@ -27,6 +27,9 @@
 #include <fstream>
 
 using namespace openMVG;
+using namespace openMVG::image;
+using namespace openMVG::features;
+using namespace openMVG::sfm;
 using namespace std;
 
 enum eGeometricModel
@@ -49,7 +52,6 @@ enum ePairMode
 //--/!\ If you use a new Regions type you define and register it in
 //   "openMVG/features/regions_factory.hpp" file.
 ///
-using namespace openMVG::features;
 // Reuse the existing AKAZE floating point Keypoint.
 typedef features::AKAZE_Float_Regions AKAZE_OpenCV_Regions;
 // Define the Interface
@@ -233,9 +235,9 @@ int main(int argc, char **argv)
   // - if regions file exist continue,
   // - if no file, compute features
   {
-    Timer timer;
+    system::Timer timer;
     Image<unsigned char> imageGray;
-    C_Progress_display my_progress_bar( sfm_data.getViews().size(),
+    C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
     for(Views::const_iterator iterViews = sfm_data.views.begin();
         iterViews != sfm_data.views.end();

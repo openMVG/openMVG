@@ -16,6 +16,7 @@
 #include <vector>
 
 namespace openMVG {
+namespace features {
 
 /**
  * Base class for Point features.
@@ -170,6 +171,7 @@ void PointsToMat(
   }
 }
 
+} // namespace features
 } // namespace openMVG
 
 #endif // OPENMVG_FEATURES_FEATURE_HPP

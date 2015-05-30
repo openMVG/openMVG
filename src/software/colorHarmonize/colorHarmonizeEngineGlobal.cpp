@@ -43,10 +43,12 @@
 namespace openMVG{
 
 using namespace lemon;
+using namespace openMVG::image;
 using namespace openMVG::matching;
 using namespace openMVG::lInfinity;
+using namespace openMVG::sfm;
 
-typedef SIOPointFeature FeatureT;
+typedef features::SIOPointFeature FeatureT;
 typedef vector< FeatureT > featsT;
 
 ColorHarmonizationEngineGlobal::ColorHarmonizationEngineGlobal(
@@ -113,10 +115,10 @@ bool ColorHarmonizationEngineGlobal::Process()
   }
 
   {
-    graphUtils::indexedGraph putativeGraph(getPairs(_map_Matches));
+    graph::indexedGraph putativeGraph(getPairs(_map_Matches));
 
     // Save the graph before cleaning:
-    graphUtils::exportToGraphvizData(
+    graph::exportToGraphvizData(
       stlplus::create_filespec(_sOutDirectory, "input_graph_poor_supportRemoved"),
       putativeGraph.g);
   }
@@ -328,7 +330,7 @@ bool ColorHarmonizationEngineGlobal::Process()
   std::vector<double> vec_solution_g(_vec_fileNames.size() * 2 + 1);
   std::vector<double> vec_solution_b(_vec_fileNames.size() * 2 + 1);
 
-  openMVG::Timer timer;
+  openMVG::system::Timer timer;
 
   #ifdef OPENMVG_HAVE_MOSEK
   typedef MOSEK_SolveWrapper SOLVER_LP_T;
@@ -469,8 +471,8 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
   }
 
   // Read images names
-  for (Views::const_iterator iter = sfm_data.getViews().begin();
-    iter != sfm_data.getViews().end(); ++iter)
+  for (Views::const_iterator iter = sfm_data.GetViews().begin();
+    iter != sfm_data.GetViews().end(); ++iter)
   {
     const View * v = iter->second.get();
     _vec_fileNames.push_back( stlplus::create_filespec(sfm_data.s_root_path, v->s_Img_path));
@@ -499,10 +501,10 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
     }
   }
 
-  graphUtils::indexedGraph putativeGraph(getPairs(_map_Matches));
+  graph::indexedGraph putativeGraph(getPairs(_map_Matches));
 
   // Save the graph before cleaning:
-  graphUtils::exportToGraphvizData(
+  graph::exportToGraphvizData(
       stlplus::create_filespec( _sOutDirectory, "initialGraph" ),
       putativeGraph.g );
 
@@ -514,10 +516,10 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
   // Create a graph from pairwise correspondences:
   // - keep the largest connected component.
 
-  graphUtils::indexedGraph putativeGraph(getPairs(_map_Matches));
+  graph::indexedGraph putativeGraph(getPairs(_map_Matches));
 
   // Save the graph before cleaning:
-  graphUtils::exportToGraphvizData(
+  graph::exportToGraphvizData(
     stlplus::create_filespec(_sOutDirectory, "initialGraph"),
     putativeGraph.g);
 
@@ -530,7 +532,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
   {
     // Search the largest CC index
     const std::map<IndexT, std::set<lemon::ListGraph::Node> > map_subgraphs =
-      openMVG::graphUtils::exportGraphToMapSubgraphs<lemon::ListGraph, IndexT>(putativeGraph.g);
+      openMVG::graph::exportGraphToMapSubgraphs<lemon::ListGraph, IndexT>(putativeGraph.g);
     size_t count = std::numeric_limits<size_t>::min();
     std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iterLargestCC = map_subgraphs.end();
     for(std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
@@ -577,7 +579,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
   }
 
   // Save the graph after cleaning:
-  graphUtils::exportToGraphvizData(
+  graph::exportToGraphvizData(
     stlplus::create_filespec(_sOutDirectory, "cleanedGraph"),
     putativeGraph.g);
 

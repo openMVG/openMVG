@@ -6,7 +6,7 @@ language: cpp
 
 compiler:
   - gcc
-  #- clang: #Consider clang later, since cereal does not build fine with clang
+  #- clang: #Consider clang later, since cereal does not build fine on the clang CI version
   #  - "3.3"
 
 before_install:
@@ -33,7 +33,7 @@ before_script:
 
 script:
 # limit GCC builds to a reduced number of thread for the virtual machine
-  - if [ "$CC" = "gcc" ]; then make; else make -j 2; fi
+  - make -j 2
 # Perform unit tests only on GCC builds
   - if [ "$CC" = "gcc" ]; then make test; fi
 

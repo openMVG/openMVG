@@ -28,7 +28,10 @@
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 namespace openMVG{
-namespace globalSfM{
+namespace sfm{
+
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
 
 /// Use features in normalized camera frames
 bool GlobalSfM_Translation_AveragingSolver::Run(
@@ -43,7 +46,7 @@ bool GlobalSfM_Translation_AveragingSolver::Run(
   // Assert relative matches only share index between the relative poseId defined by the global rotations
   matching::PairWiseMatches map_Matches_Ecpy = matches_provider->_pairWise_matches;
   std::set<IndexT> set_remainingIds;
-  std::transform(map_globalR.begin(), map_globalR.end(), std::inserter(set_remainingIds, set_remainingIds.begin()), RetrieveKey());
+  std::transform(map_globalR.begin(), map_globalR.end(), std::inserter(set_remainingIds, set_remainingIds.begin()), stl::RetrieveKey());
   KeepOnlyReferencedElement(set_remainingIds, map_Matches_Ecpy);
 
   // Compute the translations and save them to vec_initialRijTijEstimates:
@@ -56,8 +59,8 @@ bool GlobalSfM_Translation_AveragingSolver::Run(
 
   // Keep the largest Biedge connected component graph of relative translations
   Pair_Set pairs;
-  std::transform(vec_initialRijTijEstimates.begin(), vec_initialRijTijEstimates.end(), std::inserter(pairs, pairs.begin()), std::RetrieveKey());
-  set_remainingIds = openMVG::graphUtils::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs, "./");
+  std::transform(vec_initialRijTijEstimates.begin(), vec_initialRijTijEstimates.end(), std::inserter(pairs, pairs.begin()), stl::RetrieveKey());
+  set_remainingIds = openMVG::graph::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs, "./");
   KeepOnlyReferencedElement(set_remainingIds, map_Matches_Ecpy);
   KeepOnlyReferencedElement(set_remainingIds, vec_initialRijTijEstimates);
   KeepOnlyReferencedElement(set_remainingIds, tripletWise_matches);
@@ -96,16 +99,17 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
       return false;
     }
     //-- Update initial estimates from [minId,maxId] to range [0->Ncam]
-    const Pair_Set pairs = getPairs(vec_initialRijTijEstimates);
+    RelativeInfo_Vec vec_initialRijTijEstimates_cpy = vec_initialRijTijEstimates;
+    const Pair_Set pairs = getPairs(vec_initialRijTijEstimates_cpy);
     Hash_Map<IndexT,IndexT> _reindexForward, _reindexBackward;
-    openMVG::reindex(pairs, _reindexForward, _reindexBackward);
-    for(size_t i = 0; i < vec_initialRijTijEstimates.size(); ++i)
+    reindex(pairs, _reindexForward, _reindexBackward);
+    for(size_t i = 0; i < vec_initialRijTijEstimates_cpy.size(); ++i)
     {
-      openMVG::relativeInfo & rel = vec_initialRijTijEstimates[i];
+      openMVG::relativeInfo & rel = vec_initialRijTijEstimates_cpy[i];
       rel.first = Pair(_reindexForward[rel.first.first], _reindexForward[rel.first.second]);
     }
 
-    openMVG::Timer timerLP_translation;
+    openMVG::system::Timer timerLP_translation;
 
     switch(eTranslationAveragingMethod)
     {
@@ -114,7 +118,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
         double gamma = -1.0;
         std::vector<double> vec_solution;
         {
-          vec_solution.resize(iNview*3 + vec_initialRijTijEstimates.size()/3 + 1);
+          vec_solution.resize(iNview*3 + vec_initialRijTijEstimates_cpy.size()/3 + 1);
           using namespace openMVG::linearProgramming;
           #ifdef OPENMVG_HAVE_MOSEK
             MOSEK_SolveWrapper solverLP(vec_solution.size());
@@ -122,7 +126,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
             OSI_CLP_SolverWrapper solverLP(vec_solution.size());
           #endif
 
-          lInfinityCV::Tifromtij_ConstraintBuilder_OneLambdaPerTrif cstBuilder(vec_initialRijTijEstimates);
+          lInfinityCV::Tifromtij_ConstraintBuilder_OneLambdaPerTrif cstBuilder(vec_initialRijTijEstimates_cpy);
 
           LP_Constraints_Sparse constraint;
           //-- Setup constraint and solver
@@ -152,15 +156,11 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
           os << "Translation fusion statistics.";
           os.str("");
           os << "-------------------------------" << "\n"
-            << "-- #relative estimates: " << vec_initialRijTijEstimates.size()
+            << "-- #relative estimates: " << vec_initialRijTijEstimates_cpy.size()
             << " converge with gamma: " << gamma << ".\n"
             << " timing (s): " << timeLP_translation << ".\n"
             << "-------------------------------" << "\n";
           std::cout << os.str() << std::endl;
-          //using namespace htmlDocument;
-          //_htmlDocStream->pushInfo("<hr>");
-          //_htmlDocStream->pushInfo(htmlMarkup("h1",os.str()));
-          //_htmlDocStream->pushInfo(os.str());
         }
 
         std::cout << "Found solution:\n";
@@ -169,7 +169,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
         std::vector<double> vec_camTranslation(iNview*3,0);
         std::copy(&vec_solution[0], &vec_solution[iNview*3], &vec_camTranslation[0]);
 
-        std::vector<double> vec_camRelLambdas(&vec_solution[iNview*3], &vec_solution[iNview*3 + vec_initialRijTijEstimates.size()/3]);
+        std::vector<double> vec_camRelLambdas(&vec_solution[iNview*3], &vec_solution[iNview*3 + vec_initialRijTijEstimates_cpy.size()/3]);
         std::cout << "\ncam position: " << std::endl;
         std::copy(vec_camTranslation.begin(), vec_camTranslation.end(), std::ostream_iterator<double>(std::cout, " "));
         std::cout << "\ncam Lambdas: " << std::endl;
@@ -191,18 +191,22 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
       case TRANSLATION_AVERAGING_L2:
       {
         std::vector<int> vec_edges;
-        vec_edges.reserve(vec_initialRijTijEstimates.size() * 2);
+        vec_edges.reserve(vec_initialRijTijEstimates_cpy.size() * 2);
         std::vector<double> vec_poses;
-        vec_poses.reserve(vec_initialRijTijEstimates.size() * 3);
+        vec_poses.reserve(vec_initialRijTijEstimates_cpy.size() * 3);
         std::vector<double> vec_weights;
-        vec_weights.reserve(vec_initialRijTijEstimates.size());
+        vec_weights.reserve(vec_initialRijTijEstimates_cpy.size());
 
-        for(int i=0; i < vec_initialRijTijEstimates.size(); ++i)
+        for(int i=0; i < vec_initialRijTijEstimates_cpy.size(); ++i)
         {
-          const openMVG::relativeInfo & rel = vec_initialRijTijEstimates[i];
+          const openMVG::relativeInfo & rel = vec_initialRijTijEstimates_cpy[i];
           vec_edges.push_back(rel.first.first);
           vec_edges.push_back(rel.first.second);
-          const Mat3 Ri = map_globalR.at(rel.first.second);
+          // Since index have been remapped
+          // (use the backward indexing to retrieve the second global rotation)
+          const IndexT secondId = _reindexBackward[rel.first.second];
+          const View * view = sfm_data.views.at(secondId).get();
+          const Mat3 & Ri = map_globalR.at(view->id_pose);
           const Vec3 direction = -(Ri.transpose() * rel.second.second.normalized());
 
           vec_poses.push_back(direction(0));
@@ -222,7 +226,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
           &vec_edges[0],
           &vec_poses[0],
           &vec_weights[0],
-          vec_initialRijTijEstimates.size(),
+          vec_initialRijTijEstimates_cpy.size(),
           loss_width,
           &X[0],
           function_tolerance,
@@ -237,8 +241,8 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
         {
           const Vec3 C(X[i*3], X[i*3+1], X[i*3+2]);
           const IndexT camNodeId = _reindexBackward[i]; // undo the reindexing
-          const View * view = sfm_data.views[camNodeId].get();
-          const Mat3 & Ri = map_globalR.find(view->id_pose)->second;
+          const View * view = sfm_data.views.at(camNodeId).get();
+          const Mat3 & Ri = map_globalR.at(view->id_pose);
           sfm_data.poses[view->id_pose] = Pose3(Ri, C);
         }
       }
@@ -261,13 +265,13 @@ void GlobalSfM_Translation_AveragingSolver::Compute_translations(
 
   // List putative triplets
   const Pair_Set pairs = getPairs(map_Matches_E);
-  std::vector< graphUtils::Triplet > vec_triplets = graphUtils::tripletListing(pairs);
+  std::vector< graph::Triplet > vec_triplets = graph::tripletListing(pairs);
 
   std::cout << "#Triplets: " << vec_triplets.size() << std::endl;
 
   // Compute putative translations with an edge coverage algorithm
 
-  openMVG::Timer timerLP_triplet;
+  openMVG::system::Timer timerLP_triplet;
   // Compute relative translations over the graph of putative triplets
 
   ComputePutativeTranslation_EdgesCoverage(
@@ -296,7 +300,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
   const Hash_Map<IndexT, Mat3> & map_globalR,
   const Features_Provider * normalized_features_provider,
   const matching::PairWiseMatches & map_Matches_E,
-  const std::vector< graphUtils::Triplet > & vec_triplets,
+  const std::vector< graph::Triplet > & vec_triplets,
   RelativeInfo_Vec & vec_initialEstimates,
   matching::PairWiseMatches & newpairMatches)
 {
@@ -307,7 +311,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
 #endif
   for (int i = 0; i < (int)vec_triplets.size(); ++i)
   {
-    const graphUtils::Triplet & triplet = vec_triplets[i];
+    const graph::Triplet & triplet = vec_triplets[i];
     const IndexT I = triplet.i, J = triplet.j , K = triplet.k;
 
     PairWiseMatches map_matchesIJK;
@@ -349,7 +353,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
 
   for (size_t i = 0; i < vec_triplets.size(); ++i)
   {
-    const graphUtils::Triplet & triplet = vec_triplets[i];
+    const graph::Triplet & triplet = vec_triplets[i];
     const IndexT I = triplet.i, J = triplet.j , K = triplet.k;
     // Add three edges
     set_edges.insert(std::make_pair(std::min(I,J), std::max(I,J)));
@@ -394,7 +398,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     // Find the triplet that contain the given edge
     for (size_t i = 0; i < vec_triplets.size(); ++i)
     {
-      const graphUtils::Triplet & triplet = vec_triplets[i];
+      const graph::Triplet & triplet = vec_triplets[i];
       if (triplet.contain(edge))
       {
         vec_possibleTriplets.push_back(i);
@@ -411,7 +415,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     if (m_mutexSet.count(edge))
       continue;
 
-    using namespace indexed_sort;
+    using namespace stl::indexed_sort;
     std::vector< sort_index_packet_descend < size_t, size_t> > packet_vec(vec_commonTracksPerTriplets.size());
     sort_index_helper(packet_vec, &vec_commonTracksPerTriplets[0]);
 
@@ -425,7 +429,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     // Search the possible triplet:
     for (size_t i = 0; i < vec_possibleTriplets.size(); ++i)
     {
-      const graphUtils::Triplet & triplet = vec_triplets[vec_possibleTriplets[i]];
+      const graph::Triplet & triplet = vec_triplets[vec_possibleTriplets[i]];
       const IndexT I = triplet.i, J = triplet.j , K = triplet.k;
       {
         PairWiseMatches map_matchesIJK;
@@ -466,14 +470,14 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
         vec_global_KR_Triplet[1] = (map_globalR.at(J));
         vec_global_KR_Triplet[2] = (map_globalR.at(K));
 
-        const View * view_I = sfm_data.getViews().at(I).get();
-        const View * view_J = sfm_data.getViews().at(J).get();
-        const View * view_K = sfm_data.getViews().at(K).get();
+        const View * view_I = sfm_data.GetViews().at(I).get();
+        const View * view_J = sfm_data.GetViews().at(J).get();
+        const View * view_K = sfm_data.GetViews().at(K).get();
 
         // update pixel precision (from image to camera coordinate system, since features are normalized)
-        const Pinhole_Intrinsic* cam_I = dynamic_cast<Pinhole_Intrinsic*>(sfm_data.getIntrinsics().at(view_I->id_intrinsic).get());
-        const Pinhole_Intrinsic* cam_J = dynamic_cast<Pinhole_Intrinsic*>(sfm_data.getIntrinsics().at(view_J->id_intrinsic).get());
-        const Pinhole_Intrinsic* cam_K = dynamic_cast<Pinhole_Intrinsic*>(sfm_data.getIntrinsics().at(view_K->id_intrinsic).get());
+        const Pinhole_Intrinsic* cam_I = dynamic_cast<Pinhole_Intrinsic*>(sfm_data.GetIntrinsics().at(view_I->id_intrinsic).get());
+        const Pinhole_Intrinsic* cam_J = dynamic_cast<Pinhole_Intrinsic*>(sfm_data.GetIntrinsics().at(view_J->id_intrinsic).get());
+        const Pinhole_Intrinsic* cam_K = dynamic_cast<Pinhole_Intrinsic*>(sfm_data.GetIntrinsics().at(view_K->id_intrinsic).get());
         if (cam_I == NULL || cam_J == NULL || cam_K == NULL)
         {
           continue;
@@ -596,7 +600,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
     for (tracks::submapTrack::const_iterator iter = subTrack.begin(); iter != subTrack.end(); ++iter, ++index) {
       const size_t imaIndex = iter->first;
       const size_t featIndex = iter->second;
-      const PointFeature pt = features_provider->getFeatures(imaIndex)[featIndex];
+      const features::PointFeature pt = features_provider->getFeatures(imaIndex)[featIndex];
       xxx[index]->col(cpt) = pt.coords().cast<double>();
     }
   }
@@ -635,6 +639,6 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
   return bTest;
 }
 
-
-} // namespace globalSfM
+} // namespace sfm
 } // namespace openMVG
+

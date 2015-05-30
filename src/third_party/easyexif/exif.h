@@ -1,5 +1,5 @@
 /**************************************************************************
-  exif.h  -- A simple ISO C++ library to parse basic EXIF 
+  exif.h  -- A simple ISO C++ library to parse basic EXIF
              information from a JPEG file.
 
   Based on the description of the EXIF file format at:
@@ -28,25 +28,25 @@
        -- added GPS support
 
   1.0: Released 2010
-  
-  Redistribution and use in source and binary forms, with or without 
+
+  Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
 
-  -- Redistributions of source code must retain the above copyright notice, 
+  -- Redistributions of source code must retain the above copyright notice,
      this list of conditions and the following disclaimer.
-  -- Redistributions in binary form must reproduce the above copyright notice, 
-     this list of conditions and the following disclaimer in the documentation 
+  -- Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
    and/or other materials provided with the distribution.
 
-   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY EXPRESS 
-   OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
-   OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN 
-   NO EVENT SHALL THE FREEBSD PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-   INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-   BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY 
-   OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
-   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY EXPRESS
+   OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+   OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+   NO EVENT SHALL THE FREEBSD PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+   INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+   BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+   OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
    EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #ifndef __EXIF_H
@@ -54,7 +54,7 @@
 
 #include <string>
 
-// 
+//
 // Class responsible for storing and parsing EXIF information from a JPEG blob
 //
 class EXIFInfo {
@@ -69,7 +69,7 @@ class EXIFInfo {
   int parseFrom(const std::string &data);
 
   // Parsing function for an EXIF segment. This is used internally by parseFrom()
-  // but can be called for special cases where only the EXIF section is 
+  // but can be called for special cases where only the EXIF section is
   // available (i.e., a blob starting with the bytes "Exif\0\0").
   int parseFromEXIFSegment(const unsigned char *buf, unsigned len);
 
@@ -77,7 +77,7 @@ class EXIFInfo {
   void clear();
 
   // Data fields filled out by parseFrom()
-  char ByteAlign;                   // 0 = Motorola byte alignment, 1 = Intel 
+  char ByteAlign;                   // 0 = Motorola byte alignment, 1 = Intel
   std::string ImageDescription;     // Image description
   std::string Make;                 // Camera manufacturer's name
   std::string Model;                // Camera model
@@ -103,6 +103,13 @@ class EXIFInfo {
   double SubjectDistance;           // Distance to focus point in meters
   double FocalLength;               // Focal length of lens in millimeters
   unsigned short FocalLengthIn35mm; // Focal length in 35mm film
+  double FocalPlaneXResolution;     // Indicates the number of pixels in the image width (X) direction per FocalPlaneResolutionUnit on the camera focal plane (may not exist)
+  double FocalPlaneYResolution;     // Indicates the number of pixels in the image width (Y) direction per FocalPlaneResolutionUnit on the camera focal plane (may not exist)
+  unsigned short FocalPlaneResolutionUnit;// Indicates the unit for measuring FocalPlaneXResolution and FocalPlaneYResolution (may not exist)
+                                    // 0: unspecified in EXIF data
+                                    // 1: no absolute unit of measurement
+                                    // 2: inch
+                                    // 3: centimeter
   char Flash;                       // 0 = no flash, 1 = flash used
   unsigned short MeteringMode;      // Metering mode
                                     // 1: average
@@ -118,11 +125,11 @@ class EXIFInfo {
     double Altitude;                  // Altitude in meters, relative to sea level
     char AltitudeRef;                 // 0 = above sea level, -1 = below sea level
     struct Coord_t {
-      double degrees;               
+      double degrees;
       double minutes;
       double seconds;
       char direction;
-    } LatComponents, LonComponents;   // Latitude, Longitude expressed in deg/min/sec 
+    } LatComponents, LonComponents;   // Latitude, Longitude expressed in deg/min/sec
   } GeoLocation;
   EXIFInfo() {
     clear();

@@ -16,7 +16,6 @@ openMVG provide a collection of tiny libraries that allow to solve computer visi
   robust_estimation/robust_estimation.rst
   matching/matching.rst
   tracks/tracks.rst
-  bundle_adjustment/bundle_adjustment.rst
   geometry/geometry.rst
 
 
@@ -34,7 +33,7 @@ Todo:
 
 * **graph** - Manipulation of graphs (connected CC, triplet listing...)
 
-* **exif_IO** - Collection of tools to extract and use image EXIF data.
+* **exif** - Collection of tools to extract and use image EXIF data.
 
 * **matching_image_collection** - Functions to perform local matching and geometric filtering of putative correspondences in image collections.
 

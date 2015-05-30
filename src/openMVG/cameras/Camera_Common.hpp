@@ -7,6 +7,9 @@
 #ifndef OPENMVG_CAMERAS_COMMON_HPP
 #define OPENMVG_CAMERAS_COMMON_HPP
 
+namespace openMVG {
+namespace cameras {
+
 enum EINTRINSIC
 {
   PINHOLE_CAMERA_START = 0,
@@ -22,5 +25,13 @@ static bool isValid(EINTRINSIC eintrinsic)
 {
   return eintrinsic > PINHOLE_CAMERA_START && eintrinsic < PINHOLE_CAMERA_END;
 }
+
+static bool isPinhole(EINTRINSIC eintrinsic)
+{
+  return eintrinsic > PINHOLE_CAMERA_START && eintrinsic < PINHOLE_CAMERA_END;
+}
+
+} // namespace cameras
+} // namespace openMVG
 
 #endif // OPENMVG_CAMERAS_COMMON_HPP

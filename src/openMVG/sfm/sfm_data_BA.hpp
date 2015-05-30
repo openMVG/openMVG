@@ -8,6 +8,7 @@
 #define OPENMVG_SFM_DATA_BA_HPP
 
 namespace openMVG {
+namespace sfm {
 
 class Bundle_Adjustment
 {
@@ -24,6 +25,7 @@ class Bundle_Adjustment
   // TODO: Use filter to say wich parameter is const or not (allow to refine only a subpart of the intrinsics or the poses)
 };
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_DATA_BA_HPP

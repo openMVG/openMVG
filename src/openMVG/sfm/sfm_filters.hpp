@@ -12,6 +12,7 @@
 #include "openMVG/matching/indMatch.hpp"
 
 namespace openMVG {
+namespace sfm { 
 
 template<typename IterableIndexTSequence>
 static std::set<IndexT> getIndexes(const IterableIndexTSequence & seq)
@@ -143,6 +144,7 @@ void KeepOnlyReferencedElement(
   relativeInfo_vec.swap(map_infered);
 }
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_FILTERS_HPP

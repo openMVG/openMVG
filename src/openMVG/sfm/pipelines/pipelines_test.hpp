@@ -8,6 +8,7 @@
 #include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/sfm/sfm.hpp"
 using namespace openMVG;
+using namespace openMVG::sfm;
 
 #include <random>
 #include <iostream>
@@ -29,7 +30,7 @@ struct Synthetic_Features_Provider : public Features_Provider
       {
         const Vec2 pt = synthetic_data._x[j].col(i);
         feats_per_view[j].push_back(
-          PointFeature(pt(0)+noise(generator), pt(1)+noise(generator)));
+          features::PointFeature(pt(0)+noise(generator), pt(1)+noise(generator)));
       }
     }
     return true;
@@ -48,7 +49,6 @@ struct Synthetic_Matches_Provider : public Matches_Provider
     {
       for (int jj = j+1; jj < j+3 ; ++jj)
       {
-        std::cout << j << "\t" << (jj)%synthetic_data._n << std::endl;
         for (int idx = 0; idx < synthetic_data._x[j].cols(); ++idx)
         {
           _pairWise_matches[Pair(j,(jj)%synthetic_data._n)].push_back(IndMatch(idx,idx));
@@ -64,17 +64,17 @@ static double RMSE(const SfM_Data & sfm_data)
 {
   // Compute residuals for each observation
   std::vector<double> vec;
-  for(Landmarks::const_iterator iterTracks = sfm_data.getLandmarks().begin();
-      iterTracks != sfm_data.getLandmarks().end();
+  for(Landmarks::const_iterator iterTracks = sfm_data.GetLandmarks().begin();
+      iterTracks != sfm_data.GetLandmarks().end();
       ++iterTracks)
   {
     const Observations & obs = iterTracks->second.obs;
     for(Observations::const_iterator itObs = obs.begin();
       itObs != obs.end(); ++itObs)
     {
-      const View * view = sfm_data.getViews().find(itObs->first)->second.get();
-      const Pose3 & pose = sfm_data.getPoses().find(view->id_pose)->second;
-      const std::shared_ptr<IntrinsicBase> intrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic)->second;
+      const View * view = sfm_data.GetViews().find(itObs->first)->second.get();
+      const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view);
+      const std::shared_ptr<cameras::IntrinsicBase> intrinsic = sfm_data.GetIntrinsics().at(view->id_intrinsic);
       const Vec2 residual = intrinsic->residual(pose, iterTracks->second.X, itObs->second.x);
       //std::cout << residual << " ";
       vec.push_back( residual(0) );
@@ -92,7 +92,7 @@ SfM_Data getInputScene
 (
   const NViewDataSet & d,
   const nViewDatasetConfigurator & config,
-  EINTRINSIC eintrinsic)
+  cameras::EINTRINSIC eintrinsic)
 {
   // Translate the input dataset to a SfM_Data scene
   SfM_Data sfm_data;
@@ -116,7 +116,7 @@ SfM_Data getInputScene
   // 2. Poses
   for (int i = 0; i < nviews; ++i)
   {
-    sfm_data.poses[i] = Pose3(d._R[i], d._C[i]);;
+    sfm_data.poses[i] = geometry::Pose3(d._R[i], d._C[i]);;
   }
 
   // 3. Intrinsic data (shared, so only one camera intrinsic is defined)
@@ -125,16 +125,16 @@ SfM_Data getInputScene
     const unsigned int h = config._cy *2;
     switch (eintrinsic)
     {
-      case PINHOLE_CAMERA:
-        sfm_data.intrinsics[0] = std::make_shared<Pinhole_Intrinsic>
+      case cameras::PINHOLE_CAMERA:
+        sfm_data.intrinsics[0] = std::make_shared<cameras::Pinhole_Intrinsic>
           (w, h, config._fx, config._cx, config._cy);
       break;
-      case PINHOLE_CAMERA_RADIAL1:
-        sfm_data.intrinsics[0] = std::make_shared<Pinhole_Intrinsic_Radial_K1>
+      case cameras::PINHOLE_CAMERA_RADIAL1:
+        sfm_data.intrinsics[0] = std::make_shared<cameras::Pinhole_Intrinsic_Radial_K1>
           (w, h, config._fx, config._cx, config._cy, 0.0);
       break;
-      case PINHOLE_CAMERA_RADIAL3:
-        sfm_data.intrinsics[0] = std::make_shared<Pinhole_Intrinsic_Radial_K3>
+      case cameras::PINHOLE_CAMERA_RADIAL3:
+        sfm_data.intrinsics[0] = std::make_shared<cameras::Pinhole_Intrinsic_Radial_K3>
           (w, h, config._fx, config._cx, config._cy, 0., 0., 0.);
       break;
       default:

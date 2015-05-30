@@ -21,6 +21,7 @@
 
 using namespace openMVG;
 using namespace openMVG::matching;
+using namespace openMVG::sfm;
 using namespace openMVG::tracks;
 using namespace svg;
 
@@ -109,12 +110,12 @@ int main(int argc, char ** argv)
     tracksBuilder.Build(map_Matches);
     tracksBuilder.Filter();
     tracksBuilder.ExportToSTL(map_tracks);
-}
+  }
 
   // ------------
   // For each pair, export the matches
   // ------------
-  const size_t viewCount = sfm_data.getViews().size();
+  const size_t viewCount = sfm_data.GetViews().size();
 
   stlplus::folder_create(sOutDir);
   std::cout << "\n Export pairwise tracks" << std::endl;
@@ -125,10 +126,10 @@ int main(int argc, char ** argv)
     for (size_t J = I+1; J < viewCount; ++J, ++my_progress_bar)
     {
 
-      const View * view_I = sfm_data.getViews().at(I).get();
+      const View * view_I = sfm_data.GetViews().at(I).get();
       const std::string sView_I= stlplus::create_filespec(sfm_data.s_root_path,
         view_I->s_Img_path);
-      const View * view_J = sfm_data.getViews().at(J).get();
+      const View * view_J = sfm_data.GetViews().at(J).get();
       const std::string sView_J= stlplus::create_filespec(sfm_data.s_root_path,
         view_J->s_Img_path);
 

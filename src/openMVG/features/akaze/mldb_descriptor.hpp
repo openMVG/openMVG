@@ -12,8 +12,9 @@
 #include "openMVG/image/image.hpp"
 #include "openMVG/numeric/math_trait.hpp"
 
-namespace openMVG
-{
+namespace openMVG {
+namespace features {
+
   /**
   ** @brief Compute mean values (Li,Lx,Ly) in each subdivisions
   ** @param samples_Li input values on Li
@@ -140,9 +141,9 @@ namespace openMVG
     **/
   template< typename Real>
   void ComputeMLDBDescriptor(
-    const Image<Real> & Li ,
-    const Image<Real> &Lx ,
-    const Image<Real> &Ly ,
+    const image::Image<Real> & Li,
+    const image::Image<Real> &Lx,
+    const image::Image<Real> &Ly,
     const int id_octave ,
     const SIOPointFeature & ipt ,
     Descriptor<bool, 486> & desc )
@@ -216,6 +217,8 @@ namespace openMVG
 
     assert( outIndex == 486 ) ; // Just to be sure (and we are sure ! completly sure !)
   }
-}
+
+} // namespace features
+} // namespace openMVG
 
 #endif

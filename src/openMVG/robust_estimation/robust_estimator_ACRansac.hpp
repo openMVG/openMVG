@@ -216,7 +216,7 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
 
         if(bVerbose)  {
           std::cout << "  nfa=" << minNFA
-            << " inliers=" << best.second
+            << " inliers=" << best.second << "/" << nData
             << " precisionNormalized=" << errorMax
             << " precision=" << kernel.unormalizeError(errorMax)
             << " (iter=" << iter;

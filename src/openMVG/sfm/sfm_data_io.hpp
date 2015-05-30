@@ -11,8 +11,8 @@
 
 #include "openMVG/sfm/sfm_data.hpp"
 
-namespace openMVG
-{
+namespace openMVG {
+namespace sfm {
 
 enum ESfM_Data
 {
@@ -32,6 +32,7 @@ bool Load(SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_par
 /// Save SfM_Data SfM scene to a file
 bool Save(const SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_part);
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_DATA_IO_HPP

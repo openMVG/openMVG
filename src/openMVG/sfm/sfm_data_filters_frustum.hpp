@@ -12,6 +12,7 @@
 #include "openMVG/geometry/frustum.hpp"
 
 namespace openMVG {
+namespace sfm {
 
 struct SfM_Data;
 
@@ -50,7 +51,7 @@ private:
   NearFarPlanesT z_near_z_far_perView; // Near & Far plane distance per view
 };
 
-
-}; // namespace openMVG
+} // namespace sfm
+} // namespace openMVG
 
 #endif // OPENMVG_SFM_DATA_FILTERS_FRUSTUM_HPP

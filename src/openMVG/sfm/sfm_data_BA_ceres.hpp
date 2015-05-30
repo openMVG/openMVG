@@ -13,9 +13,12 @@
 #include "ceres/ceres.h"
 
 namespace openMVG {
+namespace sfm {
 
 /// Create the appropriate cost functor according the provided input camera intrinsic model
-ceres::CostFunction * IntrinsicsToCostFunction(IntrinsicBase * intrinsic, const Vec2 & observation);
+ceres::CostFunction * IntrinsicsToCostFunction(
+  cameras::IntrinsicBase * intrinsic,
+  const Vec2 & observation);
 
 class Bundle_Adjustment_Ceres : public Bundle_Adjustment
 {
@@ -44,6 +47,8 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
     bool bRefineIntrinsics = true,  // tell if the camera intrinsic will be refined
     bool bRefineStructure = true);  // tell if the structure will be refined
 };
+
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_DATA_BA_CERES_HPP

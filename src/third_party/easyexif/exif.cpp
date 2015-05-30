@@ -1,6 +1,6 @@
 #include <stdio.h>
 /**************************************************************************
-  exif.cpp  -- A simple ISO C++ library to parse basic EXIF 
+  exif.cpp  -- A simple ISO C++ library to parse basic EXIF
                information from a JPEG file.
 
   Copyright (c) 2010-2013 Mayank Lahiri
@@ -9,24 +9,24 @@
 
   See exif.h for version history.
 
-  Redistribution and use in source and binary forms, with or without 
+  Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
 
-  -- Redistributions of source code must retain the above copyright notice, 
+  -- Redistributions of source code must retain the above copyright notice,
      this list of conditions and the following disclaimer.
-  -- Redistributions in binary form must reproduce the above copyright notice, 
-     this list of conditions and the following disclaimer in the documentation 
+  -- Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
      and/or other materials provided with the distribution.
 
-     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY EXPRESS 
-     OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
-     OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN 
-     NO EVENT SHALL THE FREEBSD PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-     INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-     BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-     DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY 
-     OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
-     NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
+     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY EXPRESS
+     OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+     OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+     NO EVENT SHALL THE FREEBSD PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+     INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+     BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+     DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+     OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+     NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
      EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include <algorithm>
@@ -35,14 +35,14 @@
 using std::string;
 
 namespace {
-  // IF Entry 
+  // IF Entry
   struct IFEntry {
     // Raw fields
     unsigned short tag;
     unsigned short format;
     unsigned data;
     unsigned length;
-    
+
     // Parsed fields
     string val_string;
     unsigned short val_16;
@@ -53,28 +53,28 @@ namespace {
 
   // Helper functions
   unsigned int parse32(const unsigned char *buf, bool intel) {
-    if (intel) 
-      return ((unsigned)buf[3]<<24) | 
-             ((unsigned)buf[2]<<16) | 
-             ((unsigned)buf[1]<<8)  | 
+    if (intel)
+      return ((unsigned)buf[3]<<24) |
+             ((unsigned)buf[2]<<16) |
+             ((unsigned)buf[1]<<8)  |
              buf[0];
 
-    return ((unsigned)buf[0]<<24) | 
-           ((unsigned)buf[1]<<16) | 
-           ((unsigned)buf[2]<<8)  | 
+    return ((unsigned)buf[0]<<24) |
+           ((unsigned)buf[1]<<16) |
+           ((unsigned)buf[2]<<8)  |
            buf[3];
   }
 
   unsigned short parse16(const unsigned char *buf, bool intel) {
     if (intel)
       return ((unsigned) buf[1]<<8) | buf[0];
-    return ((unsigned) buf[0]<<8) | buf[1]; 
+    return ((unsigned) buf[0]<<8) | buf[1];
   }
 
-  string parseEXIFString(const unsigned char *buf, 
-                         const unsigned num_components, 
-                         const unsigned data, 
-                         const unsigned base, 
+  string parseEXIFString(const unsigned char *buf,
+                         const unsigned num_components,
+                         const unsigned data,
+                         const unsigned base,
                          const unsigned len) {
     string value;
     if (num_components <= 4)
@@ -97,10 +97,10 @@ namespace {
     return numerator/denominator;
   }
 
-  IFEntry parseIFEntry(const unsigned char *buf, 
-                       const unsigned offs, 
-                       const bool alignIntel, 
-                       const unsigned base, 
+  IFEntry parseIFEntry(const unsigned char *buf,
+                       const unsigned offs,
+                       const bool alignIntel,
+                       const unsigned base,
                        const unsigned len) {
     IFEntry result;
 
@@ -144,20 +144,22 @@ namespace {
 }
 
 //
-// Locates the EXIF segment and parses it using parseFromEXIFSegment 
+// Locates the EXIF segment and parses it using parseFromEXIFSegment
 //
 int EXIFInfo::parseFrom(const unsigned char *buf, unsigned len) {
   // Sanity check: all JPEG files start with 0xFFD8 and end with 0xFFD9
   // This check also ensures that the user has supplied a correct value for len.
   if (!buf || len < 4)
     return PARSE_EXIF_ERROR_NO_EXIF;
+  // JPEG file start check
   if (buf[0] != 0xFF || buf[1] != 0xD8)
     return PARSE_EXIF_ERROR_NO_JPEG;
-  if (buf[len-2] != 0xFF || buf[len-1] != 0xD9)
-    return PARSE_EXIF_ERROR_NO_JPEG;
+  // JPEG file end check
+//  if (buf[len-2] != 0xFF || buf[len-1] != 0xD9)
+//    return PARSE_EXIF_ERROR_NO_JPEG;
   clear();
 
-  // Scan for EXIF header (bytes 0xFF 0xE1) and do a sanity check by 
+  // Scan for EXIF header (bytes 0xFF 0xE1) and do a sanity check by
   // looking for bytes "Exif\0\0". The marker length data is in Motorola
   // byte order, which results in the 'false' parameter to parse16().
   // The marker has to contain at least the TIFF header, otherwise the
@@ -170,13 +172,13 @@ int EXIFInfo::parseFrom(const unsigned char *buf, unsigned len) {
   // =========
   //  16 bytes
   unsigned offs = 0;        // current offset into buffer
-  for (offs = 0; offs < len-1; offs++) 
-    if (buf[offs] == 0xFF && buf[offs+1] == 0xE1) 
+  for (offs = 0; offs < len-1; offs++)
+    if (buf[offs] == 0xFF && buf[offs+1] == 0xE1)
       break;
   if (offs + 4 > len)
     return PARSE_EXIF_ERROR_NO_EXIF;
   offs += 2;
-  unsigned short section_length = parse16(buf + offs, false); 
+  unsigned short section_length = parse16(buf + offs, false);
   if (offs + section_length > len || section_length < 16)
     return PARSE_EXIF_ERROR_CORRUPT;
   offs += 2;
@@ -203,11 +205,11 @@ int EXIFInfo::parseFromEXIFSegment(const unsigned char *buf, unsigned len) {
   if (!std::equal(buf, buf+6, "Exif\0\0"))
     return PARSE_EXIF_ERROR_NO_EXIF;
   offs += 6;
-  
+
   // Now parsing the TIFF header. The first two bytes are either "II" or
   // "MM" for Intel or Motorola byte alignment. Sanity check by parsing
   // the unsigned short that follows, making sure it equals 0x2a. The
-  // last 4 bytes are an offset into the first IFD, which are added to 
+  // last 4 bytes are an offset into the first IFD, which are added to
   // the global offset counter. For this block, we expect the following
   // minimum size:
   //  2 bytes: 'II' or 'MM'
@@ -223,7 +225,7 @@ int EXIFInfo::parseFromEXIFSegment(const unsigned char *buf, unsigned len) {
   else {
     if(buf[offs] == 'M' && buf[offs+1] == 'M')
       alignIntel = false;
-    else 
+    else
       return PARSE_EXIF_ERROR_UNKNOWN_BYTEALIGN;
   }
   this->ByteAlign = alignIntel;
@@ -364,7 +366,7 @@ int EXIFInfo::parseFromEXIFSegment(const unsigned char *buf, unsigned len) {
           break;
 
         case 0x9204:
-          // Exposure bias value 
+          // Exposure bias value
           if (result.format == 5)
             this->ExposureBiasValue = result.val_rational;
           break;
@@ -455,13 +457,13 @@ int EXIFInfo::parseFromEXIFSegment(const unsigned char *buf, unsigned len) {
         case 2:
           // GPS latitude
           if (format == 5 && length == 3) {
-            this->GeoLocation.LatComponents.degrees = 
+            this->GeoLocation.LatComponents.degrees =
               parseEXIFRational(buf + data + tiff_header_start, alignIntel);
-            this->GeoLocation.LatComponents.minutes = 
+            this->GeoLocation.LatComponents.minutes =
               parseEXIFRational(buf + data + tiff_header_start + 8, alignIntel);
-            this->GeoLocation.LatComponents.seconds = 
+            this->GeoLocation.LatComponents.seconds =
               parseEXIFRational(buf + data + tiff_header_start + 16, alignIntel);
-            this->GeoLocation.Latitude = 
+            this->GeoLocation.Latitude =
               this->GeoLocation.LatComponents.degrees +
               this->GeoLocation.LatComponents.minutes / 60 +
               this->GeoLocation.LatComponents.seconds / 3600;
@@ -480,13 +482,13 @@ int EXIFInfo::parseFromEXIFSegment(const unsigned char *buf, unsigned len) {
         case 4:
           // GPS longitude
           if (format == 5 && length == 3) {
-            this->GeoLocation.LonComponents.degrees = 
+            this->GeoLocation.LonComponents.degrees =
               parseEXIFRational(buf + data + tiff_header_start, alignIntel);
-            this->GeoLocation.LonComponents.minutes = 
+            this->GeoLocation.LonComponents.minutes =
               parseEXIFRational(buf + data + tiff_header_start + 8, alignIntel);
-            this->GeoLocation.LonComponents.seconds = 
+            this->GeoLocation.LonComponents.seconds =
               parseEXIFRational(buf + data + tiff_header_start + 16, alignIntel);
-            this->GeoLocation.Longitude = 
+            this->GeoLocation.Longitude =
               this->GeoLocation.LonComponents.degrees +
               this->GeoLocation.LonComponents.minutes / 60 +
               this->GeoLocation.LonComponents.seconds / 3600;
@@ -505,7 +507,7 @@ int EXIFInfo::parseFromEXIFSegment(const unsigned char *buf, unsigned len) {
         case 6:
           // GPS altitude reference
           if (format == 5) {
-            this->GeoLocation.Altitude = 
+            this->GeoLocation.Altitude =
               parseEXIFRational(buf + data + tiff_header_start, alignIntel);
             if (1 == this->GeoLocation.AltitudeRef)
               this->GeoLocation.Altitude = -this->GeoLocation.Altitude;
@@ -527,13 +529,13 @@ void EXIFInfo::clear() {
   Software          = "";
   DateTime          = "";
   DateTimeOriginal  = "";
-  DateTimeDigitized = ""; 
+  DateTimeDigitized = "";
   SubSecTimeOriginal= "";
   Copyright         = "";
 
   // Shorts / unsigned / double
   ByteAlign         = 0;
-  Orientation       = 0; 
+  Orientation       = 0;
 
   BitsPerSample     = 0;
   ExposureTime      = 0;

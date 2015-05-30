@@ -5,7 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/graph/triplet_finder.hpp"
-using namespace openMVG::graphUtils;
+using namespace openMVG::graph;
 
 #include "CppUnitLite/TestHarness.h"
 #include "testing/testing.h"

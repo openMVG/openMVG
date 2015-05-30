@@ -13,6 +13,7 @@
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
 namespace openMVG {
+namespace sfm {
 
 static bool Generate_SfM_Report
 (
@@ -23,8 +24,8 @@ static bool Generate_SfM_Report
   // Compute mean,max,median residual values per View
   IndexT residualCount = 0;
   Hash_Map< IndexT, std::vector<double> > residuals_per_view;
-  for (Landmarks::const_iterator iterTracks = sfm_data.getLandmarks().begin();
-    iterTracks != sfm_data.getLandmarks().end();
+  for (Landmarks::const_iterator iterTracks = sfm_data.GetLandmarks().begin();
+    iterTracks != sfm_data.GetLandmarks().end();
     ++iterTracks
   )
   {
@@ -32,9 +33,9 @@ static bool Generate_SfM_Report
     for (Observations::const_iterator itObs = obs.begin();
       itObs != obs.end(); ++itObs)
     {
-      const View * view = sfm_data.getViews().at(itObs->first).get();
-      const Pose3 & pose = sfm_data.getPoses().at(view->id_pose);
-      const IntrinsicBase * intrinsic = sfm_data.getIntrinsics().at(view->id_intrinsic).get();
+      const View * view = sfm_data.GetViews().at(itObs->first).get();
+      const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view);
+      const cameras::IntrinsicBase * intrinsic = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       // Use absolute values
       const Vec2 residual = intrinsic->residual(pose, iterTracks->second.X, itObs->second.x).array().abs();
       residuals_per_view[itObs->first].push_back(residual(0));
@@ -58,10 +59,10 @@ static bool Generate_SfM_Report
   htmlDocStream.pushInfo( "Dataset info:" + sNewLine );
 
   std::ostringstream os;
-  os << " #views: " << sfm_data.getViews().size() << sNewLine
-  << " #poses: " << sfm_data.getPoses().size() << sNewLine
-  << " #intrinsics: " << sfm_data.getIntrinsics().size() << sNewLine
-  << " #tracks: " << sfm_data.getLandmarks().size() << sNewLine
+  os << " #views: " << sfm_data.GetViews().size() << sNewLine
+  << " #poses: " << sfm_data.GetPoses().size() << sNewLine
+  << " #intrinsics: " << sfm_data.GetIntrinsics().size() << sNewLine
+  << " #tracks: " << sfm_data.GetLandmarks().size() << sNewLine
   << " #residuals: " << residualCount << sNewLine;
 
   htmlDocStream.pushInfo( os.str() );
@@ -80,8 +81,8 @@ static bool Generate_SfM_Report
     << sRowEnd;
   htmlDocStream.pushInfo( os.str() );
 
-  for (Views::const_iterator iterV = sfm_data.getViews().begin();
-    iterV != sfm_data.getViews().end();
+  for (Views::const_iterator iterV = sfm_data.GetViews().begin();
+    iterV != sfm_data.GetViews().end();
     ++iterV)
   {
     const View * v = iterV->second.get();
@@ -94,14 +95,8 @@ static bool Generate_SfM_Report
       << sColBegin << id_view << sColEnd
       << sColBegin + stlplus::basename_part(v->s_Img_path) + sColEnd;
 
-    bool bDefined =
-      id_intrinsic != UndefinedIndexT &&
-      sfm_data.getIntrinsics().find(id_intrinsic) != sfm_data.getIntrinsics().end() &&
-      id_pose != UndefinedIndexT &&
-      sfm_data.getPoses().find(id_pose) != sfm_data.getPoses().end();
-
     // IdView | basename | #Observations | residuals min | residual median | residual max
-    if (bDefined)
+    if (sfm_data.IsPoseAndIntrinsicDefined(v))
     {
       const std::vector<double> & residuals = residuals_per_view.at(id_view);
       if (!residuals.empty())
@@ -174,8 +169,11 @@ static bool Generate_SfM_Report
 
   std::ofstream htmlFileStream(htmlFilename.c_str());
   htmlFileStream << htmlDocStream.getDoc();
+  const bool bOk = !htmlFileStream.bad();
+  return bOk;
 }
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_REPORT_HPP

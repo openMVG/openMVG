@@ -35,8 +35,11 @@
 #include <fstream>
 
 using namespace openMVG;
+using namespace openMVG::cameras;
+using namespace openMVG::image;
 using namespace openMVG::matching;
 using namespace openMVG::robust;
+using namespace openMVG::sfm;
 using namespace std;
 
 enum eGeometricModel
@@ -212,11 +215,11 @@ int main(int argc, char **argv)
   }
 
   {
-    Timer timer;
+    system::Timer timer;
     std::cout << "\n\n - EXTRACT FEATURES - " << std::endl;
 
     Image<unsigned char> imageGray;
-    C_Progress_display my_progress_bar( sfm_data.getViews().size() );
+    C_Progress_display my_progress_bar( sfm_data.GetViews().size() );
     for(Views::const_iterator iterViews = sfm_data.views.begin();
         iterViews != sfm_data.views.end();
         ++iterViews, ++my_progress_bar)
@@ -253,11 +256,11 @@ int main(int argc, char **argv)
 
   // List views as a vector of filenames & imagesizes (alias)
   std::vector<std::string> vec_fileNames;
-  vec_fileNames.reserve(sfm_data.getViews().size());
+  vec_fileNames.reserve(sfm_data.GetViews().size());
   std::vector<std::pair<size_t, size_t> > vec_imagesSize;
-  vec_imagesSize.reserve(sfm_data.getViews().size());
-  for (Views::const_iterator iter = sfm_data.getViews().begin();
-    iter != sfm_data.getViews().end();
+  vec_imagesSize.reserve(sfm_data.GetViews().size());
+  for (Views::const_iterator iter = sfm_data.GetViews().begin();
+    iter != sfm_data.GetViews().end();
     ++iter)
   {
     const View * v = iter->second.get();
@@ -283,7 +286,7 @@ int main(int argc, char **argv)
       case PAIR_FROM_FILE:  std::cout << "user defined pairwise matching" << std::endl; break;
     }
 
-    Timer timer;
+    system::Timer timer;
     std::cout << "Use cascade Hashing matcher." << std::endl;
     Matcher_CascadeHashing_AllInMemory collectionMatcher(fDistRatio);
     if (collectionMatcher.loadData(*image_describer.get(), vec_fileNames, sOutDir))
@@ -292,10 +295,10 @@ int main(int argc, char **argv)
       Pair_Set pairs;
       switch (ePairmode)
       {
-        case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(sfm_data.getViews().size()); break;
-        case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(sfm_data.getViews().size(), iMatchingVideoMode); break;
+        case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(sfm_data.GetViews().size()); break;
+        case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(sfm_data.GetViews().size(), iMatchingVideoMode); break;
         case PAIR_FROM_FILE:
-          if(!loadPairs(sfm_data.getViews().size(), sPredefinedPairList, pairs))
+          if(!loadPairs(sfm_data.GetViews().size(), sPredefinedPairList, pairs))
           {
               return EXIT_FAILURE;
           };
@@ -336,7 +339,7 @@ int main(int argc, char **argv)
   ImageCollectionGeometricFilter collectionGeomFilter(feats_provider.get());
   const double maxResidualError = 4.0;
   {
-    Timer timer;
+    system::Timer timer;
     std::cout << std::endl << " - GEOMETRIC FILTERING - " << std::endl;
     switch (eGeometricModelToCompute)
     {
@@ -354,22 +357,18 @@ int main(int argc, char **argv)
         // Build the intrinsic parameter map for each view
         std::map<IndexT, Mat3> map_K;
         size_t cpt = 0;
-        for (Views::const_iterator iter = sfm_data.getViews().begin();
-          iter != sfm_data.getViews().end();
+        for (Views::const_iterator iter = sfm_data.GetViews().begin();
+          iter != sfm_data.GetViews().end();
           ++iter, ++cpt)
         {
           const View * v = iter->second.get();
-          if (sfm_data.getIntrinsics().count(v->id_intrinsic))
+          if (sfm_data.GetIntrinsics().count(v->id_intrinsic))
           {
-            const IntrinsicBase * ptrIntrinsic = sfm_data.getIntrinsics().find(v->id_intrinsic)->second.get();
-            switch (ptrIntrinsic->getType())
+            const IntrinsicBase * ptrIntrinsic = sfm_data.GetIntrinsics().find(v->id_intrinsic)->second.get();
+            if (isPinhole(ptrIntrinsic->getType()))
             {
-              case PINHOLE_CAMERA:
-              case PINHOLE_CAMERA_RADIAL1:
-              case PINHOLE_CAMERA_RADIAL3:
-                const Pinhole_Intrinsic * ptrPinhole = (const Pinhole_Intrinsic*)(ptrIntrinsic);
-                map_K[cpt] = ptrPinhole->K();
-              break;
+              const Pinhole_Intrinsic * ptrPinhole = (const Pinhole_Intrinsic*)(ptrIntrinsic);
+              map_K[cpt] = ptrPinhole->K();
             }
           }
         }

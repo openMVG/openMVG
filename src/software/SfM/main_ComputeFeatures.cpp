@@ -23,6 +23,9 @@
 #include <fstream>
 
 using namespace openMVG;
+using namespace openMVG::image;
+using namespace openMVG::features;
+using namespace openMVG::sfm;
 using namespace std;
 
 features::EDESCRIBER_PRESET stringToEnum(const std::string & sPreset)
@@ -206,9 +209,9 @@ int main(int argc, char **argv)
   // - if regions file exist continue,
   // - if no file, compute features
   {
-    Timer timer;
+    system::Timer timer;
     Image<unsigned char> imageGray;
-    C_Progress_display my_progress_bar( sfm_data.getViews().size(),
+    C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
     for(Views::const_iterator iterViews = sfm_data.views.begin();
         iterViews != sfm_data.views.end();

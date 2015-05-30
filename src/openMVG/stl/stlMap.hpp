@@ -24,17 +24,17 @@
 // m[1] = 1.6;
 // std::vector<int> keys;
 // // Retrieve all keys
-// transform(m.begin(), m.end(), back_inserter(keys), RetrieveKey());
+// transform(m.begin(), m.end(), back_inserter(keys), stl::RetrieveKey());
 // // Log all keys to console
 // copy(keys.begin(), keys.end(), ostream_iterator<int>(cout, "\n"));
 // // Retrieve all values
 // std::vector<double> values;
 // // Retrieve all values
-// transform(m.begin(), m.end(), back_inserter(values), RetrieveValue());
+// transform(m.begin(), m.end(), back_inserter(values), stl::RetrieveValue());
 
 #include <map>
 
-namespace std{
+namespace stl{
 
 /// Allow to select the Keys of a map.
 struct RetrieveKey
@@ -56,7 +56,7 @@ struct RetrieveValue
   }
 };
 
-} // namespace std
+} // namespace stl
 
 #endif // STL_MAP_ADDITION_H
 

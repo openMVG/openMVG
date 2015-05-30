@@ -1,13 +1,15 @@
 #ifndef EXIF_IO_EASYEXIF_HPP
 #define EXIF_IO_EASYEXIF_HPP
 
-#include "exif_IO.hpp"
+#include "openMVG/exif/exif_IO.hpp"
 #include "third_party/easyexif/exif.h"
 
 #include <fstream>
-#include <string>
 #include <sstream>
 #include <vector>
+
+namespace openMVG {
+namespace exif  {
 
 class Exif_IO_EasyExif : public Exif_IO
 {
@@ -138,4 +140,8 @@ class Exif_IO_EasyExif : public Exif_IO
     EXIFInfo exifInfo_;
     bool bHaveExifInfo_;
 };
+
+} // namespace exif
+} // namespace openMVG
+
 #endif //EXIF_IO_EASYEXIF_HPP

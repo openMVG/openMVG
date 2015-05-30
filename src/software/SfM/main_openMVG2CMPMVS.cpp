@@ -9,6 +9,10 @@
 #include "openMVG/image/image.hpp"
 
 using namespace openMVG;
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
+using namespace openMVG::image;
+using namespace openMVG::sfm;
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/progress/progress.hpp"
@@ -41,23 +45,22 @@ bool exportToCMPMVSFormat(
   {
     // Export data :
 
-    C_Progress_display my_progress_bar( sfm_data.getViews().size()*2 );
+    C_Progress_display my_progress_bar( sfm_data.GetViews().size()*2 );
 
     // Export valid views as Projective Cameras:
     size_t count = 0;
-    for(Views::const_iterator iter = sfm_data.getViews().begin();
-      iter != sfm_data.getViews().end(); ++iter, ++my_progress_bar)
+    for(Views::const_iterator iter = sfm_data.GetViews().begin();
+      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
       const View * view = iter->second.get();
-      Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
-      Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+        continue;
 
-      if (iterPose == sfm_data.getPoses().end() ||
-        iterIntrinsic == sfm_data.getIntrinsics().end())
-      continue;
+      const Pose3 pose = sfm_data.GetPoseOrDie(view);
+      Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
 
       // We have a valid view with a corresponding camera & pose
-      const Mat34 P = iterIntrinsic->second.get()->get_projective_equivalent(iterPose->second);
+      const Mat34 P = iterIntrinsic->second.get()->get_projective_equivalent(pose);
       std::ostringstream os;
       os << std::setw(5) << std::setfill('0') << count << "_P";
       std::ofstream file(
@@ -73,16 +76,14 @@ bool exportToCMPMVSFormat(
     count = 0;
     std::pair<int,int> w_h_image_size;
     Image<RGBColor> image, image_ud;
-    for(Views::const_iterator iter = sfm_data.getViews().begin();
-      iter != sfm_data.getViews().end(); ++iter, ++my_progress_bar)
+    for(Views::const_iterator iter = sfm_data.GetViews().begin();
+      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
       const View * view = iter->second.get();
-      Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
-      Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+        continue;
 
-      if (iterPose == sfm_data.getPoses().end() ||
-        iterIntrinsic == sfm_data.getIntrinsics().end())
-      continue;
+      Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
 
       // We have a valid view with a corresponding camera & pose
       const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);

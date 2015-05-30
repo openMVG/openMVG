@@ -10,6 +10,7 @@
 #include <iostream>
 using namespace std;
 using namespace openMVG;
+using namespace openMVG::image;
 
 TEST(Image, Basis)
 {
@@ -73,12 +74,12 @@ TEST(Image, ImageConverter)
   Image<RGBColor> imaColorRGB(5,5);
   imaColorRGB.fill(RGBColor(10,10,10));
   Image<unsigned char> imaGray;
-  openMVG::ConvertPixelType(imaColorRGB, &imaGray);
+  ConvertPixelType(imaColorRGB, &imaGray);
 
   //RGBA
   Image<RGBAColor> imaColorRGBA(5,5);
   imaColorRGBA.fill(RGBAColor(10,10,10, 255));
-  openMVG::ConvertPixelType(imaColorRGBA, &imaGray);
+  ConvertPixelType(imaColorRGBA, &imaGray);
 }
 
 /* ************************************************************************* */

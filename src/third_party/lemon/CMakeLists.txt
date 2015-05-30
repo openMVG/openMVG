@@ -277,3 +277,4 @@ CONFIGURE_FILE(
   ${PROJECT_BINARY_DIR}/cmake/version.cmake
   @ONLY
 )
+

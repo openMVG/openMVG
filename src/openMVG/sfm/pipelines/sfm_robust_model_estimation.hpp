@@ -12,26 +12,26 @@
 #include "openMVG/geometry/pose3.hpp"
 #include <vector>
 
-namespace openMVG
-{
+namespace openMVG {
+namespace sfm {
 
 /**
- * @brief Estimate the best possible Rotation/Translation from E.
- *  Four are possible, keep the one with most of the point in front.
- *
- * @param[in] K1 camera 1 intrinsics
- * @param[in] K2 camera 2 intrinsics
- * @param[in] x1 camera 1 image points
- * @param[in] x2 camera 2 image points
- * @param[in] E essential matrix
- * @param[in] vec_inliers inliers indices
- * @param[out] R estimated rotation
- * @param[out] t estimated translation
- */
-bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
-  const Mat & x1, const Mat & x2,
-  const Mat3 & E, const std::vector<size_t> & vec_inliers,
-  Mat3 * R, Vec3 * t);
+* @brief Estimate the best possible Rotation/Translation from E.
+*  Four are possible, keep the one with most of the point in front.
+*
+* @param[in] K1 camera 1 intrinsics
+* @param[in] K2 camera 2 intrinsics
+* @param[in] x1 camera 1 image points
+* @param[in] x2 camera 2 image points
+* @param[in] E essential matrix
+* @param[in] vec_inliers inliers indices
+* @param[out] R estimated rotation
+* @param[out] t estimated translation
+*/
+  bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
+    const Mat & x1, const Mat & x2,
+    const Mat3 & E, const std::vector<size_t> & vec_inliers,
+    Mat3 * R, Vec3 * t);
 
 struct RelativePose_Info
 {
@@ -92,6 +92,7 @@ bool robustResection(
   const size_t max_iteration = 4096);
 
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_ROBUST_MODEL_ESTIMATION_HPP

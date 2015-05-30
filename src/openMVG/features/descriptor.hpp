@@ -16,6 +16,7 @@
 #include <vector>
 
 namespace openMVG {
+namespace features {
 
 /**
  * Class that handle descriptor (a data container of N values of type T).
@@ -209,7 +210,7 @@ static bool saveDescsToBinFile(
   return bOk;
 }
 
-
-}  // namespace openMVG
+} // namespace features
+} // namespace openMVG
 
 #endif  // OPENMVG_FEATURES_DESCRIPTOR_HPP

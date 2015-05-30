@@ -18,19 +18,27 @@ ENDIF()
 # OpenMVG build options
 # ==============================================================================
 OPTION(OpenMVG_BUILD_TESTS "Build OpenMVG tests" OFF)
-OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG example applications. Does not affect binaries under 'software'" ON)
+OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG samples applications." ON)
 OPTION(OpenMVG_BUILD_OPENGL_EXAMPLES "Build OpenMVG openGL examples" OFF)
 OPTION(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
 
-# By default build in Release mode
+SET(OPENMVG_VERSION_MAJOR 0)
+SET(OPENMVG_VERSION_MINOR 8)
+SET(OPENMVG_VERSION_PATCH 1)
+SET(OPENMVG_VERSION
+    ${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}.${OPENMVG_VERSION_PATCH})
+
+# Default build is in Release mode
 IF(NOT CMAKE_BUILD_TYPE AND NOT MSVC)
   SET(CMAKE_BUILD_TYPE "Release")
 ENDIF(NOT CMAKE_BUILD_TYPE AND NOT MSVC)
 
 IF (WIN32)
   ADD_DEFINITIONS(-DNOMINMAX)
-  ADD_DEFINITIONS(/bigobj)
+  IF (MSVC)
+    ADD_DEFINITIONS(/bigobj)
+  ENDIF (MSVC)
 ENDIF (WIN32)
 
 # ==============================================================================
@@ -122,11 +130,12 @@ IF (OpenMVG_BUILD_OPENGL_EXAMPLES)
   SET(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Do not build the GLFW example programs")
   SET(GLFW_BUILD_TESTS    OFF CACHE BOOL "Do not build the GLFW tests programs")
   SET(GLFW_BUILD_DOCS     OFF CACHE BOOL "Do not build the GLFW documentation")
+  SET(GLFW_INSTALL        OFF CACHE BOOL "Do not generate the GLFW installation target")
   ADD_SUBDIRECTORY(dependencies/glfw)
   INCLUDE_DIRECTORIES(SYSTEM dependencies/glfw/include)
   SET_PROPERTY(TARGET glfw PROPERTY FOLDER OpenMVG/3rdParty/glfw)
-  SET_PROPERTY(TARGET uninstall PROPERTY FOLDER OpenMVG/3rdParty/glfw)
 ENDIF (OpenMVG_BUILD_OPENGL_EXAMPLES)
+
 #===============================
 #---- LINEAR PROGRAMMING SOLVER
 #===============================
@@ -136,10 +145,11 @@ ENDIF (OpenMVG_BUILD_OPENGL_EXAMPLES)
 FIND_PACKAGE(Mosek)
 IF(MOSEK_FOUND)
   ADD_DEFINITIONS(-DOPENMVG_HAVE_MOSEK)
-  INCLUDE_DIRECTORIES(
+  SET(LP_INCLUDE_DIRS 
     ${MOSEK_INCLUDE}
-    ./dependencies/osi_clp/Osi/src/OsiMsk/
+    ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/OsiMsk/
   )
+  INCLUDE_DIRECTORIES(${LP_INCLUDE_DIRS})
 ENDIF(MOSEK_FOUND)
 
 #- osi_clp (linear programming interface)
@@ -150,21 +160,33 @@ if(NOT EXISTS ${PROJECT_SOURCE_DIR}/dependencies/osi_clp/Clp)
     "  > git submodule update -i\n")
 endif()
 ADD_SUBDIRECTORY(dependencies/osi_clp)
-INCLUDE_DIRECTORIES(
-  ./dependencies/osi_clp/CoinUtils/src/
-  ./dependencies/osi_clp/Clp/src/
-  ./dependencies/osi_clp/Osi/src/Osi/
-  ./dependencies/osi_clp/Clp/src/OsiClp/
+SET(LP_INCLUDE_DIRS "${LP_INCLUDE_DIRS}" 
+  ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/CoinUtils/src/
+  ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/
+  ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/Osi/
+  ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/OsiClp/
 )
+INCLUDE_DIRECTORIES(${LP_INCLUDE_DIRS})
 SET_PROPERTY(TARGET lib_CoinUtils PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
 SET_PROPERTY(TARGET lib_Osi PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
 SET_PROPERTY(TARGET lib_OsiClpSolver PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
 SET_PROPERTY(TARGET lib_clp PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
 
-#===============================
-#--END-- LINEAR PROGRAMMING SOLVER
-#===============================
+# =================================
+# --END-- LINEAR PROGRAMMING SOLVER
+# =================================
 
+#INSTALL RULES
+INSTALL(
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/
+  DESTINATION include/openMVG_dependencies
+  COMPONENT headers
+  FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+)
+
+# ==============================================================================
+# --END-- SUBMODULE CONFIGURATION
+# ==============================================================================
 
 # ==============================================================================
 # Opencv is not used by openMVG but some samples show how to use openCV
@@ -193,8 +215,42 @@ MACRO (UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
   ENDIF (OpenMVG_BUILD_TESTS)
 ENDMACRO (UNIT_TEST)
 
+# ==============================================================================
+# Eigen
+# ==============================================================================
+# - internal by default,
+# - external if EIGEN_INCLUDE_DIR_HINTS is defined
+# ==============================================================================
+IF(NOT DEFINED EIGEN_INCLUDE_DIR_HINTS)
+  SET(EIGEN_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen)
+  SET(OpenMVG_USE_INTERNAL_EIGEN ON)
+ENDIF()
+FIND_PACKAGE(Eigen QUIET)
+IF(EIGEN_FOUND)
+	INCLUDE_DIRECTORIES(${EIGEN_INCLUDE_DIRS})
+ENDIF(EIGEN_FOUND)
+
 # Configure Eigen to use only MPL2 licensed code
 ADD_DEFINITIONS(-DEIGEN_MPL2_ONLY)
+
+# ==============================================================================
+# Ceres
+# ==============================================================================
+# - internal by default (ceres-solver+cxsparse+miniglog),
+# - external if CERES_DIR_HINTS and FIND_PACKAGE return a valid Ceres setup
+# ==============================================================================
+FIND_PACKAGE(Ceres QUIET HINTS ${CERES_DIR_HINTS})
+IF(Ceres_FOUND)
+   MESSAGE("CERES FOUND")
+ELSE()
+  MESSAGE("CERES NOT FOUND")
+  SET(OpenMVG_USE_INTERNAL_CERES ON)
+  SET(CERES_INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/internal/ceres/miniglog
+    ${PROJECT_BINARY_DIR}/third_party/ceres-solver/config)
+  SET(CERES_LIBRARIES ceres cxsparse)
+ENDIF(Ceres_FOUND)
 
 # ==============================================================================
 # Third-party libraries:
@@ -204,24 +260,23 @@ ADD_SUBDIRECTORY(third_party)
 # ==============================================================================
 # Include directories
 # ==============================================================================
-SET(OpenMVG_INCLUDES
+SET(OpenMVG_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party
   ${JPEG_INCLUDE_DIR}
   ${PNG_INCLUDE_DIRS}
   ${TIFF_INCLUDE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon
   ${PROJECT_BINARY_DIR}/third_party/lemon
-  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/internal/ceres/miniglog
-  ${PROJECT_BINARY_DIR}/third_party/ceres-solver/config
+  ${EIGEN_INCLUDE_DIRS}
+  ${CERES_INCLUDE_DIRS}  
+  ${LP_INCLUDE_DIRS}
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp
   CACHE PATH "include directories for openMVG and its dependencies"
 )
 
-INCLUDE_DIRECTORIES(${OpenMVG_INCLUDES})
+INCLUDE_DIRECTORIES(${OpenMVG_INCLUDE_DIRS})
 
 # ==============================================================================
 # openMVG modules
@@ -229,37 +284,34 @@ INCLUDE_DIRECTORIES(${OpenMVG_INCLUDES})
 # The openMVG library itself
 ADD_SUBDIRECTORY(openMVG)
 
-# software under patent or commercial licence
-# Included for research purpose only
-ADD_SUBDIRECTORY(nonFree)
-
 # ==============================================================================
 # openMVG libraries
 # ==============================================================================
-SET(OpenMVG_LIBS
+SET(OpenMVG_LIBRARIES
   openMVG_image
   openMVG_features
   openMVG_matching_image_collection
+  openMVG_kvld
   openMVG_multiview
   openMVG_lInftyComputerVision
   openMVG_system
   openMVG_sfm)
 
-FOREACH(omvglib ${OpenMVG_LIBS})
+FOREACH(omvglib ${OpenMVG_LIBRARIES})
   SET_PROPERTY(TARGET ${omvglib} PROPERTY FOLDER OpenMVG/OpenMVG)
 ENDFOREACH()
 
-# concat lists
-SET(OpenMVG_LIBS "${OpenMVG_LIBS}" ${openMVG_linearProgramming})
 #third_party libs
-SET(OpenMVG_LIBS "${OpenMVG_LIBS}"
+SET(OpenMVG_LIBRARIES
+  "${OpenMVG_LIBRARIES}"
+  "${openMVG_linearProgramming}"
   vlsift
   stlplus
   flann_cpp_s
-  ceres
+  ${CERES_LIBRARIES}
   lemon
   easyexif)
-SET(OpenMVG_LIBS "${OpenMVG_LIBS}"
+SET(OpenMVG_LIBRARIES "${OpenMVG_LIBRARIES}"
   ${OPENMVG_LIBRARY_DEPENDENCIES} CACHE STRING "openMVG library names")
 
 # openMVG tutorial examples
@@ -267,8 +319,12 @@ IF (OpenMVG_BUILD_EXAMPLES)
   ADD_SUBDIRECTORY(openMVG_Samples)
 ENDIF (OpenMVG_BUILD_EXAMPLES)
 
-# Complete software build on openMVG
+# Complete software(s) build on openMVG libraries
 ADD_SUBDIRECTORY(software)
+
+# software(s) under patent or commercial licence
+# Included for research purpose only
+ADD_SUBDIRECTORY(nonFree)
 
 # ==============================================================================
 # Documentation
@@ -296,3 +352,60 @@ IF (EXISTS ${SPHINX_EXECUTABLE})
 ELSE (EXISTS ${SPHINX_EXECUTABLE})
   MESSAGE("Sphinx need to be installed to generate the documentation")
 ENDIF (EXISTS ${SPHINX_EXECUTABLE})
+
+
+# ==============================================================================
+# INSTALL RULES
+# ==============================================================================
+
+INSTALL(EXPORT openMVG-targets DESTINATION lib)
+INSTALL(EXPORT openMVG-targets
+        DESTINATION share/openMVG/cmake FILE OpenMVGTargets.cmake)
+
+#Adapt build include paths to install path
+SET(OpenMVG_INCLUDE_DIRS
+  "${OpenMVG_INCLUDE_DIRS}"
+  "${CMAKE_INSTALL_PREFIX}/include/openMVG")
+
+STRING(REGEX REPLACE
+  "${CMAKE_CURRENT_SOURCE_DIR}"
+  "${CMAKE_INSTALL_PREFIX}/include"
+  OpenMVG_INCLUDE_DIRS
+  "${OpenMVG_INCLUDE_DIRS}"
+)
+STRING(REGEX REPLACE
+  "third_party"
+  "openMVG/third_party"
+  OpenMVG_INCLUDE_DIRS
+  "${OpenMVG_INCLUDE_DIRS}"
+)
+STRING(REGEX REPLACE
+  "dependencies"
+  "openMVG_dependencies"
+  OpenMVG_INCLUDE_DIRS
+  "${OpenMVG_INCLUDE_DIRS}"
+)
+IF (OpenMVG_USE_INTERNAL_CERES)
+  STRING(REGEX REPLACE
+    "ceres-solver"
+    "ceres"
+    OpenMVG_INCLUDE_DIRS
+    "${OpenMVG_INCLUDE_DIRS}"
+  )
+  STRING(REGEX REPLACE
+    "internal/ceres/"
+    ""
+    OpenMVG_INCLUDE_DIRS
+    "${OpenMVG_INCLUDE_DIRS}"
+  )
+ENDIF(OpenMVG_USE_INTERNAL_CERES)
+
+# Create a OpenMVGConfig.cmake file. <name>Config.cmake files are searched by
+# FIND_PACKAGE() automatically. We configure that file so that we can put any
+# information we want in it, e.g. version numbers, include directories, etc.
+CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/cmakeFindModules/OpenMVGConfig.cmake.in"
+               "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake" @ONLY)
+
+INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake"
+        DESTINATION share/openMVG/cmake)
+

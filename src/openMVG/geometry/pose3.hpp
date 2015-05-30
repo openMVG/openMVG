@@ -13,7 +13,7 @@
 namespace openMVG {
 namespace geometry {
 
-// Define a 3D Pose as a 3D transform : [R|C] t = -RC
+// Define a 3D Pose as a 3D transform: [R|C] t = -RC
 class Pose3
 {
   protected:

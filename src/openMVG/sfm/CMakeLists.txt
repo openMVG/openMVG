@@ -17,8 +17,8 @@ FILE(GLOB_RECURSE REMOVEFILESUNITTEST *_test.hpp)
 list(REMOVE_ITEM sfm_files_header ${REMOVEFILESUNITTEST})
 
 ADD_LIBRARY(openMVG_sfm ${sfm_files_header} ${sfm_files_cpp})
-TARGET_LINK_LIBRARIES(openMVG_sfm ceres openMVG_multiview)
-INSTALL(TARGETS openMVG_sfm DESTINATION lib/)
+TARGET_LINK_LIBRARIES(openMVG_sfm ceres openMVG_multiview ${OPENMVG_LIBRARY_DEPENDENCIES})
+INSTALL(TARGETS openMVG_sfm DESTINATION lib EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG sfm_data_io "stlplus;openMVG_features;openMVG_sfm;${openMVG_linearProgramming}")
 UNIT_TEST(openMVG sfm_data_BA

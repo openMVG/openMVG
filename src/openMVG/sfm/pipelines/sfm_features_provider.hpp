@@ -15,14 +15,15 @@
 
 #include <memory>
 
-namespace openMVG{
+namespace openMVG {
+namespace sfm {
 
 /// Abstract PointFeature provider (read some feature and store them as PointFeature).
 /// Allow to load and return the features related to a view
 struct Features_Provider
 {
   /// PointFeature array per ViewId of the considered SfM_Data container
-  Hash_Map<IndexT, PointFeatures> feats_per_view;
+  Hash_Map<IndexT, features::PointFeatures> feats_per_view;
 
   // Load features related to a provided SfM_Data View container
   virtual bool load(
@@ -30,13 +31,13 @@ struct Features_Provider
     const std::string & feat_directory,
     std::unique_ptr<features::Image_describer>& image_describer)
   {
-    C_Progress_display my_progress_bar( sfm_data.getViews().size(),
+    C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- Features Loading -\n" );
     // Read for each view the corresponding features and store them as PointFeatures
     std::unique_ptr<features::Regions> regions;
     image_describer->Allocate(regions);
-    for (Views::const_iterator iter = sfm_data.getViews().begin();
-      iter != sfm_data.getViews().end(); ++iter, ++my_progress_bar)
+    for (Views::const_iterator iter = sfm_data.GetViews().begin();
+      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
       const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.get()->s_Img_path);
       const std::string basename = stlplus::basename_part(sImageName);
@@ -58,12 +59,12 @@ struct Features_Provider
     const std::string & feat_directory,
     std::unique_ptr<features::Regions>& region_type)
   {
-    C_Progress_display my_progress_bar( sfm_data.getViews().size(),
+    C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- Features Loading -\n" );
     // Read for each view the corresponding features and store them as PointFeatures
     std::unique_ptr<features::Regions> regions(region_type->EmptyClone());
-    for (Views::const_iterator iter = sfm_data.getViews().begin();
-      iter != sfm_data.getViews().end(); ++iter, ++my_progress_bar)
+    for (Views::const_iterator iter = sfm_data.GetViews().begin();
+      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
       const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.get()->s_Img_path);
       const std::string basename = stlplus::basename_part(sImageName);
@@ -82,12 +83,12 @@ struct Features_Provider
 
   /// Return the PointFeatures belonging to the View, if the view does not exist
   ///  it return an empty PointFeature array.
-  const PointFeatures & getFeatures(const IndexT & id_view) const
+  const features::PointFeatures & getFeatures(const IndexT & id_view) const
   {
     // Have an empty feature set in order to deal with non existing view_id
-    static const PointFeatures emptyFeats = PointFeatures();
+    static const features::PointFeatures emptyFeats = features::PointFeatures();
 
-    Hash_Map<IndexT, PointFeatures>::const_iterator it = feats_per_view.find(id_view);
+    Hash_Map<IndexT, features::PointFeatures>::const_iterator it = feats_per_view.find(id_view);
     if (it != feats_per_view.end())
       return it->second;
     else
@@ -95,6 +96,7 @@ struct Features_Provider
   }
 }; // Features_Provider
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_FEATURES_PROVIDER_HPP

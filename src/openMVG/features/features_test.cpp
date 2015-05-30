@@ -6,6 +6,7 @@
 
 #include "openMVG/features/features.hpp"
 using namespace openMVG;
+using namespace openMVG::features;
 
 #include "testing/testing.h"
 

@@ -68,7 +68,7 @@ int main( int argc, char **argv )
   // Harmonization process
   //---------------------------------------
 
-  openMVG::Timer timer;
+  openMVG::system::Timer timer;
 
   sMatchesDir = stlplus::folder_part(sMatchesFile);
   std::auto_ptr<ColorHarmonizationEngineGlobal> m_colorHarmonizeEngine(

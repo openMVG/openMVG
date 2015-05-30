@@ -15,7 +15,8 @@
 #include "third_party/htmlDoc/htmlDoc.hpp"
 #include "third_party/histogram/histogram.hpp"
 
-namespace openMVG{
+namespace openMVG {
+namespace sfm {
 
 /// Sequential SfM Pipeline Reconstruction Engine.
 class SequentialSfMReconstructionEngine : public ReconstructionEngine
@@ -48,7 +49,7 @@ public:
   /// Compute the initial 3D seed (First camera t=0; R=Id, second estimated by 5 point algorithm)
   bool MakeInitialPair3D(const Pair & initialPair);
 
-  void SetUnknownCameraType(const EINTRINSIC camType)
+  void SetUnknownCameraType(const cameras::EINTRINSIC camType)
   {
     _camType = camType;
   }
@@ -86,7 +87,7 @@ private:
 
   // Parameter
   Pair _initialpair;
-  EINTRINSIC _camType; // The camera type for the unknown cameras
+  cameras::EINTRINSIC _camType; // The camera type for the unknown cameras
 
   //-- Data provider
   Features_Provider  * _features_provider;
@@ -99,4 +100,6 @@ private:
   std::set<size_t> _set_remainingViewId;     // Remaining camera index that can be used for resection
 };
 
+} // namespace sfm
 } // namespace openMVG
+

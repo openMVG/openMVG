@@ -11,6 +11,7 @@
 #include <cereal/cereal.hpp> // Serialization
 
 namespace openMVG {
+namespace sfm {
 
 /// Define 3D-2D tracking data: 3D landmark with it's 2D observations
 struct Observation
@@ -68,6 +69,7 @@ struct Landmark
   }
 };
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_LANDMARK_HPP

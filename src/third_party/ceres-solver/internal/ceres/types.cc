@@ -338,6 +338,14 @@ bool IsSparseLinearAlgebraLibraryTypeAvailable(
 #endif
   }
 
+  if (type == EIGEN_SPARSE) {
+#ifdef CERES_USE_EIGEN_SPARSE
+    return true;
+#else
+    return false;
+#endif
+  }
+
   LOG(WARNING) << "Unknown sparse linear algebra library " << type;
   return false;
 }

@@ -7,8 +7,8 @@
 #ifndef OPENMVG_IMAGE_IMAGE_CONVOLUTION_BASE_HPP
 #define OPENMVG_IMAGE_IMAGE_CONVOLUTION_BASE_HPP
 
-namespace openMVG
-{
+namespace openMVG {
+namespace image {
   /**
    ** Filter an extended row [halfKernelSize][row][halfKernelSize]
    ** @param buffer data to filter
@@ -29,6 +29,7 @@ namespace openMVG
       buffer[i] = sum;
     }
   }
+} // namespace image
 } // namespace openMVG
 
 #endif // OPENMVG_IMAGE_IMAGE_CONVOLUTION_BASE_HPP

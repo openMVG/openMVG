@@ -11,7 +11,7 @@
 #include <set>
 
 namespace openMVG {
-namespace graphUtils  {
+namespace graph  {
 
 // Structure used to keep information of an image graph:
 //  - Build a graph (add nodes and connection between nodes)
@@ -24,12 +24,12 @@ struct indexedGraph
 
   GraphT g;
   map_Size_t_Node map_size_t_to_node; // Original image index to graph node
-  std::auto_ptr<map_NodeMapIndex> map_nodeMapIndex; // Association of data to graph Node
+  std::unique_ptr<map_NodeMapIndex> map_nodeMapIndex; // Association of data to graph Node
 
   template <typename IterablePairs>
   indexedGraph(const IterablePairs & pairs)
   {
-    map_nodeMapIndex = std::auto_ptr<map_NodeMapIndex>( new map_NodeMapIndex(g) );
+    map_nodeMapIndex.reset( new map_NodeMapIndex(g) );
 
     //A-- Compute the number of node we need
     std::set<IndexT> setNodes;
@@ -60,9 +60,36 @@ struct indexedGraph
       g.addEdge(map_size_t_to_node[i], map_size_t_to_node[j]);
     }
   }
+
+  /// Create a graph from node index and pairs (edges)
+  // /!\ pairs must contains valid nodes indexes
+  template <typename IterableNodes, typename IterablePairs>
+  indexedGraph(const IterableNodes & nodes, const IterablePairs & pairs)
+  {
+    map_nodeMapIndex.reset( new map_NodeMapIndex(g) );
+
+    //A-- Create a node graph for each element of the set
+    for (typename IterableNodes::const_iterator iter = nodes.begin();
+      iter != nodes.end();
+      ++iter)
+    {
+      map_size_t_to_node[*iter] = g.addNode();
+      (*map_nodeMapIndex) [map_size_t_to_node[*iter]] = *iter;
+    }
+
+    //B-- Add weighted edges from the pairs object
+    for (typename IterablePairs::const_iterator iter = pairs.begin();
+      iter != pairs.end();
+      ++iter)
+    {
+      const IndexT i = iter->first;
+      const IndexT j = iter->second;
+      g.addEdge(map_size_t_to_node[i], map_size_t_to_node[j]);
+    }
+  }
 };
 
-} // namespace graphUtils
+} // namespace graph
 } // namespace openMVG
 
 #endif // OPENMVG_GRAPH_BUILDER__H_

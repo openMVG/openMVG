@@ -36,6 +36,7 @@
 
 #include "ceres/ceres.h"
 
+#include <ctime>
 #include <vector>
 #include <set>
 #include <map>
@@ -129,8 +130,16 @@ bool solve_translations_problem(
   options.max_num_iterations = max_iterations;
   options.function_tolerance = function_tolerance;
   options.parameter_tolerance = parameter_tolerance;
-  options.linear_solver_type = ceres::ITERATIVE_SCHUR;
-  options.preconditioner_type = ceres::SCHUR_JACOBI;
+  if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE) ||
+      ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE) ||
+      ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+  {
+    options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+  }
+  else
+  {
+    options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
+  }
 
   Solver::Summary summary;
   Solve(options, &problem, &summary);

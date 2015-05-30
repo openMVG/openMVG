@@ -235,16 +235,16 @@ void GuidedMatching_Fundamental_Fast(
   IndMatches & vec_corresponding_index) // Ouput corresponding index
 {
   // Looking for the corresponding points that have
-  //  the satisfy:
-  //   1. an geometric distance below the provided Threshold
+  //  to satisfy:
+  //   1. a geometric distance below the provided Threshold
   //   2. a distance ratio between descriptors of valid geometric correspondencess
   //
   // - Cluster left point according their epipolar line border intersection.
   // - For each right point, compute threshold limited bandwidth and compare only
   //   points that belong to this range (limited buckets).
 
-  const PointFeatures r_pt = rRegions->GetRegionsPositions();
-  const PointFeatures l_pt = lRegions->GetRegionsPositions();
+  const features::PointFeatures r_pt = rRegions->GetRegionsPositions();
+  const features::PointFeatures l_pt = lRegions->GetRegionsPositions();
 
   MetricT metric;
 

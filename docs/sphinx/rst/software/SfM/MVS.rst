@@ -55,6 +55,11 @@ Export to MVE (Multi-View Environment)
   
 You will need to compile MVE tools and `FSSR <http://www.gris.informatik.tu-darmstadt.de/projects/floating-scale-surface-reco/>`_.
 
+Export to MVS Texturing
+=======================
+
+If you don't want to use the full MVE pipeline but only `MVS Texturing <http://www.gris.tu-darmstadt.de/projects/mvs-texturing/>`_ [Waechter2014]_ to project a set of oriented images on a mesh, one solution is to use the openMVG_main_openMVG2MVSTEXTURING binary. This binary converts your SfM_Data file into one format used by MVS Texturing. In addition, you may need to undistort your images with openMVG_main_ExportUndistortedImages as it's not handled by the openMVG_main_openMVG2MVSTEXTURING tool.
+
 Export to CMPMVS
 ========================
 

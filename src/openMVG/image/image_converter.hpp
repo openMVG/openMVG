@@ -11,6 +11,7 @@
 #include "openMVG/image/pixel_types.hpp"
 
 namespace openMVG{
+namespace image {
 
 template<typename T>
 // The factor comes from http://www.easyrgb.com/
@@ -116,6 +117,7 @@ static void rgbFloat2rgbInt(
       convertFloatToInt( imaIn( j, i ), (*imaOut)( j, i ), factor  );
 }
 
+} // namespace image
 } // namespace openMVG
 
 #endif  // OPENMVG_IMAGE_IMAGE_CONVERTER_HPP

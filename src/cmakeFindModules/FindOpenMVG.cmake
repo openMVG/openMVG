@@ -15,7 +15,7 @@
 
 MESSAGE(STATUS "Looking for OpenMVG.")
 
-FIND_PATH(OPENMVG_INCLUDE_DIR openMVG/version.h
+FIND_PATH(OPENMVG_INCLUDE_DIR openMVG/version.hpp
   HINTS
   $ENV{OPENMVG_DIR}/include
   ${OPENMVG_DIR}/include

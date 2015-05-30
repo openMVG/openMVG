@@ -8,6 +8,7 @@
 #define OPENMVG_SFM_GLOBAL_REINDEX_HPP
 
 namespace openMVG {
+namespace sfm{
 
 /// Association of Ids to a contiguous set of Ids
 template<typename IterablePairs, typename PairValueType>
@@ -45,6 +46,7 @@ void reindex(
   }
 }
 
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_GLOBAL_REINDEX_HPP

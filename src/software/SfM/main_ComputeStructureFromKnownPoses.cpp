@@ -13,6 +13,7 @@
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 using namespace openMVG;
+using namespace openMVG::sfm;
 
 /// Build a list of pair from the camera frusta intersections
 Pair_Set BuildPairsFromFrustumsIntersections(
@@ -110,7 +111,7 @@ int main(int argc, char **argv)
   std::set<IndexT> valid_viewIdx = Get_Valid_Views(sfm_data);
   pairs = Pair_filter(pairs, valid_viewIdx);
 
-  openMVG::Timer timer;
+  openMVG::system::Timer timer;
 
   //------------------------------------------
   // Compute Structure from known camera poses
@@ -121,7 +122,7 @@ int main(int argc, char **argv)
 
   std::cout << "\nStructure estimation took (s): " << timer.elapsed() << "." << std::endl;
 
-  std::cout << "#landmark found: " << sfm_data.getLandmarks().size() << std::endl;
+  std::cout << "#landmark found: " << sfm_data.GetLandmarks().size() << std::endl;
 
   if (stlplus::extension_part(sOutFile) != "ply") {
     Save(sfm_data,

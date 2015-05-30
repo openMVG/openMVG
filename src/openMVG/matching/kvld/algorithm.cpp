@@ -12,7 +12,7 @@ the terms of the BSD license (see the COPYING file).
 
 #include "algorithm.h"
 
-IntegralImages::IntegralImages( const openMVG::Image< float >& I )
+IntegralImages::IntegralImages(const openMVG::image::Image< float >& I)
 {
   map.resize( I.Width() + 1, I.Height() + 1 );
   map.fill( 0 );
@@ -25,9 +25,10 @@ IntegralImages::IntegralImages( const openMVG::Image< float >& I )
   }
 }
 
-float getRange( const openMVG::Image< float >& I,
-                int a,
-                const float p )
+float getRange(
+  const openMVG::image::Image< float >& I,
+  int a,
+  const float p )
 {
   float range = sqrt( float( 3.f * I.Height() * I.Width() ) / ( p * a * PI_ ) );
   return range;
@@ -36,7 +37,7 @@ float getRange( const openMVG::Image< float >& I,
 
 //=============================IO interface======================//
 
-std::ofstream& writeDetector( std::ofstream& out, const openMVG::SIOPointFeature& feature )
+std::ofstream& writeDetector( std::ofstream& out, const openMVG::features::SIOPointFeature& feature )
 {
   out << feature.x() << " "
     << feature.y() << " "
@@ -45,7 +46,7 @@ std::ofstream& writeDetector( std::ofstream& out, const openMVG::SIOPointFeature
   return out;
 }
 
-std::ifstream& readDetector( std::ifstream& in, openMVG::SIOPointFeature& point )
+std::ifstream& readDetector( std::ifstream& in, openMVG::features::SIOPointFeature& point )
 {
   in >> point.x()
     >> point.y()

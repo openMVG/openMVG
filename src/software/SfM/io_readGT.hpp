@@ -17,6 +17,8 @@
 namespace openMVG
 {
 
+using namespace openMVG::cameras;
+
 static bool read_openMVG_Camera(const std::string & camName, PinholeCamera & cam)
 {
   std::vector<double> val;

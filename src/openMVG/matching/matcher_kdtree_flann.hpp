@@ -122,7 +122,11 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
       flann::Matrix<int> indices(indicePTR, nbQuery, NN);
       flann::Matrix<DistanceType> dists(distancePTR, nbQuery, NN);
       // do a knn search, using 128 checks
-      _index->knnSearch(queries, indices, dists, NN, flann::SearchParams(128));
+      flann::SearchParams params(128);
+#ifdef OPENMVG_USE_OPENMP
+      params.cores = omp_get_max_threads();
+#endif
+      _index->knnSearch(queries, indices, dists, NN, params);
       return true;
     }
     else  {

@@ -20,6 +20,7 @@
 namespace openMVG {
 
 using namespace openMVG::matching;
+using namespace openMVG::features;
 
 Matcher_Regions_AllInMemory::Matcher_Regions_AllInMemory(
   float distRatio, EMatcherType eMatcherType)
@@ -93,9 +94,15 @@ void Template_Matcher(
     iter != map_Pairs.end(); ++iter)
   {
     const size_t I = iter->first;
+    const std::vector<size_t> & indexToCompare = iter->second;
 
     const features::Regions *regionsI = regions_perImage.at(I).get();
     const size_t regions_countI = regionsI->RegionCount();
+    if(regions_countI == 0)
+    {
+      my_progress_bar += indexToCompare.size();
+      continue;
+    }
     const std::vector<PointFeature> pointFeaturesI = regionsI->GetRegionsPositions();
     const typename MatcherT::ScalarT * tabI =
       reinterpret_cast<const typename MatcherT::ScalarT *>(regionsI->DescriptorRawData());
@@ -103,16 +110,16 @@ void Template_Matcher(
     MatcherT matcher10;
     ( matcher10.Build(tabI, regions_countI, regionsI->DescriptorLength()) );
 
-    const std::vector<size_t> & indexToCompare = iter->second;
-#ifdef OPENMVG_USE_OPENMP
-#pragma omp parallel for schedule(dynamic)
-#endif
-    for (int j = 0; j < (int)indexToCompare.size(); ++j)
+    for (int j = 0; j < (int)indexToCompare.size(); ++j, ++my_progress_bar)
     {
       const size_t J = indexToCompare[j];
 
       const features::Regions *regionsJ = regions_perImage.at(J).get();
       const size_t regions_countJ = regionsJ->RegionCount();
+      if(regions_countJ == 0)
+      {
+        continue;
+      }
       const typename MatcherT::ScalarT * tabJ =
         reinterpret_cast<const typename MatcherT::ScalarT *>(regionsJ->DescriptorRawData());
 
@@ -146,15 +153,9 @@ void Template_Matcher(
       IndMatchDecorator<float> matchDeduplicator(vec_FilteredMatches, pointFeaturesI, pointFeaturesJ);
       matchDeduplicator.getDeduplicated(vec_FilteredMatches);
 
-#ifdef OPENMVG_USE_OPENMP
-#pragma omp critical
-#endif
+      if (!vec_FilteredMatches.empty())
       {
-        ++my_progress_bar;
-        if (!vec_FilteredMatches.empty())
-        {
-          map_PutativesMatches.insert( make_pair( make_pair(I,J), vec_FilteredMatches ));
-        }
+        map_PutativesMatches.insert( make_pair( make_pair(I,J), std::move(vec_FilteredMatches) ));
       }
     }
   }

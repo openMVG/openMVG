@@ -18,6 +18,6 @@ ADD_LIBRARY(openMVG_matching_image_collection
   ${matching_collection_images_files_header}
   ${matching_collection_images_files_cpp})
 SET_PROPERTY(TARGET openMVG_matching_image_collection PROPERTY FOLDER OpenMVG)
-INSTALL(TARGETS openMVG_matching_image_collection DESTINATION lib/)
+INSTALL(TARGETS openMVG_matching_image_collection DESTINATION lib EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG Pair_Builder "")

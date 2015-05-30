@@ -9,13 +9,15 @@
 #include "openMVG/sfm/sfm.hpp"
 #include "openMVG/types.hpp"
 #include "openMVG/geometry/half_space_intersection.hpp"
-using namespace openMVG;
-using namespace openMVG::geometry;
-using namespace openMVG::geometry::halfPlane;
 
 #include <fstream>
 
 namespace openMVG {
+namespace sfm {
+
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
+using namespace openMVG::geometry::halfPlane;
 
 // Constructor
 Frustum_Filter::Frustum_Filter(const SfM_Data & sfm_data,
@@ -34,15 +36,15 @@ void Frustum_Filter::initFrustum(const SfM_Data & sfm_data)
   for (NearFarPlanesT::const_iterator it = z_near_z_far_perView.begin();
       it != z_near_z_far_perView.end(); ++it)
   {
-    const View * view = sfm_data.getViews().at(it->first).get();
-    Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
-    Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
+    const View * view = sfm_data.GetViews().at(it->first).get();
+    if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+      continue;
+    Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
+    if (!isPinhole(iterIntrinsic->second.get()->getType()))
+      continue;
 
-    if (iterPose == sfm_data.getPoses().end() ||
-      iterIntrinsic == sfm_data.getIntrinsics().end())
-    continue;
+    const Pose3 pose = sfm_data.GetPoseOrDie(view);
 
-    const Pose3 & pose = iterPose->second;
     const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic->second.get());
     if (cam == NULL)
       continue;
@@ -70,7 +72,7 @@ Pair_Set Frustum_Filter::getFrustumIntersectionPairs() const
   std::vector<IndexT> viewIds;
   viewIds.reserve(z_near_z_far_perView.size());
   std::transform(z_near_z_far_perView.begin(), z_near_z_far_perView.end(),
-    std::back_inserter(viewIds), std::RetrieveKey());
+    std::back_inserter(viewIds), stl::RetrieveKey());
 
   C_Progress_display my_progress_bar(
     viewIds.size() * (viewIds.size()-1)/2,
@@ -188,8 +190,8 @@ void Frustum_Filter::init_z_near_z_far_depth(const SfM_Data & sfm_data,
   const bool bComputed_Z = (zNear == -1. && zFar == -1.) && !sfm_data.structure.empty();
   if (bComputed_Z)  // Compute the near & far planes from the structure and view observations
   {
-    for (Landmarks::const_iterator itL = sfm_data.getLandmarks().begin();
-      itL != sfm_data.getLandmarks().end(); ++itL)
+    for (Landmarks::const_iterator itL = sfm_data.GetLandmarks().begin();
+      itL != sfm_data.GetLandmarks().end(); ++itL)
     {
       const Landmark & landmark = itL->second;
       const Vec3 & X = landmark.X;
@@ -198,13 +200,12 @@ void Frustum_Filter::init_z_near_z_far_depth(const SfM_Data & sfm_data,
       {
         const IndexT id_view = iterO->first;
         const Observation & ob = iterO->second;
-        const View * view = sfm_data.getViews().at(id_view).get();
-        Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
-        Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
-        if (iterPose == sfm_data.getPoses().end() || iterIntrinsic == sfm_data.getIntrinsics().end())
+        const View * view = sfm_data.GetViews().at(id_view).get();
+        if (!sfm_data.IsPoseAndIntrinsicDefined(view))
           continue;
 
-        const Pose3 & pose = iterPose->second;
+        Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
+        const Pose3 pose = sfm_data.GetPoseOrDie(view);
         const double z = pose.depth(X);
         NearFarPlanesT::iterator itZ = z_near_z_far_perView.find(id_view);
         if (itZ != z_near_z_far_perView.end())
@@ -223,19 +224,17 @@ void Frustum_Filter::init_z_near_z_far_depth(const SfM_Data & sfm_data,
   else
   {
     // Init the same near & far limit for all the valid views
-    for (Views::const_iterator it = sfm_data.getViews().begin();
-    it != sfm_data.getViews().end(); ++it)
+    for (Views::const_iterator it = sfm_data.GetViews().begin();
+    it != sfm_data.GetViews().end(); ++it)
     {
       const View * view = it->second.get();
-      Poses::const_iterator iterPose = sfm_data.getPoses().find(view->id_pose);
-      Intrinsics::const_iterator iterIntrinsic = sfm_data.getIntrinsics().find(view->id_intrinsic);
-
-      if (iterPose == sfm_data.getPoses().end() || iterIntrinsic == sfm_data.getIntrinsics().end())
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
         continue;
       z_near_z_far_perView[view->id_view] = std::make_pair(zNear, zFar);
     }
   }
 }
 
-}; // namespace openMVG
+} // namespace sfm
+} // namespace openMVG
 

@@ -19,6 +19,7 @@
 #include <cstdlib>
 
 using namespace openMVG;
+using namespace openMVG::sfm;
 
 int main(int argc, char **argv)
 {
@@ -126,7 +127,7 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
   // Assert that GT and loaded scene have the same camera count
-  if (map_Cam_gt.size() != sfm_data.getPoses().size())
+  if (map_Cam_gt.size() != sfm_data.GetPoses().size())
   {
     std::cerr << std::endl
       << "There is missing camera in the loaded scene." << std::endl;
@@ -134,7 +135,7 @@ int main(int argc, char **argv)
   }
 
   // Prepare data for comparison (corresponding camera centers and rotations)
-  Poses::const_iterator iter_loaded_poses = sfm_data.getPoses().begin();
+  Poses::const_iterator iter_loaded_poses = sfm_data.GetPoses().begin();
   std::vector<Vec3> vec_camPosGT, vec_C;
   std::vector<Mat3> vec_camRotGT, vec_camRot;
   for(std::map< size_t, PinholeCamera>::const_iterator iterGT = map_Cam_gt.begin();

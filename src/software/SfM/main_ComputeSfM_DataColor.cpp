@@ -14,6 +14,8 @@
 #include <vector>
 
 using namespace openMVG;
+using namespace openMVG::image;
+using namespace openMVG::sfm;
 
 /// Find the color of the SfM_Data Landmarks/structure
 void ColorizeTracks(
@@ -26,18 +28,18 @@ void ColorizeTracks(
   //    and iterate to provide a color to each 3D point
 
   {
-    C_Progress_display my_progress_bar(sfm_data.getLandmarks().size(),
+    C_Progress_display my_progress_bar(sfm_data.GetLandmarks().size(),
                                        std::cout,
                                        "\nCompute scene structure color\n");
 
-    vec_tracksColor.resize(sfm_data.getLandmarks().size());
-    vec_3dPoints.resize(sfm_data.getLandmarks().size());
+    vec_tracksColor.resize(sfm_data.GetLandmarks().size());
+    vec_3dPoints.resize(sfm_data.GetLandmarks().size());
 
     //Build a list of contiguous index for the trackIds
     std::map<IndexT, IndexT> trackIds_to_contiguousIndexes;
     IndexT cpt = 0;
-    for (Landmarks::const_iterator it = sfm_data.getLandmarks().begin();
-      it != sfm_data.getLandmarks().end(); ++it, ++cpt)
+    for (Landmarks::const_iterator it = sfm_data.GetLandmarks().begin();
+      it != sfm_data.GetLandmarks().end(); ++it, ++cpt)
     {
       trackIds_to_contiguousIndexes[it->first] = cpt;
       vec_3dPoints[cpt] = it->second.X;
@@ -45,9 +47,9 @@ void ColorizeTracks(
 
     // The track list that will be colored (point removed during the process)
     std::set<IndexT> remainingTrackToColor;
-    std::transform(sfm_data.getLandmarks().begin(), sfm_data.getLandmarks().end(),
+    std::transform(sfm_data.GetLandmarks().begin(), sfm_data.GetLandmarks().end(),
       std::inserter(remainingTrackToColor, remainingTrackToColor.begin()),
-      RetrieveKey() );
+      stl::RetrieveKey());
 
     while( !remainingTrackToColor.empty() )
     {
@@ -62,7 +64,7 @@ void ColorizeTracks(
         ++iterT)
       {
         const size_t trackId = *iterT;
-        const Observations & obs = sfm_data.getLandmarks().at(trackId).obs;
+        const Observations & obs = sfm_data.GetLandmarks().at(trackId).obs;
         for( Observations::const_iterator iterObs = obs.begin();
           iterObs != obs.end(); ++iterObs)
         {
@@ -79,8 +81,8 @@ void ColorizeTracks(
       std::transform(map_IndexCardinal.begin(),
         map_IndexCardinal.end(),
         std::back_inserter(vec_cardinal),
-        RetrieveValue());
-      using namespace indexed_sort;
+        stl::RetrieveValue());
+      using namespace stl::indexed_sort;
       std::vector< sort_index_packet_descend< IndexT, IndexT> > packet_vec(vec_cardinal.size());
       sort_index_helper(packet_vec, &vec_cardinal[0], 1);
 
@@ -88,7 +90,7 @@ void ColorizeTracks(
       std::map<IndexT, IndexT>::const_iterator iterTT = map_IndexCardinal.begin();
       std::advance(iterTT, packet_vec[0].index);
       const size_t view_index = iterTT->first;
-      const View * view = sfm_data.getViews().at(view_index).get();
+      const View * view = sfm_data.GetViews().at(view_index).get();
       const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
         view->s_Img_path);
       Image<RGBColor> image;
@@ -103,7 +105,7 @@ void ColorizeTracks(
         ++iterT)
       {
         const size_t trackId = *iterT;
-        const Observations & obs = sfm_data.getLandmarks().at(trackId).obs;
+        const Observations & obs = sfm_data.GetLandmarks().at(trackId).obs;
         Observations::const_iterator it = obs.find(view_index);
 
         if (it != obs.end())
@@ -130,7 +132,7 @@ void ColorizeTracks(
 /// Export camera poses positions as a Vec3 vector
 void GetCameraPositions(const SfM_Data & sfm_data, std::vector<Vec3> & vec_camPosition)
 {
-  const Poses & poses = sfm_data.getPoses();
+  const Poses & poses = sfm_data.GetPoses();
   for (Poses::const_iterator iterPose = poses.begin();
     iterPose != poses.end(); ++iterPose)
   {
