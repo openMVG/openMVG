@@ -6,7 +6,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-# Config file for OpenMVG libary - Find OpenMVG & dependencies.
+# Config file for OpenMVG library - Find OpenMVG & dependencies.
 #
 # This file is used by CMake when FIND_PACKAGE( OpenMVG ) is invoked (and
 # the directory containing this file is present in CMAKE_MODULE_PATH).
@@ -86,7 +86,7 @@ ENDIF (NOT EXISTS ${CURRENT_ROOT_INSTALL_DIR}/include/openMVG/version.hpp)
 
 # Set the include directories for OpenMVG (itself) and all (potentially optional)
 # dependencies with which OpenMVG was compiled.
-SET(OPENMVG_INCLUDE_DIRS @OpenMVG_INCLUDE_DIRS@)
+SET(OPENMVG_INCLUDE_DIRS "@OpenMVG_INCLUDE_DIRS@")
 
 ##### the libraries themselves come in via OpenMVGTargets-<release/debug>.cmake
 # as link libraries rules as target.
