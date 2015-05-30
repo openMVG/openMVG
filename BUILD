@@ -122,14 +122,27 @@ Using openCV sample
  Add -DOpenMVG_USE_OPENCV=ON to your cmake command line and set OpenCV_DIR variable to your openCV build directory
 => i.e.: -DOpenCV_DIR="/home/user/Dev/github/itseez/opencv_Build" -DOpenMVG_USE_OPENCV=ON
  
-------------------------------------
-Using as library dependency in cmake
-------------------------------------
+------------------------------------------------------------
+Using OpenMVG as a third party library dependency in cmake
+-------------------------------------------------------------
 
-Adding following lines to your CMakeLists.txt should provide OpenMVG usable as
-static library:
+OpenMVG can be used as a third party once it have been installed.
+Because it can use it's own ceres version, it's better to install it locally and not in system files.
+So please consider using the CMAKE_INSTALL_PREFIX cmake variable to specify a local installation directory.
 
- add_subdirectory(openMVG/src)
- include_directories(${OpenMVG_INCLUDE_DIRS})
- target_link_libraries(target ${OpenMVG_LIBRARIES})
+Here the syntax to add the variable to the cmake command line:
+-DCMAKE_INSTALL_PREFIX:STRING="./openMVG_install"
 
+Perform "make" and "make install"
+
+Once the library has been installed, go to your project that want use OpenMVG as an external library and add:
+
+FIND_PACKAGE(OpenMVG REQUIRED)
+INCLUDE_DIRECTORIES(${OPENMVG_INCLUDE_DIRS})
+ADD_EXECUTABLE(main main.cpp)
+TARGET_LINK_LIBRARIES(main ${OPENMVG_LIBRARIES})
+
+Specify to CMAKE where OpenMVG have been installed by using the cmake OpenMVG_DIR variable that must point to:
+-DOpenMVG_DIR:STRING="YourInstallPath"/share/openMVG/cmake
+
+A message will be displayed if OpenMVG is found or not at the cmake configure step.
