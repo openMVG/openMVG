@@ -86,7 +86,7 @@ or cite it as:
 ```
   @misc{openMVG,
     author = "Pierre Moulon and Pascal Monasse and Renaud Marlet and Others",
-     title = "OpenMVG",
+     title = "OpenMVG. An Open Multiple View Geometry library.",
     howpublished = "\url{https://github.com/openMVG/openMVG}",
   }
 ```
