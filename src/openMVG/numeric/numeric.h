@@ -270,7 +270,7 @@ namespace openMVG {
       res.resize(lhs.rows(), lhs.cols()+rhs.cols());
       res << lhs, rhs;
       return res;
-  };
+  }
 
 
   template<typename Derived1, typename Derived2>
@@ -298,7 +298,7 @@ namespace openMVG {
       res.resize(lhs.rows()+rhs.rows(), lhs.cols());
       res << lhs, rhs;
       return res;
-  };
+  }
 #undef SUM_OR_DYNAMIC
 
   template<typename TMat>

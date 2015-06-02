@@ -41,8 +41,8 @@ class Pinhole_Intrinsic : public IntrinsicBase
   const Mat3& K() const { return _K; }
   const Mat3& Kinv() const { return _Kinv; }
   /// Return the value of the focal in pixels
-  inline const double focal() const {return _K(0,0);}
-  inline const Vec2 principal_point() const {return Vec2(_K(0,2), _K(1,2));}
+  inline double focal() const {return _K(0,0);}
+  inline Vec2 principal_point() const {return Vec2(_K(0,2), _K(1,2));}
 
   // Get bearing vector of p point (image coord)
   Vec3 operator () (const Vec2& p) const

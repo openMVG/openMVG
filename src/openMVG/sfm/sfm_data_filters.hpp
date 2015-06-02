@@ -181,7 +181,6 @@ static bool eraseObservationsWithMissingPoses(SfM_Data & sfm_data, const IndexT 
 {
   IndexT removed_elements = 0;
 
-  const Landmarks & landmarks = sfm_data.structure;
   std::set<IndexT> pose_Index;
   std::transform(sfm_data.poses.begin(), sfm_data.poses.end(),
     std::inserter(pose_Index, pose_Index.begin()), stl::RetrieveKey());

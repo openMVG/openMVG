@@ -113,7 +113,7 @@ struct IntrinsicBase
   /// Generate an unique Hash from the camera parameters (used for grouping)
   virtual std::size_t hashValue() const
   {
-    size_t seed;
+    size_t seed = 0;
     stl::hash_combine(seed, static_cast<int>(this->getType()));
     stl::hash_combine(seed, _w);
     stl::hash_combine(seed, _h);

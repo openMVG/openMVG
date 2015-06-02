@@ -60,7 +60,7 @@ namespace indexed_sort
         packet_vec.end());
   }
 
-}; // namespace indexed_sort
-}; // namespace stl
+} // namespace indexed_sort
+} // namespace stl
 
 #endif  // OPENMVG_STL_INDEXED_SORT_H

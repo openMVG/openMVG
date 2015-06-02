@@ -87,8 +87,6 @@ static bool Generate_SfM_Report
   {
     const View * v = iterV->second.get();
     const IndexT id_view = v->id_view;
-    const IndexT id_intrinsic = v->id_intrinsic;
-    const IndexT id_pose = v->id_pose;
 
     os.str("");
     os << sRowBegin

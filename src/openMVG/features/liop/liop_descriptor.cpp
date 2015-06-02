@@ -321,7 +321,6 @@ void Liop_Descriptor_Extractor::extract(
   image::Image<unsigned char> flagPatch(outPatchWidth, outPatchWidth, true, 0);
 
   // pointer alias
-  const unsigned char * img_data = I.GetMat().data();
   unsigned char * flagPatch_data = flagPatch.data();
   float * outPatch_data = outPatch.data();
 

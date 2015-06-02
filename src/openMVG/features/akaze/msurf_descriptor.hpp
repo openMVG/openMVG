@@ -50,9 +50,9 @@ namespace features {
     Real rx = 0, ry = 0, rrx = 0, rry = 0, xf = 0, yf = 0, ys = 0, xs = 0;
     Real sample_x = 0, sample_y = 0, co = 0, si = 0, angle = 0;
     Real ratio = 0;
-    int x1 = 0, y1 = 0, x2 = 0, y2 = 0, sample_step = 0, pattern_size = 0;
+    int sample_step = 0, pattern_size = 0;
     int kx = 0, ky = 0, i = 0, j = 0, dcount = 0;
-    int scale = 0, dsize = 0, level = 0;
+    int scale = 0, dsize = 0;
 
     // Subregion centers for the 4x4 gaussian weighting
     Real cx = - static_cast<Real>( 0.5 ) , cy = static_cast<Real>( 0.5 ) ;

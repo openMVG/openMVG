@@ -256,6 +256,6 @@ namespace htmlDocument
     std::ostringstream stream;
     size_t cpt; //increment for variable
   };
-};
+} // namespace htmlDocument
 
 #endif // MIMATTE_HTML_DOC_H

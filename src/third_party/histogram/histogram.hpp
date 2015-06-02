@@ -110,9 +110,9 @@ public:
     return vec_XbinValue;
   }
   // Get start
-  const double GetStart() const {return Start;}
+  double GetStart() const {return Start;}
   // Get End
-  const double GetEnd() const {return End;}
+  double GetEnd() const {return End;}
 
   // Text display of the histogram
   std::string ToString(const std::string & sTitle = "") const
