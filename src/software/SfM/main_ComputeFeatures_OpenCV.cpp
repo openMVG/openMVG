@@ -154,9 +154,9 @@ int main(int argc, char **argv)
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--input_file]: a SfM_Data file \n"
-      << "[-o|--outdir path] \n"
+      << "[-o|--outdir] path \n"
       << "\n[Optional]\n"
-      << "[-f|--force: Force to recompute data]\n"
+      << "[-f|--force] Force to recompute data\n"
       << std::endl;
 
       std::cerr << s << std::endl;

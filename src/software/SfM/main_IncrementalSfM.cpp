@@ -86,15 +86,15 @@ int main(int argc, char **argv)
     << "[-i|--input_file] path to a SfM_Data scene\n"
     << "[-m|--matchdir] path to the matches that corresponds to the provided SfM_Data scene\n"
     << "[-o|--outdir] path where the output data will be stored\n"
-    << "[-a|--initialPairA NAME] \n"
-    << "[-b|--initialPairB NAME] \n"
+    << "[-a|--initialPairA] NAME \n"
+    << "[-b|--initialPairB] NAME \n"
     << "[-c|--camera_model] Camera model type for view with unknown intrinsic:\n"
       << "\t 1: Pinhole \n"
       << "\t 2: Pinhole radial 1\n"
       << "\t 3: Pinhole radial 3 (default)\n"
-    << "[-f|--refineIntrinsics \n"
+    << "[-f|--refineIntrinsics] \n"
     << "\t 0-> intrinsic parameters are kept as constant\n"
-    << "\t 1-> refine intrinsic parameters (default).] \n"
+    << "\t 1-> refine intrinsic parameters (default). \n"
     << std::endl;
 
     std::cerr << s << std::endl;

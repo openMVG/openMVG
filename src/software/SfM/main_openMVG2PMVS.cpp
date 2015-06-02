@@ -316,11 +316,11 @@ int main(int argc, char *argv[]) {
       cmd.process(argc, argv);
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
-      << "[-i|--sfmdata filename, the SfM_Data file to convert]\n"
+      << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
       << "[-o|--outdir path]\n"
-      << "[-r|--resolution: divide image coefficient]\n"
+      << "[-r|--resolution] divide image coefficient\n"
       << "[-c|--nb core]\n"
-      << "[-v|--useVisData use visibility information]"
+      << "[-v|--useVisData] use visibility information."
       << std::endl;
 
       std::cerr << s << std::endl;

@@ -35,8 +35,8 @@ int main(int argc, char *argv[]) {
     std::cerr
       << "Export undistorted images related to a sfm_data file.\n"
       << "Usage: " << argv[0] << '\n'
-      << "[-i|--sfmdata filename, the SfM_Data file to convert]\n"
-      << "[-o|--outdir path]\n"
+      << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
+      << "[-o|--outdir] path\n"
       << std::endl;
 
       std::cerr << s << std::endl;

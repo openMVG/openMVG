@@ -86,28 +86,28 @@ int main(int argc, char **argv)
       cmd.process(argc, argv);
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
-      << "[-i|--input_file]: a SfM_Data file\n"
-      << "[-o|--out_dir path]\n"
+      << "[-i|--input_file] a SfM_Data file\n"
+      << "[-o|--out_dir path] output path where computed are stored\n"
       << "\n[Optional]\n"
-      << "[-f|--force: Force to recompute data]\n"
-      << "[-r|--ratio Distance ratio to discard non meaningful matches\n"
-      << "   0.6 typical value (you can use 0.8 to have more matches)]\n"
-      << "[-g|--geometricModel\n"
+      << "[-f|--force] Force to recompute data]\n"
+      << "[-r|--ratio] Distance ratio to discard non meaningful matches\n"
+      << "   0.6: (default); you can use 0.8 to have more matches.\n"
+      << "[-g|--geometricModel]\n"
       << "  (pairwise correspondences filtering thanks to robust model estimation):\n"
-      << "   f: fundamental matrix,\n"
+      << "   f: (default) fundamental matrix,\n"
       << "   e: essential matrix,\n"
-      << "   h: homography matrix]\n"
-      << "[-v|--videoModeMatching\n"
+      << "   h: homography matrix.\n"
+      << "[-v|--videoModeMatching]\n"
       << "  (sequence matching with an overlap of X images)\n"
       << "   X: with match 0 with (1->X), ...]\n"
       << "   2: will match 0 with (1,2), 1 with (2,3), ...\n"
-      << "   3: will match 0 with (1,2,3), 1 with (2,3,4), ...]\n"
-      << "[-l]--pairList file\n"
-      << "[-n|--nearestMatchingMethod\n"
+      << "   3: will match 0 with (1,2,3), 1 with (2,3,4), ...\n"
+      << "[-l]--pairList] file\n"
+      << "[-n|--nearestMatchingMethod]\n"
       << "  AUTO: auto choice from regions type,\n"
       << "  BRUTEFORCEL2: BruteForce L2 matching for Scalar based regions descriptor,\n"
       << "  BRUTEFORCEHAMMING: BruteForce Hamming matching for binary based regions descriptor,\n"
-      << "  ANNL2: Approximate Nearest Neighbor L2 matching for Scalar based regions descriptor.]\n"
+      << "  ANNL2: Approximate Nearest Neighbor L2 matching for Scalar based regions descriptor.\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
     }
   }
 
-  if (sMatchesDirectory.empty())  {
+  if (sMatchesDirectory.empty() || !stlplus::is_folder(sMatchesDirectory))  {
     std::cerr << "\nIt is an invalid output directory" << std::endl;
     return EXIT_FAILURE;
   }

@@ -71,21 +71,21 @@ int main(int argc, char **argv)
       cmd.process(argc, argv);
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
-      << "[-i|--input_file]: a SfM_Data file \n"
+      << "[-i|--input_file] a SfM_Data file \n"
       << "[-o|--outdir path] \n"
       << "\n[Optional]\n"
-      << "[-f|--force: Force to recompute data]\n"
-      << "[-m|--describerMethod\n"
+      << "[-f|--force] Force to recompute data\n"
+      << "[-m|--describerMethod]\n"
       << "  (method to use to describe an image):\n"
       << "   SIFT (default),\n"
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
-      << "   AKAZE_MLDB:  AKAZE with binary descriptors]\n"
+      << "   AKAZE_MLDB:  AKAZE with binary descriptors\n"
       << "[-u|--upright] Use Upright feature 0 or 1\n"
-      << "[-p|--describerPreset\n"
+      << "[-p|--describerPreset]\n"
       << "  (used to control the Image_describer configuration):\n"
       << "   NORMAL (default),\n"
       << "   HIGH,\n"
-      << "   ULTRA: !!Can take long time!!]\n"
+      << "   ULTRA: !!Can take long time!!\n"
       << std::endl;
 
       std::cerr << s << std::endl;

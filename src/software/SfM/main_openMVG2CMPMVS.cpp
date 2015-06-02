@@ -231,8 +231,8 @@ int main(int argc, char *argv[]) {
       cmd.process(argc, argv);
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
-      << "[-i|--sfmdata filename, the SfM_Data file to convert]\n"
-      << "[-o|--outdir path]\n"
+      << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
+      << "[-o|--outdir] path\n"
       << std::endl;
 
       std::cerr << s << std::endl;
