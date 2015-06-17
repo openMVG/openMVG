@@ -167,11 +167,17 @@ IF(OpenMVG_USE_OPENCV)
 
     ADD_EXECUTABLE(openMVG_main_ComputeFeatures_OpenCV
       main_ComputeFeatures_OpenCV.cpp)
+    IF(OpenMVG_USE_OCVSIFT)
+        TARGET_COMPILE_DEFINITIONS(openMVG_main_ComputeFeatures_OpenCV
+                                   PUBLIC
+                                   -DUSE_OCVSIFT)
+    ENDIF(OpenMVG_USE_OCVSIFT)
     TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures_OpenCV
                           ${OpenMVG_LIBRARIES}
                           ${OpenCV_LIBS})
 
     SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY FOLDER OpenMVG/software)
+    SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
     INSTALL(TARGETS openMVG_main_ComputeFeatures_OpenCV DESTINATION bin/)
 
   ENDIF(NOT OpenCV_FOUND)
