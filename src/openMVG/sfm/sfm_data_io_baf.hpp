@@ -27,6 +27,8 @@ namespace sfm {
 //- Export also a _imgList.txt file with View filename and id_intrinsic & id_pose.
 // filename id_intrinsic id_pose
 // The ids allow to establish a link between 3D point observations & the corresponding views
+//--
+// Export missing poses as Identity pose to keep tracking of the original id_pose indexes
 static bool Save_BAF(
   const SfM_Data & sfm_data,
   const std::string & filename,
@@ -40,30 +42,45 @@ static bool Save_BAF(
   {
     stream
       << sfm_data.GetIntrinsics().size() << '\n'
-      << sfm_data.GetPoses().size() << '\n'
+      << sfm_data.GetViews().size() << '\n'
       << sfm_data.GetLandmarks().size() << '\n';
 
     const Intrinsics & intrinsics = sfm_data.GetIntrinsics();
     for (Intrinsics::const_iterator iterIntrinsic = intrinsics.begin();
       iterIntrinsic != intrinsics.end(); ++iterIntrinsic)
     {
-        //get params
-        const std::vector<double> intrinsicsParams = iterIntrinsic->second.get()->getParams();
-        std::copy(intrinsicsParams.begin(), intrinsicsParams.end(),
-          std::ostream_iterator<double>(stream, " "));
-        stream << "\n";
+      //get params
+      const std::vector<double> intrinsicsParams = iterIntrinsic->second.get()->getParams();
+      std::copy(intrinsicsParams.begin(), intrinsicsParams.end(),
+        std::ostream_iterator<double>(stream, " "));
+      stream << '\n';
     }
 
     const Poses & poses = sfm_data.GetPoses();
-    for (Poses::const_iterator iterPose = poses.begin();
-      iterPose != poses.end(); ++iterPose)
+    for (Views::const_iterator iterV = sfm_data.GetViews().begin();
+      iterV != sfm_data.GetViews().end();
+      ++ iterV)
     {
-      // [Rotation col major 3x3; camera center 3x1]
-      const double * rotation = iterPose->second.rotation().data();
-      std::copy(rotation, rotation+9, std::ostream_iterator<double>(stream, " "));
-      const double * center = iterPose->second.center().data();
-      std::copy(center, center+3, std::ostream_iterator<double>(stream, " "));
-      stream << "\n";
+      const View * view = iterV->second.get();
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+      {
+        const Mat3 R = Mat3::Identity();
+        const double * rotation = R.data();
+        std::copy(rotation, rotation+9, std::ostream_iterator<double>(stream, " "));
+        const Vec3 C = Vec3::Zero();
+        const double * center = C.data();
+        std::copy(center, center+3, std::ostream_iterator<double>(stream, " "));
+        stream << '\n';
+      }
+      else
+      {
+        // [Rotation col major 3x3; camera center 3x1]
+        const double * rotation = poses.at(view->id_pose).rotation().data();
+        std::copy(rotation, rotation+9, std::ostream_iterator<double>(stream, " "));
+        const double * center = poses.at(view->id_pose).center().data();
+        std::copy(center, center+3, std::ostream_iterator<double>(stream, " "));
+        stream << '\n';
+      }
     }
 
     const Landmarks & landmarks = sfm_data.GetLandmarks();
@@ -82,11 +99,12 @@ static bool Save_BAF(
       {
         const IndexT id_view = iterOb->first;
         const View * v = sfm_data.GetViews().at(id_view).get();
-        stream << v->id_intrinsic << ' ' << v->id_pose << ' '
-          << iterOb->second.x(0) << ' '
-          << iterOb->second.x(1) << ' ';
+        stream
+          << v->id_intrinsic << ' '
+          << v->id_pose << ' '
+          << iterOb->second.x(0) << ' ' << iterOb->second.x(1) << ' ';
       }
-      stream << "\n";
+      stream << '\n';
     }
 
     stream.flush();
@@ -108,7 +126,8 @@ static bool Save_BAF(
     {
       const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
         iterV->second->s_Img_path);
-      stream << sView_filename
+      stream
+        << sView_filename
         << ' ' << iterV->second->id_intrinsic
         << ' ' << iterV->second->id_pose << "\n";
     }
