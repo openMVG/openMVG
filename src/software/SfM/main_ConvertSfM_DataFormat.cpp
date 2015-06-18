@@ -41,6 +41,12 @@ int main(int argc, char **argv)
       return EXIT_FAILURE;
   }
 
+  if (sSfM_Data_Filename_In.empty() || sSfM_Data_Filename_Out.empty())
+  {
+    std::cerr << "Invalid input or output filename." << std::endl;
+    return EXIT_FAILURE;
+  }
+
   // Load input SfM_Data scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename_In, ESfM_Data(ALL)))
