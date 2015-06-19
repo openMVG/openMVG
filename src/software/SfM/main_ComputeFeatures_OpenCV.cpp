@@ -228,7 +228,7 @@ int main(int argc, char **argv)
   std::string sOutDir = "";
   bool bForce = false;
 #ifdef USE_OCVSIFT
-  std::string sImage_Describer_Method = "AKAZE_OCV";
+  std::string sImage_Describer_Method = "AKAZE_OPENCV";
 #endif
 
   // required
