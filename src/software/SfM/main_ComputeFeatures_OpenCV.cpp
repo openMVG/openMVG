@@ -179,10 +179,10 @@ public:
     regionsCasted->Features().reserve(v_keypoints.size());
     regionsCasted->Descriptors().reserve(v_keypoints.size());
 
-	// Prepare a column vector with the sum of each descriptor
-	cv::Mat m_siftsum;
-	cv::reduce(m_desc, m_siftsum, 1, cv::REDUCE_SUM);
-	
+    // Prepare a column vector with the sum of each descriptor
+    cv::Mat m_siftsum;
+    cv::reduce(m_desc, m_siftsum, 1, cv::REDUCE_SUM);
+
     // Copy keypoints and descriptors in the regions
     int cpt = 0;
     for(std::vector< cv::KeyPoint >::const_iterator i_kp = v_keypoints.begin();
@@ -254,7 +254,7 @@ int main(int argc, char **argv)
       << "\n[Optional]\n"
       << "[-f|--force: Force to recompute data]\n"
 #ifdef USE_OCVSIFT
-	  << "[-m|--describerMethod\n"
+      << "[-m|--describerMethod\n"
       << "  (method to use to describe an image):\n"
       << "   AKAZE_OPENCV (default),\n"
       << "   SIFT_OPENCV: SIFT FROM OPENCV,\n"
@@ -272,7 +272,7 @@ int main(int argc, char **argv)
 #ifdef USE_OCVSIFT
             << "--describerMethod " << sImage_Describer_Method << std::endl
 #endif
-		    ;
+            ;
 
   if (sOutDir.empty())  {
     std::cerr << "\nIt is an invalid output directory" << std::endl;
@@ -320,9 +320,9 @@ int main(int argc, char **argv)
   else
   {
 #ifdef USE_OCVSIFT
-	if (sImage_Describer_Method == "AKAZE_OPENCV")
+    if (sImage_Describer_Method == "AKAZE_OPENCV")
     {
-		image_describer.reset(new AKAZE_OCV_Image_describer);
+      image_describer.reset(new AKAZE_OCV_Image_describer);
     }
     else
     if (sImage_Describer_Method == "SIFT_OPENCV")
@@ -331,13 +331,13 @@ int main(int argc, char **argv)
     }
     else
     {
-		std::cerr << "Unknown image describer method." << std::endl;
-		return EXIT_FAILURE;
+      std::cerr << "Unknown image describer method." << std::endl;
+      return EXIT_FAILURE;
     }
 #else
     image_describer.reset(new AKAZE_OCV_Image_describer);
 #endif
-	
+
     // Export the used Image_describer and region type for:
     // - dynamic future regions computation and/or loading
     {
