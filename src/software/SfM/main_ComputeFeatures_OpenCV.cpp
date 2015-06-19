@@ -179,6 +179,10 @@ public:
     regionsCasted->Features().reserve(v_keypoints.size());
     regionsCasted->Descriptors().reserve(v_keypoints.size());
 
+	// Prepare a column vector with the sum of each descriptor
+	cv::Mat m_siftsum;
+	cv::reduce(m_desc, m_siftsum, 1, cv::REDUCE_SUM);
+	
     // Copy keypoints and descriptors in the regions
     int cpt = 0;
     for(std::vector< cv::KeyPoint >::const_iterator i_kp = v_keypoints.begin();
@@ -191,7 +195,7 @@ public:
       Descriptor<unsigned char, 128> desc;
       for(int j = 0; j < 128; j++)
       {
-        desc[j] = static_cast<unsigned char>(m_desc.at<float>(cpt, j));
+        desc[j] = static_cast<unsigned char>(512.0*sqrt(m_desc.at<float>(cpt, j)/m_siftsum.at<float>(cpt, 0)));
       }
       regionsCasted->Descriptors().push_back(desc);
     }
