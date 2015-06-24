@@ -24,4 +24,5 @@ UNIT_TEST(openMVG image "openMVG_image")
 UNIT_TEST(openMVG image_drawing "openMVG_image")
 UNIT_TEST(openMVG image_io "openMVG_image")
 UNIT_TEST(openMVG image_filtering "openMVG_image")
+UNIT_TEST(openMVG image_resampling "openMVG_image")
 
