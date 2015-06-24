@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     sGTDirectory,
     sComputedDirectory,
     sOutDir = "";
-    int camType = -1; //1: openMVG cam, 2,3: Strechas cam
+  int camType = -1; //1: openMVG cam, 2,3: Strechas cam
 
 
   cmd.add( make_option('i', sGTDirectory, "gt") );

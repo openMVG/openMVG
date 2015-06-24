@@ -51,7 +51,7 @@ bool computeSimilarity(
   for (size_t i = 0; i  < vec_camPosGT.size(); ++i) {
     Vec3 newPos = S * R * ( vec_camPosComputed[i]) + t;
     vec_camPosComputed_T[i] = newPos;
-    double dResidual = (newPos - vec_camPosGT[i]).norm();
+    const double dResidual = (newPos - vec_camPosGT[i]).norm();
     vec_residualErrors[i] = dResidual;
   }
 
@@ -61,7 +61,7 @@ bool computeSimilarity(
   return true;
 }
 
-/// Export to PLY two camera tracjectories
+/// Export to PLY two camera trajectories
 static bool exportToPly(const std::vector<Vec3> & vec_camPosGT,
   const std::vector<Vec3> & vec_camPosComputed,
   const std::string & sFileName)
@@ -121,7 +121,7 @@ void EvaluteToGT(
   std::vector<double> vec_residualErrors;
   {
     for (size_t i = 0; i  < vec_camPosGT.size(); ++i) {
-      double dResidual = (vec_camPosGT[i] - vec_camPosComputed_T[i]).norm();
+      const double dResidual = (vec_camPosGT[i] - vec_camPosComputed_T[i]).norm();
       vec_residualErrors.push_back(dResidual);
     }
   }
@@ -132,10 +132,10 @@ void EvaluteToGT(
     std::vector<Mat3>::const_iterator iter1 = vec_camRotGT.begin();
     for (std::vector<Mat3>::const_iterator iter2 = vec_camRotComputed.begin();
       iter2 != vec_camRotComputed.end(); ++iter2, ++iter1) {
-        Mat3 R1 = *iter1; //GT
-        Mat3 R2T = *iter2 * R.transpose(); // Computed
+        const Mat3 R1 = *iter1; //GT
+        const Mat3 R2T = *iter2 * R.transpose(); // Computed
 
-        double angularErrorDegree = R2D(getRotationMagnitude(R1 * R2T.transpose()));
+        const double angularErrorDegree = R2D(getRotationMagnitude(R1 * R2T.transpose()));
         vec_angularErrors.push_back(angularErrorDegree);
     }
   }
