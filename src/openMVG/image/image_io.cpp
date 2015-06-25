@@ -630,5 +630,213 @@ int WriteTiff(const char * filename,
   return 1;
 }
 
+bool ReadImageHeader(const char * filename, ImageHeader * imgheader)
+{
+  const Format f = GetFormat(filename);
+
+  switch (f) {
+    case Pnm:
+      return Read_PNM_ImageHeader(filename, imgheader);
+    case Png:
+      return Read_PNG_ImageHeader(filename, imgheader);
+    case Jpg:
+      return Read_JPG_ImageHeader(filename, imgheader);
+  	case Tiff:
+      return Read_TIFF_ImageHeader(filename, imgheader);
+    default:
+      return false;
+  };
+}
+
+bool Read_PNG_ImageHeader(const char * filename, ImageHeader * imgheader)
+{
+  bool bStatus = false;
+  FILE *file = fopen(filename, "rb");
+  if (!file) {
+    return false;
+  }
+
+  // first check the eight byte PNG signature
+  png_byte  pbSig[8];
+  size_t readcnt = fread(pbSig, 1, 8, file);
+  (void) readcnt;
+  if (png_sig_cmp(pbSig, 0, 8)) {
+    return false;
+  }
+
+  // create the two png(-info) structures
+  png_structp png_ptr = NULL;
+  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL,
+    (png_error_ptr)NULL, (png_error_ptr)NULL);
+  if (!png_ptr) {
+    return false;
+  }
+  png_infop info_ptr = NULL;
+  info_ptr = png_create_info_struct(png_ptr);
+  if (!info_ptr)  {
+    png_destroy_read_struct(&png_ptr, NULL, NULL);
+    return false;
+  }
+
+  // initialize the png structure
+  png_init_io(png_ptr, file);
+  png_set_sig_bytes(png_ptr, 8);
+
+  // read all PNG info up to image data
+
+  png_read_info(png_ptr, info_ptr);
+
+  // get width, height, bit-depth and color-type
+  png_uint_32 wPNG, hPNG;
+  int                 iBitDepth;
+  int                 iColorType;
+  png_get_IHDR(png_ptr, info_ptr, &wPNG, &hPNG, &iBitDepth,
+    &iColorType, NULL, NULL, NULL);
+
+  if (imgheader)
+  {
+    imgheader->width = wPNG;
+    imgheader->height = hPNG;
+    bStatus = true;
+  }
+
+  fclose(file);
+  return bStatus;
+}
+
+bool Read_JPG_ImageHeader(const char * filename, ImageHeader * imgheader)
+{
+  bool bStatus = false;
+
+  FILE *file = fopen(filename, "rb");
+  if (!file) {
+    cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+    return 0;
+  }
+
+  jpeg_decompress_struct cinfo;
+  struct my_error_mgr jerr;
+  cinfo.err = jpeg_std_error(&jerr.pub);
+  jerr.pub.error_exit = &jpeg_error;
+
+  if (setjmp(jerr.setjmp_buffer)) {
+    jpeg_destroy_decompress(&cinfo);
+    return false;
+  }
+
+  jpeg_create_decompress(&cinfo);
+  jpeg_stdio_src(&cinfo, file);
+  jpeg_read_header(&cinfo, TRUE);
+  jpeg_start_decompress(&cinfo);
+
+  if (imgheader)
+  {
+    imgheader->width = cinfo.output_width;
+    imgheader->height = cinfo.output_height;
+    bStatus = true;
+  }
+  fclose(file);
+  return bStatus;
+}
+
+bool Read_PNM_ImageHeader(const char * filename, ImageHeader * imgheader)
+{
+  const int NUM_VALUES = 3;
+  const int INT_BUFFER_SIZE = 256;
+
+  int magicnumber;
+  char intBuffer[INT_BUFFER_SIZE];
+  int values[NUM_VALUES], valuesIndex = 0, intIndex = 0, inToken = 0;
+  size_t res;
+
+  FILE *file = fopen(filename, "rb");
+  if (!file) {
+    return false;
+  }
+
+  // Check magic number.
+  res = size_t(fscanf(file, "P%d", &magicnumber));
+  if (res != 1) {
+    return false;
+  }
+  // Test if we have a Gray or RGB image, else return false
+  switch (magicnumber)
+  {
+    case 5:
+    case 6:
+      break;
+    default:
+      return false;
+  }
+
+  // the following loop parses the PNM header one character at a time, looking
+  // for the int tokens width, height and maxValues (in that order), and
+  // discarding all comment (everything from '#' to '\n' inclusive), where
+  // comments *may occur inside tokens*. Each token must be terminate with a
+  // whitespace character, and only one whitespace char is eaten after the
+  // third int token is parsed.
+  while (valuesIndex < NUM_VALUES) {
+    char nextChar ;
+    res = fread(&nextChar,1,1,file);
+    if (res == 0) return false; // read failed, EOF?
+
+    if (isspace(nextChar)) {
+      if (inToken) { // we were reading a token, so this white space delimits it
+        inToken = 0;
+        intBuffer[intIndex] = 0 ; // NULL-terminate the string
+        values[valuesIndex++] = atoi(intBuffer);
+        intIndex = 0; // reset for next int token
+        // to conform with current image class
+        if (valuesIndex == 3 && values[2] > 255) return false;
+      }
+    }
+    else if (isdigit(nextChar)) {
+      inToken = 1 ; // in case it's not already set
+      intBuffer[intIndex++] = nextChar ;
+      if (intIndex == INT_BUFFER_SIZE) // tokens should never be this long
+        return false;
+    }
+    else if (nextChar == '#') {
+      do { // eat all characters from input stream until newline
+        res = fread(&nextChar,1,1,file);
+      } while (res == 1 && nextChar != '\n');
+      if (res == 0) return false; // read failed, EOF?
+    }
+    else {
+      // Encountered a non-whitespace, non-digit outside a comment - bail out.
+      return false;
+    }
+  }
+  if (imgheader)
+  {
+    // Save value and return
+    imgheader->width = values[0];
+    imgheader->height = values[1];
+    return true;
+  }
+  fclose(file);
+  return false;
+}
+
+bool Read_TIFF_ImageHeader(const char * filename, ImageHeader * imgheader)
+{
+  bool bStatus = false;
+
+  TIFF* tiff = TIFFOpen(filename, "r");
+  if (!tiff) {
+    return false;
+  }
+
+  if (imgheader)
+  {
+    TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &imgheader->width);
+    TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &imgheader->height);
+    bStatus = true;
+  }
+
+  TIFFClose(tiff);
+  return bStatus;
+}
+
 }  // namespace image
 }  // namespace openMVG

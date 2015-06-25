@@ -68,6 +68,7 @@ IF (DEFINED OpenMVG_USE_INTERNAL_CERES)
 ENDIF()
 
 # Add an Approximate Nearest Neighbor library
+SET(FLANN_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/flann/src/cpp)
 ADD_SUBDIRECTORY(flann)
 SET_PROPERTY(TARGET flann_cpp_s PROPERTY FOLDER OpenMVG/3rdParty)
 

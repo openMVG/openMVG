@@ -185,10 +185,11 @@ int main(int argc, char **argv)
     if (openMVG::image::GetFormat(sImageFilename.c_str()) == openMVG::image::Unknown)
       continue; // image cannot be opened
 
-    Image<unsigned char> image;
-    if (openMVG::image::ReadImage( sImageFilename.c_str(), &image))  {
-      width = image.Width();
-      height = image.Height();
+    ImageHeader imgHeader;
+    if (openMVG::image::ReadImageHeader(sImageFilename.c_str(), &imgHeader))
+    {
+      width = imgHeader.width;
+      height = imgHeader.height;
       ppx = width / 2.0;
       ppy = height / 2.0;
     }

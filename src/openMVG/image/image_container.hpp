@@ -37,7 +37,7 @@ public:
 
   //------------------------------
   //-- Image construction method
-  inline Image() {};
+  inline Image() {Base::resize(0, 0);}
 
   inline Image(int width, int height, bool fInit=true, const T val = T())
   {
