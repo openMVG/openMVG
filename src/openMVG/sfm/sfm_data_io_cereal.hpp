@@ -44,7 +44,7 @@ bool Load_Cereal(
   const bool b_structure = (flags_part & STRUCTURE) == STRUCTURE;
 
   //Create the stream and check it is ok
-  std::ifstream stream(filename.c_str());
+  std::ifstream stream(filename.c_str(), std::ios::binary | std::ios::in);
   if (!stream.is_open())
     return false;
 
@@ -114,7 +114,7 @@ bool Save_Cereal(
   const bool b_structure = (flags_part & STRUCTURE) == STRUCTURE;
 
   //Create the stream and check it is ok
-  std::ofstream stream(filename.c_str());
+  std::ofstream stream(filename.c_str(), std::ios::binary | std::ios::out);
   if (!stream.is_open())
     return false;
 
