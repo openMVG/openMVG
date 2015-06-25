@@ -62,7 +62,10 @@ static bool Save_PLY(
         for (Landmarks::const_iterator iterLandmarks = landmarks.begin();
           iterLandmarks != landmarks.end();
           ++iterLandmarks)  {
-          stream << iterLandmarks->second.X.transpose() << " 255 255 255" << "\n";
+          stream << iterLandmarks->second.X.transpose() << " "
+                 << (int)iterLandmarks->second.rgb.r() << " "
+                 << (int)iterLandmarks->second.rgb.g() << " "
+                 << (int)iterLandmarks->second.rgb.b() << "\n";
         }
       }
       stream.flush();

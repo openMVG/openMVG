@@ -163,6 +163,9 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Process() {
     _htmlDocStream->pushInfo(os.str());
   }
 
+  // get the color for the 3D points
+  ColorizeTracks(_sfm_data);
+
   return true;
 }
 

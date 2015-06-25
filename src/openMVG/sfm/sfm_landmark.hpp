@@ -7,6 +7,7 @@
 #ifndef OPENMVG_SFM_LANDMARK_HPP
 #define OPENMVG_SFM_LANDMARK_HPP
 
+#include "openMVG/image/pixel_types.hpp"
 #include "openMVG/numeric/numeric.h"
 #include <cereal/cereal.hpp> // Serialization
 
@@ -49,6 +50,10 @@ struct Landmark
 {
   Observations obs;
   Vec3 X;
+  openMVG::image::RGBColor rgb;    //!> the color associated to the point
+
+  /// default constructor setting the color to white
+  Landmark() : rgb(openMVG::image::WHITE) {}
 
   // Serialization
   template <class Archive>
@@ -56,6 +61,8 @@ struct Landmark
   {
     const std::vector<double> point = { X(0), X(1), X(2) };
     ar(cereal::make_nvp("X", point ));
+    const std::vector<unsigned char> color = { rgb.r(), rgb.g(), rgb.b() };
+    ar(cereal::make_nvp("rgb", color ));
     ar(cereal::make_nvp("observations", obs));
   }
 
@@ -63,8 +70,11 @@ struct Landmark
   void load( Archive & ar)
   {
     std::vector<double> point(3);
+    std::vector<int> color(3);
     ar(cereal::make_nvp("X", point ));
     X << point[0], point[1], point[2];
+    ar(cereal::make_nvp("rgb", color ));
+    rgb = openMVG::image::RGBColor( color[0], color[1], color[2] );
     ar(cereal::make_nvp("observations", obs));
   }
 };
