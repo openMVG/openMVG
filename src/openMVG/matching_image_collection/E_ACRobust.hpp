@@ -18,7 +18,7 @@ namespace openMVG {
 using namespace openMVG::robust;
 
 //-- A contrario Functor to filter putative corresponding points
-//--  thanks estimation of the essential matrix.
+//--  Essential matrix estimation struct functor
 struct GeometricFilter_EMatrix_AC
 {
   GeometricFilter_EMatrix_AC(
@@ -28,7 +28,7 @@ struct GeometricFilter_EMatrix_AC
     : m_dPrecision(dPrecision), m_stIteration(iteration), m_K(K) {};
 
   /// Robust fitting of the ESSENTIAL matrix
-  void Fit(
+  bool Fit(
     const std::pair<size_t, size_t> pairIndex,
     const Mat & xA,
     const std::pair<size_t, size_t> & imgSizeA,
@@ -43,7 +43,7 @@ struct GeometricFilter_EMatrix_AC
       iterK_J = m_K.find(pairIndex.second);
     // Check that intrinsic parameters exist for this pair
     if (iterK_I == m_K.end() || iterK_J == m_K.end() )
-      return;
+      return false;
 
     // Define the AContrario adapted Essential matrix solver
     typedef ACKernelAdaptorEssential<
@@ -65,7 +65,9 @@ struct GeometricFilter_EMatrix_AC
 
     if (vec_inliers.size() < KernelType::MINIMUM_SAMPLES *2.5)  {
       vec_inliers.clear();
+      return false;
     }
+    return true;
   }
 
   double m_dPrecision;  //upper_bound of the precision

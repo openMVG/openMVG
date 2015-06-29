@@ -24,7 +24,8 @@ using namespace openMVG::matching;
 class ImageCollectionGeometricFilter
 {
   public:
-    ImageCollectionGeometricFilter() : _feat_provider(NULL)
+  ImageCollectionGeometricFilter()
+    : _feat_provider(NULL)
   {
   }
 
@@ -58,7 +59,7 @@ class ImageCollectionGeometricFilter
       const features::PointFeatures & kpSetI = _feat_provider->getFeatures(iIndex);
       const features::PointFeatures & kpSetJ = _feat_provider->getFeatures(jIndex);
 
-      //-- Copy point to array in order to estimate fundamental matrix :
+      //-- Copy point to array in order to robustly estimate a geometric model:
       const size_t n = vec_PutativeMatches.size();
       Mat xI(2,n), xJ(2,n);
 
@@ -72,18 +73,18 @@ class ImageCollectionGeometricFilter
       //-- Apply the geometric filter
       {
         std::vector<size_t> vec_inliers;
-        geometricFilter.Fit(
+        const bool bRobustEstimation = geometricFilter.Fit(
           iter->first,
           xI, vec_imagesSize[iIndex],
           xJ, vec_imagesSize[jIndex],
           vec_inliers);
 
-        if(!vec_inliers.empty())
+        if (bRobustEstimation)
         {
           std::vector<IndMatch> vec_filteredMatches;
           vec_filteredMatches.reserve(vec_inliers.size());
-          for (size_t i=0; i < vec_inliers.size(); ++i)  {
-            vec_filteredMatches.push_back( vec_PutativeMatches[vec_inliers[i]] );
+          for ( const size_t & index : vec_inliers)  {
+            vec_filteredMatches.push_back( vec_PutativeMatches[index] );
           }
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp critical

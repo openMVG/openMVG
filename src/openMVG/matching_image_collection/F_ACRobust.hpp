@@ -17,6 +17,7 @@ namespace openMVG {
 using namespace openMVG::robust;
 
 //-- A contrario Functor to filter putative corresponding points
+//--  Fundamental matrix estimation struct functor
 struct GeometricFilter_FMatrix_AC
 {
   GeometricFilter_FMatrix_AC(
@@ -25,7 +26,7 @@ struct GeometricFilter_FMatrix_AC
     : m_dPrecision(dPrecision), m_stIteration(iteration) {};
 
   /// Robust fitting of the FUNDAMENTAL matrix
-  void Fit(
+  bool Fit(
     const std::pair<size_t, size_t> pairIndex,
     const Mat & xA,
     const std::pair<size_t, size_t> & imgSizeA,
@@ -56,7 +57,9 @@ struct GeometricFilter_FMatrix_AC
 
     if (vec_inliers.size() < KernelType::MINIMUM_SAMPLES *2.5)  {
       vec_inliers.clear();
+      return false;
     }
+    return true;
   }
 
   double m_dPrecision;  //upper_bound of the precision

@@ -16,7 +16,7 @@ namespace openMVG {
 using namespace openMVG::robust;
 
 //-- A contrario Functor to filter putative corresponding points
-//--  thanks estimation of the homography matrix.
+//--  Homography matrix estimation struct functor
 struct GeometricFilter_HMatrix_AC
 {
   GeometricFilter_HMatrix_AC(
@@ -25,7 +25,7 @@ struct GeometricFilter_HMatrix_AC
     : m_dPrecision(dPrecision), m_stIteration(iteration)  {};
 
   /// Robust fitting of the HOMOGRAPHY matrix
-  void Fit(
+  bool Fit(
     const std::pair<size_t, size_t> pairIndex,
     const Mat & xA,
     const std::pair<size_t, size_t> & imgSizeA,
@@ -56,7 +56,9 @@ struct GeometricFilter_HMatrix_AC
 
     if (vec_inliers.size() < KernelType::MINIMUM_SAMPLES *2.5)  {
       vec_inliers.clear();
+      return false;
     }
+    return true;
   }
 
   double m_dPrecision;  //upper_bound of the precision
