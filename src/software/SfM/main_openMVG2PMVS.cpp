@@ -59,8 +59,11 @@ bool exportToPMVSFormat(
   {
     C_Progress_display my_progress_bar( sfm_data.GetViews().size()*2 );
 
+    // Since PMVS requires contiguous camera index, and that some views can have some missing poses,
+    // we reindex the poses to ensure a contiguous pose list.
+    Hash_Map<IndexT, IndexT> map_viewIdToContiguous;
+
     // Export valid views as Projective Cameras:
-    size_t count = 0;
     for(Views::const_iterator iter = sfm_data.GetViews().begin();
       iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
@@ -71,23 +74,23 @@ bool exportToPMVSFormat(
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
       Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
 
+      // View Id re-indexing
+      map_viewIdToContiguous.insert(std::make_pair(view->id_view, map_viewIdToContiguous.size()));
+
       // We have a valid view with a corresponding camera & pose
       const Mat34 P = iterIntrinsic->second.get()->get_projective_equivalent(pose);
       std::ostringstream os;
-      os << std::setw(8) << std::setfill('0') << count;
+      os << std::setw(8) << std::setfill('0') << map_viewIdToContiguous[view->id_view];
       std::ofstream file(
         stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory) + "txt",
         os.str() ,"txt").c_str());
       file << "CONTOUR" << os.widen('\n')
         << P.row(0) <<"\n"<< P.row(1) <<"\n"<< P.row(2) << os.widen('\n');
       file.close();
-      ++count;
     }
 
     // Export (calibrated) views as undistorted images
-    count = 0;
     Image<RGBColor> image, image_ud;
-    Hash_Map<IndexT, IndexT> map_viewIdToContiguous;
     for(Views::const_iterator iter = sfm_data.GetViews().begin();
       iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
@@ -97,11 +100,10 @@ bool exportToPMVSFormat(
 
       Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
 
-      map_viewIdToContiguous[view->id_view] = count;
       // We have a valid view with a corresponding camera & pose
       const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
       std::ostringstream os;
-      os << std::setw(8) << std::setfill('0') << count;
+      os << std::setw(8) << std::setfill('0') << map_viewIdToContiguous[view->id_view];
       const std::string dstImage = stlplus::create_filespec(
         stlplus::folder_append_separator(sOutDirectory) + "visualize", os.str(),"jpg");
 
@@ -127,7 +129,6 @@ bool exportToPMVSFormat(
           WriteImage( dstImage.c_str(), image);
         }
       }
-      ++count;
     }
 
     //pmvs_options.txt
@@ -144,7 +145,7 @@ bool exportToPMVSFormat(
      << "sequence -1" << os.widen('\n')
      << "maxAngle 10" << os.widen('\n')
      << "quad 2.0" << os.widen('\n')
-     << "timages -1 0 " << count << os.widen('\n')
+     << "timages -1 0 " << map_viewIdToContiguous.size() << os.widen('\n')
      << "oimages 0" << os.widen('\n');
 
     if (b_VisData)
@@ -213,8 +214,11 @@ bool exportToBundlerFormat(
   }
   else
   {
-    // Count the number of valid cameras
-    IndexT validCameraCount = 0;
+    // Since PMVS requires contiguous camera index, and that some views can have some missing poses,
+    // we reindex the poses to ensure a contiguous pose list.
+    Hash_Map<IndexT, IndexT> map_viewIdToContiguous;
+
+    // Count the number of valid cameras and re-index the viewIds
     for(Views::const_iterator iter = sfm_data.GetViews().begin();
       iter != sfm_data.GetViews().end(); ++iter)
     {
@@ -222,12 +226,13 @@ bool exportToBundlerFormat(
       if (!sfm_data.IsPoseAndIntrinsicDefined(view))
         continue;
 
-      ++validCameraCount;
+      // View Id re-indexing
+      map_viewIdToContiguous.insert(std::make_pair(view->id_view, map_viewIdToContiguous.size()));
     }
 
     // Fill the "Bundle file"
     os << "# Bundle file v0.3" << os.widen('\n')
-      << validCameraCount  << " " << sfm_data.GetLandmarks().size() << os.widen('\n');
+      << map_viewIdToContiguous.size()  << " " << sfm_data.GetLandmarks().size() << os.widen('\n');
 
     // Export camera properties & image filenames
     for(Views::const_iterator iter = sfm_data.GetViews().begin();
@@ -270,9 +275,8 @@ bool exportToBundlerFormat(
       }
     }
     // Export structure and visibility
-    IndexT count = 0;
     for (Landmarks::const_iterator iter = sfm_data.GetLandmarks().begin();
-      iter != sfm_data.GetLandmarks().end(); ++iter, ++count)
+      iter != sfm_data.GetLandmarks().end(); ++iter)
     {
       const Landmark & landmark = iter->second;
       const Observations & obs = landmark.obs;
@@ -286,7 +290,7 @@ bool exportToBundlerFormat(
       {
         const Observation & ob = iterObs->second;
         // ViewId, FeatId, x, y
-        os << iterObs->first << " " << ob.id_feat << " " << ob.x(0) << " " << ob.x(1) << " ";
+        os << map_viewIdToContiguous[iterObs->first] << " " << ob.id_feat << " " << ob.x(0) << " " << ob.x(1) << " ";
       }
       os << os.widen('\n');
     }
