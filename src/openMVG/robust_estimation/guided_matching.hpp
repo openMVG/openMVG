@@ -12,6 +12,7 @@
 using namespace openMVG::matching;
 
 #include "openMVG/features/regions.hpp"
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
 
 #include <vector>
 
@@ -129,9 +130,8 @@ void GuidedMatching(
 
   MetricT metric;
 
-  // Looking for the corresponding points that have
-  //  the satisfy:
-  //   1. an geometric distance below the provided Threshold
+  // Looking for the corresponding points that have to satisfy:
+  //   1. a geometric distance below the provided Threshold
   //   2. a distance ratio between descriptors of valid geometric correspondencess
 
   for (size_t i = 0; i < xLeft.cols(); ++i) {
@@ -145,11 +145,59 @@ void GuidedMatching(
       if (geomErr < errorTh) {
         const typename MetricT::ResultType descDist =
           metric( lDescriptors[i].getData(), rDescriptors[j].getData(), DescriptorT::static_size );
-        // if smaller error update corresponding index
+        // Update the corresponding points & distance (if required)
         dR.update(j, descDist);
       }
     }
-    // Add correspondence only if if the distance ratio is valid
+    // Add correspondence only iff the distance ratio is valid
+    if (dR.isValid(distRatio))  {
+      // save the best corresponding index
+      vec_corresponding_index.push_back(IndMatch(i,dR.idx));
+    }
+  }
+
+  // Remove duplicates (when multiple points at same position exist)
+  IndMatch::getDeduplicated(vec_corresponding_index);
+}
+
+/// Guided Matching (features + descriptors with distance ratio):
+///  Use a model to find valid correspondences:
+///   Keep the best corresponding points for the given model under the
+///   user specified distance ratio.
+template<
+  typename ModelArg,    // The used model type
+  typename ErrorArg    // The metric to compute distance to the model
+  >
+void GuidedMatching(
+  const ModelArg & mod, // The model
+  const cameras::IntrinsicBase * camL, // Optional camera (in order to undistord on the fly feature positions, can be NULL)
+  const features::Regions & lRegions,  // regions (point features & corresponding descriptors)
+  const cameras::IntrinsicBase * camR, // Optional camera (in order to undistord on the fly feature positions, can be NULL)
+  const features::Regions & rRegions,  // regions (point features & corresponding descriptors)
+  double errorTh,       // Maximal authorized error threshold
+  double distRatio,     // Maximal authorized distance ratio
+  IndMatches & vec_corresponding_index) // Ouput corresponding index
+{
+  // Looking for the corresponding points that have to satisfy:
+  //   1. a geometric distance below the provided Threshold
+  //   2. a distance ratio between descriptors of valid geometric correspondencess
+
+  for (size_t i = 0; i < lRegions.RegionCount(); ++i) {
+
+    distanceRatio<double> dR;
+    for (size_t j = 0; j < rRegions.RegionCount(); ++j) {
+      // Compute the geometric error: error to the model
+      const double geomErr = ErrorArg::Error(
+        mod,  // The model
+        // The corresponding points
+        camL ? camL->get_ud_pixel(lRegions.GetRegionPosition(i)) : lRegions.GetRegionPosition(i),
+        camR ? camR->get_ud_pixel(rRegions.GetRegionPosition(j)) : rRegions.GetRegionPosition(j));
+      if (geomErr < errorTh) {
+        // Update the corresponding points & distance (if required)
+        dR.update(j, lRegions.SquaredDescriptorDistance(i, &rRegions, j));
+      }
+    }
+    // Add correspondence only iff the distance ratio is valid
     if (dR.isValid(distRatio))  {
       // save the best corresponding index
       vec_corresponding_index.push_back(IndMatch(i,dR.idx));
@@ -234,8 +282,7 @@ void GuidedMatching_Fundamental_Fast(
   double distRatio,     // Maximal authorized distance ratio
   IndMatches & vec_corresponding_index) // Ouput corresponding index
 {
-  // Looking for the corresponding points that have
-  //  to satisfy:
+  // Looking for the corresponding points that have to satisfy:
   //   1. a geometric distance below the provided Threshold
   //   2. a distance ratio between descriptors of valid geometric correspondencess
   //
@@ -319,7 +366,7 @@ void GuidedMatching_Fundamental_Fast(
             ((const typename MetricT::ElementType*) lRegions->DescriptorRawData()) + (i * lRegions->DescriptorLength()),
             ((const typename MetricT::ElementType*) rRegions->DescriptorRawData()) + (j * rRegions->DescriptorLength()),
             rRegions->DescriptorLength() );
-        // Update the closest distance for later distance ratio computation
+        // Update the corresponding points & distance (if required)
         dR[i].update(j, descDist);
       }
     }

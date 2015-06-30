@@ -284,6 +284,11 @@ void Matcher_Regions_AllInMemory::Match(
             std::cerr << "Using unknown matcher type" << std::endl;
       }
     }
+    else
+    {
+      std::cerr << "Please consider add this region type_id to Matcher_Regions_AllInMemory::Match(...)\n"
+        << "typeid: " << regions->Type_id() << std::endl;
+    }
   }
 }
 

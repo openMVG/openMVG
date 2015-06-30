@@ -36,9 +36,9 @@ class ImageCollectionGeometricFilter
   /// Filter all putative correspondences according the templated geometric filter
   template <typename GeometricFilterT>
   void Filter(
-    const GeometricFilterT & geometricFilter,  // geometric filter functor
-    PairWiseMatches & map_PutativesMatchesPair, // putative correspondences to filter
-    PairWiseMatches & map_GeometricMatches,
+    const GeometricFilterT & geometricFilter,   // geometric filter functor
+    PairWiseMatches & map_PutativesMatchesPair, // input putative correspondences to filter
+    PairWiseMatches & map_GeometricMatches,     // output geometric filtered correspondences
     const std::vector<std::pair<size_t, size_t> > & vec_imagesSize) const
   {
     C_Progress_display my_progress_bar( map_PutativesMatchesPair.size() );
