@@ -66,8 +66,8 @@ class ImageCollectionGeometricFilter
       for (size_t i=0; i < vec_PutativeMatches.size(); ++i)  {
         const features::PointFeature & imaA = kpSetI[vec_PutativeMatches[i]._i];
         const features::PointFeature & imaB = kpSetJ[vec_PutativeMatches[i]._j];
-        xI.col(i) = Vec2f(imaA.coords()).cast<double>();
-        xJ.col(i) = Vec2f(imaB.coords()).cast<double>();
+        xI.col(i) = imaA.coords().cast<double>();
+        xJ.col(i) = imaB.coords().cast<double>();
       }
 
       //-- Apply the geometric filter
