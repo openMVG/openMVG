@@ -214,7 +214,6 @@ int main() {
         << std::endl;
 
       // b. by considering geometric error and descriptor distance ratio
-      typedef SIFT_Regions::DescriptorT DescriptorT;
       geometry_aware::GuidedMatching
         <Mat3, openMVG::fundamental::kernel::EpipolarDistanceError>(
         F,
