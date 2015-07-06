@@ -182,6 +182,17 @@ void GuidedMatching(
   //   1. a geometric distance below the provided Threshold
   //   2. a distance ratio between descriptors of valid geometric correspondencess
 
+  // Build region positions arrays (in order to un-distord on-demand point position once)
+  std::vector<Vec2>
+    lRegionsPos(lRegions.RegionCount()),
+   rRegionsPos(rRegions.RegionCount());
+  for (size_t i = 0; i < lRegions.RegionCount(); ++i) {
+    lRegionsPos[i] = camL ? camL->get_ud_pixel(lRegions.GetRegionPosition(i)) : lRegions.GetRegionPosition(i);
+  }
+  for (size_t i = 0; i < rRegions.RegionCount(); ++i) {
+    rRegionsPos[i] = camR ? camR->get_ud_pixel(rRegions.GetRegionPosition(i)) : rRegions.GetRegionPosition(i);
+  }
+
   for (size_t i = 0; i < lRegions.RegionCount(); ++i) {
 
     distanceRatio<double> dR;
@@ -190,8 +201,8 @@ void GuidedMatching(
       const double geomErr = ErrorArg::Error(
         mod,  // The model
         // The corresponding points
-        camL ? camL->get_ud_pixel(lRegions.GetRegionPosition(i)) : lRegions.GetRegionPosition(i),
-        camR ? camR->get_ud_pixel(rRegions.GetRegionPosition(j)) : rRegions.GetRegionPosition(j));
+        lRegionsPos[i],
+        rRegionsPos[j]);
       if (geomErr < errorTh) {
         // Update the corresponding points & distance (if required)
         dR.update(j, lRegions.SquaredDescriptorDistance(i, &rRegions, j));
