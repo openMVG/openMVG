@@ -1096,14 +1096,21 @@ void SequentialSfMReconstructionEngine::BundleAdjustment()
   bool bOk = bundle_adjustment_obj.Adjust(_sfm_data, true, true, !_bFixedIntrinsics);
 }
 
-/// Discard track with too large residual error
+/**
+ * @brief Discard tracks with too large residual error
+ *
+ * Remove observation/tracks that have:
+ *  - too large residual error
+ *  - too small angular value
+ *
+ * @return True if more than N outliers (50) have been removed.
+ */
 size_t SequentialSfMReconstructionEngine::badTrackRejector(double dPrecision)
 {
-  // Remove observation/tracks that have:
-  // - too large residual error,
-  // - too small angular value.
-  return RemoveOutliers_PixelResidualError( _sfm_data, 4.0, 2) +
-    RemoveOutliers_AngleError(_sfm_data, 2.0);
+  size_t nbOutliers_residualErr = RemoveOutliers_PixelResidualError( _sfm_data, dPrecision, 2);
+  size_t nbOutliers_angleErr = RemoveOutliers_AngleError(_sfm_data, 2.0);
+
+  return (nbOutliers_residualErr + nbOutliers_angleErr) > 50;
 }
 
 } // namespace sfm
