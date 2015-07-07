@@ -101,7 +101,8 @@ bool SequentialSfMReconstructionEngine::Process() {
 
   size_t imageIndex = 0;
   size_t resectionGroupIndex = 0;
-  // Compute robust Resection of remaining image
+  // Compute robust Resection of remaining images
+  // - group of images will be selected and resection + scene completion will be tried
   std::vector<size_t> vec_possible_resection_indexes;
   while (FindImagesWithPossibleResection(vec_possible_resection_indexes))
   {
@@ -112,26 +113,23 @@ bool SequentialSfMReconstructionEngine::Process() {
     for (std::vector<size_t>::const_iterator iter = vec_possible_resection_indexes.begin();
       iter != vec_possible_resection_indexes.end(); ++iter)
     {
-      int currentIndex = imageIndex;
+      const size_t currentIndex = imageIndex;
       ++imageIndex;
-      bool bResect = Resection(*iter);
+      const bool bResect = Resection(*iter);
       bImageAdded |= bResect;
       if (!bResect) {
-        std::cerr << std::endl
-          << "Resection of image: " << *iter << " was not possible" << std::endl;
+        std::cerr << "\nResection of image: " << *iter << " was not possible" << std::endl;
       }
       _set_remainingViewId.erase(*iter);
     }
 
     if (bImageAdded)
     {
+      // Scene logging as ply for visual debug
       std::ostringstream os;
       os << std::setw(8) << std::setfill('0') << resectionGroupIndex << "_Resection";
       Save(_sfm_data, stlplus::create_filespec(_sOutDirectory, os.str(), ".ply"), ESfM_Data(ALL));
-    }
 
-    if (bImageAdded)
-    {
       // std::cout << "Global Bundle start, resection group index: " << resectionGroupIndex << ".\n";
       int bundleAdjustmentIteration = 0;
       // Perform BA until all point are under the given precision
@@ -141,10 +139,12 @@ bool SequentialSfMReconstructionEngine::Process() {
         BundleAdjustment();
         ++bundleAdjustmentIteration;
       }
-      while (badTrackRejector(4.0) != 0);
+      while (badTrackRejector(4.0, 50) != 0);
     }
     ++resectionGroupIndex;
   }
+  // Ensure there is no remaining outliers  
+  badTrackRejector(4.0, 0);
 
   //-- Reconstruction done.
   //-- Display some statistics
@@ -1024,8 +1024,8 @@ bool SequentialSfMReconstructionEngine::Resection(size_t viewIndex)
       const View * view_2 = _sfm_data.GetViews().at(J).get();
       const IntrinsicBase * cam_1 = _sfm_data.GetIntrinsics().at(view_1->id_intrinsic).get();
       const IntrinsicBase * cam_2 = _sfm_data.GetIntrinsics().at(view_2->id_intrinsic).get();
-      const Pose3& pose_1 = _sfm_data.GetPoseOrDie(view_1);
-      const Pose3& pose_2 = _sfm_data.GetPoseOrDie(view_2);
+      const Pose3 pose_1 = _sfm_data.GetPoseOrDie(view_1);
+      const Pose3 pose_2 = _sfm_data.GetPoseOrDie(view_2);
       const Mat34 P1 = cam_1->get_projective_equivalent(pose_1);
       const Mat34 P2 = cam_2->get_projective_equivalent(pose_2);
 
@@ -1103,14 +1103,14 @@ void SequentialSfMReconstructionEngine::BundleAdjustment()
  *  - too large residual error
  *  - too small angular value
  *
- * @return True if more than N outliers (50) have been removed.
+ * @return True if more than 'count' outliers have been removed.
  */
-size_t SequentialSfMReconstructionEngine::badTrackRejector(double dPrecision)
+size_t SequentialSfMReconstructionEngine::badTrackRejector(double dPrecision, size_t count)
 {
-  size_t nbOutliers_residualErr = RemoveOutliers_PixelResidualError( _sfm_data, dPrecision, 2);
-  size_t nbOutliers_angleErr = RemoveOutliers_AngleError(_sfm_data, 2.0);
+  const size_t nbOutliers_residualErr = RemoveOutliers_PixelResidualError( _sfm_data, dPrecision, 2);
+  const size_t nbOutliers_angleErr = RemoveOutliers_AngleError(_sfm_data, 2.0);
 
-  return (nbOutliers_residualErr + nbOutliers_angleErr) > 50;
+  return (nbOutliers_residualErr + nbOutliers_angleErr) > count;
 }
 
 } // namespace sfm

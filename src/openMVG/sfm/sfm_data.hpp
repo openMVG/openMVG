@@ -64,7 +64,7 @@ struct SfM_Data
   }
 
   /// Get the pose associated to a view
-  const geometry::Pose3& GetPoseOrDie(const View * view) const
+  const geometry::Pose3 GetPoseOrDie(const View * view) const
   {
     return poses.at(view->id_pose);
   }
