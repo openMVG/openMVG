@@ -35,6 +35,7 @@ using namespace openMVG::cameras;
 using namespace openMVG::matching;
 using namespace openMVG::robust;
 using namespace openMVG::sfm;
+using namespace openMVG::matching_image_collection;
 using namespace std;
 
 enum EGeometricModel
@@ -75,10 +76,10 @@ int main(int argc, char **argv)
   cmd.add( make_option('o', sMatchesDirectory, "out_dir") );
   // Options
   cmd.add( make_option('r', fDistRatio, "ratio") );
-  cmd.add( make_option('g', sGeometricModel, "geometricModel") );
-  cmd.add( make_option('v', iMatchingVideoMode, "videoModeMatching") );
-  cmd.add( make_option('l', sPredefinedPairList, "pairList") );
-  cmd.add( make_option('n', sNearestMatchingMethod, "nearestMatchingMethod") );
+  cmd.add( make_option('g', sGeometricModel, "geometric_model") );
+  cmd.add( make_option('v', iMatchingVideoMode, "video_mode_matching") );
+  cmd.add( make_option('l', sPredefinedPairList, "pair_list") );
+  cmd.add( make_option('n', sNearestMatchingMethod, "nearest_matching_method") );
   cmd.add( make_option('f', bForce, "force") );
 
   try {
@@ -92,18 +93,18 @@ int main(int argc, char **argv)
       << "[-f|--force] Force to recompute data]\n"
       << "[-r|--ratio] Distance ratio to discard non meaningful matches\n"
       << "   0.6: (default); you can use 0.8 to have more matches.\n"
-      << "[-g|--geometricModel]\n"
+      << "[-g|--geometric_model]\n"
       << "  (pairwise correspondences filtering thanks to robust model estimation):\n"
       << "   f: (default) fundamental matrix,\n"
       << "   e: essential matrix,\n"
       << "   h: homography matrix.\n"
-      << "[-v|--videoModeMatching]\n"
+      << "[-v|--video_mode_matching]\n"
       << "  (sequence matching with an overlap of X images)\n"
       << "   X: with match 0 with (1->X), ...]\n"
       << "   2: will match 0 with (1,2), 1 with (2,3), ...\n"
       << "   3: will match 0 with (1,2,3), 1 with (2,3,4), ...\n"
-      << "[-l]--pairList] file\n"
-      << "[-n|--nearestMatchingMethod]\n"
+      << "[-l]--pair_list] file\n"
+      << "[-n|--nearest_matching_method]\n"
       << "  AUTO: auto choice from regions type,\n"
       << "  BRUTEFORCEL2: BruteForce L2 matching for Scalar based regions descriptor,\n"
       << "  BRUTEFORCEHAMMING: BruteForce Hamming matching for binary based regions descriptor,\n"
@@ -114,14 +115,17 @@ int main(int argc, char **argv)
       return EXIT_FAILURE;
   }
 
-  std::cout << " You called : " <<std::endl
-            << argv[0] << std::endl
-            << "--input_file " << sSfM_Data_Filename << std::endl
-            << "--outdir " << sMatchesDirectory << std::endl
-            << "--ratio " << fDistRatio << std::endl
-            << "--geometricModel " << sGeometricModel << std::endl
-            << "--videoModeMatching " << iMatchingVideoMode << std::endl
-            << "--nearestMatchingMethod " << sNearestMatchingMethod << std::endl;
+  std::cout << " You called : " << "\n"
+            << argv[0] << "\n"
+            << "--input_file " << sSfM_Data_Filename << "\n"
+            << "--out_dir " << sMatchesDirectory << "\n"
+            << "Optional parameters:" << "\n"
+            << "--force " << bForce << "\n"
+            << "--ratio " << fDistRatio << "\n"
+            << "--geometric_model " << sGeometricModel << "\n"
+            << "--video_mode_matching " << iMatchingVideoMode << "\n"
+            << "--pair_list " << sPredefinedPairList << "\n"
+            << "--nearest_matching_method " << sNearestMatchingMethod << std::endl;
 
   EPairMode ePairmode = (iMatchingVideoMode == -1 ) ? PAIR_EXHAUSTIVE : PAIR_CONTIGUOUS;
 
@@ -196,6 +200,14 @@ int main(int argc, char **argv)
   //    - Descriptor matching (according user method choice)
   //    - Keep correspondences only if NearestNeighbor ratio is ok
   //---------------------------------------
+
+  // Load the corresponding view regions
+  std::shared_ptr<Regions_Provider> regions_provider = std::make_shared<Regions_Provider>();
+  if (!regions_provider->load(sfm_data, sMatchesDirectory, regions_type)) {
+    std::cerr << std::endl << "Invalid regions." << std::endl;
+    return EXIT_FAILURE;
+  }
+
   PairWiseMatches map_PutativesMatches;
 
   // Build some alias from SfM_Data Views data:
@@ -269,7 +281,7 @@ int main(int argc, char **argv)
     }
     // Perform the matching
     system::Timer timer;
-    if (collectionMatcher->loadData(regions_type, vec_fileNames, sMatchesDirectory))
+    // Setup view pairs that must be tested
     {
       // From matching mode compute the pair list that have to be matched:
       Pair_Set pairs;
@@ -285,7 +297,7 @@ int main(int argc, char **argv)
           break;
       }
       // Photometric matching of putative pairs
-      collectionMatcher->Match(vec_fileNames, pairs, map_PutativesMatches);
+      collectionMatcher->Match(sfm_data, regions_provider, pairs, map_PutativesMatches);
       //---------------------------------------
       //-- Export putative matches
       //---------------------------------------

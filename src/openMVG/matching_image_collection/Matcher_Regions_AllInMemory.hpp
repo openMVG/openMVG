@@ -11,6 +11,7 @@
 #include "openMVG/matching_image_collection/Matcher.hpp"
 
 namespace openMVG {
+namespace matching_image_collection {
 
 enum EMatcherType
 {
@@ -29,14 +30,10 @@ class Matcher_Regions_AllInMemory : public Matcher
   public:
   Matcher_Regions_AllInMemory(float distRatio, EMatcherType eMatcherType);
 
-  /// Load all features and descriptors in memory
-  bool loadData(
-    std::unique_ptr<features::Regions>& region_type, // interface to load computed regions
-    const std::vector<std::string> & vec_fileNames, // input filenames
-    const std::string & sMatchDir); // where the data are saved
-
+  /// Find corresponding points between some pair of view Ids
   void Match(
-    const std::vector<std::string> & vec_fileNames, // input filenames,
+    const sfm::SfM_Data & sfm_data,
+    const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
     const Pair_Set & pairs,
     matching::PairWiseMatches & map_PutativesMatches)const; // the pairwise photometric corresponding points
 
@@ -48,4 +45,5 @@ class Matcher_Regions_AllInMemory : public Matcher
   EMatcherType _eMatcherType;
 };
 
-}; // namespace openMVG
+} // namespace openMVG
+} // namespace matching_image_collection
