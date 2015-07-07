@@ -79,7 +79,7 @@ struct distanceRatio
   { }
 
   // Update match according the provided distance
-  inline void update(size_t index, DistT dist)
+  inline bool update(size_t index, DistT dist)
   {
     if (dist < bd) // best than any previous
     {
@@ -87,11 +87,14 @@ struct distanceRatio
       // update and swap
       sbd = dist;
       std::swap(bd, sbd);
+      return true;
     }
     else if(dist < sbd)
     {
       sbd = dist;
+      return true;
     }
+    return false;
   }
 
   // Return if the ratio of distance is ok or not
