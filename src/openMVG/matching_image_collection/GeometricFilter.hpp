@@ -38,7 +38,9 @@ struct ImageCollectionGeometricFilter
   void Robust_model_estimation
   (
     const GeometryFunctor & functor,
-    const PairWiseMatches & putative_matches
+    const PairWiseMatches & putative_matches,
+    const bool b_guided_matching = false,
+    const double d_distance_ratio = 0.6
   );
 
   const PairWiseMatches & Get_geometric_matches() const {return _map_GeometricMatches;}
@@ -53,7 +55,9 @@ template<typename GeometryFunctor>
 void ImageCollectionGeometricFilter::Robust_model_estimation
 (
   const GeometryFunctor & functor,
-  const PairWiseMatches & putative_matches
+  const PairWiseMatches & putative_matches,
+  const bool b_guided_matching,
+  const double d_distance_ratio
 )
 {
   C_Progress_display my_progress_bar( putative_matches.size() );
@@ -75,6 +79,13 @@ void ImageCollectionGeometricFilter::Robust_model_estimation
       GeometryFunctor geometricFilter = functor; // use a copy since we are in a multi-thread context
       if (geometricFilter.Robust_estimation(_sfm_data, _regions_provider, iter->first, vec_PutativeMatches, putative_inliers))
       {
+        if (b_guided_matching)
+        {
+          IndMatches guided_geometric_inliers;
+          geometricFilter.Geometry_guided_matching(_sfm_data, _regions_provider, iter->first, d_distance_ratio, guided_geometric_inliers);
+          //std::cout << "#before/#after: " << putative_inliers.size() << "/" << guided_geometric_inliers.size() << std::endl;
+          std::swap(putative_inliers, guided_geometric_inliers);
+        }
 
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp critical

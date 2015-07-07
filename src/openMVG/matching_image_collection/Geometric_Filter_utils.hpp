@@ -25,7 +25,7 @@ void MatchesPointsToMat
   x_I.resize(2, n);
   x_J.resize(2, n);
   typedef typename MatT::Scalar Scalar; // Output matrix type
-  
+
   for (size_t i=0; i < putativeMatches.size(); ++i)  {
     const features::PointFeature & pt_I = feature_I[putativeMatches[i]._i];
     const features::PointFeature & pt_J = feature_J[putativeMatches[i]._j];
@@ -54,17 +54,18 @@ void MatchesPairToMat
   const sfm::View * view_I = sfm_data->views.at(pairIndex.first).get();
   const sfm::View * view_J = sfm_data->views.at(pairIndex.second).get();
 
-  // Check that valid camera are existing for the pair index
-  const bool bHaveIntrinsic_I = sfm_data->GetIntrinsics().find(view_I->id_intrinsic) != sfm_data->GetIntrinsics().end();
-  const bool bHaveIntrinsic_J = sfm_data->GetIntrinsics().find(view_J->id_intrinsic) != sfm_data->GetIntrinsics().end();
-
-  const cameras::IntrinsicBase * cam_I = bHaveIntrinsic_I ? sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
-  const cameras::IntrinsicBase * cam_J = bHaveIntrinsic_I ? sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
+  // Retrieve corresponding pair camera intrinsic if any
+  const cameras::IntrinsicBase * cam_I =
+    sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
+      sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
+  const cameras::IntrinsicBase * cam_J =
+    sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
+      sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
 
   // Load features of Inth and Jnth images
   const features::PointFeatures feature_I = regions_provider->regions_per_view.at(pairIndex.first)->GetRegionsPositions();
   const features::PointFeatures feature_J = regions_provider->regions_per_view.at(pairIndex.second)->GetRegionsPositions();
-  
+
   MatchesPointsToMat(
     putativeMatches,
     cam_I, feature_I,

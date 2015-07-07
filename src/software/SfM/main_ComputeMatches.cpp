@@ -70,6 +70,7 @@ int main(int argc, char **argv)
   bool bUpRight = false;
   std::string sNearestMatchingMethod = "AUTO";
   bool bForce = false;
+  bool bGuided_matching = false;
 
   //required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -81,6 +82,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('l', sPredefinedPairList, "pair_list") );
   cmd.add( make_option('n', sNearestMatchingMethod, "nearest_matching_method") );
   cmd.add( make_option('f', bForce, "force") );
+  cmd.add( make_option('m', bGuided_matching, "guided_matching") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -109,6 +111,8 @@ int main(int argc, char **argv)
       << "  BRUTEFORCEL2: BruteForce L2 matching for Scalar based regions descriptor,\n"
       << "  BRUTEFORCEHAMMING: BruteForce Hamming matching for binary based regions descriptor,\n"
       << "  ANNL2: Approximate Nearest Neighbor L2 matching for Scalar based regions descriptor.\n"
+      << "[-m|--guided_matching]\n"
+      << "  use the found model to improve the pairwise correspondences."
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -125,7 +129,8 @@ int main(int argc, char **argv)
             << "--geometric_model " << sGeometricModel << "\n"
             << "--video_mode_matching " << iMatchingVideoMode << "\n"
             << "--pair_list " << sPredefinedPairList << "\n"
-            << "--nearest_matching_method " << sNearestMatchingMethod << std::endl;
+            << "--nearest_matching_method " << sNearestMatchingMethod << "\n"
+            << "--guided_matching " << bGuided_matching << std::endl;
 
   EPairMode ePairmode = (iMatchingVideoMode == -1 ) ? PAIR_EXHAUSTIVE : PAIR_CONTIGUOUS;
 
@@ -341,19 +346,21 @@ int main(int argc, char **argv)
     {
       case HOMOGRAPHY_MATRIX:
       {
-        filter_ptr->Robust_model_estimation(GeometricFilter_HMatrix_AC(4.0), map_PutativesMatches);
+        const bool bGeometric_only_guided_matching = true;
+        filter_ptr->Robust_model_estimation(GeometricFilter_HMatrix_AC(4.0), map_PutativesMatches, bGuided_matching,
+          bGeometric_only_guided_matching ? -1.0 : 0.6);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
       case FUNDAMENTAL_MATRIX:
       {
-        filter_ptr->Robust_model_estimation(GeometricFilter_FMatrix_AC(4.0), map_PutativesMatches);
+        filter_ptr->Robust_model_estimation(GeometricFilter_FMatrix_AC(4.0), map_PutativesMatches, bGuided_matching);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
       case ESSENTIAL_MATRIX:
       {
-        filter_ptr->Robust_model_estimation(GeometricFilter_EMatrix_AC(4.0), map_PutativesMatches);
+        filter_ptr->Robust_model_estimation(GeometricFilter_EMatrix_AC(4.0), map_PutativesMatches, bGuided_matching);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
 
         //-- Perform an additional check to remove pairs with poor overlap

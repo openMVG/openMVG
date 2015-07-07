@@ -11,6 +11,7 @@
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
+#include "openMVG/robust_estimation/guided_matching.hpp"
 
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
@@ -89,6 +90,46 @@ struct GeometricFilter_FMatrix_AC
       vec_inliers.clear();
       return false;
     }
+  }
+
+  bool Geometry_guided_matching
+  (
+    const sfm::SfM_Data * sfm_data,
+    const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
+    const Pair pairIndex,
+    const double dDistanceRatio,
+    matching::IndMatches & matches
+  )
+  {
+    if (m_dPrecision_robust != std::numeric_limits<double>::infinity())
+    {
+      // Get back corresponding view index
+      const IndexT iIndex = pairIndex.first;
+      const IndexT jIndex = pairIndex.second;
+
+      const sfm::View * view_I = sfm_data->views.at(iIndex).get();
+      const sfm::View * view_J = sfm_data->views.at(jIndex).get();
+
+      // Retrieve corresponding pair camera intrinsic if any
+      const cameras::IntrinsicBase * cam_I =
+        sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
+          sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
+      const cameras::IntrinsicBase * cam_J =
+        sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
+          sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
+
+      // Check the features correspondences that agree in the geometric and photometric domain
+      geometry_aware::GuidedMatching
+        <Mat3,
+        openMVG::fundamental::kernel::EpipolarDistanceError>(
+        //openMVG::fundamental::kernel::SymmetricEpipolarDistanceError>(
+        m_F,
+        cam_I, *regions_provider->regions_per_view.at(iIndex),
+        cam_J, *regions_provider->regions_per_view.at(jIndex),
+        Square(m_dPrecision_robust), Square(dDistanceRatio),
+        matches);
+    }
+    return matches.size() != 0;
   }
 
   double m_dPrecision;  //upper_bound precision used for robust estimation

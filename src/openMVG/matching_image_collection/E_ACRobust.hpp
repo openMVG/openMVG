@@ -12,6 +12,7 @@
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
+#include "openMVG/robust_estimation/guided_matching.hpp"
 #include <limits>
 
 #include "openMVG/matching/indMatch.hpp"
@@ -54,16 +55,16 @@ struct GeometricFilter_EMatrix_AC
     const sfm::View * view_I = sfm_data->views.at(iIndex).get();
     const sfm::View * view_J = sfm_data->views.at(jIndex).get();
 
-    // Check that valid camera are existing for the pair index
-    const bool bHaveIntrinsic_I = sfm_data->GetIntrinsics().find(view_I->id_intrinsic) != sfm_data->GetIntrinsics().end();
-    const bool bHaveIntrinsic_J = sfm_data->GetIntrinsics().find(view_J->id_intrinsic) != sfm_data->GetIntrinsics().end();
+     // Check that valid cameras can be retrieved for the pair of views
+    const cameras::IntrinsicBase * cam_I =
+      sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
+        sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
+    const cameras::IntrinsicBase * cam_J =
+      sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
+        sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
 
-    if (!bHaveIntrinsic_I || !bHaveIntrinsic_J)
-     return false;
-
-    const cameras::IntrinsicBase * cam_I = bHaveIntrinsic_I ? sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
-    const cameras::IntrinsicBase * cam_J = bHaveIntrinsic_I ? sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
-
+    if (!cam_I || !cam_J)
+      return false;
     if ( !isPinhole(cam_I->getType()) || !isPinhole(cam_J->getType()))
       return false;
 
@@ -113,6 +114,57 @@ struct GeometricFilter_EMatrix_AC
       vec_inliers.clear();
       return false;
     }
+  }
+
+  bool Geometry_guided_matching
+  (
+    const sfm::SfM_Data * sfm_data,
+    const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
+    const Pair pairIndex,
+    const double dDistanceRatio,
+    matching::IndMatches & matches
+  )
+  {
+    if (m_dPrecision_robust != std::numeric_limits<double>::infinity())
+    {
+      // Get back corresponding view index
+      const IndexT iIndex = pairIndex.first;
+      const IndexT jIndex = pairIndex.second;
+
+      const sfm::View * view_I = sfm_data->views.at(iIndex).get();
+      const sfm::View * view_J = sfm_data->views.at(jIndex).get();
+
+      // Check that valid cameras can be retrieved for the pair of views
+      const cameras::IntrinsicBase * cam_I =
+        sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
+          sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
+      const cameras::IntrinsicBase * cam_J =
+        sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
+          sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
+
+      if (!cam_I || !cam_J)
+        return false;
+
+      if ( !isPinhole(cam_I->getType()) || !isPinhole(cam_J->getType()))
+        return false;
+
+      const cameras::Pinhole_Intrinsic * ptrPinhole_I = (const cameras::Pinhole_Intrinsic*)(cam_I);
+      const cameras::Pinhole_Intrinsic * ptrPinhole_J = (const cameras::Pinhole_Intrinsic*)(cam_J);
+
+      Mat3 F;
+      FundamentalFromEssential(m_E, ptrPinhole_I->K(), ptrPinhole_J->K(), &F);
+
+      geometry_aware::GuidedMatching
+        <Mat3,
+        openMVG::fundamental::kernel::EpipolarDistanceError>(
+        //openMVG::fundamental::kernel::SymmetricEpipolarDistanceError>(
+        F,
+        cam_I, *regions_provider->regions_per_view.at(iIndex),
+        cam_J, *regions_provider->regions_per_view.at(jIndex),
+        Square(m_dPrecision_robust), Square(dDistanceRatio),
+        matches);
+    }
+    return matches.size() != 0;
   }
 
   double m_dPrecision;  //upper_bound precision used for robust estimation
