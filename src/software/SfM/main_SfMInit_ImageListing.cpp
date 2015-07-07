@@ -186,16 +186,14 @@ int main(int argc, char **argv)
       continue; // image cannot be opened
 
     ImageHeader imgHeader;
-    if (openMVG::image::ReadImageHeader(sImageFilename.c_str(), &imgHeader))
-    {
-      width = imgHeader.width;
-      height = imgHeader.height;
-      ppx = width / 2.0;
-      ppy = height / 2.0;
-    }
-    else
+    if (!openMVG::image::ReadImageHeader(sImageFilename.c_str(), &imgHeader))
       continue; // image cannot be read
 
+    width = imgHeader.width;
+    height = imgHeader.height;
+    ppx = width / 2.0;
+    ppy = height / 2.0;
+    
     std::unique_ptr<Exif_IO> exifReader(new Exif_IO_EasyExif());
     exifReader->open( sImageFilename );
 

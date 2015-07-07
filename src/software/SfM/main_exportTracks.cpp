@@ -118,6 +118,7 @@ int main(int argc, char ** argv)
   const size_t viewCount = sfm_data.GetViews().size();
 
   stlplus::folder_create(sOutDir);
+  std::cout << "\n viewCount: " << viewCount << std::endl;
   std::cout << "\n Export pairwise tracks" << std::endl;
   C_Progress_display my_progress_bar( (viewCount*(viewCount-1)) / 2.0 );
 

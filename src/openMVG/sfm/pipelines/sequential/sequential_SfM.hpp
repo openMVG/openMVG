@@ -49,6 +49,12 @@ public:
   /// Compute the initial 3D seed (First camera t=0; R=Id, second estimated by 5 point algorithm)
   bool MakeInitialPair3D(const Pair & initialPair);
 
+  /**
+   * Set the default lens distortion type to use if it is declared unknown
+   * in the intrinsics camera parameters by the previous steps.
+   *
+   * It can be declared unknown if the type cannot be deduced from the metadata.
+   */
   void SetUnknownCameraType(const cameras::EINTRINSIC camType)
   {
     _camType = camType;
@@ -65,9 +71,6 @@ private:
   /// List the images that the greatest number of matches to the current 3D reconstruction.
   bool FindImagesWithPossibleResection(std::vector<size_t> & vec_possible_indexes);
 
-  /// Add to the current scene the desired image indexes.
-  bool Resection(std::vector<size_t> & vec_possible_indexes);
-
   /// Add a single Image to the scene and triangulate new possible tracks.
   bool Resection(size_t imageIndex);
 
@@ -75,7 +78,7 @@ private:
   void BundleAdjustment();
 
   /// Discard track with too large residual error
-  size_t badTrackRejector(double dPrecision);
+  size_t badTrackRejector(double dPrecision, size_t count = 0);
 
   //----
   //-- Data
