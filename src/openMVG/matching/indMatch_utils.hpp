@@ -42,27 +42,24 @@ static bool PairedIndMatchImport(
   const std::string & fileName,
   PairWiseMatches & map_indexedMatches)
 {
-  bool bOk = false;
   std::ifstream in(fileName.c_str());
-  if (in.is_open()) {
-    map_indexedMatches.clear();
-
-    size_t I, J, number;
-    while (in >> I >> J >> number)  {
-      std::vector<IndMatch> matches(number);
-      for (size_t i = 0; i < number; ++i) {
-        in >> matches[i];
-      }
-      map_indexedMatches[std::make_pair(I,J)] = matches;
-    }
-    bOk = true;
-  }
-  else  {
+  if (!in.is_open()) {
     std::cout << std::endl << "ERROR indexedMatchesUtils::import(...)" << std::endl
       << "with : " << fileName << std::endl;
-    bOk = false;
+    return false;
   }
-  return bOk;
+  
+  map_indexedMatches.clear();
+
+  size_t I, J, number;
+  while (in >> I >> J >> number)  {
+    std::vector<IndMatch> matches(number);
+    for (size_t i = 0; i < number; ++i) {
+      in >> matches[i];
+    }
+    map_indexedMatches[std::make_pair(I,J)] = matches;
+  }
+  return true;
 }
 }  // namespace matching
 }  // namespace openMVG

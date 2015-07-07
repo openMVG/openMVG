@@ -46,9 +46,10 @@ static bool loadPairs(
      Pair_Set & pairs)  // output pairs read from the list file
 {
   std::ifstream in(sFileName.c_str());
-  if(!in.is_open())  {
+  if(!in.is_open())
+  {
     std::cerr << std::endl
-      << "--loadPairs: Impossible to read the specified file." << std::endl;
+      << "loadPairs: Impossible to read the specified file: \"" << sFileName << "\"." << std::endl;
     return false;
   }
   std::string sValue;
@@ -60,7 +61,7 @@ static bool loadPairs(
     const size_t str_size = vec_str.size();
     if (str_size < 2)
     {
-      std::cerr << "--loadPairs: Invalid input file" << std::endl;
+      std::cerr << "loadPairs: Invalid input file: \"" << sFileName << "\"." << std::endl;
       return false;
     }
     std::stringstream oss;
@@ -73,21 +74,17 @@ static bool loadPairs(
       oss >> J;
       if( I > N-1 || J > N-1) //I&J always > 0 since we use unsigned type
       {
-        std::cerr << "--loadPairs: Invalid input file. Image out of range" << std::endl;
+        std::cerr << "loadPairs: Invalid input file. Image out of range. "
+                << "I: " << I << " J:" << J << " N:" << N << std::endl
+                << "File: \"" << sFileName << "\"." << std::endl;
         return false;
       }
-      else
+      if( I == J )
       {
-        if( I != J )
-        {
-          pairs.insert( (I < J) ? std::make_pair(I, J) : std::make_pair(J, I) );
-        }
-        else
-        {
-          std::cerr << "--loadPairs: Invalid input file. Image see herself " << std::endl;
-          return false;
-        }
+        std::cerr << "loadPairs: Invalid input file. Image " << I << " see itself. File: \"" << sFileName << "\"." << std::endl;
+        return false;
       }
+      pairs.insert( (I < J) ? std::make_pair(I, J) : std::make_pair(J, I) );
     }
   }
   in.close();
@@ -103,7 +100,7 @@ static bool savePairs(const std::string &sFileName, const Pair_Set & pairs)
   std::ofstream outStream(sFileName.c_str());
   if(!outStream.is_open())  {
     std::cerr << std::endl
-      << "--savePairs: Impossible to open the output specified file." << std::endl;
+      << "savePairs: Impossible to open the output specified file: \"" << sFileName << "\"." << std::endl;
     return false;
   }
   for (Pair_Set::const_iterator iterP = pairs.begin();
