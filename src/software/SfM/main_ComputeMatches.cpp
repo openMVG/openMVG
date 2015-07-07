@@ -281,7 +281,6 @@ int main(int argc, char **argv)
     }
     // Perform the matching
     system::Timer timer;
-    // Setup view pairs that must be tested
     {
       // From matching mode compute the pair list that have to be matched:
       Pair_Set pairs;
@@ -329,57 +328,33 @@ int main(int argc, char **argv)
   //    - Use an upper bound for the a contrario estimated threshold
   //---------------------------------------
 
-  // Load the features
-  std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
-  if (!feats_provider->load(sfm_data, sMatchesDirectory, regions_type)) {
-    std::cerr << std::endl << "Invalid features." << std::endl;
-    return EXIT_FAILURE;
-  }
+  std::unique_ptr<ImageCollectionGeometricFilter> filter_ptr(
+    new ImageCollectionGeometricFilter(&sfm_data, regions_provider));
 
-  PairWiseMatches map_GeometricMatches;
-
-  ImageCollectionGeometricFilter collectionGeomFilter(feats_provider.get());
-  const double maxResidualError = 4.0;
+  if (filter_ptr)
   {
     system::Timer timer;
-    std::cout << std::endl << " - GEOMETRIC FILTERING - " << std::endl;
+    std::cout << std::endl << " - Geometric filtering - " << std::endl;
+
+    PairWiseMatches map_GeometricMatches;
     switch (eGeometricModelToCompute)
     {
+      case HOMOGRAPHY_MATRIX:
+      {
+        filter_ptr->Robust_model_estimation(GeometricFilter_HMatrix_AC(4.0), map_PutativesMatches);
+        map_GeometricMatches = filter_ptr->Get_geometric_matches();
+      }
+      break;
       case FUNDAMENTAL_MATRIX:
       {
-       collectionGeomFilter.Filter(
-          GeometricFilter_FMatrix_AC(maxResidualError),
-          map_PutativesMatches,
-          map_GeometricMatches,
-          vec_imagesSize);
+        filter_ptr->Robust_model_estimation(GeometricFilter_FMatrix_AC(4.0), map_PutativesMatches);
+        map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
       case ESSENTIAL_MATRIX:
       {
-        // Build the intrinsic parameter map for each view
-        std::map<IndexT, Mat3> map_K;
-        size_t cpt = 0;
-        for (Views::const_iterator iter = sfm_data.GetViews().begin();
-          iter != sfm_data.GetViews().end();
-          ++iter, ++cpt)
-        {
-          const View * v = iter->second.get();
-          if (sfm_data.GetIntrinsics().count(v->id_intrinsic))
-          {
-            const IntrinsicBase * ptrIntrinsic = sfm_data.GetIntrinsics().find(v->id_intrinsic)->second.get();
-            if (isPinhole(ptrIntrinsic->getType()))
-            {
-              const Pinhole_Intrinsic * ptrPinhole = (const Pinhole_Intrinsic*)(ptrIntrinsic);
-              map_K[cpt] = ptrPinhole->K();
-             }
-          }
-        }
-
-        collectionGeomFilter.Filter(
-          GeometricFilter_EMatrix_AC(map_K, maxResidualError),
-          map_PutativesMatches,
-          map_GeometricMatches,
-          vec_imagesSize);
+        filter_ptr->Robust_model_estimation(GeometricFilter_EMatrix_AC(4.0), map_PutativesMatches);
+        map_GeometricMatches = filter_ptr->Get_geometric_matches();
 
         //-- Perform an additional check to remove pairs with poor overlap
         std::vector<PairWiseMatches::key_type> vec_toRemove;
@@ -400,15 +375,6 @@ int main(int argc, char **argv)
         {
           map_GeometricMatches.erase(*iter);
         }
-      }
-      break;
-      case HOMOGRAPHY_MATRIX:
-      {
-        collectionGeomFilter.Filter(
-          GeometricFilter_HMatrix_AC(maxResidualError),
-          map_PutativesMatches,
-          map_GeometricMatches,
-          vec_imagesSize);
       }
       break;
     }

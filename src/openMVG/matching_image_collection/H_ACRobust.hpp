@@ -1,5 +1,5 @@
 
-// Copyright (c) 2014 Pierre MOULON.
+// Copyright (c) 2014, 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,30 +10,51 @@
 #include "openMVG/multiview/solver_homography_kernel.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
-#include <limits>
+
+#include "openMVG/matching/indMatch.hpp"
+#include "openMVG/matching/indMatchDecoratorXY.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/matching_image_collection/Geometric_Filter_utils.hpp"
 
 namespace openMVG {
-using namespace openMVG::robust;
+namespace matching_image_collection {
 
-//-- A contrario Functor to filter putative corresponding points
-//--  Homography matrix estimation struct functor
+//-- A contrario homography matrix estimation template functor used for filter pair of putative correspondences 
 struct GeometricFilter_HMatrix_AC
 {
   GeometricFilter_HMatrix_AC(
     double dPrecision = std::numeric_limits<double>::infinity(),
     size_t iteration = 4096)
-    : m_dPrecision(dPrecision), m_stIteration(iteration)  {};
+    : m_dPrecision(dPrecision), m_stIteration(iteration), m_H(Mat3::Identity()),
+      m_dPrecision_robust(std::numeric_limits<double>::infinity()){};
 
   /// Robust fitting of the HOMOGRAPHY matrix
-  bool Fit(
-    const std::pair<size_t, size_t> pairIndex,
-    const Mat & xA,
-    const std::pair<size_t, size_t> & imgSizeA,
-    const Mat & xB,
-    const std::pair<size_t, size_t> & imgSizeB,
-    std::vector<size_t> & vec_inliers) const
+  bool Robust_estimation(
+    const sfm::SfM_Data * sfm_data,
+    const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
+    const Pair pairIndex,
+    const matching::IndMatches & vec_PutativeMatches,
+    matching::IndMatches & geometric_inliers)
   {
-    vec_inliers.clear();
+    using namespace openMVG;
+    using namespace openMVG::robust;
+    geometric_inliers.clear();
+
+    // Get back corresponding view index
+    const IndexT iIndex = pairIndex.first;
+    const IndexT jIndex = pairIndex.second;
+
+    //--
+    // Get corresponding point regions arrays
+    //--
+
+    Mat xI,xJ;
+    MatchesPairToMat(pairIndex, vec_PutativeMatches, sfm_data, regions_provider, xI, xJ);
+
+    //--
+    // Robust estimation
+    //--
 
     // Define the AContrario adapted Homography matrix solver
     typedef ACKernelAdaptor<
@@ -44,25 +65,40 @@ struct GeometricFilter_HMatrix_AC
       KernelType;
 
     KernelType kernel(
-      xA, imgSizeA.first, imgSizeA.second,
-      xB, imgSizeB.first, imgSizeB.second,
+      xI, sfm_data->GetViews().at(iIndex)->ui_width, sfm_data->GetViews().at(iIndex)->ui_height,
+      xJ, sfm_data->GetViews().at(jIndex)->ui_width, sfm_data->GetViews().at(jIndex)->ui_height,
       false); // configure as point to point error model.
-    
-    // Robustly estimate the Homography matrix with A Contrario ransac
-    Mat3 H;
-    double upper_bound_precision = m_dPrecision;
-    std::pair<double,double> ACRansacOut =
-      ACRANSAC(kernel, vec_inliers, m_stIteration, &H, upper_bound_precision);
 
-    if (vec_inliers.size() < KernelType::MINIMUM_SAMPLES *2.5)  {
+    // Robustly estimate the Homography matrix with A Contrario ransac
+    const double upper_bound_precision = Square(m_dPrecision);
+    std::vector<size_t> vec_inliers;
+    const std::pair<double,double> ACRansacOut =
+      ACRANSAC(kernel, vec_inliers, m_stIteration, &m_H, upper_bound_precision);
+
+    if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5)  {
+      m_dPrecision_robust = ACRansacOut.first;
+      // update geometric_inliers
+      geometric_inliers.reserve(vec_inliers.size());
+      for ( const size_t & index : vec_inliers)  {
+        geometric_inliers.push_back( vec_PutativeMatches[index] );
+      }
+      return true;
+    }
+    else  {
       vec_inliers.clear();
       return false;
     }
-    return true;
   }
 
-  double m_dPrecision;  //upper_bound of the precision
-  size_t m_stIteration; //maximal number of used iterations
+  double m_dPrecision;  //upper_bound precision used for robust estimation
+  size_t m_stIteration; //maximal number of iteration for robust estimation
+  //
+  //-- Stored data
+  Mat3 m_H;
+  double m_dPrecision_robust;
 };
 
-}; // namespace openMVG
+} // namespace openMVG
+} //namespace matching_image_collection
+
+

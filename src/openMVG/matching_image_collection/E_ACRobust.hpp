@@ -1,5 +1,5 @@
 
-// Copyright (c) 2012, 2013, 2014 Pierre MOULON.
+// Copyright (c) 2012, 2013, 2014, 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,36 +14,69 @@
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 #include <limits>
 
-namespace openMVG {
-using namespace openMVG::robust;
+#include "openMVG/matching/indMatch.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/matching_image_collection/Geometric_Filter_utils.hpp"
 
-//-- A contrario Functor to filter putative corresponding points
-//--  Essential matrix estimation struct functor
+namespace openMVG {
+namespace matching_image_collection {
+
+//-- A contrario essential matrix estimation template functor used for filter pair of putative correspondences 
 struct GeometricFilter_EMatrix_AC
 {
   GeometricFilter_EMatrix_AC(
-    const std::map<IndexT, Mat3> & K,
     double dPrecision = std::numeric_limits<double>::infinity(),
     size_t iteration = 4096)
-    : m_dPrecision(dPrecision), m_stIteration(iteration), m_K(K) {};
+    : m_dPrecision(dPrecision), m_stIteration(iteration), m_E(Mat3::Identity()),
+      m_dPrecision_robust(std::numeric_limits<double>::infinity()){};
 
   /// Robust fitting of the ESSENTIAL matrix
-  bool Fit(
-    const std::pair<size_t, size_t> pairIndex,
-    const Mat & xA,
-    const std::pair<size_t, size_t> & imgSizeA,
-    const Mat & xB,
-    const std::pair<size_t, size_t> & imgSizeB,
-    std::vector<size_t> & vec_inliers) const
+  bool Robust_estimation(
+    const sfm::SfM_Data * sfm_data,
+    const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
+    const Pair pairIndex,
+    const matching::IndMatches & vec_PutativeMatches,
+    matching::IndMatches & geometric_inliers)
   {
-    vec_inliers.clear();
+    using namespace openMVG;
+    using namespace openMVG::robust;
+    geometric_inliers.clear();
 
-    std::map<IndexT, Mat3>::const_iterator
-      iterK_I = m_K.find(pairIndex.first),
-      iterK_J = m_K.find(pairIndex.second);
-    // Check that intrinsic parameters exist for this pair
-    if (iterK_I == m_K.end() || iterK_J == m_K.end() )
+    // Get back corresponding view index
+    const IndexT iIndex = pairIndex.first;
+    const IndexT jIndex = pairIndex.second;
+
+    //--
+    // Reject pair with missing Intrinsic information
+    //--
+
+    const sfm::View * view_I = sfm_data->views.at(iIndex).get();
+    const sfm::View * view_J = sfm_data->views.at(jIndex).get();
+
+    // Check that valid camera are existing for the pair index
+    const bool bHaveIntrinsic_I = sfm_data->GetIntrinsics().find(view_I->id_intrinsic) != sfm_data->GetIntrinsics().end();
+    const bool bHaveIntrinsic_J = sfm_data->GetIntrinsics().find(view_J->id_intrinsic) != sfm_data->GetIntrinsics().end();
+
+    if (!bHaveIntrinsic_I || !bHaveIntrinsic_J)
+     return false;
+
+    const cameras::IntrinsicBase * cam_I = bHaveIntrinsic_I ? sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
+    const cameras::IntrinsicBase * cam_J = bHaveIntrinsic_I ? sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
+
+    if ( !isPinhole(cam_I->getType()) || !isPinhole(cam_J->getType()))
       return false;
+
+    //--
+    // Get corresponding point regions arrays
+    //--
+
+    Mat xI,xJ;
+    MatchesPairToMat(pairIndex, vec_PutativeMatches, sfm_data, regions_provider, xI, xJ);
+
+    //--
+    // Robust estimation
+    //--
 
     // Define the AContrario adapted Essential matrix solver
     typedef ACKernelAdaptorEssential<
@@ -53,26 +86,43 @@ struct GeometricFilter_EMatrix_AC
         Mat3>
         KernelType;
 
-    KernelType kernel(xA, imgSizeA.first, imgSizeA.second,
-                      xB, imgSizeB.first, imgSizeB.second,
-                      iterK_I->second, iterK_J->second);
+    const cameras::Pinhole_Intrinsic * ptrPinhole_I = (const cameras::Pinhole_Intrinsic*)(cam_I);
+    const cameras::Pinhole_Intrinsic * ptrPinhole_J = (const cameras::Pinhole_Intrinsic*)(cam_J);
 
-    // Robustly estimate the Essential matrix with A Contrario ransac
-    Mat3 E;
-    double upper_bound_precision = m_dPrecision;
-    std::pair<double,double> ACRansacOut =
-      ACRANSAC(kernel, vec_inliers, m_stIteration, &E, upper_bound_precision);
+    KernelType kernel(
+      xI, sfm_data->GetViews().at(iIndex)->ui_width, sfm_data->GetViews().at(iIndex)->ui_height,
+      xJ, sfm_data->GetViews().at(jIndex)->ui_width, sfm_data->GetViews().at(jIndex)->ui_height,
+      ptrPinhole_I->K(), ptrPinhole_J->K());
 
-    if (vec_inliers.size() < KernelType::MINIMUM_SAMPLES *2.5)  {
+    // Robustly estimate the Fundamental matrix with A Contrario ransac
+    const double upper_bound_precision = Square(m_dPrecision);
+    std::vector<size_t> vec_inliers;
+    const std::pair<double,double> ACRansacOut =
+      ACRANSAC(kernel, vec_inliers, m_stIteration, &m_E, upper_bound_precision);
+
+    if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5)  {
+      m_dPrecision_robust = ACRansacOut.first;
+      // update geometric_inliers
+      geometric_inliers.reserve(vec_inliers.size());
+      for ( const size_t & index : vec_inliers)  {
+        geometric_inliers.push_back( vec_PutativeMatches[index] );
+      }
+      return true;
+    }
+    else  {
       vec_inliers.clear();
       return false;
     }
-    return true;
   }
 
-  double m_dPrecision;  //upper_bound of the precision
-  size_t m_stIteration; //maximal number of used iterations
-  std::map<IndexT, Mat3> m_K; // K intrinsic matrix per image index
+  double m_dPrecision;  //upper_bound precision used for robust estimation
+  size_t m_stIteration; //maximal number of iteration for robust estimation
+  //
+  //-- Stored data
+  Mat3 m_E;
+  double m_dPrecision_robust;
 };
 
-}; // namespace openMVG
+} // namespace openMVG
+} //namespace matching_image_collection
+
