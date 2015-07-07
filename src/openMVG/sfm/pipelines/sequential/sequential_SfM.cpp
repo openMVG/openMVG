@@ -143,7 +143,7 @@ bool SequentialSfMReconstructionEngine::Process() {
     }
     ++resectionGroupIndex;
   }
-  // Ensure there is no remaining outliers  
+  // Ensure there is no remaining outliers
   badTrackRejector(4.0, 0);
 
   //-- Reconstruction done.
@@ -283,7 +283,7 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
     // List of features matches for each couple of images
     const openMVG::matching::PairWiseMatches & map_Matches = _matches_provider->_pairWise_matches;
     std::cout << std::endl << "Track building" << std::endl;
-    
+
     tracksBuilder.Build(map_Matches);
     std::cout << std::endl << "Track filtering" << std::endl;
     tracksBuilder.Filter();
@@ -322,28 +322,6 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
     }
   }
   return _map_tracks.size() > 0;
-}
-
-/// Export point feature based vector to a matrix [(x,y)'T, (x,y)'T]
-/// Use the camera intrinsics in order to get undistorted pixel coordinates
-template< typename FeaturesT, typename MatT >
-static void PointsToMat(
-  const IntrinsicBase * cam,
-  const FeaturesT & vec_feats,
-  MatT & m)
-{
-  m.resize(2, vec_feats.size());
-  typedef typename FeaturesT::value_type ValueT; // Container type
-  typedef typename MatT::Scalar Scalar; // Output matrix type
-
-  size_t i = 0;
-  for( typename FeaturesT::const_iterator iter = vec_feats.begin();
-    iter != vec_feats.end(); ++iter, ++i)
-  {
-    Vec2 feat;
-    feat << iter->x(), iter->y();
-    m.col(i) = cam->get_ud_pixel(feat);
-  }
 }
 
 /// Compute the initial 3D seed (First camera t=0; R=Id, second estimated by 5 point algorithm)
@@ -631,10 +609,10 @@ struct sort_pair_second {
 
 /**
  * @brief Estimate images on which we can compute the resectioning safely.
- * 
+ *
  * @param[out] vec_possible_indexes: list of indexes we can use for resectioning.
  * @return False if there is no possible resection.
- * 
+ *
  * Sort the images by the number of features already reconstructed.
  * Instead of returning the best one, we select a group of images, we can use
  * to do the resectioning in one step, which means without global Bundle Adjustment.
@@ -702,7 +680,7 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
 
   if (vec_putative.empty())
     return false;
-  
+
   // Sort by the number of matches into the 3D scene.
   std::sort(vec_putative.begin(), vec_putative.end(), sort_pair_second<size_t, size_t, std::greater<size_t> >());
 
@@ -714,7 +692,7 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
   // std::cout << std::endl << std::endl << "TEMPORARY return only the best image" << std::endl;
   // return true;
   // END TEMPORARY
-  
+
   // Return all the images that have at least N% of the number of matches of the best image.
   const size_t threshold = static_cast<size_t>(dThresholdGroup * M);
   for (size_t i = 1; i < vec_putative.size() &&
@@ -729,7 +707,7 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
  * @brief Add one image to the 3D reconstruction. To the resectioning of
  * the camera and triangulate all the new possible tracks.
  * @param[in] viewIndex: image index to add to the reconstruction.
- * 
+ *
  * A. Compute 2D/3D matches
  * B. Look if intrinsic data is known or not
  * C. Do the resectioning: compute the camera pose.
@@ -1019,7 +997,7 @@ bool SequentialSfMReconstructionEngine::Resection(size_t viewIndex)
       // Do we have new tracks to add to the scene?
       if (vec_tracksToAdd.empty())
         continue;
-      
+
       const View * view_1 = _sfm_data.GetViews().at(I).get();
       const View * view_2 = _sfm_data.GetViews().at(J).get();
       const IntrinsicBase * cam_1 = _sfm_data.GetIntrinsics().at(view_1->id_intrinsic).get();
