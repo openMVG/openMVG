@@ -18,6 +18,7 @@
 #include "third_party/progress/progress.hpp"
 
 namespace openMVG {
+namespace matching_image_collection {
 
 using namespace openMVG::matching;
 using namespace openMVG::features;
@@ -28,34 +29,13 @@ Matcher_Regions_AllInMemory::Matcher_Regions_AllInMemory(
 {
 }
 
-/// Load all features and descriptors in memory
-bool Matcher_Regions_AllInMemory::loadData(
-  std::unique_ptr<features::Regions>& region_type, // interface to load computed regions
-  const std::vector<std::string> & vec_fileNames, // input filenames
-  const std::string & sMatchDir) // where the data are saved
-{
-  bool bOk = true;
-  for (size_t j = 0; j < vec_fileNames.size(); ++j)  {
-    // Load regions of Jnth image
-    const std::string sFeatJ = stlplus::create_filespec(sMatchDir,
-      stlplus::basename_part(vec_fileNames[j]), "feat");
-    const std::string sDescJ = stlplus::create_filespec(sMatchDir,
-      stlplus::basename_part(vec_fileNames[j]), "desc");
-
-    regions_perImage[j] = std::unique_ptr<features::Regions>(region_type->EmptyClone());
-    bOk &= regions_perImage[j]->Load(sFeatJ, sDescJ);
-  }
-  return bOk;
-}
-
 /// Template matching
 template <typename MatcherT>
 void Template_Matcher(
-  const std::vector<std::string> & vec_fileNames, // input filenames,
   const Pair_Set & pairs,
   PairWiseMatches & map_PutativesMatches, // the pairwise photometric corresponding points
   // Data & parameters
-  const std::map<IndexT, std::unique_ptr<features::Regions> > & regions_perImage,
+  const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
   // Distance ratio used to discard spurious correspondence
   const float fDistRatio,
   // Matcher Type
@@ -96,30 +76,42 @@ void Template_Matcher(
     const size_t I = iter->first;
     const std::vector<size_t> & indexToCompare = iter->second;
 
-    const features::Regions *regionsI = regions_perImage.at(I).get();
+    if (regions_provider->regions_per_view.count(I) == 0)
+      continue;
+
+    const features::Regions *regionsI = regions_provider->regions_per_view.at(I).get();
     const size_t regions_countI = regionsI->RegionCount();
-    if(regions_countI == 0)
+    if (regions_countI == 0)
     {
       my_progress_bar += indexToCompare.size();
       continue;
     }
+
     const std::vector<PointFeature> pointFeaturesI = regionsI->GetRegionsPositions();
     const typename MatcherT::ScalarT * tabI =
       reinterpret_cast<const typename MatcherT::ScalarT *>(regionsI->DescriptorRawData());
 
     MatcherT matcher10;
-    ( matcher10.Build(tabI, regions_countI, regionsI->DescriptorLength()) );
+    if (!matcher10.Build(tabI, regions_countI, regionsI->DescriptorLength()))
+    {
+      my_progress_bar += indexToCompare.size();
+      continue;
+    }
 
     for (int j = 0; j < (int)indexToCompare.size(); ++j, ++my_progress_bar)
     {
       const size_t J = indexToCompare[j];
 
-      const features::Regions *regionsJ = regions_perImage.at(J).get();
+      if (regions_provider->regions_per_view.count(J) == 0)
+        continue;
+
+      const features::Regions *regionsJ = regions_provider->regions_per_view.at(J).get();
       const size_t regions_countJ = regionsJ->RegionCount();
       if(regions_countJ == 0)
       {
         continue;
       }
+
       const typename MatcherT::ScalarT * tabJ =
         reinterpret_cast<const typename MatcherT::ScalarT *>(regionsJ->DescriptorRawData());
 
@@ -128,52 +120,54 @@ void Template_Matcher(
       std::vector<typename MatcherT::DistanceType> vec_fDistance10;
 
       //Find left->right
-      matcher10.SearchNeighbours(tabJ, regions_countJ, &vec_nIndice10, &vec_fDistance10, NNN__);
-
-      std::vector<IndMatch> vec_FilteredMatches;
-      std::vector<int> vec_NNRatioIndexes;
-      NNdistanceRatio( vec_fDistance10.begin(), // distance start
-        vec_fDistance10.end(),  // distance end
-        NNN__, // Number of neighbor in iterator sequence (minimum required 2)
-        vec_NNRatioIndexes, // output (index that respect Lowe Ratio)
-        fDistRatio);
-
-      for (size_t k=0; k < vec_NNRatioIndexes.size(); ++k)
+      if (matcher10.SearchNeighbours(tabJ, regions_countJ, &vec_nIndice10, &vec_fDistance10, NNN__))
       {
-        const size_t index = vec_NNRatioIndexes[k];
-        vec_FilteredMatches.push_back(
-          IndMatch(vec_nIndice10[index*NNN__], index) );
-      }
+        std::vector<IndMatch> vec_FilteredMatches;
+        std::vector<int> vec_NNRatioIndexes;
+        NNdistanceRatio( vec_fDistance10.begin(), // distance start
+          vec_fDistance10.end(),  // distance end
+          NNN__, // Number of neighbor in iterator sequence (minimum required 2)
+          vec_NNRatioIndexes, // output (indices that respect Lowe Ratio)
+          fDistRatio);
 
-      // Remove duplicates
-      IndMatch::getDeduplicated(vec_FilteredMatches);
+        for (size_t k=0; k < vec_NNRatioIndexes.size(); ++k)
+        {
+          const size_t index = vec_NNRatioIndexes[k];
+          vec_FilteredMatches.push_back(
+            IndMatch(vec_nIndice10[index*NNN__], index) );
+        }
 
-      // Remove matches that have the same (X,Y) coordinates
-      const std::vector<PointFeature> pointFeaturesJ = regionsJ->GetRegionsPositions();
-      IndMatchDecorator<float> matchDeduplicator(vec_FilteredMatches, pointFeaturesI, pointFeaturesJ);
-      matchDeduplicator.getDeduplicated(vec_FilteredMatches);
+        // Remove duplicates
+        IndMatch::getDeduplicated(vec_FilteredMatches);
 
-      if (!vec_FilteredMatches.empty())
-      {
-        map_PutativesMatches.insert( make_pair( make_pair(I,J), std::move(vec_FilteredMatches) ));
+        // Remove matches that have the same (X,Y) coordinates
+        const std::vector<PointFeature> pointFeaturesJ = regionsJ->GetRegionsPositions();
+        IndMatchDecorator<float> matchDeduplicator(vec_FilteredMatches, pointFeaturesI, pointFeaturesJ);
+        matchDeduplicator.getDeduplicated(vec_FilteredMatches);
+
+        if (!vec_FilteredMatches.empty())
+        {
+          map_PutativesMatches.insert( make_pair( make_pair(I,J), std::move(vec_FilteredMatches) ));
+        }
       }
     }
   }
 }
 
 void Matcher_Regions_AllInMemory::Match(
-  const std::vector<std::string> & vec_fileNames, // input filenames,
+  const sfm::SfM_Data & sfm_data,
+  const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
   const Pair_Set & pairs,
   PairWiseMatches & map_PutativesMatches)const // the pairwise photometric corresponding points
 {
-  if (regions_perImage.size() < 2)
+  if (regions_provider->regions_per_view.size() < 2)
   {
     return; // No sufficient images to compare (nothing to do)
   }
   else
   {
-    // Build the required abstract Matchers from the regions Types
-    const features::Regions *regions = regions_perImage.begin()->second.get();
+    // Build the required abstract Matchers according of the regions descriptor Types
+    const features::Regions *regions = regions_provider->regions_per_view.begin()->second.get();
 
     // Handle invalid request
     if (regions->IsScalar() && _eMatcherType == BRUTE_FORCE_HAMMING)
@@ -194,8 +188,8 @@ void Matcher_Regions_AllInMemory::Match(
             typedef L2_Vectorized<unsigned char> MetricT;
             typedef ArrayMatcherBruteForce<unsigned char, MetricT> MatcherT;
             /// Match the distRatio to the used metric
-            Template_Matcher<MatcherT>(vec_fileNames, pairs, map_PutativesMatches,
-              regions_perImage, Square(fDistRatio), _eMatcherType);
+            Template_Matcher<MatcherT>(pairs, map_PutativesMatches,
+              regions_provider, Square(fDistRatio), _eMatcherType);
           }
           break;
           case ANN_L2:
@@ -203,8 +197,8 @@ void Matcher_Regions_AllInMemory::Match(
             typedef flann::L2<unsigned char> MetricT;
             typedef ArrayMatcher_Kdtree_Flann<unsigned char, MetricT> MatcherT;
             /// Match the distRatio to the used metric
-            Template_Matcher<MatcherT>(vec_fileNames, pairs, map_PutativesMatches,
-              regions_perImage, Square(fDistRatio), _eMatcherType);
+            Template_Matcher<MatcherT>(pairs, map_PutativesMatches,
+              regions_provider, Square(fDistRatio), _eMatcherType);
           }
           break;
           default:
@@ -221,8 +215,8 @@ void Matcher_Regions_AllInMemory::Match(
           {
             typedef L2_Vectorized<float> MetricT;
             typedef ArrayMatcherBruteForce<float, MetricT> MatcherT;
-            Template_Matcher<MatcherT>(vec_fileNames, pairs, map_PutativesMatches,
-              regions_perImage, Square(fDistRatio), _eMatcherType);
+            Template_Matcher<MatcherT>(pairs, map_PutativesMatches,
+              regions_provider, Square(fDistRatio), _eMatcherType);
           }
           break;
           case ANN_L2:
@@ -230,8 +224,8 @@ void Matcher_Regions_AllInMemory::Match(
             typedef flann::L2<float> MetricT;
             typedef ArrayMatcher_Kdtree_Flann<float, MetricT> MatcherT;
             /// Match the distRatio to the used metric
-            Template_Matcher<MatcherT>(vec_fileNames, pairs, map_PutativesMatches,
-              regions_perImage, Square(fDistRatio), _eMatcherType);
+            Template_Matcher<MatcherT>(pairs, map_PutativesMatches,
+              regions_provider, Square(fDistRatio), _eMatcherType);
           }
           break;
           default:
@@ -249,8 +243,8 @@ void Matcher_Regions_AllInMemory::Match(
             typedef L2_Vectorized<double> MetricT;
             typedef ArrayMatcherBruteForce<double, MetricT> MatcherT;
             /// Match the distRatio to the used metric
-            Template_Matcher<MatcherT>(vec_fileNames, pairs, map_PutativesMatches,
-              regions_perImage, Square(fDistRatio), _eMatcherType);
+            Template_Matcher<MatcherT>(pairs, map_PutativesMatches,
+              regions_provider, Square(fDistRatio), _eMatcherType);
           }
           break;
           case ANN_L2:
@@ -258,8 +252,8 @@ void Matcher_Regions_AllInMemory::Match(
             typedef flann::L2<double> MetricT;
             typedef ArrayMatcher_Kdtree_Flann<double, MetricT> MatcherT;
             /// Match the distRatio to the used metric
-            Template_Matcher<MatcherT>(vec_fileNames, pairs, map_PutativesMatches,
-              regions_perImage, Square(fDistRatio), _eMatcherType);
+            Template_Matcher<MatcherT>(pairs, map_PutativesMatches,
+              regions_provider, Square(fDistRatio), _eMatcherType);
           }
           break;
           default:
@@ -276,15 +270,21 @@ void Matcher_Regions_AllInMemory::Match(
         {
           typedef Hamming<unsigned char> Metric;
           typedef ArrayMatcherBruteForce<unsigned char, Metric> MatcherT;
-          Template_Matcher<MatcherT>(vec_fileNames, pairs, map_PutativesMatches,
-           regions_perImage, fDistRatio, _eMatcherType);
+          Template_Matcher<MatcherT>(pairs, map_PutativesMatches,
+           regions_provider, fDistRatio, _eMatcherType);
         }
         break;
         default:
             std::cerr << "Using unknown matcher type" << std::endl;
       }
     }
+    else
+    {
+      std::cerr << "Please consider add this region type_id to Matcher_Regions_AllInMemory::Match(...)\n"
+        << "typeid: " << regions->Type_id() << std::endl;
+    }
   }
 }
 
-}; // namespace openMVG
+} // namespace openMVG
+} // namespace matching_image_collection

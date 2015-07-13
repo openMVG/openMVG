@@ -35,6 +35,7 @@ using namespace openMVG::cameras;
 using namespace openMVG::matching;
 using namespace openMVG::robust;
 using namespace openMVG::sfm;
+using namespace openMVG::matching_image_collection;
 using namespace std;
 
 enum EGeometricModel
@@ -69,17 +70,19 @@ int main(int argc, char **argv)
   bool bUpRight = false;
   std::string sNearestMatchingMethod = "AUTO";
   bool bForce = false;
+  bool bGuided_matching = false;
 
   //required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('o', sMatchesDirectory, "out_dir") );
   // Options
   cmd.add( make_option('r', fDistRatio, "ratio") );
-  cmd.add( make_option('g', sGeometricModel, "geometricModel") );
-  cmd.add( make_option('v', iMatchingVideoMode, "videoModeMatching") );
-  cmd.add( make_option('l', sPredefinedPairList, "pairList") );
-  cmd.add( make_option('n', sNearestMatchingMethod, "nearestMatchingMethod") );
+  cmd.add( make_option('g', sGeometricModel, "geometric_model") );
+  cmd.add( make_option('v', iMatchingVideoMode, "video_mode_matching") );
+  cmd.add( make_option('l', sPredefinedPairList, "pair_list") );
+  cmd.add( make_option('n', sNearestMatchingMethod, "nearest_matching_method") );
   cmd.add( make_option('f', bForce, "force") );
+  cmd.add( make_option('m', bGuided_matching, "guided_matching") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -92,36 +95,42 @@ int main(int argc, char **argv)
       << "[-f|--force] Force to recompute data]\n"
       << "[-r|--ratio] Distance ratio to discard non meaningful matches\n"
       << "   0.6: (default); you can use 0.8 to have more matches.\n"
-      << "[-g|--geometricModel]\n"
+      << "[-g|--geometric_model]\n"
       << "  (pairwise correspondences filtering thanks to robust model estimation):\n"
       << "   f: (default) fundamental matrix,\n"
       << "   e: essential matrix,\n"
       << "   h: homography matrix.\n"
-      << "[-v|--videoModeMatching]\n"
+      << "[-v|--video_mode_matching]\n"
       << "  (sequence matching with an overlap of X images)\n"
       << "   X: with match 0 with (1->X), ...]\n"
       << "   2: will match 0 with (1,2), 1 with (2,3), ...\n"
       << "   3: will match 0 with (1,2,3), 1 with (2,3,4), ...\n"
-      << "[-l]--pairList] file\n"
-      << "[-n|--nearestMatchingMethod]\n"
+      << "[-l]--pair_list] file\n"
+      << "[-n|--nearest_matching_method]\n"
       << "  AUTO: auto choice from regions type,\n"
       << "  BRUTEFORCEL2: BruteForce L2 matching for Scalar based regions descriptor,\n"
       << "  BRUTEFORCEHAMMING: BruteForce Hamming matching for binary based regions descriptor,\n"
       << "  ANNL2: Approximate Nearest Neighbor L2 matching for Scalar based regions descriptor.\n"
+      << "[-m|--guided_matching]\n"
+      << "  use the found model to improve the pairwise correspondences."
       << std::endl;
 
       std::cerr << s << std::endl;
       return EXIT_FAILURE;
   }
 
-  std::cout << " You called : " <<std::endl
-            << argv[0] << std::endl
-            << "--input_file " << sSfM_Data_Filename << std::endl
-            << "--outdir " << sMatchesDirectory << std::endl
-            << "--ratio " << fDistRatio << std::endl
-            << "--geometricModel " << sGeometricModel << std::endl
-            << "--videoModeMatching " << iMatchingVideoMode << std::endl
-            << "--nearestMatchingMethod " << sNearestMatchingMethod << std::endl;
+  std::cout << " You called : " << "\n"
+            << argv[0] << "\n"
+            << "--input_file " << sSfM_Data_Filename << "\n"
+            << "--out_dir " << sMatchesDirectory << "\n"
+            << "Optional parameters:" << "\n"
+            << "--force " << bForce << "\n"
+            << "--ratio " << fDistRatio << "\n"
+            << "--geometric_model " << sGeometricModel << "\n"
+            << "--video_mode_matching " << iMatchingVideoMode << "\n"
+            << "--pair_list " << sPredefinedPairList << "\n"
+            << "--nearest_matching_method " << sNearestMatchingMethod << "\n"
+            << "--guided_matching " << bGuided_matching << std::endl;
 
   EPairMode ePairmode = (iMatchingVideoMode == -1 ) ? PAIR_EXHAUSTIVE : PAIR_CONTIGUOUS;
 
@@ -196,6 +205,14 @@ int main(int argc, char **argv)
   //    - Descriptor matching (according user method choice)
   //    - Keep correspondences only if NearestNeighbor ratio is ok
   //---------------------------------------
+
+  // Load the corresponding view regions
+  std::shared_ptr<Regions_Provider> regions_provider = std::make_shared<Regions_Provider>();
+  if (!regions_provider->load(sfm_data, sMatchesDirectory, regions_type)) {
+    std::cerr << std::endl << "Invalid regions." << std::endl;
+    return EXIT_FAILURE;
+  }
+
   PairWiseMatches map_PutativesMatches;
 
   // Build some alias from SfM_Data Views data:
@@ -269,7 +286,6 @@ int main(int argc, char **argv)
     }
     // Perform the matching
     system::Timer timer;
-    if (collectionMatcher->loadData(regions_type, vec_fileNames, sMatchesDirectory))
     {
       // From matching mode compute the pair list that have to be matched:
       Pair_Set pairs;
@@ -285,7 +301,7 @@ int main(int argc, char **argv)
           break;
       }
       // Photometric matching of putative pairs
-      collectionMatcher->Match(vec_fileNames, pairs, map_PutativesMatches);
+      collectionMatcher->Match(sfm_data, regions_provider, pairs, map_PutativesMatches);
       //---------------------------------------
       //-- Export putative matches
       //---------------------------------------
@@ -317,57 +333,35 @@ int main(int argc, char **argv)
   //    - Use an upper bound for the a contrario estimated threshold
   //---------------------------------------
 
-  // Load the features
-  std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
-  if (!feats_provider->load(sfm_data, sMatchesDirectory, regions_type)) {
-    std::cerr << std::endl << "Invalid features." << std::endl;
-    return EXIT_FAILURE;
-  }
+  std::unique_ptr<ImageCollectionGeometricFilter> filter_ptr(
+    new ImageCollectionGeometricFilter(&sfm_data, regions_provider));
 
-  PairWiseMatches map_GeometricMatches;
-
-  ImageCollectionGeometricFilter collectionGeomFilter(feats_provider.get());
-  const double maxResidualError = 4.0;
+  if (filter_ptr)
   {
     system::Timer timer;
-    std::cout << std::endl << " - GEOMETRIC FILTERING - " << std::endl;
+    std::cout << std::endl << " - Geometric filtering - " << std::endl;
+
+    PairWiseMatches map_GeometricMatches;
     switch (eGeometricModelToCompute)
     {
+      case HOMOGRAPHY_MATRIX:
+      {
+        const bool bGeometric_only_guided_matching = true;
+        filter_ptr->Robust_model_estimation(GeometricFilter_HMatrix_AC(4.0), map_PutativesMatches, bGuided_matching,
+          bGeometric_only_guided_matching ? -1.0 : 0.6);
+        map_GeometricMatches = filter_ptr->Get_geometric_matches();
+      }
+      break;
       case FUNDAMENTAL_MATRIX:
       {
-       collectionGeomFilter.Filter(
-          GeometricFilter_FMatrix_AC(maxResidualError),
-          map_PutativesMatches,
-          map_GeometricMatches,
-          vec_imagesSize);
+        filter_ptr->Robust_model_estimation(GeometricFilter_FMatrix_AC(4.0), map_PutativesMatches, bGuided_matching);
+        map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
       case ESSENTIAL_MATRIX:
       {
-        // Build the intrinsic parameter map for each view
-        std::map<IndexT, Mat3> map_K;
-        size_t cpt = 0;
-        for (Views::const_iterator iter = sfm_data.GetViews().begin();
-          iter != sfm_data.GetViews().end();
-          ++iter, ++cpt)
-        {
-          const View * v = iter->second.get();
-          if (sfm_data.GetIntrinsics().count(v->id_intrinsic))
-          {
-            const IntrinsicBase * ptrIntrinsic = sfm_data.GetIntrinsics().find(v->id_intrinsic)->second.get();
-            if (isPinhole(ptrIntrinsic->getType()))
-            {
-              const Pinhole_Intrinsic * ptrPinhole = (const Pinhole_Intrinsic*)(ptrIntrinsic);
-              map_K[cpt] = ptrPinhole->K();
-             }
-          }
-        }
-
-        collectionGeomFilter.Filter(
-          GeometricFilter_EMatrix_AC(map_K, maxResidualError),
-          map_PutativesMatches,
-          map_GeometricMatches,
-          vec_imagesSize);
+        filter_ptr->Robust_model_estimation(GeometricFilter_EMatrix_AC(4.0), map_PutativesMatches, bGuided_matching);
+        map_GeometricMatches = filter_ptr->Get_geometric_matches();
 
         //-- Perform an additional check to remove pairs with poor overlap
         std::vector<PairWiseMatches::key_type> vec_toRemove;
@@ -388,15 +382,6 @@ int main(int argc, char **argv)
         {
           map_GeometricMatches.erase(*iter);
         }
-      }
-      break;
-      case HOMOGRAPHY_MATRIX:
-      {
-        collectionGeomFilter.Filter(
-          GeometricFilter_HMatrix_AC(maxResidualError),
-          map_PutativesMatches,
-          map_GeometricMatches,
-          vec_imagesSize);
       }
       break;
     }

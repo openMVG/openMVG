@@ -47,8 +47,11 @@ bool exportToCMPMVSFormat(
 
     C_Progress_display my_progress_bar( sfm_data.GetViews().size()*2 );
 
+    // Since CMPMVS requires contiguous camera index, and that some views can have some missing poses,
+    // we reindex the poses to ensure a contiguous pose list.
+    Hash_Map<IndexT, IndexT> map_viewIdToContiguous;
+
     // Export valid views as Projective Cameras:
-    size_t count = 0;
     for(Views::const_iterator iter = sfm_data.GetViews().begin();
       iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
@@ -59,21 +62,22 @@ bool exportToCMPMVSFormat(
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
       Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
 
+      // View Id re-indexing
+      map_viewIdToContiguous.insert(std::make_pair(view->id_view, map_viewIdToContiguous.size()));
+
       // We have a valid view with a corresponding camera & pose
       const Mat34 P = iterIntrinsic->second.get()->get_projective_equivalent(pose);
       std::ostringstream os;
-      os << std::setw(5) << std::setfill('0') << count << "_P";
+      os << std::setw(5) << std::setfill('0') << map_viewIdToContiguous[view->id_view] << "_P";
       std::ofstream file(
         stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory),
         os.str() ,"txt").c_str());
       file << "CONTOUR" << os.widen('\n')
         << P.row(0) <<"\n"<< P.row(1) <<"\n"<< P.row(2) << os.widen('\n');
       file.close();
-      ++count;
     }
 
     // Export (calibrated) views as undistorted images
-    count = 0;
     std::pair<int,int> w_h_image_size;
     Image<RGBColor> image, image_ud;
     for(Views::const_iterator iter = sfm_data.GetViews().begin();
@@ -88,12 +92,12 @@ bool exportToCMPMVSFormat(
       // We have a valid view with a corresponding camera & pose
       const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
       std::ostringstream os;
-      os << std::setw(5) << std::setfill('0') << count;
+      os << std::setw(5) << std::setfill('0') << map_viewIdToContiguous[view->id_view];
       std::string dstImage = stlplus::create_filespec(
         stlplus::folder_append_separator(sOutDirectory), os.str(),"jpg");
 
       const IntrinsicBase * cam = iterIntrinsic->second.get();
-      if (count == 0)
+      if (map_viewIdToContiguous[view->id_view] == 0)
         w_h_image_size = std::make_pair(cam->w(), cam->h());
       else
       {
@@ -126,7 +130,6 @@ bool exportToCMPMVSFormat(
           WriteImage( dstImage.c_str(), image);
         }
       }
-      ++count;
     }
 
     // Write the mvs_firstRun script
@@ -135,7 +138,7 @@ bool exportToCMPMVSFormat(
     << "dirName=\"" << stlplus::folder_append_separator(sOutDirectory) <<"\"" << os.widen('\n')
     << "prefix=\"\"" << os.widen('\n')
     << "imgExt=\"jpg\"" << os.widen('\n')
-    << "ncams=" << count << os.widen('\n')
+    << "ncams=" << map_viewIdToContiguous.size() << os.widen('\n')
     << "width=" << w_h_image_size.first << os.widen('\n')
     << "height=" << w_h_image_size.second << os.widen('\n')
     << "scale=2" << os.widen('\n')
@@ -171,7 +174,7 @@ bool exportToCMPMVSFormat(
     << "dirName=\"" << stlplus::folder_append_separator(sOutDirectory) <<"\"" << os.widen('\n')
     << "prefix=\"\"" << os.widen('\n')
     << "imgExt=\"jpg\"" << os.widen('\n')
-    << "ncams=" << count << os.widen('\n')
+    << "ncams=" << map_viewIdToContiguous.size() << os.widen('\n')
     << "width=" << w_h_image_size.first << os.widen('\n')
     << "height=" << w_h_image_size.second << os.widen('\n')
     << "scale=2" << os.widen('\n')

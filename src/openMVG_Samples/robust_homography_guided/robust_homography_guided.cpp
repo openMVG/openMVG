@@ -199,7 +199,7 @@ int main() {
       // Use the computed model to check valid correspondences
       // a. by considering only the geometric error,
       // b. by considering geometric error and descriptor distance ratio.
-      std::vector< std::vector<IndMatch> > vec_corresponding_indexes(2);
+      std::vector< IndMatches > vec_corresponding_indexes(2);
 
       Mat xL, xR;
       PointsToMat(featsL, xL);
@@ -214,13 +214,11 @@ int main() {
         << std::endl;
 
       // b. by considering geometric error and descriptor distance ratio
-      typedef SIFT_Regions::DescriptorT DescriptorT;
       geometry_aware::GuidedMatching
-        <Mat3, openMVG::homography::kernel::AsymmetricError,
-        DescriptorT, L2_Vectorized<DescriptorT::bin_type> >(
+        <Mat3, openMVG::homography::kernel::AsymmetricError>(
         H,
-        xL, ((SIFT_Regions*)regions_perImage.at(0).get())->Descriptors(),
-        xR, ((SIFT_Regions*)regions_perImage.at(1).get())->Descriptors(),
+        NULL, *regions_perImage.at(0), // Null since no Intrinsic is defined
+        NULL, *regions_perImage.at(1), // Null since no Intrinsic is defined
         Square(thresholdH), Square(0.8),
         vec_corresponding_indexes[1]);
 

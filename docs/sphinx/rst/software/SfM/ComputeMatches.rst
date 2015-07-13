@@ -17,7 +17,7 @@ Arguments description:
 
     - a SfM_Data file
 
-  - **[-o|--outdir path]**
+  - **[-o|--out_dir path]**
 
     - path were putative and geometric matches will be stored
 
@@ -32,7 +32,7 @@ Arguments description:
 
     - (Nearest Neighbor distance ratio, default value is set to 0.6). 0.8 is less restrictive and advised.
 
-  - **[-g|-geometricModel]**
+  - **[-g|-geometric_model]**
 
     - type of model used for robust estimation from the photometric putative matches
 
@@ -40,7 +40,7 @@ Arguments description:
       - e: Essential matrix filtering (all the image must have the same known focal length)
       - h: Homography matrix filtering
 
-  - **[-n|--nearestMatchingMethod]**
+  - **[-n|--nearest_matching_method]**
 
     - AUTO: auto choice from regions type,
     - BRUTEFORCEL2: BruteForce L2 matching for Scalar based regions descriptor,
@@ -48,7 +48,7 @@ Arguments description:
     - ANNL2: Approximate Nearest Neighbor L2 matching for Scalar based regions descriptor. 
      
 
-  - **[-v|--videoModeMatching]**
+  - **[-v|--video_mode_matching]**
   
     - (sequence matching with an overlap of X images)
 
@@ -57,7 +57,7 @@ Arguments description:
       - 3: will match 0 with (1,2,3), 1 with (2,3,4), ...]
 
 
-  - **[-l|--pairList]**
+  - **[-l|--pair_list]**
 
     - file that explicitly list the View pair that must be compared
      

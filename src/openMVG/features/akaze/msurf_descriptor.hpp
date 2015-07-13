@@ -73,6 +73,8 @@ namespace features {
 
     i = -8;
 
+    const image::Sampler2d<image::SamplerLinear> sampler;
+
     // Calculate descriptor for this interest point
     // Area of size 24 s x 24 s
     while ( i < pattern_size )
@@ -106,8 +108,8 @@ namespace features {
             // Get the gaussian weighted x and y responses
             gauss_s1 = gaussian( xs - sample_x, ys - sample_y, static_cast<Real>( 2.5 ) * static_cast<Real>( scale ) );
 
-            rx = SampleLinear( Lx, sample_y, sample_x );
-            ry = SampleLinear( Ly, sample_y, sample_x );
+            rx = sampler( Lx, sample_y, sample_x );
+            ry = sampler( Ly, sample_y, sample_x );
 
             // Get the x and y derivatives on the rotated axis
             rry = gauss_s1 * ( rx * co + ry * si );

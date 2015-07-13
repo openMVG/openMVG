@@ -11,12 +11,12 @@
 namespace openMVG {
 namespace image {
 
-	/** 
+	/**
    ** Half sample an image (ie reduce it's size by a factor 2) using bilinear interpolation
-   ** @param src input image 
-   ** @param out output image 
+   ** @param src input image
+   ** @param out output image
    **/
-  template < typename Image > 
+  template < typename Image >
   void ImageHalfSample( const Image & src , Image & out )
   {
     const int new_width  = src.Width() / 2 ;
@@ -24,13 +24,14 @@ namespace image {
 
     out.resize( new_width , new_height ) ;
 
+    const Sampler2d<SamplerLinear> sampler;
+
     for( int i = 0 ; i < new_height ; ++i )
     {
       for( int j = 0 ; j < new_width ; ++j )
       {
         // Use .5f offset to ensure mid pixel and correct bilinear sampling
-        out( i , j ) =
-          SampleLinear( src, 2.f * (i+.5f), 2.f * (j+.5f) );
+        out( i , j ) =  sampler( src, 2.f * (i+.5f), 2.f * (j+.5f) );
       }
     }
   }

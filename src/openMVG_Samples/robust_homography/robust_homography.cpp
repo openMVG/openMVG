@@ -203,10 +203,8 @@ int main() {
       // Create and fill the output image
       Image<RGBColor> imaOut(imageL.Width(), imageL.Height());
       image::Warp(image, H, imaOut);
-      std::string imageNameOut = "query_warped.png";
+      const std::string imageNameOut = "query_warped.png";
       WriteImage(imageNameOut.c_str(), imaOut);
-
-
     }
     else  {
       std::cout << "ACRANSAC was unable to estimate a rigid homography"

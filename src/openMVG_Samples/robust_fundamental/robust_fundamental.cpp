@@ -143,7 +143,7 @@ int main() {
 
     Mat3 F;
     std::pair<double,double> ACRansacOut = ACRANSAC(kernel, vec_inliers, 1024, &F,
-      4.0, // Upper bound of authorized threshold
+      Square(4.0), // Upper bound of authorized threshold
       true);
     const double & thresholdF = ACRansacOut.first;
 

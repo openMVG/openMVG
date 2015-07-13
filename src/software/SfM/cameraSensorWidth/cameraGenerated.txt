@@ -2990,6 +2990,7 @@ Samsung;Samsung Digimax 330;7.53
 Samsung;Samsung Digimax 220 SE;5.33
 Samsung;Samsung Digimax 35 MP3;4.8
 Samsung;Samsung Digimax 210 SE;5.33
+Samsung;Samsung-SGH-I537;3.0
 Sanyo;Sanyo VPC E1500TP;6.08
 Sanyo;Sanyo VPC S1414;6.08
 Sanyo;Sanyo VPC T1495;6.08

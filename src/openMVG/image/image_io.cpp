@@ -133,6 +133,7 @@ int ReadJpgStream(FILE * file,
   jerr.pub.error_exit = &jpeg_error;
 
   if (setjmp(jerr.setjmp_buffer)) {
+    cerr << "Error JPG: Failed to decompress.";
     jpeg_destroy_decompress(&cinfo);
     return 0;
   }
