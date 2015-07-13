@@ -190,6 +190,10 @@ bool SequentialSfMReconstructionEngine::Process() {
     jsxGraph.close();
     _htmlDocStream->pushInfo(jsxGraph.toStr());
   }
+
+  // get the color for the 3D points
+  ColorizeTracks(_sfm_data);
+
   return true;
 }
 

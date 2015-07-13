@@ -70,6 +70,14 @@ struct SfM_Data
   }
 };
 
+/**
+ * @brief ColorizeTracks Add the associated color to each 3D point of
+ * the sfm_data, using the track to determine the best view from which
+ * to get the color.
+ * @param sfm_data The container of the data
+ */
+void ColorizeTracks( SfM_Data & sfm_data );
+
 } // namespace sfm
 } // namespace openMVG
 
