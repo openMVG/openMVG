@@ -253,27 +253,33 @@ bool Bundle_Adjustment_Ceres::Adjust(
     }
 
     // Update camera poses with refined data
-    for (Poses::iterator itPose = sfm_data.poses.begin();
-      itPose != sfm_data.poses.end(); ++itPose)
+    if (bRefineRotations || bRefineTranslations)
     {
-      const IndexT indexPose = itPose->first;
+      for (Poses::iterator itPose = sfm_data.poses.begin();
+        itPose != sfm_data.poses.end(); ++itPose)
+      {
+        const IndexT indexPose = itPose->first;
 
-      Mat3 R_refined;
-      ceres::AngleAxisToRotationMatrix(&map_poses[indexPose][0], R_refined.data());
-      Vec3 t_refined(map_poses[indexPose][3], map_poses[indexPose][4], map_poses[indexPose][5]);
-      // Update the pose
-      Pose3 & pose = itPose->second;
-      pose = Pose3(R_refined, -R_refined.transpose() * t_refined);
+        Mat3 R_refined;
+        ceres::AngleAxisToRotationMatrix(&map_poses[indexPose][0], R_refined.data());
+        Vec3 t_refined(map_poses[indexPose][3], map_poses[indexPose][4], map_poses[indexPose][5]);
+        // Update the pose
+        Pose3 & pose = itPose->second;
+        pose = Pose3(R_refined, -R_refined.transpose() * t_refined);
+      }
     }
 
     // Update camera intrinsics with refined data
-    for (Intrinsics::iterator itIntrinsic = sfm_data.intrinsics.begin();
-      itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
+    if (bRefineIntrinsics)
     {
-      const IndexT indexCam = itIntrinsic->first;
+      for (Intrinsics::iterator itIntrinsic = sfm_data.intrinsics.begin();
+        itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
+      {
+        const IndexT indexCam = itIntrinsic->first;
 
-      const std::vector<double> & vec_params = map_intrinsics[indexCam];
-      itIntrinsic->second.get()->updateFromParams(vec_params);
+        const std::vector<double> & vec_params = map_intrinsics[indexCam];
+        itIntrinsic->second.get()->updateFromParams(vec_params);
+      }
     }
     return true;
   }
