@@ -11,7 +11,7 @@
 namespace openMVG {
 namespace image {
 
-	/**
+  /**
    ** Half sample an image (ie reduce it's size by a factor 2) using bilinear interpolation
    ** @param src input image
    ** @param out output image
