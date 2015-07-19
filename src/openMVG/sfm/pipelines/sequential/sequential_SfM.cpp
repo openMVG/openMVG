@@ -202,14 +202,6 @@ bool SequentialSfMReconstructionEngine::ChooseInitialPair(Pair & initialPairInde
   }
   else
   {
-    std::cout << std::endl
-      << "---------------------------------------------------\n"
-      << "IncrementalReconstructionEngine::ChooseInitialPair\n"
-      << "---------------------------------------------------\n"
-      << " Pairs that have valid intrinsic and high support of points are displayed:\n"
-      << " Choose one pair manually by typing the two integer indexes\n"
-      << "---------------------------------------------------\n"
-      << std::endl;
 
     // List Views that support valid intrinsic
     std::set<IndexT> valid_views;
@@ -220,6 +212,23 @@ bool SequentialSfMReconstructionEngine::ChooseInitialPair(Pair & initialPairInde
       if( _sfm_data.GetIntrinsics().find(v->id_intrinsic) != _sfm_data.GetIntrinsics().end())
         valid_views.insert(v->id_view);
     }
+
+    if (_sfm_data.GetIntrinsics().empty() || valid_views.empty())
+    {
+      std::cerr
+        << "There is no defined intrinsic data in order to compute an essential matrix for the initial pair."
+        << std::endl;
+      return false;
+    }
+
+    std::cout << std::endl
+      << "---------------------------------------------------\n"
+      << "IncrementalReconstructionEngine::ChooseInitialPair\n"
+      << "---------------------------------------------------\n"
+      << " Pairs that have valid intrinsic and high support of points are displayed:\n"
+      << " Choose one pair manually by typing the two integer indexes\n"
+      << "---------------------------------------------------\n"
+      << std::endl;
 
     // Try to list the 10 top pairs that have:
     //  - valid intrinsics,
