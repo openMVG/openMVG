@@ -8,7 +8,7 @@
 
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
-
+#include "openMVG/image/image_io.hpp"
 #include "openMVG/stl/stl.hpp"
 
 #include "third_party/progress/progress.hpp"
