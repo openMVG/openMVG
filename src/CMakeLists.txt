@@ -136,6 +136,9 @@ IF (OpenMVG_BUILD_OPENGL_EXAMPLES)
   SET_PROPERTY(TARGET glfw PROPERTY FOLDER OpenMVG/3rdParty/glfw)
 ENDIF (OpenMVG_BUILD_OPENGL_EXAMPLES)
 
+
+
+
 #===============================
 #---- LINEAR PROGRAMMING SOLVER
 #===============================
@@ -272,6 +275,7 @@ SET(OpenMVG_INCLUDE_DIRS
   ${EIGEN_INCLUDE_DIRS}
   ${CERES_INCLUDE_DIRS}  
   ${LP_INCLUDE_DIRS}
+  ${NANOMSG_INCLUDE_DIRS}
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp
   CACHE PATH "include directories for openMVG and its dependencies"
 )
@@ -310,6 +314,7 @@ SET(OpenMVG_LIBRARIES
   flann_cpp_s
   ${CERES_LIBRARIES}
   lemon
+  ${NANOMSG_LIBRARIES}
   easyexif)
 SET(OpenMVG_LIBRARIES "${OpenMVG_LIBRARIES}"
   ${OPENMVG_LIBRARY_DEPENDENCIES} CACHE STRING "openMVG library names")

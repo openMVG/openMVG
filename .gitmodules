@@ -7,3 +7,6 @@
 [submodule "src/dependencies/cereal"]
 	path = src/dependencies/cereal
 	url = https://github.com/openMVG-thirdparty/cereal.git
+[submodule "src/third_party/nanomsg"]
+	path = src/third_party/nanomsg
+	url = https://github.com/nanomsg/nanomsg.git

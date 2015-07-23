@@ -93,3 +93,35 @@ INSTALL(
   FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
 )
 ENDFOREACH(inDirectory)
+
+
+#===============================
+#---- nanomsg for distributed system communication
+#===============================
+OPTION(OpenMVG_USE_NANOMSG "Pass the computing progress via nanomsg to a socket. " OFF)
+IF(OpenMVG_USE_NANOMSG)
+  if(NOT EXISTS ${PROJECT_SOURCE_DIR}/third_party/nanomsg/src)
+    message(FATAL_ERROR
+      "\n'nanomsg' submodule is missing. Looked under ${PROJECT_SOURCE_DIR}/third_party/nanomsg/src. \nPlease update your repository:\n"
+      "  > git submodule update -i\n")
+  endif()
+
+  IF(MSVC)
+    #use the cmake file if on windows
+    ADD_SUBDIRECTORY(dependencies/nanomsg)
+  ELSE(MSVS)
+    #check if the project is compiled
+    if(NOT EXISTS ${PROJECT_SOURCE_DIR}/third_party/nanomsg/.libs/libnanomsg.so)
+      message(FATAL_ERROR
+        "\n'nanomsg' submodule needs to be compiled manually. Go to the directory ${PROJECT_SOURCE_DIR}/third_party/nanomsg and see the Readme file.\n"
+        )
+    endif()
+    #set the parameters for nanomsg
+    SET(NANOMSG_DIR "${PROJECT_SOURCE_DIR}/third_party/nanomsg")
+    SET(NANOMSG_INCLUDE_DIRS "${NANOMSG_DIR}/src" PARENT_SCOPE)
+    SET(NANOMSG_LIBRARIES "${NANOMSG_DIR}/.libs/libnanomsg.so" PARENT_SCOPE)
+  ENDIF(MSVC)
+
+  add_definitions(-DUSE_NANOMSG)
+  MESSAGE(STATUS "NANOMSG Initialized")
+ENDIF(OpenMVG_USE_NANOMSG)
