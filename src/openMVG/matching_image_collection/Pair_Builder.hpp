@@ -84,7 +84,7 @@ static bool loadPairs(
         }
         else
         {
-          std::cerr << "--loadPairs: Invalid input file. Image see herself " << std::endl;
+          std::cerr << "--loadPairs: Invalid input file. Image see herself (I: " << I << ", J: "<< J << "), line: " << sValue  << std::endl;
           return false;
         }
       }
