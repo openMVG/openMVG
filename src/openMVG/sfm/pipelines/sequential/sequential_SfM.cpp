@@ -197,6 +197,12 @@ bool SequentialSfMReconstructionEngine::ChooseInitialPair(Pair & initialPairInde
       if( _sfm_data.GetIntrinsics().find(v->id_intrinsic) != _sfm_data.GetIntrinsics().end())
         valid_views.insert(v->id_view);
     }
+    std::cout << "\nValid views with extracted intrinsics: " << valid_views.size();
+    if (valid_views.size()==0)
+    {
+      std::cerr << "\nIt looks like there is an issue with your intrisinc camera parameters. Check the sfm_data.json!\n";
+      return false;
+    }
 
     // Try to list the 10 top pairs that have:
     //  - valid intrinsics,
@@ -204,6 +210,7 @@ bool SequentialSfMReconstructionEngine::ChooseInitialPair(Pair & initialPairInde
     std::vector< size_t > vec_NbMatchesPerPair;
     std::vector<openMVG::matching::PairWiseMatches::const_iterator> vec_MatchesIterator;
     const openMVG::matching::PairWiseMatches & map_Matches = _matches_provider->_pairWise_matches;
+    std::cout << "\nFound " << map_Matches.size() << " valid pairs.";
     for (openMVG::matching::PairWiseMatches::const_iterator
       iter = map_Matches.begin();
       iter != map_Matches.end(); ++iter)
@@ -221,7 +228,7 @@ bool SequentialSfMReconstructionEngine::ChooseInitialPair(Pair & initialPairInde
     std::vector< sort_index_packet_descend< size_t, size_t> > packet_vec(vec_NbMatchesPerPair.size());
     sort_index_helper(packet_vec, &vec_NbMatchesPerPair[0], std::min((size_t)10, vec_NbMatchesPerPair.size()));
 
-    for (size_t i = 0; i < std::min((size_t)10, vec_NbMatchesPerPair.size()); ++i) {
+    for (size_t i = 0; i < std::min((size_t)50, vec_NbMatchesPerPair.size()); ++i) {
       const size_t index = packet_vec[i].index;
       openMVG::matching::PairWiseMatches::const_iterator iter = vec_MatchesIterator[index];
       std::cout << "(" << iter->first.first << "," << iter->first.second <<")\t\t"

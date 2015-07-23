@@ -26,7 +26,7 @@ struct Matches_Provider
     if (!stlplus::is_file(matchesfile))
     {
       std::cerr << std::endl
-        << "Invalid matches file" << std::endl;
+        << "Invalid matches file" << matchesfile << std::endl;
       return false;
     }
     if (!matching::PairedIndMatchImport(matchesfile, _pairWise_matches)) {
@@ -48,6 +48,11 @@ struct Matches_Provider
         }
       }
       _pairWise_matches.swap(matches_saved);
+    }
+    if (_pairWise_matches.size()==0)
+    {
+      std::cerr << "None of the matches has been found in the SfM_Data! Check your pair-List file!" << std::endl;
+      return false;
     }
     return true;
   }

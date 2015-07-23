@@ -22,6 +22,11 @@ INSTALL(TARGETS openMVG_main_ConvertList DESTINATION bin/)
 ###
 
 ADD_EXECUTABLE(openMVG_main_ComputeFeatures main_ComputeFeatures.cpp)
+IF(OpenMVG_USE_NANOMSG)
+  ADD_DEFINITIONS(-DUSE_NANOMSG)
+ENDIF(OpenMVG_USE_NANOMSG)
+MESSAGE(STATUS "xxx----ComputeFeautres: ${OpenMVG_LIBRARIES}")
+
 TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures ${OpenMVG_LIBRARIES})
 
 ADD_EXECUTABLE(openMVG_main_ComputeMatches main_ComputeMatches.cpp)

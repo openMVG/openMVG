@@ -18,6 +18,9 @@
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/progress/progress.hpp"
+#ifdef USE_NANOMSG
+  #include "third_party/progress/SocketProgress.hpp"
+#endif
 
 #include <cstdlib>
 #include <fstream>
@@ -56,6 +59,7 @@ int main(int argc, char **argv)
   std::string sImage_Describer_Method = "SIFT";
   bool bForce = false;
   std::string sFeaturePreset = "";
+  std::string sSocketUrl="";
 
   // required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -65,6 +69,9 @@ int main(int argc, char **argv)
   cmd.add( make_option('u', bUpRight, "upright") );
   cmd.add( make_option('f', bForce, "force") );
   cmd.add( make_option('p', sFeaturePreset, "describerPreset") );
+  #ifdef USE_NANOMSG
+  cmd.add (make_option('s', sSocketUrl, "progressSocket") );
+  #endif
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -75,6 +82,10 @@ int main(int argc, char **argv)
       << "[-o|--outdir path] \n"
       << "\n[Optional]\n"
       << "[-f|--force: Force to recompute data]\n"
+      #ifdef USE_NANOMSG
+      << "[-s|--progressSocket]  Socket Url for the progress reporter to send progress updates \n"
+      << "   Use tcp://<IP>:<PORT> for remote or ipc:///tmp/openmvg.ipc for shared memory distribution.\n"
+      #endif
       << "[-m|--describerMethod\n"
       << "  (method to use to describe an image):\n"
       << "   SIFT (default),\n"
@@ -99,6 +110,9 @@ int main(int argc, char **argv)
             << "--describerMethod " << sImage_Describer_Method << std::endl
             << "--upright " << bUpRight << std::endl
             << "--describerPreset " << (sFeaturePreset.empty() ? "NORMAL" : sFeaturePreset) << std::endl
+            #ifdef USE_NANOMSG
+            << "--progressSocket  " << sSocketUrl << std::endl
+            #endif
             << "--force " << bForce << std::endl;
 
 
@@ -213,6 +227,10 @@ int main(int argc, char **argv)
     Image<unsigned char> imageGray;
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
+    #ifdef USE_NANOMSG
+    Socket_Progress_send socket_progress_bar("Compute Features", sSocketUrl, sfm_data.GetViews().size());
+    #endif
+
     for(Views::const_iterator iterViews = sfm_data.views.begin();
         iterViews != sfm_data.views.end();
         ++iterViews, ++my_progress_bar)
@@ -236,6 +254,10 @@ int main(int argc, char **argv)
         image_describer->Describe(imageGray, regions);
         image_describer->Save(regions.get(), sFeat, sDesc);
       }
+      //update the socket progress updater.
+      #ifdef USE_NANOMSG
+        ++socket_progress_bar;
+      #endif
     }
     std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
   }
