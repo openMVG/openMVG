@@ -11,12 +11,13 @@
 #include <fstream>
 #include <iterator>
 
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
 // Parse the database
 bool parseDatabase( const std::string& sfileDatabase, std::vector<Datasheet>& vec_database )
 {
-  bool createDatabase = false;
   std::ifstream iFilein( sfileDatabase.c_str() );
-  if ( iFilein.is_open() )
+  if ( stlplus::is_file(sfileDatabase) && iFilein)
   {
     std::string line;
     while ( iFilein.good() )
@@ -39,15 +40,12 @@ bool parseDatabase( const std::string& sfileDatabase, std::vector<Datasheet>& ve
         }
       }
     }
-    createDatabase = true;
+    return true;
   }
   else
   {
-    std::cerr<< "Cannot open the database file: "
-      << sfileDatabase << std::endl;
+    return false;
   }
-
-  return createDatabase;
 }
 
 // Get information for the given camera model
