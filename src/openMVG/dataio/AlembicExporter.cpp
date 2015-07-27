@@ -8,6 +8,7 @@
 #if HAVE_ALEMBIC
 
 #include "AlembicExporter.hpp"
+#include "openMVG/sfm/sfm_view_metadata.hpp"
 
 namespace openMVG {
 namespace dataio {
@@ -94,7 +95,8 @@ void AlembicExporter::appendCamera(const std::string &cameraName,
                                    const cameras::Pinhole_Intrinsic *cam,
                                    const std::string &imagePath,
                                    const IndexT id_view,
-                                   const IndexT id_intrinsic)
+                                   const IndexT id_intrinsic,
+                                   const float sensorWidth_mm)
 {
   const openMVG::Mat3 R = pose.rotation();
   const openMVG::Vec3 center = pose.center();
@@ -147,9 +149,7 @@ void AlembicExporter::appendCamera(const std::string &cameraName,
   const float hoffset_pix = cam->principal_point()(0);
   const float voffset_pix = cam->principal_point()(1);
   
-  // Use a common sensor width as we don't have this information at this point
-  // We chose a full frame 24x36 camera
-  const float sensorWidth_mm = 36.0; // 36mm per default TODO adapt to real values
+
   const float sensorHeight_mm = sensorWidth_mm * imgRatio;
   const float focalLength_mm = sensorWidth_mm * focalLength_pix / sensorWidth_pix;
   const float pix2mm = sensorWidth_mm / sensorWidth_pix;
@@ -220,7 +220,15 @@ void AlembicExporter::add(const sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_par
       const std::string cameraName = stlplus::basename_part(view->s_Img_path);
       const std::string sView_filename = stlplus::create_filespec(sfmdata.s_root_path, view->s_Img_path);
       
-      appendCamera(cameraName, pose, dynamic_cast<openMVG::cameras::Pinhole_Intrinsic*>(cam.get()), sView_filename, view->id_view, view->id_intrinsic);
+      // Use a common sensor width if we don't have this information.
+      // We chose a full frame 24x36 camera
+      float sensorWidth_mm = 36.0;
+      const sfm::View_Metadata* viewMetadata = dynamic_cast<const sfm::View_Metadata*>(view);
+      if(viewMetadata)
+      {
+        sensorWidth_mm = std::stof(viewMetadata->metadata.at(std::string("sensor_width")));
+      }
+      appendCamera(cameraName, pose, dynamic_cast<openMVG::cameras::Pinhole_Intrinsic*>(cam.get()), sView_filename, view->id_view, view->id_intrinsic, sensorWidth_mm);
     }
   }
   if(flags_part & sfm::ESfM_Data::STRUCTURE)

@@ -41,7 +41,8 @@ public:
                     const cameras::Pinhole_Intrinsic *cam,
                     const std::string &imagePath,
                     const IndexT id_view,
-                    const IndexT id_intrinsic);
+                    const IndexT id_intrinsic,
+                    const float sensorWidth_mm=36.0);
   
   /**
    * @brief Add SfM Data
