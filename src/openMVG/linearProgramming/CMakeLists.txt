@@ -22,10 +22,9 @@ IF (NOT MOSEK_FOUND)
   LIST(REMOVE_ITEM linearProgramming_headers ${REMOVEFILESMOSEK})
   
   SET(openMVG_linearProgramming
-    lib_OsiClpSolver # solver wrapper
-    lib_CoinUtils    # container tools
-    lib_Osi          # generic LP
-    lib_clp          # Solver
+    ${CLP_LIBRARIES}     # clp + solver wrapper
+    ${COINUTILS_LIBRARY} # container tools
+    ${OSI_LIBRARY}       # generic LP
   )
   
 ELSE (NOT MOSEK_FOUND)
@@ -35,19 +34,15 @@ ELSE (NOT MOSEK_FOUND)
   INSTALL(TARGETS openMVG_linearProgrammingMSK DESTINATION lib EXPORT openMVG-targets)
 
   SET(openMVG_linearProgramming
-    lib_Osi_Msk      # OSI solver wrapper for the Mosek backend
-    lib_OsiClpSolver # solver wrapper
-    lib_CoinUtils    # container tools
-    lib_Osi          # generic LP
-    lib_clp          # Solver
+    lib_Osi_Msk          # OSI solver wrapper for the Mosek backend
+    ${CLP_LIBRARIES}     # clp + solver wrapper
+    ${COINUTILS_LIBRARY} # container tools
+    ${OSI_LIBRARY}       # generic LP
 
     openMVG_linearProgrammingMSK # openMVG Mosek wrapper
     ${MOSEK_LIB}    # Mosek lib
   )
 ENDIF (NOT MOSEK_FOUND)
-
-# set the variable in the parent_scope
-SET(openMVG_linearProgramming ${openMVG_linearProgramming} PARENT_SCOPE)
 
 UNIT_TEST(openMVG_linearProgramming linearProgramming "${openMVG_linearProgramming}")
 

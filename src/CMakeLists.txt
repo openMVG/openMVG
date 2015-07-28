@@ -14,9 +14,14 @@ IF(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed.")
 ENDIF()
 
+# build path
+SET(EXECUTABLE_OUTPUT_PATH "${PROJECT_BINARY_DIR}/${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}-${CMAKE_BUILD_TYPE}")
+SET(LIBRARY_OUTPUT_PATH "${PROJECT_BINARY_DIR}/${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}-${CMAKE_BUILD_TYPE}")
+
 # ==============================================================================
 # OpenMVG build options
 # ==============================================================================
+OPTION(OpenMVG_BUILD_SHARED "Build OpenMVG shared libs" OFF)
 OPTION(OpenMVG_BUILD_TESTS "Build OpenMVG tests" OFF)
 OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG samples applications." ON)
 OPTION(OpenMVG_BUILD_OPENGL_EXAMPLES "Build OpenMVG openGL examples" OFF)
@@ -40,6 +45,13 @@ IF (WIN32)
     ADD_DEFINITIONS(/bigobj)
   ENDIF (MSVC)
 ENDIF (WIN32)
+
+# Set shared or static mode
+IF(OpenMVG_BUILD_SHARED)
+  SET(BUILD_SHARED_LIBS ON)
+ELSEIF()
+  SET(BUILD_SHARED_LIBS OFF)
+ENDIF()
 
 # ==============================================================================
 # Additional cmake find modules
@@ -136,45 +148,17 @@ IF (OpenMVG_BUILD_OPENGL_EXAMPLES)
   SET_PROPERTY(TARGET glfw PROPERTY FOLDER OpenMVG/3rdParty/glfw)
 ENDIF (OpenMVG_BUILD_OPENGL_EXAMPLES)
 
-#===============================
-#---- LINEAR PROGRAMMING SOLVER
-#===============================
-
 #- Mosek (linear programming interface)
 #===============================================================================
 FIND_PACKAGE(Mosek)
 IF(MOSEK_FOUND)
   ADD_DEFINITIONS(-DOPENMVG_HAVE_MOSEK)
-  SET(LP_INCLUDE_DIRS 
+  SET(LP_INCLUDE_DIRS
     ${MOSEK_INCLUDE}
     ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/OsiMsk/
   )
   INCLUDE_DIRECTORIES(${LP_INCLUDE_DIRS})
 ENDIF(MOSEK_FOUND)
-
-#- osi_clp (linear programming interface)
-# ==============================================================================
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/dependencies/osi_clp/Clp)
-  message(FATAL_ERROR
-    "\n'osi_clp' submodule is missing, please update your repository:\n"
-    "  > git submodule update -i\n")
-endif()
-ADD_SUBDIRECTORY(dependencies/osi_clp)
-SET(LP_INCLUDE_DIRS "${LP_INCLUDE_DIRS}" 
-  ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/CoinUtils/src/
-  ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/
-  ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/Osi/
-  ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/OsiClp/
-)
-INCLUDE_DIRECTORIES(${LP_INCLUDE_DIRS})
-SET_PROPERTY(TARGET lib_CoinUtils PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
-SET_PROPERTY(TARGET lib_Osi PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
-SET_PROPERTY(TARGET lib_OsiClpSolver PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
-SET_PROPERTY(TARGET lib_clp PROPERTY FOLDER OpenMVG/3rdParty/osi_clp)
-
-# =================================
-# --END-- LINEAR PROGRAMMING SOLVER
-# =================================
 
 #INSTALL RULES
 INSTALL(
@@ -217,7 +201,8 @@ MACRO (UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
     TARGET_LINK_LIBRARIES(${NAMESPACE}_test_${NAME}
                           ${EXTRA_LIBS} # Extra libs MUST be first.
                           CppUnitLite ${OPENMVG_LIBRARY_DEPENDENCIES})
-    ADD_TEST(${NAMESPACE}_test_${NAME} ${NAMESPACE}_test_${NAME})
+    ADD_TEST(NAME ${NAMESPACE}_test_${NAME} COMMAND ${NAMESPACE}_test_${NAME}
+             WORKING_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}-${CMAKE_BUILD_TYPE}")
   ENDIF (OpenMVG_BUILD_TESTS)
 ENDMACRO (UNIT_TEST)
 
@@ -233,9 +218,8 @@ IF(NOT DEFINED EIGEN_INCLUDE_DIR_HINTS)
 ENDIF()
 FIND_PACKAGE(Eigen QUIET)
 IF(EIGEN_FOUND)
-	INCLUDE_DIRECTORIES(${EIGEN_INCLUDE_DIRS})
+  INCLUDE_DIRECTORIES(${EIGEN_INCLUDE_DIRS})
 ENDIF(EIGEN_FOUND)
-
 # Configure Eigen to use only MPL2 licensed code
 ADD_DEFINITIONS(-DEIGEN_MPL2_ONLY)
 
@@ -246,17 +230,150 @@ ADD_DEFINITIONS(-DEIGEN_MPL2_ONLY)
 # - external if CERES_DIR_HINTS and FIND_PACKAGE return a valid Ceres setup
 # ==============================================================================
 FIND_PACKAGE(Ceres QUIET HINTS ${CERES_DIR_HINTS})
-IF(Ceres_FOUND)
-   MESSAGE("CERES FOUND")
-ELSE()
-  MESSAGE("CERES NOT FOUND")
+IF(NOT Ceres_FOUND)
   SET(OpenMVG_USE_INTERNAL_CERES ON)
   SET(CERES_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/include
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/internal/ceres/miniglog
     ${PROJECT_BINARY_DIR}/third_party/ceres-solver/config)
+    FILE(READ "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/VERSION" CERES_CONFIG)
+    STRING(REGEX REPLACE "version ([0-9.]+).*" "\\1" CERES_VERSION ${CERES_CONFIG})
   SET(CERES_LIBRARIES ceres cxsparse)
-ENDIF(Ceres_FOUND)
+ENDIF()
+
+# ==============================================================================
+# Flann
+# ==============================================================================
+# - internal by default (flann),
+# - external if FLANN_DIR_HINTS and a valid Flann setup is found
+# ==============================================================================
+FIND_PATH(FLANN_INCLUDE_DIRS flann.hpp ${FLANN_DIR_HINTS})
+IF(FLANN_INCLUDE_DIRS)
+  FILE(READ "${FLANN_INCLUDE_DIRS}/config.h" FLANN_CONFIG)
+  STRING(REGEX REPLACE ".*FLANN_VERSION_.+\"([0-9.]+)\".*" "\\1" FLANN_VERSION ${FLANN_CONFIG})
+  FIND_LIBRARY(FLANN_LIBRARY NAMES flann_cpp)
+  IF(NOT DEFINED FLANN_LIBRARY)
+    SET(OpenMVG_USE_INTERNAL_FLANN ON)
+  ENDIF()
+ELSE(FLANN_INCLUDE_DIRS)
+  SET(OpenMVG_USE_INTERNAL_FLANN ON)
+ENDIF()
+
+IF(DEFINED OpenMVG_USE_INTERNAL_FLANN)
+  SET(FLANN_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp)
+  FILE(READ "${FLANN_INCLUDE_DIRS}/flann/config.h" FLANN_CONFIG)
+  STRING(REGEX REPLACE ".*FLANN_VERSION_.+\"([0-9.]+)\".*" "\\1" FLANN_VERSION ${FLANN_CONFIG})
+  SET(FLANN_LIBRARY flann_cpp_s)
+ENDIF()
+
+# ==============================================================================
+# CoinUtils
+# ==============================================================================
+# - internal by default (CoinUtils),
+# - external if COINUTILS_DIR_HINTS and a valid CoinUtils setup is found
+# ==============================================================================
+FIND_PATH(COINUTILS_INCLUDE_DIRS CoinUtilsConfig.h ${COINUTILS_DIR_HINTS})
+IF(COINUTILS_INCLUDE_DIRS)
+  FILE(READ "${COINUTILS_INCLUDE_DIRS}/CoinUtilsConfig.h" COINUTILS_CONFIG)
+  STRING(REGEX REPLACE ".*COINUTILS_VERSION \"([0-9.]+)\".*" "\\1" COINUTILS_VERSION ${COINUTILS_CONFIG})
+  FIND_LIBRARY(COINUTILS_LIBRARY NAMES CoinUtils)
+  IF(NOT DEFINED COINUTILS_LIBRARY)
+    SET(OpenMVG_USE_INTERNAL_COINUTILS ON)
+  ENDIF()
+ELSE(COINUTILS_INCLUDE_DIRS)
+  SET(OpenMVG_USE_INTERNAL_COINUTILS ON)
+ENDIF()
+
+IF(DEFINED OpenMVG_USE_INTERNAL_COINUTILS)
+  SET(COINUTILS_INCLUDE_DIRS
+     ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/CoinUtils/src/)
+  SET(COINUTILS_LIBRARY lib_CoinUtils)
+ENDIF()
+
+# ==============================================================================
+# Clp
+# ==============================================================================
+# - internal by default (Clp),
+# - external if CLP_DIR_HINTS and a valid Clp setup is found
+# ==============================================================================
+FIND_PATH(CLP_INCLUDE_DIRS ClpConfig.h ${CLP_DIR_HINTS})
+IF(CLP_INCLUDE_DIRS)
+  FILE(READ "${CLP_INCLUDE_DIRS}/ClpConfig.h" CLP_CONFIG)
+  STRING(REGEX REPLACE ".*CLP_VERSION \"([0-9.]+)\".*" "\\1" CLP_VERSION ${CLP_CONFIG})
+  FIND_LIBRARY(CLP_LIBRARY NAMES Clp)
+  FIND_LIBRARY(CLPSOLVER_LIBRARY NAMES ClpSolver)
+  FIND_LIBRARY(OSICLP_LIBRARY NAMES OsiClp)
+  IF(NOT DEFINED CLP_LIBRARY AND NOT DEFINED CLP_SOLVER_LIBRARY AND NOT DEFINED OSICLP_LIBRARY)
+    SET(OpenMVG_USE_INTERNAL_CLP ON)
+  ELSE()
+    SET(CLP_LIBRARIES ${CLP_LIBRARY} ${CLPSOLVER_LIBRARY} ${OSICLP_LIBRARY})
+  ENDIF()
+ELSE(CLP_INCLUDE_DIRS)
+  SET(OpenMVG_USE_INTERNAL_CLP ON)
+ENDIF()
+
+IF(DEFINED OpenMVG_USE_INTERNAL_CLP)
+  SET(CLP_INCLUDE_DIRS
+     ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/
+     ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/OsiClp/)
+  SET(CLP_LIBRARIES lib_clp lib_OsiClpSolver)
+ENDIF()
+
+# ==============================================================================
+# Osi
+# ==============================================================================
+# - internal by default (Osi),
+# - external if OSI_DIR_HINTS and a valid Osi setup is found
+# ==============================================================================
+FIND_PATH(OSI_INCLUDE_DIRS OsiConfig.h ${OSI_DIR_HINTS})
+IF(OSI_INCLUDE_DIRS)
+  FILE(READ "${OSI_INCLUDE_DIRS}/OsiConfig.h" OSI_CONFIG)
+  STRING(REGEX REPLACE ".*OSI_VERSION \"([0-9.]+)\".*" "\\1" OSI_VERSION ${OSI_CONFIG})
+  FIND_LIBRARY(OSI_LIBRARY NAMES Osi)
+  IF(NOT DEFINED OSI_LIBRARY)
+    SET(OpenMVG_USE_INTERNAL_OSI ON)
+  ENDIF()
+ELSE(OSI_INCLUDE_DIRS)
+  SET(OpenMVG_USE_INTERNAL_OSI ON)
+ENDIF()
+
+IF(DEFINED OpenMVG_USE_INTERNAL_OSI)
+  SET(OSI_INCLUDE_DIRS
+     ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/Osi/)
+  SET(OSI_LIBRARY lib_Osi)
+ENDIF()
+
+# ==============================================================================
+# Lemon
+# ==============================================================================
+# - internal by default (Lemon),
+# - external if LEMON_DIR_HINTS and a valid Lemon setup is found
+# ==============================================================================
+FIND_PATH(LEMON_INCLUDE_DIR config.h ${LEMON_DIR_HINTS})
+IF(LEMON_INCLUDE_DIR)
+  FILE(READ "${LEMON_INCLUDE_DIR}/config.h" LEMON_CONFIG)
+  STRING(REGEX REPLACE ".*LEMON_VERSION \"([0-9.]+)\".*" "\\1" LEMON_VERSION ${LEMON_CONFIG})
+  FIND_LIBRARY(LEMON_LIBRARY NAMES emon)
+  IF(NOT DEFINED LEMON_LIBRARY)
+    SET(OpenMVG_USE_INTERNAL_LEMON ON)
+  ELSE()
+    GET_FILENAME_COMPONENT(LEMON_INCLUDE_DIRS ${LEMON_INCLUDE_DIR} PATH)
+  ENDIF()
+ELSE(LEMON_INCLUDE_DIR)
+  SET(OpenMVG_USE_INTERNAL_LEMON ON)
+ENDIF()
+
+IF(DEFINED OpenMVG_USE_INTERNAL_LEMON)
+  SET(LEMON_INCLUDE_DIRS
+     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon)
+  SET(LEMON_LIBRARY lemon)
+ENDIF()
+
+# ==============================================================================
+# Internal CLP/OSI/COINUTILS libraries:
+# ==============================================================================
+ADD_SUBDIRECTORY(dependencies/osi_clp/)
+
 
 # ==============================================================================
 # Third-party libraries:
@@ -274,12 +391,14 @@ SET(OpenMVG_INCLUDE_DIRS
   ${TIFF_INCLUDE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/dependencies
   ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon
-  ${PROJECT_BINARY_DIR}/third_party/lemon
+  ${LEMON_INCLUDE_DIRS}
   ${EIGEN_INCLUDE_DIRS}
-  ${CERES_INCLUDE_DIRS}  
+  ${CERES_INCLUDE_DIRS}
+  ${FLANN_INCLUDE_DIRS}
   ${LP_INCLUDE_DIRS}
-  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp
+  ${COINUTILS_INCLUDE_DIRS}
+  ${CLP_INCLUDE_DIRS}
+  ${OSI_INCLUDE_DIRS}
   CACHE PATH "include directories for openMVG and its dependencies"
 )
 
@@ -307,19 +426,6 @@ SET(OpenMVG_LIBRARIES
 FOREACH(omvglib ${OpenMVG_LIBRARIES})
   SET_PROPERTY(TARGET ${omvglib} PROPERTY FOLDER OpenMVG/OpenMVG)
 ENDFOREACH()
-
-#third_party libs
-SET(OpenMVG_LIBRARIES
-  "${OpenMVG_LIBRARIES}"
-  "${openMVG_linearProgramming}"
-  vlsift
-  stlplus
-  flann_cpp_s
-  ${CERES_LIBRARIES}
-  lemon
-  easyexif)
-SET(OpenMVG_LIBRARIES "${OpenMVG_LIBRARIES}"
-  ${OPENMVG_LIBRARY_DEPENDENCIES} CACHE STRING "openMVG library names")
 
 # openMVG tutorial examples
 IF (OpenMVG_BUILD_EXAMPLES)
@@ -359,6 +465,83 @@ IF (EXISTS ${SPHINX_EXECUTABLE})
 ELSE (EXISTS ${SPHINX_EXECUTABLE})
   MESSAGE("Sphinx need to be installed to generate the documentation")
 ENDIF (EXISTS ${SPHINX_EXECUTABLE})
+
+
+MESSAGE("\n")
+
+MESSAGE("** OpenMVG version: " ${OPENMVG_VERSION})
+MESSAGE("** Build Shared libs: " ${OpenMVG_BUILD_SHARED})
+MESSAGE("** Build OpenMVG tests: " ${OpenMVG_BUILD_TESTS})
+MESSAGE("** Build OpenMVG samples applications: " ${OpenMVG_BUILD_EXAMPLES})
+MESSAGE("** Build OpenMVG openGL examples: " ${OpenMVG_BUILD_OPENGL_EXAMPLES})
+MESSAGE("** Enable code coverage generation: " ${OpenMVG_BUILD_COVERAGE})
+MESSAGE("** Enable OpenMP parallelization: " ${OpenMVG_USE_OPENMP})
+MESSAGE("** Build OpenCV+OpenMVG samples programs: " ${OpenMVG_USE_OPENCV})
+MESSAGE("** Use OpenCV SIFT features: " ${OpenMVG_USE_OCVSIFT})
+
+MESSAGE("\n")
+
+IF(DEFINED OpenMVG_USE_INTERNAL_EIGEN)
+  MESSAGE(STATUS "EIGEN: " ${EIGEN_VERSION} " (internal)")
+ELSE()
+  MESSAGE(STATUS "EIGEN: " ${EIGEN_VERSION} " (external)")
+ENDIF()
+
+IF(DEFINED OpenMVG_USE_INTERNAL_CERES)
+  MESSAGE(STATUS "CERES: " ${CERES_VERSION} " (internal)")
+ELSE()
+  MESSAGE(STATUS "CERES: " ${CERES_VERSION} " (external)")
+ENDIF()
+
+IF(DEFINED OpenMVG_USE_INTERNAL_FLANN)
+  MESSAGE(STATUS "FLANN: " ${FLANN_VERSION} " (internal)")
+ELSE()
+  MESSAGE(STATUS "FLANN: " ${FLANN_VERSION} " (external)")
+ENDIF()
+
+IF(DEFINED OpenMVG_USE_INTERNAL_TIFF)
+  MESSAGE(STATUS "LIBTIFF: " ${TIFF_VERSION_STRING} " (internal)")
+ELSE()
+  MESSAGE(STATUS "LIBTIFF: " ${TIFF_VERSION_STRING} " (external)")
+ENDIF()
+
+IF(DEFINED OpenMVG_USE_INTERNAL_PNG)
+  MESSAGE(STATUS "LIBPNG: " ${PNG_VERSION_STRING} " (internal)")
+ELSE()
+  MESSAGE(STATUS "LIBPNG: " ${PNG_VERSION_STRING} " (external)")
+ENDIF()
+
+IF(DEFINED OpenMVG_USE_INTERNAL_JPEG)
+  MESSAGE(STATUS "LIBPNG (internal)")
+ELSE()
+  MESSAGE(STATUS "LIBPNG (external)")
+ENDIF()
+
+IF(DEFINED OpenMVG_USE_INTERNAL_CLP)
+  MESSAGE(STATUS "CLP (internal)")
+ELSE()
+  MESSAGE(STATUS "CLP: " ${CLP_VERSION} " (external)")
+ENDIF()
+
+IF(DEFINED OpenMVG_USE_INTERNAL_COINUTILS)
+  MESSAGE(STATUS "COINUTILS (internal)")
+ELSE()
+  MESSAGE(STATUS "COINUTILS: " ${COINUTILS_VERSION} " (external)")
+ENDIF()
+
+IF(DEFINED OpenMVG_USE_INTERNAL_OSI)
+  MESSAGE(STATUS "OSI (internal)")
+ELSE()
+  MESSAGE(STATUS "OSI: " ${OSI_VERSION} " (external)")
+ENDIF()
+
+IF(DEFINED OpenMVG_USE_INTERNAL_LEMON)
+  MESSAGE(STATUS "LEMON (internal)")
+ELSE()
+  MESSAGE(STATUS "LEMON: " ${LEMON_VERSION} " (external)")
+ENDIF()
+
+MESSAGE("\n")
 
 
 # ==============================================================================
