@@ -25,7 +25,9 @@ INSTALL(TARGETS openMVG_multiview DESTINATION lib EXPORT openMVG-targets)
 #Make multiview library integrate numeric library
 ADD_LIBRARY(openMVG_multiview_test_data ${MULTIVIEWTESTDATA})
 SET_PROPERTY(TARGET openMVG_multiview_test_data PROPERTY FOLDER OpenMVG/OpenMVG)
-TARGET_LINK_LIBRARIES(openMVG_multiview openMVG_numeric)
+TARGET_LINK_LIBRARIES(openMVG_multiview openMVG_numeric ${CERES_LIBRARIES})
+SET_TARGET_PROPERTIES(openMVG_multiview PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
+
 
 # Triangulation routines
 UNIT_TEST(openMVG triangulation "openMVG_multiview;openMVG_multiview_test_data")
@@ -41,6 +43,6 @@ UNIT_TEST(openMVG solver_resection_kernel "openMVG_multiview;openMVG_multiview_t
 UNIT_TEST(openMVG solver_translation_knownRotation_kernel "openMVG_multiview;openMVG_multiview_test_data")
 
 # Averaging routines
-UNIT_TEST(openMVG rotation_averaging "lemon;openMVG_multiview;openMVG_multiview_test_data;ceres")
-UNIT_TEST(openMVG translation_averaging "lemon;openMVG_multiview;openMVG_multiview_test_data;ceres")
+UNIT_TEST(openMVG rotation_averaging "openMVG_multiview;openMVG_multiview_test_data;${CERES_LIBRARIES}")
+UNIT_TEST(openMVG translation_averaging "openMVG_multiview;openMVG_multiview_test_data;${CERES_LIBRARIES}")
 

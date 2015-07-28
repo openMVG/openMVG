@@ -7,7 +7,7 @@
 
 #include "testing/testing.h"
 #include "openMVG/matching/metric.hpp"
-#include "third_party/flann/src/cpp/flann/algorithms/dist.h"
+#include "flann/algorithms/dist.h"
 #include <iostream>
 #include <bitset>
 #include <string>

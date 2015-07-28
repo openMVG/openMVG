@@ -1,4 +1,4 @@
 
 UNIT_TEST(openMVG global_SfM
-  "openMVG_multiview_test_data;openMVG_features;openMVG_multiview;openMVG_sfm;openMVG_system;${openMVG_linearProgramming};lemon;stlplus")
+  "openMVG_multiview_test_data;openMVG_features;openMVG_multiview;openMVG_sfm;openMVG_system;stlplus;${CLP_LIBRARIES};${COINUTILS_LIBRARY};${OSI_LIBRARY}")
 

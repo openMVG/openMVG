@@ -1,4 +1,12 @@
 
+# libs should be static
+SET(BUILD_SHARED_LIBS OFF)
+
+# use PIC code for link into shared lib
+IF(UNIX)
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+ENDIF(UNIX)
+
 INCLUDE_DIRECTORIES(./vl)
 SET(FEATS 
   vl/generic.c
