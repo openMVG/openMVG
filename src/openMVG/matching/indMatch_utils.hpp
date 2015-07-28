@@ -48,8 +48,6 @@ static bool PairedIndMatchImport(
       << "with : " << fileName << std::endl;
     return false;
   }
-  
-  map_indexedMatches.clear();
 
   size_t I, J, number;
   while (in >> I >> J >> number)  {

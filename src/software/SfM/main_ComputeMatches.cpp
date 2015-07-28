@@ -67,6 +67,7 @@ int main(int argc, char **argv)
   float fDistRatio = .6f;
   int iMatchingVideoMode = -1;
   std::string sPredefinedPairList = "";
+  int specificIndex = -1;
   bool bUpRight = false;
   std::string sNearestMatchingMethod = "AUTO";
   bool bForce = false;
@@ -80,6 +81,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('g', sGeometricModel, "geometric_model") );
   cmd.add( make_option('v', iMatchingVideoMode, "video_mode_matching") );
   cmd.add( make_option('l', sPredefinedPairList, "pair_list") );
+  cmd.add( make_option('x', specificIndex, "specific_index") );
   cmd.add( make_option('n', sNearestMatchingMethod, "nearest_matching_method") );
   cmd.add( make_option('f', bForce, "force") );
   cmd.add( make_option('m', bGuided_matching, "guided_matching") );
@@ -105,7 +107,11 @@ int main(int argc, char **argv)
       << "   X: with match 0 with (1->X), ...]\n"
       << "   2: will match 0 with (1,2), 1 with (2,3), ...\n"
       << "   3: will match 0 with (1,2,3), 1 with (2,3,4), ...\n"
-      << "[-l]--pair_list] file\n"
+      << "[-l]--pair_list] filepath\n"
+      << "  A file which contains the list of matches to perform.\n"
+      << "[-x]--specific_index] image index\n"
+      << "  To compute only the matches for the specified image index.\n"
+      << "  This allows to compute different matches on different computers in parallel.\n"
       << "[-n|--nearest_matching_method]\n"
       << "  AUTO: auto choice from regions type,\n"
       << "  BRUTEFORCEL2: BruteForce L2 matching for Scalar based regions descriptor,\n"
@@ -129,6 +135,7 @@ int main(int argc, char **argv)
             << "--geometric_model " << sGeometricModel << "\n"
             << "--video_mode_matching " << iMatchingVideoMode << "\n"
             << "--pair_list " << sPredefinedPairList << "\n"
+            << "--specific_index " << specificIndex << "\n"
             << "--nearest_matching_method " << sNearestMatchingMethod << "\n"
             << "--guided_matching " << bGuided_matching << std::endl;
 
@@ -149,6 +156,7 @@ int main(int argc, char **argv)
   }
 
   EGeometricModel eGeometricModelToCompute = FUNDAMENTAL_MATRIX;
+  std::string sPutativeMatchesFilename = "matches.putative.txt";
   std::string sGeometricMatchesFilename = "";
   switch(sGeometricModel[0])
   {
@@ -167,6 +175,11 @@ int main(int argc, char **argv)
     default:
       std::cerr << "Unknown geometric model" << std::endl;
       return EXIT_FAILURE;
+  }
+  if( specificIndex != -1 )
+  {
+    sGeometricMatchesFilename = std::to_string(specificIndex) + "." + sGeometricMatchesFilename;
+    sPutativeMatchesFilename = std::to_string(specificIndex) + "." + sPutativeMatchesFilename;
   }
 
   // -----------------------------
@@ -234,10 +247,11 @@ int main(int argc, char **argv)
   }
 
   std::cout << std::endl << " - PUTATIVE MATCHES - " << std::endl;
+
   // If the matches already exists, reload them
-  if (!bForce && stlplus::file_exists(sMatchesDirectory + "/matches.putative.txt"))
+  if (!bForce && stlplus::file_exists(sMatchesDirectory + "/" + sPutativeMatchesFilename))
   {
-    PairedIndMatchImport(sMatchesDirectory + "/matches.putative.txt", map_PutativesMatches);
+    PairedIndMatchImport(sMatchesDirectory + "/" + sPutativeMatchesFilename, map_PutativesMatches);
     std::cout << "\t PREVIOUS RESULTS LOADED" << std::endl;
   }
   else // Compute the putative matches
@@ -300,12 +314,21 @@ int main(int argc, char **argv)
           };
           break;
       }
+      // If we have a specificIndex, only compute the matching for (specificIndex, X).
+      if( specificIndex != -1 )
+      {
+        Pair_Set specificedPairs;
+        for (const Pair& p: pairs)
+          if( p.first == specificIndex )
+            specificedPairs.insert(p);
+        pairs = specificedPairs;
+      }
       // Photometric matching of putative pairs
       collectionMatcher->Match(sfm_data, regions_provider, pairs, map_PutativesMatches);
       //---------------------------------------
       //-- Export putative matches
       //---------------------------------------
-      std::ofstream file (std::string(sMatchesDirectory + "/matches.putative.txt").c_str());
+      std::ofstream file (std::string(sMatchesDirectory + "/" + sPutativeMatchesFilename).c_str());
       if (file.is_open())
         PairedIndMatchToStream(map_PutativesMatches, file);
       file.close();
