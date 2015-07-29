@@ -36,7 +36,7 @@ struct SfM_Data
   Views views;
   /// Considered poses (indexed by view.id_pose)
   Poses poses;
-  /// Considered camera intrinsics (indexed by view.id_cam)
+  /// Considered camera intrinsics (indexed by view.id_intrinsic)
   Intrinsics intrinsics;
   /// Structure (3D points with their 2D observations)
   Landmarks structure;
