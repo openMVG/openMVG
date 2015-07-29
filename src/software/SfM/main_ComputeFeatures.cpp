@@ -44,6 +44,31 @@ features::EDESCRIBER_PRESET stringToEnum(const std::string & sPreset)
   return preset;
 }
 
+bool extractFeatures(const View* view, const SfM_Data& sfm_data, std::unique_ptr<Image_describer> image_describer, const std::string& outDirectory, bool bForce)
+{
+  // const View * view = iterViews->second.get();
+  const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
+    view->s_Img_path);
+  const std::string sFeat = stlplus::create_filespec(outDirectory,
+    stlplus::basename_part(sView_filename), "feat");
+  const std::string sDesc = stlplus::create_filespec(outDirectory,
+    stlplus::basename_part(sView_filename), "desc");
+
+  //If features or descriptors file are missing, compute them
+  if (bForce || !stlplus::file_exists(sFeat) || !stlplus::file_exists(sDesc))
+  {
+    Image<unsigned char> imageGray;
+    if (!ReadImage(sView_filename.c_str(), &imageGray))
+      return false;
+
+    // Compute features and descriptors and export them to files
+    std::unique_ptr<Regions> regions;
+    image_describer->Describe(imageGray, regions);
+    image_describer->Save(regions.get(), sFeat, sDesc);
+  }
+  return true;
+}
+
 /// - Compute view image description (feature & descriptor extraction)
 /// - Export computed data
 int main(int argc, char **argv)
@@ -56,6 +81,7 @@ int main(int argc, char **argv)
   std::string sImage_Describer_Method = "SIFT";
   bool bForce = false;
   std::string sFeaturePreset = "";
+  int specificIndex = -1;
 
   // required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -65,6 +91,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('u', bUpRight, "upright") );
   cmd.add( make_option('f', bForce, "force") );
   cmd.add( make_option('p', sFeaturePreset, "describerPreset") );
+  cmd.add( make_option('x', specificIndex, "specific_index") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -86,6 +113,7 @@ int main(int argc, char **argv)
       << "   NORMAL (default),\n"
       << "   HIGH,\n"
       << "   ULTRA: !!Can take long time!!\n"
+      << "[-x]--specific_index] image index\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -99,7 +127,8 @@ int main(int argc, char **argv)
             << "--describerMethod " << sImage_Describer_Method << std::endl
             << "--upright " << bUpRight << std::endl
             << "--describerPreset " << (sFeaturePreset.empty() ? "NORMAL" : sFeaturePreset) << std::endl
-            << "--force " << bForce << std::endl;
+            << "--force " << bForce << std::endl
+            << "--specific_index " << specificIndex << std::endl;
 
 
   if (sOutDir.empty())  {
@@ -210,32 +239,20 @@ int main(int argc, char **argv)
   // - if no file, compute features
   {
     system::Timer timer;
-    Image<unsigned char> imageGray;
+    // Image<unsigned char> imageGray;
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
-    for(Views::const_iterator iterViews = sfm_data.views.begin();
+
+    if(specificIndex != -1)
+      extractFeatures(sfm_data.views.at(specificIndex).get(), sfm_data, std::move(image_describer), sOutDir, bForce);
+    else
+    {
+      for(Views::const_iterator iterViews = sfm_data.views.begin(); 
         iterViews != sfm_data.views.end();
         ++iterViews, ++my_progress_bar)
-    {
-      const View * view = iterViews->second.get();
-      const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
-        view->s_Img_path);
-      const std::string sFeat = stlplus::create_filespec(sOutDir,
-        stlplus::basename_part(sView_filename), "feat");
-      const std::string sDesc = stlplus::create_filespec(sOutDir,
-        stlplus::basename_part(sView_filename), "desc");
-
-      //If features or descriptors file are missing, compute them
-      if (bForce || !stlplus::file_exists(sFeat) || !stlplus::file_exists(sDesc))
       {
-        if (!ReadImage(sView_filename.c_str(), &imageGray))
-          continue;
-
-        // Compute features and descriptors and export them to files
-        std::unique_ptr<Regions> regions;
-        image_describer->Describe(imageGray, regions);
-        image_describer->Save(regions.get(), sFeat, sDesc);
-      }
+        extractFeatures(iterViews->second.get(), sfm_data, std::move(image_describer), sOutDir, bForce);
+      }      
     }
     std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
   }
