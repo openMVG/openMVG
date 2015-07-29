@@ -365,7 +365,8 @@ ENDIF()
 
 IF(DEFINED OpenMVG_USE_INTERNAL_LEMON)
   SET(LEMON_INCLUDE_DIRS
-     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon)
+     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon
+     ${PROJECT_BINARY_DIR}/third_party/lemon)
   SET(LEMON_LIBRARY lemon)
 ENDIF()
 
