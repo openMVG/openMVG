@@ -300,7 +300,16 @@ IF(OpenMVG_USE_OPENCV)
                                    -DUSE_OCVSIFT)
     ENDIF(OpenMVG_USE_OCVSIFT)
     TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures_OpenCV
-                          ${OpenCV_LIBS})
+      openMVG_system
+      openMVG_image
+      openMVG_features
+      openMVG_multiview
+      openMVG_sfm
+      stlplus
+      vlsift
+      ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
+      ${OSI_LIBRARY}
+      ${OpenCV_LIBS})
 
     SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY FOLDER OpenMVG/software)
     SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)

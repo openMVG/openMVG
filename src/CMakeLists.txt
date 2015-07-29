@@ -54,6 +54,15 @@ ELSEIF()
 ENDIF()
 
 # ==============================================================================
+# Check that submodule have been initialized and updated
+# ==============================================================================
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/dependencies/cereal/include)
+  message(FATAL_ERROR
+    "\n submodule(s) are missing, please update your repository:\n"
+    "  > git submodule update -i\n")
+endif()
+
+# ==============================================================================
 # Additional cmake find modules
 # ==============================================================================
 SET(CMAKE_MODULE_PATH
@@ -373,7 +382,9 @@ ENDIF()
 # ==============================================================================
 # Internal CLP/OSI/COINUTILS libraries:
 # ==============================================================================
-ADD_SUBDIRECTORY(dependencies/osi_clp/)
+IF(DEFINED OpenMVG_USE_INTERNAL_CLP AND DEFINED OpenMVG_USE_INTERNAL_OSI)
+  ADD_SUBDIRECTORY(dependencies/osi_clp/)
+ENDIF()
 
 
 # ==============================================================================
@@ -513,9 +524,9 @@ ELSE()
 ENDIF()
 
 IF(DEFINED OpenMVG_USE_INTERNAL_JPEG)
-  MESSAGE(STATUS "LIBPNG (internal)")
+  MESSAGE(STATUS "LIBJPEG (internal)")
 ELSE()
-  MESSAGE(STATUS "LIBPNG (external)")
+  MESSAGE(STATUS "LIBJPEG (external)")
 ENDIF()
 
 IF(DEFINED OpenMVG_USE_INTERNAL_CLP)
