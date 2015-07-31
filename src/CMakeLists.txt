@@ -14,10 +14,6 @@ IF(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed.")
 ENDIF()
 
-# build path
-SET(EXECUTABLE_OUTPUT_PATH "${PROJECT_BINARY_DIR}/${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}-${CMAKE_BUILD_TYPE}")
-SET(LIBRARY_OUTPUT_PATH "${PROJECT_BINARY_DIR}/${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}-${CMAKE_BUILD_TYPE}")
-
 # ==============================================================================
 # OpenMVG build options
 # ==============================================================================
@@ -38,6 +34,10 @@ SET(OPENMVG_VERSION
 IF(NOT CMAKE_BUILD_TYPE AND NOT MSVC)
   SET(CMAKE_BUILD_TYPE "Release")
 ENDIF(NOT CMAKE_BUILD_TYPE AND NOT MSVC)
+
+# Set build path
+SET(EXECUTABLE_OUTPUT_PATH "${PROJECT_BINARY_DIR}/${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}-${CMAKE_BUILD_TYPE}")
+SET(LIBRARY_OUTPUT_PATH "${PROJECT_BINARY_DIR}/${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}-${CMAKE_BUILD_TYPE}")
 
 IF (WIN32)
   ADD_DEFINITIONS(-DNOMINMAX)
@@ -254,24 +254,15 @@ ENDIF()
 # Flann
 # ==============================================================================
 # - internal by default (flann),
-# - external if FLANN_DIR_HINTS and a valid Flann setup is found
+# - external if FLANN_INCLUDE_DIR_HINTS and a valid Flann setup is found
 # ==============================================================================
-FIND_PATH(FLANN_INCLUDE_DIRS flann.hpp ${FLANN_DIR_HINTS})
-IF(FLANN_INCLUDE_DIRS)
-  FILE(READ "${FLANN_INCLUDE_DIRS}/config.h" FLANN_CONFIG)
-  STRING(REGEX REPLACE ".*FLANN_VERSION_.+\"([0-9.]+)\".*" "\\1" FLANN_VERSION ${FLANN_CONFIG})
-  FIND_LIBRARY(FLANN_LIBRARY NAMES flann_cpp)
-  IF(NOT DEFINED FLANN_LIBRARY)
-    SET(OpenMVG_USE_INTERNAL_FLANN ON)
-  ENDIF()
-ELSE(FLANN_INCLUDE_DIRS)
+IF(NOT DEFINED FLANN_INCLUDE_DIR_HINTS)
+  SET(FLANN_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp)
   SET(OpenMVG_USE_INTERNAL_FLANN ON)
 ENDIF()
-
-IF(DEFINED OpenMVG_USE_INTERNAL_FLANN)
+FIND_PACKAGE(Flann QUIET)
+IF(NOT FLANN_FOUND OR OpenMVG_USE_INTERNAL_FLANN)
   SET(FLANN_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp)
-  FILE(READ "${FLANN_INCLUDE_DIRS}/flann/config.h" FLANN_CONFIG)
-  STRING(REGEX REPLACE ".*FLANN_VERSION_.+\"([0-9.]+)\".*" "\\1" FLANN_VERSION ${FLANN_CONFIG})
   SET(FLANN_LIBRARY flann_cpp_s)
 ENDIF()
 
@@ -279,49 +270,30 @@ ENDIF()
 # CoinUtils
 # ==============================================================================
 # - internal by default (CoinUtils),
-# - external if COINUTILS_DIR_HINTS and a valid CoinUtils setup is found
+# - external if COINUTILS_INCLUDE_DIR_HINTS and a valid CoinUtils setup is found
 # ==============================================================================
-FIND_PATH(COINUTILS_INCLUDE_DIRS CoinUtilsConfig.h ${COINUTILS_DIR_HINTS})
-IF(COINUTILS_INCLUDE_DIRS)
-  FILE(READ "${COINUTILS_INCLUDE_DIRS}/CoinUtilsConfig.h" COINUTILS_CONFIG)
-  STRING(REGEX REPLACE ".*COINUTILS_VERSION \"([0-9.]+)\".*" "\\1" COINUTILS_VERSION ${COINUTILS_CONFIG})
-  FIND_LIBRARY(COINUTILS_LIBRARY NAMES CoinUtils)
-  IF(NOT DEFINED COINUTILS_LIBRARY)
-    SET(OpenMVG_USE_INTERNAL_COINUTILS ON)
-  ENDIF()
-ELSE(COINUTILS_INCLUDE_DIRS)
+IF(NOT DEFINED COINUTILS_INCLUDE_DIR_HINTS)
+  SET(COINUTILS_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/CoinUtils/src/)
   SET(OpenMVG_USE_INTERNAL_COINUTILS ON)
 ENDIF()
-
-IF(DEFINED OpenMVG_USE_INTERNAL_COINUTILS)
-  SET(COINUTILS_INCLUDE_DIRS
-     ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/CoinUtils/src/)
+FIND_PACKAGE(CoinUtils QUIET)
+IF(NOT COINUTILS_FOUND OR OpenMVG_USE_INTERNAL_COINUTILS)
+  SET(COINUTILS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/CoinUtils/src/)
   SET(COINUTILS_LIBRARY lib_CoinUtils)
 ENDIF()
 
-# ==============================================================================
-# Clp
-# ==============================================================================
-# - internal by default (Clp),
-# - external if CLP_DIR_HINTS and a valid Clp setup is found
-# ==============================================================================
-FIND_PATH(CLP_INCLUDE_DIRS ClpConfig.h ${CLP_DIR_HINTS})
-IF(CLP_INCLUDE_DIRS)
-  FILE(READ "${CLP_INCLUDE_DIRS}/ClpConfig.h" CLP_CONFIG)
-  STRING(REGEX REPLACE ".*CLP_VERSION \"([0-9.]+)\".*" "\\1" CLP_VERSION ${CLP_CONFIG})
-  FIND_LIBRARY(CLP_LIBRARY NAMES Clp)
-  FIND_LIBRARY(CLPSOLVER_LIBRARY NAMES ClpSolver)
-  FIND_LIBRARY(OSICLP_LIBRARY NAMES OsiClp)
-  IF(NOT DEFINED CLP_LIBRARY AND NOT DEFINED CLP_SOLVER_LIBRARY AND NOT DEFINED OSICLP_LIBRARY)
-    SET(OpenMVG_USE_INTERNAL_CLP ON)
-  ELSE()
-    SET(CLP_LIBRARIES ${CLP_LIBRARY} ${CLPSOLVER_LIBRARY} ${OSICLP_LIBRARY})
-  ENDIF()
-ELSE(CLP_INCLUDE_DIRS)
+## ==============================================================================
+## Clp
+## ==============================================================================
+## - internal by default (Clp),
+## - external if CLP_INCLUDE_DIR_HINTS and a valid Clp setup is found
+## ==============================================================================
+IF(NOT DEFINED CLP_INCLUDE_DIR_HINTS)
+  SET(CLP_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/)
   SET(OpenMVG_USE_INTERNAL_CLP ON)
 ENDIF()
-
-IF(DEFINED OpenMVG_USE_INTERNAL_CLP)
+FIND_PACKAGE(Clp QUIET)
+IF(NOT CLP_FOUND OR OpenMVG_USE_INTERNAL_CLP)
   SET(CLP_INCLUDE_DIRS
      ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/
      ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/OsiClp/)
@@ -332,23 +304,15 @@ ENDIF()
 # Osi
 # ==============================================================================
 # - internal by default (Osi),
-# - external if OSI_DIR_HINTS and a valid Osi setup is found
+# - external if OSI_INCLUDE_DIR_HINTS and a valid Osi setup is found
 # ==============================================================================
-FIND_PATH(OSI_INCLUDE_DIRS OsiConfig.h ${OSI_DIR_HINTS})
-IF(OSI_INCLUDE_DIRS)
-  FILE(READ "${OSI_INCLUDE_DIRS}/OsiConfig.h" OSI_CONFIG)
-  STRING(REGEX REPLACE ".*OSI_VERSION \"([0-9.]+)\".*" "\\1" OSI_VERSION ${OSI_CONFIG})
-  FIND_LIBRARY(OSI_LIBRARY NAMES Osi)
-  IF(NOT DEFINED OSI_LIBRARY)
-    SET(OpenMVG_USE_INTERNAL_OSI ON)
-  ENDIF()
-ELSE(OSI_INCLUDE_DIRS)
+IF(NOT DEFINED OSI_INCLUDE_DIR_HINTS)
+  SET(OSI_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/)
   SET(OpenMVG_USE_INTERNAL_OSI ON)
 ENDIF()
-
-IF(DEFINED OpenMVG_USE_INTERNAL_OSI)
-  SET(OSI_INCLUDE_DIRS
-     ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/Osi/)
+FIND_PACKAGE(Osi QUIET)
+IF(NOT OSI_FOUND OR OpenMVG_USE_INTERNAL_OSI)
+  SET(OSI_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/Osi/)
   SET(OSI_LIBRARY lib_Osi)
 ENDIF()
 
@@ -356,36 +320,21 @@ ENDIF()
 # Lemon
 # ==============================================================================
 # - internal by default (Lemon),
-# - external if LEMON_DIR_HINTS and a valid Lemon setup is found
+# - external if LEMON_INCLUDE_DIR_HINTS and a valid Lemon setup is found
 # ==============================================================================
-FIND_PATH(LEMON_INCLUDE_DIR config.h ${LEMON_DIR_HINTS})
-IF(LEMON_INCLUDE_DIR)
-  FILE(READ "${LEMON_INCLUDE_DIR}/config.h" LEMON_CONFIG)
-  STRING(REGEX REPLACE ".*LEMON_VERSION \"([0-9.]+)\".*" "\\1" LEMON_VERSION ${LEMON_CONFIG})
-  FIND_LIBRARY(LEMON_LIBRARY NAMES emon)
-  IF(NOT DEFINED LEMON_LIBRARY)
-    SET(OpenMVG_USE_INTERNAL_LEMON ON)
-  ELSE()
-    GET_FILENAME_COMPONENT(LEMON_INCLUDE_DIRS ${LEMON_INCLUDE_DIR} PATH)
-  ENDIF()
-ELSE(LEMON_INCLUDE_DIR)
+IF(NOT DEFINED LEMON_INCLUDE_DIR_HINTS)
+  SET(LEMON_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon)
   SET(OpenMVG_USE_INTERNAL_LEMON ON)
 ENDIF()
-
-IF(DEFINED OpenMVG_USE_INTERNAL_LEMON)
-  SET(LEMON_INCLUDE_DIRS
-     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon
-     ${PROJECT_BINARY_DIR}/third_party/lemon)
+FIND_PACKAGE(Lemon QUIET)
+IF(NOT LEMON_FOUND OR OpenMVG_USE_INTERNAL_LEMON)
+  SET(LEMON_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon)
   SET(LEMON_LIBRARY lemon)
 ENDIF()
-
 # ==============================================================================
 # Internal CLP/OSI/COINUTILS libraries:
 # ==============================================================================
-IF(DEFINED OpenMVG_USE_INTERNAL_CLP AND DEFINED OpenMVG_USE_INTERNAL_OSI)
-  ADD_SUBDIRECTORY(dependencies/osi_clp/)
-ENDIF()
-
+ADD_SUBDIRECTORY(dependencies/osi_clp/)
 
 # ==============================================================================
 # Third-party libraries:
@@ -397,10 +346,10 @@ ADD_SUBDIRECTORY(third_party)
 # ==============================================================================
 SET(OpenMVG_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/third_party
   ${JPEG_INCLUDE_DIR}
   ${PNG_INCLUDE_DIRS}
   ${TIFF_INCLUDE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party
   ${CMAKE_CURRENT_SOURCE_DIR}/dependencies
   ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include
   ${LEMON_INCLUDE_DIRS}
@@ -530,31 +479,30 @@ ELSE()
 ENDIF()
 
 IF(DEFINED OpenMVG_USE_INTERNAL_CLP)
-  MESSAGE(STATUS "CLP (internal)")
+  MESSAGE(STATUS "CLP: " ${CLP_VERSION} " (internal)")
 ELSE()
   MESSAGE(STATUS "CLP: " ${CLP_VERSION} " (external)")
 ENDIF()
 
 IF(DEFINED OpenMVG_USE_INTERNAL_COINUTILS)
-  MESSAGE(STATUS "COINUTILS (internal)")
+  MESSAGE(STATUS "COINUTILS: " ${COINUTILS_VERSION} " (internal)")
 ELSE()
   MESSAGE(STATUS "COINUTILS: " ${COINUTILS_VERSION} " (external)")
 ENDIF()
 
 IF(DEFINED OpenMVG_USE_INTERNAL_OSI)
-  MESSAGE(STATUS "OSI (internal)")
+  MESSAGE(STATUS "OSI: " ${OSI_VERSION} " (internal)")
 ELSE()
   MESSAGE(STATUS "OSI: " ${OSI_VERSION} " (external)")
 ENDIF()
 
 IF(DEFINED OpenMVG_USE_INTERNAL_LEMON)
-  MESSAGE(STATUS "LEMON (internal)")
+  MESSAGE(STATUS "LEMON: " ${LEMON_VERSION} " (internal)")
 ELSE()
   MESSAGE(STATUS "LEMON: " ${LEMON_VERSION} " (external)")
 ENDIF()
 
 MESSAGE("\n")
-
 
 # ==============================================================================
 # INSTALL RULES

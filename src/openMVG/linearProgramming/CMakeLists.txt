@@ -43,7 +43,6 @@ ELSE (NOT MOSEK_FOUND)
     ${MOSEK_LIB}    # Mosek lib
   )
 ENDIF (NOT MOSEK_FOUND)
-
 UNIT_TEST(openMVG_linearProgramming linearProgramming "${openMVG_linearProgramming}")
 
 ADD_SUBDIRECTORY(lInfinityCV)
