@@ -5,13 +5,33 @@
 
 #include <string>
 
+static const std::string sDatabase = "sensor_width_camera_database.txt";
+TEST(Matching, InvalidDatabase)
+{
+  std::vector<Datasheet> vec_database;
+  const std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), "" );
+
+  EXPECT_FALSE( parseDatabase( sfileDatabase, vec_database ) );
+  EXPECT_TRUE( vec_database.empty() );
+}
+
+TEST(Matching, ValidDatabase)
+{
+  std::vector<Datasheet> vec_database;
+  const std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), sDatabase );
+
+  EXPECT_TRUE( parseDatabase( sfileDatabase, vec_database ) );
+  EXPECT_TRUE( !vec_database.empty() );
+
+}
+
 TEST(Matching, ParseDatabaseSD900)
 {
   std::vector<Datasheet> vec_database;
   Datasheet datasheet;
-  std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), "cameraGenerated.txt" );
-  std::string sModel = "Canon PowerShot SD900";
-  std::string sBrand = "Canon";
+  const std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), sDatabase );
+  const std::string sModel = "Canon PowerShot SD900";
+  const std::string sBrand = "Canon";
 
   EXPECT_TRUE( parseDatabase( sfileDatabase, vec_database ) );
   EXPECT_TRUE( getInfo( sBrand, sModel, vec_database, datasheet ) );
@@ -24,9 +44,9 @@ TEST(Matching, ParseDatabaseA710_IS)
 {
   std::vector<Datasheet> vec_database;
   Datasheet datasheet;
-  std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), "cameraGenerated.txt" );
-  std::string sModel = "Canon PowerShot A710 IS";
-  std::string sBrand = "Canon";
+  const std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), sDatabase );
+  const std::string sModel = "Canon PowerShot A710 IS";
+  const std::string sBrand = "Canon";
 
   EXPECT_TRUE( parseDatabase( sfileDatabase, vec_database ) );
   EXPECT_TRUE( getInfo( sBrand, sModel, vec_database, datasheet ) );
@@ -39,9 +59,9 @@ TEST(Matching, ParseDatabaseNotExist)
 {
   std::vector<Datasheet> vec_database;
   Datasheet datasheet;
-  std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), "cameraGenerated.txt" );
-  std::string sModel = "NotExistModel";
-  std::string sBrand = "NotExistBrand";
+  const std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), sDatabase );
+  const std::string sModel = "NotExistModel";
+  const std::string sBrand = "NotExistBrand";
 
   EXPECT_TRUE( parseDatabase( sfileDatabase, vec_database ) );
   EXPECT_FALSE( getInfo( sBrand, sModel, vec_database, datasheet ) );
@@ -52,9 +72,9 @@ TEST(Matching, ParseDatabaseCanon_EOS_550D)
 {
   std::vector<Datasheet> vec_database;
   Datasheet datasheet;
-  std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), "cameraGenerated.txt" );
-  std::string sModel = "Canon EOS 550D";
-  std::string sBrand = "Canon";
+  const std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), sDatabase );
+  const std::string sModel = "Canon EOS 550D";
+  const std::string sBrand = "Canon";
 
   EXPECT_TRUE( parseDatabase( sfileDatabase, vec_database ) );
   EXPECT_TRUE( getInfo( sBrand, sModel, vec_database, datasheet ) );
@@ -65,9 +85,9 @@ TEST(Matching, ParseDatabaseCanon_EOS_5D_Mark_II)
 {
   std::vector<Datasheet> vec_database;
   Datasheet datasheet;
-  std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), "cameraGenerated.txt" );
-  std::string sModel = "Canon EOS 5D Mark II";
-  std::string sBrand = "Canon";
+  const std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), sDatabase );
+  const std::string sModel = "Canon EOS 5D Mark II";
+  const std::string sBrand = "Canon";
 
   EXPECT_TRUE( parseDatabase( sfileDatabase, vec_database ) );
   EXPECT_TRUE( getInfo( sBrand, sModel, vec_database, datasheet ) );
@@ -78,9 +98,9 @@ TEST(Matching, ParseDatabaseCanon_EOS_1100D)
 {
   std::vector<Datasheet> vec_database;
   Datasheet datasheet;
-  std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), "cameraGenerated.txt" );
-  std::string sModel = "Canon EOS 1100D";
-  std::string sBrand = "Canon";
+  const std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), sDatabase );
+  const std::string sModel = "Canon EOS 1100D";
+  const std::string sBrand = "Canon";
 
   EXPECT_TRUE( parseDatabase( sfileDatabase, vec_database ) );
   EXPECT_TRUE( getInfo( sBrand, sModel, vec_database, datasheet ) );
