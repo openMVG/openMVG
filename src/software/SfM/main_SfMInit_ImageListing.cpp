@@ -5,7 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #include "openMVG/exif/exif_IO_EasyExif.hpp"
 
-#include "openMVG_Samples/sensorWidthDatabase/ParseDatabase.hpp"
+#include "openMVG/exif/sensor_width_database/ParseDatabase.hpp"
 
 #include "openMVG/image/image.hpp"
 #include "openMVG/stl/split.hpp"
@@ -158,7 +158,9 @@ int main(int argc, char **argv)
   {
     if ( !parseDatabase( sfileDatabase, vec_database ) )
     {
-      std::cerr << "\nInvalid input database" << std::endl;
+      std::cerr
+       << "\nInvalid input database: " << sfileDatabase
+       << ", please specify a valid file." << std::endl;
       return EXIT_FAILURE;
     }
   }
@@ -353,6 +355,11 @@ int main(int argc, char **argv)
   {
     return EXIT_FAILURE;
   }
+
+  std::cout << std::endl
+    << "SfMInit_ImageListing report:\n"
+    << "listed #File(s): " << vec_image.size() << "\n"
+    << "usable #File(s) listed in sfm_data: " << sfm_data.GetViews().size() << std::endl;
 
   return EXIT_SUCCESS;
 }

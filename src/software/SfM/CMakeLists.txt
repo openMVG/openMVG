@@ -62,7 +62,6 @@ ADD_EXECUTABLE(openMVG_main_ComputeSfM_DataColor main_ComputeSfM_DataColor.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_ComputeSfM_DataColor ${OpenMVG_LIBRARIES})
 
 # Installation rules
-INSTALL(FILES cameraSensorWidth/cameraGenerated.txt DESTINATION share/openMVG)
 SET_PROPERTY(TARGET openMVG_main_IncrementalSfM PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_IncrementalSfM DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_GlobalSfM PROPERTY FOLDER OpenMVG/software)

@@ -10,7 +10,7 @@
 OPENMVG_SFM_BIN = "@OPENMVG_SOFTWARE_SFM_BUILD_DIR@"
 
 # Indicate the openMVG camera sensor width directory
-CAMERA_SENSOR_WIDTH_DIRECTORY = "@OPENMVG_SOFTWARE_SFM_SRC_DIR@" + "/cameraSensorWidth"
+CAMERA_SENSOR_WIDTH_DIRECTORY = "@OPENMVG_SOFTWARE_SFM_SRC_DIR@" + "/../../openMVG/exif/sensor_width_database"
 
 import commands
 import os
@@ -38,7 +38,7 @@ print ("Using input dir  : ", input_dir)
 print ("      output_dir : ", output_dir)
     
 matches_dir = os.path.join(output_dir, "matches")
-camera_file_params = os.path.join(CAMERA_SENSOR_WIDTH_DIRECTORY, "cameraGenerated.txt")
+camera_file_params = os.path.join(CAMERA_SENSOR_WIDTH_DIRECTORY, "sensor_width_camera_database.txt")
 
 # Create the ouput/matches folder if not present
 if not os.path.exists(matches_dir):
