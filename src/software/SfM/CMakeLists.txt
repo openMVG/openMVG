@@ -116,6 +116,7 @@ INSTALL(TARGETS openMVG_main_ExportUndistortedImages DESTINATION bin/)
 # - PMVS + bundler data format
 # - CMPMVS
 # - Meshlab
+# - MVE (File format v2)
 ###
 
 # - Export a SfM openMVG scene to PMVS format
@@ -127,6 +128,11 @@ TARGET_LINK_LIBRARIES(openMVG_main_openMVG2PMVS ${OpenMVG_LIBRARIES})
 #
 ADD_EXECUTABLE(openMVG_main_openMVG2CMPMVS main_openMVG2CMPMVS.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_openMVG2CMPMVS ${OpenMVG_LIBRARIES})
+
+# - Export a SfM openMVG scene to MVE(v2) format
+#
+ADD_EXECUTABLE(openMVG_main_openMVG2MVE2 main_openMVG2MVE2.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVE2 ${OpenMVG_LIBRARIES})
 
 # - Export a SfM openMVG scene to meshlab scene with rasters
 # -
