@@ -12,9 +12,9 @@
 using namespace svg;
 
 #include "openMVG/matching/indMatch.hpp"
-using namespace openMVG::matching;
 
 namespace openMVG  {
+namespace matching {
 
 /// Display pair wises matches as an Adjacency matrix in svg format
 void PairWiseMatchingToAdjacencyMatrixSVG(const size_t NbImages,
@@ -62,6 +62,7 @@ void PairWiseMatchingToAdjacencyMatrixSVG(const size_t NbImages,
   }
 }
 
+} // namespace matching
 } // namespace openMVG
 
 #endif // OPENMVG_PAIRWISE_ADJACENCY_DISPLAY_H

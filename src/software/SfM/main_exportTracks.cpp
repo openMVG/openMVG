@@ -11,7 +11,6 @@
 #include "openMVG/features/features.hpp"
 #include "openMVG/tracks/tracks.hpp"
 #include "openMVG/sfm/sfm.hpp"
-#include "software/SfM/io_regions_type.hpp"
 
 #include "software/SfM/SfMIOHelper.hpp"
 #include "third_party/cmdLine/cmdLine.h"
