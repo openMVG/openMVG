@@ -294,57 +294,7 @@ int main(int argc, char **argv)
   // Group camera that share common properties if desired (leads to more faster & stable BA).
   if (b_Group_camera_model)
   {
-    // Group camera model that share common optics camera properties
-    // They must share (camera model, image size, & camera parameters)
-    // Grouping is simplified by using a hash function over the camera intrinsic.
-
-    // Build hash & build a set of the hash in order to maintain unique Ids
-    std::set<size_t> hash_index;
-    std::vector<size_t> hash_value;
-
-    for (Intrinsics::const_iterator iterIntrinsic = intrinsics.begin();
-      iterIntrinsic != intrinsics.end();
-      ++iterIntrinsic)
-    {
-      const IntrinsicBase * intrinsicData = iterIntrinsic->second.get();
-      const size_t hashVal = intrinsicData->hashValue();
-      hash_index.insert(hashVal);
-      hash_value.push_back(hashVal);
-    }
-
-    // From hash_value(s) compute the new index (old to new indexing)
-    Hash_Map<IndexT, IndexT> old_new_reindex;
-    size_t i = 0;
-    for (Intrinsics::const_iterator iterIntrinsic = intrinsics.begin();
-      iterIntrinsic != intrinsics.end();
-      ++iterIntrinsic, ++i)
-    {
-      old_new_reindex[iterIntrinsic->first] = std::distance(hash_index.begin(), hash_index.find(hash_value[i]));
-      //std::cout << hash_value[i] // hash
-      //  << "\t" << iterIntrinsic->first // old reference index
-      // << "\t" << old_new_reindex[iterIntrinsic->first] << std::endl; // new index
-    }
-    //--> Copy & modify Ids & replace
-    //     - for the Intrinsic params
-    //     - for the View
-    Intrinsics intrinsic_updated;
-    for (Intrinsics::const_iterator iterIntrinsic = intrinsics.begin();
-      iterIntrinsic != intrinsics.end();
-      ++iterIntrinsic)
-    {
-      intrinsic_updated[old_new_reindex[iterIntrinsic->first]] = intrinsics[iterIntrinsic->first];
-    }
-    intrinsics.swap(intrinsic_updated); // swap camera intrinsics
-    // Update intrinsic ids
-    for (Views::iterator iterView = views.begin();
-      iterView != views.end();
-      ++iterView)
-    {
-      View * v = iterView->second.get();
-      // Update the Id only if a corresponding index exists
-      if (old_new_reindex.count(v->id_intrinsic))
-        v->id_intrinsic = old_new_reindex[v->id_intrinsic];
-    }
+    GroupSharedIntrinsics(sfm_data);
   }
 
   // Store SfM_Data views & intrinsic data

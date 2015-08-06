@@ -20,9 +20,12 @@ ADD_LIBRARY(openMVG_sfm ${sfm_files_header} ${sfm_files_cpp})
 TARGET_LINK_LIBRARIES(openMVG_sfm ceres openMVG_multiview ${OPENMVG_LIBRARY_DEPENDENCIES})
 INSTALL(TARGETS openMVG_sfm DESTINATION lib EXPORT openMVG-targets)
 
-UNIT_TEST(openMVG sfm_data_io "stlplus;openMVG_features;openMVG_sfm;${openMVG_linearProgramming}")
+UNIT_TEST(openMVG sfm_data_io
+  "stlplus;openMVG_features;openMVG_sfm;${openMVG_linearProgramming}")
 UNIT_TEST(openMVG sfm_data_BA
   "openMVG_multiview_test_data;openMVG_features;openMVG_multiview;openMVG_sfm;stlplus;${openMVG_linearProgramming}")
-
+UNIT_TEST(openMVG sfm_data_utils
+  "openMVG_features;openMVG_multiview;openMVG_sfm;stlplus;${openMVG_linearProgramming}")
+  
 ADD_SUBDIRECTORY(pipelines)
 
