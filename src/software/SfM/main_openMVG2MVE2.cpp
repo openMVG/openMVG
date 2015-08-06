@@ -1,7 +1,7 @@
-/* v.0.12 4 August 2015
+/* v.0.12 5 August 2015
  * Kevin CAIN, www.insightdigital.org
  * Adapted from the openMVG libraries,
- * Copyright (c) 2012, 2013 Pierre MOULON.
+ * Copyright (c) 2012-2015 Pierre MOULON.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -30,9 +30,9 @@ using namespace openMVG::features;
 /* Notes:
  * - An MVE2 scene appears to duplicate camera rot matrix and trans vector per-view data in 'meta.ini'
  *   within the first section of 'synth_0.out'.
- * - We do not save the original, instead we rely on the undistorted image from openMPV.
+ * - We do not save the original, instead we rely on the undistorted image from openMVG.
  * - We do not output thumbnails or EXIF blobs, as these appear only to be used only for the GUI UMVE.
- * - To avoid encoding loss, openMPV images should be written as .PNG if undistorted images are *not* computed.
+ * - To avoid encoding loss, openMVG images should be written as .PNG if undistorted images are *not* computed.
  *
  *  For information on the target for this conversion, please see the MVE (v2) File format:
  *  https://github.com/simonfuhrmann/mve/wiki/MVE-File-Format
@@ -65,7 +65,7 @@ bool exportToMVE2Format(
     stlplus::folder_create(sOutViewsDirectory);
 
     // Prepare to write bundle file
-    // Get cameras and features from OpenMPV
+    // Get cameras and features from OpenMVG
     int cameraCount = std::distance(sfm_data.GetViews().begin(), sfm_data.GetViews().end());
     // Tally global set of feature landmarks
     const Landmarks & landmarks = sfm_data.GetLandmarks();
@@ -119,24 +119,14 @@ bool exportToMVE2Format(
 
       // We have a valid view with a corresponding camera & pose
       const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
-      std::ostringstream os;
-      os << std::setw(5) << std::setfill('0') << map_viewIdToContiguous[view->id_view];
+      //std::ostringstream os;
+      //os << std::setw(5) << std::setfill('0') << map_viewIdToContiguous[view->id_view];
       std::string dstImage = stlplus::create_filespec(
         stlplus::folder_append_separator(sOutViewIteratorDirectory), "undistorted","png");
 
       const IntrinsicBase * cam = iterIntrinsic->second.get();
       if (map_viewIdToContiguous[view->id_view] == 0)
         w_h_image_size = std::make_pair(cam->w(), cam->h());
-      else
-      {
-        // check that there is no image sizing change -- do we need to enforce this for MVE?
-        if (cam->w() != w_h_image_size.first ||
-            cam->h() != w_h_image_size.second)
-        {
-          std::cerr << "CMPMVS support only image having the same image size";
-          return false;
-        }
-      }
       if (cam->have_disto())
       {
         // Undistort and save the image
@@ -162,24 +152,19 @@ bool exportToMVE2Format(
       // Prepare to write an MVE 'meta.ini' file for the current view
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
       Mat34 P = cam->get_projective_equivalent(pose);
-
-      for ( int i = 1; i < 3 ; ++i)
-        for ( int j = 0; j < 4; ++j)
-          P(i, j) *= -1.;
-
       Mat3 R, K;
       Vec3 t;
-      KRt_From_P( P, &K, &R, &t);
+      KRt_From_P(P, &K, &R, &t);
 
-      // Output translation via optical center vector for given pose
-      const Vec3 optical_center = R.transpose() * t;
+      Mat3 rotation = pose.rotation();
+      const Vec3 translation = pose.translation();
       // Pixel aspect = pixel width divided by the pixel height
       const float pixelAspect = cam->w()/cam->h();
-      // Focal length and principal point are embedded into the calibration matrix K:
+      // Focal length and principal point are embedded within calibration matrix K:
       // focal_length = K(0,0)
-      // const std::vector<double> pp = {_K(0,2), _K(1,2)}
+      // principal point = {_K(0,2), _K(1,2)}
       // their values are normalized (0..1)
-      const float flen = cam->h()/K(0, 0);
+      const float flen = K(0,0) / static_cast<double>(std::max(cam->w(), cam->h()));
       const float ppX = abs(K(0,2)/cam->w());
       const float ppY = abs(K(1,2)/cam->h());
 
@@ -191,16 +176,16 @@ bool exportToMVE2Format(
       << "focal_length = " << flen << fileOut.widen('\n')
       << "pixel_aspect = " << pixelAspect << fileOut.widen('\n')
       << "principal_point = " << ppX << " " << ppY << fileOut.widen('\n')
-      << "rotation = " << R(0, 0) << " " << R(0, 1) << " " << R(0, 2) << " "
-      << R(1, 0) << " " << R(1, 1) << " " << R(1, 2) << " "
-      << R(2, 0) << " " << R(2, 1) << " " << R(2, 2) << fileOut.widen('\n')
-      << "translation = " << optical_center[0] << " " << optical_center[1] << " "
-      << optical_center[2] << " " << fileOut.widen('\n')
+      << "rotation = " << rotation(0, 0) << " " << rotation(0, 1) << " " << rotation(0, 2) << " "
+      << rotation(1, 0) << " " << rotation(1, 1) << " " << rotation(1, 2) << " "
+      << rotation(2, 0) << " " << rotation(2, 1) << " " << rotation(2, 2) << fileOut.widen('\n')
+      << "translation = " << translation[0] << " " << translation[1] << " "
+      << translation[2] << " " << fileOut.widen('\n')
       << "[view]" << fileOut.widen('\n')
       << "id = " << view->id_view << fileOut.widen('\n')
       << "name = " << srcImage.c_str() << fileOut.widen('\n');
 
-      // To do:  trim any extra separator(s) from openMPV name we receive, e.g.:
+      // To do:  trim any extra separator(s) from openMVG name we receive, e.g.:
       // '/home/insight/openMVG_KevinCain/openMVG_Build/software/SfM/ImageDataset_SceauxCastle/images//100_7100.JPG'
       std::ofstream file(
 	    stlplus::create_filespec(stlplus::folder_append_separator(sOutViewIteratorDirectory),
@@ -227,7 +212,7 @@ bool exportToMVE2Format(
       out << R(0, 0) << " " << R(0, 1) << " " << R(0, 2) << "\n";
       out << R(1, 0) << " " << R(1, 1) << " " << R(1, 2) << "\n";
       out << R(2, 0) << " " << R(2, 1) << " " << R(2, 2) << "\n";
-      out << optical_center[0] << " " << optical_center[1] << " " << optical_center[2] << "\n";
+      out << translation[0] << " " << translation[1] << " " << translation[2] << "\n";
     }
 
     // For each feature, write to bundle:  position XYZ[0-3], color RGB[0-2], all ref.view_id & ref.feature_id
@@ -242,7 +227,7 @@ bool exportToMVE2Format(
       // Tally set of feature observations
       const Observations & obs = iterLandmarks->second.obs;
       int featureCount = std::distance(obs.begin(), obs.end());
-      out << featureCount;  // MVE equivalent:  p.refs.size();
+      out << featureCount;
 
       for (Observations::const_iterator itObs = obs.begin(); itObs != obs.end(); ++itObs)  {
           const IndexT viewId = itObs->first;
