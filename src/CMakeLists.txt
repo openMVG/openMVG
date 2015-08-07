@@ -22,6 +22,7 @@ OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG samples applications." ON)
 OPTION(OpenMVG_BUILD_OPENGL_EXAMPLES "Build OpenMVG openGL examples" OFF)
 OPTION(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
+OPTION(OpenMVG_USE_BOOST "Enable Boost" ON)
 
 SET(OPENMVG_VERSION_MAJOR 0)
 SET(OPENMVG_VERSION_MINOR 8)
@@ -257,6 +258,24 @@ ELSE()
     ${PROJECT_BINARY_DIR}/third_party/ceres-solver/config)
   SET(CERES_LIBRARIES ceres cxsparse)
 ENDIF(Ceres_FOUND)
+
+# ==============================================================================
+# Boost
+# ==============================================================================
+# - optional, it allows to compile the vocabulary tree
+# ==============================================================================
+IF(OpenMVG_USE_BOOST)
+    FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS date_time chrono exception thread serialization system filesystem atomic program_options timer unit_test_framework)
+    IF(Boost_FOUND)
+       MESSAGE(STATUS "Boost ${Boost_LIB_VERSION} found ${Boost_LIBRARIES}")
+       include_directories(${Boost_INCLUDE_DIRS})
+       link_directories(${Boost_LIBRARIES})
+       add_definitions(${Boost_DEFINITIONS})
+    ELSE()
+      MESSAGE(STATUS "Boost not found -- disabling the vocabulary tree")
+      UPDATE_CACHE_VARIABLE(OpenMVG_USE_BOOST OFF)
+    ENDIF(Boost_FOUND)
+ENDIF(OpenMVG_USE_BOOST)
 
 # ==============================================================================
 # Third-party libraries:

@@ -7,3 +7,6 @@ ENDIF (OpenMVG_BUILD_OPENGL_EXAMPLES)
 
 ADD_SUBDIRECTORY(colorHarmonize)
 
+IF (Boost_FOUND)
+  ADD_SUBDIRECTORY(localization)
+ENDIF(Boost_FOUND)
