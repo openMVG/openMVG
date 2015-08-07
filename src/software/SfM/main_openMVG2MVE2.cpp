@@ -32,7 +32,7 @@ using namespace openMVG::features;
  * - We do not save the original, instead we rely on the undistorted image from openMVG.
  * - We do not output thumbnails or EXIF blobs, as these appear only to be used only for the GUI UMVE.
  * - To avoid encoding loss, openMVG images should be written as .PNG if undistorted images are *not* computed.
- * - In OpenMPV, some views may have some missing poses; MVE does *not* require a contiguous camera index.
+ * - In OpenMVG, some views may have some missing poses; MVE does *not* require a contiguous camera index.
  *
  *  For information on the target for this conversion, please see the MVE (v2) File format:
  *  https://github.com/simonfuhrmann/mve/wiki/MVE-File-Format
@@ -55,12 +55,13 @@ bool exportToMVE2Format(
   if (!bOk)
   {
     std::cerr << "Cannot access one of the desired output directories" << std::endl;
-	return false;
+	  return false;
   }
-  else
+  
+  // Export the SfM_Data scene to the MVE2 format
   {
     // Create 'views' subdirectory
-    string sOutViewsDirectory = stlplus::folder_append_separator(sOutDirectory) + "views";
+    const string sOutViewsDirectory = stlplus::folder_append_separator(sOutDirectory) + "views";
     if (!stlplus::folder_exists(sOutViewsDirectory))
     {
       cout << "\033[1;31mCreating directory:  " << sOutViewsDirectory << "\033[0m\n";
@@ -69,11 +70,11 @@ bool exportToMVE2Format(
 
     // Prepare to write bundle file
     // Get cameras and features from OpenMVG
-    int cameraCount = std::distance(sfm_data.GetViews().begin(), sfm_data.GetViews().end());
+    const size_t cameraCount = std::distance(sfm_data.GetViews().begin(), sfm_data.GetViews().end());
     // Tally global set of feature landmarks
     const Landmarks & landmarks = sfm_data.GetLandmarks();
-    int featureCount = std::distance(landmarks.begin(), landmarks.end());
-    string filename = "synth_0.out";
+    const size_t featureCount = std::distance(landmarks.begin(), landmarks.end());
+    const std::string filename = "synth_0.out";
     std::cout << "Writing bundle (" << cameraCount << " cameras, "
         << featureCount << " features): to " << filename << "...\n";
     std::ofstream out(stlplus::folder_append_separator(sOutDirectory) + filename);
@@ -84,7 +85,7 @@ bool exportToMVE2Format(
     C_Progress_display my_progress_bar( sfm_data.GetViews().size()*1);
     std::pair<int,int> w_h_image_size;
     Image<RGBColor> image, image_ud;
-    string sOutViewIteratorDirectory;
+    std::string sOutViewIteratorDirectory;
     for(Views::const_iterator iter = sfm_data.GetViews().begin();
       iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
@@ -132,15 +133,24 @@ bool exportToMVE2Format(
 
       // Prepare to write an MVE 'meta.ini' file for the current view
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
-      Mat34 P = cam->get_projective_equivalent(pose);
-      Mat3 R, K;
-      Vec3 t;
-      KRt_From_P(P, &K, &R, &t);
+      Mat3 K; // intrinsic camera parameter matrix      
+      const Pinhole_Intrinsic * pinhole_cam = static_cast<const Pinhole_Intrinsic *>(cam);
+      if (pinhole_cam)
+      {
+        K = pinhole_cam->K();
+      }
+      else
+      {
+        const Mat34 P = cam->get_projective_equivalent(pose);
+        Mat3 R;
+        Vec3 t;
+        KRt_From_P(P, &K, &R, &t);
+      }
 
-      Mat3 rotation = pose.rotation();
+      const Mat3 rotation = pose.rotation();
       const Vec3 translation = pose.translation();
-      // Pixel aspect = pixel width divided by the pixel height
-      const float pixelAspect = 1;
+      // Pixel aspect: assuming square pixels
+      const float pixelAspect = 1.f;
       // Focal length and principal point are embedded within calibration matrix K:
       // focal_length = K(0,0)
       // principal point = {_K(0,2), _K(1,2)}
@@ -151,26 +161,26 @@ bool exportToMVE2Format(
 
       std::ostringstream fileOut;
       fileOut << "#MVE view meta data is stored in INI-file syntax." << fileOut.widen('\n')
-      << "#This file is generated, formatting will get lost." << fileOut.widen('\n')
-      << fileOut.widen('\n')
-      << "[camera]" << fileOut.widen('\n')
-      << "focal_length = " << flen << fileOut.widen('\n')
-      << "pixel_aspect = " << pixelAspect << fileOut.widen('\n')
-      << "principal_point = " << ppX << " " << ppY << fileOut.widen('\n')
-      << "rotation = " << rotation(0, 0) << " " << rotation(0, 1) << " " << rotation(0, 2) << " "
-      << rotation(1, 0) << " " << rotation(1, 1) << " " << rotation(1, 2) << " "
-      << rotation(2, 0) << " " << rotation(2, 1) << " " << rotation(2, 2) << fileOut.widen('\n')
-      << "translation = " << translation[0] << " " << translation[1] << " "
-      << translation[2] << " " << fileOut.widen('\n')
-      << "[view]" << fileOut.widen('\n')
-      << "id = " << view->id_view << fileOut.widen('\n')
-      << "name = " << srcImage.c_str() << fileOut.widen('\n');
+        << "#This file is generated, formatting will get lost." << fileOut.widen('\n')
+        << fileOut.widen('\n')
+        << "[camera]" << fileOut.widen('\n')
+        << "focal_length = " << flen << fileOut.widen('\n')
+        << "pixel_aspect = " << pixelAspect << fileOut.widen('\n')
+        << "principal_point = " << ppX << " " << ppY << fileOut.widen('\n')
+        << "rotation = " << rotation(0, 0) << " " << rotation(0, 1) << " " << rotation(0, 2) << " "
+        << rotation(1, 0) << " " << rotation(1, 1) << " " << rotation(1, 2) << " "
+        << rotation(2, 0) << " " << rotation(2, 1) << " " << rotation(2, 2) << fileOut.widen('\n')
+        << "translation = " << translation[0] << " " << translation[1] << " "
+        << translation[2] << " " << fileOut.widen('\n')
+        << "[view]" << fileOut.widen('\n')
+        << "id = " << view->id_view << fileOut.widen('\n')
+        << "name = " << srcImage.c_str() << fileOut.widen('\n');
 
       // To do:  trim any extra separator(s) from openMVG name we receive, e.g.:
       // '/home/insight/openMVG_KevinCain/openMVG_Build/software/SfM/ImageDataset_SceauxCastle/images//100_7100.JPG'
       std::ofstream file(
-	    stlplus::create_filespec(stlplus::folder_append_separator(sOutViewIteratorDirectory),
-	    "meta","ini").c_str());
+  	    stlplus::create_filespec(stlplus::folder_append_separator(sOutViewIteratorDirectory),
+	      "meta","ini").c_str());
       file << fileOut.str();
       file.close();
 
@@ -182,17 +192,17 @@ bool exportToMVE2Format(
       // To do:  add more rigorous camera sanity checks, as per:
       // https://github.com/simonfuhrmann/mve/blob/e3db7bc60ce93fe51702ba77ef480e151f927c23/libs/mve/bundle_io.cc
       if (flen == 0.0f)
-        {
-          for (int i = 0; i < 5 * 3; ++i)
-            out << "0" << (i % 3 == 2 ? "\n" : " ");
-          continue;
-        }
+      {
+        for (int i = 0; i < 5 * 3; ++i)
+          out << "0" << (i % 3 == 2 ? "\n" : " ");
+        continue;
+      }
 
-      out << flen << " " << "0" << " " << "0" << "\n";  // Write '0' distortion values for pre-corrected images
-      out << R(0, 0) << " " << R(0, 1) << " " << R(0, 2) << "\n";
-      out << R(1, 0) << " " << R(1, 1) << " " << R(1, 2) << "\n";
-      out << R(2, 0) << " " << R(2, 1) << " " << R(2, 2) << "\n";
-      out << translation[0] << " " << translation[1] << " " << translation[2] << "\n";
+      out << flen << " " << "0" << " " << "0" << "\n"  // Write '0' distortion values for pre-corrected images
+        << rotation(0, 0) << " " << rotation(0, 1) << " " << rotation(0, 2) << "\n"
+        << rotation(1, 0) << " " << rotation(1, 1) << " " << rotation(1, 2) << "\n"
+        << rotation(2, 0) << " " << rotation(2, 1) << " " << rotation(2, 2) << "\n"
+        << translation[0] << " " << translation[1] << " " << translation[2] << "\n";
     }
 
     // For each feature, write to bundle:  position XYZ[0-3], color RGB[0-2], all ref.view_id & ref.feature_id
@@ -206,7 +216,7 @@ bool exportToMVE2Format(
 
       // Tally set of feature observations
       const Observations & obs = iterLandmarks->second.obs;
-      int featureCount = std::distance(obs.begin(), obs.end());
+      const size_t featureCount = std::distance(obs.begin(), obs.end());
       out << featureCount;
 
       for (Observations::const_iterator itObs = obs.begin(); itObs != obs.end(); ++itObs)  {
@@ -228,7 +238,7 @@ int main(int argc, char *argv[]) {
   std::string sOutDir = "";
   cmd.add( make_option('i', sSfM_Data_Filename, "sfmdata") );
   cmd.add( make_option('o', sOutDir, "outdir") );
-  cout << "Note:  this program writes output in MVE file format.\n";
+  std::cout << "Note:  this program writes output in MVE file format.\n";
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");

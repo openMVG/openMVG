@@ -7,7 +7,7 @@ Once camera position and orientation have been computed, Multiple View Stereo-vi
 to compute a dense scene representation, such as:
 
 - dense point cloud (PMVS),
-- surface and texture (UMVS, CMPMVS).
+- surface and texture (MVE+FSSR+texrecon, CMPMVS).
 
 
 Export to PMVS/CMVS
@@ -19,8 +19,8 @@ Once a 3D calibration have been computed you can convert the SfM_Ouput files to 
 
 .. code-block:: c++
 
-  $ openMVG_main_openMVG2PMVS -i Dataset/outReconstruction/SfM_Output/ -o Dataset/outReconstruction/SfM_Output/
-  $ pmvs Dataset/outReconstruction/SfM_Output/PMVS/ pmvs_options.txt
+  $ openMVG_main_openMVG2PMVS -i Dataset/outReconstruction/sfm_data.json -o Dataset/outReconstruction
+  $ pmvs Dataset/outReconstruction/PMVS/ pmvs_options.txt
 
 .. figure:: resultOutput.png
    :align: center
@@ -31,26 +31,39 @@ In order to use CMVS for large scene openMVG2PMVS export also the scene in the B
 
 .. code-block:: c++
 
-  $ openMVG_main_openMVG2PMVS -i Dataset/outReconstruction/SfM_Output/ -o Dataset/outReconstruction/SfM_Output/
-  $ cmvs Dataset/outReconstruction/SfM_Output/PMVS/ [MaxImageCountByCluster=100]
-  $ cmvs Dataset/outReconstruction/SfM_Output/PMVS/ 30
-  $ genOption Dataset/outReconstruction/SfM_Output/PMVS/
-  $ sh Dataset/outReconstruction/SfM_Output/PMVS/pmvs.sh
+  $ openMVG_main_openMVG2PMVS -i Dataset/outReconstruction/sfm_data.json -o Dataset/outReconstruction
+  $ cmvs Dataset/outReconstruction/PMVS/ [MaxImageCountByCluster=100]
+  $ cmvs Dataset/outReconstruction/PMVS/ 30
+  $ genOption Dataset/outReconstruction/PMVS/
+  $ sh Dataset/outReconstruction/PMVS/pmvs.sh
 
 
 Export to MVE (Multi-View Environment)
 =========================================
 
-`MVE <http://www.gris.informatik.tu-darmstadt.de/projects/multiview-environment>`_ can import an openMVG SfM scene and use it to create dense depth map and complete dense 3D models.
+`MVE <http://www.gris.informatik.tu-darmstadt.de/projects/multiview-environment>`_ can import a converted openMVG SfM scene and use it to create dense depth map and complete dense 3D models.
 
 .. code-block:: c++
 
-  $ makescene SfmOutput_DIR MVE_SCENE_DIR
-  $ dmrecon -s2 MVE_SCENE_DIR
-  $ scene2pset -ddepth-L2 -iundist-L2 -n -s -c MVE_SCENE_DIR OUTPUT.ply
-  $ fssr_octree OUTPUT.ply OUTPUT.fssr
-  $ fssr_surface -t10 -c100000 OUTPUT.fssr surface.ply
+  # Convert the openMVG SfM scene to the MVE format
+  $ openMVG_main_openMVG2MVE -i Dataset/outReconstruction/sfm_data.json -o Dataset/outReconstruction
+
+  #--
+  # shell script example
+  #--
   
+  directory=Dataset/outReconstruction/MVE
+  resolution=2
+  
+  # MVE
+  makescene $directory $directory
+  dmrecon -s$resolution $directory
+  scene2pset -ddepth-L$resolution -iundist-L$resolution -n -s -c $directory $directory/OUTPUT.ply
+  
+  # FSSR
+  fssrecon $directory/OUTPUT.ply $directory/OUTPUT_MESH.ply
+  meshclean $directory/OUTPUT_MESH.ply $directory/OUTPUT_MESH_CLEAN.ply
+
   Call any tool without arguments to see the help.
   
 You will need to compile MVE tools and `FSSR <http://www.gris.informatik.tu-darmstadt.de/projects/floating-scale-surface-reco/>`_.
@@ -67,4 +80,4 @@ OpenMVG exports [CMPMVS]_ ready to use project (images, projection matrices and 
 
 .. code-block:: c++
 
-  $ openMVG_main_openMVG2CMPMVS -i Dataset/outReconstruction/SfM_Output/ -o Dataset/outReconstruction/SfM_Output/
+  $ openMVG_main_openMVG2CMPMVS -i Dataset/outReconstruction/sfm_data.json -o Dataset/outReconstruction
