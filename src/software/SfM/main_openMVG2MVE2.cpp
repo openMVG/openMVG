@@ -1,4 +1,4 @@
-/* v.0.12 5 August 2015
+/* v.0.15 7 August 2015
  * Kevin CAIN, www.insightdigital.org
  * Adapted from the openMVG libraries,
  * Copyright (c) 2012-2015 Pierre MOULON.
@@ -20,7 +20,6 @@ using namespace openMVG::features;
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/progress/progress.hpp"
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <cmath>
@@ -33,6 +32,7 @@ using namespace openMVG::features;
  * - We do not save the original, instead we rely on the undistorted image from openMVG.
  * - We do not output thumbnails or EXIF blobs, as these appear only to be used only for the GUI UMVE.
  * - To avoid encoding loss, openMVG images should be written as .PNG if undistorted images are *not* computed.
+ * - In OpenMPV, some views may have some missing poses; MVE does *not* require a contiguous camera index.
  *
  *  For information on the target for this conversion, please see the MVE (v2) File format:
  *  https://github.com/simonfuhrmann/mve/wiki/MVE-File-Format
@@ -61,8 +61,11 @@ bool exportToMVE2Format(
   {
     // Create 'views' subdirectory
     string sOutViewsDirectory = stlplus::folder_append_separator(sOutDirectory) + "views";
-    cout << "\033[1;31mCreating directory:  " << sOutViewsDirectory << "\033[0m\n";
-    stlplus::folder_create(sOutViewsDirectory);
+    if (!stlplus::folder_exists(sOutViewsDirectory))
+    {
+      cout << "\033[1;31mCreating directory:  " << sOutViewsDirectory << "\033[0m\n";
+      stlplus::folder_create(sOutViewsDirectory);
+    }
 
     // Prepare to write bundle file
     // Get cameras and features from OpenMVG
@@ -77,29 +80,8 @@ bool exportToMVE2Format(
     out << "drews 1.0\n";  // MVE expects this header
     out << cameraCount << " " << featureCount << "\n";
 
-    // Export data :
-    C_Progress_display my_progress_bar( sfm_data.GetViews().size()*2 );
-
-    // MVE, like CMPMVS, requires a contiguous camera index.  In openMPV, some views may have some missing poses;
-    // here we reindex the poses to ensure a contiguous pose list.
-    Hash_Map<IndexT, IndexT> map_viewIdToContiguous;
-
-    // Export valid views as Projective Cameras:
-    for(Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
-    {
-      const View * view = iter->second.get();
-      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
-        continue;
-
-      const Pose3 pose = sfm_data.GetPoseOrDie(view);
-      Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
-
-      // View Id re-indexing
-      map_viewIdToContiguous.insert(std::make_pair(view->id_view, map_viewIdToContiguous.size()));
-    }
-
     // Export (calibrated) views as undistorted images
+    C_Progress_display my_progress_bar( sfm_data.GetViews().size()*1);
     std::pair<int,int> w_h_image_size;
     Image<RGBColor> image, image_ud;
     string sOutViewIteratorDirectory;
@@ -112,21 +94,20 @@ bool exportToMVE2Format(
 
       // Create current view subdirectory 'view_xxxx.mve'
       std::ostringstream padding;
-      padding << std::setw(4) << std::setfill('0') << map_viewIdToContiguous[view->id_view];
+      padding << std::setw(4) << std::setfill('0') << view->id_view;
       sOutViewIteratorDirectory = stlplus::folder_append_separator(sOutViewsDirectory) + "view_" + padding.str() + ".mve";
-      stlplus::folder_create(sOutViewIteratorDirectory);
+      if (!stlplus::folder_exists(sOutViewIteratorDirectory))
+      {
+        stlplus::folder_create(sOutViewIteratorDirectory);
+      }
       Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
 
       // We have a valid view with a corresponding camera & pose
       const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
-      //std::ostringstream os;
-      //os << std::setw(5) << std::setfill('0') << map_viewIdToContiguous[view->id_view];
-      std::string dstImage = stlplus::create_filespec(
-        stlplus::folder_append_separator(sOutViewIteratorDirectory), "undistorted","png");
+      std::string dstImage =
+        stlplus::create_filespec(stlplus::folder_append_separator(sOutViewIteratorDirectory), "undistorted","png");
 
       const IntrinsicBase * cam = iterIntrinsic->second.get();
-      if (map_viewIdToContiguous[view->id_view] == 0)
-        w_h_image_size = std::make_pair(cam->w(), cam->h());
       if (cam->have_disto())
       {
         // Undistort and save the image
@@ -159,14 +140,14 @@ bool exportToMVE2Format(
       Mat3 rotation = pose.rotation();
       const Vec3 translation = pose.translation();
       // Pixel aspect = pixel width divided by the pixel height
-      const float pixelAspect = cam->w()/cam->h();
+      const float pixelAspect = 1;
       // Focal length and principal point are embedded within calibration matrix K:
       // focal_length = K(0,0)
       // principal point = {_K(0,2), _K(1,2)}
       // their values are normalized (0..1)
       const float flen = K(0,0) / static_cast<double>(std::max(cam->w(), cam->h()));
-      const float ppX = abs(K(0,2)/cam->w());
-      const float ppY = abs(K(1,2)/cam->h());
+      const float ppX = std::abs(K(0,2)/cam->w());
+      const float ppY = std::abs(K(1,2)/cam->h());
 
       std::ostringstream fileOut;
       fileOut << "#MVE view meta data is stored in INI-file syntax." << fileOut.widen('\n')
@@ -198,7 +179,6 @@ bool exportToMVE2Format(
       // Pierre Moulon suggested we resample as per:  https://github.com/openMVG/openMVG/blob/develop/src/openMVG/image/image_resampling_test.cpp#L24
 
       // For each camera, write to bundle:  focal length, radial distortion[0-1], rotation matrix[0-8], translation vector[0-2]
-
       // To do:  add more rigorous camera sanity checks, as per:
       // https://github.com/simonfuhrmann/mve/blob/e3db7bc60ce93fe51702ba77ef480e151f927c23/libs/mve/bundle_io.cc
       if (flen == 0.0f)
@@ -246,11 +226,9 @@ int main(int argc, char *argv[]) {
   CmdLine cmd;
   std::string sSfM_Data_Filename;
   std::string sOutDir = "";
-
   cmd.add( make_option('i', sSfM_Data_Filename, "sfmdata") );
   cmd.add( make_option('o', sOutDir, "outdir") );
-
-  cout << "Note:  this program writes output in MVE file format v2.\n";
+  cout << "Note:  this program writes output in MVE file format.\n";
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -267,7 +245,7 @@ int main(int argc, char *argv[]) {
 
   // Create output dir
   if (!stlplus::folder_exists(sOutDir))
-    stlplus::folder_create( sOutDir );
+    stlplus::folder_create(sOutDir);
 
   // Read the input SfM scene
   SfM_Data sfm_data;
