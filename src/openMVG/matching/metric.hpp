@@ -108,7 +108,7 @@ namespace optim_ss2{
     }
     else
     {
-      std::cout <<"\n/!\\ size is not modulus 4,"
+      std::cerr <<"\n/!\\ size is not modulus 4,"
         << " distance cannot be performed in SSE"<< std::endl;
       return 0.0f;
     }
