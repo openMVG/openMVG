@@ -275,9 +275,9 @@ ENDIF(Ceres_FOUND)
 # - optional, it allows to compile the vocabulary tree
 # ==============================================================================
 IF(OpenMVG_USE_BOOST)
-    FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS date_time chrono exception thread serialization system filesystem atomic program_options timer unit_test_framework)
+    FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS system filesystem program_options unit_test_framework)
     IF(Boost_FOUND)
-       MESSAGE(STATUS "Boost ${Boost_LIB_VERSION} found ${Boost_LIBRARIES}")
+       MESSAGE(STATUS "Boost ${Boost_LIB_VERSION} found")
        include_directories(${Boost_INCLUDE_DIRS})
        link_directories(${Boost_LIBRARIES})
        add_definitions(${Boost_DEFINITIONS})
