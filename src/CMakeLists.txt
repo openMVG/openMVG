@@ -19,6 +19,7 @@ ENDIF()
 # ==============================================================================
 OPTION(OpenMVG_BUILD_TESTS "Build OpenMVG tests" OFF)
 OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG samples applications." ON)
+OPTION(OpenMVG_BUILD_DOC "Build OpenMVG documentation." ON)
 OPTION(OpenMVG_BUILD_OPENGL_EXAMPLES "Build OpenMVG openGL examples" OFF)
 OPTION(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
@@ -357,28 +358,30 @@ ADD_SUBDIRECTORY(nonFree)
 # --------------------------
 # Sphinx detection
 # ==============================================================================
-FIND_PACKAGE(Sphinx)
-IF (EXISTS ${SPHINX_EXECUTABLE})
-  SET(SPHINX_HTML_DIR "${CMAKE_CURRENT_BINARY_DIR}/htmlDoc")
+IF (OpenMVG_BUILD_DOC)
+  FIND_PACKAGE(Sphinx)
+  IF (EXISTS ${SPHINX_EXECUTABLE})
+     SET(SPHINX_HTML_DIR "${CMAKE_CURRENT_BINARY_DIR}/htmlDoc")
 
-  CONFIGURE_FILE(
-    "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst/conf.py"
-    "${CMAKE_CURRENT_BINARY_DIR}/conf.py"
-    @ONLY)
+     CONFIGURE_FILE(
+       "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst/conf.py"
+       "${CMAKE_CURRENT_BINARY_DIR}/conf.py"
+       @ONLY)
 
-  ADD_CUSTOM_TARGET(doc ALL
-    ${SPHINX_EXECUTABLE}
-    -b html
-    "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst"
-    "${SPHINX_HTML_DIR}"
-    COMMENT "Building HTML documentation with Sphinx")
+     ADD_CUSTOM_TARGET(doc ALL
+       ${SPHINX_EXECUTABLE}
+       -b html
+       "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst"
+       "${SPHINX_HTML_DIR}"
+       COMMENT "Building HTML documentation with Sphinx")
 
-  SET_PROPERTY(TARGET doc PROPERTY FOLDER OpenMVG)
+     SET_PROPERTY(TARGET doc PROPERTY FOLDER OpenMVG)
 
-ELSE (EXISTS ${SPHINX_EXECUTABLE})
-  MESSAGE("Sphinx need to be installed to generate the documentation")
-ENDIF (EXISTS ${SPHINX_EXECUTABLE})
-
+   ELSE (EXISTS ${SPHINX_EXECUTABLE})
+     MESSAGE("Sphinx need to be installed to generate the documentation")
+     UPDATE_CACHE_VARIABLE(OpenMVG_BUILD_DOC OFF)
+   ENDIF (EXISTS ${SPHINX_EXECUTABLE})
+ENDIF (OpenMVG_BUILD_DOC)
 
 # ==============================================================================
 # INSTALL RULES
