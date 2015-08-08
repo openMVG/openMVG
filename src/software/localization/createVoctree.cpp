@@ -114,7 +114,7 @@ int main( int argc, char** argv )
 	}
 	
 	POPART_COUT( "Done! " << featRead.size() << " sets of descriptors read for a total of " << numTotFeatures << " features"  );
-	POPART_COUT( "Reading took " << t << " sec" );
+	POPART_COUT( "Reading took " << detect_elapsed.count() << " sec" );
 
 	// Create tree
 	openMVG::voctree::TreeBuilder<FeatureFloat> builder( FeatureFloat::Zero( ) );
@@ -125,7 +125,7 @@ int main( int argc, char** argv )
 	builder.build( features, K, LEVELS );
 	detect_end = std::chrono::steady_clock::now();
 	detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
-	POPART_COUT( "Tree created in " << t << " sec" );
+	POPART_COUT( "Tree created in " << detect_elapsed.count() << " sec" );
 	POPART_COUT( builder.tree( ).centers( ).size( ) << " centers" );
 	POPART_COUT( "Saving vocabulary tree as " << treeName );
 	builder.tree( ).save( treeName );
@@ -161,7 +161,7 @@ int main( int argc, char** argv )
 	}
 	detect_end = std::chrono::steady_clock::now();
 	detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
-	POPART_COUT( "Feature quantization took " << t << " sec" );
+	POPART_COUT( "Feature quantization took " << detect_elapsed.count() << " sec" );
 	
 	
 	POPART_COUT( "Creating the database..." );
@@ -180,7 +180,7 @@ int main( int argc, char** argv )
 	db.computeTfIdfWeights( );
 	detect_end = std::chrono::steady_clock::now();
 	detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
-	POPART_COUT( "Computing weights done in " << t << " sec" );
+	POPART_COUT( "Computing weights done in " << detect_elapsed.count() << " sec" );
 	POPART_COUT( "Saving weights as " << weightName );
 	db.saveWeights( weightName );
 
@@ -200,7 +200,7 @@ int main( int argc, char** argv )
 			db.find( i->second, 4, matches );
 			detect_end = std::chrono::steady_clock::now();
 			detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
-			POPART_COUT( "query document " << i->first << " took "<< t <<"sec and has " << matches.size( ) << " matches\tBest " << matches[0].id << " with score " << matches[0].score << endl );
+			POPART_COUT( "query document " << i->first << " took "<< detect_elapsed.count() <<"sec and has " << matches.size( ) << " matches\tBest " << matches[0].id << " with score " << matches[0].score << endl );
 			// for each found match print the score, ideally the first one should be the document itself
 			for ( size_t j = 0; j < matches.size( ); ++j )
 			{
