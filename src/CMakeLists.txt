@@ -43,6 +43,10 @@ IF (WIN32)
   ENDIF (MSVC)
 ENDIF (WIN32)
 
+# suppress annoying osi_clp warning
+IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    ADD_DEFINITIONS(-Wno-deprecated-register)
+ENDIF()
 # ==============================================================================
 # Additional cmake find modules
 # ==============================================================================
