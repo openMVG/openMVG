@@ -9,10 +9,8 @@ RUN apt-get update && apt-get install -y \
   cmake \
   graphviz \
   git \
-  gcc-4.6 \ 
-  g++-4.6 \ 
-  gcc-4.6-multilib \  
-  g++-4.6-multilib \ 
+  gcc-4.8 \ 
+  gcc-4.8-multilib \  
   libpng-dev \
   libjpeg-dev \
   libtiff-dev \
