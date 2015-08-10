@@ -317,6 +317,17 @@ IF(NOT OSI_FOUND OR OpenMVG_USE_INTERNAL_OSI)
 ENDIF()
 
 # ==============================================================================
+# Internal CLP/OSI/COINUTILS libraries:
+# ==============================================================================
+IF (OpenMVG_USE_INTERNAL_OSI AND OpenMVG_USE_INTERNAL_CLP AND OpenMVG_USE_INTERNAL_COINUTILS)
+  ADD_SUBDIRECTORY(dependencies/osi_clp/)
+ELSE()
+  message(FATAL_ERROR
+    "\n When you want to use OSI or CLP or COINUTILS as external librairies,\n"
+    " please use the three as external.\n")
+ENDIF()
+
+# ==============================================================================
 # Lemon
 # ==============================================================================
 # - internal by default (Lemon),
@@ -331,10 +342,8 @@ IF(NOT LEMON_FOUND OR OpenMVG_USE_INTERNAL_LEMON)
   SET(LEMON_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon)
   SET(LEMON_LIBRARY lemon)
 ENDIF()
-# ==============================================================================
-# Internal CLP/OSI/COINUTILS libraries:
-# ==============================================================================
-ADD_SUBDIRECTORY(dependencies/osi_clp/)
+
+
 
 # ==============================================================================
 # Third-party libraries:
