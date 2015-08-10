@@ -57,14 +57,14 @@ struct HammingBitSet
 
 // https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetTable
 // Lookup table to count the number of common 1 bits on unsigned char values
-static const unsigned char pop_count_LUT[256] = 
+static const unsigned char pop_count_LUT[256] =
 {
 #   define B2(n) n,     n+1,     n+1,     n+2
 #   define B4(n) B2(n), B2(n+1), B2(n+1), B2(n+2)
 #   define B6(n) B4(n), B4(n+1), B4(n+1), B4(n+2)
     B6(0), B6(1), B6(1), B6(2)
 };
-  
+
 // Hamming distance to work on raw memory
 //  like unsigned char *
 template<typename T>
@@ -72,7 +72,7 @@ struct Hamming
 {
   typedef T ElementType;
   typedef unsigned int ResultType;
-    
+
   /** This is popcount_3() from:
    * http://en.wikipedia.org/wiki/Hamming_weight */
   static inline unsigned int popcnt32(uint32_t n)
@@ -108,29 +108,6 @@ struct Hamming
   inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
   {
     ResultType result = 0;
-
-#if (defined __GNUC__ || defined __clang__)
-    {
-      //for portability just use unsigned long -- and use the __builtin_popcountll (see docs for __builtin_popcountll)
-      typedef unsigned long long pop_t;
-      const size_t modulo = size % sizeof(pop_t);
-      const pop_t* a2 = reinterpret_cast<const pop_t*> (a);
-      const pop_t* b2 = reinterpret_cast<const pop_t*> (b);
-      const pop_t* a2_end = a2 + (size / sizeof(pop_t));
-
-      for (; a2 != a2_end; ++a2, ++b2) result += __builtin_popcountll((*a2) ^ (*b2));
-
-      if (modulo) {
-        //in the case where size is not dividable by sizeof(pop_t)
-        //need to mask off the bits at the end
-        pop_t a_final = 0, b_final = 0;
-        memcpy(&a_final, a2, modulo);
-        memcpy(&b_final, b2, modulo);
-        result += __builtin_popcountll(a_final ^ b_final);
-      }
-    }
-#else
-
 // Windows & generic platforms:
 
 #ifdef PLATFORM_64_BIT
@@ -181,7 +158,6 @@ struct Hamming
       }
     }
 #endif // PLATFORM_64_BIT
-#endif // (defined __GNUC__ || defined __clang__)
     return result;
   }
 };

@@ -11,6 +11,7 @@
 #include "openMVG/matching_image_collection/Matcher.hpp"
 #include "openMVG/matching/matcher_brute_force.hpp"
 #include "openMVG/matching/matcher_kdtree_flann.hpp"
+#include "openMVG/matching/matcher_cascade_hashing.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
 #include "openMVG/matching/matching_filters.hpp"
 
@@ -44,6 +45,7 @@ void Template_Matcher(
 #ifdef OPENMVG_USE_OPENMP
   std::cout << "Using the OPENMP thread interface" << std::endl;
 #endif
+  bool b_multithreaded_pair_search = false;
   switch(_eMatcherType)
   {
     case BRUTE_FORCE_L2:
@@ -54,6 +56,11 @@ void Template_Matcher(
     break;
     case ANN_L2:
       std::cout << "Using ANN_L2 matcher" << std::endl;
+    break;
+    case CASCADE_HASHING_L2:
+      std::cout << "Using CASCADE_HASHING_L2 matcher" << std::endl;
+      b_multithreaded_pair_search = true;
+      // -> set to true only here, since OpenMP instructions are not used in this matcher
     break;
     default:
       std::cout << "Using unknown matcher type" << std::endl;
@@ -97,8 +104,10 @@ void Template_Matcher(
       my_progress_bar += indexToCompare.size();
       continue;
     }
-
-    for (int j = 0; j < (int)indexToCompare.size(); ++j, ++my_progress_bar)
+#ifdef OPENMVG_USE_OPENMP
+    #pragma omp parallel for schedule(dynamic) if(b_multithreaded_pair_search)
+#endif
+    for (int j = 0; j < (int)indexToCompare.size(); ++j)
     {
       const size_t J = indexToCompare[j];
 
@@ -145,9 +154,15 @@ void Template_Matcher(
         IndMatchDecorator<float> matchDeduplicator(vec_FilteredMatches, pointFeaturesI, pointFeaturesJ);
         matchDeduplicator.getDeduplicated(vec_FilteredMatches);
 
-        if (!vec_FilteredMatches.empty())
+#ifdef OPENMVG_USE_OPENMP
+  #pragma omp critical
+#endif
         {
-          map_PutativesMatches.insert( make_pair( make_pair(I,J), std::move(vec_FilteredMatches) ));
+          ++my_progress_bar;
+          if (!vec_FilteredMatches.empty())
+          {
+            map_PutativesMatches.insert( make_pair( make_pair(I,J), std::move(vec_FilteredMatches) ));
+          }
         }
       }
     }
@@ -178,10 +193,10 @@ void Matcher_Regions_AllInMemory::Match(
     // Switch regions type ID, matcher & Metric: call the good MatcherT
     if (regions->IsScalar())
     {
-      if(regions->Type_id() == typeid(unsigned char).name())
+      if (regions->Type_id() == typeid(unsigned char).name())
       {
         // Build on the fly unsigned char based Matcher
-        switch(_eMatcherType)
+        switch (_eMatcherType)
         {
           case BRUTE_FORCE_L2:
           {
@@ -201,15 +216,24 @@ void Matcher_Regions_AllInMemory::Match(
               regions_provider, Square(fDistRatio), _eMatcherType);
           }
           break;
+          case CASCADE_HASHING_L2:
+          {
+            typedef L2_Vectorized<unsigned char> MetricT;
+            typedef ArrayMatcherCascadeHashing<unsigned char, MetricT> MatcherT;
+            /// Match the distRatio to the used metric
+            Template_Matcher<MatcherT>(pairs, map_PutativesMatches,
+              regions_provider, Square(fDistRatio), _eMatcherType);
+          }
+          break;
           default:
             std::cerr << "Using unknown matcher type" << std::endl;
         }
       }
       else
-      if(regions->Type_id() == typeid(float).name())
+      if (regions->Type_id() == typeid(float).name())
       {
         // Build on the fly float based Matcher
-        switch(_eMatcherType)
+        switch (_eMatcherType)
         {
           case BRUTE_FORCE_L2:
           {
@@ -228,15 +252,24 @@ void Matcher_Regions_AllInMemory::Match(
               regions_provider, Square(fDistRatio), _eMatcherType);
           }
           break;
+          case CASCADE_HASHING_L2:
+          {
+            typedef L2_Vectorized<float> MetricT;
+            typedef ArrayMatcherCascadeHashing<float, MetricT> MatcherT;
+            /// Match the distRatio to the used metric
+            Template_Matcher<MatcherT>(pairs, map_PutativesMatches,
+              regions_provider, Square(fDistRatio), _eMatcherType);
+          }
+          break;
           default:
             std::cerr << "Using unknown matcher type" << std::endl;
         }
       }
       else
-      if(regions->Type_id() == typeid(double).name())
+      if (regions->Type_id() == typeid(double).name())
       {
         // Build on the fly double based Matcher
-        switch(_eMatcherType)
+        switch (_eMatcherType)
         {
           case BRUTE_FORCE_L2:
           {
@@ -256,6 +289,11 @@ void Matcher_Regions_AllInMemory::Match(
               regions_provider, Square(fDistRatio), _eMatcherType);
           }
           break;
+          case CASCADE_HASHING_L2:
+          {
+            std::cerr << "Not yet implemented" << std::endl;
+          }
+          break;
           default:
             std::cerr << "Using unknown matcher type" << std::endl;
         }
@@ -264,7 +302,7 @@ void Matcher_Regions_AllInMemory::Match(
     else
     if (regions->IsBinary() && regions->Type_id() == typeid(unsigned char).name())
     {
-      switch(_eMatcherType)
+      switch (_eMatcherType)
       {
         case BRUTE_FORCE_HAMMING:
         {
