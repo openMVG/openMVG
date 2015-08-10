@@ -76,7 +76,7 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-    if (iTranslationAveragingMethod < TRANSLATION_AVERAGING_L1 ||
+  if (iTranslationAveragingMethod < TRANSLATION_AVERAGING_L1 ||
       iTranslationAveragingMethod > TRANSLATION_AVERAGING_L2 )  {
     std::cerr << "\n Translation averaging method is invalid" << std::endl;
     return EXIT_FAILURE;
