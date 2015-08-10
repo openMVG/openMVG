@@ -16,9 +16,6 @@ ADD_SUBDIRECTORY(system)
 ADD_SUBDIRECTORY(sfm)
 ADD_SUBDIRECTORY(stl)
 
-# set the variable in the parent_scope
-SET(openMVG_linearProgramming ${openMVG_linearProgramming} PARENT_SCOPE)
-
 #INSTALL RULES
 INSTALL(
   DIRECTORY .
