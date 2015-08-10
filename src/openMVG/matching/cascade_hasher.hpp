@@ -250,8 +250,8 @@ public:
     const MatrixT & descriptions1,
     const HashedDescriptions& hashed_descriptions2,
     const MatrixT & descriptions2,
-    std::vector<int> * pvec_indice,
-    std::vector<DistanceType> * pvec_distance,
+    IndMatches * pvec_indices,
+    std::vector<DistanceType> * pvec_distances,
     const int NN = 2
   ) const
   {
@@ -303,8 +303,6 @@ public:
       // Skip matching this descriptor if there are not at least NN candidates.
       if (candidate_descriptors.size() <= NN)
       {
-        // TODO: no candidate (actual design does not support it)
-        // each query must have NN retrieved neighbors
         continue;
       }
 
@@ -347,22 +345,21 @@ public:
         }
       }
 
-      // TODO ASSERT THERE IS SUFFICIENT MATCHES (at least NN candidates)
-      // each query must have NN retrieved neighbors
-      if (candidate_euclidean_distances.size() < NN)
+      // Assert that each query is having at least NN retrieved neighbors
+      if (candidate_euclidean_distances.size() >= NN)
       {
-        std::cerr << "too few candidates..." << std::endl;
+        // Find the top NN candidates based on euclidean distance.
+        std::partial_sort(candidate_euclidean_distances.begin(),
+          candidate_euclidean_distances.begin() + NN,
+          candidate_euclidean_distances.end());
+        // save resulting neighbors
+        for (int l = 0; l < NN; ++l)
+        {
+          pvec_distances->emplace_back(candidate_euclidean_distances[l].first);
+          pvec_indices->emplace_back(IndMatch(i,candidate_euclidean_distances[l].second));
+        }
       }
-      // Find the top NN candidates based on euclidean distance.
-      std::partial_sort(candidate_euclidean_distances.begin(),
-                        candidate_euclidean_distances.begin() + NN,
-                        candidate_euclidean_distances.end());
-
-      for (int l = 0; l < NN; ++l)
-      {
-        (*pvec_distance)[i*NN+l] = candidate_euclidean_distances[l].first;
-        (*pvec_indice)[i*NN+l] = candidate_euclidean_distances[l].second;
-      }
+      //else -> too few candidates... (save no one)
     }
   }
 

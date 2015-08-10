@@ -10,6 +10,7 @@
 
 #include <vector>
 #include "openMVG/numeric/numeric.h"
+#include "openMVG/matching/indMatch.hpp"
 
 namespace openMVG {
 namespace matching {
@@ -57,17 +58,16 @@ class ArrayMatcher
    *
    * \param[in]   query     The query array
    * \param[in]   nbQuery   The number of query rows
-   * \param[out]  indice    The indices of arrays in the dataset that
-   *  have been computed as the nearest arrays.
-   * \param[out]  distance  The distances between the matched arrays.
+   * \param[out]  indices   The corresponding (query, neighbor) indices
+   * \param[out]  distances The distances between the matched arrays.
    * \param[out]  NN        The number of maximal neighbor that could
    *  will be searched.
    *
    * \return True if success.
    */
   virtual bool SearchNeighbours( const Scalar * query, int nbQuery,
-                                  vector<int> * indice,
-                                  vector<DistanceType> * distance,
+                                  IndMatches * indices,
+                                  std::vector<DistanceType> * distances,
                                   size_t NN)=0;
 };
 

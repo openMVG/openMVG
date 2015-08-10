@@ -84,17 +84,19 @@ class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
    *
    * \param[in]   query     The query array
    * \param[in]   nbQuery   The number of query rows
-   * \param[out]  indice    The indices of arrays in the dataset that
-   *  have been computed as the nearest arrays.
-   * \param[out]  distance  The distances between the matched arrays.
+   * \param[out]  indices   The corresponding (query, neighbor) indices
+   * \param[out]  distances  The distances between the matched arrays.
    * \param[out]  NN        The number of maximal neighbor that will be searched.
    *
    * \return True if success.
    */
-  bool SearchNeighbours( const Scalar * query, int nbQuery,
-                          std::vector<int> * pvec_indice,
-                          std::vector<DistanceType> * pvec_distance,
-                          size_t NN)
+  bool SearchNeighbours
+  (
+    const Scalar * query, int nbQuery,
+    IndMatches * pvec_indices,
+    std::vector<DistanceType> * pvec_distances,
+    size_t NN
+  )
   {
     if (memMapping.get() == NULL)  {
       return false;
@@ -108,8 +110,8 @@ class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
     // Matrix representation of the input data;
     Eigen::Map<BaseMat> mat_query((Scalar*)query, nbQuery, (*memMapping).cols());
 
-    pvec_distance->resize(nbQuery * NN);
-    pvec_indice->resize(nbQuery * NN);
+    pvec_distances->reserve(nbQuery * NN);
+    pvec_indices->reserve(nbQuery * NN);
 
     // Index the query descriptors
     const HashedDescriptions hashed_query = cascade_hasher_.CreateHashedDescriptions(mat_query);
@@ -117,7 +119,7 @@ class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
     cascade_hasher_.Match_HashedDescriptions(
       hashed_query, mat_query,
       hashed_base_, *memMapping,
-      pvec_indice, pvec_distance,
+      pvec_indices, pvec_distances,
       NN);
 
     return true;

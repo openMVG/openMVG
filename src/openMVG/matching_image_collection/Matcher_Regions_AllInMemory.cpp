@@ -125,7 +125,7 @@ void Template_Matcher(
         reinterpret_cast<const typename MatcherT::ScalarT *>(regionsJ->DescriptorRawData());
 
       const size_t NNN__ = 2;
-      std::vector<int> vec_nIndice10;
+      IndMatches vec_nIndice10;
       std::vector<typename MatcherT::DistanceType> vec_fDistance10;
 
       //Find left->right
@@ -133,7 +133,8 @@ void Template_Matcher(
       {
         std::vector<IndMatch> vec_FilteredMatches;
         std::vector<int> vec_NNRatioIndexes;
-        NNdistanceRatio( vec_fDistance10.begin(), // distance start
+        NNdistanceRatio(
+          vec_fDistance10.begin(), // distance start
           vec_fDistance10.end(),  // distance end
           NNN__, // Number of neighbor in iterator sequence (minimum required 2)
           vec_NNRatioIndexes, // output (indices that respect Lowe Ratio)
@@ -142,8 +143,8 @@ void Template_Matcher(
         for (size_t k=0; k < vec_NNRatioIndexes.size(); ++k)
         {
           const size_t index = vec_NNRatioIndexes[k];
-          vec_FilteredMatches.push_back(
-            IndMatch(vec_nIndice10[index*NNN__], index) );
+          vec_FilteredMatches.emplace_back(
+            IndMatch(vec_nIndice10[index*NNN__]._j, vec_nIndice10[index*NNN__]._i));
         }
 
         // Remove duplicates

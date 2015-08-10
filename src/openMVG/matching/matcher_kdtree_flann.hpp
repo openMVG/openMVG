@@ -83,9 +83,7 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
       flann::Matrix<int> indices(indicePTR, 1, 1);
       flann::Matrix<DistanceType> dists(distancePTR, 1, 1);
       // do a knn search, using 128 checks
-      _index->knnSearch(queries, indices, dists, 1, flann::SearchParams(128));
-
-      return true;
+      return (_index->knnSearch(queries, indices, dists, 1, flann::SearchParams(128)) > 0);
     }
     else  {
       return false;
@@ -96,38 +94,58 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
 /**
    * Search the N nearest Neighbor of the scalar array query.
    *
-   * \param[in]   query     The query array
-   * \param[in]   nbQuery   The number of query rows
-   * \param[out]  indice    For each "query" it save the index of the "NN"
-   * nearest entry in the dataset (provided in Build).
-   * \param[out]  distance  The distances between the matched arrays.
-   * \param[out]  NN        The number of maximal neighbor that will be searched.
+   * \param[in]   query           The query array
+   * \param[in]   nbQuery         The number of query rows
+   * \param[out]  indices   The corresponding (query, neighbor) indices
+   * \param[out]  pvec_distances  The distances between the matched arrays.
+   * \param[out]  NN              The number of maximal neighbor that will be searched.
    *
    * \return True if success.
    */
-  bool SearchNeighbours( const Scalar * query, int nbQuery,
-                        vector<int> * pvec_indice,
-                        vector<DistanceType> * pvec_distance,
-                        size_t NN)
+  bool SearchNeighbours
+  (
+    const Scalar * query, int nbQuery,
+    IndMatches * pvec_indices,
+    std::vector<DistanceType> * pvec_distances,
+    size_t NN
+  )
   {
     if (_index.get() != NULL && NN <= _datasetM->rows)  {
-      //-- Check if resultIndices is allocated
-      pvec_indice->resize(nbQuery * NN);
-      pvec_distance->resize(nbQuery * NN);
-
-      int * indicePTR = &((*pvec_indice)[0]);
-      DistanceType * distancePTR = &(*pvec_distance)[0];
-      flann::Matrix<Scalar> queries((Scalar*)query, nbQuery, _dimension);
-
-      flann::Matrix<int> indices(indicePTR, nbQuery, NN);
+      std::vector<DistanceType> vec_distances(nbQuery * NN);
+      DistanceType * distancePTR = &(vec_distances[0]);
       flann::Matrix<DistanceType> dists(distancePTR, nbQuery, NN);
+
+      std::vector<int> vec_indices(nbQuery * NN);
+      int * indicePTR = &(vec_indices[0]);
+      flann::Matrix<int> indices(indicePTR, nbQuery, NN);
+
+      flann::Matrix<Scalar> queries((Scalar*)query, nbQuery, _dimension);
       // do a knn search, using 128 checks
       flann::SearchParams params(128);
 #ifdef OPENMVG_USE_OPENMP
       params.cores = omp_get_max_threads();
 #endif
-      _index->knnSearch(queries, indices, dists, NN, params);
-      return true;
+      if (_index->knnSearch(queries, indices, dists, NN, params)>0)
+      {
+        // Save the resulting found indices
+        pvec_indices->reserve(nbQuery * NN);
+        pvec_distances->reserve(nbQuery * NN);
+        for (size_t i = 0; i < nbQuery; ++i)
+        {
+          for (size_t j = 0; j < NN; ++j)
+          {
+            if (indices[i] > 0)
+            {
+              pvec_indices->emplace_back(IndMatch(i, vec_indices[i*NN+j]));
+              pvec_distances->emplace_back(vec_distances[i*NN+j]);
+            }
+          }
+        }
+        return true;
+      }
+      else  {
+        return false;
+      }
     }
     else  {
       return false;
