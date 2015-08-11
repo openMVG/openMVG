@@ -92,6 +92,27 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_Radial_K3) {
   EXPECT_TRUE( dResidual_before > dResidual_after);
 }
 
+TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_Intrinsic_Brown_T2) {
+
+  const int nviews = 3;
+  const int npoints = 6;
+  const nViewDatasetConfigurator config;
+  const NViewDataSet d = NRealisticCamerasRing(nviews, npoints, config);
+
+  // Translate the input dataset to a SfM_Data scene
+  SfM_Data sfm_data = getInputScene(d, config, PINHOLE_CAMERA_BROWN);
+
+  const double dResidual_before = RMSE(sfm_data);
+
+  // Call the BA interface and let it refine (Structure and Camera parameters [Intrinsics|Motion])
+  std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
+  EXPECT_TRUE( ba_object->Adjust(sfm_data) );
+
+  const double dResidual_after = RMSE(sfm_data);
+  EXPECT_TRUE( dResidual_before > dResidual_after);
+}
+
+
 /// Compute the Root Mean Square Error of the residuals
 double RMSE(const SfM_Data & sfm_data)
 {
@@ -165,6 +186,10 @@ SfM_Data getInputScene(const NViewDataSet & d, const nViewDatasetConfigurator & 
       case PINHOLE_CAMERA_RADIAL3:
         sfm_data.intrinsics[0] = std::make_shared<Pinhole_Intrinsic_Radial_K3>
           (w, h, config._fx, config._cx, config._cy, 0., 0., 0.);
+      break;
+      case PINHOLE_CAMERA_BROWN:
+        sfm_data.intrinsics[0] = std::make_shared<Pinhole_Intrinsic_Brown_T2>
+          (w, h, config._fx, config._cx, config._cy, 0., 0., 0., 0., 0.);
       break;
       default:
         std::cout << "Not yet supported" << std::endl;
