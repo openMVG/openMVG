@@ -107,3 +107,6 @@ MESSAGE(STATUS "----")
 
 SET(OPENMVG_FOUND TRUE)
 
+# Reset the CMake module path to its state when this script was called.
+SET(CMAKE_MODULE_PATH ${CALLERS_CMAKE_MODULE_PATH})
+

@@ -22,7 +22,7 @@ void getPutativesMatches(
   typedef typename DESCRIPTOR_TYPE::bin_type DescTbin;
 
   const int NNN__ = 2; // look for the two nearest distance for each Left descriptor
-  std::vector<int> vec_nIndice;
+  IndMatches vec_nIndices;
   std::vector<typename MatcherT::MetricT::ResultType> vec_Distance;
 
   MatcherT matcher;
@@ -33,7 +33,7 @@ void getPutativesMatches(
     reinterpret_cast<const DescTbin *>(&descsR[0]);
 
   matcher.Build(descsLReinterpret, descsL.size(), DESCRIPTOR_TYPE::static_size);
-  matcher.SearchNeighbours(descsRReinterpret, descsR.size(), &vec_nIndice, &vec_Distance, NNN__);
+  matcher.SearchNeighbours(descsRReinterpret, descsR.size(), &vec_nIndices, &vec_Distance, NNN__);
 
   // Filter the correspondences with the Ratio of distance
   std::vector<int> vec_loweRatioIndexes;
@@ -46,7 +46,7 @@ void getPutativesMatches(
   // Get back feature index : (Left, right) index.
   for (size_t k=0; k < vec_loweRatioIndexes.size(); ++k) {
     vec_PutativeMatches.push_back(
-    IndMatch(vec_nIndice[vec_loweRatioIndexes[k]*NNN__],
-             vec_loweRatioIndexes[k]) );
+    IndMatch(vec_nIndices[vec_loweRatioIndexes[k]*NNN__]._j,
+             vec_nIndices[vec_loweRatioIndexes[k]*NNN__]._i));
   }
 }

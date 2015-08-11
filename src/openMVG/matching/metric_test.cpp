@@ -7,9 +7,7 @@
 
 #include "testing/testing.h"
 #include "openMVG/matching/metric.hpp"
-#include "third_party/flann/src/cpp/flann/algorithms/dist.h"
 #include <iostream>
-#include <bitset>
 #include <string>
 using namespace std;
 
@@ -53,6 +51,12 @@ TEST(Metric, HAMMING_BITSET)
   EXPECT_EQ(8, metricHamming(&a,&b,1));
   EXPECT_EQ(0, metricHamming(&a,&a,1));
   EXPECT_EQ(2, metricHamming(&a,&c,1));
+  
+  Hamming< unsigned char > metricHammingUchar;
+  
+  EXPECT_EQ(8, metricHammingUchar(reinterpret_cast<unsigned char *>(&a),reinterpret_cast<unsigned char *>(&b),1));
+  EXPECT_EQ(0, metricHammingUchar(reinterpret_cast<unsigned char *>(&a),reinterpret_cast<unsigned char *>(&a),1));
+  EXPECT_EQ(2, metricHammingUchar(reinterpret_cast<unsigned char *>(&a),reinterpret_cast<unsigned char *>(&c),1));
 }
 
 TEST(Metric, HAMMING_BITSET_RAW_MEMORY_64BITS)
@@ -126,8 +130,6 @@ TEST(Metric, HAMMING_BITSET_RAW_MEMORY_32BITS)
     }
   }
 }
-
-
 
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}

@@ -10,7 +10,6 @@
 #include "openMVG/sfm/pipelines/sfm_engine.hpp"
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
-#include "software/SfM/io_regions_type.hpp"
 
 /// Generic Image Collection image matching
 #include "openMVG/matching_image_collection/Matcher_Regions_AllInMemory.hpp"
@@ -18,7 +17,7 @@
 #include "openMVG/matching_image_collection/F_ACRobust.hpp"
 #include "openMVG/matching_image_collection/E_ACRobust.hpp"
 #include "openMVG/matching_image_collection/H_ACRobust.hpp"
-#include "software/SfM/pairwiseAdjacencyDisplay.hpp"
+#include "openMVG/matching/pairwiseAdjacencyDisplay.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/system/timer.hpp"
 
@@ -108,9 +107,12 @@ int main(int argc, char **argv)
       << "[-l]--pair_list] file\n"
       << "[-n|--nearest_matching_method]\n"
       << "  AUTO: auto choice from regions type,\n"
-      << "  BRUTEFORCEL2: BruteForce L2 matching for Scalar based regions descriptor,\n"
-      << "  BRUTEFORCEHAMMING: BruteForce Hamming matching for binary based regions descriptor,\n"
-      << "  ANNL2: Approximate Nearest Neighbor L2 matching for Scalar based regions descriptor.\n"
+      << "  For Scalar based regions descriptor:\n"
+      << "    BRUTEFORCEL2: BruteForce L2 matching,\n"
+      << "    ANNL2: Approximate Nearest Neighbor L2 matching,\n"
+      << "    CASCADEHASHINGL2: Cascade Hashing L2 matching.\n"
+      << "  For Binary based descriptor:\n"
+      << "    BRUTEFORCEHAMMING: BruteForce Hamming matching.\n"
       << "[-m|--guided_matching]\n"
       << "  use the found model to improve the pairwise correspondences."
       << std::endl;
@@ -278,6 +280,11 @@ int main(int argc, char **argv)
     if (sNearestMatchingMethod == "ANNL2")
     {
       collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, ANN_L2));
+    }
+    else
+    if (sNearestMatchingMethod == "CASCADEHASHINGL2")
+    {
+      collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, CASCADE_HASHING_L2));
     }
     if (!collectionMatcher)
     {

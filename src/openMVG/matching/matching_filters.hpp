@@ -36,21 +36,24 @@ using namespace std;
   * \return void.
   */
 template <typename DataInputIterator>
-static void NNdistanceRatio( DataInputIterator first, // distance start
-                        DataInputIterator last,  // distance end
-                        int NN, // Number of neighbor in iterator sequence (minimum required 2)
-                        vector<int> & vec_ratioOkIndex, // output (index that respect NN dist Ratio)
-                        float fratio = 0.6f) // ratio value
+static void NNdistanceRatio
+(
+  DataInputIterator first, // distance start
+  DataInputIterator last,  // distance end
+  int NN, // Number of neighbor in iterator sequence (minimum required 2)
+  std::vector<int> & vec_ratioOkIndex, // output (index that respect NN dist Ratio)
+  float fratio = 0.6f) // ratio value
 {
   assert( NN >= 2);
 
-  vec_ratioOkIndex.clear();
   const size_t n = std::distance(first,last);
+  vec_ratioOkIndex.clear();
+  vec_ratioOkIndex.reserve(n/NN);
   DataInputIterator iter = first;
-  for(size_t i=0; i < n/NN; ++i, advance(iter, NN))
+  for(size_t i=0; i < n/NN; ++i, std::advance(iter, NN))
   {
     DataInputIterator iter2 = iter;
-    advance(iter2,1);
+    std::advance(iter2, 1);
     if ( (*iter) < fratio * (*iter2))
       vec_ratioOkIndex.push_back(static_cast<int>(i));
   }
