@@ -321,10 +321,6 @@ ENDIF()
 # ==============================================================================
 IF (OpenMVG_USE_INTERNAL_OSI AND OpenMVG_USE_INTERNAL_CLP AND OpenMVG_USE_INTERNAL_COINUTILS)
   ADD_SUBDIRECTORY(dependencies/osi_clp/)
-ELSE()
-  message(FATAL_ERROR
-    "\n When you want to use OSI or CLP or COINUTILS as external librairies,\n"
-    " please use the three as external.\n")
 ENDIF()
 
 # ==============================================================================
