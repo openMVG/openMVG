@@ -1,4 +1,9 @@
-// Author: Sida Li
+
+// Copyright (c) 2015 Sida Li.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #ifndef OPENMVG_CAMERA_PINHOLE_BROWN_HPP
 #define OPENMVG_CAMERA_PINHOLE_BROWN_HPP
@@ -11,7 +16,7 @@
 namespace openMVG {
 namespace cameras {
 
-/// Implement a Pinhole camera with a 3 radial distortion coefficients ad 2 tangential distortion coefficients.
+/// Implement a Pinhole camera with a 3 radial distortion coefficients and 2 tangential distortion coefficients.
 /// x_d = x_u (1 + K_1 r^2 + K_2 r^4 + K_3 r^6) + (T_2 (r^2 + 2 x_u^2) + 2 T_1 x_u y_u)
 /// y_d = y_u (1 + K_1 r^2 + K_2 r^4 + K_3 r^6) + (T_1 (r^2 + 2 y_u^2) + 2 T_2 x_u y_u)
 class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
@@ -29,17 +34,12 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
         double t1 = 0.0, double t2 = 0.0)
             :Pinhole_Intrinsic(w, h, focal, ppx, ppy)
     {
-        _params.resize(5);
-        _params[0] = k1;
-        _params[1] = k2;
-        _params[2] = k3;
-        _params[3] = t1;
-        _params[4] = t2;
+        _params = {k1, k2, k3, t1, t2};
     }
 
-    EINTRINSIC getType() const { return PINHOLE_CAMERA_TANGENTIAL2; }
+    EINTRINSIC getType() const { return PINHOLE_CAMERA_BROWN; }
 
-    virtual bool have_distro() const { return true;}
+    virtual bool have_disto() const { return true;}
 
     virtual Vec2 add_disto(const Vec2 & p) const{
         return (p + distoFunction(_params, p));
@@ -50,12 +50,14 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     // IEEE Trans. Pattern Anal. Mach. Intell., 22:1066-1077
 
     virtual Vec2 remove_disto(const Vec2 & p) const{
-        double epsilon = 1e-8; //criteria to stop the iteration
+        const double epsilon = 1e-8; //criteria to stop the iteration
         Vec2 p_u = p;
+
         while((add_disto(p_u)-p).lpNorm<1>() > epsilon)//manhattan distance between the two points
         {
             p_u = p - distoFunction(_params, p_u);
         }
+
         return p_u;
     }
 
@@ -127,7 +129,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
         const double k_diff = (k1*r2 + k2*r4 + k3*r6);
         const double t_x = t2 * (r2 + 2 * p(0)*p(0)) + 2 * t1 * p(0) * p(1);
         const double t_y = t1 * (r2 + 2 * p(1)*p(1)) + 2 * t2 * p(0) * p(1);
-        Vec2 d(k_diff + t_x, k_diff + t_y);
+        Vec2 d(p(0) * k_diff + t_x, p(1) * k_diff + t_y);
         return d;
     }
 };
