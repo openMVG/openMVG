@@ -21,6 +21,7 @@ ADD_LIBRARY(openMVG_multiview
   ${multiview_files_cpp})
 SET_PROPERTY(TARGET openMVG_multiview PROPERTY FOLDER OpenMVG)
 INSTALL(TARGETS openMVG_multiview DESTINATION lib EXPORT openMVG-targets)
+TARGET_LINK_LIBRARIES(openMVG_multiview ${LEMON_LIBRARY})
 
 #Make multiview library integrate numeric library
 ADD_LIBRARY(openMVG_multiview_test_data ${MULTIVIEWTESTDATA})
