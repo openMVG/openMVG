@@ -14,7 +14,7 @@ void GroupSharedIntrinsics(SfM_Data & sfm_data)
 {
   Views & views = sfm_data.views;
   Intrinsics & intrinsics = sfm_data.intrinsics;
-  
+
   // Build hash & build a set of the hash in order to maintain unique Ids
   std::set<size_t> hash_index;
   std::vector<size_t> hash_value;
