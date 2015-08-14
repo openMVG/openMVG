@@ -70,6 +70,7 @@ int main(int argc, char **argv)
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
 
   bool b_Group_camera_model = true;
+  bool b_use_UID = false;
 
   double focal_pixels = -1.0;
 
@@ -80,6 +81,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('k', sKmatrix, "intrinsics") );
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_option('g', b_Group_camera_model, "group_camera_model") );
+  cmd.add( make_option('u', b_use_UID, "use_UID") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -98,6 +100,7 @@ int main(int argc, char **argv)
       << "[-g|--group_camera_model]\n"
       << "\t 0-> each view have it's own camera intrinsic parameters,\n"
       << "\t 1-> (default) view can share some camera intrinsic parameters\n"
+      << "[-u|--use_UID] Generate a UID instead of using indexes\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -180,15 +183,16 @@ int main(int argc, char **argv)
   {
     // Read meta data to fill camera parameter (w,h,focal,ppx,ppy) fields.
     width = height = ppx = ppy = focal = -1.0;
-
-    const std::string sImageFilename = stlplus::create_filespec( sImageDir, *iter_image );
+    
+    const std::string imageFilename = *iter_image;
+    const std::string imageAbsFilepath = stlplus::create_filespec( sImageDir, imageFilename );
 
     // Test if the image format is supported:
-    if (openMVG::image::GetFormat(sImageFilename.c_str()) == openMVG::image::Unknown)
+    if (openMVG::image::GetFormat(imageAbsFilepath.c_str()) == openMVG::image::Unknown)
       continue; // image cannot be opened
 
     ImageHeader imgHeader;
-    if (!openMVG::image::ReadImageHeader(sImageFilename.c_str(), &imgHeader))
+    if (!openMVG::image::ReadImageHeader(imageAbsFilepath.c_str(), &imgHeader))
       continue; // image cannot be read
 
     width = imgHeader.width;
@@ -196,13 +200,13 @@ int main(int argc, char **argv)
     ppx = width / 2.0;
     ppy = height / 2.0;
 
-    std::unique_ptr<Exif_IO> exifReader(new Exif_IO_EasyExif());
-    exifReader->open( sImageFilename );
+    Exif_IO_EasyExif exifReader;
+    exifReader.open( imageAbsFilepath );
 
     const bool bHaveValidExifMetadata =
-      exifReader->doesHaveExifInfo()
-      && !exifReader->getBrand().empty()
-      && !exifReader->getModel().empty();
+      exifReader.doesHaveExifInfo()
+      && !exifReader.getBrand().empty()
+      && !exifReader.getModel().empty();
 
     // Consider the case where the focal is provided manually
     if ( !bHaveValidExifMetadata || focal_pixels != -1)
@@ -218,13 +222,13 @@ int main(int argc, char **argv)
     }
     else // If image contains meta data
     {
-      const std::string sCamName = exifReader->getBrand();
-      const std::string sCamModel = exifReader->getModel();
+      const std::string sCamName = exifReader.getBrand();
+      const std::string sCamModel = exifReader.getModel();
 
       // Handle case where focal length is equal to 0
-      if (exifReader->getFocal() == 0.0f)
+      if (exifReader.getFocal() == 0.0f)
       {
-        std::cerr << stlplus::basename_part(sImageFilename) << ": Focal length is missing." << std::endl;
+        std::cerr << stlplus::basename_part(imageAbsFilepath) << ": Focal length is missing." << std::endl;
         continue;
       }
 
@@ -235,11 +239,11 @@ int main(int argc, char **argv)
         {
           // The camera model was found in the database so we can compute it's approximated focal length
           const double ccdw = datasheet._sensorSize;
-          focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
+          focal = std::max ( width, height ) * exifReader.getFocal() / ccdw;
         }
         else
         {
-          std::cout << stlplus::basename_part(sImageFilename) << ": Camera \""
+          std::cout << stlplus::basename_part(imageAbsFilepath) << ": Camera \""
             << sCamName << "\" model \"" << sCamModel << "\" doesn't exist in the database" << std::endl
             << "Please consider add your camera model and sensor width in the database." << std::endl;
         }
@@ -271,8 +275,44 @@ int main(int argc, char **argv)
       }
     }
 
+    IndexT id_view = views.size();
+    if( b_use_UID )
+    {
+      std::size_t uid = 0;
+
+      if( !exifReader.getImageUniqueID().empty() ||
+          !exifReader.getSerialNumber().empty() ||
+          !exifReader.getLensSerialNumber().empty()
+        )
+      {
+        stl::hash_combine(uid, exifReader.getImageUniqueID());
+        stl::hash_combine(uid, exifReader.getSerialNumber());
+        stl::hash_combine(uid, exifReader.getLensSerialNumber());
+      }
+      else
+      {
+        // No metadata to identify the image, fallback to the filename
+        stl::hash_combine(uid, imageFilename);
+      }
+
+      if( !exifReader.getSubSecTimeOriginal().empty() )
+      {
+        stl::hash_combine(uid, exifReader.getSubSecTimeOriginal());
+      }
+      else
+      {
+        // If no original date/time, fallback to the file date/time
+        stl::hash_combine(uid, exifReader.getDateTime());
+      }
+      
+      stl::hash_combine(uid, exifReader.getWidth());
+      stl::hash_combine(uid, exifReader.getHeight());
+
+      id_view = (IndexT)uid;
+    }
+
     // Build the view corresponding to the image
-    View v(*iter_image, views.size(), views.size(), views.size(), width, height);
+    View v(imageFilename, id_view, views.size(), views.size(), width, height);
 
     // Add intrinsic related to the image (if any)
     if (intrinsic == NULL)
