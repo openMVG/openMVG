@@ -313,6 +313,26 @@ int EXIFInfo::parseFromEXIFSegment(const unsigned char *buf, unsigned len) {
         // EXIF SubIFD offset
         exif_sub_ifd_offset = tiff_header_start + result.data;
         break;
+      
+      case 0xa420:
+        if (result.format == 2)
+          this->ImageUniqueID = result.val_string;
+        break;
+      
+      case 0xa431:
+        if (result.format == 2)
+          this->SerialNumber = result.val_string;
+        break;
+      
+      case 0xa434:
+        if (result.format == 2)
+          this->LensModel = result.val_string;
+        break;
+      
+      case 0xa435:
+        if (result.format == 2)
+          this->LensSerialNumber = result.val_string;
+        break;
     }
   }
 
