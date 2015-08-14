@@ -94,9 +94,48 @@ class Exif_IO_EasyExif : public Exif_IO
       return smodel;
     }
 
+    std::string getImageUniqueID() const
+    {
+      return exifInfo_.ImageUniqueID;
+    }
+
+    std::string getSerialNumber() const
+    {
+      return exifInfo_.SerialNumber;
+    }
+
     std::string getLensModel() const
     {
-      return "";
+      return exifInfo_.LensModel;
+    }
+
+    std::string getLensSerialNumber() const
+    {
+      return exifInfo_.LensSerialNumber;
+    }
+
+    // File change date and time
+    std::string getDateTime() const
+    {
+      return exifInfo_.DateTime;
+    }
+
+    // Original file date and time (may not exist)
+    std::string getDateTimeOriginal() const
+    {
+      return exifInfo_.SubSecTimeOriginal;
+    }
+
+    // Digitization date and time (may not exist)
+    std::string getDateTimeDigitized() const
+    {
+      return exifInfo_.SubSecTimeOriginal;
+    }
+
+    // Sub-second time that original picture was taken
+    std::string getSubSecTimeOriginal() const
+    {
+      return exifInfo_.SubSecTimeOriginal;
     }
 
     /**Verify if the file has metadata*/
@@ -110,41 +149,45 @@ class Exif_IO_EasyExif : public Exif_IO
     {
       std::ostringstream os;
       os
-        << "Camera make       : " << exifInfo_.Make << "\n"
-        << "Camera model      : " << exifInfo_.Model << "\n"
-        << "Software          : " << exifInfo_.Software << "\n"
-        << "Bits per sample   : " << exifInfo_.BitsPerSample << "\n"
-        << "Image width       : " << exifInfo_.ImageWidth << "\n"
-        << "Image height      : " << exifInfo_.ImageHeight << "\n"
-        << "Image description : " << exifInfo_.ImageDescription << "\n"
-        << "Image orientation : " << exifInfo_.Orientation << "\n"
-        << "Image copyright   : " << exifInfo_.Copyright << "\n"
-        << "Image date/time   : " << exifInfo_.DateTime << "\n"
-        << "Original date/time: " << exifInfo_.DateTimeOriginal << "\n"
-        << "Digitize date/time: " << exifInfo_.DateTimeDigitized << "\n"
-        << "Subsecond time    : " << exifInfo_.SubSecTimeOriginal << "\n"
-        << "Exposure time     : 1/time " << (unsigned) (1.0/exifInfo_.ExposureTime) << "\n"
-        << "F-stop            : " << exifInfo_.FNumber << "\n"
-        << "ISO speed         : " << exifInfo_.ISOSpeedRatings << "\n"
-        << "Subject distance  : " << exifInfo_.SubjectDistance << "\n"
-        << "Exposure bias     : EV" << exifInfo_.ExposureBiasValue << "\n"
-        << "Flash used?       : " << exifInfo_.Flash << "\n"
-        << "Metering mode     : " << exifInfo_.MeteringMode << "\n"
-        << "Lens focal length : mm\n" << exifInfo_.FocalLength << "\n"
-        << "35mm focal length : mm\n" << exifInfo_.FocalLengthIn35mm << "\n"
-        << "GPS Latitude      : deg ( deg, min, sec )\n" << "("
+        << "Camera make        : " << exifInfo_.Make << "\n"
+        << "Camera model       : " << exifInfo_.Model << "\n"
+        << "Lens Model         : " << exifInfo_.LensModel << "\n"
+        << "Software           : " << exifInfo_.Software << "\n"
+        << "Bits per sample    : " << exifInfo_.BitsPerSample << "\n"
+        << "Image width        : " << exifInfo_.ImageWidth << "\n"
+        << "Image height       : " << exifInfo_.ImageHeight << "\n"
+        << "Image description  : " << exifInfo_.ImageDescription << "\n"
+        << "Image orientation  : " << exifInfo_.Orientation << "\n"
+        << "Image copyright    : " << exifInfo_.Copyright << "\n"
+        << "Image date/time    : " << exifInfo_.DateTime << "\n"
+        << "Original date/time : " << exifInfo_.DateTimeOriginal << "\n"
+        << "Digitize date/time : " << exifInfo_.DateTimeDigitized << "\n"
+        << "Subsecond time     : " << exifInfo_.SubSecTimeOriginal << "\n"
+        << "Exposure time      : 1/" << (unsigned) (1.0/exifInfo_.ExposureTime) << "\n"
+        << "F-stop             : " << exifInfo_.FNumber << "\n"
+        << "ISO speed          : " << exifInfo_.ISOSpeedRatings << "\n"
+        << "Subject distance   : " << exifInfo_.SubjectDistance << "\n"
+        << "Exposure bias      : EV" << exifInfo_.ExposureBiasValue << "\n"
+        << "Flash used?        : " << exifInfo_.Flash << "\n"
+        << "Metering mode      : " << exifInfo_.MeteringMode << "\n"
+        << "Lens focal length  : mm\n" << exifInfo_.FocalLength << "\n"
+        << "35mm focal length  : mm\n" << exifInfo_.FocalLengthIn35mm << "\n"
+        << "GPS Latitude       : deg ( deg, min, sec )\n" << "("
         <<  exifInfo_.GeoLocation.Latitude << ", "
         <<  exifInfo_.GeoLocation.LatComponents.degrees << ", "
         <<  exifInfo_.GeoLocation.LatComponents.minutes << ", "
         <<  exifInfo_.GeoLocation.LatComponents.seconds << ", "
         <<  exifInfo_.GeoLocation.LatComponents.direction << ")" << "\n"
-        << "GPS Longitude     : deg ( deg, min, sec )\n" << "("
+        << "GPS Longitude      : deg ( deg, min, sec )\n" << "("
         <<  exifInfo_.GeoLocation.Longitude << ", "
         <<  exifInfo_.GeoLocation.LonComponents.degrees << ", "
         <<  exifInfo_.GeoLocation.LonComponents.minutes << ", "
         <<  exifInfo_.GeoLocation.LonComponents.seconds << ", "
         <<  exifInfo_.GeoLocation.LonComponents.direction << ")" << "\n"
-        << "GPS Altitude      : m" << exifInfo_.GeoLocation.Altitude << "\n";
+        << "GPS Altitude       : m" << exifInfo_.GeoLocation.Altitude << "\n"
+        << "Image Unique ID    : " << exifInfo_.ImageUniqueID << "\n"
+        << "Serial Number      : " << exifInfo_.SerialNumber << "\n"
+        << "Lens Serial Number : " << exifInfo_.LensSerialNumber << "\n";
       return os.str();
     }
 
