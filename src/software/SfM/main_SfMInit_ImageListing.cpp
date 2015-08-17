@@ -225,10 +225,10 @@ int main(int argc, char **argv)
       // Handle case where focal length is equal to 0
       if (exifReader->getFocal() == 0.0f)
       {
-        std::cerr << stlplus::basename_part(sImageFilename) << ": Focal length is missing." << std::endl;
-        continue;
+        std::cout << stlplus::basename_part(sImageFilename) << ": Focal length is missing." << std::endl;
+        focal = -1.0;
       }
-
+      else
       // Create the image entry in the list file
       {
         Datasheet datasheet;
