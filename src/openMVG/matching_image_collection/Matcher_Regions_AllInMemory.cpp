@@ -115,11 +115,11 @@ void Template_Matcher(
         continue;
 
       const features::Regions *regionsJ = regions_provider->regions_per_view.at(J).get();
-      const size_t regions_countJ = regionsJ->RegionCount();
-      if(regions_countJ == 0)
-      {
+      
+      if (regionsI->Type_id() != regionsJ->Type_id())
         continue;
-      }
+        
+      const size_t regions_countJ = regionsJ->RegionCount();
 
       const typename MatcherT::ScalarT * tabJ =
         reinterpret_cast<const typename MatcherT::ScalarT *>(regionsJ->DescriptorRawData());
@@ -131,7 +131,7 @@ void Template_Matcher(
       //Find left->right
       if (matcher10.SearchNeighbours(tabJ, regions_countJ, &vec_nIndice10, &vec_fDistance10, NNN__))
       {
-        std::vector<IndMatch> vec_FilteredMatches;
+        IndMatches vec_FilteredMatches;
         std::vector<int> vec_NNRatioIndexes;
         NNdistanceRatio(
           vec_fDistance10.begin(), // distance start
