@@ -321,6 +321,10 @@ ENDIF()
 # ==============================================================================
 IF (OpenMVG_USE_INTERNAL_OSI AND OpenMVG_USE_INTERNAL_CLP AND OpenMVG_USE_INTERNAL_COINUTILS)
   ADD_SUBDIRECTORY(dependencies/osi_clp/)
+  SET_PROPERTY(TARGET lib_clp PROPERTY FOLDER OpenMVG/3rdParty/lib_clp)
+  SET_PROPERTY(TARGET lib_CoinUtils PROPERTY FOLDER OpenMVG/3rdParty/lib_CoinUtils)
+  SET_PROPERTY(TARGET lib_Osi PROPERTY FOLDER OpenMVG/3rdParty/lib_Osi)
+  SET_PROPERTY(TARGET lib_OsiClpSolver PROPERTY FOLDER OpenMVG/3rdParty/lib_OsiClpSolver)
 ELSE()
   message(FATAL_ERROR
     "\n When you want to use OSI or CLP or COINUTILS as external librairies,\n"
@@ -339,7 +343,9 @@ IF(NOT DEFINED LEMON_INCLUDE_DIR_HINTS)
 ENDIF()
 FIND_PACKAGE(Lemon QUIET)
 IF(NOT LEMON_FOUND OR OpenMVG_USE_INTERNAL_LEMON)
-  SET(LEMON_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon)
+  SET(LEMON_INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon
+    ${PROJECT_BINARY_DIR}/third_party/lemon)
   SET(LEMON_LIBRARY lemon)
 ENDIF()
 

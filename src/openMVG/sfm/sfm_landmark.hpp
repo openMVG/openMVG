@@ -38,7 +38,7 @@ struct Observation
     ar(cereal::make_nvp("id_feat", id_feat ));
     std::vector<double> p(2);
     ar(cereal::make_nvp("x", p));
-    x << p[0], p[1];
+    x = Eigen::Map<const Vec2>(&p[0]);
   }
 };
 /// Observations are indexed by their View_id
@@ -64,7 +64,7 @@ struct Landmark
   {
     std::vector<double> point(3);
     ar(cereal::make_nvp("X", point ));
-    X << point[0], point[1], point[2];
+    X = Eigen::Map<const Vec3>(&point[0]);
     ar(cereal::make_nvp("observations", obs));
   }
 };
