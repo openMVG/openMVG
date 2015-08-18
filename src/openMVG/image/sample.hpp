@@ -300,12 +300,12 @@ struct RealPixel
   typedef T base_type ;
   typedef double real_type ;
 
-  static real_type convert_to_real( const base_type val )
+  static real_type convert_to_real( const base_type & val )
   {
     return static_cast<real_type>( val ) ;
   }
 
-  static base_type convert_from_real( const real_type val )
+  static base_type convert_from_real( const real_type & val )
   {
     return static_cast<base_type>( val );
   }
@@ -318,12 +318,12 @@ struct RealPixel<unsigned char>
   typedef unsigned char base_type ;
   typedef double real_type ;
 
-  static real_type convert_to_real( const base_type val )
+  static real_type convert_to_real( const base_type & val )
   {
     return static_cast<real_type>( val ) ;
   }
 
-  static base_type convert_from_real( const real_type val )
+  static base_type convert_from_real( const real_type & val )
   {
     // handle out of range values.
     return (val < 0.0) ?
@@ -341,12 +341,12 @@ struct RealPixel<float>
   typedef float base_type ;
   typedef double real_type ;
 
-  static real_type convert_to_real( const base_type val )
+  static real_type convert_to_real( const base_type & val )
   {
     return val ;
   }
 
-  static base_type convert_from_real( const real_type val )
+  static base_type convert_from_real( const real_type & val )
   {
     return val ;
   }
@@ -359,12 +359,12 @@ struct RealPixel< Rgb<T> >
   typedef Rgb<T> base_type ;
   typedef Rgb<double> real_type ;
 
-  static real_type convert_to_real( const base_type val )
+  static real_type convert_to_real( const base_type & val )
   {
     return real_type( val.template cast<double>() ) ;
   }
 
-  static base_type convert_from_real( const real_type val )
+  static base_type convert_from_real( const real_type & val )
   {
     return base_type( RealPixel<T>::convert_from_real( val.r() ) ,
                       RealPixel<T>::convert_from_real( val.g() ) ,
@@ -379,12 +379,12 @@ struct RealPixel< Rgba<T> >
   typedef Rgba<T> base_type ;
   typedef Rgba<double> real_type ;
 
-  static real_type convert_to_real( const base_type val )
+  static real_type convert_to_real( const base_type & val )
   {
     return real_type( val.template cast<double>() );
   }
 
-  static base_type convert_from_real( const real_type val )
+  static base_type convert_from_real( const real_type & val )
   {
     return base_type( RealPixel<T>::convert_from_real( val.r() ) ,
                       RealPixel<T>::convert_from_real( val.g() ) ,
