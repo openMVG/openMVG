@@ -91,7 +91,7 @@ struct Hamming
 
   static inline unsigned int popcnt64(uint64_t n)
   {
-#ifdef _MSC_VER
+#if defined _MSC_VER && defined PLATFORM_64_BIT
     return __popcnt64(n);
 #else
 #if (defined __GNUC__ || defined __clang__)
