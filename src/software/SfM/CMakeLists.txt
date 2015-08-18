@@ -30,7 +30,7 @@ INSTALL(TARGETS openMVG_main_ConvertList DESTINATION bin/)
 ###
 # Add executable that computes:
 # - openMVG_main_ComputeFeatures: features and descriptors
-# - openMVG_main_ComputeMatches: putatives matches + geometric filtered matches
+# - openMVG_main_ComputeMatches: putative matches + geometric filtered matches
 ###
 
 ADD_EXECUTABLE(openMVG_main_ComputeFeatures main_ComputeFeatures.cpp)
@@ -285,6 +285,8 @@ SET_PROPERTY(TARGET openMVG_main_openMVG2MESHLAB PROPERTY FOLDER OpenMVG/softwar
 INSTALL(TARGETS openMVG_main_openMVG2MESHLAB DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_openMVG2MVSTEXTURING PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_openMVG2MVSTEXTURING DESTINATION bin/)
+SET_PROPERTY(TARGET openMVG_main_openMVG2MVE2 PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_openMVG2MVE2 DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_ExportCameraFrustums PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ExportCameraFrustums DESTINATION bin/)
 
@@ -347,7 +349,12 @@ INSTALL(TARGETS openMVG_main_evalQuality DESTINATION bin/)
 # Export tutorial with valid path thanks to a configuration file
 ##
 SET(OPENMVG_SOFTWARE_SFM_SRC_DIR ${CMAKE_CURRENT_LIST_DIR})
-SET(OPENMVG_SOFTWARE_SFM_BUILD_DIR ${EXECUTABLE_OUTPUT_PATH})
+IF(MSVC OR APPLE)
+  SET(OPENMVG_SOFTWARE_SFM_BUILD_DIR "${EXECUTABLE_OUTPUT_PATH}/${CMAKE_BUILD_TYPE}")
+ELSE()
+  SET(OPENMVG_SOFTWARE_SFM_BUILD_DIR ${EXECUTABLE_OUTPUT_PATH})
+ENDIF()
+
 SET(OPENMVG_TUTORIAL_IN_FILE "${CMAKE_CURRENT_LIST_DIR}/tutorial_demo.py.in")
 CONFIGURE_FILE(${OPENMVG_TUTORIAL_IN_FILE}
     "${CMAKE_CURRENT_BINARY_DIR}/tutorial_demo.py" @ONLY)

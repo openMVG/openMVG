@@ -174,9 +174,12 @@ int main(int argc, char **argv)
   Views & views = sfm_data.views;
   Intrinsics & intrinsics = sfm_data.intrinsics;
 
+  C_Progress_display my_progress_bar( vec_image.size(),
+      std::cout, "\n- Image listing -\n" );
+  std::ostringstream error_report_stream;
   for ( std::vector<std::string>::const_iterator iter_image = vec_image.begin();
     iter_image != vec_image.end();
-    iter_image++ )
+    ++iter_image, ++my_progress_bar )
   {
     // Read meta data to fill camera parameter (w,h,focal,ppx,ppy) fields.
     width = height = ppx = ppy = focal = -1.0;
@@ -224,10 +227,11 @@ int main(int argc, char **argv)
       // Handle case where focal length is equal to 0
       if (exifReader->getFocal() == 0.0f)
       {
-        std::cerr << stlplus::basename_part(sImageFilename) << ": Focal length is missing." << std::endl;
-        continue;
+        error_report_stream
+          << stlplus::basename_part(sImageFilename) << ": Focal length is missing." << "\n";
+        focal = -1.0;
       }
-
+      else
       // Create the image entry in the list file
       {
         Datasheet datasheet;
@@ -239,9 +243,10 @@ int main(int argc, char **argv)
         }
         else
         {
-          std::cout << stlplus::basename_part(sImageFilename) << ": Camera \""
-            << sCamName << "\" model \"" << sCamModel << "\" doesn't exist in the database" << std::endl
-            << "Please consider add your camera model and sensor width in the database." << std::endl;
+          error_report_stream
+            << stlplus::basename_part(sImageFilename) << ": Camera \""
+            << sCamName << "\" model \"" << sCamModel << "\" doesn't exist in the database" << "\n"
+            << "Please consider add your camera model and sensor width in the database." << "\n";
         }
       }
     }
@@ -267,7 +272,8 @@ int main(int argc, char **argv)
             (width, height, focal, ppx, ppy, 0.0, 0.0, 0.0);  // setup no distortion as initial guess
         break;
         default:
-          std::cout << "Unknown camera model: " << (int) e_User_camera_model << std::endl;
+          std::cerr << "Error: unknown camera model: " << (int) e_User_camera_model << std::endl;
+          return EXIT_FAILURE;
       }
     }
 
@@ -289,6 +295,14 @@ int main(int argc, char **argv)
 
     // Add the view to the sfm_container
     views[v.id_view] = std::make_shared<View>(v);
+  }
+
+  // Display saved warning & error messages if any.
+  if (!error_report_stream.str().empty())
+  {
+    std::cerr
+      << "\nWarning & Error messages:" << std::endl
+      << error_report_stream.str() << std::endl;
   }
 
   // Group camera that share common properties if desired (leads to more faster & stable BA).

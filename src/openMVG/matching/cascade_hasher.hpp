@@ -280,6 +280,8 @@ public:
     // feature for matching (i.e., prevents duplicates).
     std::vector<bool> used_descriptor(hashed_descriptions2.hashed_desc.size());
 
+    typedef matching::Hamming<stl::dynamic_bitset::BlockType> HammingMetricType;
+    static const HammingMetricType metricH = {};
     for (int i = 0; i < hashed_descriptions1.hashed_desc.size(); ++i)
     {
       candidate_descriptors.clear();
@@ -314,9 +316,8 @@ public:
         if (!used_descriptor[candidate_id]) // avoid selecting the same candidate multiple times
         {
           used_descriptor[candidate_id] = true;
-          typedef matching::Hamming<stl::dynamic_bitset::BlockType> HammingMetricType;
-          static const HammingMetricType metric;
-          const HammingMetricType::ResultType hamming_distance = metric(
+          
+          const HammingMetricType::ResultType hamming_distance = metricH(
             hashed_desc.hash_code.data(),
             hashed_descriptions2.hashed_desc[candidate_id].hash_code.data(),
             hashed_desc.hash_code.num_blocks());
