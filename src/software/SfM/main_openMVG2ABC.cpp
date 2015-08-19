@@ -1,5 +1,8 @@
 #include <cstdlib>
 
+// Command line
+#include "third_party/cmdLine/cmdLine.h"
+
 // OpenMVG
 #include "openMVG/sfm/sfm.hpp"
 #include "openMVG/numeric/numeric.h"
@@ -14,23 +17,45 @@ namespace AbcG = Alembic::AbcGeom;
 using namespace AbcG;
 
 
-int main(int argc, const char **argv) {
+int main(int argc, char **argv) {
    
-    //
-    SfM_Data sfm_data;
-    std::string filename = {"sfm_data.json"};// FIXME: give a correct file name
-    if (!Load(sfm_data, filename, ESfM_Data(ALL))) {
-        std::cerr << std::endl
-        << "Error: The input project file \""<< filename << "\" cannot be read." << std::endl;
-        return EXIT_FAILURE;
-    }
-  
-    if (sfm_data.GetLandmarks().size() == 0) {
-        std::cerr << "Error: no landmarks found" << std::endl;
+    // Get arguments
+    CmdLine cmdLine;
+    std::string sfmDataFilename;
+    std::string sOutAlembic = "";
+
+    cmdLine.add(make_option('i', sfmDataFilename, "sfmdata"));
+    cmdLine.add(make_option('o', sOutAlembic, "outfile"));
+
+    try {
+        if (argc < 4) throw std::string("Invalid number of parameters in the command line.");
+        cmdLine.process(argc, argv);
+    } catch(const std::string &s) {
+        std::cout << "openMVG to alembic" << std::endl;
+        std::cout << "Usage: " << argv[0] << '\n'
+        << "[-i|--sfmdata filename, the SfM_Data file to convert]\n"
+        << "[-o|--outfile path]\n"
+        << std::endl;
+        std::cerr << s << std::endl;
         return EXIT_FAILURE;
     }
 
-    // Fill vector with the values taken from OpenMVG 
+    //
+    SfM_Data sfm_data;
+    if (!Load(sfm_data, sfmDataFilename, ESfM_Data(ALL))) {
+        cout << "Error: The input project file \""<< sfmDataFilename << "\" cannot be read." << std::endl;
+        return EXIT_FAILURE;
+    }
+  
+    // Open Alembic archive
+    // TODO: decide wether we want to keep HDF5 or switch to Ogawa 
+    OArchive archive(Alembic::AbcCoreHDF5::WriteArchive(), sOutAlembic);
+    OObject topObj(archive, kTop);
+
+    //=================================================================================
+    // Export points
+    //=================================================================================
+
     std::vector<V3f> positions;
     positions.reserve(sfm_data.GetLandmarks().size());
 
@@ -43,18 +68,13 @@ int main(int argc, const char **argv) {
     std::vector<Alembic::Util::uint64_t> ids(positions.size());
     iota(begin(ids), end(ids), 0);
 
-    // TODO: decide wether we want to keep HDF5 or switch to Ogawa 
-    // FIXME : dynamic output filename instead of test
-    OArchive archive(Alembic::AbcCoreHDF5::WriteArchive(), "test.abc");
-
-    OObject topObj(archive, kTop);
     OPoints partsOut(topObj, "particleShape1");
     OPointsSchema &pSchema = partsOut.getSchema();
-
     OPointsSchema::Sample psamp( move(V3fArraySample (positions)), move(UInt64ArraySample ( ids )));
     pSchema.set( psamp );
+
     //=================================================================================
-    //
+    // Export cameras
     //=================================================================================
     for(const auto it: sfm_data.GetViews()) {
         const View * view = it.second.get();
@@ -104,7 +124,6 @@ int main(int argc, const char **argv) {
         
         xformMatrix = scale2*xformMatrix*scale;
 
-        // Set the matrix in the sample
         XformSample xformsample;
         xformsample.setMatrix(xformMatrix);
 
@@ -114,26 +133,33 @@ int main(int argc, const char **argv) {
         xform.getSchema().set(xformsample);
 
         // Camera intrinsic parameters
-        // K is of the form:
-        // 10861.9      -3.41061e-13 2879
-        // 5.68434e-14  10861.9      1927.38
-        // 0            0            1
-        // Unit is pixels !!!
-        // as we don't have the original film back, we set the horizontal aperture to 1mm
-        // is equal to one and deduce the focal length from it
-        const double widthPixels = static_cast<double>(cam->w());
-        const double heightPixels = static_cast<double>(cam->h()); 
-        const double focalLength = K(0,0)/widthPixels; // in mm
-        const double horizontalAperture = 0.1; // in cm
-        const double verticalAperture = 0.1*heightPixels/widthPixels; // in cm
-        //const double verticalFilmOffset = 0.0;
-        //const double horizontalFilmOffset = 0.0;
         OCamera camObj(xform, "camera_" + ss.str());
         CameraSample camSample;
-        
+    
+        // Take the max of the image size to handle the case where the image is in portrait mode 
+        const float imgWidth = cam->w();  
+        const float imgHeight = cam->h(); 
+        const float sensorWidthPix = std::max(imgWidth, imgHeight);
+        const float sensorHeightPix = std::min(imgWidth, imgHeight);
+        const float focalLengthPix = K(0,0);
+        const float dx = K(0,2);
+        const float dy = K(1,2);
+        // Use a common sensor width as we don't have this information at this point
+        // We chose a full frame 24x36 camera
+        const float sensorWidth = 36.0; // 36mm per default
+        const float sensorHeight = sensorWidth*sensorHeightPix/sensorWidthPix;
+        const float focalLength = sensorWidth*focalLengthPix/sensorWidthPix;
+        // Following values are in cm, hence the 0.1 multiplier
+        const float hoffset = 0.1*sensorWidth*(0.5-dx/imgWidth);
+        const float voffset = 0.1*sensorHeight*(dy/imgHeight-0.5)*sensorHeightPix/sensorWidthPix;
+        const float haperture = 0.1*sensorWidth*imgWidth/sensorWidthPix;
+        const float vaperture = 0.1*sensorWidth*imgHeight/sensorWidthPix;
+
         camSample.setFocalLength(focalLength);
-        camSample.setHorizontalAperture(horizontalAperture);
-        camSample.setVerticalAperture(verticalAperture);
+        camSample.setHorizontalAperture(haperture);
+        camSample.setVerticalAperture(vaperture);
+        camSample.setHorizontalFilmOffset(hoffset);
+        camSample.setVerticalFilmOffset(voffset);
 
         camObj.getSchema().set( camSample );
     } 
