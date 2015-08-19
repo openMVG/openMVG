@@ -18,7 +18,8 @@ MESSAGE(STATUS "Looking for Alembic. 1.5.8")
 ################################################################################
 # IlmBase include dir for half and ilm libraries used in alembic
 ################################################################################
-# Alembic includes half.h for a single function "half to float", this is sad
+
+# Alembic includes half.h for a single function "half to float", this is unfortunate
 FIND_PATH(ABC_HALF_INCLUDE_DIR half.h
     HINTS
     ${ALEMBIC_ILMBASE_ROOT}/include/OpenEXR
@@ -75,8 +76,7 @@ FIND_PATH(ABC_INCLUDE_DIR Alembic/Abc/All.h
 )
 
 #
-# We force the use of dynamic libraries as using the static ones had caused some 
-# initialization problems.
+# We force the use of dynamic libraries as with using the static ones we had initialization problems.
 FIND_PATH(ABC_LIBRARY_DIR libAlembicAbc.so
     PATHS
         ${ALEMBIC_ROOT}/lib
@@ -84,13 +84,6 @@ FIND_PATH(ABC_LIBRARY_DIR libAlembicAbc.so
         $ENV{ALEMBIC_ROOT}/lib
         $ENV{ALEMBIC_ROOT}/lib64
     NO_DEFAULT_PATH)
-#FIND_LIBRARY(ABC_COLLECTION libAlembicAbcCollection.so PATHS ${ABC_LIBRARY_DIR})
-#FIND_LIBRARY(ABC_COREFACTORY libAlembicAbcCoreFactory.so PATHS ${ABC_LIBRARY_DIR})
-#FIND_LIBRARY(ABC_COREOGAWA libAlembicAbcCoreOgawa.so PATHS ${ABC_LIBRARY_DIR})
-#FIND_LIBRARY(ABC_MATERIAL libAlembicAbcMaterial.so PATHS ${ABC_LIBRARY_DIR})
-#FIND_LIBRARY(ABC_OGAWA libAlembicOgawa.so PATHS ${ABC_LIBRARY_DIR})
-#FIND_LIBRARY(ABC_OPENGL libAlembicAbcOpenGL.so PATHS ${ABC_LIBRARY_DIR})
-#FIND_LIBRARY(ABC_WFOBJCONVERT libAbcWFObjConvert.so PATHS ${ABC_LIBRARY_DIR})
 FIND_LIBRARY(ABC libAlembicAbc.so PATHS ${ABC_LIBRARY_DIR})
 FIND_LIBRARY(ABC_COREABSTRACT libAlembicAbcCoreAbstract.so PATHS ${ABC_LIBRARY_DIR})
 FIND_LIBRARY(ABC_COREHDF5 libAlembicAbcCoreHDF5.so PATHS ${ABC_LIBRARY_DIR})
