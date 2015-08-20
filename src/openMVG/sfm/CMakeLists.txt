@@ -23,11 +23,11 @@ SET_TARGET_PROPERTIES(openMVG_sfm PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} 
 INSTALL(TARGETS openMVG_sfm DESTINATION lib EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG sfm_data_io
-  "openMVG_features;openMVG_sfm;openMVG_system;stlplus;${openMVG_linearProgramming}")
+  "openMVG_features;openMVG_sfm;openMVG_system;stlplus;${openMVG_lInftyComputerVision}")
 UNIT_TEST(openMVG sfm_data_BA
-  "openMVG_multiview_test_data;openMVG_features;openMVG_multiview;openMVG_sfm;openMVG_system;stlplus;${openMVG_linearProgramming}")
+  "openMVG_multiview_test_data;openMVG_features;openMVG_multiview;openMVG_sfm;openMVG_system;stlplus;${openMVG_lInftyComputerVision}")
 UNIT_TEST(openMVG sfm_data_utils
-  "openMVG_features;openMVG_multiview;openMVG_sfm;stlplus;${openMVG_linearProgramming}")
+  "openMVG_features;openMVG_multiview;openMVG_sfm;stlplus;${openMVG_lInftyComputerVision}")
 
 ADD_SUBDIRECTORY(pipelines)
 
