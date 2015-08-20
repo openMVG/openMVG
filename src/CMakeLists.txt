@@ -325,10 +325,6 @@ IF (OpenMVG_USE_INTERNAL_OSI AND OpenMVG_USE_INTERNAL_CLP AND OpenMVG_USE_INTERN
   SET_PROPERTY(TARGET lib_CoinUtils PROPERTY FOLDER OpenMVG/3rdParty/lib_CoinUtils)
   SET_PROPERTY(TARGET lib_Osi PROPERTY FOLDER OpenMVG/3rdParty/lib_Osi)
   SET_PROPERTY(TARGET lib_OsiClpSolver PROPERTY FOLDER OpenMVG/3rdParty/lib_OsiClpSolver)
-ELSE()
-  message(FATAL_ERROR
-    "\n When you want to use OSI or CLP or COINUTILS as external librairies,\n"
-    " please use the three as external.\n")
 ENDIF()
 
 # ==============================================================================
