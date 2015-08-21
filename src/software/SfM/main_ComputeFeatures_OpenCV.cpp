@@ -234,6 +234,8 @@ int main(int argc, char **argv)
 #ifdef USE_OCVSIFT
   std::string sImage_Describer_Method = "AKAZE_OPENCV";
 #endif
+  int rangeStart = -1;
+  int rangeSize = 1;
 
   // required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -243,6 +245,8 @@ int main(int argc, char **argv)
 #ifdef USE_OCVSIFT
   cmd.add( make_option('m', sImage_Describer_Method, "describerMethod") );
 #endif
+  cmd.add( make_option('s', rangeStart, "range_start") );
+  cmd.add( make_option('r', rangeSize, "range_size") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -259,6 +263,8 @@ int main(int argc, char **argv)
       << "   AKAZE_OPENCV (default),\n"
       << "   SIFT_OPENCV: SIFT FROM OPENCV,\n"
 #endif
+      << "[-s]--range_start] range image index start\n"
+      << "[-r]--range_size] range size\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -273,6 +279,8 @@ int main(int argc, char **argv)
             << "--describerMethod " << sImage_Describer_Method << std::endl
 #endif
             ;
+            << "--range_start " << rangeStart << std::endl
+            << "--range_size " << rangeSize << std::endl;
 
   if (sOutDir.empty())  {
     std::cerr << "\nIt is an invalid output directory" << std::endl;
@@ -362,8 +370,29 @@ int main(int argc, char **argv)
     Image<unsigned char> imageGray;
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
-    for(Views::const_iterator iterViews = sfm_data.views.begin();
-        iterViews != sfm_data.views.end();
+    Views::const_iterator iterViews = sfm_data.views.begin();
+    Views::const_iterator iterViewsEnd = sfm_data.views.end();
+    if(rangeStart != -1)
+    {
+      if(rangeStart < 0 || rangeStart > sfm_data.views.size())
+      {
+        std::cerr << "Bad specific index" << std::endl;
+        return EXIT_FAILURE;
+      }
+      if(rangeSize < 0 || rangeSize > sfm_data.views.size())
+      {
+        std::cerr << "Bad range size. " << std::endl;
+        return EXIT_FAILURE;
+      }
+      if(rangeStart + rangeSize > sfm_data.views.size())
+        rangeSize = sfm_data.views.size() - rangeStart;
+
+      std::advance(iterViews, rangeStart);
+      iterViewsEnd = iterViews;
+      std::advance(iterViewsEnd, rangeSize);
+    }
+    for(;
+        iterViews != iterViewsEnd;
         ++iterViews, ++my_progress_bar)
     {
       const View * view = iterViews->second.get();
@@ -381,7 +410,9 @@ int main(int argc, char **argv)
           continue;
 
         // Compute features and descriptors and export them to files
+        std::cout << "Extracting features from image " << view->id_view << std::endl;
         std::unique_ptr<Regions> regions;
+
         image_describer->Describe(imageGray, regions);
         image_describer->Save(regions.get(), sFeat, sDesc);
       }
