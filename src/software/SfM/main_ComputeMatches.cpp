@@ -67,11 +67,14 @@ int main(int argc, char **argv)
   float fDistRatio = .6f;
   int iMatchingVideoMode = -1;
   std::string sPredefinedPairList = "";
-  int specificIndex = -1;
+  int rangeStart = -1;
+  int rangeSize = 1;
   bool bUpRight = false;
   std::string sNearestMatchingMethod = "AUTO";
   bool bForce = false;
   bool bGuided_matching = false;
+  bool matchFilePerImage = false;
+  bool orderPairs = false;
 
   //required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -81,10 +84,13 @@ int main(int argc, char **argv)
   cmd.add( make_option('g', sGeometricModel, "geometric_model") );
   cmd.add( make_option('v', iMatchingVideoMode, "video_mode_matching") );
   cmd.add( make_option('l', sPredefinedPairList, "pair_list") );
-  cmd.add( make_option('x', specificIndex, "specific_index") );
+  cmd.add( make_option('s', rangeStart, "range_start") );
+  cmd.add( make_option('r', rangeSize, "range_size") );
   cmd.add( make_option('n', sNearestMatchingMethod, "nearest_matching_method") );
   cmd.add( make_option('f', bForce, "force") );
   cmd.add( make_option('m', bGuided_matching, "guided_matching") );
+  cmd.add( make_option('x', matchFilePerImage, "match_file_per_image") );
+  cmd.add( make_option('p', orderPairs, "order_pairs") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -109,8 +115,11 @@ int main(int argc, char **argv)
       << "   3: will match 0 with (1,2,3), 1 with (2,3,4), ...\n"
       << "[-l]--pair_list] filepath\n"
       << "  A file which contains the list of matches to perform.\n"
-      << "[-x]--specific_index] image index\n"
-      << "  To compute only the matches for the specified image index.\n"
+      << "[-s]--range_start] range image index start\n"
+      << "  To compute only the matches for specified range.\n"
+      << "  This allows to compute different matches on different computers in parallel.\n"
+      << "[-r]--range_size] range size\n"
+      << "  To compute only the matches for specified range.\n"
       << "  This allows to compute different matches on different computers in parallel.\n"
       << "[-n|--nearest_matching_method]\n"
       << "  AUTO: auto choice from regions type,\n"
@@ -118,7 +127,11 @@ int main(int argc, char **argv)
       << "  BRUTEFORCEHAMMING: BruteForce Hamming matching for binary based regions descriptor,\n"
       << "  ANNL2: Approximate Nearest Neighbor L2 matching for Scalar based regions descriptor.\n"
       << "[-m|--guided_matching]\n"
-      << "  use the found model to improve the pairwise correspondences."
+      << "  use the found model to improve the pairwise correspondences.\n"
+      << "[-x|--match_file_per_image]\n"
+      << "  Save matches in a separate file per image\n"
+      << "[-p|--order_pairs]\n"
+      << "  Order the pairs"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -135,9 +148,12 @@ int main(int argc, char **argv)
             << "--geometric_model " << sGeometricModel << "\n"
             << "--video_mode_matching " << iMatchingVideoMode << "\n"
             << "--pair_list " << sPredefinedPairList << "\n"
-            << "--specific_index " << specificIndex << "\n"
+            << "--range_start " << rangeStart <<  "\n"
+            << "--range_size " << rangeSize <<  "\n"
             << "--nearest_matching_method " << sNearestMatchingMethod << "\n"
-            << "--guided_matching " << bGuided_matching << std::endl;
+            << "--guided_matching " << bGuided_matching << "\n"
+            << "--order_pairs " << orderPairs << "\n"
+            << "--match_file_per_image " << matchFilePerImage << std::endl;
 
   EPairMode ePairmode = (iMatchingVideoMode == -1 ) ? PAIR_EXHAUSTIVE : PAIR_CONTIGUOUS;
 
@@ -175,11 +191,6 @@ int main(int argc, char **argv)
     default:
       std::cerr << "Unknown geometric model" << std::endl;
       return EXIT_FAILURE;
-  }
-  if( specificIndex != -1 )
-  {
-    sGeometricMatchesFilename = std::to_string(specificIndex) + "." + sGeometricMatchesFilename;
-    sPutativeMatchesFilename = std::to_string(specificIndex) + "." + sPutativeMatchesFilename;
   }
 
   // -----------------------------
@@ -308,18 +319,18 @@ int main(int argc, char **argv)
         case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(sfm_data.GetViews().size()); break;
         case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(sfm_data.GetViews().size(), iMatchingVideoMode); break;
         case PAIR_FROM_FILE:
-          if(!loadPairs(sfm_data.GetViews().size(), sPredefinedPairList, pairs))
+          if(!loadPairs(sfm_data.GetViews().size(), sPredefinedPairList, pairs, orderPairs))
           {
               return EXIT_FAILURE;
-          };
+          }
           break;
       }
-      // If we have a specificIndex, only compute the matching for (specificIndex, X).
-      if( specificIndex != -1 )
+      // If we have a rangeStart, only compute the matching for (rangeStart, X).
+      if(rangeStart != -1)
       {
         Pair_Set specificedPairs;
         for (const Pair& p: pairs)
-          if( p.first == specificIndex )
+          if( p.first >= rangeStart && p.first <= rangeStart + rangeSize)
             specificedPairs.insert(p);
         pairs = specificedPairs;
       }
@@ -328,10 +339,14 @@ int main(int argc, char **argv)
       //---------------------------------------
       //-- Export putative matches
       //---------------------------------------
-      std::ofstream file (std::string(sMatchesDirectory + "/" + sPutativeMatchesFilename).c_str());
-      if (file.is_open())
-        PairedIndMatchToStream(map_PutativesMatches, file);
-      file.close();
+      if( !matchFilePerImage )
+      {
+        ExportPairedIndMatchFile(map_PutativesMatches, std::string(sMatchesDirectory + "/" + sPutativeMatchesFilename).c_str());
+      }
+      else
+      {
+        ExportPairedIndMatchFilePerImage(map_PutativesMatches, sMatchesDirectory, sPutativeMatchesFilename);
+      }
     }
     std::cout << "Task (Regions Loading+Matching) done in (s): " << timer.elapsed() << std::endl;
   }
@@ -412,10 +427,14 @@ int main(int argc, char **argv)
     //---------------------------------------
     //-- Export geometric filtered matches
     //---------------------------------------
-    std::ofstream file (string(sMatchesDirectory + "/" + sGeometricMatchesFilename).c_str());
-    if (file.is_open())
-      PairedIndMatchToStream(map_GeometricMatches, file);
-    file.close();
+    if( !matchFilePerImage )
+    {
+      ExportPairedIndMatchFile(map_PutativesMatches, std::string(sMatchesDirectory + "/" + sGeometricMatchesFilename).c_str());
+    }
+    else
+    {
+      ExportPairedIndMatchFilePerImage(map_PutativesMatches, sMatchesDirectory, sGeometricMatchesFilename);
+    }
 
     std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
 
