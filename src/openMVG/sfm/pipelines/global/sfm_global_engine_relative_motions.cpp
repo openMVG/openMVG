@@ -444,8 +444,8 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
 
   // Check that poses & intrinsic cover some measures (after outlier removal)
   const IndexT minPointPerPose = 12; // 6 min
-  const IndexT minTrackLenght = 3; // 2 min
-  if (eraseUnstablePosesAndObservations(_sfm_data, minPointPerPose, minTrackLenght))
+  const IndexT minTrackLength = 3; // 2 min
+  if (eraseUnstablePosesAndObservations(_sfm_data, minPointPerPose, minTrackLength))
   {
     // TODO: must ensure that track graph is producing a single connected component
 
