@@ -28,22 +28,6 @@ using namespace openMVG::features;
 using namespace openMVG::sfm;
 using namespace std;
 
-features::EDESCRIBER_PRESET stringToEnum(const std::string & sPreset)
-{
-  features::EDESCRIBER_PRESET preset;
-  if(sPreset == "NORMAL")
-    preset = features::NORMAL_PRESET;
-  else
-  if (sPreset == "HIGH")
-    preset = features::HIGH_PRESET;
-  else
-  if (sPreset == "ULTRA")
-    preset = features::ULTRA_PRESET;
-  else
-    preset = features::EDESCRIBER_PRESET(-1);
-  return preset;
-}
-
 
 /// - Compute view image description (feature & descriptor extraction)
 /// - Export computed data
@@ -191,7 +175,7 @@ int main(int argc, char **argv)
     else
     {
       if (!sFeaturePreset.empty())
-      if (!image_describer->Set_configuration_preset(stringToEnum(sFeaturePreset)))
+      if (!image_describer->Set_configuration_preset(sFeaturePreset))
       {
         std::cerr << "Preset configuration failed." << std::endl;
         return EXIT_FAILURE;
