@@ -234,6 +234,7 @@ int main(int argc, char **argv)
 #ifdef USE_OCVSIFT
   std::string sImage_Describer_Method = "AKAZE_OPENCV";
 #endif
+  std::string sFeaturePreset = "NORMAL";
   int rangeStart = -1;
   int rangeSize = 1;
 
@@ -245,6 +246,7 @@ int main(int argc, char **argv)
 #ifdef USE_OCVSIFT
   cmd.add( make_option('m', sImage_Describer_Method, "describerMethod") );
 #endif
+  cmd.add( make_option('p', sFeaturePreset, "describerPreset") );
   cmd.add( make_option('s', rangeStart, "range_start") );
   cmd.add( make_option('r', rangeSize, "range_size") );
 
@@ -263,6 +265,13 @@ int main(int argc, char **argv)
       << "   AKAZE_OPENCV (default),\n"
       << "   SIFT_OPENCV: SIFT FROM OPENCV,\n"
 #endif
+      << "[-p|--describerPreset]\n"
+      << "  (used to control the Image_describer configuration):\n"
+      << "   LOW,\n"
+      << "   MEDIUM,\n"
+      << "   NORMAL (default),\n"
+      << "   HIGH,\n"
+      << "   ULTRA: !!Can take long time!!\n"
       << "[-s]--range_start] range image index start\n"
       << "[-r]--range_size] range size\n"
       << std::endl;
@@ -278,7 +287,7 @@ int main(int argc, char **argv)
 #ifdef USE_OCVSIFT
             << "--describerMethod " << sImage_Describer_Method << std::endl
 #endif
-            ;
+            << "--describerPreset " << sFeaturePreset << std::endl
             << "--range_start " << rangeStart << std::endl
             << "--range_size " << rangeSize << std::endl;
 
@@ -345,6 +354,8 @@ int main(int argc, char **argv)
 #else
     image_describer.reset(new AKAZE_OCV_Image_describer);
 #endif
+
+    image_describer->Set_configuration_preset(sFeaturePreset);
 
     // Export the used Image_describer and region type for:
     // - dynamic future regions computation and/or loading
