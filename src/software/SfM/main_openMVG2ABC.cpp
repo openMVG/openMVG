@@ -1,3 +1,10 @@
+// Copyright (c) 2015 cpichard.
+//
+// // This Source Code Form is subject to the terms of the Mozilla Public
+// // License, v. 2.0. If a copy of the MPL was not distributed with this
+// // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
 #include <cstdlib>
 
 // Command line
@@ -16,7 +23,6 @@ using namespace Alembic::Abc;
 namespace AbcG = Alembic::AbcGeom;
 using namespace AbcG;
 
-
 int main(int argc, char **argv) {
    
     // Get arguments
@@ -31,7 +37,7 @@ int main(int argc, char **argv) {
         if (argc < 4) throw std::string("Invalid number of parameters in the command line.");
         cmdLine.process(argc, argv);
     } catch(const std::string &s) {
-        std::cout << "openMVG to alembic" << std::endl;
+        std::cout << "openMVG to alembic\n";
         std::cout << "Usage: " << argv[0] << '\n'
         << "[-i|--sfmdata filename, the SfM_Data file to convert]\n"
         << "[-o|--outfile path]\n"
@@ -43,7 +49,8 @@ int main(int argc, char **argv) {
     //
     SfM_Data sfm_data;
     if (!Load(sfm_data, sfmDataFilename, ESfM_Data(ALL))) {
-        cout << "Error: The input project file \""<< sfmDataFilename << "\" cannot be read." << std::endl;
+        std::cout << "Error: The input project file \""
+                  << sfmDataFilename << "\" cannot be read." << std::endl;
         return EXIT_FAILURE;
     }
   
@@ -66,11 +73,11 @@ int main(int argc, char **argv) {
     }
 
     std::vector<Alembic::Util::uint64_t> ids(positions.size());
-    iota(begin(ids), end(ids), 0);
+    std::iota(std::begin(ids), std::end(ids), 0);
 
     OPoints partsOut(topObj, "particleShape1");
     OPointsSchema &pSchema = partsOut.getSchema();
-    OPointsSchema::Sample psamp( move(V3fArraySample (positions)), move(UInt64ArraySample ( ids )));
+    OPointsSchema::Sample psamp( std::move(V3fArraySample (positions)), std::move(UInt64ArraySample ( ids )));
     pSchema.set( psamp );
 
     //=================================================================================
@@ -88,13 +95,16 @@ int main(int argc, char **argv) {
         openMVG::Mat34 P = cam->get_projective_equivalent(pose);
 
         // Extract internal matrix, rotation and translation
-        openMVG::Mat3 R, K;
-        openMVG::Vec3 t;
-        openMVG::KRt_From_P(P, &K, &R, &t);
-        
+        //openMVG::Mat3 R, K;
+        //openMVG::Vec3 t;
+        //openMVG::KRt_From_P(P, &K, &R, &t);
+       
+        const openMVG::Mat3 R = pose.rotation();
+        const openMVG::Vec3 center = pose.center();
+
         // POSE
         // Compensate translation with rotation
-        openMVG::Vec3 center = R.transpose() * t;
+        //openMVG::Vec3 center = R.transpose() * t;
         // Build transform matrix
         Abc::M44d xformMatrix;
         xformMatrix[0][0]= R(0,0);
@@ -111,18 +121,12 @@ int main(int argc, char **argv) {
         xformMatrix[3][2]= center(2);
         xformMatrix[3][3]= 1.0;
 
-        // Get correct camera orientation
+        // Correct camera orientation for alembic
         M44d scale;
-        scale[0][0] = -1;
         scale[1][1] = -1;
         scale[2][2] = -1;
-
-        M44d scale2;
-        scale2[0][0] = -1;
-        scale2[1][1] = 1;
-        scale2[2][2] = 1;
         
-        xformMatrix = scale2*xformMatrix*scale;
+        xformMatrix = scale*xformMatrix;
 
         XformSample xformsample;
         xformsample.setMatrix(xformMatrix);
@@ -141,9 +145,9 @@ int main(int argc, char **argv) {
         const float imgHeight = cam->h(); 
         const float sensorWidthPix = std::max(imgWidth, imgHeight);
         const float sensorHeightPix = std::min(imgWidth, imgHeight);
-        const float focalLengthPix = K(0,0);
-        const float dx = K(0,2);
-        const float dy = K(1,2);
+        const float focalLengthPix = cam->focal();
+        const float dx = cam->principal_point()(0);
+        const float dy = cam->principal_point()(1);
         // Use a common sensor width as we don't have this information at this point
         // We chose a full frame 24x36 camera
         const float sensorWidth = 36.0; // 36mm per default
