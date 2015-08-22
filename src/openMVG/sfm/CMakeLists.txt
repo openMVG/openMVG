@@ -27,7 +27,7 @@ UNIT_TEST(openMVG sfm_data_io
 UNIT_TEST(openMVG sfm_data_BA
   "openMVG_multiview_test_data;openMVG_features;openMVG_multiview;openMVG_sfm;openMVG_system;stlplus;${openMVG_lInftyComputerVision}")
 UNIT_TEST(openMVG sfm_data_utils
-  "openMVG_features;openMVG_multiview;openMVG_sfm;stlplus;${openMVG_lInftyComputerVision}")
+  "openMVG_features;openMVG_multiview;openMVG_system;openMVG_sfm;stlplus;${openMVG_lInftyComputerVision}")
 
 ADD_SUBDIRECTORY(pipelines)
 
