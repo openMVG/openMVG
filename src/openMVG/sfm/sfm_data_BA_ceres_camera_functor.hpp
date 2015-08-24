@@ -18,7 +18,7 @@ namespace openMVG {
 namespace sfm {
 
 /**
- * @brief Ceres functor to use a Pinhole_Intrinsic (pinhole camera model K[R[t]) and a 3D points.
+ * @brief Ceres functor to use a Pinhole_Intrinsic (pinhole camera model K[R[t]) and a 3D point.
  *
  *  Data parameter blocks are the following <2,3,6,3>
  *  - 2 => dimension of the residuals,
