@@ -278,36 +278,7 @@ int main(int argc, char **argv)
     IndexT id_view = views.size();
     if( b_use_UID )
     {
-      std::size_t uid = 0;
-
-      if( !exifReader.getImageUniqueID().empty() ||
-          !exifReader.getSerialNumber().empty() ||
-          !exifReader.getLensSerialNumber().empty()
-        )
-      {
-        stl::hash_combine(uid, exifReader.getImageUniqueID());
-        stl::hash_combine(uid, exifReader.getSerialNumber());
-        stl::hash_combine(uid, exifReader.getLensSerialNumber());
-      }
-      else
-      {
-        // No metadata to identify the image, fallback to the filename
-        stl::hash_combine(uid, imageFilename);
-      }
-
-      if( !exifReader.getSubSecTimeOriginal().empty() )
-      {
-        stl::hash_combine(uid, exifReader.getSubSecTimeOriginal());
-      }
-      else
-      {
-        // If no original date/time, fallback to the file date/time
-        stl::hash_combine(uid, exifReader.getDateTime());
-      }
-      
-      stl::hash_combine(uid, exifReader.getWidth());
-      stl::hash_combine(uid, exifReader.getHeight());
-
+      std::size_t uid = computeUID(exifReader, imageFilename);
       id_view = (IndexT)uid;
     }
 
