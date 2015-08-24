@@ -361,10 +361,8 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure()
     }
   }
 
-  // Compute 3D position of the landmark of the structure by triangulation of the observations
+  // Compute 3D position of the landmarks (structure) by triangulation of the observations
   {
-    IndexT countRemoved = 0;
-
     openMVG::system::Timer timer;
 
     const IndexT trackCountBefore = _sfm_data.GetLandmarks().size();
