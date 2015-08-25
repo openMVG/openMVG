@@ -189,7 +189,11 @@ int main(int argc, char **argv)
 
     // Test if the image format is supported:
     if (openMVG::image::GetFormat(sImageFilename.c_str()) == openMVG::image::Unknown)
+    {
+      error_report_stream
+          << stlplus::filename_part(sImageFilename) << ": Unkown image file format." << "\n";
       continue; // image cannot be opened
+    }
 
     ImageHeader imgHeader;
     if (!openMVG::image::ReadImageHeader(sImageFilename.c_str(), &imgHeader))

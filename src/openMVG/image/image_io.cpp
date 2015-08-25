@@ -47,7 +47,6 @@ Format GetFormat(const char *c) {
   if (CmpFormatExt(p, ".tif")) return Tiff;
   if (CmpFormatExt(p, ".tiff")) return Tiff;
 
-  cerr << "Error: Couldn't open " << c << " Unknown file format" << std::endl;
   return Unknown;
 }
 
