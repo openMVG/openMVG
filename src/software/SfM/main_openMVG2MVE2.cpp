@@ -1,4 +1,4 @@
-/* v.0.15 7 August 2015
+/* v.0.16 25 August 2015
  * Kevin CAIN, www.insightdigital.org
  * Adapted from the openMVG libraries,
  * Copyright (c) 2012-2015 Pierre MOULON.
@@ -25,6 +25,16 @@ using namespace openMVG::features;
 #include <cmath>
 #include <iterator>
 #include <iomanip>
+
+/// Naive image bilinear resampling of an image for thumbnail generation
+template <typename ImageT>
+ImageT
+create_thumbnail
+(
+  const ImageT & image,
+  int thumb_width,
+  int thumb_height
+);
 
 /* Notes:
  * - An MVE2 scene appears to duplicate camera rot matrix and trans vector per-view data in 'meta.ini'
@@ -57,7 +67,7 @@ bool exportToMVE2Format(
     std::cerr << "Cannot access one of the desired output directories" << std::endl;
 	  return false;
   }
-  
+
   // Export the SfM_Data scene to the MVE2 format
   {
     // Create 'views' subdirectory
@@ -84,7 +94,7 @@ bool exportToMVE2Format(
     // Export (calibrated) views as undistorted images
     C_Progress_display my_progress_bar( sfm_data.GetViews().size()*1);
     std::pair<int,int> w_h_image_size;
-    Image<RGBColor> image, image_ud;
+    Image<RGBColor> image, image_ud, thumbnail;
     std::string sOutViewIteratorDirectory;
     for(Views::const_iterator iter = sfm_data.GetViews().begin();
       iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
@@ -105,7 +115,7 @@ bool exportToMVE2Format(
 
       // We have a valid view with a corresponding camera & pose
       const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
-      std::string dstImage =
+      const std::string dstImage =
         stlplus::create_filespec(stlplus::folder_append_separator(sOutViewIteratorDirectory), "undistorted","png");
 
       const IntrinsicBase * cam = iterIntrinsic->second.get();
@@ -133,31 +143,16 @@ bool exportToMVE2Format(
 
       // Prepare to write an MVE 'meta.ini' file for the current view
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
-      Mat3 K; // intrinsic camera parameter matrix      
       const Pinhole_Intrinsic * pinhole_cam = static_cast<const Pinhole_Intrinsic *>(cam);
-      if (pinhole_cam)
-      {
-        K = pinhole_cam->K();
-      }
-      else
-      {
-        const Mat34 P = cam->get_projective_equivalent(pose);
-        Mat3 R;
-        Vec3 t;
-        KRt_From_P(P, &K, &R, &t);
-      }
 
       const Mat3 rotation = pose.rotation();
       const Vec3 translation = pose.translation();
       // Pixel aspect: assuming square pixels
       const float pixelAspect = 1.f;
-      // Focal length and principal point are embedded within calibration matrix K:
-      // focal_length = K(0,0)
-      // principal point = {_K(0,2), _K(1,2)}
-      // their values are normalized (0..1)
-      const float flen = K(0,0) / static_cast<double>(std::max(cam->w(), cam->h()));
-      const float ppX = std::abs(K(0,2)/cam->w());
-      const float ppY = std::abs(K(1,2)/cam->h());
+      // Focal length and principal point must be normalized (0..1)
+      const float flen = pinhole_cam->focal() / static_cast<double>(std::max(cam->w(), cam->h()));
+      const float ppX = std::abs(pinhole_cam->principal_point()(0)/cam->w());
+      const float ppY = std::abs(pinhole_cam->principal_point()(1)/cam->h());
 
       std::ostringstream fileOut;
       fileOut << "#MVE view meta data is stored in INI-file syntax." << fileOut.widen('\n')
@@ -185,8 +180,10 @@ bool exportToMVE2Format(
       file.close();
 
       // Save a thumbnail image "thumbnail.png", 50x50 pixels
-      // For now, we ignore thumbnails under the assumption that they are used only by UMVE
-      // Pierre Moulon suggested we resample as per:  https://github.com/openMVG/openMVG/blob/develop/src/openMVG/image/image_resampling_test.cpp#L24
+      thumbnail = create_thumbnail(image, 50, 50);
+      const std::string dstThumbnailImage =
+        stlplus::create_filespec(stlplus::folder_append_separator(sOutViewIteratorDirectory), "thumbnail","png");
+      WriteImage(dstThumbnailImage.c_str(), thumbnail);
 
       // For each camera, write to bundle:  focal length, radial distortion[0-1], rotation matrix[0-8], translation vector[0-2]
       // To do:  add more rigorous camera sanity checks, as per:
@@ -269,4 +266,51 @@ int main(int argc, char *argv[]) {
     return( EXIT_SUCCESS );
   else
     return( EXIT_FAILURE );
+}
+
+/// Naive image bilinear resampling of an image for thumbnail generation
+/// Inspired by create_thumbnail from MVE (cropping is here ignored)
+template <typename ImageT>
+ImageT
+create_thumbnail
+(
+  const ImageT & image,
+  int thumb_width,
+  int thumb_height
+)
+{
+  const int width = image.Width();
+  const int height = image.Height();
+  const float image_aspect = static_cast<float>(width) / height;
+  const float thumb_aspect = static_cast<float>(thumb_width) / thumb_height;
+
+  int rescale_width, rescale_height;
+  if (image_aspect > thumb_aspect)
+  {
+    rescale_width = std::ceil(thumb_height * image_aspect);
+    rescale_height = thumb_height;
+  }
+  else
+  {
+    rescale_width = thumb_width;
+    rescale_height = std::ceil(thumb_width / image_aspect);
+  }
+
+  // Generation of the sampling grid
+  std::vector< std::pair<float,float> > sampling_grid;
+  sampling_grid.reserve(rescale_height * rescale_width);
+  for ( int i = 0 ; i < rescale_height ; ++i )
+  {
+    for ( int j = 0 ; j < rescale_width ; ++j )
+    {
+      const float dx = static_cast<float>(j) * width / rescale_width;
+      const float dy = static_cast<float>(i) * height / rescale_height;
+      sampling_grid.push_back( std::make_pair( dy , dx ) ) ;
+    }
+  }
+
+  const Sampler2d<SamplerLinear> sampler;
+  ImageT imageOut;
+  GenericRessample(image, sampling_grid, rescale_width, rescale_height, sampler, imageOut);
+  return imageOut;
 }

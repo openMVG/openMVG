@@ -160,7 +160,6 @@ void PointsToMat(
 {
   m.resize(2, vec_feats.size());
   typedef typename FeaturesT::value_type ValueT; // Container type
-  typedef typename MatT::Scalar Scalar; // Output matrix type
 
   size_t i = 0;
   for( typename FeaturesT::const_iterator iter = vec_feats.begin();

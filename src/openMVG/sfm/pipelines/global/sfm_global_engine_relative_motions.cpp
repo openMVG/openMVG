@@ -361,10 +361,8 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure()
     }
   }
 
-  // Compute 3D position of the landmark of the structure by triangulation of the observations
+  // Compute 3D position of the landmarks (structure) by triangulation of the observations
   {
-    IndexT countRemoved = 0;
-
     openMVG::system::Timer timer;
 
     const IndexT trackCountBefore = _sfm_data.GetLandmarks().size();
@@ -444,8 +442,8 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
 
   // Check that poses & intrinsic cover some measures (after outlier removal)
   const IndexT minPointPerPose = 12; // 6 min
-  const IndexT minTrackLenght = 3; // 2 min
-  if (eraseUnstablePosesAndObservations(_sfm_data, minPointPerPose, minTrackLenght))
+  const IndexT minTrackLength = 3; // 2 min
+  if (eraseUnstablePosesAndObservations(_sfm_data, minPointPerPose, minTrackLength))
   {
     // TODO: must ensure that track graph is producing a single connected component
 

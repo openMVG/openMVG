@@ -1,7 +1,7 @@
 FROM ubuntu:14.04
 
 # Add openMVG binaries to path
-ENV PATH $PATH:/opt/openMVG_Build/software/SfM
+ENV PATH $PATH:/opt/openMVG_Build/install/bin
 
 # Get dependencies
 RUN apt-get update && apt-get install -y \
@@ -22,10 +22,12 @@ RUN apt-get update && apt-get install -y \
   python-pip
 
 # Clone the openvMVG repo 
-RUN cd /opt && git clone --recursive https://github.com/openMVG/openMVG.git
+ADD . /opt/openMVG
+RUN cd /opt/openMVG && git submodule update --init --recursive
 
 # Build
 RUN mkdir /opt/openMVG_Build && cd /opt/openMVG_Build && cmake -DCMAKE_BUILD_TYPE=RELEASE \
-  -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src/ && make
+  -DCMAKE_INSTALL_PREFIX="/opt/openMVG_Build/install" -DOpenMVG_BUILD_TESTS=ON \
+  -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src/ && make
 
 RUN cd /opt/openMVG_Build && make test

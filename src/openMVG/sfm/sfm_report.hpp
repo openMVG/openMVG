@@ -96,16 +96,19 @@ static bool Generate_SfM_Report
     // IdView | basename | #Observations | residuals min | residual median | residual max
     if (sfm_data.IsPoseAndIntrinsicDefined(v))
     {
-      const std::vector<double> & residuals = residuals_per_view.at(id_view);
-      if (!residuals.empty())
+      if( residuals_per_view.find(id_view) != residuals_per_view.end() )
       {
-        double min, max, mean, median;
-        minMaxMeanMedian(residuals.begin(), residuals.end(), min, max, mean, median);
-        os << sColBegin << residuals.size()/2 << sColEnd // #observations
-          << sColBegin << min << sColEnd
-          << sColBegin << median << sColEnd
-          << sColBegin << mean << sColEnd
-          << sColBegin << max <<sColEnd;
+        const std::vector<double> & residuals = residuals_per_view.at(id_view);
+        if (!residuals.empty())
+        {
+          double min, max, mean, median;
+          minMaxMeanMedian(residuals.begin(), residuals.end(), min, max, mean, median);
+          os << sColBegin << residuals.size()/2 << sColEnd // #observations
+            << sColBegin << min << sColEnd
+            << sColBegin << median << sColEnd
+            << sColBegin << mean << sColEnd
+            << sColBegin << max <<sColEnd;
+        }
       }
     }
     os << sRowEnd;
