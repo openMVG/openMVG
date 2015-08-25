@@ -100,7 +100,7 @@ int main(int argc, char **argv)
       << "[-g|--group_camera_model]\n"
       << "\t 0-> each view have it's own camera intrinsic parameters,\n"
       << "\t 1-> (default) view can share some camera intrinsic parameters\n"
-      << "[-u|--use_UID] Generate a UID instead of using indexes\n"
+      << "[-u|--use_UID] Generate a UID (unique identifier) for each view. By default, the key is the image index.\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -278,7 +278,7 @@ int main(int argc, char **argv)
     IndexT id_view = views.size();
     if( b_use_UID )
     {
-      std::size_t uid = computeUID(exifReader, imageFilename);
+      const std::size_t uid = computeUID(exifReader, imageFilename);
       id_view = (IndexT)uid;
     }
 
