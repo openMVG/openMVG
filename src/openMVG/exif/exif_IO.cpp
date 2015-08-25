@@ -30,9 +30,10 @@ std::size_t computeUID(const Exif_IO& exifReader, const std::string& imageFilena
     // No metadata to identify the image, fallback to the filename
     stl::hash_combine(uid, imageFilename);
   }
-
-  if( !exifReader.getSubSecTimeOriginal().empty() )
+  
+  if( !exifReader.getDateTimeOriginal().empty() )
   {
+    stl::hash_combine(uid, exifReader.getDateTimeOriginal());
     stl::hash_combine(uid, exifReader.getSubSecTimeOriginal());
   }
   else
