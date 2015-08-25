@@ -95,6 +95,7 @@ int main(int argc, char **argv)
       << "\t 1: Pinhole\n"
       << "\t 2: Pinhole radial 1\n"
       << "\t 3: Pinhole radial 3 (default)\n"
+      << "\t 4: Pinhole brown 2\n"
       << "[-g|--group_camera_model]\n"
       << "\t 0-> each view have it's own camera intrinsic parameters,\n"
       << "\t 1-> (default) view can share some camera intrinsic parameters\n"
@@ -188,7 +189,11 @@ int main(int argc, char **argv)
 
     // Test if the image format is supported:
     if (openMVG::image::GetFormat(sImageFilename.c_str()) == openMVG::image::Unknown)
+    {
+      error_report_stream
+          << stlplus::filename_part(sImageFilename) << ": Unkown image file format." << "\n";
       continue; // image cannot be opened
+    }
 
     ImageHeader imgHeader;
     if (!openMVG::image::ReadImageHeader(sImageFilename.c_str(), &imgHeader))
@@ -270,6 +275,10 @@ int main(int argc, char **argv)
         case PINHOLE_CAMERA_RADIAL3:
           intrinsic = std::make_shared<Pinhole_Intrinsic_Radial_K3>
             (width, height, focal, ppx, ppy, 0.0, 0.0, 0.0);  // setup no distortion as initial guess
+        break;
+        case PINHOLE_CAMERA_BROWN:
+          intrinsic =std::make_shared<Pinhole_Intrinsic_Brown_T2>
+            (width, height, focal, ppx, ppy, 0.0, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
         break;
         default:
           std::cerr << "Error: unknown camera model: " << (int) e_User_camera_model << std::endl;

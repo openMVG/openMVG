@@ -89,7 +89,7 @@ inline int ReadImage(const char * path, Image<unsigned char> * im)
 {
   std::vector<unsigned char> ptr;
   int w, h, depth;
-  int res = ReadImage(path, &ptr, &w, &h, &depth);
+  const int res = ReadImage(path, &ptr, &w, &h, &depth);
   if (res == 1 && depth == 1) {
     //convert raw array to Image
     (*im) = Eigen::Map<Image<unsigned char>::Base>(&ptr[0], h, w);
@@ -122,7 +122,7 @@ inline int ReadImage(const char * path, Image<RGBColor> * im)
 {
   std::vector<unsigned char> ptr;
   int w, h, depth;
-  int res = ReadImage(path, &ptr, &w, &h, &depth);
+  const int res = ReadImage(path, &ptr, &w, &h, &depth);
   if (res == 1 && depth == 3) {
     RGBColor * ptrCol = (RGBColor*) &ptr[0];
     //convert raw array to Image
@@ -147,7 +147,7 @@ inline int ReadImage(const char * path, Image<RGBAColor> * im)
 {
   std::vector<unsigned char> ptr;
   int w, h, depth;
-  int res = ReadImage(path, &ptr, &w, &h, &depth);
+  const int res = ReadImage(path, &ptr, &w, &h, &depth);
   if (depth !=4) return 0;
   if (res == 1) {
     RGBAColor * ptrCol = (RGBAColor*) &ptr[0];
@@ -166,9 +166,9 @@ template<typename T>
 int WriteImage(const char * filename, const Image<T>& im)
 {
   const unsigned char * ptr = (unsigned char*)(im.GetMat().data());
-  int depth = sizeof( T ) / sizeof(unsigned char);
+  const int depth = sizeof( T ) / sizeof(unsigned char);
   std::vector<unsigned char> array( ptr , ptr + im.Width()*im.Height()*depth );
-  int w = im.Width(), h = im.Height();
+  const int w = im.Width(), h = im.Height();
   return WriteImage(filename, array, w, h, depth);
 }
 
