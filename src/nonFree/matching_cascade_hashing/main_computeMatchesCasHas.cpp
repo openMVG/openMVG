@@ -17,8 +17,7 @@
 #include "openMVG/matching_image_collection/F_ACRobust.hpp"
 #include "openMVG/matching_image_collection/E_ACRobust.hpp"
 #include "openMVG/matching_image_collection/H_ACRobust.hpp"
-#include "software/SfM/pairwiseAdjacencyDisplay.hpp"
-#include "software/SfM/SfMIOHelper.hpp"
+#include "openMVG/matching/pairwiseAdjacencyDisplay.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
 
 /// Cacade Hashing implementation

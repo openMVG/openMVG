@@ -88,6 +88,9 @@ Bibliography
 
 .. [OlssonDuality] **Outlier Removal Using Duality.**
     Carl Olsson, Anders Eriksson and Richard Hartley, Richard. CVPR 2010.
+    
+.. [CASCADEHASHING] **Fast and Accurate Image Matching with Cascade Hashing for 3D Reconstruction**
+   Jian Cheng, Cong Leng, Jiaxiang Wu, Hainan Cui, Hanqing Lu. CVPR 2014. 
  
 .. [Ceres] **Ceres Solver**
     Sameer Agarwal and Keir Mierle and Others, http://ceres-solver.org

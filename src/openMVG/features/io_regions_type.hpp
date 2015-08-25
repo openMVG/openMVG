@@ -9,15 +9,16 @@
 #define IO_REGIONS_TYPE_HPP
 
 #include "openMVG/features/features.hpp"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include <cereal/archives/json.hpp>
 
 #include <fstream>
 #include <vector>
 
-namespace openMVG
-{
+namespace openMVG {
+namespace features {
 
-// Init the regions_type from the image describer (used for regions loading)
+// Init the regions_type from an image describer file (used for regions loading)
 static std::unique_ptr<features::Regions> Init_region_type_from_file
 (
   const std::string & sImage_describer_file
@@ -42,6 +43,7 @@ static std::unique_ptr<features::Regions> Init_region_type_from_file
   return regions_type;
 }
 
+} // namespace features
 } // namespace openMVG
 
 #endif // IO_REGIONS_TYPE_HPP

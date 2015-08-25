@@ -5,7 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #include "openMVG/exif/exif_IO_EasyExif.hpp"
 
-#include "openMVG_Samples/sensorWidthDatabase/ParseDatabase.hpp"
+#include "openMVG/exif/sensor_width_database/ParseDatabase.hpp"
 
 #include "openMVG/image/image.hpp"
 #include "openMVG/stl/split.hpp"
@@ -70,6 +70,7 @@ int main(int argc, char **argv)
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
 
   bool b_Group_camera_model = true;
+  bool b_use_UID = false;
 
   double focal_pixels = -1.0;
 
@@ -80,6 +81,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('k', sKmatrix, "intrinsics") );
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_option('g', b_Group_camera_model, "group_camera_model") );
+  cmd.add( make_option('u', b_use_UID, "use_UID") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -98,6 +100,7 @@ int main(int argc, char **argv)
       << "[-g|--group_camera_model]\n"
       << "\t 0-> each view have it's own camera intrinsic parameters,\n"
       << "\t 1-> (default) view can share some camera intrinsic parameters\n"
+      << "[-u|--use_UID] Generate a UID (unique identifier) for each view. By default, the key is the image index.\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -158,7 +161,9 @@ int main(int argc, char **argv)
   {
     if ( !parseDatabase( sfileDatabase, vec_database ) )
     {
-      std::cerr << "\nInvalid input database" << std::endl;
+      std::cerr
+       << "\nInvalid input database: " << sfileDatabase
+       << ", please specify a valid file." << std::endl;
       return EXIT_FAILURE;
     }
   }
@@ -178,15 +183,16 @@ int main(int argc, char **argv)
   {
     // Read meta data to fill camera parameter (w,h,focal,ppx,ppy) fields.
     width = height = ppx = ppy = focal = -1.0;
-
-    const std::string sImageFilename = stlplus::create_filespec( sImageDir, *iter_image );
+    
+    const std::string imageFilename = *iter_image;
+    const std::string imageAbsFilepath = stlplus::create_filespec( sImageDir, imageFilename );
 
     // Test if the image format is supported:
-    if (openMVG::image::GetFormat(sImageFilename.c_str()) == openMVG::image::Unknown)
+    if (openMVG::image::GetFormat(imageAbsFilepath.c_str()) == openMVG::image::Unknown)
       continue; // image cannot be opened
 
     ImageHeader imgHeader;
-    if (!openMVG::image::ReadImageHeader(sImageFilename.c_str(), &imgHeader))
+    if (!openMVG::image::ReadImageHeader(imageAbsFilepath.c_str(), &imgHeader))
       continue; // image cannot be read
 
     width = imgHeader.width;
@@ -194,13 +200,13 @@ int main(int argc, char **argv)
     ppx = width / 2.0;
     ppy = height / 2.0;
 
-    std::unique_ptr<Exif_IO> exifReader(new Exif_IO_EasyExif());
-    exifReader->open( sImageFilename );
+    Exif_IO_EasyExif exifReader;
+    exifReader.open( imageAbsFilepath );
 
     const bool bHaveValidExifMetadata =
-      exifReader->doesHaveExifInfo()
-      && !exifReader->getBrand().empty()
-      && !exifReader->getModel().empty();
+      exifReader.doesHaveExifInfo()
+      && !exifReader.getBrand().empty()
+      && !exifReader.getModel().empty();
 
     // Consider the case where the focal is provided manually
     if ( !bHaveValidExifMetadata || focal_pixels != -1)
@@ -216,13 +222,13 @@ int main(int argc, char **argv)
     }
     else // If image contains meta data
     {
-      const std::string sCamName = exifReader->getBrand();
-      const std::string sCamModel = exifReader->getModel();
+      const std::string sCamName = exifReader.getBrand();
+      const std::string sCamModel = exifReader.getModel();
 
       // Handle case where focal length is equal to 0
-      if (exifReader->getFocal() == 0.0f)
+      if (exifReader.getFocal() == 0.0f)
       {
-        std::cerr << stlplus::basename_part(sImageFilename) << ": Focal length is missing." << std::endl;
+        std::cerr << stlplus::basename_part(imageAbsFilepath) << ": Focal length is missing." << std::endl;
         continue;
       }
 
@@ -233,11 +239,11 @@ int main(int argc, char **argv)
         {
           // The camera model was found in the database so we can compute it's approximated focal length
           const double ccdw = datasheet._sensorSize;
-          focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
+          focal = std::max ( width, height ) * exifReader.getFocal() / ccdw;
         }
         else
         {
-          std::cout << stlplus::basename_part(sImageFilename) << ": Camera \""
+          std::cout << stlplus::basename_part(imageAbsFilepath) << ": Camera \""
             << sCamName << "\" model \"" << sCamModel << "\" doesn't exist in the database" << std::endl
             << "Please consider add your camera model and sensor width in the database." << std::endl;
         }
@@ -269,8 +275,15 @@ int main(int argc, char **argv)
       }
     }
 
+    IndexT id_view = views.size();
+    if( b_use_UID )
+    {
+      const std::size_t uid = computeUID(exifReader, imageFilename);
+      id_view = (IndexT)uid;
+    }
+
     // Build the view corresponding to the image
-    View v(*iter_image, views.size(), views.size(), views.size(), width, height);
+    View v(imageFilename, id_view, views.size(), views.size(), width, height);
 
     // Add intrinsic related to the image (if any)
     if (intrinsic == NULL)
@@ -292,57 +305,7 @@ int main(int argc, char **argv)
   // Group camera that share common properties if desired (leads to more faster & stable BA).
   if (b_Group_camera_model)
   {
-    // Group camera model that share common optics camera properties
-    // They must share (camera model, image size, & camera parameters)
-    // Grouping is simplified by using a hash function over the camera intrinsic.
-
-    // Build hash & build a set of the hash in order to maintain unique Ids
-    std::set<size_t> hash_index;
-    std::vector<size_t> hash_value;
-
-    for (Intrinsics::const_iterator iterIntrinsic = intrinsics.begin();
-      iterIntrinsic != intrinsics.end();
-      ++iterIntrinsic)
-    {
-      const IntrinsicBase * intrinsicData = iterIntrinsic->second.get();
-      const size_t hashVal = intrinsicData->hashValue();
-      hash_index.insert(hashVal);
-      hash_value.push_back(hashVal);
-    }
-
-    // From hash_value(s) compute the new index (old to new indexing)
-    Hash_Map<IndexT, IndexT> old_new_reindex;
-    size_t i = 0;
-    for (Intrinsics::const_iterator iterIntrinsic = intrinsics.begin();
-      iterIntrinsic != intrinsics.end();
-      ++iterIntrinsic, ++i)
-    {
-      old_new_reindex[iterIntrinsic->first] = std::distance(hash_index.begin(), hash_index.find(hash_value[i]));
-      //std::cout << hash_value[i] // hash
-      //  << "\t" << iterIntrinsic->first // old reference index
-      // << "\t" << old_new_reindex[iterIntrinsic->first] << std::endl; // new index
-    }
-    //--> Copy & modify Ids & replace
-    //     - for the Intrinsic params
-    //     - for the View
-    Intrinsics intrinsic_updated;
-    for (Intrinsics::const_iterator iterIntrinsic = intrinsics.begin();
-      iterIntrinsic != intrinsics.end();
-      ++iterIntrinsic)
-    {
-      intrinsic_updated[old_new_reindex[iterIntrinsic->first]] = intrinsics[iterIntrinsic->first];
-    }
-    intrinsics.swap(intrinsic_updated); // swap camera intrinsics
-    // Update intrinsic ids
-    for (Views::iterator iterView = views.begin();
-      iterView != views.end();
-      ++iterView)
-    {
-      View * v = iterView->second.get();
-      // Update the Id only if a corresponding index exists
-      if (old_new_reindex.count(v->id_intrinsic))
-        v->id_intrinsic = old_new_reindex[v->id_intrinsic];
-    }
+    GroupSharedIntrinsics(sfm_data);
   }
 
   // Store SfM_Data views & intrinsic data
@@ -353,6 +316,11 @@ int main(int argc, char **argv)
   {
     return EXIT_FAILURE;
   }
+
+  std::cout << std::endl
+    << "SfMInit_ImageListing report:\n"
+    << "listed #File(s): " << vec_image.size() << "\n"
+    << "usable #File(s) listed in sfm_data: " << sfm_data.GetViews().size() << std::endl;
 
   return EXIT_SUCCESS;
 }

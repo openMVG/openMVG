@@ -194,12 +194,6 @@ void convert_scale(Image &src)
    src /= max_val;
 }
 
-/// log2 of a number
-static double Log2( double n )
-{
-  return log( n ) / log( 2.0 );
-}
-
 /// Constructor with input arguments
 AKAZE::AKAZE(const Image<unsigned char> & in, const AKAZEConfig & options):
     options_(options)
@@ -207,7 +201,7 @@ AKAZE::AKAZE(const Image<unsigned char> & in, const AKAZEConfig & options):
   in_ = in.GetMat().cast<float>() / 255.f;
   options_.fDesc_factor = std::max(6.f*sqrtf(2.f), options_.fDesc_factor);
   //-- Safety check to limit the computable octave count
-  const int nbOctaveMax = ceil(Log2( std::min(in_.Width(), in_.Height())));
+  const int nbOctaveMax = ceil(std::log2( std::min(in_.Width(), in_.Height())));
   options_.iNbOctave = std::min(options_.iNbOctave, nbOctaveMax);
 }
 

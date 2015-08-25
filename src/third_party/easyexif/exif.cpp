@@ -428,6 +428,26 @@ int EXIFInfo::parseFromEXIFSegment(const unsigned char *buf, unsigned len) {
           if (result.format == 3)
             this->FocalLengthIn35mm = result.val_16;
           break;
+      
+        case 0xa420:
+          if (result.format == 2)
+            this->ImageUniqueID = result.val_string;
+          break;
+
+        case 0xa431:
+          if (result.format == 2)
+            this->SerialNumber = result.val_string;
+          break;
+
+        case 0xa434:
+          if (result.format == 2)
+            this->LensModel = result.val_string;
+          break;
+
+        case 0xa435:
+          if (result.format == 2)
+            this->LensSerialNumber = result.val_string;
+          break;
       }
       offs += 12;
     }
