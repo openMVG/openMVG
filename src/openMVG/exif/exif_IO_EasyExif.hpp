@@ -17,6 +17,19 @@
 namespace openMVG {
 namespace exif  {
 
+/// Remove all leading and trailing spaces from the input. The result is a trimmed copy of the input
+inline std::string trim_copy(const std::string& s)
+{
+  if(s.empty())
+    return s;
+  
+  std::string res(s);
+  // remove leading and trailing spaces
+  res.erase(0, res.find_first_not_of(' '));
+  res.erase(res.find_last_not_of(' '));
+  return res;
+}
+
 class Exif_IO_EasyExif : public Exif_IO
 {
   public:
@@ -72,70 +85,56 @@ class Exif_IO_EasyExif : public Exif_IO
 
     std::string getBrand() const
     {
-      std::string sbrand = exifInfo_.Make;
-      if (!sbrand.empty())
-      {
-        // remove leading and trailing spaces
-        sbrand.erase(0, sbrand.find_first_not_of(' '));
-        sbrand.erase(sbrand.find_last_not_of(' '));
-      }
-      return sbrand;
+      return trim_copy(exifInfo_.Make);
     }
 
     std::string getModel() const
     {
-      std::string smodel = exifInfo_.Model;
-      if (!smodel.empty())
-      {
-        // remove leading and trailing spaces
-        smodel.erase(0, smodel.find_first_not_of(' '));
-        smodel.erase(smodel.find_last_not_of(' '));
-      }
-      return smodel;
+      return trim_copy(exifInfo_.Model);
     }
 
     std::string getImageUniqueID() const
     {
-      return exifInfo_.ImageUniqueID;
+      return trim_copy(exifInfo_.ImageUniqueID);
     }
 
     std::string getSerialNumber() const
     {
-      return exifInfo_.SerialNumber;
+      return trim_copy(exifInfo_.SerialNumber);
     }
 
     std::string getLensModel() const
     {
-      return exifInfo_.LensModel;
+      return trim_copy(exifInfo_.LensModel);
     }
 
     std::string getLensSerialNumber() const
     {
-      return exifInfo_.LensSerialNumber;
+      return trim_copy(exifInfo_.LensSerialNumber);
     }
 
     // File change date and time
     std::string getDateTime() const
     {
-      return exifInfo_.DateTime;
+      return trim_copy(exifInfo_.DateTime);
     }
 
     // Original file date and time (may not exist)
     std::string getDateTimeOriginal() const
     {
-      return exifInfo_.SubSecTimeOriginal;
+      return trim_copy(exifInfo_.DateTimeOriginal);
     }
 
     // Digitization date and time (may not exist)
     std::string getDateTimeDigitized() const
     {
-      return exifInfo_.SubSecTimeOriginal;
+      return trim_copy(exifInfo_.DateTimeDigitized);
     }
 
     // Sub-second time that original picture was taken
     std::string getSubSecTimeOriginal() const
     {
-      return exifInfo_.SubSecTimeOriginal;
+      return trim_copy(exifInfo_.SubSecTimeOriginal);
     }
 
     /**Verify if the file has metadata*/
