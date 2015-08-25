@@ -17,17 +17,17 @@ FILE(GLOB_RECURSE REMOVEFILESUNITTEST *_test.hpp)
 list(REMOVE_ITEM sfm_files_header ${REMOVEFILESUNITTEST})
 
 ADD_LIBRARY(openMVG_sfm ${sfm_files_header} ${sfm_files_cpp})
-TARGET_LINK_LIBRARIES(openMVG_sfm openMVG_multiview stlplus ${CERES_LIBRARIES})
+TARGET_LINK_LIBRARIES(openMVG_sfm openMVG_multiview stlplus ${CERES_LIBRARIES} openMVG_lInftyComputerVision)
 SET_TARGET_PROPERTIES(openMVG_sfm PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 
 INSTALL(TARGETS openMVG_sfm DESTINATION lib EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG sfm_data_io
-  "openMVG_features;openMVG_sfm;openMVG_system;stlplus;${openMVG_lInftyComputerVision}")
+  "openMVG_features;openMVG_sfm;openMVG_system;stlplus")
 UNIT_TEST(openMVG sfm_data_BA
-  "openMVG_multiview_test_data;openMVG_features;openMVG_multiview;openMVG_sfm;openMVG_system;stlplus;${openMVG_lInftyComputerVision}")
+  "openMVG_multiview_test_data;openMVG_features;openMVG_multiview;openMVG_sfm;openMVG_system;stlplus")
 UNIT_TEST(openMVG sfm_data_utils
-  "openMVG_features;openMVG_multiview;openMVG_system;openMVG_sfm;stlplus;${openMVG_lInftyComputerVision}")
+  "openMVG_features;openMVG_multiview;openMVG_system;openMVG_sfm;stlplus")
 
 ADD_SUBDIRECTORY(pipelines)
 
