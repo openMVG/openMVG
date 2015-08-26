@@ -226,6 +226,15 @@ TARGET_LINK_LIBRARIES(openMVG_main_openMVG2CMPMVS
 ADD_EXECUTABLE(openMVG_main_openMVG2MVE2 main_openMVG2MVE2.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVE2 ${OpenMVG_LIBRARIES})
 
+# - Export a SfM openMVG scene to Alembic format
+#
+FIND_PACKAGE(Alembic)
+if (ALEMBIC_FOUND)
+  ADD_EXECUTABLE(openMVG_main_openMVG2ABC main_openMVG2ABC.cpp)
+  INCLUDE_DIRECTORIES(${ABC_INCLUDE_DIR})
+  TARGET_LINK_LIBRARIES(openMVG_main_openMVG2ABC ${ABC_LIBRARIES} ${OpenMVG_LIBRARIES})
+endif(ALEMBIC_FOUND)
+
 # - Export a SfM openMVG scene to meshlab scene with rasters
 # -
 ADD_EXECUTABLE(openMVG_main_openMVG2MESHLAB main_openMVG2MESHLAB.cpp)
