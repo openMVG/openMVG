@@ -92,7 +92,7 @@ bool exportToMVE2Format(
     out << cameraCount << " " << featureCount << "\n";
 
     // Export (calibrated) views as undistorted images
-    C_Progress_display my_progress_bar( sfm_data.GetViews().size()*1);
+    C_Progress_display my_progress_bar(sfm_data.GetViews().size());
     std::pair<int,int> w_h_image_size;
     Image<RGBColor> image, image_ud, thumbnail;
     std::string sOutViewIteratorDirectory;
