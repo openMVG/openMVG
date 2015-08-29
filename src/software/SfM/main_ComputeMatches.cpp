@@ -455,11 +455,11 @@ int main(int argc, char **argv)
     //---------------------------------------
     if( !matchFilePerImage )
     {
-      ExportPairedIndMatchFile(map_PutativesMatches, std::string(sMatchesDirectory + "/" + sGeometricMatchesFilename).c_str());
+      ExportPairedIndMatchFile(map_GeometricMatches, std::string(sMatchesDirectory + "/" + sGeometricMatchesFilename).c_str());
     }
     else
     {
-      ExportPairedIndMatchFilePerImage(map_PutativesMatches, sMatchesDirectory, sGeometricMatchesFilename);
+      ExportPairedIndMatchFilePerImage(map_GeometricMatches, sMatchesDirectory, sGeometricMatchesFilename);
     }
 
     std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
