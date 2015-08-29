@@ -59,7 +59,10 @@ static void ExportPairedIndMatchFilePerImage(
   const std::string & baseFilename)
 {
   if(map_indexedMatches.empty())
+  {
+    std::cerr << "No match to export." << std::endl;
     return;
+  }
   size_t previousI = map_indexedMatches.begin()->first.first + 1;
 
   std::ofstream file;
@@ -73,7 +76,8 @@ static void ExportPairedIndMatchFilePerImage(
     {
       previousI = I;
       file.close();
-      std::string filepath = directory + "/" + std::to_string(I) + "." + baseFilename;
+      const std::string filepath = directory + "/" + std::to_string(I) + "." + baseFilename;
+      std::cout << "Export Matches in " << filepath << std::endl;
       file.open(filepath.c_str());
       if (!file.is_open())
         throw std::runtime_error(std::string("Unable to open file: ") + filepath);

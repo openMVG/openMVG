@@ -178,7 +178,8 @@ void Matcher_Regions_AllInMemory::Match(
 {
   if (regions_provider->regions_per_view.size() < 2)
   {
-    return; // No sufficient images to compare (nothing to do)
+    std::cerr << "Matching: No sufficient images to compare (nothing to do)" << std::endl;
+    return;
   }
   else
   {
@@ -187,9 +188,15 @@ void Matcher_Regions_AllInMemory::Match(
 
     // Handle invalid request
     if (regions->IsScalar() && _eMatcherType == BRUTE_FORCE_HAMMING)
-      return ;
+    {
+      std::cerr << "Matching: Invalid arguments: BRUTE_FORCE_HAMMING doesn't support scalar descriptors." << std::endl;
+      return;
+    }
     if (regions->IsBinary() && _eMatcherType != BRUTE_FORCE_HAMMING)
-      return ;
+    {
+      std::cerr << "Matching: Invalid arguments: The matcher type doesn't support binary descriptors." << std::endl;
+      return;
+    }
 
     // Switch regions type ID, matcher & Metric: call the good MatcherT
     if (regions->IsScalar())

@@ -138,6 +138,7 @@ int main(int argc, char **argv)
   {
     // Load the match file
     const std::string matchFilepath = stlplus::create_filespec(sMatchesDir, "matches.f.txt");
+    std::cout << "Load matches file: " << matchFilepath << std::endl;
     if (!matches_provider->load(sfm_data, matchFilepath)) {
       std::cerr << std::endl << "Unable to load matches file: " << matchFilepath << std::endl;
       return EXIT_FAILURE;
@@ -152,6 +153,7 @@ int main(int argc, char **argv)
     {
       const View * v = it->second.get();
       const std::string matchFilepath = stlplus::create_filespec(sMatchesDir, std::to_string(v->id_view) + ".matches.f.txt");
+      std::cout << "Load matches file: " << matchFilepath << std::endl;
       if (stlplus::file_exists(matchFilepath) && !matches_provider->load(sfm_data, matchFilepath)) {
         std::cerr << std::endl << "Unable to load matches file: " << matchFilepath << std::endl;
         continue;

@@ -326,12 +326,21 @@ int main(int argc, char **argv)
         case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(sfm_data.GetViews().size()); break;
         case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(sfm_data.GetViews().size(), iMatchingVideoMode); break;
         case PAIR_FROM_FILE:
+          std::cout << "Load pairList from file: " << sPredefinedPairList << std::endl;
           if(!loadPairs(sfm_data.GetViews().size(), sPredefinedPairList, pairs, orderPairs))
           {
               return EXIT_FAILURE;
           }
           break;
       }
+      
+      if( pairs.empty() )
+      {
+        std::cout << "No image pair to match." << std::endl;
+        return EXIT_FAILURE;
+      }
+      std::cout << "There are " << sfm_data.GetViews().size() << " views and " << pairs.size() << " image pairs." << std::endl;
+
       // If we have a rangeStart, only compute the matching for (rangeStart, X).
       if(rangeStart != -1)
       {
@@ -340,9 +349,19 @@ int main(int argc, char **argv)
           if( p.first >= rangeStart && p.first <= rangeStart + rangeSize)
             specificedPairs.insert(p);
         pairs = specificedPairs;
+        std::cout << "We will compute " << pairs.size() << " image pairs." << std::endl;
       }
+
       // Photometric matching of putative pairs
       collectionMatcher->Match(sfm_data, regions_provider, pairs, map_PutativesMatches);
+      
+      if( map_PutativesMatches.empty() )
+      {
+        std::cout << "No putative matches." << std::endl;
+        return EXIT_FAILURE;
+      }
+      std::cout << "There are " << map_PutativesMatches.size() << " putative matches." << std::endl;
+
       //---------------------------------------
       //-- Export putative matches
       //---------------------------------------
