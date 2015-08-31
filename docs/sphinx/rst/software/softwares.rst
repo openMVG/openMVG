@@ -6,6 +6,7 @@ openMVG softwares & tools
   :maxdepth: 1
   
   SfM/SfM.rst
-  colorHarmonization/color.rst    
+  MVS/MVS.rst
+  colorHarmonization/color.rst
 
 

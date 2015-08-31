@@ -1,5 +1,5 @@
 ***************************
-SfM: Structure-from-Motion
+SfM: Structure from Motion
 ***************************
 
 Structure from Motion computes an external camera pose per image (the motion) and a 3D point cloud (the structure) from:
