@@ -104,7 +104,7 @@ int main( int argc, char** argv )
 	std::vector<size_t> featRead;
 	POPART_COUT( "Reading descriptors from " << keylist );
 	auto detect_start = std::chrono::steady_clock::now();
-	size_t numTotFeatures = 0;//readDescFromFiles( keylist, features, featRead );
+	size_t numTotFeatures = 0; // @TODO port me! readDescFromFiles( keylist, features, featRead );
 	auto detect_end = std::chrono::steady_clock::now();
 	auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
 	if ( features.size() == 0 )
