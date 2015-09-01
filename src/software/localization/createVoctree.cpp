@@ -27,8 +27,8 @@ using namespace std;
 //using namespace boost::accumulators;
 namespace po = boost::program_options;
 
-typedef openMVG::features::Descriptor<float, DIMENSION> FeatureFloat;
-typedef std::vector<FeatureFloat> FeatureFloatVector;
+typedef openMVG::features::Descriptor<float, DIMENSION> DescriptorFloat;
+typedef std::vector<DescriptorFloat> DescriptorFloatVector;
 
 typedef std::map<size_t, openMVG::voctree::Document> DocumentMap;
 
@@ -103,30 +103,30 @@ int main( int argc, char** argv )
 				<< "verbosity: " << verbosity << std::endl << std::endl;
 	}
 
-	FeatureFloatVector features;
+	DescriptorFloatVector descriptors;
 
-	std::vector<size_t> featRead;
+	std::vector<size_t> descRead;
 	POPART_COUT( "Reading descriptors from " << keylist );
 	auto detect_start = std::chrono::steady_clock::now();
-	size_t numTotFeatures = 0; // @TODO port me! readDescFromFiles( keylist, features, featRead );
+	size_t numTotDescriptors = 0; // @TODO port me! readDescFromFiles( keylist, descriptors, descRead );
 	auto detect_end = std::chrono::steady_clock::now();
 	auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
-	if ( features.size() == 0 )
+	if ( descriptors.size() == 0 )
 	{
 		POPART_CERR( "No descriptors loaded!!" );
 		return EXIT_FAILURE;
 	}
 
-	POPART_COUT( "Done! " << featRead.size() << " sets of descriptors read for a total of " << numTotFeatures << " features"  );
+	POPART_COUT( "Done! " << descRead.size() << " sets of descriptors read for a total of " << numTotDescriptors << " features"  );
 	POPART_COUT( "Reading took " << detect_elapsed.count() << " sec" );
 
 	// Create tree
-	openMVG::voctree::TreeBuilder<FeatureFloat> builder( FeatureFloat(0) );
+	openMVG::voctree::TreeBuilder<DescriptorFloat> builder( DescriptorFloat(0) );
 	builder.setVerbose( verbosity );
 	builder.kmeans( ).setRestarts( restart );
 	POPART_COUT( "Building a tree of L=" << LEVELS << " levels with a branching factor of k=" << K );
 	detect_start = std::chrono::steady_clock::now();
-	builder.build( features, K, LEVELS );
+	builder.build( descriptors, K, LEVELS );
 	detect_end = std::chrono::steady_clock::now();
 	detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
 	POPART_COUT( "Tree created in " << detect_elapsed.count() << " sec" );
@@ -142,26 +142,26 @@ int main( int argc, char** argv )
 	size_t offset = 0;   ///< this is used to align to the features of a given image in 'feature'
 	detect_start = std::chrono::steady_clock::now();
 	// pass each feature through the vocabulary tree to get the associated visual word
-	// for each read images, recover the number of features in it from featRead and loop over the features
-	for ( size_t i = 0; i < featRead.size( ); ++i )
+	// for each read images, recover the number of features in it from descRead and loop over the features
+	for ( size_t i = 0; i < descRead.size( ); ++i )
 	{
 		// for each image:
 		// clear the temporary vector used to save all the visual word and allocate the proper size
 		imgVisualWords.clear();
 		// allocate as many visual words as the number of the features in the image
-		imgVisualWords.resize( featRead[i], 0 );
+		imgVisualWords.resize( descRead[i], 0 );
 
 		#pragma omp parallel for
-		for( size_t j = 0; j < featRead[i]; ++j )
+		for( size_t j = 0; j < descRead[i]; ++j )
 		{
 			//	store the visual word associated to the feature in the temporary list
-			imgVisualWords[j] = builder.tree( ).quantize( features[ j + offset ] );
+			imgVisualWords[j] = builder.tree( ).quantize( descriptors[ j + offset ] );
 		}
 		// add the vector to the documents
 		documents[ i ] = imgVisualWords;
 
 		// update the offset
-		offset += featRead[ i ];
+		offset += descRead[ i ];
 	}
 	detect_end = std::chrono::steady_clock::now();
 	detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
