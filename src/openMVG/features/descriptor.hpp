@@ -28,6 +28,8 @@ template <typename T, std::size_t N>
 class Descriptor
 {
 public:
+  typedef Descriptor<T, N> This;
+  typedef T value_type;
   typedef T bin_type;
   typedef std::size_t size_type;
 
@@ -37,12 +39,35 @@ public:
   /// Constructor
   inline Descriptor() {}
 
+  inline Descriptor(T defaultValue)
+  {
+    for(size_type i = 0; i < N; ++i)
+      data[i] = defaultValue;
+  }
+
   /// capacity
   inline size_type size() const { return N; }
 
   /// Mutable and non-mutable bin getters
   inline bin_type& operator[](std::size_t i) { return data[i]; }
   inline bin_type operator[](std::size_t i) const { return data[i]; }
+
+  // Atomic addition between two descriptors
+  inline This& operator+=(const This other)
+  {
+    for(size_type i = 0; i < size(); ++i)
+      data[i] += other[i];
+    return *this;
+  }
+
+  // Division between two descriptors
+  inline This operator/(const This other) const
+  {
+    This res;
+    for(size_type i = 0; i < size(); ++i)
+      res[i] = data[i] / other[i];
+    return res;
+  }
 
   inline bin_type* getData() const {return (bin_type* ) (&data[0]);}
 
