@@ -25,7 +25,7 @@ FIND_PATH(ABC_HALF_INCLUDE_DIR half.h
     ${ALEMBIC_ILMBASE_ROOT}/include/OpenEXR
     $ENV{ALEMBIC_ILMBASE_ROOT}/include/OpenEXR)
 
-FIND_PATH(ABC_ILMBASE_LIBS_PATH NAMES libIex.so libIex.a
+FIND_PATH(ABC_ILMBASE_LIBS_PATH NAMES libIex.so libIex.a 
     PATHS
         ${ALEMBIC_ILMBASE_ROOT}/lib 
         ${ALEMBIC_ILMBASE_ROOT}/lib64
@@ -76,19 +76,21 @@ FIND_PATH(ABC_INCLUDE_DIR Alembic/Abc/All.h
 )
 
 #
-# We force the use of dynamic libraries as with using the static ones we had initialization problems.
-FIND_PATH(ABC_LIBRARY_DIR libAlembicAbc.so
+# We force the use of dynamic libraries because we had initialization problems
+# on linux when we used the static version of the libraries
+#
+FIND_PATH(ABC_LIBRARY_DIR NAMES libAlembicAbc.so libAlembicAbc.dylib
     PATHS
         ${ALEMBIC_ROOT}/lib
         ${ALEMBIC_ROOT}/lib64
         $ENV{ALEMBIC_ROOT}/lib
         $ENV{ALEMBIC_ROOT}/lib64
     NO_DEFAULT_PATH)
-FIND_LIBRARY(ABC libAlembicAbc.so PATHS ${ABC_LIBRARY_DIR})
-FIND_LIBRARY(ABC_COREABSTRACT libAlembicAbcCoreAbstract.so PATHS ${ABC_LIBRARY_DIR})
-FIND_LIBRARY(ABC_COREHDF5 libAlembicAbcCoreHDF5.so PATHS ${ABC_LIBRARY_DIR})
-FIND_LIBRARY(ABC_GEOM libAlembicAbcGeom.so PATHS ${ABC_LIBRARY_DIR})
-FIND_LIBRARY(ABC_UTIL libAlembicUtil.so PATHS ${ABC_LIBRARY_DIR})
+FIND_LIBRARY(ABC AlembicAbc PATHS ${ABC_LIBRARY_DIR})
+FIND_LIBRARY(ABC_COREABSTRACT AlembicAbcCoreAbstract PATHS ${ABC_LIBRARY_DIR})
+FIND_LIBRARY(ABC_COREHDF5 AlembicAbcCoreHDF5 PATHS ${ABC_LIBRARY_DIR})
+FIND_LIBRARY(ABC_GEOM AlembicAbcGeom PATHS ${ABC_LIBRARY_DIR})
+FIND_LIBRARY(ABC_UTIL AlembicUtil PATHS ${ABC_LIBRARY_DIR})
 SET(ABC_CORE_LIBS ${ABC_GEOM} ${ABC} ${ABC_COREHDF5} ${ABC_COREABSTRACT} ${ABC_UTIL})
 
 SET(ABC_LIBRARIES ${ABC_CORE_LIBS} ${ABC_HDF5_LIBS} "-ldl" ${ABC_OPENEXR_LIBS} ${ABC_ILMBASE_LIBS})
