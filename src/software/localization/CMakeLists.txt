@@ -3,7 +3,7 @@ IF(OpenMVG_USE_BOOST)
 # Create the vocabulary tree
 ###
 ADD_EXECUTABLE(openMVG_main_createVoctree createVoctree.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_createVoctree openMVG_voctree ${BOOST_LIBRARIES})
+TARGET_LINK_LIBRARIES(openMVG_main_createVoctree openMVG_voctree ${OpenMVG_LIBRARIES} ${BOOST_LIBRARIES})
 
 ###
 # generate the pair lists

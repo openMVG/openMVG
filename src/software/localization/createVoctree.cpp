@@ -26,11 +26,169 @@ using namespace std;
 
 //using namespace boost::accumulators;
 namespace po = boost::program_options;
+namespace boostfs = boost::filesystem;
 
 typedef openMVG::features::Descriptor<float, DIMENSION> DescriptorFloat;
 typedef std::vector<DescriptorFloat> DescriptorFloatVector;
 
 typedef std::map<size_t, openMVG::voctree::Document> DocumentMap;
+
+void getInfoBinFile( const std::string &path, int dim, size_t &numDescriptors, int &bytesPerElement )
+{
+	std::fstream fs;
+
+	// the file is supposed to have the number of descriptors as first element and then
+	// the set of descriptors of dimension dim either as chars or floats
+
+	// Open file and get the number of descriptors
+	fs.open(path, std::ios::in | std::ios::binary);
+
+	if( !fs.is_open() )
+	{
+		cerr << "Error while opening " << path << endl;
+		cerr << "Error while opening " + path << endl;
+	}
+
+	// go to the end of the file
+	fs.seekg (0, fs.end);
+
+	// get the length in byte of the file
+	//@fixeme we are ignoring the first element of the file which is the number of
+	// feature. However given the large amount of data of the feature this is mitigate
+	// by the integer division in bytepd later
+	int length = fs.tellg();
+
+	// go back to the beginning of the file
+	fs.seekg (0, fs.beg);
+
+	// get the number of descriptors
+	fs.read((char*) &numDescriptors, sizeof(size_t));
+
+	if( numDescriptors > 0 )
+	{
+		// get the number of bytes per descriptor element
+		bytesPerElement = (length / numDescriptors) / dim;
+	}
+	else
+	{
+		bytesPerElement = 0;
+	}
+}
+
+template<int DIM>
+size_t readDescFromFiles( const std::string &fileFullPath, DescriptorFloatVector &descriptors, std::vector<size_t> &numFeatures )
+{
+	namespace boostfs = boost::filesystem;
+	std::ifstream fs;
+	boostfs::path pathToFiles;
+	std::string line;
+
+	size_t numDescriptors = 0;
+	boostfs::path bp(fileFullPath);
+
+	if( !bp.has_extension() )
+	{
+		cerr << "File without extension not recognized! " << fileFullPath << endl;
+		cerr << "The file  " + fileFullPath + " is neither a JSON nor a txt file" << endl;
+	}
+
+	// get the extension of the file and put it lowercase
+	std::string ext = bp.extension().string();
+	boost::to_lower( ext );
+
+	// two cases, either the input file is a text file with the relative paths or
+	// it is a JSON file from OpenMVG
+
+	// if it is a JSON file
+	if( ext == ".json")
+	{
+		// processing a JSON file containing sfm_data
+
+		// open the sfm_data file
+		openMVG::sfm::SfM_Data sfmdata;
+		openMVG::sfm::Load( sfmdata, fileFullPath, openMVG::sfm::ESfM_Data::VIEWS );
+
+		// get the number of files to load
+		size_t numberOfFiles = sfmdata.GetViews().size();
+
+		if( numberOfFiles == 0 )
+		{
+			cout << "It seems like there are no views in " << fileFullPath << endl;
+			return 0;
+		}
+
+		// get the base path for the files
+		pathToFiles = boostfs::path( fileFullPath ).parent_path();
+
+		// contains a the size in byte for each descriptor element
+		// could be 1 for char/uchar, 4 for float
+		int bytesPerElement = 0;
+
+		cout << "Pre-computing the memory needed..." << endl;
+		boost::progress_display display( numberOfFiles );
+		// pass all the files to get the number of features to load
+		for(openMVG::sfm::Views::const_iterator it = sfmdata.GetViews().begin(); it != sfmdata.GetViews().end(); ++it, ++display)
+		{
+			// get just the image name, remove the extension
+			std::string filename = boostfs::path( it->second->s_Img_path ).stem().string();
+			// and generate the equivalent .desc filename
+
+			filename = boostfs::path( pathToFiles / boostfs::path(filename+".desc")).string();
+
+			// if it is the first one read the number of descriptors and the type of data (we are assuming the the feat are all the same...)
+			// bytesPerElement could be 0 even after the first element (eg it has 0 descriptors...), so do it until
+			// we get the correct info
+			if( bytesPerElement == 0 )
+			{
+				getInfoBinFile( filename, DIM, numDescriptors, bytesPerElement );
+			}
+			else
+			{
+				// get the file size in byte and estimate the number of features without opening the file
+				numDescriptors += ( boostfs::file_size( filename ) / bytesPerElement ) / DIM;
+			}
+		}
+		BOOST_ASSERT( bytesPerElement > 0 );
+		cout << "Found " << numDescriptors << " descriptors overall, allocating memory..." << endl;
+
+
+		descriptors.reserve( numDescriptors );
+		size_t numDesc =  numDescriptors;  // this is just to check everything is ok after
+		numDescriptors = 0;
+
+		cout << "Reading the descriptors..." << endl;
+		display.restart( numberOfFiles );
+		// run through the poses and read the descriptors
+		for(openMVG::sfm::Views::const_iterator it = sfmdata.GetViews().begin(); it != sfmdata.GetViews().end(); ++it, ++display )
+		{
+			// for the first one, read the descriptor and estimate the size of memory to reserve
+
+			// get just the image name, remove the extension
+			std::string filename = boostfs::path( it->second->s_Img_path ).stem().string();
+			// and generate the equivalent .desc filename
+
+			filename = boostfs::path( pathToFiles / boostfs::path(filename+".desc")).string();
+
+			// read the descriptor
+			loadDescsFromBinFile(filename, descriptors);
+			size_t result = descriptors.size();
+
+			// add the number of extracted features for this file
+			numFeatures.push_back( result );
+			// update the overall counter
+			numDescriptors += result;
+		}
+
+		BOOST_ASSERT( numDesc == numDescriptors );
+		return numDescriptors;
+
+	}
+	else
+	{
+		cerr << "File not recognized! " << fileFullPath << endl;
+		cerr << "The file  " + fileFullPath + " is neither a JSON nor a txt file" << endl;
+	}
+}
 
 /*
  * This program is used to load the sift descriptors from a list of files and create a vocabulary tree
@@ -109,6 +267,7 @@ int main( int argc, char** argv )
 	POPART_COUT( "Reading descriptors from " << keylist );
 	auto detect_start = std::chrono::steady_clock::now();
 	size_t numTotDescriptors = 0; // @TODO port me! readDescFromFiles( keylist, descriptors, descRead );
+	readDescFromFiles<DIMENSION>( keylist, descriptors, descRead);
 	auto detect_end = std::chrono::steady_clock::now();
 	auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
 	if ( descriptors.size() == 0 )
