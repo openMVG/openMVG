@@ -2,6 +2,8 @@
 
 #include <openMVG/features/descriptor.hpp>
 #include <openMVG/sfm/sfm_data_io.hpp>
+#include "database.hpp"
+#include "vocabulary_tree.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
@@ -258,6 +260,200 @@ size_t readDescFromFiles( const std::string &fileFullPath, std::vector<Descripto
 		cerr << "File not recognized! " << fileFullPath << endl;
 		cerr << "The file  " + fileFullPath + " is neither a JSON nor a txt file" << endl;
 		return numDescriptors;
+	}
+}
+
+/**
+ * @brief Given a vocabulary tree and a set of features it builds a database
+ *
+ * @param[in] fileFullPath A file containing the path the features to load, it could be a .txt or an OpenMVG .json
+ * @param[in] tree The vocabulary tree to be used for feature quantization
+ * @param[out] db The built database
+ * @param[out] documents A map containing for each image the list of associated visual words
+ * @param[in,out] numFeatures a vector collecting for each file read the number of features read
+ * @return the number of overall features read
+ */
+template<class DescriptorT>
+std::size_t populateDatabase( const std::string &fileFullPath,
+							const VocabularyTree<DescriptorT> &tree,
+							Database &db,
+							std::map<size_t, Document> &documents,
+							std::vector<size_t> &numFeatures)
+{
+	namespace boostfs = boost::filesystem;
+	std::ifstream fs;
+	boostfs::path pathToFiles;
+	std::string line;
+
+	size_t numDescriptors = 0;
+	boostfs::path bp(fileFullPath);
+
+	if( !bp.has_extension() )
+	{
+		cerr << "File without extension not recognized! " << fileFullPath << endl;
+		cerr << "The file  " + fileFullPath + " is neither a JSON nor a txt file" << endl;
+		return numDescriptors;
+	}
+
+	// get the extension of the file and put it lowercase
+	std::string ext = bp.extension().string();
+	boost::to_lower( ext );
+
+	// two cases, either the input file is a text file with the relative paths or
+	// it is a JSON file from OpenMVG
+
+	// if it is a JSON file
+	if( ext == ".json")
+	{
+		// processing a JSON file containing sfm_data
+
+		// open the sfm_data file
+		openMVG::sfm::SfM_Data sfmdata;
+		openMVG::sfm::Load( sfmdata, fileFullPath, openMVG::sfm::ESfM_Data::VIEWS );
+
+		// get the number of files to load
+		size_t numberOfFiles = sfmdata.GetViews().size();
+
+		if( numberOfFiles == 0 )
+		{
+			cout << "It seems like there are no views in " << fileFullPath << endl;
+			return 0;
+		}
+
+		// get the base path for the files
+		pathToFiles = boostfs::path( fileFullPath ).parent_path();
+
+		cout << "Reading the descriptors..." << endl;
+		boost::progress_display display( numberOfFiles );
+		size_t docId = 0;
+		numFeatures.resize(numberOfFiles);
+		// run through the poses and read the descriptors
+		for(openMVG::sfm::Views::const_iterator it = sfmdata.GetViews().begin(); it != sfmdata.GetViews().end(); ++it, ++display, ++docId )
+		{
+			std::vector<DescriptorT> descriptors;
+
+			// get just the image name, remove the extension
+			std::string filename = boostfs::path( it->second->s_Img_path ).stem().string();
+
+			// and generate the equivalent .desc filename
+			filename = boostfs::path( pathToFiles / boostfs::path(filename+".desc")).string();
+
+			// read the descriptor and append them in the vector
+			loadDescsFromBinFile(filename, descriptors, false);
+			size_t result = descriptors.size();
+
+			// create the visual word
+			std::vector<Word> imgVisualWords;
+			imgVisualWords.resize( result, 0 );
+
+			// quantize the descriptors
+			#pragma omp parallel for
+			for( size_t j = 0; j < result; ++j )
+			{
+				//	store the visual word associated to the feature in the temporary list
+				imgVisualWords[j] = tree.quantize( descriptors[ j ] );
+			}
+
+			// add the vector to the documents
+			documents[ docId ] = imgVisualWords;
+
+			// insert document in database
+			db.insert( imgVisualWords );
+
+			// update the overall counter
+			numDescriptors += result;
+
+			// save the number of features of this image
+			numFeatures[docId] = result;
+		}
+
+		return numDescriptors;
+
+	}
+	else if( ext == ".txt" )
+	{
+
+		// processing a file .txt containing the relative paths
+
+		// Extract the folder path from the list file path
+		pathToFiles = boostfs::path( fileFullPath ).parent_path();
+
+		// Open file and fill the vector
+		fs.open(fileFullPath, std::ios::in);
+
+		if( !fs.is_open() )
+		{
+			cerr << "Error while opening " << fileFullPath << endl;
+			return numDescriptors;
+		}
+
+		// count the name of files to load (ie the number of lines)
+		auto numberOfFiles = std::count( std::istreambuf_iterator<char>( fs ),
+									std::istreambuf_iterator<char>(), '\n' );
+
+		if( numberOfFiles == 0 )
+		{
+			cout << "Could not found any file to load..." << endl;
+			return 0;
+		}
+
+		// get back to the beginning of the file
+		fs.clear();
+		fs.seekg (0, std::ios::beg);
+
+		boost::progress_display display( numberOfFiles );
+		size_t docId = 0;
+		numFeatures.resize(numberOfFiles);
+		while( getline( fs, line ) )
+		{
+			std::vector<DescriptorT> descriptors;
+
+			// get the file name
+			std::string filename = line.substr( 0, line.find_first_of(".") );
+			filename = boostfs::path( pathToFiles / boostfs::path(filename+".desc")).string();
+
+			// load descriptors
+			loadDescsFromBinFile(filename, descriptors, false);
+			size_t result = descriptors.size();
+
+			// create the visual word
+			std::vector<Word> imgVisualWords;
+			imgVisualWords.resize( result, 0 );
+
+			// quantize the descriptors
+			#pragma omp parallel for
+			for( size_t j = 0; j < result; ++j )
+			{
+				//	store the visual word associated to the feature in the temporary list
+				imgVisualWords[j] = tree.quantize( descriptors[ j ] );
+			}
+
+			// add the vector to the documents
+			documents[ docId ] = imgVisualWords;
+
+			// insert document in database
+			db.insert( imgVisualWords );
+
+			// update the overall counter
+			numDescriptors += result;
+
+			// save the number of features of this image
+			numFeatures[docId] = result;
+			
+			++display;
+			++docId;
+		}
+
+		// Close and return
+		fs.close();
+
+		return numDescriptors;
+	}
+	else
+	{
+		cerr << "File not recognized! " << fileFullPath << endl;
+		cerr << "The file  " + fileFullPath + " is neither a JSON nor a txt file" << endl;
+		return 0;
 	}
 }
 
