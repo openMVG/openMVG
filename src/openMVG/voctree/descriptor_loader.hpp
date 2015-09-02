@@ -67,6 +67,7 @@ size_t readDescFromFiles( const std::string &fileFullPath, std::vector<Descripto
 	{
 		cerr << "File without extension not recognized! " << fileFullPath << endl;
 		cerr << "The file  " + fileFullPath + " is neither a JSON nor a txt file" << endl;
+		return numDescriptors;
 	}
 
 	// get the extension of the file and put it lowercase
@@ -175,7 +176,7 @@ size_t readDescFromFiles( const std::string &fileFullPath, std::vector<Descripto
 		if( !fs.is_open() )
 		{
 			cerr << "Error while opening " << fileFullPath << endl;
-			cerr << "Error while opening " + fileFullPath << endl;
+			return numDescriptors;
 		}
 
 		// count the name of files to load (ie the number of lines)
@@ -256,6 +257,7 @@ size_t readDescFromFiles( const std::string &fileFullPath, std::vector<Descripto
 	{
 		cerr << "File not recognized! " << fileFullPath << endl;
 		cerr << "The file  " + fileFullPath + " is neither a JSON nor a txt file" << endl;
+		return numDescriptors;
 	}
 }
 
