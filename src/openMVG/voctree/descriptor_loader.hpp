@@ -16,8 +16,42 @@ using namespace std;
 namespace openMVG {
 namespace voctree {
 
+/**
+ * Get the number of descriptors contained inside a .desc file and the number of bytes
+ * used to store each descriptor elements
+ *
+ * @param[in] path The .desc filename
+ * @param[in] dim The number of elements per descriptor
+ * @param[out] numDescriptors The number of descriptors stored in the file
+ * @param[out] bytesPerElement The number of bytes used to store each element of the descriptor
+ */
 void getInfoBinFile( const std::string &path, int dim, size_t &numDescriptors, int &bytesPerElement );
 
+/**
+ * Read a set of descriptors from a file containing the path to the descriptor files.
+ * Two format are supported:
+ * 1. a simple text file containing a list of filenames of images or descriptors, one for
+ * each line, like:
+ * imagename1.jpg
+ * imagename2.jpg
+ * imagename3.jpg
+ * or
+ * imagename1.desc
+ * imagename2.desc
+ * imagename3.desc
+ * In any case the filename for the descriptors will be inferred by removing the extension
+ * and keeping the name. Normally this is the format used by Bundler
+ *
+ * 2. a json file containing the sfm_data using the OpenMVG data container. The function will
+ * parse the view section to retrieve the image name and it will infer the descriptor
+ * filename from that
+ *
+ * @param[in] fileFullPath the input filename containing the list of file to read
+ * @param[in,out] descriptors the vector to which append all the read descriptors
+ * @param[in,out] numFeatures a vector collecting for each file read the number of features read
+ * @return the total number of features read
+ *
+ */
 template<class DescriptorT>
 size_t readDescFromFiles( const std::string &fileFullPath, std::vector<DescriptorT>& descriptors, std::vector<size_t> &numFeatures )
 {
