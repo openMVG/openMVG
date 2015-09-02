@@ -127,6 +127,97 @@ size_t readDescFromFiles( const std::string &fileFullPath, std::vector<Descripto
 		return numDescriptors;
 
 	}
+	else if( ext == ".txt" )
+	{
+
+		// processing a file .txt containing the relative paths
+
+		// Extract the folder path from the list file path
+		pathToFiles = boostfs::path( fileFullPath ).parent_path();
+
+		// Open file and fill the vector
+		fs.open(fileFullPath, std::ios::in);
+
+		if( !fs.is_open() )
+		{
+			cerr << "Error while opening " << fileFullPath << endl;
+			cerr << "Error while opening " + fileFullPath << endl;
+		}
+
+		// count the name of files to load (ie the number of lines)
+		auto numberOfFiles = std::count( std::istreambuf_iterator<char>( fs ),
+									std::istreambuf_iterator<char>(), '\n' );
+
+		if( numberOfFiles == 0 )
+		{
+			cout << "Could not found any file to load..." << endl;
+			return 0;
+		}
+
+		// reserve space to append the number of extracted features
+		numFeatures.reserve( numFeatures.size() + numberOfFiles );
+
+		// get back to the beginning of the file
+		fs.seekg (0, std::ios::beg);
+
+		// contains a the size in byte for each descriptor element
+		// could be 1 for char/uchar, 4 for float
+		int bytesPerElement = 0;
+
+		// pass all the files to get the number of features to load
+		while( getline( fs, line ) )
+		{
+			// we have to do that because OMVG does not really output a clean list.txt, it also
+			// contains other stuff, so we look at the first '.' to get the extension (not robust at all)
+			std::string filename = line.substr( 0, line.find_first_of(".") );
+			filename = boostfs::path( pathToFiles / boostfs::path(filename+".desc")).string();
+			std::cout << filename << std::endl;
+
+			// if it is the first one read the number of descriptors and the type of data (we are assuming the the feat are all the same...)
+			// bytesPerElement could be 0 even after the first element (eg it has 0 descriptors...), so do it until
+			// we get the correct info
+			if( bytesPerElement == 0 )
+			{
+				getInfoBinFile( filename, DescriptorT::static_size, numDescriptors, bytesPerElement );
+			}
+			else
+			{
+				// get the file size in byte and estimate the number of features without opening the file
+				numDescriptors += ( boostfs::file_size( filename ) / bytesPerElement ) / DescriptorT::static_size;
+			}
+		}
+
+		BOOST_ASSERT( bytesPerElement > 0 );
+
+		descriptors.reserve( numDescriptors );
+		size_t numDesc =  numDescriptors;  // this is just to check everything is ok after
+		numDescriptors = 0;
+
+		// get back to the beginning of the file
+		fs.clear();
+		fs.seekg (0, std::ios::beg);
+
+		boost::progress_display display( numberOfFiles );
+		while( getline( fs, line ) )
+		{
+			std::string filename = line.substr( 0, line.find_first_of(".") );
+			filename = boostfs::path( pathToFiles / boostfs::path(filename+".desc")).string();
+			loadDescsFromBinFile(filename, descriptors, true);
+			size_t result = descriptors.size();
+			// add the number of extracted features for this file
+			numFeatures.push_back( result - numDescriptors );
+			// update the overall counter
+			numDescriptors = result;
+			++display;
+		}
+
+		// Close and return
+		fs.close();
+
+		BOOST_ASSERT( numDesc == numDescriptors );
+
+		return numDescriptors;
+	}
 	else
 	{
 		cerr << "File not recognized! " << fileFullPath << endl;
