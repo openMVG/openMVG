@@ -124,7 +124,7 @@ int main( int argc, char** argv )
 	builder.build( descriptors, K, LEVELS );
 	detect_end = std::chrono::steady_clock::now();
 	detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
-	POPART_COUT( "Tree created in " << detect_elapsed.count() << " sec" );
+	POPART_COUT( "Tree created in " << ((float) detect_elapsed.count()) / 1000 << " sec" );
 	POPART_COUT( builder.tree( ).centers( ).size( ) << " centers" );
 	POPART_COUT( "Saving vocabulary tree as " << treeName );
 	builder.tree( ).save( treeName );
