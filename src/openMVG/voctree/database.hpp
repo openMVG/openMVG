@@ -120,7 +120,15 @@ namespace voctree{
 			DocId id;
 			uint32_t count;
 
+			WordFrequency() {}
 			WordFrequency( DocId _id, uint32_t _count ) : id( _id ), count( _count ) { }
+
+			// Cereal serialize methode
+			template<class Archive>
+			void serialize(Archive & archive)
+			{
+				archive(id, count);
+			}
 		};
 
 		// Stored in increasing order by DocId
