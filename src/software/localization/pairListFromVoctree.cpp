@@ -195,14 +195,14 @@ static const std::string programDescription =
 
 int main( int argc, char** argv )
 {
-	int verbosity = 1;						///< verbosity level
-	string weightsName;						///< the filename for the voctree weights
-	bool withWeights = false;				///< flag for the optional weights file
-	string treeName;						///< the filename of the voctree
-	string keylist;							///< the file containing the list of features
-	string outfile = "pairList.txt";		///< the file in which to save the results
-	bool withOutput = false;				///< flag for the optional output file
-	size_t numImageQuery;					///< the number of matches to retrieve for each image
+	int verbosity = 1;                  ///< verbosity level
+	string weightsName;                 ///< the filename for the voctree weights
+	bool withWeights = false;           ///< flag for the optional weights file
+	string treeName;                    ///< the filename of the voctree
+	string keylist;                     ///< the file containing the list of features
+	string outfile = "pairList.txt";    ///< the file in which to save the results
+	bool withOutput = false;            ///< flag for the optional output file
+	size_t numImageQuery;               ///< the number of matches to retrieve for each image
 
 	po::options_description desc( programDescription );
 	desc.add_options()
