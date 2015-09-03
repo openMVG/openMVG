@@ -224,7 +224,6 @@ std::size_t populateDatabase( const std::string &fileFullPath,
 	namespace boostfs = boost::filesystem;
 	std::ifstream fs;
 	boostfs::path pathToFiles;
-	std::string line;
 
 	size_t numDescriptors = 0;
 	boostfs::path bp(fileFullPath);
@@ -242,6 +241,9 @@ std::size_t populateDatabase( const std::string &fileFullPath,
 
 	// two cases, either the input file is a text file with the relative paths or
 	// it is a JSON file from OpenMVG
+	// in the two cases we fill a vector with paths to the descriptors files
+
+	vector<string> descriptorsFiles;
 
 	// if it is a JSON file
 	if( ext == ".json")
@@ -264,140 +266,97 @@ std::size_t populateDatabase( const std::string &fileFullPath,
 		// get the base path for the files
 		pathToFiles = boostfs::path( fileFullPath ).parent_path();
 
-		cout << "Reading the descriptors..." << endl;
-		boost::progress_display display( numberOfFiles );
-		size_t docId = 0;
-		numFeatures.resize(numberOfFiles);
-		// run through the poses and read the descriptors
-		for(openMVG::sfm::Views::const_iterator it = sfmdata.GetViews().begin(); it != sfmdata.GetViews().end(); ++it, ++display, ++docId )
+		// explore the sfm_data container to get the files path
+		for(openMVG::sfm::Views::const_iterator it = sfmdata.GetViews().begin(); it != sfmdata.GetViews().end(); ++it)
 		{
-			std::vector<DescriptorT> descriptors;
-
 			// get just the image name, remove the extension
-			std::string filename = boostfs::path( it->second->s_Img_path ).stem().string();
+			std::string filepath = boostfs::path( it->second->s_Img_path ).stem().string();
 
-			// and generate the equivalent .desc filename
-			filename = boostfs::path( pathToFiles / boostfs::path(filename+".desc")).string();
+			// generate the equivalent .desc file path
+			filepath = boostfs::path( pathToFiles / boostfs::path(filepath+".desc")).string();
 
-			// read the descriptor and append them in the vector
-			loadDescsFromBinFile(filename, descriptors, false);
-			size_t result = descriptors.size();
-
-			// create the visual word
-			std::vector<Word> imgVisualWords;
-			imgVisualWords.resize( result, 0 );
-
-			// quantize the descriptors
-			#pragma omp parallel for
-			for( size_t j = 0; j < result; ++j )
-			{
-				//	store the visual word associated to the feature in the temporary list
-				imgVisualWords[j] = tree.quantize( descriptors[ j ] );
-			}
-
-			// add the vector to the documents
-			documents[ docId ] = imgVisualWords;
-
-			// insert document in database
-			db.insert( imgVisualWords );
-
-			// update the overall counter
-			numDescriptors += result;
-
-			// save the number of features of this image
-			numFeatures[docId] = result;
+			// add the filepath in the vector
+			descriptorsFiles.push_back(filepath);
 		}
-
-		return numDescriptors;
-
 	}
-	else if( ext == ".txt" )
+	else if(ext == ".txt")
 	{
-
 		// processing a file .txt containing the relative paths
 
 		// Extract the folder path from the list file path
-		pathToFiles = boostfs::path( fileFullPath ).parent_path();
+		pathToFiles = boostfs::path(fileFullPath).parent_path();
 
-		// Open file and fill the vector
+		// Open file
 		fs.open(fileFullPath, std::ios::in);
-
-		if( !fs.is_open() )
+		if(!fs.is_open())
 		{
 			cerr << "Error while opening " << fileFullPath << endl;
 			return numDescriptors;
 		}
 
-		// count the name of files to load (ie the number of lines)
-		auto numberOfFiles = std::count( std::istreambuf_iterator<char>( fs ),
-									std::istreambuf_iterator<char>(), '\n' );
-
-		if( numberOfFiles == 0 )
+		// read the file line by line and store in the vector the descriptors paths
+		std::string line;
+		while(getline(fs,line))
 		{
-			cout << "Could not found any file to load..." << endl;
-			return 0;
+			// we have to do that because OMVG does not really output a clean list.txt, it also
+			// contains other stuff, so we look at the first '.' to get the extension (not robust at all)
+			std::string filepath = line.substr( 0, line.find_first_of(".") );
+			filepath = boostfs::path( pathToFiles / boostfs::path(filepath+".desc")).string();
+
+			// add the filepath in the vector
+			descriptorsFiles.push_back(filepath);
 		}
-
-		// get back to the beginning of the file
-		fs.clear();
-		fs.seekg (0, std::ios::beg);
-
-		boost::progress_display display( numberOfFiles );
-		size_t docId = 0;
-		numFeatures.resize(numberOfFiles);
-		while( getline( fs, line ) )
-		{
-			std::vector<DescriptorT> descriptors;
-
-			// get the file name
-			std::string filename = line.substr( 0, line.find_first_of(".") );
-			filename = boostfs::path( pathToFiles / boostfs::path(filename+".desc")).string();
-
-			// load descriptors
-			loadDescsFromBinFile(filename, descriptors, false);
-			size_t result = descriptors.size();
-
-			// create the visual word
-			std::vector<Word> imgVisualWords;
-			imgVisualWords.resize( result, 0 );
-
-			// quantize the descriptors
-			#pragma omp parallel for
-			for( size_t j = 0; j < result; ++j )
-			{
-				//	store the visual word associated to the feature in the temporary list
-				imgVisualWords[j] = tree.quantize( descriptors[ j ] );
-			}
-
-			// add the vector to the documents
-			documents[ docId ] = imgVisualWords;
-
-			// insert document in database
-			db.insert( imgVisualWords );
-
-			// update the overall counter
-			numDescriptors += result;
-
-			// save the number of features of this image
-			numFeatures[docId] = result;
-			
-			++display;
-			++docId;
-		}
-
-		// Close and return
-		fs.close();
-
-		return numDescriptors;
 	}
 	else
 	{
 		cerr << "File not recognized! " << fileFullPath << endl;
 		cerr << "The file  " + fileFullPath + " is neither a JSON nor a txt file" << endl;
-		return 0;
+		return numDescriptors;
 	}
-}
 
+	// Read the descriptors
+	cout << "Reading the descriptors..." << endl;
+	boost::progress_display display(descriptorsFiles.size());
+	size_t docId = 0;
+	numFeatures.resize(descriptorsFiles.size());
+
+	// Run through the path vector and read the descriptors
+	for(vector<string>::const_iterator it = descriptorsFiles.begin(); it != descriptorsFiles.end(); ++it, ++display, ++docId)
+	{
+		std::vector<DescriptorT> descriptors;
+
+		// Read the descriptors
+		loadDescsFromBinFile(*it, descriptors, false);
+		size_t result = descriptors.size();
+
+		// Create the visual words vector
+		vector<Word> imgVisualWords;
+		imgVisualWords.resize(result, 0);
+
+		// Quantize the descriptors
+		#pragma omp parallel for
+		for(size_t j = 0; j < result; ++j)
+		{
+			// Store the visual word associated to the descriptor in the temporarylist
+			imgVisualWords[j] = tree.quantize(descriptors[j]);
+		}
+
+		// Add the vector to the documents
+		documents[docId] = imgVisualWords;
+
+		// Insert document in database
+		db.insert(imgVisualWords);
+
+		// Update the overall counter
+		numDescriptors += result;
+
+		// Save the number of features of this image
+		numFeatures[docId] = result;
+	}
+
+	// Return the result
+	return numDescriptors;
+}
 
 }
 }
