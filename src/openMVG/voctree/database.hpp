@@ -3,6 +3,10 @@
 
 #include "vocabulary_tree.hpp"
 
+#include <cereal/archives/binary.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/map.hpp>
+
 #include <map>
 
 namespace openMVG{
@@ -101,6 +105,13 @@ namespace voctree{
 		// Save weights and documents
 		//void save(const std::string& file) const;
 		//void load(const std::string& file);
+
+		// Cereal serialize method
+		template<class Archive>
+		void serialize(Archive & archive)
+		{
+			archive(word_files_, word_weights_, database_vectors_);
+		}
 
 	private:
 
