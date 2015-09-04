@@ -93,6 +93,9 @@ size_t readDescFromFiles( const std::string &fileFullPath, std::vector<Descripto
 		// get the number of files to load
 		size_t numberOfFiles = sfmdata.GetViews().size();
 
+		// Reserve memory for the file path vector
+		descriptorsFiles.reserve(numberOfFiles);
+
 		if( numberOfFiles == 0 )
 		{
 			cout << "It seems like there are no views in " << fileFullPath << endl;
@@ -256,6 +259,9 @@ std::size_t populateDatabase( const std::string &fileFullPath,
 
 		// get the number of files to load
 		size_t numberOfFiles = sfmdata.GetViews().size();
+
+		// Reserve memory for the file path vector
+		descriptorsFiles.reserve(numberOfFiles);
 
 		if( numberOfFiles == 0 )
 		{
