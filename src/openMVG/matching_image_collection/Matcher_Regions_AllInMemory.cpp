@@ -13,6 +13,7 @@
 #include "openMVG/matching/matcher_kdtree_flann.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
 #include "openMVG/matching/matching_filters.hpp"
+#include "openMVG/matching/regions_matcher.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/progress/progress.hpp"
@@ -79,24 +80,14 @@ void Template_Matcher(
     if (regions_provider->regions_per_view.count(I) == 0)
       continue;
 
-    const features::Regions *regionsI = regions_provider->regions_per_view.at(I).get();
-    const size_t regions_countI = regionsI->RegionCount();
-    if (regions_countI == 0)
+    const features::Regions& regionsI = *regions_provider->regions_per_view.at(I).get();
+    if (regionsI.RegionCount() == 0)
     {
       my_progress_bar += indexToCompare.size();
       continue;
     }
-
-    const std::vector<PointFeature> pointFeaturesI = regionsI->GetRegionsPositions();
-    const typename MatcherT::ScalarT * tabI =
-      reinterpret_cast<const typename MatcherT::ScalarT *>(regionsI->DescriptorRawData());
-
-    MatcherT matcher10;
-    if (!matcher10.Build(tabI, regions_countI, regionsI->DescriptorLength()))
-    {
-      my_progress_bar += indexToCompare.size();
-      continue;
-    }
+    
+    matching::RegionsMatcher<MatcherT> matcher(regionsI);
 
     for (int j = 0; j < (int)indexToCompare.size(); ++j, ++my_progress_bar)
     {
@@ -105,50 +96,16 @@ void Template_Matcher(
       if (regions_provider->regions_per_view.count(J) == 0)
         continue;
 
-      const features::Regions *regionsJ = regions_provider->regions_per_view.at(J).get();
-      const size_t regions_countJ = regionsJ->RegionCount();
-      if(regions_countJ == 0)
-      {
+      const features::Regions& regionsJ = *regions_provider->regions_per_view.at(J).get();
+      if(regionsJ.RegionCount() == 0)
         continue;
-      }
+      
+      std::vector<IndMatch> vec_matches;
+      matcher.MatchRatioTest(vec_matches, regionsJ, fDistRatio);
 
-      const typename MatcherT::ScalarT * tabJ =
-        reinterpret_cast<const typename MatcherT::ScalarT *>(regionsJ->DescriptorRawData());
-
-      const size_t NNN__ = 2;
-      std::vector<int> vec_nIndice10;
-      std::vector<typename MatcherT::DistanceType> vec_fDistance10;
-
-      //Find left->right
-      if (matcher10.SearchNeighbours(tabJ, regions_countJ, &vec_nIndice10, &vec_fDistance10, NNN__))
+      if (!vec_matches.empty())
       {
-        std::vector<IndMatch> vec_FilteredMatches;
-        std::vector<int> vec_NNRatioIndexes;
-        NNdistanceRatio( vec_fDistance10.begin(), // distance start
-          vec_fDistance10.end(),  // distance end
-          NNN__, // Number of neighbor in iterator sequence (minimum required 2)
-          vec_NNRatioIndexes, // output (indices that respect Lowe Ratio)
-          fDistRatio);
-
-        for (size_t k=0; k < vec_NNRatioIndexes.size(); ++k)
-        {
-          const size_t index = vec_NNRatioIndexes[k];
-          vec_FilteredMatches.push_back(
-            IndMatch(vec_nIndice10[index*NNN__], index) );
-        }
-
-        // Remove duplicates
-        IndMatch::getDeduplicated(vec_FilteredMatches);
-
-        // Remove matches that have the same (X,Y) coordinates
-        const std::vector<PointFeature> pointFeaturesJ = regionsJ->GetRegionsPositions();
-        IndMatchDecorator<float> matchDeduplicator(vec_FilteredMatches, pointFeaturesI, pointFeaturesJ);
-        matchDeduplicator.getDeduplicated(vec_FilteredMatches);
-
-        if (!vec_FilteredMatches.empty())
-        {
-          map_PutativesMatches.insert( make_pair( make_pair(I,J), std::move(vec_FilteredMatches) ));
-        }
+        map_PutativesMatches.insert( make_pair( make_pair(I,J), std::move(vec_matches) ));
       }
     }
   }
