@@ -921,7 +921,7 @@ bool SequentialSfMReconstructionEngine::Resection(size_t viewIndex)
       Landmark landmark;
       landmark.X = pt3D.col(idx);
       const size_t feat_id = vec_featIdForResection[idx];
-      Observation ob(_features_provider->feats_per_view[viewIndex][feat_id].coords().cast<double>(), feat_id);
+      Observation ob(_features_provider->feats_per_view.at(viewIndex)[feat_id].coords().cast<double>(), feat_id);
       landmark.obs[view_I->id_view] = ob;
       tiny_scene.structure[i] = landmark;
     }
@@ -935,11 +935,11 @@ bool SequentialSfMReconstructionEngine::Resection(size_t viewIndex)
     }
 
     // E. Update the global scene with the new camera
-    _sfm_data.poses[view_I->id_pose] = tiny_scene.poses[view_I->id_pose];
+    _sfm_data.poses[view_I->id_pose] = tiny_scene.poses.at(view_I->id_pose);
     // - with new intrinsic data if it was unknown
     if (!bKnownIntrinsic)
     {
-      _sfm_data.intrinsics[view_I->id_intrinsic] = tiny_scene.intrinsics[view_I->id_intrinsic];
+      _sfm_data.intrinsics[view_I->id_intrinsic] = tiny_scene.intrinsics.at(view_I->id_intrinsic);
     }
     _map_ACThreshold.insert(std::make_pair(viewIndex, errorMax));
   }
@@ -955,7 +955,7 @@ bool SequentialSfMReconstructionEngine::Resection(size_t viewIndex)
     const IntrinsicBase * intrinsic = _sfm_data.GetIntrinsics().at(view_I->id_intrinsic).get();
     const Pose3 pose = _sfm_data.GetPoseOrDie(view_I);
     const Vec3 X = pt3D.col(cpt);
-    const Vec2 x = _features_provider->feats_per_view[viewIndex][*iterfeatId].coords().cast<double>();
+    const Vec2 x = _features_provider->feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
     const Vec2 residual = intrinsic->residual(pose, X, x);
     if (residual.norm() < errorMax &&
         pose.depth(X) > 0)
@@ -965,9 +965,9 @@ bool SequentialSfMReconstructionEngine::Resection(size_t viewIndex)
     }
     else {
       // Remove this observation from the scene tracking data
-      _map_tracks[*iterTrackId].erase(viewIndex);
+      _map_tracks.at(*iterTrackId).erase(viewIndex);
       // Remove the track itself, if there is only one view left.
-      if (_map_tracks[*iterTrackId].size() < 2) {
+      if (_map_tracks.at(*iterTrackId).size() < 2) {
           _map_tracks.erase(*iterTrackId);
       }
     }
@@ -1033,8 +1033,8 @@ bool SequentialSfMReconstructionEngine::Resection(size_t viewIndex)
         const size_t trackId = vec_tracksToAdd[i];
 
         // Get corresponding points and triangulate it
-        const Vec2 x1 = _features_provider->feats_per_view[I][vec_index[i]._i].coords().cast<double>();
-        const Vec2 x2 = _features_provider->feats_per_view[J][vec_index[i]._j].coords().cast<double>();
+        const Vec2 x1 = _features_provider->feats_per_view.at(I)[vec_index[i]._i].coords().cast<double>();
+        const Vec2 x2 = _features_provider->feats_per_view.at(J)[vec_index[i]._j].coords().cast<double>();
 
         Vec3 X_euclidean = Vec3::Zero();
         assert(reconstructed_trackId.count(trackId) == 0);
@@ -1052,14 +1052,14 @@ bool SequentialSfMReconstructionEngine::Resection(size_t viewIndex)
         if ( angle > 2.0 &&
              pose_1.depth(X_euclidean) > 0 &&
              pose_2.depth(X_euclidean) > 0 &&
-             residual_1.norm() < std::max(4.0, _map_ACThreshold[I]) &&
-             residual_2.norm() < std::max(4.0, _map_ACThreshold[J]))
+             residual_1.norm() < std::max(4.0, _map_ACThreshold.at(I)) &&
+             residual_2.norm() < std::max(4.0, _map_ACThreshold.at(J)))
         {
           // Add a new track
           ++new_track_count;
           _sfm_data.structure[trackId].X = X_euclidean;
-          _sfm_data.structure[trackId].obs[I] = Observation(x1, vec_index[i]._i);
-          _sfm_data.structure[trackId].obs[J] = Observation(x2, vec_index[i]._j);
+          _sfm_data.structure.at(trackId).obs[I] = Observation(x1, vec_index[i]._i);
+          _sfm_data.structure.at(trackId).obs[J] = Observation(x2, vec_index[i]._j);
           reconstructed_trackId.insert(trackId);
         }
       }
