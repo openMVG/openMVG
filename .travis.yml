@@ -37,11 +37,7 @@ script:
 # Perform unit tests only on GCC builds
   - if [ "$CC" = "gcc" ]; then make test; fi
 
-branches:
-  only:
-    - develop
-
-after_success:
+# after_success:
   #- cd ../openMVG
   # If GCC: compute code coverage and export it to coveralls
   #- if [ "$CC" = "gcc" ];
