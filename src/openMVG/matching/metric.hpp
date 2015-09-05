@@ -10,6 +10,7 @@
 
 #include "openMVG/matching/metric_hamming.hpp"
 #include "openMVG/numeric/accumulator_trait.hpp"
+#include <cstddef>
 
 namespace openMVG {
 namespace matching {
@@ -18,54 +19,54 @@ namespace matching {
 template<class T>
 struct L2_Simple
 {
-    typedef T ElementType;
-    typedef typename Accumulator<T>::Type ResultType;
+  typedef T ElementType;
+  typedef typename Accumulator<T>::Type ResultType;
 
-    template <typename Iterator1, typename Iterator2>
-    inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
-    {
-        ResultType result = ResultType();
-        ResultType diff;
-        for(size_t i = 0; i < size; ++i ) {
-            diff = *a++ - *b++;
-            result += diff*diff;
-        }
-        return result;
+  template <typename Iterator1, typename Iterator2>
+  inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
+  {
+    ResultType result = ResultType();
+    ResultType diff;
+    for(size_t i = 0; i < size; ++i ) {
+      diff = *a++ - *b++;
+      result += diff*diff;
     }
+    return result;
+  }
 };
 
 /// Squared Euclidean distance functor (vectorized version)
 template<class T>
 struct L2_Vectorized
 {
-    typedef T ElementType;
-    typedef typename Accumulator<T>::Type ResultType;
+  typedef T ElementType;
+  typedef typename Accumulator<T>::Type ResultType;
 
-    template <typename Iterator1, typename Iterator2>
-    inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
-    {
-      ResultType result = ResultType();
-      ResultType diff0, diff1, diff2, diff3;
-      Iterator1 last = a + size;
-      Iterator1 lastgroup = last - 3;
+  template <typename Iterator1, typename Iterator2>
+  inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
+  {
+    ResultType result = ResultType();
+    ResultType diff0, diff1, diff2, diff3;
+    Iterator1 last = a + size;
+    Iterator1 lastgroup = last - 3;
 
-      // Process 4 items with each loop for efficiency.
-      while (a < lastgroup) {
-          diff0 = a[0] - b[0];
-          diff1 = a[1] - b[1];
-          diff2 = a[2] - b[2];
-          diff3 = a[3] - b[3];
-          result += diff0 * diff0 + diff1 * diff1 + diff2 * diff2 + diff3 * diff3;
-          a += 4;
-          b += 4;
-      }
-      // Process last 0-3 pixels.  Not needed for standard vector lengths.
-      while (a < last) {
-          diff0 = *a++ - *b++;
-          result += diff0 * diff0;
-      }
-      return result;
+    // Process 4 items with each loop for efficiency.
+    while (a < lastgroup) {
+      diff0 = a[0] - b[0];
+      diff1 = a[1] - b[1];
+      diff2 = a[2] - b[2];
+      diff3 = a[3] - b[3];
+      result += diff0 * diff0 + diff1 * diff1 + diff2 * diff2 + diff3 * diff3;
+      a += 4;
+      b += 4;
     }
+    // Process last 0-3 pixels.  Not needed for standard vector lengths.
+    while (a < last) {
+      diff0 = *a++ - *b++;
+      result += diff0 * diff0;
+    }
+    return result;
+  }
 };
 
 #ifdef OPENVMG_USE_SSE
@@ -120,14 +121,14 @@ namespace optim_ss2{
 template<>
 struct L2_Vectorized<float>
 {
-    typedef float ElementType;
-    typedef Accumulator<float>::Type ResultType;
+  typedef float ElementType;
+  typedef Accumulator<float>::Type ResultType;
 
-    template <typename Iterator1, typename Iterator2>
-    inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
-    {
-      return optim_ss2::l2_sse(a,b,size);
-    }
+  template <typename Iterator1, typename Iterator2>
+  inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
+  {
+    return optim_ss2::l2_sse(a,b,size);
+  }
 };
 
 #endif // OPENVMG_USE_SSE

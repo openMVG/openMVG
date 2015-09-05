@@ -6,6 +6,7 @@ TARGET_LINK_LIBRARIES(openMVG_sample_robustEssential_spherical
   openMVG_image
   openMVG_multiview
   openMVG_features
+  openMVG_matching
   openMVG_system
   openMVG_sfm
   stlplus

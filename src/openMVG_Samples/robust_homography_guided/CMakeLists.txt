@@ -6,9 +6,8 @@ TARGET_LINK_LIBRARIES(openMVG_sample_robustHomography_guided
   openMVG_image
   openMVG_multiview
   openMVG_features
-  ${OPENMVG_LIBRARY_DEPENDENCIES}
+  openMVG_matching
   vlsift
-  stlplus
-  ${CERES_LIBRARIES})
+  stlplus)
 
 SET_PROPERTY(TARGET openMVG_sample_robustHomography_guided PROPERTY FOLDER OpenMVG/Samples)

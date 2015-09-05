@@ -9,7 +9,7 @@
 #include "openMVG/features/features.hpp"
 #include "openMVG/robust_estimation/guided_matching.hpp"
 #include "openMVG/multiview/solver_homography_kernel.hpp"
-#include "./regions_matching.hpp"
+#include "openMVG/matching/regions_matcher.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
@@ -370,11 +370,11 @@ int main(int argc, char **argv)
           const PointFeatures pointsFeatures0 = regions_0->GetRegionsPositions();
           const PointFeatures pointsFeaturesI = regions_I->GetRegionsPositions();
 
-          IndMatches putativesMatches;
-          Regions_Matcher(
-            regions_0, regions_I,
-            putativesMatches,
-            nndr);
+          matching::IndMatches putativesMatches;
+          matching::DistanceRatioMatch(
+            nndr, matching::BRUTE_FORCE_L2,
+            *regions_0, *regions_I,
+            putativesMatches);
 
           Mat x0, xI;
           PointsToMat(putativesMatches, pointsFeatures0, pointsFeaturesI, x0, xI);

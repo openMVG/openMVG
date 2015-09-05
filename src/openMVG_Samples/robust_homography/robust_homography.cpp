@@ -8,14 +8,13 @@
 #include "openMVG/image/image.hpp"
 #include "openMVG/image/image_warping.hpp"
 #include "openMVG/features/features.hpp"
-#include "openMVG/matching/matcher_brute_force.hpp"
+#include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/multiview/solver_homography_kernel.hpp"
 #include "openMVG/multiview/conditioning.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 
 #include "nonFree/sift/SIFT_describer.hpp"
-#include "openMVG_Samples/siftPutativeMatches/two_view_matches.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
@@ -87,15 +86,12 @@ int main() {
   std::vector<IndMatch> vec_PutativeMatches;
   //-- Perform matching -> find Nearest neighbor, filtered with Distance ratio
   {
-    // Define a matcher and a metric to find corresponding points
-    typedef SIFT_Regions::DescriptorT DescriptorT;
-    typedef L2_Vectorized<DescriptorT::bin_type> Metric;
-    typedef ArrayMatcherBruteForce<DescriptorT::bin_type, Metric> MatcherT;
-    // Distance ratio squared due to squared metric
-    getPutativesMatches<DescriptorT, MatcherT>(
-      ((SIFT_Regions*)regions_perImage.at(0).get())->Descriptors(),
-      ((SIFT_Regions*)regions_perImage.at(1).get())->Descriptors(),
-      Square(0.8), vec_PutativeMatches);
+    // Find corresponding points
+    matching::DistanceRatioMatch(
+      0.8, matching::BRUTE_FORCE_L2,
+      *regions_perImage.at(0).get(),
+      *regions_perImage.at(1).get(),
+      vec_PutativeMatches);
 
     // Draw correspondences after Nearest Neighbor ratio filter
     svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
@@ -109,8 +105,8 @@ int main() {
       svgStream.drawCircle(L.x(), L.y(), L.scale(), svgStyle().stroke("yellow", 2.0));
       svgStream.drawCircle(R.x()+imageL.Width(), R.y(), R.scale(),svgStyle().stroke("yellow", 2.0));
     }
-    string out_filename = "03_siftMatches.svg";
-    ofstream svgFile( out_filename.c_str() );
+    const std::string out_filename = "03_siftMatches.svg";
+    std::ofstream svgFile( out_filename.c_str() );
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
   }

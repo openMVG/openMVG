@@ -8,6 +8,7 @@
 
 #include "openMVG/matching/matching_interface.hpp"
 #include "openMVG/matching/cascade_hasher.hpp"
+#include "openMVG/matching/indMatch.hpp"
 #include <memory>
 #include <random>
 #include <cmath>
