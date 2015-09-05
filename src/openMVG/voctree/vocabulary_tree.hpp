@@ -52,7 +52,10 @@ namespace voctree {
 		VocabularyTree( const std::string& file, Distance d = Distance( ) );
 
 		/// Quantizes a feature into a discrete word.
-		Word quantize( const Feature& f ) const;
+		Word quantize( const Feature& feature ) const;
+
+		/// Quantizes a set of features into visual words.
+		std::vector<Word> quantize( const std::vector<Feature>& features ) const;
 
 		/// Get the depth (number of levels) of the tree.
 		uint32_t levels( ) const;
@@ -101,7 +104,7 @@ namespace voctree {
 	}
 
 	template<class Feature, class Distance, class FeatureAllocator>
-	Word VocabularyTree<Feature, Distance, FeatureAllocator>::quantize( const Feature& f ) const
+	Word VocabularyTree<Feature, Distance, FeatureAllocator>::quantize( const Feature& feature ) const
 	{
 		//	printf("asserting\n");
 		assert( initialized( ) );
@@ -118,7 +121,7 @@ namespace voctree {
 			{
 				if ( !valid_centers_[child] )
 					break; // Fewer than splits() children.
-				distance_type child_distance = distance_( f, centers_[child] );
+				distance_type child_distance = distance_( feature, centers_[child] );
 				if ( child_distance < best_distance )
 				{
 					best_child = child;
@@ -129,6 +132,23 @@ namespace voctree {
 		}
 
 		return index - word_start_;
+	}
+  
+	template<class Feature, class Distance, class FeatureAllocator>
+	std::vector<Word> VocabularyTree<Feature, Distance, FeatureAllocator>::quantize( const std::vector<Feature>& features ) const
+	{
+		std::vector<Word> imgVisualWords(features.size(), 0);
+
+		// quantize the features
+		#pragma omp parallel for
+		for( size_t j = 0; j < features.size(); ++j )
+		{
+			// store the visual word associated to the feature in the temporary list
+			imgVisualWords[j] = quantize(features[j]);
+		}
+
+		// add the vector to the documents
+		return imgVisualWords;
 	}
 
 	template<class Feature, class Distance, class FeatureAllocator>
