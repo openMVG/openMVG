@@ -27,6 +27,14 @@ class Pinhole_Intrinsic : public IntrinsicBase
 
   public:
   Pinhole_Intrinsic(
+    unsigned int w, unsigned int h,
+    const Mat3 K)
+    :IntrinsicBase(w,h)
+  {
+    _K = K;
+    _Kinv = _K.inverse();
+  }
+  Pinhole_Intrinsic(
     unsigned int w = 0, unsigned int h = 0,
     double focal_length_pix = 0.0,
     double ppx = 0.0, double ppy = 0.0)

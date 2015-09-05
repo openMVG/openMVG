@@ -169,6 +169,12 @@ public:
     return metric(_vec_descs[i].getData(), regionsT->_vec_descs[j].getData(), DescriptorT::static_size);
   }
 
+  void swap(Scalar_Regions& other)
+  {
+    _vec_feats.swap(other._vec_feats);
+    _vec_descs.swap(other._vec_descs);
+  }
+
 private:
   //--
   //-- internal data
