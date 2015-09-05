@@ -14,8 +14,10 @@ ADD_SUBDIRECTORY(tracks)
 ADD_SUBDIRECTORY(color_harmonization)
 ADD_SUBDIRECTORY(system)
 ADD_SUBDIRECTORY(sfm)
+
 IF(OpenMVG_USE_BOOST)
-   ADD_SUBDIRECTORY(voctree)
+  ADD_SUBDIRECTORY(localization)
+  ADD_SUBDIRECTORY(voctree)
 ENDIF(OpenMVG_USE_BOOST)
 
 # set the variable in the parent_scope

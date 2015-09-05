@@ -2,13 +2,22 @@ IF(OpenMVG_USE_BOOST)
 ###
 # Create the vocabulary tree
 ###
+ADD_EXECUTABLE(openMVG_main_localization main_localization.cpp)
+INSTALL(TARGETS openMVG_main_localization DESTINATION bin/)
+TARGET_LINK_LIBRARIES(openMVG_main_localization openMVG_localization openMVG_image openMVG_features vlsift ${BOOST_LIBRARIES})
+
+###
+# Create the vocabulary tree
+###
 ADD_EXECUTABLE(openMVG_main_createVoctree createVoctree.cpp)
+INSTALL(TARGETS openMVG_main_createVoctree DESTINATION bin/)
 TARGET_LINK_LIBRARIES(openMVG_main_createVoctree openMVG_voctree ${OpenMVG_LIBRARIES} ${BOOST_LIBRARIES})
 
 ###
 # generate the pair lists
 ###
 ADD_EXECUTABLE(openMVG_main_generatePairList pairListFromVoctree.cpp)
+INSTALL(TARGETS openMVG_main_generatePairList DESTINATION bin/)
 TARGET_LINK_LIBRARIES(openMVG_main_generatePairList openMVG_voctree ${BOOST_LIBRARIES})
 
 
