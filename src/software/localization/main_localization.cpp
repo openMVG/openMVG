@@ -13,7 +13,7 @@
 #include <openMVG/voctree/vocabulary_tree.hpp>
 #include <openMVG/voctree/database.hpp>
 
-#include <opencv2/core/core.hpp>
+//#include <opencv2/core/core.hpp>
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
@@ -306,7 +306,7 @@ int main( int argc, char** argv )
           geometricFilter.m_F,
           queryIntrinsics, // cameras::IntrinsicBase of the matched image
           queryRegions, // features::Regions
-          sfmData.intrinsics[matchedView->id_intrinsic].get(), // cameras::IntrinsicBase of the qauery image
+          sfmData.intrinsics[matchedView->id_intrinsic].get(), // cameras::IntrinsicBase of the query image
           matchedRegions._regions, // features::Regions
           Square(geometricFilter.m_dPrecision_robust), 
           Square(fDistRatio),
@@ -326,12 +326,11 @@ int main( int argc, char** argv )
       for(const matching::IndMatch& featureMatch: vec_featureMatches)
       {
         IndexT trackId3D = matchedRegions._associated3dPoint[featureMatch._j];
-        features::PointFeature queryFeature = queryRegions.GetRegionsPositions()[featureMatch._i];
 
         // prepare data for resectioning
         pt3D.col(index) = sfmData.GetLandmarks().at(trackId3D).X;
 
-        const Vec2 feat = queryFeature.coords().cast<double>();
+        const Vec2 feat = queryRegions.GetRegionPosition(featureMatch._i);
         if (bKnownIntrinsic)
           pt2D.col(index) = queryIntrinsics->get_ud_pixel(feat);
         else
