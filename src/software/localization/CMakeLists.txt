@@ -11,7 +11,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_localization openMVG_localization openMVG_ima
 ###
 ADD_EXECUTABLE(openMVG_main_createVoctree createVoctree.cpp)
 INSTALL(TARGETS openMVG_main_createVoctree DESTINATION bin/)
-TARGET_LINK_LIBRARIES(openMVG_main_createVoctree openMVG_voctree ${OpenMVG_LIBRARIES} ${BOOST_LIBRARIES})
+TARGET_LINK_LIBRARIES(openMVG_main_createVoctree openMVG_voctree openMVG_features ${BOOST_LIBRARIES})
 
 ###
 # generate the pair lists
