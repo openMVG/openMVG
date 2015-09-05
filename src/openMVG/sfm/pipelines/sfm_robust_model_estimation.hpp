@@ -72,6 +72,8 @@ bool robustRelativePose(
  * @brief Estimate the Absolute pose between 3D<->2D correspondences
  *  by using a robust pose estimation.
  *
+ * @warning: pt2D are considered undistorted.
+ *
  * @param[in] imageSize w,h of the image
  * @param[in] pt2D 2d point coordinates
  * @param[in] pt3D 3d point coordinates
