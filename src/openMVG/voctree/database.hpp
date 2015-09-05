@@ -12,152 +12,163 @@
 namespace openMVG{
 namespace voctree{
 
-	typedef uint32_t DocId;
+typedef uint32_t DocId;
 
-	/**
-	 * \brief Struct representing a single database match.
-	 *
-	 * \c score is in the range [0,2], where 0 is best and 2 is worst.
-	 */
-	struct Match
-	{
-		DocId id;
-		float score;
+/**
+ * @brief Struct representing a single database match.
+ *
+ * \c score is in the range [0,2], where 0 is best and 2 is worst.
+ */
+struct Match
+{
+  DocId id;
+  float score;
 
-		Match( ) { }
+  Match()
+  {
+  }
 
-		Match( DocId _id, float _score ) : id( _id ), score( _score ) { }
+  Match(DocId _id, float _score) : id(_id), score(_score)
+  {
+  }
 
-		/// Allows sorting Matches in best-to-worst order with std::sort.
+  /// Allows sorting Matches in best-to-worst order with std::sort.
 
-		bool operator<( const Match& other ) const
-		{
-			return score < other.score;
-		}
-	};
+  bool operator<(const Match& other) const
+  {
+    return score < other.score;
+  }
+};
 
-	// Remove these, just make docs more confusing
-	typedef std::vector<Word> Document;
-	typedef std::vector<Match> Matches;
+// Remove these, just make docs more confusing
+typedef std::vector<Word> Document;
+typedef std::vector<Match> Matches;
 
-	/**
-	 * \brief Class for efficiently matching a bag-of-words representation of a document (image) against
-	 * a database of known documents.
-	 */
-	class Database
-	{
-	public:
-		/**
-		 * \brief Constructor
-		 *
-		 * If computing weights for a new vocabulary, \c num_words should be the size of the vocabulary.
-		 * If calling loadWeights(), it can be left zero.
-		 */
-		Database( uint32_t num_words = 0 );
+/**
+ * @brief Class for efficiently matching a bag-of-words representation of a document (image) against
+ * a database of known documents.
+ */
+class Database
+{
+public:
+  /**
+   * @brief Constructor
+   *
+   * If computing weights for a new vocabulary, \c num_words should be the size of the vocabulary.
+   * If calling loadWeights(), it can be left zero.
+   */
+  Database(uint32_t num_words = 0);
 
-		/**
-		 * \brief Insert a new document.
-		 *
-		 * \param document The set of quantized words in a document/image.
-		 * \return An ID representing the inserted document.
-		 */
-		DocId insert( const std::vector<Word>& document );
+  /**
+   * @brief Insert a new document.
+   *
+   * @param document The set of quantized words in a document/image.
+   * \return An ID representing the inserted document.
+   */
+  DocId insert(const std::vector<Word>& document);
 
-		/**
-		 * \brief Find the top N matches in the database for the query document.
-		 *
-		 * \param      document The query document, a set of quantized words.
-		 * \param      N        The number of matches to return.
-		 * \param[out] matches  IDs and scores for the top N matching database documents.
-		 */
-		void find( const std::vector<Word>& document, size_t N, std::vector<Match>& matches ) const;
+  /**
+   * @brief Find the top N matches in the database for the query document.
+   *
+   * @param      document The query document, a set of quantized words.
+   * @param      N        The number of matches to return.
+   * @param[out] matches  IDs and scores for the top N matching database documents.
+   */
+  void find(const std::vector<Word>& document, size_t N, std::vector<Match>& matches) const;
 
-		/**
-		 * \brief Find the top N matches, then insert the query document.
-		 *
-		 * This is equivalent to calling find() followed by insert(), but may be more efficient.
-		 *
-		 * \param      document The document to match then insert, a set of quantized words.
-		 * \param      N        The number of matches to return.
-		 * \param[out] matches  IDs and scores for the top N matching database documents.
-		 */
-		DocId findAndInsert( const std::vector<Word>& document, size_t N, std::vector<Match>& matches );
+  /**
+   * @brief Find the top N matches, then insert the query document.
+   *
+   * This is equivalent to calling find() followed by insert(), but may be more efficient.
+   *
+   * @param      document The document to match then insert, a set of quantized words.
+   * @param      N        The number of matches to return.
+   * @param[out] matches  IDs and scores for the top N matching database documents.
+   */
+  DocId findAndInsert(const std::vector<Word>& document, size_t N, std::vector<Match>& matches);
 
-		/**
-		 * \brief Compute the TF-IDF weights of all the words. To be called after inserting a corpus of
-		 * training examples into the database.
-		 *
-		 * \param default_weight The default weight of a word that appears in none of the training documents.
-		 */
-		void computeTfIdfWeights( float default_weight = 1.0f );
-		
-		/**
-		 * \brief Return the size of the database in terms of number of documents
-         * @return the number of documents
-         */
-		size_t size() const;
+  /**
+   * @brief Compute the TF-IDF weights of all the words. To be called after inserting a corpus of
+   * training examples into the database.
+   *
+   * @param default_weight The default weight of a word that appears in none of the training documents.
+   */
+  void computeTfIdfWeights(float default_weight = 1.0f);
 
-		/// Save the vocabulary word weights to a file.
-		void saveWeights( const std::string& file ) const;
-		/// Load the vocabulary word weights from a file.
-		void loadWeights( const std::string& file );
+  /**
+   * @brief Return the size of the database in terms of number of documents
+   * @return the number of documents
+   */
+  size_t size() const;
 
-		// Save weights and documents
-		//void save(const std::string& file) const;
-		//void load(const std::string& file);
+  /// Save the vocabulary word weights to a file.
+  void saveWeights(const std::string& file) const;
+  /// Load the vocabulary word weights from a file.
+  void loadWeights(const std::string& file);
 
-		// Cereal serialize method
-		template<class Archive>
-		void serialize(Archive & archive)
-		{
-			archive(word_files_, word_weights_, database_vectors_);
-		}
+  // Save weights and documents
+  //void save(const std::string& file) const;
+  //void load(const std::string& file);
 
-	private:
+  // Cereal serialize method
 
-		struct WordFrequency
-		{
-			DocId id;
-			uint32_t count;
+  template<class Archive>
+  void serialize(Archive & archive)
+  {
+    archive(word_files_, word_weights_, database_vectors_);
+  }
 
-			WordFrequency() {}
-			WordFrequency( DocId _id, uint32_t _count ) : id( _id ), count( _count ) { }
+private:
 
-			// Cereal serialize methode
-			template<class Archive>
-			void serialize(Archive & archive)
-			{
-				archive(id, count);
-			}
-		};
+  struct WordFrequency
+  {
+    DocId id;
+    uint32_t count;
 
-		// Stored in increasing order by DocId
-		typedef std::vector<WordFrequency> InvertedFile;
+    WordFrequency()
+    {
+    }
 
-		/// @todo Use sorted vector?
-		// typedef std::vector< std::pair<Word, float> > DocumentVector;
-		typedef std::map<Word, float> DocumentVector;
+    WordFrequency(DocId _id, uint32_t _count) : id(_id), count(_count)
+    {
+    }
 
-		std::vector<InvertedFile> word_files_;
-		std::vector<float> word_weights_;
-		std::vector<DocumentVector> database_vectors_; // Precomputed for inserted documents
+    // Cereal serialize methode
 
-		/**
-		 * Given a list of visual words associated to the features of a document it computes the 
-		 * vector of unique weighted visual words
-		 * 
-         * @param[in] document a list of (possibly repeated) visual words
-         * @param[out] v the vector of visual words
-         */
-		void computeVector( const std::vector<Word>& document, DocumentVector& v ) const;
+    template<class Archive>
+    void serialize(Archive & archive)
+    {
+      archive(id, count);
+    }
+  };
 
-		/**
-		* Normalize a document vector representing the histogram of visual words for a given image
-		* @param[in/out] v the unnormalized histogram of visual words
-		*/
-		static void normalize( DocumentVector& v );
-		static float sparseDistance( const DocumentVector& v1, const DocumentVector& v2 );
-	};
+  // Stored in increasing order by DocId
+  typedef std::vector<WordFrequency> InvertedFile;
+
+  /// @todo Use sorted vector?
+  // typedef std::vector< std::pair<Word, float> > DocumentVector;
+  typedef std::map<Word, float> DocumentVector;
+
+  std::vector<InvertedFile> word_files_;
+  std::vector<float> word_weights_;
+  std::vector<DocumentVector> database_vectors_; // Precomputed for inserted documents
+
+  /**
+   * Given a list of visual words associated to the features of a document it computes the 
+   * vector of unique weighted visual words
+   * 
+   * @param[in] document a list of (possibly repeated) visual words
+   * @param[out] v the vector of visual words
+   */
+  void computeVector(const std::vector<Word>& document, DocumentVector& v) const;
+
+  /**
+   * Normalize a document vector representing the histogram of visual words for a given image
+   * @param[in/out] v the unnormalized histogram of visual words
+   */
+  static void normalize(DocumentVector& v);
+  static float sparseDistance(const DocumentVector& v1, const DocumentVector& v2);
+};
 
 }//namespace voctree
 }//namespace openMVG
