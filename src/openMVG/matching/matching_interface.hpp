@@ -8,8 +8,10 @@
 #ifndef OPENMVG_MATCHING_MATCHINGINTERFACE_H
 #define OPENMVG_MATCHING_MATCHINGINTERFACE_H
 
-#include <vector>
 #include "openMVG/numeric/numeric.h"
+
+#include <vector>
+
 
 namespace openMVG {
 namespace matching {
@@ -37,7 +39,7 @@ class ArrayMatcher
    * \return True if success.
    */
   virtual bool Build( const Scalar * dataset, int nbRows, int dimension)=0;
-
+  
   /**
    * Search the nearest Neighbor of the scalar array query.
    *
@@ -66,8 +68,8 @@ class ArrayMatcher
    * \return True if success.
    */
   virtual bool SearchNeighbours( const Scalar * query, int nbQuery,
-                                  vector<int> * indice,
-                                  vector<DistanceType> * distance,
+                                  std::vector<int> * indice,
+                                  std::vector<DistanceType> * distance,
                                   size_t NN)=0;
 };
 
