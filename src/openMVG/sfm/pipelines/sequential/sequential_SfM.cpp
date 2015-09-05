@@ -775,7 +775,7 @@ bool SequentialSfMReconstructionEngine::Resection(size_t viewIndex)
   Mat pt3D( 3, set_trackIdForResection.size());
 
   // Get the view of the current camera to do the resectioning.
-  const View * view_I = _sfm_data.GetViews().at(viewIndex).get();
+  View * view_I = _sfm_data.GetViews().at(viewIndex).get();
 
   // B. Look if intrinsic data is known or not
   bool bKnownIntrinsic = true;
@@ -784,6 +784,10 @@ bool SequentialSfMReconstructionEngine::Resection(size_t viewIndex)
   Pinhole_Intrinsic * cam_I = NULL;
   if (iterIntrinsic_I == _sfm_data.GetIntrinsics().end())
   {
+    if(view_I->id_intrinsic != UndefinedIndexT)
+    {
+      std::cerr << "Error: Intrinsic ID " << view_I->id_intrinsic << " not found." << std::endl;
+    }
     bKnownIntrinsic = false;
   }
   else
@@ -879,11 +883,10 @@ bool SequentialSfMReconstructionEngine::Resection(size_t viewIndex)
       tiny_scene.intrinsics[view_I->id_intrinsic] = iterIntrinsic_I->second;
     }
     else
-    {
+    { 
+      // Update id_intrinsic to a valid value
       if (view_I->id_intrinsic == UndefinedIndexT)
       {
-        // Update id_intrinsic to a valid value
-        View * view_I = _sfm_data.GetViews().at(viewIndex).get();
         view_I->id_intrinsic = _sfm_data.GetIntrinsics().size();
       }
       // Create the new camera intrinsic group
