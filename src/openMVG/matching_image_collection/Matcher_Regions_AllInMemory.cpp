@@ -101,9 +101,9 @@ void Template_Matcher(
         continue;
       
       std::vector<IndMatch> vec_matches;
-      matcher.MatchRatioTest(vec_matches, regionsJ, fDistRatio);
+      bool success = matcher.MatchRatioTest(vec_matches, regionsJ, fDistRatio);
 
-      if (!vec_matches.empty())
+      if (success and !vec_matches.empty())
       {
         map_PutativesMatches.insert( make_pair( make_pair(I,J), std::move(vec_matches) ));
       }

@@ -90,6 +90,8 @@ public:
       // Remove matches that have the same (X,Y) coordinates
       IndMatchDecorator<float> matchDeduplicator(vec_FilteredMatches, _origRegions.GetRegionsPositions(), regionsJ.GetRegionsPositions());
       matchDeduplicator.getDeduplicated(vec_FilteredMatches);
+
+      return true;
   }
 };
 
