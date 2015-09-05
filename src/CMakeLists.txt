@@ -53,6 +53,7 @@ ENDIF()
 SET(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmakeFindModules)
 INCLUDE(OptimizeForArchitecture)
+INCLUDE(UpdateCacheVariable)
 OptimizeForArchitecture()
 IF (SSE2_FOUND)
   IF (MSVC AND NOT ${CMAKE_CL_64})
@@ -260,7 +261,7 @@ FIND_PACKAGE(Ceres QUIET HINTS ${CERES_DIR_HINTS})
 IF(Ceres_FOUND)
    MESSAGE("CERES FOUND")
 ELSE()
-  MESSAGE("CERES NOT FOUND")
+  MESSAGE("No external CERES detected, using the embedded one.")
   SET(OpenMVG_USE_INTERNAL_CERES ON)
   SET(CERES_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/include
