@@ -21,7 +21,6 @@ install:
 - sudo apt-get install libxxf86vm1 libxxf86vm1 libxxf86vm-dev x11proto-xf86vidmode-dev libxrandr-dev
 - sudo apt-get install -qq g++-4.8
 - export CXX="g++-4.8"
-- sudo apt-get install libboost1.55-dev
 
 before_script:
   - cd ..
