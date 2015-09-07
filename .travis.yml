@@ -15,19 +15,20 @@ before_install:
  - export NUM_CPU="`grep processor /proc/cpuinfo | wc -l`"; echo $NUM_CPU
  - sudo apt-get install lcov
  - gem install coveralls-lcov
- 
-install: 
+
+install:
 - sudo apt-get install cmake libpng-dev libjpeg8-dev libtiff-dev
 - sudo apt-get install libxxf86vm1 libxxf86vm1 libxxf86vm-dev x11proto-xf86vidmode-dev libxrandr-dev
 - sudo apt-get install -qq g++-4.8
 - export CXX="g++-4.8"
+- sudo apt-get install libboost1.55-dev
 
 before_script:
   - cd ..
   - mkdir build
   - cd build
   # Classic release build
-  - cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
+  - cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -DOpenMVG_USE_BOOST=ON . ../openMVG/src
   # Build for code coverage evaluation
   #- cmake -DOpenMVG_BUILD_COVERAGE=ON -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
 
@@ -49,4 +50,3 @@ script:
   #    lcov --remove coverage.info '*/src/dependencies/*' -o coverage.info;
   #    coveralls-lcov coverage.info;
   #  fi
-  
