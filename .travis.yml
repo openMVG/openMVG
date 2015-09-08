@@ -11,18 +11,24 @@ compiler:
 
 before_install:
  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
- - sudo add-apt-repository ppa:apokluda/boost1.53 -y
  - sudo apt-get update -qq
  - export NUM_CPU="`grep processor /proc/cpuinfo | wc -l`"; echo $NUM_CPU
  - sudo apt-get install lcov
  - gem install coveralls-lcov
+ # Boost download, configuration, build and installation
+ - wget -O boost.tar.bz2 "http://downloads.sourceforge.net/project/boost/boost/1.53.0/boost_1_53_0.tar.bz2?r=http%3A%2F%2Fwww.boost.org%2Fusers%2Fhistory%2Fversion_1_53_0.html&ts=1441701949&use_mirror=netix"
+ - mkdir boost
+ - tar -xf boost.tar.bz2 -C .
+ - cd boost
+ - ./bootstrap.sh --with-libraries=system,filesystem,program_options,test
+ - sudo ./b2 -d0 install
+ - cd ..
 
 install:
 - sudo apt-get install cmake libpng-dev libjpeg8-dev libtiff-dev
 - sudo apt-get install libxxf86vm1 libxxf86vm1 libxxf86vm-dev x11proto-xf86vidmode-dev libxrandr-dev
 - sudo apt-get install -qq g++-4.8
 - export CXX="g++-4.8"
-- sudo apt-get install libboost1.53-dev
 
 before_script:
   - cd ..
