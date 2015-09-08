@@ -17,9 +17,8 @@ before_install:
  - gem install coveralls-lcov
  # Boost download, configuration, build and installation
  - wget -O boost.tar.bz2 "http://downloads.sourceforge.net/project/boost/boost/1.53.0/boost_1_53_0.tar.bz2?r=http%3A%2F%2Fwww.boost.org%2Fusers%2Fhistory%2Fversion_1_53_0.html&ts=1441701949&use_mirror=netix"
- - mkdir boost
  - tar -xf boost.tar.bz2 -C .
- - cd boost
+ - cd boost_1_53_0
  - ./bootstrap.sh --with-libraries=system,filesystem,program_options,test
  - sudo ./b2 -d0 install
  - cd ..
