@@ -22,7 +22,6 @@ void DistanceRatioMatch
   matching::IndMatches & matches // photometric corresponding points
 )
 {
-  using namespace matching;
   Matcher_Regions_Database matcher(eMatcherType, regions_I);
   matcher.Match(f_dist_ratio, regions_J, matches);
 }
