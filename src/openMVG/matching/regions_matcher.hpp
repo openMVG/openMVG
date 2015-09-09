@@ -54,7 +54,7 @@ class RegionsMatcher
   public:
     
    /**
-    * @brief The empty constructor.
+    * @brief The destructor.
     */ 
    ~RegionsMatcher() {}
 
@@ -194,7 +194,8 @@ public:
   }
 
   /**
-   * @brief 
+   * @brief Match a Regions to the internal database using the test ratio to improve
+   * the robustness of the match.
    * 
    * @param f_dist_ratio The threshold for the ratio test.
    * @param query_regions The Regions to match.
