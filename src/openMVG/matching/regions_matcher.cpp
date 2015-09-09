@@ -98,8 +98,7 @@ Matcher_Regions_Database::Matcher_Regions_Database
           std::cerr << "Using unknown matcher type" << std::endl;
       }
     }
-    else
-    if (database_regions.Type_id() == typeid(float).name())
+    else if (database_regions.Type_id() == typeid(float).name())
     {
       // Build on the fly float based Matcher
       switch (eMatcherType)
@@ -129,8 +128,7 @@ Matcher_Regions_Database::Matcher_Regions_Database
           std::cerr << "Using unknown matcher type" << std::endl;
       }
     }
-    else
-    if (database_regions.Type_id() == typeid(double).name())
+    else if (database_regions.Type_id() == typeid(double).name())
     {
       // Build on the fly double based Matcher
       switch (eMatcherType)
@@ -159,8 +157,7 @@ Matcher_Regions_Database::Matcher_Regions_Database
       }
     }
   }
-  else
-  if (database_regions.IsBinary() && database_regions.Type_id() == typeid(unsigned char).name())
+  else if (database_regions.IsBinary() and database_regions.Type_id() == typeid(unsigned char).name())
   {
     switch (eMatcherType)
     {
