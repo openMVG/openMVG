@@ -37,9 +37,9 @@ script:
 # Perform unit tests only on GCC builds
   - if [ "$CC" = "gcc" ]; then make test; fi
 
-branches:
-  only:
-    - develop
+#branches:
+#  only:
+#    - develop
 
 after_success:
   #- cd ../openMVG
