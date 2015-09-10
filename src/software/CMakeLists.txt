@@ -8,5 +8,5 @@ ENDIF (OpenMVG_BUILD_OPENGL_EXAMPLES)
 ADD_SUBDIRECTORY(colorHarmonize)
 
 IF (Boost_FOUND)
-  ADD_SUBDIRECTORY(localization)
+  ADD_SUBDIRECTORY(Localization)
 ENDIF(Boost_FOUND)
