@@ -16,7 +16,6 @@ file(GLOB REMOVEFILESUNITTEST *_test.cpp)
 #Remove the future main files
 list(REMOVE_ITEM matching_files_cpp ${REMOVEFILESUNITTEST})
 
-set_source_files_properties(${matching_files_header} PROPERTIES LANGUAGE CXX)
 set_source_files_properties(${matching_files_cpp} PROPERTIES LANGUAGE CXX)
 
 ADD_LIBRARY(openMVG_matching
