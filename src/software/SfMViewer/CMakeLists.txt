@@ -7,14 +7,14 @@ include_directories(${OPENGL_INCLUDE_DIR})
 add_definitions(-DGL_GLEXT_PROTOTYPES -DGL3_PROTOTYPES)
 
 if(APPLE)
-	add_definitions(-DGLFW_INCLUDE_GLCOREARB)
+  add_definitions(-DGLFW_INCLUDE_GLCOREARB)
 endif()
 
 #
 # GLFW
 #
 if(!APPLE)
-add_definitions(-DGLFW_NO_GLU)
+  add_definitions(-DGLFW_NO_GLU)
 endif()
 
 FIND_FILE(GL3HEADER gl3.h)
@@ -23,7 +23,7 @@ add_definitions(-DGLFW_INCLUDE_GL3)
 endif()
 
 INCLUDE_DIRECTORIES(
-    ${CMAKE_CURRENT_BINARY_DIR}
+  ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 SET(SOURCES
@@ -32,8 +32,13 @@ SET(SOURCES
 
 ADD_EXECUTABLE(openMVG_main_sfmViewer ${SOURCES} )
 TARGET_LINK_LIBRARIES(openMVG_main_sfmViewer
-  ${OPENGL_gl_LIBRARY} glfw ${GLFW_LIBRARIES}
-  ${OpenMVG_LIBRARIES}
-)
+  openMVG_image
+  openMVG_features
+  openMVG_multiview
+  openMVG_sfm
+  ${OPENGL_gl_LIBRARY}
+  glfw
+  ${GLFW_LIBRARIES})
+
 SET_PROPERTY(TARGET openMVG_main_sfmViewer PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_sfmViewer DESTINATION bin/)

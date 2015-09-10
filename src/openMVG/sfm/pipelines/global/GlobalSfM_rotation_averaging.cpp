@@ -34,7 +34,7 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
   RelativeRotations relativeRotations = relativeRot_In;
   // We work on a copy, since inference can remove some relative motions
 
-  //-> Test there is only one graph and at least 3 camera ?
+  //-> Test there is only one graph and at least 3 camera?
   switch(eRelativeRotationInferenceMethod)
   {
     case(TRIPLET_ROTATION_INFERENCE_COMPOSITION_ERROR):
@@ -87,6 +87,14 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
         bSuccess = rotation_averaging::l2::L2RotationAveraging_Refine(
           relativeRotations,
           vec_globalR);
+
+      // save kept pairs (restore original pose indices using the backward reindexing)
+      for(RelativeRotations::iterator iter = relativeRotations.begin();  iter != relativeRotations.end(); ++iter)
+      {
+        RelativeRotation & rel = *iter;
+        rel.i = _reindexBackward[rel.i];
+        rel.j = _reindexBackward[rel.j];
+      }
       used_pairs = getPairs(relativeRotations);
     }
     break;
@@ -104,10 +112,16 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
       std::copy(vec_inliers.begin(), vec_inliers.end(), std::ostream_iterator<bool>(std::cout, " "));
       std::cout << std::endl;
 
-      // save kept pairs
+      // save kept pairs (restore original pose indices using the backward reindexing)
       for (size_t i = 0; i < vec_inliers.size(); ++i)
+      {
         if (vec_inliers[i])
-          used_pairs.insert(Pair(relativeRotations[i].i,relativeRotations[i].j));
+        {
+          used_pairs.insert(
+            Pair(_reindexBackward[relativeRotations[i].i],
+                 _reindexBackward[relativeRotations[i].j]));
+        }
+      }
     }
     break;
     default:

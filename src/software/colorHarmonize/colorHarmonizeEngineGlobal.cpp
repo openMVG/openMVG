@@ -396,18 +396,18 @@ bool ColorHarmonizationEngineGlobal::Process()
   for (std::set<size_t>::const_iterator iterSet = set_indeximage.begin();
     iterSet != set_indeximage.end(); ++iterSet, ++my_progress_bar)
   {
-    size_t imaNum = *iterSet;
+    const size_t imaNum = *iterSet;
     typedef Eigen::Matrix<double, 256, 1> Vec256;
     std::vector< Vec256 > vec_map_lut(3);
 
-    size_t nodeIndex = std::distance(set_indeximage.begin(), iterSet);
+    const size_t nodeIndex = std::distance(set_indeximage.begin(), iterSet);
 
-    double g_r = vec_solution_r[nodeIndex*2];
-    double offset_r = vec_solution_r[nodeIndex*2+1];
-    double g_g = vec_solution_g[nodeIndex*2];
-    double offset_g = vec_solution_g[nodeIndex*2+1];
-    double g_b = vec_solution_b[nodeIndex*2];
-    double offset_b = vec_solution_b[nodeIndex*2+1];
+    const  double g_r = vec_solution_r[nodeIndex*2];
+    const  double offset_r = vec_solution_r[nodeIndex*2+1];
+    const  double g_g = vec_solution_g[nodeIndex*2];
+    const  double offset_g = vec_solution_g[nodeIndex*2+1];
+    const  double g_b = vec_solution_b[nodeIndex*2];
+    const double offset_b = vec_solution_b[nodeIndex*2+1];
 
     for( size_t k = 0; k < 256; ++k)
     {
@@ -432,11 +432,11 @@ bool ColorHarmonizationEngineGlobal::Process()
       }
     }
 
-    std::string out_folder = stlplus::create_filespec( _sOutDirectory,
+    const std::string out_folder = stlplus::create_filespec( _sOutDirectory,
       vec_selectionMethod[ _selectionMethod ] + "_" + vec_harmonizeMethod[ harmonizeMethod ]);
     if( !stlplus::folder_exists( out_folder ) )
       stlplus::folder_create( out_folder );
-    std::string out_filename = stlplus::create_filespec( out_folder, _vec_fileNames[ imaNum ] );
+    const std::string out_filename = stlplus::create_filespec( out_folder, stlplus::filename_part(_vec_fileNames[ imaNum ]) );
 
     WriteImage( out_filename.c_str(), image_c );
   }
@@ -445,20 +445,24 @@ bool ColorHarmonizationEngineGlobal::Process()
 
 bool ColorHarmonizationEngineGlobal::ReadInputData()
 {
-  if( !stlplus::is_folder( _sMatchesPath) ||
+  if ( !stlplus::is_folder( _sMatchesPath) ||
       !stlplus::is_folder( _sOutDirectory) )
   {
-    cerr << endl
-      << "One of the required directory is not a valid directory" << endl;
+    std::cerr << std::endl
+      << "One of the required directory is not a valid directory" << std::endl;
     return false;
   }
 
-  if( !stlplus::is_file( _sSfM_Data_Path ) ||
-      !stlplus::is_file( _sMatchesFile ) )
+  if ( !stlplus::is_file( _sSfM_Data_Path ))
   {
-    cerr << endl
-      << "One of the input required file is not a present (sfm_data.X,"
-      << stlplus::basename_part(_sMatchesFile) << ")" << endl;
+    std::cerr << std::endl
+      << "Invalid input sfm_data file: (" << stlplus::basename_part(_sMatchesFile) << ")" << std::endl;
+    return false;
+  }
+  if (!stlplus::is_file( _sMatchesFile ))
+  {
+    std::cerr << std::endl
+      << "Invalid match file: (" << stlplus::basename_part(_sMatchesFile) << ")"<< std::endl;
     return false;
   }
 

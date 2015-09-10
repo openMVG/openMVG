@@ -218,7 +218,7 @@ int main(int argc, char** argv)
   typedef flann::L2<unsigned char> MetricT;
   typedef matching::ArrayMatcher_Kdtree_Flann<unsigned char, MetricT> MatcherT;
   POPART_COUT("Build the matcher");
-  matching::RegionsMatcher<MatcherT> matcher(queryRegions);
+  matching::RegionsMatcherT<MatcherT> matcher(queryRegions);
 
   // Prepare intrinsics
   POPART_COUT("Prepare query intrinsics");
@@ -254,10 +254,16 @@ int main(int argc, char** argv)
 
     // B. Putative Features Matching
     std::vector<matching::IndMatch> vec_featureMatches;
-    matcher.MatchRatioTest(vec_featureMatches, matchedRegions._regions, fDistRatio);
-
-    // geometric filtering
+    bool matchWorked = matcher.Match(fDistRatio, matchedRegions._regions, vec_featureMatches);
+    if (!matchWorked)
     {
+      POPART_COUT("matching with " << matchedView->s_Img_path << " failed! Skipping image");
+      continue;
+    }
+    
+    //@fixme let's keep it in a separate block for now
+    {
+	  // geometric filtering
       Mat featuresI(2, vec_featureMatches.size());
       Mat featuresJ(2, vec_featureMatches.size());
 

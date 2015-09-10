@@ -9,9 +9,9 @@
 #define OPENMVG_MATCHING_MATCHINGINTERFACE_H
 
 #include "openMVG/numeric/numeric.h"
+#include "openMVG/matching/indMatch.hpp"
 
 #include <vector>
-
 
 namespace openMVG {
 namespace matching {
@@ -39,7 +39,7 @@ class ArrayMatcher
    * \return True if success.
    */
   virtual bool Build( const Scalar * dataset, int nbRows, int dimension)=0;
-  
+
   /**
    * Search the nearest Neighbor of the scalar array query.
    *
@@ -59,17 +59,16 @@ class ArrayMatcher
    *
    * \param[in]   query     The query array
    * \param[in]   nbQuery   The number of query rows
-   * \param[out]  indice    The indices of arrays in the dataset that
-   *  have been computed as the nearest arrays.
-   * \param[out]  distance  The distances between the matched arrays.
+   * \param[out]  indices   The corresponding (query, neighbor) indices
+   * \param[out]  distances The distances between the matched arrays.
    * \param[out]  NN        The number of maximal neighbor that could
    *  will be searched.
    *
    * \return True if success.
    */
   virtual bool SearchNeighbours( const Scalar * query, int nbQuery,
-                                  std::vector<int> * indice,
-                                  std::vector<DistanceType> * distance,
+                                  IndMatches * indices,
+                                  std::vector<DistanceType> * distances,
                                   size_t NN)=0;
 };
 

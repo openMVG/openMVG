@@ -22,11 +22,13 @@ public:
   ReconstructionEngine(
     const SfM_Data & sfm_data,
     const std::string & soutDirectory)
-    :_sfm_data(sfm_data),
-     _sOutDirectory(soutDirectory),
-     _bFixedIntrinsics(false)
+    :_sOutDirectory(soutDirectory),
+    _sfm_data(sfm_data),
+    _bFixedIntrinsics(false)
   {
   }
+
+  virtual ~ReconstructionEngine() {}
 
   virtual bool Process() = 0;
 

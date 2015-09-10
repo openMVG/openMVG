@@ -7,10 +7,8 @@
 
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/features.hpp"
-#include "openMVG/matching/matcher_brute_force.hpp"
-#include "openMVG/matching/matcher_kdtree_flann.hpp"
 #include "openMVG/matching/matching_filters.hpp"
-#include "openMVG_Samples/siftPutativeMatches/two_view_matches.hpp"
+#include "openMVG/matching/regions_matcher.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
@@ -120,51 +118,13 @@ int main(int argc, char **argv) {
   //--
   // Compute corresponding points
   //--
-  using namespace openMVG::matching;
   //-- Perform matching -> find Nearest neighbor, filtered with Distance ratio
-  std::vector<IndMatch> vec_PutativeMatches;
-  {
-    // Use dynamic cast on Regions type to use the appropriate matcher
-    if (regions_perImage.at(0)->IsScalar() && regions_perImage.at(1)->IsScalar())
-    {
-      if( dynamic_cast<SIFT_Regions*>(regions_perImage.at(0).get()) != NULL )
-      {
-        typedef SIFT_Regions::DescriptorT DescriptorT;
-        typedef L2_Vectorized<DescriptorT::bin_type> Metric;
-        typedef ArrayMatcherBruteForce<DescriptorT::bin_type, Metric> MatcherT;
-        // Distance ratio squared due to squared metric
-        getPutativesMatches<DescriptorT, MatcherT>(
-          ((SIFT_Regions*)regions_perImage.at(0).get())->Descriptors(),
-          ((SIFT_Regions*)regions_perImage.at(1).get())->Descriptors(),
-          Square(0.8), vec_PutativeMatches);
-      }
-
-      if( dynamic_cast<AKAZE_Float_Regions*>(regions_perImage.at(0).get()) != NULL )
-      {
-        typedef AKAZE_Float_Regions::DescriptorT DescriptorT;
-        typedef L2_Vectorized<DescriptorT::bin_type> Metric;
-        typedef ArrayMatcherBruteForce<DescriptorT::bin_type, Metric> MatcherT;
-        // Distance ratio squared due to squared metric
-        getPutativesMatches<DescriptorT, MatcherT>(
-          ((AKAZE_Float_Regions*)regions_perImage.at(0).get())->Descriptors(),
-          ((AKAZE_Float_Regions*)regions_perImage.at(1).get())->Descriptors(),
-          Square(0.8), vec_PutativeMatches);
-      }
-    }
-    else  // Binary regions
-    {
-      if( dynamic_cast<AKAZE_Binary_Regions*>(regions_perImage.at(0).get()) != NULL )
-      {
-        typedef AKAZE_Binary_Regions::DescriptorT DescriptorT;
-        typedef Hamming<unsigned char> Metric;
-        typedef ArrayMatcherBruteForce<unsigned char, Metric> MatcherT;
-        getPutativesMatches<DescriptorT, MatcherT>(
-          ((AKAZE_Binary_Regions*)regions_perImage.at(0).get())->Descriptors(),
-          ((AKAZE_Binary_Regions*)regions_perImage.at(1).get())->Descriptors(),
-          0.8, vec_PutativeMatches);
-      }
-    }
-  }
+  matching::IndMatches vec_PutativeMatches;
+  matching::DistanceRatioMatch(
+    0.8, matching::BRUTE_FORCE_L2,
+    *regions_perImage[0].get(),
+    *regions_perImage[1].get(),
+    vec_PutativeMatches);
 
   // Draw correspondences after Nearest Neighbor ratio filter
   {

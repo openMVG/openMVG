@@ -38,10 +38,11 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iterator>
-#include <vector>
-#include <limits>
 #include <iostream>
+#include <iterator>
+#include <limits>
+#include <numeric>
+#include <vector>
 
 #include "openMVG/robust_estimation/rand_sampling.hpp"
 
@@ -156,10 +157,9 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
   std::vector<double> vec_residuals_(nData);
   std::vector<size_t> vec_sample(sizeSample); // Sample indices
 
-  // Possible sampling indices (could change in the optimization phase)
+  // Possible sampling indices [0,..,nData] (will change in the optimization phase)
   std::vector<size_t> vec_index(nData);
-  for (size_t i = 0; i < nData; ++i)
-    vec_index[i] = i;
+  std::iota(vec_index.begin(), vec_index.end(), 0);
 
   // Precompute log combi
   double loge0 = log10((double)Kernel::MAX_MODELS * (nData-sizeSample));

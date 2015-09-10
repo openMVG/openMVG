@@ -25,6 +25,8 @@ class Regions
 {
 public:
 
+  virtual ~Regions() {}
+
   //--
   // IO - one file for region features, one file for region descriptors
   //--
@@ -67,6 +69,9 @@ public:
   // - Scalar: L2,
   // - Binary: Hamming
   virtual double SquaredDescriptorDistance(size_t i, const Regions *, size_t j) const = 0;
+
+  /// Add the Inth region to another Region container
+  virtual void CopyRegion(size_t i, Regions *) const = 0;
 
   virtual Regions * EmptyClone() const = 0;
 
@@ -175,6 +180,14 @@ public:
     _vec_descs.swap(other._vec_descs);
   }
 
+  /// Add the Inth region to another Region container
+  void CopyRegion(size_t i, Regions * region_container) const
+  {
+    assert(i < _vec_feats.size() && i < _vec_descs.size());
+    static_cast<Scalar_Regions<FeatT, T, L> *>(region_container)->_vec_feats.push_back(_vec_feats[i]);
+    static_cast<Scalar_Regions<FeatT, T, L> *>(region_container)->_vec_descs.push_back(_vec_descs[i]);
+  }
+
 private:
   //--
   //-- internal data
@@ -281,6 +294,14 @@ public:
     const typename matching::Hamming<unsigned char>::ResultType descDist =
       metric(_vec_descs[i].getData(), regionsT->_vec_descs[j].getData(), DescriptorT::static_size);
     return descDist * descDist;
+  }
+
+  /// Add the Inth region to another Region container
+  void CopyRegion(size_t i, Regions * region_container) const
+  {
+    assert(i < _vec_feats.size() && i < _vec_descs.size());
+    static_cast<Binary_Regions<FeatT, L> *>(region_container)->_vec_feats.push_back(_vec_feats[i]);
+    static_cast<Binary_Regions<FeatT, L> *>(region_container)->_vec_descs.push_back(_vec_descs[i]);
   }
 
 private:

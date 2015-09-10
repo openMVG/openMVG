@@ -25,9 +25,10 @@ struct IntrinsicBase
   unsigned int _w, _h;
 
   IntrinsicBase(unsigned int w = 0, unsigned int h = 0):_w(w), _h(h) {}
+  virtual ~IntrinsicBase() {}
 
-  const unsigned int w() const {return _w;}
-  const unsigned int h() const {return _h;}
+  unsigned int w() const {return _w;}
+  unsigned int h() const {return _h;}
 
   /// Projection of a 3D point into the camera plane (Apply pose, disto (if any) and Intrinsics)
   Vec2 project(

@@ -11,6 +11,7 @@
 #include "openMVG/robust_estimation/rand_sampling.hpp"
 #include "openMVG/robust_estimation/robust_ransac_tools.hpp"
 #include <limits>
+#include <numeric>
 #include <vector>
 
 namespace openMVG {
@@ -59,11 +60,9 @@ typename Kernel::Model RANSAC(
   }
 
   // In this robust estimator, the scorer always works on all the data points
-  // at once. So precompute the list ahead of time.
-  std::vector<size_t> all_samples;
-  for (size_t i = 0; i < total_samples; ++i) {
-    all_samples.push_back(i);
-  }
+  // at once. So precompute the list ahead of time [0,..,total_samples].
+  std::vector<size_t> all_samples(total_samples);
+  std::iota(all_samples.begin(), all_samples.end(), 0);
 
   std::vector<size_t> sample;
   for (iteration = 0;

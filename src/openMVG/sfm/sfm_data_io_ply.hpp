@@ -16,7 +16,7 @@ namespace sfm {
 
 /// Save the structure and camera positions of a SfM_Data container as 3D points in a PLY ASCII file.
 static bool Save_PLY(
-  const SfM_Data & data,
+  const SfM_Data & sfm_data,
   const std::string & filename,
   ESfM_Data flags_part)
 {
@@ -33,11 +33,21 @@ static bool Save_PLY(
 
   bool bOk = false;
   {
+    // Count how many views having valid poses:
+    IndexT view_with_pose_count = 0;
+    if (b_extrinsics)
+    {
+      for (const auto & view : sfm_data.GetViews())
+      {
+        view_with_pose_count += sfm_data.IsPoseAndIntrinsicDefined(view.second.get());
+      }
+    }
     stream << "ply"
       << '\n' << "format ascii 1.0"
       << '\n' << "element vertex "
-        << ((b_structure ? data.GetLandmarks().size() : 0) +
-           (b_extrinsics ? data.GetPoses().size() : 0))
+        // Vertex count: (#landmark + #view_with_valid_pose)
+        << ((b_structure ? sfm_data.GetLandmarks().size() : 0) +
+            view_with_pose_count)
       << '\n' << "property float x"
       << '\n' << "property float y"
       << '\n' << "property float z"
@@ -48,17 +58,20 @@ static bool Save_PLY(
 
       if (b_extrinsics)
       {
-        const Poses & poses = data.GetPoses();
-        for (Poses::const_iterator iterPose = poses.begin();
-          iterPose != poses.end(); ++iterPose)  {
-            stream << iterPose->second.center().transpose()
+        for (const auto & view : sfm_data.GetViews())
+        {
+          if (sfm_data.IsPoseAndIntrinsicDefined(view.second.get()))
+          {
+            const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view.second.get());
+            stream << pose.center().transpose()
               << " 0 255 0" << "\n";
+          }
         }
       }
 
       if (b_structure)
       {
-        const Landmarks & landmarks = data.GetLandmarks();
+        const Landmarks & landmarks = sfm_data.GetLandmarks();
         for (Landmarks::const_iterator iterLandmarks = landmarks.begin();
           iterLandmarks != landmarks.end();
           ++iterLandmarks)  {

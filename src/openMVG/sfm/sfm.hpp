@@ -14,6 +14,7 @@
 // SfM data
 //-----------------
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_utils.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_filters.hpp"
 #include "openMVG/sfm/sfm_data_filters_frustum.hpp"
@@ -40,5 +41,8 @@
 #include "openMVG/sfm/pipelines/global/sfm_global_engine_relative_motions.hpp"
 
 #include "openMVG/sfm/pipelines/structure_from_known_poses/structure_estimator.hpp"
+
+#include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
+#include "openMVG/sfm/pipelines/localization/SfM_Localizer_Single_3DTrackObservation_Database.hpp"
 
 #endif // OPENMVG_SFM_HPP

@@ -51,6 +51,7 @@ int main(int argc, char **argv)
       << "\t 1: Pinhole (default)\n"
       << "\t 2: Pinhole radial 1\n"
       << "\t 3: Pinhole radial 3\n"
+      << "\t 4: Pinhole brown with radial 3 and tangential 2\n"
       << "[-g|--group_camera_model]\n"
       << "\t 0-> each view have it's own camera intrinsic parameters,\n"
       << "\t 1-> views can share some camera intrinsic parameters (default)\n"
@@ -151,6 +152,9 @@ int main(int argc, char **argv)
         break;
         case PINHOLE_CAMERA_RADIAL3:
           intrinsic = std::make_shared<Pinhole_Intrinsic_Radial_K3>(width, height, focal, ppx, ppy);
+        break;
+        case PINHOLE_CAMERA_BROWN:
+          intrinsic = std::make_shared<Pinhole_Intrinsic_Brown_T2>(width, height, focal, ppx, ppy);
         break;
         default:
           std::cerr << "Invalid camera model." << std::endl;

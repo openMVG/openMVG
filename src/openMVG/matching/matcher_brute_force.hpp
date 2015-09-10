@@ -92,17 +92,19 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
    *
    * \param[in]   query     The query array
    * \param[in]   nbQuery   The number of query rows
-   * \param[out]  pvec_indice    The indices of arrays in the dataset that
-   *  have been computed as the nearest arrays.
-   * \param[out]  pvec_distance  The distances between the matched arrays.
+   * \param[out]  indices   The corresponding (query, neighbor) indices
+   * \param[out]  distances The distances between the matched arrays.
    * \param[out]  NN        The number of maximal neighbor that will be searched.
    *
    * \return True if success.
    */
-  bool SearchNeighbours( const Scalar * query, int nbQuery,
-                         std::vector<int> * pvec_indice,
-                         std::vector<DistanceType> * pvec_distance,
-                         size_t NN)
+  bool SearchNeighbours
+  (
+    const Scalar * query, int nbQuery,
+    IndMatches * pvec_indices,
+    std::vector<DistanceType> * pvec_distances,
+    size_t NN
+  )
   {
     if (memMapping.get() == NULL)  {
       return false;
@@ -117,19 +119,20 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
     Eigen::Map<BaseMat> mat_query((Scalar*)query, nbQuery, (*memMapping).cols());
     Metric metric;
 
-    pvec_distance->resize(nbQuery * NN);
-    pvec_indice->resize(nbQuery * NN);
+    pvec_distances->resize(nbQuery * NN);
+    pvec_indices->resize(nbQuery * NN);
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-    for (int queryIndex=0; queryIndex < nbQuery; ++queryIndex)
+    for (int queryIndex=0; queryIndex < nbQuery; ++queryIndex) 
     {
       std::vector<DistanceType> vec_distance((*memMapping).rows(), 0.0);
       const Scalar * queryPtr = mat_query.row(queryIndex).data();
       const Scalar * rowPtr = (*memMapping).data();
       for (int i = 0; i < (*memMapping).rows(); ++i)
       {
-        vec_distance[i] = metric( queryPtr, rowPtr, (*memMapping).cols() );
+        vec_distance[i] = metric( queryPtr,
+          rowPtr, (*memMapping).cols() );
         rowPtr += (*memMapping).cols();
       }
 
@@ -141,8 +144,8 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
 
       for (int i = 0; i < maxMinFound; ++i)
       {
-        (*pvec_distance)[queryIndex*NN+i] = (packet_vec[i].val);
-        (*pvec_indice)[queryIndex*NN+i] = (packet_vec[i].index);
+        (*pvec_distances)[queryIndex*NN+i] = packet_vec[i].val;
+        (*pvec_indices)[queryIndex*NN+i] = IndMatch(queryIndex, packet_vec[i].index);
       }
     }
     return true;
