@@ -9,20 +9,31 @@
 
 #include "reconstructed_regions.hpp"
 
+#include <openMVG/features/image_describer.hpp>
+#include <nonFree/sift/SIFT_describer.hpp>
 #include <openMVG/sfm/sfm_data.hpp>
 #include <openMVG/stl/stlMap.hpp>
+#include <openMVG/voctree/vocabulary_tree.hpp>
+#include <openMVG/voctree/database.hpp>
 
 
 namespace openMVG {
 namespace localization {
 
+//@fixme find a better place or maje the class template?
+typedef openMVG::features::Descriptor<unsigned char, 128> DescriptorFloat;
 typedef Reconstructed_Regions<features::SIOPointFeature, unsigned char, 128> Reconstructed_RegionsT;
 
 class VoctreeLocalizer
 {
+  
 public:
-  Hash_Map<IndexT, Reconstructed_RegionsT > regions_per_view;
-
+  
+  bool init(const std::string &sfmFilePath,
+            const std::string &descriptorsFolder,
+            const std::string &vocTreeFilepath,
+            const std::string &weightsFilepath);
+  
   // loadSfmData(const std::string & sfmDataPath)
 
   /**
@@ -32,11 +43,34 @@ public:
     const sfm::SfM_Data & sfm_data,
     const std::string & feat_directory);
 
+private:
   /**
    * @brief Load the vocabulary tree.
    */
-  bool loadVoctree(const std::string & feat_directory) {}
+  bool initDatabase(const std::string & vocTreeFilepath,
+                                    const std::string & weightsFilepath,
+                                    const std::string & feat_directory);
 
+  
+  
+public:
+  Hash_Map<IndexT, Reconstructed_RegionsT > _regions_per_view;
+  
+  sfm::SfM_Data _sfm_data;
+  
+  // the feature extractor
+  // @fixme do we want a generic image describer>
+  features::SIFT_Image_describer _image_describer;
+  
+  // the vocabulary tree
+  voctree::VocabularyTree<DescriptorFloat> _voctree;
+  
+  // the database
+  voctree::Database _database;
+  
+  // this maps the docId in the database with the view index of the associated
+  // image
+  std::map<voctree::DocId, IndexT> _mapDocIdToView;
   
 };
 

@@ -142,7 +142,7 @@ std::vector<Word> VocabularyTree<Feature, Distance, FeatureAllocator>::quantize(
   std::vector<Word> imgVisualWords(features.size(), 0);
 
   // quantize the features
-#pragma omp parallel for
+  #pragma omp parallel for
   for(size_t j = 0; j < features.size(); ++j)
   {
     // store the visual word associated to the feature in the temporary list
