@@ -18,7 +18,7 @@ namespace localization {
 
 typedef Reconstructed_Regions<features::SIOPointFeature, unsigned char, 128> Reconstructed_RegionsT;
 
-class Localization
+class VoctreeLocalizer
 {
 public:
   Hash_Map<IndexT, Reconstructed_RegionsT > regions_per_view;

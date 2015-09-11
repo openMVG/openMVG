@@ -156,7 +156,7 @@ int main(int argc, char** argv)
   trackedcameras.intrinsics[0] = std::make_shared<cameras::Pinhole_Intrinsic>(); // 0, 0, cameraCalib.getFocalLength( ), cameraCalib.getU0( ), cameraCalib.getV0( ) );
   trackedcameras.structure = sfmData.GetLandmarks();
 
-  localization::Localization localization;
+  localization::VoctreeLocalizer localization;
   localization.loadReconstructionDescriptors(sfmData, descriptorsFolder);
 
   // Load vocabulary tree

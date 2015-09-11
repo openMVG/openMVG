@@ -16,6 +16,12 @@ bool Localization::loadReconstructionDescriptors(
   C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
     std::cout, "\n- Regions Loading -\n");
   
+bool VoctreeLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_data,
+                                                     const std::string & feat_directory)
+{
+  C_Progress_display my_progress_bar(sfm_data.GetViews().size(),
+                                     std::cout, "\n- Regions Loading -\n");
+
   std::cout << "Build observations per view" << std::endl;
   // Build observations per view
   std::map<IndexT, std::vector<FeatureInImage> > observationsPerView;
