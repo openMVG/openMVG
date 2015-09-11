@@ -112,6 +112,8 @@ bool VoctreeLocalizer::init( const std::string &sfmFilePath,
   return true;
 }
 
+
+//@fixme deprecated.. now inside initDatabase
 bool VoctreeLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_data,
                                                      const std::string & feat_directory)
 {
@@ -219,13 +221,13 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
 
   POPART_COUT("Load Features and Descriptors per view");
   // Read for each view the corresponding regions and store them
-  for(sfm::Views::const_iterator iter = _sfm_data.GetViews().begin();
-          iter != _sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
+  for(const auto &iter : _sfm_data.GetViews())
   {
-    const IndexT id_view = iter->second->id_view;
+    const std::shared_ptr<sfm::View> currView = iter.second;
+    const IndexT id_view = currView->id_view;
     Reconstructed_RegionsT& currRecoRegions = _regions_per_view[id_view];
 
-    const std::string sImageName = stlplus::create_filespec(_sfm_data.s_root_path, iter->second.get()->s_Img_path);
+    const std::string sImageName = stlplus::create_filespec(_sfm_data.s_root_path, currView.get()->s_Img_path);
     const std::string basename = stlplus::basename_part(sImageName);
     const std::string featFilepath = stlplus::create_filespec(feat_directory, basename, ".feat");
     const std::string descFilepath = stlplus::create_filespec(feat_directory, basename, ".desc");
@@ -244,6 +246,7 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
 
     // Filter descriptors to keep only the 3D reconstructed points
     currRecoRegions.filterRegions(observationsPerView[id_view]);
+    ++my_progress_bar;
   }
   
   return true;
