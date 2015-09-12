@@ -3,8 +3,12 @@
 
 #include <openMVG/sfm/sfm_data_io.hpp>
 #include <openMVG/features/io_regions_type.hpp>
+#include <openMVG/matching/regions_matcher.hpp>
+#include <openMVG/matching_image_collection/Matcher.hpp>
+#include <openMVG/matching/matcher_kdtree_flann.hpp>
+#include <openMVG/matching_image_collection/F_ACRobust.hpp>
 #include <third_party/progress/progress.hpp>
-#include <cereal/archives/json.hpp>
+//#include <cereal/archives/json.hpp>
 
 #include <algorithm>
 
@@ -258,20 +262,68 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
 
 
 bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
-                const cameras::IntrinsicBase * optional_intrinsics,
-                const features::Regions & query_regions,
+                const cameras::IntrinsicBase * queryIntrinsics,
+                const size_t numResults,
                 geometry::Pose3 & pose,
                 sfm::Image_Localizer_Match_Data * resection_data /*= nullptr*/)
 {
   // extract descriptors and features from image
+  POPART_COUT("[features]\tExtract SIFT from query image");
+  std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Regions());
+  _image_describer.Describe(imageGray, tmpQueryRegions, NULL);
+  POPART_COUT("[features]\tExtract SIFT done: found " << tmpQueryRegions->RegionCount() << " features");
+  features::SIFT_Regions queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
+//  POPART_COUT("Extract SIFT done!!");
+
+  POPART_COUT("[database]\tRequest closest images from voctree");
+  // pass the descriptors through the vocabulary tree to get the visual words
+  // associated to each feature
+  std::vector<voctree::Word> requestImageWords = _voctree.quantize(queryRegions.Descriptors());
   
-  // pass the descriptors in the vocabulary tree
+  // Request closest images from voctree
+  std::vector<voctree::Match> matchedImages;
+  _database.find(requestImageWords, numResults, matchedImages);
   
-  // qury the vocabulary tree
+  // just debugging bla bla
+  // for each similar image found print score and number of features
+  for(const voctree::Match & currMatch : matchedImages )
+  {
+    // get the corresponding index of the view
+    const IndexT matchedViewIndex = _mapDocIdToView[currMatch.id];
+    // get the view handle
+    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
+    POPART_COUT( "[database]\t\t match " << matchedView->s_Img_path 
+            << " [docid: "<< currMatch.id << "]"
+            << " with score " << currMatch.score 
+            << " and it has "  << _regions_per_view[matchedViewIndex]._regions.RegionCount() 
+            << " features with 3D points");
+  }
+
+  //@fixme Maybe useless, just do everything with DistanceRatioMatch
+  // preparing the matcher, it will use the extracted Regions as reference and it
+  // will match them to the Regions of each similar image
+  const float fDistRatio = 0.6; //@fixme this could be a param
+  typedef flann::L2<unsigned char> MetricT;
+  typedef matching::ArrayMatcher_Kdtree_Flann<unsigned char, MetricT> MatcherT;
+  POPART_COUT("[matching]\tBuild the matcher");
+  matching::RegionsMatcherT<MatcherT> matcher(queryRegions);
+  
+  // Prepare intrinsics
+  POPART_COUT("[matching]\tPrepare query intrinsics");
+  const bool bKnownIntrinsic = (queryIntrinsics != nullptr);
+  Mat3 K = Mat3::Identity();
+ 
   
   // for each found similar image
   
       // match
+      // void DistanceRatioMatch(
+//          float f_dist_ratio,
+//          matching::EMatcherType eMatcherType,
+//          const features::Regions & regions_I, // database
+//          const features::Regions & regions_J, // query
+//          matching::IndMatches & matches // photometric corresponding points
+//        )
   
       // estimate the pose
   

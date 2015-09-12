@@ -48,15 +48,15 @@ public:
   * @brief Try to localize an image in the database
   *
   * @param[in] image_size the w,h image size
-  * @param[in] optional_intrinsics camera intrinsic if known (else nullptr)
+  * @param[in] queryIntrinsics camera intrinsic if known (else nullptr)
   * @param[in] query_regions the image regions (type must be the same as the database)
   * @param[out] pose found pose
   * @param[out] resection_data matching data (2D-3D and inliers; optional)
   * @return True if a putative pose has been estimated
   */
   bool Localize( const image::Image<unsigned char> & imageGray,
-                const cameras::IntrinsicBase * optional_intrinsics,
-                const features::Regions & query_regions,
+                const cameras::IntrinsicBase * queryIntrinsics,
+                const size_t numResults,
                 geometry::Pose3 & pose,
                 sfm::Image_Localizer_Match_Data * resection_data = nullptr);
 
