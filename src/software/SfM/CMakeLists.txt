@@ -50,6 +50,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeMatches
   openMVG_sfm
   openMVG_matching_image_collection
   stlplus
+  ${FLANN_LIBRARY}
   )
 
 # Installation rules
@@ -223,7 +224,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_openMVG2CMPMVS
 # - Export a SfM openMVG scene to MVE(v2) format
 #
 ADD_EXECUTABLE(openMVG_main_openMVG2MVE2 main_openMVG2MVE2.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVE2 ${OpenMVG_LIBRARIES})
+TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVE2 ${OpenMVG_LIBRARIES} ${FLANN_LIBRARY})
 
 # - Export a SfM openMVG scene to meshlab scene with rasters
 # -
