@@ -257,5 +257,28 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
 }
 
 
+bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
+                const cameras::IntrinsicBase * optional_intrinsics,
+                const features::Regions & query_regions,
+                geometry::Pose3 & pose,
+                sfm::Image_Localizer_Match_Data * resection_data /*= nullptr*/)
+{
+  // extract descriptors and features from image
+  
+  // pass the descriptors in the vocabulary tree
+  
+  // qury the vocabulary tree
+  
+  // for each found similar image
+  
+      // match
+  
+      // estimate the pose
+  
+  
+  
+  return true;
+}
+
 }
 }

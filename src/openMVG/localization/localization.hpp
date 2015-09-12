@@ -12,6 +12,7 @@
 #include <openMVG/features/image_describer.hpp>
 #include <nonFree/sift/SIFT_describer.hpp>
 #include <openMVG/sfm/sfm_data.hpp>
+#include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 #include <openMVG/stl/stlMap.hpp>
 #include <openMVG/voctree/vocabulary_tree.hpp>
 #include <openMVG/voctree/database.hpp>
@@ -42,6 +43,22 @@ public:
   bool loadReconstructionDescriptors(
     const sfm::SfM_Data & sfm_data,
     const std::string & feat_directory);
+  
+  /**
+  * @brief Try to localize an image in the database
+  *
+  * @param[in] image_size the w,h image size
+  * @param[in] optional_intrinsics camera intrinsic if known (else nullptr)
+  * @param[in] query_regions the image regions (type must be the same as the database)
+  * @param[out] pose found pose
+  * @param[out] resection_data matching data (2D-3D and inliers; optional)
+  * @return True if a putative pose has been estimated
+  */
+  bool Localize( const image::Image<unsigned char> & imageGray,
+                const cameras::IntrinsicBase * optional_intrinsics,
+                const features::Regions & query_regions,
+                geometry::Pose3 & pose,
+                sfm::Image_Localizer_Match_Data * resection_data = nullptr);
 
 private:
   /**
