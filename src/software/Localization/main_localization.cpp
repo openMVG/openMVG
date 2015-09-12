@@ -205,7 +205,7 @@ int main(int argc, char** argv)
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Regions());
   POPART_COUT("Describe");
   describer.Describe(imageGray, tmpQueryRegions, NULL);
-  POPART_COUT("Extract SIFT done");
+  POPART_COUT("tExtract SIFT done: found " << tmpQueryRegions->RegionCount() << " features");
   features::SIFT_Regions queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
   POPART_COUT("Extract SIFT done!!");
 
@@ -227,7 +227,7 @@ int main(int argc, char** argv)
   const bool bKnownIntrinsic = false;
   Mat3 K = Mat3::Identity();
   //  const Intrinsics::const_iterator iterIntrinsic_I = sfmData.GetIntrinsics().find(view_I->id_intrinsic);
-  cameras::Pinhole_Intrinsic * queryIntrinsics = NULL;
+  cameras::Pinhole_Intrinsic * queryIntrinsics = nullptr;
   //  if (iterIntrinsic_I == _sfm_data.GetIntrinsics().end())
   //  {
   //    bKnownIntrinsic = false;
