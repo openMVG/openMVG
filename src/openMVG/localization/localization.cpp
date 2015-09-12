@@ -197,6 +197,10 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
   }
 
   
+  // Load the descriptors and the features related to the images
+  // for every image, pass the descriptors through the vocabulary tree and
+  // add its visual words to the database.
+  // then only store the feature and descriptors that have a 3D point associated
   C_Progress_display my_progress_bar(_sfm_data.GetViews().size(),
                                      std::cout, "\n- Regions Loading -\n");
 
@@ -211,7 +215,7 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
     {
       const IndexT viewId = obs.first;
       const sfm::Observation& obs2d = obs.second;
-      observationsPerView[viewId].push_back(FeatureInImage(obs2d.id_feat, trackId));
+      observationsPerView[viewId].emplace_back(obs2d.id_feat, trackId);
     }
   }
   for(auto featuresInImage : observationsPerView)
