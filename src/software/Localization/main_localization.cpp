@@ -162,7 +162,9 @@ int main(int argc, char** argv)
   // Load vocabulary tree
   printf("Loading vocabulary tree\n");
   voctree::VocabularyTree<localization::DescriptorFloat> voctree(vocTreeFilepath);
-  cout << "tree loaded with" << endl << "\t" << voctree.levels() << " levels" << endl << "\t" << voctree.splits() << " branching factor" << endl;
+  POPART_COUT("tree loaded with" << endl 
+          << "\t" << voctree.levels() << " levels" << endl 
+          << "\t" << voctree.splits() << " branching factor");
 
   POPART_COUT("Creating the database...");
   // Add each object (document) to the database
@@ -249,7 +251,7 @@ int main(int argc, char** argv)
   {
     const IndexT matchedViewIndex = mapDocIdToView[matchedImage.id];
     const std::shared_ptr<sfm::View> matchedView = sfmData.views[matchedViewIndex];
-    POPART_COUT("Localize with " << matchedView->s_Img_path);
+    POPART_COUT("Localize with " << matchedView->s_Img_path << " [score: " << matchedImage.score << "]");
     const localization::Reconstructed_RegionsT& matchedRegions = localization._regions_per_view[matchedViewIndex];
 
     // B. Putative Features Matching
@@ -257,13 +259,13 @@ int main(int argc, char** argv)
     bool matchWorked = matcher.Match(fDistRatio, matchedRegions._regions, vec_featureMatches);
     if (!matchWorked)
     {
-      POPART_COUT("matching with " << matchedView->s_Img_path << " failed! Skipping image");
+      POPART_COUT("\tmatching with " << matchedView->s_Img_path << " failed! Skipping image");
       continue;
     }
     
     //@fixme let's keep it in a separate block for now
     {
-	  // geometric filtering
+      // geometric filtering
       Mat featuresI(2, vec_featureMatches.size());
       Mat featuresJ(2, vec_featureMatches.size());
 
@@ -276,8 +278,7 @@ int main(int argc, char** argv)
 
       matching_image_collection::GeometricFilter_FMatrix_AC geometricFilter(4.0);
       std::vector<size_t> vec_matchingInliers;
-      bool valid = geometricFilter.Robust_estimation(
-                                                     featuresI, // points of the query image
+      bool valid = geometricFilter.Robust_estimation(featuresI, // points of the query image
                                                      featuresJ, // points of the matched image
                                                      std::make_pair(imageGray.Width(), imageGray.Height()),
                                                      std::make_pair(imageGray.Width(), imageGray.Height()), // NO! @todo here we need the size of the img in the dataset...
@@ -285,7 +286,7 @@ int main(int argc, char** argv)
 
       if(!valid)
       {
-        cout << "Unable to robustly matching the query image with the database image " << matchedImage.id;
+        POPART_COUT("\tUnable to robustly matching the query image with the database image " << matchedView->s_Img_path);
         continue;
       }
       bool b_guided_matching = true;
@@ -367,17 +368,17 @@ int main(int argc, char** argv)
 
       if(!bResection)
       {
-        std::cout << "Resection FAILED" << std::endl;
+        POPART_COUT("\tResection FAILED");
         continue;
       }
     }
-    std::cout << "Resection SUCCEDED" << std::endl;
+    POPART_COUT("Resection SUCCEDED");
     // Decompose P matrix
     Mat3 K_, R_;
     Vec3 t_;
     KRt_From_P(P, &K_, &R_, &t_);
 
-    std::cout << "K: " << K_ << std::endl;
+    POPART_COUT("K: " << K_);
 
     {
       sfm::SfM_Data exportedScene(sfmData);
