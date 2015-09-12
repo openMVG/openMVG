@@ -54,7 +54,8 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeMatches
   openMVG_matching_image_collection
   stlplus
   ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  ${OSI_LIBRARY}
+  ${FLANN_LIBRARY})
 
 # Installation rules
 SET_PROPERTY(TARGET openMVG_main_ComputeFeatures PROPERTY FOLDER OpenMVG/software)
@@ -239,7 +240,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_openMVG2CMPMVS
 # - Export a SfM openMVG scene to MVE(v2) format
 #
 ADD_EXECUTABLE(openMVG_main_openMVG2MVE2 main_openMVG2MVE2.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVE2 ${OpenMVG_LIBRARIES})
+TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVE2 ${OpenMVG_LIBRARIES} ${FLANN_LIBRARY})
 
 # - Export a SfM openMVG scene to meshlab scene with rasters
 # -
