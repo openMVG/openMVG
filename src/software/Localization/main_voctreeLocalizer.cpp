@@ -5,6 +5,7 @@
  * Created on September 12, 2015, 3:16 PM
  */
 #include <openMVG/localization/localization.hpp>
+#include <openMVG/image/image_io.hpp>
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
@@ -80,5 +81,21 @@ int main(int argc, char** argv)
     return EXIT_FAILURE;
   }
  
+  // init the localizer
+  localization::VoctreeLocalizer localizer;
+  localizer.init(sfmFilePath, descriptorsFolder, vocTreeFilepath, weightsFilepath);
+  
+  // load the image
+    POPART_COUT("Load the query image");
+  // load the query image
+  image::Image<unsigned char> imageGray;
+  if(!image::ReadImage(mediaFilepath.c_str(), &imageGray))
+    throw std::runtime_error("Unable to read the media file.");
+  POPART_COUT("Image size: " << imageGray.Width() << "x" << imageGray.Height());
+  
+  // localize
+//  localizer.Localize( imageGray)
+  
+  // save data
   
 }
