@@ -250,6 +250,9 @@ public:
 
     return (!vec_putative_matches.empty());
   }
+  
+  const features::Regions* getDatabaseRegions() const { return _regions; } 
+  
 };
 
 }  // namespace matching

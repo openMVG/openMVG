@@ -2,10 +2,12 @@
 
 
 #include <openMVG/sfm/sfm_data_io.hpp>
+#include <openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp>
 #include <openMVG/features/io_regions_type.hpp>
 #include <openMVG/matching/regions_matcher.hpp>
 #include <openMVG/matching_image_collection/Matcher.hpp>
 #include <openMVG/matching/matcher_kdtree_flann.hpp>
+#include <openMVG/robust_estimation/guided_matching.hpp>
 #include <openMVG/matching_image_collection/F_ACRobust.hpp>
 #include <third_party/progress/progress.hpp>
 //#include <cereal/archives/json.hpp>
@@ -265,6 +267,7 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
                 const cameras::IntrinsicBase * queryIntrinsics,
                 const size_t numResults,
                 geometry::Pose3 & pose,
+                bool useGuidedMatching,
                 sfm::Image_Localizer_Match_Data * resection_data /*= nullptr*/)
 {
   // extract descriptors and features from image
@@ -308,29 +311,177 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
   POPART_COUT("[matching]\tBuild the matcher");
   matching::RegionsMatcherT<MatcherT> matcher(queryRegions);
   
-  // Prepare intrinsics
+  // Prepare intrinsics @fixme 
   POPART_COUT("[matching]\tPrepare query intrinsics");
   const bool bKnownIntrinsic = (queryIntrinsics != nullptr);
   Mat3 K = Mat3::Identity();
  
-  
   // for each found similar image
+  for(const voctree::Match& matchedImage : matchedImages)
+  {
+    const IndexT matchedViewIndex = _mapDocIdToView[matchedImage.id];
+    const Reconstructed_RegionsT& matchedRegions = _regions_per_view[matchedViewIndex];
+    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
+    const cameras::IntrinsicBase *matchedIntrinsics = _sfm_data.intrinsics[matchedView->id_intrinsic].get();
+    std::vector<matching::IndMatch> vec_featureMatches;
+    bool matchWorked = robustMatching( matcher, 
+                                      queryIntrinsics,
+                                      matchedRegions,
+                                      matchedIntrinsics,
+                                      fDistRatio,
+                                      useGuidedMatching,
+                                      std::make_pair(imageGray.Width(), imageGray.Height()),
+                                      std::make_pair(imageGray.Width(), imageGray.Height()), // NO! @fixme here we need the size of the img in the dataset...
+                                      vec_featureMatches);
+    if (!matchWorked)
+    {
+      POPART_COUT("\tmatching with " << matchedView->s_Img_path << " failed! Skipping image");
+      continue;
+    }
   
-      // match
-      // void DistanceRatioMatch(
-//          float f_dist_ratio,
-//          matching::EMatcherType eMatcherType,
-//          const features::Regions & regions_I, // database
-//          const features::Regions & regions_J, // query
-//          matching::IndMatches & matches // photometric corresponding points
-//        )
+    // recover the 2D-3D associations
+    Mat34 P;  // the projection matrix
+    // Prepare data for resection
+    Mat pt2D(2, vec_featureMatches.size());
+    Mat pt3D(3, vec_featureMatches.size());
+
+    // Get the 3D points associated to each matched feature
+    std::size_t index = 0;
+    for(const matching::IndMatch& featureMatch : vec_featureMatches)
+    {
+      // the ID of the 3D point
+      IndexT trackId3D = matchedRegions._associated3dPoint[featureMatch._j];
+
+      // prepare data for resectioning
+      pt3D.col(index) = _sfm_data.GetLandmarks().at(trackId3D).X;
+
+      const Vec2 feat = queryRegions.GetRegionPosition(featureMatch._i);
+      if(bKnownIntrinsic)
+        pt2D.col(index) = queryIntrinsics->get_ud_pixel(feat);
+      else
+        pt2D.col(index) = feat;
+
+      ++index;
+    }
+    // estimate the pose
+    // Do the resectioning: compute the camera pose.
+    std::vector<size_t> vec_inliers;
+    double errorMax = std::numeric_limits<double>::max();
+
+    bool bResection = sfm::robustResection(
+                                           std::make_pair(imageGray.Width(), imageGray.Height()),
+                                           pt2D, pt3D,
+                                           &vec_inliers,
+                                           // Use intrinsic guess if possible
+                                           (bKnownIntrinsic) ? &K : NULL,
+                                           &P, &errorMax);
+
+    std::cout << std::endl
+            << "-------------------------------" << std::endl
+            << "-- Robust Resection using view: " << _mapDocIdToView[matchedImage.id] << std::endl
+            << "-- Resection status: " << bResection << std::endl
+            << "-- #Points used for Resection: " << vec_featureMatches.size() << std::endl
+            << "-- #Points validated by robust Resection: " << vec_inliers.size() << std::endl
+            << "-- Threshold: " << errorMax << std::endl
+            << "-------------------------------" << std::endl;
+
+    if(!bResection)
+    {
+      POPART_COUT("\tResection FAILED");
+      continue;
+    }
+    POPART_COUT("Resection SUCCEDED");
+    // Decompose P matrix
+    Mat3 K_, R_;
+    Vec3 t_;
+    KRt_From_P(P, &K_, &R_, &t_);
+    break;
+    POPART_COUT("K: " << K_);
+  }
+
+  return true;
   
-      // estimate the pose
+ } 
   
-  
+
+
+
+
+
+bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matcher, 
+                    const cameras::IntrinsicBase * queryIntrinsics,   // the intrinsics of the image we are using as reference
+                    const Reconstructed_RegionsT & matchedRegions,
+                    const cameras::IntrinsicBase * matchedIntrinsics,
+                    const float fDistRatio,
+                    const bool b_guided_matching,
+                    const std::pair<size_t,size_t> & imageSizeI,     // size of the first image @fixme change the API of the kernel!! 
+                    const std::pair<size_t,size_t> & imageSizeJ,     // size of the first image
+                    std::vector<matching::IndMatch> & vec_featureMatches) const
+{
+  // A. Putative Features Matching
+  bool matchWorked = matcher.Match(fDistRatio, matchedRegions._regions, vec_featureMatches);
+  if (!matchWorked)
+  {
+    POPART_COUT("\tmatching with failed!");
+    return false;
+  }
+
+  // they contains the matching features
+  Mat featuresI(2, vec_featureMatches.size());
+  Mat featuresJ(2, vec_featureMatches.size());
+
+  // fill the matrices with the features according to vec_featureMatches
+  for(int i = 0; i < vec_featureMatches.size(); ++i)
+  {
+    const matching::IndMatch& match = vec_featureMatches[i];
+    //@fixme get the query regions, we need to add the method to RegionsMatcherT
+    featuresI.col(i) = matcher.getDatabaseRegions()->GetRegionPosition(match._i);
+    featuresJ.col(i) = matchedRegions._regions.GetRegionPosition(match._j);
+  }
+
+  matching_image_collection::GeometricFilter_FMatrix_AC geometricFilter(4.0);
+  std::vector<size_t> vec_matchingInliers;
+  bool valid = geometricFilter.Robust_estimation(featuresI, // points of the query image
+                                                 featuresJ, // points of the matched image
+                                                 imageSizeI,
+                                                 imageSizeJ,
+                                                 vec_matchingInliers);
+  if(!valid)
+  {
+    POPART_COUT("\tUnable to robustly matching the query image with the database image.");
+    return false;
+  }
+  if(!b_guided_matching)
+  {
+    std::vector<matching::IndMatch> vec_robustFeatureMatches(vec_matchingInliers.size());
+    for(const int i : vec_matchingInliers)
+    {
+      vec_robustFeatureMatches[i] = vec_featureMatches[i];
+    }
+    // replace the featuresMatches with the robust ones.
+    std::swap(vec_featureMatches, vec_robustFeatureMatches);
+  }
+  else
+  {
+    // Use the Fundamental Matrix estimated by the robust estimation to
+    // perform guided matching.
+    // So we ignore the previous matches and recompute all matches.
+
+    geometry_aware::GuidedMatching<
+            Mat3,
+            openMVG::fundamental::kernel::EpipolarDistanceError>(
+            geometricFilter.m_F,
+            queryIntrinsics, // cameras::IntrinsicBase of the matched image
+            *matcher.getDatabaseRegions(), // features::Regions
+            matchedIntrinsics, // cameras::IntrinsicBase of the query image
+            matchedRegions._regions, // features::Regions
+            Square(geometricFilter.m_dPrecision_robust),
+            Square(fDistRatio),
+            vec_featureMatches); // output
+  }
   
   return true;
 }
 
-}
-}
+} // localization
+} // openMVG

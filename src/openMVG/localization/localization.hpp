@@ -16,6 +16,9 @@
 #include <openMVG/stl/stlMap.hpp>
 #include <openMVG/voctree/vocabulary_tree.hpp>
 #include <openMVG/voctree/database.hpp>
+#include <openMVG/matching/matcher_kdtree_flann.hpp>
+#include <openMVG/matching/regions_matcher.hpp>
+#include <flann/algorithms/dist.h>
 
 
 namespace openMVG {
@@ -58,6 +61,7 @@ public:
                 const cameras::IntrinsicBase * queryIntrinsics,
                 const size_t numResults,
                 geometry::Pose3 & pose,
+                bool useGuidedMatching,
                 sfm::Image_Localizer_Match_Data * resection_data = nullptr);
 
 private:
@@ -68,21 +72,37 @@ private:
                                     const std::string & weightsFilepath,
                                     const std::string & feat_directory);
 
-  
+  typedef flann::L2<unsigned char> MetricT;
+  typedef matching::ArrayMatcher_Kdtree_Flann<unsigned char, MetricT> MatcherT;
+  bool robustMatching(matching::RegionsMatcherT<MatcherT> & matcher, 
+                      const cameras::IntrinsicBase * queryIntrinsics,// the intrinsics of the image we are using as reference
+                      const Reconstructed_RegionsT & regionsToMatch,
+                      const cameras::IntrinsicBase * matchedIntrinsics,
+                      const float fDistRatio,
+                      const bool b_guided_matching,
+                      const std::pair<size_t,size_t> & imageSizeI,     // size of the first image  
+                      const std::pair<size_t,size_t> & imageSizeJ,     // size of the first image
+                      std::vector<matching::IndMatch> & vec_featureMatches) const;
   
 public:
+  
+  // for each view index, it contains the features and descriptors that have an
+  // associated 3D point
   Hash_Map<IndexT, Reconstructed_RegionsT > _regions_per_view;
   
+  // contains the 3D reconstruction data
   sfm::SfM_Data _sfm_data;
   
   // the feature extractor
   // @fixme do we want a generic image describer>
   features::SIFT_Image_describer _image_describer;
   
-  // the vocabulary tree
+  // the vocabulary tree used to generate the database and the visual images for
+  // the query images
   voctree::VocabularyTree<DescriptorFloat> _voctree;
   
-  // the database
+  // the database that stores the visual word representation of each image of
+  // the original dataset
   voctree::Database _database;
   
   // this maps the docId in the database with the view index of the associated
@@ -90,6 +110,7 @@ public:
   std::map<voctree::DocId, IndexT> _mapDocIdToView;
   
 };
+
 
 }
 }
