@@ -5,6 +5,7 @@
  * Created on September 12, 2015, 3:16 PM
  */
 #include <openMVG/localization/localization.hpp>
+#include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 #include <openMVG/image/image_io.hpp>
 
 #include <boost/filesystem/operations.hpp>
@@ -94,7 +95,11 @@ int main(int argc, char** argv)
   POPART_COUT("Image size: " << imageGray.Width() << "x" << imageGray.Height());
   
   // localize
-//  localizer.Localize( imageGray)
+  // @fixme load intrinsics
+  cameras::Pinhole_Intrinsic * queryIntrinsics = nullptr;
+  geometry::Pose3 cameraPose;
+  sfm::Image_Localizer_Match_Data matchData;
+  localizer.Localize(imageGray, queryIntrinsics, numResults, cameraPose, true, &matchData);
   
   // save data
   
