@@ -264,7 +264,7 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
 
 
 bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
-                const cameras::IntrinsicBase * queryIntrinsics,
+                cameras::IntrinsicBase * queryIntrinsics,
                 const size_t numResults,
                 geometry::Pose3 & pose,
                 bool useGuidedMatching,
@@ -319,9 +319,13 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
   // for each found similar image
   for(const voctree::Match& matchedImage : matchedImages)
   {
+    // the view index of the current matched image
     const IndexT matchedViewIndex = _mapDocIdToView[matchedImage.id];
-    const Reconstructed_RegionsT& matchedRegions = _regions_per_view[matchedViewIndex];
+    // the handler to the current view
     const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
+    // its associated reconstructed regions
+    const Reconstructed_RegionsT& matchedRegions = _regions_per_view[matchedViewIndex];
+    // its associated intrinsics
     const cameras::IntrinsicBase *matchedIntrinsics = _sfm_data.intrinsics[matchedView->id_intrinsic].get();
     std::vector<matching::IndMatch> vec_featureMatches;
     bool matchWorked = robustMatching( matcher, 
@@ -340,10 +344,10 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
     }
   
     // recover the 2D-3D associations
-    Mat34 P;  // the projection matrix
     // Prepare data for resection
-    Mat pt2D(2, vec_featureMatches.size());
-    Mat pt3D(3, vec_featureMatches.size());
+    sfm::Image_Localizer_Match_Data matchData;
+    matchData.pt2D = Mat2X(2, vec_featureMatches.size());
+    matchData.pt3D = Mat3X(3, vec_featureMatches.size());
 
     // Get the 3D points associated to each matched feature
     std::size_t index = 0;
@@ -353,13 +357,13 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
       IndexT trackId3D = matchedRegions._associated3dPoint[featureMatch._j];
 
       // prepare data for resectioning
-      pt3D.col(index) = _sfm_data.GetLandmarks().at(trackId3D).X;
+      matchData.pt3D.col(index) = _sfm_data.GetLandmarks().at(trackId3D).X;
 
       const Vec2 feat = queryRegions.GetRegionPosition(featureMatch._i);
       if(bKnownIntrinsic)
-        pt2D.col(index) = queryIntrinsics->get_ud_pixel(feat);
+        matchData.pt2D.col(index) = queryIntrinsics->get_ud_pixel(feat);
       else
-        pt2D.col(index) = feat;
+        matchData.pt2D.col(index) = feat;
 
       ++index;
     }
@@ -370,11 +374,11 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
 
     bool bResection = sfm::robustResection(
                                            std::make_pair(imageGray.Width(), imageGray.Height()),
-                                           pt2D, pt3D,
+                                           matchData.pt2D, matchData.pt3D,
                                            &vec_inliers,
                                            // Use intrinsic guess if possible
                                            (bKnownIntrinsic) ? &K : NULL,
-                                           &P, &errorMax);
+                                           &matchData.projection_matrix, &errorMax);
 
     std::cout << std::endl
             << "-------------------------------" << std::endl
@@ -394,9 +398,14 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
     // Decompose P matrix
     Mat3 K_, R_;
     Vec3 t_;
-    KRt_From_P(P, &K_, &R_, &t_);
-    break;
+    KRt_From_P(matchData.projection_matrix, &K_, &R_, &t_);
+    pose = geometry::Pose3(R_, -R_.transpose() * t_);
+    
+    bool refineStatus = sfm::SfM_Localizer::RefinePose(queryIntrinsics, pose, matchData, true /*b_refine_pose*/, false /*b_refine_intrinsic*/);
+    if(!refineStatus)
+      POPART_COUT("Refine pose could not improve the estimation of the camera pose.");
     POPART_COUT("K: " << K_);
+    break;
   }
 
   return true;

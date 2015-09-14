@@ -58,7 +58,7 @@ public:
   * @return True if a putative pose has been estimated
   */
   bool Localize( const image::Image<unsigned char> & imageGray,
-                const cameras::IntrinsicBase * queryIntrinsics,
+                cameras::IntrinsicBase * queryIntrinsics,
                 const size_t numResults,
                 geometry::Pose3 & pose,
                 bool useGuidedMatching,
