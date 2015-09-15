@@ -126,7 +126,7 @@ bool VoctreeLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_d
   C_Progress_display my_progress_bar(sfm_data.GetViews().size(),
                                      std::cout, "\n- Regions Loading -\n");
 
-  std::cout << "Build observations per view" << std::endl;
+  POPART_COUT("Build observations per view");
   // Build observations per view
   std::map<IndexT, std::vector<FeatureInImage> > observationsPerView;
   for(auto landmarkValue : sfm_data.structure)
@@ -145,7 +145,7 @@ bool VoctreeLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_d
     std::sort(featuresInImage.second.begin(), featuresInImage.second.end());
   }
 
-  std::cout << "Load Features and Descriptors per view" << std::endl;
+  POPART_COUT("Load Features and Descriptors per view");
   // Read for each view the corresponding regions and store them
   for(sfm::Views::const_iterator iter = sfm_data.GetViews().begin();
           iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
@@ -162,7 +162,7 @@ bool VoctreeLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_d
 
     if(!reconstructedRegion._regions.Load(featFilepath, descFilepath))
     {
-      std::cerr << "Invalid regions files for the view: " << sImageName << std::endl;
+      POPART_CERR("Invalid regions files for the view: " << sImageName);
       return false;
     }
 
