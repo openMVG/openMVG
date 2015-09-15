@@ -20,6 +20,7 @@ struct Image_Localizer_Match_Data
   Mat3X pt3D;
   Mat2X pt2D;
   std::vector<size_t> vec_inliers;
+  double error_max;
 };
 
 class SfM_Localizer
@@ -58,6 +59,24 @@ public:
     geometry::Pose3 & pose,
     Image_Localizer_Match_Data * resection_data = nullptr // optional
   ) const = 0;
+
+
+  /**
+  * @brief Try to localize an image from known 2D-3D matches
+  *
+  * @param[in] image_size the w,h image size
+  * @param[in] optional_intrinsics camera intrinsic if known (else nullptr)
+  * @param[in/out] resection_data matching data (with filled 2D-3D correspondences)
+  * @param[out] pose found pose
+  * @return True if a putative pose has been estimated
+  */
+  static bool Localize
+  (
+    const Pair & image_size,
+    const cameras::IntrinsicBase * optional_intrinsics,
+    Image_Localizer_Match_Data & resection_data,
+    geometry::Pose3 & pose
+  );
 
   /**
   * @brief Refine a pose according 2D-3D matching & camera model data

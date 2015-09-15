@@ -7,9 +7,54 @@
 
 #include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
+#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
 
 namespace openMVG {
 namespace sfm {
+
+  bool SfM_Localizer::Localize
+  (
+    const Pair & image_size,
+    const cameras::IntrinsicBase * optional_intrinsics,
+    Image_Localizer_Match_Data & resection_data,
+    geometry::Pose3 & pose
+  )
+  {
+    // --
+    // Compute the camera pose (resectioning)
+    // --
+    resection_data.error_max = std::numeric_limits<double>::max();
+    Mat34 P;
+    resection_data.vec_inliers.clear();
+
+    const cameras::Pinhole_Intrinsic * pinhole_cam = dynamic_cast<const cameras::Pinhole_Intrinsic *>(optional_intrinsics);
+    const bool bResection = sfm::robustResection(
+      image_size,
+      resection_data.pt2D, resection_data.pt3D,
+      &resection_data.vec_inliers,
+      (pinhole_cam == nullptr) ? nullptr : &pinhole_cam->K(),
+      &P, &resection_data.error_max);
+
+    if (bResection)
+    {
+      resection_data.projection_matrix = P;
+      Mat3 K, R;
+      Vec3 t;
+      KRt_From_P(P, &K, &R, &t);
+      pose = geometry::Pose3(R, -R.transpose() * t);
+    }
+
+    std::cout << std::endl
+      << "-------------------------------" << "\n"
+      << "-- Robust Resection " << "\n"
+      << "-- Resection status: " << bResection << "\n"
+      << "-- #Points used for Resection: " << resection_data.pt2D.cols() << "\n"
+      << "-- #Points validated by robust Resection: " << resection_data.vec_inliers.size() << "\n"
+      << "-- Threshold: " << resection_data.error_max << "\n"
+      << "-------------------------------" << std::endl;
+
+    return bResection;
+  }
 
   bool SfM_Localizer::RefinePose
   (
