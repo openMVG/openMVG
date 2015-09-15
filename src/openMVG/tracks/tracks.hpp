@@ -59,11 +59,11 @@ public:
   typedef typename std::vector< P >::iterator iterator;
 
   typename std::vector< P >::iterator find(const T1 & val)  {
-    return lower_bound(m_vec.begin(), m_vec.end(), val, superiorToFirst);
+    return std::lower_bound(m_vec.begin(), m_vec.end(), val, superiorToFirst);
   }
 
   T2 & operator[](const T1 & val) {
-    return lower_bound(m_vec.begin(), m_vec.end(), val, superiorToFirst)->second;
+    return std::lower_bound(m_vec.begin(), m_vec.end(), val, superiorToFirst)->second;
   }
 
   void sort()  {std::sort(m_vec.begin(), m_vec.end(), sortPairAscend);}
@@ -117,7 +117,7 @@ struct TracksBuilder
       const size_t & J = iter->first.second;
       // Features correspondences between I and J image.
       const std::vector<IndMatch> & vec_FilteredMatches = iter->second;
-      
+
       // Retrieve all features
       for( size_t k = 0; k < vec_FilteredMatches.size(); ++k)
       {
@@ -170,32 +170,44 @@ struct TracksBuilder
     return false;
   }
 
-  /// Remove bad tracks, conflict tracks (many times the same image index in a track)
-  bool Filter(size_t nLengthSupTo = 2)
+  /// Remove bad tracks (too short or track with ids collision)
+  bool Filter(size_t nLengthSupTo = 2, bool bMultithread = true)
   {
-    // Remove bad tracks (shorter, conflicts (Many times the same image index)...)
+    // Remove bad tracks:
+    // - track that are too short,
+    // - track with id conflicts (many times the same image index)
 
-    // Remove tracks that have a conflict (many times the same image index)
     std::set<int> set_classToErase;
+#ifdef OPENMVG_USE_OPENMP
+    #pragma omp parallel if(bMultithread)
+#endif
     for ( lemon::UnionFindEnum< IndexMap >::ClassIt cit(*_tracksUF); cit != INVALID; ++cit) {
-      size_t cpt = 0;
-      std::set<size_t> myset;
-      for (lemon::UnionFindEnum< IndexMap >::ItemIt iit(*_tracksUF, cit); iit != INVALID; ++iit) {
-        myset.insert(_map_nodeToIndex[ iit ].first);
-        ++cpt;
-      }
-      if (myset.size() != cpt || myset.size() < nLengthSupTo)
+#ifdef OPENMVG_USE_OPENMP
+    #pragma omp single nowait
+#endif
       {
-        set_classToErase.insert(cit.operator int());
+        size_t cpt = 0;
+        std::set<size_t> myset;
+        for (lemon::UnionFindEnum< IndexMap >::ItemIt iit(*_tracksUF, cit); iit != INVALID; ++iit) {
+          myset.insert(_map_nodeToIndex[ iit ].first);
+          ++cpt;
+        }
+        if (myset.size() != cpt || myset.size() < nLengthSupTo)
+        {
+#ifdef OPENMVG_USE_OPENMP
+          #pragma omp critical
+#endif
+          set_classToErase.insert(cit.operator int());
+        }
       }
     }
-    for_each (set_classToErase.begin(), set_classToErase.end(),
+    std::for_each (set_classToErase.begin(), set_classToErase.end(),
       std::bind1st( std::mem_fun( &UnionFindObject::eraseClass ), _tracksUF.get() ));
     return false;
   }
 
   /// Remove the pair that have too few correspondences.
-  bool FilterPairWiseMinimumMatches(size_t minMatchesOccurences, bool bVerbose = false)
+  bool FilterPairWiseMinimumMatches(size_t minMatchesOccurences, bool bMultithread = true)
   {
     std::vector<size_t> vec_tracksToRemove;
     typedef std::map< size_t, std::set<size_t> > TrackIdPerImageT;
@@ -211,30 +223,42 @@ struct TracksBuilder
       }
     }
 
-    //-- Compute cross images matches
+    //-- Compute corresponding track per image pair
+#ifdef OPENMVG_USE_OPENMP
+    #pragma omp parallel if(bMultithread)
+#endif
     for (TrackIdPerImageT::const_iterator iter = map_tracksIdPerImages.begin();
       iter != map_tracksIdPerImages.end();
       ++iter)
     {
-      const std::set<size_t> & setA = iter->second;
-      for (TrackIdPerImageT::const_iterator iter2 = iter;
-        iter2 != map_tracksIdPerImages.end();  ++iter2)
+#ifdef OPENMVG_USE_OPENMP
+    #pragma omp single nowait
+#endif
       {
-        const std::set<size_t> & setB = iter2->second;
+        const std::set<size_t> & setA = iter->second;
         std::vector<size_t> inter;
-
-        std::set_intersection(setA.begin(), setA.end(), setB.begin(), setB.end(), std::back_inserter(inter));
-
-        if (inter.size() < minMatchesOccurences)
-          copy(inter.begin(), inter.end(), std::back_inserter(vec_tracksToRemove));
+        for (TrackIdPerImageT::const_iterator iter2 = iter;
+          iter2 != map_tracksIdPerImages.end();  ++iter2)
+        {
+          // compute intersection of track ids
+          const std::set<size_t> & setB = iter2->second;
+          inter.clear();
+          std::set_intersection(setA.begin(), setA.end(), setB.begin(), setB.end(), std::back_inserter(inter));
+          if (inter.size() < minMatchesOccurences)
+          {
+#ifdef OPENMVG_USE_OPENMP
+            #pragma omp critical
+#endif
+            {
+              std::copy(inter.begin(), inter.end(), std::back_inserter(vec_tracksToRemove));
+            }
+          }
+        }
       }
     }
-    sort(vec_tracksToRemove.begin(), vec_tracksToRemove.end());
+    std::sort(vec_tracksToRemove.begin(), vec_tracksToRemove.end());
     std::vector<size_t>::iterator it = std::unique(vec_tracksToRemove.begin(), vec_tracksToRemove.end());
     vec_tracksToRemove.resize( std::distance(vec_tracksToRemove.begin(), it) );
-    if (bVerbose)
-      std::cout << std::endl << std::endl << vec_tracksToRemove.size()
-        << " Tracks will be removed"<< std::endl;
     std::for_each(vec_tracksToRemove.begin(), vec_tracksToRemove.end(),
       std::bind1st(std::mem_fun(&UnionFindObject::eraseClass), _tracksUF.get()));
     return false;
@@ -276,7 +300,7 @@ struct TracksBuilder
     size_t cptClass = 0;
     for ( lemon::UnionFindEnum< IndexMap >::ClassIt cit(*_tracksUF); cit != INVALID; ++cit, ++cptClass) {
       std::pair<STLMAPTracks::iterator, bool> ret =
-        map_tracks.insert(std::pair<size_t, submapTrack >(cptClass, submapTrack() ) );
+        map_tracks.insert(std::pair<size_t, submapTrack >(cptClass, submapTrack()));
       STLMAPTracks::iterator iterN = ret.first;
 
       for (lemon::UnionFindEnum< IndexMap >::ItemIt iit(*_tracksUF, cit); iit != INVALID; ++iit) {
@@ -374,14 +398,14 @@ struct TracksUtilsMap
 
   /**
    * @brief Convert a trackId to a vector of indexed Matches.
-   * 
+   *
    * @param[in]  map_tracks: set of tracks with only 2 elements
    *             (image A and image B) in each submapTrack.
    * @param[in]  vec_filterIndex: the track indexes to retrieve.
    *             Only track indexes contained in this filter vector are kept.
    * @param[out] pvec_index: list of matches
    *             (feature index in image A, feature index in image B).
-   * 
+   *
    * @warning The input tracks must be composed of only two images index.
    * @warning Image index are considered sorted (increasing order).
    */
@@ -399,12 +423,12 @@ struct TracksUtilsMap
         find_if(map_tracks.begin(), map_tracks.end(), FunctorMapFirstEqual(vec_filterIndex[i]));
       // The current track.
       const submapTrack & map_ref = itF->second;
-      
+
       // We have 2 elements for a track.
       assert(map_ref.size() == 2);
       const IndexT indexI = (map_ref.begin())->second;
       const IndexT indexJ = (++map_ref.begin())->second;
-      
+
       vec_indexref.push_back(IndMatch(indexI, indexJ));
     }
   }
