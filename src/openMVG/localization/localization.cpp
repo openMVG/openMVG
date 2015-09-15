@@ -273,7 +273,7 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
   // extract descriptors and features from image
   POPART_COUT("[features]\tExtract SIFT from query image");
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Regions());
-  _image_describer.Describe(imageGray, tmpQueryRegions, NULL);
+  _image_describer.Describe(imageGray, tmpQueryRegions, nullptr);
   POPART_COUT("[features]\tExtract SIFT done: found " << tmpQueryRegions->RegionCount() << " features");
   features::SIFT_Regions queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
 //  POPART_COUT("Extract SIFT done!!");
@@ -372,8 +372,7 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
     std::vector<size_t> vec_inliers;
     double errorMax = std::numeric_limits<double>::max();
 
-    bool bResection = sfm::robustResection(
-                                           std::make_pair(imageGray.Width(), imageGray.Height()),
+    bool bResection = sfm::robustResection(std::make_pair(imageGray.Width(), imageGray.Height()),
                                            matchData.pt2D, matchData.pt3D,
                                            &vec_inliers,
                                            // Use intrinsic guess if possible

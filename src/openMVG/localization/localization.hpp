@@ -112,5 +112,5 @@ public:
 };
 
 
-}
-}
+} // localization
+} // openMVG
