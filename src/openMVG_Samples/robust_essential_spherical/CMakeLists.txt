@@ -11,9 +11,7 @@ TARGET_LINK_LIBRARIES(openMVG_sample_robustEssential_spherical
   openMVG_sfm
   stlplus
   vlsift
-  ${CERES_LIBRARIES}
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 SET_PROPERTY(TARGET openMVG_sample_robustEssential_spherical PROPERTY FOLDER OpenMVG/Samples)
 
