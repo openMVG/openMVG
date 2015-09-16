@@ -17,10 +17,12 @@ namespace sfm {
 struct Image_Localizer_Match_Data
 {
   Mat34 projection_matrix;
-  Mat3X pt3D;
-  Mat2X pt2D;
+  Mat pt3D;
+  Mat pt2D;
   std::vector<size_t> vec_inliers;
-  double error_max;
+  // Upper bound pixel(s) tolerance for residual errors
+  double error_max = std::numeric_limits<double>::infinity();
+  size_t max_iteration = 4096;
 };
 
 class SfM_Localizer
@@ -66,7 +68,7 @@ public:
   *
   * @param[in] image_size the w,h image size
   * @param[in] optional_intrinsics camera intrinsic if known (else nullptr)
-  * @param[in/out] resection_data matching data (with filled 2D-3D correspondences)
+  * @param[in,out] resection_data matching data (with filled 2D-3D correspondences)
   * @param[out] pose found pose
   * @return True if a putative pose has been estimated
   */
@@ -81,8 +83,8 @@ public:
   /**
   * @brief Refine a pose according 2D-3D matching & camera model data
   *
-  * @param[in/out] intrinsics Camera model
-  * @param[in/out] pose Camera pose
+  * @param[in,out] intrinsics Camera model
+  * @param[in,out] pose Camera pose
   * @param[in] matching_data Corresponding 2D-3D data
   * @param[in] b_refine_pose tell if pose must be refined
   * @param[in] b_refine_intrinsic tell if intrinsics must be refined
