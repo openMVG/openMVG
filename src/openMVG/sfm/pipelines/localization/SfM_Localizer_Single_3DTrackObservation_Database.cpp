@@ -92,6 +92,10 @@ namespace sfm {
     std::cout << "#3D2d putative correspondences: " << vec_putative_matches.size() << std::endl;
     // Init the 3D-2d correspondences array
     Image_Localizer_Match_Data resection_data;
+    if (resection_data_ptr)
+    {
+      resection_data.error_max = resection_data_ptr->error_max;
+    }
     resection_data.pt3D.resize(3, vec_putative_matches.size());
     resection_data.pt2D.resize(2, vec_putative_matches.size());
     Mat2X pt2D_original(2, vec_putative_matches.size());
