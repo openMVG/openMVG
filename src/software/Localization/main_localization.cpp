@@ -249,10 +249,16 @@ int main(int argc, char** argv)
   // For each image retrieved from the voctree
   for(const voctree::Match& matchedImage : matchedImages)
   {
+    // get the view id of the current matched image of the dataset
     const IndexT matchedViewIndex = mapDocIdToView[matchedImage.id];
+    // get the handle to the view
     const std::shared_ptr<sfm::View> matchedView = sfmData.views[matchedViewIndex];
-    POPART_COUT("Localize with " << matchedView->s_Img_path << " [score: " << matchedImage.score << "]");
+    // get the handle to its Regions
     const localization::Reconstructed_RegionsT& matchedRegions = localization._regions_per_view[matchedViewIndex];
+    
+    POPART_COUT("Localize with " << matchedView->s_Img_path 
+            << " [score: " << matchedImage.score << " and "
+            << matchedRegions._regions.RegionCount() << " descriptors]");
 
     // B. Putative Features Matching
     std::vector<matching::IndMatch> vec_featureMatches;
@@ -261,6 +267,10 @@ int main(int argc, char** argv)
     {
       POPART_COUT("\tmatching with " << matchedView->s_Img_path << " failed! Skipping image");
       continue;
+    }
+    else
+    {
+       POPART_COUT("\tFound  " << vec_featureMatches.size() << " putative matches");
     }
     
     //@fixme let's keep it in a separate block for now
@@ -281,12 +291,12 @@ int main(int argc, char** argv)
       bool valid = geometricFilter.Robust_estimation(featuresI, // points of the query image
                                                      featuresJ, // points of the matched image
                                                      std::make_pair(imageGray.Width(), imageGray.Height()),
-                                                     std::make_pair(imageGray.Width(), imageGray.Height()), // NO! @todo here we need the size of the img in the dataset...
+                                                     std::make_pair(imageGray.Width(), imageGray.Height()), // NO! @fixme here we need the size of the img in the dataset...
                                                      vec_matchingInliers);
 
       if(!valid)
       {
-        POPART_COUT("\tUnable to robustly matching the query image with the database image " << matchedView->s_Img_path);
+        POPART_COUT("\tUnable to robustly match the query image with the database image " << matchedView->s_Img_path);
         continue;
       }
       bool b_guided_matching = true;
