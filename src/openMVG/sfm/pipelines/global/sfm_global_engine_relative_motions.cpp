@@ -285,7 +285,22 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
   {
     using namespace openMVG::tracks;
     TracksBuilder tracksBuilder;
+#if defined USE_ALL_VALID_MATCHES // not used by default
+    matching::PairWiseMatches pose_supported_matches;
+    for (const std::pair< Pair, IndMatches > & match_info :  _matches_provider->_pairWise_matches)
+    {
+      const View * vI = _sfm_data.GetViews().at(match_info.first.first).get();
+      const View * vJ = _sfm_data.GetViews().at(match_info.first.second).get();
+      if (_sfm_data.IsPoseAndIntrinsicDefined(vI) && _sfm_data.IsPoseAndIntrinsicDefined(vJ))
+      {
+        pose_supported_matches.insert(match_info);
+      }
+    }
+    tracksBuilder.Build(pose_supported_matches);
+#else
+    // Use triplet validated matches
     tracksBuilder.Build(tripletWise_matches);
+#endif
     tracksBuilder.Filter(3);
     STLMAPTracks map_selectedTracks; // reconstructed track (visibility per 3D point)
     tracksBuilder.ExportToSTL(map_selectedTracks);
