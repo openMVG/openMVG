@@ -91,7 +91,7 @@ OpenMVG SfM pipelines run as a 4 step process:
 .. toctree::
    :maxdepth: 1
 
-   ./MVS.rst
+   ../MVS/MVS.rst
 
 **You can either run by hand all the process or use pre-defined python scripts (that are using some default options).**
 
@@ -138,7 +138,7 @@ To know more about each tool visit the following link and read the doc below:
    :maxdepth: 1
 
    ./SfM_OutputFormat.rst
-   ./MVS.rst
+   ../MVS/MVS.rst
 
 PS: We strongly advise to use a 3 directories based data organisation structure
 

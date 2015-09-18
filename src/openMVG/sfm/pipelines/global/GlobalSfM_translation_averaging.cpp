@@ -189,7 +189,29 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
       }
       break;
 
-      case TRANSLATION_AVERAGING_L2:
+      case TRANSLATION_AVERAGING_SOFTL1:
+      {
+        std::vector<Vec3> vec_translations;
+        if (!solve_translations_problem_softl1(
+          vec_initialRijTijEstimates_cpy, true, iNview, vec_translations))
+        {
+          std::cerr << "Compute global translations: failed" << std::endl;
+          return false;
+        }
+
+        // A valid solution was found:
+        // - Update the view poses according the found camera translations
+        for (size_t i = 0; i < iNview; ++i)
+        {
+          const Vec3 & t = vec_translations[i];
+          const IndexT pose_id = _reindexBackward[i];
+          const Mat3 & Ri = map_globalR.at(pose_id);
+          sfm_data.poses[pose_id] = Pose3(Ri, -Ri.transpose()*t);
+        }
+      }
+      break;
+
+      case TRANSLATION_AVERAGING_L2_DISTANCE_CHORDAL:
       {
         std::vector<int> vec_edges;
         vec_edges.reserve(vec_initialRijTijEstimates_cpy.size() * 2);
@@ -223,7 +245,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
         const double loss_width = 0.0; // No loss in order to compare with TRANSLATION_AVERAGING_L1
 
         std::vector<double> X(iNview*3, 0.0);
-        if(!solve_translations_problem(
+        if(!solve_translations_problem_l2_chordal(
           &vec_edges[0],
           &vec_poses[0],
           &vec_weights[0],
@@ -247,6 +269,11 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
         }
       }
       break;
+      default:
+      {
+        std::cerr << "Unknown translation averaging method" << std::endl;
+        return false;
+      }
     }
   }
   return true;

@@ -14,7 +14,8 @@ namespace sfm{
 enum ETranslationAveragingMethod
 {
   TRANSLATION_AVERAGING_L1 = 1,
-  TRANSLATION_AVERAGING_L2 = 2
+  TRANSLATION_AVERAGING_L2_DISTANCE_CHORDAL = 2,
+  TRANSLATION_AVERAGING_SOFTL1 = 3
 };
 
 } // namespace sfm

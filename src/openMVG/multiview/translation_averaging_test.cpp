@@ -4,17 +4,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_solver.hpp"
-
-#include "openMVG/graph/triplet_finder.hpp"
-using namespace openMVG::graph;
-
-#include "third_party/vectorGraphics/svgDrawer.hpp"
-using namespace svg;
-
-#include "openMVG/multiview/test_data_sets.hpp"
+#include "openMVG/multiview/translation_averaging_test.hpp"
 #include "testing/testing.h"
 
 #include <fstream>
@@ -25,132 +17,139 @@ using namespace svg;
 using namespace openMVG;
 using namespace std;
 
-int modifiedMod(int number, int modulus)
-{
-   int result = number % modulus;
-   if (result < 0) result += modulus;
-   return result;
-}
+TEST(translation_averaging, globalTi_from_tijs_Triplets_softL1_Ceres) {
 
-//-- Export a series of camera positions to a SVG surface of specified squared size
-void visibleCamPosToSVGSurface(
-  const std::vector<Vec3> & vec_Ci,
-  const std::string & fileName)
-{
-  Mat points(3, vec_Ci.size());
-  for(size_t i = 0; i  < vec_Ci.size(); ++i)
-  {
-    points.col(i) = vec_Ci[i];
-  }
-
-  Vec mean, variance;
-  MeanAndVarianceAlongRows(points, &mean, &variance);
-
-  double xfactor = sqrt(2.0 / variance(0));
-  double yfactor = sqrt(2.0 / variance(2));
-
-  std::vector<Vec3> out = vec_Ci;
-  for(size_t i = 0; i  < vec_Ci.size(); ++i)
-  {
-    out[i](0) = ((out[i](0) * xfactor) + -xfactor * mean(0)) * 30 + 100;
-    out[i](2) = ((out[i](2) * yfactor) + -yfactor * mean(2)) * 30 + 100;
-  }
-
-  if (!fileName.empty())
-  {
-    const double size = 200;
-    svgDrawer svgSurface_GT(size,size);
-    for(size_t i = 0; i  < vec_Ci.size(); ++i)
-    {
-      svgSurface_GT.drawCircle(out[i](0), out[i](2),
-                               3,svgStyle().stroke("black",0.2).fill("red"));
-    }
-    std::ostringstream osSvgGT;
-    osSvgGT << fileName;
-    std::ofstream svgFileGT( osSvgGT.str().c_str());
-    svgFileGT << svgSurface_GT.closeSvgFile().str();
-  }
-}
-
-TEST(translation_averaging, globalTi_from_tijs_Triplets_ECCV14) {
-
-  int focal = 1000;
-  int principal_Point = 500;
+  const int focal = 1000;
+  const int principal_Point = 500;
   //-- Setup a circular camera rig or "cardioid".
   const int iNviews = 12;
   const int iNbPoints = 6;
-  NViewDataSet d =
-    //NRealisticCamerasRing(
-    NRealisticCamerasCardioid(
-    iNviews, iNbPoints,
-    nViewDatasetConfigurator(focal,focal,principal_Point,principal_Point,5,0));
+
+  const bool bCardiod = true;
+  const bool bRelative_Translation_PerTriplet = true;
+  std::vector<openMVG::relativeInfo > vec_relative_estimates;
+
+  const NViewDataSet d =
+    Setup_RelativeTranslations_AndNviewDataset
+    (
+      vec_relative_estimates,
+      focal, principal_Point, iNviews, iNbPoints,
+      bCardiod, bRelative_Translation_PerTriplet
+    );
 
   d.ExportToPLY("global_translations_from_triplets_GT.ply");
-
   visibleCamPosToSVGSurface(d._C, "global_translations_from_triplets_GT.svg");
 
-  // List successive triplets of the large loop of camera
-  std::vector< graph::Triplet > vec_triplets;
-  for (size_t i = 0; i < iNviews; ++i)
+  // Solve the translation averaging problem:
+  std::vector<Vec3> vec_translations;
+  EXPECT_TRUE(solve_translations_problem_softl1(
+    vec_relative_estimates, bRelative_Translation_PerTriplet, iNviews, vec_translations));
+
+  EXPECT_EQ(iNviews, vec_translations.size());
+
+  // Check accuracy of the found translations
+  for (unsigned i = 0; i < iNviews; ++i)
   {
-    const size_t iPlus1 = modifiedMod(i+1,iNviews);
-    const size_t iPlus2 = modifiedMod(i+2,iNviews);
-    //-- sort the triplet index to have a monotonic ascending series of value
-    size_t triplet[3] = {i, iPlus1, iPlus2};
-    std::sort(&triplet[0], &triplet[3]);
-    vec_triplets.push_back(Triplet(triplet[0],triplet[1],triplet[2]));
-  }
+    const Vec3 t = vec_translations[i];
+    const Mat3 & Ri = d._R[i];
+    const Vec3 C_computed = - Ri.transpose() * t;
 
-  //- For each triplet compute relative translations and rotations motions
-  std::vector<openMVG::relativeInfo > vec_initialEstimates;
+    const Vec3 C_GT = d._C[i] - d._C[0];
 
-  for (size_t i = 0; i < vec_triplets.size(); ++i)
-  {
-    const graph::Triplet & triplet = vec_triplets[i];
-    size_t I = triplet.i, J = triplet.j , K = triplet.k;
-
-    //-- Build camera alias over GT translations and rotations:
-    const Mat3 & RI = d._R[I];
-    const Mat3 & RJ = d._R[J];
-    const Mat3 & RK = d._R[K];
-    const Vec3 & ti = d._t[I];
-    const Vec3 & tj = d._t[J];
-    const Vec3 & tk = d._t[K];
-
-    //-- Build relatives motions (that feeds the Linear program formulation)
-    {
-      Mat3 RijGt;
-      Vec3 tij;
-      RelativeCameraMotion(RI, ti, RJ, tj, &RijGt, &tij);
-      vec_initialEstimates.push_back(
-        std::make_pair(std::make_pair(I, J), std::make_pair(RijGt, tij)));
-
-      Mat3 RjkGt;
-      Vec3 tjk;
-      RelativeCameraMotion(RJ, tj, RK, tk, &RjkGt, &tjk);
-      vec_initialEstimates.push_back(
-        std::make_pair(std::make_pair(J, K), std::make_pair(RjkGt, tjk)));
-
-      Mat3 RikGt;
-      Vec3 tik;
-      RelativeCameraMotion(RI, ti, RK, tk, &RikGt, &tik);
-      vec_initialEstimates.push_back(
-        std::make_pair(std::make_pair(I, K), std::make_pair(RikGt, tik)));
+    //-- Check that found camera position is equal to GT value
+    if (i==0)  {
+      EXPECT_MATRIX_NEAR(C_computed, C_GT, 1e-6);
+    }
+    else  {
+     EXPECT_NEAR(0.0, DistanceLInfinity(C_computed.normalized(), C_GT.normalized()), 1e-6);
     }
   }
+}
+
+TEST(translation_averaging, globalTi_from_tijs_softl1_Ceres) {
+
+  const int focal = 1000;
+  const int principal_Point = 500;
+  //-- Setup a circular camera rig or "cardiod".
+  const int iNviews = 12;
+  const int iNbPoints = 6;
+
+  const bool bCardiod = true;
+  const bool bRelative_Translation_PerTriplet = false;
+  std::vector<openMVG::relativeInfo > vec_relative_estimates;
+
+  const NViewDataSet d =
+    Setup_RelativeTranslations_AndNviewDataset
+    (
+      vec_relative_estimates,
+      focal, principal_Point, iNviews, iNbPoints,
+      bCardiod, bRelative_Translation_PerTriplet
+    );
+
+  d.ExportToPLY("global_translations_from_Tij_GT.ply");
+  visibleCamPosToSVGSurface(d._C, "global_translations_from_Tij_GT.svg");
+
+  // Solve the translation averaging problem:
+  std::vector<Vec3> vec_translations;
+  EXPECT_TRUE(solve_translations_problem_softl1(
+    vec_relative_estimates, bRelative_Translation_PerTriplet, iNviews, vec_translations));
+
+  EXPECT_EQ(iNviews, vec_translations.size());
+
+  // Check accuracy of the found translations
+  for (unsigned i = 0; i < iNviews; ++i)
+  {
+    const Vec3 t = vec_translations[i];
+    const Mat3 & Ri = d._R[i];
+    const Vec3 C_computed = - Ri.transpose() * t;
+
+    const Vec3 C_GT = d._C[i] - d._C[0];
+
+    //-- Check that found camera position is equal to GT value
+    if (i==0)  {
+      EXPECT_MATRIX_NEAR(C_computed, C_GT, 1e-6);
+    }
+    else  {
+     EXPECT_NEAR(0.0, DistanceLInfinity(C_computed.normalized(), C_GT.normalized()), 1e-6);
+    }
+  }
+}
+
+TEST(translation_averaging, globalTi_from_tijs_Triplets_l2_chordal) {
+
+  const int focal = 1000;
+  const int principal_Point = 500;
+  //-- Setup a circular camera rig or "cardiod".
+  const int iNviews = 12;
+  const int iNbPoints = 6;
+
+  const bool bCardiod = true;
+  const bool bRelative_Translation_PerTriplet = true;
+  std::vector<openMVG::relativeInfo > vec_relative_estimates;
+
+  const NViewDataSet d =
+    Setup_RelativeTranslations_AndNviewDataset
+    (
+      vec_relative_estimates,
+      focal, principal_Point, iNviews, iNbPoints,
+      bCardiod, bRelative_Translation_PerTriplet
+    );
+
+  d.ExportToPLY("global_translations_from_Tij_GT.ply");
+  visibleCamPosToSVGSurface(d._C, "global_translations_from_Tij_GT.svg");
 
   //-- Compute the global translations from the triplets of heading directions
-  //-   with the Kyle method
+  //-   with the L2 minimization of a Chordal distance
   std::vector<int> vec_edges;
-  vec_edges.reserve(vec_initialEstimates.size() * 2);
+  vec_edges.reserve(vec_relative_estimates.size() * 2);
   std::vector<double> vec_poses;
-  vec_poses.reserve(vec_initialEstimates.size() * 3);
+  vec_poses.reserve(vec_relative_estimates.size() * 3);
   std::vector<double> vec_weights;
-  vec_weights.reserve(vec_initialEstimates.size());
+  vec_weights.reserve(vec_relative_estimates.size());
 
-  for(int i=0; i < vec_initialEstimates.size(); ++i)
+  for(int i=0; i < vec_relative_estimates.size(); ++i)
   {
-    const openMVG::relativeInfo & rel = vec_initialEstimates[i];
+    const openMVG::relativeInfo & rel = vec_relative_estimates[i];
     vec_edges.push_back(rel.first.first);
     vec_edges.push_back(rel.first.second);
 
@@ -171,11 +170,11 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets_ECCV14) {
   std::vector<double> X(iNviews*3);
 
   EXPECT_TRUE(
-    solve_translations_problem(
+    solve_translations_problem_l2_chordal(
       &vec_edges[0],
       &vec_poses[0],
       &vec_weights[0],
-      vec_initialEstimates.size(),
+      vec_relative_estimates.size(),
       loss_width,
       &X[0],
       function_tolerance,
