@@ -41,6 +41,8 @@
 #include <set>
 #include <map>
 
+namespace openMVG {
+
 using ceres::AutoDiffCostFunction;
 using ceres::CostFunction;
 using ceres::Problem;
@@ -72,7 +74,7 @@ struct ChordFunctor {
 
 void reindex_problem(int* edges, int num_edges, std::vector<int> &reindex_lookup);
 
-bool solve_translations_problem(
+bool solve_translations_problem_l2_chordal(
   const int* edges,
   const double* poses,
   const double* weights,
@@ -183,3 +185,5 @@ reindex_problem(int* edges, int num_edges, std::vector<int> &reindex_lookup)
   for (int i=0; i<2*num_edges; ++i)
     edges[i]  = reindexing_key[edges[i]];
 }
+
+} // namespace openMVG

@@ -10,10 +10,12 @@ file(
   *.cpp
 )
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
+file(GLOB_RECURSE REMOVEFILESUNITTEST_HEADER *_test.hpp)
 file(GLOB_RECURSE MULTIVIEWTESTDATA *_data_sets*)
 
 #Remove the unit test files (not been used by the library)
 list(REMOVE_ITEM multiview_files_cpp ${REMOVEFILESUNITTEST})
+list(REMOVE_ITEM multiview_files_header ${REMOVEFILESUNITTEST_HEADER})
 list(REMOVE_ITEM multiview_files_cpp ${MULTIVIEWTESTDATA})
 
 ADD_LIBRARY(openMVG_multiview
