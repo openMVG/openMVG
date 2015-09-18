@@ -63,25 +63,40 @@ void SfM_Data_Structure_Computation_Blind::triangulate(SfM_Data & sfm_data) cons
         itObs != obs.end(); ++itObs)
       {
         const View * view = sfm_data.views.at(itObs->first).get();
-        const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
-        const Pose3 pose = sfm_data.GetPoseOrDie(view);
-        trianObj.add(
-          cam->get_projective_equivalent(pose),
-          cam->get_ud_pixel(itObs->second.x));
+        if (sfm_data.IsPoseAndIntrinsicDefined(view))
+        {
+          const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
+          const Pose3 pose = sfm_data.GetPoseOrDie(view);
+          trianObj.add(
+            cam->get_projective_equivalent(pose),
+            cam->get_ud_pixel(itObs->second.x));
+        }
       }
-      // Compute the 3D point
-      const Vec3 X = trianObj.compute();
-      if (trianObj.minDepth() > 0) // Keep the point only if it have a positive depth
-      {
-        iterTracks->second.X = X;
-      }
-      else
+      if (trianObj.size() < 2)
       {
 #ifdef OPENMVG_USE_OPENMP
         #pragma omp critical
 #endif
         {
           rejectedId.push_front(iterTracks->first);
+        }
+      }
+      else
+      {
+        // Compute the 3D point
+        const Vec3 X = trianObj.compute();
+        if (trianObj.minDepth() > 0) // Keep the point only if it have a positive depth
+        {
+          iterTracks->second.X = X;
+        }
+        else
+        {
+#ifdef OPENMVG_USE_OPENMP
+          #pragma omp critical
+#endif
+          {
+            rejectedId.push_front(iterTracks->first);
+          }
         }
       }
     }
