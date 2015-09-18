@@ -252,6 +252,7 @@ bool Bundle_Adjustment_Ceres::Adjust(
         << " #residuals: " << summary.num_residuals << "\n"
         << " Initial RMSE: " << std::sqrt( summary.initial_cost / summary.num_residuals) << "\n"
         << " Final RMSE: " << std::sqrt( summary.final_cost / summary.num_residuals) << "\n"
+        << " Time (s): " << summary.total_time_in_seconds << "\n"
         << std::endl;
     }
 
