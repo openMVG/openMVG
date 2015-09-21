@@ -96,11 +96,17 @@ int main(int argc, char** argv)
   
   // localize
   // @fixme load intrinsics
-  cameras::Pinhole_Intrinsic * queryIntrinsics = nullptr;
+  cameras::Pinhole_Intrinsic_Radial_K3 queryIntrinsics;
   geometry::Pose3 cameraPose;
   sfm::Image_Localizer_Match_Data matchData;
-  localizer.Localize(imageGray, queryIntrinsics, numResults, cameraPose, true, &matchData);
-  
+  localizer.Localize(imageGray, 
+                     queryIntrinsics, 
+                     numResults, 
+                     cameraPose, 
+                     false/*useGuidedMatching*/, 
+                     false/*useInputIntrinsics*/, 
+                     true/*refineIntrinsics*/, 
+                     &matchData);
   // save data
   
 }

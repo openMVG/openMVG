@@ -215,12 +215,17 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
   return true;
 }
 
+
+
+
 //@todo move the parameters into a struct
 bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
-                cameras::IntrinsicBase * queryIntrinsics,
+                cameras::Pinhole_Intrinsic &queryIntrinsics,
                 const size_t numResults,
                 geometry::Pose3 & pose,
                 bool useGuidedMatching,
+                bool useInputIntrinsics,
+                bool refineIntrinsics,
                 sfm::Image_Localizer_Match_Data * resection_data /*= nullptr*/)
 {
   // A. extract descriptors and features from image
@@ -259,15 +264,18 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
   // preparing the matcher, it will use the extracted Regions as reference and it
   // will match them to the Regions of each similar image
   const float fDistRatio = 0.6; //@fixme this could be a param
-  typedef flann::L2<unsigned char> MetricT;
-  typedef matching::ArrayMatcher_Kdtree_Flann<unsigned char, MetricT> MatcherT;
+//  typedef flann::L2<unsigned char> MetricT;
+//  typedef matching::ArrayMatcher_Kdtree_Flann<unsigned char, MetricT> MatcherT;
   POPART_COUT("[matching]\tBuild the matcher");
   matching::RegionsMatcherT<MatcherT> matcher(queryRegions);
   
-  // Prepare intrinsics @fixme 
+  // Prepare intrinsics 
   POPART_COUT("[matching]\tPrepare query intrinsics");
-  const bool bKnownIntrinsic = (queryIntrinsics != nullptr);
-  Mat3 K = Mat3::Identity(); //@fixme 
+  Mat3 queryK;
+  if (useInputIntrinsics)
+  {
+    queryK = queryIntrinsics.K(); 
+  }
  
   // C. for each found similar image, try to find the correspondences between the 
   // query image adn the similar image
@@ -281,18 +289,18 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
     const Reconstructed_RegionsT& matchedRegions = _regions_per_view[matchedViewIndex];
     // its associated intrinsics
     // this is just ugly!
-    const cameras::IntrinsicBase *intBase = _sfm_data.intrinsics[matchedView->id_intrinsic].get();
-    if ( !isPinhole(intBase->getType()) )
+    const cameras::IntrinsicBase *matchedIntrinsicsBase = _sfm_data.intrinsics[matchedView->id_intrinsic].get();
+    if ( !isPinhole(matchedIntrinsicsBase->getType()) )
     {
       //@fixme maybe better to throw something here
       POPART_CERR("Only Pinhole cameras are supported!");
       return false;
     }
-    const cameras::Pinhole_Intrinsic *matchedIntrinsics = (const cameras::Pinhole_Intrinsic*)(intBase);
+    const cameras::Pinhole_Intrinsic *matchedIntrinsics = (const cameras::Pinhole_Intrinsic*)(matchedIntrinsicsBase);
      
     std::vector<matching::IndMatch> vec_featureMatches;
     bool matchWorked = robustMatching( matcher, 
-                                      queryIntrinsics,
+                                      &queryIntrinsics,
                                       matchedRegions,
                                       matchedIntrinsics,
                                       fDistRatio,
@@ -326,9 +334,9 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
 
       const Vec2 feat = queryRegions.GetRegionPosition(featureMatch._i);
       // if the intrinsics are known undistort the points
-      if(bKnownIntrinsic)
+      if(useInputIntrinsics)
       {
-        matchData.pt2D.col(index) = queryIntrinsics->get_ud_pixel(feat);
+        matchData.pt2D.col(index) = queryIntrinsics.get_ud_pixel(feat);
       }
       else
       {
@@ -345,7 +353,7 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
                                            matchData.pt2D, matchData.pt3D,
                                            &matchData.vec_inliers,
                                            // Use intrinsic guess if possible
-                                           (bKnownIntrinsic) ? &K : nullptr,
+                                           (useInputIntrinsics) ? &queryK : nullptr,
                                            &matchData.projection_matrix, &errorMax);
 
     std::cout << std::endl
@@ -366,11 +374,26 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
     // Decompose P matrix
     Mat3 K_, R_;
     Vec3 t_;
-    KRt_From_P(matchData.projection_matrix, &K_, &R_, &t_);
+    // if K is known then recover R and t by a simple multiplication
+    if(useInputIntrinsics)
+    {
+     //  inv(K) * P = [R t]
+      Mat34 tmp = K_.inverse()*matchData.projection_matrix;
+      R_ = tmp.block<3,3>(0,0);
+      t_ = tmp.block<3,1>(0,3);
+    }
+    else
+    {
+      // otherwise decompose the projection matrix  to get K, R and t using 
+      // RQ decomposition
+      KRt_From_P(matchData.projection_matrix, &K_, &R_, &t_);
+    }
     POPART_COUT("P\n" << matchData.projection_matrix);
     POPART_COUT("K\n" << K_);
     POPART_COUT("R\n" << R_);
     POPART_COUT("t\n" << t_);
+    
+    // create the pose
     pose = geometry::Pose3(R_, -R_.transpose() * t_);
     
     const geometry::Pose3 &refPose = _sfm_data.poses[matchedViewIndex];
@@ -378,25 +401,26 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
     POPART_COUT("t_gt\n" << refPose.translation());
     
     // E. refine the estimated pose
-    //@todo put K R T inside the intrinsics if it is null
-    if(!bKnownIntrinsic)
+    // if we did't use the provided intrinsics, copy the estimated K into
+    // the object so that it provides an initial value for the refinement
+    if(!useInputIntrinsics)
     {
-      queryIntrinsics = new cameras::Pinhole_Intrinsic_Radial_K3(imageGray.Width(), 
-                                                                 imageGray.Height(),
-                                                                 K_(0,0),
-                                                                 K_(0,2),
-                                                                 K_(1,2));
+      queryIntrinsics.setK(K_);
+      queryIntrinsics.setWidth(imageGray.Width());
+      queryIntrinsics.setHeight(imageGray.Height());
     }
-    bool refineStatus = sfm::SfM_Localizer::RefinePose(queryIntrinsics, 
+    
+    bool refineStatus = sfm::SfM_Localizer::RefinePose(&queryIntrinsics, 
                                                        pose, 
                                                        matchData, 
                                                        true /*b_refine_pose*/, 
-                                                       !bKnownIntrinsic /*b_refine_intrinsic*/);
+                                                       refineIntrinsics /*b_refine_intrinsic*/);
     if(!refineStatus)
       POPART_COUT("Refine pose could not improve the estimation of the camera pose.");
     
-    POPART_COUT("R\n" << pose.rotation());
-    POPART_COUT("t\n" << pose.translation());
+    POPART_COUT("R refined\n" << pose.rotation());
+    POPART_COUT("t refined\n" << pose.translation());
+    
     break;
   }
 

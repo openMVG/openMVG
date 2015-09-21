@@ -58,10 +58,12 @@ public:
   * @return True if a putative pose has been estimated
   */
   bool Localize( const image::Image<unsigned char> & imageGray,
-                cameras::IntrinsicBase * queryIntrinsics,
+                cameras::Pinhole_Intrinsic &queryIntrinsics,
                 const size_t numResults,
                 geometry::Pose3 & pose,
                 bool useGuidedMatching,
+                bool useInputIntrinsics,
+                bool refineIntrinsics,
                 sfm::Image_Localizer_Match_Data * resection_data = nullptr);
 
 private:

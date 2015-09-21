@@ -205,7 +205,7 @@ int main(int argc, char** argv)
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Regions());
   POPART_COUT("Describe");
   describer.Describe(imageGray, tmpQueryRegions, NULL);
-  POPART_COUT("tExtract SIFT done: found " << tmpQueryRegions->RegionCount() << " features");
+  POPART_COUT("Extract SIFT done: found " << tmpQueryRegions->RegionCount() << " features");
   features::SIFT_Regions queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
   POPART_COUT("Extract SIFT done!!");
 
