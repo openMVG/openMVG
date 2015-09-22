@@ -551,8 +551,6 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
 
       if (!robustRelativePose(K, K, x1, x2, relativePose_info, imageSize_I, imageSize_J, 256))
       {
-        std::cerr << " /!\\ Robust estimation failed to compute E for this pair"
-          << std::endl;
         continue;
       }
       bool bRefine_using_BA = true;
