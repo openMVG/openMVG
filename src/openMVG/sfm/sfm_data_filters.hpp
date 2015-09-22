@@ -68,9 +68,9 @@ static IndexT RemoveOutliers_PixelResidualError
     Observations::iterator itObs = obs.begin();
     while (itObs != obs.end())
     {
-      const View * view = sfm_data.views[itObs->first].get();
+      const View * view = sfm_data.views.at(itObs->first).get();
       const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view);
-      const cameras::IntrinsicBase * intrinsic = sfm_data.intrinsics[view->id_intrinsic].get();
+      const cameras::IntrinsicBase * intrinsic = sfm_data.intrinsics.at(view->id_intrinsic).get();
       const Vec2 residual = intrinsic->residual(pose, iterTracks->second.X, itObs->second.x);
       if (residual.norm() > dThresholdPixel)
       {
@@ -105,17 +105,17 @@ static IndexT RemoveOutliers_AngleError
     for (Observations::const_iterator itObs1 = obs.begin();
       itObs1 != obs.end(); ++itObs1)
     {
-      const View * view1 = sfm_data.views[itObs1->first].get();
+      const View * view1 = sfm_data.views.at(itObs1->first).get();
       const geometry::Pose3 pose1 = sfm_data.GetPoseOrDie(view1);
-      const cameras::IntrinsicBase * intrinsic1 = sfm_data.intrinsics[view1->id_intrinsic].get();
+      const cameras::IntrinsicBase * intrinsic1 = sfm_data.intrinsics.at(view1->id_intrinsic).get();
 
       Observations::const_iterator itObs2 = itObs1;
       ++itObs2;
       for (; itObs2 != obs.end(); ++itObs2)
       {
-        const View * view2 = sfm_data.views[itObs2->first].get();
+        const View * view2 = sfm_data.views.at(itObs2->first).get();
         const geometry::Pose3 pose2 = sfm_data.GetPoseOrDie(view2);
-        const cameras::IntrinsicBase * intrinsic2 = sfm_data.intrinsics[view2->id_intrinsic].get();
+        const cameras::IntrinsicBase * intrinsic2 = sfm_data.intrinsics.at(view2->id_intrinsic).get();
 
         const double angle = AngleBetweenRay(
           pose1, intrinsic1, pose2, intrinsic2,
@@ -159,7 +159,7 @@ static bool eraseMissingPoses(SfM_Data & sfm_data, const IndexT min_points_per_p
       const IndexT ViewId = itObs->first;
       const View * v = sfm_data.GetViews().at(ViewId).get();
       if (map_PoseId_Count.count(v->id_pose))
-        map_PoseId_Count[v->id_pose] += 1;
+        map_PoseId_Count.at(v->id_pose) += 1;
       else
         map_PoseId_Count[v->id_pose] = 0;
     }

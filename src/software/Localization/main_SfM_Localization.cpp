@@ -267,9 +267,9 @@ int main(int argc, char **argv)
       {
         const bool b_new_intrinsic = (optional_intrinsic == nullptr);
         // A valid pose has been found (try to refine it):
-        // If not intrinsic as input:
+        // If no valid intrinsic as input:
         //  init a new one from the projection matrix decomposition
-        // Else use the existing one and consider as static.
+        // Else use the existing one and consider it as constant
         if (b_new_intrinsic)
         {
           // setup a default camera model from the found projection matrix

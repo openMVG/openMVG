@@ -338,7 +338,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     openMVG::tracks::TracksBuilder tracksBuilder;
     {
       tracksBuilder.Build(map_matchesIJK);
-      tracksBuilder.Filter(3);
+      tracksBuilder.Filter(3, false);
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp critical
 #endif
@@ -456,7 +456,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
         openMVG::tracks::TracksBuilder tracksBuilder;
         {
           tracksBuilder.Build(map_matchesIJK);
-          tracksBuilder.Filter(3);
+          tracksBuilder.Filter(3, false);
           tracksBuilder.ExportToSTL(map_tracksCommon);
         }
 
