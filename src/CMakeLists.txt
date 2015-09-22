@@ -448,7 +448,7 @@ ADD_SUBDIRECTORY(nonFree)
 # --------------------------
 # Sphinx detection
 # ==============================================================================
-IF (OpenMVG_BUILD_DOC)
+IF(OpenMVG_BUILD_DOC)
   FIND_PACKAGE(Sphinx)
   IF (EXISTS ${SPHINX_EXECUTABLE})
      SET(SPHINX_HTML_DIR "${CMAKE_CURRENT_BINARY_DIR}/htmlDoc")
@@ -479,6 +479,7 @@ MESSAGE("\n")
 MESSAGE("** OpenMVG version: " ${OPENMVG_VERSION})
 MESSAGE("** Build Shared libs: " ${OpenMVG_BUILD_SHARED})
 MESSAGE("** Build OpenMVG tests: " ${OpenMVG_BUILD_TESTS})
+MESSAGE("** Build OpenMVG documentation: " ${OpenMVG_BUILD_DOC})
 MESSAGE("** Build OpenMVG samples applications: " ${OpenMVG_BUILD_EXAMPLES})
 MESSAGE("** Build OpenMVG openGL examples: " ${OpenMVG_BUILD_OPENGL_EXAMPLES})
 MESSAGE("** Enable code coverage generation: " ${OpenMVG_BUILD_COVERAGE})

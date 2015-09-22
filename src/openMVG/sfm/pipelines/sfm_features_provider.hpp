@@ -25,35 +25,6 @@ struct Features_Provider
   /// PointFeature array per ViewId of the considered SfM_Data container
   Hash_Map<IndexT, features::PointFeatures> feats_per_view;
 
-  // Load features related to a provided SfM_Data View container
-  virtual bool load(
-    const SfM_Data & sfm_data,
-    const std::string & feat_directory,
-    std::unique_ptr<features::Image_describer>& image_describer)
-  {
-    C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
-      std::cout, "\n- Features Loading -\n" );
-    // Read for each view the corresponding features and store them as PointFeatures
-    std::unique_ptr<features::Regions> regions;
-    image_describer->Allocate(regions);
-    for (Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
-    {
-      const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.get()->s_Img_path);
-      const std::string basename = stlplus::basename_part(sImageName);
-      const std::string featFile = stlplus::create_filespec(feat_directory, basename, ".feat");
-
-      if (!image_describer->LoadFeatures(regions.get(), featFile))
-      {
-        std::cerr << "Invalid feature files for the view: " << sImageName << std::endl;
-        return false;
-      }
-      // save loaded Features as PointFeature
-      feats_per_view[iter->second.get()->id_view] = regions->GetRegionsPositions();
-    }
-    return true;
-  }
-
   virtual bool load(
     const SfM_Data & sfm_data,
     const std::string & feat_directory,
@@ -62,23 +33,41 @@ struct Features_Provider
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- Features Loading -\n" );
     // Read for each view the corresponding features and store them as PointFeatures
-    std::unique_ptr<features::Regions> regions(region_type->EmptyClone());
+    bool bContinue = true;
+#ifdef OPENMVG_USE_OPENMP
+    #pragma omp parallel
+#endif
     for (Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
+      iter != sfm_data.GetViews().end() && bContinue; ++iter)
     {
-      const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.get()->s_Img_path);
-      const std::string basename = stlplus::basename_part(sImageName);
-      const std::string featFile = stlplus::create_filespec(feat_directory, basename, ".feat");
-
-      if (!regions->LoadFeatures(featFile))
+#ifdef OPENMVG_USE_OPENMP
+    #pragma omp single nowait
+#endif
       {
-        std::cerr << "Invalid feature files for the view: " << sImageName << std::endl;
-        return false;
+        const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.get()->s_Img_path);
+        const std::string basename = stlplus::basename_part(sImageName);
+        const std::string featFile = stlplus::create_filespec(feat_directory, basename, ".feat");
+
+        std::unique_ptr<features::Regions> regions(region_type->EmptyClone());
+        if (!regions->LoadFeatures(featFile))
+        {
+          std::cerr << "Invalid feature files for the view: " << sImageName << std::endl;
+#ifdef OPENMVG_USE_OPENMP
+      #pragma omp critical
+#endif
+          bContinue = false;
+        }
+#ifdef OPENMVG_USE_OPENMP
+      #pragma omp critical
+#endif
+        {
+          // save loaded Features as PointFeature
+          feats_per_view[iter->second.get()->id_view] = regions->GetRegionsPositions();
+          ++my_progress_bar;
+        }
       }
-      // save loaded Features as PointFeature
-      feats_per_view[iter->second.get()->id_view] = regions->GetRegionsPositions();
     }
-    return true;
+    return bContinue;
   }
 
   /// Return the PointFeatures belonging to the View, if the view does not exist
