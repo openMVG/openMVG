@@ -163,7 +163,7 @@ bool exportToPMVSFormat(
           const IndexT viewId = itOb->first;
           Observations::const_iterator itOb2 = itOb;
           ++itOb2;
-          for (itOb2; itOb2 != obs.end(); ++itOb2)
+          for (; itOb2 != obs.end(); ++itOb2)
           {
             const IndexT viewId2 = itOb2->first;
             view_shared[map_viewIdToContiguous[viewId]].insert(map_viewIdToContiguous[viewId2]);
