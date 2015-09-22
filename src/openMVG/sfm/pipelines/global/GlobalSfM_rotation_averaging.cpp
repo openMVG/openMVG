@@ -53,9 +53,12 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
         return false;
       KeepOnlyReferencedElement(set_remainingIds, relativeRotations);
     }
-    break;
+	break;
+    default:
+    std::cerr << "Unknown relative rotation inference method: " 
+            << (int) eRelativeRotationInferenceMethod << std::endl;
   }
-
+      
   // Compute contiguous index (mapping between sparse index and contiguous index)
   //  from ranging in [min(Id), max(Id)] to  [0, nbCam]
 
