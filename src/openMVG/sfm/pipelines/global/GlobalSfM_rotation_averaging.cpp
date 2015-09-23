@@ -53,7 +53,7 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
         return false;
       KeepOnlyReferencedElement(set_remainingIds, relativeRotations);
     }
-	break;
+    break;
     default:
     std::cerr << "Unknown relative rotation inference method: " 
             << (int) eRelativeRotationInferenceMethod << std::endl;
