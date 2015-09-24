@@ -94,7 +94,7 @@ static void EncodeTiXi_withNoise(const Mat & M, //Scene representation
     vec_bounds[offsetStart + k].first = 0;
 
   size_t rowPos = 0;
-  // Add the cheirality conditions (R_i*X_j + T_i)_3 + Z_ij >= 1
+  // Add the cheirality conditions (R_i*X_j + T_i)_3 >= 1
   for (size_t k = 0; k < Nobs; ++k)
   {
     const size_t indexPt3D = M(2,k);
