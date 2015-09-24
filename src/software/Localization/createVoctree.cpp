@@ -51,7 +51,7 @@ int main(int argc, char** argv)
           (",k", po::value<uint32_t>(&K)->default_value(10), "The branching factor of the tree")
           ("restart,r", po::value<uint32_t>(&restart)->default_value(5), "Number of times that the kmean is launched for each cluster, the best solution is kept")
           (",L", po::value<uint32_t>(&LEVELS)->default_value(6), "Number of levels of the tree")
-          ("sanitycheck,s", po::value<bool>(&sanityCheck)->default_value(sanityCheck), "Perform a sanity check at the end of the creation of the vocabulary tree. The sanity check is a query to the database with the same documents/images useed to train the vocabulary tree");
+          ("sanitycheck,s", po::bool_switch(&sanityCheck)->default_value(sanityCheck), "Perform a sanity check at the end of the creation of the vocabulary tree. The sanity check is a query to the database with the same documents/images useed to train the vocabulary tree");
 
 
   po::variables_map vm;
