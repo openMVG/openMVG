@@ -199,14 +199,14 @@ int main(int argc, char** argv)
   POPART_COUT("Image size: " << imageGray.Width() << "x" << imageGray.Height());
 
   // Extract features from the query image
-  features::SIFT_Image_describer describer;
+  features::SIFT_float_describer describer;
 
   POPART_COUT("Extract SIFT from query image");
-  std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Regions());
+  std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Float_Regions());
   POPART_COUT("Describe");
   describer.Describe(imageGray, tmpQueryRegions, NULL);
   POPART_COUT("Extract SIFT done: found " << tmpQueryRegions->RegionCount() << " features");
-  features::SIFT_Regions queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
+  features::SIFT_Float_Regions queryRegions = *dynamic_cast<features::SIFT_Float_Regions*> (tmpQueryRegions.get());
   POPART_COUT("Extract SIFT done!!");
 
   POPART_COUT("Request closest images from voctree");
@@ -217,8 +217,8 @@ int main(int argc, char** argv)
 
   // Match with the N best images
   const float fDistRatio = 0.6;
-  typedef flann::L2<unsigned char> MetricT;
-  typedef matching::ArrayMatcher_Kdtree_Flann<unsigned char, MetricT> MatcherT;
+  typedef flann::L2<float> MetricT;
+  typedef matching::ArrayMatcher_Kdtree_Flann<float, MetricT> MatcherT;
   POPART_COUT("Build the matcher");
   matching::RegionsMatcherT<MatcherT> matcher(queryRegions);
 
