@@ -10,7 +10,7 @@
 #include "reconstructed_regions.hpp"
 
 #include <openMVG/features/image_describer.hpp>
-#include <nonFree/sift/SIFT_describer.hpp>
+#include <nonFree/sift/SIFT_float_describer.hpp>
 #include <openMVG/sfm/sfm_data.hpp>
 #include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 #include <openMVG/stl/stlMap.hpp>
@@ -25,8 +25,8 @@ namespace openMVG {
 namespace localization {
 
 //@fixme find a better place or maje the class template?
-typedef openMVG::features::Descriptor<unsigned char, 128> DescriptorFloat;
-typedef Reconstructed_Regions<features::SIOPointFeature, unsigned char, 128> Reconstructed_RegionsT;
+typedef openMVG::features::Descriptor<float, 128> DescriptorFloat;
+typedef Reconstructed_Regions<features::SIOPointFeature, float, 128> Reconstructed_RegionsT;
 
 class VoctreeLocalizer
 {
@@ -74,8 +74,8 @@ private:
                                     const std::string & weightsFilepath,
                                     const std::string & feat_directory);
 
-  typedef flann::L2<unsigned char> MetricT;
-  typedef matching::ArrayMatcher_Kdtree_Flann<unsigned char, MetricT> MatcherT;
+  typedef flann::L2<float> MetricT;
+  typedef matching::ArrayMatcher_Kdtree_Flann<float, MetricT> MatcherT;
   bool robustMatching(matching::RegionsMatcherT<MatcherT> & matcher, 
                       const cameras::IntrinsicBase * queryIntrinsics,// the intrinsics of the image we are using as reference
                       const Reconstructed_RegionsT & regionsToMatch,
@@ -97,7 +97,7 @@ public:
   
   // the feature extractor
   // @fixme do we want a generic image describer>
-  features::SIFT_Image_describer _image_describer;
+  features::SIFT_float_describer _image_describer;
   
   // the vocabulary tree used to generate the database and the visual images for
   // the query images

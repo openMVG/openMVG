@@ -230,10 +230,10 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
 {
   // A. extract descriptors and features from image
   POPART_COUT("[features]\tExtract SIFT from query image");
-  std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Regions());
+  std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Float_Regions());
   _image_describer.Describe(imageGray, tmpQueryRegions, nullptr);
   POPART_COUT("[features]\tExtract SIFT done: found " << tmpQueryRegions->RegionCount() << " features");
-  features::SIFT_Regions queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
+  features::SIFT_Float_Regions queryRegions = *dynamic_cast<features::SIFT_Float_Regions*> (tmpQueryRegions.get());
 
   // B. Find the (visually) similar images in the database 
   POPART_COUT("[database]\tRequest closest images from voctree");
