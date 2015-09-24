@@ -118,7 +118,7 @@ void AlembicExporter::appendCamera(const std::string &cameraName,
   camObj.getSchema().set(camSample);
 }
 
-void AlembicExporter::addSfmData(const sfm::SfM_Data &sfm_data)
+void AlembicExporter::addCameras(const sfm::SfM_Data &sfm_data)
 {
   for(const auto it : sfm_data.GetViews())
   {

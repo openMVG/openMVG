@@ -22,14 +22,29 @@ public:
   {
   }
 
+  /**
+   * @brief Add a set of 3D points from a SFM scene
+   * @param points The 3D points to add
+   */
   void addPoints(const sfm::Landmarks &points);
 
-  // Add a camera to the archive
+  /**
+   * @brief Add a single camera
+   * 
+   * @param name An identifier for the camera
+   * @param pose The camera pose
+   * @param cam The camera intrinsics
+   */
   void appendCamera(const std::string &name, 
                     const geometry::Pose3 &pose, 
                     const cameras::Pinhole_Intrinsic *cam);
   
-  void addSfmData(const sfm::SfM_Data &sfmdata);
+  /**
+   * @brief Add a set of cameras contained in a SFM scene
+   * 
+   * @param sfmdata The structure containing the camera info
+   */
+  void addCameras(const sfm::SfM_Data &sfmdata);
 
   virtual ~AlembicExporter();
 
