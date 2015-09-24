@@ -25,6 +25,7 @@ OPTION(OpenMVG_BUILD_OPENGL_EXAMPLES "Build OpenMVG openGL examples" OFF)
 OPTION(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
 OPTION(OpenMVG_USE_BOOST "Enable Boost" ON)
+OPTION(OpenMVG_USE_ALEMBIC "Enable Alembic I/O" ON)
 
 SET(OPENMVG_VERSION_MAJOR 0)
 SET(OPENMVG_VERSION_MINOR 8)
@@ -365,19 +366,34 @@ ENDIF()
 # - optional, it allows to compile the vocabulary tree
 # ==============================================================================
 IF(OpenMVG_USE_BOOST)
-    FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS system filesystem program_options unit_test_framework)
-    IF(Boost_FOUND)
-       MESSAGE(STATUS "Boost ${Boost_LIB_VERSION} found")
-       include_directories(${Boost_INCLUDE_DIRS})
-       link_directories(${Boost_LIBRARIES})
-       add_definitions(${Boost_DEFINITIONS})
-    ELSE()
-      MESSAGE(STATUS "Boost not found -- disabling the vocabulary tree")
-      UPDATE_CACHE_VARIABLE(OpenMVG_USE_BOOST OFF)
-    ENDIF(Boost_FOUND)
+  FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS system filesystem program_options unit_test_framework)
+  IF(Boost_FOUND)
+    MESSAGE(STATUS "Boost ${Boost_LIB_VERSION} found")
+    include_directories(${Boost_INCLUDE_DIRS})
+    link_directories(${Boost_LIBRARIES})
+    add_definitions(${Boost_DEFINITIONS})
+  ELSE()
+    MESSAGE(STATUS "Boost not found -- disabling the vocabulary tree")
+    UPDATE_CACHE_VARIABLE(OpenMVG_USE_BOOST OFF)
+  ENDIF(Boost_FOUND)
 ENDIF(OpenMVG_USE_BOOST)
 
-
+# ==============================================================================
+# Alembic
+# ==============================================================================
+# - optional, it allows to use the classes to export data in alembic format
+# ==============================================================================
+IF(OpenMVG_USE_ALEMBIC)
+  FIND_PACKAGE(Alembic)
+  IF(ALEMBIC_FOUND)
+    MESSAGE(STATUS "Alembic found")
+    include_directories(${ABC_INCLUDE_DIR})
+    add_definitions(-DHAVE_ALEMBIC)
+  ELSE()
+    MESSAGE(STATUS "Alembic not found -- disabling I/O exporter")
+    UPDATE_CACHE_VARIABLE(OpenMVG_USE_ALEMBIC OFF)
+  ENDIF(ALEMBIC_FOUND)
+ENDIF(OpenMVG_USE_ALEMBIC)
 
 # ==============================================================================
 # Third-party libraries:
@@ -486,6 +502,8 @@ MESSAGE("** Enable code coverage generation: " ${OpenMVG_BUILD_COVERAGE})
 MESSAGE("** Enable OpenMP parallelization: " ${OpenMVG_USE_OPENMP})
 MESSAGE("** Build OpenCV+OpenMVG samples programs: " ${OpenMVG_USE_OPENCV})
 MESSAGE("** Use OpenCV SIFT features: " ${OpenMVG_USE_OCVSIFT})
+MESSAGE("** Build vocabulary tree: " ${OpenMVG_USE_BOOST})
+MESSAGE("** Build Alembic exporter: " ${OpenMVG_USE_ALEMBIC})
 
 MESSAGE("\n")
 
