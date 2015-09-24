@@ -3,13 +3,14 @@
 
 #include "openMVG/stl/split.hpp"
 #include <iterator>
+#include <algorithm>
 
 // Database structure
 struct Datasheet
 {
   Datasheet()
   {}
-  
+
   Datasheet( const std::string& brand,
              const std::string& model,
              const double& sensorSize ):
@@ -25,24 +26,19 @@ struct Datasheet
     stl::split(ds._brand, " ", vec_brand);
     std::string brandlower = _brand;
 
-    for ( int index = 0; index < brandlower.length(); index++ )
-    {
-      brandlower[index] = tolower(brandlower[index]);
-    }
-    
+    std::transform(brandlower.begin(), brandlower.end(),
+      brandlower.begin(), ::tolower);
+
     for ( std::vector<std::string>::const_iterator iter_brand = vec_brand.begin();
             iter_brand != vec_brand.end();
             iter_brand++ )
     {
       std::string brandlower2 = *iter_brand;
-      for ( int index = 0; index < brandlower2.length(); index++ )
-      {
-        brandlower2[index] = tolower(brandlower2[index]);
-      }
+      std::transform(brandlower2.begin(), brandlower2.end(),
+        brandlower2.begin(), ::tolower);
       //std::cout << brandlower << "\t" << brandlower2 << std::endl;
       if ( brandlower.compare( brandlower2 ) == 0 )
       {
-
         std::vector<std::string> vec_model1;
         stl::split(ds._model, " ", vec_model1);
         std::vector<std::string> vec_model2;
