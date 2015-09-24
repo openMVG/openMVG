@@ -84,10 +84,16 @@ int main(int argc, char** argv)
  
   // init the localizer
   localization::VoctreeLocalizer localizer;
-  localizer.init(sfmFilePath, descriptorsFolder, vocTreeFilepath, weightsFilepath);
+  bool isInit = localizer.init(sfmFilePath, descriptorsFolder, vocTreeFilepath, weightsFilepath);
+  
+  if(!isInit)
+  {
+    POPART_CERR("ERROR while initializing the localizer!");
+    return EXIT_FAILURE;
+  }
   
   // load the image
-    POPART_COUT("Load the query image");
+  POPART_COUT("Load the query image");
   // load the query image
   image::Image<unsigned char> imageGray;
   if(!image::ReadImage(mediaFilepath.c_str(), &imageGray))
