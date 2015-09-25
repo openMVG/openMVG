@@ -17,17 +17,14 @@ MVE (Multi-View Environment)
   resolution=2
   
   # MVE
-  makescene $directory $directory
   dmrecon -s$resolution $directory
   scene2pset -ddepth-L$resolution -iundist-L$resolution -n -s -c $directory $directory/OUTPUT.ply
-  
-  # FSSR
   fssrecon $directory/OUTPUT.ply $directory/OUTPUT_MESH.ply
   meshclean $directory/OUTPUT_MESH.ply $directory/OUTPUT_MESH_CLEAN.ply
 
   Call any tool without arguments to see the help.
   
-You will need to compile MVE tools and `FSSR <http://www.gris.informatik.tu-darmstadt.de/projects/floating-scale-surface-reco/>`_.
+You will need to compile MVE tools and `FSSR <http://www.gris.informatik.tu-darmstadt.de/projects/floating-scale-surface-recon/>`_.
 
 Export to MVS Texturing
 =======================
