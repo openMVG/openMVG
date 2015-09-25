@@ -255,7 +255,7 @@ public:
     const int NN = 2
   ) const
   {
-    typedef L2_Vectorized<unsigned char> MetricT;
+    typedef L2_Vectorized<typename MatrixT::Scalar> MetricT;
     MetricT metric;
 
     static const int kNumTopCandidates = 10;
