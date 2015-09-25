@@ -85,7 +85,7 @@ class Matcher_Regions_Database
   private:
   // Matcher Type
   matching::EMatcherType _eMatcherType;
-  // The matching intergace
+  // The matching interface
   std::unique_ptr<RegionsMatcher> _matching_interface;
 };
 
@@ -96,26 +96,26 @@ template < class ArrayMatcherT >
 class RegionsMatcherT : public RegionsMatcher
 {
 private:
-  ArrayMatcherT _matcher;
-  const features::Regions* _regions;
-  bool _b_squared_metric; // Store if the metric is squared or not
+  ArrayMatcherT matcher_;
+  const features::Regions* regions_;
+  bool b_squared_metric_; // Store if the metric is squared or not
 public:
   typedef typename ArrayMatcherT::ScalarT Scalar;
   typedef typename ArrayMatcherT::DistanceType DistanceType;
 
-  RegionsMatcherT() :_regions(NULL) {}
+  RegionsMatcherT() :regions_(NULL) {}
 
   /**
    * @brief Init the matcher with some reference regions.
    */
   RegionsMatcherT(const features::Regions& regions, bool b_squared_metric = false)
-    : _regions(&regions), _b_squared_metric(b_squared_metric)
+    : regions_(&regions), b_squared_metric_(b_squared_metric)
   {
-    if (_regions->RegionCount() == 0)
+    if (regions_->RegionCount() == 0)
       return;
 
-    const Scalar * tab = reinterpret_cast<const Scalar *>(_regions->DescriptorRawData());
-    _matcher.Build(tab, _regions->RegionCount(), _regions->DescriptorLength());
+    const Scalar * tab = reinterpret_cast<const Scalar *>(regions_->DescriptorRawData());
+    matcher_.Build(tab, regions_->RegionCount(), regions_->DescriptorLength());
   }
 
   void Init_database
@@ -123,12 +123,12 @@ public:
     const features::Regions& regions
   )
   {
-    _regions = &regions;
-    if (_regions->RegionCount() == 0)
+    regions_ = &regions;
+    if (regions_->RegionCount() == 0)
       return;
 
-    const Scalar * tab = reinterpret_cast<const Scalar *>(_regions->DescriptorRawData());
-    _matcher.Build(tab, _regions->RegionCount(), _regions->DescriptorLength());
+    const Scalar * tab = reinterpret_cast<const Scalar *>(regions_->DescriptorRawData());
+    matcher_.Build(tab, regions_->RegionCount(), regions_->DescriptorLength());
   }
 
   /**
@@ -136,20 +136,20 @@ public:
    */
   bool Match(
     const float f_dist_ratio,
-    const features::Regions& query_regions,
+    const features::Regions& queryregions_,
     matching::IndMatches & vec_putative_matches)
   {
-    if (_regions == nullptr)
+    if (regions_ == nullptr)
       return false;
 
-    const Scalar * queries = reinterpret_cast<const Scalar *>(query_regions.DescriptorRawData());
+    const Scalar * queries = reinterpret_cast<const Scalar *>(queryregions_.DescriptorRawData());
 
     const size_t NNN__ = 2;
     matching::IndMatches vec_nIndice;
     std::vector<DistanceType> vec_fDistance;
 
     // Search the 2 closest features neighbours for each query descriptor
-    if (!_matcher.SearchNeighbours(queries, query_regions.RegionCount(), &vec_nIndice, &vec_fDistance, NNN__))
+    if (!matcher_.SearchNeighbours(queries, queryregions_.RegionCount(), &vec_nIndice, &vec_fDistance, NNN__))
       return false;
 
     std::vector<int> vec_nn_ratio_idx;
@@ -162,7 +162,7 @@ public:
       vec_fDistance.end(),   // distance end
       NNN__, // Number of neighbor in iterator sequence (minimum required 2)
       vec_nn_ratio_idx, // output (indices that respect the distance Ratio)
-      _b_squared_metric ? Square(f_dist_ratio) : f_dist_ratio);
+      b_squared_metric_ ? Square(f_dist_ratio) : f_dist_ratio);
 
     vec_putative_matches.reserve(vec_nn_ratio_idx.size());
     for (size_t k=0; k < vec_nn_ratio_idx.size(); ++k)
@@ -176,7 +176,7 @@ public:
 
     // Remove matches that have the same (X,Y) coordinates
     matching::IndMatchDecorator<float> matchDeduplicator(vec_putative_matches,
-      _regions->GetRegionsPositions(), query_regions.GetRegionsPositions());
+      regions_->GetRegionsPositions(), queryregions_.GetRegionsPositions());
     matchDeduplicator.getDeduplicated(vec_putative_matches);
 
     return (!vec_putative_matches.empty());

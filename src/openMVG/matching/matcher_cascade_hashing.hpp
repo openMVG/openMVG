@@ -116,7 +116,7 @@ class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
 
     // Index the query descriptors
     const HashedDescriptions hashed_query = cascade_hasher_.CreateHashedDescriptions(mat_query);
-    // Match the query descriptors to the data'base'
+    // Match the query descriptors to the database
     cascade_hasher_.Match_HashedDescriptions(
       hashed_query, mat_query,
       hashed_base_, *memMapping,

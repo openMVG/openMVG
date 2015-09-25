@@ -36,26 +36,8 @@ void Matcher_Regions_AllInMemory::Match(
 #ifdef OPENMVG_USE_OPENMP
   std::cout << "Using the OPENMP thread interface" << std::endl;
 #endif
-  bool b_multithreaded_pair_search = false;
-  switch(_eMatcherType)
-  {
-    case BRUTE_FORCE_L2:
-      std::cout << "Using BRUTE_FORCE_L2 matcher" << std::endl;
-    break;
-    case BRUTE_FORCE_HAMMING:
-      std::cout << "Using BRUTE_FORCE_HAMMING matcher" << std::endl;
-    break;
-    case ANN_L2:
-      std::cout << "Using ANN_L2 matcher" << std::endl;
-    break;
-    case CASCADE_HASHING_L2:
-      std::cout << "Using CASCADE_HASHING_L2 matcher" << std::endl;
-      b_multithreaded_pair_search = true;
-      // -> set to true only here, since OpenMP instructions are not used in this matcher
-    break;
-    default:
-      std::cout << "Using unknown matcher type" << std::endl;
-  }
+  const bool b_multithreaded_pair_search = (_eMatcherType == CASCADE_HASHING_L2);
+  // -> set to true for CASCADE_HASHING_L2, since OpenMP instructions are not used in this matcher
 
   C_Progress_display my_progress_bar( pairs.size() );
 
@@ -92,14 +74,18 @@ void Matcher_Regions_AllInMemory::Match(
       const size_t J = indexToCompare[j];
 
       const features::Regions &regionsJ = *regions_provider->regions_per_view.at(J).get();
-      if (regionsJ.RegionCount() == 0)
+      if (regionsJ.RegionCount() == 0
+          || regionsI.Type_id() != regionsJ.Type_id())
+      {
+#ifdef OPENMVG_USE_OPENMP
+  #pragma omp critical
+#endif
+        ++my_progress_bar;
         continue;
-
-      if (regionsI.Type_id() != regionsJ.Type_id())
-        continue;
+      }
 
       IndMatches vec_putatives_matches;
-      matcher.Match(Square(_f_dist_ratio), regionsJ, vec_putatives_matches);
+      matcher.Match(_f_dist_ratio, regionsJ, vec_putatives_matches);
 
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
