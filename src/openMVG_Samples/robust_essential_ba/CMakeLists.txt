@@ -5,11 +5,10 @@ ADD_EXECUTABLE(openMVG_sample_robustEssential_ba robust_essential_ba.cpp)
 TARGET_LINK_LIBRARIES(openMVG_sample_robustEssential_ba
   openMVG_image
   openMVG_features
+  openMVG_matching
   openMVG_system
   openMVG_sfm
   stlplus
-  vlsift
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  vlsift)
 
 SET_PROPERTY(TARGET openMVG_sample_robustEssential_ba PROPERTY FOLDER OpenMVG/Samples)

@@ -72,10 +72,10 @@ private:
   bool FindImagesWithPossibleResection(std::vector<size_t> & vec_possible_indexes);
 
   /// Add a single Image to the scene and triangulate new possible tracks.
-  bool Resection(size_t imageIndex);
+  bool Resection(const size_t imageIndex);
 
   /// Bundle adjustment to refine Structure; Motion and Intrinsics
-  void BundleAdjustment();
+  bool BundleAdjustment();
 
   /// Discard track with too large residual error
   size_t badTrackRejector(double dPrecision, size_t count = 0);

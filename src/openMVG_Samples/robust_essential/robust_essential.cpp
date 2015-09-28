@@ -9,12 +9,10 @@
 #include "openMVG/sfm/sfm.hpp"
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/features.hpp"
-#include "openMVG/matching/matcher_brute_force.hpp"
-#include "openMVG/matching/indMatchDecoratorXY.hpp"
+#include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 
 #include "nonFree/sift/SIFT_describer.hpp"
-#include "openMVG_Samples/siftPutativeMatches/two_view_matches.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
@@ -97,15 +95,12 @@ int main() {
   std::vector<IndMatch> vec_PutativeMatches;
   //-- Perform matching -> find Nearest neighbor, filtered with Distance ratio
   {
-    // Define a matcher and a metric to find corresponding points
-    typedef SIFT_Regions::DescriptorT DescriptorT;
-    typedef L2_Vectorized<DescriptorT::bin_type> Metric;
-    typedef ArrayMatcherBruteForce<DescriptorT::bin_type, Metric> MatcherT;
-    // Distance ratio squared due to squared metric
-    getPutativesMatches<DescriptorT, MatcherT>(
-      ((SIFT_Regions*)regions_perImage.at(0).get())->Descriptors(),
-      ((SIFT_Regions*)regions_perImage.at(1).get())->Descriptors(),
-      Square(0.8), vec_PutativeMatches);
+    // Find corresponding points
+    matching::DistanceRatioMatch(
+      0.8, matching::BRUTE_FORCE_L2,
+      *regions_perImage.at(0).get(),
+      *regions_perImage.at(1).get(),
+      vec_PutativeMatches);
 
     IndMatchDecorator<float> matchDeduplicator(
             vec_PutativeMatches, featsL, featsR);

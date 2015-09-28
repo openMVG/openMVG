@@ -94,7 +94,7 @@ class Matcher_CascadeHashing_AllInMemory
         const size_t J = indexToCompare[j];
         const features::Regions *regionsJ = regions_perImage.at(J).get();
 
-        std::vector<IndMatch> vec_FilteredMatches;
+        IndMatches vec_FilteredMatches;
         cascadeHashing.MatchSpFast(
           vec_FilteredMatches,
           vec_hashing[I], ((features::SIFT_Regions*)regionsI)->Descriptors(),

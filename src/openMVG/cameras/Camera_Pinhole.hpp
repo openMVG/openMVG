@@ -36,6 +36,8 @@ class Pinhole_Intrinsic : public IntrinsicBase
     _Kinv = _K.inverse();
   }
 
+  virtual ~Pinhole_Intrinsic() {}
+
   virtual EINTRINSIC getType() const { return PINHOLE_CAMERA; }
 
   const Mat3& K() const { return _K; }

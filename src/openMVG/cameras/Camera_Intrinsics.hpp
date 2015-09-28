@@ -25,6 +25,7 @@ struct IntrinsicBase
   unsigned int _w, _h;
 
   IntrinsicBase(unsigned int w = 0, unsigned int h = 0):_w(w), _h(h) {}
+  virtual ~IntrinsicBase() {}
 
   unsigned int w() const {return _w;}
   unsigned int h() const {return _h;}

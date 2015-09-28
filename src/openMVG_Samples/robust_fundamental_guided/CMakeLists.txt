@@ -6,8 +6,8 @@ TARGET_LINK_LIBRARIES(openMVG_sample_robustFundamental_guided
   openMVG_image
   openMVG_multiview
   openMVG_features
+  openMVG_matching
   stlplus
-  vlsift
-  ${CERES_LIBRARIES})
+  vlsift)
 
 SET_PROPERTY(TARGET openMVG_sample_robustFundamental_guided PROPERTY FOLDER OpenMVG/Samples)

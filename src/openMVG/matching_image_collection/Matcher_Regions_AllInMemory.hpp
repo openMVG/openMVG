@@ -7,43 +7,39 @@
 
 #pragma once
 
-#include "openMVG/features/regions.hpp"
 #include "openMVG/matching_image_collection/Matcher.hpp"
 
 namespace openMVG {
 namespace matching_image_collection {
 
-enum EMatcherType
-{
-  BRUTE_FORCE_L2,
-  ANN_L2,
-  CASCADE_HASHING_L2,
-  BRUTE_FORCE_HAMMING
-};
-
 /// Implementation of an Image Collection Matcher
 /// Compute putative matches between a collection of pictures
 /// Spurious correspondences are discarded by using the
-///  a threshold over the distance ratio of the 2 neighbours points.
+///  a threshold over the distance ratio of the 2 nearest neighbours.
 ///
 class Matcher_Regions_AllInMemory : public Matcher
 {
   public:
-  Matcher_Regions_AllInMemory(float distRatio, EMatcherType eMatcherType);
+  Matcher_Regions_AllInMemory
+  (
+    float dist_ratio,
+    matching::EMatcherType eMatcherType
+  );
 
   /// Find corresponding points between some pair of view Ids
-  void Match(
+  void Match
+  (
     const sfm::SfM_Data & sfm_data,
     const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
     const Pair_Set & pairs,
-    matching::PairWiseMatches & map_PutativesMatches)const; // the pairwise photometric corresponding points
+    matching::PairWiseMatches & map_PutativesMatches // the pairwise photometric corresponding points
+  )const;
 
   private:
-  std::map<IndexT, std::unique_ptr<features::Regions> > regions_perImage;
   // Distance ratio used to discard spurious correspondence
-  float fDistRatio;
+  float _f_dist_ratio;
   // Matcher Type
-  EMatcherType _eMatcherType;
+  matching::EMatcherType _eMatcherType;
 };
 
 } // namespace openMVG

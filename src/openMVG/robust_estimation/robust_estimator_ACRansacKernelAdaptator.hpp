@@ -179,7 +179,8 @@ public:
   double unormalizeError(double val) const {return sqrt(val) / N1_(0,0);}
 
 private:
-  Mat x2d_, x3D_;
+  Mat x2d_;
+  const Mat & x3D_;
   Mat3 N1_;      // Matrix used to normalize data
   double logalpha0_; // Alpha0 is used to make the error adaptive to the image size
 };
@@ -244,7 +245,8 @@ public:
   double unormalizeError(double val) const {return sqrt(val) / N1_(0,0);}
 
 private:
-  Mat x2d_, x3D_;
+  Mat x2d_;
+  const Mat & x3D_;
   Mat3 N1_;      // Matrix used to normalize data
   double logalpha0_; // Alpha0 is used to make the error adaptive to the image size
   Mat3 K_;            // Intrinsic camera parameter

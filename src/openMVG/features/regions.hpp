@@ -25,6 +25,8 @@ class Regions
 {
 public:
 
+  virtual ~Regions() {}
+
   //--
   // IO - one file for region features, one file for region descriptors
   //--
@@ -67,6 +69,9 @@ public:
   // - Scalar: L2,
   // - Binary: Hamming
   virtual double SquaredDescriptorDistance(size_t i, const Regions *, size_t j) const = 0;
+
+  /// Add the Inth region to another Region container
+  virtual void CopyRegion(size_t i, Regions *) const = 0;
 
   virtual Regions * EmptyClone() const = 0;
 
@@ -152,7 +157,7 @@ public:
     ar(_vec_descs);
   }
 
-  virtual Regions * EmptyClone() const
+  Regions * EmptyClone() const
   {
     return new Scalar_Regions();
   }
@@ -167,6 +172,14 @@ public:
     const Scalar_Regions<FeatT, T, L> * regionsT = dynamic_cast<const Scalar_Regions<FeatT, T, L> *>(regions);
     static matching::L2_Vectorized<T> metric;
     return metric(_vec_descs[i].getData(), regionsT->_vec_descs[j].getData(), DescriptorT::static_size);
+  }
+
+  /// Add the Inth region to another Region container
+  void CopyRegion(size_t i, Regions * region_container) const
+  {
+    assert(i < _vec_feats.size() && i < _vec_descs.size());
+    static_cast<Scalar_Regions<FeatT, T, L> *>(region_container)->_vec_feats.push_back(_vec_feats[i]);
+    static_cast<Scalar_Regions<FeatT, T, L> *>(region_container)->_vec_descs.push_back(_vec_descs[i]);
   }
 
 private:
@@ -258,7 +271,7 @@ public:
     ar(_vec_descs);
   }
 
-  virtual Regions * EmptyClone() const
+  Regions * EmptyClone() const
   {
     return new Binary_Regions();
   }
@@ -275,6 +288,14 @@ public:
     const typename matching::Hamming<unsigned char>::ResultType descDist =
       metric(_vec_descs[i].getData(), regionsT->_vec_descs[j].getData(), DescriptorT::static_size);
     return descDist * descDist;
+  }
+
+  /// Add the Inth region to another Region container
+  void CopyRegion(size_t i, Regions * region_container) const
+  {
+    assert(i < _vec_feats.size() && i < _vec_descs.size());
+    static_cast<Binary_Regions<FeatT, L> *>(region_container)->_vec_feats.push_back(_vec_feats[i]);
+    static_cast<Binary_Regions<FeatT, L> *>(region_container)->_vec_descs.push_back(_vec_descs[i]);
   }
 
 private:

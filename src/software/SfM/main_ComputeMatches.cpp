@@ -252,37 +252,43 @@ int main(int argc, char **argv)
     }
 
     // Allocate the right Matcher according the Matching requested method
-    std::unique_ptr<Matcher_Regions_AllInMemory> collectionMatcher;
+    std::unique_ptr<Matcher> collectionMatcher;
     if (sNearestMatchingMethod == "AUTO")
     {
       if (regions_type->IsScalar())
       {
+        std::cout << "Using ANN_L2 matcher" << std::endl;
         collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, ANN_L2));
       }
       else
       if (regions_type->IsBinary())
       {
+        std::cout << "Using BRUTE_FORCE_HAMMING matcher" << std::endl;
         collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, BRUTE_FORCE_HAMMING));
       }
     }
     else
     if (sNearestMatchingMethod == "BRUTEFORCEL2")
     {
+      std::cout << "Using BRUTE_FORCE_L2 matcher" << std::endl;
       collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, BRUTE_FORCE_L2));
     }
     else
     if (sNearestMatchingMethod == "BRUTEFORCEHAMMING")
     {
+      std::cout << "Using BRUTE_FORCE_HAMMING matcher" << std::endl;
       collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, BRUTE_FORCE_HAMMING));
     }
     else
     if (sNearestMatchingMethod == "ANNL2")
     {
+      std::cout << "Using ANN_L2 matcher" << std::endl;
       collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, ANN_L2));
     }
     else
     if (sNearestMatchingMethod == "CASCADEHASHINGL2")
     {
+      std::cout << "Using CASCADE_HASHING_L2 matcher" << std::endl;
       collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, CASCADE_HASHING_L2));
     }
     if (!collectionMatcher)

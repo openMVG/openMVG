@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "openMVG/matching/matcher_type.hpp"
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching_image_collection/Pair_Builder.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
