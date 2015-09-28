@@ -83,9 +83,13 @@ void Match
       if (i==0)
       {
         matForZeroMean.resize(used_index.size(), dimension);
+        matForZeroMean.fill(0.0f);
       }
-      Eigen::Map<BaseMat> mat_I( (ScalarT*)tabI, regionsI.RegionCount(), dimension);
-      matForZeroMean.row(i) = CascadeHasher::GetZeroMeanDescriptor(mat_I);
+      if (regionsI.RegionCount() > 0)
+      {
+        Eigen::Map<BaseMat> mat_I( (ScalarT*)tabI, regionsI.RegionCount(), dimension);
+        matForZeroMean.row(i) = CascadeHasher::GetZeroMeanDescriptor(mat_I);
+      }
     }
     zero_mean_descriptor = CascadeHasher::GetZeroMeanDescriptor(matForZeroMean);
   }
@@ -124,6 +128,12 @@ void Match
     const std::vector<IndexT> & indexToCompare = iter->second;
 
     const features::Regions &regionsI = *regions_provider.regions_per_view.at(I).get();
+    if (regionsI.RegionCount() == 0)
+    {
+      my_progress_bar += indexToCompare.size();
+      continue;
+    }
+
     const std::vector<features::PointFeature> pointFeaturesI = regionsI.GetRegionsPositions();
     const ScalarT * tabI =
       reinterpret_cast<const ScalarT*>(regionsI.DescriptorRawData());
