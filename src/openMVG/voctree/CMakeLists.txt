@@ -1,4 +1,4 @@
-IF(OpenMVG_USE_BOOST)
+IF(OpenMVG_BUILD_VOCTREE)
 file(
   GLOB_RECURSE
   voctree_header
@@ -22,4 +22,4 @@ INSTALL(TARGETS openMVG_voctree DESTINATION lib/ EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG voctree "openMVG_voctree")
 
-ENDIF(OpenMVG_USE_BOOST)
+ENDIF(OpenMVG_BUILD_VOCTREE)

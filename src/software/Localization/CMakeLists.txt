@@ -1,4 +1,4 @@
-IF(OpenMVG_USE_BOOST)
+IF(OpenMVG_BUILD_VOCTREE)
 ###
 # Test the localization script
 ###
@@ -36,7 +36,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_generatePairList openMVG_voctree ${BOOST_LIBR
 #SET_PROPERTY(TARGET openMVG_main_generatePairList PROPERTY FOLDER OpenMVG/software)
 #INSTALL(TARGETS openMVG_main_generatePairList DESTINATION bin/)
 
-ENDIF(OpenMVG_USE_BOOST)
+ENDIF(OpenMVG_BUILD_VOCTREE)
 
 ###
 # Localize images in an existing SfM reconstruction

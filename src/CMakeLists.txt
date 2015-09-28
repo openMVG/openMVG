@@ -23,8 +23,8 @@ OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG samples applications." ON)
 OPTION(OpenMVG_BUILD_DOC "Build OpenMVG documentation." ON)
 OPTION(OpenMVG_BUILD_OPENGL_EXAMPLES "Build OpenMVG openGL examples" OFF)
 OPTION(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
+OPTION(OpenMVG_BUILD_VOCTREE "Build the vocabulary tree and localization module" ON)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
-OPTION(OpenMVG_USE_BOOST "Enable Boost" ON)
 
 SET(OPENMVG_VERSION_MAJOR 0)
 SET(OPENMVG_VERSION_MINOR 8)
@@ -364,7 +364,7 @@ ENDIF()
 # ==============================================================================
 # - optional, it allows to compile the vocabulary tree
 # ==============================================================================
-IF(OpenMVG_USE_BOOST)
+IF(OpenMVG_BUILD_VOCTREE)
     FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS system filesystem program_options unit_test_framework)
     IF(Boost_FOUND)
        MESSAGE(STATUS "Boost ${Boost_LIB_VERSION} found")
@@ -373,9 +373,9 @@ IF(OpenMVG_USE_BOOST)
        add_definitions(${Boost_DEFINITIONS})
     ELSE()
       MESSAGE(STATUS "Boost not found -- disabling the vocabulary tree")
-      UPDATE_CACHE_VARIABLE(OpenMVG_USE_BOOST OFF)
+      UPDATE_CACHE_VARIABLE(OpenMVG_BUILD_VOCTREE OFF)
     ENDIF(Boost_FOUND)
-ENDIF(OpenMVG_USE_BOOST)
+ENDIF(OpenMVG_BUILD_VOCTREE)
 
 
 
@@ -482,6 +482,7 @@ MESSAGE("** Build OpenMVG tests: " ${OpenMVG_BUILD_TESTS})
 MESSAGE("** Build OpenMVG documentation: " ${OpenMVG_BUILD_DOC})
 MESSAGE("** Build OpenMVG samples applications: " ${OpenMVG_BUILD_EXAMPLES})
 MESSAGE("** Build OpenMVG openGL examples: " ${OpenMVG_BUILD_OPENGL_EXAMPLES})
+MESSAGE("** Builde the voctree and localization module: " ${OpenMVG_BUILD_VOCTREE})
 MESSAGE("** Enable code coverage generation: " ${OpenMVG_BUILD_COVERAGE})
 MESSAGE("** Enable OpenMP parallelization: " ${OpenMVG_USE_OPENMP})
 MESSAGE("** Build OpenCV+OpenMVG samples programs: " ${OpenMVG_USE_OPENCV})
