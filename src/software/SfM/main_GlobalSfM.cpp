@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     << "\t 1 -> L1 minimization\n"
     << "\t 2 -> L2 minimization (default)\n"
     << "[-t|--translationAveraging]:\n"
-    << "\t 1 -> L1 minimization\n"
+    << "\t 1 -> L1 minimization \n"
     << "\t 2 -> L2 minimization of sum of squared Chordal distances\n"
     << "\t 3 -> SoftL1 minimization (default)\n"
     << "[-f|--refineIntrinsics]\n"
