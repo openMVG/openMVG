@@ -64,7 +64,7 @@ int main(int argc, char **argv)
   std::string sSfM_Data_Filename;
   std::string sMatchesDirectory = "";
   std::string sGeometricModel = "f";
-  float fDistRatio = .6f;
+  float fDistRatio = 0.8f;
   int iMatchingVideoMode = -1;
   std::string sPredefinedPairList = "";
   bool bUpRight = false;
@@ -96,7 +96,7 @@ int main(int argc, char **argv)
       << "\n[Optional]\n"
       << "[-f|--force] Force to recompute data]\n"
       << "[-r|--ratio] Distance ratio to discard non meaningful matches\n"
-      << "   0.6: (default); you can use 0.8 to have more matches.\n"
+      << "   0.8: (default).\n"
       << "[-g|--geometric_model]\n"
       << "  (pairwise correspondences filtering thanks to robust model estimation):\n"
       << "   f: (default) fundamental matrix,\n"
