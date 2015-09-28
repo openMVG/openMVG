@@ -92,12 +92,25 @@ bool SequentialSfMReconstructionEngine::Process() {
   if (!InitLandmarkTracks())
     return false;
 
-  Pair initialPairIndex;
-  if(! ChooseInitialPair(initialPairIndex))
-    return false;
+  // Initial pair choice
+  Pair initialPairIndex = _initialpair;
+  if (_initialpair == Pair(0,0))
+  {
+    Pair putative_initial_pair;
+    if (AutomaticInitialPairChoice(putative_initial_pair))
+    {
+      initialPairIndex = _initialpair = putative_initial_pair;
+    }
+    else // Cannot find a valid initial pair, try to set it by hand?
+    {
+      if (!ChooseInitialPair(_initialpair))
+        return false;
+    }
+  }
+  // Else a starting pair was already initialized before
 
   // Initial pair Essential Matrix and [R|t] estimation.
-  if(! MakeInitialPair3D(initialPairIndex))
+  if (!MakeInitialPair3D(initialPairIndex))
     return false;
 
   size_t imageIndex = 0;
@@ -223,12 +236,12 @@ bool SequentialSfMReconstructionEngine::ChooseInitialPair(Pair & initialPairInde
     }
 
     std::cout << std::endl
-      << "---------------------------------------------------\n"
-      << "IncrementalReconstructionEngine::ChooseInitialPair\n"
-      << "---------------------------------------------------\n"
+      << "----------------------------------------------------\n"
+      << "SequentialSfMReconstructionEngine::ChooseInitialPair\n"
+      << "----------------------------------------------------\n"
       << " Pairs that have valid intrinsic and high support of points are displayed:\n"
       << " Choose one pair manually by typing the two integer indexes\n"
-      << "---------------------------------------------------\n"
+      << "----------------------------------------------------\n"
       << std::endl;
 
     // Try to list the 10 top pairs that have:
@@ -332,6 +345,144 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
     }
   }
   return _map_tracks.size() > 0;
+}
+
+bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initial_pair) const
+{
+  // From the k view pairs with the highest number of verified matches
+  // select a pair that have the largest basline (mean angle between it's bearing vectors).
+
+  const unsigned k = 20;
+  const unsigned iMin_inliers_count = 100;
+  const float fRequired_min_angle = 3.0f;
+  const float fLimit_max_angle = 60.0f; // More than 60 degree, we cannot rely on matches for initial pair seeding
+
+  // List Views that support valid intrinsic (view that could be used for Essential matrix computation)
+  std::set<IndexT> valid_views;
+  for (Views::const_iterator it = _sfm_data.GetViews().begin();
+    it != _sfm_data.GetViews().end(); ++it)
+  {
+    const View * v = it->second.get();
+    if( _sfm_data.GetIntrinsics().find(v->id_intrinsic) != _sfm_data.GetIntrinsics().end())
+      valid_views.insert(v->id_view);
+  }
+
+  if (valid_views.size() < 2)
+  {
+    return false; // There is not view that support valid intrinsic data
+  }
+
+  std::vector<std::pair<double, Pair> > scoring_per_pair;
+
+  // Compute the relative pose & the 'baseline score'
+  C_Progress_display my_progress_bar( _matches_provider->_pairWise_matches.size(),
+    std::cout,
+    "Automatic selection of an initial pair:\n" );
+#ifdef OPENMVG_USE_OPENMP
+  #pragma omp parallel
+#endif
+  for (const std::pair< Pair, IndMatches > & match_pair : _matches_provider->_pairWise_matches)
+  {
+#ifdef OPENMVG_USE_OPENMP
+  #pragma omp single nowait
+#endif
+    {
+#ifdef OPENMVG_USE_OPENMP
+      #pragma omp critical
+#endif
+      ++my_progress_bar;
+
+      const Pair current_pair = match_pair.first;
+
+      const size_t I = min(current_pair.first, current_pair.second);
+      const size_t J = max(current_pair.first, current_pair.second);
+
+      const View * view_I = _sfm_data.GetViews().at(I).get();
+      const Intrinsics::const_iterator iterIntrinsic_I = _sfm_data.GetIntrinsics().find(view_I->id_intrinsic);
+      const View * view_J = _sfm_data.GetViews().at(J).get();
+      const Intrinsics::const_iterator iterIntrinsic_J = _sfm_data.GetIntrinsics().find(view_J->id_intrinsic);
+
+      const Pinhole_Intrinsic * cam_I = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_I->second.get());
+      const Pinhole_Intrinsic * cam_J = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_J->second.get());
+      if (cam_I != NULL && cam_J != NULL)
+      {
+        openMVG::tracks::STLMAPTracks map_tracksCommon;
+        const std::set<size_t> set_imageIndex= {I, J};
+        tracks::TracksUtilsMap::GetTracksInImages(set_imageIndex, _map_tracks, map_tracksCommon);
+
+        //-- Copy points correspondences to arrays
+        const size_t n = map_tracksCommon.size();
+        Mat xI(2,n), xJ(2,n);
+        size_t cptIndex = 0;
+        for (openMVG::tracks::STLMAPTracks::const_iterator
+          iterT = map_tracksCommon.begin(); iterT != map_tracksCommon.end();
+          ++iterT, ++cptIndex)
+        {
+          tracks::submapTrack::const_iterator iter = iterT->second.begin();
+          const size_t i = iter->second;
+          const size_t j = (++iter)->second;
+
+          Vec2 feat = _features_provider->feats_per_view[I][i].coords().cast<double>();
+          xI.col(cptIndex) = cam_I->get_ud_pixel(feat);
+          feat = _features_provider->feats_per_view[J][j].coords().cast<double>();
+          xJ.col(cptIndex) = cam_J->get_ud_pixel(feat);
+        }
+
+        // Robust estimation of the relative pose
+        RelativePose_Info relativePose_info;
+        relativePose_info.initial_residual_tolerance = Square(4.0);
+
+        if (robustRelativePose(
+          cam_I->K(), cam_J->K(),
+          xI, xJ, relativePose_info,
+          std::make_pair(cam_I->w(), cam_I->h()), std::make_pair(cam_J->w(), cam_J->h()),
+          256) && relativePose_info.vec_inliers.size() > iMin_inliers_count)
+        {
+          // Triangulate inliers & compute the median angle
+          std::vector<float> vec_angles;
+          const Pose3 pose_I = Pose3(Mat3::Identity(), Vec3::Zero());
+          const Pose3 pose_J = relativePose_info.relativePose;
+          const Mat34 PI = cam_I->get_projective_equivalent(pose_I);
+          const Mat34 PJ = cam_J->get_projective_equivalent(pose_J);
+          for (const size_t inlier_idx : relativePose_info.vec_inliers)
+          {
+            Vec3 X;
+            TriangulateDLT(PI, xI.col(inlier_idx), PJ, xJ.col(inlier_idx), &X);
+
+            openMVG::tracks::STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
+            std::advance(iterT, inlier_idx);
+            tracks::submapTrack::const_iterator iter = iterT->second.begin();
+            const Vec2 featI = _features_provider->feats_per_view[I][iter->second].coords().cast<double>();
+            const Vec2 featJ = _features_provider->feats_per_view[J][(++iter)->second].coords().cast<double>();
+            vec_angles.push_back(AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, featI, featJ));
+          }
+          const unsigned median_index = vec_angles.size() / 2;
+          std::nth_element(
+            vec_angles.begin(),
+            vec_angles.begin() + median_index,
+            vec_angles.end());
+          const float scoring_angle = vec_angles[median_index];
+          if (scoring_angle > fRequired_min_angle &&
+              scoring_angle < fLimit_max_angle)
+          {
+#ifdef OPENMVG_USE_OPENMP
+            #pragma omp critical
+#endif
+            scoring_per_pair.emplace_back(scoring_angle, current_pair);
+          }
+        }
+      }
+    } // omp section
+  }
+  std::sort(scoring_per_pair.begin(), scoring_per_pair.end());
+  // Since scoring is ordered in increasing order, reverse the order
+  std::reverse(scoring_per_pair.begin(), scoring_per_pair.end());
+  if (!scoring_per_pair.empty())
+  {
+    initial_pair = scoring_per_pair.begin()->second;
+    return true;
+  }
+  return false;
 }
 
 /// Compute the initial 3D seed (First camera t=0; R=Id, second estimated by 5 point algorithm)
@@ -584,7 +735,7 @@ double SequentialSfMReconstructionEngine::ComputeResidualsHistogram(Histogram<do
 
     std::cout << std::endl << std::endl;
     std::cout << std::endl
-      << "IncrementalReconstructionEngine::ComputeResidualsMSE." << "\n"
+      << "SequentialSfMReconstructionEngine::ComputeResidualsMSE." << "\n"
       << "\t-- #Tracks:\t" << _sfm_data.GetLandmarks().size() << std::endl
       << "\t-- Residual min:\t" << dMin << std::endl
       << "\t-- Residual median:\t" << dMedian << std::endl
@@ -719,11 +870,6 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
 {
   using namespace tracks;
 
-  std::cout << std::endl
-    << "-------------------------------" << std::endl
-    << "-- Resection of camera index: " << viewIndex << std::endl
-    << "-------------------------------" << std::endl;
-
   // A. Compute 2D/3D matches
   // A1. list tracks ids used by the view
   openMVG::tracks::STLMAPTracks map_tracksCommon;
@@ -746,9 +892,14 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
     reconstructed_trackId.end(),
     std::inserter(set_trackIdForResection, set_trackIdForResection.begin()));
 
-  if(set_trackIdForResection.empty())
+  if (set_trackIdForResection.empty())
   {
     // No match. The image has no connection with already reconstructed points.
+    std::cout << std::endl
+      << "-------------------------------" << "\n"
+      << "-- Resection of camera index: " << viewIndex << "\n"
+      << "-- Resection status: " << "FAILED" << "\n"
+      << "-------------------------------" << std::endl;
     return false;
   }
 
