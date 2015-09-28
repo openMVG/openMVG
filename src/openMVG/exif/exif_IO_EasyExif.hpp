@@ -78,6 +78,8 @@ class Exif_IO_EasyExif : public Exif_IO
         // remove leading and trailing spaces
         sbrand.erase(0, sbrand.find_first_not_of(' '));
         sbrand.erase(sbrand.find_last_not_of(' '));
+        // handle multiple trailing end character
+        sbrand = sbrand.substr(0, sbrand.find('\0'));
       }
       return sbrand;
     }
@@ -90,6 +92,8 @@ class Exif_IO_EasyExif : public Exif_IO
         // remove leading and trailing spaces
         smodel.erase(0, smodel.find_first_not_of(' '));
         smodel.erase(smodel.find_last_not_of(' '));
+        // handle multiple trailing end character
+        smodel = smodel.substr(0, smodel.find('\0'));
       }
       return smodel;
     }

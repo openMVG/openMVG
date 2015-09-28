@@ -1034,11 +1034,16 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
           }
         }
       }
-      std::cout
-        << "\n--Triangulated 3D points [" << I << "-" << J <<"]:"
-        << "\n\t#Track extented: " << extented_track
-        << "\n\t#Validated/#Possible: " << new_added_track << "/" << new_putative_track
-        << "\n\t#3DPoint for the entire scene: " << _sfm_data.GetLandmarks().size() << std::endl;
+#ifdef OPENMVG_USE_OPENMP
+            #pragma omp critical
+#endif
+      {
+        std::cout
+          << "\n--Triangulated 3D points [" << I << "-" << J <<"]:"
+          << "\n\t#Track extented: " << extented_track
+          << "\n\t#Validated/#Possible: " << new_added_track << "/" << new_putative_track
+          << "\n\t#3DPoint for the entire scene: " << _sfm_data.GetLandmarks().size() << std::endl;
+      }
     }
   }
   return true;

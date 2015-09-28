@@ -141,7 +141,6 @@ int main(int argc, char **argv)
   EPairMode ePairmode = (iMatchingVideoMode == -1 ) ? PAIR_EXHAUSTIVE : PAIR_CONTIGUOUS;
 
   if (sPredefinedPairList.length()) {
-    std::cout << "--pairList " << sPredefinedPairList << std::endl;
     ePairmode = PAIR_FROM_FILE;
     if (iMatchingVideoMode>0) {
       std::cerr << "\nIncompatible options: --videoModeMatching and --pairList" << std::endl;

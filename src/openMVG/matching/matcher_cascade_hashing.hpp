@@ -105,7 +105,6 @@ class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
     }
 
     if (NN > (*memMapping).rows() || nbQuery < 1) {
-      std::cerr << "Too much asked nearest neighbors" << std::endl;
       return false;
     }
 
