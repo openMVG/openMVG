@@ -410,7 +410,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
         const std::set<size_t> set_imageIndex= {I, J};
         tracks::TracksUtilsMap::GetTracksInImages(set_imageIndex, _map_tracks, map_tracksCommon);
 
-        //-- Copy points correspondences to arrays
+        // Copy points correspondences to arrays for relative pose estimation
         const size_t n = map_tracksCommon.size();
         Mat xI(2,n), xJ(2,n);
         size_t cptIndex = 0;
@@ -438,7 +438,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
           std::make_pair(cam_I->w(), cam_I->h()), std::make_pair(cam_J->w(), cam_J->h()),
           256) && relativePose_info.vec_inliers.size() > iMin_inliers_count)
         {
-          // Triangulate inliers & compute the median angle
+          // Triangulate inliers & compute angle between bearing vectors
           std::vector<float> vec_angles;
           const Pose3 pose_I = Pose3(Mat3::Identity(), Vec3::Zero());
           const Pose3 pose_J = relativePose_info.relativePose;
@@ -456,12 +456,14 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
             const Vec2 featJ = _features_provider->feats_per_view[J][(++iter)->second].coords().cast<double>();
             vec_angles.push_back(AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, featI, featJ));
           }
+          // Compute the median triangulation angle
           const unsigned median_index = vec_angles.size() / 2;
           std::nth_element(
             vec_angles.begin(),
             vec_angles.begin() + median_index,
             vec_angles.end());
           const float scoring_angle = vec_angles[median_index];
+          // Store the pair iff the pair is in the asked angle range [fRequired_min_angle;fLimit_max_angle]
           if (scoring_angle > fRequired_min_angle &&
               scoring_angle < fLimit_max_angle)
           {
