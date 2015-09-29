@@ -50,7 +50,7 @@ class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
    */
   bool Build(const Scalar * dataset, int nbRows, int dimension) {
     if (nbRows < 1) {
-      memMapping.reset(NULL);
+      memMapping.reset(nullptr);
       return false;
     }
     memMapping.reset(new Eigen::Map<BaseMat>( (Scalar*)dataset, nbRows, dimension) );
@@ -58,8 +58,11 @@ class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
     // Init the cascade hasher (hashing projection matrices)
     cascade_hasher_.Init(dimension);
     // Index the input descriptors
+    zero_mean_descriptor_ = CascadeHasher::GetZeroMeanDescriptor(*memMapping);
+    zero_mean_descriptor_.fill(zero_mean_descriptor_.mean());
     hashed_base_ = cascade_hasher_.CreateHashedDescriptions(
-      *memMapping, CascadeHasher::GetZeroMeanDescriptor(*memMapping));
+      *memMapping, zero_mean_descriptor_);
+
     return true;
   };
 
@@ -116,7 +119,8 @@ class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
 
     // Index the query descriptors
     const HashedDescriptions hashed_query = cascade_hasher_.CreateHashedDescriptions(
-      mat_query, CascadeHasher::GetZeroMeanDescriptor(mat_query));
+      mat_query,
+      zero_mean_descriptor_);
     // Match the query descriptors to the database
     cascade_hasher_.Match_HashedDescriptions(
       hashed_query, mat_query,
@@ -133,6 +137,7 @@ private:
   std::unique_ptr< Eigen::Map<BaseMat> > memMapping;
   CascadeHasher cascade_hasher_;
   HashedDescriptions hashed_base_;
+  Eigen::VectorXf zero_mean_descriptor_;
 };
 
 }  // namespace matching
