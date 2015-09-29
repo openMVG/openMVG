@@ -11,6 +11,7 @@
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/descriptor.hpp"
+#include "openMVG/matching/metric.hpp"
 #include "cereal/types/vector.hpp"
 #include <string>
 #include <typeinfo>
@@ -23,6 +24,8 @@ namespace features {
 class Regions
 {
 public:
+
+  virtual ~Regions() {}
 
   //--
   // IO - one file for region features, one file for region descriptors
@@ -51,7 +54,7 @@ public:
   //--
 
   //-- Assume that a region can always be represented at least by a 2D positions
-  virtual std::vector<PointFeature> GetRegionsPositions() const = 0;
+  virtual PointFeatures GetRegionsPositions() const = 0;
   virtual Vec2 GetRegionPosition(size_t i) const = 0;
 
   /// Return the number of defined regions
@@ -60,6 +63,15 @@ public:
   /// Return a pointer to the first value of the descriptor array
   // Used to avoid complex template imbrication
   virtual const void * DescriptorRawData() const = 0;
+
+  /// Return the squared distance between two descriptors
+  // A default metric is used according the descriptor type:
+  // - Scalar: L2,
+  // - Binary: Hamming
+  virtual double SquaredDescriptorDistance(size_t i, const Regions *, size_t j) const = 0;
+
+  /// Add the Inth region to another Region container
+  virtual void CopyRegion(size_t i, Regions *) const = 0;
 
   virtual Regions * EmptyClone() const = 0;
 
@@ -115,9 +127,9 @@ public:
     return loadFeatsFromFile(sfileNameFeats, _vec_feats);
   }
 
-  std::vector<PointFeature> GetRegionsPositions() const
+  PointFeatures GetRegionsPositions() const
   {
-    return std::vector<PointFeature>(_vec_feats.begin(), _vec_feats.end());
+    return PointFeatures(_vec_feats.begin(), _vec_feats.end());
   }
 
   Vec2 GetRegionPosition(size_t i) const
@@ -145,10 +157,31 @@ public:
     ar(_vec_descs);
   }
 
-  virtual Regions * EmptyClone() const
+  Regions * EmptyClone() const
   {
     return new Scalar_Regions();
   }
+
+  // Return the L2 distance between two descriptors
+  double SquaredDescriptorDistance(size_t i, const Regions * regions, size_t j) const
+  {
+    assert(i < _vec_descs.size());
+    assert(regions);
+    assert(j < regions->RegionCount());
+
+    const Scalar_Regions<FeatT, T, L> * regionsT = dynamic_cast<const Scalar_Regions<FeatT, T, L> *>(regions);
+    static matching::L2_Vectorized<T> metric;
+    return metric(_vec_descs[i].getData(), regionsT->_vec_descs[j].getData(), DescriptorT::static_size);
+  }
+
+  /// Add the Inth region to another Region container
+  void CopyRegion(size_t i, Regions * region_container) const
+  {
+    assert(i < _vec_feats.size() && i < _vec_descs.size());
+    static_cast<Scalar_Regions<FeatT, T, L> *>(region_container)->_vec_feats.push_back(_vec_feats[i]);
+    static_cast<Scalar_Regions<FeatT, T, L> *>(region_container)->_vec_descs.push_back(_vec_descs[i]);
+  }
+
 private:
   //--
   //-- internal data
@@ -208,9 +241,9 @@ public:
     return loadFeatsFromFile(sfileNameFeats, _vec_feats);
   }
 
-  std::vector<PointFeature> GetRegionsPositions() const
+  PointFeatures GetRegionsPositions() const
   {
-    return std::vector<PointFeature>(_vec_feats.begin(), _vec_feats.end());
+    return PointFeatures(_vec_feats.begin(), _vec_feats.end());
   }
 
   Vec2 GetRegionPosition(size_t i) const
@@ -238,9 +271,31 @@ public:
     ar(_vec_descs);
   }
 
-  virtual Regions * EmptyClone() const
+  Regions * EmptyClone() const
   {
     return new Binary_Regions();
+  }
+
+  // Return the squared Hamming distance between two descriptors
+  double SquaredDescriptorDistance(size_t i, const Regions * regions, size_t j) const
+  {
+    assert(i < _vec_descs.size());
+    assert(regions);
+    assert(j < regions->RegionCount());
+
+    const Binary_Regions<FeatT, L> * regionsT = dynamic_cast<const Binary_Regions<FeatT, L> *>(regions);
+    static matching::Hamming<unsigned char> metric;
+    const typename matching::Hamming<unsigned char>::ResultType descDist =
+      metric(_vec_descs[i].getData(), regionsT->_vec_descs[j].getData(), DescriptorT::static_size);
+    return descDist * descDist;
+  }
+
+  /// Add the Inth region to another Region container
+  void CopyRegion(size_t i, Regions * region_container) const
+  {
+    assert(i < _vec_feats.size() && i < _vec_descs.size());
+    static_cast<Binary_Regions<FeatT, L> *>(region_container)->_vec_feats.push_back(_vec_feats[i]);
+    static_cast<Binary_Regions<FeatT, L> *>(region_container)->_vec_descs.push_back(_vec_descs[i]);
   }
 
 private:

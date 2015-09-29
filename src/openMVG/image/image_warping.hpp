@@ -31,6 +31,7 @@ void Warp(const Image &im, const Mat3 & H, Image &out)
   const int wOut = static_cast<int>(out.Width());
   const int hOut = static_cast<int>(out.Height());
 
+  const Sampler2d<SamplerLinear> sampler;
   for (int j = 0; j < hOut; ++j)
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for
@@ -40,7 +41,7 @@ void Warp(const Image &im, const Mat3 & H, Image &out)
       double xT = i, yT = j;
       if (ApplyH_AndCheckOrientation(H, xT, yT)
           && im.Contains(yT,xT))
-        out(j,i) = SampleLinear(im, (float)yT, (float)xT);
+        out(j,i) = sampler(im, (float)yT, (float)xT);
     }
 }
 

@@ -9,13 +9,13 @@
 
 #include "openMVG/sfm/sfm.hpp"
 #include "openMVG/system/timer.hpp"
-#include "software/SfM/io_regions_type.hpp"
-using namespace openMVG;
-using namespace openMVG::cameras;
-using namespace openMVG::sfm;
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
+using namespace openMVG;
+using namespace openMVG::cameras;
+using namespace openMVG::sfm;
 
 /// From 2 given image file-names, find the two corresponding index in the View list
 bool computeIndexFromImageNames(

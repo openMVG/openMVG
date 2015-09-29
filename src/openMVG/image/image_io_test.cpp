@@ -18,7 +18,7 @@ using std::string;
 
 TEST(ReadJpg, Jpg_Color) {
   Image<RGBColor> image;
-  string jpg_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels_color.jpg";
+  const std::string jpg_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels_color.jpg";
   EXPECT_TRUE(ReadImage(jpg_filename.c_str(), &image));
   EXPECT_EQ(2, image.Width());
   EXPECT_EQ(1, image.Height());
@@ -29,7 +29,7 @@ TEST(ReadJpg, Jpg_Color) {
 
 TEST(ReadJpg, Jpg_Monochrome) {
   Image<unsigned char> image;
-  string jpg_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels_monochrome.jpg";
+  const std::string jpg_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels_monochrome.jpg";
   EXPECT_TRUE(ReadImage(jpg_filename.c_str(), &image));
   EXPECT_EQ(2, image.Width());
   EXPECT_EQ(1, image.Height());
@@ -40,7 +40,7 @@ TEST(ReadJpg, Jpg_Monochrome) {
 
 TEST(ReadPng, Png_Color) {
   Image<RGBAColor> image;
-  string png_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels_color.png";
+  const std::string png_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels_color.png";
   EXPECT_TRUE(ReadImage(png_filename.c_str(), &image));
   // Depth is 4 (RGBA by default)
   EXPECT_EQ(2, image.Width());
@@ -52,7 +52,7 @@ TEST(ReadPng, Png_Color) {
 
 TEST(ReadPng, Png_Monochrome) {
   Image<unsigned char> image;
-  string png_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels_monochrome.png";
+  const std::string png_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels_monochrome.png";
   EXPECT_TRUE(ReadImage(png_filename.c_str(), &image));
   EXPECT_EQ(2, image.Width());
   EXPECT_EQ(1, image.Height());
@@ -80,7 +80,7 @@ TEST(ImageIOTest, Png_Out) {
   Image<unsigned char> image(1,2);
   image(0,0) = 255;
   image(1,0) = 0;
-  string out_filename = ("test_write_png.png");
+  const std::string out_filename = ("test_write_png.png");
   EXPECT_TRUE(WriteImage(out_filename.c_str(), image));
 
   Image<unsigned char> read_image;
@@ -93,7 +93,7 @@ TEST(ImageIOTest, Png_Out_Color) {
   Image<RGBColor> image(1,2);
   image(0,0) = RGBColor(255,127,0);
   image(1,0) = RGBColor(0,127,255);
-  string out_filename = ("test_write_png_color.png");
+  const std::string out_filename = ("test_write_png_color.png");
   EXPECT_TRUE(WriteImage(out_filename.c_str(), image));
 
   Image<RGBColor> read_image;
@@ -104,7 +104,7 @@ TEST(ImageIOTest, Png_Out_Color) {
 
 TEST(ImageIOTest, InvalidFiles) {
   Image<unsigned char> image;
-  string filename = string(THIS_SOURCE_DIR) + "/donotexist.jpg";
+  const std::string filename = string(THIS_SOURCE_DIR) + "/donotexist.jpg";
   EXPECT_FALSE(ReadImage(filename.c_str(), &image));
   EXPECT_FALSE(ReadImage("hopefully_unexisting_file", &image));
   remove(filename.c_str());
@@ -114,7 +114,7 @@ TEST(ImageIOTest, Jpg) {
   Image<unsigned char> image(1,2);
   image(0,0) = 255;
   image(1,0) = 0;
-  string filename = ("test_write_jpg.jpg");
+  const std::string filename = ("test_write_jpg.jpg");
   EXPECT_TRUE(WriteJpg(filename.c_str(), image, 100));
 
   Image<unsigned char> read_image;
@@ -125,7 +125,7 @@ TEST(ImageIOTest, Jpg) {
 
 TEST(ReadPnm, Pgm) {
   Image<unsigned char> image;
-  string pgm_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.pgm";
+  const std::string pgm_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.pgm";
   EXPECT_TRUE(ReadImage(pgm_filename.c_str(), &image));
   EXPECT_EQ(2, image.Width());
   EXPECT_EQ(1, image.Height());
@@ -136,7 +136,7 @@ TEST(ReadPnm, Pgm) {
 
 TEST(ReadPnm, PgmComments) {
   Image<unsigned char> image;
-  string pgm_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels_gray.pgm";
+  const std::string pgm_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels_gray.pgm";
   EXPECT_TRUE(ReadImage(pgm_filename.c_str(), &image));
   EXPECT_EQ(2, image.Width());
   EXPECT_EQ(1, image.Height());
@@ -150,7 +150,7 @@ TEST(ImageIOTest, Pgm) {
   Image<unsigned char> image(1,2);
   image(0,0) = 255;
   image(1,0) = 0;
-  string out_filename = "test_write_pnm.pgm";
+  const std::string out_filename = "test_write_pnm.pgm";
   EXPECT_TRUE(WriteImage(out_filename.c_str(),image));
 
   Image<unsigned char> read_image;
@@ -161,7 +161,7 @@ TEST(ImageIOTest, Pgm) {
 
 TEST(ReadPnm, Ppm) {
   Image<RGBColor> image;
-  string ppm_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.ppm";
+  const std::string ppm_filename = string(THIS_SOURCE_DIR) + "/image_test/two_pixels.ppm";
   EXPECT_TRUE(ReadImage(ppm_filename.c_str(), &image));
   EXPECT_EQ(2, image.Width());
   EXPECT_EQ(1, image.Height());
@@ -174,7 +174,7 @@ TEST(ImageIOTest, Ppm) {
   Image<RGBColor> image(1,2);
   image(0,0) = RGBColor((unsigned char)255);
   image(1,0) = RGBColor((unsigned char)0);
-  string out_filename = "test_write_pnm.ppm";
+  const std::string out_filename = "test_write_pnm.ppm";
   EXPECT_TRUE(WriteImage(out_filename.c_str(), image));
 
   Image<RGBColor> read_image;
@@ -187,7 +187,7 @@ TEST(ImageIOTest, Tiff_Gray) {
   Image<unsigned char> image(1,2);
   image(0,0) = 255;
   image(1,0) = 0;
-  string filename = ("test_write_tiff.tif");
+  const std::string filename = ("test_write_tiff.tif");
   EXPECT_TRUE(WriteImage(filename.c_str(), image));
 
   Image<unsigned char> read_image;
@@ -200,7 +200,7 @@ TEST(ImageIOTest, Tiff_RGB) {
   Image<RGBColor> image(1,2);
   image(0,0) = RGBColor((unsigned char)255);
   image(1,0) = RGBColor((unsigned char)0);
-  string filename = ("test_write_tiff.tif");
+  const std::string filename = ("test_write_tiff.tif");
   EXPECT_TRUE(WriteImage(filename.c_str(), image));
 
   Image<RGBColor> read_image;
@@ -213,13 +213,48 @@ TEST(ImageIOTest, Tiff_RGBA) {
   Image<RGBAColor> image(1,2);
   image(0,0) = RGBAColor(255, 125, 10, 255);
   image(1,0) = RGBAColor(2, 3, 4, 255);
-  string filename = ("test_write_tiff.tif");
+  const std::string filename = ("test_write_tiff.tif");
   EXPECT_TRUE(WriteImage(filename.c_str(), image));
 
   Image<RGBAColor> read_image;
   EXPECT_TRUE(ReadImage(filename.c_str(), &read_image));
   EXPECT_TRUE(read_image == image);
   remove(filename.c_str());
+}
+
+TEST(ImageHeader, AllFormats) {
+
+  const std::vector<std::string> ext_Type = {"jpg", "png", "tif", "png", "pgm"};
+  const int image_border_size = 10;
+  for (int i=0; i < ext_Type.size(); ++i)
+  {
+    std::ostringstream os;
+    os << "img" << "." << ext_Type[i];
+    const std::string filename = os.str();
+    std::cout << "Testing:" << filename << std::endl;
+
+    // Test for gray images
+    {
+      Image<unsigned char> gray_image(image_border_size, image_border_size);
+      EXPECT_TRUE(WriteImage(filename.c_str(), gray_image));
+      ImageHeader imgHeader;
+      EXPECT_TRUE(ReadImageHeader(filename.c_str(), &imgHeader));
+      EXPECT_EQ(image_border_size, imgHeader.width);
+      EXPECT_EQ(image_border_size, imgHeader.height);
+      remove(filename.c_str());
+    }
+
+    // Test for RGB images
+    {
+      Image<RGBColor> rgb_image(image_border_size, image_border_size);
+      ImageHeader imgHeader;
+      EXPECT_TRUE(WriteImage(filename.c_str(), rgb_image));
+      EXPECT_TRUE(ReadImageHeader(filename.c_str(), &imgHeader));
+      EXPECT_EQ(image_border_size, imgHeader.width);
+      EXPECT_EQ(image_border_size, imgHeader.height);
+      remove(filename.c_str());
+    }
+  }
 }
 
 /* ************************************************************************* */

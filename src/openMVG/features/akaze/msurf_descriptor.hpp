@@ -47,31 +47,30 @@ namespace features {
   {
 
     Real dx = 0, dy = 0, mdx = 0, mdy = 0, gauss_s1 = 0, gauss_s2 = 0;
-    Real rx = 0, ry = 0, rrx = 0, rry = 0, xf = 0, yf = 0, ys = 0, xs = 0;
-    Real sample_x = 0, sample_y = 0, co = 0, si = 0, angle = 0;
-    Real ratio = 0;
-    int sample_step = 0, pattern_size = 0;
+    Real rx = 0, ry = 0, rrx = 0, rry = 0, ys = 0, xs = 0;
+    Real sample_x = 0, sample_y = 0;
     int kx = 0, ky = 0, i = 0, j = 0, dcount = 0;
-    int scale = 0, dsize = 0;
 
     // Subregion centers for the 4x4 gaussian weighting
     Real cx = - static_cast<Real>( 0.5 ) , cy = static_cast<Real>( 0.5 ) ;
 
     // Set the descriptor size and the sample and pattern sizes
-    dsize = 64;
-    sample_step = 5;
-    pattern_size = 12;
+    const int dsize = 64;
+    const int sample_step = 5;
+    const int pattern_size = 12;
 
     // Get the information from the keypoint
-    ratio = static_cast<Real>( 1 << id_octave );
-    scale = MathTrait<float>::round( ipt.scale() / ratio );
-    angle = ipt.orientation() ;
-    yf = ipt.y() / ratio;
-    xf = ipt.x() / ratio;
-    co = MathTrait<Real>::cos( angle );
-    si = MathTrait<Real>::sin( angle );
+    const Real ratio = static_cast<Real>( 1 << id_octave );
+    const int scale = MathTrait<float>::round( ipt.scale() / ratio );
+    const Real angle = ipt.orientation() ;
+    const Real yf = ipt.y() / ratio;
+    const Real xf = ipt.x() / ratio;
+    const Real co = MathTrait<Real>::cos( angle );
+    const Real si = MathTrait<Real>::sin( angle );
 
     i = -8;
+
+    const image::Sampler2d<image::SamplerLinear> sampler;
 
     // Calculate descriptor for this interest point
     // Area of size 24 s x 24 s
@@ -106,8 +105,8 @@ namespace features {
             // Get the gaussian weighted x and y responses
             gauss_s1 = gaussian( xs - sample_x, ys - sample_y, static_cast<Real>( 2.5 ) * static_cast<Real>( scale ) );
 
-            rx = SampleLinear( Lx, sample_y, sample_x );
-            ry = SampleLinear( Ly, sample_y, sample_x );
+            rx = sampler( Lx, sample_y, sample_x );
+            ry = sampler( Ly, sample_y, sample_x );
 
             // Get the x and y derivatives on the rotated axis
             rry = gauss_s1 * ( rx * co + ry * si );

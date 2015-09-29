@@ -19,22 +19,33 @@ enum Format {
 
 Format GetFormat(const char *c);
 
-/// Try to load the given file in the image<T> openMVG image.
+/// Load an image<T> from the provided input filename
 template<typename T>
 int ReadImage(const char *, Image<T> *);
 
-/// Open an png image with unsigned char as memory target.
-/// The memory point must be null as input.
-int ReadImage(const char *, std::vector<unsigned char> *, int * w, int * h, int * depth);
-int ReadPng(const char *, std::vector<unsigned char> *, int * w, int * h, int * depth);
-int ReadPngStream(FILE *, std::vector<unsigned char> *, int * w, int * h, int * depth);
-
+/// Save an image<T> from the provided input filename
 template<typename T>
 int WriteImage(const char *, const Image<T>&);
 
+/// Unsigned char specialization (The memory pointer must be null as input)
+int ReadImage(const char *, std::vector<unsigned char> *, int * w, int * h, int * depth);
+
+/// Unsigned char specialization
 int WriteImage(const char *, const std::vector<unsigned char>& array, int w, int h, int depth);
+
+//--
+// PNG I/O
+//--
+int ReadPng(const char *, std::vector<unsigned char> *, int * w, int * h, int * depth);
+int ReadPngStream(FILE *, std::vector<unsigned char> *, int * w, int * h, int * depth);
 int WritePng(const char *, const std::vector<unsigned char>& array, int w, int h, int depth);
 int WritePngStream(FILE *,  const std::vector<unsigned char>& array, int w, int h, int depth);
+
+//--
+// JPG I/O
+//--
+int ReadJpg(const char *, std::vector<unsigned char> *, int * w, int * h, int * depth);
+int ReadJpgStream(FILE *, std::vector<unsigned char> *, int * w, int * h, int * depth);
 
 template<typename T>
 int WriteJpg(const char *, const Image<T>&, int quality=90);
@@ -42,26 +53,43 @@ int WriteJpg(const char *, const std::vector<unsigned char>& array, int w, int h
 int WriteJpgStream(FILE *, const std::vector<unsigned char>& array, int w, int h, int depth, int quality=90);
 
 
-/// Open a jpg image with unsigned char as memory target.
-/// The memory point must be null as input.
-int ReadJpg(const char *, std::vector<unsigned char> *, int * w, int * h, int * depth);
-int ReadJpgStream(FILE *, std::vector<unsigned char> *, int * w, int * h, int * depth);
-
+//--
+// PNG/PGM I/O
+//--
 int ReadPnm(const char *, std::vector<unsigned char> *, int * w, int * h, int * depth);
 int ReadPnmStream(FILE *, std::vector<unsigned char> *, int * w, int * h, int * depth);
 
 int WritePnm(const char *, const std::vector<unsigned char>& array, int w, int h, int depth);
 int WritePnmStream(FILE *,  const std::vector<unsigned char>& array, int w, int h, int depth);
 
+//--
+// TIFF I/O
+//--
 int ReadTiff(const char *, std::vector<unsigned char> *, int * w, int * h, int * depth);
 int WriteTiff(const char *, const std::vector<unsigned char>& array, int w, int h, int depth);
+
+// ImageHeader: structure used to know the size of an image
+// Note: can be extented later to support the pixel data type and the number of channel:
+// i.e: - unsigned char, 1 => gray image
+//      - unsigned char, 3 => rgb image
+//      - unsigned char, 4 => rgba image
+struct ImageHeader
+{
+  int width, height;
+};
+
+bool ReadImageHeader(const char *, ImageHeader *);
+bool Read_PNG_ImageHeader(const char *, ImageHeader *);
+bool Read_JPG_ImageHeader(const char *, ImageHeader *);
+bool Read_PNM_ImageHeader(const char *, ImageHeader *);
+bool Read_TIFF_ImageHeader(const char *, ImageHeader *);
 
 template<>
 inline int ReadImage(const char * path, Image<unsigned char> * im)
 {
   std::vector<unsigned char> ptr;
   int w, h, depth;
-  int res = ReadImage(path, &ptr, &w, &h, &depth);
+  const int res = ReadImage(path, &ptr, &w, &h, &depth);
   if (res == 1 && depth == 1) {
     //convert raw array to Image
     (*im) = Eigen::Map<Image<unsigned char>::Base>(&ptr[0], h, w);
@@ -94,7 +122,7 @@ inline int ReadImage(const char * path, Image<RGBColor> * im)
 {
   std::vector<unsigned char> ptr;
   int w, h, depth;
-  int res = ReadImage(path, &ptr, &w, &h, &depth);
+  const int res = ReadImage(path, &ptr, &w, &h, &depth);
   if (res == 1 && depth == 3) {
     RGBColor * ptrCol = (RGBColor*) &ptr[0];
     //convert raw array to Image
@@ -119,7 +147,7 @@ inline int ReadImage(const char * path, Image<RGBAColor> * im)
 {
   std::vector<unsigned char> ptr;
   int w, h, depth;
-  int res = ReadImage(path, &ptr, &w, &h, &depth);
+  const int res = ReadImage(path, &ptr, &w, &h, &depth);
   if (depth !=4) return 0;
   if (res == 1) {
     RGBAColor * ptrCol = (RGBAColor*) &ptr[0];
@@ -138,9 +166,9 @@ template<typename T>
 int WriteImage(const char * filename, const Image<T>& im)
 {
   const unsigned char * ptr = (unsigned char*)(im.GetMat().data());
-  int depth = sizeof( T ) / sizeof(unsigned char);
+  const int depth = sizeof( T ) / sizeof(unsigned char);
   std::vector<unsigned char> array( ptr , ptr + im.Width()*im.Height()*depth );
-  int w = im.Width(), h = im.Height();
+  const int w = im.Width(), h = im.Height();
   return WriteImage(filename, array, w, h, depth);
 }
 

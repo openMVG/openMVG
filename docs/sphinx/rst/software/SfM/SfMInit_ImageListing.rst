@@ -15,7 +15,6 @@ Each **View** is associated to a camera **Pose** index and an **Intrinsic** came
 
 .. code-block:: c++
 
-  $ cd openMVG_Build/software/SfM/
   $ openMVG_main_SfMInit_ImageListing -i [] -d [] -o []
 
 Arguments description:
@@ -24,7 +23,7 @@ Arguments description:
 
   - **[-i|--imageDirectory]**
 
-  - **[-d|--sensorWidthDatabase]** src/software/SfM/cameraSensorWidth/cameraGenerated.txt
+  - **[-d|--sensorWidthDatabase]** openMVG/src/openMVG/exif/sensor_width_database/sensor_width_camera_database.txt
 
   - **[-o|--outputDirectory]**
 
@@ -48,7 +47,10 @@ Arguments description:
 .. code-block:: c++
 
   // Example
-  $ openMVG_main_SfMInit_ImageListing -d /home/user/Dev/openMVG/src/software/SfM/cameraSensorWidth/cameraGenerated.txt -i /home/user/Dataset/ImageDataset_SceauxCastle/images -o /home/user/Dataset/ImageDataset_SceauxCastle/matches
+  $ openMVG_main_SfMInit_ImageListing -d /home/user/Dev/openMVG/src/openMVG/exif/sensor_width_database/sensor_width_camera_database.txt -i /home/user/Dataset/ImageDataset_SceauxCastle/images -o /home/user/Dataset/ImageDataset_SceauxCastle/matches
+  
+  If you have installed OpenMVG on your machine your could do:
+  $ openMVG_main_SfMInit_ImageListing -d /usr/share/openMVG/sensor_width_camera_database.txt -i /home/user/Dataset/ImageDataset_SceauxCastle/images -o /home/user/Dataset/ImageDataset_SceauxCastle/matches
 
 It will produce you a sfm_data.json file that is used by openMVG as a scene description.
 

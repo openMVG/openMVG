@@ -41,7 +41,8 @@ N-View geometry estimation
 
 * Translation averaging
 
-  * L2 [Kyle2014]_.
+  * L2 Chordal [Kyle2014]_,
+  * SoftL1 'approximation of the LInf method of [GlobalACSfM]_'.
 
 Homography matrix:
 ---------------------
@@ -102,7 +103,7 @@ This essential matrix links the relative position of the camera to the fundament
 Absolute pose estimation/Camera resection (Pose matrix)
 ========================================================
 
-Given a serie of 3D-2D image plane correspondences it is possible to compute a camera pose estimation.
+Given a list of 3D-2D point correspondences it is possible to compute a camera pose estimation.
 It consists in estimating the camera parameters of the right camera that minimizes the residual error of the 3D points re-projections, it's an optimization problem that trying to solve P parameters in order to minimize 
 
 .. math:: 

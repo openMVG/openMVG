@@ -50,7 +50,7 @@ struct FourPointSolver {
    * \param y  A 2xN matrix of column vectors.
    * \param Hs A vector into which the computed homography is stored.
    *
-   * The estimated homography should approximatelly hold the condition y = H x.
+   * The estimated homography should approximately hold the condition y = H x.
    */
   static void Solve(const Mat &x, const Mat &y, vector<Mat3> *Hs);
 };

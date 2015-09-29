@@ -11,7 +11,6 @@
 #include "openMVG/features/features.hpp"
 #include "openMVG/tracks/tracks.hpp"
 #include "openMVG/sfm/sfm.hpp"
-#include "software/SfM/io_regions_type.hpp"
 
 #include "software/SfM/SfMIOHelper.hpp"
 #include "third_party/cmdLine/cmdLine.h"
@@ -118,6 +117,7 @@ int main(int argc, char ** argv)
   const size_t viewCount = sfm_data.GetViews().size();
 
   stlplus::folder_create(sOutDir);
+  std::cout << "\n viewCount: " << viewCount << std::endl;
   std::cout << "\n Export pairwise tracks" << std::endl;
   C_Progress_display my_progress_bar( (viewCount*(viewCount-1)) / 2.0 );
 

@@ -7,10 +7,7 @@
 
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/features.hpp"
-#include "openMVG/matching/matcher_brute_force.hpp"
-#include "openMVG/matching/matcher_kdtree_flann.hpp"
-#include "openMVG/matching/matching_filters.hpp"
-#include "openMVG_Samples/siftPutativeMatches/two_view_matches.hpp"
+#include "openMVG/matching/regions_matcher.hpp"
 
 #include "nonFree/sift/SIFT_describer.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -47,9 +44,6 @@ int main() {
   image_describer->Describe(imageL, regions_perImage[0]);
   image_describer->Describe(imageR, regions_perImage[1]);
 
-  const SIFT_Regions* regionsL = dynamic_cast<SIFT_Regions*>(regions_perImage.at(0).get());
-  const SIFT_Regions* regionsR = dynamic_cast<SIFT_Regions*>(regions_perImage.at(1).get());
-
   const PointFeatures
     featsL = regions_perImage.at(0)->GetRegionsPositions(),
     featsR = regions_perImage.at(1)->GetRegionsPositions();
@@ -61,6 +55,9 @@ int main() {
     string out_filename = "00_images.jpg";
     WriteImage(out_filename.c_str(), concat);
   }
+
+  const SIFT_Regions* regionsL = dynamic_cast<SIFT_Regions*>(regions_perImage.at(0).get());
+  const SIFT_Regions* regionsR = dynamic_cast<SIFT_Regions*>(regions_perImage.at(1).get());
 
   //- Draw features on the two image (side by side)
   {
@@ -76,22 +73,19 @@ int main() {
       const SIOPointFeature point = regionsR->Features()[i];
       DrawCircle(point.x()+imageL.Width(), point.y(), point.scale(), 255, &concat);
     }
-    string out_filename = "01_features.jpg";
+    const std::string out_filename = "01_features.jpg";
     WriteImage(out_filename.c_str(), concat);
   }
 
   //-- Perform matching -> find Nearest neighbor, filtered with Distance ratio
   std::vector<IndMatch> vec_PutativeMatches;
   {
-    // Define a matcher and a metric to find corresponding points
-    typedef SIFT_Regions::DescriptorT DescriptorT;
-    typedef L2_Vectorized<DescriptorT::bin_type> Metric;
-    typedef ArrayMatcherBruteForce<DescriptorT::bin_type, Metric> MatcherT;
-    // Distance ratio squared due to squared metric
-    getPutativesMatches<DescriptorT, MatcherT>(
-      ((SIFT_Regions*)regions_perImage.at(0).get())->Descriptors(),
-      ((SIFT_Regions*)regions_perImage.at(1).get())->Descriptors(),
-      Square(0.8), vec_PutativeMatches);
+    // Find corresponding points
+    matching::DistanceRatioMatch(
+      0.8, matching::BRUTE_FORCE_L2,
+      *regions_perImage.at(0).get(),
+      *regions_perImage.at(1).get(),
+      vec_PutativeMatches);
 
     // Draw correspondences after Nearest Neighbor ratio filter
     svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));

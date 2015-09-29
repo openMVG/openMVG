@@ -7,45 +7,40 @@
 
 #pragma once
 
-#include "openMVG/features/regions.hpp"
 #include "openMVG/matching_image_collection/Matcher.hpp"
 
 namespace openMVG {
-
-enum EMatcherType
-{
-  BRUTE_FORCE_L2,
-  ANN_L2,
-  BRUTE_FORCE_HAMMING
-};
+namespace matching_image_collection {
 
 /// Implementation of an Image Collection Matcher
 /// Compute putative matches between a collection of pictures
 /// Spurious correspondences are discarded by using the
-///  a threshold over the distance ratio of the 2 neighbours points.
+///  a threshold over the distance ratio of the 2 nearest neighbours.
 ///
 class Matcher_Regions_AllInMemory : public Matcher
 {
   public:
-  Matcher_Regions_AllInMemory(float distRatio, EMatcherType eMatcherType);
+  Matcher_Regions_AllInMemory
+  (
+    float dist_ratio,
+    matching::EMatcherType eMatcherType
+  );
 
-  /// Load all features and descriptors in memory
-  bool loadData(
-    std::unique_ptr<features::Regions>& region_type, // interface to load computed regions
-    const std::vector<std::string> & vec_fileNames, // input filenames
-    const std::string & sMatchDir); // where the data are saved
-
-  void Match(
-    const std::vector<std::string> & vec_fileNames, // input filenames,
+  /// Find corresponding points between some pair of view Ids
+  void Match
+  (
+    const sfm::SfM_Data & sfm_data,
+    const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
     const Pair_Set & pairs,
-    matching::PairWiseMatches & map_PutativesMatches)const; // the pairwise photometric corresponding points
+    matching::PairWiseMatches & map_PutativesMatches // the pairwise photometric corresponding points
+  )const;
 
   private:
-  std::map<IndexT, std::unique_ptr<features::Regions> > regions_perImage;
   // Distance ratio used to discard spurious correspondence
-  float fDistRatio;
+  float _f_dist_ratio;
   // Matcher Type
-  EMatcherType _eMatcherType;
+  matching::EMatcherType _eMatcherType;
 };
 
-}; // namespace openMVG
+} // namespace openMVG
+} // namespace matching_image_collection

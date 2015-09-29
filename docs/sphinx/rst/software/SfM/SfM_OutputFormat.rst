@@ -15,6 +15,7 @@ SfM_Data is a data container. It contains:
   - 3D points and their 2D Observations
 
 The View and Intrinsic concept are abstract and so:
+
 - any internal camera model can be used
 - any metadata can be stored related to a view.
 

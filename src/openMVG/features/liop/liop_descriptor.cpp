@@ -320,6 +320,8 @@ void Liop_Descriptor_Extractor::extract(
   image::Image<float> outPatch(outPatchWidth,outPatchWidth, true, 0);
   image::Image<unsigned char> flagPatch(outPatchWidth, outPatchWidth, true, 0);
 
+  const image::Sampler2d<image::SamplerLinear> sampler;
+
   // pointer alias
   unsigned char * flagPatch_data = flagPatch.data();
   float * outPatch_data = outPatch.data();
@@ -340,7 +342,7 @@ void Liop_Descriptor_Extractor::extract(
       if(xs<0 || xs>I.Width()-1)
         continue;
 
-      outPatch_data[(y+outRadius)*outPatchWidth+x+outRadius] = SampleLinear(I, ys, xs);
+      outPatch_data[(y+outRadius)*outPatchWidth+x+outRadius] = sampler(I, ys, xs);
       flagPatch_data[(y+outRadius)*outPatchWidth+x+outRadius] = 1;
     }
   }

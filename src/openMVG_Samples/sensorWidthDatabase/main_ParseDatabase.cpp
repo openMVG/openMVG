@@ -1,6 +1,6 @@
 #include "third_party/cmdLine/cmdLine.h"
 
-#include "ParseDatabase.hpp"
+#include "openMVG/exif/sensor_width_database/ParseDatabase.hpp"
 
 int main(int argc, char ** argv)
 {

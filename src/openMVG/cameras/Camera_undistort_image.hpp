@@ -28,6 +28,7 @@ void UndistortImage(
   else // There is distortion
   {
     image_ud.resize(imageIn.Width(), imageIn.Height(), true, fillcolor);
+    const image::Sampler2d<image::SamplerLinear> sampler;
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for
 #endif
@@ -39,7 +40,7 @@ void UndistortImage(
       const Vec2 disto_pix = cam->get_d_pixel(undisto_pix);
       // pick pixel if it is in the image domain
       if ( imageIn.Contains(disto_pix(1), disto_pix(0)) )
-        image_ud( j, i ) = SampleLinear(imageIn, disto_pix(1), disto_pix(0));
+        image_ud( j, i ) = sampler(imageIn, disto_pix(1), disto_pix(0));
     }
   }
 }

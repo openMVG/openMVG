@@ -48,7 +48,10 @@ static void PointsToMat(
   for( PointFeatures::const_iterator iter = vec_feats.begin();
     iter != vec_feats.end(); ++iter, ++i)
   {
-    m.col(i) = cam->get_ud_pixel(Vec2(iter->x(), iter->y()));
+    if (cam)
+      m.col(i) = cam->get_ud_pixel(Vec2(iter->x(), iter->y()));
+    else
+      m.col(i) << iter->x(), iter->y();
   }
 }
 
@@ -96,98 +99,54 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
     const Pose3 poseR = sfm_data.GetPoseOrDie(viewR);
     const Intrinsics::const_iterator iterIntrinsicR = sfm_data.GetIntrinsics().find(viewR->id_intrinsic);
 
-    Mat xL, xR;
-    PointsToMat(iterIntrinsicL->second.get(), regions_provider->regions_per_view.at(it->first)->GetRegionsPositions(), xL);
-    PointsToMat(iterIntrinsicR->second.get(), regions_provider->regions_per_view.at(it->second)->GetRegionsPositions(), xR);
-
-    const Mat34 P_L = iterIntrinsicL->second.get()->get_projective_equivalent(poseL);
-    const Mat34 P_R = iterIntrinsicR->second.get()->get_projective_equivalent(poseR);
-
-    const Mat3 F_lr = F_from_P(P_L, P_R);
-    const double thresholdF = 4.0;
-
-#if defined(EXHAUSTIVE_MATCHING)
-    // Guided matching considering geometric error and descriptor distance ratio
-    geometry_aware::GuidedMatching
-      <Mat3, openMVG::fundamental::kernel::EpipolarDistanceError,
-      DescriptorT, L2_Vectorized<DescriptorT::bin_type> >(
-      F_lr, xL, desc_provider.at(it->first), xR, desc_provider.at(it->second),
-      Square(thresholdF), Square(0.8),
-      vec_corresponding_indexes);
-#else
-    const Vec3 epipole2  = epipole_from_P(P_R, poseL);
-
-    const features::Regions * regions = regions_provider->regions_per_view.at(it->first).get();
-    if (regions->IsScalar())
+    if (sfm_data.GetIntrinsics().count(viewL->id_intrinsic) != 0 ||
+        sfm_data.GetIntrinsics().count(viewR->id_intrinsic) != 0)
     {
-      // L2 Metric (Handle descriptor internal type)
-      if(regions->Type_id() == typeid(unsigned char).name())
-      {
-        geometry_aware::GuidedMatching_Fundamental_Fast<
-        openMVG::fundamental::kernel::EpipolarDistanceError,
-        L2_Vectorized<unsigned char> >
-        ( F_lr,
-          epipole2,
-          regions_provider->regions_per_view.at(it->first).get(),
-          iterIntrinsicR->second.get()->w(), iterIntrinsicR->second.get()->h(),
-          regions_provider->regions_per_view.at(it->second).get(),
-          Square(thresholdF), Square(0.8),
-          vec_corresponding_indexes);
-      }
-      else
-      if(regions->Type_id() == typeid(float).name())
-      {
-        geometry_aware::GuidedMatching_Fundamental_Fast<
-        openMVG::fundamental::kernel::EpipolarDistanceError,
-        L2_Vectorized<float> >
-        ( F_lr,
-          epipole2,
-          regions_provider->regions_per_view.at(it->first).get(),
-          iterIntrinsicR->second.get()->w(), iterIntrinsicR->second.get()->h(),
-          regions_provider->regions_per_view.at(it->second).get(),
-          Square(thresholdF), Square(0.8),
-          vec_corresponding_indexes);
-      }
-      else
-      if(regions->Type_id() == typeid(double).name())
-      {
-        geometry_aware::GuidedMatching_Fundamental_Fast<
-        openMVG::fundamental::kernel::EpipolarDistanceError,
-        L2_Vectorized<double> >
-        ( F_lr,
-          epipole2,
-          regions_provider->regions_per_view.at(it->first).get(),
-          iterIntrinsicR->second.get()->w(), iterIntrinsicR->second.get()->h(),
-          regions_provider->regions_per_view.at(it->second).get(),
-          Square(thresholdF), Square(0.8),
-          vec_corresponding_indexes);
-      }
-    }
-    else
-    if (regions->IsBinary() && regions->Type_id() == typeid(unsigned char).name())
-    {
-      // Hamming metric
-      geometry_aware::GuidedMatching_Fundamental_Fast<
-      openMVG::fundamental::kernel::EpipolarDistanceError,
-      Hamming<unsigned char> >
-      ( F_lr,
-        epipole2,
-        regions_provider->regions_per_view.at(it->first).get(),
-        iterIntrinsicR->second.get()->w(), iterIntrinsicR->second.get()->h(),
-        regions_provider->regions_per_view.at(it->second).get(),
-        Square(thresholdF), 0.8,
-        vec_corresponding_indexes);
-    }
+      const Mat34 P_L = iterIntrinsicL->second.get()->get_projective_equivalent(poseL);
+      const Mat34 P_R = iterIntrinsicR->second.get()->get_projective_equivalent(poseR);
 
-#endif
+      const Mat3 F_lr = F_from_P(P_L, P_R);
+      const double thresholdF = 4.0;
 
-#ifdef OPENMVG_USE_OPENMP
-    #pragma omp critical
-#endif // OPENMVG_USE_OPENMP
-      {
-        ++my_progress_bar;
-        for (size_t i = 0; i < vec_corresponding_indexes.size(); ++i)
-          putatives_matches[*it].push_back(vec_corresponding_indexes[i]);
+    #if defined(EXHAUSTIVE_MATCHING)
+      geometry_aware::GuidedMatching
+        <Mat3, openMVG::fundamental::kernel::EpipolarDistanceError>
+        (
+          F_lr,
+          iterIntrinsicL->second.get(),
+          *regions_provider->regions_per_view.at(it->first),
+          iterIntrinsicR->second.get(),
+          *regions_provider->regions_per_view.at(it->second),
+          Square(thresholdF), Square(0.8),
+          vec_corresponding_indexes
+        );
+    #else
+      const Vec3 epipole2  = epipole_from_P(P_R, poseL);
+
+      const features::Regions * regions = regions_provider->regions_per_view.at(it->first).get();
+      geometry_aware::GuidedMatching_Fundamental_Fast
+        <openMVG::fundamental::kernel::EpipolarDistanceError>
+        (
+          F_lr,
+          epipole2,
+          iterIntrinsicL->second.get(),
+          *regions_provider->regions_per_view.at(it->first),
+          iterIntrinsicR->second.get(),
+          *regions_provider->regions_per_view.at(it->second),
+          iterIntrinsicR->second->w(), iterIntrinsicR->second->h(),
+          Square(thresholdF), Square(0.8),
+          vec_corresponding_indexes
+        );
+  #endif
+
+  #ifdef OPENMVG_USE_OPENMP
+      #pragma omp critical
+  #endif // OPENMVG_USE_OPENMP
+        {
+          ++my_progress_bar;
+          for (size_t i = 0; i < vec_corresponding_indexes.size(); ++i)
+            putatives_matches[*it].push_back(vec_corresponding_indexes[i]);
+        }
       }
     }
   }
@@ -240,7 +199,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
 
         if (map_matchesIJK.size() >= 2) {
           tracksBuilder.Build(map_matchesIJK);
-          tracksBuilder.Filter(3);
+          tracksBuilder.Filter(3, false);
           tracksBuilder.ExportToSTL(map_tracksCommon);
         }
 

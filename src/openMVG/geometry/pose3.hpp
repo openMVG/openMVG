@@ -80,14 +80,13 @@ class Pose3
       std::vector<std::vector<double>> mat(3, std::vector<double>(3));
       ar(cereal::make_nvp("rotation", mat));
       // copy back to the rotation
-      _rotation <<
-        mat[0][0], mat[0][1], mat[0][2],
-        mat[1][0], mat[1][1], mat[1][2],
-        mat[2][0], mat[2][1], mat[2][2];
+      _rotation.row(0) = Eigen::Map<const Vec3>(&(mat[0][0]));
+      _rotation.row(1) = Eigen::Map<const Vec3>(&(mat[1][0]));
+      _rotation.row(2) = Eigen::Map<const Vec3>(&(mat[2][0]));
 
       std::vector<double> vec(3);
       ar(cereal::make_nvp("center", vec));
-      _center << vec[0], vec[1], vec[2];
+      _center = Eigen::Map<const Vec3>(&vec[0]);
     }
 };
 } // namespace geometry

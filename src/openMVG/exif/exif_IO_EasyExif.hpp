@@ -1,3 +1,9 @@
+// Copyright (c) 2013-2015 Pierre MOULON.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #ifndef EXIF_IO_EASYEXIF_HPP
 #define EXIF_IO_EASYEXIF_HPP
 
@@ -27,8 +33,8 @@ class Exif_IO_EasyExif : public Exif_IO
     {
       // Read the file into a buffer
       FILE *fp = fopen(sFileName.c_str(), "rb");
-      if (!fp) { 
-        return false; 
+      if (!fp) {
+        return false;
       }
       fseek(fp, 0, SEEK_END);
       unsigned long fsize = ftell(fp);
@@ -45,7 +51,7 @@ class Exif_IO_EasyExif : public Exif_IO
         bHaveExifInfo_ = false;
       else
         bHaveExifInfo_ = true;
-      
+
       return bHaveExifInfo_;
     }
 
@@ -67,18 +73,28 @@ class Exif_IO_EasyExif : public Exif_IO
     std::string getBrand() const
     {
       std::string sbrand = exifInfo_.Make;
-      // remove leading and trailing spaces
-      sbrand.erase(0, sbrand.find_first_not_of(' '));
-      sbrand.erase(sbrand.find_last_not_of(' '));
+      if (!sbrand.empty())
+      {
+        // remove leading and trailing spaces
+        sbrand.erase(0, sbrand.find_first_not_of(' '));
+        sbrand.erase(sbrand.find_last_not_of(' '));
+        // handle multiple trailing end character
+        sbrand = sbrand.substr(0, sbrand.find('\0'));
+      }
       return sbrand;
     }
 
     std::string getModel() const
     {
       std::string smodel = exifInfo_.Model;
-      // remove leading and trailing spaces
-      smodel.erase(0, smodel.find_first_not_of(' '));
-      smodel.erase(smodel.find_last_not_of(' '));
+      if (!smodel.empty())
+      {
+        // remove leading and trailing spaces
+        smodel.erase(0, smodel.find_first_not_of(' '));
+        smodel.erase(smodel.find_last_not_of(' '));
+        // handle multiple trailing end character
+        smodel = smodel.substr(0, smodel.find('\0'));
+      }
       return smodel;
     }
 
@@ -98,41 +114,41 @@ class Exif_IO_EasyExif : public Exif_IO
     {
       std::ostringstream os;
       os
-        << "Camera make       : " << exifInfo_.Make
-        << "Camera model      : " << exifInfo_.Model
-        << "Software          : " << exifInfo_.Software
-        << "Bits per sample   : " << exifInfo_.BitsPerSample
-        << "Image width       : " << exifInfo_.ImageWidth
-        << "Image height      : " << exifInfo_.ImageHeight
-        << "Image description : " << exifInfo_.ImageDescription
-        << "Image orientation : " << exifInfo_.Orientation
-        << "Image copyright   : " << exifInfo_.Copyright
-        << "Image date/time   : " << exifInfo_.DateTime
-        << "Original date/time: " << exifInfo_.DateTimeOriginal
-        << "Digitize date/time: " << exifInfo_.DateTimeDigitized
-        << "Subsecond time    : " << exifInfo_.SubSecTimeOriginal
-        << "Exposure time     : 1/time " << (unsigned) (1.0/exifInfo_.ExposureTime)
-        << "F-stop            : " << exifInfo_.FNumber
-        << "ISO speed         : " << exifInfo_.ISOSpeedRatings
-        << "Subject distance  : " << exifInfo_.SubjectDistance
-        << "Exposure bias     : EV" << exifInfo_.ExposureBiasValue
-        << "Flash used?       : " << exifInfo_.Flash
-        << "Metering mode     : " << exifInfo_.MeteringMode
-        << "Lens focal length : mm\n" << exifInfo_.FocalLength
-        << "35mm focal length : mm\n" << exifInfo_.FocalLengthIn35mm
+        << "Camera make       : " << exifInfo_.Make << "\n"
+        << "Camera model      : " << exifInfo_.Model << "\n"
+        << "Software          : " << exifInfo_.Software << "\n"
+        << "Bits per sample   : " << exifInfo_.BitsPerSample << "\n"
+        << "Image width       : " << exifInfo_.ImageWidth << "\n"
+        << "Image height      : " << exifInfo_.ImageHeight << "\n"
+        << "Image description : " << exifInfo_.ImageDescription << "\n"
+        << "Image orientation : " << exifInfo_.Orientation << "\n"
+        << "Image copyright   : " << exifInfo_.Copyright << "\n"
+        << "Image date/time   : " << exifInfo_.DateTime << "\n"
+        << "Original date/time: " << exifInfo_.DateTimeOriginal << "\n"
+        << "Digitize date/time: " << exifInfo_.DateTimeDigitized << "\n"
+        << "Subsecond time    : " << exifInfo_.SubSecTimeOriginal << "\n"
+        << "Exposure time     : 1/time " << (unsigned) (1.0/exifInfo_.ExposureTime) << "\n"
+        << "F-stop            : " << exifInfo_.FNumber << "\n"
+        << "ISO speed         : " << exifInfo_.ISOSpeedRatings << "\n"
+        << "Subject distance  : " << exifInfo_.SubjectDistance << "\n"
+        << "Exposure bias     : EV" << exifInfo_.ExposureBiasValue << "\n"
+        << "Flash used?       : " << exifInfo_.Flash << "\n"
+        << "Metering mode     : " << exifInfo_.MeteringMode << "\n"
+        << "Lens focal length : mm\n" << exifInfo_.FocalLength << "\n"
+        << "35mm focal length : mm\n" << exifInfo_.FocalLengthIn35mm << "\n"
         << "GPS Latitude      : deg ( deg, min, sec )\n" << "("
-        <<  exifInfo_.GeoLocation.Latitude << ", " 
-        <<  exifInfo_.GeoLocation.LatComponents.degrees << ", " 
-        <<  exifInfo_.GeoLocation.LatComponents.minutes << ", " 
-        <<  exifInfo_.GeoLocation.LatComponents.seconds << ", " 
-        <<  exifInfo_.GeoLocation.LatComponents.direction << ")"
+        <<  exifInfo_.GeoLocation.Latitude << ", "
+        <<  exifInfo_.GeoLocation.LatComponents.degrees << ", "
+        <<  exifInfo_.GeoLocation.LatComponents.minutes << ", "
+        <<  exifInfo_.GeoLocation.LatComponents.seconds << ", "
+        <<  exifInfo_.GeoLocation.LatComponents.direction << ")" << "\n"
         << "GPS Longitude     : deg ( deg, min, sec )\n" << "("
-        <<  exifInfo_.GeoLocation.Longitude << ", " 
-        <<  exifInfo_.GeoLocation.LonComponents.degrees << ", " 
-        <<  exifInfo_.GeoLocation.LonComponents.minutes << ", " 
-        <<  exifInfo_.GeoLocation.LonComponents.seconds << ", " 
-        <<  exifInfo_.GeoLocation.LonComponents.direction << ")"
-        << "GPS Altitude      : m" << exifInfo_.GeoLocation.Altitude;
+        <<  exifInfo_.GeoLocation.Longitude << ", "
+        <<  exifInfo_.GeoLocation.LonComponents.degrees << ", "
+        <<  exifInfo_.GeoLocation.LonComponents.minutes << ", "
+        <<  exifInfo_.GeoLocation.LonComponents.seconds << ", "
+        <<  exifInfo_.GeoLocation.LonComponents.direction << ")" << "\n"
+        << "GPS Altitude      : m" << exifInfo_.GeoLocation.Altitude << "\n";
       return os.str();
     }
 

@@ -132,11 +132,13 @@ void ColorizeTracks(
 /// Export camera poses positions as a Vec3 vector
 void GetCameraPositions(const SfM_Data & sfm_data, std::vector<Vec3> & vec_camPosition)
 {
-  const Poses & poses = sfm_data.GetPoses();
-  for (Poses::const_iterator iterPose = poses.begin();
-    iterPose != poses.end(); ++iterPose)
+  for (const auto & view : sfm_data.GetViews())
   {
-    vec_camPosition.push_back(iterPose->second.center());
+    if (sfm_data.IsPoseAndIntrinsicDefined(view.second.get()))
+    {
+      const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view.second.get());
+      vec_camPosition.push_back(pose.center());
+    }
   }
 }
 

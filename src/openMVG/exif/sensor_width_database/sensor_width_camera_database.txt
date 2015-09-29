@@ -1070,6 +1070,7 @@ GE;GE E1030;7.53
 GE;GE E1040;7.53
 GE;GE E1240;7.53
 GE;GE G 1;5.75
+GoPro;GoPro HERO4 Black;5.75
 HP;HP PW550;6.16
 HP;HP CW450;6.16
 HP;HP PW460t;6.16
@@ -2990,6 +2991,7 @@ Samsung;Samsung Digimax 330;7.53
 Samsung;Samsung Digimax 220 SE;5.33
 Samsung;Samsung Digimax 35 MP3;4.8
 Samsung;Samsung Digimax 210 SE;5.33
+Samsung;Samsung-SGH-I537;3.0
 Sanyo;Sanyo VPC E1500TP;6.08
 Sanyo;Sanyo VPC S1414;6.08
 Sanyo;Sanyo VPC T1495;6.08

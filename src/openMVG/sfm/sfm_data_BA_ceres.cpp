@@ -31,6 +31,9 @@ ceres::CostFunction * IntrinsicsToCostFunction(IntrinsicBase * intrinsic, const 
       return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3, 2, 6, 6, 3>(
         new ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3(observation.data()));
     break;
+    case PINHOLE_CAMERA_BROWN:
+      return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2, 2, 8, 6, 3>(
+        new ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2(observation.data()));
     default:
       return NULL;
   }
@@ -192,7 +195,7 @@ bool Bundle_Adjustment_Ceres::Adjust(
       itObs != obs.end(); ++itObs)
     {
       // Build the residual block corresponding to the track observation:
-      const View * view = sfm_data.views[itObs->first].get();
+      const View * view = sfm_data.views.at(itObs->first).get();
 
       // Each Residual block takes a point and a camera as input and outputs a 2
       // dimensional residual. Internally, the cost function stores the observed
@@ -249,31 +252,38 @@ bool Bundle_Adjustment_Ceres::Adjust(
         << " #residuals: " << summary.num_residuals << "\n"
         << " Initial RMSE: " << std::sqrt( summary.initial_cost / summary.num_residuals) << "\n"
         << " Final RMSE: " << std::sqrt( summary.final_cost / summary.num_residuals) << "\n"
+        << " Time (s): " << summary.total_time_in_seconds << "\n"
         << std::endl;
     }
 
     // Update camera poses with refined data
-    for (Poses::iterator itPose = sfm_data.poses.begin();
-      itPose != sfm_data.poses.end(); ++itPose)
+    if (bRefineRotations || bRefineTranslations)
     {
-      const IndexT indexPose = itPose->first;
+      for (Poses::iterator itPose = sfm_data.poses.begin();
+        itPose != sfm_data.poses.end(); ++itPose)
+      {
+        const IndexT indexPose = itPose->first;
 
-      Mat3 R_refined;
-      ceres::AngleAxisToRotationMatrix(&map_poses[indexPose][0], R_refined.data());
-      Vec3 t_refined(map_poses[indexPose][3], map_poses[indexPose][4], map_poses[indexPose][5]);
-      // Update the pose
-      Pose3 & pose = itPose->second;
-      pose = Pose3(R_refined, -R_refined.transpose() * t_refined);
+        Mat3 R_refined;
+        ceres::AngleAxisToRotationMatrix(&map_poses[indexPose][0], R_refined.data());
+        Vec3 t_refined(map_poses[indexPose][3], map_poses[indexPose][4], map_poses[indexPose][5]);
+        // Update the pose
+        Pose3 & pose = itPose->second;
+        pose = Pose3(R_refined, -R_refined.transpose() * t_refined);
+      }
     }
 
     // Update camera intrinsics with refined data
-    for (Intrinsics::iterator itIntrinsic = sfm_data.intrinsics.begin();
-      itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
+    if (bRefineIntrinsics)
     {
-      const IndexT indexCam = itIntrinsic->first;
+      for (Intrinsics::iterator itIntrinsic = sfm_data.intrinsics.begin();
+        itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
+      {
+        const IndexT indexCam = itIntrinsic->first;
 
-      const std::vector<double> & vec_params = map_intrinsics[indexCam];
-      itIntrinsic->second.get()->updateFromParams(vec_params);
+        const std::vector<double> & vec_params = map_intrinsics[indexCam];
+        itIntrinsic->second.get()->updateFromParams(vec_params);
+      }
     }
     return true;
   }

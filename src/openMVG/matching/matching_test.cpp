@@ -9,6 +9,7 @@
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/matching/matcher_brute_force.hpp"
 #include "openMVG/matching/matcher_kdtree_flann.hpp"
+#include "openMVG/matching/matcher_cascade_hashing.hpp"
 #include <iostream>
 using namespace std;
 
@@ -17,11 +18,11 @@ using namespace matching;
 
 TEST(Matching, ArrayMatcherBruteForce_Simple_Dim1)
 {
-  float array[] = {0, 1, 2, 3, 4};
+  const float array[] = {0, 1, 2, 3, 4};
   ArrayMatcherBruteForce<float> matcher;
   EXPECT_TRUE( matcher.Build(array, 5, 1) );
 
-  float query[] = {2};
+  const float query[] = {2};
   int nIndice = -1;
   float fDistance = -1.0f;
   EXPECT_TRUE( matcher.SearchNeighbour( query, &nIndice, &fDistance) );
@@ -32,13 +33,13 @@ TEST(Matching, ArrayMatcherBruteForce_Simple_Dim1)
 
 TEST(Matching, ArrayMatcherBruteForce_NN)
 {
-  float array[] = {0, 1, 2, 5, 6};
+  const float array[] = {0, 1, 2, 5, 6};
   // no 3, because it involve the same dist as 1,1
   ArrayMatcherBruteForce<float> matcher;
   EXPECT_TRUE( matcher.Build(array, 5, 1) );
 
-  float query[] = {2};
-  vector<int> vec_nIndice;
+  const float query[] = {2};
+  IndMatches vec_nIndice;
   vector<float> vec_fDistance;
   EXPECT_TRUE( matcher.SearchNeighbours(query,1, &vec_nIndice, &vec_fDistance, 5) );
 
@@ -53,23 +54,23 @@ TEST(Matching, ArrayMatcherBruteForce_NN)
   EXPECT_NEAR( vec_fDistance[4], Square(6.0f-2.0f), 1e-6);
 
   // Check indexes:
-  EXPECT_EQ(2, vec_nIndice[0]);
-  EXPECT_EQ(1, vec_nIndice[1]);
-  EXPECT_EQ(0, vec_nIndice[2]);
-  EXPECT_EQ(3, vec_nIndice[3]);
-  EXPECT_EQ(4, vec_nIndice[4]);
+  EXPECT_EQ(IndMatch(0,2), vec_nIndice[0]);
+  EXPECT_EQ(IndMatch(0,1), vec_nIndice[1]);
+  EXPECT_EQ(IndMatch(0,0), vec_nIndice[2]);
+  EXPECT_EQ(IndMatch(0,3), vec_nIndice[3]);
+  EXPECT_EQ(IndMatch(0,4), vec_nIndice[4]);
 }
 
 TEST(Matching, ArrayMatcherBruteForce_Simple_Dim4)
 {
-  float array[] = {
+  const float array[] = {
     0, 1, 2, 3,
     4, 5, 6, 7,
     8, 9, 10, 11};
   ArrayMatcherBruteForce<float> matcher;
   EXPECT_TRUE( matcher.Build(array, 3, 4) );
 
-  float query[] = {4, 5, 6, 7};
+  const float query[] = {4, 5, 6, 7};
   int nIndice = -1;
   float fDistance = -1.0f;
   EXPECT_TRUE( matcher.SearchNeighbour( query, &nIndice, &fDistance) );
@@ -80,16 +81,16 @@ TEST(Matching, ArrayMatcherBruteForce_Simple_Dim4)
 
 TEST(Matching, ArrayMatcher_Kdtree_Flann_Simple__NN)
 {
-  float array[] = {0, 1, 2, 5, 6};
+  const float array[] = {0, 1, 2, 5, 6};
   // no 3, because it involve the same dist as 1,1
 
   ArrayMatcher_Kdtree_Flann<float> matcher;
   EXPECT_TRUE( matcher.Build(array, 5, 1) );
 
-  float query[] = {2};
-  vector<int> vec_nIndice;
+  const float query[] = {2};
+  IndMatches vec_nIndice;
   vector<float> vec_fDistance;
-  int NN = 5;
+  const int NN = 5;
   EXPECT_TRUE( matcher.SearchNeighbours(query, 1, &vec_nIndice, &vec_fDistance, NN) );
 
   EXPECT_EQ( 5, vec_nIndice.size());
@@ -103,11 +104,11 @@ TEST(Matching, ArrayMatcher_Kdtree_Flann_Simple__NN)
   EXPECT_NEAR( vec_fDistance[4], Square(6.0f-2.0f), 1e-6);
 
   // Check indexes:
-  EXPECT_EQ(2, vec_nIndice[0]);
-  EXPECT_EQ(1, vec_nIndice[1]);
-  EXPECT_EQ(0, vec_nIndice[2]);
-  EXPECT_EQ(3, vec_nIndice[3]);
-  EXPECT_EQ(4, vec_nIndice[4]);
+  EXPECT_EQ(IndMatch(0,2), vec_nIndice[0]);
+  EXPECT_EQ(IndMatch(0,1), vec_nIndice[1]);
+  EXPECT_EQ(IndMatch(0,0), vec_nIndice[2]);
+  EXPECT_EQ(IndMatch(0,3), vec_nIndice[3]);
+  EXPECT_EQ(IndMatch(0,4), vec_nIndice[4]);
 }
 
 //-- Test LIMIT case (empty arrays)
@@ -127,6 +128,17 @@ TEST(Matching, ArrayMatcher_Kdtree_Flann_Simple_EmptyArrays)
 {
   std::vector<float> array;
   ArrayMatcher_Kdtree_Flann<float> matcher;
+  EXPECT_FALSE( matcher.Build(&array[0], 0, 4) );
+
+  int nIndice = -1;
+  float fDistance = -1.0f;
+  EXPECT_FALSE( matcher.SearchNeighbour( &array[0], &nIndice, &fDistance) );
+}
+
+TEST(Matching, Cascade_Hashing_Simple_EmptyArrays)
+{
+  std::vector<float> array;
+  ArrayMatcherCascadeHashing<float> matcher;
   EXPECT_FALSE( matcher.Build(&array[0], 0, 4) );
 
   int nIndice = -1;

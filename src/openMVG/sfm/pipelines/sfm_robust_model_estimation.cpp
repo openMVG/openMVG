@@ -11,11 +11,6 @@
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 
-#include "openMVG/multiview/solver_resection_kernel.hpp"
-#include "openMVG/multiview/solver_resection_p3p.hpp"
-#include "openMVG/multiview/solver_essential_kernel.hpp"
-#include "openMVG/multiview/projection.hpp"
-
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 
@@ -30,11 +25,9 @@ bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
   // Accumulator to find the best solution
   std::vector<size_t> f(4, 0);
 
-  std::vector<Mat3> Es; // Essential,
   std::vector<Mat3> Rs;  // Rotation matrix.
   std::vector<Vec3> ts;  // Translation matrix.
 
-  Es.push_back(E);
   // Recover best rotation and translation from E.
   MotionFromEssential(E, &Rs, &ts);
 
@@ -124,67 +117,6 @@ bool robustRelativePose(
   // Store [R|C] for the second camera, since the first camera is [Id|0]
   relativePose_info.relativePose = geometry::Pose3(R, -R.transpose() * t);
   return true;
-}
-
-struct ResectionSquaredResidualError {
-// Compute the residual of the projection distance(pt2D, Project(P,pt3D))
-// Return the squared error
-static double Error(const Mat34 & P, const Vec2 & pt2D, const Vec3 & pt3D){
-  Vec2 x = Project(P, pt3D);
-  return (x - pt2D).squaredNorm();
-}
-};
-
-bool robustResection(
-  const std::pair<size_t,size_t> & imageSize,
-  const Mat & pt2D,
-  const Mat & pt3D,
-  std::vector<size_t> * pvec_inliers,
-  const Mat3 * K,
-  Mat34 * P,
-  double * maxError,
-  const size_t max_iteration)
-{
-  double dPrecision = std::numeric_limits<double>::infinity();//Square(16.0);
-  size_t MINIMUM_SAMPLES = 0;
-  // Classic resection (P matrix is unknown)
-  if (K == NULL)
-  {
-    typedef openMVG::resection::kernel::SixPointResectionSolver SolverType;
-    MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
-
-    typedef ACKernelAdaptorResection<
-      SolverType, ResectionSquaredResidualError, UnnormalizerResection, Mat34>
-      KernelType;
-
-    KernelType kernel(pt2D, imageSize.first, imageSize.second, pt3D);
-    // Robustly estimation of the Projection matrix and it's precision
-    std::pair<double,double> ACRansacOut = ACRANSAC(kernel, *pvec_inliers,
-      max_iteration, P, dPrecision, true);
-    *maxError = ACRansacOut.first;
-  }
-  else // K calibration matrix is known
-  {
-    typedef openMVG::euclidean_resection::P3PSolver SolverType;
-    MINIMUM_SAMPLES = std::min(static_cast<size_t>(SolverType::MINIMUM_SAMPLES), size_t(6));
-
-    typedef ACKernelAdaptorResection_K<
-      SolverType, ResectionSquaredResidualError,
-      UnnormalizerResection, Mat34>  KernelType;
-
-    KernelType kernel(pt2D, pt3D, *K);
-    // Robustly estimation of the Projection matrix and it's precision
-    std::pair<double,double> ACRansacOut = ACRANSAC(kernel, *pvec_inliers,
-      max_iteration, P, dPrecision, true);
-    *maxError = ACRansacOut.first;
-  }
-
-  // Test if the mode support some points (more than those required for estimation)
-  if (pvec_inliers->size() > 2.5 * MINIMUM_SAMPLES)
-  {
-    return true;
-  }
-  return false;
 }
 
 } // namespace sfm
