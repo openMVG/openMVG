@@ -10,6 +10,7 @@
 #include <QDebug>
 
 #include <algorithm>
+#include <string>
 
 #include "GraphicsMainWindow.h"
 #include "document.hpp"
@@ -71,7 +72,7 @@ private:
     m_doc._sfm_data.control_points = Landmarks();
     doubleClickImageList();
   }
-  
+
   void help()
   {
      QMessageBox::about(this, tr("About"),
@@ -328,6 +329,7 @@ private:
         }
 
         // Display some statistics:
+        std::stringstream os;
         for (Landmarks::const_iterator iterL = m_doc._sfm_data.control_points.begin();
           iterL != m_doc._sfm_data.control_points.end(); ++iterL)
         {
@@ -336,12 +338,17 @@ private:
           if (vec_triangulation_errors.find(CPIndex) == vec_triangulation_errors.end())
             continue;
 
-          std::cout
+          os
             << "CP index: " << CPIndex << "\n"
             << "CP triangulation error: " << vec_triangulation_errors[CPIndex] << " pixel(s)\n"
             << "CP registration error: "
-            << (sim(vec_triangulated[CPIndex]) - vec_control_points[CPIndex]).norm() << " user unit(s)"<< std::endl;
+            << (sim(vec_triangulated[CPIndex]) - vec_control_points[CPIndex]).norm() << " user unit(s)"<< "\n\n";
         }
+        std::cout << os.str();
+
+        QMessageBox msgBox;
+        msgBox.setText(QString::fromStdString(string_pattern_replace(os.str(), "\n", "<br>")));
+        msgBox.exec();
       }
       else
       {
@@ -351,6 +358,22 @@ private:
       }
     }
   }
+
+  std::string string_pattern_replace
+  (
+    std::string subject,
+    const std::string& search,
+    const std::string& replace
+  )
+  {
+    size_t pos = 0;
+    while ((pos = subject.find(search, pos)) != std::string::npos)
+    {
+      subject.replace(pos, search.length(), replace);
+      pos += replace.length();
+    }
+    return subject;
+}
 
 public:
   MainWindow(QWidget * parent = 0)
