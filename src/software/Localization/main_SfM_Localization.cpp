@@ -5,10 +5,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <openMVG/sfm/sfm.hpp>
 #include <openMVG/features/features.hpp>
 #include <nonFree/sift/SIFT_describer.hpp>
 #include <openMVG/image/image.hpp>
-#include <openMVG/sfm/sfm.hpp>
+
 #include <openMVG/system/timer.hpp>
 
 using namespace openMVG;
