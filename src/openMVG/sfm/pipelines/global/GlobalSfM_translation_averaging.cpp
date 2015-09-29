@@ -358,10 +358,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
       // List matches that belong to the triplet of poses
       const graph::Triplet & triplet = vec_triplets[i];
       PairWiseMatches map_triplet_matches;
-      std::set<IndexT> set_pose_ids;
-      set_pose_ids.insert(triplet.i);
-      set_pose_ids.insert(triplet.j);
-      set_pose_ids.insert(triplet.k);
+      const std::set<IndexT> set_pose_ids = {triplet.i, triplet.j, triplet.k};
       // List shared correspondences (pairs) between the triplet poses
       for (const auto & match_iterator : matches_provider->_pairWise_matches)
       {

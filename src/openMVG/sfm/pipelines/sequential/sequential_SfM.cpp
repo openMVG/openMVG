@@ -967,7 +967,6 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
           if (_sfm_data.structure.count(trackId) != 0)
           {
             // 3D point triangulated before, only add image observation if needed
-
 #ifdef OPENMVG_USE_OPENMP
             #pragma omp critical
 #endif
