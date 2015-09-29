@@ -38,8 +38,8 @@ int main(int argc, char **argv)
   std::string sSfM_Data_Filename;
   std::string sMatchesDir;
   std::string sOutDir = "";
-  int iRotationAveragingMethod = 2;
-  int iTranslationAveragingMethod = 1;
+  int iRotationAveragingMethod = int (ROTATION_AVERAGING_L2);
+  int iTranslationAveragingMethod = int (TRANSLATION_AVERAGING_SOFTL1);
   bool bRefineIntrinsics = true;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -57,13 +57,17 @@ int main(int argc, char **argv)
     << "[-i|--input_file] path to a SfM_Data scene\n"
     << "[-m|--matchdir] path to the matches that corresponds to the provided SfM_Data scene\n"
     << "[-o|--outdir] path where the output data will be stored\n"
-    << "[-r|--rotationAveraging] 2(default L2) or 1 (L1)\n"
-    << "[-t|--translationAveraging] 1(default L1) or 2 (L2)\n"
-    << "[-f|--refineIntrinsics] \n"
+    << "\n[Optional]\n"
+    << "[-r|--rotationAveraging]\n"
+    << "\t 1 -> L1 minimization\n"
+    << "\t 2 -> L2 minimization (default)\n"
+    << "[-t|--translationAveraging]:\n"
+    << "\t 1 -> L1 minimization\n"
+    << "\t 2 -> L2 minimization of sum of squared Chordal distances\n"
+    << "\t 3 -> SoftL1 minimization (default)\n"
+    << "[-f|--refineIntrinsics]\n"
     << "\t 0-> intrinsic parameters are kept as constant\n"
     << "\t 1-> refine intrinsic parameters (default). \n"
-    << "\n"
-    << " ICCV 2013: => -r 2 -t 1"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -77,7 +81,7 @@ int main(int argc, char **argv)
   }
 
   if (iTranslationAveragingMethod < TRANSLATION_AVERAGING_L1 ||
-      iTranslationAveragingMethod > TRANSLATION_AVERAGING_L2 )  {
+      iTranslationAveragingMethod > TRANSLATION_AVERAGING_SOFTL1 )  {
     std::cerr << "\n Translation averaging method is invalid" << std::endl;
     return EXIT_FAILURE;
   }

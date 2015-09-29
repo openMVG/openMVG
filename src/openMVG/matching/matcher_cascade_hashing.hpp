@@ -58,7 +58,8 @@ class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
     // Init the cascade hasher (hashing projection matrices)
     cascade_hasher_.Init(dimension);
     // Index the input descriptors
-    hashed_base_ = cascade_hasher_.CreateHashedDescriptions(*memMapping);
+    hashed_base_ = cascade_hasher_.CreateHashedDescriptions(
+      *memMapping, CascadeHasher::GetZeroMeanDescriptor(*memMapping));
     return true;
   };
 
@@ -104,7 +105,6 @@ class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
     }
 
     if (NN > (*memMapping).rows() || nbQuery < 1) {
-      std::cerr << "Too much asked nearest neighbors" << std::endl;
       return false;
     }
 
@@ -115,8 +115,9 @@ class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
     pvec_indices->reserve(nbQuery * NN);
 
     // Index the query descriptors
-    const HashedDescriptions hashed_query = cascade_hasher_.CreateHashedDescriptions(mat_query);
-    // Match the query descriptors to the data'base'
+    const HashedDescriptions hashed_query = cascade_hasher_.CreateHashedDescriptions(
+      mat_query, CascadeHasher::GetZeroMeanDescriptor(mat_query));
+    // Match the query descriptors to the database
     cascade_hasher_.Match_HashedDescriptions(
       hashed_query, mat_query,
       hashed_base_, *memMapping,
