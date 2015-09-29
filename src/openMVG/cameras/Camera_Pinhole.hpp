@@ -10,6 +10,7 @@
 
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/geometry/pose3.hpp"
 
 #include <vector>
