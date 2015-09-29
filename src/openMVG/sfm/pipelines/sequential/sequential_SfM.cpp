@@ -113,27 +113,18 @@ bool SequentialSfMReconstructionEngine::Process() {
   if (!MakeInitialPair3D(initialPairIndex))
     return false;
 
-  size_t imageIndex = 0;
-  size_t resectionGroupIndex = 0;
   // Compute robust Resection of remaining images
   // - group of images will be selected and resection + scene completion will be tried
+  size_t resectionGroupIndex = 0;
   std::vector<size_t> vec_possible_resection_indexes;
   while (FindImagesWithPossibleResection(vec_possible_resection_indexes))
   {
-    // std::cout << "Resection group start " << resectionGroupIndex << " with " << vec_possible_resection_indexes.size() << " images.\n";
-
     bool bImageAdded = false;
     // Add images to the 3D reconstruction
     for (std::vector<size_t>::const_iterator iter = vec_possible_resection_indexes.begin();
       iter != vec_possible_resection_indexes.end(); ++iter)
     {
-      const size_t currentIndex = imageIndex;
-      ++imageIndex;
-      const bool bResect = Resection(*iter);
-      bImageAdded |= bResect;
-      if (!bResect) {
-        std::cerr << "\nResection of image: " << *iter << " was not possible" << std::endl;
-      }
+      bImageAdded |= Resection(*iter);
       _set_remainingViewId.erase(*iter);
     }
 
@@ -144,14 +135,10 @@ bool SequentialSfMReconstructionEngine::Process() {
       os << std::setw(8) << std::setfill('0') << resectionGroupIndex << "_Resection";
       Save(_sfm_data, stlplus::create_filespec(_sOutDirectory, os.str(), ".ply"), ESfM_Data(ALL));
 
-      // std::cout << "Global Bundle start, resection group index: " << resectionGroupIndex << ".\n";
-      int bundleAdjustmentIteration = 0;
       // Perform BA until all point are under the given precision
       do
       {
-        // std::cout << "Resection group index: " << resectionGroupIndex << ", bundle iteration: " << bundleAdjustmentIteration << "\n";
         BundleAdjustment();
-        ++bundleAdjustmentIteration;
       }
       while (badTrackRejector(4.0, 50) != 0);
     }
@@ -305,18 +292,18 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
   {
     // List of features matches for each couple of images
     const openMVG::matching::PairWiseMatches & map_Matches = _matches_provider->_pairWise_matches;
-    std::cout << std::endl << "Track building" << std::endl;
+    std::cout << "\n" << "Track building" << std::endl;
 
     tracksBuilder.Build(map_Matches);
-    std::cout << std::endl << "Track filtering" << std::endl;
+    std::cout << "\n" << "Track filtering" << std::endl;
     tracksBuilder.Filter();
-    std::cout << std::endl << "Track filtering : min occurence" << std::endl;
+    std::cout << "\n" << "Track filtering : min occurence" << std::endl;
     tracksBuilder.FilterPairWiseMinimumMatches(20);
-    std::cout << std::endl << "Track export to internal struct" << std::endl;
+    std::cout << "\n" << "Track export to internal struct" << std::endl;
     //-- Build tracks with STL compliant type :
     tracksBuilder.ExportToSTL(_map_tracks);
 
-    std::cout << std::endl << "Track stats" << std::endl;
+    std::cout << "\n" << "Track stats" << std::endl;
     {
       std::ostringstream osTrack;
       //-- Display stats :
@@ -766,17 +753,16 @@ struct sort_pair_second {
  * @param[out] vec_possible_indexes: list of indexes we can use for resectioning.
  * @return False if there is no possible resection.
  *
- * Sort the images by the number of features already reconstructed.
- * Instead of returning the best one, we select a group of images, we can use
- * to do the resectioning in one step, which means without global Bundle Adjustment.
- * So we return all the images with at least 75% of the number of matches
- * of the best image.
+ * Sort the images by the number of features id shared with the reconstruction.
+ * Select the image I that share the most of correspondences.
+ * Then keep all the images that have at least:
+ *  0.75 * #correspondences(I) common correspondences to the reconstruction.
  */
 bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
   std::vector<size_t> & vec_possible_indexes)
 {
   // Threshold used to select the best images
-  static const double dThresholdGroup = 0.75;
+  static const float dThresholdGroup = 0.75f;
 
   vec_possible_indexes.clear();
 
@@ -807,7 +793,7 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
       const std::set<size_t> set_viewId = {viewId};
       tracks::TracksUtilsMap::GetTracksInImages(set_viewId, _map_tracks, map_tracksCommon);
 
-      if (! map_tracksCommon.empty())
+      if (!map_tracksCommon.empty())
       {
         std::set<size_t> set_tracksIds;
         tracks::TracksUtilsMap::GetTracksIdVector(map_tracksCommon, &set_tracksIds);
@@ -830,22 +816,23 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
     }
   }
 
-  if (vec_putative.empty())
-    return false;
-
-  // Sort by the number of matches into the 3D scene.
+  // Sort by the number of matches to the 3D scene.
   std::sort(vec_putative.begin(), vec_putative.end(), sort_pair_second<size_t, size_t, std::greater<size_t> >());
 
-  // The number of matches of the best image.
-  const IndexT M = vec_putative[0].second;
+  // If the list is empty or if the list contains images with no correspdences
+  // -> (no resection will be possible)
+  if (vec_putative.empty() || vec_putative[0].second == 0)
+  {
+    // All remaining images cannot be used for pose estimation
+    _set_remainingViewId.clear();
+    return false;
+  }
+
+  // Add the image view index that share the most of 2D-3D correspondences
   vec_possible_indexes.push_back(vec_putative[0].first);
 
-  // TEMPORARY
-  // std::cout << std::endl << std::endl << "TEMPORARY return only the best image" << std::endl;
-  // return true;
-  // END TEMPORARY
-
-  // Return all the images that have at least N% of the number of matches of the best image.
+  // Then, add all the image view indexes that have at least N% of the number of the matches of the best image.
+  const IndexT M = vec_putative[0].second; // Number of 2D-3D correspondences
   const size_t threshold = static_cast<size_t>(dThresholdGroup * M);
   for (size_t i = 1; i < vec_putative.size() &&
     vec_putative[i].second > threshold; ++i)
@@ -875,8 +862,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
   // A. Compute 2D/3D matches
   // A1. list tracks ids used by the view
   openMVG::tracks::STLMAPTracks map_tracksCommon;
-  std::set<size_t> set_viewIndex;
-  set_viewIndex.insert(viewIndex);
+  const std::set<size_t> set_viewIndex = {viewIndex};
   TracksUtilsMap::GetTracksInImages(set_viewIndex, _map_tracks, map_tracksCommon);
   std::set<size_t> set_tracksIds;
   TracksUtilsMap::GetTracksIdVector(map_tracksCommon, &set_tracksIds);
@@ -1083,7 +1069,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
     const std::set<IndexT> valid_views = Get_Valid_Views(_sfm_data);
     const std::vector<IndexT> valid_views_vec(valid_views.begin(), valid_views.end());
 #ifdef OPENMVG_USE_OPENMP
-    #pragma omp parallel for schedule(dynamic) private(map_tracksCommon, set_viewIndex)
+    #pragma omp parallel for schedule(dynamic) private(map_tracksCommon)
 #endif
     for (int i=0; i < (int)valid_views_vec.size(); ++i)
     {
@@ -1097,8 +1083,8 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
       // Find matches between I and J
       // map_tracksCommon: All common tracks between I and J
       map_tracksCommon.clear();
-      set_viewIndex = {I,J};
-      TracksUtilsMap::GetTracksInImages(set_viewIndex, _map_tracks, map_tracksCommon);
+      const std::set<size_t> set_viewIndexIJ = {I,J};
+      TracksUtilsMap::GetTracksInImages(set_viewIndexIJ, _map_tracks, map_tracksCommon);
 
       if (map_tracksCommon.empty()) { continue; }
 
