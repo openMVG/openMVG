@@ -21,9 +21,6 @@ namespace openMVG {
 namespace matching {
 
 /**
- * 
- */
-/**
  * @brief Match two Regions according a chosen MatcherType using the ratio test
  * to assure the robustness of the matches.
  * It returns the matching features.
@@ -52,39 +49,34 @@ void DistanceRatioMatch
 class RegionsMatcher
 {
   public:
-    
-   /**
-    * @brief The destructor.
-    */ 
-   ~RegionsMatcher() {}
+  ~RegionsMatcher() {}
 
+  /**
+   * @brief Initialize the matcher by setting one region as a "database".
+   * 
+   * @param[in] regions The Regions to be used as reference when matching another Region.
+   */
+  virtual void Init_database
+  (
+    const features::Regions& regions
+  ) = 0;
 
-    /**
-     * @brief Initialize the matcher by setting one region as a "database".
-     * 
-     * @param[in] regions The Regions to be used as reference when matching another Region.
-     */
-    virtual void Init_database
-    (
-      const features::Regions& regions
-    ) = 0;
-
-    /**
-     * @brief Match a Regions to the internal database using the test ratio to improve
-     * the robustness of the match.
-     * 
-     * @param[in] f_dist_ratio The threshold for the ratio test.
-     * @param[in] query_regions The Regions to match.
-     * @param[out] vec_putative_matches It contains the indices of the matching features
-     * of the database and the query Regions.
-     * @return True if everything went well.
-     */
-    virtual bool Match
-    (
-      const float f_dist_ratio,
-      const features::Regions& query_regions,
-      matching::IndMatches & vec_putative_matches
-    ) =0;
+  /**
+   * @brief Match a Regions to the internal database using the test ratio to improve
+   * the robustness of the match.
+   * 
+   * @param[in] f_dist_ratio The threshold for the ratio test.
+   * @param[in] query_regions The Regions to match.
+   * @param[out] vec_putative_matches It contains the indices of the matching features
+   * of the database and the query Regions.
+   * @return True if everything went well.
+   */
+  virtual bool Match
+  (
+    const float f_dist_ratio,
+    const features::Regions& query_regions,
+    matching::IndMatches & vec_putative_matches
+  ) =0;
 };
 
 /**
@@ -95,46 +87,46 @@ class Matcher_Regions_Database
 {
   public:
 
-    /**
-     * @brief Empty constructor, by default it initializes the matcher to BRUTE_FORCE_L2
-     * and the database to an empty database.
-     */
-    Matcher_Regions_Database();
+  /**
+   * @brief Empty constructor, by default it initializes the matcher to BRUTE_FORCE_L2
+   * and the database to an empty database.
+   */
+  Matcher_Regions_Database();
 
-    /**
-     * @brief Initialize the internal database
-     * 
-     * @param[in] eMatcherType The type of matcher to use to match the Regions.
-     * @param[in] database_regions The Regions that will be used as database to 
-     * match other Regions (query).
-     */
-    Matcher_Regions_Database
-    (
-      matching::EMatcherType eMatcherType,
-      const features::Regions & database_regions // database
-    );
+  /**
+   * @brief Initialize the internal database
+   * 
+   * @param[in] eMatcherType The type of matcher to use to match the Regions.
+   * @param[in] database_regions The Regions that will be used as database to 
+   * match other Regions (query).
+   */
+  Matcher_Regions_Database
+  (
+    matching::EMatcherType eMatcherType,
+    const features::Regions & database_regions // database
+  );
 
-    /**
-     * @brief Find corresponding points between the query Regions and the database one
-     * 
-     * @param[in] dist_ratio The threshold for the ratio test.
-     * @param[in] query_regions The Regions to match.
-     * @param[out] matches It contains the indices of the matching features
-     * of the database and the query Regions.
-     * @return True if everything went well.
-     */
-    bool Match
-    (
-      float dist_ratio, 
-      const features::Regions & query_regions,
-      matching::IndMatches & matches 
-    )const;
+  /**
+   * @brief Find corresponding points between the query Regions and the database one
+   * 
+   * @param[in] dist_ratio The threshold for the ratio test.
+   * @param[in] query_regions The Regions to match.
+   * @param[out] matches It contains the indices of the matching features
+   * of the database and the query Regions.
+   * @return True if everything went well.
+   */
+  bool Match
+  (
+    float dist_ratio, // Distance ratio used to discard spurious correspondence
+    const features::Regions & query_regions,
+    matching::IndMatches & matches // photometric corresponding points
+  )const;
 
   private:
-    // Matcher Type
-    matching::EMatcherType _eMatcherType;
-    // The matching interface
-    std::unique_ptr<RegionsMatcher> _matching_interface;
+  // Matcher Type
+  matching::EMatcherType _eMatcherType;
+  // The matching interface
+  std::unique_ptr<RegionsMatcher> _matching_interface;
 };
 
 /**
@@ -143,12 +135,10 @@ class Matcher_Regions_Database
 template < class ArrayMatcherT >
 class RegionsMatcherT : public RegionsMatcher
 {
-  
 private:
-  ArrayMatcherT _matcher;
-  const features::Regions* _regions;
-  bool _b_squared_metric; // Store if the metric is squared or not
-  
+  ArrayMatcherT matcher_;
+  const features::Regions* regions_;
+  bool b_squared_metric_; // Store if the metric is squared or not
 public:
   typedef typename ArrayMatcherT::ScalarT Scalar;
   typedef typename ArrayMatcherT::DistanceType DistanceType;
@@ -156,7 +146,7 @@ public:
    /**
    * @brief Empty constructor, by default it initializes the database to an empty database.
    */
-  RegionsMatcherT() :_regions(nullptr) {}
+  RegionsMatcherT() :regions_(nullptr) {}
 
   /**
    * @brief Initialize the matcher with a Regions that will be used as database
@@ -166,31 +156,26 @@ public:
    * when matching two Regions.
    */
   RegionsMatcherT(const features::Regions& regions, bool b_squared_metric = false)
-    : _regions(&regions), _b_squared_metric(b_squared_metric)
+    : regions_(&regions), b_squared_metric_(b_squared_metric)
   {
-    if (_regions->RegionCount() == 0)
+    if (regions_->RegionCount() == 0)
       return;
 
-    const Scalar * tab = reinterpret_cast<const Scalar *>(_regions->DescriptorRawData());
-    _matcher.Build(tab, _regions->RegionCount(), _regions->DescriptorLength());
+    const Scalar * tab = reinterpret_cast<const Scalar *>(regions_->DescriptorRawData());
+    matcher_.Build(tab, regions_->RegionCount(), regions_->DescriptorLength());
   }
 
-  /**
-   * @brief Initialize the matcher with a Regions that will be used as database
-   * 
-   * @param regions The Regions to be used as database.
-   */
   void Init_database
   (
     const features::Regions& regions
   )
   {
-    _regions = &regions;
-    if (_regions->RegionCount() == 0)
+    regions_ = &regions;
+    if (regions_->RegionCount() == 0)
       return;
 
-    const Scalar * tab = reinterpret_cast<const Scalar *>(_regions->DescriptorRawData());
-    _matcher.Build(tab, _regions->RegionCount(), _regions->DescriptorLength());
+    const Scalar * tab = reinterpret_cast<const Scalar *>(regions_->DescriptorRawData());
+    matcher_.Build(tab, regions_->RegionCount(), regions_->DescriptorLength());
   }
 
   /**
@@ -205,20 +190,20 @@ public:
    */
   bool Match(
     const float f_dist_ratio,
-    const features::Regions& query_regions,
+    const features::Regions& queryregions_,
     matching::IndMatches & vec_putative_matches)
   {
-    if (_regions == nullptr)
+    if (regions_ == nullptr)
       return false;
 
-    const Scalar * queries = reinterpret_cast<const Scalar *>(query_regions.DescriptorRawData());
+    const Scalar * queries = reinterpret_cast<const Scalar *>(queryregions_.DescriptorRawData());
 
     const size_t NNN__ = 2;
     matching::IndMatches vec_nIndice;
     std::vector<DistanceType> vec_fDistance;
 
     // Search the 2 closest features neighbours for each query descriptor
-    if (!_matcher.SearchNeighbours(queries, query_regions.RegionCount(), &vec_nIndice, &vec_fDistance, NNN__))
+    if (!matcher_.SearchNeighbours(queries, queryregions_.RegionCount(), &vec_nIndice, &vec_fDistance, NNN__))
       return false;
 
     std::vector<int> vec_nn_ratio_idx;
@@ -231,7 +216,7 @@ public:
       vec_fDistance.end(),   // distance end
       NNN__, // Number of neighbor in iterator sequence (minimum required 2)
       vec_nn_ratio_idx, // output (indices that respect the distance Ratio)
-      _b_squared_metric ? Square(f_dist_ratio) : f_dist_ratio);
+      b_squared_metric_ ? Square(f_dist_ratio) : f_dist_ratio);
 
     vec_putative_matches.reserve(vec_nn_ratio_idx.size());
     for (size_t k=0; k < vec_nn_ratio_idx.size(); ++k)
@@ -245,7 +230,7 @@ public:
 
     // Remove matches that have the same (X,Y) coordinates
     matching::IndMatchDecorator<float> matchDeduplicator(vec_putative_matches,
-      _regions->GetRegionsPositions(), query_regions.GetRegionsPositions());
+      regions_->GetRegionsPositions(), queryregions_.GetRegionsPositions());
     matchDeduplicator.getDeduplicated(vec_putative_matches);
 
     return (!vec_putative_matches.empty());

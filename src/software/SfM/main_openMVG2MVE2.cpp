@@ -100,8 +100,6 @@ bool exportToMVE2Format(
       iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
       const View * view = iter->second.get();
-      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
-        continue;
 
       // Create current view subdirectory 'view_xxxx.mve'
       std::ostringstream padding;
@@ -111,102 +109,107 @@ bool exportToMVE2Format(
       {
         stlplus::folder_create(sOutViewIteratorDirectory);
       }
-      Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
 
       // We have a valid view with a corresponding camera & pose
       const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
       const std::string dstImage =
         stlplus::create_filespec(stlplus::folder_append_separator(sOutViewIteratorDirectory), "undistorted","png");
 
-      const IntrinsicBase * cam = iterIntrinsic->second.get();
-      if (cam->have_disto())
+      if (sfm_data.IsPoseAndIntrinsicDefined(view))
       {
-        // Undistort and save the image
-        ReadImage(srcImage.c_str(), &image);
-        UndistortImage(image, cam, image_ud, BLACK);
-        WriteImage(dstImage.c_str(), image_ud);
+        Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
+        const IntrinsicBase * cam = iterIntrinsic->second.get();
+        if (cam->have_disto())
+        {
+          // Undistort and save the image
+          ReadImage(srcImage.c_str(), &image);
+          UndistortImage(image, cam, image_ud, BLACK);
+          WriteImage(dstImage.c_str(), image_ud);
+        }
+        else // (no distortion)
+        {
+          // If extensions match, copy the PNG image
+          if (stlplus::extension_part(srcImage) == "PNG" ||
+            stlplus::extension_part(srcImage) == "png")
+          {
+            stlplus::file_copy(srcImage, dstImage);
+          }
+          else
+          {
+            ReadImage( srcImage.c_str(), &image);
+            WriteImage( dstImage.c_str(), image);
+          }
+        }
+
+        // Prepare to write an MVE 'meta.ini' file for the current view
+        const Pose3 pose = sfm_data.GetPoseOrDie(view);
+        const Pinhole_Intrinsic * pinhole_cam = static_cast<const Pinhole_Intrinsic *>(cam);
+
+        const Mat3 rotation = pose.rotation();
+        const Vec3 translation = pose.translation();
+        // Pixel aspect: assuming square pixels
+        const float pixelAspect = 1.f;
+        // Focal length and principal point must be normalized (0..1)
+        const float flen = pinhole_cam->focal() / static_cast<double>(std::max(cam->w(), cam->h()));
+        const float ppX = std::abs(pinhole_cam->principal_point()(0)/cam->w());
+        const float ppY = std::abs(pinhole_cam->principal_point()(1)/cam->h());
+
+        // For each camera, write to bundle:  focal length, radial distortion[0-1], rotation matrix[0-8], translation vector[0-2]
+        std::ostringstream fileOut;
+        fileOut
+          << "#MVE view meta data is stored in INI-file syntax." << fileOut.widen('\n')
+          << "#This file is generated, formatting will get lost." << fileOut.widen('\n')
+          << fileOut.widen('\n')
+          << "[camera]" << fileOut.widen('\n')
+          << "focal_length = " << flen << fileOut.widen('\n')
+          << "pixel_aspect = " << pixelAspect << fileOut.widen('\n')
+          << "principal_point = " << ppX << " " << ppY << fileOut.widen('\n')
+          << "rotation = " << rotation(0, 0) << " " << rotation(0, 1) << " " << rotation(0, 2) << " "
+          << rotation(1, 0) << " " << rotation(1, 1) << " " << rotation(1, 2) << " "
+          << rotation(2, 0) << " " << rotation(2, 1) << " " << rotation(2, 2) << fileOut.widen('\n')
+          << "translation = " << translation[0] << " " << translation[1] << " "
+          << translation[2] << " " << fileOut.widen('\n')
+          << "[view]" << fileOut.widen('\n')
+          << "id = " << view->id_view << fileOut.widen('\n')
+          << "name = " << srcImage.c_str() << fileOut.widen('\n');
+
+        // To do:  trim any extra separator(s) from openMVG name we receive, e.g.:
+        // '/home/insight/openMVG_KevinCain/openMVG_Build/software/SfM/ImageDataset_SceauxCastle/images//100_7100.JPG'
+        std::ofstream file(
+          stlplus::create_filespec(stlplus::folder_append_separator(sOutViewIteratorDirectory),
+          "meta","ini").c_str());
+        file << fileOut.str();
+        file.close();
+
+        out
+          << flen << " " << "0" << " " << "0" << "\n"  // Write '0' distortion values for pre-corrected images
+          << rotation(0, 0) << " " << rotation(0, 1) << " " << rotation(0, 2) << "\n"
+          << rotation(1, 0) << " " << rotation(1, 1) << " " << rotation(1, 2) << "\n"
+          << rotation(2, 0) << " " << rotation(2, 1) << " " << rotation(2, 2) << "\n"
+          << translation[0] << " " << translation[1] << " " << translation[2] << "\n";
       }
-      else // (no distortion)
+      else
       {
-        // If extensions match, copy the PNG image
-        if (stlplus::extension_part(srcImage) == "PNG" ||
-          stlplus::extension_part(srcImage) == "png")
-        {
-          stlplus::file_copy(srcImage, dstImage);
-        }
-        else
-        {
-          ReadImage( srcImage.c_str(), &image);
-          WriteImage( dstImage.c_str(), image);
-        }
+        // export a camera without pose & intrinsic info (export {0})
+        // see: https://github.com/simonfuhrmann/mve/blob/952a80b0be48e820b8c72de1d3df06efc3953bd3/libs/mve/bundle_io.cc#L448
+        for (int i = 0; i < 5 * 3; ++i)
+          out << "0" << (i % 3 == 2 ? "\n" : " ");
+        continue;
       }
-
-      // Prepare to write an MVE 'meta.ini' file for the current view
-      const Pose3 pose = sfm_data.GetPoseOrDie(view);
-      const Pinhole_Intrinsic * pinhole_cam = static_cast<const Pinhole_Intrinsic *>(cam);
-
-      const Mat3 rotation = pose.rotation();
-      const Vec3 translation = pose.translation();
-      // Pixel aspect: assuming square pixels
-      const float pixelAspect = 1.f;
-      // Focal length and principal point must be normalized (0..1)
-      const float flen = pinhole_cam->focal() / static_cast<double>(std::max(cam->w(), cam->h()));
-      const float ppX = std::abs(pinhole_cam->principal_point()(0)/cam->w());
-      const float ppY = std::abs(pinhole_cam->principal_point()(1)/cam->h());
-
-      std::ostringstream fileOut;
-      fileOut << "#MVE view meta data is stored in INI-file syntax." << fileOut.widen('\n')
-        << "#This file is generated, formatting will get lost." << fileOut.widen('\n')
-        << fileOut.widen('\n')
-        << "[camera]" << fileOut.widen('\n')
-        << "focal_length = " << flen << fileOut.widen('\n')
-        << "pixel_aspect = " << pixelAspect << fileOut.widen('\n')
-        << "principal_point = " << ppX << " " << ppY << fileOut.widen('\n')
-        << "rotation = " << rotation(0, 0) << " " << rotation(0, 1) << " " << rotation(0, 2) << " "
-        << rotation(1, 0) << " " << rotation(1, 1) << " " << rotation(1, 2) << " "
-        << rotation(2, 0) << " " << rotation(2, 1) << " " << rotation(2, 2) << fileOut.widen('\n')
-        << "translation = " << translation[0] << " " << translation[1] << " "
-        << translation[2] << " " << fileOut.widen('\n')
-        << "[view]" << fileOut.widen('\n')
-        << "id = " << view->id_view << fileOut.widen('\n')
-        << "name = " << srcImage.c_str() << fileOut.widen('\n');
-
-      // To do:  trim any extra separator(s) from openMVG name we receive, e.g.:
-      // '/home/insight/openMVG_KevinCain/openMVG_Build/software/SfM/ImageDataset_SceauxCastle/images//100_7100.JPG'
-      std::ofstream file(
-  	    stlplus::create_filespec(stlplus::folder_append_separator(sOutViewIteratorDirectory),
-	      "meta","ini").c_str());
-      file << fileOut.str();
-      file.close();
 
       // Save a thumbnail image "thumbnail.png", 50x50 pixels
       thumbnail = create_thumbnail(image, 50, 50);
       const std::string dstThumbnailImage =
         stlplus::create_filespec(stlplus::folder_append_separator(sOutViewIteratorDirectory), "thumbnail","png");
       WriteImage(dstThumbnailImage.c_str(), thumbnail);
-
-      // For each camera, write to bundle:  focal length, radial distortion[0-1], rotation matrix[0-8], translation vector[0-2]
-      // To do:  add more rigorous camera sanity checks, as per:
-      // https://github.com/simonfuhrmann/mve/blob/e3db7bc60ce93fe51702ba77ef480e151f927c23/libs/mve/bundle_io.cc
-      if (flen == 0.0f)
-      {
-        for (int i = 0; i < 5 * 3; ++i)
-          out << "0" << (i % 3 == 2 ? "\n" : " ");
-        continue;
-      }
-
-      out << flen << " " << "0" << " " << "0" << "\n"  // Write '0' distortion values for pre-corrected images
-        << rotation(0, 0) << " " << rotation(0, 1) << " " << rotation(0, 2) << "\n"
-        << rotation(1, 0) << " " << rotation(1, 1) << " " << rotation(1, 2) << "\n"
-        << rotation(2, 0) << " " << rotation(2, 1) << " " << rotation(2, 2) << "\n"
-        << translation[0] << " " << translation[1] << " " << translation[2] << "\n";
     }
 
     // For each feature, write to bundle:  position XYZ[0-3], color RGB[0-2], all ref.view_id & ref.feature_id
     // The following method is adapted from Simon Fuhrmann's MVE project:
     // https://github.com/simonfuhrmann/mve/blob/e3db7bc60ce93fe51702ba77ef480e151f927c23/libs/mve/bundle_io.cc
 
-    for (Landmarks::const_iterator iterLandmarks = landmarks.begin(); iterLandmarks != landmarks.end(); ++iterLandmarks)  {
+    for (Landmarks::const_iterator iterLandmarks = landmarks.begin(); iterLandmarks != landmarks.end(); ++iterLandmarks)
+    {
       const Vec3 exportPoint = iterLandmarks->second.X;
       out << exportPoint.x() << " " << exportPoint.y() << " " << exportPoint.z() << "\n";
       out << 250 << " " << 100 << " " << 150 << "\n";  // Write arbitrary RGB color, see above note
@@ -216,7 +219,8 @@ bool exportToMVE2Format(
       const size_t featureCount = std::distance(obs.begin(), obs.end());
       out << featureCount;
 
-      for (Observations::const_iterator itObs = obs.begin(); itObs != obs.end(); ++itObs)  {
+      for (Observations::const_iterator itObs = obs.begin(); itObs != obs.end(); ++itObs)
+      {
           const IndexT viewId = itObs->first;
           const IndexT featId = itObs->second.id_feat;
           out << " " << viewId << " " << featId << " 0";
@@ -228,7 +232,8 @@ bool exportToMVE2Format(
   return bOk;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 
   CmdLine cmd;
   std::string sSfM_Data_Filename;

@@ -156,35 +156,47 @@ public:
   }
 
   template <typename MatrixT>
-  HashedDescriptions CreateHashedDescriptions
+  static Eigen::VectorXf GetZeroMeanDescriptor
   (
     const MatrixT & descriptions
-  ) const
+  )
   {
-    // Steps:
-    //   1) Get zero mean descriptor.
-    //   2) Compute hash code and hash buckets.
-    //   3) Construct buckets.
-
-    HashedDescriptions hashed_descriptions;
-    if (descriptions.rows() == 0) {
-      return hashed_descriptions;
-    }
-    const typename MatrixT::Index nbDescriptions = descriptions.rows();
-
-    // Compute the ZeroMean descriptor (required for the hashing)
     Eigen::VectorXf zero_mean_descriptor;
+    if (descriptions.rows() == 0) {
+      return zero_mean_descriptor;
+    }
+    // Compute the ZeroMean descriptor
     zero_mean_descriptor.setZero(descriptions.cols());
+    const typename MatrixT::Index nbDescriptions = descriptions.rows();
     for (int i = 0; i < nbDescriptions; ++i)
     {
       for (int j = 0; j < descriptions.cols(); ++j)
         zero_mean_descriptor(j) += descriptions(i,j);
     }
-    zero_mean_descriptor /= static_cast<double>(nbDescriptions);
+    return zero_mean_descriptor / static_cast<double>(nbDescriptions);
+  }
+
+
+  template <typename MatrixT>
+  HashedDescriptions CreateHashedDescriptions
+  (
+    const MatrixT & descriptions,
+    const Eigen::VectorXf & zero_mean_descriptor
+  ) const
+  {
+    // Steps:
+    //   1) Compute hash code and hash buckets (based on the zero_mean_descriptor).
+    //   2) Construct buckets.
+
+    HashedDescriptions hashed_descriptions;
+    if (descriptions.rows() == 0) {
+      return hashed_descriptions;
+    }
 
     // Create hash codes for each description.
     {
       // Allocate space for hash codes.
+      const typename MatrixT::Index nbDescriptions = descriptions.rows();
       hashed_descriptions.hashed_desc.resize(nbDescriptions);
       Eigen::VectorXf descriptor(descriptions.cols());
       for (int i = 0; i < nbDescriptions; ++i)
@@ -255,7 +267,7 @@ public:
     const int NN = 2
   ) const
   {
-    typedef L2_Vectorized<unsigned char> MetricT;
+    typedef L2_Vectorized<typename MatrixT::Scalar> MetricT;
     MetricT metric;
 
     static const int kNumTopCandidates = 10;

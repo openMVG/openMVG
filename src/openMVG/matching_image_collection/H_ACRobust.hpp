@@ -26,7 +26,7 @@ struct GeometricFilter_HMatrix_AC
 {
   GeometricFilter_HMatrix_AC(
     double dPrecision = std::numeric_limits<double>::infinity(),
-    size_t iteration = 4096)
+    size_t iteration = 1024)
     : m_dPrecision(dPrecision), m_stIteration(iteration), m_H(Mat3::Identity()),
       m_dPrecision_robust(std::numeric_limits<double>::infinity()){};
 

@@ -138,6 +138,8 @@ To know more about each tool visit the following link and read the doc below:
    :maxdepth: 1
 
    ./SfM_OutputFormat.rst
+   ../MVS/MVS.rst
+
 
 PS: We strongly advise to use a 3 directories based data organisation structure
 
