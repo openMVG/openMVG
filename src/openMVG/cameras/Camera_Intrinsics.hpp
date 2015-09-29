@@ -29,6 +29,8 @@ struct IntrinsicBase
 
   unsigned int w() const {return _w;}
   unsigned int h() const {return _h;}
+  void setWidth(unsigned int w) { _w = w;}
+  void setHeight(unsigned int h) { _h = h;}
 
   /// Projection of a 3D point into the camera plane (Apply pose, disto (if any) and Intrinsics)
   Vec2 project(

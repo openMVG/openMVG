@@ -24,13 +24,9 @@ struct Match
   DocId id;
   float score;
 
-  Match()
-  {
-  }
+  Match() { }
 
-  Match(DocId _id, float _score) : id(_id), score(_score)
-  {
-  }
+  Match(DocId _id, float _score) : id(_id), score(_score) { }
 
   /// Allows sorting Matches in best-to-worst order with std::sort.
 
@@ -66,6 +62,15 @@ public:
    * \return An ID representing the inserted document.
    */
   DocId insert(const std::vector<Word>& document);
+
+  /**
+   * @brief Perform a sanity check of the database by querying each document
+   * of the database and finding its top N matches
+   * 
+   * @param[in] N The number of matches to return.
+   * @param[out] matches IDs and scores for the top N matching database documents.
+   */
+  void sanityCheck(size_t N, std::vector< std::vector<Match> >& matches) const;
 
   /**
    * @brief Find the top N matches in the database for the query document.
@@ -148,6 +153,7 @@ private:
   /// @todo Use sorted vector?
   // typedef std::vector< std::pair<Word, float> > DocumentVector;
   typedef std::map<Word, float> DocumentVector;
+  friend std::ostream& operator<<(std::ostream& os, const Database::DocumentVector &dv);	
 
   std::vector<InvertedFile> word_files_;
   std::vector<float> word_weights_;
@@ -163,10 +169,27 @@ private:
   void computeVector(const std::vector<Word>& document, DocumentVector& v) const;
 
   /**
+   * @brief Find the top N matches in the database for the query document.
+   *
+   * @param      query The query document, a normalized set of quantized words.
+   * @param      N        The number of matches to return.
+   * @param[out] matches  IDs and scores for the top N matching database documents.
+   */
+  void find(const DocumentVector& query, size_t N, std::vector<Match>& matches) const;
+
+  /**
    * Normalize a document vector representing the histogram of visual words for a given image
    * @param[in/out] v the unnormalized histogram of visual words
    */
   static void normalize(DocumentVector& v);
+
+  /**
+   * @brief compute the sparse distance L1 between two histograms
+   * 
+   * @param v1 The first sparse histogram
+   * @param v2 The second sparse histogram
+   * @return the distance of the two histograms in norm L1
+   */
   static float sparseDistance(const DocumentVector& v1, const DocumentVector& v2);
 };
 

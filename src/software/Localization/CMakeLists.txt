@@ -1,10 +1,17 @@
-IF(OpenMVG_USE_BOOST)
+IF(OpenMVG_BUILD_VOCTREE)
 ###
-# Create the vocabulary tree
+# Test the localization script
 ###
 ADD_EXECUTABLE(openMVG_main_localization main_localization.cpp)
 INSTALL(TARGETS openMVG_main_localization DESTINATION bin/)
 TARGET_LINK_LIBRARIES(openMVG_main_localization openMVG_localization openMVG_image openMVG_features vlsift ${BOOST_LIBRARIES})
+
+###
+# Test the localization class
+###
+ADD_EXECUTABLE(openMVG_main_voctreLocalizer main_voctreeLocalizer.cpp)
+INSTALL(TARGETS openMVG_main_voctreLocalizer DESTINATION bin/)
+TARGET_LINK_LIBRARIES(openMVG_main_voctreLocalizer openMVG_localization openMVG_image openMVG_features vlsift ${BOOST_LIBRARIES})
 
 ###
 # Create the vocabulary tree
@@ -29,7 +36,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_generatePairList openMVG_voctree ${BOOST_LIBR
 #SET_PROPERTY(TARGET openMVG_main_generatePairList PROPERTY FOLDER OpenMVG/software)
 #INSTALL(TARGETS openMVG_main_generatePairList DESTINATION bin/)
 
-ENDIF(OpenMVG_USE_BOOST)
+ENDIF(OpenMVG_BUILD_VOCTREE)
 
 ###
 # Localize images in an existing SfM reconstruction

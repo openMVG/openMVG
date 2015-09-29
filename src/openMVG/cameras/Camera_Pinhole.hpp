@@ -10,6 +10,7 @@
 
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/geometry/pose3.hpp"
 
 #include <vector>
@@ -50,6 +51,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
 
   const Mat3& K() const { return _K; }
   const Mat3& Kinv() const { return _Kinv; }
+  void setK(const Mat3 &K) { _K = K;} 
   /// Return the value of the focal in pixels
   inline double focal() const {return _K(0,0);}
   inline Vec2 principal_point() const {return Vec2(_K(0,2), _K(1,2));}

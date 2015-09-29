@@ -1,6 +1,7 @@
 #include "database.hpp"
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/tail.hpp>
+#include <boost/progress.hpp>
 #include <cmath>
 #include <fstream>
 #include <stdexcept>
@@ -9,11 +10,19 @@
 namespace openMVG{
 namespace voctree{
 
+std::ostream& operator<<(std::ostream& os, const Database::DocumentVector &dv)	
+{
+	for( const auto &e : dv )
+	{
+		os << e.first << ", " << e.second << "; ";
+	}
+	os << "\n";
+	return os;
+}
+
 Database::Database(uint32_t num_words)
 : word_files_(num_words),
-word_weights_(num_words, 1.0f)
-{
-}
+word_weights_( num_words, 1.0f ) { }
 
 DocId Database::insert(const std::vector<Word>& document)
 {
@@ -38,6 +47,38 @@ DocId Database::insert(const std::vector<Word>& document)
   return doc_id;
 }
 
+void Database::sanityCheck(size_t N, std::vector< std::vector<Match> >& matches) const
+{
+  // if N is equal to zero
+  if(N == 0)
+  {
+    // retrieve all the matchings
+    N = this->size();
+  }
+  else
+  {
+    // otherwise always take the min between N and the number of documents
+    // in the database
+    N = std::min(N, this->size());
+  }
+
+  matches.clear();
+  // since we already know the size of the vectors, in order to parallelize the 
+  // query allocate the whole memory
+  matches = std::vector< std::vector<Match> >(this->size(), std::vector<Match>(N));
+  boost::progress_display display(database_vectors_.size());
+  
+  #pragma omp parallel for
+  for(DocId i = 0; i < (DocId) database_vectors_.size(); ++i)
+  {
+    std::vector<Match> m;
+    find(database_vectors_[i], N, m);
+    //		matches.emplace_back( m );
+    matches[i] = m;
+    ++display;
+  }
+}
+
 /**
  * @brief Find the top N matches in the database for the query document.
  *
@@ -52,6 +93,18 @@ void Database::find(const std::vector<Word>& document, size_t N, std::vector<Mat
   // generate the (sparse) histogram of the visual words 
   computeVector(document, query);
 
+	find( query, N, matches );
+}
+
+/**
+ * @brief Find the top N matches in the database for the query document.
+ *
+ * @param      query The query document, a normalized set of quantized words.
+ * @param      N        The number of matches to return.
+ * @param[out] matches  IDs and scores for the top N matching database documents.
+ */
+void Database::find( const DocumentVector& query, size_t N, std::vector<Match>& matches ) const
+{
   // Accumulate the best N matches
   using namespace boost::accumulators;
   typedef tag::tail<left> bestN_tag;

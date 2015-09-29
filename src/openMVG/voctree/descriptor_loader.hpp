@@ -177,7 +177,7 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
     }
   }
   BOOST_ASSERT(bytesPerElement > 0);
-  cout << "Found" << numDescriptors << " descriptors overall, allocating memory..." << endl;
+  cout << "Found " << numDescriptors << " descriptors overall, allocating memory..." << endl;
 
   // Allocate the memory
   descriptors.reserve(numDescriptors);

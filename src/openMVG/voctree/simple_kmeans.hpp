@@ -94,7 +94,7 @@ struct InitKmeanspp
       currSum += *dstiter;
     }
 
-    // iterate k times
+    // iterate k-1 times
     for(int i = 1; i < k; ++i)
     {
       if(verbose > 1) std::cout << "#\t\t\tFinding initial center " << i + 1 << std::endl;
@@ -112,14 +112,23 @@ struct InitKmeanspp
         // 0 and this sum, then start compute the sum from the first element again
         // until the partial sum is greater than the number drawn: the
         // the previous element is what we are looking for
-        squared_distance_type partial = currSum * rand() / RAND_MAX;
-
+        const float perc = (float)rand() / RAND_MAX;
+        squared_distance_type partial = (squared_distance_type)(currSum * perc);
         // look for the element that cap the partial sum that has been
         // drawn
         dstiter = dists.begin();
-        while(partial > 0)
+        while((partial > 0) and (dstiter != dists.end()))
         {
-          partial -= *dstiter;
+          assert(dstiter != dists.end());
+          // safeguard against unsigned types that do not allow negative numbers
+          if(partial > *dstiter)
+          {
+            partial -= *dstiter;
+          }
+          else
+          {
+            partial = 0;
+          }
           ++dstiter;
         }
 
@@ -134,7 +143,7 @@ struct InitKmeanspp
         squared_distance_type distSum = 0;
 
         Feature newCenter = *features[ featidx ];
-#pragma omp parallel for reduction(+:distSum)
+        #pragma omp parallel for reduction(+:distSum)
         for(size_t it = 0; it < features.size(); ++it)
         {
           distsTemp[it] = std::min(distance(*(features[it]), newCenter), dists[it]);
@@ -422,7 +431,7 @@ SimpleKmeans<Feature, Distance, FeatureAllocator>::clusterOnce(const std::vector
 
 
     // Assign data objects to current centers
-#pragma omp parallel for shared( new_centers, new_center_counts, features, centers, membership)
+    #pragma omp parallel for shared( new_centers, new_center_counts, features, centers, membership)
     for(size_t i = 0; i < features.size(); ++i)
     {
       //printf("\tLOLkf%lu/%lu\n", i, features.size());
@@ -458,7 +467,7 @@ SimpleKmeans<Feature, Distance, FeatureAllocator>::clusterOnce(const std::vector
       // Accumulate the cluster center and its membership count
       //	  printf("\t nearest %d\n", nearest);
       //			checkElements(*features[i], "feat");
-#pragma omp critical
+      #pragma omp critical
       {
         new_centers[nearest] += *features[i];
         //			checkElements(new_centers[nearest], "sum");
@@ -487,9 +496,7 @@ SimpleKmeans<Feature, Distance, FeatureAllocator>::clusterOnce(const std::vector
         max_center_shift = std::max(max_center_shift, shift);
 
         centers[i] = new_centers[i];
-
         //					centers[i] = new_centers[i] / new_center_counts[i];
-
         //		checkElements(new_centers[i], "aft");
         //		PrintFeat(centers[i] );
       }
