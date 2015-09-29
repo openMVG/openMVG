@@ -7,6 +7,7 @@
 #include <openMVG/localization/localization.hpp>
 #include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 #include <openMVG/image/image_io.hpp>
+#include <openMVG/voctree/FeedProvider.hpp>
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
@@ -92,27 +93,32 @@ int main(int argc, char** argv)
     return EXIT_FAILURE;
   }
   
-  // load the image
-  POPART_COUT("Load the query image");
-  // load the query image
-  image::Image<unsigned char> imageGray;
-  if(!image::ReadImage(mediaFilepath.c_str(), &imageGray))
-    throw std::runtime_error("Unable to read the media file.");
-  POPART_COUT("Image size: " << imageGray.Width() << "x" << imageGray.Height());
+  // create the feedProvider
+  dataio::FeedProvider feed(mediaFilepath, calibFile);
+  if(!feed.isInit())
+  {
+    POPART_CERR("ERROR while initializing the FeedProvider!");
+    return EXIT_FAILURE;
+  }
   
-  // localize
-  // @fixme load intrinsics
+  image::Image<unsigned char> imageGray;
   cameras::Pinhole_Intrinsic_Radial_K3 queryIntrinsics;
+  bool hasIntrinsics = false;
   geometry::Pose3 cameraPose;
-  sfm::Image_Localizer_Match_Data matchData;
-  localizer.Localize(imageGray, 
-                     queryIntrinsics, 
-                     numResults, 
-                     cameraPose, 
-                     false/*useGuidedMatching*/, 
-                     false/*useInputIntrinsics*/, 
-                     true/*refineIntrinsics*/, 
-                     &matchData);
-  // save data
+  
+  while(feed.next(imageGray, queryIntrinsics, hasIntrinsics))
+  {
+  
+    sfm::Image_Localizer_Match_Data matchData;
+    localizer.Localize(imageGray, 
+                       queryIntrinsics, 
+                       numResults, 
+                       cameraPose, 
+                       false/*useGuidedMatching*/, 
+                       hasIntrinsics/*useInputIntrinsics*/, 
+                       true/*refineIntrinsics*/, 
+                       &matchData);
+    // save data
+  }
   
 }
