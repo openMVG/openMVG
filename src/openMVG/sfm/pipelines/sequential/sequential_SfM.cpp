@@ -928,121 +928,126 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
   {
     // For all reconstructed images look for common content in the tracks.
     const std::set<IndexT> valid_views = Get_Valid_Views(_sfm_data);
-    const std::vector<IndexT> valid_views_vec(valid_views.begin(), valid_views.end());
 #ifdef OPENMVG_USE_OPENMP
-    #pragma omp parallel for schedule(dynamic) private(map_tracksCommon, set_viewIndex)
+    #pragma omp parallel
 #endif
-    for (int i=0; i < (int)valid_views_vec.size(); ++i)
+    for (const IndexT & indexI : valid_views)
     {
-      const size_t indexI = valid_views_vec[i];
-      // Ignore the current view
-      if (indexI == viewIndex) {  continue; }
-
-      const size_t I = std::min(viewIndex, indexI);
-      const size_t J = std::max(viewIndex, indexI);
-
-      // Find matches between I and J
-      // map_tracksCommon: All common tracks between I and J
-      map_tracksCommon.clear();
-      set_viewIndex = {I,J};
-      TracksUtilsMap::GetTracksInImages(set_viewIndex, _map_tracks, map_tracksCommon);
-
-      if (map_tracksCommon.empty()) { continue; }
-
-      const View * view_I = _sfm_data.GetViews().at(I).get();
-      const View * view_J = _sfm_data.GetViews().at(J).get();
-      const IntrinsicBase * cam_I = _sfm_data.GetIntrinsics().at(view_I->id_intrinsic).get();
-      const IntrinsicBase * cam_J = _sfm_data.GetIntrinsics().at(view_J->id_intrinsic).get();
-      const Pose3 pose_I = _sfm_data.GetPoseOrDie(view_I);
-      const Pose3 pose_J = _sfm_data.GetPoseOrDie(view_J);
-
-      size_t new_putative_track = 0, new_added_track = 0, extented_track = 0;
-      for (const std::pair< size_t, tracks::submapTrack >& trackIt : map_tracksCommon)
+#ifdef OPENMVG_USE_OPENMP
+      #pragma omp single nowait
+#endif
       {
-        const size_t trackId = trackIt.first;
-        const tracks::submapTrack & track = trackIt.second;
+        // Ignore the current view
+        if (indexI == viewIndex) {  continue; }
 
-        const Vec2 xI = _features_provider->feats_per_view.at(I)[track.at(I)].coords().cast<double>();
-        const Vec2 xJ = _features_provider->feats_per_view.at(J)[track.at(J)].coords().cast<double>();
+        const size_t I = std::min((IndexT)viewIndex, indexI);
+        const size_t J = std::max((IndexT)viewIndex, indexI);
 
-        // test if the track already exists in 3D
-        if (_sfm_data.structure.count(trackId) != 0)
+        // Find track correspondences between I and J
+        const std::set<size_t> set_viewIndex = { I,J };
+        openMVG::tracks::STLMAPTracks map_tracksCommonIJ;
+        TracksUtilsMap::GetTracksInImages(set_viewIndex, _map_tracks, map_tracksCommonIJ);
+
+        if (map_tracksCommonIJ.empty()) { continue; }
+
+        const View * view_I = _sfm_data.GetViews().at(I).get();
+        const View * view_J = _sfm_data.GetViews().at(J).get();
+        const IntrinsicBase * cam_I = _sfm_data.GetIntrinsics().at(view_I->id_intrinsic).get();
+        const IntrinsicBase * cam_J = _sfm_data.GetIntrinsics().at(view_J->id_intrinsic).get();
+        const Pose3 pose_I = _sfm_data.GetPoseOrDie(view_I);
+        const Pose3 pose_J = _sfm_data.GetPoseOrDie(view_J);
+
+        size_t new_putative_track = 0, new_added_track = 0, extented_track = 0;
+        for (const std::pair< size_t, tracks::submapTrack >& trackIt : map_tracksCommonIJ)
         {
-          // 3D point triangulated before, only add image observation if needed
-#ifdef OPENMVG_USE_OPENMP
-          #pragma omp critical
-#endif
+          const size_t trackId = trackIt.first;
+          const tracks::submapTrack & track = trackIt.second;
+
+          const Vec2 xI = _features_provider->feats_per_view.at(I)[track.at(I)].coords().cast<double>();
+          const Vec2 xJ = _features_provider->feats_per_view.at(J)[track.at(J)].coords().cast<double>();
+
+          // test if the track already exists in 3D
+          if (_sfm_data.structure.count(trackId) != 0)
           {
-            Landmark & landmark = _sfm_data.structure[trackId];
-            if (landmark.obs.count(I)==0)
-            {
-              const Vec2 residual = cam_I->residual(pose_I, landmark.X, xI);
-              if (pose_I.depth(landmark.X) > 0 && residual.norm() < std::max(4.0, _map_ACThreshold.at(I)))
-              {
-                landmark.obs[I] = Observation(xI, track.at(I));
-                ++extented_track;
-              }
-            }
-            if (landmark.obs.count(J)==0)
-            {
-              const Vec2 residual = cam_J->residual(pose_J, landmark.X, xJ);
-              if (pose_J.depth(landmark.X) > 0 && residual.norm() < std::max(4.0, _map_ACThreshold.at(J)))
-              {
-                landmark.obs[J] = Observation(xJ, track.at(J));
-                ++extented_track;
-              }
-            }
-          }
-        }
-        else
-        {
-          // A new 3D point must be added
-#ifdef OPENMVG_USE_OPENMP
-          #pragma omp critical
-#endif
-          ++new_putative_track;
-          Vec3 X_euclidean = Vec3::Zero();
-          const Vec2 xI_ud = cam_I->get_ud_pixel(xI);
-          const Vec2 xJ_ud = cam_J->get_ud_pixel(xJ);
-          const Mat34 P_I = cam_I->get_projective_equivalent(pose_I);
-          const Mat34 P_J = cam_J->get_projective_equivalent(pose_J);
-          TriangulateDLT(P_I, xI_ud, P_J, xJ_ud, &X_euclidean);
-          // Check triangulation results
-          //  - Check angle (small angle leads imprecise triangulation)
-          //  - Check positive depth
-          //  - Check residual values
-          const double angle = AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, xI, xJ);
-          const Vec2 residual_I = cam_I->residual(pose_I, X_euclidean, xI);
-          const Vec2 residual_J = cam_J->residual(pose_J, X_euclidean, xJ);
-          if ( angle > 2.0 &&
-               pose_I.depth(X_euclidean) > 0 &&
-               pose_J.depth(X_euclidean) > 0 &&
-               residual_I.norm() < std::max(4.0, _map_ACThreshold.at(I)) &&
-               residual_J.norm() < std::max(4.0, _map_ACThreshold.at(J)))
-          {
+            // 3D point triangulated before, only add image observation if needed
+
 #ifdef OPENMVG_USE_OPENMP
             #pragma omp critical
 #endif
             {
-              // Add a new track
               Landmark & landmark = _sfm_data.structure[trackId];
-              landmark.X = X_euclidean;
-              landmark.obs[I] = Observation(xI, track.at(I));
-              landmark.obs[J] = Observation(xJ, track.at(J));
-              ++new_added_track;
+              if (landmark.obs.count(I) == 0)
+              {
+                const Vec2 residual = cam_I->residual(pose_I, landmark.X, xI);
+                if (pose_I.depth(landmark.X) > 0 && residual.norm() < std::max(4.0, _map_ACThreshold.at(I)))
+                {
+                  landmark.obs[I] = Observation(xI, track.at(I));
+                  ++extented_track;
+                }
+              }
+              if (landmark.obs.count(J) == 0)
+              {
+                const Vec2 residual = cam_J->residual(pose_J, landmark.X, xJ);
+                if (pose_J.depth(landmark.X) > 0 && residual.norm() < std::max(4.0, _map_ACThreshold.at(J)))
+                {
+                  landmark.obs[J] = Observation(xJ, track.at(J));
+                  ++extented_track;
+                }
+              }
             }
           }
-        }
-      }
+          else
+          {
+            // A new 3D point must be added
 #ifdef OPENMVG_USE_OPENMP
             #pragma omp critical
 #endif
-      {
-        std::cout
-          << "\n--Triangulated 3D points [" << I << "-" << J <<"]:"
-          << "\n\t#Track extented: " << extented_track
-          << "\n\t#Validated/#Possible: " << new_added_track << "/" << new_putative_track
-          << "\n\t#3DPoint for the entire scene: " << _sfm_data.GetLandmarks().size() << std::endl;
+            {
+              ++new_putative_track;
+            }
+            Vec3 X_euclidean = Vec3::Zero();
+            const Vec2 xI_ud = cam_I->get_ud_pixel(xI);
+            const Vec2 xJ_ud = cam_J->get_ud_pixel(xJ);
+            const Mat34 P_I = cam_I->get_projective_equivalent(pose_I);
+            const Mat34 P_J = cam_J->get_projective_equivalent(pose_J);
+            TriangulateDLT(P_I, xI_ud, P_J, xJ_ud, &X_euclidean);
+            // Check triangulation results
+            //  - Check angle (small angle leads imprecise triangulation)
+            //  - Check positive depth
+            //  - Check residual values
+            const double angle = AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, xI, xJ);
+            const Vec2 residual_I = cam_I->residual(pose_I, X_euclidean, xI);
+            const Vec2 residual_J = cam_J->residual(pose_J, X_euclidean, xJ);
+            if (angle > 2.0 &&
+              pose_I.depth(X_euclidean) > 0 &&
+              pose_J.depth(X_euclidean) > 0 &&
+              residual_I.norm() < std::max(4.0, _map_ACThreshold.at(I)) &&
+              residual_J.norm() < std::max(4.0, _map_ACThreshold.at(J)))
+            {
+#ifdef OPENMVG_USE_OPENMP
+              #pragma omp critical
+#endif
+              {
+                // Add a new track
+                Landmark & landmark = _sfm_data.structure[trackId];
+                landmark.X = X_euclidean;
+                landmark.obs[I] = Observation(xI, track.at(I));
+                landmark.obs[J] = Observation(xJ, track.at(J));
+                ++new_added_track;
+              } // critical
+            } // 3D point is valid
+          } // else (New 3D point)
+        }// For all correspondences
+#ifdef OPENMVG_USE_OPENMP
+        #pragma omp critical
+#endif
+        {
+          std::cout
+            << "\n--Triangulated 3D points [" << I << "-" << J << "]:"
+            << "\n\t#Track extented: " << extented_track
+            << "\n\t#Validated/#Possible: " << new_added_track << "/" << new_putative_track
+            << "\n\t#3DPoint for the entire scene: " << _sfm_data.GetLandmarks().size() << std::endl;
+        }
       }
     }
   }
