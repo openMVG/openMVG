@@ -24,6 +24,18 @@ OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG samples applications." ON)
 OPTION(OpenMVG_BUILD_OPENGL_EXAMPLES "Build OpenMVG openGL examples" OFF)
 OPTION(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
+# ==============================================================================
+# Opencv is not used by openMVG but some samples show how to use openCV
+#  and openMVG simultaneously
+# ==============================================================================
+OPTION(OpenMVG_USE_OPENCV "Build or not opencv+openMVG samples programs" OFF)
+
+# ==============================================================================
+# Since OpenCV 3, SIFT is no longer in the default modules. See
+# https://github.com/itseez/opencv_contrib for more informations.
+# Enable this to be able to use OpenCV SIFT in main_ComputeFeatures_OpenCV.
+# ==============================================================================
+OPTION(OpenMVG_USE_OCVSIFT "Add or not OpenCV SIFT in available features" OFF)
 
 SET(OPENMVG_VERSION_MAJOR 0)
 SET(OPENMVG_VERSION_MINOR 8)
@@ -188,19 +200,6 @@ INSTALL(
 # ==============================================================================
 
 # ==============================================================================
-# Opencv is not used by openMVG but some samples show how to use openCV
-#  and openMVG simultaneously
-# ==============================================================================
-OPTION(OpenMVG_USE_OPENCV "Build or not opencv+openMVG samples programs" OFF)
-
-# ==============================================================================
-# Since OpenCV 3, SIFT is no longer in the default modules. See
-# https://github.com/itseez/opencv_contrib for more informations.
-# Enable this to be able to use OpenCV SIFT in main_ComputeFeatures_OpenCV.
-# ==============================================================================
-OPTION(OpenMVG_USE_OCVSIFT "Add or not OpenCV SIFT in available features" OFF)
-
-# ==============================================================================
 # Enable cmake UNIT TEST framework
 # ==============================================================================
 IF(OpenMVG_BUILD_TESTS)
@@ -351,6 +350,24 @@ IF(NOT LEMON_FOUND OR OpenMVG_USE_INTERNAL_LEMON)
   SET(LEMON_LIBRARY lemon)
 ENDIF()
 
+# ==============================================================================
+# OpenCV
+# ==============================================================================
+# - only external and enabled only if OpenMVG_USE_OPENCV is set to ON
+# ==============================================================================
+IF(OpenMVG_USE_OPENCV)
+  FIND_PACKAGE( OpenCV )
+  IF(NOT OpenCV_FOUND)
+    MESSAGE(STATUS "OpenCV was not found. Disabling OpenCV support.")
+    UPDATE_CACHE_VARIABLE(OpenMVG_USE_OPENCV OFF)
+    UPDATE_CACHE_VARIABLE(OpenMVG_USE_OCVSIFT OFF)
+  ELSE(NOT OpenCV_FOUND)
+    INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
+    IF(OpenMVG_USE_OCVSIFT)
+      ADD_DEFINITIONS(-DUSE_OCVSIFT)
+    ENDIF(OpenMVG_USE_OCVSIFT)
+  ENDIF(NOT OpenCV_FOUND)
+ENDIF(OpenMVG_USE_OPENCV)
 
 
 # ==============================================================================
