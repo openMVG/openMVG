@@ -203,12 +203,12 @@ OPTION(OpenMVG_USE_OCVSIFT "Add or not OpenCV SIFT in available features" OFF)
 # ==============================================================================
 # Enable cmake UNIT TEST framework
 # ==============================================================================
-IF (OpenMVG_BUILD_TESTS)
+IF(OpenMVG_BUILD_TESTS)
   ENABLE_TESTING()
-ENDIF (OpenMVG_BUILD_TESTS)
+ENDIF(OpenMVG_BUILD_TESTS)
 # MACRO to ease UnitTesting
-MACRO (UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
-  IF (OpenMVG_BUILD_TESTS)
+MACRO(UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
+  IF(OpenMVG_BUILD_TESTS)
     ADD_EXECUTABLE(${NAMESPACE}_test_${NAME} ${NAME}_test.cpp)
 
     SET_PROPERTY(TARGET ${NAMESPACE}_test_${NAME} PROPERTY FOLDER OpenMVG/test)
@@ -218,8 +218,8 @@ MACRO (UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
                           CppUnitLite ${OPENMVG_LIBRARY_DEPENDENCIES})
     ADD_TEST(NAME ${NAMESPACE}_test_${NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
              COMMAND $<TARGET_FILE:${NAMESPACE}_test_${NAME}>)
-  ENDIF (OpenMVG_BUILD_TESTS)
-ENDMACRO (UNIT_TEST)
+  ENDIF(OpenMVG_BUILD_TESTS)
+ENDMACRO(UNIT_TEST)
 
 # ==============================================================================
 # Eigen
