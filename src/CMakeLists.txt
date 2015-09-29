@@ -104,21 +104,22 @@ ENDIF(CXX11_COMPILER)
 # ==============================================================================
 # OpenMP detection
 # ==============================================================================
-IF (OpenMVG_USE_OPENMP)
+IF(OpenMVG_USE_OPENMP)
   FIND_PACKAGE(OpenMP)
-  IF (OPENMP_FOUND)
+  IF(OPENMP_FOUND)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     OPTION(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" ON)
     ADD_DEFINITIONS(-DOPENMVG_USE_OPENMP)
     IF (NOT MSVC)
       LIST(APPEND OPENMVG_LIBRARY_DEPENDENCIES gomp)
     ENDIF (NOT MSVC)
-ELSE (OpenMVG_USE_OPENMP)
+    ENDIF(NOT MSVC)
+  ENDIF(OPENMP_FOUND)
+ELSE(OpenMVG_USE_OPENMP)
     OPTION(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" OFF)
-    SET(OpenMVG_USE_OPENMP OFF CACHE BOOL "Use OpenMP for parallelization")
+    UPDATE_CACHE_VARIABLE(OpenMVG_USE_OPENMP OFF)
     REMOVE_DEFINITIONS(-DOPENMVG_USE_OPENMP)
-  ENDIF (OPENMP_FOUND)
-ENDIF (OpenMVG_USE_OPENMP)
+ENDIF(OpenMVG_USE_OPENMP)
 
 # ==============================================================================
 # enable code coverage generation (only with GCC)
