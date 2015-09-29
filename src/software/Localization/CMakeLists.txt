@@ -11,7 +11,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_localization openMVG_localization openMVG_ima
 ###
 ADD_EXECUTABLE(openMVG_main_voctreLocalizer main_voctreeLocalizer.cpp)
 INSTALL(TARGETS openMVG_main_voctreLocalizer DESTINATION bin/)
-TARGET_LINK_LIBRARIES(openMVG_main_voctreLocalizer openMVG_localization openMVG_image openMVG_features vlsift ${BOOST_LIBRARIES})
+TARGET_LINK_LIBRARIES(openMVG_main_voctreLocalizer openMVG_localization openMVG_dataio openMVG_image openMVG_features vlsift ${BOOST_LIBRARIES})
 
 ###
 # Create the vocabulary tree

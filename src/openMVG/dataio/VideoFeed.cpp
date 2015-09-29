@@ -5,6 +5,8 @@
  * Created on September 28, 2015, 10:35 AM
  */
 
+#if HAVE_OPENCV
+
 #include "VideoFeed.hpp"
 
 #include <openMVG/image/image_converter.hpp>
@@ -117,3 +119,6 @@ VideoFeed::~VideoFeed() { }
 
 }//namespace dataio 
 }//namespace openMVG
+
+
+#endif //#if HAVE_OPENCV

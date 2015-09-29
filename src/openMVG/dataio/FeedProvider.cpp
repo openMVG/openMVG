@@ -34,8 +34,13 @@ FeedProvider::FeedProvider(const std::string &feedPath, const std::string &calib
     }
     else 
     {
+#if HAVE_OPENCV
       // let's try it with a video
       _feeder.reset(new VideoFeed(feedPath, calibPath));
+#else
+      throw std::invalid_argument("Unsupported mode! If you intended to use a video"
+              " please add OpenCV support");
+#endif
     }
   }
   else if(bf::is_directory(bf::path(feedPath)))

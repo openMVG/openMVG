@@ -7,7 +7,7 @@
 #include <openMVG/localization/localization.hpp>
 #include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 #include <openMVG/image/image_io.hpp>
-#include <openMVG/voctree/FeedProvider.hpp>
+#include <openMVG/dataio/FeedProvider.hpp>
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
