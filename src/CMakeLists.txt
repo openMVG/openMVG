@@ -377,6 +377,23 @@ IF(OpenMVG_USE_OPENCV)
   ENDIF(NOT OpenCV_FOUND)
 ENDIF(OpenMVG_USE_OPENCV)
 
+# ==============================================================================
+# Boost
+# ==============================================================================
+# - optional, it allows to compile the vocabulary tree
+# ==============================================================================
+IF(OpenMVG_USE_BOOST)
+    FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS system filesystem program_options unit_test_framework)
+    IF(Boost_FOUND)
+       MESSAGE(STATUS "Boost ${Boost_LIB_VERSION} found")
+       include_directories(${Boost_INCLUDE_DIRS})
+       link_directories(${Boost_LIBRARIES})
+       add_definitions(${Boost_DEFINITIONS})
+    ELSE()
+      MESSAGE(STATUS "Boost not found -- disabling the vocabulary tree")
+      UPDATE_CACHE_VARIABLE(OpenMVG_USE_BOOST OFF)
+    ENDIF(Boost_FOUND)
+ENDIF(OpenMVG_USE_BOOST)
 
 # ==============================================================================
 # Third-party libraries:
