@@ -66,6 +66,11 @@ namespace control_point_GUI
 
   void GraphicsMainWindow::mousePressEvent (QMouseEvent* e )
   {
+    if (_doc._sfm_data.GetViews().empty())
+    {
+      return;
+    }
+
     const QPointF pos =  this->view->mapToScene(e->pos());
 
     int index = -1;

@@ -70,7 +70,7 @@ void control_point_2DNode::paint
   //painter->drawLine(10, 10, -10, -10);
   //painter->drawLine(10, -10, -10, 10);
 
-  // Paint the index of the control_point  
+  // Paint the index of the control_point
   // adapt the font size to fit the GCP id to the bounding box of the ellipse
   const QRectF node_rect(QPointF(-8,-8),QSize(18,18));
   const QString s_node_id = QString::number(_id_control_point);
