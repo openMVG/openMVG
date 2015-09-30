@@ -334,7 +334,7 @@ int main(int argc, char **argv)
         PairedIndMatchToStream(map_PutativesMatches, file);
       file.close();
     }
-    std::cout << "Task (Regions Loading+Matching) done in (s): " << timer.elapsed() << std::endl;
+    std::cout << "Task (Regions Matching) done in (s): " << timer.elapsed() << std::endl;
   }
   //-- export putative matches Adjacency matrix
   PairWiseMatchingToAdjacencyMatrixSVG(vec_fileNames.size(),
