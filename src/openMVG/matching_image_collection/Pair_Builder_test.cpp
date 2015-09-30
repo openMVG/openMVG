@@ -7,9 +7,13 @@
 
 #include "openMVG/matching_image_collection/Pair_Builder.hpp"
 #include "testing/testing.h"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_view.hpp"
 
 #include <iostream>
 #include <algorithm>
+#include <memory>
+
 using namespace std;
 
 using namespace openMVG;
@@ -29,31 +33,54 @@ bool checkPairOrder(const IterablePairs & pairs)
 
 TEST(matching_image_collection, exhaustivePairs)
 {
-  Pair_Set pairSet = exhaustivePairs(0);
-  EXPECT_EQ( 0, pairSet.size());
+  sfm::Views views;
+  {
+    // Empty
+    Pair_Set pairSet = exhaustivePairs(views);
+    EXPECT_EQ( 0, pairSet.size());
+  }
+  {
+    std::vector<IndexT> indexes = {{ 12, 54, 89, 65 }};
+    for( IndexT i: indexes )
+    {
+      views[i] = std::make_shared<sfm::View>("filepath", i);
+    }
 
-  pairSet = exhaustivePairs(4);
-  EXPECT_TRUE( checkPairOrder(pairSet) );
-  EXPECT_EQ( 6, pairSet.size());
-  EXPECT_TRUE( pairSet.find(std::make_pair(0,1)) != pairSet.end() );
-  EXPECT_TRUE( pairSet.find(std::make_pair(0,2)) != pairSet.end() );
-  EXPECT_TRUE( pairSet.find(std::make_pair(0,3)) != pairSet.end() );
-  EXPECT_TRUE( pairSet.find(std::make_pair(1,2)) != pairSet.end() );
-  EXPECT_TRUE( pairSet.find(std::make_pair(1,3)) != pairSet.end() );
-  EXPECT_TRUE( pairSet.find(std::make_pair(2,3)) != pairSet.end() );
+
+    Pair_Set pairSet = exhaustivePairs(views);
+    EXPECT_TRUE( checkPairOrder(pairSet) );
+    EXPECT_EQ( 6, pairSet.size());
+    EXPECT_TRUE( pairSet.find(std::make_pair(12,54)) != pairSet.end() );
+    EXPECT_TRUE( pairSet.find(std::make_pair(12,89)) != pairSet.end() );
+    EXPECT_TRUE( pairSet.find(std::make_pair(12,65)) != pairSet.end() );
+    EXPECT_TRUE( pairSet.find(std::make_pair(54,89)) != pairSet.end() );
+    EXPECT_TRUE( pairSet.find(std::make_pair(54,65)) != pairSet.end() );
+    EXPECT_TRUE( pairSet.find(std::make_pair(65,89)) != pairSet.end() );
+  }
 }
 
 TEST(matching_image_collection, contiguousWithOverlap)
 {
-  Pair_Set pairSet = exhaustivePairs(0);
-  EXPECT_EQ( 0, pairSet.size());
+  sfm::Views views;
+  {
+    // Empty
+    Pair_Set pairSet = exhaustivePairs(views);
+    EXPECT_EQ( 0, pairSet.size());
+  }
+  {
+    std::vector<IndexT> indexes = {{ 12, 54, 89, 65 }};
+    for( IndexT i: indexes )
+    {
+      views[i] = std::make_shared<sfm::View>("filepath", i);
+    }
 
-  pairSet = contiguousWithOverlap(4,1);
-  EXPECT_TRUE( checkPairOrder(pairSet) );
-  EXPECT_EQ( 3, pairSet.size());
-  EXPECT_TRUE( pairSet.find(std::make_pair(0,1)) != pairSet.end() );
-  EXPECT_TRUE( pairSet.find(std::make_pair(1,2)) != pairSet.end() );
-  EXPECT_TRUE( pairSet.find(std::make_pair(2,3)) != pairSet.end() );
+    Pair_Set pairSet = contiguousWithOverlap(views, 1);
+    EXPECT_TRUE( checkPairOrder(pairSet) );
+    EXPECT_EQ( 3, pairSet.size());
+    EXPECT_TRUE( pairSet.find(std::make_pair(12,54)) != pairSet.end() );
+    EXPECT_TRUE( pairSet.find(std::make_pair(54,65)) != pairSet.end() );
+    EXPECT_TRUE( pairSet.find(std::make_pair(65,89)) != pairSet.end() );
+  }
 }
 
 TEST(matching_image_collection, IO)
@@ -71,28 +98,8 @@ TEST(matching_image_collection, IO)
   EXPECT_TRUE( savePairs("pairsT_IO.txt", pairSetGT));
 
   Pair_Set loaded_Pairs;
-  EXPECT_TRUE( loadPairs(3, "pairsT_IO.txt", loaded_Pairs));
+  EXPECT_TRUE( loadPairs("pairsT_IO.txt", loaded_Pairs));
   EXPECT_TRUE( std::equal(loaded_Pairs.begin(), loaded_Pairs.end(), pairSetGTsorted.begin()) );
-}
-
-TEST(matching_image_collection, IO_InvalidInput)
-{
-  // A pair with index superior to the expected picture count
-  Pair_Set pairSetGT;
-  pairSetGT.insert( std::make_pair(0,1) );
-  pairSetGT.insert( std::make_pair(10,20) );
-
-  EXPECT_TRUE( savePairs("pairsT_IO_InvalidInput.txt", pairSetGT));
-
-  Pair_Set loaded_Pairs;
-  const int expectedPicCount = 2;
-  EXPECT_FALSE( loadPairs(expectedPicCount, "pairsT_IO_InvalidInput.txt", loaded_Pairs));
-
-  // A pair with equal index
-  pairSetGT.clear();
-  pairSetGT.insert( std::make_pair(0,1) );
-  pairSetGT.insert( std::make_pair(0,0) );
-  EXPECT_FALSE( loadPairs(expectedPicCount, "pairsT_IO_InvalidInput.txt", loaded_Pairs));
 }
 
 /* ************************************************************************* */

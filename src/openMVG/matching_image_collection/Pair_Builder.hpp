@@ -8,6 +8,7 @@
 
 #include "openMVG/types.hpp"
 #include "openMVG/stl/split.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
 
 #include <set>
 #include <iostream>
@@ -17,31 +18,40 @@
 namespace openMVG {
 
 /// Generate all the (I,J) pairs of the upper diagonal of the NxN matrix
-static Pair_Set exhaustivePairs(const size_t N)
+static Pair_Set exhaustivePairs(const sfm::Views& views)
 {
   Pair_Set pairs;
-  for(size_t I = 0; I < N; ++I)
-    for(size_t J = I+1; J < N; ++J)
-      pairs.insert(std::make_pair(I,J));
-
+  for(sfm::Views::const_iterator itA = views.begin(); itA != views.end(); ++itA)
+  {
+    sfm::Views::const_iterator itB = itA;
+    std::advance(itB, 1);
+    for(; itB != views.end(); ++itB)
+      pairs.insert(std::make_pair(itA->first, itB->first));
+  }
   return pairs;
 }
 
 /// Generate the pairs that have a distance inferior to the overlapSize
 /// Usable to match video sequence
-static Pair_Set contiguousWithOverlap(const size_t N, const size_t overlapSize)
+static Pair_Set contiguousWithOverlap(const sfm::Views& views, const size_t overlapSize)
 {
   Pair_Set pairs;
-  for(size_t I = 0; I < N; ++I)
-    for(size_t J = I+1; J < I+1+overlapSize && J < N; ++J)
-      pairs.insert(std::make_pair(I,J));
+  for(sfm::Views::const_iterator itA = views.begin(); itA != views.end(); ++itA)
+  {
+    sfm::Views::const_iterator itB = itA;
+    std::advance(itB, 1);
+    sfm::Views::const_iterator itBEnd = itA;
+    std::advance(itBEnd, 1 + overlapSize);
+    
+    for(; itB != views.end() && itB != itBEnd; ++itB)
+      pairs.insert(std::make_pair(itA->first, itB->first));
+  }
   return pairs;
 }
 
 /// Load a set of Pair_Set from a file
 /// I J K L (pair that link I)
 static bool loadPairs(
-     const size_t N,  // number of image in the current project (to check index validity)
      const std::string &sFileName, // filename of the list file,
      Pair_Set & pairs)  // output pairs read from the list file
 {
@@ -72,13 +82,6 @@ static bool loadPairs(
     {
       oss.clear(); oss.str(vec_str[i]);
       oss >> J;
-      if( I > N-1 || J > N-1) //I&J always > 0 since we use unsigned type
-      {
-        std::cerr << "loadPairs: Invalid input file. Image out of range. "
-                << "I: " << I << " J:" << J << " N:" << N << std::endl
-                << "File: \"" << sFileName << "\"." << std::endl;
-        return false;
-      }
       if( I == J )
       {
         std::cerr << "loadPairs: Invalid input file. Image " << I << " see itself. File: \"" << sFileName << "\"." << std::endl;
