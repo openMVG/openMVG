@@ -66,7 +66,7 @@ private:
   std::vector<IndexT> index_to_landmark_id_;
   /// A matching interface to find matches between 2D descriptor matches
   ///  and 3D points observation descriptors
-  matching::Matcher_Regions_Database matching_interface_;
+  std::unique_ptr<matching::Matcher_Regions_Database> matching_interface_;
 };
 
 } // namespace sfm
