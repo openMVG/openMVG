@@ -92,7 +92,6 @@ void Match
       }
     }
     zero_mean_descriptor = CascadeHasher::GetZeroMeanDescriptor(matForZeroMean);
-    zero_mean_descriptor.fill(zero_mean_descriptor.mean());
   }
 
   // Index the input regions

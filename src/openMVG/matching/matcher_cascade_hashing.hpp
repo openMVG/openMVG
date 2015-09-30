@@ -59,7 +59,6 @@ class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
     cascade_hasher_.Init(dimension);
     // Index the input descriptors
     zero_mean_descriptor_ = CascadeHasher::GetZeroMeanDescriptor(*memMapping);
-    zero_mean_descriptor_.fill(zero_mean_descriptor_.mean());
     hashed_base_ = cascade_hasher_.CreateHashedDescriptions(
       *memMapping, zero_mean_descriptor_);
 
