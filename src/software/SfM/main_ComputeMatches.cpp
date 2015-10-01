@@ -13,6 +13,7 @@
 
 /// Generic Image Collection image matching
 #include "openMVG/matching_image_collection/Matcher_Regions_AllInMemory.hpp"
+#include "openMVG/matching_image_collection/Cascade_Hashing_Matcher_Regions_AllInMemory.hpp"
 #include "openMVG/matching_image_collection/GeometricFilter.hpp"
 #include "openMVG/matching_image_collection/F_ACRobust.hpp"
 #include "openMVG/matching_image_collection/E_ACRobust.hpp"
@@ -63,13 +64,14 @@ int main(int argc, char **argv)
   std::string sSfM_Data_Filename;
   std::string sMatchesDirectory = "";
   std::string sGeometricModel = "f";
-  float fDistRatio = .6f;
+  float fDistRatio = 0.8f;
   int iMatchingVideoMode = -1;
   std::string sPredefinedPairList = "";
   bool bUpRight = false;
   std::string sNearestMatchingMethod = "AUTO";
   bool bForce = false;
   bool bGuided_matching = false;
+  int imax_iteration = 1024;
 
   //required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -82,6 +84,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('n', sNearestMatchingMethod, "nearest_matching_method") );
   cmd.add( make_option('f', bForce, "force") );
   cmd.add( make_option('m', bGuided_matching, "guided_matching") );
+  cmd.add( make_option('I', imax_iteration, "max_iteration") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -93,7 +96,7 @@ int main(int argc, char **argv)
       << "\n[Optional]\n"
       << "[-f|--force] Force to recompute data]\n"
       << "[-r|--ratio] Distance ratio to discard non meaningful matches\n"
-      << "   0.6: (default); you can use 0.8 to have more matches.\n"
+      << "   0.8: (default).\n"
       << "[-g|--geometric_model]\n"
       << "  (pairwise correspondences filtering thanks to robust model estimation):\n"
       << "   f: (default) fundamental matrix,\n"
@@ -108,9 +111,12 @@ int main(int argc, char **argv)
       << "[-n|--nearest_matching_method]\n"
       << "  AUTO: auto choice from regions type,\n"
       << "  For Scalar based regions descriptor:\n"
-      << "    BRUTEFORCEL2: BruteForce L2 matching,\n"
-      << "    ANNL2: Approximate Nearest Neighbor L2 matching,\n"
-      << "    CASCADEHASHINGL2: Cascade Hashing L2 matching.\n"
+      << "    BRUTEFORCEL2: L2 BruteForce matching,\n"
+      << "    ANNL2: L2 Approximate Nearest Neighbor matching,\n"
+      << "    CASCADEHASHINGL2: L2 Cascade Hashing matching.\n"
+      << "    FASTCASCADEHASHINGL2: (default)\n"
+      << "      L2 Cascade Hashing with precomputed hashed regions\n"
+      << "     (faster than CASCADEHASHINGL2 but use more memory).\n"
       << "  For Binary based descriptor:\n"
       << "    BRUTEFORCEHAMMING: BruteForce Hamming matching.\n"
       << "[-m|--guided_matching]\n"
@@ -137,7 +143,6 @@ int main(int argc, char **argv)
   EPairMode ePairmode = (iMatchingVideoMode == -1 ) ? PAIR_EXHAUSTIVE : PAIR_CONTIGUOUS;
 
   if (sPredefinedPairList.length()) {
-    std::cout << "--pairList " << sPredefinedPairList << std::endl;
     ePairmode = PAIR_FROM_FILE;
     if (iMatchingVideoMode>0) {
       std::cerr << "\nIncompatible options: --videoModeMatching and --pairList" << std::endl;
@@ -253,38 +258,50 @@ int main(int argc, char **argv)
     }
 
     // Allocate the right Matcher according the Matching requested method
-    std::unique_ptr<Matcher_Regions_AllInMemory> collectionMatcher;
+    std::unique_ptr<Matcher> collectionMatcher;
     if (sNearestMatchingMethod == "AUTO")
     {
       if (regions_type->IsScalar())
       {
-        collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, ANN_L2));
+        std::cout << "Using FAST_CASCADE_HASHING_L2 matcher" << std::endl;
+        collectionMatcher.reset(new Cascade_Hashing_Matcher_Regions_AllInMemory(fDistRatio));
       }
       else
       if (regions_type->IsBinary())
       {
+        std::cout << "Using BRUTE_FORCE_HAMMING matcher" << std::endl;
         collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, BRUTE_FORCE_HAMMING));
       }
     }
     else
     if (sNearestMatchingMethod == "BRUTEFORCEL2")
     {
+      std::cout << "Using BRUTE_FORCE_L2 matcher" << std::endl;
       collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, BRUTE_FORCE_L2));
     }
     else
     if (sNearestMatchingMethod == "BRUTEFORCEHAMMING")
     {
+      std::cout << "Using BRUTE_FORCE_HAMMING matcher" << std::endl;
       collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, BRUTE_FORCE_HAMMING));
     }
     else
     if (sNearestMatchingMethod == "ANNL2")
     {
+      std::cout << "Using ANN_L2 matcher" << std::endl;
       collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, ANN_L2));
     }
     else
     if (sNearestMatchingMethod == "CASCADEHASHINGL2")
     {
+      std::cout << "Using CASCADE_HASHING_L2 matcher" << std::endl;
       collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, CASCADE_HASHING_L2));
+    }
+    else
+    if (sNearestMatchingMethod == "FASTCASCADEHASHINGL2")
+    {
+      std::cout << "Using FAST_CASCADE_HASHING_L2 matcher" << std::endl;
+      collectionMatcher.reset(new Cascade_Hashing_Matcher_Regions_AllInMemory(fDistRatio));
     }
     if (!collectionMatcher)
     {
@@ -354,20 +371,23 @@ int main(int argc, char **argv)
       case HOMOGRAPHY_MATRIX:
       {
         const bool bGeometric_only_guided_matching = true;
-        filter_ptr->Robust_model_estimation(GeometricFilter_HMatrix_AC(4.0), map_PutativesMatches, bGuided_matching,
+        filter_ptr->Robust_model_estimation(GeometricFilter_HMatrix_AC(4.0, imax_iteration),
+          map_PutativesMatches, bGuided_matching,
           bGeometric_only_guided_matching ? -1.0 : 0.6);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
       case FUNDAMENTAL_MATRIX:
       {
-        filter_ptr->Robust_model_estimation(GeometricFilter_FMatrix_AC(4.0), map_PutativesMatches, bGuided_matching);
+        filter_ptr->Robust_model_estimation(GeometricFilter_FMatrix_AC(4.0, imax_iteration),
+          map_PutativesMatches, bGuided_matching);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
       case ESSENTIAL_MATRIX:
       {
-        filter_ptr->Robust_model_estimation(GeometricFilter_EMatrix_AC(4.0), map_PutativesMatches, bGuided_matching);
+        filter_ptr->Robust_model_estimation(GeometricFilter_EMatrix_AC(4.0, imax_iteration),
+          map_PutativesMatches, bGuided_matching);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
 
         //-- Perform an additional check to remove pairs with poor overlap

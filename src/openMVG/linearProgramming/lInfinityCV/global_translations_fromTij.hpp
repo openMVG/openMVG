@@ -97,8 +97,7 @@ static void EncodeTi_from_tij(
     const size_t i = vec_relative[k].first.first;
     const size_t j  = vec_relative[k].first.second;
     const Mat3 & Rij = vec_relative[k].second.first;
-    Vec3 tij = vec_relative[k].second.second;
-    tij.normalize(); //Be sure that tij is normalized
+    const Vec3 tij = vec_relative[k].second.second;
 
     // | T_j - R_ij T_i - Lambda_ij t_ij | < Gamma
     // Absolute constraint transformed in two sign constraints

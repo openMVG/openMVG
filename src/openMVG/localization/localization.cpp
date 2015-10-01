@@ -349,12 +349,17 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
     // Do the resectioning: compute the camera pose.
     double errorMax = std::numeric_limits<double>::max();
 
-    bool bResection = sfm::robustResection(std::make_pair(imageGray.Width(), imageGray.Height()),
-                                           matchData.pt2D, matchData.pt3D,
-                                           &matchData.vec_inliers,
-                                           // Use intrinsic guess if possible
-                                           (useInputIntrinsics) ? &queryK : nullptr,
-                                           &matchData.projection_matrix, &errorMax);
+    bool bResection = sfm::SfM_Localizer::Localize(std::make_pair(imageGray.Width(), imageGray.Height()),
+                                                   // pass the input intrinsic if they are valid, null otherwise
+                                                   (useInputIntrinsics) ? &queryIntrinsics : nullptr,
+                                                   matchData,
+                                                   pose);
+//    bool bResection = sfm::robustResection(std::make_pair(imageGray.Width(), imageGray.Height()),
+//                                           matchData.pt2D, matchData.pt3D,
+//                                           &matchData.vec_inliers,
+//                                           // Use intrinsic guess if possible
+//                                           (useInputIntrinsics) ? &queryK : nullptr,
+//                                           &matchData.projection_matrix, &errorMax);
 
     std::cout << std::endl
             << "-------------------------------" << std::endl
@@ -371,30 +376,31 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
       continue;
     }
     POPART_COUT("Resection SUCCEDED");
-    // Decompose P matrix
+//    // Decompose P matrix
     Mat3 K_, R_;
     Vec3 t_;
-    // if K is known then recover R and t by a simple multiplication
-    if(useInputIntrinsics)
-    {
-     //  inv(K) * P = [R t]
-      Mat34 tmp = K_.inverse()*matchData.projection_matrix;
-      R_ = tmp.block<3,3>(0,0);
-      t_ = tmp.block<3,1>(0,3);
-    }
-    else
+//    // if K is known then recover R and t by a simple multiplication
+    if(!useInputIntrinsics)
+//    {
+//     //  inv(K) * P = [R t]
+//      Mat34 tmp = K_.inverse()*matchData.projection_matrix;
+//      R_ = tmp.block<3,3>(0,0);
+//      t_ = tmp.block<3,1>(0,3);
+//    }
+//    else
     {
       // otherwise decompose the projection matrix  to get K, R and t using 
       // RQ decomposition
       KRt_From_P(matchData.projection_matrix, &K_, &R_, &t_);
     }
-    POPART_COUT("P\n" << matchData.projection_matrix);
-    POPART_COUT("K\n" << K_);
-    POPART_COUT("R\n" << R_);
-    POPART_COUT("t\n" << t_);
+//    POPART_COUT("P\n" << matchData.projection_matrix);
+//    POPART_COUT("K\n" << K_);
+//    POPART_COUT("R\n" << R_);
+//    POPART_COUT("t\n" << t_);
+//    
+//    // create the pose
+//    pose = geometry::Pose3(R_, -R_.transpose() * t_);
     
-    // create the pose
-    pose = geometry::Pose3(R_, -R_.transpose() * t_);
     
     const geometry::Pose3 &refPose = _sfm_data.poses[matchedViewIndex];
     POPART_COUT("R_gt\n" << refPose.rotation());

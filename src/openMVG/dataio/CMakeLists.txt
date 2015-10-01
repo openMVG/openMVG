@@ -12,15 +12,6 @@ file(
 #file(GLOB_RECURSE REMOVE_FILES_UNIT_TEST *_test.cpp)
 #list(REMOVE_ITEM dataio_cpp ${REMOVE_FILES_UNIT_TEST})
 
-if(OpenMVG_USE_OPENCV)
-  find_package( OpenCV )
-  if(NOT OpenCV_FOUND)
-    message(STATUS "WARNING: OpenCV was not found. ")
-  else(not OpenCV_FOUND)
-    include_directories(${OpenCV_INCLUDE_DIRS})
-  endif()
-endif()
-
 set_source_files_properties(${dataio_cpp} PROPERTIES LANGUAGE CXX)
 add_library(openMVG_dataio
   ${dataio_header}

@@ -23,6 +23,8 @@
 #include <iostream>
 #include <string>
 
+#include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
+
 #define POPART_COUT(x) std::cout << x << std::endl
 #define POPART_CERR(x) std::cerr << x << std::endl
 
@@ -332,10 +334,11 @@ int main(int argc, char** argv)
 
     // C. Resection
     Mat34 P;
+    sfm::Image_Localizer_Match_Data resection_data;
     {
       // Prepare data for resection
-      Mat pt2D(2, vec_featureMatches.size());
-      Mat pt3D(3, vec_featureMatches.size());
+      resection_data.pt2D(2, vec_featureMatches.size());
+      resection_data.pt3D(3, vec_featureMatches.size());
 
       // Get the 3D points associated to each matched feature
       std::size_t index = 0;
@@ -344,13 +347,13 @@ int main(int argc, char** argv)
         IndexT trackId3D = matchedRegions._associated3dPoint[featureMatch._j];
 
         // prepare data for resectioning
-        pt3D.col(index) = sfmData.GetLandmarks().at(trackId3D).X;
+        resection_data.pt3D.col(index) = sfmData.GetLandmarks().at(trackId3D).X;
 
         const Vec2 feat = queryRegions.GetRegionPosition(featureMatch._i);
         if(bKnownIntrinsic)
-          pt2D.col(index) = queryIntrinsics->get_ud_pixel(feat);
+          resection_data.pt2D.col(index) = queryIntrinsics->get_ud_pixel(feat);
         else
-          pt2D.col(index) = feat;
+          resection_data.pt2D.col(index) = feat;
 
         ++index;
       }
@@ -359,13 +362,17 @@ int main(int argc, char** argv)
       std::vector<size_t> vec_inliers;
       double errorMax = std::numeric_limits<double>::max();
 
-      bool bResection = sfm::robustResection(
-                                             std::make_pair(imageGray.Width(), imageGray.Height()),
-                                             pt2D, pt3D,
-                                             &vec_inliers,
-                                             // Use intrinsic guess if possible
-                                             (bKnownIntrinsic) ? &K : NULL,
-                                             &P, &errorMax);
+      geometry::Pose3 pose;
+      bool bResection = sfm::SfM_Localizer::Localize(std::make_pair(imageGray.Width(), imageGray.Height()),
+                                                     queryIntrinsics,
+                                                     resection_data,
+                                                     pose);
+//      bool bResection = sfm::robustResection(
+//                                             pt2D, pt3D,
+//                                             &vec_inliers,
+//                                             // Use intrinsic guess if possible
+//                                             (bKnownIntrinsic) ? &K : NULL,
+//                                             &P, &errorMax);
 
       std::cout << std::endl
               << "-------------------------------" << std::endl

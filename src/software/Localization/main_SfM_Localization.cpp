@@ -43,11 +43,13 @@ int main(int argc, char **argv)
   std::string sMatchesDir;
   std::string sOutDir = "";
   std::string sQueryImage;
+  double dMaxResidualError = std::numeric_limits<double>::infinity();
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "match_dir") );
   cmd.add( make_option('o', sOutDir, "out_dir") );
   cmd.add( make_option('q', sQueryImage, "query_image"));
+  cmd.add( make_option('r', dMaxResidualError, "residual_error"));
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -59,6 +61,7 @@ int main(int argc, char **argv)
     << "[-o|--out_dir] path where the output data will be stored\n"
     << "(optional)\n"
     << "[-q|--query_image] path to the image that must be localized\n"
+    << "[-r|--residual_error] upper bound of the residual error tolerance\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -177,6 +180,7 @@ int main(int argc, char **argv)
 
     geometry::Pose3 pose;
     sfm::Image_Localizer_Match_Data matching_data;
+    matching_data.error_max = dMaxResidualError;
 
     // Try to localize the image in the database thanks to its regions
     if (!localizer.Localize(
@@ -252,6 +256,7 @@ int main(int argc, char **argv)
 
       geometry::Pose3 pose;
       sfm::Image_Localizer_Match_Data matching_data;
+      matching_data.error_max = dMaxResidualError;
 
       // Try to localize the image in the database thanks to its regions
       if (!localizer.Localize(
