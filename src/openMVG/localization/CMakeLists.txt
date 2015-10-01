@@ -17,6 +17,6 @@ file(
 ADD_LIBRARY(openMVG_localization
   ${localization_files_header}
   ${localization_files_cpp})
-TARGET_LINK_LIBRARIES(openMVG_localization openMVG_sfm openMVG_voctree)
+TARGET_LINK_LIBRARIES(openMVG_localization openMVG_sfm openMVG_voctree openMVG_numeric)
 SET_PROPERTY(TARGET openMVG_localization PROPERTY FOLDER OpenMVG)
 INSTALL(TARGETS openMVG_localization DESTINATION lib EXPORT openMVG-targets)

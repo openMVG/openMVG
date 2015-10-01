@@ -7,6 +7,7 @@
 #include <openMVG/matching/regions_matcher.hpp>
 #include <openMVG/matching_image_collection/Matcher.hpp>
 #include <openMVG/matching/matcher_kdtree_flann.hpp>
+#include <openMVG/numeric/numeric.h>
 #include <openMVG/robust_estimation/guided_matching.hpp>
 #include <openMVG/matching_image_collection/F_ACRobust.hpp>
 #include <third_party/progress/progress.hpp>
@@ -219,14 +220,14 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
 
 
 //@todo move the parameters into a struct
-bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
-                cameras::Pinhole_Intrinsic &queryIntrinsics,
-                const size_t numResults,
-                geometry::Pose3 & pose,
-                bool useGuidedMatching,
-                bool useInputIntrinsics,
-                bool refineIntrinsics,
-                sfm::Image_Localizer_Match_Data * resection_data /*= nullptr*/)
+bool VoctreeLocalizer::Localize(const image::Image<unsigned char> & imageGray,
+                                cameras::Pinhole_Intrinsic &queryIntrinsics,
+                                const size_t numResults,
+                                geometry::Pose3 & pose,
+                                bool useGuidedMatching,
+                                bool useInputIntrinsics,
+                                bool refineIntrinsics,
+                                sfm::Image_Localizer_Match_Data * resection_data /*= nullptr*/)
 {
   // A. extract descriptors and features from image
   POPART_COUT("[features]\tExtract SIFT from query image");
@@ -401,10 +402,8 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
 //    // create the pose
 //    pose = geometry::Pose3(R_, -R_.transpose() * t_);
     
-    
-    const geometry::Pose3 &refPose = _sfm_data.poses[matchedViewIndex];
-    POPART_COUT("R_gt\n" << refPose.rotation());
-    POPART_COUT("t_gt\n" << refPose.translation());
+    const geometry::Pose3 &referencePose = _sfm_data.poses[matchedViewIndex];
+
     
     // E. refine the estimated pose
     // if we did't use the provided intrinsics, copy the estimated K into
@@ -426,6 +425,10 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
     
     POPART_COUT("R refined\n" << pose.rotation());
     POPART_COUT("t refined\n" << pose.translation());
+    POPART_COUT("R_gt\n" << referencePose.rotation());
+    POPART_COUT("t_gt\n" << referencePose.translation());
+    POPART_COUT("angular difference: " << R2D(getRotationMagnitude(pose.rotation()*referencePose.rotation().inverse())) << "deg");
+    POPART_COUT("center difference: " << (pose.center()-referencePose.center()).norm());
     
     break;
   }
