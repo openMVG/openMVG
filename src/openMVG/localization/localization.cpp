@@ -157,7 +157,6 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
   {
     POPART_COUT("No weights specified, skipping...");
   }
-
   
   // Load the descriptors and the features related to the images
   // for every image, pass the descriptors through the vocabulary tree and
@@ -165,7 +164,7 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
   // then only store the feature and descriptors that have a 3D point associated
   POPART_COUT("Build observations per view");
   C_Progress_display my_progress_bar(_sfm_data.GetViews().size(),
-                                     std::cout, "\n- Regions Loading -\n");
+                                     std::cout, "\n- Load Features and Descriptors per view -\n");
 
   // Build observations per view
   std::map<IndexT, std::vector<FeatureInImage> > observationsPerView;
@@ -185,7 +184,6 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
     std::sort(featuresInImage.second.begin(), featuresInImage.second.end());
   }
 
-  POPART_COUT("Load Features and Descriptors per view");
   // Read for each view the corresponding regions and store them
   for(const auto &iter : _sfm_data.GetViews())
   {
@@ -275,10 +273,23 @@ bool VoctreeLocalizer::Localize(const image::Image<unsigned char> & imageGray,
   // query image adn the similar image
   for(const voctree::Match& matchedImage : matchedImages)
   {
+    // minimum number of points that allows a reliable 3D reconstruction
+    const size_t minNum3DPoints = 5;
+    
     // the view index of the current matched image
     const IndexT matchedViewIndex = _mapDocIdToView[matchedImage.id];
     // the handler to the current view
     const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
+    
+    // safeguard: we should match the query image with an image that has at least
+    // some 3D points visible --> if this is not true it is likely that it is an
+    // image of the dataset that was not reconstructed
+    if(_regions_per_view[matchedViewIndex]._regions.RegionCount() < minNum3DPoints)
+    {
+      POPART_COUT("[matching]\tSkipping matching with " << matchedView->s_Img_path << " as it has too few visible 3D points");
+      continue;
+    }
+    
     // its associated reconstructed regions
     const Reconstructed_RegionsT& matchedRegions = _regions_per_view[matchedViewIndex];
     // its associated intrinsics
@@ -308,7 +319,7 @@ bool VoctreeLocalizer::Localize(const image::Image<unsigned char> & imageGray,
       POPART_COUT("\tmatching with " << matchedView->s_Img_path << " failed! Skipping image");
       continue;
     }
-  
+    assert(vec_featureMatches.size()!=0);
     // D. recover the 2D-3D associations from the matches 
     // Each matched feature in the current similar image is associated to a 3D point,
     // hence we can recover the 2D-3D associations to estimate the pose
@@ -321,6 +332,7 @@ bool VoctreeLocalizer::Localize(const image::Image<unsigned char> & imageGray,
     std::size_t index = 0;
     for(const matching::IndMatch& featureMatch : vec_featureMatches)
     {
+      assert(vec_featureMatches.size()>index);
       // the ID of the 3D point
       const IndexT trackId3D = matchedRegions._associated3dPoint[featureMatch._j];
 
@@ -427,7 +439,6 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
   // they contains the matching features
   Mat featuresI(2, vec_featureMatches.size());
   Mat featuresJ(2, vec_featureMatches.size());
-
   // fill the matrices with the features according to vec_featureMatches
   for(int i = 0; i < vec_featureMatches.size(); ++i)
   {
