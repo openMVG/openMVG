@@ -163,10 +163,10 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
   // for every image, pass the descriptors through the vocabulary tree and
   // add its visual words to the database.
   // then only store the feature and descriptors that have a 3D point associated
+  POPART_COUT("Build observations per view");
   C_Progress_display my_progress_bar(_sfm_data.GetViews().size(),
                                      std::cout, "\n- Regions Loading -\n");
 
-  POPART_COUT("Build observations per view");
   // Build observations per view
   std::map<IndexT, std::vector<FeatureInImage> > observationsPerView;
   for(auto landmarkValue : _sfm_data.structure)
@@ -267,16 +267,9 @@ bool VoctreeLocalizer::Localize(const image::Image<unsigned char> & imageGray,
   const float fDistRatio = 0.6; //@fixme this could be a param
 //  typedef flann::L2<unsigned char> MetricT;
 //  typedef matching::ArrayMatcher_Kdtree_Flann<unsigned char, MetricT> MatcherT;
-  POPART_COUT("[matching]\tBuild the matcher");
+  POPART_COUT("[matching]\tBuilding the matcher");
   matching::RegionsMatcherT<MatcherT> matcher(queryRegions);
   
-  // Prepare intrinsics 
-  POPART_COUT("[matching]\tPrepare query intrinsics");
-  Mat3 queryK;
-  if (useInputIntrinsics)
-  {
-    queryK = queryIntrinsics.K(); 
-  }
  
   // C. for each found similar image, try to find the correspondences between the 
   // query image adn the similar image
@@ -328,7 +321,7 @@ bool VoctreeLocalizer::Localize(const image::Image<unsigned char> & imageGray,
     for(const matching::IndMatch& featureMatch : vec_featureMatches)
     {
       // the ID of the 3D point
-      IndexT trackId3D = matchedRegions._associated3dPoint[featureMatch._j];
+      const IndexT trackId3D = matchedRegions._associated3dPoint[featureMatch._j];
 
       // prepare data for resectioning
       matchData.pt3D.col(index) = _sfm_data.GetLandmarks().at(trackId3D).X;
@@ -349,72 +342,38 @@ bool VoctreeLocalizer::Localize(const image::Image<unsigned char> & imageGray,
     // estimate the pose
     // Do the resectioning: compute the camera pose.
     double errorMax = std::numeric_limits<double>::max();
-
+    POPART_COUT("[poseEstimation]\tEstimating camera pose");
     bool bResection = sfm::SfM_Localizer::Localize(std::make_pair(imageGray.Width(), imageGray.Height()),
                                                    // pass the input intrinsic if they are valid, null otherwise
                                                    (useInputIntrinsics) ? &queryIntrinsics : nullptr,
                                                    matchData,
                                                    pose);
-//    bool bResection = sfm::robustResection(std::make_pair(imageGray.Width(), imageGray.Height()),
-//                                           matchData.pt2D, matchData.pt3D,
-//                                           &matchData.vec_inliers,
-//                                           // Use intrinsic guess if possible
-//                                           (useInputIntrinsics) ? &queryK : nullptr,
-//                                           &matchData.projection_matrix, &errorMax);
-
-    std::cout << std::endl
-            << "-------------------------------" << std::endl
-            << "-- Robust Resection using view: " << _mapDocIdToView[matchedImage.id] << std::endl
-            << "-- Resection status: " << bResection << std::endl
-            << "-- #Points used for Resection: " << vec_featureMatches.size() << std::endl
-            << "-- #Points validated by robust Resection: " << matchData.vec_inliers.size() << std::endl
-            << "-- Threshold: " << errorMax << std::endl
-            << "-------------------------------" << std::endl;
 
     if(!bResection)
     {
-      POPART_COUT("\tResection FAILED");
+      POPART_COUT("[poseEstimation]\tResection FAILED");
       continue;
     }
-    POPART_COUT("Resection SUCCEDED");
-//    // Decompose P matrix
-    Mat3 K_, R_;
-    Vec3 t_;
-//    // if K is known then recover R and t by a simple multiplication
+    POPART_COUT("[poseEstimation]\tResection SUCCEDED");
+
+    // if we didn't use the provided intrinsics, estimate K from the projection
+    // matrix estimated by the localizer and initialize the queryIntrinsics with
+    // it and the image size. This will provide a first guess for the refine function
     if(!useInputIntrinsics)
-//    {
-//     //  inv(K) * P = [R t]
-//      Mat34 tmp = K_.inverse()*matchData.projection_matrix;
-//      R_ = tmp.block<3,3>(0,0);
-//      t_ = tmp.block<3,1>(0,3);
-//    }
-//    else
     {
-      // otherwise decompose the projection matrix  to get K, R and t using 
+      // Decompose P matrix
+      Mat3 K_, R_;
+      Vec3 t_;
+      // Decompose the projection matrix  to get K, R and t using 
       // RQ decomposition
       KRt_From_P(matchData.projection_matrix, &K_, &R_, &t_);
-    }
-//    POPART_COUT("P\n" << matchData.projection_matrix);
-//    POPART_COUT("K\n" << K_);
-//    POPART_COUT("R\n" << R_);
-//    POPART_COUT("t\n" << t_);
-//    
-//    // create the pose
-//    pose = geometry::Pose3(R_, -R_.transpose() * t_);
-    
-    const geometry::Pose3 &referencePose = _sfm_data.poses[matchedViewIndex];
-
-    
-    // E. refine the estimated pose
-    // if we did't use the provided intrinsics, copy the estimated K into
-    // the object so that it provides an initial value for the refinement
-    if(!useInputIntrinsics)
-    {
       queryIntrinsics.setK(K_);
       queryIntrinsics.setWidth(imageGray.Width());
       queryIntrinsics.setHeight(imageGray.Height());
     }
-    
+
+    // E. refine the estimated pose
+    POPART_COUT("[poseEstimation]\tRefining estimated pose");
     bool refineStatus = sfm::SfM_Localizer::RefinePose(&queryIntrinsics, 
                                                        pose, 
                                                        matchData, 
@@ -423,13 +382,17 @@ bool VoctreeLocalizer::Localize(const image::Image<unsigned char> & imageGray,
     if(!refineStatus)
       POPART_COUT("Refine pose could not improve the estimation of the camera pose.");
     
-    POPART_COUT("R refined\n" << pose.rotation());
-    POPART_COUT("t refined\n" << pose.translation());
-    POPART_COUT("R_gt\n" << referencePose.rotation());
-    POPART_COUT("t_gt\n" << referencePose.translation());
-    POPART_COUT("angular difference: " << R2D(getRotationMagnitude(pose.rotation()*referencePose.rotation().inverse())) << "deg");
-    POPART_COUT("center difference: " << (pose.center()-referencePose.center()).norm());
-    
+    {
+      // just temporary code to evaluate the estimated pose @todo remove it
+      const geometry::Pose3 &referencePose = _sfm_data.poses[matchedViewIndex];
+      POPART_COUT("R refined\n" << pose.rotation());
+      POPART_COUT("t refined\n" << pose.translation());
+      POPART_COUT("R_gt\n" << referencePose.rotation());
+      POPART_COUT("t_gt\n" << referencePose.translation());
+      POPART_COUT("angular difference: " << R2D(getRotationMagnitude(pose.rotation()*referencePose.rotation().inverse())) << "deg");
+      POPART_COUT("center difference: " << (pose.center()-referencePose.center()).norm());
+      POPART_COUT("err = [err; " << R2D(getRotationMagnitude(pose.rotation()*referencePose.rotation().inverse())) << ", "<< (pose.center()-referencePose.center()).norm() << "];");
+    }
     break;
   }
 
@@ -456,7 +419,7 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
   bool matchWorked = matcher.Match(fDistRatio, matchedRegions._regions, vec_featureMatches);
   if (!matchWorked)
   {
-    POPART_COUT("\tmatching with failed!");
+    POPART_COUT("\tRobust matching failed!");
     return false;
   }
 
@@ -472,7 +435,6 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
     featuresI.col(i) = matcher.getDatabaseRegions()->GetRegionPosition(match._i);
     featuresJ.col(i) = matchedRegions._regions.GetRegionPosition(match._j);
   }
-
   matching_image_collection::GeometricFilter_FMatrix_AC geometricFilter(4.0);
   std::vector<size_t> vec_matchingInliers;
   bool valid = geometricFilter.Robust_estimation(featuresI, // points of the query image
