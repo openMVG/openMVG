@@ -294,7 +294,8 @@ bool VoctreeLocalizer::Localize(const image::Image<unsigned char> & imageGray,
      
     std::vector<matching::IndMatch> vec_featureMatches;
     bool matchWorked = robustMatching( matcher, 
-                                      &queryIntrinsics,
+                                      // pass the input intrinsic if they are valid, null otherwise
+                                      (useInputIntrinsics) ? &queryIntrinsics : nullptr,
                                       matchedRegions,
                                       matchedIntrinsics,
                                       fDistRatio,
