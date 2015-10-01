@@ -65,6 +65,8 @@ public:
                 bool useInputIntrinsics,
                 bool refineIntrinsics,
                 sfm::Image_Localizer_Match_Data * resection_data = nullptr);
+  
+  const sfm::SfM_Data& getSfMData() const {return _sfm_data; }
 
 private:
   /**
