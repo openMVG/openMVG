@@ -23,14 +23,15 @@ INCLUDE(${QT_USE_FILE})
 # All Source Files here
 SET(SourceFiles
   main.cpp
+  mainLayout.cpp
   GraphicsMainWindow.cpp
   ControlPointTableView.cpp
   node.cpp)
 
 # All non moc header files here
 SET(HeaderFiles
-  mainLayout.h
-  GraphicsMainWindow.h
+  mainLayout.hpp
+  GraphicsMainWindow.hpp
   node.hpp
   document.hpp)
 
