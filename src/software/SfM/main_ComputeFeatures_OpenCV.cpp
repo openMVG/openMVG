@@ -263,8 +263,8 @@ public:
 
         cv::Mat countFeatPerCell(_params.gridSize, _params.gridSize, cv::DataType<std::size_t>::type, cv::Scalar(0));
         const std::size_t keypointsPerCell = _params.maxTotalKeypoints / countFeatPerCell.total();
-        const std::size_t regionWidth = image.Width() / countFeatPerCell.cols;
-        const std::size_t regionHeight = image.Height() / countFeatPerCell.rows;
+        const double regionWidth = image.Width() / double(countFeatPerCell.cols);
+        const double regionHeight = image.Height() / double(countFeatPerCell.rows);
 
         std::cout << "Grid filtering -- keypointsPerCell: " << keypointsPerCell
                   << ", regionWidth: " << regionWidth
@@ -272,13 +272,13 @@ public:
 
         for(const cv::KeyPoint& keypoint: v_keypoints)
         {
-          const std::size_t cellX = std::size_t(keypoint.pt.x) / regionWidth;
-          const std::size_t cellY = std::size_t(keypoint.pt.y) / regionHeight;
+          const std::size_t cellX = std::min(std::size_t(keypoint.pt.x / regionWidth), _params.gridSize);
+          const std::size_t cellY = std::min(std::size_t(keypoint.pt.y / regionHeight), _params.gridSize);
           // std::cout << "- keypoint.pt.x: " << keypoint.pt.x << ", keypoint.pt.y: " << keypoint.pt.y << std::endl;
           // std::cout << "- cellX: " << cellX << ", cellY: " << cellY << std::endl;
           // std::cout << "- countFeatPerCell: " << countFeatPerCell << std::endl;
+          // std::cout << "- gridSize: " << _params.gridSize << std::endl;
 
-          assert(cellX < _params.gridSize && cellY < _params.gridSize);
           const std::size_t count = countFeatPerCell.at<std::size_t>(cellX, cellY);
           countFeatPerCell.at<std::size_t>(cellX, cellY) = count + 1;
           if(count < keypointsPerCell)
