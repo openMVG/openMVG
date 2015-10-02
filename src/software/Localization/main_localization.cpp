@@ -304,10 +304,11 @@ int main(int argc, char** argv)
       bool b_guided_matching = true;
       if(!b_guided_matching)
       {
-        std::vector<matching::IndMatch> vec_robustFeatureMatches(vec_matchingInliers.size());
-        for(const int i : vec_matchingInliers)
+        std::vector<matching::IndMatch> vec_robustFeatureMatches;
+        vec_robustFeatureMatches.reserve(vec_matchingInliers.size());
+        for(const size_t i : vec_matchingInliers)
         {
-          vec_robustFeatureMatches[i] = vec_featureMatches[i];
+          vec_robustFeatureMatches.emplace_back(vec_featureMatches[i]);
         }
         // replace the featuresMatches with the robust ones.
         std::swap(vec_featureMatches, vec_robustFeatureMatches);
