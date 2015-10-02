@@ -71,7 +71,7 @@ int main(int argc, char **argv)
   std::string sNearestMatchingMethod = "AUTO";
   bool bForce = false;
   bool bGuided_matching = false;
-  int imax_iteration = 1024;
+  int imax_iteration = 2048;
 
   //required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -334,7 +334,7 @@ int main(int argc, char **argv)
         PairedIndMatchToStream(map_PutativesMatches, file);
       file.close();
     }
-    std::cout << "Task (Regions Loading+Matching) done in (s): " << timer.elapsed() << std::endl;
+    std::cout << "Task (Regions Matching) done in (s): " << timer.elapsed() << std::endl;
   }
   //-- export putative matches Adjacency matrix
   PairWiseMatchingToAdjacencyMatrixSVG(vec_fileNames.size(),

@@ -42,6 +42,7 @@ bool Load_Cereal(
   const bool b_intrinsics = (flags_part & INTRINSICS) == INTRINSICS;
   const bool b_extrinsics = (flags_part & EXTRINSICS) == EXTRINSICS;
   const bool b_structure = (flags_part & STRUCTURE) == STRUCTURE;
+  const bool b_control_point = (flags_part & CONTROL_POINTS) == CONTROL_POINTS;
 
   //Create the stream and check it is ok
   std::ifstream stream(filename.c_str(), std::ios::binary | std::ios::in);
@@ -81,7 +82,6 @@ bool Load_Cereal(
         archive(cereal::make_nvp("extrinsics", poses));
       }
 
-    // Structure -> See for export in another file
     if (b_structure)
       archive(cereal::make_nvp("structure", data.structure));
     else
@@ -89,6 +89,17 @@ bool Load_Cereal(
         Landmarks structure;
         archive(cereal::make_nvp("structure", structure));
       }
+
+    if (version != "0.1") // fast check to assert we are at least using version 0.2
+    {
+      if (b_control_point)
+        archive(cereal::make_nvp("control_points", data.control_points));
+      else
+        if (bBinary) { // Binary file require read all the member
+          Landmarks control_points;
+          archive(cereal::make_nvp("control_points", control_points));
+        }
+    }
   }
   catch (const cereal::Exception & e)
   {
@@ -112,6 +123,7 @@ bool Save_Cereal(
   const bool b_intrinsics = (flags_part & INTRINSICS) == INTRINSICS;
   const bool b_extrinsics = (flags_part & EXTRINSICS) == EXTRINSICS;
   const bool b_structure = (flags_part & STRUCTURE) == STRUCTURE;
+  const bool b_control_point = (flags_part & CONTROL_POINTS) == CONTROL_POINTS;
 
   //Create the stream and check it is ok
   std::ofstream stream(filename.c_str(), std::ios::binary | std::ios::out);
@@ -121,7 +133,9 @@ bool Save_Cereal(
   // Data serialization
   {
     archiveType archive(stream);
-    const std::string version = "0.1";
+    // since OpenMVG 0.9, the sfm_data version 0.2 is introduced
+    //  - it adds control_points storage
+    const std::string version = "0.2";
     archive(cereal::make_nvp("sfm_data_version", version));
     archive(cereal::make_nvp("root_path", data.s_root_path));
 
@@ -145,6 +159,14 @@ bool Save_Cereal(
       archive(cereal::make_nvp("structure", data.structure));
     else
       archive(cereal::make_nvp("structure", Landmarks()));
+
+    if (version != "0.1") // fast check to assert we are at least using version 0.2
+    {
+      if (b_control_point)
+        archive(cereal::make_nvp("control_points", data.control_points));
+      else
+        archive(cereal::make_nvp("control_points", Landmarks()));
+    }
   }
   return true;
 }

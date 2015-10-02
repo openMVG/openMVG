@@ -10,7 +10,7 @@ Structure from Motion computes an external camera pose per image (the motion) an
 
 .. figure:: imagesInput.png
    :align: center
-   
+
    Figure : Input images, estimated camera location and structure.
 
 openMVG SfM tools
@@ -74,7 +74,7 @@ OpenMVG SfM pipelines run as a 4 step process:
    ./IncrementalSfM.rst
    ./GlobalSfM.rst
 
-5. Optional further processing 
+5. Optional further processing
 ----------------------------------------
 
 .. toctree::
@@ -140,6 +140,7 @@ To know more about each tool visit the following link and read the doc below:
    ./SfM_OutputFormat.rst
    ../MVS/MVS.rst
 
+
 PS: We strongly advise to use a 3 directories based data organisation structure
 
 * **images**
@@ -154,7 +155,7 @@ PS: We strongly advise to use a 3 directories based data organisation structure
 
   * directory used to store the SfM result and process log.
 
-.. 
+..
   1. Image & view listing:
 
     - describe images parameters:

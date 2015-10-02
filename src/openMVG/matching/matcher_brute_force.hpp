@@ -40,11 +40,10 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
    */
   bool Build(const Scalar * dataset, int nbRows, int dimension) {
     if (nbRows < 1) {
-      memMapping = auto_ptr< Eigen::Map<BaseMat> >(NULL);
+      memMapping.reset(nullptr);
       return false;
     }
-    memMapping = auto_ptr< Eigen::Map<BaseMat> >
-      (new Eigen::Map<BaseMat>( (Scalar*)dataset, nbRows, dimension) );
+    memMapping.reset(new Eigen::Map<BaseMat>( (Scalar*)dataset, nbRows, dimension) );
     return true;
   };
 
@@ -151,7 +150,7 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
 private:
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> BaseMat;
   /// Use a memory mapping in order to avoid memory re-allocation
-  auto_ptr< Eigen::Map<BaseMat> > memMapping;
+  std::unique_ptr< Eigen::Map<BaseMat> > memMapping;
 };
 
 }  // namespace matching
