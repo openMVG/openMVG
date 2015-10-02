@@ -9,6 +9,7 @@
 #include <QDebug>
 
 #include <algorithm>
+#include <clocale>
 
 #include "node.hpp"
 #include "ControlPointTableView.hpp"
