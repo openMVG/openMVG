@@ -7,6 +7,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_SfMInit_ImageListing
   openMVG_system
   openMVG_image
   openMVG_features
+  openMVG_exif
   openMVG_sfm
   easyexif
   )
@@ -230,6 +231,17 @@ TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVE2
   openMVG_sfm
   stlplus
   )
+
+# - Export a SfM openMVG scene to Alembic format
+#
+FIND_PACKAGE(Alembic)
+if (ALEMBIC_FOUND)
+  ADD_EXECUTABLE(openMVG_main_openMVG2ABC main_openMVG2ABC.cpp)
+  INCLUDE_DIRECTORIES(${ABC_INCLUDE_DIR})
+  TARGET_LINK_LIBRARIES(openMVG_main_openMVG2ABC ${ABC_LIBRARIES} ${OpenMVG_LIBRARIES})
+  SET_PROPERTY(TARGET openMVG_main_openMVG2ABC PROPERTY FOLDER OpenMVG/software)
+  INSTALL(TARGETS openMVG_main_openMVG2ABC DESTINATION bin/)
+endif(ALEMBIC_FOUND)
 
 # - Export a SfM openMVG scene to meshlab scene with rasters
 # -

@@ -3,6 +3,7 @@
              information from a JPEG file.
 
   Based on the description of the EXIF file format at:
+  -- http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/EXIF.html
   -- http://park2.wakwak.com/~tsuruzoh/Computer/Digicams/exif-e.html
   -- http://www.media.mit.edu/pia/Research/deepview/exif.html
   -- http://www.exif.org/Exif2-2.PDF
@@ -95,6 +96,10 @@ class EXIFInfo {
   std::string DateTimeDigitized;    // Digitization date and time (may not exist)
   std::string SubSecTimeOriginal;   // Sub-second time that original picture was taken
   std::string Copyright;            // File copyright information
+  std::string ImageUniqueID;
+  std::string SerialNumber;
+  std::string LensModel;
+  std::string LensSerialNumber;
   double ExposureTime;              // Exposure time in seconds
   double FNumber;                   // F/stop
   unsigned short ISOSpeedRatings;   // ISO speed

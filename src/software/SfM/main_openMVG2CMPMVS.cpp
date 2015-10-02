@@ -23,6 +23,22 @@ using namespace openMVG::sfm;
 #include <iterator>
 #include <iomanip>
 
+std::string replaceAll( std::string const& original, std::string const& from, std::string const& to )
+{
+    std::string results;
+    std::string::const_iterator end = original.end();
+    std::string::const_iterator current = original.begin();
+    std::string::const_iterator next = std::search( current, end, from.begin(), from.end() );
+    while ( next != end ) {
+        results.append( current, next );
+        results.append( to );
+        current = next + from.size();
+        next = std::search( current, end, from.begin(), from.end() );
+    }
+    results.append( current, next );
+    return results;
+}
+
 bool exportToCMPMVSFormat(
   const SfM_Data & sfm_data,
   const std::string & sOutDirectory // Output CMPMVS files directory
@@ -63,7 +79,8 @@ bool exportToCMPMVSFormat(
       Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
 
       // View Id re-indexing
-      map_viewIdToContiguous.insert(std::make_pair(view->id_view, map_viewIdToContiguous.size()));
+      // Need to start at 1 for CMPMVS
+      map_viewIdToContiguous.insert(std::make_pair(view->id_view, map_viewIdToContiguous.size() + 1));
 
       // We have a valid view with a corresponding camera & pose
       const Mat34 P = iterIntrinsic->second.get()->get_projective_equivalent(pose);
@@ -93,11 +110,12 @@ bool exportToCMPMVSFormat(
       const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
       std::ostringstream os;
       os << std::setw(5) << std::setfill('0') << map_viewIdToContiguous[view->id_view];
+      
       std::string dstImage = stlplus::create_filespec(
         stlplus::folder_append_separator(sOutDirectory), os.str(),"jpg");
 
       const IntrinsicBase * cam = iterIntrinsic->second.get();
-      if (map_viewIdToContiguous[view->id_view] == 0)
+      if (map_viewIdToContiguous[view->id_view] == 1)
         w_h_image_size = std::make_pair(cam->w(), cam->h());
       else
       {
@@ -131,81 +149,66 @@ bool exportToCMPMVSFormat(
         }
       }
     }
-
-    // Write the mvs_firstRun script
+    std::string dirName = stlplus::folder_append_separator(sOutDirectory);
+    std::cout << "Linux path is: " << dirName << std::endl;
+    dirName = replaceAll(dirName, "/s/prods/", "V:\\");
+    dirName = replaceAll(dirName, "/s/v/", "V:\\");
+    dirName = replaceAll(dirName, "/", "\\");
+    std::cout << "Windows path is: " << dirName << std::endl;
+    
+    // Write the cmpmvs ini file
     std::ostringstream os;
     os << "[global]" << os.widen('\n')
-    << "dirName=\"" << stlplus::folder_append_separator(sOutDirectory) <<"\"" << os.widen('\n')
+    << "dirName=\"" << dirName << "\"" << os.widen('\n')
     << "prefix=\"\"" << os.widen('\n')
     << "imgExt=\"jpg\"" << os.widen('\n')
     << "ncams=" << map_viewIdToContiguous.size() << os.widen('\n')
     << "width=" << w_h_image_size.first << os.widen('\n')
     << "height=" << w_h_image_size.second << os.widen('\n')
     << "scale=2" << os.widen('\n')
-    << "workDirName=\"_tmp_fast\"" << os.widen('\n')
+    << "workDirName=\"_tmp_scale2\"" << os.widen('\n')
     << "doPrepareData=TRUE" << os.widen('\n')
     << "doPrematchSifts=TRUE" << os.widen('\n')
     << "doPlaneSweepingSGM=TRUE"  << os.widen('\n')
     << "doFuse=TRUE" << os.widen('\n')
     << "nTimesSimplify=10" << os.widen('\n')
     << os.widen('\n')
-    << "[prematching]" << os.widen('\n')
-    << "minAngle=3.0" << os.widen('\n')
-    << os.widen('\n')
-    << "[grow]" << os.widen('\n')
-    << "minNumOfConsistentCams=6" << os.widen('\n')
-    << os.widen('\n')
-    << "[filter]" << os.widen('\n')
-    << "minNumOfConsistentCams=2" << os.widen('\n')
-    << os.widen('\n')
-    << "#do not erase empy lines after this comment otherwise it will crash ... bug" << os.widen('\n')
-    << os.widen('\n')
-    << os.widen('\n');
 
-    std::ofstream file(
-	    stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory),
-	    "01_mvs_firstRun" ,"ini").c_str());
-    file << os.str();
-    file.close();
-
-    // limitedScale
-    os.str("");
-    os << "[global]" << os.widen('\n')
-    << "dirName=\"" << stlplus::folder_append_separator(sOutDirectory) <<"\"" << os.widen('\n')
-    << "prefix=\"\"" << os.widen('\n')
-    << "imgExt=\"jpg\"" << os.widen('\n')
-    << "ncams=" << map_viewIdToContiguous.size() << os.widen('\n')
-    << "width=" << w_h_image_size.first << os.widen('\n')
-    << "height=" << w_h_image_size.second << os.widen('\n')
-    << "scale=2" << os.widen('\n')
-    << "workDirName=\"_tmp_fast\"" << os.widen('\n')
-    << "doPrepareData=FALSE" << os.widen('\n')
-    << "doPrematchSifts=FALSE" << os.widen('\n')
-    << "doPlaneSweepingSGM=FALSE"  << os.widen('\n')
-    << "doFuse=FALSE" << os.widen('\n')
-    << os.widen('\n')
     << "[uvatlas]" << os.widen('\n')
-    << "texSide=1024" << os.widen('\n')
-    << "scale=1" << os.widen('\n')
+    << "texSide=8192" << os.widen('\n')
+    << "scale=2" << os.widen('\n')
     << os.widen('\n')
-    << "[delanuaycut]" << os.widen('\n')
-    << "saveMeshTextured=FALSE" << os.widen('\n')
-    << os.widen('\n')
+    
     << "[hallucinationsFiltering]" << os.widen('\n')
     << "useSkyPrior=FALSE" << os.widen('\n')
     << "doLeaveLargestFullSegmentOnly=FALSE" << os.widen('\n')
-    << "doRemoveHugeTriangles=TRUE" << os.widen('\n')
+    << "doRemoveHugeTriangles=FALSE" << os.widen('\n')
     << os.widen('\n')
+
+    << "[delanuaycut]" << os.widen('\n')
+    << "saveMeshTextured=TRUE" << os.widen('\n')
+    << os.widen('\n')
+
     << "[largeScale]" << os.widen('\n')
-    << "doGenerateAndReconstructSpaceMaxPts=TRUE" << os.widen('\n')
+    << "workDirName=\"largeScaleMaxPts01024_scale2\"" << os.widen('\n')
+    << "doReconstructSpaceAccordingToVoxelsArray=TRUE" << os.widen('\n')
+    << "doGenerateAndReconstructSpaceMaxPts=FALSE" << os.widen('\n')
     << "doGenerateSpace=TRUE" << os.widen('\n')
     << "planMaxPts=3000000" << os.widen('\n')
-    << "doComputeDEMandOrtoPhoto=FALSE" << os.widen('\n')
-    << "doGenerateVideoFrames=FALSE" << os.widen('\n')
+    << "planMaxPtsPerVoxel=3000000" << os.widen('\n')
+    // << "doComputeDEMandOrtoPhoto=FALSE" << os.widen('\n')
+    // << "doGenerateVideoFrames=FALSE" << os.widen('\n')
+    << "nGridHelperVolumePointsDim=10" << os.widen('\n')
+    << "joinMeshesSaveTextured=TRUE" << os.widen('\n')
     << os.widen('\n')
     << "[meshEnergyOpt]" << os.widen('\n')
     << "doOptimizeOrSmoothMesh=FALSE" << os.widen('\n')
     << os.widen('\n')
+    << "[semiGlobalMatching]" << os.widen('\n')
+    << "wsh=4" << os.widen('\n')
+    << os.widen('\n')
+    << "[refineRc]" << os.widen('\n')
+    << "wsh=4" << os.widen('\n')
     << os.widen('\n')
     << "#EOF" << os.widen('\n')
     << os.widen('\n')
@@ -213,7 +216,7 @@ bool exportToCMPMVSFormat(
 
     std::ofstream file2(
 	    stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory),
-	    "02_mvs_limitedScale" ,"ini").c_str());
+	    "cmpmvs_scale2" ,"ini").c_str());
     file2 << os.str();
     file2.close();
   }
@@ -245,6 +248,7 @@ int main(int argc, char *argv[]) {
   // Create output dir
   if (!stlplus::folder_exists(sOutDir))
     stlplus::folder_create( sOutDir );
+
 
   // Read the input SfM scene
   SfM_Data sfm_data;

@@ -26,11 +26,11 @@ struct Matches_Provider
     if (!stlplus::is_file(matchesfile))
     {
       std::cerr << std::endl
-        << "Invalid matches file" << std::endl;
+        << "Invalid matches file: " << matchesfile << std::endl;
       return false;
     }
     if (!matching::PairedIndMatchImport(matchesfile, _pairWise_matches)) {
-      std::cerr<< "Unable to read the matches file:" << matchesfile << std::endl;
+      std::cerr<< "Unable to read the matches file: " << matchesfile << std::endl;
       return false;
     }
     // Filter to keep only the one defined in SfM_Data
