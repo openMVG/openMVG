@@ -126,7 +126,7 @@ int main(int argc, char** argv)
   {
   
     sfm::Image_Localizer_Match_Data matchData;
-    localizer.Localize(imageGray, 
+    bool localized = localizer.Localize(imageGray, 
                        queryIntrinsics, 
                        numResults, 
                        cameraPose, 
@@ -136,7 +136,10 @@ int main(int argc, char** argv)
                        &matchData);
     // save data
 #if HAVE_ALEMBIC
-    exporter.appendCamera("camera."+std::to_string(frameCounter), cameraPose, &queryIntrinsics);
+    if(localized)
+    {
+      exporter.appendCamera("camera."+std::to_string(frameCounter), cameraPose, &queryIntrinsics);
+    }
 #endif
     ++frameCounter;
   }
