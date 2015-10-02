@@ -222,7 +222,7 @@ bool ImageFeed::FeederImpl::feedWithJson(image::Image<unsigned char> &imageGray,
     return false;
   }
   // get the associated Intrinsics
-  if(view->id_intrinsic == UndefinedIndexT)
+  if((view->id_intrinsic == UndefinedIndexT) or (!_sfmdata.GetIntrinsics().count(view->id_intrinsic)))
   {
     std::cout << "Image "<< imageName << " does not have associated intrinsics" << std::endl;
     hasIntrinsics = false;
