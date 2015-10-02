@@ -24,13 +24,13 @@ namespace localization {
 
 std::ostream& operator<<( std::ostream& os, const voctree::Document &doc )	
 {
-	os << "[ ";
-	for( const voctree::Word &w : doc )
-	{
-		os << w << ", ";
-	}
-	os << "];\n";
-	return os;
+  os << "[ ";
+  for( const voctree::Word &w : doc )
+  {
+          os << w << ", ";
+  }
+  os << "];\n";
+  return os;
 }
 
 
@@ -289,6 +289,10 @@ bool VoctreeLocalizer::Localize(const image::Image<unsigned char> & imageGray,
       POPART_COUT("[matching]\tSkipping matching with " << matchedView->s_Img_path << " as it has too few visible 3D points");
       continue;
     }
+    else
+    {
+      POPART_COUT("[matching]\tTrying to match the query image with " << matchedView->s_Img_path);
+    }
     
     // its associated reconstructed regions
     const Reconstructed_RegionsT& matchedRegions = _regions_per_view[matchedViewIndex];
@@ -316,10 +320,15 @@ bool VoctreeLocalizer::Localize(const image::Image<unsigned char> & imageGray,
                                       vec_featureMatches);
     if (!matchWorked)
     {
-      POPART_COUT("\tmatching with " << matchedView->s_Img_path << " failed! Skipping image");
+      POPART_COUT("[matching]\tMatching with " << matchedView->s_Img_path << " failed! Skipping image");
       continue;
     }
-    assert(vec_featureMatches.size()!=0);
+    else
+    {
+      POPART_COUT("[matching]\tFound " << vec_featureMatches.size() << " matches");
+    }
+    assert(vec_featureMatches.size()>0);
+    
     // D. recover the 2D-3D associations from the matches 
     // Each matched feature in the current similar image is associated to a 3D point,
     // hence we can recover the 2D-3D associations to estimate the pose
@@ -355,7 +364,7 @@ bool VoctreeLocalizer::Localize(const image::Image<unsigned char> & imageGray,
     // estimate the pose
     // Do the resectioning: compute the camera pose.
     double errorMax = std::numeric_limits<double>::max();
-    POPART_COUT("[poseEstimation]\tEstimating camera pose");
+    POPART_COUT("[poseEstimation]\tEstimating camera pose...");
     bool bResection = sfm::SfM_Localizer::Localize(std::make_pair(imageGray.Width(), imageGray.Height()),
                                                    // pass the input intrinsic if they are valid, null otherwise
                                                    (useInputIntrinsics) ? &queryIntrinsics : nullptr,
@@ -368,6 +377,9 @@ bool VoctreeLocalizer::Localize(const image::Image<unsigned char> & imageGray,
       continue;
     }
     POPART_COUT("[poseEstimation]\tResection SUCCEDED");
+       
+    POPART_COUT("R est\n" << pose.rotation());
+    POPART_COUT("t est\n" << pose.translation());
 
     // if we didn't use the provided intrinsics, estimate K from the projection
     // matrix estimated by the localizer and initialize the queryIntrinsics with
@@ -435,8 +447,9 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
     POPART_COUT("\tRobust matching failed!");
     return false;
   }
-
-  // they contains the matching features
+  assert(vec_featureMatches.size()>0);
+  // prepare the data for geometric filtering: for each matched pair of features,
+  // store them in two matrices
   Mat featuresI(2, vec_featureMatches.size());
   Mat featuresJ(2, vec_featureMatches.size());
   // fill the matrices with the features according to vec_featureMatches
@@ -447,6 +460,7 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
     featuresI.col(i) = matcher.getDatabaseRegions()->GetRegionPosition(match._i);
     featuresJ.col(i) = matchedRegions._regions.GetRegionPosition(match._j);
   }
+  // perform the geometric filtering
   matching_image_collection::GeometricFilter_FMatrix_AC geometricFilter(4.0);
   std::vector<size_t> vec_matchingInliers;
   bool valid = geometricFilter.Robust_estimation(featuresI, // points of the query image
@@ -456,7 +470,7 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
                                                  vec_matchingInliers);
   if(!valid)
   {
-    POPART_COUT("\tUnable to robustly matching the query image with the database image.");
+    POPART_COUT("[matching]\tUnable to robustly matching the query image with the database image.");
     return false;
   }
   if(!b_guided_matching)
@@ -494,7 +508,6 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
             Square(fDistRatio),
             vec_featureMatches); // output
   }
-  
   return true;
 }
 
