@@ -461,20 +461,27 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
   }
   if(!b_guided_matching)
   {
-    std::vector<matching::IndMatch> vec_robustFeatureMatches(vec_matchingInliers.size());
-    for(const int i : vec_matchingInliers)
+    // prepare to output vec_featureMatches
+    // the indices stored in vec_matchingInliers refer to featuresI, now we need
+    // to recover the original indices wrt matchedRegions and queryRegions and fill 
+    // a temporary vector.
+    std::vector<matching::IndMatch> vec_robustFeatureMatches;
+    vec_robustFeatureMatches.reserve(vec_matchingInliers.size());
+    for(const size_t idx : vec_matchingInliers)
     {
-      vec_robustFeatureMatches[i] = vec_featureMatches[i];
+      // use the index stored in vec_matchingInliers to get the indices of the 
+      // original matching features and store them in vec_robustFeatureMatches
+      vec_robustFeatureMatches.emplace_back(vec_featureMatches[idx]);
     }
-    // replace the featuresMatches with the robust ones.
-    std::swap(vec_featureMatches, vec_robustFeatureMatches);
+    // just swap the vector so the output is ready
+    std::swap(vec_robustFeatureMatches, vec_featureMatches);
   }
   else
   {
     // Use the Fundamental Matrix estimated by the robust estimation to
     // perform guided matching.
     // So we ignore the previous matches and recompute all matches.
-
+    vec_featureMatches.clear();
     geometry_aware::GuidedMatching<
             Mat3,
             openMVG::fundamental::kernel::EpipolarDistanceError>(
