@@ -1,5 +1,6 @@
 #include <openMVG/sfm/sfm_data_io.hpp>
 #include <openMVG/voctree/database.hpp>
+#include <openMVG/voctree/databaseIO.hpp>
 #include <openMVG/voctree/vocabulary_tree.hpp>
 #include <openMVG/voctree/descriptor_loader.hpp>
 
@@ -263,7 +264,7 @@ int main(int argc, char** argv)
   {
     // otherwise qury the database with the provided query list
     POPART_COUT("Querying the database with the documents in " << queryList);
-//    popart::vision::database::queryDatabase(queryList, tree, db, numImageQuery, allMatches);
+    openMVG::voctree::queryDatabase(queryList, tree, db, numImageQuery, allMatches);
   }
 
   if(withOutDir)
