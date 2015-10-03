@@ -15,8 +15,8 @@ void getInfoBinFile(const std::string &path, int dim, size_t &numDescriptors, in
 
   if(!fs.is_open())
   {
-    cerr << "Error while opening " << path << endl;
-    cerr << "Error while opening " + path << endl;
+    std::cerr << "Error while opening " << path << std::endl;
+    std::cerr << "Error while opening " + path << std::endl;
   }
 
   // go to the end of the file
