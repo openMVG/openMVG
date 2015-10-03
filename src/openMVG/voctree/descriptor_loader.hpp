@@ -57,12 +57,12 @@ void getInfoBinFile(const std::string &path, int dim, size_t &numDescriptors, in
 template<class DescriptorT>
 size_t readDescFromFiles(const std::string &fileFullPath, std::vector<DescriptorT>& descriptors, std::vector<size_t> &numFeatures)
 {
-  namespace boostfs = boost::filesystem;
+  namespace bfs = boost::filesystem;
   std::ifstream fs;
-  boostfs::path pathToFiles;
+  bfs::path pathToFiles;
 
   size_t numDescriptors = 0;
-  boostfs::path bp(fileFullPath);
+  bfs::path bp(fileFullPath);
 
   if(!bp.has_extension())
   {
@@ -103,16 +103,16 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
     }
 
     // get the base path for the files
-    pathToFiles = boostfs::path(fileFullPath).parent_path();
+    pathToFiles = bfs::path(fileFullPath).parent_path();
 
     // explore the sfm_data container to get the files path
     for(openMVG::sfm::Views::const_iterator it = sfmdata.GetViews().begin(); it != sfmdata.GetViews().end(); ++it)
     {
       // get just the image name, remove the extension
-      std::string filepath = boostfs::path(it->second->s_Img_path).stem().string();
+      std::string filepath = bfs::path(it->second->s_Img_path).stem().string();
 
       // generate the equivalent .desc file path
-      filepath = boostfs::path(pathToFiles / boostfs::path(filepath + ".desc")).string();
+      filepath = bfs::path(pathToFiles / bfs::path(filepath + ".desc")).string();
 
       // add the filepath in the vector
       descriptorsFiles.push_back(filepath);
@@ -123,7 +123,7 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
     // processing a file .txt containing the relative paths
 
     // Extract the folder path from the list file path
-    pathToFiles = boostfs::path(fileFullPath).parent_path();
+    pathToFiles = bfs::path(fileFullPath).parent_path();
 
     // Open file
     fs.open(fileFullPath, std::ios::in);
@@ -140,7 +140,7 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
       // we have to do that because OMVG does not really output a clean list.txt, it also
       // contains other stuff, so we look at the first '.' to get the extension (not robust at all)
       std::string filepath = line.substr(0, line.find_first_of("."));
-      filepath = boostfs::path(pathToFiles / boostfs::path(filepath + ".desc")).string();
+      filepath = bfs::path(pathToFiles / bfs::path(filepath + ".desc")).string();
 
       // add the filepath in the vector
       descriptorsFiles.push_back(filepath);
@@ -173,7 +173,7 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
     else
     {
       // get the file size in byte and estimate the number of features without opening the file
-      numDescriptors += (boostfs::file_size(*it) / bytesPerElement) / DescriptorT::static_size;
+      numDescriptors += (bfs::file_size(*it) / bytesPerElement) / DescriptorT::static_size;
     }
   }
   BOOST_ASSERT(bytesPerElement > 0);
