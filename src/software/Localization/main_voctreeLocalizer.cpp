@@ -13,6 +13,12 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/progress.hpp>
 #include <boost/program_options.hpp> 
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/min.hpp>
+#include <boost/accumulators/statistics/max.hpp>
+#include <boost/accumulators/statistics/sum.hpp>
 
 #include <iostream>
 #include <string>
@@ -26,12 +32,18 @@
 
 
 namespace bfs = boost::filesystem;
+namespace bacc = boost::accumulators;
 namespace po = boost::program_options;
 
 using namespace openMVG;
 
-static const int DIMENSION = 128;
 
+std::string myToString(std::size_t i, std::size_t zeroPadding)
+{
+  std::stringstream ss;
+  ss << std::setw(zeroPadding) << std::setfill('0') << i;
+  return ss.str();
+}
 
 int main(int argc, char** argv)
 {
@@ -91,6 +103,19 @@ int main(int argc, char** argv)
     POPART_COUT("Usage:\n\n" << desc);
     return EXIT_FAILURE;
   }
+  {
+    POPART_COUT("Program called with the following parameters:");
+    POPART_COUT("\tvoctree: " << vocTreeFilepath);
+    POPART_COUT("\tweights: " << weightsFilepath);
+    POPART_COUT("\tcalibration: " << calibFile);
+    POPART_COUT("\tsfmdata: " << sfmFilePath);
+    POPART_COUT("\tmediafile: " << sfmFilePath);
+    POPART_COUT("\tsiftPath: " << descriptorsFolder);
+    POPART_COUT("\tresults: " << numResults);
+    POPART_COUT("\tcommon views: " << numCommonViews);
+//    POPART_COUT("\tvisual debug: " << visualDebug);
+//    POPART_COUT("\talgorithm: " << algorithm);
+  }
  
   // init the localizer
   localization::VoctreeLocalizer localizer;
@@ -122,10 +147,17 @@ int main(int argc, char** argv)
   
   size_t frameCounter = 0;
   
+  // Define an accumulator set for computing the mean and the
+  // standard deviation of the time taken for localization
+  bacc::accumulator_set<double, bacc::stats<bacc::tag::mean, bacc::tag::min, bacc::tag::max, bacc::tag::sum > > stats;
+  
   while(feed.next(imageGray, queryIntrinsics, hasIntrinsics))
   {
-  
+    POPART_COUT("******************************");
+    POPART_COUT("FRAME " << myToString(frameCounter,4));
+    POPART_COUT("******************************");
     sfm::Image_Localizer_Match_Data matchData;
+    auto detect_start = std::chrono::steady_clock::now();
     bool localized = localizer.Localize(imageGray, 
                        queryIntrinsics, 
                        numResults, 
@@ -134,14 +166,30 @@ int main(int argc, char** argv)
                        hasIntrinsics/*useInputIntrinsics*/, 
                        true/*refineIntrinsics*/, 
                        &matchData);
+    auto detect_end = std::chrono::steady_clock::now();
+    auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
+    POPART_COUT("\nLocalization took  " << detect_elapsed.count() << " [ms]");
+    stats(detect_elapsed.count());
+    
     // save data
-#if HAVE_ALEMBIC
     if(localized)
     {
-      exporter.appendCamera("camera."+std::to_string(frameCounter), cameraPose, &queryIntrinsics);
-    }
+#if HAVE_ALEMBIC
+      exporter.appendCamera("camera."+myToString(frameCounter,4), cameraPose, &queryIntrinsics);
 #endif
+    }
+    else
+    {
+      POPART_CERR("Unable to localize frame " << frameCounter);
+    }
     ++frameCounter;
   }
   
+  // print out some time stats
+  POPART_COUT("\n\n******************************");
+  POPART_COUT("Localized " << frameCounter+1 << " images");
+  POPART_COUT("Processing took " << bacc::sum(stats)*1000 << " [s] overall");
+  POPART_COUT("Mean time for localization:   " << bacc::mean(stats) << " [ms]");
+  POPART_COUT("Max time for localization:   " << bacc::max(stats) << " [ms]");
+  POPART_COUT("Min time for localization:   " << bacc::min(stats) << " [ms]");
 }
