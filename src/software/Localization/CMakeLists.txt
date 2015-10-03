@@ -29,6 +29,13 @@ IF(OpenMVG_BUILD_VOCTREE)
     INSTALL(TARGETS openMVG_main_generatePairList DESTINATION bin/)
     TARGET_LINK_LIBRARIES(openMVG_main_generatePairList openMVG_voctree ${BOOST_LIBRARIES})
 
+    ###
+    # voctree query utility
+    ###
+    ADD_EXECUTABLE(openMVG_main_voctreeQueryUtility voctreeQueryUtility.cpp)
+    INSTALL(TARGETS openMVG_main_voctreeQueryUtility DESTINATION bin/)
+    TARGET_LINK_LIBRARIES(openMVG_main_voctreeQueryUtility openMVG_voctree ${BOOST_LIBRARIES})
+
 
     #@TODO decide where to put the binaries
 
