@@ -14,6 +14,7 @@
 //#include <cereal/archives/json.hpp>
 
 #include <algorithm>
+#include <chrono>
 
 //@fixme move/redefine
 #define POPART_COUT(x) std::cout << x << std::endl
@@ -230,8 +231,11 @@ bool VoctreeLocalizer::Localize(const image::Image<unsigned char> & imageGray,
   // A. extract descriptors and features from image
   POPART_COUT("[features]\tExtract SIFT from query image");
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Float_Regions());
+  auto detect_start = std::chrono::steady_clock::now();
   _image_describer.Describe(imageGray, tmpQueryRegions, nullptr);
-  POPART_COUT("[features]\tExtract SIFT done: found " << tmpQueryRegions->RegionCount() << " features");
+  auto detect_end = std::chrono::steady_clock::now();
+  auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
+  POPART_COUT("[features]\tExtract SIFT done: found " << tmpQueryRegions->RegionCount() << " features in " << detect_elapsed.count() << " [ms]" );
   features::SIFT_Float_Regions queryRegions = *dynamic_cast<features::SIFT_Float_Regions*> (tmpQueryRegions.get());
 
   // B. Find the (visually) similar images in the database 
