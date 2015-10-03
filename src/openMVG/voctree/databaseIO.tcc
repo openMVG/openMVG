@@ -40,6 +40,7 @@ void queryDatabase(const std::string &fileFullPath,
   {
     std::cerr << "File without extension not recognized! " << fileFullPath << std::endl;
     std::cerr << "The file  " + fileFullPath + " is neither a JSON nor a txt file" << std::endl;
+    throw std::invalid_argument("Unrecognized extension for " + fileFullPath);
   }
 
   // get the extension of the file and put it lowercase
