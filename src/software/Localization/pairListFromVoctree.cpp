@@ -8,7 +8,7 @@
 
 #include <openMVG/voctree/database.hpp>
 #include <openMVG/voctree/vocabulary_tree.hpp>
-#include <openMVG/voctree/descriptor_loader.hpp>
+#include <openMVG/voctree/databaseIO.hpp>
 
 #include <Eigen/Core>
 

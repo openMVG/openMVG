@@ -1,19 +1,10 @@
 #pragma once
 
-#include <openMVG/features/descriptor.hpp>
-#include <openMVG/sfm/sfm_data_io.hpp>
 #include "database.hpp"
 #include "vocabulary_tree.hpp"
+#include <openMVG/features/descriptor.hpp>
 
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string/case_conv.hpp>
-#include <boost/progress.hpp>
-
-#include <iostream>
-#include <fstream>
 #include <string>
-
-//using namespace std;
 
 namespace openMVG {
 namespace voctree {
@@ -79,122 +70,9 @@ void getListOfDescriptorFiles(const std::string &listFile, std::vector<std::stri
  *
  */
 template<class DescriptorT>
-size_t readDescFromFiles(const std::string &fileFullPath, std::vector<DescriptorT>& descriptors, std::vector<size_t> &numFeatures)
-{
-  namespace bfs = boost::filesystem;
-  std::vector<std::string> descriptorsFiles;
-  getListOfDescriptorFiles(fileFullPath, descriptorsFiles);
-  std::size_t numDescriptors = 0;
+size_t readDescFromFiles(const std::string &fileFullPath, std::vector<DescriptorT>& descriptors, std::vector<size_t> &numFeatures);
 
-  // Allocate the memory by reading in a first time the files to get the number
-  // of descriptors
-  int bytesPerElement = 0;
+} // namespace voctree
+} // namespace openMVG
 
-  // Display infos and progress bar
-  std::cout << "Pre-computing the memory needed..." << std::endl;
-  boost::progress_display display(descriptorsFiles.size());
-
-  // Read all files and get the number of descriptors to load
-  for(std::vector<std::string>::const_iterator it = descriptorsFiles.begin(); it != descriptorsFiles.end(); ++it)
-  for(const auto &currentFile : descriptorsFiles)
-  {
-    // if it is the first one read the number of descriptors and the type of data (we are assuming the the feat are all the same...)
-    // bytesPerElement could be 0 even after the first element (eg it has 0 descriptors...), so do it until we get the correct info
-    if(bytesPerElement == 0)
-    {
-      getInfoBinFile(currentFile, DescriptorT::static_size, numDescriptors, bytesPerElement);
-    }
-    else
-    {
-      // get the file size in byte and estimate the number of features without opening the file
-      numDescriptors += (bfs::file_size(*it) / bytesPerElement) / DescriptorT::static_size;
-    }
-  }
-  BOOST_ASSERT(bytesPerElement > 0);
-  std::cout << "Found " << numDescriptors << " descriptors overall, allocating memory..." << std::endl;
-
-  // Allocate the memory
-  descriptors.reserve(numDescriptors);
-  size_t numDescriptorsCheck = numDescriptors; // for later check
-  numDescriptors = 0;
-
-  // Read the descriptors
-  std::cout << "Reading the descriptors..." << std::endl;
-  display.restart(descriptorsFiles.size());
-
-  // Run through the path vector and read the descriptors
-  for(std::vector<std::string>::const_iterator it = descriptorsFiles.begin(); it != descriptorsFiles.end(); ++it, ++display)
-  {
-    // Read the descriptors and append them in the vector
-    loadDescsFromBinFile(*it, descriptors, true);
-    size_t result = descriptors.size();
-
-    // Add the number of descriptors from this file
-    numFeatures.push_back(result - numDescriptors);
-
-    // Update the overall counter
-    numDescriptors = result;
-  }
-  BOOST_ASSERT(numDescriptors == numDescriptorsCheck);
-
-  // Return the result
-  return numDescriptors;
-}
-
-/**
- * @brief Given a vocabulary tree and a set of features it builds a database
- *
- * @param[in] fileFullPath A file containing the path the features to load, it could be a .txt or an OpenMVG .json
- * @param[in] tree The vocabulary tree to be used for feature quantization
- * @param[out] db The built database
- * @param[out] documents A map containing for each image the list of associated visual words
- * @param[in,out] numFeatures a vector collecting for each file read the number of features read
- * @return the number of overall features read
- */
-template<class DescriptorT>
-std::size_t populateDatabase(const std::string &fileFullPath,
-                             const VocabularyTree<DescriptorT> &tree,
-                             Database &db,
-                             std::map<size_t, Document> &documents,
-                             std::vector<size_t> &numFeatures)
-{ 
-  std::vector<std::string> descriptorsFiles;
-  getListOfDescriptorFiles(fileFullPath, descriptorsFiles);
-  std::size_t numDescriptors = 0;
-  
-  // Read the descriptors
-  std::cout << "Reading the descriptors..." << std::endl;
-  boost::progress_display display(descriptorsFiles.size());
-  size_t docId = 0;
-  numFeatures.resize(descriptorsFiles.size());
-
-  // Run through the path vector and read the descriptors
-  for(const auto &currentFile : descriptorsFiles)
-  {
-    std::vector<DescriptorT> descriptors;
-
-    // Read the descriptors
-    loadDescsFromBinFile(currentFile, descriptors, false);
-    size_t result = descriptors.size();
-    
-    std::vector<openMVG::voctree::Word> imgVisualWords = tree.quantize(descriptors);
-
-    // Add the vector to the documents
-    documents[docId] = imgVisualWords;
-
-    // Insert document in database
-    db.insert(imgVisualWords);
-
-    // Update the overall counter
-    numDescriptors += result;
-
-    // Save the number of features of this image
-    numFeatures[docId] = result;
-  }
-
-  // Return the result
-  return numDescriptors;
-}
-
-}
-}
+#include "descriptor_loader.tcc"
