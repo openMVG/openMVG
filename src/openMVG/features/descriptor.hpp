@@ -14,6 +14,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <exception>
 
 namespace openMVG {
 namespace features {
@@ -202,6 +203,13 @@ static bool loadDescsFromBinFile(
     vec_desc.clear();
 
   std::ifstream fileIn(sfileNameDescs.c_str(), std::ios::in | std::ios::binary);
+  
+  if(!fileIn.is_open())
+  {
+    std::cerr << "Unable to open file " << sfileNameDescs << std::endl;
+    throw std::invalid_argument("Unable to open file " + sfileNameDescs);
+  }
+  
   //Read the number of descriptor in the file
   std::size_t cardDesc = 0;
   fileIn.read((char*) &cardDesc,  sizeof(std::size_t));
