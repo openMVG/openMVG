@@ -9,11 +9,11 @@ IF(OpenMVG_BUILD_VOCTREE)
     ###
     # Test the localization class
     ###
-    ADD_EXECUTABLE(openMVG_main_voctreLocalizer main_voctreeLocalizer.cpp)
-    INSTALL(TARGETS openMVG_main_voctreLocalizer DESTINATION bin/)
-    TARGET_LINK_LIBRARIES(openMVG_main_voctreLocalizer openMVG_localization openMVG_dataio openMVG_image openMVG_features vlsift ${BOOST_LIBRARIES})
+    ADD_EXECUTABLE(openMVG_main_voctreeLocalizer main_voctreeLocalizer.cpp)
+    INSTALL(TARGETS openMVG_main_voctreeLocalizer DESTINATION bin/)
+    TARGET_LINK_LIBRARIES(openMVG_main_voctreeLocalizer openMVG_localization openMVG_dataio openMVG_image openMVG_features vlsift ${BOOST_LIBRARIES})
     if(OpenMVG_USE_ALEMBIC)
-        target_link_libraries(openMVG_main_voctreLocalizer ${ABC_LIBRARIES})
+        target_link_libraries(openMVG_main_voctreeLocalizer ${ABC_LIBRARIES})
     endif()
     ###
     # Create the vocabulary tree
