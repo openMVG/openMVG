@@ -348,7 +348,7 @@ int main(int argc, char** argv)
       else
       {
         // this is very wrong
-        POPART_CERR("Could find the image file for the document " << i << "!");
+        POPART_CERR("Could not find the image file for the document " << i << "!");
         return EXIT_FAILURE;
       }
       boostfs::create_directories(dirname);
@@ -369,18 +369,18 @@ int main(int argc, char** argv)
         boostfs::path sylinkName; //< the name used for the symbolic link
 
         // get the dirname from the filename
-        openMVG::sfm::Views::const_iterator it = sfmdataQuery->GetViews().find(matches[j].id);
-        if(it != sfmdataQuery->GetViews().end())
+        openMVG::sfm::Views::const_iterator it = sfmdata.GetViews().find(matches[j].id);
+        if(it != sfmdata.GetViews().end())
         {
           boostfs::path imgName(it->second->s_Img_path);
           sylinkName = boostfs::path(myToString(j, 4) + "." + imgName.filename().string());
-          boostfs::path imgPath(sfmdataQuery->s_root_path);
+          boostfs::path imgPath(sfmdata.s_root_path);
           absoluteFilename = imgPath / imgName;
         }
         else
         {
           // this is very wrong
-          POPART_CERR("Could find the image file for the document " << matches[j].id << "!");
+          POPART_CERR("Could not find the image file for the document " << matches[j].id << "!");
           return EXIT_FAILURE;
         }
         boostfs::create_symlink(absoluteFilename, dirname / sylinkName);
