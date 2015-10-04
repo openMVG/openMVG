@@ -126,10 +126,9 @@ void getListOfDescriptorFiles(const std::string &fileFullPath, std::vector<std::
     std::string line;
     while(getline(fs, line))
     {
-      // we have to do that because OMVG does not really output a clean list.txt, it also
-      // contains other stuff, so we look at the first '.' to get the extension (not robust at all)
-      std::string filepath = line.substr(0, line.find_first_of("."));
-      filepath = bfs::path(pathToFiles / bfs::path(filepath + ".desc")).string();
+      // extract the filename without extension and create on with .desc as extension
+      const std::string filename = bfs::path(line).stem().string() + ".desc";
+      const std::string filepath = (pathToFiles / filename).string();
 
       // add the filepath in the vector
       descriptorsFiles.push_back(filepath);
