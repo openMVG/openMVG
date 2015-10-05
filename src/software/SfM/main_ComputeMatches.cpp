@@ -337,7 +337,8 @@ int main(int argc, char **argv)
       if( pairs.empty() )
       {
         std::cout << "No image pair to match." << std::endl;
-        return EXIT_FAILURE;
+        // If we only compute a selection of matches, we may have no match.
+        return rangeSize ? EXIT_SUCCESS : EXIT_FAILURE;
       }
       std::cout << "There are " << sfm_data.GetViews().size() << " views and " << pairs.size() << " image pairs." << std::endl;
 
@@ -347,7 +348,8 @@ int main(int argc, char **argv)
       if( map_PutativesMatches.empty() )
       {
         std::cout << "No putative matches." << std::endl;
-        return EXIT_FAILURE;
+        // If we only compute a selection of matches, we may have no match.
+        return rangeSize ? EXIT_SUCCESS : EXIT_FAILURE;
       }
       std::cout << "There are " << map_PutativesMatches.size() << " putative matches." << std::endl;
 
