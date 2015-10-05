@@ -68,7 +68,7 @@ int main(int argc, char **argv)
   int iMatchingVideoMode = -1;
   std::string sPredefinedPairList = "";
   int rangeStart = -1;
-  int rangeSize = 1;
+  int rangeSize = 0;
   bool bUpRight = false;
   std::string sNearestMatchingMethod = "AUTO";
   bool bForce = false;
@@ -375,7 +375,8 @@ int main(int argc, char **argv)
       if( map_PutativesMatches.empty() )
       {
         std::cout << "No putative matches." << std::endl;
-        return EXIT_FAILURE;
+        // We may have no matches if we perform matches on a selection of images pairs.
+        return rangeSize ? EXIT_SUCCESS : EXIT_FAILURE;
       }
       std::cout << "There are " << map_PutativesMatches.size() << " putative matches." << std::endl;
 
