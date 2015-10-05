@@ -20,9 +20,11 @@ ENDIF()
 OPTION(OpenMVG_BUILD_SHARED "Build OpenMVG shared libs" OFF)
 OPTION(OpenMVG_BUILD_TESTS "Build OpenMVG tests" OFF)
 OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG samples applications." ON)
+OPTION(OpenMVG_BUILD_DOC "Build OpenMVG documentation." ON)
 OPTION(OpenMVG_BUILD_OPENGL_EXAMPLES "Build OpenMVG openGL examples" OFF)
 OPTION(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
+OPTION(OpenMVG_USE_BOOST "Enable Boost" ON)
 
 SET(OPENMVG_VERSION_MAJOR 0)
 SET(OPENMVG_VERSION_MINOR 8)
@@ -51,6 +53,11 @@ IF(OpenMVG_BUILD_SHARED)
   SET(BUILD_SHARED_LIBS ON)
 ELSEIF()
   SET(BUILD_SHARED_LIBS OFF)
+ENDIF()
+
+# suppress annoying osi_clp warning
+IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    ADD_DEFINITIONS(-Wno-deprecated-register)
 ENDIF()
 
 # ==============================================================================
@@ -245,6 +252,7 @@ ADD_DEFINITIONS(-DEIGEN_MPL2_ONLY)
 # ==============================================================================
 FIND_PACKAGE(Ceres QUIET HINTS ${CERES_DIR_HINTS})
 IF(NOT Ceres_FOUND)
+  MESSAGE(STATUS "No external CERES detected, using the embedded one.")
   SET(OpenMVG_USE_INTERNAL_CERES ON)
   SET(CERES_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/include
@@ -351,6 +359,25 @@ IF(NOT LEMON_FOUND OR OpenMVG_USE_INTERNAL_LEMON)
 ENDIF()
 
 
+# ==============================================================================
+# Boost
+# ==============================================================================
+# - optional, it allows to compile the vocabulary tree
+# ==============================================================================
+IF(OpenMVG_USE_BOOST)
+    FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS system filesystem program_options unit_test_framework)
+    IF(Boost_FOUND)
+       MESSAGE(STATUS "Boost ${Boost_LIB_VERSION} found")
+       include_directories(${Boost_INCLUDE_DIRS})
+       link_directories(${Boost_LIBRARIES})
+       add_definitions(${Boost_DEFINITIONS})
+    ELSE()
+      MESSAGE(STATUS "Boost not found -- disabling the vocabulary tree")
+      UPDATE_CACHE_VARIABLE(OpenMVG_USE_BOOST OFF)
+    ENDIF(Boost_FOUND)
+ENDIF(OpenMVG_USE_BOOST)
+
+
 
 # ==============================================================================
 # Third-party libraries:
@@ -421,27 +448,30 @@ ADD_SUBDIRECTORY(nonFree)
 # --------------------------
 # Sphinx detection
 # ==============================================================================
-FIND_PACKAGE(Sphinx)
-IF (EXISTS ${SPHINX_EXECUTABLE})
-  SET(SPHINX_HTML_DIR "${CMAKE_CURRENT_BINARY_DIR}/htmlDoc")
+IF(OpenMVG_BUILD_DOC)
+  FIND_PACKAGE(Sphinx)
+  IF (EXISTS ${SPHINX_EXECUTABLE})
+     SET(SPHINX_HTML_DIR "${CMAKE_CURRENT_BINARY_DIR}/htmlDoc")
 
-  CONFIGURE_FILE(
-    "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst/conf.py"
-    "${CMAKE_CURRENT_BINARY_DIR}/conf.py"
-    @ONLY)
+     CONFIGURE_FILE(
+       "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst/conf.py"
+       "${CMAKE_CURRENT_BINARY_DIR}/conf.py"
+       @ONLY)
 
-  ADD_CUSTOM_TARGET(doc ALL
-    ${SPHINX_EXECUTABLE}
-    -b html
-    "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst"
-    "${SPHINX_HTML_DIR}"
-    COMMENT "Building HTML documentation with Sphinx")
+     ADD_CUSTOM_TARGET(doc ALL
+       ${SPHINX_EXECUTABLE}
+       -b html
+       "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst"
+       "${SPHINX_HTML_DIR}"
+       COMMENT "Building HTML documentation with Sphinx")
 
-  SET_PROPERTY(TARGET doc PROPERTY FOLDER OpenMVG)
+     SET_PROPERTY(TARGET doc PROPERTY FOLDER OpenMVG)
 
-ELSE (EXISTS ${SPHINX_EXECUTABLE})
-  MESSAGE("Sphinx need to be installed to generate the documentation")
-ENDIF (EXISTS ${SPHINX_EXECUTABLE})
+   ELSE (EXISTS ${SPHINX_EXECUTABLE})
+     MESSAGE("Sphinx need to be installed to generate the documentation")
+     UPDATE_CACHE_VARIABLE(OpenMVG_BUILD_DOC OFF)
+   ENDIF (EXISTS ${SPHINX_EXECUTABLE})
+ENDIF (OpenMVG_BUILD_DOC)
 
 
 MESSAGE("\n")
@@ -449,6 +479,7 @@ MESSAGE("\n")
 MESSAGE("** OpenMVG version: " ${OPENMVG_VERSION})
 MESSAGE("** Build Shared libs: " ${OpenMVG_BUILD_SHARED})
 MESSAGE("** Build OpenMVG tests: " ${OpenMVG_BUILD_TESTS})
+MESSAGE("** Build OpenMVG documentation: " ${OpenMVG_BUILD_DOC})
 MESSAGE("** Build OpenMVG samples applications: " ${OpenMVG_BUILD_EXAMPLES})
 MESSAGE("** Build OpenMVG openGL examples: " ${OpenMVG_BUILD_OPENGL_EXAMPLES})
 MESSAGE("** Enable code coverage generation: " ${OpenMVG_BUILD_COVERAGE})

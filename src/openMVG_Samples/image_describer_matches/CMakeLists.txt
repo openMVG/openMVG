@@ -5,6 +5,7 @@ ADD_EXECUTABLE(openMVG_sample_describe_and_match describe_and_match.cpp)
 TARGET_LINK_LIBRARIES(openMVG_sample_describe_and_match
   openMVG_image
   openMVG_features
+  openMVG_matching
   stlplus
   vlsift)
 

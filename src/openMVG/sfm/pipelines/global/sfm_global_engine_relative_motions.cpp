@@ -68,18 +68,25 @@ void GlobalSfMReconstructionEngine_RelativeMotions::SetFeaturesProvider(Features
 
   // Copy features and save a normalized version
   _normalized_features_provider = std::make_shared<Features_Provider>(*provider);
+#ifdef OPENMVG_USE_OPENMP
+  #pragma omp parallel
+#endif
   for (Hash_Map<IndexT, PointFeatures>::iterator iter = _normalized_features_provider->feats_per_view.begin();
     iter != _normalized_features_provider->feats_per_view.end(); ++iter)
   {
-    // get the related view & camera intrinsic and compute the corresponding bearing vectors
-    const View * view = _sfm_data.GetViews().at(iter->first).get();
-    const std::shared_ptr<IntrinsicBase> cam = _sfm_data.GetIntrinsics().find(view->id_intrinsic)->second;
-    for (PointFeatures::iterator iterPt = iter->second.begin();
-      iterPt != iter->second.end(); ++iterPt)
+#ifdef OPENMVG_USE_OPENMP
+    #pragma omp single nowait
+#endif
     {
-      const Vec3 bearingVector = (*cam)(cam->get_ud_pixel(iterPt->coords().cast<double>()));
-      const Vec2 bearingVectorNormalized = bearingVector.head(2) / bearingVector(2);
-      iterPt->coords() = Vec2f(bearingVectorNormalized(0), bearingVectorNormalized(1));
+      // get the related view & camera intrinsic and compute the corresponding bearing vectors
+      const View * view = _sfm_data.GetViews().at(iter->first).get();
+      const std::shared_ptr<IntrinsicBase> cam = _sfm_data.GetIntrinsics().find(view->id_intrinsic)->second;
+      for (PointFeatures::iterator iterPt = iter->second.begin();
+        iterPt != iter->second.end(); ++iterPt)
+      {
+        const Vec3 bearingVector = (*cam)(cam->get_ud_pixel(iterPt->coords().cast<double>()));
+        iterPt->coords() << (bearingVector.head(2) / bearingVector(2)).cast<float>();
+      }
     }
   }
 }

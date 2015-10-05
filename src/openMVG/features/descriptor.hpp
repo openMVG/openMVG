@@ -28,6 +28,8 @@ template <typename T, std::size_t N>
 class Descriptor
 {
 public:
+  typedef Descriptor<T, N> This;
+  typedef T value_type;
   typedef T bin_type;
   typedef std::size_t size_type;
 
@@ -37,12 +39,35 @@ public:
   /// Constructor
   inline Descriptor() {}
 
+  inline Descriptor(T defaultValue)
+  {
+    for(size_type i = 0; i < N; ++i)
+      data[i] = defaultValue;
+  }
+
   /// capacity
   inline size_type size() const { return N; }
 
   /// Mutable and non-mutable bin getters
   inline bin_type& operator[](std::size_t i) { return data[i]; }
   inline bin_type operator[](std::size_t i) const { return data[i]; }
+
+  // Atomic addition between two descriptors
+  inline This& operator+=(const This other)
+  {
+    for(size_type i = 0; i < size(); ++i)
+      data[i] += other[i];
+    return *this;
+  }
+
+  // Division between two descriptors
+  inline This operator/(const This other) const
+  {
+    This res;
+    for(size_type i = 0; i < size(); ++i)
+      res[i] = data[i] / other[i];
+    return res;
+  }
 
   inline bin_type* getData() const {return (bin_type* ) (&data[0]);}
 
@@ -168,18 +193,25 @@ static bool saveDescsToFile(
 template<typename DescriptorsT >
 static bool loadDescsFromBinFile(
   const std::string & sfileNameDescs,
-  DescriptorsT & vec_desc)
+  DescriptorsT & vec_desc,
+  bool append = false)
 {
   typedef typename DescriptorsT::value_type VALUE;
 
-  vec_desc.clear();
+  if( !append ) // for compatibility
+    vec_desc.clear();
+
   std::ifstream fileIn(sfileNameDescs.c_str(), std::ios::in | std::ios::binary);
   //Read the number of descriptor in the file
   std::size_t cardDesc = 0;
   fileIn.read((char*) &cardDesc,  sizeof(std::size_t));
-  vec_desc.resize(cardDesc);
-  for (typename DescriptorsT::const_iterator iter = vec_desc.begin();
-    iter != vec_desc.end(); ++iter) {
+  // Reserve is necessary to avoid iterator problems in case of cleared vector
+  vec_desc.reserve(vec_desc.size() + cardDesc);
+  typename DescriptorsT::const_iterator begin = vec_desc.end();
+  vec_desc.resize(vec_desc.size() + cardDesc);
+  for (typename DescriptorsT::const_iterator iter = begin;
+    iter != vec_desc.end(); ++iter)
+  {
     fileIn.read((char*) (*iter).getData(),
       VALUE::static_size*sizeof(typename VALUE::bin_type));
   }

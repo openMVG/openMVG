@@ -7,7 +7,12 @@
 #ifndef OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_H
 #define OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_H
 
+#include <openMVG/features/descriptor.hpp>
+#include <openMVG/features/image_describer.hpp>
+#include <openMVG/features/regions_factory.hpp>
+
 #include <cereal/cereal.hpp>
+
 #include <iostream>
 #include <numeric>
 
@@ -29,7 +34,7 @@ inline void siftDescToUChar(
 {
   if (brootSift)  {
     // rootsift = sqrt( sift / sum(sift) );
-    const float sum = accumulate(descr, descr+128, 0.0f);
+    const float sum = std::accumulate(descr, descr+128, 0.0f);
     for (int k=0;k<128;++k)
       descriptor[k] = static_cast<unsigned char>(512.f*sqrt(descr[k]/sum));
   }

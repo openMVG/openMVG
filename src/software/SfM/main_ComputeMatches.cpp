@@ -323,11 +323,11 @@ int main(int argc, char **argv)
       Pair_Set pairs;
       switch (ePairmode)
       {
-        case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(sfm_data.GetViews().size()); break;
-        case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(sfm_data.GetViews().size(), iMatchingVideoMode); break;
+        case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(sfm_data.GetViews()); break;
+        case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(sfm_data.GetViews(), iMatchingVideoMode); break;
         case PAIR_FROM_FILE:
           std::cout << "Load pairList from file: " << sPredefinedPairList << std::endl;
-          if(!loadPairs(sfm_data.GetViews().size(), sPredefinedPairList, pairs, orderPairs))
+          if(!loadPairs(sPredefinedPairList, pairs, orderPairs))
           {
               return EXIT_FAILURE;
           }

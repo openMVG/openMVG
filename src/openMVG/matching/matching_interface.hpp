@@ -8,9 +8,10 @@
 #ifndef OPENMVG_MATCHING_MATCHINGINTERFACE_H
 #define OPENMVG_MATCHING_MATCHINGINTERFACE_H
 
-#include <vector>
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/matching/indMatch.hpp"
+
+#include <vector>
 
 namespace openMVG {
 namespace matching {

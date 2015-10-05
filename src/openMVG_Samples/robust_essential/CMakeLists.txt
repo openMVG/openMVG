@@ -7,9 +7,8 @@ TARGET_LINK_LIBRARIES(openMVG_sample_robustEssential
   openMVG_multiview
   openMVG_system
   openMVG_features
+  openMVG_matching
   openMVG_sfm
-  vlsift
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  vlsift)
 
 SET_PROPERTY(TARGET openMVG_sample_robustEssential PROPERTY FOLDER OpenMVG/Samples)

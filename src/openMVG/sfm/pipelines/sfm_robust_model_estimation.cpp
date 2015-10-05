@@ -105,7 +105,7 @@ bool robustRelativePose(
   KernelType kernel(x1, size_ima1.first, size_ima1.second,
                     x2, size_ima2.first, size_ima2.second, K1, K2);
 
-  // Robustly estimation of the Essential matrix and it's precision
+  // Robustly estimation of the Essential matrix and its precision
   std::pair<double,double> acRansacOut = ACRANSAC(kernel, relativePose_info.vec_inliers,
     max_iteration_count, &relativePose_info.essential_matrix, relativePose_info.initial_residual_tolerance, false);
   relativePose_info.found_residual_precision = acRansacOut.first;
@@ -158,7 +158,7 @@ bool robustResection(
       KernelType;
 
     KernelType kernel(pt2D, imageSize.first, imageSize.second, pt3D);
-    // Robustly estimation of the Projection matrix and it's precision
+    // Robustly estimation of the Projection matrix and its precision
     std::pair<double,double> ACRansacOut = ACRANSAC(kernel, *pvec_inliers,
       max_iteration, P, dPrecision, true);
     *maxError = ACRansacOut.first;
@@ -180,11 +180,7 @@ bool robustResection(
   }
 
   // Test if the mode support some points (more than those required for estimation)
-  if (pvec_inliers->size() > 2.5 * MINIMUM_SAMPLES)
-  {
-    return true;
-  }
-  return false;
+  return pvec_inliers->size() > 2.5 * MINIMUM_SAMPLES;
 }
 
 } // namespace sfm

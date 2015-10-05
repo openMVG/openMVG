@@ -61,30 +61,29 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
   bool SearchNeighbour( const Scalar * query,
                         int * indice, DistanceType * distance)
   {
-    if (memMapping.get() != NULL)  {
-      //matrix representation of the input data;
-      Eigen::Map<BaseMat> mat_query((Scalar*)query, 1, (*memMapping).cols() );
-      Metric metric;
-      vector<DistanceType> vec_dist((*memMapping).rows(), 0.0);
-      for (int i = 0; i < (*memMapping).rows(); ++i)  {
-        // Compute Distance Metric
-        vec_dist[i] = metric( (Scalar*)query, (*memMapping).row(i).data(), (*memMapping).cols() );
-      }
-      if (!vec_dist.empty())
-      {
-        // Find the minimum distance :
-        typename vector<DistanceType>::const_iterator min_iter =
-          min_element( vec_dist.begin(), vec_dist.end());
-        *indice =std::distance(
-          typename vector<DistanceType>::const_iterator(vec_dist.begin()),
-          min_iter);
-        *distance = static_cast<DistanceType>(*min_iter);
-      }
-      return true;
-    }
-    else  {
+    if (memMapping.get() == NULL)
       return false;
+
+    //matrix representation of the input data;
+    Eigen::Map<BaseMat> mat_query((Scalar*)query, 1, (*memMapping).cols() );
+    Metric metric;
+    vector<DistanceType> vec_dist((*memMapping).rows(), 0.0);
+    for (int i = 0; i < (*memMapping).rows(); ++i)
+    {
+      // Compute Distance Metric
+      vec_dist[i] = metric( (Scalar*)query, (*memMapping).row(i).data(), (*memMapping).cols() );
     }
+    if (!vec_dist.empty())
+    {
+      // Find the minimum distance :
+      typename vector<DistanceType>::const_iterator min_iter =
+        min_element( vec_dist.begin(), vec_dist.end());
+      *indice =std::distance(
+        typename vector<DistanceType>::const_iterator(vec_dist.begin()),
+        min_iter);
+      *distance = static_cast<DistanceType>(*min_iter);
+    }
+    return true;
   }
 
 
@@ -125,23 +124,26 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-    for (int queryIndex=0; queryIndex < nbQuery; ++queryIndex) {
+    for (int queryIndex=0; queryIndex < nbQuery; ++queryIndex) 
+    {
       std::vector<DistanceType> vec_distance((*memMapping).rows(), 0.0);
       const Scalar * queryPtr = mat_query.row(queryIndex).data();
       const Scalar * rowPtr = (*memMapping).data();
-      for (int i = 0; i < (*memMapping).rows(); ++i)  {
+      for (int i = 0; i < (*memMapping).rows(); ++i)
+      {
         vec_distance[i] = metric( queryPtr,
           rowPtr, (*memMapping).cols() );
         rowPtr += (*memMapping).cols();
       }
 
       // Find the N minimum distances:
-      const int maxMinFound = (int) min( size_t(NN), vec_distance.size());
+      const int maxMinFound = (int) std::min( size_t(NN), vec_distance.size());
       using namespace stl::indexed_sort;
       vector< sort_index_packet_ascend< DistanceType, int> > packet_vec(vec_distance.size());
       sort_index_helper(packet_vec, &vec_distance[0], maxMinFound);
 
-      for (int i = 0; i < maxMinFound; ++i) {
+      for (int i = 0; i < maxMinFound; ++i)
+      {
         (*pvec_distances)[queryIndex*NN+i] = packet_vec[i].val;
         (*pvec_indices)[queryIndex*NN+i] = IndMatch(queryIndex, packet_vec[i].index);
       }
@@ -152,7 +154,7 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
 private:
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> BaseMat;
   /// Use a memory mapping in order to avoid memory re-allocation
-  auto_ptr< Eigen::Map<BaseMat> > memMapping;
+  std::auto_ptr< Eigen::Map<BaseMat> > memMapping;
 };
 
 }  // namespace matching

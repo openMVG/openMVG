@@ -28,6 +28,8 @@ public:
   {
   }
 
+  virtual ~ReconstructionEngine() {}
+
   virtual bool Process() = 0;
 
   bool Get_bFixedIntrinsics() const {return _bFixedIntrinsics;}

@@ -15,8 +15,15 @@ before_install:
  - export NUM_CPU="`grep processor /proc/cpuinfo | wc -l`"; echo $NUM_CPU
  - sudo apt-get install lcov
  - gem install coveralls-lcov
- 
-install: 
+ # Boost download, configuration, build and installation
+ - wget -O boost.tar.bz2 "http://downloads.sourceforge.net/project/boost/boost/1.53.0/boost_1_53_0.tar.bz2?r=http%3A%2F%2Fwww.boost.org%2Fusers%2Fhistory%2Fversion_1_53_0.html&ts=1441701949&use_mirror=netix"
+ - tar -xf boost.tar.bz2 -C .
+ - cd boost_1_53_0
+ - ./bootstrap.sh --with-libraries=system,filesystem,program_options,test
+ - sudo ./b2 -d0 install
+ - cd ..
+
+install:
 - sudo apt-get install cmake libpng-dev libjpeg8-dev libtiff-dev
 - sudo apt-get install libxxf86vm1 libxxf86vm1 libxxf86vm-dev x11proto-xf86vidmode-dev libxrandr-dev
 - sudo apt-get install -qq g++-4.8
@@ -27,7 +34,7 @@ before_script:
   - mkdir build
   - cd build
   # Classic release build
-  - cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
+  - cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -DOpenMVG_USE_BOOST=ON . ../openMVG/src
   # Build for code coverage evaluation
   #- cmake -DOpenMVG_BUILD_COVERAGE=ON -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
 
@@ -37,11 +44,7 @@ script:
 # Perform unit tests only on GCC builds
   - if [ "$CC" = "gcc" ]; then make test; fi
 
-branches:
-  only:
-    - develop
-
-after_success:
+# after_success:
   #- cd ../openMVG
   # If GCC: compute code coverage and export it to coveralls
   #- if [ "$CC" = "gcc" ];
@@ -53,4 +56,3 @@ after_success:
   #    lcov --remove coverage.info '*/src/dependencies/*' -o coverage.info;
   #    coveralls-lcov coverage.info;
   #  fi
-  

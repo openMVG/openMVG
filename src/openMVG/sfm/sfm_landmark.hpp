@@ -16,7 +16,7 @@ namespace sfm {
 /// Define 3D-2D tracking data: 3D landmark with it's 2D observations
 struct Observation
 {
-  Observation() {}
+  Observation():id_feat(UndefinedIndexT) {  }
   Observation(const Vec2 & p, IndexT idFeat): x(p), id_feat(idFeat) {}
 
   Vec2 x;

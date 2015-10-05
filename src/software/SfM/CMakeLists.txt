@@ -224,8 +224,13 @@ TARGET_LINK_LIBRARIES(openMVG_main_openMVG2CMPMVS
 # - Export a SfM openMVG scene to MVE(v2) format
 #
 ADD_EXECUTABLE(openMVG_main_openMVG2MVE2 main_openMVG2MVE2.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVE2 ${OpenMVG_LIBRARIES})
-
+TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVE2 
+  openMVG_system
+  openMVG_image
+  openMVG_features
+  openMVG_sfm
+  stlplus
+  )
 # - Export a SfM openMVG scene to Alembic format
 #
 FIND_PACKAGE(Alembic)
