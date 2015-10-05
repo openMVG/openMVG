@@ -255,9 +255,14 @@ int main(int argc, char** argv)
   //**********************************************************
 
   // Load vocabulary tree
+
   printf("Loading vocabulary tree\n");
+  auto loadVoctree_start = std::chrono::steady_clock::now();
   openMVG::voctree::VocabularyTree<DescriptorFloat> tree(treeName);
-  cout << "tree loaded with" << endl << "\t" << tree.levels() << " levels" << endl << "\t" << tree.splits() << " branching factor" << endl;
+  auto loadVoctree_elapsed = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - loadVoctree_start);
+  std::cout << "tree loaded with" << endl << "\t" << tree.levels() << " levels" << std::endl
+          << "\t" << tree.splits() << " branching factor" << std::endl
+          << "\t in " << loadVoctree_elapsed.count() << " seconds" << std::endl;
 
   //**********************************************************
   // Create the database

@@ -13,7 +13,6 @@
 #include <fstream>
 #include <string>
 
-using namespace std;
 
 namespace openMVG {
 namespace voctree {
@@ -66,8 +65,8 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
 
   if(!bp.has_extension())
   {
-    cerr << "File without extension not recognized! " << fileFullPath << endl;
-    cerr << "The file  " + fileFullPath + " is neither a JSON nor a txt file" << endl;
+    std::cerr << "File without extension not recognized! " << fileFullPath << std::endl;
+    std::cerr << "The file  " + fileFullPath + " is neither a JSON nor a txt file" << std::endl;
     return numDescriptors;
   }
 
@@ -79,7 +78,7 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
   // it is a JSON file from OpenMVG
   // in the two cases we fill a vector with paths to the descriptors files
 
-  vector<string> descriptorsFiles;
+  std::vector<std::string> descriptorsFiles;
 
   // if it is a JSON file
   if(ext == ".json")
@@ -98,7 +97,7 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
 
     if(numberOfFiles == 0)
     {
-      cout << "It seems like there are no views in " << fileFullPath << endl;
+      std::cout << "It seems like there are no views in " << fileFullPath << std::endl;
       return 0;
     }
 
@@ -129,7 +128,7 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
     fs.open(fileFullPath, std::ios::in);
     if(!fs.is_open())
     {
-      cerr << "Error while opening " << fileFullPath << endl;
+      std::cerr << "Error while opening " << fileFullPath << std::endl;
       return numDescriptors;
     }
 
@@ -148,8 +147,8 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
   }
   else
   {
-    cerr << "File not recognized! " << fileFullPath << endl;
-    cerr << "The file  " + fileFullPath + " is neither a JSON nor a txt file" << endl;
+    std::cerr << "File not recognized! " << fileFullPath << std::endl;
+    std::cerr << "The file  " + fileFullPath + " is neither a JSON nor a txt file" << std::endl;
     return numDescriptors;
   }
 
@@ -158,11 +157,11 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
   int bytesPerElement = 0;
 
   // Display infos and progress bar
-  cout << "Pre-computing the memory needed..." << endl;
+  std::cout << "Pre-computing the memory needed..." << std::endl;
   boost::progress_display display(descriptorsFiles.size());
 
   // Read all files and get the number of descriptors to load
-  for(vector<string>::const_iterator it = descriptorsFiles.begin(); it != descriptorsFiles.end(); ++it)
+  for(std::vector<std::string>::const_iterator it = descriptorsFiles.cbegin(); it != descriptorsFiles.cend(); ++it)
   {
     // if it is the first one read the number of descriptors and the type of data (we are assuming the the feat are all the same...)
     // bytesPerElement could be 0 even after the first element (eg it has 0 descriptors...), so do it until we get the correct info
@@ -177,7 +176,7 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
     }
   }
   BOOST_ASSERT(bytesPerElement > 0);
-  cout << "Found " << numDescriptors << " descriptors overall, allocating memory..." << endl;
+  std::cout << "Found " << numDescriptors << " descriptors overall, allocating memory..." << std::endl;
 
   // Allocate the memory
   descriptors.reserve(numDescriptors);
@@ -185,11 +184,11 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
   numDescriptors = 0;
 
   // Read the descriptors
-  cout << "Reading the descriptors..." << endl;
+  std::cout << "Reading the descriptors..." << std::endl;
   display.restart(descriptorsFiles.size());
 
   // Run through the path vector and read the descriptors
-  for(vector<string>::const_iterator it = descriptorsFiles.begin(); it != descriptorsFiles.end(); ++it, ++display)
+  for(std::vector<std::string>::const_iterator it = descriptorsFiles.cbegin(); it != descriptorsFiles.cend(); ++it, ++display)
   {
     // Read the descriptors and append them in the vector
     loadDescsFromBinFile(*it, descriptors, true);
@@ -228,13 +227,13 @@ std::size_t populateDatabase(const std::string &fileFullPath,
   std::ifstream fs;
   boostfs::path pathToFiles;
 
-  size_t numDescriptors = 0;
+  std::size_t numDescriptors = 0;
   boostfs::path bp(fileFullPath);
 
   if(!bp.has_extension())
   {
-    cerr << "File without extension not recognized! " << fileFullPath << endl;
-    cerr << "The file  " + fileFullPath + " is neither a JSON nor a txt file" << endl;
+    std::cerr << "File without extension not recognized! " << fileFullPath << std::endl;
+    std::cerr << "The file  " + fileFullPath + " is neither a JSON nor a txt file" << std::endl;
     return numDescriptors;
   }
 
@@ -265,7 +264,7 @@ std::size_t populateDatabase(const std::string &fileFullPath,
 
     if(numberOfFiles == 0)
     {
-      cout << "It seems like there are no views in " << fileFullPath << endl;
+      std::cout << "It seems like there are no views in " << fileFullPath << std::endl;
       return 0;
     }
 
@@ -296,7 +295,7 @@ std::size_t populateDatabase(const std::string &fileFullPath,
     fs.open(fileFullPath, std::ios::in);
     if(!fs.is_open())
     {
-      cerr << "Error while opening " << fileFullPath << endl;
+      std::cerr << "Error while opening " << fileFullPath << std::endl;
       return numDescriptors;
     }
 
@@ -315,13 +314,13 @@ std::size_t populateDatabase(const std::string &fileFullPath,
   }
   else
   {
-    cerr << "File not recognized! " << fileFullPath << endl;
-    cerr << "The file  " + fileFullPath + " is neither a JSON nor a txt file" << endl;
+    std::cerr << "File not recognized! " << fileFullPath << std::endl;
+    std::cerr << "The file  " + fileFullPath + " is neither a JSON nor a txt file" << std::endl;
     return numDescriptors;
   }
 
   // Read the descriptors
-  cout << "Reading the descriptors..." << endl;
+  std::cout << "Reading the descriptors..." << std::endl;
   boost::progress_display display(descriptorsFiles.size());
   size_t docId = 0;
   numFeatures.resize(descriptorsFiles.size());
@@ -341,7 +340,7 @@ std::size_t populateDatabase(const std::string &fileFullPath,
 
     // Quantize the descriptors
 #pragma omp parallel for
-    for(size_t j = 0; j < result; ++j)
+    for(std::size_t j = 0; j < result; ++j)
     {
       // Store the visual word associated to the descriptor in the temporarylist
       imgVisualWords[j] = tree.quantize(descriptors[j]);
