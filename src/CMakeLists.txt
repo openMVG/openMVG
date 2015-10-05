@@ -361,13 +361,13 @@ IF(OpenMVG_USE_OPENCV)
     MESSAGE(STATUS "OpenCV was not found. Disabling OpenCV support.")
     UPDATE_CACHE_VARIABLE(OpenMVG_USE_OPENCV OFF)
     UPDATE_CACHE_VARIABLE(OpenMVG_USE_OCVSIFT OFF)
-    # add a definition that allows the conditional compiling
-    ADD_DEFINITIONS(-DHAVE_OPENCV)
   ELSE(NOT OpenCV_FOUND)
     INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
     IF(OpenMVG_USE_OCVSIFT)
       ADD_DEFINITIONS(-DUSE_OCVSIFT)
     ENDIF(OpenMVG_USE_OCVSIFT)
+    # add a definition that allows the conditional compiling
+    ADD_DEFINITIONS(-DHAVE_OPENCV)
   ENDIF(NOT OpenCV_FOUND)
 ENDIF(OpenMVG_USE_OPENCV)
 
