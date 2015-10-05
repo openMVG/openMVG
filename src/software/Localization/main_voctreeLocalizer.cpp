@@ -109,7 +109,7 @@ int main(int argc, char** argv)
     POPART_COUT("\tweights: " << weightsFilepath);
     POPART_COUT("\tcalibration: " << calibFile);
     POPART_COUT("\tsfmdata: " << sfmFilePath);
-    POPART_COUT("\tmediafile: " << sfmFilePath);
+    POPART_COUT("\tmediafile: " << mediaFilepath);
     POPART_COUT("\tsiftPath: " << descriptorsFolder);
     POPART_COUT("\tresults: " << numResults);
     POPART_COUT("\tcommon views: " << numCommonViews);
@@ -188,7 +188,7 @@ int main(int argc, char** argv)
   // print out some time stats
   POPART_COUT("\n\n******************************");
   POPART_COUT("Localized " << frameCounter+1 << " images");
-  POPART_COUT("Processing took " << bacc::sum(stats)*1000 << " [s] overall");
+  POPART_COUT("Processing took " << bacc::sum(stats)/1000 << " [s] overall");
   POPART_COUT("Mean time for localization:   " << bacc::mean(stats) << " [ms]");
   POPART_COUT("Max time for localization:   " << bacc::max(stats) << " [ms]");
   POPART_COUT("Min time for localization:   " << bacc::min(stats) << " [ms]");
