@@ -391,6 +391,10 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
   const View * view_J = _sfm_data.GetViews().at(J).get();
   const Intrinsics::const_iterator iterIntrinsic_J = _sfm_data.GetIntrinsics().find(view_J->id_intrinsic);
 
+  std::cout << "Initial pair is:\n"
+          << "  A - " << view_I->id_view << " (" << view_I->s_Img_path << ")\n"
+          << "  B - " << view_J->id_view << " (" << view_J->s_Img_path << ")" << std::endl;
+
   if (iterIntrinsic_I == _sfm_data.GetIntrinsics().end() ||
       iterIntrinsic_J == _sfm_data.GetIntrinsics().end() )
   {
@@ -427,6 +431,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
     feat = _features_provider->feats_per_view[J][j].coords().cast<double>();
     xJ.col(cptIndex) = cam_J->get_ud_pixel(feat);
   }
+  std::cout << n << " matches in the image pair for the initial pose estimation." << std::endl;
 
   // c. Robust estimation of the relative pose
   RelativePose_Info relativePose_info;
