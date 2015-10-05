@@ -187,8 +187,8 @@ int main(int argc, char** argv)
     const IndexT viewId = regionsValue.first;
     const localization::Reconstructed_RegionsT& regions = regionsValue.second;
     std::vector<voctree::Word> words = voctree.quantize(regions._regions.Descriptors());
-    voctree::DocId docId = db.insert(words);
-    mapDocIdToView[docId] = viewId;
+    db.insert(viewId, words);
+    mapDocIdToView[viewId] = viewId; //@todo JEME: to remove
   }
 
   POPART_COUT("Load the query image");

@@ -169,7 +169,7 @@ int main(int argc, char** argv)
   POPART_COUT("\tfound " << documents.size() << " documents");
   for(const auto &doc : documents)
   {
-    db.insert(doc.second);
+    db.insert(doc.first, doc.second);
   }
   POPART_COUT("Database created!");
 
@@ -187,7 +187,7 @@ int main(int argc, char** argv)
   if(sanityCheck)
   {
     // Now query each document (sanity check)
-    openMVG::voctree::Matches matches;
+    std::vector<openMVG::voctree::Match> matches;
     size_t wrong = 0; // count the wrong matches
     double recval = 0;
     POPART_COUT("Sanity check: querying the database with the same documents");

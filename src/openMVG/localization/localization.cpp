@@ -204,8 +204,8 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
     }
     
     std::vector<voctree::Word> words = _voctree.quantize(currRecoRegions._regions.Descriptors());
-    voctree::DocId docId = _database.insert(words);
-    _mapDocIdToView[docId] = id_view;
+    _database.insert(id_view, words);
+    _mapDocIdToView[id_view] = id_view; //@todo remove
 
     // Filter descriptors to keep only the 3D reconstructed points
     currRecoRegions.filterRegions(observationsPerView[id_view]);

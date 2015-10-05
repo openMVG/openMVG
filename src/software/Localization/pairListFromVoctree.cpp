@@ -287,14 +287,12 @@ int main(int argc, char** argv)
   // Read the descriptors and populate the database
   //*********************************************************
 
-  std::vector<size_t> featRead;
   POPART_COUT("Reading descriptors from " << keylist);
   DocumentMap documents;
 
   auto detect_start = std::chrono::steady_clock::now();
-  size_t numTotFeatures = openMVG::voctree::populateDatabase(keylist, tree, db, documents, featRead);
-  auto detect_end = std::chrono::steady_clock::now();
-  auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
+  size_t numTotFeatures = openMVG::voctree::populateDatabase(keylist, tree, db, documents);
+  auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - detect_start);
 
   if(numTotFeatures == 0)
   {
@@ -302,7 +300,7 @@ int main(int argc, char** argv)
     return EXIT_FAILURE;
   }
 
-  POPART_COUT("Done! " << featRead.size() << " sets of descriptors read for a total of " << numTotFeatures << " features");
+  POPART_COUT("Done! " << documents.size() << " sets of descriptors read for a total of " << numTotFeatures << " features");
   POPART_COUT("Reading took " << detect_elapsed.count() << " sec");
 
   if(!withWeights)
@@ -316,8 +314,8 @@ int main(int argc, char** argv)
   // Query the database to get all the pair list
   //**********************************************************
 
-  // Now query each document (sanity check)
-  openMVG::voctree::Matches matches;
+  // Now query each document
+  std::vector<openMVG::voctree::Match> matches;
 
   if(numImageQuery == 0)
   {
@@ -331,7 +329,7 @@ int main(int argc, char** argv)
   {
     detect_start = std::chrono::steady_clock::now();
     db.find(doc.second, numImageQuery, matches);
-    detect_end = std::chrono::steady_clock::now();
+    auto detect_end = std::chrono::steady_clock::now();
     detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
     POPART_COUT("query document " << doc.first 
 			<< " took " << detect_elapsed.count() 
@@ -339,16 +337,13 @@ int main(int argc, char** argv)
 			<< " matches\tBest " << matches[0].id 
 			<< " with score " << matches[0].score << endl);
 
-
     allMatches[ doc.first ] = ListOfImageID();
     allMatches[ doc.first ].reserve(matches.size());
 
-    for(openMVG::voctree::Match m : matches)
+    for(const openMVG::voctree::Match& m : matches)
     {
       allMatches[ doc.first ].push_back(m.id);
     }
-
-
   }
 
   //**********************************************************
