@@ -25,6 +25,10 @@ int main(int argc, char **argv)
     sSfM_Data_Filename_Out;
 
   cmd.add(make_option('i', sSfM_Data_Filename_In, "input_file"));
+  cmd.add(make_switch('V', "VIEWS"));
+  cmd.add(make_switch('I', "INTRINSICS"));
+  cmd.add(make_switch('E', "EXTRINSICS"));
+  cmd.add(make_switch('S', "STRUCTURE"));
   cmd.add(make_option('o', sSfM_Data_Filename_Out, "output_file"));
 
   try {
@@ -33,6 +37,10 @@ int main(int argc, char **argv)
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
         << "[-i|--input_file] path to the input SfM_Data scene\n"
+        << "[-V|--VIEWS\n"
+        << "[-I|--INTRINSICS\n"
+        << "[-E|--EXTRINSICS\n"
+        << "[-S|--STRUCTURE\n"
         << "[-o|--output_file] path to the output SfM_Data scene\n"
         << "\t .json, .bin, .xml, .ply, .baf\n"
         << std::endl;
@@ -47,6 +55,16 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  // OptionSwitch is cloned in cmd.add(),
+  // so we must use cmd.used() instead of testing OptionSwitch.used
+  int flags =
+    (cmd.used('V') ? VIEWS      : 0)
+  | (cmd.used('I') ? INTRINSICS : 0)
+  | (cmd.used('E') ? EXTRINSICS : 0)
+  | (cmd.used('S') ? STRUCTURE  : 0);
+
+  flags=(flags)?flags:ALL;
+
   // Load input SfM_Data scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename_In, ESfM_Data(ALL)))
@@ -60,12 +78,14 @@ int main(int argc, char **argv)
   if (Save(
     sfm_data,
     sSfM_Data_Filename_Out.c_str(),
-    ESfM_Data(ALL)))
+    ESfM_Data(flags)))
   {
     return EXIT_SUCCESS;
   }
   else
   {
+    std::cerr << std::endl
+      << "An error occured while trying to save \"" << sSfM_Data_Filename_Out << "\"." << std::endl;
     return EXIT_FAILURE;
   }
 }
