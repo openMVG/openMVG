@@ -14,14 +14,28 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
 namespace openMVG {
 
 /// Generate all the (I,J) pairs of the upper diagonal of the NxN matrix
-static Pair_Set exhaustivePairs(const sfm::Views& views)
+static Pair_Set exhaustivePairs(const sfm::Views& views, int rangeStart=-1, int rangeSize=0)
 {
   Pair_Set pairs;
-  for(sfm::Views::const_iterator itA = views.begin(); itA != views.end(); ++itA)
+  sfm::Views::const_iterator itA = views.begin();
+  sfm::Views::const_iterator itAEnd = views.end();
+
+  // If we have a rangeStart, only compute the matching for (rangeStart, X).
+  if(rangeStart != -1 && rangeSize != 0)
+  {
+    if(rangeStart >= views.size())
+      return pairs;
+    std::advance(itA, rangeStart);
+    itAEnd = views.begin();
+    std::advance(itAEnd, std::min(std::size_t(rangeStart+rangeSize), views.size()));
+  }
+  
+  for(; itA != itAEnd; ++itA)
   {
     sfm::Views::const_iterator itB = itA;
     std::advance(itB, 1);
@@ -33,10 +47,23 @@ static Pair_Set exhaustivePairs(const sfm::Views& views)
 
 /// Generate the pairs that have a distance inferior to the overlapSize
 /// Usable to match video sequence
-static Pair_Set contiguousWithOverlap(const sfm::Views& views, const size_t overlapSize)
+static Pair_Set contiguousWithOverlap(const sfm::Views& views, const size_t overlapSize, int rangeStart=-1, int rangeSize=0)
 {
   Pair_Set pairs;
-  for(sfm::Views::const_iterator itA = views.begin(); itA != views.end(); ++itA)
+  sfm::Views::const_iterator itA = views.begin();
+  sfm::Views::const_iterator itAEnd = views.end();
+
+  // If we have a rangeStart, only compute the matching for (rangeStart, X).
+  if(rangeStart != -1 && rangeSize != 0)
+  {
+    if(rangeStart >= views.size())
+      return pairs;
+    std::advance(itA, rangeStart);
+    itAEnd = views.begin();
+    std::advance(itAEnd, std::min(std::size_t(rangeStart+rangeSize), views.size()));
+  }
+  
+  for(; itA != itAEnd; ++itA)
   {
     sfm::Views::const_iterator itB = itA;
     std::advance(itB, 1);
@@ -54,7 +81,9 @@ static Pair_Set contiguousWithOverlap(const sfm::Views& views, const size_t over
 static bool loadPairs(
      const std::string &sFileName, // filename of the list file,
      Pair_Set & pairs,
-     bool ordered=true)  // output pairs read from the list file
+     bool ordered=true, // output pairs read from the list file
+     int rangeStart=-1,
+     int rangeSize=0)
 {
   std::ifstream in(sFileName.c_str());
   if(!in.is_open())
@@ -63,10 +92,18 @@ static bool loadPairs(
       << "loadPairs: Impossible to read the specified file: \"" << sFileName << "\"." << std::endl;
     return false;
   }
+  std::size_t nbLine = 0;
   std::string sValue;
   std::vector<std::string> vec_str;
-  while(std::getline( in, sValue ) )
+  for(; std::getline( in, sValue ); ++nbLine)
   {
+    if(rangeStart != -1 && rangeSize != 0)
+    {
+      if(nbLine < rangeStart)
+        continue;
+      if(nbLine >= rangeStart + rangeSize)
+        break;
+    }
     vec_str.clear();
     stl::split(sValue, " ", vec_str);
     const size_t str_size = vec_str.size();
