@@ -29,6 +29,7 @@ int main(int argc, char **argv)
   cmd.add(make_switch('I', "INTRINSICS"));
   cmd.add(make_switch('E', "EXTRINSICS"));
   cmd.add(make_switch('S', "STRUCTURE"));
+  cmd.add(make_switch('C', "CONTROL_POINTS"));
   cmd.add(make_option('o', sSfM_Data_Filename_Out, "output_file"));
 
   try {
@@ -37,12 +38,15 @@ int main(int argc, char **argv)
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
         << "[-i|--input_file] path to the input SfM_Data scene\n"
-        << "[-V|--VIEWS\n"
-        << "[-I|--INTRINSICS\n"
-        << "[-E|--EXTRINSICS\n"
-        << "[-S|--STRUCTURE\n"
         << "[-o|--output_file] path to the output SfM_Data scene\n"
         << "\t .json, .bin, .xml, .ply, .baf\n"
+        << "\n[Options to export partial data (by default all data are exported)]\n"
+        << "\nUsable for json/bin/xml format"
+        << "[-V|--VIEWS] export views\n"
+        << "[-I|--INTRINSICS] export intrinsics (view orientations)\n"
+        << "[-E|--EXTRINSICS] export extrinsics (view poses)\n"
+        << "[-S|--STRUCTURE] export structure\n"
+        << "[-C|--CONTROL_POINTS] export control points\n"
         << std::endl;
 
       std::cerr << s << std::endl;
@@ -63,7 +67,7 @@ int main(int argc, char **argv)
   | (cmd.used('E') ? EXTRINSICS : 0)
   | (cmd.used('S') ? STRUCTURE  : 0);
 
-  flags=(flags)?flags:ALL;
+  flags = (flags) ? flags : ALL;
 
   // Load input SfM_Data scene
   SfM_Data sfm_data;
