@@ -46,9 +46,8 @@ public:
  * @brief Read the calibration from a simple text file.
  * @param[in] filename The file containing the calibration parameters.
  * @param[out] camIntrinsics The loaded parameters.
- * @return True if everything went ok.
  */
-bool readCalibrationFromFile(const std::string &filename, cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics);
+void readCalibrationFromFile(const std::string &filename, cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics);
 
 }//namespace dataio 
 }//namespace openMVG

@@ -148,7 +148,7 @@ ImageFeed::FeederImpl::FeederImpl(const std::string imagePath, const std::string
   if(_withCalibration)
   {
     // load the calibration from calibPath
-    _isInit = readCalibrationFromFile(calibPath, _camIntrinsics);
+    readCalibrationFromFile(calibPath, _camIntrinsics);
   }
 }
 

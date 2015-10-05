@@ -1,6 +1,7 @@
 #include "IFeed.hpp"
 
 #include <fstream>
+#include <exception>
 
 namespace openMVG{
 namespace dataio{
@@ -14,13 +15,13 @@ namespace dataio{
 // double #k0
 // double #k1
 // double #k2
-bool readCalibrationFromFile(const std::string &filename, cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics)
+void readCalibrationFromFile(const std::string &filename, cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics)
 {
   std::ifstream fs(filename, std::ios::in);
   if(!fs.is_open())
   {
     std::cerr << "Unable to open the calibration file " << filename << std::endl;
-    return false;
+    throw std::invalid_argument("Unable to open the calibration file "+filename);
   }
   int width = 0;
   int height = 0;
@@ -38,7 +39,6 @@ bool readCalibrationFromFile(const std::string &filename, cameras::Pinhole_Intri
                                   params[3], params[4], params[5]);
   
   fs.close();
-  return true;
 }
 
 }//namespace dataio 

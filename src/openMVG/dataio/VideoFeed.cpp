@@ -37,6 +37,7 @@ public:
   
 private:
   bool _isInit;
+  bool _withIntrinsics;
   cv::VideoCapture _videoCapture;
   cameras::Pinhole_Intrinsic_Radial_K3 _camIntrinsics;
   
@@ -44,10 +45,9 @@ private:
 
 
 VideoFeed::FeederImpl::FeederImpl(const std::string &videoPath, const std::string &calibPath)
+: _isInit(false), _withIntrinsics(false)
 {
-  _isInit = false;
-
-  // load the video
+    // load the video
   _videoCapture.open(videoPath);
   if (!_videoCapture.isOpened())
   {
@@ -56,7 +56,11 @@ VideoFeed::FeederImpl::FeederImpl(const std::string &videoPath, const std::strin
   }
 
   // load the calibration path
-  _isInit = readCalibrationFromFile(calibPath, _camIntrinsics);
+  _withIntrinsics = !calibPath.empty();
+  if(_withIntrinsics)
+    readCalibrationFromFile(calibPath, _camIntrinsics);
+  
+  _isInit = true;
 }
 
 
@@ -88,8 +92,9 @@ bool VideoFeed::FeederImpl::next(image::Image<unsigned char> &imageGray,
     cv::cv2eigen(frame, imageGray);
   }
 
-  camIntrinsics = _camIntrinsics;
-  hasIntrinsics = true;
+  hasIntrinsics = _withIntrinsics;
+  if(_withIntrinsics)
+    camIntrinsics = _camIntrinsics;
 
   return true;
 }
