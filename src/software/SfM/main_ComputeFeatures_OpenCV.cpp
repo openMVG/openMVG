@@ -146,26 +146,27 @@ public:
       switch(preset)
       {
         case LOW_PRESET:
-          contrastThreshold = 0.02;
-          maxTotalKeypoints = 500;
-          break;
-        case MEDIUM_PRESET:
           contrastThreshold = 0.01;
           maxTotalKeypoints = 1000;
           break;
-        case NORMAL_PRESET:
+        case MEDIUM_PRESET:
           contrastThreshold = 0.005;
-          maxTotalKeypoints = 2000;
+          maxTotalKeypoints = 5000;
           break;
-        case HIGH_PRESET:
+        case NORMAL_PRESET:
           contrastThreshold = 0.005;
           edgeThreshold = 15;
           maxTotalKeypoints = 10000;
           break;
-        case ULTRA_PRESET:
+        case HIGH_PRESET:
           contrastThreshold = 0.005;
           edgeThreshold = 20;
           maxTotalKeypoints = 20000;
+          break;
+        case ULTRA_PRESET:
+          contrastThreshold = 0.005;
+          edgeThreshold = 20;
+          maxTotalKeypoints = 40000;
           break;
       }
       return true;
@@ -557,10 +558,13 @@ int main(int argc, char **argv)
       if (bForce || !stlplus::file_exists(sFeat) || !stlplus::file_exists(sDesc))
       {
         if (!ReadImage(sView_filename.c_str(), &imageGray))
+        {
+          std::cout << "Error: can't read image: " << sView_filename << std::endl;
           continue;
+        }
 
         // Compute features and descriptors and export them to files
-        std::cout << "Extracting features from image " << view->id_view << std::endl;
+        std::cout << "Extracting features from image " << view->id_view << " - (" << sFeat << ")" << std::endl;
         std::unique_ptr<Regions> regions;
 
         image_describer->Describe(imageGray, regions);
