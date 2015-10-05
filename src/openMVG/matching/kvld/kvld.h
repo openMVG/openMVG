@@ -112,11 +112,11 @@ public:
     {
 		  for( int j = 0; j < subdirection; j++ )
       {// term of descriptor
-        diff[ 0 ] += abs( descriptor[ i * subdirection + j ] - vld2.descriptor[ i * subdirection + j ] );
+        diff[ 0 ] += std::abs( descriptor[ i * subdirection + j ] - vld2.descriptor[ i * subdirection + j ] );
       }
 			//term of main SIFT like orientation
-			diff[ 1 ] += std::min( abs( principleAngle[ i ] - vld2.principleAngle[ i ] ),
-			  binNum - abs( principleAngle[ i ] - vld2.principleAngle[ i ] ) ) * ( weight[ i ] + vld2.weight[ i ] );// orientation term
+			diff[ 1 ] += std::min( std::abs( principleAngle[ i ] - vld2.principleAngle[ i ] ),
+			  binNum - std::abs( principleAngle[ i ] - vld2.principleAngle[ i ] ) ) * ( weight[ i ] + vld2.weight[ i ] );// orientation term
     }
 
 		diff[ 0 ] *= 0.36;

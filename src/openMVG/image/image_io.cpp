@@ -586,7 +586,8 @@ int ReadTiff(const char * filename,
     }
   } else {
     for (size_t i=0; i<TIFFNumberOfStrips(tiff); ++i) {
-      if (TIFFReadEncodedStrip(tiff, i, ((uint8*)&((*ptr)[0]))+i*TIFFStripSize(tiff),(tsize_t)-1)<0) {
+      if (TIFFReadEncodedStrip(tiff, i, ((uint8*)&((*ptr)[0]))+i*TIFFStripSize(tiff),(tsize_t)-1) ==
+        std::numeric_limits<tsize_t>::max()) {
         TIFFClose(tiff);
         return 0;
       }
