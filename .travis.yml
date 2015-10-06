@@ -31,13 +31,16 @@ addons:
       - libxrandr-dev
       - g++-4.8
 
-before_install:
- - export NUM_CPU="`grep processor /proc/cpuinfo | wc -l`"; echo $NUM_CPU
- - export BUILD_TYPE="Release"
- - gem install coveralls-lcov
+env:
+  global:
+    - NUM_CPU="`grep processor /proc/cpuinfo | wc -l`"; echo $NUM_CPU
+    - BUILD_TYPE="Release"
+    - BUILD_SYSTEM=`uname -s`
+    - BUILD_PROCESSOR=`uname -p`
+    - CXX="g++-4.8"
 
-install:
-- export CXX="g++-4.8"
+before_install:
+ - gem install coveralls-lcov
 
 before_script:
   - cd ..
@@ -58,7 +61,7 @@ after_success:
   - mkdir gt_test
   - git clone --branch dev https://github.com/caymard/SfM_quality_evaluation.git gt_test/
   - cd gt_test
-  - python EvaluationLauncher.py -s "../`uname -s`-`uname -p`-$BUILD_TYPE" -i Benchmarking_Camera_Calibration_2008/ -o output -r results.json > gt_log.log 2>&1
+  - python EvaluationLauncher.py -s "../$BUILD_SYSTEM-$BUILD_PROCESSOR-$BUILD_TYPE" -i Benchmarking_Camera_Calibration_2008/ -o output -r results.json > gt_log.log 2>&1
   - cat gt_log.log | tail
   - cat results.json
   #- cd ../openMVG
