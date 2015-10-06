@@ -25,7 +25,7 @@ OPTION(OpenMVG_BUILD_OPENGL_EXAMPLES "Build OpenMVG openGL examples" OFF)
 OPTION(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 OPTION(OpenMVG_BUILD_VOCTREE "Build the vocabulary tree and localization module" ON)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
-OPTION(OpenMVG_USE_ALEMBIC "Enable Alembic I/O" ON)
+OPTION(OpenMVG_USE_ALEMBIC "Enable Alembic I/O" OFF)
 
 # ==============================================================================
 # Opencv is not used by openMVG but some samples show how to use openCV
