@@ -14,6 +14,7 @@
 #include <fstream>
 #include <ostream>
 #include <string>
+#include <chrono>
 #include <iomanip>
 
 #define POPART_COUT(x) std::cout << x << std::endl
