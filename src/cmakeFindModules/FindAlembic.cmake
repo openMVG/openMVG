@@ -23,14 +23,17 @@ MESSAGE(STATUS "Looking for Alembic. 1.5.8")
 FIND_PATH(ABC_HALF_INCLUDE_DIR half.h
     HINTS
     ${ALEMBIC_ILMBASE_ROOT}/include/OpenEXR
-    $ENV{ALEMBIC_ILMBASE_ROOT}/include/OpenEXR)
+    $ENV{ALEMBIC_ILMBASE_ROOT}/include/OpenEXR
+    $ENV{ILMBASE_INCLUDE_DIR} )
 
 FIND_PATH(ABC_ILMBASE_LIBS_PATH NAMES libIex.so libIex.a
     PATHS
         ${ALEMBIC_ILMBASE_ROOT}/lib 
+        ${ALEMBIC_ILMBASE_ROOT}/lib/static
         ${ALEMBIC_ILMBASE_ROOT}/lib64
         $ENV{ALEMBIC_ILMBASE_ROOT}/lib 
         $ENV{ALEMBIC_ILMBASE_ROOT}/lib64
+        $ENV{ILMBASE_LIBRARY_DIR}
     NO_DEFAULT_PATH)
 
 FIND_LIBRARY(ABC_ILMBASE_IEX Iex PATHS ${ABC_ILMBASE_LIBS_PATH} NO_DEFAULT_PATH)
@@ -45,6 +48,7 @@ FIND_LIBRARY(ABC_OPENEXR_LIBS IlmImf
         ${ALEMBIC_OPENEXR_ROOT}/lib64
         $ENV{ALEMBIC_OPENEXR_ROOT}/lib 
         $ENV{ALEMBIC_OPENEXR_ROOT}/lib64
+        $ENV{OPENEXR_LIBRARY_DIR}
     NO_DEFAULT_PATH)
 
 ################################################################################
@@ -58,6 +62,7 @@ FIND_PATH(ABC_HDF5_LIBS_PATH NAMES libhdf5.so libhdf5.a
         ${ALEMBIC_HDF5_ROOT}/lib64
         $ENV{ALEMBIC_HDF5_ROOT}/lib 
         $ENV{ALEMBIC_HDF5_ROOT}/lib64
+        $ENV{HDF5_LIBRARY_DIR}
        NO_DEFAULT_PATH)
 FIND_LIBRARY(ABC_HDF5 hdf5 PATHS ${ABC_HDF5_LIBS_PATH})
 FIND_LIBRARY(ABC_HDF5_HL hdf5_hl PATHS ${ABC_HDF5_LIBS_PATH})
@@ -70,16 +75,21 @@ SET(ABC_HDF5_LIBS ${ABC_HDF5} ${ABC_HDF5_HL})
 FIND_PATH(ABC_INCLUDE_DIR Alembic/Abc/All.h
     PATHS
         $ENV{ALEMBIC_ROOT}/include
+        $ENV{ALEMBIC_INCLUDE_DIR}
         ${ALEMBIC_ROOT}/include
     PATH_SUFFIXES
         alembic
     NO_DEFAULT_PATH
 )
+# message(STATUS "ABC_OPENEXR_LIBS ${ABC_OPENEXR_LIBS}")
 
 #
-# We force the use of dynamic libraries as with using the static ones we had initialization problems.
-#MESSAGE(STATUS "ALEMBIC_ROOT ${ALEMBIC_ROOT}")
-FIND_PATH(ABC_LIBRARY_DIR libAlembicAbc.so libAlembicAbc.a libAlembicAbc.dylib
+# We force the use of dynamic libraries as using the static ones had caused some 
+# initialization problems.
+
+# try to find the all-in-one library
+message(STATUS "trying to found the all-in-one libAlembic.so")
+FIND_LIBRARY(ABC_ALL_IN_ONE libAlembic
     PATHS
         ${ALEMBIC_ROOT}/lib
         ${ALEMBIC_ROOT}/lib/static
@@ -90,13 +100,36 @@ FIND_PATH(ABC_LIBRARY_DIR libAlembicAbc.so libAlembicAbc.a libAlembicAbc.dylib
         $ENV{ALEMBIC_LIBRARY_DIR}
         $ENV{ALEMBIC_LIBRARY_DIR}/static
     NO_DEFAULT_PATH)
-#MESSAGE(STATUS "ABC_LIBRARY_DIR ${ABC_LIBRARY_DIR}")
-FIND_LIBRARY(ABC AlembicAbc PATHS ${ABC_LIBRARY_DIR})
-FIND_LIBRARY(ABC_COREABSTRACT AlembicAbcCoreAbstract PATHS ${ABC_LIBRARY_DIR})
-FIND_LIBRARY(ABC_COREHDF5 AlembicAbcCoreHDF5 PATHS ${ABC_LIBRARY_DIR})
-FIND_LIBRARY(ABC_GEOM AlembicAbcGeom PATHS ${ABC_LIBRARY_DIR})
-FIND_LIBRARY(ABC_UTIL AlembicUtil PATHS ${ABC_LIBRARY_DIR})
-SET(ABC_CORE_LIBS ${ABC_GEOM} ${ABC} ${ABC_COREHDF5} ${ABC_COREABSTRACT} ${ABC_UTIL})
+# message(STATUS "ABC_ALL_IN_ONE ${ABC_ALL_IN_ONE}")
+if( EXISTS ${ABC_ALL_IN_ONE})
+    message(STATUS "found the all-in-one libAlembic")
+    SET(ABC_CORE_LIBS ${ABC_ALL_IN_ONE} )
+else()
+    message(STATUS "all-in-one not found, try finding individual ones")
+
+    FIND_PATH(ABC_LIBRARY_DIR libAlembicAbc.so libAlembicAbc.a
+        PATHS
+            ${ALEMBIC_ROOT}/lib
+            ${ALEMBIC_ROOT}/lib/static
+            ${ALEMBIC_ROOT}/lib64
+            $ENV{ALEMBIC_ROOT}/lib
+            $ENV{ALEMBIC_ROOT}/lib64
+            $ENV{ALEMBIC_LIBRARY_DIR}
+        NO_DEFAULT_PATH)
+    #FIND_LIBRARY(ABC_COLLECTION libAlembicAbcCollection.so PATHS ${ABC_LIBRARY_DIR})
+    #FIND_LIBRARY(ABC_COREFACTORY libAlembicAbcCoreFactory.so PATHS ${ABC_LIBRARY_DIR})
+    #FIND_LIBRARY(ABC_COREOGAWA libAlembicAbcCoreOgawa.so PATHS ${ABC_LIBRARY_DIR})
+    #FIND_LIBRARY(ABC_MATERIAL libAlembicAbcMaterial.so PATHS ${ABC_LIBRARY_DIR})
+    #FIND_LIBRARY(ABC_OGAWA libAlembicOgawa.so PATHS ${ABC_LIBRARY_DIR})
+    #FIND_LIBRARY(ABC_OPENGL libAlembicAbcOpenGL.so PATHS ${ABC_LIBRARY_DIR})
+    #FIND_LIBRARY(ABC_WFOBJCONVERT libAbcWFObjConvert.so PATHS ${ABC_LIBRARY_DIR})
+    FIND_LIBRARY(ABC libAlembicAbc.so PATHS ${ABC_LIBRARY_DIR})
+    FIND_LIBRARY(ABC_COREABSTRACT libAlembicAbcCoreAbstract.so PATHS ${ABC_LIBRARY_DIR})
+    FIND_LIBRARY(ABC_COREHDF5 libAlembicAbcCoreHDF5.so PATHS ${ABC_LIBRARY_DIR})
+    FIND_LIBRARY(ABC_GEOM libAlembicAbcGeom.so PATHS ${ABC_LIBRARY_DIR})
+    FIND_LIBRARY(ABC_UTIL libAlembicUtil.so PATHS ${ABC_LIBRARY_DIR})
+    SET(ABC_CORE_LIBS ${ABC_GEOM} ${ABC} ${ABC_COREHDF5} ${ABC_COREABSTRACT} ${ABC_UTIL})
+endif()
 
 SET(ABC_LIBRARIES ${ABC_CORE_LIBS} ${ABC_HDF5_LIBS} "-ldl" ${ABC_OPENEXR_LIBS} ${ABC_ILMBASE_LIBS})
 SET(ABC_INCLUDE_DIR ${ABC_INCLUDE_DIR} ${ABC_HALF_INCLUDE_DIR})
@@ -105,4 +138,9 @@ INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS("Alembic" DEFAULT_MSG ABC_LIBRARIES ABC_LIBRARY_DIR ABC_INCLUDE_DIR ABC_HDF5_LIBS)
 
 
+if (ALEMBIC_FOUND)
 mark_as_advanced(ABC_LIBRARY_DIR ABC_HDF5_LIBS_PATH ABC_ILMBASE_LIBS_PATH)
+    message("Found Alembic - will build alembic exporter")
+else()
+    message("Alembic NOT FOUND")   
+endif()
