@@ -52,7 +52,7 @@ before_install:
  - mkdir --parent $OPENCV_SOURCE
  - mkdir --parent $OPENCV_BUILD
  - mkdir --parent $OPENCV_INSTALL
- - git clone --recursive --branch 3.0.0 https://github.com/Itseez/opencv.git $OPENCV_SOURCE
+ - if [ ! "$(ls -A $OPENCV_SOURCE)" ]; then git clone --recursive --branch 3.0.0 https://github.com/Itseez/opencv.git $OPENCV_SOURCE; fi
 
 install:
   # OPENCV
