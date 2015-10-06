@@ -37,17 +37,20 @@ env:
     - BUILD_TYPE="Release"
     - BUILD_SYSTEM="`uname -s`"
     - BUILD_PROCESSOR="`uname -p`"
+    - OPENMVG_SOURCE=${TRAVIS_BUILD_DIR}/openMVG/src
+    - OPENMVG_BUILD=${TRAVIS_BUILD_DIR}/build
+    - GT_TEST_SOURCE=${TRAVIS_BUILD_DIR}/gt_test
 
 before_install:
  - gem install coveralls-lcov
 
 before_script:
   - export CXX="g++-4.8"
-  - cd ..
-  - mkdir build
-  - cd build
+  # Create build folder
+  - mkdir --parent $OPENMVG_BUILD
+  - cd $OPENMVG_BUILD
   # Classic release build
-  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -DOpenMVG_USE_BOOST=ON . ../openMVG/src
+  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -DOpenMVG_USE_BOOST=ON . $OPENMVG_SOURCE
   # Build for code coverage evaluation
   #- cmake -DOpenMVG_BUILD_COVERAGE=ON -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
 
@@ -58,10 +61,9 @@ script:
   - if [ "$CC" = "gcc" ]; then make test; fi
  
 after_success:
-  - mkdir gt_test
-  - git clone --branch dev https://github.com/caymard/SfM_quality_evaluation.git gt_test/
-  - cd gt_test
-  - python EvaluationLauncher.py -s "../$BUILD_SYSTEM-$BUILD_PROCESSOR-$BUILD_TYPE" -i Benchmarking_Camera_Calibration_2008/ -o output -r results.json > gt_log.log 2>&1
+  - git clone --branch dev https://github.com/caymard/SfM_quality_evaluation.git $GT_TEST_SOURCE
+  - cd $GT_TEST_SOURCE
+  - python EvaluationLauncher.py -s "$OPENMVG_BUILD/$BUILD_SYSTEM-$BUILD_PROCESSOR-$BUILD_TYPE" -i Benchmarking_Camera_Calibration_2008/ -o output -r results.json > gt_log.log 2>&1
   - cat gt_log.log | tail
   - cat results.json
   #- cd ../openMVG
