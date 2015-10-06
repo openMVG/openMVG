@@ -35,8 +35,8 @@ env:
   global:
     - NUM_CPU="`grep processor /proc/cpuinfo | wc -l`"; echo $NUM_CPU
     - BUILD_TYPE="Release"
-    - BUILD_SYSTEM=`uname -s`
-    - BUILD_PROCESSOR=`uname -p`
+    - BUILD_SYSTEM="`uname -s`"
+    - BUILD_PROCESSOR="`uname -p`"
     - CXX="g++-4.8"
 
 before_install:
