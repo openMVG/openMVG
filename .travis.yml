@@ -95,3 +95,9 @@ after_success:
   #    lcov --remove coverage.info '*/src/dependencies/*' -o coverage.info;
   #    coveralls-lcov coverage.info;
   #  fi
+
+cache:
+  directories:
+    - $OPENCV_SOURCE
+    - $OPENCV_BUILD
+    - $OPENCV_INSTALL
