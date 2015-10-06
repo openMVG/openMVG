@@ -22,6 +22,7 @@
 
 #include <iostream>
 #include <string>
+#include <chrono>
 
 #if HAVE_ALEMBIC
 #include <openMVG/dataio/AlembicExporter.hpp>
