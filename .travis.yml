@@ -40,9 +40,27 @@ env:
     - OPENMVG_SOURCE=${TRAVIS_BUILD_DIR}/src
     - OPENMVG_BUILD=${TRAVIS_BUILD_DIR}/build
     - GT_TEST_SOURCE=${TRAVIS_BUILD_DIR}/gt_test
+    # OPENCV
+    - OPENCV_ROOT=${TRAVIS_BUILD_DIR}/opencv3
+    - OPENCV_SOURCE=${OPENCV_ROOT}/source
+    - OPENCV_BUILD=${OPENCV_ROOT}/build
+    - OPENCV_INSTALL=${OPENCV_ROOT}/install
 
 before_install:
  - gem install coveralls-lcov
+ # OPENCV
+ - mkdir --parent $OPENCV_SOURCE
+ - mkdir --parent $OPENCV_BUILD
+ - mkdir --parent $OPENCV_INSTALL
+ - git clone --recursive --branch 3.0.0 https://github.com/Itseez/opencv.git $OPENCV_SOURCE
+
+install:
+  # OPENCV
+  - cd $OPENCV_BUILD
+  - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$OPENCV_INSTALL $OPENCV_SOURCE
+  - make -j 16
+  - make install
+  - ls -l $OPENCV_INSTALL
 
 before_script:
   - export CXX="g++-4.8"
