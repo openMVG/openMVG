@@ -33,6 +33,11 @@ public:
   void SetFeaturesProvider(Features_Provider * provider);
   void SetMatchesProvider(Matches_Provider * provider);
 
+  void RobustResectionOfImages(
+    const std::set<size_t>& viewIds,
+    std::set<size_t>& set_reconstructedViewId,
+    std::set<size_t>& set_rejectedViewId);
+
   virtual bool Process();
 
   void setInitialPair(const Pair & initialPair)
@@ -69,13 +74,15 @@ private:
   double ComputeResidualsHistogram(Histogram<double> * histo);
 
   /// List the images that the greatest number of matches to the current 3D reconstruction.
-  bool FindImagesWithPossibleResection(std::vector<size_t> & vec_possible_indexes);
+  bool FindImagesWithPossibleResection(
+    std::vector<size_t>& vec_possible_indexes,
+    const std::set<size_t>& set_remainingViewId) const;
 
   /// Add a single Image to the scene and triangulate new possible tracks.
-  bool Resection(size_t imageIndex);
+  bool Resection(const size_t imageIndex);
 
   /// Bundle adjustment to refine Structure; Motion and Intrinsics
-  void BundleAdjustment();
+  bool BundleAdjustment();
 
   /// Discard track with too large residual error
   size_t badTrackRejector(double dPrecision, size_t count = 0);

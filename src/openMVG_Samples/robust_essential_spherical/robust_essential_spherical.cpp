@@ -8,15 +8,13 @@
 
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/features.hpp"
-#include "openMVG/matching/matcher_kdtree_flann.hpp"
-#include "openMVG/matching/indMatchDecoratorXY.hpp"
+#include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/multiview/conditioning.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 
 #include "nonFree/sift/SIFT_describer.hpp"
-#include "openMVG_Samples/siftPutativeMatches/two_view_matches.hpp"
 #include "openMVG_Samples/robust_essential_spherical/spherical_cam.hpp"
 
 #include "software/SfM/SfMPlyHelper.hpp"
@@ -98,15 +96,12 @@ int main() {
   std::vector<IndMatch> vec_PutativeMatches;
   //-- Perform matching -> find Nearest neighbor, filtered with Distance ratio
   {
-    // Define a matcher and a metric to find corresponding points
-    typedef SIFT_Regions::DescriptorT DescriptorT;
-    typedef flann::L2<DescriptorT::bin_type> MetricT;
-    typedef ArrayMatcher_Kdtree_Flann<DescriptorT::bin_type, MetricT> MatcherT;
-    // Distance ratio squared due to squared metric
-    getPutativesMatches<DescriptorT, MatcherT>(
-      ((SIFT_Regions*)regions_perImage.at(0).get())->Descriptors(),
-      ((SIFT_Regions*)regions_perImage.at(1).get())->Descriptors(),
-      Square(0.8), vec_PutativeMatches);
+    // Find corresponding points
+    matching::DistanceRatioMatch(
+      0.8, matching::ANN_L2,
+      *regions_perImage.at(0).get(),
+      *regions_perImage.at(1).get(),
+      vec_PutativeMatches);
 
     IndMatchDecorator<float> matchDeduplicator(vec_PutativeMatches, featsL, featsR);
     matchDeduplicator.getDeduplicated(vec_PutativeMatches);

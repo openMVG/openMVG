@@ -10,8 +10,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_SfMInit_ImageListing
   openMVG_exif
   openMVG_sfm
   easyexif
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 #convert a v0.6 lists.txt file to the new sfm_data.X format
 ADD_EXECUTABLE(openMVG_main_ConvertList main_ConvertList.cpp)
@@ -19,8 +18,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ConvertList
   openMVG_system
   openMVG_features
   openMVG_sfm
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 # Installation rules
 SET_PROPERTY(TARGET openMVG_main_SfMInit_ImageListing PROPERTY FOLDER OpenMVG/software)
@@ -43,8 +41,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures
   openMVG_sfm
   stlplus
   vlsift
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 ADD_EXECUTABLE(openMVG_main_ComputeMatches main_ComputeMatches.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_ComputeMatches
@@ -54,8 +51,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeMatches
   openMVG_sfm
   openMVG_matching_image_collection
   stlplus
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 # Installation rules
 SET_PROPERTY(TARGET openMVG_main_ComputeFeatures PROPERTY FOLDER OpenMVG/software)
@@ -80,8 +76,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_IncrementalSfM
   openMVG_features
   openMVG_sfm
   stlplus
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 ADD_EXECUTABLE(openMVG_main_GlobalSfM main_GlobalSfM.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_GlobalSfM
@@ -90,8 +85,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_GlobalSfM
   openMVG_features
   openMVG_sfm
   stlplus
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 ADD_EXECUTABLE(openMVG_main_ConvertSfM_DataFormat main_ConvertSfM_DataFormat.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_ConvertSfM_DataFormat
@@ -99,8 +93,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ConvertSfM_DataFormat
   openMVG_features
   openMVG_sfm
   stlplus
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 ADD_EXECUTABLE(openMVG_main_FrustumFiltering main_FrustumFiltering.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_FrustumFiltering
@@ -108,8 +101,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_FrustumFiltering
   openMVG_features
   openMVG_sfm
   stlplus
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 ADD_EXECUTABLE(openMVG_main_ComputeStructureFromKnownPoses main_ComputeStructureFromKnownPoses.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_ComputeStructureFromKnownPoses
@@ -117,8 +109,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeStructureFromKnownPoses
   openMVG_features
   openMVG_sfm
   stlplus
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 ADD_EXECUTABLE(openMVG_main_ComputeSfM_DataColor main_ComputeSfM_DataColor.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_ComputeSfM_DataColor
@@ -127,8 +118,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeSfM_DataColor
   openMVG_features
   openMVG_sfm
   stlplus
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 # Installation rules
 SET_PROPERTY(TARGET openMVG_main_IncrementalSfM PROPERTY FOLDER OpenMVG/software)
@@ -156,8 +146,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_exportKeypoints
   openMVG_features
   openMVG_sfm
   stlplus
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 
 # - View computed matches (putatives, geometrics) per image pair
@@ -168,8 +157,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_exportMatches
   openMVG_features
   openMVG_sfm
   stlplus
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 # - View tracks per image pair
 #
@@ -179,8 +167,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_exportTracks
   openMVG_features
   openMVG_sfm
   stlplus
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 # - Export undistorted images related to a sfm_data file
 #
@@ -191,8 +178,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ExportUndistortedImages
   openMVG_features
   openMVG_sfm
   stlplus
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 # installation rules
 SET_PROPERTY(TARGET openMVG_main_exportKeypoints PROPERTY FOLDER OpenMVG/software)
@@ -221,8 +207,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_openMVG2PMVS
   openMVG_features
   openMVG_sfm
   stlplus
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 # - Export a SfM openMVG scene to CMPMVS format
 #
@@ -233,14 +218,27 @@ TARGET_LINK_LIBRARIES(openMVG_main_openMVG2CMPMVS
   openMVG_features
   openMVG_sfm
   stlplus
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 
 # - Export a SfM openMVG scene to MVE(v2) format
 #
 ADD_EXECUTABLE(openMVG_main_openMVG2MVE2 main_openMVG2MVE2.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVE2 ${OpenMVG_LIBRARIES})
+TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVE2 
+  openMVG_system
+  openMVG_image
+  openMVG_features
+  openMVG_sfm
+  stlplus
+  )
+# - Export a SfM openMVG scene to Alembic format
+#
+FIND_PACKAGE(Alembic)
+if (ALEMBIC_FOUND)
+  ADD_EXECUTABLE(openMVG_main_openMVG2ABC main_openMVG2ABC.cpp)
+  INCLUDE_DIRECTORIES(${ABC_INCLUDE_DIR})
+  TARGET_LINK_LIBRARIES(openMVG_main_openMVG2ABC ${ABC_LIBRARIES} ${OpenMVG_LIBRARIES})
+endif(ALEMBIC_FOUND)
 
 # - Export a SfM openMVG scene to meshlab scene with rasters
 # -
@@ -251,8 +249,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MESHLAB
   openMVG_features
   openMVG_sfm
   stlplus
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 # - Export a SfM openMVG scene to mvs-texturing scene folder
 # -
@@ -263,8 +260,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVSTEXTURING
   openMVG_features
   openMVG_sfm
   stlplus
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 # - Export SfM openMVG camera scene as triangle meshes
 # -
@@ -274,8 +270,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ExportCameraFrustums
   openMVG_features
   openMVG_sfm
   stlplus
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 # installation rules
 SET_PROPERTY(TARGET openMVG_main_openMVG2PMVS PROPERTY FOLDER OpenMVG/software)
@@ -316,8 +311,6 @@ IF(OpenMVG_USE_OPENCV)
       openMVG_sfm
       stlplus
       vlsift
-      ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-      ${OSI_LIBRARY}
       ${OpenCV_LIBS})
 
     SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY FOLDER OpenMVG/software)
@@ -339,8 +332,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_evalQuality
   openMVG_features
   openMVG_sfm
   stlplus
-  ${CLP_LIBRARIES} ${COINUTILS_LIBRARY}
-  ${OSI_LIBRARY})
+  )
 
 #installation rules
 SET_PROPERTY(TARGET openMVG_main_evalQuality PROPERTY FOLDER OpenMVG/software)

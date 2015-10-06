@@ -104,7 +104,7 @@ size_t ImportFeatures(
   imageDataList.resize(regions_perImage.size());
   const HashConvertor stHashConvertor;
 #ifdef OPENMVG_USE_OPENMP
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic)
 #endif
   for (int i = 0; i < regions_perImage.size(); ++i)
   {

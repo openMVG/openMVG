@@ -42,4 +42,7 @@
 
 #include "openMVG/sfm/pipelines/structure_from_known_poses/structure_estimator.hpp"
 
+#include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
+#include "openMVG/sfm/pipelines/localization/SfM_Localizer_Single_3DTrackObservation_Database.hpp"
+
 #endif // OPENMVG_SFM_HPP

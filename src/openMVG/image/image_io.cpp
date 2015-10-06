@@ -47,7 +47,6 @@ Format GetFormat(const char *c) {
   if (CmpFormatExt(p, ".tif")) return Tiff;
   if (CmpFormatExt(p, ".tiff")) return Tiff;
 
-  cerr << "Error: Couldn't open " << c << " Unknown file format" << std::endl;
   return Unknown;
 }
 
@@ -367,7 +366,7 @@ int WritePng(const char * filename,
     cerr << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
-  int res = WritePngStream(file, ptr, w, h, depth);
+  const int res = WritePngStream(file, ptr, w, h, depth);
   fclose(file);
   return res;
 }
@@ -400,23 +399,21 @@ int WritePngStream(FILE * file,
     case 1: colour = PNG_COLOR_TYPE_GRAY;
       break;
     default:
+    {
+      png_destroy_write_struct(&png_ptr, &info_ptr);
       return 0;
+    }
   }
 
   png_set_IHDR(png_ptr, info_ptr, w, h,
       8, colour, PNG_INTERLACE_NONE,
-      PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+      PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
   png_write_info(png_ptr, info_ptr);
 
-  png_bytep *row_pointers =
-      (png_bytep*) malloc(sizeof(png_bytep) * depth * h);
-
   for (int y = 0; y < h; ++y)
-    row_pointers[y] = (png_byte*) (&ptr[0]) + w * depth * y;
+    png_write_row(png_ptr, (png_byte*) (&ptr[0]) + w * depth * y);
 
-  png_write_image(png_ptr, row_pointers);
-  free(row_pointers);
   png_write_end(png_ptr, NULL);
   png_destroy_write_struct(&png_ptr, &info_ptr);
   return 1;
@@ -432,7 +429,7 @@ int ReadPnm(const char * filename,
     cerr << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
-  int res = ReadPnmStream(file, array, w, h, depth);
+  const int res = ReadPnmStream(file, array, w, h, depth);
   fclose(file);
   return res;
 }
@@ -528,7 +525,7 @@ int WritePnm(const char * filename,
     cerr << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
-  int res = WritePnmStream(file, array, w, h, depth);
+  const int res = WritePnmStream(file, array, w, h, depth);
   fclose(file);
   return res;
 }
@@ -539,8 +536,6 @@ int WritePnmStream(FILE * file,
                    int w,
                    int h,
                    int depth) {
-  int res;
-
   // Write magic number.
   if (depth == 1) {
     fprintf(file, "P5\n");
@@ -554,7 +549,7 @@ int WritePnmStream(FILE * file,
   fprintf(file, "%d %d %d\n", w, h, 255);
 
   // Write pixels.
-  res = fwrite( &array[0], 1, static_cast<int>(array.size()), file);
+  const int res = fwrite( &array[0], 1, static_cast<int>(array.size()), file);
   if (res != array.size()) {
     return 0;
   }
@@ -689,8 +684,8 @@ bool Read_PNG_ImageHeader(const char * filename, ImageHeader * imgheader)
 
   // get width, height, bit-depth and color-type
   png_uint_32 wPNG, hPNG;
-  int                 iBitDepth;
-  int                 iColorType;
+  int iBitDepth;
+  int iColorType;
   png_get_IHDR(png_ptr, info_ptr, &wPNG, &hPNG, &iBitDepth,
     &iColorType, NULL, NULL, NULL);
 

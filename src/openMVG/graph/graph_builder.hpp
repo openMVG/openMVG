@@ -47,7 +47,7 @@ struct indexedGraph
       ++iter)
     {
       map_size_t_to_node[*iter] = g.addNode();
-      (*map_nodeMapIndex) [map_size_t_to_node[*iter]] = *iter;
+      (*map_nodeMapIndex) [map_size_t_to_node.at(*iter)] = *iter;
     }
 
     //C-- Add weighted edges from the pairs object
@@ -57,7 +57,7 @@ struct indexedGraph
     {
       const IndexT i = iter->first;
       const IndexT j = iter->second;
-      g.addEdge(map_size_t_to_node[i], map_size_t_to_node[j]);
+      g.addEdge(map_size_t_to_node.at(i), map_size_t_to_node.at(j));
     }
   }
 
@@ -74,7 +74,7 @@ struct indexedGraph
       ++iter)
     {
       map_size_t_to_node[*iter] = g.addNode();
-      (*map_nodeMapIndex) [map_size_t_to_node[*iter]] = *iter;
+      (*map_nodeMapIndex) [map_size_t_to_node.at(*iter)] = *iter;
     }
 
     //B-- Add weighted edges from the pairs object
@@ -84,7 +84,7 @@ struct indexedGraph
     {
       const IndexT i = iter->first;
       const IndexT j = iter->second;
-      g.addEdge(map_size_t_to_node[i], map_size_t_to_node[j]);
+      g.addEdge(map_size_t_to_node.at(i), map_size_t_to_node.at(j));
     }
   }
 };

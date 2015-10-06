@@ -24,7 +24,7 @@ INSTALL(TARGETS vlsift DESTINATION lib EXPORT openMVG-targets)
 SET_PROPERTY(TARGET vlsift PROPERTY FOLDER OpenMVG/nonFree)
 INSTALL(
   DIRECTORY .
-  DESTINATION include/openMVG_dependencies/nonFree
+  DESTINATION include/openMVG_dependencies/nonFree/sift
   COMPONENT headers
   FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
 )

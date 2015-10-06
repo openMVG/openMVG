@@ -30,7 +30,7 @@ void PairWiseMatchingToAdjacencyMatrixSVG(const size_t NbImages,
       for (size_t J = 0; J < NbImages; ++J) {
         // If the pair have matches display a blue boxes at I,J position.
         matching::PairWiseMatches::const_iterator iterSearch =
-          map_Matches.find(make_pair(I,J));
+          map_Matches.find(std::make_pair(I,J));
         if (iterSearch != map_Matches.end() && !iterSearch->second.empty())
         {
           // Display as a tooltip: (IndexI, IndexJ NbMatches)
@@ -42,7 +42,8 @@ void PairWiseMatchingToAdjacencyMatrixSVG(const size_t NbImages,
       }
     }
     // Display axes with 0 -> NbImages annotation : _|
-    ostringstream osNbImages;   osNbImages << NbImages;
+    std::ostringstream osNbImages;
+    osNbImages << NbImages;
     svgStream.drawText((NbImages+1)*scaleFactor, scaleFactor, scaleFactor, "0", "black");
     svgStream.drawText((NbImages+1)*scaleFactor,
       (NbImages)*scaleFactor - scaleFactor, scaleFactor, osNbImages.str(), "black");
@@ -57,7 +58,7 @@ void PairWiseMatchingToAdjacencyMatrixSVG(const size_t NbImages,
       (NbImages)*scaleFactor - 2*scaleFactor, (NbImages+1)*scaleFactor,
       svgStyle().stroke("black", 1.0));
 
-    ofstream svgFileStream( sOutName.c_str());
+    std::ofstream svgFileStream( sOutName.c_str());
     svgFileStream << svgStream.closeSvgFile().str();
   }
 }

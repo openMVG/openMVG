@@ -28,6 +28,7 @@
 
 #include <cstdlib>
 #include <fstream>
+#include <algorithm>
 
 using namespace openMVG;
 using namespace openMVG::image;
@@ -133,6 +134,66 @@ public:
 CEREAL_REGISTER_TYPE_WITH_NAME(AKAZE_OCV_Image_describer, "AKAZE_OCV_Image_describer");
 
 #ifdef USE_OCVSIFT
+
+class SIFT_OPENCV_Params
+{
+public:
+  SIFT_OPENCV_Params() {}
+  ~SIFT_OPENCV_Params() {}
+  
+  bool Set_configuration_preset(EDESCRIBER_PRESET preset)
+  {
+      switch(preset)
+      {
+        case LOW_PRESET:
+          contrastThreshold = 0.02;
+          maxTotalKeypoints = 500;
+          break;
+        case MEDIUM_PRESET:
+          contrastThreshold = 0.01;
+          maxTotalKeypoints = 1000;
+          break;
+        case NORMAL_PRESET:
+          contrastThreshold = 0.005;
+          maxTotalKeypoints = 2000;
+          break;
+        case HIGH_PRESET:
+          contrastThreshold = 0.005;
+          edgeThreshold = 15;
+          maxTotalKeypoints = 10000;
+          break;
+        case ULTRA_PRESET:
+          contrastThreshold = 0.005;
+          edgeThreshold = 20;
+          maxTotalKeypoints = 20000;
+          break;
+      }
+      return true;
+  }
+
+  template<class Archive>
+  void serialize( Archive & ar )
+  {
+    ar(
+      cereal::make_nvp("grid_size", gridSize),
+      cereal::make_nvp("max_total_keypoints", maxTotalKeypoints),
+      cereal::make_nvp("n_octave_layers", nOctaveLayers),
+      cereal::make_nvp("contrast_threshold", contrastThreshold),
+      cereal::make_nvp("edge_threshold", edgeThreshold),
+      cereal::make_nvp("sigma", sigma));
+      // cereal::make_nvp("root_sift", root_sift));
+  }
+
+  // Parameters
+  std::size_t gridSize = 4;
+  std::size_t maxTotalKeypoints = 1000;
+  int nOctaveLayers = 6;  // default opencv value is 3
+  double contrastThreshold = 0.04;  // default opencv value is 0.04
+  double edgeThreshold = 10;
+  double sigma = 1.6;
+  // bool rootSift = true;
+};
+
 ///
 //- Create an Image_describer interface that use and OpenCV extraction method
 // i.e. with the SIFT detector+descriptor
@@ -144,10 +205,10 @@ public:
 
   ~SIFT_OPENCV_Image_describer() {}
 
-  bool Set_configuration_preset(EDESCRIBER_PRESET preset){
-    return true;
+  bool Set_configuration_preset(EDESCRIBER_PRESET preset)
+  {
+    return _params.Set_configuration_preset(preset);
   }
-
   /**
   @brief Detect regions on the image and compute their attributes (description)
   @param image Image.
@@ -166,10 +227,85 @@ public:
     // Create a SIFT detector
     std::vector< cv::KeyPoint > v_keypoints;
     cv::Mat m_desc;
-    cv::Ptr<cv::Feature2D> siftdetector = cv::xfeatures2d::SIFT::create();
+    std::size_t maxDetect = 0; // No max value by default
+    if(_params.maxTotalKeypoints)
+      if(!_params.gridSize)  // If no grid filtering, use opencv to limit the number of features
+        maxDetect = _params.maxTotalKeypoints;
 
-    // Process SIFT computation
-    siftdetector->detectAndCompute(img, cv::Mat(), v_keypoints, m_desc);
+    cv::Ptr<cv::Feature2D> siftdetector = cv::xfeatures2d::SIFT::create(maxDetect, _params.nOctaveLayers, _params.contrastThreshold, _params.edgeThreshold, _params.sigma);
+
+    // Detect SIFT keypoints
+    auto detect_start = std::chrono::steady_clock::now();
+    siftdetector->detect(img, v_keypoints);
+    auto detect_end = std::chrono::steady_clock::now();
+    auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
+
+    std::cout << "SIFT: contrastThreshold: " << _params.contrastThreshold << ", edgeThreshold: " << _params.edgeThreshold << std::endl;
+    std::cout << "Detect SIFT: " << detect_elapsed.count() << " milliseconds." << std::endl;
+    std::cout << "Image size: " << img.cols << " x " << img.rows << std::endl;
+    std::cout << "Grid size: " << _params.gridSize << ", maxTotalKeypoints: " << _params.maxTotalKeypoints << std::endl;
+    std::cout << "Number of detected features: " << v_keypoints.size() << std::endl;
+
+    // cv::KeyPoint::response: the response by which the most strong keypoints have been selected.
+    // Can be used for the further sorting or subsampling.
+    std::sort(v_keypoints.begin(), v_keypoints.end(), [](const cv::KeyPoint& a, const cv::KeyPoint& b){ return a.response > b.response; });
+
+    // Grid filtering of the keypoints to ensure a global repartition
+    if(_params.gridSize && _params.maxTotalKeypoints)
+    {
+      // Only filter features if we have more features than the maxTotalKeypoints
+      if(v_keypoints.size() > _params.maxTotalKeypoints)
+      {
+        std::vector< cv::KeyPoint > filtered_keypoints;
+        std::vector< cv::KeyPoint > rejected_keypoints;
+        filtered_keypoints.reserve(std::min(v_keypoints.size(), _params.maxTotalKeypoints));
+        rejected_keypoints.reserve(v_keypoints.size());
+
+        cv::Mat countFeatPerCell(_params.gridSize, _params.gridSize, cv::DataType<std::size_t>::type, cv::Scalar(0));
+        const std::size_t keypointsPerCell = _params.maxTotalKeypoints / countFeatPerCell.total();
+        const std::size_t regionWidth = image.Width() / countFeatPerCell.cols;
+        const std::size_t regionHeight = image.Height() / countFeatPerCell.rows;
+
+        std::cout << "Grid filtering -- keypointsPerCell: " << keypointsPerCell
+                  << ", regionWidth: " << regionWidth
+                  << ", regionHeight: " << regionHeight << std::endl;
+
+        for(const cv::KeyPoint& keypoint: v_keypoints)
+        {
+          const std::size_t cellX = std::size_t(keypoint.pt.x) / regionWidth;
+          const std::size_t cellY = std::size_t(keypoint.pt.y) / regionHeight;
+          // std::cout << "- keypoint.pt.x: " << keypoint.pt.x << ", keypoint.pt.y: " << keypoint.pt.y << std::endl;
+          // std::cout << "- cellX: " << cellX << ", cellY: " << cellY << std::endl;
+          // std::cout << "- countFeatPerCell: " << countFeatPerCell << std::endl;
+
+          assert(cellX < _params.gridSize && cellY < _params.gridSize);
+          const std::size_t count = countFeatPerCell.at<std::size_t>(cellX, cellY);
+          countFeatPerCell.at<std::size_t>(cellX, cellY) = count + 1;
+          if(count < keypointsPerCell)
+            filtered_keypoints.push_back(keypoint);
+          else
+            rejected_keypoints.push_back(keypoint);
+        }
+        // If we don't have enough features (less than maxTotalKeypoints) after the grid filtering (empty regions in the grid for example).
+        // We add the best other ones, without repartition constraint.
+        if( filtered_keypoints.size() < _params.maxTotalKeypoints )
+        {
+          const std::size_t remainingElements = std::min(rejected_keypoints.size(), _params.maxTotalKeypoints - filtered_keypoints.size());
+          std::cout << "Grid filtering -- Copy remaining points: " << remainingElements << std::endl;
+          filtered_keypoints.insert(filtered_keypoints.end(), rejected_keypoints.begin(), rejected_keypoints.begin() + remainingElements);
+        }
+
+        v_keypoints.swap(filtered_keypoints);
+      }
+    }
+    std::cout << "Number of features: " << v_keypoints.size() << std::endl;
+
+    // Compute SIFT descriptors
+    auto desc_start = std::chrono::steady_clock::now();
+    siftdetector->compute(img, v_keypoints, m_desc);
+    auto desc_end = std::chrono::steady_clock::now();
+    auto desc_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(desc_end - desc_start);
+    std::cout << "Compute descriptors: " << desc_elapsed.count() << " milliseconds." << std::endl;
 
     Allocate(regions);
 
@@ -212,10 +348,13 @@ public:
   template<class Archive>
   void serialize( Archive & ar )
   {
+    ar(cereal::make_nvp("params", _params));
   }
+
 private:
-  int _i;
+  SIFT_OPENCV_Params _params;
 };
+
 CEREAL_REGISTER_TYPE_WITH_NAME(SIFT_OPENCV_Image_describer, "SIFT_OPENCV_Image_describer");
 #endif //USE_OCVSIFT
 
@@ -234,6 +373,9 @@ int main(int argc, char **argv)
 #ifdef USE_OCVSIFT
   std::string sImage_Describer_Method = "AKAZE_OPENCV";
 #endif
+  std::string sFeaturePreset = "NORMAL";
+  int rangeStart = -1;
+  int rangeSize = 1;
 
   // required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -243,6 +385,9 @@ int main(int argc, char **argv)
 #ifdef USE_OCVSIFT
   cmd.add( make_option('m', sImage_Describer_Method, "describerMethod") );
 #endif
+  cmd.add( make_option('p', sFeaturePreset, "describerPreset") );
+  cmd.add( make_option('s', rangeStart, "range_start") );
+  cmd.add( make_option('r', rangeSize, "range_size") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -259,6 +404,15 @@ int main(int argc, char **argv)
       << "   AKAZE_OPENCV (default),\n"
       << "   SIFT_OPENCV: SIFT FROM OPENCV,\n"
 #endif
+      << "[-p|--describerPreset]\n"
+      << "  (used to control the Image_describer configuration):\n"
+      << "   LOW,\n"
+      << "   MEDIUM,\n"
+      << "   NORMAL (default),\n"
+      << "   HIGH,\n"
+      << "   ULTRA: !!Can take long time!!\n"
+      << "[-s]--range_start] range image index start\n"
+      << "[-r]--range_size] range size\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -272,7 +426,9 @@ int main(int argc, char **argv)
 #ifdef USE_OCVSIFT
             << "--describerMethod " << sImage_Describer_Method << std::endl
 #endif
-            ;
+            << "--describerPreset " << sFeaturePreset << std::endl
+            << "--range_start " << rangeStart << std::endl
+            << "--range_size " << rangeSize << std::endl;
 
   if (sOutDir.empty())  {
     std::cerr << "\nIt is an invalid output directory" << std::endl;
@@ -338,6 +494,8 @@ int main(int argc, char **argv)
     image_describer.reset(new AKAZE_OCV_Image_describer);
 #endif
 
+    image_describer->Set_configuration_preset(sFeaturePreset);
+
     // Export the used Image_describer and region type for:
     // - dynamic future regions computation and/or loading
     {
@@ -362,8 +520,29 @@ int main(int argc, char **argv)
     Image<unsigned char> imageGray;
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
-    for(Views::const_iterator iterViews = sfm_data.views.begin();
-        iterViews != sfm_data.views.end();
+    Views::const_iterator iterViews = sfm_data.views.begin();
+    Views::const_iterator iterViewsEnd = sfm_data.views.end();
+    if(rangeStart != -1)
+    {
+      if(rangeStart < 0 || rangeStart > sfm_data.views.size())
+      {
+        std::cerr << "Bad specific index" << std::endl;
+        return EXIT_FAILURE;
+      }
+      if(rangeSize < 0 || rangeSize > sfm_data.views.size())
+      {
+        std::cerr << "Bad range size. " << std::endl;
+        return EXIT_FAILURE;
+      }
+      if(rangeStart + rangeSize > sfm_data.views.size())
+        rangeSize = sfm_data.views.size() - rangeStart;
+
+      std::advance(iterViews, rangeStart);
+      iterViewsEnd = iterViews;
+      std::advance(iterViewsEnd, rangeSize);
+    }
+    for(;
+        iterViews != iterViewsEnd;
         ++iterViews, ++my_progress_bar)
     {
       const View * view = iterViews->second.get();
@@ -381,7 +560,9 @@ int main(int argc, char **argv)
           continue;
 
         // Compute features and descriptors and export them to files
+        std::cout << "Extracting features from image " << view->id_view << std::endl;
         std::unique_ptr<Regions> regions;
+
         image_describer->Describe(imageGray, regions);
         image_describer->Save(regions.get(), sFeat, sDesc);
       }
