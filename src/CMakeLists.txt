@@ -100,6 +100,7 @@ IF (UNIX AND NOT OpenMVG_BUILD_COVERAGE)
   SET(CMAKE_C_FLAGS_RELEASE "-O3")
   SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
 ENDIF ()
+include(UpdateCacheVariable)
 
 # ==============================================================================
 # Check C++11 support
