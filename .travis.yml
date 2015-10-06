@@ -37,7 +37,7 @@ env:
     - BUILD_TYPE="Release"
     - BUILD_SYSTEM="`uname -s`"
     - BUILD_PROCESSOR="`uname -p`"
-    - OPENMVG_SOURCE=${TRAVIS_BUILD_DIR}/openMVG/src
+    - OPENMVG_SOURCE=${TRAVIS_BUILD_DIR}/src
     - OPENMVG_BUILD=${TRAVIS_BUILD_DIR}/build
     - GT_TEST_SOURCE=${TRAVIS_BUILD_DIR}/gt_test
 
@@ -47,7 +47,7 @@ before_install:
 before_script:
   - export CXX="g++-4.8"
   # Create build folder
-  - mkdir --parent $OPENMVG_BUILD
+  - mkdir $OPENMVG_BUILD
   - cd $OPENMVG_BUILD
   # Classic release build
   - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -DOpenMVG_USE_BOOST=ON . $OPENMVG_SOURCE
