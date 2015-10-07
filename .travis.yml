@@ -82,8 +82,9 @@ script:
   - if [ "$CC" = "gcc" ]; then make test; fi
  
 after_success:
-  - git clone --branch dev https://github.com/caymard/SfM_quality_evaluation.git $GT_TEST_SOURCE
+  - if [ ! "$(ls -A $GT_TEST_SOURCE)" ]; then git clone --branch dev https://github.com/caymard/SfM_quality_evaluation.git $GT_TEST_SOURCE; fi
   - cd $GT_TEST_SOURCE
+  - git pull
   - python EvaluationLauncher.py -s "$OPENMVG_BUILD/$BUILD_SYSTEM-$BUILD_PROCESSOR-$BUILD_TYPE" -i Benchmarking_Camera_Calibration_2008/ -o output -r results.json > gt_log.log 2>&1
   - cat gt_log.log | tail
   - cat results.json
@@ -105,3 +106,4 @@ cache:
     - $OPENCV_CONTRIB
     - $OPENCV_BUILD
     - $OPENCV_INSTALL
+    - $GT_TEST_SOURCE
