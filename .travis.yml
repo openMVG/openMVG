@@ -101,6 +101,7 @@ after_success:
   #  fi
 
 cache:
+  apt: true
   directories:
     - $OPENCV_SOURCE
     - $OPENCV_CONTRIB
