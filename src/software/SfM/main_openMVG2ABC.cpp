@@ -55,7 +55,7 @@ void findTracksColors( const SfM_Data & sfm_data,
         //  a. Count the number of observation per view for each 3Dpoint Index
         //  b. Find the View index that is the most represented ie has the biggest
         //  number of observations
-        size_t view_index = 0; // FIXME not logical, could be "no view found"
+        size_t view_index = 0; // FIXME ambiguous, should be "no view found"
         size_t maxObs = 0;
         std::fill(obsPerView.begin(), obsPerView.end(), 0);
 
@@ -259,6 +259,13 @@ int main(int argc, char **argv) {
         camSample.setHorizontalFilmOffset(hoffset);
         camSample.setVerticalFilmOffset(voffset);
 
+        // Set camera image plane 
+        auto userProps = camObj.getSchema().getUserProperties();
+        OStringProperty imagePlane(userProps, "imagePlane"); 
+        const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
+        imagePlane.set(sView_filename.c_str());
+
+        // Finalize
         camObj.getSchema().set( camSample );
     } 
 
