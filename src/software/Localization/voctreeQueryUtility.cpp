@@ -119,7 +119,7 @@ int main(int argc, char** argv)
           ("querylist,q", po::value<string>(&queryList), "Path to the list file to be used for querying the database")
           ("saveDocumentMap", po::value<string>(&documentMapFile), "A matlab file .m where to save the document map of the created database.")
           ("outdir,", po::value<string>(&outDir), "Path to the directory in which save the symlinks of the similar images (it will be create if it does not exist)")
-          (",r", po::value<size_t>(&numImageQuery)->default_value(10), "The number of matches to retrieve for each image, 0 to retrieve all the images")
+          ("results,r", po::value<size_t>(&numImageQuery)->default_value(10), "The number of matches to retrieve for each image, 0 to retrieve all the images")
           ("matlab,", po::bool_switch(&matlabOutput)->default_value(matlabOutput), "It produces an output readable by matlab")
           ("outfile,o", po::value<string>(&outfile), "Name of the output file");
 
@@ -167,9 +167,9 @@ int main(int argc, char** argv)
   {
     // check that both query list or klist are a json file
     withOutDir = boostfs::path(keylist).extension().string() == ".json";
-    if(withOutDir and withQuery)
+    if(withOutDir && withQuery)
     {
-      withOutDir = withOutDir and ( boostfs::path(queryList).extension().string() == ".json");
+      withOutDir = withOutDir && ( boostfs::path(queryList).extension().string() == ".json");
     }
   }
 
@@ -360,7 +360,7 @@ int main(int argc, char** argv)
     {
       POPART_COUT("\t match " << matches[j].id << " with score " << matches[j].score);
       //			POPART_CERR("" <<  i->first << " " << matches[j].id << " " << matches[j].score);
-      if(withOutput and not matlabOutput) fileout << i << " " << matches[j].id << " " << matches[j].score << std::endl;
+      if(withOutput && !matlabOutput) fileout << i << " " << matches[j].id << " " << matches[j].score << std::endl;
 
       if(withOutDir)
       {
