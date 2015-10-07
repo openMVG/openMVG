@@ -15,6 +15,9 @@
 #include "openMVG/sfm/sfm_data_io_ply.hpp"
 #include "openMVG/sfm/sfm_data_io_baf.hpp"
 
+#include "openMVG/dataio/AlembicExporter.hpp"
+#include "openMVG/dataio/AlembicImporter.hpp"
+
 namespace openMVG {
 namespace sfm {
 
@@ -100,6 +103,13 @@ bool Save(const SfM_Data & sfm_data, const std::string & filename, ESfM_Data fla
     return Save_PLY(sfm_data, filename, flags_part);
   else if (ext == "baf") // Bundle Adjustment file
     return Save_BAF(sfm_data, filename, flags_part);
+#if HAVE_ALEMBIC
+  else if (ext == "abc") // Alembic
+  {
+    openMVG::dataio::AlembicExporter(filename).add(sfm_data, flags_part);
+    return true;
+  }
+#endif // HAVE_ALEMBIC
   return false;
 }
 

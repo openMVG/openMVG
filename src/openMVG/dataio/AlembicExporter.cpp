@@ -118,23 +118,31 @@ void AlembicExporter::appendCamera(const std::string &cameraName,
   camObj.getSchema().set(camSample);
 }
 
-void AlembicExporter::addCameras(const sfm::SfM_Data &sfm_data)
+void AlembicExporter::add(const sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part)
 {
-  for(const auto it : sfm_data.GetViews())
+  if(flags_part & sfm::ESfM_Data::VIEWS || flags_part & sfm::ESfM_Data::EXTRINSICS)
   {
-    const sfm::View * view = it.second.get();
-    if(!sfm_data.IsPoseAndIntrinsicDefined(view))
-      continue;
-
-    // OpenMVG Camera
-    const openMVG::geometry::Pose3 pose = sfm_data.GetPoseOrDie(view);
-    auto iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
-    openMVG::cameras::Pinhole_Intrinsic *cam = static_cast<openMVG::cameras::Pinhole_Intrinsic*> (iterIntrinsic->second.get());
-    
-    const std::string cameraName = stlplus::basename_part(view->s_Img_path);
-    appendCamera(cameraName, pose, cam);
+    for(const auto it : sfmdata.GetViews())
+    {
+      const sfm::View * view = it.second.get();
+      if(!sfmdata.IsPoseAndIntrinsicDefined(view))
+        continue;
+  
+      // OpenMVG Camera
+      const openMVG::geometry::Pose3 pose = sfmdata.GetPoseOrDie(view);
+      auto iterIntrinsic = sfmdata.GetIntrinsics().find(view->id_intrinsic);
+      openMVG::cameras::Pinhole_Intrinsic *cam = static_cast<openMVG::cameras::Pinhole_Intrinsic*> (iterIntrinsic->second.get());
+      
+      const std::string cameraName = stlplus::basename_part(view->s_Img_path);
+      appendCamera(cameraName, pose, cam);
+    }
+  }
+  if(flags_part & sfm::ESfM_Data::STRUCTURE)
+  {
+    addPoints(sfmdata.GetLandmarks());
   }
 }
+
 
 } //namespace dataio
 } //namespace openMVG

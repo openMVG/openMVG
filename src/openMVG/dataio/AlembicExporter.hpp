@@ -7,6 +7,7 @@
 #include <Alembic/AbcCoreHDF5/All.h>
 
 #include <openMVG/sfm/sfm_data.hpp>
+#include <openMVG/sfm/sfm_data_io.hpp>
 
 namespace openMVG {
 namespace dataio {
@@ -40,11 +41,12 @@ public:
                     const cameras::Pinhole_Intrinsic *cam);
   
   /**
-   * @brief Add a set of cameras contained in a SFM scene
+   * @brief Add SfM Data
    * 
-   * @param sfmdata The structure containing the camera info
+   * @param sfmdata SfM_Data container
+   * @param flags_part filter the elements to add
    */
-  void addCameras(const sfm::SfM_Data &sfmdata);
+  void add(const sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part = sfm::ESfM_Data::ALL);
 
   virtual ~AlembicExporter();
 

@@ -253,20 +253,6 @@ TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVSTEXTURING
   stlplus
   )
 
-if(OpenMVG_USE_ALEMBIC)
-# - Export a SfMdata to alembic
-# -
-ADD_EXECUTABLE(openMVG_main_openMVG2ABC main_openMVG2ABC.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_openMVG2ABC
-  openMVG_system
-  openMVG_image
-  openMVG_features
-  openMVG_sfm
-  openMVG_dataio
-  ${ABC_LIBRARIES}
-  )
-endif(OpenMVG_USE_ALEMBIC)
-
 # - Export SfM openMVG camera scene as triangle meshes
 # -
 ADD_EXECUTABLE(openMVG_main_ExportCameraFrustums main_ExportCameraFrustums.cpp)
