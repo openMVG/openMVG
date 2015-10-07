@@ -102,5 +102,6 @@ after_success:
 cache:
   directories:
     - $OPENCV_SOURCE
+    - $OPENCV_CONTRIB
     - $OPENCV_BUILD
     - $OPENCV_INSTALL
