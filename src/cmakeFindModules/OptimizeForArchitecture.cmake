@@ -41,9 +41,9 @@ macro(AutodetectHostArchitecture)
    if(_vendor_id STREQUAL "GenuineIntel")
       if(_cpu_family EQUAL 6)
          # Any recent Intel CPU except NetBurst
-         if(_cpu_model EQUAL 70) #intel core i7-3720qm MacBook Pro Retina
-            set(TARGET_ARCHITECTURE "ivy-bridge")
-         elseif( cpu_model EQUAL 69) # Core i5/i7-4xxxU CPUs
+         if(_cpu_model EQUAL 70) #intel haswell
+            set(TARGET_ARCHITECTURE "haswell")
+         elseif(_cpu_model EQUAL 69) # Core i5/i7-4xxxU CPUs
             set(TARGET_ARCHITECTURE "haswell")
          elseif(_cpu_model EQUAL 63) # Xeon E5 series
             set(TARGET_ARCHITECTURE "sandy-bridge")

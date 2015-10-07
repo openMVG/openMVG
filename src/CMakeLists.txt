@@ -69,11 +69,6 @@ ELSEIF()
   SET(BUILD_SHARED_LIBS OFF)
 ENDIF()
 
-# suppress annoying osi_clp warning
-IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    ADD_DEFINITIONS(-Wno-deprecated-register)
-ENDIF()
-
 # ==============================================================================
 # Check that submodule have been initialized and updated
 # ==============================================================================
@@ -125,9 +120,9 @@ ENDIF(CXX11_COMPILER)
 # ==============================================================================
 # OpenMP detection
 # ==============================================================================
-IF(OpenMVG_USE_OPENMP)
+IF (OpenMVG_USE_OPENMP)
   FIND_PACKAGE(OpenMP)
-  IF(OPENMP_FOUND)
+  IF (OPENMP_FOUND)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     OPTION(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" ON)
     ADD_DEFINITIONS(-DOPENMVG_USE_OPENMP)
@@ -136,15 +131,15 @@ IF(OpenMVG_USE_OPENMP)
         # for those using the clang with OpenMP support
         LIST(APPEND OPENMVG_LIBRARY_DEPENDENCIES iomp)
       ELSE()
-        LIST(APPEND OPENMVG_LIBRARY_DEPENDENCIES gomp)
+      LIST(APPEND OPENMVG_LIBRARY_DEPENDENCIES gomp)
       ENDIF()
-    ENDIF(NOT MSVC)
+    ENDIF (NOT MSVC)
   ENDIF(OPENMP_FOUND)
-ELSE(OpenMVG_USE_OPENMP)
+ELSE (OpenMVG_USE_OPENMP)
     OPTION(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" OFF)
     UPDATE_CACHE_VARIABLE(OpenMVG_USE_OPENMP OFF)
     REMOVE_DEFINITIONS(-DOPENMVG_USE_OPENMP)
-ENDIF(OpenMVG_USE_OPENMP)
+ENDIF (OpenMVG_USE_OPENMP)
 
 # ==============================================================================
 # enable code coverage generation (only with GCC)
@@ -211,12 +206,12 @@ INSTALL(
 # ==============================================================================
 # Enable cmake UNIT TEST framework
 # ==============================================================================
-IF(OpenMVG_BUILD_TESTS)
+IF (OpenMVG_BUILD_TESTS)
   ENABLE_TESTING()
-ENDIF(OpenMVG_BUILD_TESTS)
+ENDIF (OpenMVG_BUILD_TESTS)
 # MACRO to ease UnitTesting
-MACRO(UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
-  IF(OpenMVG_BUILD_TESTS)
+MACRO (UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
+  IF (OpenMVG_BUILD_TESTS)
     ADD_EXECUTABLE(${NAMESPACE}_test_${NAME} ${NAME}_test.cpp)
 
     SET_PROPERTY(TARGET ${NAMESPACE}_test_${NAME} PROPERTY FOLDER OpenMVG/test)
@@ -226,8 +221,8 @@ MACRO(UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
                           CppUnitLite ${OPENMVG_LIBRARY_DEPENDENCIES})
     ADD_TEST(NAME ${NAMESPACE}_test_${NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
              COMMAND $<TARGET_FILE:${NAMESPACE}_test_${NAME}>)
-  ENDIF(OpenMVG_BUILD_TESTS)
-ENDMACRO(UNIT_TEST)
+  ENDIF (OpenMVG_BUILD_TESTS)
+ENDMACRO (UNIT_TEST)
 
 # ==============================================================================
 # Eigen
@@ -486,28 +481,28 @@ ADD_SUBDIRECTORY(nonFree)
 # Sphinx detection
 # ==============================================================================
 IF(OpenMVG_BUILD_DOC)
-  FIND_PACKAGE(Sphinx)
-  IF (EXISTS ${SPHINX_EXECUTABLE})
-    SET(SPHINX_HTML_DIR "${CMAKE_CURRENT_BINARY_DIR}/htmlDoc")
+FIND_PACKAGE(Sphinx)
+IF (EXISTS ${SPHINX_EXECUTABLE})
+  SET(SPHINX_HTML_DIR "${CMAKE_CURRENT_BINARY_DIR}/htmlDoc")
 
-    CONFIGURE_FILE(
-      "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst/conf.py"
-      "${CMAKE_CURRENT_BINARY_DIR}/conf.py"
-      @ONLY)
+  CONFIGURE_FILE(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst/conf.py"
+    "${CMAKE_CURRENT_BINARY_DIR}/conf.py"
+    @ONLY)
 
-    ADD_CUSTOM_TARGET(doc ALL
-      ${SPHINX_EXECUTABLE}
-      -b html
-      "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst"
-      "${SPHINX_HTML_DIR}"
-      COMMENT "Building HTML documentation with Sphinx")
+  ADD_CUSTOM_TARGET(doc ALL
+    ${SPHINX_EXECUTABLE}
+    -b html
+    "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst"
+    "${SPHINX_HTML_DIR}"
+    COMMENT "Building HTML documentation with Sphinx")
 
-    SET_PROPERTY(TARGET doc PROPERTY FOLDER OpenMVG)
+  SET_PROPERTY(TARGET doc PROPERTY FOLDER OpenMVG)
 
-  ELSE (EXISTS ${SPHINX_EXECUTABLE})
-    MESSAGE("Sphinx need to be installed to generate the documentation")
+ELSE (EXISTS ${SPHINX_EXECUTABLE})
+  MESSAGE("Sphinx need to be installed to generate the documentation")
     UPDATE_CACHE_VARIABLE(OpenMVG_BUILD_DOC OFF)
-  ENDIF (EXISTS ${SPHINX_EXECUTABLE})
+ENDIF (EXISTS ${SPHINX_EXECUTABLE})
 ENDIF(OpenMVG_BUILD_DOC)
 
 MESSAGE("\n")

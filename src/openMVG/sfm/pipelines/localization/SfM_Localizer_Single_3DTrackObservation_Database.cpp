@@ -7,13 +7,14 @@
 
 #include "openMVG/sfm/pipelines/localization/SfM_Localizer_Single_3DTrackObservation_Database.hpp"
 #include "openMVG/matching/indMatch.hpp"
+#include "openMVG/matching/regions_matcher.hpp"
 
 namespace openMVG {
 namespace sfm {
 
   SfM_Localization_Single_3DTrackObservation_Database::
   SfM_Localization_Single_3DTrackObservation_Database()
-  :SfM_Localizer(), sfm_data_(nullptr)
+  :SfM_Localizer(), sfm_data_(nullptr), matching_interface_(nullptr)
   {}
 
   bool
@@ -57,8 +58,8 @@ namespace sfm {
       }
     }
     std::cout << "Init retrieval database ... " << std::endl;
-    matching_interface_ =
-      matching::Matcher_Regions_Database(matching::ANN_L2, *landmark_observations_descriptors_.get());
+    matching_interface_.reset(new
+      matching::Matcher_Regions_Database(matching::ANN_L2, *landmark_observations_descriptors_));
     std::cout << "Retrieval database initialized\n"
       << "#landmark: " << sfm_data.GetLandmarks().size() << "\n"
       << "#descriptor initialized: " << landmark_observations_descriptors_->RegionCount() << std::endl;
@@ -78,24 +79,18 @@ namespace sfm {
     Image_Localizer_Match_Data * resection_data_ptr
   ) const
   {
-    if (sfm_data_ == nullptr)
+    if (sfm_data_ == nullptr || matching_interface_ == nullptr)
     {
-      std::cerr << std::endl
-        << "The internal sfm_data structure is not initialized!" << std::endl;
       return false;
     }
 
     matching::IndMatches vec_putative_matches;
-    if (!matching_interface_.Match(0.8, query_regions, vec_putative_matches))
+    if (!matching_interface_->Match(0.8, query_regions, vec_putative_matches))
     {
-      std::cerr << std::endl
-        << "Matching failed!" << std::endl;
       return false;
     }
 
-    std::cout << "Number of 3D2d putative correspondences found: " 
-            << vec_putative_matches.size() << std::endl;
-    
+    std::cout << "#3D2d putative correspondences: " << vec_putative_matches.size() << std::endl;
     // Init the 3D-2d correspondences array
     Image_Localizer_Match_Data resection_data;
     if (resection_data_ptr)
@@ -107,9 +102,7 @@ namespace sfm {
     Mat2X pt2D_original(2, vec_putative_matches.size());
     for (size_t i = 0; i < vec_putative_matches.size(); ++i)
     {
-      // get the ID of the 3D point associated to the database feature
-      const IndexT pt3D_ID = index_to_landmark_id_[vec_putative_matches[i]._i];
-      resection_data.pt3D.col(i) = sfm_data_->GetLandmarks().at(pt3D_ID).X;
+      resection_data.pt3D.col(i) = sfm_data_->GetLandmarks().at(index_to_landmark_id_[vec_putative_matches[i]._i]).X;
       resection_data.pt2D.col(i) = query_regions.GetRegionPosition(vec_putative_matches[i]._j);
       pt2D_original.col(i) = resection_data.pt2D.col(i);
       // Handle image distortion if intrinsic is known (to ease the resection)

@@ -40,11 +40,10 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
    */
   bool Build(const Scalar * dataset, int nbRows, int dimension) {
     if (nbRows < 1) {
-      memMapping = auto_ptr< Eigen::Map<BaseMat> >(NULL);
+      memMapping.reset(nullptr);
       return false;
     }
-    memMapping = auto_ptr< Eigen::Map<BaseMat> >
-      (new Eigen::Map<BaseMat>( (Scalar*)dataset, nbRows, dimension) );
+    memMapping.reset(new Eigen::Map<BaseMat>( (Scalar*)dataset, nbRows, dimension) );
     return true;
   };
 
@@ -64,26 +63,26 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
     if (memMapping.get() == NULL)
       return false;
 
-    //matrix representation of the input data;
-    Eigen::Map<BaseMat> mat_query((Scalar*)query, 1, (*memMapping).cols() );
-    Metric metric;
-    vector<DistanceType> vec_dist((*memMapping).rows(), 0.0);
+      //matrix representation of the input data;
+      Eigen::Map<BaseMat> mat_query((Scalar*)query, 1, (*memMapping).cols() );
+      Metric metric;
+      vector<DistanceType> vec_dist((*memMapping).rows(), 0.0);
     for (int i = 0; i < (*memMapping).rows(); ++i)
     {
-      // Compute Distance Metric
-      vec_dist[i] = metric( (Scalar*)query, (*memMapping).row(i).data(), (*memMapping).cols() );
-    }
-    if (!vec_dist.empty())
-    {
-      // Find the minimum distance :
-      typename vector<DistanceType>::const_iterator min_iter =
-        min_element( vec_dist.begin(), vec_dist.end());
-      *indice =std::distance(
-        typename vector<DistanceType>::const_iterator(vec_dist.begin()),
-        min_iter);
-      *distance = static_cast<DistanceType>(*min_iter);
-    }
-    return true;
+        // Compute Distance Metric
+        vec_dist[i] = metric( (Scalar*)query, (*memMapping).row(i).data(), (*memMapping).cols() );
+      }
+      if (!vec_dist.empty())
+      {
+        // Find the minimum distance :
+        typename vector<DistanceType>::const_iterator min_iter =
+          min_element( vec_dist.begin(), vec_dist.end());
+        *indice =std::distance(
+          typename vector<DistanceType>::const_iterator(vec_dist.begin()),
+          min_iter);
+        *distance = static_cast<DistanceType>(*min_iter);
+      }
+      return true;
   }
 
 
@@ -153,7 +152,7 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
 private:
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> BaseMat;
   /// Use a memory mapping in order to avoid memory re-allocation
-  std::auto_ptr< Eigen::Map<BaseMat> > memMapping;
+  std::unique_ptr< Eigen::Map<BaseMat> > memMapping;
 };
 
 }  // namespace matching

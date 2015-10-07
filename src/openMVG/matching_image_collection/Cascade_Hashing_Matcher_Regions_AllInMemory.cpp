@@ -110,7 +110,6 @@ void Match
 
     Eigen::Map<BaseMat> mat_I( (ScalarT*)tabI, regionsI.RegionCount(), dimension);
     const HashedDescriptions hashed_description = cascade_hasher.CreateHashedDescriptions(mat_I,
-      //CascadeHasher::GetZeroMeanDescriptor(mat_I));
       zero_mean_descriptor);
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp critical

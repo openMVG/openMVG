@@ -105,10 +105,6 @@ bool exportToMVE2Format(
       std::ostringstream padding;
       padding << std::setw(4) << std::setfill('0') << view->id_view;
       sOutViewIteratorDirectory = stlplus::folder_append_separator(sOutViewsDirectory) + "view_" + padding.str() + ".mve";
-      if (!stlplus::folder_exists(sOutViewIteratorDirectory))
-      {
-        stlplus::folder_create(sOutViewIteratorDirectory);
-      }
 
       // We have a valid view with a corresponding camera & pose
       const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
@@ -117,6 +113,11 @@ bool exportToMVE2Format(
 
       if (sfm_data.IsPoseAndIntrinsicDefined(view))
       {
+        if (!stlplus::folder_exists(sOutViewIteratorDirectory))
+        {
+          stlplus::folder_create(sOutViewIteratorDirectory);
+        }
+
         Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
         const IntrinsicBase * cam = iterIntrinsic->second.get();
         if (cam->have_disto())

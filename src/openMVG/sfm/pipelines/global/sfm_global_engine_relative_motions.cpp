@@ -484,7 +484,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
   #pragma omp parallel for schedule(dynamic)
 #endif
   // Compute the relative pose from pairwise point matches:
-  for (size_t i = 0; i < poseWiseMatches.size(); ++i)
+  for (int i = 0; i < poseWiseMatches.size(); ++i)
   {
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp critical

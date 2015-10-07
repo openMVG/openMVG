@@ -84,6 +84,7 @@ TEST(SfM_Data_IO, SAVE_LOAD_JSON) {
     EXPECT_EQ( sfm_data_load.poses.size(), sfm_data.poses.size());
     EXPECT_EQ( sfm_data_load.intrinsics.size(), sfm_data.intrinsics.size());
     EXPECT_EQ( sfm_data_load.structure.size(), sfm_data.structure.size());
+    EXPECT_EQ( sfm_data_load.control_points.size(), sfm_data.control_points.size());
   }
 
   // LOAD (only a subpart: VIEWS)
@@ -97,6 +98,7 @@ TEST(SfM_Data_IO, SAVE_LOAD_JSON) {
     EXPECT_EQ( sfm_data_load.poses.size(), 0);
     EXPECT_EQ( sfm_data_load.intrinsics.size(), 0);
     EXPECT_EQ( sfm_data_load.structure.size(), 0);
+    EXPECT_EQ( sfm_data_load.control_points.size(), 0);
   }
 
   // LOAD (only a subpart: POSES)
@@ -110,6 +112,7 @@ TEST(SfM_Data_IO, SAVE_LOAD_JSON) {
     EXPECT_EQ( sfm_data_load.poses.size(), sfm_data.poses.size());
     EXPECT_EQ( sfm_data_load.intrinsics.size(), 0);
     EXPECT_EQ( sfm_data_load.structure.size(), 0);
+    EXPECT_EQ( sfm_data_load.control_points.size(), 0);
   }
 
   // LOAD (only a subpart: INTRINSICS)
@@ -123,6 +126,7 @@ TEST(SfM_Data_IO, SAVE_LOAD_JSON) {
     EXPECT_EQ( sfm_data_load.poses.size(), 0);
     EXPECT_EQ( sfm_data_load.intrinsics.size(), sfm_data.intrinsics.size());
     EXPECT_EQ( sfm_data_load.structure.size(), 0);
+    EXPECT_EQ( sfm_data_load.control_points.size(), 0);
   }
 
   // LOAD (subparts: COMBINED)
@@ -136,6 +140,7 @@ TEST(SfM_Data_IO, SAVE_LOAD_JSON) {
     EXPECT_EQ( sfm_data_load.poses.size(), sfm_data.poses.size());
     EXPECT_EQ( sfm_data_load.intrinsics.size(), sfm_data.intrinsics.size());
     EXPECT_EQ( sfm_data_load.structure.size(), 0);
+    EXPECT_EQ( sfm_data_load.control_points.size(), 0);
   }
 
   // LOAD (subparts: COMBINED)
@@ -149,6 +154,7 @@ TEST(SfM_Data_IO, SAVE_LOAD_JSON) {
     EXPECT_EQ( sfm_data_load.poses.size(), sfm_data.poses.size());
     EXPECT_EQ( sfm_data_load.intrinsics.size(), sfm_data.intrinsics.size());
     EXPECT_EQ( sfm_data_load.structure.size(), 0);
+    EXPECT_EQ( sfm_data_load.control_points.size(), 0);
     }
   }
 }

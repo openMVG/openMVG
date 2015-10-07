@@ -156,7 +156,7 @@ Matcher_Regions_Database::Matcher_Regions_Database
       }
     }
   }
-  else if (database_regions.IsBinary() and database_regions.Type_id() == typeid(unsigned char).name())
+  else if (database_regions.IsBinary() && database_regions.Type_id() == typeid(unsigned char).name())
   {
     switch (eMatcherType)
     {
