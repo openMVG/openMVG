@@ -3,9 +3,9 @@
 # You can help the search by providing several environment variable or cmake 
 # variable:
 # ALEMBIC_ROOT
-# ALEMBIC_HDF5_ROOT
-# ALEMBIC_ILMBASE_ROOT
-# ALEMBIC_OPENEXR_ROOT
+# HDF5_ROOT
+# ILMBASE_ROOT
+# OPENEXR_ROOT
 #
 # HDF5 and ILMBASE should point to the root dir used to compile alembic
 #
@@ -22,15 +22,15 @@ MESSAGE(STATUS "Looking for Alembic. 1.5.8")
 # Alembic includes half.h for a single function "half to float", this is unfortunate
 FIND_PATH(ABC_HALF_INCLUDE_DIR half.h
     HINTS
-    ${ALEMBIC_ILMBASE_ROOT}/include/OpenEXR
-    $ENV{ALEMBIC_ILMBASE_ROOT}/include/OpenEXR)
+    ${ILMBASE_ROOT}/include/OpenEXR
+    $ENV{ILMBASE_ROOT}/include/OpenEXR)
 
 FIND_PATH(ABC_ILMBASE_LIBS_PATH NAMES libIex.so libIex.a 
     PATHS
-        ${ALEMBIC_ILMBASE_ROOT}/lib 
-        ${ALEMBIC_ILMBASE_ROOT}/lib64
-        $ENV{ALEMBIC_ILMBASE_ROOT}/lib 
-        $ENV{ALEMBIC_ILMBASE_ROOT}/lib64
+        ${ILMBASE_ROOT}/lib 
+        ${ILMBASE_ROOT}/lib64
+        $ENV{ILMBASE_ROOT}/lib 
+        $ENV{ILMBASE_ROOT}/lib64
     NO_DEFAULT_PATH)
 
 FIND_LIBRARY(ABC_ILMBASE_IEX Iex PATHS ${ABC_ILMBASE_LIBS_PATH} NO_DEFAULT_PATH)
@@ -40,10 +40,10 @@ SET(ABC_ILMBASE_LIBS ${ABC_ILMBASE_IEX} ${ABC_ILMBASE_IEXMATH})
 # OpenEXR
 FIND_LIBRARY(ABC_OPENEXR_LIBS IlmImf 
     PATHS 
-        ${ALEMBIC_OPENEXR_ROOT}/lib
-        ${ALEMBIC_OPENEXR_ROOT}/lib64
-        $ENV{ALEMBIC_OPENEXR_ROOT}/lib 
-        $ENV{ALEMBIC_OPENEXR_ROOT}/lib64
+        ${OPENEXR_ROOT}/lib
+        ${OPENEXR_ROOT}/lib64
+        $ENV{OPENEXR_ROOT}/lib 
+        $ENV{OPENEXR_ROOT}/lib64
     NO_DEFAULT_PATH)
 
 ################################################################################
@@ -53,10 +53,10 @@ FIND_LIBRARY(ABC_OPENEXR_LIBS IlmImf
 # FIXME: hdf5 should be handled by a specialized module
 FIND_PATH(ABC_HDF5_LIBS_PATH NAMES libhdf5.so libhdf5.a
        PATHS 
-        ${ALEMBIC_HDF5_ROOT}/lib 
-        ${ALEMBIC_HDF5_ROOT}/lib64
-        $ENV{ALEMBIC_HDF5_ROOT}/lib 
-        $ENV{ALEMBIC_HDF5_ROOT}/lib64
+        ${HDF5_ROOT}/lib 
+        ${HDF5_ROOT}/lib64
+        $ENV{HDF5_ROOT}/lib 
+        $ENV{HDF5_ROOT}/lib64
        NO_DEFAULT_PATH)
 FIND_LIBRARY(ABC_HDF5 hdf5 PATHS ${ABC_HDF5_LIBS_PATH})
 FIND_LIBRARY(ABC_HDF5_HL hdf5_hl PATHS ${ABC_HDF5_LIBS_PATH})
