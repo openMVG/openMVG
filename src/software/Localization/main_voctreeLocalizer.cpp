@@ -60,6 +60,7 @@ int main(int argc, char** argv)
   std::string exportFile = "trackedcameras.abc"; //!< the export file
 #endif
   std::string algostring = "FirstBest";
+  bool refineIntrinsics = false;
   localization::VoctreeLocalizer::Algorithm algorithm =	localization::VoctreeLocalizer::Algorithm::FirstBest;				//< Algorithm type to use for localization
 
 
@@ -77,6 +78,7 @@ int main(int argc, char** argv)
           ("siftPath,s", po::value<std::string>(&descriptorsFolder), "Folder containing the .desc. If not provided, it will be assumed to be parent(sfmdata)/matches [for the older version of openMVG it is the list.txt]")
           ("algorithm,", po::value<std::string>( &algostring )->default_value(algostring), "Algorithm type: FirstBest=0, BestResult=1, AllResults=2, Cluster=3" )
           ("mediafile,m", po::value<std::string>(&mediaFilepath)->required(), "The folder path or the filename for the media to track")
+          ("refineIntrinsics,", po::bool_switch(&refineIntrinsics), "Enable/Disable camera intrinsics refinement")
 #if HAVE_ALEMBIC
           ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), "Filename for the SfM_Data export file (where camera poses will be stored). Default : trackedcameras.json If Alambic is enable it will also export an .abc file of the scene with the same name")
 #endif
@@ -122,6 +124,7 @@ int main(int argc, char** argv)
     POPART_COUT("\tsiftPath: " << descriptorsFolder);
     POPART_COUT("\tresults: " << numResults);
     POPART_COUT("\tcommon views: " << numCommonViews);
+    POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
 //    POPART_COUT("\tvisual debug: " << visualDebug);
     POPART_COUT("\talgorithm: " << algorithm);
   }
@@ -173,7 +176,7 @@ int main(int argc, char** argv)
                        cameraPose, 
                        false/*useGuidedMatching*/, 
                        hasIntrinsics/*useInputIntrinsics*/, 
-                       true/*refineIntrinsics*/, 
+                       refineIntrinsics/*refineIntrinsics*/, 
                        algorithm,
                        &matchData);
     auto detect_end = std::chrono::steady_clock::now();
