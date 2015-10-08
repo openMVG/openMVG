@@ -78,7 +78,7 @@ VoctreeLocalizer::Algorithm VoctreeLocalizer::initFromString(const std::string &
 
 bool VoctreeLocalizer::localize( const image::Image<unsigned char> & imageGray,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
-                const size_t numResults,
+                size_t numResults,
                 geometry::Pose3 & pose,
                 bool useGuidedMatching,
                 bool useInputIntrinsics,
@@ -281,7 +281,7 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
 //@todo move the parameters into a struct
 bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char> & imageGray,
                                 cameras::Pinhole_Intrinsic &queryIntrinsics,
-                                const size_t numResults,
+                                size_t numResults,
                                 geometry::Pose3 & pose,
                                 bool useGuidedMatching,
                                 bool useInputIntrinsics,
@@ -334,7 +334,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
   
  
   // C. for each found similar image, try to find the correspondences between the 
-  // query image adn the similar image
+  // query image and the similar image
   for(const voctree::Match& matchedImage : matchedImages)
   {
     // minimum number of points that allows a reliable 3D reconstruction
@@ -346,7 +346,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
     const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
     
     // safeguard: we should match the query image with an image that has at least
-    // some 3D points visible --> if this is not true it is likely that it is an
+    // some 3D points visible --> if it has 0 3d points it is likely that it is an
     // image of the dataset that was not reconstructed
     if(_regions_per_view[matchedViewIndex]._regions.RegionCount() < minNum3DPoints)
     {
@@ -456,8 +456,8 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
       // Decompose the projection matrix  to get K, R and t using 
       // RQ decomposition
       KRt_From_P(matchData.projection_matrix, &K_, &R_, &t_);
+      POPART_COUT("K estimated\n" << K_);
       queryIntrinsics.setK(K_);
-      POPART_COUT("K estimated\n" <<K_);
       queryIntrinsics.setWidth(imageGray.Width());
       queryIntrinsics.setHeight(imageGray.Height());
     }
@@ -470,7 +470,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
                                                        true /*b_refine_pose*/, 
                                                        refineIntrinsics /*b_refine_intrinsic*/);
     if(!refineStatus)
-      POPART_COUT("Refine pose could not improve the estimation of the camera pose.");
+      POPART_COUT("[poseEstimation]\tRefine pose could not improve the estimation of the camera pose.");
     
     {
       // just temporary code to evaluate the estimated pose @todo remove it
@@ -494,7 +494,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
 
 bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & imageGray,
                                           cameras::Pinhole_Intrinsic &queryIntrinsics,
-                                          const size_t numResults,
+                                          size_t numResults,
                                           geometry::Pose3 & pose,
                                           bool useGuidedMatching,
                                           bool useInputIntrinsics,

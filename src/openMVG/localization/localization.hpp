@@ -68,7 +68,7 @@ public:
    */
   bool localize( const image::Image<unsigned char> & imageGray,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
-                const size_t numResults,
+                size_t numResults,
                 geometry::Pose3 & pose,
                 bool useGuidedMatching,
                 bool useInputIntrinsics,
@@ -95,7 +95,7 @@ public:
    */
   bool localizeFirstBestResult( const image::Image<unsigned char> & imageGray,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
-                const size_t numResults,
+                size_t numResults,
                 geometry::Pose3 & pose,
                 bool useGuidedMatching,
                 bool useInputIntrinsics,
@@ -122,7 +122,7 @@ public:
    */
   bool localizeAllResults( const image::Image<unsigned char> & imageGray,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
-                const size_t numResults,
+                size_t numResults,
                 geometry::Pose3 & pose,
                 bool useGuidedMatching,
                 bool useInputIntrinsics,
