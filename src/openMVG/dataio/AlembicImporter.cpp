@@ -79,7 +79,10 @@ void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata
     IndexT id_pose = sfmdata.GetPoses().size();
     IndexT id_intrinsics = sfmdata.GetIntrinsics().size();
     
-    const std::string objectName = iObj.getName();
+    std::string objectName = iObj.getName();
+    // For readability in exporter we add a prefix 'camera_' for each view
+    if(objectName.substr(0,7) == "camera_")
+      objectName = objectName.substr(7);
 
     sfmdata.views.emplace(id_view, std::make_shared<View>(objectName, id_view, id_pose, id_intrinsics, width, height));
     sfmdata.poses.emplace(id_pose, pose);
