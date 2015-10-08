@@ -390,7 +390,7 @@ IF(OpenMVG_BUILD_VOCTREE)
      add_definitions(${Boost_DEFINITIONS})
   ELSE()
     MESSAGE(STATUS "Boost not found -- disabling the vocabulary tree")
-    UPDATE_CACHE_VARIABLE(OpenMVG_USE_BOOST OFF)
+    UPDATE_CACHE_VARIABLE(OpenMVG_BUILD_VOCTREE OFF)
   ENDIF(Boost_FOUND)
 ENDIF(OpenMVG_BUILD_VOCTREE)
 
