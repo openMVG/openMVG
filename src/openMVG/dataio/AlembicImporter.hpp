@@ -11,6 +11,9 @@
 #include <Alembic/AbcGeom/All.h>
 #include <Alembic/AbcCoreHDF5/All.h>
 
+#include <openMVG/sfm/sfm_data.hpp>
+#include <openMVG/sfm/sfm_data_io.hpp>
+
 using namespace Alembic::Abc;
 namespace AbcG = Alembic::AbcGeom;
 using namespace AbcG;
@@ -18,17 +21,17 @@ using namespace AbcG;
 namespace openMVG {
 namespace dataio {
 
-class AlembicImport 
+class AlembicImporter 
 {
 public:
-  explicit AlembicImport(const char* fileName);
-  ~AlembicImport() = default;
+  explicit AlembicImporter(const std::string &filename);
+  ~AlembicImporter() = default;
 
-  void populate(/*@todo put something here*/);
+  void populate(sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part = sfm::ESfM_Data::ALL);
 
 private:
   //@todo complete the interface, also maybe parameters need to be passed by reference?
-  void visitObject(IObject iObj, M44d mat);
+  void visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part = sfm::ESfM_Data::ALL);
   IObject _rootEntity;
 };
 

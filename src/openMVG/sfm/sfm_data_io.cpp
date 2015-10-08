@@ -77,6 +77,10 @@ bool Load(SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_par
     bStatus = Load_Cereal<cereal::PortableBinaryInputArchive>(sfm_data, filename, flags_part);
   else if (ext == "xml")
     bStatus = Load_Cereal<cereal::XMLInputArchive>(sfm_data, filename, flags_part);
+  else if (ext == "abc") {
+    openMVG::dataio::AlembicImporter(filename).populate(sfm_data, flags_part);
+    bStatus = true;
+  }
   else return false;
 
   // Assert that loaded intrinsics | extrinsics are linked to valid view

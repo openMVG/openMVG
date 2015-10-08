@@ -21,10 +21,14 @@ namespace dataio {
 
 // Top down insertion of 3d objects
 
-void AlembicImport::visitObject(IObject iObj, M44d mat)
+void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part)
 {
+  using namespace openMVG::geometry;
+  using namespace openMVG::cameras;
+  using namespace openMVG::sfm;
+
   const MetaData& md = iObj.getMetaData();
-  if(IPoints::matches(md))
+  if(IPoints::matches(md) && (flags_part & sfm::ESfM_Data::STRUCTURE))
   {
     IPoints points(iObj, kWrapExisting);
     IPointsSchema ms = points.getSchema();
@@ -40,22 +44,56 @@ void AlembicImport::visitObject(IObject iObj, M44d mat)
     xform.getSchema().get(xs);
     mat *= xs.getMatrix();
   }
-  else if(ICamera::matches(md))
+  else if(ICamera::matches(md) && (flags_part & sfm::ESfM_Data::EXTRINSICS))
   {
+    // OpenMVG Camera
+    Mat3 cam_r;
+    cam_r(0,0) = mat[0][0];
+    cam_r(0,1) = mat[0][1];
+    cam_r(0,2) = mat[0][2];
+    cam_r(1,0) = mat[1][0];
+    cam_r(1,1) = mat[1][1];
+    cam_r(1,2) = mat[1][2];
+    cam_r(2,0) = mat[2][0];
+    cam_r(2,1) = mat[2][1];
+    cam_r(2,2) = mat[2][2];
+    Vec3 cam_t;
+    cam_t(0) = mat[3][0];
+    cam_t(1) = mat[3][1];
+    cam_t(2) = mat[3][2];
+    Pose3 pose(cam_r, cam_t);
+    
     ICamera camera(iObj, kWrapExisting);
     ICameraSchema cs = camera.getSchema();
-    CameraSample matrix = cs.getValue();
-    //@todo put the camera somewhere...
+    CameraSample camSample = cs.getValue();
+
+    double width = camSample.getHorizontalAperture(); // TODO
+    double height = camSample.getVerticalAperture();
+
+    Pinhole_Intrinsic intrinsic(
+      width, height,
+      camSample.getFocalLength(), // TODO: pix
+      camSample.getHorizontalFilmOffset(), camSample.getVerticalFilmOffset());
+
+    IndexT id_view = sfmdata.GetViews().size();
+    IndexT id_pose = sfmdata.GetPoses().size();
+    IndexT id_intrinsics = sfmdata.GetIntrinsics().size();
+    
+    const std::string objectName = iObj.getName();
+
+    sfmdata.views.emplace(id_view, std::make_shared<View>(objectName, id_view, id_pose, id_intrinsics, width, height));
+    sfmdata.poses.emplace(id_pose, pose);
+    sfmdata.intrinsics.emplace(id_intrinsics, std::make_shared<Pinhole_Intrinsic>(intrinsic));
   }
 
   // Recurse
   for(size_t i = 0; i < iObj.getNumChildren(); i++)
   {
-    visitObject(iObj.getChild(i), mat);
+    visitObject(iObj.getChild(i), mat, sfmdata, flags_part);
   }
 }
 
-AlembicImport::AlembicImport(const char* filename)
+AlembicImporter::AlembicImporter(const std::string &filename)
 {
   Alembic::AbcCoreFactory::IFactory factory;
   Alembic::AbcCoreFactory::IFactory::CoreType coreType;
@@ -65,11 +103,13 @@ AlembicImport::AlembicImport(const char* filename)
   _rootEntity = archive.getTop();
 }
 
-void AlembicImport::populate()
+void AlembicImporter::populate(sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part)
 {
   // TODO : handle the case where the archive wasn't correctly opened
   M44d xformMat;
-  visitObject(_rootEntity, xformMat);
+  visitObject(_rootEntity, xformMat, sfmdata, flags_part);
+
+  // TODO: fusion of common intrinsics
 }
 
 } // namespace data_io
