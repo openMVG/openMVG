@@ -427,7 +427,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
     }
     // estimate the pose
     // Do the resectioning: compute the camera pose.
-    double errorMax = std::numeric_limits<double>::max();
+    matchData.error_max = std::numeric_limits<double>::max();
     POPART_COUT("[poseEstimation]\tEstimating camera pose...");
     bool bResection = sfm::SfM_Localizer::Localize(std::make_pair(imageGray.Width(), imageGray.Height()),
                                                    // pass the input intrinsic if they are valid, null otherwise
@@ -658,7 +658,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   
   // estimate the pose
   // Do the resectioning: compute the camera pose.
-  double errorMax = std::numeric_limits<double>::max();
+  matchData.error_max = std::numeric_limits<double>::max();
   POPART_COUT("[poseEstimation]\tEstimating camera pose...");
   bool bResection = sfm::SfM_Localizer::Localize(std::make_pair(imageGray.Width(), imageGray.Height()),
                                                  // pass the input intrinsic if they are valid, null otherwise
