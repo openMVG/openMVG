@@ -519,6 +519,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   
   // Request closest images from voctree
   std::vector<voctree::Match> matchedImages;
+  if(numResults==0) numResults = _database.size();
   _database.find(requestImageWords, numResults, matchedImages);
   
   // just debugging bla bla
