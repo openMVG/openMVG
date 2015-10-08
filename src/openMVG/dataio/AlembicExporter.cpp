@@ -44,6 +44,9 @@ void AlembicExporter::addPoints(const sfm::Landmarks &points)
 
   OPointsSchema::Sample psamp(std::move(V3fArraySample(positions)), std::move(UInt64ArraySample(ids)));
   pSchema.set(psamp);
+  
+  // TODO Visibility
+  // TODO index
 }
 
 void AlembicExporter::appendCamera(const std::string &cameraName, 
@@ -100,7 +103,7 @@ void AlembicExporter::appendCamera(const std::string &cameraName,
   const float dy = cam->principal_point()(1);
   // Use a common sensor width as we don't have this information at this point
   // We chose a full frame 24x36 camera
-  const float sensorWidth = 36.0; // 36mm per default
+  const float sensorWidth = 36.0; // 36mm per default TODO adapt to real values
   const float sensorHeight = sensorWidth * sensorHeightPix / sensorWidthPix;
   const float focalLength = sensorWidth * focalLengthPix / sensorWidthPix;
   // Following values are in cm, hence the 0.1 multiplier
@@ -134,7 +137,7 @@ void AlembicExporter::add(const sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_par
       openMVG::cameras::Pinhole_Intrinsic *cam = static_cast<openMVG::cameras::Pinhole_Intrinsic*> (iterIntrinsic->second.get());
       
       const std::string cameraName = stlplus::basename_part(view->s_Img_path);
-      appendCamera(cameraName, pose, cam);
+      appendCamera(cameraName, pose, cam); // TODO Real index
     }
   }
   if(flags_part & sfm::ESfM_Data::STRUCTURE)

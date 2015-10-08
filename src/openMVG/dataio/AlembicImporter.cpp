@@ -75,7 +75,7 @@ void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata
       camSample.getFocalLength(), // TODO: pix
       camSample.getHorizontalFilmOffset(), camSample.getVerticalFilmOffset());
 
-    IndexT id_view = sfmdata.GetViews().size();
+    IndexT id_view = sfmdata.GetViews().size(); // TODO real index
     IndexT id_pose = sfmdata.GetPoses().size();
     IndexT id_intrinsics = sfmdata.GetIntrinsics().size();
     
