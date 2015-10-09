@@ -38,7 +38,8 @@ public:
    */
   void appendCamera(const std::string &name, 
                     const geometry::Pose3 &pose, 
-                    const cameras::Pinhole_Intrinsic *cam);
+                    const cameras::Pinhole_Intrinsic *cam,
+                    const std::string &imagePath);
   
   /**
    * @brief Add SfM Data

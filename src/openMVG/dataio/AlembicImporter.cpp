@@ -46,6 +46,27 @@ void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata
   }
   else if(ICamera::matches(md) && (flags_part & sfm::ESfM_Data::EXTRINSICS))
   {
+    ICamera camera(iObj, kWrapExisting);
+    ICameraSchema cs = camera.getSchema();
+    CameraSample camSample = cs.getValue();
+    
+    // Check if we have an associated image plane
+    ICompoundProperty userProps = cs.getUserProperties();
+    std::string imagePath;
+    float sensorWidth_pix = 2048.0;
+    if(userProps)
+    {
+        if(userProps.getPropertyHeader("imagePath"))
+        {
+          Alembic::Abc::IStringProperty prop(userProps, "imagePath");
+          prop.get(imagePath);
+        }
+        if(userProps.getPropertyHeader("sensorWidth_pix"))
+        {
+          Alembic::Abc::IFloatProperty prop(userProps, "sensorWidth_pix");
+          prop.get(sensorWidth_pix);
+        }
+    }
     // OpenMVG Camera
     Mat3 cam_r;
     cam_r(0,0) = mat[0][0];
@@ -61,30 +82,46 @@ void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata
     cam_t(0) = mat[3][0];
     cam_t(1) = mat[3][1];
     cam_t(2) = mat[3][2];
-    Pose3 pose(cam_r, cam_t);
+
+    // Correct camera orientation from alembic
+    Mat3 scale;
+    scale(0,0) = 1;
+    scale(1,1) = -1;
+    scale(2,2) = -1;
+    cam_r = scale*cam_r;
     
-    ICamera camera(iObj, kWrapExisting);
-    ICameraSchema cs = camera.getSchema();
-    CameraSample camSample = cs.getValue();
+    Pose3 pose(cam_r, cam_t);
 
-    double width = camSample.getHorizontalAperture(); // TODO
-    double height = camSample.getVerticalAperture();
+    // Get known values from alembic
+    const float haperture_cm = camSample.getHorizontalAperture();
+    const float vaperture_cm = camSample.getVerticalAperture();
+    const float hoffset_cm = camSample.getHorizontalFilmOffset();
+    const float voffset_cm = camSample.getVerticalFilmOffset();
+    const float focalLength_mm = camSample.getFocalLength();
+    
+    // Compute other needed values
+    const float sensorWidth_mm = std::max(vaperture_cm, haperture_cm) * 10.0;
+    const float mm2pix = sensorWidth_pix / sensorWidth_mm;
+    const float imgWidth = haperture_cm * 10.0 * mm2pix;
+    const float imgHeight = vaperture_cm * 10.0 * mm2pix;
+    const float focalLength_pix = focalLength_mm * mm2pix;
+    
+    // Following values are in cm, hence the 10.0 multiplier
+    const float hoffset_pix = (imgWidth*0.5) - (10.0 * hoffset_cm * mm2pix);
+    const float voffset_pix = (imgHeight*0.5) + (10.0 * voffset_cm * mm2pix);
 
+    // Create intrinsics parameters object
     Pinhole_Intrinsic intrinsic(
-      width, height,
-      camSample.getFocalLength(), // TODO: pix
-      camSample.getHorizontalFilmOffset(), camSample.getVerticalFilmOffset());
+      imgWidth, imgHeight,
+      focalLength_pix,
+      hoffset_pix, voffset_pix);
 
     IndexT id_view = sfmdata.GetViews().size(); // TODO real index
     IndexT id_pose = sfmdata.GetPoses().size();
     IndexT id_intrinsics = sfmdata.GetIntrinsics().size();
-    
-    std::string objectName = iObj.getName();
-    // For readability in exporter we add a prefix 'camera_' for each view
-    if(objectName.substr(0,7) == "camera_")
-      objectName = objectName.substr(7);
 
-    sfmdata.views.emplace(id_view, std::make_shared<View>(objectName, id_view, id_pose, id_intrinsics, width, height));
+    // Add imported data to the SfM_Data container TODO use UID
+    sfmdata.views.emplace(id_view, std::make_shared<View>(imagePath, id_view, id_pose, id_intrinsics, imgWidth, imgHeight));
     sfmdata.poses.emplace(id_pose, pose);
     sfmdata.intrinsics.emplace(id_intrinsics, std::make_shared<Pinhole_Intrinsic>(intrinsic));
   }
