@@ -148,18 +148,24 @@ void AlembicExporter::add(const sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_par
     for(const auto it : sfmdata.GetViews())
     {
       const sfm::View * view = it.second.get();
-      if(!sfmdata.IsPoseAndIntrinsicDefined(view))
+      openMVG::geometry::Pose3 pose;
+      std::shared_ptr<cameras::IntrinsicBase> cam = std::make_shared<cameras::Pinhole_Intrinsic>();
+      if(sfmdata.IsPoseAndIntrinsicDefined(view))
+      {
+        // OpenMVG Camera
+        pose = sfmdata.GetPoseOrDie(view);
+        auto iterIntrinsic = sfmdata.GetIntrinsics().find(view->id_intrinsic);
+        cam = iterIntrinsic->second;
+      }
+      else if(!(flags_part & sfm::ESfM_Data::VIEWS))
+      {
+        // If we don't export views, skip cameras without valid pose.
         continue;
-  
-      // OpenMVG Camera
-      const openMVG::geometry::Pose3 pose = sfmdata.GetPoseOrDie(view);
-      auto iterIntrinsic = sfmdata.GetIntrinsics().find(view->id_intrinsic);
-      openMVG::cameras::Pinhole_Intrinsic *cam = static_cast<openMVG::cameras::Pinhole_Intrinsic*> (iterIntrinsic->second.get());
-      
+      }
       const std::string cameraName = stlplus::basename_part(view->s_Img_path);
-      
       const std::string sView_filename = stlplus::create_filespec(sfmdata.s_root_path, view->s_Img_path);
-      appendCamera(cameraName, pose, cam, sView_filename); // TODO Real index
+      
+      appendCamera(cameraName, pose, dynamic_cast<openMVG::cameras::Pinhole_Intrinsic*>(cam.get()), sView_filename);
     }
   }
   if(flags_part & sfm::ESfM_Data::STRUCTURE)
