@@ -78,10 +78,10 @@ struct Features_Provider
     static const features::PointFeatures emptyFeats = features::PointFeatures();
 
     Hash_Map<IndexT, features::PointFeatures>::const_iterator it = feats_per_view.find(id_view);
-    if (it != feats_per_view.end())
-      return it->second;
-    else
+    if (it == feats_per_view.end())
       return emptyFeats;
+    
+    return it->second;
   }
 }; // Features_Provider
 
