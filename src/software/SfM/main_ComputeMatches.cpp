@@ -378,7 +378,7 @@ int main(int argc, char **argv)
       std::inserter(set_ViewIds, set_ViewIds.begin()), stl::RetrieveKey());
     graph::indexedGraph putativeGraph(set_ViewIds, getPairs(map_PutativesMatches));
     graph::exportToGraphvizData(
-      stlplus::create_filespec(sMatchesDirectory, "putative_matches"),
+      stlplus::create_filespec(sMatchesDirectory, "putative_matches.dot"),
       putativeGraph.g);
   }
 
@@ -469,7 +469,7 @@ int main(int argc, char **argv)
         std::inserter(set_ViewIds, set_ViewIds.begin()), stl::RetrieveKey());
       graph::indexedGraph putativeGraph(set_ViewIds, getPairs(map_GeometricMatches));
       graph::exportToGraphvizData(
-        stlplus::create_filespec(sMatchesDirectory, "geometric_matches"),
+        stlplus::create_filespec(sMatchesDirectory, "geometric_matches.dot"),
         putativeGraph.g);
     }
   }
