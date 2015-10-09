@@ -181,14 +181,12 @@ int main(int argc, char** argv)
 
   POPART_COUT("Populate the database using the loaded ReconstructedRegions");
   // Populate the database using the loaded ReconstructedRegions
-  std::map<voctree::DocId, IndexT> mapDocIdToView;
   for(const auto regionsValue : localization._regions_per_view)
   {
     const IndexT viewId = regionsValue.first;
     const localization::Reconstructed_RegionsT& regions = regionsValue.second;
     std::vector<voctree::Word> words = voctree.quantize(regions._regions.Descriptors());
     db.insert(viewId, words);
-    mapDocIdToView[viewId] = viewId; //@todo JEME: to remove
   }
 
   POPART_COUT("Load the query image");
@@ -250,7 +248,7 @@ int main(int argc, char** argv)
   for(const voctree::Match& matchedImage : matchedImages)
   {
     // get the view id of the current matched image of the dataset
-    const IndexT matchedViewIndex = mapDocIdToView[matchedImage.id];
+    const IndexT matchedViewIndex = matchedImage.id;
     // get the handle to the view
     const std::shared_ptr<sfm::View> matchedView = sfmData.views[matchedViewIndex];
     // get the handle to its Regions
@@ -369,7 +367,7 @@ int main(int argc, char** argv)
 
       std::cout << std::endl
               << "-------------------------------" << std::endl
-              << "-- Robust Resection using view: " << mapDocIdToView[matchedImage.id] << std::endl
+              << "-- Robust Resection using view: " << matchedImage.id << std::endl
               << "-- Resection status: " << bResection << std::endl
               << "-- #Points used for Resection: " << vec_featureMatches.size() << std::endl
               << "-- #Points validated by robust Resection: " << vec_inliers.size() << std::endl

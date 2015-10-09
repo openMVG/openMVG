@@ -106,11 +106,7 @@ public:
   // the database that stores the visual word representation of each image of
   // the original dataset
   voctree::Database _database;
-  
-  // this maps the docId in the database with the view index of the associated
-  // image
-  std::map<voctree::DocId, IndexT> _mapDocIdToView;
-  
+    
 };
 
 

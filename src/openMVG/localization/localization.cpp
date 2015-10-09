@@ -205,7 +205,6 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
     
     std::vector<voctree::Word> words = _voctree.quantize(currRecoRegions._regions.Descriptors());
     _database.insert(id_view, words);
-    _mapDocIdToView[id_view] = id_view; //@todo remove
 
     // Filter descriptors to keep only the 3D reconstructed points
     currRecoRegions.filterRegions(observationsPerView[id_view]);
@@ -250,7 +249,7 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
   for(const voctree::Match & currMatch : matchedImages )
   {
     // get the corresponding index of the view
-    const IndexT matchedViewIndex = _mapDocIdToView[currMatch.id];
+    const IndexT matchedViewIndex = currMatch.id;
     // get the view handle
     const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
     POPART_COUT( "[database]\t\t match " << matchedView->s_Img_path 
@@ -282,7 +281,7 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
   for(const voctree::Match& matchedImage : matchedImages)
   {
     // the view index of the current matched image
-    const IndexT matchedViewIndex = _mapDocIdToView[matchedImage.id];
+    const IndexT matchedViewIndex = matchedImage.id;
     // the handler to the current view
     const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
     // its associated reconstructed regions
@@ -358,7 +357,7 @@ bool VoctreeLocalizer::Localize( const image::Image<unsigned char> & imageGray,
 
     std::cout << std::endl
             << "-------------------------------" << std::endl
-            << "-- Robust Resection using view: " << _mapDocIdToView[matchedImage.id] << std::endl
+            << "-- Robust Resection using view: " << matchedImage.id << std::endl
             << "-- Resection status: " << bResection << std::endl
             << "-- #Points used for Resection: " << vec_featureMatches.size() << std::endl
             << "-- #Points validated by robust Resection: " << matchData.vec_inliers.size() << std::endl
