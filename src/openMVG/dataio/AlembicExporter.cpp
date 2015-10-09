@@ -129,7 +129,7 @@ void AlembicExporter::appendCamera(const std::string &cameraName,
   camSample.setVerticalFilmOffset(voffset_cm);
   
   // Add sensor width (largest image side) in pixels as custom property
-  OFloatProperty propSensorWidth_pix(userProps, "sensorWidth_pix");
+  OUInt32Property propSensorWidth_pix(userProps, "sensorWidth_pix");
   propSensorWidth_pix.set(sensorWidth_pix);
 
   // Add image path as custom property

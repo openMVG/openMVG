@@ -19,8 +19,42 @@ using namespace AbcG;
 namespace openMVG {
 namespace dataio {
 
-// Top down insertion of 3d objects
+  
+/**
+ * @brief Retrieve an Abc property.
+ *         Maya convert everything into arrays. So here we made a trick
+ *         to retrieve the element directly or the first element
+ *         if it's an array.
+ * @param userProps
+ * @param id
+ * @return value
+ */
+template<class AbcProperty>
+typename AbcProperty::traits_type::value_type getAbcProp(ICompoundProperty& userProps, const Alembic::Abc::PropertyHeader& propHeader, const std::string& id)
+{
+  typedef typename AbcProperty::traits_type traits_type;
+  typedef typename traits_type::value_type value_type;
+  typedef typename Alembic::Abc::ITypedArrayProperty<traits_type> array_type;
+  typedef typename array_type::sample_ptr_type array_sample_ptr_type;
 
+  // Maya transforms everything into arrays
+  if(propHeader.isArray())
+  {
+    Alembic::Abc::ITypedArrayProperty<traits_type> prop(userProps, id);
+    array_sample_ptr_type sample;
+    prop.get(sample);
+    return (*sample)[0];
+  }
+  else
+  {
+    value_type v;
+    AbcProperty prop(userProps, id);
+    prop.get(v);
+    return v;
+  }
+}
+
+// Top down insertion of 3d objects
 void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part)
 {
   using namespace openMVG::geometry;
@@ -52,46 +86,61 @@ void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata
     
     // Check if we have an associated image plane
     ICompoundProperty userProps = cs.getUserProperties();
+    if(userProps.getNumProperties() == 0)
+    {
+      // Maya always use ArbGeomParams instead of user properties.
+      userProps = cs.getArbGeomParams();
+    }
     std::string imagePath;
     float sensorWidth_pix = 2048.0;
-    std::string mvg_intrinsicType = "Pinhole_Intrinsic";
+    std::string mvg_intrinsicType = "PINHOLE_CAMERA";
     std::vector<double> mvg_intrinsicParams;
     IndexT id_view = sfmdata.GetViews().size();
     IndexT id_intrinsic = sfmdata.GetIntrinsics().size();
     if(userProps)
     {
-        if(userProps.getPropertyHeader("imagePath"))
+      if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("imagePath"))
+      {
+        imagePath = getAbcProp<Alembic::Abc::IStringProperty>(userProps, *propHeader, "imagePath");
+      }
+      if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("sensorWidth_pix"))
+      {
+        try {
+          sensorWidth_pix = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "sensorWidth_pix");
+        } catch(Alembic::Util::v7::Exception&)
         {
-          Alembic::Abc::IStringProperty prop(userProps, "imagePath");
-          prop.get(imagePath);
+          sensorWidth_pix = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "sensorWidth_pix");
         }
-        if(userProps.getPropertyHeader("sensorWidth_pix"))
+      }
+      if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_intrinsicType"))
+      {
+        mvg_intrinsicType = getAbcProp<Alembic::Abc::IStringProperty>(userProps, *propHeader, "mvg_intrinsicType");
+      }
+      if(userProps.getPropertyHeader("mvg_intrinsicParams"))
+      {
+        Alembic::Abc::IDoubleArrayProperty prop(userProps, "mvg_intrinsicParams");
+        std::shared_ptr<DoubleArraySample> sample;
+        prop.get(sample);
+        mvg_intrinsicParams.assign(sample->get(), sample->get()+sample->size());
+      }
+      if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_viewId"))
+      {
+        try {
+          id_view = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_viewId");
+        } catch(Alembic::Util::v7::Exception&)
         {
-          Alembic::Abc::IFloatProperty prop(userProps, "sensorWidth_pix");
-          prop.get(sensorWidth_pix);
+          id_view = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_viewId");
         }
-        if(userProps.getPropertyHeader("mvg_intrinsicType"))
+      }
+      if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_intrinsicId"))
+      {
+        try {
+          id_intrinsic = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_intrinsicId");
+        } catch(Alembic::Util::v7::Exception&)
         {
-          Alembic::Abc::IStringProperty prop(userProps, "mvg_intrinsicType");
-          prop.get(mvg_intrinsicType);
+          id_intrinsic = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_intrinsicId");
         }
-        if(userProps.getPropertyHeader("mvg_intrinsicParams"))
-        {
-          Alembic::Abc::IDoubleArrayProperty prop(userProps, "mvg_intrinsicParams");
-          std::shared_ptr<DoubleArraySample> sample;
-          prop.get(sample);
-          mvg_intrinsicParams.assign(sample->get(), sample->get()+sample->size());
-        }
-        if(userProps.getPropertyHeader("mvg_viewId"))
-        {
-          Alembic::Abc::IUInt32Property prop(userProps, "mvg_viewId");
-          prop.get(id_view);
-        }
-        if(userProps.getPropertyHeader("mvg_intrinsicId"))
-        {
-          Alembic::Abc::IUInt32Property prop(userProps, "mvg_intrinsicId");
-          prop.get(id_intrinsic);
-        }
+      }
     }
     // OpenMVG Camera
     Mat3 cam_r;
