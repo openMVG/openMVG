@@ -246,8 +246,36 @@ std::size_t populateDatabase(const std::string &fileFullPath,
 
   std::map<IndexT, std::string> descriptorsFiles;
 
-  // if it is a JSON file
-  if(ext == ".json")
+  if(ext == ".txt")
+  {
+    // processing a file .txt containing the relative paths
+
+    // Extract the folder path from the list file path
+    pathToFiles = boostfs::path(fileFullPath).parent_path();
+
+    // Open file
+    fs.open(fileFullPath, std::ios::in);
+    if(!fs.is_open())
+    {
+      std::cerr << "Error while opening " << fileFullPath << std::endl;
+      return numDescriptors;
+    }
+
+    // read the file line by line and store in the vector the descriptors paths
+    IndexT viewId = 0;
+    std::string line;
+    while(getline(fs, line))
+    {
+      // we have to do that because OMVG does not really output a clean list.txt, it also
+      // contains other stuff, so we look at the first '.' to get the extension (not robust at all)
+      std::string filepath = line.substr(0, line.find_first_of("."));
+      filepath = boostfs::path(pathToFiles / boostfs::path(filepath + ".desc")).string();
+
+      // add the filepath in the vector
+      descriptorsFiles[viewId++] = filepath;
+    }
+  }
+  else
   {
     // processing a JSON file containing sfm_data
 
@@ -279,41 +307,6 @@ std::size_t populateDatabase(const std::string &fileFullPath,
       // add the filepath in the vector
       descriptorsFiles[it->first] = filepath;
     }
-  }
-  else if(ext == ".txt")
-  {
-    // processing a file .txt containing the relative paths
-
-    // Extract the folder path from the list file path
-    pathToFiles = boostfs::path(fileFullPath).parent_path();
-
-    // Open file
-    fs.open(fileFullPath, std::ios::in);
-    if(!fs.is_open())
-    {
-      std::cerr << "Error while opening " << fileFullPath << std::endl;
-      return numDescriptors;
-    }
-
-    // read the file line by line and store in the vector the descriptors paths
-    IndexT viewId = 0;
-    std::string line;
-    while(getline(fs, line))
-    {
-      // we have to do that because OMVG does not really output a clean list.txt, it also
-      // contains other stuff, so we look at the first '.' to get the extension (not robust at all)
-      std::string filepath = line.substr(0, line.find_first_of("."));
-      filepath = boostfs::path(pathToFiles / boostfs::path(filepath + ".desc")).string();
-
-      // add the filepath in the vector
-      descriptorsFiles[viewId++] = filepath;
-    }
-  }
-  else
-  {
-    std::cerr << "File not recognized! " << fileFullPath << std::endl;
-    std::cerr << "The file  " + fileFullPath + " is neither a JSON nor a txt file" << std::endl;
-    return numDescriptors;
   }
 
   // Read the descriptors
