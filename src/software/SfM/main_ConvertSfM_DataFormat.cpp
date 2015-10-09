@@ -39,7 +39,11 @@ int main(int argc, char **argv)
       std::cerr << "Usage: " << argv[0] << '\n'
         << "[-i|--input_file] path to the input SfM_Data scene\n"
         << "[-o|--output_file] path to the output SfM_Data scene\n"
-        << "\t .json, .bin, .xml, .ply, .baf\n"
+        << "\t .json, .bin, .xml, .ply, .baf"
+#if HAVE_ALEMBIC
+           ", .abc"
+#endif
+           "\n"
         << "\n[Options to export partial data (by default all data are exported)]\n"
         << "\nUsable for json/bin/xml format"
         << "[-V|--VIEWS] export views\n"
