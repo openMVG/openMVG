@@ -54,6 +54,8 @@ void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata
     ICompoundProperty userProps = cs.getUserProperties();
     std::string imagePath;
     float sensorWidth_pix = 2048.0;
+    std::string mvg_intrinsicType = "Pinhole_Intrinsic";
+    std::vector<double> mvg_intrinsicParams;
     if(userProps)
     {
         if(userProps.getPropertyHeader("imagePath"))
@@ -65,6 +67,18 @@ void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata
         {
           Alembic::Abc::IFloatProperty prop(userProps, "sensorWidth_pix");
           prop.get(sensorWidth_pix);
+        }
+        if(userProps.getPropertyHeader("mvg_intrinsicType"))
+        {
+          Alembic::Abc::IStringProperty prop(userProps, "mvg_intrinsicType");
+          prop.get(mvg_intrinsicType);
+        }
+        if(userProps.getPropertyHeader("mvg_intrinsicParams"))
+        {
+          Alembic::Abc::IDoubleArrayProperty prop(userProps, "mvg_intrinsicParams");
+          std::shared_ptr<DoubleArraySample> sample;
+          prop.get(sample);
+          mvg_intrinsicParams.assign(sample->get(), sample->get()+sample->size());
         }
     }
     // OpenMVG Camera
@@ -110,20 +124,21 @@ void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata
     const float hoffset_pix = (imgWidth*0.5) - (10.0 * hoffset_cm * mm2pix);
     const float voffset_pix = (imgHeight*0.5) + (10.0 * voffset_cm * mm2pix);
 
-    // Create intrinsics parameters object
-    Pinhole_Intrinsic intrinsic(
-      imgWidth, imgHeight,
-      focalLength_pix,
-      hoffset_pix, voffset_pix);
 
     IndexT id_view = sfmdata.GetViews().size(); // TODO real index
     IndexT id_pose = sfmdata.GetPoses().size();
-    IndexT id_intrinsics = sfmdata.GetIntrinsics().size();
+    IndexT id_intrinsic = sfmdata.GetIntrinsics().size();
+    // Create intrinsic parameters object
+    std::shared_ptr<Pinhole_Intrinsic> pinholeIntrinsic = createPinholeIntrinsic(EINTRINSIC_stringToEnum(mvg_intrinsicType));
+    pinholeIntrinsic->setWidth(imgWidth);
+    pinholeIntrinsic->setHeight(imgHeight);
+    pinholeIntrinsic->setK(focalLength_pix, hoffset_pix, voffset_pix);
+    pinholeIntrinsic->updateFromParams(mvg_intrinsicParams);
 
     // Add imported data to the SfM_Data container TODO use UID
-    sfmdata.views.emplace(id_view, std::make_shared<View>(imagePath, id_view, id_pose, id_intrinsics, imgWidth, imgHeight));
+    sfmdata.views.emplace(id_view, std::make_shared<View>(imagePath, id_view, id_pose, id_intrinsic, imgWidth, imgHeight));
     sfmdata.poses.emplace(id_pose, pose);
-    sfmdata.intrinsics.emplace(id_intrinsics, std::make_shared<Pinhole_Intrinsic>(intrinsic));
+    sfmdata.intrinsics.emplace(id_intrinsic, pinholeIntrinsic);
   }
 
   // Recurse

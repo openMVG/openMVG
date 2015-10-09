@@ -138,6 +138,13 @@ void AlembicExporter::appendCamera(const std::string &cameraName,
     imagePlane.set(imagePath.c_str());
   }
   
+  OStringProperty mvg_intrinsicType(userProps, "mvg_intrinsicType");
+  mvg_intrinsicType.set(cam->getTypeStr());
+  
+  std::vector<double> intrinsicParams = cam->getParams();
+  ODoubleArrayProperty mvg_intrinsicParams(userProps, "mvg_intrinsicParams");
+  mvg_intrinsicParams.set(intrinsicParams);
+  
   camObj.getSchema().set(camSample);
 }
 

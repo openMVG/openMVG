@@ -7,6 +7,9 @@
 #ifndef OPENMVG_CAMERAS_COMMON_HPP
 #define OPENMVG_CAMERAS_COMMON_HPP
 
+#include <string>
+#include <stdexcept>
+
 namespace openMVG {
 namespace cameras {
 
@@ -19,6 +22,38 @@ enum EINTRINSIC
   PINHOLE_CAMERA_BROWN = 4, // radial distortion K1,K2,K3, tangential distortion T1,T2
   PINHOLE_CAMERA_END
 };
+
+inline std::string EINTRINSIC_enumToString(EINTRINSIC intrinsic)
+{
+  switch(intrinsic)
+  {
+    case PINHOLE_CAMERA:
+      return "PINHOLE_CAMERA";
+    case PINHOLE_CAMERA_RADIAL1:
+      return "PINHOLE_CAMERA_RADIAL1";
+    case PINHOLE_CAMERA_RADIAL3:
+      return "PINHOLE_CAMERA_RADIAL3";
+    case PINHOLE_CAMERA_BROWN:
+      return "PINHOLE_CAMERA_BROWN";
+    case PINHOLE_CAMERA_START:
+    case PINHOLE_CAMERA_END:
+      break;
+  }
+  throw std::out_of_range("Invalid Intrinsic Enum");
+}
+
+inline EINTRINSIC EINTRINSIC_stringToEnum(const std::string& intrinsic)
+{
+  if(intrinsic == "PINHOLE_CAMERA")
+    return PINHOLE_CAMERA;
+  if(intrinsic == "PINHOLE_CAMERA_RADIAL1")
+    return PINHOLE_CAMERA_RADIAL1;
+  if(intrinsic == "PINHOLE_CAMERA_RADIAL3")
+    return PINHOLE_CAMERA_RADIAL3;
+  if(intrinsic == "PINHOLE_CAMERA_BROWN")
+    return PINHOLE_CAMERA_BROWN;
+  throw std::out_of_range(intrinsic);
+}
 
 // Return if the camera type is a valid enum
 static bool isValid(EINTRINSIC eintrinsic)
