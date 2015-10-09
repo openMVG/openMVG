@@ -42,7 +42,6 @@ static void ExportPairedIndMatchFile(
   const std::string & filepath)
 {
   std::ofstream file(filepath.c_str());
-  file.open(filepath.c_str());
   if (!file.is_open())
     throw std::runtime_error(std::string("Unable to open file: ") + filepath);
 
