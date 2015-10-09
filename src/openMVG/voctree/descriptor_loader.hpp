@@ -271,7 +271,7 @@ std::size_t populateDatabase(const std::string &fileFullPath,
     for(openMVG::sfm::Views::const_iterator it = sfmdata.GetViews().begin(); it != sfmdata.GetViews().end(); ++it)
     {
       // get just the image name, remove the extension
-      std::string filepath = boostfs::path(it->second->s_Img_path).stem().string();
+      std::string filepath = boostfs::path(std::to_string(it->second->id_view)).stem().string();
 
       // generate the equivalent .desc file path
       filepath = boostfs::path(pathToFiles / boostfs::path(filepath + ".desc")).string();
