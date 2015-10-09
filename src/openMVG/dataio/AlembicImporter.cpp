@@ -56,6 +56,8 @@ void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata
     float sensorWidth_pix = 2048.0;
     std::string mvg_intrinsicType = "Pinhole_Intrinsic";
     std::vector<double> mvg_intrinsicParams;
+    IndexT id_view = sfmdata.GetViews().size();
+    IndexT id_intrinsic = sfmdata.GetIntrinsics().size();
     if(userProps)
     {
         if(userProps.getPropertyHeader("imagePath"))
@@ -79,6 +81,16 @@ void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata
           std::shared_ptr<DoubleArraySample> sample;
           prop.get(sample);
           mvg_intrinsicParams.assign(sample->get(), sample->get()+sample->size());
+        }
+        if(userProps.getPropertyHeader("mvg_viewId"))
+        {
+          Alembic::Abc::IUInt32Property prop(userProps, "mvg_viewId");
+          prop.get(id_view);
+        }
+        if(userProps.getPropertyHeader("mvg_intrinsicId"))
+        {
+          Alembic::Abc::IUInt32Property prop(userProps, "mvg_intrinsicId");
+          prop.get(id_intrinsic);
         }
     }
     // OpenMVG Camera
@@ -124,10 +136,6 @@ void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata
     const float hoffset_pix = (imgWidth*0.5) - (10.0 * hoffset_cm * mm2pix);
     const float voffset_pix = (imgHeight*0.5) + (10.0 * voffset_cm * mm2pix);
 
-
-    IndexT id_view = sfmdata.GetViews().size(); // TODO real index
-    IndexT id_pose = sfmdata.GetPoses().size();
-    IndexT id_intrinsic = sfmdata.GetIntrinsics().size();
     // Create intrinsic parameters object
     std::shared_ptr<Pinhole_Intrinsic> pinholeIntrinsic = createPinholeIntrinsic(EINTRINSIC_stringToEnum(mvg_intrinsicType));
     pinholeIntrinsic->setWidth(imgWidth);
@@ -136,8 +144,8 @@ void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata
     pinholeIntrinsic->updateFromParams(mvg_intrinsicParams);
 
     // Add imported data to the SfM_Data container TODO use UID
-    sfmdata.views.emplace(id_view, std::make_shared<View>(imagePath, id_view, id_pose, id_intrinsic, imgWidth, imgHeight));
-    sfmdata.poses.emplace(id_pose, pose);
+    sfmdata.views.emplace(id_view, std::make_shared<View>(imagePath, id_view, id_view, id_intrinsic, imgWidth, imgHeight));
+    sfmdata.poses.emplace(id_view, pose);
     sfmdata.intrinsics.emplace(id_intrinsic, pinholeIntrinsic);
   }
 

@@ -185,7 +185,7 @@ int main(int argc, char** argv)
     if(localized)
     {
 #if HAVE_ALEMBIC
-      exporter.appendCamera("camera."+myToString(frameCounter,4), cameraPose, &queryIntrinsics, mediaFilepath);
+      exporter.appendCamera("camera."+myToString(frameCounter,4), cameraPose, &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
 #endif
     }
     else

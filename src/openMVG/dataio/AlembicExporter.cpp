@@ -52,7 +52,9 @@ void AlembicExporter::addPoints(const sfm::Landmarks &points)
 void AlembicExporter::appendCamera(const std::string &cameraName, 
                                    const geometry::Pose3 &pose,
                                    const cameras::Pinhole_Intrinsic *cam,
-                                   const std::string &imagePath)
+                                   const std::string &imagePath,
+                                   const IndexT id_view,
+                                   const IndexT id_intrinsic)
 {
   const openMVG::Mat3 R = pose.rotation();
   const openMVG::Vec3 center = pose.center();
@@ -137,6 +139,12 @@ void AlembicExporter::appendCamera(const std::string &cameraName,
     OStringProperty imagePlane(userProps, "imagePath");
     imagePlane.set(imagePath.c_str());
   }
+
+  OUInt32Property propViewId(userProps, "mvg_viewId");
+  propViewId.set(id_view);
+
+  OUInt32Property propIntrinsicId(userProps, "mvg_intrinsicId");
+  propIntrinsicId.set(id_intrinsic);
   
   OStringProperty mvg_intrinsicType(userProps, "mvg_intrinsicType");
   mvg_intrinsicType.set(cam->getTypeStr());
@@ -172,7 +180,7 @@ void AlembicExporter::add(const sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_par
       const std::string cameraName = stlplus::basename_part(view->s_Img_path);
       const std::string sView_filename = stlplus::create_filespec(sfmdata.s_root_path, view->s_Img_path);
       
-      appendCamera(cameraName, pose, dynamic_cast<openMVG::cameras::Pinhole_Intrinsic*>(cam.get()), sView_filename);
+      appendCamera(cameraName, pose, dynamic_cast<openMVG::cameras::Pinhole_Intrinsic*>(cam.get()), sView_filename, view->id_view, view->id_intrinsic);
     }
   }
   if(flags_part & sfm::ESfM_Data::STRUCTURE)
