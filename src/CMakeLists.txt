@@ -382,7 +382,7 @@ ENDIF(OpenMVG_USE_OPENCV)
 # - optional, it allows to compile the vocabulary tree
 # ==============================================================================
 IF(OpenMVG_BUILD_VOCTREE)
-  FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS system filesystem program_options unit_test_framework)
+  FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS system filesystem program_options)
   IF(Boost_FOUND)
      MESSAGE(STATUS "Boost ${Boost_LIB_VERSION} found")
      include_directories(${Boost_INCLUDE_DIRS})
