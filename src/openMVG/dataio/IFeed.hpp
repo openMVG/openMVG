@@ -28,12 +28,14 @@ public:
    * @brief Provide a new image from the feed
    * @param[out] imageGray The new image from the feed.
    * @param[out] camIntrinsics The associated camera intrinsics.
+   * @param[out] mediaPath The original media path.
    * @param[out] hasIntrinsics True if \p camIntrinsics is valid, otherwise there
    * is no intrinsics associated to \p imageGray.
    * @return True if there is a new image, false otherwise.
    */
   virtual bool next(image::Image<unsigned char> &imageGray,
                     cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics, 
+                    std::string &mediaPath,
                     bool &hasIntrinsics) = 0;  
 
   virtual ~IFeed( ) { };

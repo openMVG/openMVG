@@ -33,6 +33,7 @@ public:
 
   bool next(image::Image<unsigned char> &imageGray, 
                      cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
+                     std::string &imageName,
                      bool &hasIntrinsics);
   
   bool isInit() const {return _isInit;} 
@@ -41,6 +42,7 @@ private:
   
   bool feedWithJson(image::Image<unsigned char> &imageGray, 
                      cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
+                     std::string &imageName,
                      bool &hasIntrinsics);
   
 private:
@@ -156,6 +158,7 @@ ImageFeed::FeederImpl::FeederImpl(const std::string imagePath, const std::string
 
 bool ImageFeed::FeederImpl::next(image::Image<unsigned char> &imageGray, 
                    cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
+                   std::string &imageName,
                    bool &hasIntrinsics)
 {
   if(!_isInit)
@@ -167,7 +170,7 @@ bool ImageFeed::FeederImpl::next(image::Image<unsigned char> &imageGray,
   // dealing with json mode
   if(_jsonMode)
   {
-    return(feedWithJson(imageGray, camIntrinsics, hasIntrinsics));
+    return(feedWithJson(imageGray, camIntrinsics, imageName, hasIntrinsics));
   }
   else
   {
@@ -186,11 +189,11 @@ bool ImageFeed::FeederImpl::next(image::Image<unsigned char> &imageGray,
     {
       hasIntrinsics = false;
     }
-    const std::string currImage = _images.front();
-    std::cout << currImage << std::endl;
-    if (!image::ReadImage(currImage.c_str(), &imageGray))
+    imageName = _images.front();
+    std::cout << imageName << std::endl;
+    if (!image::ReadImage(imageName.c_str(), &imageGray))
     {
-      std::cerr << "Error while opening image " << currImage << std::endl;
+      std::cerr << "Error while opening image " << imageName << std::endl;
       return false;
     }
     _images.pop();
@@ -202,6 +205,7 @@ bool ImageFeed::FeederImpl::next(image::Image<unsigned char> &imageGray,
 
 bool ImageFeed::FeederImpl::feedWithJson(image::Image<unsigned char> &imageGray, 
                    cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
+                   std::string &imageName,
                    bool &hasIntrinsics)
 {
   // if there are no more images to process
@@ -215,7 +219,7 @@ bool ImageFeed::FeederImpl::feedWithJson(image::Image<unsigned char> &imageGray,
   // get the image
   const std::string rootPath = _sfmdata.s_root_path;
   const sfm::View *view = _viewIterator->second.get();
-  const std::string imageName = (bf::path(rootPath) / bf::path(view->s_Img_path)).string();
+  imageName = (bf::path(rootPath) / bf::path(view->s_Img_path)).string();
   if (!image::ReadImage(imageName.c_str(), &imageGray))
   {
     std::cerr << "Error while opening image " << imageName << std::endl;
@@ -262,9 +266,10 @@ ImageFeed::ImageFeed(const std::string imagePath, const std::string calibPath)
 
 bool ImageFeed::next(image::Image<unsigned char> &imageGray, 
                      cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
+                     std::string &mediaPath,
                      bool &hasIntrinsics)
 {
-  return(_imageFeed->next(imageGray, camIntrinsics, hasIntrinsics));
+  return(_imageFeed->next(imageGray, camIntrinsics, mediaPath, hasIntrinsics));
 }
 
 bool ImageFeed::isInit() const

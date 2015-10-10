@@ -58,9 +58,10 @@ FeedProvider::FeedProvider(const std::string &feedPath, const std::string &calib
   
 bool FeedProvider::next(image::Image<unsigned char> &imageGray,
       cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
+      std::string &mediaPath,
       bool &hasIntrinsics)
 {
-  return(_feeder->next(imageGray, camIntrinsics, hasIntrinsics));
+  return(_feeder->next(imageGray, camIntrinsics, mediaPath, hasIntrinsics));
 }
 
 bool FeedProvider::isInit() const
