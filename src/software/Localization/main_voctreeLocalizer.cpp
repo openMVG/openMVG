@@ -164,7 +164,6 @@ int main(int argc, char** argv)
   // standard deviation of the time taken for localization
   bacc::accumulator_set<double, bacc::stats<bacc::tag::mean, bacc::tag::min, bacc::tag::max, bacc::tag::sum > > stats;
   
-  while(feed.next(imageGray, queryIntrinsics, hasIntrinsics))
   while(feed.next(imageGray, queryIntrinsics, currentImgName, hasIntrinsics))
   {
     POPART_COUT("******************************");
