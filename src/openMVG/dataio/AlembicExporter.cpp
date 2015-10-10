@@ -44,11 +44,17 @@ void AlembicExporter::addPoints(const sfm::Landmarks &points)
 
   OPointsSchema::Sample psamp(std::move(V3fArraySample(positions)), std::move(UInt64ArraySample(ids)));
   pSchema.set(psamp);
+  
+  // TODO Visibility
+  // TODO index
 }
 
 void AlembicExporter::appendCamera(const std::string &cameraName, 
                                    const geometry::Pose3 &pose,
-                                   const cameras::Pinhole_Intrinsic *cam)
+                                   const cameras::Pinhole_Intrinsic *cam,
+                                   const std::string &imagePath,
+                                   const IndexT id_view,
+                                   const IndexT id_intrinsic)
 {
   const openMVG::Mat3 R = pose.rotation();
   const openMVG::Vec3 center = pose.center();
@@ -88,53 +94,101 @@ void AlembicExporter::appendCamera(const std::string &cameraName,
 
   // Camera intrinsic parameters
   OCamera camObj(xform, "camera_" + ss.str());
+  auto userProps = camObj.getSchema().getUserProperties();
   CameraSample camSample;
 
   // Take the max of the image size to handle the case where the image is in portrait mode 
   const float imgWidth = cam->w();
   const float imgHeight = cam->h();
-  const float sensorWidthPix = std::max(imgWidth, imgHeight);
-  const float sensorHeightPix = std::min(imgWidth, imgHeight);
-  const float focalLengthPix = cam->focal();
-  const float dx = cam->principal_point()(0);
-  const float dy = cam->principal_point()(1);
+  const float sensorWidth_pix = std::max(imgWidth, imgHeight);
+  const float sensorHeight_pix = std::min(imgWidth, imgHeight);
+  const float imgRatio = sensorHeight_pix / sensorWidth_pix;
+  const float focalLength_pix = cam->focal();
+  const float hoffset_pix = cam->principal_point()(0);
+  const float voffset_pix = cam->principal_point()(1);
+  
   // Use a common sensor width as we don't have this information at this point
   // We chose a full frame 24x36 camera
-  const float sensorWidth = 36.0; // 36mm per default
-  const float sensorHeight = sensorWidth * sensorHeightPix / sensorWidthPix;
-  const float focalLength = sensorWidth * focalLengthPix / sensorWidthPix;
+  const float sensorWidth_mm = 36.0; // 36mm per default TODO adapt to real values
+  const float sensorHeight_mm = sensorWidth_mm * imgRatio;
+  const float focalLength_mm = sensorWidth_mm * focalLength_pix / sensorWidth_pix;
+  const float pix2mm = sensorWidth_mm / sensorWidth_pix;
+
+  // openMVG: origin is (top,left) corner and orientation is (bottom,right)
+  // ABC: origin is centered and orientation is (up,right)
   // Following values are in cm, hence the 0.1 multiplier
-  const float hoffset = 0.1 * sensorWidth * (0.5 - dx / imgWidth);
-  const float voffset = 0.1 * sensorHeight * (dy / imgHeight - 0.5) * sensorHeightPix / sensorWidthPix;
-  const float haperture = 0.1 * sensorWidth * imgWidth / sensorWidthPix;
-  const float vaperture = 0.1 * sensorWidth * imgHeight / sensorWidthPix;
+  const float hoffset_cm = 0.1 * ((imgWidth*0.5) - hoffset_pix) * pix2mm;
+  const float voffset_cm = -0.1 * ((imgHeight*0.5) - voffset_pix) * pix2mm; // vertical flip
+  const float haperture_cm = 0.1 * imgWidth * pix2mm;
+  const float vaperture_cm = 0.1 * imgHeight * pix2mm;
 
-  camSample.setFocalLength(focalLength);
-  camSample.setHorizontalAperture(haperture);
-  camSample.setVerticalAperture(vaperture);
-  camSample.setHorizontalFilmOffset(hoffset);
-  camSample.setVerticalFilmOffset(voffset);
+  camSample.setFocalLength(focalLength_mm);
+  camSample.setHorizontalAperture(haperture_cm);
+  camSample.setVerticalAperture(vaperture_cm);
+  camSample.setHorizontalFilmOffset(hoffset_cm);
+  camSample.setVerticalFilmOffset(voffset_cm);
+  
+  // Add sensor width (largest image side) in pixels as custom property
+  OUInt32Property propSensorWidth_pix(userProps, "sensorWidth_pix");
+  propSensorWidth_pix.set(sensorWidth_pix);
 
+  // Add image path as custom property
+  if(!imagePath.empty())
+  {
+    // Set camera image plane 
+    OStringProperty imagePlane(userProps, "imagePath");
+    imagePlane.set(imagePath.c_str());
+  }
+
+  OUInt32Property propViewId(userProps, "mvg_viewId");
+  propViewId.set(id_view);
+
+  OUInt32Property propIntrinsicId(userProps, "mvg_intrinsicId");
+  propIntrinsicId.set(id_intrinsic);
+  
+  OStringProperty mvg_intrinsicType(userProps, "mvg_intrinsicType");
+  mvg_intrinsicType.set(cam->getTypeStr());
+  
+  std::vector<double> intrinsicParams = cam->getParams();
+  ODoubleArrayProperty mvg_intrinsicParams(userProps, "mvg_intrinsicParams");
+  mvg_intrinsicParams.set(intrinsicParams);
+  
   camObj.getSchema().set(camSample);
 }
 
-void AlembicExporter::addCameras(const sfm::SfM_Data &sfm_data)
+void AlembicExporter::add(const sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part)
 {
-  for(const auto it : sfm_data.GetViews())
+  if(flags_part & sfm::ESfM_Data::VIEWS || flags_part & sfm::ESfM_Data::EXTRINSICS)
   {
-    const sfm::View * view = it.second.get();
-    if(!sfm_data.IsPoseAndIntrinsicDefined(view))
-      continue;
-
-    // OpenMVG Camera
-    const openMVG::geometry::Pose3 pose = sfm_data.GetPoseOrDie(view);
-    auto iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
-    openMVG::cameras::Pinhole_Intrinsic *cam = static_cast<openMVG::cameras::Pinhole_Intrinsic*> (iterIntrinsic->second.get());
-    
-    const std::string cameraName = stlplus::basename_part(view->s_Img_path);
-    appendCamera(cameraName, pose, cam);
+    for(const auto it : sfmdata.GetViews())
+    {
+      const sfm::View * view = it.second.get();
+      openMVG::geometry::Pose3 pose;
+      std::shared_ptr<cameras::IntrinsicBase> cam = std::make_shared<cameras::Pinhole_Intrinsic>();
+      if(sfmdata.IsPoseAndIntrinsicDefined(view))
+      {
+        // OpenMVG Camera
+        pose = sfmdata.GetPoseOrDie(view);
+        auto iterIntrinsic = sfmdata.GetIntrinsics().find(view->id_intrinsic);
+        cam = iterIntrinsic->second;
+      }
+      else if(!(flags_part & sfm::ESfM_Data::VIEWS))
+      {
+        // If we don't export views, skip cameras without valid pose.
+        continue;
+      }
+      const std::string cameraName = stlplus::basename_part(view->s_Img_path);
+      const std::string sView_filename = stlplus::create_filespec(sfmdata.s_root_path, view->s_Img_path);
+      
+      appendCamera(cameraName, pose, dynamic_cast<openMVG::cameras::Pinhole_Intrinsic*>(cam.get()), sView_filename, view->id_view, view->id_intrinsic);
+    }
+  }
+  if(flags_part & sfm::ESfM_Data::STRUCTURE)
+  {
+    addPoints(sfmdata.GetLandmarks());
   }
 }
+
 
 } //namespace dataio
 } //namespace openMVG

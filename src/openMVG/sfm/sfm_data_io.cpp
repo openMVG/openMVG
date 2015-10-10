@@ -15,6 +15,9 @@
 #include "openMVG/sfm/sfm_data_io_ply.hpp"
 #include "openMVG/sfm/sfm_data_io_baf.hpp"
 
+#include "openMVG/dataio/AlembicExporter.hpp"
+#include "openMVG/dataio/AlembicImporter.hpp"
+
 namespace openMVG {
 namespace sfm {
 
@@ -74,6 +77,12 @@ bool Load(SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_par
     bStatus = Load_Cereal<cereal::PortableBinaryInputArchive>(sfm_data, filename, flags_part);
   else if (ext == "xml")
     bStatus = Load_Cereal<cereal::XMLInputArchive>(sfm_data, filename, flags_part);
+#if HAVE_ALEMBIC
+  else if (ext == "abc") {
+    openMVG::dataio::AlembicImporter(filename).populate(sfm_data, flags_part);
+    bStatus = true;
+  }
+#endif // HAVE_ALEMBIC
   else return false;
 
   // Assert that loaded intrinsics | extrinsics are linked to valid view
@@ -100,6 +109,13 @@ bool Save(const SfM_Data & sfm_data, const std::string & filename, ESfM_Data fla
     return Save_PLY(sfm_data, filename, flags_part);
   else if (ext == "baf") // Bundle Adjustment file
     return Save_BAF(sfm_data, filename, flags_part);
+#if HAVE_ALEMBIC
+  else if (ext == "abc") // Alembic
+  {
+    openMVG::dataio::AlembicExporter(filename).add(sfm_data, flags_part);
+    return true;
+  }
+#endif // HAVE_ALEMBIC
   return false;
 }
 

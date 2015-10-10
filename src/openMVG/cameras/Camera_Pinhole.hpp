@@ -41,17 +41,22 @@ class Pinhole_Intrinsic : public IntrinsicBase
     double ppx = 0.0, double ppy = 0.0)
     :IntrinsicBase(w,h)
   {
-    _K << focal_length_pix, 0., ppx, 0., focal_length_pix, ppy, 0., 0., 1.;
-    _Kinv = _K.inverse();
+    setK(focal_length_pix, ppx, ppy);
   }
-
+  
   virtual ~Pinhole_Intrinsic() {}
 
   virtual EINTRINSIC getType() const { return PINHOLE_CAMERA; }
+  std::string getTypeStr() const { return EINTRINSIC_enumToString(getType()); }
 
   const Mat3& K() const { return _K; }
   const Mat3& Kinv() const { return _Kinv; }
-  void setK(const Mat3 &K) { _K = K;} 
+  void setK(double focal_length_pix, double ppx, double ppy)
+  {
+    _K << focal_length_pix, 0., ppx, 0., focal_length_pix, ppy, 0., 0., 1.;
+    _Kinv = _K.inverse();
+  }
+  void setK(const Mat3 &K) { _K = K;}
   /// Return the value of the focal in pixels
   inline double focal() const {return _K(0,0);}
   inline Vec2 principal_point() const {return Vec2(_K(0,2), _K(1,2));}
