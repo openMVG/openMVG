@@ -48,7 +48,7 @@ void PreconditionerFromPoints(const Mat &points, Mat3 *T) {
         0,       0,        1;
 }
 
-void PreconditionerFromPoints(int width, int height, Mat3 *T) {
+void PreconditionerFromImageSize(int width, int height, Mat3 *T) {
   // Build the normalization matrix
   double dNorm = 1.0 / sqrt( static_cast<double>(width*height) );
 
@@ -72,12 +72,12 @@ void ApplyTransformationToPoints(const Mat &points,
   }
 }
 
-void NormalizePoints(const Mat &points,
+void NormalizePointsFromImageSize(const Mat &points,
                       Mat *normalized_points,
                       Mat3 *T,
                       int width,
                       int height) {
-  PreconditionerFromPoints(width, height, T);
+  PreconditionerFromImageSize(width, height, T);
   ApplyTransformationToPoints(points, *T, normalized_points);
 }
 

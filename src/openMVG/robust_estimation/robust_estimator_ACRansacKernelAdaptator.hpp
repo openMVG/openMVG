@@ -56,8 +56,8 @@ public:
     assert(x1_.rows() == x2_.rows());
     assert(x1_.cols() == x2_.cols());
 
-    NormalizePoints(x1, &x1_, &N1_, w1, h1);
-    NormalizePoints(x2, &x2_, &N2_, w2, h2);
+    NormalizePointsFromImageSize(x1, &x1_, &N1_, w1, h1);
+    NormalizePointsFromImageSize(x2, &x2_, &N2_, w2, h2);
 
     // LogAlpha0 is used to make error data scale invariant
     if(bPointToLine)  {
@@ -142,7 +142,7 @@ public:
     assert(3 == x3D_.rows());
     assert(x2d_.cols() == x3D_.cols());
 
-    NormalizePoints(x2d, &x2d_, &N1_, w, h);
+    NormalizePointsFromImageSize(x2d, &x2d_, &N1_, w, h);
   }
 
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
@@ -180,7 +180,7 @@ public:
 
 private:
   Mat x2d_;
-  const Mat & x3D_;
+  const Mat& x3D_;
   Mat3 N1_;      // Matrix used to normalize data
   double logalpha0_; // Alpha0 is used to make the error adaptive to the image size
 };
@@ -246,7 +246,7 @@ public:
 
 private:
   Mat x2d_;
-  const Mat & x3D_;
+  const Mat& x3D_;
   Mat3 N1_;      // Matrix used to normalize data
   double logalpha0_; // Alpha0 is used to make the error adaptive to the image size
   Mat3 K_;            // Intrinsic camera parameter

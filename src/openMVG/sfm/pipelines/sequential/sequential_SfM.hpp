@@ -79,7 +79,7 @@ private:
   /// List the images that the greatest number of matches to the current 3D reconstruction.
   bool FindImagesWithPossibleResection(
     std::vector<size_t>& vec_possible_indexes,
-    const std::set<size_t>& set_remainingViewId) const;
+    std::set<size_t>& set_remainingViewId) const;
 
   /// Add a single Image to the scene and triangulate new possible tracks.
   bool Resection(const size_t imageIndex);

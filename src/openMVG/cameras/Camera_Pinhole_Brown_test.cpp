@@ -5,10 +5,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/cameras/cameras.hpp"
+#include "testing/testing.h"
+
 using namespace openMVG;
 using namespace openMVG::cameras;
 
-#include "testing/testing.h"
 
 //-----------------
 // Test summary:

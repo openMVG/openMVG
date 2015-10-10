@@ -9,17 +9,33 @@ compiler:
   #- clang: #Consider clang later, since cereal does not build fine on the clang CI version
   #  - "3.3"
 
+sudo: false
+
+addons:
+  apt:
+    sources:
+      - boost-latest
+      - ubuntu-toolchain-r-test
+    packages:
+      - cmake
+      - libeigen3-dev
+      - libboost1.55-all-dev
+      - lcov
+      - libpng-dev
+      - libjpeg8-dev
+      - libtiff4-dev
+      - libxxf86vm1
+      - libxxf86vm1
+      - libxxf86vm-dev
+      - x11proto-xf86vidmode-dev
+      - libxrandr-dev
+      - g++-4.8
+
 before_install:
- - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
- - sudo apt-get update -qq
  - export NUM_CPU="`grep processor /proc/cpuinfo | wc -l`"; echo $NUM_CPU
- - sudo apt-get install lcov
  - gem install coveralls-lcov
- 
-install: 
-- sudo apt-get install cmake libpng-dev libjpeg8-dev libtiff-dev
-- sudo apt-get install libxxf86vm1 libxxf86vm1 libxxf86vm-dev x11proto-xf86vidmode-dev libxrandr-dev
-- sudo apt-get install -qq g++-4.8
+
+install:
 - export CXX="g++-4.8"
 
 before_script:
@@ -27,7 +43,7 @@ before_script:
   - mkdir build
   - cd build
   # Classic release build
-  - cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
+  - cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -DOpenMVG_BUILD_VOCTREE=ON . ../openMVG/src
   # Build for code coverage evaluation
   #- cmake -DOpenMVG_BUILD_COVERAGE=ON -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
 
@@ -37,11 +53,7 @@ script:
 # Perform unit tests only on GCC builds
   - if [ "$CC" = "gcc" ]; then make test; fi
 
-branches:
-  only:
-    - develop
-
-after_success:
+# after_success:
   #- cd ../openMVG
   # If GCC: compute code coverage and export it to coveralls
   #- if [ "$CC" = "gcc" ];
@@ -53,4 +65,3 @@ after_success:
   #    lcov --remove coverage.info '*/src/dependencies/*' -o coverage.info;
   #    coveralls-lcov coverage.info;
   #  fi
-  

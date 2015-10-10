@@ -19,10 +19,26 @@ ENDIF()
 # ==============================================================================
 OPTION(OpenMVG_BUILD_SHARED "Build OpenMVG shared libs" OFF)
 OPTION(OpenMVG_BUILD_TESTS "Build OpenMVG tests" OFF)
+OPTION(OpenMVG_BUILD_DOC "Build OpenMVG documentation" ON)
 OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG samples applications." ON)
 OPTION(OpenMVG_BUILD_OPENGL_EXAMPLES "Build OpenMVG openGL examples" OFF)
 OPTION(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
+OPTION(OpenMVG_BUILD_VOCTREE "Build the vocabulary tree and localization module" ON)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
+OPTION(OpenMVG_USE_ALEMBIC "Enable Alembic I/O" OFF)
+
+# ==============================================================================
+# Opencv is not used by openMVG but some samples show how to use openCV
+#  and openMVG simultaneously
+# ==============================================================================
+OPTION(OpenMVG_USE_OPENCV "Build or not opencv+openMVG samples programs" OFF)
+
+# ==============================================================================
+# Since OpenCV 3, SIFT is no longer in the default modules. See
+# https://github.com/itseez/opencv_contrib for more informations.
+# Enable this to be able to use OpenCV SIFT in main_ComputeFeatures_OpenCV.
+# ==============================================================================
+OPTION(OpenMVG_USE_OCVSIFT "Add or not OpenCV SIFT in available features" OFF)
 
 SET(OPENMVG_VERSION_MAJOR 0)
 SET(OPENMVG_VERSION_MINOR 8)
@@ -79,6 +95,7 @@ IF (UNIX AND NOT OpenMVG_BUILD_COVERAGE)
   SET(CMAKE_C_FLAGS_RELEASE "-O3")
   SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
 ENDIF ()
+include(UpdateCacheVariable)
 
 # ==============================================================================
 # Check C++11 support
@@ -114,14 +131,14 @@ IF (OpenMVG_USE_OPENMP)
         # for those using the clang with OpenMP support
         LIST(APPEND OPENMVG_LIBRARY_DEPENDENCIES iomp)
       ELSE()
-        LIST(APPEND OPENMVG_LIBRARY_DEPENDENCIES gomp)
+      LIST(APPEND OPENMVG_LIBRARY_DEPENDENCIES gomp)
       ENDIF()
     ENDIF (NOT MSVC)
+  ENDIF(OPENMP_FOUND)
 ELSE (OpenMVG_USE_OPENMP)
     OPTION(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" OFF)
-    SET(OpenMVG_USE_OPENMP OFF CACHE BOOL "Use OpenMP for parallelization")
+    UPDATE_CACHE_VARIABLE(OpenMVG_USE_OPENMP OFF)
     REMOVE_DEFINITIONS(-DOPENMVG_USE_OPENMP)
-  ENDIF (OPENMP_FOUND)
 ENDIF (OpenMVG_USE_OPENMP)
 
 # ==============================================================================
@@ -187,19 +204,6 @@ INSTALL(
 # ==============================================================================
 
 # ==============================================================================
-# Opencv is not used by openMVG but some samples show how to use openCV
-#  and openMVG simultaneously
-# ==============================================================================
-OPTION(OpenMVG_USE_OPENCV "Build or not opencv+openMVG samples programs" OFF)
-
-# ==============================================================================
-# Since OpenCV 3, SIFT is no longer in the default modules. See
-# https://github.com/itseez/opencv_contrib for more informations.
-# Enable this to be able to use OpenCV SIFT in main_ComputeFeatures_OpenCV.
-# ==============================================================================
-OPTION(OpenMVG_USE_OCVSIFT "Add or not OpenCV SIFT in available features" OFF)
-
-# ==============================================================================
 # Enable cmake UNIT TEST framework
 # ==============================================================================
 IF (OpenMVG_BUILD_TESTS)
@@ -245,6 +249,7 @@ ADD_DEFINITIONS(-DEIGEN_MPL2_ONLY)
 # ==============================================================================
 FIND_PACKAGE(Ceres QUIET HINTS ${CERES_DIR_HINTS})
 IF(NOT Ceres_FOUND)
+  MESSAGE(STATUS "No external CERES detected, using the embedded one.")
   SET(OpenMVG_USE_INTERNAL_CERES ON)
   SET(CERES_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/include
@@ -350,7 +355,61 @@ IF(NOT LEMON_FOUND OR OpenMVG_USE_INTERNAL_LEMON)
   SET(LEMON_LIBRARY lemon)
 ENDIF()
 
+# ==============================================================================
+# OpenCV
+# ==============================================================================
+# - only external and enabled only if OpenMVG_USE_OPENCV is set to ON
+# ==============================================================================
+IF(OpenMVG_USE_OPENCV)
+  FIND_PACKAGE( OpenCV )
+  IF(NOT OpenCV_FOUND)
+    MESSAGE(STATUS "OpenCV was not found. Disabling OpenCV support.")
+    UPDATE_CACHE_VARIABLE(OpenMVG_USE_OPENCV OFF)
+    UPDATE_CACHE_VARIABLE(OpenMVG_USE_OCVSIFT OFF)
+  ELSE(NOT OpenCV_FOUND)
+    INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
+    # add a definition that allows the conditional compiling
+    ADD_DEFINITIONS(-DHAVE_OPENCV)
+    IF(OpenMVG_USE_OCVSIFT)
+      ADD_DEFINITIONS(-DUSE_OCVSIFT)
+    ENDIF(OpenMVG_USE_OCVSIFT)
+  ENDIF(NOT OpenCV_FOUND)
+ENDIF(OpenMVG_USE_OPENCV)
 
+# ==============================================================================
+# Boost
+# ==============================================================================
+# - optional, it allows to compile the vocabulary tree
+# ==============================================================================
+IF(OpenMVG_BUILD_VOCTREE)
+  FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS system filesystem program_options)
+  IF(Boost_FOUND)
+     MESSAGE(STATUS "Boost ${Boost_LIB_VERSION} found")
+     include_directories(${Boost_INCLUDE_DIRS})
+     link_directories(${Boost_LIBRARIES})
+     add_definitions(${Boost_DEFINITIONS})
+  ELSE()
+    MESSAGE(STATUS "Boost not found -- disabling the vocabulary tree")
+    UPDATE_CACHE_VARIABLE(OpenMVG_BUILD_VOCTREE OFF)
+  ENDIF(Boost_FOUND)
+ENDIF(OpenMVG_BUILD_VOCTREE)
+
+# ==============================================================================
+# Alembic
+# ==============================================================================
+# - optional, it allows to use the classes to export data in alembic format
+# ==============================================================================
+IF(OpenMVG_USE_ALEMBIC)
+  FIND_PACKAGE(Alembic)
+  IF(ALEMBIC_FOUND)
+    MESSAGE(STATUS "Alembic found")
+    include_directories(${ABC_INCLUDE_DIR})
+    add_definitions(-DHAVE_ALEMBIC)
+  ELSE()
+    MESSAGE(STATUS "Alembic not found -- disabling I/O exporter")
+    UPDATE_CACHE_VARIABLE(OpenMVG_USE_ALEMBIC OFF)
+  ENDIF(ALEMBIC_FOUND)
+ENDIF(OpenMVG_USE_ALEMBIC)
 
 # ==============================================================================
 # Third-party libraries:
@@ -421,40 +480,45 @@ ADD_SUBDIRECTORY(nonFree)
 # --------------------------
 # Sphinx detection
 # ==============================================================================
-FIND_PACKAGE(Sphinx)
-IF (EXISTS ${SPHINX_EXECUTABLE})
-  SET(SPHINX_HTML_DIR "${CMAKE_CURRENT_BINARY_DIR}/htmlDoc")
+IF(OpenMVG_BUILD_DOC)
+  FIND_PACKAGE(Sphinx)
+  IF (EXISTS ${SPHINX_EXECUTABLE})
+    SET(SPHINX_HTML_DIR "${CMAKE_CURRENT_BINARY_DIR}/htmlDoc")
 
-  CONFIGURE_FILE(
-    "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst/conf.py"
-    "${CMAKE_CURRENT_BINARY_DIR}/conf.py"
-    @ONLY)
+    CONFIGURE_FILE(
+      "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst/conf.py"
+      "${CMAKE_CURRENT_BINARY_DIR}/conf.py"
+      @ONLY)
 
-  ADD_CUSTOM_TARGET(doc ALL
-    ${SPHINX_EXECUTABLE}
-    -b html
-    "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst"
-    "${SPHINX_HTML_DIR}"
-    COMMENT "Building HTML documentation with Sphinx")
+    ADD_CUSTOM_TARGET(doc ALL
+      ${SPHINX_EXECUTABLE}
+      -b html
+      "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst"
+      "${SPHINX_HTML_DIR}"
+      COMMENT "Building HTML documentation with Sphinx")
 
-  SET_PROPERTY(TARGET doc PROPERTY FOLDER OpenMVG)
+    SET_PROPERTY(TARGET doc PROPERTY FOLDER OpenMVG)
 
-ELSE (EXISTS ${SPHINX_EXECUTABLE})
-  MESSAGE("Sphinx need to be installed to generate the documentation")
-ENDIF (EXISTS ${SPHINX_EXECUTABLE})
-
+  ELSE (EXISTS ${SPHINX_EXECUTABLE})
+    MESSAGE("Sphinx need to be installed to generate the documentation")
+      UPDATE_CACHE_VARIABLE(OpenMVG_BUILD_DOC OFF)
+  ENDIF (EXISTS ${SPHINX_EXECUTABLE})
+ENDIF(OpenMVG_BUILD_DOC)
 
 MESSAGE("\n")
 
 MESSAGE("** OpenMVG version: " ${OPENMVG_VERSION})
 MESSAGE("** Build Shared libs: " ${OpenMVG_BUILD_SHARED})
 MESSAGE("** Build OpenMVG tests: " ${OpenMVG_BUILD_TESTS})
+MESSAGE("** Build OpenMVG documentation: " ${OpenMVG_BUILD_DOC})
 MESSAGE("** Build OpenMVG samples applications: " ${OpenMVG_BUILD_EXAMPLES})
 MESSAGE("** Build OpenMVG openGL examples: " ${OpenMVG_BUILD_OPENGL_EXAMPLES})
+MESSAGE("** Build the voctree and localization module: " ${OpenMVG_BUILD_VOCTREE})
 MESSAGE("** Enable code coverage generation: " ${OpenMVG_BUILD_COVERAGE})
 MESSAGE("** Enable OpenMP parallelization: " ${OpenMVG_USE_OPENMP})
 MESSAGE("** Build OpenCV+OpenMVG samples programs: " ${OpenMVG_USE_OPENCV})
 MESSAGE("** Use OpenCV SIFT features: " ${OpenMVG_USE_OCVSIFT})
+MESSAGE("** Build Alembic exporter: " ${OpenMVG_USE_ALEMBIC})
 
 MESSAGE("\n")
 

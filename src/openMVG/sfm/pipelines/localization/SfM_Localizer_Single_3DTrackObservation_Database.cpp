@@ -7,13 +7,14 @@
 
 #include "openMVG/sfm/pipelines/localization/SfM_Localizer_Single_3DTrackObservation_Database.hpp"
 #include "openMVG/matching/indMatch.hpp"
+#include "openMVG/matching/regions_matcher.hpp"
 
 namespace openMVG {
 namespace sfm {
 
   SfM_Localization_Single_3DTrackObservation_Database::
   SfM_Localization_Single_3DTrackObservation_Database()
-  :SfM_Localizer(), sfm_data_(nullptr)
+  :SfM_Localizer(), sfm_data_(nullptr), matching_interface_(nullptr)
   {}
 
   bool
@@ -37,28 +38,28 @@ namespace sfm {
 
     // Setup the database
     // A collection of regions
-    // -each view observation leads to a new regions
+    // - each view observation leads to a new regions
     // - link each observation region to a track id to ease 2D-3D correspondences search
 
     const features::Regions * regions_type = std::begin(regions_provider.regions_per_view)->second.get();
     landmark_observations_descriptors_.reset(regions_type->EmptyClone());
-    for (const auto & landmarks : sfm_data.GetLandmarks())
+    for (const auto & landmark : sfm_data.GetLandmarks())
     {
-      for (const auto & landmark : landmarks.second.obs)
+      for (const auto & observation : landmark.second.obs)
       {
-        if (landmark.second.id_feat != UndefinedIndexT)
+        if (observation.second.id_feat != UndefinedIndexT)
         {
           // copy the feature/descriptor to landmark_observations_descriptors
-          const features::Regions * view_regions = regions_provider.regions_per_view.at(landmark.first).get();
-          view_regions->CopyRegion(landmark.second.id_feat, landmark_observations_descriptors_.get());
+          const features::Regions * view_regions = regions_provider.regions_per_view.at(observation.first).get();
+          view_regions->CopyRegion(observation.second.id_feat, landmark_observations_descriptors_.get());
           // link this descriptor to the track Id
-          index_to_landmark_id_.push_back(landmarks.first);
+          index_to_landmark_id_.push_back(landmark.first);
         }
       }
     }
     std::cout << "Init retrieval database ... " << std::endl;
-    matching_interface_ =
-      matching::Matcher_Regions_Database(matching::ANN_L2, *landmark_observations_descriptors_.get());
+    matching_interface_.reset(new
+      matching::Matcher_Regions_Database(matching::ANN_L2, *landmark_observations_descriptors_));
     std::cout << "Retrieval database initialized\n"
       << "#landmark: " << sfm_data.GetLandmarks().size() << "\n"
       << "#descriptor initialized: " << landmark_observations_descriptors_->RegionCount() << std::endl;
@@ -78,13 +79,13 @@ namespace sfm {
     Image_Localizer_Match_Data * resection_data_ptr
   ) const
   {
-    if (sfm_data_ == nullptr)
+    if (sfm_data_ == nullptr || matching_interface_ == nullptr)
     {
       return false;
     }
 
     matching::IndMatches vec_putative_matches;
-    if (!matching_interface_.Match(0.8, query_regions, vec_putative_matches))
+    if (!matching_interface_->Match(0.8, query_regions, vec_putative_matches))
     {
       return false;
     }

@@ -293,20 +293,9 @@ INSTALL(TARGETS openMVG_main_ExportCameraFrustums DESTINATION bin/)
 # Use openCV Feature detector to describe the images
 # -
 IF(OpenMVG_USE_OPENCV)
-  FIND_PACKAGE( OpenCV )
-  INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
-  IF(NOT OpenCV_FOUND)
-    MESSAGE(STATUS "WARNING: OpenCV was not found. ")
-  ELSE(NOT OpenCV_FOUND)
-
-    ADD_EXECUTABLE(openMVG_main_ComputeFeatures_OpenCV
+  ADD_EXECUTABLE(openMVG_main_ComputeFeatures_OpenCV
       main_ComputeFeatures_OpenCV.cpp)
-    IF(OpenMVG_USE_OCVSIFT)
-        TARGET_COMPILE_DEFINITIONS(openMVG_main_ComputeFeatures_OpenCV
-                                   PUBLIC
-                                   -DUSE_OCVSIFT)
-    ENDIF(OpenMVG_USE_OCVSIFT)
-    TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures_OpenCV
+  TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures_OpenCV
       openMVG_system
       openMVG_image
       openMVG_features
@@ -316,11 +305,9 @@ IF(OpenMVG_USE_OPENCV)
       vlsift
       ${OpenCV_LIBS})
 
-    SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY FOLDER OpenMVG/software)
-    SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
-    INSTALL(TARGETS openMVG_main_ComputeFeatures_OpenCV DESTINATION bin/)
-
-  ENDIF(NOT OpenCV_FOUND)
+  SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY FOLDER OpenMVG/software)
+  SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
+  INSTALL(TARGETS openMVG_main_ComputeFeatures_OpenCV DESTINATION bin/)
 ENDIF(OpenMVG_USE_OPENCV)
 
 

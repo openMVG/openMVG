@@ -73,7 +73,7 @@ int main(int argc, char **argv)
   std::string sNearestMatchingMethod = "AUTO";
   bool bForce = false;
   bool bGuided_matching = false;
-  int imax_iteration = 1024;
+  int imax_iteration = 2048;
   bool matchFilePerImage = false;
   bool orderPairs = false;
 

@@ -58,7 +58,7 @@ public:
 
   bool Set_configuration_preset(const std::string& preset)
   {
-    Set_configuration_preset(describerPreset_stringToEnum(preset));
+    return Set_configuration_preset(describerPreset_stringToEnum(preset));
   }
 
   /**

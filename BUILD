@@ -130,8 +130,9 @@ OpenMVG can be used as a third party once it have been installed.
 Because it can use it's own ceres version, it's better to install it locally and not in system files.
 So please consider using the CMAKE_INSTALL_PREFIX cmake variable to specify a local installation directory.
 
-Here the syntax to add the variable to the cmake command line:
--DCMAKE_INSTALL_PREFIX:STRING="./openMVG_install"
+Here the syntax to add the variable to the cmake command line (use absolute path):
+-DCMAKE_INSTALL_PREFIX:STRING="YourInstallPath"
+i.e: -DCMAKE_INSTALL_PREFIX:STRING="/home/user/Dev/github/openMVG_Build/openMVG_install"
 
 Perform "make" and "make install"
 

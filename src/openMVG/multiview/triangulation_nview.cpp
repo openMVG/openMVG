@@ -116,7 +116,7 @@ namespace openMVG {
 				{
 					for (int j=0;j<=k;j++)
 					{
-						double v = v1[j] * v1[k] + v2[j] * v2[k];
+						const double v = v1[j] * v1[k] + v2[j] * v2[k];
 						AtA(j,k) += v;
 						if (j<k) AtA(k,j) += v;
 					}
@@ -134,7 +134,7 @@ namespace openMVG {
 				const Mat34& PMat = views[i].first;
 				const Vec2 & p = views[i].second;
 				const Vec3 xProj = PMat * Vec4(X(0), X(1), X(2), 1.0);
-				double z = xProj(2);
+				const double z = xProj(2);
         const Vec2 x = xProj.head<2>() / z;
 				if (z<zmin) zmin = z;
 				if (z>zmax) zmax = z;

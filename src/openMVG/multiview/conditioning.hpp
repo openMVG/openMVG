@@ -50,10 +50,10 @@ void NormalizePoints(const Mat &points,
                      Mat3 *T);
 
 /// Point conditioning (compute Transformation matrix)
-void PreconditionerFromPoints(int width, int height, Mat3 *T);
+void PreconditionerFromImageSize(int width, int height, Mat3 *T);
 
 ///  Normalize point rom image coordinates to [-.5, .5]
-void NormalizePoints(const Mat &points,
+void NormalizePointsFromImageSize(const Mat &points,
                      Mat *normalized_points,
                      Mat3 *T, int width, int height);
 

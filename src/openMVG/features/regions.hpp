@@ -157,7 +157,7 @@ public:
     ar(_vec_descs);
   }
 
-  Regions * EmptyClone() const
+  virtual Regions * EmptyClone() const
   {
     return new Scalar_Regions();
   }
@@ -172,6 +172,12 @@ public:
     const Scalar_Regions<FeatT, T, L> * regionsT = dynamic_cast<const Scalar_Regions<FeatT, T, L> *>(regions);
     static matching::L2_Vectorized<T> metric;
     return metric(_vec_descs[i].getData(), regionsT->_vec_descs[j].getData(), DescriptorT::static_size);
+  }
+
+  void swap(Scalar_Regions& other)
+  {
+    _vec_feats.swap(other._vec_feats);
+    _vec_descs.swap(other._vec_descs);
   }
 
   /// Add the Inth region to another Region container
@@ -271,7 +277,7 @@ public:
     ar(_vec_descs);
   }
 
-  Regions * EmptyClone() const
+  virtual Regions * EmptyClone() const
   {
     return new Binary_Regions();
   }
