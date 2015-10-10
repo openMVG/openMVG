@@ -117,7 +117,7 @@ struct InitKmeanspp
         // look for the element that cap the partial sum that has been
         // drawn
         dstiter = dists.begin();
-        while((partial > 0) and (dstiter != dists.end()))
+        while((partial > 0) && (dstiter != dists.end()))
         {
           assert(dstiter != dists.end());
           // safeguard against unsigned types that do not allow negative numbers
