@@ -31,7 +31,7 @@ TEST(database, databaseIO) {
   // Create the databases
   Database source_db( documents_to_insert.size() * documents_to_insert[0].size() ) ;
   for(int i = 0; i < documents_to_insert.size(); ++i)
-    source_db.insert(documents_to_insert[i]);
+    source_db.insert(i, documents_to_insert[i]);
 
   // Compute weights
   source_db.computeTfIdfWeights( );

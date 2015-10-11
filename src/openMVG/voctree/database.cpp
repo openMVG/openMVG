@@ -24,11 +24,8 @@ Database::Database(uint32_t num_words)
 : word_files_(num_words),
 word_weights_( num_words, 1.0f ) { }
 
-DocId Database::insert(const std::vector<Word>& document)
+DocId Database::insert(DocId doc_id, const std::vector<Word>& document)
 {
-  /// @todo Evaluate whether sorting words makes much difference in speed
-  DocId doc_id = database_vectors_.size();
-
   // For each word, retrieve its inverted file and increment the count for doc_id.
   for(std::vector<Word>::const_iterator it = document.begin(), end = document.end(); it != end; ++it)
   {
@@ -41,8 +38,8 @@ DocId Database::insert(const std::vector<Word>& document)
   }
 
   // Precompute the document vector to compare queries against.
-  database_vectors_.resize(doc_id + 1);
-  computeVector(document, database_vectors_.back());
+  DocumentVector& newDoc = database_[doc_id];
+  computeVector(document, newDoc);
 
   return doc_id;
 }
@@ -65,18 +62,20 @@ void Database::sanityCheck(size_t N, std::vector< std::vector<Match> >& matches)
   matches.clear();
   // since we already know the size of the vectors, in order to parallelize the 
   // query allocate the whole memory
-  matches = std::vector< std::vector<Match> >(this->size(), std::vector<Match>(N));
-  boost::progress_display display(database_vectors_.size());
+  matches.resize(this->size(), std::vector<Match>(N));
+  boost::progress_display display(database_.size());
   
-  #pragma omp parallel for
-  for(DocId i = 0; i < (DocId) database_vectors_.size(); ++i)
-  {
-    std::vector<Match> m;
-    find(database_vectors_[i], N, m);
-    //		matches.emplace_back( m );
-    matches[i] = m;
-    ++display;
-  }
+//  @todo JEME
+//  #pragma omp parallel for
+//  for(DocId i = 0; i < (DocId) database_.size(); ++i)
+//  for(auto& document: database_)
+//  {
+//    std::vector<Match> m;
+//    find(document.second, N, m);
+//    //		matches.emplace_back( m );
+//    matches[i] = m;
+//    ++display;
+//  }
 }
 
 /**
@@ -111,25 +110,18 @@ void Database::find( const DocumentVector& query, size_t N, std::vector<Match>& 
   accumulator_set<Match, features<bestN_tag> > acc(bestN_tag::cache_size = N);
 
   /// @todo Try only computing distances against documents sharing at least one word
-  for(DocId i = 0; i < (DocId) database_vectors_.size(); ++i)
+  for(const auto& document: database_)
   {
     // for each document/image in the database compute the distance between the 
     // histograms of the query image and the others
-    float distance = sparseDistance(query, database_vectors_[i]);
-    acc(Match(i, distance));
+    float distance = sparseDistance(query, document.second);
+    acc(Match(document.first, distance));
   }
 
   // extract the best N
   extractor<bestN_tag> bestN;
-  matches.resize(std::min(N, database_vectors_.size()));
+  matches.resize(std::min(N, database_.size()));
   std::copy(bestN(acc).begin(), bestN(acc).end(), matches.begin());
-}
-
-DocId Database::findAndInsert(const std::vector<Word>& document, size_t N, std::vector<Match>& matches)
-{
-  /// @todo Can this be accelerated? Could iterate over words only once?
-  find(document, N, matches);
-  return insert(document);
 }
 
 /**
@@ -140,7 +132,7 @@ DocId Database::findAndInsert(const std::vector<Word>& document, size_t N, std::
  */
 void Database::computeTfIdfWeights(float default_weight)
 {
-  float N = (float) database_vectors_.size();
+  float N = (float) database_.size();
   size_t num_words = word_files_.size();
   for(size_t i = 0; i < num_words; ++i)
   {
@@ -263,7 +255,7 @@ float Database::sparseDistance(const DocumentVector& v1, const DocumentVector& v
  */
 size_t Database::size() const
 {
-  return database_vectors_.size();
+  return database_.size();
 }
 
 } //namespace voctree

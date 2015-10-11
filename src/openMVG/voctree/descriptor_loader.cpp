@@ -45,7 +45,7 @@ void getInfoBinFile(const std::string &path, int dim, size_t &numDescriptors, in
   }
 }
 
-void getListOfDescriptorFiles(const std::string &fileFullPath, std::vector<std::string> &descriptorsFiles)
+void getListOfDescriptorFiles(const std::string &fileFullPath, std::map<IndexT, std::string> &descriptorsFiles)
 {
   namespace bfs = boost::filesystem;
   std::ifstream fs;
@@ -70,44 +70,7 @@ void getListOfDescriptorFiles(const std::string &fileFullPath, std::vector<std::
   // it is a JSON file from OpenMVG
   // in the two cases we fill a vector with paths to the descriptors files
 
-  // if it is a JSON file
-  if(ext == ".json")
-  {
-    // processing a JSON file containing sfm_data
-
-    // open the sfm_data file
-    openMVG::sfm::SfM_Data sfmdata;
-    openMVG::sfm::Load(sfmdata, fileFullPath, openMVG::sfm::ESfM_Data::VIEWS);
-
-    // get the number of files to load
-    size_t numberOfFiles = sfmdata.GetViews().size();
-
-    if(numberOfFiles == 0)
-    {
-      std::cout << "It seems like there are no views in " << fileFullPath << std::endl;
-      return;
-    }
-
-    // Reserve memory for the file path vector
-    descriptorsFiles.reserve(numberOfFiles);
-
-    // get the base path for the files
-    pathToFiles = bfs::path(fileFullPath).parent_path();
-
-    // explore the sfm_data container to get the files path
-    for(const auto &view : sfmdata.GetViews())
-    {
-      // get just the image name, remove the extension
-      std::string filepath = bfs::path(view.second->s_Img_path).stem().string();
-
-      // generate the equivalent .desc file path
-      filepath = bfs::path(pathToFiles / (filepath + ".desc")).string();
-
-      // add the filepath in the vector
-      descriptorsFiles.push_back(filepath);
-    }
-  }
-  else if(ext == ".txt")
+  if(ext == ".txt")
   {
     // processing a file .txt containing the relative paths
 
@@ -124,6 +87,7 @@ void getListOfDescriptorFiles(const std::string &fileFullPath, std::vector<std::
 
     // read the file line by line and store in the vector the descriptors paths
     std::string line;
+    IndexT viewId = 0;
     while(getline(fs, line))
     {
       // extract the filename without extension and create on with .desc as extension
@@ -131,14 +95,41 @@ void getListOfDescriptorFiles(const std::string &fileFullPath, std::vector<std::
       const std::string filepath = (pathToFiles / filename).string();
 
       // add the filepath in the vector
-      descriptorsFiles.push_back(filepath);
+      descriptorsFiles[viewId++] = filepath;
     }
   }
   else
   {
-    std::cerr << "File not recognized! " << fileFullPath << std::endl;
-    std::cerr << "The file  " + fileFullPath + " is neither a JSON nor a txt file" << std::endl;
-    throw std::invalid_argument("Unrecognized file format " + fileFullPath);
+    // processing a JSON file containing sfm_data
+
+    // open the sfm_data file
+    openMVG::sfm::SfM_Data sfmdata;
+    openMVG::sfm::Load(sfmdata, fileFullPath, openMVG::sfm::ESfM_Data::VIEWS);
+
+    // get the number of files to load
+    size_t numberOfFiles = sfmdata.GetViews().size();
+
+    if(numberOfFiles == 0)
+    {
+      std::cout << "It seems like there are no views in " << fileFullPath << std::endl;
+      return;
+    }
+
+    // get the base path for the files
+    pathToFiles = bfs::path(fileFullPath).parent_path();
+
+    // explore the sfm_data container to get the files path
+    for(const auto &view : sfmdata.GetViews())
+    {
+      // get just the image name, remove the extension
+      std::string filepath = bfs::path(view.second->s_Img_path).stem().string();
+
+      // generate the equivalent .desc file path
+      filepath = bfs::path(pathToFiles / (filepath + ".desc")).string();
+
+      // add the filepath in the vector
+      descriptorsFiles[view.first] = filepath;
+    }
   }
 }
 

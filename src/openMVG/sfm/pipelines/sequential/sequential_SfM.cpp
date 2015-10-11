@@ -544,9 +544,14 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
   const View * view_J = _sfm_data.GetViews().at(J).get();
   const Intrinsics::const_iterator iterIntrinsic_J = _sfm_data.GetIntrinsics().find(view_J->id_intrinsic);
 
+  std::cout << "Initial pair is:\n"
+          << "  A - Id: " << I << " - " << " filepath: " << view_I->s_Img_path << "\n"
+          << "  B - Id: " << J << " - " << " filepath: " << view_J->s_Img_path << std::endl;
+
   if (iterIntrinsic_I == _sfm_data.GetIntrinsics().end() ||
       iterIntrinsic_J == _sfm_data.GetIntrinsics().end() )
   {
+    std::cout << "Can't find initial image pair intrinsics." << std::endl;
     return false;
   }
 
@@ -554,6 +559,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
   const Pinhole_Intrinsic * cam_J = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_J->second.get());
   if (cam_I == NULL || cam_J == NULL)
   {
+    std::cout << "Can't find initial image pair intrinsics (NULL ptr)." << std::endl;
     return false;
   }
 
@@ -580,6 +586,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
     feat = _features_provider->feats_per_view[J][j].coords().cast<double>();
     xJ.col(cptIndex) = cam_J->get_ud_pixel(feat);
   }
+  std::cout << n << " matches in the image pair for the initial pose estimation." << std::endl;
 
   // c. Robust estimation of the relative pose
   RelativePose_Info relativePose_info;

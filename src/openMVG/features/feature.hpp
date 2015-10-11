@@ -126,14 +126,15 @@ static bool loadFeatsFromFile(
   FeaturesT & vec_feat)
 {
   vec_feat.clear();
-  bool bOk = false;
 
   std::ifstream fileIn(sfileNameFeats.c_str());
+  if(!fileIn.is_open())
+    return false;
   std::copy(
     std::istream_iterator<typename FeaturesT::value_type >(fileIn),
     std::istream_iterator<typename FeaturesT::value_type >(),
     std::back_inserter(vec_feat));
-  bOk = !fileIn.bad();
+  bool bOk = !fileIn.bad();
   fileIn.close();
   return bOk;
 }

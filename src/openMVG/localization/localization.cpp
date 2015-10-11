@@ -28,7 +28,7 @@ std::ostream& operator<<( std::ostream& os, const voctree::Document &doc )
   os << "[ ";
   for( const voctree::Word &w : doc )
   {
-          os << w << ", ";
+    os << w << ", ";
   }
   os << "];\n";
   return os;
@@ -264,8 +264,7 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
     }
     
     std::vector<voctree::Word> words = _voctree.quantize(currRecoRegions._regions.Descriptors());
-    voctree::DocId docId = _database.insert(words);
-    _mapDocIdToView[docId] = id_view;
+    _database.insert(id_view, words);
 
     // Filter descriptors to keep only the 3D reconstructed points
     currRecoRegions.filterRegions(observationsPerView[id_view]);
@@ -313,7 +312,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
   for(const voctree::Match & currMatch : matchedImages )
   {
     // get the corresponding index of the view
-    const IndexT matchedViewIndex = _mapDocIdToView[currMatch.id];
+    const IndexT matchedViewIndex = currMatch.id;
     // get the view handle
     const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
     POPART_COUT( "[database]\t\t match " << matchedView->s_Img_path 
@@ -341,7 +340,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
     const size_t minNum3DPoints = 5;
     
     // the view index of the current matched image
-    const IndexT matchedViewIndex = _mapDocIdToView[matchedImage.id];
+    const IndexT matchedViewIndex = matchedImage.id;
     // the handler to the current view
     const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
     
@@ -526,14 +525,12 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   // for each similar image found print score and number of features
   for(const voctree::Match & currMatch : matchedImages )
   {
-    // get the corresponding index of the view
-    const IndexT matchedViewIndex = _mapDocIdToView[currMatch.id];
     // get the view handle
-    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
+    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[currMatch.id];
     POPART_COUT( "[database]\t\t match " << matchedView->s_Img_path 
             << " [docid: "<< currMatch.id << "]"
             << " with score " << currMatch.score 
-            << " and it has "  << _regions_per_view[matchedViewIndex]._regions.RegionCount() 
+            << " and it has "  << _regions_per_view[currMatch.id]._regions.RegionCount() 
             << " features with 3D points");
   }
 
@@ -553,15 +550,15 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
     // minimum number of points that allows a reliable 3D reconstruction
     const size_t minNum3DPoints = 5;
     
-    // the view index of the current matched image
-    const IndexT matchedViewIndex = _mapDocIdToView[matchedImage.id];
     // the handler to the current view
-    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
+    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedImage.id];
+    // its associated reconstructed regions
+    const Reconstructed_RegionsT& matchedRegions = _regions_per_view[matchedImage.id];
     
     // safeguard: we should match the query image with an image that has at least
     // some 3D points visible --> if this is not true it is likely that it is an
     // image of the dataset that was not reconstructed
-    if(_regions_per_view[matchedViewIndex]._regions.RegionCount() < minNum3DPoints)
+    if(matchedRegions._regions.RegionCount() < minNum3DPoints)
     {
       POPART_COUT("[matching]\tSkipping matching with " << matchedView->s_Img_path << " as it has too few visible 3D points");
       continue;
@@ -571,8 +568,6 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
       POPART_COUT("[matching]\tTrying to match the query image with " << matchedView->s_Img_path);
     }
     
-    // its associated reconstructed regions
-    const Reconstructed_RegionsT& matchedRegions = _regions_per_view[matchedViewIndex];
     // its associated intrinsics
     // this is just ugly!
     const cameras::IntrinsicBase *matchedIntrinsicsBase = _sfm_data.intrinsics[matchedView->id_intrinsic].get();

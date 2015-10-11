@@ -208,12 +208,11 @@ int main(int argc, char** argv)
   // Read the descriptors and populate the database
   //*********************************************************
 
-  std::vector<size_t> featRead;
   POPART_COUT("Reading descriptors from " << keylist);
   DocumentMap documents;
 
   auto detect_start = std::chrono::steady_clock::now();
-  size_t numTotFeatures = openMVG::voctree::populateDatabase(keylist, tree, db, documents, featRead);
+  size_t numTotFeatures = openMVG::voctree::populateDatabase(keylist, tree, db, documents);
   auto detect_end = std::chrono::steady_clock::now();
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
 

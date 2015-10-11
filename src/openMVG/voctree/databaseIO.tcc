@@ -27,18 +27,15 @@ template<class DescriptorT>
 std::size_t populateDatabase(const std::string &fileFullPath,
                              const VocabularyTree<DescriptorT> &tree,
                              Database &db,
-                             std::map<size_t, Document> &documents,
-                             std::vector<size_t> &numFeatures)
-{ 
-  std::vector<std::string> descriptorsFiles;
+                             std::map<size_t, Document> &documents)
+{
+  std::map<IndexT, std::string> descriptorsFiles;
   getListOfDescriptorFiles(fileFullPath, descriptorsFiles);
   std::size_t numDescriptors = 0;
   
   // Read the descriptors
   std::cout << "Reading the descriptors from " << descriptorsFiles.size() <<" files..." << std::endl;
   boost::progress_display display(descriptorsFiles.size());
-  size_t docId = 0;
-  numFeatures.resize(descriptorsFiles.size());
 
   // Run through the path vector and read the descriptors
   for(const auto &currentFile : descriptorsFiles)
@@ -46,24 +43,20 @@ std::size_t populateDatabase(const std::string &fileFullPath,
     std::vector<DescriptorT> descriptors;
 
     // Read the descriptors
-    loadDescsFromBinFile(currentFile, descriptors, false);
+    loadDescsFromBinFile(currentFile.second, descriptors, false);
     size_t result = descriptors.size();
     
     std::vector<openMVG::voctree::Word> imgVisualWords = tree.quantize(descriptors);
 
     // Add the vector to the documents
-    documents[docId] = imgVisualWords;
+    documents[currentFile.first] = imgVisualWords;
 
     // Insert document in database
-    db.insert(imgVisualWords);
+    db.insert(currentFile.first, imgVisualWords);
 
     // Update the overall counter
     numDescriptors += result;
-
-    // Save the number of features of this image
-    numFeatures[docId] = result;
     
-    ++docId;
     ++display;
   }
 
@@ -90,14 +83,13 @@ void queryDatabase(const std::string &fileFullPath,
                    size_t numResults,
                    std::vector<openMVG::voctree::Matches> &allMatches,
                    std::map<size_t, openMVG::voctree::Document> &documents)
-{  
-  std::vector<std::string> descriptorsFiles;
+{
+  std::map<IndexT, std::string> descriptorsFiles;
   getListOfDescriptorFiles(fileFullPath, descriptorsFiles);
   
   // Read the descriptors
-  std::cout << "Reading the descriptors from " << descriptorsFiles.size() <<" files..." << std::endl;
+  std::cout << "Reading the descriptors from " << descriptorsFiles.size() << " files..." << std::endl;
   boost::progress_display display(descriptorsFiles.size());
-  size_t docId = 0;
 
   // Run through the path vector and read the descriptors
   for(const auto &currentFile : descriptorsFiles)
@@ -106,13 +98,13 @@ void queryDatabase(const std::string &fileFullPath,
     openMVG::voctree::Matches matches;
 
     // Read the descriptors
-    loadDescsFromBinFile(currentFile, descriptors, false);
+    loadDescsFromBinFile(currentFile.second, descriptors, false);
     
     // quantize the descriptors
     std::vector<openMVG::voctree::Word> imgVisualWords = tree.quantize(descriptors);
 
     // add the vector to the documents
-    documents[docId] = imgVisualWords;
+    documents[currentFile.first] = imgVisualWords;
 
     // query the database
     db.find(imgVisualWords, numResults, matches);
@@ -121,7 +113,6 @@ void queryDatabase(const std::string &fileFullPath,
     allMatches.emplace_back(matches);
     
     ++display;
-    ++docId;
   }
 
 }

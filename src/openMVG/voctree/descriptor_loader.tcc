@@ -14,7 +14,7 @@ template<class DescriptorT>
 size_t readDescFromFiles(const std::string &fileFullPath, std::vector<DescriptorT>& descriptors, std::vector<size_t> &numFeatures)
 {
   namespace bfs = boost::filesystem;
-  std::vector<std::string> descriptorsFiles;
+  std::map<IndexT, std::string> descriptorsFiles;
   getListOfDescriptorFiles(fileFullPath, descriptorsFiles);
   std::size_t numDescriptors = 0;
 
@@ -33,12 +33,12 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
     // bytesPerElement could be 0 even after the first element (eg it has 0 descriptors...), so do it until we get the correct info
     if(bytesPerElement == 0)
     {
-      getInfoBinFile(currentFile, DescriptorT::static_size, numDescriptors, bytesPerElement);
+      getInfoBinFile(currentFile.second, DescriptorT::static_size, numDescriptors, bytesPerElement);
     }
     else
     {
       // get the file size in byte and estimate the number of features without opening the file
-      numDescriptors += (bfs::file_size(currentFile) / bytesPerElement) / DescriptorT::static_size;
+      numDescriptors += (bfs::file_size(currentFile.second) / bytesPerElement) / DescriptorT::static_size;
     }
     ++display;
   }
@@ -58,7 +58,7 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
   for(const auto &currentFile : descriptorsFiles)
   {
     // Read the descriptors and append them in the vector
-    loadDescsFromBinFile(currentFile, descriptors, true);
+    loadDescsFromBinFile(currentFile.second, descriptors, true);
     size_t result = descriptors.size();
 
     // Add the number of descriptors from this file

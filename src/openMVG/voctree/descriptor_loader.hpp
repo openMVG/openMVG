@@ -2,9 +2,11 @@
 
 #include "database.hpp"
 #include "vocabulary_tree.hpp"
+#include <openMVG/types.hpp>
 #include <openMVG/features/descriptor.hpp>
 
 #include <string>
+
 
 namespace openMVG {
 namespace voctree {
@@ -42,7 +44,7 @@ void getInfoBinFile(const std::string &path, int dim, size_t &numDescriptors, in
  * @param[in] listFile The input filename containing the list of files to read
  * @param[out] descriptorsFiles A list of descriptor files 
  */
-void getListOfDescriptorFiles(const std::string &listFile, std::vector<std::string> &descriptorsFiles);
+void getListOfDescriptorFiles(const std::string &fileFullPath, std::map<IndexT, std::string> &descriptorsFiles);
 
 /**
  * @brief Read a set of descriptors from a file containing the path to the descriptor files.

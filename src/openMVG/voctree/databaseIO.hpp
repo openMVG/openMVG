@@ -25,8 +25,7 @@ template<class DescriptorT>
 std::size_t populateDatabase(const std::string &fileFullPath,
                              const VocabularyTree<DescriptorT> &tree,
                              Database &db,
-                             std::map<size_t, Document> &documents,
-                             std::vector<size_t> &numFeatures);
+                             std::map<size_t, Document> &documents);
 /**
  * @brief Given an non empty database, it queries the database with a set of images
  * and their associated features and returns, for each image, the first \p numResults best
@@ -41,11 +40,11 @@ std::size_t populateDatabase(const std::string &fileFullPath,
  */
 template<class DescriptorT>
 void queryDatabase(const std::string &fileFullPath,
-                   const openMVG::voctree::VocabularyTree<DescriptorT> &tree,
-                   const openMVG::voctree::Database &db,
+                   const VocabularyTree<DescriptorT> &tree,
+                   const Database &db,
                    size_t numResults,
-                   std::vector<openMVG::voctree::Matches> &allMatches,
-                   std::map<size_t, openMVG::voctree::Document> &documents);
+                   std::vector<Matches> &allMatches,
+                   std::map<size_t, Document> &documents);
 
 /**
  * @brief Given an non empty database, it queries the database with a set of images

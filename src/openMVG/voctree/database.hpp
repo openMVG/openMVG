@@ -58,10 +58,11 @@ public:
   /**
    * @brief Insert a new document.
    *
+   * @param doc_id Unique ID of the new document to insert
    * @param document The set of quantized words in a document/image.
    * \return An ID representing the inserted document.
    */
-  DocId insert(const std::vector<Word>& document);
+  DocId insert(DocId doc_id, const std::vector<Word>& document);
 
   /**
    * @brief Perform a sanity check of the database by querying each document
@@ -80,17 +81,6 @@ public:
    * @param[out] matches  IDs and scores for the top N matching database documents.
    */
   void find(const std::vector<Word>& document, size_t N, std::vector<Match>& matches) const;
-
-  /**
-   * @brief Find the top N matches, then insert the query document.
-   *
-   * This is equivalent to calling find() followed by insert(), but may be more efficient.
-   *
-   * @param      document The document to match then insert, a set of quantized words.
-   * @param      N        The number of matches to return.
-   * @param[out] matches  IDs and scores for the top N matching database documents.
-   */
-  DocId findAndInsert(const std::vector<Word>& document, size_t N, std::vector<Match>& matches);
 
   /**
    * @brief Compute the TF-IDF weights of all the words. To be called after inserting a corpus of
@@ -120,7 +110,7 @@ public:
   template<class Archive>
   void serialize(Archive & archive)
   {
-    archive(word_files_, word_weights_, database_vectors_);
+    archive(word_files_, word_weights_, database_);
   }
 
 private:
@@ -157,7 +147,7 @@ private:
 
   std::vector<InvertedFile> word_files_;
   std::vector<float> word_weights_;
-  std::vector<DocumentVector> database_vectors_; // Precomputed for inserted documents
+  std::map<DocId, DocumentVector> database_; // Precomputed for inserted documents
 
   /**
    * Given a list of visual words associated to the features of a document it computes the 
