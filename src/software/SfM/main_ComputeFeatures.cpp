@@ -29,21 +29,6 @@ using namespace openMVG::features;
 using namespace openMVG::sfm;
 using namespace std;
 
-features::EDESCRIBER_PRESET stringToEnum(const std::string & sPreset)
-{
-  features::EDESCRIBER_PRESET preset;
-  if(sPreset == "NORMAL")
-    preset = features::NORMAL_PRESET;
-  else
-  if (sPreset == "HIGH")
-    preset = features::HIGH_PRESET;
-  else
-  if (sPreset == "ULTRA")
-    preset = features::ULTRA_PRESET;
-  else
-    preset = features::EDESCRIBER_PRESET(-1);
-  return preset;
-}
 
 /// - Compute view image description (feature & descriptor extraction)
 /// - Export computed data
@@ -57,6 +42,8 @@ int main(int argc, char **argv)
   std::string sImage_Describer_Method = "SIFT";
   bool bForce = false;
   std::string sFeaturePreset = "";
+  int rangeStart = -1;
+  int rangeSize = 1;
 
   // required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -66,6 +53,8 @@ int main(int argc, char **argv)
   cmd.add( make_option('u', bUpRight, "upright") );
   cmd.add( make_option('f', bForce, "force") );
   cmd.add( make_option('p', sFeaturePreset, "describerPreset") );
+  cmd.add( make_option('s', rangeStart, "range_start") );
+  cmd.add( make_option('r', rangeSize, "range_size") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -88,6 +77,8 @@ int main(int argc, char **argv)
       << "   NORMAL (default),\n"
       << "   HIGH,\n"
       << "   ULTRA: !!Can take long time!!\n"
+      << "[-s]--range_start] range image index start\n"
+      << "[-r]--range_size] range size\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -101,7 +92,9 @@ int main(int argc, char **argv)
             << "--describerMethod " << sImage_Describer_Method << std::endl
             << "--upright " << bUpRight << std::endl
             << "--describerPreset " << (sFeaturePreset.empty() ? "NORMAL" : sFeaturePreset) << std::endl
-            << "--force " << bForce << std::endl;
+            << "--force " << bForce << std::endl
+            << "--range_start " << rangeStart << std::endl
+            << "--range_size " << rangeSize << std::endl;
 
 
   if (sOutDir.empty())  {
@@ -189,7 +182,7 @@ int main(int argc, char **argv)
     else
     {
       if (!sFeaturePreset.empty())
-      if (!image_describer->Set_configuration_preset(stringToEnum(sFeaturePreset)))
+      if (!image_describer->Set_configuration_preset(sFeaturePreset))
       {
         std::cerr << "Preset configuration failed." << std::endl;
         return EXIT_FAILURE;
@@ -217,13 +210,37 @@ int main(int argc, char **argv)
   // - if no file, compute features
   {
     system::Timer timer;
-    Image<unsigned char> imageGray;
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
-    for(Views::const_iterator iterViews = sfm_data.views.begin();
-        iterViews != sfm_data.views.end();
-        ++iterViews, ++my_progress_bar)
+
+    Views::const_iterator iterViews = sfm_data.views.begin();
+    Views::const_iterator iterViewsEnd = sfm_data.views.end();
+    if(rangeStart != -1)
     {
+      if(rangeStart < 0 || rangeStart > sfm_data.views.size())
+      {
+        std::cerr << "Bad specific index" << std::endl;
+        return EXIT_FAILURE;
+      }
+      if(rangeSize < 0 || rangeSize > sfm_data.views.size())
+      {
+        std::cerr << "Bad range size. " << std::endl;
+        return EXIT_FAILURE;
+      }
+      if(rangeStart + rangeSize > sfm_data.views.size())
+        rangeSize = sfm_data.views.size() - rangeStart;
+
+      std::advance(iterViews, rangeStart);
+      iterViewsEnd = iterViews;
+      std::advance(iterViewsEnd, rangeSize);
+    }
+
+    Image<unsigned char> imageGray;
+    for(;
+      iterViews != iterViewsEnd;
+      ++iterViews, ++my_progress_bar)
+    {
+
       const View * view = iterViews->second.get();
       const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
         view->s_Img_path);
@@ -239,6 +256,7 @@ int main(int argc, char **argv)
           continue;
 
         // Compute features and descriptors and export them to files
+        std::cout << "Extracting features from image " << view->id_view << std::endl;
         std::unique_ptr<Regions> regions;
         image_describer->Describe(imageGray, regions);
         image_describer->Save(regions.get(), sFeat, sDesc);

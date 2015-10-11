@@ -95,12 +95,13 @@ static ErrorIndex bestNFA(
 {
   ErrorIndex bestIndex(std::numeric_limits<double>::infinity(), startIndex);
   const size_t n = e.size();
-  for(size_t k=startIndex+1; k<=n && e[k-1].first<=maxThreshold; ++k) {
-    double logalpha = logalpha0 + multError * log10(e[k-1].first + std::numeric_limits<float>::min());
+  for(size_t k = startIndex + 1; k <= n && e[k - 1].first <= maxThreshold; ++k)
+  {
+    double logalpha = logalpha0 + multError * log10(e[k - 1].first + std::numeric_limits<float>::min());
     ErrorIndex index(loge0 +
-      logalpha * (double)(k-startIndex) +
-      logc_n[k] +
-      logc_k[k], k);
+                     logalpha * (double) (k - startIndex) +
+                     logc_n[k] +
+                     logc_k[k], k);
 
     if(index.first < bestIndex.first)
       bestIndex = index;
@@ -176,7 +177,8 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
   nIter -= nIterReserve;
 
   // Main estimation loop.
-  for (size_t iter=0; iter < nIter; ++iter) {
+  for (size_t iter=0; iter < nIter; ++iter)
+  {
     UniformSample(sizeSample, vec_index, &vec_sample); // Get random sample
 
     std::vector<typename Kernel::Model> vec_models; // Up to max_models solutions
@@ -184,10 +186,12 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
 
     // Evaluate models
     bool better = false;
-    for (size_t k = 0; k < vec_models.size(); ++k)  {
+    for (size_t k = 0; k < vec_models.size(); ++k)
+    {
       // Residuals computation and ordering
       kernel.Errors(vec_models[k], vec_residuals_);
-      for (size_t i = 0; i < nData; ++i)  {
+      for (size_t i = 0; i < nData; ++i)
+      {
         const double error = vec_residuals_[i];
         vec_residuals[i] = ErrorIndex(error, i);
       }
@@ -204,7 +208,8 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
         vec_logc_k,
         kernel.multError());
 
-      if (best.first < minNFA /*&& vec_residuals[best.second-1].first < errorMax*/)  {
+      if (best.first < minNFA /*&& vec_residuals[best.second-1].first < errorMax*/)
+      {
         // A better model was found
         better = true;
         minNFA = best.first;
@@ -214,7 +219,8 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
         errorMax = vec_residuals[best.second-1].first; // Error threshold
         if(model) *model = vec_models[k];
 
-        if(bVerbose)  {
+        if(bVerbose)
+        {
           std::cout << "  nfa=" << minNFA
             << " inliers=" << best.second << "/" << nData
             << " precisionNormalized=" << errorMax
@@ -229,16 +235,21 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
     }
 
     // ACRANSAC optimization: draw samples among best set of inliers so far
-    if((better && minNFA<0) || (iter+1==nIter && nIterReserve)) {
-      if(vec_inliers.empty()) { // No model found at all so far
+    if((better && minNFA<0) || (iter+1==nIter && nIterReserve))
+    {
+      if(vec_inliers.empty())
+      { // No model found at all so far
         nIter++; // Continue to look for any model, even not meaningful
         nIterReserve--;
-      } else {
+      }
+      else
+      {
         // ACRANSAC optimization: draw samples among best set of inliers so far
         vec_index = vec_inliers;
-        if(nIterReserve) {
-            nIter = iter+1+nIterReserve;
-            nIterReserve=0;
+        if(nIterReserve)
+        {
+          nIter = iter + 1 + nIterReserve;
+          nIterReserve = 0;
         }
       }
     }

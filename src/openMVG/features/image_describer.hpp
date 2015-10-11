@@ -19,10 +19,29 @@ namespace features {
 
 enum EDESCRIBER_PRESET
 {
+  LOW_PRESET = 0,
+  MEDIUM_PRESET,
   NORMAL_PRESET,
   HIGH_PRESET,
   ULTRA_PRESET
 };
+
+inline EDESCRIBER_PRESET describerPreset_stringToEnum(const std::string& sPreset)
+{
+  if(sPreset == "LOW")
+    return LOW_PRESET;
+  if (sPreset == "MEDIUM")
+    return MEDIUM_PRESET;
+  if(sPreset == "NORMAL")
+    return NORMAL_PRESET;
+  if (sPreset == "HIGH")
+    return HIGH_PRESET;
+  if (sPreset == "ULTRA")
+    return ULTRA_PRESET;
+  return NORMAL_PRESET;
+}
+
+
 /// A pure virtual class for image description computation
 class Image_describer
 {
@@ -36,6 +55,11 @@ public:
   @return True if configuration succeed.
   */
   virtual bool Set_configuration_preset(EDESCRIBER_PRESET preset) = 0;
+
+  bool Set_configuration_preset(const std::string& preset)
+  {
+    return Set_configuration_preset(describerPreset_stringToEnum(preset));
+  }
 
   /**
   @brief Detect regions on the image and compute their attributes (description)

@@ -37,6 +37,59 @@ static bool PairedIndMatchToStream(
   return os.good();
 }
 
+static void ExportPairedIndMatchFile(
+  const PairWiseMatches & map_indexedMatches,
+  const std::string & filepath)
+{
+  std::ofstream file(filepath.c_str());
+  file.open(filepath.c_str());
+  if (!file.is_open())
+    throw std::runtime_error(std::string("Unable to open file: ") + filepath);
+
+  if (file.is_open())
+    PairedIndMatchToStream(map_indexedMatches, file);
+
+  file.close();
+}
+
+/// Export matches file per image
+static void ExportPairedIndMatchFilePerImage(
+  const PairWiseMatches & map_indexedMatches,
+  const std::string & directory,
+  const std::string & baseFilename)
+{
+  if(map_indexedMatches.empty())
+  {
+    std::cerr << "No match to export." << std::endl;
+    return;
+  }
+  size_t previousI = map_indexedMatches.begin()->first.first + 1;
+
+  std::ofstream file;
+  for (PairWiseMatches::const_iterator iter = map_indexedMatches.begin();
+      iter != map_indexedMatches.end();
+      ++iter)
+  {
+    const size_t I = iter->first.first;
+    const size_t J = iter->first.second;
+    if( previousI != I )
+    {
+      previousI = I;
+      file.close();
+      const std::string filepath = directory + "/" + std::to_string(I) + "." + baseFilename;
+      std::cout << "Export Matches in " << filepath << std::endl;
+      file.open(filepath.c_str());
+      if (!file.is_open())
+        throw std::runtime_error(std::string("Unable to open file: ") + filepath);
+    }
+    const std::vector<IndMatch> & vec_matches = iter->second;
+    file << I << " " << J << '\n' << vec_matches.size() << '\n';
+    copy(vec_matches.begin(), vec_matches.end(),
+         std::ostream_iterator<IndMatch>(file, "\n"));
+  }
+  file.close();
+}
+
 /// Import vector of IndMatch from a file
 static bool PairedIndMatchImport(
   const std::string & fileName,
@@ -48,8 +101,6 @@ static bool PairedIndMatchImport(
       << "with : " << fileName << std::endl;
     return false;
   }
-  
-  map_indexedMatches.clear();
 
   size_t I, J, number;
   while (in >> I >> J >> number)  {

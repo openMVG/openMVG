@@ -63,18 +63,18 @@ public:
    * @param[in] useInputIntrinsics Uses the \p queryIntrinsics as known calibration
    * @param[in] refineIntrinsics Refine the intrinsic parameters after resection
    * @param[in] algorithm Algorithm to use
-   * @param[out] resection_data [optional] the 2D-3D correspondances used to compute the pose
+   * @param[out] resection_data the 2D-3D correspondences used to compute the pose
    * @return true if the localization is successful
    */
   bool localize( const image::Image<unsigned char> & imageGray,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
-                const size_t numResults,
+                size_t numResults,
                 geometry::Pose3 & pose,
                 bool useGuidedMatching,
                 bool useInputIntrinsics,
                 bool refineIntrinsics,
                 Algorithm algorithm,
-                sfm::Image_Localizer_Match_Data * resection_data = nullptr);
+                sfm::Image_Localizer_Match_Data &resection_data);
 
   /**
    * @brief Try to localize an image in the database: it queries the database to 
@@ -90,17 +90,17 @@ public:
    * matrix 
    * @param[in] useInputIntrinsics Uses the \p queryIntrinsics as known calibration
    * @param[in] refineIntrinsics Refine the intrinsic parameters after resection
-   * @param[out] resection_data [optional] the 2D-3D correspondances used to compute the pose
+   * @param[out] resection_data the 2D-3D correspondances used to compute the pose
    * @return true if the localization is successful
    */
   bool localizeFirstBestResult( const image::Image<unsigned char> & imageGray,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
-                const size_t numResults,
+                size_t numResults,
                 geometry::Pose3 & pose,
                 bool useGuidedMatching,
                 bool useInputIntrinsics,
                 bool refineIntrinsics,
-                sfm::Image_Localizer_Match_Data * resection_data = nullptr);
+                sfm::Image_Localizer_Match_Data &resection_data);
 
   /**
    * @brief Try to localize an image in the database: it queries the database to 
@@ -117,17 +117,17 @@ public:
    * matrix 
    * @param[in] useInputIntrinsics Uses the \p queryIntrinsics as known calibration
    * @param[in] refineIntrinsics Refine the intrinsic parameters after resection
-   * @param[out] resection_data [optional] the 2D-3D correspondences used to compute the pose
+   * @param[out] resection_data the 2D-3D correspondences used to compute the pose
    * @return true if the localization is successful
    */
   bool localizeAllResults( const image::Image<unsigned char> & imageGray,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
-                const size_t numResults,
+                size_t numResults,
                 geometry::Pose3 & pose,
                 bool useGuidedMatching,
                 bool useInputIntrinsics,
                 bool refineIntrinsics,
-                sfm::Image_Localizer_Match_Data * resection_data = nullptr);
+                sfm::Image_Localizer_Match_Data &resection_data);
   
   const sfm::SfM_Data& getSfMData() const {return _sfm_data; }
 

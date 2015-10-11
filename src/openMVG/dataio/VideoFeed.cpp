@@ -33,11 +33,13 @@ public:
   
   bool next(image::Image<unsigned char> &imageGray,
                      cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
+                     std::string &mediaPath,
                      bool &hasIntrinsics);
   
 private:
   bool _isInit;
   bool _withIntrinsics;
+  std::string _videoPath;
   cv::VideoCapture _videoCapture;
   cameras::Pinhole_Intrinsic_Radial_K3 _camIntrinsics;
   
@@ -45,7 +47,7 @@ private:
 
 
 VideoFeed::FeederImpl::FeederImpl(const std::string &videoPath, const std::string &calibPath)
-: _isInit(false), _withIntrinsics(false)
+: _isInit(false), _withIntrinsics(false), _videoPath(videoPath)
 {
     // load the video
   _videoCapture.open(videoPath);
@@ -67,6 +69,7 @@ VideoFeed::FeederImpl::FeederImpl(const std::string &videoPath, const std::strin
 
 bool VideoFeed::FeederImpl::next(image::Image<unsigned char> &imageGray,
                    cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
+                   std::string &mediaPath,
                    bool &hasIntrinsics)
 {
   cv::Mat frame;
@@ -96,6 +99,7 @@ bool VideoFeed::FeederImpl::next(image::Image<unsigned char> &imageGray,
   if(_withIntrinsics)
     camIntrinsics = _camIntrinsics;
 
+  mediaPath = _videoPath;
   return true;
 }
 
@@ -113,9 +117,10 @@ VideoFeed::VideoFeed(const std::string &videoPath, const std::string &calibPath)
 
 bool VideoFeed::next(image::Image<unsigned char> &imageGray,
                      cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
+                     std::string &mediaPath,
                      bool &hasIntrinsics)
 {
-  return(_feeder->next(imageGray, camIntrinsics, hasIntrinsics));
+  return(_feeder->next(imageGray, camIntrinsics, mediaPath, hasIntrinsics));
 }
 
 bool VideoFeed::isInit() const {return(_feeder->isInit()); }

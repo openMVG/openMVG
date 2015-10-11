@@ -27,20 +27,23 @@ Failure::Failure (const SimpleString&	theTestName,
   fileName (theFileName), 
   lineNumber (theLineNumber)
 {
-	const char *part1 = "expected ";
-	const char *part3 = " but was: ";
+	const char *part1 = "expected \"";
+	const char *part3 = "\" but was: \"";
+	const char *part5 = "\"";
 
 	char *stage = new char [strlen (part1) 
 					+ expected.size () 
 					+ strlen (part3)
 					+ actual.size ()
+					+ strlen (part5)
 					+ 1];
 
-	sprintf(stage, "%s%s%s%s", 
-		part1, 
+	sprintf(stage, "%s%s%s%s%s", 
+		part1,
 		expected.asCharString(), 
-		part3, 
-		actual.asCharString());
+		part3,
+		actual.asCharString(),
+		part5);
 
 	message = SimpleString(stage);
 

@@ -93,6 +93,8 @@ public:
   {
     switch(preset)
     {
+    case LOW_PRESET:
+    case MEDIUM_PRESET:
     case NORMAL_PRESET:
       _params._peak_threshold = 0.04f;
     break;

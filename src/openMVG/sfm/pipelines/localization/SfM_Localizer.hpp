@@ -94,7 +94,7 @@ public:
   (
     cameras::IntrinsicBase * intrinsics,
     geometry::Pose3 & pose,
-    Image_Localizer_Match_Data & matching_data,
+    const Image_Localizer_Match_Data & matching_data,
     bool b_refine_pose,
     bool b_refine_intrinsic
   );
