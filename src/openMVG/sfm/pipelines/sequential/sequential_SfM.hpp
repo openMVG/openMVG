@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/pipelines/sfm_engine.hpp"
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
@@ -67,6 +68,14 @@ public:
   {
     _camType = camType;
   }
+  
+  /**
+   * @brief Extension of the file format to store intermediate reconstruction files.
+   */
+  void setSfmdataInterFileExtension(const std::string& interFileExtension)
+  {
+    _sfmdataInterFileExtension = interFileExtension;
+  }
 
 protected:
 
@@ -97,6 +106,10 @@ private:
   // HTML logger
   std::shared_ptr<htmlDocument::htmlDocumentStream> _htmlDocStream;
   std::string _sLoggingFile;
+
+  // Extension of the file format to store intermediate reconstruction files.
+  std::string _sfmdataInterFileExtension = ".ply";
+  ESfM_Data _sfmdataInterFilter = ESfM_Data(VIEWS | EXTRINSICS | INTRINSICS | STRUCTURE);
 
   // Parameter
   Pair _initialpair;

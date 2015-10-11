@@ -55,6 +55,7 @@ SequentialSfMReconstructionEngine::SequentialSfMReconstructionEngine(
     _htmlDocStream->pushInfo( "Views count: " +
       htmlDocument::toString( sfm_data.GetViews().size()) + "<br>");
   }
+
   // Init remaining image list
   for (Views::const_iterator itV = sfm_data.GetViews().begin();
     itV != sfm_data.GetViews().end(); ++itV)
@@ -124,7 +125,7 @@ void SequentialSfMReconstructionEngine::RobustResectionOfImages(
       // Scene logging as ply for visual debug
       std::ostringstream os;
       os << std::setw(8) << std::setfill('0') << resectionGroupIndex << "_Resection";
-      Save(_sfm_data, stlplus::create_filespec(_sOutDirectory, os.str(), ".ply"), ESfM_Data(ALL));
+      Save(_sfm_data, stlplus::create_filespec(_sOutDirectory, os.str(), _sfmdataInterFileExtension), _sfmdataInterFilter);
 
       // std::cout << "Global Bundle start, resection group index: " << resectionGroupIndex << ".\n";
       int bundleAdjustmentIteration = 0;
@@ -647,7 +648,8 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
       landmarks[iterT->first].obs = std::move(obs);
       landmarks[iterT->first].X = X;
     }
-    Save(tiny_scene, stlplus::create_filespec(_sOutDirectory, "initialPair.ply"), ESfM_Data(ALL));
+
+    Save(tiny_scene, stlplus::create_filespec(_sOutDirectory, "initialPair", _sfmdataInterFileExtension), _sfmdataInterFilter);
 
     // - refine only Structure and Rotations & translations (keep intrinsic constant)
     Bundle_Adjustment_Ceres::BA_options options(true, false);
