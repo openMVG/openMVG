@@ -105,13 +105,11 @@ bool Load(SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_par
     bStatus = true;
   }
 #endif // HAVE_ALEMBIC
-  else return false;
 
   // Assert that loaded intrinsics | extrinsics are linked to valid view
-  if ( bStatus &&
-    (flags_part & VIEWS) == VIEWS && (
-    (flags_part & INTRINSICS) == INTRINSICS ||
-    (flags_part & EXTRINSICS) == EXTRINSICS))
+  if(bStatus &&
+     (flags_part & VIEWS) &&
+     ((flags_part & INTRINSICS) || (flags_part & EXTRINSICS)))
   {
     return ValidIds(sfm_data, flags_part);
   }
