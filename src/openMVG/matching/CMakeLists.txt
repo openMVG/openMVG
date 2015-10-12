@@ -25,9 +25,9 @@ target_link_libraries(openMVG_matching ${FLANN_LIBRARY})
 set_property(TARGET openMVG_matching PROPERTY FOLDER OpenMVG/OpenMVG)
 install(TARGETS openMVG_matching DESTINATION lib EXPORT openMVG-targets)
 
-UNIT_TEST(openMVG matching "")
-UNIT_TEST(openMVG matching_filters "")
-UNIT_TEST(openMVG indMatch "")
+UNIT_TEST(openMVG matching "stlplus")
+UNIT_TEST(openMVG matching_filters "stlplus")
+UNIT_TEST(openMVG indMatch "stlplus")
 UNIT_TEST(openMVG metric "")
 
 add_subdirectory(kvld)

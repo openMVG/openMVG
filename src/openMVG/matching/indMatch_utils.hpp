@@ -9,6 +9,14 @@
 #define OPENMVG_MATCHING_IND_MATCH_UTILS_H
 
 #include "openMVG/matching/indMatch.hpp"
+
+#include <cereal/archives/portable_binary.hpp>
+#include <cereal/types/map.hpp>
+#include <cereal/types/utility.hpp>
+#include <cereal/types/vector.hpp>
+
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
 #include <map>
 #include <fstream>
 #include <iterator>
@@ -18,48 +26,98 @@
 namespace openMVG {
 namespace matching {
 
-/// Export vector of IndMatch to a stream
-static bool PairedIndMatchToStream(
-  const PairWiseMatches & map_indexedMatches,
-  std::ostream & os)
+static bool Load
+(
+  PairWiseMatches & matches,
+  const std::string & filename
+)
 {
-  for (PairWiseMatches::const_iterator iter = map_indexedMatches.begin();
-    iter != map_indexedMatches.end();
-    ++iter)
+  matches.clear();
+  const std::string ext = stlplus::extension_part(filename);
+  if (ext == "txt")
   {
-    const size_t I = iter->first.first;
-    const size_t J = iter->first.second;
-    const std::vector<IndMatch> & vec_matches = iter->second;
-    os << I << " " << J << '\n' << vec_matches.size() << '\n';
-    copy(vec_matches.begin(), vec_matches.end(),
-         std::ostream_iterator<IndMatch>(os, "\n"));
+    std::ifstream stream(filename.c_str());
+    if (!stream.is_open())
+    {
+      return false;
+    }
+    // Read from the text file
+    // I J
+    // #matches count
+    // idx idx
+    // ...
+    size_t I, J, number;
+    while (stream >> I >> J >> number)  {
+      std::vector<IndMatch> read_matches(number);
+      for (size_t i = 0; i < number; ++i) {
+        stream >> read_matches[i];
+      }
+      matches[std::make_pair(I,J)] = std::move(read_matches);
+    }
+    stream.close();
+    return true;
   }
-  return os.good();
+  else if (ext == "bin")
+  {
+    std::ifstream stream (filename.c_str(), std::ios::in | std::ios::binary);
+    if (stream.is_open())
+    {
+      cereal::PortableBinaryInputArchive archive(stream);
+      archive(matches);
+      stream.close();
+      return true;
+    }
+  }
+  else
+  {
+    std::cerr << "Unknown PairWiseMatches input format: " << ext << std::endl;
+  }
+  return false;
 }
 
-/// Import vector of IndMatch from a file
-static bool PairedIndMatchImport(
-  const std::string & fileName,
-  PairWiseMatches & map_indexedMatches)
+static bool Save
+(
+  const PairWiseMatches & matches,
+  const std::string & filename
+)
 {
-  std::ifstream in(fileName.c_str());
-  if (!in.is_open()) {
-    std::cout << std::endl << "ERROR indexedMatchesUtils::import(...)" << std::endl
-      << "with : " << fileName << std::endl;
-    return false;
-  }
-  
-  map_indexedMatches.clear();
-
-  size_t I, J, number;
-  while (in >> I >> J >> number)  {
-    std::vector<IndMatch> matches(number);
-    for (size_t i = 0; i < number; ++i) {
-      in >> matches[i];
+  const std::string ext = stlplus::extension_part(filename);
+  if (ext == "txt")
+  {
+    std::ofstream stream(filename.c_str());
+    if (!stream.is_open())
+    {
+      return false;
     }
-    map_indexedMatches[std::make_pair(I,J)] = matches;
+    for (PairWiseMatches::const_iterator iter = matches.begin();
+      iter != matches.end(); ++iter)
+    {
+      const size_t I = iter->first.first;
+      const size_t J = iter->first.second;
+      const std::vector<IndMatch> & pair_matches = iter->second;
+      stream << I << " " << J << '\n' << pair_matches.size() << '\n';
+      copy(pair_matches.begin(), pair_matches.end(),
+           std::ostream_iterator<IndMatch>(stream, "\n"));
+    }
+    stream.close();
+    return true;
   }
-  return true;
+  else if (ext == "bin")
+  {
+    std::ofstream stream (filename.c_str(), std::ios::out | std::ios::binary);
+    if (stream.is_open())
+    {
+      cereal::PortableBinaryOutputArchive archive(stream);
+      archive(matches);
+      stream.close();
+      return true;
+    }
+  }
+  else
+  {
+    std::cerr << "Unknown PairWiseMatches output format: " << ext << std::endl;
+  }
+  return false;
 }
 }  // namespace matching
 }  // namespace openMVG

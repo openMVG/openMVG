@@ -99,7 +99,7 @@ int main(int argc, char **argv)
   else
   {
     PairWiseMatches matches;
-    if (!matching::PairedIndMatchImport(sMatchFile, matches)) {
+    if (!matching::Load(matches, sMatchFile)) {
       std::cerr<< "Unable to read the matches file." << std::endl;
       return EXIT_FAILURE;
     }
