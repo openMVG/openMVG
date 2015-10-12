@@ -24,13 +24,38 @@ using namespace openMVG::image;
 using namespace svg;
 using namespace std;
 
+features::EDESCRIBER_PRESET stringToEnum(const std::string & sPreset)
+{
+  features::EDESCRIBER_PRESET preset;
+  if(sPreset == "NORMAL")
+    preset = features::NORMAL_PRESET;
+  else
+  if (sPreset == "HIGH")
+    preset = features::HIGH_PRESET;
+  else
+  if (sPreset == "ULTRA")
+    preset = features::ULTRA_PRESET;
+  else
+    preset = features::EDESCRIBER_PRESET(-1);
+  return preset;
+}
+
 int main(int argc, char **argv) {
 
   // Add options to choose the desired Image_describer
   std::string sImage_describer_type = "SIFT";
+  std::string jpg_filenameL = stlplus::folder_up(string(THIS_SOURCE_DIR))
+    + "/imageData/StanfordMobileVisualSearch/Ace_0.png";
+  std::string jpg_filenameR = stlplus::folder_up(string(THIS_SOURCE_DIR))
+    + "/imageData/StanfordMobileVisualSearch/Ace_1.png";
+  
+  std::string sFeaturePreset = "";
 
   CmdLine cmd;
   cmd.add( make_option('t', sImage_describer_type, "type") );
+  cmd.add( make_option('l', jpg_filenameL, "left") );
+  cmd.add( make_option('r', jpg_filenameR, "right") );
+  cmd.add( make_option('p', sFeaturePreset, "describerPreset") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -38,10 +63,17 @@ int main(int argc, char **argv) {
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "\n[Optional]\n"
+      << "[-l|--left] the left image (default imageData/StanfordMobileVisualSearch/Ace_0.png)"
+      << "[-r|--right] the right image (default imageData/StanfordMobileVisualSearch/Ace_1.png)"
       << "[-t|--type\n"
       << "  (choose an image_describer interface):\n"
       << "   SIFT: SIFT keypoint & descriptor,\n"
       << "   AKAZE: AKAZE keypoint & floating point descriptor]"
+      << "[-p|--describerPreset]\n"
+      << "  (used to control the Image_describer configuration):\n"
+      << "   NORMAL (default),\n"
+      << "   HIGH,\n"
+      << "   ULTRA: !!Can take long time!!\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -49,10 +81,6 @@ int main(int argc, char **argv) {
   }
 
   Image<RGBColor> image;
-  const string jpg_filenameL = stlplus::folder_up(string(THIS_SOURCE_DIR))
-    + "/imageData/StanfordMobileVisualSearch/Ace_0.png";
-  const string jpg_filenameR = stlplus::folder_up(string(THIS_SOURCE_DIR))
-    + "/imageData/StanfordMobileVisualSearch/Ace_1.png";
 
   Image<unsigned char> imageL, imageR;
   ReadImage(jpg_filenameL.c_str(), &imageL);
@@ -72,6 +100,14 @@ int main(int argc, char **argv) {
   {
     std::cerr << "Invalid Image_describer type" << std::endl;
     return EXIT_FAILURE;
+  }
+  if (!sFeaturePreset.empty())
+  {
+    if (!image_describer->Set_configuration_preset(stringToEnum(sFeaturePreset)))
+    {
+      std::cerr << "Preset configuration failed." << std::endl;
+      return EXIT_FAILURE;
+    }
   }
 
   //--
