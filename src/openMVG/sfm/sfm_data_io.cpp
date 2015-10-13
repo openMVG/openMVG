@@ -76,8 +76,8 @@ bool ValidIds(const SfM_Data & sfm_data, ESfM_Data flags_part)
     std::cerr << extrinsicIdsDeclared.size() << " extrinsics declared and " << extrinsicIdsReferenced.size() << " extrinsics used." << std::endl;
     std::set<IndexT> undefinedExtrinsicIds;
     // undefinedExtrinsicIds = extrinsicIdsReferenced - extrinsicIdsDeclared
-    std::set_difference(extrinsicIdsReferenced.begin(), extrinsicIdsReferenced.end(),
-                        extrinsicIdsDeclared.begin(), extrinsicIdsDeclared.end(), 
+    std::set_difference(extrinsicIdsDeclared.begin(), extrinsicIdsDeclared.end(),
+                        extrinsicIdsReferenced.begin(), extrinsicIdsReferenced.end(),
                         std::inserter(undefinedExtrinsicIds, undefinedExtrinsicIds.begin()));
     // If undefinedExtrinsicIds is not empty,
     // some extrinsics are used in Views but never declared.
