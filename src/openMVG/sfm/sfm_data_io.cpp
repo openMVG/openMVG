@@ -136,6 +136,8 @@ bool Save(const SfM_Data & sfm_data, const std::string & filename, ESfM_Data fla
     return true;
   }
 #endif // HAVE_ALEMBIC
+  std::cerr << "ERROR: Cannot save the SfM Data: " << filename << ".\n"
+            << "The file extension is not recognized." << std::endl;
   return false;
 }
 
