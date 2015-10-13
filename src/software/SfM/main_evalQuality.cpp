@@ -67,7 +67,7 @@ int main(int argc, char **argv)
     stlplus::folder_create(sOutDir);
 
   //Setup the camera type and the appropriate camera reader
-  bool (*fcnReadCamPtr)(const std::string &, PinholeCamera &);
+  bool (*fcnReadCamPtr)(const std::string&, Pinhole_Intrinsic&, geometry::Pose3&);
   std::string suffix;
 
   switch (camType)
@@ -107,27 +107,26 @@ int main(int argc, char **argv)
   // Quality evaluation
   //---------------------------------------
 
-  // Load GT camera rotations & positions [R|C]:
-
-  std::map< std::string, std::pair<Mat3, Vec3> > map_Rt_gt;
-  std::map< size_t, PinholeCamera> map_Cam_gt;
+  //-- Load GT camera rotations & positions [R|C]:
+  SfM_Data sfm_data_gt;
   // READ DATA FROM GT
   {
     std::cout << "\nTry to read data from GT";
     std::vector<std::string> vec_fileNames;
-    readGt(fcnReadCamPtr, sGTDirectory, suffix, vec_fileNames, map_Rt_gt, map_Cam_gt);
-    std::cout << map_Cam_gt.size() << " gt cameras have been found" << std::endl;
+    readGt(fcnReadCamPtr, sGTDirectory, suffix, vec_fileNames, sfm_data_gt.poses, sfm_data_gt.intrinsics);
+    std::cout << sfm_data_gt.poses.size() << " gt cameras have been found" << std::endl;
   }
 
   //-- Load the camera that we have to evaluate
   SfM_Data sfm_data;
-  if (!Load(sfm_data, sComputedDirectory, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS))) {
+  if (!Load(sfm_data, sComputedDirectory, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS)))
+  {
     std::cerr << std::endl
       << "The input SfM_Data file \""<< sComputedDirectory << "\" cannot be read." << std::endl;
     return EXIT_FAILURE;
   }
   // Assert that GT and loaded scene have the same camera count
-  if (map_Cam_gt.size() != sfm_data.GetPoses().size())
+  if (sfm_data_gt.poses.size() != sfm_data.GetPoses().size())
   {
     std::cerr << std::endl
       << "There is missing camera in the loaded scene." << std::endl;
@@ -135,19 +134,21 @@ int main(int argc, char **argv)
   }
 
   // Prepare data for comparison (corresponding camera centers and rotations)
-  Poses::const_iterator iter_loaded_poses = sfm_data.GetPoses().begin();
+  Poses::const_iterator iter_poses_eval = sfm_data.GetPoses().begin();
+  Poses::const_iterator iter_poses_gt = sfm_data_gt.GetPoses().begin();
   std::vector<Vec3> vec_camPosGT, vec_C;
   std::vector<Mat3> vec_camRotGT, vec_camRot;
-  for(std::map< size_t, PinholeCamera>::const_iterator iterGT = map_Cam_gt.begin();
-    iterGT != map_Cam_gt.end(); ++iterGT, ++iter_loaded_poses)
+  for(; iter_poses_gt != sfm_data_gt.GetPoses().end(); ++iter_poses_gt, ++iter_poses_eval)
   {
-    // GT
-    vec_camPosGT.push_back(iterGT->second._C);
-    vec_camRotGT.push_back(iterGT->second._R);
+    //-- GT
+    const geometry::Pose3& pose_gt = iter_poses_gt->second;
+    vec_camPosGT.push_back(pose_gt.center());
+    vec_camRotGT.push_back(pose_gt.rotation());
 
-    //-- Computed
-    vec_C.push_back(iter_loaded_poses->second.center());
-    vec_camRot.push_back(iter_loaded_poses->second.rotation());
+    //-- Data to evaluate
+    const geometry::Pose3& pose_eval = iter_poses_eval->second;
+    vec_C.push_back(pose_eval.center());
+    vec_camRot.push_back(pose_eval.rotation());
   }
 
   // Visual output of the camera location
