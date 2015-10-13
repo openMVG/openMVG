@@ -31,19 +31,47 @@ addons:
       - libxrandr-dev
       - g++-4.8
 
+env:
+  global:
+    - NUM_CPU="`grep processor /proc/cpuinfo | wc -l`"; echo $NUM_CPU
+    - BUILD_TYPE="Release"
+    - BUILD_SYSTEM="`uname -s`"
+    - BUILD_PROCESSOR="`uname -p`"
+    - OPENMVG_SOURCE=${TRAVIS_BUILD_DIR}/src
+    - OPENMVG_BUILD=${TRAVIS_BUILD_DIR}/build
+    - GT_TEST_SOURCE=${TRAVIS_BUILD_DIR}/gt_test
+    # OPENCV
+    - OPENCV_ROOT=${TRAVIS_BUILD_DIR}/opencv3
+    - OPENCV_SOURCE=${OPENCV_ROOT}/source
+    - OPENCV_CONTRIB=${OPENCV_ROOT}/contrib
+    - OPENCV_BUILD=${OPENCV_ROOT}/build
+    - OPENCV_INSTALL=${OPENCV_ROOT}/install
+
 before_install:
- - export NUM_CPU="`grep processor /proc/cpuinfo | wc -l`"; echo $NUM_CPU
  - gem install coveralls-lcov
+ # OPENCV
+ - mkdir --parent $OPENCV_SOURCE
+ - mkdir --parent $OPENCV_CONTRIB
+ - mkdir --parent $OPENCV_BUILD
+ - mkdir --parent $OPENCV_INSTALL
+ - if [ ! "$(ls -A $OPENCV_SOURCE)" ]; then git clone --recursive --branch 3.0.0 https://github.com/Itseez/opencv.git $OPENCV_SOURCE; fi
+ - if [ ! "$(ls -A $OPENCV_CONTRIB)" ]; then git clone --branch 3.0.0 --depth 1  https://github.com/Itseez/opencv_contrib.git $OPENCV_CONTRIB; fi
 
 install:
-- export CXX="g++-4.8"
+  # OPENCV
+  - cd $OPENCV_BUILD
+  - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$OPENCV_INSTALL -DOPENCV_EXTRA_MODULES_PATH=$OPENCV_CONTRIB/modules $OPENCV_SOURCE
+  - make -j 16
+  - make install
+  - ls -l $OPENCV_INSTALL
 
 before_script:
-  - cd ..
-  - mkdir build
-  - cd build
+  - export CXX="g++-4.8"
+  # Create build folder
+  - mkdir $OPENMVG_BUILD
+  - cd $OPENMVG_BUILD
   # Classic release build
-  - cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -DOpenMVG_USE_BOOST=ON . ../openMVG/src
+  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -DOpenMVG_USE_BOOST=ON -DOpenMVG_USE_OPENCV=ON -DOpenCV_DIR=$OPENCV_INSTALL/share/OpenCV . $OPENMVG_SOURCE
   # Build for code coverage evaluation
   #- cmake -DOpenMVG_BUILD_COVERAGE=ON -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
 
@@ -52,8 +80,14 @@ script:
   - make -j 2
 # Perform unit tests only on GCC builds
   - if [ "$CC" = "gcc" ]; then make test; fi
-
-# after_success:
+# Perform benchmark through ground truth tests with many scenes
+  - if [ ! "$(ls -A $GT_TEST_SOURCE)" ]; then git clone --branch dev https://github.com/caymard/SfM_quality_evaluation.git $GT_TEST_SOURCE; fi
+  - cd $GT_TEST_SOURCE
+  - git pull
+  - python EvaluationLauncher.py -s "$OPENMVG_BUILD/$BUILD_SYSTEM-$BUILD_PROCESSOR-$BUILD_TYPE" -i Benchmarking_Camera_Calibration_2008/ -o ../output -r ../results.json > ../gt_log.log 2>&1
+  - cat ../gt_log.log | tail
+  - cat ../results.json
+after_success:
   #- cd ../openMVG
   # If GCC: compute code coverage and export it to coveralls
   #- if [ "$CC" = "gcc" ];
@@ -65,3 +99,12 @@ script:
   #    lcov --remove coverage.info '*/src/dependencies/*' -o coverage.info;
   #    coveralls-lcov coverage.info;
   #  fi
+
+cache:
+  apt: true
+  directories:
+    - $OPENCV_SOURCE
+    - $OPENCV_CONTRIB
+    - $OPENCV_BUILD
+    - $OPENCV_INSTALL
+    - $GT_TEST_SOURCE
