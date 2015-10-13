@@ -121,11 +121,8 @@ void getListOfDescriptorFiles(const std::string &fileFullPath, std::map<IndexT, 
     // explore the sfm_data container to get the files path
     for(const auto &view : sfmdata.GetViews())
     {
-      // get just the image name, remove the extension
-      std::string filepath = bfs::path(view.second->s_Img_path).stem().string();
-
       // generate the equivalent .desc file path
-      filepath = bfs::path(pathToFiles / (filepath + ".desc")).string();
+      const std::string filepath = bfs::path(pathToFiles / (std::to_string(view.first) + ".desc")).string();
 
       // add the filepath in the vector
       descriptorsFiles[view.first] = filepath;
