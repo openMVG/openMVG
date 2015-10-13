@@ -527,6 +527,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
     initial_pair = scoring_per_pair.begin()->second;
     return true;
   }
+  std::cout << "No valid initial pair found automatically." << std::endl;
   return false;
 }
 
