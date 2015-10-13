@@ -50,34 +50,68 @@ namespace openMVG {
 namespace robust{
 
 /// logarithm (base 10) of binomial coefficient
-static double logcombi(size_t k, size_t n)
+template <typename T>
+static T logcombi
+(
+  size_t k,
+  size_t n,
+  const std::vector<T> & vec_log10 // lookuptable in [0,n+1]
+)
 {
-  if (k>=n || k<=0) return(0.0);
+  if (k>=n || k<=0) return(0.0f);
   if (n-k<k) k=n-k;
-  double r = 0.0;
-  for (size_t i = 1; i <= k; i++)
-    r += log10((double)(n-i+1))-log10((double)i);
-
+  T r = 0.0f;
+  for (size_t i = 1; i <= k; ++i)
+    r += vec_log10[n-i+1] - vec_log10[i];
   return r;
 }
 
 /// tabulate logcombi(.,n)
 template<typename Type>
-static void makelogcombi_n(size_t n, std::vector<Type> & l)
+static void makelogcombi_n
+(
+  size_t n,
+  std::vector<Type> & l,
+  std::vector<Type> & vec_log10 // lookuptable [0,n+1]
+)
 {
   l.resize(n+1);
-  for (size_t k = 0; k <= n; k++)
-    l[k] = static_cast<Type>( logcombi(k,n) );
+  for (size_t k = 0; k <= n; ++k)
+    l[k] = logcombi<Type>(k, n, vec_log10);
 }
 
 /// tabulate logcombi(k,.)
 template<typename Type>
-static void makelogcombi_k(size_t k, size_t nmax, std::vector<Type> & l)
+static void makelogcombi_k
+(
+  size_t k,
+  size_t nmax,
+  std::vector<Type> & l,
+  std::vector<Type> & vec_log10 // lookuptable [0,n+1]
+)
 {
   l.resize(nmax+1);
-  for (size_t n = 0; n <= nmax; n++)
-    l[n] = static_cast<Type>(logcombi(k,n));
+  for (size_t n = 0; n <= nmax; ++n)
+    l[n] = logcombi<Type>(k, n, vec_log10);
 }
+
+template <typename Type>
+static void makelogcombi
+(
+  size_t k,
+  size_t n,
+  std::vector<Type> & vec_logc_k,
+  std::vector<Type> & vec_logc_n)
+{
+  // compute a lookuptable of log10 value for the range [0,n+1]
+  std::vector<Type> vec_log10(n + 1);
+  for (size_t k = 0; k <= n; ++k)
+    vec_log10[k] = log10((Type)k);
+
+  makelogcombi_n(n, vec_logc_n, vec_log10);
+  makelogcombi_k(k, n, vec_logc_k, vec_log10);
+}
+
 
 /// Distance and associated index
 typedef std::pair<double,size_t> ErrorIndex;
@@ -96,7 +130,7 @@ static ErrorIndex bestNFA(
   ErrorIndex bestIndex(std::numeric_limits<double>::infinity(), startIndex);
   const size_t n = e.size();
   for(size_t k=startIndex+1; k<=n && e[k-1].first<=maxThreshold; ++k) {
-    double logalpha = logalpha0 + multError * log10(e[k-1].first + std::numeric_limits<float>::min());
+    const double logalpha = logalpha0 + multError * log10(e[k-1].first + std::numeric_limits<float>::min());
     ErrorIndex index(loge0 +
       logalpha * (double)(k-startIndex) +
       logc_n[k] +
@@ -162,10 +196,9 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
   std::iota(vec_index.begin(), vec_index.end(), 0);
 
   // Precompute log combi
-  double loge0 = log10((double)Kernel::MAX_MODELS * (nData-sizeSample));
+  const double loge0 = log10((double)Kernel::MAX_MODELS * (nData-sizeSample));
   std::vector<float> vec_logc_n, vec_logc_k;
-  makelogcombi_n(nData, vec_logc_n);
-  makelogcombi_k(sizeSample, nData, vec_logc_k);
+  makelogcombi(sizeSample, nData, vec_logc_k, vec_logc_n);
 
   // Output parameters
   double minNFA = std::numeric_limits<double>::infinity();
@@ -231,14 +264,14 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
     // ACRANSAC optimization: draw samples among best set of inliers so far
     if((better && minNFA<0) || (iter+1==nIter && nIterReserve)) {
       if(vec_inliers.empty()) { // No model found at all so far
-        nIter++; // Continue to look for any model, even not meaningful
-        nIterReserve--;
+        ++nIter; // Continue to look for any model, even not meaningful
+        --nIterReserve;
       } else {
         // ACRANSAC optimization: draw samples among best set of inliers so far
         vec_index = vec_inliers;
         if(nIterReserve) {
-            nIter = iter+1+nIterReserve;
-            nIterReserve=0;
+            nIter = iter + 1 + nIterReserve;
+            nIterReserve = 0;
         }
       }
     }
