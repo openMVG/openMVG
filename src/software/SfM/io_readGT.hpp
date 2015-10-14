@@ -73,7 +73,8 @@ static bool read_openMVG_Camera(const std::string & camName, Pinhole_Intrinsic &
   Vec3 t;
   KRt_From_P(P, &K, &R, &t);
   cam = Pinhole_Intrinsic(0,0,K);
-  pose = geometry::Pose3(P);
+  // K.transpose() is applied to give [R t] to the constructor instead of P = K [R t]
+  pose = geometry::Pose3(K.transpose() * P);
   return true;
 }
 
@@ -105,10 +106,9 @@ static bool read_Strecha_Camera(const std::string & camName, Pinhole_Intrinsic &
       val[18], val[19], val[20];
 
     Vec3 C (val[21], val[22], val[23]);
-    // Strecha model is P = K[R^T|-R^T t];
-    // openMVG use P = K[R|t], t = - RC
+    // R need to be transposed
     cam = Pinhole_Intrinsic(0,0,K);
-    pose = geometry::Pose3(R, C);
+    pose = geometry::Pose3(R.transpose(), C);
   }
   else
   {
