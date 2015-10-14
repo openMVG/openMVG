@@ -41,7 +41,7 @@ env:
     - OPENMVG_BUILD=${TRAVIS_BUILD_DIR}/build
     # GT tests
     - GT_TEST_ROOT=${TRAVIS_BUILD_DIR}/gt_test
-    - GT_TEST_SOURCE=${gt_source}/GT_TEST_ROOT
+    - GT_TEST_SOURCE=${GT_TEST_ROOT}/gt_source
     - GT_TEST_RESULTS=${GT_TEST_ROOT}/result.json
     - GT_TEST_OUTPUT=${GT_TEST_ROOT}/gt_output
     # OPENCV
