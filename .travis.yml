@@ -110,4 +110,3 @@ cache:
     - $OPENCV_CONTRIB
     - $OPENCV_BUILD
     - $OPENCV_INSTALL
-    - $GT_TEST_SOURCE
