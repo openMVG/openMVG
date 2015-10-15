@@ -74,7 +74,8 @@ public:
                 bool useInputIntrinsics,
                 bool refineIntrinsics,
                 Algorithm algorithm,
-                sfm::Image_Localizer_Match_Data &resection_data);
+                sfm::Image_Localizer_Match_Data &resection_data,
+                std::vector<pair<IndexT, IndexT> > &associationIDs);
 
   /**
    * @brief Try to localize an image in the database: it queries the database to 
@@ -100,7 +101,8 @@ public:
                 bool useGuidedMatching,
                 bool useInputIntrinsics,
                 bool refineIntrinsics,
-                sfm::Image_Localizer_Match_Data &resection_data);
+                sfm::Image_Localizer_Match_Data &resection_data,
+                std::vector<pair<IndexT, IndexT> > &associationIDs);
 
   /**
    * @brief Try to localize an image in the database: it queries the database to 
@@ -127,9 +129,16 @@ public:
                 bool useGuidedMatching,
                 bool useInputIntrinsics,
                 bool refineIntrinsics,
-                sfm::Image_Localizer_Match_Data &resection_data);
+                sfm::Image_Localizer_Match_Data &resection_data,
+                std::vector<pair<IndexT, IndexT> > &associationIDs);
   
   const sfm::SfM_Data& getSfMData() const {return _sfm_data; }
+  
+public:
+  static bool refineSequence(cameras::Pinhole_Intrinsic_Radial_K3 *intrinsics,
+                             std::vector<geometry::Pose3> & poses,
+                             std::vector<sfm::Image_Localizer_Match_Data> & associations,
+                             std::vector<std::vector<pair<IndexT, IndexT> > > &associationIDs);
 
 private:
   /**
