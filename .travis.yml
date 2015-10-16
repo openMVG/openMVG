@@ -96,6 +96,10 @@ script:
   - rm -rf $GT_TEST_SOURCE
   - rm -rf $GT_TEST_OUTPUT
 after_success:
+  - du -hs $OPENCV_SOURCE
+  - du -hs $OPENCV_CONTRIB
+  - du -hs $OPENCV_BUILD
+  - du -hs $OPENCV_INSTALL
   #- cd ../openMVG
   # If GCC: compute code coverage and export it to coveralls
   #- if [ "$CC" = "gcc" ];
