@@ -64,9 +64,9 @@ before_install:
 install:
   # OPENCV
   - cd $OPENCV_BUILD
-  - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$OPENCV_INSTALL -DOPENCV_EXTRA_MODULES_PATH=$OPENCV_CONTRIB/modules $OPENCV_SOURCE
-  - make -j 16
-  - make install
+  - if [ ! "$(ls -A $OPENCV_INSTALL)" ]; then cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$OPENCV_INSTALL -DOPENCV_EXTRA_MODULES_PATH=$OPENCV_CONTRIB/modules $OPENCV_SOURCE; fi
+  - if [ ! "$(ls -A $OPENCV_INSTALL)" ]; then make -j 16; fi
+  - if [ ! "$(ls -A $OPENCV_INSTALL)" ]; then make install; fi
   - ls -l $OPENCV_INSTALL
 
 before_script:
