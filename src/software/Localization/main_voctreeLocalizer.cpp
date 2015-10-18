@@ -153,7 +153,7 @@ int main(int argc, char** argv)
   exporter.addPoints(localizer.getSfMData().GetLandmarks());
 #endif
   
-  image::Image<unsigned char> imageGray;
+  image::Image<unsigned char> imageGrey;
   cameras::Pinhole_Intrinsic_Radial_K3 queryIntrinsics;
   bool hasIntrinsics = false;
   geometry::Pose3 cameraPose;
@@ -172,7 +172,7 @@ int main(int argc, char** argv)
   std::vector<bool> localized;  // this is just to keep track of the unlocalized frames so that a fake camera
                                 // can be inserted and we see the sequence correctly in maya
   
-  while(feed.next(imageGray, queryIntrinsics, currentImgName, hasIntrinsics))
+  while(feed.next(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics))
   {
     POPART_COUT("******************************");
     POPART_COUT("FRAME " << myToString(frameCounter,4));
@@ -180,11 +180,11 @@ int main(int argc, char** argv)
     sfm::Image_Localizer_Match_Data matchData;
     std::vector<pair<IndexT, IndexT> > ids;
     auto detect_start = std::chrono::steady_clock::now();
-    bool isLocalized = localizer.localize(imageGray, 
+    bool isLocalized = localizer.localize(imageGrey, 
+                                          param,
+                                          hasIntrinsics/*useInputIntrinsics*/,
                                           queryIntrinsics,
                                           cameraPose,
-                                          hasIntrinsics/*useInputIntrinsics*/,
-                                          param,
                                           matchData,
                                           ids);
     auto detect_end = std::chrono::steady_clock::now();

@@ -77,31 +77,31 @@ VoctreeLocalizer::Algorithm VoctreeLocalizer::initFromString(const std::string &
     throw std::invalid_argument("Unrecognized algorithm \"" + value + "\"!");
 }
 
-bool VoctreeLocalizer::localize( const image::Image<unsigned char> & imageGray,
+bool VoctreeLocalizer::localize(const image::Image<unsigned char> & imageGrey,
+                const Parameters &param,
+                bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
                 geometry::Pose3 & pose,
-                bool useInputIntrinsics,
-                const Parameters &param,
                 sfm::Image_Localizer_Match_Data &resection_data,
                 std::vector<pair<IndexT, IndexT> > &associationIDs)
 {
   switch(param._algorithm)
   {
     case Algorithm::FirstBest: 
-      return localizeFirstBestResult(imageGray, 
+      return localizeFirstBestResult(imageGrey, 
+                                     param,
+                                     useInputIntrinsics,
                                      queryIntrinsics, 
                                      pose,
-                                     useInputIntrinsics,
-                                     param,
                                      resection_data, 
                                      associationIDs);
     case Algorithm::BestResult: throw std::invalid_argument("BestResult not yet implemented");
     case Algorithm::AllResults: 
-      return localizeAllResults(imageGray, 
+      return localizeAllResults(imageGrey, 
+                                param,
+                                useInputIntrinsics, 
                                 queryIntrinsics,
                                 pose, 
-                                useInputIntrinsics, 
-                                param,
                                 resection_data, 
                                 associationIDs);
     case Algorithm::Cluster: throw std::invalid_argument("Cluster not yet implemented");
@@ -292,11 +292,11 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
 
 
 //@todo move the parameters into a struct
-bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char> & imageGray,
+bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char> & imageGrey,
+                                const Parameters &param,
+                                bool useInputIntrinsics,
                                 cameras::Pinhole_Intrinsic &queryIntrinsics,
                                 geometry::Pose3 & pose,
-                                bool useInputIntrinsics,
-                                const Parameters &param,
                                 sfm::Image_Localizer_Match_Data &resectionData,
                                 std::vector<pair<IndexT, IndexT> > &associationIDs)
 {
@@ -305,7 +305,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Float_Regions());
   auto detect_start = std::chrono::steady_clock::now();
   _image_describer.Set_configuration_preset(param._featurePreset);
-  _image_describer.Describe(imageGray, tmpQueryRegions, nullptr);
+  _image_describer.Describe(imageGrey, tmpQueryRegions, nullptr);
   auto detect_end = std::chrono::steady_clock::now();
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
   POPART_COUT("[features]\tExtract SIFT done: found " << tmpQueryRegions->RegionCount() << " features in " << detect_elapsed.count() << " [ms]" );
@@ -392,8 +392,8 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
                                       matchedIntrinsics,
                                       param._fDistRatio,
                                       param._useGuidedMatching,
-                                      std::make_pair(imageGray.Width(), imageGray.Height()),
-                                      std::make_pair(imageGray.Width(), imageGray.Height()), // NO! @fixme here we need the size of the img in the dataset...
+                                      std::make_pair(imageGrey.Width(), imageGrey.Height()),
+                                      std::make_pair(imageGrey.Width(), imageGrey.Height()), // NO! @fixme here we need the size of the img in the dataset...
                                       vec_featureMatches);
     if (!matchWorked)
     {
@@ -442,7 +442,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
     // Do the resectioning: compute the camera pose.
     resectionData.error_max = param._errorMax;
     POPART_COUT("[poseEstimation]\tEstimating camera pose...");
-    bool bResection = sfm::SfM_Localizer::Localize(std::make_pair(imageGray.Width(), imageGray.Height()),
+    bool bResection = sfm::SfM_Localizer::Localize(std::make_pair(imageGrey.Width(), imageGrey.Height()),
                                                    // pass the input intrinsic if they are valid, null otherwise
                                                    (useInputIntrinsics) ? &queryIntrinsics : nullptr,
                                                    resectionData,
@@ -471,8 +471,8 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
       KRt_From_P(resectionData.projection_matrix, &K_, &R_, &t_);
       POPART_COUT("K estimated\n" << K_);
       queryIntrinsics.setK(K_);
-      queryIntrinsics.setWidth(imageGray.Width());
-      queryIntrinsics.setHeight(imageGray.Height());
+      queryIntrinsics.setWidth(imageGrey.Width());
+      queryIntrinsics.setHeight(imageGrey.Height());
     }
 
     // E. refine the estimated pose
@@ -505,11 +505,11 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
  } 
 
 
-bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & imageGray,
+bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & imageGrey,
+                                          const Parameters &param,
+                                          bool useInputIntrinsics,
                                           cameras::Pinhole_Intrinsic &queryIntrinsics,
                                           geometry::Pose3 & pose,
-                                          bool useInputIntrinsics,
-                                          const Parameters &param,
                                           sfm::Image_Localizer_Match_Data &resectionData,
                                           std::vector<pair<IndexT, IndexT> > &associationIDs)
 {
@@ -518,7 +518,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Float_Regions());
   auto detect_start = std::chrono::steady_clock::now();
   _image_describer.Set_configuration_preset(param._featurePreset);
-  _image_describer.Describe(imageGray, tmpQueryRegions, nullptr);
+  _image_describer.Describe(imageGrey, tmpQueryRegions, nullptr);
   auto detect_end = std::chrono::steady_clock::now();
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
   POPART_COUT("[features]\tExtract SIFT done: found " << tmpQueryRegions->RegionCount() << " features in " << detect_elapsed.count() << " [ms]" );
@@ -609,12 +609,12 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
                                       matchedIntrinsics,
                                       param._fDistRatio,
                                       param._useGuidedMatching,
-                                      std::make_pair(imageGray.Width(), imageGray.Height()),
-                                      std::make_pair(imageGray.Width(), imageGray.Height()), // NO! @fixme here we need the size of the img in the dataset...
+                                      std::make_pair(imageGrey.Width(), imageGrey.Height()),
+                                      std::make_pair(imageGrey.Width(), imageGrey.Height()), // NO! @fixme here we need the size of the img in the dataset...
                                       vec_featureMatches);
     if (!matchWorked)
     {
-      POPART_COUT("[matching]\tMatching with " << matchedView->s_Img_path << " failed! Skipping image");
+//      POPART_COUT("[matching]\tMatching with " << matchedView->s_Img_path << " failed! Skipping image");
       continue;
     }
     else
@@ -699,7 +699,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   // Do the resectioning: compute the camera pose.
   resectionData.error_max = param._errorMax;
   POPART_COUT("[poseEstimation]\tEstimating camera pose...");
-  bool bResection = sfm::SfM_Localizer::Localize(std::make_pair(imageGray.Width(), imageGray.Height()),
+  bool bResection = sfm::SfM_Localizer::Localize(std::make_pair(imageGrey.Width(), imageGrey.Height()),
                                                  // pass the input intrinsic if they are valid, null otherwise
                                                  (useInputIntrinsics) ? &queryIntrinsics : nullptr,
                                                  resectionData,
@@ -728,8 +728,8 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
     KRt_From_P(resectionData.projection_matrix, &K_, &R_, &t_);
     queryIntrinsics.setK(K_);
     POPART_COUT("K estimated\n" <<K_);
-    queryIntrinsics.setWidth(imageGray.Width());
-    queryIntrinsics.setHeight(imageGray.Height());
+    queryIntrinsics.setWidth(imageGrey.Width());
+    queryIntrinsics.setHeight(imageGrey.Height());
   }
 
   // E. refine the estimated pose

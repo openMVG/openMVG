@@ -78,20 +78,23 @@ public:
     const std::string & feat_directory);
   
   /**
+   * @brief Just a wrapper around the different localization algorithm, the algorith
+   * used to localized is chosen using \p param._algorithm
    * 
-   * @param imageGray The input greyscale image
+   * @param[in] imageGray The input greyscale image
+   * @param[in] param The parameters for the localization
+   * @param[in] useInputIntrinsics Uses the \p queryIntrinsics as known calibration
    * @param[in,out] queryIntrinsics Intrinsic parameters of the camera, they are used if the
    * flag useInputIntrinsics is set to true, otherwise they are estimated from the correspondences.
    * @param[out] pose The camera pose
-   * @param[in] useInputIntrinsics Uses the \p queryIntrinsics as known calibration
    * @param[out] resection_data the 2D-3D correspondences used to compute the pose
    * @return true if the localization is successful
    */
-  bool localize( const image::Image<unsigned char> & imageGray,
+  bool localize(const image::Image<unsigned char> & imageGrey,
+                const Parameters &param,
+                bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
                 geometry::Pose3 & pose,
-                bool useInputIntrinsics,
-                const Parameters &param,
                 sfm::Image_Localizer_Match_Data &resection_data,
                 std::vector<pair<IndexT, IndexT> > &associationIDs);
 
@@ -100,19 +103,21 @@ public:
    * retrieve \p numResults matching images and it tries to localize the query image
    * wrt the retrieve images in order of their score taking the first best result.
    *
-   * @param imageGray The input greayscale image
+   * @param[in] imageGray The input greayscale image
+   * @param[in] param The parameters for the localization
+   * @param[in] useInputIntrinsics Uses the \p queryIntrinsics as known calibration
    * @param[in,out] queryIntrinsics Intrinsic parameters of the camera, they are used if the
    * flag useInputIntrinsics is set to true, otherwise they are estimated from the correspondences.
    * @param[out] pose The camera pose
-   * @param[in] useInputIntrinsics Uses the \p queryIntrinsics as known calibration
    * @param[out] resection_data the 2D-3D correspondences used to compute the pose
+   * @param[out] associationIDs the ids of the 2D-3D correspondences used to compute the pose
    * @return true if the localization is successful
    */
-  bool localizeFirstBestResult( const image::Image<unsigned char> & imageGray,
+  bool localizeFirstBestResult(const image::Image<unsigned char> & imageGrey,
+                const Parameters &param,
+                bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
                 geometry::Pose3 & pose,
-                bool useInputIntrinsics,
-                const Parameters &param,
                 sfm::Image_Localizer_Match_Data &resection_data,
                 std::vector<pair<IndexT, IndexT> > &associationIDs);
 
@@ -122,19 +127,21 @@ public:
    * wrt the retrieve images in order of their score, collecting all the 2d-3d correspondences
    * and performing the resection with all these correspondences
    *
-   * @param imageGray The input greyscale image
+   * @param[in] imageGray The input greyscale image
+   * @param[in] param The parameters for the localization
+   * @param[in] useInputIntrinsics Uses the \p queryIntrinsics as known calibration
    * @param[in,out] queryIntrinsics Intrinsic parameters of the camera, they are used if the
    * flag useInputIntrinsics is set to true, otherwise they are estimated from the correspondences.
    * @param[out] pose The camera pose
-   * @param[in] useInputIntrinsics Uses the \p queryIntrinsics as known calibration
    * @param[out] resection_data the 2D-3D correspondences used to compute the pose
+   * @param[out] associationIDs the ids of the 2D-3D correspondences used to compute the pose
    * @return true if the localization is successful
    */
-  bool localizeAllResults( const image::Image<unsigned char> & imageGray,
+  bool localizeAllResults(const image::Image<unsigned char> & imageGrey,
+                const Parameters &param,
+                bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
                 geometry::Pose3 & pose,
-                bool useInputIntrinsics,
-                const Parameters &param,
                 sfm::Image_Localizer_Match_Data &resection_data,
                 std::vector<pair<IndexT, IndexT> > &associationIDs);
   
