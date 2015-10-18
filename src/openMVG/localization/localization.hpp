@@ -36,6 +36,32 @@ public:
   static Algorithm initFromString(const std::string &value);
   
 public:
+  struct Parameters 
+  {
+
+    Parameters() :
+      _useGuidedMatching(false),
+      _refineIntrinsics(false),
+      _algorithm(Algorithm::FirstBest),
+      _numResults(4),
+      _maxResults(10),
+      _numCommonViews(3),
+      _fDistRatio(0.6),
+      _featurePreset(features::EDESCRIBER_PRESET::ULTRA_PRESET),
+      _errorMax(std::numeric_limits<double>::max()) { }
+    
+    bool _useGuidedMatching;    //< Enable/disable guided matching when matching images
+    bool _refineIntrinsics;     //< whether or not the Intrinsics of the query camera has to be refined
+    Algorithm _algorithm;       //< algorithm to use for localization
+    size_t _numResults;         //< number of best matching images to retrieve from the database
+    size_t _maxResults;         
+    size_t _numCommonViews;     //< number minimum common images in which a point must be seen to be used in cluster tracking
+    float _fDistRatio;          //< the ratio distance to use when matching feature with the ratio test
+    features::EDESCRIBER_PRESET _featurePreset; //< the preset to use for feature extraction of the query image
+    double _errorMax;           
+  };
+  
+public:
   
   bool init(const std::string &sfmFilePath,
             const std::string &descriptorsFolder,
@@ -53,27 +79,19 @@ public:
   
   /**
    * 
-   * @param imageGray The input grayscale image
+   * @param imageGray The input greyscale image
    * @param[in,out] queryIntrinsics Intrinsic parameters of the camera, they are used if the
    * flag useInputIntrinsics is set to true, otherwise they are estimated from the correspondences.
-   * @param[in] numResults Number of images to retrieve from the vocabulary tree
    * @param[out] pose The camera pose
-   * @param[in] useGuidedMatching Enable the guided match using the estimated fundamental
-   * matrix 
    * @param[in] useInputIntrinsics Uses the \p queryIntrinsics as known calibration
-   * @param[in] refineIntrinsics Refine the intrinsic parameters after resection
-   * @param[in] algorithm Algorithm to use
    * @param[out] resection_data the 2D-3D correspondences used to compute the pose
    * @return true if the localization is successful
    */
   bool localize( const image::Image<unsigned char> & imageGray,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
-                size_t numResults,
                 geometry::Pose3 & pose,
-                bool useGuidedMatching,
                 bool useInputIntrinsics,
-                bool refineIntrinsics,
-                Algorithm algorithm,
+                const Parameters &param,
                 sfm::Image_Localizer_Match_Data &resection_data,
                 std::vector<pair<IndexT, IndexT> > &associationIDs);
 
@@ -82,25 +100,19 @@ public:
    * retrieve \p numResults matching images and it tries to localize the query image
    * wrt the retrieve images in order of their score taking the first best result.
    *
-   * @param imageGray The input grayscale image
+   * @param imageGray The input greayscale image
    * @param[in,out] queryIntrinsics Intrinsic parameters of the camera, they are used if the
    * flag useInputIntrinsics is set to true, otherwise they are estimated from the correspondences.
-   * @param[in] numResults Number of images to retrieve from the vocabulary tree
    * @param[out] pose The camera pose
-   * @param[in] useGuidedMatching Enable the guided match using the estimated fundamental
-   * matrix 
    * @param[in] useInputIntrinsics Uses the \p queryIntrinsics as known calibration
-   * @param[in] refineIntrinsics Refine the intrinsic parameters after resection
-   * @param[out] resection_data the 2D-3D correspondances used to compute the pose
+   * @param[out] resection_data the 2D-3D correspondences used to compute the pose
    * @return true if the localization is successful
    */
   bool localizeFirstBestResult( const image::Image<unsigned char> & imageGray,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
-                size_t numResults,
                 geometry::Pose3 & pose,
-                bool useGuidedMatching,
                 bool useInputIntrinsics,
-                bool refineIntrinsics,
+                const Parameters &param,
                 sfm::Image_Localizer_Match_Data &resection_data,
                 std::vector<pair<IndexT, IndexT> > &associationIDs);
 
@@ -110,25 +122,19 @@ public:
    * wrt the retrieve images in order of their score, collecting all the 2d-3d correspondences
    * and performing the resection with all these correspondences
    *
-   * @param imageGray The input grayscale image
+   * @param imageGray The input greyscale image
    * @param[in,out] queryIntrinsics Intrinsic parameters of the camera, they are used if the
    * flag useInputIntrinsics is set to true, otherwise they are estimated from the correspondences.
-   * @param[in] numResults Number of images to retrieve from the vocabulary tree
    * @param[out] pose The camera pose
-   * @param[in] useGuidedMatching Enable the guided match using the estimated fundamental
-   * matrix 
    * @param[in] useInputIntrinsics Uses the \p queryIntrinsics as known calibration
-   * @param[in] refineIntrinsics Refine the intrinsic parameters after resection
    * @param[out] resection_data the 2D-3D correspondences used to compute the pose
    * @return true if the localization is successful
    */
   bool localizeAllResults( const image::Image<unsigned char> & imageGray,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
-                size_t numResults,
                 geometry::Pose3 & pose,
-                bool useGuidedMatching,
                 bool useInputIntrinsics,
-                bool refineIntrinsics,
+                const Parameters &param,
                 sfm::Image_Localizer_Match_Data &resection_data,
                 std::vector<pair<IndexT, IndexT> > &associationIDs);
   
