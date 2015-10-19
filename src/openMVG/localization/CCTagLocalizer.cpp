@@ -77,16 +77,17 @@ bool CCTagLocalizer::init(const std::string &sfmFilePath,
  * @param[in] desc descriptor
  * @return cctag id or UndefinedIndexT if wrong cctag descriptor
  */
-IndexT getCCTagId(const DescriptorT & desc)
+IndexT getCCTagId(const CCTagDescriptor & desc)
 {
   std::size_t cctagId = UndefinedIndexT;
   for (int i = 0; i < desc.size(); ++i)
   {
-    if (desc.getData()[i] == 255)
+    if (desc.getData()[i] == 1.0)
     {
       if (cctagId != UndefinedIndexT)
+      {
         return UndefinedIndexT;
-
+      }
       cctagId = i;
     }
     else if(desc.getData()[i] != 0)
@@ -128,7 +129,7 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
           iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
   {
     const IndexT id_view = iter->second->id_view;
-    Reconstructed_RegionsT& reconstructedRegion = _regions_per_view[id_view];
+    Reconstructed_RegionsCCTag& reconstructedRegion = _regions_per_view[id_view];
 
     const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.get()->s_Img_path);
     const std::string basename = stlplus::basename_part(sImageName);
@@ -174,7 +175,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
   for(size_t i = 0; i<queryRegions.RegionCount(); ++i)
   {
     // get the current descriptor
-    const DescriptorT & desc = queryRegions.Descriptors()[i];
+    const CCTagDescriptor & desc = queryRegions.Descriptors()[i];
     IndexT idCCTag = getCCTagId(desc);
     
     // check whether it is in the database of the cctag with an associated 3D point

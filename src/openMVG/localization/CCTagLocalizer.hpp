@@ -12,8 +12,9 @@
 
 namespace openMVG {
 namespace localization {
-  
-typedef Reconstructed_RegionsT::DescriptorT DescriptorT;
+
+typedef Reconstructed_Regions<features::SIOPointFeature, unsigned char, 128> Reconstructed_RegionsCCTag; 
+typedef Reconstructed_RegionsCCTag::DescriptorT CCTagDescriptor;
 
 class CCTagLocalizer {
   
@@ -77,7 +78,7 @@ private:
   
   // for each view index, it contains the cctag features and descriptors that have an
   // associated 3D point
-  Hash_Map<IndexT, Reconstructed_RegionsT > _regions_per_view;
+  Hash_Map<IndexT, Reconstructed_RegionsCCTag > _regions_per_view;
   
   // contains the 3D reconstruction data
   sfm::SfM_Data _sfm_data;
@@ -89,7 +90,7 @@ private:
   std::map<IndexT, Vec3> _cctagDatabase;
 };
 
-IndexT getCCTagId(const DescriptorT & desc);
+IndexT getCCTagId(const CCTagDescriptor & desc);
 
 } // namespace localization
 } // openMVG
