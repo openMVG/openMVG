@@ -149,11 +149,13 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
   return true;
 }
 
-bool CCTagLocalizer::Localize(const image::Image<unsigned char> & imageGray,
-                              cameras::IntrinsicBase * queryIntrinsics,
-                              geometry::Pose3 & pose,
-                              bool useGuidedMatching,
-                              sfm::Image_Localizer_Match_Data * resection_data /*= nullptr*/)
+bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
+                const CCTagLocalizer::Parameters &param,
+                bool useInputIntrinsics,
+                cameras::Pinhole_Intrinsic &queryIntrinsics,
+                geometry::Pose3 & pose,
+                sfm::Image_Localizer_Match_Data &resection_data,
+                std::vector<pair<IndexT, IndexT> > &associationIDs)
 {
 #if 0
   // extract descriptors and features from image

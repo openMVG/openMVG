@@ -16,16 +16,55 @@ namespace localization {
 typedef Reconstructed_RegionsT::DescriptorT DescriptorT;
 
 class CCTagLocalizer {
+  
+  public:
+  struct Parameters 
+  {
+
+    Parameters() :
+      _useGuidedMatching(false),
+      _refineIntrinsics(false),
+      _numResults(4),
+      _numCommonViews(3),
+      _fDistRatio(0.6),
+      _featurePreset(features::EDESCRIBER_PRESET::ULTRA_PRESET),
+      _errorMax(std::numeric_limits<double>::max()) { }
+    
+    bool _useGuidedMatching;    //< Enable/disable guided matching when matching images
+    bool _refineIntrinsics;     //< whether or not the Intrinsics of the query camera has to be refined
+    size_t _numResults;         //< number of best matching images to retrieve from the database        
+    size_t _numCommonViews;     //< number minimum common images in which a point must be seen to be used in cluster tracking
+    float _fDistRatio;          //< the ratio distance to use when matching feature with the ratio test
+    features::EDESCRIBER_PRESET _featurePreset; //< the preset to use for feature extraction of the query image
+    double _errorMax;           
+  };
+  
 public:
   
   bool init(const std::string &sfmFilePath,
             const std::string &descriptorsFolder);
   
-  bool Localize(const image::Image<unsigned char> & imageGray,
-                cameras::IntrinsicBase * queryIntrinsics,
+ /**
+   * @brief Just a wrapper around the different localization algorithm, the algorith
+   * used to localized is chosen using \p param._algorithm
+   * 
+   * @param[in] imageGray The input greyscale image
+   * @param[in] param The parameters for the localization
+   * @param[in] useInputIntrinsics Uses the \p queryIntrinsics as known calibration
+   * @param[in,out] queryIntrinsics Intrinsic parameters of the camera, they are used if the
+   * flag useInputIntrinsics is set to true, otherwise they are estimated from the correspondences.
+   * @param[out] pose The camera pose
+   * @param[out] resection_data the 2D-3D correspondences used to compute the pose
+   * @return true if the localization is successful
+   */
+  bool localize(const image::Image<unsigned char> & imageGrey,
+                const Parameters &param,
+                bool useInputIntrinsics,
+                cameras::Pinhole_Intrinsic &queryIntrinsics,
                 geometry::Pose3 & pose,
-                bool useGuidedMatching,
-                sfm::Image_Localizer_Match_Data * resection_data = nullptr);
+                sfm::Image_Localizer_Match_Data &resection_data,
+                std::vector<pair<IndexT, IndexT> > &associationIDs);
+  
   
   CCTagLocalizer();
   CCTagLocalizer(const CCTagLocalizer& orig);
