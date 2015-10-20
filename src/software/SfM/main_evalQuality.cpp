@@ -80,6 +80,10 @@ int main(int argc, char **argv)
         camType = 2;
       else if (!stlplus::folder_wildcard(sGTDirectory, "*.jpg.camera", false, true).empty())
         camType = 3;
+      else if (!stlplus::folder_wildcard(sGTDirectory, "*.PNG.camera", false, true).empty())
+        camType = 4;
+      else if (!stlplus::folder_wildcard(sGTDirectory, "*.JPG.camera", false, true).empty())
+        camType = 5;
       else
         camType = std::numeric_limits<int>::infinity();
     }
@@ -93,10 +97,24 @@ int main(int argc, char **argv)
       suffix = "bin";
       break;
     case 2:
-    case 3:
-      std::cout << "\nusing Strechas Camera";
+      std::cout << "\nusing Strechas Camera (png)";
       fcnReadCamPtr = &read_Strecha_Camera;
-      suffix = (camType == 2) ? "png.camera" : "jpg.camera";
+      suffix = "png.camera";
+      break;
+    case 3:
+      std::cout << "\nusing Strechas Camera (jpg)";
+      fcnReadCamPtr = &read_Strecha_Camera;
+      suffix = "jpg.camera";
+      break;
+    case 4:
+      std::cout << "\nusing Strechas Camera (PNG)";
+      fcnReadCamPtr = &read_Strecha_Camera;
+      suffix = "PNG.camera";
+      break;
+    case 5:
+      std::cout << "\nusing Strechas Camera (JPG)";
+      fcnReadCamPtr = &read_Strecha_Camera;
+      suffix = "JPG.camera";
       break;
     default:
       std::cerr << "Unsupported camera type. Please write your camera reader." << std::endl;
