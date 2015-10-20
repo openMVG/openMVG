@@ -385,7 +385,7 @@ int main(int argc, char **argv)
       //---------------------------------------
       if( !matchFilePerImage )
       {
-        ExportPairedIndMatchFile(map_PutativesMatches, std::string(sMatchesDirectory + "/" + sPutativeMatchesFilename).c_str());
+        ExportPairedIndMatchFile(map_PutativesMatches, std::string(sMatchesDirectory + "/" + sPutativeMatchesFilename));
       }
       else
       {
