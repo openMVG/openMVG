@@ -58,15 +58,15 @@ before_install:
  - mkdir --parent $OPENCV_CONTRIB
  - mkdir --parent $OPENCV_BUILD
  - mkdir --parent $OPENCV_INSTALL
- - if [ ! "$(ls -A $OPENCV_SOURCE)" ]; then git clone --recursive --branch 3.0.0 https://github.com/Itseez/opencv.git $OPENCV_SOURCE; fi
+ - if [ ! "$(ls -A $OPENCV_INSTALL)" ]; then git clone --recursive --branch 3.0.0 --depth 1 https://github.com/Itseez/opencv.git $OPENCV_SOURCE; fi
  - if [ ! "$(ls -A $OPENCV_CONTRIB)" ]; then git clone --branch 3.0.0 --depth 1  https://github.com/Itseez/opencv_contrib.git $OPENCV_CONTRIB; fi
 
 install:
   # OPENCV
   - cd $OPENCV_BUILD
-  - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$OPENCV_INSTALL -DOPENCV_EXTRA_MODULES_PATH=$OPENCV_CONTRIB/modules $OPENCV_SOURCE
-  - make -j 16
-  - make install
+  - if [ ! "$(ls -A $OPENCV_INSTALL)" ]; then cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$OPENCV_INSTALL -DOPENCV_EXTRA_MODULES_PATH=$OPENCV_CONTRIB/modules $OPENCV_SOURCE; fi
+  - if [ ! "$(ls -A $OPENCV_INSTALL)" ]; then make -j 16; fi
+  - if [ ! "$(ls -A $OPENCV_INSTALL)" ]; then make install; fi
   - ls -l $OPENCV_INSTALL
 
 before_script:
@@ -96,6 +96,10 @@ script:
   - rm -rf $GT_TEST_SOURCE
   - rm -rf $GT_TEST_OUTPUT
 after_success:
+  - du -hs $OPENCV_SOURCE
+  - du -hs $OPENCV_CONTRIB
+  - du -hs $OPENCV_BUILD
+  - du -hs $OPENCV_INSTALL
   #- cd ../openMVG
   # If GCC: compute code coverage and export it to coveralls
   #- if [ "$CC" = "gcc" ];
@@ -110,7 +114,4 @@ after_success:
 
 cache:
   directories:
-    - $OPENCV_SOURCE
-    - $OPENCV_CONTRIB
-    - $OPENCV_BUILD
     - $OPENCV_INSTALL
