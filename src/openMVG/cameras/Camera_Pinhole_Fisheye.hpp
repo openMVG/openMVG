@@ -1,7 +1,7 @@
 // This is an adaptation of the Fisheye distortion model implemented in OpenCV
 // https://github.com/Itseez/opencv/blob/master/modules/calib3d/src/fisheye.cpp
 
-// (c) 2015 Romain Janvier <romain.janvier~AT~univ-orleans.fr> for the given adaptation
+// Copyright (c) 2015 Romain Janvier <romain.janvier~AT~univ-orleans.fr> for the given adaptation
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
