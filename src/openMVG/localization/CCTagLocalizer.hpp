@@ -116,5 +116,10 @@ float viewSimilarity(
         const features::CCTAG_Regions & regionsA,
         const features::CCTAG_Regions & regionsB);
 
+void viewMatching(
+        const features::CCTAG_Regions & regionsA,
+        const features::CCTAG_Regions & regionsB,
+        std::vector<matching::IndMatch> & vec_featureMatches);
+
 } // namespace localization
 } // openMVG
