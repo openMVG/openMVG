@@ -9,12 +9,14 @@
 #include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 
 #include <iostream>
+#include <bitset>
 
 namespace openMVG {
 namespace localization {
 
 typedef Reconstructed_Regions<features::SIOPointFeature, unsigned char, 128> Reconstructed_RegionsCCTag; 
 typedef Reconstructed_RegionsCCTag::DescriptorT CCTagDescriptor;
+typedef Hash_Map<IndexT, Reconstructed_RegionsCCTag > CCTagRegionsPerViews;
 
 class CCTagLocalizer {
   
@@ -25,7 +27,7 @@ class CCTagLocalizer {
     Parameters() :
       _useGuidedMatching(false),
       _refineIntrinsics(false),
-      _numResults(4),
+      _nNearestKeyFrames(4),
       _numCommonViews(3),
       _fDistRatio(0.6),
       _featurePreset(features::EDESCRIBER_PRESET::ULTRA_PRESET),
@@ -33,7 +35,7 @@ class CCTagLocalizer {
     
     bool _useGuidedMatching;    //< Enable/disable guided matching when matching images
     bool _refineIntrinsics;     //< whether or not the Intrinsics of the query camera has to be refined
-    size_t _numResults;         //< number of best matching images to retrieve from the database        
+    size_t _nNearestKeyFrames;         //< number of best matching images to retrieve from the database        
     size_t _numCommonViews;     //< number minimum common images in which a point must be seen to be used in cluster tracking
     float _fDistRatio;          //< the ratio distance to use when matching feature with the ratio test
     features::EDESCRIBER_PRESET _featurePreset; //< the preset to use for feature extraction of the query image
@@ -78,8 +80,8 @@ private:
   
   // for each view index, it contains the cctag features and descriptors that have an
   // associated 3D point
-  Hash_Map<IndexT, Reconstructed_RegionsCCTag > _regions_per_view;
   
+  CCTagRegionsPerViews _regions_per_view;
   // contains the 3D reconstruction data
   sfm::SfM_Data _sfm_data;
   
@@ -87,10 +89,32 @@ private:
   features::CCTAG_Image_describer _image_describer;
   
   //
-  std::map<IndexT, Vec3> _cctagDatabase;
+  //std::map<IndexT, Vec3> _cctagDatabase;
 };
 
 IndexT getCCTagId(const CCTagDescriptor & desc);
+
+ /**
+   * @brief Retrieve the k nearest views in a collection of views based on a query
+   *        consisting in a set of CCTag regions.
+   * 
+   * @param[in] queryRegions Set of CCTag regions in the query
+   * @param[in] Collection of views containing a set of cctag regions 
+   * @param[in] nNearestKeyFrames Number of nearest neighbours to return
+   * @param[out] kNearestFrames Set of computed indices associated to the k nearest views
+   */
+void kNearestKeyFrames(
+          const features::CCTAG_Regions & queryRegions,
+          const CCTagRegionsPerViews & _regions_per_view,
+          std::size_t nNearestKeyFrames,
+          std::vector<IndexT> & kNearestFrames);
+
+std::bitset<128> constructCCTagViewDescriptor(
+        const std::vector<CCTagDescriptor> & vCCTagDescriptors);
+
+float viewSimilarity(
+        const features::CCTAG_Regions & regionsA,
+        const features::CCTAG_Regions & regionsB);
 
 } // namespace localization
 } // openMVG

@@ -49,26 +49,26 @@ bool CCTagLocalizer::init(const std::string &sfmFilePath,
   
   const sfm::Landmarks & landmarks = _sfm_data.GetLandmarks();
   
-  for(const auto & landmark : landmarks)
-  {
-    // Use the first observation to retrieve the associated descriptor.
-    const auto & firstObservation = *landmark.second.obs.begin();
-    
-    // Retrieve the Regions of the first observation
-    auto & reconstructedRegions = _regions_per_view[firstObservation.first];
-    
-    // Get the feature id: remap the index as we only load the reconstructed regions
-    const auto localFeatureId = reconstructedRegions._mapFullToLocal[firstObservation.second.id_feat];
-    
-    const auto & desc = reconstructedRegions._regions.Descriptors()[localFeatureId];
-    IndexT idCCTag = getCCTagId(desc);
-
-    // Insert <idCCTag, 3D point> into a map.
-    if (idCCTag!=UndefinedIndexT)
-    {
-      _cctagDatabase.emplace(idCCTag, landmark.second.X);
-    }
-  }
+//  for(const auto & landmark : landmarks)
+//  {
+//    // Use the first observation to retrieve the associated descriptor.
+//    const auto & firstObservation = *landmark.second.obs.begin();
+//    
+//    // Retrieve the Regions of the first observation
+//    auto & reconstructedRegions = _regions_per_view[firstObservation.first];
+//    
+//    // Get the feature id: remap the index as we only load the reconstructed regions
+//    const auto localFeatureId = reconstructedRegions._mapFullToLocal[firstObservation.second.id_feat];
+//    
+//    const auto & desc = reconstructedRegions._regions.Descriptors()[localFeatureId];
+//    IndexT idCCTag = getCCTagId(desc);
+//
+//    // Insert <idCCTag, 3D point> into a map.
+//    if (idCCTag!=UndefinedIndexT)
+//    {
+//      _cctagDatabase.emplace(idCCTag, landmark.second.X);
+//    }
+//  }
   return true;
 }
 
@@ -158,37 +158,60 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                 sfm::Image_Localizer_Match_Data &resection_data,
                 std::vector<pair<IndexT, IndexT> > &associationIDs)
 {
-#if 0
   // extract descriptors and features from image
   POPART_COUT("[features]\tExtract CCTag from query image");
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::CCTAG_Regions());
-  _image_describer.Describe(imageGray, tmpQueryRegions, NULL);
+  _image_describer.Describe(imageGrey, tmpQueryRegions);
   POPART_COUT("[features]\tExtract CCTAG done: found " << tmpQueryRegions->RegionCount() << " features");
   features::CCTAG_Regions queryRegions = *dynamic_cast<features::CCTAG_Regions*> (tmpQueryRegions.get());
 //  
 //    // recover the 2D-3D associations
 //    // Prepare data for resection
   
-  // Mapping between cctag id and their index inside Regions
-  std::map<IndexT, IndexT> cctagWith3D;
+  std::vector<IndexT> kNearestFrames;
+  kNearestFrames.reserve(param._nNearestKeyFrames);
   
-  for(size_t i = 0; i<queryRegions.RegionCount(); ++i)
-  {
-    // get the current descriptor
-    const CCTagDescriptor & desc = queryRegions.Descriptors()[i];
-    IndexT idCCTag = getCCTagId(desc);
-    
-    // check whether it is in the database of the cctag with an associated 3D point
-    if(_cctagDatabase.find(idCCTag) != _cctagDatabase.end())
-    {
-      cctagWith3D[idCCTag] = i;
-    }
-  }
+  kNearestKeyFrames(
+          queryRegions,
+          _regions_per_view,
+          param._nNearestKeyFrames,
+          kNearestFrames);
   
-    sfm::Image_Localizer_Match_Data matchData;
-    matchData.pt2D = Mat2X(2, cctagWith3D.size());
-    matchData.pt3D = Mat3X(3, cctagWith3D.size());
-#endif
+  
+//  // Mapping between cctag id and their index inside Regions
+//  std::map<IndexT, IndexT> cctagWith3D;
+//  
+//  for(size_t i = 0; i<queryRegions.RegionCount(); ++i)
+//  {
+//    // get the current descriptor
+//    const CCTagDescriptor & desc = queryRegions.Descriptors()[i];
+//    IndexT idCCTag = getCCTagId(desc);
+//    
+//    // check whether it is in the database of the cctag with an associated 3D point
+//    if(_cctagDatabase.find(idCCTag) != _cctagDatabase.end())
+//    {
+//      cctagWith3D[idCCTag] = i;
+//    }
+//  }
+  
+  //  Reconstructed_RegionsCCTag query <- detection_cctag
+//          
+//  vector<IndexT> = sim(Reconstructed_RegionsCCTag query,  _regions_per_view);
+//  
+//  for(auto indexView : _regions_per_view)
+//  {
+//    residu = localize(query, view);
+//    if ( residu < residuMin)
+//    {
+//      residuMin = residu;
+//      indexBestView = indexView;
+//    }
+//    refinePose( query, bestPose);
+//  }
+  
+ //   sfm::Image_Localizer_Match_Data matchData;
+ //   matchData.pt2D = Mat2X(2, cctagWith3D.size());
+ //   matchData.pt3D = Mat3X(3, cctagWith3D.size());
     
 //
 //    // Get the 3D points associated to each matched feature
@@ -263,6 +286,63 @@ CCTagLocalizer::CCTagLocalizer(const CCTagLocalizer& orig)
 
 CCTagLocalizer::~CCTagLocalizer()
 {
+}
+
+void kNearestKeyFrames(
+          const features::CCTAG_Regions & queryRegions,
+          const CCTagRegionsPerViews & regionsPerView,
+          std::size_t nNearestKeyFrames,
+          std::vector<IndexT> & kNearestFrames)
+{
+  kNearestFrames.clear();
+  
+  // A std::multimap is used instead of a std::map because is very likely that the
+  // similarity measure is equal for a subset of views in the CCTag regions case.
+  std::multimap<float, IndexT> sortedViewSimilarities;
+  
+  for(const auto & keyFrame : regionsPerView)
+  {
+    const float similarity = viewSimilarity(queryRegions, keyFrame.second._regions);
+    sortedViewSimilarities.emplace(similarity, keyFrame.first);
+  }
+  
+  std::size_t counter = 0;
+  for (auto rit = sortedViewSimilarities.crbegin(); rit != sortedViewSimilarities.crbegin(); ++rit)
+  {
+    kNearestFrames.push_back(rit->second);
+    ++counter;
+    
+    if (counter == nNearestKeyFrames)
+      break;
+  }
+}
+
+float viewSimilarity(
+        const features::CCTAG_Regions & regionsA,
+        const features::CCTAG_Regions & regionsB)
+{
+  assert(regionsA.DescriptorLength() == regionsB.DescriptorLength()); 
+  
+  const std::bitset<128> descriptorViewA = constructCCTagViewDescriptor(regionsA.Descriptors());
+  const std::bitset<128> descriptorViewB = constructCCTagViewDescriptor(regionsB.Descriptors());
+  
+  // The similarity is the sum of all the cctags sharing the same id visible in both views.
+  return (descriptorViewA & descriptorViewB).count();
+}
+
+std::bitset<128> constructCCTagViewDescriptor(
+        const std::vector<CCTagDescriptor> & vCCTagDescriptors)
+{
+  std::bitset<128> descriptorView;
+  for(const auto & cctagDescriptor : vCCTagDescriptors )
+  {
+    const IndexT cctagId = getCCTagId(cctagDescriptor);
+    if ( cctagId != UndefinedIndexT)
+    {
+      descriptorView.set(cctagId, true);
+    }
+  }
+  return descriptorView;
 }
 
 } // localization
