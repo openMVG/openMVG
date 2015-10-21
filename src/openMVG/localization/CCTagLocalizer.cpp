@@ -1,3 +1,5 @@
+#ifdef HAVE_CCTAG
+
 #include "CCTagLocalizer.hpp"
 #include "reconstructed_regions.hpp"
 #include <openMVG/sfm/sfm_data_io.hpp>
@@ -413,3 +415,5 @@ std::bitset<128> constructCCTagViewDescriptor(
 
 } // localization
 } // openMVG
+
+#endif //HAVE_CCTAG

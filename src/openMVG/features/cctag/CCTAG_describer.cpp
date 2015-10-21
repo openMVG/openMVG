@@ -1,3 +1,5 @@
+#ifdef HAVE_CCTAG
+
 #include "CCTAG_describer.hpp"
 
 //#define CPU_ADAPT_OF_GPU_PART //todo: #ifdef depreciated
@@ -62,3 +64,5 @@ bool CCTAG_Image_describer::Describe(const image::Image<unsigned char>& image,
 
 } // namespace features
 } // namespace openMVG
+
+#endif HAVE_CCTAG

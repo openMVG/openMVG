@@ -1,5 +1,6 @@
-#ifndef OPENMVG_CCTAG_DESCRIBER_H
-#define OPENMVG_CCTAG_DESCRIBER_H
+#ifdef HAVE_CCTAG
+
+#pragma once
 
 #include <openMVG/features/image_describer.hpp>
 #include <openMVG/features/regions_factory.hpp>
@@ -88,4 +89,4 @@ private:
 #include <cereal/archives/json.hpp>
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::CCTAG_Image_describer, "CCTAG_Image_describer");
 
-#endif // OPENMVG_CCTAG_DESCRIBER_H
+#endif //HAVE_CCTAG
