@@ -72,6 +72,7 @@ public:
   CCTagLocalizer();
   CCTagLocalizer(const CCTagLocalizer& orig);
   virtual ~CCTagLocalizer();
+  const sfm::SfM_Data& getSfMData() const {return _sfm_data; }
 private:
   
   bool loadReconstructionDescriptors(
