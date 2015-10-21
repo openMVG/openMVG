@@ -252,7 +252,7 @@ bool checkVectorElements(const std::vector<Feature, FeatureAllocator> &f, const 
  *
  * The standard Lloyd's algorithm is used. By default, cluster centers are initialized randomly.
  */
-template<class Feature, class Distance = L2<Feature>,
+template<class Feature, class Distance = L2<Feature, Feature>,
 class FeatureAllocator = typename DefaultAllocator<Feature>::type>
 class SimpleKmeans
 {

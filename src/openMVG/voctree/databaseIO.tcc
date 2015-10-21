@@ -23,9 +23,9 @@ namespace voctree {
  * @param[in,out] numFeatures a vector collecting for each file read the number of features read
  * @return the number of overall features read
  */
-template<class DescriptorT>
+template<class DescriptorT, class VocDescriptorT>
 std::size_t populateDatabase(const std::string &fileFullPath,
-                             const VocabularyTree<DescriptorT> &tree,
+                             const VocabularyTree<VocDescriptorT> &tree,
                              Database &db,
                              std::map<size_t, Document> &documents)
 {
@@ -64,25 +64,25 @@ std::size_t populateDatabase(const std::string &fileFullPath,
   return numDescriptors;
 }
 
-template<class DescriptorT>
+template<class DescriptorT, class VocDescriptorT>
 void queryDatabase(const std::string &fileFullPath,
-                   const openMVG::voctree::VocabularyTree<DescriptorT> &tree,
-                   const openMVG::voctree::Database &db,
+                   const VocabularyTree<VocDescriptorT> &tree,
+                   const Database &db,
                    size_t numResults,
-                   std::vector<openMVG::voctree::Matches> &allMatches)
+                   std::map<size_t, DocMatches> &allMatches)
 {
-  std::map<size_t, openMVG::voctree::Document> documents;
-  queryDatabase(fileFullPath, tree, db, numResults, allMatches, documents);
+  std::map<size_t, Document> documents;
+  queryDatabase<DescriptorT>(fileFullPath, tree, db, numResults, allMatches, documents);
 }
 
 
-template<class DescriptorT>
+template<class DescriptorT, class VocDescriptorT>
 void queryDatabase(const std::string &fileFullPath,
-                   const openMVG::voctree::VocabularyTree<DescriptorT> &tree,
-                   const openMVG::voctree::Database &db,
+                   const VocabularyTree<VocDescriptorT> &tree,
+                   const Database &db,
                    size_t numResults,
-                   std::vector<openMVG::voctree::Matches> &allMatches,
-                   std::map<size_t, openMVG::voctree::Document> &documents)
+                   std::map<size_t, DocMatches> &allMatches,
+                   std::map<size_t, Document> &documents)
 {
   std::map<IndexT, std::string> descriptorsFiles;
   getListOfDescriptorFiles(fileFullPath, descriptorsFiles);
@@ -95,7 +95,7 @@ void queryDatabase(const std::string &fileFullPath,
   for(const auto &currentFile : descriptorsFiles)
   {
     std::vector<DescriptorT> descriptors;
-    openMVG::voctree::Matches matches;
+    openMVG::voctree::DocMatches matches;
 
     // Read the descriptors
     loadDescsFromBinFile(currentFile.second, descriptors, false);
@@ -110,11 +110,10 @@ void queryDatabase(const std::string &fileFullPath,
     db.find(imgVisualWords, numResults, matches);
 
     // add the matches to the result vector
-    allMatches.emplace_back(matches);
+    allMatches[currentFile.first] = matches;
     
     ++display;
   }
-
 }
 
 

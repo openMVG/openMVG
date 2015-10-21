@@ -187,7 +187,7 @@ int main(int argc, char** argv)
   if(sanityCheck)
   {
     // Now query each document (sanity check)
-    std::vector<openMVG::voctree::Match> matches;
+    std::vector<openMVG::voctree::DocMatch> matches;
     size_t wrong = 0; // count the wrong matches
     double recval = 0;
     POPART_COUT("Sanity check: querying the database with the same documents");

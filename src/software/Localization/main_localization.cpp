@@ -212,7 +212,7 @@ int main(int argc, char** argv)
   POPART_COUT("Request closest images from voctree");
   // Request closest images from voctree
   std::vector<voctree::Word> requestImageWords = voctree.quantize(queryRegions.Descriptors());
-  std::vector<voctree::Match> matchedImages;
+  std::vector<voctree::DocMatch> matchedImages;
   db.find(requestImageWords, numResults, matchedImages);
 
   // Match with the N best images
@@ -247,7 +247,7 @@ int main(int argc, char** argv)
 
   POPART_COUT("Localization for each image.");
   // For each image retrieved from the voctree
-  for(const voctree::Match& matchedImage : matchedImages)
+  for(const voctree::DocMatch& matchedImage : matchedImages)
   {
     // get the view id of the current matched image of the dataset
     const IndexT matchedViewIndex = matchedImage.id;

@@ -21,9 +21,9 @@ namespace voctree {
  * @param[in,out] numFeatures a vector collecting for each file read the number of features read
  * @return the number of overall features read
  */
-template<class DescriptorT>
+template<class DescriptorT, class VocDescriptorT>
 std::size_t populateDatabase(const std::string &fileFullPath,
-                             const VocabularyTree<DescriptorT> &tree,
+                             const VocabularyTree<VocDescriptorT> &tree,
                              Database &db,
                              std::map<size_t, Document> &documents);
 /**
@@ -38,12 +38,12 @@ std::size_t populateDatabase(const std::string &fileFullPath,
  * @param[out] allMatches The matches for all the images
  * @param[out] documents For each document, it contains the list of associated visual words 
  */
-template<class DescriptorT>
+template<class DescriptorT, class VocDescriptorT>
 void queryDatabase(const std::string &fileFullPath,
-                   const VocabularyTree<DescriptorT> &tree,
+                   const VocabularyTree<VocDescriptorT> &tree,
                    const Database &db,
                    size_t numResults,
-                   std::vector<Matches> &allMatches,
+                   std::map<size_t, DocMatches> &allMatches,
                    std::map<size_t, Document> &documents);
 
 /**
@@ -59,12 +59,12 @@ void queryDatabase(const std::string &fileFullPath,
  * 
  * @see queryDatabase()
  */
-template<class DescriptorT>
+template<class DescriptorT, class VocDescriptorT>
 void queryDatabase(const std::string &fileFullPath,
-                   const openMVG::voctree::VocabularyTree<DescriptorT> &tree,
+                   const openMVG::voctree::VocabularyTree<VocDescriptorT> &tree,
                    const openMVG::voctree::Database &db,
                    size_t numResults,
-                   std::vector<openMVG::voctree::Matches> &allMatches);
+                   std::map<size_t, DocMatches> &allMatches);
 
 
 } //namespace voctree

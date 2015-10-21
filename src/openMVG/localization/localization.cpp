@@ -304,12 +304,12 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
   std::vector<voctree::Word> requestImageWords = _voctree.quantize(queryRegions.Descriptors());
   
   // Request closest images from voctree
-  std::vector<voctree::Match> matchedImages;
+  std::vector<voctree::DocMatch> matchedImages;
   _database.find(requestImageWords, numResults, matchedImages);
   
   // just debugging bla bla
   // for each similar image found print score and number of features
-  for(const voctree::Match & currMatch : matchedImages )
+  for(const voctree::DocMatch & currMatch : matchedImages )
   {
     // get the corresponding index of the view
     const IndexT matchedViewIndex = currMatch.id;
@@ -334,7 +334,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
  
   // C. for each found similar image, try to find the correspondences between the 
   // query image and the similar image
-  for(const voctree::Match& matchedImage : matchedImages)
+  for(const voctree::DocMatch& matchedImage : matchedImages)
   {
     // minimum number of points that allows a reliable 3D reconstruction
     const size_t minNum3DPoints = 5;
@@ -517,13 +517,13 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   std::vector<voctree::Word> requestImageWords = _voctree.quantize(queryRegions.Descriptors());
   
   // Request closest images from voctree
-  std::vector<voctree::Match> matchedImages;
+  std::vector<voctree::DocMatch> matchedImages;
   if(numResults==0) numResults = _database.size();
   _database.find(requestImageWords, numResults, matchedImages);
   
   // just debugging bla bla
   // for each similar image found print score and number of features
-  for(const voctree::Match & currMatch : matchedImages )
+  for(const voctree::DocMatch & currMatch : matchedImages )
   {
     // get the view handle
     const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[currMatch.id];
@@ -545,7 +545,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   // C. for each found similar image, try to find the correspondences between the 
   // query image adn the similar image
   std::size_t maxResults = 10;
-  for(const voctree::Match& matchedImage : matchedImages)
+  for(const voctree::DocMatch& matchedImage : matchedImages)
   {
     // minimum number of points that allows a reliable 3D reconstruction
     const size_t minNum3DPoints = 5;

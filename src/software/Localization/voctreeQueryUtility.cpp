@@ -28,10 +28,11 @@ namespace bpo = boost::program_options;
 namespace bfs = boost::filesystem;
 
 typedef openMVG::features::Descriptor<float, DIMENSION> DescriptorFloat;
+typedef openMVG::features::Descriptor<unsigned char, DIMENSION> DescriptorUChar;
 
 typedef std::map<size_t, openMVG::voctree::Document> DocumentMap;
 
-std::ostream& operator<<(std::ostream& os, const openMVG::voctree::Matches &matches)
+std::ostream& operator<<(std::ostream& os, const openMVG::voctree::DocMatches &matches)
 {
   os << "[ ";
   for(const auto &e : matches)
@@ -212,7 +213,7 @@ int main(int argc, char** argv)
   DocumentMap documents;
 
   auto detect_start = std::chrono::steady_clock::now();
-  size_t numTotFeatures = openMVG::voctree::populateDatabase(keylist, tree, db, documents);
+  size_t numTotFeatures = openMVG::voctree::populateDatabase<DescriptorUChar>(keylist, tree, db, documents);
   auto detect_end = std::chrono::steady_clock::now();
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
 
@@ -242,7 +243,7 @@ int main(int argc, char** argv)
   // Query documents or sanity check
   //************************************************
 
-  std::vector<openMVG::voctree::Matches> allMatches;
+  std::map<size_t, openMVG::voctree::DocMatches> allMatches;
   size_t wrong = 0;
   if(numImageQuery == 0)
   {
@@ -264,9 +265,9 @@ int main(int argc, char** argv)
   }
   else
   {
-    // otherwise qury the database with the provided query list
+    // otherwise query the database with the provided query list
     POPART_COUT("Querying the database with the documents in " << queryList);
-    openMVG::voctree::queryDatabase(queryList, tree, db, numImageQuery, allMatches);
+    openMVG::voctree::queryDatabase<DescriptorUChar>(queryList, tree, db, numImageQuery, allMatches);
   }
 
   if(withOutDir)
@@ -312,21 +313,21 @@ int main(int argc, char** argv)
 
   }
 
-  for(size_t i = 0; i < allMatches.size(); ++i)
+  for(auto docMatches: allMatches)
   {
-    const auto matches = allMatches[i];
+    const auto matches = docMatches.second;
     bfs::path dirname;
-    POPART_COUT("Camera: " << i);
-    POPART_COUT("query document " << i << " has " << matches.size() << " matches\tBest " << matches[0].id << " with score " << matches[0].score);
+    POPART_COUT("Camera: " << docMatches.first);
+    POPART_COUT("query document " << docMatches.first << " has " << matches.size() << " matches\tBest " << matches[0].id << " with score " << matches[0].score);
     if(withOutput)
     {
       if(not matlabOutput)
       {
-        fileout << "Camera: " << i << std::endl;
+        fileout << "Camera: " << docMatches.first << std::endl;
       }
       else
       {
-        fileout << "m{" << i + 1 << "}=";
+        fileout << "m{" << docMatches.first + 1 << "}=";
         fileout << matches;
       }
     }
@@ -340,7 +341,8 @@ int main(int argc, char** argv)
       bfs::path sylinkName; //< the name used for the symbolic link
 
       // get the dirname from the filename
-      openMVG::sfm::Views::const_iterator it = sfmdataQuery->GetViews().find(i);
+      
+      openMVG::sfm::Views::const_iterator it = sfmdataQuery->GetViews().find(docMatches.first);
       if(it != sfmdataQuery->GetViews().end())
       {
         sylinkName = bfs::path(it->second->s_Img_path).filename();
@@ -350,7 +352,7 @@ int main(int argc, char** argv)
       else
       {
         // this is very wrong
-        POPART_CERR("Could not find the image file for the document " << i << "!");
+        POPART_CERR("Could not find the image file for the document " << docMatches.first << "!");
         return EXIT_FAILURE;
       }
       bfs::create_directories(dirname);
@@ -361,7 +363,7 @@ int main(int argc, char** argv)
     {
       POPART_COUT("\t match " << matches[j].id << " with score " << matches[j].score);
       //			POPART_CERR("" <<  i->first << " " << matches[j].id << " " << matches[j].score);
-      if(withOutput && !matlabOutput) fileout << i << " " << matches[j].id << " " << matches[j].score << std::endl;
+      if(withOutput && !matlabOutput) fileout << docMatches.first << " " << matches[j].id << " " << matches[j].score << std::endl;
 
       if(withOutDir)
       {
@@ -375,7 +377,7 @@ int main(int argc, char** argv)
         if(it != sfmdata.GetViews().end())
         {
           bfs::path imgName(it->second->s_Img_path);
-          sylinkName = bfs::path(myToString(j, 4) + "." + imgName.filename().string());
+          sylinkName = bfs::path(myToString(j, 4) + "." + std::to_string(matches[j].score) + "." + imgName.filename().string());
           bfs::path imgPath(sfmdata.s_root_path);
           absoluteFilename = imgPath / imgName;
         }
@@ -392,10 +394,10 @@ int main(int argc, char** argv)
     if(!withQuery)
     {
       // only for the sanity check, check if the best matching image is the document itself
-      if(i != matches[0].id)
+      if(docMatches.first != matches[0].id)
       {
         ++wrong;
-        POPART_COUT("##### wrong match for document " << i);
+        POPART_COUT("##### wrong match for document " << docMatches.first);
       }
     }
   }
