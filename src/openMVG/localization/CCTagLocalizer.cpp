@@ -177,9 +177,6 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
           param._nNearestKeyFrames,
           nearestKeyFrames);
   
-  POPART_COUT("After kNearestKeyFrames:");
-  POPART_COUT(nearestKeyFrames.size());
-  
   // Set the minimum of the residual to infinite.
   double residualMin = std::numeric_limits<double>::max();
   IndexT indexBestKeyFrame = UndefinedIndexT;
@@ -188,7 +185,6 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
   // consistent one.
   for(const auto indexKeyFrame : nearestKeyFrames)
   {
-    POPART_COUT("[poseEstimation]\tEstimating camera pose...");
     const Reconstructed_RegionsCCTag& matchedRegions = _regions_per_view[indexKeyFrame];
     
     // Matching
@@ -251,14 +247,11 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
       // Update best inital pose.
       pose = poseTemp;
       resectionData = resectionDataTemp;
-      
-      POPART_COUT(" ----------- find a minimum residual -----------");
     }
   }
   
   if ( indexBestKeyFrame == UndefinedIndexT ) 
   {
-    POPART_COUT(" ----------- No solution found -----------");
     return false;
   }
   
@@ -273,28 +266,9 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
     // Decompose the projection matrix  to get K, R and t using 
     // RQ decomposition
     KRt_From_P(resectionData.projection_matrix, &K_, &R_, &t_);
-    POPART_COUT("K estimated\n" << K_);
     queryIntrinsics.setK(K_);
     queryIntrinsics.setWidth(imageGrey.Width());
     queryIntrinsics.setHeight(imageGrey.Height());
-  }
-
-  POPART_COUT("Pose estimated\n");
-  POPART_COUT(pose.center());
-  POPART_COUT(pose.rotation());
-  
-  POPART_COUT(resectionData.projection_matrix);
-  POPART_COUT(resectionData.pt3D.cols());
-  POPART_COUT(resectionData.pt2D.cols());
-  POPART_COUT(resectionData.vec_inliers.size());
-  for(IndexT toto : resectionData.vec_inliers)
-  {
-    std::cout << "Index " << toto << std::endl;
-    std::cout << resectionData.pt3D.col(toto);
-    std::cout << std::endl;
-    std::cout << resectionData.pt2D.col(toto);
-    std::cout << std::endl;
-    std::cout << std::endl;
   }
   
   // Upper bound pixel(s) tolerance for residual errors
@@ -309,7 +283,6 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
           resectionData, 
           true /*b_refine_pose*/, 
           param._refineIntrinsics /*b_refine_intrinsic*/);
-  POPART_COUT("Refine pose");
   
   if(!refineStatus)
     POPART_COUT("[poseEstimation]\tRefine pose could not improve the estimation of the camera pose.");
