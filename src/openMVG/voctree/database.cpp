@@ -185,7 +185,10 @@ void Database::computeVector(const std::vector<Word>& document, DocumentVector& 
     // the map v contains only the visual words that are associated to some features
     // the visual words in v are unique unlikely the document
     Word word = *it;
-    v[word] += word_weights_[word];
+    if(v.find(word) == v.end())
+      v[word] = word_weights_[word];
+    else
+      v[word] += word_weights_[word];
   }
   normalize(v);
 }
