@@ -23,10 +23,10 @@ FIND_PATH(CCTAG_INCLUDE_DIR cctag/ICCTag.hpp
   CCTag
 )
 
-find_package(OpenCV REQUIRED)
-find_package(OPTPP REQUIRED)
-find_package(Ceres REQUIRED)
-find_package(Glog REQUIRED)
+find_package(OpenCV QUIET)
+find_package(OPTPP QUIET)
+find_package(Ceres QUIET)
+find_package(Glog QUIET)
 
 IF(CCTAG_INCLUDE_DIR)
   MESSAGE(STATUS "CCTag headers found in ${CCTAG_INCLUDE_DIRS}")
