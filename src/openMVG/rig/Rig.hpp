@@ -9,6 +9,7 @@
 #include <Eigen/Dense>
 
 #include <vector>
+#include <map>
 
 namespace openMVG {
 namespace rig {
@@ -20,53 +21,68 @@ public:
  
   virtual ~Rig();
   
-#if 0
-  std::size_t nCams() const { return _vTrackers.size(); }
+  std::size_t nCams() const { return _vLocalizationResults.size(); }
   
-  const PonctualMarkerTracker& tracker(std::size_t i) const { return _vTrackers[i]; }
-  PonctualMarkerTracker& tracker(std::size_t i) { return _vTrackers[i]; }
+  std::vector<localization::LocalizationResult> & getLocalizationResults(IndexT i)
+  { 
+    return _vLocalizationResults[i];
+  }
+  //localization::LocalizationResult& getLocalizationResults(std::size_t i) { return _vLocalizationResults[i]; }
   
-  const Pose& relativePose(std::size_t i) const { return _vRelativePoses[i-1]; }
-  Pose& relativePose(std::size_t i) { return _vRelativePoses[i-1]; } 
+  const geometry::Pose3& getRelativePose(std::size_t i) const { return _vRelativePoses[i-1]; }
+  //geometry::Pose3& getRelativePose(std::size_t i) { return _vRelativePoses[i-1]; } 
   
-  const std::vector<Pose> & poses( ) const { return _vPoses; }
-  std::vector<Pose>& poses( ) { return _vPoses; } 
+  const std::vector<geometry::Pose3> & getPoses( ) const { return _vPoses; }
+  //std::vector<geometry::Pose3>& getPoses( ) { return _vPoses; }
   
-  // Compute the intial relative positions between all witness cameras and the 
-  // main one
-  // ouput: true if the initial calibration succeed, false otherwise
+  /*
+   * @brief Compute the initial guess related to the relative positions between all witness 
+   * cameras and the main camera
+   * @return True if the initial calibration succeed, false otherwise.
+   */
   bool initializeCalibration();
   
-  double distance(openMVG::Vec3 va, openMVG::Vec3 vb);
+  /*
+   * @brief 
+   */
+  void setTrackingResult(
+          std::vector<localization::LocalizationResult> vLocalizationResults,
+          std::size_t i);
   
-  Pose product(const Pose & poseA, const Pose & poseB);
-  Pose productInv(const Pose & poseA, const Pose & poseB);
+  //double distance(openMVG::Vec3 va, openMVG::Vec3 vb);
   
+  //Pose product(const Pose & poseA, const Pose & poseB);
+ // Pose productInv(const Pose & poseA, const Pose & poseB);
+  
+  /*
+   * @brief From a set of relative poses, find the optimal one for a given 
+   *        localization result which minimizes the reprojection errors over
+   *        all views.
+   */
+  void findOptimalPose(
+        const std::vector<geometry::Pose3> & vPoses,
+        std::size_t iRes,
+        geometry::Pose3 & result );
+
   // Optimize the initial solutions over all images
   // output: mean of the reprojection errors
-  bool optimizeCalibration();
+  //bool optimizeCalibration();
   
-  // Direct method to compute an optimal solution to the relative pose problem for
-  // the traker iTracker
-  void findOptimalPose(const std::vector<Pose> & vPoses, std::size_t iTracker, Pose & result );
-  
-  void displayRelativePoseReprojection(const Pose & relativePose, std::size_t iTracker);
- #endif 
+  //void displayRelativePoseReprojection(const Pose & relativePose, std::size_t iTracker);
   
 private:
+  // Set of localization results (all of them associated to a camera)
+  // The FIRST INDEX is associated to the MAIN CAMERA for which the pose
+  // corresponds to the entire system pose.
+  std::map<IndexT,std::vector<localization::LocalizationResult> > _vLocalizationResults;
   
-  // Set of camera trackers (all of them associated to a camera)
-  // THE FIRST index is associated to the main camera for which the pose
-  // corresponds to the whole system pose.
-  std::vector<localization::CCTagLocalizer> _vTrackers; // todo@L: replace by Tracker interface
-  
-  // (_vRelativePoses.size == nCams-1) where nCams represents the number of cameras including the main one
+  // (_vRelativePoses.size == nCams-1) where nCams represents the number of cameras
+  // including the main one
   // _vRelativePoses contains the relative poses of all witness cameras
   std::vector<geometry::Pose3> _vRelativePoses;
-  // todo@L: discuss the "degree" of dependancy with openMVG
-  // (BA aside in cameraLoc or used mainly the openMVG implementation?)
   
-  std::vector<geometry::Pose3> _vPoses; // Pose of the rig, (== pose of the main camera == pose of _vTrackers[0])
+  // Rig pose
+  std::vector<geometry::Pose3> _vPoses; // (i.e. pose of the main camera)
 };
 
 #if 0

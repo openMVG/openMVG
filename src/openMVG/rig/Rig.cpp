@@ -2,7 +2,7 @@
 //#include "bundleAdjustmentCeresFunctor.hpp"
 
 //#include <vision/cameraTracking/debug/visualDebug.hpp>
-#include <eigen3/Eigen/src/Core/MatrixBase.h>
+//#include <eigen3/Eigen/src/Core/MatrixBase.h>
 
 #include <openMVG/sfm/sfm_data_BA_ceres.hpp>
 #include <ceres/rotation.h>
@@ -14,66 +14,72 @@ Rig::~Rig()
 {
 }
 
-#if 0
+void Rig::setTrackingResult(
+        std::vector<localization::LocalizationResult> vLocalizationResults,
+        std::size_t i)
+{
+  _vLocalizationResults.emplace(i, vLocalizationResults);
+}
+
 bool Rig::initializeCalibration()
 {
-  const std::size_t nCams = _vTrackers.size();
+  const std::size_t nCams = _vLocalizationResults.size();
   
   // Tracker of the main cameras
-  PonctualMarkerTracker & mainTracker = _vTrackers[0];
+  std::vector<localization::LocalizationResult> & resMainCamera = _vLocalizationResults[0];
   
   // Clear all relative poses
   _vRelativePoses.clear();
   _vRelativePoses.reserve(nCams-1);
   
-  // Loop overall witness cameras
+  // Loop over all witness cameras
   for (int i=1 ; i < nCams ; ++i)
   {
     // Perform the pose averaging over all relative pose between the main camera
     // (index 0) and the witness camera (index i)
-    PonctualMarkerTracker & tracker = _vTrackers[i];
+    std::vector<localization::LocalizationResult> & resWitnessCamera = _vLocalizationResults[i];
     
     // vRelativePoses will store all the relative poses overall frames where both
     // the pose computation of the main camera and witness camera succeed
-    std::vector<Pose> vRelativePoses;
-    vRelativePoses.reserve(tracker.poses().size());
+    std::vector<geometry::Pose3> vRelativePoses;
+    vRelativePoses.reserve(resWitnessCamera.size());
     
-    for(int j=0 ; j < tracker.poses().size() ; ++j )
+    for(int iView=0 ; iView < resWitnessCamera.size() ; ++iView )
     {
       // Check that both pose computations succeed 
-      if ( mainTracker.poses()[j].second && tracker.poses()[j].second )
+      if ( resMainCamera[iView].isValid() && resWitnessCamera[iView].isValid() )
       {
-        const openMVG::Mat3 R1 = mainTracker.poses()[j].first.rotation();
-        const openMVG::Vec3 t1 = mainTracker.poses()[j].first.translation();
-        const openMVG::Mat3 R2 = tracker.poses()[j].first.rotation();
-        const openMVG::Vec3 t2 = tracker.poses()[j].first.translation();
+        const openMVG::Mat3 R1 = resMainCamera[iView].getPose().rotation();
+        const openMVG::Vec3 t1 = resMainCamera[iView].getPose().translation();
+        const openMVG::Mat3 R2 = resWitnessCamera[iView].getPose().rotation();
+        const openMVG::Vec3 t2 = resWitnessCamera[iView].getPose().translation();
         
         const openMVG::Mat3 R12 = R2 * R1.transpose();
         const openMVG::Vec3 t12 = t2 - R12 * t1;
         
-        const Pose relativePose( R12 , -R12.transpose()*t12 );
+        const geometry::Pose3 relativePose( R12 , -R12.transpose()*t12 );
         
         vRelativePoses.push_back(relativePose);
       }
     }
-    Pose optimalRelativePose;
+    geometry::Pose3 optimalRelativePose;
     findOptimalPose(vRelativePoses, i, optimalRelativePose );
     //poseAveraging(vRelativePoses, averageRelativePose);
     _vRelativePoses.push_back(optimalRelativePose);
   }
   
-  // Update all poses in all trackers
+  // Update all poses in all localization
   for (int iRelativePose = 0 ; iRelativePose < _vRelativePoses.size() ; ++iRelativePose )
   {
-    std::size_t iTracker = iRelativePose+1;
-    for (int iPose = 0 ; iPose < _vTrackers[iTracker].poses().size() ; ++iPose )
+    std::size_t iRes = iRelativePose+1;
+    for (int iView = 0 ; iView < _vLocalizationResults[iRes].size() ; ++iView )
     {
-      if( _vTrackers[iTracker].poses()[iPose].second && _vTrackers[0].poses()[iPose].second )
+      if( _vLocalizationResults[iRes][iView].isValid() && _vLocalizationResults[0][iView].isValid() )
       {
-        const Pose & relativePose = _vRelativePoses[iRelativePose];
+        const geometry::Pose3 & relativePose = _vRelativePoses[iRelativePose];
         
-        const openMVG::Mat3 R1 = _vTrackers[0].poses()[iPose].first.rotation();
-        const openMVG::Vec3 t1 = _vTrackers[0].poses()[iPose].first.translation();
+        const openMVG::Mat3 R1 = _vLocalizationResults[0][iView].getPose().rotation();
+        const openMVG::Vec3 t1 = _vLocalizationResults[0][iView].getPose().translation();
         
         const openMVG::Mat3 R12 = relativePose.rotation();
         const openMVG::Vec3 t12 = relativePose.translation();
@@ -81,26 +87,26 @@ bool Rig::initializeCalibration()
         const openMVG::Mat3 R2 = R12 * R1;
         const openMVG::Vec3 t2 = R12 * t1 + t12 ;
         
-        _vTrackers[iTracker].poses()[iPose].first = Pose( R2 , -R2.transpose() * t2 );
+        _vLocalizationResults[iRes][iView].setPose(geometry::Pose3( R2 , -R2.transpose() * t2 ));
       }
     }
   }
-  
 }
 
-Pose Rig::product(const Pose & poseA, const Pose & poseB)
+#if 0
+geometry::Pose3 Rig::product(const geometry::Pose3 & poseA, const geometry::Pose3 & poseB)
 {
   openMVG::Mat3 R = poseA.rotation()*poseB.rotation();
   openMVG::Vec3 t = poseA.rotation()*poseB.translation()+poseA.translation();
-  return Pose(R, -R.transpose()*t);
+  return geometry::Pose3(R, -R.transpose()*t);
 }
 
-Pose Rig::productInv(const Pose & poseA, const Pose & poseB)
+geometry::Pose3 Rig::productInv(const geometry::Pose3 & poseA, const geometry::Pose3 & poseB)
 {
   openMVG::Vec3 t = -poseA.rotation().transpose()*poseA.translation();
   openMVG::Mat3 R = poseA.rotation().transpose();
   
-  Pose poseC(R, -R.transpose()*t);
+  geometry::Pose3 poseC(R, -R.transpose()*t);
   return product(poseC,poseB);
 }
 
@@ -114,30 +120,33 @@ double Rig::distance(openMVG::Vec3 va, openMVG::Vec3 vb)
   return sqrt(d1*d1+d2*d2+d3*d3);
 }
 
+#endif
+
 // From a set of relative pose, find the optimal one for a given tracker iTraker which
 // minimize the reprojection errors over all images
-void Rig::findOptimalPose(const std::vector<Pose> & vPoses, std::size_t iTracker, Pose & result )
+void Rig::findOptimalPose(
+        const std::vector<geometry::Pose3> & vPoses,
+        std::size_t iRes,
+        geometry::Pose3 & result )
 {
-  PonctualMarkerTracker & mainTracker = _vTrackers[0];
-  PonctualMarkerTracker & tracker = _vTrackers[iTracker];
+  std::vector<localization::LocalizationResult> & resMainCamera = _vLocalizationResults[0];
+  std::vector<localization::LocalizationResult> & resWitnessCamera = _vLocalizationResults[iRes];
   
-  double minReprojError = 1e13;
+  double minReprojError = std::numeric_limits<double>::max();
   double iMin = 0;
   
   for(int i=0 ; i < vPoses.size() ; ++i)
   {
-    const Pose & relativePose = vPoses[i];
-    
+    const geometry::Pose3 & relativePose = vPoses[i];
+
     double error = 0;
-    for(int j=0 ; j < tracker.poses().size() ; ++j )
+    for(int j=0 ; j < resWitnessCamera.size() ; ++j )
     {
       // Check that both pose computations succeed 
-      if ( tracker.poses()[j].second )
+      if ( ( resMainCamera[j].isValid() ) && ( resWitnessCamera[j].isValid() ) )
       {
-        //Pose pose = mainTracker.poses()[j].first*relativePose;
-        
-        const openMVG::Mat3 R1 = mainTracker.poses()[j].first.rotation();
-        const openMVG::Vec3 t1 = mainTracker.poses()[j].first.translation();
+        const openMVG::Mat3 R1 = resMainCamera[j].getPose().rotation();
+        const openMVG::Vec3 t1 = resMainCamera[j].getPose().translation();
         
         const openMVG::Mat3 R12 = relativePose.rotation();
         const openMVG::Vec3 t12 = relativePose.translation();
@@ -145,9 +154,10 @@ void Rig::findOptimalPose(const std::vector<Pose> & vPoses, std::size_t iTracker
         const openMVG::Mat3 R2 = R12 * R1;
         const openMVG::Vec3 t2 = R12 * t1 + t12 ;
         
-        const Pose pose( R2 , -R2.transpose() * t2 );
+        const geometry::Pose3 pose( R2 , -R2.transpose() * t2 );
         
-        error += reprojectionError(toOMVG(tracker.intrinsics()[j].getIntrinsics().getK()), pose, tracker.imgPts()[j], tracker.pts()[j]);
+        // todo: uncomment:
+        // error += reprojectionError(toOMVG(resWitnessCamera.intrinsics()[j].getIntrinsics().getK()), pose, tracker.imgPts()[j], tracker.pts()[j]);
       }
     }
     if ( error < minReprojError )
@@ -158,16 +168,18 @@ void Rig::findOptimalPose(const std::vector<Pose> & vPoses, std::size_t iTracker
   }
   result = vPoses[iMin];
   
-  //displayRelativePoseReprojection(Pose(openMVG::Mat3::Identity(), openMVG::Vec3::Zero()), 0);
+  //displayRelativePoseReprojection(geometry::Pose3(openMVG::Mat3::Identity(), openMVG::Vec3::Zero()), 0);
   //displayRelativePoseReprojection(result, iTracker);
 }
 
+#if 0
+
 // Display reprojection error based on a relative pose
-void Rig::displayRelativePoseReprojection(const Pose & relativePose, std::size_t iTracker)
+void Rig::displayRelativePoseReprojection(const geometry::Pose3 & relativePose, std::size_t iTracker)
 {
 #ifdef VISUAL_DEBUG_MODE
-  PonctualMarkerTracker & mainTracker = _vTrackers[0];
-  PonctualMarkerTracker & tracker = _vTrackers[iTracker];
+  PonctualMarkerTracker & mainTracker = _vLocalizationResults[0];
+  PonctualMarkerTracker & tracker = _vLocalizationResults[iTracker];
 
   // Set the marker size
   std::size_t semiWidth = 3.0;
@@ -185,7 +197,7 @@ void Rig::displayRelativePoseReprojection(const Pose & relativePose, std::size_t
     // Check that both pose computations succeed 
     if ( tracker.poses()[j].second )
     {
-      //Pose pose = mainTracker.poses()[j].first*relativePose;
+      //geometry::Pose3 pose = mainTracker.poses()[j].first*relativePose;
       
       const openMVG::Mat3 R1 = mainTracker.poses()[j].first.rotation();
       const openMVG::Vec3 t1 = mainTracker.poses()[j].first.translation();
@@ -196,7 +208,7 @@ void Rig::displayRelativePoseReprojection(const Pose & relativePose, std::size_t
       const openMVG::Mat3 R2 = R12 * R1;
       const openMVG::Vec3 t2 = R12 * t1 + t12 ;
 
-      const Pose pose( R2 , -R2.transpose() * t2 );
+      const geometry::Pose3 pose( R2 , -R2.transpose() * t2 );
         
       //
       for(int k=0 ; k < tracker.pts()[j].size() ; ++k)
@@ -246,7 +258,7 @@ bool Rig::optimizeCalibration()
   std::vector<std::vector<double> > vRelativePoses;
   for (int iRelativePose = 0 ; iRelativePose < _vRelativePoses.size() ; ++iRelativePose )
   {
-    Pose & pose = _vRelativePoses[iRelativePose];
+    geometry::Pose3 & pose = _vRelativePoses[iRelativePose];
     
     const openMVG::Mat3 R = pose.rotation();
     const openMVG::Vec3 t = pose.translation();
@@ -271,11 +283,11 @@ bool Rig::optimizeCalibration()
   
   
   std::vector<std::vector<double> > vMainPoses;
-  for (int iView = 0 ; iView < _vTrackers[0].poses().size() ; ++iView )
+  for (int iView = 0 ; iView < _vLocalizationResults[0].poses().size() ; ++iView )
   {
-    if ( _vTrackers[0].poses()[iView].second )
+    if ( _vLocalizationResults[0].poses()[iView].second )
     {
-      Pose & pose = _vTrackers[0].poses()[iView].first;
+      geometry::Pose3 & pose = _vLocalizationResults[0].poses()[iView].first;
 
       POPART_COUT_VAR(pose.rotation());
       const openMVG::Mat3 R = pose.rotation();
@@ -339,9 +351,9 @@ bool Rig::optimizeCalibration()
   // TODO: make the LOSS function and the parameter an option
 
   // For all visibility add reprojections errors:
-  for (int iTracker = 0 ; iTracker < _vTrackers.size() ; ++iTracker)
+  for (int iTracker = 0 ; iTracker < _vLocalizationResults.size() ; ++iTracker)
   {
-    const PonctualMarkerTracker & tracker = _vTrackers[iTracker];
+    const PonctualMarkerTracker & tracker = _vLocalizationResults[iTracker];
     
     for (int iView = 0 ; iView < tracker.poses().size() ; ++iView)
     {
@@ -361,7 +373,7 @@ bool Rig::optimizeCalibration()
         if ( iTracker == 0 )
         {
           // Add the residual block if the resection (of the main camera) succeeded
-          if ( _vTrackers[iTracker].poses()[iView].second )
+          if ( _vLocalizationResults[iTracker].poses()[iView].second )
           {
             // Vector-2 residual, pose of the rig parameterized by 6 parameters
             cost_function = new ceres::AutoDiffCostFunction<ResidualErrorMainCameraFunctor, 2, 6>(
@@ -382,7 +394,7 @@ bool Rig::optimizeCalibration()
         // Add a residual block for a secondary camera
         {
           // Add the residual block if the resection (of the secondary camera) succeeded
-          if ( _vTrackers[iTracker].poses()[iView].second )
+          if ( _vLocalizationResults[iTracker].poses()[iView].second )
           {
                     //POPART_COUT_VAR(observations[iPoint]);
                     //POPART_COUT_VAR(points[iPoint]);
@@ -465,14 +477,14 @@ bool Rig::optimizeCalibration()
       ceres::AngleAxisToRotationMatrix(&vRelativePoses[iRelativePose][0], R_refined.data());
       openMVG::Vec3 t_refined(vRelativePoses[iRelativePose][3], vRelativePoses[iRelativePose][4], vRelativePoses[iRelativePose][5]);
       // Update the pose
-      Pose & pose = _vRelativePoses[iRelativePose];
-      pose = Pose(R_refined, -R_refined.transpose() * t_refined);
+      geometry::Pose3 & pose = _vRelativePoses[iRelativePose];
+      pose = geometry::Pose3(R_refined, -R_refined.transpose() * t_refined);
     }
     
     // Update relative poses along with rig poses after optimization
-    for (int iPose = 0 ; iPose < _vTrackers[0].poses().size() ; ++iPose )
+    for (int iPose = 0 ; iPose < _vLocalizationResults[0].poses().size() ; ++iPose )
     {
-      if( _vTrackers[0].poses()[iPose].second )
+      if( _vLocalizationResults[0].poses()[iPose].second )
       {
         openMVG::Mat3 R_refined;
         std::vector<double> vPose;
@@ -480,12 +492,12 @@ bool Rig::optimizeCalibration()
         ceres::AngleAxisToRotationMatrix(&vMainPoses[iPose][0], R_refined.data());
         openMVG::Vec3 t_refined(vMainPoses[iPose][3], vMainPoses[iPose][4], vMainPoses[iPose][5]);
         // Push the optimized pose
-        Pose pose = Pose(R_refined, -R_refined.transpose() * t_refined);
-        _vTrackers[0].poses()[iPose].first = pose;
+        geometry::Pose3 pose = geometry::Pose3(R_refined, -R_refined.transpose() * t_refined);
+        _vLocalizationResults[0].poses()[iPose].first = pose;
         _vPoses.push_back(pose);
       }else{
         // todo@L garbage...
-        _vPoses.push_back(Pose());
+        _vPoses.push_back(geometry::Pose3());
       }
     }
     
@@ -493,14 +505,14 @@ bool Rig::optimizeCalibration()
     for (int iRelativePose = 0 ; iRelativePose < _vRelativePoses.size() ; ++iRelativePose )
     {
       std::size_t iTracker = iRelativePose+1;
-      for (int iPose = 0 ; iPose < _vTrackers[iTracker].poses().size() ; ++iPose )
+      for (int iPose = 0 ; iPose < _vLocalizationResults[iTracker].poses().size() ; ++iPose )
       {
-        if( _vTrackers[iTracker].poses()[iPose].second && _vTrackers[0].poses()[iPose].second )
+        if( _vLocalizationResults[iTracker].poses()[iPose].second && _vLocalizationResults[0].poses()[iPose].second )
         {
-          const Pose & relativePose = _vRelativePoses[iRelativePose];
+          const geometry::Pose3 & relativePose = _vRelativePoses[iRelativePose];
           
-          const openMVG::Mat3 R1 = _vTrackers[0].poses()[iPose].first.rotation();
-          const openMVG::Vec3 t1 = _vTrackers[0].poses()[iPose].first.translation();
+          const openMVG::Mat3 R1 = _vLocalizationResults[0].poses()[iPose].first.rotation();
+          const openMVG::Vec3 t1 = _vLocalizationResults[0].poses()[iPose].first.translation();
 
           const openMVG::Mat3 R12 = relativePose.rotation();
           const openMVG::Vec3 t12 = relativePose.translation();
@@ -508,14 +520,14 @@ bool Rig::optimizeCalibration()
           const openMVG::Mat3 R2 = R12 * R1;
           const openMVG::Vec3 t2 = R12 * t1 + t12 ;
           
-          _vTrackers[iTracker].poses()[iPose].first = Pose( R2 , -R2.transpose() * t2 );
+          _vLocalizationResults[iTracker].poses()[iPose].first = geometry::Pose3( R2 , -R2.transpose() * t2 );
           
           
         }
       }
     }
     
-    displayRelativePoseReprojection(Pose(openMVG::Mat3::Identity(), openMVG::Vec3::Zero()), 0);
+    displayRelativePoseReprojection(geometry::Pose3(openMVG::Mat3::Identity(), openMVG::Vec3::Zero()), 0);
     displayRelativePoseReprojection(_vRelativePoses[0], 1);
 // Possibility to update the intrinsics here
     
@@ -534,12 +546,12 @@ bool Rig::optimizeCalibration()
 }
 
 // Compute an average pose
-void poseAveraging(const std::vector<Pose> & vPoses, Pose & result)
+void poseAveraging(const std::vector<geometry::Pose3> & vPoses, geometry::Pose3 & result)
 {
   // todo
 }
 
-double reprojectionError(const openMVG::Mat3 & K, const Pose & pose, const std::vector<openMVG::Vec2> & imgPts, const std::vector<openMVG::Vec3> & pts)
+double reprojectionError(const openMVG::Mat3 & K, const geometry::Pose3 & pose, const std::vector<openMVG::Vec2> & imgPts, const std::vector<openMVG::Vec3> & pts)
 {
   double res = 0;
   
@@ -553,7 +565,7 @@ double reprojectionError(const openMVG::Mat3 & K, const Pose & pose, const std::
 }
 
 // Compute the residual between the 3D projected point X and an image observation x
-double residual( const openMVG::Mat3 & K, const Pose & pose, const openMVG::Vec3 & X, const openMVG::Vec2 & x)
+double residual( const openMVG::Mat3 & K, const geometry::Pose3 & pose, const openMVG::Vec3 & X, const openMVG::Vec2 & x)
 {
   openMVG::Vec2 reproj;
   reproject( K, pose, X, reproj );
@@ -566,7 +578,7 @@ double residual( const openMVG::Mat3 & K, const Pose & pose, const openMVG::Vec3
 }
 
 // Compute the reprojection of X through the camera whose pose pose
-void reproject( const openMVG::Mat3 & K, const Pose & pose, const openMVG::Vec3 & X, openMVG::Vec2 & x)
+void reproject( const openMVG::Mat3 & K, const geometry::Pose3 & pose, const openMVG::Vec3 & X, openMVG::Vec2 & x)
 {
   openMVG::Vec3 proj = K * pose(X);
   x(0) = proj(0)/proj(2);
