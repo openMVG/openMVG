@@ -7,6 +7,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_SfMInit_ImageListing
   openMVG_system
   openMVG_image
   openMVG_features
+  openMVG_exif
   openMVG_sfm
   easyexif
   )
@@ -41,6 +42,12 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures
   stlplus
   vlsift
   )
+
+IF(OpenMVG_USE_CCTAG)
+TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures
+  ${CCTAG_LIBRARIES}
+  )
+ENDIF(OpenMVG_USE_CCTAG)
 
 ADD_EXECUTABLE(openMVG_main_ComputeMatches main_ComputeMatches.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_ComputeMatches

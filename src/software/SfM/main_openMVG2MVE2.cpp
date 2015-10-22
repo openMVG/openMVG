@@ -101,22 +101,21 @@ bool exportToMVE2Format(
     {
       const View * view = iter->second.get();
 
-      // Create current view subdirectory 'view_xxxx.mve'
-      std::ostringstream padding;
-      padding << std::setw(4) << std::setfill('0') << view->id_view;
-      sOutViewIteratorDirectory = stlplus::folder_append_separator(sOutViewsDirectory) + "view_" + padding.str() + ".mve";
-
-      // We have a valid view with a corresponding camera & pose
-      const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
-      const std::string dstImage =
-        stlplus::create_filespec(stlplus::folder_append_separator(sOutViewIteratorDirectory), "undistorted","png");
-
       if (sfm_data.IsPoseAndIntrinsicDefined(view))
       {
+        // Create current view subdirectory 'view_xxxx.mve'
+        std::ostringstream padding;
+        padding << std::setw(4) << std::setfill('0') << view->id_view;
+        sOutViewIteratorDirectory = stlplus::folder_append_separator(sOutViewsDirectory) + "view_" + padding.str() + ".mve";
         if (!stlplus::folder_exists(sOutViewIteratorDirectory))
         {
           stlplus::folder_create(sOutViewIteratorDirectory);
         }
+
+        // We have a valid view with a corresponding camera & pose
+        const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
+        const std::string dstImage =
+          stlplus::create_filespec(stlplus::folder_append_separator(sOutViewIteratorDirectory), "undistorted","png");
 
         Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
         const IntrinsicBase * cam = iterIntrinsic->second.get();

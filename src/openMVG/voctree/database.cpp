@@ -93,7 +93,7 @@ void Database::find(const std::vector<Word>& document, size_t N, std::vector<Mat
   // generate the (sparse) histogram of the visual words 
   computeVector(document, query);
 
-	find( query, N, matches );
+  find( query, N, matches );
 }
 
 /**

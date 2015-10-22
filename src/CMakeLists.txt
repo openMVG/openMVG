@@ -25,6 +25,7 @@ OPTION(OpenMVG_BUILD_OPENGL_EXAMPLES "Build OpenMVG openGL examples" OFF)
 OPTION(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 OPTION(OpenMVG_BUILD_VOCTREE "Build the vocabulary tree and localization module" ON)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
+OPTION(OpenMVG_USE_CCTAG "Enable CCTAG markers" ON)
 OPTION(OpenMVG_USE_ALEMBIC "Enable Alembic I/O" OFF)
 
 # ==============================================================================
@@ -225,6 +226,25 @@ MACRO (UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
 ENDMACRO (UNIT_TEST)
 
 # ==============================================================================
+# CCTag TODO (todo)
+# ==============================================================================
+IF(OpenMVG_USE_CCTAG)
+  FIND_PACKAGE(CCTag)
+  IF(NOT CCTAG_FOUND)
+    MESSAGE(STATUS "CCTAG package not found, CCTAG will be disabled")
+    UPDATE_CACHE_VARIABLE(OpenMVG_USE_CCTAG OFF)
+  ELSE(NOT CCTAG_FOUND)
+    MESSAGE(STATUS "CCTAG package found")
+    MESSAGE(STATUS "CCTAG library directory ${CCTAG_LIBRARY_DIR}")
+    MESSAGE(STATUS "CCTAG library names     ${CCTAG_LIBRARIES_NAMES}")
+    MESSAGE(STATUS "CCTAG include directory ${CCTAG_INCLUDE_DIR}")
+    LINK_DIRECTORIES(${CCTAG_LIBRARY_DIR})
+    INCLUDE_DIRECTORIES(${CCTAG_INCLUDE_DIRS})
+    ADD_DEFINITIONS(-DHAVE_CCTAG)
+  ENDIF(NOT CCTAG_FOUND)
+ENDIF(OpenMVG_USE_CCTAG)
+
+# ==============================================================================
 # Eigen
 # ==============================================================================
 # - internal by default,
@@ -382,7 +402,7 @@ ENDIF(OpenMVG_USE_OPENCV)
 # - optional, it allows to compile the vocabulary tree
 # ==============================================================================
 IF(OpenMVG_BUILD_VOCTREE)
-  FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS system filesystem program_options unit_test_framework)
+  FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS system filesystem program_options)
   IF(Boost_FOUND)
      MESSAGE(STATUS "Boost ${Boost_LIB_VERSION} found")
      include_directories(${Boost_INCLUDE_DIRS})
@@ -390,7 +410,7 @@ IF(OpenMVG_BUILD_VOCTREE)
      add_definitions(${Boost_DEFINITIONS})
   ELSE()
     MESSAGE(STATUS "Boost not found -- disabling the vocabulary tree")
-    UPDATE_CACHE_VARIABLE(OpenMVG_USE_BOOST OFF)
+    UPDATE_CACHE_VARIABLE(OpenMVG_BUILD_VOCTREE OFF)
   ENDIF(Boost_FOUND)
 ENDIF(OpenMVG_BUILD_VOCTREE)
 
@@ -481,28 +501,28 @@ ADD_SUBDIRECTORY(nonFree)
 # Sphinx detection
 # ==============================================================================
 IF(OpenMVG_BUILD_DOC)
-FIND_PACKAGE(Sphinx)
-IF (EXISTS ${SPHINX_EXECUTABLE})
-  SET(SPHINX_HTML_DIR "${CMAKE_CURRENT_BINARY_DIR}/htmlDoc")
+  FIND_PACKAGE(Sphinx)
+  IF (EXISTS ${SPHINX_EXECUTABLE})
+    SET(SPHINX_HTML_DIR "${CMAKE_CURRENT_BINARY_DIR}/htmlDoc")
 
-  CONFIGURE_FILE(
-    "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst/conf.py"
-    "${CMAKE_CURRENT_BINARY_DIR}/conf.py"
-    @ONLY)
+    CONFIGURE_FILE(
+      "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst/conf.py"
+      "${CMAKE_CURRENT_BINARY_DIR}/conf.py"
+      @ONLY)
 
-  ADD_CUSTOM_TARGET(doc ALL
-    ${SPHINX_EXECUTABLE}
-    -b html
-    "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst"
-    "${SPHINX_HTML_DIR}"
-    COMMENT "Building HTML documentation with Sphinx")
+    ADD_CUSTOM_TARGET(doc ALL
+      ${SPHINX_EXECUTABLE}
+      -b html
+      "${CMAKE_CURRENT_SOURCE_DIR}/../docs/sphinx/rst"
+      "${SPHINX_HTML_DIR}"
+      COMMENT "Building HTML documentation with Sphinx")
 
-  SET_PROPERTY(TARGET doc PROPERTY FOLDER OpenMVG)
+    SET_PROPERTY(TARGET doc PROPERTY FOLDER OpenMVG)
 
-ELSE (EXISTS ${SPHINX_EXECUTABLE})
-  MESSAGE("Sphinx need to be installed to generate the documentation")
-    UPDATE_CACHE_VARIABLE(OpenMVG_BUILD_DOC OFF)
-ENDIF (EXISTS ${SPHINX_EXECUTABLE})
+  ELSE (EXISTS ${SPHINX_EXECUTABLE})
+    MESSAGE("Sphinx need to be installed to generate the documentation")
+      UPDATE_CACHE_VARIABLE(OpenMVG_BUILD_DOC OFF)
+  ENDIF (EXISTS ${SPHINX_EXECUTABLE})
 ENDIF(OpenMVG_BUILD_DOC)
 
 MESSAGE("\n")
@@ -518,6 +538,7 @@ MESSAGE("** Enable code coverage generation: " ${OpenMVG_BUILD_COVERAGE})
 MESSAGE("** Enable OpenMP parallelization: " ${OpenMVG_USE_OPENMP})
 MESSAGE("** Build OpenCV+OpenMVG samples programs: " ${OpenMVG_USE_OPENCV})
 MESSAGE("** Use OpenCV SIFT features: " ${OpenMVG_USE_OCVSIFT})
+MESSAGE("** Use CCTAG markers: " ${OpenMVG_USE_CCTAG})
 MESSAGE("** Build Alembic exporter: " ${OpenMVG_USE_ALEMBIC})
 
 MESSAGE("\n")

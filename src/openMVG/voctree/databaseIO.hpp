@@ -41,11 +41,11 @@ std::size_t populateDatabase(const std::string &fileFullPath,
  */
 template<class DescriptorT>
 void queryDatabase(const std::string &fileFullPath,
-                   const openMVG::voctree::VocabularyTree<DescriptorT> &tree,
-                   const openMVG::voctree::Database &db,
+                   const VocabularyTree<DescriptorT> &tree,
+                   const Database &db,
                    size_t numResults,
-                   std::vector<openMVG::voctree::Matches> &allMatches,
-                   std::map<size_t, openMVG::voctree::Document> &documents);
+                   std::vector<Matches> &allMatches,
+                   std::map<size_t, Document> &documents);
 
 /**
  * @brief Given an non empty database, it queries the database with a set of images
@@ -62,10 +62,10 @@ void queryDatabase(const std::string &fileFullPath,
  */
 template<class DescriptorT>
 void queryDatabase(const std::string &fileFullPath,
-                   const openMVG::voctree::VocabularyTree<DescriptorT> &tree,
-                   const openMVG::voctree::Database &db,
+                   const VocabularyTree<DescriptorT> &tree,
+                   const Database &db,
                    size_t numResults,
-                   std::vector<openMVG::voctree::Matches> &allMatches);
+                   std::vector<Matches> &allMatches);
 
 
 } //namespace voctree

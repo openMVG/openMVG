@@ -43,7 +43,11 @@ template<typename FeatT, typename T, size_t L>
 class Reconstructed_Regions
 {
 public:
-
+  // Region type
+  typedef FeatT FeatureT;
+  // Region descriptor
+  typedef features::Descriptor<T, L> DescriptorT;
+  
 //  template<class Archive>
 //  void serialize(Archive & ar)
 //  {

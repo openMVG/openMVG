@@ -43,7 +43,8 @@ static Pair_Set contiguousWithOverlap(const size_t N, const size_t overlapSize)
 static bool loadPairs(
      const size_t N,  // number of image in the current project (to check index validity)
      const std::string &sFileName, // filename of the list file,
-     Pair_Set & pairs)  // output pairs read from the list file
+     Pair_Set & pairs,
+     bool ordered=true)  // output pairs read from the list file
 {
   std::ifstream in(sFileName.c_str());
   if(!in.is_open())
@@ -84,7 +85,20 @@ static bool loadPairs(
         std::cerr << "loadPairs: Invalid input file. Image " << I << " see itself. File: \"" << sFileName << "\"." << std::endl;
         return false;
       }
-      pairs.insert( (I < J) ? std::make_pair(I, J) : std::make_pair(J, I) );
+      Pair pairToInsert;
+      if(ordered)
+      {
+        // Insert pair with I = min(I, J) and J = max(I,J)
+        pairToInsert = (( (I < J) ? std::make_pair(I, J) : std::make_pair(J, I) ));  
+      }
+      else
+      {
+        // Keep I & J
+        Pair_Set::iterator it = pairs.find(std::make_pair(J, I));
+        if(it == pairs.end())
+          pairToInsert = std::make_pair(I, J);
+      }
+      pairs.insert(pairToInsert);
     }
   }
   in.close();

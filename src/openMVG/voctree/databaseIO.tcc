@@ -49,7 +49,7 @@ std::size_t populateDatabase(const std::string &fileFullPath,
     loadDescsFromBinFile(currentFile, descriptors, false);
     size_t result = descriptors.size();
     
-    std::vector<openMVG::voctree::Word> imgVisualWords = tree.quantize(descriptors);
+    std::vector<Word> imgVisualWords = tree.quantize(descriptors);
 
     // Add the vector to the documents
     documents[docId] = imgVisualWords;
@@ -73,23 +73,23 @@ std::size_t populateDatabase(const std::string &fileFullPath,
 
 template<class DescriptorT>
 void queryDatabase(const std::string &fileFullPath,
-                   const openMVG::voctree::VocabularyTree<DescriptorT> &tree,
-                   const openMVG::voctree::Database &db,
+                   const VocabularyTree<DescriptorT> &tree,
+                   const Database &db,
                    size_t numResults,
-                   std::vector<openMVG::voctree::Matches> &allMatches)
+                   std::vector<Matches> &allMatches)
 {
-  std::map<size_t, openMVG::voctree::Document> documents;
+  std::map<size_t, Document> documents;
   queryDatabase(fileFullPath, tree, db, numResults, allMatches, documents);
 }
 
 
 template<class DescriptorT>
 void queryDatabase(const std::string &fileFullPath,
-                   const openMVG::voctree::VocabularyTree<DescriptorT> &tree,
-                   const openMVG::voctree::Database &db,
+                   const VocabularyTree<DescriptorT> &tree,
+                   const Database &db,
                    size_t numResults,
-                   std::vector<openMVG::voctree::Matches> &allMatches,
-                   std::map<size_t, openMVG::voctree::Document> &documents)
+                   std::vector<Matches> &allMatches,
+                   std::map<size_t, Document> &documents)
 {  
   std::vector<std::string> descriptorsFiles;
   getListOfDescriptorFiles(fileFullPath, descriptorsFiles);
@@ -103,13 +103,13 @@ void queryDatabase(const std::string &fileFullPath,
   for(const auto &currentFile : descriptorsFiles)
   {
     std::vector<DescriptorT> descriptors;
-    openMVG::voctree::Matches matches;
+    Matches matches;
 
     // Read the descriptors
     loadDescsFromBinFile(currentFile, descriptors, false);
     
     // quantize the descriptors
-    std::vector<openMVG::voctree::Word> imgVisualWords = tree.quantize(descriptors);
+    std::vector<Word> imgVisualWords = tree.quantize(descriptors);
 
     // add the vector to the documents
     documents[docId] = imgVisualWords;
