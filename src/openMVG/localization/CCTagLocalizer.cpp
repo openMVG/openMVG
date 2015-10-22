@@ -157,9 +157,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                 const CCTagLocalizer::Parameters &param,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
-                geometry::Pose3 & pose,
-                sfm::Image_Localizer_Match_Data &resectionData,
-                std::vector<pair<IndexT, IndexT> > &associationIDs)
+                LocalizationResult & localizationResult)
 {
   // extract descriptors and features from image
   POPART_COUT("[features]\tExtract CCTag from query image");
@@ -183,6 +181,10 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
   
   // Loop over all k nearest key frames in order to get the most geometrically 
   // consistent one.
+  sfm::Image_Localizer_Match_Data bestResectionData;
+  std::vector<pair<IndexT, IndexT> > bestAssociationIDs;
+  geometry::Pose3 bestPose;
+  
   for(const auto indexKeyFrame : nearestKeyFrames)
   {
     const Reconstructed_RegionsCCTag& matchedRegions = _regions_per_view[indexKeyFrame];
@@ -198,8 +200,9 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
     // Each matched feature in the current similar image is associated to a 3D point,
     // hence we can recover the 2D-3D associations to estimate the pose
     // Prepare data for resection
-    
+    std::vector<pair<IndexT, IndexT> > associationIDsTemp;
     sfm::Image_Localizer_Match_Data resectionDataTemp;
+    
     resectionDataTemp.error_max = param._errorMax;
     
     resectionDataTemp = sfm::Image_Localizer_Match_Data();
@@ -227,7 +230,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
       {
         resectionDataTemp.pt2D.col(index) = feat;
       }
-
+      associationIDsTemp.emplace_back(trackId3D, featureMatch._i);
       ++index;
     }
     
@@ -245,11 +248,14 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
       residualMin = resectionDataTemp.error_max;
       indexBestKeyFrame = indexKeyFrame;
       // Update best inital pose.
-      pose = poseTemp;
-      resectionData = resectionDataTemp;
+      bestPose = poseTemp;
+      bestResectionData = resectionDataTemp;
+      std::swap(bestAssociationIDs, associationIDsTemp);
     }
   }
   
+  // If the resection has failed for all the nearest keyframes, the localization 
+  // has failed.
   if ( indexBestKeyFrame == UndefinedIndexT ) 
   {
     return false;
@@ -265,7 +271,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
     Vec3 t_;
     // Decompose the projection matrix  to get K, R and t using 
     // RQ decomposition
-    KRt_From_P(resectionData.projection_matrix, &K_, &R_, &t_);
+    KRt_From_P(bestResectionData.projection_matrix, &K_, &R_, &t_);
     queryIntrinsics.setK(K_);
     queryIntrinsics.setWidth(imageGrey.Width());
     queryIntrinsics.setHeight(imageGrey.Height());
@@ -279,14 +285,17 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
   POPART_COUT("[poseEstimation]\tRefining estimated pose");
   bool refineStatus = sfm::SfM_Localizer::RefinePose(
           &queryIntrinsics, 
-          pose, 
-          resectionData, 
+          bestPose, 
+          bestResectionData, 
           true /*b_refine_pose*/, 
           param._refineIntrinsics /*b_refine_intrinsic*/);
   
   if(!refineStatus)
     POPART_COUT("[poseEstimation]\tRefine pose could not improve the estimation of the camera pose.");
-return true;
+  
+  localizationResult = LocalizationResult(bestResectionData, bestAssociationIDs, bestPose, true);
+
+  return localizationResult.isValid();
   
  } 
 

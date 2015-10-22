@@ -12,6 +12,12 @@ public:
   
   LocalizationResult();
   
+  LocalizationResult(
+        const sfm::Image_Localizer_Match_Data & matchData,
+        const std::vector<pair<IndexT, IndexT> > & indMatch3D2D,
+        const geometry::Pose3 & pose,
+        bool isValid = true);
+  
   LocalizationResult(const LocalizationResult& orig);
   
   virtual ~LocalizationResult();

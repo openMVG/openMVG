@@ -86,7 +86,11 @@ namespace sfm {
     }
 
     // Test if the mode support some points (more than those required for estimation)
+#ifdef HAVE_CCTAG
+    const bool bResection = (resection_data.vec_inliers.size() > MINIMUM_SAMPLES);
+#else
     const bool bResection = (resection_data.vec_inliers.size() > 2.5 * MINIMUM_SAMPLES);
+#endif
 
     if (bResection)
     {

@@ -9,6 +9,7 @@
 #include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 #include <openMVG/image/image_io.hpp>
 #include <openMVG/dataio/FeedProvider.hpp>
+#include <openMVG/localization/LocalizationResult.hpp>
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
@@ -161,6 +162,8 @@ int main(int argc, char** argv)
   std::vector<bool> localized;  // this is just to keep track of the unlocalized frames so that a fake camera
                                 // can be inserted and we see the sequence correctly in maya
   
+  std::vector<localization::LocalizationResult> vLocalizationResults;
+  
   while(feed.next(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics))
   {
     POPART_COUT("******************************");
@@ -169,31 +172,26 @@ int main(int argc, char** argv)
     sfm::Image_Localizer_Match_Data matchData;
     std::vector<pair<IndexT, IndexT> > ids;
     auto detect_start = std::chrono::steady_clock::now();
-    bool isLocalized = localizer.localize(imageGrey, 
-                                          param,
-                                          hasIntrinsics/*useInputIntrinsics*/,
-                                          queryIntrinsics,
-                                          cameraPose,
-                                          matchData,
-                                          ids);
+    localization::LocalizationResult localizationResult;
+    localizer.localize(
+            imageGrey, 
+            param,
+            hasIntrinsics/*useInputIntrinsics*/,
+            queryIntrinsics,
+            localizationResult);
+    vLocalizationResults.emplace_back(localizationResult);
+    
     auto detect_end = std::chrono::steady_clock::now();
     auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
     POPART_COUT("\nLocalization took  " << detect_elapsed.count() << " [ms]");
     stats(detect_elapsed.count());
     
     // save data
-    if(isLocalized)
+    if(localizationResult.isValid())
     {
 #if HAVE_ALEMBIC
       exporter.appendCamera("camera."+myToString(frameCounter,4), cameraPose, &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
 #endif
-      if(globalBundle)
-      {
-        associations.push_back(matchData);
-        poses.push_back(cameraPose);
-        associationIDs.push_back(ids);
-        localized.push_back(true);
-      }
     }
     else
     {
@@ -201,10 +199,6 @@ int main(int argc, char** argv)
       // @fixme for now just add a fake camera so that it still can be see in MAYA
       exporter.appendCamera("camera.V."+myToString(frameCounter,4), geometry::Pose3(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
 #endif
-      if(globalBundle) 
-      {
-        localized.push_back(false);
-      }
       POPART_CERR("Unable to localize frame " << frameCounter);
     }
     ++frameCounter;

@@ -5,6 +5,7 @@
 #include <openMVG/localization/VoctreeLocalizer.hpp>
 
 #include "openMVG/features/features.hpp"
+#include "LocalizationResult.hpp"
 #include <openMVG/features/image_describer.hpp>
 #include <openMVG/features/cctag/CCTAG_describer.hpp>
 #include <openMVG/sfm/sfm_data.hpp>
@@ -66,9 +67,7 @@ public:
                 const Parameters &param,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
-                geometry::Pose3 & pose,
-                sfm::Image_Localizer_Match_Data &resection_data,
-                std::vector<pair<IndexT, IndexT> > &associationIDs);
+                LocalizationResult & localizationResult);
   
   
   CCTagLocalizer();
