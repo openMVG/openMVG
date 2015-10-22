@@ -43,7 +43,7 @@ before_script:
   - mkdir build
   - cd build
   # Classic release build
-  - cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -DOpenMVG_BUILD_VOCTREE=ON . ../openMVG/src
+  - cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -DOpenMVG_BUILD_VOCTREE=ON -DOpenMVG_USE_CCTAG=OFF . ../openMVG/src
   # Build for code coverage evaluation
   #- cmake -DOpenMVG_BUILD_COVERAGE=ON -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
 

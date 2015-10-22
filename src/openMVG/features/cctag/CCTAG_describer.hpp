@@ -1,7 +1,11 @@
-#ifndef OPENMVG_CCTAG_DESCRIBER_H
-#define OPENMVG_CCTAG_DESCRIBER_H
+#ifdef HAVE_CCTAG
 
-//#include <cctag/view.hpp>
+#pragma once
+
+#include <openMVG/features/image_describer.hpp>
+#include <openMVG/features/regions_factory.hpp>
+
+#include <cctag/view.hpp>
 #include <cctag/ICCTag.hpp>
 
 #include <cereal/cereal.hpp>
@@ -17,30 +21,34 @@ class CCTAG_Image_describer : public Image_describer
 {
 public:
   CCTAG_Image_describer()
-    :Image_describer(), _nRings(3) {}
+    :Image_describer(), _params(3) {}
     
   CCTAG_Image_describer(const std::size_t nRings)
-    :Image_describer(), _nRings(nRings) {}   
+    :Image_describer(), _params(nRings) {}   
 
   ~CCTAG_Image_describer() {}
 
   bool Set_configuration_preset(EDESCRIBER_PRESET preset)
   {
-//    switch(preset)
-//    {
-//    case NORMAL_PRESET:
-//      _params._peak_threshold = 0.04f;
-//    break;
-//    case HIGH_PRESET:
-//      _params._peak_threshold = 0.01f;
-//    break;
-//    case ULTRA_PRESET:
-//      _params._peak_threshold = 0.01f;
-//      _params._first_octave = -1;
-//    break;
-//    default:
-//      return false;
-//    }
+    // todo@L: choose most relevant preset names
+    switch(preset)
+    {
+    // Normal lighting conditions: normal contrast
+    case NORMAL_PRESET:
+      _params._cannyThrLow = 0.01f;
+      _params._cannyThrHigh = 0.04f;
+    break;
+    // Low lighting conditions: very low contrast
+    case HIGH_PRESET:
+      _params._cannyThrLow = 0.002f;
+      _params._cannyThrHigh = 0.01f;
+    break;
+    case ULTRA_PRESET:
+      // todo@L: not set yet
+    break;
+    default:
+      return false;
+    }
     return true;
   }
 
@@ -53,46 +61,7 @@ public:
   */
   bool Describe(const image::Image<unsigned char>& image,
     std::unique_ptr<Regions> &regions,
-    const image::Image<unsigned char> * mask = NULL)
-  {
-    const int w = image.Width(), h = image.Height();
-
-    Allocate(regions);
-
-    // Build alias to cached data
-    CCTAG_Regions * regionsCasted = dynamic_cast<CCTAG_Regions*>(regions.get());
-    // reserve some memory for faster keypoint saving
-    regionsCasted->Features().reserve(50);
-    regionsCasted->Descriptors().reserve(50);
-    
-    const cv::Mat graySrc(cv::Size(image.Width(), image.Height()), CV_8UC1, (unsigned char *) image.data(), cv::Mat::AUTO_STEP);
-    
-    boost::ptr_list<cctag::ICCTag> cctags;
-    
-    cctag::cctagDetection(cctags,1,graySrc,_nRings);
-    
-    for (const auto & cctag : cctags)
-    {
-      if ( cctag.getStatus() > 0 )
-      {
-        std::cout << " New CCTag: " << cctag.id() << " ( " << cctag.x() << " , " << cctag.y() << " ) " << std::endl;
-
-        // Add its associated descriptor
-        Descriptor<unsigned char,128> desc;
-        for(int i=0; i< desc.size(); ++i)
-        {
-          desc[i] = 0;
-        }
-        desc[cctag.id()] = 255;
-        regionsCasted->Descriptors().push_back(desc);
-        regionsCasted->Features().push_back(SIOPointFeature(cctag.x(), cctag.y()));
-      }
-    }
-
-    cctags.clear();
-
-    return true;
-  };
+    const image::Image<unsigned char> * mask = NULL);
 
   /// Allocate Regions type depending of the Image_describer
   void Allocate(std::unique_ptr<Regions> &regions) const
@@ -109,9 +78,8 @@ public:
   }
 
 private:
-  //SiftParams _params;
-  //bool _bOrientation;
-  std::size_t _nRings;
+  //CCTag parameters
+  cctag::Parameters _params;
 };
 
 } // namespace features
@@ -121,4 +89,4 @@ private:
 #include <cereal/archives/json.hpp>
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::CCTAG_Image_describer, "CCTAG_Image_describer");
 
-#endif // OPENMVG_CCTAG_DESCRIBER_H
+#endif //HAVE_CCTAG

@@ -162,6 +162,10 @@ struct Hamming
   }
 };
 
+#undef B2
+#undef B4
+#undef B6
+
 }  // namespace matching
 }  // namespace openMVG
 
