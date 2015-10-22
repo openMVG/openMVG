@@ -28,6 +28,8 @@ public:
   const std::vector<pair<IndexT, IndexT> > & getIndMatch3D2D() const;
 
   const geometry::Pose3 & getPose() const;
+  
+  void setPose(const geometry::Pose3 & pose);
 
   bool isValid() const;
   

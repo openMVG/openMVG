@@ -46,6 +46,11 @@ const geometry::Pose3 & LocalizationResult::getPose() const
   return _pose;
 }
 
+void LocalizationResult::setPose(const geometry::Pose3 & pose)
+{
+  _pose = pose;
+}
+
 bool LocalizationResult::isValid() const
 {
   return _isValid;
