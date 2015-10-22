@@ -23,6 +23,13 @@ IF(OpenMVG_BUILD_VOCTREE)
     TARGET_LINK_LIBRARIES(openMVG_main_createVoctree openMVG_voctree openMVG_features ${BOOST_LIBRARIES})
 
     ###
+    # Localize images in an existing SfM reconstruction based on CCTag features
+    ###
+    ADD_EXECUTABLE(openMVG_main_cctag_localizer main_cctagLocalizer.cpp)
+    INSTALL(TARGETS openMVG_main_cctag_localizer DESTINATION bin/)
+    TARGET_LINK_LIBRARIES(openMVG_main_cctag_localizer openMVG_localization openMVG_dataio openMVG_image openMVG_features vlsift ${CCTAG_LIBRARIES} ${BOOST_LIBRARIES}) #todo: delete vlsift
+
+    ###
     # generate the pair lists
     ###
     ADD_EXECUTABLE(openMVG_main_generatePairList pairListFromVoctree.cpp)

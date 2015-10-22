@@ -225,6 +225,21 @@ MACRO (UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
 ENDMACRO (UNIT_TEST)
 
 # ==============================================================================
+# CCTag TODO (todo)
+# ==============================================================================
+FIND_PACKAGE(CCTag)
+IF(NOT CCTAG_FOUND)
+  MESSAGE(FATAL_ERROR "CCTAG package not found")
+ELSE(NOT CCTAG_FOUND)
+  MESSAGE(STATUS "CCTAG package found")
+  MESSAGE(STATUS "CCTAG library directory ${CCTAG_LIBRARY_DIR}")
+  MESSAGE(STATUS "CCTAG library names     ${CCTAG_LIBRARIES_NAMES}")
+  MESSAGE(STATUS "CCTAG include directory ${CCTAG_INCLUDE_DIR}")
+  LINK_DIRECTORIES(${CCTAG_LIBRARY_DIR})
+  INCLUDE_DIRECTORIES(${CCTAG_INCLUDE_DIRS})
+ENDIF(NOT CCTAG_FOUND)
+
+# ==============================================================================
 # Eigen
 # ==============================================================================
 # - internal by default,
