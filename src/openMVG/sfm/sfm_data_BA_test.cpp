@@ -212,7 +212,7 @@ SfM_Data getInputScene(const NViewDataSet & d, const nViewDatasetConfigurator & 
           (w, h, config._fx, config._cx, config._cy, 0., 0., 0., 0., 0.);
       break;
       case PINHOLE_CAMERA_FISHEYE:
-        sfm_data.intrinsics[0] = std::make_shared<Pinhole_Intrinsic_Brown_T2>
+      sfm_data.intrinsics[0] = std::make_shared<Pinhole_Intrinsic_Fisheye>
           (w, h, config._fx, config._cx, config._cy, 0., 0., 0., 0.);
       break;
       default:
