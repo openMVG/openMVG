@@ -291,7 +291,6 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
 
 
 
-//@todo move the parameters into a struct
 bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char> & imageGrey,
                                 const Parameters &param,
                                 bool useInputIntrinsics,
@@ -413,6 +412,8 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
     resectionData = sfm::Image_Localizer_Match_Data();
     resectionData.pt2D = Mat2X(2, vec_featureMatches.size());
     resectionData.pt3D = Mat3X(3, vec_featureMatches.size());
+    associationIDs.clear();
+    associationIDs.reserve(vec_featureMatches.size());
 
     // Get the 3D points associated to each matched feature
     std::size_t index = 0;
@@ -435,6 +436,8 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
       {
         resectionData.pt2D.col(index) = feat;
       }
+      
+      associationIDs.emplace_back(trackId3D, featureMatch._i);
 
       ++index;
     }
