@@ -13,6 +13,7 @@
 #include "openMVG/features/features.hpp"
 #include "nonFree/sift/SIFT_describer.hpp"
 #include "nonFree/sift/SIFT_float_describer.hpp"
+#include "openMVG/features/cctag/CCTAG_describer.hpp"
 #include <cereal/archives/json.hpp>
 #include "openMVG/system/timer.hpp"
 
@@ -70,7 +71,8 @@ int main(int argc, char **argv)
       << "   SIFT (default),\n"
       << "   SIFT_FLOAT to use SIFT stored as float,\n"
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
-      << "   AKAZE_MLDB:  AKAZE with binary descriptors\n"
+      << "   AKAZE_MLDB:  AKAZE with binary descriptors]\n"
+      << "   CCTAG\n"
       << "[-u|--upright] Use Upright feature 0 or 1\n"
       << "[-p|--describerPreset]\n"
       << "  (used to control the Image_describer configuration):\n"
@@ -161,6 +163,16 @@ int main(int argc, char **argv)
     if (sImage_Describer_Method == "SIFT_FLOAT")
     {
       image_describer.reset(new SIFT_float_describer(SiftParams(), !bUpRight));
+    }
+    else
+    if (sImage_Describer_Method == "CCTAG3")
+    {
+      image_describer.reset(new CCTAG_Image_describer(3));
+    }
+    else
+    if (sImage_Describer_Method == "CCTAG4")
+    {
+      image_describer.reset(new CCTAG_Image_describer(4));
     }
     else
     if (sImage_Describer_Method == "AKAZE_FLOAT")
