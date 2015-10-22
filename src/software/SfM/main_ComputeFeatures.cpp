@@ -13,7 +13,9 @@
 #include "openMVG/features/features.hpp"
 #include "nonFree/sift/SIFT_describer.hpp"
 #include "nonFree/sift/SIFT_float_describer.hpp"
+#if HAVE_CCTAG
 #include "openMVG/features/cctag/CCTAG_describer.hpp"
+#endif
 #include <cereal/archives/json.hpp>
 #include "openMVG/system/timer.hpp"
 
@@ -164,6 +166,7 @@ int main(int argc, char **argv)
     {
       image_describer.reset(new SIFT_float_describer(SiftParams(), !bUpRight));
     }
+#if HAVE_CCTAG
     else
     if (sImage_Describer_Method == "CCTAG3")
     {
@@ -174,6 +177,7 @@ int main(int argc, char **argv)
     {
       image_describer.reset(new CCTAG_Image_describer(4));
     }
+#endif //HAVE_CCTAG   
     else
     if (sImage_Describer_Method == "AKAZE_FLOAT")
     {
