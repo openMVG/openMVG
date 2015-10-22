@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <openMVG/localization/localization.hpp>
+#include <openMVG/localization/VoctreeLocalizer.hpp>
 
 #include "openMVG/features/features.hpp"
 #include <openMVG/features/image_describer.hpp>

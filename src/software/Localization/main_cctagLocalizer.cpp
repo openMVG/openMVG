@@ -4,7 +4,7 @@
  *
  * Created on September 12, 2015, 3:16 PM
  */
-#include <openMVG/localization/localization.hpp>
+#include <openMVG/localization/VoctreeLocalizer.hpp>
 #include <openMVG/localization/CCTagLocalizer.hpp>
 #include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 #include <openMVG/image/image_io.hpp>

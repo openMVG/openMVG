@@ -1,4 +1,4 @@
-#include "localization.hpp"
+#include "VoctreeLocalizer.hpp"
 
 
 #include <openMVG/sfm/sfm_data_io.hpp>
