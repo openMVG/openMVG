@@ -175,31 +175,11 @@ int main(int argc, char** argv)
       POPART_COUT("\nLocalization took  " << detect_elapsed.count() << " [ms]");
       stats(detect_elapsed.count());
 
-      // save data
-      if (localizationResult.isValid()) {
-        //      if(globalBundle)
-        //      {
-        //        associations.push_back(matchData);
-        //        poses.push_back(cameraPose);
-        //        associationIDs.push_back(ids);
-        //        localized.push_back(true);
-        //      }
-        //    }
-        //    else
-        //    {
-        //#if HAVE_ALEMBIC
-        //      // @fixme for now just add a fake camera so that it still can be see in MAYA
-        //      exporter.appendCamera("camera.V."+myToString(frameCounter,4), geometry::Pose3(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
-        //#endif
-        //      if(globalBundle) 
-        //      {
-        //       localized.push_back(false);
-        //      }
-        //      POPART_CERR("Unable to localize frame " << frameCounter);
-      }
       ++frameCounter;
     }
 
+    rig.setTrackingResult(vLocalizationResults, i);
+    
     // print out some time stats
     POPART_COUT("\n\n******************************");
     POPART_COUT("Localized " << frameCounter << " images");
@@ -208,4 +188,5 @@ int main(int argc, char** argv)
     POPART_COUT("Max time for localization:   " << bacc::max(stats) << " [ms]");
     POPART_COUT("Min time for localization:   " << bacc::min(stats) << " [ms]");
   }
+  rig.initializeCalibration();
 }
