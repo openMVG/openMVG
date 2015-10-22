@@ -1,12 +1,5 @@
 IF(OpenMVG_BUILD_VOCTREE)
     ###
-    # Test the localization script
-    ###
-    ADD_EXECUTABLE(openMVG_main_localization main_localization.cpp)
-    INSTALL(TARGETS openMVG_main_localization DESTINATION bin/)
-    TARGET_LINK_LIBRARIES(openMVG_main_localization openMVG_localization openMVG_image openMVG_features vlsift ${BOOST_LIBRARIES})
-
-    ###
     # Test the localization class
     ###
     ADD_EXECUTABLE(openMVG_main_voctreeLocalizer main_voctreeLocalizer.cpp)
