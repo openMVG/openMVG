@@ -2,7 +2,7 @@
 
 //#include <vision/cameraTracking/markerBasedTracker/PonctualMarkerTracker.hpp>
 
-#include <openMVG/localization/CCTagLocalizer.hpp>
+#include <openMVG/localization/LocalizationResult.hpp>
 #include <openMVG/geometry/pose3.hpp>
 #include <openMVG/numeric/numeric.h>
 
