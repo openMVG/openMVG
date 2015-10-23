@@ -550,9 +550,6 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   POPART_COUT("[matching]\tBuilding the matcher");
   matching::RegionsMatcherT<MatcherT> matcher(queryRegions);
 
-//  std::vector<Vec3> collected3Dpts;
-//  std::vector<Vec2> collected2Dpts;
-//  std::vector<IndexT> collected3DptsID;
   // this map is used to collect the 2d-3d associations as we go through the images
   // the key is a pair <Id3D, Id2d>
   // the element is the pair 3D point - 2D point
@@ -670,8 +667,6 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
     }
   }
   
-//  assert(collected3Dpts.size() == collected2Dpts.size());
-//  assert(collected3Dpts.size() == associations.size());
   const size_t numCollectedPts = associations.size();
   sfm::Image_Localizer_Match_Data resectionData;
   std::vector<pair<IndexT, IndexT> > associationIDs;
@@ -693,7 +688,6 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
      associationIDs.push_back(ass.first);
      ++index;
   }
-  
   
   // estimate the pose
   // Do the resectioning: compute the camera pose.
@@ -834,101 +828,6 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
             vec_featureMatches); // output
   }
   return true;
-}
-
-bool VoctreeLocalizer::refineSequence(cameras::Pinhole_Intrinsic_Radial_K3 *intrinsics,
-                             std::vector<geometry::Pose3> & poses,
-                             std::vector<sfm::Image_Localizer_Match_Data> & associations,
-                             std::vector<std::vector<pair<IndexT, IndexT> > > &associationIDs)
-{
-  assert(poses.size() == associations.size());
-  
-  // flags for BA
-  const bool b_refine_pose = true;
-  const bool b_refine_intrinsic = true;
-  const bool b_refine_structure = false;
-  
-  const size_t numCameras = poses.size();
-  assert(numCameras == associations.size());
-  assert(numCameras == associationIDs.size());
-  
-  // the id for the instrinsic group
-  const IndexT intrinsicID = 0;
-    
-  // Setup a tiny SfM scene with the corresponding 2D-3D data
-  sfm::SfM_Data tinyScene;
-  
-  for(size_t viewID = 0; viewID < numCameras; ++viewID)
-  {
-    std::cout << "\n*****\nView " << viewID << std::endl;
-    // view
-    tinyScene.views.insert( std::make_pair(viewID, std::make_shared<sfm::View>("",viewID, intrinsicID, viewID)));
-    // pose
-    tinyScene.poses[viewID] = poses[viewID];
-    // intrinsic (the shared_ptr does not take the ownership, will not release the input pointer)
-    tinyScene.intrinsics[intrinsicID] = std::shared_ptr<cameras::Pinhole_Intrinsic_Radial_K3>(intrinsics, [](cameras::Pinhole_Intrinsic_Radial_K3*){});
-    
-    // structure data (2D-3D correspondences)
-    const sfm::Image_Localizer_Match_Data &matching_data = associations[viewID];
-    const vector<pair<IndexT, IndexT> > &currentIDs = associationIDs[viewID];
-    
-    for(const size_t idx : matching_data.vec_inliers )
-    {
-      // the idx should be in the size range of the data
-      assert(idx < matching_data.pt3D.cols());
-      // get the corresponding 3D point (landmark) ID
-      const IndexT landmarkID = currentIDs[idx].first;
-      // get the corresponding 2D point ID
-      const IndexT featID = currentIDs[idx].second;
-      std::cout << "inlier " << idx << " is land " << landmarkID << " and feat " << featID << std::endl;
-      // get the corresponding feature
-      const Vec2 &feature = matching_data.pt2D.col(idx);
-      // check if the point exists already
-      if(tinyScene.structure.count(landmarkID))
-      {
-        // normally there should be no other features already associated to this
-        // 3D point in this view
-//        assert(tinyScene.structure[landmarkID].obs.count(viewID) == 0);
-        if(tinyScene.structure[landmarkID].obs.count(viewID) != 0)
-        {
-          // this is weird but it could happen when two features are really close to each other (?)
-          std::cout << "Point 3D " << landmarkID << " has multiple features " << tinyScene.structure[landmarkID].obs.size() << " in the same view " << viewID << " size "  << std::endl; 
-          continue;
-        }
-        
-        // the 3D point exists already, add the observation
-        tinyScene.structure[landmarkID].obs[viewID] =  sfm::Observation(feature, featID);
-      }
-      else
-      {
-        // create a new 3D point
-        sfm::Landmark landmark;
-        landmark.X = matching_data.pt3D.col(idx);
-        landmark.obs[viewID] = sfm::Observation(feature, featID);
-        tinyScene.structure[landmarkID] = std::move(landmark);
-      }
-    }
-  }
-  POPART_COUT("Number of 3D-2D associations " << tinyScene.structure.size());
-  std::vector<double> params = intrinsics->getParams();
-  POPART_COUT("K before bundle:" << params[0] << " " << params[1] << " "<< params[2]);
-  POPART_COUT("Distortion before bundle" << params[3] << " " << params[4] << " "<< params[5]);
-
-  sfm::Bundle_Adjustment_Ceres bundle_adjustment_obj;
-  const bool b_BA_Status = bundle_adjustment_obj.Adjust(tinyScene, b_refine_pose, b_refine_pose, b_refine_intrinsic, b_refine_structure);
-  if(b_BA_Status)
-  {
-    for(const auto &pose : tinyScene.poses)
-    {
-      const IndexT idPose = pose.first;
-      poses[idPose] = pose.second;
-    }
-  }
-  params = intrinsics->getParams();
-  POPART_COUT("K after bundle:" << params[0] << " " << params[1] << " "<< params[2]);
-  POPART_COUT("Distortion after bundle" << params[3] << " " << params[4] << " "<< params[5]);
-  
-  return b_BA_Status;
 }
 
 
