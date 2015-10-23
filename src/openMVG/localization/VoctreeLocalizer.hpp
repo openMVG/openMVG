@@ -8,6 +8,7 @@
 #pragma once
 
 #include "reconstructed_regions.hpp"
+#include "LocalizationResult.hpp"
 
 #include <openMVG/features/image_describer.hpp>
 #include <nonFree/sift/SIFT_float_describer.hpp>
@@ -94,9 +95,7 @@ public:
                 const Parameters &param,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
-                geometry::Pose3 & pose,
-                sfm::Image_Localizer_Match_Data &resection_data,
-                std::vector<pair<IndexT, IndexT> > &associationIDs);
+                LocalizationResult &localizationResult);
 
   /**
    * @brief Try to localize an image in the database: it queries the database to 
@@ -117,9 +116,7 @@ public:
                 const Parameters &param,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
-                geometry::Pose3 & pose,
-                sfm::Image_Localizer_Match_Data &resection_data,
-                std::vector<pair<IndexT, IndexT> > &associationIDs);
+                LocalizationResult &localizationResult);
 
   /**
    * @brief Try to localize an image in the database: it queries the database to 
@@ -141,9 +138,7 @@ public:
                 const Parameters &param,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
-                geometry::Pose3 & pose,
-                sfm::Image_Localizer_Match_Data &resection_data,
-                std::vector<pair<IndexT, IndexT> > &associationIDs);
+                LocalizationResult &localizationResult);
   
   const sfm::SfM_Data& getSfMData() const {return _sfm_data; }
   

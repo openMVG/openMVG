@@ -81,9 +81,7 @@ bool VoctreeLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                 const Parameters &param,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic &queryIntrinsics,
-                geometry::Pose3 & pose,
-                sfm::Image_Localizer_Match_Data &resection_data,
-                std::vector<pair<IndexT, IndexT> > &associationIDs)
+                LocalizationResult &localizationResult)
 {
   switch(param._algorithm)
   {
@@ -91,19 +89,15 @@ bool VoctreeLocalizer::localize(const image::Image<unsigned char> & imageGrey,
       return localizeFirstBestResult(imageGrey, 
                                      param,
                                      useInputIntrinsics,
-                                     queryIntrinsics, 
-                                     pose,
-                                     resection_data, 
-                                     associationIDs);
+                                     queryIntrinsics,
+                                     localizationResult);
     case Algorithm::BestResult: throw std::invalid_argument("BestResult not yet implemented");
     case Algorithm::AllResults: 
       return localizeAllResults(imageGrey, 
                                 param,
                                 useInputIntrinsics, 
                                 queryIntrinsics,
-                                pose, 
-                                resection_data, 
-                                associationIDs);
+                                localizationResult);
     case Algorithm::Cluster: throw std::invalid_argument("Cluster not yet implemented");
     default: throw std::invalid_argument("Unknown algorithm type");
   }
@@ -258,7 +252,7 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
     std::sort(featuresInImage.second.begin(), featuresInImage.second.end());
   }
 
-  // Read for each view the corresponding regions and store them
+  // Read for each view the corresponding Regions and store them
   for(const auto &iter : _sfm_data.GetViews())
   {
     const std::shared_ptr<sfm::View> currView = iter.second;
@@ -292,12 +286,10 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
 
 
 bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char> & imageGrey,
-                                const Parameters &param,
-                                bool useInputIntrinsics,
-                                cameras::Pinhole_Intrinsic &queryIntrinsics,
-                                geometry::Pose3 & pose,
-                                sfm::Image_Localizer_Match_Data &resectionData,
-                                std::vector<pair<IndexT, IndexT> > &associationIDs)
+                                                const Parameters &param,
+                                                bool useInputIntrinsics,
+                                                cameras::Pinhole_Intrinsic &queryIntrinsics,
+                                                LocalizationResult &localizationResult)
 {
   // A. extract descriptors and features from image
   POPART_COUT("[features]\tExtract SIFT from query image");
@@ -344,6 +336,9 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
   POPART_COUT("[matching]\tBuilding the matcher");
   matching::RegionsMatcherT<MatcherT> matcher(queryRegions);
   
+  sfm::Image_Localizer_Match_Data resectionData;
+  std::vector<pair<IndexT, IndexT> > associationIDs;
+  geometry::Pose3 pose;
  
   // C. for each found similar image, try to find the correspondences between the 
   // query image and the similar image
@@ -500,10 +495,11 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
       POPART_COUT("center difference: " << (pose.center()-referencePose.center()).norm());
       POPART_COUT("err = [err; " << R2D(getRotationMagnitude(pose.rotation()*referencePose.rotation().inverse())) << ", "<< (pose.center()-referencePose.center()).norm() << "];");
     }
+    localizationResult = LocalizationResult(resectionData, associationIDs, pose, true);
     break;
   }
   //@todo deal with unsuccesful case...
-  return true;
+  return localizationResult.isValid();
   
  } 
 
@@ -512,9 +508,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
                                           const Parameters &param,
                                           bool useInputIntrinsics,
                                           cameras::Pinhole_Intrinsic &queryIntrinsics,
-                                          geometry::Pose3 & pose,
-                                          sfm::Image_Localizer_Match_Data &resectionData,
-                                          std::vector<pair<IndexT, IndexT> > &associationIDs)
+                                          LocalizationResult &localizationResult)
 {
   // A. extract descriptors and features from image
   POPART_COUT("[features]\tExtract SIFT from query image");
@@ -679,6 +673,9 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
 //  assert(collected3Dpts.size() == collected2Dpts.size());
 //  assert(collected3Dpts.size() == associations.size());
   const size_t numCollectedPts = associations.size();
+  sfm::Image_Localizer_Match_Data resectionData;
+  std::vector<pair<IndexT, IndexT> > associationIDs;
+  geometry::Pose3 pose;
   associationIDs.reserve(numCollectedPts);
   
   resectionData = sfm::Image_Localizer_Match_Data();
@@ -751,8 +748,10 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
     POPART_COUT("t refined\n" << pose.translation());
     POPART_COUT("K refined\n" << queryIntrinsics.K());
   }
+    
+  localizationResult = LocalizationResult(resectionData, associationIDs, pose, true);
   
-  return true;
+  return localizationResult.isValid();
 }
 
 
