@@ -74,7 +74,10 @@ int main(int argc, char **argv)
       << "   SIFT_FLOAT to use SIFT stored as float,\n"
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
       << "   AKAZE_MLDB:  AKAZE with binary descriptors]\n"
-      << "   CCTAG\n"
+#if HAVE_CCTAG
+      << "   CCTAG3: CCTAG markers with 3 crowns\n"
+      << "   CCTAG3: CCTAG markers with 4 crowns\n"
+#endif
       << "[-u|--upright] Use Upright feature 0 or 1\n"
       << "[-p|--describerPreset]\n"
       << "  (used to control the Image_describer configuration):\n"
