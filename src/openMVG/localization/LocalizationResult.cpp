@@ -3,9 +3,24 @@
 namespace openMVG {
 namespace localization {
 
-LocalizationResult::LocalizationResult()
+LocalizationResult::LocalizationResult() : 
+        _isValid(false)
 {
 }
+
+LocalizationResult::LocalizationResult(
+        const sfm::Image_Localizer_Match_Data & matchData,
+        const std::vector<pair<IndexT, IndexT> > & indMatch3D2D,
+        const geometry::Pose3 & pose,
+        bool isValid) :
+        _matchData(matchData),
+        _indMatch3D2D(indMatch3D2D),
+        _pose(pose),
+        _isValid(isValid)
+{
+}
+        
+        
 
 LocalizationResult::LocalizationResult(const LocalizationResult& orig)
 {
@@ -29,6 +44,11 @@ const std::vector<pair<IndexT, IndexT> > & LocalizationResult::getIndMatch3D2D()
 const geometry::Pose3 & LocalizationResult::getPose() const
 {
   return _pose;
+}
+
+void LocalizationResult::setPose(const geometry::Pose3 & pose)
+{
+  _pose = pose;
 }
 
 bool LocalizationResult::isValid() const
