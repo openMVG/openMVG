@@ -107,11 +107,7 @@ bool retrieveResources(const std::string& jsonFile, std::vector<std::string>& ve
   jsonString.resize(length);
   jsonStream.read(&jsonString[0], length);
   jsonStream.close();
-  if(!jsonStream)
-  {
-    std::cerr << "Error when reading file." << std::endl;
-    return false;
-  }
+
   // Parse json
   rapidjson::Document document;
   document.Parse<0>(&jsonString[0]);
