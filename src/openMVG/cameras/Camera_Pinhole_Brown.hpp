@@ -143,4 +143,4 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
 
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::cameras::Pinhole_Intrinsic_Brown_T2, "pinhole_brown_t2");
 
-#endif // #ifndef OPENMVG_CAMERA_PINHOLE_RADIAL_K_HPP
+#endif // #ifndef OPENMVG_CAMERA_PINHOLE_BROWN_HPP
