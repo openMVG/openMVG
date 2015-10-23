@@ -35,17 +35,25 @@ bool refineSequence(cameras::Pinhole_Intrinsic_Radial_K3 *intrinsics,
   
   for(size_t viewID = 0; viewID < numCameras; ++viewID)
   {
+    const LocalizationResult &currResult = localizationResult[viewID];
+    // skip invalid poses
+    if(!currResult.isValid())
+    {
+      std::cout << "\n*****\nskipping invalid View " << viewID << std::endl;
+      continue;
+    }
+    
     std::cout << "\n*****\nView " << viewID << std::endl;
     // view
     tinyScene.views.insert( std::make_pair(viewID, std::make_shared<sfm::View>("",viewID, intrinsicID, viewID)));
     // pose
-    tinyScene.poses[viewID] = localizationResult[viewID].getPose();
+    tinyScene.poses[viewID] = currResult.getPose();
     // intrinsic (the shared_ptr does not take the ownership, will not release the input pointer)
     tinyScene.intrinsics[intrinsicID] = std::shared_ptr<cameras::Pinhole_Intrinsic_Radial_K3>(intrinsics, [](cameras::Pinhole_Intrinsic_Radial_K3*){});
     
     // structure data (2D-3D correspondences)
-    const sfm::Image_Localizer_Match_Data &matching_data = localizationResult[viewID].getMatchData();
-    const vector<pair<IndexT, IndexT> > &currentIDs = localizationResult[viewID].getIndMatch3D2D();
+    const sfm::Image_Localizer_Match_Data &matching_data = currResult.getMatchData();
+    const vector<pair<IndexT, IndexT> > &currentIDs = currResult.getIndMatch3D2D();
     
     for(const size_t idx : matching_data.vec_inliers )
     {
