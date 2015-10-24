@@ -969,7 +969,6 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
     optional_intrinsic = _sfm_data.GetIntrinsics().at(view_I->id_intrinsic);
   }
 
-  Mat2X pt2D_original(2, set_trackIdForResection.size());
   size_t cpt = 0;
   std::set<size_t>::const_iterator iterTrackId = set_trackIdForResection.begin();
   for (std::vector<size_t>::const_iterator iterfeatId = vec_featIdForResection.begin();
@@ -977,13 +976,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
     ++iterfeatId, ++iterTrackId, ++cpt)
   {
     resection_data.pt3D.col(cpt) = _sfm_data.GetLandmarks().at(*iterTrackId).X;
-    resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
-      _features_provider->feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
-    // Handle image distortion if intrinsic is known (to ease the resection)
-    if (optional_intrinsic && optional_intrinsic->have_disto())
-    {
-      resection_data.pt2D.col(cpt) = optional_intrinsic->get_ud_pixel(resection_data.pt2D.col(cpt));
-    }
+    resection_data.pt2D.col(cpt) = _features_provider->feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
   }
 
   // C. Do the resectioning: compute the camera pose.
@@ -999,7 +992,6 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
     resection_data,
     pose
   );
-  resection_data.pt2D = std::move(pt2D_original); // restore original image domain points
 
   if (!_sLoggingFile.empty())
   {
