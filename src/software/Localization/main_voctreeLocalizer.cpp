@@ -10,6 +10,7 @@
 #include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 #include <openMVG/image/image_io.hpp>
 #include <openMVG/dataio/FeedProvider.hpp>
+#include <openMVG/features/image_describer.hpp>
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
@@ -57,6 +58,7 @@ int main(int argc, char** argv)
   std::string weightsFilepath;      //< the vocabulary tree weights file
   std::string mediaFilepath;        //< the media file to localize
   localization::VoctreeLocalizer::Parameters param = localization::VoctreeLocalizer::Parameters();
+  std::string preset = features::describerPreset_enumToString(param._featurePreset);               //< the preset for the feature extractor
 #if HAVE_ALEMBIC
   std::string exportFile = "trackedcameras.abc"; //!< the export file
 #endif
@@ -70,6 +72,7 @@ int main(int argc, char** argv)
       ("help,h", "Print this message")
       ("results,r", po::value<size_t>(&param._numResults)->default_value(param._numResults), "Number of images to retrieve in database")
       ("commonviews,", po::value<size_t>(&param._numCommonViews)->default_value(param._numCommonViews), "Number of minimum images in which a point must be seen to be used in cluster tracking")
+      ("preset,", po::value<std::string>(&preset)->default_value(preset), "Number of minimum images in which a point must be seen to be used in cluster tracking")
       ("calibration,c", po::value<std::string>(&calibFile)/*->required( )*/, "Calibration file")
       ("voctree,t", po::value<std::string>(&vocTreeFilepath)->required(), "Filename for the vocabulary tree")
       ("weights,w", po::value<std::string>(&weightsFilepath), "Filename for the vocabulary tree weights")
@@ -114,6 +117,10 @@ int main(int argc, char** argv)
   {
     param._algorithm = localization::VoctreeLocalizer::initFromString(algostring);
   }
+  if(vm.count("preset"))
+  {
+    param._featurePreset = features::describerPreset_stringToEnum(preset);
+  }
   {
     // the bundle adjustment can be run for now only if the refine intrinsics option is not set
     globalBundle = (globalBundle && !param._refineIntrinsics);
@@ -127,6 +134,7 @@ int main(int argc, char** argv)
     POPART_COUT("\tresults: " << param._numResults);
     POPART_COUT("\tcommon views: " << param._numCommonViews);
     POPART_COUT("\trefineIntrinsics: " << param._refineIntrinsics);
+    POPART_COUT("\tpreset: " << param._featurePreset);
     POPART_COUT("\tglobalBundle: " << globalBundle);
 //    POPART_COUT("\tvisual debug: " << visualDebug);
     POPART_COUT("\talgorithm: " << param._algorithm);
