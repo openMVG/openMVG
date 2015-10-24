@@ -11,6 +11,8 @@
 #include <vector>
 #include <map>
 
+//#define VISUAL_DEBUG_MODE
+
 namespace openMVG {
 namespace rig {
   
@@ -72,7 +74,7 @@ public:
   // output: mean of the reprojection errors
   bool optimizeCalibration();
   
-  //void displayRelativePoseReprojection(const Pose & relativePose, std::size_t iTracker);
+  void displayRelativePoseReprojection(const geometry::Pose3 & relativePose, std::size_t iTracker);
   
 private:
   // Set of localization results (all of them associated to a camera)
@@ -114,6 +116,8 @@ geometry::Pose3 poseFromMainToWitness(geometry::Pose3 poseMainCamera, geometry::
  *
  */
 geometry::Pose3 computeRelativePose(geometry::Pose3 poseMainCamera, geometry::Pose3 poseWitnessCamera);
+
+void cvpause();
 
 #if 0
 

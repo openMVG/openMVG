@@ -5,7 +5,9 @@
 //#include <eigen3/Eigen/src/Core/MatrixBase.h>
 
 #include <openMVG/sfm/sfm_data_BA_ceres.hpp>
+
 #include <ceres/rotation.h>
+#include <opencv2/opencv.hpp>
 
 namespace openMVG {
 namespace rig {
@@ -114,8 +116,8 @@ void Rig::findBestRelativePose(
   }
   result = vPoses[iMin];
   
-  //displayRelativePoseReprojection(geometry::Pose3(openMVG::Mat3::Identity(), openMVG::Vec3::Zero()), 0);
-  //displayRelativePoseReprojection(result, iTracker);
+  displayRelativePoseReprojection(geometry::Pose3(openMVG::Mat3::Identity(), openMVG::Vec3::Zero()), 0);
+  displayRelativePoseReprojection(result, iLocalizer);
 }
 
 geometry::Pose3 computeRelativePose(geometry::Pose3 poseMainCamera, geometry::Pose3 poseWitnessCamera)
@@ -157,7 +159,7 @@ double reprojectionError(const localization::LocalizationResult & localizationRe
     // Its reprojection
     Vec2 itsReprojection = localizationResult.getIntrinsics().project(pose, point3D);
     // Its associated observation location
-    const Vec2 & point2D = localizationResult.getMatchData().pt3D.col(iInliers);
+    const Vec2 & point2D = localizationResult.getMatchData().pt2D.col(iInliers);
     // Residual
     residual += (point2D(0) - itsReprojection(0))*(point2D(0) - itsReprojection(0));
     residual += (point2D(1) - itsReprojection(1))*(point2D(1) - itsReprojection(1));
@@ -204,52 +206,45 @@ void Rig::displayRelativePoseReprojection(const geometry::Pose3 & relativePose, 
   // Set the marker size
   std::size_t semiWidth = 3.0;
   
-  for(int j=0 ; j < tracker.poses().size() ; ++j )
+  for(int iView=0 ; iView < witnessLocalizerResults.size() ; ++iView )
   {
-    // Window to display reprojection errors
-    cv::Mat imgRes(tracker._height, tracker._width, CV_8UC3);// todo
-    imgRes = cv::Scalar(255,255,255);
-    cvNamedWindow("Reprojection", CV_WINDOW_NORMAL);
-    cv::moveWindow("Reprojection",0,0);
-    cv::resizeWindow("Reprojection", tracker._width/2, tracker._height/2);
-    cv::imshow("Reprojection", imgRes);
-
-    // Check that both pose computations succeed 
-    if ( tracker.poses()[j].second )
+        // Check that both pose computations succeed 
+    if ( witnessLocalizerResults[iView].isValid() )
     {
-      //geometry::Pose3 pose = mainTracker.poses()[j].first*relativePose;
+      const std::size_t width = witnessLocalizerResults[iView].getIntrinsics()._w;
+      const std::size_t height = witnessLocalizerResults[iView].getIntrinsics()._h;
+
+      // Window to display reprojection errors
+      cv::Mat imgRes(height, width, CV_8UC3);
+      imgRes = cv::Scalar(255,255,255);
+      cvNamedWindow("Reprojection", CV_WINDOW_NORMAL);
+      cv::moveWindow("Reprojection",0,0);
+      cv::resizeWindow("Reprojection", width/2, height/2);
+      cv::imshow("Reprojection", imgRes);
       
-      const openMVG::Mat3 R1 = mainTracker.poses()[j].first.rotation();
-      const openMVG::Vec3 t1 = mainTracker.poses()[j].first.translation();
-
-      const openMVG::Mat3 R12 = relativePose.rotation();
-      const openMVG::Vec3 t12 = relativePose.translation();
-
-      const openMVG::Mat3 R2 = R12 * R1;
-      const openMVG::Vec3 t2 = R12 * t1 + t12 ;
-
-      const geometry::Pose3 pose( R2 , -R2.transpose() * t2 );
+      const geometry::Pose3 poseWitnessCamera = poseFromMainToWitness(mainLocalizerResults[iView].getPose(), relativePose);
         
-      //
-      for(int k=0 ; k < tracker.pts()[j].size() ; ++k)
+      const openMVG::Mat points2D = witnessLocalizerResults[iView].getMatchData().pt2D;
+      const openMVG::Mat points3D = witnessLocalizerResults[iView].getMatchData().pt3D;
+      
+      for(const IndexT iInlier : witnessLocalizerResults[iView].getMatchData().vec_inliers)
       {
         // Reprojections
-        openMVG::Vec2 calibReprojPt;
-        reproject( toOMVG(tracker.intrinsics()[j].getIntrinsics().getK()), pose, tracker.pts()[j][k], calibReprojPt);
-        
-        // Observations
-        openMVG::Vec2 calibimgPt;
-        popart::vision::projectiveTransform(toOMVG(tracker.intrinsics()[j].getIntrinsics().getK()), tracker.imgPts()[j][k], calibimgPt);
-        
+        const Vec3 & point3D = points3D.col(iInlier);
+        // Its reprojection
+        Vec2 itsReprojection = witnessLocalizerResults[iView].getIntrinsics().project(poseWitnessCamera, point3D);
+        // Its associated observation location
+        const Vec2 & point2D = points2D.col(iInlier);
+ 
         // Display reprojections and observations
         cv::rectangle(imgRes, 
-                cvPoint(calibimgPt(0)-semiWidth,calibimgPt(1)-semiWidth),
-                cvPoint(calibimgPt(0)+semiWidth,calibimgPt(1)+semiWidth),
+                cvPoint(point2D(0)-semiWidth,point2D(1)-semiWidth),
+                cvPoint(point2D(0)+semiWidth,point2D(1)+semiWidth),
                 cv::Scalar(0,255,0));
         
         cv::rectangle(imgRes,
-                cvPoint(calibReprojPt(0)-semiWidth,calibReprojPt(1)-semiWidth),
-                cvPoint(calibReprojPt(0)+semiWidth,calibReprojPt(1)+semiWidth),
+                cvPoint(itsReprojection(0)-semiWidth,itsReprojection(1)-semiWidth),
+                cvPoint(itsReprojection(0)+semiWidth,itsReprojection(1)+semiWidth),
                 cv::Scalar(255,0,0));
       }
       cv::imshow("Reprojection", imgRes);
@@ -258,7 +253,22 @@ void Rig::displayRelativePoseReprojection(const geometry::Pose3 & relativePose, 
   }
 #endif
 }
+
+/* Pause function while using cv::namedwindows*/
+void cvpause(){
+#ifdef VISUAL_DEBUG_MODE
+  int keyboard;
+  while( !(char) keyboard ){ // ASCII code for 'CR'
+    keyboard = cv::waitKey( 0 );
+  }
+
+  if ( (char) keyboard == 'q' )
+  {
+    std::cerr << "The program has been manually stopped" << std::endl;
+    std::exit(0);
+  }
 #endif
+}
 
 bool Rig::optimizeCalibration()
 {
@@ -521,8 +531,8 @@ bool Rig::optimizeCalibration()
       }
     }
     
-    //displayRelativePoseReprojection(geometry::Pose3(openMVG::Mat3::Identity(), openMVG::Vec3::Zero()), 0);
-    //displayRelativePoseReprojection(_vRelativePoses[0], 1);
+    displayRelativePoseReprojection(geometry::Pose3(openMVG::Mat3::Identity(), openMVG::Vec3::Zero()), 0);
+    displayRelativePoseReprojection(_vRelativePoses[0], 1);
     
     // Possibility to update the intrinsics here
 
