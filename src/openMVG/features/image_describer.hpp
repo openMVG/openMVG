@@ -14,6 +14,9 @@
 #include <memory>
 #include <cereal/cereal.hpp> // Serialization
 
+#include <exception>
+#include <string>
+
 namespace openMVG {
 namespace features {
 
@@ -53,8 +56,7 @@ inline std::string describerPreset_enumToString(const EDESCRIBER_PRESET preset)
     return "HIGH";
   if (preset == ULTRA_PRESET)
     return "ULTRA";
-  //@fixme rather throw an exception?
-  return "unrecognized preset";
+  throw std::invalid_argument("Unrecognized EDESCRIBER_PRESET "+std::to_string(preset));
 }
 
 
