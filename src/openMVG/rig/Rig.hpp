@@ -55,9 +55,13 @@ public:
  // Pose productInv(const Pose & poseA, const Pose & poseB);
   
   /*
-   * @brief From a set of relative poses, find the optimal one for a given 
+   * @brief From a set of relative poses, find the one for a given 
    *        localization result which minimizes the reprojection errors over
    *        all views.
+   * 
+   * @param[in] vPoses Relative poses to test
+   * @param[in] Index of the considered witness camera
+   * @param[out] Best relative pose belonging in vPoses
    */
   void findOptimalPose(
         const std::vector<geometry::Pose3> & vPoses,
