@@ -100,6 +100,10 @@ private:
  */
 double reprojectionError(const localization::LocalizationResult & localizationResult, const geometry::Pose3 & pose);
 
+/*
+ *
+ */
+geometry::Pose3 computeRelativePose(geometry::Pose3 poseMainCamera, geometry::Pose3 poseWitnessCamera);
 #if 0
 
 // Depreciated

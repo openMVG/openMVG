@@ -49,17 +49,9 @@ bool Rig::initializeCalibration()
       // Check that both pose computations succeed 
       if ( resMainCamera[iView].isValid() && resWitnessCamera[iView].isValid() )
       {
-        const openMVG::Mat3 R1 = resMainCamera[iView].getPose().rotation();
-        const openMVG::Vec3 t1 = resMainCamera[iView].getPose().translation();
-        const openMVG::Mat3 R2 = resWitnessCamera[iView].getPose().rotation();
-        const openMVG::Vec3 t2 = resWitnessCamera[iView].getPose().translation();
-        
-        const openMVG::Mat3 R12 = R2 * R1.transpose();
-        const openMVG::Vec3 t12 = t2 - R12 * t1;
-        
-        const geometry::Pose3 relativePose( R12 , -R12.transpose()*t12 );
-        
-        vRelativePoses.push_back(relativePose);
+        vRelativePoses.push_back(
+                computeRelativePose(resMainCamera[iView].getPose(), resWitnessCamera[iView].getPose())
+                );
       }
     }
     geometry::Pose3 optimalRelativePose;
@@ -171,6 +163,19 @@ void Rig::findOptimalPose(
   //displayRelativePoseReprojection(result, iTracker);
 }
 
+geometry::Pose3 computeRelativePose(geometry::Pose3 poseMainCamera, geometry::Pose3 poseWitnessCamera)
+{
+  const openMVG::Mat3 & R1 = poseMainCamera.rotation();
+  const openMVG::Vec3 & t1 = poseMainCamera.translation();
+  const openMVG::Mat3 & R2 = poseWitnessCamera.rotation();
+  const openMVG::Vec3 & t2 = poseWitnessCamera.translation();
+
+  const openMVG::Mat3 R12 = R2 * R1.transpose();
+  const openMVG::Vec3 t12 = t2 - R12 * t1;
+
+  return geometry::Pose3( R12 , -R12.transpose()*t12 );
+}
+        
 double reprojectionError(const localization::LocalizationResult & localizationResult, const geometry::Pose3 & pose)
 {
   double residual = 0;
