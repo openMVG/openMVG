@@ -33,11 +33,11 @@ bool Rig::initializeCalibration()
   _vRelativePoses.reserve(nCams-1);
   
   // Loop over all witness cameras
-  for (int i=1 ; i < nCams ; ++i)
+  for (int iLocalizer=1 ; iLocalizer < nCams ; ++iLocalizer)
   {
     // Perform the pose averaging over all relative pose between the main camera
     // (index 0) and the witness camera (index i)
-    std::vector<localization::LocalizationResult> & resWitnessCamera = _vLocalizationResults[i];
+    std::vector<localization::LocalizationResult> & resWitnessCamera = _vLocalizationResults[iLocalizer];
     
     // vRelativePoses will store all the relative poses overall frames where both
     // the pose computation of the main camera and witness camera succeed
@@ -55,7 +55,8 @@ bool Rig::initializeCalibration()
       }
     }
     geometry::Pose3 optimalRelativePose;
-    findBestRelativePose(vRelativePoses, i, optimalRelativePose );
+    findBestRelativePose(vRelativePoses, iLocalizer, optimalRelativePose );
+  
     //poseAveraging(vRelativePoses, averageRelativePose);
     _vRelativePoses.push_back(optimalRelativePose);
   }
@@ -82,11 +83,11 @@ bool Rig::initializeCalibration()
 // minimize the reprojection errors over all images
 void Rig::findBestRelativePose(
         const std::vector<geometry::Pose3> & vPoses,
-        std::size_t iRes,
+        std::size_t iLocalizer,
         geometry::Pose3 & result )
 {
   std::vector<localization::LocalizationResult> & resMainCamera = _vLocalizationResults[0];
-  std::vector<localization::LocalizationResult> & resWitnessCamera = _vLocalizationResults[iRes];
+  std::vector<localization::LocalizationResult> & resWitnessCamera = _vLocalizationResults[iLocalizer];
   
   double minReprojError = std::numeric_limits<double>::max();
   double iMin = 0;
@@ -193,14 +194,12 @@ double Rig::distance(openMVG::Vec3 va, openMVG::Vec3 vb)
 
 #endif
 
-#if 0
-
 // Display reprojection error based on a relative pose
-void Rig::displayRelativePoseReprojection(const geometry::Pose3 & relativePose, std::size_t iTracker)
+void Rig::displayRelativePoseReprojection(const geometry::Pose3 & relativePose, std::size_t iLocalizer)
 {
 #ifdef VISUAL_DEBUG_MODE
-  PonctualMarkerTracker & mainTracker = _vLocalizationResults[0];
-  PonctualMarkerTracker & tracker = _vLocalizationResults[iTracker];
+  std::vector<localization::LocalizationResult> & mainLocalizerResults = _vLocalizationResults[0];
+  std::vector<localization::LocalizationResult> & witnessLocalizerResults = _vLocalizationResults[iLocalizer];
 
   // Set the marker size
   std::size_t semiWidth = 3.0;
