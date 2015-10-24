@@ -60,7 +60,7 @@ bool Rig::initializeCalibration()
     _vRelativePoses.push_back(optimalRelativePose);
   }
   
-  // Update all poses in all localization
+  // Update all poses in all localization results
   for (int iRelativePose = 0 ; iRelativePose < _vRelativePoses.size() ; ++iRelativePose )
   {
     std::size_t iRes = iRelativePose+1;
@@ -78,38 +78,9 @@ bool Rig::initializeCalibration()
   }
 }
 
-#if 0
-geometry::Pose3 Rig::product(const geometry::Pose3 & poseA, const geometry::Pose3 & poseB)
-{
-  openMVG::Mat3 R = poseA.rotation()*poseB.rotation();
-  openMVG::Vec3 t = poseA.rotation()*poseB.translation()+poseA.translation();
-  return geometry::Pose3(R, -R.transpose()*t);
-}
-
-geometry::Pose3 Rig::productInv(const geometry::Pose3 & poseA, const geometry::Pose3 & poseB)
-{
-  openMVG::Vec3 t = -poseA.rotation().transpose()*poseA.translation();
-  openMVG::Mat3 R = poseA.rotation().transpose();
-  
-  geometry::Pose3 poseC(R, -R.transpose()*t);
-  return product(poseC,poseB);
-}
-
-
-
-double Rig::distance(openMVG::Vec3 va, openMVG::Vec3 vb)
-{
-  double d1 = va(0)-vb(0);
-  double d2 = va(1)-vb(1);
-  double d3 = va(2)-vb(2);
-  return sqrt(d1*d1+d2*d2+d3*d3);
-}
-
-#endif
-
 // From a set of relative pose, find the optimal one for a given tracker iTraker which
 // minimize the reprojection errors over all images
-void Rig::findOptimalPose(
+void Rig::findBestRelativePose(
         const std::vector<geometry::Pose3> & vPoses,
         std::size_t iRes,
         geometry::Pose3 & result )
@@ -194,6 +165,35 @@ double reprojectionError(const localization::LocalizationResult & localizationRe
 }
 
 #if 0
+geometry::Pose3 Rig::product(const geometry::Pose3 & poseA, const geometry::Pose3 & poseB)
+{
+  openMVG::Mat3 R = poseA.rotation()*poseB.rotation();
+  openMVG::Vec3 t = poseA.rotation()*poseB.translation()+poseA.translation();
+  return geometry::Pose3(R, -R.transpose()*t);
+}
+
+geometry::Pose3 Rig::productInv(const geometry::Pose3 & poseA, const geometry::Pose3 & poseB)
+{
+  openMVG::Vec3 t = -poseA.rotation().transpose()*poseA.translation();
+  openMVG::Mat3 R = poseA.rotation().transpose();
+  
+  geometry::Pose3 poseC(R, -R.transpose()*t);
+  return product(poseC,poseB);
+}
+
+
+
+double Rig::distance(openMVG::Vec3 va, openMVG::Vec3 vb)
+{
+  double d1 = va(0)-vb(0);
+  double d2 = va(1)-vb(1);
+  double d3 = va(2)-vb(2);
+  return sqrt(d1*d1+d2*d2+d3*d3);
+}
+
+#endif
+
+#if 0
 
 // Display reprojection error based on a relative pose
 void Rig::displayRelativePoseReprojection(const geometry::Pose3 & relativePose, std::size_t iTracker)
@@ -259,7 +259,9 @@ void Rig::displayRelativePoseReprojection(const geometry::Pose3 & relativePose, 
   }
 #endif
 }
+#endif
 
+#if 0
 bool Rig::optimizeCalibration()
 {
   //----------
@@ -565,6 +567,10 @@ bool Rig::optimizeCalibration()
   }
   #endif
 }
+#endif
+
+
+#if 0
 
 // Compute an average pose
 void poseAveraging(const std::vector<geometry::Pose3> & vPoses, geometry::Pose3 & result)
