@@ -11,7 +11,7 @@
 #include <vector>
 #include <map>
 
-//#define VISUAL_DEBUG_MODE
+#define VISUAL_DEBUG_MODE
 
 namespace openMVG {
 namespace rig {
