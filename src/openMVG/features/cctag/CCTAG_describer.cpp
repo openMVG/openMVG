@@ -65,4 +65,4 @@ bool CCTAG_Image_describer::Describe(const image::Image<unsigned char>& image,
 } // namespace features
 } // namespace openMVG
 
-#endif HAVE_CCTAG
+#endif //HAVE_CCTAG
