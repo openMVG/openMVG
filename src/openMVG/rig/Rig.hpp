@@ -63,7 +63,7 @@ public:
    * @param[in] Index of the considered witness camera
    * @param[out] Best relative pose belonging in vPoses
    */
-  void findOptimalPose(
+  void findBestRelativePose(
         const std::vector<geometry::Pose3> & vPoses,
         std::size_t iRes,
         geometry::Pose3 & result );

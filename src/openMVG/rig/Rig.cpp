@@ -55,7 +55,7 @@ bool Rig::initializeCalibration()
       }
     }
     geometry::Pose3 optimalRelativePose;
-    findOptimalPose(vRelativePoses, i, optimalRelativePose );
+    findBestRelativePose(vRelativePoses, i, optimalRelativePose );
     //poseAveraging(vRelativePoses, averageRelativePose);
     _vRelativePoses.push_back(optimalRelativePose);
   }
