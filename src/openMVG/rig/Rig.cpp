@@ -154,10 +154,9 @@ void Rig::findOptimalPose(
         const openMVG::Mat3 R2 = R12 * R1;
         const openMVG::Vec3 t2 = R12 * t1 + t12 ;
         
-        const geometry::Pose3 pose( R2 , -R2.transpose() * t2 );
+        const geometry::Pose3 poseWitnessCamera( R2 , -R2.transpose() * t2 );
         
-        // todo: uncomment:
-        // error += reprojectionError(toOMVG(resWitnessCamera.intrinsics()[j].getIntrinsics().getK()), pose, tracker.imgPts()[j], tracker.pts()[j]);
+        error += reprojectionError(resWitnessCamera[j], poseWitnessCamera);
       }
     }
     if ( error < minReprojError )
@@ -170,6 +169,25 @@ void Rig::findOptimalPose(
   
   //displayRelativePoseReprojection(geometry::Pose3(openMVG::Mat3::Identity(), openMVG::Vec3::Zero()), 0);
   //displayRelativePoseReprojection(result, iTracker);
+}
+
+double reprojectionError(const localization::LocalizationResult & localizationResult, const geometry::Pose3 & pose)
+{
+  double residual = 0;
+  
+  for(const IndexT iInliers : localizationResult.getMatchData().vec_inliers)
+  {
+    // Inlier 3D point
+    const Vec3 & point3D = localizationResult.getMatchData().pt3D.col(iInliers);
+    // Its reprojection
+    Vec2 itsReprojection = localizationResult.getIntrinsics().project(pose, point3D);
+    // Its associated observation location
+    const Vec2 & point2D = localizationResult.getMatchData().pt3D.col(iInliers);
+    // Residual
+    residual += (point2D(0) - itsReprojection(0))*(point2D(0) - itsReprojection(0));
+    residual += (point2D(1) - itsReprojection(1))*(point2D(1) - itsReprojection(1));
+  }
+  return residual;
 }
 
 #if 0
@@ -551,18 +569,9 @@ void poseAveraging(const std::vector<geometry::Pose3> & vPoses, geometry::Pose3 
   // todo
 }
 
-double reprojectionError(const openMVG::Mat3 & K, const geometry::Pose3 & pose, const std::vector<openMVG::Vec2> & imgPts, const std::vector<openMVG::Vec3> & pts)
-{
-  double res = 0;
-  
-  //assert( imgPts.size - pts.size() == 0 );
-  
-  for(int i=0 ; i < imgPts.size() ; ++i)
-  {
-    res += residual(K, pose, pts[i], imgPts[i]);
-  }
-  return res;
-}
+#endif
+
+#if 0
 
 // Compute the residual between the 3D projected point X and an image observation x
 double residual( const openMVG::Mat3 & K, const geometry::Pose3 & pose, const openMVG::Vec3 & X, const openMVG::Vec2 & x)

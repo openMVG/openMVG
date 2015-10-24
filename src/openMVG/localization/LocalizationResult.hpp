@@ -16,6 +16,7 @@ public:
         const sfm::Image_Localizer_Match_Data & matchData,
         const std::vector<pair<IndexT, IndexT> > & indMatch3D2D,
         const geometry::Pose3 & pose,
+        const cameras::Pinhole_Intrinsic & intrinsics,
         bool isValid = true);
   
   LocalizationResult(const LocalizationResult& orig);
@@ -30,6 +31,8 @@ public:
   const geometry::Pose3 & getPose() const;
   
   void setPose(const geometry::Pose3 & pose);
+  
+  const cameras::Pinhole_Intrinsic & getIntrinsics() const;
 
   bool isValid() const;
   
@@ -43,6 +46,8 @@ private:
                                                     // i.e. the set of pair (landmark id, index of the associated 2D point)
 
   geometry::Pose3 _pose; // Computed camera pose
+  
+  cameras::Pinhole_Intrinsic _intrinsics;
 
   bool _isValid; // True if the localization succedded, false otherwise
   
