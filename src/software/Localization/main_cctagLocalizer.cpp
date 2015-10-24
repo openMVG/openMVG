@@ -177,7 +177,7 @@ int main(int argc, char** argv)
             imageGrey, 
             param,
             hasIntrinsics/*useInputIntrinsics*/,
-            queryIntrinsics,
+            queryIntrinsics, // todo: put as const and use the intrinsic result store in localizationResult afterward
             localizationResult);
     vLocalizationResults.emplace_back(localizationResult);
     

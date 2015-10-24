@@ -293,7 +293,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
   if(!refineStatus)
     POPART_COUT("[poseEstimation]\tRefine pose could not improve the estimation of the camera pose.");
   
-  localizationResult = LocalizationResult(bestResectionData, bestAssociationIDs, bestPose, true);
+  localizationResult = LocalizationResult(bestResectionData, bestAssociationIDs, bestPose, queryIntrinsics, true);
 
   return localizationResult.isValid();
   
