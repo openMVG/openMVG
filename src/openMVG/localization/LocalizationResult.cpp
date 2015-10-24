@@ -21,12 +21,6 @@ LocalizationResult::LocalizationResult(
         _isValid(isValid)
 {
 }
-        
-        
-
-LocalizationResult::LocalizationResult(const LocalizationResult& orig)
-{
-}
 
 LocalizationResult::~LocalizationResult()
 {
