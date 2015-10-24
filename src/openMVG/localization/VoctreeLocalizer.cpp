@@ -80,7 +80,7 @@ VoctreeLocalizer::Algorithm VoctreeLocalizer::initFromString(const std::string &
 bool VoctreeLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                 const Parameters &param,
                 bool useInputIntrinsics,
-                cameras::Pinhole_Intrinsic &queryIntrinsics,
+                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult &localizationResult)
 {
   switch(param._algorithm)
@@ -288,7 +288,7 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
 bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char> & imageGrey,
                                                 const Parameters &param,
                                                 bool useInputIntrinsics,
-                                                cameras::Pinhole_Intrinsic &queryIntrinsics,
+                                                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                                                 LocalizationResult &localizationResult)
 {
   // A. extract descriptors and features from image
@@ -507,7 +507,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
 bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & imageGrey,
                                           const Parameters &param,
                                           bool useInputIntrinsics,
-                                          cameras::Pinhole_Intrinsic &queryIntrinsics,
+                                          cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                                           LocalizationResult &localizationResult)
 {
   // A. extract descriptors and features from image

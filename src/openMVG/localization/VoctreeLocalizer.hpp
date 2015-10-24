@@ -94,7 +94,7 @@ public:
   bool localize(const image::Image<unsigned char> & imageGrey,
                 const Parameters &param,
                 bool useInputIntrinsics,
-                cameras::Pinhole_Intrinsic &queryIntrinsics,
+                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult &localizationResult);
 
   /**
@@ -115,7 +115,7 @@ public:
   bool localizeFirstBestResult(const image::Image<unsigned char> & imageGrey,
                 const Parameters &param,
                 bool useInputIntrinsics,
-                cameras::Pinhole_Intrinsic &queryIntrinsics,
+                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult &localizationResult);
 
   /**
@@ -137,7 +137,7 @@ public:
   bool localizeAllResults(const image::Image<unsigned char> & imageGrey,
                 const Parameters &param,
                 bool useInputIntrinsics,
-                cameras::Pinhole_Intrinsic &queryIntrinsics,
+                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult &localizationResult);
   
   const sfm::SfM_Data& getSfMData() const {return _sfm_data; }

@@ -16,7 +16,7 @@ public:
         const sfm::Image_Localizer_Match_Data & matchData,
         const std::vector<pair<IndexT, IndexT> > & indMatch3D2D,
         const geometry::Pose3 & pose,
-        const cameras::Pinhole_Intrinsic & intrinsics,
+        const cameras::Pinhole_Intrinsic_Radial_K3 & intrinsics,
         bool isValid = true);
   
   virtual ~LocalizationResult();
@@ -30,7 +30,7 @@ public:
   
   void setPose(const geometry::Pose3 & pose);
   
-  const cameras::Pinhole_Intrinsic & getIntrinsics() const;
+  const cameras::Pinhole_Intrinsic_Radial_K3 & getIntrinsics() const;
 
   bool isValid() const;
   
@@ -45,7 +45,7 @@ private:
 
   geometry::Pose3 _pose; // Computed camera pose
   
-  cameras::Pinhole_Intrinsic _intrinsics;
+  cameras::Pinhole_Intrinsic_Radial_K3 _intrinsics;
 
   bool _isValid; // True if the localization succedded, false otherwise
   

@@ -12,7 +12,7 @@ LocalizationResult::LocalizationResult(
         const sfm::Image_Localizer_Match_Data & matchData,
         const std::vector<pair<IndexT, IndexT> > & indMatch3D2D,
         const geometry::Pose3 & pose,
-        const cameras::Pinhole_Intrinsic & intrinsics,
+        const cameras::Pinhole_Intrinsic_Radial_K3 & intrinsics,
         bool isValid) :
         _matchData(matchData),
         _indMatch3D2D(indMatch3D2D),
@@ -47,7 +47,7 @@ void LocalizationResult::setPose(const geometry::Pose3 & pose)
   _pose = pose;
 }
 
-const cameras::Pinhole_Intrinsic & LocalizationResult::getIntrinsics() const
+const cameras::Pinhole_Intrinsic_Radial_K3 & LocalizationResult::getIntrinsics() const
 {
   return _intrinsics;
 }
