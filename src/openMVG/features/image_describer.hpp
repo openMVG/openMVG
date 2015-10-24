@@ -41,6 +41,22 @@ inline EDESCRIBER_PRESET describerPreset_stringToEnum(const std::string& sPreset
   return NORMAL_PRESET;
 }
 
+inline std::string describerPreset_enumToString(const EDESCRIBER_PRESET preset)
+{
+  if(preset == LOW_PRESET)
+    return "LOW";
+  if (preset == MEDIUM_PRESET)
+    return "MEDIUM";
+  if(preset == NORMAL_PRESET)
+    return "NORMAL";
+  if (preset == HIGH_PRESET)
+    return "HIGH";
+  if (preset == ULTRA_PRESET)
+    return "ULTRA";
+  //@fixme rather throw an exception?
+  return "unrecognized preset";
+}
+
 
 /// A pure virtual class for image description computation
 class Image_describer
