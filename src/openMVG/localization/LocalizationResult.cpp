@@ -27,9 +27,19 @@ LocalizationResult::~LocalizationResult()
 }
 
 // Accessor
-const sfm::Image_Localizer_Match_Data & LocalizationResult::getMatchData() const
+const std::vector<size_t> & LocalizationResult::getInliers() const 
 {
-  return _matchData;
+  return _matchData.vec_inliers;
+}
+
+const Mat & LocalizationResult::getPt2D() const 
+{
+  return _matchData.pt2D;
+}
+
+const Mat & LocalizationResult::getPt3D() const 
+{
+  return _matchData.pt3D;
 }
 
 const std::vector<pair<IndexT, IndexT> > & LocalizationResult::getIndMatch3D2D() const

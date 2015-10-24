@@ -22,7 +22,11 @@ public:
   virtual ~LocalizationResult();
   
   // Accessors
-  const sfm::Image_Localizer_Match_Data & getMatchData() const;
+  const std::vector<size_t> & getInliers() const;
+
+  const Mat & getPt2D() const;
+
+  const Mat & getPt3D() const;
 
   const std::vector<pair<IndexT, IndexT> > & getIndMatch3D2D() const;
 
