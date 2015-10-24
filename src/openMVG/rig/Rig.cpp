@@ -66,20 +66,13 @@ bool Rig::initializeCalibration()
     std::size_t iRes = iRelativePose+1;
     for (int iView = 0 ; iView < _vLocalizationResults[iRes].size() ; ++iView )
     {
-      if( _vLocalizationResults[iRes][iView].isValid() && _vLocalizationResults[0][iView].isValid() )
+      if(  _vLocalizationResults[0][iView].isValid() )
       {
         const geometry::Pose3 & relativePose = _vRelativePoses[iRelativePose];
         
-        const openMVG::Mat3 R1 = _vLocalizationResults[0][iView].getPose().rotation();
-        const openMVG::Vec3 t1 = _vLocalizationResults[0][iView].getPose().translation();
+        const geometry::Pose3 poseWitnessCamera = poseFromMainToWitness(_vLocalizationResults[0][iView].getPose(), relativePose);
+        _vLocalizationResults[iRes][iView].setPose(poseWitnessCamera);
         
-        const openMVG::Mat3 R12 = relativePose.rotation();
-        const openMVG::Vec3 t12 = relativePose.translation();
-        
-        const openMVG::Mat3 R2 = R12 * R1;
-        const openMVG::Vec3 t2 = R12 * t1 + t12 ;
-        
-        _vLocalizationResults[iRes][iView].setPose(geometry::Pose3( R2 , -R2.transpose() * t2 ));
       }
     }
   }
@@ -137,17 +130,7 @@ void Rig::findOptimalPose(
       // Check that both pose computations succeed 
       if ( ( resMainCamera[j].isValid() ) && ( resWitnessCamera[j].isValid() ) )
       {
-        const openMVG::Mat3 R1 = resMainCamera[j].getPose().rotation();
-        const openMVG::Vec3 t1 = resMainCamera[j].getPose().translation();
-        
-        const openMVG::Mat3 R12 = relativePose.rotation();
-        const openMVG::Vec3 t12 = relativePose.translation();
-        
-        const openMVG::Mat3 R2 = R12 * R1;
-        const openMVG::Vec3 t2 = R12 * t1 + t12 ;
-        
-        const geometry::Pose3 poseWitnessCamera( R2 , -R2.transpose() * t2 );
-        
+        const geometry::Pose3 poseWitnessCamera = poseFromMainToWitness(resMainCamera[j].getPose(), relativePose);
         error += reprojectionError(resWitnessCamera[j], poseWitnessCamera);
       }
     }
@@ -176,6 +159,21 @@ geometry::Pose3 computeRelativePose(geometry::Pose3 poseMainCamera, geometry::Po
   return geometry::Pose3( R12 , -R12.transpose()*t12 );
 }
         
+
+geometry::Pose3 poseFromMainToWitness(geometry::Pose3 poseMainCamera, geometry::Pose3 relativePose)
+{
+  const openMVG::Mat3 & R1 = poseMainCamera.rotation();
+  const openMVG::Vec3 & t1 = poseMainCamera.translation();
+
+  const openMVG::Mat3 & R12 = relativePose.rotation();
+  const openMVG::Vec3 & t12 = relativePose.translation();
+
+  const openMVG::Mat3 R2 = R12 * R1;
+  const openMVG::Vec3 t2 = R12 * t1 + t12 ;
+  
+  return geometry::Pose3( R2 , -R2.transpose() * t2 );
+}
+
 double reprojectionError(const localization::LocalizationResult & localizationResult, const geometry::Pose3 & pose)
 {
   double residual = 0;

@@ -101,9 +101,20 @@ private:
 double reprojectionError(const localization::LocalizationResult & localizationResult, const geometry::Pose3 & pose);
 
 /*
+ * @brief Compute the witness camera from the main camera pose and the relative pose 
+ * from the main camera to the witness camera
+ * 
+ * @param[in] poseMainCamera Pose of the main camera
+ * @param[in] relativePose Relative pose from the main camera to the witness camera
+ * @return The absolute pose of the witness camera
+ */
+geometry::Pose3 poseFromMainToWitness(geometry::Pose3 poseMainCamera, geometry::Pose3 relativePose);
+
+/*
  *
  */
 geometry::Pose3 computeRelativePose(geometry::Pose3 poseMainCamera, geometry::Pose3 poseWitnessCamera);
+
 #if 0
 
 // Depreciated
