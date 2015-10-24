@@ -85,6 +85,17 @@ private:
   std::vector<geometry::Pose3> _vPoses; // (i.e. pose of the main camera)
 };
 
+/*
+ * @brief For a given localization result, compute the sum of the reprojection errors
+ * (over all points) related to another pose than the one previously computed and store
+ * in the provided localizationResult instance.
+ * 
+ * @param[in] localizationResult The localization result
+ * @param[in] pose The pose
+ * @return The reprojection error over all inliers store in localizationResult
+ */
+double reprojectionError(const localization::LocalizationResult & localizationResult, const geometry::Pose3 & pose);
+
 #if 0
 
 // Depreciated
