@@ -188,5 +188,8 @@ int main(int argc, char** argv)
     POPART_COUT("Max time for localization:   " << bacc::max(stats) << " [ms]");
     POPART_COUT("Min time for localization:   " << bacc::min(stats) << " [ms]");
   }
+  POPART_COUT("Rig calibration initialization");
   rig.initializeCalibration();
+  POPART_COUT("Rig calibration optimization");
+  rig.optimizeCalibration();
 }

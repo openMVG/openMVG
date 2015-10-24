@@ -70,7 +70,7 @@ public:
 
   // Optimize the initial solutions over all images
   // output: mean of the reprojection errors
-  //bool optimizeCalibration();
+  bool optimizeCalibration();
   
   //void displayRelativePoseReprojection(const Pose & relativePose, std::size_t iTracker);
   

@@ -1,5 +1,5 @@
 #include "Rig.hpp"
-//#include "bundleAdjustmentCeresFunctor.hpp"
+#include "bundleAdjustmentCeresFunctor.hpp"
 
 //#include <vision/cameraTracking/debug/visualDebug.hpp>
 //#include <eigen3/Eigen/src/Core/MatrixBase.h>
@@ -261,20 +261,8 @@ void Rig::displayRelativePoseReprojection(const geometry::Pose3 & relativePose, 
 }
 #endif
 
-#if 0
 bool Rig::optimizeCalibration()
 {
-  //----------
-  // Add camera parameters
-  // - intrinsics
-  // - poses [R|t]
-
-  // Create residuals for each observation in the bundle adjustment problem. The
-  // parameters for cameras and points are added automatically.
-  //----------
-
-  //google::InitGoogleLogging("/home/lilian/toto.txt");
-  
   ceres::Problem problem;
 
   // Add relative pose as a parameter block for each witness cameras (i.e. each Tracker)
@@ -306,13 +294,13 @@ bool Rig::optimizeCalibration()
   
   
   std::vector<std::vector<double> > vMainPoses;
-  for (int iView = 0 ; iView < _vLocalizationResults[0].poses().size() ; ++iView )
+  for (int iView = 0 ; iView < _vLocalizationResults[0].size() ; ++iView )
   {
-    if ( _vLocalizationResults[0].poses()[iView].second )
+    if ( _vLocalizationResults[0][iView].isValid() )
     {
-      geometry::Pose3 & pose = _vLocalizationResults[0].poses()[iView].first;
+      const geometry::Pose3 & pose = _vLocalizationResults[0][iView].getPose();
 
-      POPART_COUT_VAR(pose.rotation());
+      //POPART_COUT_VAR(pose.rotation());
       const openMVG::Mat3 R = pose.rotation();
       const openMVG::Vec3 t = pose.translation();
 
@@ -334,10 +322,8 @@ bool Rig::optimizeCalibration()
       problem.AddParameterBlock(parameter_block, 6);
     }
   }
-  
-  POPART_COUT("Second init loop");
 
-// The following code will be used if the intrinsics have to be refined in the bundle adjustment
+// The following code can be used if the intrinsics have to be refined in the bundle adjustment
   
 //  for (Intrinsics::const_iterator itIntrinsic = sfm_data.intrinsics.begin();
 //    itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
@@ -366,26 +352,27 @@ bool Rig::optimizeCalibration()
 //    }
 //  }
 
-
-//#if 0
-   // Set a LossFunction to be less penalized by false measurements
+  // Set a LossFunction to be less penalized by false measurements
   //  - set it to NULL if you don't want use a lossFunction.
   ceres::LossFunction * p_LossFunction = NULL;//new ceres::HuberLoss(Square(4.0));
   // TODO: make the LOSS function and the parameter an option
 
   // For all visibility add reprojections errors:
-  for (int iTracker = 0 ; iTracker < _vLocalizationResults.size() ; ++iTracker)
+  for (int iLocalizer = 0 ; iLocalizer < _vLocalizationResults.size() ; ++iLocalizer)
   {
-    const PonctualMarkerTracker & tracker = _vLocalizationResults[iTracker];
+    const std::vector<localization::LocalizationResult> & localizationResults = _vLocalizationResults[iLocalizer];
     
-    for (int iView = 0 ; iView < tracker.poses().size() ; ++iView)
+    for (int iView = 0 ; iView < localizationResults.size() ; ++iView)
     {
-      const TrackingCamera & cameraInfo = tracker.intrinsics()[iView];
+      const cameras::Pinhole_Intrinsic & cameraInfo = localizationResults[iView].getIntrinsics();
       
-      const std::vector<openMVG::Vec3> & points = tracker.pts()[iView];
-      const std::vector<openMVG::Vec2> & observations = tracker.imgPts()[iView];
+      // Get the inliers 3D points
+      const Mat & points3D = localizationResults[iView].getMatchData().pt3D;
+      // Get their image locations
+      const Mat & points2D = localizationResults[iView].getMatchData().pt2D;
       
-      for (int iPoint = 0 ; iPoint < points.size() ; ++iPoint)
+      // Add a residual block for all inliers
+      for (const IndexT iPoint : localizationResults[iView].getMatchData().vec_inliers )
       {
         // Each Residual block takes a point and a camera as input and outputs a 2
         // dimensional residual. Internally, the cost function stores the observations
@@ -393,14 +380,14 @@ bool Rig::optimizeCalibration()
         ceres::CostFunction* cost_function;
 
         // Add a residual block for the main camera
-        if ( iTracker == 0 )
+        if ( iLocalizer == 0 )
         {
           // Add the residual block if the resection (of the main camera) succeeded
-          if ( _vLocalizationResults[iTracker].poses()[iView].second )
+          if ( _vLocalizationResults[iLocalizer][iView].isValid() )
           {
             // Vector-2 residual, pose of the rig parameterized by 6 parameters
             cost_function = new ceres::AutoDiffCostFunction<ResidualErrorMainCameraFunctor, 2, 6>(
-            new ResidualErrorMainCameraFunctor(toOMVG(cameraInfo.getIntrinsics().getK()), observations[iPoint], points[iPoint]));
+            new ResidualErrorMainCameraFunctor(_vLocalizationResults[iLocalizer][iView].getIntrinsics().K(), points2D.col(iPoint), points3D.col(iPoint) ));
 
             if (cost_function)
             {
@@ -409,7 +396,7 @@ bool Rig::optimizeCalibration()
                                         &vMainPoses[iView][0]);
             }else
             {
-              POPART_COUT("Fail in adding residual block for the main camera");
+              std::cout << "Fail in adding residual block for the main camera" << std::endl;
             }
           }
 
@@ -417,7 +404,7 @@ bool Rig::optimizeCalibration()
         // Add a residual block for a secondary camera
         {
           // Add the residual block if the resection (of the secondary camera) succeeded
-          if ( _vLocalizationResults[iTracker].poses()[iView].second )
+          if ( _vLocalizationResults[iLocalizer][iView].isValid() )
           {
                     //POPART_COUT_VAR(observations[iPoint]);
                     //POPART_COUT_VAR(points[iPoint]);
@@ -425,7 +412,7 @@ bool Rig::optimizeCalibration()
             // Vector-2 residual, pose of the rig parametrised by 6 parameters
             //                  + relative pose of the secondary camera parameterized by 6 parameters
             cost_function = new ceres::AutoDiffCostFunction<ResidualErrorSecondaryCameraFunctor, 2, 6, 6>(
-            new ResidualErrorSecondaryCameraFunctor(toOMVG(cameraInfo.getIntrinsics().getK()), observations[iPoint], points[iPoint]));
+            new ResidualErrorSecondaryCameraFunctor(_vLocalizationResults[iLocalizer][iView].getIntrinsics().K(), points2D.col(iPoint), points3D.col(iPoint)));
 
             if (cost_function)
             {
@@ -433,10 +420,10 @@ bool Rig::optimizeCalibration()
               problem.AddResidualBlock( cost_function,
                                         p_LossFunction,
                                         &vMainPoses[iView][0],
-                                        &vRelativePoses[iTracker-1][0]);
+                                        &vRelativePoses[iLocalizer-1][0]);
             }else
             {
-              POPART_COUT("Fail in adding residual block for a secondary camera");
+              std::cout << "Fail in adding residual block for a secondary camera" << std::endl;
             }
           }
         }
@@ -463,7 +450,6 @@ bool Rig::optimizeCalibration()
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
   
-#if 1
   if (openMVG_options._bCeres_Summary)
     std::cout << summary.FullReport() << std::endl;
 
@@ -504,81 +490,55 @@ bool Rig::optimizeCalibration()
       pose = geometry::Pose3(R_refined, -R_refined.transpose() * t_refined);
     }
     
-    // Update relative poses along with rig poses after optimization
-    for (int iPose = 0 ; iPose < _vLocalizationResults[0].poses().size() ; ++iPose )
+    // Update the main camera pose after optimization
+    for (int iView = 0 ; iView < _vLocalizationResults[0].size() ; ++iView )
     {
-      if( _vLocalizationResults[0].poses()[iPose].second )
+      if( _vLocalizationResults[0][iView].isValid() )
       {
         openMVG::Mat3 R_refined;
         std::vector<double> vPose;
         vPose.reserve(6);
-        ceres::AngleAxisToRotationMatrix(&vMainPoses[iPose][0], R_refined.data());
-        openMVG::Vec3 t_refined(vMainPoses[iPose][3], vMainPoses[iPose][4], vMainPoses[iPose][5]);
+        ceres::AngleAxisToRotationMatrix(&vMainPoses[iView][0], R_refined.data());
+        openMVG::Vec3 t_refined(vMainPoses[iView][3], vMainPoses[iView][4], vMainPoses[iView][5]);
         // Push the optimized pose
         geometry::Pose3 pose = geometry::Pose3(R_refined, -R_refined.transpose() * t_refined);
-        _vLocalizationResults[0].poses()[iPose].first = pose;
+        _vLocalizationResults[0][iView].setPose(pose);
         _vPoses.push_back(pose);
-      }else{
-        // todo@L garbage...
-        _vPoses.push_back(geometry::Pose3());
       }
     }
     
-    // Update all poses in all trackers
+    // Update all poses over all witness cameras after optimization
     for (int iRelativePose = 0 ; iRelativePose < _vRelativePoses.size() ; ++iRelativePose )
     {
-      std::size_t iTracker = iRelativePose+1;
-      for (int iPose = 0 ; iPose < _vLocalizationResults[iTracker].poses().size() ; ++iPose )
+      std::size_t iLocalizer = iRelativePose+1;
+      for (int iView = 0 ; iView < _vLocalizationResults[iLocalizer].size() ; ++iView )
       {
-        if( _vLocalizationResults[iTracker].poses()[iPose].second && _vLocalizationResults[0].poses()[iPose].second )
+        if( _vLocalizationResults[iLocalizer][iView].isValid() && _vLocalizationResults[0][iView].isValid() )
         {
-          const geometry::Pose3 & relativePose = _vRelativePoses[iRelativePose];
-          
-          const openMVG::Mat3 R1 = _vLocalizationResults[0].poses()[iPose].first.rotation();
-          const openMVG::Vec3 t1 = _vLocalizationResults[0].poses()[iPose].first.translation();
-
-          const openMVG::Mat3 R12 = relativePose.rotation();
-          const openMVG::Vec3 t12 = relativePose.translation();
-
-          const openMVG::Mat3 R2 = R12 * R1;
-          const openMVG::Vec3 t2 = R12 * t1 + t12 ;
-          
-          _vLocalizationResults[iTracker].poses()[iPose].first = geometry::Pose3( R2 , -R2.transpose() * t2 );
-          
-          
+          // Retrieve the witness camera pose from the main camera one.
+          const geometry::Pose3 poseWitnessCamera = poseFromMainToWitness(_vLocalizationResults[0][iView].getPose(), _vRelativePoses[iRelativePose]);
+          _vLocalizationResults[iLocalizer][iView].setPose(poseWitnessCamera);
         }
       }
     }
     
-    displayRelativePoseReprojection(geometry::Pose3(openMVG::Mat3::Identity(), openMVG::Vec3::Zero()), 0);
-    displayRelativePoseReprojection(_vRelativePoses[0], 1);
-// Possibility to update the intrinsics here
+    //displayRelativePoseReprojection(geometry::Pose3(openMVG::Mat3::Identity(), openMVG::Vec3::Zero()), 0);
+    //displayRelativePoseReprojection(_vRelativePoses[0], 1);
     
-// Update camera intrinsics with refined data
-//    for (Intrinsics::iterator itIntrinsic = sfm_data.intrinsics.begin();
-//      itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
-//    {
-//      const IndexT indexCam = itIntrinsic->first;
-//
-//      const std::vector<double> & vec_params = map_intrinsics[indexCam];
-//      itIntrinsic->second.get()->updateFromParams(vec_params);
-//    }
+    // Possibility to update the intrinsics here
+
+    // Update camera intrinsics with refined data
+    //    for (Intrinsics::iterator itIntrinsic = sfm_data.intrinsics.begin();
+    //      itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
+    //    {
+    //      const IndexT indexCam = itIntrinsic->first;
+    //
+    //      const std::vector<double> & vec_params = map_intrinsics[indexCam];
+    //      itIntrinsic->second.get()->updateFromParams(vec_params);
+    //    }
     return true;
   }
-  #endif
 }
-#endif
-
-
-#if 0
-
-// Compute an average pose
-void poseAveraging(const std::vector<geometry::Pose3> & vPoses, geometry::Pose3 & result)
-{
-  // todo
-}
-
-#endif
 
 #if 0
 
