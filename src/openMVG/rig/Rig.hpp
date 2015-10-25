@@ -23,19 +23,17 @@ public:
  
   virtual ~Rig();
   
+  // Accessors
   std::size_t nCams() const { return _vLocalizationResults.size(); }
   
   std::vector<localization::LocalizationResult> & getLocalizationResults(IndexT i)
   { 
     return _vLocalizationResults[i];
   }
-  //localization::LocalizationResult& getLocalizationResults(std::size_t i) { return _vLocalizationResults[i]; }
   
   const geometry::Pose3& getRelativePose(std::size_t i) const { return _vRelativePoses[i-1]; }
-  //geometry::Pose3& getRelativePose(std::size_t i) { return _vRelativePoses[i-1]; } 
   
   const std::vector<geometry::Pose3> & getPoses( ) const { return _vPoses; }
-  //std::vector<geometry::Pose3>& getPoses( ) { return _vPoses; }
   
   /*
    * @brief Compute the initial guess related to the relative positions between all witness 
@@ -44,17 +42,9 @@ public:
    */
   bool initializeCalibration();
   
-  /*
-   * @brief 
-   */
   void setTrackingResult(
           std::vector<localization::LocalizationResult> vLocalizationResults,
           std::size_t i);
-  
-  //double distance(openMVG::Vec3 va, openMVG::Vec3 vb);
-  
-  //Pose product(const Pose & poseA, const Pose & poseB);
- // Pose productInv(const Pose & poseA, const Pose & poseB);
   
   /*
    * @brief From a set of relative poses, find the one for a given 
@@ -70,14 +60,19 @@ public:
         std::size_t iRes,
         geometry::Pose3 & result );
 
-  // Optimize the initial solutions over all images
-  // output: mean of the reprojection errors
+  /*
+   * @brief Perform the rig bundle adjustment
+   */
   bool optimizeCalibration();
   
+  /*
+   * @brief Visual debug function displaying the reprojected 3D points and their
+   * associated observation.
+   */
   void displayRelativePoseReprojection(const geometry::Pose3 & relativePose, std::size_t iTracker);
   
 private:
-  // Set of localization results (all of them associated to a camera)
+  // Set of localization results (each of them associated to a camera)
   // The FIRST INDEX is associated to the MAIN CAMERA for which the pose
   // corresponds to the entire system pose.
   std::map<IndexT,std::vector<localization::LocalizationResult> > _vLocalizationResults;
@@ -88,7 +83,7 @@ private:
   std::vector<geometry::Pose3> _vRelativePoses;
   
   // Rig pose
-  std::vector<geometry::Pose3> _vPoses; // (i.e. pose of the main camera)
+  std::vector<geometry::Pose3> _vPoses; // (i.e., by convention, pose of the main camera)
 };
 
 /*
@@ -112,40 +107,12 @@ double reprojectionError(const localization::LocalizationResult & localizationRe
  */
 geometry::Pose3 poseFromMainToWitness(geometry::Pose3 poseMainCamera, geometry::Pose3 relativePose);
 
-/*
- *
- */
 geometry::Pose3 computeRelativePose(geometry::Pose3 poseMainCamera, geometry::Pose3 poseWitnessCamera);
 
+/*
+ * @brief Visual debug function doing a pause during the program execution.
+ */
 void cvpause();
-
-#if 0
-
-// Depreciated
-// ugly -> required until type in camera localization change.
-Pose toOMVG(const DeprePose & pose);
-
-// Depreciated
-// ugly -> required until type in camera localization change.
-openMVG::Mat3 toOMVG(const numerical::BoundedMatrix3x3d & mat);
-
-// Compute an average pose
-void poseAveraging(const std::vector<Pose> & vPoses, Pose & result);
-
-// Compute the sum of the reprojections error for imaged points imgPts of a set of points
-// pts viewed through a camera whose pose Pose
-double reprojectionError(const openMVG::Mat3 & K, const Pose & pose, const std::vector<openMVG::Vec2> & imgPts, const std::vector<openMVG::Vec3> & pts);
-
- // Compute the residual between the 3D projected point X and an image observation x
-double residual( const openMVG::Mat3 & K, const Pose & pose, const openMVG::Vec3 & X, const openMVG::Vec2 & x);
-
-// Compute the reprojection of X through the camera whose pose pose
-void reproject( const openMVG::Mat3 & K, const Pose & pose, const openMVG::Vec3 & X, openMVG::Vec2 & res);
-
-/* Apply a 2D projective transformation */
-void projectiveTransform(const openMVG::Mat3 & H, const openMVG::Vec2 & x, openMVG::Vec2 & res);
-
-#endif
 
 } // namespace rig
 } // namespace openMVG

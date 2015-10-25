@@ -1,9 +1,5 @@
 #include "Rig.hpp"
 #include "rig_BA_ceres.hpp"
-
-//#include <vision/cameraTracking/debug/visualDebug.hpp>
-//#include <eigen3/Eigen/src/Core/MatrixBase.h>
-
 #include <openMVG/sfm/sfm_data_BA_ceres.hpp>
 
 #include <ceres/rotation.h>
@@ -120,82 +116,6 @@ void Rig::findBestRelativePose(
   displayRelativePoseReprojection(result, iLocalizer);
 }
 
-geometry::Pose3 computeRelativePose(geometry::Pose3 poseMainCamera, geometry::Pose3 poseWitnessCamera)
-{
-  const openMVG::Mat3 & R1 = poseMainCamera.rotation();
-  const openMVG::Vec3 & t1 = poseMainCamera.translation();
-  const openMVG::Mat3 & R2 = poseWitnessCamera.rotation();
-  const openMVG::Vec3 & t2 = poseWitnessCamera.translation();
-
-  const openMVG::Mat3 R12 = R2 * R1.transpose();
-  const openMVG::Vec3 t12 = t2 - R12 * t1;
-
-  return geometry::Pose3( R12 , -R12.transpose()*t12 );
-}
-        
-
-geometry::Pose3 poseFromMainToWitness(geometry::Pose3 poseMainCamera, geometry::Pose3 relativePose)
-{
-  const openMVG::Mat3 & R1 = poseMainCamera.rotation();
-  const openMVG::Vec3 & t1 = poseMainCamera.translation();
-
-  const openMVG::Mat3 & R12 = relativePose.rotation();
-  const openMVG::Vec3 & t12 = relativePose.translation();
-
-  const openMVG::Mat3 R2 = R12 * R1;
-  const openMVG::Vec3 t2 = R12 * t1 + t12 ;
-  
-  return geometry::Pose3( R2 , -R2.transpose() * t2 );
-}
-
-double reprojectionError(const localization::LocalizationResult & localizationResult, const geometry::Pose3 & pose)
-{
-  double residual = 0;
-  
-  for(const IndexT iInliers : localizationResult.getInliers())
-  {
-    // Inlier 3D point
-    const Vec3 & point3D = localizationResult.getPt3D().col(iInliers);
-    // Its reprojection
-    Vec2 itsReprojection = localizationResult.getIntrinsics().project(pose, point3D);
-    // Its associated observation location
-    const Vec2 & point2D = localizationResult.getPt2D().col(iInliers);
-    // Residual
-    residual += (point2D(0) - itsReprojection(0))*(point2D(0) - itsReprojection(0));
-    residual += (point2D(1) - itsReprojection(1))*(point2D(1) - itsReprojection(1));
-  }
-  return residual;
-}
-
-#if 0
-geometry::Pose3 Rig::product(const geometry::Pose3 & poseA, const geometry::Pose3 & poseB)
-{
-  openMVG::Mat3 R = poseA.rotation()*poseB.rotation();
-  openMVG::Vec3 t = poseA.rotation()*poseB.translation()+poseA.translation();
-  return geometry::Pose3(R, -R.transpose()*t);
-}
-
-geometry::Pose3 Rig::productInv(const geometry::Pose3 & poseA, const geometry::Pose3 & poseB)
-{
-  openMVG::Vec3 t = -poseA.rotation().transpose()*poseA.translation();
-  openMVG::Mat3 R = poseA.rotation().transpose();
-  
-  geometry::Pose3 poseC(R, -R.transpose()*t);
-  return product(poseC,poseB);
-}
-
-
-
-double Rig::distance(openMVG::Vec3 va, openMVG::Vec3 vb)
-{
-  double d1 = va(0)-vb(0);
-  double d2 = va(1)-vb(1);
-  double d3 = va(2)-vb(2);
-  return sqrt(d1*d1+d2*d2+d3*d3);
-}
-
-#endif
-
 // Display reprojection error based on a relative pose
 void Rig::displayRelativePoseReprojection(const geometry::Pose3 & relativePose, std::size_t iLocalizer)
 {
@@ -251,22 +171,6 @@ void Rig::displayRelativePoseReprojection(const geometry::Pose3 & relativePose, 
       cv::imshow("Reprojection", imgRes);
       cvpause();
     }
-  }
-#endif
-}
-
-/* Pause function while using cv::namedwindows*/
-void cvpause(){
-#ifdef VISUAL_DEBUG_MODE
-  int keyboard;
-  while( !(char) keyboard ){ // ASCII code for 'CR'
-    keyboard = cv::waitKey( 0 );
-  }
-
-  if ( (char) keyboard == 'q' )
-  {
-    std::cerr << "The program has been manually stopped" << std::endl;
-    std::exit(0);
   }
 #endif
 }
@@ -570,6 +474,68 @@ bool Rig::optimizeCalibration()
     //    }
     return true;
   }
+}
+
+geometry::Pose3 computeRelativePose(geometry::Pose3 poseMainCamera, geometry::Pose3 poseWitnessCamera)
+{
+  const openMVG::Mat3 & R1 = poseMainCamera.rotation();
+  const openMVG::Vec3 & t1 = poseMainCamera.translation();
+  const openMVG::Mat3 & R2 = poseWitnessCamera.rotation();
+  const openMVG::Vec3 & t2 = poseWitnessCamera.translation();
+
+  const openMVG::Mat3 R12 = R2 * R1.transpose();
+  const openMVG::Vec3 t12 = t2 - R12 * t1;
+
+  return geometry::Pose3( R12 , -R12.transpose()*t12 );
+}
+        
+
+geometry::Pose3 poseFromMainToWitness(geometry::Pose3 poseMainCamera, geometry::Pose3 relativePose)
+{
+  const openMVG::Mat3 & R1 = poseMainCamera.rotation();
+  const openMVG::Vec3 & t1 = poseMainCamera.translation();
+
+  const openMVG::Mat3 & R12 = relativePose.rotation();
+  const openMVG::Vec3 & t12 = relativePose.translation();
+
+  const openMVG::Mat3 R2 = R12 * R1;
+  const openMVG::Vec3 t2 = R12 * t1 + t12 ;
+  
+  return geometry::Pose3( R2 , -R2.transpose() * t2 );
+}
+
+double reprojectionError(const localization::LocalizationResult & localizationResult, const geometry::Pose3 & pose)
+{
+  double residual = 0;
+  
+  for(const IndexT iInliers : localizationResult.getInliers())
+  {
+    // Inlier 3D point
+    const Vec3 & point3D = localizationResult.getPt3D().col(iInliers);
+    // Its reprojection
+    Vec2 itsReprojection = localizationResult.getIntrinsics().project(pose, point3D);
+    // Its associated observation location
+    const Vec2 & point2D = localizationResult.getPt2D().col(iInliers);
+    // Residual
+    residual += (point2D(0) - itsReprojection(0))*(point2D(0) - itsReprojection(0));
+    residual += (point2D(1) - itsReprojection(1))*(point2D(1) - itsReprojection(1));
+  }
+  return residual;
+}
+
+void cvpause(){
+#ifdef VISUAL_DEBUG_MODE
+  int keyboard;
+  while( !(char) keyboard ){ // ASCII code for 'CR'
+    keyboard = cv::waitKey( 0 );
+  }
+
+  if ( (char) keyboard == 'q' )
+  {
+    std::cerr << "The program has been manually stopped" << std::endl;
+    std::exit(0);
+  }
+#endif
 }
 
 } // namespace rig
