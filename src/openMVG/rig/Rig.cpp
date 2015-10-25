@@ -555,7 +555,7 @@ bool Rig::optimizeCalibration()
           _vLocalizationResults[iLocalizer][iView].setPose(poseWitnessCamera);
         }
       }
-      displayRelativePoseReprojection(_vRelativePoses[0], iLocalizer);
+      displayRelativePoseReprojection(_vRelativePoses[iRelativePose], iLocalizer);
     }
     // Possibility to update the intrinsics here
 
