@@ -354,7 +354,12 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
     std::cout << "\n" << "Track filtering" << std::endl;
     tracksBuilder.Filter();
     std::cout << "\n" << "Track filtering : min occurence" << std::endl;
+#ifdef HAVE_CCTAG
+    tracksBuilder.FilterPairWiseMinimumMatches(3);
+#else
     tracksBuilder.FilterPairWiseMinimumMatches(20);
+#endif
+    
     std::cout << "\n" << "Track export to internal struct" << std::endl;
     //-- Build tracks with STL compliant type :
     tracksBuilder.ExportToSTL(_map_tracks);
