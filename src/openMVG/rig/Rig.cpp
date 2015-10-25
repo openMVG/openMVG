@@ -1,5 +1,5 @@
 #include "Rig.hpp"
-#include "bundleAdjustmentCeresFunctor.hpp"
+#include "rig_BA_ceres.hpp"
 
 //#include <vision/cameraTracking/debug/visualDebug.hpp>
 //#include <eigen3/Eigen/src/Core/MatrixBase.h>
