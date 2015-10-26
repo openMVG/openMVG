@@ -114,10 +114,10 @@ int main(int argc, char** argv)
   rig::Rig rig;
 
   // Loop over all cameras of the rig
-  for (int i = 0; i < nCam; ++i)
+  for (int iLocalizer = 0; iLocalizer < nCam; ++iLocalizer)
   {
     std::string subMediaFilepath, calibFile;
-    subMediaFilepath = mediaFilepath + "/" + std::to_string(i);
+    subMediaFilepath = mediaFilepath + "/" + std::to_string(iLocalizer);
     calibFile = subMediaFilepath + "/intrinsics.txt";
 
     // create the feedProvider
@@ -178,7 +178,7 @@ int main(int argc, char** argv)
       ++frameCounter;
     }
 
-    rig.setTrackingResult(vLocalizationResults, i);
+    rig.setTrackingResult(vLocalizationResults, iLocalizer);
     
     // print out some time stats
     POPART_COUT("\n\n******************************");
@@ -188,5 +188,8 @@ int main(int argc, char** argv)
     POPART_COUT("Max time for localization:   " << bacc::max(stats) << " [ms]");
     POPART_COUT("Min time for localization:   " << bacc::min(stats) << " [ms]");
   }
+  POPART_COUT("Rig calibration initialization");
   rig.initializeCalibration();
+  POPART_COUT("Rig calibration optimization");
+  rig.optimizeCalibration();
 }

@@ -99,23 +99,14 @@ namespace sfm {
     }
     resection_data.pt3D.resize(3, vec_putative_matches.size());
     resection_data.pt2D.resize(2, vec_putative_matches.size());
-    Mat2X pt2D_original(2, vec_putative_matches.size());
     for (size_t i = 0; i < vec_putative_matches.size(); ++i)
     {
       resection_data.pt3D.col(i) = sfm_data_->GetLandmarks().at(index_to_landmark_id_[vec_putative_matches[i]._i]).X;
       resection_data.pt2D.col(i) = query_regions.GetRegionPosition(vec_putative_matches[i]._j);
-      pt2D_original.col(i) = resection_data.pt2D.col(i);
-      // Handle image distortion if intrinsic is known (to ease the resection)
-      if (optional_intrinsics && optional_intrinsics->have_disto())
-      {
-        resection_data.pt2D.col(i) = optional_intrinsics->get_ud_pixel(resection_data.pt2D.col(i));
-      }
     }
 
     const bool bResection =  SfM_Localizer::Localize(
       image_size, optional_intrinsics, resection_data, pose);
-
-    resection_data.pt2D = std::move(pt2D_original); // restore original image domain points
 
     if (resection_data_ptr != nullptr)
       (*resection_data_ptr) = std::move(resection_data);

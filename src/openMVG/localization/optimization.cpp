@@ -35,29 +35,36 @@ bool refineSequence(cameras::Pinhole_Intrinsic_Radial_K3 *intrinsics,
   
   for(size_t viewID = 0; viewID < numCameras; ++viewID)
   {
+    const LocalizationResult &currResult = localizationResult[viewID];
+    // skip invalid poses
+    if(!currResult.isValid())
+    {
+      std::cout << "\n*****\nskipping invalid View " << viewID << std::endl;
+      continue;
+    }
+    
     std::cout << "\n*****\nView " << viewID << std::endl;
     // view
     tinyScene.views.insert( std::make_pair(viewID, std::make_shared<sfm::View>("",viewID, intrinsicID, viewID)));
     // pose
-    tinyScene.poses[viewID] = localizationResult[viewID].getPose();
+    tinyScene.poses[viewID] = currResult.getPose();
     // intrinsic (the shared_ptr does not take the ownership, will not release the input pointer)
     tinyScene.intrinsics[intrinsicID] = std::shared_ptr<cameras::Pinhole_Intrinsic_Radial_K3>(intrinsics, [](cameras::Pinhole_Intrinsic_Radial_K3*){});
     
     // structure data (2D-3D correspondences)
-    const sfm::Image_Localizer_Match_Data &matching_data = localizationResult[viewID].getMatchData();
-    const vector<pair<IndexT, IndexT> > &currentIDs = localizationResult[viewID].getIndMatch3D2D();
+    const vector<pair<IndexT, IndexT> > &currentIDs = currResult.getIndMatch3D2D();
     
-    for(const size_t idx : matching_data.vec_inliers )
+    for(const size_t idx : currResult.getInliers() )
     {
       // the idx should be in the size range of the data
-      assert(idx < matching_data.pt3D.cols());
+      assert(idx < currResult.getPt3D().cols());
       // get the corresponding 3D point (landmark) ID
       const IndexT landmarkID = currentIDs[idx].first;
       // get the corresponding 2D point ID
       const IndexT featID = currentIDs[idx].second;
       std::cout << "inlier " << idx << " is land " << landmarkID << " and feat " << featID << std::endl;
       // get the corresponding feature
-      const Vec2 &feature = matching_data.pt2D.col(idx);
+      const Vec2 &feature = currResult.getPt2D().col(idx);
       // check if the point exists already
       if(tinyScene.structure.count(landmarkID))
       {
@@ -78,7 +85,7 @@ bool refineSequence(cameras::Pinhole_Intrinsic_Radial_K3 *intrinsics,
       {
         // create a new 3D point
         sfm::Landmark landmark;
-        landmark.X = matching_data.pt3D.col(idx);
+        landmark.X = currResult.getPt3D().col(idx);
         landmark.obs[viewID] = sfm::Observation(feature, featID);
         tinyScene.structure[landmarkID] = std::move(landmark);
       }

@@ -5,9 +5,12 @@
  * Created on September 12, 2015, 3:16 PM
  */
 #include <openMVG/localization/VoctreeLocalizer.hpp>
+#include <openMVG/localization/LocalizationResult.hpp>
+#include <openMVG/localization/optimization.hpp>
 #include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 #include <openMVG/image/image_io.hpp>
 #include <openMVG/dataio/FeedProvider.hpp>
+#include <openMVG/features/image_describer.hpp>
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
@@ -55,6 +58,7 @@ int main(int argc, char** argv)
   std::string weightsFilepath;      //< the vocabulary tree weights file
   std::string mediaFilepath;        //< the media file to localize
   localization::VoctreeLocalizer::Parameters param = localization::VoctreeLocalizer::Parameters();
+  std::string preset = features::describerPreset_enumToString(param._featurePreset);               //< the preset for the feature extractor
 #if HAVE_ALEMBIC
   std::string exportFile = "trackedcameras.abc"; //!< the export file
 #endif
@@ -68,6 +72,7 @@ int main(int argc, char** argv)
       ("help,h", "Print this message")
       ("results,r", po::value<size_t>(&param._numResults)->default_value(param._numResults), "Number of images to retrieve in database")
       ("commonviews,", po::value<size_t>(&param._numCommonViews)->default_value(param._numCommonViews), "Number of minimum images in which a point must be seen to be used in cluster tracking")
+      ("preset,", po::value<std::string>(&preset)->default_value(preset), "Number of minimum images in which a point must be seen to be used in cluster tracking")
       ("calibration,c", po::value<std::string>(&calibFile)/*->required( )*/, "Calibration file")
       ("voctree,t", po::value<std::string>(&vocTreeFilepath)->required(), "Filename for the vocabulary tree")
       ("weights,w", po::value<std::string>(&weightsFilepath), "Filename for the vocabulary tree weights")
@@ -112,6 +117,10 @@ int main(int argc, char** argv)
   {
     param._algorithm = localization::VoctreeLocalizer::initFromString(algostring);
   }
+  if(vm.count("preset"))
+  {
+    param._featurePreset = features::describerPreset_stringToEnum(preset);
+  }
   {
     // the bundle adjustment can be run for now only if the refine intrinsics option is not set
     globalBundle = (globalBundle && !param._refineIntrinsics);
@@ -125,6 +134,7 @@ int main(int argc, char** argv)
     POPART_COUT("\tresults: " << param._numResults);
     POPART_COUT("\tcommon views: " << param._numCommonViews);
     POPART_COUT("\trefineIntrinsics: " << param._refineIntrinsics);
+    POPART_COUT("\tpreset: " << param._featurePreset);
     POPART_COUT("\tglobalBundle: " << globalBundle);
 //    POPART_COUT("\tvisual debug: " << visualDebug);
     POPART_COUT("\talgorithm: " << param._algorithm);
@@ -156,7 +166,6 @@ int main(int argc, char** argv)
   image::Image<unsigned char> imageGrey;
   cameras::Pinhole_Intrinsic_Radial_K3 queryIntrinsics;
   bool hasIntrinsics = false;
-  geometry::Pose3 cameraPose;
   
   size_t frameCounter = 0;
   std::string currentImgName;
@@ -165,45 +174,39 @@ int main(int argc, char** argv)
   // standard deviation of the time taken for localization
   bacc::accumulator_set<double, bacc::stats<bacc::tag::mean, bacc::tag::min, bacc::tag::max, bacc::tag::sum > > stats;
   
-  // used to collect the match data result
-  std::vector<sfm::Image_Localizer_Match_Data> associations;
-  std::vector<geometry::Pose3> poses;
-  std::vector<std::vector<pair<IndexT, IndexT> > > associationIDs;
+  // used to collect the localization data result
   std::vector<bool> localized;  // this is just to keep track of the unlocalized frames so that a fake camera
                                 // can be inserted and we see the sequence correctly in maya
+  
+  std::vector<localization::LocalizationResult> localizationResults;
   
   while(feed.next(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics))
   {
     POPART_COUT("******************************");
     POPART_COUT("FRAME " << myToString(frameCounter,4));
     POPART_COUT("******************************");
-    sfm::Image_Localizer_Match_Data matchData;
+    localization::LocalizationResult locResult;
     std::vector<pair<IndexT, IndexT> > ids;
     auto detect_start = std::chrono::steady_clock::now();
-    bool isLocalized = localizer.localize(imageGrey, 
-                                          param,
-                                          hasIntrinsics/*useInputIntrinsics*/,
-                                          queryIntrinsics,
-                                          cameraPose,
-                                          matchData,
-                                          ids);
+    localizer.localize(imageGrey, 
+                       param,
+                       hasIntrinsics /*useInputIntrinsics*/,
+                       queryIntrinsics,
+                       locResult);
     auto detect_end = std::chrono::steady_clock::now();
     auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
     POPART_COUT("\nLocalization took  " << detect_elapsed.count() << " [ms]");
     stats(detect_elapsed.count());
     
     // save data
-    if(isLocalized)
+    if(locResult.isValid())
     {
 #if HAVE_ALEMBIC
-      exporter.appendCamera("camera."+myToString(frameCounter,4), cameraPose, &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
+      exporter.appendCamera("camera."+myToString(frameCounter,4), locResult.getPose(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
 #endif
       if(globalBundle)
       {
-        associations.push_back(matchData);
-        poses.push_back(cameraPose);
-        associationIDs.push_back(ids);
-        localized.push_back(true);
+        localizationResults.emplace_back(locResult);
       }
     }
     else
@@ -212,10 +215,6 @@ int main(int argc, char** argv)
       // @fixme for now just add a fake camera so that it still can be see in MAYA
       exporter.appendCamera("camera.V."+myToString(frameCounter,4), geometry::Pose3(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
 #endif
-      if(globalBundle) 
-      {
-        localized.push_back(false);
-      }
       POPART_CERR("Unable to localize frame " << frameCounter);
     }
     ++frameCounter;
@@ -224,7 +223,7 @@ int main(int argc, char** argv)
   if(globalBundle)
   {
     // run a bundle adjustment
-    const bool BAresult = localization::VoctreeLocalizer::refineSequence(&queryIntrinsics, poses, associations, associationIDs);
+    const bool BAresult = localization::refineSequence(&queryIntrinsics, localizationResults);
     if(!BAresult)
     {
       POPART_CERR("Bundle Adjustment failed!");
@@ -234,19 +233,19 @@ int main(int argc, char** argv)
 #if HAVE_ALEMBIC
       // now copy back in a new abc with the same name file and BUNDLE appended at the end
       dataio::AlembicExporter exporterBA( bfs::path(exportFile).stem().string()+".BUNDLE.abc" );
-      size_t idxLocalized = 0;
-      for(std::size_t i = 0; i < localized.size(); ++i)
+      size_t idx = 0;
+      for(const localization::LocalizationResult &res : localizationResults)
       {
-        if(localized[i])
+        if(res.isValid())
         {
-          assert(idxLocalized < poses.size());
-          exporterBA.appendCamera("camera."+myToString(i,4), poses[idxLocalized], &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
-          idxLocalized++;
+          assert(idx < localizationResults.size());
+          exporterBA.appendCamera("camera."+myToString(idx,4), res.getPose(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
         }
         else
         {
-          exporterBA.appendCamera("camera.V."+myToString(i,4), geometry::Pose3(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
+          exporterBA.appendCamera("camera.V."+myToString(idx,4), geometry::Pose3(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
         }
+        idx++;
       }
       exporterBA.addPoints(localizer.getSfMData().GetLandmarks());
 #endif

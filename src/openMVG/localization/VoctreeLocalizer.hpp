@@ -8,6 +8,7 @@
 #pragma once
 
 #include "reconstructed_regions.hpp"
+#include "LocalizationResult.hpp"
 
 #include <openMVG/features/image_describer.hpp>
 #include <nonFree/sift/SIFT_float_describer.hpp>
@@ -93,10 +94,8 @@ public:
   bool localize(const image::Image<unsigned char> & imageGrey,
                 const Parameters &param,
                 bool useInputIntrinsics,
-                cameras::Pinhole_Intrinsic &queryIntrinsics,
-                geometry::Pose3 & pose,
-                sfm::Image_Localizer_Match_Data &resection_data,
-                std::vector<pair<IndexT, IndexT> > &associationIDs);
+                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
+                LocalizationResult &localizationResult);
 
   /**
    * @brief Try to localize an image in the database: it queries the database to 
@@ -116,10 +115,8 @@ public:
   bool localizeFirstBestResult(const image::Image<unsigned char> & imageGrey,
                 const Parameters &param,
                 bool useInputIntrinsics,
-                cameras::Pinhole_Intrinsic &queryIntrinsics,
-                geometry::Pose3 & pose,
-                sfm::Image_Localizer_Match_Data &resection_data,
-                std::vector<pair<IndexT, IndexT> > &associationIDs);
+                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
+                LocalizationResult &localizationResult);
 
   /**
    * @brief Try to localize an image in the database: it queries the database to 
@@ -140,10 +137,8 @@ public:
   bool localizeAllResults(const image::Image<unsigned char> & imageGrey,
                 const Parameters &param,
                 bool useInputIntrinsics,
-                cameras::Pinhole_Intrinsic &queryIntrinsics,
-                geometry::Pose3 & pose,
-                sfm::Image_Localizer_Match_Data &resection_data,
-                std::vector<pair<IndexT, IndexT> > &associationIDs);
+                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
+                LocalizationResult &localizationResult);
   
   const sfm::SfM_Data& getSfMData() const {return _sfm_data; }
   

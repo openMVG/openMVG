@@ -101,7 +101,11 @@ struct GeometricFilter_EMatrix_AC
     const std::pair<double,double> ACRansacOut =
       ACRANSAC(kernel, vec_inliers, m_stIteration, &m_E, upper_bound_precision);
 
-    if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5)  {
+#ifdef HAVE_CCTAG
+    if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES)  {
+#else
+    if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5)  {  
+#endif
       m_dPrecision_robust = ACRansacOut.first;
       // update geometric_inliers
       geometric_inliers.reserve(vec_inliers.size());

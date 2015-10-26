@@ -21,7 +21,7 @@ struct Image_Localizer_Match_Data
   Mat pt3D; // 3xN matrix storing all the 3D points whose images have been found
             // in the query view through the feature matching procedure.
   
-  Mat pt2D; // 2xN matrix storing all 2D points associated to 3D points (pt3D)
+  Mat pt2D; // 2xN matrix storing all 2D distorted points associated to 3D points (pt3D)
             // found through the feature matching procedure.
   
   // pt2D and pt3D have the same number of columns.
@@ -78,7 +78,8 @@ public:
   *
   * @param[in] image_size the w,h image size
   * @param[in] optional_intrinsics camera intrinsic if known (else nullptr)
-  * @param[in,out] resection_data matching data (with filled 2D-3D correspondences)
+  * @param[in,out] resection_data matching data (with filled 2D-3D correspondences). 
+   * The 2D points are supposed to be the original distorted image points
   * @param[out] pose found pose
   * @return True if a putative pose has been estimated
   */
