@@ -15,6 +15,7 @@
 #include "nonFree/sift/SIFT_float_describer.hpp"
 #if HAVE_CCTAG
 #include "openMVG/features/cctag/CCTAG_describer.hpp"
+#include "openMVG/features/cctag/SIFT_CCTAG_describer.hpp"
 #endif
 #include <cereal/archives/json.hpp>
 #include "openMVG/system/timer.hpp"
@@ -77,6 +78,8 @@ int main(int argc, char **argv)
 #if HAVE_CCTAG
       << "   CCTAG3: CCTAG markers with 3 crowns\n"
       << "   CCTAG3: CCTAG markers with 4 crowns\n"
+      << "   SIFT_CCTAG3: CCTAG markers with 3 crowns\n" 
+      << "   SIFT_CCTAG4: CCTAG markers with 4 crowns\n" 
 #endif
       << "[-u|--upright] Use Upright feature 0 or 1\n"
       << "[-p|--describerPreset]\n"
@@ -179,6 +182,16 @@ int main(int argc, char **argv)
     if (sImage_Describer_Method == "CCTAG4")
     {
       image_describer.reset(new CCTAG_Image_describer(4));
+    }
+    else
+    if (sImage_Describer_Method == "SIFT_CCTAG3")
+    {
+      image_describer.reset(new SIFT_CCTAG_Image_describer(SiftParams(), !bUpRight, 3));
+    }
+    else
+    if (sImage_Describer_Method == "SIFT_CCTAG4")
+    {
+      image_describer.reset(new SIFT_CCTAG_Image_describer(SiftParams(), !bUpRight, 4));
     }
 #endif //HAVE_CCTAG   
     else

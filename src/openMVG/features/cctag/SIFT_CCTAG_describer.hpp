@@ -5,46 +5,47 @@
 #include <openMVG/features/image_describer.hpp>
 #include <openMVG/features/regions_factory.hpp>
 
-#include <cctag/view.hpp>
+// Sift related
+#include <nonFree/sift/SIFT_describer.hpp>
+
+// CCTag related
 #include <cctag/ICCTag.hpp>
 
 #include <cereal/cereal.hpp>
 #include <iostream>
 #include <numeric>
 
+//#include <cereal/cereal.hpp>
+
+#include <iostream>
+#include <numeric>
+
 namespace openMVG {
 namespace features {
 
-/** @brief CCTag filter pixel type */
-
-class CCTAG_Image_describer : public Image_describer
+class SIFT_CCTAG_Image_describer : public Image_describer
 {
 public:
-  CCTAG_Image_describer()
-    :Image_describer(), _params(3) {}
-    
-  CCTAG_Image_describer(const std::size_t nRings, const bool doAppend = false)
-    :Image_describer(), _params(nRings), _doAppend(doAppend){}   
+  SIFT_CCTAG_Image_describer(const SiftParams & params = SiftParams(), bool bOrientation = true, std::size_t nRings = 3)
+    :Image_describer(), _paramsSift(params), _bOrientation(bOrientation), _paramsCCTag(nRings) {}
 
-  ~CCTAG_Image_describer() {}
+  ~SIFT_CCTAG_Image_describer() {}
 
   bool Set_configuration_preset(EDESCRIBER_PRESET preset)
   {
-    // todo@L: choose most relevant preset names
     switch(preset)
     {
-    // Normal lighting conditions: normal contrast
+    case LOW_PRESET:
+    case MEDIUM_PRESET:
     case NORMAL_PRESET:
-      _params._cannyThrLow = 0.01f;
-      _params._cannyThrHigh = 0.04f;
+      _paramsSift._peak_threshold = 0.04f;
     break;
-    // Low lighting conditions: very low contrast
     case HIGH_PRESET:
-      _params._cannyThrLow = 0.002f;
-      _params._cannyThrHigh = 0.01f;
+      _paramsSift._peak_threshold = 0.01f;
     break;
     case ULTRA_PRESET:
-      // todo@L: not set yet
+      _paramsSift._peak_threshold = 0.01f;
+      _paramsSift._first_octave = -1;
     break;
     default:
       return false;
@@ -66,21 +67,21 @@ public:
   /// Allocate Regions type depending of the Image_describer
   void Allocate(std::unique_ptr<Regions> &regions) const
   {
-    regions.reset( new CCTAG_Regions );
+    regions.reset( new SIFT_Regions );
   }
 
   template<class Archive>
   void serialize( Archive & ar )
   {
     //ar(
-     //cereal::make_nvp("params", _params),
-     //cereal::make_nvp("bOrientation", _bOrientation));
+    // cereal::make_nvp("params", _paramsSift),
+    // cereal::make_nvp("bOrientation", _bOrientation));
   }
 
 private:
-  //CCTag parameters
-  cctag::Parameters _params;
-  bool _doAppend;
+  SiftParams _paramsSift;
+  cctag::Parameters _paramsCCTag;
+  bool _bOrientation;
 };
 
 } // namespace features
@@ -88,6 +89,6 @@ private:
 
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/archives/json.hpp>
-CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::CCTAG_Image_describer, "CCTAG_Image_describer");
+CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::SIFT_CCTAG_Image_describer, "SIFT_CCTAG_Image_describer");
 
-#endif //HAVE_CCTAG
+#endif
