@@ -85,7 +85,7 @@ IndexT getCCTagId(const CCTagDescriptor & desc)
   std::size_t cctagId = UndefinedIndexT;
   for (int i = 0; i < desc.size(); ++i)
   {
-    if (desc.getData()[i] == 1.0)
+    if (desc.getData()[i] == (unsigned char) 255)
     {
       if (cctagId != UndefinedIndexT)
       {
@@ -93,7 +93,7 @@ IndexT getCCTagId(const CCTagDescriptor & desc)
       }
       cctagId = i;
     }
-    else if(desc.getData()[i] != 0)
+    else if(desc.getData()[i] != (unsigned char) 0)
     {
       return UndefinedIndexT;
     }
