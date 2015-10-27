@@ -438,7 +438,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
   const IndexT minPointPerPose = 7; // 6 min todo param@L
 #else
   const IndexT minPointPerPose = 12; // 6 min
-#end
+#endif
   const IndexT minTrackLength = 3; // 2 min todo param@L
   
   if (eraseUnstablePosesAndObservations(_sfm_data, minPointPerPose, minTrackLength))
