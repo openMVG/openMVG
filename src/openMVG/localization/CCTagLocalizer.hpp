@@ -94,8 +94,6 @@ private:
   //std::map<IndexT, Vec3> _cctagDatabase;
 };
 
-IndexT getCCTagId(const CCTagDescriptor & desc);
-
  /**
    * @brief Retrieve the k nearest views in a collection of views based on a query
    *        consisting in a set of CCTag regions.

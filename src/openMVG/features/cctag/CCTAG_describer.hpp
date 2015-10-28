@@ -4,6 +4,7 @@
 
 #include <openMVG/features/image_describer.hpp>
 #include <openMVG/features/regions_factory.hpp>
+#include <openMVG/types.hpp>
 
 #include <cctag/view.hpp>
 #include <cctag/ICCTag.hpp>
@@ -82,6 +83,33 @@ private:
   cctag::Parameters _params;
   bool _doAppend;
 };
+
+/**
+ * @brief Convert the descriptor representation into a CCTag ID.
+ * @param[in] desc descriptor
+ * @return cctag id or UndefinedIndexT if wrong cctag descriptor
+ */
+template <class DescriptorT>
+IndexT getCCTagId(const DescriptorT & desc)
+{
+  std::size_t cctagId = UndefinedIndexT;
+  for (int i = 0; i < desc.size(); ++i)
+  {
+    if (desc.getData()[i] == (unsigned char) 255)
+    {
+      if (cctagId != UndefinedIndexT)
+      {
+        return UndefinedIndexT;
+      }
+      cctagId = i;
+    }
+    else if(desc.getData()[i] != (unsigned char) 0)
+    {
+      return UndefinedIndexT;
+    }
+  }
+  return cctagId;
+}
 
 } // namespace features
 } // namespace openMVG

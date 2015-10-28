@@ -75,32 +75,6 @@ bool CCTagLocalizer::init(const std::string &sfmFilePath,
   return true;
 }
 
-/**
- * @brief Convert the descriptor representation into a CCTag ID.
- * @param[in] desc descriptor
- * @return cctag id or UndefinedIndexT if wrong cctag descriptor
- */
-IndexT getCCTagId(const CCTagDescriptor & desc)
-{
-  std::size_t cctagId = UndefinedIndexT;
-  for (int i = 0; i < desc.size(); ++i)
-  {
-    if (desc.getData()[i] == (unsigned char) 255)
-    {
-      if (cctagId != UndefinedIndexT)
-      {
-        return UndefinedIndexT;
-      }
-      cctagId = i;
-    }
-    else if(desc.getData()[i] != (unsigned char) 0)
-    {
-      return UndefinedIndexT;
-    }
-  }
-  return cctagId;
-}
-
 bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_data,
                                                    const std::string & feat_directory)
 {
@@ -342,13 +316,13 @@ void viewMatching(
   
   for(std::size_t i=0 ; i < regionsA.Descriptors().size() ; ++i)
   {
-    const IndexT cctagIdA = getCCTagId(regionsA.Descriptors()[i]);
+    const IndexT cctagIdA = features::getCCTagId(regionsA.Descriptors()[i]);
     // todo: Should be change to: Find in regionsB.Descriptors() the nearest 
     // descriptor to descriptorA. Currently, a cctag descriptor encode directly
     // the cctag id, then the id equality is tested.
     for(std::size_t j=0 ; j < regionsB.Descriptors().size() ; ++j)
     {
-      const IndexT cctagIdB = getCCTagId(regionsB.Descriptors()[j]);
+      const IndexT cctagIdB = features::getCCTagId(regionsB.Descriptors()[j]);
       if ( cctagIdA == cctagIdB )
       {
         vec_featureMatches.emplace_back(i,j);
@@ -379,7 +353,7 @@ std::bitset<128> constructCCTagViewDescriptor(
   std::bitset<128> descriptorView;
   for(const auto & cctagDescriptor : vCCTagDescriptors )
   {
-    const IndexT cctagId = getCCTagId(cctagDescriptor);
+    const IndexT cctagId = features::getCCTagId(cctagDescriptor);
     if ( cctagId != UndefinedIndexT)
     {
       descriptorView.set(cctagId, true);
