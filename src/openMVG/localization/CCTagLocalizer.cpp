@@ -9,6 +9,7 @@
 //@fixme move/redefine
 #define POPART_COUT(x) std::cout << x << std::endl
 #define POPART_CERR(x) std::cerr << x << std::endl
+#define POPART_COUT_DEBUG(x) std::cout << x << std::endl
 
 namespace openMVG {
 namespace localization {
@@ -99,8 +100,9 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
   {
     std::sort(featuresInImage.second.begin(), featuresInImage.second.end());
   }
-
+  
   std::cout << "Load Features and Descriptors per view" << std::endl;
+  std::vector<bool> presentIds(128,false); // todo Assume a maximum library size of 128 unique ids.
   // Read for each view the corresponding regions and store them
   for(sfm::Views::const_iterator iter = sfm_data.GetViews().begin();
           iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
@@ -123,7 +125,21 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
 
     // Filter descriptors to keep only the 3D reconstructed points
     reconstructedRegion.filterRegions(observationsPerView[id_view]);
+    
+    // Update the visibility mask
+    reconstructedRegion.updateLandmarksVisibility(presentIds);
   }
+
+  // Display the cctag ids over all cctag landmarks present in the database
+  std::cout << std::endl << "Present CCTag landmarks present in the database: " << std::endl;
+  for(std::size_t i ; i < presentIds.size() ; ++i)
+  {
+    if (presentIds[i])
+      std::cout <<  i+1 << " ";
+  }
+
+  std::cout <<  std::endl << std::endl;
+  
   return true;
 }
 
@@ -159,8 +175,11 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
   std::vector<pair<IndexT, IndexT> > bestAssociationIDs;
   geometry::Pose3 bestPose;
   
-  for(const auto indexKeyFrame : nearestKeyFrames)
+  POPART_COUT_DEBUG("nearestKeyFrames.size() = " << nearestKeyFrames.size());
+  for(const IndexT indexKeyFrame : nearestKeyFrames)
   {
+    POPART_COUT_DEBUG(indexKeyFrame);
+    POPART_COUT_DEBUG(_sfm_data.GetViews().at(indexKeyFrame)->s_Img_path);
     const Reconstructed_RegionsCCTag& matchedRegions = _regions_per_view[indexKeyFrame];
     
     // Matching

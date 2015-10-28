@@ -91,6 +91,18 @@ public:
     }
     _regions.swap(newRegions);
   }
+  
+  void updateLandmarksVisibility(std::vector<bool> & presentIds)
+  {
+#ifdef HAVE_CCTAG
+    for (const auto & desc : _regions.Descriptors())
+    {
+      IndexT cctagId = features::getCCTagId(desc);
+      if( cctagId != UndefinedIndexT) // todo put an assert instead ?
+        presentIds[cctagId] = true;
+    }
+#endif    
+  }
 
 public:
   //--
