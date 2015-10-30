@@ -42,6 +42,7 @@ bool Load_Cereal(
   const bool b_intrinsics = (flags_part & INTRINSICS) == INTRINSICS;
   const bool b_extrinsics = (flags_part & EXTRINSICS) == EXTRINSICS;
   const bool b_structure = (flags_part & STRUCTURE) == STRUCTURE;
+  // TODO: check observations
   const bool b_control_point = (flags_part & CONTROL_POINTS) == CONTROL_POINTS;
 
   //Create the stream and check it is ok
@@ -123,6 +124,7 @@ bool Save_Cereal(
   const bool b_intrinsics = (flags_part & INTRINSICS) == INTRINSICS;
   const bool b_extrinsics = (flags_part & EXTRINSICS) == EXTRINSICS;
   const bool b_structure = (flags_part & STRUCTURE) == STRUCTURE;
+  // TODO: check observations
   const bool b_control_point = (flags_part & CONTROL_POINTS) == CONTROL_POINTS;
 
   //Create the stream and check it is ok
