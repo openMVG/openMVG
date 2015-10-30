@@ -66,7 +66,7 @@ public:
   bool localize(const image::Image<unsigned char> & imageGrey,
                 const Parameters &param,
                 bool useInputIntrinsics,
-                cameras::Pinhole_Intrinsic &queryIntrinsics,
+                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult & localizationResult);
   
   

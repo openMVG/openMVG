@@ -80,7 +80,7 @@ VoctreeLocalizer::Algorithm VoctreeLocalizer::initFromString(const std::string &
 bool VoctreeLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                 const Parameters &param,
                 bool useInputIntrinsics,
-                cameras::Pinhole_Intrinsic &queryIntrinsics,
+                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult &localizationResult)
 {
   switch(param._algorithm)
@@ -288,7 +288,7 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
 bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char> & imageGrey,
                                                 const Parameters &param,
                                                 bool useInputIntrinsics,
-                                                cameras::Pinhole_Intrinsic &queryIntrinsics,
+                                                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                                                 LocalizationResult &localizationResult)
 {
   // A. extract descriptors and features from image
@@ -422,15 +422,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
       resectionData.pt3D.col(index) = _sfm_data.GetLandmarks().at(trackId3D).X;
 
       const Vec2 feat = queryRegions.GetRegionPosition(featureMatch._i);
-      // if the intrinsics are known undistort the points
-      if(useInputIntrinsics)
-      {
-        resectionData.pt2D.col(index) = queryIntrinsics.get_ud_pixel(feat);
-      }
-      else
-      {
-        resectionData.pt2D.col(index) = feat;
-      }
+      resectionData.pt2D.col(index) = feat;
       
       associationIDs.emplace_back(trackId3D, featureMatch._i);
 
@@ -507,7 +499,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
 bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & imageGrey,
                                           const Parameters &param,
                                           bool useInputIntrinsics,
-                                          cameras::Pinhole_Intrinsic &queryIntrinsics,
+                                          cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                                           LocalizationResult &localizationResult)
 {
   // A. extract descriptors and features from image
@@ -644,17 +636,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
 
       // Get the 2D point
       const Vec2 feat = queryRegions.GetRegionPosition(pt2D_id);
-      Vec2 point2d;
-      // if the intrinsics are known undistort the points
-      if(useInputIntrinsics)
-      {
-        point2d = queryIntrinsics.get_ud_pixel(feat);
-      }
-      else
-      {
-        point2d = feat;
-      }
-      associations.insert(std::make_pair(key, std::make_pair(point3d, point2d)));
+      associations.insert(std::make_pair(key, std::make_pair(point3d, feat)));
       
       ++index;
     }

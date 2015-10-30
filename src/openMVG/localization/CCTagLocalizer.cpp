@@ -85,7 +85,7 @@ IndexT getCCTagId(const CCTagDescriptor & desc)
   std::size_t cctagId = UndefinedIndexT;
   for (int i = 0; i < desc.size(); ++i)
   {
-    if (desc.getData()[i] == 1.0)
+    if (desc.getData()[i] == (unsigned char) 255)
     {
       if (cctagId != UndefinedIndexT)
       {
@@ -93,7 +93,7 @@ IndexT getCCTagId(const CCTagDescriptor & desc)
       }
       cctagId = i;
     }
-    else if(desc.getData()[i] != 0)
+    else if(desc.getData()[i] != (unsigned char) 0)
     {
       return UndefinedIndexT;
     }
@@ -156,7 +156,7 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
 bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                 const CCTagLocalizer::Parameters &param,
                 bool useInputIntrinsics,
-                cameras::Pinhole_Intrinsic &queryIntrinsics,
+                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult & localizationResult)
 {
   // extract descriptors and features from image
@@ -221,15 +221,8 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
       resectionDataTemp.pt3D.col(index) = _sfm_data.GetLandmarks().at(trackId3D).X;
 
       const Vec2 feat = queryRegions.GetRegionPosition(featureMatch._i);
-      // if the intrinsics are known undistort the points
-      if(useInputIntrinsics)
-      {
-        resectionDataTemp.pt2D.col(index) = queryIntrinsics.get_ud_pixel(feat);
-      }
-      else
-      {
-        resectionDataTemp.pt2D.col(index) = feat;
-      }
+      resectionDataTemp.pt2D.col(index) = feat;
+
       associationIDsTemp.emplace_back(trackId3D, featureMatch._i);
       ++index;
     }
