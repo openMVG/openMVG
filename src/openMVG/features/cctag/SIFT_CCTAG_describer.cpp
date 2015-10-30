@@ -1,3 +1,5 @@
+#ifdef HAVE_CCTAG
+
 #include "SIFT_CCTAG_describer.hpp"
 
 //#include <openMVG/features/descriptor.hpp>
@@ -27,3 +29,5 @@ namespace features {
 
 } // features
 } // openMVG
+
+#endif //HAVE_CCTAG
