@@ -18,9 +18,7 @@ public:
         const geometry::Pose3 & pose,
         const cameras::Pinhole_Intrinsic & intrinsics,
         bool isValid = true);
-  
-  LocalizationResult(const LocalizationResult& orig);
-  
+   
   virtual ~LocalizationResult();
   
   // Accessors
