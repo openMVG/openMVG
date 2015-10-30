@@ -16,12 +16,13 @@ namespace sfm {
 
 enum ESfM_Data
 {
-  VIEWS           = 0x01,
-  EXTRINSICS      = 0x02,
-  INTRINSICS      = 0x04,
-  STRUCTURE       = 0x08,
-  CONTROL_POINTS  = 0x16,
-  ALL = VIEWS | EXTRINSICS | INTRINSICS | STRUCTURE | CONTROL_POINTS
+  VIEWS           = 1,
+  EXTRINSICS      = 2,
+  INTRINSICS      = 4,
+  STRUCTURE       = 8,
+  OBSERVATIONS    = 16,
+  CONTROL_POINTS  = 32,
+  ALL = VIEWS | EXTRINSICS | INTRINSICS | STRUCTURE | OBSERVATIONS | CONTROL_POINTS
 };
 
 ///Check that each pose have a valid intrinsic and pose id in the existing View ids

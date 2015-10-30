@@ -200,11 +200,13 @@ int main(int argc, char **argv)
     }
     else
     {
+      std::cerr << "Error while exporting to ply file format" << std::endl;
       return EXIT_FAILURE;
     }
   }
   else
   {
+    std::cerr << "Error while trying to colorize the tracks" << std::endl;
     return EXIT_FAILURE;
   }
 }

@@ -21,18 +21,19 @@ AlembicExporter::~AlembicExporter()
 {
 }
 
-void AlembicExporter::addPoints(const sfm::Landmarks &points)
+void AlembicExporter::addPoints(const sfm::Landmarks &landmarks, bool withVisibility)
 {
-  if(points.empty())
+  if(landmarks.empty())
     return;
+
   // Fill vector with the values taken from OpenMVG 
   std::vector<V3f> positions;
-  positions.reserve(points.size());
+  positions.reserve(landmarks.size());
 
   // For all the 3d points in the hash_map
-  for(const auto lm : points)
+  for(const auto landmark : landmarks)
   {
-    const openMVG::Vec3 &pt = lm.second.X;
+    const openMVG::Vec3 &pt = landmark.second.X;
     positions.emplace_back(pt[0], pt[1], pt[2]);
   }
 
@@ -44,9 +45,48 @@ void AlembicExporter::addPoints(const sfm::Landmarks &points)
 
   OPointsSchema::Sample psamp(std::move(V3fArraySample(positions)), std::move(UInt64ArraySample(ids)));
   pSchema.set(psamp);
-  
-  // TODO Visibility
-  // TODO index
+
+  if(withVisibility)
+  {
+    OCompoundProperty userProps = pSchema.getUserProperties();
+    std::vector<uint32_t> visibilitySize;
+    visibilitySize.reserve(positions.size());
+    for(const auto landmark : landmarks)
+    {
+      visibilitySize.emplace_back(landmark.second.obs.size());
+    }
+    std::size_t nbObservations = std::accumulate(visibilitySize.begin(), visibilitySize.end(), 0);
+    
+    std::vector<V2i> visibilityIds;
+    visibilityIds.reserve(nbObservations);
+    std::vector<V2f> featPos2d;
+    featPos2d.reserve(nbObservations);
+
+    for(sfm::Landmarks::const_iterator itLandmark = landmarks.cbegin(), itLandmarkEnd = landmarks.cend();
+       itLandmark != itLandmarkEnd; ++itLandmark)
+    {
+      const sfm::Observations& observations = itLandmark->second.obs;
+      for(const auto vObs: observations )
+      {
+        const sfm::Observation& obs = vObs.second;
+        // (View ID, Feature ID)
+        visibilityIds.emplace_back(vObs.first, obs.id_feat);
+        // Feature 2D position (x, y))
+        featPos2d.emplace_back(obs.x[0], obs.x[1]);
+      }
+    }
+
+    OUInt32ArrayProperty propVisibilitySize( pSchema, "mvg_visibilitySize" );
+    propVisibilitySize.set(visibilitySize);
+
+    // (viewID, featID)
+    OV2iArrayProperty propVisibilityIds( pSchema, "mvg_visibilityIds" );
+    propVisibilityIds.set(visibilityIds);
+
+    // Feature position (x,y)
+    OV2fArrayProperty propFeatPos2d( pSchema, "mvg_visibilityFeatPos" );
+    propFeatPos2d.set(featPos2d);
+  }
 }
 
 void AlembicExporter::appendCamera(const std::string &cameraName, 
@@ -185,7 +225,7 @@ void AlembicExporter::add(const sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_par
   }
   if(flags_part & sfm::ESfM_Data::STRUCTURE)
   {
-    addPoints(sfmdata.GetLandmarks());
+    addPoints(sfmdata.GetLandmarks(), (flags_part & sfm::ESfM_Data::OBSERVATIONS));
   }
 }
 

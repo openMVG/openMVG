@@ -27,7 +27,7 @@ public:
    * @brief Add a set of 3D points from a SFM scene
    * @param points The 3D points to add
    */
-  void addPoints(const sfm::Landmarks &points);
+  void addPoints(const sfm::Landmarks &points, bool withVisibility=true);
 
   /**
    * @brief Add a single camera

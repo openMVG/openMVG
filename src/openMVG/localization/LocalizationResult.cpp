@@ -21,7 +21,7 @@ LocalizationResult::LocalizationResult(
         _isValid(isValid)
 {
 }
-
+        
 LocalizationResult::~LocalizationResult()
 {
 }

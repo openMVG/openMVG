@@ -3,7 +3,10 @@
 #include <openMVG/sfm/sfm_data_BA_ceres.hpp>
 
 #include <ceres/rotation.h>
+
+#ifdef VISUAL_DEBUG_MODE
 #include <opencv2/opencv.hpp>
+#endif
 
 namespace openMVG {
 namespace rig {
@@ -75,6 +78,7 @@ bool Rig::initializeCalibration()
       }
     }
   }
+  return true;
 }
 
 // From a set of relative pose, find the optimal one for a given tracker iTraker which

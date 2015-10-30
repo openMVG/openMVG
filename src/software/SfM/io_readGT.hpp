@@ -8,7 +8,7 @@
 #ifndef IO_READ_GT_HPP
 #define IO_READ_GT_HPP
 
-#include "openMVG/cameras/PinholeCamera.hpp"
+#include "openMVG/geometry/pose3.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <fstream>
@@ -19,19 +19,21 @@ namespace openMVG
 
 using namespace openMVG::cameras;
 
-static bool read_openMVG_Camera(const std::string & camName, PinholeCamera & cam)
+static bool read_openMVG_Camera(const std::string & camName, Pinhole_Intrinsic & cam, geometry::Pose3 & pose)
 {
   std::vector<double> val;
   if (stlplus::extension_part(camName) == "bin")
   {
     std::ifstream in(camName.c_str(), std::ios::in|std::ios::binary);
-    if (!in.is_open())  {
+    if (!in.is_open())
+    {
       std::cerr << "Error: failed to open file '" << camName << "' for reading" << std::endl;
       return false;
     }
     val.resize(12);
     in.read((char*)&val[0],(std::streamsize)12*sizeof(double));
-    if (in.fail())  {
+    if (in.fail())
+    {
       val.clear();
       return false;
     }
@@ -70,11 +72,13 @@ static bool read_openMVG_Camera(const std::string & camName, PinholeCamera & cam
   Mat3 K, R;
   Vec3 t;
   KRt_From_P(P, &K, &R, &t);
-  cam = PinholeCamera(K, R, t);
+  cam = Pinhole_Intrinsic(0,0,K);
+  // K.transpose() is applied to give [R t] to the constructor instead of P = K [R t]
+  pose = geometry::Pose3(K.transpose() * P);
   return true;
 }
 
-static bool read_Strecha_Camera(const std::string & camName, PinholeCamera & cam)
+static bool read_Strecha_Camera(const std::string & camName, Pinhole_Intrinsic & cam, geometry::Pose3 & pose)
 {
   std::ifstream ifs;
   ifs.open( camName.c_str(), std::ifstream::in);
@@ -102,11 +106,9 @@ static bool read_Strecha_Camera(const std::string & camName, PinholeCamera & cam
       val[18], val[19], val[20];
 
     Vec3 C (val[21], val[22], val[23]);
-    // Strecha model is P = K[R^T|-R^T t];
-    // My model is P = K[R|t], t = - RC
-    Vec3 t (-R.transpose() * C);
-    R.transposeInPlace();
-    cam = PinholeCamera(K, R, t);
+    // R need to be transposed
+    cam = Pinhole_Intrinsic(0,0,K);
+    pose = geometry::Pose3(R.transpose(), C);
   }
   else
   {
@@ -125,42 +127,45 @@ static bool read_Strecha_Camera(const std::string & camName, PinholeCamera & cam
 @param[out] map_camerasGT Map of PinholeCameras.
 **/
 bool readGt(
-  bool (*fcnReadCamPtr)(const std::string &, PinholeCamera &), //pointer to the function reading a camera
+  bool (*fcnReadCamPtr)(const std::string &, Pinhole_Intrinsic &, geometry::Pose3&), //pointer to the function reading a camera
   std::string sGTPath,
   std::string suffix,
   std::vector<std::string> & vec_filenames,
-  std::map< std::string, std::pair<Mat3, Vec3> > & map_Rt_gt,
-  std::map< size_t, PinholeCamera> & map_camerasGT)
+  sfm::Poses & map_Rt_gt,
+  sfm::Intrinsics & map_camerasGT)
 {
   // IF GT_Folder exists, perform evaluation of the quality of rotation estimates
   if (!stlplus::is_folder(sGTPath)) {
     std::cout << std::endl << "There is not valid GT data to read from " << sGTPath << std::endl;
     return false;
   }
-  else
+  
+  std::cout << std::endl << "Read rotation and translation estimates" << std::endl;
+  // Load GT
+  std::map< std::string, Mat3 > map_R_gt;
+  //Try to read .suffix camera (parse camera names)
+  std::vector<std::string> vec_camfilenames =
+    stlplus::folder_wildcard(sGTPath, "*."+suffix, false, true);
+  std::sort(vec_camfilenames.begin(), vec_camfilenames.end());
+  std::vector<std::string>::const_iterator citerBegin = vec_camfilenames.begin();
+  if (!vec_camfilenames.empty())
   {
-    std::cout << std::endl << "Read rotation and translation estimates" << std::endl;
-    // Load GT
-    std::map< std::string, Mat3 > map_R_gt;
-    //Try to read .suffix camera (parse camera names)
-    std::vector<std::string> vec_camfilenames =
-      stlplus::folder_wildcard(sGTPath, "*."+suffix, false, true);
-    std::sort(vec_camfilenames.begin(), vec_camfilenames.end());
-    std::vector<std::string>::const_iterator citerBegin = vec_camfilenames.begin();
-    if (!vec_camfilenames.empty())
+    IndexT id = 0;
+    for (std::vector<std::string>::const_iterator iter = vec_camfilenames.begin();
+      iter != vec_camfilenames.end(); ++iter, ++id)
     {
-      for (std::vector<std::string>::const_iterator iter = vec_camfilenames.begin();
-        iter != vec_camfilenames.end(); ++iter) {
-        PinholeCamera cam;
-        if (fcnReadCamPtr(stlplus::create_filespec(sGTPath, *iter), cam))
-        {
-          vec_filenames.push_back(stlplus::create_filespec(sGTPath, *iter));
-          map_Rt_gt[ stlplus::basename_part(*iter) ] = std::make_pair(cam._R, cam._t);
-          map_camerasGT[ std::distance(std::vector<std::string>::const_iterator(vec_camfilenames.begin()),iter)] = cam;
-        }
-        else
-          return false;
+      geometry::Pose3 pose;
+      std::shared_ptr<Pinhole_Intrinsic> pinholeIntrinsic = std::make_shared<Pinhole_Intrinsic>();
+      bool loaded = fcnReadCamPtr(stlplus::create_filespec(sGTPath, *iter), *pinholeIntrinsic.get(), pose);
+      if (!loaded)
+      {
+        std::cout << "Failed to load: " << *iter << std::endl;
+        return false;
       }
+
+      vec_filenames.push_back(stlplus::create_filespec(sGTPath, *iter));
+      map_Rt_gt[id] = pose;
+      map_camerasGT.emplace(id, pinholeIntrinsic);
     }
   }
   return true;

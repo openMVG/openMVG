@@ -138,7 +138,6 @@ int main(int argc, char** argv)
     image::Image<unsigned char> imageGrey;
     cameras::Pinhole_Intrinsic_Radial_K3 queryIntrinsics;
     bool hasIntrinsics = false;
-    geometry::Pose3 cameraPose;
 
     size_t frameCounter = 0;
     std::string currentImgName;
@@ -148,19 +147,12 @@ int main(int argc, char** argv)
     bacc::accumulator_set<double, bacc::stats<bacc::tag::mean, bacc::tag::min, bacc::tag::max, bacc::tag::sum > > stats;
 
     // used to collect the match data result
-    std::vector<sfm::Image_Localizer_Match_Data> associations;
-    std::vector<geometry::Pose3> poses;
-    std::vector<std::vector<pair<IndexT, IndexT> > > associationIDs;
-    std::vector<bool> localized; // this is just to keep track of the unlocalized frames so that a fake camera
-    // can be inserted and we see the sequence correctly in maya
-    
     std::vector<localization::LocalizationResult> vLocalizationResults;
     while (feed.next(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics))
     {
       POPART_COUT("******************************");
       POPART_COUT("FRAME " << myToString(frameCounter, 4));
       POPART_COUT("******************************");
-      sfm::Image_Localizer_Match_Data matchData;
       std::vector<pair<IndexT, IndexT> > ids;
       auto detect_start = std::chrono::steady_clock::now();
       localization::LocalizationResult localizationResult;

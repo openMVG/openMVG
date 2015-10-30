@@ -24,6 +24,12 @@ class Pose3
     // Constructors
     Pose3() : _rotation(Mat3::Identity()), _center(Vec3::Zero()) {}
     Pose3(const Mat3& r, const Vec3& c) : _rotation(r), _center(c) {}
+    Pose3(const Mat34& Rt)
+    : _rotation(Rt.block<3,3>(0,0))
+    {
+      Vec3 t = Rt.block<1, 3>(3,0);
+      _center = -_rotation.transpose() * t;
+    }
 
     // Accessors
     const Mat3& rotation() const { return _rotation; }
