@@ -128,7 +128,13 @@ static bool loadFeatsFromFile(
   vec_feat.clear();
   bool bOk = false;
 
-  std::ifstream fileIn(sfileNameFeats.c_str());
+  std::ifstream fileIn(sfileNameFeats);
+  if(!fileIn.is_open())
+  {
+    std::cerr << "Unable to open file " << sfileNameFeats << std::endl;
+    throw std::runtime_error("Unable to open file " + sfileNameFeats);
+  }
+  
   std::copy(
     std::istream_iterator<typename FeaturesT::value_type >(fileIn),
     std::istream_iterator<typename FeaturesT::value_type >(),
