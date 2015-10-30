@@ -7,7 +7,6 @@
                          // only Pinhole_Intrinsic_Radial_K3 is currently supported
                          // todo: allows internal parameters refinement
 
-#include <opencv2/opencv.hpp>
 
 namespace openMVG {
 namespace rig {
