@@ -75,6 +75,7 @@ bool Rig::initializeCalibration()
       }
     }
   }
+  return true;
 }
 
 // From a set of relative pose, find the optimal one for a given tracker iTraker which
