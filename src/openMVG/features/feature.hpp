@@ -55,7 +55,7 @@ typedef std::vector<PointFeature> PointFeatures;
 //with overloaded operators:
 inline std::ostream& operator<<(std::ostream& out, const PointFeature& obj)
 {
-  return out << obj._coords(0) << obj._coords(1);
+  return out << obj._coords(0) << " " << obj._coords(1);
 }
 
 inline std::istream& operator>>(std::istream& in, PointFeature& obj)
@@ -112,12 +112,14 @@ protected:
 //
 inline std::ostream& operator<<(std::ostream& out, const SIOPointFeature& obj)
 {
-  return out << obj._coords(0) << obj._coords(1) << obj._scale << obj._orientation;
+  const PointFeature *pf = static_cast<const PointFeature*>(&obj);
+  return out << *pf << " " << obj._scale << " " << obj._orientation;
 }
 
 inline std::istream& operator>>(std::istream& in, SIOPointFeature& obj)
 {
-  return in >> obj._coords(0) >> obj._coords(1) >> obj._scale >> obj._orientation;
+  PointFeature *pf = static_cast<PointFeature*>(&obj);
+  return in >> *pf >> obj._scale >> obj._orientation;
 }
 
 /// Read feats from file
