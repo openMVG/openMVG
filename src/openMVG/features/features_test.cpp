@@ -30,7 +30,7 @@ TEST(featureIO, ASCII) {
   }
 
   //Save them to a file
-  saveDescsToFile("tempFeats.feat", vec_feats);
+  saveFeatsToFile("tempFeats.feat", vec_feats);
 
   //Read the saved data and compare to input (to check write/read IO)
   Feats_T vec_feats_read;
