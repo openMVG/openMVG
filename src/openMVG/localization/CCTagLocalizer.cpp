@@ -289,10 +289,6 @@ CCTagLocalizer::CCTagLocalizer()
 {
 }
 
-CCTagLocalizer::CCTagLocalizer(const CCTagLocalizer& orig)
-{
-}
-
 CCTagLocalizer::~CCTagLocalizer()
 {
 }
