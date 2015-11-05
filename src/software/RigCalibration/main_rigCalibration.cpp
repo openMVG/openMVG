@@ -52,8 +52,8 @@ int main(int argc, char** argv)
 #endif
   std::size_t nCam = 3;
   po::options_description desc(
-          "This program takes as input a media (image, image sequence, video) and a database (voctree, 3D structure data) \n"
-          "and returns for each frame a pose estimation for the camera.");
+                               "This program takes as input a media (image, image sequence, video) and a database (voctree, 3D structure data) \n"
+                               "and returns for each frame a pose estimation for the camera.");
   desc.add_options()
           ("help,h", "Print this message")
           ("results,r", po::value<size_t>(&param._nNearestKeyFrames)->default_value(param._nNearestKeyFrames), "Number of images to retrieve in database")
@@ -69,20 +69,26 @@ int main(int argc, char** argv)
 
   po::variables_map vm;
 
-  try {
+  try
+  {
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
-    if (vm.count("help") || (argc == 1)) {
+    if(vm.count("help") || (argc == 1))
+    {
       POPART_COUT(desc);
       return EXIT_SUCCESS;
     }
 
     po::notify(vm);
-  }  catch (boost::program_options::required_option& e) {
+  }
+  catch(boost::program_options::required_option& e)
+  {
     POPART_CERR("ERROR: " << e.what() << std::endl);
     POPART_COUT("Usage:\n\n" << desc);
     return EXIT_FAILURE;
-  }  catch (boost::program_options::error& e) {
+  }
+  catch(boost::program_options::error& e)
+  {
     POPART_CERR("ERROR: " << e.what() << std::endl);
     POPART_COUT("Usage:\n\n" << desc);
     return EXIT_FAILURE;
@@ -100,7 +106,8 @@ int main(int argc, char** argv)
   localization::CCTagLocalizer localizer;
   bool isInit = localizer.init(sfmFilePath, descriptorsFolder);
 
-  if (!isInit) {
+  if(!isInit)
+  {
     POPART_CERR("ERROR while initializing the localizer!");
     return EXIT_FAILURE;
   }
@@ -109,12 +116,12 @@ int main(int argc, char** argv)
   dataio::AlembicExporter exporter(exportFile);
   exporter.addPoints(localizer.getSfMData().GetLandmarks());
 #endif
-  
+
   // Create a camera rig
   rig::Rig rig;
 
   // Loop over all cameras of the rig
-  for (int iLocalizer = 0; iLocalizer < nCam; ++iLocalizer)
+  for(int iLocalizer = 0; iLocalizer < nCam; ++iLocalizer)
   {
     std::string subMediaFilepath, calibFile;
     subMediaFilepath = mediaFilepath + "/" + std::to_string(iLocalizer);
@@ -122,7 +129,7 @@ int main(int argc, char** argv)
 
     // create the feedProvider
     dataio::FeedProvider feed(subMediaFilepath, calibFile);
-    if (!feed.isInit())
+    if(!feed.isInit())
     {
       POPART_CERR("ERROR while initializing the FeedProvider!");
       return EXIT_FAILURE;
@@ -148,7 +155,7 @@ int main(int argc, char** argv)
 
     // used to collect the match data result
     std::vector<localization::LocalizationResult> vLocalizationResults;
-    while (feed.next(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics))
+    while(feed.next(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics))
     {
       POPART_COUT("******************************");
       POPART_COUT("FRAME " << myToString(frameCounter, 4));
@@ -157,10 +164,10 @@ int main(int argc, char** argv)
       auto detect_start = std::chrono::steady_clock::now();
       localization::LocalizationResult localizationResult;
       localizer.localize(imageGrey,
-              param,
-              hasIntrinsics/*useInputIntrinsics*/,
-              queryIntrinsics,
-              localizationResult);
+                         param,
+                         hasIntrinsics/*useInputIntrinsics*/,
+                         queryIntrinsics,
+                         localizationResult);
       vLocalizationResults.emplace_back(localizationResult);
       auto detect_end = std::chrono::steady_clock::now();
       auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
@@ -171,7 +178,7 @@ int main(int argc, char** argv)
     }
 
     rig.setTrackingResult(vLocalizationResults, iLocalizer);
-    
+
     // print out some time stats
     POPART_COUT("\n\n******************************");
     POPART_COUT("Localized " << frameCounter << " images");
