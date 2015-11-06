@@ -754,6 +754,7 @@ bool Read_PNM_ImageHeader(const char * filename, ImageHeader * imgheader)
   // Check magic number.
   res = size_t(fscanf(file, "P%d", &magicnumber));
   if (res != 1) {
+    fclose(file);
     return false;
   }
   // Test if we have a Gray or RGB image, else return false
@@ -763,6 +764,7 @@ bool Read_PNM_ImageHeader(const char * filename, ImageHeader * imgheader)
     case 6:
       break;
     default:
+      fclose(file);
       return false;
   }
 
@@ -773,9 +775,13 @@ bool Read_PNM_ImageHeader(const char * filename, ImageHeader * imgheader)
   // whitespace character, and only one whitespace char is eaten after the
   // third int token is parsed.
   while (valuesIndex < NUM_VALUES) {
-    char nextChar ;
+    char nextChar;
     res = fread(&nextChar,1,1,file);
-    if (res == 0) return false; // read failed, EOF?
+    if (res == 0)
+    {
+      fclose(file);
+      return false; // read failed, EOF?
+    }
 
     if (isspace(nextChar)) {
       if (inToken) { // we were reading a token, so this white space delimits it
@@ -784,23 +790,32 @@ bool Read_PNM_ImageHeader(const char * filename, ImageHeader * imgheader)
         values[valuesIndex++] = atoi(intBuffer);
         intIndex = 0; // reset for next int token
         // to conform with current image class
-        if (valuesIndex == 3 && values[2] > 255) return false;
+        if (valuesIndex == 3 && values[2] > 255)  {
+          fclose(file);
+          return false;
+        }
       }
     }
     else if (isdigit(nextChar)) {
       inToken = 1 ; // in case it's not already set
       intBuffer[intIndex++] = nextChar ;
-      if (intIndex == INT_BUFFER_SIZE) // tokens should never be this long
+      if (intIndex == INT_BUFFER_SIZE) {// tokens should never be this long
+        fclose(file);
         return false;
+      }
     }
     else if (nextChar == '#') {
       do { // eat all characters from input stream until newline
         res = fread(&nextChar,1,1,file);
       } while (res == 1 && nextChar != '\n');
-      if (res == 0) return false; // read failed, EOF?
+      if (res == 0) {
+        fclose(file);
+        return false; // read failed, EOF?
+      }
     }
     else {
       // Encountered a non-whitespace, non-digit outside a comment - bail out.
+      fclose(file);
       return false;
     }
   }
