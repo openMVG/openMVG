@@ -3,8 +3,8 @@
 
 # Python script to launch OpenMVG SfM tools on an image dataset
 #
-# usage : python tutorial_demo.py 
-# 
+# usage : python tutorial_demo.py
+#
 
 # Indicate the openMVG binary directory
 OPENMVG_SFM_BIN = "@OPENMVG_SOFTWARE_SFM_BUILD_DIR@"
@@ -36,7 +36,7 @@ input_dir = input_eval_dir
 output_dir = output_eval_dir
 print ("Using input dir  : ", input_dir)
 print ("      output_dir : ", output_dir)
-    
+
 matches_dir = os.path.join(output_dir, "matches")
 camera_file_params = os.path.join(CAMERA_SENSOR_WIDTH_DIRECTORY, "sensor_width_camera_database.txt")
 
@@ -44,7 +44,7 @@ camera_file_params = os.path.join(CAMERA_SENSOR_WIDTH_DIRECTORY, "sensor_width_c
 if not os.path.exists(matches_dir):
   os.mkdir(matches_dir)
 
-print ("1. Intrinsics analysis") 
+print ("1. Intrinsics analysis")
 pIntrisics = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfMInit_ImageListing"),  "-i", input_dir, "-o", matches_dir, "-d", camera_file_params, "-c", "3"] )
 pIntrisics.wait()
 
@@ -62,11 +62,11 @@ pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_Increme
 pRecons.wait()
 
 print ("5. Colorize Structure")
-pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeSfM_DataColor"),  "-i", reconstruction_dir+"/sfm_data.json", "-o", os.path.join(reconstruction_dir,"colorized.ply")] )
+pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeSfM_DataColor"),  "-i", reconstruction_dir+"/sfm_data.bin", "-o", os.path.join(reconstruction_dir,"colorized.ply")] )
 pRecons.wait()
 
 print ("4. Structure from Known Poses (robust triangulation)")
-pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeStructureFromKnownPoses"),  "-i", reconstruction_dir+"/sfm_data.json", "-m", matches_dir, "-o", os.path.join(reconstruction_dir,"robust.ply")] )
+pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeStructureFromKnownPoses"),  "-i", reconstruction_dir+"/sfm_data.bin", "-m", matches_dir, "-o", os.path.join(reconstruction_dir,"robust.ply")] )
 pRecons.wait()
 
 # Reconstruction for the global SfM pipeline
@@ -82,11 +82,11 @@ pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_GlobalS
 pRecons.wait()
 
 print ("5. Colorize Structure")
-pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeSfM_DataColor"),  "-i", reconstruction_dir+"/sfm_data.json", "-o", os.path.join(reconstruction_dir,"colorized.ply")] )
+pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeSfM_DataColor"),  "-i", reconstruction_dir+"/sfm_data.bin", "-o", os.path.join(reconstruction_dir,"colorized.ply")] )
 pRecons.wait()
 
 print ("4. Structure from Known Poses (robust triangulation)")
-pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeStructureFromKnownPoses"),  "-i", reconstruction_dir+"/sfm_data.json", "-m", matches_dir, "-o", os.path.join(reconstruction_dir,"robust.ply")] )
+pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeStructureFromKnownPoses"),  "-i", reconstruction_dir+"/sfm_data.bin", "-m", matches_dir, "-o", os.path.join(reconstruction_dir,"robust.ply")] )
 pRecons.wait()
 
 
