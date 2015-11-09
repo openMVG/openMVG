@@ -46,7 +46,7 @@ struct Regions_Provider
     #pragma omp single nowait
 #endif
       {
-        const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.get()->s_Img_path);
+        const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, std::to_string(iter->second.get()->id_view));
         const std::string basename = stlplus::basename_part(sImageName);
         const std::string featFile = stlplus::create_filespec(feat_directory, basename, ".feat");
         const std::string descFile = stlplus::create_filespec(feat_directory, basename, ".desc");

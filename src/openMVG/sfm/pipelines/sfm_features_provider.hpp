@@ -44,14 +44,12 @@ struct Features_Provider
     #pragma omp single nowait
 #endif
       {
-        const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.get()->s_Img_path);
-        const std::string basename = stlplus::basename_part(sImageName);
-        const std::string featFile = stlplus::create_filespec(feat_directory, basename, ".feat");
+        const std::string featFile = stlplus::create_filespec(feat_directory, std::to_string(iter->second->id_view), ".feat");
 
         std::unique_ptr<features::Regions> regions(region_type->EmptyClone());
         if (!regions->LoadFeatures(featFile))
         {
-          std::cerr << "Invalid feature files for the view: " << sImageName << std::endl;
+          std::cerr << "Invalid feature file: " << featFile << std::endl;
 #ifdef OPENMVG_USE_OPENMP
       #pragma omp critical
 #endif
@@ -78,10 +76,10 @@ struct Features_Provider
     static const features::PointFeatures emptyFeats = features::PointFeatures();
 
     Hash_Map<IndexT, features::PointFeatures>::const_iterator it = feats_per_view.find(id_view);
-    if (it != feats_per_view.end())
-      return it->second;
-    else
+    if (it == feats_per_view.end())
       return emptyFeats;
+    
+    return it->second;
   }
 }; // Features_Provider
 

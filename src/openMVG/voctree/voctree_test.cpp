@@ -31,7 +31,7 @@ TEST(database, databaseIO) {
   // Create the databases
   Database source_db( documents_to_insert.size() * documents_to_insert[0].size() ) ;
   for(int i = 0; i < documents_to_insert.size(); ++i)
-    source_db.insert(documents_to_insert[i]);
+    source_db.insert(i, documents_to_insert[i]);
 
   // Compute weights
   source_db.computeTfIdfWeights( );
@@ -56,7 +56,7 @@ TEST(database, databaseIO) {
   for(int i = 0; i < documents_to_insert.size(); i++)
   {
     // Create match vectors
-    vector<Match> source_match(1), reload_match(1);
+    vector<DocMatch> source_match(1), reload_match(1);
     // Query both databases with the same document
     source_db.find(documents_to_insert[i], 1, source_match);
     reload_db.find(documents_to_insert[i], 1, reload_match);

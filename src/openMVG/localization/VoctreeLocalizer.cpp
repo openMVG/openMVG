@@ -271,8 +271,7 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
     }
     
     std::vector<voctree::Word> words = _voctree.quantize(currRecoRegions._regions.Descriptors());
-    voctree::DocId docId = _database.insert(words);
-    _mapDocIdToView[docId] = id_view;
+    _database.insert(id_view, words);
 
     // Filter descriptors to keep only the 3D reconstructed points
     currRecoRegions.filterRegions(observationsPerView[id_view]);
@@ -287,7 +286,7 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
 
 bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char> & imageGrey,
                                                 const Parameters &param,
-                                                bool useInputIntrinsics,
+                                bool useInputIntrinsics,
                                                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                                                 LocalizationResult &localizationResult)
 {
@@ -309,15 +308,15 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
   std::vector<voctree::Word> requestImageWords = _voctree.quantize(queryRegions.Descriptors());
   
   // Request closest images from voctree
-  std::vector<voctree::Match> matchedImages;
+  std::vector<voctree::DocMatch> matchedImages;
   _database.find(requestImageWords, param._numResults, matchedImages);
   
   // just debugging bla bla
   // for each similar image found print score and number of features
-  for(const voctree::Match & currMatch : matchedImages )
+  for(const voctree::DocMatch & currMatch : matchedImages )
   {
     // get the corresponding index of the view
-    const IndexT matchedViewIndex = _mapDocIdToView[currMatch.id];
+    const IndexT matchedViewIndex = currMatch.id;
     // get the view handle
     const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
     POPART_COUT( "[database]\t\t match " << matchedView->s_Img_path 
@@ -330,7 +329,6 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
   //@fixme Maybe useless, just do everything with DistanceRatioMatch
   // preparing the matcher, it will use the extracted Regions as reference and it
   // will match them to the Regions of each similar image
-
 //  typedef flann::L2<unsigned char> MetricT;
 //  typedef matching::ArrayMatcher_Kdtree_Flann<unsigned char, MetricT> MatcherT;
   POPART_COUT("[matching]\tBuilding the matcher");
@@ -342,13 +340,13 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
  
   // C. for each found similar image, try to find the correspondences between the 
   // query image and the similar image
-  for(const voctree::Match& matchedImage : matchedImages)
+  for(const voctree::DocMatch& matchedImage : matchedImages)
   {
     // minimum number of points that allows a reliable 3D reconstruction
     const size_t minNum3DPoints = 5;
     
     // the view index of the current matched image
-    const IndexT matchedViewIndex = _mapDocIdToView[matchedImage.id];
+    const IndexT matchedViewIndex = matchedImage.id;
     // the handler to the current view
     const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
     
@@ -422,7 +420,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
       resectionData.pt3D.col(index) = _sfm_data.GetLandmarks().at(trackId3D).X;
 
       const Vec2 feat = queryRegions.GetRegionPosition(featureMatch._i);
-      resectionData.pt2D.col(index) = feat;
+        resectionData.pt2D.col(index) = feat;
       
       associationIDs.emplace_back(trackId3D, featureMatch._i);
 
@@ -520,24 +518,23 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   std::vector<voctree::Word> requestImageWords = _voctree.quantize(queryRegions.Descriptors());
   
   // Request closest images from voctree
-  std::vector<voctree::Match> matchedImages;
+  std::vector<voctree::DocMatch> matchedImages;
   _database.find(requestImageWords, (param._numResults==0) ? (_database.size()) : (param._numResults) , matchedImages);
   
   // just debugging bla bla
   // for each similar image found print score and number of features
-  for(const voctree::Match & currMatch : matchedImages )
+  for(const voctree::DocMatch & currMatch : matchedImages )
   {
-    // get the corresponding index of the view
-    const IndexT matchedViewIndex = _mapDocIdToView[currMatch.id];
     // get the view handle
-    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
+    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[currMatch.id];
     POPART_COUT( "[database]\t\t match " << matchedView->s_Img_path 
             << " [docid: "<< currMatch.id << "]"
             << " with score " << currMatch.score 
-            << " and it has "  << _regions_per_view[matchedViewIndex]._regions.RegionCount() 
+            << " and it has "  << _regions_per_view[currMatch.id]._regions.RegionCount() 
             << " features with 3D points");
   }
 
+  const float fDistRatio = 0.6; //@fixme this could be a param
 
   POPART_COUT("[matching]\tBuilding the matcher");
   matching::RegionsMatcherT<MatcherT> matcher(queryRegions);
@@ -551,20 +548,20 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   // query image adn the similar image
   // stop when param._maxResults successful matches have been found
   std::size_t goodMatches = 0;
-  for(const voctree::Match& matchedImage : matchedImages)
+  for(const voctree::DocMatch& matchedImage : matchedImages)
   {
     // minimum number of points that allows a reliable 3D reconstruction
     const size_t minNum3DPoints = 5;
     
-    // the view index of the current matched image
-    const IndexT matchedViewIndex = _mapDocIdToView[matchedImage.id];
     // the handler to the current view
-    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
+    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedImage.id];
+    // its associated reconstructed regions
+    const Reconstructed_RegionsT& matchedRegions = _regions_per_view[matchedImage.id];
     
     // safeguard: we should match the query image with an image that has at least
     // some 3D points visible --> if this is not true it is likely that it is an
     // image of the dataset that was not reconstructed
-    if(_regions_per_view[matchedViewIndex]._regions.RegionCount() < minNum3DPoints)
+    if(matchedRegions._regions.RegionCount() < minNum3DPoints)
     {
       POPART_COUT("[matching]\tSkipping matching with " << matchedView->s_Img_path << " as it has too few visible 3D points");
       continue;
@@ -574,8 +571,6 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
       POPART_COUT("[matching]\tTrying to match the query image with " << matchedView->s_Img_path);
     }
     
-    // its associated reconstructed regions
-    const Reconstructed_RegionsT& matchedRegions = _regions_per_view[matchedViewIndex];
     // its associated intrinsics
     // this is just ugly!
     const cameras::IntrinsicBase *matchedIntrinsicsBase = _sfm_data.intrinsics[matchedView->id_intrinsic].get();
@@ -630,14 +625,12 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
       }
 
       // Get the 3D point
-//      collected3DptsID.push_back(pt3D_id);
-//      collected3Dpts.emplace_back(_sfm_data.GetLandmarks().at(pt3D_id).X);
       const auto &point3d = _sfm_data.GetLandmarks().at(pt3D_id).X;
 
       // Get the 2D point
       const Vec2 feat = queryRegions.GetRegionPosition(pt2D_id);
       associations.insert(std::make_pair(key, std::make_pair(point3d, feat)));
-      
+
       ++index;
     }
     ++goodMatches;
@@ -659,7 +652,6 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   resectionData.pt2D = Mat2X(2, numCollectedPts);
   resectionData.pt3D = Mat3X(3, numCollectedPts);
   
-//  for(std::size_t index = 0; index < numCollectedPts; ++index)
   size_t index = 0;
   for(const auto &ass : associations)
   {
@@ -670,6 +662,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
      associationIDs.push_back(ass.first);
      ++index;
   }
+  
   
   // estimate the pose
   // Do the resectioning: compute the camera pose.
@@ -811,7 +804,6 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
   }
   return true;
 }
-
 
 } // localization
 } // openMVG

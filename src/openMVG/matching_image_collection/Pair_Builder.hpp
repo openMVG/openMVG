@@ -8,43 +8,82 @@
 
 #include "openMVG/types.hpp"
 #include "openMVG/stl/split.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
 
 #include <set>
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
 namespace openMVG {
 
 /// Generate all the (I,J) pairs of the upper diagonal of the NxN matrix
-static Pair_Set exhaustivePairs(const size_t N)
+static Pair_Set exhaustivePairs(const sfm::Views& views, int rangeStart=-1, int rangeSize=0)
 {
   Pair_Set pairs;
-  for(size_t I = 0; I < N; ++I)
-    for(size_t J = I+1; J < N; ++J)
-      pairs.insert(std::make_pair(I,J));
+  sfm::Views::const_iterator itA = views.begin();
+  sfm::Views::const_iterator itAEnd = views.end();
 
+  // If we have a rangeStart, only compute the matching for (rangeStart, X).
+  if(rangeStart != -1 && rangeSize != 0)
+  {
+    if(rangeStart >= views.size())
+      return pairs;
+    std::advance(itA, rangeStart);
+    itAEnd = views.begin();
+    std::advance(itAEnd, std::min(std::size_t(rangeStart+rangeSize), views.size()));
+  }
+  
+  for(; itA != itAEnd; ++itA)
+  {
+    sfm::Views::const_iterator itB = itA;
+    std::advance(itB, 1);
+    for(; itB != views.end(); ++itB)
+      pairs.insert(std::make_pair(itA->first, itB->first));
+  }
   return pairs;
 }
 
 /// Generate the pairs that have a distance inferior to the overlapSize
 /// Usable to match video sequence
-static Pair_Set contiguousWithOverlap(const size_t N, const size_t overlapSize)
+static Pair_Set contiguousWithOverlap(const sfm::Views& views, const size_t overlapSize, int rangeStart=-1, int rangeSize=0)
 {
   Pair_Set pairs;
-  for(size_t I = 0; I < N; ++I)
-    for(size_t J = I+1; J < I+1+overlapSize && J < N; ++J)
-      pairs.insert(std::make_pair(I,J));
+  sfm::Views::const_iterator itA = views.begin();
+  sfm::Views::const_iterator itAEnd = views.end();
+
+  // If we have a rangeStart, only compute the matching for (rangeStart, X).
+  if(rangeStart != -1 && rangeSize != 0)
+  {
+    if(rangeStart >= views.size())
+      return pairs;
+    std::advance(itA, rangeStart);
+    itAEnd = views.begin();
+    std::advance(itAEnd, std::min(std::size_t(rangeStart+rangeSize), views.size()));
+  }
+  
+  for(; itA != itAEnd; ++itA)
+  {
+    sfm::Views::const_iterator itB = itA;
+    std::advance(itB, 1);
+    sfm::Views::const_iterator itBEnd = itA;
+    std::advance(itBEnd, 1 + overlapSize);
+    
+    for(; itB != views.end() && itB != itBEnd; ++itB)
+      pairs.insert(std::make_pair(itA->first, itB->first));
+  }
   return pairs;
 }
 
 /// Load a set of Pair_Set from a file
 /// I J K L (pair that link I)
 static bool loadPairs(
-     const size_t N,  // number of image in the current project (to check index validity)
      const std::string &sFileName, // filename of the list file,
      Pair_Set & pairs,
-     bool ordered=true)  // output pairs read from the list file
+     bool ordered=true, // output pairs read from the list file
+     int rangeStart=-1,
+     int rangeSize=0)
 {
   std::ifstream in(sFileName.c_str());
   if(!in.is_open())
@@ -53,10 +92,18 @@ static bool loadPairs(
       << "loadPairs: Impossible to read the specified file: \"" << sFileName << "\"." << std::endl;
     return false;
   }
+  std::size_t nbLine = 0;
   std::string sValue;
   std::vector<std::string> vec_str;
-  while(std::getline( in, sValue ) )
+  for(; std::getline( in, sValue ); ++nbLine)
   {
+    if(rangeStart != -1 && rangeSize != 0)
+    {
+      if(nbLine < rangeStart)
+        continue;
+      if(nbLine >= rangeStart + rangeSize)
+        break;
+    }
     vec_str.clear();
     stl::split(sValue, " ", vec_str);
     const size_t str_size = vec_str.size();
@@ -73,13 +120,6 @@ static bool loadPairs(
     {
       oss.clear(); oss.str(vec_str[i]);
       oss >> J;
-      if( I > N-1 || J > N-1) //I&J always > 0 since we use unsigned type
-      {
-        std::cerr << "loadPairs: Invalid input file. Image out of range. "
-                << "I: " << I << " J:" << J << " N:" << N << std::endl
-                << "File: \"" << sFileName << "\"." << std::endl;
-        return false;
-      }
       if( I == J )
       {
         std::cerr << "loadPairs: Invalid input file. Image " << I << " see itself. File: \"" << sFileName << "\"." << std::endl;

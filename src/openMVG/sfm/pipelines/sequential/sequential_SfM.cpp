@@ -55,6 +55,7 @@ SequentialSfMReconstructionEngine::SequentialSfMReconstructionEngine(
     _htmlDocStream->pushInfo( "Views count: " +
       htmlDocument::toString( sfm_data.GetViews().size()) + "<br>");
   }
+
   // Init remaining image list
   for (Views::const_iterator itV = sfm_data.GetViews().begin();
     itV != sfm_data.GetViews().end(); ++itV)
@@ -124,7 +125,7 @@ void SequentialSfMReconstructionEngine::RobustResectionOfImages(
       // Scene logging as ply for visual debug
       std::ostringstream os;
       os << std::setw(8) << std::setfill('0') << resectionGroupIndex << "_Resection";
-      Save(_sfm_data, stlplus::create_filespec(_sOutDirectory, os.str(), ".ply"), ESfM_Data(ALL));
+      Save(_sfm_data, stlplus::create_filespec(_sOutDirectory, os.str(), _sfmdataInterFileExtension), _sfmdataInterFilter);
 
       // std::cout << "Global Bundle start, resection group index: " << resectionGroupIndex << ".\n";
       int bundleAdjustmentIteration = 0;
@@ -532,6 +533,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
     initial_pair = scoring_per_pair.begin()->second;
     return true;
   }
+  std::cout << "No valid initial pair found automatically." << std::endl;
   return false;
 }
 
@@ -549,9 +551,14 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
   const View * view_J = _sfm_data.GetViews().at(J).get();
   const Intrinsics::const_iterator iterIntrinsic_J = _sfm_data.GetIntrinsics().find(view_J->id_intrinsic);
 
+  std::cout << "Initial pair is:\n"
+          << "  A - Id: " << I << " - " << " filepath: " << view_I->s_Img_path << "\n"
+          << "  B - Id: " << J << " - " << " filepath: " << view_J->s_Img_path << std::endl;
+
   if (iterIntrinsic_I == _sfm_data.GetIntrinsics().end() ||
       iterIntrinsic_J == _sfm_data.GetIntrinsics().end() )
   {
+    std::cout << "Can't find initial image pair intrinsics." << std::endl;
     return false;
   }
 
@@ -559,6 +566,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
   const Pinhole_Intrinsic * cam_J = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_J->second.get());
   if (cam_I == NULL || cam_J == NULL)
   {
+    std::cout << "Can't find initial image pair intrinsics (NULL ptr)." << std::endl;
     return false;
   }
 
@@ -585,6 +593,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
     feat = _features_provider->feats_per_view[J][j].coords().cast<double>();
     xJ.col(cptIndex) = cam_J->get_ud_pixel(feat);
   }
+  std::cout << n << " matches in the image pair for the initial pose estimation." << std::endl;
 
   // c. Robust estimation of the relative pose
   RelativePose_Info relativePose_info;
@@ -644,7 +653,8 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
       landmarks[iterT->first].obs = std::move(obs);
       landmarks[iterT->first].X = X;
     }
-    Save(tiny_scene, stlplus::create_filespec(_sOutDirectory, "initialPair.ply"), ESfM_Data(ALL));
+
+    Save(tiny_scene, stlplus::create_filespec(_sOutDirectory, "initialPair", _sfmdataInterFileExtension), _sfmdataInterFilter);
 
     // - refine only Structure and Rotations & translations (keep intrinsic constant)
     Bundle_Adjustment_Ceres::BA_options options(true, false);
