@@ -65,12 +65,12 @@ void Database::sanityCheck(size_t N, std::map<size_t, DocMatches>& matches) cons
   boost::progress_display display(database_.size());
   
   //#pragma omp parallel for default(none) shared(database_)
-  for (auto itData = database_.begin(); itData != database_.end(); itData++ )
+  for(const auto &doc : database_)
   {
     std::vector<DocMatch> m;
-    find(itData->second, N, m);
+    find(doc.second, N, m);
     //		matches.emplace_back( m );
-    matches[itData->first] = m;
+    matches[doc.first] = m;
     ++display;
   }
 }
@@ -178,13 +178,12 @@ void Database::loadWeights(const std::string& file)
  */
 void Database::computeVector(const std::vector<Word>& document, DocumentVector& v) const
 {
-  //	for each visual word in the list
-  for(std::vector<Word>::const_iterator it = document.begin(), end = document.end(); it != end; ++it)
+  //for each visual word in the list
+  for(const Word &word : document)
   {
     // update its weighted count inside the map
     // the map v contains only the visual words that are associated to some features
     // the visual words in v are unique unlikely the document
-    Word word = *it;
     if(v.find(word) == v.end())
       v[word] = word_weights_[word];
     else
