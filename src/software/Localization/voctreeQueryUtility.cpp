@@ -321,7 +321,7 @@ int main(int argc, char** argv)
     POPART_COUT("query document " << docMatches.first << " has " << matches.size() << " matches\tBest " << matches[0].id << " with score " << matches[0].score);
     if(withOutput)
     {
-      if(not matlabOutput)
+      if(!matlabOutput)
       {
         fileout << "Camera: " << docMatches.first << std::endl;
       }
