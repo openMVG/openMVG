@@ -95,6 +95,7 @@ public:
   void updateLandmarksVisibility(std::vector<bool> & presentIds)
   {
 #ifdef HAVE_CCTAG
+    assert(presentIds.size()==128);
     for (const auto & desc : _regions.Descriptors())
     {
       IndexT cctagId = features::getCCTagId(desc);
