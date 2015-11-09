@@ -44,7 +44,7 @@ DocId Database::insert(DocId doc_id, const std::vector<Word>& document)
   return doc_id;
 }
 
-void Database::sanityCheck(size_t N, std::vector< std::vector<Match> >& matches) const
+void Database::sanityCheck(size_t N, std::map<size_t, DocMatches>& matches) const
 {
   // if N is equal to zero
   if(N == 0)
@@ -62,20 +62,17 @@ void Database::sanityCheck(size_t N, std::vector< std::vector<Match> >& matches)
   matches.clear();
   // since we already know the size of the vectors, in order to parallelize the 
   // query allocate the whole memory
-  matches.resize(this->size(), std::vector<Match>(N));
   boost::progress_display display(database_.size());
   
-//  @todo JEME
-//  #pragma omp parallel for
-//  for(DocId i = 0; i < (DocId) database_.size(); ++i)
-//  for(auto& document: database_)
-//  {
-//    std::vector<Match> m;
-//    find(document.second, N, m);
-//    //		matches.emplace_back( m );
-//    matches[i] = m;
-//    ++display;
-//  }
+  //#pragma omp parallel for default(none) shared(database_)
+  for(const auto &doc : database_)
+  {
+    std::vector<DocMatch> m;
+    find(doc.second, N, m);
+    //		matches.emplace_back( m );
+    matches[doc.first] = m;
+    ++display;
+  }
 }
 
 /**
@@ -85,7 +82,7 @@ void Database::sanityCheck(size_t N, std::vector< std::vector<Match> >& matches)
  * @param[in]  N        The number of matches to return.
  * @param[out] matches  IDs and scores for the top N matching database documents.
  */
-void Database::find(const std::vector<Word>& document, size_t N, std::vector<Match>& matches) const
+void Database::find(const std::vector<Word>& document, size_t N, std::vector<DocMatch>& matches) const
 {
   DocumentVector query;
   // from the list of visual words associated with each feature in the document/image
@@ -102,12 +99,12 @@ void Database::find(const std::vector<Word>& document, size_t N, std::vector<Mat
  * @param      N        The number of matches to return.
  * @param[out] matches  IDs and scores for the top N matching database documents.
  */
-void Database::find( const DocumentVector& query, size_t N, std::vector<Match>& matches ) const
+void Database::find( const DocumentVector& query, size_t N, std::vector<DocMatch>& matches ) const
 {
   // Accumulate the best N matches
   using namespace boost::accumulators;
   typedef tag::tail<left> bestN_tag;
-  accumulator_set<Match, features<bestN_tag> > acc(bestN_tag::cache_size = N);
+  accumulator_set<DocMatch, features<bestN_tag> > acc(bestN_tag::cache_size = N);
 
   /// @todo Try only computing distances against documents sharing at least one word
   for(const auto& document: database_)
@@ -115,7 +112,7 @@ void Database::find( const DocumentVector& query, size_t N, std::vector<Match>& 
     // for each document/image in the database compute the distance between the 
     // histograms of the query image and the others
     float distance = sparseDistance(query, document.second);
-    acc(Match(document.first, distance));
+    acc(DocMatch(document.first, distance));
   }
 
   // extract the best N
@@ -181,14 +178,16 @@ void Database::loadWeights(const std::string& file)
  */
 void Database::computeVector(const std::vector<Word>& document, DocumentVector& v) const
 {
-  //	for each visual word in the list
-  for(std::vector<Word>::const_iterator it = document.begin(), end = document.end(); it != end; ++it)
+  //for each visual word in the list
+  for(const Word &word : document)
   {
     // update its weighted count inside the map
     // the map v contains only the visual words that are associated to some features
     // the visual words in v are unique unlikely the document
-    Word word = *it;
-    v[word] += word_weights_[word];
+    if(v.find(word) == v.end())
+      v[word] = word_weights_[word];
+    else
+      v[word] += word_weights_[word];
   }
   normalize(v);
 }

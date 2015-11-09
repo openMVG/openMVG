@@ -31,6 +31,7 @@ namespace po = boost::program_options;
 
 
 typedef openMVG::features::Descriptor<float, DIMENSION> DescriptorFloat;
+typedef openMVG::features::Descriptor<unsigned char, DIMENSION> DescriptorUChar;
 
 typedef size_t ImageID;
 
@@ -291,7 +292,7 @@ int main(int argc, char** argv)
   DocumentMap documents;
 
   auto detect_start = std::chrono::steady_clock::now();
-  size_t numTotFeatures = openMVG::voctree::populateDatabase(keylist, tree, db, documents);
+  size_t numTotFeatures = openMVG::voctree::populateDatabase<DescriptorUChar>(keylist, tree, db, documents);
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - detect_start);
 
   if(numTotFeatures == 0)
@@ -315,7 +316,7 @@ int main(int argc, char** argv)
   //**********************************************************
 
   // Now query each document
-  std::vector<openMVG::voctree::Match> matches;
+  std::vector<openMVG::voctree::DocMatch> matches;
 
   if(numImageQuery == 0)
   {
@@ -340,7 +341,7 @@ int main(int argc, char** argv)
     allMatches[ doc.first ] = ListOfImageID();
     allMatches[ doc.first ].reserve(matches.size());
 
-    for(const openMVG::voctree::Match& m : matches)
+    for(const openMVG::voctree::DocMatch& m : matches)
     {
       allMatches[ doc.first ].push_back(m.id);
     }

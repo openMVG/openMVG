@@ -56,7 +56,7 @@ TEST(database, databaseIO) {
   for(int i = 0; i < documents_to_insert.size(); i++)
   {
     // Create match vectors
-    vector<Match> source_match(1), reload_match(1);
+    vector<DocMatch> source_match(1), reload_match(1);
     // Query both databases with the same document
     source_db.find(documents_to_insert[i], 1, source_match);
     reload_db.find(documents_to_insert[i], 1, reload_match);
