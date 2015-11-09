@@ -264,8 +264,8 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
   }
   
   // Upper bound pixel(s) tolerance for residual errors
-  double error_max = std::numeric_limits<double>::infinity();
-  size_t max_iteration = 4096;
+  bestResectionData.error_max = std::numeric_limits<double>::infinity();
+  bestResectionData.max_iteration = 4096;
   
   // E. refine the estimated pose
   POPART_COUT("[poseEstimation]\tRefining estimated pose");
