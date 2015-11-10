@@ -1,10 +1,13 @@
 #include "VoctreeLocalizer.hpp"
 
-
 #include <openMVG/sfm/sfm_data_io.hpp>
 #include <openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp>
 #include <openMVG/sfm/sfm_data_BA_ceres.hpp>
 #include <openMVG/features/io_regions_type.hpp>
+#ifdef HAVE_CCTAG
+#include <openMVG/features/cctag/SIFT_CCTAG_describer.hpp>
+#endif
+#include <nonFree/sift/SIFT_float_describer.hpp>
 #include <openMVG/matching/regions_matcher.hpp>
 #include <openMVG/matching_image_collection/Matcher.hpp>
 #include <openMVG/matching/matcher_kdtree_flann.hpp>
@@ -76,6 +79,25 @@ VoctreeLocalizer::Algorithm VoctreeLocalizer::initFromString(const std::string &
   else
     throw std::invalid_argument("Unrecognized algorithm \"" + value + "\"!");
 }
+
+#ifdef HAVE_CCTAG
+VoctreeLocalizer::VoctreeLocalizer(bool useSIFT_CCTAG)
+{
+  if(useSIFT_CCTAG)
+  {
+    _image_describer = new features::SIFT_CCTAG_Image_describer();  
+  }
+  else
+  {
+    _image_describer = new features::SIFT_float_describer();
+  }
+}
+#else
+VoctreeLocalizer::VoctreeLocalizer()
+{
+  _image_describer = new features::SIFT_float_describer();
+}
+#endif
 
 bool VoctreeLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                 const Parameters &param,
@@ -294,8 +316,8 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
   POPART_COUT("[features]\tExtract SIFT from query image");
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Float_Regions());
   auto detect_start = std::chrono::steady_clock::now();
-  _image_describer.Set_configuration_preset(param._featurePreset);
-  _image_describer.Describe(imageGrey, tmpQueryRegions, nullptr);
+  _image_describer->Set_configuration_preset(param._featurePreset);
+  _image_describer->Describe(imageGrey, tmpQueryRegions, nullptr);
   auto detect_end = std::chrono::steady_clock::now();
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
   POPART_COUT("[features]\tExtract SIFT done: found " << tmpQueryRegions->RegionCount() << " features in " << detect_elapsed.count() << " [ms]" );
@@ -504,8 +526,8 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   POPART_COUT("[features]\tExtract SIFT from query image");
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Float_Regions());
   auto detect_start = std::chrono::steady_clock::now();
-  _image_describer.Set_configuration_preset(param._featurePreset);
-  _image_describer.Describe(imageGrey, tmpQueryRegions, nullptr);
+  _image_describer->Set_configuration_preset(param._featurePreset);
+  _image_describer->Describe(imageGrey, tmpQueryRegions, nullptr);
   auto detect_end = std::chrono::steady_clock::now();
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
   POPART_COUT("[features]\tExtract SIFT done: found " << tmpQueryRegions->RegionCount() << " features in " << detect_elapsed.count() << " [ms]" );

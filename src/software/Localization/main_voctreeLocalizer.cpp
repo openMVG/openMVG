@@ -62,6 +62,9 @@ int main(int argc, char** argv)
 #if HAVE_ALEMBIC
   std::string exportFile = "trackedcameras.abc"; //!< the export file
 #endif
+#if HAVE_CCTAG
+  bool useSIFT_CCTAG = false;
+#endif
   std::string algostring = "FirstBest";
   bool globalBundle = false;      ///< If !param._refineIntrinsics it can run a final global budndle to refine the scene
 
@@ -84,6 +87,9 @@ int main(int argc, char** argv)
       ("globalBundle,", po::bool_switch(&globalBundle), "If --refineIntrinsics is not set, this option allows to run a final global budndle adjustment to refine the scene")
 #if HAVE_ALEMBIC
       ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), "Filename for the SfM_Data export file (where camera poses will be stored). Default : trackedcameras.json If Alambic is enable it will also export an .abc file of the scene with the same name")
+#endif
+#if HAVE_CCTAG
+      ("useSIFT_CCTAG,", po::bool_switch(&useSIFT_CCTAG), "If provided, for each image it will extract both SIFT and the CCTAG.")
 #endif
       ;
 
@@ -141,7 +147,11 @@ int main(int argc, char** argv)
   }
  
   // init the localizer
+#if HAVE_CCTAG
+  localization::VoctreeLocalizer localizer(useSIFT_CCTAG);
+#else
   localization::VoctreeLocalizer localizer;
+#endif
   bool isInit = localizer.init(sfmFilePath, descriptorsFolder, vocTreeFilepath, weightsFilepath);
   
   if(!isInit)

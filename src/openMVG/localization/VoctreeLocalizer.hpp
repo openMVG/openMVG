@@ -11,7 +11,6 @@
 #include "LocalizationResult.hpp"
 
 #include <openMVG/features/image_describer.hpp>
-#include <nonFree/sift/SIFT_float_describer.hpp>
 #include <openMVG/sfm/sfm_data.hpp>
 #include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 #include <openMVG/stl/stlMap.hpp>
@@ -63,6 +62,11 @@ public:
   };
   
 public:
+#ifdef HAVE_CCTAG
+  VoctreeLocalizer(bool useSIFT_CCTAG = false);
+#else
+  VoctreeLocalizer();
+#endif
   
   bool init(const std::string &sfmFilePath,
             const std::string &descriptorsFolder,
@@ -179,7 +183,8 @@ public:
   
   // the feature extractor
   // @fixme do we want a generic image describer?
-  features::SIFT_float_describer _image_describer;
+//  features::SIFT_float_describer _image_describer;
+  features::Image_describer* _image_describer;
   
   // the vocabulary tree used to generate the database and the visual images for
   // the query images

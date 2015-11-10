@@ -124,7 +124,7 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
     }
 
     // Filter descriptors to keep only the 3D reconstructed points
-    reconstructedRegion.filterRegions(observationsPerView[id_view]);
+    reconstructedRegion.filterCCTagRegions(observationsPerView[id_view]);
     
     // Update the visibility mask
     reconstructedRegion.updateLandmarksVisibility(presentIds);
