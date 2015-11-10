@@ -19,18 +19,18 @@ typedef uint32_t DocId;
  *
  * \c score is in the range [0,2], where 0 is best and 2 is worst.
  */
-struct Match
+struct DocMatch
 {
   DocId id;
   float score;
 
-  Match() { }
+  DocMatch() { }
 
-  Match(DocId _id, float _score) : id(_id), score(_score) { }
+  DocMatch(DocId _id, float _score) : id(_id), score(_score) { }
 
-  /// Allows sorting Matches in best-to-worst order with std::sort.
+  /// Allows sorting DocMatches in best-to-worst order with std::sort.
 
-  bool operator<(const Match& other) const
+  bool operator<(const DocMatch& other) const
   {
     return score < other.score;
   }
@@ -38,7 +38,7 @@ struct Match
 
 // Remove these, just make docs more confusing
 typedef std::vector<Word> Document;
-typedef std::vector<Match> Matches;
+typedef std::vector<DocMatch> DocMatches;
 
 /**
  * @brief Class for efficiently matching a bag-of-words representation of a document (image) against
@@ -58,10 +58,11 @@ public:
   /**
    * @brief Insert a new document.
    *
+   * @param doc_id Unique ID of the new document to insert
    * @param document The set of quantized words in a document/image.
    * \return An ID representing the inserted document.
    */
-  DocId insert(const std::vector<Word>& document);
+  DocId insert(DocId doc_id, const std::vector<Word>& document);
 
   /**
    * @brief Perform a sanity check of the database by querying each document
@@ -70,7 +71,7 @@ public:
    * @param[in] N The number of matches to return.
    * @param[out] matches IDs and scores for the top N matching database documents.
    */
-  void sanityCheck(size_t N, std::vector< std::vector<Match> >& matches) const;
+   void sanityCheck(size_t N, std::map<size_t, DocMatches>& matches) const;
 
   /**
    * @brief Find the top N matches in the database for the query document.
@@ -79,18 +80,7 @@ public:
    * @param      N        The number of matches to return.
    * @param[out] matches  IDs and scores for the top N matching database documents.
    */
-  void find(const std::vector<Word>& document, size_t N, std::vector<Match>& matches) const;
-
-  /**
-   * @brief Find the top N matches, then insert the query document.
-   *
-   * This is equivalent to calling find() followed by insert(), but may be more efficient.
-   *
-   * @param      document The document to match then insert, a set of quantized words.
-   * @param      N        The number of matches to return.
-   * @param[out] matches  IDs and scores for the top N matching database documents.
-   */
-  DocId findAndInsert(const std::vector<Word>& document, size_t N, std::vector<Match>& matches);
+  void find(const std::vector<Word>& document, size_t N, std::vector<DocMatch>& matches) const;
 
   /**
    * @brief Compute the TF-IDF weights of all the words. To be called after inserting a corpus of
@@ -120,7 +110,7 @@ public:
   template<class Archive>
   void serialize(Archive & archive)
   {
-    archive(word_files_, word_weights_, database_vectors_);
+    archive(word_files_, word_weights_, database_);
   }
 
 private:
@@ -157,7 +147,7 @@ private:
 
   std::vector<InvertedFile> word_files_;
   std::vector<float> word_weights_;
-  std::vector<DocumentVector> database_vectors_; // Precomputed for inserted documents
+  std::map<DocId, DocumentVector> database_; // Precomputed for inserted documents
 
   /**
    * Given a list of visual words associated to the features of a document it computes the 
@@ -175,7 +165,7 @@ private:
    * @param      N        The number of matches to return.
    * @param[out] matches  IDs and scores for the top N matching database documents.
    */
-  void find(const DocumentVector& query, size_t N, std::vector<Match>& matches) const;
+  void find(const DocumentVector& query, size_t N, std::vector<DocMatch>& matches) const;
 
   /**
    * Normalize a document vector representing the histogram of visual words for a given image

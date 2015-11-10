@@ -259,7 +259,7 @@ int main(int argc, char **argv)
     {
       const View * v = iter->second.get();
       vec_fileNames.push_back(stlplus::create_filespec(sfm_data.s_root_path,
-          v->s_Img_path));
+          std::to_string(v->id_view)));
       vec_imagesSize.push_back( std::make_pair( v->ui_width, v->ui_height) );
     }
   }
@@ -340,11 +340,11 @@ int main(int argc, char **argv)
       Pair_Set pairs;
       switch (ePairmode)
       {
-        case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(sfm_data.GetViews().size()); break;
-        case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(sfm_data.GetViews().size(), iMatchingVideoMode); break;
+        case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(sfm_data.GetViews(), rangeStart, rangeSize); break;
+        case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(sfm_data.GetViews(), iMatchingVideoMode); break;
         case PAIR_FROM_FILE:
           std::cout << "Load pairList from file: " << sPredefinedPairList << std::endl;
-          if(!loadPairs(sfm_data.GetViews().size(), sPredefinedPairList, pairs, orderPairs))
+          if(!loadPairs(sPredefinedPairList, pairs, orderPairs, rangeStart, rangeSize))
           {
               return EXIT_FAILURE;
           }
@@ -354,20 +354,10 @@ int main(int argc, char **argv)
       if( pairs.empty() )
       {
         std::cout << "No image pair to match." << std::endl;
-        return EXIT_FAILURE;
+        // If we only compute a selection of matches, we may have no match.
+        return rangeSize ? EXIT_SUCCESS : EXIT_FAILURE;
       }
       std::cout << "There are " << sfm_data.GetViews().size() << " views and " << pairs.size() << " image pairs." << std::endl;
-
-      // If we have a rangeStart, only compute the matching for (rangeStart, X).
-      if(rangeStart != -1)
-      {
-        Pair_Set specificedPairs;
-        for (const Pair& p: pairs)
-          if( p.first >= rangeStart && p.first <= rangeStart + rangeSize)
-            specificedPairs.insert(p);
-        pairs = specificedPairs;
-        std::cout << "We will compute " << pairs.size() << " image pairs." << std::endl;
-      }
 
       // Photometric matching of putative pairs
       collectionMatcher->Match(sfm_data, regions_provider, pairs, map_PutativesMatches);
@@ -375,7 +365,7 @@ int main(int argc, char **argv)
       if( map_PutativesMatches.empty() )
       {
         std::cout << "No putative matches." << std::endl;
-        // We may have no matches if we perform matches on a selection of images pairs.
+        // If we only compute a selection of matches, we may have no match.
         return rangeSize ? EXIT_SUCCESS : EXIT_FAILURE;
       }
       std::cout << "There are " << map_PutativesMatches.size() << " putative matches." << std::endl;
@@ -405,7 +395,7 @@ int main(int argc, char **argv)
       std::inserter(set_ViewIds, set_ViewIds.begin()), stl::RetrieveKey());
     graph::indexedGraph putativeGraph(set_ViewIds, getPairs(map_PutativesMatches));
     graph::exportToGraphvizData(
-      stlplus::create_filespec(sMatchesDirectory, "putative_matches"),
+      stlplus::create_filespec(sMatchesDirectory, "putative_matches.dot"),
       putativeGraph.g);
   }
 
@@ -471,6 +461,8 @@ int main(int argc, char **argv)
       break;
     }
 
+    std::cout << "There are " << map_GeometricMatches.size() << " geometric matches." << std::endl;
+    
     //---------------------------------------
     //-- Export geometric filtered matches
     //---------------------------------------
@@ -499,7 +491,7 @@ int main(int argc, char **argv)
         std::inserter(set_ViewIds, set_ViewIds.begin()), stl::RetrieveKey());
       graph::indexedGraph putativeGraph(set_ViewIds, getPairs(map_GeometricMatches));
       graph::exportToGraphvizData(
-        stlplus::create_filespec(sMatchesDirectory, "geometric_matches"),
+        stlplus::create_filespec(sMatchesDirectory, "geometric_matches.dot"),
         putativeGraph.g);
     }
   }

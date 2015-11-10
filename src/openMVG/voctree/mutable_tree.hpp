@@ -12,16 +12,14 @@ namespace voctree {
  *
  * When loading and using an existing vocabulary tree, use VocabularyTree instead.
  */
-template<class Feature, class Distance = L2<Feature>,
+template<class Feature, template<typename, typename> class Distance = L2,
 class FeatureAllocator = typename DefaultAllocator<Feature>::type>
 class MutableVocabularyTree : public VocabularyTree<Feature, Distance, FeatureAllocator>
 {
   typedef VocabularyTree<Feature, Distance, FeatureAllocator> BaseClass;
 
 public:
-
-  MutableVocabularyTree(Distance d = Distance())
-  : BaseClass(d)
+  MutableVocabularyTree()
   {
   }
 

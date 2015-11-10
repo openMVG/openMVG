@@ -399,6 +399,14 @@ int main(int argc, char **argv)
           return EXIT_FAILURE;
       }
     }
+    else
+    {
+      std::cerr << "Error: No instrinsics for \"" << imageFilename << "\".\n"
+        << "focal: " << focal << "\n"
+        << "ppx,ppy: " << ppx << ", " << ppy << "\n"
+        << "width,height: " << width << ", " << height
+        << std::endl;
+    }
 
     IndexT id_view = views.size();
     if( b_use_UID )
