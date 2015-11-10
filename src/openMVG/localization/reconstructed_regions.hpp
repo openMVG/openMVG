@@ -59,7 +59,7 @@ public:
 //    ar(_vec_feats);
 //    ar(_vec_descs);
 //  }
-
+  
   void filterRegions(const std::vector<FeatureInImage>& featuresInImage)
   {
     features::Scalar_Regions<FeatT, T, L> newRegions;
@@ -69,8 +69,26 @@ public:
     for(std::size_t i = 0; i < featuresInImage.size(); ++i)
     {
       const FeatureInImage & feat = featuresInImage[i];
-#ifdef HAVE_CCTAG // todo: this #ifdef should be remove is the the localizer use both sift and cctag.
-                  // After this loop, all the natural descriptors will be removed.
+      newRegions.Features().push_back(_regions.Features()[feat._featureIndex]);
+      newRegions.Descriptors().push_back(_regions.Descriptors()[feat._featureIndex]);
+      _mapFullToLocal[feat._featureIndex] = i; //todo@Simone check if map is already initialized
+      _associated3dPoint.push_back(feat._point3dId);
+    }
+    _regions.swap(newRegions);
+  }
+  
+  
+#ifdef HAVE_CCTAG
+  
+   void filterCCTagRegions(const std::vector<FeatureInImage>& featuresInImage)
+  {
+    features::Scalar_Regions<FeatT, T, L> newRegions;
+    newRegions.Features().reserve(featuresInImage.size());
+    newRegions.Descriptors().reserve(featuresInImage.size());
+    _associated3dPoint.reserve(featuresInImage.size());
+    for(std::size_t i = 0; i < featuresInImage.size(); ++i)
+    {
+      const FeatureInImage & feat = featuresInImage[i];  
       // if the descriptor is a CCTag Descriptor, then add the region
       IndexT cctagId = features::getCCTagId(_regions.Descriptors()[feat._featureIndex]);
       if( cctagId != UndefinedIndexT)
@@ -78,23 +96,14 @@ public:
         newRegions.Features().push_back(_regions.Features()[feat._featureIndex]);
         newRegions.Descriptors().push_back(_regions.Descriptors()[feat._featureIndex]);
         _mapFullToLocal[feat._featureIndex] = i; //@TODO check if map is already initialized
-        _associated3dPoint.push_back(feat._point3dId);
-        
-        
+        _associated3dPoint.push_back(feat._point3dId); 
       }
-#else
-      newRegions.Features().push_back(_regions.Features()[feat._featureIndex]);
-      newRegions.Descriptors().push_back(_regions.Descriptors()[feat._featureIndex]);
-      _mapFullToLocal[feat._featureIndex] = i; //todo@Simone check if map is already initialized
-      _associated3dPoint.push_back(feat._point3dId);
-#endif
     }
     _regions.swap(newRegions);
   }
   
   void updateLandmarksVisibility(std::vector<bool> & presentIds)
   {
-#ifdef HAVE_CCTAG
     assert(presentIds.size()==128);
     for (const auto & desc : _regions.Descriptors())
     {
@@ -102,8 +111,8 @@ public:
       if( cctagId != UndefinedIndexT) // todo put an assert instead ?
         presentIds[cctagId] = true;
     }
-#endif    
   }
+#endif    
 
 public:
   //--
