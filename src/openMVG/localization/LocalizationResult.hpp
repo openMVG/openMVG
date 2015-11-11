@@ -51,7 +51,7 @@ private:
   
   cameras::Pinhole_Intrinsic_Radial_K3 _intrinsics;
 
-  bool _isValid; // True if the localization succedded, false otherwise
+  bool _isValid; // True if the localization succeeded, false otherwise
   
 private:
 
