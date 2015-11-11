@@ -28,7 +28,7 @@ std::size_t populateDatabase(const std::string &fileFullPath,
                              const VocabularyTree<VocDescriptorT> &tree,
                              Database &db,
                              std::map<size_t, Document> &documents)
-{
+{ 
   std::map<IndexT, std::string> descriptorsFiles;
   getListOfDescriptorFiles(fileFullPath, descriptorsFiles);
   std::size_t numDescriptors = 0;
@@ -56,7 +56,7 @@ std::size_t populateDatabase(const std::string &fileFullPath,
 
     // Update the overall counter
     numDescriptors += result;
-    
+
     ++display;
   }
 
@@ -83,12 +83,12 @@ void queryDatabase(const std::string &fileFullPath,
                    size_t numResults,
                    std::map<size_t, DocMatches> &allMatches,
                    std::map<size_t, Document> &documents)
-{
+{  
   std::map<IndexT, std::string> descriptorsFiles;
   getListOfDescriptorFiles(fileFullPath, descriptorsFiles);
   
   // Read the descriptors
-  std::cout << "Reading the descriptors from " << descriptorsFiles.size() << " files..." << std::endl;
+  std::cout << "Reading the descriptors from " << descriptorsFiles.size() <<" files..." << std::endl;
   boost::progress_display display(descriptorsFiles.size());
 
   // Run through the path vector and read the descriptors

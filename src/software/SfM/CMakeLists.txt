@@ -43,6 +43,12 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures
   vlsift
   )
 
+IF(OpenMVG_USE_CCTAG)
+TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures
+  ${CCTAG_LIBRARIES}
+  )
+ENDIF(OpenMVG_USE_CCTAG)
+
 ADD_EXECUTABLE(openMVG_main_ComputeMatches main_ComputeMatches.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_ComputeMatches
   openMVG_system

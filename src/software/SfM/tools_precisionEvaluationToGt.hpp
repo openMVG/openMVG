@@ -120,7 +120,8 @@ void EvaluteToGT(
   // -a. distance between camera center
   std::vector<double> vec_residualErrors;
   {
-    for (size_t i = 0; i  < vec_camPosGT.size(); ++i) {
+    for (size_t i = 0; i  < vec_camPosGT.size(); ++i)
+    {
       const double dResidual = (vec_camPosGT[i] - vec_camPosComputed_T[i]).norm();
       vec_residualErrors.push_back(dResidual);
     }

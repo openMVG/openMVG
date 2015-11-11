@@ -76,17 +76,43 @@ namespace sfm {
       typedef openMVG::robust::ACKernelAdaptorResection_K<
         SolverType, ResectionSquaredResidualError,
         openMVG::robust::UnnormalizerResection, Mat34>  KernelType;
-
-      KernelType kernel(resection_data.pt2D, resection_data.pt3D, pinhole_cam->K());
-      // Robust estimation of the Projection matrix and its precision
-      const std::pair<double,double> ACRansacOut =
-        openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision, true);
-      // Update the upper bound precision of the model found by AC-RANSAC
-      resection_data.error_max = ACRansacOut.first;
+      
+      // since the intrinsics are known undistort the input 2d points
+      //@fixe there is a lot of code redundancy in this solution; find better solution to
+      // avoid code duplication when calling ACRansacOut
+      if(pinhole_cam->have_disto())
+      {
+        const std::size_t numPts = resection_data.pt2D.cols();
+        Mat pt2Dundistorted = Mat2X(2, numPts);
+        for(std::size_t iPoint = 0; iPoint < numPts; ++iPoint)
+        {
+          pt2Dundistorted.col(iPoint) = pinhole_cam->get_ud_pixel(resection_data.pt2D.col(iPoint));
+         }
+        KernelType kernel = KernelType(pt2Dundistorted, resection_data.pt3D, pinhole_cam->K());
+        // Robust estimation of the Projection matrix and its precision
+        const std::pair<double,double> ACRansacOut =
+          openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision, true);
+        // Update the upper bound precision of the model found by AC-RANSAC
+        resection_data.error_max = ACRansacOut.first;
+      }
+      else
+      {
+        // otherwise we just pass the input points
+        KernelType kernel = KernelType(resection_data.pt2D, resection_data.pt3D, pinhole_cam->K());
+        // Robust estimation of the Projection matrix and its precision
+        const std::pair<double,double> ACRansacOut =
+          openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision, true);
+        // Update the upper bound precision of the model found by AC-RANSAC
+        resection_data.error_max = ACRansacOut.first;
+      }
     }
 
     // Test if the mode support some points (more than those required for estimation)
+#ifdef HAVE_CCTAG
+    const bool bResection = (resection_data.vec_inliers.size() > MINIMUM_SAMPLES);
+#else
     const bool bResection = (resection_data.vec_inliers.size() > 2.5 * MINIMUM_SAMPLES);
+#endif
 
     if (bResection)
     {

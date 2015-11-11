@@ -61,8 +61,8 @@ void queryDatabase(const std::string &fileFullPath,
  */
 template<class DescriptorT, class VocDescriptorT>
 void queryDatabase(const std::string &fileFullPath,
-                   const openMVG::voctree::VocabularyTree<VocDescriptorT> &tree,
-                   const openMVG::voctree::Database &db,
+                   const VocabularyTree<VocDescriptorT> &tree,
+                   const Database &db,
                    size_t numResults,
                    std::map<size_t, DocMatches> &allMatches);
 

@@ -31,7 +31,7 @@ static bool PairedIndMatchToStream(
     const size_t J = iter->first.second;
     const std::vector<IndMatch> & vec_matches = iter->second;
     os << I << " " << J << '\n' << vec_matches.size() << '\n';
-    std::copy(vec_matches.begin(), vec_matches.end(),
+    copy(vec_matches.begin(), vec_matches.end(),
          std::ostream_iterator<IndMatch>(os, "\n"));
   }
   return os.good();
@@ -41,7 +41,7 @@ static void ExportPairedIndMatchFile(
   const PairWiseMatches & map_indexedMatches,
   const std::string & filepath)
 {
-  std::ofstream file(filepath.c_str());
+  std::ofstream file(filepath);
   if (!file.is_open())
     throw std::runtime_error(std::string("Unable to open file: ") + filepath);
 

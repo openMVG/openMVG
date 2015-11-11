@@ -1,12 +1,5 @@
 IF(OpenMVG_BUILD_VOCTREE)
     ###
-    # Test the localization script
-    ###
-    ADD_EXECUTABLE(openMVG_main_localization main_localization.cpp)
-    INSTALL(TARGETS openMVG_main_localization DESTINATION bin/)
-    TARGET_LINK_LIBRARIES(openMVG_main_localization openMVG_localization openMVG_image openMVG_features vlsift ${BOOST_LIBRARIES})
-
-    ###
     # Test the localization class
     ###
     ADD_EXECUTABLE(openMVG_main_voctreeLocalizer main_voctreeLocalizer.cpp)
@@ -21,6 +14,15 @@ IF(OpenMVG_BUILD_VOCTREE)
     ADD_EXECUTABLE(openMVG_main_createVoctree createVoctree.cpp)
     INSTALL(TARGETS openMVG_main_createVoctree DESTINATION bin/)
     TARGET_LINK_LIBRARIES(openMVG_main_createVoctree openMVG_voctree openMVG_features ${BOOST_LIBRARIES})
+
+    IF(OpenMVG_USE_CCTAG)
+      ###
+      # Localize images in an existing SfM reconstruction based on CCTag features
+      ###
+      ADD_EXECUTABLE(openMVG_main_cctagLocalizer main_cctagLocalizer.cpp)
+      INSTALL(TARGETS openMVG_main_cctagLocalizer DESTINATION bin/)
+      TARGET_LINK_LIBRARIES(openMVG_main_cctagLocalizer openMVG_localization openMVG_dataio openMVG_image openMVG_features vlsift ${CCTAG_LIBRARIES} ${BOOST_LIBRARIES}) #todo: delete vlsift
+    ENDIF(OpenMVG_USE_CCTAG)
 
     ###
     # generate the pair lists
@@ -46,6 +48,8 @@ IF(OpenMVG_BUILD_VOCTREE)
     #INSTALL(TARGETS openMVG_main_generatePairList DESTINATION bin/)
 
 ENDIF(OpenMVG_BUILD_VOCTREE)
+
+
 
 ###
 # Localize images in an existing SfM reconstruction

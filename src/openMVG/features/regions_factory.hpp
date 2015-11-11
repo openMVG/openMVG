@@ -17,7 +17,8 @@ namespace features {
 typedef Scalar_Regions<SIOPointFeature,unsigned char,128> SIFT_Regions;
 /// Define the classic SIFT features using float representation
 typedef Scalar_Regions<SIOPointFeature,float,128> SIFT_Float_Regions;
-
+/// Define the classic CCTag Keypoint
+typedef Scalar_Regions<SIOPointFeature,unsigned char,128> CCTAG_Regions;
 /// Define the AKAZE Keypoint (with a float descriptor)
 typedef Scalar_Regions<SIOPointFeature,float,64> AKAZE_Float_Regions;
 /// Define the AKAZE Keypoint (with a LIOP descriptor)
