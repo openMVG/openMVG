@@ -108,6 +108,8 @@ bool SfM_Localizer::Localize
   }
 
   // Test if the mode support some points (more than those required for estimation)
+  // @fixme this is a compilation flag, this should be rather some sort of param to
+  // pass to the function
 #ifdef HAVE_CCTAG
   const bool bResection = (resection_data.vec_inliers.size() > MINIMUM_SAMPLES);
 #else
