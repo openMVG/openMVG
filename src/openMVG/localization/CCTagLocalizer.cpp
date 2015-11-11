@@ -154,7 +154,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::CCTAG_Regions());
   _image_describer.Describe(imageGrey, tmpQueryRegions);
   POPART_COUT("[features]\tExtract CCTAG done: found " << tmpQueryRegions->RegionCount() << " features");
-  features::CCTAG_Regions queryRegions = *dynamic_cast<features::CCTAG_Regions*> (tmpQueryRegions.get());
+  features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (tmpQueryRegions.get());
   
   std::vector<IndexT> nearestKeyFrames;
   nearestKeyFrames.reserve(param._nNearestKeyFrames);
