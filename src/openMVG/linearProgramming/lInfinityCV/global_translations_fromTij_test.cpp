@@ -1,75 +1,20 @@
+// Copyright (c) 2012 Pierre MOULON.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
 #include "openMVG/linearProgramming/lInfinityCV/global_translations_fromTij.hpp"
 
-#include "openMVG/multiview/essential.hpp"
-
-#include "openMVG/graph/triplet_finder.hpp"
-using namespace openMVG::graph;
-
-#include "third_party/vectorGraphics/svgDrawer.hpp"
-using namespace svg;
-
-#include "openMVG/multiview/test_data_sets.hpp"
+#include "openMVG/multiview/translation_averaging_test.hpp"
 #include "testing/testing.h"
-
-#include <fstream>
-#include <map>
-#include <utility>
-#include <vector>
 
 using namespace openMVG;
 using namespace openMVG::linearProgramming;
 using namespace lInfinityCV;
 using namespace std;
-
-int modifiedMod(int number, int modulus)
-{
-   int result = number % modulus;
-   if (result < 0) result += modulus;
-   return result;
-}
-
-//-- Export a series of camera positions to a SVG surface of specified squared size
-void visibleCamPosToSVGSurface(
-  const std::vector<Vec3> & vec_Ci,
-  const std::string & fileName)
-{
-  Mat points(3, vec_Ci.size());
-  for(size_t i = 0; i  < vec_Ci.size(); ++i)
-  {
-    points.col(i) = vec_Ci[i];
-  }
-
-  Vec mean, variance;
-  MeanAndVarianceAlongRows(points, &mean, &variance);
-
-  double xfactor = sqrt(2.0 / variance(0));
-  double yfactor = sqrt(2.0 / variance(2));
-
-  std::vector<Vec3> out = vec_Ci;
-  for(size_t i = 0; i  < vec_Ci.size(); ++i)
-  {
-    out[i](0) = ((out[i](0) * xfactor) + -xfactor * mean(0)) * 30 + 100;
-    out[i](2) = ((out[i](2) * yfactor) + -yfactor * mean(2)) * 30 + 100;
-  }
-
-  if (!fileName.empty())
-  {
-    const double size = 200;
-    svgDrawer svgSurface_GT(size,size);
-    for(size_t i = 0; i  < vec_Ci.size(); ++i)
-    {
-      svgSurface_GT.drawCircle(out[i](0), out[i](2),
-                               3,svgStyle().stroke("black",0.2).fill("red"));
-    }
-    std::ostringstream osSvgGT;
-    osSvgGT << fileName;
-    std::ofstream svgFileGT( osSvgGT.str().c_str());
-    svgFileGT << svgSurface_GT.closeSvgFile().str();
-  }
-}
 
 TEST(translation_averaging, globalTi_from_tijs) {
 
@@ -78,60 +23,26 @@ TEST(translation_averaging, globalTi_from_tijs) {
   //-- Setup a circular camera rig or "cardiod".
   const int iNviews = 12;
   const int iNbPoints = 6;
-  NViewDataSet d =
-    //NRealisticCamerasRing(
-    NRealisticCamerasCardioid(
-        iNviews, iNbPoints,
-        nViewDatasetConfigurator(focal,focal,principal_Point,principal_Point,5,0));
+
+  const bool bCardiod = true;
+  const bool bRelative_Translation_PerTriplet = true;
+  std::vector<openMVG::relativeInfo > vec_relative_estimates;
+
+  const NViewDataSet d =
+    Setup_RelativeTranslations_AndNviewDataset
+    (
+      vec_relative_estimates,
+      focal, principal_Point, iNviews, iNbPoints,
+      bCardiod, bRelative_Translation_PerTriplet
+    );
 
   d.ExportToPLY("global_translations_from_Tij_GT.ply");
-
   visibleCamPosToSVGSurface(d._C, "global_translations_from_Tij_GT.svg");
 
-  //- For each relative translations and rotations motions
-  std::vector<openMVG::relativeInfo > vec_initialEstimates;
-
-  //-- Setup initial pair that will be considered (link each camera to the two next)
-  std::vector< std::pair<size_t,size_t> > map_pairs;
-  for (size_t i = 0; i < iNviews; ++i)  {
-    for (size_t j=i; j<=i+2; ++j)
-    {
-      const size_t jj = modifiedMod(j,iNviews);
-      if (i != jj)
-        map_pairs.push_back(make_pair(i,jj));
-    }
-  }
-  
-  for (std::vector< std::pair<size_t,size_t> >::const_iterator
-    iter = map_pairs.begin();
-    iter != map_pairs.end();
-    ++iter)
-  {
-    const size_t I = (*iter).first;
-    const size_t J = (*iter).second;
-   
-    //-- Build camera alias over GT translations and rotations:
-    const Mat3 & RI = d._R[I];
-    const Mat3 & RJ = d._R[J];
-    const Vec3 & ti = d._t[I];
-    const Vec3 & tj = d._t[J];
-
-    //-- Build relative motions (that feeds the Linear program formulation)
-    {
-      Mat3 RijGt;
-      Vec3 tij;
-      RelativeCameraMotion(RI, ti, RJ, tj, &RijGt, &tij);
-      //-- normalize tij (keep only direction)
-      tij.normalize();
-      vec_initialEstimates.push_back(
-        std::make_pair(std::make_pair(I, J), std::make_pair(RijGt, tij)));
-    }
-  }
-  
   //-- Compute the global translations from the translation heading directions
   //-   with the L_infinity optimization
   // 3*NCam*[X,Y,Z] ; Ncam*[Lambda], [gamma]
-  std::vector<double> vec_solution(iNviews*3 + vec_initialEstimates.size() + 1);
+  std::vector<double> vec_solution(iNviews*3 + vec_relative_estimates.size() + 1);
 
   //- a. Setup the LP solver,
   //- b. Setup the constraints generator (for the dedicated L_inf problem),
@@ -142,7 +53,7 @@ TEST(translation_averaging, globalTi_from_tijs) {
   OSI_CLP_SolverWrapper solverLP(vec_solution.size());
 
   //- b. Setup the constraints generator (for the dedicated L_inf problem),
-  Tifromtij_ConstraintBuilder cstBuilder(vec_initialEstimates);
+  Tifromtij_ConstraintBuilder cstBuilder(vec_relative_estimates);
 
   //- c. Build constraints and solve the problem (Setup constraints and solver)
   LP_Constraints_Sparse constraint;
@@ -167,7 +78,7 @@ TEST(translation_averaging, globalTi_from_tijs) {
   std::copy(&vec_solution[0], &vec_solution[iNviews*3], &vec_camTranslation[0]);
 
   //-- Get back computed lambda factors
-  std::vector<double> vec_camRelLambdas(&vec_solution[iNviews*3], &vec_solution[iNviews*3 + vec_initialEstimates.size()]);
+  std::vector<double> vec_camRelLambdas(&vec_solution[iNviews*3], &vec_solution[iNviews*3 + vec_relative_estimates.size()]);
 
   // Check validity of the camera centers:
   // Check the direction since solution if found up to a scale

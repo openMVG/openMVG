@@ -54,6 +54,10 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
       KeepOnlyReferencedElement(set_remainingIds, relativeRotations);
     }
     break;
+    default:
+      std::cerr
+        << "Unknown relative rotation inference method: "
+        << (int) eRelativeRotationInferenceMethod << std::endl;
   }
 
   // Compute contiguous index (mapping between sparse index and contiguous index)
@@ -125,7 +129,9 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
     }
     break;
     default:
-    std::cerr << "Unknown rotation averaging method: " << (int) eRotationAveragingMethod << std::endl;
+      std::cerr
+        << "Unknown rotation averaging method: "
+        << (int) eRotationAveragingMethod << std::endl;
   }
 
   if (bSuccess)
@@ -154,45 +160,33 @@ void GlobalSfM_Rotation_AveragingSolver::TripletRotationRejection(
   RelativeRotations_map map_relatives = getMap(relativeRotations);
   RelativeRotations_map map_relatives_validated;
 
-  // DETECTION OF ROTATION OUTLIERS
+  //--
+  // ROTATION OUTLIERS DETECTION
+  //--
+
   std::vector< graph::Triplet > vec_triplets_validated;
+  vec_triplets_validated.reserve(vec_triplets.size());
 
   std::vector<float> vec_errToIdentityPerTriplet;
   vec_errToIdentityPerTriplet.reserve(vec_triplets.size());
-  // Compute for each length 3 cycles: the composition error
-  //  Error to identity rotation.
+  // Compute the composition error for each length 3 cycles
   for (size_t i = 0; i < vec_triplets.size(); ++i)
   {
     const graph::Triplet & triplet = vec_triplets[i];
     const IndexT I = triplet.i, J = triplet.j , K = triplet.k;
 
-    //-- Find the three rotations
-    const Pair ij(I,J);
-    const Pair ji(J,I);
+    //-- Find the three relative rotations
+    const Pair ij(I,J), ji(J,I);
+    const Mat3 RIJ = (map_relatives.count(ij)) ?
+      map_relatives.at(ij).Rij : Mat3(map_relatives.at(ji).Rij.transpose());
 
-    Mat3 RIJ;
-    if (map_relatives.find(ij) != map_relatives.end())
-      RIJ = map_relatives.at(ij).Rij;
-    else
-      RIJ = map_relatives.at(ji).Rij.transpose();
+    const Pair jk(J,K), kj(K,J);
+    const Mat3 RJK = (map_relatives.count(jk)) ?
+      map_relatives.at(jk).Rij : Mat3(map_relatives.at(kj).Rij.transpose());
 
-    const Pair jk(J,K);
-    const Pair kj(K,J);
-
-    Mat3 RJK;
-    if (map_relatives.find(jk) != map_relatives.end())
-      RJK = map_relatives.at(jk).Rij;
-    else
-      RJK = map_relatives.at(kj).Rij.transpose();
-
-    const Pair ki(K,I);
-    const Pair ik(I,K);
-
-    Mat3 RKI;
-    if (map_relatives.find(ki) != map_relatives.end())
-      RKI = map_relatives.at(ki).Rij;
-    else
-      RKI = map_relatives.at(ik).Rij.transpose();
+    const Pair ki(K,I), ik(I,K);
+    const Mat3 RKI = (map_relatives.count(ki)) ?
+      map_relatives.at(ki).Rij : Mat3(map_relatives.at(ik).Rij.transpose());
 
     const Mat3 Rot_To_Identity = RIJ * RJK * RKI; // motion composition
     const float angularErrorDegree = static_cast<float>(R2D(getRotationMagnitude(Rot_To_Identity)));
@@ -202,23 +196,23 @@ void GlobalSfM_Rotation_AveragingSolver::TripletRotationRejection(
     {
       vec_triplets_validated.push_back(triplet);
 
-      if (map_relatives.find(ij) != map_relatives.end())
+      if (map_relatives.count(ij))
         map_relatives_validated[ij] = map_relatives.at(ij);
       else
         map_relatives_validated[ji] = map_relatives.at(ji);
 
-      if (map_relatives.find(jk) != map_relatives.end())
+      if (map_relatives.count(jk))
         map_relatives_validated[jk] = map_relatives.at(jk);
       else
         map_relatives_validated[kj] = map_relatives.at(kj);
 
-      if (map_relatives.find(ki) != map_relatives.end())
+      if (map_relatives.count(ki))
         map_relatives_validated[ki] = map_relatives.at(ki);
       else
         map_relatives_validated[ik] = map_relatives.at(ik);
     }
   }
-  map_relatives.swap(map_relatives_validated);
+  map_relatives = std::move(map_relatives_validated);
 
   // update to keep only useful triplets
   relativeRotations.clear();
@@ -242,8 +236,7 @@ void GlobalSfM_Rotation_AveragingSolver::TripletRotationRejection(
     << "#Triplets after: " << vec_triplets_validated.size() << std::endl;
   }
 
-  vec_triplets.clear();
-  vec_triplets = vec_triplets_validated;
+  vec_triplets = std::move(vec_triplets_validated);
 
   const size_t edges_end_count = relativeRotations.size();
   std::cout << "\n #Edges removed by triplet inference: " << edges_start_count - edges_end_count << std::endl;

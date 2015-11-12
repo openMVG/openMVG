@@ -16,7 +16,7 @@ namespace sfm {
 /// Define 3D-2D tracking data: 3D landmark with it's 2D observations
 struct Observation
 {
-  Observation() {}
+  Observation():id_feat(UndefinedIndexT) {  }
   Observation(const Vec2 & p, IndexT idFeat): x(p), id_feat(idFeat) {}
 
   Vec2 x;
@@ -44,9 +44,17 @@ struct Observation
 /// Observations are indexed by their View_id
 typedef Hash_Map<IndexT, Observation> Observations;
 
-/// Define a landmark (a 3D point, with it's 2d observations)
+/**
+ * @brief Landmark is a 3D point with its 2d observations.
+ */
 struct Landmark
 {
+  Landmark() = default;
+  Landmark(const Vec3& pos3d, const Observations& observations = Observations())
+    : X(pos3d)
+    , obs(observations)
+  {}
+  
   Observations obs;
   Vec3 X;
 

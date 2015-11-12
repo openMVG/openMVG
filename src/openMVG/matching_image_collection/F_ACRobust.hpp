@@ -1,4 +1,3 @@
-
 // Copyright (c) 2012, 2013, 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -27,7 +26,7 @@ struct GeometricFilter_FMatrix_AC
 {
   GeometricFilter_FMatrix_AC(
     double dPrecision = std::numeric_limits<double>::infinity(),
-    size_t iteration = 4096)
+    size_t iteration = 1024)
     : m_dPrecision(dPrecision), m_stIteration(iteration), m_F(Mat3::Identity()),
       m_dPrecision_robust(std::numeric_limits<double>::infinity()){};
 
@@ -54,6 +53,52 @@ struct GeometricFilter_FMatrix_AC
     Mat xI,xJ;
     MatchesPairToMat(pairIndex, vec_PutativeMatches, sfm_data, regions_provider, xI, xJ);
 
+    std::vector<size_t> vec_inliers;
+    bool valid = Robust_estimation(
+        xI, xJ,
+        std::make_pair(sfm_data->GetViews().at(iIndex)->ui_width, sfm_data->GetViews().at(iIndex)->ui_height),
+        std::make_pair(sfm_data->GetViews().at(jIndex)->ui_width, sfm_data->GetViews().at(jIndex)->ui_height),
+        vec_inliers);
+
+    if (!valid)
+    {
+      return false;
+    }
+
+    // update geometric_inliers
+    geometric_inliers.reserve(vec_inliers.size());
+    for ( const size_t & index : vec_inliers)  
+    {
+      geometric_inliers.push_back( vec_PutativeMatches[index] );
+    }
+    return true;
+  }
+  
+    /// Robust fitting of the FUNDAMENTAL matrix
+  /**
+   * @brief Given two sets of image points, it estimates the fundamental matrix
+   * relating them using a robust method (A Contrario Ransac)
+   * 
+   * @param[in] xI The first set of points
+   * @param[in] xJ The second set of points
+   * @param[in] imageSizeI The size of the first image (used for normalizing the points)
+   * @param[in] imageSizeJ The size of the second image
+   * @param[out] geometric_inliers A vector containing the indices of the inliers
+   * @return true if the estimated fundamental matrix is supported by enough points,
+   * namely if there are at least KernelType::MINIMUM_SAMPLES *2.5 points supporting
+   * the estimated fundamental matrix 
+   */
+  bool Robust_estimation(
+    const Mat& xI,       // points of the first image
+    const Mat& xJ,       // points of the second image
+    const std::pair<size_t,size_t> & imageSizeI,     // size of the first image  
+    const std::pair<size_t,size_t> & imageSizeJ,     // size of the first image
+    std::vector<size_t> &vec_inliers)
+  {
+    using namespace openMVG;
+    using namespace openMVG::robust;
+    vec_inliers.clear();
+
     //--
     // Robust estimation
     //--
@@ -68,29 +113,26 @@ struct GeometricFilter_FMatrix_AC
       KernelType;
 
     const KernelType kernel(
-      xI, sfm_data->GetViews().at(iIndex)->ui_width, sfm_data->GetViews().at(iIndex)->ui_height,
-      xJ, sfm_data->GetViews().at(jIndex)->ui_width, sfm_data->GetViews().at(jIndex)->ui_height, true);
+      xI, imageSizeI.first, imageSizeI.second,
+      xJ, imageSizeJ.first, imageSizeJ.second, true);
 
     // Robustly estimate the Fundamental matrix with A Contrario ransac
     const double upper_bound_precision = Square(m_dPrecision);
-    std::vector<size_t> vec_inliers;
     const std::pair<double,double> ACRansacOut =
       ACRANSAC(kernel, vec_inliers, m_stIteration, &m_F, upper_bound_precision);
-
-    if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5)  {
-      m_dPrecision_robust = ACRansacOut.first;
-      // update geometric_inliers
-      geometric_inliers.reserve(vec_inliers.size());
-      for ( const size_t & index : vec_inliers)  {
-        geometric_inliers.push_back( vec_PutativeMatches[index] );
-      }
-      return true;
-    }
-    else  {
-      vec_inliers.clear();
-      return false;
-    }
+    
+#ifdef HAVE_CCTAG
+    bool valid = ( (vec_inliers.size() > KernelType::MINIMUM_SAMPLES) );
+#else
+    bool valid = ( (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5) );
+#endif
+    
+    // if the estimation has enough support set its precision
+    if(valid) m_dPrecision_robust = ACRansacOut.first;
+    
+    return valid;
   }
+  
 
   bool Geometry_guided_matching
   (
@@ -124,14 +166,16 @@ struct GeometricFilter_FMatrix_AC
         openMVG::fundamental::kernel::EpipolarDistanceError>(
         //openMVG::fundamental::kernel::SymmetricEpipolarDistanceError>(
         m_F,
-        cam_I, *regions_provider->regions_per_view.at(iIndex),
-        cam_J, *regions_provider->regions_per_view.at(jIndex),
+        cam_I, // cameras::IntrinsicBase
+        *regions_provider->regions_per_view.at(iIndex), // features::Regions
+        cam_J, // cameras::IntrinsicBase
+        *regions_provider->regions_per_view.at(jIndex), // features::Regions
         Square(m_dPrecision_robust), Square(dDistanceRatio),
         matches);
     }
     return matches.size() != 0;
   }
-
+  
   double m_dPrecision;  //upper_bound precision used for robust estimation
   size_t m_stIteration; //maximal number of iteration for robust estimation
   //
@@ -142,4 +186,3 @@ struct GeometricFilter_FMatrix_AC
 
 } // namespace openMVG
 } //namespace matching_image_collection
-

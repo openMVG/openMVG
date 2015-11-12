@@ -146,26 +146,27 @@ public:
       switch(preset)
       {
         case LOW_PRESET:
-          contrastThreshold = 0.02;
-          maxTotalKeypoints = 500;
-          break;
-        case MEDIUM_PRESET:
           contrastThreshold = 0.01;
           maxTotalKeypoints = 1000;
           break;
-        case NORMAL_PRESET:
+        case MEDIUM_PRESET:
           contrastThreshold = 0.005;
-          maxTotalKeypoints = 2000;
+          maxTotalKeypoints = 5000;
           break;
-        case HIGH_PRESET:
+        case NORMAL_PRESET:
           contrastThreshold = 0.005;
           edgeThreshold = 15;
           maxTotalKeypoints = 10000;
           break;
-        case ULTRA_PRESET:
+        case HIGH_PRESET:
           contrastThreshold = 0.005;
           edgeThreshold = 20;
           maxTotalKeypoints = 20000;
+          break;
+        case ULTRA_PRESET:
+          contrastThreshold = 0.005;
+          edgeThreshold = 20;
+          maxTotalKeypoints = 40000;
           break;
       }
       return true;
@@ -263,8 +264,8 @@ public:
 
         cv::Mat countFeatPerCell(_params.gridSize, _params.gridSize, cv::DataType<std::size_t>::type, cv::Scalar(0));
         const std::size_t keypointsPerCell = _params.maxTotalKeypoints / countFeatPerCell.total();
-        const std::size_t regionWidth = image.Width() / countFeatPerCell.cols;
-        const std::size_t regionHeight = image.Height() / countFeatPerCell.rows;
+        const double regionWidth = image.Width() / double(countFeatPerCell.cols);
+        const double regionHeight = image.Height() / double(countFeatPerCell.rows);
 
         std::cout << "Grid filtering -- keypointsPerCell: " << keypointsPerCell
                   << ", regionWidth: " << regionWidth
@@ -272,13 +273,13 @@ public:
 
         for(const cv::KeyPoint& keypoint: v_keypoints)
         {
-          const std::size_t cellX = std::size_t(keypoint.pt.x) / regionWidth;
-          const std::size_t cellY = std::size_t(keypoint.pt.y) / regionHeight;
+          const std::size_t cellX = std::min(std::size_t(keypoint.pt.x / regionWidth), _params.gridSize);
+          const std::size_t cellY = std::min(std::size_t(keypoint.pt.y / regionHeight), _params.gridSize);
           // std::cout << "- keypoint.pt.x: " << keypoint.pt.x << ", keypoint.pt.y: " << keypoint.pt.y << std::endl;
           // std::cout << "- cellX: " << cellX << ", cellY: " << cellY << std::endl;
           // std::cout << "- countFeatPerCell: " << countFeatPerCell << std::endl;
+          // std::cout << "- gridSize: " << _params.gridSize << std::endl;
 
-          assert(cellX < _params.gridSize && cellY < _params.gridSize);
           const std::size_t count = countFeatPerCell.at<std::size_t>(cellX, cellY);
           countFeatPerCell.at<std::size_t>(cellX, cellY) = count + 1;
           if(count < keypointsPerCell)
@@ -549,18 +550,22 @@ int main(int argc, char **argv)
       const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
         view->s_Img_path);
       const std::string sFeat = stlplus::create_filespec(sOutDir,
-        stlplus::basename_part(sView_filename), "feat");
+        stlplus::basename_part(std::to_string(view->id_view)), "feat");
       const std::string sDesc = stlplus::create_filespec(sOutDir,
-        stlplus::basename_part(sView_filename), "desc");
+        stlplus::basename_part(std::to_string(view->id_view)), "desc");
+      
 
       //If features or descriptors file are missing, compute them
       if (bForce || !stlplus::file_exists(sFeat) || !stlplus::file_exists(sDesc))
       {
         if (!ReadImage(sView_filename.c_str(), &imageGray))
+        {
+          std::cout << "Error: can't read image: " << sView_filename << std::endl;
           continue;
+        }
 
         // Compute features and descriptors and export them to files
-        std::cout << "Extracting features from image " << view->id_view << std::endl;
+        std::cout << "Extracting features from image " << view->id_view << " - (" << sFeat << ")" << std::endl;
         std::unique_ptr<Regions> regions;
 
         image_describer->Describe(imageGray, regions);

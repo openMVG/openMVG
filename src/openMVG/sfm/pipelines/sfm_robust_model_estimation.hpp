@@ -28,10 +28,13 @@ namespace sfm {
 * @param[out] R estimated rotation
 * @param[out] t estimated translation
 */
-  bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
-    const Mat & x1, const Mat & x2,
-    const Mat3 & E, const std::vector<size_t> & vec_inliers,
-    Mat3 * R, Vec3 * t);
+bool estimate_Rt_fromE
+(
+  const Mat3 & K1, const Mat3 & K2,
+  const Mat & x1, const Mat & x2,
+  const Mat3 & E, const std::vector<size_t> & vec_inliers,
+  Mat3 * R, Vec3 * t
+);
 
 struct RelativePose_Info
 {
@@ -60,37 +63,15 @@ struct RelativePose_Info
  * @param[in] size_ima2 width, height of image 2
  * @param[in] max iteration count
  */
-bool robustRelativePose(
+bool robustRelativePose
+(
   const Mat3 & K1, const Mat3 & K2,
   const Mat & x1, const Mat & x2,
   RelativePose_Info & relativePose_info,
   const std::pair<size_t, size_t> & size_ima1,
   const std::pair<size_t, size_t> & size_ima2,
-  const size_t max_iteration_count = 4096);
-
-/**
- * @brief Estimate the Absolute pose between 3D<->2D correspondences
- *  by using a robust pose estimation.
- *
- * @param[in] imageSize w,h of the image
- * @param[in] pt2D 2d point coordinates
- * @param[in] pt3D 3d point coordinates
- * @param[out] pvec_inliers (opt) inliers list
- * @param[in] (opt) K calibration matrix
- * @param[out] found projection matrix
- * @param[out] upper bound of tolerated precision found by robust estimation
- * @param[in] max iteration count
- */
-bool robustResection(
-  const std::pair<size_t,size_t> & imageSize,
-  const Mat & pt2D,
-  const Mat & pt3D,
-  std::vector<size_t> * pvec_inliers,
-  const Mat3 * K = NULL,
-  Mat34 * P = NULL,
-  double * maxError = NULL,
-  const size_t max_iteration = 4096);
-
+  const size_t max_iteration_count = 4096
+);
 
 } // namespace sfm
 } // namespace openMVG

@@ -7,14 +7,14 @@
 
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/features.hpp"
-#include "openMVG/matching/matcher_brute_force.hpp"
+#include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
 #include "openMVG/multiview/conditioning.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 
 #include "nonFree/sift/SIFT_describer.hpp"
-#include "openMVG_Samples/siftPutativeMatches/two_view_matches.hpp"
+#include "third_party/cmdLine/cmdLine.h"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
@@ -29,13 +29,56 @@ using namespace openMVG::robust;
 using namespace svg;
 using namespace std;
 
-int main() {
+features::EDESCRIBER_PRESET stringToEnum(const std::string & sPreset)
+{
+  features::EDESCRIBER_PRESET preset;
+  if(sPreset == "NORMAL")
+    preset = features::NORMAL_PRESET;
+  else
+  if (sPreset == "HIGH")
+    preset = features::HIGH_PRESET;
+  else
+  if (sPreset == "ULTRA")
+    preset = features::ULTRA_PRESET;
+  else
+    preset = features::EDESCRIBER_PRESET(-1);
+  return preset;
+}
+
+int main(int argc, char **argv) 
+{
 
   const std::string sInputDir = stlplus::folder_up(string(THIS_SOURCE_DIR))
     + "/imageData/SceauxCastle/";
   Image<RGBColor> image;
-  const string jpg_filenameL = sInputDir + "100_7101.jpg";
-  const string jpg_filenameR = sInputDir + "100_7102.jpg";
+  std::string jpg_filenameL = sInputDir + "100_7101.jpg";
+  std::string jpg_filenameR = sInputDir + "100_7102.jpg";
+  
+  std::string sFeaturePreset = "";
+  
+  CmdLine cmd;
+  cmd.add( make_option('l', jpg_filenameL, "left") );
+  cmd.add( make_option('r', jpg_filenameR, "right") );
+  cmd.add( make_option('p', sFeaturePreset, "describerPreset") );
+  
+  try {
+      if (argc == 1) throw std::string("Invalid command line parameter.");
+      cmd.process(argc, argv);
+  } catch(const std::string& s) {
+      std::cerr << "Usage: " << argv[0] << '\n'
+      << "\n[Optional]\n"
+      << "[-l|--left] the left image (default 100_7101.jpg)"
+      << "[-r|--right] the right image (default 100_7102.jpg)"
+      << "[-p|--describerPreset]\n"
+      << "  (used to control the Image_describer configuration):\n"
+      << "   NORMAL (default),\n"
+      << "   HIGH,\n"
+      << "   ULTRA: !!Can take long time!!\n"
+      << std::endl;
+
+      std::cerr << s << std::endl;
+      return EXIT_FAILURE;
+  }
 
   Image<unsigned char> imageL, imageR;
   ReadImage(jpg_filenameL.c_str(), &imageL);
@@ -46,6 +89,15 @@ int main() {
   //--
   using namespace openMVG::features;
   std::unique_ptr<Image_describer> image_describer(new SIFT_Image_describer);
+  if (!sFeaturePreset.empty())
+  {
+    if (!image_describer->Set_configuration_preset(stringToEnum(sFeaturePreset)))
+    {
+      std::cerr << "Preset configuration failed." << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
+ 
   std::map<IndexT, std::unique_ptr<features::Regions> > regions_perImage;
   image_describer->Describe(imageL, regions_perImage[0]);
   image_describer->Describe(imageR, regions_perImage[1]);
@@ -86,21 +138,19 @@ int main() {
   std::vector<IndMatch> vec_PutativeMatches;
   //-- Perform matching -> find Nearest neighbor, filtered with Distance ratio
   {
-    // Define a matcher and a metric to find corresponding points
-    typedef SIFT_Regions::DescriptorT DescriptorT;
-    typedef L2_Vectorized<DescriptorT::bin_type> Metric;
-    typedef ArrayMatcherBruteForce<DescriptorT::bin_type, Metric> MatcherT;
-    // Distance ratio squared due to squared metric
-    getPutativesMatches<DescriptorT, MatcherT>(
-      ((SIFT_Regions*)regions_perImage.at(0).get())->Descriptors(),
-      ((SIFT_Regions*)regions_perImage.at(1).get())->Descriptors(),
-      Square(0.8), vec_PutativeMatches);
+    // Find corresponding points
+    matching::DistanceRatioMatch(
+      0.8, matching::BRUTE_FORCE_L2,
+      *regions_perImage.at(0).get(),
+      *regions_perImage.at(1).get(),
+      vec_PutativeMatches);
 
     // Draw correspondences after Nearest Neighbor ratio filter
     svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
     svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
     svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
-    for (size_t i = 0; i < vec_PutativeMatches.size(); ++i) {
+    for (size_t i = 0; i < vec_PutativeMatches.size(); ++i) 
+    {
       //Get back linked feature, draw a circle and link them by a line
       const SIOPointFeature L = regionsL->Features()[vec_PutativeMatches[i]._i];
       const SIOPointFeature R = regionsR->Features()[vec_PutativeMatches[i]._j];
@@ -120,7 +170,8 @@ int main() {
     Mat xL(2, vec_PutativeMatches.size());
     Mat xR(2, vec_PutativeMatches.size());
 
-    for (size_t k = 0; k < vec_PutativeMatches.size(); ++k)  {
+    for (size_t k = 0; k < vec_PutativeMatches.size(); ++k)
+    {
       const PointFeature & imaL = featsL[vec_PutativeMatches[k]._i];
       const PointFeature & imaR = featsR[vec_PutativeMatches[k]._j];
       xL.col(k) = imaL.coords().cast<double>();
@@ -148,8 +199,8 @@ int main() {
     const double & thresholdF = ACRansacOut.first;
 
     // Check the fundamental support some point to be considered as valid
-    if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5) {
-
+    if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5) 
+    {
       std::cout << "\nFound a fundamental under the confidence threshold of: "
         << thresholdF << " pixels\n\twith: " << vec_inliers.size() << " inliers"
         << " from: " << vec_PutativeMatches.size()
@@ -161,7 +212,8 @@ int main() {
       svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
       svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
       svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
-      for ( size_t i = 0; i < vec_inliers.size(); ++i)  {
+      for ( size_t i = 0; i < vec_inliers.size(); ++i)  
+      {
         const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[vec_inliers[i]]._i];
         const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[vec_inliers[i]]._j];
         const Vec2f L = LL.coords();
@@ -191,7 +243,8 @@ int main() {
         << "\t-- Residual max:\t "  << dMax << std::endl
         << "\t-- Residual mean:\t " << dMean << std::endl;
     }
-    else  {
+    else  
+    {
       std::cout << "ACRANSAC was unable to estimate a rigid fundamental"
         << std::endl;
     }

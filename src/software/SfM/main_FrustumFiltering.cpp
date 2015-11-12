@@ -33,7 +33,7 @@ Pair_Set BuildPairsFromStructureObservations(const SfM_Data & sfm_data)
       const IndexT id_viewI = iterI->first;
       Observations::const_iterator iterJ = landmark.obs.begin();
       std::advance(iterJ, 1);
-      for (iterJ; iterJ != landmark.obs.end(); ++iterJ)
+      for (; iterJ != landmark.obs.end(); ++iterJ)
       {
         const IndexT id_viewJ = iterJ->first;
         pairs.insert( std::make_pair(id_viewI,id_viewJ));

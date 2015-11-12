@@ -66,6 +66,8 @@ int main(int argc, char **argv)
   std::string sSfM_Data_Filename;
   std::string sMatchesDir;
   std::string sOutDir = "";
+  std::string sOutSfMDataFilepath = "";
+  std::string sOutInterFileExtension = ".ply";
   std::pair<std::string,std::string> initialPairString("","");
   bool bRefineIntrinsics = true;
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
@@ -74,6 +76,8 @@ int main(int argc, char **argv)
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
   cmd.add( make_option('o', sOutDir, "outdir") );
+  cmd.add( make_option('s', sOutSfMDataFilepath, "out_sfmdata_file") );
+  cmd.add( make_option('e', sOutInterFileExtension, "inter_file_extension") );
   cmd.add( make_option('a', initialPairString.first, "initialPairA") );
   cmd.add( make_option('b', initialPairString.second, "initialPairB") );
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
@@ -88,8 +92,10 @@ int main(int argc, char **argv)
     << "[-i|--input_file] path to a SfM_Data scene\n"
     << "[-m|--matchdir] path to the matches that corresponds to the provided SfM_Data scene\n"
     << "[-o|--outdir] path where the output data will be stored\n"
-    << "[-a|--initialPairA] NAME \n"
-    << "[-b|--initialPairB] NAME \n"
+    << "[-s|--out_sfmdata_file] path of the output sfmdata file (default: $outdir/sfm_data.json)\n"
+    << "[-e|--inter_file_extension] extension of the intermediate file export (default: .ply)\n"
+    << "[-a|--initialPairA] filename of the first image (without path)\n"
+    << "[-b|--initialPairB] filename of the second image (without path)\n"
     << "[-c|--camera_model] Camera model type for view with unknown intrinsic:\n"
       << "\t 1: Pinhole \n"
       << "\t 2: Pinhole radial 1\n"
@@ -104,6 +110,9 @@ int main(int argc, char **argv)
     std::cerr << s << std::endl;
     return EXIT_FAILURE;
   }
+
+  if(sOutSfMDataFilepath.empty())
+    sOutSfMDataFilepath = stlplus::create_filespec(sOutDir, "sfm_data", "json");
 
   // Load input SfM_Data scene
   SfM_Data sfm_data;
@@ -193,12 +202,18 @@ int main(int argc, char **argv)
   sfmEngine.Set_bFixedIntrinsics(!bRefineIntrinsics);
   sfmEngine.SetUnknownCameraType(EINTRINSIC(i_User_camera_model));
 
+  sfmEngine.setSfmdataInterFileExtension(sOutInterFileExtension);
+
   // Handle Initial pair parameter
   if (!initialPairString.first.empty() && !initialPairString.second.empty())
   {
     Pair initialPairIndex;
     if(!computeIndexFromImageNames(sfm_data, initialPairString, initialPairIndex))
+    {
+        std::cerr << "Could not find the initial pairs <" << initialPairString.first 
+          <<  ", " << initialPairString.second << ">!\n";
       return EXIT_FAILURE;
+    }
     sfmEngine.setInitialPair(initialPairIndex);
   }
 
@@ -211,14 +226,12 @@ int main(int argc, char **argv)
       stlplus::create_filespec(sOutDir, "SfMReconstruction_Report.html"));
 
     //-- Export to disk computed scene (data & visualizable results)
-    std::cout << "...Export SfM_Data to disk." << std::endl;
-    Save(sfmEngine.Get_SfM_Data(),
-      stlplus::create_filespec(sOutDir, "sfm_data", ".json"),
-      ESfM_Data(ALL));
+    std::cout << "...Export SfM_Data to disk:" << std::endl;
+    std::cout << "   " << sOutSfMDataFilepath << std::endl;
 
-    Save(sfmEngine.Get_SfM_Data(),
-      stlplus::create_filespec(sOutDir, "cloud_and_poses", ".ply"),
-      ESfM_Data(ALL));
+    Save(sfmEngine.Get_SfM_Data(), sOutSfMDataFilepath, ESfM_Data(ALL));
+
+    Save(sfmEngine.Get_SfM_Data(), stlplus::create_filespec(sOutDir, "cloud_and_poses", sOutInterFileExtension), ESfM_Data(VIEWS | EXTRINSICS | INTRINSICS | STRUCTURE));
 
     return EXIT_SUCCESS;
   }

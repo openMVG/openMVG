@@ -40,20 +40,34 @@ public:
 
 protected:
   /// Compute from relative rotations the global rotations of the camera poses
-  bool Compute_Global_Rotations();
+  bool Compute_Global_Rotations
+  (
+    const openMVG::rotation_averaging::RelativeRotations & vec_relatives_R,
+    Hash_Map<IndexT, Mat3> & map_globalR
+  );
 
   /// Compute/refine relative translations and compute global translations
-  bool Compute_Global_Translations();
+  bool Compute_Global_Translations
+  (
+    const Hash_Map<IndexT, Mat3> & global_rotations,
+    matching::PairWiseMatches & tripletWise_matches
+  );
 
   /// Compute the initial structure of the scene
-  bool Compute_Initial_Structure();
+  bool Compute_Initial_Structure
+  (
+    matching::PairWiseMatches & tripletWise_matches
+  );
 
   // Adjust the scene (& remove outliers)
   bool Adjust();
 
 private:
   /// Compute relative rotations
-  void Compute_Relative_Rotations(RelativeInfo_Map & vec_relatives);
+  void Compute_Relative_Rotations
+  (
+    openMVG::rotation_averaging::RelativeRotations & vec_relatives_R
+  );
 
   //----
   //-- Data
@@ -72,12 +86,6 @@ private:
   Matches_Provider  * _matches_provider;
 
   std::shared_ptr<Features_Provider> _normalized_features_provider;
-
-  // Temporary data
-  RelativeInfo_Map _relatives_Rt; // The relative [R|t] extracted from essential matrices
-  Hash_Map<IndexT, Mat3> _map_globalR; // The global rotations
-  matching::PairWiseMatches _tripletWise_matches; // Matches valided by triplet at the translation averaging step
-
 };
 
 } // namespace sfm

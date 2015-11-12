@@ -195,7 +195,7 @@ bool Bundle_Adjustment_Ceres::Adjust(
       itObs != obs.end(); ++itObs)
     {
       // Build the residual block corresponding to the track observation:
-      const View * view = sfm_data.views[itObs->first].get();
+      const View * view = sfm_data.views.at(itObs->first).get();
 
       // Each Residual block takes a point and a camera as input and outputs a 2
       // dimensional residual. Internally, the cost function stores the observed
@@ -252,6 +252,7 @@ bool Bundle_Adjustment_Ceres::Adjust(
         << " #residuals: " << summary.num_residuals << "\n"
         << " Initial RMSE: " << std::sqrt( summary.initial_cost / summary.num_residuals) << "\n"
         << " Final RMSE: " << std::sqrt( summary.final_cost / summary.num_residuals) << "\n"
+        << " Time (s): " << summary.total_time_in_seconds << "\n"
         << std::endl;
     }
 

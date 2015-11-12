@@ -93,42 +93,40 @@ bool retrieveResources(const std::string& jsonFile, std::vector<std::string>& ve
   }
 
   // Read file
-  std::ifstream jsonStream(jsonFile.c_str(), std::ifstream::binary);
-  if(jsonStream)
-  {
-    // get length of file:
-    jsonStream.seekg (0, jsonStream.end);
-    const int length = jsonStream.tellg();
-    jsonStream.seekg (0, jsonStream.beg);
-    // read data as a block:
-    std::string jsonString;
-    jsonString.resize(length);
-    jsonStream.read(&jsonString[0], length);
-    jsonStream.close();
-    if(!jsonStream)
-    {
-      std::cerr << "Error when reading file." << std::endl;
-      return false;
-    }
-    // Parse json
-    rapidjson::Document document;
-    document.Parse<0>(&jsonString[0]);
-    if(!document.IsObject())
-    {
-      std::cerr << "File \"" << jsonFile << "\" is not in json format." << std::endl;
-      return false;
-    }
-    if(!document.HasMember("resources"))
-    {
-      std::cerr << "No member \"resources\" in json file" << std::endl;
-      return false;
-    }
-    rapidjson::Value& resourcesValue = document["resources"];
-    for(rapidjson::Value::ConstValueIterator it = resourcesValue.Begin(); it != resourcesValue.End(); it++)
-      vec_imagePaths.push_back(it->GetString());
+  std::ifstream jsonStream(jsonFile, std::ifstream::binary);
+  
+  if(!jsonStream.is_open())
+    throw std::runtime_error("Unable to open "+jsonFile);
 
-    return true;
+  // get length of file:
+  jsonStream.seekg (0, jsonStream.end);
+  const int length = jsonStream.tellg();
+  jsonStream.seekg (0, jsonStream.beg);
+  // read data as a block:
+  std::string jsonString;
+  jsonString.resize(length);
+  jsonStream.read(&jsonString[0], length);
+  jsonStream.close();
+
+  // Parse json
+  rapidjson::Document document;
+  document.Parse<0>(&jsonString[0]);
+  if(!document.IsObject())
+  {
+    std::cerr << "File \"" << jsonFile << "\" is not in json format." << std::endl;
+    return false;
   }
+  if(!document.HasMember("resources"))
+  {
+    std::cerr << "No member \"resources\" in json file" << std::endl;
+    return false;
+  }
+  rapidjson::Value& resourcesValue = document["resources"];
+  for(rapidjson::Value::ConstValueIterator it = resourcesValue.Begin(); it != resourcesValue.End(); it++)
+    vec_imagePaths.push_back(it->GetString());
+
+  return true;
+
 }
 
 //
@@ -400,6 +398,14 @@ int main(int argc, char **argv)
           std::cerr << "Error: unknown camera model: " << (int) e_User_camera_model << std::endl;
           return EXIT_FAILURE;
       }
+    }
+    else
+    {
+      std::cerr << "Error: No instrinsics for \"" << imageFilename << "\".\n"
+        << "focal: " << focal << "\n"
+        << "ppx,ppy: " << ppx << ", " << ppy << "\n"
+        << "width,height: " << width << ", " << height
+        << std::endl;
     }
 
     IndexT id_view = views.size();

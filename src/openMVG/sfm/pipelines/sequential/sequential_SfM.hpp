@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/pipelines/sfm_engine.hpp"
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
@@ -54,6 +55,9 @@ public:
   /// Compute the initial 3D seed (First camera t=0; R=Id, second estimated by 5 point algorithm)
   bool MakeInitialPair3D(const Pair & initialPair);
 
+  /// Automatic initial pair selection (based on a 'baseline' computation score)
+  bool AutomaticInitialPairChoice(Pair & initialPair) const;
+
   /**
    * Set the default lens distortion type to use if it is declared unknown
    * in the intrinsics camera parameters by the previous steps.
@@ -63,6 +67,14 @@ public:
   void SetUnknownCameraType(const cameras::EINTRINSIC camType)
   {
     _camType = camType;
+  }
+  
+  /**
+   * @brief Extension of the file format to store intermediate reconstruction files.
+   */
+  void setSfmdataInterFileExtension(const std::string& interFileExtension)
+  {
+    _sfmdataInterFileExtension = interFileExtension;
   }
 
 protected:
@@ -76,13 +88,13 @@ private:
   /// List the images that the greatest number of matches to the current 3D reconstruction.
   bool FindImagesWithPossibleResection(
     std::vector<size_t>& vec_possible_indexes,
-    const std::set<size_t>& set_remainingViewId) const;
+    std::set<size_t>& set_remainingViewId) const;
 
   /// Add a single Image to the scene and triangulate new possible tracks.
-  bool Resection(size_t imageIndex);
+  bool Resection(const size_t imageIndex);
 
   /// Bundle adjustment to refine Structure; Motion and Intrinsics
-  void BundleAdjustment();
+  bool BundleAdjustment();
 
   /// Discard track with too large residual error
   size_t badTrackRejector(double dPrecision, size_t count = 0);
@@ -94,6 +106,10 @@ private:
   // HTML logger
   std::shared_ptr<htmlDocument::htmlDocumentStream> _htmlDocStream;
   std::string _sLoggingFile;
+
+  // Extension of the file format to store intermediate reconstruction files.
+  std::string _sfmdataInterFileExtension = ".ply";
+  ESfM_Data _sfmdataInterFilter = ESfM_Data(VIEWS | EXTRINSICS | INTRINSICS | STRUCTURE);
 
   // Parameter
   Pair _initialpair;

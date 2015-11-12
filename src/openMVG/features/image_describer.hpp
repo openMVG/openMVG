@@ -14,6 +14,9 @@
 #include <memory>
 #include <cereal/cereal.hpp> // Serialization
 
+#include <exception>
+#include <string>
+
 namespace openMVG {
 namespace features {
 
@@ -41,6 +44,21 @@ inline EDESCRIBER_PRESET describerPreset_stringToEnum(const std::string& sPreset
   return NORMAL_PRESET;
 }
 
+inline std::string describerPreset_enumToString(const EDESCRIBER_PRESET preset)
+{
+  if(preset == LOW_PRESET)
+    return "LOW";
+  if (preset == MEDIUM_PRESET)
+    return "MEDIUM";
+  if(preset == NORMAL_PRESET)
+    return "NORMAL";
+  if (preset == HIGH_PRESET)
+    return "HIGH";
+  if (preset == ULTRA_PRESET)
+    return "ULTRA";
+  throw std::invalid_argument("Unrecognized EDESCRIBER_PRESET "+std::to_string(preset));
+}
+
 
 /// A pure virtual class for image description computation
 class Image_describer
@@ -58,7 +76,7 @@ public:
 
   bool Set_configuration_preset(const std::string& preset)
   {
-    Set_configuration_preset(describerPreset_stringToEnum(preset));
+    return Set_configuration_preset(describerPreset_stringToEnum(preset));
   }
 
   /**

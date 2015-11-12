@@ -15,7 +15,10 @@ namespace features {
 
 /// Define the classic SIFT Keypoint
 typedef Scalar_Regions<SIOPointFeature,unsigned char,128> SIFT_Regions;
-
+/// Define the classic SIFT features using float representation
+typedef Scalar_Regions<SIOPointFeature,float,128> SIFT_Float_Regions;
+/// Define the classic CCTag Keypoint
+typedef Scalar_Regions<SIOPointFeature,unsigned char,128> CCTAG_Regions;
 /// Define the AKAZE Keypoint (with a float descriptor)
 typedef Scalar_Regions<SIOPointFeature,float,64> AKAZE_Float_Regions;
 /// Define the AKAZE Keypoint (with a LIOP descriptor)
@@ -33,6 +36,7 @@ typedef Binary_Regions<SIOPointFeature,64> AKAZE_Binary_Regions;
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/archives/json.hpp>
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::SIFT_Regions, "SIFT_Regions");
+CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::SIFT_Float_Regions, "SIFT_Float_Regions");
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Float_Regions, "AKAZE_Float_Regions");
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Liop_Regions, "AKAZE_Liop_Regions");
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Binary_Regions, "AKAZE_Binary_Regions");

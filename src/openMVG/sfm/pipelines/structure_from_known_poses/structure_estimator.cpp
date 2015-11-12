@@ -199,7 +199,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
 
         if (map_matchesIJK.size() >= 2) {
           tracksBuilder.Build(map_matchesIJK);
-          tracksBuilder.Filter(3);
+          tracksBuilder.Filter(3, false);
           tracksBuilder.ExportToSTL(map_tracksCommon);
         }
 
@@ -219,7 +219,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
               trianObj.add(cam->get_projective_equivalent(pose), cam->get_ud_pixel(pt));
             }
             const Vec3 Xs = trianObj.compute();
-            if (trianObj.minDepth() > 0 && trianObj.error() < 4.0)
+            if (trianObj.minDepth() > 0 && trianObj.error()/(double)trianObj.size() < 4.0)
             // TODO: Add an angular check ?
             {
               #ifdef OPENMVG_USE_OPENMP

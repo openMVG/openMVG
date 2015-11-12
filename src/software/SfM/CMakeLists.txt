@@ -43,6 +43,12 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures
   vlsift
   )
 
+IF(OpenMVG_USE_CCTAG)
+TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures
+  ${CCTAG_LIBRARIES}
+  )
+ENDIF(OpenMVG_USE_CCTAG)
+
 ADD_EXECUTABLE(openMVG_main_ComputeMatches main_ComputeMatches.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_ComputeMatches
   openMVG_system
@@ -224,16 +230,13 @@ TARGET_LINK_LIBRARIES(openMVG_main_openMVG2CMPMVS
 # - Export a SfM openMVG scene to MVE(v2) format
 #
 ADD_EXECUTABLE(openMVG_main_openMVG2MVE2 main_openMVG2MVE2.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVE2 ${OpenMVG_LIBRARIES})
-
-# - Export a SfM openMVG scene to Alembic format
-#
-FIND_PACKAGE(Alembic)
-if (ALEMBIC_FOUND)
-  ADD_EXECUTABLE(openMVG_main_openMVG2ABC main_openMVG2ABC.cpp)
-  INCLUDE_DIRECTORIES(${ABC_INCLUDE_DIR})
-  TARGET_LINK_LIBRARIES(openMVG_main_openMVG2ABC ${ABC_LIBRARIES} ${OpenMVG_LIBRARIES})
-endif(ALEMBIC_FOUND)
+TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVE2 
+  openMVG_system
+  openMVG_image
+  openMVG_features
+  openMVG_sfm
+  stlplus
+  )
 
 # - Export a SfM openMVG scene to meshlab scene with rasters
 # -
@@ -285,20 +288,9 @@ INSTALL(TARGETS openMVG_main_ExportCameraFrustums DESTINATION bin/)
 # Use openCV Feature detector to describe the images
 # -
 IF(OpenMVG_USE_OPENCV)
-  FIND_PACKAGE( OpenCV )
-  INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
-  IF(NOT OpenCV_FOUND)
-    MESSAGE(STATUS "WARNING: OpenCV was not found. ")
-  ELSE(NOT OpenCV_FOUND)
-
-    ADD_EXECUTABLE(openMVG_main_ComputeFeatures_OpenCV
+  ADD_EXECUTABLE(openMVG_main_ComputeFeatures_OpenCV
       main_ComputeFeatures_OpenCV.cpp)
-    IF(OpenMVG_USE_OCVSIFT)
-        TARGET_COMPILE_DEFINITIONS(openMVG_main_ComputeFeatures_OpenCV
-                                   PUBLIC
-                                   -DUSE_OCVSIFT)
-    ENDIF(OpenMVG_USE_OCVSIFT)
-    TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures_OpenCV
+  TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures_OpenCV
       openMVG_system
       openMVG_image
       openMVG_features
@@ -308,11 +300,9 @@ IF(OpenMVG_USE_OPENCV)
       vlsift
       ${OpenCV_LIBS})
 
-    SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY FOLDER OpenMVG/software)
-    SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
-    INSTALL(TARGETS openMVG_main_ComputeFeatures_OpenCV DESTINATION bin/)
-
-  ENDIF(NOT OpenCV_FOUND)
+  SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY FOLDER OpenMVG/software)
+  SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
+  INSTALL(TARGETS openMVG_main_ComputeFeatures_OpenCV DESTINATION bin/)
 ENDIF(OpenMVG_USE_OPENCV)
 
 
