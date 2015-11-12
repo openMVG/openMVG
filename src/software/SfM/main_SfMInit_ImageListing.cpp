@@ -457,5 +457,20 @@ int main(int argc, char **argv)
     << "listed #File(s): " << vec_images.size() << "\n"
     << "usable #File(s) listed in sfm_data: " << sfm_data.GetViews().size() << std::endl;
 
+  std::size_t viewsWithoutMetatada = 0;
+  for(const auto& viewValue: sfm_data.GetViews())
+  {
+    if(viewValue.second->id_intrinsic == UndefinedIndexT)
+      ++viewsWithoutMetatada;
+  }
+  if(viewsWithoutMetatada == sfm_data.GetViews().size())
+  {
+    std::cerr << "ERROR: No metadata in images." << std::endl;
+    return EXIT_FAILURE;
+  }
+  else if(viewsWithoutMetatada)
+  {
+    std::cerr << "WARNING: " << viewsWithoutMetatada << " views without metadata. It may fail the reconstruction." << std::endl;
+  }
   return EXIT_SUCCESS;
 }
