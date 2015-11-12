@@ -393,6 +393,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
   if (iterIntrinsic_I == _sfm_data.GetIntrinsics().end() ||
       iterIntrinsic_J == _sfm_data.GetIntrinsics().end() )
   {
+    std::cerr << "Initial pair: Input intrinsic not found: " << view_I->id_intrinsic << ", "  << view_J->id_intrinsic << std::endl;
     return false;
   }
 
@@ -400,6 +401,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
   const Pinhole_Intrinsic * cam_J = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_J->second.get());
   if (cam_I == NULL || cam_J == NULL)
   {
+    std::cerr << "Initial pair: Input intrinsic unrecognized: " << view_I->id_intrinsic << ", "  << view_J->id_intrinsic << std::endl;
     return false;
   }
 
