@@ -16,18 +16,14 @@ class AlembicExporter
 {
 public:
 
-  AlembicExporter(const std::string &filename)
-  : archive(Alembic::AbcCoreHDF5::WriteArchive(), filename)
-  , topObj(archive, Alembic::Abc::kTop)
-  , counter(0)
-  {
-  }
+  AlembicExporter(const std::string &filename);
 
   /**
    * @brief Add a set of 3D points from a SFM scene
    * @param points The 3D points to add
    */
-  void addPoints(const sfm::Landmarks &points, bool withVisibility=true);
+  void addPoints(const sfm::Landmarks &points,
+                 bool withVisibility=true);
 
   /**
    * @brief Add a single camera
@@ -57,6 +53,10 @@ public:
 private:
   Alembic::Abc::OArchive archive;
   Alembic::Abc::OObject topObj;
+  Alembic::Abc::OObject mvgRoot;
+  Alembic::Abc::OObject mvgCameras;
+  Alembic::Abc::OObject mvgCloud;
+  Alembic::Abc::OObject mvgPointCloud;
   unsigned int counter;
 };
 

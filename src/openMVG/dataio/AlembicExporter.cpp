@@ -18,6 +18,19 @@ using namespace Alembic::Abc;
 namespace AbcG = Alembic::AbcGeom;
 using namespace AbcG;
 
+AlembicExporter::AlembicExporter(const std::string &filename)
+: archive(Alembic::AbcCoreHDF5::WriteArchive(), filename)
+, topObj(archive, Alembic::Abc::kTop)
+, counter(0)
+{
+  // Create MVG hierarchy
+  mvgRoot = Alembic::Abc::OObject(topObj, "mvgRoot");
+  mvgCameras = Alembic::Abc::OObject(mvgRoot, "mvgCameras");
+  mvgCloud = Alembic::Abc::OObject(mvgRoot, "mvgCloud");
+  mvgPointCloud = Alembic::Abc::OObject(mvgCloud, "mvgPointCloud"); 
+
+}
+
 AlembicExporter::~AlembicExporter()
 {
 }
@@ -41,7 +54,7 @@ void AlembicExporter::addPoints(const sfm::Landmarks &landmarks, bool withVisibi
   std::vector<Alembic::Util::uint64_t> ids(positions.size());
   iota(begin(ids), end(ids), 0);
 
-  OPoints partsOut(topObj, "particleShape1");
+  OPoints partsOut(mvgPointCloud, "particleShape1");
   OPointsSchema &pSchema = partsOut.getSchema();
 
   OPointsSchema::Sample psamp(std::move(V3fArraySample(positions)), std::move(UInt64ArraySample(ids)));
@@ -58,10 +71,12 @@ void AlembicExporter::addPoints(const sfm::Landmarks &landmarks, bool withVisibi
     }
     std::size_t nbObservations = std::accumulate(visibilitySize.begin(), visibilitySize.end(), 0);
     
-    std::vector<V2i> visibilityIds;
-    visibilityIds.reserve(nbObservations);
-    std::vector<V2f> featPos2d;
-    featPos2d.reserve(nbObservations);
+    // Use std::vector<uint32_t> and std::vector<float> instead of std::vector<V2i> and std::vector<V2f>
+    // Because Maya don't import them correctly
+    std::vector<uint32_t> visibilityIds;
+    visibilityIds.reserve(nbObservations*2);
+    std::vector<float>featPos2d;
+    featPos2d.reserve(nbObservations*2);
 
     for(sfm::Landmarks::const_iterator itLandmark = landmarks.cbegin(), itLandmarkEnd = landmarks.cend();
        itLandmark != itLandmarkEnd; ++itLandmark)
@@ -71,21 +86,23 @@ void AlembicExporter::addPoints(const sfm::Landmarks &landmarks, bool withVisibi
       {
         const sfm::Observation& obs = vObs.second;
         // (View ID, Feature ID)
-        visibilityIds.emplace_back(vObs.first, obs.id_feat);
+        visibilityIds.emplace_back(vObs.first);
+        visibilityIds.emplace_back(obs.id_feat);
         // Feature 2D position (x, y))
-        featPos2d.emplace_back(obs.x[0], obs.x[1]);
+        featPos2d.emplace_back(obs.x[0]);
+        featPos2d.emplace_back(obs.x[1]);
       }
     }
 
-    OUInt32ArrayProperty propVisibilitySize( pSchema, "mvg_visibilitySize" );
+    OUInt32ArrayProperty propVisibilitySize( userProps, "mvg_visibilitySize" );
     propVisibilitySize.set(visibilitySize);
 
     // (viewID, featID)
-    OV2iArrayProperty propVisibilityIds( pSchema, "mvg_visibilityIds" );
+    OUInt32ArrayProperty propVisibilityIds( userProps, "mvg_visibilityIds" );
     propVisibilityIds.set(visibilityIds);
 
     // Feature position (x,y)
-    OV2fArrayProperty propFeatPos2d( pSchema, "mvg_visibilityFeatPos" );
+    OFloatArrayProperty propFeatPos2d( userProps, "mvg_visibilityFeatPos" );
     propFeatPos2d.set(featPos2d);
   }
 }
@@ -131,7 +148,7 @@ void AlembicExporter::appendCamera(const std::string &cameraName,
 
   std::stringstream ss;
   ss << cameraName;
-  Alembic::AbcGeom::OXform xform(topObj, "camxform_" + ss.str());
+  Alembic::AbcGeom::OXform xform(mvgCameras, "camxform_" + ss.str());
   xform.getSchema().set(xformsample);
 
   // Camera intrinsic parameters
@@ -169,14 +186,14 @@ void AlembicExporter::appendCamera(const std::string &cameraName,
   camSample.setVerticalFilmOffset(voffset_cm);
   
   // Add sensor width (largest image side) in pixels as custom property
-  OUInt32Property propSensorWidth_pix(userProps, "sensorWidth_pix");
+  OUInt32Property propSensorWidth_pix(userProps, "mvg_sensorWidth_pix");
   propSensorWidth_pix.set(sensorWidth_pix);
 
   // Add image path as custom property
   if(!imagePath.empty())
   {
     // Set camera image plane 
-    OStringProperty imagePlane(userProps, "imagePath");
+    OStringProperty imagePlane(userProps, "mvg_imagePath");
     imagePlane.set(imagePath.c_str());
   }
 
@@ -198,6 +215,7 @@ void AlembicExporter::appendCamera(const std::string &cameraName,
 
 void AlembicExporter::add(const sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part)
 {
+
   if(flags_part & sfm::ESfM_Data::VIEWS || flags_part & sfm::ESfM_Data::EXTRINSICS)
   {
     for(const auto it : sfmdata.GetViews())
