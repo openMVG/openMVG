@@ -17,8 +17,6 @@ namespace localization {
 // inputs
 // - sfmdata path
 // - descriptorsFolder directory with the sift
-// - vocTreeFilepath; 
-// - weightsFilepath; 
 bool CCTagLocalizer::init(const std::string &sfmFilePath,
                           const std::string &descriptorsFolder)
 {
@@ -178,7 +176,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
   POPART_COUT_DEBUG("nearestKeyFrames.size() = " << nearestKeyFrames.size());
   for(const IndexT indexKeyFrame : nearestKeyFrames)
   {
-    POPART_COUT_DEBUG(indexKeyFrame);
+    POPART_COUT_DEBUG("[localization]\tProcessing nearest kframe " << indexKeyFrame);
     POPART_COUT_DEBUG(_sfm_data.GetViews().at(indexKeyFrame)->s_Img_path);
     const Reconstructed_RegionsCCTag& matchedRegions = _regions_per_view[indexKeyFrame];
     
@@ -187,7 +185,10 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
     viewMatching(queryRegions, _regions_per_view[indexKeyFrame]._regions, vec_featureMatches);
     
     if ( vec_featureMatches.size() < 3 )
+    {
+      POPART_COUT("[localization]\tSkipping kframe " << indexKeyFrame << " as it contains only "<< vec_featureMatches.size()<<" points");
       continue;
+    }
     
     // D. recover the 2D-3D associations from the matches 
     // Each matched feature in the current similar image is associated to a 3D point,

@@ -80,7 +80,7 @@ public:
   
 #ifdef HAVE_CCTAG
   
-   void filterCCTagRegions(const std::vector<FeatureInImage>& featuresInImage)
+  void filterCCTagRegions(const std::vector<FeatureInImage>& featuresInImage)
   {
     features::Scalar_Regions<FeatT, T, L> newRegions;
     newRegions.Features().reserve(featuresInImage.size());
