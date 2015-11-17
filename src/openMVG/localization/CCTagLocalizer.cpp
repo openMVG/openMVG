@@ -100,7 +100,7 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
   }
   
   std::cout << "Load Features and Descriptors per view" << std::endl;
-  std::vector<bool> presentIds(128,false); // todo Assume a maximum library size of 128 unique ids.
+  std::vector<bool> presentIds(128,false); // @todo Assume a maximum library size of 128 unique ids.
   // Read for each view the corresponding regions and store them
   for(sfm::Views::const_iterator iter = sfm_data.GetViews().begin();
           iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
@@ -130,7 +130,7 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
 
   // Display the cctag ids over all cctag landmarks present in the database
   std::cout << std::endl << "Present CCTag landmarks present in the database: " << std::endl;
-  for(std::size_t i ; i < presentIds.size() ; ++i)
+  for(std::size_t i=0 ; i < presentIds.size() ; ++i)
   {
     if (presentIds[i])
       std::cout <<  i+1 << " ";
