@@ -4,6 +4,7 @@
 
 #include <openMVG/features/image_describer.hpp>
 #include <openMVG/features/regions_factory.hpp>
+#include <openMVG/types.hpp>
 
 #include <cctag/view.hpp>
 #include <cctag/ICCTag.hpp>
@@ -23,8 +24,8 @@ public:
   CCTAG_Image_describer()
     :Image_describer(), _params(3) {}
     
-  CCTAG_Image_describer(const std::size_t nRings)
-    :Image_describer(), _params(nRings) {}   
+  CCTAG_Image_describer(const std::size_t nRings, const bool doAppend = false)
+    :Image_describer(), _params(nRings), _doAppend(doAppend){}   
 
   ~CCTAG_Image_describer() {}
 
@@ -80,7 +81,35 @@ public:
 private:
   //CCTag parameters
   cctag::Parameters _params;
+  bool _doAppend;
 };
+
+/**
+ * @brief Convert the descriptor representation into a CCTag ID.
+ * @param[in] desc descriptor
+ * @return cctag id or UndefinedIndexT if wrong cctag descriptor
+ */
+template <class DescriptorT>
+IndexT getCCTagId(const DescriptorT & desc)
+{
+  std::size_t cctagId = UndefinedIndexT;
+  for (int i = 0; i < desc.size(); ++i)
+  {
+    if (desc.getData()[i] == (unsigned char) 255)
+    {
+      if (cctagId != UndefinedIndexT)
+      {
+        return UndefinedIndexT;
+      }
+      cctagId = i;
+    }
+    else if(desc.getData()[i] != (unsigned char) 0)
+    {
+      return UndefinedIndexT;
+    }
+  }
+  return cctagId;
+}
 
 } // namespace features
 } // namespace openMVG

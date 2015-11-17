@@ -69,11 +69,28 @@ public:
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult & localizationResult);
   
+  bool localize(const std::vector<image::Image<unsigned char> > & vec_imageGrey,
+                const Parameters &param,
+                const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                const std::vector<geometry::Pose3 > &vec_subPoses,
+                geometry::Pose3 rigPose);
+  
+  bool localize(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+                const Parameters &param,
+                const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                const std::vector<geometry::Pose3 > &vec_subPoses,
+                geometry::Pose3 rigPose);
   
   CCTagLocalizer();
-  CCTagLocalizer(const CCTagLocalizer& orig);
+
   virtual ~CCTagLocalizer();
+  
   const sfm::SfM_Data& getSfMData() const {return _sfm_data; }
+  
+  void getAllAssociationsFromNearestKFrames(const features::CCTAG_Regions &queryRegions,
+                                            const CCTagLocalizer::Parameters &param,
+                                            std::map< pair<IndexT, IndexT>, pair<Vec3, Vec2> > &associations) const;
+  
 private:
   
   bool loadReconstructionDescriptors(
@@ -82,8 +99,8 @@ private:
   
   // for each view index, it contains the cctag features and descriptors that have an
   // associated 3D point
-  
   CCTagRegionsPerViews _regions_per_view;
+  
   // contains the 3D reconstruction data
   sfm::SfM_Data _sfm_data;
   
@@ -93,8 +110,6 @@ private:
   //
   //std::map<IndexT, Vec3> _cctagDatabase;
 };
-
-IndexT getCCTagId(const CCTagDescriptor & desc);
 
  /**
    * @brief Retrieve the k nearest views in a collection of views based on a query
@@ -110,7 +125,16 @@ void kNearestKeyFrames(
           const CCTagRegionsPerViews & _regions_per_view,
           std::size_t nNearestKeyFrames,
           std::vector<IndexT> & kNearestFrames);
-
+/**
+ * @brief Given a set of CCTag descriptors seen in a view, it creates a descriptor for the view: the
+ * view descriptor is a 128 bit array (ie the number of possible markers) whose 
+ * bits are 0 or 1 whether the corresponding marker is seen or not. E.g. if the 
+ * bit in position 8 is 1 it means that the marker with ID 8 has been seen by the view
+ * 
+ * @param[in] vCCTagDescriptors The input descriptors associated to the view
+ * @return The view descriptor as a set of bit representing the visibility of 
+ * each possible marker for that view
+ */
 std::bitset<128> constructCCTagViewDescriptor(
         const std::vector<CCTagDescriptor> & vCCTagDescriptors);
 
