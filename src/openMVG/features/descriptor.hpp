@@ -69,6 +69,13 @@ public:
       res[i] = data[i] / other[i];
     return res;
   }
+  
+  inline This& operator*=(const value_type scalar) 
+  {
+    for(size_type i = 0; i < size(); ++i)
+      data[i] *= scalar;
+    return *this;
+  }
 
   inline bin_type* getData() const {return (bin_type* ) (&data[0]);}
 
