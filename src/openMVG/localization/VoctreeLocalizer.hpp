@@ -73,8 +73,6 @@ public:
             const std::string &vocTreeFilepath,
             const std::string &weightsFilepath);
   
-  // loadSfmData(const std::string & sfmDataPath)
-
   /**
    * @brief Load all the Descriptors who have contributed to the reconstruction.
    */
@@ -146,12 +144,6 @@ public:
   
   const sfm::SfM_Data& getSfMData() const {return _sfm_data; }
   
-public:
-  static bool refineSequence(cameras::Pinhole_Intrinsic_Radial_K3 *intrinsics,
-                             std::vector<geometry::Pose3> & poses,
-                             std::vector<sfm::Image_Localizer_Match_Data> & associations,
-                             std::vector<std::vector<pair<IndexT, IndexT> > > &associationIDs);
-
 private:
   /**
    * @brief Load the vocabulary tree.
