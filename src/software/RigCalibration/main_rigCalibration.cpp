@@ -51,8 +51,7 @@ int main(int argc, char** argv)
   std::string exportFile = "trackedcameras.abc"; //!< the export file
 #endif
   std::size_t nCam = 3;
-  po::options_description desc(
-                               "This program takes as input a media (image, image sequence, video) and a database (voctree, 3D structure data) \n"
+  po::options_description desc("This program takes as input a media (image, image sequence, video) and a database (voctree, 3D structure data) \n"
                                "and returns for each frame a pose estimation for the camera.");
   desc.add_options()
           ("help,h", "Print this message")
@@ -121,10 +120,10 @@ int main(int argc, char** argv)
   rig::Rig rig;
 
   // Loop over all cameras of the rig
-  for(int iLocalizer = 0; iLocalizer < nCam; ++iLocalizer)
+  for(int idCamera = 0; idCamera < nCam; ++idCamera)
   {
     std::string subMediaFilepath, calibFile;
-    subMediaFilepath = mediaFilepath + "/" + std::to_string(iLocalizer);
+    subMediaFilepath = mediaFilepath + "/" + std::to_string(idCamera);
     calibFile = subMediaFilepath + "/intrinsics.txt";
 
     // create the feedProvider
@@ -177,7 +176,7 @@ int main(int argc, char** argv)
       ++frameCounter;
     }
 
-    rig.setTrackingResult(vLocalizationResults, iLocalizer);
+    rig.setTrackingResult(vLocalizationResults, idCamera);
 
     // print out some time stats
     POPART_COUT("\n\n******************************");
