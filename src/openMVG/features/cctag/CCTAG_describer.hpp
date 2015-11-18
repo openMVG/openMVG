@@ -1,4 +1,5 @@
-#ifdef HAVE_CCTAG
+
+#ifdef HAVE_CCTAG // FIXME do not export ifdef in the api
 
 #pragma once
 
@@ -8,6 +9,7 @@
 
 #include <cctag/view.hpp>
 #include <cctag/ICCTag.hpp>
+#include <cctag/logtime.hpp>
 
 #include <cereal/cereal.hpp>
 #include <iostream>

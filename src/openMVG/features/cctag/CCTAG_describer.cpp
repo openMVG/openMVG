@@ -31,19 +31,21 @@ bool CCTAG_Image_describer::Describe(const image::Image<unsigned char>& image,
     }
     
     boost::ptr_list<cctag::ICCTag> cctags;
-    
+    cctag::logtime::Mgmt* durations = new cctag::logtime::Mgmt( 25 );
+    // cctag::CCTagMarkersBank bank(_params._nCrowns);
 #ifndef CPU_ADAPT_OF_GPU_PART
     const cv::Mat graySrc(cv::Size(image.Width(), image.Height()), CV_8UC1, (unsigned char *) image.data(), cv::Mat::AUTO_STEP);
     //// Invert the image
     //cv::Mat invertImg;
     //cv::bitwise_not(graySrc,invertImg);
-    cctag::cctagDetection(cctags,1,graySrc,_params);
+    cctag::cctagDetection(cctags,1,graySrc,_params, durations );
 #else //todo: #ifdef depreciated
     cctag::MemoryPool::instance().updateMemoryAuthorizedWithRAM();
     cctag::View cctagView((const unsigned char *) image.data(), image.Width(), image.Height(), image.Depth()*image.Width());
     boost::ptr_list<cctag::ICCTag> cctags;
-    cctag::cctagDetection(cctags, 1 ,cctagView._grayView ,_params);
+    cctag::cctagDetection(cctags, 1 ,cctagView._grayView ,_params, durations );
 #endif
+    durations->print( std::cerr );
     
     for (const auto & cctag : cctags)
     {
