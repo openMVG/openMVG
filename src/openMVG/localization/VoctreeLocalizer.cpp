@@ -283,8 +283,8 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
 
     const std::string sImageName = stlplus::create_filespec(_sfm_data.s_root_path, currView.get()->s_Img_path);
     const std::string basename = stlplus::basename_part(sImageName);
-    const std::string featFilepath = stlplus::create_filespec(feat_directory, basename, ".feat");
-    const std::string descFilepath = stlplus::create_filespec(feat_directory, basename, ".desc");
+    const std::string featFilepath = stlplus::create_filespec(feat_directory, std::to_string(iter.first), ".feat");
+    const std::string descFilepath = stlplus::create_filespec(feat_directory, std::to_string(iter.first), ".desc");
 
     if(!currRecoRegions._regions.Load(featFilepath, descFilepath))
     {
