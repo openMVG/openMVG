@@ -7,11 +7,6 @@
 
 //---------------------------------
 //  Universal Image Processing Algorithm (UIPA)
-//   _  _  __  ___  __
-//  ( )( )(  )(  ,\(  )
-//  ( )( ) )(  ) _//__\
-//  (____)(__)(_) (_)(_)
-//-------
 // Generic Image algorithm that require
 //  an ImageModel class that must implement the following:
 //
