@@ -1,5 +1,8 @@
 #include "CCTAG_describer.hpp"
 
+#include <cctag/view.hpp>
+#include <cctag/ICCTag.hpp>
+#include <cctag/logtime.hpp>
 //#define CPU_ADAPT_OF_GPU_PART //todo: #ifdef depreciated
 #ifdef CPU_ADAPT_OF_GPU_PART    
   #include "cctag/progBase/MemoryPool.hpp"

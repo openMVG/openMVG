@@ -4,13 +4,6 @@
 #include <openMVG/features/regions_factory.hpp>
 #include <openMVG/types.hpp>
 
-//#include <cctag/view.hpp>
-//#include <cctag/ICCTag.hpp>
-//#include <cctag/logtime.hpp>
-#include <cctag/view.hpp>
-#include <cctag/ICCTag.hpp>
-#include <cctag/logtime.hpp>
-
 #include <cereal/cereal.hpp>
 #include <iostream>
 #include <numeric>
@@ -55,7 +48,6 @@ private:
   //CCTag parameters
   struct CCTagParameters; // Hidden implementation
   CCTagParameters *_params;
-  //cctag::Parameters _params;
   bool _doAppend;
 };
 
