@@ -80,9 +80,19 @@ VoctreeLocalizer::Algorithm VoctreeLocalizer::initFromString(const std::string &
     throw std::invalid_argument("Unrecognized algorithm \"" + value + "\"!");
 }
 
+
+VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
+                                  const std::string &descriptorsFolder,
+                                  const std::string &vocTreeFilepath,
+                                  const std::string &weightsFilepath
 #ifdef HAVE_CCTAG
-VoctreeLocalizer::VoctreeLocalizer(bool useSIFT_CCTAG)
+                                  , bool useSIFT_CCTAG
+#endif
+                                  )
 {
+  using namespace openMVG::features;
+  // init the feature extractor
+#ifdef HAVE_CCTAG
   if(useSIFT_CCTAG)
   {
     _image_describer = new features::SIFT_CCTAG_Image_describer();  
@@ -91,13 +101,35 @@ VoctreeLocalizer::VoctreeLocalizer(bool useSIFT_CCTAG)
   {
     _image_describer = new features::SIFT_float_describer();
   }
-}
 #else
-VoctreeLocalizer::VoctreeLocalizer()
-{
   _image_describer = new features::SIFT_float_describer();
-}
 #endif
+  
+  // load the sfm data containing the 3D reconstruction info
+  POPART_COUT("Loading SFM data...");
+  if (!Load(_sfm_data, sfmFilePath, sfm::ESfM_Data::ALL)) 
+  {
+    POPART_CERR("The input SfM_Data file "<< sfmFilePath << " cannot be read!");
+//    return false;
+  }
+  else
+  {
+    POPART_COUT("SfM data loaded from " << sfmFilePath << " containing: ");
+    POPART_COUT("\tnumber of views      : " << _sfm_data.GetViews().size());
+    POPART_COUT("\tnumber of poses      : " << _sfm_data.GetPoses().size());
+    POPART_COUT("\tnumber of points     : " << _sfm_data.GetLandmarks().size());
+    POPART_COUT("\tnumber of intrinsics : " << _sfm_data.GetIntrinsics().size());
+  }
+
+  // load the features and descriptors
+  // initially we need all the feature in order to create the database
+  // then we can store only those associated to 3D points
+  //? can we use Feature_Provider to load the features and filter them later?
+    
+  initDatabase(vocTreeFilepath, weightsFilepath, descriptorsFolder);
+  
+  _isInit = true;
+}
 
 bool VoctreeLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                 const Parameters &param,
@@ -131,39 +163,39 @@ bool VoctreeLocalizer::localize(const image::Image<unsigned char> & imageGrey,
 // - descriptorsFolder directory with the sift
 // - vocTreeFilepath; 
 // - weightsFilepath; 
-bool VoctreeLocalizer::init( const std::string &sfmFilePath,
-                            const std::string &descriptorsFolder,
-                            const std::string &vocTreeFilepath,
-                            const std::string &weightsFilepath)
-{
-  using namespace openMVG::features;
-  
-  // load the sfm data containing the 3D reconstruction info
-  POPART_COUT("Loading SFM data...");
-  if (!Load(_sfm_data, sfmFilePath, sfm::ESfM_Data::ALL)) 
-  {
-    POPART_CERR("The input SfM_Data file "<< sfmFilePath << " cannot be read!");
-    return false;
-  }
-  else
-  {
-    POPART_COUT("SfM data loaded from " << sfmFilePath << " containing: ");
-    POPART_COUT("\tnumber of views      : " << _sfm_data.GetViews().size());
-    POPART_COUT("\tnumber of poses      : " << _sfm_data.GetPoses().size());
-    POPART_COUT("\tnumber of points     : " << _sfm_data.GetLandmarks().size());
-    POPART_COUT("\tnumber of intrinsics : " << _sfm_data.GetIntrinsics().size());
-  }
-
-  // load the features and descriptors
-  // initially we need all the feature in order to create the database
-  // then we can store only those associated to 3D points
-  //? can we use Feature_Provider to load the features and filter them later?
-    
-  initDatabase(vocTreeFilepath, weightsFilepath, descriptorsFolder);
-  
-  return true;
-}
-
+//bool VoctreeLocalizer::init(const std::string &sfmFilePath,
+//                            const std::string &descriptorsFolder,
+//                            const std::string &vocTreeFilepath,
+//                            const std::string &weightsFilepath)
+//{
+//  using namespace openMVG::features;
+//  
+//  // load the sfm data containing the 3D reconstruction info
+//  POPART_COUT("Loading SFM data...");
+//  if (!Load(_sfm_data, sfmFilePath, sfm::ESfM_Data::ALL)) 
+//  {
+//    POPART_CERR("The input SfM_Data file "<< sfmFilePath << " cannot be read!");
+//    return false;
+//  }
+//  else
+//  {
+//    POPART_COUT("SfM data loaded from " << sfmFilePath << " containing: ");
+//    POPART_COUT("\tnumber of views      : " << _sfm_data.GetViews().size());
+//    POPART_COUT("\tnumber of poses      : " << _sfm_data.GetPoses().size());
+//    POPART_COUT("\tnumber of points     : " << _sfm_data.GetLandmarks().size());
+//    POPART_COUT("\tnumber of intrinsics : " << _sfm_data.GetIntrinsics().size());
+//  }
+//
+//  // load the features and descriptors
+//  // initially we need all the feature in order to create the database
+//  // then we can store only those associated to 3D points
+//  //? can we use Feature_Provider to load the features and filter them later?
+//    
+//  initDatabase(vocTreeFilepath, weightsFilepath, descriptorsFolder);
+//  
+//  return true;
+//}
+//
 
 //@fixme deprecated.. now inside initDatabase
 bool VoctreeLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_data,

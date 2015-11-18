@@ -147,12 +147,15 @@ int main(int argc, char** argv)
   }
  
   // init the localizer
+  localization::VoctreeLocalizer localizer(sfmFilePath,
+                                           descriptorsFolder,
+                                           vocTreeFilepath,
+                                           weightsFilepath
 #if HAVE_CCTAG
-  localization::VoctreeLocalizer localizer(useSIFT_CCTAG);
-#else
-  localization::VoctreeLocalizer localizer;
+                                           , useSIFT_CCTAG
 #endif
-  bool isInit = localizer.init(sfmFilePath, descriptorsFolder, vocTreeFilepath, weightsFilepath);
+                                           );
+  bool isInit = localizer.isInit();
   
   if(!isInit)
   {
@@ -183,10 +186,6 @@ int main(int argc, char** argv)
   // Define an accumulator set for computing the mean and the
   // standard deviation of the time taken for localization
   bacc::accumulator_set<double, bacc::stats<bacc::tag::mean, bacc::tag::min, bacc::tag::max, bacc::tag::sum > > stats;
-  
-  // used to collect the localization data result
-  std::vector<bool> localized;  // this is just to keep track of the unlocalized frames so that a fake camera
-                                // can be inserted and we see the sequence correctly in maya
   
   std::vector<localization::LocalizationResult> localizationResults;
   

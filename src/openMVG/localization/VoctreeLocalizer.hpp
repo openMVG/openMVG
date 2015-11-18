@@ -9,6 +9,7 @@
 
 #include "reconstructed_regions.hpp"
 #include "LocalizationResult.hpp"
+#include "ILocalizer.hpp"
 
 #include <openMVG/features/image_describer.hpp>
 #include <openMVG/sfm/sfm_data.hpp>
@@ -36,42 +37,37 @@ public:
   static Algorithm initFromString(const std::string &value);
   
 public:
-  struct Parameters 
+  struct Parameters : LocalizerParameters
   {
 
     Parameters() :
       _useGuidedMatching(false),
-      _refineIntrinsics(false),
       _algorithm(Algorithm::FirstBest),
       _numResults(4),
       _maxResults(10),
-      _numCommonViews(3),
-      _fDistRatio(0.6),
-      _featurePreset(features::EDESCRIBER_PRESET::ULTRA_PRESET),
-      _errorMax(std::numeric_limits<double>::max()) { }
+      _numCommonViews(3) { }
     
     bool _useGuidedMatching;    //< Enable/disable guided matching when matching images
-    bool _refineIntrinsics;     //< whether or not the Intrinsics of the query camera has to be refined
     Algorithm _algorithm;       //< algorithm to use for localization
     size_t _numResults;         //< number of best matching images to retrieve from the database
     size_t _maxResults;         
-    size_t _numCommonViews;     //< number minimum common images in which a point must be seen to be used in cluster tracking
-    float _fDistRatio;          //< the ratio distance to use when matching feature with the ratio test
-    features::EDESCRIBER_PRESET _featurePreset; //< the preset to use for feature extraction of the query image
-    double _errorMax;           
+    size_t _numCommonViews;     //< number minimum common images in which a point must be seen to be used in cluster tracking       
   };
   
 public:
+  VoctreeLocalizer(const std::string &sfmFilePath,
+                                  const std::string &descriptorsFolder,
+                                  const std::string &vocTreeFilepath,
+                                  const std::string &weightsFilepath
 #ifdef HAVE_CCTAG
-  VoctreeLocalizer(bool useSIFT_CCTAG = false);
-#else
-  VoctreeLocalizer();
+                                  , bool useSIFT_CCTAG
 #endif
+                                  );
   
-  bool init(const std::string &sfmFilePath,
-            const std::string &descriptorsFolder,
-            const std::string &vocTreeFilepath,
-            const std::string &weightsFilepath);
+//  bool init(const std::string &sfmFilePath,
+//            const std::string &descriptorsFolder,
+//            const std::string &vocTreeFilepath,
+//            const std::string &weightsFilepath);
   
   /**
    * @brief Load all the Descriptors who have contributed to the reconstruction.
@@ -185,6 +181,9 @@ public:
   // the database that stores the visual word representation of each image of
   // the original dataset
   voctree::Database _database;
+  
+  bool _isInit;
+  bool isInit() {return _isInit;}
     
 };
 
