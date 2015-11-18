@@ -377,7 +377,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
     // image of the dataset that was not reconstructed
     if(_regions_per_view[matchedViewIndex]._regions.RegionCount() < minNum3DPoints)
     {
-      POPART_COUT("[matching]\tSkipping matching with " << matchedView->s_Img_path << " as it has too few visible 3D points");
+      POPART_COUT("[matching]\tSkipping matching with " << matchedView->s_Img_path << " as it has too few visible 3D points (" << _regions_per_view[matchedViewIndex]._regions.RegionCount() << ")");
       continue;
     }
     else
@@ -585,7 +585,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
     // image of the dataset that was not reconstructed
     if(matchedRegions._regions.RegionCount() < minNum3DPoints)
     {
-      POPART_COUT("[matching]\tSkipping matching with " << matchedView->s_Img_path << " as it has too few visible 3D points");
+      POPART_COUT("[matching]\tSkipping matching with " << matchedView->s_Img_path << " as it has too few visible 3D points (" << matchedRegions._regions.RegionCount() << ")");
       continue;
     }
     else
