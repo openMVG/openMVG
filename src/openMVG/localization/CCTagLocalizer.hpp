@@ -30,10 +30,8 @@ class CCTagLocalizer : public ILocalizer
   {
 
     Parameters() : LocalizerParameters(), 
-      _useGuidedMatching(false),
       _nNearestKeyFrames(4) { }
     
-    bool _useGuidedMatching;    //< Enable/disable guided matching when matching images
     size_t _nNearestKeyFrames;         //< number of best matching images to retrieve from the database                
   };
   
