@@ -80,7 +80,7 @@ public:
   
 #ifdef HAVE_CCTAG
   
-   void filterCCTagRegions(const std::vector<FeatureInImage>& featuresInImage)
+  void filterCCTagRegions(const std::vector<FeatureInImage>& featuresInImage)
   {
     features::Scalar_Regions<FeatT, T, L> newRegions;
     newRegions.Features().reserve(featuresInImage.size());
@@ -102,7 +102,7 @@ public:
     _regions.swap(newRegions);
   }
   
-  void updateLandmarksVisibility(std::vector<bool> & presentIds)
+  void updateLandmarksVisibility(std::vector<bool> & presentIds) const
   {
     assert(presentIds.size()==128);
     for (const auto & desc : _regions.Descriptors())

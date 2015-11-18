@@ -69,12 +69,27 @@ public:
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult & localizationResult);
   
+  bool localize(const std::vector<image::Image<unsigned char> > & vec_imageGrey,
+                const Parameters &param,
+                const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                const std::vector<geometry::Pose3 > &vec_subPoses,
+                geometry::Pose3 rigPose);
+  
+  bool localize(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+                const Parameters &param,
+                const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                const std::vector<geometry::Pose3 > &vec_subPoses,
+                geometry::Pose3 rigPose);
   
   CCTagLocalizer();
 
   virtual ~CCTagLocalizer();
   
   const sfm::SfM_Data& getSfMData() const {return _sfm_data; }
+  
+  void getAllAssociationsFromNearestKFrames(const features::CCTAG_Regions &queryRegions,
+                                            const CCTagLocalizer::Parameters &param,
+                                            std::map< pair<IndexT, IndexT>, pair<Vec3, Vec2> > &associations) const;
   
 private:
   
