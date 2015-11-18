@@ -82,13 +82,13 @@ VoctreeLocalizer::Algorithm VoctreeLocalizer::initFromString(const std::string &
 
 
 VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
-                                  const std::string &descriptorsFolder,
-                                  const std::string &vocTreeFilepath,
-                                  const std::string &weightsFilepath
+                                   const std::string &descriptorsFolder,
+                                   const std::string &vocTreeFilepath,
+                                   const std::string &weightsFilepath
 #ifdef HAVE_CCTAG
-                                  , bool useSIFT_CCTAG
+                                   , bool useSIFT_CCTAG
 #endif
-                                  )
+                                  ) : ILocalizer()
 {
   using namespace openMVG::features;
   // init the feature extractor
@@ -132,23 +132,30 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
 }
 
 bool VoctreeLocalizer::localize(const image::Image<unsigned char> & imageGrey,
-                const Parameters &param,
+                const LocalizerParameters *param,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult &localizationResult)
 {
-  switch(param._algorithm)
+  const Parameters *voctreeParam = static_cast<const Parameters *>(param);
+  if(!voctreeParam)
+  {
+    // error!
+    throw std::invalid_argument("The parameters are not in the right format!!");
+  }
+  
+  switch(voctreeParam->_algorithm)
   {
     case Algorithm::FirstBest: 
       return localizeFirstBestResult(imageGrey, 
-                                     param,
+                                     *voctreeParam,
                                      useInputIntrinsics,
                                      queryIntrinsics,
                                      localizationResult);
     case Algorithm::BestResult: throw std::invalid_argument("BestResult not yet implemented");
     case Algorithm::AllResults: 
       return localizeAllResults(imageGrey, 
-                                param,
+                                *voctreeParam,
                                 useInputIntrinsics, 
                                 queryIntrinsics,
                                 localizationResult);

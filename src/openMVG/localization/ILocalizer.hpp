@@ -51,13 +51,13 @@ public:
     * @return true if the localization is successful
     */
     virtual bool localize(const image::Image<unsigned char> & imageGrey,
-                 const LocalizerParameters &param,
+                 const LocalizerParameters *param,
                  bool useInputIntrinsics,
                  cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                  LocalizationResult & localizationResult)=0;
    
-    virtual ~ILocalizer( );
-private:
+    virtual ~ILocalizer( ) { } ;
+protected:
   bool _isInit;
 
 };

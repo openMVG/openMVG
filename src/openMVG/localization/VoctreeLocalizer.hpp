@@ -29,7 +29,7 @@ namespace localization {
 typedef openMVG::features::Descriptor<float, 128> DescriptorFloat;
 typedef Reconstructed_Regions<features::SIOPointFeature, float, 128> Reconstructed_RegionsT;
 
-class VoctreeLocalizer
+class VoctreeLocalizer : public ILocalizer
 {
 
 public:
@@ -40,7 +40,7 @@ public:
   struct Parameters : LocalizerParameters
   {
 
-    Parameters() :
+    Parameters() : LocalizerParameters(), 
       _useGuidedMatching(false),
       _algorithm(Algorithm::FirstBest),
       _numResults(4),
@@ -64,11 +64,6 @@ public:
 #endif
                                   );
   
-//  bool init(const std::string &sfmFilePath,
-//            const std::string &descriptorsFolder,
-//            const std::string &vocTreeFilepath,
-//            const std::string &weightsFilepath);
-  
   /**
    * @brief Load all the Descriptors who have contributed to the reconstruction.
    */
@@ -90,7 +85,7 @@ public:
    * @return true if the localization is successful
    */
   bool localize(const image::Image<unsigned char> & imageGrey,
-                const Parameters &param,
+                const LocalizerParameters *param,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult &localizationResult);
@@ -181,9 +176,6 @@ public:
   // the database that stores the visual word representation of each image of
   // the original dataset
   voctree::Database _database;
-  
-  bool _isInit;
-  bool isInit() {return _isInit;}
     
 };
 

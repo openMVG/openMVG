@@ -198,7 +198,7 @@ int main(int argc, char** argv)
     std::vector<pair<IndexT, IndexT> > ids;
     auto detect_start = std::chrono::steady_clock::now();
     localizer.localize(imageGrey, 
-                       param,
+                       &param,
                        hasIntrinsics /*useInputIntrinsics*/,
                        queryIntrinsics,
                        locResult);
