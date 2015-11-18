@@ -31,7 +31,6 @@ class CCTagLocalizer {
       _useGuidedMatching(false),
       _refineIntrinsics(false),
       _nNearestKeyFrames(4),
-      _numCommonViews(3),
       _fDistRatio(0.6),
       _featurePreset(features::EDESCRIBER_PRESET::ULTRA_PRESET),
       _errorMax(std::numeric_limits<double>::max()) { }
