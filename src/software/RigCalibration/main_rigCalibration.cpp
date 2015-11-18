@@ -102,10 +102,9 @@ int main(int argc, char** argv)
   }
 
   // init the localizer
-  localization::CCTagLocalizer localizer;
-  bool isInit = localizer.init(sfmFilePath, descriptorsFolder);
+  localization::CCTagLocalizer localizer(sfmFilePath, descriptorsFolder);
 
-  if(!isInit)
+  if(!localizer.isInit())
   {
     POPART_CERR("ERROR while initializing the localizer!");
     return EXIT_FAILURE;
@@ -163,7 +162,7 @@ int main(int argc, char** argv)
       auto detect_start = std::chrono::steady_clock::now();
       localization::LocalizationResult localizationResult;
       localizer.localize(imageGrey,
-                         param,
+                         &param,
                          hasIntrinsics/*useInputIntrinsics*/,
                          queryIntrinsics,
                          localizationResult);

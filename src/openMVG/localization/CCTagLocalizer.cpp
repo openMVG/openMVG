@@ -14,11 +14,8 @@
 namespace openMVG {
 namespace localization {
 
-// inputs
-// - sfmdata path
-// - descriptorsFolder directory with the sift
-bool CCTagLocalizer::init(const std::string &sfmFilePath,
-                          const std::string &descriptorsFolder)
+CCTagLocalizer::CCTagLocalizer(const std::string &sfmFilePath,
+                               const std::string &descriptorsFolder)
 {
   using namespace openMVG::features;
   
@@ -27,7 +24,7 @@ bool CCTagLocalizer::init(const std::string &sfmFilePath,
   {
     std::cerr << std::endl
       << "The input SfM_Data file "<< sfmFilePath << " cannot be read." << std::endl;
-    return false;
+    throw std::invalid_argument("The input SfM_Data file "+ sfmFilePath + " cannot be read.");
   }
 
   // this block is used to get the type of features (by default SIFT) used
@@ -38,7 +35,7 @@ bool CCTagLocalizer::init(const std::string &sfmFilePath,
   {
     POPART_CERR("Invalid: "
             << sImage_describer << " regions type file.");
-    return false;
+    throw std::invalid_argument("Invalid: "+ sImage_describer + " regions type file.");
   }
   
   bool loadSuccessful = loadReconstructionDescriptors(_sfm_data, descriptorsFolder);
@@ -46,10 +43,8 @@ bool CCTagLocalizer::init(const std::string &sfmFilePath,
   if(!loadSuccessful)
   {
     POPART_CERR("Unable to load the descriptors");
-    return false;
+    throw std::invalid_argument("Unable to load the descriptors from "+descriptorsFolder);
   }
-  
-  const sfm::Landmarks & landmarks = _sfm_data.GetLandmarks();
   
 //  for(const auto & landmark : landmarks)
 //  {
@@ -71,8 +66,10 @@ bool CCTagLocalizer::init(const std::string &sfmFilePath,
 //      _cctagDatabase.emplace(idCCTag, landmark.second.X);
 //    }
 //  }
-  return true;
+  
+  _isInit = true;
 }
+
 
 bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_data,
                                                    const std::string & feat_directory)
@@ -142,11 +139,17 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
 }
 
 bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
-                const CCTagLocalizer::Parameters &param,
+                const LocalizerParameters *parameters,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult & localizationResult)
 {
+  const CCTagLocalizer::Parameters *param = static_cast<const CCTagLocalizer::Parameters *>(parameters);
+  if(!param)
+  {
+    // error!
+    throw std::invalid_argument("The parameters are not in the right format!!");
+  }
   // extract descriptors and features from image
   POPART_COUT("[features]\tExtract CCTag from query image");
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::CCTAG_Regions());
@@ -155,12 +158,12 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
   features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (tmpQueryRegions.get());
   
   std::vector<IndexT> nearestKeyFrames;
-  nearestKeyFrames.reserve(param._nNearestKeyFrames);
+  nearestKeyFrames.reserve(param->_nNearestKeyFrames);
   
   kNearestKeyFrames(
           queryRegions,
           _regions_per_view,
-          param._nNearestKeyFrames,
+          param->_nNearestKeyFrames,
           nearestKeyFrames);
   
   // Set the minimum of the residual to infinite.
@@ -197,7 +200,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
     std::vector<pair<IndexT, IndexT> > associationIDsTemp;
     sfm::Image_Localizer_Match_Data resectionDataTemp;
     
-    resectionDataTemp.error_max = param._errorMax;
+    resectionDataTemp.error_max = param->_errorMax;
     
     resectionDataTemp = sfm::Image_Localizer_Match_Data();
     resectionDataTemp.pt2D = Mat2X(2, vec_featureMatches.size());
@@ -275,7 +278,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
           bestPose, 
           bestResectionData, 
           true /*b_refine_pose*/, 
-          param._refineIntrinsics /*b_refine_intrinsic*/);
+          param->_refineIntrinsics /*b_refine_intrinsic*/);
   
   if(!refineStatus)
     POPART_COUT("[poseEstimation]\tRefine pose could not improve the estimation of the camera pose.");
@@ -285,10 +288,6 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
   return localizationResult.isValid();
   
  } 
-
-CCTagLocalizer::CCTagLocalizer()
-{
-}
 
 CCTagLocalizer::~CCTagLocalizer()
 {

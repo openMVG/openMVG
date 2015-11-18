@@ -126,10 +126,9 @@ int main(int argc, char** argv)
   }
  
   // init the localizer
-  localization::CCTagLocalizer localizer;
-  bool isInit = localizer.init(sfmFilePath, descriptorsFolder);
+  localization::CCTagLocalizer localizer(sfmFilePath, descriptorsFolder);
   
-  if(!isInit)
+  if(!localizer.isInit())
   {
     POPART_CERR("ERROR while initializing the localizer!");
     return EXIT_FAILURE;
@@ -151,7 +150,6 @@ int main(int argc, char** argv)
   image::Image<unsigned char> imageGrey;
   cameras::Pinhole_Intrinsic_Radial_K3 queryIntrinsics;
   bool hasIntrinsics = false;
-  geometry::Pose3 cameraPose;
   
   size_t frameCounter = 0;
   std::string currentImgName;
@@ -159,13 +157,6 @@ int main(int argc, char** argv)
   // Define an accumulator set for computing the mean and the
   // standard deviation of the time taken for localization
   bacc::accumulator_set<double, bacc::stats<bacc::tag::mean, bacc::tag::min, bacc::tag::max, bacc::tag::sum > > stats;
-  
-  // used to collect the match data result
-  std::vector<sfm::Image_Localizer_Match_Data> associations;
-  std::vector<geometry::Pose3> poses;
-  std::vector<std::vector<pair<IndexT, IndexT> > > associationIDs;
-  std::vector<bool> localized;  // this is just to keep track of the unlocalized frames so that a fake camera
-                                // can be inserted and we see the sequence correctly in maya
   
   std::vector<localization::LocalizationResult> vLocalizationResults;
   
@@ -180,7 +171,7 @@ int main(int argc, char** argv)
     localization::LocalizationResult localizationResult;
     localizer.localize(
             imageGrey, 
-            param,
+            &param,
             hasIntrinsics/*useInputIntrinsics*/,
             queryIntrinsics, // todo: put as const and use the intrinsic result store in localizationResult afterward
             localizationResult);

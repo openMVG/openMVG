@@ -2,10 +2,11 @@
 
 #pragma once
 
-#include <openMVG/localization/VoctreeLocalizer.hpp>
-
-#include "openMVG/features/features.hpp"
+#include "ILocalizer.hpp"
 #include "LocalizationResult.hpp"
+#include "VoctreeLocalizer.hpp"
+
+#include <openMVG/features/features.hpp>
 #include <openMVG/features/image_describer.hpp>
 #include <openMVG/features/cctag/CCTAG_describer.hpp>
 #include <openMVG/sfm/sfm_data.hpp>
@@ -21,34 +22,26 @@ typedef Reconstructed_Regions<features::SIOPointFeature, unsigned char, 128> Rec
 typedef Reconstructed_RegionsCCTag::DescriptorT CCTagDescriptor;
 typedef Hash_Map<IndexT, Reconstructed_RegionsCCTag > CCTagRegionsPerViews;
 
-class CCTagLocalizer {
+class CCTagLocalizer : public ILocalizer
+{
   
   public:
-  struct Parameters 
+  struct Parameters : LocalizerParameters
   {
 
-    Parameters() :
+    Parameters() : LocalizerParameters(), 
       _useGuidedMatching(false),
-      _refineIntrinsics(false),
-      _nNearestKeyFrames(4),
-      _fDistRatio(0.6),
-      _featurePreset(features::EDESCRIBER_PRESET::ULTRA_PRESET),
-      _errorMax(std::numeric_limits<double>::max()) { }
+      _nNearestKeyFrames(4) { }
     
     bool _useGuidedMatching;    //< Enable/disable guided matching when matching images
-    bool _refineIntrinsics;     //< whether or not the Intrinsics of the query camera has to be refined
-    size_t _nNearestKeyFrames;         //< number of best matching images to retrieve from the database        
-    size_t _numCommonViews;     //< number minimum common images in which a point must be seen to be used in cluster tracking
-    float _fDistRatio;          //< the ratio distance to use when matching feature with the ratio test
-    features::EDESCRIBER_PRESET _featurePreset; //< the preset to use for feature extraction of the query image
-    double _errorMax;           
+    size_t _nNearestKeyFrames;         //< number of best matching images to retrieve from the database                
   };
   
 public:
   
-  bool init(const std::string &sfmFilePath,
-            const std::string &descriptorsFolder);
-  
+  CCTagLocalizer(const std::string &sfmFilePath,
+                 const std::string &descriptorsFolder);
+   
  /**
    * @brief Just a wrapper around the different localization algorithm, the algorith
    * used to localized is chosen using \p param._algorithm
@@ -63,7 +56,7 @@ public:
    * @return true if the localization is successful
    */
   bool localize(const image::Image<unsigned char> & imageGrey,
-                const Parameters &param,
+                const LocalizerParameters *param,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult & localizationResult);
@@ -79,9 +72,7 @@ public:
                 const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
                 const std::vector<geometry::Pose3 > &vec_subPoses,
                 geometry::Pose3 rigPose);
-  
-  CCTagLocalizer();
-
+ 
   virtual ~CCTagLocalizer();
   
   const sfm::SfM_Data& getSfMData() const {return _sfm_data; }
