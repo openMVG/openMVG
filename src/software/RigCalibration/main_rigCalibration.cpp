@@ -62,10 +62,12 @@ inline std::string describerTypeToString(DescriberType describerType)
 {
   if(describerType == DescriberType::SIFT)
     return "SIFT";
+#if HAVE_CCTAG
   if (describerType == DescriberType::CCTAG)
     return "CCTAG";
   if(describerType == DescriberType::SIFT_CCTAG)
     return "SIFT_CCTAG";
+#endif
   throw std::invalid_argument("Unrecognized DescriberType "+std::to_string(describerType));
 }
 
@@ -97,7 +99,7 @@ int main(int argc, char** argv)
   std::string descriptorsFolder;          //< the OpenMVG .json data file
   std::string mediaFilepath;              //< the media file to localize
   std::string preset = features::describerPreset_enumToString(features::EDESCRIBER_PRESET::NORMAL_PRESET);               //< the preset for the feature extractor
-  std::string str_descriptorType = describerTypeToString(DescriberType::CCTAG);               //< the preset for the feature extractor
+  std::string str_descriptorType = describerTypeToString(DescriberType::SIFT);               //< the preset for the feature extractor
   bool refineIntrinsics = false;
   // parameters for voctree localizer
   std::string vocTreeFilepath;            //< the vocabulary tree file
