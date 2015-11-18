@@ -322,8 +322,8 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
 
     const std::string sImageName = stlplus::create_filespec(_sfm_data.s_root_path, currView.get()->s_Img_path);
     const std::string basename = stlplus::basename_part(sImageName);
-    const std::string featFilepath = stlplus::create_filespec(feat_directory, basename, ".feat");
-    const std::string descFilepath = stlplus::create_filespec(feat_directory, basename, ".desc");
+    const std::string featFilepath = stlplus::create_filespec(feat_directory, std::to_string(iter.first), ".feat");
+    const std::string descFilepath = stlplus::create_filespec(feat_directory, std::to_string(iter.first), ".desc");
 
     if(!currRecoRegions._regions.Load(featFilepath, descFilepath))
     {
@@ -416,7 +416,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
     // image of the dataset that was not reconstructed
     if(_regions_per_view[matchedViewIndex]._regions.RegionCount() < minNum3DPoints)
     {
-      POPART_COUT("[matching]\tSkipping matching with " << matchedView->s_Img_path << " as it has too few visible 3D points");
+      POPART_COUT("[matching]\tSkipping matching with " << matchedView->s_Img_path << " as it has too few visible 3D points (" << _regions_per_view[matchedViewIndex]._regions.RegionCount() << ")");
       continue;
     }
     else
@@ -624,7 +624,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
     // image of the dataset that was not reconstructed
     if(matchedRegions._regions.RegionCount() < minNum3DPoints)
     {
-      POPART_COUT("[matching]\tSkipping matching with " << matchedView->s_Img_path << " as it has too few visible 3D points");
+      POPART_COUT("[matching]\tSkipping matching with " << matchedView->s_Img_path << " as it has too few visible 3D points (" << matchedRegions._regions.RegionCount() << ")");
       continue;
     }
     else
