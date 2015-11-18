@@ -74,9 +74,7 @@ public:
                 geometry::Pose3 rigPose);
  
   virtual ~CCTagLocalizer();
-  
-  const sfm::SfM_Data& getSfMData() const {return _sfm_data; }
-  
+   
   void getAllAssociationsFromNearestKFrames(const features::CCTAG_Regions &queryRegions,
                                             const CCTagLocalizer::Parameters &param,
                                             std::map< pair<IndexT, IndexT>, pair<Vec3, Vec2> > &associations) const;
@@ -90,10 +88,7 @@ private:
   // for each view index, it contains the cctag features and descriptors that have an
   // associated 3D point
   CCTagRegionsPerViews _regions_per_view;
-  
-  // contains the 3D reconstruction data
-  sfm::SfM_Data _sfm_data;
-  
+   
   // the feature extractor
   features::CCTAG_Image_describer _image_describer;
   

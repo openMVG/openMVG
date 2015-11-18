@@ -133,8 +133,6 @@ public:
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult &localizationResult);
   
-  const sfm::SfM_Data& getSfMData() const {return _sfm_data; }
-  
 private:
   /**
    * @brief Load the vocabulary tree.
@@ -160,10 +158,7 @@ public:
   // for each view index, it contains the features and descriptors that have an
   // associated 3D point
   Hash_Map<IndexT, Reconstructed_RegionsT > _regions_per_view;
-  
-  // contains the 3D reconstruction data
-  sfm::SfM_Data _sfm_data;
-  
+   
   // the feature extractor
   // @fixme do we want a generic image describer?
 //  features::SIFT_float_describer _image_describer;

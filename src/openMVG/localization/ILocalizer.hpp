@@ -37,6 +37,8 @@ public:
     
     bool isInit() {return _isInit;}
     
+    const sfm::SfM_Data& getSfMData() const {return _sfm_data; }
+    
     /**
     * @brief Just a wrapper around the different localization algorithm, the algorith
     * used to localized is chosen using \p param._algorithm
@@ -59,6 +61,7 @@ public:
     virtual ~ILocalizer( ) { } ;
 protected:
   bool _isInit;
+  sfm::SfM_Data _sfm_data;
 
 };
 
