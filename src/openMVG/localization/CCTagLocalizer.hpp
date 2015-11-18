@@ -1,5 +1,3 @@
-#ifdef HAVE_CCTAG
-
 #pragma once
 
 #include <openMVG/localization/VoctreeLocalizer.hpp>
@@ -150,4 +148,3 @@ void viewMatching(
 } // namespace localization
 } // openMVG
 
-#endif //HAVE_CCTAG
