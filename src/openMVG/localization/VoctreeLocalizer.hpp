@@ -51,7 +51,7 @@ public:
     Algorithm _algorithm;       //< algorithm to use for localization
     size_t _numResults;         //< number of best matching images to retrieve from the database
     size_t _maxResults;         
-    size_t _numCommonViews;     //< number minimum common images in which a point must be seen to be used in cluster tracking       
+    size_t _numCommonViews;     //< number minimum common images in which a point must be seen to be used in cluster tracking
   };
   
 public:
@@ -71,13 +71,13 @@ public:
    * It enable the use of combined SIFT and CCTAG features.
    */
   VoctreeLocalizer(const std::string &sfmFilePath,
-                                  const std::string &descriptorsFolder,
-                                  const std::string &vocTreeFilepath,
-                                  const std::string &weightsFilepath
+                   const std::string &descriptorsFolder,
+                   const std::string &vocTreeFilepath,
+                   const std::string &weightsFilepath
 #ifdef HAVE_CCTAG
-                                  , bool useSIFT_CCTAG
+                   , bool useSIFT_CCTAG
 #endif
-                                  );
+                  );
   
   /**
    * @brief Just a wrapper around the different localization algorithm, the algorith
@@ -140,7 +140,7 @@ public:
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult &localizationResult);
-  
+
 private:
   /**
    * @brief Load the vocabulary tree.
@@ -169,7 +169,7 @@ private:
                       const std::pair<size_t,size_t> & imageSizeI,     // size of the first image  
                       const std::pair<size_t,size_t> & imageSizeJ,     // size of the first image
                       std::vector<matching::IndMatch> & vec_featureMatches) const;
-    
+  
   /**
    * @brief Load all the Descriptors who have contributed to the reconstruction.
    * deprecated.. now inside initDatabase
@@ -184,7 +184,7 @@ public:
   // for each view index, it contains the features and descriptors that have an
   // associated 3D point
   Hash_Map<IndexT, Reconstructed_RegionsT > _regions_per_view;
-   
+  
   // the feature extractor
   // @fixme do we want a generic image describer?
 //  features::SIFT_float_describer _image_describer;
@@ -197,7 +197,7 @@ public:
   // the database that stores the visual word representation of each image of
   // the original dataset
   voctree::Database _database;
-    
+  
 };
 
 /**
