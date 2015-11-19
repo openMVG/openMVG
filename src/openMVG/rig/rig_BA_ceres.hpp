@@ -1,11 +1,11 @@
 #pragma once
 
-#include <ceres/ceres.h>
-#include <ceres/rotation.h>
 #include <openMVG/geometry/pose3.hpp>
 #include <openMVG/cameras/Camera_Pinhole_Radial.hpp> //todo: not generic
                          // only Pinhole_Intrinsic_Radial_K3 is currently supported
                          // todo: allows internal parameters refinement
+#include <ceres/ceres.h>
+#include <ceres/rotation.h>
 
 
 namespace openMVG {

@@ -16,13 +16,19 @@ bool CCTAG_Image_describer::Describe(const image::Image<unsigned char>& image,
   {
     const int w = image.Width(), h = image.Height();
     
-    Allocate(regions);
+    if ( !_doAppend )
+      Allocate(regions);  
+    // else regions are added to the current vector of features/descriptors
 
     // Build alias to cached data
     CCTAG_Regions * regionsCasted = dynamic_cast<CCTAG_Regions*>(regions.get());
     // reserve some memory for faster keypoint saving
-    regionsCasted->Features().reserve(50);
-    regionsCasted->Descriptors().reserve(50);
+    
+    if ( !_doAppend )
+    {
+      regionsCasted->Features().reserve(50);
+      regionsCasted->Descriptors().reserve(50);
+    }
     
     boost::ptr_list<cctag::ICCTag> cctags;
     

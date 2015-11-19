@@ -226,25 +226,6 @@ MACRO (UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
 ENDMACRO (UNIT_TEST)
 
 # ==============================================================================
-# CCTag TODO (todo)
-# ==============================================================================
-IF(OpenMVG_USE_CCTAG)
-  FIND_PACKAGE(CCTag)
-  IF(NOT CCTAG_FOUND)
-    MESSAGE(STATUS "CCTAG package not found, CCTAG will be disabled")
-    UPDATE_CACHE_VARIABLE(OpenMVG_USE_CCTAG OFF)
-  ELSE(NOT CCTAG_FOUND)
-    MESSAGE(STATUS "CCTAG package found")
-    MESSAGE(STATUS "CCTAG library directory ${CCTAG_LIBRARY_DIR}")
-    MESSAGE(STATUS "CCTAG library names     ${CCTAG_LIBRARIES_NAMES}")
-    MESSAGE(STATUS "CCTAG include directory ${CCTAG_INCLUDE_DIR}")
-    LINK_DIRECTORIES(${CCTAG_LIBRARY_DIR})
-    INCLUDE_DIRECTORIES(${CCTAG_INCLUDE_DIRS})
-    ADD_DEFINITIONS(-DHAVE_CCTAG)
-  ENDIF(NOT CCTAG_FOUND)
-ENDIF(OpenMVG_USE_CCTAG)
-
-# ==============================================================================
 # Eigen
 # ==============================================================================
 # - internal by default,
@@ -267,6 +248,7 @@ ADD_DEFINITIONS(-DEIGEN_MPL2_ONLY)
 # - internal by default (ceres-solver+cxsparse+miniglog),
 # - external if CERES_DIR_HINTS and FIND_PACKAGE return a valid Ceres setup
 # ==============================================================================
+MESSAGE(STATUS "Trying to find package Ceres for openMVG")
 FIND_PACKAGE(Ceres QUIET HINTS ${CERES_DIR_HINTS})
 IF(NOT Ceres_FOUND)
   MESSAGE(STATUS "No external CERES detected, using the embedded one.")
@@ -278,7 +260,31 @@ IF(NOT Ceres_FOUND)
     FILE(READ "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/VERSION" CERES_CONFIG)
     STRING(REGEX REPLACE "version ([0-9.]+).*" "\\1" CERES_VERSION ${CERES_CONFIG})
   SET(CERES_LIBRARIES ceres cxsparse)
+  SET(Ceres_FOUND TRUE)
+ELSE()
+  MESSAGE(STATUS "Ceres include dirs ${CERES_INCLUDE_DIRS}")
+  MESSAGE(STATUS "Ceres libraries ${CERES_LIBRARIES}")
+  INCLUDE_DIRECTORIES(${CERES_INCLUDE_DIRS})
 ENDIF()
+
+# ==============================================================================
+# CCTag TODO (todo)
+# ==============================================================================
+IF(OpenMVG_USE_CCTAG)
+  FIND_PACKAGE(CCTag)
+  IF(NOT CCTAG_FOUND)
+    MESSAGE(STATUS "CCTAG package not found, CCTAG will be disabled")
+    UPDATE_CACHE_VARIABLE(OpenMVG_USE_CCTAG OFF)
+  ELSE(NOT CCTAG_FOUND)
+    MESSAGE(STATUS "CCTAG package found")
+    MESSAGE(STATUS "CCTAG library directory ${CCTAG_LIBRARY_DIR}")
+    MESSAGE(STATUS "CCTAG library names     ${CCTAG_LIBRARIES_NAMES}")
+    MESSAGE(STATUS "CCTAG include directory ${CCTAG_INCLUDE_DIR}")
+    LINK_DIRECTORIES(${CCTAG_LIBRARY_DIR})
+    INCLUDE_DIRECTORIES(${CCTAG_INCLUDE_DIRS})
+    ADD_DEFINITIONS(-DHAVE_CCTAG)
+  ENDIF(NOT CCTAG_FOUND)
+ENDIF(OpenMVG_USE_CCTAG)
 
 # ==============================================================================
 # Flann
