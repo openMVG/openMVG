@@ -6,6 +6,7 @@
  */
 #include <openMVG/localization/VoctreeLocalizer.hpp>
 #include <openMVG/localization/CCTagLocalizer.hpp>
+#include <openMVG/localization/optimization.hpp>
 #include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 #include <openMVG/image/image_io.hpp>
 #include <openMVG/dataio/FeedProvider.hpp>
@@ -126,13 +127,13 @@ int main(int argc, char** argv)
  
   // init the localizer
   localization::CCTagLocalizer localizer(sfmFilePath, descriptorsFolder);
-  
+
   if(!localizer.isInit())
   {
     POPART_CERR("ERROR while initializing the localizer!");
     return EXIT_FAILURE;
   }
-  
+
   // create the feedProvider
   dataio::FeedProvider feed(mediaFilepath, calibFile);
   if(!feed.isInit())
@@ -140,70 +141,69 @@ int main(int argc, char** argv)
     POPART_CERR("ERROR while initializing the FeedProvider!");
     return EXIT_FAILURE;
   }
-  
+
 #if HAVE_ALEMBIC
-  dataio::AlembicExporter exporter( exportFile );
+  dataio::AlembicExporter exporter(exportFile);
   exporter.addPoints(localizer.getSfMData().GetLandmarks());
 #endif
-  
+
   image::Image<unsigned char> imageGrey;
   cameras::Pinhole_Intrinsic_Radial_K3 queryIntrinsics;
   bool hasIntrinsics = false;
-  
+
   size_t frameCounter = 0;
   std::string currentImgName;
-  
+
   // Define an accumulator set for computing the mean and the
   // standard deviation of the time taken for localization
   bacc::accumulator_set<double, bacc::stats<bacc::tag::mean, bacc::tag::min, bacc::tag::max, bacc::tag::sum > > stats;
-  
-  std::vector<localization::LocalizationResult> vLocalizationResults;
-  
+
+  std::vector<localization::LocalizationResult> vec_localizationResults;
+
   while(feed.next(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics))
   {
     POPART_COUT("******************************");
-    POPART_COUT("FRAME " << myToString(frameCounter,4));
+    POPART_COUT("FRAME " << myToString(frameCounter, 4));
     POPART_COUT("******************************");
-    sfm::Image_Localizer_Match_Data matchData;
-    std::vector<pair<IndexT, IndexT> > ids;
     auto detect_start = std::chrono::steady_clock::now();
     localization::LocalizationResult localizationResult;
     localizer.localize(
-            imageGrey, 
-            &param,
-            hasIntrinsics/*useInputIntrinsics*/,
-            queryIntrinsics, // todo: put as const and use the intrinsic result store in localizationResult afterward
-            localizationResult);
-    vLocalizationResults.emplace_back(localizationResult);
-    
+                       imageGrey,
+                       &param,
+                       hasIntrinsics/*useInputIntrinsics*/,
+                       queryIntrinsics, // todo: put as const and use the intrinsic result store in localizationResult afterward
+                       localizationResult);
     auto detect_end = std::chrono::steady_clock::now();
     auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
     POPART_COUT("\nLocalization took  " << detect_elapsed.count() << " [ms]");
     stats(detect_elapsed.count());
-    
+
     // save data
     if(localizationResult.isValid())
     {
 #if HAVE_ALEMBIC
-      exporter.appendCamera("camera."+myToString(frameCounter,4), localizationResult.getPose(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
+      exporter.appendCamera("camera." + myToString(frameCounter, 4), localizationResult.getPose(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
 #endif
+      if(globalBundle)
+      {
+        vec_localizationResults.emplace_back(localizationResult);
+      }
     }
     else
     {
 #if HAVE_ALEMBIC
       // @fixme for now just add a fake camera so that it still can be see in MAYA
-      exporter.appendCamera("camera.V."+myToString(frameCounter,4), geometry::Pose3(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
+      exporter.appendCamera("camera.V." + myToString(frameCounter, 4), geometry::Pose3(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
 #endif
       POPART_CERR("Unable to localize frame " << frameCounter);
     }
     ++frameCounter;
   }
-  
-#ifdef CCTAG_GLOBAL_BUNDLE // todo
+
   if(globalBundle)
   {
     // run a bundle adjustment
-    const bool BAresult = localization::VoctreeLocalizer::refineSequence(&queryIntrinsics, poses, associations, associationIDs);
+    const bool BAresult = localization::refineSequence(&queryIntrinsics, vec_localizationResults);
     if(!BAresult)
     {
       POPART_CERR("Bundle Adjustment failed!");
@@ -212,31 +212,30 @@ int main(int argc, char** argv)
     {
 #if HAVE_ALEMBIC
       // now copy back in a new abc with the same name file and BUNDLE appended at the end
-      dataio::AlembicExporter exporterBA( bfs::path(exportFile).stem().string()+".BUNDLE.abc" );
-      size_t idxLocalized = 0;
-      for(std::size_t i = 0; i < localized.size(); ++i)
+      dataio::AlembicExporter exporterBA(bfs::path(exportFile).stem().string() + ".BUNDLE.abc");
+      size_t idx = 0;
+      for(const localization::LocalizationResult &res : vec_localizationResults)
       {
-        if(localized[i])
+        if(res.isValid())
         {
-          assert(idxLocalized < poses.size());
-          exporterBA.appendCamera("camera."+myToString(i,4), poses[idxLocalized], &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
-          idxLocalized++;
+          assert(idx < vec_localizationResults.size());
+          exporterBA.appendCamera("camera." + myToString(idx, 4), res.getPose(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
         }
         else
         {
-          exporterBA.appendCamera("camera.V."+myToString(i,4), geometry::Pose3(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
+          exporterBA.appendCamera("camera.V." + myToString(idx, 4), geometry::Pose3(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
         }
+        idx++;
       }
       exporterBA.addPoints(localizer.getSfMData().GetLandmarks());
 #endif
     }
   }
-#endif // CCTAG_GLOBAL_BUNDLE
-  
+
   // print out some time stats
   POPART_COUT("\n\n******************************");
   POPART_COUT("Localized " << frameCounter << " images");
-  POPART_COUT("Processing took " << bacc::sum(stats)/1000 << " [s] overall");
+  POPART_COUT("Processing took " << bacc::sum(stats) / 1000 << " [s] overall");
   POPART_COUT("Mean time for localization:   " << bacc::mean(stats) << " [ms]");
   POPART_COUT("Max time for localization:   " << bacc::max(stats) << " [ms]");
   POPART_COUT("Min time for localization:   " << bacc::min(stats) << " [ms]");
