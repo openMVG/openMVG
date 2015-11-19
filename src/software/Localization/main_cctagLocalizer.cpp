@@ -120,7 +120,7 @@ int main(int argc, char** argv)
     POPART_COUT("\tsiftPath: " << descriptorsFolder);
     POPART_COUT("\tresults: " << param._nNearestKeyFrames);
     POPART_COUT("\trefineIntrinsics: " << param._refineIntrinsics);
-    POPART_COUT("\tpreset: " << param._featurePreset);
+    POPART_COUT("\tpreset: " << features::describerPreset_enumToString(param._featurePreset));
     POPART_COUT("\tglobalBundle: " << globalBundle);
 //    POPART_COUT("\tvisual debug: " << visualDebug);
   }

@@ -140,7 +140,7 @@ int main(int argc, char** argv)
     POPART_COUT("\tresults: " << param._numResults);
     POPART_COUT("\tcommon views: " << param._numCommonViews);
     POPART_COUT("\trefineIntrinsics: " << param._refineIntrinsics);
-    POPART_COUT("\tpreset: " << param._featurePreset);
+    POPART_COUT("\tpreset: " << features::describerPreset_enumToString(param._featurePreset));
     POPART_COUT("\tglobalBundle: " << globalBundle);
 //    POPART_COUT("\tvisual debug: " << visualDebug);
     POPART_COUT("\talgorithm: " << param._algorithm);
