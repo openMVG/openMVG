@@ -187,35 +187,34 @@ int main(int argc, char** argv)
   // standard deviation of the time taken for localization
   bacc::accumulator_set<double, bacc::stats<bacc::tag::mean, bacc::tag::min, bacc::tag::max, bacc::tag::sum > > stats;
   
-  std::vector<localization::LocalizationResult> localizationResults;
+  std::vector<localization::LocalizationResult> vec_localizationResults;
   
   while(feed.next(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics))
   {
     POPART_COUT("******************************");
     POPART_COUT("FRAME " << myToString(frameCounter,4));
     POPART_COUT("******************************");
-    localization::LocalizationResult locResult;
-    std::vector<pair<IndexT, IndexT> > ids;
+    localization::LocalizationResult localizationResult;
     auto detect_start = std::chrono::steady_clock::now();
     localizer.localize(imageGrey, 
                        &param,
                        hasIntrinsics /*useInputIntrinsics*/,
                        queryIntrinsics,
-                       locResult);
+                       localizationResult);
     auto detect_end = std::chrono::steady_clock::now();
     auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
     POPART_COUT("\nLocalization took  " << detect_elapsed.count() << " [ms]");
     stats(detect_elapsed.count());
     
     // save data
-    if(locResult.isValid())
+    if(localizationResult.isValid())
     {
 #if HAVE_ALEMBIC
-      exporter.appendCamera("camera."+myToString(frameCounter,4), locResult.getPose(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
+      exporter.appendCamera("camera."+myToString(frameCounter,4), localizationResult.getPose(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
 #endif
       if(globalBundle)
       {
-        localizationResults.emplace_back(locResult);
+        vec_localizationResults.emplace_back(localizationResult);
       }
     }
     else
@@ -232,7 +231,7 @@ int main(int argc, char** argv)
   if(globalBundle)
   {
     // run a bundle adjustment
-    const bool BAresult = localization::refineSequence(&queryIntrinsics, localizationResults);
+    const bool BAresult = localization::refineSequence(&queryIntrinsics, vec_localizationResults);
     if(!BAresult)
     {
       POPART_CERR("Bundle Adjustment failed!");
@@ -243,11 +242,11 @@ int main(int argc, char** argv)
       // now copy back in a new abc with the same name file and BUNDLE appended at the end
       dataio::AlembicExporter exporterBA( bfs::path(exportFile).stem().string()+".BUNDLE.abc" );
       size_t idx = 0;
-      for(const localization::LocalizationResult &res : localizationResults)
+      for(const localization::LocalizationResult &res : vec_localizationResults)
       {
         if(res.isValid())
         {
-          assert(idx < localizationResults.size());
+          assert(idx < vec_localizationResults.size());
           exporterBA.appendCamera("camera."+myToString(idx,4), res.getPose(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
         }
         else
