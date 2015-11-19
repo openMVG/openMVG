@@ -55,6 +55,21 @@ public:
   };
   
 public:
+  
+  /**
+   * @brief Initialize a localizer based on a vocabulary tree
+   * 
+   * @param[in] sfmFilePath The path to the sfmdata file containing the scene 
+   * reconstruction.
+   * @param[in] descriptorsFolder The path to the directory containing the features 
+   * of the scene (.desc and .feat files).
+   * @param[in] vocTreeFilepath The path to the vocabulary tree (usually a .tree file).
+   * @param[in] weightsFilepath Optional path to the weights of the vocabulary 
+   * tree (usually a .weights file), if not provided the weights will be recomputed 
+   * when all the documents are added.
+   * @param[in] useSIFT_CCTAG Optional and enabled only if the CCTAG are available. 
+   * It enable the use of combined SIFT and CCTAG features.
+   */
   VoctreeLocalizer(const std::string &sfmFilePath,
                                   const std::string &descriptorsFolder,
                                   const std::string &vocTreeFilepath,
@@ -63,13 +78,6 @@ public:
                                   , bool useSIFT_CCTAG
 #endif
                                   );
-  
-  /**
-   * @brief Load all the Descriptors who have contributed to the reconstruction.
-   */
-  bool loadReconstructionDescriptors(
-    const sfm::SfM_Data & sfm_data,
-    const std::string & feat_directory);
   
   /**
    * @brief Just a wrapper around the different localization algorithm, the algorith
@@ -136,6 +144,15 @@ public:
 private:
   /**
    * @brief Load the vocabulary tree.
+
+   * @param[in] vocTreeFilepath The path to the directory containing the features 
+   * of the scene (.desc and .feat files).
+   * @param[in] weightsFilepath weightsFilepath Optional path to the weights of the vocabulary 
+   * tree (usually a .weights file), if not provided the weights will be recomputed 
+   * when all the documents are added.
+   * @param[in] feat_directory The path to the directory containing the features 
+   * of the scene (.desc and .feat files).
+   * @return true if everything went ok
    */
   bool initDatabase(const std::string & vocTreeFilepath,
                                     const std::string & weightsFilepath,
@@ -152,6 +169,15 @@ private:
                       const std::pair<size_t,size_t> & imageSizeI,     // size of the first image  
                       const std::pair<size_t,size_t> & imageSizeJ,     // size of the first image
                       std::vector<matching::IndMatch> & vec_featureMatches) const;
+    
+  /**
+   * @brief Load all the Descriptors who have contributed to the reconstruction.
+   * deprecated.. now inside initDatabase
+   */
+  bool loadReconstructionDescriptors(
+    const sfm::SfM_Data & sfm_data,
+    const std::string & feat_directory);
+  
   
 public:
   
