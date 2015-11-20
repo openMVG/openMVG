@@ -106,15 +106,28 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
   for(sfm::Views::const_iterator iter = sfm_data.GetViews().begin();
           iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
   {
-    const IndexT id_view = iter->second->id_view;
+	  const IndexT id_view = iter->second->id_view;
     Reconstructed_RegionsCCTag& reconstructedRegion = _regions_per_view[id_view];
 
     const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.get()->s_Img_path);
     const std::string basename = stlplus::basename_part(sImageName);
-    const std::string featFilepath = stlplus::create_filespec(feat_directory, basename, ".feat");
-    const std::string descFilepath = stlplus::create_filespec(feat_directory, basename, ".desc");
-    //    std::cout << "Feat: " << featFilepath << std::endl;
-    //    std::cout << "Desc: " << descFilepath << std::endl;
+    std::string featFilepath = stlplus::create_filespec(feat_directory, std::to_string(iter->first), ".feat");
+    std::string descFilepath = stlplus::create_filespec(feat_directory, std::to_string(iter->first), ".desc");
+
+    if(!(stlplus::is_file(featFilepath) && stlplus::is_file(descFilepath)))
+    {
+      // legacy compatibility, if the features are not named using the UID convention
+      // let's try with the old-fashion naming convention
+      const std::string basename = stlplus::basename_part(sImageName);
+      featFilepath = stlplus::create_filespec(feat_directory, basename, ".feat");
+      descFilepath = stlplus::create_filespec(feat_directory, basename, ".desc");
+      if(!(stlplus::is_file(featFilepath) && stlplus::is_file(descFilepath)))
+      {
+        POPART_CERR("Cannot find the features for image " << sImageName 
+                << " neither using the UID naming convention nor the image name based convention");
+        return false;
+      }
+    }
 
     if(!reconstructedRegion._regions.Load(featFilepath, descFilepath))
     {
