@@ -1,11 +1,10 @@
-#ifdef HAVE_CCTAG
-
 #include "CCTagLocalizer.hpp"
 #include "reconstructed_regions.hpp"
 #include <openMVG/sfm/sfm_data_io.hpp>
 #include <openMVG/matching/indMatch.hpp>
 #include <openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp>
 
+#include <cctag/ICCTag.hpp>
 //@fixme move/redefine
 #define POPART_COUT(x) std::cout << x << std::endl
 #define POPART_CERR(x) std::cerr << x << std::endl
@@ -21,7 +20,9 @@ bool CCTagLocalizer::init(const std::string &sfmFilePath,
                           const std::string &descriptorsFolder)
 {
   using namespace openMVG::features;
-  
+
+  cctag::initCCTagDetection();
+
   // load the sfm data containing the 3D reconstruction info
   if (!Load(_sfm_data, sfmFilePath, sfm::ESfM_Data::ALL)) 
   {
@@ -591,4 +592,3 @@ std::bitset<128> constructCCTagViewDescriptor(
 } // localization
 } // openMVG
 
-#endif //HAVE_CCTAG
