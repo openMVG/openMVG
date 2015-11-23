@@ -418,7 +418,8 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
 
   if (valid_views.size() < 2)
   {
-    return false; // There is not view that support valid intrinsic data
+    std::cerr << "Failed to find an initial pair automatically. There is no view with valid intrinsics." << std::endl;
+    return false;
   }
 
   std::vector<std::pair<double, Pair> > scoring_per_pair;
