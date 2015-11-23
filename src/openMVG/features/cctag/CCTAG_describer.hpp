@@ -22,8 +22,8 @@ class CCTAG_Image_describer : public Image_describer
 {
 public:
   CCTAG_Image_describer()
-    :Image_describer(), _params(3) {}
-    
+    :Image_describer(), _params(3), _doAppend(false) {}
+
   CCTAG_Image_describer(const std::size_t nRings, const bool doAppend = false)
     :Image_describer(), _params(nRings), _doAppend(doAppend){}   
 
