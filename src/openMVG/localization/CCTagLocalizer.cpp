@@ -201,7 +201,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
     
     if ( vec_featureMatches.size() < 3 )
     {
-      POPART_COUT("[localization]\tSkipping kframe " << indexKeyFrame << " as it contains only "<< vec_featureMatches.size()<<" points");
+      POPART_COUT("[localization]\tSkipping kframe " << indexKeyFrame << " as it contains only "<< vec_featureMatches.size()<<" matches");
       continue;
     }
     
