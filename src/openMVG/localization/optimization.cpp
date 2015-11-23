@@ -16,26 +16,53 @@ namespace openMVG{
 namespace localization{
 
 bool refineSequence(cameras::Pinhole_Intrinsic_Radial_K3 *intrinsics,
-                    std::vector<LocalizationResult> & localizationResult)
+                    std::vector<LocalizationResult> & vec_localizationResult,
+                    bool b_refine_pose /*= true*/,
+                    bool b_refine_intrinsic /*= true*/,
+                    bool b_refine_structure /*= false*/)
 {
-  
+  std::vector<cameras::Pinhole_Intrinsic_Radial_K3* > vec_intrinsics;
+  vec_intrinsics.push_back(intrinsics);
+  return refineSequence(vec_intrinsics, vec_localizationResult);
+}
+
+bool refineSequence(std::vector<cameras::Pinhole_Intrinsic_Radial_K3* > vec_intrinsics,
+                    std::vector<LocalizationResult> & vec_localizationResult,
+                    bool b_refine_pose /*= true*/,
+                    bool b_refine_intrinsic /*= true*/,
+                    bool b_refine_structure /*= false*/)
+{
+   
   // flags for BA
-  //@todo expose as parameters?
-  const bool b_refine_pose = true;
-  const bool b_refine_intrinsic = true;
-  const bool b_refine_structure = false;
+//  const bool b_refine_pose = true;
+//  const bool b_refine_intrinsic = true;
+//  const bool b_refine_structure = false;
   
-  const size_t numCameras = localizationResult.size();
+  // vec_intrinsics must be either of the same size of localization result (a 
+  // camera for each found pose) or it must contain only 1 element, meaning that 
+  // it's the same camera for the whole sequence
+  assert(vec_intrinsics.size()==vec_localizationResult.size() || vec_intrinsics.size()==1);
+  
+  const size_t numViews = vec_localizationResult.size();
+  const bool singleCamera = vec_intrinsics.size()==1;
   
   // the id for the instrinsic group
-  const IndexT intrinsicID = 0;
+  IndexT intrinsicID = 0;
     
   // Setup a tiny SfM scene with the corresponding 2D-3D data
   sfm::SfM_Data tinyScene;
   
-  for(size_t viewID = 0; viewID < numCameras; ++viewID)
+  // if we have only one camera just set the intrinsics group once for all
+  if(singleCamera)
   {
-    const LocalizationResult &currResult = localizationResult[viewID];
+    // intrinsic (the shared_ptr does not take the ownership, will not release the input pointer)
+    tinyScene.intrinsics[intrinsicID] = std::shared_ptr<cameras::Pinhole_Intrinsic_Radial_K3>(vec_intrinsics[0], [](cameras::Pinhole_Intrinsic_Radial_K3*){});
+  }
+  
+  for(size_t viewID = 0; viewID < numViews; ++viewID)
+  {
+    const LocalizationResult &currResult = vec_localizationResult[viewID];
+    cameras::Pinhole_Intrinsic_Radial_K3* currIntrinsics = vec_intrinsics[viewID];
     // skip invalid poses
     if(!currResult.isValid())
     {
@@ -48,8 +75,13 @@ bool refineSequence(cameras::Pinhole_Intrinsic_Radial_K3 *intrinsics,
     tinyScene.views.insert( std::make_pair(viewID, std::make_shared<sfm::View>("",viewID, intrinsicID, viewID)));
     // pose
     tinyScene.poses[viewID] = currResult.getPose();
-    // intrinsic (the shared_ptr does not take the ownership, will not release the input pointer)
-    tinyScene.intrinsics[intrinsicID] = std::shared_ptr<cameras::Pinhole_Intrinsic_Radial_K3>(intrinsics, [](cameras::Pinhole_Intrinsic_Radial_K3*){});
+    
+    if(!singleCamera)
+    {
+       // intrinsic (the shared_ptr does not take the ownership, will not release the input pointer)
+      tinyScene.intrinsics[intrinsicID] = std::shared_ptr<cameras::Pinhole_Intrinsic_Radial_K3>(currIntrinsics, [](cameras::Pinhole_Intrinsic_Radial_K3*){});
+      ++intrinsicID;
+    }
     
     // structure data (2D-3D correspondences)
     const vector<pair<IndexT, IndexT> > &currentIDs = currResult.getIndMatch3D2D();
@@ -92,9 +124,15 @@ bool refineSequence(cameras::Pinhole_Intrinsic_Radial_K3 *intrinsics,
     }
   }
   POPART_COUT("Number of 3D-2D associations " << tinyScene.structure.size());
-  std::vector<double> params = intrinsics->getParams();
-  POPART_COUT("K before bundle:" << params[0] << " " << params[1] << " "<< params[2]);
-  POPART_COUT("Distortion before bundle" << params[3] << " " << params[4] << " "<< params[5]);
+  
+  if(singleCamera)
+  {
+    // just debugging stuff
+    const cameras::Pinhole_Intrinsic_Radial_K3* intrinsics = vec_intrinsics[0];
+    std::vector<double> params = intrinsics->getParams();
+    POPART_COUT("K before bundle:" << params[0] << " " << params[1] << " "<< params[2]);
+    POPART_COUT("Distortion before bundle" << params[3] << " " << params[4] << " "<< params[5]);
+  }
 
   sfm::Bundle_Adjustment_Ceres bundle_adjustment_obj;
   const bool b_BA_Status = bundle_adjustment_obj.Adjust(tinyScene, b_refine_pose, b_refine_pose, b_refine_intrinsic, b_refine_structure);
@@ -104,12 +142,18 @@ bool refineSequence(cameras::Pinhole_Intrinsic_Radial_K3 *intrinsics,
     for(const auto &pose : tinyScene.poses)
     {
       const IndexT idPose = pose.first;
-      localizationResult[idPose].setPose(pose.second);
+      vec_localizationResult[idPose].setPose(pose.second);
     }
   }
-  params = intrinsics->getParams();
-  POPART_COUT("K after bundle:" << params[0] << " " << params[1] << " "<< params[2]);
-  POPART_COUT("Distortion after bundle" << params[3] << " " << params[4] << " "<< params[5]);
+  
+  if(singleCamera)
+  {
+    // just debugging stuff
+    const cameras::Pinhole_Intrinsic_Radial_K3* intrinsics = vec_intrinsics[0];
+    std::vector<double> params = intrinsics->getParams();
+    POPART_COUT("K after bundle:" << params[0] << " " << params[1] << " "<< params[2]);
+    POPART_COUT("Distortion after bundle" << params[3] << " " << params[4] << " "<< params[5]);
+  }
   
   return b_BA_Status;
 }
