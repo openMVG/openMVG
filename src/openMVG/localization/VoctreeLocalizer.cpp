@@ -80,9 +80,19 @@ VoctreeLocalizer::Algorithm VoctreeLocalizer::initFromString(const std::string &
     throw std::invalid_argument("Unrecognized algorithm \"" + value + "\"!");
 }
 
+
+VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
+                                   const std::string &descriptorsFolder,
+                                   const std::string &vocTreeFilepath,
+                                   const std::string &weightsFilepath
 #ifdef HAVE_CCTAG
-VoctreeLocalizer::VoctreeLocalizer(bool useSIFT_CCTAG)
+                                   , bool useSIFT_CCTAG
+#endif
+                                  ) : ILocalizer()
 {
+  using namespace openMVG::features;
+  // init the feature extractor
+#ifdef HAVE_CCTAG
   if(useSIFT_CCTAG)
   {
     _image_describer = new features::SIFT_CCTAG_Image_describer();  
@@ -91,59 +101,15 @@ VoctreeLocalizer::VoctreeLocalizer(bool useSIFT_CCTAG)
   {
     _image_describer = new features::SIFT_float_describer();
   }
-}
 #else
-VoctreeLocalizer::VoctreeLocalizer()
-{
   _image_describer = new features::SIFT_float_describer();
-}
 #endif
-
-bool VoctreeLocalizer::localize(const image::Image<unsigned char> & imageGrey,
-                const Parameters &param,
-                bool useInputIntrinsics,
-                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                LocalizationResult &localizationResult)
-{
-  switch(param._algorithm)
-  {
-    case Algorithm::FirstBest: 
-      return localizeFirstBestResult(imageGrey, 
-                                     param,
-                                     useInputIntrinsics,
-                                     queryIntrinsics,
-                                     localizationResult);
-    case Algorithm::BestResult: throw std::invalid_argument("BestResult not yet implemented");
-    case Algorithm::AllResults: 
-      return localizeAllResults(imageGrey, 
-                                param,
-                                useInputIntrinsics, 
-                                queryIntrinsics,
-                                localizationResult);
-    case Algorithm::Cluster: throw std::invalid_argument("Cluster not yet implemented");
-    default: throw std::invalid_argument("Unknown algorithm type");
-  }
-}
-
-
-// inputs
-// - sfmdata path
-// - descriptorsFolder directory with the sift
-// - vocTreeFilepath; 
-// - weightsFilepath; 
-bool VoctreeLocalizer::init( const std::string &sfmFilePath,
-                            const std::string &descriptorsFolder,
-                            const std::string &vocTreeFilepath,
-                            const std::string &weightsFilepath)
-{
-  using namespace openMVG::features;
   
   // load the sfm data containing the 3D reconstruction info
   POPART_COUT("Loading SFM data...");
   if (!Load(_sfm_data, sfmFilePath, sfm::ESfM_Data::ALL)) 
   {
     POPART_CERR("The input SfM_Data file "<< sfmFilePath << " cannot be read!");
-    return false;
   }
   else
   {
@@ -161,9 +127,81 @@ bool VoctreeLocalizer::init( const std::string &sfmFilePath,
     
   initDatabase(vocTreeFilepath, weightsFilepath, descriptorsFolder);
   
-  return true;
+  _isInit = true;
 }
 
+bool VoctreeLocalizer::localize(const image::Image<unsigned char> & imageGrey,
+                const LocalizerParameters *param,
+                bool useInputIntrinsics,
+                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
+                LocalizationResult &localizationResult)
+{
+  const Parameters *voctreeParam = static_cast<const Parameters *>(param);
+  if(!voctreeParam)
+  {
+    // error!
+    throw std::invalid_argument("The parameters are not in the right format!!");
+  }
+  
+  switch(voctreeParam->_algorithm)
+  {
+    case Algorithm::FirstBest: 
+      return localizeFirstBestResult(imageGrey, 
+                                     *voctreeParam,
+                                     useInputIntrinsics,
+                                     queryIntrinsics,
+                                     localizationResult);
+    case Algorithm::BestResult: throw std::invalid_argument("BestResult not yet implemented");
+    case Algorithm::AllResults: 
+      return localizeAllResults(imageGrey, 
+                                *voctreeParam,
+                                useInputIntrinsics, 
+                                queryIntrinsics,
+                                localizationResult);
+    case Algorithm::Cluster: throw std::invalid_argument("Cluster not yet implemented");
+    default: throw std::invalid_argument("Unknown algorithm type");
+  }
+}
+
+
+// inputs
+// - sfmdata path
+// - descriptorsFolder directory with the sift
+// - vocTreeFilepath; 
+// - weightsFilepath; 
+//bool VoctreeLocalizer::init(const std::string &sfmFilePath,
+//                            const std::string &descriptorsFolder,
+//                            const std::string &vocTreeFilepath,
+//                            const std::string &weightsFilepath)
+//{
+//  using namespace openMVG::features;
+//  
+//  // load the sfm data containing the 3D reconstruction info
+//  POPART_COUT("Loading SFM data...");
+//  if (!Load(_sfm_data, sfmFilePath, sfm::ESfM_Data::ALL)) 
+//  {
+//    POPART_CERR("The input SfM_Data file "<< sfmFilePath << " cannot be read!");
+//    return false;
+//  }
+//  else
+//  {
+//    POPART_COUT("SfM data loaded from " << sfmFilePath << " containing: ");
+//    POPART_COUT("\tnumber of views      : " << _sfm_data.GetViews().size());
+//    POPART_COUT("\tnumber of poses      : " << _sfm_data.GetPoses().size());
+//    POPART_COUT("\tnumber of points     : " << _sfm_data.GetLandmarks().size());
+//    POPART_COUT("\tnumber of intrinsics : " << _sfm_data.GetIntrinsics().size());
+//  }
+//
+//  // load the features and descriptors
+//  // initially we need all the feature in order to create the database
+//  // then we can store only those associated to 3D points
+//  //? can we use Feature_Provider to load the features and filter them later?
+//    
+//  initDatabase(vocTreeFilepath, weightsFilepath, descriptorsFolder);
+//  
+//  return true;
+//}
+//
 
 //@fixme deprecated.. now inside initDatabase
 bool VoctreeLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_data,
@@ -282,9 +320,23 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
     Reconstructed_RegionsT& currRecoRegions = _regions_per_view[id_view];
 
     const std::string sImageName = stlplus::create_filespec(_sfm_data.s_root_path, currView.get()->s_Img_path);
-    const std::string basename = stlplus::basename_part(sImageName);
-    const std::string featFilepath = stlplus::create_filespec(feat_directory, std::to_string(iter.first), ".feat");
-    const std::string descFilepath = stlplus::create_filespec(feat_directory, std::to_string(iter.first), ".desc");
+    std::string featFilepath = stlplus::create_filespec(feat_directory, std::to_string(iter.first), ".feat");
+    std::string descFilepath = stlplus::create_filespec(feat_directory, std::to_string(iter.first), ".desc");
+
+    if(!(stlplus::is_file(featFilepath) && stlplus::is_file(descFilepath)))
+    {
+      // legacy compatibility, if the features are not named using the UID convention
+      // let's try with the old-fashion naming convention
+      const std::string basename = stlplus::basename_part(sImageName);
+      featFilepath = stlplus::create_filespec(feat_directory, basename, ".feat");
+      descFilepath = stlplus::create_filespec(feat_directory, basename, ".desc");
+      if(!(stlplus::is_file(featFilepath) && stlplus::is_file(descFilepath)))
+      {
+        POPART_CERR("Cannot find the features for image " << sImageName 
+                << " neither using the UID naming convention nor the image name based convention");
+        return false;
+      }
+    }
 
     if(!currRecoRegions._regions.Load(featFilepath, descFilepath))
     {
@@ -308,7 +360,7 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
 
 bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char> & imageGrey,
                                                 const Parameters &param,
-                                bool useInputIntrinsics,
+                                                bool useInputIntrinsics,
                                                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                                                 LocalizationResult &localizationResult)
 {
@@ -351,6 +403,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
   //@fixme Maybe useless, just do everything with DistanceRatioMatch
   // preparing the matcher, it will use the extracted Regions as reference and it
   // will match them to the Regions of each similar image
+
 //  typedef flann::L2<unsigned char> MetricT;
 //  typedef matching::ArrayMatcher_Kdtree_Flann<unsigned char, MetricT> MatcherT;
   POPART_COUT("[matching]\tBuilding the matcher");
@@ -442,7 +495,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
       resectionData.pt3D.col(index) = _sfm_data.GetLandmarks().at(trackId3D).X;
 
       const Vec2 feat = queryRegions.GetRegionPosition(featureMatch._i);
-        resectionData.pt2D.col(index) = feat;
+      resectionData.pt2D.col(index) = feat;
       
       associationIDs.emplace_back(trackId3D, featureMatch._i);
 
@@ -543,20 +596,21 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   std::vector<voctree::DocMatch> matchedImages;
   _database.find(requestImageWords, (param._numResults==0) ? (_database.size()) : (param._numResults) , matchedImages);
   
-  // just debugging bla bla
-  // for each similar image found print score and number of features
-  for(const voctree::DocMatch & currMatch : matchedImages )
-  {
-    // get the view handle
-    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[currMatch.id];
-    POPART_COUT( "[database]\t\t match " << matchedView->s_Img_path 
-            << " [docid: "<< currMatch.id << "]"
-            << " with score " << currMatch.score 
-            << " and it has "  << _regions_per_view[currMatch.id]._regions.RegionCount() 
-            << " features with 3D points");
-  }
+//  // just debugging bla bla
+//  // for each similar image found print score and number of features
+//  for(const voctree::Match & currMatch : matchedImages )
+//  {
+//    // get the corresponding index of the view
+//    const IndexT matchedViewIndex = _mapDocIdToView[currMatch.id];
+//    // get the view handle
+//    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
+//    POPART_COUT( "[database]\t\t match " << matchedView->s_Img_path 
+//            << " [docid: "<< currMatch.id << "]"
+//            << " with score " << currMatch.score 
+//            << " and it has "  << _regions_per_view[matchedViewIndex]._regions.RegionCount() 
+//            << " features with 3D points");
+//  }
 
-  const float fDistRatio = 0.6; //@fixme this could be a param
 
   POPART_COUT("[matching]\tBuilding the matcher");
   matching::RegionsMatcherT<MatcherT> matcher(queryRegions);
@@ -590,7 +644,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
     }
     else
     {
-      POPART_COUT("[matching]\tTrying to match the query image with " << matchedView->s_Img_path);
+//      POPART_COUT("[matching]\tTrying to match the query image with " << matchedView->s_Img_path);
     }
     
     // its associated intrinsics
@@ -652,7 +706,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
       // Get the 2D point
       const Vec2 feat = queryRegions.GetRegionPosition(pt2D_id);
       associations.insert(std::make_pair(key, std::make_pair(point3d, feat)));
-
+      
       ++index;
     }
     ++goodMatches;

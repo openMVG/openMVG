@@ -9,6 +9,7 @@
 
 #include "reconstructed_regions.hpp"
 #include "LocalizationResult.hpp"
+#include "ILocalizer.hpp"
 
 #include <openMVG/features/image_describer.hpp>
 #include <openMVG/sfm/sfm_data.hpp>
@@ -28,7 +29,7 @@ namespace localization {
 typedef openMVG::features::Descriptor<float, 128> DescriptorFloat;
 typedef Reconstructed_Regions<features::SIOPointFeature, float, 128> Reconstructed_RegionsT;
 
-class VoctreeLocalizer
+class VoctreeLocalizer : public ILocalizer
 {
 
 public:
@@ -36,51 +37,47 @@ public:
   static Algorithm initFromString(const std::string &value);
   
 public:
-  struct Parameters 
+  struct Parameters : LocalizerParameters
   {
 
-    Parameters() :
+    Parameters() : LocalizerParameters(), 
       _useGuidedMatching(false),
-      _refineIntrinsics(false),
       _algorithm(Algorithm::FirstBest),
       _numResults(4),
       _maxResults(10),
-      _numCommonViews(3),
-      _fDistRatio(0.6),
-      _featurePreset(features::EDESCRIBER_PRESET::ULTRA_PRESET),
-      _errorMax(std::numeric_limits<double>::max()) { }
+      _numCommonViews(3) { }
     
     bool _useGuidedMatching;    //< Enable/disable guided matching when matching images
-    bool _refineIntrinsics;     //< whether or not the Intrinsics of the query camera has to be refined
     Algorithm _algorithm;       //< algorithm to use for localization
     size_t _numResults;         //< number of best matching images to retrieve from the database
     size_t _maxResults;         
     size_t _numCommonViews;     //< number minimum common images in which a point must be seen to be used in cluster tracking
-    float _fDistRatio;          //< the ratio distance to use when matching feature with the ratio test
-    features::EDESCRIBER_PRESET _featurePreset; //< the preset to use for feature extraction of the query image
-    double _errorMax;           
   };
   
 public:
-#ifdef HAVE_CCTAG
-  VoctreeLocalizer(bool useSIFT_CCTAG = false);
-#else
-  VoctreeLocalizer();
-#endif
   
-  bool init(const std::string &sfmFilePath,
-            const std::string &descriptorsFolder,
-            const std::string &vocTreeFilepath,
-            const std::string &weightsFilepath);
-  
-  // loadSfmData(const std::string & sfmDataPath)
-
   /**
-   * @brief Load all the Descriptors who have contributed to the reconstruction.
+   * @brief Initialize a localizer based on a vocabulary tree
+   * 
+   * @param[in] sfmFilePath The path to the sfmdata file containing the scene 
+   * reconstruction.
+   * @param[in] descriptorsFolder The path to the directory containing the features 
+   * of the scene (.desc and .feat files).
+   * @param[in] vocTreeFilepath The path to the vocabulary tree (usually a .tree file).
+   * @param[in] weightsFilepath Optional path to the weights of the vocabulary 
+   * tree (usually a .weights file), if not provided the weights will be recomputed 
+   * when all the documents are added.
+   * @param[in] useSIFT_CCTAG Optional and enabled only if the CCTAG are available. 
+   * It enable the use of combined SIFT and CCTAG features.
    */
-  bool loadReconstructionDescriptors(
-    const sfm::SfM_Data & sfm_data,
-    const std::string & feat_directory);
+  VoctreeLocalizer(const std::string &sfmFilePath,
+                   const std::string &descriptorsFolder,
+                   const std::string &vocTreeFilepath,
+                   const std::string &weightsFilepath
+#ifdef HAVE_CCTAG
+                   , bool useSIFT_CCTAG
+#endif
+                  );
   
   /**
    * @brief Just a wrapper around the different localization algorithm, the algorith
@@ -96,7 +93,7 @@ public:
    * @return true if the localization is successful
    */
   bool localize(const image::Image<unsigned char> & imageGrey,
-                const Parameters &param,
+                const LocalizerParameters *param,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult &localizationResult);
@@ -143,18 +140,19 @@ public:
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult &localizationResult);
-  
-  const sfm::SfM_Data& getSfMData() const {return _sfm_data; }
-  
-public:
-  static bool refineSequence(cameras::Pinhole_Intrinsic_Radial_K3 *intrinsics,
-                             std::vector<geometry::Pose3> & poses,
-                             std::vector<sfm::Image_Localizer_Match_Data> & associations,
-                             std::vector<std::vector<pair<IndexT, IndexT> > > &associationIDs);
 
 private:
   /**
    * @brief Load the vocabulary tree.
+
+   * @param[in] vocTreeFilepath The path to the directory containing the features 
+   * of the scene (.desc and .feat files).
+   * @param[in] weightsFilepath weightsFilepath Optional path to the weights of the vocabulary 
+   * tree (usually a .weights file), if not provided the weights will be recomputed 
+   * when all the documents are added.
+   * @param[in] feat_directory The path to the directory containing the features 
+   * of the scene (.desc and .feat files).
+   * @return true if everything went ok
    */
   bool initDatabase(const std::string & vocTreeFilepath,
                                     const std::string & weightsFilepath,
@@ -172,14 +170,20 @@ private:
                       const std::pair<size_t,size_t> & imageSizeJ,     // size of the first image
                       std::vector<matching::IndMatch> & vec_featureMatches) const;
   
+  /**
+   * @brief Load all the Descriptors who have contributed to the reconstruction.
+   * deprecated.. now inside initDatabase
+   */
+  bool loadReconstructionDescriptors(
+    const sfm::SfM_Data & sfm_data,
+    const std::string & feat_directory);
+  
+  
 public:
   
   // for each view index, it contains the features and descriptors that have an
   // associated 3D point
   Hash_Map<IndexT, Reconstructed_RegionsT > _regions_per_view;
-  
-  // contains the 3D reconstruction data
-  sfm::SfM_Data _sfm_data;
   
   // the feature extractor
   // @fixme do we want a generic image describer?
@@ -193,7 +197,7 @@ public:
   // the database that stores the visual word representation of each image of
   // the original dataset
   voctree::Database _database;
-    
+  
 };
 
 /**
