@@ -25,7 +25,7 @@ struct View_Metadata : public View
     IndexT intrinsic_id = UndefinedIndexT,
     IndexT pose_id = UndefinedIndexT,
     IndexT width = UndefinedIndexT, IndexT height = UndefinedIndexT,
-    std::map<std::string, std::string> metadata = std::map<std::string, std::string>())
+    const std::map<std::string, std::string>& metadata = std::map<std::string, std::string>())
     : View(sImgPath, view_id, intrinsic_id, pose_id, width, height), 
     metadata(metadata)
     {
