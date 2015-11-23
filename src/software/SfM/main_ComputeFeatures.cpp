@@ -179,12 +179,12 @@ int main(int argc, char **argv)
     else
     if (sImage_Describer_Method == "CCTAG3")
     {
-      image_describer.reset(new CCTAG_Image_describer(3));
+      image_describer.reset(new CCTAG_Image_describer(3, true));
     }
     else
     if (sImage_Describer_Method == "CCTAG4")
     {
-      image_describer.reset(new CCTAG_Image_describer(4));
+      image_describer.reset(new CCTAG_Image_describer(4, true));
     }
     else
     if (sImage_Describer_Method == "SIFT_CCTAG3")
