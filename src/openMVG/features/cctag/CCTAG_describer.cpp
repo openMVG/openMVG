@@ -23,12 +23,9 @@ bool CCTAG_Image_describer::Describe(const image::Image<unsigned char>& image,
     // Build alias to cached data
     CCTAG_Regions * regionsCasted = dynamic_cast<CCTAG_Regions*>(regions.get());
     // reserve some memory for faster keypoint saving
-    
-    if ( !_doAppend )
-    {
-      regionsCasted->Features().reserve(50);
-      regionsCasted->Descriptors().reserve(50);
-    }
+
+    regionsCasted->Features().reserve(regionsCasted->Features().size() + 50);
+    regionsCasted->Descriptors().reserve(regionsCasted->Descriptors().size() + 50);
     
     boost::ptr_list<cctag::ICCTag> cctags;
     
