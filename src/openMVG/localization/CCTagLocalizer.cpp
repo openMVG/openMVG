@@ -2,9 +2,12 @@
 
 #include "CCTagLocalizer.hpp"
 #include "reconstructed_regions.hpp"
+#include "optimization.hpp"
 #include <openMVG/sfm/sfm_data_io.hpp>
 #include <openMVG/matching/indMatch.hpp>
 #include <openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp>
+
+#include <algorithm>
 
 //@fixme move/redefine
 #define POPART_COUT(x) std::cout << x << std::endl
@@ -201,7 +204,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
     
     if ( vec_featureMatches.size() < 3 )
     {
-      POPART_COUT("[localization]\tSkipping kframe " << indexKeyFrame << " as it contains only "<< vec_featureMatches.size()<<" points");
+      POPART_COUT("[localization]\tSkipping kframe " << indexKeyFrame << " as it contains only "<< vec_featureMatches.size()<<" matches");
       continue;
     }
     
@@ -305,41 +308,99 @@ CCTagLocalizer::~CCTagLocalizer()
 {
 }
 
-
+// subposes is n-1 as we consider the first camera as the main camera and the 
+// reference frame of the grid
 bool CCTagLocalizer::localize(const std::vector<image::Image<unsigned char> > & vec_imageGrey,
                               const Parameters &param,
-                              const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                              std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
                               const std::vector<geometry::Pose3 > &vec_subPoses,
                               geometry::Pose3 rigPose)
 {
   assert(vec_imageGrey.size()==vec_queryIntrinsics.size());
-  assert(vec_imageGrey.size()==vec_subPoses.size());
+  assert(vec_imageGrey.size()==vec_subPoses.size()-1);
 
   const size_t numCams = vec_imageGrey.size();
 
-  std::vector<std::unique_ptr<features::Regions> > vec_queryRegions;
-  vec_queryRegions.reserve(numCams);
-
-  for( size_t i = 0; i < numCams; ++i )
-  {
-    // initialize the regions
-    vec_queryRegions.emplace_back(new features::CCTAG_Regions());
-  }
-
+  std::vector<LocalizationResult> vec_localizationResults(numCams);
+    
+  // this is basic, just localize each camera alone
   //@todo parallelize?
-  for( size_t i = 0; i < numCams; ++i )
+  std::vector<bool> isLocalized(numCams, false);
+  for(size_t i = 0; i < numCams; ++i)
   {
-    // for each image, extract descriptors and features 
-    POPART_COUT("[features]\tExtract CCTag from query image " << i);
-    _image_describer.Describe(vec_imageGrey[i], vec_queryRegions[i]);
-    POPART_COUT("[features]\tExtract CCTAG done: found " << vec_queryRegions[i]->RegionCount() << " features for query image " << i);
+    isLocalized[i] = localize(vec_imageGrey[i], &param, true /*useInputIntrinsics*/, vec_queryIntrinsics[i], vec_localizationResults[i]);
+    if(!isLocalized[i])
+    {
+      POPART_CERR("Could not localize camera " << i);
+      // even if it is not localize we can try to go on and do with the cameras we have
+    }
   }
+  
+  // ** 'easy' cases in which we don't need further processing **
+  
+  const std::size_t numLocalizedCam = std::count(isLocalized.begin(), isLocalized.end(), true);
+  
+  // no camera has be localized
+  if(numLocalizedCam == 0)
+  {
+    POPART_COUT("No camera has been localized!!!");
+    return false;
+  }
+  
+  POPART_COUT("Localized cameras: " << numLocalizedCam << "/" << numCams);
+  
+  // if there is only one camera (the main one)
+  if(numCams==1)
+  {
+    // there is only the main camera, not much else to do, the position is already
+    // refined by the call to localize
+    //set the pose
+    rigPose = vec_localizationResults[0].getPose();
+    return vec_localizationResults[0].isValid();
+  }
+  
+  // if only one camera has been localized
+  if(numLocalizedCam == 1)
+  {
+    // all the other cameras have not been localized just return the result of the 
+    // localized one
+    
+    // find the index of the localized camera
+    const std::size_t idx = std::distance(isLocalized.begin(), 
+                                          std::find(isLocalized.begin(), isLocalized.end(), true));
+    
+    // useless safeguard as there should be at least 1 element at this point but
+    // better safe than sorry
+    assert(idx < isLocalized.size());
+    
+    // if the only localized camera is the main camera
+    if(idx==0)
+    {
+      // just give its pose
+      rigPose = vec_localizationResults[0].getPose();
+    }
+    else
+    {
+      // main camera: q1 ~ [R1 t1] Q = [I 0] A   where A = [R1 t1] Q  
+      // another camera: q2 ~ [R2 t2] Q = [R2 t2]*inv([R1 t1]) A   and subPose12 = [R12 t12] = [R2 t2]*inv([R1 t1])
+      // with the localization localize() we have computed [R2 t2], hence:
+      // q2 ~ [R2 t2] Q = [R12 t12]*inv([R12 t12]) * [R2 t2] Q
+      // and inv([R12 t12]) * [R2 t2] is the pose of the main camera
+      
+      // recover the rig pose using the subposes
+      rigPose = vec_subPoses[idx-1].inverse() * vec_localizationResults[idx].getPose();
+    }
+    return vec_localizationResults[idx].isValid();
+  }
+  
+  // ** otherwise run a BA with the localized cameras
 
-  return localize(vec_queryRegions, param, vec_queryIntrinsics, vec_subPoses, rigPose);
+  refineRigPose(vec_subPoses, vec_localizationResults, rigPose);
+  
+  return true;
 }
 
-
-bool CCTagLocalizer::localize(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+bool CCTagLocalizer::localizeAllAssociations(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
               const Parameters &param,
               const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
               const std::vector<geometry::Pose3 > &vec_subPoses,
@@ -390,7 +451,7 @@ bool CCTagLocalizer::localize(const std::vector<std::unique_ptr<features::Region
       const cameras::Pinhole_Intrinsic_Radial_K3 &currCamera = vec_queryIntrinsics[i];
       const geometry::Pose3 &currPose = vec_subPoses[i];
        // recopy all the points in the matching structure
-      //@todo 
+      //@todo THIS IS WRONG!!!!!
       // undistort and normalize the 2D points 
       // we first remove the distortion and then we transform the undistorted point in
       // normalized camera coordinates (inv(K)*undistortedPoint)

@@ -61,11 +61,17 @@ public:
   
   bool localize(const std::vector<image::Image<unsigned char> > & vec_imageGrey,
                 const Parameters &param,
-                const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
                 const std::vector<geometry::Pose3 > &vec_subPoses,
                 geometry::Pose3 rigPose);
   
   bool localize(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+              const Parameters &param,
+              const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+              const std::vector<geometry::Pose3 > &vec_subPoses,
+              geometry::Pose3 rigPose);
+  
+  bool localizeAllAssociations(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
                 const Parameters &param,
                 const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
                 const std::vector<geometry::Pose3 > &vec_subPoses,
