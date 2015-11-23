@@ -69,12 +69,14 @@ inline ICompoundProperty getAbcUserProperties(ABCSCHEMA& schema)
 
 bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part)
 {
+
   using namespace openMVG::geometry;
   using namespace openMVG::sfm;
 
   IPoints points(iObj, kWrapExisting);
   IPointsSchema& ms = points.getSchema();
   P3fArraySamplePtr positions = ms.getValue().getPositions();
+  ICompoundProperty userProps = getAbcUserProperties(ms);
 
   // Number of points before adding the Alembic data
   const std::size_t nbPointsInit = sfmdata.structure.size();
@@ -88,21 +90,22 @@ bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmd
     Landmark& landmark = sfmdata.structure[point3d_i] = Landmark(Vec3(pos_i.x, pos_i.y, pos_i.z));
   }
 
-  if(ms.getPropertyHeader("mvg_visibilitySize") &&
-     ms.getPropertyHeader("mvg_visibilityIds") &&
-     ms.getPropertyHeader("mvg_visibilityFeatPos")
+
+  if(userProps.getPropertyHeader("mvg_visibilitySize") &&
+     userProps.getPropertyHeader("mvg_visibilityIds") &&
+     userProps.getPropertyHeader("mvg_visibilityFeatPos")
      )
   {
-    IUInt32ArrayProperty propVisibilitySize(ms, "mvg_visibilitySize");
+    IUInt32ArrayProperty propVisibilitySize(userProps, "mvg_visibilitySize");
     std::shared_ptr<UInt32ArraySample> sampleVisibilitySize;
     propVisibilitySize.get(sampleVisibilitySize);
 
-    IV2iArrayProperty propVisibilityIds(ms, "mvg_visibilityIds");
-    std::shared_ptr<V2iArraySample> sampleVisibilityIds;
+    IUInt32ArrayProperty propVisibilityIds(userProps, "mvg_visibilityIds");
+    std::shared_ptr<UInt32ArraySample> sampleVisibilityIds;
     propVisibilityIds.get(sampleVisibilityIds);
 
-    IV2fArrayProperty propFeatPos2d(ms, "mvg_visibilityFeatPos");
-    std::shared_ptr<V2fArraySample> sampleFeatPos2d;
+    IFloatArrayProperty propFeatPos2d(userProps, "mvg_visibilityFeatPos");
+    std::shared_ptr<FloatArraySample> sampleFeatPos2d;
     propFeatPos2d.get(sampleFeatPos2d);
 
     if( positions->size() != sampleVisibilitySize->size() )
@@ -130,15 +133,19 @@ bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmd
       const std::size_t visibilitySize = (*sampleVisibilitySize)[point3d_i];
 
       for(std::size_t obs_i = 0;
-          obs_i < visibilitySize;
-          ++obs_i, ++obsGlobal_i)
+          obs_i < visibilitySize*2;
+          obs_i+=2, obsGlobal_i+=2)
       {
-        const V2i viewId_featId = (*sampleVisibilityIds)[obsGlobal_i];
-        Observation& obs = landmark.obs[viewId_featId[0]];
-        obs.id_feat = viewId_featId[1];
-        const V2f pos = (*sampleFeatPos2d)[obsGlobal_i];
-        obs.x[0] = pos[0];
-        obs.x[1] = pos[1];
+
+        const int viewID = (*sampleVisibilityIds)[obsGlobal_i];
+        const int featID = (*sampleVisibilityIds)[obsGlobal_i+1];
+        Observation& obs = landmark.obs[viewID];
+        obs.id_feat = featID;
+
+        const float posX = (*sampleFeatPos2d)[obsGlobal_i];
+        const float posY = (*sampleFeatPos2d)[obsGlobal_i+1];
+        obs.x[0] = posX;
+        obs.x[1] = posY;
       }
     }
   }
@@ -165,17 +172,17 @@ bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata,
   IndexT id_intrinsic = sfmdata.GetIntrinsics().size();
   if(userProps)
   {
-    if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("imagePath"))
+    if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_imagePath"))
     {
-      imagePath = getAbcProp<Alembic::Abc::IStringProperty>(userProps, *propHeader, "imagePath");
+      imagePath = getAbcProp<Alembic::Abc::IStringProperty>(userProps, *propHeader, "mvg_imagePath");
     }
-    if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("sensorWidth_pix"))
+    if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_sensorWidth_pix"))
     {
       try {
-        sensorWidth_pix = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "sensorWidth_pix");
+        sensorWidth_pix = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_sensorWidth_pix");
       } catch(Alembic::Util::v7::Exception&)
       {
-        sensorWidth_pix = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "sensorWidth_pix");
+        sensorWidth_pix = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_sensorWidth_pix");
       }
     }
     if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_intrinsicType"))
