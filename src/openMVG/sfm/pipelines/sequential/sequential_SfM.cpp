@@ -162,10 +162,14 @@ bool SequentialSfMReconstructionEngine::Process()
     {
       initialPairIndex = _initialpair = putative_initial_pair;
     }
-    else // Cannot find a valid initial pair, try to set it by hand?
+    else if(_userInteraction) // Cannot find a valid initial pair, try to set it by hand?
     {
       if (!ChooseInitialPair(_initialpair))
         return false;
+    }
+    else
+    {
+      return false;
     }
   }
   // Else a starting pair was already initialized before

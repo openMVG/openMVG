@@ -72,6 +72,7 @@ int main(int argc, char **argv)
   bool bRefineIntrinsics = true;
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
   bool matchFilePerImage = false;
+  bool allowUserInteraction = true;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
@@ -83,6 +84,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_option('f', bRefineIntrinsics, "refineIntrinsics") );
   cmd.add( make_option('p', matchFilePerImage, "matchFilePerImage") );
+  cmd.add( make_option('u', allowUserInteraction, "allowUserInteraction") );
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -105,6 +107,8 @@ int main(int argc, char **argv)
     << "\t 1-> refine intrinsic parameters (default). \n"
     << "[-p|--matchFilePerImage] \n"
     << "\t To use one match file per image instead of a global file.\n"
+    << "[-u|--allowUserInteraction] Enable/Disable user interactions. (default: true)\n"
+    << "\t If the process is done on renderfarm, it doesn't make sense to wait for user inputs.\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -203,6 +207,8 @@ int main(int argc, char **argv)
   sfmEngine.SetUnknownCameraType(EINTRINSIC(i_User_camera_model));
 
   sfmEngine.setSfmdataInterFileExtension(sOutInterFileExtension);
+
+  sfmEngine.setAllowUserInteraction(allowUserInteraction);
 
   // Handle Initial pair parameter
   if (!initialPairString.first.empty() && !initialPairString.second.empty())
