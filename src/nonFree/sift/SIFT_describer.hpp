@@ -101,7 +101,13 @@ public:
     switch(preset)
     {
     case LOW_PRESET:
+      _params._peak_threshold = 0.04f;
+      _params._first_octave = 2;
+    break;
     case MEDIUM_PRESET:
+      _params._peak_threshold = 0.04f;
+      _params._first_octave = 1;
+    break;
     case NORMAL_PRESET:
       _params._peak_threshold = 0.04f;
     break;
