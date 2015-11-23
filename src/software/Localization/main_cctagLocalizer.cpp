@@ -152,6 +152,8 @@ int main(int argc, char** argv)
   bool hasIntrinsics = false;
 
   size_t frameCounter = 0;
+  size_t goodFrameCounter = 0;
+  vector<string> goodFrameList;
   std::string currentImgName;
 
   // Define an accumulator set for computing the mean and the
@@ -184,6 +186,9 @@ int main(int argc, char** argv)
 #if HAVE_ALEMBIC
       exporter.appendCamera("camera." + myToString(frameCounter, 4), localizationResult.getPose(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
 #endif
+      goodFrameCounter++;
+      goodFrameList.push_back(currentImgName + " : " + std::to_string(localizationResult.getIndMatch3D2D().size()) );
+      
       if(globalBundle)
       {
         vec_localizationResults.emplace_back(localizationResult);
@@ -234,8 +239,11 @@ int main(int argc, char** argv)
 
   // print out some time stats
   POPART_COUT("\n\n******************************");
-  POPART_COUT("Localized " << frameCounter << " images");
-  POPART_COUT("Processing took " << bacc::sum(stats) / 1000 << " [s] overall");
+  POPART_COUT("Localized " << goodFrameCounter << "/" << frameCounter << " images");
+  POPART_COUT("Images localized with the number of 2D/3D matches during localization :");
+  for(int i = 0; i < goodFrameList.size(); i++)
+    POPART_COUT(goodFrameList[i]);
+  POPART_COUT("Processing took " << bacc::sum(stats)/1000 << " [s] overall");
   POPART_COUT("Mean time for localization:   " << bacc::mean(stats) << " [ms]");
   POPART_COUT("Max time for localization:   " << bacc::max(stats) << " [ms]");
   POPART_COUT("Min time for localization:   " << bacc::min(stats) << " [ms]");
