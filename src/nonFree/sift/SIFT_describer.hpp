@@ -85,9 +85,16 @@ class SIFT_Image_describer : public Image_describer
 {
 public:
   SIFT_Image_describer(const SiftParams & params = SiftParams(), bool bOrientation = true)
-    :Image_describer(), _params(params), _bOrientation(bOrientation) {}
+    :Image_describer(), _params(params), _bOrientation(bOrientation)
+  {
+    // Configure VLFeat
+    vl_constructor();
+  }
 
-  ~SIFT_Image_describer() {}
+  ~SIFT_Image_describer()
+  {
+    vl_destructor();
+  }
 
   bool Set_configuration_preset(EDESCRIBER_PRESET preset)
   {
@@ -126,11 +133,9 @@ public:
     //Convert to float
     const image::Image<float> If(image.GetMat().cast<float>());
 
-    // Configure VLFeat
-    vl_constructor();
-
     VlSiftFilt *filt = vl_sift_new(w, h,
       _params._num_octaves, _params._num_scales, _params._first_octave);
+
     if (_params._edge_threshold >= 0)
       vl_sift_set_edge_thresh(filt, _params._edge_threshold);
     if (_params._peak_threshold >= 0)
@@ -198,8 +203,6 @@ public:
         break; // Last octave
     }
     vl_sift_delete(filt);
-
-    vl_destructor();
 
     return true;
   };
