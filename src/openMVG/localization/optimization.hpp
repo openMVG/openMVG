@@ -9,6 +9,7 @@
 
 #include "LocalizationResult.hpp"
 #include <openMVG/cameras/Camera_Pinhole_Radial.hpp>
+#include <openMVG/geometry/pose3.hpp>
 
 namespace openMVG{
 namespace localization{
@@ -54,6 +55,11 @@ bool refineSequence(std::vector<cameras::Pinhole_Intrinsic_Radial_K3* > vec_intr
                     bool b_refine_pose = true,
                     bool b_refine_intrinsic = true,
                     bool b_refine_structure = false);
+
+
+bool refineRigPose(const std::vector<geometry::Pose3 > &vec_subPoses,
+                   const std::vector<localization::LocalizationResult> vec_localizationResults,
+                   geometry::Pose3 & rigPose);
 
 } //namespace localization
 } //namespace openMVG
