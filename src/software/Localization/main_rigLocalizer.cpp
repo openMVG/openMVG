@@ -339,17 +339,29 @@ int main(int argc, char** argv)
     POPART_COUT("FRAME " << myToString(frameCounter, 4));
     POPART_COUT("******************************");
     auto detect_start = std::chrono::steady_clock::now();
-    localizer->localizeRig(vec_imageGrey,
-                           param,
-                           vec_queryIntrinsics,
-                           vec_subPoses,
-                           rigPose);
+    const bool isLocalized = localizer->localizeRig(vec_imageGrey,
+                                                    param,
+                                                    vec_queryIntrinsics,
+                                                    vec_subPoses,
+                                                    rigPose);
     auto detect_end = std::chrono::steady_clock::now();
     auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
     POPART_COUT("\nLocalization took  " << detect_elapsed.count() << " [ms]");
     stats(detect_elapsed.count());
     
     //@todo do something with the pose
+    
+#if HAVE_ALEMBIC
+    if(isLocalized)
+    {
+      // for now just save the position of the main camera
+      exporter.appendCamera("camera." + myToString(frameCounter, 4), rigPose, &vec_queryIntrinsics[0], mediaPath, frameCounter, frameCounter);
+    }
+    else
+    {
+      exporter.appendCamera("camera.V." + myToString(frameCounter, 4), geometry::Pose3(), &vec_queryIntrinsics[0], mediaPath, frameCounter, frameCounter);
+    }
+#endif
 
     ++frameCounter;
     
