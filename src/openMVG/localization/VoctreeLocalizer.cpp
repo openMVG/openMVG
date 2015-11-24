@@ -881,5 +881,13 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
   return true;
 }
 
+bool VoctreeLocalizer::localizeRig(const std::vector<image::Image<unsigned char> > & vec_imageGrey,
+                             const LocalizerParameters *parameters,
+                             std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                             const std::vector<geometry::Pose3 > &vec_subPoses,
+                             geometry::Pose3 rigPose)
+{
+  throw std::runtime_error("localizeRig is not yet supported for voctree_localizer");
+}
 } // localization
 } // openMVG
