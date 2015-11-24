@@ -97,7 +97,8 @@ int main(int argc, char** argv)
   // common parameters
   std::string sfmFilePath;                //< the OpenMVG .json data file
   std::string descriptorsFolder;          //< the OpenMVG .json data file
-  std::string mediaPath;              //< the media file to localize
+  std::string mediaPath;                  //< the media file to localize
+  std::string outputFile;                 //< the name of the file where to store the calibration data
   std::string preset = features::describerPreset_enumToString(features::EDESCRIBER_PRESET::NORMAL_PRESET);               //< the preset for the feature extractor
   std::string str_descriptorType = describerTypeToString(DescriberType::SIFT);               //< the preset for the feature extractor
   bool refineIntrinsics = false;
@@ -123,6 +124,7 @@ int main(int argc, char** argv)
           ("refineIntrinsics,", po::bool_switch(&refineIntrinsics), "Enable/Disable camera intrinsics refinement for each localized image")
           ("nCameras", po::value<size_t>(&nCam)->default_value(nCam), "Number of cameras composing the rig")
           ("preset,", po::value<std::string>(&preset)->default_value(preset), "Preset for the feature extractor when localizing a new image {LOW,NORMAL,HIGH,ULTRA}")
+          ("outfile,o", po::value<std::string>(&outputFile)->required(), "The name of the file where to store the calibration data")
           ("descriptors,", po::value<std::string>(&str_descriptorType)->default_value(str_descriptorType), "Type of descriptors to use")
   // parameters for voctree localizer
           ("voctree,t", po::value<std::string>(&vocTreeFilepath), "Filename for the vocabulary tree")
@@ -320,4 +322,7 @@ int main(int argc, char** argv)
   rig.initializeCalibration();
   POPART_COUT("Rig calibration optimization");
   rig.optimizeCalibration();
+  
+  // save the rig calibration (subposes)
+  rig.saveCalibration(outputFile);
 }
