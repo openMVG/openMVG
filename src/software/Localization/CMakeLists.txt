@@ -41,6 +41,19 @@ IF(OpenMVG_BUILD_VOCTREE)
     INSTALL(TARGETS openMVG_main_voctreeQueryUtility DESTINATION bin/)
     TARGET_LINK_LIBRARIES(openMVG_main_voctreeQueryUtility openMVG_voctree ${BOOST_LIBRARIES})
 
+    ###
+    # Test the localization class
+    ###
+    ADD_EXECUTABLE(openMVG_main_rigLocalizer main_rigLocalizer.cpp)
+    INSTALL(TARGETS openMVG_main_rigLocalizer DESTINATION bin/)
+    TARGET_LINK_LIBRARIES(openMVG_main_rigLocalizer openMVG_localization openMVG_dataio openMVG_rig openMVG_image openMVG_features vlsift ${BOOST_LIBRARIES})
+    if(OpenMVG_USE_ALEMBIC)
+        target_link_libraries(openMVG_main_rigLocalizer ${ABC_LIBRARIES})
+    endif()
+    if(OpenMVG_USE_CCTAG)
+        target_link_libraries(openMVG_main_rigLocalizer ${CCTAG_LIBRARIES})
+    endif()
+
 
     #@TODO decide where to put the binaries
 
