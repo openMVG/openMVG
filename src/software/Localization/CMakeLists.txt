@@ -21,7 +21,10 @@ IF(OpenMVG_BUILD_VOCTREE)
       ###
       ADD_EXECUTABLE(openMVG_main_cctagLocalizer main_cctagLocalizer.cpp)
       INSTALL(TARGETS openMVG_main_cctagLocalizer DESTINATION bin/)
-      TARGET_LINK_LIBRARIES(openMVG_main_cctagLocalizer openMVG_localization openMVG_dataio openMVG_image openMVG_features vlsift ${CCTAG_LIBRARIES} ${BOOST_LIBRARIES}) #todo: delete vlsift
+      TARGET_LINK_LIBRARIES(openMVG_main_cctagLocalizer openMVG_localization openMVG_dataio openMVG_image openMVG_features ${CCTAG_LIBRARIES} ${BOOST_LIBRARIES})
+      if(OpenMVG_USE_ALEMBIC)
+        target_link_libraries(openMVG_main_cctagLocalizer ${ABC_LIBRARIES})
+      endif()
     ENDIF(OpenMVG_USE_CCTAG)
 
     ###
