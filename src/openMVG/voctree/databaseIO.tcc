@@ -125,6 +125,7 @@ std::size_t populateDatabase(const std::string &fileFullPath,
  * @param[in] db The built database
  * @param[in] numResults The number of results to retrieve for each image
  * @param[out] allMatches The matches for all the images
+ * @param[in] distanceMethod The distance method used for create the pair list
  * @param[in] Nmax The maximum number of features loaded in each desc file. For Nmax = 0 (default), all the descriptors are loaded. 
  * @see queryDatabase()
  */
@@ -134,10 +135,11 @@ void queryDatabase(const std::string &fileFullPath,
                    const Database &db,
                    size_t numResults,
                    std::map<size_t, DocMatches> &allDocMatches,
+                   const std::string &distanceMethod,
                    const int Nmax)
 {
   std::map<size_t, Document> documents;
-  queryDatabase<DescriptorT>(fileFullPath, tree, db, numResults, allMatches, documents);
+  queryDatabase<DescriptorT>(fileFullPath, tree, db, numResults, allDocMatches, documents, distanceMethod, Nmax);
 }
 
 /**
@@ -151,6 +153,7 @@ void queryDatabase(const std::string &fileFullPath,
  * @param[in] numResults The number of results to retrieve for each image
  * @param[out] allMatches The matches for all the images
  * @param[out] documents For each document, it contains the list of associated visual words 
+ * @param[in] distanceMethod The distance method used for create the pair list
  * @param[in] Nmax The maximum number of features loaded in each desc file. For Nmax = 0 (default), all the descriptors are loaded.
  */
 template<class DescriptorT, class VocDescriptorT>
@@ -160,6 +163,7 @@ void queryDatabase(const std::string &fileFullPath,
                    size_t numResults,
                    std::map<size_t, DocMatches> &allDocMatches,
                    std::map<size_t, Database::SparseHistogram> &documents,
+                   const std::string &distanceMethod,
                    const int Nmax)
 {
   std::map<IndexT, std::string> descriptorsFiles;
@@ -180,14 +184,23 @@ void queryDatabase(const std::string &fileFullPath,
     // quantize the descriptors
     std::vector<openMVG::voctree::Word> imgVisualWords = tree.quantize(descriptors);
 
-    // add the vector to the documents
-    documents[currentFile.first] = imgVisualWords;
 
+    openMVG::voctree::DocMatches docMatches;
     // query the database
-    db.find(imgVisualWords, numResults, matches);
+    
+    Database::SparseHistogram query;
+    // from the list of visual words associated with each feature in the document/image
+    // generate the (sparse) histogram of the visual words 
+    db.computeVector(imgVisualWords, query);
 
+    db.find(query, numResults, docMatches, distanceMethod);
+    // db.find(imgVisualWords, numResults, docMatches, distanceMethod);
+    
+    // add the vector to the documents
+    documents[currentFile.first] = query;
+    
     // add the matches to the result vector
-    allMatches[currentFile.first] = matches;
+    allDocMatches[currentFile.first] = docMatches;
     
     ++display;
   }

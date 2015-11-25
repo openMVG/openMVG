@@ -85,7 +85,25 @@ public:
    * @param      N        The number of matches to return.
    * @param[out] matches  IDs and scores for the top N matching database documents.
    */
-  void find(const std::vector<Word>& document, size_t N, std::vector<DocMatch>& matches) const;
+  void find(const std::vector<Word>& document, size_t N, std::vector<DocMatch>& matches, const std::string &distanceMethod = "classic") const;
+  
+    /**
+   * @brief Find the top N matches in the database for the query document.
+   *
+   * @param      query The query document, a normalized set of quantized words.
+   * @param      N        The number of matches to return.
+   * @param[out] matches  IDs and scores for the top N matching database documents.
+   */
+  void find(const SparseHistogram& query, size_t N, std::vector<DocMatch>& matches, const std::string &distanceMethod = "classic") const;
+  
+    /**
+   * Given a list of visual words associated to the features of a document it computes the 
+   * vector of unique weighted visual words
+   * 
+   * @param[in] document a list of (possibly repeated) visual words
+   * @param[out] v the vector of visual words
+   */
+  void computeVector(const std::vector<Word>& document, SparseHistogram& v) const;
 
   /**
    * @brief Compute the TF-IDF weights of all the words. To be called after inserting a corpus of
@@ -154,23 +172,6 @@ private:
   std::vector<float> word_weights_;
   std::map<DocId, SparseHistogram> database_; // Precomputed for inserted documents
 
-  /**
-   * Given a list of visual words associated to the features of a document it computes the 
-   * vector of unique weighted visual words
-   * 
-   * @param[in] document a list of (possibly repeated) visual words
-   * @param[out] v the vector of visual words
-   */
-  void computeVector(const std::vector<Word>& document, DocumentVector& v) const;
-
-  /**
-   * @brief Find the top N matches in the database for the query document.
-   *
-   * @param      query The query document, a normalized set of quantized words.
-   * @param      N        The number of matches to return.
-   * @param[out] matches  IDs and scores for the top N matching database documents.
-   */
-  void find(const DocumentVector& query, size_t N, std::vector<DocMatch>& matches) const;
 
   /**
    * Normalize a document vector representing the histogram of visual words for a given image
@@ -185,7 +186,7 @@ private:
    * @param v2 The second sparse histogram
    * @return the distance of the two histograms in norm L1
    */
-  static float sparseDistance(const DocumentVector& v1, const DocumentVector& v2);
+  float sparseDistance(const SparseHistogram& v1, const SparseHistogram& v2, const std::string &distanceMethod = "classic") const;
 };
 
 }//namespace voctree
