@@ -30,6 +30,7 @@
 #include <iostream>
 
 
+
 using namespace openMVG;
 using namespace openMVG::image;
 using namespace openMVG::features;
@@ -68,7 +69,7 @@ int main(int argc, char **argv)
       cmd.process(argc, argv);
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
-      << "[-i|--input_file] a SfM_Data file \n"
+      << "[-i|--input_file] a SfM_Data file or a directory with JPG files\n"
       << "[-o|--outdir path] \n"
       << "\n[Optional]\n"
       << "[-f|--force] Force to recompute data\n"
@@ -87,6 +88,8 @@ int main(int argc, char **argv)
       << "[-u|--upright] Use Upright feature 0 or 1\n"
       << "[-p|--describerPreset]\n"
       << "  (used to control the Image_describer configuration):\n"
+      << "   LOW,\n"
+      << "   MEDIUM,\n"
       << "   NORMAL (default),\n"
       << "   HIGH,\n"
       << "   ULTRA: !!Can take long time!!\n"
@@ -129,10 +132,46 @@ int main(int argc, char **argv)
   // a. Load input scene
   //---------------------------------------
   SfM_Data sfm_data;
-  if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
-    std::cerr << std::endl
-      << "The input file \""<< sSfM_Data_Filename << "\" cannot be read" << std::endl;
+
+  if(sSfM_Data_Filename.empty())
+  {
+    std::cerr << "\nThe input directory doesn't exist" << std::endl;
     return EXIT_FAILURE;
+  }
+  else if(stlplus::is_file( sSfM_Data_Filename))
+  {
+    if(!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS)))
+    {
+      std::cerr << std::endl
+        << "The input file \""<< sSfM_Data_Filename << "\" cannot be read" << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
+  else if(stlplus::is_folder(sSfM_Data_Filename))
+  {
+    // Retrieve image paths
+    std::vector<std::string> vec_images;
+    const std::vector<std::string> supportedExtensions {"jpg", "jpeg"};
+    
+    vec_images = stlplus::folder_files(sSfM_Data_Filename);
+    std::sort(vec_images.begin(), vec_images.end());
+    
+    sfm_data.s_root_path = "";
+    if(!sSfM_Data_Filename.empty())
+      sfm_data.s_root_path = sSfM_Data_Filename; // Setup main image root_path
+    Views & views = sfm_data.views;
+    
+    for(std::vector<std::string>::const_iterator iter_image = vec_images.begin();
+        iter_image != vec_images.end(); ++iter_image)
+    {
+      std::size_t id_view = 0;
+      stl::hash_combine(id_view, *iter_image);
+    
+      // Build the view corresponding to the image
+      View v(*iter_image, (IndexT)id_view);
+      v.id_intrinsic = UndefinedIndexT;
+      views[v.id_view] = std::make_shared<View>(v);
+    }
   }
 
   // b. Init the image_describer
