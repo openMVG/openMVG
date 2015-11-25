@@ -102,7 +102,7 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
   std::cout << "Load Features and Descriptors per view" << std::endl;
   std::vector<bool> presentIds(128,false); // @todo Assume a maximum library size of 128 unique ids.
   // Read for each view the corresponding regions and store them
-  for(const auto &iter : sfm_data.GetViews() )
+  for(const auto &iter : sfm_data.GetViews())
   {
     const IndexT id_view = iter.second->id_view;
     Reconstructed_RegionsCCTag& reconstructedRegion = _regions_per_view[id_view];
@@ -132,17 +132,6 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
       return false;
     }
     
-    {
-      // just debugging stuff -- print for each image the visible reconstructed cctag
-      std::cout << "Image " << sImageName << " contains :\t";
-      for(const auto &desc : reconstructedRegion._regions.Descriptors())
-      {
-        const IndexT cctagIdA = features::getCCTagId(desc);
-        std::cout << cctagIdA << " ";
-      }
-      std::cout << "\n";
-    }
-
     // Filter descriptors to keep only the 3D reconstructed points
     reconstructedRegion.filterCCTagRegions(observationsPerView[id_view]);
     
@@ -152,6 +141,33 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
     ++my_progress_bar;
   }
 
+  {
+    // just debugging stuff -- print for each image the visible reconstructed cctag
+    for(const auto &iter : sfm_data.GetViews())
+    {
+      const IndexT id_view = iter.second->id_view;
+      Reconstructed_RegionsCCTag& reconstructedRegion = _regions_per_view[id_view];
+      const std::string &sImageName = iter.second.get()->s_Img_path;
+
+      std::cout << "Image " << sImageName;
+      if(reconstructedRegion._regions.Descriptors().size() == 0 )
+      {
+        std::cout << " does not contain any cctag!!!";
+      }
+      else
+      {
+        std::cout << " contains CCTag Id:\t";
+        for(const auto &desc : reconstructedRegion._regions.Descriptors())
+        {
+          const IndexT cctagIdA = features::getCCTagId(desc);
+          if(cctagIdA != UndefinedIndexT)
+            std::cout << cctagIdA << " ";
+        }
+      }
+      std::cout << "\n";
+    }
+  }
+  
   // Display the cctag ids over all cctag landmarks present in the database
   std::cout << std::endl << "Present CCTag landmarks present in the database: " << std::endl;
   for(std::size_t i = 0; i < presentIds.size(); ++i)
