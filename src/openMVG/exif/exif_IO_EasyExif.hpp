@@ -17,6 +17,21 @@
 namespace openMVG {
 namespace exif  {
 
+/// Remove all leading and trailing spaces from the input. The result is a trimmed copy of the input
+inline std::string trim_copy(const std::string& s)
+{
+  if(s.empty())
+    return s;
+
+  std::string res(s);
+  // remove leading and trailing spaces
+  res.erase(0, res.find_first_not_of(' '));
+  res.erase(res.find_last_not_of(' ')+1);
+  // handle multiple trailing end character
+  res = res.substr(0, res.find('\0'));
+  return res;
+}
+
 class Exif_IO_EasyExif : public Exif_IO
 {
   public:
@@ -72,35 +87,22 @@ class Exif_IO_EasyExif : public Exif_IO
 
     std::string getBrand() const
     {
-      std::string sbrand = exifInfo_.Make;
-      if (!sbrand.empty())
-      {
-        // remove leading and trailing spaces
-        sbrand.erase(0, sbrand.find_first_not_of(' '));
-        sbrand.erase(sbrand.find_last_not_of(' '));
-        // handle multiple trailing end character
-        sbrand = sbrand.substr(0, sbrand.find('\0'));
-      }
-      return sbrand;
+      return trim_copy(exifInfo_.Make);
     }
 
     std::string getModel() const
     {
-      std::string smodel = exifInfo_.Model;
-      if (!smodel.empty())
-      {
-        // remove leading and trailing spaces
-        smodel.erase(0, smodel.find_first_not_of(' '));
-        smodel.erase(smodel.find_last_not_of(' '));
-        // handle multiple trailing end character
-        smodel = smodel.substr(0, smodel.find('\0'));
-      }
-      return smodel;
+      return trim_copy(exifInfo_.Model);
     }
 
     std::string getLensModel() const
     {
-      return "";
+      return trim_copy(exifInfo_.LensInfo.Model);
+    }
+
+     std::string getImageUniqueID() const
+    {
+      return exifInfo_.ImageUniqueID;
     }
 
     /**Verify if the file has metadata*/
@@ -127,7 +129,7 @@ class Exif_IO_EasyExif : public Exif_IO
         << "Original date/time: " << exifInfo_.DateTimeOriginal << "\n"
         << "Digitize date/time: " << exifInfo_.DateTimeDigitized << "\n"
         << "Subsecond time    : " << exifInfo_.SubSecTimeOriginal << "\n"
-        << "Exposure time     : 1/time " << (unsigned) (1.0/exifInfo_.ExposureTime) << "\n"
+        << "Exposure time     : 1/" << (unsigned) (1.0/exifInfo_.ExposureTime) << "\n"
         << "F-stop            : " << exifInfo_.FNumber << "\n"
         << "ISO speed         : " << exifInfo_.ISOSpeedRatings << "\n"
         << "Subject distance  : " << exifInfo_.SubjectDistance << "\n"
@@ -142,18 +144,27 @@ class Exif_IO_EasyExif : public Exif_IO
         <<  exifInfo_.GeoLocation.LatComponents.minutes << ", "
         <<  exifInfo_.GeoLocation.LatComponents.seconds << ", "
         <<  exifInfo_.GeoLocation.LatComponents.direction << ")" << "\n"
-        << "GPS Longitude     : deg ( deg, min, sec )\n" << "("
+        << "GPS Longitude      : deg ( deg, min, sec )\n" << "("
         <<  exifInfo_.GeoLocation.Longitude << ", "
         <<  exifInfo_.GeoLocation.LonComponents.degrees << ", "
         <<  exifInfo_.GeoLocation.LonComponents.minutes << ", "
         <<  exifInfo_.GeoLocation.LonComponents.seconds << ", "
         <<  exifInfo_.GeoLocation.LonComponents.direction << ")" << "\n"
-        << "GPS Altitude      : m" << exifInfo_.GeoLocation.Altitude << "\n";
+        << "GPS Altitude       : m" << exifInfo_.GeoLocation.Altitude << "\n"
+        << "Lens stop (min, max) : " << "("
+        << exifInfo_.LensInfo.FStopMin << ", "
+        << exifInfo_.LensInfo.FStopMax << ")"
+        << "Lens focal (min, max) : " << "("
+        << exifInfo_.LensInfo.FocalLengthMin << ", "
+        << exifInfo_.LensInfo.FocalLengthMax << ")"
+        << "Lens make : " <<  exifInfo_.LensInfo.Make << "\n"
+        << "Lens model : " << exifInfo_.LensInfo.Model << "\n"
+        << "Image Unique ID    : " << exifInfo_.ImageUniqueID << "\n";
       return os.str();
     }
 
   private:
-    EXIFInfo exifInfo_;
+    easyexif::EXIFInfo exifInfo_;
     bool bHaveExifInfo_;
 };
 
