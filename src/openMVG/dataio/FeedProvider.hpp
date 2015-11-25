@@ -42,11 +42,14 @@ public:
    * @return True if the feed is correctly initialized.
    */  
   bool isInit() const;
+  
+  bool isVideo() const {return _isVideo; }
 
   virtual ~FeedProvider();
     
 private:
   std::unique_ptr<IFeed> _feeder;
+  bool _isVideo;
 
 };
 
