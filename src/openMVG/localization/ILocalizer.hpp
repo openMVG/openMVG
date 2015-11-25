@@ -19,11 +19,13 @@ namespace localization {
 struct LocalizerParameters
 {
   LocalizerParameters() :
+  _visualDebug(false),
   _refineIntrinsics(false),
   _fDistRatio(0.6),
   _featurePreset(features::EDESCRIBER_PRESET::ULTRA_PRESET),
   _errorMax(std::numeric_limits<double>::max()) { }
 
+  bool _visualDebug;          //< enable visual debugging options
   bool _refineIntrinsics;     //< whether or not the Intrinsics of the query camera has to be refined
   float _fDistRatio;          //< the ratio distance to use when matching feature with the ratio test
   features::EDESCRIBER_PRESET _featurePreset; //< the preset to use for feature extraction of the query image
