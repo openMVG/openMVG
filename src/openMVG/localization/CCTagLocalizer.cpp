@@ -3,9 +3,13 @@
 #include "CCTagLocalizer.hpp"
 #include "reconstructed_regions.hpp"
 #include "optimization.hpp"
+#include "svgVisualization.hpp"
+
 #include <openMVG/sfm/sfm_data_io.hpp>
 #include <openMVG/matching/indMatch.hpp>
 #include <openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp>
+
+#include <boost/filesystem/path.hpp>
 
 #include <algorithm>
 
@@ -187,6 +191,8 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult & localizationResult, const std::string& imagePath /* = std::string() */)
 {
+  namespace bfs = boost::filesystem;
+  
   const CCTagLocalizer::Parameters *param = static_cast<const CCTagLocalizer::Parameters *>(parameters);
   if(!param)
   {
@@ -199,6 +205,15 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
   _image_describer.Describe(imageGrey, tmpQueryRegions);
   POPART_COUT("[features]\tExtract CCTAG done: found " << tmpQueryRegions->RegionCount() << " features");
   features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (tmpQueryRegions.get());
+  
+  if(param->_visualDebug && !imagePath.empty())
+  {
+    // just debugging -- save the svg image with detected cctag
+    saveCCTag2SVG(imagePath, 
+                  std::make_pair(imageGrey.Width(),imageGrey.Height()), 
+                  queryRegions, 
+                  bfs::path(imagePath).stem().string()+".svg");
+  }
   
   std::vector<IndexT> nearestKeyFrames;
   nearestKeyFrames.reserve(param->_nNearestKeyFrames);

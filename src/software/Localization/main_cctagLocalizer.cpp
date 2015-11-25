@@ -41,7 +41,7 @@ namespace po = boost::program_options;
 
 using namespace openMVG;
 
-
+  
 std::string myToString(std::size_t i, std::size_t zeroPadding)
 {
   std::stringstream ss;
@@ -60,8 +60,8 @@ int main(int argc, char** argv)
 #if HAVE_ALEMBIC
   std::string exportFile = "trackedcameras.abc"; //!< the export file
 #endif
-  bool globalBundle = false;      ///< If !param._refineIntrinsics it can run a final global budndle to refine the scene
-
+  bool globalBundle = false;      //< If !param._refineIntrinsics it can run a final global budndle to refine the scene
+  
   po::options_description desc(
                                "This program takes as input a media (image, image sequence, video) and a database (voctree, 3D structure data) \n"
                                "and returns for each frame a pose estimation for the camera.");
@@ -75,6 +75,7 @@ int main(int argc, char** argv)
       ("mediafile,m", po::value<std::string>(&mediaFilepath)->required(), "The folder path or the filename for the media to track")
       ("refineIntrinsics,", po::bool_switch(&param._refineIntrinsics), "Enable/Disable camera intrinsics refinement for each localized image")
       ("globalBundle,", po::bool_switch(&globalBundle), "If --refineIntrinsics is not set, this option allows to run a final global budndle adjustment to refine the scene")
+      ("visualDebug,", po::bool_switch(&param._visualDebug), "Enable visual debug")
 #if HAVE_ALEMBIC
       ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), "Filename for the SfM_Data export file (where camera poses will be stored). Default : trackedcameras.json If Alambic is enable it will also export an .abc file of the scene with the same name")
 #endif
@@ -141,6 +142,7 @@ int main(int argc, char** argv)
     POPART_CERR("ERROR while initializing the FeedProvider!");
     return EXIT_FAILURE;
   }
+  bool feedIsVideo = feed.isVideo();
 
 #if HAVE_ALEMBIC
   dataio::AlembicExporter exporter(exportFile);
@@ -169,12 +171,12 @@ int main(int argc, char** argv)
     POPART_COUT("******************************");
     auto detect_start = std::chrono::steady_clock::now();
     localization::LocalizationResult localizationResult;
-    localizer.localize(
-                       imageGrey,
+    localizer.localize(imageGrey,
                        &param,
                        hasIntrinsics/*useInputIntrinsics*/,
                        queryIntrinsics, // todo: put as const and use the intrinsic result store in localizationResult afterward
-                       localizationResult);
+                       localizationResult,
+                       (feedIsVideo) ? "" : currentImgName);
     auto detect_end = std::chrono::steady_clock::now();
     auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
     POPART_COUT("\nLocalization took  " << detect_elapsed.count() << " [ms]");

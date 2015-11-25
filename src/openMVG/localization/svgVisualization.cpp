@@ -58,7 +58,7 @@ void saveFeatures2SVG(const std::string &inputImagePath,
     svgStream.drawCircle(kpt.x(), kpt.y(), 3.0f, svg::svgStyle().stroke("yellow", 2.0));
   }
  
-  std::ofstream svgFile( outputSVGPath.c_str() );
+  std::ofstream svgFile( outputSVGPath );
   svgFile << svgStream.closeSvgFile().str();
   svgFile.close();
 }
@@ -89,7 +89,7 @@ void saveCCTag2SVG(const std::string &inputImagePath,
     svgStream.drawText(kpt.x(), kpt.y(), 20, std::to_string(cctagId), "yellow");
   }
  
-  std::ofstream svgFile( outputSVGPath.c_str() );
+  std::ofstream svgFile( outputSVGPath );
   svgFile << svgStream.closeSvgFile().str();
   svgFile.close();
 }
