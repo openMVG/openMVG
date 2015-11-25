@@ -319,7 +319,7 @@ struct TracksUtilsMap
    * @brief Find common tracks between images.
    *
    * @param[in] set_imageIndex: set of images we are looking for common tracks
-   * @param[in] map_tracksIn: all tracks of the world
+   * @param[in] map_tracksIn: all tracks of the scene
    * @param[out] map_tracksOut: output with only the common tracks
    */
   static bool GetTracksInImages(
@@ -331,20 +331,23 @@ struct TracksUtilsMap
 
     // Go along the tracks
     for (STLMAPTracks::const_iterator iterT = map_tracksIn.begin();
-      iterT != map_tracksIn.end(); ++iterT)  {
-
-      // If the track contain one of the provided index save the point of the track
+      iterT != map_tracksIn.end(); ++iterT)
+    {
+      // Look if the track contains the provided view index & save the point ids
       submapTrack map_temp;
+      bool bTest = true;
       for (std::set<size_t>::const_iterator iterIndex = set_imageIndex.begin();
-        iterIndex != set_imageIndex.end(); ++iterIndex)
+        iterIndex != set_imageIndex.end() && bTest; ++iterIndex)
       {
         submapTrack::const_iterator iterSearch = iterT->second.find(*iterIndex);
         if (iterSearch != iterT->second.end())
           map_temp[iterSearch->first] = iterSearch->second;
+        else
+          bTest = false;
       }
 
       if (!map_temp.empty() && map_temp.size() == set_imageIndex.size())
-        map_tracksOut[iterT->first] = map_temp;
+        map_tracksOut[iterT->first] = std::move(map_temp);
     }
     return !map_tracksOut.empty();
   }
@@ -380,7 +383,7 @@ struct TracksUtilsMap
         submapTrack::const_iterator iterSearch = map_ref.find(nImageIndex);
         if (iterSearch != map_ref.end())
         {
-          pvec_featIndex->push_back(iterSearch->second);
+          pvec_featIndex->emplace_back(iterSearch->second);
         }
       }
     }
@@ -429,7 +432,7 @@ struct TracksUtilsMap
       const IndexT indexI = (map_ref.begin())->second;
       const IndexT indexJ = (++map_ref.begin())->second;
 
-      vec_indexref.push_back(IndMatch(indexI, indexJ));
+      vec_indexref.emplace_back(indexI, indexJ);
     }
   }
 
