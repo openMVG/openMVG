@@ -69,12 +69,17 @@ public:
       res[i] = data[i] / other[i];
     return res;
   }
-  
+
   inline This& operator*=(const value_type scalar) 
   {
     for(size_type i = 0; i < size(); ++i)
       data[i] *= scalar;
     return *this;
+  }
+
+  bool operator==(const Descriptor& other) const
+  {
+    return std::equal(data, data+N, other.data);
   }
 
   inline bin_type* getData() const {return (bin_type* ) (&data[0]);}
@@ -207,7 +212,8 @@ template<typename DescriptorsT >
 bool loadDescsFromBinFile(
   const std::string & sfileNameDescs,
   DescriptorsT & vec_desc,
-  bool append = false)
+  bool append = false,
+  const int Nmax = 0)
 {
   typedef typename DescriptorsT::value_type VALUE;
 
@@ -221,10 +227,15 @@ bool loadDescsFromBinFile(
   //Read the number of descriptor in the file
   std::size_t cardDesc = 0;
   fileIn.read((char*) &cardDesc,  sizeof(std::size_t));
-  // Reserve is necessary to avoid iterator problems in case of cleared vector
-  vec_desc.reserve(vec_desc.size() + cardDesc);
-  typename DescriptorsT::const_iterator begin = vec_desc.end();
-  vec_desc.resize(vec_desc.size() + cardDesc);
+  
+  std::size_t previousSize = vec_desc.size();
+  
+  if (Nmax != 0)
+    vec_desc.resize(vec_desc.size() + std::min((int)cardDesc, Nmax));
+  else
+    vec_desc.resize(vec_desc.size() + cardDesc);
+  typename DescriptorsT::const_iterator begin = vec_desc.begin();
+  std::advance(begin, previousSize);
   for (typename DescriptorsT::const_iterator iter = begin;
     iter != vec_desc.end(); ++iter)
   {
