@@ -237,8 +237,8 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
   POPART_COUT_DEBUG("nearestKeyFrames.size() = " << nearestKeyFrames.size());
   for(const IndexT indexKeyFrame : nearestKeyFrames)
   {
-    POPART_COUT_DEBUG("[localization]\tProcessing nearest kframe " << indexKeyFrame);
-    POPART_COUT_DEBUG(_sfm_data.GetViews().at(indexKeyFrame)->s_Img_path);
+    POPART_COUT("[localization]\tProcessing nearest kframe " << indexKeyFrame 
+            << " (" << _sfm_data.GetViews().at(indexKeyFrame)->s_Img_path << ")");
     const Reconstructed_RegionsCCTag& matchedRegions = _regions_per_view[indexKeyFrame];
     
     // Matching
@@ -269,6 +269,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
       POPART_COUT("[localization]\tSkipping kframe " << indexKeyFrame << " as it contains only "<< vec_featureMatches.size()<<" matches");
       continue;
     }
+    POPART_COUT("[localization]\tFound "<< vec_featureMatches.size()<<" matches");
     
     // D. recover the 2D-3D associations from the matches 
     // Each matched feature in the current similar image is associated to a 3D point,
@@ -648,7 +649,8 @@ void kNearestKeyFrames(
           const features::CCTAG_Regions & queryRegions,
           const CCTagRegionsPerViews & regionsPerView,
           std::size_t nNearestKeyFrames,
-          std::vector<IndexT> & kNearestFrames)
+          std::vector<IndexT> & kNearestFrames,
+          const float similarityThreshold /*=.0f*/)
 {
   kNearestFrames.clear();
   
@@ -663,8 +665,14 @@ void kNearestKeyFrames(
   }
   
   std::size_t counter = 0;
+  kNearestFrames.reserve(nNearestKeyFrames);
   for (auto rit = sortedViewSimilarities.crbegin(); rit != sortedViewSimilarities.crend(); ++rit)
   {
+    if(rit->first < similarityThreshold)
+      // since it is ordered, the first having smaller similarity guarantees that
+      // there won't be other useful kframes
+      break;
+    
     kNearestFrames.push_back(rit->second);
     ++counter;
     

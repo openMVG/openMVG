@@ -107,25 +107,28 @@ private:
    * @brief Retrieve the k nearest views in a collection of views based on a query
    *        consisting in a set of CCTag regions.
    * 
-   * @param[in] queryRegions Set of CCTag regions in the query
-   * @param[in] Collection of views containing a set of cctag regions 
-   * @param[in] nNearestKeyFrames Number of nearest neighbours to return
-   * @param[out] kNearestFrames Set of computed indices associated to the k nearest views
+   * @param[in] queryRegions Set of CCTag regions in the query.
+   * @param[in] Collection of views containing a set of cctag regions.
+   * @param[in] nNearestKeyFrames Number of nearest neighbours to return.
+   * @param[out] kNearestFrames Set of computed indices associated to the k nearest views.
+   * @param[in] similarityThreshold A threshold to retrieve only the kframes having 
+  *  at least \p similarityThreshold similarity score.
    */
 void kNearestKeyFrames(
           const features::CCTAG_Regions & queryRegions,
           const CCTagRegionsPerViews & _regions_per_view,
           std::size_t nNearestKeyFrames,
-          std::vector<IndexT> & kNearestFrames);
+          std::vector<IndexT> & kNearestFrames,
+          const float similarityThreshold = .0f);
 /**
  * @brief Given a set of CCTag descriptors seen in a view, it creates a descriptor for the view: the
  * view descriptor is a 128 bit array (ie the number of possible markers) whose 
  * bits are 0 or 1 whether the corresponding marker is seen or not. E.g. if the 
- * bit in position 8 is 1 it means that the marker with ID 8 has been seen by the view
+ * bit in position 8 is 1 it means that the marker with ID 8 has been seen by the view.
  * 
- * @param[in] vCCTagDescriptors The input descriptors associated to the view
- * @return The view descriptor as a set of bit representing the visibility of 
- * each possible marker for that view
+ * @param[in] vCCTagDescriptors The input descriptors associated to the view.
+ * @return The view descriptor as a set of bit representing the visibility of
+ * each possible marker for that view.
  */
 std::bitset<128> constructCCTagViewDescriptor(
         const std::vector<CCTagDescriptor> & vCCTagDescriptors);
