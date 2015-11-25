@@ -102,15 +102,14 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
   std::cout << "Load Features and Descriptors per view" << std::endl;
   std::vector<bool> presentIds(128,false); // @todo Assume a maximum library size of 128 unique ids.
   // Read for each view the corresponding regions and store them
-  for(sfm::Views::const_iterator iter = sfm_data.GetViews().begin();
-          iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
+  for(const auto &iter : sfm_data.GetViews() )
   {
-    const IndexT id_view = iter->second->id_view;
+    const IndexT id_view = iter.second->id_view;
     Reconstructed_RegionsCCTag& reconstructedRegion = _regions_per_view[id_view];
 
-    const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.get()->s_Img_path);
-    std::string featFilepath = stlplus::create_filespec(feat_directory, std::to_string(iter->first), ".feat");
-    std::string descFilepath = stlplus::create_filespec(feat_directory, std::to_string(iter->first), ".desc");
+    const std::string &sImageName = iter.second.get()->s_Img_path;
+    std::string featFilepath = stlplus::create_filespec(feat_directory, std::to_string(iter.first), ".feat");
+    std::string descFilepath = stlplus::create_filespec(feat_directory, std::to_string(iter.first), ".desc");
 
     if(!(stlplus::is_file(featFilepath) && stlplus::is_file(descFilepath)))
     {
@@ -132,12 +131,25 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
       std::cerr << "Invalid regions files for the view: " << sImageName << std::endl;
       return false;
     }
+    
+    {
+      // just debugging stuff -- print for each image the visible reconstructed cctag
+      std::cout << "Image " << sImageName << " contains :\t";
+      for(const auto &desc : reconstructedRegion._regions.Descriptors())
+      {
+        const IndexT cctagIdA = features::getCCTagId(desc);
+        std::cout << cctagIdA << " ";
+      }
+      std::cout << "\n";
+    }
 
     // Filter descriptors to keep only the 3D reconstructed points
     reconstructedRegion.filterCCTagRegions(observationsPerView[id_view]);
     
     // Update the visibility mask
     reconstructedRegion.updateLandmarksVisibility(presentIds);
+    
+    ++my_progress_bar;
   }
 
   // Display the cctag ids over all cctag landmarks present in the database
