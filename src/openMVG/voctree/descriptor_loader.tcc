@@ -42,35 +42,42 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
     }
     ++display;
   }
-  BOOST_ASSERT(bytesPerElement > 0);
   std::cout << "Found " << numDescriptors << " descriptors overall, allocating memory..." << std::endl;
-
-  // Allocate the memory
-  descriptors.reserve(numDescriptors);
-  size_t numDescriptorsCheck = numDescriptors; // for later check
-  numDescriptors = 0;
-
-  // Read the descriptors
-  std::cout << "Reading the descriptors..." << std::endl;
-  display.restart(descriptorsFiles.size());
-
-  // Run through the path vector and read the descriptors
-  for(const auto &currentFile : descriptorsFiles)
+  if(bytesPerElement == 0)
   {
-    // Read the descriptors and append them in the vector
-    loadDescsFromBinFile(currentFile.second, descriptors, true);
-    size_t result = descriptors.size();
-
-    // Add the number of descriptors from this file
-    numFeatures.push_back(result - numDescriptors);
-
-    // Update the overall counter
-    numDescriptors = result;
-    
-    ++display;
+    std::cout << "WARNING: Empty descriptor file: " << fileFullPath << std::endl;
+    return 0;
   }
-  BOOST_ASSERT(numDescriptors == numDescriptorsCheck);
+  
+  else
+  {
+    // Allocate the memory
+    descriptors.reserve(numDescriptors);
+    size_t numDescriptorsCheck = numDescriptors; // for later check
+    numDescriptors = 0;
 
+    // Read the descriptors
+    std::cout << "Reading the descriptors..." << std::endl;
+    display.restart(descriptorsFiles.size());
+
+    // Run through the path vector and read the descriptors
+    for(const auto &currentFile : descriptorsFiles)
+    {
+      // Read the descriptors and append them in the vector
+      loadDescsFromBinFile(currentFile.second, descriptors, true);
+      size_t result = descriptors.size();
+
+      // Add the number of descriptors from this file
+      numFeatures.push_back(result - numDescriptors);
+
+      // Update the overall counter
+      numDescriptors = result;
+
+      ++display;
+    }
+    BOOST_ASSERT(numDescriptors == numDescriptorsCheck);
+
+  }
   // Return the result
   return numDescriptors;
 }
