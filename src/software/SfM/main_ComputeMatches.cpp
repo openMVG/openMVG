@@ -100,7 +100,7 @@ int main(int argc, char **argv)
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--input_file] a SfM_Data file\n"
-      << "[-o|--out_dir path] output path where computed are stored\n"
+      << "[-o|--out_dir path] output path where computed matches are stored\n"
       << "\n[Optional]\n"
       << "[-f|--force] Force to recompute data]\n"
       << "[-r|--ratio] Distance ratio to discard non meaningful matches\n"
