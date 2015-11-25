@@ -260,7 +260,8 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                            std::make_pair(mview->ui_width, mview->ui_height), 
                            _regions_per_view[indexKeyFrame]._regions,
                            vec_featureMatches,
-                           queryimage+"_"+matchedImage+".svg");
+                           queryimage+"_"+matchedImage+".svg",
+                           true ); //showNotMatched
     }
     
     if ( vec_featureMatches.size() < 3 )

@@ -66,7 +66,8 @@ void saveCCTagMatches2SVG(const std::string &imagePathLeft,
                      const std::pair<size_t,size_t> & imageSizeRight,
                      const features::CCTAG_Regions &cctagRight,
                      const matching::IndMatches &matches,
-                     const std::string &outputSVGPath);
+                     const std::string &outputSVGPath, 
+                     bool showNotMatched);
 #endif
 
 } // namespace localization

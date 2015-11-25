@@ -103,7 +103,8 @@ void saveCCTagMatches2SVG(const std::string &imagePathLeft,
                      const std::pair<size_t,size_t> & imageSizeRight,
                      const features::CCTAG_Regions &cctagRight,
                      const matching::IndMatches &matches,
-                     const std::string &outputSVGPath)
+                     const std::string &outputSVGPath, 
+                     bool showNotMatched)
 {
   // set the text size to 5% if the image heigth
   const float textSize = 0.05*std::min(imageSizeRight.second, imageSizeLeft.second);
@@ -117,24 +118,89 @@ void saveCCTagMatches2SVG(const std::string &imagePathLeft,
   const std::vector<CCTagDescriptor > &descLeft = cctagLeft.Descriptors();
   const std::vector<CCTagDescriptor > &descRight = cctagRight.Descriptors();
   
+  //just to be sure...
+  assert(keypointsLeft.size() == descLeft.size());
+  assert(keypointsRight.size() == descRight.size());
+  
   for(const matching::IndMatch &m : matches)
   {
     //Get back linked feature, draw a circle and link them by a line
     const features::PointFeature & L = keypointsLeft[m._i];
     const features::PointFeature & R = keypointsRight[m._j];
-    svgStream.drawLine(L.x(), L.y(), R.x() + imageSizeLeft.first, R.y(), svg::svgStyle().stroke("green", 2.0));
-    svgStream.drawCircle(L.x(), L.y(), 3.0f, svg::svgStyle().stroke("yellow", 2.0));
-    svgStream.drawCircle(R.x() + imageSizeLeft.first, R.y(), 3.0f, svg::svgStyle().stroke("yellow", 2.0));
-    
     const IndexT cctagIdLeft = features::getCCTagId(descLeft[m._i]);
     const IndexT cctagIdRight = features::getCCTagId(descRight[m._j]);
     if ( cctagIdLeft == UndefinedIndexT || cctagIdRight == UndefinedIndexT )
     {
-      std::cerr << "Warning! cctagIdLeft " << cctagIdLeft << " " << "cctagIdRight " << cctagIdRight << std::endl;
+      std::cerr << "[svg]\tWarning! cctagIdLeft " << cctagIdLeft << " " << "cctagIdRight " << cctagIdRight << std::endl;
       continue;
     }
+    
+    svgStream.drawLine(L.x(), L.y(), R.x() + imageSizeLeft.first, R.y(), svg::svgStyle().stroke("green", 2.0));
+    svgStream.drawCircle(L.x(), L.y(), 3.0f, svg::svgStyle().stroke("yellow", 2.0));
+    svgStream.drawCircle(R.x() + imageSizeLeft.first, R.y(), 3.0f, svg::svgStyle().stroke("yellow", 2.0));
+    
     svgStream.drawText(L.x(), L.y(), textSize, std::to_string(cctagIdLeft), "yellow");
     svgStream.drawText(R.x() + imageSizeLeft.first, R.y(), textSize, std::to_string(cctagIdRight), "yellow");
+  }
+  
+  if(showNotMatched)
+  {
+    const float textSizeSmaller = 0.75*textSize;
+    
+    // for the left side
+    for(std::size_t i = 0; i < keypointsLeft.size(); ++i)
+    {
+      // look if the index is not already in matches
+      bool found = false;
+      for(const matching::IndMatch &m : matches)
+      {
+        found = m._i == i;
+        if(found)
+          break;
+      }
+      if(found)
+        continue;
+      
+      assert(i < descLeft.size());
+      // find the cctag id
+      const IndexT cctagIdLeft = features::getCCTagId(descLeft[i]);
+      if(cctagIdLeft == UndefinedIndexT)
+        continue;
+      
+      // draw the center
+      const features::PointFeature & L = keypointsLeft[i];
+      svgStream.drawCircle(L.x(), L.y(), 3.0f, svg::svgStyle().stroke("red", 2.0));
+      // print the id
+      svgStream.drawText(L.x(), L.y(), textSizeSmaller, std::to_string(cctagIdLeft), "red");
+    }
+    
+    // for the right side
+    for(std::size_t i = 0; i < keypointsRight.size(); ++i)
+    {
+      // look if the index is not already in matches
+      bool found = false;
+      for(const matching::IndMatch &m : matches)
+      {
+        found = m._j == i;
+        if(found)
+          break;
+      }
+      if(found)
+        continue;
+      
+      assert(i < descRight.size());
+      // find the cctag id
+      const IndexT cctagIdRight = features::getCCTagId(descRight[i]);
+      if(cctagIdRight == UndefinedIndexT)
+        continue;
+      
+      // draw the center
+      const features::PointFeature & R = keypointsRight[i];
+      svgStream.drawCircle(R.x() + imageSizeLeft.first, R.y(), 3.0f, svg::svgStyle().stroke("red", 2.0));
+      // print the id
+      svgStream.drawText(R.x() + imageSizeLeft.first, R.y(), textSizeSmaller, std::to_string(cctagIdRight), "red");
+
+    }
   }
 
   std::ofstream svgFile(outputSVGPath.c_str());
