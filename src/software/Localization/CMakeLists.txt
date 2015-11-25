@@ -61,6 +61,11 @@ IF(OpenMVG_BUILD_VOCTREE)
     INSTALL(TARGETS openMVG_main_convertDescFloat2Uchar DESTINATION bin/)
     TARGET_LINK_LIBRARIES(openMVG_main_convertDescFloat2Uchar openMVG_localization openMVG_features ${BOOST_LIBRARIES})
 
+    # voctree statistics
+    ###
+    ADD_EXECUTABLE(openMVG_main_voctreeStatistics voctreeStatistics.cpp)
+    INSTALL(TARGETS openMVG_main_voctreeStatistics DESTINATION bin/)
+    TARGET_LINK_LIBRARIES(openMVG_main_voctreeStatistics openMVG_voctree ${BOOST_LIBRARIES})
 
     #@TODO decide where to put the binaries
 

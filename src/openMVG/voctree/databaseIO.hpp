@@ -76,25 +76,22 @@ void queryDatabase(const std::string &fileFullPath,
                    const int Nmax = 0);
 
 /**
- * @brief Given an non empty database, it queries the database with a set of images
- * and their associated features and returns, for each image, the first \p numResults best
- * matching documents in the database
+ * @brief Returns some statistics (histogram) 
  * 
  * @param[in] fileFullPath A file containing the path the features to load, it could be a .txt or an OpenMVG .json
  * @param[in] tree The vocabulary tree to be used for feature quantization
  * @param[in] db The built database
- * @param[in] numResults The number of results to retrieve for each image
- * @param[out] allMatches The matches for all the images
- * 
+ * @param[in] distanceMethod The distance method used for create the pair list
+ * @param[in/out] globalHistogram The histogram of the "population" of voctree leaves. 
  * @see queryDatabase()
  */
 template<class DescriptorT, class VocDescriptorT>
-void queryDatabase(const std::string &fileFullPath,
-                   const VocabularyTree<VocDescriptorT> &tree,
-                   const Database &db,
-                   size_t numResults,
-                   std::map<size_t, DocMatches> &allMatches);
-
+void voctreeStatistics(
+    const std::string &fileFullPath,
+    const VocabularyTree<VocDescriptorT> &tree,
+    const Database &db,
+    const std::string &distanceMethod,
+    std::map<int, int> &globalHistogram);
 
 } //namespace voctree
 } //namespace openMVG
