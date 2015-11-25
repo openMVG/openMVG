@@ -169,7 +169,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                 const LocalizerParameters *parameters,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                LocalizationResult & localizationResult)
+                LocalizationResult & localizationResult, const std::string& imagePath /* = std::string() */)
 {
   const CCTagLocalizer::Parameters *param = static_cast<const CCTagLocalizer::Parameters *>(parameters);
   if(!param)

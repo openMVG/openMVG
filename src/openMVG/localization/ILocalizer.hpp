@@ -40,23 +40,22 @@ public:
     const sfm::SfM_Data& getSfMData() const {return _sfm_data; }
     
     /**
-    * @brief Just a wrapper around the different localization algorithm, the algorith
-    * used to localized is chosen using \p param._algorithm
-    * 
-    * @param[in] imageGray The input greyscale image
-    * @param[in] param The parameters for the localization
-    * @param[in] useInputIntrinsics Uses the \p queryIntrinsics as known calibration
-    * @param[in,out] queryIntrinsics Intrinsic parameters of the camera, they are used if the
-    * flag useInputIntrinsics is set to true, otherwise they are estimated from the correspondences.
-    * @param[out] pose The camera pose
-    * @param[out] resection_data the 2D-3D correspondences used to compute the pose
-    * @return true if the localization is successful
-    */
+     * @brief Localize one image
+     * 
+     * @param[in] imageGrey The input greyscale image.
+     * @param[in] param The parameters for the localization.
+     * @param[in] useInputIntrinsics Uses the \p queryIntrinsics as known calibration.
+     * @param[in,out] queryIntrinsics Intrinsic parameters of the camera, they are used if the
+     * flag useInputIntrinsics is set to true, otherwise they are estimated from the correspondences.
+     * @param[out] localizationResult The localization result containing the pose and the associations.
+     * @param[in] imagePath Optional complete path to the image, used only for debugging purposes.
+     * @return  true if the image has been successfully localized.
+     */
     virtual bool localize(const image::Image<unsigned char> & imageGrey,
                  const LocalizerParameters *param,
                  bool useInputIntrinsics,
                  cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                 LocalizationResult & localizationResult)=0;
+                 LocalizationResult & localizationResult, const std::string& imagePath = std::string())=0;
     
     virtual bool localizeRig(const std::vector<image::Image<unsigned char> > & vec_imageGrey,
                              const LocalizerParameters *param,

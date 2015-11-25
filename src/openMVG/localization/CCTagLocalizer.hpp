@@ -44,20 +44,20 @@ public:
    * @brief Just a wrapper around the different localization algorithm, the algorith
    * used to localized is chosen using \p param._algorithm
    * 
-   * @param[in] imageGray The input greyscale image
-   * @param[in] param The parameters for the localization
-   * @param[in] useInputIntrinsics Uses the \p queryIntrinsics as known calibration
+   * @param[in] imageGrey The input greyscale image.
+   * @param[in] param The parameters for the localization.
+   * @param[in] useInputIntrinsics Uses the \p queryIntrinsics as known calibration.
    * @param[in,out] queryIntrinsics Intrinsic parameters of the camera, they are used if the
    * flag useInputIntrinsics is set to true, otherwise they are estimated from the correspondences.
-   * @param[out] pose The camera pose
-   * @param[out] resection_data the 2D-3D correspondences used to compute the pose
-   * @return true if the localization is successful
+   * @param[out] localizationResult The localization result containing the pose and the associations.
+   * @param[in] imagePath Optional complete path to the image, used only for debugging purposes.
+   * @return  true if the image has been successfully localized.
    */
   bool localize(const image::Image<unsigned char> & imageGrey,
                 const LocalizerParameters *param,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                LocalizationResult & localizationResult);
+                LocalizationResult & localizationResult, const std::string& imagePath = std::string());
   
   bool localizeRig(const std::vector<image::Image<unsigned char> > & vec_imageGrey,
                 const LocalizerParameters *parameters,

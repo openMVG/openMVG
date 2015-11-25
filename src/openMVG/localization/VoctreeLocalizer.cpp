@@ -134,7 +134,7 @@ bool VoctreeLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                 const LocalizerParameters *param,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                LocalizationResult &localizationResult)
+                LocalizationResult &localizationResult, const std::string& imagePath /* = std::string() */)
 {
   const Parameters *voctreeParam = static_cast<const Parameters *>(param);
   if(!voctreeParam)
