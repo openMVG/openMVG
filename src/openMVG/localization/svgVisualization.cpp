@@ -6,6 +6,10 @@
  */
 
 #include "svgVisualization.hpp"
+#if HAVE_CCTAG
+#include "CCTagLocalizer.hpp"
+#include <openMVG/features/cctag/CCTAG_describer.hpp>
+#endif
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
 namespace openMVG {
@@ -58,6 +62,38 @@ void saveFeatures2SVG(const std::string &inputImagePath,
   svgFile << svgStream.closeSvgFile().str();
   svgFile.close();
 }
+
+#if HAVE_CCTAG
+void saveCCTag2SVG(const std::string &inputImagePath,
+                      const std::pair<size_t,size_t> & imageSize,
+                      const features::CCTAG_Regions &cctags,
+                      const std::string &outputSVGPath)
+{
+  svg::svgDrawer svgStream( imageSize.first, imageSize.second);
+  svgStream.drawImage(inputImagePath, imageSize.first, imageSize.second);
+  
+
+  
+  const auto &feat = cctags.Features();
+  const std::vector<CCTagDescriptor > &desc = cctags.Descriptors();
+  
+  for(std::size_t i = 0; i < desc.size(); ++i) 
+  {
+    const IndexT cctagId = features::getCCTagId(desc[i]);
+    if ( cctagId == UndefinedIndexT)
+    {
+      continue;
+    }
+    const CCTagKeypoint &kpt = feat[i];
+    svgStream.drawCircle(kpt.x(), kpt.y(), 3.0f, svg::svgStyle().stroke("yellow", 2.0));
+    svgStream.drawText(kpt.x(), kpt.y(), 20, std::to_string(cctagId), "yellow");
+  }
+ 
+  std::ofstream svgFile( outputSVGPath.c_str() );
+  svgFile << svgStream.closeSvgFile().str();
+  svgFile.close();
+}
+#endif
 
 } // namespace localization
 } // namespace openMVG

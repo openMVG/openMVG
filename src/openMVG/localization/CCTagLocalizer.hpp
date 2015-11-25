@@ -20,6 +20,7 @@ namespace localization {
 
 typedef Reconstructed_Regions<features::SIOPointFeature, unsigned char, 128> Reconstructed_RegionsCCTag; 
 typedef Reconstructed_RegionsCCTag::DescriptorT CCTagDescriptor;
+typedef Reconstructed_RegionsCCTag::FeatureT CCTagKeypoint;
 typedef Hash_Map<IndexT, Reconstructed_RegionsCCTag > CCTagRegionsPerViews;
 
 class CCTagLocalizer : public ILocalizer

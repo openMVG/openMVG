@@ -8,6 +8,9 @@
 #pragma once
 
 #include <openMVG/features/image_describer.hpp>
+#if HAVE_CCTAG
+#include <openMVG/features/regions_factory.hpp>
+#endif
 #include <openMVG/matching/indMatch.hpp>
 
 #include <vector>
@@ -48,6 +51,14 @@ void saveFeatures2SVG(const std::string &inputImagePath,
                       const std::pair<size_t,size_t> & imageSize,
                       const std::vector<features::PointFeature> &keypoints,
                       const std::string &outputSVGPath);
+
+#if HAVE_CCTAG
+
+void saveCCTag2SVG(const std::string &inputImagePath,
+                      const std::pair<size_t,size_t> & imageSize,
+                      const features::CCTAG_Regions &cctags,
+                      const std::string &outputSVGPath);
+#endif
 
 } // namespace localization
 } // namespace openMVG
