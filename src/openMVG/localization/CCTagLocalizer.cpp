@@ -245,6 +245,24 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
     std::vector<matching::IndMatch> vec_featureMatches;
     viewMatching(queryRegions, _regions_per_view[indexKeyFrame]._regions, vec_featureMatches);
     
+    if(param->_visualDebug && !imagePath.empty())
+    {
+      const sfm::View *mview = _sfm_data.GetViews().at(indexKeyFrame).get();
+      const std::string queryimage = bfs::path(imagePath).stem().string();
+      const std::string matchedImage = bfs::path(mview->s_Img_path).stem().string();
+      const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
+      
+      
+      saveCCTagMatches2SVG(imagePath, 
+                           std::make_pair(imageGrey.Width(),imageGrey.Height()), 
+                           queryRegions,
+                           matchedPath,
+                           std::make_pair(mview->ui_width, mview->ui_height), 
+                           _regions_per_view[indexKeyFrame]._regions,
+                           vec_featureMatches,
+                           queryimage+"_"+matchedImage+".svg");
+    }
+    
     if ( vec_featureMatches.size() < 3 )
     {
       POPART_COUT("[localization]\tSkipping kframe " << indexKeyFrame << " as it contains only "<< vec_featureMatches.size()<<" matches");
