@@ -10,11 +10,11 @@
 namespace openMVG{
 namespace voctree{
 
-std::ostream& operator<<(std::ostream& os, const Database::DocumentVector &dv)	
+std::ostream& operator<<(std::ostream& os, const Database::SparseHistogram &dv)	
 {
 	for( const auto &e : dv )
 	{
-		os << e.first << ", " << e.second << "; ";
+		os << e.first << ", " << e.second.size() << "; ";
 	}
 	os << "\n";
 	return os;
@@ -38,7 +38,7 @@ DocId Database::insert(DocId doc_id, const std::vector<Word>& document)
   }
 
   // Precompute the document vector to compare queries against.
-  DocumentVector& newDoc = database_[doc_id];
+  SparseHistogram& newDoc = database_[doc_id];
   computeVector(document, newDoc);
 
   return doc_id;
@@ -84,7 +84,7 @@ void Database::sanityCheck(size_t N, std::map<size_t, DocMatches>& matches) cons
  */
 void Database::find(const std::vector<Word>& document, size_t N, std::vector<DocMatch>& matches) const
 {
-  DocumentVector query;
+  SparseHistogram query;
   // from the list of visual words associated with each feature in the document/image
   // generate the (sparse) histogram of the visual words 
   computeVector(document, query);
@@ -176,20 +176,17 @@ void Database::loadWeights(const std::string& file)
  * @param[in] document a list of (possibly repeated) visual words
  * @param[out] v the vector of visual words (ie the visual word histogram of the image)
  */
-void Database::computeVector(const std::vector<Word>& document, DocumentVector& v) const
+void Database::computeVector(const std::vector<Word>& document, SparseHistogram& v) const
 {
-  //for each visual word in the list
-  for(const Word &word : document)
+  // for each visual word in the list
+  for(std::size_t i = 0; i < document.size(); ++i)
   {
     // update its weighted count inside the map
     // the map v contains only the visual words that are associated to some features
     // the visual words in v are unique unlikely the document
-    if(v.find(word) == v.end())
-      v[word] = word_weights_[word];
-    else
-      v[word] += word_weights_[word];
+    Word word = document[i];
+    v[word].push_back(i);
   }
-  normalize(v);
 }
 
 /**

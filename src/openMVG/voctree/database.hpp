@@ -7,6 +7,8 @@
 #include <cereal/types/vector.hpp>
 #include <cereal/types/map.hpp>
 
+#include <openMVG/types.hpp>
+
 #include <map>
 
 namespace openMVG{
@@ -47,6 +49,9 @@ typedef std::vector<DocMatch> DocMatches;
 class Database
 {
 public:
+  
+  typedef std::map<Word, std::vector<IndexT>> SparseHistogram;
+
   /**
    * @brief Constructor
    *
@@ -142,12 +147,12 @@ private:
 
   /// @todo Use sorted vector?
   // typedef std::vector< std::pair<Word, float> > DocumentVector;
-  typedef std::map<Word, float> DocumentVector;
-  friend std::ostream& operator<<(std::ostream& os, const Database::DocumentVector &dv);	
+  
+  friend std::ostream& operator<<(std::ostream& os, const Database::SparseHistogram &dv);	
 
   std::vector<InvertedFile> word_files_;
   std::vector<float> word_weights_;
-  std::map<DocId, DocumentVector> database_; // Precomputed for inserted documents
+  std::map<DocId, SparseHistogram> database_; // Precomputed for inserted documents
 
   /**
    * Given a list of visual words associated to the features of a document it computes the 
@@ -171,7 +176,7 @@ private:
    * Normalize a document vector representing the histogram of visual words for a given image
    * @param[in/out] v the unnormalized histogram of visual words
    */
-  static void normalize(DocumentVector& v);
+  void normalize(SparseHistogram& v) const;
 
   /**
    * @brief compute the sparse distance L1 between two histograms
