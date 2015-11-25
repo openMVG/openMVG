@@ -15,7 +15,7 @@ namespace voctree {
  * Works with std::vector, boost::array, or more generally any container that has
  * a \c value_type typedef, \c size() and array-indexed element access.
  */
-template<class DescriptorA, class DescriptorB>
+template<class DescriptorA, class DescriptorB=DescriptorA>
 struct L2
 {
   typedef typename DescriptorA::value_type value_type;
@@ -23,7 +23,7 @@ struct L2
 
   result_type operator()(const DescriptorA& a, const DescriptorB& b) const
   {
-    result_type result = result_type();
+    result_type result = result_type(0);
     for(std::size_t i = 0; i < a.size(); ++i)
     {
       result_type diff = (result_type)a[i] - (result_type)b[i];
