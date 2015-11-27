@@ -23,5 +23,5 @@ SET_TARGET_PROPERTIES(openMVG_features PROPERTIES SOVERSION ${OPENMVG_VERSION_MA
 INSTALL(TARGETS openMVG_features DESTINATION lib EXPORT openMVG-targets)
 SET_PROPERTY(TARGET openMVG_features PROPERTY FOLDER OpenMVG/OpenMVG)
 
-UNIT_TEST(openMVG features "openMVG_features")
+UNIT_TEST(openMVG features "openMVG_features;stlplus")
 

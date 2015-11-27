@@ -105,6 +105,7 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
   
   std::cout << "Load Features and Descriptors per view" << std::endl;
   std::vector<bool> presentIds(128,false); // @todo Assume a maximum library size of 128 unique ids.
+  std::vector<int> counterCCtagsInImage = {0, 0, 0, 0, 0, 0};
   // Read for each view the corresponding regions and store them
   for(const auto &iter : sfm_data.GetViews())
   {
@@ -147,6 +148,7 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
 
   {
     // just debugging stuff -- print for each image the visible reconstructed cctag
+    // and create an histogram of cctags per image
     for(const auto &iter : sfm_data.GetViews())
     {
       const IndexT id_view = iter.second->id_view;
@@ -167,13 +169,25 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
           if(cctagIdA != UndefinedIndexT)
             std::cout << cctagIdA << " ";
         }
+        // Update histogram
+        int countcctag = reconstructedRegion._regions.Descriptors().size();
+        if(countcctag >= 5)
+          counterCCtagsInImage[5] +=1;
+        else
+          counterCCtagsInImage[countcctag] += 1;
       }
       std::cout << "\n";
     }
   }
   
+  // Display histogram
+  std::cout << std::endl << "Histogram of number of cctags in images :" << std::endl;
+  for(int i = 0; i < 5; i++)
+    std::cout << "Images with " << i << "  CCTags : " << counterCCtagsInImage[i] << std::endl;
+  std::cout << "Images with 5+ CCTags : " << counterCCtagsInImage[5] << std::endl << std::endl;
+  
   // Display the cctag ids over all cctag landmarks present in the database
-  std::cout << std::endl << "Present CCTag landmarks present in the database: " << std::endl;
+  std::cout << std::endl << "CCTag landmarks present in the database: " << std::endl;
   for(std::size_t i = 0; i < presentIds.size(); ++i)
   {
     if (presentIds[i])

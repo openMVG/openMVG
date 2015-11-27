@@ -186,22 +186,6 @@ struct RepeatabilityResults_Matching
   }
 };
 
-features::EDESCRIBER_PRESET stringToEnum(const std::string & sPreset)
-{
-  features::EDESCRIBER_PRESET preset;
-  if(sPreset == "NORMAL")
-    preset = features::NORMAL_PRESET;
-  else
-  if (sPreset == "HIGH")
-    preset = features::HIGH_PRESET;
-  else
-  if (sPreset == "ULTRA")
-    preset = features::ULTRA_PRESET;
-  else
-    preset = features::EDESCRIBER_PRESET(-1);
-  return preset;
-}
-
 //--
 // Regions repeatability evaluation:
 // - compare feature/descriptor matching repeatability on some dataset with known homography motions
@@ -240,6 +224,8 @@ int main(int argc, char **argv)
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors.\n"
       << "[-p|--describer_preset]\n"
       << "  (used to control the Image_describer configuration):\n"
+      << "   LOW,\n"
+      << "   MEDIUM,\n"
       << "   NORMAL (default),\n"
       << "   HIGH,\n"
       << "   ULTRA: !!Can take long time!!\n"
@@ -306,7 +292,7 @@ int main(int argc, char **argv)
       }
       else
       {
-        if (!image_describer->Set_configuration_preset(stringToEnum(sFeature_Preset)))
+        if (!image_describer->Set_configuration_preset(sFeature_Preset))
         {
           std::cerr << "Preset configuration failed." << std::endl;
           return EXIT_FAILURE;

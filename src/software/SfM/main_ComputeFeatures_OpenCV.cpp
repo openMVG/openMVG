@@ -249,7 +249,7 @@ public:
 
     // cv::KeyPoint::response: the response by which the most strong keypoints have been selected.
     // Can be used for the further sorting or subsampling.
-    std::sort(v_keypoints.begin(), v_keypoints.end(), [](const cv::KeyPoint& a, const cv::KeyPoint& b){ return a.response > b.response; });
+    std::sort(v_keypoints.begin(), v_keypoints.end(), [](const cv::KeyPoint& a, const cv::KeyPoint& b) { return a.size > b.size; });
 
     // Grid filtering of the keypoints to ensure a global repartition
     if(_params.gridSize && _params.maxTotalKeypoints)

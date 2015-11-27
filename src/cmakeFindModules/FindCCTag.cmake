@@ -16,6 +16,8 @@
 MESSAGE(STATUS "Looking for CCTag.")
 
 # Try to find the headers location
+SET(CCTAG_FOUND 1)
+
 FIND_PATH(CCTAG_INCLUDE_DIR cctag/ICCTag.hpp
   HINTS
   $ENV{CCTAG_DIR}/include
@@ -27,18 +29,23 @@ IF(CCTAG_INCLUDE_DIR)
   MESSAGE(STATUS "CCTag headers found in ${CCTAG_INCLUDE_DIR}")
 ELSE()
   MESSAGE(WARNING "CCTag headers not found")
-ENDIF (CCTAG_INCLUDE_DIR)
+  SET(CCTAG_FOUND 0)
+ENDIF()
 
 # Locate libCCTag.a
 FIND_LIBRARY(CCTAG_LIBRARY NAMES CCTag 
   HINTS
-  $ENV{CCTAG_DIR}/lib
-  ${CCTAG_DIR}/lib
+  $ENV{CCTAG_DIR}
+  ${CCTAG_DIR}
   PATH_SUFFIXES
-  CCTag
+  lib
+  lib64
 )
 IF(CCTAG_LIBRARY)
   MESSAGE(STATUS "CCTag library found: ${CCTAG_LIBRARY}")
+else()
+  MESSAGE(WARNING "CCTag library not found")
+  SET(CCTAG_FOUND 0)
 ENDIF (CCTAG_LIBRARY)
 
 
@@ -61,10 +68,11 @@ endif()
 # Look for the cuda version of the lib
 FIND_LIBRARY(CCTAGCUDA_LIBRARY NAMES CCTagCuda 
   HINTS
-  $ENV{CCTAG_DIR}/lib
-  ${CCTAG_DIR}/lib
+    $ENV{CCTAG_DIR}
+    ${CCTAG_DIR}
   PATH_SUFFIXES
-  CCTag
+    lib
+    lib64
 )
 # To work with cuda, cctags needs additional CUDA cudadevrt library
 IF(CCTAGCUDA_LIBRARY)
@@ -72,21 +80,29 @@ IF(CCTAGCUDA_LIBRARY)
 ENDIF()
 
 # Sets the libraries needed to link with CCTag
-SET(CCTAG_LIBRARIES 
-	${CCTAG_LIBRARY} 
-	boost_filesystem boost_system boost_serialization 
-	dl 
-	${OpenCV_LIBS} 
-	${OPTPP_LIBRARIES} 
-	${Ceres_LIBRARIES} 
-	lapack
-	#${GLOG_LIBRARIES}
-	${CCTAGCUDA_LIBRARIES}
+SET(CCTAG_LIBRARIES
+  ${CCTAG_LIBRARY} 
+  ${CCTAGCUDA_LIBRARIES}
+#  boost_filesystem boost_system boost_serialization
+  dl
+  ${OpenCV_LIBS}
+  ${OPTPP_LIBRARIES}
+  ${Ceres_LIBRARIES}
+#  lapack
 )
+
+GET_FILENAME_COMPONENT(CCTAG_LIBRARY_DIR "${CCTAG_LIBRARY}" PATH)
 
 # Sets the include dirs we need to compile with cctags
 SET(CCTAG_INCLUDE_DIRS ${CCTAG_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS})
 
+
+IF(CCTAG_LIBRARY)
+  MESSAGE(STATUS "CCTag libraries found: ${CCTAG_LIBRARY}")
+  MESSAGE(STATUS "CCTag libraries directories: ${CCTAG_LIBRARY_DIR}")
+ELSE()
+  SET(CCTAG_FOUND 0)
+ENDIF()
 
 include(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set CCTAG_FOUND to TRUE

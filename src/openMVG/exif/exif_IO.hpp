@@ -8,6 +8,7 @@
 #define EXIF_IO_HPP
 
 #include <string>
+#include <map>
 
 namespace openMVG {
 namespace exif  {
@@ -33,14 +34,15 @@ class Exif_IO
     /// Verify if the file has metadata
     virtual bool doesHaveExifInfo() const = 0;
 
-    /// Print all data
-    virtual std::string allExifData() const = 0;
-    
     virtual std::string getImageUniqueID() const = 0;
 
     virtual std::string getSerialNumber() const = 0;
 
     virtual std::string getLensSerialNumber() const = 0;
+
+    virtual std::string getExifDataString() const = 0;
+
+    virtual std::map<std::string, std::string> getExifData () const = 0;
 
     /// File change date and time
     virtual std::string getDateTime() const = 0;

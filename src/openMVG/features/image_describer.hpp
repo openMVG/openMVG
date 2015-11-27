@@ -41,7 +41,7 @@ inline EDESCRIBER_PRESET describerPreset_stringToEnum(const std::string& sPreset
     return HIGH_PRESET;
   if (sPreset == "ULTRA")
     return ULTRA_PRESET;
-  return NORMAL_PRESET;
+  throw std::invalid_argument("Invalid descriptor preset: " + sPreset);
 }
 
 inline std::string describerPreset_enumToString(const EDESCRIBER_PRESET preset)
