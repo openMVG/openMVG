@@ -22,8 +22,8 @@ class CCTAG_Image_describer : public Image_describer
 {
 public:
   CCTAG_Image_describer()
-    :Image_describer(), _params(3) {}
-    
+    :Image_describer(), _params(3), _doAppend(false) {}
+
   CCTAG_Image_describer(const std::size_t nRings, const bool doAppend = false)
     :Image_describer(), _params(nRings), _doAppend(doAppend){}   
 
@@ -35,17 +35,17 @@ public:
     switch(preset)
     {
     // Normal lighting conditions: normal contrast
+    case LOW_PRESET:
+    case MEDIUM_PRESET:
     case NORMAL_PRESET:
       _params._cannyThrLow = 0.01f;
       _params._cannyThrHigh = 0.04f;
     break;
     // Low lighting conditions: very low contrast
     case HIGH_PRESET:
+    case ULTRA_PRESET: // todo@L: not set yet
       _params._cannyThrLow = 0.002f;
       _params._cannyThrHigh = 0.01f;
-    break;
-    case ULTRA_PRESET:
-      // todo@L: not set yet
     break;
     default:
       return false;

@@ -5,7 +5,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 #include "openMVG/image/image.hpp"
 #include "openMVG/sfm/sfm.hpp"
 
@@ -13,10 +12,12 @@
 #include "openMVG/features/features.hpp"
 #include "nonFree/sift/SIFT_describer.hpp"
 #include "nonFree/sift/SIFT_float_describer.hpp"
+
 #if HAVE_CCTAG
 #include "openMVG/features/cctag/CCTAG_describer.hpp"
 #include "openMVG/features/cctag/SIFT_CCTAG_describer.hpp"
 #endif
+
 #include <cereal/archives/json.hpp>
 #include "openMVG/system/timer.hpp"
 
@@ -26,6 +27,8 @@
 
 #include <cstdlib>
 #include <fstream>
+#include <iostream>
+
 
 using namespace openMVG;
 using namespace openMVG::image;
@@ -129,7 +132,7 @@ int main(int argc, char **argv)
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
     std::cerr << std::endl
       << "The input file \""<< sSfM_Data_Filename << "\" cannot be read" << std::endl;
-    return false;
+    return EXIT_FAILURE;
   }
 
   // b. Init the image_describer
@@ -145,7 +148,7 @@ int main(int argc, char **argv)
     // Dynamically load the image_describer from the file (will restore old used settings)
     std::ifstream stream(sImage_describer.c_str());
     if (!stream.is_open())
-      return false;
+      return EXIT_FAILURE;
 
     try
     {

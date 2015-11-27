@@ -187,7 +187,7 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
   std::cout << "Images with 5+ CCTags : " << counterCCtagsInImage[5] << std::endl << std::endl;
   
   // Display the cctag ids over all cctag landmarks present in the database
-  std::cout << std::endl << "Present CCTag landmarks present in the database: " << std::endl;
+  std::cout << std::endl << "CCTag landmarks present in the database: " << std::endl;
   for(std::size_t i = 0; i < presentIds.size(); ++i)
   {
     if (presentIds[i])

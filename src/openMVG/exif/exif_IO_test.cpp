@@ -36,7 +36,7 @@ TEST(Matching, Exif_IO_easyexif_ReadData)
   std::cout << "Read Metadata of file: " << sImg << std::endl;
 
   std::cout << "-----" << std::endl;
-  std::cout << exif_io->allExifData() << std::endl;
+  std::cout << exif_io->getExifDataString() << std::endl;
   std::cout << "-----" << std::endl;
 
   EXPECT_TRUE(exif_io->doesHaveExifInfo());
