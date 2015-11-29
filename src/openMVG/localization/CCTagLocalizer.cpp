@@ -158,6 +158,7 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
       std::cout << "Image " << sImageName;
       if(reconstructedRegion._regions.Descriptors().size() == 0 )
       {
+        counterCCtagsInImage[0] +=1;
         std::cout << " does not contain any cctag!!!";
       }
       else
@@ -178,23 +179,24 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
       }
       std::cout << "\n";
     }
-  }
-  
-  // Display histogram
-  std::cout << std::endl << "Histogram of number of cctags in images :" << std::endl;
-  for(int i = 0; i < 5; i++)
-    std::cout << "Images with " << i << "  CCTags : " << counterCCtagsInImage[i] << std::endl;
-  std::cout << "Images with 5+ CCTags : " << counterCCtagsInImage[5] << std::endl << std::endl;
-  
-  // Display the cctag ids over all cctag landmarks present in the database
-  std::cout << std::endl << "CCTag landmarks present in the database: " << std::endl;
-  for(std::size_t i = 0; i < presentIds.size(); ++i)
-  {
-    if (presentIds[i])
-      std::cout <<  i+1 << " ";
-  }
+    
+    // Display histogram
+    std::cout << std::endl << "Histogram of number of cctags in images :" << std::endl;
+    for(int i = 0; i < 5; i++)
+      std::cout << "Images with " << i << "  CCTags : " << counterCCtagsInImage[i] << std::endl;
+    std::cout << "Images with 5+ CCTags : " << counterCCtagsInImage[5] << std::endl << std::endl;
 
-  std::cout <<  std::endl << std::endl;
+    // Display the cctag ids over all cctag landmarks present in the database
+    std::cout << std::endl << "CCTag landmarks present in the database: " << std::endl;
+    for(std::size_t i = 0; i < presentIds.size(); ++i)
+    {
+      if(presentIds[i])
+        std::cout << i + 1 << " ";
+    }
+
+    std::cout << std::endl << std::endl;
+  }
+  
   
   return true;
 }
