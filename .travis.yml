@@ -75,13 +75,13 @@ before_script:
   - mkdir $OPENMVG_BUILD
   - cd $OPENMVG_BUILD
   # Classic release build
-  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -DOpenMVG_USE_BOOST=ON -DOpenMVG_USE_OPENCV=ON -DOpenCV_DIR=$OPENCV_INSTALL/share/OpenCV -DOpenMVG_BUILD_VOCTREE=ON -DOpenMVG_USE_CCTAG=OFF . $OPENMVG_SOURCE
+  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -DOpenMVG_USE_OPENCV=ON -DOpenCV_DIR=$OPENCV_INSTALL/share/OpenCV -DOpenMVG_BUILD_VOCTREE=ON -DOpenMVG_USE_CCTAG=OFF . $OPENMVG_SOURCE
   # Build for code coverage evaluation
   #- cmake -DOpenMVG_BUILD_COVERAGE=ON -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
 
 script:
 # limit GCC builds to a reduced number of thread for the virtual machine
-  - make -j 2
+  - make -j 2 VERBOSE=1
 # Perform unit tests only on GCC builds
   - if [ "$CC" = "gcc" ]; then make test; fi
 # Perform benchmark through ground truth tests with many scenes
