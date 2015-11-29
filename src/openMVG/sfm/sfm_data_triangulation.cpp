@@ -256,9 +256,9 @@ Vec3 SfM_Data_Structure_Computation_Robust::track_sample_triangulation(
   const std::set<IndexT> & samples) const
 {
   Triangulation trianObj;
-  for (auto& it : samples)
+  for (const IndexT idx : samples)
   {
-    const IndexT & idx = it;
+    assert(idx < obs.size());
     Observations::const_iterator itObs = obs.begin();
     std::advance(itObs, idx);
     const View * view = sfm_data.views.at(itObs->first).get();
