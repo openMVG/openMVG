@@ -28,18 +28,16 @@
 #ifndef OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_H_
 #define OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_H_
 
-#include <vector>
-#include <stdlib.h>
+#include <set>
+#include <cstdlib>
+#include <random>
+#include <cassert>
 
 namespace openMVG {
 namespace robust{
 
-using namespace std;
-
 /**
 * Pick a random subset of the integers [0, total), in random order.
-* Note that this can behave badly if num_samples is close to total; runtime
-* could be unlimited!
 *
 * This uses a quadratic rejection strategy and should only be used for small
 * num_samples.
@@ -48,35 +46,55 @@ using namespace std;
 * \param total_samples The number of samples available.
 * \param samples       num_samples of numbers in [0, total_samples) is placed
 *                      here on return.
+* \warning Argument values should respect: num_samples <= total_samples
 */
+template<typename IntT>
 static void UniformSample(
   size_t num_samples,
   size_t total_samples,
-  std::vector<size_t> *samples)
+  std::set<IntT> *samples)
 {
+  assert(num_samples <= total_samples);
+  std::random_device rd;
+  std::default_random_engine e1(rd());
+  std::uniform_int_distribution<IntT> uniform_dist(0, total_samples-1);
+  while (samples->size() < num_samples)
+  {
+    IntT sample = uniform_dist(e1);
+    samples->insert(sample);
+  }
+}
+
+template<typename IntT>
+static void UniformSample(
+  size_t num_samples,
+  size_t total_samples,
+  std::vector<IntT> *samples)
+{
+  assert(num_samples <= total_samples);
   samples->resize(0);
-  while (samples->size() < num_samples) {
-    size_t sample = size_t(rand() % total_samples);
-    bool bFound = false;
-    for (size_t j = 0; j < samples->size(); ++j) {
-      bFound = (*samples)[j] == sample;
-      if (bFound) { //the picked index already exist
-        break;
-      }
-    }
-    if (!bFound) {
+  samples->reserve(num_samples);
+  std::random_device rd;
+  std::default_random_engine e1(rd());
+  std::uniform_int_distribution<IntT> uniform_dist(0, total_samples-1);
+  std::set<IntT> set_samples;
+  while (set_samples.size() < num_samples)
+  {
+    IntT sample = uniform_dist(e1);
+    if(set_samples.count(sample) == 0)
+    {
+      set_samples.insert(sample);
       samples->push_back(sample);
     }
   }
 }
 
 /// Get a (sorted) random sample of size X in [0:n-1]
-/// samples array must be pre-allocated
 static void random_sample(size_t X, size_t n, std::vector<size_t> *samples)
 {
   samples->resize(X);
   for(size_t i=0; i < X; ++i) {
-    size_t r = (rand()>>3)%(n-i), j;
+    size_t r = (std::rand()>>3)%(n-i), j;
     for(j=0; j<i && r>=(*samples)[j]; ++j)
       ++r;
     size_t j0 = j;
