@@ -109,15 +109,12 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
   POPART_COUT("Loading SFM data...");
   if (!Load(_sfm_data, sfmFilePath, sfm::ESfM_Data::ALL)) 
   {
-    POPART_CERR("The input SfM_Data file "<< sfmFilePath << " cannot be read!");
-  }
-  else
-  {
-    POPART_COUT("SfM data loaded from " << sfmFilePath << " containing: ");
-    POPART_COUT("\tnumber of views      : " << _sfm_data.GetViews().size());
-    POPART_COUT("\tnumber of poses      : " << _sfm_data.GetPoses().size());
-    POPART_COUT("\tnumber of points     : " << _sfm_data.GetLandmarks().size());
-    POPART_COUT("\tnumber of intrinsics : " << _sfm_data.GetIntrinsics().size());
+    POPART_CERR("The input SfM_Data file " << sfmFilePath << " cannot be read!");
+    POPART_CERR("\n\nIf the error says \"JSON Parsing failed - provided NVP not found\" "
+            "it's likely that you have to convert your sfm_data to a recent version supporting "
+            "polymorphic Views. You can run the python script convertSfmData.py to update an existing sfmdata.");
+    _isInit = false;
+    return;
   }
 
   // load the features and descriptors

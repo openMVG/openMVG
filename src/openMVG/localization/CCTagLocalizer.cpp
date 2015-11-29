@@ -31,6 +31,9 @@ CCTagLocalizer::CCTagLocalizer(const std::string &sfmFilePath,
   {
     std::cerr << std::endl
       << "The input SfM_Data file "<< sfmFilePath << " cannot be read." << std::endl;
+    POPART_CERR("\n\nIf the error says \"JSON Parsing failed - provided NVP not found\" "
+        "it's likely that you have to convert your sfm_data to a recent version supporting "
+        "polymorphic Views. You can run the python script convertSfmData.py to update an existing sfmdata.");
     throw std::invalid_argument("The input SfM_Data file "+ sfmFilePath + " cannot be read.");
   }
 
