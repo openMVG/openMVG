@@ -392,7 +392,8 @@ ENDIF()
 # - only external and enabled only if OpenMVG_USE_OPENCV is set to ON
 # ==============================================================================
 IF(OpenMVG_USE_OPENCV)
-  FIND_PACKAGE( OpenCV )
+  FIND_PACKAGE(OpenCV REQUIRED core imgproc video imgcodecs videoio features2d xfeatures2d)
+
   IF(NOT OpenCV_FOUND)
     MESSAGE(STATUS "OpenCV was not found. Disabling OpenCV support.")
     UPDATE_CACHE_VARIABLE(OpenMVG_USE_OPENCV OFF)
