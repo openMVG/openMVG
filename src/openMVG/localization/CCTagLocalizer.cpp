@@ -226,7 +226,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
   POPART_COUT("[features]\tExtract CCTAG done: found " << tmpQueryRegions->RegionCount() << " features");
   features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (tmpQueryRegions.get());
   
-  if(param->_visualDebug && !imagePath.empty())
+  if(!param->_visualDebug.empty() && !imagePath.empty())
   {
     // just debugging -- save the svg image with detected cctag
     saveCCTag2SVG(imagePath, 
@@ -265,7 +265,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
     std::vector<matching::IndMatch> vec_featureMatches;
     viewMatching(queryRegions, _regions_per_view[indexKeyFrame]._regions, vec_featureMatches);
     
-    if(param->_visualDebug && !imagePath.empty())
+    if(!param->_visualDebug.empty() && !imagePath.empty())
     {
       const sfm::View *mview = _sfm_data.GetViews().at(indexKeyFrame).get();
       const std::string queryimage = bfs::path(imagePath).stem().string();

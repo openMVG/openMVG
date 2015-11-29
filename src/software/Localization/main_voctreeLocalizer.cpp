@@ -142,10 +142,10 @@ int main(int argc, char** argv)
     POPART_COUT("\trefineIntrinsics: " << param._refineIntrinsics);
     POPART_COUT("\tpreset: " << features::describerPreset_enumToString(param._featurePreset));
     POPART_COUT("\tglobalBundle: " << globalBundle);
-//    POPART_COUT("\tvisual debug: " << visualDebug);
+    POPART_COUT("\tvisualDebug: " << param._visualDebug);
     POPART_COUT("\talgorithm: " << param._algorithm);
 #if HAVE_CCTAG
-    POPART_COUT("useSIFT_CCTAG: " << useSIFT_CCTAG);
+    POPART_COUT("\tuseSIFT_CCTAG: " << useSIFT_CCTAG);
 #endif
   }
  
