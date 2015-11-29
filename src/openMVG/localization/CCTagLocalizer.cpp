@@ -232,7 +232,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
     saveCCTag2SVG(imagePath, 
                   std::make_pair(imageGrey.Width(),imageGrey.Height()), 
                   queryRegions, 
-                  bfs::path(imagePath).stem().string()+".svg");
+                  param->_visualDebug+"/"+bfs::path(imagePath).stem().string()+".svg");
   }
   
   std::vector<IndexT> nearestKeyFrames;
@@ -280,7 +280,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                            std::make_pair(mview->ui_width, mview->ui_height), 
                            _regions_per_view[indexKeyFrame]._regions,
                            vec_featureMatches,
-                           queryimage+"_"+matchedImage+".svg",
+                           param->_visualDebug+"/"+queryimage+"_"+matchedImage+".svg",
                            true ); //showNotMatched
     }
     
