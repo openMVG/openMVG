@@ -172,7 +172,7 @@ int main(int argc, char **argv)
   {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--imageDirectory]\n"
-      << "[-j|--jsonFile]\n"
+      << "[-j|--jsonFile] Input file with all the user options. It can be used to provide a list of images instead of a directory.\n"
       << "[-d|--sensorWidthDatabase]\n"
       << "[-o|--outputDirectory]\n"
       << "[-f|--focal] (pixels)\n"
@@ -205,6 +205,7 @@ int main(int argc, char **argv)
             << "--intrinsics " << sKmatrix << std::endl
             << "--camera_model " << i_User_camera_model << std::endl
             << "--group_camera_model " << b_Group_camera_model << std::endl
+            << "--use_UID " << b_use_UID << std::endl
             << "--storeMetadata " << b_storeMetadata << std::endl;
 
   const EINTRINSIC e_User_camera_model = EINTRINSIC(i_User_camera_model);

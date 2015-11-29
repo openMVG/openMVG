@@ -54,6 +54,13 @@ IF(OpenMVG_BUILD_VOCTREE)
         target_link_libraries(openMVG_main_rigLocalizer ${CCTAG_LIBRARIES})
     endif()
 
+    ###
+    # Test the localization class
+    ###
+    ADD_EXECUTABLE(openMVG_main_convertDescFloat2Uchar convertDescFloat2Uchar.cpp)
+    INSTALL(TARGETS openMVG_main_convertDescFloat2Uchar DESTINATION bin/)
+    TARGET_LINK_LIBRARIES(openMVG_main_convertDescFloat2Uchar openMVG_localization openMVG_features ${BOOST_LIBRARIES})
+
 
     #@TODO decide where to put the binaries
 

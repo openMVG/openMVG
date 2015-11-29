@@ -31,6 +31,9 @@ CCTagLocalizer::CCTagLocalizer(const std::string &sfmFilePath,
   {
     std::cerr << std::endl
       << "The input SfM_Data file "<< sfmFilePath << " cannot be read." << std::endl;
+    POPART_CERR("\n\nIf the error says \"JSON Parsing failed - provided NVP not found\" "
+        "it's likely that you have to convert your sfm_data to a recent version supporting "
+        "polymorphic Views. You can run the python script convertSfmData.py to update an existing sfmdata.");
     throw std::invalid_argument("The input SfM_Data file "+ sfmFilePath + " cannot be read.");
   }
 
@@ -158,6 +161,7 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
       std::cout << "Image " << sImageName;
       if(reconstructedRegion._regions.Descriptors().size() == 0 )
       {
+        counterCCtagsInImage[0] +=1;
         std::cout << " does not contain any cctag!!!";
       }
       else
@@ -178,23 +182,25 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
       }
       std::cout << "\n";
     }
-  }
-  
-  // Display histogram
-  std::cout << std::endl << "Histogram of number of cctags in images :" << std::endl;
-  for(int i = 0; i < 5; i++)
-    std::cout << "Images with " << i << "  CCTags : " << counterCCtagsInImage[i] << std::endl;
-  std::cout << "Images with 5+ CCTags : " << counterCCtagsInImage[5] << std::endl << std::endl;
-  
-  // Display the cctag ids over all cctag landmarks present in the database
-  std::cout << std::endl << "CCTag landmarks present in the database: " << std::endl;
-  for(std::size_t i = 0; i < presentIds.size(); ++i)
-  {
-    if (presentIds[i])
-      std::cout <<  i+1 << " ";
-  }
+    
+    // Display histogram
+    std::cout << std::endl << "Histogram of number of cctags in images :" << std::endl;
+    for(int i = 0; i < 5; i++)
+      std::cout << "Images with " << i << "  CCTags : " << counterCCtagsInImage[i] << std::endl;
+    std::cout << "Images with 5+ CCTags : " << counterCCtagsInImage[5] << std::endl << std::endl;
 
-  std::cout <<  std::endl << std::endl;
+    // Display the cctag ids over all cctag landmarks present in the database
+    std::cout << std::endl << "Found " << std::count(presentIds.begin(), presentIds.end(), true) 
+            << " CCTag landmarks in the database: " << std::endl;
+    for(std::size_t i = 0; i < presentIds.size(); ++i)
+    {
+      if(presentIds[i])
+        std::cout << i + 1 << " ";
+    }
+
+    std::cout << std::endl << std::endl;
+  }
+  
   
   return true;
 }
@@ -220,13 +226,13 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
   POPART_COUT("[features]\tExtract CCTAG done: found " << tmpQueryRegions->RegionCount() << " features");
   features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (tmpQueryRegions.get());
   
-  if(param->_visualDebug && !imagePath.empty())
+  if(!param->_visualDebug.empty() && !imagePath.empty())
   {
     // just debugging -- save the svg image with detected cctag
     saveCCTag2SVG(imagePath, 
                   std::make_pair(imageGrey.Width(),imageGrey.Height()), 
                   queryRegions, 
-                  bfs::path(imagePath).stem().string()+".svg");
+                  param->_visualDebug+"/"+bfs::path(imagePath).stem().string()+".svg");
   }
   
   std::vector<IndexT> nearestKeyFrames;
@@ -259,7 +265,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
     std::vector<matching::IndMatch> vec_featureMatches;
     viewMatching(queryRegions, _regions_per_view[indexKeyFrame]._regions, vec_featureMatches);
     
-    if(param->_visualDebug && !imagePath.empty())
+    if(!param->_visualDebug.empty() && !imagePath.empty())
     {
       const sfm::View *mview = _sfm_data.GetViews().at(indexKeyFrame).get();
       const std::string queryimage = bfs::path(imagePath).stem().string();
@@ -274,7 +280,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                            std::make_pair(mview->ui_width, mview->ui_height), 
                            _regions_per_view[indexKeyFrame]._regions,
                            vec_featureMatches,
-                           queryimage+"_"+matchedImage+".svg",
+                           param->_visualDebug+"/"+queryimage+"_"+matchedImage+".svg",
                            true ); //showNotMatched
     }
     

@@ -109,15 +109,12 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
   POPART_COUT("Loading SFM data...");
   if (!Load(_sfm_data, sfmFilePath, sfm::ESfM_Data::ALL)) 
   {
-    POPART_CERR("The input SfM_Data file "<< sfmFilePath << " cannot be read!");
-  }
-  else
-  {
-    POPART_COUT("SfM data loaded from " << sfmFilePath << " containing: ");
-    POPART_COUT("\tnumber of views      : " << _sfm_data.GetViews().size());
-    POPART_COUT("\tnumber of poses      : " << _sfm_data.GetPoses().size());
-    POPART_COUT("\tnumber of points     : " << _sfm_data.GetLandmarks().size());
-    POPART_COUT("\tnumber of intrinsics : " << _sfm_data.GetIntrinsics().size());
+    POPART_CERR("The input SfM_Data file " << sfmFilePath << " cannot be read!");
+    POPART_CERR("\n\nIf the error says \"JSON Parsing failed - provided NVP not found\" "
+            "it's likely that you have to convert your sfm_data to a recent version supporting "
+            "polymorphic Views. You can run the python script convertSfmData.py to update an existing sfmdata.");
+    _isInit = false;
+    return;
   }
 
   // load the features and descriptors
@@ -367,13 +364,17 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
   // A. extract descriptors and features from image
   POPART_COUT("[features]\tExtract SIFT from query image");
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Float_Regions());
+//  std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Regions());
   auto detect_start = std::chrono::steady_clock::now();
   _image_describer->Set_configuration_preset(param._featurePreset);
   _image_describer->Describe(imageGrey, tmpQueryRegions, nullptr);
   auto detect_end = std::chrono::steady_clock::now();
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
-  POPART_COUT("[features]\tExtract SIFT done: found " << tmpQueryRegions->RegionCount() << " features in " << detect_elapsed.count() << " [ms]" );
+  POPART_COUT("[features]\tExtract SIFT done: found " 
+          << tmpQueryRegions->RegionCount() << " features in " 
+          << detect_elapsed.count() << " [ms]" );
   features::SIFT_Float_Regions &queryRegions = *dynamic_cast<features::SIFT_Float_Regions*> (tmpQueryRegions.get());
+//  features::SIFT_Regions &queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
 
   // B. Find the (visually) similar images in the database 
   POPART_COUT("[database]\tRequest closest images from voctree");
@@ -460,7 +461,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
                                       param._fDistRatio,
                                       param._useGuidedMatching,
                                       std::make_pair(imageGrey.Width(), imageGrey.Height()),
-                                      std::make_pair(imageGrey.Width(), imageGrey.Height()), // NO! @fixme here we need the size of the img in the dataset...
+                                      std::make_pair(matchedView->ui_width, matchedView->ui_height), 
                                       vec_featureMatches);
     if (!matchWorked)
     {
@@ -578,6 +579,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   // A. extract descriptors and features from image
   POPART_COUT("[features]\tExtract SIFT from query image");
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Float_Regions());
+//  std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Regions());
   auto detect_start = std::chrono::steady_clock::now();
   _image_describer->Set_configuration_preset(param._featurePreset);
   _image_describer->Describe(imageGrey, tmpQueryRegions, nullptr);
@@ -585,6 +587,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
   POPART_COUT("[features]\tExtract SIFT done: found " << tmpQueryRegions->RegionCount() << " features in " << detect_elapsed.count() << " [ms]" );
   features::SIFT_Float_Regions &queryRegions = *dynamic_cast<features::SIFT_Float_Regions*> (tmpQueryRegions.get());
+//  features::SIFT_Regions &queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
 
   // B. Find the (visually) similar images in the database 
   // pass the descriptors through the vocabulary tree to get the visual words
@@ -667,7 +670,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
                                       param._fDistRatio,
                                       param._useGuidedMatching,
                                       std::make_pair(imageGrey.Width(), imageGrey.Height()),
-                                      std::make_pair(imageGrey.Width(), imageGrey.Height()), // NO! @fixme here we need the size of the img in the dataset...
+                                      std::make_pair(matchedView->ui_width, matchedView->ui_height), 
                                       vec_featureMatches);
     if (!matchWorked)
     {

@@ -70,6 +70,7 @@ ELSEIF()
   SET(BUILD_SHARED_LIBS OFF)
 ENDIF()
 
+
 # ==============================================================================
 # Check that submodule have been initialized and updated
 # ==============================================================================
@@ -414,9 +415,13 @@ ENDIF(OpenMVG_USE_OPENCV)
 # - optional, it allows to compile the vocabulary tree
 # ==============================================================================
 IF(OpenMVG_BUILD_VOCTREE)
+  OPTION(BOOST_NO_CXX11 "If Boost is not build with C++11 support this must be enabled to avoid symbol conflicts (SCOPED_ENUM)" OFF)
   FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS system filesystem program_options)
   IF(Boost_FOUND)
      MESSAGE(STATUS "Boost ${Boost_LIB_VERSION} found")
+     if(BOOST_NO_CXX11)
+       add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
+     endif(BOOST_NO_CXX11)
      include_directories(${Boost_INCLUDE_DIRS})
      link_directories(${Boost_LIBRARIES})
      add_definitions(${Boost_DEFINITIONS})

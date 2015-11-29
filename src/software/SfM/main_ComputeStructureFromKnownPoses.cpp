@@ -47,6 +47,16 @@ int main(int argc, char **argv)
     std::cerr << s << std::endl;
     return EXIT_FAILURE;
   }
+  
+  // Create output dir
+  if (!stlplus::folder_exists(sOutFile))
+  {
+    if (!stlplus::folder_create(sOutFile))
+    {
+      std::cerr << "Cannot create output directory." << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
 
   // Load input SfM_Data scene
   SfM_Data sfm_data;
@@ -125,6 +135,7 @@ int main(int argc, char **argv)
 
   if (Save(sfm_data, sOutFile, ESfM_Data(ALL)))
     return EXIT_SUCCESS;
-  else
-    return EXIT_FAILURE;
+  
+  std::cout << "Error while saving the sfm data!" << std::endl;
+  return EXIT_FAILURE;
 }

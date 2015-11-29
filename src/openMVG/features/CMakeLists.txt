@@ -16,18 +16,14 @@ file(
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 #Remove the future main files
 list(REMOVE_ITEM features_files_sources ${REMOVEFILESUNITTEST})
-			
+
 set_source_files_properties(${features_files_sources} PROPERTIES LANGUAGE CXX)
 ADD_LIBRARY(openMVG_features ${features_files_sources} ${features_files_headers})
 
-TARGET_LINK_LIBRARIES(openMVG_features
-  openMVG_system
-  stlplus
-  )
-IF(OpenMVG_USE_CCTAG)
-TARGET_LINK_LIBRARIES(openMVG_features
-  CCTag)
-ENDIF()
+target_link_libraries( openMVG_features openMVG_numeric openMVG_image vlsift stlplus)
+if(OpenMVG_USE_CCTAG)
+  target_link_libraries( openMVG_features ${CCTAG_LIBRARIES})
+endif()
 
 SET_TARGET_PROPERTIES(openMVG_features PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 INSTALL(TARGETS openMVG_features DESTINATION lib EXPORT openMVG-targets)
