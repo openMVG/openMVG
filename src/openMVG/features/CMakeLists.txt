@@ -19,6 +19,7 @@ list(REMOVE_ITEM features_files_sources ${REMOVEFILESUNITTEST})
 
 set_source_files_properties(${features_files_sources} PROPERTIES LANGUAGE CXX)
 ADD_LIBRARY(openMVG_features ${features_files_sources} ${features_files_headers})
+
 target_link_libraries( openMVG_features openMVG_numeric openMVG_image vlsift stlplus)
 if(OpenMVG_USE_CCTAG)
   target_link_libraries( openMVG_features ${CCTAG_LIBRARIES})

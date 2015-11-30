@@ -199,8 +199,8 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
     }
 
     std::cout << std::endl << std::endl;
+
   }
-  
   
   return true;
 }

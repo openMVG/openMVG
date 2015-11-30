@@ -14,16 +14,6 @@
 using namespace openMVG;
 using namespace openMVG::sfm;
 
-/// Build a list of pair from the camera frusta intersections
-Pair_Set BuildPairsFromFrustumsIntersections(
-  const SfM_Data & sfm_data,
-  const double z_near = -1., // default near plane
-  const double z_far = -1.)  // default far plane
-{
-  const Frustum_Filter frustum_filter(sfm_data, z_near, z_far);
-  return frustum_filter.getFrustumIntersectionPairs();
-}
-
 /// Compute the structure of a scene according existing camera poses.
 int main(int argc, char **argv)
 {
@@ -103,11 +93,13 @@ int main(int argc, char **argv)
   Pair_Set pairs;
   if (sMatchFile.empty())
   {
-    // no provided pair, use camera frustum intersection
-    pairs = BuildPairsFromFrustumsIntersections(sfm_data);
+    // No image pair provided, so we use cameras frustum intersection.
+    // Build the list of connected images pairs from frustum intersections
+    pairs = Frustum_Filter(sfm_data).getFrustumIntersectionPairs();
   }
   else
   {
+    // Load pre-computed matches
     PairWiseMatches matches;
     if (!matching::PairedIndMatchImport(sMatchFile, matches)) {
       std::cerr<< "Unable to read the matches file." << std::endl;

@@ -252,6 +252,10 @@ ADD_DEFINITIONS(-DEIGEN_MPL2_ONLY)
 MESSAGE(STATUS "Trying to find package Ceres for openMVG: ${CERES_DIR_HINTS}")
 FIND_PACKAGE(Ceres QUIET HINTS ${CERES_DIR_HINTS})
 IF(NOT Ceres_FOUND)
+  IF(DEFINED OpenMVG_USE_INTERNAL_CERES AND NOT OpenMVG_USE_INTERNAL_CERES)
+    MESSAGE(FATAL_ERROR "External CERES not found. Not found in CERES_DIR_HINTS: ${CERES_DIR_HINTS}")
+  ENDIF()
+
   MESSAGE(STATUS "No external CERES detected, using the embedded one.")
   SET(OpenMVG_USE_INTERNAL_CERES ON)
   SET(CERES_INCLUDE_DIRS
@@ -389,7 +393,8 @@ ENDIF()
 # - only external and enabled only if OpenMVG_USE_OPENCV is set to ON
 # ==============================================================================
 IF(OpenMVG_USE_OPENCV)
-  FIND_PACKAGE( OpenCV )
+  FIND_PACKAGE(OpenCV REQUIRED core imgproc video imgcodecs videoio features2d xfeatures2d)
+
   IF(NOT OpenCV_FOUND)
     MESSAGE(STATUS "OpenCV was not found. Disabling OpenCV support.")
     UPDATE_CACHE_VARIABLE(OpenMVG_USE_OPENCV OFF)
