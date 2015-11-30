@@ -59,7 +59,7 @@ struct Frustum
     z_near = zNear;
     z_far = zFar;
     points.clear();
-    assert(zFar > zNear);
+    assert(zFar >= zNear);
 
     // Add Znear and ZFar half plane using the cam looking direction
     const Vec3 camLookDirection_n = R.row(2).normalized();
