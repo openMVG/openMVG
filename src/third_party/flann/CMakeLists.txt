@@ -51,18 +51,18 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 set(TEST_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/test)
 
 option(BUILD_C_BINDINGS "Build C bindings" OFF)
-option(BUILD_PYTHON_BINDINGS "Build Python bindings" OFF)
-option(BUILD_MATLAB_BINDINGS "Build Matlab bindings" OFF)
+#option(BUILD_PYTHON_BINDINGS "Build Python bindings" OFF)
+#option(BUILD_MATLAB_BINDINGS "Build Matlab bindings" OFF)
 option(BUILD_CUDA_LIB "Build CUDA library" OFF)
 option(USE_OPENMP "Use OpenMP multi-threading" ON)
-option(USE_MPI "Use MPI" OFF)
+#option(USE_MPI "Use MPI" OFF)
 
 set(NVCC_COMPILER_BINDIR "" CACHE PATH  "Directory where nvcc should look for C++ compiler. This is passed to nvcc through the --compiler-bindir option.")
 
-if (NOT BUILD_C_BINDINGS)
-    set(BUILD_PYTHON_BINDINGS OFF)
-    set(BUILD_MATLAB_BINDINGS OFF)
-endif()
+#if (NOT BUILD_C_BINDINGS)
+#    set(BUILD_PYTHON_BINDINGS OFF)
+#    set(BUILD_MATLAB_BINDINGS OFF)
+#endif()
 
 
 if (USE_OPENMP)
