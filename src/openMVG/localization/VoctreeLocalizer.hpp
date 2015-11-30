@@ -123,7 +123,7 @@ public:
                 const Parameters &param,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                LocalizationResult &localizationResult);
+                LocalizationResult &localizationResult, const std::string& imagePath = std::string());
 
   /**
    * @brief Try to localize an image in the database: it queries the database to 
@@ -145,7 +145,7 @@ public:
                 const Parameters &param,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                LocalizationResult &localizationResult);
+                LocalizationResult &localizationResult, const std::string& imagePath = std::string());
 
 private:
   /**

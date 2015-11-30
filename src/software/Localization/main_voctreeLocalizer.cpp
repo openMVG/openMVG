@@ -84,6 +84,7 @@ int main(int argc, char** argv)
       ("mediafile,m", po::value<std::string>(&mediaFilepath)->required(), "The folder path or the filename for the media to track")
       ("refineIntrinsics", po::bool_switch(&param._refineIntrinsics), "Enable/Disable camera intrinsics refinement for each localized image")
       ("globalBundle", po::bool_switch(&globalBundle), "If --refineIntrinsics is not set, this option allows to run a final global budndle adjustment to refine the scene")
+      ("visualDebug", po::value<std::string>(&param._visualDebug), "If a directory is provided it enables visual debug and saves all the debugging info in that directory")
 #if HAVE_ALEMBIC
       ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), "Filename for the SfM_Data export file (where camera poses will be stored). Default : trackedcameras.json If Alambic is enable it will also export an .abc file of the scene with the same name")
 #endif
@@ -147,6 +148,11 @@ int main(int argc, char** argv)
     POPART_COUT("\tuseSIFT_CCTAG: " << useSIFT_CCTAG);
 #endif
   }
+  
+  if((!param._visualDebug.empty()) && (!bfs::exists(param._visualDebug)))
+  {
+    bfs::create_directories(param._visualDebug);
+  }
  
   // init the localizer
   localization::VoctreeLocalizer localizer(sfmFilePath,
@@ -204,7 +210,8 @@ int main(int argc, char** argv)
                        &param,
                        hasIntrinsics /*useInputIntrinsics*/,
                        queryIntrinsics,
-                       localizationResult);
+                       localizationResult,
+                       currentImgName);
     auto detect_end = std::chrono::steady_clock::now();
     auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
     POPART_COUT("\nLocalization took  " << detect_elapsed.count() << " [ms]");

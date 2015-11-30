@@ -147,14 +147,16 @@ bool VoctreeLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                                      *voctreeParam,
                                      useInputIntrinsics,
                                      queryIntrinsics,
-                                     localizationResult);
+                                     localizationResult,
+                                     imagePath);
     case Algorithm::BestResult: throw std::invalid_argument("BestResult not yet implemented");
     case Algorithm::AllResults: 
       return localizeAllResults(imageGrey, 
                                 *voctreeParam,
                                 useInputIntrinsics, 
                                 queryIntrinsics,
-                                localizationResult);
+                                localizationResult,
+                                imagePath);
     case Algorithm::Cluster: throw std::invalid_argument("Cluster not yet implemented");
     default: throw std::invalid_argument("Unknown algorithm type");
   }
@@ -359,7 +361,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
                                                 const Parameters &param,
                                                 bool useInputIntrinsics,
                                                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                                                LocalizationResult &localizationResult)
+                                                LocalizationResult &localizationResult, const std::string& imagePath /*= std::string()*/)
 {
   // A. extract descriptors and features from image
   POPART_COUT("[features]\tExtract SIFT from query image");
@@ -574,7 +576,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
                                           const Parameters &param,
                                           bool useInputIntrinsics,
                                           cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                                          LocalizationResult &localizationResult)
+                                          LocalizationResult &localizationResult, const std::string& imagePath /*= std::string()*/)
 {
   // A. extract descriptors and features from image
   POPART_COUT("[features]\tExtract SIFT from query image");
@@ -588,6 +590,14 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   POPART_COUT("[features]\tExtract SIFT done: found " << tmpQueryRegions->RegionCount() << " features in " << detect_elapsed.count() << " [ms]" );
   features::SIFT_Float_Regions &queryRegions = *dynamic_cast<features::SIFT_Float_Regions*> (tmpQueryRegions.get());
 //  features::SIFT_Regions &queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
+  if(!param._visualDebug.empty())
+  {
+    namespace bfs = boost::filesystem;
+    saveFeatures2SVG(imagePath, 
+                     std::make_pair(imageGrey.Width(), imageGrey.Height()), 
+                     tmpQueryRegions->GetRegionsPositions(),
+                     param._visualDebug+"/"+bfs::path(imagePath).stem().string()+".svg");
+  }
 
   // B. Find the (visually) similar images in the database 
   // pass the descriptors through the vocabulary tree to get the visual words
@@ -601,16 +611,14 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   
 //  // just debugging bla bla
 //  // for each similar image found print score and number of features
-//  for(const voctree::Match & currMatch : matchedImages )
+//  for(const voctree::DocMatch& currMatch : matchedImages )
 //  {
-//    // get the corresponding index of the view
-//    const IndexT matchedViewIndex = _mapDocIdToView[currMatch.id];
 //    // get the view handle
-//    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
+//    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[currMatch.id];
 //    POPART_COUT( "[database]\t\t match " << matchedView->s_Img_path 
 //            << " [docid: "<< currMatch.id << "]"
 //            << " with score " << currMatch.score 
-//            << " and it has "  << _regions_per_view[matchedViewIndex]._regions.RegionCount() 
+//            << " and it has "  << _regions_per_view[currMatch.id]._regions.RegionCount() 
 //            << " features with 3D points");
 //  }
 
@@ -740,6 +748,16 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
      // recopy the associations IDs in the vector
      associationIDs.push_back(ass.first);
      ++index;
+  }
+  
+  if(!param._visualDebug.empty())
+  {
+    namespace bfs = boost::filesystem;
+    saveFeatures2SVG(imagePath, 
+                     std::make_pair(imageGrey.Width(), imageGrey.Height()), 
+                     resectionData.pt2D,
+                     param._visualDebug+"/"+bfs::path(imagePath).stem().string()+".svg");
+    POPART_COUT(param._visualDebug+"/"+bfs::path(imagePath).stem().string()+".associations.svg");
   }
   
   
