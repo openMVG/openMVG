@@ -1,4 +1,5 @@
 #include "VoctreeLocalizer.hpp"
+#include "svgVisualization.hpp"
 
 #include <openMVG/sfm/sfm_data_io.hpp>
 #include <openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp>
@@ -17,6 +18,7 @@
 #include <third_party/progress/progress.hpp>
 //#include <cereal/archives/json.hpp>
 
+#include <boost/filesystem.hpp>
 #include <algorithm>
 #include <chrono>
 
@@ -99,7 +101,11 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
   }
   else
   {
+#if USE_SIFT_FLOAT
     _image_describer = new features::SIFT_float_describer();
+#else
+    _image_describer = new features::SIFT_Image_describer();
+#endif
   }
 #else
   _image_describer = new features::SIFT_float_describer();
@@ -365,8 +371,11 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
 {
   // A. extract descriptors and features from image
   POPART_COUT("[features]\tExtract SIFT from query image");
+#if USE_SIFT_FLOAT
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Float_Regions());
-//  std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Regions());
+#else
+  std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Regions());
+#endif
   auto detect_start = std::chrono::steady_clock::now();
   _image_describer->Set_configuration_preset(param._featurePreset);
   _image_describer->Describe(imageGrey, tmpQueryRegions, nullptr);
@@ -375,8 +384,11 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
   POPART_COUT("[features]\tExtract SIFT done: found " 
           << tmpQueryRegions->RegionCount() << " features in " 
           << detect_elapsed.count() << " [ms]" );
+#if USE_SIFT_FLOAT
   features::SIFT_Float_Regions &queryRegions = *dynamic_cast<features::SIFT_Float_Regions*> (tmpQueryRegions.get());
-//  features::SIFT_Regions &queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
+#else
+  features::SIFT_Regions &queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
+#endif
 
   // B. Find the (visually) similar images in the database 
   POPART_COUT("[database]\tRequest closest images from voctree");
@@ -580,16 +592,23 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
 {
   // A. extract descriptors and features from image
   POPART_COUT("[features]\tExtract SIFT from query image");
+#if USE_SIFT_FLOAT
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Float_Regions());
-//  std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Regions());
+#else
+  std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Regions());
+#endif
   auto detect_start = std::chrono::steady_clock::now();
   _image_describer->Set_configuration_preset(param._featurePreset);
   _image_describer->Describe(imageGrey, tmpQueryRegions, nullptr);
   auto detect_end = std::chrono::steady_clock::now();
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
   POPART_COUT("[features]\tExtract SIFT done: found " << tmpQueryRegions->RegionCount() << " features in " << detect_elapsed.count() << " [ms]" );
+#if USE_SIFT_FLOAT  
   features::SIFT_Float_Regions &queryRegions = *dynamic_cast<features::SIFT_Float_Regions*> (tmpQueryRegions.get());
-//  features::SIFT_Regions &queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
+#else
+  features::SIFT_Regions &queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
+#endif
+  
   if(!param._visualDebug.empty())
   {
     namespace bfs = boost::filesystem;

@@ -21,13 +21,19 @@
 #include <openMVG/matching/regions_matcher.hpp>
 #include <flann/algorithms/dist.h>
 
+#define USE_SIFT_FLOAT 0
+
 
 namespace openMVG {
 namespace localization {
 
 //@fixme find a better place or maje the class template?
 typedef openMVG::features::Descriptor<float, 128> DescriptorFloat;
+#if USE_SIFT_FLOAT
 typedef Reconstructed_Regions<features::SIOPointFeature, float, 128> Reconstructed_RegionsT;
+#else
+typedef Reconstructed_Regions<features::SIOPointFeature, unsigned char, 128> Reconstructed_RegionsT;
+#endif
 
 class VoctreeLocalizer : public ILocalizer
 {
@@ -164,8 +170,13 @@ private:
                                     const std::string & weightsFilepath,
                                     const std::string & feat_directory);
 
+#if USE_SIFT_FLOAT
   typedef flann::L2<float> MetricT;
   typedef matching::ArrayMatcher_Kdtree_Flann<float, MetricT> MatcherT;
+#else
+  typedef flann::L2<unsigned char> MetricT;
+  typedef matching::ArrayMatcher_Kdtree_Flann<unsigned char, MetricT> MatcherT;
+#endif
   bool robustMatching(matching::RegionsMatcherT<MatcherT> & matcher, 
                       const cameras::IntrinsicBase * queryIntrinsics,// the intrinsics of the image we are using as reference
                       const Reconstructed_RegionsT & regionsToMatch,
