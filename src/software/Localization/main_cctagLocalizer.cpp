@@ -125,7 +125,7 @@ int main(int argc, char** argv)
     POPART_COUT("\tvisual debug: " << param._visualDebug);
   }
   
-  if(!bfs::exists(param._visualDebug))
+  if(!bfs::exists(param._visualDebug) && param._visualDebug != "")
   {
     bfs::create_directories(param._visualDebug);
   }
