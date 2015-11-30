@@ -721,7 +721,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
       ++index;
     }
     ++goodMatches;
-    if( goodMatches == param._maxResults )
+    if((param._maxResults !=0) && (goodMatches == param._maxResults))
     { 
       // let's say we have enough features
       POPART_COUT("[matching]\tgot enough point from " << param._maxResults << "images");
