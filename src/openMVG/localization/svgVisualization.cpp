@@ -63,6 +63,34 @@ void saveFeatures2SVG(const std::string &inputImagePath,
   svgFile.close();
 }
 
+/**
+ * @brief
+ * 
+ * @param[in] inputImagePath The full path to the image file. The image is only 
+ * saved as a link, no image data is stored in the svg.
+ * @param[in] imageSize The size of the image <width,height>.
+ * @param[in] points A vector containing the points to draw.
+ * @param[in] outputSVGPath The name of the svg file to generate.
+ */
+void saveFeatures2SVG(const std::string &inputImagePath,
+                      const std::pair<size_t,size_t> & imageSize,
+                      const Mat &points,
+                      const std::string &outputSVGPath)
+{
+  assert(points.rows()>=2);
+  svg::svgDrawer svgStream( imageSize.first, imageSize.second);
+  svgStream.drawImage(inputImagePath, imageSize.first, imageSize.second);
+  
+  for(std::size_t i=0; i < points.cols(); ++i) 
+  {
+    svgStream.drawCircle(points(0,i), points(1,i), 3.0f, svg::svgStyle().stroke("yellow", 2.0));
+  }
+ 
+  std::ofstream svgFile( outputSVGPath );
+  svgFile << svgStream.closeSvgFile().str();
+  svgFile.close();
+}
+
 #if HAVE_CCTAG
 
 void saveCCTag2SVG(const std::string &inputImagePath,
