@@ -39,7 +39,7 @@ public:
 
   const geometry::Pose3 & getPose(std::size_t i) const;
 
-  const std::size_t & getPosesSize() const;
+  const std::size_t getPosesSize() const;
 
   const std::vector<geometry::Pose3> & getPoses() const;
   
@@ -103,7 +103,7 @@ private:
 };
 
 /*
- * @brief For a given localization result, compute the sum of the reprojection errors
+ * @brief For a given localization result, compute the sum of the squared reprojection errors
  * (over all points) related to another pose than the one previously computed and store
  * in the provided localizationResult instance.
  * 
@@ -115,15 +115,15 @@ double reprojectionError(const localization::LocalizationResult & localizationRe
 
 /*
  * @brief Compute the witness camera from the main camera pose and the relative pose 
- * from the main camera to the witness camera
+ * from the main camera to the witness camera.
  * 
- * @param[in] poseMainCamera Pose of the main camera
- * @param[in] relativePose Relative pose from the main camera to the witness camera
- * @return The absolute pose of the witness camera
+ * @param[in] poseMainCamera Pose of the main camera.
+ * @param[in] relativePose Relative pose from the main camera to the witness camera.
+ * @return The absolute pose of the witness camera as relativePose*poseMainCamera
  */
-geometry::Pose3 poseFromMainToWitness(geometry::Pose3 poseMainCamera, geometry::Pose3 relativePose);
+geometry::Pose3 poseFromMainToWitness(const geometry::Pose3 &poseMainCamera, const geometry::Pose3 &relativePose);
 
-geometry::Pose3 computeRelativePose(geometry::Pose3 poseMainCamera, geometry::Pose3 poseWitnessCamera);
+geometry::Pose3 computeRelativePose(const geometry::Pose3 &poseMainCamera, const geometry::Pose3 &poseWitnessCamera);
 
 /*
  * @brief Visual debug function doing a pause during the program execution.

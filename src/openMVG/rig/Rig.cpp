@@ -38,7 +38,7 @@ const geometry::Pose3 & Rig::getPose(std::size_t i) const
   return _vPoses.at(i); 
 }
 
-const std::size_t & Rig::getPosesSize( ) const 
+const std::size_t Rig::getPosesSize( ) const 
 { 
   return _vPoses.size(); 
 }
@@ -520,7 +520,8 @@ bool Rig::saveCalibration(std::string &filename)
 }
 
 
-geometry::Pose3 computeRelativePose(geometry::Pose3 poseMainCamera, geometry::Pose3 poseWitnessCamera)
+// it returns poseWitnessCamera*inv(poseMainCamera)
+geometry::Pose3 computeRelativePose(const geometry::Pose3 &poseMainCamera, const geometry::Pose3 &poseWitnessCamera)
 {
   const openMVG::Mat3 & R1 = poseMainCamera.rotation();
   const openMVG::Vec3 & t1 = poseMainCamera.translation();
@@ -534,7 +535,8 @@ geometry::Pose3 computeRelativePose(geometry::Pose3 poseMainCamera, geometry::Po
 }
         
 
-geometry::Pose3 poseFromMainToWitness(geometry::Pose3 poseMainCamera, geometry::Pose3 relativePose)
+// it returns relativePose*poseMainCamera
+geometry::Pose3 poseFromMainToWitness(const geometry::Pose3 &poseMainCamera, const geometry::Pose3 &relativePose)
 {
   const openMVG::Mat3 & R1 = poseMainCamera.rotation();
   const openMVG::Vec3 & t1 = poseMainCamera.translation();
