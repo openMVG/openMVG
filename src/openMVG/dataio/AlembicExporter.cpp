@@ -213,6 +213,134 @@ void AlembicExporter::appendCamera(const std::string &cameraName,
   camObj.getSchema().set(camSample);
 }
 
+void AlembicExporter::initAnimatedCamera(const std::string& cameraName)
+{
+  // Sample the time in order to have one keyframe every frame
+  // nb: it HAS TO be attached to EACH keyframed properties
+  TimeSamplingPtr tsp( new TimeSampling(1.0 / 24.0, 1.0 / 24.0) );
+  
+  // Create the camera transform object
+  std::stringstream ss;
+  ss << cameraName;
+  mxform = Alembic::AbcGeom::OXform(mvgCameras, "camxform_" + ss.str());
+  mxform.getSchema().setTimeSampling(tsp);
+  
+  // Create the camera parameters object (intrinsics & custom properties)
+  mcamObj = OCamera(mxform, "camera_" + ss.str());
+  mcamObj.getSchema().setTimeSampling(tsp);
+  
+  // Add the custom properties
+  auto userProps = mcamObj.getSchema().getUserProperties();
+  // Sensor width
+  mpropSensorWidth_pix = OUInt32Property(userProps, "mvg_sensorWidth_pix", tsp);
+  // Image path
+  mimagePlane = OStringProperty(userProps, "mvg_imagePath", tsp);
+  // View id
+  mpropViewId = OUInt32Property(userProps, "mvg_viewId", tsp);
+  // Intrinsic id
+  mpropIntrinsicId = OUInt32Property(userProps, "mvg_intrinsicId", tsp);
+  // Intrinsic type (ex: PINHOLE_CAMERA_RADIAL3)
+  mmvg_intrinsicType = OStringProperty(userProps, "mvg_intrinsicType", tsp);
+  // Intrinsic parameters
+  mmvg_intrinsicParams = ODoubleArrayProperty(userProps, "mvg_intrinsicParams", tsp);
+}
+
+void AlembicExporter::addCameraKeyframe(const geometry::Pose3 &pose,
+                                          const cameras::Pinhole_Intrinsic *cam,
+                                          const std::string &imagePath,
+                                          const IndexT id_view,
+                                          const IndexT id_intrinsic,
+                                          const float sensorWidth_mm)
+{
+  const openMVG::Mat3 R = pose.rotation();
+  const openMVG::Vec3 center = pose.center();
+  // POSE
+  // Compensate translation with rotation
+  // Build transform matrix
+  Abc::M44d xformMatrix;
+  xformMatrix[0][0] = R(0, 0);
+  xformMatrix[0][1] = R(0, 1);
+  xformMatrix[0][2] = R(0, 2);
+  xformMatrix[1][0] = R(1, 0);
+  xformMatrix[1][1] = R(1, 1);
+  xformMatrix[1][2] = R(1, 2);
+  xformMatrix[2][0] = R(2, 0);
+  xformMatrix[2][1] = R(2, 1);
+  xformMatrix[2][2] = R(2, 2);
+  xformMatrix[3][0] = center(0);
+  xformMatrix[3][1] = center(1);
+  xformMatrix[3][2] = center(2);
+  xformMatrix[3][3] = 1.0;
+
+  // Correct camera orientation for alembic
+  M44d scale;
+  scale[0][0] = 1;
+  scale[1][1] = -1;
+  scale[2][2] = -1;
+  xformMatrix = scale*xformMatrix;
+
+  // Create the XformSample
+  XformSample xformsample;
+  xformsample.setMatrix(xformMatrix);
+  
+  // Attach it to the schema of the OXform
+  mxform.getSchema().set(xformsample);
+  
+  // Camera intrinsic parameters
+  CameraSample camSample;
+
+  // Take the max of the image size to handle the case where the image is in portrait mode 
+  const float imgWidth = cam->w();
+  const float imgHeight = cam->h();
+  const float sensorWidth_pix = std::max(imgWidth, imgHeight);
+  const float sensorHeight_pix = std::min(imgWidth, imgHeight);
+  const float imgRatio = sensorHeight_pix / sensorWidth_pix;
+  const float focalLength_pix = cam->focal();
+  const float hoffset_pix = cam->principal_point()(0);
+  const float voffset_pix = cam->principal_point()(1);
+  
+
+  const float sensorHeight_mm = sensorWidth_mm * imgRatio;
+  const float focalLength_mm = sensorWidth_mm * focalLength_pix / sensorWidth_pix;
+  const float pix2mm = sensorWidth_mm / sensorWidth_pix;
+
+  // openMVG: origin is (top,left) corner and orientation is (bottom,right)
+  // ABC: origin is centered and orientation is (up,right)
+  // Following values are in cm, hence the 0.1 multiplier
+  const float hoffset_cm = 0.1 * ((imgWidth*0.5) - hoffset_pix) * pix2mm;
+  const float voffset_cm = -0.1 * ((imgHeight*0.5) - voffset_pix) * pix2mm; // vertical flip
+  const float haperture_cm = 0.1 * imgWidth * pix2mm;
+  const float vaperture_cm = 0.1 * imgHeight * pix2mm;
+
+  camSample.setFocalLength(focalLength_mm);
+  camSample.setHorizontalAperture(haperture_cm);
+  camSample.setVerticalAperture(vaperture_cm);
+  camSample.setHorizontalFilmOffset(hoffset_cm);
+  camSample.setVerticalFilmOffset(voffset_cm);
+  
+  // Add sensor width (largest image side) in pixels as custom property
+  mpropSensorWidth_pix.set(sensorWidth_pix);
+  
+  // Set custom attributes
+  // Image path
+  if(!imagePath.empty())
+  {
+    mimagePlane.set(imagePath.c_str());
+  }
+  // View id
+  mpropViewId.set(id_view);
+  // Intrinsic id
+  mpropIntrinsicId.set(id_intrinsic);
+  // Intrinsic type
+  mmvg_intrinsicType.set(cam->getTypeStr());
+  // Intrinsic parameters
+  std::vector<double> intrinsicParams = cam->getParams();
+  mmvg_intrinsicParams.set(intrinsicParams);
+  
+  // Attach intrinsic parameters to camera object
+  mcamObj.getSchema().set(camSample);
+}
+
 void AlembicExporter::add(const sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part)
 {
 
