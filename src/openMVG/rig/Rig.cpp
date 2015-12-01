@@ -604,7 +604,7 @@ bool saveRigCalibration(const std::string &filename, const std::vector<geometry:
     std::cerr << "Unable to create the calibration file " << filename << std::endl;
     throw std::invalid_argument("Unable to create the calibration file "+filename);
   }
-  fs << subposes.size();
+  fs << subposes.size() << std::endl;
   
   for(const geometry::Pose3 & p : subposes)
   {
@@ -612,13 +612,13 @@ bool saveRigCalibration(const std::string &filename, const std::vector<geometry:
     const Mat3 &rot = p.rotation();
     for(std::size_t i = 0; i < 3; ++i)
       for(std::size_t j = 0; j < 3; ++j)
-        fs << rot(i,j);
+        fs << rot(i,j) << std::endl;
     
     // write the translation part
     const Vec3 &center = p.center();
-    fs << center(0);
-    fs << center(1);
-    fs << center(2);
+    fs << center(0) << std::endl;
+    fs << center(1) << std::endl;
+    fs << center(2) << std::endl;
   }
   bool isOk = fs.good();
   fs.close();
