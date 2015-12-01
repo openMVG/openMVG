@@ -18,6 +18,38 @@ Rig::~Rig()
 {
 }
 
+const std::size_t Rig::getRelativePosesSize() const 
+{ 
+  return _vRelativePoses.size(); 
+}
+
+const geometry::Pose3& Rig::getRelativePose(std::size_t i) const 
+{ 
+  assert(i<_vRelativePoses.size());
+  return _vRelativePoses[i-1]; 
+}
+
+const std::vector<geometry::Pose3>& Rig::getRelativePoses() const 
+{ 
+  return _vRelativePoses; 
+}
+
+const geometry::Pose3 & Rig::getPose(std::size_t i) const 
+{ 
+  assert(i<_vPoses.size());
+  return _vPoses[i]; 
+}
+
+const std::size_t & Rig::getPosesSize( ) const 
+{ 
+  return _vPoses.size(); 
+}
+
+const std::vector<geometry::Pose3> & Rig::getPoses( ) const 
+{ 
+  return _vPoses; 
+}
+
 void Rig::setTrackingResult(
         std::vector<localization::LocalizationResult> vLocalizationResults,
         std::size_t i)
