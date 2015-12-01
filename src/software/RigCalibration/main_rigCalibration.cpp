@@ -345,4 +345,30 @@ int main(int argc, char** argv)
   
   // save the rig calibration (subposes)
   rig.saveCalibration(outputFile);
+  
+  
+  // just print out the results
+  // the first rig pose
+  if(rig.getPosesSize() > 0)
+  {
+    POPART_COUT("First pose of the rig");
+    const geometry::Pose3 &pose = rig.getPose(0); 
+    POPART_COUT("R\n" << pose.rotation());
+    POPART_COUT("center\n" << pose.center());
+    POPART_COUT("t\n" << pose.translation());
+  }
+  
+  // get the subposes of the cameras inside the rig
+  const std::vector<geometry::Pose3>& subposes = rig.getRelativePoses();
+  assert(nCam-1 == subposes.size());
+  for(std::size_t i = 0; i < subposes.size(); ++i)
+  {
+    const geometry::Pose3 &pose = subposes[i];
+    POPART_COUT("--------------------");
+    POPART_COUT("Subpose p0" << i+1); // from camera 0 to camera i+1
+    POPART_COUT("R\n" << pose.rotation());
+    POPART_COUT("center\n" << pose.center());
+    POPART_COUT("t\n" << pose.translation());
+    POPART_COUT("--------------------\n");
+  }
 }
