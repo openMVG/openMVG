@@ -304,7 +304,18 @@ int main(int argc, char** argv)
       auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
       POPART_COUT("\nLocalization took  " << detect_elapsed.count() << " [ms]");
       stats(detect_elapsed.count());
-
+      
+#if HAVE_ALEMBIC
+      if(localizationResult.isValid())
+      {
+        exporter.appendCamera("camera"+std::to_string(idCamera)+"."+myToString(frameCounter,4), localizationResult.getPose(), &queryIntrinsics, subMediaFilepath, frameCounter, frameCounter);
+      }
+      else
+      {
+        // @fixme for now just add a fake camera so that it still can be see in MAYA
+        exporter.appendCamera("camera"+std::to_string(idCamera)+".V."+myToString(frameCounter,4), geometry::Pose3(), &queryIntrinsics, subMediaFilepath, frameCounter, frameCounter);
+      }
+#endif
       ++frameCounter;
     }
 
