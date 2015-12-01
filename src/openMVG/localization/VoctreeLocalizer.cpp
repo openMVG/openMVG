@@ -123,6 +123,11 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
     return;
   }
 
+  POPART_COUT("SfM data loaded from " << sfmFilePath << " containing: ");
+  POPART_COUT("\tnumber of views      : " << _sfm_data.GetViews().size());
+  POPART_COUT("\tnumber of poses      : " << _sfm_data.GetPoses().size());
+  POPART_COUT("\tnumber of points     : " << _sfm_data.GetLandmarks().size());
+  POPART_COUT("\tnumber of intrinsics : " << _sfm_data.GetIntrinsics().size());
   // load the features and descriptors
   // initially we need all the feature in order to create the database
   // then we can store only those associated to 3D points
@@ -400,20 +405,20 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
   std::vector<voctree::DocMatch> matchedImages;
   _database.find(requestImageWords, param._numResults, matchedImages);
   
-  // just debugging bla bla
-  // for each similar image found print score and number of features
-  for(const voctree::DocMatch & currMatch : matchedImages )
-  {
-    // get the corresponding index of the view
-    const IndexT matchedViewIndex = currMatch.id;
-    // get the view handle
-    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
-    POPART_COUT( "[database]\t\t match " << matchedView->s_Img_path 
-            << " [docid: "<< currMatch.id << "]"
-            << " with score " << currMatch.score 
-            << " and it has "  << _regions_per_view[matchedViewIndex]._regions.RegionCount() 
-            << " features with 3D points");
-  }
+//  // just debugging bla bla
+//  // for each similar image found print score and number of features
+//  for(const voctree::DocMatch & currMatch : matchedImages )
+//  {
+//    // get the corresponding index of the view
+//    const IndexT matchedViewIndex = currMatch.id;
+//    // get the view handle
+//    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
+//    POPART_COUT( "[database]\t\t match " << matchedView->s_Img_path 
+//            << " [docid: "<< currMatch.id << "]"
+//            << " with score " << currMatch.score 
+//            << " and it has "  << _regions_per_view[matchedViewIndex]._regions.RegionCount() 
+//            << " features with 3D points");
+//  }
 
   //@fixme Maybe useless, just do everything with DistanceRatioMatch
   // preparing the matcher, it will use the extracted Regions as reference and it
@@ -669,13 +674,10 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
     // image of the dataset that was not reconstructed
     if(matchedRegions._regions.RegionCount() < minNum3DPoints)
     {
-      POPART_COUT("[matching]\tSkipping matching with " << matchedView->s_Img_path << " as it has too few visible 3D points (" << matchedRegions._regions.RegionCount() << ")");
+      POPART_COUT("[matching]\tSkipping matching with " << matchedView->s_Img_path << " as it has too few visible 3D points");
       continue;
     }
-    else
-    {
-//      POPART_COUT("[matching]\tTrying to match the query image with " << matchedView->s_Img_path);
-    }
+    POPART_COUT("[matching]\tTrying to match the query image with " << matchedView->s_Img_path);
     
     // its associated intrinsics
     // this is just ugly!
