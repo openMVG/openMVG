@@ -21,13 +21,19 @@
 #include <openMVG/matching/regions_matcher.hpp>
 #include <flann/algorithms/dist.h>
 
+#define USE_SIFT_FLOAT 0
+
 
 namespace openMVG {
 namespace localization {
 
 //@fixme find a better place or maje the class template?
 typedef openMVG::features::Descriptor<float, 128> DescriptorFloat;
+#if USE_SIFT_FLOAT
 typedef Reconstructed_Regions<features::SIOPointFeature, float, 128> Reconstructed_RegionsT;
+#else
+typedef Reconstructed_Regions<features::SIOPointFeature, unsigned char, 128> Reconstructed_RegionsT;
+#endif
 
 class VoctreeLocalizer : public ILocalizer
 {
@@ -50,7 +56,7 @@ public:
     bool _useGuidedMatching;    //< Enable/disable guided matching when matching images
     Algorithm _algorithm;       //< algorithm to use for localization
     size_t _numResults;         //< number of best matching images to retrieve from the database
-    size_t _maxResults;         
+    size_t _maxResults;         //< for algorithm AllResults, it stops the image matching when this number of matched images is reached
     size_t _numCommonViews;     //< number minimum common images in which a point must be seen to be used in cluster tracking
   };
   
@@ -123,7 +129,7 @@ public:
                 const Parameters &param,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                LocalizationResult &localizationResult);
+                LocalizationResult &localizationResult, const std::string& imagePath = std::string());
 
   /**
    * @brief Try to localize an image in the database: it queries the database to 
@@ -145,7 +151,7 @@ public:
                 const Parameters &param,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                LocalizationResult &localizationResult);
+                LocalizationResult &localizationResult, const std::string& imagePath = std::string());
 
 private:
   /**
@@ -164,8 +170,13 @@ private:
                                     const std::string & weightsFilepath,
                                     const std::string & feat_directory);
 
+#if USE_SIFT_FLOAT
   typedef flann::L2<float> MetricT;
   typedef matching::ArrayMatcher_Kdtree_Flann<float, MetricT> MatcherT;
+#else
+  typedef flann::L2<unsigned char> MetricT;
+  typedef matching::ArrayMatcher_Kdtree_Flann<unsigned char, MetricT> MatcherT;
+#endif
   bool robustMatching(matching::RegionsMatcherT<MatcherT> & matcher, 
                       const cameras::IntrinsicBase * queryIntrinsics,// the intrinsics of the image we are using as reference
                       const Reconstructed_RegionsT & regionsToMatch,

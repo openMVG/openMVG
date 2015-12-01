@@ -55,6 +55,20 @@ void saveFeatures2SVG(const std::string &inputImagePath,
                       const std::vector<features::PointFeature> &keypoints,
                       const std::string &outputSVGPath);
 
+/**
+ * @brief
+ * 
+ * @param[in] inputImagePath The full path to the image file. The image is only 
+ * saved as a link, no image data is stored in the svg.
+ * @param[in] imageSize The size of the image <width,height>.
+ * @param[in] points A vector containing the points to draw.
+ * @param[in] outputSVGPath The name of the svg file to generate.
+ */
+void saveFeatures2SVG(const std::string &inputImagePath,
+                      const std::pair<size_t,size_t> & imageSize,
+                      const Mat &points,
+                      const std::string &outputSVGPath);
+
 #if HAVE_CCTAG
 
 /**

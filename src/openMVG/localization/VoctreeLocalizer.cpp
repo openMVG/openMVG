@@ -1,4 +1,5 @@
 #include "VoctreeLocalizer.hpp"
+#include "svgVisualization.hpp"
 
 #include <openMVG/sfm/sfm_data_io.hpp>
 #include <openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp>
@@ -17,6 +18,7 @@
 #include <third_party/progress/progress.hpp>
 //#include <cereal/archives/json.hpp>
 
+#include <boost/filesystem.hpp>
 #include <algorithm>
 #include <chrono>
 
@@ -99,7 +101,11 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
   }
   else
   {
+#if USE_SIFT_FLOAT
     _image_describer = new features::SIFT_float_describer();
+#else
+    _image_describer = new features::SIFT_Image_describer();
+#endif
   }
 #else
   _image_describer = new features::SIFT_float_describer();
@@ -117,6 +123,11 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
     return;
   }
 
+  POPART_COUT("SfM data loaded from " << sfmFilePath << " containing: ");
+  POPART_COUT("\tnumber of views      : " << _sfm_data.GetViews().size());
+  POPART_COUT("\tnumber of poses      : " << _sfm_data.GetPoses().size());
+  POPART_COUT("\tnumber of points     : " << _sfm_data.GetLandmarks().size());
+  POPART_COUT("\tnumber of intrinsics : " << _sfm_data.GetIntrinsics().size());
   // load the features and descriptors
   // initially we need all the feature in order to create the database
   // then we can store only those associated to 3D points
@@ -147,14 +158,16 @@ bool VoctreeLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                                      *voctreeParam,
                                      useInputIntrinsics,
                                      queryIntrinsics,
-                                     localizationResult);
+                                     localizationResult,
+                                     imagePath);
     case Algorithm::BestResult: throw std::invalid_argument("BestResult not yet implemented");
     case Algorithm::AllResults: 
       return localizeAllResults(imageGrey, 
                                 *voctreeParam,
                                 useInputIntrinsics, 
                                 queryIntrinsics,
-                                localizationResult);
+                                localizationResult,
+                                imagePath);
     case Algorithm::Cluster: throw std::invalid_argument("Cluster not yet implemented");
     default: throw std::invalid_argument("Unknown algorithm type");
   }
@@ -359,12 +372,15 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
                                                 const Parameters &param,
                                                 bool useInputIntrinsics,
                                                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                                                LocalizationResult &localizationResult)
+                                                LocalizationResult &localizationResult, const std::string& imagePath /*= std::string()*/)
 {
   // A. extract descriptors and features from image
   POPART_COUT("[features]\tExtract SIFT from query image");
+#if USE_SIFT_FLOAT
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Float_Regions());
-//  std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Regions());
+#else
+  std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Regions());
+#endif
   auto detect_start = std::chrono::steady_clock::now();
   _image_describer->Set_configuration_preset(param._featurePreset);
   _image_describer->Describe(imageGrey, tmpQueryRegions, nullptr);
@@ -373,8 +389,11 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
   POPART_COUT("[features]\tExtract SIFT done: found " 
           << tmpQueryRegions->RegionCount() << " features in " 
           << detect_elapsed.count() << " [ms]" );
+#if USE_SIFT_FLOAT
   features::SIFT_Float_Regions &queryRegions = *dynamic_cast<features::SIFT_Float_Regions*> (tmpQueryRegions.get());
-//  features::SIFT_Regions &queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
+#else
+  features::SIFT_Regions &queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
+#endif
 
   // B. Find the (visually) similar images in the database 
   POPART_COUT("[database]\tRequest closest images from voctree");
@@ -386,20 +405,20 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
   std::vector<voctree::DocMatch> matchedImages;
   _database.find(requestImageWords, param._numResults, matchedImages);
   
-  // just debugging bla bla
-  // for each similar image found print score and number of features
-  for(const voctree::DocMatch & currMatch : matchedImages )
-  {
-    // get the corresponding index of the view
-    const IndexT matchedViewIndex = currMatch.id;
-    // get the view handle
-    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
-    POPART_COUT( "[database]\t\t match " << matchedView->s_Img_path 
-            << " [docid: "<< currMatch.id << "]"
-            << " with score " << currMatch.score 
-            << " and it has "  << _regions_per_view[matchedViewIndex]._regions.RegionCount() 
-            << " features with 3D points");
-  }
+//  // just debugging bla bla
+//  // for each similar image found print score and number of features
+//  for(const voctree::DocMatch & currMatch : matchedImages )
+//  {
+//    // get the corresponding index of the view
+//    const IndexT matchedViewIndex = currMatch.id;
+//    // get the view handle
+//    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
+//    POPART_COUT( "[database]\t\t match " << matchedView->s_Img_path 
+//            << " [docid: "<< currMatch.id << "]"
+//            << " with score " << currMatch.score 
+//            << " and it has "  << _regions_per_view[matchedViewIndex]._regions.RegionCount() 
+//            << " features with 3D points");
+//  }
 
   //@fixme Maybe useless, just do everything with DistanceRatioMatch
   // preparing the matcher, it will use the extracted Regions as reference and it
@@ -473,6 +492,25 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
       POPART_COUT("[matching]\tFound " << vec_featureMatches.size() << " matches");
     }
     assert(vec_featureMatches.size()>0);
+    
+    if(!param._visualDebug.empty() && !imagePath.empty())
+    {
+      namespace bfs = boost::filesystem;
+      const sfm::View *mview = _sfm_data.GetViews().at(matchedViewIndex).get();
+      const std::string queryimage = bfs::path(imagePath).stem().string();
+      const std::string matchedImage = bfs::path(mview->s_Img_path).stem().string();
+      const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
+      
+      
+      saveMatches2SVG(imagePath, 
+                           std::make_pair(imageGrey.Width(),imageGrey.Height()), 
+                           queryRegions.GetRegionsPositions(),
+                           matchedPath,
+                           std::make_pair(mview->ui_width, mview->ui_height), 
+                           _regions_per_view[matchedViewIndex]._regions.GetRegionsPositions(),
+                           vec_featureMatches,
+                           param._visualDebug+"/"+queryimage+"_"+matchedImage+".svg"); 
+    }
     
     // D. recover the 2D-3D associations from the matches 
     // Each matched feature in the current similar image is associated to a 3D point,
@@ -574,20 +612,35 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
                                           const Parameters &param,
                                           bool useInputIntrinsics,
                                           cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                                          LocalizationResult &localizationResult)
+                                          LocalizationResult &localizationResult, const std::string& imagePath /*= std::string()*/)
 {
   // A. extract descriptors and features from image
   POPART_COUT("[features]\tExtract SIFT from query image");
+#if USE_SIFT_FLOAT
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Float_Regions());
-//  std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Regions());
+#else
+  std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Regions());
+#endif
   auto detect_start = std::chrono::steady_clock::now();
   _image_describer->Set_configuration_preset(param._featurePreset);
   _image_describer->Describe(imageGrey, tmpQueryRegions, nullptr);
   auto detect_end = std::chrono::steady_clock::now();
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
   POPART_COUT("[features]\tExtract SIFT done: found " << tmpQueryRegions->RegionCount() << " features in " << detect_elapsed.count() << " [ms]" );
+#if USE_SIFT_FLOAT  
   features::SIFT_Float_Regions &queryRegions = *dynamic_cast<features::SIFT_Float_Regions*> (tmpQueryRegions.get());
-//  features::SIFT_Regions &queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
+#else
+  features::SIFT_Regions &queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
+#endif
+  
+  if(!param._visualDebug.empty() && !imagePath.empty())
+  {
+    namespace bfs = boost::filesystem;
+    saveFeatures2SVG(imagePath, 
+                     std::make_pair(imageGrey.Width(), imageGrey.Height()), 
+                     tmpQueryRegions->GetRegionsPositions(),
+                     param._visualDebug+"/"+bfs::path(imagePath).stem().string()+".svg");
+  }
 
   // B. Find the (visually) similar images in the database 
   // pass the descriptors through the vocabulary tree to get the visual words
@@ -601,16 +654,14 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   
 //  // just debugging bla bla
 //  // for each similar image found print score and number of features
-//  for(const voctree::Match & currMatch : matchedImages )
+//  for(const voctree::DocMatch& currMatch : matchedImages )
 //  {
-//    // get the corresponding index of the view
-//    const IndexT matchedViewIndex = _mapDocIdToView[currMatch.id];
 //    // get the view handle
-//    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[matchedViewIndex];
+//    const std::shared_ptr<sfm::View> matchedView = _sfm_data.views[currMatch.id];
 //    POPART_COUT( "[database]\t\t match " << matchedView->s_Img_path 
 //            << " [docid: "<< currMatch.id << "]"
 //            << " with score " << currMatch.score 
-//            << " and it has "  << _regions_per_view[matchedViewIndex]._regions.RegionCount() 
+//            << " and it has "  << _regions_per_view[currMatch.id]._regions.RegionCount() 
 //            << " features with 3D points");
 //  }
 
@@ -642,13 +693,10 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
     // image of the dataset that was not reconstructed
     if(matchedRegions._regions.RegionCount() < minNum3DPoints)
     {
-      POPART_COUT("[matching]\tSkipping matching with " << matchedView->s_Img_path << " as it has too few visible 3D points (" << matchedRegions._regions.RegionCount() << ")");
+      POPART_COUT("[matching]\tSkipping matching with " << matchedView->s_Img_path << " as it has too few visible 3D points");
       continue;
     }
-    else
-    {
-//      POPART_COUT("[matching]\tTrying to match the query image with " << matchedView->s_Img_path);
-    }
+    POPART_COUT("[matching]\tTrying to match the query image with " << matchedView->s_Img_path);
     
     // its associated intrinsics
     // this is just ugly!
@@ -683,6 +731,26 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
     }
     assert(vec_featureMatches.size()>0);
     
+    if(!param._visualDebug.empty() && !imagePath.empty())
+    {
+      namespace bfs = boost::filesystem;
+      const auto &matchedViewIndex = matchedImage.id;
+      const sfm::View *mview = _sfm_data.GetViews().at(matchedViewIndex).get();
+      const std::string queryimage = bfs::path(imagePath).stem().string();
+      const std::string matchedImage = bfs::path(mview->s_Img_path).stem().string();
+      const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
+      
+      
+      saveMatches2SVG(imagePath, 
+                           std::make_pair(imageGrey.Width(),imageGrey.Height()), 
+                           queryRegions.GetRegionsPositions(),
+                           matchedPath,
+                           std::make_pair(mview->ui_width, mview->ui_height), 
+                           _regions_per_view[matchedViewIndex]._regions.GetRegionsPositions(),
+                           vec_featureMatches,
+                           param._visualDebug+"/"+queryimage+"_"+matchedImage+".svg"); 
+    }
+    
     // D. recover the 2D-3D associations from the matches 
     // Each matched feature in the current similar image is associated to a 3D point,
     // hence we can recover the 2D-3D associations to estimate the pose
@@ -713,7 +781,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
       ++index;
     }
     ++goodMatches;
-    if( goodMatches == param._maxResults )
+    if((param._maxResults !=0) && (goodMatches == param._maxResults))
     { 
       // let's say we have enough features
       POPART_COUT("[matching]\tgot enough point from " << param._maxResults << "images");
@@ -740,6 +808,15 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
      // recopy the associations IDs in the vector
      associationIDs.push_back(ass.first);
      ++index;
+  }
+  
+  if(!param._visualDebug.empty() && !imagePath.empty())
+  {
+    namespace bfs = boost::filesystem;
+    saveFeatures2SVG(imagePath, 
+                     std::make_pair(imageGrey.Width(), imageGrey.Height()), 
+                     resectionData.pt2D,
+                     param._visualDebug+"/"+bfs::path(imagePath).stem().string()+".associations.svg");
   }
   
   

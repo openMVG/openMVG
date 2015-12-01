@@ -30,10 +30,18 @@ public:
   { 
     return _vLocalizationResults[i];
   }
-  
-  const geometry::Pose3& getRelativePose(std::size_t i) const { return _vRelativePoses[i-1]; }
-  
-  const std::vector<geometry::Pose3> & getPoses( ) const { return _vPoses; }
+
+  const std::size_t getRelativePosesSize() const;
+
+  const geometry::Pose3& getRelativePose(std::size_t i) const;
+
+  const std::vector<geometry::Pose3>& getRelativePoses() const;
+
+  const geometry::Pose3 & getPose(std::size_t i) const;
+
+  const std::size_t & getPosesSize() const;
+
+  const std::vector<geometry::Pose3> & getPoses() const;
   
   /*
    * @brief Compute the initial guess related to the relative positions between all witness 
