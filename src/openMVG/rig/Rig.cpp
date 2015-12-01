@@ -25,8 +25,7 @@ const std::size_t Rig::getRelativePosesSize() const
 
 const geometry::Pose3& Rig::getRelativePose(std::size_t i) const 
 { 
-  assert(i<_vRelativePoses.size());
-  return _vRelativePoses[i-1]; 
+  return _vRelativePoses.at(i-1); 
 }
 
 const std::vector<geometry::Pose3>& Rig::getRelativePoses() const 
@@ -36,8 +35,7 @@ const std::vector<geometry::Pose3>& Rig::getRelativePoses() const
 
 const geometry::Pose3 & Rig::getPose(std::size_t i) const 
 { 
-  assert(i<_vPoses.size());
-  return _vPoses[i]; 
+  return _vPoses.at(i); 
 }
 
 const std::size_t & Rig::getPosesSize( ) const 
