@@ -493,6 +493,25 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
     }
     assert(vec_featureMatches.size()>0);
     
+    if(!param._visualDebug.empty() && !imagePath.empty())
+    {
+      namespace bfs = boost::filesystem;
+      const sfm::View *mview = _sfm_data.GetViews().at(matchedViewIndex).get();
+      const std::string queryimage = bfs::path(imagePath).stem().string();
+      const std::string matchedImage = bfs::path(mview->s_Img_path).stem().string();
+      const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
+      
+      
+      saveMatches2SVG(imagePath, 
+                           std::make_pair(imageGrey.Width(),imageGrey.Height()), 
+                           queryRegions.GetRegionsPositions(),
+                           matchedPath,
+                           std::make_pair(mview->ui_width, mview->ui_height), 
+                           _regions_per_view[matchedViewIndex]._regions.GetRegionsPositions(),
+                           vec_featureMatches,
+                           param._visualDebug+"/"+queryimage+"_"+matchedImage+".svg"); 
+    }
+    
     // D. recover the 2D-3D associations from the matches 
     // Each matched feature in the current similar image is associated to a 3D point,
     // hence we can recover the 2D-3D associations to estimate the pose
@@ -614,7 +633,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   features::SIFT_Regions &queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
 #endif
   
-  if(!param._visualDebug.empty())
+  if(!param._visualDebug.empty() && !imagePath.empty())
   {
     namespace bfs = boost::filesystem;
     saveFeatures2SVG(imagePath, 
@@ -712,6 +731,26 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
     }
     assert(vec_featureMatches.size()>0);
     
+    if(!param._visualDebug.empty() && !imagePath.empty())
+    {
+      namespace bfs = boost::filesystem;
+      const auto &matchedViewIndex = matchedImage.id;
+      const sfm::View *mview = _sfm_data.GetViews().at(matchedViewIndex).get();
+      const std::string queryimage = bfs::path(imagePath).stem().string();
+      const std::string matchedImage = bfs::path(mview->s_Img_path).stem().string();
+      const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
+      
+      
+      saveMatches2SVG(imagePath, 
+                           std::make_pair(imageGrey.Width(),imageGrey.Height()), 
+                           queryRegions.GetRegionsPositions(),
+                           matchedPath,
+                           std::make_pair(mview->ui_width, mview->ui_height), 
+                           _regions_per_view[matchedViewIndex]._regions.GetRegionsPositions(),
+                           vec_featureMatches,
+                           param._visualDebug+"/"+queryimage+"_"+matchedImage+".svg"); 
+    }
+    
     // D. recover the 2D-3D associations from the matches 
     // Each matched feature in the current similar image is associated to a 3D point,
     // hence we can recover the 2D-3D associations to estimate the pose
@@ -771,14 +810,13 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
      ++index;
   }
   
-  if(!param._visualDebug.empty())
+  if(!param._visualDebug.empty() && !imagePath.empty())
   {
     namespace bfs = boost::filesystem;
     saveFeatures2SVG(imagePath, 
                      std::make_pair(imageGrey.Width(), imageGrey.Height()), 
                      resectionData.pt2D,
-                     param._visualDebug+"/"+bfs::path(imagePath).stem().string()+".svg");
-    POPART_COUT(param._visualDebug+"/"+bfs::path(imagePath).stem().string()+".associations.svg");
+                     param._visualDebug+"/"+bfs::path(imagePath).stem().string()+".associations.svg");
   }
   
   
