@@ -599,7 +599,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
       POPART_COUT("center difference: " << (pose.center()-referencePose.center()).norm());
       POPART_COUT("err = [err; " << R2D(getRotationMagnitude(pose.rotation()*referencePose.rotation().inverse())) << ", "<< (pose.center()-referencePose.center()).norm() << "];");
     }
-    localizationResult = LocalizationResult(resectionData, associationIDs, pose, true);
+    localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, true);
     break;
   }
   //@todo deal with unsuccesful case...
@@ -874,7 +874,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
     POPART_COUT("K refined\n" << queryIntrinsics.K());
   }
     
-  localizationResult = LocalizationResult(resectionData, associationIDs, pose, true);
+  localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, true);
   
   return localizationResult.isValid();
 }
