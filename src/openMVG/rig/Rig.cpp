@@ -4,6 +4,9 @@
 
 #include <ceres/rotation.h>
 
+#include <fstream>
+#include <exception>
+
 #ifdef VISUAL_DEBUG_MODE
 #include <opencv2/opencv.hpp>
 #endif
@@ -13,6 +16,36 @@ namespace rig {
 
 Rig::~Rig()
 {
+}
+
+const std::size_t Rig::getRelativePosesSize() const 
+{ 
+  return _vRelativePoses.size(); 
+}
+
+const geometry::Pose3& Rig::getRelativePose(std::size_t i) const 
+{ 
+  return _vRelativePoses.at(i-1); 
+}
+
+const std::vector<geometry::Pose3>& Rig::getRelativePoses() const 
+{ 
+  return _vRelativePoses; 
+}
+
+const geometry::Pose3 & Rig::getPose(std::size_t i) const 
+{ 
+  return _vPoses.at(i); 
+}
+
+const std::size_t & Rig::getPosesSize( ) const 
+{ 
+  return _vPoses.size(); 
+}
+
+const std::vector<geometry::Pose3> & Rig::getPoses( ) const 
+{ 
+  return _vPoses; 
 }
 
 void Rig::setTrackingResult(
@@ -480,6 +513,13 @@ bool Rig::optimizeCalibration()
   }
 }
 
+
+bool Rig::saveCalibration(std::string &filename)
+{
+  return saveRigCalibration(filename, _vRelativePoses);
+}
+
+
 geometry::Pose3 computeRelativePose(geometry::Pose3 poseMainCamera, geometry::Pose3 poseWitnessCamera)
 {
   const openMVG::Mat3 & R1 = poseMainCamera.rotation();
@@ -540,6 +580,79 @@ void cvpause(){
     std::exit(0);
   }
 #endif
+}
+
+bool loadRigCalibration(const std::string &filename, std::vector<geometry::Pose3> &subposes)
+{
+  std::ifstream fs(filename, std::ios::in);
+  if(!fs.is_open())
+  {
+    std::cerr << "Unable to load the calibration file " << filename << std::endl;
+    throw std::invalid_argument("Unable to load the calibration file "+filename);
+  }  
+  
+  // first read the number of cameras subposes stores
+  std::size_t numCameras = 0;
+  fs >> numCameras;
+  std::cout << "Found " << numCameras << " cameras" << std::endl;
+  subposes.reserve(numCameras);
+  
+  for(std::size_t cam = 0; cam < numCameras; ++cam)
+  {
+    // load the rotatiop part
+    Mat3 rot;
+    for(std::size_t i = 0; i < 3; ++i)
+      for(std::size_t j = 0; j < 3; ++j)
+        fs >> rot(i,j);
+    
+    // write the translation part
+    Vec3 center;
+    fs >> center(0);
+    fs >> center(1);
+    fs >> center(2);
+  }
+  
+  bool isOk = fs.good();
+  fs.close();
+  return isOk;
+}
+
+//numCam
+//R[0][0] // first camera rotation
+//R[0][1]
+//...
+//t[0] // first camera translation
+//t[1]
+//t[2]
+//R[0][0] // second camera rotation
+//...
+bool saveRigCalibration(const std::string &filename, const std::vector<geometry::Pose3> &subposes)
+{
+  std::ofstream fs(filename, std::ios::out);
+  if(!fs.is_open())
+  {
+    std::cerr << "Unable to create the calibration file " << filename << std::endl;
+    throw std::invalid_argument("Unable to create the calibration file "+filename);
+  }
+  fs << subposes.size() << std::endl;
+  
+  for(const geometry::Pose3 & p : subposes)
+  {
+    // write the rotatiop part
+    const Mat3 &rot = p.rotation();
+    for(std::size_t i = 0; i < 3; ++i)
+      for(std::size_t j = 0; j < 3; ++j)
+        fs << rot(i,j) << std::endl;
+    
+    // write the translation part
+    const Vec3 &center = p.center();
+    fs << center(0) << std::endl;
+    fs << center(1) << std::endl;
+    fs << center(2) << std::endl;
+  }
+  bool isOk = fs.good();
+  fs.close();
+  return isOk;
 }
 
 } // namespace rig

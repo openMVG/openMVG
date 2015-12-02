@@ -199,7 +199,7 @@ static bool saveDescsToFile(
 
 /// Read descriptors from file (in binary mode)
 template<typename DescriptorsT >
-static bool loadDescsFromBinFile(
+bool loadDescsFromBinFile(
   const std::string & sfileNameDescs,
   DescriptorsT & vec_desc,
   bool append = false)
@@ -237,18 +237,19 @@ static bool loadDescsFromBinFile(
 
 /// Write descriptors to file (in binary mode)
 template<typename DescriptorsT >
-static bool saveDescsToBinFile(
+bool saveDescsToBinFile(
   const std::string & sfileNameDescs,
   DescriptorsT & vec_desc)
 {
   typedef typename DescriptorsT::value_type VALUE;
 
   std::ofstream file(sfileNameDescs.c_str(), std::ios::out | std::ios::binary);
-  //Write the number of descriptor
+  //Write the number of descriptors
   const std::size_t cardDesc = vec_desc.size();
   file.write((const char*) &cardDesc,  sizeof(std::size_t));
   for (typename DescriptorsT::const_iterator iter = vec_desc.begin();
-    iter != vec_desc.end(); ++iter) {
+    iter != vec_desc.end(); ++iter) 
+  {
     file.write((const char*) (*iter).getData(),
       VALUE::static_size*sizeof(typename VALUE::bin_type));
   }

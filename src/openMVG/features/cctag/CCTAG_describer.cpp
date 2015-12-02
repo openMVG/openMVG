@@ -18,7 +18,7 @@ struct CCTAG_Image_describer::CCTagParameters : public cctag::Parameters
 
 
 CCTAG_Image_describer::CCTAG_Image_describer()
-    :Image_describer(), _params(new CCTagParameters(3)) {}
+    :Image_describer(), _params(new CCTagParameters(3)), _doAppend(false) {}
     
 CCTAG_Image_describer::CCTAG_Image_describer(const std::size_t nRings, const bool doAppend)
     :Image_describer(), _params(new CCTagParameters(nRings)), _doAppend(doAppend){}   
@@ -39,6 +39,8 @@ bool CCTAG_Image_describer::Set_configuration_preset(EDESCRIBER_PRESET preset)
   switch(preset)
   {
   // Normal lighting conditions: normal contrast
+  case LOW_PRESET:
+  case MEDIUM_PRESET:
   case NORMAL_PRESET:
     _params->_cannyThrLow = 0.01f;
     _params->_cannyThrHigh = 0.04f;
@@ -70,12 +72,9 @@ bool CCTAG_Image_describer::Describe(const image::Image<unsigned char>& image,
     // Build alias to cached data
     CCTAG_Regions * regionsCasted = dynamic_cast<CCTAG_Regions*>(regions.get());
     // reserve some memory for faster keypoint saving
-    
-    if ( !_doAppend )
-    {
-      regionsCasted->Features().reserve(50);
-      regionsCasted->Descriptors().reserve(50);
-    }
+
+    regionsCasted->Features().reserve(regionsCasted->Features().size() + 50);
+    regionsCasted->Descriptors().reserve(regionsCasted->Descriptors().size() + 50);
     
     boost::ptr_list<cctag::ICCTag> cctags;
     cctag::logtime::Mgmt* durations = new cctag::logtime::Mgmt( 25 );

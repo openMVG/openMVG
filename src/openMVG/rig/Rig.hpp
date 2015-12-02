@@ -30,10 +30,18 @@ public:
   { 
     return _vLocalizationResults[i];
   }
-  
-  const geometry::Pose3& getRelativePose(std::size_t i) const { return _vRelativePoses[i-1]; }
-  
-  const std::vector<geometry::Pose3> & getPoses( ) const { return _vPoses; }
+
+  const std::size_t getRelativePosesSize() const;
+
+  const geometry::Pose3& getRelativePose(std::size_t i) const;
+
+  const std::vector<geometry::Pose3>& getRelativePoses() const;
+
+  const geometry::Pose3 & getPose(std::size_t i) const;
+
+  const std::size_t & getPosesSize() const;
+
+  const std::vector<geometry::Pose3> & getPoses() const;
   
   /*
    * @brief Compute the initial guess related to the relative positions between all witness 
@@ -64,6 +72,14 @@ public:
    * @brief Perform the rig bundle adjustment
    */
   bool optimizeCalibration();
+  
+  /**
+   * @brief Save the calibrated poses to a text file.
+   * @param filename The filename for the calibration file.
+   * @return true if everything went ok.
+   * @see saveRigCalibration()
+   */
+  bool saveCalibration(std::string &filename);
   
   /*
    * @brief Visual debug function displaying the reprojected 3D points and their
@@ -113,6 +129,44 @@ geometry::Pose3 computeRelativePose(geometry::Pose3 poseMainCamera, geometry::Po
  * @brief Visual debug function doing a pause during the program execution.
  */
 void cvpause();
+
+/**
+ * @brief Load the set of subposes from a simple text file.
+ * @param[in] filename The file from which to load the subposes.
+ * @param[out] subposes The loaded subposes.
+ * @return true if everything went ok.
+ * 
+ * The format of the file is the following
+ * numCam
+ * R[0][0] // first camera rotation
+ * R[0][1]
+ * ...
+ * t[0] // first camera translation
+ * t[1]
+ * t[2]
+ * R[0][0] // second camera rotation
+ * ...
+ */
+bool loadRigCalibration(const std::string &filename, std::vector<geometry::Pose3> &subposes);
+
+/**
+ * @brief Save the set of subposes from a simple text file.
+ * @param[in] filename The file to which the subposes are saved.
+ * @param[in] subposes The subposes to write.
+ * @return true if everything went ok.
+ * 
+ * The format of the file is the following
+ * numCam
+ * R[0][0] // first camera rotation
+ * R[0][1]
+ * ...
+ * t[0] // first camera translation
+ * t[1]
+ * t[2]
+ * R[0][0] // second camera rotation
+ * ...
+ */
+bool saveRigCalibration(const std::string &filename, const std::vector<geometry::Pose3> &subposes);
 
 } // namespace rig
 } // namespace openMVG

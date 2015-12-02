@@ -112,6 +112,11 @@ bool SfM_Localizer::Localize
   // pass to the function
 #ifdef HAVE_CCTAG
   const bool bResection = (resection_data.vec_inliers.size() > MINIMUM_SAMPLES);
+  if (!bResection) {
+    std::cout << "bResection is false";
+    std::cout << " because resection_data.vec_inliers.size() = " << resection_data.vec_inliers.size();
+    std::cout << " and MINIMUM_SAMPLES = " << MINIMUM_SAMPLES << std::endl;
+  }
 #else
   const bool bResection = (resection_data.vec_inliers.size() > 2.5 * MINIMUM_SAMPLES);
 #endif

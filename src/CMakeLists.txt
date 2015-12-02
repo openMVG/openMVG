@@ -70,6 +70,7 @@ ELSEIF()
   SET(BUILD_SHARED_LIBS OFF)
 ENDIF()
 
+
 # ==============================================================================
 # Check that submodule have been initialized and updated
 # ==============================================================================
@@ -248,9 +249,13 @@ ADD_DEFINITIONS(-DEIGEN_MPL2_ONLY)
 # - internal by default (ceres-solver+cxsparse+miniglog),
 # - external if CERES_DIR_HINTS and FIND_PACKAGE return a valid Ceres setup
 # ==============================================================================
-MESSAGE(STATUS "Trying to find package Ceres for openMVG")
+MESSAGE(STATUS "Trying to find package Ceres for openMVG: ${CERES_DIR_HINTS}")
 FIND_PACKAGE(Ceres QUIET HINTS ${CERES_DIR_HINTS})
 IF(NOT Ceres_FOUND)
+  IF(DEFINED OpenMVG_USE_INTERNAL_CERES AND NOT OpenMVG_USE_INTERNAL_CERES)
+    MESSAGE(FATAL_ERROR "External CERES not found. Not found in CERES_DIR_HINTS: ${CERES_DIR_HINTS}")
+  ENDIF()
+
   MESSAGE(STATUS "No external CERES detected, using the embedded one.")
   SET(OpenMVG_USE_INTERNAL_CERES ON)
   SET(CERES_INCLUDE_DIRS
@@ -265,6 +270,7 @@ ELSE()
   MESSAGE(STATUS "Ceres include dirs ${CERES_INCLUDE_DIRS}")
   MESSAGE(STATUS "Ceres libraries ${CERES_LIBRARIES}")
   INCLUDE_DIRECTORIES(${CERES_INCLUDE_DIRS})
+  SET(OpenMVG_USE_INTERNAL_CERES OFF)
 ENDIF()
 
 # ==============================================================================
@@ -387,7 +393,8 @@ ENDIF()
 # - only external and enabled only if OpenMVG_USE_OPENCV is set to ON
 # ==============================================================================
 IF(OpenMVG_USE_OPENCV)
-  FIND_PACKAGE( OpenCV )
+  FIND_PACKAGE(OpenCV REQUIRED core imgproc video imgcodecs videoio features2d xfeatures2d)
+
   IF(NOT OpenCV_FOUND)
     MESSAGE(STATUS "OpenCV was not found. Disabling OpenCV support.")
     UPDATE_CACHE_VARIABLE(OpenMVG_USE_OPENCV OFF)
@@ -408,9 +415,13 @@ ENDIF(OpenMVG_USE_OPENCV)
 # - optional, it allows to compile the vocabulary tree
 # ==============================================================================
 IF(OpenMVG_BUILD_VOCTREE)
+  OPTION(BOOST_NO_CXX11 "If Boost is not build with C++11 support this must be enabled to avoid symbol conflicts (SCOPED_ENUM)" OFF)
   FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS system filesystem program_options)
   IF(Boost_FOUND)
      MESSAGE(STATUS "Boost ${Boost_LIB_VERSION} found")
+     if(BOOST_NO_CXX11)
+       add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
+     endif(BOOST_NO_CXX11)
      include_directories(${Boost_INCLUDE_DIRS})
      link_directories(${Boost_LIBRARIES})
      add_definitions(${Boost_DEFINITIONS})
@@ -549,61 +560,61 @@ MESSAGE("** Build Alembic exporter: " ${OpenMVG_USE_ALEMBIC})
 
 MESSAGE("\n")
 
-IF(DEFINED OpenMVG_USE_INTERNAL_EIGEN)
+IF(OpenMVG_USE_INTERNAL_EIGEN)
   MESSAGE(STATUS "EIGEN: " ${EIGEN_VERSION} " (internal)")
 ELSE()
   MESSAGE(STATUS "EIGEN: " ${EIGEN_VERSION} " (external)")
 ENDIF()
 
-IF(DEFINED OpenMVG_USE_INTERNAL_CERES)
+IF(OpenMVG_USE_INTERNAL_CERES)
   MESSAGE(STATUS "CERES: " ${CERES_VERSION} " (internal)")
 ELSE()
   MESSAGE(STATUS "CERES: " ${CERES_VERSION} " (external)")
 ENDIF()
 
-IF(DEFINED OpenMVG_USE_INTERNAL_FLANN)
+IF(OpenMVG_USE_INTERNAL_FLANN)
   MESSAGE(STATUS "FLANN: " ${FLANN_VERSION} " (internal)")
 ELSE()
   MESSAGE(STATUS "FLANN: " ${FLANN_VERSION} " (external)")
 ENDIF()
 
-IF(DEFINED OpenMVG_USE_INTERNAL_TIFF)
+IF(OpenMVG_USE_INTERNAL_TIFF)
   MESSAGE(STATUS "LIBTIFF: " ${TIFF_VERSION_STRING} " (internal)")
 ELSE()
   MESSAGE(STATUS "LIBTIFF: " ${TIFF_VERSION_STRING} " (external)")
 ENDIF()
 
-IF(DEFINED OpenMVG_USE_INTERNAL_PNG)
+IF(OpenMVG_USE_INTERNAL_PNG)
   MESSAGE(STATUS "LIBPNG: " ${PNG_VERSION_STRING} " (internal)")
 ELSE()
   MESSAGE(STATUS "LIBPNG: " ${PNG_VERSION_STRING} " (external)")
 ENDIF()
 
-IF(DEFINED OpenMVG_USE_INTERNAL_JPEG)
+IF(OpenMVG_USE_INTERNAL_JPEG)
   MESSAGE(STATUS "LIBJPEG (internal)")
 ELSE()
   MESSAGE(STATUS "LIBJPEG (external)")
 ENDIF()
 
-IF(DEFINED OpenMVG_USE_INTERNAL_CLP)
+IF(OpenMVG_USE_INTERNAL_CLP)
   MESSAGE(STATUS "CLP: " ${CLP_VERSION} " (internal)")
 ELSE()
   MESSAGE(STATUS "CLP: " ${CLP_VERSION} " (external)")
 ENDIF()
 
-IF(DEFINED OpenMVG_USE_INTERNAL_COINUTILS)
+IF(OpenMVG_USE_INTERNAL_COINUTILS)
   MESSAGE(STATUS "COINUTILS: " ${COINUTILS_VERSION} " (internal)")
 ELSE()
   MESSAGE(STATUS "COINUTILS: " ${COINUTILS_VERSION} " (external)")
 ENDIF()
 
-IF(DEFINED OpenMVG_USE_INTERNAL_OSI)
+IF(OpenMVG_USE_INTERNAL_OSI)
   MESSAGE(STATUS "OSI: " ${OSI_VERSION} " (internal)")
 ELSE()
   MESSAGE(STATUS "OSI: " ${OSI_VERSION} " (external)")
 ENDIF()
 
-IF(DEFINED OpenMVG_USE_INTERNAL_LEMON)
+IF(OpenMVG_USE_INTERNAL_LEMON)
   MESSAGE(STATUS "LEMON: " ${LEMON_VERSION} " (internal)")
 ELSE()
   MESSAGE(STATUS "LEMON: " ${LEMON_VERSION} " (external)")
