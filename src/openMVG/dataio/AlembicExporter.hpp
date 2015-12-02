@@ -41,6 +41,30 @@ public:
                     const float sensorWidth_mm=36.0);
   
   /**
+   * @brief Initiate an animated camera
+   * 
+   * @param cameraName An identifier for the camera
+   */
+  void initAnimatedCamera(const std::string &cameraName);
+  
+  /**
+   * @brief Add a keyframe to the animated camera
+   * 
+   * @param pose The camera pose
+   * @param cam The camera intrinsics parameters
+   * @param imagePath The localized image path
+   * @param id_view View id
+   * @param id_intrinsic Intrinsic id
+   * @param sensorWidth_mm Width of the sensor in millimeters
+   */
+  void addCameraKeyframe(const geometry::Pose3 &pose,
+                           const cameras::Pinhole_Intrinsic *cam,
+                           const std::string &imagePath,
+                           const IndexT id_view,
+                           const IndexT id_intrinsic,
+                           const float sensorWidth_mm=36.0);
+  
+  /**
    * @brief Add SfM Data
    * 
    * @param sfmdata SfM_Data container
@@ -58,6 +82,14 @@ private:
   Alembic::Abc::OObject mvgCloud;
   Alembic::Abc::OObject mvgPointCloud;
   unsigned int counter;
+  Alembic::AbcGeom::OXform mxform;
+  Alembic::AbcGeom::OCamera mcamObj;
+  Alembic::AbcGeom::OUInt32Property mpropSensorWidth_pix;
+  Alembic::AbcGeom::OStringProperty mimagePlane;
+  Alembic::AbcGeom::OUInt32Property mpropViewId;
+  Alembic::AbcGeom::OUInt32Property mpropIntrinsicId;
+  Alembic::AbcGeom::OStringProperty mmvg_intrinsicType;
+  Alembic::AbcGeom::ODoubleArrayProperty mmvg_intrinsicParams;
 };
 
 } // namespace data_io

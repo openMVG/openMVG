@@ -19,6 +19,7 @@
 //#include <cereal/archives/json.hpp>
 
 #include <boost/filesystem.hpp>
+
 #include <algorithm>
 #include <chrono>
 
@@ -128,14 +129,26 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
   POPART_COUT("\tnumber of poses      : " << _sfm_data.GetPoses().size());
   POPART_COUT("\tnumber of points     : " << _sfm_data.GetLandmarks().size());
   POPART_COUT("\tnumber of intrinsics : " << _sfm_data.GetIntrinsics().size());
+
   // load the features and descriptors
   // initially we need all the feature in order to create the database
   // then we can store only those associated to 3D points
   //? can we use Feature_Provider to load the features and filter them later?
-    
+
   initDatabase(vocTreeFilepath, weightsFilepath, descriptorsFolder);
-  
+
   _isInit = true;
+}
+
+bool VoctreeLocalizer::localize(const std::unique_ptr<features::Regions> &genQueryRegions,
+                              const std::pair<std::size_t, std::size_t> imageSize,
+                              const LocalizerParameters *parameters,
+                              bool useInputIntrinsics,
+                              cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
+                              LocalizationResult & localizationResult,
+                              const std::string& imagePath)
+{
+  throw std::runtime_error("Localize does not support input regions yet for voctree localizer");
 }
 
 bool VoctreeLocalizer::localize(const image::Image<unsigned char> & imageGrey,
@@ -599,7 +612,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
       POPART_COUT("center difference: " << (pose.center()-referencePose.center()).norm());
       POPART_COUT("err = [err; " << R2D(getRotationMagnitude(pose.rotation()*referencePose.rotation().inverse())) << ", "<< (pose.center()-referencePose.center()).norm() << "];");
     }
-    localizationResult = LocalizationResult(resectionData, associationIDs, pose, true);
+    localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, true);
     break;
   }
   //@todo deal with unsuccesful case...
@@ -874,7 +887,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
     POPART_COUT("K refined\n" << queryIntrinsics.K());
   }
     
-  localizationResult = LocalizationResult(resectionData, associationIDs, pose, true);
+  localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, true);
   
   return localizationResult.isValid();
 }
@@ -969,5 +982,6 @@ bool VoctreeLocalizer::localizeRig(const std::vector<image::Image<unsigned char>
 {
   throw std::runtime_error("localizeRig is not yet supported for voctree_localizer");
 }
+
 } // localization
 } // openMVG

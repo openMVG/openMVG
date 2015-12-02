@@ -38,7 +38,7 @@ const geometry::Pose3 & Rig::getPose(std::size_t i) const
   return _vPoses.at(i); 
 }
 
-const std::size_t & Rig::getPosesSize( ) const 
+const std::size_t Rig::getPosesSize( ) const 
 { 
   return _vPoses.size(); 
 }
@@ -80,12 +80,14 @@ bool Rig::initializeCalibration()
     
     for(int iView=0 ; iView < resWitnessCamera.size() ; ++iView )
     {
-      // Check that both pose computations succeed 
+      // Check that both pose computations succeeded 
       if ( resMainCamera[iView].isValid() && resWitnessCamera[iView].isValid() )
       {
-        vRelativePoses.push_back(
-                computeRelativePose(resMainCamera[iView].getPose(), resWitnessCamera[iView].getPose())
-                );
+        // q0 ~ [poseMain] Q
+        // q1 ~ [relative][poseMain] Q = [poseWitness]Q
+        // [relative] = [poseWitness]*inv([poseMain])
+        vRelativePoses.push_back(computeRelativePose(resMainCamera[iView].getPose(), 
+                                                     resWitnessCamera[iView].getPose()));
       }
     }
     geometry::Pose3 optimalRelativePose;
@@ -121,22 +123,28 @@ void Rig::findBestRelativePose(
         std::size_t iLocalizer,
         geometry::Pose3 & result )
 {
-  std::vector<localization::LocalizationResult> & resMainCamera = _vLocalizationResults[0];
-  std::vector<localization::LocalizationResult> & resWitnessCamera = _vLocalizationResults[iLocalizer];
+  assert(iLocalizer < _vLocalizationResults.size());
+  assert(_vLocalizationResults.size() > 0);
+  
+  const std::vector<localization::LocalizationResult> & resMainCamera = _vLocalizationResults[0];
+  const std::vector<localization::LocalizationResult> & resWitnessCamera = _vLocalizationResults[iLocalizer];
   
   double minReprojError = std::numeric_limits<double>::max();
-  double iMin = 0;
+  std::size_t iMin = 0;
   
-  for(int i=0 ; i < vPoses.size() ; ++i)
+  assert(vPoses.size() > 0);
+  
+  for(std::size_t i=0 ; i < vPoses.size() ; ++i)
   {
     const geometry::Pose3 & relativePose = vPoses[i];
 
     double error = 0;
     for(int j=0 ; j < resWitnessCamera.size() ; ++j )
     {
-      // Check that both pose computations succeed 
+      // Check that both pose computations succeeded 
       if ( ( resMainCamera[j].isValid() ) && ( resWitnessCamera[j].isValid() ) )
       {
+        // [poseWitness] = [relativePose]*[poseMainCamera]
         const geometry::Pose3 poseWitnessCamera = poseFromMainToWitness(resMainCamera[j].getPose(), relativePose);
         error += reprojectionError(resWitnessCamera[j], poseWitnessCamera);
       }
@@ -520,7 +528,8 @@ bool Rig::saveCalibration(std::string &filename)
 }
 
 
-geometry::Pose3 computeRelativePose(geometry::Pose3 poseMainCamera, geometry::Pose3 poseWitnessCamera)
+// it returns poseWitnessCamera*inv(poseMainCamera)
+geometry::Pose3 computeRelativePose(const geometry::Pose3 &poseMainCamera, const geometry::Pose3 &poseWitnessCamera)
 {
   const openMVG::Mat3 & R1 = poseMainCamera.rotation();
   const openMVG::Vec3 & t1 = poseMainCamera.translation();
@@ -534,7 +543,8 @@ geometry::Pose3 computeRelativePose(geometry::Pose3 poseMainCamera, geometry::Po
 }
         
 
-geometry::Pose3 poseFromMainToWitness(geometry::Pose3 poseMainCamera, geometry::Pose3 relativePose)
+// it returns relativePose*poseMainCamera
+geometry::Pose3 poseFromMainToWitness(const geometry::Pose3 &poseMainCamera, const geometry::Pose3 &relativePose)
 {
   const openMVG::Mat3 & R1 = poseMainCamera.rotation();
   const openMVG::Vec3 & t1 = poseMainCamera.translation();
@@ -557,7 +567,7 @@ double reprojectionError(const localization::LocalizationResult & localizationRe
     // Inlier 3D point
     const Vec3 & point3D = localizationResult.getPt3D().col(iInliers);
     // Its reprojection
-    Vec2 itsReprojection = localizationResult.getIntrinsics().project(pose, point3D);
+    const Vec2 itsReprojection = localizationResult.getIntrinsics().project(pose, point3D);
     // Its associated observation location
     const Vec2 & point2D = localizationResult.getPt2D().col(iInliers);
     // Residual
