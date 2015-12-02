@@ -407,6 +407,8 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
 #else
   features::SIFT_Regions &queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
 #endif
+  
+  const std::pair<std::size_t, std::size_t> queryImageSize = std::make_pair(imageGrey.Width(), imageGrey.Height());
 
   // B. Find the (visually) similar images in the database 
   POPART_COUT("[database]\tRequest closest images from voctree");
@@ -492,7 +494,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
                                       matchedIntrinsics,
                                       param._fDistRatio,
                                       param._useGuidedMatching,
-                                      std::make_pair(imageGrey.Width(), imageGrey.Height()),
+                                      queryImageSize,
                                       std::make_pair(matchedView->ui_width, matchedView->ui_height), 
                                       vec_featureMatches);
     if (!matchWorked)
@@ -514,15 +516,14 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
       const std::string matchedImage = bfs::path(mview->s_Img_path).stem().string();
       const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
       
-      
-      saveMatches2SVG(imagePath, 
-                           std::make_pair(imageGrey.Width(),imageGrey.Height()), 
-                           queryRegions.GetRegionsPositions(),
-                           matchedPath,
-                           std::make_pair(mview->ui_width, mview->ui_height), 
-                           _regions_per_view[matchedViewIndex]._regions.GetRegionsPositions(),
-                           vec_featureMatches,
-                           param._visualDebug+"/"+queryimage+"_"+matchedImage+".svg"); 
+      saveMatches2SVG(imagePath,
+                      queryImageSize,
+                      queryRegions.GetRegionsPositions(),
+                      matchedPath,
+                      std::make_pair(mview->ui_width, mview->ui_height),
+                      _regions_per_view[matchedViewIndex]._regions.GetRegionsPositions(),
+                      vec_featureMatches,
+                      param._visualDebug + "/" + queryimage + "_" + matchedImage + ".svg"); 
     }
     
     // D. recover the 2D-3D associations from the matches 
@@ -557,7 +558,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
     // Do the resectioning: compute the camera pose.
     resectionData.error_max = param._errorMax;
     POPART_COUT("[poseEstimation]\tEstimating camera pose...");
-    bool bResection = sfm::SfM_Localizer::Localize(std::make_pair(imageGrey.Width(), imageGrey.Height()),
+    bool bResection = sfm::SfM_Localizer::Localize(queryImageSize,
                                                    // pass the input intrinsic if they are valid, null otherwise
                                                    (useInputIntrinsics) ? &queryIntrinsics : nullptr,
                                                    resectionData,
@@ -586,8 +587,8 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
       KRt_From_P(resectionData.projection_matrix, &K_, &R_, &t_);
       POPART_COUT("K estimated\n" << K_);
       queryIntrinsics.setK(K_);
-      queryIntrinsics.setWidth(imageGrey.Width());
-      queryIntrinsics.setHeight(imageGrey.Height());
+      queryIntrinsics.setWidth(queryImageSize.first);
+      queryIntrinsics.setHeight(queryImageSize.second);
     }
 
     // E. refine the estimated pose
@@ -646,11 +647,13 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   features::SIFT_Regions &queryRegions = *dynamic_cast<features::SIFT_Regions*> (tmpQueryRegions.get());
 #endif
   
+  const std::pair<std::size_t, std::size_t> queryImageSize = std::make_pair(imageGrey.Width(), imageGrey.Height());
+  
   if(!param._visualDebug.empty() && !imagePath.empty())
   {
     namespace bfs = boost::filesystem;
     saveFeatures2SVG(imagePath, 
-                     std::make_pair(imageGrey.Width(), imageGrey.Height()), 
+                     queryImageSize, 
                      tmpQueryRegions->GetRegionsPositions(),
                      param._visualDebug+"/"+bfs::path(imagePath).stem().string()+".svg");
   }
@@ -730,7 +733,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
                                       matchedIntrinsics,
                                       param._fDistRatio,
                                       param._useGuidedMatching,
-                                      std::make_pair(imageGrey.Width(), imageGrey.Height()),
+                                      queryImageSize,
                                       std::make_pair(matchedView->ui_width, matchedView->ui_height), 
                                       vec_featureMatches);
     if (!matchWorked)
@@ -753,15 +756,15 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
       const std::string matchedImage = bfs::path(mview->s_Img_path).stem().string();
       const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
       
-      
-      saveMatches2SVG(imagePath, 
-                           std::make_pair(imageGrey.Width(),imageGrey.Height()), 
-                           queryRegions.GetRegionsPositions(),
-                           matchedPath,
-                           std::make_pair(mview->ui_width, mview->ui_height), 
-                           _regions_per_view[matchedViewIndex]._regions.GetRegionsPositions(),
-                           vec_featureMatches,
-                           param._visualDebug+"/"+queryimage+"_"+matchedImage+".svg"); 
+
+      saveMatches2SVG(imagePath,
+                      queryImageSize,
+                      queryRegions.GetRegionsPositions(),
+                      matchedPath,
+                      std::make_pair(mview->ui_width, mview->ui_height),
+                      _regions_per_view[matchedViewIndex]._regions.GetRegionsPositions(),
+                      vec_featureMatches,
+                      param._visualDebug + "/" + queryimage + "_" + matchedImage + ".svg"); 
     }
     
     // D. recover the 2D-3D associations from the matches 
@@ -827,7 +830,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   {
     namespace bfs = boost::filesystem;
     saveFeatures2SVG(imagePath, 
-                     std::make_pair(imageGrey.Width(), imageGrey.Height()), 
+                     queryImageSize, 
                      resectionData.pt2D,
                      param._visualDebug+"/"+bfs::path(imagePath).stem().string()+".associations.svg");
   }
@@ -837,7 +840,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   // Do the resectioning: compute the camera pose.
   resectionData.error_max = param._errorMax;
   POPART_COUT("[poseEstimation]\tEstimating camera pose...");
-  bool bResection = sfm::SfM_Localizer::Localize(std::make_pair(imageGrey.Width(), imageGrey.Height()),
+  bool bResection = sfm::SfM_Localizer::Localize(queryImageSize,
                                                  // pass the input intrinsic if they are valid, null otherwise
                                                  (useInputIntrinsics) ? &queryIntrinsics : nullptr,
                                                  resectionData,
@@ -866,8 +869,8 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
     KRt_From_P(resectionData.projection_matrix, &K_, &R_, &t_);
     queryIntrinsics.setK(K_);
     POPART_COUT("K estimated\n" <<K_);
-    queryIntrinsics.setWidth(imageGrey.Width());
-    queryIntrinsics.setHeight(imageGrey.Height());
+    queryIntrinsics.setWidth(queryImageSize.first);
+    queryIntrinsics.setHeight(queryImageSize.second);
   }
 
   // E. refine the estimated pose
