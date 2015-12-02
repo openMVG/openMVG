@@ -898,15 +898,35 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
 
 
 bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matcher, 
-                    const cameras::IntrinsicBase * queryIntrinsics,   // the intrinsics of the image we are using as reference
+                    const cameras::IntrinsicBase * queryIntrinsicsBase,   // the intrinsics of the image we are using as reference
                     const Reconstructed_RegionsT & matchedRegions,
-                    const cameras::IntrinsicBase * matchedIntrinsics,
+                    const cameras::IntrinsicBase * matchedIntrinsicsBase,
                     const float fDistRatio,
                     const bool b_guided_matching,
                     const std::pair<size_t,size_t> & imageSizeI,     // size of the first image @fixme change the API of the kernel!! 
                     const std::pair<size_t,size_t> & imageSizeJ,     // size of the first image
                     std::vector<matching::IndMatch> & vec_featureMatches) const
 {
+  // get the intrinsics of the query camera
+  if ((queryIntrinsicsBase != nullptr) && !isPinhole(queryIntrinsicsBase->getType()))
+  {
+    //@fixme maybe better to throw something here
+    POPART_CERR("Only Pinhole cameras are supported!");
+    return false;
+  }
+  const cameras::Pinhole_Intrinsic *queryIntrinsics = (const cameras::Pinhole_Intrinsic*)(queryIntrinsicsBase);
+  
+  // get the intrinsics of the matched view
+  if ((matchedIntrinsicsBase != nullptr) &&  !isPinhole(matchedIntrinsicsBase->getType()) )
+  {
+    //@fixme maybe better to throw something here
+    POPART_CERR("Only Pinhole cameras are supported!");
+    return false;
+  }
+  const cameras::Pinhole_Intrinsic *matchedIntrinsics = (const cameras::Pinhole_Intrinsic*)(matchedIntrinsicsBase);
+  
+  const bool canBeUndistorted = (queryIntrinsicsBase != nullptr) && (matchedIntrinsicsBase != nullptr);
+    
   // A. Putative Features Matching
   bool matchWorked = matcher.Match(fDistRatio, matchedRegions._regions, vec_featureMatches);
   if (!matchWorked)
@@ -923,8 +943,21 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
   for(int i = 0; i < vec_featureMatches.size(); ++i)
   {
     const matching::IndMatch& match = vec_featureMatches[i];
-    featuresI.col(i) = matcher.getDatabaseRegions()->GetRegionPosition(match._i);
-    featuresJ.col(i) = matchedRegions._regions.GetRegionPosition(match._j);
+    const Vec2 &queryPoint = matcher.getDatabaseRegions()->GetRegionPosition(match._i);
+    const Vec2 &matchedPoint = matchedRegions._regions.GetRegionPosition(match._j);
+    
+    if(canBeUndistorted)
+    {
+      // undistort the points for the query image
+      featuresI.col(i) = queryIntrinsics->get_ud_pixel(queryPoint);
+      // undistort the points for the query image
+      featuresJ.col(i) = matchedIntrinsics->get_ud_pixel(matchedPoint);
+    }
+    else
+    {
+      featuresI.col(i) = queryPoint;
+      featuresJ.col(i) = matchedPoint;
+    }
   }
   // perform the geometric filtering
   matching_image_collection::GeometricFilter_FMatrix_AC geometricFilter(4.0);
@@ -966,9 +999,9 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
             Mat3,
             openMVG::fundamental::kernel::EpipolarDistanceError>(
             geometricFilter.m_F,
-            queryIntrinsics, // cameras::IntrinsicBase of the matched image
+            queryIntrinsicsBase, // cameras::IntrinsicBase of the matched image
             *matcher.getDatabaseRegions(), // features::Regions
-            matchedIntrinsics, // cameras::IntrinsicBase of the query image
+            matchedIntrinsicsBase, // cameras::IntrinsicBase of the query image
             matchedRegions._regions, // features::Regions
             Square(geometricFilter.m_dPrecision_robust),
             Square(fDistRatio),
