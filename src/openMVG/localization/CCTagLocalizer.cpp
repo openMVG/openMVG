@@ -9,7 +9,7 @@
 #include <openMVG/matching/indMatch.hpp>
 #include <openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp>
 
-#include <boost/filesystem/path.hpp>
+#include <boost/filesystem.hpp>
 
 #include <algorithm>
 
@@ -191,7 +191,8 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
 
     // Display the cctag ids over all cctag landmarks present in the database
     std::cout << std::endl << "Found " << std::count(presentIds.begin(), presentIds.end(), true) 
-            << " CCTag landmarks in the database: " << std::endl;
+            << " CCTag in the database with " << _sfm_data.GetLandmarks().size() << " associated 3D points\n"
+            "The CCTag id in the database are: " << std::endl;
     for(std::size_t i = 0; i < presentIds.size(); ++i)
     {
       if(presentIds[i])
@@ -209,7 +210,8 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                 const LocalizerParameters *parameters,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                LocalizationResult & localizationResult, const std::string& imagePath /* = std::string() */)
+                LocalizationResult & localizationResult, 
+                const std::string& imagePath /* = std::string() */)
 {
   namespace bfs = boost::filesystem;
   
@@ -224,17 +226,51 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::CCTAG_Regions());
   _image_describer.Describe(imageGrey, tmpQueryRegions);
   POPART_COUT("[features]\tExtract CCTAG done: found " << tmpQueryRegions->RegionCount() << " features");
-  features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (tmpQueryRegions.get());
+  
+  std::pair<std::size_t, std::size_t> imageSize = std::make_pair(imageGrey.Width(),imageGrey.Height());
   
   if(!param->_visualDebug.empty() && !imagePath.empty())
   {
+    // it automatically throws an exception if the cast does not work
+    features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (tmpQueryRegions.get());
+    
     // just debugging -- save the svg image with detected cctag
     saveCCTag2SVG(imagePath, 
-                  std::make_pair(imageGrey.Width(),imageGrey.Height()), 
+                  imageSize, 
                   queryRegions, 
                   param->_visualDebug+"/"+bfs::path(imagePath).stem().string()+".svg");
   }
+
+  return localize(tmpQueryRegions,
+                  imageSize,
+                  parameters,
+                  useInputIntrinsics,
+                  queryIntrinsics,
+                  localizationResult,
+                  imagePath);
+}
+
+
+bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQueryRegions,
+                              const std::pair<std::size_t, std::size_t> imageSize,
+                              const LocalizerParameters *parameters,
+                              bool useInputIntrinsics,
+                              cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
+                              LocalizationResult & localizationResult,
+                              const std::string& imagePath)
+{
+  namespace bfs = boost::filesystem;
   
+  const CCTagLocalizer::Parameters *param = static_cast<const CCTagLocalizer::Parameters *>(parameters);
+  if(!param)
+  {
+    // error!
+    throw std::invalid_argument("The parameters are not in the right format!!");
+  }
+  
+  // it automatically throws an exception if the cast does not work
+  features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (genQueryRegions.get());
+   
   std::vector<IndexT> nearestKeyFrames;
   nearestKeyFrames.reserve(param->_nNearestKeyFrames);
   
@@ -274,7 +310,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
       
       
       saveCCTagMatches2SVG(imagePath, 
-                           std::make_pair(imageGrey.Width(),imageGrey.Height()), 
+                           imageSize, 
                            queryRegions,
                            matchedPath,
                            std::make_pair(mview->ui_width, mview->ui_height), 
@@ -325,7 +361,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
     geometry::Pose3 poseTemp;
     
     bool bResection = sfm::SfM_Localizer::Localize(
-            std::make_pair(imageGrey.Width(), imageGrey.Height()),
+            imageSize,
             // pass the input intrinsic if they are valid, null otherwise
             (useInputIntrinsics) ? &queryIntrinsics : nullptr,
             resectionDataTemp,
@@ -361,8 +397,8 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
     // RQ decomposition
     KRt_From_P(bestResectionData.projection_matrix, &K_, &R_, &t_);
     queryIntrinsics.setK(K_);
-    queryIntrinsics.setWidth(imageGrey.Width());
-    queryIntrinsics.setHeight(imageGrey.Height());
+    queryIntrinsics.setWidth(imageSize.first);
+    queryIntrinsics.setHeight(imageSize.second);
   }
   
   // Upper bound pixel(s) tolerance for residual errors

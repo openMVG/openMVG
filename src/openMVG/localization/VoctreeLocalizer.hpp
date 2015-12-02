@@ -102,7 +102,16 @@ public:
                 const LocalizerParameters *param,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                LocalizationResult &localizationResult, const std::string& imagePath = std::string());
+                LocalizationResult &localizationResult, 
+                const std::string& imagePath = std::string());
+
+  bool localize(const std::unique_ptr<features::Regions> &genQueryRegions,
+                const std::pair<std::size_t, std::size_t> imageSize,
+                const LocalizerParameters *parameters,
+                bool useInputIntrinsics,
+                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
+                LocalizationResult & localizationResult,
+                const std::string& imagePath);
   
   bool localizeRig(const std::vector<image::Image<unsigned char> > & vec_imageGrey,
                              const LocalizerParameters *param,
