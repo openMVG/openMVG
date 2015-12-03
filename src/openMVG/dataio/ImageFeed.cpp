@@ -194,7 +194,7 @@ bool ImageFeed::FeederImpl::next(image::Image<unsigned char> &imageGray,
     if (!image::ReadImage(imageName.c_str(), &imageGray))
     {
       std::cerr << "Error while opening image " << imageName << std::endl;
-      return false;
+      throw std::invalid_argument("Error while opening image " + imageName);
     }
     _images.pop();
     return true;
