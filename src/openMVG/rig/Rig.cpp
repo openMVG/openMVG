@@ -57,7 +57,19 @@ void Rig::setTrackingResult(
 
 bool Rig::initializeCalibration()
 {
+  // check that there are cameras
+  assert(_vLocalizationResults.size()>0);
+  
+  // check that all the cameras have the same number of localizationResults
+  const std::size_t sequenceLength = _vLocalizationResults[0].size();
   const std::size_t nCams = _vLocalizationResults.size();
+  
+  for(std::size_t i = 1; i < nCams; ++i)
+  {
+    assert(_vLocalizationResults[i].size() == sequenceLength 
+            && "All cameras must have the same number of images");
+  }
+  
   
   // Tracker of the main cameras
   std::vector<localization::LocalizationResult> & resMainCamera = _vLocalizationResults[0];
