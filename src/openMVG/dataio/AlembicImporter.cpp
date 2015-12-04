@@ -153,7 +153,7 @@ bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmd
   return true;
 }
 
-bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part, chrono_t sampleTime)
+bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part, const chrono_t sampleTime)
 {
   using namespace openMVG::geometry;
   using namespace openMVG::cameras;
@@ -303,8 +303,8 @@ void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata
     else
     {
       std::cout << xform.getSchema().getNumSamples() << " samples found in this animated xform." << std::endl;
-      float timebase = 1.0 / 24.0;
-      float timestep = 1.0 / 24.0;
+      const float timebase = 1.0 / 24.0;
+      const float timestep = 1.0 / 24.0;
       for(int frame = 0; frame < xform.getSchema().getNumSamples(); ++frame)
       {
         xform.getSchema().get(xs, ISampleSelector(frame * timestep + timebase));
