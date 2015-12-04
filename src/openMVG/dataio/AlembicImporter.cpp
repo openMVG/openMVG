@@ -27,10 +27,11 @@ namespace dataio {
  *         if it's an array.
  * @param userProps
  * @param id
+ * @param sampleTime
  * @return value
  */
 template<class AbcProperty>
-typename AbcProperty::traits_type::value_type getAbcProp(ICompoundProperty& userProps, const Alembic::Abc::PropertyHeader& propHeader, const std::string& id)
+typename AbcProperty::traits_type::value_type getAbcProp(ICompoundProperty& userProps, const Alembic::Abc::PropertyHeader& propHeader, const std::string& id, chrono_t sampleTime)
 {
   typedef typename AbcProperty::traits_type traits_type;
   typedef typename traits_type::value_type value_type;
@@ -42,14 +43,14 @@ typename AbcProperty::traits_type::value_type getAbcProp(ICompoundProperty& user
   {
     Alembic::Abc::ITypedArrayProperty<traits_type> prop(userProps, id);
     array_sample_ptr_type sample;
-    prop.get(sample);
+    prop.get(sample, ISampleSelector(sampleTime));
     return (*sample)[0];
   }
   else
   {
     value_type v;
     AbcProperty prop(userProps, id);
-    prop.get(v);
+    prop.get(v, ISampleSelector(sampleTime));
     return v;
   }
 }
@@ -152,7 +153,7 @@ bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmd
   return true;
 }
 
-bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part)
+bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part, chrono_t sampleTime)
 {
   using namespace openMVG::geometry;
   using namespace openMVG::cameras;
@@ -160,7 +161,11 @@ bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata,
 
   ICamera camera(iObj, kWrapExisting);
   ICameraSchema cs = camera.getSchema();
-  CameraSample camSample = cs.getValue();
+  CameraSample camSample;
+  if(sampleTime == 0)
+    camSample = cs.getValue();
+  else
+    camSample = cs.getValue(ISampleSelector(sampleTime));
 
   // Check if we have an associated image plane
   ICompoundProperty userProps = getAbcUserProperties(cs);
@@ -174,44 +179,44 @@ bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata,
   {
     if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_imagePath"))
     {
-      imagePath = getAbcProp<Alembic::Abc::IStringProperty>(userProps, *propHeader, "mvg_imagePath");
+      imagePath = getAbcProp<Alembic::Abc::IStringProperty>(userProps, *propHeader, "mvg_imagePath", sampleTime);
     }
     if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_sensorWidth_pix"))
     {
       try {
-        sensorWidth_pix = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_sensorWidth_pix");
+        sensorWidth_pix = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_sensorWidth_pix", sampleTime);
       } catch(Alembic::Util::v7::Exception&)
       {
-        sensorWidth_pix = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_sensorWidth_pix");
+        sensorWidth_pix = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_sensorWidth_pix", sampleTime);
       }
     }
     if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_intrinsicType"))
     {
-      mvg_intrinsicType = getAbcProp<Alembic::Abc::IStringProperty>(userProps, *propHeader, "mvg_intrinsicType");
+      mvg_intrinsicType = getAbcProp<Alembic::Abc::IStringProperty>(userProps, *propHeader, "mvg_intrinsicType", sampleTime);
     }
     if(userProps.getPropertyHeader("mvg_intrinsicParams"))
     {
       Alembic::Abc::IDoubleArrayProperty prop(userProps, "mvg_intrinsicParams");
       std::shared_ptr<DoubleArraySample> sample;
-      prop.get(sample);
+      prop.get(sample, ISampleSelector(sampleTime));
       mvg_intrinsicParams.assign(sample->get(), sample->get()+sample->size());
     }
     if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_viewId"))
     {
       try {
-        id_view = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_viewId");
+        id_view = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_viewId", sampleTime);
       } catch(Alembic::Util::v7::Exception&)
       {
-        id_view = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_viewId");
+        id_view = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_viewId", sampleTime);
       }
     }
     if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_intrinsicId"))
     {
       try {
-        id_intrinsic = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_intrinsicId");
+        id_intrinsic = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_intrinsicId", sampleTime);
       } catch(Alembic::Util::v7::Exception&)
       {
-        id_intrinsic = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_intrinsicId");
+        id_intrinsic = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_intrinsicId", sampleTime);
       }
     }
   }
@@ -285,6 +290,20 @@ void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata
   {
     readPointCloud(iObj, mat, sfmdata, flags_part);
   }
+  // This case in when we have an animated camera : we handle both xform and camera here
+  else if(IXform::matches(md) && iObj.getName().find("animxform") != std::string::npos)
+  {
+    IXform xform(iObj, kWrapExisting);
+    XformSample xs;
+    std::cout << xform.getSchema().getNumSamples() << " samples found in this animated xform." << std::endl;
+    float timebase = 1.0 / 24.0;
+    float timestep = 1.0 / 24.0;
+    for(int frame = 0; frame < xform.getSchema().getNumSamples(); ++frame)
+    {
+      xform.getSchema().get(xs, ISampleSelector(frame * timestep + timebase));
+      readCamera(iObj.getChild(0), mat*xs.getMatrix(), sfmdata, flags_part, frame * timestep + timebase);
+    }
+  }
   else if(IXform::matches(md))
   {
     IXform xform(iObj, kWrapExisting);
@@ -292,7 +311,8 @@ void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata
     xform.getSchema().get(xs);
     mat *= xs.getMatrix();
   }
-  else if(ICamera::matches(md) && (flags_part & sfm::ESfM_Data::EXTRINSICS))
+  // If it's an animated camera, no need to add it, we handled the thing upper
+  else if(ICamera::matches(md) && (flags_part & sfm::ESfM_Data::EXTRINSICS) && iObj.getName().find("animcam") == std::string::npos)
   {
     readCamera(iObj, mat, sfmdata, flags_part);
   }
