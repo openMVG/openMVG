@@ -290,31 +290,36 @@ void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata
   {
     readPointCloud(iObj, mat, sfmdata, flags_part);
   }
-  // This case in when we have an animated camera : we handle both xform and camera here
-  else if(IXform::matches(md) && iObj.getName().find("animxform") != std::string::npos)
-  {
-    IXform xform(iObj, kWrapExisting);
-    XformSample xs;
-    std::cout << xform.getSchema().getNumSamples() << " samples found in this animated xform." << std::endl;
-    float timebase = 1.0 / 24.0;
-    float timestep = 1.0 / 24.0;
-    for(int frame = 0; frame < xform.getSchema().getNumSamples(); ++frame)
-    {
-      xform.getSchema().get(xs, ISampleSelector(frame * timestep + timebase));
-      readCamera(iObj.getChild(0), mat*xs.getMatrix(), sfmdata, flags_part, frame * timestep + timebase);
-    }
-  }
   else if(IXform::matches(md))
   {
     IXform xform(iObj, kWrapExisting);
     XformSample xs;
-    xform.getSchema().get(xs);
-    mat *= xs.getMatrix();
+    if(xform.getSchema().getNumSamples() == 1)
+    {
+      xform.getSchema().get(xs);
+      mat *= xs.getMatrix();
+    }
+    // If we have an animated camera we handle it with the xform here
+    else
+    {
+      std::cout << xform.getSchema().getNumSamples() << " samples found in this animated xform." << std::endl;
+      float timebase = 1.0 / 24.0;
+      float timestep = 1.0 / 24.0;
+      for(int frame = 0; frame < xform.getSchema().getNumSamples(); ++frame)
+      {
+        xform.getSchema().get(xs, ISampleSelector(frame * timestep + timebase));
+        readCamera(iObj.getChild(0), mat * xs.getMatrix(), sfmdata, flags_part, frame * timestep + timebase);
+      }
+    }
   }
-  // If it's an animated camera, no need to add it, we handled the thing upper
-  else if(ICamera::matches(md) && (flags_part & sfm::ESfM_Data::EXTRINSICS) && iObj.getName().find("animcam") == std::string::npos)
+  else if(ICamera::matches(md) && (flags_part & sfm::ESfM_Data::EXTRINSICS))
   {
-    readCamera(iObj, mat, sfmdata, flags_part);
+    ICamera check_cam(iObj, kWrapExisting);
+    // If it's not an animated camera we add it here
+    if(check_cam.getSchema().getNumSamples() == 1)
+    {
+      readCamera(iObj, mat, sfmdata, flags_part);
+    }
   }
 
   // Recurse
