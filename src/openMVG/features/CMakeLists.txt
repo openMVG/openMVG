@@ -21,7 +21,7 @@ set( features_files_sources
   liop/liop_descriptor.cpp
   features_test.cpp)
 
-if (CCTag_FOUND)
+if (CCTAG_FOUND)
   list(APPEND features_files_headers 
         cctag/CCTAG_describer.hpp 
         cctag/SIFT_CCTAG_describer.hpp)
