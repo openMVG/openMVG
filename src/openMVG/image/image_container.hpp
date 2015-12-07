@@ -11,11 +11,6 @@
 
 //---------------------------------
 //  Universal Image Processing Algorithm
-//   _  _  __  ___  __
-//  ( )( )(  )(  ,\(  )
-//  ( )( ) )(  ) _//__\
-//  (____)(__)(_) (_)(_)
-//-------
 //-- Container for a 2D image
 //-- This class ensure that the image have a width and a height
 //-- and a 2D array of T data.
