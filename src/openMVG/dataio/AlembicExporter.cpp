@@ -136,7 +136,7 @@ void AlembicExporter::appendCamera(const std::string &cameraName,
   xformMatrix[3][3] = 1.0;
 
   // Correct camera orientation for alembic
-  M44d scale;
+  M44d scale;   //  by default this is an identity matrix
   scale[0][0] = 1;
   scale[1][1] = -1;
   scale[2][2] = -1;
