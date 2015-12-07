@@ -183,6 +183,7 @@ int main(int argc, char** argv)
 #if HAVE_ALEMBIC
   dataio::AlembicExporter exporter( exportFile );
   exporter.addPoints(localizer.getSfMData().GetLandmarks());
+  exporter.initAnimatedCamera("camera");
 #endif
   
   image::Image<unsigned char> imageGrey;
@@ -222,7 +223,8 @@ int main(int argc, char** argv)
     if(localizationResult.isValid())
     {
 #if HAVE_ALEMBIC
-      exporter.appendCamera("camera."+myToString(frameCounter,4), localizationResult.getPose(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
+      // exporter.appendCamera("camera."+myToString(frameCounter,4), localizationResult.getPose(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
+      exporter.addCameraKeyframe(localizationResult.getPose(), &queryIntrinsics, currentImgName, frameCounter, frameCounter);
 #endif
       if(globalBundle)
       {
@@ -235,7 +237,8 @@ int main(int argc, char** argv)
     {
 #if HAVE_ALEMBIC
       // @fixme for now just add a fake camera so that it still can be see in MAYA
-      exporter.appendCamera("camera.V."+myToString(frameCounter,4), geometry::Pose3(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
+      // exporter.appendCamera("camera.V."+myToString(frameCounter,4), geometry::Pose3(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
+      exporter.addCameraKeyframe(geometry::Pose3(), &queryIntrinsics, currentImgName, frameCounter, frameCounter);
 #endif
       POPART_CERR("Unable to localize frame " << frameCounter);
     }
