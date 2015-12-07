@@ -274,25 +274,6 @@ ELSE()
 ENDIF()
 
 # ==============================================================================
-# CCTag TODO (todo)
-# ==============================================================================
-IF(OpenMVG_USE_CCTAG)
-  FIND_PACKAGE(CCTag)
-  IF(NOT CCTAG_FOUND)
-    MESSAGE(STATUS "CCTAG package not found, CCTAG will be disabled")
-    UPDATE_CACHE_VARIABLE(OpenMVG_USE_CCTAG OFF)
-  ELSE(NOT CCTAG_FOUND)
-    MESSAGE(STATUS "CCTAG package found")
-    MESSAGE(STATUS "CCTAG library directory ${CCTAG_LIBRARY_DIR}")
-    MESSAGE(STATUS "CCTAG library names     ${CCTAG_LIBRARIES_NAMES}")
-    MESSAGE(STATUS "CCTAG include directory ${CCTAG_INCLUDE_DIR}")
-    LINK_DIRECTORIES(${CCTAG_LIBRARY_DIR})
-    INCLUDE_DIRECTORIES(${CCTAG_INCLUDE_DIRS})
-    ADD_DEFINITIONS(-DHAVE_CCTAG)
-  ENDIF(NOT CCTAG_FOUND)
-ENDIF(OpenMVG_USE_CCTAG)
-
-# ==============================================================================
 # Flann
 # ==============================================================================
 # - internal by default (flann),
@@ -452,6 +433,26 @@ ENDIF(OpenMVG_USE_ALEMBIC)
 # Third-party libraries:
 # ==============================================================================
 ADD_SUBDIRECTORY(third_party)
+
+# ==============================================================================
+# CCTag
+# ==============================================================================
+IF(OpenMVG_USE_CCTAG)
+  FIND_PACKAGE(LAPACK)
+  FIND_PACKAGE(CCTag)
+  IF(NOT CCTAG_FOUND)
+    MESSAGE(STATUS "CCTAG package not found, CCTAG will be disabled")
+    UPDATE_CACHE_VARIABLE(OpenMVG_USE_CCTAG OFF)
+  ELSE(NOT CCTAG_FOUND)
+    MESSAGE(STATUS "CCTAG package found")
+    MESSAGE(STATUS "CCTAG library directory ${CCTAG_LIBRARY_DIR}")
+    MESSAGE(STATUS "CCTAG library names     ${CCTAG_LIBRARIES_NAMES}")
+    MESSAGE(STATUS "CCTAG include directory ${CCTAG_INCLUDE_DIR}")
+    LINK_DIRECTORIES(${CCTAG_LIBRARY_DIR})
+    INCLUDE_DIRECTORIES(${CCTAG_INCLUDE_DIRS})
+    ADD_DEFINITIONS(-DHAVE_CCTAG)
+  ENDIF(NOT CCTAG_FOUND)
+ENDIF(OpenMVG_USE_CCTAG)
 
 # ==============================================================================
 # Include directories
