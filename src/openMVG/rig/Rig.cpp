@@ -609,17 +609,20 @@ bool loadRigCalibration(const std::string &filename, std::vector<geometry::Pose3
   
   for(std::size_t cam = 0; cam < numCameras; ++cam)
   {
-    // load the rotatiop part
+    // load the rotation part
     Mat3 rot;
     for(std::size_t i = 0; i < 3; ++i)
       for(std::size_t j = 0; j < 3; ++j)
         fs >> rot(i,j);
     
-    // write the translation part
+    // load the translation part
     Vec3 center;
     fs >> center(0);
     fs >> center(1);
     fs >> center(2);
+    
+    // add the pose in the vector
+    subposes.push_back(geometry::Pose3(rot, center));
   }
   
   bool isOk = fs.good();
