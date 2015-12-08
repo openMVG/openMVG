@@ -351,12 +351,21 @@ double CosinusBetweenMatrices(const TMat &a, const TMat &b)
           FrobeniusNorm(a) / FrobeniusNorm(b);
 }
 
+/**
+ * @brief It extracts the columns of given indices from the given matrix
+ * 
+ * @param[in] A The NxM input matrix
+ * @param[in] columns The list of K indices to extract
+ * @return A NxK matrix
+ */
 template <typename TMat, typename TCols>
 TMat ExtractColumns(const TMat &A, const TCols &columns)
 {
   TMat compressed(A.rows(), columns.size());
   for(std::size_t i = 0; i < static_cast<std::size_t> (columns.size()); ++i)
   {
+    // check for indices out of range
+    assert(columns[i]<A.cols());
     compressed.col(i) = A.col(columns[i]);
   }
   return compressed;
