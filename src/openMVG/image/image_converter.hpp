@@ -93,7 +93,7 @@ void rgb2Float( const ImageIn& imaIn,
 //--------------------------------------------------------------------------
 
 
-static void convertFloatToInt(
+static inline void convertFloatToInt(
         const RGBfColor& valIn,
         RGBColor& valOut,
         float factor = 255.f)
@@ -104,7 +104,7 @@ static void convertFloatToInt(
 
 
 //template<typename ImageOut>
-static void rgbFloat2rgbInt(
+static inline void rgbFloat2rgbInt(
         const Image< RGBfColor >& imaIn,
         Image< RGBColor > *imaOut,
         float factor = 255.f )
