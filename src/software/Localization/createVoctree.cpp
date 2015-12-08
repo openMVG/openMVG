@@ -13,8 +13,7 @@
 #include <string>
 #include <chrono>
 
-#define POPART_COUT(x) std::cout << x << std::endl
-#define POPART_CERR(x) std::cerr << x << std::endl
+#include <openMVG/logger.hpp>
 
 static const int DIMENSION = 128;
 

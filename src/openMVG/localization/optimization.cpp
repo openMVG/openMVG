@@ -8,10 +8,7 @@
 #include "optimization.hpp"
 #include <openMVG/sfm/sfm_data_BA_ceres.hpp>
 #include <openMVG/rig/rig_BA_ceres.hpp>
-
-//@fixme move/redefine
-#define POPART_COUT(x) std::cout << x << std::endl
-#define POPART_CERR(x) std::cerr << x << std::endl
+#include <openMVG/logger.hpp>
 
 namespace openMVG{
 namespace localization{

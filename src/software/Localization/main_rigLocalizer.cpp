@@ -13,6 +13,7 @@
 #include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 #include <openMVG/image/image_io.hpp>
 #include <openMVG/dataio/FeedProvider.hpp>
+#include <openMVG/logger.hpp>
 
 #include <boost/filesystem.hpp>
 #include <boost/progress.hpp>
@@ -31,9 +32,6 @@
 #if HAVE_ALEMBIC
 #include <openMVG/dataio/AlembicExporter.hpp>
 #endif // HAVE_ALEMBIC
-
-#define POPART_COUT(x) std::cout << x << std::endl
-#define POPART_CERR(x) std::cerr << x << std::endl
 
 
 namespace bfs = boost::filesystem;

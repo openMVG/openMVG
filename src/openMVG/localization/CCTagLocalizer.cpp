@@ -8,15 +8,11 @@
 #include <openMVG/sfm/sfm_data_io.hpp>
 #include <openMVG/matching/indMatch.hpp>
 #include <openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp>
+#include <openMVG/logger.hpp>
 
 #include <boost/filesystem.hpp>
 
 #include <algorithm>
-
-//@fixme move/redefine
-#define POPART_COUT(x) std::cout << x << std::endl
-#define POPART_CERR(x) std::cerr << x << std::endl
-#define POPART_COUT_DEBUG(x) std::cout << x << std::endl
 
 namespace openMVG {
 namespace localization {
