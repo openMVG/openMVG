@@ -39,8 +39,8 @@ TEST(SRT_precision, Experiment_ScaleOnly)
   double Sc = 0;
   Mat3 Rc;
   Vec3 tc;
-  FindRTS(x1, x2, &Sc, &tc, &Rc);
-  Refine_RTS(x1, x2, &Sc, &tc, &Rc);
+  FindRTS(x1, x2, Sc, tc, Rc);
+  Refine_RTS(x1, x2, Sc, tc, Rc);
 
   std::cout << "\n"
           << "Scale " << Sc << "\n"
@@ -71,8 +71,8 @@ TEST(SRT_precision, Experiment_ScaleAndRot)
   double Sc = 0;
   Mat3 Rc;
   Vec3 tc;
-  FindRTS(x1, x2, &Sc, &tc, &Rc);
-  Refine_RTS(x1, x2, &Sc, &tc, &Rc);
+  FindRTS(x1, x2, Sc, tc, Rc);
+  Refine_RTS(x1, x2, Sc, tc, Rc);
 
   std::cout << "\n"
           << "Scale " << Sc << "\n"
@@ -108,8 +108,8 @@ TEST(SRT_precision, Experiment_ScaleRotTranslation)
   double Sc = 0;
   Mat3 Rc;
   Vec3 tc;
-  FindRTS(x1, x2, &Sc, &tc, &Rc);
-  Refine_RTS(x1, x2, &Sc, &tc, &Rc);
+  FindRTS(x1, x2, Sc, tc, Rc);
+  Refine_RTS(x1, x2, Sc, tc, Rc);
 
   std::cout << "\n"
           << "Scale " << Sc << "\n"

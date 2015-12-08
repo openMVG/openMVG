@@ -76,9 +76,9 @@ static bool decomposeRTS(const Mat4 &RTS, double &S, Vec3 &t, Mat3 &R)
 
 static bool FindRTS(const Mat &x1,
   const Mat &x2,
-  double * S,
-  Vec3 * t,
-  Mat3 * R)
+  double &S,
+  Vec3 &t,
+  Mat3 &R)
 {
   if (x1.cols() < 3 || x2.cols() < 3)
     return false;
@@ -95,7 +95,7 @@ static bool FindRTS(const Mat &x1,
   // from which we can extract the scale, rotation, and translation.
   const Eigen::Matrix4d transform = Eigen::umeyama(x1, x2, true);
 
-  return decomposeRTS(transform, *S, *t, *R);
+  return decomposeRTS(transform, S, t, R);
 }
 
 // Eigen LM functor to refine translation, Rotation and Scale parameter.
@@ -198,12 +198,12 @@ struct lm_RRefine_functor : Functor<double>
  */
 static void Refine_RTS(const Mat &x1,
   const Mat &x2,
-  double * S,
-  Vec3 * t,
-  Mat3 * R)
+  double &S,
+  Vec3 &t,
+  Mat3 &R)
 {
   {
-    lm_SRTRefine_functor functor(7, 3*x1.cols(), x1, x2, *S, *R, *t);
+    lm_SRTRefine_functor functor(7, 3*x1.cols(), x1, x2, S, R, t);
 
     Eigen::NumericalDiff<lm_SRTRefine_functor> numDiff(functor);
 
@@ -223,14 +223,14 @@ static void Refine_RTS(const Mat &x1,
       * Eigen::AngleAxis<double>(rot(1), Vec3::UnitY())
       * Eigen::AngleAxis<double>(rot(2), Vec3::UnitZ())).toRotationMatrix();
 
-    *R = (*R)*Rcor;
-    *t = (*t)+transAdd;
-    *S = (*S)+SAdd;
+    R = R * Rcor;
+    t = t + transAdd;
+    S = S + SAdd;
   }
 
   // Refine rotation
   {
-    lm_RRefine_functor functor(3, 3*x1.cols(), x1, x2, *S, *R, *t);
+    lm_RRefine_functor functor(3, 3*x1.cols(), x1, x2, S, R, t);
 
     Eigen::NumericalDiff<lm_RRefine_functor> numDiff(functor);
 
@@ -248,7 +248,7 @@ static void Refine_RTS(const Mat &x1,
       * Eigen::AngleAxis<double>(rot(1), Vec3::UnitY())
       * Eigen::AngleAxis<double>(rot(2), Vec3::UnitZ())).toRotationMatrix();
 
-    *R = (*R)*Rcor;
+    R = R * Rcor;
   }
 }
 
@@ -428,7 +428,7 @@ static bool ACRansac_FindRTS(const Mat &x1,
     inliers2.col(i) = x2.col(vec_inliers[i]);
   }
 
-  geometry::Refine_RTS(inliers1, inliers2, &S, &t, &R);
+  geometry::Refine_RTS(inliers1, inliers2, S, t, R);
   
   return good;
 
