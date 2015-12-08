@@ -78,7 +78,7 @@ struct Landmark
   void load( Archive & ar)
   {
     std::vector<double> point(3);
-    std::vector<int> color(3);
+    std::vector<unsigned char> color(3);
     ar(cereal::make_nvp("X", point ));
     X = Eigen::Map<const Vec3>(&point[0]);
     try
