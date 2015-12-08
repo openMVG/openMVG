@@ -23,12 +23,12 @@
 namespace openMVG {
 namespace matching_image_collection {
 
-//-- A contrario essential matrix estimation template functor used for filter pair of putative correspondences 
+//-- A contrario essential matrix estimation template functor used for filter pair of putative correspondences
 struct GeometricFilter_EMatrix_AC
 {
   GeometricFilter_EMatrix_AC(
     double dPrecision = std::numeric_limits<double>::infinity(),
-    size_t iteration = 4096)
+    size_t iteration = 1024)
     : m_dPrecision(dPrecision), m_stIteration(iteration), m_E(Mat3::Identity()),
       m_dPrecision_robust(std::numeric_limits<double>::infinity()){};
 
@@ -101,7 +101,11 @@ struct GeometricFilter_EMatrix_AC
     const std::pair<double,double> ACRansacOut =
       ACRANSAC(kernel, vec_inliers, m_stIteration, &m_E, upper_bound_precision);
 
-    if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5)  {
+#ifdef HAVE_CCTAG
+    if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES)  {
+#else
+    if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5)  {  
+#endif
       m_dPrecision_robust = ACRansacOut.first;
       // update geometric_inliers
       geometric_inliers.reserve(vec_inliers.size());

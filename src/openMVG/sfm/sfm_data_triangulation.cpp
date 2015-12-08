@@ -63,25 +63,40 @@ void SfM_Data_Structure_Computation_Blind::triangulate(SfM_Data & sfm_data) cons
         itObs != obs.end(); ++itObs)
       {
         const View * view = sfm_data.views.at(itObs->first).get();
-        const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
-        const Pose3 pose = sfm_data.GetPoseOrDie(view);
-        trianObj.add(
-          cam->get_projective_equivalent(pose),
-          cam->get_ud_pixel(itObs->second.x));
+        if (sfm_data.IsPoseAndIntrinsicDefined(view))
+        {
+          const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
+          const Pose3 pose = sfm_data.GetPoseOrDie(view);
+          trianObj.add(
+            cam->get_projective_equivalent(pose),
+            cam->get_ud_pixel(itObs->second.x));
+        }
       }
-      // Compute the 3D point
-      const Vec3 X = trianObj.compute();
-      if (trianObj.minDepth() > 0) // Keep the point only if it have a positive depth
-      {
-        iterTracks->second.X = X;
-      }
-      else
+      if (trianObj.size() < 2)
       {
 #ifdef OPENMVG_USE_OPENMP
         #pragma omp critical
 #endif
         {
           rejectedId.push_front(iterTracks->first);
+        }
+      }
+      else
+      {
+        // Compute the 3D point
+        const Vec3 X = trianObj.compute();
+        if (trianObj.minDepth() > 0) // Keep the point only if it have a positive depth
+        {
+          iterTracks->second.X = X;
+        }
+        else
+        {
+#ifdef OPENMVG_USE_OPENMP
+          #pragma omp critical
+#endif
+          {
+            rejectedId.push_front(iterTracks->first);
+          }
         }
       }
     }
@@ -176,9 +191,8 @@ bool SfM_Data_Structure_Computation_Robust::robust_triangulation(
   // - Ransac loop
   for (IndexT i = 0; i < nbIter; ++i)
   {
-    std::vector<size_t> vec_samples;
-    robust::UniformSample(min_sample_index, obs.size(), &vec_samples);
-    const std::set<IndexT> samples(vec_samples.begin(), vec_samples.end());
+    std::set<IndexT> samples;
+    robust::UniformSample(std::min(std::size_t(min_sample_index), obs.size()), obs.size(), &samples);
 
     // Hypothesis generation.
     const Vec3 current_model = track_sample_triangulation(sfm_data, obs, samples);
@@ -242,9 +256,9 @@ Vec3 SfM_Data_Structure_Computation_Robust::track_sample_triangulation(
   const std::set<IndexT> & samples) const
 {
   Triangulation trianObj;
-  for (auto& it : samples)
+  for (const IndexT idx : samples)
   {
-    const IndexT & idx = it;
+    assert(idx < obs.size());
     Observations::const_iterator itObs = obs.begin();
     std::advance(itObs, idx);
     const View * view = sfm_data.views.at(itObs->first).get();

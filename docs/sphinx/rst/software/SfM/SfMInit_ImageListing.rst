@@ -15,7 +15,6 @@ Each **View** is associated to a camera **Pose** index and an **Intrinsic** came
 
 .. code-block:: c++
 
-  $ cd openMVG_Build/software/SfM/
   $ openMVG_main_SfMInit_ImageListing -i [] -d [] -o []
 
 Arguments description:

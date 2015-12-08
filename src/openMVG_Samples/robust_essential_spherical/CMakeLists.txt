@@ -6,10 +6,12 @@ TARGET_LINK_LIBRARIES(openMVG_sample_robustEssential_spherical
   openMVG_image
   openMVG_multiview
   openMVG_features
-  vlsift
+  openMVG_matching
+  openMVG_system
+  openMVG_sfm
   stlplus
-  flann_cpp_s
-  ${OPENMVG_LIBRARY_DEPENDENCIES})
+  vlsift
+  )
 
-  SET_PROPERTY(TARGET openMVG_sample_robustEssential_spherical PROPERTY FOLDER OpenMVG/Samples)
+SET_PROPERTY(TARGET openMVG_sample_robustEssential_spherical PROPERTY FOLDER OpenMVG/Samples)
 

@@ -7,7 +7,12 @@
 #ifndef OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_H
 #define OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_H
 
+#include <openMVG/features/descriptor.hpp>
+#include <openMVG/features/image_describer.hpp>
+#include <openMVG/features/regions_factory.hpp>
+
 #include <cereal/cereal.hpp>
+
 #include <iostream>
 #include <numeric>
 
@@ -29,13 +34,13 @@ inline void siftDescToUChar(
 {
   if (brootSift)  {
     // rootsift = sqrt( sift / sum(sift) );
-    const float sum = accumulate(descr, descr+128, 0.0f);
+    const float sum = std::accumulate(descr, descr+128, 0.0f);
     for (int k=0;k<128;++k)
       descriptor[k] = static_cast<unsigned char>(512.f*sqrt(descr[k]/sum));
   }
   else
     for (int k=0;k<128;++k)
-    descriptor[k] = static_cast<unsigned char>(512.f*descr[k]);
+      descriptor[k] = static_cast<unsigned char>(512.f*descr[k]);
 }
 
 struct SiftParams
@@ -80,14 +85,29 @@ class SIFT_Image_describer : public Image_describer
 {
 public:
   SIFT_Image_describer(const SiftParams & params = SiftParams(), bool bOrientation = true)
-    :Image_describer(), _params(params), _bOrientation(bOrientation) {}
+    :Image_describer(), _params(params), _bOrientation(bOrientation)
+  {
+    // Configure VLFeat
+    vl_constructor();
+  }
 
-  ~SIFT_Image_describer() {}
+  ~SIFT_Image_describer()
+  {
+    vl_destructor();
+  }
 
   bool Set_configuration_preset(EDESCRIBER_PRESET preset)
   {
     switch(preset)
     {
+    case LOW_PRESET:
+      _params._peak_threshold = 0.04f;
+      _params._first_octave = 2;
+    break;
+    case MEDIUM_PRESET:
+      _params._peak_threshold = 0.04f;
+      _params._first_octave = 1;
+    break;
     case NORMAL_PRESET:
       _params._peak_threshold = 0.04f;
     break;
@@ -119,11 +139,9 @@ public:
     //Convert to float
     const image::Image<float> If(image.GetMat().cast<float>());
 
-    // Configure VLFeat
-    vl_constructor();
-
     VlSiftFilt *filt = vl_sift_new(w, h,
       _params._num_octaves, _params._num_scales, _params._first_octave);
+
     if (_params._edge_threshold >= 0)
       vl_sift_set_edge_thresh(filt, _params._edge_threshold);
     if (_params._peak_threshold >= 0)
@@ -191,8 +209,6 @@ public:
         break; // Last octave
     }
     vl_sift_delete(filt);
-
-    vl_destructor();
 
     return true;
   };

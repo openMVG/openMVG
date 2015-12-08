@@ -1,4 +1,12 @@
 
+# libs should be static
+SET(BUILD_SHARED_LIBS OFF)
+
+# use PIC code for link into shared lib
+IF(UNIX)
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+ENDIF(UNIX)
+
 INCLUDE_DIRECTORIES(./vl)
 SET(FEATS 
   vl/generic.c
@@ -16,7 +24,7 @@ INSTALL(TARGETS vlsift DESTINATION lib EXPORT openMVG-targets)
 SET_PROPERTY(TARGET vlsift PROPERTY FOLDER OpenMVG/nonFree)
 INSTALL(
   DIRECTORY .
-  DESTINATION include/openMVG_dependencies/nonFree
+  DESTINATION include/openMVG_dependencies/nonFree/sift
   COMPONENT headers
   FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
 )

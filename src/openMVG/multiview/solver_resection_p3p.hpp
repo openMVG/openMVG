@@ -326,8 +326,8 @@ class P3P_ResectionKernel_K {
   typedef Mat34 Model;
   enum { MINIMUM_SAMPLES = 3 };
 
-  P3P_ResectionKernel_K(const Mat2X &x_camera, const Mat3X &X)
-    :x_image_(x_camera), X_(X), K_(Mat3::Identity())
+  P3P_ResectionKernel_K(const Mat2X &x_camera, const Mat3X &X, const Mat3 &K = Mat3::Identity())
+    :x_image_(x_camera), X_(X), K_(K)
   {
     assert(x_camera.cols() == X.cols());
     // Conversion from image coordinates to normalized camera coordinates
@@ -338,25 +338,10 @@ class P3P_ResectionKernel_K {
       x_camera_.col(i).normalize();
   }
 
-  P3P_ResectionKernel_K(const Mat2X &x_image, const Mat3X &X, const Mat3 &K)
-  : x_image_(x_image), X_(X), K_(K)
-  {
-    assert(x_image.cols() == X.cols());
-    // Conversion from image coordinates to normalized camera coordinates
-    Mat3X x_image_h;
-    EuclideanToHomogeneous(x_image, &x_image_h);
-    x_camera_ = K_.inverse() * x_image_h;
-    for(size_t i = 0; i < x_camera_.cols(); ++i)
-      x_camera_.col(i).normalize();
-  }
-
   void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
-    Mat3X x = ExtractColumns(x_camera_, samples);
-    Mat3X X = ExtractColumns(X_, samples);
-    assert(x.cols() == 3);
+    const Mat3 pt2D_3x3 ( ExtractColumns(x_camera_, samples) );
+    const Mat3 pt3D_3x3 ( ExtractColumns(X_, samples) );
     Mat solutions(3, 4*4);
-    Mat3 pt2D_3x3 = x;
-    Mat3 pt3D_3x3 = X;
     if (compute_P3P_Poses( pt2D_3x3, pt3D_3x3, solutions))
     {
       Mat34 P;
@@ -365,15 +350,15 @@ class P3P_ResectionKernel_K {
       for (size_t i=0; i < 4; ++i)  {
         R = solutions.block<3,3>(0,i*4+1);
         t = -R * solutions.col(i*4);
-        P_From_KRt(K_, R, t, &P); // K = Id
+        P_From_KRt(K_, R, t, &P);
         models->push_back(P);
       }
     }
   }
 
   double Error(size_t sample, const Model &model) const {
-    Mat3X X = X_.col(sample);
-    Mat2X error = Project(model, X) - x_image_.col(sample);
+    const Vec3 X = X_.col(sample);
+    const Mat2X error = Project(model, X) - x_image_.col(sample);
     return error.col(0).norm();
   }
 
@@ -382,7 +367,7 @@ class P3P_ResectionKernel_K {
   }
 
  private:
-  Mat2X  x_image_; // camera coordinates
+  Mat2X x_image_; // camera coordinates
   Mat3X x_camera_; // camera coordinates (normalized)
   Mat3X X_;        // 3D points
   Mat3 K_;

@@ -39,13 +39,14 @@ struct View
     id_pose(pose_id), ui_width(width), ui_height(height)
     {}
 
+  virtual ~View() {}
+
   // Serialization
   template <class Archive>
-  void serialize( Archive & ar )
+  void serialize(Archive & ar)
   {
     //Define a view with two string (base_path & basename)
-    std::string local_path = stlplus::folder_append_separator(
-      stlplus::folder_part(s_Img_path));
+    std::string local_path = stlplus::folder_append_separator(stlplus::folder_part(s_Img_path));
     std::string filename = stlplus::filename_part(s_Img_path);
 
     ar(cereal::make_nvp("local_path", local_path),

@@ -22,7 +22,10 @@ static bool exportToPly(const std::vector<Vec3> & vec_points,
   const std::string & sFileName)
 {
   std::ofstream outfile;
-  outfile.open(sFileName.c_str(), std::ios_base::out);
+  outfile.open(sFileName, std::ios_base::out);
+  
+  if(!outfile.is_open())
+    throw std::runtime_error("Unable to create file "+sFileName);
 
   outfile << "ply"
     << std::endl << "format ascii 1.0"
@@ -52,7 +55,10 @@ static bool exportToPly(const std::vector<Vec3> & vec_points,
   const std::vector<Vec3> * vec_coloredPoints = NULL)
 {
   std::ofstream outfile;
-  outfile.open(sFileName.c_str(), std::ios_base::out);
+  outfile.open(sFileName, std::ios_base::out);
+  
+  if(!outfile.is_open())
+    throw std::runtime_error("Unable to create file "+sFileName);
 
   outfile << "ply"
     << '\n' << "format ascii 1.0"

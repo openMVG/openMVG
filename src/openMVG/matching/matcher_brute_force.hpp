@@ -40,11 +40,10 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
    */
   bool Build(const Scalar * dataset, int nbRows, int dimension) {
     if (nbRows < 1) {
-      memMapping = auto_ptr< Eigen::Map<BaseMat> >(NULL);
+      memMapping.reset(nullptr);
       return false;
     }
-    memMapping = auto_ptr< Eigen::Map<BaseMat> >
-      (new Eigen::Map<BaseMat>( (Scalar*)dataset, nbRows, dimension) );
+    memMapping.reset(new Eigen::Map<BaseMat>( (Scalar*)dataset, nbRows, dimension) );
     return true;
   };
 
@@ -61,12 +60,15 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
   bool SearchNeighbour( const Scalar * query,
                         int * indice, DistanceType * distance)
   {
-    if (memMapping.get() != NULL)  {
+    if (memMapping.get() == NULL)
+      return false;
+
       //matrix representation of the input data;
       Eigen::Map<BaseMat> mat_query((Scalar*)query, 1, (*memMapping).cols() );
       Metric metric;
       vector<DistanceType> vec_dist((*memMapping).rows(), 0.0);
-      for (int i = 0; i < (*memMapping).rows(); ++i)  {
+    for (int i = 0; i < (*memMapping).rows(); ++i)
+    {
         // Compute Distance Metric
         vec_dist[i] = metric( (Scalar*)query, (*memMapping).row(i).data(), (*memMapping).cols() );
       }
@@ -81,10 +83,6 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
         *distance = static_cast<DistanceType>(*min_iter);
       }
       return true;
-    }
-    else  {
-      return false;
-    }
   }
 
 
@@ -93,24 +91,25 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
    *
    * \param[in]   query     The query array
    * \param[in]   nbQuery   The number of query rows
-   * \param[out]  indice    The indices of arrays in the dataset that
-   *  have been computed as the nearest arrays.
-   * \param[out]  distance  The distances between the matched arrays.
+   * \param[out]  indices   The corresponding (query, neighbor) indices
+   * \param[out]  distances The distances between the matched arrays.
    * \param[out]  NN        The number of maximal neighbor that will be searched.
    *
    * \return True if success.
    */
-  bool SearchNeighbours( const Scalar * query, int nbQuery,
-                          vector<int> * pvec_indice,
-                          vector<DistanceType> * pvec_distance,
-                          size_t NN)
+  bool SearchNeighbours
+  (
+    const Scalar * query, int nbQuery,
+    IndMatches * pvec_indices,
+    std::vector<DistanceType> * pvec_distances,
+    size_t NN
+  )
   {
     if (memMapping.get() == NULL)  {
       return false;
     }
 
     if (NN > (*memMapping).rows() || nbQuery < 1) {
-      std::cerr << "Too much asked nearest neighbors" << std::endl;
       return false;
     }
 
@@ -118,30 +117,33 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
     Eigen::Map<BaseMat> mat_query((Scalar*)query, nbQuery, (*memMapping).cols());
     Metric metric;
 
-    pvec_distance->resize(nbQuery * NN);
-    pvec_indice->resize(nbQuery * NN);
+    pvec_distances->resize(nbQuery * NN);
+    pvec_indices->resize(nbQuery * NN);
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-    for (int queryIndex=0; queryIndex < nbQuery; ++queryIndex) {
+    for (int queryIndex=0; queryIndex < nbQuery; ++queryIndex) 
+    {
       std::vector<DistanceType> vec_distance((*memMapping).rows(), 0.0);
       const Scalar * queryPtr = mat_query.row(queryIndex).data();
       const Scalar * rowPtr = (*memMapping).data();
-      for (int i = 0; i < (*memMapping).rows(); ++i)  {
+      for (int i = 0; i < (*memMapping).rows(); ++i)
+      {
         vec_distance[i] = metric( queryPtr,
           rowPtr, (*memMapping).cols() );
         rowPtr += (*memMapping).cols();
       }
 
       // Find the N minimum distances:
-      const int maxMinFound = (int) min( size_t(NN), vec_distance.size());
+      const int maxMinFound = (int) std::min( size_t(NN), vec_distance.size());
       using namespace stl::indexed_sort;
       vector< sort_index_packet_ascend< DistanceType, int> > packet_vec(vec_distance.size());
       sort_index_helper(packet_vec, &vec_distance[0], maxMinFound);
 
-      for (int i = 0; i < maxMinFound; ++i) {
-        (*pvec_distance)[queryIndex*NN+i] = (packet_vec[i].val);
-        (*pvec_indice)[queryIndex*NN+i] = (packet_vec[i].index);
+      for (int i = 0; i < maxMinFound; ++i)
+      {
+        (*pvec_distances)[queryIndex*NN+i] = packet_vec[i].val;
+        (*pvec_indices)[queryIndex*NN+i] = IndMatch(queryIndex, packet_vec[i].index);
       }
     }
     return true;
@@ -150,7 +152,7 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
 private:
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> BaseMat;
   /// Use a memory mapping in order to avoid memory re-allocation
-  auto_ptr< Eigen::Map<BaseMat> > memMapping;
+  std::unique_ptr< Eigen::Map<BaseMat> > memMapping;
 };
 
 }  // namespace matching

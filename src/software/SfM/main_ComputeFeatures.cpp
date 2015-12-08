@@ -5,13 +5,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 #include "openMVG/image/image.hpp"
 #include "openMVG/sfm/sfm.hpp"
 
 /// Feature/Regions & Image describer interfaces
 #include "openMVG/features/features.hpp"
 #include "nonFree/sift/SIFT_describer.hpp"
+#include "nonFree/sift/SIFT_float_describer.hpp"
+
+#if HAVE_CCTAG
+#include "openMVG/features/cctag/CCTAG_describer.hpp"
+#include "openMVG/features/cctag/SIFT_CCTAG_describer.hpp"
+#endif
+
 #include <cereal/archives/json.hpp>
 #include "openMVG/system/timer.hpp"
 
@@ -21,6 +27,8 @@
 
 #include <cstdlib>
 #include <fstream>
+#include <iostream>
+
 
 using namespace openMVG;
 using namespace openMVG::image;
@@ -28,21 +36,6 @@ using namespace openMVG::features;
 using namespace openMVG::sfm;
 using namespace std;
 
-features::EDESCRIBER_PRESET stringToEnum(const std::string & sPreset)
-{
-  features::EDESCRIBER_PRESET preset;
-  if(sPreset == "NORMAL")
-    preset = features::NORMAL_PRESET;
-  else
-  if (sPreset == "HIGH")
-    preset = features::HIGH_PRESET;
-  else
-  if (sPreset == "ULTRA")
-    preset = features::ULTRA_PRESET;
-  else
-    preset = features::EDESCRIBER_PRESET(-1);
-  return preset;
-}
 
 /// - Compute view image description (feature & descriptor extraction)
 /// - Export computed data
@@ -56,6 +49,8 @@ int main(int argc, char **argv)
   std::string sImage_Describer_Method = "SIFT";
   bool bForce = false;
   std::string sFeaturePreset = "";
+  int rangeStart = -1;
+  int rangeSize = 1;
 
   // required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -65,6 +60,8 @@ int main(int argc, char **argv)
   cmd.add( make_option('u', bUpRight, "upright") );
   cmd.add( make_option('f', bForce, "force") );
   cmd.add( make_option('p', sFeaturePreset, "describerPreset") );
+  cmd.add( make_option('s', rangeStart, "range_start") );
+  cmd.add( make_option('r', rangeSize, "range_size") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -78,14 +75,23 @@ int main(int argc, char **argv)
       << "[-m|--describerMethod]\n"
       << "  (method to use to describe an image):\n"
       << "   SIFT (default),\n"
+      << "   SIFT_FLOAT to use SIFT stored as float,\n"
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
-      << "   AKAZE_MLDB:  AKAZE with binary descriptors\n"
+      << "   AKAZE_MLDB:  AKAZE with binary descriptors]\n"
+#if HAVE_CCTAG
+      << "   CCTAG3: CCTAG markers with 3 crowns\n"
+      << "   CCTAG3: CCTAG markers with 4 crowns\n"
+      << "   SIFT_CCTAG3: CCTAG markers with 3 crowns\n" 
+      << "   SIFT_CCTAG4: CCTAG markers with 4 crowns\n" 
+#endif
       << "[-u|--upright] Use Upright feature 0 or 1\n"
       << "[-p|--describerPreset]\n"
       << "  (used to control the Image_describer configuration):\n"
       << "   NORMAL (default),\n"
       << "   HIGH,\n"
       << "   ULTRA: !!Can take long time!!\n"
+      << "[-s]--range_start] range image index start\n"
+      << "[-r]--range_size] range size\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -99,7 +105,9 @@ int main(int argc, char **argv)
             << "--describerMethod " << sImage_Describer_Method << std::endl
             << "--upright " << bUpRight << std::endl
             << "--describerPreset " << (sFeaturePreset.empty() ? "NORMAL" : sFeaturePreset) << std::endl
-            << "--force " << bForce << std::endl;
+            << "--force " << bForce << std::endl
+            << "--range_start " << rangeStart << std::endl
+            << "--range_size " << rangeSize << std::endl;
 
 
   if (sOutDir.empty())  {
@@ -124,7 +132,7 @@ int main(int argc, char **argv)
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
     std::cerr << std::endl
       << "The input file \""<< sSfM_Data_Filename << "\" cannot be read" << std::endl;
-    return false;
+    return EXIT_FAILURE;
   }
 
   // b. Init the image_describer
@@ -140,7 +148,7 @@ int main(int argc, char **argv)
     // Dynamically load the image_describer from the file (will restore old used settings)
     std::ifstream stream(sImage_describer.c_str());
     if (!stream.is_open())
-      return false;
+      return EXIT_FAILURE;
 
     try
     {
@@ -163,6 +171,33 @@ int main(int argc, char **argv)
       image_describer.reset(new SIFT_Image_describer(SiftParams(), !bUpRight));
     }
     else
+    if (sImage_Describer_Method == "SIFT_FLOAT")
+    {
+      image_describer.reset(new SIFT_float_describer(SiftParams(), !bUpRight));
+    }
+#if HAVE_CCTAG
+    else
+    if (sImage_Describer_Method == "CCTAG3")
+    {
+      image_describer.reset(new CCTAG_Image_describer(3));
+    }
+    else
+    if (sImage_Describer_Method == "CCTAG4")
+    {
+      image_describer.reset(new CCTAG_Image_describer(4));
+    }
+    else
+    if (sImage_Describer_Method == "SIFT_CCTAG3")
+    {
+      image_describer.reset(new SIFT_CCTAG_Image_describer(SiftParams(), !bUpRight, 3));
+    }
+    else
+    if (sImage_Describer_Method == "SIFT_CCTAG4")
+    {
+      image_describer.reset(new SIFT_CCTAG_Image_describer(SiftParams(), !bUpRight, 4));
+    }
+#endif //HAVE_CCTAG   
+    else
     if (sImage_Describer_Method == "AKAZE_FLOAT")
     {
       image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_MSURF), !bUpRight));
@@ -182,7 +217,7 @@ int main(int argc, char **argv)
     else
     {
       if (!sFeaturePreset.empty())
-      if (!image_describer->Set_configuration_preset(stringToEnum(sFeaturePreset)))
+      if (!image_describer->Set_configuration_preset(sFeaturePreset))
       {
         std::cerr << "Preset configuration failed." << std::endl;
         return EXIT_FAILURE;
@@ -210,20 +245,44 @@ int main(int argc, char **argv)
   // - if no file, compute features
   {
     system::Timer timer;
-    Image<unsigned char> imageGray;
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
-    for(Views::const_iterator iterViews = sfm_data.views.begin();
-        iterViews != sfm_data.views.end();
-        ++iterViews, ++my_progress_bar)
+
+    Views::const_iterator iterViews = sfm_data.views.begin();
+    Views::const_iterator iterViewsEnd = sfm_data.views.end();
+    if(rangeStart != -1)
     {
+      if(rangeStart < 0 || rangeStart > sfm_data.views.size())
+      {
+        std::cerr << "Bad specific index" << std::endl;
+        return EXIT_FAILURE;
+      }
+      if(rangeSize < 0 || rangeSize > sfm_data.views.size())
+      {
+        std::cerr << "Bad range size. " << std::endl;
+        return EXIT_FAILURE;
+      }
+      if(rangeStart + rangeSize > sfm_data.views.size())
+        rangeSize = sfm_data.views.size() - rangeStart;
+
+      std::advance(iterViews, rangeStart);
+      iterViewsEnd = iterViews;
+      std::advance(iterViewsEnd, rangeSize);
+    }
+
+    Image<unsigned char> imageGray;
+    for(;
+      iterViews != iterViewsEnd;
+      ++iterViews, ++my_progress_bar)
+    {
+
       const View * view = iterViews->second.get();
       const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
         view->s_Img_path);
       const std::string sFeat = stlplus::create_filespec(sOutDir,
-        stlplus::basename_part(sView_filename), "feat");
+        stlplus::basename_part(std::to_string(view->id_view)), "feat");
       const std::string sDesc = stlplus::create_filespec(sOutDir,
-        stlplus::basename_part(sView_filename), "desc");
+        stlplus::basename_part(std::to_string(view->id_view)), "desc");
 
       //If features or descriptors file are missing, compute them
       if (bForce || !stlplus::file_exists(sFeat) || !stlplus::file_exists(sDesc))
@@ -232,6 +291,7 @@ int main(int argc, char **argv)
           continue;
 
         // Compute features and descriptors and export them to files
+        std::cout << "Extracting features from image " << view->id_view << std::endl;
         std::unique_ptr<Regions> regions;
         image_describer->Describe(imageGray, regions);
         image_describer->Save(regions.get(), sFeat, sDesc);

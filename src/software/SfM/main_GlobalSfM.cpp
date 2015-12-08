@@ -9,7 +9,7 @@
 
 #include "openMVG/sfm/pipelines/global/sfm_global_engine_relative_motions.hpp"
 #include "openMVG/system/timer.hpp"
-#include "software/SfM/io_regions_type.hpp"
+
 using namespace openMVG;
 using namespace openMVG::sfm;
 
@@ -38,9 +38,10 @@ int main(int argc, char **argv)
   std::string sSfM_Data_Filename;
   std::string sMatchesDir;
   std::string sOutDir = "";
-  int iRotationAveragingMethod = 2;
-  int iTranslationAveragingMethod = 1;
+  int iRotationAveragingMethod = int (ROTATION_AVERAGING_L2);
+  int iTranslationAveragingMethod = int (TRANSLATION_AVERAGING_SOFTL1);
   bool bRefineIntrinsics = true;
+  bool matchFilePerImage = false;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
@@ -48,6 +49,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('r', iRotationAveragingMethod, "rotationAveraging") );
   cmd.add( make_option('t', iTranslationAveragingMethod, "translationAveraging") );
   cmd.add( make_option('f', bRefineIntrinsics, "refineIntrinsics") );
+  cmd.add( make_option('p', matchFilePerImage, "matchFilePerImage") );
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -57,13 +59,19 @@ int main(int argc, char **argv)
     << "[-i|--input_file] path to a SfM_Data scene\n"
     << "[-m|--matchdir] path to the matches that corresponds to the provided SfM_Data scene\n"
     << "[-o|--outdir] path where the output data will be stored\n"
-    << "[-r|--rotationAveraging] 2(default L2) or 1 (L1)\n"
-    << "[-t|--translationAveraging] 1(default L1) or 2 (L2)\n"
-    << "[-f|--refineIntrinsics] \n"
+    << "\n[Optional]\n"
+    << "[-r|--rotationAveraging]\n"
+    << "\t 1 -> L1 minimization\n"
+    << "\t 2 -> L2 minimization (default)\n"
+    << "[-t|--translationAveraging]:\n"
+    << "\t 1 -> L1 minimization\n"
+    << "\t 2 -> L2 minimization of sum of squared Chordal distances\n"
+    << "\t 3 -> SoftL1 minimization (default)\n"
+    << "[-f|--refineIntrinsics]\n"
     << "\t 0-> intrinsic parameters are kept as constant\n"
     << "\t 1-> refine intrinsic parameters (default). \n"
-    << "\n"
-    << " ICCV 2013: => -r 2 -t 1"
+    << "[-p|--matchFilePerImage] \n"
+    << "\t To use one match file per image instead of a global file.\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -76,8 +84,8 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-    if (iTranslationAveragingMethod < TRANSLATION_AVERAGING_L1 ||
-      iTranslationAveragingMethod > TRANSLATION_AVERAGING_L2 )  {
+  if (iTranslationAveragingMethod < TRANSLATION_AVERAGING_L1 ||
+      iTranslationAveragingMethod > TRANSLATION_AVERAGING_SOFTL1 )  {
     std::cerr << "\n Translation averaging method is invalid" << std::endl;
     return EXIT_FAILURE;
   }
@@ -110,10 +118,35 @@ int main(int argc, char **argv)
   }
   // Matches reading
   std::shared_ptr<Matches_Provider> matches_provider = std::make_shared<Matches_Provider>();
-  if (!matches_provider->load(sfm_data, stlplus::create_filespec(sMatchesDir, "matches.e.txt"))) {
-    std::cerr << std::endl
-      << "Invalid matches file." << std::endl;
-    return EXIT_FAILURE;
+  if( !matchFilePerImage )
+  {
+    // Load the match file
+    if (!matches_provider->load(sfm_data, stlplus::create_filespec(sMatchesDir, "matches.e.txt"))) {
+      std::cerr << std::endl
+        << "Invalid matches file." << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
+  else
+  {
+    int nbLoadedMatchFiles = 0;
+    // Load one match file per image
+    for (Views::const_iterator it = sfm_data.GetViews().begin();
+      it != sfm_data.GetViews().end(); ++it)
+    {
+      const View * v = it->second.get();
+      const std::string matchFilepath = stlplus::create_filespec(sMatchesDir, std::to_string(v->id_view) + ".matches.e.txt");
+      if (stlplus::file_exists(matchFilepath) && !matches_provider->load(sfm_data, matchFilepath)) {
+        std::cerr << std::endl << "Unable to load matches file: " << matchFilepath << std::endl;
+        continue;
+      }
+      ++nbLoadedMatchFiles;
+    }
+    if( nbLoadedMatchFiles == 0 )
+    {
+      std::cerr << std::endl << "No matches file loaded in: " << sMatchesDir << std::endl;
+      return EXIT_FAILURE;
+    }
   }
 
   if (sOutDir.empty())  {

@@ -9,6 +9,7 @@
 
 #include "openMVG/types.hpp"
 #include "openMVG/sfm/sfm_view.hpp"
+#include "openMVG/sfm/sfm_view_metadata.hpp"
 #include "openMVG/sfm/sfm_landmark.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/cameras/cameras.hpp"
@@ -40,6 +41,8 @@ struct SfM_Data
   Intrinsics intrinsics;
   /// Structure (3D points with their 2D observations)
   Landmarks structure;
+  /// Controls points (stored as Landmarks (id_feat has no meaning here))
+  Landmarks control_points;
 
   /// Root Views path
   std::string s_root_path;
@@ -51,6 +54,7 @@ struct SfM_Data
   const Poses & GetPoses() const {return poses;}
   const Intrinsics & GetIntrinsics() const {return intrinsics;}
   const Landmarks & GetLandmarks() const {return structure;}
+  const Landmarks & GetControl_Points() const {return control_points;}
 
   /// Check if the View have defined intrinsic and pose
   bool IsPoseAndIntrinsicDefined(const View * view) const

@@ -61,6 +61,8 @@ public:
   {
     switch(preset)
     {
+    case LOW_PRESET:
+    case MEDIUM_PRESET:
     case NORMAL_PRESET:
       _params._options.fThreshold = AKAZEConfig().fThreshold;
     break;

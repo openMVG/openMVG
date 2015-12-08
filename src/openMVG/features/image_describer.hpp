@@ -14,15 +14,52 @@
 #include <memory>
 #include <cereal/cereal.hpp> // Serialization
 
+#include <exception>
+#include <string>
+
 namespace openMVG {
 namespace features {
 
 enum EDESCRIBER_PRESET
 {
+  LOW_PRESET = 0,
+  MEDIUM_PRESET,
   NORMAL_PRESET,
   HIGH_PRESET,
   ULTRA_PRESET
 };
+
+inline EDESCRIBER_PRESET describerPreset_stringToEnum(const std::string& sPreset)
+{
+  if(sPreset == "LOW")
+    return LOW_PRESET;
+  if (sPreset == "MEDIUM")
+    return MEDIUM_PRESET;
+  if(sPreset == "NORMAL")
+    return NORMAL_PRESET;
+  if (sPreset == "HIGH")
+    return HIGH_PRESET;
+  if (sPreset == "ULTRA")
+    return ULTRA_PRESET;
+  throw std::invalid_argument("Invalid descriptor preset: " + sPreset);
+}
+
+inline std::string describerPreset_enumToString(const EDESCRIBER_PRESET preset)
+{
+  if(preset == LOW_PRESET)
+    return "LOW";
+  if (preset == MEDIUM_PRESET)
+    return "MEDIUM";
+  if(preset == NORMAL_PRESET)
+    return "NORMAL";
+  if (preset == HIGH_PRESET)
+    return "HIGH";
+  if (preset == ULTRA_PRESET)
+    return "ULTRA";
+  throw std::invalid_argument("Unrecognized EDESCRIBER_PRESET "+std::to_string(preset));
+}
+
+
 /// A pure virtual class for image description computation
 class Image_describer
 {
@@ -36,6 +73,11 @@ public:
   @return True if configuration succeed.
   */
   virtual bool Set_configuration_preset(EDESCRIBER_PRESET preset) = 0;
+
+  bool Set_configuration_preset(const std::string& preset)
+  {
+    return Set_configuration_preset(describerPreset_stringToEnum(preset));
+  }
 
   /**
   @brief Detect regions on the image and compute their attributes (description)

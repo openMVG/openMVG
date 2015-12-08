@@ -9,7 +9,6 @@
 #include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/image/image.hpp"
 #include "openMVG/sfm/sfm.hpp"
-#include "software/SfM/io_regions_type.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"

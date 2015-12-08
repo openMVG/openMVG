@@ -6,8 +6,8 @@ TARGET_LINK_LIBRARIES(openMVG_sample_kvld
   openMVG_multiview
   openMVG_kvld
   openMVG_features
-  vlsift
+  openMVG_matching
   stlplus
-  )
+  vlsift)
 
 SET_PROPERTY(TARGET openMVG_sample_kvld PROPERTY FOLDER OpenMVG/Samples)

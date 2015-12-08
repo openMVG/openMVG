@@ -10,10 +10,11 @@ We provide a generic interface to perform:
 * **Nearest neighbor search (NNS)**
 * **K-Nearest Neighbor (K-NN)**
 
-Two implementation are available:
+Three implementations are available:
 
 * a Brute force,
-* an Approximate Nearest Neighbor [FLANN]_.
+* an Approximate Nearest Neighbor [FLANN]_,
+* a Cascade hashing Nearest Neighbor [CASCADEHASHING]_.
 
 This module works for data of any dimensionality, it could be use to match:
 
@@ -55,12 +56,12 @@ Example of usage:
   //--
   // Looking for the K=2 nearest neighbor
   //--
-  vector<int> vec_nIndice;
+  IndMatches vec_nIndices;
   vector<float> vec_fDistance;
   const int K = 2;
-  matcher.SearchNeighbours(query, 1, &vec_nIndice, &vec_fDistance, K);
+  matcher.SearchNeighbours(query, 1, &vec_nIndices, &vec_fDistance, K);
   
-  // vec_nIndice = {2,1};
+  // vec_nIndices = {IndMatch(0,2), IndMatche(0,1)};
 
 
 Metric customization
@@ -81,7 +82,7 @@ Metric customization
 Image domain, correspondences filtering (KVLD)
 ===============================================
 
-When used with descriptors found putatives matches can be filtered thanks to different filters:
+When used with descriptors found putative matches can be filtered thanks to different filters:
 
 * Symmetric distance (Left-Right check).
 

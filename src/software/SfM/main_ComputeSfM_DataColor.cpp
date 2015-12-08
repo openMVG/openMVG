@@ -18,7 +18,7 @@ using namespace openMVG::image;
 using namespace openMVG::sfm;
 
 /// Find the color of the SfM_Data Landmarks/structure
-void ColorizeTracks(
+bool ColorizeTracks(
   const SfM_Data & sfm_data,
   std::vector<Vec3> & vec_3dPoints,
   std::vector<Vec3> & vec_tracksColor)
@@ -93,8 +93,18 @@ void ColorizeTracks(
       const View * view = sfm_data.GetViews().at(view_index).get();
       const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
         view->s_Img_path);
-      Image<RGBColor> image;
-      ReadImage(sView_filename.c_str(), &image);
+      Image<RGBColor> image_rgb;
+      Image<unsigned char> image_gray;
+      const bool b_rgb_image = ReadImage(sView_filename.c_str(), &image_rgb);
+      if (!b_rgb_image) //try Gray level
+      {
+        const bool b_gray_image = ReadImage(sView_filename.c_str(), &image_gray);
+        if (!b_gray_image)
+        {
+          std::cerr << "Cannot open provided the image." << std::endl;
+          return false;
+        }
+      }
 
       // Iterate through the remaining track to color
       // - look if the current view is present to color the track
@@ -112,7 +122,7 @@ void ColorizeTracks(
         {
           // Color the track
           const Vec2 & pt = it->second.x;
-          const RGBColor color = image(pt.y(), pt.x());
+          const RGBColor color = b_rgb_image ? image_rgb(pt.y(), pt.x()) : RGBColor(image_gray(pt.y(), pt.x()));
 
           vec_tracksColor[ trackIds_to_contiguousIndexes[trackId] ] = Vec3(color.r(), color.g(), color.b());
           set_toRemove.insert(trackId);
@@ -127,16 +137,19 @@ void ColorizeTracks(
       }
     }
   }
+  return true;
 }
 
 /// Export camera poses positions as a Vec3 vector
 void GetCameraPositions(const SfM_Data & sfm_data, std::vector<Vec3> & vec_camPosition)
 {
-  const Poses & poses = sfm_data.GetPoses();
-  for (Poses::const_iterator iterPose = poses.begin();
-    iterPose != poses.end(); ++iterPose)
+  for (const auto & view : sfm_data.GetViews())
   {
-    vec_camPosition.push_back(iterPose->second.center());
+    if (sfm_data.IsPoseAndIntrinsicDefined(view.second.get()))
+    {
+      const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view.second.get());
+      vec_camPosition.push_back(pose.center());
+    }
   }
 }
 
@@ -176,16 +189,24 @@ int main(int argc, char **argv)
 
   // Compute the scene structure color
   std::vector<Vec3> vec_3dPoints, vec_tracksColor, vec_camPosition;
-  ColorizeTracks(sfm_data, vec_3dPoints, vec_tracksColor);
-  GetCameraPositions(sfm_data, vec_camPosition);
-
-  // Export the SfM_Data scene in the expected format
-  if (plyHelper::exportToPly(vec_3dPoints, vec_camPosition, sOutputPLY_Out, &vec_tracksColor))
+  if (ColorizeTracks(sfm_data, vec_3dPoints, vec_tracksColor))
   {
-    return EXIT_SUCCESS;
+    GetCameraPositions(sfm_data, vec_camPosition);
+
+    // Export the SfM_Data scene in the expected format
+    if (plyHelper::exportToPly(vec_3dPoints, vec_camPosition, sOutputPLY_Out, &vec_tracksColor))
+    {
+      return EXIT_SUCCESS;
+    }
+    else
+    {
+      std::cerr << "Error while exporting to ply file format" << std::endl;
+      return EXIT_FAILURE;
+    }
   }
   else
   {
+    std::cerr << "Error while trying to colorize the tracks" << std::endl;
     return EXIT_FAILURE;
   }
 }
