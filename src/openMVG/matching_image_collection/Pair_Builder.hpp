@@ -68,6 +68,8 @@ static Pair_Set contiguousWithOverlap(const sfm::Views& views, const size_t over
     sfm::Views::const_iterator itB = itA;
     std::advance(itB, 1);
     sfm::Views::const_iterator itBEnd = itA;
+    if(std::distance(itBEnd, views.end()) < 1 + overlapSize)
+      break;
     std::advance(itBEnd, 1 + overlapSize);
     
     for(; itB != views.end() && itB != itBEnd; ++itB)
