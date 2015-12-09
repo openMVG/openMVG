@@ -24,8 +24,6 @@ CCTagLocalizer::CCTagLocalizer(const std::string &sfmFilePath,
 {
   using namespace openMVG::features;
 
-  cctag::initCCTagDetection();
-
   // load the sfm data containing the 3D reconstruction info
   if (!Load(_sfm_data, sfmFilePath, sfm::ESfM_Data::ALL)) 
   {
