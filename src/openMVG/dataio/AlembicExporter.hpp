@@ -65,6 +65,11 @@ public:
                            const float sensorWidth_mm=36.0);
   
   /**
+   * @brief Register keyframe on the previous values
+   */
+  void jumpKeyframe();
+  
+  /**
    * @brief Add SfM Data
    * 
    * @param sfmdata SfM_Data container

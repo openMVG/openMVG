@@ -341,6 +341,12 @@ void AlembicExporter::addCameraKeyframe(const geometry::Pose3 &pose,
   mcamObj.getSchema().set(camSample);
 }
 
+void AlembicExporter::jumpKeyframe()
+{
+  mxform.getSchema().setFromPrevious();
+  mcamObj.getSchema().setFromPrevious();
+}
+
 void AlembicExporter::add(const sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part)
 {
 
