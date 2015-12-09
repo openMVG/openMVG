@@ -83,12 +83,12 @@ ENDIF()
 SET(CCTAG_LIBRARIES
   ${CCTAG_LIBRARY} 
   ${CCTAGCUDA_LIBRARIES}
-#  boost_filesystem boost_system boost_serialization
+  ${Boost_LIBRARIES}
   dl
   ${OpenCV_LIBS}
   ${OPTPP_LIBRARIES}
   ${Ceres_LIBRARIES}
-#  lapack
+  ${LAPACK_LIBRARIES}
 )
 
 GET_FILENAME_COMPONENT(CCTAG_LIBRARY_DIR "${CCTAG_LIBRARY}" PATH)

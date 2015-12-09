@@ -1,5 +1,3 @@
-#ifdef HAVE_CCTAG
-
 #pragma once
 
 #include "ILocalizer.hpp"
@@ -153,4 +151,3 @@ void viewMatching(
 } // namespace localization
 } // openMVG
 
-#endif //HAVE_CCTAG

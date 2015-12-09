@@ -44,6 +44,7 @@ using namespace lemon;
 #include <vector>
 #include <set>
 #include <map>
+#include <memory>
 
 namespace openMVG  {
 
@@ -96,8 +97,8 @@ struct TracksBuilder
 
   lemon::ListDigraph _graph; //Graph container to create the node
   MapNodeToIndex _map_nodeToIndex; //Node to index map
-  std::auto_ptr<IndexMap> _index;
-  std::auto_ptr<UnionFindObject> _tracksUF;
+  std::unique_ptr<IndexMap> _index;
+  std::unique_ptr<UnionFindObject> _tracksUF;
 
   const UnionFindObject & getUnionFindEnum() const {return *_tracksUF; }
   const MapNodeToIndex & getReverseMap() const {return _map_nodeToIndex;}
@@ -144,8 +145,8 @@ struct TracksBuilder
     _map_nodeToIndex.sort();
 
     // Add the element of myset to the UnionFind insert method.
-    _index = std::auto_ptr<IndexMap>( new IndexMap(_graph) );
-    _tracksUF = std::auto_ptr<UnionFindObject>( new UnionFindObject(*_index));
+    _index = std::unique_ptr<IndexMap>( new IndexMap(_graph) );
+    _tracksUF = std::unique_ptr<UnionFindObject>( new UnionFindObject(*_index));
     for (ListDigraph::NodeIt it(_graph); it != INVALID; ++it) {
       _tracksUF->insert(it);
     }
