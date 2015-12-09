@@ -270,9 +270,9 @@ void MainWindow::registerProject()
     Vec3 t;
     Mat3 R;
     double S;
-    if (openMVG::geometry::FindRTS(x1, x2, &S, &t, &R))
+    if (openMVG::geometry::FindRTS(x1, x2, S, t, R))
     {
-      openMVG::geometry::Refine_RTS(x1,x2,&S,&t,&R);
+      openMVG::geometry::Refine_RTS(x1, x2, S, t, R);
       std::cout << "Found transform:\n"
         << " scale: " << S << "\n"
         << " rotation:\n" << R << "\n"

@@ -238,10 +238,7 @@ bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata,
   cam_t(2) = mat[3][2];
 
   // Correct camera orientation from alembic
-  Mat3 scale;
-  scale(0,0) = 1;
-  scale(1,1) = -1;
-  scale(2,2) = -1;
+  const Mat3 scale = Vec3(1,-1,-1).asDiagonal();
   cam_r = scale*cam_r;
 
   Pose3 pose(cam_r, cam_t);
