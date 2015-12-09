@@ -60,7 +60,7 @@ struct IndMatch
   IndexT _i, _j;  // Left, right index
 };
 
-static std::ostream& operator<<(std::ostream & out, const IndMatch & obj) {
+static inline std::ostream& operator<<(std::ostream & out, const IndMatch & obj) {
   return out << obj._i << " " << obj._j;
 }
 

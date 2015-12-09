@@ -22,12 +22,12 @@ enum EINTRINSIC
 };
 
 // Return if the camera type is a valid enum
-static bool isValid(EINTRINSIC eintrinsic)
+static inline bool isValid(EINTRINSIC eintrinsic)
 {
   return eintrinsic > PINHOLE_CAMERA_START && eintrinsic < PINHOLE_CAMERA_END;
 }
 
-static bool isPinhole(EINTRINSIC eintrinsic)
+static inline bool isPinhole(EINTRINSIC eintrinsic)
 {
   return eintrinsic > PINHOLE_CAMERA_START && eintrinsic < PINHOLE_CAMERA_END;
 }

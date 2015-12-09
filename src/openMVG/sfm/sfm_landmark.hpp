@@ -47,8 +47,8 @@ typedef Hash_Map<IndexT, Observation> Observations;
 /// Define a landmark (a 3D point, with it's 2d observations)
 struct Landmark
 {
-  Observations obs;
   Vec3 X;
+  Observations obs;
 
   // Serialization
   template <class Archive>

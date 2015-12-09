@@ -130,7 +130,9 @@ int main(int argc, char **argv)
   if (map_Cam_gt.size() != sfm_data.GetPoses().size())
   {
     std::cerr << std::endl
-      << "There is missing camera in the loaded scene." << std::endl;
+      << "There is missing camera in the loaded scene." << "\n"
+      << "#GT poses: " << map_Cam_gt.size() << "\n"
+      << "#Scene poses: " << sfm_data.GetPoses().size() << std::endl;
     return EXIT_FAILURE;
   }
 
