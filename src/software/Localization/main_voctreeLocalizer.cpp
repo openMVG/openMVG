@@ -236,9 +236,7 @@ int main(int argc, char** argv)
     else
     {
 #if HAVE_ALEMBIC
-      // @fixme for now just add a fake camera so that it still can be see in MAYA
-      // exporter.appendCamera("camera.V."+myToString(frameCounter,4), geometry::Pose3(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
-      exporter.addCameraKeyframe(geometry::Pose3(), &queryIntrinsics, currentImgName, frameCounter, frameCounter);
+      exporter.jumpKeyframe();
 #endif
       POPART_CERR("Unable to localize frame " << frameCounter);
     }
@@ -269,7 +267,7 @@ int main(int argc, char** argv)
         }
         else
         {
-          exporterBA.addCameraKeyframe(geometry::Pose3(), &queryIntrinsics, currentImgName, frameCounter, frameCounter);
+          exporterBA.jumpKeyframe();
         }
         idx++;
       }
