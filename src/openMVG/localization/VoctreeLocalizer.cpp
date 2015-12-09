@@ -135,9 +135,7 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
   // then we can store only those associated to 3D points
   //? can we use Feature_Provider to load the features and filter them later?
 
-  initDatabase(vocTreeFilepath, weightsFilepath, descriptorsFolder);
-
-  _isInit = true;
+  _isInit = initDatabase(vocTreeFilepath, weightsFilepath, descriptorsFolder);
 }
 
 bool VoctreeLocalizer::localize(const std::unique_ptr<features::Regions> &genQueryRegions,

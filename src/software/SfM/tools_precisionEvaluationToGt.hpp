@@ -44,14 +44,15 @@ bool computeSimilarity(
   double S;
   Vec3 t;
   Mat3 R;
-  openMVG::geometry::FindRTS(x1, x2, &S, &t, &R);
-  std::cout << "\n Non linear refinement" << std::endl;
-  openMVG::geometry::Refine_RTS(x1,x2,&S,&t,&R);
+  std::vector<std::size_t> inliers;
+  if(!openMVG::geometry::ACRansac_FindRTS(x1, x2, S, t, R, inliers, true))
+    return false;
 
   vec_camPosComputed_T.resize(vec_camPosGT.size());
   std::vector<double> vec_residualErrors(vec_camPosGT.size());
-  for (size_t i = 0; i  < vec_camPosGT.size(); ++i) {
-    Vec3 newPos = S * R * ( vec_camPosComputed[i]) + t;
+  for(size_t i = 0; i < vec_camPosGT.size(); ++i)
+  {
+    Vec3 newPos = S * R * (vec_camPosComputed[i]) + t;
     vec_camPosComputed_T[i] = newPos;
     const double dResidual = (newPos - vec_camPosGT[i]).norm();
     vec_residualErrors[i] = dResidual;

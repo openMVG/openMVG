@@ -148,6 +148,8 @@ int main(int argc, char **argv)
   {
     std::cerr << std::endl
       << "There is missing camera in the loaded scene." << std::endl;
+    std::cerr << "number of poses in GT    : " << sfm_data_gt.poses.size() << std::endl;
+    std::cerr << "number of poses in scene :" << sfm_data.GetPoses().size() << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -178,7 +180,7 @@ int main(int argc, char **argv)
   EvaluteToGT(vec_camPosGT, vec_C, vec_camRotGT, vec_camRot, sOutDir, &_htmlDocStream);
 
   ofstream htmlFileStream( string(stlplus::folder_append_separator(sOutDir) +
-    "ExternalCalib_Report.html").c_str());
+    "ExternalCalib_Report.html"));
   htmlFileStream << _htmlDocStream.getDoc();
 
   return EXIT_SUCCESS;
