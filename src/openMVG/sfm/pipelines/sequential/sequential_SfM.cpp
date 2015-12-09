@@ -162,10 +162,14 @@ bool SequentialSfMReconstructionEngine::Process()
     {
       initialPairIndex = _initialpair = putative_initial_pair;
     }
-    else // Cannot find a valid initial pair, try to set it by hand?
+    else if(_userInteraction) // Cannot find a valid initial pair, try to set it by hand?
     {
       if (!ChooseInitialPair(_initialpair))
         return false;
+    }
+    else
+    {
+      return false;
     }
   }
   // Else a starting pair was already initialized before
@@ -356,9 +360,9 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
     tracksBuilder.Filter();
     std::cout << "\n" << "Track filtering : min occurence" << std::endl;
 #ifdef HAVE_CCTAG
-    tracksBuilder.FilterPairWiseMinimumMatches(3);
+    tracksBuilder.FilterPairWiseMinimumMatches(3); // todo param@L
 #else
-    tracksBuilder.FilterPairWiseMinimumMatches(20);
+    tracksBuilder.FilterPairWiseMinimumMatches(20); // todo param@L
 #endif
     
     std::cout << "\n" << "Track export to internal struct" << std::endl;
@@ -418,7 +422,8 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
 
   if (valid_views.size() < 2)
   {
-    return false; // There is not view that support valid intrinsic data
+    std::cerr << "Failed to find an initial pair automatically. There is no view with valid intrinsics." << std::endl;
+    return false;
   }
 
   std::vector<std::pair<double, Pair> > scoring_per_pair;
@@ -558,7 +563,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
   if (iterIntrinsic_I == _sfm_data.GetIntrinsics().end() ||
       iterIntrinsic_J == _sfm_data.GetIntrinsics().end() )
   {
-    std::cout << "Can't find initial image pair intrinsics." << std::endl;
+    std::cerr << "Can't find initial image pair intrinsics: " << view_I->id_intrinsic << ", "  << view_J->id_intrinsic << std::endl;
     return false;
   }
 
@@ -566,7 +571,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
   const Pinhole_Intrinsic * cam_J = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_J->second.get());
   if (cam_I == NULL || cam_J == NULL)
   {
-    std::cout << "Can't find initial image pair intrinsics (NULL ptr)." << std::endl;
+    std::cerr << "Can't find initial image pair intrinsics (NULL ptr): " << view_I->id_intrinsic << ", "  << view_J->id_intrinsic << std::endl;
     return false;
   }
 

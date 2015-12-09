@@ -128,7 +128,7 @@ struct IntrinsicBase
 };
 
 /// Return the angle (degree) between two bearing vector rays
-static double AngleBetweenRay(
+static inline double AngleBetweenRay(
   const geometry::Pose3 & pose1,
   const IntrinsicBase * intrinsic1,
   const geometry::Pose3 & pose2,

@@ -20,7 +20,7 @@ SET(_optpp_SEARCH_DIRS
   /opt/local/opt++
 )
 
-set(OPTPP_FOUND FALSE)
+set(OPTPP_FOUND TRUE)
 
 if(NOT OPTPP_INCLUDE_DIRS)
   # Look for the OPTPP header, first in the user-specified location and then in the system locations
@@ -45,7 +45,8 @@ if(NOT OPTPP_INCLUDE_DIRS)
     IF(OPTPP_INCLUDE_DIRS)
       MESSAGE( STATUS "opt++ header files found at ${OPTPP_INCLUDE_DIRS}" )
     ELSE(OPTPP_INCLUDE_DIRS)
-      MESSAGE( FATAL_ERROR "opt++ header files not found" )
+      MESSAGE( WARNING "opt++ header files not found" )
+      set(OPTPP_FOUND FALSE)
     ENDIF(OPTPP_INCLUDE_DIRS)
   endif()
 endif()
@@ -65,10 +66,10 @@ endif()
 
 # Look for libopt
 find_library(OPTPP_DEBUG_LIBRARY NAMES opt_d libopt_d optd liboptd PATH_SUFFIXES "" Debug
-	PATHS ${OPTPP_LIBRARY_DIRS} ${OPTPP_LIBRARY_DIRS}/lib ${OPTPP_LIBRARY_DIRS}/lib/.libs/ NO_DEFAULT_PATH)
+             PATHS ${OPTPP_LIBRARY_DIRS} ${OPTPP_LIBRARY_DIRS}/lib NO_DEFAULT_PATH)
 
 find_library(OPTPP_RELEASE_LIBRARY NAMES opt libopt PATH_SUFFIXES "" Release
-	PATHS ${OPTPP_LIBRARY_DIRS} ${OPTPP_LIBRARY_DIRS}/lib ${OPTPP_LIBRARY_DIRS}/lib/.libs/ NO_DEFAULT_PATH)
+             PATHS ${OPTPP_LIBRARY_DIRS} ${OPTPP_LIBRARY_DIRS}/lib NO_DEFAULT_PATH)
 
 if(OPTPP_DEBUG_LIBRARY AND OPTPP_RELEASE_LIBRARY)
   message(STATUS "opt++ release library found at ${OPTPP_RELEASE_LIBRARY}" )
@@ -81,7 +82,8 @@ elseif(OPTPP_RELEASE_LIBRARY)
   message(STATUS "opt++ release library found at ${OPTPP_RELEASE_LIBRARY}" )
   set(OPTPP_LIBRARIES ${OPTPP_RELEASE_LIBRARY})
 else()
-  message(FATAL_ERROR "did not found any opt++ libraries")
+  message(WARNING "did not found any opt++ libraries")
+  set(OPTPP_FOUND FALSE)
 endif()
 
 # Look for libnewmat
@@ -101,18 +103,19 @@ ELSE(OPTPP_NEWMAT_INCLUDE_DIRS)
 	     DOC ${OPTPP_INCLUDE_DOC})
   IF(NOT OPTPP_NEWMAT_INCLUDE_DIRS)
     MESSAGE( WARNING "newmat include dirs not found")
+    set(OPTPP_FOUND FALSE)
   ENDIF(NOT OPTPP_NEWMAT_INCLUDE_DIRS)
 ENDIF(OPTPP_NEWMAT_INCLUDE_DIRS)
 
 find_library(OPTPP_NEWMAT_DEBUG_LIBRARY
              NAMES newmat_d libnewmat_d newmatd libnewmatd PATH_SUFFIXES "" Debug
-	     PATHS ${OPTPP_LIBRARY_DIRS} ${OPTPP_LIBRARY_DIRS}/lib ${OPTPP_LIBRARY_DIRS}/lib/.libs/
+             PATHS ${OPTPP_LIBRARY_DIRS} ${OPTPP_LIBRARY_DIRS}/lib
 	     NO_DEFAULT_PATH)
   
 find_library(OPTPP_NEWMAT_RELEASE_LIBRARY
              NAMES newmat libnewmat
 	     PATH_SUFFIXES "" Release
-	     PATHS ${OPTPP_LIBRARY_DIRS} ${OPTPP_LIBRARY_DIRS}/lib ${OPTPP_LIBRARY_DIRS}/lib/.libs/
+             PATHS ${OPTPP_LIBRARY_DIRS} ${OPTPP_LIBRARY_DIRS}/lib
 	     NO_DEFAULT_PATH)
 
 IF(NOT OPTPP_INCLUDE_DIRS STREQUAL OPTPP_NEWMAT_INCLUDE_DIRS)
@@ -130,7 +133,8 @@ elseif(OPTPP_NEWMAT_RELEASE_LIBRARY)
   message(STATUS "newmat release library found at ${OPTPP_NEWMAT_RELEASE_LIBRARY}" )
   set(OPTPP_LIBRARIES ${OPTPP_LIBRARIES} ${OPTPP_NEWMAT_RELEASE_LIBRARY})
 else()
-  message(FATAL_ERROR "did not found any newmat libraries")
+  message(WARNING "did not found any newmat libraries")
+  set(OPTPP_FOUND FALSE)
 endif()
 
 # Look for BLAS
@@ -139,20 +143,18 @@ if(BLAS_FOUND)
   set(OPTPP_LIBRARIES ${OPTPP_LIBRARIES} ${BLAS_LIBRARIES})
   set(OPTPP_LDFLAGS ${BLAS_LINKER_FLAGS})
 else()
-  message(FATAL_ERROR "OPTPP: BLAS library not found")
+  message(WARNING "OPTPP: BLAS library not found")
   set(OPTPP_LIBRARIES )
+  set(OPTPP_FOUND FALSE)
 endif()
 
-# now we have opt++, newmat and BLAS, opt++ is probably going to work
-set(OPTPP_FOUND TRUE)
 
 if(OPTPP_FOUND)
+  set(OPTPP_DEFINITIONS "WITH_OPTPP=1")
   if(NOT OPTPP_FIND_QUIETLY)
     message(STATUS "Found OPTPP: headers at ${OPTPP_INCLUDE_DIRS}, libraries at ${OPTPP_LIBRARIES}")
   endif()
 else()
-  if(OPTPP_FIND_REQUIRED)
-    message(FATAL_ERROR "OPTPP not found")
-  endif()
+  message(WARNING "OPTPP not found")
 endif()
 

@@ -117,6 +117,20 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeStructureFromKnownPoses
   stlplus
   )
 
+IF(OpenMVG_USE_CCTAG)
+ADD_EXECUTABLE(openMVG_main_ComputeCCTagStructureFromKnownPoses main_ComputeCCTagStructureFromKnownPoses.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_ComputeCCTagStructureFromKnownPoses
+  openMVG_system
+  openMVG_features
+  openMVG_sfm
+  openMVG_localization
+  stlplus
+  ${CCTAG_LIBRARIES}
+  )
+SET_PROPERTY(TARGET openMVG_main_ComputeCCTagStructureFromKnownPoses PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_ComputeCCTagStructureFromKnownPoses DESTINATION bin/)
+ENDIF()
+
 ADD_EXECUTABLE(openMVG_main_ComputeSfM_DataColor main_ComputeSfM_DataColor.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_ComputeSfM_DataColor
   openMVG_system

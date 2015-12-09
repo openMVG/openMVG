@@ -32,9 +32,16 @@ class SIFT_Image_describer : public Image_describer
 {
 public:
   SIFT_Image_describer(const SiftParams & params = SiftParams(), bool bOrientation = true)
-    :Image_describer(), _params(params), _bOrientation(bOrientation) {}
+    :Image_describer(), _params(params), _bOrientation(bOrientation)
+  {
+    // Configure VLFeat
+    vl_constructor();
+  }
 
-  ~SIFT_Image_describer() {}
+  ~SIFT_Image_describer()
+  {
+    vl_destructor();
+  }
 
   bool Set_configuration_preset(EDESCRIBER_PRESET preset)
   {

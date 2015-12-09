@@ -76,11 +76,15 @@ struct SiftParams
     case LOW_PRESET:
     {
       _maxTotalKeypoints = 1000;
+      _peak_threshold = 0.04f;
+      _first_octave = 2;
       break;
     }
     case MEDIUM_PRESET:
     {
       _maxTotalKeypoints = 5000;
+      _peak_threshold = 0.04f;
+      _first_octave = 1;
       break;
     }
     case NORMAL_PRESET:

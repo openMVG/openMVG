@@ -1,12 +1,8 @@
-#ifdef HAVE_CCTAG
-
 #pragma once
 
 #include <openMVG/features/image_describer.hpp>
 #include <openMVG/features/regions_factory.hpp>
-
-#include <cctag/view.hpp>
-#include <cctag/ICCTag.hpp>
+#include <openMVG/types.hpp>
 
 #include <cereal/cereal.hpp>
 #include <iostream>
@@ -20,37 +16,11 @@ namespace features {
 class CCTAG_Image_describer : public Image_describer
 {
 public:
-  CCTAG_Image_describer()
-    :Image_describer(), _params(3) {}
-    
-  CCTAG_Image_describer(const std::size_t nRings)
-    :Image_describer(), _params(nRings) {}   
+  CCTAG_Image_describer();
+  CCTAG_Image_describer(const std::size_t nRings, const bool doAppend = false);
+  ~CCTAG_Image_describer();
 
-  ~CCTAG_Image_describer() {}
-
-  bool Set_configuration_preset(EDESCRIBER_PRESET preset)
-  {
-    // todo@L: choose most relevant preset names
-    switch(preset)
-    {
-    // Normal lighting conditions: normal contrast
-    case NORMAL_PRESET:
-      _params._cannyThrLow = 0.01f;
-      _params._cannyThrHigh = 0.04f;
-    break;
-    // Low lighting conditions: very low contrast
-    case HIGH_PRESET:
-      _params._cannyThrLow = 0.002f;
-      _params._cannyThrHigh = 0.01f;
-    break;
-    case ULTRA_PRESET:
-      // todo@L: not set yet
-    break;
-    default:
-      return false;
-    }
-    return true;
-  }
+  bool Set_configuration_preset(EDESCRIBER_PRESET preset);
 
   /**
   @brief Detect regions on the image and compute their attributes (description)
@@ -64,10 +34,7 @@ public:
     const image::Image<unsigned char> * mask = NULL);
 
   /// Allocate Regions type depending of the Image_describer
-  void Allocate(std::unique_ptr<Regions> &regions) const
-  {
-    regions.reset( new CCTAG_Regions );
-  }
+  void Allocate(std::unique_ptr<Regions> &regions) const;
 
   template<class Archive>
   void serialize( Archive & ar )
@@ -79,8 +46,37 @@ public:
 
 private:
   //CCTag parameters
-  cctag::Parameters _params;
+  struct CCTagParameters; // Hidden implementation
+  CCTagParameters *_params;
+  bool _doAppend;
 };
+
+/**
+ * @brief Convert the descriptor representation into a CCTag ID.
+ * @param[in] desc descriptor
+ * @return cctag id or UndefinedIndexT if wrong cctag descriptor
+ */
+template <class DescriptorT>
+IndexT getCCTagId(const DescriptorT & desc)
+{
+  std::size_t cctagId = UndefinedIndexT;
+  for (int i = 0; i < desc.size(); ++i)
+  {
+    if (desc.getData()[i] == (unsigned char) 255)
+    {
+      if (cctagId != UndefinedIndexT)
+      {
+        return UndefinedIndexT;
+      }
+      cctagId = i;
+    }
+    else if(desc.getData()[i] != (unsigned char) 0)
+    {
+      return UndefinedIndexT;
+    }
+  }
+  return cctagId;
+}
 
 } // namespace features
 } // namespace openMVG
@@ -88,5 +84,3 @@ private:
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/archives/json.hpp>
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::CCTAG_Image_describer, "CCTAG_Image_describer");
-
-#endif //HAVE_CCTAG

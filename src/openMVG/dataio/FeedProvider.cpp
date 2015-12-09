@@ -17,7 +17,7 @@
 namespace openMVG{
 namespace dataio{
 
-FeedProvider::FeedProvider(const std::string &feedPath, const std::string &calibPath)
+FeedProvider::FeedProvider(const std::string &feedPath, const std::string &calibPath) : _isVideo(false)
 {
   namespace bf = boost::filesystem;
   if(!bf::exists(feedPath))
@@ -37,6 +37,7 @@ FeedProvider::FeedProvider(const std::string &feedPath, const std::string &calib
 #if HAVE_OPENCV
       // let's try it with a video
       _feeder.reset(new VideoFeed(feedPath, calibPath));
+      _isVideo = true;
 #else
       throw std::invalid_argument("Unsupported mode! If you intended to use a video"
               " please add OpenCV support");

@@ -77,6 +77,11 @@ public:
     _sfmdataInterFileExtension = interFileExtension;
   }
 
+  void setAllowUserInteraction(bool v)
+  {
+    _userInteraction = v;
+  }
+
 protected:
 
 
@@ -112,6 +117,7 @@ private:
   ESfM_Data _sfmdataInterFilter = ESfM_Data(VIEWS | EXTRINSICS | INTRINSICS | STRUCTURE);
 
   // Parameter
+  bool _userInteraction = true;
   Pair _initialpair;
   cameras::EINTRINSIC _camType; // The camera type for the unknown cameras
 

@@ -15,6 +15,9 @@
 
 MESSAGE(STATUS "Looking for CCTag.")
 
+# Try to find the headers location
+SET(CCTAG_FOUND 1)
+
 FIND_PATH(CCTAG_INCLUDE_DIR cctag/ICCTag.hpp
   HINTS
   $ENV{CCTAG_DIR}/include
@@ -22,57 +25,84 @@ FIND_PATH(CCTAG_INCLUDE_DIR cctag/ICCTag.hpp
   PATH_SUFFIXES
   CCTag
 )
-
-find_package(OpenCV QUIET)
-find_package(OPTPP QUIET)
-find_package(Ceres QUIET)
-find_package(Glog QUIET)
-
 IF(CCTAG_INCLUDE_DIR)
-  MESSAGE(STATUS "CCTag headers found in ${CCTAG_INCLUDE_DIRS}")
+  MESSAGE(STATUS "CCTag headers found in ${CCTAG_INCLUDE_DIR}")
 ELSE()
-  MESSAGE(STATUS "NOT FOUND")
-ENDIF (CCTAG_INCLUDE_DIR)
+  MESSAGE(WARNING "CCTag headers not found")
+  SET(CCTAG_FOUND 0)
+ENDIF()
 
-SET(CCTAG_LIBRARIES_NAMES  
-  CCTag
-  #third_party libraries
-  boost_filesystem
-  boost_system
-  boost_serialization
+# Locate libCCTag.a
+FIND_LIBRARY(CCTAG_LIBRARY NAMES CCTag 
+  HINTS
+  $ENV{CCTAG_DIR}
+  ${CCTAG_DIR}
+  PATH_SUFFIXES
+  lib
+  lib64
+)
+IF(CCTAG_LIBRARY)
+  MESSAGE(STATUS "CCTag library found: ${CCTAG_LIBRARY}")
+else()
+  MESSAGE(WARNING "CCTag library not found")
+  SET(CCTAG_FOUND 0)
+ENDIF (CCTAG_LIBRARY)
+
+
+#
+# Try to find the packages needed to work with CCTags
+# note that openMVG is already providing openCV, Ceres and Glog (or minilog)
+# TODO : add boost ?
+# TODO : the CCTag library could export a CCTagConfig.cmake to provide the path
+#        of its dependencies
+find_package(OPTPP REQUIRED)
+find_package(OpenCV REQUIRED) # TODO: try to use openCV provided by openMVG
+if (NOT Ceres_FOUND) # Shouldn't this test be in FindCeres.cmake ?
+	             # Or may be we only need to check that ${Ceres_LIBRARIES} is set
+  find_package(Ceres QUIET HINTS ${CERES_DIR_HINTS})
+endif()
+
+# Not sure that we need glog, commenting it for now
+#find_package(Glog QUIET)
+
+# Look for the cuda version of the lib
+FIND_LIBRARY(CCTAGCUDA_LIBRARY NAMES CCTagCuda 
+  HINTS
+    $ENV{CCTAG_DIR}
+    ${CCTAG_DIR}
+  PATH_SUFFIXES
+    lib
+    lib64
+)
+# To work with cuda, cctags needs additional CUDA cudadevrt library
+IF(CCTAGCUDA_LIBRARY)
+  SET(CCTAGCUDA_LIBRARIES ${CCTAGCUDA_LIBRARY} cudadevrt)
+ENDIF()
+
+# Sets the libraries needed to link with CCTag
+SET(CCTAG_LIBRARIES
+  ${CCTAG_LIBRARY} 
+  ${CCTAGCUDA_LIBRARIES}
+  ${Boost_LIBRARIES}
   dl
   ${OpenCV_LIBS}
   ${OPTPP_LIBRARIES}
   ${Ceres_LIBRARIES}
-  ${GLOG_LIBRARIES}
+  ${LAPACK_LIBRARIES}
 )
 
-FIND_LIBRARY(CCTAG_LIBRARY NAMES ${CCTAG_LIBRARIES_NAMES}
-  HINTS
-  $ENV{CCTAG_DIR}/lib
-  ${CCTAG_DIR}/lib
-  PATH_SUFFIXES
-  CCTag
-  #third_party libraries
-  ${OpenCV_LIB_DIR}
-  ${OPTPP_LIBRARY_DIRS}
-  ${Ceres_LIBRARY}
-  ${GLOG_LIBRARY_DIR_HINTS}
-)
 GET_FILENAME_COMPONENT(CCTAG_LIBRARY_DIR "${CCTAG_LIBRARY}" PATH)
 
-SET(CCTAG_LIBRARY "")
-FOREACH(lib ${CCTAG_LIBRARIES_NAMES})
- LIST(APPEND CCTAG_LIBRARY ${lib})  
-ENDFOREACH()
+# Sets the include dirs we need to compile with cctags
+SET(CCTAG_INCLUDE_DIRS ${CCTAG_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS})
 
-SET(CCTAG_LIBRARIES ${CCTAG_LIBRARY})
-SET(CCTAG_INCLUDE_DIRS ${CCTAG_INCLUDE_DIR})
 
 IF(CCTAG_LIBRARY)
   MESSAGE(STATUS "CCTag libraries found: ${CCTAG_LIBRARY}")
   MESSAGE(STATUS "CCTag libraries directories: ${CCTAG_LIBRARY_DIR}")
-ENDIF (CCTAG_LIBRARY)
+ELSE()
+  SET(CCTAG_FOUND 0)
+ENDIF()
 
 include(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set CCTAG_FOUND to TRUE
@@ -82,12 +112,3 @@ find_package_handle_standard_args(CCTag  DEFAULT_MSG
 
 MARK_AS_ADVANCED(CCTAG_INCLUDE_DIR CCTAG_LIBRARY)
 
-#Third parties:
-# - include directories
-
-IF(CCTAG_FOUND)
-  SET(CCTAG_INCLUDE_DIRS
-    ${CCTAG_INCLUDE_DIR}
-    ${OpenCV_INCLUDE_DIRS}
-  )
-ENDIF(CCTAG_FOUND)
