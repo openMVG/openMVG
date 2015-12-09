@@ -220,7 +220,7 @@ bool Bundle_Adjustment_Ceres::Adjust(
   options.preconditioner_type = _openMVG_options._preconditioner_type;
   options.linear_solver_type = _openMVG_options._linear_solver_type;
   options.sparse_linear_algebra_library_type = _openMVG_options._sparse_linear_algebra_library_type;
-  options.minimizer_progress_to_stdout = false;
+  options.minimizer_progress_to_stdout = _openMVG_options._bVerbose;
   options.logging_type = ceres::SILENT;
   options.num_threads = _openMVG_options._nbThreads;
   options.num_linear_solver_threads = _openMVG_options._nbThreads;
