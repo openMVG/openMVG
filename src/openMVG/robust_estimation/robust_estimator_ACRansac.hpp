@@ -130,7 +130,8 @@ static ErrorIndex bestNFA(
   ErrorIndex bestIndex(std::numeric_limits<double>::infinity(), startIndex);
   const size_t n = e.size();
   for(size_t k=startIndex+1; k<=n && e[k-1].first<=maxThreshold; ++k) {
-    const double logalpha = logalpha0 + multError * log10(e[k-1].first + std::numeric_limits<float>::min());
+    const double logalpha = logalpha0 +
+      multError * log10(e[k-1].first + std::numeric_limits<float>::epsilon());
     ErrorIndex index(loge0 +
       logalpha * (double)(k-startIndex) +
       logc_n[k] +
@@ -180,7 +181,7 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
 
   const size_t sizeSample = Kernel::MINIMUM_SAMPLES;
   const size_t nData = kernel.NumSamples();
-  if(nData <= (size_t)sizeSample)
+  if (nData <= (size_t)sizeSample)
     return std::make_pair(0.0,0.0);
 
   const double maxThreshold = (precision==std::numeric_limits<double>::infinity()) ?
