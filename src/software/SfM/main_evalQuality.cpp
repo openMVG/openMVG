@@ -180,7 +180,7 @@ int main(int argc, char **argv)
   EvaluteToGT(vec_camPosGT, vec_C, vec_camRotGT, vec_camRot, sOutDir, &_htmlDocStream);
 
   ofstream htmlFileStream( string(stlplus::folder_append_separator(sOutDir) +
-    "ExternalCalib_Report.html").c_str());
+    "ExternalCalib_Report.html"));
   htmlFileStream << _htmlDocStream.getDoc();
 
   return EXIT_SUCCESS;

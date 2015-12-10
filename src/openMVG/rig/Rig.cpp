@@ -57,7 +57,19 @@ void Rig::setTrackingResult(
 
 bool Rig::initializeCalibration()
 {
+  // check that there are cameras
+  assert(_vLocalizationResults.size()>0);
+  
+  // check that all the cameras have the same number of localizationResults
+  const std::size_t sequenceLength = _vLocalizationResults[0].size();
   const std::size_t nCams = _vLocalizationResults.size();
+  
+  for(std::size_t i = 1; i < nCams; ++i)
+  {
+    assert(_vLocalizationResults[i].size() == sequenceLength 
+            && "All cameras must have the same number of images");
+  }
+  
   
   // Tracker of the main cameras
   std::vector<localization::LocalizationResult> & resMainCamera = _vLocalizationResults[0];
@@ -222,11 +234,15 @@ void Rig::displayRelativePoseReprojection(const geometry::Pose3 & relativePose, 
 
 bool Rig::optimizeCalibration()
 {
+  assert(_vRelativePoses.size() > 0);
+  assert(_vLocalizationResults.size() > 0);
+  
   ceres::Problem problem;
 
   // Add relative pose as a parameter block over all witness cameras.
   std::vector<std::vector<double> > vRelativePoses;
-  for (int iRelativePose = 0 ; iRelativePose < _vRelativePoses.size() ; ++iRelativePose )
+  vRelativePoses.reserve(_vRelativePoses.size());
+  for(std::size_t iRelativePose = 0 ; iRelativePose < _vRelativePoses.size() ; ++iRelativePose )
   {
     geometry::Pose3 & pose = _vRelativePoses[iRelativePose];
     
@@ -246,13 +262,16 @@ bool Rig::optimizeCalibration()
     relativePose.push_back(t(2));
 
     vRelativePoses.push_back(relativePose);
-    
-    double * parameter_block = &vRelativePoses.back()[0];
+  }
+  for(std::vector<double> &pose : vRelativePoses)
+  {
+    double * parameter_block = &pose[0];
     problem.AddParameterBlock(parameter_block, 6);
   }
   
   // Add rig pose (i.e. main camera pose) as a parameter block over all views (i.e. timestamps).
   std::vector<std::vector<double> > vMainPoses;
+  vMainPoses.reserve(_vLocalizationResults[0].size());
   for (int iView = 0 ; iView < _vLocalizationResults[0].size() ; ++iView )
   {
     if ( _vLocalizationResults[0][iView].isValid() )
@@ -274,10 +293,12 @@ bool Rig::optimizeCalibration()
       mainPose.push_back(t(2));
 
       vMainPoses.push_back(mainPose);
-      
-      double * parameter_block = &vMainPoses.back()[0];
-      problem.AddParameterBlock(parameter_block, 6);
     }
+  }
+  for(std::vector<double> &pose : vMainPoses)
+  {
+    double * parameter_block = &pose[0];
+    problem.AddParameterBlock(parameter_block, 6);
   }
 
 // The following code can be used if the intrinsics have to be refined in the bundle adjustment

@@ -4,9 +4,12 @@
 #include "opencv2/highgui/highgui.hpp"
 
 #include <cctype>
+#include <fstream>
 #include <stdio.h>
-#include <string.h>
+#include <iostream>
+#include <string>
 #include <time.h>
+#include <stdexcept>
 
 using namespace cv;
 using namespace std;
@@ -62,6 +65,7 @@ static void help()
         "     [-op]                    # write detected feature points\n"
         "     [-oe]                    # write extrinsic parameters\n"
         "     [-zt]                    # assume zero tangential distortion\n"
+        "     [-k2]                    # use only two radial distortion coefficients\n"
         "     [-a <aspectRatio>]      # fix aspect ratio (fx/fy)\n"
         "     [-p]                     # fix the principal point at the center\n"
         "     [-v]                     # flip the captured images around the horizontal axis\n"
@@ -165,6 +169,56 @@ static bool runCalibration( vector<vector<Point2f> > imagePoints,
     return ok;
 }
 
+static void saveCameraParamsToPlainTxt(const string &filename,
+                                       const Size &imageSize,
+                                       const Mat& cameraMatrix,
+                                       const Mat& distCoeffs)
+{
+  std::ofstream fs(filename, std::ios::out);
+  if(!fs.is_open())
+  {
+    std::cerr << "Unable to create the calibration file " << filename << std::endl;
+    throw std::invalid_argument("Unable to create the calibration file "+filename);
+  }
+  
+  // the structure of the file is
+// int #image width
+// int #image height
+// double #focal
+// double #ppx principal point x-coord
+// double #ppy principal point y-coord
+// double #k0
+// double #k1
+// double #k2
+  fs << imageSize.width << std::endl;
+  fs << imageSize.height << std::endl;
+  if(cameraMatrix.type() == DataType<double>::type)
+  {
+    fs << (cameraMatrix.at<double>(0,0) + cameraMatrix.at<double>(1,1))/2 << std::endl;
+    fs << cameraMatrix.at<double>(0,2) << std::endl;
+    fs << cameraMatrix.at<double>(1,2) << std::endl;
+  }
+  else
+  {
+    fs << (cameraMatrix.at<float>(0,0) + cameraMatrix.at<float>(1,1))/2 << std::endl;
+    fs << cameraMatrix.at<float>(0,2) << std::endl;
+    fs << cameraMatrix.at<float>(1,2) << std::endl;
+  }
+  if(distCoeffs.type() == DataType<double>::type)
+  {
+    fs << distCoeffs.at<double>(0) << std::endl;
+    fs << distCoeffs.at<double>(1) << std::endl;
+    fs << distCoeffs.at<double>(2) << std::endl;
+  }
+  else
+  {
+    fs << distCoeffs.at<float>(0) << std::endl;
+    fs << distCoeffs.at<float>(1) << std::endl;
+    fs << distCoeffs.at<float>(2) << std::endl;
+  }
+  fs.close();
+}
+
 
 static void saveCameraParams( const string& filename,
                        Size imageSize, Size boardSize,
@@ -245,6 +299,8 @@ static void saveCameraParams( const string& filename,
         }
         fs << "image_points" << imagePtMat;
     }
+    const string txtfilename = filename.substr(0, filename.find_last_of("."))+".cal.txt";
+    saveCameraParamsToPlainTxt(txtfilename, imageSize, cameraMatrix, distCoeffs);
 }
 
 static bool readStringList( const string& filename, vector<string>& l )
@@ -380,6 +436,10 @@ int main( int argc, char** argv )
         else if( strcmp( s, "-zt" ) == 0 )
         {
             flags |= CV_CALIB_ZERO_TANGENT_DIST;
+        }
+        else if( strcmp( s, "-k2" ) == 0 )
+        {
+            flags |= CV_CALIB_FIX_K3;
         }
         else if( strcmp( s, "-p" ) == 0 )
         {
