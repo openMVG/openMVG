@@ -184,9 +184,6 @@ bool extractSIFT(const image::Image<unsigned char>& image,
   //Convert to float
   const image::Image<float> imageFloat(image.GetMat().cast<float>());
 
-  // Configure VLFeat
-  vl_constructor();
-
   VlSiftFilt *filt = vl_sift_new(w, h, params._num_octaves, params._num_scales, params._first_octave);
   if (params._edge_threshold >= 0)
     vl_sift_set_edge_thresh(filt, params._edge_threshold);
@@ -259,8 +256,6 @@ bool extractSIFT(const image::Image<unsigned char>& image,
       break; // Last octave
   }
   vl_sift_delete(filt);
-
-  vl_destructor();
 
   const auto& features = regionsCasted->Features();
   const auto& descriptors = regionsCasted->Descriptors();
