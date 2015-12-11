@@ -45,13 +45,22 @@ struct IntrinsicBase
   }
 
   /// Compute the residual between the 3D projected point X and an image observation x
-  Vec2 residual(
-    const geometry::Pose3 & pose,
-    const Vec3 & X,
-    const Vec2 & x) const
+  Vec2 residual(const geometry::Pose3 & pose, const Vec3 & X, const Vec2 & x) const
   {
     const Vec2 proj = this->project(pose, X);
     return x - proj;
+  }
+  
+  Mat2X residuals(const geometry::Pose3 & pose, const Mat3X & X, const Mat2X & x) const
+  {
+    assert(X.cols() == x.cols());
+    const std::size_t numPts = x.cols();
+    Mat2X residuals = Mat2X::Zero(2, numPts);
+    for(std::size_t i = 0; i < numPts; ++i)
+    {
+      residuals.col(i) = residual(pose, X.col(i), x.col(i));
+    }
+    return residuals;
   }
 
   // --
