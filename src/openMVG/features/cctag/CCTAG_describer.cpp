@@ -14,6 +14,30 @@ namespace features {
 struct CCTAG_Image_describer::CCTagParameters : public cctag::Parameters 
 {
   CCTagParameters(size_t nRings) : cctag::Parameters(nRings) {}
+  
+  float _cannyThrLow;
+  float _cannyThrHigh;
+  
+  bool setPreset(EDESCRIBER_PRESET preset)
+  {
+    switch(preset)
+    {
+    // Normal lighting conditions: normal contrast
+    case LOW_PRESET:
+    case MEDIUM_PRESET:
+    case NORMAL_PRESET:
+      _cannyThrLow = 0.01f;
+      _cannyThrHigh = 0.04f;
+    break;
+    // Low lighting conditions: very low contrast
+    case HIGH_PRESET:
+    case ULTRA_PRESET:
+      _cannyThrLow = 0.002f;
+      _cannyThrHigh = 0.01f;
+    break;
+    }
+    return true;
+  }
 };
 
 
@@ -35,28 +59,7 @@ void CCTAG_Image_describer::Allocate(std::unique_ptr<Regions> &regions) const
 
 bool CCTAG_Image_describer::Set_configuration_preset(EDESCRIBER_PRESET preset)
 {
-  // todo@L: choose most relevant preset names
-  switch(preset)
-  {
-  // Normal lighting conditions: normal contrast
-  case LOW_PRESET:
-  case MEDIUM_PRESET:
-  case NORMAL_PRESET:
-    _params->_cannyThrLow = 0.01f;
-    _params->_cannyThrHigh = 0.04f;
-  break;
-  // Low lighting conditions: very low contrast
-  case HIGH_PRESET:
-    _params->_cannyThrLow = 0.002f;
-    _params->_cannyThrHigh = 0.01f;
-  break;
-  case ULTRA_PRESET:
-    // todo@L: not set yet
-  break;
-  default:
-    return false;
-  }
-  return true;
+  return _params->setPreset(preset);
 }
 
 bool CCTAG_Image_describer::Describe(const image::Image<unsigned char>& image,
