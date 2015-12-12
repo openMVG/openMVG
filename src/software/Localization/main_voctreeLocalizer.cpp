@@ -244,8 +244,11 @@ int main(int argc, char** argv)
   
   if(globalBundle)
   {
+    POPART_COUT("\n\n\n***********************************************");
+    POPART_COUT("Bundle Adjustment - Refining the whole sequence");
+    POPART_COUT("***********************************************\n\n");
     // run a bundle adjustment
-    const bool BAresult = localization::refineSequence(&queryIntrinsics, vec_localizationResults);
+    const bool BAresult = localization::refineSequence(vec_localizationResults, true, true);
     if(!BAresult)
     {
       POPART_CERR("Bundle Adjustment failed!");
@@ -261,7 +264,8 @@ int main(int argc, char** argv)
         if(res.isValid())
         {
           assert(idx < vec_localizationResults.size());
-          exporterBA.appendCamera("camera."+myToString(idx,4), res.getPose(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
+//          exporterBA.appendCamera("camera."+myToString(idx,4), res.getPose(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
+          exporterBA.appendCamera("camera."+myToString(idx,4), res.getPose(), &res.getIntrinsics(), mediaFilepath, frameCounter, frameCounter);
         }
         else
         {

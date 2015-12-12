@@ -9,6 +9,14 @@
 #include <openMVG/sfm/sfm_data_BA_ceres.hpp>
 #include <openMVG/rig/rig_BA_ceres.hpp>
 
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/density.hpp>
+#include <boost/accumulators/statistics/min.hpp>
+#include <boost/accumulators/statistics/max.hpp>
+#include <boost/accumulators/statistics/sum.hpp>
+
 //@fixme move/redefine
 #define POPART_COUT(x) std::cout << x << std::endl
 #define POPART_CERR(x) std::cerr << x << std::endl
@@ -16,37 +24,17 @@
 namespace openMVG{
 namespace localization{
 
-bool refineSequence(cameras::Pinhole_Intrinsic_Radial_K3 *intrinsics,
-                    std::vector<LocalizationResult> & vec_localizationResult,
-                    bool b_refine_pose /*= true*/,
+bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
+                    bool allTheSameIntrinsics /*= true*/,
                     bool b_refine_intrinsic /*= true*/,
+                    bool b_no_distortion /*= false*/,
+                    bool b_refine_pose /*= true*/,
                     bool b_refine_structure /*= false*/)
 {
-  std::vector<cameras::Pinhole_Intrinsic_Radial_K3* > vec_intrinsics;
-  vec_intrinsics.push_back(intrinsics);
-  return refineSequence(vec_intrinsics, vec_localizationResult);
-}
-
-bool refineSequence(std::vector<cameras::Pinhole_Intrinsic_Radial_K3* > vec_intrinsics,
-                    std::vector<LocalizationResult> & vec_localizationResult,
-                    bool b_refine_pose /*= true*/,
-                    bool b_refine_intrinsic /*= true*/,
-                    bool b_refine_structure /*= false*/)
-{
-   
-  // flags for BA
-//  const bool b_refine_pose = true;
-//  const bool b_refine_intrinsic = true;
-//  const bool b_refine_structure = false;
-  
-  // vec_intrinsics must be either of the same size of localization result (a 
-  // camera for each found pose) or it must contain only 1 element, meaning that 
-  // it's the same camera for the whole sequence
-  assert(vec_intrinsics.size()==vec_localizationResult.size() || vec_intrinsics.size()==1);
   
   const size_t numViews = vec_localizationResult.size();
-  const bool singleCamera = vec_intrinsics.size()==1;
-  
+  assert(numViews > 0 );
+   
   // the id for the instrinsic group
   IndexT intrinsicID = 0;
     
@@ -54,31 +42,81 @@ bool refineSequence(std::vector<cameras::Pinhole_Intrinsic_Radial_K3* > vec_intr
   sfm::SfM_Data tinyScene;
   
   // if we have only one camera just set the intrinsics group once for all
-  if(singleCamera)
+  if(allTheSameIntrinsics)
   {
-    // intrinsic (the shared_ptr does not take the ownership, will not release the input pointer)
-    tinyScene.intrinsics[intrinsicID] = std::shared_ptr<cameras::Pinhole_Intrinsic_Radial_K3>(vec_intrinsics[0], [](cameras::Pinhole_Intrinsic_Radial_K3*){});
+    // find the first valid localization result and use its intrinsics
+    std::size_t intrinsicIndex = 0;
+    for(size_t viewID = 0; viewID < numViews; ++viewID, ++intrinsicIndex)
+    {
+      if(vec_localizationResult[viewID].isValid())
+        break;
+    }
+    // it may be the case that all the localization result are invalid...
+    if(!vec_localizationResult[intrinsicIndex].isValid())
+    {
+      POPART_CERR("Apparently all the vec_localizationResult are invalid! Aborting...");
+      return false;
+    }
+    
+    POPART_CERR("allTheSameIntrinsics mode: using the intrinsics of the " << intrinsicIndex << " result");
+    
+    cameras::Pinhole_Intrinsic_Radial_K3* currIntrinsics = &vec_localizationResult[intrinsicIndex].getIntrinsics();
+    
+    if(b_no_distortion)
+    {
+      // no distortion refinement
+      POPART_COUT("Optical distortion won't be considered");
+      // just add a simple pinhole camera with the same K as the input camera
+      Vec2 pp = currIntrinsics->principal_point();
+      tinyScene.intrinsics[intrinsicID] = std::make_shared<cameras::Pinhole_Intrinsic>(currIntrinsics->_w, currIntrinsics->_h, currIntrinsics->focal(), pp(0), pp(1));
+    }
+    else
+    {
+      // intrinsic (the shared_ptr does not take the ownership, will not release the input pointer)
+      tinyScene.intrinsics[intrinsicID] = std::shared_ptr<cameras::Pinhole_Intrinsic_Radial_K3>(currIntrinsics, [](cameras::Pinhole_Intrinsic_Radial_K3*){});
+      POPART_COUT("Type of intrinsics " <<tinyScene.intrinsics[0].get()->getType());
+    }
+  }
+  
+  {
+    // just debugging -- print reprojection errors -- this block can be safely removed/commented out
+    for(size_t viewID = 0; viewID < numViews; ++viewID)
+    {
+      const LocalizationResult &currResult = vec_localizationResult[viewID];
+      if(!currResult.isValid())
+      {
+        continue;
+      }
+      
+      const Mat2X residuals = currResult.computeResiduals();
+      
+      const auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
+      POPART_COUT("View " << viewID << " RMSE = " << std::sqrt(sqrErrors.mean()) 
+              << " min = " << std::sqrt(sqrErrors.minCoeff()) 
+              << " mean = " << std::sqrt(sqrErrors.mean())
+              << " max = " << std::sqrt(sqrErrors.maxCoeff()));
+    }
   }
   
   for(size_t viewID = 0; viewID < numViews; ++viewID)
   {
-    const LocalizationResult &currResult = vec_localizationResult[viewID];
-    cameras::Pinhole_Intrinsic_Radial_K3* currIntrinsics = vec_intrinsics[viewID];
+    LocalizationResult &currResult = vec_localizationResult[viewID];
     // skip invalid poses
     if(!currResult.isValid())
     {
-      std::cout << "\n*****\nskipping invalid View " << viewID << std::endl;
+      POPART_COUT("\n*****\nskipping invalid View " << viewID);
       continue;
     }
     
-    std::cout << "\n*****\nView " << viewID << std::endl;
+//    POPART_COUT("\n*****\nView " << viewID);
     // view
     tinyScene.views.insert( std::make_pair(viewID, std::make_shared<sfm::View>("",viewID, intrinsicID, viewID)));
     // pose
     tinyScene.poses[viewID] = currResult.getPose();
     
-    if(!singleCamera)
+    if(!allTheSameIntrinsics)
     {
+      cameras::Pinhole_Intrinsic_Radial_K3* currIntrinsics = &currResult.getIntrinsics();
        // intrinsic (the shared_ptr does not take the ownership, will not release the input pointer)
       tinyScene.intrinsics[intrinsicID] = std::shared_ptr<cameras::Pinhole_Intrinsic_Radial_K3>(currIntrinsics, [](cameras::Pinhole_Intrinsic_Radial_K3*){});
       ++intrinsicID;
@@ -95,7 +133,7 @@ bool refineSequence(std::vector<cameras::Pinhole_Intrinsic_Radial_K3* > vec_intr
       const IndexT landmarkID = currentIDs[idx].first;
       // get the corresponding 2D point ID
       const IndexT featID = currentIDs[idx].second;
-      std::cout << "inlier " << idx << " is land " << landmarkID << " and feat " << featID << std::endl;
+//      POPART_COUT("inlier " << idx << " is land " << landmarkID << " and feat " << featID);
       // get the corresponding feature
       const Vec2 &feature = currResult.getPt2D().col(idx);
       // check if the point exists already
@@ -103,11 +141,12 @@ bool refineSequence(std::vector<cameras::Pinhole_Intrinsic_Radial_K3* > vec_intr
       {
         // normally there should be no other features already associated to this
         // 3D point in this view
-//        assert(tinyScene.structure[landmarkID].obs.count(viewID) == 0);
         if(tinyScene.structure[landmarkID].obs.count(viewID) != 0)
         {
           // this is weird but it could happen when two features are really close to each other (?)
-          std::cout << "Point 3D " << landmarkID << " has multiple features " << tinyScene.structure[landmarkID].obs.size() << " in the same view " << viewID << " size "  << std::endl; 
+          POPART_COUT("Point 3D " << landmarkID << " has multiple features " 
+                  << tinyScene.structure[landmarkID].obs.size() 
+                  << " in the same view " << viewID << " size "); 
           continue;
         }
         
@@ -124,22 +163,52 @@ bool refineSequence(std::vector<cameras::Pinhole_Intrinsic_Radial_K3* > vec_intr
       }
     }
   }
-  POPART_COUT("Number of 3D-2D associations " << tinyScene.structure.size());
   
-  if(singleCamera)
   {
+    // just debugging some stats -- this block can be safely removed/commented out
+    
+    POPART_COUT("Number of 3D-2D associations " << tinyScene.structure.size());
+    
+    std::size_t maxObs = 0;
+    for(const auto landmark : tinyScene.GetLandmarks() )
+    {
+      if(landmark.second.obs.size() > maxObs)
+        maxObs = landmark.second.obs.size();
+    }
+    namespace bacc = boost::accumulators;
+    bacc::accumulator_set<std::size_t, bacc::stats<bacc::tag::mean, bacc::tag::min, bacc::tag::max, bacc::tag::sum > > stats;
+    std::vector<std::size_t> hist(maxObs+1, 0);
+    for(const auto landmark : tinyScene.GetLandmarks() )
+    {
+      const std::size_t nobs = landmark.second.obs.size();
+      assert(nobs < hist.size());
+      stats(nobs);
+      hist[nobs]++;
+    }
+    POPART_COUT("Min number of observations per point:   " << bacc::min(stats) );
+    POPART_COUT("Mean number of observations per point:   " << bacc::mean(stats) );
+    POPART_COUT("Max number of observations per point:   " << bacc::max(stats) );
+    
+    for( int i = 0; i < hist.size(); i++ ) 
+    {
+      POPART_COUT("Points with " << i << " observations: " << hist[i]); 
+    }
+
     // just debugging stuff
-    const cameras::Pinhole_Intrinsic_Radial_K3* intrinsics = vec_intrinsics[0];
-    std::vector<double> params = intrinsics->getParams();
-    POPART_COUT("K before bundle:" << params[0] << " " << params[1] << " "<< params[2]);
-    POPART_COUT("Distortion before bundle" << params[3] << " " << params[4] << " "<< params[5]);
+    if(allTheSameIntrinsics)
+    {
+      std::vector<double> params = tinyScene.intrinsics[0].get()->getParams();
+      POPART_COUT("K before bundle: " << params[0] << " " << params[1] << " "<< params[2]);
+      if(params.size() == 6)
+        POPART_COUT("Distortion before bundle: " << params[3] << " " << params[4] << " "<< params[5]);
+    }
   }
 
   sfm::Bundle_Adjustment_Ceres bundle_adjustment_obj;
   const bool b_BA_Status = bundle_adjustment_obj.Adjust(tinyScene, b_refine_pose, b_refine_pose, b_refine_intrinsic, b_refine_structure);
   if(b_BA_Status)
   {
-    // get back the results
+    // get back the results and update the localization result with the refined pose
     for(const auto &pose : tinyScene.poses)
     {
       const IndexT idPose = pose.first;
@@ -147,13 +216,54 @@ bool refineSequence(std::vector<cameras::Pinhole_Intrinsic_Radial_K3* > vec_intr
     }
   }
   
-  if(singleCamera)
+  if(allTheSameIntrinsics)
   {
-    // just debugging stuff
-    const cameras::Pinhole_Intrinsic_Radial_K3* intrinsics = vec_intrinsics[0];
-    std::vector<double> params = intrinsics->getParams();
-    POPART_COUT("K after bundle:" << params[0] << " " << params[1] << " "<< params[2]);
-    POPART_COUT("Distortion after bundle" << params[3] << " " << params[4] << " "<< params[5]);
+    // if we used the same intrinsics for all the localization results we need to
+    // update the intrinsics of each localization result
+    
+    // get the optimized intrinsics parameters
+//    const cameras::Pinhole_Intrinsic_Radial_K3 *intrinsics = (const cameras::Pinhole_Intrinsic_Radial_K3*) tinyScene.intrinsics[0].get();
+//    {
+//      // this is when we do not optimize the distortion
+//      std::vector<double> params = tinyScene.intrinsics[0]->getParams();
+//      POPART_COUT("size of fake params " << params.size());
+//      intrinsics->setK(params[0], params[1], params[2]);
+//    }
+    // get its optimized parametes
+    std::vector<double> params = tinyScene.intrinsics[0].get()->getParams();
+    POPART_COUT("Type of intrinsics " <<tinyScene.intrinsics[0].get()->getType());
+    if(params.size() == 3)
+    {
+      // this means that the b_no_distortion has been passed
+      // set distortion to 0
+      params.push_back(0);
+      params.push_back(0);
+      params.push_back(0);
+    }
+    assert(params.size() == 6);
+    POPART_COUT("K after bundle: " << params[0] << " " << params[1] << " "<< params[2]);
+    POPART_COUT("Distortion after bundle " << params[3] << " " << params[4] << " "<< params[5]);
+
+    // update the intrinsics of the each localization result
+    for(size_t viewID = 0; viewID < numViews; ++viewID)
+    {
+      LocalizationResult &currResult = vec_localizationResult[viewID];
+      if(!currResult.isValid())
+      {
+        continue;
+      }
+      currResult.updateIntrinsics(params);
+      
+      // just debugging -- print reprojection errors
+      const Mat2X residuals = currResult.computeResiduals();
+      
+      const auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
+      POPART_COUT("View " << viewID << " RMSE = " << std::sqrt(sqrErrors.mean()) 
+              << " min = " << std::sqrt(sqrErrors.minCoeff()) 
+              << " mean = " << std::sqrt(sqrErrors.mean())
+              << " max = " << std::sqrt(sqrErrors.maxCoeff()));
+    }
+    
   }
   
   return b_BA_Status;
