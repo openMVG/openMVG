@@ -66,6 +66,8 @@ int main(int argc, char** argv)
 #endif
   std::string algostring = "FirstBest";
   bool globalBundle = false;      ///< If !param._refineIntrinsics it can run a final global budndle to refine the scene
+  bool noDistortion = false;      ///< It does not count the distortion
+  bool noBArefineIntrinsics = false;      ///< It does not refine intrinsics during BA
 
   po::options_description desc(
                                "This program takes as input a media (image, image sequence, video) and a database (voctree, 3D structure data) \n"
@@ -85,6 +87,8 @@ int main(int argc, char** argv)
       ("mediafile,m", po::value<std::string>(&mediaFilepath)->required(), "The folder path or the filename for the media to track")
       ("refineIntrinsics", po::bool_switch(&param._refineIntrinsics), "Enable/Disable camera intrinsics refinement for each localized image")
       ("globalBundle", po::bool_switch(&globalBundle), "If --refineIntrinsics is not set, this option allows to run a final global budndle adjustment to refine the scene")
+      ("noDistortion", po::bool_switch(&noDistortion), "It does not take into account distortion during the BA, it consider the distortion coefficients all equal to 0")
+      ("noBArefineIntrinsics", po::bool_switch(&noBArefineIntrinsics), "It does not refine intrinsics during BA")
       ("visualDebug", po::value<std::string>(&param._visualDebug), "If a directory is provided it enables visual debug and saves all the debugging info in that directory")
 #if HAVE_ALEMBIC
       ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), "Filename for the SfM_Data export file (where camera poses will be stored). Default : trackedcameras.json If Alambic is enable it will also export an .abc file of the scene with the same name")
@@ -143,6 +147,8 @@ int main(int argc, char** argv)
     POPART_COUT("\trefineIntrinsics: " << param._refineIntrinsics);
     POPART_COUT("\tpreset: " << features::describerPreset_enumToString(param._featurePreset));
     POPART_COUT("\tglobalBundle: " << globalBundle);
+    POPART_COUT("\tnoDistortion: " << noDistortion);
+    POPART_COUT("\tnoBArefineIntrinsics: " << noBArefineIntrinsics);
     POPART_COUT("\tvisualDebug: " << param._visualDebug);
     POPART_COUT("\talgorithm: " << param._algorithm);
 #if HAVE_CCTAG
@@ -248,7 +254,8 @@ int main(int argc, char** argv)
     POPART_COUT("Bundle Adjustment - Refining the whole sequence");
     POPART_COUT("***********************************************\n\n");
     // run a bundle adjustment
-    const bool BAresult = localization::refineSequence(vec_localizationResults, true, true);
+    const bool b_allTheSame = true;
+    const bool BAresult = localization::refineSequence(vec_localizationResults, b_allTheSame, !noBArefineIntrinsics, noDistortion);
     if(!BAresult)
     {
       POPART_CERR("Bundle Adjustment failed!");
