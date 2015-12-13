@@ -636,7 +636,7 @@ bool loadRigCalibration(const std::string &filename, std::vector<geometry::Pose3
       for(std::size_t j = 0; j < 3; ++j)
         fs >> rot(i,j);
     
-    // write the translation part
+    // load the center
     Vec3 center;
     fs >> center(0);
     fs >> center(1);
@@ -652,9 +652,9 @@ bool loadRigCalibration(const std::string &filename, std::vector<geometry::Pose3
 //R[0][0] // first camera rotation
 //R[0][1]
 //...
-//t[0] // first camera translation
-//t[1]
-//t[2]
+//C[0] // first camera center
+//C[1]
+//C[2]
 //R[0][0] // second camera rotation
 //...
 bool saveRigCalibration(const std::string &filename, const std::vector<geometry::Pose3> &subposes)
@@ -675,7 +675,7 @@ bool saveRigCalibration(const std::string &filename, const std::vector<geometry:
       for(std::size_t j = 0; j < 3; ++j)
         fs << rot(i,j) << std::endl;
     
-    // write the translation part
+    // write the center
     const Vec3 &center = p.center();
     fs << center(0) << std::endl;
     fs << center(1) << std::endl;
