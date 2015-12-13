@@ -221,15 +221,7 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
     // if we used the same intrinsics for all the localization results we need to
     // update the intrinsics of each localization result
     
-    // get the optimized intrinsics parameters
-//    const cameras::Pinhole_Intrinsic_Radial_K3 *intrinsics = (const cameras::Pinhole_Intrinsic_Radial_K3*) tinyScene.intrinsics[0].get();
-//    {
-//      // this is when we do not optimize the distortion
-//      std::vector<double> params = tinyScene.intrinsics[0]->getParams();
-//      POPART_COUT("size of fake params " << params.size());
-//      intrinsics->setK(params[0], params[1], params[2]);
-//    }
-    // get its optimized parametes
+    // get its optimized parameters
     std::vector<double> params = tinyScene.intrinsics[0].get()->getParams();
     POPART_COUT("Type of intrinsics " <<tinyScene.intrinsics[0].get()->getType());
     if(params.size() == 3)
