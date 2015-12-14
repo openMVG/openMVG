@@ -351,13 +351,11 @@ int main(int argc, char **argv)
       const std::string sCamName = exifReader.getBrand();
       const std::string sCamModel = exifReader.getModel();
 
-      std::cout << "Search sensor width in file database." << std::endl;
       Datasheet datasheet;
       if ( getInfo( sCamName, sCamModel, vec_database, datasheet ))
       {
         // The camera model was found in the database so we can compute it's approximated focal length
         ccdw = datasheet._sensorSize;
-        std::cout << "Camera found in database. Sensor width = " << ccdw << std::endl;
         allExifData.emplace("sensor_width", std::to_string(ccdw));
       }
       else
