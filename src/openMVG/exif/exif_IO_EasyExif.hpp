@@ -56,16 +56,13 @@ class Exif_IO_EasyExif : public Exif_IO
       rewind(fp);
       std::vector<unsigned char> buf(fsize);
       if (fread(&buf[0], 1, fsize, fp) != fsize) {
+        fclose(fp);
         return false;
       }
       fclose(fp);
 
       // Parse EXIF
-      int code = exifInfo_.parseFrom(&buf[0], fsize);
-      if (code)
-        bHaveExifInfo_ = false;
-      else
-        bHaveExifInfo_ = true;
+      bHaveExifInfo_ = (exifInfo_.parseFrom(&buf[0], fsize) == PARSE_EXIF_SUCCESS);
 
       return bHaveExifInfo_;
     }

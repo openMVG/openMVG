@@ -466,6 +466,189 @@ int easyexif::EXIFInfo::parseFrom(const string &data) {
   return parseFrom((const unsigned char *)data.data(), data.length());
 }
 
+void readTag(IFEntry & result, easyexif::EXIFInfo * exif)
+{
+  switch (result.tag()) {
+    case 0x102:
+      // Bits per sample
+      if (result.format() == 3)
+        exif->BitsPerSample = result.val_short().front();
+      break;
+
+    case 0x10E:
+      // Image description
+      if (result.format() == 2) exif->ImageDescription = result.val_string();
+      break;
+
+    case 0x10F:
+      // Digicam make
+      if (result.format() == 2) exif->Make = result.val_string();
+      break;
+
+    case 0x110:
+      // Digicam model
+      if (result.format() == 2) exif->Model = result.val_string();
+      break;
+
+    case 0x112:
+      // Orientation of image
+      if (result.format() == 3)
+        exif->Orientation = result.val_short().front();
+      break;
+
+    case 0x131:
+      // Software used for image
+      if (result.format() == 2) exif->Software = result.val_string();
+      break;
+
+    case 0x132:
+      // EXIF/TIFF date/time of image modification
+      if (result.format() == 2) exif->DateTime = result.val_string();
+      break;
+
+    case 0x8298:
+      // Copyright information
+      if (result.format() == 2) exif->Copyright = result.val_string();
+      break;
+
+    case 0x829a:
+      // Exposure time in seconds
+      if (result.format() == 5)
+        exif->ExposureTime = result.val_rational().front();
+      break;
+
+    case 0x829d:
+      // FNumber
+      if (result.format() == 5)
+        exif->FNumber = result.val_rational().front();
+      break;
+
+    case 0x8827:
+      // ISO Speed Rating
+      if (result.format() == 3)
+        exif->ISOSpeedRatings = result.val_short().front();
+      break;
+
+    case 0x9003:
+      // Original date and time
+      if (result.format() == 2)
+        exif->DateTimeOriginal = result.val_string();
+      break;
+
+    case 0x9004:
+      // Digitization date and time
+      if (result.format() == 2)
+        exif->DateTimeDigitized = result.val_string();
+      break;
+
+    case 0x9201:
+      // Shutter speed value
+      if (result.format() == 5)
+        exif->ShutterSpeedValue = result.val_rational().front();
+      break;
+
+    case 0x9204:
+      // Exposure bias value
+      if (result.format() == 5)
+        exif->ExposureBiasValue = result.val_rational().front();
+      break;
+
+    case 0x9206:
+      // Subject distance
+      if (result.format() == 5)
+        exif->SubjectDistance = result.val_rational().front();
+      break;
+
+    case 0x9209:
+      // Flash used
+      if (result.format() == 3) exif->Flash = result.data() ? 1 : 0;
+      break;
+
+    case 0x920a:
+      // Focal length
+      if (result.format() == 5)
+        exif->FocalLength = result.val_rational().front();
+      break;
+
+    case 0x9207:
+      // Metering mode
+      if (result.format() == 3)
+        exif->MeteringMode = result.val_short().front();
+      break;
+
+    case 0x9291:
+      // Subsecond original time
+      if (result.format() == 2)
+        exif->SubSecTimeOriginal = result.val_string();
+      break;
+
+    case 0xa002:
+      // EXIF Image width
+      if (result.format() == 4)
+        exif->ImageWidth = result.val_long().front();
+      if (result.format() == 3)
+        exif->ImageWidth = result.val_short().front();
+      break;
+
+    case 0xa003:
+      // EXIF Image height
+      if (result.format() == 4)
+        exif->ImageHeight = result.val_long().front();
+      if (result.format() == 3)
+        exif->ImageHeight = result.val_short().front();
+      break;
+
+    case 0xa20e:
+      // EXIF Focal plane X-resolution
+      if (result.format() == 5) {
+        exif->LensInfo.FocalPlaneXResolution = result.val_rational()[0];
+      }
+      break;
+
+    case 0xa20f:
+      // EXIF Focal plane Y-resolution
+      if (result.format() == 5) {
+        exif->LensInfo.FocalPlaneYResolution = result.val_rational()[0];
+      }
+      break;
+
+    case 0xa405:
+      // Focal length in 35mm film
+      if (result.format() == 3)
+        exif->FocalLengthIn35mm = result.val_short().front();
+      break;
+
+    case 0xa420:
+      if (result.format() == 2)
+        exif->ImageUniqueID = result.val_string();
+       break;
+
+    case 0xa432:
+      // Focal length and FStop.
+      if (result.format() == 5) {
+        exif->LensInfo.FocalLengthMin = result.val_rational()[0];
+        exif->LensInfo.FocalLengthMax = result.val_rational()[1];
+        exif->LensInfo.FStopMin = result.val_rational()[2];
+        exif->LensInfo.FStopMax = result.val_rational()[3];
+      }
+      break;
+
+    case 0xa433:
+      // Lens make.
+      if (result.format() == 2) {
+        exif->LensInfo.Make = result.val_string();
+      }
+      break;
+
+    case 0xa434:
+      // Lens model.
+      if (result.format() == 2) {
+        exif->LensInfo.Model = result.val_string();
+      }
+      break;
+  }
+}
+
 //
 // Main parsing function for an EXIF segment.
 //
@@ -527,49 +710,9 @@ int easyexif::EXIFInfo::parseFromEXIFSegment(const unsigned char *buf,
     IFEntry result =
         parseIFEntry(buf, offs, alignIntel, tiff_header_start, len);
     offs += 12;
-    switch (result.tag()) {
-      case 0x102:
-        // Bits per sample
-        if (result.format() == 3)
-          this->BitsPerSample = result.val_short().front();
-        break;
-
-      case 0x10E:
-        // Image description
-        if (result.format() == 2) this->ImageDescription = result.val_string();
-        break;
-
-      case 0x10F:
-        // Digicam make
-        if (result.format() == 2) this->Make = result.val_string();
-        break;
-
-      case 0x110:
-        // Digicam model
-        if (result.format() == 2) this->Model = result.val_string();
-        break;
-
-      case 0x112:
-        // Orientation of image
-        if (result.format() == 3)
-          this->Orientation = result.val_short().front();
-        break;
-
-      case 0x131:
-        // Software used for image
-        if (result.format() == 2) this->Software = result.val_string();
-        break;
-
-      case 0x132:
-        // EXIF/TIFF date/time of image modification
-        if (result.format() == 2) this->DateTime = result.val_string();
-        break;
-
-      case 0x8298:
-        // Copyright information
-        if (result.format() == 2) this->Copyright = result.val_string();
-        break;
-
+    readTag(result, this);
+    switch(result.tag())
+    {
       case 0x8825:
         // GPS IFS offset
         gps_sub_ifd_offset = tiff_header_start + result.data();
@@ -594,143 +737,7 @@ int easyexif::EXIFInfo::parseFromEXIFSegment(const unsigned char *buf,
     while (--num_entries >= 0) {
       IFEntry result =
           parseIFEntry(buf, offs, alignIntel, tiff_header_start, len);
-      switch (result.tag()) {
-        case 0x829a:
-          // Exposure time in seconds
-          if (result.format() == 5)
-            this->ExposureTime = result.val_rational().front();
-          break;
-
-        case 0x829d:
-          // FNumber
-          if (result.format() == 5)
-            this->FNumber = result.val_rational().front();
-          break;
-
-        case 0x8827:
-          // ISO Speed Rating
-          if (result.format() == 3)
-            this->ISOSpeedRatings = result.val_short().front();
-          break;
-
-        case 0x9003:
-          // Original date and time
-          if (result.format() == 2)
-            this->DateTimeOriginal = result.val_string();
-          break;
-
-        case 0x9004:
-          // Digitization date and time
-          if (result.format() == 2)
-            this->DateTimeDigitized = result.val_string();
-          break;
-
-        case 0x9201:
-          // Shutter speed value
-          if (result.format() == 5)
-            this->ShutterSpeedValue = result.val_rational().front();
-          break;
-
-        case 0x9204:
-          // Exposure bias value
-          if (result.format() == 5)
-            this->ExposureBiasValue = result.val_rational().front();
-          break;
-
-        case 0x9206:
-          // Subject distance
-          if (result.format() == 5)
-            this->SubjectDistance = result.val_rational().front();
-          break;
-
-        case 0x9209:
-          // Flash used
-          if (result.format() == 3) this->Flash = result.data() ? 1 : 0;
-          break;
-
-        case 0x920a:
-          // Focal length
-          if (result.format() == 5)
-            this->FocalLength = result.val_rational().front();
-          break;
-
-        case 0x9207:
-          // Metering mode
-          if (result.format() == 3)
-            this->MeteringMode = result.val_short().front();
-          break;
-
-        case 0x9291:
-          // Subsecond original time
-          if (result.format() == 2)
-            this->SubSecTimeOriginal = result.val_string();
-          break;
-
-        case 0xa002:
-          // EXIF Image width
-          if (result.format() == 4)
-            this->ImageWidth = result.val_long().front();
-          if (result.format() == 3)
-            this->ImageWidth = result.val_short().front();
-          break;
-
-        case 0xa003:
-          // EXIF Image height
-          if (result.format() == 4)
-            this->ImageHeight = result.val_long().front();
-          if (result.format() == 3)
-            this->ImageHeight = result.val_short().front();
-          break;
-
-        case 0xa20e:
-          // EXIF Focal plane X-resolution
-          if (result.format() == 5) {
-            this->LensInfo.FocalPlaneXResolution = result.val_rational()[0];
-          }
-          break;
-
-        case 0xa20f:
-          // EXIF Focal plane Y-resolution
-          if (result.format() == 5) {
-            this->LensInfo.FocalPlaneYResolution = result.val_rational()[0];
-          }
-          break;
-
-        case 0xa405:
-          // Focal length in 35mm film
-          if (result.format() == 3)
-            this->FocalLengthIn35mm = result.val_short().front();
-          break;
-
-        case 0xa420:
-          if (result.format() == 2)
-            this->ImageUniqueID = result.val_string();
-           break;
-
-        case 0xa432:
-          // Focal length and FStop.
-          if (result.format() == 5) {
-            this->LensInfo.FocalLengthMin = result.val_rational()[0];
-            this->LensInfo.FocalLengthMax = result.val_rational()[1];
-            this->LensInfo.FStopMin = result.val_rational()[2];
-            this->LensInfo.FStopMax = result.val_rational()[3];
-          }
-          break;
-
-        case 0xa433:
-          // Lens make.
-          if (result.format() == 2) {
-            this->LensInfo.Make = result.val_string();
-          }
-          break;
-
-        case 0xa434:
-          // Lens model.
-          if (result.format() == 2) {
-            this->LensInfo.Model = result.val_string();
-          }
-          break;
-      }
+      readTag(result, this);
       offs += 12;
     }
   }
