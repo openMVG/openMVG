@@ -32,7 +32,7 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
   
   const size_t numViews = vec_localizationResult.size();
   assert(numViews > 0 );
-  
+   
   // the id for the instrinsic group
   IndexT intrinsicID = 0;
     
@@ -69,8 +69,8 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
       tinyScene.intrinsics[intrinsicID] = std::make_shared<cameras::Pinhole_Intrinsic>(currIntrinsics->_w, currIntrinsics->_h, currIntrinsics->focal(), pp(0), pp(1));
     }
     else
-  {
-    // intrinsic (the shared_ptr does not take the ownership, will not release the input pointer)
+    {
+      // intrinsic (the shared_ptr does not take the ownership, will not release the input pointer)
       tinyScene.intrinsics[intrinsicID] = std::shared_ptr<cameras::Pinhole_Intrinsic_Radial_K3>(currIntrinsics, [](cameras::Pinhole_Intrinsic_Radial_K3*){});
       POPART_COUT("Type of intrinsics " <<tinyScene.intrinsics[0].get()->getType());
     }
@@ -78,9 +78,9 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
   
   {
     // just debugging -- print reprojection errors -- this block can be safely removed/commented out
-  for(size_t viewID = 0; viewID < numViews; ++viewID)
-  {
-    const LocalizationResult &currResult = vec_localizationResult[viewID];
+    for(size_t viewID = 0; viewID < numViews; ++viewID)
+    {
+      const LocalizationResult &currResult = vec_localizationResult[viewID];
       if(!currResult.isValid())
       {
         continue;
@@ -165,11 +165,11 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
   {
     // just debugging some stats -- this block can be safely removed/commented out
     
-  POPART_COUT("Number of 3D-2D associations " << tinyScene.structure.size());
-  
+    POPART_COUT("Number of 3D-2D associations " << tinyScene.structure.size());
+    
     std::size_t maxObs = 0;
     for(const auto landmark : tinyScene.GetLandmarks() )
-  {
+    {
       if(landmark.second.obs.size() > maxObs)
         maxObs = landmark.second.obs.size();
     }
@@ -196,7 +196,7 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
     if(allTheSameIntrinsics)
     {
       std::vector<double> params = tinyScene.intrinsics[0].get()->getParams();
-    POPART_COUT("K before bundle:" << params[0] << " " << params[1] << " "<< params[2]);
+      POPART_COUT("K before bundle: " << params[0] << " " << params[1] << " "<< params[2]);
       if(params.size() == 6)
         POPART_COUT("Distortion before bundle: " << params[3] << " " << params[4] << " "<< params[5]);
     }
@@ -231,8 +231,8 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
       params.push_back(0);
     }
     assert(params.size() == 6);
-    POPART_COUT("K after bundle:" << params[0] << " " << params[1] << " "<< params[2]);
-    POPART_COUT("Distortion after bundle" << params[3] << " " << params[4] << " "<< params[5]);
+    POPART_COUT("K after bundle: " << params[0] << " " << params[1] << " "<< params[2]);
+    POPART_COUT("Distortion after bundle " << params[3] << " " << params[4] << " "<< params[5]);
 
     // update the intrinsics of the each localization result
     for(size_t viewID = 0; viewID < numViews; ++viewID)
