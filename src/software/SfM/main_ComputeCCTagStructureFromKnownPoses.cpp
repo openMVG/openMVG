@@ -39,6 +39,7 @@ int main(int argc, char **argv)
   std::string sMatchesDir;
   std::string sMatchFile;
   std::string sOutFile;
+  std::string sDebugOutputDir;
   bool sKeepSift = false;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -46,6 +47,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('f', sMatchFile, "match_file") );
   cmd.add( make_option('o', sOutFile, "output_file") );
   cmd.add( make_option('s', sKeepSift, "keep_sift") );
+  cmd.add( make_option('d', sDebugOutputDir, "debug_dir") );
 
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -58,6 +60,7 @@ int main(int argc, char **argv)
     << "[-f|--match_file] (opt.) path to a matches file (used pairs will be used)\n"
     << "[-o|--output_file] file where the output data will be stored\n"
     << "[-s|--keep_sift] keep SIFT points (default false)\n"
+    << "[-d|--debug_dir] debug output diretory to generate svg files with detected CCTags (default \"\")\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -148,7 +151,7 @@ int main(int argc, char **argv)
       {
         throw std::runtime_error("Only works with SIFT regions in input.");
       }
-//      features::SIFT_Regions cctagRegions_debug;
+      features::SIFT_Regions cctagRegions_debug;
       for(std::size_t i = 0; i < siftRegions->RegionCount(); ++i)
       {
         const features::SIFT_Regions::DescriptorT& cctagDesc = siftRegions->Descriptors()[i];
@@ -161,17 +164,21 @@ int main(int argc, char **argv)
         cctagsVisibility[cctagId].insert(regionForView.first);
         cctagsObservations[std::make_pair(cctagId, regionForView.first)] = Observation(siftRegions->Features()[i].coords().cast<double>(), i);
         
-//        cctagRegions_debug.Features().push_back(siftRegions->Features()[i]);
-//        cctagRegions_debug.Descriptors().push_back(cctagDesc);
+        if(!sDebugOutputDir.empty())
+        {
+          cctagRegions_debug.Features().push_back(siftRegions->Features()[i]);
+          cctagRegions_debug.Descriptors().push_back(cctagDesc);
+        }
       }
-//      // DEBUG
-//      {
-//        cameras::IntrinsicBase* intrinsics = reconstructionSfmData.GetIntrinsics().at(view->id_intrinsic).get();
-//        localization::saveCCTag2SVG(view->s_Img_path, 
-//                std::make_pair(intrinsics->w(), intrinsics->h()),
-//                cctagRegions_debug,
-//                bfs::path(view->s_Img_path).stem().string()+".svg");
-//      }
+      // DEBUG: export svg files
+      if(!sDebugOutputDir.empty())
+      {
+        cameras::IntrinsicBase* intrinsics = reconstructionSfmData.GetIntrinsics().at(view->id_intrinsic).get();
+        localization::saveCCTag2SVG(view->s_Img_path, 
+                std::make_pair(intrinsics->w(), intrinsics->h()),
+                cctagRegions_debug,
+                (bfs::path(sDebugOutputDir) / bfs::path(bfs::path(view->s_Img_path).stem().string()+".svg")).string());
+      }
     }
   }
 

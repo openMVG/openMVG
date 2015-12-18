@@ -222,11 +222,11 @@ void AlembicExporter::initAnimatedCamera(const std::string& cameraName)
   // Create the camera transform object
   std::stringstream ss;
   ss << cameraName;
-  mxform = Alembic::AbcGeom::OXform(mvgCameras, "camxform_" + ss.str());
+  mxform = Alembic::AbcGeom::OXform(mvgCameras, "animxform_" + ss.str());
   mxform.getSchema().setTimeSampling(tsp);
   
   // Create the camera parameters object (intrinsics & custom properties)
-  mcamObj = OCamera(mxform, "camera_" + ss.str());
+  mcamObj = OCamera(mxform, "animcam_" + ss.str());
   mcamObj.getSchema().setTimeSampling(tsp);
   
   // Add the custom properties
