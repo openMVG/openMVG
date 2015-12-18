@@ -15,6 +15,8 @@
 #include <openMVG/matching_image_collection/F_ACRobust.hpp>
 #include <openMVG/numeric/numeric.h>
 #include <openMVG/robust_estimation/guided_matching.hpp>
+#include <openMVG/logger.hpp>
+
 #include <third_party/progress/progress.hpp>
 //#include <cereal/archives/json.hpp>
 
@@ -22,10 +24,6 @@
 
 #include <algorithm>
 #include <chrono>
-
-//@fixme move/redefine
-#define POPART_COUT(x) std::cout << x << std::endl
-#define POPART_CERR(x) std::cerr << x << std::endl
 
 namespace openMVG {
 namespace localization {

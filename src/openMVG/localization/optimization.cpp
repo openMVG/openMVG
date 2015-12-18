@@ -17,9 +17,7 @@
 #include <boost/accumulators/statistics/max.hpp>
 #include <boost/accumulators/statistics/sum.hpp>
 
-//@fixme move/redefine
-#define POPART_COUT(x) std::cout << x << std::endl
-#define POPART_CERR(x) std::cerr << x << std::endl
+#include <openMVG/logger.hpp>
 
 namespace openMVG{
 namespace localization{
@@ -347,8 +345,8 @@ bool refineRigPose(const std::vector<geometry::Pose3 > &vec_subPoses,
   options.preconditioner_type = openMVG_options._preconditioner_type;
   options.linear_solver_type = openMVG_options._linear_solver_type;
   options.sparse_linear_algebra_library_type = openMVG_options._sparse_linear_algebra_library_type;
-  options.minimizer_progress_to_stdout = true;
-  //options.logging_type = ceres::SILENT;
+  options.minimizer_progress_to_stdout = openMVG_options._bVerbose;
+  options.logging_type = ceres::SILENT;
   options.num_threads = 1;//openMVG_options._nbThreads;
   options.num_linear_solver_threads = 1;//openMVG_options._nbThreads;
   
