@@ -12,6 +12,8 @@
 #endif
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
+#include <algorithm> 
+
 namespace openMVG {
 namespace localization {
 
@@ -75,15 +77,29 @@ void saveFeatures2SVG(const std::string &inputImagePath,
 void saveFeatures2SVG(const std::string &inputImagePath,
                       const std::pair<size_t,size_t> & imageSize,
                       const Mat &points,
-                      const std::string &outputSVGPath)
+                      const std::string &outputSVGPath,
+                      const std::vector<size_t> *inliers /*=nullptr*/)
 {
   assert(points.rows()>=2);
   svg::svgDrawer svgStream( imageSize.first, imageSize.second);
   svgStream.drawImage(inputImagePath, imageSize.first, imageSize.second);
   
-  for(std::size_t i=0; i < points.cols(); ++i) 
+  if(!inliers)
   {
-    svgStream.drawCircle(points(0,i), points(1,i), 3.0f, svg::svgStyle().stroke("yellow", 2.0));
+    for(std::size_t i=0; i < points.cols(); ++i) 
+    {
+      svgStream.drawCircle(points(0,i), points(1,i), 3.0f, svg::svgStyle().stroke("yellow", 2.0));
+    }
+  }
+  else
+  {
+    for(std::size_t i=0; i < points.cols(); ++i) 
+    {
+      if(std::find(inliers->begin(), inliers->end(), i) != inliers->end())
+        svgStream.drawCircle(points(0,i), points(1,i), 3.0f, svg::svgStyle().stroke("green", 3.0));
+      else
+        svgStream.drawCircle(points(0,i), points(1,i), 3.0f, svg::svgStyle().stroke("yellow", 2.0));
+    }   
   }
  
   std::ofstream svgFile( outputSVGPath );
