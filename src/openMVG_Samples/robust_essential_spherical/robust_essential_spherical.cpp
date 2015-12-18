@@ -162,7 +162,7 @@ int main() {
       Mat3 E;
       const double precision = std::numeric_limits<double>::infinity();
       const std::pair<double,double> ACRansacOut =
-        ACRANSAC(kernel, vec_inliers, 1024, &E, precision, true);
+        ACRANSAC(kernel, vec_inliers, 1024, &E, precision);
       const double & threshold = ACRansacOut.first;
       const double & NFA = ACRansacOut.second;
 

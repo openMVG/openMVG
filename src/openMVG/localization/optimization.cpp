@@ -8,6 +8,8 @@
 #include "optimization.hpp"
 #include <openMVG/sfm/sfm_data_BA_ceres.hpp>
 #include <openMVG/rig/rig_BA_ceres.hpp>
+#include <openMVG/logger.hpp>
+
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
@@ -16,10 +18,6 @@
 #include <boost/accumulators/statistics/min.hpp>
 #include <boost/accumulators/statistics/max.hpp>
 #include <boost/accumulators/statistics/sum.hpp>
-
-//@fixme move/redefine
-#define POPART_COUT(x) std::cout << x << std::endl
-#define POPART_CERR(x) std::cerr << x << std::endl
 
 namespace openMVG{
 namespace localization{
@@ -34,7 +32,7 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
   
   const size_t numViews = vec_localizationResult.size();
   assert(numViews > 0 );
-   
+  
   // the id for the instrinsic group
   IndexT intrinsicID = 0;
     
@@ -71,8 +69,8 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
       tinyScene.intrinsics[intrinsicID] = std::make_shared<cameras::Pinhole_Intrinsic>(currIntrinsics->_w, currIntrinsics->_h, currIntrinsics->focal(), pp(0), pp(1));
     }
     else
-    {
-      // intrinsic (the shared_ptr does not take the ownership, will not release the input pointer)
+  {
+    // intrinsic (the shared_ptr does not take the ownership, will not release the input pointer)
       tinyScene.intrinsics[intrinsicID] = std::shared_ptr<cameras::Pinhole_Intrinsic_Radial_K3>(currIntrinsics, [](cameras::Pinhole_Intrinsic_Radial_K3*){});
       POPART_COUT("Type of intrinsics " <<tinyScene.intrinsics[0].get()->getType());
     }
@@ -80,9 +78,9 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
   
   {
     // just debugging -- print reprojection errors -- this block can be safely removed/commented out
-    for(size_t viewID = 0; viewID < numViews; ++viewID)
-    {
-      const LocalizationResult &currResult = vec_localizationResult[viewID];
+  for(size_t viewID = 0; viewID < numViews; ++viewID)
+  {
+    const LocalizationResult &currResult = vec_localizationResult[viewID];
       if(!currResult.isValid())
       {
         continue;
@@ -116,7 +114,6 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
     
     if(!allTheSameIntrinsics)
     {
-      cameras::Pinhole_Intrinsic_Radial_K3* currIntrinsics = &currResult.getIntrinsics();
        // intrinsic (the shared_ptr does not take the ownership, will not release the input pointer)
       tinyScene.intrinsics[intrinsicID] = std::shared_ptr<cameras::Pinhole_Intrinsic_Radial_K3>(currIntrinsics, [](cameras::Pinhole_Intrinsic_Radial_K3*){});
       ++intrinsicID;
@@ -141,6 +138,7 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
       {
         // normally there should be no other features already associated to this
         // 3D point in this view
+//        assert(tinyScene.structure[landmarkID].obs.count(viewID) == 0);
         if(tinyScene.structure[landmarkID].obs.count(viewID) != 0)
         {
           // this is weird but it could happen when two features are really close to each other (?)
@@ -167,11 +165,11 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
   {
     // just debugging some stats -- this block can be safely removed/commented out
     
-    POPART_COUT("Number of 3D-2D associations " << tinyScene.structure.size());
-    
+  POPART_COUT("Number of 3D-2D associations " << tinyScene.structure.size());
+  
     std::size_t maxObs = 0;
     for(const auto landmark : tinyScene.GetLandmarks() )
-    {
+  {
       if(landmark.second.obs.size() > maxObs)
         maxObs = landmark.second.obs.size();
     }
@@ -198,7 +196,7 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
     if(allTheSameIntrinsics)
     {
       std::vector<double> params = tinyScene.intrinsics[0].get()->getParams();
-      POPART_COUT("K before bundle: " << params[0] << " " << params[1] << " "<< params[2]);
+    POPART_COUT("K before bundle:" << params[0] << " " << params[1] << " "<< params[2]);
       if(params.size() == 6)
         POPART_COUT("Distortion before bundle: " << params[3] << " " << params[4] << " "<< params[5]);
     }
@@ -233,8 +231,8 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
       params.push_back(0);
     }
     assert(params.size() == 6);
-    POPART_COUT("K after bundle: " << params[0] << " " << params[1] << " "<< params[2]);
-    POPART_COUT("Distortion after bundle " << params[3] << " " << params[4] << " "<< params[5]);
+    POPART_COUT("K after bundle:" << params[0] << " " << params[1] << " "<< params[2]);
+    POPART_COUT("Distortion after bundle" << params[3] << " " << params[4] << " "<< params[5]);
 
     // update the intrinsics of the each localization result
     for(size_t viewID = 0; viewID < numViews; ++viewID)
@@ -347,8 +345,8 @@ bool refineRigPose(const std::vector<geometry::Pose3 > &vec_subPoses,
   options.preconditioner_type = openMVG_options._preconditioner_type;
   options.linear_solver_type = openMVG_options._linear_solver_type;
   options.sparse_linear_algebra_library_type = openMVG_options._sparse_linear_algebra_library_type;
-  options.minimizer_progress_to_stdout = true;
-  //options.logging_type = ceres::SILENT;
+  options.minimizer_progress_to_stdout = openMVG_options._bVerbose;
+  options.logging_type = ceres::SILENT;
   options.num_threads = 1;//openMVG_options._nbThreads;
   options.num_linear_solver_threads = 1;//openMVG_options._nbThreads;
   

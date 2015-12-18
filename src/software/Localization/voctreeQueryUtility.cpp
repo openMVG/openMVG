@@ -3,6 +3,7 @@
 #include <openMVG/voctree/databaseIO.hpp>
 #include <openMVG/voctree/vocabulary_tree.hpp>
 #include <openMVG/voctree/descriptor_loader.hpp>
+#include <openMVG/logger.hpp>
 
 #include <boost/program_options.hpp> 
 #include <boost/accumulators/accumulators.hpp>
@@ -17,8 +18,6 @@
 #include <chrono>
 #include <iomanip>
 
-#define POPART_COUT(x) std::cout << x << std::endl
-#define POPART_CERR(x) std::cerr << x << std::endl
 
 static const int DIMENSION = 128;
 
