@@ -114,6 +114,7 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
     
     if(!allTheSameIntrinsics)
     {
+      cameras::Pinhole_Intrinsic_Radial_K3* currIntrinsics = &currResult.getIntrinsics();
        // intrinsic (the shared_ptr does not take the ownership, will not release the input pointer)
       tinyScene.intrinsics[intrinsicID] = std::shared_ptr<cameras::Pinhole_Intrinsic_Radial_K3>(currIntrinsics, [](cameras::Pinhole_Intrinsic_Radial_K3*){});
       ++intrinsicID;
@@ -138,7 +139,6 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
       {
         // normally there should be no other features already associated to this
         // 3D point in this view
-//        assert(tinyScene.structure[landmarkID].obs.count(viewID) == 0);
         if(tinyScene.structure[landmarkID].obs.count(viewID) != 0)
         {
           // this is weird but it could happen when two features are really close to each other (?)
