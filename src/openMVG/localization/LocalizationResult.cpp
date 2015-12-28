@@ -42,6 +42,11 @@ const Mat & LocalizationResult::getPt3D() const
   return _matchData.pt3D;
 }
 
+ const Mat34 & LocalizationResult::getProjection() const
+ {
+   return _matchData.projection_matrix;
+ }
+
 const std::vector<pair<IndexT, IndexT> > & LocalizationResult::getIndMatch3D2D() const
 {
   return _indMatch3D2D;

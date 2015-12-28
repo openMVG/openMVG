@@ -27,6 +27,8 @@ public:
   const Mat & getPt2D() const;
 
   const Mat & getPt3D() const;
+  
+  const Mat34 & getProjection() const;
 
   const std::vector<pair<IndexT, IndexT> > & getIndMatch3D2D() const;
 
@@ -50,7 +52,7 @@ private:
                              // their associated 3D points and the inlier indices 
                              // (w.r.t. the F/E robust estimation)
 
-  std::vector<pair<IndexT, IndexT> > _indMatch3D2D; // 3D to 2D index matches in the global index system,
+  std::vector<std::pair<IndexT, IndexT> > _indMatch3D2D; // 3D to 2D index matches in the global index system,
                                                     // i.e. the set of pair (landmark id, index of the associated 2D point)
 
   geometry::Pose3 _pose; // Computed camera pose
