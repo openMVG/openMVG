@@ -53,6 +53,8 @@ features::EDESCRIBER_PRESET stringToEnum(const std::string & sPreset)
 #include <unistd.h>
 #include <sys/wait.h>
 
+// This function dispatch the compute function on several sub processes
+// keeping the maximum number of subprocesses under maxJobs
 void dispatch(const int &maxJobs, std::function<void()> compute)
 {
   static int nbJobs;
@@ -60,14 +62,16 @@ void dispatch(const int &maxJobs, std::function<void()> compute)
   if (pid < 0)           
   {                      
     // Something bad happened
-      std::cerr << "fork failed\n";
+    std::cerr << "fork failed\n";
   }
   else if(pid == 0)
   {
+#ifdef OPENMVG_USE_OPENMP
     // Disable OpenMP as we dispatch the work on multiple sub processes
-    omp_set_num_threads(1); // FIXME: test compilation flag for omp
-    // Launch the computation
-    compute();
+    // and we don't want each subprocess to ask for all the cpu ressource
+    omp_set_num_threads(1); 
+#endif
+    compute();// TODO : search for data races if any. 
     _exit(EXIT_SUCCESS);
   }
   else 
@@ -85,6 +89,7 @@ void dispatch(const int &maxJobs, std::function<void()> compute)
   }
 }
 
+// Waits for all subprocesses to be completed
 void waitForCompletion()
 {
   pid_t pids;
@@ -128,31 +133,34 @@ int main(int argc, char **argv)
   cmd.add( make_option('p', sFeaturePreset, "describerPreset") );
   cmd.add( make_option('j', maxJobs, "jobs") );
 
-  try {
-      if (argc == 1) throw std::string("Invalid command line parameter.");
-      cmd.process(argc, argv);
-  } catch(const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << '\n'
-      << "[-i|--input_file] a SfM_Data file \n"
-      << "[-o|--outdir path] \n"
-      << "\n[Optional]\n"
-      << "[-f|--force] Force to recompute data\n"
-      << "[-m|--describerMethod]\n"
-      << "  (method to use to describe an image):\n"
-      << "   SIFT (default),\n"
-      << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
-      << "   AKAZE_MLDB:  AKAZE with binary descriptors\n"
-      << "[-u|--upright] Use Upright feature 0 or 1\n"
-      << "[-p|--describerPreset]\n"
-      << "  (used to control the Image_describer configuration):\n"
-      << "   NORMAL (default),\n"
-      << "   HIGH,\n"
-      << "   ULTRA: !!Can take long time!!\n"
-      << "[-j|--jobs] Specifies the number of jobs to run simultaneously\n"
-      << std::endl;
+  try 
+  {
+    if (argc == 1) throw std::string("Invalid command line parameter.");
+    cmd.process(argc, argv);
+  } 
+  catch(const std::string& s) 
+  {
+    std::cerr << "Usage: " << argv[0] << '\n'
+    << "[-i|--input_file] a SfM_Data file \n"
+    << "[-o|--outdir path] \n"
+    << "\n[Optional]\n"
+    << "[-f|--force] Force to recompute data\n"
+    << "[-m|--describerMethod]\n"
+    << "  (method to use to describe an image):\n"
+    << "   SIFT (default),\n"
+    << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
+    << "   AKAZE_MLDB:  AKAZE with binary descriptors\n"
+    << "[-u|--upright] Use Upright feature 0 or 1\n"
+    << "[-p|--describerPreset]\n"
+    << "  (used to control the Image_describer configuration):\n"
+    << "   NORMAL (default),\n"
+    << "   HIGH,\n"
+    << "   ULTRA: !!Can take long time!!\n"
+    << "[-j|--jobs] Specifies the number of jobs to run simultaneously\n"
+    << std::endl;
 
-      std::cerr << s << std::endl;
-      return EXIT_FAILURE;
+    std::cerr << s << std::endl;
+    return EXIT_FAILURE;
   }
 
   std::cout << " You called : " <<std::endl
@@ -166,8 +174,15 @@ int main(int argc, char **argv)
             << "--jobs " << maxJobs << std::endl;
 
 
-  if (sOutDir.empty())  {
+  if (sOutDir.empty())
+  {
     std::cerr << "\nIt is an invalid output directory" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  if (maxJobs <=0 ) 
+  {
+    std::cerr << "\nInvalid value for -j option, the value must be >=1" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -185,7 +200,8 @@ int main(int argc, char **argv)
   // a. Load input scene
   //---------------------------------------
   SfM_Data sfm_data;
-  if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
+  if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) 
+  {
     std::cerr << std::endl
       << "The input file \""<< sSfM_Data_Filename << "\" cannot be read" << std::endl;
     return false;
