@@ -21,6 +21,7 @@
 
 #include <cstdlib>
 #include <fstream>
+#include <functional>
 
 using namespace openMVG;
 using namespace openMVG::image;
@@ -44,6 +45,65 @@ features::EDESCRIBER_PRESET stringToEnum(const std::string & sPreset)
   return preset;
 }
 
+// ----------
+// Dispatcher
+// ----------
+
+#ifdef __linux__
+#include <unistd.h>
+#include <sys/wait.h>
+
+void dispatch(const int &maxJobs, std::function<void()> compute)
+{
+  static int nbJobs;
+  pid_t pid = fork();
+  if (pid < 0)           
+  {                      
+    // Something bad happened
+      std::cerr << "fork failed\n";
+  }
+  else if(pid == 0)
+  {
+    // Disable OpenMP as we dispatch the work on multiple sub processes
+    omp_set_num_threads(1); // FIXME: test compilation flag for omp
+    // Launch the computation
+    compute();
+    _exit(EXIT_SUCCESS);
+  }
+  else 
+  {
+    nbJobs++;
+    if (nbJobs && (nbJobs % maxJobs == 0))
+    {
+      pid_t pids;
+      while(pids = waitpid(-1, NULL, 0)) 
+      {
+        nbJobs--;
+        break;
+      }
+    }
+  }
+}
+
+void waitForCompletion()
+{
+  pid_t pids;
+  while(pids = waitpid(-1, NULL, 0)) 
+  {
+    if (errno == ECHILD)
+        break;
+  }
+}
+
+#else
+void dispatch(const int &maxJobs, std::function<void()> compute)
+{
+    compute();
+}
+void waitForCompletion() {}
+#endif
+
+
 /// - Compute view image description (feature & descriptor extraction)
 /// - Export computed data
 int main(int argc, char **argv)
@@ -56,6 +116,7 @@ int main(int argc, char **argv)
   std::string sImage_Describer_Method = "SIFT";
   bool bForce = false;
   std::string sFeaturePreset = "";
+  int maxJobs = 1;
 
   // required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -65,6 +126,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('u', bUpRight, "upright") );
   cmd.add( make_option('f', bForce, "force") );
   cmd.add( make_option('p', sFeaturePreset, "describerPreset") );
+  cmd.add( make_option('j', maxJobs, "jobs") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -86,6 +148,7 @@ int main(int argc, char **argv)
       << "   NORMAL (default),\n"
       << "   HIGH,\n"
       << "   ULTRA: !!Can take long time!!\n"
+      << "[-j|--jobs] Specifies the number of jobs to run simultaneously\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -99,7 +162,8 @@ int main(int argc, char **argv)
             << "--describerMethod " << sImage_Describer_Method << std::endl
             << "--upright " << bUpRight << std::endl
             << "--describerPreset " << (sFeaturePreset.empty() ? "NORMAL" : sFeaturePreset) << std::endl
-            << "--force " << bForce << std::endl;
+            << "--force " << bForce << std::endl
+            << "--jobs " << maxJobs << std::endl;
 
 
   if (sOutDir.empty())  {
@@ -210,7 +274,6 @@ int main(int argc, char **argv)
   // - if no file, compute features
   {
     system::Timer timer;
-    Image<unsigned char> imageGray;
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
     for(Views::const_iterator iterViews = sfm_data.views.begin();
@@ -228,15 +291,21 @@ int main(int argc, char **argv)
       //If features or descriptors file are missing, compute them
       if (bForce || !stlplus::file_exists(sFeat) || !stlplus::file_exists(sDesc))
       {
-        if (!ReadImage(sView_filename.c_str(), &imageGray))
-          continue;
+        auto computeFunction = [&]() {
+            Image<unsigned char> imageGray;
+            if (!ReadImage(sView_filename.c_str(), &imageGray)) return;
 
-        // Compute features and descriptors and export them to files
-        std::unique_ptr<Regions> regions;
-        image_describer->Describe(imageGray, regions);
-        image_describer->Save(regions.get(), sFeat, sDesc);
+            // Compute features and descriptors and export them to files
+            std::unique_ptr<Regions> regions;
+            image_describer->Describe(imageGray, regions);
+            image_describer->Save(regions.get(), sFeat, sDesc);
+        };
+        dispatch(maxJobs, computeFunction);
       }
     }
+
+    waitForCompletion();
+
     std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
   }
   return EXIT_SUCCESS;
