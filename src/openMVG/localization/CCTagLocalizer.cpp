@@ -274,11 +274,10 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
   std::vector<IndexT> nearestKeyFrames;
   nearestKeyFrames.reserve(param->_nNearestKeyFrames);
   
-  kNearestKeyFrames(
-          queryRegions,
-          _regions_per_view,
-          param->_nNearestKeyFrames,
-          nearestKeyFrames);
+  kNearestKeyFrames(queryRegions,
+                    _regions_per_view,
+                    param->_nNearestKeyFrames,
+                    nearestKeyFrames, 4);
   
   // Set the minimum of the residual to infinite.
   double residualMin = std::numeric_limits<double>::max();

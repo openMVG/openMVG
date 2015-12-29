@@ -67,7 +67,18 @@ public:
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult & localizationResult,
                 const std::string& imagePath = std::string());
-  
+  /**
+   * @brief Naive implementation of the localizer using the rig. Each image from
+   * the rig is localized and then a bundle adjustment is run for optimizing the 
+   * global pose.
+   * 
+   * @param[in] vec_imageGrey A vector containing all the images from the rig
+   * @param[in] parameters The parameters for the localization.
+   * @param[in,out] vec_queryIntrinsics Vector containing the intrinsic parameters of the cameras
+   * @param[in] vec_subPoses A vector containing the N-1 subposes of each camera wrt the main camera
+   * @param[out] rigPose The pose of the rig expressed as the pose of the main camera
+   * @return true if the rig has been successfully localized.
+   */
   bool localizeRig(const std::vector<image::Image<unsigned char> > & vec_imageGrey,
                 const LocalizerParameters *parameters,
                 std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
@@ -75,13 +86,16 @@ public:
                 geometry::Pose3 rigPose);
   
   
-  // @todo UNSTABLE / TO FIX
-  bool localize(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
-              const Parameters &param,
-              const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
-              const std::vector<geometry::Pose3 > &vec_subPoses,
-              geometry::Pose3 rigPose);
+  // @todo THESE ARE UNSTABLE / TO FIX
   
+  // @simone this is not even implemented, this should be the localizeRig counterpart using regions as input
+//  bool localize(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+//              const Parameters &param,
+//              const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+//              const std::vector<geometry::Pose3 > &vec_subPoses,
+//              geometry::Pose3 rigPose);
+  
+  // this is the wrong implementation of localizeRig, we need openGV for this
   bool localizeAllAssociations(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
                 const Parameters &param,
                 const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
