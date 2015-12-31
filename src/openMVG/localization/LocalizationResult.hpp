@@ -131,9 +131,6 @@ private:
 
 };
 
-
-
-
 bool load(LocalizationResult & res, const std::string & filename);
 bool load(std::vector<LocalizationResult> & res, const std::string & filename);
 

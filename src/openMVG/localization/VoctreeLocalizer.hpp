@@ -35,6 +35,7 @@ typedef Reconstructed_Regions<features::SIOPointFeature, float, 128> Reconstruct
 typedef Reconstructed_Regions<features::SIOPointFeature, unsigned char, 128> Reconstructed_RegionsT;
 #endif
 
+
 class VoctreeLocalizer : public ILocalizer
 {
 
@@ -184,6 +185,17 @@ public:
                           cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                           LocalizationResult &localizationResult,
                           const std::string& imagePath = std::string());
+  
+  
+  void getAllAssociations(const features::SIFT_Regions &siftQueryRegions,
+                          const std::pair<std::size_t, std::size_t> imageSize,
+                          const Parameters &param,
+                          bool useInputIntrinsics,
+                          const cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
+                          std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences,
+                          Mat &pt2D,
+                          Mat &pt3D,
+                          const std::string& imagePath = std::string()) const;
 
 private:
   /**
