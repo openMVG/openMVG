@@ -593,7 +593,7 @@ bool CCTagLocalizer::localizeAllAssociations(const std::vector<std::unique_ptr<f
     // the element is the pair 3D point - 2D point
     std::map< pair<IndexT, IndexT>, pair<Vec3, Vec2> > &associations = vec_associations[i];
     features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (vec_queryRegions[i].get());
-    getAllAssociationsFromNearestKFrames(queryRegions, param, associations);
+    getAllAssociations(queryRegions, param, associations);
     numAssociations += associations.size();
   }
 
@@ -684,9 +684,9 @@ bool CCTagLocalizer::localizeAllAssociations(const std::vector<std::unique_ptr<f
 }
 
 
-void CCTagLocalizer::getAllAssociationsFromNearestKFrames(const features::CCTAG_Regions &queryRegions,
-                                                          const CCTagLocalizer::Parameters &param,
-                                                          std::map< pair<IndexT, IndexT>, pair<Vec3, Vec2> > &associations) const
+void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegions,
+                                        const CCTagLocalizer::Parameters &param,
+                                        std::map< pair<IndexT, IndexT>, pair<Vec3, Vec2> > &associations) const
 {
   std::vector<IndexT> nearestKeyFrames;
   nearestKeyFrames.reserve(param._nNearestKeyFrames);

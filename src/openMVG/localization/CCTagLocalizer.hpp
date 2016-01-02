@@ -101,9 +101,10 @@ public:
                 geometry::Pose3 rigPose);
  
   virtual ~CCTagLocalizer();
-  void getAllAssociationsFromNearestKFrames(const features::CCTAG_Regions &queryRegions,
-                                            const CCTagLocalizer::Parameters &param,
-                                            std::map< pair<IndexT, IndexT>, pair<Vec3, Vec2> > &associations) const;
+
+  void getAllAssociations(const features::CCTAG_Regions &queryRegions,
+                          const CCTagLocalizer::Parameters &param,
+                          std::map< pair<IndexT, IndexT>, pair<Vec3, Vec2> > &associations) const;
   
 private:
   
