@@ -5,7 +5,7 @@
 #   OPENGV_FOUND        - TRUE if the openGV headers and libs are found
 #   OPENGV_INCLUDE_DIRS - The path to openGV headers
 #
-#   OPENGV_LIBRARIES    - All openGV libraries
+#   OPENGV_LIBRARY      - The opengv library
 #   OPENGV_LIBRARY_DIR  - The directory where the libraries are located
 #
 # Accepts the following variables as input:
