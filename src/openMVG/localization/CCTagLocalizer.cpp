@@ -573,14 +573,16 @@ bool CCTagLocalizer::localizeAllAssociations(const std::vector<std::unique_ptr<f
               const Parameters &param,
               const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
               const std::vector<geometry::Pose3 > &vec_subPoses,
-              geometry::Pose3 rigPose)
+              geometry::Pose3 &rigPose)
 {
   assert(vec_queryRegions.size()==vec_queryIntrinsics.size());
   assert(vec_queryRegions.size()==vec_subPoses.size()-1);   
 
   const size_t numCams = vec_queryRegions.size();
 
-  vector<std::map< pair<IndexT, IndexT>, pair<Vec3, Vec2> > > vec_associations(numCams);
+  vector<std::map< pair<IndexT, IndexT>, std::size_t > > vec_occurrences(numCams);
+  vector<Mat > vec_pts3D(numCams);
+  vector<Mat > vec_pts2D(numCams);
 
   // for each camera retrieve the associations
   //@todo parallelize?
@@ -591,11 +593,16 @@ bool CCTagLocalizer::localizeAllAssociations(const std::vector<std::unique_ptr<f
     // this map is used to collect the 2d-3d associations as we go through the images
     // the key is a pair <Id3D, Id2d>
     // the element is the pair 3D point - 2D point
-    std::map< pair<IndexT, IndexT>, pair<Vec3, Vec2> > &associations = vec_associations[i];
+    auto &occurrences = vec_occurrences[i];
+    auto &pts3D = vec_pts3D[i];
+    auto &pts2D = vec_pts2D[i];
     features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (vec_queryRegions[i].get());
-    getAllAssociations(queryRegions, param, associations);
-    numAssociations += associations.size();
+    getAllAssociations(queryRegions, param, occurrences, pts2D, pts3D);
+    numAssociations += occurrences.size();
   }
+  
+  // @todo Here it could be possible to filter the associations according to their
+  // occurrences, eg giving priority to those associations that are more frequent
 
   const size_t minNumAssociations = 5;  //possible parameter?
   if(numAssociations < minNumAssociations)
@@ -613,26 +620,30 @@ bool CCTagLocalizer::localizeAllAssociations(const std::vector<std::unique_ptr<f
   size_t index = 0;
   for( size_t i = 0; i < numCams; ++i )
   {
-    std::map< pair<IndexT, IndexT>, pair<Vec3, Vec2> > &associations = vec_associations[i];
+    const auto &pts3D = vec_pts3D[i];
+    const auto &pts2D = vec_pts2D[i];
+    const cameras::Pinhole_Intrinsic_Radial_K3 &currCamera = vec_queryIntrinsics[i];
+    const geometry::Pose3 &currPose = vec_subPoses[i];
+    
+    const std::size_t numPts = pts3D.cols();
+    assert(numPts == pts2D.cols());
 
-    for(const auto &ass : associations)
+    for(std::size_t k = 0; k < numPts; ++k)
     {
-      const cameras::Pinhole_Intrinsic_Radial_K3 &currCamera = vec_queryIntrinsics[i];
-      const geometry::Pose3 &currPose = vec_subPoses[i];
        // recopy all the points in the matching structure
       //@todo THIS IS WRONG!!!!!
       // undistort and normalize the 2D points 
       // we first remove the distortion and then we transform the undistorted point in
       // normalized camera coordinates (inv(K)*undistortedPoint)
-      resectionData.pt2D.col(index) = currCamera.ima2cam(currCamera.remove_disto(ass.second.second));
+      resectionData.pt2D.col(index) = currCamera.ima2cam(currCamera.remove_disto(pts2D.col(k)));
       // multiply the 3D point by the camera rototranslation
-      resectionData.pt3D.col(index) = currPose(ass.second.first);
+      resectionData.pt3D.col(index) = currPose(pts3D.col(k));
 
       ++index;
     }
 
   }
-  assert(index==numAssociations);
+  assert(index == numAssociations);
 
   // do the resection with all the associations
   // the resection in this case must be done in normalized coordinates for the 
@@ -686,7 +697,9 @@ bool CCTagLocalizer::localizeAllAssociations(const std::vector<std::unique_ptr<f
 
 void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegions,
                                         const CCTagLocalizer::Parameters &param,
-                                        std::map< pair<IndexT, IndexT>, pair<Vec3, Vec2> > &associations) const
+                                        std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences,
+                                        Mat &pt2D,
+                                        Mat &pt3D) const
 {
   std::vector<IndexT> nearestKeyFrames;
   nearestKeyFrames.reserve(param._nNearestKeyFrames);
@@ -713,32 +726,40 @@ void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegi
     // hence we can recover the 2D-3D associations to estimate the pose
     
     // Get the 3D points associated to each matched feature
-    std::size_t index = 0;
     for(const matching::IndMatch& featureMatch : vec_featureMatches)
     {
-      assert(vec_featureMatches.size()>index);
       // the ID of the 3D point
       const IndexT pt3D_id = matchedRegions._associated3dPoint[featureMatch._j];
       const IndexT pt2D_id = featureMatch._i;
       
       const auto key = std::make_pair(pt3D_id, pt2D_id);
-      if(associations.count(key))
+      if(occurences.count(key))
       {
-        // we already have this association, skip it
-        continue;
+        occurences[key]++;
       }
-      
-      // prepare data for resectioning
-      const auto &point3d = _sfm_data.GetLandmarks().at(pt3D_id).X;
-
-      const Vec2 feat = queryRegions.GetRegionPosition(pt2D_id);
-      
-      associations.insert(std::make_pair(key, std::make_pair(point3d, feat)));
-      
-      ++index;
+      else
+      {
+        occurences[key] = 1;
+      }
     }
   }
   
+  const size_t numCollectedPts = occurences.size();
+
+  pt2D = Mat2X(2, numCollectedPts);
+  pt3D = Mat3X(3, numCollectedPts);
+
+  size_t index = 0;
+  for(const auto &idx : occurences)
+  {
+    // recopy all the points in the matching structure
+    const IndexT pt3D_id = idx.first.first;
+    const IndexT pt2D_id = idx.first.second;
+
+    pt2D.col(index) = queryRegions.GetRegionPosition(pt2D_id);
+    pt3D.col(index) = _sfm_data.GetLandmarks().at(pt3D_id).X;
+    ++index;
+  }
 }
 
 

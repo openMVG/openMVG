@@ -98,14 +98,31 @@ public:
                 const Parameters &param,
                 const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
                 const std::vector<geometry::Pose3 > &vec_subPoses,
-                geometry::Pose3 rigPose);
+                geometry::Pose3 &rigPose);
  
-  virtual ~CCTagLocalizer();
-
+  /**
+   * @brief Given the input Regions, it retrieves all the 2D-3D associations from
+   * the nearest k-frames in the database. The associations are retrived in terms
+   * of region index and 3D point index along with the number of times (\p occurrences) that the 
+   * pair has been found. \p pt2D and \p pt3D contains the coordinates of the corresponding
+   * points of the associations, in the same order as in \p occurences.
+   * 
+   * @param[in] queryRegions The input query regions containing the extracted 
+   * markers from the query image
+   * @param[in] param The parameters to use
+   * @param[out] occurences A map with a pair of indices for each association as 
+   * key and its occurrence as value
+   * @param[out] pt2D The set of 2D points of the associations as they are given in \p queryRegions
+   * @param[out] pt3D The set of 3D points of the associations
+   */
   void getAllAssociations(const features::CCTAG_Regions &queryRegions,
                           const CCTagLocalizer::Parameters &param,
-                          std::map< pair<IndexT, IndexT>, pair<Vec3, Vec2> > &associations) const;
+                          std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences,
+                          Mat &pt2D,
+                          Mat &pt3D) const;
   
+  virtual ~CCTagLocalizer();
+
 private:
   
   bool loadReconstructionDescriptors(
