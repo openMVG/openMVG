@@ -252,7 +252,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
 
 
 bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQueryRegions,
-                              const std::pair<std::size_t, std::size_t> imageSize,
+                              const std::pair<std::size_t, std::size_t> &imageSize,
                               const LocalizerParameters *parameters,
                               bool useInputIntrinsics,
                               cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
@@ -432,7 +432,7 @@ bool CCTagLocalizer::localizeRig(const std::vector<image::Image<unsigned char> >
                               const LocalizerParameters *parameters,
                               std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
                               const std::vector<geometry::Pose3 > &vec_subPoses,
-                              geometry::Pose3 rigPose)
+                              geometry::Pose3 &rigPose)
 {
   const CCTagLocalizer::Parameters *param = static_cast<const CCTagLocalizer::Parameters *>(parameters);
   if(!param)

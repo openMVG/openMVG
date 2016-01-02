@@ -61,7 +61,7 @@ public:
                 LocalizationResult & localizationResult, const std::string& imagePath = std::string());
 
   bool localize(const std::unique_ptr<features::Regions> &queryRegions,
-                const std::pair<std::size_t, std::size_t> imageSize,
+                const std::pair<std::size_t, std::size_t> &imageSize,
                 const LocalizerParameters *parameters,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
@@ -83,7 +83,7 @@ public:
                 const LocalizerParameters *parameters,
                 std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
                 const std::vector<geometry::Pose3 > &vec_subPoses,
-                geometry::Pose3 rigPose);
+                geometry::Pose3 &rigPose);
   
   
   // @todo THESE ARE UNSTABLE / TO FIX

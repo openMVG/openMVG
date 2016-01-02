@@ -123,7 +123,7 @@ public:
    * @return  true if the image has been successfully localized.
    */
   bool localize(const std::unique_ptr<features::Regions> &genQueryRegions,
-                const std::pair<std::size_t, std::size_t> imageSize,
+                const std::pair<std::size_t, std::size_t> &imageSize,
                 const LocalizerParameters *param,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
@@ -135,7 +135,7 @@ public:
                              const LocalizerParameters *param,
                              std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
                              const std::vector<geometry::Pose3 > &vec_subPoses,
-                             geometry::Pose3 rigPose);
+                             geometry::Pose3 &rigPose);
 
   /**
    * @brief Try to localize an image in the database: it queries the database to 
