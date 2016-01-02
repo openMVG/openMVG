@@ -132,10 +132,17 @@ public:
   
   // not yet implemented!
   bool localizeRig(const std::vector<image::Image<unsigned char> > & vec_imageGrey,
-                             const LocalizerParameters *param,
-                             std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
-                             const std::vector<geometry::Pose3 > &vec_subPoses,
-                             geometry::Pose3 &rigPose);
+                   const LocalizerParameters *param,
+                   std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                   const std::vector<geometry::Pose3 > &vec_subPoses,
+                   geometry::Pose3 &rigPose);
+  // not yet implemented!
+  bool localizeRig(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+                   const std::vector<std::pair<std::size_t, std::size_t> > &vec_imageSize,
+                   const LocalizerParameters *param,
+                   std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                   const std::vector<geometry::Pose3 > &vec_subPoses,
+                   geometry::Pose3 &rigPose);
 
   /**
    * @brief Try to localize an image in the database: it queries the database to 

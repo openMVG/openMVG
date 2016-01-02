@@ -80,20 +80,18 @@ public:
    * @return true if the rig has been successfully localized.
    */
   bool localizeRig(const std::vector<image::Image<unsigned char> > & vec_imageGrey,
-                const LocalizerParameters *parameters,
-                std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
-                const std::vector<geometry::Pose3 > &vec_subPoses,
-                geometry::Pose3 &rigPose);
+                   const LocalizerParameters *parameters,
+                   std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                   const std::vector<geometry::Pose3 > &vec_subPoses,
+                   geometry::Pose3 &rigPose);
   
-  
-  // @todo THESE ARE UNSTABLE / TO FIX
-  
-  // @simone this is not even implemented, this should be the localizeRig counterpart using regions as input
-//  bool localize(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
-//              const Parameters &param,
-//              const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
-//              const std::vector<geometry::Pose3 > &vec_subPoses,
-//              geometry::Pose3 rigPose);
+
+  bool localizeRig(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+                   const std::vector<std::pair<std::size_t, std::size_t> > &imageSize,
+                   const LocalizerParameters *param,
+                   std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                   const std::vector<geometry::Pose3 > &vec_subPoses,
+                   geometry::Pose3 &rigPose);
   
   // this is the wrong implementation of localizeRig, we need openGV for this
   bool localizeAllAssociations(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
@@ -103,7 +101,6 @@ public:
                 geometry::Pose3 rigPose);
  
   virtual ~CCTagLocalizer();
-   
   void getAllAssociationsFromNearestKFrames(const features::CCTAG_Regions &queryRegions,
                                             const CCTagLocalizer::Parameters &param,
                                             std::map< pair<IndexT, IndexT>, pair<Vec3, Vec2> > &associations) const;

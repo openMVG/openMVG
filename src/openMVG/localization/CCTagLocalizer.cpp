@@ -440,10 +440,55 @@ bool CCTagLocalizer::localizeRig(const std::vector<image::Image<unsigned char> >
     // error!
     throw std::invalid_argument("The parameters are not in the right format!!");
   }
-  assert(vec_imageGrey.size()==vec_queryIntrinsics.size());
-  assert(vec_imageGrey.size()==vec_subPoses.size()-1);
-
   const size_t numCams = vec_imageGrey.size();
+  assert(numCams == vec_queryIntrinsics.size());
+  assert(numCams == vec_subPoses.size() - 1);
+
+  std::vector<std::unique_ptr<features::Regions> > vec_queryRegions(numCams);
+  std::vector<std::pair<std::size_t, std::size_t> > vec_imageSize;
+  
+  //@todo parallelize?
+  for(size_t i = 0; i < numCams; ++i)
+  {
+    // extract descriptors and features from each image
+    vec_queryRegions[i] = std::unique_ptr<features::Regions>(new features::CCTAG_Regions());
+    POPART_COUT("[features]\tExtract CCTag from query image...");
+    _image_describer.Describe(vec_imageGrey[i], vec_queryRegions[i]);
+    POPART_COUT("[features]\tExtract CCTAG done: found " <<  vec_queryRegions[i]->RegionCount() << " features");
+    // add the image size for this image
+    vec_imageSize.emplace_back(vec_imageGrey[i].Width(), vec_imageGrey[i].Height());
+  }
+  assert(vec_imageSize.size() == vec_queryRegions.size());
+          
+  return localizeRig(vec_queryRegions,
+                     vec_imageSize,
+                     parameters,
+                     vec_queryIntrinsics,
+                     vec_subPoses,
+                     rigPose);
+}
+
+// subposes is n-1 as we consider the first camera as the main camera and the 
+// reference frame of the grid
+bool CCTagLocalizer::localizeRig(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+                                 const std::vector<std::pair<std::size_t, std::size_t> > &imageSize,
+                                 const LocalizerParameters *parameters,
+                                 std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                                 const std::vector<geometry::Pose3 > &vec_subPoses,
+                                 geometry::Pose3 &rigPose)
+{
+  const CCTagLocalizer::Parameters *param = static_cast<const CCTagLocalizer::Parameters *>(parameters);
+  if(!param)
+  {
+    // error!
+    throw std::invalid_argument("The parameters are not in the right format!!");
+  }
+
+  const size_t numCams = vec_queryRegions.size();
+  
+  assert(numCams==vec_queryIntrinsics.size());
+  assert(numCams==vec_subPoses.size()-1);
+  assert(numCams==imageSize.size());
 
   std::vector<LocalizationResult> vec_localizationResults(numCams);
     
@@ -452,7 +497,7 @@ bool CCTagLocalizer::localizeRig(const std::vector<image::Image<unsigned char> >
   std::vector<bool> isLocalized(numCams, false);
   for(size_t i = 0; i < numCams; ++i)
   {
-    isLocalized[i] = localize(vec_imageGrey[i], param, true /*useInputIntrinsics*/, vec_queryIntrinsics[i], vec_localizationResults[i]);
+    isLocalized[i] = localize(vec_queryRegions[i], imageSize[i], param, true /*useInputIntrinsics*/, vec_queryIntrinsics[i], vec_localizationResults[i]);
     if(!isLocalized[i])
     {
       POPART_CERR("Could not localize camera " << i);
