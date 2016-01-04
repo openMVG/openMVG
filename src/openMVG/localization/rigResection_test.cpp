@@ -15,6 +15,7 @@
 #include <math.h>
 #include <chrono>
 #include <random>
+#include <random>
 
 using namespace openMVG;
 
@@ -96,38 +97,32 @@ geometry::Pose3 generateRandomPose(const Vec3 &maxAngles = Vec3::Constant(2*M_PI
   return geometry::Pose3(generateRandomRotation(maxAngles), generateRandomTranslation(maxNorm));
 }
 
-
-
-
-TEST(rigResection, simpleNoNoiseNoOutliers)
+void generateRandomExperiment(std::size_t numCameras, 
+                              std::size_t numPoints,
+                              double outliersPercentage,
+                              double noise,
+                              geometry::Pose3 &rigPoseGT,
+                              Mat3X &pointsGT,
+                              std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                              std::vector<geometry::Pose3 > &vec_subPoses,
+                              std::vector<Mat3X> &vec_pts3d,
+                              std::vector<Mat2X> &vec_pts2d)
 {
-  const std::size_t numCameras = 3;
-  const std::size_t numPoints = 10;
-  const std::size_t numTrials = 10;
-  const double threshold = 1e-3;
-  
-  for(std::size_t trial = 0; trial < numTrials; ++trial)
-  {
-
-    // generate random pose for the rig
-    const geometry::Pose3 rigPoseGT = generateRandomPose(Vec3::Constant(M_PI/10), 5);
+      // generate random pose for the rig
+    rigPoseGT = generateRandomPose(Vec3::Constant(M_PI/10), 5);
 
     // generate random 3D points
     const double thetaMin = 0;
     const double thetaMax = M_PI/3;
     const double depthMax = 50;
     const double depthMin = 10;
-    const Mat3X pointsGT = generateRandomPoints(numPoints, thetaMin, thetaMax, depthMax, depthMin);
+    pointsGT = generateRandomPoints(numPoints, thetaMin, thetaMax, depthMax, depthMin);
 
     // apply random rig pose to points
     const Mat3X points = rigPoseGT(pointsGT);
+    std::cout << "rigPoseGT\n" << rigPoseGT.rotation() << "\n" << rigPoseGT.center()<< std::endl;
 
     // generate numCameras random poses and intrinsics
-    std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > vec_queryIntrinsics;
-    std::vector<geometry::Pose3 > vec_subPoses;
-
-  //  std::cout << "points" << points << std::endl;
-    std::cout << "rigPoseGT\n" << rigPoseGT.rotation() << "\n" << rigPoseGT.center()<< std::endl;
     for(std::size_t cam = 0; cam < numCameras; ++cam)
     {
       // first camera is in I 0
@@ -142,10 +137,10 @@ TEST(rigResection, simpleNoNoiseNoOutliers)
   //    std::cout << "vec_subPoses\n" << vec_subPoses[i].rotation() << "\n" << vec_subPoses[i].center()<< std::endl;;
 
     // for each camera generate the features (if 3D point is "in front" of the camera)
-    std::vector<Mat3X> vec_pts3d;
     vec_pts3d.reserve(numCameras);
-    std::vector<Mat2X> vec_pts2d;
     vec_pts2d.reserve(numCameras);
+    
+    const std::size_t numOutliers = (std::size_t)numPoints*outliersPercentage;
 
     for(std::size_t cam = 0; cam < numCameras; ++cam)
     {
@@ -156,9 +151,10 @@ TEST(rigResection, simpleNoNoiseNoOutliers)
         localPts = points;
 
       // count the number of points in front of the camera
+      // ie take the 3rd coordinate and check it is > 0
       const std::size_t validPoints = (localPts.row(2).array() > 0.0).count();
-      Mat3X pts3d = Mat(3, validPoints);
-      Mat2X pts2d = Mat(2, validPoints);
+      Mat3X pts3d = Mat(3, validPoints + numOutliers);
+      Mat2X pts2d = Mat(2, validPoints + numOutliers);
 
       // for each 3D point
       std::size_t idx = 0;
@@ -169,27 +165,40 @@ TEST(rigResection, simpleNoNoiseNoOutliers)
         {
           // project it
           Vec2 feat = vec_queryIntrinsics[cam].project(geometry::Pose3(), localPts.col(i));
+          
+          if(noise > 0.0)
+          {
+            feat = feat + noise*Vec2::Random();
+          }
 
           // add the 3d and 2d point
           pts3d.col(idx) = pointsGT.col(i);
           pts2d.col(idx) = feat;
           ++idx;
         }
-        else
-        {
-          std::cout << localPts.col(i) << std::endl;
-        }
       }
       assert(idx == validPoints);
+      
+      if(numOutliers)
+      {
+        //add some other random associations
+        for(std::size_t i = 0; i < numOutliers; ++i)
+        {
+          pts3d.col(idx) = 10*Vec3::Random();
+          pts2d.col(idx) = 100*Vec2::Random();
+          ++idx;
+        }
+      }
 
-  //    std::cout << "Cam " << cam << std::endl;
-  //    std::cout << "pts3d\n" << pts3d << std::endl;
-  //    std::cout << "pts2d\n" << pts2d << std::endl;
-  //    
-  //    auto residuals = vec_queryIntrinsics[cam].residuals(geometry::Pose3(), localPts, pts2d);
-  //    auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
-  //    
-  //    std::cout << "residuals\n" << sqrErrors << std::endl;
+//      std::cout << "Cam " << cam << std::endl;
+//      std::cout << "pts2d\n" << pts2d << std::endl;
+//      std::cout << "pts3d\n" << pts3d << std::endl;
+//      std::cout << "pts3dTRA\n" << localPts << std::endl;
+//      
+//      auto residuals = vec_queryIntrinsics[cam].residuals(geometry::Pose3(), localPts, pts2d);
+//      auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
+//      
+//      std::cout << "residuals\n" << sqrErrors << std::endl;
 
   //    if(cam!=0)
   //      residuals = vec_queryIntrinsics[cam].residuals(vec_subPoses[cam-1], points, pts2d);
@@ -203,6 +212,37 @@ TEST(rigResection, simpleNoNoiseNoOutliers)
       vec_pts3d.push_back(pts3d);
       vec_pts2d.push_back(pts2d);
     }
+}
+
+
+TEST(rigResection, simpleNoNoiseNoOutliers)
+{
+  const std::size_t numCameras = 3;
+  const std::size_t numPoints = 10;
+  const std::size_t numTrials = 10;
+  const double threshold = 1e-3;
+  
+  for(std::size_t trial = 0; trial < numTrials; ++trial)
+  {
+
+    // generate random pose for the rig
+    geometry::Pose3 rigPoseGT;
+    std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > vec_queryIntrinsics;
+    std::vector<geometry::Pose3 > vec_subPoses;
+    std::vector<Mat3X> vec_pts3d;
+    std::vector<Mat2X> vec_pts2d;
+    Mat3X pointsGT;
+
+    generateRandomExperiment(numCameras, 
+                             numPoints,
+                             0,
+                             0,
+                             rigPoseGT,
+                             pointsGT,
+                             vec_queryIntrinsics,
+                             vec_subPoses,
+                             vec_pts3d,
+                             vec_pts2d);
 
     // call the GPNP
     std::vector<std::vector<std::size_t> > inliers;
