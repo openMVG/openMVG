@@ -3,6 +3,7 @@
 #include "CCTagLocalizer.hpp"
 #include "reconstructed_regions.hpp"
 #include "optimization.hpp"
+#include "rigResection.hpp"
 #include "svgVisualization.hpp"
 
 #include <openMVG/sfm/sfm_data_io.hpp>
@@ -468,6 +469,8 @@ bool CCTagLocalizer::localizeRig(const std::vector<image::Image<unsigned char> >
                      rigPose);
 }
 
+#ifndef HAVE_OPENGV
+
 // subposes is n-1 as we consider the first camera as the main camera and the 
 // reference frame of the grid
 bool CCTagLocalizer::localizeRig(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
@@ -569,20 +572,29 @@ bool CCTagLocalizer::localizeRig(const std::vector<std::unique_ptr<features::Reg
   return true;
 }
 
-bool CCTagLocalizer::localizeAllAssociations(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
-              const Parameters &param,
-              const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
-              const std::vector<geometry::Pose3 > &vec_subPoses,
-              geometry::Pose3 &rigPose)
-{
-  assert(vec_queryRegions.size()==vec_queryIntrinsics.size());
-  assert(vec_queryRegions.size()==vec_subPoses.size()-1);   
+#else
 
+bool CCTagLocalizer::localizeRig(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+                                 const std::vector<std::pair<std::size_t, std::size_t> > &imageSize,
+                                 const LocalizerParameters *parameters,
+                                 std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                                 const std::vector<geometry::Pose3 > &vec_subPoses,
+                                 geometry::Pose3 &rigPose)
+{
   const size_t numCams = vec_queryRegions.size();
+  assert(numCams == vec_queryIntrinsics.size());
+  assert(numCams == vec_subPoses.size() - 1);   
+  
+  const CCTagLocalizer::Parameters *param = static_cast<const CCTagLocalizer::Parameters *>(parameters);
+  if(!param)
+  {
+    // error!
+    throw std::invalid_argument("The parameters are not in the right format!!");
+  }
 
   vector<std::map< pair<IndexT, IndexT>, std::size_t > > vec_occurrences(numCams);
-  vector<Mat > vec_pts3D(numCams);
-  vector<Mat > vec_pts2D(numCams);
+  vector<Mat3X > vec_pts3D(numCams);
+  vector<Mat2X > vec_pts2D(numCams);
 
   // for each camera retrieve the associations
   //@todo parallelize?
@@ -594,10 +606,10 @@ bool CCTagLocalizer::localizeAllAssociations(const std::vector<std::unique_ptr<f
     // the key is a pair <Id3D, Id2d>
     // the element is the pair 3D point - 2D point
     auto &occurrences = vec_occurrences[i];
-    auto &pts3D = vec_pts3D[i];
-    auto &pts2D = vec_pts2D[i];
+    Mat3X &pts3D = vec_pts3D[i];
+    Mat2X &pts2D = vec_pts2D[i];
     features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (vec_queryRegions[i].get());
-    getAllAssociations(queryRegions, param, occurrences, pts2D, pts3D);
+    getAllAssociations(queryRegions, *param, occurrences, pts2D, pts3D);
     numAssociations += occurrences.size();
   }
   
@@ -610,96 +622,24 @@ bool CCTagLocalizer::localizeAllAssociations(const std::vector<std::unique_ptr<f
     POPART_COUT("[poseEstimation]\tonly " << numAssociations << " have been found, not enough to do the resection!");
     return false;
   }
-
-  // prepare resection data
-  sfm::Image_Localizer_Match_Data resectionData;
-  resectionData.pt2D = Mat2X(2, numAssociations);
-  resectionData.pt3D = Mat3X(3, numAssociations);
-
-  // fill the point matrices with the relevant points
-  size_t index = 0;
-  for( size_t i = 0; i < numCams; ++i )
-  {
-    const auto &pts3D = vec_pts3D[i];
-    const auto &pts2D = vec_pts2D[i];
-    const cameras::Pinhole_Intrinsic_Radial_K3 &currCamera = vec_queryIntrinsics[i];
-    const geometry::Pose3 &currPose = vec_subPoses[i];
-    
-    const std::size_t numPts = pts3D.cols();
-    assert(numPts == pts2D.cols());
-
-    for(std::size_t k = 0; k < numPts; ++k)
-    {
-       // recopy all the points in the matching structure
-      //@todo THIS IS WRONG!!!!!
-      // undistort and normalize the 2D points 
-      // we first remove the distortion and then we transform the undistorted point in
-      // normalized camera coordinates (inv(K)*undistortedPoint)
-      resectionData.pt2D.col(index) = currCamera.ima2cam(currCamera.remove_disto(pts2D.col(k)));
-      // multiply the 3D point by the camera rototranslation
-      resectionData.pt3D.col(index) = currPose(pts3D.col(k));
-
-      ++index;
-    }
-
-  }
-  assert(index == numAssociations);
-
-  // do the resection with all the associations
-  // the resection in this case must be done in normalized coordinates for the 
-  // 2D feature points (ie inv(K)*feat) so that all the 2D points are independent
-  // from their camera parameters (f, pp, and distortion)
-  // estimate the pose
-  // Do the resectioning: compute the camera pose.
-  resectionData.error_max = param._errorMax;
   
-  // this is a 'fake' intrinsics for the camera rig: all the 2D points are already
-  // undistorted and in their normalized camera coordinates, hence the K is the 
-  // identity matrix (f=1, pp=(0,0)), image size is irrelevant/not used so set to 0
-  cameras::Pinhole_Intrinsic rigIntrinsics(0,0,1,0,0);
-  POPART_COUT("[poseEstimation]\tEstimating camera pose...");
-  bool bResection = sfm::SfM_Localizer::Localize(std::make_pair(0,0), // image size is not used for calibrated case
-                                                 &rigIntrinsics,
-                                                 resectionData,
-                                                 rigPose);
+  std::vector<std::vector<std::size_t> > inliers;
+  return localization::rigResection(vec_pts2D,
+                                    vec_pts3D,
+                                    vec_queryIntrinsics,
+                                    vec_subPoses,
+                                    rigPose,
+                                    inliers);
 
-  if(!bResection)
-  {
-    POPART_COUT("[poseEstimation]\tResection FAILED");
-    return false;
-  }
-  POPART_COUT("[poseEstimation]\tResection SUCCEDED");
-
-  POPART_COUT("R est\n" << rigPose.rotation());
-  POPART_COUT("t est\n" << rigPose.translation());
-  
-  // E. refine the estimated pose
-  POPART_COUT("[poseEstimation]\tRefining estimated pose");
-  bool refineStatus = sfm::SfM_Localizer::RefinePose(&rigIntrinsics, 
-                                                     rigPose, 
-                                                     resectionData, 
-                                                     true /*b_refine_pose*/, 
-                                                     false /*b_refine_intrinsic*/);
-  if(!refineStatus)
-    POPART_COUT("Refine pose could not improve the estimation of the camera pose.");
-
-  {
-    // just temporary code to evaluate the estimated pose @todo remove it
-    POPART_COUT("R refined\n" << rigPose.rotation());
-    POPART_COUT("t refined\n" << rigPose.translation());
-    POPART_COUT("K refined\n" << rigIntrinsics.K());
-  }
-  
-  //@fixme return something meaningful
-  return true;
 }
 
+#endif // HAVE_OPENGV
 
 void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegions,
                                         const CCTagLocalizer::Parameters &param,
                                         std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences,
-                                        Mat &pt2D,
-                                        Mat &pt3D) const
+                                        Mat2X &pt2D,
+                                        Mat3X &pt3D) const
 {
   std::vector<IndexT> nearestKeyFrames;
   nearestKeyFrames.reserve(param._nNearestKeyFrames);

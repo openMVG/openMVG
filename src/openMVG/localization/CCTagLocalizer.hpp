@@ -93,13 +93,7 @@ public:
                    const std::vector<geometry::Pose3 > &vec_subPoses,
                    geometry::Pose3 &rigPose);
   
-  // this is the wrong implementation of localizeRig, we need openGV for this
-  bool localizeAllAssociations(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
-                const Parameters &param,
-                const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
-                const std::vector<geometry::Pose3 > &vec_subPoses,
-                geometry::Pose3 &rigPose);
- 
+  
   /**
    * @brief Given the input Regions, it retrieves all the 2D-3D associations from
    * the nearest k-frames in the database. The associations are retrived in terms
@@ -118,8 +112,8 @@ public:
   void getAllAssociations(const features::CCTAG_Regions &queryRegions,
                           const CCTagLocalizer::Parameters &param,
                           std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences,
-                          Mat &pt2D,
-                          Mat &pt3D) const;
+                          Mat2X &pt2D,
+                          Mat3X &pt3D) const;
   
   virtual ~CCTagLocalizer();
 
