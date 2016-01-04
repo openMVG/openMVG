@@ -31,3 +31,7 @@ INSTALL(TARGETS openMVG_localization DESTINATION lib EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG LocalizationResult
   "openMVG_localization;openMVG_sfm;openMVG_system;stlplus")
+IF(OpenMVG_USE_OPENGV)
+  UNIT_TEST(openMVG rigResection
+    "openMVG_localization;openMVG_sfm;openMVG_system;stlplus")
+ENDIF(OpenMVG_USE_OPENGV)
