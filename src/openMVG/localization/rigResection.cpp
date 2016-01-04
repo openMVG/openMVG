@@ -84,11 +84,6 @@ bool rigResection(const std::vector<Mat2X> &pts2d,
   {
     const std::size_t numPts = pts2d[cam].cols();
     const cameras::Pinhole_Intrinsic_Radial_K3 &currCamera = vec_queryIntrinsics[cam];
-//    std::cout << "pts2d[cam] "<< cam << ":\n" << pts2d[cam] << std::endl;
-//    if(cam!=0)
-//      std::cout << "Res cam " << cam << ":\n" << currCamera.residuals(vec_subPoses[cam-1], pts3d[cam], pts2d[cam]) << std::endl;
-//    else
-//      std::cout << "Res cam " << cam << ":\n" << currCamera.residuals(geometry::Pose3(), pts3d[cam], pts2d[cam]) << std::endl;
     
     for(std::size_t i = 0; i < numPts; ++i)
     {
@@ -100,11 +95,6 @@ bool rigResection(const std::vector<Mat2X> &pts2d,
       auto pt = currCamera.ima2cam(currCamera.remove_disto(pts2d[cam].col(i)));
       
       opengv::bearingVector_t bearing(pt(0), pt(1), 1.0);
-//      std::cout << bearing << std::endl;
-//      if(cam != 0)
-//        std::cout << "l " << cam << ":\n" << (bearing.cwiseQuotient(vec_subPoses[cam-1](pts3d[cam].col(i)))) << std::endl;
-//      else
-//        std::cout << "l " << cam << ":\n" << (bearing.cwiseQuotient(pts3d[cam].col(i))) << std::endl;
       
       // normalize the bearing-vector to 1
       bearing = bearing / bearing.norm();
@@ -169,7 +159,7 @@ bool rigResection(const std::vector<Mat2X> &pts2d,
     << "-- Resection status: " << success << "\n"
     << "-- #Points used for Resection: " << numTotalPoints << "\n"
     << "-- #Points validated by robust Resection: " << numInliers << "\n"
-    << "-- #Iteration needed: " << ransac.iterations_ << "\n"
+    << "-- #Iterations needed: " << ransac.iterations_ << "\n"
     << "-- #Thresehold used: " << ransac.threshold_ << "\n"
     << "-- Time spent in ransac [ms]: " << detect_elapsed.count() << "\n"
     << "-------------------------------" << std::endl;
