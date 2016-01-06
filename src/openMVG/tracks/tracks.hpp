@@ -258,7 +258,8 @@ struct TracksBuilder
       }
     }
     std::sort(vec_tracksToRemove.begin(), vec_tracksToRemove.end());
-    std::vector<size_t>::iterator it = std::unique(vec_tracksToRemove.begin(), vec_tracksToRemove.end());
+
+    const std::vector<size_t>::iterator it = std::unique(vec_tracksToRemove.begin(), vec_tracksToRemove.end());
     vec_tracksToRemove.resize( std::distance(vec_tracksToRemove.begin(), it) );
     std::for_each(vec_tracksToRemove.begin(), vec_tracksToRemove.end(),
       std::bind1st(std::mem_fun(&UnionFindObject::eraseClass), _tracksUF.get()));
