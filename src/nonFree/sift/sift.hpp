@@ -119,14 +119,14 @@ struct SiftParams
 //////////////////////////////
 template < typename TOut > 
 inline void convertSIFT(
-  vl_sift_pix descr[128],
+  const vl_sift_pix* descr,
   Descriptor<TOut,128> & descriptor,
   bool brootSift = false
   );
 
 template <> 
 inline void convertSIFT<float>(
-  vl_sift_pix descr[128],
+  const vl_sift_pix* descr,
   Descriptor<float,128> &descriptor,
   bool brootSift)
 {
@@ -145,7 +145,7 @@ inline void convertSIFT<float>(
 
 template <> 
 inline void convertSIFT<unsigned char>(
-  vl_sift_pix descr[128],
+  const vl_sift_pix* descr,
   Descriptor<unsigned char,128> & descriptor,
   bool brootSift)
 {
@@ -259,6 +259,8 @@ bool extractSIFT(const image::Image<unsigned char>& image,
 
   const auto& features = regionsCasted->Features();
   const auto& descriptors = regionsCasted->Descriptors();
+  
+  //Sorting the extracted features according to their scale
   {
     std::vector<std::size_t> indexSort(features.size());
     std::iota(indexSort.begin(), indexSort.end(), 0);
@@ -281,14 +283,13 @@ bool extractSIFT(const image::Image<unsigned char>& image,
     // Only filter features if we have more features than the maxTotalKeypoints
     if(features.size() > params._maxTotalKeypoints)
     {
-      std::cout << "Début filtrage" << std::endl;
       std::vector<typename SIFT_Region_T::FeatureT> filtered_keypoints;
       std::vector<typename SIFT_Region_T::FeatureT> rejected_keypoints;
       filtered_keypoints.reserve(std::min(features.size(), params._maxTotalKeypoints));
       rejected_keypoints.reserve(features.size());
 
-      std::size_t sizeMat = params._gridSize*params._gridSize;
-      std::size_t countFeatPerCell[sizeMat];
+      const std::size_t sizeMat = params._gridSize*params._gridSize;
+      std::vector<std::size_t> countFeatPerCell(sizeMat, 0);
       for (int Indice = 0; Indice < sizeMat; Indice++) {
     	  countFeatPerCell[Indice] = 0;
       }
@@ -300,7 +301,7 @@ bool extractSIFT(const image::Image<unsigned char>& image,
       //          << ", regionWidth: " << regionWidth
       //          << ", regionHeight: " << regionHeight << std::endl;
 
-      for(auto& keypoint: features)
+      for(const auto& keypoint: features)
       {
         const std::size_t cellX = std::min(std::size_t(keypoint.x() / regionWidth), params._gridSize);
         const std::size_t cellY = std::min(std::size_t(keypoint.y() / regionHeight), params._gridSize);
@@ -309,8 +310,8 @@ bool extractSIFT(const image::Image<unsigned char>& image,
         //std::cout << "- countFeatPerCell: " << countFeatPerCell << std::endl;
         //std::cout << "- gridSize: " << _params.gridSize << std::endl;
 
-        const std::size_t count = countFeatPerCell[cellX*params._gridSize + cellY];
-        countFeatPerCell[cellX*params._gridSize + cellY] = count + 1;
+        std::size_t &count = countFeatPerCell[cellX*params._gridSize + cellY];
+        ++count;
         if(count < keypointsPerCell)
           filtered_keypoints.push_back(keypoint);
         else
@@ -326,10 +327,6 @@ bool extractSIFT(const image::Image<unsigned char>& image,
       }
 
       regionsCasted->Features().swap(filtered_keypoints);
-      
-      for (int Indice = 0; Indice < sizeMat; Indice++) {
-    	  countFeatPerCell[Indice] = 0;
-      }
       
     }
   }
