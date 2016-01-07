@@ -3,11 +3,11 @@
 // Copyright (C) 2013 David Ok <david.ok8@gmail.com>
 // Copyright (C) 2014 Pierre Moulon
 //
-// Adapted from DO++, a basic set of libraries in C++ for computer 
+// Adapted from DO++, a basic set of libraries in C++ for computer
 // vision.
 //
-// This Source Code Form is subject to the terms of the Mozilla Public 
-// License v. 2.0. If a copy of the MPL was not distributed with this file, 
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License v. 2.0. If a copy of the MPL was not distributed with this file,
 // you can obtain one at http://mozilla.org/MPL/2.0/.
 // ========================================================================== //
 
@@ -44,7 +44,7 @@ namespace system {
 #ifdef HAVE_CXX11_CHRONO
     start_ = std::chrono::high_resolution_clock::now();
 #else
-    
+
 #ifdef _WIN32
     LARGE_INTEGER li_start_;
     QueryPerformanceCounter(&li_start_);
@@ -62,7 +62,7 @@ namespace system {
   {
     double elapsed_;
 #ifdef HAVE_CXX11_CHRONO
-    auto end_ = std::chrono::high_resolution_clock::now();
+    const auto end_ = std::chrono::high_resolution_clock::now();
     elapsed_ = std::chrono::duration_cast<std::chrono::milliseconds>(end_ - start_).count() / 1000.;
 #else
 
@@ -73,7 +73,7 @@ namespace system {
 #else
     timeval end;
     gettimeofday(&end, NULL);
-    double end_ = end.tv_sec + end.tv_usec * 1e-6;
+    const double end_ = end.tv_sec + end.tv_usec * 1e-6;
     elapsed_ = end_ - start_;
 #endif
 #endif // HAVE_CXX11_CHRONO
@@ -83,14 +83,13 @@ namespace system {
   double Timer::elapsedMs() const
   {
 #ifdef HAVE_CXX11_CHRONO
-    auto end_ = std::chrono::high_resolution_clock::now();
-    double elapsed_ = std::chrono::duration_cast<std::chrono::milliseconds>(end_ - start_).count();
-    return elapsed_;
+    const auto end_ = std::chrono::high_resolution_clock::now();
+    return std::chrono::duration_cast<std::chrono::milliseconds>(end_ - start_).count();
 #else
     return elapsed() * 1000.;
 #endif // HAVE_CXX11_CHRONO
   }
-  
+
   std::ostream& operator << (std::ostream& str, const Timer& t)
   {
     return str << t.elapsed() << " s elapsed";
