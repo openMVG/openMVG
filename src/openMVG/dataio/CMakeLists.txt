@@ -26,4 +26,4 @@ if(OpenMVG_USE_ALEMBIC)
 endif(OpenMVG_USE_ALEMBIC)
 install(TARGETS openMVG_dataio DESTINATION lib/ EXPORT openMVG-targets)
 
-#UNIT_TEST(openMVG dataio "openMVG_dataio")
+UNIT_TEST(openMVG AlembicImporter "openMVG_dataio")
