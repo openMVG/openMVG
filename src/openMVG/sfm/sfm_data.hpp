@@ -80,8 +80,8 @@ struct SfM_Data
       return false;
     for(Views::const_iterator it = views.begin(); it != views.end(); ++it)
     {
-        View& view1 = *(it->second.get());
-        View& view2 = *(other.views.at(it->first).get());
+        const View& view1 = *(it->second.get());
+        const View& view2 = *(other.views.at(it->first).get());
         if(!(view1 == view2))
           return false;
         

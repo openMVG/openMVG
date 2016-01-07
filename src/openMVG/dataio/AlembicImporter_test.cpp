@@ -12,7 +12,7 @@ using namespace openMVG::sfm;
 
 // Create a SfM scene with desired count of views & poses & intrinsic (shared or not)
 // Add a 3D point with observation in 2 view (just in order to have non empty data)
-SfM_Data create_test_scene(IndexT viewsCount, IndexT pointCount, bool bSharedIntrinsic)
+SfM_Data create_test_scene(const IndexT viewsCount, const IndexT pointCount, const bool bSharedIntrinsic)
 {
   SfM_Data sfm_data;
   sfm_data.s_root_path = "./";
@@ -76,7 +76,7 @@ TEST(AlembicImporter, importExport) {
     int flags = ALL;
 
     // Create a random scene
-    SfM_Data sfm_data = create_test_scene(5, 50, true);
+    const SfM_Data sfm_data = create_test_scene(5, 50, true);
     
 
     /*********************************************************************/
@@ -84,7 +84,7 @@ TEST(AlembicImporter, importExport) {
     /*********************************************************************/
 
     // Export as JSON
-    std::string jsonFile = "jsonToJson.json";
+    const std::string jsonFile = "jsonToJson.json";
     {
         EXPECT_TRUE(Save(
         sfm_data,
@@ -100,7 +100,7 @@ TEST(AlembicImporter, importExport) {
     }
 
     // Export as JSON
-    std::string jsonFile2 = "jsonToJson2.json";
+    const std::string jsonFile2 = "jsonToJson2.json";
     {
         EXPECT_TRUE(Save(
         sfmJsonToJson,
@@ -113,7 +113,7 @@ TEST(AlembicImporter, importExport) {
     /*********************************************************************/
 
     // Export as ABC
-    std::string abcFile = "abcToAbc.abc";
+    const std::string abcFile = "abcToAbc.abc";
     {
         EXPECT_TRUE(Save(
         sfm_data,
@@ -134,7 +134,7 @@ TEST(AlembicImporter, importExport) {
     }
 
     // Export as ABC
-    std::string abcFile2 = "abcToAbc2.abc";
+    const std::string abcFile2 = "abcToAbc2.abc";
     {
         EXPECT_TRUE(Save(
         sfmAbcToAbc,
@@ -149,18 +149,18 @@ TEST(AlembicImporter, importExport) {
     /*********************************************************************/
 
     // Export as JSON
-    jsonFile = "jsonToABC.json";
+    const std::string jsonFile3 = "jsonToABC.json";
     {
         EXPECT_TRUE(Save(
         sfm_data,
-        jsonFile.c_str(),
+        jsonFile3.c_str(),
         ESfM_Data(flags)));
     }
 
     // Reload
     SfM_Data sfmJsonToABC;
     {
-        EXPECT_TRUE(Load(sfmJsonToABC, jsonFile, ESfM_Data(flags)));
+        EXPECT_TRUE(Load(sfmJsonToABC, jsonFile3, ESfM_Data(flags)));
         EXPECT_EQ( sfm_data.views.size(), sfmJsonToABC.views.size());
         EXPECT_EQ( sfm_data.poses.size(), sfmJsonToABC.poses.size());
         EXPECT_EQ( sfm_data.intrinsics.size(), sfmJsonToABC.intrinsics.size());
@@ -169,18 +169,18 @@ TEST(AlembicImporter, importExport) {
     }
 
     // Export as ABC
-    abcFile = "jsonToABC.abc";
+    const std::string abcFile3 = "jsonToABC.abc";
     {
         EXPECT_TRUE(Save(
         sfmJsonToABC,
-        abcFile.c_str(),
+        abcFile3.c_str(),
         ESfM_Data(flags)));
     }
 
     // Reload
     SfM_Data sfmJsonToABC2;
     {
-        EXPECT_TRUE(Load(sfmJsonToABC2, abcFile, ESfM_Data(flags)));
+        EXPECT_TRUE(Load(sfmJsonToABC2, abcFile3, ESfM_Data(flags)));
         EXPECT_EQ( sfm_data.views.size(), sfmJsonToABC2.views.size());
         EXPECT_EQ( sfm_data.poses.size(), sfmJsonToABC2.poses.size());
         EXPECT_EQ( sfm_data.intrinsics.size(), sfmJsonToABC2.intrinsics.size());
@@ -189,18 +189,18 @@ TEST(AlembicImporter, importExport) {
     }
 
     // Export as ABC
-    abcFile2 = "jsonToABC2.abc";
+    const std::string abcFile4 = "jsonToABC2.abc";
     {
         EXPECT_TRUE(Save(
         sfmJsonToABC2,
-        abcFile2.c_str(),
+        abcFile4.c_str(),
         ESfM_Data(flags)));
     }
 
     // Reload
     SfM_Data sfmJsonToABC3;
     {
-        EXPECT_TRUE(Load(sfmJsonToABC3, abcFile2, ESfM_Data(flags)));
+        EXPECT_TRUE(Load(sfmJsonToABC3, abcFile4, ESfM_Data(flags)));
         EXPECT_EQ( sfm_data.views.size(), sfmJsonToABC3.views.size());
         EXPECT_EQ( sfm_data.poses.size(), sfmJsonToABC3.poses.size());
         EXPECT_EQ( sfm_data.intrinsics.size(), sfmJsonToABC3.intrinsics.size());
@@ -209,11 +209,11 @@ TEST(AlembicImporter, importExport) {
     }
 
     // Export as JSON
-    jsonFile2 = "jsonToABC2.json";
+    const std::string jsonFile4 = "jsonToABC2.json";
     {
         EXPECT_TRUE(Save(
         sfmJsonToABC3,
-        jsonFile2.c_str(),
+        jsonFile4.c_str(),
         ESfM_Data(flags)));
     }
 
