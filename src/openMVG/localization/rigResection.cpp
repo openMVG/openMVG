@@ -25,8 +25,8 @@ namespace localization{
 
 #if HAVE_OPENGV
 
-bool rigResection(const std::vector<Mat2X> &pts2d, 
-                  const std::vector<Mat3X> &pts3d,
+bool rigResection(const std::vector<Mat> &pts2d, 
+                  const std::vector<Mat> &pts3d,
                   const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
                   const std::vector<geometry::Pose3 > &vec_subPoses,
                   geometry::Pose3 &rigPose,
@@ -64,6 +64,8 @@ bool rigResection(const std::vector<Mat2X> &pts2d,
   {
     const std::size_t numPts = pts2d[i].cols();
     assert(pts3d[i].cols() == numPts);
+    assert(pts3d[i].rows() == 3);
+    assert(pts2d[i].rows() == 2);
     numTotalPoints += numPts;
   }
   // transform the points into bearingVectors

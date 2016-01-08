@@ -112,8 +112,8 @@ public:
   void getAllAssociations(const features::CCTAG_Regions &queryRegions,
                           const CCTagLocalizer::Parameters &param,
                           std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences,
-                          Mat2X &pt2D,
-                          Mat3X &pt3D) const;
+                          Mat &pt2D,
+                          Mat &pt3D) const;
   
   virtual ~CCTagLocalizer();
 

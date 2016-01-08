@@ -105,8 +105,8 @@ void generateRandomExperiment(std::size_t numCameras,
                               Mat3X &pointsGT,
                               std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
                               std::vector<geometry::Pose3 > &vec_subPoses,
-                              std::vector<Mat3X> &vec_pts3d,
-                              std::vector<Mat2X> &vec_pts2d)
+                              std::vector<Mat> &vec_pts3d,
+                              std::vector<Mat> &vec_pts2d)
 {
       // generate random pose for the rig
     rigPoseGT = generateRandomPose(Vec3::Constant(M_PI/10), 5);
@@ -229,8 +229,8 @@ TEST(rigResection, simpleNoNoiseNoOutliers)
     geometry::Pose3 rigPoseGT;
     std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > vec_queryIntrinsics;
     std::vector<geometry::Pose3 > vec_subPoses;
-    std::vector<Mat3X> vec_pts3d;
-    std::vector<Mat2X> vec_pts2d;
+    std::vector<Mat> vec_pts3d;
+    std::vector<Mat> vec_pts2d;
     Mat3X pointsGT;
 
     generateRandomExperiment(numCameras, 
@@ -329,8 +329,8 @@ TEST(rigResection, simpleWithNoiseNoOutliers)
     geometry::Pose3 rigPoseGT;
     std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > vec_queryIntrinsics;
     std::vector<geometry::Pose3 > vec_subPoses;
-    std::vector<Mat3X> vec_pts3d;
-    std::vector<Mat2X> vec_pts2d;
+    std::vector<Mat> vec_pts3d;
+    std::vector<Mat> vec_pts2d;
     Mat3X pointsGT;
 
     generateRandomExperiment(numCameras, 
@@ -405,8 +405,8 @@ TEST(rigResection, simpleNoNoiseWithOutliers)
     const double outlierPercentage = 0.4*dis(gen);
     std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > vec_queryIntrinsics;
     std::vector<geometry::Pose3 > vec_subPoses;
-    std::vector<Mat3X> vec_pts3d;
-    std::vector<Mat2X> vec_pts2d;
+    std::vector<Mat> vec_pts3d;
+    std::vector<Mat> vec_pts2d;
     Mat3X pointsGT;
 
     generateRandomExperiment(numCameras, 

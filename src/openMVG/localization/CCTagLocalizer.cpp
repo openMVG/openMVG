@@ -593,8 +593,8 @@ bool CCTagLocalizer::localizeRig(const std::vector<std::unique_ptr<features::Reg
   }
 
   vector<std::map< pair<IndexT, IndexT>, std::size_t > > vec_occurrences(numCams);
-  vector<Mat3X > vec_pts3D(numCams);
-  vector<Mat2X > vec_pts2D(numCams);
+  vector<Mat> vec_pts3D(numCams);
+  vector<Mat> vec_pts2D(numCams);
 
   // for each camera retrieve the associations
   //@todo parallelize?
@@ -606,8 +606,8 @@ bool CCTagLocalizer::localizeRig(const std::vector<std::unique_ptr<features::Reg
     // the key is a pair <Id3D, Id2d>
     // the element is the pair 3D point - 2D point
     auto &occurrences = vec_occurrences[i];
-    Mat3X &pts3D = vec_pts3D[i];
-    Mat2X &pts2D = vec_pts2D[i];
+    Mat &pts3D = vec_pts3D[i];
+    Mat &pts2D = vec_pts2D[i];
     features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (vec_queryRegions[i].get());
     getAllAssociations(queryRegions, *param, occurrences, pts2D, pts3D);
     numAssociations += occurrences.size();
@@ -638,8 +638,8 @@ bool CCTagLocalizer::localizeRig(const std::vector<std::unique_ptr<features::Reg
 void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegions,
                                         const CCTagLocalizer::Parameters &param,
                                         std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences,
-                                        Mat2X &pt2D,
-                                        Mat3X &pt3D) const
+                                        Mat &pt2D,
+                                        Mat &pt3D) const
 {
   std::vector<IndexT> nearestKeyFrames;
   nearestKeyFrames.reserve(param._nNearestKeyFrames);

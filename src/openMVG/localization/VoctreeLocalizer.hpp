@@ -128,7 +128,7 @@ public:
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult & localizationResult,
-                const std::string& imagePath);
+                const std::string& imagePath = std::string());
   
   // not yet implemented!
   bool localizeRig(const std::vector<image::Image<unsigned char> > & vec_imageGrey,
@@ -195,7 +195,7 @@ public:
   
   
   void getAllAssociations(const features::SIFT_Regions &siftQueryRegions,
-                          const std::pair<std::size_t, std::size_t> imageSize,
+                          const std::pair<std::size_t, std::size_t> &imageSize,
                           const Parameters &param,
                           bool useInputIntrinsics,
                           const cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,

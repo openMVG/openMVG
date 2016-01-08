@@ -45,8 +45,8 @@ namespace localization{
  * @param[in] verbosity Mute/unmute the debugging messages.
  * @return true if the ransac has success.
  */
-bool rigResection(const std::vector<openMVG::Mat2X> &vec_pts2d, 
-                  const std::vector<openMVG::Mat3X> &vec_pts3d,
+bool rigResection(const std::vector<Mat> &vec_pts2d, 
+                  const std::vector<Mat> &vec_pts3d,
                   const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
                   const std::vector<geometry::Pose3 > &vec_subPoses,
                   geometry::Pose3 &rigPose,
