@@ -95,7 +95,7 @@ struct GeometricFilter_EMatrix_AC
       xJ, sfm_data->GetViews().at(jIndex)->ui_width, sfm_data->GetViews().at(jIndex)->ui_height,
       ptrPinhole_I->K(), ptrPinhole_J->K());
 
-    // Robustly estimate the Fundamental matrix with A Contrario ransac
+    // Robustly estimate the Essential matrix with A Contrario ransac
     const double upper_bound_precision = Square(m_dPrecision);
     std::vector<size_t> vec_inliers;
     const std::pair<double,double> ACRansacOut =

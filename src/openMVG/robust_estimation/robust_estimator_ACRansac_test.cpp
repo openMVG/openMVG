@@ -329,8 +329,8 @@ TEST(RansacLineFitter, ACRANSACSimu) {
     // Check the best model that fit the most of the data
     //  in a robust framework (ACRANSAC).
     std::vector<size_t> vec_inliers;
-    std::pair<double,double> ret = ACRANSAC(lineKernel, vec_inliers, 1000, &line);
-    double errorMax = ret.first;
+    const std::pair<double,double> ret = ACRANSAC(lineKernel, vec_inliers, 1000, &line);
+    const double errorMax = ret.first;
 
     EXPECT_TRUE( abs(gaussianNoiseLevel - sqrt(errorMax)) < 2.0);
 

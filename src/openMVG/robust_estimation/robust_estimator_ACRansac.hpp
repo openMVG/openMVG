@@ -113,7 +113,7 @@ static void makelogcombi
 }
 
 
-/// Distance and associated index
+/// NFA and associated index
 typedef std::pair<double,size_t> ErrorIndex;
 
 /// Find best NFA and its index wrt square error threshold in e.

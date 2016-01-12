@@ -427,6 +427,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
         {
           // Triangulate inliers & compute angle between bearing vectors
           std::vector<float> vec_angles;
+          vec_angles.reserve(relativePose_info.vec_inliers.size());
           const Pose3 pose_I = Pose3(Mat3::Identity(), Vec3::Zero());
           const Pose3 pose_J = relativePose_info.relativePose;
           const Mat34 PI = cam_I->get_projective_equivalent(pose_I);
