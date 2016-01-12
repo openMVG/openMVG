@@ -22,6 +22,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <functional>
+#include <limits>
 
 using namespace openMVG;
 using namespace openMVG::image;
@@ -45,6 +46,7 @@ features::EDESCRIBER_PRESET stringToEnum(const std::string & sPreset)
   return preset;
 }
 
+
 // ----------
 // Dispatcher
 // ----------
@@ -63,15 +65,16 @@ void dispatch(const int &maxJobs, std::function<void()> compute)
   {                      
     // Something bad happened
     std::cerr << "fork failed\n";
+    _exit(EXIT_FAILURE);
   }
   else if(pid == 0)
   {
 #ifdef OPENMVG_USE_OPENMP
     // Disable OpenMP as we dispatch the work on multiple sub processes
-    // and we don't want each subprocess to ask for all the cpu ressource
+    // and we don't want that each subprocess use all the cpu ressource
     omp_set_num_threads(1); 
 #endif
-    compute();// TODO : search for data races if any. 
+    compute();
     _exit(EXIT_SUCCESS);
   }
   else 
@@ -103,6 +106,9 @@ void waitForCompletion()
 #else
 void dispatch(const int &maxJobs, std::function<void()> compute)
 {
+#ifdef OPENMVG_USE_OPENMP
+    omp_set_num_threads(maxJobs);
+#endif
     compute();
 }
 void waitForCompletion() {}
@@ -121,7 +127,10 @@ int main(int argc, char **argv)
   std::string sImage_Describer_Method = "SIFT";
   bool bForce = false;
   std::string sFeaturePreset = "";
-  int maxJobs = 1;
+  // MAX_JOBS_DEFAULT is the default value for maxJobs which keeps 
+  // the original behavior of the program:
+  constexpr static int MAX_JOBS_DEFAULT = std::numeric_limits<int>::max();
+  int maxJobs = MAX_JOBS_DEFAULT;
 
   // required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -170,9 +179,11 @@ int main(int argc, char **argv)
             << "--describerMethod " << sImage_Describer_Method << std::endl
             << "--upright " << bUpRight << std::endl
             << "--describerPreset " << (sFeaturePreset.empty() ? "NORMAL" : sFeaturePreset) << std::endl
-            << "--force " << bForce << std::endl
-            << "--jobs " << maxJobs << std::endl;
-
+            << "--force " << bForce << std::endl;
+  if (maxJobs != MAX_JOBS_DEFAULT)
+  {
+    std::cout << "--jobs " << maxJobs << std::endl;
+  }
 
   if (sOutDir.empty())
   {
@@ -180,7 +191,7 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  if (maxJobs <=0 ) 
+  if (maxJobs != MAX_JOBS_DEFAULT && maxJobs <=0 ) 
   {
     std::cerr << "\nInvalid value for -j option, the value must be >=1" << std::endl;
     return EXIT_FAILURE;
@@ -316,11 +327,14 @@ int main(int argc, char **argv)
             image_describer->Describe(imageGray, regions);
             image_describer->Save(regions.get(), sFeat, sDesc);
         };
-        dispatch(maxJobs, computeFunction);
+        if (maxJobs != MAX_JOBS_DEFAULT)
+          dispatch(maxJobs, computeFunction);
+        else
+          computeFunction();
       }
     }
 
-    waitForCompletion();
+    if (maxJobs != MAX_JOBS_DEFAULT) waitForCompletion();
 
     std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
   }
