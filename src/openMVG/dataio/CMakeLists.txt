@@ -9,8 +9,8 @@ file(
   *.cpp
 )
 
-#file(GLOB_RECURSE REMOVE_FILES_UNIT_TEST *_test.cpp)
-#list(REMOVE_ITEM dataio_cpp ${REMOVE_FILES_UNIT_TEST})
+file(GLOB_RECURSE REMOVE_FILES_UNIT_TEST *_test.cpp)
+list(REMOVE_ITEM dataio_cpp ${REMOVE_FILES_UNIT_TEST})
 
 set_source_files_properties(${dataio_cpp} PROPERTIES LANGUAGE CXX)
 add_library(openMVG_dataio
@@ -26,4 +26,6 @@ if(OpenMVG_USE_ALEMBIC)
 endif(OpenMVG_USE_ALEMBIC)
 install(TARGETS openMVG_dataio DESTINATION lib/ EXPORT openMVG-targets)
 
-UNIT_TEST(openMVG AlembicImporter "openMVG_dataio")
+if(OpenMVG_USE_ALEMBIC)
+  UNIT_TEST(openMVG AlembicImporter "openMVG_dataio")
+endif(OpenMVG_USE_ALEMBIC)
