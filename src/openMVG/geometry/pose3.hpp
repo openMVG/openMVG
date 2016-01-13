@@ -52,6 +52,13 @@ class Pose3
       return Pose3(_rotation * P._rotation, P._center + P._rotation.transpose() * _center );
     }
 
+    // Operator ==
+    bool operator==(const Pose3& other) const
+    {
+      return AreMatNearEqual(_rotation, other._rotation, 1e-6) &&
+              AreVecNearEqual(_center, other._center, 1e-6);
+    }
+
     // Inverse
     Pose3 inverse() const
     {
