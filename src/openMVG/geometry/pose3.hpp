@@ -35,7 +35,7 @@ class Pose3
     inline Vec3 translation() const { return -(_rotation * _center); }
 
     // Apply pose
-    inline Vec3 operator () (const Vec3& p) const
+    inline Vec3 apply(const Vec3& p) const
     {
       return _rotation * (p - _center);
     }

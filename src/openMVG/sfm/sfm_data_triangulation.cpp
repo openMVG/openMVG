@@ -68,7 +68,7 @@ void SfM_Data_Structure_Computation_Blind::triangulate(SfM_Data & sfm_data) cons
           const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
           const Pose3 pose = sfm_data.GetPoseOrDie(view);
           trianObj.add(
-            cam->get_projective_equivalent(pose),
+            cam->createProjectiveMatrix(pose),
             cam->get_ud_pixel(itObs->second.x));
         }
       }
@@ -266,7 +266,7 @@ Vec3 SfM_Data_Structure_Computation_Robust::track_sample_triangulation(
     const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
     const Pose3 pose = sfm_data.GetPoseOrDie(view);
     trianObj.add(
-      cam->get_projective_equivalent(pose),
+      cam->createProjectiveMatrix(pose),
       cam->get_ud_pixel(itObs->second.x));
   }
   return trianObj.compute();

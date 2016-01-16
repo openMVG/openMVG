@@ -19,14 +19,14 @@ using namespace lemon;
 namespace openMVG {
 namespace graph {
 
-/// Simple container for tuple of three value
-/// It is used to store the node id of triplets of a graph.
+/// Simple container for tuple of three values
+/// It is used to store the node id of triplets in a graph.
 struct Triplet
 {
   Triplet(IndexT ii, IndexT jj, IndexT kk)
-    :i(ii), j(jj), k(kk)
+    : i(ii), j(jj), k(kk)
   { }
-  IndexT i,j,k;
+  IndexT i, j, k;
 
   bool contain(const std::pair<IndexT,IndexT> & edge) const
   {
@@ -124,19 +124,18 @@ static std::vector< graph::Triplet > tripletListing(
 
   indexedGraph putativeGraph(pairs);
 
-  graph::List_Triplets<indexedGraph::GraphT>(putativeGraph.g, vec_triplets);
+  graph::List_Triplets(putativeGraph.g, vec_triplets);
 
-  //Change triplets to ImageIds
-  for (size_t i = 0; i < vec_triplets.size(); ++i)
+  // Sort ImageIds in each triplet
+  for (graph::Triplet & triplet: vec_triplets)
   {
-    graph::Triplet & triplet = vec_triplets[i];
-    IndexT I = triplet.i, J = triplet.j , K = triplet.k;
-    I = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.nodeFromId(I)];
-    J = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.nodeFromId(J)];
-    K = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.nodeFromId(K)];
-    IndexT triplet_[3] = { I, J, K };
+    IndexT I = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.nodeFromId(triplet.i)];
+    IndexT J = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.nodeFromId(triplet.j)];
+    IndexT K = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.nodeFromId(triplet.k)];
+    IndexT triplet_[3] = {I, J, K };
     std::sort(&triplet_[0], &triplet_[3]);
-    triplet = graph::Triplet(triplet_[0],triplet_[1],triplet_[2]);
+
+    triplet = graph::Triplet(triplet_[0], triplet_[1], triplet_[2]);
   }
   return vec_triplets;
 }

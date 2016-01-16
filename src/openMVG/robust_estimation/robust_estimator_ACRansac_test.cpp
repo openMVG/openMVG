@@ -295,7 +295,7 @@ struct IndMatchd
 // Test ACRANSAC adaptability to noise
 // Set a line with a increasing gaussian noise
 // See if the AContrario RANSAC is able to label the good point as inlier
-//  by having it's estimated confidence threshold growing.
+//  by having its estimated confidence threshold growing.
 TEST(RansacLineFitter, ACRANSACSimu) {
 
   int S = 100;

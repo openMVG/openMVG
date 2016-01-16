@@ -115,7 +115,7 @@ bool ColorHarmonizationEngineGlobal::Process()
   }
 
   {
-    graph::indexedGraph putativeGraph(getPairs(_map_Matches));
+    graph::indexedGraph putativeGraph(convertPairWiseMatchesToPairSet(_map_Matches));
 
     // Save the graph before cleaning:
     graph::exportToGraphvizData(
@@ -505,7 +505,7 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
     }
   }
 
-  graph::indexedGraph putativeGraph(getPairs(_map_Matches));
+  graph::indexedGraph putativeGraph(convertPairWiseMatchesToPairSet(_map_Matches));
 
   // Save the graph before cleaning:
   graph::exportToGraphvizData(
@@ -520,7 +520,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
   // Create a graph from pairwise correspondences:
   // - keep the largest connected component.
 
-  graph::indexedGraph putativeGraph(getPairs(_map_Matches));
+  graph::indexedGraph putativeGraph(convertPairWiseMatchesToPairSet(_map_Matches));
 
   // Save the graph before cleaning:
   graph::exportToGraphvizData(

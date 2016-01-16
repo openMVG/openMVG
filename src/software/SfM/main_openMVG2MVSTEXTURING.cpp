@@ -85,8 +85,8 @@ int main(int argc, char **argv)
     const Vec2 pp = pinhole_cam->principal_point();
 
     // Image size in px
-    const int w = pinhole_cam->w();
-    const int h = pinhole_cam->h();
+    const int w = pinhole_cam->getWidth();
+    const int h = pinhole_cam->getHeight();
     
     // We can now create the .cam file for the View in the output dir 
     std::ofstream outfile( stlplus::create_filespec(
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
         << f / largerDim << " 0 0 1 " << pp(0) / w << " " << pp(1) / h;
     outfile.close();
     
-    if(cam->have_disto())
+    if(cam->hasDistortion())
       bOneHaveDisto = true;
   }
   

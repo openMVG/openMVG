@@ -13,7 +13,7 @@
 namespace openMVG {
 namespace cameras {
 
-/// Undistort an image according a given camera & it's distortion model
+/// Undistort an image according a given camera & its distortion model
 template <typename Image>
 void UndistortImage(
   const Image& imageIn,
@@ -21,7 +21,7 @@ void UndistortImage(
   Image & image_ud,
   typename Image::Tpixel fillcolor = typename Image::Tpixel(0))
 {
-  if (!cam->have_disto()) // no distortion, perform a direct copy
+  if (!cam->hasDistortion()) // no distortion, perform a direct copy
   {
     image_ud = imageIn;
   }

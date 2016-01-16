@@ -106,7 +106,7 @@ namespace sfm {
       resection_data.pt2D.col(i) = query_regions.GetRegionPosition(vec_putative_matches[i]._j);
       pt2D_original.col(i) = resection_data.pt2D.col(i);
       // Handle image distortion if intrinsic is known (to ease the resection)
-      if (optional_intrinsics && optional_intrinsics->have_disto())
+      if (optional_intrinsics && optional_intrinsics->hasDistortion())
       {
         resection_data.pt2D.col(i) = optional_intrinsics->get_ud_pixel(resection_data.pt2D.col(i));
       }

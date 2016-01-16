@@ -97,7 +97,7 @@ int main(int argc, char **argv)
       << "\t 3: Pinhole radial 3 (default)\n"
       << "\t 4: Pinhole brown 2\n"
       << "[-g|--group_camera_model]\n"
-      << "\t 0-> each view have it's own camera intrinsic parameters,\n"
+      << "\t 0-> each view have its own camera intrinsic parameters,\n"
       << "\t 1-> (default) view can share some camera intrinsic parameters\n"
       << std::endl;
 
@@ -242,7 +242,7 @@ int main(int argc, char **argv)
         Datasheet datasheet;
         if ( getInfo( sCamName, sCamModel, vec_database, datasheet ))
         {
-          // The camera model was found in the database so we can compute it's approximated focal length
+          // The camera model was found in the database so we can compute its approximated focal length
           const double ccdw = datasheet._sensorSize;
           focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
         }

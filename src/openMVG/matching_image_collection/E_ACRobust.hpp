@@ -93,7 +93,7 @@ struct GeometricFilter_EMatrix_AC
     KernelType kernel(
       xI, sfm_data->GetViews().at(iIndex)->ui_width, sfm_data->GetViews().at(iIndex)->ui_height,
       xJ, sfm_data->GetViews().at(jIndex)->ui_width, sfm_data->GetViews().at(jIndex)->ui_height,
-      ptrPinhole_I->K(), ptrPinhole_J->K());
+      ptrPinhole_I->getK(), ptrPinhole_J->getK());
 
     // Robustly estimate the Fundamental matrix with A Contrario ransac
     const double upper_bound_precision = Square(m_dPrecision);
@@ -152,7 +152,7 @@ struct GeometricFilter_EMatrix_AC
       const cameras::Pinhole_Intrinsic * ptrPinhole_J = (const cameras::Pinhole_Intrinsic*)(cam_J);
 
       Mat3 F;
-      FundamentalFromEssential(m_E, ptrPinhole_I->K(), ptrPinhole_J->K(), &F);
+      FundamentalFromEssential(m_E, ptrPinhole_I->getK(), ptrPinhole_J->getK(), &F);
 
       geometry_aware::GuidedMatching
         <Mat3,

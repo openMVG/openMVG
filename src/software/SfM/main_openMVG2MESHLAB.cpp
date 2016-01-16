@@ -96,7 +96,7 @@ int main(int argc, char **argv)
     // We have a valid view with a corresponding camera & pose
     const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
     const IntrinsicBase * cam = iterIntrinsic->second.get();
-    Mat34 P = cam->get_projective_equivalent(pose);
+    Mat34 P = cam->createProjectiveMatrix(pose);
 
     for ( int i = 1; i < 3 ; ++i)
       for ( int j = 0; j < 4; ++j)
@@ -116,9 +116,9 @@ int main(int argc, char **argv)
       << optical_center[2] << " "
       << " 1 \""
       << " LensDistortion=\"0 0\""
-      << " ViewportPx=\"" << cam->w() << " " << cam->h() << "\""
+      << " ViewportPx=\"" << cam->getWidth() << " " << cam->getHeight() << "\""
       << " PixelSizeMm=\"" << 1  << " " << 1 << "\""
-      << " CenterPx=\"" << cam->w() / 2.0 << " " << cam->h() / 2.0 << "\""
+      << " CenterPx=\"" << cam->getWidth() / 2.0 << " " << cam->getHeight() / 2.0 << "\""
       << " FocalMm=\"" << (double)K(0, 0 )  << "\""
       << " RotationMatrix=\""
       << R(0, 0) << " " << R(0, 1) << " " << R(0, 2) << " 0 "

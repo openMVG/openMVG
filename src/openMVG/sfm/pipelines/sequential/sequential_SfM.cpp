@@ -337,7 +337,7 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
 bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initial_pair) const
 {
   // From the k view pairs with the highest number of verified matches
-  // select a pair that have the largest basline (mean angle between it's bearing vectors).
+  // select a pair that have the largest basline (mean angle between its bearing vectors).
 
   const unsigned k = 20;
   const unsigned iMin_inliers_count = 100;
@@ -420,17 +420,17 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
         relativePose_info.initial_residual_tolerance = Square(4.0);
 
         if (robustRelativePose(
-          cam_I->K(), cam_J->K(),
+          cam_I->getK(), cam_J->getK(),
           xI, xJ, relativePose_info,
-          std::make_pair(cam_I->w(), cam_I->h()), std::make_pair(cam_J->w(), cam_J->h()),
+          std::make_pair(cam_I->getWidth(), cam_I->getHeight()), std::make_pair(cam_J->getWidth(), cam_J->getHeight()),
           256) && relativePose_info.vec_inliers.size() > iMin_inliers_count)
         {
           // Triangulate inliers & compute angle between bearing vectors
           std::vector<float> vec_angles;
           const Pose3 pose_I = Pose3(Mat3::Identity(), Vec3::Zero());
           const Pose3 pose_J = relativePose_info.relativePose;
-          const Mat34 PI = cam_I->get_projective_equivalent(pose_I);
-          const Mat34 PJ = cam_J->get_projective_equivalent(pose_J);
+          const Mat34 PI = cam_I->createProjectiveMatrix(pose_I);
+          const Mat34 PJ = cam_J->createProjectiveMatrix(pose_J);
           for (const size_t inlier_idx : relativePose_info.vec_inliers)
           {
             Vec3 X;
@@ -528,11 +528,11 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
   // c. Robust estimation of the relative pose
   RelativePose_Info relativePose_info;
 
-  const std::pair<size_t, size_t> imageSize_I(cam_I->w(), cam_I->h());
-  const std::pair<size_t, size_t> imageSize_J(cam_J->w(), cam_J->h());
+  const std::pair<size_t, size_t> imageSize_I(cam_I->getWidth(), cam_I->getHeight());
+  const std::pair<size_t, size_t> imageSize_J(cam_J->getWidth(), cam_J->getHeight());
 
   if (!robustRelativePose(
-    cam_I->K(), cam_J->K(), xI, xJ, relativePose_info, imageSize_I, imageSize_J, 4096))
+    cam_I->getK(), cam_J->getK(), xI, xJ, relativePose_info, imageSize_I, imageSize_J, 4096))
   {
     std::cerr << " /!\\ Robust estimation failed to compute E for this pair"
       << std::endl;
@@ -558,8 +558,8 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
     const Pose3 & Pose_J = tiny_scene.poses[view_J->id_pose] = relativePose_info.relativePose;
 
     // Init structure
-    const Mat34 P1 = cam_I->get_projective_equivalent(Pose_I);
-    const Mat34 P2 = cam_J->get_projective_equivalent(Pose_J);
+    const Mat34 P1 = cam_I->createProjectiveMatrix(Pose_I);
+    const Mat34 P2 = cam_J->createProjectiveMatrix(Pose_J);
     Landmarks & landmarks = tiny_scene.structure;
 
     for (openMVG::tracks::STLMAPTracks::const_iterator
@@ -923,7 +923,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
     resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
       _features_provider->feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
     // Handle image distortion if intrinsic is known (to ease the resection)
-    if (optional_intrinsic && optional_intrinsic->have_disto())
+    if (optional_intrinsic && optional_intrinsic->hasDistortion())
     {
       resection_data.pt2D.col(cpt) = optional_intrinsic->get_ud_pixel(resection_data.pt2D.col(cpt));
     }
@@ -1143,8 +1143,8 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
             Vec3 X_euclidean = Vec3::Zero();
             const Vec2 xI_ud = cam_I->get_ud_pixel(xI);
             const Vec2 xJ_ud = cam_J->get_ud_pixel(xJ);
-            const Mat34 P_I = cam_I->get_projective_equivalent(pose_I);
-            const Mat34 P_J = cam_J->get_projective_equivalent(pose_J);
+            const Mat34 P_I = cam_I->createProjectiveMatrix(pose_I);
+            const Mat34 P_J = cam_J->createProjectiveMatrix(pose_J);
             TriangulateDLT(P_I, xI_ud, P_J, xJ_ud, &X_euclidean);
             // Check triangulation results
             //  - Check angle (small angle leads imprecise triangulation)

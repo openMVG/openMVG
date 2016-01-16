@@ -13,7 +13,7 @@
 namespace openMVG {
 namespace sfm {
 
-/// Define 3D-2D tracking data: 3D landmark with it's 2D observations
+/// Define 3D-2D tracking data: 3D landmark with its 2D observations
 struct Observation
 {
   Observation():id_feat(UndefinedIndexT) {  }
@@ -41,10 +41,13 @@ struct Observation
     x = Eigen::Map<const Vec2>(&p[0]);
   }
 };
+
 /// Observations are indexed by their View_id
 typedef Hash_Map<IndexT, Observation> Observations;
 
-/// Define a landmark (a 3D point, with it's 2d observations)
+/**
+ * @brief 3D reconstructed point with its 2D observations.
+ */
 struct Landmark
 {
   Observations obs;

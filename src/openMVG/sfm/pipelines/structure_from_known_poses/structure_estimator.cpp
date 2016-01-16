@@ -102,8 +102,8 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
     if (sfm_data.GetIntrinsics().count(viewL->id_intrinsic) != 0 ||
         sfm_data.GetIntrinsics().count(viewR->id_intrinsic) != 0)
     {
-      const Mat34 P_L = iterIntrinsicL->second.get()->get_projective_equivalent(poseL);
-      const Mat34 P_R = iterIntrinsicR->second.get()->get_projective_equivalent(poseR);
+      const Mat34 P_L = iterIntrinsicL->second.get()->createProjectiveMatrix(poseL);
+      const Mat34 P_R = iterIntrinsicR->second.get()->createProjectiveMatrix(poseR);
 
       const Mat3 F_lr = F_from_P(P_L, P_R);
       const double thresholdF = 4.0;
@@ -133,7 +133,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
           *regions_provider->regions_per_view.at(it->first),
           iterIntrinsicR->second.get(),
           *regions_provider->regions_per_view.at(it->second),
-          iterIntrinsicR->second->w(), iterIntrinsicR->second->h(),
+          iterIntrinsicR->second->getWidth(), iterIntrinsicR->second->getHeight(),
           Square(thresholdF), Square(0.8),
           vec_corresponding_indexes
         );
@@ -216,7 +216,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
               const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
               const Pose3 pose = sfm_data.GetPoseOrDie(view);
               const Vec2 pt = regions_provider->regions_per_view.at(imaIndex)->GetRegionPosition(featIndex);
-              trianObj.add(cam->get_projective_equivalent(pose), cam->get_ud_pixel(pt));
+              trianObj.add(cam->createProjectiveMatrix(pose), cam->get_ud_pixel(pt));
             }
             const Vec3 Xs = trianObj.compute();
             if (trianObj.minDepth() > 0 && trianObj.error()/(double)trianObj.size() < 4.0)

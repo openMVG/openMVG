@@ -266,8 +266,8 @@ static void draw(void)
         glEnd();
 
         // compute image corners coordinated with normalized focal (f=normalized_focal)
-        const int w = camPinhole->w();
-        const int h = camPinhole->h();
+        const int w = camPinhole->getWidth();
+        const int h = camPinhole->getHeight();
 
         const double focal = camPinhole->focal();
         // use principal point to adjust image center

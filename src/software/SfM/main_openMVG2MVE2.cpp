@@ -120,7 +120,7 @@ bool exportToMVE2Format(
 
         Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
         const IntrinsicBase * cam = iterIntrinsic->second.get();
-        if (cam->have_disto())
+        if (cam->hasDistortion())
         {
           // Undistort and save the image
           ReadImage(srcImage.c_str(), &image);
@@ -151,9 +151,9 @@ bool exportToMVE2Format(
         // Pixel aspect: assuming square pixels
         const float pixelAspect = 1.f;
         // Focal length and principal point must be normalized (0..1)
-        const float flen = pinhole_cam->focal() / static_cast<double>(std::max(cam->w(), cam->h()));
-        const float ppX = std::abs(pinhole_cam->principal_point()(0)/cam->w());
-        const float ppY = std::abs(pinhole_cam->principal_point()(1)/cam->h());
+        const float flen = pinhole_cam->focal() / static_cast<double>(std::max(cam->getWidth(), cam->getHeight()));
+        const float ppX = std::abs(pinhole_cam->principal_point()(0)/cam->getWidth());
+        const float ppY = std::abs(pinhole_cam->principal_point()(1)/cam->getHeight());
 
         // For each camera, write to bundle:  focal length, radial distortion[0-1], rotation matrix[0-8], translation vector[0-2]
         std::ostringstream fileOut;

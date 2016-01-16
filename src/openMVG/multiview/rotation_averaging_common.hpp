@@ -17,7 +17,8 @@ namespace openMVG   {
 namespace rotation_averaging  {
 
 /// Representation of weighted relative rotations data between two poses
-struct RelativeRotation {
+struct RelativeRotation
+{
   IndexT i, j; // pose's indices
   Mat3 Rij; // pose's relative rotation
   float weight;
@@ -31,11 +32,11 @@ typedef std::vector<RelativeRotation> RelativeRotations;
 typedef std::map<Pair, RelativeRotation> RelativeRotations_map;
 
 /// List the pairs used by the relative rotations
-static Pair_Set getPairs(const RelativeRotations & relRots)
+static Pair_Set convertRelativeRotationsToPairSet(const RelativeRotations & relRots)
 {
   Pair_Set pairs;
   for(RelativeRotations::const_iterator it = relRots.begin(); it != relRots.end(); ++it)
-    pairs.insert(std::make_pair(it->i, it->j));
+	pairs.emplace(it->i, it->j);
   return pairs;
 }
 

@@ -155,7 +155,7 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints & cstraint
       col_ub[i] = cstraints._vec_bounds[0].second;
     }
   }
-  else // each parameter have it's own bounds
+  else // each parameter have its own bounds
   {
     for (int i=0; i < this->_nbParams; ++i)
     {
@@ -253,7 +253,7 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints_Sparse & c
       col_ub[i] = cstraints._vec_bounds[0].second;
     }
   }
-  else  // each parameter have it's own bounds
+  else  // each parameter have its own bounds
   {
     for (int i=0; i < this->_nbParams; ++i)
     {

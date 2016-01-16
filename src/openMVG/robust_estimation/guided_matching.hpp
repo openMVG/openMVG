@@ -342,7 +342,7 @@ void GuidedMatching_Fundamental_Fast(
   for (size_t j = 0; j < rRegions.RegionCount(); ++j)
   {
     // According the point:
-    // - Compute it's epipolar line from the epipole
+    // - Compute its epipolar line from the epipole
     // - compute the range of possible bucket by computing
     //    the epipolar line gauge limitation introduced by the tolerated pixel error
 
