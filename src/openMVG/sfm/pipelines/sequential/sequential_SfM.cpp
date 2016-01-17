@@ -1011,6 +1011,11 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
             std::make_shared<Pinhole_Intrinsic_Brown_T2>
             (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
         break;
+        case PINHOLE_CAMERA_FISHEYE:
+            optional_intrinsic =
+                std::make_shared<Pinhole_Intrinsic_Fisheye>
+            (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
+        break;
         default:
           std::cerr << "Try to create an unknown camera type." << std::endl;
           return false;

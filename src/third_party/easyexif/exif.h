@@ -7,12 +7,15 @@
   -- http://www.media.mit.edu/pia/Research/deepview/exif.html
   -- http://www.exif.org/Exif2-2.PDF
 
-  Copyright (c) 2010-2013 Mayank Lahiri
+  Copyright (c) 2010-2015 Mayank Lahiri
   mlahiri@gmail.com
   All rights reserved.
 
   VERSION HISTORY:
   ================
+
+  2.2: Release December 2014
+       --
 
   2.1: Released July 2013
        -- fixed a bug where JPEGs without an EXIF SubIFD would not be parsed
@@ -53,6 +56,8 @@
 #define __EXIF_H
 
 #include <string>
+
+namespace easyexif {
 
 //
 // Class responsible for storing and parsing EXIF information from a JPEG blob
@@ -95,6 +100,7 @@ class EXIFInfo {
   std::string DateTimeDigitized;    // Digitization date and time (may not exist)
   std::string SubSecTimeOriginal;   // Sub-second time that original picture was taken
   std::string Copyright;            // File copyright information
+  std::string ImageUniqueID;        // Unique identifier assigned to the picture
   double ExposureTime;              // Exposure time in seconds
   double FNumber;                   // F/stop
   unsigned short ISOSpeedRatings;   // ISO speed
@@ -103,13 +109,6 @@ class EXIFInfo {
   double SubjectDistance;           // Distance to focus point in meters
   double FocalLength;               // Focal length of lens in millimeters
   unsigned short FocalLengthIn35mm; // Focal length in 35mm film
-  double FocalPlaneXResolution;     // Indicates the number of pixels in the image width (X) direction per FocalPlaneResolutionUnit on the camera focal plane (may not exist)
-  double FocalPlaneYResolution;     // Indicates the number of pixels in the image width (Y) direction per FocalPlaneResolutionUnit on the camera focal plane (may not exist)
-  unsigned short FocalPlaneResolutionUnit;// Indicates the unit for measuring FocalPlaneXResolution and FocalPlaneYResolution (may not exist)
-                                    // 0: unspecified in EXIF data
-                                    // 1: no absolute unit of measurement
-                                    // 2: inch
-                                    // 3: centimeter
   char Flash;                       // 0 = no flash, 1 = flash used
   unsigned short MeteringMode;      // Metering mode
                                     // 1: average
@@ -124,6 +123,7 @@ class EXIFInfo {
     double Longitude;                 // Image longitude expressed as decimal
     double Altitude;                  // Altitude in meters, relative to sea level
     char AltitudeRef;                 // 0 = above sea level, -1 = below sea level
+    double DOP;                       // GPS degree of precision (DOP)
     struct Coord_t {
       double degrees;
       double minutes;
@@ -131,10 +131,24 @@ class EXIFInfo {
       char direction;
     } LatComponents, LonComponents;   // Latitude, Longitude expressed in deg/min/sec
   } GeoLocation;
+  struct LensInfo_t {               // Lens information
+    double FStopMin;                // Min aperture (f-stop)
+    double FStopMax;                // Max aperture (f-stop)
+    double FocalLengthMin;          // Min focal length (mm)
+    double FocalLengthMax;          // Max focal length (mm)
+    double FocalPlaneXResolution;   // Focal plane X-resolution
+    double FocalPlaneYResolution;   // Focal plane Y-resolution
+    std::string Make;               // Lens manufacturer
+    std::string Model;              // Lens model
+  } LensInfo;
+
+
   EXIFInfo() {
     clear();
   }
 };
+
+}
 
 // Parse was successful
 #define PARSE_EXIF_SUCCESS                    0

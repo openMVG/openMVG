@@ -106,6 +106,7 @@ bool Load_Cereal(
     std::cerr << e.what() << std::endl;
     return false;
   }
+  stream.close();
   return true;
 }
 
@@ -168,6 +169,7 @@ bool Save_Cereal(
         archive(cereal::make_nvp("control_points", Landmarks()));
     }
   }
+  stream.close();
   return true;
 }
 

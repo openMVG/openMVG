@@ -226,9 +226,12 @@ void GlobalSfM_Rotation_AveragingSolver::TripletRotationRejection(
 
   std::sort(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end());
 
-  Histogram<float> histo(0.0f, *max_element(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end()), 20);
-  histo.Add(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end());
-  std::cout << histo.ToString() << std::endl;
+  if (!vec_errToIdentityPerTriplet.empty())
+  {
+    Histogram<float> histo(0.0f, *max_element(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end()), 20);
+    histo.Add(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end());
+    std::cout << histo.ToString() << std::endl;
+  }
 
   {
     std::cout << "\nTriplets filtering based on composition error on unit cycles\n";

@@ -50,8 +50,8 @@ typedef Hash_Map<IndexT, Observation> Observations;
  */
 struct Landmark
 {
-  Observations obs;
   Vec3 X;
+  Observations obs;
 
   // Serialization
   template <class Archive>

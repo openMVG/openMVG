@@ -25,11 +25,9 @@ struct Matches_Provider
   {
     if (!stlplus::is_file(matchesfile))
     {
-      std::cerr << std::endl
-        << "Invalid matches file" << std::endl;
       return false;
     }
-    if (!matching::PairedIndMatchImport(matchesfile, _pairWise_matches)) {
+    if (!matching::Load(_pairWise_matches, matchesfile)) {
       std::cerr<< "Unable to read the matches file:" << matchesfile << std::endl;
       return false;
     }

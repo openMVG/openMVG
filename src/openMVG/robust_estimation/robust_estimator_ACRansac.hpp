@@ -50,34 +50,68 @@ namespace openMVG {
 namespace robust{
 
 /// logarithm (base 10) of binomial coefficient
-static double logcombi(size_t k, size_t n)
+template <typename T>
+static T logcombi
+(
+  size_t k,
+  size_t n,
+  const std::vector<T> & vec_log10 // lookuptable in [0,n+1]
+)
 {
-  if (k>=n || k<=0) return(0.0);
+  if (k>=n || k<=0) return(0.0f);
   if (n-k<k) k=n-k;
-  double r = 0.0;
-  for (size_t i = 1; i <= k; i++)
-    r += log10((double)(n-i+1))-log10((double)i);
-
+  T r = 0.0f;
+  for (size_t i = 1; i <= k; ++i)
+    r += vec_log10[n-i+1] - vec_log10[i];
   return r;
 }
 
 /// tabulate logcombi(.,n)
 template<typename Type>
-static void makelogcombi_n(size_t n, std::vector<Type> & l)
+static void makelogcombi_n
+(
+  size_t n,
+  std::vector<Type> & l,
+  std::vector<Type> & vec_log10 // lookuptable [0,n+1]
+)
 {
   l.resize(n+1);
-  for (size_t k = 0; k <= n; k++)
-    l[k] = static_cast<Type>( logcombi(k,n) );
+  for (size_t k = 0; k <= n; ++k)
+    l[k] = logcombi<Type>(k, n, vec_log10);
 }
 
 /// tabulate logcombi(k,.)
 template<typename Type>
-static void makelogcombi_k(size_t k, size_t nmax, std::vector<Type> & l)
+static void makelogcombi_k
+(
+  size_t k,
+  size_t nmax,
+  std::vector<Type> & l,
+  std::vector<Type> & vec_log10 // lookuptable [0,n+1]
+)
 {
   l.resize(nmax+1);
-  for (size_t n = 0; n <= nmax; n++)
-    l[n] = static_cast<Type>(logcombi(k,n));
+  for (size_t n = 0; n <= nmax; ++n)
+    l[n] = logcombi<Type>(k, n, vec_log10);
 }
+
+template <typename Type>
+static void makelogcombi
+(
+  size_t k,
+  size_t n,
+  std::vector<Type> & vec_logc_k,
+  std::vector<Type> & vec_logc_n)
+{
+  // compute a lookuptable of log10 value for the range [0,n+1]
+  std::vector<Type> vec_log10(n + 1);
+  for (size_t k = 0; k <= n; ++k)
+    vec_log10[k] = log10((Type)k);
+
+  makelogcombi_n(n, vec_logc_n, vec_log10);
+  makelogcombi_k(k, n, vec_logc_k, vec_log10);
+}
+
 
 /// Distance and associated index
 typedef std::pair<double,size_t> ErrorIndex;
@@ -96,7 +130,8 @@ static ErrorIndex bestNFA(
   ErrorIndex bestIndex(std::numeric_limits<double>::infinity(), startIndex);
   const size_t n = e.size();
   for(size_t k=startIndex+1; k<=n && e[k-1].first<=maxThreshold; ++k) {
-    double logalpha = logalpha0 + multError * log10(e[k-1].first + std::numeric_limits<float>::min());
+    const double logalpha = logalpha0 +
+      multError * log10(e[k-1].first + std::numeric_limits<float>::epsilon());
     ErrorIndex index(loge0 +
       logalpha * (double)(k-startIndex) +
       logc_n[k] +
@@ -146,7 +181,7 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
 
   const size_t sizeSample = Kernel::MINIMUM_SAMPLES;
   const size_t nData = kernel.NumSamples();
-  if(nData <= (size_t)sizeSample)
+  if (nData <= (size_t)sizeSample)
     return std::make_pair(0.0,0.0);
 
   const double maxThreshold = (precision==std::numeric_limits<double>::infinity()) ?
@@ -162,10 +197,9 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
   std::iota(vec_index.begin(), vec_index.end(), 0);
 
   // Precompute log combi
-  double loge0 = log10((double)Kernel::MAX_MODELS * (nData-sizeSample));
+  const double loge0 = log10((double)Kernel::MAX_MODELS * (nData-sizeSample));
   std::vector<float> vec_logc_n, vec_logc_k;
-  makelogcombi_n(nData, vec_logc_n);
-  makelogcombi_k(sizeSample, nData, vec_logc_k);
+  makelogcombi(sizeSample, nData, vec_logc_k, vec_logc_n);
 
   // Output parameters
   double minNFA = std::numeric_limits<double>::infinity();
@@ -175,9 +209,14 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
   size_t nIterReserve = nIter/10;
   nIter -= nIterReserve;
 
+  bool bACRansacMode = (precision == std::numeric_limits<double>::infinity());
+
   // Main estimation loop.
   for (size_t iter=0; iter < nIter; ++iter) {
-    UniformSample(sizeSample, vec_index, &vec_sample); // Get random sample
+    if (bACRansacMode)
+      UniformSample(sizeSample, vec_index, &vec_sample); // Get random sample
+    else
+      UniformSample(sizeSample, nData, &vec_sample); // Get random sample
 
     std::vector<typename Kernel::Model> vec_models; // Up to max_models solutions
     kernel.Fit(vec_sample, &vec_models);
@@ -187,58 +226,75 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
     for (size_t k = 0; k < vec_models.size(); ++k)  {
       // Residuals computation and ordering
       kernel.Errors(vec_models[k], vec_residuals_);
-      for (size_t i = 0; i < nData; ++i)  {
-        const double error = vec_residuals_[i];
-        vec_residuals[i] = ErrorIndex(error, i);
+
+      if (!bACRansacMode)
+      {
+        unsigned int nInlier = 0;
+        for (size_t i = 0; i < nData; ++i)
+        {
+         if (vec_residuals_[i] <= maxThreshold)
+          ++nInlier;
+        }
+        if (nInlier > 2.5 * sizeSample) // does the model is meaningful
+          bACRansacMode = true;
+        if (!bACRansacMode && nIter > nIterReserve)
+          nIter = 0;
       }
-      std::sort(vec_residuals.begin(), vec_residuals.end());
+      if (bACRansacMode)
+      {
+        for (size_t i = 0; i < nData; ++i)  {
+          const double error = vec_residuals_[i];
+          vec_residuals[i] = ErrorIndex(error, i);
+        }
+        std::sort(vec_residuals.begin(), vec_residuals.end());
 
-      // Most meaningful discrimination inliers/outliers
-      const ErrorIndex best = bestNFA(
-        sizeSample,
-        kernel.logalpha0(),
-        vec_residuals,
-        loge0,
-        maxThreshold,
-        vec_logc_n,
-        vec_logc_k,
-        kernel.multError());
+        // Most meaningful discrimination inliers/outliers
+        const ErrorIndex best = bestNFA(
+          sizeSample,
+          kernel.logalpha0(),
+          vec_residuals,
+          loge0,
+          maxThreshold,
+          vec_logc_n,
+          vec_logc_k,
+          kernel.multError());
 
-      if (best.first < minNFA /*&& vec_residuals[best.second-1].first < errorMax*/)  {
-        // A better model was found
-        better = true;
-        minNFA = best.first;
-        vec_inliers.resize(best.second);
-        for (size_t i=0; i<best.second; ++i)
-          vec_inliers[i] = vec_residuals[i].second;
-        errorMax = vec_residuals[best.second-1].first; // Error threshold
-        if(model) *model = vec_models[k];
+        if (best.first < minNFA /*&& vec_residuals[best.second-1].first < errorMax*/)  {
+          // A better model was found
+          better = true;
+          minNFA = best.first;
+          vec_inliers.resize(best.second);
+          for (size_t i=0; i<best.second; ++i)
+            vec_inliers[i] = vec_residuals[i].second;
+          errorMax = vec_residuals[best.second-1].first; // Error threshold
+          if(model) *model = vec_models[k];
 
-        if(bVerbose)  {
-          std::cout << "  nfa=" << minNFA
-            << " inliers=" << best.second << "/" << nData
-            << " precisionNormalized=" << errorMax
-            << " precision=" << kernel.unormalizeError(errorMax)
-            << " (iter=" << iter;
-          std::cout << ",sample=";
-          std::copy(vec_sample.begin(), vec_sample.end(),
-            std::ostream_iterator<size_t>(std::cout, ","));
-          std::cout << ")" <<std::endl;
+          if(bVerbose)  {
+            std::cout << "  nfa=" << minNFA
+              << " inliers=" << best.second << "/" << nData
+              << " precisionNormalized=" << errorMax
+              << " precision=" << kernel.unormalizeError(errorMax)
+              << " (iter=" << iter;
+            std::cout << ",sample=";
+            std::copy(vec_sample.begin(), vec_sample.end(),
+              std::ostream_iterator<size_t>(std::cout, ","));
+            std::cout << ")" <<std::endl;
+          }
         }
       }
     }
 
     // ACRANSAC optimization: draw samples among best set of inliers so far
-    if((better && minNFA<0) || (iter+1==nIter && nIterReserve)) {
-      if(vec_inliers.empty()) { // No model found at all so far
-        nIter++; // Continue to look for any model, even not meaningful
-        nIterReserve--;
+    if (bACRansacMode && ((better && minNFA<0) || (iter+1==nIter && nIterReserve))) {
+      if (vec_inliers.empty()) { // No model found at all so far
+        ++nIter; // Continue to look for any model, even not meaningful
+        --nIterReserve;
       } else {
         // ACRANSAC optimization: draw samples among best set of inliers so far
         vec_index = vec_inliers;
         if(nIterReserve) {
-            nIter = iter+1+nIterReserve;
-            nIterReserve=0;
+            nIter = iter + 1 + nIterReserve;
+            nIterReserve = 0;
         }
       }
     }

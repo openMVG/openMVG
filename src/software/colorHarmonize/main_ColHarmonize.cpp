@@ -5,14 +5,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <cstdlib>
-#include <memory>
-
 #include "software/colorHarmonize/colorHarmonizeEngineGlobal.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "openMVG/system/timer.hpp"
+
+#include <cstdlib>
+#include <memory>
 
 using namespace openMVG;
 
@@ -71,7 +71,7 @@ int main( int argc, char **argv )
   openMVG::system::Timer timer;
 
   sMatchesDir = stlplus::folder_part(sMatchesFile);
-  std::auto_ptr<ColorHarmonizationEngineGlobal> m_colorHarmonizeEngine(
+  std::unique_ptr<ColorHarmonizationEngineGlobal> m_colorHarmonizeEngine(
     new ColorHarmonizationEngineGlobal(sSfM_Data_Filename,
     sMatchesDir,
     sMatchesFile,

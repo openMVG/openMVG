@@ -80,12 +80,15 @@ void GlobalSfMReconstructionEngine_RelativeMotions::SetFeaturesProvider(Features
     {
       // get the related view & camera intrinsic and compute the corresponding bearing vectors
       const View * view = _sfm_data.GetViews().at(iter->first).get();
-      const std::shared_ptr<IntrinsicBase> cam = _sfm_data.GetIntrinsics().find(view->id_intrinsic)->second;
-      for (PointFeatures::iterator iterPt = iter->second.begin();
-        iterPt != iter->second.end(); ++iterPt)
+      if (_sfm_data.GetIntrinsics().count(view->id_intrinsic))
       {
-        const Vec3 bearingVector = (*cam)(cam->get_ud_pixel(iterPt->coords().cast<double>()));
-        iterPt->coords() << (bearingVector.head(2) / bearingVector(2)).cast<float>();
+        const std::shared_ptr<IntrinsicBase> cam = _sfm_data.GetIntrinsics().find(view->id_intrinsic)->second;
+        for (PointFeatures::iterator iterPt = iter->second.begin();
+          iterPt != iter->second.end(); ++iterPt)
+        {
+          const Vec3 bearingVector = (*cam)(cam->get_ud_pixel(iterPt->coords().cast<double>()));
+          iterPt->coords() << (bearingVector.head(2) / bearingVector(2)).cast<float>();
+        }
       }
     }
   }

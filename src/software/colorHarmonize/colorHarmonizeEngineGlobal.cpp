@@ -484,17 +484,18 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
   }
 
   // b. Read matches
-  if( !matching::PairedIndMatchImport( _sMatchesFile, _map_Matches ) )
+
+  if ( !matching::Load(_map_Matches, _sMatchesFile) )
   {
     cerr<< "Unable to read the geometric matrix matches" << endl;
     return false;
   }
 
   // Read features:
-  for( size_t i = 0; i < _vec_fileNames.size(); ++i )
+  for ( size_t i = 0; i < _vec_fileNames.size(); ++i )
   {
     const size_t camIndex = i;
-    if( !loadFeatsFromFile(
+    if ( !loadFeatsFromFile(
             stlplus::create_filespec( _sMatchesPath,
                                       stlplus::basename_part( _vec_fileNames[ camIndex ] ),
                                       ".feat" ),

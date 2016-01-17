@@ -17,16 +17,17 @@ enum EINTRINSIC
   PINHOLE_CAMERA_RADIAL1 = 2, // radial distortion K1
   PINHOLE_CAMERA_RADIAL3 = 3, // radial distortion K1,K2,K3
   PINHOLE_CAMERA_BROWN = 4, // radial distortion K1,K2,K3, tangential distortion T1,T2
+  PINHOLE_CAMERA_FISHEYE = 5, // a simple Fish-eye distortion model with 4 distortion coefficients
   PINHOLE_CAMERA_END
 };
 
 // Return if the camera type is a valid enum
-static bool isValid(EINTRINSIC eintrinsic)
+static inline bool isValid(EINTRINSIC eintrinsic)
 {
   return eintrinsic > PINHOLE_CAMERA_START && eintrinsic < PINHOLE_CAMERA_END;
 }
 
-static bool isPinhole(EINTRINSIC eintrinsic)
+static inline bool isPinhole(EINTRINSIC eintrinsic)
 {
   return eintrinsic > PINHOLE_CAMERA_START && eintrinsic < PINHOLE_CAMERA_END;
 }

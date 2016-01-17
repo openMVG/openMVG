@@ -94,11 +94,18 @@ OpenMVG Pinhole camera models
 
     * classic pinhole camera (Focal + principal point and image size) + radial distortion by three factors.
     * can add and remove distortion
-    
+
   * :class:`Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic`
-  
+
     * classic pinhole camera (Focal + principal point and image size) + radial distortion by three factors + tangential distortion by two factors.
     * can add and remove distortion
+
+  * :class:`Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic`
+
+    * classic pinhole camera (Focal + principal point and image size) + fish-eye distortion by four factors.
+    * can only be applied to a full frame fish-eye (i.e not to hemispherical ones)
+    * can add and remove distortion
+
 
 * Simple pinhole camera models (intrinsic + extrinsic(pose))
 

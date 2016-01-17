@@ -161,15 +161,15 @@ int main(int argc, char **argv)
   {
     case 'f': case 'F':
       eGeometricModelToCompute = FUNDAMENTAL_MATRIX;
-      sGeometricMatchesFilename = "matches.f.txt";
+      sGeometricMatchesFilename = "matches.f.bin";
     break;
     case 'e': case 'E':
       eGeometricModelToCompute = ESSENTIAL_MATRIX;
-      sGeometricMatchesFilename = "matches.e.txt";
+      sGeometricMatchesFilename = "matches.e.bin";
     break;
     case 'h': case 'H':
       eGeometricModelToCompute = HOMOGRAPHY_MATRIX;
-      sGeometricMatchesFilename = "matches.h.txt";
+      sGeometricMatchesFilename = "matches.h.bin";
     break;
     default:
       std::cerr << "Unknown geometric model" << std::endl;
@@ -242,10 +242,21 @@ int main(int argc, char **argv)
 
   std::cout << std::endl << " - PUTATIVE MATCHES - " << std::endl;
   // If the matches already exists, reload them
-  if (!bForce && stlplus::file_exists(sMatchesDirectory + "/matches.putative.txt"))
+  if
+  (
+    !bForce
+    && (stlplus::file_exists(sMatchesDirectory + "/matches.putative.txt")
+        || stlplus::file_exists(sMatchesDirectory + "/matches.putative.bin"))
+  )
   {
-    PairedIndMatchImport(sMatchesDirectory + "/matches.putative.txt", map_PutativesMatches);
-    std::cout << "\t PREVIOUS RESULTS LOADED" << std::endl;
+    if (!(Load(map_PutativesMatches, sMatchesDirectory + "/matches.putative.bin") ||
+          Load(map_PutativesMatches, sMatchesDirectory + "/matches.putative.txt")) )
+    {
+      std::cerr << "Cannot load input matches file";
+      return EXIT_FAILURE;
+    }
+    std::cout << "\t PREVIOUS RESULTS LOADED;"
+      << " #pair: " << map_PutativesMatches.size() << std::endl;
   }
   else // Compute the putative matches
   {
@@ -329,10 +340,13 @@ int main(int argc, char **argv)
       //---------------------------------------
       //-- Export putative matches
       //---------------------------------------
-      std::ofstream file (std::string(sMatchesDirectory + "/matches.putative.txt").c_str());
-      if (file.is_open())
-        PairedIndMatchToStream(map_PutativesMatches, file);
-      file.close();
+      if (!Save(map_PutativesMatches, std::string(sMatchesDirectory + "/matches.putative.bin")))
+      {
+        std::cerr
+          << "Cannot save computed matches in: "
+          << std::string(sMatchesDirectory + "/matches.putative.bin");
+        return EXIT_FAILURE;
+      }
     }
     std::cout << "Task (Regions Matching) done in (s): " << timer.elapsed() << std::endl;
   }
@@ -416,10 +430,14 @@ int main(int argc, char **argv)
     //---------------------------------------
     //-- Export geometric filtered matches
     //---------------------------------------
-    std::ofstream file (string(sMatchesDirectory + "/" + sGeometricMatchesFilename).c_str());
-    if (file.is_open())
-      PairedIndMatchToStream(map_GeometricMatches, file);
-    file.close();
+    if (!Save(map_GeometricMatches,
+      std::string(sMatchesDirectory + "/" + sGeometricMatchesFilename)))
+    {
+      std::cerr
+          << "Cannot save computed matches in: "
+          << std::string(sMatchesDirectory + "/" + sGeometricMatchesFilename);
+      return EXIT_FAILURE;
+    }
 
     std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
 

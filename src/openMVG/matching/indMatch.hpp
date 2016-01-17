@@ -10,6 +10,8 @@
 
 #include "openMVG/types.hpp"
 
+#include <cereal/cereal.hpp> // Serialization
+
 #include <iostream>
 #include <set>
 #include <map>
@@ -53,11 +55,17 @@ struct IndMatch
     return sizeBefore != vec_match.size();
   }
 
+  // Serialization
+  template <class Archive>
+  void serialize( Archive & ar )  {
+    ar(_i, _j);
+  }
+
   IndexT _i;
   IndexT _j;
 };
 
-static std::ostream& operator<<(std::ostream & out, const IndMatch & obj) {
+static inline std::ostream& operator<<(std::ostream & out, const IndMatch & obj) {
   return out << obj._i << " " << obj._j;
 }
 

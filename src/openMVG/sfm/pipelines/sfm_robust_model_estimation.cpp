@@ -31,7 +31,7 @@ bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
   // Recover best rotation and translation from E.
   MotionFromEssential(E, &Rs, &ts);
 
-  //-> Test the 4 solutions will all the point
+  //-> Test the 4 solutions will all the points
   assert(Rs.size() == 4);
   assert(ts.size() == 4);
 
@@ -49,8 +49,9 @@ bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
 
     for (size_t k = 0; k < vec_inliers.size(); ++k)
     {
-      const Vec2 & x1_ = x1.col(vec_inliers[k]),
-        &x2_ = x2.col(vec_inliers[k]);
+      const Vec2
+        & x1_ = x1.col(vec_inliers[k]),
+        & x2_ = x2.col(vec_inliers[k]);
       TriangulateDLT(P1, x1_, P2, x2_, &X);
       // Test if point is front to the two cameras.
       if (Depth(R1, t1, X) > 0 && Depth(R2, t2, X) > 0)
@@ -60,12 +61,10 @@ bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
     }
   }
   // Check the solution:
-  const std::vector<size_t>::iterator iter = max_element(f.begin(), f.end());
+  const std::vector<size_t>::iterator iter = std::max_element(f.begin(), f.end());
   if (*iter == 0)
   {
-    std::cerr << std::endl << "/!\\There is no right solution,"
-      << " probably intermediate results are not correct or no points"
-      << " in front of both cameras" << std::endl;
+    // There is no right solution with points in front of the cameras
     return false;
   }
   const size_t index = std::distance(f.begin(), iter);
