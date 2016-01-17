@@ -79,7 +79,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
   virtual Mat34 createProjectiveMatrix(const geometry::Pose3 & pose) const
   {
     Mat34 P;
-	P_From_KRt(getK(), pose.rotation(), pose.translation(), &P);
+    P_From_KRt(getK(), pose.rotation(), pose.translation(), &P);
     return P;
   }
 
@@ -94,7 +94,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
   virtual bool updateFromParams(const std::vector<double> & params)
   {
     if (params.size() == 3) {
-	  *this = Pinhole_Intrinsic(_width, _height, params[0], params[1], params[2]);
+      *this = Pinhole_Intrinsic(_width, _height, params[0], params[1], params[2]);
       return true;
     }
     else  {
@@ -127,7 +127,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     ar(cereal::make_nvp("focal_length", focal_length ));
     std::vector<double> pp(2);
     ar(cereal::make_nvp("principal_point", pp));
-	*this = Pinhole_Intrinsic(_width, _height, focal_length, pp[0], pp[1]);
+    *this = Pinhole_Intrinsic(_width, _height, focal_length, pp[0], pp[1]);
   }
 };
 

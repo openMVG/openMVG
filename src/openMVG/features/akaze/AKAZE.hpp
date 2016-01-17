@@ -107,7 +107,7 @@ class AKAZE {
 private:
 
   AKAZEConfig options_;               ///< Configuration options for AKAZE
-  std::vector<TEvolution> evolution_;	///< Vector of nonlinear diffusion evolution (Scale Space)
+  std::vector<TEvolution> evolution_; ///< Vector of nonlinear diffusion evolution (Scale Space)
   image::Image<float> in_;            ///< Input image
 
 public:

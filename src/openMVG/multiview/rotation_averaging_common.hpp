@@ -23,7 +23,7 @@ struct RelativeRotation
   Mat3 Rij; // pose's relative rotation
   float weight;
 
-  RelativeRotation(IndexT i_=0, IndexT j_=0, const	Mat3 & Rij_=Mat3::Identity(), float weight_=1.0f):
+  RelativeRotation(IndexT i_=0, IndexT j_=0, const Mat3 & Rij_=Mat3::Identity(), float weight_=1.0f):
   i(i_), j(j_), Rij(Rij_), weight(weight_)
   {}
 };
@@ -36,7 +36,7 @@ static Pair_Set convertRelativeRotationsToPairSet(const RelativeRotations & relR
 {
   Pair_Set pairs;
   for(RelativeRotations::const_iterator it = relRots.begin(); it != relRots.end(); ++it)
-	pairs.emplace(it->i, it->j);
+    pairs.emplace(it->i, it->j);
   return pairs;
 }
 

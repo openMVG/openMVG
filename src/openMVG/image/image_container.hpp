@@ -32,7 +32,7 @@ class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::Row
 {
 
 public:
-  typedef T Tpixel;	//-- Pixel data type
+  typedef T Tpixel;  //-- Pixel data type
   typedef Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Base;
 
   //------------------------------

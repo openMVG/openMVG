@@ -226,10 +226,10 @@ void GuidedMatching(
 ///  (the one that is closer to image border intersection)
 static unsigned int pix_to_bucket(const Vec2i &x, int W, int H)
 {
-	if (x(1) == 0) return x(0); // Top border
-	if (x(0) == W-1) return W-1 + x(1); // Right border
-	if (x(1) == H-1) return 2*W + H-3 - x(0); // Bottom border
-	return 2*(W+H-2) - x(1); // Left border
+  if (x(1) == 0) return x(0); // Top border
+  if (x(0) == W-1) return W-1 + x(1); // Right border
+  if (x(1) == H-1) return 2*W + H-3 - x(0); // Bottom border
+  return 2*(W+H-2) - x(1); // Left border
 }
 
 /// Compute intersection of the epipolar line with the image border
@@ -239,38 +239,38 @@ static bool line_to_endPoints(const Vec3 & line, int W, int H, Vec2 & x0, Vec2 &
 
   float r1, r2;
   // Intersection with Y axis (0 or W-1)
-	if (b!=0)
-	{
-		double x = (b<0) ? 0 : W-1;
-		double y = -(a*x+c)/b;
-		if (y < 0) y = 0.;
-		else if (y >= H) y = H-1;
-		r1 = fabs(a*x + b*y + c);
-		x0 << x,y;
-	}
-	else  {
-		return false;
-	}
-
-	// Intersection with X axis (0 or H-1)
-	if (a!=0)
-	{
-		double y = (a<0) ? H-1 : 0;
-		double x = -(b*y+c)/a;
-		if (x < 0) x = 0.;
-		else if (x >= W) x = W-1;
-		r2 = fabs(a*x + b*y + c);
-		x1 << x,y;
-	}
-	else  {
+  if (b!=0)
+  {
+    double x = (b<0) ? 0 : W-1;
+    double y = -(a*x+c)/b;
+    if (y < 0) y = 0.;
+    else if (y >= H) y = H-1;
+    r1 = fabs(a*x + b*y + c);
+    x0 << x,y;
+  }
+  else  {
     return false;
-	}
+  }
 
-	// Choose x0 to be as close as the intersection axis
-	if (r1>r2)
+  // Intersection with X axis (0 or H-1)
+  if (a!=0)
+  {
+    double y = (a<0) ? H-1 : 0;
+    double x = -(b*y+c)/a;
+    if (x < 0) x = 0.;
+    else if (x >= W) x = W-1;
+    r2 = fabs(a*x + b*y + c);
+    x1 << x,y;
+  }
+  else  {
+    return false;
+  }
+
+  // Choose x0 to be as close as the intersection axis
+  if (r1>r2)
     std::swap(x0,x1);
 
-	return true;
+  return true;
 }
 
 /// Guided Matching (features + descriptors with distance ratio):
@@ -318,8 +318,8 @@ void GuidedMatching_Fundamental_Fast(
   //-- Store point in the corresponding epipolar line bucket
   //--
   typedef std::vector<IndexT> Bucket_vec;
-	typedef std::vector<Bucket_vec> Buckets_vec;
-	const int nb_buckets = 2*(widthR + heightR-2);
+  typedef std::vector<Bucket_vec> Buckets_vec;
+  const int nb_buckets = 2*(widthR + heightR-2);
 
   Buckets_vec buckets(nb_buckets);
   for (size_t i = 0; i < lRegions.RegionCount(); ++i) {
@@ -348,18 +348,18 @@ void GuidedMatching_Fundamental_Fast(
 
     const Vec2 xR = camR ? camR->get_ud_pixel(rRegions.GetRegionPosition(j)) : rRegions.GetRegionPosition(j);
     const Vec3 l2 = ep2.cross(Vec3(xR(0), xR(1), 1.));
-		const Vec2 n = l2.head<2>() * (sqrt(errorTh) / l2.head<2>().norm());
+    const Vec2 n = l2.head<2>() * (sqrt(errorTh) / l2.head<2>().norm());
 
-		const Vec3 l2min = ep2.cross(Vec3(xR(0) - n(0), xR(1) - n(1), 1.));
-		const Vec3 l2max = ep2.cross(Vec3(xR(0) + n(0), xR(1) + n(1), 1.));
+    const Vec3 l2min = ep2.cross(Vec3(xR(0) - n(0), xR(1) - n(1), 1.));
+    const Vec3 l2max = ep2.cross(Vec3(xR(0) + n(0), xR(1) + n(1), 1.));
 
     // Compute corresponding buckets
-		Vec2 x0, x1;
-		if (!line_to_endPoints(l2min, widthR, heightR, x0, x1))
+    Vec2 x0, x1;
+    if (!line_to_endPoints(l2min, widthR, heightR, x0, x1))
       continue;
     const int bucket_start = pix_to_bucket(x0.cast<int>(), widthR, heightR);
 
- 		if (!line_to_endPoints(l2max, widthR, heightR, x0, x1))
+     if (!line_to_endPoints(l2max, widthR, heightR, x0, x1))
       continue;
     const int bucket_stop = pix_to_bucket(x0.cast<int>(), widthR, heightR);
 

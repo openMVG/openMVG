@@ -1,12 +1,12 @@
 FILE(
-	GLOB
-	linearProgramming_headers
-	*.hpp
+  GLOB
+  linearProgramming_headers
+  *.hpp
 )
 FILE(
-	GLOB
-	linearProgramming_cpp
-	*.cpp
+  GLOB
+  linearProgramming_cpp
+  *.cpp
 )
 FILE(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 

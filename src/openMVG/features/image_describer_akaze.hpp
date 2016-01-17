@@ -224,8 +224,8 @@ public:
             SIOPointFeature(ptAkaze.x, ptAkaze.y, ptAkaze.size, ptAkaze.angle);
 
           // Compute MLDB descriptor
-		      Descriptor<bool,486> desc;
-      		ComputeMLDBDescriptor(cur_slice.cur, cur_slice.Lx, cur_slice.Ly,
+          Descriptor<bool,486> desc;
+          ComputeMLDBDescriptor(cur_slice.cur, cur_slice.Lx, cur_slice.Ly,
             ptAkaze.octave, regionsCasted->Features()[i], desc);
           // convert the bool vector to the binary unsigned char array
           unsigned char * ptr = reinterpret_cast<unsigned char*>(&regionsCasted->Descriptors()[i]);

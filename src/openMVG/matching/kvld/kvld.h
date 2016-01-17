@@ -56,14 +56,14 @@ struct KvldParameters
 // magnitudes: store gradient norms of pixels of each scale image into a vector of images
 struct ImageScale
 {
-	std::vector< openMVG::image::Image< float > > angles;
+  std::vector< openMVG::image::Image< float > > angles;
   std::vector< openMVG::image::Image< float > > magnitudes;
-	std::vector< double > ratios;
-	double radius_size;
-	double step;
+  std::vector< double > ratios;
+  double radius_size;
+  double step;
 
   ImageScale(const openMVG::image::Image< float >& I, double r = 5.0);
-	int getIndex( const double r )const;
+  int getIndex( const double r )const;
 
 private:
   void GradAndNorm(
@@ -75,55 +75,55 @@ private:
 //====== VLD structures ======//
 class VLD
 {
-	double contrast;
-	float distance;
+  double contrast;
+  float distance;
 
-	float begin_point[ 2 ];
-	float end_point[ 2 ];
+  float begin_point[ 2 ];
+  float end_point[ 2 ];
 
-	Eigen::Matrix< int, dimension, 1 > principleAngle; //relative angle
-	Eigen::Matrix< double, dimension, 1 > weight;
-	Eigen::Matrix< double, dimension * subdirection, 1 > descriptor;//relative angle
+  Eigen::Matrix< int, dimension, 1 > principleAngle; //relative angle
+  Eigen::Matrix< double, dimension, 1 > weight;
+  Eigen::Matrix< double, dimension * subdirection, 1 > descriptor;//relative angle
 
 public:
-	inline double get_contrast()const{ return contrast; }
-	//====================constructors=====================//
-	template< typename T >
-	VLD( const ImageScale& series, T const& P1, T const& P2 );
+  inline double get_contrast()const{ return contrast; }
+  //====================constructors=====================//
+  template< typename T >
+  VLD( const ImageScale& series, T const& P1, T const& P2 );
 //=========================================class functions==============================================//
-	inline double get_orientation()const
-	{
-		float dy = end_point[ 1 ] - begin_point[ 1 ];
-		float	dx = end_point[ 0 ] - begin_point[ 0 ];
-		float angle;
-		anglefrom( dx, dy, angle );
-		return angle;
-	}
-	inline double difference( const  VLD& vld2 )const
-	{
-		double diff[ 2 ];
-		diff[ 0 ] = 0;
-		diff[ 1 ] = 0;
+  inline double get_orientation()const
+  {
+    float dy = end_point[ 1 ] - begin_point[ 1 ];
+    float  dx = end_point[ 0 ] - begin_point[ 0 ];
+    float angle;
+    anglefrom( dx, dy, angle );
+    return angle;
+  }
+  inline double difference( const  VLD& vld2 )const
+  {
+    double diff[ 2 ];
+    diff[ 0 ] = 0;
+    diff[ 1 ] = 0;
 
-		if( contrast > 300 || vld2.contrast > 300	|| contrast <= 0 || vld2.contrast <=0 )
+    if( contrast > 300 || vld2.contrast > 300  || contrast <= 0 || vld2.contrast <=0 )
       return 128;
 
-		for( int i = 0; i < dimension; i++ )
+    for( int i = 0; i < dimension; i++ )
     {
-		  for( int j = 0; j < subdirection; j++ )
+      for( int j = 0; j < subdirection; j++ )
       {// term of descriptor
         diff[ 0 ] += std::abs( descriptor[ i * subdirection + j ] - vld2.descriptor[ i * subdirection + j ] );
       }
-			//term of main SIFT like orientation
-			diff[ 1 ] += std::min( std::abs( principleAngle[ i ] - vld2.principleAngle[ i ] ),
-			  binNum - std::abs( principleAngle[ i ] - vld2.principleAngle[ i ] ) ) * ( weight[ i ] + vld2.weight[ i ] );// orientation term
+      //term of main SIFT like orientation
+      diff[ 1 ] += std::min( std::abs( principleAngle[ i ] - vld2.principleAngle[ i ] ),
+        binNum - std::abs( principleAngle[ i ] - vld2.principleAngle[ i ] ) ) * ( weight[ i ] + vld2.weight[ i ] );// orientation term
     }
 
-		diff[ 0 ] *= 0.36;
-		diff[ 1 ] *= 0.64 / ( binNum );
+    diff[ 0 ] *= 0.36;
+    diff[ 1 ] *= 0.64 / ( binNum );
     //std::cout<<"diff = "<<diff[0]<<" "<<diff[1]<<std::endl;
-		return diff[ 0 ] + diff[ 1 ];
-	}
+    return diff[ 0 ] + diff[ 1 ];
+  }
 
   inline void test() const
   {

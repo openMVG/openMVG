@@ -97,16 +97,16 @@ struct IntrinsicBase
   template <class Archive>
   void save( Archive & ar) const
   {
-	ar(cereal::make_nvp("width", _width));
-	ar(cereal::make_nvp("height", _height));
+    ar(cereal::make_nvp("width", _width));
+    ar(cereal::make_nvp("height", _height));
   }
 
   /// Serialization in
   template <class Archive>
   void load( Archive & ar)
   {
-	ar(cereal::make_nvp("width", _width));
-	ar(cereal::make_nvp("height", _height));
+    ar(cereal::make_nvp("width", _width));
+    ar(cereal::make_nvp("height", _height));
   }
 
   /// Generate an unique Hash from the camera parameters (used for grouping)
@@ -114,8 +114,8 @@ struct IntrinsicBase
   {
     size_t seed = 0;
     stl::hash_combine(seed, static_cast<int>(this->getType()));
-	stl::hash_combine(seed, _width);
-	stl::hash_combine(seed, _height);
+    stl::hash_combine(seed, _width);
+    stl::hash_combine(seed, _height);
     const std::vector<double> params = this->getParams();
     for (size_t i=0; i < params.size(); ++i)
       stl::hash_combine(seed, params[i]);

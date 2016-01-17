@@ -81,7 +81,7 @@ void MotionFromEssential(const Mat3 &E,
                          std::vector<Mat3> *Rs,
                          std::vector<Vec3> *ts)
 {
-  Eigen::	JacobiSVD<Mat3> USV(E, Eigen::ComputeFullU|Eigen::ComputeFullV);
+  Eigen::JacobiSVD<Mat3> USV(E, Eigen::ComputeFullU|Eigen::ComputeFullV);
   Mat3 U =  USV.matrixU();
   // Vec3 d =  USV.singularValues();
   Mat3 Vt = USV.matrixV().transpose();

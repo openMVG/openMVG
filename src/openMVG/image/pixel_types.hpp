@@ -61,9 +61,9 @@ public:
   template <typename Z>
   inline Rgb operator *(const Z& val) const
   {
-  	return Rgb(T((Z)(*this)(0) * val),
-							 T((Z)(*this)(1) * val),
-							 T((Z)(*this)(2) * val) );
+    return Rgb(T((Z)(*this)(0) * val),
+               T((Z)(*this)(1) * val),
+               T((Z)(*this)(2) * val) );
   }
 };
 typedef Rgb<unsigned char> RGBColor;
@@ -113,19 +113,19 @@ public:
   template<class Z>
   inline Rgba operator /(const Z& val) const
   {
-		return Rgba(T((Z)(*this)(0) / val),
-										 T((Z)(*this)(1) / val),
-										 T((Z)(*this)(2) / val),
-										 T((Z)(*this)(3) / val));
+    return Rgba(T((Z)(*this)(0) / val),
+                     T((Z)(*this)(1) / val),
+                     T((Z)(*this)(2) / val),
+                     T((Z)(*this)(3) / val));
   }
 
   template<class Z>
   inline Rgba operator *(const Z& val) const
   {
-  	return Rgba(T((Z)(*this)(0) * val),
-										 T((Z)(*this)(1) * val),
-										 T((Z)(*this)(2) * val),
-										 T((Z)(*this)(3) * val));
+    return Rgba(T((Z)(*this)(0) * val),
+                     T((Z)(*this)(1) * val),
+                     T((Z)(*this)(2) * val),
+                     T((Z)(*this)(3) * val));
   }
 };
 typedef Rgba<unsigned char> RGBAColor;

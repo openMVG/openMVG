@@ -2,14 +2,14 @@
 ADD_DEFINITIONS(-DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 file(
-	GLOB_RECURSE
-	image_files_header
-	*.hpp
+  GLOB_RECURSE
+  image_files_header
+  *.hpp
 )
 file(
-	GLOB_RECURSE
-	image_files_cpp
-	*.cpp
+  GLOB_RECURSE
+  image_files_cpp
+  *.cpp
 )
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 

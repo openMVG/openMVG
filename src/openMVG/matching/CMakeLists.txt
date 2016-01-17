@@ -2,14 +2,14 @@
 project(matching)
 
 file(
-	GLOB
-	matching_files_header
-	*.hpp
+  GLOB
+  matching_files_header
+  *.hpp
 )
 file(
-	GLOB
-	matching_files_cpp
-	*.cpp
+  GLOB
+  matching_files_cpp
+  *.cpp
 )
 file(GLOB REMOVEFILESUNITTEST *_test.cpp)
 
