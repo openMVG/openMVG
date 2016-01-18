@@ -53,12 +53,12 @@ TEST(Split, stringSplit3part)
 
 TEST(Split, ontheSameString)
 {
-	std::string sInput = "";
-	std::string sDelimiter = ";";
-	std::vector<std::string> vec_str;
-	vec_str.push_back("foo;");
+  std::string sInput = "";
+  std::string sDelimiter = ";";
+  std::vector<std::string> vec_str;
+  vec_str.push_back("foo;");
   EXPECT_TRUE( stl::split(vec_str[0], sDelimiter, vec_str));
-	EXPECT_EQ( 2, vec_str.size() );
+  EXPECT_EQ( 2, vec_str.size() );
 }
 
 /* ************************************************************************* */

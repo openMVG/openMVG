@@ -60,7 +60,7 @@ namespace sfm {
 
       KernelType kernel(resection_data.pt2D, image_size.first, image_size.second,
         resection_data.pt3D);
-      // Robust estimation of the Projection matrix and it's precision
+      // Robust estimation of the Projection matrix and its precision
       const std::pair<double,double> ACRansacOut =
         openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision, true);
       // Update the upper bound precision of the model found by AC-RANSAC
@@ -77,8 +77,8 @@ namespace sfm {
         SolverType, ResectionSquaredResidualError,
         openMVG::robust::UnnormalizerResection, Mat34>  KernelType;
 
-      KernelType kernel(resection_data.pt2D, resection_data.pt3D, pinhole_cam->K());
-      // Robust estimation of the Projection matrix and it's precision
+      KernelType kernel(resection_data.pt2D, resection_data.pt3D, pinhole_cam->getK());
+      // Robust estimation of the Projection matrix and its precision
       const std::pair<double,double> ACRansacOut =
         openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision, true);
       // Update the upper bound precision of the model found by AC-RANSAC

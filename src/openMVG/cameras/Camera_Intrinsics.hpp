@@ -22,22 +22,20 @@ namespace cameras {
 /// Store the image size & define all basis optical modelization of a camera
 struct IntrinsicBase
 {
-  unsigned int _w, _h;
-
-  IntrinsicBase(unsigned int w = 0, unsigned int h = 0):_w(w), _h(h) {}
+  IntrinsicBase(unsigned int width = 0, unsigned int height = 0):_width(width), _height(height) {}
   virtual ~IntrinsicBase() {}
 
-  unsigned int w() const {return _w;}
-  unsigned int h() const {return _h;}
+  unsigned int getWidth() const {return _width;}
+  unsigned int getHeight() const {return _height;}
 
   /// Projection of a 3D point into the camera plane (Apply pose, disto (if any) and Intrinsics)
   Vec2 project(
     const geometry::Pose3 & pose,
     const Vec3 & pt3D) const
   {
-    const Vec3 X = pose(pt3D); // apply pose
-    if (this->have_disto()) // apply disto & intrinsics
-      return this->cam2ima( this->add_disto(X.head<2>()/X(2)) );
+    const Vec3 X = pose.apply(pt3D); // apply pose
+    if (this->hasDistortion()) // apply disto & intrinsics
+      return this->cam2ima( this->addDistortion(X.head<2>()/X(2)) );
     else // apply intrinsics
       return this->cam2ima( X.head<2>()/X(2) );
   }
@@ -75,13 +73,13 @@ struct IntrinsicBase
   virtual Vec2 ima2cam(const Vec2& p) const = 0;
 
   /// Does the camera model handle a distortion field?
-  virtual bool have_disto() const {return false;}
+  virtual bool hasDistortion() const {return false;}
 
   /// Add the distortion field to a point (that is in normalized camera frame)
-  virtual Vec2 add_disto(const Vec2& p) const = 0;
+  virtual Vec2 addDistortion(const Vec2& p) const = 0;
 
   /// Remove the distortion to a camera point (that is in normalized camera frame)
-  virtual Vec2 remove_disto(const Vec2& p) const  = 0;
+  virtual Vec2 removeDistortion(const Vec2& p) const  = 0;
 
   /// Return the un-distorted pixel (with removed distortion)
   virtual Vec2 get_ud_pixel(const Vec2& p) const = 0;
@@ -92,23 +90,23 @@ struct IntrinsicBase
   /// Normalize a given unit pixel error to the camera plane
   virtual double imagePlane_toCameraPlaneError(double value) const = 0;
 
-  /// Return the intrinsic (interior & exterior) as a simplified projective projection
-  virtual Mat34 get_projective_equivalent(const geometry::Pose3 & pose) const = 0;
+  /// Create a projection matrix by combining this intrinsic with an external pose
+  virtual Mat34 createProjectiveMatrix(const geometry::Pose3 & pose) const = 0;
 
   /// Serialization out
   template <class Archive>
   void save( Archive & ar) const
   {
-    ar(cereal::make_nvp("width", _w));
-    ar(cereal::make_nvp("height", _h));
+    ar(cereal::make_nvp("width", _width));
+    ar(cereal::make_nvp("height", _height));
   }
 
   /// Serialization in
   template <class Archive>
   void load( Archive & ar)
   {
-    ar(cereal::make_nvp("width", _w));
-    ar(cereal::make_nvp("height", _h));
+    ar(cereal::make_nvp("width", _width));
+    ar(cereal::make_nvp("height", _height));
   }
 
   /// Generate an unique Hash from the camera parameters (used for grouping)
@@ -116,13 +114,16 @@ struct IntrinsicBase
   {
     size_t seed = 0;
     stl::hash_combine(seed, static_cast<int>(this->getType()));
-    stl::hash_combine(seed, _w);
-    stl::hash_combine(seed, _h);
+    stl::hash_combine(seed, _width);
+    stl::hash_combine(seed, _height);
     const std::vector<double> params = this->getParams();
     for (size_t i=0; i < params.size(); ++i)
       stl::hash_combine(seed, params[i]);
     return seed;
   }
+
+protected:
+  unsigned int _width, _height;
 };
 
 /// Return the angle (degree) between two bearing vector rays

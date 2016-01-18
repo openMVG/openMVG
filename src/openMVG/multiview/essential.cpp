@@ -36,7 +36,8 @@ namespace openMVG {
 void EssentialFromFundamental(const Mat3 &F,
                               const Mat3 &K1,
                               const Mat3 &K2,
-                              Mat3 *E) {
+                              Mat3 *E)
+{
   *E = K2.transpose() * F * K1;
 }
 
@@ -45,7 +46,8 @@ void EssentialFromFundamental(const Mat3 &F,
 void FundamentalFromEssential(const Mat3 &E,
                               const Mat3 &K1,
                               const Mat3 &K2,
-                              Mat3 *F)  {
+                              Mat3 *F)
+{
   *F = K2.inverse().transpose() * E * K1.inverse();
 }
 
@@ -54,7 +56,8 @@ void RelativeCameraMotion(const Mat3 &R1,
                           const Mat3 &R2,
                           const Vec3 &t2,
                           Mat3 *R,
-                          Vec3 *t) {
+                          Vec3 *t)
+{
   *R = R2 * R1.transpose();
   *t = t2 - (*R) * t1;
 }
@@ -64,7 +67,8 @@ void EssentialFromRt(const Mat3 &R1,
                      const Vec3 &t1,
                      const Mat3 &R2,
                      const Vec3 &t2,
-                     Mat3 *E) {
+                     Mat3 *E)
+{
   Mat3 R;
   Vec3 t;
   RelativeCameraMotion(R1, t1, R2, t2, &R, &t);
@@ -75,8 +79,9 @@ void EssentialFromRt(const Mat3 &R1,
 // HZ 9.7 page 259 (Result 9.19)
 void MotionFromEssential(const Mat3 &E,
                          std::vector<Mat3> *Rs,
-                         std::vector<Vec3> *ts) {
-  Eigen::	JacobiSVD<Mat3> USV(E, Eigen::ComputeFullU|Eigen::ComputeFullV);
+                         std::vector<Vec3> *ts)
+{
+  Eigen::JacobiSVD<Mat3> USV(E, Eigen::ComputeFullU|Eigen::ComputeFullV);
   Mat3 U =  USV.matrixU();
   // Vec3 d =  USV.singularValues();
   Mat3 Vt = USV.matrixV().transpose();
@@ -112,7 +117,8 @@ int MotionFromEssentialChooseSolution(const std::vector<Mat3> &Rs,
                                       const Mat3 &K1,
                                       const Vec2 &x1,
                                       const Mat3 &K2,
-                                      const Vec2 &x2) {
+                                      const Vec2 &x2)
+{
   assert(Rs.size() == 4);
   assert(ts.size() == 4);
 
@@ -142,7 +148,8 @@ bool MotionFromEssentialAndCorrespondence(const Mat3 &E,
                                           const Mat3 &K2,
                                           const Vec2 &x2,
                                           Mat3 *R,
-                                          Vec3 *t) {
+                                          Vec3 *t)
+{
   std::vector<Mat3> Rs;
   std::vector<Vec3> ts;
   MotionFromEssential(E, &Rs, &ts);

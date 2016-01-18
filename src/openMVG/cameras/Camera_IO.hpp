@@ -45,7 +45,8 @@ static bool load(
   if (stlplus::extension_part(scameraFile) == "bin")
   {
     std::ifstream in(scameraFile.c_str(), std::ios::in|std::ios::binary);
-    if (!in.is_open())	{
+    if (!in.is_open())
+    {
       std::cerr << "Error: failed to open file '" << scameraFile
         << "' for reading" << std::endl;
       return false;

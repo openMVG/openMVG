@@ -54,7 +54,7 @@ int main(int argc, char **argv)
       << "\t 4: Pinhole brown with radial 3 and tangential 2\n"
       << "\t 5: Pinhole with a simple Fish-eye distortion\n"
       << "[-g|--group_camera_model]\n"
-      << "\t 0-> each view have it's own camera intrinsic parameters,\n"
+      << "\t 0-> each view have its own camera intrinsic parameters,\n"
       << "\t 1-> views can share some camera intrinsic parameters (default)\n"
       << std::endl;
 

@@ -34,11 +34,11 @@ TEST(Cameras_Radial, disto_undisto_K1) {
 
     const Vec2 ptCamera = cam.ima2cam(ptImage);
     // Check that adding and removing distortion allow to recover the provided point
-    EXPECT_MATRIX_NEAR( ptCamera, cam.remove_disto(cam.add_disto(ptCamera)), epsilon);
-    EXPECT_MATRIX_NEAR( ptImage, cam.cam2ima(cam.remove_disto(cam.add_disto(ptCamera))), epsilon);
+    EXPECT_MATRIX_NEAR( ptCamera, cam.removeDistortion(cam.addDistortion(ptCamera)), epsilon);
+    EXPECT_MATRIX_NEAR( ptImage, cam.cam2ima(cam.removeDistortion(cam.addDistortion(ptCamera))), epsilon);
 
     // Assert that distortion field is not null and it has moved the initial provided point
-    EXPECT_FALSE( (cam.add_disto(ptCamera) == cam.remove_disto(cam.add_disto(ptCamera))) ) ;
+    EXPECT_FALSE( (cam.addDistortion(ptCamera) == cam.removeDistortion(cam.addDistortion(ptCamera))) ) ;
   }
 }
 
@@ -67,11 +67,11 @@ TEST(Cameras_Radial, disto_undisto_K3) {
 
     const Vec2 ptCamera = cam.ima2cam(ptImage);
     // Check that adding and removing distortion allow to recover the provided point
-    EXPECT_MATRIX_NEAR( ptCamera, cam.remove_disto(cam.add_disto(ptCamera)), epsilon);
-    EXPECT_MATRIX_NEAR( ptImage, cam.cam2ima(cam.remove_disto(cam.add_disto(ptCamera))), epsilon);
+    EXPECT_MATRIX_NEAR( ptCamera, cam.removeDistortion(cam.addDistortion(ptCamera)), epsilon);
+    EXPECT_MATRIX_NEAR( ptImage, cam.cam2ima(cam.removeDistortion(cam.addDistortion(ptCamera))), epsilon);
 
     // Assert that distortion field is not null and it has moved the initial provided point
-    EXPECT_FALSE( (cam.add_disto(ptCamera) == cam.remove_disto(cam.add_disto(ptCamera))) ) ;
+    EXPECT_FALSE( (cam.addDistortion(ptCamera) == cam.removeDistortion(cam.addDistortion(ptCamera))) ) ;
   }
 }
 

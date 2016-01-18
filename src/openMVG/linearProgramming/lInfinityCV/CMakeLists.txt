@@ -1,14 +1,14 @@
 
 FILE(
-	GLOB
-	lInftycomputervision_headers
-	*.hpp
+  GLOB
+  lInftycomputervision_headers
+  *.hpp
 )
 
 FILE(
-	GLOB
-	lInftycomputervision_cpp
-	*.cpp
+  GLOB
+  lInftycomputervision_cpp
+  *.cpp
 )
 
 FILE(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
@@ -18,7 +18,7 @@ LIST(REMOVE_ITEM lInftycomputervision_cpp ${REMOVEFILESUNITTEST})
 
 # Disable some warnings on MSVC.
 IF (MSVC)
-  # Disable Warning	C4267: conversion from 'size_t' to 'int', possible loss of data
+  # Disable Warning  C4267: conversion from 'size_t' to 'int', possible loss of data
   ADD_DEFINITIONS("/wd4267")
 ENDIF (MSVC)
 

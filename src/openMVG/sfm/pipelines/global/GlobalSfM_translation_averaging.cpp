@@ -103,7 +103,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
     }
     //-- Update initial estimates from [minId,maxId] to range [0->Ncam]
     RelativeInfo_Vec vec_initialRijTijEstimates_cpy = _vec_initialRijTijEstimates;
-    const Pair_Set pairs = getPairs(vec_initialRijTijEstimates_cpy);
+    const Pair_Set pairs = convertPairWiseMatchesToPairSet(vec_initialRijTijEstimates_cpy);
     Hash_Map<IndexT,IndexT> _reindexForward, _reindexBackward;
     reindex(pairs, _reindexForward, _reindexBackward);
     for(size_t i = 0; i < vec_initialRijTijEstimates_cpy.size(); ++i)

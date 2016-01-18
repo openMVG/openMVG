@@ -74,7 +74,7 @@ ENDIF (NOT TIFF_FOUND)
 ADD_SUBDIRECTORY(vectorGraphics)
 
 # Add ceres-solver (A Nonlinear Least Squares Minimizer)
-IF (DEFINED OpenMVG_USE_INTERNAL_CERES)
+IF (OpenMVG_USE_INTERNAL_CERES)
   SET(CXSPARSE_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/cxsparse)
   ADD_SUBDIRECTORY(cxsparse)
   SET(CERES_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/ceres)

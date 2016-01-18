@@ -66,7 +66,7 @@ bool exportToCMPMVSFormat(
       map_viewIdToContiguous.insert(std::make_pair(view->id_view, map_viewIdToContiguous.size()));
 
       // We have a valid view with a corresponding camera & pose
-      const Mat34 P = iterIntrinsic->second.get()->get_projective_equivalent(pose);
+      const Mat34 P = iterIntrinsic->second.get()->createProjectiveMatrix(pose);
       std::ostringstream os;
       os << std::setw(5) << std::setfill('0') << map_viewIdToContiguous[view->id_view] << "_P";
       std::ofstream file(
@@ -98,18 +98,18 @@ bool exportToCMPMVSFormat(
 
       const IntrinsicBase * cam = iterIntrinsic->second.get();
       if (map_viewIdToContiguous[view->id_view] == 0)
-        w_h_image_size = std::make_pair(cam->w(), cam->h());
+        w_h_image_size = std::make_pair(cam->getWidth(), cam->getHeight());
       else
       {
         // check that there is no image sizing change (CMPMVS support only images of the same size)
-        if (cam->w() != w_h_image_size.first ||
-            cam->h() != w_h_image_size.second)
+        if (cam->getWidth() != w_h_image_size.first ||
+            cam->getHeight() != w_h_image_size.second)
         {
           std::cerr << "CMPMVS support only image having the same image size";
           return false;
         }
       }
-      if (cam->have_disto())
+      if (cam->hasDistortion())
       {
         // undistort the image and save it
         ReadImage( srcImage.c_str(), &image);

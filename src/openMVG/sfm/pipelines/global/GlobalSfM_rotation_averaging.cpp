@@ -42,12 +42,12 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
       //-------------------
       // Triplet inference (test over the composition error)
       //-------------------
-      Pair_Set pairs = getPairs(relativeRotations);
+      Pair_Set pairs = convertRelativeRotationsToPairSet(relativeRotations);
       std::vector< graph::Triplet > vec_triplets = graph::tripletListing(pairs);
       //-- Rejection triplet that are 'not' identity rotation (error to identity > 5°)
       TripletRotationRejection(5.0f, vec_triplets, relativeRotations);
 
-      pairs = getPairs(relativeRotations);
+      pairs = convertRelativeRotationsToPairSet(relativeRotations);
       const std::set<IndexT> set_remainingIds = graph::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs);
       if(set_remainingIds.empty())
         return false;
@@ -63,7 +63,7 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
   // Compute contiguous index (mapping between sparse index and contiguous index)
   //  from ranging in [min(Id), max(Id)] to  [0, nbCam]
 
-  const Pair_Set pairs = getPairs(relativeRotations);
+  const Pair_Set pairs = convertRelativeRotationsToPairSet(relativeRotations);
   Hash_Map<IndexT, IndexT> _reindexForward, _reindexBackward;
   reindex(pairs, _reindexForward, _reindexBackward);
 
@@ -99,7 +99,7 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
         rel.i = _reindexBackward[rel.i];
         rel.j = _reindexBackward[rel.j];
       }
-      used_pairs = getPairs(relativeRotations);
+      used_pairs = convertRelativeRotationsToPairSet(relativeRotations);
     }
     break;
     case ROTATION_AVERAGING_L1:

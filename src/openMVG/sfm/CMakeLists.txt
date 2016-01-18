@@ -1,13 +1,13 @@
 
 file(
-	GLOB_RECURSE
-	sfm_files_header
-	*.hpp
+  GLOB_RECURSE
+  sfm_files_header
+  *.hpp
 )
 file(
-	GLOB_RECURSE
-	sfm_files_cpp
-	*.cpp
+  GLOB_RECURSE
+  sfm_files_cpp
+  *.cpp
 )
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 #Remove the future main files

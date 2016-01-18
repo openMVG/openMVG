@@ -121,7 +121,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Process() {
   // Keep only the largest biedge connected subgraph
   //-------------------
   {
-    const Pair_Set pairs = _matches_provider->getPairs();
+    const Pair_Set pairs = _matches_provider->getPairsAsSet();
     const std::set<IndexT> set_remainingIds = graph::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs, _sOutDirectory);
     if(set_remainingIds.empty())
     {
@@ -571,8 +571,8 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
         const Pose3 & Pose_J = tiny_scene.poses[view_J->id_pose] = relativePose_info.relativePose;
 
         // Init structure
-        const Mat34 P1 = cam_I->get_projective_equivalent(Pose_I);
-        const Mat34 P2 = cam_J->get_projective_equivalent(Pose_J);
+        const Mat34 P1 = cam_I->createProjectiveMatrix(Pose_I);
+        const Mat34 P2 = cam_J->createProjectiveMatrix(Pose_J);
         Landmarks & landmarks = tiny_scene.structure;
         for (size_t k = 0; k < x1.cols(); ++k) {
           const Vec2 x1_ = _features_provider->feats_per_view[I][matches[k]._i].coords().cast<double>();
@@ -646,7 +646,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
       std::set<IndexT> set_ViewIds;
       std::transform(_sfm_data.GetViews().begin(), _sfm_data.GetViews().end(),
         std::inserter(set_ViewIds, set_ViewIds.begin()), stl::RetrieveKey());
-      graph::indexedGraph putativeGraph(set_ViewIds, getPairs(_matches_provider->_pairWise_matches));
+      graph::indexedGraph putativeGraph(set_ViewIds, convertPairWiseMatchesToPairSet(_matches_provider->_pairWise_matches));
       graph::exportToGraphvizData(
         stlplus::create_filespec(_sOutDirectory, "global_relative_rotation_view_graph"),
         putativeGraph.g);

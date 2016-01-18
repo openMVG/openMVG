@@ -76,6 +76,19 @@ bool estimate_Rt_fromE(const Mat3 & K1, const Mat3 & K2,
 
 using namespace openMVG::robust;
 
+/**
+ * @brief Estimate relation between 2 images: essential matrix, relative pose, etc.
+ *
+ * @param[in] K1 3x3 calibration matrix for image 1 (intrinsics)
+ * @param[in] K2 3x3 calibration matrix for image 2
+ * @param[in] x1 2xN matrix with features coordinates for image 1
+ * @param[in] x2 2xN matrix with features coordinates for image 2
+ * @param[in,out] relativePose_info results of the estimation
+ * @param[in] size_ima1 image 1 size
+ * @param[in] size_ima2 image 2 size
+ * @param[in] max_iteration_count limit for Ransac iterations
+ * @return true if a model is found
+ */
 bool robustRelativePose(
   const Mat3 & K1, const Mat3 & K2,
   const Mat & x1, const Mat & x2,
@@ -97,7 +110,7 @@ bool robustRelativePose(
   KernelType kernel(x1, size_ima1.first, size_ima1.second,
                     x2, size_ima2.first, size_ima2.second, K1, K2);
 
-  // Robustly estimation of the Essential matrix and it's precision
+  // Robust estimation of the Essential matrix and its precision
   std::pair<double,double> acRansacOut = ACRANSAC(kernel, relativePose_info.vec_inliers,
     max_iteration_count, &relativePose_info.essential_matrix, relativePose_info.initial_residual_tolerance, false);
   relativePose_info.found_residual_precision = acRansacOut.first;
@@ -105,7 +118,7 @@ bool robustRelativePose(
   if (relativePose_info.vec_inliers.size() < 2.5 * SolverType::MINIMUM_SAMPLES )
     return false; // no sufficient coverage (the model does not support enough samples)
 
-  // estimation of the relative poses
+  // Estimation of the relative poses
   Mat3 R;
   Vec3 t;
   if (!estimate_Rt_fromE(

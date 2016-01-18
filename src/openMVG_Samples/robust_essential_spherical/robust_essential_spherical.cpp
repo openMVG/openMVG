@@ -158,7 +158,7 @@ int main() {
 
       KernelType kernel(xL_spherical, xR_spherical);
 
-      // Robust estimation of the Essential matrix and it's precision
+      // Robust estimation of the Essential matrix and its precision
       Mat3 E;
       const double precision = std::numeric_limits<double>::infinity();
       const std::pair<double,double> ACRansacOut =

@@ -84,7 +84,7 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes(
   {
     // Keep only the largest connected component
     // - list all CC size
-    // - if the largest one is meet, keep all the edges that belong to this node
+    // - if the largest one is met, keep all the edges that belong to this node
 
     const std::map<IndexT, std::set<Graph::Node> > map_subgraphs = exportGraphToMapSubgraphs<Graph,IndexT>(putativeGraph.g);
     size_t count = std::numeric_limits<size_t>::min();
@@ -92,7 +92,9 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes(
     for(typename std::map<IndexT, std::set<Graph::Node> >::const_iterator iter = map_subgraphs.begin();
         iter != map_subgraphs.end(); ++iter)
     {
-      if (iter->second.size() > count)  {
+      // Select the largest subgraph
+      if (iter->second.size() > count)
+      {
         count = iter->second.size();
         iterLargestCC = iter;
       }

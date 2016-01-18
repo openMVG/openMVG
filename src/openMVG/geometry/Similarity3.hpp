@@ -23,7 +23,7 @@ struct Similarity3
   // Operators
   Vec3 operator () (const Vec3 & point) const
   {
-    return _scale * _pose(point);
+    return _scale * _pose.apply(point);
   }
 
   Pose3 operator () (const Pose3 & pose) const

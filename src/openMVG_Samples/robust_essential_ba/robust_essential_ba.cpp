@@ -215,7 +215,7 @@ int main() {
     // Setup intrinsics camera data
     switch (iBAType)
     {
-      case 1: // Each view use it's own pinhole camera intrinsic
+      case 1: // Each view use its own pinhole camera intrinsic
         tiny_scene.intrinsics[0].reset(new Pinhole_Intrinsic(imageL.Width(), imageL.Height(), K(0, 0), K(0, 2), K(1, 2)));
         tiny_scene.intrinsics[1].reset(new Pinhole_Intrinsic(imageR.Width(), imageR.Height(), K(0, 0), K(0, 2), K(1, 2)));
         break;
@@ -235,8 +235,8 @@ int main() {
     const Pose3 pose1 = tiny_scene.poses[tiny_scene.views[1]->id_pose] = relativePose_info.relativePose;
 
     // Init structure by inlier triangulation
-    const Mat34 P1 = tiny_scene.intrinsics[tiny_scene.views[0]->id_intrinsic]->get_projective_equivalent(pose0);
-    const Mat34 P2 = tiny_scene.intrinsics[tiny_scene.views[1]->id_intrinsic]->get_projective_equivalent(pose1);
+    const Mat34 P1 = tiny_scene.intrinsics[tiny_scene.views[0]->id_intrinsic]->createProjectiveMatrix(pose0);
+    const Mat34 P2 = tiny_scene.intrinsics[tiny_scene.views[1]->id_intrinsic]->createProjectiveMatrix(pose1);
     Landmarks & landmarks = tiny_scene.structure;
     for (size_t i = 0; i < relativePose_info.vec_inliers.size(); ++i)  {
       const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]]._i];
@@ -247,7 +247,7 @@ int main() {
       // Reject point that is behind the camera
       if (pose0.depth(X) < 0 && pose1.depth(X) < 0)
           continue;
-      // Add a new landmark (3D point with it's 2d observations)
+      // Add a new landmark (3D point with its 2d observations)
       landmarks[i].obs[tiny_scene.views[0]->id_view] = Observation(LL.coords().cast<double>(), vec_PutativeMatches[relativePose_info.vec_inliers[i]]._i);
       landmarks[i].obs[tiny_scene.views[1]->id_view] = Observation(RR.coords().cast<double>(), vec_PutativeMatches[relativePose_info.vec_inliers[i]]._j);
       landmarks[i].X = X;

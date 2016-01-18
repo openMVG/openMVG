@@ -133,7 +133,7 @@ int main(int argc, char ** argv)
 
   stlplus::folder_create(sOutDir);
   std::cout << "\n Export pairwise matches" << std::endl;
-  const Pair_Set pairs = matches_provider->getPairs();
+  const Pair_Set pairs = matches_provider->getPairsAsSet();
   C_Progress_display my_progress_bar( pairs.size() );
   for (Pair_Set::const_iterator iter = pairs.begin();
     iter != pairs.end();

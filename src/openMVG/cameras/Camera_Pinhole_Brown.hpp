@@ -39,9 +39,9 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
 
     EINTRINSIC getType() const { return PINHOLE_CAMERA_BROWN; }
 
-    virtual bool have_disto() const { return true;}
+    virtual bool hasDistortion() const { return true;}
 
-    virtual Vec2 add_disto(const Vec2 & p) const{
+    virtual Vec2 addDistortion(const Vec2 & p) const{
         return (p + distoFunction(_params, p));
     }
 
@@ -49,11 +49,11 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     // Heikkila J (2000) Geometric Camera Calibration Using Circular Control Points.
     // IEEE Trans. Pattern Anal. Mach. Intell., 22:1066-1077
 
-    virtual Vec2 remove_disto(const Vec2 & p) const{
+    virtual Vec2 removeDistortion(const Vec2 & p) const{
         const double epsilon = 1e-8; //criteria to stop the iteration
         Vec2 p_u = p;
 
-        while((add_disto(p_u)-p).lpNorm<1>() > epsilon)//manhattan distance between the two points
+        while((addDistortion(p_u)-p).lpNorm<1>() > epsilon)//manhattan distance between the two points
         {
             p_u = p - distoFunction(_params, p_u);
         }
@@ -78,7 +78,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     {
         if (params.size() == 8) {
           *this = Pinhole_Intrinsic_Brown_T2(
-            _w, _h,
+            _width, _height,
             params[0], params[1], params[2], // focal, ppx, ppy
             params[3], params[4], params[5], // K1, K2, K3
             params[6], params[7]);           // T1, T2
@@ -92,13 +92,13 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     /// Return the un-distorted pixel (with removed distortion)
     virtual Vec2 get_ud_pixel(const Vec2& p) const
     {
-      return cam2ima( remove_disto(ima2cam(p)) );
+      return cam2ima( removeDistortion(ima2cam(p)) );
     }
 
     /// Return the distorted pixel (with added distortion)
     virtual Vec2 get_d_pixel(const Vec2& p) const
     {
-      return cam2ima( add_disto(ima2cam(p)) );
+      return cam2ima( addDistortion(ima2cam(p)) );
     }
 
     // Serialization

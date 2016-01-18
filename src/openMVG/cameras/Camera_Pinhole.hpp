@@ -40,8 +40,8 @@ class Pinhole_Intrinsic : public IntrinsicBase
 
   virtual EINTRINSIC getType() const { return PINHOLE_CAMERA; }
 
-  const Mat3& K() const { return _K; }
-  const Mat3& Kinv() const { return _Kinv; }
+  const Mat3& getK() const { return _K; }
+  const Mat3& getKinv() const { return _Kinv; }
   /// Return the value of the focal in pixels
   inline double focal() const {return _K(0,0);}
   inline Vec2 principal_point() const {return Vec2(_K(0,2), _K(1,2));}
@@ -65,21 +65,21 @@ class Pinhole_Intrinsic : public IntrinsicBase
     return ( p -  principal_point() ) / focal();
   }
 
-  virtual bool have_disto() const {  return false; }
+  virtual bool hasDistortion() const {  return false; }
 
-  virtual Vec2 add_disto(const Vec2& p) const  { return p; }
+  virtual Vec2 addDistortion(const Vec2& p) const  { return p; }
 
-  virtual Vec2 remove_disto(const Vec2& p) const  { return p; }
+  virtual Vec2 removeDistortion(const Vec2& p) const  { return p; }
 
   virtual double imagePlane_toCameraPlaneError(double value) const
   {
     return value / focal();
   }
 
-  virtual Mat34 get_projective_equivalent(const geometry::Pose3 & pose) const
+  virtual Mat34 createProjectiveMatrix(const geometry::Pose3 & pose) const
   {
     Mat34 P;
-    P_From_KRt(K(), pose.rotation(), pose.translation(), &P);
+    P_From_KRt(getK(), pose.rotation(), pose.translation(), &P);
     return P;
   }
 
@@ -94,7 +94,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
   virtual bool updateFromParams(const std::vector<double> & params)
   {
     if (params.size() == 3) {
-      *this = Pinhole_Intrinsic(_w, _h, params[0], params[1], params[2]);
+      *this = Pinhole_Intrinsic(_width, _height, params[0], params[1], params[2]);
       return true;
     }
     else  {
@@ -127,7 +127,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     ar(cereal::make_nvp("focal_length", focal_length ));
     std::vector<double> pp(2);
     ar(cereal::make_nvp("principal_point", pp));
-    *this = Pinhole_Intrinsic(_w, _h, focal_length, pp[0], pp[1]);
+    *this = Pinhole_Intrinsic(_width, _height, focal_length, pp[0], pp[1]);
   }
 };
 

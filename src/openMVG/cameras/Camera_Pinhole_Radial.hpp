@@ -68,10 +68,10 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
 
   EINTRINSIC getType() const { return PINHOLE_CAMERA_RADIAL1; }
 
-  virtual bool have_disto() const {  return true; }
+  virtual bool hasDistortion() const {  return true; }
 
   /// Add distortion to the point p (assume p is in the camera frame [normalized coordinates])
-  virtual Vec2 add_disto(const Vec2 & p) const {
+  virtual Vec2 addDistortion(const Vec2 & p) const {
 
     const double k1 = _params[0];
 
@@ -82,7 +82,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
   }
 
   /// Remove distortion (return p' such that disto(p') = p)
-  virtual Vec2 remove_disto(const Vec2& p) const {
+  virtual Vec2 removeDistortion(const Vec2& p) const {
     // Compute the radius from which the point p comes from thanks to a bisection
     // Minimize disto(radius(p')^2) == actual Squared(radius(p))
 
@@ -106,7 +106,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
   {
     if (params.size() == 4) {
       *this = Pinhole_Intrinsic_Radial_K1(
-        _w, _h,
+        _width, _height,
         params[0], params[1], params[2], // focal, ppx, ppy
         params[3]); //K1
       return true;
@@ -119,13 +119,13 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
   /// Return the un-distorted pixel (with removed distortion)
   virtual Vec2 get_ud_pixel(const Vec2& p) const
   {
-    return cam2ima( remove_disto(ima2cam(p)) );
+    return cam2ima( removeDistortion(ima2cam(p)) );
   }
 
   /// Return the distorted pixel (with added distortion)
   virtual Vec2 get_d_pixel(const Vec2& p) const
   {
-    return cam2ima( add_disto(ima2cam(p)) );
+    return cam2ima( addDistortion(ima2cam(p)) );
   }
 
   // Serialization
@@ -178,10 +178,10 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
 
   EINTRINSIC getType() const { return PINHOLE_CAMERA_RADIAL3; }
 
-  virtual bool have_disto() const {  return true; }
+  virtual bool hasDistortion() const {  return true; }
 
   /// Add distortion to the point p (assume p is in the camera frame [normalized coordinates])
-  virtual Vec2 add_disto(const Vec2 & p) const {
+  virtual Vec2 addDistortion(const Vec2 & p) const {
 
     const double k1 = _params[0], k2 = _params[1], k3 = _params[2];
 
@@ -194,7 +194,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
   }
 
   /// Remove distortion (return p' such that disto(p') = p)
-  virtual Vec2 remove_disto(const Vec2& p) const {
+  virtual Vec2 removeDistortion(const Vec2& p) const {
     // Compute the radius from which the point p comes from thanks to a bisection
     // Minimize disto(radius(p')^2) == actual Squared(radius(p))
 
@@ -220,7 +220,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
   {
     if (params.size() == 6) {
       *this = Pinhole_Intrinsic_Radial_K3(
-        _w, _h,
+        _width, _height,
         params[0], params[1], params[2], // focal, ppx, ppy
         params[3], params[4], params[5]); // K1, K2, K3
       return true;
@@ -233,13 +233,13 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
   /// Return the un-distorted pixel (with removed distortion)
   virtual Vec2 get_ud_pixel(const Vec2& p) const
   {
-    return cam2ima( remove_disto(ima2cam(p)) );
+    return cam2ima( removeDistortion(ima2cam(p)) );
   }
 
   /// Return the distorted pixel (with added distortion)
   virtual Vec2 get_d_pixel(const Vec2& p) const
   {
-    return cam2ima( add_disto(ima2cam(p)) );
+    return cam2ima( addDistortion(ima2cam(p)) );
   }
 
   // Serialization

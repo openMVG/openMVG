@@ -78,7 +78,7 @@ bool exportToPMVSFormat(
       map_viewIdToContiguous.insert(std::make_pair(view->id_view, map_viewIdToContiguous.size()));
 
       // We have a valid view with a corresponding camera & pose
-      const Mat34 P = iterIntrinsic->second.get()->get_projective_equivalent(pose);
+      const Mat34 P = iterIntrinsic->second.get()->createProjectiveMatrix(pose);
       std::ostringstream os;
       os << std::setw(8) << std::setfill('0') << map_viewIdToContiguous[view->id_view];
       std::ofstream file(
@@ -108,7 +108,7 @@ bool exportToPMVSFormat(
         stlplus::folder_append_separator(sOutDirectory) + "visualize", os.str(),"jpg");
 
       const IntrinsicBase * cam = iterIntrinsic->second.get();
-      if (cam->have_disto())
+      if (cam->hasDistortion())
       {
         // undistort the image and save it
         ReadImage( srcImage.c_str(), &image);

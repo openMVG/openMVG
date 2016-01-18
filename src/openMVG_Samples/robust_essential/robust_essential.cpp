@@ -195,8 +195,8 @@ int main() {
     const Pose3 pose1 = relativePose_info.relativePose;
 
     // Init structure by inlier triangulation
-    const Mat34 P1 = intrinsic0.get_projective_equivalent(pose0);
-    const Mat34 P2 = intrinsic1.get_projective_equivalent(pose1);
+    const Mat34 P1 = intrinsic0.createProjectiveMatrix(pose0);
+    const Mat34 P2 = intrinsic1.createProjectiveMatrix(pose1);
     std::vector<double> vec_residuals;
     vec_residuals.reserve(relativePose_info.vec_inliers.size() * 4);
     for (size_t i = 0; i < relativePose_info.vec_inliers.size(); ++i)  {

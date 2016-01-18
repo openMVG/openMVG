@@ -139,7 +139,7 @@ void ControlPointTableView::keyReleaseEvent
       // Retrieve the control point Ids
       bool bOk_X = false;
       const int cp_index = table_->item(index - i, 0)->text().toInt(&bOk_X);
-      // Remove the control points entry and it's GUI representation
+      // Remove the control points entry and its GUI representation
       control_points_.erase(cp_index);
       table_->removeRow(index - i);
       ++i;

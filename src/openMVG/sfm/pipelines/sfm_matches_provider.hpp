@@ -51,9 +51,9 @@ struct Matches_Provider
   }
 
   /// Return the pairs used by the visibility graph defined by the pairwiser matches
-  virtual Pair_Set getPairs() const
+  virtual Pair_Set getPairsAsSet() const
   {
-    return matching::getPairs(_pairWise_matches);
+    return matching::convertPairWiseMatchesToPairSet(_pairWise_matches);
   }
 }; // Features_Provider
 

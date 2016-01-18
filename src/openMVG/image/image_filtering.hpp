@@ -287,7 +287,7 @@ namespace image {
    **/
   static inline Vec ComputeGaussianKernel( const size_t size , const double sigma )
   {
-    // If kernel size is 0 computes it's size using uber formula
+    // If kernel size is 0 computes its size using uber formula
     size_t k_size = ( size == 0 ) ? ceil(2.0*(1.0 + (sigma-0.8)/(0.3))) : size ;
 
     // Make kernel odd width

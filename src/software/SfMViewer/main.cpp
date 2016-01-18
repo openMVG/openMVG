@@ -10,6 +10,14 @@
 #include <cmath>
 #include <iterator>
 
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#include <GLUT/glut.h>
+#else
+#ifdef _WIN32
+#include <windows.h>
+#endif
+#endif
 #include <GLFW/glfw3.h>
 
 #include "openMVG/sfm/sfm.hpp"
@@ -266,8 +274,8 @@ static void draw(void)
         glEnd();
 
         // compute image corners coordinated with normalized focal (f=normalized_focal)
-        const int w = camPinhole->w();
-        const int h = camPinhole->h();
+        const int w = camPinhole->getWidth();
+        const int h = camPinhole->getHeight();
 
         const double focal = camPinhole->focal();
         // use principal point to adjust image center

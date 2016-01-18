@@ -224,7 +224,7 @@ void MainWindow::registerProject()
       const openMVG::cameras::IntrinsicBase * cam = m_doc._sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       const openMVG::geometry::Pose3 pose = m_doc._sfm_data.GetPoseOrDie(view);
       trianObj.add(
-        cam->get_projective_equivalent(pose),
+        cam->createProjectiveMatrix(pose),
         cam->get_ud_pixel(itObs->second.x));
     }
     // Compute the 3D point

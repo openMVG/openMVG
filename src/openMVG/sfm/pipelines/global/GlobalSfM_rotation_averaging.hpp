@@ -39,6 +39,15 @@ private:
   mutable Pair_Set used_pairs; // pair that are considered as valid by the rotation averaging solver
 
 public:
+  /**
+   * @brief Refine rotations.
+   *
+   * @param[in] eRotationAveragingMethod
+   * @param[in] eRelativeRotationInferenceMethod
+   * @param[in] relativeRot_In
+   * @param[out] map_globalR
+   * @return
+   */
   bool Run(
     ERotationAveragingMethod eRotationAveragingMethod,
     ERelativeRotationInferenceMethod eRelativeRotationInferenceMethod,

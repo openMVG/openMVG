@@ -23,15 +23,13 @@ static std::set<IndexT> getIndexes(const IterableIndexTSequence & seq)
   return setOut;
 }
 
-/// Filter the toFilter iterable sequence (keep only the element that share a common index
-///  with the provided Ids index list).
+/// Keep only the elements that share a common index with the provided Ids.
+/// Like std::set_intersection.
+/// @note: The function should be specialized for your data type T.
 template<typename T>
 static void KeepOnlyReferencedElement(
   const std::set<IndexT> & Ids,
-  T & toFilter)
-{
-  std::cout << "Must be specialized for your type" << std::endl;
-}
+  T & toFilter);
 
 // Specialization for RelativeInfo_Map
 template<>

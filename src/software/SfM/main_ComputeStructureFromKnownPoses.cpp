@@ -106,7 +106,7 @@ int main(int argc, char **argv)
       std::cerr<< "Unable to read the matches file." << std::endl;
       return EXIT_FAILURE;
     }
-    pairs = getPairs(matches);
+    pairs = convertPairWiseMatchesToPairSet(matches);
     // Keep only Pairs that belong to valid view indexes.
     const std::set<IndexT> valid_viewIdx = Get_Valid_Views(sfm_data);
     pairs = Pair_filter(pairs, valid_viewIdx);

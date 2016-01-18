@@ -210,7 +210,7 @@ void Liop_Descriptor_Extractor::CreateLIOP_GOrder(
       const float nDirX = static_cast<float>(x);
       const float nDirY = static_cast<float>(y);
       float nOri = atan2(nDirY, nDirX);
-      if (fabs(nOri - M_PI) < FLT_EPSILON)	//[-M_PI, M_PI)
+      if (fabs(nOri - M_PI) < FLT_EPSILON)  //[-M_PI, M_PI)
       {
         nOri = static_cast<float>(-M_PI);
       }
@@ -258,7 +258,7 @@ void Liop_Descriptor_Extractor::CreateLIOP_GOrder(
     }
   }
 
-  std::sort(pixel, pixel+pixelCount, fGrayComp);	//sort by gray
+  std::sort(pixel, pixel+pixelCount, fGrayComp);  //sort by gray
 
   const int l_patternWidth = LIOP_NUM == 3 ? 6 : 24;
   const int dim = l_patternWidth*REGION_NUM;

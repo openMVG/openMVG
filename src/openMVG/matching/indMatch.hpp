@@ -20,8 +20,9 @@
 namespace openMVG {
 namespace matching {
 
-/// Structure in order to save pairwise indexed references.
-/// A sort operator exist in order to remove duplicates of IndMatch series.
+/**
+ * @brief Pair of features indexes.
+ */
 struct IndMatch
 {
   IndMatch(IndexT i = 0, IndexT j = 0)  {
@@ -29,22 +30,25 @@ struct IndMatch
     _j = j;
   }
 
-  friend bool operator==(const IndMatch& m1, const IndMatch& m2)  {
+  friend bool operator==(const IndMatch& m1, const IndMatch& m2)
+  {
     return (m1._i == m2._i && m1._j == m2._j);
   }
 
-  friend bool operator!=(const IndMatch& m1, const IndMatch& m2)  {
+  friend bool operator!=(const IndMatch& m1, const IndMatch& m2)
+  {
     return !(m1 == m2);
   }
 
   // Lexicographical ordering of matches. Used to remove duplicates.
-  friend bool operator<(const IndMatch& m1, const IndMatch& m2) {
+  friend bool operator<(const IndMatch& m1, const IndMatch& m2)
+  {
     return (m1._i < m2._i || (m1._i == m2._i && m1._j < m2._j));
   }
 
   /// Remove duplicates ((_i, _j) that appears multiple times)
-  static bool getDeduplicated(std::vector<IndMatch> & vec_match)  {
-
+  static bool getDeduplicated(std::vector<IndMatch> & vec_match)
+  {
     const size_t sizeBefore = vec_match.size();
     std::set<IndMatch> set_deduplicated( vec_match.begin(), vec_match.end());
     vec_match.assign(set_deduplicated.begin(), set_deduplicated.end());
@@ -57,7 +61,8 @@ struct IndMatch
     ar(_i, _j);
   }
 
-  IndexT _i, _j;  // Left, right index
+  IndexT _i;
+  IndexT _j;
 };
 
 static inline std::ostream& operator<<(std::ostream & out, const IndMatch & obj) {
@@ -74,7 +79,7 @@ typedef std::vector<matching::IndMatch> IndMatches;
 /// The structure used to store corresponding point indexes per images pairs
 typedef std::map< Pair, IndMatches > PairWiseMatches;
 
-static Pair_Set getPairs(const PairWiseMatches & matches)
+static Pair_Set convertPairWiseMatchesToPairSet(const PairWiseMatches & matches)
 {
   Pair_Set pairs;
   for(PairWiseMatches::const_iterator it = matches.begin(); it != matches.end(); ++it)
