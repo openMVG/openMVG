@@ -49,7 +49,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     // Heikkila J (2000) Geometric Camera Calibration Using Circular Control Points.
     // IEEE Trans. Pattern Anal. Mach. Intell., 22:1066-1077
 
-    virtual Vec2 remove_disto(const Vec2 & p) const{
+    virtual Vec2 removeDistortion(const Vec2 & p) const{
         const double epsilon = 1e-8; //criteria to stop the iteration
         Vec2 p_u = p;
 
@@ -92,7 +92,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     /// Return the un-distorted pixel (with removed distortion)
     virtual Vec2 get_ud_pixel(const Vec2& p) const
     {
-      return cam2ima( remove_disto(ima2cam(p)) );
+      return cam2ima( removeDistortion(ima2cam(p)) );
     }
 
     /// Return the distorted pixel (with added distortion)

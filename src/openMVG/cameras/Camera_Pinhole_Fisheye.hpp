@@ -39,9 +39,9 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
 
   EINTRINSIC getType() const { return PINHOLE_CAMERA_FISHEYE; }
 
-  virtual bool have_disto() const { return true;}
+  virtual bool hasDistortion() const { return true;}
 
-  virtual Vec2 add_disto(const Vec2 & p) const{
+  virtual Vec2 addDistortion(const Vec2 & p) const{
     const double eps = 1e-8;
     const double k1 = _params[0], k2 = _params[1], k3 = _params[2], k4 = _params[3];
     const double r = std::sqrt(p(0)*p(0) + p(1)*p(1));
@@ -61,7 +61,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     return  p*cdist;
   }
 
-  virtual Vec2 remove_disto(const Vec2 & p) const{
+  virtual Vec2 removeDistortion(const Vec2 & p) const{
     const double eps = 1e-8;
     double scale = 1.0;
     const double theta_dist = std::sqrt(p[0]*p[0] + p[1]*p[1]);
@@ -115,13 +115,13 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
   /// Return the un-distorted pixel (with removed distortion)
   virtual Vec2 get_ud_pixel(const Vec2& p) const
   {
-    return cam2ima( remove_disto(ima2cam(p)) );
+    return cam2ima( removeDistortion(ima2cam(p)) );
   }
 
   /// Return the distorted pixel (with added distortion)
   virtual Vec2 get_d_pixel(const Vec2& p) const
   {
-    return cam2ima( add_disto(ima2cam(p)) );
+    return cam2ima( addDistortion(ima2cam(p)) );
   }
 
   // Serialization

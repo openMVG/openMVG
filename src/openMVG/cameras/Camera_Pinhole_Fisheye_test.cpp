@@ -31,11 +31,11 @@ const Pinhole_Intrinsic_Fisheye cam(1000, 1000, 1000, 500, 500,
     const Vec2 ptImage = (Vec2::Random() * 800./2.) + Vec2(500,500) + Vec2::Random();
     const Vec2 ptCamera = cam.ima2cam(ptImage);
     // Check that adding and removing distortion allow to recover the provided point
-    EXPECT_MATRIX_NEAR( ptCamera, cam.remove_disto(cam.add_disto(ptCamera)), epsilon);
-    EXPECT_MATRIX_NEAR( ptImage, cam.cam2ima(cam.remove_disto(cam.add_disto(ptCamera))), epsilon);
+    EXPECT_MATRIX_NEAR( ptCamera, cam.removeDistortion(cam.addDistortion(ptCamera)), epsilon);
+    EXPECT_MATRIX_NEAR( ptImage, cam.cam2ima(cam.removeDistortion(cam.addDistortion(ptCamera))), epsilon);
 
     // Assert that distortion field is not null and it has moved the initial provided point
-    EXPECT_FALSE( (cam.add_disto(ptCamera) == cam.remove_disto(cam.add_disto(ptCamera))) ) ;
+    EXPECT_FALSE( (cam.addDistortion(ptCamera) == cam.removeDistortion(cam.addDistortion(ptCamera))) ) ;
   }
 }
 
