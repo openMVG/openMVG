@@ -93,24 +93,21 @@ bool SequentialSfMReconstructionEngine::Process() {
     return false;
 
   // Initial pair choice
-  Pair initialPairIndex = _initialpair;
   if (_initialpair == Pair(0,0))
   {
-    Pair putative_initial_pair;
-    if (AutomaticInitialPairChoice(putative_initial_pair))
+    if (!AutomaticInitialPairChoice(_initialpair))
     {
-      initialPairIndex = _initialpair = putative_initial_pair;
-    }
-    else // Cannot find a valid initial pair, try to set it by hand?
-    {
+      // Cannot find a valid initial pair, try to set it by hand?
       if (!ChooseInitialPair(_initialpair))
+      {
         return false;
+      }
     }
   }
   // Else a starting pair was already initialized before
 
   // Initial pair Essential Matrix and [R|t] estimation.
-  if (!MakeInitialPair3D(initialPairIndex))
+  if (!MakeInitialPair3D(_initialpair))
     return false;
 
   // Compute robust Resection of remaining images
@@ -199,12 +196,12 @@ bool SequentialSfMReconstructionEngine::ChooseInitialPair(Pair & initialPairInde
 {
   if (_initialpair != Pair(0,0))
   {
+    // Internal initial pair is already initialized (so return it)
     initialPairIndex = _initialpair;
   }
   else
   {
-
-    // List Views that support valid intrinsic
+    // List Views that supports valid intrinsic
     std::set<IndexT> valid_views;
     for (Views::const_iterator it = _sfm_data.GetViews().begin();
       it != _sfm_data.GetViews().end(); ++it)
