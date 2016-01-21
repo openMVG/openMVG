@@ -196,12 +196,12 @@ bool SequentialSfMReconstructionEngine::ChooseInitialPair(Pair & initialPairInde
 {
   if (_initialpair != Pair(0,0))
   {
+    // Internal initial pair is already initialized (so return it)
     initialPairIndex = _initialpair;
   }
   else
   {
-
-    // List Views that support valid intrinsic
+    // List Views that supports valid intrinsic
     std::set<IndexT> valid_views;
     for (Views::const_iterator it = _sfm_data.GetViews().begin();
       it != _sfm_data.GetViews().end(); ++it)
