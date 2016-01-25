@@ -202,8 +202,9 @@ bool extractSIFT(const image::Image<unsigned char>& image,
   // Build alias to cached data
   SIFT_Region_T * regionsCasted = dynamic_cast<SIFT_Region_T*>(regions.get());
   // reserve some memory for faster keypoint saving
-  regionsCasted->Features().reserve(2000);
-  regionsCasted->Descriptors().reserve(2000);
+  const std::size_t reserveSize = (params._gridSize && params._maxTotalKeypoints) ? params._maxTotalKeypoints : 2000;
+  regionsCasted->Features().reserve(reserveSize);
+  regionsCasted->Descriptors().reserve(reserveSize);
 
   while (true) {
     vl_sift_detect(filt);
