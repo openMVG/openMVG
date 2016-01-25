@@ -226,7 +226,7 @@ bool ImageFeed::FeederImpl::feedWithJson(image::Image<unsigned char> &imageGray,
     return false;
   }
   // get the associated Intrinsics
-  if((view->id_intrinsic == UndefinedIndexT) or (!_sfmdata.GetIntrinsics().count(view->id_intrinsic)))
+  if((view->id_intrinsic == UndefinedIndexT) || (!_sfmdata.GetIntrinsics().count(view->id_intrinsic)))
   {
     std::cout << "Image "<< imageName << " does not have associated intrinsics" << std::endl;
     hasIntrinsics = false;
@@ -280,7 +280,7 @@ bool ImageFeed::isInit() const
 bool ImageFeed::isSupported(const std::string &extension)
 {
   std::string ext = boost::to_lower_copy(extension);
-  if(ext == ".json" or ext == ".txt")
+  if(ext == ".json" || ext == ".txt")
   {
     return true;
   }
