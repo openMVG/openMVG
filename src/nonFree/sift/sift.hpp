@@ -188,7 +188,7 @@ bool extractSIFT(const image::Image<unsigned char>& image,
   if (params._edge_threshold >= 0)
     vl_sift_set_edge_thresh(filt, params._edge_threshold);
   if (params._peak_threshold >= 0)
-    vl_sift_set_peak_thresh(filt, 255*params._peak_threshold/params._num_scales);
+    vl_sift_set_peak_thresh(filt, 255.0 * params._peak_threshold/params._num_scales);
 
   Descriptor<vl_sift_pix, 128> vlFeatDescriptor;
   Descriptor<T, 128> descriptor;
@@ -206,7 +206,8 @@ bool extractSIFT(const image::Image<unsigned char>& image,
   regionsCasted->Features().reserve(reserveSize);
   regionsCasted->Descriptors().reserve(reserveSize);
 
-  while (true) {
+  while (true)
+  {
     vl_sift_detect(filt);
 
     VlSiftKeypoint const *keys  = vl_sift_get_keypoints(filt);
@@ -219,7 +220,8 @@ bool extractSIFT(const image::Image<unsigned char>& image,
     #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for private(vlFeatDescriptor, descriptor)
     #endif
-    for (int i = 0; i < nkeys; ++i) {
+    for (int i = 0; i < nkeys; ++i)
+    {
 
       // Feature masking
       if (mask)
@@ -236,7 +238,8 @@ bool extractSIFT(const image::Image<unsigned char>& image,
         nangles = vl_sift_calc_keypoint_orientations(filt, angles, keys+i);
       }
 
-      for (int q=0 ; q < nangles ; ++q) {
+      for (int q=0 ; q < nangles ; ++q)
+      {
         vl_sift_calc_keypoint_descriptor(filt, &vlFeatDescriptor[0], keys+i, angles[q]);
         const SIOPointFeature fp(keys[i].x, keys[i].y,
           keys[i].sigma, static_cast<float>(angles[q]));
@@ -289,9 +292,10 @@ bool extractSIFT(const image::Image<unsigned char>& image,
       filtered_keypoints.reserve(std::min(features.size(), params._maxTotalKeypoints));
       rejected_keypoints.reserve(features.size());
 
-      const std::size_t sizeMat = params._gridSize*params._gridSize;
+      const std::size_t sizeMat = params._gridSize * params._gridSize;
       std::vector<std::size_t> countFeatPerCell(sizeMat, 0);
-      for (int Indice = 0; Indice < sizeMat; Indice++) {
+      for (int Indice = 0; Indice < sizeMat; Indice++)
+      {
     	  countFeatPerCell[Indice] = 0;
       }
       const std::size_t keypointsPerCell = params._maxTotalKeypoints / sizeMat;
@@ -313,6 +317,7 @@ bool extractSIFT(const image::Image<unsigned char>& image,
 
         std::size_t &count = countFeatPerCell[cellX*params._gridSize + cellY];
         ++count;
+
         if(count < keypointsPerCell)
           filtered_keypoints.push_back(keypoint);
         else
@@ -328,7 +333,6 @@ bool extractSIFT(const image::Image<unsigned char>& image,
       }
 
       regionsCasted->Features().swap(filtered_keypoints);
-      
     }
   }
   

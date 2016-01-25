@@ -24,7 +24,7 @@ namespace features {
  */
 class PointFeature {
 public:
-  virtual inline ~PointFeature() {};
+  virtual inline ~PointFeature() {}
 
   inline PointFeature(float x=0.0f, float y=0.0f)
    : _coords(x, y) {}
@@ -50,7 +50,7 @@ public:
   }
 
 protected:
-  Vec2f _coords;  // (x, y).
+  Vec2f _coords;  // (x, y)
 };
 
 typedef std::vector<PointFeature> PointFeatures;
