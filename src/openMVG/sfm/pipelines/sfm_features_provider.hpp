@@ -71,7 +71,7 @@ struct Features_Provider
   }
 
   /// Return the PointFeatures belonging to the View, if the view does not exist
-  ///  it return an empty PointFeature array.
+  ///  it returns an empty PointFeature array.
   const features::PointFeatures & getFeatures(const IndexT & id_view) const
   {
     // Have an empty feature set in order to deal with non existing view_id

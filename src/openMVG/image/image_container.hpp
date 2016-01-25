@@ -47,7 +47,7 @@ public:
 
   inline Image(const Base& I)  { (*this) = I; }
   inline Image& operator=(const Base& I) { Base::operator=(I);  return *this; }
-  virtual inline ~Image() {};
+  virtual inline ~Image() {}
   //-- Image construction method
   //------------------------------
 

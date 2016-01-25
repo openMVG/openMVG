@@ -523,7 +523,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
       const View * view_I = _sfm_data.views[I].get();
       const View * view_J = _sfm_data.views[J].get();
 
-      // Check that valid camera are existing for the pair view
+      // Check that valid cameras are existing for the pair of view
       if (_sfm_data.GetIntrinsics().count(view_I->id_intrinsic) == 0 ||
         _sfm_data.GetIntrinsics().count(view_J->id_intrinsic) == 0)
         continue;
@@ -548,15 +548,16 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
         cam_I->imagePlane_toCameraPlaneError(2.5) *
         cam_J->imagePlane_toCameraPlaneError(2.5),
         1./2.);
-      // Since we use normalized features:
-      const std::pair<size_t, size_t> imageSize_I(1., 1.), imageSize_J(1.,1.);
+
+      // Since we use normalized features, we will use unit image size and intrinsic matrix:
+      const std::pair<size_t, size_t> imageSize(1., 1.);
       const Mat3 K  = Mat3::Identity();
 
-      if (!robustRelativePose(K, K, x1, x2, relativePose_info, imageSize_I, imageSize_J, 256))
+      if (!robustRelativePose(K, K, x1, x2, relativePose_info, imageSize, imageSize, 256))
       {
         continue;
       }
-      bool bRefine_using_BA = true;
+      const bool bRefine_using_BA = true;
       if (bRefine_using_BA)
       {
         // Refine the defined scene
