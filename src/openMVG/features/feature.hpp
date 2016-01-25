@@ -20,7 +20,7 @@ namespace features {
 
 /**
  * Base class for Point features.
- * Store position of the feature point.
+ * Store position of a feature point.
  */
 class PointFeature {
 
@@ -38,7 +38,6 @@ public:
   float& x() { return _coords(0); }
   float& y() { return _coords(1); }
   Vec2f& coords() { return _coords;}
-
 
   template<class Archive>
   void serialize(Archive & ar)
@@ -69,8 +68,8 @@ inline std::istream& operator>>(std::istream& in, PointFeature& obj)
  */
 class SIOPointFeature : public PointFeature {
 
-    friend std::ostream& operator<<(std::ostream& out, const SIOPointFeature& obj);
-    friend std::istream& operator>>(std::istream& in, SIOPointFeature& obj);
+  friend std::ostream& operator<<(std::ostream& out, const SIOPointFeature& obj);
+  friend std::istream& operator>>(std::istream& in, SIOPointFeature& obj);
 
 public:
   SIOPointFeature(float x=0.0f, float y=0.0f,
@@ -93,7 +92,6 @@ public:
   bool operator !=(const SIOPointFeature& b) const {
     return !((*this)==b);
   };
-
 
   template<class Archive>
   void serialize(Archive & ar)
@@ -154,7 +152,7 @@ static bool saveFeatsToFile(
     return false;
   std::copy(vec_feat.begin(), vec_feat.end(),
             std::ostream_iterator<typename FeaturesT::value_type >(file,"\n"));
-  bool bOk = file.good();
+  const bool bOk = file.good();
   file.close();
   return bOk;
 }
