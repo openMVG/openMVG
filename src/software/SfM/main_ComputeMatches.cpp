@@ -504,15 +504,15 @@ int main(int argc, char **argv)
 
           if(bUseGridSort) 
           {
-            matchesGridFiltering(lRegions, rRegions, indexImagePair, sfm_data, uNumMatchesToKeep, outMatches);
+            matchesGridFiltering(lRegions, rRegions, indexImagePair, sfm_data, outMatches);
           }
-        
-        size_t finalSize = min(uNumMatchesToKeep,outMatches.size());
-        outMatches.resize(finalSize);
-        
-        std::cout << "There are " << outMatches.size() << " new final matches." << std::endl; 
-        finalMatches.insert(std::pair<Pair, IndMatches> (indexImagePair,outMatches));
-        
+
+          size_t finalSize = min(uNumMatchesToKeep,outMatches.size());
+          outMatches.resize(finalSize);
+
+          std::cout << "There are " << outMatches.size() << " new final matches." << std::endl; 
+          finalMatches.insert(std::pair<Pair, IndMatches> (indexImagePair,outMatches));
+
         }
         else
         {

@@ -75,15 +75,13 @@ void thresholdMatches(openMVG::matching::IndMatches& outputMatches, const std::s
  * @param[in] rRegions The regions of the second picture
  * @param[in] indexImagePair The Pair of matched images
  * @param[in] sfm_data The sfm data file
- * @param[in] uNumMatchesToKeep The number of matches to keep
  * @param[out] outMatches The remaining matches
  */
 void matchesGridFiltering(const openMVG::features::Feat_Regions<openMVG::features::SIOPointFeature>* lRegions, 
         const openMVG::features::Feat_Regions<openMVG::features::SIOPointFeature>* rRegions, 
         const openMVG::Pair& indexImagePair,
         const openMVG::sfm::SfM_Data sfm_data, 
-        const size_t uNumMatchesToKeep,
-        openMVG::matching::IndMatches outMatches)
+        openMVG::matching::IndMatches& outMatches)
 {
   std::cout << "Grid Phase. " << std::endl;
   const std::size_t lWidth = sfm_data.GetViews().at(indexImagePair.first)->ui_width;
@@ -91,46 +89,61 @@ void matchesGridFiltering(const openMVG::features::Feat_Regions<openMVG::feature
   const std::size_t rWidth = sfm_data.GetViews().at(indexImagePair.second)->ui_width;
   const std::size_t rHeight = sfm_data.GetViews().at(indexImagePair.second)->ui_height;
   
-  openMVG::matching::IndMatches gridMatches;
-  gridMatches.reserve(uNumMatchesToKeep);
-
-  openMVG::matching::IndMatches tempBackupMatches;
-  tempBackupMatches.reserve(uNumMatchesToKeep);
-
   const size_t gridSize = 5;
-  const size_t cellMinMatch = uNumMatchesToKeep / (gridSize*gridSize);
-  std::vector<size_t> leftGrid(gridSize*gridSize, 0);
-  std::vector<size_t> rightGrid(gridSize*gridSize, 0);
   
   const size_t leftCellHeight = std::ceil(lHeight / (float)gridSize);
   const size_t leftCellWidth = std::ceil(lWidth / (float)gridSize);
   const size_t rightCellHeight = std::ceil(rHeight / (float)gridSize);
   const size_t rightCellWidth = std::ceil(rWidth / (float)gridSize);
-  
+
+  std::vector< openMVG::matching::IndMatches > completeGrid(gridSize*gridSize*2);
+  // Reserve all cells
+  for(openMVG::matching::IndMatches& cell: completeGrid)
+  {
+    cell.reserve(outMatches.size()/completeGrid.size());
+  }
+  // Split matches in grid cells
   for(const auto& match: outMatches)
   {
-    const openMVG::features::SIOPointFeature leftPoint = lRegions->Features()[match._i];
-    const openMVG::features::SIOPointFeature rightPoint = rRegions->Features()[match._j];
+    const openMVG::features::SIOPointFeature& leftPoint = lRegions->Features()[match._i];
+    const openMVG::features::SIOPointFeature& rightPoint = rRegions->Features()[match._j];
+    
     const size_t leftGridIndex = std::floor(leftPoint.x() / (float)leftCellWidth) + std::floor(leftPoint.y() / (float)leftCellHeight) * gridSize;
     const size_t rightGridIndex = std::floor(rightPoint.x() / (float)rightCellWidth) + std::floor(rightPoint.y() / (float)rightCellHeight) * gridSize;
-
-    if(leftGrid[leftGridIndex] <= cellMinMatch || rightGrid[rightGridIndex] <= cellMinMatch)
+    
+    openMVG::matching::IndMatches& currentCaseL = completeGrid[leftGridIndex];
+    openMVG::matching::IndMatches& currentCaseR = completeGrid[rightGridIndex + gridSize*gridSize];
+    
+    if(currentCaseL.size() > currentCaseR.size())
     {
-      leftGrid[leftGridIndex]++;
-      rightGrid[rightGridIndex]++;
-      gridMatches.push_back(match);
+      currentCaseR.push_back(match);
     }
     else
     {
-      tempBackupMatches.push_back(match);
+      currentCaseL.push_back(match);
     }
   }
   
-  if(gridMatches.size() < uNumMatchesToKeep)
+  // max Size of the cells:
+  int maxSize = 0;
+  for (const auto& cell: completeGrid)
   {
-    const size_t limit = std::min(tempBackupMatches.size(), uNumMatchesToKeep - gridMatches.size());
-    gridMatches.insert(gridMatches.end(), tempBackupMatches.begin(), tempBackupMatches.begin() += limit);
-  } 
-
-  outMatches.swap(gridMatches);
+    if(cell.size() > maxSize)
+    {
+      maxSize = cell.size();
+    }
+  }
+   
+  // Combine all cells into a global ordered vector
+  for (int cmpt = 0; cmpt < maxSize; ++cmpt)
+  {
+    for(const auto& cell: completeGrid)
+    {
+      if(cell.size() > cmpt)
+      {
+        outMatches.push_back(cell[cmpt]);
+      }
+    }
+  }
+  
 }

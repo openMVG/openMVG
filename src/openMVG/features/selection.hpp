@@ -45,12 +45,10 @@ void thresholdMatches(openMVG::matching::IndMatches& outputMatches, const std::s
  * @param[in] rRegions The regions of the second picture
  * @param[in] indexImagePair The Pair of matched images
  * @param[in] sfm_data The sfm data file
- * @param[in] uNumMatchesToKeep The number of matches to keep
  * @param[out] outMatches The remaining matches
  */
 void matchesGridFiltering(const openMVG::features::Feat_Regions<openMVG::features::SIOPointFeature>* lRegions, 
         const openMVG::features::Feat_Regions<openMVG::features::SIOPointFeature>* rRegions, 
         const openMVG::Pair& indexImagePair,
         const openMVG::sfm::SfM_Data sfm_data, 
-        const size_t uNumMatchesToKeep,
-        openMVG::matching::IndMatches outMatches);
+        openMVG::matching::IndMatches& outMatches);
