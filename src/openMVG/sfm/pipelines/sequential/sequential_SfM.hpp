@@ -88,7 +88,10 @@ protected:
 private:
 
   /// Return MSE (Mean Square Error) and a histogram of residual values.
-  double ComputeResidualsHistogram(Histogram<double> * histo);
+  double ComputeResidualsHistogram(Histogram<double> * histo) const;
+
+  /// Return MSE (Mean Square Error) and a histogram of tracks size.
+  double ComputeTracksLengthsHistogram(Histogram<double> * histo) const;
 
   /// List the images that the greatest number of matches to the current 3D reconstruction.
   bool FindImagesWithPossibleResection(
