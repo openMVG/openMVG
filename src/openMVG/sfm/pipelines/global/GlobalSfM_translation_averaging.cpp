@@ -540,7 +540,9 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
                   iterInliers != vec_inliers.end(); ++iterInliers)
                 {
                   using namespace openMVG::tracks;
-                  const submapTrack & subTrack = pose_triplet_tracks.at(*iterInliers);
+                  STLMAPTracks::iterator it_tracks = pose_triplet_tracks.begin();
+                  std::advance(it_tracks, *iterInliers);
+                  const submapTrack & subTrack = it_tracks->second;
 
                   // create pairwise matches from inlier track
                   for (size_t index_I = 0; index_I < subTrack.size() ; ++index_I)
