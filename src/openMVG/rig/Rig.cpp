@@ -641,6 +641,9 @@ bool loadRigCalibration(const std::string &filename, std::vector<geometry::Pose3
     fs >> center(0);
     fs >> center(1);
     fs >> center(2);
+
+    // add the pose in the vector
+    subposes.emplace_back(rot, center);
   }
   
   bool isOk = fs.good();
