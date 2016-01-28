@@ -658,6 +658,7 @@ bool Read_PNG_ImageHeader(const char * filename, ImageHeader * imgheader)
   size_t readcnt = fread(pbSig, 1, 8, file);
   (void) readcnt;
   if (png_sig_cmp(pbSig, 0, 8)) {
+    fclose(file);
     return false;
   }
 
@@ -666,12 +667,14 @@ bool Read_PNG_ImageHeader(const char * filename, ImageHeader * imgheader)
   png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL,
     (png_error_ptr)NULL, (png_error_ptr)NULL);
   if (!png_ptr) {
+    fclose(file);
     return false;
   }
   png_infop info_ptr = NULL;
   info_ptr = png_create_info_struct(png_ptr);
   if (!info_ptr)  {
     png_destroy_read_struct(&png_ptr, NULL, NULL);
+    fclose(file);
     return false;
   }
 
@@ -718,6 +721,7 @@ bool Read_JPG_ImageHeader(const char * filename, ImageHeader * imgheader)
 
   if (setjmp(jerr.setjmp_buffer)) {
     jpeg_destroy_decompress(&cinfo);
+    fclose(file);
     return false;
   }
 
@@ -819,6 +823,7 @@ bool Read_PNM_ImageHeader(const char * filename, ImageHeader * imgheader)
       return false;
     }
   }
+  fclose(file);
   if (imgheader)
   {
     // Save value and return
@@ -826,7 +831,6 @@ bool Read_PNM_ImageHeader(const char * filename, ImageHeader * imgheader)
     imgheader->height = values[1];
     return true;
   }
-  fclose(file);
   return false;
 }
 
