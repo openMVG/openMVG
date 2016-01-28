@@ -207,65 +207,6 @@ struct TracksBuilder
     return false;
   }
 
-  /// Remove the pair that have too few correspondences.
-  bool FilterPairWiseMinimumMatches(size_t minMatchesOccurences, bool bMultithread = true)
-  {
-    std::vector<size_t> vec_tracksToRemove;
-    typedef std::map< size_t, std::set<size_t> > TrackIdPerImageT;
-    TrackIdPerImageT map_tracksIdPerImages;
-
-    //-- Count the number of track per image Id
-    for ( lemon::UnionFindEnum< IndexMap >::ClassIt cit(*_tracksUF); cit != INVALID; ++cit) {
-      const size_t trackId = cit.operator int();
-      for (lemon::UnionFindEnum< IndexMap >::ItemIt iit(*_tracksUF, cit); iit != INVALID; ++iit) {
-        const MapNodeToIndex::iterator iterTrackValue = _map_nodeToIndex.find(iit);
-        const indexedFeaturePair & currentPair = iterTrackValue->second;
-        map_tracksIdPerImages[currentPair.first].insert(trackId);
-      }
-    }
-
-    //-- Compute corresponding track per image pair
-#ifdef OPENMVG_USE_OPENMP
-    #pragma omp parallel if(bMultithread)
-#endif
-    for (TrackIdPerImageT::const_iterator iter = map_tracksIdPerImages.begin();
-      iter != map_tracksIdPerImages.end();
-      ++iter)
-    {
-#ifdef OPENMVG_USE_OPENMP
-    #pragma omp single nowait
-#endif
-      {
-        const std::set<size_t> & setA = iter->second;
-        std::vector<size_t> inter;
-        for (TrackIdPerImageT::const_iterator iter2 = iter;
-          iter2 != map_tracksIdPerImages.end();  ++iter2)
-        {
-          // compute intersection of track ids
-          const std::set<size_t> & setB = iter2->second;
-          inter.clear();
-          std::set_intersection(setA.begin(), setA.end(), setB.begin(), setB.end(), std::back_inserter(inter));
-          if (inter.size() < minMatchesOccurences)
-          {
-#ifdef OPENMVG_USE_OPENMP
-            #pragma omp critical
-#endif
-            {
-              std::copy(inter.begin(), inter.end(), std::back_inserter(vec_tracksToRemove));
-            }
-          }
-        }
-      }
-    }
-    std::sort(vec_tracksToRemove.begin(), vec_tracksToRemove.end());
-
-    const std::vector<size_t>::iterator it = std::unique(vec_tracksToRemove.begin(), vec_tracksToRemove.end());
-    vec_tracksToRemove.resize( std::distance(vec_tracksToRemove.begin(), it) );
-    std::for_each(vec_tracksToRemove.begin(), vec_tracksToRemove.end(),
-      std::bind1st(std::mem_fun(&UnionFindObject::eraseClass), _tracksUF.get()));
-    return false;
-  }
-
   bool ExportToStream(std::ostream & os)
   {
     size_t cpt = 0;
