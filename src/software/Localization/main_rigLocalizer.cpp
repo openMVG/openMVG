@@ -113,6 +113,7 @@ int main(int argc, char** argv)
   std::string weightsFilepath;            //< the vocabulary tree weights file
   std::string algostring = "FirstBest";   //< the localization algorithm to use for the voctree localizer
   size_t numResults = 10;                 //< number of documents to search when querying the voctree
+  size_t maxResults = 10;                 //< For algorithm AllResults, it stops the image matching when this number of matched images is reached. If 0 it is ignored.
   // parameters for cctag localizer
   size_t nNearestKeyFrames = 5;           //
 
@@ -133,10 +134,11 @@ int main(int argc, char** argv)
           ("descriptors,", po::value<std::string>(&str_descriptorType)->default_value(str_descriptorType), "Type of descriptors to use")
           ("calibration,c", po::value<std::string>(&rigCalibPath)->required(), "The file containing the calibration data for the file (subposes)")
   // parameters for voctree localizer
-          ("voctree,t", po::value<std::string>(&vocTreeFilepath), "Filename for the vocabulary tree")
-          ("weights,w", po::value<std::string>(&weightsFilepath), "Filename for the vocabulary tree weights")
-          ("algorithm,", po::value<std::string>(&algostring)->default_value(algostring), "Algorithm type: FirstBest=0, BestResult=1, AllResults=2, Cluster=3" )
-          ("results,r", po::value<size_t>(&numResults)->default_value(numResults), "Number of images to retrieve in database")
+          ("voctree,t", po::value<std::string>(&vocTreeFilepath), "[voctree] Filename for the vocabulary tree")
+          ("weights,w", po::value<std::string>(&weightsFilepath), "[voctree] Filename for the vocabulary tree weights")
+          ("algorithm,", po::value<std::string>(&algostring)->default_value(algostring), "[voctree] Algorithm type: FirstBest=0, BestResult=1, AllResults=2, Cluster=3" )
+          ("results,r", po::value<size_t>(&numResults)->default_value(numResults), "[voctree] Number of images to retrieve in database")
+          ("maxResults", po::value<size_t>(&maxResults)->default_value(maxResults), "[voctree] For algorithm AllResults, it stops the image matching when this number of matched images is reached. If 0 it is ignored.")
 #if HAVE_CCTAG
   // parameters for cctag localizer
           ("nNearestKeyFrames", po::value<size_t>(&nNearestKeyFrames)->default_value(nNearestKeyFrames), "Number of images to retrieve in database")
@@ -193,6 +195,7 @@ int main(int argc, char** argv)
       POPART_COUT("\tweights: " << weightsFilepath);
       POPART_COUT("\talgorithm: " << algostring);
       POPART_COUT("\tresults: " << numResults);
+      POPART_COUT("\tmaxResults: " << maxResults);
     }
 #if HAVE_CCTAG
     else
@@ -230,6 +233,7 @@ int main(int argc, char** argv)
     localization::VoctreeLocalizer::Parameters *casted = static_cast<localization::VoctreeLocalizer::Parameters *>(param);
     casted->_algorithm = localization::VoctreeLocalizer::initFromString(algostring);;
     casted->_numResults = numResults;
+    casted->_maxResults = maxResults;
   }
 #if HAVE_CCTAG
   else
