@@ -1003,7 +1003,7 @@ bool VoctreeLocalizer::localizeRig(const std::vector<image::Image<unsigned char>
 {
   const size_t numCams = vec_imageGrey.size();
   assert(numCams == vec_queryIntrinsics.size());
-  assert(numCams == vec_subPoses.size() - 1);
+  assert(numCams == vec_subPoses.size() + 1);
 
   std::vector<std::unique_ptr<features::Regions> > vec_queryRegions(numCams);
   std::vector<std::pair<std::size_t, std::size_t> > vec_imageSize;
@@ -1047,7 +1047,7 @@ bool VoctreeLocalizer::localizeRig(const std::vector<std::unique_ptr<features::R
   const size_t numCams = vec_queryRegions.size();
   
   assert(numCams==vec_queryIntrinsics.size());
-  assert(numCams==vec_subPoses.size()-1);
+  assert(numCams==vec_subPoses.size()+1);
   assert(numCams==vec_imageSize.size());
 
   std::vector<LocalizationResult> vec_localizationResults(numCams);
@@ -1140,7 +1140,7 @@ bool VoctreeLocalizer::localizeRig(const std::vector<std::unique_ptr<features::R
 {
   const size_t numCams = vec_queryRegions.size();
   assert(numCams == vec_queryIntrinsics.size());
-  assert(numCams == vec_subPoses.size() - 1);   
+  assert(numCams == vec_subPoses.size() + 1);   
   
   const VoctreeLocalizer::Parameters *param = static_cast<const VoctreeLocalizer::Parameters *>(parameters);
   if(!param)
