@@ -52,7 +52,7 @@ int main(int argc, char** argv)
 {
   std::string calibFile;            //< the calibration file
   std::string sfmFilePath;          //< the OpenMVG .json data file
-  std::string descriptorsFolder;    //< the OpenMVG .json data file
+  std::string descriptorsFolder;    //< the the the folder containing the descriptors
   std::string vocTreeFilepath;      //< the vocabulary tree file
   std::string weightsFilepath;      //< the vocabulary tree weights file
   std::string mediaFilepath;        //< the media file to localize
