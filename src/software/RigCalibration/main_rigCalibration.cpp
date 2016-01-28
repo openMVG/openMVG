@@ -96,9 +96,9 @@ int main(int argc, char** argv)
 {
   // common parameters
   std::string sfmFilePath;                //< the OpenMVG .json data file
-  std::string descriptorsFolder;          //< the OpenMVG .json data file
+  std::string descriptorsFolder;          //< the the folder containing the descriptors
   std::string mediaPath;                  //< the media file to localize
-  std::string filelist;                  //< the media file to localize
+  std::string filelist;                   //< the media file to localize
   std::string outputFile;                 //< the name of the file where to store the calibration data
   std::string preset = features::describerPreset_enumToString(features::EDESCRIBER_PRESET::NORMAL_PRESET);               //< the preset for the feature extractor
   std::string str_descriptorType = describerTypeToString(DescriberType::SIFT);               //< the preset for the feature extractor
@@ -174,11 +174,11 @@ int main(int argc, char** argv)
     POPART_COUT("\tsfmdata: " << sfmFilePath);
     POPART_COUT("\tmediapath: " << mediaPath);
     POPART_COUT("\tsiftPath: " << descriptorsFolder);
+    if(!filelist.empty())
+      POPART_COUT("\tfilelist: " << filelist);
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
     POPART_COUT("\tnCameras: " << nCam);
     POPART_COUT("\tpreset: " << preset);
-    if(!filelist.empty())
-      POPART_COUT("\tfilelist: " << filelist);
     POPART_COUT("\tdescriptors: " << str_descriptorType);
     if((DescriberType::SIFT==stringToDescriberType(str_descriptorType))
 #if HAVE_CCTAG
