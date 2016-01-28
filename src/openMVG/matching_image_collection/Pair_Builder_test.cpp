@@ -64,11 +64,11 @@ TEST(matching_image_collection, contiguousWithOverlap)
   sfm::Views views;
   {
     // Empty
-    Pair_Set pairSet = exhaustivePairs(views);
+    Pair_Set pairSet = contiguousWithOverlap(views, 1);
     EXPECT_EQ( 0, pairSet.size());
   }
   {
-    std::vector<IndexT> indexes = {{ 12, 54, 89, 65 }};
+    std::vector<IndexT> indexes = {{ 12, 54, 65, 89 }};
     for( IndexT i: indexes )
     {
       views[i] = std::make_shared<sfm::View>("filepath", i);
@@ -77,9 +77,32 @@ TEST(matching_image_collection, contiguousWithOverlap)
     Pair_Set pairSet = contiguousWithOverlap(views, 1);
     EXPECT_TRUE( checkPairOrder(pairSet) );
     EXPECT_EQ( 3, pairSet.size());
-    EXPECT_TRUE( pairSet.find(std::make_pair(12,54)) != pairSet.end() );
+    EXPECT_TRUE( pairSet.find(std::make_pair(12, 54)) != pairSet.end() );
+    EXPECT_TRUE( pairSet.find(std::make_pair(54, 65)) != pairSet.end() );
+    EXPECT_TRUE( pairSet.find(std::make_pair(65, 89)) != pairSet.end() );
+  }
+  {
+    std::vector<IndexT> indexes = {{ 11, 12, 54, 65, 89, 99 }};
+    for( IndexT i: indexes )
+    {
+      views[i] = std::make_shared<sfm::View>("filepath", i);
+    }
+
+    Pair_Set pairSet = contiguousWithOverlap(views, 3);
+    EXPECT_TRUE( checkPairOrder(pairSet) );
+    EXPECT_EQ( 12, pairSet.size());
+    EXPECT_TRUE( pairSet.find(std::make_pair(11, 12)) != pairSet.end() );
+    EXPECT_TRUE( pairSet.find(std::make_pair(11, 54)) != pairSet.end() );
+    EXPECT_TRUE( pairSet.find(std::make_pair(11, 65)) != pairSet.end() );
+    EXPECT_TRUE( pairSet.find(std::make_pair(12, 54)) != pairSet.end() );
+    EXPECT_TRUE( pairSet.find(std::make_pair(12,65)) != pairSet.end() );
+    EXPECT_TRUE( pairSet.find(std::make_pair(12,89)) != pairSet.end() );
     EXPECT_TRUE( pairSet.find(std::make_pair(54,65)) != pairSet.end() );
+    EXPECT_TRUE( pairSet.find(std::make_pair(54,89)) != pairSet.end() );
+    EXPECT_TRUE( pairSet.find(std::make_pair(54,99)) != pairSet.end() );
     EXPECT_TRUE( pairSet.find(std::make_pair(65,89)) != pairSet.end() );
+    EXPECT_TRUE( pairSet.find(std::make_pair(65,99)) != pairSet.end() );
+    EXPECT_TRUE( pairSet.find(std::make_pair(89,99)) != pairSet.end() );
   }
 }
 
