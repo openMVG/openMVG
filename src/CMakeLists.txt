@@ -54,6 +54,7 @@ SET(LIBRARY_OUTPUT_PATH "${PROJECT_BINARY_DIR}/${CMAKE_SYSTEM_NAME}-${CMAKE_SYST
 
 IF (WIN32)
   ADD_DEFINITIONS(-DNOMINMAX)
+  ADD_DEFINITIONS(-DVC_EXTRALEAN)
   IF (MSVC)
     ADD_DEFINITIONS(/bigobj)
   ENDIF (MSVC)
@@ -432,7 +433,6 @@ ENDIF (OpenMVG_BUILD_EXAMPLES)
 # Complete software(s) build on openMVG libraries
 ADD_SUBDIRECTORY(software)
 
-# software(s) under patent or commercial licence
 # Included for research purpose only
 ADD_SUBDIRECTORY(nonFree)
 
