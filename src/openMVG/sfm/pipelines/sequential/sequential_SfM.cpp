@@ -345,7 +345,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
     it != _sfm_data.GetViews().end(); ++it)
   {
     const View * v = it->second.get();
-    if( _sfm_data.GetIntrinsics().find(v->id_intrinsic) != _sfm_data.GetIntrinsics().end())
+    if (_sfm_data.GetIntrinsics().count(v->id_intrinsic))
       valid_views.insert(v->id_view);
   }
 
@@ -378,82 +378,84 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
 
       const size_t I = min(current_pair.first, current_pair.second);
       const size_t J = max(current_pair.first, current_pair.second);
-
-      const View * view_I = _sfm_data.GetViews().at(I).get();
-      const Intrinsics::const_iterator iterIntrinsic_I = _sfm_data.GetIntrinsics().find(view_I->id_intrinsic);
-      const View * view_J = _sfm_data.GetViews().at(J).get();
-      const Intrinsics::const_iterator iterIntrinsic_J = _sfm_data.GetIntrinsics().find(view_J->id_intrinsic);
-
-      const Pinhole_Intrinsic * cam_I = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_I->second.get());
-      const Pinhole_Intrinsic * cam_J = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_J->second.get());
-      if (cam_I != NULL && cam_J != NULL)
+      if (valid_views.count(I) && valid_views.count(J))
       {
-        openMVG::tracks::STLMAPTracks map_tracksCommon;
-        const std::set<size_t> set_imageIndex= {I, J};
-        tracks::TracksUtilsMap::GetTracksInImages(set_imageIndex, _map_tracks, map_tracksCommon);
+        const View * view_I = _sfm_data.GetViews().at(I).get();
+        const Intrinsics::const_iterator iterIntrinsic_I = _sfm_data.GetIntrinsics().find(view_I->id_intrinsic);
+        const View * view_J = _sfm_data.GetViews().at(J).get();
+        const Intrinsics::const_iterator iterIntrinsic_J = _sfm_data.GetIntrinsics().find(view_J->id_intrinsic);
 
-        // Copy points correspondences to arrays for relative pose estimation
-        const size_t n = map_tracksCommon.size();
-        Mat xI(2,n), xJ(2,n);
-        size_t cptIndex = 0;
-        for (openMVG::tracks::STLMAPTracks::const_iterator
-          iterT = map_tracksCommon.begin(); iterT != map_tracksCommon.end();
-          ++iterT, ++cptIndex)
+        const Pinhole_Intrinsic * cam_I = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_I->second.get());
+        const Pinhole_Intrinsic * cam_J = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_J->second.get());
+        if (cam_I != NULL && cam_J != NULL)
         {
-          tracks::submapTrack::const_iterator iter = iterT->second.begin();
-          const size_t i = iter->second;
-          const size_t j = (++iter)->second;
+          openMVG::tracks::STLMAPTracks map_tracksCommon;
+          const std::set<size_t> set_imageIndex= {I, J};
+          tracks::TracksUtilsMap::GetTracksInImages(set_imageIndex, _map_tracks, map_tracksCommon);
 
-          Vec2 feat = _features_provider->feats_per_view[I][i].coords().cast<double>();
-          xI.col(cptIndex) = cam_I->get_ud_pixel(feat);
-          feat = _features_provider->feats_per_view[J][j].coords().cast<double>();
-          xJ.col(cptIndex) = cam_J->get_ud_pixel(feat);
-        }
-
-        // Robust estimation of the relative pose
-        RelativePose_Info relativePose_info;
-        relativePose_info.initial_residual_tolerance = Square(4.0);
-
-        if (robustRelativePose(
-          cam_I->K(), cam_J->K(),
-          xI, xJ, relativePose_info,
-          std::make_pair(cam_I->w(), cam_I->h()), std::make_pair(cam_J->w(), cam_J->h()),
-          256) && relativePose_info.vec_inliers.size() > iMin_inliers_count)
-        {
-          // Triangulate inliers & compute angle between bearing vectors
-          std::vector<float> vec_angles;
-          vec_angles.reserve(relativePose_info.vec_inliers.size());
-          const Pose3 pose_I = Pose3(Mat3::Identity(), Vec3::Zero());
-          const Pose3 pose_J = relativePose_info.relativePose;
-          const Mat34 PI = cam_I->get_projective_equivalent(pose_I);
-          const Mat34 PJ = cam_J->get_projective_equivalent(pose_J);
-          for (const size_t inlier_idx : relativePose_info.vec_inliers)
+          // Copy points correspondences to arrays for relative pose estimation
+          const size_t n = map_tracksCommon.size();
+          Mat xI(2,n), xJ(2,n);
+          size_t cptIndex = 0;
+          for (openMVG::tracks::STLMAPTracks::const_iterator
+            iterT = map_tracksCommon.begin(); iterT != map_tracksCommon.end();
+            ++iterT, ++cptIndex)
           {
-            Vec3 X;
-            TriangulateDLT(PI, xI.col(inlier_idx), PJ, xJ.col(inlier_idx), &X);
-
-            openMVG::tracks::STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
-            std::advance(iterT, inlier_idx);
             tracks::submapTrack::const_iterator iter = iterT->second.begin();
-            const Vec2 featI = _features_provider->feats_per_view[I][iter->second].coords().cast<double>();
-            const Vec2 featJ = _features_provider->feats_per_view[J][(++iter)->second].coords().cast<double>();
-            vec_angles.push_back(AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, featI, featJ));
+            const size_t i = iter->second;
+            const size_t j = (++iter)->second;
+
+            Vec2 feat = _features_provider->feats_per_view[I][i].coords().cast<double>();
+            xI.col(cptIndex) = cam_I->get_ud_pixel(feat);
+            feat = _features_provider->feats_per_view[J][j].coords().cast<double>();
+            xJ.col(cptIndex) = cam_J->get_ud_pixel(feat);
           }
-          // Compute the median triangulation angle
-          const unsigned median_index = vec_angles.size() / 2;
-          std::nth_element(
-            vec_angles.begin(),
-            vec_angles.begin() + median_index,
-            vec_angles.end());
-          const float scoring_angle = vec_angles[median_index];
-          // Store the pair iff the pair is in the asked angle range [fRequired_min_angle;fLimit_max_angle]
-          if (scoring_angle > fRequired_min_angle &&
-              scoring_angle < fLimit_max_angle)
+
+          // Robust estimation of the relative pose
+          RelativePose_Info relativePose_info;
+          relativePose_info.initial_residual_tolerance = Square(4.0);
+
+          if (robustRelativePose(
+            cam_I->K(), cam_J->K(),
+            xI, xJ, relativePose_info,
+            std::make_pair(cam_I->w(), cam_I->h()), std::make_pair(cam_J->w(), cam_J->h()),
+            256) && relativePose_info.vec_inliers.size() > iMin_inliers_count)
           {
-#ifdef OPENMVG_USE_OPENMP
-            #pragma omp critical
-#endif
-            scoring_per_pair.emplace_back(scoring_angle, current_pair);
+            // Triangulate inliers & compute angle between bearing vectors
+            std::vector<float> vec_angles;
+            vec_angles.reserve(relativePose_info.vec_inliers.size());
+            const Pose3 pose_I = Pose3(Mat3::Identity(), Vec3::Zero());
+            const Pose3 pose_J = relativePose_info.relativePose;
+            const Mat34 PI = cam_I->get_projective_equivalent(pose_I);
+            const Mat34 PJ = cam_J->get_projective_equivalent(pose_J);
+            for (const size_t inlier_idx : relativePose_info.vec_inliers)
+            {
+              Vec3 X;
+              TriangulateDLT(PI, xI.col(inlier_idx), PJ, xJ.col(inlier_idx), &X);
+
+              openMVG::tracks::STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
+              std::advance(iterT, inlier_idx);
+              tracks::submapTrack::const_iterator iter = iterT->second.begin();
+              const Vec2 featI = _features_provider->feats_per_view[I][iter->second].coords().cast<double>();
+              const Vec2 featJ = _features_provider->feats_per_view[J][(++iter)->second].coords().cast<double>();
+              vec_angles.push_back(AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, featI, featJ));
+            }
+            // Compute the median triangulation angle
+            const unsigned median_index = vec_angles.size() / 2;
+            std::nth_element(
+              vec_angles.begin(),
+              vec_angles.begin() + median_index,
+              vec_angles.end());
+            const float scoring_angle = vec_angles[median_index];
+            // Store the pair iff the pair is in the asked angle range [fRequired_min_angle;fLimit_max_angle]
+            if (scoring_angle > fRequired_min_angle &&
+                scoring_angle < fLimit_max_angle)
+            {
+  #ifdef OPENMVG_USE_OPENMP
+              #pragma omp critical
+  #endif
+              scoring_per_pair.emplace_back(scoring_angle, current_pair);
+            }
           }
         }
       }
