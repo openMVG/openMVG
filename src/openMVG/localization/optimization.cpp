@@ -32,7 +32,7 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
                     bool b_refine_structure /*= false*/)
 {
   
-  const size_t numViews = vec_localizationResult.size();
+  const std::size_t numViews = vec_localizationResult.size();
   assert(numViews > 0 );
    
   // the id for the instrinsic group
@@ -46,7 +46,7 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
   {
     // find the first valid localization result and use its intrinsics
     std::size_t intrinsicIndex = 0;
-    for(size_t viewID = 0; viewID < numViews; ++viewID, ++intrinsicIndex)
+    for(std::size_t viewID = 0; viewID < numViews; ++viewID, ++intrinsicIndex)
     {
       if(vec_localizationResult[viewID].isValid())
         break;
@@ -265,6 +265,9 @@ bool refineRigPose(const std::vector<geometry::Pose3 > &vec_subPoses,
                    const std::vector<localization::LocalizationResult> vec_localizationResults,
                    geometry::Pose3 & rigPose)
 {
+  const size_t numCameras = vec_localizationResults.size();
+  assert(vec_subPoses.size() == numCameras - 1);
+  
   ceres::Problem problem;
   
   const openMVG::Mat3 & R = rigPose.rotation();
@@ -285,7 +288,7 @@ bool refineRigPose(const std::vector<geometry::Pose3 > &vec_subPoses,
   // todo: make the LOSS function and the parameter an option
 
   // For all visibility add reprojections errors:
-  for(int iLocalizer = 0; iLocalizer < vec_localizationResults.size(); ++iLocalizer)
+  for(size_t iLocalizer = 0; iLocalizer < numCameras; ++iLocalizer)
   {
     const localization::LocalizationResult & localizationResult = vec_localizationResults[iLocalizer];
 

@@ -1138,7 +1138,7 @@ bool VoctreeLocalizer::localizeRig(const std::vector<std::unique_ptr<features::R
                                  const std::vector<geometry::Pose3 > &vec_subPoses,
                                  geometry::Pose3 &rigPose)
 {
-  const size_t numCams = vec_queryRegions.size();
+  const std::size_t numCams = vec_queryRegions.size();
   assert(numCams == vec_queryIntrinsics.size());
   assert(numCams == vec_subPoses.size() + 1);   
   
@@ -1156,7 +1156,7 @@ bool VoctreeLocalizer::localizeRig(const std::vector<std::unique_ptr<features::R
   // for each camera retrieve the associations
   //@todo parallelize?
   size_t numAssociations = 0;
-  for( size_t i = 0; i < numCams; ++i )
+  for(std::size_t i = 0; i < numCams; ++i)
   {
 
     // this map is used to collect the 2d-3d associations as we go through the images
@@ -1197,6 +1197,30 @@ bool VoctreeLocalizer::localizeRig(const std::vector<std::unique_ptr<features::R
                                     vec_subPoses,
                                     rigPose,
                                     inliers);
+  
+  // compute the reprojection error for inliers (just debugging purposes)
+//    for(std::size_t cam = 0; cam < numCameras; ++cam)
+//    {
+//      const std::size_t numPts = vec_pts2d[cam].cols();
+//      const cameras::Pinhole_Intrinsic_Radial_K3 &currCamera = vec_queryIntrinsics[cam];
+//      Mat2X residuals;
+//      if(cam!=0)
+//        residuals = currCamera.residuals(vec_subPoses[cam-1]*rigPose, vec_pts3d[cam], vec_pts2d[cam]);
+//      else
+//        residuals = currCamera.residuals(geometry::Pose3()*rigPose, vec_pts3d[cam], vec_pts2d[cam]);
+//
+//      auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
+//      
+////      std::cout << sqrErrors << std::endl;
+//
+//      const auto &currInliers = inliers[cam];
+//      for(std::size_t j = 0; j < currInliers.size(); ++j)
+//      {
+////        std::cout << sqrErrors(currInliers[j]) << std::endl;
+//        EXPECT_TRUE(sqrErrors(currInliers[j]) <= threshold);
+//      }
+//    }
+  
 }
 
 #endif // HAVE_OPENGV

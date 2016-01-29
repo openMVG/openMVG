@@ -38,7 +38,19 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
                     bool b_refine_pose = true,
                     bool b_refine_structure = false);
 
-
+/**
+ * @brief refine the pose of a camera rig by minimizing the reprojection error in
+ * each camera with the bundle adjustment.
+ * 
+ * @param[in] vec_subPoses The rig calibration, ie the pose of the cameras wrt the main
+ * camera; for a rig of N cameras the size of the vector is N-1 as the main camera has
+ * identity as pose.
+ * @param[in] vec_localizationResults A vector of N element containing the localization
+ * results for each camera.
+ * @param[in,out] rigPose The current rig pose and the refined rig pose if the bundle
+ * adjustment succeeds.
+ * @return true if the bundle adjustment succeeds.
+ */
 bool refineRigPose(const std::vector<geometry::Pose3 > &vec_subPoses,
                    const std::vector<localization::LocalizationResult> vec_localizationResults,
                    geometry::Pose3 & rigPose);
