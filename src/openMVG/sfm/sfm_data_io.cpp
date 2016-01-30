@@ -105,6 +105,11 @@ bool Load(SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_par
     bStatus = true;
   }
 #endif // HAVE_ALEMBIC
+  else
+  {
+    std::cerr << "Unknown sfm_data input format: " << ext << std::endl;
+    return false;
+  }
 
   // Assert that loaded intrinsics | extrinsics are linked to valid view
   if(bStatus &&

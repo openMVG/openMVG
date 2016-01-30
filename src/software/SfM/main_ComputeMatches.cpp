@@ -179,24 +179,23 @@ int main(int argc, char **argv)
   }
 
   EGeometricModel eGeometricModelToCompute = FUNDAMENTAL_MATRIX;
-  std::string sPutativeMatchesFilename = "matches.putative.txt";
-  std::string sGeometricMatchesFilename = "";
-  switch(sGeometricModel[0])
+  if(sGeometricModel.size() != 1)
   {
-    case 'f': case 'F':
+      std::cerr << "Unknown geometric model: " << sGeometricModel << std::endl;
+      return EXIT_FAILURE;
+  }
+  const std::string sGeometricMode = std::string(1, std::tolower(sGeometricModel[0]));
+  switch(sGeometricMode[0])
+  {
+    case 'f':
       eGeometricModelToCompute = FUNDAMENTAL_MATRIX;
-      sGeometricMatchesFilename = "matches.f.txt";
-    break;
-    case 'e': case 'E':
+    case 'e':
       eGeometricModelToCompute = ESSENTIAL_MATRIX;
-      sGeometricMatchesFilename = "matches.e.txt";
-    break;
-    case 'h': case 'H':
+    case 'h':
       eGeometricModelToCompute = HOMOGRAPHY_MATRIX;
-      sGeometricMatchesFilename = "matches.h.txt";
     break;
     default:
-      std::cerr << "Unknown geometric model" << std::endl;
+      std::cerr << "Unknown geometric model: " << sGeometricMode << std::endl;
       return EXIT_FAILURE;
   }
 
@@ -267,9 +266,12 @@ int main(int argc, char **argv)
   std::cout << std::endl << " - PUTATIVE MATCHES - " << std::endl;
 
   // If the matches already exists, reload them
-  if (!bForce && stlplus::file_exists(sMatchesDirectory + "/" + sPutativeMatchesFilename))
+  if (!bForce &&
+     (!matchFilePerImage ?
+          stlplus::is_file(stlplus::create_filespec(sMatchesDirectory, "putative.bin"))
+        : stlplus::folder_wildcard(sMatchesDirectory, "*.putative.bin", false).size()))
   {
-    PairedIndMatchImport(sMatchesDirectory + "/" + sPutativeMatchesFilename, map_PutativesMatches);
+    Load(map_PutativesMatches, sfm_data.GetViewsKeys(), sMatchesDirectory, "putative");
     std::cout << "\t PREVIOUS RESULTS LOADED" << std::endl;
   }
   else // Compute the putative matches
@@ -373,16 +375,9 @@ int main(int argc, char **argv)
       //---------------------------------------
       //-- Export putative matches
       //---------------------------------------
-      if( !matchFilePerImage )
-      {
-        ExportPairedIndMatchFile(map_PutativesMatches, std::string(sMatchesDirectory + "/" + sPutativeMatchesFilename));
-      }
-      else
-      {
-        ExportPairedIndMatchFilePerImage(map_PutativesMatches, sMatchesDirectory, sPutativeMatchesFilename);
-      }
+      Save(map_PutativesMatches, sMatchesDirectory, "putative", "bin", matchFilePerImage);
     }
-    std::cout << "Task (Regions Loading+Matching) done in (s): " << timer.elapsed() << std::endl;
+    std::cout << "Task (Regions Matching) done in (s): " << timer.elapsed() << std::endl;
   }
   //-- export putative matches Adjacency matrix
   PairWiseMatchingToAdjacencyMatrixSVG(vec_fileNames.size(),
@@ -466,14 +461,7 @@ int main(int argc, char **argv)
     //---------------------------------------
     //-- Export geometric filtered matches
     //---------------------------------------
-    if( !matchFilePerImage )
-    {
-      ExportPairedIndMatchFile(map_GeometricMatches, std::string(sMatchesDirectory + "/" + sGeometricMatchesFilename).c_str());
-    }
-    else
-    {
-      ExportPairedIndMatchFilePerImage(map_GeometricMatches, sMatchesDirectory, sGeometricMatchesFilename);
-    }
+    Save(map_GeometricMatches, sMatchesDirectory, sGeometricMode, "bin", matchFilePerImage);
 
     std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
 

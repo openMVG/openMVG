@@ -120,10 +120,11 @@ int main(int argc, char **argv)
   std::shared_ptr<Matches_Provider> matches_provider = std::make_shared<Matches_Provider>();
   if( !matchFilePerImage )
   {
-    // Load the match file
-    if (!matches_provider->load(sfm_data, stlplus::create_filespec(sMatchesDir, "matches.e.txt"))) {
-      std::cerr << std::endl
-        << "Invalid matches file." << std::endl;
+    // Load the match file (try to read the two matches file formats)
+    if( !(matches_provider->load(sfm_data, sMatchesDir, "matches.e.txt") ||
+          matches_provider->load(sfm_data, sMatchesDir, "matches.e.bin")))
+    {
+      std::cerr << std::endl << "Unable to load matches files from: " << sMatchesDir << std::endl;
       return EXIT_FAILURE;
     }
   }
@@ -131,13 +132,14 @@ int main(int argc, char **argv)
   {
     int nbLoadedMatchFiles = 0;
     // Load one match file per image
-    for (Views::const_iterator it = sfm_data.GetViews().begin();
-      it != sfm_data.GetViews().end(); ++it)
+    for(Views::const_iterator it = sfm_data.GetViews().begin();
+        it != sfm_data.GetViews().end(); ++it)
     {
       const View * v = it->second.get();
-      const std::string matchFilepath = stlplus::create_filespec(sMatchesDir, std::to_string(v->id_view) + ".matches.e.txt");
-      if (stlplus::file_exists(matchFilepath) && !matches_provider->load(sfm_data, matchFilepath)) {
-        std::cerr << std::endl << "Unable to load matches file: " << matchFilepath << std::endl;
+      if( !(matches_provider->load(sfm_data, sMatchesDir, std::to_string(v->id_view) + ".matches.e.txt") ||
+            matches_provider->load(sfm_data, sMatchesDir, std::to_string(v->id_view) + ".matches.e.bin")))
+      {
+        std::cerr << std::endl << "Unable to load matches files from: " << sMatchesDir << std::endl;
         continue;
       }
       ++nbLoadedMatchFiles;
@@ -149,7 +151,8 @@ int main(int argc, char **argv)
     }
   }
 
-  if (sOutDir.empty())  {
+  if (sOutDir.empty())
+  {
     std::cerr << "\nIt is an invalid output directory" << std::endl;
     return EXIT_FAILURE;
   }
@@ -191,7 +194,7 @@ int main(int argc, char **argv)
     //-- Export to disk computed scene (data & visualizable results)
     std::cout << "...Export SfM_Data to disk." << std::endl;
     Save(sfmEngine.Get_SfM_Data(),
-      stlplus::create_filespec(sOutDir, "sfm_data", ".json"),
+      stlplus::create_filespec(sOutDir, "sfm_data", ".bin"),
       ESfM_Data(ALL));
 
     Save(sfmEngine.Get_SfM_Data(),

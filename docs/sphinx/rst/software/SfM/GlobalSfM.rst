@@ -61,28 +61,21 @@ Arguments description:
 
   - **[-r|--rotationAveraging]**
 
-    - 2: (default) L2 rotation averaging _[Martinec]
     - 1: L1 rotation averaging _[Chatterjee]
+    - 2: (default) L2 rotation averaging _[Martinec]
 
   - **[-t|--translationAveraging]**
 
     - 1: (default) L1 translation averaging _[GlobalACSfM]
     - 2: L2 translation averaging _[Kyle2014]
-
-  - **[-c|--camera_model]**
-
-    - The camera model type that will be used for views with unknown intrinsic:
-
-      - 1: Pinhole
-      - 2: Pinhole radial 1
-      - 3: Pinhole radial 3 (default)
+    - 3: (default) SoftL1 minimization _[GlobalACSfM]
 
   - **[-f|--refineIntrinsics]**
 
     - 0: intrinsic parameters are kept as constant
     - 1: refine intrinsic parameters (default)
 
-*_[GlobalACSfM]* default settings are "-r 2 -t 1".
+*_[GlobalACSfM]* default settings are "-r 2 -t 3".
 
 
 **Tips**

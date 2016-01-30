@@ -56,6 +56,14 @@ struct SfM_Data
   const Landmarks & GetLandmarks() const {return structure;}
   const Landmarks & GetControl_Points() const {return control_points;}
 
+  std::set<IndexT> GetViewsKeys() const
+  {
+    std::set<IndexT> viewKeys;
+    for(auto v: views)
+        viewKeys.insert(v.first);
+    return viewKeys;
+  }
+
   /// Check if the View have defined intrinsic and pose
   bool IsPoseAndIntrinsicDefined(const View * view) const
   {

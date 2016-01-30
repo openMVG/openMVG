@@ -29,6 +29,20 @@ typedef double REAL;
 typedef std::vector<openMVG::Mat3> Matrix3x3Arr;
 
 /**
+ * @brief Compute an initial estimation of global rotation (chain rotations along a MST).
+ *
+ * @param[in] RelRs Relative weighted rotation matrices
+ * @param[out] Rs output global rotation matrices
+ * @param[in] nMainViewID Id of the image considered as Identity (unit rotation)
+ */
+void InitRotationsMST
+(
+  const RelativeRotations& RelRs,
+  Matrix3x3Arr& Rs,
+  const size_t nMainViewID
+);
+
+/**
  * @brief Compute an initial estimation of global rotation and refines them under the L1 norm, [1].
  *
  * @param[in] RelRs Relative weighted rotation matrices

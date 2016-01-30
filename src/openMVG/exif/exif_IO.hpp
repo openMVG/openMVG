@@ -28,13 +28,13 @@ class Exif_IO
 
     virtual std::string getLensModel() const = 0;
 
+    virtual std::string getImageUniqueID() const = 0;
+
     /// Open the file for checking and parsing
     virtual bool open( const std::string & sFileName ) = 0;
 
     /// Verify if the file has metadata
     virtual bool doesHaveExifInfo() const = 0;
-
-    virtual std::string getImageUniqueID() const = 0;
 
     virtual std::string getSerialNumber() const = 0;
 

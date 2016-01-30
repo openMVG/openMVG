@@ -183,6 +183,7 @@ int main(int argc, char **argv)
       << "\t 2: Pinhole radial 1\n"
       << "\t 3: Pinhole radial 3 (default)\n"
       << "\t 4: Pinhole brown 2\n"
+      << "\t 5: Pinhole with a simple Fish-eye distortion\n"
       << "[-g|--group_camera_model]\n"
       << "\t 0-> each view have it's own camera intrinsic parameters,\n"
       << "\t 1-> (default) view can share some camera intrinsic parameters\n"
@@ -435,6 +436,10 @@ int main(int argc, char **argv)
           intrinsic =std::make_shared<Pinhole_Intrinsic_Brown_T2>
             (width, height, focalPix, ppx, ppy, 0.0, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
         break;
+        case PINHOLE_CAMERA_FISHEYE:
+          intrinsic =std::make_shared<Pinhole_Intrinsic_Fisheye>
+            (width, height, focalPix, ppx, ppy, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
+        break;
         default:
           std::cerr << "Error: unknown camera model: " << (int) e_User_camera_model << std::endl;
           return EXIT_FAILURE;
@@ -460,11 +465,11 @@ int main(int argc, char **argv)
     std::shared_ptr<View> currentView;
     if(!b_storeMetadata)
     {
-      currentView.reset(new View(*iter_image, views.size(), views.size(), views.size(), width, height));
+      currentView.reset(new View(*iter_image, id_view, views.size(), views.size(), width, height));
     }
     else
     {
-      currentView.reset(new View_Metadata(*iter_image, views.size(), views.size(), views.size(), width, height, allExifData));
+      currentView.reset(new View_Metadata(*iter_image, id_view, views.size(), views.size(), width, height, allExifData));
     }
 
     // Add intrinsic related to the image (if any)

@@ -37,13 +37,11 @@ int main(int argc, char **argv)
   CmdLine cmd;
   std::string sSfM_Data_Filename;
   std::string sMatchesDir;
-  std::string sMatchFile;
   std::string sOutFile;
   bool sKeepSift = false;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "match_dir") );
-  cmd.add( make_option('f', sMatchFile, "match_file") );
   cmd.add( make_option('o', sOutFile, "output_file") );
   cmd.add( make_option('s', sKeepSift, "keep_sift") );
 
@@ -100,7 +98,7 @@ int main(int argc, char **argv)
   std::map<IndexT, std::set<IndexT>> connectedViews;
   {
     Pair_Set viewPairs;
-    if (sMatchFile.empty())
+    if (sMatchesDir.empty())
     {
       // No image pair provided, so we use cameras frustum intersection.
       // Build the list of connected images pairs from frustum intersections
@@ -109,7 +107,8 @@ int main(int argc, char **argv)
     else
     {
       PairWiseMatches matches;
-      if (!matching::PairedIndMatchImport(sMatchFile, matches)) {
+      if (!matching::Load(matches, reconstructionSfmData.GetViewsKeys(), sMatchesDir, "f"))
+      {
         std::cerr<< "Unable to read the matches file." << std::endl;
         return EXIT_FAILURE;
       }

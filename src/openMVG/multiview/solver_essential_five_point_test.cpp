@@ -181,15 +181,6 @@ TEST(o2, Evaluation) {
   }
 }
 
-TEST(FivePointsGaussJordan, RandomMatrix) {
-
-  Mat M = Mat::Random(10, 20);
-  FivePointsGaussJordan(&M);
-  Mat I = Mat::Identity(10,10);
-  Mat M1 = M.block<10,10>(0,0);
-  EXPECT_MATRIX_NEAR(I, M1, 1e-8);
-}
-
 /// Check that the E matrix fit the Essential Matrix properties
 /// Determinant is 0
 ///

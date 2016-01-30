@@ -54,7 +54,7 @@ struct Landmark
     : X(pos3d)
     , obs(observations)
   {}
-  
+
   Vec3 X;
   Observations obs;
 

@@ -25,7 +25,6 @@ addons:
       - libjpeg8-dev
       - libtiff4-dev
       - libxxf86vm1
-      - libxxf86vm1
       - libxxf86vm-dev
       - x11proto-xf86vidmode-dev
       - libxrandr-dev

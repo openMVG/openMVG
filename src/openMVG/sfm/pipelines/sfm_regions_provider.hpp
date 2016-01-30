@@ -69,7 +69,7 @@ struct Regions_Provider
         }
       }
     }
-    return true;
+    return bContinue;
   }
 
 }; // Regions_Provider

@@ -43,21 +43,19 @@ struct LineSolver {
     X.col(0).setOnes();
     X.col(1) = x.row(0).transpose();
     Mat A(X.transpose() * X);
-    Vec b(X.transpose() * x.row(1).transpose());
-    Vec2 ba;
+    const Vec b(X.transpose() * x.row(1).transpose());
     Eigen::JacobiSVD<Mat> svd(A, Eigen::ComputeFullU | Eigen::ComputeFullV);
-    ba = svd.solve(b);
-    lines->push_back(ba);
+    lines->push_back(svd.solve(b));
   }
 };
 
 struct pointToLineError {
   static double Error(const Vec2 &lineEq, const Vec2 &xs) {
-    double b = lineEq[0];
-    double a = lineEq[1];
-    double x = xs[0];
-    double y = xs[1];
-    double e = y - (a*x + b);
+    const double b = lineEq[0];
+    const double a = lineEq[1];
+    const double x = xs[0];
+    const double y = xs[1];
+    const double e = y - (a*x + b);
     return e*e;
   }
 };
@@ -74,7 +72,7 @@ struct LineKernel {
   void Fit(const std::vector<size_t> &samples, std::vector<Vec2> *lines) const {
     assert(samples.size() >= (unsigned int)MINIMUM_SAMPLES);
     // Standard least squares solution.
-    Mat2X sampled_xs = ExtractColumns(xs_, samples);
+    const Mat2X sampled_xs = ExtractColumns(xs_, samples);
 
     LineSolver::Solve(sampled_xs, lines);
   }
