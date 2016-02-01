@@ -103,7 +103,61 @@ void waitForCompletion()
   }
 }
 
-#else
+// Returns a map containing information about the memory usage,
+// it basically reads /proc/meminfo  
+std::map<std::string, unsigned long> memInfos()
+{
+  std::map<std::string, unsigned long> memoryInfos;
+  std::ifstream meminfoFile("/proc/meminfo");
+  if (meminfoFile.is_open())
+  {
+    std::string line;
+    while(getline(meminfoFile, line))
+    {
+      auto separator = line.find(":"); 
+      if (separator!=std::string::npos)
+      {
+        const std::string key = line.substr(0, separator);
+        const std::string value = line.substr(separator+1);
+        memoryInfos[key] = std::strtoul(value.c_str(), nullptr, 10);
+      }
+    }
+  }
+  return memoryInfos;
+}
+
+// Count the number of processors on the machine using /proc/cpuinfo
+unsigned int countProcessors()
+{
+  unsigned int nprocessors = 0;
+  std::ifstream cpuinfoFile("/proc/cpuinfo");
+  if (cpuinfoFile.is_open())
+  {
+    std::string line;
+    while(getline(cpuinfoFile, line))
+    {
+        // The line must start with the word "processor"
+        if (line.compare(0, std::strlen("processor"), "processor") == 0)
+            nprocessors++;
+    }
+  }
+  return nprocessors; 
+}
+
+// Returns the number of jobs to run simultaneously if one job should run on 
+// 1 proc and 2GB (1<<21) of memory 
+int bestNumberOfJobs(unsigned long jobMemoryRequirement = 1 << 21)
+{
+  assert(jobMemoryRequirement!=0);
+  auto meminfos = memInfos();
+  const unsigned long available = meminfos["MemFree"] + meminfos["Buffers"] + meminfos["Cached"]; 
+  const unsigned int nbslots = static_cast<unsigned int>(available/jobMemoryRequirement); 
+  const unsigned int nbproc = countProcessors(); 
+  return std::max(std::min(nbslots, nbproc), 1u);
+}
+
+#else // __linux__
+
 void dispatch(const int &maxJobs, std::function<void()> compute)
 {
 #ifdef OPENMVG_USE_OPENMP
@@ -112,8 +166,9 @@ void dispatch(const int &maxJobs, std::function<void()> compute)
     compute();
 }
 void waitForCompletion() {}
-#endif
+int bestNumberOfJobs(unsigned long jobMemoryRequirement = 1 << 21) {return 1;}  
 
+#endif // __linux__
 
 /// - Compute view image description (feature & descriptor extraction)
 /// - Export computed data
@@ -165,7 +220,7 @@ int main(int argc, char **argv)
     << "   NORMAL (default),\n"
     << "   HIGH,\n"
     << "   ULTRA: !!Can take long time!!\n"
-    << "[-j|--jobs] Specifies the number of jobs to run simultaneously\n"
+    << "[-j|--jobs] Specifies the number of jobs to run simultaneously. Use -j 0 for automatic mode.\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -183,6 +238,15 @@ int main(int argc, char **argv)
   if (maxJobs != MAX_JOBS_DEFAULT)
   {
     std::cout << "--jobs " << maxJobs << std::endl;
+    if (maxJobs < 0) 
+    {
+      std::cerr << "\nInvalid value for -j option, the value must be >= 0" << std::endl;
+      return EXIT_FAILURE;
+    } 
+    else if (maxJobs == 0)
+    {
+      maxJobs = bestNumberOfJobs();
+    }
   }
 
   if (sOutDir.empty())
@@ -191,11 +255,8 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  if (maxJobs != MAX_JOBS_DEFAULT && maxJobs <=0 ) 
-  {
-    std::cerr << "\nInvalid value for -j option, the value must be >=1" << std::endl;
-    return EXIT_FAILURE;
-  }
+  
+
 
   // Create output dir
   if (!stlplus::folder_exists(sOutDir))
