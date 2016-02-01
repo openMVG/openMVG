@@ -257,7 +257,7 @@ int main(int argc, char **argv)
         std::cerr << "Bad specific index" << std::endl;
         return EXIT_FAILURE;
       }
-      if(rangeSize < 0 || rangeSize > sfm_data.views.size())
+      if(rangeSize < 0)
       {
         std::cerr << "Bad range size. " << std::endl;
         return EXIT_FAILURE;
