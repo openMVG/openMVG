@@ -198,6 +198,7 @@ Canon;Canon PowerShot S110;7.53
 Canon;Canon EOS 5D Mark III;36
 Canon;Canon IXUS 125 HS;6.16
 Canon;Canon PowerShot SX260 HS;6.16
+Canon;Canon DIGITAL IXUS 70;5.7
 Canon;Canon IXUS 240 HS;6.16
 Canon;Canon IXUS 220 HS;6.16
 Canon;Canon IXUS 510 HS;6.16
