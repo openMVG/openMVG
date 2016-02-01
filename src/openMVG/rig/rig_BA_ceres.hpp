@@ -14,10 +14,9 @@ namespace rig {
 class ResidualErrorMainCameraFunctor
 {
 public :
-  ResidualErrorMainCameraFunctor(
-          const cameras::Pinhole_Intrinsic_Radial_K3 & intrinsics,
-          const Vec2 & x,
-          const Vec3 & X)
+  ResidualErrorMainCameraFunctor(const cameras::Pinhole_Intrinsic_Radial_K3 & intrinsics,
+                                 const Vec2 & pt2d,
+                                 const Vec3 & pt3d)
   {
     // Set the intrinsics
      _K = intrinsics.K();
@@ -28,13 +27,13 @@ public :
      _params.push_back(intrinsics.getParams()[5]);
      
     // Set the observation
-    _observation[0] = x[0];
-    _observation[1] = x[1];
+    _observation[0] = pt2d[0];
+    _observation[1] = pt2d[1];
     
     // Set the 3D point
-    _point(0) = X(0);
-    _point(1) = X(1);
-    _point(2) = X(2);
+    _point(0) = pt3d(0);
+    _point(1) = pt3d(1);
+    _point(2) = pt3d(2);
 
   }
 
@@ -56,9 +55,7 @@ public :
    * @param[out] out_residuals
    */
   template <typename T>
-  bool operator()(
-    const T* const cam_Rt,
-    T* out_residuals) const
+  bool operator()(const T* const cam_Rt, T* out_residuals) const
   {
     //--
     // Apply external parameters (Pose)
@@ -126,10 +123,9 @@ private :
 class ResidualErrorSecondaryCameraFunctor
 {
 public :
-  ResidualErrorSecondaryCameraFunctor(
-          const cameras::Pinhole_Intrinsic_Radial_K3 & intrinsics, 
-          const openMVG::Vec2 & x, 
-          const openMVG::Vec3 & X) // const double* const pos_2dpoint
+  ResidualErrorSecondaryCameraFunctor(const cameras::Pinhole_Intrinsic_Radial_K3 & intrinsics,
+                                      const openMVG::Vec2 & pt2d,
+                                      const openMVG::Vec3 & pt3d) // const double* const pos_2dpoint
   {
     // Set the intrinsics
      _K = intrinsics.K();
@@ -140,13 +136,13 @@ public :
      _params.push_back(intrinsics.getParams()[5]);
      
     // Set the observation
-    _observation[0] = x[0];
-    _observation[1] = x[1];
+    _observation[0] = pt2d[0];
+    _observation[1] = pt2d[1];
     
     // Set the 3D point
-    _point(0) = X(0);
-    _point(1) = X(1);
-    _point(2) = X(2);
+    _point(0) = pt3d(0);
+    _point(1) = pt3d(1);
+    _point(2) = pt3d(2);
     
   }
 
@@ -169,10 +165,7 @@ public :
    * @param[out] out_residuals
    */
   template <typename T>
-  bool operator()(
-    const T* const cam_Rt_main,
-    const T* const cam_Rt_relative,
-    T* out_residuals) const
+  bool operator()(const T* const cam_Rt_main, const T* const cam_Rt_relative, T* out_residuals) const
   {
     //--
     // Apply external parameters (Pose)
@@ -257,11 +250,10 @@ private :
 class ResidualErrorSecondaryCameraFixedRelativeFunctor
 {
 public :
-  ResidualErrorSecondaryCameraFixedRelativeFunctor(
-          const cameras::Pinhole_Intrinsic_Radial_K3 & intrinsics, 
-          const Vec2 & x, 
-          const Vec3 & X,
-          const geometry::Pose3 &relativePose) // const double* const pos_2dpoint
+  ResidualErrorSecondaryCameraFixedRelativeFunctor(const cameras::Pinhole_Intrinsic_Radial_K3 & intrinsics,
+                                                   const Vec2 & pt2d,
+                                                   const Vec3 & pt3d,
+                                                   const geometry::Pose3 &relativePose) // const double* const pos_2dpoint
   {
     // Set the intrinsics
      _K = intrinsics.K();
@@ -272,13 +264,13 @@ public :
      _params.push_back(intrinsics.getParams()[5]);
      
     // Set the observation
-    _observation[0] = x[0];
-    _observation[1] = x[1];
+    _observation[0] = pt2d[0];
+    _observation[1] = pt2d[1];
     
     // Set the 3D point
-    _point(0) = X(0);
-    _point(1) = X(1);
-    _point(2) = X(2);
+    _point(0) = pt3d(0);
+    _point(1) = pt3d(1);
+    _point(2) = pt3d(2);
 
     const openMVG::Mat3 & R = relativePose.rotation();
     const openMVG::Vec3 & t = relativePose.translation();
@@ -308,9 +300,7 @@ public :
    * @param[out] out_residuals
    */
   template <typename T>
-  bool operator()(
-    const T* const cam_Rt_main,
-    T* out_residuals) const
+  bool operator()(const T* const cam_Rt_main, T* out_residuals) const
   {
     //--
     // Apply external parameters (Pose)
@@ -328,19 +318,19 @@ public :
     pos_3dpoint[2]= T(_point(2));
 
     T pos_tmp[3];
-    // Rotate the point according the relative rotation first
+    // Rotate the point according the main rotation first
     ceres::AngleAxisRotatePoint(RMain, pos_3dpoint, pos_tmp);
 
-    // Apply the relative translation first
+    // Apply the main translation first
     pos_tmp[0] += tMain[0];
     pos_tmp[1] += tMain[1];
     pos_tmp[2] += tMain[2];
     
     T pos_proj[3];
-    // Rotate the point according the main camera rotation
+    // Rotate the point according the relative camera rotation
     ceres::AngleAxisRotatePoint(RRelative, pos_tmp, pos_proj);
     
-    // Apply the main camera translation
+    // Apply the relative camera translation
     pos_proj[0] += T(tRelative[0]);
     pos_proj[1] += T(tRelative[1]);
     pos_proj[2] += T(tRelative[2]);
