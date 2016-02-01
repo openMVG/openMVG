@@ -1,5 +1,7 @@
 #include "selection.hpp"
 
+const size_t gridSize = 3;
+  
 /**
 * @brief Sort the matches.
 * @param[in] inputMatches Set of indices for (putative) matches.
@@ -53,7 +55,6 @@ void sortMatches(
 */
 bool matchCompare(const std::pair<float, size_t>& firstElem, const std::pair<float, size_t>& secondElem)
 {
-  // TODO: check scale
 	return firstElem.first > secondElem.first;
 }
 
@@ -88,8 +89,6 @@ void matchesGridFiltering(const openMVG::features::Feat_Regions<openMVG::feature
   const std::size_t lHeight = sfm_data.GetViews().at(indexImagePair.first)->ui_height;
   const std::size_t rWidth = sfm_data.GetViews().at(indexImagePair.second)->ui_width;
   const std::size_t rHeight = sfm_data.GetViews().at(indexImagePair.second)->ui_height;
-  
-  const size_t gridSize = 5;
   
   const size_t leftCellHeight = std::ceil(lHeight / (float)gridSize);
   const size_t leftCellWidth = std::ceil(lWidth / (float)gridSize);
@@ -134,6 +133,9 @@ void matchesGridFiltering(const openMVG::features::Feat_Regions<openMVG::feature
     }
   }
    
+  openMVG::matching::IndMatches finalMatches;
+  finalMatches.reserve(outMatches.size());
+  
   // Combine all cells into a global ordered vector
   for (int cmpt = 0; cmpt < maxSize; ++cmpt)
   {
@@ -141,9 +143,12 @@ void matchesGridFiltering(const openMVG::features::Feat_Regions<openMVG::feature
     {
       if(cell.size() > cmpt)
       {
-        outMatches.push_back(cell[cmpt]);
+        finalMatches.push_back(cell[cmpt]);
       }
     }
   }
   
+  outMatches.swap(finalMatches);
+  
+}
 }
