@@ -309,8 +309,14 @@ public :
     const T * RMain = cam_Rt_main;
     const T * tMain = &cam_Rt_main[3];
     
-    const T * RRelative = (T*)(_relativePose);
-    const T * tRelative = (T*)(&_relativePose[3]);  
+    T RRelative[3];
+    RRelative[0] = T(_relativePose[0]);
+    RRelative[1] = T(_relativePose[1]);
+    RRelative[2] = T(_relativePose[2]);
+    T tRelative[3];  
+    tRelative[0] = T(_relativePose[3]);
+    tRelative[1] = T(_relativePose[4]);
+    tRelative[2] = T(_relativePose[5]);
     
     T pos_3dpoint[3];
     pos_3dpoint[0]= T(_point(0));
