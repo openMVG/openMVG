@@ -1206,29 +1206,103 @@ bool VoctreeLocalizer::localizeRig(const std::vector<std::unique_ptr<features::R
                                         rigPose,
                                         inliers);
   
-  // compute the reprojection error for inliers (just debugging purposes)
-//    for(std::size_t cam = 0; cam < numCameras; ++cam)
-//    {
-//      const std::size_t numPts = vec_pts2d[cam].cols();
-//      const cameras::Pinhole_Intrinsic_Radial_K3 &currCamera = vec_queryIntrinsics[cam];
-//      Mat2X residuals;
-//      if(cam!=0)
-//        residuals = currCamera.residuals(vec_subPoses[cam-1]*rigPose, vec_pts3d[cam], vec_pts2d[cam]);
-//      else
-//        residuals = currCamera.residuals(geometry::Pose3()*rigPose, vec_pts3d[cam], vec_pts2d[cam]);
-//
-//      auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
-//      
-////      std::cout << sqrErrors << std::endl;
-//
-//      const auto &currInliers = inliers[cam];
-//      for(std::size_t j = 0; j < currInliers.size(); ++j)
-//      {
-////        std::cout << sqrErrors(currInliers[j]) << std::endl;
-//        EXPECT_TRUE(sqrErrors(currInliers[j]) <= threshold);
-//      }
-//    }
+  if(!resectionOk)
+    return resectionOk;
   
+  { // just debugging stuff, this block can be removed
+    
+    if(inliers.size() < numCams)
+    {
+      // in general the inlier should be spread among different cameras
+      POPART_CERR("****************** Oh, this is weird!!!!");
+    }
+    else
+    {
+      for(std::size_t cam = 0; cam < numCams; ++cam)
+        POPART_COUT("#inliers for cam " << cam << ": " << inliers[cam].size());
+    }
+    
+    POPART_COUT("Pose after resection:");
+    POPART_COUT("Rotation: " << rigPose.rotation());
+    POPART_COUT("Centre: " << rigPose.center());
+    
+    // compute the reprojection error for inliers (just debugging purposes)
+    for(std::size_t cam = 0; cam < numCams; ++cam)
+    {
+      const std::size_t numPts = vec_pts2D[cam].cols();
+      const cameras::Pinhole_Intrinsic_Radial_K3 &currCamera = vec_queryIntrinsics[cam];
+      Mat2X residuals;
+      if(cam!=0)
+        residuals = currCamera.residuals(vec_subPoses[cam-1]*rigPose, vec_pts3D[cam], vec_pts2D[cam]);
+      else
+        residuals = currCamera.residuals(geometry::Pose3()*rigPose, vec_pts3D[cam], vec_pts2D[cam]);
+
+      auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
+
+//      POPART_COUT("Camera " << cam << " all reprojection errors:");
+//      POPART_COUT(sqrErrors);
+//
+//      POPART_COUT("Camera " << cam << " inliers reprojection errors:");
+      const auto &currInliers = inliers[cam];
+
+      double rmse = 0;
+      for(std::size_t j = 0; j < currInliers.size(); ++j)
+      {
+//          std::cout << sqrErrors(currInliers[j]) << " ";
+          rmse += sqrErrors(currInliers[j]);
+      }
+      if(!currInliers.empty())
+        POPART_COUT("\n\nRMSE inliers: " << std::sqrt(rmse/currInliers.size()));
+    }
+  }
+
+  const bool refineOk = refineRigPose(vec_pts2D,
+                                      vec_pts3D,
+                                      inliers,
+                                      vec_queryIntrinsics,
+                                      vec_subPoses,
+                                      rigPose);
+  
+  if(!refineOk)
+    return resectionOk;
+  
+  { // just debugging stuff, this block can be removed
+    
+    POPART_COUT("Pose after BA:");
+    POPART_COUT("Rotation: " << rigPose.rotation());
+    POPART_COUT("Centre: " << rigPose.center());
+    
+    // compute the reprojection error for inliers (just debugging purposes)
+    for(std::size_t cam = 0; cam < numCams; ++cam)
+    {
+      const std::size_t numPts = vec_pts2D[cam].cols();
+      const cameras::Pinhole_Intrinsic_Radial_K3 &currCamera = vec_queryIntrinsics[cam];
+      Mat2X residuals;
+      if(cam!=0)
+        residuals = currCamera.residuals(vec_subPoses[cam-1]*rigPose, vec_pts3D[cam], vec_pts2D[cam]);
+      else
+        residuals = currCamera.residuals(geometry::Pose3()*rigPose, vec_pts3D[cam], vec_pts2D[cam]);
+
+      auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
+
+//      POPART_COUT("Camera " << cam << " all reprojection errors after BA:");
+//      POPART_COUT(sqrErrors);
+
+//      POPART_COUT("Camera " << cam << " inliers reprojection errors after BA:");
+      const auto &currInliers = inliers[cam];
+
+      double rmse = 0;
+      for(std::size_t j = 0; j < currInliers.size(); ++j)
+      {
+//          std::cout << sqrErrors(currInliers[j]) << " ";
+          rmse += sqrErrors(currInliers[j]);
+      }
+      if(!currInliers.empty())
+        POPART_COUT("\n\nRMSE inliers cam " << cam << ": " << std::sqrt(rmse/currInliers.size()));
+    }
+  }
+    
+  return resectionOk;
 }
 
 #endif // HAVE_OPENGV
