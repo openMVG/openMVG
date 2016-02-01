@@ -326,7 +326,7 @@ bool refineRigPose(const std::vector<geometry::Pose3 > &vec_subPoses,
                                                                    points3D.col(iPoint),
                                                                    subPose));
 
-      if(!cost_function)
+      if(cost_function)
       {
         problem.AddResidualBlock(cost_function,
                                  p_LossFunction,
@@ -434,12 +434,17 @@ bool refineRigPose(const std::vector<Mat> &pts2d,
 
     // Get the inliers 3D points
     const Mat & points3D = pts3d[cam];
+    assert(points3D.rows() == 3);
     // Get their image locations (also referred as observations)
     const Mat & points2D = pts2d[cam];
+    assert(points2D.rows() == 2);
 
     // Add a residual block for all inliers
     for(const IndexT iPoint : inliers[cam])
     {
+      assert(iPoint < points2D.cols());
+      assert(iPoint < points3D.cols());
+      
       // Each Residual block takes a point and a camera as input and outputs a 2
       // dimensional residual. Internally, the cost function stores the observations
       // and the 3D point and compares the reprojection against the observation.
@@ -461,7 +466,7 @@ bool refineRigPose(const std::vector<Mat> &pts2d,
                                                                    points3D.col(iPoint),
                                                                    subPose));
 
-      if(!cost_function)
+      if(cost_function)
       {
         problem.AddResidualBlock(cost_function,
                                  p_LossFunction,
