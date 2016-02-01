@@ -1149,25 +1149,25 @@ bool VoctreeLocalizer::localizeRig(const std::vector<std::unique_ptr<features::R
     throw std::invalid_argument("The parameters are not in the right format!!");
   }
 
-  vector<std::map< pair<IndexT, IndexT>, std::size_t > > vec_occurrences(numCams);
-  vector<Mat> vec_pts3D(numCams);
-  vector<Mat> vec_pts2D(numCams);
+  std::vector<std::map< pair<IndexT, IndexT>, std::size_t > > vec_occurrences(numCams);
+  std::vector<Mat> vec_pts3D(numCams);
+  std::vector<Mat> vec_pts2D(numCams);
 
   // for each camera retrieve the associations
   //@todo parallelize?
   size_t numAssociations = 0;
-  for(std::size_t i = 0; i < numCams; ++i)
+  for(std::size_t cam = 0; cam < numCams; ++cam)
   {
 
     // this map is used to collect the 2d-3d associations as we go through the images
     // the key is a pair <Id3D, Id2d>
     // the element is the pair 3D point - 2D point
-    auto &occurrences = vec_occurrences[i];
-    auto &imageSize = vec_imageSize[i];
-    Mat &pts3D = vec_pts3D[i];
-    Mat &pts2D = vec_pts2D[i];
-    cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics = vec_queryIntrinsics[i];
-    features::SIFT_Regions &queryRegions = *dynamic_cast<features::SIFT_Regions*> (vec_queryRegions[i].get());
+    auto &occurrences = vec_occurrences[cam];
+    auto &imageSize = vec_imageSize[cam];
+    Mat &pts3D = vec_pts3D[cam];
+    Mat &pts2D = vec_pts2D[cam];
+    cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics = vec_queryIntrinsics[cam];
+    features::SIFT_Regions &queryRegions = *dynamic_cast<features::SIFT_Regions*> (vec_queryRegions[cam].get());
     const bool useInputIntrinsics = true;
     getAllAssociations(queryRegions,
                        imageSize,
@@ -1183,20 +1183,28 @@ bool VoctreeLocalizer::localizeRig(const std::vector<std::unique_ptr<features::R
   // @todo Here it could be possible to filter the associations according to their
   // occurrences, eg giving priority to those associations that are more frequent
 
-  const size_t minNumAssociations = 5;  //possible parameter?
+  const std::size_t minNumAssociations = 5;  //possible parameter?
   if(numAssociations < minNumAssociations)
   {
     POPART_COUT("[poseEstimation]\tonly " << numAssociations << " have been found, not enough to do the resection!");
     return false;
   }
   
+  {
+    for(std::size_t cam = 0; cam < vec_subPoses.size(); ++cam)
+    {
+    POPART_COUT("Rotation: " << vec_subPoses[cam].rotation());
+    POPART_COUT("Centre: " << vec_subPoses[cam].center());
+    }
+  }
+  
   std::vector<std::vector<std::size_t> > inliers;
-  return localization::rigResection(vec_pts2D,
-                                    vec_pts3D,
-                                    vec_queryIntrinsics,
-                                    vec_subPoses,
-                                    rigPose,
-                                    inliers);
+  const bool resectionOk = rigResection(vec_pts2D,
+                                        vec_pts3D,
+                                        vec_queryIntrinsics,
+                                        vec_subPoses,
+                                        rigPose,
+                                        inliers);
   
   // compute the reprojection error for inliers (just debugging purposes)
 //    for(std::size_t cam = 0; cam < numCameras; ++cam)
