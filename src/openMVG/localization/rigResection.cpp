@@ -100,7 +100,6 @@ bool rigResection(const std::vector<Mat> &pts2d,
       
       // normalize the bearing-vector to 1
       bearing = bearing / bearing.norm();
-//      std::cout << bearing << std::endl;
 
       bearingVectors.push_back(bearing);
       
@@ -141,7 +140,12 @@ bool rigResection(const std::vector<Mat> &pts2d,
   const auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
   
   if(!success)
+  {
+    if(verbosity)
+      std::cout << "Resection Failed" << std::endl;
+    
     return false;
+  }
   
   const auto &sol = ransac.model_coefficients_;
   // again, the output is a real pose, with the center and the rotation expressed

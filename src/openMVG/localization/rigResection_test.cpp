@@ -10,6 +10,7 @@
 #include <openMVG/geometry/pose3.hpp>
 
 #include "testing/testing.h"
+#include "optimization.hpp"
 
 #include <vector>
 #include <math.h>
@@ -291,6 +292,13 @@ TEST(rigResection, simpleNoNoiseNoOutliers)
       EXPECT_TRUE(inliers[i].size() == vec_pts2d[i].cols());
     }
 
+    EXPECT_TRUE(localization::refineRigPose(vec_pts2d,
+                                            vec_pts3d,
+                                            inliers,
+                                            vec_queryIntrinsics,
+                                            vec_subPoses,
+                                            rigPose));
+
     // THIS TEST CAN FAIL AS THE REPROJECTION ERROR USED INSIDE THE GP3P IS BASED
     // ON THE ANGLE DIFFERENCE RATHER THAN THE REPROJECTED POINT DIFFERENCE
     // check reprojection errors
@@ -383,6 +391,13 @@ TEST(rigResection, simpleWithNoiseNoOutliers)
     {
       EXPECT_NEAR(center(i), 0.0, threshold);
     }
+
+    EXPECT_TRUE(localization::refineRigPose(vec_pts2d,
+                                            vec_pts3d,
+                                            inliers,
+                                            vec_queryIntrinsics,
+                                            vec_subPoses,
+                                            rigPose));
   }
 }
 
@@ -433,6 +448,13 @@ TEST(rigResection, simpleNoNoiseWithOutliers)
 
     std::cout << "rigPose\n" << rigPose.rotation() << "\n" << rigPose.center()<< std::endl;
 
+    EXPECT_TRUE(localization::refineRigPose(vec_pts2d,
+                                            vec_pts3d,
+                                            inliers,
+                                            vec_queryIntrinsics,
+                                            vec_subPoses,
+                                            rigPose));
+
     // THIS TEST CAN FAIL AS THE REPROJECTION ERROR USED INSIDE THE GP3P IS BASED
     // ON THE ANGLE DIFFERENCE RATHER THAN THE REPROJECTED POINT DIFFERENCE
 //    // check reprojection errors
@@ -445,9 +467,9 @@ TEST(rigResection, simpleNoNoiseWithOutliers)
 //        residuals = currCamera.residuals(vec_subPoses[cam-1]*rigPose, vec_pts3d[cam], vec_pts2d[cam]);
 //      else
 //        residuals = currCamera.residuals(geometry::Pose3()*rigPose, vec_pts3d[cam], vec_pts2d[cam]);
-//
+//  
 //      auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
-//      
+//
 ////      std::cout << sqrErrors << std::endl;
 //
 //      const auto &currInliers = inliers[cam];
