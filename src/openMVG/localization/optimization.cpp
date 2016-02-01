@@ -265,7 +265,7 @@ bool refineRigPose(const std::vector<geometry::Pose3 > &vec_subPoses,
                    const std::vector<localization::LocalizationResult> vec_localizationResults,
                    geometry::Pose3 & rigPose)
 {
-  const size_t numCameras = vec_localizationResults.size();
+  const std::size_t numCameras = vec_localizationResults.size();
   assert(vec_subPoses.size() == numCameras - 1);
   
   ceres::Problem problem;
@@ -288,7 +288,7 @@ bool refineRigPose(const std::vector<geometry::Pose3 > &vec_subPoses,
   // todo: make the LOSS function and the parameter an option
 
   // For all visibility add reprojections errors:
-  for(size_t iLocalizer = 0; iLocalizer < numCameras; ++iLocalizer)
+  for(std::size_t iLocalizer = 0; iLocalizer < numCameras; ++iLocalizer)
   {
     const localization::LocalizationResult & localizationResult = vec_localizationResults[iLocalizer];
 
