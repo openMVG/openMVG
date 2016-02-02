@@ -90,7 +90,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('v', iMatchingVideoMode, "video_mode_matching") );
   cmd.add( make_option('l', sPredefinedPairList, "pair_list") );
   cmd.add( make_option('s', rangeStart, "range_start") );
-  cmd.add( make_option('r', rangeSize, "range_size") );
+  cmd.add( make_option('d', rangeSize, "range_size") );
   cmd.add( make_option('n', sNearestMatchingMethod, "nearest_matching_method") );
   cmd.add( make_option('f', bForce, "force") );
   cmd.add( make_option('m', bGuided_matching, "guided_matching") );
@@ -126,7 +126,7 @@ int main(int argc, char **argv)
       << "[-s]--range_start] range image index start\n"
       << "  To compute only the matches for specified range.\n"
       << "  This allows to compute different matches on different computers in parallel.\n"
-      << "[-r]--range_size] range size\n"
+      << "[-d]--range_size] range size\n"
       << "  To compute only the matches for specified range.\n"
       << "  This allows to compute different matches on different computers in parallel.\n"
       << "[-n|--nearest_matching_method]\n"
