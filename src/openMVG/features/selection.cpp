@@ -151,4 +151,3 @@ void matchesGridFiltering(const openMVG::features::Feat_Regions<openMVG::feature
   outMatches.swap(finalMatches);
   
 }
-}
