@@ -44,8 +44,6 @@ TEST(Tracks, Simple) {
   TracksBuilder trackBuilder;
   trackBuilder.Build( map_pairwisematches );
 
-  trackBuilder.ExportToStream(std::cout);
-
   STLMAPTracks map_tracks;
   trackBuilder.ExportToSTL(map_tracks);
 

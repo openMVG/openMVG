@@ -199,7 +199,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
 
         if (map_matchesIJK.size() >= 2) {
           tracksBuilder.Build(map_matchesIJK);
-          tracksBuilder.Filter(3, false);
+          tracksBuilder.Filter(3);
           tracksBuilder.ExportToSTL(map_tracksCommon);
         }
 
