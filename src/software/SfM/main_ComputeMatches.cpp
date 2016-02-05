@@ -246,9 +246,44 @@ int main(int argc, char **argv)
   //    - Keep correspondences only if NearestNeighbor ratio is ok
   //---------------------------------------
 
+  // From matching mode compute the pair list that have to be matched:
+  Pair_Set pairs;
+  std::set<IndexT> filter;
+  switch(ePairmode)
+  {
+    case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(sfm_data.GetViews(), rangeStart, rangeSize); break;
+    case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(sfm_data.GetViews(), iMatchingVideoMode); break;
+    case PAIR_FROM_FILE:
+      std::cout << "Load pairList from file: " << sPredefinedPairList << std::endl;
+      if(!loadPairs(sPredefinedPairList, pairs, orderPairs, rangeStart, rangeSize))
+      {
+          return EXIT_FAILURE;
+      }
+      break;
+  }
+  
+  std::cout << "Number of pairs: " << pairs.size() << std::endl;
+  
+  //Creation of the filter
+  for(Pair_Set::const_iterator pair = pairs.begin(); pair != pairs.end(); pair++)
+  {
+    
+    IndexT firstElement = pair->first;
+    IndexT secondElement = pair->second;
+
+    if(filter.find(firstElement) == filter.end())
+    {
+      filter.insert(firstElement);
+    }
+    if(filter.find(secondElement) == filter.end())
+    {
+      filter.insert(secondElement);
+    }
+  }
+  
   // Load the corresponding view regions
-  std::shared_ptr<Regions_Provider> regions_provider = std::make_shared<Regions_Provider>();
-  if(!regions_provider->load(sfm_data, sMatchesDirectory, regions_type)) {
+  std::shared_ptr<Regions_Provider> regions_provider = std::make_shared<Regions_Provider>();  
+  if(!regions_provider->load(sfm_data, sMatchesDirectory, regions_type, filter)) {
     std::cerr << std::endl << "Invalid regions." << std::endl;
     return EXIT_FAILURE;
   }
@@ -345,20 +380,6 @@ int main(int argc, char **argv)
     // Perform the matching
     system::Timer timer;
     {
-      // From matching mode compute the pair list that have to be matched:
-      Pair_Set pairs;
-      switch(ePairmode)
-      {
-        case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(sfm_data.GetViews(), rangeStart, rangeSize); break;
-        case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(sfm_data.GetViews(), iMatchingVideoMode); break;
-        case PAIR_FROM_FILE:
-          std::cout << "Load pairList from file: " << sPredefinedPairList << std::endl;
-          if(!loadPairs(sPredefinedPairList, pairs, orderPairs, rangeStart, rangeSize))
-          {
-              return EXIT_FAILURE;
-          }
-          break;
-      }
       
       if(pairs.empty())
       {
