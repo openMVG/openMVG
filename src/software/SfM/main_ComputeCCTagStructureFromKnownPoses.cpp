@@ -7,7 +7,7 @@
 
 #include "openMVG/sfm/sfm.hpp"
 #include "openMVG/system/timer.hpp"
-#include "openMVG/localization/svgVisualization.hpp"
+#include "openMVG/features/svgVisualization.hpp"
 
 #include "openMVG/features/cctag/CCTAG_describer.hpp"
 
