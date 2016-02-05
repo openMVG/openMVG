@@ -148,7 +148,7 @@ int main(int argc, char **argv)
       << "  Order the pairs\n"
       << "[-u|--max_matches]\n"
       << "[-y|--use_grid_sort]\n"
-      << "  Use matching grid sort"
+      << "  Use matching grid sort\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -550,37 +550,7 @@ int main(int argc, char **argv)
     
     //---------------------------------------
     //-- Export geometric filtered matches
-    //---------------------------------------
-    /*if( !matchFilePerImage )
-    {
-      ExportPairedIndMatchFile(map_GeometricMatches, std::string(sMatchesDirectory + "/" + sGeometricMatchesFilename).c_str());
-    }
-    else
-    {
-      ExportPairedIndMatchFilePerImage(map_GeometricMatches, sMatchesDirectory, sGeometricMatchesFilename);
-    }
-
-    std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
-
-    //-- export Adjacency matrix
-    std::cout << "\n Export Adjacency Matrix of the pairwise's geometric matches"
-      << std::endl;
-    PairWiseMatchingToAdjacencyMatrixSVG(vec_fileNames.size(),
-      map_GeometricMatches,
-      stlplus::create_filespec(sMatchesDirectory, "GeometricAdjacencyMatrix", "svg"));
-
-    //-- export view pair graph once geometric filter have been done
-    {
-      std::set<IndexT> set_ViewIds;
-      std::transform(sfm_data.GetViews().begin(), sfm_data.GetViews().end(),
-        std::inserter(set_ViewIds, set_ViewIds.begin()), stl::RetrieveKey());
-      graph::indexedGraph putativeGraph(set_ViewIds, getPairs(map_GeometricMatches));
-      graph::exportToGraphvizData(
-        stlplus::create_filespec(sMatchesDirectory, "geometric_matches.dot"),
-        putativeGraph.g);
-    }
-  }*/
-    
+    //---------------------------------------   
     if(!matchFilePerImage)
     {
       ExportPairedIndMatchFile(finalMatches, std::string(sMatchesDirectory + "/" + sGeometricMatchesFilename).c_str());
