@@ -1,3 +1,3 @@
-           
-UNIT_TEST(openMVG tracks "${LEMON_LIBRARY}")
-            
+
+UNIT_TEST(openMVG tracks "")
+

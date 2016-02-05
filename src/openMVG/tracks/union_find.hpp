@@ -17,7 +17,7 @@ namespace openMVG  {
 //--
 // A disjoint-set data structure also called a union–find data structure
 // or merge–find set, is a data structure that keeps track of a set of elements
-// partitioned into a number of disjoint (nonoverlapping) subsets.
+// partitioned into a number of disjoint (non-overlapping) subsets.
 // It supports two operations:
 // - Find: Determine which subset a particular element is in.
 //   - It returns an item from this set that serves as its "representative";
@@ -32,7 +32,9 @@ struct UnionFind
   // Represent the DS/UF forest thanks to two array:
   // A parent 'pointer tree' where each node holds a reference to its parent node
   std::vector<unsigned int> m_cc_parent;
-  // A 'rank/size array' to know the size of each connected component
+  // A rank array used for union by rank
+  std::vector<unsigned int> m_cc_rank;
+  // A 'size array' to know the size of each connected component
   std::vector<unsigned int> m_cc_size;
 
   // Init the UF structure with num_cc nodes
@@ -46,6 +48,8 @@ struct UnionFind
     // Parents id have their own CC id {0,n}
     m_cc_parent.resize(num_cc);
     std::iota(m_cc_parent.begin(), m_cc_parent.end(), 0);
+    // Rank array (0)
+    m_cc_rank.resize(num_cc, 0);
   }
 
   // Return the number of nodes that have been initialized in the UF tree
@@ -60,12 +64,10 @@ struct UnionFind
     unsigned int i
   )
   {
-    while (i != m_cc_parent[i])
-    {
-      m_cc_parent[i] = m_cc_parent[m_cc_parent[i]]; // Path compression
-      i = m_cc_parent[i];
-    }
-    return i;
+    // Recursively set all branch as children of root (Path compression)
+    if (m_cc_parent[i] != i)
+        m_cc_parent[i] = Find(m_cc_parent[i]);
+     return m_cc_parent[i];
   }
 
   // Replace sets containing I and J with their union
@@ -77,8 +79,15 @@ struct UnionFind
   {
     i = Find(i);
     j = Find(j);
-    if (i==j) return;
-    if (m_cc_size[i] < m_cc_size[j])
+    if (i==j)
+    { // Already in the same set. Nothing to do
+      return;
+    }
+
+    // x and y are not already in same set. Merge them.
+    // Perform an union by rank:
+    //  - always attach the smaller tree to the root of the larger tree
+    if (m_cc_rank[i] < m_cc_rank[j])
     {
       m_cc_parent[i] = j;
       m_cc_size[j] += m_cc_size[i];
@@ -87,6 +96,8 @@ struct UnionFind
     {
       m_cc_parent[j] = i;
       m_cc_size[i] += m_cc_size[j];
+      if (m_cc_rank[i] > m_cc_rank[j])
+        ++m_cc_rank[i];
     }
   }
 };

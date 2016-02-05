@@ -32,10 +32,6 @@
 #ifndef OPENMVG_TRACKS_H_
 #define OPENMVG_TRACKS_H_
 
-#include "lemon/list_graph.h"
-#include "lemon/unionfind.h"
-using namespace lemon;
-
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/tracks/union_find.hpp"
 #include "openMVG/tracks/flat_pair_map.hpp"
