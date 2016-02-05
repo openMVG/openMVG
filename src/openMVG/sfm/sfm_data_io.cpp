@@ -15,8 +15,8 @@
 #include "openMVG/sfm/sfm_data_io_ply.hpp"
 #include "openMVG/sfm/sfm_data_io_baf.hpp"
 
-#include "openMVG/dataio/AlembicExporter.hpp"
-#include "openMVG/dataio/AlembicImporter.hpp"
+#include "openMVG/sfm/AlembicExporter.hpp"
+#include "openMVG/sfm/AlembicImporter.hpp"
 
 namespace openMVG {
 namespace sfm {

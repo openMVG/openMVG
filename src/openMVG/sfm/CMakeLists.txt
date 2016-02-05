@@ -25,9 +25,12 @@ target_link_libraries(
   openMVG_lInftyComputerVision
   openMVG_system
   openMVG_matching
-  openMVG_dataio
 )
 set_target_properties(openMVG_sfm PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
+
+if(OpenMVG_USE_ALEMBIC)
+  target_link_libraries( openMVG_sfm ${ABC_LIBRARIES})
+endif(OpenMVG_USE_ALEMBIC)
 
 install(TARGETS openMVG_sfm DESTINATION lib EXPORT openMVG-targets)
 
