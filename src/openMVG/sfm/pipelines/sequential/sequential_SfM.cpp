@@ -149,33 +149,30 @@ bool SequentialSfMReconstructionEngine::Process()
   //-------------------
   //-- Incremental reconstruction
   //-------------------
-
   if (!InitLandmarkTracks())
     return false;
 
   // Initial pair choice
-  Pair initialPairIndex = _initialpair;
-  if (_initialpair == Pair(0,0))
+  if(_initialpair == Pair(0,0))
   {
-    Pair putative_initial_pair;
-    if (AutomaticInitialPairChoice(putative_initial_pair))
+    if(!AutomaticInitialPairChoice(_initialpair))
     {
-      initialPairIndex = _initialpair = putative_initial_pair;
-    }
-    else if(_userInteraction) // Cannot find a valid initial pair, try to set it by hand?
-    {
-      if (!ChooseInitialPair(_initialpair))
+      if(_userInteraction)
+      {
+        // Cannot find a valid initial pair, try to set it by hand?
+        if(!ChooseInitialPair(_initialpair))
+          return false;
+      }
+      else
+      {
         return false;
-    }
-    else
-    {
-      return false;
+      }
     }
   }
   // Else a starting pair was already initialized before
 
   // Initial pair Essential Matrix and [R|t] estimation.
-  if (!MakeInitialPair3D(initialPairIndex))
+  if (!MakeInitialPair3D(_initialpair))
     return false;
 
   std::set<size_t> reconstructedViewIds;
