@@ -34,7 +34,6 @@
 
 #include "lemon/list_graph.h"
 #include "lemon/unionfind.h"
-using namespace lemon;
 
 #include "openMVG/matching/indMatch.hpp"
 
@@ -46,9 +45,10 @@ using namespace lemon;
 #include <map>
 #include <memory>
 
-namespace openMVG  {
+namespace openMVG {
 
 using namespace openMVG::matching;
+using namespace lemon;
 
 /// Lightweight copy of the flat_map of BOOST library
 /// Use a vector to speed up insertion (preallocated array)
@@ -270,6 +270,7 @@ struct TracksUtilsMap
     const STLMAPTracks & map_tracksIn,
     STLMAPTracks & map_tracksOut)
   {
+    assert(!set_imageIndex.empty());
     map_tracksOut.clear();
 
     // Go along the tracks
@@ -278,18 +279,17 @@ struct TracksUtilsMap
     {
       // Look if the track contains the provided view index & save the point ids
       submapTrack map_temp;
-      bool bTest = true;
       for (std::set<size_t>::const_iterator iterIndex = set_imageIndex.begin();
-        iterIndex != set_imageIndex.end() && bTest; ++iterIndex)
+        iterIndex != set_imageIndex.end(); ++iterIndex)
       {
         submapTrack::const_iterator iterSearch = iterT->second.find(*iterIndex);
-        if (iterSearch != iterT->second.end())
-          map_temp[iterSearch->first] = iterSearch->second;
-        else
-          bTest = false;
+        if (iterSearch == iterT->second.end())
+            break; // at least one request image is not in the track
+        map_temp[iterSearch->first] = iterSearch->second;
       }
-
-      if (!map_temp.empty() && map_temp.size() == set_imageIndex.size())
+      // if we have a feature for each input image
+      // we can add it to the output tracks.
+      if (map_temp.size() == set_imageIndex.size())
         map_tracksOut[iterT->first] = std::move(map_temp);
     }
     return !map_tracksOut.empty();
