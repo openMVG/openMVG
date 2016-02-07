@@ -72,6 +72,7 @@ int main(int argc, char **argv)
   bool bUpRight = false;
   std::string sNearestMatchingMethod = "AUTO";
   bool bForce = false;
+  bool bSavePutativeMatches = false;
   bool bGuided_matching = false;
   int imax_iteration = 2048;
   bool matchFilePerImage = false;
@@ -89,6 +90,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('r', rangeSize, "range_size") );
   cmd.add( make_option('n', sNearestMatchingMethod, "nearest_matching_method") );
   cmd.add( make_option('f', bForce, "force") );
+  cmd.add( make_option('f', bSavePutativeMatches, "save_putative_matches") );
   cmd.add( make_option('m', bGuided_matching, "guided_matching") );
   cmd.add( make_option('I', imax_iteration, "max_iteration") );
   cmd.add( make_option('x', matchFilePerImage, "match_file_per_image") );
@@ -102,7 +104,8 @@ int main(int argc, char **argv)
       << "[-i|--input_file] a SfM_Data file\n"
       << "[-o|--out_dir path] output path where computed matches are stored\n"
       << "\n[Optional]\n"
-      << "[-f|--force] Force to recompute data]\n"
+      << "[-f|--force] Force to recompute data\n"
+      << "[-p|--save_putative_matches] Save putative matches\n"
       << "[-r|--ratio] Distance ratio to discard non meaningful matches\n"
       << "   0.8: (default).\n"
       << "[-g|--geometric_model]\n"
@@ -138,8 +141,7 @@ int main(int argc, char **argv)
       << "  use the found model to improve the pairwise correspondences.\n"
       << "[-x|--match_file_per_image]\n"
       << "  Save matches in a separate file per image\n"
-      << "[-p|--order_pairs]\n"
-      << "  Order the pairs"
+      << "[-P|--order_pairs] Order image pairs"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -152,6 +154,7 @@ int main(int argc, char **argv)
             << "--out_dir " << sMatchesDirectory << "\n"
             << "Optional parameters:" << "\n"
             << "--force " << bForce << "\n"
+            << "--save_putative_matches " << bSavePutativeMatches << "\n"
             << "--ratio " << fDistRatio << "\n"
             << "--geometric_model " << sGeometricModel << "\n"
             << "--video_mode_matching " << iMatchingVideoMode << "\n"
@@ -375,7 +378,8 @@ int main(int argc, char **argv)
       //---------------------------------------
       //-- Export putative matches
       //---------------------------------------
-      Save(map_PutativesMatches, sMatchesDirectory, "putative", "bin", matchFilePerImage);
+      if(bSavePutativeMatches)
+        Save(map_PutativesMatches, sMatchesDirectory, "putative", "bin", matchFilePerImage);
     }
     std::cout << "Task (Regions Matching) done in (s): " << timer.elapsed() << std::endl;
   }
