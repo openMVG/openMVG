@@ -76,7 +76,6 @@ int main(int argc, char **argv)
   bool bGuided_matching = false;
   int imax_iteration = 2048;
   bool matchFilePerImage = false;
-  bool orderPairs = false;
 
   //required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -94,7 +93,6 @@ int main(int argc, char **argv)
   cmd.add( make_option('m', bGuided_matching, "guided_matching") );
   cmd.add( make_option('I', imax_iteration, "max_iteration") );
   cmd.add( make_option('x', matchFilePerImage, "match_file_per_image") );
-  cmd.add( make_option('p', orderPairs, "order_pairs") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -141,7 +139,6 @@ int main(int argc, char **argv)
       << "  use the found model to improve the pairwise correspondences.\n"
       << "[-x|--match_file_per_image]\n"
       << "  Save matches in a separate file per image\n"
-      << "[-P|--order_pairs] Order image pairs"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -163,7 +160,6 @@ int main(int argc, char **argv)
             << "--range_size " << rangeSize <<  "\n"
             << "--nearest_matching_method " << sNearestMatchingMethod << "\n"
             << "--guided_matching " << bGuided_matching << "\n"
-            << "--order_pairs " << orderPairs << "\n"
             << "--match_file_per_image " << matchFilePerImage << std::endl;
 
   EPairMode ePairmode = (iMatchingVideoMode == -1 ) ? PAIR_EXHAUSTIVE : PAIR_CONTIGUOUS;
@@ -349,7 +345,7 @@ int main(int argc, char **argv)
         case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(sfm_data.GetViews(), iMatchingVideoMode); break;
         case PAIR_FROM_FILE:
           std::cout << "Load pairList from file: " << sPredefinedPairList << std::endl;
-          if(!loadPairs(sPredefinedPairList, pairs, orderPairs, rangeStart, rangeSize))
+          if(!loadPairs(sPredefinedPairList, pairs, rangeStart, rangeSize))
           {
               return EXIT_FAILURE;
           }
