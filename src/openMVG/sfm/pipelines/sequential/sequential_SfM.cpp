@@ -217,7 +217,11 @@ bool SequentialSfMReconstructionEngine::Process()
   Histogram<double> h;
   ComputeResidualsHistogram(&h);
   std::cout << "\nHistogram of residuals:" << h.ToString() << std::endl;
-
+    
+  Histogram<double> hTracks;
+  ComputeTracksLengthsHistogram(&hTracks);
+  std::cout << "\nHistogram of tracks length:" << hTracks.ToString() << std::endl;
+  
   if (!_sLoggingFile.empty())
   {
     using namespace htmlDocument;
@@ -237,17 +241,14 @@ bool SequentialSfMReconstructionEngine::Process()
 
     _htmlDocStream->pushInfo(htmlMarkup("h2","Histogram of reprojection-residuals"));
 
+    
     const std::vector<double> xBin = h.GetXbinsValue();
-    std::pair< std::pair<double,double>, std::pair<double,double> > range =
-      autoJSXGraphViewport<double>(xBin, h.GetHist());
-
     htmlDocument::JSXGraphWrapper jsxGraph;
-    jsxGraph.init("3DtoImageResiduals",600,300);
-    jsxGraph.addXYChart(xBin, h.GetHist(), "line,point");
-    jsxGraph.UnsuspendUpdate();
-    jsxGraph.setViewport(range);
-    jsxGraph.close();
-    _htmlDocStream->pushInfo(jsxGraph.toStr());
+    _htmlDocStream->pushXYChart(xBin, h.GetHist(),"3DtoImageResiduals");
+    
+    const std::vector<double> xBinTracks = hTracks.GetXbinsValue();
+    htmlDocument::JSXGraphWrapper jsxGraphTracks;
+    _htmlDocStream->pushXYChart(xBinTracks, hTracks.GetHist(),"3DtoTracksSize");
   }
   return true;
 }
@@ -761,7 +762,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
   return !_sfm_data.structure.empty();
 }
 
-double SequentialSfMReconstructionEngine::ComputeResidualsHistogram(Histogram<double> * histo)
+double SequentialSfMReconstructionEngine::ComputeResidualsHistogram(Histogram<double> * histo) const
 {
   // Collect residuals for each observation
   std::vector<float> vec_residuals;
@@ -804,6 +805,41 @@ double SequentialSfMReconstructionEngine::ComputeResidualsHistogram(Histogram<do
     return dMean;
   }
   return -1.0;
+}
+
+double SequentialSfMReconstructionEngine::ComputeTracksLengthsHistogram(Histogram<double> * histo) const
+{
+  // Collect tracks size: number of 2D observations per 3D points
+  std::vector<float> vec_nbTracks;
+  vec_nbTracks.reserve(_sfm_data.GetLandmarks().size());
+
+  for(Landmarks::const_iterator iterTracks = _sfm_data.GetLandmarks().begin();
+      iterTracks != _sfm_data.GetLandmarks().end(); ++iterTracks)
+  {
+    const Observations & obs = iterTracks->second.obs;
+    vec_nbTracks.push_back(obs.size());
+  }
+
+  float dMin, dMax, dMean, dMedian;
+  minMaxMeanMedian<float>(
+    vec_nbTracks.begin(), vec_nbTracks.end(),
+    dMin, dMax, dMean, dMedian);
+
+  if (histo)
+  {
+    *histo = Histogram<double>(dMin, dMax, dMax-dMin+1);
+    histo->Add(vec_nbTracks.begin(), vec_nbTracks.end());
+  }
+
+  std::cout << std::endl
+    << "SequentialSfMReconstructionEngine::ComputeTracksLengthsHistogram." << "\n"
+    << "\t-- #Tracks:\t" << _sfm_data.GetLandmarks().size() << std::endl
+    << "\t-- Tracks Length min:\t" << dMin << std::endl
+    << "\t-- Tracks Length median:\t" << dMedian << std::endl
+    << "\t-- Tracks Length max:\t "  << dMax << std::endl
+    << "\t-- Tracks Length mean:\t " << dMean << std::endl;
+
+  return dMean;
 }
 
 /// Functor to sort a vector of pair given the pair's second value

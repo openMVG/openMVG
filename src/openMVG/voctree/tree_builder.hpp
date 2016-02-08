@@ -142,7 +142,6 @@ void TreeBuilder<Feature, DistanceT, FeatureAllocator>::build(const FeatureVecto
         // Cluster the current subset into k centers.
         if(verbose_ > 2) printf("#\tclustering the current subset of %lu elements into %d centers\n", subset.size(), k);
         kmeans_.clusterPointers(subset, k, centers, membership);
-        //printf("LOL\n");
         // Add the centers and mark them as valid.
         tree_.centers().insert(tree_.centers().end(), centers.begin(), centers.end());
         tree_.validCenters().insert(tree_.validCenters().end(), k, 1);

@@ -46,7 +46,7 @@ public:
   }
 
 protected:
-  Vec2f _coords;  // (x, y).
+  Vec2f _coords;  // (x, y)
 };
 
 typedef std::vector<PointFeature> PointFeatures;
