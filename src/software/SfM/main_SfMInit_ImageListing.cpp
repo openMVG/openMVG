@@ -237,16 +237,16 @@ int main(int argc, char **argv)
     }
   }
 
+  if (sKmatrix.size() > 0 && userFocalLengthPixel != -1.0)
+  {
+    std::cerr << "\nCannot combine -f and -k options" << std::endl;
+    return EXIT_FAILURE;
+  }
+
   if (sKmatrix.size() > 0 &&
     !checkIntrinsicStringValidity(sKmatrix, userFocalLengthPixel, ppx, ppy) )
   {
     std::cerr << "\nInvalid K matrix input" << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  if (sKmatrix.size() > 0 && userFocalLengthPixel != -1.0)
-  {
-    std::cerr << "\nCannot combine -f and -k options" << std::endl;
     return EXIT_FAILURE;
   }
 
