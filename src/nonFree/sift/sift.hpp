@@ -216,7 +216,6 @@ bool extractSIFT(const image::Image<unsigned char>& image,
     // Update gradient before launching parallel extraction
     vl_sift_update_gradient(filt);
 
-    std::cout << "TEST octave_width: " << filt->octave_width << std::endl;
     #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for private(vlFeatDescriptor, descriptor)
     #endif
