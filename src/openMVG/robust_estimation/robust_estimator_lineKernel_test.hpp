@@ -33,7 +33,8 @@
 namespace openMVG {
 namespace robust{
 
-struct LineSolver {
+struct LineSolver
+{
   enum { MINIMUM_SAMPLES = 2 };
   enum { MAX_MODELS = 1 };
 
@@ -42,26 +43,30 @@ struct LineSolver {
     Mat X(x.cols(), 2);
     X.col(0).setOnes();
     X.col(1) = x.row(0).transpose();
-    Mat A(X.transpose() * X);
+    const Mat A(X.transpose() * X);
     const Vec b(X.transpose() * x.row(1).transpose());
     Eigen::JacobiSVD<Mat> svd(A, Eigen::ComputeFullU | Eigen::ComputeFullV);
-    lines->push_back(svd.solve(b));
+    const Vec2 ba = svd.solve(b);
+    lines->push_back(ba);
   }
 };
 
-struct pointToLineError {
-  static double Error(const Vec2 &lineEq, const Vec2 &xs) {
+struct pointToLineError
+{
+  static double Error(const Vec2 &lineEq, const Vec2 &xs)
+  {
     const double b = lineEq[0];
     const double a = lineEq[1];
     const double x = xs[0];
     const double y = xs[1];
-    const double e = y - (a*x + b);
+    const double e = y - (a * x + b);
     return e*e;
   }
 };
 
 // Embed the basic solver to fit from sampled point set
-struct LineKernel {
+struct LineKernel
+{
   typedef Vec2 Model;  // line parametrization: a, b;
   enum { MINIMUM_SAMPLES = 2 };
 
@@ -69,15 +74,17 @@ struct LineKernel {
 
   size_t NumSamples() const { return static_cast<size_t> (xs_.cols()); }
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Vec2> *lines) const {
-    assert(samples.size() >= (unsigned int)MINIMUM_SAMPLES);
+  void Fit(const std::vector<size_t> &samples, std::vector<Vec2> *lines) const
+  {
+    assert(samples.size() >= (unsigned int) MINIMUM_SAMPLES);
     // Standard least squares solution.
     const Mat2X sampled_xs = ExtractColumns(xs_, samples);
 
     LineSolver::Solve(sampled_xs, lines);
   }
 
-  double Error(size_t sample, const Vec2 &ba) const {
+  double Error(size_t sample, const Vec2 &ba) const
+  {
     return pointToLineError::Error(ba, xs_.col(sample));
   }
 

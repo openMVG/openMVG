@@ -133,14 +133,17 @@ void EvaluteToGT(
   // -b. angle between rotation matrix
 
   // -a. distance between camera center
+  double trajectoryLength = 0;
   std::vector<double> vec_baselineErrors;
+  for(std::size_t i = 0; i < numCameras; ++i)
   {
-    for (size_t i = 0; i  < numCameras; ++i)
-    {
-      const double dResidual = (vec_camCenterGT[i] - vec_camPosComputed_T[i]).norm();
-      vec_baselineErrors.push_back(dResidual);
-    }
+    const double dResidual = (vec_camCenterGT[i] - vec_camPosComputed_T[i]).norm();
+    vec_baselineErrors.push_back(dResidual);
+    if(i > 0 && i < numCameras-2)
+      trajectoryLength += (vec_camCenterGT[i] - vec_camCenterGT[i+1]).norm();
   }
+  
+  std::cout << std::endl << "\nTrajectory length: " << trajectoryLength ;
 
   // -b. angle between rotation matrix
   std::vector<double> vec_angularErrors;

@@ -163,9 +163,6 @@ void AlembicExporter::appendCamera(const std::string &cameraName,
   const float sensorHeight_pix = std::min(imgWidth, imgHeight);
   const float imgRatio = sensorHeight_pix / sensorWidth_pix;
   const float focalLength_pix = cam->focal();
-  const float hoffset_pix = cam->principal_point()(0);
-  const float voffset_pix = cam->principal_point()(1);
-  
 
   const float sensorHeight_mm = sensorWidth_mm * imgRatio;
   const float focalLength_mm = sensorWidth_mm * focalLength_pix / sensorWidth_pix;
@@ -174,16 +171,12 @@ void AlembicExporter::appendCamera(const std::string &cameraName,
   // openMVG: origin is (top,left) corner and orientation is (bottom,right)
   // ABC: origin is centered and orientation is (up,right)
   // Following values are in cm, hence the 0.1 multiplier
-  const float hoffset_cm = 0.1 * ((imgWidth*0.5) - hoffset_pix) * pix2mm;
-  const float voffset_cm = -0.1 * ((imgHeight*0.5) - voffset_pix) * pix2mm; // vertical flip
   const float haperture_cm = 0.1 * imgWidth * pix2mm;
   const float vaperture_cm = 0.1 * imgHeight * pix2mm;
 
   camSample.setFocalLength(focalLength_mm);
   camSample.setHorizontalAperture(haperture_cm);
   camSample.setVerticalAperture(vaperture_cm);
-  camSample.setHorizontalFilmOffset(hoffset_cm);
-  camSample.setVerticalFilmOffset(voffset_cm);
   
   // Add sensor width (largest image side) in pixels as custom property
   OUInt32Property propSensorWidth_pix(userProps, "mvg_sensorWidth_pix");
@@ -296,8 +289,6 @@ void AlembicExporter::addCameraKeyframe(const geometry::Pose3 &pose,
   const float sensorHeight_pix = std::min(imgWidth, imgHeight);
   const float imgRatio = sensorHeight_pix / sensorWidth_pix;
   const float focalLength_pix = cam->focal();
-  const float hoffset_pix = cam->principal_point()(0);
-  const float voffset_pix = cam->principal_point()(1);
   
 
   const float sensorHeight_mm = sensorWidth_mm * imgRatio;
@@ -307,16 +298,12 @@ void AlembicExporter::addCameraKeyframe(const geometry::Pose3 &pose,
   // openMVG: origin is (top,left) corner and orientation is (bottom,right)
   // ABC: origin is centered and orientation is (up,right)
   // Following values are in cm, hence the 0.1 multiplier
-  const float hoffset_cm = 0.1 * ((imgWidth*0.5) - hoffset_pix) * pix2mm;
-  const float voffset_cm = -0.1 * ((imgHeight*0.5) - voffset_pix) * pix2mm; // vertical flip
   const float haperture_cm = 0.1 * imgWidth * pix2mm;
   const float vaperture_cm = 0.1 * imgHeight * pix2mm;
 
   camSample.setFocalLength(focalLength_mm);
   camSample.setHorizontalAperture(haperture_cm);
   camSample.setVerticalAperture(vaperture_cm);
-  camSample.setHorizontalFilmOffset(hoffset_cm);
-  camSample.setVerticalFilmOffset(voffset_cm);
   
   // Add sensor width (largest image side) in pixels as custom property
   mpropSensorWidth_pix.set(sensorWidth_pix);
