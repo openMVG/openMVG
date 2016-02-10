@@ -516,7 +516,7 @@ SimpleKmeans<Feature, Distance, FeatureAllocator>::clusterOnce(const std::vector
 
   // Return the sum squared error
   /// @todo Kahan summation?
-  squared_distance_type sse = squared_distance_type();
+  squared_distance_type sse = squared_distance_type(0);
   for(size_t i = 0; i < features.size(); ++i)
   {
     sse += distance_(*features[i], centers[membership[i]]);
