@@ -252,8 +252,9 @@ bool checkVectorElements(const std::vector<Feature, FeatureAllocator> &f, const 
  *
  * The standard Lloyd's algorithm is used. By default, cluster centers are initialized randomly.
  */
-template<class Feature, class Distance = L2<Feature, Feature>,
-class FeatureAllocator = typename DefaultAllocator<Feature>::type>
+template<class Feature,
+         class Distance = L2<Feature, Feature>,
+         class FeatureAllocator = typename DefaultAllocator<Feature>::type>
 class SimpleKmeans
 {
 public:
@@ -384,15 +385,13 @@ SimpleKmeans<Feature, Distance, FeatureAllocator>::clusterPointers(const std::ve
   std::vector<unsigned int> new_membership(features.size());
 
   squared_distance_type least_sse = std::numeric_limits<squared_distance_type>::max();
+  assert(restarts_ > 0);
   for(size_t starts = 0; starts < restarts_; ++starts)
   {
-    if(verbose_ > 0) std::cout << "#\t\tStarting trial " << starts + 1 << "/" << restarts_ << std::endl;
+    if(verbose_ > 0) std::cout << "#\t\tTrial " << starts + 1 << "/" << restarts_ << std::endl;
     choose_centers_(features, k, new_centers, distance_, verbose_);
-    //	for( size_t i = 0; i < k; PrintFeat(new_centers[i++] ) );
-    //	    	    printf("LOLk\n");
     squared_distance_type sse = clusterOnce(features, k, new_centers, new_membership);
-    //	for( size_t i = 0; i < k; PrintFeat(new_centers[i++] ) );
-    //	    	    printf("LOLk\n");
+    if(verbose_ > 0) std::cout << "#\t\tEnd of Trial " << starts + 1 << "/" << restarts_ << std::endl;
     if(sse < least_sse)
     {
       least_sse = sse;
@@ -400,7 +399,9 @@ SimpleKmeans<Feature, Distance, FeatureAllocator>::clusterPointers(const std::ve
       membership = new_membership;
     }
   }
-
+ 
+  assert(least_sse != std::numeric_limits<squared_distance_type>::max());
+  assert(membership.size() >= features.size());
   return least_sse;
 }
 
@@ -434,7 +435,6 @@ SimpleKmeans<Feature, Distance, FeatureAllocator>::clusterOnce(const std::vector
     #pragma omp parallel for shared( new_centers, new_center_counts, features, centers, membership)
     for(size_t i = 0; i < features.size(); ++i)
     {
-      //printf("\tLOLkf%lu/%lu\n", i, features.size());
       squared_distance_type d_min = std::numeric_limits<squared_distance_type>::max();
       unsigned int nearest = 0;
       bool found = false;
@@ -445,7 +445,6 @@ SimpleKmeans<Feature, Distance, FeatureAllocator>::clusterOnce(const std::vector
       // Find the nearest cluster center to feature i
       for(unsigned int j = 0; j < k; ++j)
       {
-        //		printf("\t\tLOLkfb%d-%d\n", i, j);
         squared_distance_type distance = distance_(*features[i], centers[j]);
         //		printf("\t\tdistance %f\n", (float)distance);
         //		PrintFeat(*features[i] );
@@ -517,6 +516,7 @@ SimpleKmeans<Feature, Distance, FeatureAllocator>::clusterOnce(const std::vector
   // Return the sum squared error
   /// @todo Kahan summation?
   squared_distance_type sse = squared_distance_type(0);
+  assert(features.size() > 0);
   for(size_t i = 0; i < features.size(); ++i)
   {
     sse += distance_(*features[i], centers[membership[i]]);
