@@ -197,11 +197,13 @@ int main(int argc, char **argv)
   {
     case 'f':
       eGeometricModelToCompute = FUNDAMENTAL_MATRIX;
+      break;
     case 'e':
       eGeometricModelToCompute = ESSENTIAL_MATRIX;
+      break;
     case 'h':
       eGeometricModelToCompute = HOMOGRAPHY_MATRIX;
-    break;
+      break;
     default:
       std::cerr << "Unknown geometric model: " << sGeometricMode << std::endl;
       return EXIT_FAILURE;
