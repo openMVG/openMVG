@@ -316,10 +316,7 @@ int main(int argc, char **argv)
   std::cout << std::endl << " - PUTATIVE MATCHES - " << std::endl;
 
   // If the matches already exists, reload them
-  if (!bForce &&
-     (!matchFilePerImage ?
-          stlplus::is_file(stlplus::create_filespec(sMatchesDirectory, "putative.bin"))
-        : stlplus::folder_wildcard(sMatchesDirectory, "*.putative.bin", false).size()))
+  if(!bForce && !matchFilePerImage && stlplus::is_file(stlplus::create_filespec(sMatchesDirectory, "putative.bin")))
   {
     Load(map_PutativesMatches, sfm_data.GetViewsKeys(), sMatchesDirectory, "putative");
     std::cout << "\t PREVIOUS RESULTS LOADED" << std::endl;
