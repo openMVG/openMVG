@@ -70,6 +70,7 @@ int main(int argc, char **argv)
   std::string sOutInterFileExtension = ".ply";
   std::pair<std::string,std::string> initialPairString("","");
   bool bRefineIntrinsics = true;
+  int minInputTrackLength = 2;
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
   bool allowUserInteraction = true;
 
@@ -82,6 +83,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('b', initialPairString.second, "initialPairB") );
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_option('f', bRefineIntrinsics, "refineIntrinsics") );
+  cmd.add( make_option('t', minInputTrackLength, "minInputTrackLength") );
   cmd.add( make_option('u', allowUserInteraction, "allowUserInteraction") );
 
   try {
@@ -103,6 +105,7 @@ int main(int argc, char **argv)
     << "[-f|--refineIntrinsics] \n"
     << "\t 0-> intrinsic parameters are kept as constant\n"
     << "\t 1-> refine intrinsic parameters (default). \n"
+    << "[-t|--minInputTrackLength N] minimum track length in input of SfM (default: 2)\n"
     << "[-p|--matchFilePerImage] \n"
     << "\t To use one match file per image instead of a global file.\n"
     << "[-u|--allowUserInteraction] Enable/Disable user interactions. (default: true)\n"
@@ -177,9 +180,8 @@ int main(int argc, char **argv)
   // Configure reconstruction parameters
   sfmEngine.Set_bFixedIntrinsics(!bRefineIntrinsics);
   sfmEngine.SetUnknownCameraType(EINTRINSIC(i_User_camera_model));
-
+  sfmEngine.setMinInputTrackLength(minInputTrackLength);
   sfmEngine.setSfmdataInterFileExtension(sOutInterFileExtension);
-
   sfmEngine.setAllowUserInteraction(allowUserInteraction);
 
   // Handle Initial pair parameter
