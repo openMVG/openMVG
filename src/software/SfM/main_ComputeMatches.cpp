@@ -270,20 +270,10 @@ int main(int argc, char **argv)
   std::cout << "Number of pairs: " << pairs.size() << std::endl;
   
   //Creation of the filter
-  for(Pair_Set::const_iterator pair = pairs.begin(); pair != pairs.end(); pair++)
+  for(const auto& pair: pairs)
   {
-    
-    IndexT firstElement = pair->first;
-    IndexT secondElement = pair->second;
-
-    if(filter.find(firstElement) == filter.end())
-    {
-      filter.insert(firstElement);
-    }
-    if(filter.find(secondElement) == filter.end())
-    {
-      filter.insert(secondElement);
-    }
+    filter.insert(pair.first);
+    filter.insert(pair.second);
   }
   
   // Load the corresponding view regions
