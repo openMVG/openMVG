@@ -259,7 +259,12 @@ int main(int argc, char **argv)
       }
       break;
   }
-  
+  if(pairs.empty())
+  {
+    std::cout << "No image pair to match." << std::endl;
+    // If we only compute a selection of matches, we may have no match.
+    return rangeSize ? EXIT_SUCCESS : EXIT_FAILURE;
+  }  
   std::cout << "Number of pairs: " << pairs.size() << std::endl;
   
   //Creation of the filter
@@ -381,27 +386,6 @@ int main(int argc, char **argv)
     // Perform the matching
     system::Timer timer;
     {
-      // From matching mode compute the pair list that have to be matched:
-      Pair_Set pairs;
-      switch (ePairmode)
-      {
-        case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(sfm_data.GetViews(), rangeStart, rangeSize); break;
-        case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(sfm_data.GetViews(), iMatchingVideoMode); break;
-        case PAIR_FROM_FILE:
-          std::cout << "Load pairList from file: " << sPredefinedPairList << std::endl;
-          if(!loadPairs(sPredefinedPairList, pairs, rangeStart, rangeSize))
-          {
-              return EXIT_FAILURE;
-          }
-          break;
-      }
-      
-      if(pairs.empty())
-      {
-        std::cout << "No image pair to match." << std::endl;
-        // If we only compute a selection of matches, we may have no match.
-        return rangeSize ? EXIT_SUCCESS : EXIT_FAILURE;
-      }
       std::cout << "There are " << sfm_data.GetViews().size() << " views and " << pairs.size() << " image pairs." << std::endl;
 
       // Photometric matching of putative pairs
