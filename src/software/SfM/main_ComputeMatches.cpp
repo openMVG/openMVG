@@ -386,7 +386,11 @@ int main(int argc, char **argv)
         // If we only compute a selection of matches, we may have no match.
         return rangeSize ? EXIT_SUCCESS : EXIT_FAILURE;
       }
-      std::cout << "There are " << map_PutativesMatches.size() << " putative matches." << std::endl;
+      std::cout << map_PutativesMatches.size() << " putative image pair matches" << std::endl;
+      for(const auto& imageMatch: map_PutativesMatches)
+      {
+        std::cout << " * image pair " << imageMatch.first.first << ", " << imageMatch.first.second << ": " << imageMatch.second.size() << " putative matches." << std::endl;
+      }
 
       //---------------------------------------
       //-- Export putative matches
@@ -472,7 +476,7 @@ int main(int argc, char **argv)
       break;
     }
     
-    std::cout << map_GeometricMatches.size() << " image pairs to match:" << std::endl;
+    std::cout << map_GeometricMatches.size() << " geometric image pair matches:" << std::endl;
     for(const auto& matchGeo: map_GeometricMatches)
     {
       std::cout << " * Image pair (" << matchGeo.first.first << ", " << matchGeo.first.second << ") contains " << matchGeo.second.size() << " geometric matches." << std::endl;
@@ -493,8 +497,8 @@ int main(int argc, char **argv)
       {
         //Get the image pair and their matches.
         const Pair& indexImagePair = matchGeo.first;
-			  const openMVG::matching::IndMatches& inputMatches = matchGeo.second;
-          
+        const openMVG::matching::IndMatches& inputMatches = matchGeo.second;
+        
         const features::Feat_Regions<features::SIOPointFeature>* rRegions = dynamic_cast<features::Feat_Regions<features::SIOPointFeature>*>(regions_provider->regions_per_view[indexImagePair.second].get());
         const features::Feat_Regions<features::SIOPointFeature>* lRegions = dynamic_cast<features::Feat_Regions<features::SIOPointFeature>*>(regions_provider->regions_per_view[indexImagePair.first].get());
         
@@ -510,12 +514,11 @@ int main(int argc, char **argv)
             matchesGridFiltering(lRegions, rRegions, indexImagePair, sfm_data, outMatches);
           }
 
-          size_t finalSize = min(uNumMatchesToKeep,outMatches.size());
+          size_t finalSize = min(uNumMatchesToKeep, outMatches.size());
           outMatches.resize(finalSize);
 
-          std::cout << "There are " << outMatches.size() << " new final matches." << std::endl; 
+          // std::cout << "Left features: " << lRegions->Features().size() << ", right features: " << rRegions->Features().size() << ", num matches: " << inputMatches.size() << ", num filtered matches: " << outMatches.size() << std::endl;
           finalMatches.insert(std::pair<Pair, IndMatches> (indexImagePair,outMatches));
-
         }
         else
         {

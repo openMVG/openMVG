@@ -22,8 +22,6 @@ void sortMatches(
 	const std::vector<openMVG::features::SIOPointFeature>& vecFeatureI = regionsI->Features();
 	const std::vector<openMVG::features::SIOPointFeature>& vecFeatureJ = regionsJ->Features();
 
-	std::cout << "Inside matcher: Left features: " << vecFeatureI.size() << " Right features: " << vecFeatureJ.size() << " Num Matches: " << inputMatches.size() << std::endl;
-
 	//outputMatches will contain the sorted matches if inputMatches.
 	outputMatches.reserve(inputMatches.size());
 
@@ -84,7 +82,6 @@ void matchesGridFiltering(const openMVG::features::Feat_Regions<openMVG::feature
         const openMVG::sfm::SfM_Data sfm_data, 
         openMVG::matching::IndMatches& outMatches)
 {
-  std::cout << "Grid Phase. " << std::endl;
   const std::size_t lWidth = sfm_data.GetViews().at(indexImagePair.first)->ui_width;
   const std::size_t lHeight = sfm_data.GetViews().at(indexImagePair.first)->ui_height;
   const std::size_t rWidth = sfm_data.GetViews().at(indexImagePair.second)->ui_width;
@@ -149,5 +146,4 @@ void matchesGridFiltering(const openMVG::features::Feat_Regions<openMVG::feature
   }
   
   outMatches.swap(finalMatches);
-  
 }
