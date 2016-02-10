@@ -23,6 +23,7 @@ using namespace std;
 namespace po = boost::program_options;
 
 typedef openMVG::features::Descriptor<float, DIMENSION> DescriptorFloat;
+typedef openMVG::features::Descriptor<unsigned char, DIMENSION> DescriptorUChar;
 
 typedef std::map<size_t, openMVG::voctree::Document> DocumentMap;
 
@@ -102,7 +103,7 @@ int main(int argc, char** argv)
   std::vector<size_t> descRead;
   POPART_COUT("Reading descriptors from " << keylist);
   auto detect_start = std::chrono::steady_clock::now();
-  size_t numTotDescriptors = openMVG::voctree::readDescFromFiles(keylist, descriptors, descRead);
+  size_t numTotDescriptors = openMVG::voctree::readDescFromFiles<DescriptorFloat, DescriptorUChar>(keylist, descriptors, descRead);
   auto detect_end = std::chrono::steady_clock::now();
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
   if(descriptors.size() == 0)

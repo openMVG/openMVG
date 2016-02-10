@@ -71,7 +71,7 @@ void getListOfDescriptorFiles(const std::string &fileFullPath, std::map<IndexT, 
  * @return the total number of features read
  *
  */
-template<class DescriptorT>
+template<class DescriptorT, class FileDescriptorT>
 size_t readDescFromFiles(const std::string &fileFullPath, std::vector<DescriptorT>& descriptors, std::vector<size_t> &numFeatures);
 
 } // namespace voctree
