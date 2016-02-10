@@ -74,7 +74,7 @@ void filterMatches(
  *            or one match file per image
  */
 bool Save(
-  PairWiseMatches & matches,
+  const PairWiseMatches & matches,
   const std::string & folder,
   const std::string & mode,
   const std::string & extension,
