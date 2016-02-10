@@ -82,6 +82,11 @@ public:
     _userInteraction = v;
   }
 
+  void setMinInputTrackLength(int minInputTrackLength)
+  {
+    _minInputTrackLength = minInputTrackLength;
+  }
+
 protected:
 
 
@@ -123,6 +128,7 @@ private:
   bool _userInteraction = true;
   Pair _initialpair;
   cameras::EINTRINSIC _camType; // The camera type for the unknown cameras
+  int _minInputTrackLength = 2;
 
   //-- Data provider
   Features_Provider  * _features_provider;
