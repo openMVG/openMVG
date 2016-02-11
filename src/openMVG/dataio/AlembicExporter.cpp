@@ -179,8 +179,9 @@ void AlembicExporter::appendCamera(const std::string &cameraName,
   camSample.setVerticalAperture(vaperture_cm);
   
   // Add sensor width (largest image side) in pixels as custom property
-  OUInt32Property propSensorWidth_pix(userProps, "mvg_sensorWidth_pix");
-  propSensorWidth_pix.set(sensorWidth_pix);
+  OUInt32ArrayProperty propSensorSize_pix(userProps, "mvg_sensorSizePix");
+  std::vector<uint32_t> sensorSize_pix = {uint32_t(sensorWidth_pix), uint32_t(sensorHeight_pix)};
+  propSensorSize_pix.set(sensorSize_pix);
 
   // Add image path as custom property
   if(!imagePath.empty())
@@ -224,8 +225,8 @@ void AlembicExporter::initAnimatedCamera(const std::string& cameraName)
   
   // Add the custom properties
   auto userProps = mcamObj.getSchema().getUserProperties();
-  // Sensor width
-  mpropSensorWidth_pix = OUInt32Property(userProps, "mvg_sensorWidth_pix", tsp);
+  // Sensor size
+  mpropSensorSize_pix = OUInt32ArrayProperty(userProps, "mvg_sensorSizePix", tsp);
   // Image path
   mimagePlane = OStringProperty(userProps, "mvg_imagePath", tsp);
   // View id
@@ -306,7 +307,8 @@ void AlembicExporter::addCameraKeyframe(const geometry::Pose3 &pose,
   camSample.setVerticalAperture(vaperture_cm);
   
   // Add sensor width (largest image side) in pixels as custom property
-  mpropSensorWidth_pix.set(sensorWidth_pix);
+  std::vector<uint32_t> sensorSize_pix = {uint32_t(sensorWidth_pix), uint32_t(sensorHeight_pix)};
+  mpropSensorSize_pix.set(sensorSize_pix);
   
   // Set custom attributes
   // Image path

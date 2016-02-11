@@ -89,7 +89,7 @@ private:
   unsigned int counter;
   Alembic::AbcGeom::OXform mxform;
   Alembic::AbcGeom::OCamera mcamObj;
-  Alembic::AbcGeom::OUInt32Property mpropSensorWidth_pix;
+  Alembic::AbcGeom::OUInt32ArrayProperty mpropSensorSize_pix;
   Alembic::AbcGeom::OStringProperty mimagePlane;
   Alembic::AbcGeom::OUInt32Property mpropViewId;
   Alembic::AbcGeom::OUInt32Property mpropIntrinsicId;
