@@ -22,5 +22,6 @@ INSTALL(TARGETS openMVG_voctree DESTINATION lib/ EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG voctree "openMVG_voctree")
 UNIT_TEST(openMVG kmeans "openMVG_voctree")
+UNIT_TEST(openMVG voctreebuild "openMVG_voctree")
 
 ENDIF(OpenMVG_BUILD_VOCTREE)
