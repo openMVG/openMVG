@@ -20,10 +20,10 @@ TEST(kmeans, kmeanInitializer)
   
   std::cout << "Testing kmeanspp Initializer..." << std::endl;
 
-  const int DIMENSION = 128;
-  const int FEATURENUMBER = 1000;
+  const std::size_t DIMENSION = 128;
+  const std::size_t FEATURENUMBER = 1000;
 
-  const uint32_t K = 10;
+  const std::size_t K = 10;
 
   typedef Eigen::Matrix<float, 1, DIMENSION> FeatureFloat;
   typedef std::vector<FeatureFloat, Eigen::aligned_allocator<FeatureFloat> > FeatureFloatVector;
@@ -53,10 +53,10 @@ TEST(kmeans, kmeanInitializer)
   featPtr.clear();
   features.reserve(FEATURENUMBER * K);
   featPtr.reserve(features.size());
-  for(int i = 0; i < K; ++i)
+  for(std::size_t i = 0; i < K; ++i)
   {
     // at each i iteration translate the cluster by 5*i
-    for(int j = 0; j < FEATURENUMBER; ++j)
+    for(std::size_t j = 0; j < FEATURENUMBER; ++j)
     {
       features.push_back(FeatureFloat::Random(1, DIMENSION) + Eigen::MatrixXf::Constant(1, DIMENSION, 5 * i));
       featPtr.push_back(const_cast<FeatureFloat*> (&features.back()));
@@ -122,6 +122,84 @@ TEST(kmeans, kmeanInitializerVarying)
     // it's difficult to check the result as it is random, just check there are no weird things
     EXPECT_TRUE(voctree::checkVectorElements(centers, "initializer"));
 
+  }
+}
+TEST(kmeans, kmeanSimple)
+{
+  using namespace openMVG;
+
+  std::cout << "Testing kmeans..." << std::endl;
+
+  const std::size_t DIMENSION = 8;
+  const std::size_t FEATURENUMBER = 1000;
+
+  const std::size_t K = 30;
+
+  const std::size_t STEP = 5 * K;
+
+  typedef Eigen::Matrix<float, 1, DIMENSION> FeatureFloat;
+  typedef std::vector<FeatureFloat, Eigen::aligned_allocator<FeatureFloat> > FeatureFloatVector;
+  typedef std::vector<FeatureFloat* > FeaturePointerVector;
+
+  // generate a random vector of features
+  FeatureFloatVector features;
+  FeatureFloatVector centers;
+  FeatureFloatVector centersGT;
+  std::vector<unsigned int> membership;
+  features.reserve(FEATURENUMBER);
+  centers.reserve(K);
+
+  voctree::SimpleKmeans<FeatureFloat> kmeans(FeatureFloat::Zero());
+  kmeans.setVerbose(0);
+  kmeans.setRestarts(5);
+
+  for(std::size_t trial = 0; trial < 10; ++trial)
+  {
+    // now try to generate k cluster well far away and comapare
+    features.clear();
+    membership.clear();
+    centersGT.clear();
+    centers.clear();
+    features.reserve(FEATURENUMBER * K);
+    membership.reserve(features.size());
+    centersGT.reserve(K);
+    centers.reserve(K);
+    for(std::size_t i = 0; i < K; ++i)
+    {
+      // at each i iteration translate the cluster by STEP*i
+      for(std::size_t j = 0; j < FEATURENUMBER; ++j)
+      {
+        features.push_back((FeatureFloat::Random(1, DIMENSION) + Eigen::MatrixXf::Constant(1, DIMENSION, STEP * i) - Eigen::MatrixXf::Constant(1, DIMENSION, STEP * (K - 1) / 2)) / ((STEP * (K - 1) / 2) * sqrt(DIMENSION)));
+        EXPECT_TRUE(voctree::checkElements(features[j], "init"));
+      }
+      centersGT.push_back((Eigen::MatrixXf::Constant(1, DIMENSION, STEP * i) - Eigen::MatrixXf::Constant(1, DIMENSION, STEP * (K - 1) / 2)) / ((STEP * (K - 1) / 2) * sqrt(DIMENSION)));
+    }
+
+    voctree::SimpleKmeans<FeatureFloat>::squared_distance_type dist = kmeans.cluster(features, K, centers, membership);
+
+    //		vt::printFeatVector( centers );
+
+    voctree::L2<FeatureFloat, FeatureFloat> distance;
+    for(int i = 0; i < K; ++i)
+    {
+      voctree::SimpleKmeans<FeatureFloat>::squared_distance_type bestDist = std::numeric_limits<voctree::SimpleKmeans<FeatureFloat>::squared_distance_type>::max();
+      for(int j = 0; j < K; ++j)
+      {
+        voctree::SimpleKmeans<FeatureFloat>::squared_distance_type centerDist = distance(centers[j], centersGT[i]);
+        if(centerDist < bestDist)
+          bestDist = centerDist;
+      }
+    }
+
+    std::vector<unsigned int> h(K, 0);
+    for(int i = 0; i < membership.size(); ++i)
+    {
+      ++h[membership[i]];
+    }
+    for(int i = 0; i < h.size(); ++i)
+    {
+      EXPECT_TRUE(h[i] > 0);
+    }
   }
 }
 
