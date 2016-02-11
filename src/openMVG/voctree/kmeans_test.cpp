@@ -177,13 +177,13 @@ TEST(kmeans, kmeanSimple)
 
     voctree::SimpleKmeans<FeatureFloat>::squared_distance_type dist = kmeans.cluster(features, K, centers, membership);
 
-    //		vt::printFeatVector( centers );
+//    voctree::printFeatVector( centers );
 
     voctree::L2<FeatureFloat, FeatureFloat> distance;
-    for(int i = 0; i < K; ++i)
+    for(std::size_t i = 0; i < K; ++i)
     {
       voctree::SimpleKmeans<FeatureFloat>::squared_distance_type bestDist = std::numeric_limits<voctree::SimpleKmeans<FeatureFloat>::squared_distance_type>::max();
-      for(int j = 0; j < K; ++j)
+      for(std::size_t j = 0; j < K; ++j)
       {
         voctree::SimpleKmeans<FeatureFloat>::squared_distance_type centerDist = distance(centers[j], centersGT[i]);
         if(centerDist < bestDist)
@@ -192,15 +192,103 @@ TEST(kmeans, kmeanSimple)
     }
 
     std::vector<unsigned int> h(K, 0);
-    for(int i = 0; i < membership.size(); ++i)
+    for(std::size_t i = 0; i < membership.size(); ++i)
     {
       ++h[membership[i]];
     }
-    for(int i = 0; i < h.size(); ++i)
+    for(std::size_t i = 0; i < h.size(); ++i)
     {
       EXPECT_TRUE(h[i] > 0);
     }
   }
+}
+
+TEST(kmeans, kmeanVarying)
+{
+  using namespace openMVG;
+  std::cout << "Testing kmeans with variable k and DIM..." << std::endl;
+
+
+  const std::size_t FEATURENUMBER = 1000;
+  const std::size_t numTrial = 10;
+
+  // generate random values for K and DIMENSION
+  std::default_random_engine generator;
+  std::uniform_int_distribution<std::size_t> dimGen(3, 128);
+  std::uniform_int_distribution<std::size_t> kGen(6, 300);
+
+  for(std::size_t trial = 0; trial < numTrial; ++trial)
+  {
+    const std::size_t DIMENSION = dimGen(generator);
+    const std::size_t K = kGen(generator);
+    const std::size_t STEP = 5 * K;
+    std::cout << "\tTrial " << trial + 1 << "/" << numTrial << " with K = " << K << " and DIMENSION = " << DIMENSION << std::endl;
+
+    typedef Eigen::RowVectorXf FeatureFloat;
+    typedef std::vector<FeatureFloat, Eigen::aligned_allocator<FeatureFloat> > FeatureFloatVector;
+    typedef std::vector<FeatureFloat* > FeaturePointerVector;
+
+    // generate a random vector of features
+    FeatureFloatVector features;
+    FeatureFloatVector centers;
+    FeatureFloatVector centersGT;
+    std::vector<unsigned int> membership;
+
+    voctree::SimpleKmeans<FeatureFloat> kmeans(FeatureFloat::Zero(DIMENSION));
+    kmeans.setVerbose(0);
+    kmeans.setRestarts(3);
+
+    features.reserve(FEATURENUMBER * K);
+    membership.reserve(features.size());
+    centersGT.reserve(K);
+    centers.reserve(K);
+
+    // now try to generate k cluster well far away and comapare
+    for(std::size_t i = 0; i < K; ++i)
+    {
+      // at each i iteration translate the cluster by STEP*i
+      for(std::size_t j = 0; j < FEATURENUMBER; ++j)
+      {
+        features.push_back((FeatureFloat::Random(DIMENSION) + FeatureFloat::Constant(DIMENSION, STEP * i) - FeatureFloat::Constant(DIMENSION, STEP * (K - 1) / 2)) / ((STEP * (K - 1) / 2) * sqrt(DIMENSION)));
+        EXPECT_TRUE(voctree::checkElements(features[j], "init"));
+      }
+      centersGT.push_back((FeatureFloat::Constant(DIMENSION, STEP * i) - FeatureFloat::Constant(DIMENSION, STEP * (K - 1) / 2)) / ((STEP * (K - 1) / 2) * sqrt(DIMENSION)));
+    }
+
+    voctree::SimpleKmeans<FeatureFloat>::squared_distance_type dist = kmeans.cluster(features, K, centers, membership);
+
+//    voctree::printFeatVector( features );
+//    voctree::printFeatVector(centers);
+//    voctree::printFeatVector(centersGT);
+
+    voctree::L2<FeatureFloat, FeatureFloat> distance;
+    voctree::SimpleKmeans<FeatureFloat>::squared_distance_type globDist = 0.0;
+    for(size_t i = 0; i < K; ++i)
+    {
+      voctree::SimpleKmeans<FeatureFloat>::squared_distance_type bestDist = std::numeric_limits<voctree::SimpleKmeans<FeatureFloat>::squared_distance_type>::max();
+      for(std::size_t j = 0; j < K; ++j)
+      {
+        voctree::SimpleKmeans<FeatureFloat>::squared_distance_type centerDist = distance(centers[j], centersGT[i]);
+        if(centerDist < bestDist)
+          bestDist = centerDist;
+      }
+      globDist += bestDist;
+    }
+    std::cout << "center distance " << globDist << std::endl;
+
+    std::vector<size_t> h(K, 0);
+    for(size_t i = 0; i < membership.size(); ++i)
+    {
+      ++h[membership[i]];
+    }
+    for(size_t i = 0; i < h.size(); ++i)
+    {
+//      std::cout << h[i] << std::endl;
+      EXPECT_TRUE(h[i] > 0);
+      EXPECT_EQ(h[i], FEATURENUMBER);
+    }
+  }
+
 }
 
 int main()
