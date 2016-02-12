@@ -171,7 +171,7 @@ bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata,
   ICompoundProperty userProps = getAbcUserProperties(cs);
   std::string imagePath;
   float sensorWidth_pix = 2048.0;
-  std::string mvg_intrinsicType = "PINHOLE_CAMERA";
+  std::string mvg_intrinsicType = EINTRINSIC_enumToString(PINHOLE_CAMERA);
   std::vector<double> mvg_intrinsicParams;
   IndexT id_view = sfmdata.GetViews().size();
   IndexT id_intrinsic = sfmdata.GetIntrinsics().size();

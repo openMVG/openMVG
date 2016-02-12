@@ -29,15 +29,15 @@ inline std::string EINTRINSIC_enumToString(EINTRINSIC intrinsic)
   switch(intrinsic)
   {
     case PINHOLE_CAMERA:
-      return "PINHOLE_CAMERA";
+      return "pinhole";
     case PINHOLE_CAMERA_RADIAL1:
-      return "PINHOLE_CAMERA_RADIAL1";
+      return "radial1";
     case PINHOLE_CAMERA_RADIAL3:
-      return "PINHOLE_CAMERA_RADIAL3";
+      return "radial3";
     case PINHOLE_CAMERA_BROWN:
-      return "PINHOLE_CAMERA_BROWN";
+      return "brown";
     case PINHOLE_CAMERA_FISHEYE:
-      return "PINHOLE_CAMERA_FISHEYE";
+      return "fisheye";
     case PINHOLE_CAMERA_START:
     case PINHOLE_CAMERA_END:
       break;
@@ -47,15 +47,15 @@ inline std::string EINTRINSIC_enumToString(EINTRINSIC intrinsic)
 
 inline EINTRINSIC EINTRINSIC_stringToEnum(const std::string& intrinsic)
 {
-  if(intrinsic == "PINHOLE_CAMERA")
+  if(intrinsic == "pinhole")
     return PINHOLE_CAMERA;
-  if(intrinsic == "PINHOLE_CAMERA_RADIAL1")
+  if(intrinsic == "radial1")
     return PINHOLE_CAMERA_RADIAL1;
-  if(intrinsic == "PINHOLE_CAMERA_RADIAL3")
+  if(intrinsic == "radial3")
     return PINHOLE_CAMERA_RADIAL3;
-  if(intrinsic == "PINHOLE_CAMERA_BROWN")
+  if(intrinsic == "brown")
     return PINHOLE_CAMERA_BROWN;
-  if(intrinsic == "PINHOLE_CAMERA_FISHEYE")
+  if(intrinsic == "fisheye")
     return PINHOLE_CAMERA_FISHEYE;
   throw std::out_of_range(intrinsic);
 }
