@@ -197,11 +197,13 @@ int main(int argc, char **argv)
   {
     case 'f':
       eGeometricModelToCompute = FUNDAMENTAL_MATRIX;
+      break;
     case 'e':
       eGeometricModelToCompute = ESSENTIAL_MATRIX;
+      break;
     case 'h':
       eGeometricModelToCompute = HOMOGRAPHY_MATRIX;
-    break;
+      break;
     default:
       std::cerr << "Unknown geometric model: " << sGeometricMode << std::endl;
       return EXIT_FAILURE;
@@ -259,24 +261,19 @@ int main(int argc, char **argv)
       }
       break;
   }
-  
+  if(pairs.empty())
+  {
+    std::cout << "No image pair to match." << std::endl;
+    // If we only compute a selection of matches, we may have no match.
+    return rangeSize ? EXIT_SUCCESS : EXIT_FAILURE;
+  }  
   std::cout << "Number of pairs: " << pairs.size() << std::endl;
   
   //Creation of the filter
-  for(Pair_Set::const_iterator pair = pairs.begin(); pair != pairs.end(); pair++)
+  for(const auto& pair: pairs)
   {
-    
-    IndexT firstElement = pair->first;
-    IndexT secondElement = pair->second;
-
-    if(filter.find(firstElement) == filter.end())
-    {
-      filter.insert(firstElement);
-    }
-    if(filter.find(secondElement) == filter.end())
-    {
-      filter.insert(secondElement);
-    }
+    filter.insert(pair.first);
+    filter.insert(pair.second);
   }
   
   // Load the corresponding view regions
@@ -309,10 +306,7 @@ int main(int argc, char **argv)
   std::cout << std::endl << " - PUTATIVE MATCHES - " << std::endl;
 
   // If the matches already exists, reload them
-  if (!bForce &&
-     (!matchFilePerImage ?
-          stlplus::is_file(stlplus::create_filespec(sMatchesDirectory, "putative.bin"))
-        : stlplus::folder_wildcard(sMatchesDirectory, "*.putative.bin", false).size()))
+  if(!bForce && !matchFilePerImage && stlplus::is_file(stlplus::create_filespec(sMatchesDirectory, "putative.bin")))
   {
     Load(map_PutativesMatches, sfm_data.GetViewsKeys(), sMatchesDirectory, "putative");
     std::cout << "\t PREVIOUS RESULTS LOADED" << std::endl;
@@ -381,27 +375,6 @@ int main(int argc, char **argv)
     // Perform the matching
     system::Timer timer;
     {
-      // From matching mode compute the pair list that have to be matched:
-      Pair_Set pairs;
-      switch (ePairmode)
-      {
-        case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(sfm_data.GetViews(), rangeStart, rangeSize); break;
-        case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(sfm_data.GetViews(), iMatchingVideoMode); break;
-        case PAIR_FROM_FILE:
-          std::cout << "Load pairList from file: " << sPredefinedPairList << std::endl;
-          if(!loadPairs(sPredefinedPairList, pairs, rangeStart, rangeSize))
-          {
-              return EXIT_FAILURE;
-          }
-          break;
-      }
-      
-      if(pairs.empty())
-      {
-        std::cout << "No image pair to match." << std::endl;
-        // If we only compute a selection of matches, we may have no match.
-        return rangeSize ? EXIT_SUCCESS : EXIT_FAILURE;
-      }
       std::cout << "There are " << sfm_data.GetViews().size() << " views and " << pairs.size() << " image pairs." << std::endl;
 
       // Photometric matching of putative pairs
@@ -413,7 +386,11 @@ int main(int argc, char **argv)
         // If we only compute a selection of matches, we may have no match.
         return rangeSize ? EXIT_SUCCESS : EXIT_FAILURE;
       }
-      std::cout << "There are " << map_PutativesMatches.size() << " putative matches." << std::endl;
+      std::cout << map_PutativesMatches.size() << " putative image pair matches" << std::endl;
+      for(const auto& imageMatch: map_PutativesMatches)
+      {
+        std::cout << " * image pair " << imageMatch.first.first << ", " << imageMatch.first.second << ": " << imageMatch.second.size() << " putative matches." << std::endl;
+      }
 
       //---------------------------------------
       //-- Export putative matches
@@ -499,7 +476,7 @@ int main(int argc, char **argv)
       break;
     }
     
-    std::cout << map_GeometricMatches.size() << " image pairs to match:" << std::endl;
+    std::cout << map_GeometricMatches.size() << " geometric image pair matches:" << std::endl;
     for(const auto& matchGeo: map_GeometricMatches)
     {
       std::cout << " * Image pair (" << matchGeo.first.first << ", " << matchGeo.first.second << ") contains " << matchGeo.second.size() << " geometric matches." << std::endl;
@@ -520,8 +497,8 @@ int main(int argc, char **argv)
       {
         //Get the image pair and their matches.
         const Pair& indexImagePair = matchGeo.first;
-			  const openMVG::matching::IndMatches& inputMatches = matchGeo.second;
-          
+        const openMVG::matching::IndMatches& inputMatches = matchGeo.second;
+        
         const features::Feat_Regions<features::SIOPointFeature>* rRegions = dynamic_cast<features::Feat_Regions<features::SIOPointFeature>*>(regions_provider->regions_per_view[indexImagePair.second].get());
         const features::Feat_Regions<features::SIOPointFeature>* lRegions = dynamic_cast<features::Feat_Regions<features::SIOPointFeature>*>(regions_provider->regions_per_view[indexImagePair.first].get());
         
@@ -537,12 +514,11 @@ int main(int argc, char **argv)
             matchesGridFiltering(lRegions, rRegions, indexImagePair, sfm_data, outMatches);
           }
 
-          size_t finalSize = min(uNumMatchesToKeep,outMatches.size());
+          size_t finalSize = min(uNumMatchesToKeep, outMatches.size());
           outMatches.resize(finalSize);
 
-          std::cout << "There are " << outMatches.size() << " new final matches." << std::endl; 
+          // std::cout << "Left features: " << lRegions->Features().size() << ", right features: " << rRegions->Features().size() << ", num matches: " << inputMatches.size() << ", num filtered matches: " << outMatches.size() << std::endl;
           finalMatches.insert(std::pair<Pair, IndMatches> (indexImagePair,outMatches));
-
         }
         else
         {
