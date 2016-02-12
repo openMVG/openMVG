@@ -28,7 +28,8 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-
+#include <functional>
+#include <limits>
 
 using namespace openMVG;
 using namespace openMVG::image;
@@ -36,6 +37,130 @@ using namespace openMVG::features;
 using namespace openMVG::sfm;
 using namespace std;
 
+
+
+// ----------
+// Dispatcher
+// ----------
+
+#ifdef __linux__
+#include <unistd.h>
+#include <sys/wait.h>
+
+// This function dispatch the compute function on several sub processes
+// keeping the maximum number of subprocesses under maxJobs
+void dispatch(const int &maxJobs, std::function<void()> compute)
+{
+  static int nbJobs;
+  pid_t pid = fork();
+  if (pid < 0)           
+  {                      
+    // Something bad happened
+    std::cerr << "fork failed\n";
+    _exit(EXIT_FAILURE);
+  }
+  else if(pid == 0)
+  {
+#ifdef OPENMVG_USE_OPENMP
+    // Disable OpenMP as we dispatch the work on multiple sub processes
+    // and we don't want that each subprocess use all the cpu ressource
+    omp_set_num_threads(1); 
+#endif
+    compute();
+    _exit(EXIT_SUCCESS);
+  }
+  else 
+  {
+    nbJobs++;
+    if (nbJobs && (nbJobs % maxJobs == 0))
+    {
+      pid_t pids;
+      while(pids = waitpid(-1, NULL, 0)) 
+      {
+        nbJobs--;
+        break;
+      }
+    }
+  }
+}
+
+// Waits for all subprocesses to be completed
+void waitForCompletion()
+{
+  pid_t pids;
+  while(pids = waitpid(-1, NULL, 0)) 
+  {
+    if (errno == ECHILD)
+        break;
+  }
+}
+
+// Returns a map containing information about the memory usage,
+// it basically reads /proc/meminfo  
+std::map<std::string, unsigned long> memInfos()
+{
+  std::map<std::string, unsigned long> memoryInfos;
+  std::ifstream meminfoFile("/proc/meminfo");
+  if (meminfoFile.is_open())
+  {
+    std::string line;
+    while(getline(meminfoFile, line))
+    {
+      auto separator = line.find(":"); 
+      if (separator!=std::string::npos)
+      {
+        const std::string key = line.substr(0, separator);
+        const std::string value = line.substr(separator+1);
+        memoryInfos[key] = std::strtoul(value.c_str(), nullptr, 10);
+      }
+    }
+  }
+  return memoryInfos;
+}
+
+// Count the number of processors on the machine using /proc/cpuinfo
+unsigned int countProcessors()
+{
+  unsigned int nprocessors = 0;
+  std::ifstream cpuinfoFile("/proc/cpuinfo");
+  if (cpuinfoFile.is_open())
+  {
+    std::string line;
+    while(getline(cpuinfoFile, line))
+    {
+        // The line must start with the word "processor"
+        if (line.compare(0, std::strlen("processor"), "processor") == 0)
+            nprocessors++;
+    }
+  }
+  return nprocessors; 
+}
+
+// Returns the number of jobs to run simultaneously if one job should run on 
+// 1 proc and 2GB (1<<21) of memory 
+int bestNumberOfJobs(unsigned long jobMemoryRequirement = 1 << 21)
+{
+  assert(jobMemoryRequirement!=0);
+  auto meminfos = memInfos();
+  const unsigned long available = meminfos["MemFree"] + meminfos["Buffers"] + meminfos["Cached"]; 
+  const unsigned int nbslots = static_cast<unsigned int>(available/jobMemoryRequirement); 
+  const unsigned int nbproc = countProcessors(); 
+  return std::max(std::min(nbslots, nbproc), 1u);
+}
+
+#else // __linux__
+
+void dispatch(const int &maxJobs, std::function<void()> compute)
+{
+#ifdef OPENMVG_USE_OPENMP
+    omp_set_num_threads(maxJobs);
+#endif
+    compute();
+}
+void waitForCompletion() {}
+int bestNumberOfJobs(unsigned long jobMemoryRequirement = 1 << 21) {return 1;}  
+
+#endif // __linux__
 
 /// - Compute view image description (feature & descriptor extraction)
 /// - Export computed data
@@ -52,6 +177,11 @@ int main(int argc, char **argv)
   int rangeStart = -1;
   int rangeSize = 1;
 
+  // MAX_JOBS_DEFAULT is the default value for maxJobs which keeps 
+  // the original behavior of the program:
+  constexpr static int MAX_JOBS_DEFAULT = std::numeric_limits<int>::max();
+  int maxJobs = MAX_JOBS_DEFAULT;
+
   // required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('o', sOutDir, "outdir") );
@@ -62,40 +192,38 @@ int main(int argc, char **argv)
   cmd.add( make_option('p', sFeaturePreset, "describerPreset") );
   cmd.add( make_option('s', rangeStart, "range_start") );
   cmd.add( make_option('r', rangeSize, "range_size") );
+  cmd.add( make_option('j', maxJobs, "jobs") );
 
-  try {
-      if (argc == 1) throw std::string("Invalid command line parameter.");
-      cmd.process(argc, argv);
-  } catch(const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << '\n'
-      << "[-i|--input_file] a SfM_Data file \n"
-      << "[-o|--outdir path] \n"
-      << "\n[Optional]\n"
-      << "[-f|--force] Force to recompute data\n"
-      << "[-m|--describerMethod]\n"
-      << "  (method to use to describe an image):\n"
-      << "   SIFT (default),\n"
-      << "   SIFT_FLOAT to use SIFT stored as float,\n"
-      << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
-      << "   AKAZE_MLDB:  AKAZE with binary descriptors]\n"
-#if HAVE_CCTAG
-      << "   CCTAG3: CCTAG markers with 3 crowns\n"
-      << "   CCTAG3: CCTAG markers with 4 crowns\n"
-      << "   SIFT_CCTAG3: CCTAG markers with 3 crowns\n" 
-      << "   SIFT_CCTAG4: CCTAG markers with 4 crowns\n" 
-#endif
-      << "[-u|--upright] Use Upright feature 0 or 1\n"
-      << "[-p|--describerPreset]\n"
-      << "  (used to control the Image_describer configuration):\n"
-      << "   NORMAL (default),\n"
-      << "   HIGH,\n"
-      << "   ULTRA: !!Can take long time!!\n"
-      << "[-s]--range_start] range image index start\n"
-      << "[-r]--range_size] range size\n"
-      << std::endl;
+  try 
+  {
+    if (argc == 1) throw std::string("Invalid command line parameter.");
+    cmd.process(argc, argv);
+  } 
+  catch(const std::string& s) 
+  {
+    std::cerr << "Usage: " << argv[0] << '\n'
+    << "[-i|--input_file] a SfM_Data file \n"
+    << "[-o|--outdir path] \n"
+    << "\n[Optional]\n"
+    << "[-f|--force] Force to recompute data\n"
+    << "[-m|--describerMethod]\n"
+    << "  (method to use to describe an image):\n"
+    << "   SIFT (default),\n"
+    << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
+    << "   AKAZE_MLDB:  AKAZE with binary descriptors\n"
+    << "[-u|--upright] Use Upright feature 0 or 1\n"
+    << "[-p|--describerPreset]\n"
+    << "  (used to control the Image_describer configuration):\n"
+    << "   NORMAL (default),\n"
+    << "   HIGH,\n"
+    << "   ULTRA: !!Can take long time!!\n"
+    << "[-s]--range_start] range image index start\n"
+    << "[-r]--range_size] range size\n"
+    << "[-j|--jobs] Specifies the number of jobs to run simultaneously. Use -j 0 for automatic mode.\n"
+    << std::endl;
 
-      std::cerr << s << std::endl;
-      return EXIT_FAILURE;
+    std::cerr << s << std::endl;
+    return EXIT_FAILURE;
   }
 
   std::cout << " You called : " <<std::endl
@@ -109,8 +237,22 @@ int main(int argc, char **argv)
             << "--range_start " << rangeStart << std::endl
             << "--range_size " << rangeSize << std::endl;
 
+  if (maxJobs != MAX_JOBS_DEFAULT)
+  {
+    std::cout << "--jobs " << maxJobs << std::endl;
+    if (maxJobs < 0) 
+    {
+      std::cerr << "\nInvalid value for -j option, the value must be >= 0" << std::endl;
+      return EXIT_FAILURE;
+    } 
+    else if (maxJobs == 0)
+    {
+      maxJobs = bestNumberOfJobs();
+    }
+  }
 
-  if (sOutDir.empty())  {
+  if (sOutDir.empty())
+  {
     std::cerr << "\nIt is an invalid output directory" << std::endl;
     return EXIT_FAILURE;
   }
@@ -129,7 +271,8 @@ int main(int argc, char **argv)
   // a. Load input scene
   //---------------------------------------
   SfM_Data sfm_data;
-  if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
+  if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) 
+  {
     std::cerr << std::endl
       << "The input file \""<< sSfM_Data_Filename << "\" cannot be read" << std::endl;
     return EXIT_FAILURE;
@@ -275,7 +418,6 @@ int main(int argc, char **argv)
       iterViews != iterViewsEnd;
       ++iterViews, ++my_progress_bar)
     {
-
       const View * view = iterViews->second.get();
       const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
         view->s_Img_path);
@@ -287,16 +429,26 @@ int main(int argc, char **argv)
       //If features or descriptors file are missing, compute them
       if (bForce || !stlplus::file_exists(sFeat) || !stlplus::file_exists(sDesc))
       {
-        if (!ReadImage(sView_filename.c_str(), &imageGray))
-          continue;
+        auto computeFunction = [&]() {
+            Image<unsigned char> imageGray;
+            if (!ReadImage(sView_filename.c_str(), &imageGray))
+              return;
 
-        // Compute features and descriptors and export them to files
-        std::cout << "Extracting features from image " << view->id_view << std::endl;
-        std::unique_ptr<Regions> regions;
-        image_describer->Describe(imageGray, regions);
-        image_describer->Save(regions.get(), sFeat, sDesc);
+            // Compute features and descriptors and export them to files
+            std::cout << "Extracting features from image " << view->id_view << std::endl;
+            std::unique_ptr<Regions> regions;
+            image_describer->Describe(imageGray, regions);
+            image_describer->Save(regions.get(), sFeat, sDesc);
+        };
+        if (maxJobs != MAX_JOBS_DEFAULT)
+          dispatch(maxJobs, computeFunction);
+        else
+          computeFunction();
       }
     }
+
+    if (maxJobs != MAX_JOBS_DEFAULT) waitForCompletion();
+
     std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
   }
   return EXIT_SUCCESS;
