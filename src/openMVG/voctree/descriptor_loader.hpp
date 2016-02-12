@@ -64,6 +64,12 @@ void getListOfDescriptorFiles(const std::string &fileFullPath, std::map<IndexT, 
  * 2. a json file containing the sfm_data using the OpenMVG data container. The function will
  * parse the view section to retrieve the image name and it will infer the descriptor
  * filename from that
+ * 
+ * \p FileDescriptorT is the type of descriptors that are stored in the file. Usually 
+ * the two types should be the same, but it could be the case in which the descriptor 
+ * stored in the file  * has different type representation: for example the file 
+ * could contain SIFT descriptors stored as uchar (the default type) and we want 
+ * to cast these into SIFT descriptors stored in memory as floats.
  *
  * @param[in] fileFullPath the input filename containing the list of files to read
  * @param[in,out] descriptors the vector to which append all the read descriptors
