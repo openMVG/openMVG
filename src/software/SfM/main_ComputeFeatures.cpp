@@ -245,7 +245,15 @@ int main(int argc, char **argv)
     } 
     else if (maxJobs == 0)
     {
-      maxJobs = bestNumberOfJobs();
+      // ULTRA method requires more memory. 
+      // Until now we found that a cap of 3.5G is enough on standard images
+      unsigned long memoryRequired = 1 << 21; // 2G 
+      if (sFeaturePreset == "ULTRA")
+      {
+        memoryRequired += 1 << 20; // + 1G
+        memoryRequired += 1 << 19; // + 500M 
+      }
+      maxJobs = bestNumberOfJobs(memoryRequired);
     }
   }
 
