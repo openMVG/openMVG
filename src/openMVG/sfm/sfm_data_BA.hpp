@@ -10,17 +10,28 @@
 namespace openMVG {
 namespace sfm {
 
+// Enum to control which parameter will be refined during the BA
+enum Parameter_Adjustment_Option
+{
+  ADJUST_CAMERA_ROTATION     = 0x01,
+  ADJUST_CAMERA_TRANSLATION  = 0x02,
+  ADJUST_CAMERA_INTRINSIC    = 0x04,
+  ADJUST_STRUCTURE    = 0x08,
+  ADJUST_ALL = ADJUST_CAMERA_ROTATION | ADJUST_CAMERA_TRANSLATION | ADJUST_CAMERA_INTRINSIC | ADJUST_STRUCTURE,
+  ADJUST_MOTION_AND_STRUCTURE = ADJUST_CAMERA_ROTATION | ADJUST_CAMERA_TRANSLATION | ADJUST_STRUCTURE
+};
+
 class Bundle_Adjustment
 {
   public:
-  // Perform a Bundle Adjustment on the SfM scene with refinement of the requested parameters
-  virtual bool Adjust(
-    SfM_Data & sfm_data,            // the SfM scene to refine
-    bool bRefineRotations = true,   // tell if pose rotations will be refined
-    bool bRefineTranslations = true,// tell if the pose translation will be refined
-    bool bRefineIntrinsics = true,  // tell if the camera intrinsic will be refined
-    bool bRefineStructure = true)   // tell if the structure will be refined
-  = 0;
+  // Perform a Bundle Adjustment on the SfM scene (refinement only asked parameters)
+  virtual bool Adjust
+  (
+    // the SfM scene to refine
+    SfM_Data & sfm_data,
+    // tell which parameter needs to be adjusted
+    Parameter_Adjustment_Option adjustment_option = ADJUST_ALL
+  ) = 0;
 
   // TODO: Use filter to say wich parameter is const or not (allow to refine only a subpart of the intrinsics or the poses)
 };

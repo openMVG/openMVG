@@ -585,9 +585,9 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
 
     // - refine only Structure and Rotations & translations (keep intrinsic constant)
     Bundle_Adjustment_Ceres::BA_options options(true, false);
-    options._linear_solver_type = ceres::DENSE_SCHUR;
+    options.m_linear_solver_type = ceres::DENSE_SCHUR;
     Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-    if (!bundle_adjustment_obj.Adjust(tiny_scene, true, true, false))
+    if (!bundle_adjustment_obj.Adjust(tiny_scene, ADJUST_MOTION_AND_STRUCTURE))
     {
       return false;
     }
@@ -1199,15 +1199,20 @@ bool SequentialSfMReconstructionEngine::BundleAdjustment()
   Bundle_Adjustment_Ceres::BA_options options;
   if (_sfm_data.GetPoses().size() > 100)
   {
-    options._preconditioner_type = ceres::JACOBI;
-    options._linear_solver_type = ceres::SPARSE_SCHUR;
+    options.m_preconditioner_type = ceres::JACOBI;
+    options.m_linear_solver_type = ceres::SPARSE_SCHUR;
   }
   else
   {
-    options._linear_solver_type = ceres::DENSE_SCHUR;
+    options.m_linear_solver_type = ceres::DENSE_SCHUR;
   }
   Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-  return bundle_adjustment_obj.Adjust(_sfm_data, true, true, !_bFixedIntrinsics);
+  const Parameter_Adjustment_Option
+    ba_refine_options =
+    (_bFixedIntrinsics) ? ADJUST_MOTION_AND_STRUCTURE
+                        : ADJUST_ALL;
+
+  return bundle_adjustment_obj.Adjust(_sfm_data, ba_refine_options);
 }
 
 /**

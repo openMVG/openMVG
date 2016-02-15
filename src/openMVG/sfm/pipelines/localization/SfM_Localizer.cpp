@@ -118,6 +118,12 @@ namespace sfm {
     bool b_refine_intrinsic
   )
   {
+    if ( !b_refine_pose && !b_refine_intrinsic)
+    {
+      // Nothing to do (There is no parameter to refine)
+      return false;
+    }
+
     // Setup a tiny SfM scene with the corresponding 2D-3D data
     SfM_Data sfm_data;
     // view
@@ -136,12 +142,20 @@ namespace sfm {
       sfm_data.structure[i] = std::move(landmark);
     }
 
+    // STRUCTURE must remain as fix
+    const unsigned int ba_refine_options =
+        (b_refine_pose ? ADJUST_CAMERA_ROTATION | ADJUST_CAMERA_TRANSLATION : 0)
+      | (b_refine_intrinsic ? ADJUST_CAMERA_INTRINSIC : 0);
+
     Bundle_Adjustment_Ceres bundle_adjustment_obj;
-    const bool b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data, b_refine_pose, b_refine_pose, b_refine_intrinsic, false);
+    const bool b_BA_Status = bundle_adjustment_obj.Adjust(
+      sfm_data,
+      Parameter_Adjustment_Option(ba_refine_options));
     if (b_BA_Status)
     {
       pose = sfm_data.poses[0];
     }
+
     return b_BA_Status;
   }
 

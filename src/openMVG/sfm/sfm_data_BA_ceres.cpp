@@ -44,56 +44,62 @@ ceres::CostFunction * IntrinsicsToCostFunction(IntrinsicBase * intrinsic, const 
 }
 
 
-Bundle_Adjustment_Ceres::BA_options::BA_options(const bool bVerbose, bool bmultithreaded)
-  :_bVerbose(bVerbose),
-   _nbThreads(1)
+Bundle_Adjustment_Ceres::BA_options::BA_options
+(
+  const bool bVerbose,
+  bool bmultithreaded
+)
+: m_bVerbose(bVerbose),
+  m_nbThreads(1),
+  m_parameter_tolerance(1e-8) //~= numeric_limits<float>::epsilon()
 {
   #ifdef OPENMVG_USE_OPENMP
-    _nbThreads = omp_get_max_threads();
+    m_nbThreads = omp_get_max_threads();
   #endif // OPENMVG_USE_OPENMP
   if (!bmultithreaded)
-    _nbThreads = 1;
+    m_nbThreads = 1;
 
   _bCeres_Summary = false;
 
   // Default configuration use a DENSE representation
-  _linear_solver_type = ceres::DENSE_SCHUR;
-  _preconditioner_type = ceres::JACOBI;
+  m_linear_solver_type = ceres::DENSE_SCHUR;
+  m_preconditioner_type = ceres::JACOBI;
   // If Sparse linear solver are available
   // Descending priority order by efficiency (SUITE_SPARSE > CX_SPARSE > EIGEN_SPARSE)
   if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
   {
-    _sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
-    _linear_solver_type = ceres::SPARSE_SCHUR;
+    m_sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
+    m_linear_solver_type = ceres::SPARSE_SCHUR;
   }
   else
   {
     if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
     {
-      _sparse_linear_algebra_library_type = ceres::CX_SPARSE;
-      _linear_solver_type = ceres::SPARSE_SCHUR;
+      m_sparse_linear_algebra_library_type = ceres::CX_SPARSE;
+      m_linear_solver_type = ceres::SPARSE_SCHUR;
     }
     else
     if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
     {
-      _sparse_linear_algebra_library_type = ceres::EIGEN_SPARSE;
-      _linear_solver_type = ceres::SPARSE_SCHUR;
+      m_sparse_linear_algebra_library_type = ceres::EIGEN_SPARSE;
+      m_linear_solver_type = ceres::SPARSE_SCHUR;
     }
   }
 }
 
 
-Bundle_Adjustment_Ceres::Bundle_Adjustment_Ceres(
-  Bundle_Adjustment_Ceres::BA_options options)
-  : _openMVG_options(options)
+Bundle_Adjustment_Ceres::Bundle_Adjustment_Ceres
+(
+  Bundle_Adjustment_Ceres::BA_options options
+)
+: m_openMVG_options(options)
 {}
 
-bool Bundle_Adjustment_Ceres::Adjust(
+bool Bundle_Adjustment_Ceres::Adjust
+(
   SfM_Data & sfm_data,     // the SfM scene to refine
-  bool bRefineRotations,   // tell if pose rotations will be refined
-  bool bRefineTranslations,// tell if the pose translation will be refined
-  bool bRefineIntrinsics,  // tell if the camera intrinsic will be refined
-  bool bRefineStructure)   // tell if the structure will be refined
+  Parameter_Adjustment_Option adjustment_option
+)
 {
   //----------
   // Add camera parameters
@@ -121,31 +127,27 @@ bool Bundle_Adjustment_Ceres::Adjust(
 
     double angleAxis[3];
     ceres::RotationMatrixToAngleAxis((const double*)R.data(), angleAxis);
-    map_poses[indexPose].reserve(6); //angleAxis + translation
-    map_poses[indexPose].push_back(angleAxis[0]);
-    map_poses[indexPose].push_back(angleAxis[1]);
-    map_poses[indexPose].push_back(angleAxis[2]);
-    map_poses[indexPose].push_back(t(0));
-    map_poses[indexPose].push_back(t(1));
-    map_poses[indexPose].push_back(t(2));
+    // angleAxis + translation
+    map_poses[indexPose] = {angleAxis[0], angleAxis[1], angleAxis[2], t(0), t(1), t(2)};
 
     double * parameter_block = &map_poses[indexPose][0];
     problem.AddParameterBlock(parameter_block, 6);
-    if (!bRefineTranslations && !bRefineRotations)
+    if (!(adjustment_option & ADJUST_CAMERA_TRANSLATION)
+       && !(adjustment_option & ADJUST_CAMERA_ROTATION))
     {
-      //set the whole parameter block as constant for best performance.
+      // set the whole parameter block as constant for best performance
       problem.SetParameterBlockConstant(parameter_block);
     }
     else  {
       // Subset parametrization
       std::vector<int> vec_constant_extrinsic;
-      if(!bRefineRotations)
+      if(!(adjustment_option & ADJUST_CAMERA_ROTATION))
       {
         vec_constant_extrinsic.push_back(0);
         vec_constant_extrinsic.push_back(1);
         vec_constant_extrinsic.push_back(2);
       }
-      if(!bRefineTranslations)
+      if(!(adjustment_option & ADJUST_CAMERA_TRANSLATION))
       {
         vec_constant_extrinsic.push_back(3);
         vec_constant_extrinsic.push_back(4);
@@ -172,9 +174,9 @@ bool Bundle_Adjustment_Ceres::Adjust(
 
       double * parameter_block = &map_intrinsics[indexCam][0];
       problem.AddParameterBlock(parameter_block, map_intrinsics[indexCam].size());
-      if (!bRefineIntrinsics)
+      if (!(adjustment_option & ADJUST_CAMERA_INTRINSIC))
       {
-        //set the whole parameter block as constant for best performance.
+        // set the whole parameter block as constant for best performance
         problem.SetParameterBlockConstant(parameter_block);
       }
     }
@@ -214,37 +216,38 @@ bool Bundle_Adjustment_Ceres::Adjust(
           &map_poses[view->id_pose][0],
           iterTracks->second.X.data()); //Do we need to copy 3D point to avoid false motion, if failure ?
     }
-    if (!bRefineStructure)
+    if (!(adjustment_option & ADJUST_STRUCTURE))
       problem.SetParameterBlockConstant(iterTracks->second.X.data());
   }
 
   // Configure a BA engine and run it
   //  Make Ceres automatically detect the bundle structure.
   ceres::Solver::Options options;
-  options.preconditioner_type = _openMVG_options._preconditioner_type;
-  options.linear_solver_type = _openMVG_options._linear_solver_type;
-  options.sparse_linear_algebra_library_type = _openMVG_options._sparse_linear_algebra_library_type;
+  options.preconditioner_type = m_openMVG_options.m_preconditioner_type;
+  options.linear_solver_type = m_openMVG_options.m_linear_solver_type;
+  options.sparse_linear_algebra_library_type = m_openMVG_options.m_sparse_linear_algebra_library_type;
   options.minimizer_progress_to_stdout = false;
   options.logging_type = ceres::SILENT;
-  options.num_threads = _openMVG_options._nbThreads;
-  options.num_linear_solver_threads = _openMVG_options._nbThreads;
+  options.num_threads = m_openMVG_options.m_nbThreads;
+  options.num_linear_solver_threads = m_openMVG_options.m_nbThreads;
+  options.parameter_tolerance = m_openMVG_options.m_parameter_tolerance;
 
   // Solve BA
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
-  if (_openMVG_options._bCeres_Summary)
+  if (m_openMVG_options._bCeres_Summary)
     std::cout << summary.FullReport() << std::endl;
 
   // If no error, get back refined parameters
   if (!summary.IsSolutionUsable())
   {
-    if (_openMVG_options._bVerbose)
+    if (m_openMVG_options.m_bVerbose)
       std::cout << "Bundle Adjustment failed." << std::endl;
     return false;
   }
   else // Solution is usable
   {
-    if (_openMVG_options._bVerbose)
+    if (m_openMVG_options.m_bVerbose)
     {
       // Display statistics about the minimization
       std::cout << std::endl
@@ -261,7 +264,9 @@ bool Bundle_Adjustment_Ceres::Adjust(
     }
 
     // Update camera poses with refined data
-    if (bRefineRotations || bRefineTranslations)
+    if (
+         (adjustment_option & ADJUST_CAMERA_ROTATION)
+      || (adjustment_option & ADJUST_CAMERA_TRANSLATION))
     {
       for (Poses::iterator itPose = sfm_data.poses.begin();
         itPose != sfm_data.poses.end(); ++itPose)
@@ -278,7 +283,7 @@ bool Bundle_Adjustment_Ceres::Adjust(
     }
 
     // Update camera intrinsics with refined data
-    if (bRefineIntrinsics)
+    if (adjustment_option & ADJUST_CAMERA_INTRINSIC)
     {
       for (Intrinsics::iterator itIntrinsic = sfm_data.intrinsics.begin();
         itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)

@@ -386,7 +386,8 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
 
   Bundle_Adjustment_Ceres bundle_adjustment_obj;
   // - refine only Structure and translations
-  bool b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data, false, true, false);
+  bool b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data,
+    Parameter_Adjustment_Option(ADJUST_STRUCTURE | ADJUST_CAMERA_TRANSLATION));
   if (b_BA_Status)
   {
     if (!_sLoggingFile.empty())
@@ -397,7 +398,9 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
     }
 
     // - refine only Structure and Rotations & translations
-    b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data, true, true, false);
+    b_BA_Status = bundle_adjustment_obj.Adjust(
+      _sfm_data,
+      Parameter_Adjustment_Option(ADJUST_STRUCTURE | ADJUST_CAMERA_ROTATION | ADJUST_CAMERA_TRANSLATION));
     if (b_BA_Status && !_sLoggingFile.empty())
     {
       Save(_sfm_data,
@@ -408,7 +411,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
 
   if (b_BA_Status && !_bFixedIntrinsics) {
     // - refine all: Structure, motion:{rotations, translations} and optics:{intrinsics}
-    b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data, true, true, true);
+    b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data, ADJUST_ALL);
     if (b_BA_Status && !_sLoggingFile.empty())
     {
       Save(_sfm_data,
@@ -447,7 +450,11 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
       << "\t #3DPoints: " << pointcount_cleaning << "\n";
   }
 
-  b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data, true, true, !_bFixedIntrinsics);
+  const Parameter_Adjustment_Option
+    ba_refine_options =
+    (_bFixedIntrinsics) ? ADJUST_MOTION_AND_STRUCTURE
+                        : ADJUST_ALL;
+  b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data, ba_refine_options);
   if (b_BA_Status && !_sLoggingFile.empty())
   {
     Save(_sfm_data,
@@ -586,11 +593,11 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
           landmarks[k].obs = obs;
           landmarks[k].X = X;
         }
-        // - refine only Structure and Rotations & translations (keep intrinsic constant)
+        // - refine only Structure and camera motion (R|t) (keep intrinsic constant)
         Bundle_Adjustment_Ceres::BA_options options(false, false);
-        options._linear_solver_type = ceres::DENSE_SCHUR;
+        options.m_linear_solver_type = ceres::DENSE_SCHUR;
         Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-        if (bundle_adjustment_obj.Adjust(tiny_scene, true, true, false))
+        if (bundle_adjustment_obj.Adjust(tiny_scene, ADJUST_MOTION_AND_STRUCTURE))
         {
           // --> to debug: save relative pair geometry on disk
           // std::ostringstream os;

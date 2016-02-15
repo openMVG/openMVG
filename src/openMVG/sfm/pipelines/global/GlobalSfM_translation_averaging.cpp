@@ -768,7 +768,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
 
   // Refine structure and poses (keep intrinsic constant)
   Bundle_Adjustment_Ceres::BA_options options(false, false);
-  options._linear_solver_type = ceres::SPARSE_SCHUR;
+  options.m_linear_solver_type = ceres::SPARSE_SCHUR;
   Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
   if (bundle_adjustment_obj.Adjust(tiny_scene, false, true, false))
   {
