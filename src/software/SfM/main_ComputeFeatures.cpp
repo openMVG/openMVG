@@ -47,56 +47,8 @@ using namespace std;
 #include <unistd.h>
 #include <sys/wait.h>
 
-// This function dispatch the compute function on several sub processes
-// keeping the maximum number of subprocesses under maxJobs
-void dispatch(const int &maxJobs, std::function<void()> compute)
-{
-  static int nbJobs;
-  pid_t pid = fork();
-  if (pid < 0)           
-  {                      
-    // Something bad happened
-    std::cerr << "fork failed\n";
-    _exit(EXIT_FAILURE);
-  }
-  else if(pid == 0)
-  {
-#ifdef OPENMVG_USE_OPENMP
-    // Disable OpenMP as we dispatch the work on multiple sub processes
-    // and we don't want that each subprocess use all the cpu ressource
-    omp_set_num_threads(1); 
-#endif
-    compute();
-    _exit(EXIT_SUCCESS);
-  }
-  else 
-  {
-    nbJobs++;
-    if (nbJobs && (nbJobs % maxJobs == 0))
-    {
-      pid_t pids;
-      while(pids = waitpid(-1, NULL, 0)) 
-      {
-        nbJobs--;
-        break;
-      }
-    }
-  }
-}
-
-// Waits for all subprocesses to be completed
-void waitForCompletion()
-{
-  pid_t pids;
-  while(pids = waitpid(-1, NULL, 0)) 
-  {
-    if (errno == ECHILD)
-        break;
-  }
-}
-
-// Returns a map containing information about the memory usage,
-// it basically reads /proc/meminfo  
+// Returns a map containing information about the memory usage o
+// of the system, it basically reads /proc/meminfo  
 std::map<std::string, unsigned long> memInfos()
 {
   std::map<std::string, unsigned long> memoryInfos;
@@ -118,7 +70,8 @@ std::map<std::string, unsigned long> memInfos()
   return memoryInfos;
 }
 
-// Count the number of processors on the machine using /proc/cpuinfo
+
+// Count the number of processors of the machine using /proc/cpuinfo
 unsigned int countProcessors()
 {
   unsigned int nprocessors = 0;
@@ -136,17 +89,112 @@ unsigned int countProcessors()
   return nprocessors; 
 }
 
-// Returns the number of jobs to run simultaneously if one job should run on 
-// 1 proc and 2GB (1<<21) of memory 
-int bestNumberOfJobs(unsigned long jobMemoryRequirement = 1 << 21)
+// Returns the number of jobs to run simultaneously if one job should 
+// run with jobMemoryRequirement Kb 
+int remainingJobSlots(unsigned long jobMemoryRequirement)
 {
   assert(jobMemoryRequirement!=0);
   auto meminfos = memInfos();
   const unsigned long available = meminfos["MemFree"] + meminfos["Buffers"] + meminfos["Cached"]; 
-  const unsigned int nbslots = static_cast<unsigned int>(available/jobMemoryRequirement); 
-  const unsigned int nbproc = countProcessors(); 
-  return std::max(std::min(nbslots, nbproc), 1u);
+  const unsigned int memSlots = static_cast<unsigned int>(available/jobMemoryRequirement); 
+  const unsigned int cpuSlots = countProcessors(); 
+  return std::max(std::min(memSlots, cpuSlots), 1u);
 }
+
+// Returns the peak virtual memory of the process processID
+// returns 0 if the process is not alive anymore, ie the 
+// /proc/pid/status can't be opened
+unsigned long peakMemory(pid_t processID)
+{  
+  char processStatusFileName[256];
+  snprintf(processStatusFileName, 256, "/proc/%d/status", processID);
+  std::ifstream processStatusFile(processStatusFileName);
+  if (processStatusFile.is_open())
+  {
+    std::string line;
+    constexpr const char *peakString = "VmPeak:";
+    constexpr size_t peakStringLen = std::strlen(peakString);
+    while(getline(processStatusFile, line))
+    {
+      if (line.compare(0, peakStringLen, peakString) == 0)
+      {
+        const std::string value = line.substr(peakStringLen);
+        return std::strtoul(value.c_str(), nullptr, 10);  
+      }
+    }
+  }
+  return 0ul;
+}
+
+// This function dispatch the compute function on several sub processes
+// keeping the maximum number of subprocesses under maxJobs
+void dispatch(const int &maxJobs, std::function<void()> compute)
+{
+  static int nbJobs;
+  static unsigned int subProcessPeakMemory = 0;
+  static int possibleJobs=0;
+  pid_t pid = fork();
+  if (pid < 0)           
+  {                      
+    // Something bad happened
+    std::cerr << "fork failed\n";
+    _exit(EXIT_FAILURE);
+  }
+  else if(pid == 0)
+  {
+#ifdef OPENMVG_USE_OPENMP
+    // Disable OpenMP as we dispatch the work on multiple sub processes
+    // and we don't want that each subprocess use all the cpu ressource
+    omp_set_num_threads(1); 
+#endif
+    compute();
+    _exit(EXIT_SUCCESS);
+  }
+  else 
+  {
+    nbJobs++;
+    // Use subprocess peak memory and assume the next job will use the 
+    // same amount of memory. It allows to roughly determine the number 
+    // of possible jobs running simultaneously
+    if (subProcessPeakMemory==0)
+    {
+      unsigned int readPeak = peakMemory(pid);
+      while(readPeak != 0) 
+      { // sample memory of the first job 
+        sleep(0.2); // sample every 0.2 seconds;
+        if( subProcessPeakMemory < readPeak )
+        {
+          subProcessPeakMemory = readPeak;
+        }  
+        readPeak = peakMemory(pid);
+      } 
+      possibleJobs = remainingJobSlots(subProcessPeakMemory);
+    }
+    
+    // Wait for a subprocess to stop when no more job slots are available
+    if (nbJobs >= possibleJobs || (maxJobs != 0 && nbJobs >= maxJobs))
+    {
+      pid_t pids;
+      while(pids = waitpid(-1, NULL, 0)) 
+      {
+        nbJobs--;
+        break;
+      }
+    }
+  }
+}
+
+// Waits for all subprocesses to terminate 
+void waitForCompletion()
+{
+  pid_t pids;
+  while(pids = waitpid(-1, NULL, 0)) 
+  {
+    if (errno == ECHILD)
+        break;
+  }
+}
+
 
 #else // __linux__
 
@@ -158,7 +206,7 @@ void dispatch(const int &maxJobs, std::function<void()> compute)
     compute();
 }
 void waitForCompletion() {}
-int bestNumberOfJobs(unsigned long jobMemoryRequirement = 1 << 21) {return 1;}  
+int remainingJobSlots(unsigned long jobMemoryRequirement) {return 1;}  
 
 #endif // __linux__
 
@@ -245,10 +293,6 @@ int main(int argc, char **argv)
       std::cerr << "\nInvalid value for -j option, the value must be >= 0" << std::endl;
       return EXIT_FAILURE;
     } 
-    else if (maxJobs == 0)
-    {
-      maxJobs = bestNumberOfJobs();
-    }
   }
 
   if (sOutDir.empty())
