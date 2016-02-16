@@ -7,6 +7,10 @@
 
 #include <cstdlib>
 
+/// Parameterization
+#include "openMVG/params/params_data_io.hpp"
+#include "openMVG/params/params_camera_io.hpp"
+
 #include "openMVG/sfm/sfm.hpp"
 #include "openMVG/system/timer.hpp"
 
@@ -15,6 +19,7 @@
 
 using namespace openMVG;
 using namespace openMVG::cameras;
+using namespace openMVG::params;
 using namespace openMVG::sfm;
 
 /// From 2 given image file-names, find the two corresponding index in the View list
@@ -64,6 +69,8 @@ int main(int argc, char **argv)
   CmdLine cmd;
 
   std::string sSfM_Data_Filename;
+  std::string sParams_Data_Filename;
+  std::string sParams_Camera_Filename;
   std::string sMatchesDir;
   std::string sOutDir = "";
   std::pair<std::string,std::string> initialPairString("","");
@@ -73,6 +80,8 @@ int main(int argc, char **argv)
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
   cmd.add( make_option('o', sOutDir, "outdir") );
+  cmd.add( make_option('P', sParams_Data_Filename, "params_file") );
+  cmd.add( make_option('C', sParams_Camera_Filename, "params_cam_file") );
   cmd.add( make_option('a', initialPairString.first, "initialPairA") );
   cmd.add( make_option('b', initialPairString.second, "initialPairB") );
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
@@ -86,6 +95,8 @@ int main(int argc, char **argv)
     << "[-i|--input_file] path to a SfM_Data scene\n"
     << "[-m|--matchdir] path to the matches that corresponds to the provided SfM_Data scene\n"
     << "[-o|--outdir] path where the output data will be stored\n"
+    << "[-P|--params_file] a params file\n"
+    << "[-C|--params_cam_file] a params camera file\n"
     << "[-a|--initialPairA] filename of the first image (without path)\n"
     << "[-b|--initialPairB] filename of the second image (without path)\n"
     << "[-c|--camera_model] Camera model type for view with unknown intrinsic:\n"
@@ -100,6 +111,45 @@ int main(int argc, char **argv)
     std::cerr << s << std::endl;
     return EXIT_FAILURE;
   }
+
+  //---------------------------------------
+  // Read parameters data if available
+  //---------------------------------------
+  paramsData params_data;
+  // Try to open file if path is provided
+  if (!sParams_Data_Filename.empty()){
+	  if (!Load(params_data, sParams_Data_Filename)) {
+		std::cout << std::endl
+		  << "The input parameters file \""<< sParams_Data_Filename << "\" cannot be read." << std::endl;
+	  }
+	  else{
+		  // Set loaded parameters
+		  std::cout << std::endl
+		  		  << "Parameters loaded from: \""<< sParams_Data_Filename << "\"" << std::endl << std::endl;
+		  bRefineIntrinsics = params_data.incrementalSfM.refineIntrinsics;
+		  i_User_camera_model = params_data.incrementalSfM.camera_type;
+	  }
+  }
+  // Camera parameters
+  paramsCamera params_cam_data;
+    // Try to open file if path is provided
+    if (!sParams_Camera_Filename.empty()){
+  	  if (!Load(params_cam_data, sParams_Camera_Filename)) {
+  		std::cout << std::endl
+  		  << "The input parameters file \""<< sParams_Camera_Filename << "\" cannot be read." << std::endl;
+  	  }
+  	  else{
+  		  // Set loaded parameters
+  		  std::cout << std::endl
+  		  		  << "Camera Parameters loaded from: \""<< sParams_Camera_Filename << "\"" << std::endl << std::endl;
+  		  i_User_camera_model = params_cam_data.camera_type;
+  	  }
+    }
+
+
+  //---------------------------------------
+  // Incremental SfM
+  //---------------------------------------
 
   // Load input SfM_Data scene
   SfM_Data sfm_data;

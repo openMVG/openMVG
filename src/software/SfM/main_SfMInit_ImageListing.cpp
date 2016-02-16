@@ -5,6 +5,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #include "openMVG/exif/exif_IO_EasyExif.hpp"
 
+/// Parameterization
+#include "openMVG/params/params_camera_io.hpp"
+
 #include "openMVG/exif/sensor_width_database/ParseDatabase.hpp"
 
 #include "openMVG/image/image.hpp"
@@ -26,6 +29,7 @@ using namespace openMVG;
 using namespace openMVG::cameras;
 using namespace openMVG::exif;
 using namespace openMVG::image;
+using namespace openMVG::params;
 using namespace openMVG::sfm;
 
 /// Check that Kmatrix is a string like "f;0;ppx;0;f;ppy;0;0;1"
@@ -63,6 +67,7 @@ int main(int argc, char **argv)
   CmdLine cmd;
 
   std::string sImageDir,
+    sParams_Camera_Filename,
     sfileDatabase = "",
     sOutputDir = "",
     sKmatrix;
@@ -76,6 +81,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('i', sImageDir, "imageDirectory") );
   cmd.add( make_option('d', sfileDatabase, "sensorWidthDatabase") );
   cmd.add( make_option('o', sOutputDir, "outputDirectory") );
+  cmd.add( make_option('C', sParams_Camera_Filename, "params_file") );
   cmd.add( make_option('f', focal_pixels, "focal") );
   cmd.add( make_option('k', sKmatrix, "intrinsics") );
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
@@ -89,6 +95,7 @@ int main(int argc, char **argv)
       << "[-i|--imageDirectory]\n"
       << "[-d|--sensorWidthDatabase]\n"
       << "[-o|--outputDirectory]\n"
+      << "[-C|--params_file] a params camera file\n"
       << "[-f|--focal] (pixels)\n"
       << "[-k|--intrinsics] Kmatrix: \"f;0;ppx;0;f;ppy;0;0;1\"\n"
       << "[-c|--camera_model] Camera model type:\n"
@@ -106,6 +113,30 @@ int main(int argc, char **argv)
       return EXIT_FAILURE;
   }
 
+  //---------------------------------------
+  // Read parameters data if available
+  //---------------------------------------
+  paramsCamera params_data;
+  // Try to open file if path is provided
+  if (!sParams_Camera_Filename.empty()){
+	  if (!Load(params_data, sParams_Camera_Filename)) {
+		std::cout << std::endl
+		  << "The input parameters file \""<< sParams_Camera_Filename << "\" cannot be read." << std::endl;
+	  }
+	  else{
+		  // Set loaded parameters
+		  std::cout << std::endl
+		  		  << "Parameters loaded from: \""<< sParams_Camera_Filename << "\"" << std::endl << std::endl;
+		  focal_pixels = params_data.focal_px;
+		  sKmatrix = params_data.kMatrix;
+		  i_User_camera_model = params_data.camera_type;
+		  b_Group_camera_model = params_data.shared_intrinsics;
+	  }
+  }
+
+  //---------------------------------------
+  // Print used parameter values
+  //---------------------------------------
   std::cout << " You called : " <<std::endl
             << argv[0] << std::endl
             << "--imageDirectory " << sImageDir << std::endl

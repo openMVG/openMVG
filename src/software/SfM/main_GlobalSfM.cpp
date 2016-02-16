@@ -7,10 +7,14 @@
 
 #include <cstdlib>
 
+/// Parameterization
+#include "openMVG/params/params_data_io.hpp"
+
 #include "openMVG/sfm/pipelines/global/sfm_global_engine_relative_motions.hpp"
 #include "openMVG/system/timer.hpp"
 
 using namespace openMVG;
+using namespace openMVG::params;
 using namespace openMVG::sfm;
 
 #include "third_party/cmdLine/cmdLine.h"
@@ -36,6 +40,7 @@ int main(int argc, char **argv)
   CmdLine cmd;
 
   std::string sSfM_Data_Filename;
+  std::string sParams_Data_Filename;
   std::string sMatchesDir;
   std::string sOutDir = "";
   int iRotationAveragingMethod = int (ROTATION_AVERAGING_L2);
@@ -45,6 +50,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
   cmd.add( make_option('o', sOutDir, "outdir") );
+  cmd.add( make_option('P', sParams_Data_Filename, "params_file") );
   cmd.add( make_option('r', iRotationAveragingMethod, "rotationAveraging") );
   cmd.add( make_option('t', iTranslationAveragingMethod, "translationAveraging") );
   cmd.add( make_option('f', bRefineIntrinsics, "refineIntrinsics") );
@@ -58,6 +64,7 @@ int main(int argc, char **argv)
     << "[-m|--matchdir] path to the matches that corresponds to the provided SfM_Data scene\n"
     << "[-o|--outdir] path where the output data will be stored\n"
     << "\n[Optional]\n"
+    << "[-P|--params_file] a params file\n"
     << "[-r|--rotationAveraging]\n"
     << "\t 1 -> L1 minimization\n"
     << "\t 2 -> L2 minimization (default)\n"
@@ -73,6 +80,31 @@ int main(int argc, char **argv)
     std::cerr << s << std::endl;
     return EXIT_FAILURE;
   }
+
+  //---------------------------------------
+  // Read parameters data if available
+  //---------------------------------------
+  paramsData params_data;
+  // Try to open file if path is provided
+  if (!sParams_Data_Filename.empty()){
+	  if (!Load(params_data, sParams_Data_Filename)) {
+		std::cout << std::endl
+		  << "The input parameters file \""<< sParams_Data_Filename << "\" cannot be read." << std::endl;
+	  }
+	  else{
+		  // Set loaded parameters
+		  std::cout << std::endl
+		  		  << "Parameters loaded from: \""<< sParams_Data_Filename << "\"" << std::endl << std::endl;
+		  bRefineIntrinsics = params_data.incrementalSfM.refineIntrinsics;
+		  iRotationAveragingMethod = params_data.globalSfM.rotationAveragingMethod;
+		  iTranslationAveragingMethod = params_data.globalSfM.translationAveragingMethod;
+	  }
+  }
+
+
+  //---------------------------------------
+  // Global SfM
+  //---------------------------------------
 
   if (iRotationAveragingMethod < ROTATION_AVERAGING_L1 ||
       iRotationAveragingMethod > ROTATION_AVERAGING_L2 )  {

@@ -5,6 +5,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+/// Parameterization
+#include "openMVG/params/params_data_io.hpp"
+
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/pipelines/sfm_engine.hpp"
@@ -33,6 +36,7 @@
 using namespace openMVG;
 using namespace openMVG::cameras;
 using namespace openMVG::matching;
+using namespace openMVG::params;
 using namespace openMVG::robust;
 using namespace openMVG::sfm;
 using namespace openMVG::matching_image_collection;
@@ -62,6 +66,7 @@ int main(int argc, char **argv)
   CmdLine cmd;
 
   std::string sSfM_Data_Filename;
+  std::string sParams_Data_Filename;
   std::string sMatchesDirectory = "";
   std::string sGeometricModel = "f";
   float fDistRatio = 0.8f;
@@ -77,6 +82,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('o', sMatchesDirectory, "out_dir") );
   // Options
+  cmd.add( make_option('P', sParams_Data_Filename, "params_file") );
   cmd.add( make_option('r', fDistRatio, "ratio") );
   cmd.add( make_option('g', sGeometricModel, "geometric_model") );
   cmd.add( make_option('v', iMatchingVideoMode, "video_mode_matching") );
@@ -94,6 +100,7 @@ int main(int argc, char **argv)
       << "[-i|--input_file] a SfM_Data file\n"
       << "[-o|--out_dir path] output path where computed are stored\n"
       << "\n[Optional]\n"
+      << "[-P|--params_file] a params file\n"
       << "[-f|--force] Force to recompute data]\n"
       << "[-r|--ratio] Distance ratio to discard non meaningful matches\n"
       << "   0.8: (default).\n"
@@ -127,6 +134,32 @@ int main(int argc, char **argv)
       return EXIT_FAILURE;
   }
 
+  //---------------------------------------
+  // Read parameters data if available
+  //---------------------------------------
+  paramsData params_data;
+  // Try to open file if path is provided
+  if (!sParams_Data_Filename.empty()){
+	  if (!Load(params_data, sParams_Data_Filename)) {
+		std::cout << std::endl
+		  << "The input parameters file \""<< sParams_Data_Filename << "\" cannot be read." << std::endl;
+	  }
+	  else{
+		  // Set loaded parameters
+		  std::cout << std::endl
+		  		  << "Parameters loaded from: \""<< sParams_Data_Filename << "\"" << std::endl << std::endl;
+		  fDistRatio = params_data.matching.max_matching_dist_ratio;
+		  sGeometricModel = params_data.matching.geometric_model;
+		  iMatchingVideoMode = params_data.matching.video_mode_matching;
+		  sNearestMatchingMethod = params_data.matching.nearest_matching_method;
+		  bGuided_matching = params_data.matching.guided_matching;
+	  }
+  }
+
+
+  //---------------------------------------
+  // Print used parameter values
+  //---------------------------------------
   std::cout << " You called : " << "\n"
             << argv[0] << "\n"
             << "--input_file " << sSfM_Data_Filename << "\n"

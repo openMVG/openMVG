@@ -7,6 +7,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_SfMInit_ImageListing
   openMVG_system
   openMVG_image
   openMVG_features
+  openMVG_params
   openMVG_sfm
   easyexif
   )
@@ -37,6 +38,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures
   openMVG_image
   openMVG_features
   openMVG_multiview
+  openMVG_params
   openMVG_sfm
   stlplus
   vlsift
@@ -47,6 +49,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeMatches
   openMVG_system
   openMVG_features
   openMVG_multiview
+  openMVG_params
   openMVG_sfm
   openMVG_matching_image_collection
   stlplus
@@ -73,6 +76,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_IncrementalSfM
   openMVG_system
   openMVG_image
   openMVG_features
+  openMVG_params
   openMVG_sfm
   stlplus
   )
@@ -82,6 +86,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_GlobalSfM
   openMVG_system
   openMVG_image
   openMVG_features
+  openMVG_params
   openMVG_sfm
   stlplus
   )

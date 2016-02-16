@@ -8,6 +8,8 @@
 
 #include "openMVG/image/image.hpp"
 #include "openMVG/sfm/sfm.hpp"
+/// Parameterization
+#include "openMVG/params/params_data_io.hpp"
 
 /// Feature/Regions & Image describer interfaces
 #include "openMVG/features/features.hpp"
@@ -26,6 +28,7 @@ using namespace openMVG;
 using namespace openMVG::image;
 using namespace openMVG::features;
 using namespace openMVG::sfm;
+using namespace openMVG::params;
 using namespace std;
 
 features::EDESCRIBER_PRESET stringToEnum(const std::string & sPreset)
@@ -51,6 +54,7 @@ int main(int argc, char **argv)
   CmdLine cmd;
 
   std::string sSfM_Data_Filename;
+  std::string sParams_Data_Filename;
   std::string sOutDir = "";
   bool bUpRight = false;
   std::string sImage_Describer_Method = "SIFT";
@@ -61,6 +65,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('o', sOutDir, "outdir") );
   // Optional
+  cmd.add( make_option('P', sParams_Data_Filename, "params_file") );
   cmd.add( make_option('m', sImage_Describer_Method, "describerMethod") );
   cmd.add( make_option('u', bUpRight, "upright") );
   cmd.add( make_option('f', bForce, "force") );
@@ -74,6 +79,7 @@ int main(int argc, char **argv)
       << "[-i|--input_file] a SfM_Data file \n"
       << "[-o|--outdir path] \n"
       << "\n[Optional]\n"
+      << "[-P|--params_file] a Params_Data file\n"
       << "[-f|--force] Force to recompute data\n"
       << "[-m|--describerMethod]\n"
       << "  (method to use to describe an image):\n"
@@ -92,6 +98,30 @@ int main(int argc, char **argv)
       return EXIT_FAILURE;
   }
 
+  //---------------------------------------
+  // Read parameters data if available
+  //---------------------------------------
+  paramsData params_data;
+  // Try to open file if path is provided
+  if (!sParams_Data_Filename.empty()){
+	  if (!Load(params_data, sParams_Data_Filename)) {
+		std::cout << std::endl
+		  << "The input parameters file \""<< sParams_Data_Filename << "\" cannot be read." << std::endl;
+	  }
+	  else{
+		  // Set loaded parameters
+		  std::cout << std::endl
+		  		  << "Parameters loaded from: \""<< sParams_Data_Filename << "\"" << std::endl << std::endl;
+		  sImage_Describer_Method = params_data.detection.feature_type;
+		  bUpRight = params_data.detection.upright;
+		  sFeaturePreset = params_data.detection.feature_present;
+	  }
+  }
+
+
+  //---------------------------------------
+  // Print used parameter values
+  //---------------------------------------
   std::cout << " You called : " <<std::endl
             << argv[0] << std::endl
             << "--input_file " << sSfM_Data_Filename << std::endl
