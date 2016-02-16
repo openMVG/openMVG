@@ -144,7 +144,7 @@ int main(int argc, char **argv)
   std::string sOutputDir;
   std::string sKmatrix;
 
-  int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
+  std::string i_User_camera_model = EINTRINSIC_enumToString(PINHOLE_CAMERA_RADIAL3);
 
   bool b_Group_camera_model = true;
   bool b_use_UID = false;
@@ -178,12 +178,7 @@ int main(int argc, char **argv)
       << "[-f|--focal] (pixels)\n"
       << "[-s|--sensorWidth] (mm)\n"
       << "[-k|--intrinsics] Kmatrix: \"f;0;ppx;0;f;ppy;0;0;1\"\n"
-      << "[-c|--camera_model] Camera model type:\n"
-      << "\t 1: Pinhole\n"
-      << "\t 2: Pinhole radial 1\n"
-      << "\t 3: Pinhole radial 3 (default)\n"
-      << "\t 4: Pinhole brown 2\n"
-      << "\t 5: Pinhole with a simple Fish-eye distortion\n"
+      << "[-c|--camera_model] Camera model type (pinhole, radial1, radial3, brown or fisheye)\n"
       << "[-g|--group_camera_model]\n"
       << "\t 0-> each view have it's own camera intrinsic parameters,\n"
       << "\t 1-> (default) view can share some camera intrinsic parameters\n"
@@ -209,7 +204,7 @@ int main(int argc, char **argv)
             << "--use_UID " << b_use_UID << std::endl
             << "--storeMetadata " << b_storeMetadata << std::endl;
 
-  const EINTRINSIC e_User_camera_model = EINTRINSIC(i_User_camera_model);
+  const EINTRINSIC e_User_camera_model = EINTRINSIC_stringToEnum(i_User_camera_model);
   double ppx = -1.0, ppy = -1.0;
 
   if(!sImageDir.empty() && !sJsonFile.empty())
