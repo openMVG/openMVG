@@ -81,7 +81,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('i', sImageDir, "imageDirectory") );
   cmd.add( make_option('d', sfileDatabase, "sensorWidthDatabase") );
   cmd.add( make_option('o', sOutputDir, "outputDirectory") );
-  cmd.add( make_option('C', sParams_Camera_Filename, "params_file") );
+  cmd.add( make_option('P', sParams_Camera_Filename, "params_file") );
   cmd.add( make_option('f', focal_pixels, "focal") );
   cmd.add( make_option('k', sKmatrix, "intrinsics") );
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
       << "[-i|--imageDirectory]\n"
       << "[-d|--sensorWidthDatabase]\n"
       << "[-o|--outputDirectory]\n"
-      << "[-C|--params_file] a params camera file\n"
+      << "[-P|--params_file] a params camera file\n"
       << "[-f|--focal] (pixels)\n"
       << "[-k|--intrinsics] Kmatrix: \"f;0;ppx;0;f;ppy;0;0;1\"\n"
       << "[-c|--camera_model] Camera model type:\n"
