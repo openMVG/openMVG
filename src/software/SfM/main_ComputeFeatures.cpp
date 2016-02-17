@@ -79,7 +79,7 @@ int main(int argc, char **argv)
       << "[-i|--input_file] a SfM_Data file \n"
       << "[-o|--outdir path] \n"
       << "\n[Optional]\n"
-      << "[-P|--params_file] a Params_Data file\n"
+      << "[-P|--params_file] a params file\n"
       << "[-f|--force] Force to recompute data\n"
       << "[-m|--describerMethod]\n"
       << "  (method to use to describe an image):\n"
@@ -114,7 +114,7 @@ int main(int argc, char **argv)
 		  		  << "Parameters loaded from: \""<< sParams_Data_Filename << "\"" << std::endl << std::endl;
 		  sImage_Describer_Method = params_data.detection.feature_type;
 		  bUpRight = params_data.detection.upright;
-		  sFeaturePreset = params_data.detection.feature_present;
+		  sFeaturePreset = params_data.detection.feature_preset;
 	  }
   }
 

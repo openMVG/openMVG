@@ -28,7 +28,7 @@ struct paramsDetection
 	//		- NORMAL (default)
 	//		- HIGH
 	//		- ULTRA !!Can take long time!!
-	std::string feature_present;
+	std::string feature_preset;
 
 	// Descriptor orientation
 	bool upright;
@@ -37,10 +37,10 @@ struct paramsDetection
 	paramsDetection(
 	std::string _feature_type = "SIFT",
 	bool _upright=false,
-	std::string _feature_present = "NORMAL")
+	std::string _feature_preset = "NORMAL")
     :feature_type(_feature_type),
      upright(_upright),
-     feature_present(_feature_present)
+     feature_preset(_feature_preset)
     {}
 
   // Serialization
@@ -49,7 +49,7 @@ struct paramsDetection
   {
     ar(cereal::make_nvp("feature_type", feature_type),
     	cereal::make_nvp("upright", upright),
-    	cereal::make_nvp("feature_present", feature_present));
+    	cereal::make_nvp("feature_preset", feature_preset));
   }
 };
 
