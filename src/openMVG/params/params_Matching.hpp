@@ -17,6 +17,7 @@ namespace params {
 
 struct paramsMatching
 {
+	bool valid;
 	// Distance ratio (d1/d2) to discard non meaningful matches (matches with smaller ratio are discarded)
 	float max_matching_dist_ratio;	//default 0.8
 
@@ -61,6 +62,7 @@ struct paramsMatching
 
 
 	paramsMatching(
+	bool _valid = false,
 	float _max_matching_dist_ratio = 0.8,
 	std::string _geometric_model = "f",
 	int _video_mode_matching=-1,
@@ -69,7 +71,8 @@ struct paramsMatching
 	double _geometric_model_initial_residual_tolerance = 4.0,
 	int _min_geometric_feat_matches=50,
 	float _min_geometric_photo_ratio=0.3)
-	:max_matching_dist_ratio(_max_matching_dist_ratio),
+	:valid(_valid),
+	 max_matching_dist_ratio(_max_matching_dist_ratio),
 	 geometric_model(_geometric_model),
 	 video_mode_matching(_video_mode_matching),
 	 nearest_matching_method(_nearest_matching_method),

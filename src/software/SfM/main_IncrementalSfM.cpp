@@ -110,11 +110,11 @@ int main(int argc, char **argv)
   //---------------------------------------
   // Read parameters data if available
   //---------------------------------------
-  std::shared_ptr<paramsIncrementalSfM> params_incSfM = std::make_shared<paramsIncrementalSfM>();
+  paramsIncrementalSfM params_incSfM;
   bool params_loaded = false;
   // Try to open file if path is provided
   if (!sParams_Data_Filename.empty()){
-	  if (!Load(*params_incSfM, sParams_Data_Filename)) {
+	  if (!Load(params_incSfM, sParams_Data_Filename)) {
 		std::cout << std::endl
 		  << "The input parameters file \""<< sParams_Data_Filename << "\" cannot be read." << std::endl;
 	  }
@@ -123,8 +123,8 @@ int main(int argc, char **argv)
 		  std::cout << std::endl
 		  		  << "Parameters loaded from: \""<< sParams_Data_Filename << "\"" << std::endl << std::endl;
 		  params_loaded = true;
-		  bRefineIntrinsics = params_incSfM->refineIntrinsics;
-		  i_User_camera_model = params_incSfM->camera_type;
+		  bRefineIntrinsics = params_incSfM.refineIntrinsics;
+		  i_User_camera_model = params_incSfM.camera_type;
 	  }
   }
 
@@ -190,7 +190,8 @@ int main(int argc, char **argv)
     stlplus::create_filespec(sOutDir, "Reconstruction_Report.html"));
 
   // Add parameter data
-  sfmEngine.SetParamsData(params_incSfM.get());
+  if(params_incSfM.valid)
+	  sfmEngine.SetParamsData(params_incSfM);
   // Configure the features_provider & the matches_provider
   sfmEngine.SetFeaturesProvider(feats_provider.get());
   sfmEngine.SetMatchesProvider(matches_provider.get());

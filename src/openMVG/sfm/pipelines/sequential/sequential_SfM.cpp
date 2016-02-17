@@ -83,7 +83,7 @@ void SequentialSfMReconstructionEngine::SetMatchesProvider(Matches_Provider * pr
   _matches_provider = provider;
 }
 
-void SequentialSfMReconstructionEngine::SetParamsData(paramsIncrementalSfM * params)
+void SequentialSfMReconstructionEngine::SetParamsData(paramsIncrementalSfM params)
 {
   _params_data = params;
 }
@@ -95,12 +95,12 @@ bool SequentialSfMReconstructionEngine::Process() {
   double outlier_min_angle_between_rays_final = 2.0;
   size_t outlier_min_tracks_removed_re_ba = 50;
 
-  if(_params_data!=NULL){
-	  outlier_max_residual_error_iter = _params_data->outlier_max_residual_error_iter;
-	  outlier_min_angle_between_rays_iter = _params_data->outlier_min_angle_triangulation_iter;
-	  outlier_max_residual_error_final = _params_data->outlier_max_residual_error_final;
-	  outlier_min_angle_between_rays_final = _params_data->outlier_min_angle_triangulation_final;
-	  outlier_min_tracks_removed_re_ba = _params_data->outlier_min_tracks_removed_re_ba;
+  if(_params_data.valid){
+	  outlier_max_residual_error_iter = _params_data.outlier_max_residual_error_iter;
+	  outlier_min_angle_between_rays_iter = _params_data.outlier_min_angle_triangulation_iter;
+	  outlier_max_residual_error_final = _params_data.outlier_max_residual_error_final;
+	  outlier_min_angle_between_rays_final = _params_data.outlier_min_angle_triangulation_final;
+	  outlier_min_tracks_removed_re_ba = _params_data.outlier_min_tracks_removed_re_ba;
   }
 
 
@@ -305,8 +305,8 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
   // Parameters load
   size_t min_obs_per_track = 2;
 
-  if(_params_data!=NULL){
-	  min_obs_per_track = _params_data->min_obs_per_track;
+  if(_params_data.valid){
+	  min_obs_per_track = _params_data.min_obs_per_track;
   }
 
   // Compute tracks from matches
@@ -367,12 +367,12 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
   double init_residual_tolerance = 4.0; // Actual ACRANSAC upperbound is squared of this
 
 
-  if(_params_data!=NULL){
-	  k = _params_data->init_pair_best_of_k;
-	  iMin_inliers_count = _params_data->init_pair_min_tracks;
-	  fRequired_min_angle = _params_data->init_pair_min_angle;
-	  fLimit_max_angle = _params_data->init_pair_max_angle;
-	  init_residual_tolerance = _params_data->init_pair_pose_init_residual_tolerance;
+  if(_params_data.valid){
+	  k = _params_data.init_pair_best_of_k;
+	  iMin_inliers_count = _params_data.init_pair_min_tracks;
+	  fRequired_min_angle = _params_data.init_pair_min_angle;
+	  fLimit_max_angle = _params_data.init_pair_max_angle;
+	  init_residual_tolerance = _params_data.init_pair_pose_init_residual_tolerance;
   }
 
   // List Views that support valid intrinsic (view that could be used for Essential matrix computation)
@@ -515,9 +515,9 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
   double min_bound_precision_add_point = 1.0;
   double min_angle_add_point = 2.0;
 
-  if(_params_data!=NULL){
-	  min_bound_precision_add_point = _params_data->init_pair_min_bound_precision_add_point;
-	  min_angle_add_point = _params_data->init_pair_min_angle_add_point;
+  if(_params_data.valid){
+	  min_bound_precision_add_point = _params_data.init_pair_min_bound_precision_add_point;
+	  min_angle_add_point = _params_data.init_pair_min_angle_add_point;
   }
 
   // Compute robust Essential matrix for ImageId [I,J]
@@ -807,8 +807,8 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
   // Threshold used to select the best images
   float dThresholdGroup = 0.75f;
 
-  if(_params_data!=NULL){
-	  dThresholdGroup = _params_data->sfm_threshold_group_insert_ratio;
+  if(_params_data.valid){
+	  dThresholdGroup = _params_data.sfm_threshold_group_insert_ratio;
   }
 
   vec_possible_indexes.clear();
@@ -909,9 +909,9 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
   double min_bound_residual_new_track = 4.0;
   double min_angle_new_track = 2.0;
 
-  if(_params_data!=NULL){
-	  min_bound_residual_new_track = _params_data->sfm_min_bound_residual_error_add_track;
-	  min_angle_new_track = _params_data->sfm_min_angle_add_track;
+  if(_params_data.valid){
+	  min_bound_residual_new_track = _params_data.sfm_min_bound_residual_error_add_track;
+	  min_angle_new_track = _params_data.sfm_min_angle_add_track;
   }
 
   // A. Compute 2D/3D matches
@@ -1255,8 +1255,8 @@ bool SequentialSfMReconstructionEngine::BundleAdjustment()
 {
   // Parameters load
   size_t min_sparse_schur = 100;
-  if(_params_data!=NULL){
-	  min_sparse_schur = _params_data->ba_min_sparse_schur;
+  if(_params_data.valid){
+	  min_sparse_schur = _params_data.ba_min_sparse_schur;
   }
   Bundle_Adjustment_Ceres::BA_options options;
   if (_sfm_data.GetPoses().size() > min_sparse_schur)

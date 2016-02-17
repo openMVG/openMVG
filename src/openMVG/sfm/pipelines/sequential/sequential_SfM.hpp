@@ -37,7 +37,7 @@ public:
 
   void SetFeaturesProvider(Features_Provider * provider);
   void SetMatchesProvider(Matches_Provider * provider);
-  void SetParamsData(paramsIncrementalSfM * params_data);
+  void SetParamsData(paramsIncrementalSfM params_data);
 
   virtual bool Process();
 
@@ -98,7 +98,8 @@ private:
   std::string _sLoggingFile;
 
   // Parameter
-  paramsIncrementalSfM * _params_data;
+  paramsIncrementalSfM _params_data;
+
   Pair _initialpair;
   cameras::EINTRINSIC _camType; // The camera type for the unknown cameras
 

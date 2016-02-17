@@ -24,8 +24,10 @@ bool Load(paramsCamera & params_data, const std::string & filename)
 {
   bool bStatus = false;
   const std::string ext = stlplus::extension_part(filename);
-  if (ext == "json")
+  if (ext == "json"){
     bStatus = Load_Cereal<cereal::JSONInputArchive>(params_data, filename);
+  	params_data.valid = true;
+  }
   else
   {
     std::cerr << "Unknown params_camera input format: " << ext << std::endl;
@@ -55,8 +57,10 @@ bool Load(paramsDetection & params_data, const std::string & filename)
 {
   bool bStatus = false;
   const std::string ext = stlplus::extension_part(filename);
-  if (ext == "json")
+  if (ext == "json"){
     bStatus = Load_Cereal<cereal::JSONInputArchive>(params_data, filename);
+  	params_data.valid = true;
+  }
   else
   {
     std::cerr << "Unknown params_detection input format: " << ext << std::endl;
@@ -86,8 +90,10 @@ bool Load(paramsMatching & params_data, const std::string & filename)
 {
   bool bStatus = false;
   const std::string ext = stlplus::extension_part(filename);
-  if (ext == "json")
+  if (ext == "json"){
     bStatus = Load_Cereal<cereal::JSONInputArchive>(params_data, filename);
+  	params_data.valid = true;
+  }
   else
   {
     std::cerr << "Unknown params_matching input format: " << ext << std::endl;
@@ -118,8 +124,10 @@ bool Load(paramsIncrementalSfM & params_data, const std::string & filename)
 {
   bool bStatus = false;
   const std::string ext = stlplus::extension_part(filename);
-  if (ext == "json")
+  if (ext == "json"){
     bStatus = Load_Cereal<cereal::JSONInputArchive>(params_data, filename);
+  	params_data.valid = true;
+  }
   else
   {
     std::cerr << "Unknown params_incrementalSfM input format: " << ext << std::endl;
@@ -150,8 +158,10 @@ bool Load(paramsGlobalSfM & params_data, const std::string & filename)
 {
   bool bStatus = false;
   const std::string ext = stlplus::extension_part(filename);
-  if (ext == "json")
+  if (ext == "json"){
     bStatus = Load_Cereal<cereal::JSONInputArchive>(params_data, filename);
+  	params_data.valid = true;
+  }
   else
   {
     std::cerr << "Unknown params_globalSfM input format: " << ext << std::endl;

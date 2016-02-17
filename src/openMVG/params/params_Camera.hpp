@@ -21,6 +21,7 @@ namespace params {
 
 struct paramsCamera
 {
+	bool valid;
 	// Focal length (in px)
 	double focal_px;	//(default) -1 (none)
 
@@ -41,11 +42,13 @@ struct paramsCamera
 	bool shared_intrinsics;
 
 	paramsCamera(
+	bool _valid=false,
 	double _focal_px = -1.0,
 	std::string _kMatrix = "",
 	int _camera_type=PINHOLE_CAMERA_RADIAL3,
 	bool _shared_intrinsics=true)
-    :focal_px(_focal_px),
+    :valid(_valid),
+	 focal_px(_focal_px),
      kMatrix(_kMatrix),
      camera_type(_camera_type),
      shared_intrinsics(_shared_intrinsics)

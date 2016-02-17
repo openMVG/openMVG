@@ -21,6 +21,7 @@ namespace params {
 
 struct paramsGlobalSfM
 {
+	bool valid;
 	// RefineIntrinsics
     //		- 0 intrinsic parameters are kept as constant"
 	//		- 1 refine intrinsic parameters (default)"
@@ -48,6 +49,7 @@ struct paramsGlobalSfM
 
 
 	paramsGlobalSfM(
+	bool _valid=false,
 	bool _refineIntrinsics=1,
 	int _rotationAveragingMethod=2,
 	int _translationAveragingMethod=3,
@@ -55,7 +57,8 @@ struct paramsGlobalSfM
 	size_t _min_obs_per_pose=12,
 	double _outlier_max_residual_error=4.0,
 	double _outlier_min_angle_triangulation=2.0)
-    :refineIntrinsics(_refineIntrinsics),
+    :valid(_valid),
+	 refineIntrinsics(_refineIntrinsics),
 	 rotationAveragingMethod(_rotationAveragingMethod),
 	 translationAveragingMethod(_translationAveragingMethod),
 	 min_obs_per_track(_min_obs_per_track),

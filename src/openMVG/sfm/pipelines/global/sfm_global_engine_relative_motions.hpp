@@ -35,7 +35,7 @@ public:
 
   void SetFeaturesProvider(Features_Provider * provider);
   void SetMatchesProvider(Matches_Provider * provider);
-  void SetParamsData(paramsGlobalSfM * params_data);
+  void SetParamsData(paramsGlobalSfM params_data);
 
   void SetRotationAveragingMethod(ERotationAveragingMethod eRotationAveragingMethod);
   void SetTranslationAveragingMethod(ETranslationAveragingMethod _eTranslationAveragingMethod);
@@ -82,7 +82,7 @@ private:
   std::string _sLoggingFile;
 
   // Parameter
-  paramsGlobalSfM * _params_data;
+  paramsGlobalSfM _params_data;
   ERotationAveragingMethod _eRotationAveragingMethod;
   ETranslationAveragingMethod _eTranslationAveragingMethod;
 

@@ -21,6 +21,7 @@ namespace params {
 
 struct paramsIncrementalSfM
 {
+	bool valid;
 	// RefineIntrinsics
     //		- 0 intrinsic parameters are kept as constant"
 	//		- 1 refine intrinsic parameters (default)"
@@ -95,6 +96,7 @@ struct paramsIncrementalSfM
 	size_t outlier_min_tracks_removed_re_ba = 50;
 
 	paramsIncrementalSfM(
+	bool _valid=false,
 	bool _refineIntrinsics=1,
 	int _camera_type=PINHOLE_CAMERA_RADIAL3,
 	std::string _matching_geometric_model="f",
@@ -115,7 +117,8 @@ struct paramsIncrementalSfM
 	double _outlier_max_residual_error_final = 4.0,
 	double _outlier_min_angle_triangulation_final = 2.0,
 	size_t _outlier_min_tracks_removed_re_ba = 50)
-    :refineIntrinsics(_refineIntrinsics),
+    :valid(_valid),
+	 refineIntrinsics(_refineIntrinsics),
 	 camera_type(_camera_type),
 	 matching_geometric_model(_matching_geometric_model),
 	 min_obs_per_track(_min_obs_per_track),

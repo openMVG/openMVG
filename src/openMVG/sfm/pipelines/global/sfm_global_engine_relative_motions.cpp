@@ -99,7 +99,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::SetMatchesProvider(Matches_P
   _matches_provider = provider;
 }
 
-void GlobalSfMReconstructionEngine_RelativeMotions::SetParamsData(paramsGlobalSfM * params)
+void GlobalSfMReconstructionEngine_RelativeMotions::SetParamsData(paramsGlobalSfM params)
 {
   _params_data = params;
 }
@@ -295,8 +295,8 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
     using namespace openMVG::tracks;
     // Parameters load
     size_t min_obs_track = 3;
-    if(_params_data!=NULL){
-  	  min_obs_track = _params_data->min_obs_per_track;
+    if(_params_data.valid){
+  	  min_obs_track = _params_data.min_obs_per_track;
     }
 
     TracksBuilder tracksBuilder;
@@ -400,12 +400,11 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
   double max_residual_error = 4.0;
   double min_angle_triangulation = 2.0;
 
-  if(_params_data!=NULL){
+  if(_params_data.valid){
 
-	  min_obs_track = _params_data->min_obs_per_track;
-	  min_obs_pose = _params_data->min_obs_per_pose;
-	  max_residual_error = _params_data->outlier_max_residual_error;
-	  min_angle_triangulation = _params_data->outlier_min_angle_triangulation;
+	  min_obs_track = _params_data.min_obs_per_track;
+	  min_obs_pose = _params_data.min_obs_per_pose;
+	  max_residual_error = _params_data.outlier_max_residual_error;
   }
 
   // Refine sfm_scene (in a 3 iteration process (free the parameters regarding their incertainty order)):

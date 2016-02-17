@@ -17,6 +17,7 @@ namespace params {
 
 struct paramsDetection
 {
+	bool valid;
 	// Feature used
 	// 		- SIFT (default)
 	//		- SIFTGPU
@@ -35,10 +36,12 @@ struct paramsDetection
 
 
 	paramsDetection(
+	bool _valid=false,
 	std::string _feature_type = "SIFT",
 	bool _upright=false,
 	std::string _feature_preset = "NORMAL")
-    :feature_type(_feature_type),
+    :valid(_valid),
+	 feature_type(_feature_type),
      upright(_upright),
      feature_preset(_feature_preset)
     {}

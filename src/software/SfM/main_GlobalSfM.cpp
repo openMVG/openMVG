@@ -83,11 +83,10 @@ int main(int argc, char **argv)
   //---------------------------------------
   // Read parameters data if available
   //---------------------------------------
-  std::shared_ptr<paramsGlobalSfM> params_globalSfM = std::make_shared<paramsGlobalSfM>();
-  bool params_load = false;
+  paramsGlobalSfM params_globalSfM;
   // Try to open file if path is provided
   if (!sParams_Data_Filename.empty()){
-	  if (!Load(*params_globalSfM, sParams_Data_Filename)) {
+	  if (!Load(params_globalSfM, sParams_Data_Filename)) {
 		std::cout << std::endl
 		  << "The input parameters file \""<< sParams_Data_Filename << "\" cannot be read." << std::endl;
 	  }
@@ -95,10 +94,9 @@ int main(int argc, char **argv)
 		  // Set loaded parameters
 		  std::cout << std::endl
 		  		  << "Parameters loaded from: \""<< sParams_Data_Filename << "\"" << std::endl << std::endl;
-		  params_load = true;
-		  bRefineIntrinsics = params_globalSfM->refineIntrinsics;
-		  iRotationAveragingMethod = params_globalSfM->rotationAveragingMethod;
-		  iTranslationAveragingMethod = params_globalSfM->translationAveragingMethod;
+		  bRefineIntrinsics = params_globalSfM.refineIntrinsics;
+		  iRotationAveragingMethod = params_globalSfM.rotationAveragingMethod;
+		  iTranslationAveragingMethod = params_globalSfM.translationAveragingMethod;
 	  }
   }
 
@@ -177,7 +175,9 @@ int main(int argc, char **argv)
     stlplus::create_filespec(sOutDir, "Reconstruction_Report.html"));
 
   // Add parameter data
-  sfmEngine.SetParamsData(params_globalSfM.get());
+  if(params_globalSfM.valid)
+	  sfmEngine.SetParamsData(params_globalSfM);
+
   // Configure the features_provider & the matches_provider
   sfmEngine.SetFeaturesProvider(feats_provider.get());
   sfmEngine.SetMatchesProvider(matches_provider.get());
