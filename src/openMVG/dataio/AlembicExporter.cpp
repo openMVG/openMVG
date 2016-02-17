@@ -9,6 +9,7 @@
 
 #include "AlembicExporter.hpp"
 #include "openMVG/sfm/sfm_view_metadata.hpp"
+#include "openMVG/version.hpp"
 
 namespace openMVG {
 namespace dataio {
@@ -28,6 +29,17 @@ AlembicExporter::AlembicExporter(const std::string &filename)
   mvgCameras = Alembic::Abc::OObject(mvgRoot, "mvgCameras");
   mvgCloud = Alembic::Abc::OObject(mvgRoot, "mvgCloud");
   mvgPointCloud = Alembic::Abc::OObject(mvgCloud, "mvgPointCloud"); 
+
+  // Add version as custom property
+  const std::string abcVersion = "1.0";
+  const std::string openMVGVersion = OPENMVG_VERSION_STRING;
+
+  auto userProps = mvgRoot.getProperties();
+
+  OStringProperty propAbcVersion(userProps, "mvg_ABC_version");
+  OStringProperty propOpenMVGVersion(userProps, "mvg_openMVG_version");
+  propAbcVersion.set(abcVersion.c_str());
+  propOpenMVGVersion.set(openMVGVersion.c_str());
 
 }
 
