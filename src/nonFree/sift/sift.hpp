@@ -262,6 +262,7 @@ bool extractSIFT(const image::Image<unsigned char>& image,
 
   const auto& features = regionsCasted->Features();
   const auto& descriptors = regionsCasted->Descriptors();
+  assert(features.size() == descriptors.size());
   
   //Sorting the extracted features according to their scale
   {
@@ -279,17 +280,17 @@ bool extractSIFT(const image::Image<unsigned char>& image,
     regionsCasted->Features().swap(sortedFeatures);
     regionsCasted->Descriptors().swap(sortedDescriptors);
   }
-    
+     
   // Grid filtering of the keypoints to ensure a global repartition
   if(params._gridSize && params._maxTotalKeypoints)
   {
     // Only filter features if we have more features than the maxTotalKeypoints
     if(features.size() > params._maxTotalKeypoints)
     {
-      std::vector<typename SIFT_Region_T::FeatureT> filtered_keypoints;
-      std::vector<typename SIFT_Region_T::FeatureT> rejected_keypoints;
-      filtered_keypoints.reserve(std::min(features.size(), params._maxTotalKeypoints));
-      rejected_keypoints.reserve(features.size());
+      std::vector<IndexT> filtered_indexes;
+      std::vector<IndexT> rejected_indexes;
+      filtered_indexes.reserve(std::min(features.size(), params._maxTotalKeypoints));
+      rejected_indexes.reserve(features.size());
 
       const std::size_t sizeMat = params._gridSize * params._gridSize;
       std::vector<std::size_t> countFeatPerCell(sizeMat, 0);
@@ -301,39 +302,42 @@ bool extractSIFT(const image::Image<unsigned char>& image,
       const double regionWidth = w / double(params._gridSize);
       const double regionHeight = h / double(params._gridSize);
 
-      //std::cout << "Grid filtering -- keypointsPerCell: " << keypointsPerCell
-      //          << ", regionWidth: " << regionWidth
-      //          << ", regionHeight: " << regionHeight << std::endl;
-
-      for(const auto& keypoint: features)
+      for(IndexT i = 0; i < features.size(); ++i)
       {
+        const auto& keypoint = features.at(i);
+        
         const std::size_t cellX = std::min(std::size_t(keypoint.x() / regionWidth), params._gridSize);
         const std::size_t cellY = std::min(std::size_t(keypoint.y() / regionHeight), params._gridSize);
-        //std::cout << "- keypoint.pt.x: " << keypoint.pt.x << ", keypoint.pt.y: " << keypoint.pt.y << std::endl;
-        //std::cout << "- cellX: " << cellX << ", cellY: " << cellY << std::endl;
-        //std::cout << "- countFeatPerCell: " << countFeatPerCell << std::endl;
-        //std::cout << "- gridSize: " << _params.gridSize << std::endl;
 
         std::size_t &count = countFeatPerCell[cellX*params._gridSize + cellY];
         ++count;
 
         if(count < keypointsPerCell)
-          filtered_keypoints.push_back(keypoint);
+          filtered_indexes.push_back(i);
         else
-          rejected_keypoints.push_back(keypoint);
+          rejected_indexes.push_back(i);
       }
       // If we don't have enough features (less than maxTotalKeypoints) after the grid filtering (empty regions in the grid for example).
       // We add the best other ones, without repartition constraint.
-      if( filtered_keypoints.size() < params._maxTotalKeypoints )
+      if( filtered_indexes.size() < params._maxTotalKeypoints )
       {
-        const std::size_t remainingElements = std::min(rejected_keypoints.size(), params._maxTotalKeypoints - filtered_keypoints.size());
+        const std::size_t remainingElements = std::min(rejected_indexes.size(), params._maxTotalKeypoints - filtered_indexes.size());
         std::cout << "Grid filtering -- Copy remaining points: " << remainingElements << std::endl;
-        filtered_keypoints.insert(filtered_keypoints.end(), rejected_keypoints.begin(), rejected_keypoints.begin() + remainingElements);
+        filtered_indexes.insert(filtered_indexes.end(), rejected_indexes.begin(), rejected_indexes.begin() + remainingElements);
       }
 
-      regionsCasted->Features().swap(filtered_keypoints);
+      std::vector<typename SIFT_Region_T::FeatureT> filtered_features(filtered_indexes.size());
+      std::vector<typename SIFT_Region_T::DescriptorT> filtered_descriptors(filtered_indexes.size());
+      for(IndexT i = 0; i < filtered_indexes.size(); ++i)
+      {
+        filtered_features[i] = features[filtered_indexes[i]];
+        filtered_descriptors[i] = descriptors[filtered_indexes[i]];
+      }
+      regionsCasted->Features().swap(filtered_features);
+      regionsCasted->Descriptors().swap(filtered_descriptors);
     }
   }
+  assert(features.size() == descriptors.size());
   
   return true;
 }
