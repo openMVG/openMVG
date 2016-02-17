@@ -159,7 +159,7 @@ void AlembicExporter::appendCamera(const std::string &cameraName,
   xformsample.setMatrix(xformMatrix);
 
   std::stringstream ss;
-  ss << cameraName;
+  ss << cameraName << "_" << id_view;
   Alembic::AbcGeom::OXform xform(mvgCameras, "camxform_" + ss.str());
   xform.getSchema().set(xformsample);
 
