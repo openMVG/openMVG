@@ -1,0 +1,11 @@
+{
+    "matching_data_version": "0.2",
+    "max_matching_dist_ratio": 0.60000001192092896,
+    "geometric_model": "f",
+    "video_mode_matching": -1,
+    "nearest_matching_method": "AUTO",
+    "guided_matching": false,
+    "geometric_model_initial_residual_tolerance": 4.0,
+    "min_geometric_feat_matches": 50,
+    "min_geometric_photo_ratio": 0.3
+}

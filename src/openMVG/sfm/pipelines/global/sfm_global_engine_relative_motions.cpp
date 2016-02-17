@@ -99,6 +99,12 @@ void GlobalSfMReconstructionEngine_RelativeMotions::SetMatchesProvider(Matches_P
   _matches_provider = provider;
 }
 
+void GlobalSfMReconstructionEngine_RelativeMotions::SetParamsData(paramsGlobalSfM * params)
+{
+  _params_data = params;
+}
+
+
 void GlobalSfMReconstructionEngine_RelativeMotions::SetRotationAveragingMethod
 (
   ERotationAveragingMethod eRotationAveragingMethod
@@ -287,6 +293,12 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
   // Build tracks from selected triplets (Union of all the validated triplet tracks (_tripletWise_matches))
   {
     using namespace openMVG::tracks;
+    // Parameters load
+    size_t min_obs_track = 3;
+    if(_params_data!=NULL){
+  	  min_obs_track = _params_data->min_obs_per_track;
+    }
+
     TracksBuilder tracksBuilder;
 #if defined USE_ALL_VALID_MATCHES // not used by default
     matching::PairWiseMatches pose_supported_matches;
@@ -304,7 +316,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
     // Use triplet validated matches
     tracksBuilder.Build(tripletWise_matches);
 #endif
-    tracksBuilder.Filter(3);
+    tracksBuilder.Filter(min_obs_track);
     STLMAPTracks map_selectedTracks; // reconstructed track (visibility per 3D point)
     tracksBuilder.ExportToSTL(map_selectedTracks);
 
@@ -382,6 +394,20 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
 // Adjust the scene (& remove outliers)
 bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
 {
+  // Parameters load
+  size_t min_obs_track = 3;
+  size_t min_obs_pose = 12;
+  double max_residual_error = 4.0;
+  double min_angle_triangulation = 2.0;
+
+  if(_params_data!=NULL){
+
+	  min_obs_track = _params_data->min_obs_per_track;
+	  min_obs_pose = _params_data->min_obs_per_pose;
+	  max_residual_error = _params_data->outlier_max_residual_error;
+	  min_angle_triangulation = _params_data->outlier_min_angle_triangulation;
+  }
+
   // Refine sfm_scene (in a 3 iteration process (free the parameters regarding their incertainty order)):
 
   Bundle_Adjustment_Ceres bundle_adjustment_obj;
@@ -419,9 +445,9 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
 
   // Remove outliers (max_angle, residual error)
   const size_t pointcount_initial = _sfm_data.structure.size();
-  RemoveOutliers_PixelResidualError(_sfm_data, 4.0);
+  RemoveOutliers_PixelResidualError(_sfm_data, max_residual_error);
   const size_t pointcount_pixelresidual_filter = _sfm_data.structure.size();
-  RemoveOutliers_AngleError(_sfm_data, 2.0);
+  RemoveOutliers_AngleError(_sfm_data, min_angle_triangulation);
   const size_t pointcount_angular_filter = _sfm_data.structure.size();
   std::cout << "Outlier removal (remaining #points):\n"
     << "\t initial structure size #3DPoints: " << pointcount_initial << "\n"
@@ -436,8 +462,8 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
   }
 
   // Check that poses & intrinsic cover some measures (after outlier removal)
-  const IndexT minPointPerPose = 12; // 6 min
-  const IndexT minTrackLength = 3; // 2 min
+  const IndexT minPointPerPose = min_obs_pose; // 6 min
+  const IndexT minTrackLength = min_obs_track; // 2 min
   if (eraseUnstablePosesAndObservations(_sfm_data, minPointPerPose, minTrackLength))
   {
     // TODO: must ensure that track graph is producing a single connected component

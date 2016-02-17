@@ -6,12 +6,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+/// Parameterization
+#include <openMVG/params/params_io.hpp>
+
 #include "openMVG/image/image.hpp"
 #include "openMVG/sfm/sfm.hpp"
-/// Parameterization
-#include "openMVG/params/params_data_io.hpp"
-
-/// Feature/Regions & Image describer interfaces
 #include "openMVG/features/features.hpp"
 #include "nonFree/sift/SIFT_describer.hpp"
 #include <cereal/archives/json.hpp>
@@ -101,10 +100,10 @@ int main(int argc, char **argv)
   //---------------------------------------
   // Read parameters data if available
   //---------------------------------------
-  paramsData params_data;
+  paramsDetection params_detection;
   // Try to open file if path is provided
   if (!sParams_Data_Filename.empty()){
-	  if (!Load(params_data, sParams_Data_Filename)) {
+	  if (!Load(params_detection, sParams_Data_Filename)) {
 		std::cout << std::endl
 		  << "The input parameters file \""<< sParams_Data_Filename << "\" cannot be read." << std::endl;
 	  }
@@ -112,9 +111,9 @@ int main(int argc, char **argv)
 		  // Set loaded parameters
 		  std::cout << std::endl
 		  		  << "Parameters loaded from: \""<< sParams_Data_Filename << "\"" << std::endl << std::endl;
-		  sImage_Describer_Method = params_data.detection.feature_type;
-		  bUpRight = params_data.detection.upright;
-		  sFeaturePreset = params_data.detection.feature_preset;
+		  sImage_Describer_Method = params_detection.feature_type;
+		  bUpRight = params_detection.upright;
+		  sFeaturePreset = params_detection.feature_preset;
 	  }
   }
 

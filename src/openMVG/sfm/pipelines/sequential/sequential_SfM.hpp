@@ -7,6 +7,9 @@
 
 #pragma once
 
+/// Parameterization
+#include "openMVG/params/params_IncrementalSfM.hpp"
+
 #include "openMVG/sfm/pipelines/sfm_engine.hpp"
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
@@ -14,6 +17,8 @@
 
 #include "third_party/htmlDoc/htmlDoc.hpp"
 #include "third_party/histogram/histogram.hpp"
+
+using namespace openMVG::params;
 
 namespace openMVG {
 namespace sfm {
@@ -32,6 +37,7 @@ public:
 
   void SetFeaturesProvider(Features_Provider * provider);
   void SetMatchesProvider(Matches_Provider * provider);
+  void SetParamsData(paramsIncrementalSfM * params_data);
 
   virtual bool Process();
 
@@ -81,7 +87,7 @@ private:
   bool BundleAdjustment();
 
   /// Discard track with too large residual error
-  size_t badTrackRejector(double dPrecision, size_t count = 0);
+  size_t badTrackRejector(double dPrecision,double aPrecision, size_t count = 0);
 
   //----
   //-- Data
@@ -92,6 +98,7 @@ private:
   std::string _sLoggingFile;
 
   // Parameter
+  paramsIncrementalSfM * _params_data;
   Pair _initialpair;
   cameras::EINTRINSIC _camType; // The camera type for the unknown cameras
 

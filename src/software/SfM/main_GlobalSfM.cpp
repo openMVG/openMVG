@@ -5,11 +5,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <openMVG/params/params_io.hpp>
 #include <cstdlib>
 
 /// Parameterization
-#include "openMVG/params/params_data_io.hpp"
-
 #include "openMVG/sfm/pipelines/global/sfm_global_engine_relative_motions.hpp"
 #include "openMVG/system/timer.hpp"
 
@@ -84,10 +83,11 @@ int main(int argc, char **argv)
   //---------------------------------------
   // Read parameters data if available
   //---------------------------------------
-  paramsData params_data;
+  std::shared_ptr<paramsGlobalSfM> params_globalSfM = std::make_shared<paramsGlobalSfM>();
+  bool params_load = false;
   // Try to open file if path is provided
   if (!sParams_Data_Filename.empty()){
-	  if (!Load(params_data, sParams_Data_Filename)) {
+	  if (!Load(*params_globalSfM, sParams_Data_Filename)) {
 		std::cout << std::endl
 		  << "The input parameters file \""<< sParams_Data_Filename << "\" cannot be read." << std::endl;
 	  }
@@ -95,9 +95,10 @@ int main(int argc, char **argv)
 		  // Set loaded parameters
 		  std::cout << std::endl
 		  		  << "Parameters loaded from: \""<< sParams_Data_Filename << "\"" << std::endl << std::endl;
-		  bRefineIntrinsics = params_data.incrementalSfM.refineIntrinsics;
-		  iRotationAveragingMethod = params_data.globalSfM.rotationAveragingMethod;
-		  iTranslationAveragingMethod = params_data.globalSfM.translationAveragingMethod;
+		  params_load = true;
+		  bRefineIntrinsics = params_globalSfM->refineIntrinsics;
+		  iRotationAveragingMethod = params_globalSfM->rotationAveragingMethod;
+		  iTranslationAveragingMethod = params_globalSfM->translationAveragingMethod;
 	  }
   }
 
@@ -175,6 +176,8 @@ int main(int argc, char **argv)
     sOutDir,
     stlplus::create_filespec(sOutDir, "Reconstruction_Report.html"));
 
+  // Add parameter data
+  sfmEngine.SetParamsData(params_globalSfM.get());
   // Configure the features_provider & the matches_provider
   sfmEngine.SetFeaturesProvider(feats_provider.get());
   sfmEngine.SetMatchesProvider(matches_provider.get());

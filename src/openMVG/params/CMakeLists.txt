@@ -26,5 +26,5 @@ set_target_properties(openMVG_params PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJO
 
 install(TARGETS openMVG_params DESTINATION lib EXPORT openMVG-targets)
 
-UNIT_TEST(openMVG params_data_io
+UNIT_TEST(openMVG params_io
   "openMVG_params;openMVG_features;openMVG_sfm;openMVG_system;stlplus")

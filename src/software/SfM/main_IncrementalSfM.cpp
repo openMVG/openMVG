@@ -5,11 +5,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <openMVG/params/params_io.hpp>
 #include <cstdlib>
 
 /// Parameterization
-#include "openMVG/params/params_data_io.hpp"
-
 #include "openMVG/sfm/sfm.hpp"
 #include "openMVG/system/timer.hpp"
 
@@ -111,10 +110,11 @@ int main(int argc, char **argv)
   //---------------------------------------
   // Read parameters data if available
   //---------------------------------------
-  paramsData params_data;
+  std::shared_ptr<paramsIncrementalSfM> params_incSfM = std::make_shared<paramsIncrementalSfM>();
+  bool params_loaded = false;
   // Try to open file if path is provided
   if (!sParams_Data_Filename.empty()){
-	  if (!Load(params_data, sParams_Data_Filename)) {
+	  if (!Load(*params_incSfM, sParams_Data_Filename)) {
 		std::cout << std::endl
 		  << "The input parameters file \""<< sParams_Data_Filename << "\" cannot be read." << std::endl;
 	  }
@@ -122,8 +122,9 @@ int main(int argc, char **argv)
 		  // Set loaded parameters
 		  std::cout << std::endl
 		  		  << "Parameters loaded from: \""<< sParams_Data_Filename << "\"" << std::endl << std::endl;
-		  bRefineIntrinsics = params_data.incrementalSfM.refineIntrinsics;
-		  i_User_camera_model = params_data.incrementalSfM.camera_type;
+		  params_loaded = true;
+		  bRefineIntrinsics = params_incSfM->refineIntrinsics;
+		  i_User_camera_model = params_incSfM->camera_type;
 	  }
   }
 
@@ -188,6 +189,8 @@ int main(int argc, char **argv)
     sOutDir,
     stlplus::create_filespec(sOutDir, "Reconstruction_Report.html"));
 
+  // Add parameter data
+  sfmEngine.SetParamsData(params_incSfM.get());
   // Configure the features_provider & the matches_provider
   sfmEngine.SetFeaturesProvider(feats_provider.get());
   sfmEngine.SetMatchesProvider(matches_provider.get());

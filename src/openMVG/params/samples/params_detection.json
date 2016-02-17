@@ -1,0 +1,6 @@
+{
+    "detection_data_version": "0.2",
+    "feature_type": "SIFT",
+    "upright": false,
+    "feature_preset": "NORMAL"
+}

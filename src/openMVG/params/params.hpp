@@ -8,11 +8,16 @@
 #ifndef OPENMVG_PARAMS_HPP
 #define OPENMVG_PARAMS_HPP
 
+#include <openMVG/params/params_Camera.hpp>
+#include <openMVG/params/params_IncrementalSfM.hpp>
 #include "openMVG/types.hpp"
 #include "openMVG/numeric/numeric.h"
 
 // Params data
-#include "openMVG/params/params_data.hpp"
-#include "openMVG/params/params_camera.hpp"
+#include "openMVG/params/params_Camera.hpp"
+#include "openMVG/params/params_Detection.hpp"
+#include "openMVG/params/params_Matching.hpp"
+#include "openMVG/params/params_IncrementalSfM.hpp"
+#include "openMVG/params/params_GlobalSfM.hpp"
 
 #endif // OPENMVG_PARAMS_HPP

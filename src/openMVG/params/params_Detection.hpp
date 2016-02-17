@@ -42,15 +42,6 @@ struct paramsDetection
      upright(_upright),
      feature_preset(_feature_preset)
     {}
-
-  // Serialization
-  template <class Archive>
-  void serialize( Archive & ar )
-  {
-    ar(cereal::make_nvp("feature_type", feature_type),
-    	cereal::make_nvp("upright", upright),
-    	cereal::make_nvp("feature_preset", feature_preset));
-  }
 };
 
 } // namespace params

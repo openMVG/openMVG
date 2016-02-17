@@ -49,6 +49,16 @@ struct paramsMatching
 	// Guided matching to use the found model to improve the pairwise correspondences
 	bool guided_matching;		//(default) false
 
+	// Upper_bound precision used for robust acontrario estimation (actual value is squared of this)
+	double geometric_model_initial_residual_tolerance;	//(default) 4.0
+
+	// Remove pairs with poor overlap (only with essential geometric model)
+	// Poor overlap matches (removed) if:
+	//	- less than (min_geometric_feat_matches) geometrically compliant feature matches
+	//	- ratio between geometric and photometric feature matches smaller than threshold
+	int min_geometric_feat_matches;	//(default) 50
+	float min_geometric_photo_ratio;	//(default)	0.3
+
 
 	paramsMatching(
 	float _max_matching_dist_ratio = 0.8,
@@ -56,29 +66,19 @@ struct paramsMatching
 	int _video_mode_matching=-1,
 	std::string _nearest_matching_method = "AUTO",
 	bool _guided_matching = false,
-	float _geometric_model_initial_residual_tolerance = 4.0,
-	bool _pair_overlap_check = true,
+	double _geometric_model_initial_residual_tolerance = 4.0,
 	int _min_geometric_feat_matches=50,
-	float _min_geo_photo_ratio=0.3)
+	float _min_geometric_photo_ratio=0.3)
 	:max_matching_dist_ratio(_max_matching_dist_ratio),
 	 geometric_model(_geometric_model),
 	 video_mode_matching(_video_mode_matching),
 	 nearest_matching_method(_nearest_matching_method),
-	 guided_matching(_guided_matching)
+	 guided_matching(_guided_matching),
+	 geometric_model_initial_residual_tolerance(_geometric_model_initial_residual_tolerance),
+	 min_geometric_feat_matches(_min_geometric_feat_matches),
+	 min_geometric_photo_ratio(_min_geometric_photo_ratio)
 	{}
 
-	// Serialization
-	template <class Archive>
-	void serialize( Archive & ar )
-	{
-		ar(cereal::make_nvp("max_matching_dist_ratio", max_matching_dist_ratio),
-			cereal::make_nvp("geometric_model", geometric_model),
-		    cereal::make_nvp("video_mode_matching", video_mode_matching),
-		    cereal::make_nvp("nearest_matching_method", nearest_matching_method),
-		    cereal::make_nvp("guided_matching", guided_matching));
-
-
-	}
 };
 
 } // namespace params

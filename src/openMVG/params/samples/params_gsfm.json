@@ -1,0 +1,10 @@
+{
+    "globalSfM_data_version": "0.2",
+    "refineIntrinsics": true,
+    "rotationAveragingMethod": 2,
+    "translationAveragingMethod": 3,
+    "min_obs_per_track": 3,
+    "min_obs_per_pose": 12,
+    "outlier_max_residual_error": 4.0,
+    "outlier_min_angle_triangulation": 2.0
+}

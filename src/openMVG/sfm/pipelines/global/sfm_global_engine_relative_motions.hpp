@@ -8,6 +8,9 @@
 #ifndef OPENMVG_SFM_GLOBAL_ENGINE_RELATIVE_MOTIONS_HPP
 #define OPENMVG_SFM_GLOBAL_ENGINE_RELATIVE_MOTIONS_HPP
 
+/// Parameterization
+#include "openMVG/params/params_GlobalSfM.hpp"
+
 #include "openMVG/sfm/pipelines/sfm_engine.hpp"
 
 #include "openMVG/sfm/pipelines/global/GlobalSfM_rotation_averaging.hpp"
@@ -32,6 +35,7 @@ public:
 
   void SetFeaturesProvider(Features_Provider * provider);
   void SetMatchesProvider(Matches_Provider * provider);
+  void SetParamsData(paramsGlobalSfM * params_data);
 
   void SetRotationAveragingMethod(ERotationAveragingMethod eRotationAveragingMethod);
   void SetTranslationAveragingMethod(ETranslationAveragingMethod _eTranslationAveragingMethod);
@@ -78,6 +82,7 @@ private:
   std::string _sLoggingFile;
 
   // Parameter
+  paramsGlobalSfM * _params_data;
   ERotationAveragingMethod _eRotationAveragingMethod;
   ETranslationAveragingMethod _eTranslationAveragingMethod;
 

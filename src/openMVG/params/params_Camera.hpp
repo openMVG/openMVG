@@ -57,16 +57,3 @@ struct paramsCamera
 } // namespace openMVG
 
 #endif // OPENMVG_PARAMS_CAMERA_HPP
-
-/*
- *
-  // Serialization
-  template <class Archive>
-  void serialize( Archive & ar )
-  {
-    ar(cereal::make_nvp("focal_px", focal_px),
-    	cereal::make_nvp("kMatrix", kMatrix),
-    	cereal::make_nvp("camera_type", camera_type),
-    	cereal::make_nvp("shared_intrinsics", shared_intrinsics));
-  }
- */

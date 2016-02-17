@@ -1,0 +1,8 @@
+{
+    "camera_data_version": "0.2",
+    "name": "StrechaBenchmark",
+    "focal_px": -1,
+    "kMatrix": "2759.48;0.0;1520.69;0.0;2764.16;1006.81;0.0;0.0;1",
+    "camera_type": 1,
+    "shared_intrinsics": true
+}

@@ -6,8 +6,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /// Parameterization
-#include "openMVG/params/params_data_io.hpp"
-
+#include <openMVG/params/params_io.hpp>
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/pipelines/sfm_engine.hpp"
@@ -78,6 +77,11 @@ int main(int argc, char **argv)
   bool bGuided_matching = false;
   int imax_iteration = 2048;
 
+  //
+  float fMin_geo_photo_ratio = 0.3f;
+  int iMin_geo_matches = 50;
+  double dAC_upper_bound_limit = 4.0;
+
   //required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('o', sMatchesDirectory, "out_dir") );
@@ -137,10 +141,10 @@ int main(int argc, char **argv)
   //---------------------------------------
   // Read parameters data if available
   //---------------------------------------
-  paramsData params_data;
+  paramsMatching params_matching;
   // Try to open file if path is provided
   if (!sParams_Data_Filename.empty()){
-	  if (!Load(params_data, sParams_Data_Filename)) {
+	  if (!Load(params_matching, sParams_Data_Filename)) {
 		std::cout << std::endl
 		  << "The input parameters file \""<< sParams_Data_Filename << "\" cannot be read." << std::endl;
 	  }
@@ -148,11 +152,15 @@ int main(int argc, char **argv)
 		  // Set loaded parameters
 		  std::cout << std::endl
 		  		  << "Parameters loaded from: \""<< sParams_Data_Filename << "\"" << std::endl << std::endl;
-		  fDistRatio = params_data.matching.max_matching_dist_ratio;
-		  sGeometricModel = params_data.matching.geometric_model;
-		  iMatchingVideoMode = params_data.matching.video_mode_matching;
-		  sNearestMatchingMethod = params_data.matching.nearest_matching_method;
-		  bGuided_matching = params_data.matching.guided_matching;
+		  fDistRatio = params_matching.max_matching_dist_ratio;
+		  sGeometricModel = params_matching.geometric_model;
+		  iMatchingVideoMode = params_matching.video_mode_matching;
+		  sNearestMatchingMethod = params_matching.nearest_matching_method;
+		  bGuided_matching = params_matching.guided_matching;
+
+		  dAC_upper_bound_limit = params_matching.geometric_model_initial_residual_tolerance;
+		  iMin_geo_matches = params_matching.min_geometric_feat_matches;
+		  fMin_geo_photo_ratio = params_matching.min_geometric_photo_ratio;
 	  }
   }
 
@@ -418,7 +426,7 @@ int main(int argc, char **argv)
       case HOMOGRAPHY_MATRIX:
       {
         const bool bGeometric_only_guided_matching = true;
-        filter_ptr->Robust_model_estimation(GeometricFilter_HMatrix_AC(4.0, imax_iteration),
+        filter_ptr->Robust_model_estimation(GeometricFilter_HMatrix_AC(dAC_upper_bound_limit, imax_iteration),
           map_PutativesMatches, bGuided_matching,
           bGeometric_only_guided_matching ? -1.0 : 0.6);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
@@ -426,14 +434,14 @@ int main(int argc, char **argv)
       break;
       case FUNDAMENTAL_MATRIX:
       {
-        filter_ptr->Robust_model_estimation(GeometricFilter_FMatrix_AC(4.0, imax_iteration),
+        filter_ptr->Robust_model_estimation(GeometricFilter_FMatrix_AC(dAC_upper_bound_limit, imax_iteration),
           map_PutativesMatches, bGuided_matching);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
       case ESSENTIAL_MATRIX:
       {
-        filter_ptr->Robust_model_estimation(GeometricFilter_EMatrix_AC(4.0, imax_iteration),
+        filter_ptr->Robust_model_estimation(GeometricFilter_EMatrix_AC(dAC_upper_bound_limit, imax_iteration),
           map_PutativesMatches, bGuided_matching);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
 
@@ -445,7 +453,7 @@ int main(int argc, char **argv)
           const size_t putativePhotometricCount = map_PutativesMatches.find(iterMap->first)->second.size();
           const size_t putativeGeometricCount = iterMap->second.size();
           const float ratio = putativeGeometricCount / (float)putativePhotometricCount;
-          if (putativeGeometricCount < 50 || ratio < .3f)  {
+          if (putativeGeometricCount < iMin_geo_matches || ratio < fMin_geo_photo_ratio)  {
             // the pair will be removed
             vec_toRemove.push_back(iterMap->first);
           }

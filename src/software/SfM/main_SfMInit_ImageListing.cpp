@@ -6,7 +6,7 @@
 #include "openMVG/exif/exif_IO_EasyExif.hpp"
 
 /// Parameterization
-#include "openMVG/params/params_camera_io.hpp"
+#include "openMVG/params/params_io.hpp"
 
 #include "openMVG/exif/sensor_width_database/ParseDatabase.hpp"
 
@@ -116,10 +116,10 @@ int main(int argc, char **argv)
   //---------------------------------------
   // Read parameters data if available
   //---------------------------------------
-  paramsCamera params_data;
+  paramsCamera params_camera;
   // Try to open file if path is provided
   if (!sParams_Camera_Filename.empty()){
-	  if (!Load(params_data, sParams_Camera_Filename)) {
+	  if (!Load(params_camera, sParams_Camera_Filename)) {
 		std::cout << std::endl
 		  << "The input parameters file \""<< sParams_Camera_Filename << "\" cannot be read." << std::endl;
 	  }
@@ -127,10 +127,10 @@ int main(int argc, char **argv)
 		  // Set loaded parameters
 		  std::cout << std::endl
 		  		  << "Parameters loaded from: \""<< sParams_Camera_Filename << "\"" << std::endl << std::endl;
-		  focal_pixels = params_data.focal_px;
-		  sKmatrix = params_data.kMatrix;
-		  i_User_camera_model = params_data.camera_type;
-		  b_Group_camera_model = params_data.shared_intrinsics;
+		  focal_pixels = params_camera.focal_px;
+		  sKmatrix = params_camera.kMatrix;
+		  i_User_camera_model = params_camera.camera_type;
+		  b_Group_camera_model = params_camera.shared_intrinsics;
 	  }
   }
 
