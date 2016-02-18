@@ -31,15 +31,13 @@ AlembicExporter::AlembicExporter(const std::string &filename)
   mvgPointCloud = Alembic::Abc::OObject(mvgCloud, "mvgPointCloud"); 
 
   // Add version as custom property
-  const std::string abcVersion = "1.0";
-  const std::string openMVGVersion = OPENMVG_VERSION_STRING;
-
   auto userProps = mvgRoot.getProperties();
-
-  OStringProperty propAbcVersion(userProps, "mvg_ABC_version");
-  OStringProperty propOpenMVGVersion(userProps, "mvg_openMVG_version");
-  propAbcVersion.set(abcVersion.c_str());
-  propOpenMVGVersion.set(openMVGVersion.c_str());
+  OUInt32ArrayProperty propAbcVersion(userProps, "mvg_ABC_version");
+  OUInt32ArrayProperty propOpenMVGVersion(userProps, "mvg_openMVG_version");
+  const std::vector<uint32_t> abcVersion = {1, 0};
+  propAbcVersion.set(abcVersion);
+  const std::vector<uint32_t> openMVGVersion = {OPENMVG_VERSION_MAJOR, OPENMVG_VERSION_MINOR, OPENMVG_VERSION_REVISION};
+  propOpenMVGVersion.set(openMVGVersion);
 
 }
 
