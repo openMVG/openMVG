@@ -223,7 +223,8 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
     for (int bin = 0; bin < nBins; ++bin)
     {
       cumulative_count += frequencies[bin];
-      if (cumulative_count > 0 && residual_val[bin] > std::numeric_limits<float>::epsilon())
+      if (cumulative_count > Kernel::MINIMUM_SAMPLES
+          && residual_val[bin] > std::numeric_limits<float>::epsilon())
       {
         const double logalpha = m_kernel.logalpha0()
           + m_kernel.multError() * log10(residual_val[bin]
@@ -317,7 +318,7 @@ static void UniformSample
 )
 {
   sample->resize(sizeSample);
-  robust::random_sample(sizeSample, vec_index.size(), sample);
+  robust::UniformSample(sizeSample, vec_index.size(), sample);
   for(int i = 0; i < sizeSample; ++i)
     (*sample)[i] = vec_index[ (*sample)[i] ];
 }

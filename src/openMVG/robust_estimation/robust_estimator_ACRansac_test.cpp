@@ -212,22 +212,21 @@ void generateLine(Mat & points, size_t nbPoints, int W, int H, float noise, floa
   Vec2 lineEq(50, 0.3);
 
   // Setup a normal distribution of mean 0 and amplitude equal to noise
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::normal_distribution<> d(0, noise);
+  std::default_random_engine gen;
+  std::normal_distribution<double> d(0, noise);
 
   for (size_t i = 0; i < nbPoints; ++i)
   {
     const float x = rand()%W;
-    float y =  d(gen) + (lineEq[1] * x + lineEq[0]) + d(gen);
+    const float y =  d(gen) + (lineEq[1] * x + lineEq[0]) + d(gen);
     points.col(i) = Vec2(x, y);
   }
 
   // generate outlier
-  std::normal_distribution<> d_outlier(0, 0.2);
-  size_t count = outlierPourcent * nbPoints;
+  std::normal_distribution<double> d_outlier(0, 0.2);
+  const size_t count = outlierPourcent * nbPoints;
   std::vector<size_t> vec_indexes(count,0);
-  random_sample(count, nbPoints, &vec_indexes);
+  UniformSample(count, nbPoints, &vec_indexes);
   for (size_t i = 0; i < count; ++i)
   {
     const size_t pos = vec_indexes[i];
