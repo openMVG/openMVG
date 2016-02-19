@@ -235,8 +235,6 @@ FIND_PACKAGE(Eigen QUIET)
 IF(EIGEN_FOUND)
   INCLUDE_DIRECTORIES(${EIGEN_INCLUDE_DIRS})
 ENDIF(EIGEN_FOUND)
-# Configure Eigen to use only MPL2 licensed code
-ADD_DEFINITIONS(-DEIGEN_MPL2_ONLY)
 
 # ==============================================================================
 # Ceres

@@ -34,9 +34,10 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
   RelativeRotations relativeRotations = relativeRot_In;
   // We work on a copy, since inference can remove some relative motions
 
-  //-> Test there is only one graph and at least 3 camera?
   switch(eRelativeRotationInferenceMethod)
   {
+    case(TRIPLET_ROTATION_INFERENCE_NONE):
+    break;
     case(TRIPLET_ROTATION_INFERENCE_COMPOSITION_ERROR):
     {
       //-------------------
