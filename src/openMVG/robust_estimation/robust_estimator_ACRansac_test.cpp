@@ -330,8 +330,7 @@ TEST(RansacLineFitter, ACRANSACSimu) {
     std::vector<size_t> vec_inliers;
     const std::pair<double,double> ret = ACRANSAC(lineKernel, vec_inliers, 1000, &line);
     const double errorMax = ret.first;
-
-    EXPECT_TRUE( abs(gaussianNoiseLevel - sqrt(errorMax)) < 2.0);
+    EXPECT_TRUE(sqrt(errorMax) < noise*2+.5);
 
     ostringstream os;
     os << gaussianNoiseLevel << "_line_" << sqrt(errorMax) << ".png";
