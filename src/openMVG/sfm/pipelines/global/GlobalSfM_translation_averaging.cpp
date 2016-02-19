@@ -432,10 +432,10 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
       }
       if (m_mutexSet.count(edge) == 0 && m_mutexSet.size() != vec_edges.size())
       {
-        // Find the triplets that support the given edge
+        // Find the triplets that are supporting the given edge
         const auto & vec_possibleTripletIndexes = map_tripletIds_perEdge.at(edge);
 
-        //-- Sort the triplets according the number of track they are supporting
+        //-- Sort the triplets according their number of track
         std::vector<size_t> vec_commonTracksPerTriplets;
         for (const size_t triplet_index : vec_possibleTripletIndexes)
         {
@@ -461,7 +461,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
               m_mutexSet.count(Pair(triplet.i, triplet.k)) &&
               m_mutexSet.count(Pair(triplet.j, triplet.k)))
           {
-            break;
+            continue;
           }
 
           //--
@@ -577,7 +577,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
         }
       }
     }
-    // Merge thread estimates
+    // Merge thread(s) estimates
     for (const auto vec : initial_estimates)
     {
       for (const auto val : vec)
@@ -587,17 +587,14 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     }
   }
 
-
-
   const double timeLP_triplet = timerLP_triplet.elapsed();
-  std::cout << "TRIPLET COVERAGE TIMING: " << timeLP_triplet << " seconds" << std::endl;
-
-  std::cout << "-------------------------------" << "\n"
-      << "-- #Relative translations estimates: " << m_vec_initialRijTijEstimates.size()/3
-      << " computed from " << vec_triplets.size() << " triplets.\n"
-      << "-- resulting in " << m_vec_initialRijTijEstimates.size() << " translations estimation.\n"
-      << "-- timing to obtain the relative translations: " << timeLP_triplet << " seconds.\n"
-      << "-------------------------------" << std::endl;
+  std::cout << "TRIPLET COVERAGE TIMING:\n"
+    << "-------------------------------" << "\n"
+    << "-- #Relative translations estimates: " << m_vec_initialRijTijEstimates.size()/3
+    << " computed from " << vec_triplets.size() << " triplets.\n"
+    << "-- resulting in " << m_vec_initialRijTijEstimates.size() << " translations estimation.\n"
+    << "-- time to compute triplets of relative translations: " << timeLP_triplet << " seconds.\n"
+    << "-------------------------------" << std::endl;
 }
 
 // Robust estimation and refinement of a translation and 3D points of an image triplets.
