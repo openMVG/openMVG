@@ -208,15 +208,55 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations
     TRIPLET_ROTATION_INFERENCE_COMPOSITION_ERROR;
     //TRIPLET_ROTATION_INFERENCE_NONE;
 
+  system::Timer t;
   GlobalSfM_Rotation_AveragingSolver rotation_averaging_solver;
   const bool b_rotation_averaging = rotation_averaging_solver.Run(
     _eRotationAveragingMethod, eRelativeRotationInferenceMethod,
     relatives_R, global_rotations);
 
-  std::cout << "Found #global_rotations: " << global_rotations.size() << std::endl;
+  std::cout
+    << "Found #global_rotations: " << global_rotations.size() << "\n"
+    << "Timing: " << t.elapsed() << " seconds" << std::endl;
+
 
   if (b_rotation_averaging)
   {
+    // Compute & display rotation fitting residual errors
+    std::vector<float> vec_rotation_fitting_error;
+    vec_rotation_fitting_error.reserve(relatives_R.size());
+    for (const auto & relative_R : relatives_R)
+    {
+      const Mat3 & Rij = relative_R.Rij;
+      const IndexT i = relative_R.i;
+      const IndexT j = relative_R.j;
+      if (global_rotations.count(i)==0 || global_rotations.count(j)==0)
+        continue;
+      const Mat3 & Ri = global_rotations[i];
+      const Mat3 & Rj = global_rotations[j];
+      const Mat3 eRij(Rj.transpose()*Rij*Ri);
+      const double angularErrorDegree = R2D(getRotationMagnitude(eRij));
+      vec_rotation_fitting_error.push_back(angularErrorDegree);
+    }
+
+    if (!vec_rotation_fitting_error.empty())
+    {
+      const float error_max = *max_element(vec_rotation_fitting_error.begin(), vec_rotation_fitting_error.end());
+      Histogram<float> histo(0.0f,error_max, 20);
+      histo.Add(vec_rotation_fitting_error.begin(), vec_rotation_fitting_error.end());
+      std::cout
+        << "\nRelative/Global degree rotations residual errors {0," << error_max<< "}:"
+        << histo.ToString() << std::endl;
+      {
+        Histogram<float> histo(0.0f, 5.0f, 20);
+        histo.Add(vec_rotation_fitting_error.begin(), vec_rotation_fitting_error.end());
+        std::cout
+          << "\nRelative/Global degree rotations residual errors {0,5}:"
+          << histo.ToString() << std::endl;
+      }
+      std::cout << "\nStatistics about global rotation evaluation:" << std::endl;
+      minMaxMeanMedian<float>(vec_rotation_fitting_error.begin(), vec_rotation_fitting_error.end());
+    }
+
     // Log input graph to the HTML report
     if (!_sLoggingFile.empty() && !_sOutDirectory.empty())
     {
@@ -247,7 +287,6 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations
       }
     }
   }
-
   return b_rotation_averaging;
 }
 
