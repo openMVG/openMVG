@@ -29,8 +29,8 @@ build_script:
   # - in debug mode, since the build is faster and VisualStudio reporting is better
   - cmake --build . --config Debug --target openMVG_test_sequential_SfM
   - cmake --build . --config Debug --target openMVG_test_global_SfM
-  - cmake --build . --config Debug --target openMVG_main_IncrementalSfM
-  - cmake --build . --config Debug --target openMVG_main_GlobalSfM
+  #- cmake --build . --config Debug --target openMVG_main_IncrementalSfM
+  #- cmake --build . --config Debug --target openMVG_main_GlobalSfM
 
 build:
   parallel: true
