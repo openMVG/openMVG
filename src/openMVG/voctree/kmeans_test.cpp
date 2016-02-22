@@ -48,7 +48,7 @@ TEST(kmeans, kmeanInitializer)
   // it's difficult to check the result as it is random, just check there are no weird things
   EXPECT_TRUE(voctree::checkVectorElements(centers, "initializer1"));
 
-  // now try to generate k cluster well far away and comapare
+  // now try to generate k cluster well far away and compare
   features.clear();
   featPtr.clear();
   features.reserve(FEATURENUMBER * K);
