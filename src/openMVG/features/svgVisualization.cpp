@@ -7,8 +7,8 @@
 
 #include "svgVisualization.hpp"
 #if HAVE_CCTAG
-#include "CCTagLocalizer.hpp"
-#include <openMVG/features/cctag/CCTAG_describer.hpp>
+#include <openMVG/localization/CCTagLocalizer.hpp>
+#include "cctag/CCTAG_describer.hpp"
 #endif
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 

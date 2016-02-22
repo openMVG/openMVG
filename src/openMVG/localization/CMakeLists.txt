@@ -4,14 +4,12 @@ set(localization_files_headers
   VoctreeLocalizer.hpp
   optimization.hpp
   reconstructed_regions.hpp
-  svgVisualization.hpp
   ILocalizer.hpp
 )
 set(localization_files_sources
   LocalizationResult.cpp
   VoctreeLocalizer.cpp
   optimization.cpp
-  svgVisualization.cpp
 )
 
 if (CCTAG_FOUND)

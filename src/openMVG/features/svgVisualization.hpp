@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include <openMVG/features/image_describer.hpp>
+#include "image_describer.hpp"
 #if HAVE_CCTAG
-#include <openMVG/features/regions_factory.hpp>
+#include "regions_factory.hpp"
 #endif
 #include <openMVG/matching/indMatch.hpp>
 

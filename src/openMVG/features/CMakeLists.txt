@@ -15,12 +15,15 @@ set(features_files_headers
   feature.hpp
   features.hpp
   selection.hpp
-  keypointSet.hpp)
+  keypointSet.hpp
+  svgVisualization.hpp)
 
 set( features_files_sources
   selection.cpp
   akaze/AKAZE.cpp
-  liop/liop_descriptor.cpp)
+  liop/liop_descriptor.cpp
+  features_test.cpp
+  svgVisualization.cpp)
 
 if (CCTAG_FOUND)
   list(APPEND features_files_headers 
