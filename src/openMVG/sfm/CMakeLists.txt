@@ -41,5 +41,9 @@ UNIT_TEST(openMVG sfm_data_BA
 UNIT_TEST(openMVG sfm_data_utils
   "openMVG_features;openMVG_multiview;openMVG_system;openMVG_sfm;stlplus")
 
+if(OpenMVG_USE_ALEMBIC)
+  UNIT_TEST(openMVG AlembicImporter "openMVG_sfm;${ABC_LIBRARIES}")
+endif(OpenMVG_USE_ALEMBIC)
+
 add_subdirectory(pipelines)
 

@@ -496,16 +496,12 @@ REAL RelRotationAvgError(const RelativeRotations& RelRs, const Matrix3x3Arr& Rs,
 }
 //----------------------------------------------------------------
 
-
-// Robustly estimate global rotations from relative rotations as in:
-// "Efficient and Robust Large-Scale Rotation Averaging", Chatterjee and Govindu, 2013
-// and detect outliers relative rotations and return them with 0 in arrInliers
-bool GlobalRotationsRobust(
+void InitRotationsMST
+(
   const RelativeRotations& RelRs,
   Matrix3x3Arr& Rs,
-  const size_t nMainViewID,
-  float threshold,
-  std::vector<bool> * vec_Inliers)
+  const size_t nMainViewID
+)
 {
   assert(!Rs.empty());
 
@@ -542,13 +538,25 @@ bool GlobalRotationsRobust(
     }
     stack.pop();
   } while(!stack.empty());
-  minGraph.clear();
-  mapIJ2R.clear();
+}
 
-  bool bOk = true;
+// Robustly estimate global rotations from relative rotations as in:
+// "Efficient and Robust Large-Scale Rotation Averaging", Chatterjee and Govindu, 2013
+// and detect outliers relative rotations and return them with 0 in arrInliers
+bool GlobalRotationsRobust(
+  const RelativeRotations& RelRs,
+  Matrix3x3Arr& Rs,
+  const size_t nMainViewID,
+  float threshold,
+  std::vector<bool> * vec_Inliers)
+{
+  assert(!Rs.empty());
+
+  // -- Compute coarse global rotation estimates:
+  InitRotationsMST(RelRs, Rs, nMainViewID);
 
   // refine global rotations based on the relative rotations
-  bOk &= RefineRotationsAvgL1IRLS(RelRs, Rs, nMainViewID);
+  const bool bOk = RefineRotationsAvgL1IRLS(RelRs, Rs, nMainViewID);
 
   // find outlier relative rotations
   if (threshold>=0 && vec_Inliers)  {

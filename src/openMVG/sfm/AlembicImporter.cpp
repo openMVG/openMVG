@@ -170,8 +170,8 @@ bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata,
   // Check if we have an associated image plane
   ICompoundProperty userProps = getAbcUserProperties(cs);
   std::string imagePath;
-  float sensorWidth_pix = 2048.0;
-  std::string mvg_intrinsicType = "PINHOLE_CAMERA";
+  std::vector<int> sensorSize_pix = {2048, 2048};
+  std::string mvg_intrinsicType = EINTRINSIC_enumToString(PINHOLE_CAMERA);
   std::vector<double> mvg_intrinsicParams;
   IndexT id_view = sfmdata.GetViews().size();
   IndexT id_intrinsic = sfmdata.GetIntrinsics().size();
@@ -181,14 +181,13 @@ bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata,
     {
       imagePath = getAbcProp<Alembic::Abc::IStringProperty>(userProps, *propHeader, "mvg_imagePath", sampleTime);
     }
-    if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_sensorWidth_pix"))
+    if(userProps.getPropertyHeader("mvg_sensorSizePix"))
     {
-      try {
-        sensorWidth_pix = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_sensorWidth_pix", sampleTime);
-      } catch(Alembic::Util::v7::Exception&)
-      {
-        sensorWidth_pix = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_sensorWidth_pix", sampleTime);
-      }
+      Alembic::Abc::IUInt32ArrayProperty prop(userProps, "mvg_sensorSizePix");
+      std::shared_ptr<UInt32ArraySample> sample;
+      prop.get(sample, ISampleSelector(sampleTime));
+      sensorSize_pix.assign(sample->get(), sample->get()+sample->size());
+      assert(sensorSize_pix.size() == 2);
     }
     if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_intrinsicType"))
     {
@@ -246,26 +245,17 @@ bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata,
   // Get known values from alembic
   const float haperture_cm = camSample.getHorizontalAperture();
   const float vaperture_cm = camSample.getVerticalAperture();
-  const float hoffset_cm = camSample.getHorizontalFilmOffset();
-  const float voffset_cm = camSample.getVerticalFilmOffset();
-  const float focalLength_mm = camSample.getFocalLength();
 
   // Compute other needed values
   const float sensorWidth_mm = std::max(vaperture_cm, haperture_cm) * 10.0;
-  const float mm2pix = sensorWidth_pix / sensorWidth_mm;
+  const float mm2pix = sensorSize_pix.at(0) / sensorWidth_mm;
   const float imgWidth = haperture_cm * 10.0 * mm2pix;
   const float imgHeight = vaperture_cm * 10.0 * mm2pix;
-  const float focalLength_pix = focalLength_mm * mm2pix;
-
-  // Following values are in cm, hence the 10.0 multiplier
-  const float hoffset_pix = (imgWidth*0.5) - (10.0 * hoffset_cm * mm2pix);
-  const float voffset_pix = (imgHeight*0.5) + (10.0 * voffset_cm * mm2pix);
 
   // Create intrinsic parameters object
   std::shared_ptr<Pinhole_Intrinsic> pinholeIntrinsic = createPinholeIntrinsic(EINTRINSIC_stringToEnum(mvg_intrinsicType));
   pinholeIntrinsic->setWidth(imgWidth);
   pinholeIntrinsic->setHeight(imgHeight);
-  pinholeIntrinsic->setK(focalLength_pix, hoffset_pix, voffset_pix);
   pinholeIntrinsic->updateFromParams(mvg_intrinsicParams);
 
   // Add imported data to the SfM_Data container TODO use UID

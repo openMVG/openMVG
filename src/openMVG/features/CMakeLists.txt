@@ -14,10 +14,12 @@ set(features_files_headers
   regions_factory.hpp
   feature.hpp
   features.hpp
+  selection.hpp
   keypointSet.hpp
   svgVisualization.hpp)
 
 set( features_files_sources
+  selection.cpp
   akaze/AKAZE.cpp
   liop/liop_descriptor.cpp
   features_test.cpp
@@ -31,10 +33,6 @@ if (CCTAG_FOUND)
         cctag/SIFT_CCTAG_describer.cpp
         cctag/CCTAG_describer.cpp)
 endif()
-
-file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
-#Remove the future main files
-list(REMOVE_ITEM features_files_sources ${REMOVEFILESUNITTEST})
 
 set_source_files_properties(${features_files_sources} PROPERTIES LANGUAGE CXX)
 ADD_LIBRARY(openMVG_features ${features_files_sources} ${features_files_headers})

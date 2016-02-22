@@ -22,11 +22,13 @@ inline std::string trim_copy(const std::string& s)
 {
   if(s.empty())
     return s;
-  
+
   std::string res(s);
   // remove leading and trailing spaces
   res.erase(0, res.find_first_not_of(' '));
   res.erase(res.find_last_not_of(' ')+1);
+  // handle multiple trailing end character
+  res = res.substr(0, res.find('\0'));
   return res;
 }
 
@@ -54,16 +56,13 @@ class Exif_IO_EasyExif : public Exif_IO
       rewind(fp);
       std::vector<unsigned char> buf(fsize);
       if (fread(&buf[0], 1, fsize, fp) != fsize) {
+        fclose(fp);
         return false;
       }
       fclose(fp);
 
       // Parse EXIF
-      int code = exifInfo_.parseFrom(&buf[0], fsize);
-      if (code)
-        bHaveExifInfo_ = false;
-      else
-        bHaveExifInfo_ = true;
+      bHaveExifInfo_ = (exifInfo_.parseFrom(&buf[0], fsize) == PARSE_EXIF_SUCCESS);
 
       return bHaveExifInfo_;
     }
@@ -93,11 +92,6 @@ class Exif_IO_EasyExif : public Exif_IO
       return trim_copy(exifInfo_.Model);
     }
 
-    std::string getImageUniqueID() const
-    {
-      return trim_copy(exifInfo_.ImageUniqueID);
-    }
-
     std::string getSerialNumber() const
     {
       return trim_copy(exifInfo_.SerialNumber);
@@ -105,7 +99,7 @@ class Exif_IO_EasyExif : public Exif_IO
 
     std::string getLensModel() const
     {
-      return trim_copy(exifInfo_.LensModel);
+      return trim_copy(exifInfo_.LensInfo.Model);
     }
 
     std::string getLensSerialNumber() const
@@ -135,6 +129,11 @@ class Exif_IO_EasyExif : public Exif_IO
     std::string getSubSecTimeOriginal() const
     {
       return trim_copy(exifInfo_.SubSecTimeOriginal);
+    }
+
+     std::string getImageUniqueID() const
+    {
+      return exifInfo_.ImageUniqueID;
     }
 
     /**Verify if the file has metadata*/
@@ -289,7 +288,7 @@ class Exif_IO_EasyExif : public Exif_IO
     }
 
   private:
-    EXIFInfo exifInfo_;
+    easyexif::EXIFInfo exifInfo_;
     bool bHaveExifInfo_;
 };
 

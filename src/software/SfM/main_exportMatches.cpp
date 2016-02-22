@@ -122,9 +122,9 @@ int main(int argc, char ** argv)
     return EXIT_FAILURE;
   }
   std::shared_ptr<Matches_Provider> matches_provider = std::make_shared<Matches_Provider>();
-  if (!matches_provider->load(sfm_data, sMatchFile)) {
-    std::cerr << std::endl
-      << "Invalid matches file." << std::endl;
+  if (!matches_provider->load(sfm_data, stlplus::folder_part(sMatchFile), stlplus::filename_part(sMatchFile)))
+  {
+    std::cerr << "\nInvalid matches file." << std::endl;
     return EXIT_FAILURE;
   }
 

@@ -13,8 +13,9 @@ namespace voctree {
  * @brief Class for building a new vocabulary by hierarchically clustering
  * a set of training features.
  */
-template<class Feature, template<typename, typename> class DistanceT = L2,
-class FeatureAllocator = typename DefaultAllocator<Feature>::type>
+template<class Feature,
+         template<typename, typename> class DistanceT = L2,
+         class FeatureAllocator = typename DefaultAllocator<Feature>::type>
 class TreeBuilder
 {
 public:
@@ -103,12 +104,15 @@ void TreeBuilder<Feature, DistanceT, FeatureAllocator>::build(const FeatureVecto
   // Feature* is used to avoid copying features.
   std::deque< std::vector<Feature*> > subset_queue(1);
 
-  // At first the queue contains one "subset" containing all the features.
-  std::vector<Feature*> &feature_ptrs = subset_queue.front();
-  feature_ptrs.reserve(training_features.size());
-  BOOST_FOREACH(const Feature& f, training_features)
-  feature_ptrs.push_back(const_cast<Feature*> (&f));
-
+  {
+    // At first the queue contains one "subset" containing all the features.
+    std::vector<Feature*> &feature_ptrs = subset_queue.front();
+    feature_ptrs.reserve(training_features.size());
+    for(const Feature& f: training_features)
+    {
+      feature_ptrs.push_back(const_cast<Feature*> (&f));
+    }
+  }
   FeatureVector centers; // always size k
   for(uint32_t level = 0; level < levels; ++level)
   {
@@ -142,18 +146,18 @@ void TreeBuilder<Feature, DistanceT, FeatureAllocator>::build(const FeatureVecto
         // Cluster the current subset into k centers.
         if(verbose_ > 2) printf("#\tclustering the current subset of %lu elements into %d centers\n", subset.size(), k);
         kmeans_.clusterPointers(subset, k, centers, membership);
-        //printf("LOL\n");
         // Add the centers and mark them as valid.
         tree_.centers().insert(tree_.centers().end(), centers.begin(), centers.end());
         tree_.validCenters().insert(tree_.validCenters().end(), k, 1);
-        //printf("LOL\n");
         // Partition the current subset into k new subsets based on the cluster assignments.
         std::vector< std::vector<Feature*> > new_subsets(k);
+        assert(membership.size() >= subset.size());
         for(size_t j = 0; j < subset.size(); ++j)
         {
+          assert(membership[j] < k);
+          assert(membership[j] < new_subsets.size());
           new_subsets[ membership[j] ].push_back(subset[j]);
         }
-        //printf("LOL\n");
         // Update the queue
         subset_queue.pop_front();
         subset_queue.insert(subset_queue.end(), new_subsets.begin(), new_subsets.end());

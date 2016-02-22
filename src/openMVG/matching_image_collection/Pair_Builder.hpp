@@ -86,7 +86,6 @@ static Pair_Set contiguousWithOverlap(const sfm::Views& views, const size_t over
 static bool loadPairs(
      const std::string &sFileName, // filename of the list file,
      Pair_Set & pairs,
-     bool ordered=true, // output pairs read from the list file
      int rangeStart=-1,
      int rangeSize=0)
 {
@@ -130,18 +129,11 @@ static bool loadPairs(
         std::cerr << "loadPairs: Invalid input file. Image " << I << " see itself. File: \"" << sFileName << "\"." << std::endl;
         return false;
       }
-      Pair pairToInsert;
-      if(ordered)
+      Pair pairToInsert = (I < J) ? std::make_pair(I, J) : std::make_pair(J, I);
+      if(pairs.find(pairToInsert) != pairs.end())
       {
-        // Insert pair with I = min(I, J) and J = max(I,J)
-        pairToInsert = (( (I < J) ? std::make_pair(I, J) : std::make_pair(J, I) ));  
-      }
-      else
-      {
-        // Keep I & J
-        Pair_Set::iterator it = pairs.find(std::make_pair(J, I));
-        if(it == pairs.end())
-          pairToInsert = std::make_pair(I, J);
+        // There is no reason to have the same image pair twice in the list of image pairs to match.
+        std::cerr << "loadPairs: Image pair " << I << ", " << J << " already added. File: \"" << sFileName << "\"." << std::endl;
       }
       pairs.insert(pairToInsert);
     }

@@ -1,4 +1,3 @@
-
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -173,11 +172,14 @@ static bool loadDescsFromFile(
   vec_desc.clear();
 
   std::ifstream fileIn(sfileNameDescs.c_str());
+  if (!fileIn.is_open())
+    return false;
+
   std::copy(
     std::istream_iterator<typename DescriptorsT::value_type >(fileIn),
     std::istream_iterator<typename DescriptorsT::value_type >(),
     std::back_inserter(vec_desc));
-  bool bOk = !fileIn.bad();
+  const bool bOk = !fileIn.bad();
   fileIn.close();
   return bOk;
 }
@@ -189,48 +191,70 @@ static bool saveDescsToFile(
   DescriptorsT & vec_desc)
 {
   std::ofstream file(sfileNameDescs.c_str());
+  if (!file.is_open())
+    return false;
   std::copy(vec_desc.begin(), vec_desc.end(),
             std::ostream_iterator<typename DescriptorsT::value_type >(file,"\n"));
-  bool bOk = file.good();
+  const bool bOk = file.good();
   file.close();
   return bOk;
 }
 
+/**
+ * @brief Convert descriptor type
+ * @warning No rescale of the values: if you convert from char to float
+ *          you will get values in range (0.0, 255.0)
+ * @param descFrom
+ * @param descTo
+ */
+template<typename DescFrom, typename DescTo>
+void convertDesc(
+  const DescFrom& descFrom,
+  DescTo& descTo)
+{
+
+  typename DescFrom::bin_type* ptrFrom = descFrom.getData();
+  typename DescTo::bin_type* ptrTo = descTo.getData();
+      
+  for (size_t i = 0; i < DescFrom::static_size; ++i)
+  {
+    ptrTo[i] = typename DescTo::value_type(ptrFrom[i]);
+  }
+}
 
 /// Read descriptors from file (in binary mode)
-template<typename DescriptorsT >
+template<typename DescriptorT, typename FileDescriptorT = DescriptorT>
 bool loadDescsFromBinFile(
   const std::string & sfileNameDescs,
-  DescriptorsT & vec_desc,
+  std::vector<DescriptorT> & vec_desc,
   bool append = false)
 {
-  typedef typename DescriptorsT::value_type VALUE;
 
   if( !append ) // for compatibility
     vec_desc.clear();
 
   std::ifstream fileIn(sfileNameDescs.c_str(), std::ios::in | std::ios::binary);
-  
   if(!fileIn.is_open())
-  {
-    std::cerr << "Unable to open file " << sfileNameDescs << std::endl;
-    throw std::invalid_argument("Unable to open file " + sfileNameDescs);
-  }
-  
+    return false;
+
   //Read the number of descriptor in the file
   std::size_t cardDesc = 0;
   fileIn.read((char*) &cardDesc,  sizeof(std::size_t));
   // Reserve is necessary to avoid iterator problems in case of cleared vector
   vec_desc.reserve(vec_desc.size() + cardDesc);
-  typename DescriptorsT::const_iterator begin = vec_desc.end();
+  typename std::vector<DescriptorT>::iterator begin = vec_desc.end();
   vec_desc.resize(vec_desc.size() + cardDesc);
-  for (typename DescriptorsT::const_iterator iter = begin;
+
+  constexpr std::size_t oneDescSize = FileDescriptorT::static_size * sizeof(typename FileDescriptorT::bin_type);
+
+  FileDescriptorT fileDescriptor;
+  for (typename std::vector<DescriptorT>::iterator iter = begin;
     iter != vec_desc.end(); ++iter)
   {
-    fileIn.read((char*) (*iter).getData(),
-      VALUE::static_size*sizeof(typename VALUE::bin_type));
+    fileIn.read((char*)fileDescriptor.getData(), oneDescSize);
+    convertDesc<FileDescriptorT, DescriptorT>(fileDescriptor, *iter);
   }
-  bool bOk = !fileIn.bad();
+  const bool bOk = !fileIn.bad();
   fileIn.close();
   return bOk;
 }
@@ -244,7 +268,9 @@ bool saveDescsToBinFile(
   typedef typename DescriptorsT::value_type VALUE;
 
   std::ofstream file(sfileNameDescs.c_str(), std::ios::out | std::ios::binary);
-  //Write the number of descriptors
+  if (!file.is_open())
+    return false;
+  //Write the number of descriptor
   const std::size_t cardDesc = vec_desc.size();
   file.write((const char*) &cardDesc,  sizeof(std::size_t));
   for (typename DescriptorsT::const_iterator iter = vec_desc.begin();
@@ -253,10 +279,12 @@ bool saveDescsToBinFile(
     file.write((const char*) (*iter).getData(),
       VALUE::static_size*sizeof(typename VALUE::bin_type));
   }
-  bool bOk = file.good();
+  const bool bOk = file.good();
   file.close();
   return bOk;
 }
+
+
 
 } // namespace features
 } // namespace openMVG

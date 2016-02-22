@@ -20,6 +20,7 @@ enum EINTRINSIC
   PINHOLE_CAMERA_RADIAL1 = 2, // radial distortion K1
   PINHOLE_CAMERA_RADIAL3 = 3, // radial distortion K1,K2,K3
   PINHOLE_CAMERA_BROWN = 4, // radial distortion K1,K2,K3, tangential distortion T1,T2
+  PINHOLE_CAMERA_FISHEYE = 5, // a simple Fish-eye distortion model with 4 distortion coefficients
   PINHOLE_CAMERA_END
 };
 
@@ -28,13 +29,15 @@ inline std::string EINTRINSIC_enumToString(EINTRINSIC intrinsic)
   switch(intrinsic)
   {
     case PINHOLE_CAMERA:
-      return "PINHOLE_CAMERA";
+      return "pinhole";
     case PINHOLE_CAMERA_RADIAL1:
-      return "PINHOLE_CAMERA_RADIAL1";
+      return "radial1";
     case PINHOLE_CAMERA_RADIAL3:
-      return "PINHOLE_CAMERA_RADIAL3";
+      return "radial3";
     case PINHOLE_CAMERA_BROWN:
-      return "PINHOLE_CAMERA_BROWN";
+      return "brown";
+    case PINHOLE_CAMERA_FISHEYE:
+      return "fisheye";
     case PINHOLE_CAMERA_START:
     case PINHOLE_CAMERA_END:
       break;
@@ -44,14 +47,16 @@ inline std::string EINTRINSIC_enumToString(EINTRINSIC intrinsic)
 
 inline EINTRINSIC EINTRINSIC_stringToEnum(const std::string& intrinsic)
 {
-  if(intrinsic == "PINHOLE_CAMERA")
+  if(intrinsic == "pinhole")
     return PINHOLE_CAMERA;
-  if(intrinsic == "PINHOLE_CAMERA_RADIAL1")
+  if(intrinsic == "radial1")
     return PINHOLE_CAMERA_RADIAL1;
-  if(intrinsic == "PINHOLE_CAMERA_RADIAL3")
+  if(intrinsic == "radial3")
     return PINHOLE_CAMERA_RADIAL3;
-  if(intrinsic == "PINHOLE_CAMERA_BROWN")
+  if(intrinsic == "brown")
     return PINHOLE_CAMERA_BROWN;
+  if(intrinsic == "fisheye")
+    return PINHOLE_CAMERA_FISHEYE;
   throw std::out_of_range(intrinsic);
 }
 

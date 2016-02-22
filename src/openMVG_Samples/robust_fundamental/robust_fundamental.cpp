@@ -180,7 +180,7 @@ int main(int argc, char **argv)
       true); // configure as point to line error model.
 
     Mat3 F;
-    std::pair<double,double> ACRansacOut = ACRANSAC(kernel, vec_inliers, 1024, &F,
+    const std::pair<double,double> ACRansacOut = ACRANSAC(kernel, vec_inliers, 1024, &F,
       Square(4.0), // Upper bound of authorized threshold
       true);
     const double & thresholdF = ACRansacOut.first;

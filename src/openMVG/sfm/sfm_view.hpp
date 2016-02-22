@@ -41,6 +41,15 @@ struct View
 
   virtual ~View() {}
 
+  bool operator==(const View& other) const {
+    // Image paths can be different
+    return id_view == other.id_view &&
+            id_intrinsic == other.id_intrinsic &&
+            id_pose == other.id_pose &&
+            ui_width == other.ui_width &&
+            ui_height == other.ui_height;
+  }
+
   // Serialization
   template <class Archive>
   void serialize(Archive & ar)

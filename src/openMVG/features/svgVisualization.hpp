@@ -67,7 +67,8 @@ void saveFeatures2SVG(const std::string &inputImagePath,
 void saveFeatures2SVG(const std::string &inputImagePath,
                       const std::pair<size_t,size_t> & imageSize,
                       const Mat &points,
-                      const std::string &outputSVGPath);
+                      const std::string &outputSVGPath,
+                      const std::vector<size_t> *inliers = nullptr);
 
 #if HAVE_CCTAG
 

@@ -33,7 +33,7 @@ namespace sfm{
 
 class GlobalSfM_Translation_AveragingSolver
 {
-  RelativeInfo_Vec _vec_initialRijTijEstimates;
+  RelativeInfo_Vec m_vec_initialRijTijEstimates;
 
 public:
 
