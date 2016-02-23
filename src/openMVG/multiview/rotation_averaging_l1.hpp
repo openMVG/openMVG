@@ -20,13 +20,24 @@
 
 namespace openMVG   {
 namespace rotation_averaging  {
-
 namespace l1  {
 
 // D E F I N E S ///////////////////////////////////////////////////
-typedef double REAL;
-
 typedef std::vector<openMVG::Mat3> Matrix3x3Arr;
+
+/**
+ * @brief Compute an initial estimation of global rotation (chain rotations along a MST).
+ *
+ * @param[in] RelRs Relative weighted rotation matrices
+ * @param[out] Rs output global rotation matrices
+ * @param[in] nMainViewID Id of the image considered as Identity (unit rotation)
+ */
+void InitRotationsMST
+(
+  const RelativeRotations& RelRs,
+  Matrix3x3Arr& Rs,
+  const size_t nMainViewID
+);
 
 /**
  * @brief Compute an initial estimation of global rotation and refines them under the L1 norm, [1].
@@ -56,7 +67,7 @@ bool RefineRotationsAvgL1IRLS(
   const RelativeRotations& RelRs,
   Matrix3x3Arr& Rs,
   const size_t nMainViewID,
-  REAL sigma=openMVG::D2R(5));
+  const double sigma=openMVG::D2R(5));
 
 /**
  * @brief Sort relative rotation as inlier, outlier rotations.
@@ -71,37 +82,6 @@ unsigned int FilterRelativeRotations(
   const Matrix3x3Arr& Rs,
   float threshold = 0.f,
   std::vector<bool> * vec_inliers = NULL);
-
-
-// Minimization Stuff
-
-// L1RA [1] for dense A matrix
-bool RobustRegressionL1PD(
-  const Eigen::Matrix<REAL, Eigen::Dynamic, Eigen::Dynamic>& A,
-  const Eigen::Matrix<REAL, Eigen::Dynamic, 1>& b,
-  Eigen::Matrix<REAL, Eigen::Dynamic, 1>& x,
-  REAL pdtol=1e-3, unsigned pdmaxiter=50);
-
-// L1RA [1] for sparse A matrix
-bool RobustRegressionL1PD(
-  const Eigen::SparseMatrix<REAL, Eigen::ColMajor>& A,
-  const Eigen::Matrix<REAL, Eigen::Dynamic, 1>& b,
-  Eigen::Matrix<REAL, Eigen::Dynamic, 1>& x,
-  REAL pdtol=1e-3, unsigned pdmaxiter=50);
-
-/// IRLS [1] for dense A matrix
-bool IterativelyReweightedLeastSquares(
-  const Eigen::Matrix<REAL, Eigen::Dynamic, Eigen::Dynamic>& A,
-  const Eigen::Matrix<REAL, Eigen::Dynamic, 1>& b,
-  Eigen::Matrix<REAL, Eigen::Dynamic, 1>& x,
-  REAL sigma, REAL eps=1e-5);
-
-/// IRLS [1] for sparse A matrix
-bool IterativelyReweightedLeastSquares(
-  const Eigen::SparseMatrix<REAL, Eigen::ColMajor>& A,
-  const Eigen::Matrix<REAL, Eigen::Dynamic, 1>& b,
-  Eigen::Matrix<REAL, Eigen::Dynamic, 1>& x,
-  REAL sigma, REAL eps=1e-5);
 
 } // namespace l1
 } // namespace rotation_averaging

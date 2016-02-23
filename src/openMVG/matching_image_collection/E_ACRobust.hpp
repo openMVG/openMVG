@@ -33,9 +33,10 @@ struct GeometricFilter_EMatrix_AC
       m_dPrecision_robust(std::numeric_limits<double>::infinity()){};
 
   /// Robust fitting of the ESSENTIAL matrix
+  template<typename Regions_or_Features_ProviderT>
   bool Robust_estimation(
     const sfm::SfM_Data * sfm_data,
-    const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
+    const std::shared_ptr<Regions_or_Features_ProviderT> & regions_provider,
     const Pair pairIndex,
     const matching::IndMatches & vec_PutativeMatches,
     matching::IndMatches & geometric_inliers)
@@ -58,10 +59,10 @@ struct GeometricFilter_EMatrix_AC
      // Check that valid cameras can be retrieved for the pair of views
     const cameras::IntrinsicBase * cam_I =
       sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
-        sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
+        sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : nullptr;
     const cameras::IntrinsicBase * cam_J =
       sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
-        sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
+        sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
     if (!cam_I || !cam_J)
       return false;
@@ -95,7 +96,7 @@ struct GeometricFilter_EMatrix_AC
       xJ, sfm_data->GetViews().at(jIndex)->ui_width, sfm_data->GetViews().at(jIndex)->ui_height,
       ptrPinhole_I->K(), ptrPinhole_J->K());
 
-    // Robustly estimate the Fundamental matrix with A Contrario ransac
+    // Robustly estimate the Essential matrix with A Contrario ransac
     const double upper_bound_precision = Square(m_dPrecision);
     std::vector<size_t> vec_inliers;
     const std::pair<double,double> ACRansacOut =
@@ -137,10 +138,10 @@ struct GeometricFilter_EMatrix_AC
       // Check that valid cameras can be retrieved for the pair of views
       const cameras::IntrinsicBase * cam_I =
         sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
-          sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
+          sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : nullptr;
       const cameras::IntrinsicBase * cam_J =
         sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
-          sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
+          sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
       if (!cam_I || !cam_J)
         return false;

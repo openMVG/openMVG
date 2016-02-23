@@ -94,8 +94,7 @@ int main(int argc, char ** argv)
   // Read the matches
   std::shared_ptr<Matches_Provider> matches_provider = std::make_shared<Matches_Provider>();
   if (!matches_provider->load(sfm_data, sMatchFile)) {
-    std::cerr << std::endl
-      << "Invalid matches file." << std::endl;
+    std::cerr << "\nInvalid matches file." << std::endl;
     return EXIT_FAILURE;
   }
 

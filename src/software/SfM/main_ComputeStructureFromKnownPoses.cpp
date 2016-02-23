@@ -48,10 +48,12 @@ int main(int argc, char **argv)
   } catch(const std::string& s) {
     std::cerr << "Usage: " << argv[0] << '\n'
     << "[-i|--input_file] path to a SfM_Data scene\n"
-    << "[-m|--match_dir] path to the features and descriptor that "
-    << " corresponds to the provided SfM_Data scene\n"
-    << "[-f|--match_file] (opt.) path to a matches file (used pairs will be used)\n"
-    << "[-o|--output_file] file where the output data will be stored\n"
+    << "[-m|--match_dir] path to the features and descriptors that "
+    <<    "corresponds to the provided SfM_Data scene\n"
+    << "[-o|--output_file] file where the output data will be stored "
+    <<    "(i.e. path/sfm_data_structure.bin)\n"
+    << "\n[Optional]\n"
+    << "[-f|--match_file] path to a matches file (loaded pair indexes will be used)\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -86,9 +88,10 @@ int main(int argc, char **argv)
   }
 
   //--
-  //- Pair selection method
-  //  - geometry guided -> camera frustum intersection
-  //  - putative matches guided (photometric matches) (Keep pair that have valid Intrinsic & Pose ids)
+  //- Pair selection method:
+  //  - geometry guided -> camera frustum intersection,
+  //  - putative matches guided (photometric matches)
+  //     (keep pairs that have valid Intrinsic & Pose ids).
   //--
   Pair_Set pairs;
   if (sMatchFile.empty())
@@ -99,16 +102,15 @@ int main(int argc, char **argv)
   else
   {
     PairWiseMatches matches;
-    if (!matching::PairedIndMatchImport(sMatchFile, matches)) {
+    if (!matching::Load(matches, sMatchFile)) {
       std::cerr<< "Unable to read the matches file." << std::endl;
       return EXIT_FAILURE;
     }
     pairs = getPairs(matches);
+    // Keep only Pairs that belong to valid view indexes.
+    const std::set<IndexT> valid_viewIdx = Get_Valid_Views(sfm_data);
+    pairs = Pair_filter(pairs, valid_viewIdx);
   }
-
-  // Keep only Pairs that belong to valid view indexes.
-  std::set<IndexT> valid_viewIdx = Get_Valid_Views(sfm_data);
-  pairs = Pair_filter(pairs, valid_viewIdx);
 
   openMVG::system::Timer timer;
 
@@ -119,9 +121,9 @@ int main(int argc, char **argv)
   structure_estimator.run(sfm_data, pairs, regions_provider);
   RemoveOutliers_AngleError(sfm_data, 2.0);
 
-  std::cout << "\nStructure estimation took (s): " << timer.elapsed() << "." << std::endl;
-
-  std::cout << "#landmark found: " << sfm_data.GetLandmarks().size() << std::endl;
+  std::cout
+    << "\nStructure estimation took (s): " << timer.elapsed() << "." << std::endl
+    << "#landmark found: " << sfm_data.GetLandmarks().size() << std::endl;
 
   if (stlplus::extension_part(sOutFile) != "ply") {
     Save(sfm_data,

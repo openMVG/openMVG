@@ -140,11 +140,14 @@ static bool loadDescsFromFile(
   vec_desc.clear();
 
   std::ifstream fileIn(sfileNameDescs.c_str());
+  if (!fileIn.is_open())
+    return false;
+
   std::copy(
     std::istream_iterator<typename DescriptorsT::value_type >(fileIn),
     std::istream_iterator<typename DescriptorsT::value_type >(),
     std::back_inserter(vec_desc));
-  bool bOk = !fileIn.bad();
+  const bool bOk = !fileIn.bad();
   fileIn.close();
   return bOk;
 }
@@ -156,9 +159,11 @@ static bool saveDescsToFile(
   DescriptorsT & vec_desc)
 {
   std::ofstream file(sfileNameDescs.c_str());
+  if (!file.is_open())
+    return false;
   std::copy(vec_desc.begin(), vec_desc.end(),
             std::ostream_iterator<typename DescriptorsT::value_type >(file,"\n"));
-  bool bOk = file.good();
+  const bool bOk = file.good();
   file.close();
   return bOk;
 }
@@ -174,6 +179,8 @@ static bool loadDescsFromBinFile(
 
   vec_desc.clear();
   std::ifstream fileIn(sfileNameDescs.c_str(), std::ios::in | std::ios::binary);
+  if (!fileIn.is_open())
+    return false;
   //Read the number of descriptor in the file
   std::size_t cardDesc = 0;
   fileIn.read((char*) &cardDesc,  sizeof(std::size_t));
@@ -183,7 +190,7 @@ static bool loadDescsFromBinFile(
     fileIn.read((char*) (*iter).getData(),
       VALUE::static_size*sizeof(typename VALUE::bin_type));
   }
-  bool bOk = !fileIn.bad();
+  const bool bOk = !fileIn.bad();
   fileIn.close();
   return bOk;
 }
@@ -197,6 +204,8 @@ static bool saveDescsToBinFile(
   typedef typename DescriptorsT::value_type VALUE;
 
   std::ofstream file(sfileNameDescs.c_str(), std::ios::out | std::ios::binary);
+  if (!file.is_open())
+    return false;
   //Write the number of descriptor
   const std::size_t cardDesc = vec_desc.size();
   file.write((const char*) &cardDesc,  sizeof(std::size_t));
@@ -205,7 +214,7 @@ static bool saveDescsToBinFile(
     file.write((const char*) (*iter).getData(),
       VALUE::static_size*sizeof(typename VALUE::bin_type));
   }
-  bool bOk = file.good();
+  const bool bOk = file.good();
   file.close();
   return bOk;
 }

@@ -6,6 +6,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <iterator>
+#include <random>
 
 #include "openMVG/robust_estimation/robust_estimator_lineKernel_test.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
@@ -29,17 +30,14 @@ public:
   typedef ModelArg  Model;
 
   ACRANSACOneViewKernel(const Mat &x1, int w1, int h1)
-    : x1_(x1.rows(), x1.cols()), N1_(3,3), logalpha0_(0.0)
+    : x1_(x1), N1_(Mat3::Identity()), logalpha0_(0.0)
   {
     assert(2 == x1_.rows());
 
-    x1_ = x1;
-    N1_ = Mat3::Identity();
-
     // Model error as point to line error
     // Ratio of containing diagonal image rectangle over image area
-    double D = sqrt(w1 *w1*1.0 + h1 * h1); // diameter
-    double A = w1 * h1; // area
+    const double D = sqrt(w1 *w1*1.0 + h1 * h1); // diameter
+    const double A = w1 * h1; // area
     logalpha0_ = log10(2.0*D/A /1.0);
   }
 
@@ -47,7 +45,7 @@ public:
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
   void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
-    Mat sampled_xs = ExtractColumns(x1_, samples);
+    const Mat sampled_xs = ExtractColumns(x1_, samples);
     Solver::Solve(sampled_xs, models);
   }
 
@@ -146,10 +144,9 @@ TEST(RansacLineFitter, OneOutlier) {
 // was given for an estimation.
 TEST(RansacLineFitter, TooFewPoints) {
 
-  Mat2X xy(2, 1);
+  Vec2 xy;
   // y = 2x + 1
-  xy << 1,
-    3;
+  xy << 1, 2;
   ACRANSACOneViewKernel<LineSolver, pointToLineError, Vec2> lineKernel(xy, 12, 12);
   std::vector<size_t> vec_inliers;
   ACRANSAC(lineKernel, vec_inliers);
@@ -167,7 +164,7 @@ TEST(RansacLineFitter, RealisticCase) {
   const int inlierPourcentAmount = 30;
   Mat2X xy(2, NbPoints);
 
-  Vec2 GTModel;
+  Vec2 GTModel; // y = 6.3 x + (-2.0)
   GTModel <<  -2.0, 6.3;
 
   //-- Build the point list according the given model
@@ -175,15 +172,21 @@ TEST(RansacLineFitter, RealisticCase) {
     xy.col(i) << i, (double)i*GTModel[1] + GTModel[0];
   }
 
-  //-- Add some noise (for the asked percentage amount)
-  int nbPtToNoise = (int) NbPoints*inlierPourcentAmount/100.0;
+  // Setup a normal distribution in order to make outlier not aligned
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::normal_distribution<> d(0, 5); // More or less 5 units
+
+  //-- Simulate outliers (for the asked percentage amount of the datum)
+  const int nbPtToNoise = (int) NbPoints*inlierPourcentAmount/100.0;
   vector<size_t> vec_samples; // Fit with unique random index
   UniformSample(nbPtToNoise, NbPoints, &vec_samples);
   for(size_t i = 0; i <vec_samples.size(); ++i)
   {
     const size_t randomIndex = vec_samples[i];
-    //Additive random noise
-    xy.col(randomIndex) += Vec2::Random()/10.;
+    // Start from a outlier point (0,0)
+    // and move it in a given small range (since it must remains in an outlier area)
+    xy.col(randomIndex)<< d(gen), d(gen);
   }
 
   // The base estimator
@@ -200,71 +203,34 @@ TEST(RansacLineFitter, RealisticCase) {
   EXPECT_NEAR(GTModel(1), line[1], 1e-9);
 }
 
-// Generate a random value between [0;1]
-static inline double randValue()  {
-  return rand()/double(RAND_MAX);
-}
-
-double gaussGenerator(){
-  double f_x1, f_x2, f_w;
-  static int i_set = 0;
-  static float f_noise;
-
-  if(i_set==0){// We do not have an extra deviate handy so,
-    do {
-      f_x1 = 2.0 * randValue() - 1.0;// pick 2 uniform numbers in the square
-      f_x2 = 2.0 * randValue() - 1.0;// extending from -1 to 1 in each direction
-      f_w = f_x1 * f_x1 + f_x2 * f_x2;// see if they are in the unit circle
-    } while ( (f_w >= 1.0) || (f_w == 0.0));// and if they are not, try again
-
-    f_w = sqrt( (-2.0 * log( f_w ) ) / f_w );
-
-    // Now make the Box-Muller transformation to get 2 normal deviates
-    f_noise=f_x2*f_w;// save one for the next  time
-    i_set=1;// set flag
-    return (f_x1*f_w);// return one
-  }else{// We have an extra deviate handy,
-    i_set=0;// so unset the flag
-    return (f_noise);// and return the value
-  }
-}
-
-double generateGaussianErrorAroundAValue(double v, double d_deviation)
-{
-  double d_value, d_noise;
-  d_value = (double) v;
-  d_noise = gaussGenerator();
-  d_noise *= d_deviation;
-  d_value += d_noise;
-  return(d_value);
-}
-
 // Generate nbPoints along a line and add gaussian noise.
 // Move some point in the dataset to create outlier contamined data
 void generateLine(Mat & points, size_t nbPoints, int W, int H, float noise, float outlierPourcent)
 {
   points = Mat(2, nbPoints);
 
-  Vec2 lineEq(50,0.3);
+  Vec2 lineEq(50, 0.3);
+
+  // Setup a normal distribution of mean 0 and amplitude equal to noise
+  std::default_random_engine gen;
+  std::normal_distribution<double> d(0, noise);
 
   for (size_t i = 0; i < nbPoints; ++i)
   {
-    float x = rand()%W;
-    float y =  lineEq[1] * x + lineEq[0];
-    y = generateGaussianErrorAroundAValue(y, noise);
+    const float x = rand()%W;
+    const float y =  d(gen) + (lineEq[1] * x + lineEq[0]) + d(gen);
     points.col(i) = Vec2(x, y);
   }
 
   // generate outlier
-  size_t count = outlierPourcent * nbPoints;
+  std::normal_distribution<double> d_outlier(0, 0.2);
+  const size_t count = outlierPourcent * nbPoints;
   std::vector<size_t> vec_indexes(count,0);
-  random_sample(count, nbPoints, &vec_indexes);
+  UniformSample(count, nbPoints, &vec_indexes);
   for (size_t i = 0; i < count; ++i)
   {
-    size_t pos = vec_indexes[i];
-    float noise2 = generateGaussianErrorAroundAValue(0, 0.2);
-    float noise3 = generateGaussianErrorAroundAValue(0, 0.2);
-    points.col(pos) = Vec2(rand()%W +noise2, rand()%H - noise3);
+    const size_t pos = vec_indexes[i];
+    points.col(pos) = Vec2(rand()%W + d_outlier(gen), rand()%H - d_outlier(gen));
   }
 }
 
@@ -298,8 +264,8 @@ struct IndMatchd
 //  by having it's estimated confidence threshold growing.
 TEST(RansacLineFitter, ACRANSACSimu) {
 
-  int S = 100;
-  int W = S, H = S;
+  const int S = 100;
+  const int W = S, H = S;
 
   std::vector<double> vec_gaussianValue;
   for (int i=0; i < 10; ++i)  {
@@ -309,12 +275,12 @@ TEST(RansacLineFitter, ACRANSACSimu) {
   for (std::vector<double>::const_iterator iter = vec_gaussianValue.begin();
     iter != vec_gaussianValue.end(); ++ iter)
   {
-    double gaussianNoiseLevel = *iter;
+    const double gaussianNoiseLevel = *iter;
 
     size_t nbPoints = 2.0 * S * sqrt(2.0);
-    float noise = gaussianNoiseLevel;
+    const float noise = gaussianNoiseLevel;
 
-    float outlierPourcent = .3;
+    const float outlierPourcent = .3f;
     Mat points;
     generateLine(points, nbPoints, W, H, noise, outlierPourcent);
 
@@ -362,8 +328,8 @@ TEST(RansacLineFitter, ACRANSACSimu) {
     // Check the best model that fit the most of the data
     //  in a robust framework (ACRANSAC).
     std::vector<size_t> vec_inliers;
-    std::pair<double,double> ret = ACRANSAC(lineKernel, vec_inliers, 1000, &line);
-    double errorMax = ret.first;
+    const std::pair<double,double> ret = ACRANSAC(lineKernel, vec_inliers, 1000, &line);
+    const double errorMax = ret.first;
 
     EXPECT_TRUE( abs(gaussianNoiseLevel - sqrt(errorMax)) < 2.0);
 

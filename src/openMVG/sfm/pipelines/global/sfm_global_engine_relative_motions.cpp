@@ -80,12 +80,15 @@ void GlobalSfMReconstructionEngine_RelativeMotions::SetFeaturesProvider(Features
     {
       // get the related view & camera intrinsic and compute the corresponding bearing vectors
       const View * view = _sfm_data.GetViews().at(iter->first).get();
-      const std::shared_ptr<IntrinsicBase> cam = _sfm_data.GetIntrinsics().find(view->id_intrinsic)->second;
-      for (PointFeatures::iterator iterPt = iter->second.begin();
-        iterPt != iter->second.end(); ++iterPt)
+      if (_sfm_data.GetIntrinsics().count(view->id_intrinsic))
       {
-        const Vec3 bearingVector = (*cam)(cam->get_ud_pixel(iterPt->coords().cast<double>()));
-        iterPt->coords() << (bearingVector.head(2) / bearingVector(2)).cast<float>();
+        const std::shared_ptr<IntrinsicBase> cam = _sfm_data.GetIntrinsics().find(view->id_intrinsic)->second;
+        for (PointFeatures::iterator iterPt = iter->second.begin();
+          iterPt != iter->second.end(); ++iterPt)
+        {
+          const Vec3 bearingVector = (*cam)(cam->get_ud_pixel(iterPt->coords().cast<double>()));
+          iterPt->coords() << (bearingVector.head(2) / bearingVector(2)).cast<float>();
+        }
       }
     }
   }
@@ -205,15 +208,55 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations
     TRIPLET_ROTATION_INFERENCE_COMPOSITION_ERROR;
     //TRIPLET_ROTATION_INFERENCE_NONE;
 
+  system::Timer t;
   GlobalSfM_Rotation_AveragingSolver rotation_averaging_solver;
   const bool b_rotation_averaging = rotation_averaging_solver.Run(
     _eRotationAveragingMethod, eRelativeRotationInferenceMethod,
     relatives_R, global_rotations);
 
-  std::cout << "Found #global_rotations: " << global_rotations.size() << std::endl;
+  std::cout
+    << "Found #global_rotations: " << global_rotations.size() << "\n"
+    << "Timing: " << t.elapsed() << " seconds" << std::endl;
+
 
   if (b_rotation_averaging)
   {
+    // Compute & display rotation fitting residual errors
+    std::vector<float> vec_rotation_fitting_error;
+    vec_rotation_fitting_error.reserve(relatives_R.size());
+    for (const auto & relative_R : relatives_R)
+    {
+      const Mat3 & Rij = relative_R.Rij;
+      const IndexT i = relative_R.i;
+      const IndexT j = relative_R.j;
+      if (global_rotations.count(i)==0 || global_rotations.count(j)==0)
+        continue;
+      const Mat3 & Ri = global_rotations[i];
+      const Mat3 & Rj = global_rotations[j];
+      const Mat3 eRij(Rj.transpose()*Rij*Ri);
+      const double angularErrorDegree = R2D(getRotationMagnitude(eRij));
+      vec_rotation_fitting_error.push_back(angularErrorDegree);
+    }
+
+    if (!vec_rotation_fitting_error.empty())
+    {
+      const float error_max = *max_element(vec_rotation_fitting_error.begin(), vec_rotation_fitting_error.end());
+      Histogram<float> histo(0.0f,error_max, 20);
+      histo.Add(vec_rotation_fitting_error.begin(), vec_rotation_fitting_error.end());
+      std::cout
+        << "\nRelative/Global degree rotations residual errors {0," << error_max<< "}:"
+        << histo.ToString() << std::endl;
+      {
+        Histogram<float> histo(0.0f, 5.0f, 20);
+        histo.Add(vec_rotation_fitting_error.begin(), vec_rotation_fitting_error.end());
+        std::cout
+          << "\nRelative/Global degree rotations residual errors {0,5}:"
+          << histo.ToString() << std::endl;
+      }
+      std::cout << "\nStatistics about global rotation evaluation:" << std::endl;
+      minMaxMeanMedian<float>(vec_rotation_fitting_error.begin(), vec_rotation_fitting_error.end());
+    }
+
     // Log input graph to the HTML report
     if (!_sLoggingFile.empty() && !_sOutDirectory.empty())
     {
@@ -244,7 +287,6 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations
       }
     }
   }
-
   return b_rotation_averaging;
 }
 
@@ -520,7 +562,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
       const View * view_I = _sfm_data.views[I].get();
       const View * view_J = _sfm_data.views[J].get();
 
-      // Check that valid camera are existing for the pair view
+      // Check that valid cameras are existing for the pair of view
       if (_sfm_data.GetIntrinsics().count(view_I->id_intrinsic) == 0 ||
         _sfm_data.GetIntrinsics().count(view_J->id_intrinsic) == 0)
         continue;
@@ -545,15 +587,16 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
         cam_I->imagePlane_toCameraPlaneError(2.5) *
         cam_J->imagePlane_toCameraPlaneError(2.5),
         1./2.);
-      // Since we use normalized features:
-      const std::pair<size_t, size_t> imageSize_I(1., 1.), imageSize_J(1.,1.);
+
+      // Since we use normalized features, we will use unit image size and intrinsic matrix:
+      const std::pair<size_t, size_t> imageSize(1., 1.);
       const Mat3 K  = Mat3::Identity();
 
-      if (!robustRelativePose(K, K, x1, x2, relativePose_info, imageSize_I, imageSize_J, 256))
+      if (!robustRelativePose(K, K, x1, x2, relativePose_info, imageSize, imageSize, 256))
       {
         continue;
       }
-      bool bRefine_using_BA = true;
+      const bool bRefine_using_BA = true;
       if (bRefine_using_BA)
       {
         // Refine the defined scene

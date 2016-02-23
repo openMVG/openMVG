@@ -280,8 +280,8 @@ public:
     ApplyTransformationToPoints(x2_, K2_.inverse(), &x2k_);
 
     //Point to line probability (line is the epipolar line)
-    double D = sqrt(w2*(double)w2 + h2*(double)h2); // diameter
-    double A = w2*(double)h2; // area
+    const double D = sqrt(w2*(double)w2 + h2*(double)h2); // diameter
+    const double A = w2*(double)h2; // area
     logalpha0_ = log10(2.0*D/A * .5);
   }
 

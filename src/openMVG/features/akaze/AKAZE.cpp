@@ -177,13 +177,10 @@ void AKAZE::ComputeAKAZESlice( const Image<float> & src , const int p , const in
   Lx *= static_cast<float>( sigma_scale ) ;
   Ly *= static_cast<float>( sigma_scale ) ;
 
-  Lxx *= static_cast<float>( sigma_scale * sigma_scale ) ;
-  Lyy *= static_cast<float>( sigma_scale * sigma_scale ) ;
-  Lxy *= static_cast<float>( sigma_scale * sigma_scale ) ;
-
   // Compute Determinant of the Hessian
   Lhess.resize(Li.Width(), Li.Height());
-  Lhess.array() = (Lxx.array()*Lyy.array()-Lxy.array().square());
+  const float sigma_size_quad = Square(sigma_scale) * Square(sigma_scale);
+  Lhess.array() = (Lxx.array()*Lyy.array()-Lxy.array().square())*sigma_size_quad;
 }
 
 template <typename Image>
@@ -218,7 +215,7 @@ void AKAZE::Compute_AKAZEScaleSpace(void)
 
     for( int q = 0 ; q < options_.iNbSlicePerOctave ; ++q )
     {
-      evolution_.push_back(TEvolution());
+      evolution_.emplace_back(TEvolution());
       TEvolution & evo = evolution_.back();
       // Compute Slice at (p,q) index
       ComputeAKAZESlice( input , p , q , options_.iNbSlicePerOctave , options_.fSigma0 , contrast_factor,
@@ -267,8 +264,6 @@ void detectDuplicates(
 
 void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
 {
-#define OPENMVG_REMOVE_DUPLICATES 1
-#ifdef OPENMVG_REMOVE_DUPLICATES
   std::vector< std::vector< std::pair<AKAZEKeypoint, bool> > > vec_kpts_perSlice(options_.iNbOctave*options_.iNbSlicePerOctave);
 
 #ifdef OPENMVG_USE_OPENMP
@@ -307,11 +302,11 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
           point.size = sigma_cur * fderivative_factor ;
           point.octave = p;
           point.response = fabs(value);
-          point.x = ix * ratio;
-          point.y = jx * ratio;
+          point.x = ix * ratio + 0.5 * (ratio-1);
+          point.y = jx * ratio + 0.5 * (ratio-1);
           point.angle = 0.0f;
           point.class_id = p * options_.iNbSlicePerOctave + q;
-          vec_kpts_perSlice[options_.iNbOctave * p + q].push_back( std::make_pair(point,false) );
+          vec_kpts_perSlice[options_.iNbOctave * p + q].emplace_back( point,false );
         }
       }
     }
@@ -331,131 +326,14 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
     const std::vector< std::pair<AKAZEKeypoint, bool> > & vec_kp = vec_kpts_perSlice[k];
     for (int i = 0; i < vec_kp.size(); ++i)
       if (!vec_kp[i].second)
-        kpts.push_back(vec_kp[i].first);
+        kpts.emplace_back(vec_kp[i].first);
   }
-
-#else
-  // Native AKAZE duplicate removal
-  bool is_extremum = false, is_repeated = false;
-  int id_repeated = 0;
-
-  for( int p = 0 ; p < options_.iNbOctave ; ++p )
-  {
-    const float ratio = (float) (1 << p);
-
-    for( int q = 0 ; q < options_.iNbSlicePerOctave ; ++q )
-    {
-      const float sigma_cur = Sigma( options_.fSigma0 , p , q , options_.iNbSlicePerOctave ) ;
-      const Image<float> & LDetHess = evolution_[options_.iNbOctave * p + q].Lhess;
-
-      // Check that the point is under the image limits for the descriptor computation
-      const float borderLimit =
-        MathTrait<float>::round(options_.fDesc_factor*sigma_cur*fderivative_factor/ratio)+1;
-
-      for (int jx = borderLimit; jx < LDetHess.Height()-borderLimit; ++jx)
-      for (int ix = borderLimit; ix < LDetHess.Width()-borderLimit; ++ix) {
-
-        is_extremum = true;
-        is_repeated = false;
-        const float value = LDetHess(jx, ix);
-
-        // Filter the points with the detector threshold
-        if (value > options_.fThreshold &&
-            value > LDetHess(jx-1, ix) &&
-            value > LDetHess(jx-1, ix+1) &&
-            value > LDetHess(jx-1, ix-1) &&
-            value > LDetHess(jx  , ix-1) &&
-            value > LDetHess(jx  , ix+1) &&
-            value > LDetHess(jx+1, ix-1) &&
-            value > LDetHess(jx+1, ix) &&
-            value > LDetHess(jx+1, ix+1))
-        {
-          AKAZEKeypoint point;
-          point.size = sigma_cur * fderivative_factor ;
-          point.octave = p;
-          point.response = fabs(value);
-          point.x = ix * ratio;
-          point.y = jx * ratio;
-          point.angle = 0.0f;
-          point.class_id = p * options_.iNbSlicePerOctave + q;
-
-          for( size_t ik = 0; ik < kpts.size(); ik++ )
-          {
-            if( point.class_id -1 == kpts[ik].class_id ||
-              point.class_id == kpts[ik].class_id  )
-            {
-              const float dist = Square(point.x-kpts[ik].x)+Square(point.y-kpts[ik].y);
-              if (dist <= Square(point.size))
-              {
-                if( point.response > kpts[ik].response )
-                {
-                  id_repeated = ik;
-                  is_repeated = true;
-                }
-                else
-                {
-                  is_extremum = false;
-                }
-                break;
-              }
-            }
-          }
-          if (is_extremum)
-          {
-            if( is_repeated == false)
-            {
-              kpts.push_back(point);
-            }
-            else
-            {
-              kpts[id_repeated] = point;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  std::vector<AKAZEKeypoint > vec_kp;
-  vec_kp.reserve(kpts.size());
-#ifdef OPENMVG_USE_OPENMP
-  #pragma omp parallel for schedule(dynamic)
-#endif
-  // Now filter points (keep the best along the pyramid)
-  for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
-  {
-    // For all point that fall inside the area of influence, keep the strongest one
-    bool is_repeated = false;
-    AKAZEKeypoint best_kp = kpts[i];
-
-    for (size_t j = i+1; j < kpts.size() && !is_repeated; j++)
-    {
-      const AKAZEKeypoint& ptJ = kpts[j];
-      if ( best_kp.class_id + 1 == ptJ.class_id )
-      {
-        const float dist = Square(best_kp.x-ptJ.x)+Square(best_kp.y-ptJ.y);
-        if (dist <= Square(best_kp.size)) {
-          if (best_kp.response < ptJ.response) {
-            is_repeated = true;
-            break ;
-          }
-        }
-      }
-    }
-#ifdef OPENMVG_USE_OPENMP
-  #pragma omp critical
-#endif
-    if (!is_repeated)
-      vec_kp.push_back(best_kp);
-  }
-  vec_kp.swap(kpts);
-#endif
 }
 
 /// This method performs sub pixel refinement of a keypoint
 bool AKAZE::Do_Subpixel_Refinement( AKAZEKeypoint & kpt, const Image<float> & Ldet) const
 {
-  const float ratio = (float) (1 << kpt.octave);
+  const unsigned int ratio = (1 << kpt.octave);
   const int x = MathTrait<float>::round(kpt.x/ratio);
   const int y = MathTrait<float>::round(kpt.y/ratio);
 
@@ -477,8 +355,8 @@ bool AKAZE::Do_Subpixel_Refinement( AKAZEKeypoint & kpt, const Image<float> & Ld
   const Vec2 dst = A.fullPivLu().solve(b);
 
   if (fabs(dst(0)) <= 1.0 && fabs(dst(1)) <= 1.0) {
-    kpt.x += dst(0)*ratio;
-    kpt.y += dst(1)*ratio;
+    kpt.x += dst(0) * ratio + 0.5 * (ratio-1);
+    kpt.y += dst(1) * ratio + 0.5 * (ratio-1);
     return true;
   }
   // Delete the point since its not stable
@@ -503,7 +381,7 @@ void AKAZE::Do_Subpixel_Refinement(std::vector<AKAZEKeypoint>& kpts) const
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
 #endif
-      kpts.push_back(pt);
+      kpts.emplace_back(pt);
     }
   }
 }
@@ -537,7 +415,7 @@ void AKAZE::Compute_Main_Orientation(
   float sumX = 0.0f, sumY = 0.0f, max = 0.0f, ang1 = 0.0f, ang2 = 0.0f;
 
   // Get the information from the keypoint
-  const float ratio = (float)(1 << kpt.octave);
+  const unsigned int ratio = (1 << kpt.octave);
   const int s = MathTrait<float>::round(kpt.size/ratio);
   const float xf = kpt.x/ratio;
   const float yf = kpt.y/ratio;

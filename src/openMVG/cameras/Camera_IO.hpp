@@ -18,7 +18,14 @@
 namespace openMVG {
 namespace cameras {
 
-/// Save a Pinhole camera to a file as a P matrix (12 doubles as binary values)
+
+    /**
+    * @brief Save a Pinhole camera to a file as a Projection matrix (12 doubles as binary values)
+    * @param scameraFile path to the file in which matrix will be written
+    * @param cam Camera to write
+    * @retval true If write is correct
+    * @retval false If there was an error during export
+    */
 static bool save(
   const std::string & scameraFile,
   const PinholeCamera & cam)
@@ -35,7 +42,14 @@ static bool save(
   return bOk;
 }
 
-/// Load a Pinhole camera from a file (read 12 doubles saved in binary values)
+
+    /**
+    * @brief Load a Pinhole camera from a file (read 12 doubles saved in binary values)
+    * @param scameraFile path where camera is stored
+    * @param[out] cam output camera after read
+    * @retval true If loading is correct
+    * @retval false If there was an error during loading
+    */
 static bool load(
   const std::string & scameraFile,
   PinholeCamera & cam)

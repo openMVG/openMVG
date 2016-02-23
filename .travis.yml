@@ -9,27 +9,42 @@ compiler:
   #- clang: #Consider clang later, since cereal does not build fine on the clang CI version
   #  - "3.3"
 
+sudo: false
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - cmake
+      - lcov
+      - libpng-dev
+      - libjpeg8-dev
+      - libtiff4-dev
+      - libxxf86vm1
+      - libxxf86vm-dev
+      - x11proto-xf86vidmode-dev
+      - libxrandr-dev
+      - g++-4.8
+
+env:
+  global:
+    - NUM_CPU="`grep processor /proc/cpuinfo | wc -l`"; echo $NUM_CPU
+    - OPENMVG_SOURCE=${TRAVIS_BUILD_DIR}/src
+    - OPENMVG_BUILD=${TRAVIS_BUILD_DIR}/build
+
 before_install:
- - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
- - sudo apt-get update -qq
- - export NUM_CPU="`grep processor /proc/cpuinfo | wc -l`"; echo $NUM_CPU
- - sudo apt-get install lcov
  - gem install coveralls-lcov
- 
-install: 
-- sudo apt-get install cmake libpng-dev libjpeg8-dev libtiff-dev
-- sudo apt-get install libxxf86vm1 libxxf86vm1 libxxf86vm-dev x11proto-xf86vidmode-dev libxrandr-dev
-- sudo apt-get install -qq g++-4.8
-- export CXX="g++-4.8"
 
 before_script:
-  - cd ..
-  - mkdir build
-  - cd build
+  - export CXX="g++-4.8"
+  # Create build folder
+  - mkdir $OPENMVG_BUILD
+  - cd $OPENMVG_BUILD
   # Classic release build
-  - cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
+  - cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . $OPENMVG_SOURCE
   # Build for code coverage evaluation
-  #- cmake -DOpenMVG_BUILD_COVERAGE=ON -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
+  #- cmake -DOpenMVG_BUILD_COVERAGE=ON -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . $OPENMVG_SOURCE
 
 script:
 # limit GCC builds to a reduced number of thread for the virtual machine
@@ -53,4 +68,4 @@ after_success:
   #    lcov --remove coverage.info '*/src/dependencies/*' -o coverage.info;
   #    coveralls-lcov coverage.info;
   #  fi
-  
+

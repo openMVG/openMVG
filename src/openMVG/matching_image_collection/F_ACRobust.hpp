@@ -22,7 +22,7 @@
 namespace openMVG {
 namespace matching_image_collection {
 
-//-- A contrario fundamental matrix estimation template functor used for filter pair of putative correspondences 
+//-- A contrario fundamental matrix estimation template functor used for filter pair of putative correspondences
 struct GeometricFilter_FMatrix_AC
 {
   GeometricFilter_FMatrix_AC(
@@ -32,9 +32,10 @@ struct GeometricFilter_FMatrix_AC
       m_dPrecision_robust(std::numeric_limits<double>::infinity()){};
 
   /// Robust fitting of the FUNDAMENTAL matrix
+  template<typename Regions_or_Features_ProviderT>
   bool Robust_estimation(
     const sfm::SfM_Data * sfm_data,
-    const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
+    const std::shared_ptr<Regions_or_Features_ProviderT> & regions_provider,
     const Pair pairIndex,
     const matching::IndMatches & vec_PutativeMatches,
     matching::IndMatches & geometric_inliers)
@@ -113,10 +114,10 @@ struct GeometricFilter_FMatrix_AC
       // Retrieve corresponding pair camera intrinsic if any
       const cameras::IntrinsicBase * cam_I =
         sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
-          sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
+          sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : nullptr;
       const cameras::IntrinsicBase * cam_J =
         sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
-          sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
+          sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
       // Check the features correspondences that agree in the geometric and photometric domain
       geometry_aware::GuidedMatching

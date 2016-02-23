@@ -7,9 +7,48 @@
 
 #include "testing/testing.h"
 #include "openMVG/matching/indMatch.hpp"
+#include "openMVG/matching/indMatch_utils.hpp"
 
 using namespace openMVG;
 using namespace matching;
+
+TEST(IndMatch, IO)
+{
+  PairWiseMatches matches;
+
+  // Test save + load of empty data
+  EXPECT_TRUE(Save(matches, "matches.txt"));
+  EXPECT_TRUE(Load(matches, "matches.txt"));
+  EXPECT_EQ(0, matches.size());
+
+  EXPECT_TRUE(Save(matches, "matches.bin"));
+  EXPECT_TRUE(Load(matches, "matches.bin"));
+  EXPECT_EQ(0, matches.size());
+
+  // Test export with not empty data
+  matches[std::make_pair(0,1)] = {{0,0},{1,1}};
+  matches[std::make_pair(1,2)] = {{0,0},{1,1}, {2,2}};
+
+  EXPECT_TRUE(Save(matches, "matches.txt"));
+  EXPECT_TRUE(Load(matches, "matches.txt"));
+  EXPECT_EQ(2, matches.size());
+  EXPECT_EQ(1, matches.count(std::make_pair(0,1)));
+  EXPECT_EQ(1, matches.count(std::make_pair(1,2)));
+  EXPECT_EQ(2, matches.at(std::make_pair(0,1)).size());
+  EXPECT_EQ(3, matches.at(std::make_pair(1,2)).size());
+
+  matches.clear();
+  matches[std::make_pair(0,1)] = {{0,0},{1,1}};
+  matches[std::make_pair(1,2)] = {{0,0},{1,1}, {2,2}};
+
+  EXPECT_TRUE(Save(matches, "matches.bin"));
+  EXPECT_TRUE(Load(matches, "matches.bin"));
+  EXPECT_EQ(2, matches.size());
+  EXPECT_EQ(1, matches.count(std::make_pair(0,1)));
+  EXPECT_EQ(1, matches.count(std::make_pair(1,2)));
+  EXPECT_EQ(2, matches.at(std::make_pair(0,1)).size());
+  EXPECT_EQ(3, matches.at(std::make_pair(1,2)).size());
+}
 
 TEST(IndMatch, DuplicateRemoval_NoRemoval)
 {

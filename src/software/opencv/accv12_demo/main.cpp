@@ -208,8 +208,8 @@ int main(int, char**)
                   false); // configure as point to point error model.
 
             double error = std::numeric_limits<double>::infinity();
-            std::pair<double,double> ACRansacOut = ACRANSAC(kernel, vec_inliers, 1024, &H,
-              error, false);
+            const std::pair<double,double> ACRansacOut =
+              ACRANSAC(kernel, vec_inliers, 1024, &H, error, false);
             thresholdH = ACRansacOut.first;
             NFAH = ACRansacOut.second;
           }

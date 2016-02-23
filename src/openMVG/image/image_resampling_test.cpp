@@ -16,18 +16,19 @@ using namespace openMVG::image;
 TEST(Ressampling,SampleSamePosition)
 {
   Image<unsigned char> image;
-  std::string png_filename = std::string(THIS_SOURCE_DIR) + "/image_test/lena.png";
+  const std::string png_filename = std::string(THIS_SOURCE_DIR) + "/image_test/lena.png";
   std::cout << png_filename << std::endl ;
   EXPECT_TRUE(ReadImage(png_filename.c_str(), &image));
 
 
   // Build sampling grid
   std::vector< std::pair< float , float > > sampling_grid ;
+  sampling_grid.reserve(image.Width()*image.Height()) ;
   for( int i = 0 ; i < image.Height() ; ++i )
   {
     for( int j = 0 ; j < image.Width() ; ++j )
     {
-      sampling_grid.push_back( std::make_pair( i , j ) ) ;
+      sampling_grid.emplace_back( i , j ) ;
     }
   }
 
@@ -38,7 +39,7 @@ TEST(Ressampling,SampleSamePosition)
 
   GenericRessample( image , sampling_grid , image.Width() , image.Height() , sampler , imageOut ) ;
 
-  std::string out_filename = ("test_ressample_same.png");
+  const std::string out_filename = ("test_ressample_same.png");
   EXPECT_TRUE( WriteImage( out_filename.c_str(), imageOut) ) ;
 }
 
@@ -57,18 +58,19 @@ bool ImageRotation(
   const float delta = ( 2.0 * 3.141592 ) / nb_rot ;
 
   const float middle_x = image.Width() / 2.0 ;
-  const float middle_y = image.Height() / 2.0 ; 
+  const float middle_y = image.Height() / 2.0 ;
 
-  // Rotate image then set starting image as source 
+  // Rotate image then set starting image as source
   for( int id_rot = 0 ; id_rot < nb_rot ; ++id_rot )
   {
     // angle of rotation (negative because it's inverse transformation)
     const float cur_angle = delta ;
 
     const float cs = cosf( -cur_angle ) ;
-    const float ss = sinf( -cur_angle ) ; 
+    const float ss = sinf( -cur_angle ) ;
 
     std::vector< std::pair<float,float> > sampling_grid;
+    sampling_grid.reserve(image.Width()*image.Height());
     // Compute sampling grid
     for( int i = 0 ; i < image.Height() ; ++i )
     {
@@ -87,7 +89,7 @@ bool ImageRotation(
         const float cur_x = rotated_x + middle_x ;
         const float cur_y = rotated_y + middle_y ;
 
-        sampling_grid.push_back( std::make_pair( cur_y , cur_x ) ) ;
+        sampling_grid.emplace_back( cur_y , cur_x) ;
       }
     }
 
@@ -98,7 +100,7 @@ bool ImageRotation(
 
     std::stringstream str ;
     str << "test_ressample_"<< samplerString <<"_rotate_" << id_rot << ".png" ;
-    bOk &= WriteImage( str.str().c_str(), imageOut); 
+    bOk &= WriteImage( str.str().c_str(), imageOut);
     image = imageOut ;
   }
   return bOk;
@@ -108,7 +110,7 @@ TEST(Ressampling,SampleRotate)
 {
   Image<RGBColor> image;
 
-  std::string png_filename = std::string(THIS_SOURCE_DIR) + "/image_test/lena.png";
+  const std::string png_filename = std::string(THIS_SOURCE_DIR) + "/image_test/lena.png";
   std::cout << png_filename << std::endl ;
   EXPECT_TRUE(ReadImage(png_filename.c_str(), &image));
 

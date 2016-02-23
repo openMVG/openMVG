@@ -10,6 +10,16 @@
 namespace openMVG {
 namespace matching_image_collection {
 
+/**
+* @brief Get "image perfect" features (un-distorted feature positions)
+* @param[in] putativeMatches Selected corresponding features id (match)
+* @param[in] cam_I Inth Camera interface
+* @param[in] feature_I Inth view features
+* @param[in] cam_J Jnth Camera interface
+* @param[in] feature_J Jnth view features
+* @param[out] x_I Pixel perfect features from the Inth image putativeMatches matches
+* @param[out] x_J Pixel perfect features from the Jnth image putativeMatches matches
+*/
 template<typename MatT >
 void MatchesPointsToMat
 (
@@ -41,6 +51,15 @@ void MatchesPointsToMat
   }
 }
 
+/**
+* @brief Get un-distorted feature positions for the pair pairIndex from the Regions_Provider interface
+* @param[in] pairIndex Pair from which you need to extract the corresponding points
+* @param[in] putativeMatches Matches of the 'pairIndex' pair
+* @param[in] sfm_data SfM_Data scene container
+* @param[in] regions_provider Interface that provides the features positions
+* @param[out] x_I Pixel perfect features from the Inth image putativeMatches matches
+* @param[out] x_J Pixel perfect features from the Jnth image putativeMatches matches
+*/
 template<typename MatT >
 void MatchesPairToMat
 (
@@ -65,6 +84,47 @@ void MatchesPairToMat
   // Load features of Inth and Jnth images
   const features::PointFeatures feature_I = regions_provider->regions_per_view.at(pairIndex.first)->GetRegionsPositions();
   const features::PointFeatures feature_J = regions_provider->regions_per_view.at(pairIndex.second)->GetRegionsPositions();
+
+  MatchesPointsToMat(
+    putativeMatches,
+    cam_I, feature_I,
+    cam_J, feature_J,
+    x_I, x_J);
+}
+
+/**
+* @brief Get un-distorted feature positions for the pair pairIndex from the Features_Provider interface
+* @param[in] pairIndex Pair from which you need to extract the corresponding points
+* @param[in] putativeMatches Matches of the 'pairIndex' pair
+* @param[in] sfm_data SfM_Data scene container
+* @param[in] features_provider Interface that provides the features positions
+* @param[out] x_I Pixel perfect features from the Inth image putativeMatches matches
+* @param[out] x_J Pixel perfect features from the Jnth image putativeMatches matches
+*/
+template<typename MatT >
+void MatchesPairToMat
+(
+  const Pair pairIndex,
+  const matching::IndMatches & putativeMatches,
+  const sfm::SfM_Data * sfm_data,
+  const std::shared_ptr<sfm::Features_Provider> & features_provider,
+  MatT & x_I, MatT & x_J
+)
+{
+  const sfm::View * view_I = sfm_data->views.at(pairIndex.first).get();
+  const sfm::View * view_J = sfm_data->views.at(pairIndex.second).get();
+
+  // Retrieve corresponding pair camera intrinsic if any
+  const cameras::IntrinsicBase * cam_I =
+    sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
+      sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
+  const cameras::IntrinsicBase * cam_J =
+    sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
+      sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
+
+  // Load features of Inth and Jnth images
+  const features::PointFeatures feature_I = features_provider->feats_per_view.at(pairIndex.first);
+  const features::PointFeatures feature_J = features_provider->feats_per_view.at(pairIndex.second);
 
   MatchesPointsToMat(
     putativeMatches,

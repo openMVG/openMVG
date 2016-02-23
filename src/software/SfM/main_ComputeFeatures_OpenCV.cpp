@@ -109,7 +109,7 @@ public:
 
         memcpy(descriptor.getData(),
                m_desc.ptr<typename DescriptorT::bin_type>(cpt),
-               DescriptorT::static_size*sizeof(typename DescriptorT::bin_type));
+               DescriptorT::static_size*sizeof(DescriptorT::bin_type));
         regionsCasted->Descriptors().push_back(descriptor);
       }
     }
