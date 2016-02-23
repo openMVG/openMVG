@@ -222,7 +222,22 @@ void convertDesc(
   }
 }
 
-/// Read descriptors from file (in binary mode)
+
+/**
+ * @brief It load descriptors from a given binary file (.desc). \p DescriptorT is 
+ * the type of descriptor in which to store the data loaded from the file. \p FileDescriptorT is
+ * the type of descriptors that are stored in the file. Usually the two types should
+ * be the same, but it could be the case in which the descriptor stored in the file
+ * has different type representation: for example the file could contain SIFT descriptors
+ * stored as uchar (the default type) and we want to cast these into SIFT descriptors
+ * stored in memory as floats.
+ * 
+ * @param[in] sfileNameDescs The file name (usually .desc)
+ * @param[out] vec_desc A vector of descriptors that stores the descriptors to load
+ * @param[in] append If true, the loaded descriptors will be appended at the end 
+ * of the vector \p vec_desc
+ * @return true if everything went well
+ */
 template<typename DescriptorT, typename FileDescriptorT = DescriptorT>
 bool loadDescsFromBinFile(
   const std::string & sfileNameDescs,
