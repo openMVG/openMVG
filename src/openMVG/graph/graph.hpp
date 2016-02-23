@@ -16,4 +16,16 @@
 #include "openMVG/graph/connectedComponent.hpp"
 #include "openMVG/graph/triplet_finder.hpp"
 
+namespace openMVG
+{
+/**
+* @brief namespace handling various methods and classes related to graph manipulation
+*/
+namespace graph
+{
+
+}
+}
+
+
 #endif // OPENMVG_GRAPH_H_
