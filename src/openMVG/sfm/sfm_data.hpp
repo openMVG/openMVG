@@ -108,7 +108,7 @@ struct SfM_Data
 
     Intrinsics::const_iterator it = intrinsics.begin();
     Intrinsics::const_iterator otherIt = other.intrinsics.begin();
-    for(; it != intrinsics.end(), otherIt != other.intrinsics.end(); ++it, ++otherIt)
+    for(; it != intrinsics.end() && otherIt != other.intrinsics.end(); ++it, ++otherIt)
     {
         // Index
         if(it->first != otherIt->first)
@@ -126,7 +126,7 @@ struct SfM_Data
       return false;
     Landmarks::const_iterator landMarkIt = structure.begin();
     Landmarks::const_iterator otherLandmarkIt = other.structure.begin();
-    for(; landMarkIt != structure.end(), otherLandmarkIt != other.structure.end(); ++landMarkIt, ++otherLandmarkIt)
+    for(; landMarkIt != structure.end() && otherLandmarkIt != other.structure.end(); ++landMarkIt, ++otherLandmarkIt)
     {
         // Points IDs are not preserved
         // Landmark

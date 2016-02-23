@@ -87,8 +87,7 @@ script:
   - if [ ! "$(ls -A $GT_TEST_SOURCE)" ]; then git clone --branch dev https://github.com/caymard/SfM_quality_evaluation.git $GT_TEST_SOURCE; fi
   - cd $GT_TEST_SOURCE
   - git pull
-  - python EvaluationLauncher.py -s "$OPENMVG_BUILD/$BUILD_SYSTEM-$BUILD_PROCESSOR-$BUILD_TYPE" -i Benchmarking_Camera_Calibration_2008/ -o ${GT_TEST_OUTPUT} -r ${GT_TEST_RESULTS} > ../gt_log.log 2>&1
-  - cat ../gt_log.log | tail -n 150
+  - python EvaluationLauncher.py -s "$OPENMVG_BUILD/$BUILD_SYSTEM-$BUILD_PROCESSOR-$BUILD_TYPE" -i Benchmarking_Camera_Calibration_2008/ -o ${GT_TEST_OUTPUT} -r ${GT_TEST_RESULTS}
   - cat ${GT_TEST_RESULTS}
 # Return to root and remove GT huge files to avoid cache problems
   - cd $TRAVIS_BUILD_DIR

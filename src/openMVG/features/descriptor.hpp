@@ -1,4 +1,3 @@
-
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -201,15 +200,50 @@ static bool saveDescsToFile(
   return bOk;
 }
 
+/**
+ * @brief Convert descriptor type
+ * @warning No rescale of the values: if you convert from char to float
+ *          you will get values in range (0.0, 255.0)
+ * @param descFrom
+ * @param descTo
+ */
+template<typename DescFrom, typename DescTo>
+void convertDesc(
+  const DescFrom& descFrom,
+  DescTo& descTo)
+{
 
-/// Read descriptors from file (in binary mode)
-template<typename DescriptorsT >
+  typename DescFrom::bin_type* ptrFrom = descFrom.getData();
+  typename DescTo::bin_type* ptrTo = descTo.getData();
+      
+  for (size_t i = 0; i < DescFrom::static_size; ++i)
+  {
+    ptrTo[i] = typename DescTo::value_type(ptrFrom[i]);
+  }
+}
+
+
+/**
+ * @brief It load descriptors from a given binary file (.desc). \p DescriptorT is 
+ * the type of descriptor in which to store the data loaded from the file. \p FileDescriptorT is
+ * the type of descriptors that are stored in the file. Usually the two types should
+ * be the same, but it could be the case in which the descriptor stored in the file
+ * has different type representation: for example the file could contain SIFT descriptors
+ * stored as uchar (the default type) and we want to cast these into SIFT descriptors
+ * stored in memory as floats.
+ * 
+ * @param[in] sfileNameDescs The file name (usually .desc)
+ * @param[out] vec_desc A vector of descriptors that stores the descriptors to load
+ * @param[in] append If true, the loaded descriptors will be appended at the end 
+ * of the vector \p vec_desc
+ * @return true if everything went well
+ */
+template<typename DescriptorT, typename FileDescriptorT = DescriptorT>
 bool loadDescsFromBinFile(
   const std::string & sfileNameDescs,
-  DescriptorsT & vec_desc,
+  std::vector<DescriptorT> & vec_desc,
   bool append = false)
 {
-  typedef typename DescriptorsT::value_type VALUE;
 
   if( !append ) // for compatibility
     vec_desc.clear();
@@ -223,13 +257,17 @@ bool loadDescsFromBinFile(
   fileIn.read((char*) &cardDesc,  sizeof(std::size_t));
   // Reserve is necessary to avoid iterator problems in case of cleared vector
   vec_desc.reserve(vec_desc.size() + cardDesc);
-  typename DescriptorsT::const_iterator begin = vec_desc.end();
+  typename std::vector<DescriptorT>::iterator begin = vec_desc.end();
   vec_desc.resize(vec_desc.size() + cardDesc);
-  for (typename DescriptorsT::const_iterator iter = begin;
+
+  constexpr std::size_t oneDescSize = FileDescriptorT::static_size * sizeof(typename FileDescriptorT::bin_type);
+
+  FileDescriptorT fileDescriptor;
+  for (typename std::vector<DescriptorT>::iterator iter = begin;
     iter != vec_desc.end(); ++iter)
   {
-    fileIn.read((char*) (*iter).getData(),
-      VALUE::static_size*sizeof(typename VALUE::bin_type));
+    fileIn.read((char*)fileDescriptor.getData(), oneDescSize);
+    convertDesc<FileDescriptorT, DescriptorT>(fileDescriptor, *iter);
   }
   const bool bOk = !fileIn.bad();
   fileIn.close();
@@ -260,6 +298,8 @@ bool saveDescsToBinFile(
   file.close();
   return bOk;
 }
+
+
 
 } // namespace features
 } // namespace openMVG

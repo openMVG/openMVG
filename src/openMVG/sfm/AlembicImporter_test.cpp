@@ -1,6 +1,6 @@
-#include "openMVG/dataio/AlembicImporter.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
+#include "AlembicImporter.hpp"
+#include "sfm_data.hpp"
+#include "sfm_data_io.hpp"
 
 #include "testing/testing.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
