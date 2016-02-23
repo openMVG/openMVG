@@ -31,4 +31,16 @@
 #include "openMVG/image/image_resampling.hpp"
 #include "openMVG/image/image_diffusion.hpp"
 
+namespace openMVG
+{
+  /**
+  * @brief namespace containing various image manipulation classes and functions
+  */
+  namespace image
+  {
+
+  }
+}
+
+
 #endif /* OPENMVG_IMAGE_HPP */
