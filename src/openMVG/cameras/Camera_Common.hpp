@@ -7,9 +7,31 @@
 #ifndef OPENMVG_CAMERAS_COMMON_HPP
 #define OPENMVG_CAMERAS_COMMON_HPP
 
-namespace openMVG {
-namespace cameras {
+namespace openMVG
+{
+namespace cameras
+{
 
+/**
+* @enum EINTRINSIC List of usable camera Intrinsics
+* @var PINHOLE_CAMERA
+*   Pinhole camera is an ideal pinhole camera with 3x3 intrinsics matrix : \n
+*      \f$ K=\begin{pmatrix} f & 0 & u_0 \\ 0 & f & v_0 \\ 0 & 0 & 1 \end{pmatrix} \f$
+* @var PINHOLE_CAMERA_RADIAL1
+*   Same as PINHOLE_CAMERA but before projection, pixel are distorded using radial distortion using one parameter \f$k_1\f$ \n
+*    Assuming input pixel is \f$X\f$, distorded pixel \f$X_d\f$ is given by the relation : \n
+*      \f$ X_d = ( 1 + k_1 r^2) X \f$  \n
+*    Where \f$ r^2 = (X_x - u_0)^2 + (Y_y - v_0)^2 \f$
+* @var PINHOLE_CAMERA_RADIAL3
+*   Same as PINHOLE_CAMERA_RADIAL1 but using 3 parameters \f$k_1, k_2, k_3\f$ : \n
+*      \f$ X_d = ( 1 + k_1 r^2 + k_2 r^4 + k_3 r^6 ) X \f$
+* @var PINHOLE_CAMERA_BROWN
+*   Same as PINHOLE_CAMERA with radial distortion and Tangential distortion : \n
+*      \f$ x_d = x_u (1 + K_1 r^2 + K_2 r^4 + K_3 r^6) + (T_2 (r^2 + 2 x_u^2) + 2 T_1 x_u y_u) \f$
+*      \f$ y_d = y_u (1 + K_1 r^2 + K_2 r^4 + K_3 r^6) + (T_1 (r^2 + 2 y_u^2) + 2 T_2 x_u y_u) \f$
+* @var PINHOLE_CAMERA_FISHEYE
+*   Simple fisheye camera with 4 distortion coefficients
+*/
 enum EINTRINSIC
 {
   PINHOLE_CAMERA_START = 0,
@@ -21,13 +43,26 @@ enum EINTRINSIC
   PINHOLE_CAMERA_END
 };
 
-// Return if the camera type is a valid enum
-static inline bool isValid(EINTRINSIC eintrinsic)
+
+/**
+* @brief Test if given intrinsic value is valid
+* @param eintrinsic Intrinsic value to test
+* @retval true if parameter is valid
+* @retval false if parameter is invalid
+*/
+static inline bool isValid( EINTRINSIC eintrinsic )
 {
   return eintrinsic > PINHOLE_CAMERA_START && eintrinsic < PINHOLE_CAMERA_END;
 }
 
-static inline bool isPinhole(EINTRINSIC eintrinsic)
+
+/**
+* @brief test if given intrinsic value corresponds to a pinhole
+* @param eintrinsic Intrinsic value to test
+* @retval true if parameter is a pinhole
+* @retval false if parameter is not a pinhole
+*/
+static inline bool isPinhole( EINTRINSIC eintrinsic )
 {
   return eintrinsic > PINHOLE_CAMERA_START && eintrinsic < PINHOLE_CAMERA_END;
 }
