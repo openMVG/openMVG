@@ -54,7 +54,7 @@ typedef vector< FeatureT > featsT;
 ColorHarmonizationEngineGlobal::ColorHarmonizationEngineGlobal(
   const string & sSfM_Data_Filename,
   const string & sMatchesPath,
-  const std::string & sMatchesFile,
+  const std::string & sMatchesGeometricModel,
   const string & sOutDirectory,
   const int selectionMethod,
   const int imgRef):
@@ -63,7 +63,7 @@ ColorHarmonizationEngineGlobal::ColorHarmonizationEngineGlobal(
   _sOutDirectory(sOutDirectory),
   _selectionMethod( selectionMethod ),
   _imgRef( imgRef ),
-  _sMatchesFile(sMatchesFile)
+  _sMatchesGeometricModel(sMatchesGeometricModel)
 {
   if( !stlplus::folder_exists( sOutDirectory ) )
   {
@@ -456,13 +456,7 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
   if ( !stlplus::is_file( _sSfM_Data_Path ))
   {
     std::cerr << std::endl
-      << "Invalid input sfm_data file: (" << stlplus::basename_part(_sMatchesFile) << ")" << std::endl;
-    return false;
-  }
-  if (!stlplus::is_file( _sMatchesFile ))
-  {
-    std::cerr << std::endl
-      << "Invalid match file: (" << stlplus::basename_part(_sMatchesFile) << ")"<< std::endl;
+      << "Invalid input sfm_data file: (" << stlplus::basename_part(_sMatchesGeometricModel) << ")" << std::endl;
     return false;
   }
 
@@ -484,17 +478,17 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
   }
 
   // b. Read matches
-  if( !matching::PairedIndMatchImport( _sMatchesFile, _map_Matches ) )
+  if ( !matching::Load(_map_Matches, sfm_data.GetViewsKeys(), _sMatchesPath, _sMatchesGeometricModel) )
   {
     cerr<< "Unable to read the geometric matrix matches" << endl;
     return false;
   }
 
   // Read features:
-  for( size_t i = 0; i < _vec_fileNames.size(); ++i )
+  for ( size_t i = 0; i < _vec_fileNames.size(); ++i )
   {
     const size_t camIndex = i;
-    if( !loadFeatsFromFile(
+    if ( !loadFeatsFromFile(
             stlplus::create_filespec( _sMatchesPath,
                                       stlplus::basename_part( _vec_fileNames[ camIndex ] ),
                                       ".feat" ),

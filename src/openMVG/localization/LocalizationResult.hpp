@@ -35,8 +35,14 @@ public:
   void setPose(const geometry::Pose3 & pose);
   
   const cameras::Pinhole_Intrinsic_Radial_K3 & getIntrinsics() const;
+  
+  cameras::Pinhole_Intrinsic_Radial_K3 & getIntrinsics();
+  
+  void updateIntrinsics(const std::vector<double> & params);
 
   bool isValid() const;
+  
+  Mat2X computeResiduals() const ;
   
 private:
   sfm::Image_Localizer_Match_Data _matchData;

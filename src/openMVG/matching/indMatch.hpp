@@ -10,6 +10,8 @@
 
 #include "openMVG/types.hpp"
 
+#include <cereal/cereal.hpp> // Serialization
+
 #include <iostream>
 #include <set>
 #include <map>
@@ -41,18 +43,24 @@ struct IndMatch
   }
 
   /// Remove duplicates ((_i, _j) that appears multiple times)
-  static bool getDeduplicated(std::vector<IndMatch> & vec_match){
-
+  static bool getDeduplicated(std::vector<IndMatch> & vec_match)
+  {
     const size_t sizeBefore = vec_match.size();
     std::set<IndMatch> set_deduplicated( vec_match.begin(), vec_match.end());
     vec_match.assign(set_deduplicated.begin(), set_deduplicated.end());
     return sizeBefore != vec_match.size();
   }
 
+  // Serialization
+  template <class Archive>
+  void serialize( Archive & ar )  {
+    ar(_i, _j);
+  }
+
   IndexT _i, _j;  // Left, right index
 };
 
-static std::ostream& operator<<(std::ostream & out, const IndMatch & obj) {
+static inline std::ostream& operator<<(std::ostream & out, const IndMatch & obj) {
   return out << obj._i << " " << obj._j;
 }
 
@@ -66,7 +74,7 @@ typedef std::vector<matching::IndMatch> IndMatches;
 /// The structure used to store corresponding point indexes per images pairs
 typedef std::map< Pair, IndMatches > PairWiseMatches;
 
-static Pair_Set getPairs(const PairWiseMatches & matches)
+static inline Pair_Set getPairs(const PairWiseMatches & matches)
 {
   Pair_Set pairs;
   for(PairWiseMatches::const_iterator it = matches.begin(); it != matches.end(); ++it)

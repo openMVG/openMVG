@@ -46,9 +46,9 @@ int main(int argc, char **argv)
 #endif
            "\n"
         << "\n[Options to export partial data (by default all data are exported)]\n"
-        << "\nUsable for json/bin/xml format"
+        << "\nUsable for json/bin/xml format\n"
         << "[-V|--VIEWS] export views\n"
-        << "[-I|--INTRINSICS] export intrinsics (view orientations)\n"
+        << "[-I|--INTRINSICS] export intrinsics\n"
         << "[-E|--EXTRINSICS] export extrinsics (view poses)\n"
         << "[-S|--STRUCTURE] export structure\n"
         << "[-O|--OBSERVATIONS] export 2D observations associated with 3D structure\n"

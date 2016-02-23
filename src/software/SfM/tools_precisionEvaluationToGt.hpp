@@ -13,8 +13,10 @@
 
 #include "third_party/htmlDoc/htmlDoc.hpp"
 #include "third_party/histogram/histogram.hpp"
+#include "third_party/vectorGraphics/svgDrawer.hpp"
 
 #include <vector>
+#include <algorithm>
 
 namespace openMVG
 {
@@ -42,14 +44,15 @@ bool computeSimilarity(
   double S;
   Vec3 t;
   Mat3 R;
-  openMVG::geometry::FindRTS(x1, x2, &S, &t, &R);
-  std::cout << "\n Non linear refinement" << std::endl;
-  openMVG::geometry::Refine_RTS(x1,x2,&S,&t,&R);
+  std::vector<std::size_t> inliers;
+  if(!openMVG::geometry::ACRansac_FindRTS(x1, x2, S, t, R, inliers, true))
+    return false;
 
   vec_camPosComputed_T.resize(vec_camPosGT.size());
   std::vector<double> vec_residualErrors(vec_camPosGT.size());
-  for (size_t i = 0; i  < vec_camPosGT.size(); ++i) {
-    Vec3 newPos = S * R * ( vec_camPosComputed[i]) + t;
+  for(size_t i = 0; i < vec_camPosGT.size(); ++i)
+  {
+    Vec3 newPos = S * R * (vec_camPosComputed[i]) + t;
     vec_camPosComputed_T[i] = newPos;
     const double dResidual = (newPos - vec_camPosGT[i]).norm();
     vec_residualErrors[i] = dResidual;
@@ -98,34 +101,49 @@ static bool exportToPly(const std::vector<Vec3> & vec_camPosGT,
 /// Compare two camera path (translation and rotation residual after a 5DOF rigid registration)
 /// Export computed statistics to a HTLM stream
 void EvaluteToGT(
-  const std::vector<Vec3> & vec_camPosGT,
-  const std::vector<Vec3> & vec_camPosComputed,
+  const std::vector<Vec3> & vec_camCenterGT,
+  const std::vector<Vec3> & vec_camCenterComputed,
   const std::vector<Mat3> & vec_camRotGT,
   const std::vector<Mat3> & vec_camRotComputed,
   const std::string & sOutPath,
-  htmlDocument::htmlDocumentStream * _htmlDocStream
+  htmlDocument::htmlDocumentStream * htmlDocStream
   )
 {
+  const std::size_t numCameras = vec_camCenterGT.size();
+  assert(numCameras>0);
+  assert(numCameras == vec_camCenterComputed.size());
+  assert(numCameras == vec_camRotGT.size());
+  assert(numCameras == vec_camRotComputed.size());
+  
   // Compute global 3D similarity between the camera position
   std::vector<Vec3> vec_camPosComputed_T;
   Mat3 R;
   Vec3 t;
-  double S;
-  computeSimilarity(vec_camPosGT, vec_camPosComputed, vec_camPosComputed_T, &S, &R, &t);
+  double scale;
+  
+  computeSimilarity(vec_camCenterGT, vec_camCenterComputed, vec_camPosComputed_T, &scale, &R, &t);
+  
+  std::cout << "\nEstimated similarity transformation between the sequences\n";
+  std::cout << "R\n" << R << std::endl;
+  std::cout << "t\n" << t << std::endl;
+  std::cout << "scale\n" << scale << std::endl;
 
   // Compute statistics and export them
   // -a. distance between camera center
   // -b. angle between rotation matrix
 
   // -a. distance between camera center
-  std::vector<double> vec_residualErrors;
+  double trajectoryLength = 0;
+  std::vector<double> vec_baselineErrors;
+  for(std::size_t i = 0; i < numCameras; ++i)
   {
-    for (size_t i = 0; i  < vec_camPosGT.size(); ++i)
-    {
-      const double dResidual = (vec_camPosGT[i] - vec_camPosComputed_T[i]).norm();
-      vec_residualErrors.push_back(dResidual);
-    }
+    const double dResidual = (vec_camCenterGT[i] - vec_camPosComputed_T[i]).norm();
+    vec_baselineErrors.push_back(dResidual);
+    if(i > 0 && i < numCameras-2)
+      trajectoryLength += (vec_camCenterGT[i] - vec_camCenterGT[i+1]).norm();
   }
+  
+  std::cout << std::endl << "\nTrajectory length: " << trajectoryLength ;
 
   // -b. angle between rotation matrix
   std::vector<double> vec_angularErrors;
@@ -142,15 +160,15 @@ void EvaluteToGT(
   }
 
   // Display residual errors :
-  std::cout << "\nBaseline residuals (in GT unit)\n";
-  copy(vec_residualErrors.begin(), vec_residualErrors.end(), std::ostream_iterator<double>(std::cout, " , "));
-  std::cout << "\nAngular residuals (Degree) \n";
-  copy(vec_angularErrors.begin(), vec_angularErrors.end(), std::ostream_iterator<double>(std::cout, " , "));
+//  std::cout << "\nBaseline residuals (in GT unit)\n";
+//  copy(vec_baselineErrors.begin(), vec_baselineErrors.end(), std::ostream_iterator<double>(std::cout, " , "));
+//  std::cout << "\nAngular residuals (Degree) \n";
+//  copy(vec_angularErrors.begin(), vec_angularErrors.end(), std::ostream_iterator<double>(std::cout, " , "));
 
   std::cout << std::endl << "\nBaseline error statistics : \n ";
-  minMaxMeanMedian<double>(vec_residualErrors.begin(), vec_residualErrors.end());
+  minMaxMeanMedian<double>(vec_baselineErrors.begin(), vec_baselineErrors.end());
   double minB, maxB, meanB, medianB;
-  minMaxMeanMedian<double>(vec_residualErrors.begin(), vec_residualErrors.end(), minB, maxB, meanB, medianB);
+  minMaxMeanMedian<double>(vec_baselineErrors.begin(), vec_baselineErrors.end(), minB, maxB, meanB, medianB);
 
   std::cout << std::endl << "\nAngular error statistics : \n ";
   minMaxMeanMedian<double>(vec_angularErrors.begin(), vec_angularErrors.end());
@@ -158,54 +176,141 @@ void EvaluteToGT(
   minMaxMeanMedian<double>(vec_angularErrors.begin(), vec_angularErrors.end(), minA, maxA, meanA, medianA);
 
   // Export camera position (viewable)
-  exportToPly(vec_camPosGT, vec_camPosComputed_T,
+  exportToPly(vec_camCenterGT, vec_camPosComputed_T,
     stlplus::create_filespec(sOutPath, "camera_Registered", "ply"));
 
-  exportToPly(vec_camPosGT, vec_camPosComputed,
+  exportToPly(vec_camCenterGT, vec_camCenterComputed,
     stlplus::create_filespec(sOutPath, "camera_original", "ply"));
 
   //-- Export residual to the HTML report
   {
     using namespace htmlDocument;
-    _htmlDocStream->pushInfo("<hr>");
-    _htmlDocStream->pushInfo(htmlMarkup("h1", "Compare GT camera position and looking direction."));
-    _htmlDocStream->pushInfo(" Display per camera after a 3D similarity estimation:<br>");
-    _htmlDocStream->pushInfo("<ul><li>Baseline_Residual -> localization error of camera center to GT (in GT unit),</li>");
-    _htmlDocStream->pushInfo("<li>Angular_residuals -> direction error as an angular degree error.</li></ul>");
+    const std::string sNewLine = "<br>";
+    const std::string sFullLine = "<hr>";
+    
+    htmlDocStream->pushInfo(sFullLine);
+    htmlDocStream->pushInfo(htmlMarkup("h1", "Compare GT camera position and looking direction."));
+    htmlDocStream->pushInfo(" Display per camera after a 3D similarity estimation:<br>");
+    htmlDocStream->pushInfo("<ul><li>Baseline_Residual -> localization error of camera center to GT (in GT unit),</li>");
+    htmlDocStream->pushInfo("<li>Angular_residuals -> direction error as an angular degree error.</li></ul>");
 
+    htmlDocStream->pushInfo(htmlMarkup("h2","Baseline errors"));
     std::ostringstream os;
     os << "Baseline_Residual=[";
-    std::copy(vec_residualErrors.begin(), vec_residualErrors.end(), std::ostream_iterator<double>(os, " "));
+    std::copy(vec_baselineErrors.begin(), vec_baselineErrors.end(), std::ostream_iterator<double>(os, " "));
     os <<"];";
-    _htmlDocStream->pushInfo("<hr>");
-    _htmlDocStream->pushInfo( htmlDocument::htmlMarkup("pre", os.str()));
+    htmlDocStream->pushInfo(sFullLine);
+    htmlDocStream->pushInfo( htmlDocument::htmlMarkup("pre", os.str()));
+
+    os.str("");
+    os << "min = " << minB;
+    htmlDocStream->pushInfo(sFullLine);
+    htmlDocStream->pushInfo( htmlDocument::htmlMarkup("pre", os.str()));
+
+    os.str("");
+    os << "max = " << maxB;
+    htmlDocStream->pushInfo( htmlDocument::htmlMarkup("pre", os.str()));
 
     os.str("");
     os << "mean = " << meanB;
-    _htmlDocStream->pushInfo("<hr>");
-    _htmlDocStream->pushInfo( htmlDocument::htmlMarkup("pre", os.str()));
+    htmlDocStream->pushInfo( htmlDocument::htmlMarkup("pre", os.str()));
 
     os.str("");
     os << "median = " << medianB;
-    _htmlDocStream->pushInfo( htmlDocument::htmlMarkup("pre", os.str()));
-    _htmlDocStream->pushInfo("<hr>");
+    htmlDocStream->pushInfo( htmlDocument::htmlMarkup("pre", os.str()));
 
+    const double maxRange = *std::max_element(vec_baselineErrors.begin(), vec_baselineErrors.end());
+    Histogram<double> baselineHistogram(0.0, maxRange, 50);
+    baselineHistogram.Add(vec_baselineErrors.begin(), vec_baselineErrors.end());
+
+    svg::svgHisto svg_BaselineHistogram;
+    svg_BaselineHistogram.draw(baselineHistogram.GetHist(), std::pair<float, float>(0.f, maxRange),
+                   stlplus::create_filespec(sOutPath, "baseline_histogram", "svg"),
+                   600, 200);
+
+    os.str("");
+    os << sNewLine << "Baseline errors histogram" << sNewLine;
+    os << "<img src=\""
+            << "baseline_histogram.svg"
+            << "\" height=\"300\" width =\"800\">\n";
+    htmlDocStream->pushInfo(os.str());
+    
+    {
+      std::vector<double> xvalues(vec_baselineErrors.size());
+      std::iota(xvalues.begin(), xvalues.end(), 0);
+      std::pair< std::pair<double,double>, std::pair<double,double> > range =
+        autoJSXGraphViewport<double>(xvalues, vec_baselineErrors);
+      range.first.first = 0;
+      range.first.second = xvalues.size()+1;
+      htmlDocument::JSXGraphWrapper jsxGraph;
+      jsxGraph.init("baselineErrors",1000,300);
+      jsxGraph.addXYChart(xvalues, vec_baselineErrors, "line,point");
+      jsxGraph.UnsuspendUpdate();
+      jsxGraph.setViewport(range);
+      jsxGraph.close();
+      htmlDocStream->pushInfo(jsxGraph.toStr());
+      
+    }
+    htmlDocStream->pushInfo(sFullLine);
+    
+    htmlDocStream->pushInfo(htmlMarkup("h2","Angular errors"));
     os.str("");
     os << "Angular_residuals=[";
     std::copy(vec_angularErrors.begin(), vec_angularErrors.end(), std::ostream_iterator<double>(os, " "));
     os <<"];";
-    _htmlDocStream->pushInfo("<br>");
-    _htmlDocStream->pushInfo( htmlDocument::htmlMarkup("pre", os.str()));
+    htmlDocStream->pushInfo("<br>");
+    htmlDocStream->pushInfo( htmlDocument::htmlMarkup("pre", os.str()));
+
+    os.str("");
+    os << "min = " << minA;
+    htmlDocStream->pushInfo(sFullLine);
+    htmlDocStream->pushInfo( htmlDocument::htmlMarkup("pre", os.str()));
+
+    os.str("");
+    os << "max = " << maxA;
+    htmlDocStream->pushInfo( htmlDocument::htmlMarkup("pre", os.str()));
 
     os.str("");
     os << "mean = " << meanA;
-    _htmlDocStream->pushInfo("<hr>");
-    _htmlDocStream->pushInfo( htmlDocument::htmlMarkup("pre", os.str()));
+    htmlDocStream->pushInfo( htmlDocument::htmlMarkup("pre", os.str()));
 
     os.str("");
     os << "median = " << medianA;
-    _htmlDocStream->pushInfo( htmlDocument::htmlMarkup("pre", os.str()));
-    _htmlDocStream->pushInfo("<hr>");
+    htmlDocStream->pushInfo( htmlDocument::htmlMarkup("pre", os.str()));
+    
+    const double maxRangeAngular = *std::max_element(vec_angularErrors.begin(), vec_angularErrors.end());
+    Histogram<double> angularHistogram(0.0, maxRangeAngular, 50);
+    angularHistogram.Add(vec_angularErrors.begin(), vec_angularErrors.end());
+
+    svg::svgHisto svg_AngularHistogram;
+    svg_AngularHistogram.draw(angularHistogram.GetHist(), std::pair<float, float>(0.f, maxRangeAngular),
+                   stlplus::create_filespec(sOutPath, "angular_histogram", "svg"),
+                   600, 200);
+
+    os.str("");
+    os << sNewLine << "Angular errors histogram" << sNewLine;
+    os << "<img src=\""
+            << "angular_histogram.svg"
+            << "\" height=\"300\" width =\"800\">\n";
+    htmlDocStream->pushInfo(os.str());
+    
+    {
+      std::vector<double> xvalues(vec_angularErrors.size());
+      std::iota(xvalues.begin(), xvalues.end(), 0);
+      std::pair< std::pair<double, double>, std::pair<double, double> > range =
+              autoJSXGraphViewport<double>(xvalues, vec_angularErrors);
+      range.first.first = 0;
+      range.first.second = xvalues.size()+1;
+      htmlDocument::JSXGraphWrapper jsxGraph;
+      jsxGraph.init("AngularErrors", 1000, 300);
+      jsxGraph.addXYChart(xvalues, vec_angularErrors, "line,point");
+      jsxGraph.UnsuspendUpdate();
+      jsxGraph.setViewport(range);
+      jsxGraph.close();
+      htmlDocStream->pushInfo(jsxGraph.toStr());
+
+    }
+    htmlDocStream->pushInfo(sFullLine);
   }
 }
 

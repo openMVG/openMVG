@@ -188,13 +188,13 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
       openMVG::tracks::TracksBuilder tracksBuilder;
       {
         PairWiseMatches map_matchesIJK;
-        if(putatives_matches.find(std::make_pair(I,J)) != putatives_matches.end())
+        if (putatives_matches.count(std::make_pair(I,J)))
           map_matchesIJK.insert(*putatives_matches.find(std::make_pair(I,J)));
 
-        if(putatives_matches.find(std::make_pair(I,K)) != putatives_matches.end())
+        if (putatives_matches.count(std::make_pair(I,K)))
           map_matchesIJK.insert(*putatives_matches.find(std::make_pair(I,K)));
 
-        if(putatives_matches.find(std::make_pair(J,K)) != putatives_matches.end())
+        if (putatives_matches.count(std::make_pair(J,K)))
           map_matchesIJK.insert(*putatives_matches.find(std::make_pair(J,K)));
 
         if (map_matchesIJK.size() >= 2) {
@@ -231,9 +231,9 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
                 std::advance(iterJ,1);
                 std::advance(iterK,2);
 
-                triplets_matches[std::make_pair(I,J)].push_back(IndMatch(iterI->second, iterJ->second));
-                triplets_matches[std::make_pair(J,K)].push_back(IndMatch(iterJ->second, iterK->second));
-                triplets_matches[std::make_pair(I,K)].push_back(IndMatch(iterI->second, iterK->second));
+                triplets_matches[std::make_pair(I,J)].emplace_back(iterI->second, iterJ->second);
+                triplets_matches[std::make_pair(J,K)].emplace_back(iterJ->second, iterK->second);
+                triplets_matches[std::make_pair(I,K)].emplace_back(iterI->second, iterK->second);
               }
             }
           }

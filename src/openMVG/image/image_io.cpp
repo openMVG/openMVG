@@ -658,6 +658,7 @@ bool Read_PNG_ImageHeader(const char * filename, ImageHeader * imgheader)
   size_t readcnt = fread(pbSig, 1, 8, file);
   (void) readcnt;
   if (png_sig_cmp(pbSig, 0, 8)) {
+    fclose(file);
     return false;
   }
 
@@ -666,12 +667,14 @@ bool Read_PNG_ImageHeader(const char * filename, ImageHeader * imgheader)
   png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL,
     (png_error_ptr)NULL, (png_error_ptr)NULL);
   if (!png_ptr) {
+    fclose(file);
     return false;
   }
   png_infop info_ptr = NULL;
   info_ptr = png_create_info_struct(png_ptr);
   if (!info_ptr)  {
     png_destroy_read_struct(&png_ptr, NULL, NULL);
+    fclose(file);
     return false;
   }
 
@@ -718,6 +721,7 @@ bool Read_JPG_ImageHeader(const char * filename, ImageHeader * imgheader)
 
   if (setjmp(jerr.setjmp_buffer)) {
     jpeg_destroy_decompress(&cinfo);
+    fclose(file);
     return false;
   }
 
@@ -754,6 +758,7 @@ bool Read_PNM_ImageHeader(const char * filename, ImageHeader * imgheader)
   // Check magic number.
   res = size_t(fscanf(file, "P%d", &magicnumber));
   if (res != 1) {
+    fclose(file);
     return false;
   }
   // Test if we have a Gray or RGB image, else return false
@@ -763,6 +768,7 @@ bool Read_PNM_ImageHeader(const char * filename, ImageHeader * imgheader)
     case 6:
       break;
     default:
+      fclose(file);
       return false;
   }
 
@@ -773,9 +779,13 @@ bool Read_PNM_ImageHeader(const char * filename, ImageHeader * imgheader)
   // whitespace character, and only one whitespace char is eaten after the
   // third int token is parsed.
   while (valuesIndex < NUM_VALUES) {
-    char nextChar ;
+    char nextChar;
     res = fread(&nextChar,1,1,file);
-    if (res == 0) return false; // read failed, EOF?
+    if (res == 0)
+    {
+      fclose(file);
+      return false; // read failed, EOF?
+    }
 
     if (isspace(nextChar)) {
       if (inToken) { // we were reading a token, so this white space delimits it
@@ -784,26 +794,36 @@ bool Read_PNM_ImageHeader(const char * filename, ImageHeader * imgheader)
         values[valuesIndex++] = atoi(intBuffer);
         intIndex = 0; // reset for next int token
         // to conform with current image class
-        if (valuesIndex == 3 && values[2] > 255) return false;
+        if (valuesIndex == 3 && values[2] > 255)  {
+          fclose(file);
+          return false;
+        }
       }
     }
     else if (isdigit(nextChar)) {
       inToken = 1 ; // in case it's not already set
       intBuffer[intIndex++] = nextChar ;
-      if (intIndex == INT_BUFFER_SIZE) // tokens should never be this long
+      if (intIndex == INT_BUFFER_SIZE) {// tokens should never be this long
+        fclose(file);
         return false;
+      }
     }
     else if (nextChar == '#') {
       do { // eat all characters from input stream until newline
         res = fread(&nextChar,1,1,file);
       } while (res == 1 && nextChar != '\n');
-      if (res == 0) return false; // read failed, EOF?
+      if (res == 0) {
+        fclose(file);
+        return false; // read failed, EOF?
+      }
     }
     else {
       // Encountered a non-whitespace, non-digit outside a comment - bail out.
+      fclose(file);
       return false;
     }
   }
+  fclose(file);
   if (imgheader)
   {
     // Save value and return
@@ -811,7 +831,6 @@ bool Read_PNM_ImageHeader(const char * filename, ImageHeader * imgheader)
     imgheader->height = values[1];
     return true;
   }
-  fclose(file);
   return false;
 }
 

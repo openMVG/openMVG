@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include <openMVG/features/image_describer.hpp>
+#include "image_describer.hpp"
 #if HAVE_CCTAG
-#include <openMVG/features/regions_factory.hpp>
+#include "regions_factory.hpp"
 #endif
 #include <openMVG/matching/indMatch.hpp>
 
@@ -67,7 +67,8 @@ void saveFeatures2SVG(const std::string &inputImagePath,
 void saveFeatures2SVG(const std::string &inputImagePath,
                       const std::pair<size_t,size_t> & imageSize,
                       const Mat &points,
-                      const std::string &outputSVGPath);
+                      const std::string &outputSVGPath,
+                      const std::vector<size_t> *inliers = nullptr);
 
 #if HAVE_CCTAG
 

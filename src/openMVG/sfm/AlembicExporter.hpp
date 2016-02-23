@@ -65,6 +65,11 @@ public:
                            const float sensorWidth_mm=36.0);
   
   /**
+   * @brief Register keyframe on the previous values
+   */
+  void jumpKeyframe();
+  
+  /**
    * @brief Add SfM Data
    * 
    * @param sfmdata SfM_Data container
@@ -84,7 +89,7 @@ private:
   unsigned int counter;
   Alembic::AbcGeom::OXform mxform;
   Alembic::AbcGeom::OCamera mcamObj;
-  Alembic::AbcGeom::OUInt32Property mpropSensorWidth_pix;
+  Alembic::AbcGeom::OUInt32ArrayProperty mpropSensorSize_pix;
   Alembic::AbcGeom::OStringProperty mimagePlane;
   Alembic::AbcGeom::OUInt32Property mpropViewId;
   Alembic::AbcGeom::OUInt32Property mpropIntrinsicId;

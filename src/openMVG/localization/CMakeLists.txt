@@ -1,22 +1,27 @@
 
-file(
-  GLOB_RECURSE
-  localization_files_header
-  *.hpp
+set(localization_files_headers
+  LocalizationResult.hpp
+  VoctreeLocalizer.hpp
+  optimization.hpp
+  reconstructed_regions.hpp
+  ILocalizer.hpp
 )
-file(
-  GLOB_RECURSE
-  localization_files_cpp
-  *.cpp
+set(localization_files_sources
+  LocalizationResult.cpp
+  VoctreeLocalizer.cpp
+  optimization.cpp
 )
-#file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
-#
-##Remove the unit test files (not been used by the library)
-#list(REMOVE_ITEM localization_files_cpp ${REMOVEFILESUNITTEST})
+
+if (CCTAG_FOUND)
+  list(APPEND localization_files_headers 
+        CCTagLocalizer.hpp)
+  list(APPEND localization_files_sources 
+        CCTagLocalizer.cpp)
+endif()
 
 ADD_LIBRARY(openMVG_localization
-  ${localization_files_header}
-  ${localization_files_cpp})
+  ${localization_files_headers}
+  ${localization_files_sources})
 TARGET_LINK_LIBRARIES(openMVG_localization openMVG_sfm openMVG_voctree openMVG_numeric ${BOOST_LIBRARIES})
 IF(OpenMVG_USE_CCTAG)
   TARGET_LINK_LIBRARIES(openMVG_localization ${CCTAG_LIBRARIES})

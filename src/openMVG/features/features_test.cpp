@@ -17,11 +17,32 @@ using namespace openMVG::features;
 using namespace std;
 using std::string;
 
-//-- Test features
-static const int CARD = 12;
-
+// Define a feature and a container of features
 typedef SIOPointFeature Feature_T;
 typedef std::vector<Feature_T> Feats_T;
+
+// Define a descriptor and a container of descriptors
+static const int DESC_LENGTH = 128;
+typedef Descriptor<float, DESC_LENGTH> Desc_T;
+typedef std::vector<Desc_T> Descs_T;
+
+//--
+//-- Features interface test
+//--
+
+static const int CARD = 12;
+
+TEST(featureIO, NON_EXISTING_FILE) {
+
+  // Try to read a non-existing feature file
+  Feats_T vec_feats;
+  EXPECT_FALSE(loadFeatsFromFile("x.feat", vec_feats));
+
+  // Try to read a non-existing descriptor file
+  Descs_T vec_descs;
+  EXPECT_FALSE(loadDescsFromFile("x.desc", vec_descs));
+  EXPECT_FALSE(loadDescsFromBinFile("x.desc", vec_descs));
+}
 
 TEST(featureIO, ASCII) {
   Feats_T vec_feats;
@@ -30,11 +51,11 @@ TEST(featureIO, ASCII) {
   }
 
   //Save them to a file
-  saveDescsToFile("tempFeats.feat", vec_feats);
+  EXPECT_TRUE(saveFeatsToFile("tempFeats.feat", vec_feats));
 
   //Read the saved data and compare to input (to check write/read IO)
   Feats_T vec_feats_read;
-  loadFeatsFromFile("tempFeats.feat", vec_feats_read);
+  EXPECT_TRUE(loadFeatsFromFile("tempFeats.feat", vec_feats_read));
   EXPECT_EQ(CARD, vec_feats_read.size());
 
   for(int i = 0; i < CARD; ++i) {
@@ -45,12 +66,9 @@ TEST(featureIO, ASCII) {
   }
 }
 
-//-- Test descriptors
-
-static const int DESC_LENGTH = 128;
-typedef Descriptor<float, DESC_LENGTH> Desc_T;
-typedef std::vector<Desc_T> Descs_T;
-
+//--
+//-- Descriptors interface test
+//--
 TEST(descriptorIO, ASCII) {
   // Create an input series of descriptor
   Descs_T vec_descs;
@@ -62,11 +80,11 @@ TEST(descriptorIO, ASCII) {
   }
 
   //Save them to a file
-  saveDescsToFile("tempDescs.desc", vec_descs);
+  EXPECT_TRUE(saveDescsToFile("tempDescs.desc", vec_descs));
 
   //Read the saved data and compare to input (to check write/read IO)
   Descs_T vec_descs_read;
-  loadDescsFromFile("tempDescs.desc", vec_descs_read);
+  EXPECT_TRUE(loadDescsFromFile("tempDescs.desc", vec_descs_read));
   EXPECT_EQ(CARD, vec_descs_read.size());
 
   for(int i = 0; i < CARD; ++i) {
@@ -88,11 +106,11 @@ TEST(descriptorIO, BINARY) {
   }
 
   //Save them to a file
-  saveDescsToBinFile("tempDescsBin.desc", vec_descs);
+  EXPECT_TRUE(saveDescsToBinFile("tempDescsBin.desc", vec_descs));
 
   //Read the saved data and compare to input (to check write/read IO)
   Descs_T vec_descs_read;
-  loadDescsFromBinFile("tempDescsBin.desc", vec_descs_read);
+  EXPECT_TRUE(loadDescsFromBinFile("tempDescsBin.desc", vec_descs_read));
   EXPECT_EQ(CARD, vec_descs_read.size());
 
   for(int i = 0; i < CARD; ++i) {

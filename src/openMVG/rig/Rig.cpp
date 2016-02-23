@@ -57,7 +57,19 @@ void Rig::setTrackingResult(
 
 bool Rig::initializeCalibration()
 {
+  // check that there are cameras
+  assert(_vLocalizationResults.size()>0);
+  
+  // check that all the cameras have the same number of localizationResults
+  const std::size_t sequenceLength = _vLocalizationResults[0].size();
   const std::size_t nCams = _vLocalizationResults.size();
+  
+  for(std::size_t i = 1; i < nCams; ++i)
+  {
+    assert(_vLocalizationResults[i].size() == sequenceLength 
+            && "All cameras must have the same number of images");
+  }
+  
   
   // Tracker of the main cameras
   std::vector<localization::LocalizationResult> & resMainCamera = _vLocalizationResults[0];
@@ -222,11 +234,15 @@ void Rig::displayRelativePoseReprojection(const geometry::Pose3 & relativePose, 
 
 bool Rig::optimizeCalibration()
 {
+  assert(_vRelativePoses.size() > 0);
+  assert(_vLocalizationResults.size() > 0);
+  
   ceres::Problem problem;
 
   // Add relative pose as a parameter block over all witness cameras.
   std::vector<std::vector<double> > vRelativePoses;
-  for (int iRelativePose = 0 ; iRelativePose < _vRelativePoses.size() ; ++iRelativePose )
+  vRelativePoses.reserve(_vRelativePoses.size());
+  for(std::size_t iRelativePose = 0 ; iRelativePose < _vRelativePoses.size() ; ++iRelativePose )
   {
     geometry::Pose3 & pose = _vRelativePoses[iRelativePose];
     
@@ -246,13 +262,16 @@ bool Rig::optimizeCalibration()
     relativePose.push_back(t(2));
 
     vRelativePoses.push_back(relativePose);
-    
-    double * parameter_block = &vRelativePoses.back()[0];
+  }
+  for(std::vector<double> &pose : vRelativePoses)
+  {
+    double * parameter_block = &pose[0];
     problem.AddParameterBlock(parameter_block, 6);
   }
   
   // Add rig pose (i.e. main camera pose) as a parameter block over all views (i.e. timestamps).
   std::vector<std::vector<double> > vMainPoses;
+  vMainPoses.reserve(_vLocalizationResults[0].size());
   for (int iView = 0 ; iView < _vLocalizationResults[0].size() ; ++iView )
   {
     if ( _vLocalizationResults[0][iView].isValid() )
@@ -274,10 +293,12 @@ bool Rig::optimizeCalibration()
       mainPose.push_back(t(2));
 
       vMainPoses.push_back(mainPose);
-      
-      double * parameter_block = &vMainPoses.back()[0];
-      problem.AddParameterBlock(parameter_block, 6);
     }
+  }
+  for(std::vector<double> &pose : vMainPoses)
+  {
+    double * parameter_block = &pose[0];
+    problem.AddParameterBlock(parameter_block, 6);
   }
 
 // The following code can be used if the intrinsics have to be refined in the bundle adjustment
@@ -422,8 +443,8 @@ bool Rig::optimizeCalibration()
   options.preconditioner_type = openMVG_options._preconditioner_type;
   options.linear_solver_type = openMVG_options._linear_solver_type;
   options.sparse_linear_algebra_library_type = openMVG_options._sparse_linear_algebra_library_type;
-  options.minimizer_progress_to_stdout = true;
-  //options.logging_type = ceres::SILENT;
+  options.minimizer_progress_to_stdout = openMVG_options._bVerbose;
+  options.logging_type = ceres::SILENT;
   options.num_threads = 1;//openMVG_options._nbThreads;
   options.num_linear_solver_threads = 1;//openMVG_options._nbThreads;
   
@@ -609,17 +630,20 @@ bool loadRigCalibration(const std::string &filename, std::vector<geometry::Pose3
   
   for(std::size_t cam = 0; cam < numCameras; ++cam)
   {
-    // load the rotatiop part
+    // load the rotation part
     Mat3 rot;
     for(std::size_t i = 0; i < 3; ++i)
       for(std::size_t j = 0; j < 3; ++j)
         fs >> rot(i,j);
     
-    // write the translation part
+    // load the center
     Vec3 center;
     fs >> center(0);
     fs >> center(1);
     fs >> center(2);
+    
+    // add the pose in the vector
+    subposes.push_back(geometry::Pose3(rot, center));
   }
   
   bool isOk = fs.good();
@@ -631,9 +655,9 @@ bool loadRigCalibration(const std::string &filename, std::vector<geometry::Pose3
 //R[0][0] // first camera rotation
 //R[0][1]
 //...
-//t[0] // first camera translation
-//t[1]
-//t[2]
+//C[0] // first camera center
+//C[1]
+//C[2]
 //R[0][0] // second camera rotation
 //...
 bool saveRigCalibration(const std::string &filename, const std::vector<geometry::Pose3> &subposes)
@@ -654,7 +678,7 @@ bool saveRigCalibration(const std::string &filename, const std::vector<geometry:
       for(std::size_t j = 0; j < 3; ++j)
         fs << rot(i,j) << std::endl;
     
-    // write the translation part
+    // write the center
     const Vec3 &center = p.center();
     fs << center(0) << std::endl;
     fs << center(1) << std::endl;

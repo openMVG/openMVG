@@ -70,8 +70,8 @@ int main(int argc, char **argv)
   std::string sOutInterFileExtension = ".ply";
   std::pair<std::string,std::string> initialPairString("","");
   bool bRefineIntrinsics = true;
+  int minInputTrackLength = 2;
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
-  bool matchFilePerImage = false;
   bool allowUserInteraction = true;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -83,7 +83,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('b', initialPairString.second, "initialPairB") );
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_option('f', bRefineIntrinsics, "refineIntrinsics") );
-  cmd.add( make_option('p', matchFilePerImage, "matchFilePerImage") );
+  cmd.add( make_option('t', minInputTrackLength, "minInputTrackLength") );
   cmd.add( make_option('u', allowUserInteraction, "allowUserInteraction") );
 
   try {
@@ -105,6 +105,7 @@ int main(int argc, char **argv)
     << "[-f|--refineIntrinsics] \n"
     << "\t 0-> intrinsic parameters are kept as constant\n"
     << "\t 1-> refine intrinsic parameters (default). \n"
+    << "[-t|--minInputTrackLength N] minimum track length in input of SfM (default: 2)\n"
     << "[-p|--matchFilePerImage] \n"
     << "\t To use one match file per image instead of a global file.\n"
     << "[-u|--allowUserInteraction] Enable/Disable user interactions. (default: true)\n"
@@ -147,40 +148,14 @@ int main(int argc, char **argv)
   // Matches reading
   std::shared_ptr<Matches_Provider> matches_provider = std::make_shared<Matches_Provider>();
 
-  if( !matchFilePerImage )
+  if(!matches_provider->load(sfm_data, sMatchesDir, "f"))
   {
-    // Load the match file
-    const std::string matchFilepath = stlplus::create_filespec(sMatchesDir, "matches.f.txt");
-    std::cout << "Load matches file: " << matchFilepath << std::endl;
-    if (!matches_provider->load(sfm_data, matchFilepath)) {
-      std::cerr << std::endl << "Unable to load matches file: " << matchFilepath << std::endl;
-      return EXIT_FAILURE;
-    }
-  }
-  else
-  {
-    int nbLoadedMatchFiles = 0;
-    // Load one match file per image
-    for (Views::const_iterator it = sfm_data.GetViews().begin();
-      it != sfm_data.GetViews().end(); ++it)
-    {
-      const View * v = it->second.get();
-      const std::string matchFilepath = stlplus::create_filespec(sMatchesDir, std::to_string(v->id_view) + ".matches.f.txt");
-      std::cout << "Load matches file: " << matchFilepath << std::endl;
-      if (stlplus::file_exists(matchFilepath) && !matches_provider->load(sfm_data, matchFilepath)) {
-        std::cerr << std::endl << "Unable to load matches file: " << matchFilepath << std::endl;
-        continue;
-      }
-      ++nbLoadedMatchFiles;
-    }
-    if( nbLoadedMatchFiles == 0 )
-    {
-      std::cerr << std::endl << "No matches file loaded in: " << sMatchesDir << std::endl;
-      return EXIT_FAILURE;
-    }
+    std::cerr << std::endl << "Unable to load matches file from: " << sMatchesDir << std::endl;
+    return EXIT_FAILURE;
   }
 
-  if (sOutDir.empty())  {
+  if (sOutDir.empty())
+  {
     std::cerr << "\nIt is an invalid output directory" << std::endl;
     return EXIT_FAILURE;
   }
@@ -205,9 +180,8 @@ int main(int argc, char **argv)
   // Configure reconstruction parameters
   sfmEngine.Set_bFixedIntrinsics(!bRefineIntrinsics);
   sfmEngine.SetUnknownCameraType(EINTRINSIC(i_User_camera_model));
-
+  sfmEngine.setMinInputTrackLength(minInputTrackLength);
   sfmEngine.setSfmdataInterFileExtension(sOutInterFileExtension);
-
   sfmEngine.setAllowUserInteraction(allowUserInteraction);
 
   // Handle Initial pair parameter
@@ -216,7 +190,7 @@ int main(int argc, char **argv)
     Pair initialPairIndex;
     if(!computeIndexFromImageNames(sfm_data, initialPairString, initialPairIndex))
     {
-        std::cerr << "Could not find the initial pairs <" << initialPairString.first 
+        std::cerr << "Could not find the initial pairs <" << initialPairString.first
           <<  ", " << initialPairString.second << ">!\n";
       return EXIT_FAILURE;
     }

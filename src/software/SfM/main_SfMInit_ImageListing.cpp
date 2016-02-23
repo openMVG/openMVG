@@ -144,7 +144,7 @@ int main(int argc, char **argv)
   std::string sOutputDir;
   std::string sKmatrix;
 
-  int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
+  std::string i_User_camera_model = EINTRINSIC_enumToString(PINHOLE_CAMERA_RADIAL3);
 
   bool b_Group_camera_model = true;
   bool b_use_UID = false;
@@ -178,11 +178,7 @@ int main(int argc, char **argv)
       << "[-f|--focal] (pixels)\n"
       << "[-s|--sensorWidth] (mm)\n"
       << "[-k|--intrinsics] Kmatrix: \"f;0;ppx;0;f;ppy;0;0;1\"\n"
-      << "[-c|--camera_model] Camera model type:\n"
-      << "\t 1: Pinhole\n"
-      << "\t 2: Pinhole radial 1\n"
-      << "\t 3: Pinhole radial 3 (default)\n"
-      << "\t 4: Pinhole brown 2\n"
+      << "[-c|--camera_model] Camera model type (pinhole, radial1, radial3, brown or fisheye)\n"
       << "[-g|--group_camera_model]\n"
       << "\t 0-> each view have it's own camera intrinsic parameters,\n"
       << "\t 1-> (default) view can share some camera intrinsic parameters\n"
@@ -208,7 +204,7 @@ int main(int argc, char **argv)
             << "--use_UID " << b_use_UID << std::endl
             << "--storeMetadata " << b_storeMetadata << std::endl;
 
-  const EINTRINSIC e_User_camera_model = EINTRINSIC(i_User_camera_model);
+  const EINTRINSIC e_User_camera_model = EINTRINSIC_stringToEnum(i_User_camera_model);
   double ppx = -1.0, ppy = -1.0;
 
   if(!sImageDir.empty() && !sJsonFile.empty())
@@ -236,16 +232,16 @@ int main(int argc, char **argv)
     }
   }
 
+  if (sKmatrix.size() > 0 && userFocalLengthPixel != -1.0)
+  {
+    std::cerr << "\nCannot combine -f and -k options" << std::endl;
+    return EXIT_FAILURE;
+  }
+
   if (sKmatrix.size() > 0 &&
     !checkIntrinsicStringValidity(sKmatrix, userFocalLengthPixel, ppx, ppy) )
   {
     std::cerr << "\nInvalid K matrix input" << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  if (sKmatrix.size() > 0 && userFocalLengthPixel != -1.0)
-  {
-    std::cerr << "\nCannot combine -f and -k options" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -351,13 +347,11 @@ int main(int argc, char **argv)
       const std::string sCamName = exifReader.getBrand();
       const std::string sCamModel = exifReader.getModel();
 
-      std::cout << "Search sensor width in file database." << std::endl;
       Datasheet datasheet;
       if ( getInfo( sCamName, sCamModel, vec_database, datasheet ))
       {
         // The camera model was found in the database so we can compute it's approximated focal length
         ccdw = datasheet._sensorSize;
-        std::cout << "Camera found in database. Sensor width = " << ccdw << std::endl;
         allExifData.emplace("sensor_width", std::to_string(ccdw));
       }
       else
@@ -437,6 +431,10 @@ int main(int argc, char **argv)
           intrinsic =std::make_shared<Pinhole_Intrinsic_Brown_T2>
             (width, height, focalPix, ppx, ppy, 0.0, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
         break;
+        case PINHOLE_CAMERA_FISHEYE:
+          intrinsic =std::make_shared<Pinhole_Intrinsic_Fisheye>
+            (width, height, focalPix, ppx, ppy, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
+        break;
         default:
           std::cerr << "Error: unknown camera model: " << (int) e_User_camera_model << std::endl;
           return EXIT_FAILURE;
@@ -462,11 +460,11 @@ int main(int argc, char **argv)
     std::shared_ptr<View> currentView;
     if(!b_storeMetadata)
     {
-      currentView.reset(new View(*iter_image, views.size(), views.size(), views.size(), width, height));
+      currentView.reset(new View(*iter_image, id_view, views.size(), views.size(), width, height));
     }
     else
     {
-      currentView.reset(new View_Metadata(*iter_image, views.size(), views.size(), views.size(), width, height, allExifData));
+      currentView.reset(new View_Metadata(*iter_image, id_view, views.size(), views.size(), width, height, allExifData));
     }
 
     // Add intrinsic related to the image (if any)

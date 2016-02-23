@@ -22,7 +22,7 @@ public:
   ColorHarmonizationEngineGlobal(
     const std::string & sSfM_Data_Filename,
     const std::string & sMatchesPath,
-    const std::string & sMatchesFile,
+    const std::string & sMatchesGeometricModel,
     const std::string & sOutDirectory,
     const int selectionMethod = -1,
     const int imgRef = -1);
@@ -48,7 +48,7 @@ private:
 
   int _selectionMethod;
   int _imgRef;
-  std::string _sMatchesFile;
+  std::string _sMatchesGeometricModel;
 
   // -----
   // Input data

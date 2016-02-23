@@ -1,10 +1,10 @@
 #include "VoctreeLocalizer.hpp"
-#include "svgVisualization.hpp"
 
 #include <openMVG/sfm/sfm_data_io.hpp>
 #include <openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp>
 #include <openMVG/sfm/sfm_data_BA_ceres.hpp>
 #include <openMVG/features/io_regions_type.hpp>
+#include <openMVG/features/svgVisualization.hpp>
 #ifdef HAVE_CCTAG
 #include <openMVG/features/cctag/SIFT_CCTAG_describer.hpp>
 #endif
@@ -15,6 +15,8 @@
 #include <openMVG/matching_image_collection/F_ACRobust.hpp>
 #include <openMVG/numeric/numeric.h>
 #include <openMVG/robust_estimation/guided_matching.hpp>
+#include <openMVG/logger.hpp>
+
 #include <third_party/progress/progress.hpp>
 //#include <cereal/archives/json.hpp>
 
@@ -22,10 +24,6 @@
 
 #include <algorithm>
 #include <chrono>
-
-//@fixme move/redefine
-#define POPART_COUT(x) std::cout << x << std::endl
-#define POPART_CERR(x) std::cerr << x << std::endl
 
 namespace openMVG {
 namespace localization {
@@ -135,9 +133,7 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
   // then we can store only those associated to 3D points
   //? can we use Feature_Provider to load the features and filter them later?
 
-  initDatabase(vocTreeFilepath, weightsFilepath, descriptorsFolder);
-
-  _isInit = true;
+  _isInit = initDatabase(vocTreeFilepath, weightsFilepath, descriptorsFolder);
 }
 
 bool VoctreeLocalizer::localize(const std::unique_ptr<features::Regions> &genQueryRegions,
@@ -883,14 +879,21 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   if(!refineStatus)
     POPART_COUT("Refine pose could not improve the estimation of the camera pose.");
 
+  localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, true);
+  
   {
     // just temporary code to evaluate the estimated pose @todo remove it
     POPART_COUT("R refined\n" << pose.rotation());
     POPART_COUT("t refined\n" << pose.translation());
     POPART_COUT("K refined\n" << queryIntrinsics.K());
+
+    const Mat2X residuals = localizationResult.computeResiduals();
+
+    const auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
+    POPART_COUT("RMSE = " << std::sqrt(sqrErrors.mean())
+              << " min = " << std::sqrt(sqrErrors.minCoeff())
+              << " max = " << std::sqrt(sqrErrors.maxCoeff()));
   }
-    
-  localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, true);
   
   return localizationResult.isValid();
 }
@@ -898,15 +901,35 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
 
 
 bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matcher, 
-                    const cameras::IntrinsicBase * queryIntrinsics,   // the intrinsics of the image we are using as reference
+                    const cameras::IntrinsicBase * queryIntrinsicsBase,   // the intrinsics of the image we are using as reference
                     const Reconstructed_RegionsT & matchedRegions,
-                    const cameras::IntrinsicBase * matchedIntrinsics,
+                    const cameras::IntrinsicBase * matchedIntrinsicsBase,
                     const float fDistRatio,
                     const bool b_guided_matching,
                     const std::pair<size_t,size_t> & imageSizeI,     // size of the first image @fixme change the API of the kernel!! 
                     const std::pair<size_t,size_t> & imageSizeJ,     // size of the first image
                     std::vector<matching::IndMatch> & vec_featureMatches) const
 {
+  // get the intrinsics of the query camera
+  if ((queryIntrinsicsBase != nullptr) && !isPinhole(queryIntrinsicsBase->getType()))
+  {
+    //@fixme maybe better to throw something here
+    POPART_CERR("Only Pinhole cameras are supported!");
+    return false;
+  }
+  const cameras::Pinhole_Intrinsic *queryIntrinsics = (const cameras::Pinhole_Intrinsic*)(queryIntrinsicsBase);
+  
+  // get the intrinsics of the matched view
+  if ((matchedIntrinsicsBase != nullptr) &&  !isPinhole(matchedIntrinsicsBase->getType()) )
+  {
+    //@fixme maybe better to throw something here
+    POPART_CERR("Only Pinhole cameras are supported!");
+    return false;
+  }
+  const cameras::Pinhole_Intrinsic *matchedIntrinsics = (const cameras::Pinhole_Intrinsic*)(matchedIntrinsicsBase);
+  
+  const bool canBeUndistorted = (queryIntrinsicsBase != nullptr) && (matchedIntrinsicsBase != nullptr);
+    
   // A. Putative Features Matching
   bool matchWorked = matcher.Match(fDistRatio, matchedRegions._regions, vec_featureMatches);
   if (!matchWorked)
@@ -923,8 +946,21 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
   for(int i = 0; i < vec_featureMatches.size(); ++i)
   {
     const matching::IndMatch& match = vec_featureMatches[i];
-    featuresI.col(i) = matcher.getDatabaseRegions()->GetRegionPosition(match._i);
-    featuresJ.col(i) = matchedRegions._regions.GetRegionPosition(match._j);
+    const Vec2 &queryPoint = matcher.getDatabaseRegions()->GetRegionPosition(match._i);
+    const Vec2 &matchedPoint = matchedRegions._regions.GetRegionPosition(match._j);
+    
+    if(canBeUndistorted)
+    {
+      // undistort the points for the query image
+      featuresI.col(i) = queryIntrinsics->get_ud_pixel(queryPoint);
+      // undistort the points for the query image
+      featuresJ.col(i) = matchedIntrinsics->get_ud_pixel(matchedPoint);
+    }
+    else
+    {
+      featuresI.col(i) = queryPoint;
+      featuresJ.col(i) = matchedPoint;
+    }
   }
   // perform the geometric filtering
   matching_image_collection::GeometricFilter_FMatrix_AC geometricFilter(4.0);
@@ -966,9 +1002,9 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
             Mat3,
             openMVG::fundamental::kernel::EpipolarDistanceError>(
             geometricFilter.m_F,
-            queryIntrinsics, // cameras::IntrinsicBase of the matched image
+            queryIntrinsicsBase, // cameras::IntrinsicBase of the matched image
             *matcher.getDatabaseRegions(), // features::Regions
-            matchedIntrinsics, // cameras::IntrinsicBase of the query image
+            matchedIntrinsicsBase, // cameras::IntrinsicBase of the query image
             matchedRegions._regions, // features::Regions
             Square(geometricFilter.m_dPrecision_robust),
             Square(fDistRatio),

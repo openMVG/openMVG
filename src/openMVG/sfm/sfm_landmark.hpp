@@ -23,6 +23,11 @@ struct Observation
   Vec2 x;
   IndexT id_feat;
 
+  bool operator==(const Observation& other) const {
+    return AreVecNearEqual(x, other.x, 1e-6) &&
+            id_feat == other.id_feat;
+  }
+
   // Serialization
   template <class Archive>
   void save( Archive & ar) const
@@ -58,10 +63,16 @@ struct Landmark
     , obs(observations)
     , rgb(color)
   {}
-  
-  Observations obs;
+
   Vec3 X;
   image::RGBColor rgb;    //!> the color associated to the point
+  Observations obs;
+
+  bool operator==(const Landmark& other) const {
+    // color is ignored
+    return AreVecNearEqual(X, other.X, 1e-3) &&
+            obs == other.obs;
+  }
 
   // Serialization
   template <class Archive>

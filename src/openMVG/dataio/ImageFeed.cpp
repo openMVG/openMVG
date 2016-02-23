@@ -51,6 +51,7 @@ private:
 private:
   bool _isInit;
   bool _withCalibration;
+  // It contains the images to be fed
   std::queue<std::string> _images;
   cameras::Pinhole_Intrinsic_Radial_K3 _camIntrinsics;
   
@@ -126,15 +127,28 @@ ImageFeed::FeederImpl::FeederImpl(const std::string imagePath, const std::string
     std::cout << "directory feedImage\n";
     // if it is a directory, list all the images and add them to the list
     bf::directory_iterator iterator(imagePath);
+    // since some OS will provide the files in a random order, first store them
+    // in a priority queue and then fill the _image queue with the alphabetical
+    // order from the priority queue
+    std::priority_queue<std::string, 
+                    std::vector<std::string>, 
+                    std::greater<std::string> > tmpSorter;
     for(; iterator != bf::directory_iterator(); ++iterator)
     {
       // get the extension of the current file to check whether it is an image
       const std::string ext = iterator->path().extension().string();
       if(FeederImpl::isSupported(ext))
       {
-        _images.push(iterator->path().string());
+        tmpSorter.push(iterator->path().string());
       }
     }
+    // put all the retrieve files inside the queue
+    while(!tmpSorter.empty())
+    {
+      _images.push(tmpSorter.top());
+      tmpSorter.pop();
+    }
+    
     _withCalibration = !calibPath.empty();
     _jsonMode = false;
     _isInit = true;
@@ -194,7 +208,7 @@ bool ImageFeed::FeederImpl::next(image::Image<unsigned char> &imageGray,
     if (!image::ReadImage(imageName.c_str(), &imageGray))
     {
       std::cerr << "Error while opening image " << imageName << std::endl;
-      return false;
+      throw std::invalid_argument("Error while opening image " + imageName);
     }
     _images.pop();
     return true;
@@ -226,7 +240,7 @@ bool ImageFeed::FeederImpl::feedWithJson(image::Image<unsigned char> &imageGray,
     return false;
   }
   // get the associated Intrinsics
-  if((view->id_intrinsic == UndefinedIndexT) or (!_sfmdata.GetIntrinsics().count(view->id_intrinsic)))
+  if((view->id_intrinsic == UndefinedIndexT) || (!_sfmdata.GetIntrinsics().count(view->id_intrinsic)))
   {
     std::cout << "Image "<< imageName << " does not have associated intrinsics" << std::endl;
     hasIntrinsics = false;
@@ -280,7 +294,7 @@ bool ImageFeed::isInit() const
 bool ImageFeed::isSupported(const std::string &extension)
 {
   std::string ext = boost::to_lower_copy(extension);
-  if(ext == ".json" or ext == ".txt")
+  if(ext == ".json" || ext == ".txt")
   {
     return true;
   }

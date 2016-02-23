@@ -171,6 +171,7 @@ void SfM_Data_Structure_Computation_Robust::robust_triangulation(SfM_Data & sfm_
 }
 
 /// Robustly try to estimate the best 3D point using a ransac Scheme
+/// A point must be seen in at least 3 views
 /// Return true for a successful triangulation
 bool SfM_Data_Structure_Computation_Robust::robust_triangulation(
   const SfM_Data & sfm_data,
@@ -179,6 +180,11 @@ bool SfM_Data_Structure_Computation_Robust::robust_triangulation(
   const IndexT min_required_inliers,
   const IndexT min_sample_index) const
 {
+  if (obs.size() < 3)
+  {
+    return false;
+  }
+
   const double dThresholdPixel = 4.0; // TODO: make this parameter customizable
 
   const IndexT nbIter = obs.size(); // TODO: automatic computation of the number of iterations?
