@@ -17,13 +17,13 @@
 
 namespace openMVG
 {
-  /**
-  * @brief Namespace handling various Camera classes and functions
-  */
-  namespace cameras
-  {
+/**
+* @brief Namespace handling various Camera classes and functions
+*/
+namespace cameras
+{
 
-  }
+}
 }
 
 
