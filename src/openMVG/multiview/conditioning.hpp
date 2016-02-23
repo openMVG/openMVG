@@ -34,40 +34,90 @@
 //  that make scale and coordinate origin invariant.
 // The implementation follows Algorithm 4.2 from HZ page 109.
 
-namespace openMVG {
+namespace openMVG
+{
 
-// Point conditioning :
-void PreconditionerFromPoints(const Mat &points, Mat3 *T);
+/**
+* @brief Compute conditioning matrix from input points
+* @param points Input points
+* @param[out] T Output conditioning matrix
+*/
+void PreconditionerFromPoints( const Mat &points, Mat3 *T );
 
-/// Normalize input point for a given T transform matrix
-void ApplyTransformationToPoints(const Mat &points,
-                                 const Mat3 &T,
-                                 Mat *transformed_points);
+/**
+* @brief Normalize input point for a given T transform matrix
+* @param points Input points to normalize
+* @param T Input conditioning matrix
+* @param[out] transformed_points transformed (ie: conditioned ) points
+*/
+void ApplyTransformationToPoints( const Mat &points,
+                                  const Mat3 &T,
+                                  Mat *transformed_points );
 
-// Normalize point in [-.5, .5] and return transformation matrix
-void NormalizePoints(const Mat &points,
-                     Mat *normalized_points,
-                     Mat3 *T);
-
-/// Point conditioning (compute Transformation matrix)
-void PreconditionerFromPoints(int width, int height, Mat3 *T);
-
-///  Normalize point rom image coordinates to [-.5, .5]
-void NormalizePoints(const Mat &points,
-                     Mat *normalized_points,
-                     Mat3 *T, int width, int height);
+/**
+* @brief Normalize point in [-.5, .5] and return transformation matrix
+* @param points Input points
+* @param[out] normalized_points Points after conditioning
+* @param[out] T Conditioning matrix used to normalize input points
+*/
+void NormalizePoints( const Mat &points,
+                      Mat *normalized_points,
+                      Mat3 *T );
 
 
-/// Unnormalize using Inverse
-struct UnnormalizerI {
-  // Denormalize the results. See HZ page 109.
-  static void Unnormalize(const Mat3 &T1, const Mat3 &T2, Mat3 *H);
+/**
+* @brief Compute conditioning from a 2d range
+* @param width First range upper bound
+* @param height Second range upper bound
+* @param[out] Transformation matrix
+* @note Transformation compress input range to [ -sqrt(2) ; sqrt(2)]
+* @note Range is [0;width]x[0;height]
+*/
+void PreconditionerFromPoints( int width, int height, Mat3 *T );
+
+/**
+* @brief Normalize point rom image coordinates to [- sqrt(2) , sqrt(2) ]
+* @param points Input points
+* @param[out] normalized_points Normalized points
+* @param[out] T Normalization matrix used to normalize points
+* @param width Range of points
+* @param height Range of points
+*/
+void NormalizePoints( const Mat &points,
+                      Mat *normalized_points,
+                      Mat3 *T, int width, int height );
+
+
+/**
+* @brief Unnormalize using Inverse
+*/
+struct UnnormalizerI
+{
+  /**
+  * @brief Denormalize the results.
+  * @ref Multiple View Geometry - Richard Hartley, Andrew Zisserman - second edition
+  * @see HZ page 109, H = T-1 H T
+  * @param T1 Input transformation of first dataset
+  * @param T2 Input transformation of second dataset
+  * @param H Denormalization transformation
+  */
+  static void Unnormalize( const Mat3 &T1, const Mat3 &T2, Mat3 *H );
 };
 
-/// Unnormalize using Transpose
-struct UnnormalizerT {
-  // Denormalize the results. See HZ page 109.
-  static void Unnormalize(const Mat3 &T1, const Mat3 &T2, Mat3 *H);
+/**
+* Unnormalize using Transpose
+*/
+struct UnnormalizerT
+{
+  /**
+  * @brief Denormalize the results.
+  * @ref Multiple View Geometry - Richard Hartley, Andrew Zisserman
+  * @see HZ page 109, H = T-1 H T
+  * @param T1 Input transformation of first dataset
+  * @param T2 Input transformation of second dataset
+  * @param H Denormalization transformation
+  */
+  static void Unnormalize( const Mat3 &T1, const Mat3 &T2, Mat3 *H );
 };
 
 } //namespace openMVG
