@@ -177,7 +177,7 @@ template<typename _Scalar> class AlignedVector3
     }
 
     template<typename Derived>
-    inline bool isApprox(const MatrixBase<Derived>& other, RealScalar eps=NumTraits<Scalar>::dummy_precision()) const
+    inline bool isApprox(const MatrixBase<Derived>& other, const RealScalar& eps=NumTraits<Scalar>::dummy_precision()) const
     {
       return m_coeffs.template head<3>().isApprox(other,eps);
     }

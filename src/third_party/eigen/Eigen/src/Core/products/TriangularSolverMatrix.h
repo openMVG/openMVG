@@ -115,8 +115,9 @@ EIGEN_DONT_INLINE void triangular_solve_matrix<Scalar,Index,OnTheLeft,Mode,Conju
           {
             // TODO write a small kernel handling this (can be shared with trsv)
             Index i  = IsLower ? k2+k1+k : k2-k1-k-1;
-            Index s  = IsLower ? k2+k1 : i+1;
             Index rs = actualPanelWidth - k - 1; // remaining size
+            Index s  = TriStorageOrder==RowMajor ? (IsLower ? k2+k1 : i+1)
+                                                 :  IsLower ? i+1 : i-rs;
 
             Scalar a = (Mode & UnitDiag) ? Scalar(1) : Scalar(1)/conj(tri(i,i));
             for (Index j=j2; j<j2+actual_cols; ++j)
@@ -133,7 +134,6 @@ EIGEN_DONT_INLINE void triangular_solve_matrix<Scalar,Index,OnTheLeft,Mode,Conju
               }
               else
               {
-                Index s = IsLower ? i+1 : i-rs;
                 Scalar b = (other(i,j) *= a);
                 Scalar* r = &other(s,j);
                 const Scalar* l = &tri(s,i);
@@ -302,9 +302,12 @@ EIGEN_DONT_INLINE void triangular_solve_matrix<Scalar,Index,OnTheRight,Mode,Conj
                 for (Index i=0; i<actual_mc; ++i)
                   r[i] -= a[i] * b;
               }
-              Scalar b = (Mode & UnitDiag) ? Scalar(1) : Scalar(1)/conj(rhs(j,j));
-              for (Index i=0; i<actual_mc; ++i)
-                r[i] *= b;
+              if((Mode & UnitDiag)==0)
+              {
+                Scalar b = conj(rhs(j,j));
+                for (Index i=0; i<actual_mc; ++i)
+                  r[i] /= b;
+              }
             }
 
             // pack the just computed part of lhs to A

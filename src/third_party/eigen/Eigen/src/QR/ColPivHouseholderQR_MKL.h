@@ -49,7 +49,6 @@ ColPivHouseholderQR<Matrix<EIGTYPE, Dynamic, Dynamic, EIGCOLROW, Dynamic, Dynami
 { \
   using std::abs; \
   typedef Matrix<EIGTYPE, Dynamic, Dynamic, EIGCOLROW, Dynamic, Dynamic> MatrixType; \
-  typedef MatrixType::Scalar Scalar; \
   typedef MatrixType::RealScalar RealScalar; \
   Index rows = matrix.rows();\
   Index cols = matrix.cols();\

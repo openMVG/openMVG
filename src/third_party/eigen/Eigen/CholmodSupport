@@ -12,7 +12,7 @@ extern "C" {
 /** \ingroup Support_modules
   * \defgroup CholmodSupport_Module CholmodSupport module
   *
-  * This module provides an interface to the Cholmod library which is part of the <a href="http://www.cise.ufl.edu/research/sparse/SuiteSparse/">suitesparse</a> package.
+  * This module provides an interface to the Cholmod library which is part of the <a href="http://www.suitesparse.com">suitesparse</a> package.
   * It provides the two following main factorization classes:
   * - class CholmodSupernodalLLT: a supernodal LLT Cholesky factorization.
   * - class CholmodDecomposiiton: a general L(D)LT Cholesky factorization with automatic or explicit runtime selection of the underlying factorization method (supernodal or simplicial).

@@ -13,34 +13,297 @@
 
 #define EIGEN_WORLD_VERSION 3
 #define EIGEN_MAJOR_VERSION 2
-#define EIGEN_MINOR_VERSION 4
+#define EIGEN_MINOR_VERSION 8
 
 #define EIGEN_VERSION_AT_LEAST(x,y,z) (EIGEN_WORLD_VERSION>x || (EIGEN_WORLD_VERSION>=x && \
                                       (EIGEN_MAJOR_VERSION>y || (EIGEN_MAJOR_VERSION>=y && \
                                                                  EIGEN_MINOR_VERSION>=z))))
+
+
+// Compiler identification, EIGEN_COMP_*
+
+/// \internal EIGEN_COMP_GNUC set to 1 for all compilers compatible with GCC
 #ifdef __GNUC__
+  #define EIGEN_COMP_GNUC 1
+#else
+  #define EIGEN_COMP_GNUC 0
+#endif
+
+/// \internal EIGEN_COMP_CLANG set to 1 if the compiler is clang (alias for __clang__)
+#if defined(__clang__)
+  #define EIGEN_COMP_CLANG 1
+#else
+  #define EIGEN_COMP_CLANG 0
+#endif
+
+
+/// \internal EIGEN_COMP_LLVM set to 1 if the compiler backend is llvm
+#if defined(__llvm__)
+  #define EIGEN_COMP_LLVM 1
+#else
+  #define EIGEN_COMP_LLVM 0
+#endif
+
+/// \internal EIGEN_COMP_ICC set to __INTEL_COMPILER if the compiler is Intel compiler, 0 otherwise
+#if defined(__INTEL_COMPILER)
+  #define EIGEN_COMP_ICC __INTEL_COMPILER
+#else
+  #define EIGEN_COMP_ICC 0
+#endif
+
+/// \internal EIGEN_COMP_MINGW set to 1 if the compiler is mingw
+#if defined(__MINGW32__)
+  #define EIGEN_COMP_MINGW 1
+#else
+  #define EIGEN_COMP_MINGW 0
+#endif
+
+/// \internal EIGEN_COMP_SUNCC set to 1 if the compiler is Solaris Studio
+#if defined(__SUNPRO_CC)
+  #define EIGEN_COMP_SUNCC 1
+#else
+  #define EIGEN_COMP_SUNCC 0
+#endif
+
+/// \internal EIGEN_COMP_MSVC set to _MSC_VER if the compiler is Microsoft Visual C++, 0 otherwise.
+#if defined(_MSC_VER)
+  #define EIGEN_COMP_MSVC _MSC_VER
+#else
+  #define EIGEN_COMP_MSVC 0
+#endif
+
+/// \internal EIGEN_COMP_MSVC_STRICT set to 1 if the compiler is really Microsoft Visual C++ and not ,e.g., ICC
+#if EIGEN_COMP_MSVC && !(EIGEN_COMP_ICC)
+  #define EIGEN_COMP_MSVC_STRICT _MSC_VER
+#else
+  #define EIGEN_COMP_MSVC_STRICT 0
+#endif
+
+/// \internal EIGEN_COMP_IBM set to 1 if the compiler is IBM XL C++
+#if defined(__IBMCPP__) || defined(__xlc__)
+  #define EIGEN_COMP_IBM 1
+#else
+  #define EIGEN_COMP_IBM 0
+#endif
+
+/// \internal EIGEN_COMP_PGI set to 1 if the compiler is Portland Group Compiler
+#if defined(__PGI)
+  #define EIGEN_COMP_PGI 1
+#else
+  #define EIGEN_COMP_PGI 0
+#endif
+
+/// \internal EIGEN_COMP_ARM set to 1 if the compiler is ARM Compiler
+#if defined(__CC_ARM) || defined(__ARMCC_VERSION)
+  #define EIGEN_COMP_ARM 1
+#else
+  #define EIGEN_COMP_ARM 0
+#endif
+
+
+/// \internal EIGEN_GNUC_STRICT set to 1 if the compiler is really GCC and not a compatible compiler (e.g., ICC, clang, mingw, etc.)
+#if EIGEN_COMP_GNUC && !(EIGEN_COMP_CLANG || EIGEN_COMP_ICC || EIGEN_COMP_MINGW || EIGEN_COMP_PGI || EIGEN_COMP_IBM || EIGEN_COMP_ARM )
+  #define EIGEN_COMP_GNUC_STRICT 1
+#else
+  #define EIGEN_COMP_GNUC_STRICT 0
+#endif
+
+
+#if EIGEN_COMP_GNUC
   #define EIGEN_GNUC_AT_LEAST(x,y) ((__GNUC__==x && __GNUC_MINOR__>=y) || __GNUC__>x)
+  #define EIGEN_GNUC_AT_MOST(x,y)  ((__GNUC__==x && __GNUC_MINOR__<=y) || __GNUC__<x)
+  #define EIGEN_GNUC_AT(x,y)       ( __GNUC__==x && __GNUC_MINOR__==y )
 #else
   #define EIGEN_GNUC_AT_LEAST(x,y) 0
+  #define EIGEN_GNUC_AT_MOST(x,y)  0
+  #define EIGEN_GNUC_AT(x,y)       0
 #endif
- 
-#ifdef __GNUC__
-  #define EIGEN_GNUC_AT_MOST(x,y) ((__GNUC__==x && __GNUC_MINOR__<=y) || __GNUC__<x)
+
+// FIXME: could probably be removed as we do not support gcc 3.x anymore
+#if EIGEN_COMP_GNUC && (__GNUC__ <= 3)
+#define EIGEN_GCC3_OR_OLDER 1
 #else
-  #define EIGEN_GNUC_AT_MOST(x,y) 0
+#define EIGEN_GCC3_OR_OLDER 0
 #endif
+
+
+// Architecture identification, EIGEN_ARCH_*
+
+#if defined(__x86_64__) || defined(_M_X64) || defined(__amd64)
+  #define EIGEN_ARCH_x86_64 1
+#else
+  #define EIGEN_ARCH_x86_64 0
+#endif
+
+#if defined(__i386__) || defined(_M_IX86) || defined(_X86_) || defined(__i386)
+  #define EIGEN_ARCH_i386 1
+#else
+  #define EIGEN_ARCH_i386 0
+#endif
+
+#if EIGEN_ARCH_x86_64 || EIGEN_ARCH_i386
+  #define EIGEN_ARCH_i386_OR_x86_64 1
+#else
+  #define EIGEN_ARCH_i386_OR_x86_64 0
+#endif
+
+/// \internal EIGEN_ARCH_ARM set to 1 if the architecture is ARM
+#if defined(__arm__)
+  #define EIGEN_ARCH_ARM 1
+#else
+  #define EIGEN_ARCH_ARM 0
+#endif
+
+/// \internal EIGEN_ARCH_ARM64 set to 1 if the architecture is ARM64
+#if defined(__aarch64__)
+  #define EIGEN_ARCH_ARM64 1
+#else
+  #define EIGEN_ARCH_ARM64 0
+#endif
+
+#if EIGEN_ARCH_ARM || EIGEN_ARCH_ARM64
+  #define EIGEN_ARCH_ARM_OR_ARM64 1
+#else
+  #define EIGEN_ARCH_ARM_OR_ARM64 0
+#endif
+
+/// \internal EIGEN_ARCH_MIPS set to 1 if the architecture is MIPS
+#if defined(__mips__) || defined(__mips)
+  #define EIGEN_ARCH_MIPS 1
+#else
+  #define EIGEN_ARCH_MIPS 0
+#endif
+
+/// \internal EIGEN_ARCH_SPARC set to 1 if the architecture is SPARC
+#if defined(__sparc__) || defined(__sparc)
+  #define EIGEN_ARCH_SPARC 1
+#else
+  #define EIGEN_ARCH_SPARC 0
+#endif
+
+/// \internal EIGEN_ARCH_IA64 set to 1 if the architecture is Intel Itanium
+#if defined(__ia64__)
+  #define EIGEN_ARCH_IA64 1
+#else
+  #define EIGEN_ARCH_IA64 0
+#endif
+
+/// \internal EIGEN_ARCH_PPC set to 1 if the architecture is PowerPC
+#if defined(__powerpc__) || defined(__ppc__) || defined(_M_PPC)
+  #define EIGEN_ARCH_PPC 1
+#else
+  #define EIGEN_ARCH_PPC 0
+#endif
+
+
+
+// Operating system identification, EIGEN_OS_*
+
+/// \internal EIGEN_OS_UNIX set to 1 if the OS is a unix variant
+#if defined(__unix__) || defined(__unix)
+  #define EIGEN_OS_UNIX 1
+#else
+  #define EIGEN_OS_UNIX 0
+#endif
+
+/// \internal EIGEN_OS_LINUX set to 1 if the OS is based on Linux kernel
+#if defined(__linux__)
+  #define EIGEN_OS_LINUX 1
+#else
+  #define EIGEN_OS_LINUX 0
+#endif
+
+/// \internal EIGEN_OS_ANDROID set to 1 if the OS is Android
+// note: ANDROID is defined when using ndk_build, __ANDROID__ is defined when using a standalone toolchain.
+#if defined(__ANDROID__) || defined(ANDROID)
+  #define EIGEN_OS_ANDROID 1
+#else
+  #define EIGEN_OS_ANDROID 0
+#endif
+
+/// \internal EIGEN_OS_GNULINUX set to 1 if the OS is GNU Linux and not Linux-based OS (e.g., not android)
+#if defined(__gnu_linux__) && !(EIGEN_OS_ANDROID)
+  #define EIGEN_OS_GNULINUX 1
+#else
+  #define EIGEN_OS_GNULINUX 0
+#endif
+
+/// \internal EIGEN_OS_BSD set to 1 if the OS is a BSD variant
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__bsdi__) || defined(__DragonFly__)
+  #define EIGEN_OS_BSD 1
+#else
+  #define EIGEN_OS_BSD 0
+#endif
+
+/// \internal EIGEN_OS_MAC set to 1 if the OS is MacOS
+#if defined(__APPLE__)
+  #define EIGEN_OS_MAC 1
+#else
+  #define EIGEN_OS_MAC 0
+#endif
+
+/// \internal EIGEN_OS_QNX set to 1 if the OS is QNX
+#if defined(__QNX__)
+  #define EIGEN_OS_QNX 1
+#else
+  #define EIGEN_OS_QNX 0
+#endif
+
+/// \internal EIGEN_OS_WIN set to 1 if the OS is Windows based
+#if defined(_WIN32)
+  #define EIGEN_OS_WIN 1
+#else
+  #define EIGEN_OS_WIN 0
+#endif
+
+/// \internal EIGEN_OS_WIN64 set to 1 if the OS is Windows 64bits
+#if defined(_WIN64)
+  #define EIGEN_OS_WIN64 1
+#else
+  #define EIGEN_OS_WIN64 0
+#endif
+
+/// \internal EIGEN_OS_WINCE set to 1 if the OS is Windows CE
+#if defined(_WIN32_WCE)
+  #define EIGEN_OS_WINCE 1
+#else
+  #define EIGEN_OS_WINCE 0
+#endif
+
+/// \internal EIGEN_OS_CYGWIN set to 1 if the OS is Windows/Cygwin
+#if defined(__CYGWIN__)
+  #define EIGEN_OS_CYGWIN 1
+#else
+  #define EIGEN_OS_CYGWIN 0
+#endif
+
+/// \internal EIGEN_OS_WIN_STRICT set to 1 if the OS is really Windows and not some variants
+#if EIGEN_OS_WIN && !( EIGEN_OS_WINCE || EIGEN_OS_CYGWIN )
+  #define EIGEN_OS_WIN_STRICT 1
+#else
+  #define EIGEN_OS_WIN_STRICT 0
+#endif
+
+/// \internal EIGEN_OS_SUN set to 1 if the OS is SUN
+#if (defined(sun) || defined(__sun)) && !(defined(__SVR4) || defined(__svr4__))
+  #define EIGEN_OS_SUN 1
+#else
+  #define EIGEN_OS_SUN 0
+#endif
+
+/// \internal EIGEN_OS_SOLARIS set to 1 if the OS is Solaris
+#if (defined(sun) || defined(__sun)) && (defined(__SVR4) || defined(__svr4__))
+  #define EIGEN_OS_SOLARIS 1
+#else
+  #define EIGEN_OS_SOLARIS 0
+#endif
+
 
 #if EIGEN_GNUC_AT_MOST(4,3) && !defined(__clang__)
   // see bug 89
   #define EIGEN_SAFE_TO_USE_STANDARD_ASSERT_MACRO 0
 #else
   #define EIGEN_SAFE_TO_USE_STANDARD_ASSERT_MACRO 1
-#endif
-
-#if defined(__GNUC__) && (__GNUC__ <= 3)
-#define EIGEN_GCC3_OR_OLDER 1
-#else
-#define EIGEN_GCC3_OR_OLDER 0
 #endif
 
 // 16 byte alignment is only useful for vectorization. Since it affects the ABI, we need to enable
@@ -95,6 +358,20 @@
 #ifndef EIGEN_DEFAULT_DENSE_INDEX_TYPE
 #define EIGEN_DEFAULT_DENSE_INDEX_TYPE std::ptrdiff_t
 #endif
+
+// A Clang feature extension to determine compiler features.
+// We use it to determine 'cxx_rvalue_references'
+#ifndef __has_feature
+# define __has_feature(x) 0
+#endif
+
+// Do we support r-value references?
+#if (__has_feature(cxx_rvalue_references) || \
+     (defined(__cplusplus) && __cplusplus >= 201103L) || \
+     (defined(_MSC_VER) && _MSC_VER >= 1600))
+  #define EIGEN_HAVE_RVALUE_REFERENCES
+#endif
+
 
 // Cross compiler wrapper around LLVM's __has_builtin
 #ifdef __has_builtin
@@ -278,6 +555,7 @@ namespace Eigen {
   #error Please tell me what is the equivalent of __attribute__((aligned(n))) for your compiler
 #endif
 
+#define EIGEN_ALIGN8  EIGEN_ALIGN_TO_BOUNDARY(8)
 #define EIGEN_ALIGN16 EIGEN_ALIGN_TO_BOUNDARY(16)
 
 #if EIGEN_ALIGN_STATICALLY
@@ -332,8 +610,11 @@ namespace Eigen {
   }
 #endif
 
-#define EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Derived) \
-  EIGEN_INHERIT_ASSIGNMENT_EQUAL_OPERATOR(Derived)
+/** \internal
+ * \brief Macro to manually inherit assignment operators.
+ * This is necessary, because the implicitly defined assignment operator gets deleted when a custom operator= is defined.
+ */
+#define EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Derived) EIGEN_INHERIT_ASSIGNMENT_EQUAL_OPERATOR(Derived)
 
 /**
 * Just a side note. Commenting within defines works only by documenting
@@ -404,6 +685,8 @@ namespace Eigen {
 // see EIGEN_SIZE_MIN_PREFER_DYNAMIC. No need for a separate variant for MaxSizes here.
 #define EIGEN_SIZE_MAX(a,b) (((int)a == Dynamic || (int)b == Dynamic) ? Dynamic \
                            : ((int)a >= (int)b) ? (int)a : (int)b)
+
+#define EIGEN_ADD_COST(a,b) int(a)==Dynamic || int(b)==Dynamic ? Dynamic : int(a)+int(b)
 
 #define EIGEN_LOGICAL_XOR(a,b) (((a) || (b)) && !((a) && (b)))
 

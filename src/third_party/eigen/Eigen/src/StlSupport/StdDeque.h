@@ -13,32 +13,24 @@
 
 #include "details.h"
 
-// Define the explicit instantiation (e.g. necessary for the Intel compiler)
-#if defined(__INTEL_COMPILER) || defined(__GNUC__)
-  #define EIGEN_EXPLICIT_STL_DEQUE_INSTANTIATION(...) template class std::deque<__VA_ARGS__, EIGEN_ALIGNED_ALLOCATOR<__VA_ARGS__> >;
-#else
-  #define EIGEN_EXPLICIT_STL_DEQUE_INSTANTIATION(...)
-#endif
-
 /**
  * This section contains a convenience MACRO which allows an easy specialization of
  * std::deque such that for data types with alignment issues the correct allocator
  * is used automatically.
  */
 #define EIGEN_DEFINE_STL_DEQUE_SPECIALIZATION(...) \
-EIGEN_EXPLICIT_STL_DEQUE_INSTANTIATION(__VA_ARGS__) \
 namespace std \
 { \
-  template<typename _Ay> \
-  class deque<__VA_ARGS__, _Ay>  \
+  template<> \
+  class deque<__VA_ARGS__, std::allocator<__VA_ARGS__> >           \
     : public deque<__VA_ARGS__, EIGEN_ALIGNED_ALLOCATOR<__VA_ARGS__> > \
   { \
     typedef deque<__VA_ARGS__, EIGEN_ALIGNED_ALLOCATOR<__VA_ARGS__> > deque_base; \
   public: \
     typedef __VA_ARGS__ value_type; \
-    typedef typename deque_base::allocator_type allocator_type; \
-    typedef typename deque_base::size_type size_type;  \
-    typedef typename deque_base::iterator iterator;  \
+    typedef deque_base::allocator_type allocator_type; \
+    typedef deque_base::size_type size_type;  \
+    typedef deque_base::iterator iterator;  \
     explicit deque(const allocator_type& a = allocator_type()) : deque_base(a) {}  \
     template<typename InputIterator> \
     deque(InputIterator first, InputIterator last, const allocator_type& a = allocator_type()) : deque_base(first, last, a) {} \

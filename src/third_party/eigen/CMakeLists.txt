@@ -1,6 +1,5 @@
 project(Eigen)
-
-cmake_minimum_required(VERSION 2.8.2)
+cmake_minimum_required(VERSION 2.8.5)
 
 # guard against in-source builds
 
@@ -36,6 +35,11 @@ string(REGEX MATCH "define[ \t]+EIGEN_MINOR_VERSION[ \t]+([0-9]+)" _eigen_minor_
 set(EIGEN_MINOR_VERSION "${CMAKE_MATCH_1}")
 set(EIGEN_VERSION_NUMBER ${EIGEN_WORLD_VERSION}.${EIGEN_MAJOR_VERSION}.${EIGEN_MINOR_VERSION})
 
+# if the mercurial program is absent, this will leave the EIGEN_HG_CHANGESET string empty,
+# but won't stop CMake.
+execute_process(COMMAND hg tip -R ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE EIGEN_HGTIP_OUTPUT)
+execute_process(COMMAND hg branch -R ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE EIGEN_BRANCH_OUTPUT)
+
 # if this is the default (aka development) branch, extract the mercurial changeset number from the hg tip output...
 if(EIGEN_BRANCH_OUTPUT MATCHES "default")
 string(REGEX MATCH "^changeset: *[0-9]*:([0-9;a-f]+).*" EIGEN_HG_CHANGESET_MATCH "${EIGEN_HGTIP_OUTPUT}")
@@ -48,27 +52,29 @@ else(EIGEN_HG_CHANGESET)
   set(EIGEN_VERSION "${EIGEN_VERSION_NUMBER}")
 endif(EIGEN_HG_CHANGESET)
 
-# the user modifiable install path for header files
-set(EIGEN_INCLUDE_INSTALL_DIR ${EIGEN_INCLUDE_INSTALL_DIR} CACHE PATH "The directory where we install the header files (optional)")
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-# set the internal install path for header files which depends on whether the user modifiable
-# EIGEN_INCLUDE_INSTALL_DIR has been set by the user or not.
-if(EIGEN_INCLUDE_INSTALL_DIR)
-  set(INCLUDE_INSTALL_DIR
-    ${EIGEN_INCLUDE_INSTALL_DIR}
-    CACHE INTERNAL
-    "The directory where we install the header files (internal)"
-  )
+include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+
+# Backward compatibility support for EIGEN_INCLUDE_INSTALL_DIR
+if(EIGEN_INCLUDE_INSTALL_DIR AND NOT INCLUDE_INSTALL_DIR)
+  set(INCLUDE_INSTALL_DIR ${EIGEN_INCLUDE_INSTALL_DIR}
+      CACHE PATH "The directory relative to CMAKE_PREFIX_PATH where Eigen header files are installed")
 else()
   set(INCLUDE_INSTALL_DIR
-    "${CMAKE_INSTALL_PREFIX}/include/eigen3"
-    CACHE INTERNAL
-    "The directory where we install the header files (internal)"
-  )
+      "${CMAKE_INSTALL_INCLUDEDIR}/eigen3"
+      CACHE PATH "The directory relative to CMAKE_PREFIX_PATH where Eigen header files are installed"
+      )
 endif()
 
-SET(CMAKE_MODULE_PATH
-  ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+set(CMAKEPACKAGE_INSTALL_DIR
+    "${CMAKE_INSTALL_LIBDIR}/cmake/eigen3"
+    CACHE PATH "The directory relative to CMAKE_PREFIX_PATH where Eigen3Config.cmake is installed"
+    )
+set(PKGCONFIG_INSTALL_DIR
+    "${CMAKE_INSTALL_DATADIR}/pkgconfig"
+    CACHE PATH "The directory relative to CMAKE_PREFIX_PATH where eigen3.pc is installed"
+    )
 
 add_subdirectory(Eigen)
 
