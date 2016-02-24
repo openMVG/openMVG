@@ -134,12 +134,16 @@ static IndexT RemoveOutliers_AngleError
   return removedTrack_count;
 }
 
-static bool eraseMissingPoses(SfM_Data & sfm_data, const IndexT min_points_per_pose)
+static bool eraseMissingPoses
+(
+  SfM_Data & sfm_data,
+  const IndexT min_points_per_pose = 6
+)
 {
   IndexT removed_elements = 0;
   const Landmarks & landmarks = sfm_data.structure;
 
-  // Count the observation poses occurence
+  // Count the observation poses occurrence
   Hash_Map<IndexT, IndexT> map_PoseId_Count;
   // Init with 0 count (in order to be able to remove non referenced elements)
   for (Poses::const_iterator itPoses = sfm_data.GetPoses().begin();
@@ -148,7 +152,7 @@ static bool eraseMissingPoses(SfM_Data & sfm_data, const IndexT min_points_per_p
     map_PoseId_Count[itPoses->first] = 0;
   }
 
-  // Count occurence of the poses in the Landmark observations
+  // Count occurrence of the poses in the Landmark observations
   for (Landmarks::const_iterator itLandmarks = landmarks.begin();
     itLandmarks != landmarks.end(); ++itLandmarks)
   {
@@ -177,7 +181,11 @@ static bool eraseMissingPoses(SfM_Data & sfm_data, const IndexT min_points_per_p
   return removed_elements > 0;
 }
 
-static bool eraseObservationsWithMissingPoses(SfM_Data & sfm_data, const IndexT min_points_per_landmark)
+static bool eraseObservationsWithMissingPoses
+(
+  SfM_Data & sfm_data,
+  const IndexT min_points_per_landmark = 2
+)
 {
   IndexT removed_elements = 0;
 
@@ -213,11 +221,16 @@ static bool eraseObservationsWithMissingPoses(SfM_Data & sfm_data, const IndexT 
 }
 
 /// Remove unstable content from analysis of the sfm_data structure
-static bool eraseUnstablePosesAndObservations(
+static bool eraseUnstablePosesAndObservations
+(
   SfM_Data & sfm_data,
   const IndexT min_points_per_pose = 6,
-  const IndexT min_points_per_landmark = 2)
+  const IndexT min_points_per_landmark = 2
+)
 {
+  // First remove orphan observation(s) (observation using an undefined pose)
+  eraseObservationsWithMissingPoses(sfm_data, min_points_per_landmark);
+  // Then iteratively remove orphan poses & observations
   IndexT remove_iteration = 0;
   bool bRemovedContent = false;
   do
