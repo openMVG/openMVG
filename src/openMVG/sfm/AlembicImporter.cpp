@@ -81,14 +81,12 @@ bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmd
 
   // Number of points before adding the Alembic data
   const std::size_t nbPointsInit = sfmdata.structure.size();
-  // Number of points with all the new Alembic data
-  std::size_t nbPointsAll = nbPointsInit + positions->size();
-  for(std::size_t point3d_i = nbPointsInit;
-      point3d_i < nbPointsAll;
+  for(std::size_t point3d_i = 0;
+      point3d_i < positions->size();
       ++point3d_i)
   {
     const P3fArraySamplePtr::element_type::value_type & pos_i = positions->get()[point3d_i];
-    Landmark& landmark = sfmdata.structure[point3d_i] = Landmark(Vec3(pos_i.x, pos_i.y, pos_i.z));
+    Landmark& landmark = sfmdata.structure[nbPointsInit + point3d_i] = Landmark(Vec3(pos_i.x, pos_i.y, pos_i.z));
   }
 
 
@@ -125,11 +123,11 @@ bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmd
     }
 
     std::size_t obsGlobal_i = 0;
-    for(std::size_t point3d_i = nbPointsInit;
-        point3d_i < nbPointsAll;
+    for(std::size_t point3d_i = 0;
+        point3d_i < positions->size();
         ++point3d_i)
     {
-      Landmark& landmark = sfmdata.structure[point3d_i];
+      Landmark& landmark = sfmdata.structure[nbPointsInit + point3d_i];
       // Number of observation for this 3d point
       const std::size_t visibilitySize = (*sampleVisibilitySize)[point3d_i];
 
