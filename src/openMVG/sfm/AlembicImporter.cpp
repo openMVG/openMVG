@@ -77,7 +77,21 @@ bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmd
   IPoints points(iObj, kWrapExisting);
   IPointsSchema& ms = points.getSchema();
   P3fArraySamplePtr positions = ms.getValue().getPositions();
+
   ICompoundProperty userProps = getAbcUserProperties(ms);
+  ICompoundProperty arbGeom = ms.getArbGeomParams();
+
+  C3fArraySamplePtr sampleColors;
+  if(arbGeom.getPropertyHeader("color"))
+  {
+    IC3fArrayProperty propColor(arbGeom, "color");
+    propColor.get(sampleColors);
+    if(sampleColors->size() != positions->size())
+    {
+      std::cerr << "[Alembic Importer] WARNING: colors will be ignored. Color vector size: " << sampleColors->size() << ", positions vector size: " << positions->size() << std::endl;
+      sampleColors.reset();
+    }
+  }
 
   // Number of points before adding the Alembic data
   const std::size_t nbPointsInit = sfmdata.structure.size();
@@ -87,8 +101,12 @@ bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmd
   {
     const P3fArraySamplePtr::element_type::value_type & pos_i = positions->get()[point3d_i];
     Landmark& landmark = sfmdata.structure[nbPointsInit + point3d_i] = Landmark(Vec3(pos_i.x, pos_i.y, pos_i.z));
+    if(sampleColors)
+    {
+      const P3fArraySamplePtr::element_type::value_type & color_i = sampleColors->get()[point3d_i];
+      landmark.rgb = image::RGBColor(color_i[0], color_i[1], color_i[2]);
+    }
   }
-
 
   if(userProps.getPropertyHeader("mvg_visibilitySize") &&
      userProps.getPropertyHeader("mvg_visibilityIds") &&
@@ -96,15 +114,15 @@ bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmd
      )
   {
     IUInt32ArrayProperty propVisibilitySize(userProps, "mvg_visibilitySize");
-    std::shared_ptr<UInt32ArraySample> sampleVisibilitySize;
+    UInt32ArraySamplePtr sampleVisibilitySize;
     propVisibilitySize.get(sampleVisibilitySize);
 
     IUInt32ArrayProperty propVisibilityIds(userProps, "mvg_visibilityIds");
-    std::shared_ptr<UInt32ArraySample> sampleVisibilityIds;
+    UInt32ArraySamplePtr sampleVisibilityIds;
     propVisibilityIds.get(sampleVisibilityIds);
 
     IFloatArrayProperty propFeatPos2d(userProps, "mvg_visibilityFeatPos");
-    std::shared_ptr<FloatArraySample> sampleFeatPos2d;
+    FloatArraySamplePtr sampleFeatPos2d;
     propFeatPos2d.get(sampleFeatPos2d);
 
     if( positions->size() != sampleVisibilitySize->size() )

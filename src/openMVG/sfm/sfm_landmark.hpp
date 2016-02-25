@@ -69,8 +69,8 @@ struct Landmark
   Observations obs;
 
   bool operator==(const Landmark& other) const {
-    // color is ignored
     return AreVecNearEqual(X, other.X, 1e-3) &&
+           AreVecNearEqual(rgb, other.rgb, 1e-3) &&
             obs == other.obs;
   }
 
