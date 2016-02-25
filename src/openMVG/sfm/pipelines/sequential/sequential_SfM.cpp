@@ -251,9 +251,6 @@ bool SequentialSfMReconstructionEngine::Process()
     _htmlDocStream->pushXYChart(xBinTracks, hTracks.GetHist(),"3DtoTracksSize");
   }
 
-  // get the color for the 3D points
-  ColorizeTracks(_sfm_data);
-
   return true;
 }
 

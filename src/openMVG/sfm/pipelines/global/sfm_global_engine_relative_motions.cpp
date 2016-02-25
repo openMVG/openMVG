@@ -177,9 +177,6 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Process() {
     _htmlDocStream->pushInfo(os.str());
   }
 
-  // get the color for the 3D points
-  openMVG::sfm::ColorizeTracks(_sfm_data);
-
   return true;
 }
 
