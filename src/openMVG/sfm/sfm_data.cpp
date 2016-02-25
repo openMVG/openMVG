@@ -53,7 +53,7 @@ void ColorizeTracks( SfM_Data & sfm_data )
     std::transform(sfm_data.GetLandmarks().begin(), sfm_data.GetLandmarks().end(),
       std::inserter(remainingTrackToColor, remainingTrackToColor.begin()),
       stl::RetrieveKey());
-
+    
     while( !remainingTrackToColor.empty() )
     {
       // Find the most representative image (for the remaining 3D points)
@@ -89,7 +89,7 @@ void ColorizeTracks( SfM_Data & sfm_data )
       std::vector< sort_index_packet_descend< IndexT, IndexT> > packet_vec(vec_cardinal.size());
       sort_index_helper(packet_vec, &vec_cardinal[0], 1);
 
-      // First image index with the most of occurence
+      // First image index with the most of occurrence
       std::map<IndexT, IndexT>::const_iterator iterTT = map_IndexCardinal.begin();
       std::advance(iterTT, packet_vec[0].index);
       const size_t view_index = iterTT->first;
@@ -97,7 +97,11 @@ void ColorizeTracks( SfM_Data & sfm_data )
       const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
         view->s_Img_path);
       Image<RGBColor> image;
-      ReadImage(sView_filename.c_str(), &image);
+      if(!ReadImage(sView_filename.c_str(), &image))
+      {
+        std::cerr << "Unable to read image: " << sView_filename << std::endl;
+        return;
+      }
 
       // Iterate through the remaining track to color
       // - look if the current view is present to color the track
