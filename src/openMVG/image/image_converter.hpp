@@ -10,88 +10,158 @@
 #include "openMVG/image/image_container.hpp"
 #include "openMVG/image/pixel_types.hpp"
 
-namespace openMVG{
-namespace image {
+namespace openMVG
+{
+namespace image
+{
 
+
+
+/**
+* @brief Convert RGB color to gray color
+* @note The factor comes from http://www.easyrgb.com/
+* RGB to XYZ : Y is the luminance channel
+* var_R * 0.2126 + var_G * 0.7152 + var_B * 0.0722
+*/
 template<typename T>
-// The factor comes from http://www.easyrgb.com/
-// RGB to XYZ : Y is the luminance channel
-// var_R * 0.2126 + var_G * 0.7152 + var_B * 0.0722
-inline T Rgb2Gray(const T r,const T g, const T b) {
+inline T Rgb2Gray( const T r, const T g, const T b )
+{
   return r * 0.2126 + g * 0.7152 + b * 0.0722;
 }
 
+/**
+* @brief Convert from one color type to another one
+* @param valin Input color value
+* @param out Output color value after conversion
+* @tparam Tin Input color type
+* @tparam Tout Output color type
+*/
 template<typename Tin, typename Tout>
-inline void Convert(const Tin& valin, Tout& out) {
-  out = static_cast<Tout>(valin);
+inline void Convert( const Tin& valin, Tout& out )
+{
+  out = static_cast<Tout>( valin );
 }
 
+/**
+* @brief Convert RGBColor to unsigned char color
+* @param valin Input color value
+* @param valOut Output color value after conversion
+*/
 template<>
 inline void Convert<RGBColor, unsigned char>(
-  const RGBColor& valin, unsigned char& valOut)
+  const RGBColor& valin, unsigned char& valOut )
 {
-  valOut = static_cast<unsigned char>(0.3 * valin.r() + 0.59 * valin.g() + 0.11 * valin.b());
+  /// TODO : why not using Rgb2Gray ?
+  /// TODO need to check value > 255 before conversion ?
+  valOut = static_cast<unsigned char>( 0.3 * valin.r() + 0.59 * valin.g() + 0.11 * valin.b() );
 }
 
+/**
+* @brief Convert RGBAColor to unsigned char color
+* @param valin Input color value
+* @param valOut Output color value after conversion
+*/
 template<>
 inline void Convert<RGBAColor, unsigned char>(
-  const RGBAColor& valin, unsigned char& valOut)
+  const RGBAColor& valin, unsigned char& valOut )
 {
   valOut = static_cast<unsigned char>(
-    (valin.a()/255.f) *
-    (0.3 * valin.r() + 0.59 * valin.g() + 0.11 * valin.b()));
+             ( valin.a() / 255.f ) *
+             ( 0.3 * valin.r() + 0.59 * valin.g() + 0.11 * valin.b() ) );
 }
 
+/**
+* @brief Convert RGBAColor to RGBColor
+* @param valin Input color value
+* @param valOut Output color value after conversion
+*/
 template<>
 inline void Convert<RGBAColor, RGBColor>(
-  const RGBAColor& valin, RGBColor& valOut)
+  const RGBAColor& valin, RGBColor& valOut )
 {
   valOut = RGBColor(
-    static_cast<unsigned char> ((valin.a()/255.f) * valin.r()),
-    static_cast<unsigned char> ((valin.a()/255.f) * valin.g()),
-    static_cast<unsigned char> ((valin.a()/255.f) * valin.b()));
+             static_cast<unsigned char> ( ( valin.a() / 255.f ) * valin.r() ),
+             static_cast<unsigned char> ( ( valin.a() / 255.f ) * valin.g() ),
+             static_cast<unsigned char> ( ( valin.a() / 255.f ) * valin.b() ) );
 }
 
+/**
+* @brief Convert image from one internal pixel type to another one
+* @param imaIn Input image
+* @param imaOut Output image
+* @tparam ImageIn Type of input image
+* @tparam ImageOut Type of output image
+*/
 template<typename ImageIn, typename ImageOut>
-void ConvertPixelType(const ImageIn& imaIn, ImageOut *imaOut)
+void ConvertPixelType( const ImageIn& imaIn, ImageOut *imaOut )
 {
-  (*imaOut) = ImageOut(imaIn.Width(), imaIn.Height());
+  ( *imaOut ) = ImageOut( imaIn.Width(), imaIn.Height() );
   // Convert each input pixel to destination pixel
-  for(int j = 0; j < imaIn.Height(); ++j)
-    for(int i = 0; i < imaIn.Width(); ++i)
-      Convert(imaIn(j,i), (*imaOut)(j,i));
+  for( int j = 0; j < imaIn.Height(); ++j )
+    for( int i = 0; i < imaIn.Width(); ++i )
+    {
+      Convert( imaIn( j, i ), ( *imaOut )( j, i ) );
+    }
 }
 
 //--------------------------------------------------------------------------
 // RGB ( unsigned char or int ) to Float
 //--------------------------------------------------------------------------
 
+/**
+* @brief Convert RGB color stored as an int to RGB color stored as a float
+* @param valIn Input color
+* @param valOut Output color
+* @param scaling factor applied to input color component
+* @tparam Tin Input color type
+* @tparam[out] Tout Output color type
+* @todo Use SFINAE to ensure input type is an intergral one
+* @todo Why not using RGBfColor as output type ?
+*/
 template< typename Tin, typename Tout >
 inline void convertRGB2Float(
-    const Tin& valIn,
-    Tout& valOut,
-    float factor = 1.0f / 255.f)
+  const Tin& valIn,
+  Tout& valOut,
+  float factor = 1.0f / 255.f )
 {
   for( int channel = 0; channel < 3; ++channel )
-    valOut(channel) = (float)((int)(valIn(channel)) * factor);
+  {
+    valOut( channel ) = ( float )( ( int )( valIn( channel ) ) * factor );
+  }
 }
 
+/**
+* @brief Convert RGB image stored as an int to RGB image stored as a float
+* @param imaIn Input image
+* @param[out] imaOut Output image
+* @param scaling factor applied to input image color component
+* @tparam ImageIn Input image type
+* @todo Use SFINAE to ensure input type is an intergral one
+*/
 template< typename ImageIn >
 void rgb2Float( const ImageIn& imaIn,
                 Image< RGBfColor > *imaOut, float factor = 1.0f / 255.f )
 {
   assert( imaIn.Depth() == 3 );
-  (*imaOut).resize(imaIn.Width(), imaIn.Height());
+  ( *imaOut ).resize( imaIn.Width(), imaIn.Height() );
   // Convert each int RGB to float RGB values
   for( int j = 0; j < imaIn.Height(); ++j )
     for( int i = 0; i < imaIn.Width(); ++i )
+    {
       convertRGB2Float( imaIn( j, i ), ( *imaOut )( j, i ), factor );
+    }
 }
 
 //--------------------------------------------------------------------------
 // Float to RGB ( unsigned char or int )
 //--------------------------------------------------------------------------
 
+/**
+* @brief Convert float RGB color to Int RGB color
+* @param valin Input color
+* @param[out] Output color
+* @param factor scaling factor applied to input color components
+*/
 static inline
 void convertFloatToInt
 (
@@ -101,20 +171,30 @@ void convertFloatToInt
 )
 {
   for( int channel = 0; channel < 3; ++channel )
-    valOut(channel) = (int)(valIn(channel) * factor);
+  {
+    valOut( channel ) = ( int )( valIn( channel ) * factor );
+  }
 }
 
+/**
+* @brief Convert RGB image stored as float components to RGB image stored as int components
+* @param imaIn Input image
+* @param[out] imaOut Output image
+* @param factor scaling factor applied to each input color component
+*/
 static void rgbFloat2rgbInt(
-        const Image< RGBfColor >& imaIn,
-        Image< RGBColor > *imaOut,
-        float factor = 255.f )
+  const Image< RGBfColor >& imaIn,
+  Image< RGBColor > *imaOut,
+  float factor = 255.f )
 {
   assert( imaIn.Depth() == 3 );
-  (*imaOut).resize(imaIn.Width(), imaIn.Height());
+  ( *imaOut ).resize( imaIn.Width(), imaIn.Height() );
   // Convert each int RGB to float RGB values
   for( int j = 0; j < imaIn.Height(); ++j )
     for( int i = 0; i < imaIn.Width(); ++i )
-      convertFloatToInt( imaIn( j, i ), (*imaOut)( j, i ), factor  );
+    {
+      convertFloatToInt( imaIn( j, i ), ( *imaOut )( j, i ), factor  );
+    }
 }
 
 } // namespace image

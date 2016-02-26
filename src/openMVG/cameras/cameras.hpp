@@ -15,4 +15,16 @@
 #include "openMVG/cameras/Camera_Pinhole_Fisheye.hpp"
 #include "openMVG/cameras/Camera_undistort_image.hpp"
 
+namespace openMVG
+{
+/**
+* @brief Namespace handling various Camera classes and functions
+*/
+namespace cameras
+{
+
+}
+}
+
+
 #endif // OPENMVG_CAMERAS_HPP
