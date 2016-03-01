@@ -83,7 +83,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
   std::transform(m_vec_initialRijTijEstimates.begin(), m_vec_initialRijTijEstimates.end(),
     std::inserter(pairs, pairs.begin()), stl::RetrieveKey());
   const std::set<IndexT> set_remainingIds =
-    openMVG::graph::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs, "./");
+    openMVG::graph::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs);
   KeepOnlyReferencedElement(set_remainingIds, m_vec_initialRijTijEstimates);
 
   const std::string _sOutDirectory("./");

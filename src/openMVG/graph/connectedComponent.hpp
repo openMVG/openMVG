@@ -1,4 +1,4 @@
-// Copyright (c) 2012, 2013 openMVG authors.
+// Copyright (c) 2012, 2016 openMVG authors.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,6 +9,7 @@
 
 #include <openMVG/types.hpp>
 #include <openMVG/graph/graph.hpp>
+#include <openMVG/tracks/union_find.hpp>
 #include <set>
 
 namespace openMVG {
@@ -16,8 +17,10 @@ namespace graph {
 
 /// Export node of each CC (Connected Component) in a map
 template <typename GraphT, typename IndexT>
-std::map<IndexT, std::set<lemon::ListGraph::Node> >  exportGraphToMapSubgraphs(
-  const GraphT & g)
+std::map<IndexT, std::set<lemon::ListGraph::Node> >  exportGraphToMapSubgraphs
+(
+  const GraphT & g
+)
 {
   typedef lemon::ListGraph::NodeMap<IndexT> IndexMap;
   IndexMap connectedNodeMap(g);
@@ -37,9 +40,10 @@ std::map<IndexT, std::set<lemon::ListGraph::Node> >  exportGraphToMapSubgraphs(
 
 /// Return imageIds that belongs to the largest bi-edge connected component
 template<typename EdgesInterface_T, typename IndexT>
-std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes(
-  const EdgesInterface_T & edges,
-  const std::string & _sOutDirectory = "")
+std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes
+(
+  const EdgesInterface_T & edges
+)
 {
   std::set<IndexT> largestBiEdgeCC;
 
@@ -49,15 +53,6 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes(
 
   typedef lemon::ListGraph Graph;
   graph::indexedGraph putativeGraph(edges);
-/*
-  if (!_sOutDirectory.empty())
-  {
-    // Save the graph before cleaning:
-    imageGraph::exportToGraphvizData(
-    stlplus::create_filespec(_sOutDirectory, "initialGraph"),
-    putativeGraph.g);
-  }
-  */
 
   // Remove not bi-edge connected edges
   typedef Graph::EdgeMap<bool> EdgeMapAlias;
@@ -130,14 +125,6 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes(
       }
     }
   }
-/*
-  if (!_sOutDirectory.empty())
-  {
-    // Save the graph after cleaning:
-    imageGraph::exportToGraphvizData(
-      stlplus::create_filespec(_sOutDirectory, "cleanedGraph"),
-      putativeGraph.g);
-  }*/
 
   std::cout << "\n"
     << "Cardinal of nodes: " << lemon::countNodes(putativeGraph.g) << "\n"
@@ -145,6 +132,84 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes(
     << std::endl;
 
   return largestBiEdgeCC;
+}
+
+/// Return node Ids that belongs to the largest CC (Connected Component)
+template<typename EdgesInterface_T, typename IndexT>
+std::set<IndexT> KeepLargestCC_Nodes
+(
+  const EdgesInterface_T & edges
+)
+{
+  // Index nodes as individual components [X->Y] => [0,n]
+  std::map<IndexT, unsigned int> node_to_index;
+  {
+    unsigned int i = 0;
+    for (const Pair & pair_it: edges)
+    {
+      if (node_to_index.count(pair_it.first) == 0)
+        node_to_index[pair_it.first] = i++;
+      if (node_to_index.count(pair_it.second) == 0)
+        node_to_index[pair_it.second] = i++;
+    }
+  }
+
+  // Establish nodes connections (by using Union Find) on edges
+  UnionFind uf;
+  {
+    // Init singletons
+    uf.InitSets(node_to_index.size());
+    // Merge containing sets
+    for (const Pair & pair_it: edges)
+    {
+      uf.Union(node_to_index[pair_it.first], node_to_index[pair_it.second]);
+    }
+  }
+
+  // List the number of parent_id (the number of CCs)
+  std::set<unsigned int> parent_id;
+  for (const Pair & pair_it: edges)
+  {
+    parent_id.insert( uf.Find(node_to_index[pair_it.first]) ); // edge first and second go to the same parent_id
+  }
+
+  std::set<IndexT> node_ids;
+  if (parent_id.size() == 1)
+  {
+    // There is only one CC, return all ids
+    for (const Pair & pair_it: edges)
+    {
+      node_ids.insert(pair_it.first);
+      node_ids.insert(pair_it.second);
+    }
+  }
+  else
+  {
+    // There is many CC, look the largest one and export containing node ids
+    // (if many CC have the same size, export the first that have been seen)
+    std::pair<IndexT, unsigned int> max_cc( UndefinedIndexT, std::numeric_limits<unsigned int>::min());
+    {
+      for (const unsigned int parent_id_it : parent_id)
+      {
+        if (uf.m_cc_size[parent_id_it] > max_cc.second) // Update the component parent id and size
+          max_cc = std::make_pair(parent_id_it, uf.m_cc_size[parent_id_it]);
+      }
+    }
+    if (max_cc.first != UndefinedIndexT)
+    {
+      // Backup nodes that belong to the largest CC
+      const unsigned int parent_id_largest_cc = max_cc.first;
+      for (const Pair & pair_it: edges)
+      {
+        if (uf.Find(node_to_index[pair_it.first]) == parent_id_largest_cc)
+        {
+          node_ids.insert(pair_it.first);
+          node_ids.insert(pair_it.second);
+        }
+      }
+    }
+  }
+  return node_ids;
 }
 
 } // namespace graph
