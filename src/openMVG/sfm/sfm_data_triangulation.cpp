@@ -216,7 +216,7 @@ bool SfM_Data_Structure_Computation_Robust::robust_triangulation(
       const View * view = sfm_data.views.at(itObs->first).get();
       const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
-      const double z = pose.depth(current_model); // TODO: cam->depth(pose(X));
+      const double z = pose.depth(current_model);
       bChierality &= z > 0;
     }
 
