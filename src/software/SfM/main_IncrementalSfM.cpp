@@ -197,23 +197,27 @@ int main(int argc, char **argv)
     sfmEngine.setInitialPair(initialPairIndex);
   }
 
-  if (sfmEngine.Process())
+  if (!sfmEngine.Process())
   {
-    std::cout << std::endl << " Total Ac-Sfm took (s): " << timer.elapsed() << std::endl;
-
-    std::cout << "...Generating SfM_Report.html" << std::endl;
-    Generate_SfM_Report(sfmEngine.Get_SfM_Data(),
-      stlplus::create_filespec(sOutDir, "SfMReconstruction_Report.html"));
-
-    //-- Export to disk computed scene (data & visualizable results)
-    std::cout << "...Export SfM_Data to disk:" << std::endl;
-    std::cout << "   " << sOutSfMDataFilepath << std::endl;
-
-    Save(sfmEngine.Get_SfM_Data(), sOutSfMDataFilepath, ESfM_Data(ALL));
-
-    Save(sfmEngine.Get_SfM_Data(), stlplus::create_filespec(sOutDir, "cloud_and_poses", sOutInterFileExtension), ESfM_Data(VIEWS | EXTRINSICS | INTRINSICS | STRUCTURE));
-
-    return EXIT_SUCCESS;
+    return EXIT_FAILURE;
   }
-  return EXIT_FAILURE;
+
+  // get the color for the 3D points
+  sfmEngine.Colorize();
+
+  std::cout << std::endl << " Total Ac-Sfm took (s): " << timer.elapsed() << std::endl;
+
+  std::cout << "...Generating SfM_Report.html" << std::endl;
+  Generate_SfM_Report(sfmEngine.Get_SfM_Data(),
+    stlplus::create_filespec(sOutDir, "SfMReconstruction_Report.html"));
+
+  //-- Export to disk computed scene (data & visualizable results)
+  std::cout << "...Export SfM_Data to disk:" << std::endl;
+  std::cout << "   " << sOutSfMDataFilepath << std::endl;
+
+  Save(sfmEngine.Get_SfM_Data(), sOutSfMDataFilepath, ESfM_Data(ALL));
+
+  Save(sfmEngine.Get_SfM_Data(), stlplus::create_filespec(sOutDir, "cloud_and_poses", sOutInterFileExtension), ESfM_Data(VIEWS | EXTRINSICS | INTRINSICS | STRUCTURE));
+
+  return EXIT_SUCCESS;
 }

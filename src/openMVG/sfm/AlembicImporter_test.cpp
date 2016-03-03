@@ -49,13 +49,13 @@ SfM_Data create_test_scene(const IndexT viewsCount, const IndexT pointCount, con
   // Fill with not meaningful tracks
   for(IndexT i = 0; i < pointCount; ++i)
   {
-
     // Add structure
     Observations obs;
     obs[0] = Observation( Vec2(std::rand() % 10000, std::rand() % 10000), 0);
     obs[1] = Observation( Vec2(std::rand() % 10000, std::rand() % 10000), 1);
     sfm_data.structure[i].obs = obs;
     sfm_data.structure[i].X = Vec3(std::rand() % 10000, std::rand() % 10000, std::rand() % 10000);
+    sfm_data.structure[i].rgb = image::RGBColor((std::rand() % 1000) / 1000.0, (std::rand() % 1000) / 1000.0, (std::rand() % 1000) / 1000.0);
 
     // Add control points    
   }

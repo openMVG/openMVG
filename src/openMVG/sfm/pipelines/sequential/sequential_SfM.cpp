@@ -250,6 +250,7 @@ bool SequentialSfMReconstructionEngine::Process()
     htmlDocument::JSXGraphWrapper jsxGraphTracks;
     _htmlDocStream->pushXYChart(xBinTracks, hTracks.GetHist(),"3DtoTracksSize");
   }
+
   return true;
 }
 

@@ -52,13 +52,16 @@ void AlembicExporter::addPoints(const sfm::Landmarks &landmarks, bool withVisibi
 
   // Fill vector with the values taken from OpenMVG 
   std::vector<V3f> positions;
+  std::vector<Imath::C3f> colors;
   positions.reserve(landmarks.size());
 
   // For all the 3d points in the hash_map
   for(const auto landmark : landmarks)
   {
-    const openMVG::Vec3 &pt = landmark.second.X;
+    const openMVG::Vec3& pt = landmark.second.X;
+    const openMVG::image::RGBColor& color = landmark.second.rgb;
     positions.emplace_back(pt[0], pt[1], pt[2]);
+    colors.emplace_back(color.r()/255.f, color.g()/255.f, color.b()/255.f);
   }
 
   std::vector<Alembic::Util::uint64_t> ids(positions.size());
@@ -69,6 +72,12 @@ void AlembicExporter::addPoints(const sfm::Landmarks &landmarks, bool withVisibi
 
   OPointsSchema::Sample psamp(std::move(V3fArraySample(positions)), std::move(UInt64ArraySample(ids)));
   pSchema.set(psamp);
+
+  C3fArraySample val_samp(&colors[0], colors.size());
+  OC3fGeomParam::Sample color_samp(val_samp, kVertexScope);
+  OCompoundProperty arbGeom = pSchema.getArbGeomParams();
+  OC3fGeomParam rgbOut(arbGeom, "color", false, kVertexScope, 1);
+  rgbOut.set(color_samp);
 
   if(withVisibility)
   {
