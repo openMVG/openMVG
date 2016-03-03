@@ -276,7 +276,7 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
     for( int q = 0 ; q < options_.iNbSlicePerOctave ; ++q )
     {
       const float sigma_cur = Sigma( options_.fSigma0 , p , q , options_.iNbSlicePerOctave ) ;
-      const Image<float> & LDetHess = evolution_[options_.iNbOctave * p + q].Lhess;
+      const Image<float> & LDetHess = evolution_[options_.iNbSlicePerOctave * p + q].Lhess;
 
       // Check that the point is under the image limits for the descriptor computation
       const float borderLimit =
