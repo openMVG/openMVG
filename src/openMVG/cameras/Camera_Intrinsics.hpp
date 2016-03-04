@@ -23,14 +23,23 @@ namespace cameras
 {
 
 /**
+* @brief Struct used to force "clonability"
+*/
+template< typename T>
+struct Clonable
+{
+  virtual T * clone() const = 0 ;
+} ;
+
+/**
 * @brief Base class used to store common intrinsics parameters
 */
-struct IntrinsicBase
+struct IntrinsicBase : public Clonable<IntrinsicBase>
 {
   /// Width of image
-  unsigned int _w ;
+  unsigned int w_ ;
   /// Height of image
-  unsigned int _h;
+  unsigned int h_;
 
   /**
   * @brief Constructor
@@ -38,8 +47,8 @@ struct IntrinsicBase
   * @param h Height of the image
   */
   IntrinsicBase( unsigned int w = 0, unsigned int h = 0 )
-    : _w( w ),
-      _h( h )
+    : w_( w ),
+      h_( h )
   {
 
   }
@@ -55,7 +64,7 @@ struct IntrinsicBase
   */
   const unsigned int w() const
   {
-    return _w;
+    return w_;
   }
 
   /**
@@ -64,7 +73,7 @@ struct IntrinsicBase
   */
   const unsigned int h() const
   {
-    return _h;
+    return h_;
   }
 
 
@@ -217,8 +226,8 @@ struct IntrinsicBase
   template <class Archive>
   void save( Archive & ar ) const
   {
-    ar( cereal::make_nvp( "width", _w ) );
-    ar( cereal::make_nvp( "height", _h ) );
+    ar( cereal::make_nvp( "width", w_ ) );
+    ar( cereal::make_nvp( "height", h_ ) );
   }
 
   /**
@@ -228,8 +237,8 @@ struct IntrinsicBase
   template <class Archive>
   void load( Archive & ar )
   {
-    ar( cereal::make_nvp( "width", _w ) );
-    ar( cereal::make_nvp( "height", _h ) );
+    ar( cereal::make_nvp( "width", w_ ) );
+    ar( cereal::make_nvp( "height", h_ ) );
   }
 
 
@@ -241,8 +250,8 @@ struct IntrinsicBase
   {
     size_t seed = 0;
     stl::hash_combine( seed, static_cast<int>( this->getType() ) );
-    stl::hash_combine( seed, _w );
-    stl::hash_combine( seed, _h );
+    stl::hash_combine( seed, w_ );
+    stl::hash_combine( seed, h_ );
     const std::vector<double> params = this->getParams();
     for ( size_t i = 0; i < params.size(); ++i )
     {
