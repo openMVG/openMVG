@@ -28,7 +28,7 @@ int main() {
   Image<RGBColor> image;
   const std::string jpg_filenameL =
   stlplus::folder_up(string(THIS_SOURCE_DIR))  + "/imageData/StanfordMobileVisualSearch/Ace_0.png";
-  const std::string jpg_filenameR = 
+  const std::string jpg_filenameR =
   stlplus::folder_up(string(THIS_SOURCE_DIR))  + "/imageData/StanfordMobileVisualSearch/Ace_1.png";
 
   Image<unsigned char> imageL, imageR;
@@ -113,8 +113,8 @@ int main() {
     svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
     for (size_t i = 0; i < vec_PutativeMatches.size(); ++i) {
       //Get back linked feature, draw a circle and link them by a line
-      const SIOPointFeature & L = featsL[vec_PutativeMatches[i]._i];
-      const SIOPointFeature & R = featsR[vec_PutativeMatches[i]._j];
+      const SIOPointFeature & L = featsL[vec_PutativeMatches[i].i_];
+      const SIOPointFeature & R = featsR[vec_PutativeMatches[i].j_];
       svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
       svgStream.drawCircle(L.x(), L.y(), L.scale(), svgStyle().stroke("yellow", 2.0));
       svgStream.drawCircle(R.x()+imageL.Width(), R.y(), R.scale(),svgStyle().stroke("yellow", 2.0));

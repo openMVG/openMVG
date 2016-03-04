@@ -150,18 +150,18 @@ struct Resection_L1_ConstraintBuilder
     const Mat2X & Pt2D,
     const Mat3X & Pt3D)
   {
-    _2DPt = Pt2D;
-    _3DPt = Pt3D;
+    pt_2d_ = Pt2D;
+    pt_3d_ = Pt3D;
   }
 
   /// Setup constraints for the Resection problem,
   ///  in the LP_Constraints object.
   bool Build(double gamma, LP_Constraints_Sparse & constraint)
   {
-    EncodeResection(_2DPt, _3DPt,
+    EncodeResection(pt_2d_, pt_3d_,
       gamma,
-      constraint._constraintMat,
-      constraint._Cst_objective);
+      constraint.constraint_mat_,
+      constraint.constraint_objective_);
 
     //-- Setup additional information about the Linear Program constraint
     // We look for:
@@ -170,20 +170,20 @@ struct Resection_L1_ConstraintBuilder
     //      P20 P21 P22 1.0];
     const int NParams = 4 * 2 + 3;
 
-    constraint._nbParams = NParams;
-    constraint._vec_bounds = std::vector< std::pair<double,double> >(1);
-    fill(constraint._vec_bounds.begin(),constraint._vec_bounds.end(),
+    constraint.nbParams_ = NParams;
+    constraint.vec_bounds_ = std::vector< std::pair<double,double> >(1);
+    fill(constraint.vec_bounds_.begin(),constraint.vec_bounds_.end(),
       std::make_pair((double)-1e+30, (double)1e+30)); // lp_solve => getInfinite => DEF_INFINITE
     // Constraint sign are all LESS or equal (<=)
-    constraint._vec_sign.resize(constraint._constraintMat.rows());
-    fill(constraint._vec_sign.begin(), constraint._vec_sign.end(),
+    constraint.vec_sign_.resize(constraint.constraint_mat_.rows());
+    fill(constraint.vec_sign_.begin(), constraint.vec_sign_.end(),
       LP_Constraints::LP_LESS_OR_EQUAL);
 
     return true;
   }
 
-  Mat2X _2DPt;
-  Mat3X _3DPt;
+  Mat2X pt_2d_;
+  Mat3X pt_3d_;
 };
 
 } // namespace lInfinityCV

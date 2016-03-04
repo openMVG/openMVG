@@ -94,7 +94,7 @@ struct lm_SRTRefine_functor : Functor<double>
   lm_SRTRefine_functor( int inputs, int values,
                         const Mat &x1, const Mat &x2,
                         const double &S, const Mat3 & R, const Vec &t ): Functor<double>( inputs, values ),
-    _x1( x1 ), _x2( x2 ), _t( t ), _R( R ), _S( S ) { }
+    x1_( x1 ), x2_( x2 ), t_( t ), R_( R ), S_( S ) { }
 
   /**
   * @brief Computes error given a sample
@@ -115,15 +115,15 @@ struct lm_SRTRefine_functor : Functor<double>
         * Eigen::AngleAxis<double>( rot( 1 ), Vec3::UnitY() )
         * Eigen::AngleAxis<double>( rot( 2 ), Vec3::UnitZ() ) ).toRotationMatrix();
 
-    const Mat3 nR  = _R * Rcor;
-    const Vec3 nt = _t + transAdd;
-    const double nS = _S + Sadd;
+    const Mat3 nR  = R_ * Rcor;
+    const Vec3 nt = t_ + transAdd;
+    const double nS = S_ + Sadd;
 
     // Evaluate re-projection errors
     Vec3 proj;
-    for ( Mat::Index i = 0; i < _x1.cols(); ++i )
+    for ( Mat::Index i = 0; i < x1_.cols(); ++i )
     {
-      proj = _x2.col( i ) -  ( nS *  nR * ( _x1.col( i ) ) + nt );
+      proj = x2_.col( i ) -  ( nS *  nR * ( x1_.col( i ) ) + nt );
       fvec[i * 3]   = proj( 0 );
       fvec[i * 3 + 1] = proj( 1 );
       fvec[i * 3 + 2] = proj( 2 );
@@ -131,10 +131,10 @@ struct lm_SRTRefine_functor : Functor<double>
     return 0;
   }
 
-  Mat _x1, _x2;
-  Vec3 _t;
-  Mat3 _R;
-  double _S;
+  Mat x1_, x2_;
+  Vec3 t_;
+  Mat3 R_;
+  double S_;
 };
 
 
@@ -156,7 +156,7 @@ struct lm_RRefine_functor : Functor<double>
   lm_RRefine_functor( int inputs, int values,
                       const Mat &x1, const Mat &x2,
                       const double &S, const Mat3 & R, const Vec &t ): Functor<double>( inputs, values ),
-    _x1( x1 ), _x2( x2 ), _t( t ), _R( R ), _S( S ) { }
+    x1_( x1 ), x2_( x2 ), t_( t ), R_( R ), S_( S ) { }
 
   /**
    * @brief Computes error given a sample
@@ -175,15 +175,15 @@ struct lm_RRefine_functor : Functor<double>
         * Eigen::AngleAxis<double>( rot( 1 ), Vec3::UnitY() )
         * Eigen::AngleAxis<double>( rot( 2 ), Vec3::UnitZ() ) ).toRotationMatrix();
 
-    const Mat3 nR  = _R * Rcor;
-    const Vec3 nt = _t;
-    const double nS = _S;
+    const Mat3 nR  = R_ * Rcor;
+    const Vec3 nt = t_;
+    const double nS = S_;
 
     // Evaluate re-projection errors
     Vec3 proj;
-    for ( Mat::Index i = 0; i < _x1.cols(); ++i )
+    for ( Mat::Index i = 0; i < x1_.cols(); ++i )
     {
-      proj = _x2.col( i ) -  ( nS *  nR * ( _x1.col( i ) ) + nt );
+      proj = x2_.col( i ) -  ( nS *  nR * ( x1_.col( i ) ) + nt );
       fvec[i * 3]   = proj( 0 );
       fvec[i * 3 + 1] = proj( 1 );
       fvec[i * 3 + 2] = proj( 2 );
@@ -191,10 +191,10 @@ struct lm_RRefine_functor : Functor<double>
     return 0;
   }
 
-  Mat _x1, _x2;
-  Vec3 _t;
-  Mat3 _R;
-  double _S;
+  Mat x1_, x2_;
+  Vec3 t_;
+  Mat3 R_;
+  double S_;
 };
 
 /** 3D rigid transformation refinement using LM

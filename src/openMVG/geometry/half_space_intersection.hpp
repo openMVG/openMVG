@@ -77,34 +77,34 @@ static bool isNotEmpty( const Half_planes & hplanes )
 
   LP_Constraints cstraint;
   {
-    cstraint._nbParams = 3; // {X,Y,Z}
-    cstraint._vec_bounds.resize( cstraint._nbParams );
-    std::fill( cstraint._vec_bounds.begin(), cstraint._vec_bounds.end(),
+    cstraint.nbParams_ = 3; // {X,Y,Z}
+    cstraint.vec_bounds_.resize( cstraint.nbParams_ );
+    std::fill( cstraint.vec_bounds_.begin(), cstraint.vec_bounds_.end(),
                std::make_pair( ( double ) - 1e+30, ( double )1e+30 ) ); // [X,Y,Z] => -inf, +inf
-    cstraint._bminimize = true;
+    cstraint.bminimize_ = true;
 
     // Configure constraints
     const size_t nbConstraints = hplanes.size();
-    cstraint._constraintMat = Mat( nbConstraints, 3 );
-    cstraint._vec_sign.resize( nbConstraints );
-    cstraint._Cst_objective = Vec( nbConstraints );
+    cstraint.constraint_mat_.resize( nbConstraints, 3 );
+    cstraint.vec_sign_.resize( nbConstraints );
+    cstraint.constraint_objective_ = Vec( nbConstraints );
 
     // Fill the constrains (half-space equations)
     for ( unsigned char i = 0; i < hplanes.size(); ++i )
     {
       const Vec & half_plane_coeff = hplanes[i].coeffs();
       // add the half plane equation to the system
-      cstraint._constraintMat.row( i ) =
+      cstraint.constraint_mat_.row( i ) =
         Vec3( half_plane_coeff( 0 ),
               half_plane_coeff( 1 ),
               half_plane_coeff( 2 ) );
-      cstraint._vec_sign[i] = LP_Constraints::LP_GREATER_OR_EQUAL;
-      cstraint._Cst_objective( i ) = - half_plane_coeff( 3 );
+      cstraint.vec_sign_[i] = LP_Constraints::LP_GREATER_OR_EQUAL;
+      cstraint.constraint_objective_( i ) = - half_plane_coeff( 3 );
     }
   }
 
   // Solve in order to see if a point exists within the half spaces positive side?
-  OSI_CLP_SolverWrapper solver( cstraint._nbParams );
+  OSI_CLP_SolverWrapper solver( cstraint.nbParams_ );
   solver.setup( cstraint );
   const bool bIntersect = solver.solve(); // Status of the solver tell if there is an intersection or not
   return bIntersect;

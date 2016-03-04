@@ -33,8 +33,8 @@ public:
     const std::string& sfileNameFeats,
     const std::string& sfileNameDescs)
   {
-    return loadFeatsFromFile(sfileNameFeats, _feats)
-          & loadDescsFromFile(sfileNameDescs, _descs);
+    return loadFeatsFromFile(sfileNameFeats, feats_)
+          & loadDescsFromFile(sfileNameDescs, descs_);
   }
 
   /// Export in two separate files the feats and their corresponding descriptors.
@@ -42,8 +42,8 @@ public:
     const std::string& sfileNameFeats,
     const std::string& sfileNameDescs) const
   {
-    return saveFeatsToFile(sfileNameFeats, _feats)
-          & saveDescsToFile(sfileNameDescs, _descs);
+    return saveFeatsToFile(sfileNameFeats, feats_)
+          & saveDescsToFile(sfileNameDescs, descs_);
   }
 
   /// Read from files the feats and their corresponding descriptors
@@ -52,8 +52,8 @@ public:
     const std::string& sfileNameFeats,
     const std::string& sfileNameDescs)
   {
-    return loadFeatsFromFile(sfileNameFeats, _feats)
-          & loadDescsFromBinFile(sfileNameDescs, _descs);
+    return loadFeatsFromFile(sfileNameFeats, feats_)
+          & loadDescsFromBinFile(sfileNameDescs, descs_);
   }
 
   /// Export in two separate files the feats and their corresponding descriptors
@@ -62,21 +62,21 @@ public:
     const std::string& sfileNameFeats,
     const std::string& sfileNameDescs) const
   {
-    return saveFeatsToFile(sfileNameFeats, _feats)
-          & saveDescsToBinFile(sfileNameDescs, _descs);
+    return saveFeatsToFile(sfileNameFeats, feats_)
+          & saveDescsToBinFile(sfileNameDescs, descs_);
   }
 
   /// Mutable and non-mutable FeatureT getters.
-  inline FeaturesT & features() { return _feats; }
-  inline const FeaturesT & features() const { return _feats; }
+  inline FeaturesT & features() { return feats_; }
+  inline const FeaturesT & features() const { return feats_; }
 
   /// Mutable and non-mutable DescriptorT getters.
-  inline DescriptorsT & descriptors() { return _descs; }
-  inline const DescriptorsT & descriptors() const { return _descs; }
+  inline DescriptorsT & descriptors() { return descs_; }
+  inline const DescriptorsT & descriptors() const { return descs_; }
 
 private:
-  FeaturesT _feats;
-  DescriptorsT _descs;
+  FeaturesT feats_;
+  DescriptorsT descs_;
 };
 
 } // namespace features

@@ -112,8 +112,8 @@ int main() {
     svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
     for (size_t i = 0; i < vec_PutativeMatches.size(); ++i) {
       //Get back linked feature, draw a circle and link them by a line
-      const SIOPointFeature L = regionsL->Features()[vec_PutativeMatches[i]._i];
-      const SIOPointFeature R = regionsR->Features()[vec_PutativeMatches[i]._j];
+      const SIOPointFeature L = regionsL->Features()[vec_PutativeMatches[i].i_];
+      const SIOPointFeature R = regionsR->Features()[vec_PutativeMatches[i].j_];
       svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
       svgStream.drawCircle(L.x(), L.y(), L.scale(), svgStyle().stroke("yellow", 2.0));
       svgStream.drawCircle(R.x()+imageL.Width(), R.y(), R.scale(),svgStyle().stroke("yellow", 2.0));
@@ -131,8 +131,8 @@ int main() {
     Mat xR(2, vec_PutativeMatches.size());
 
     for (size_t k = 0; k < vec_PutativeMatches.size(); ++k)  {
-      const PointFeature & imaL = featsL[vec_PutativeMatches[k]._i];
-      const PointFeature & imaR = featsR[vec_PutativeMatches[k]._j];
+      const PointFeature & imaL = featsL[vec_PutativeMatches[k].i_];
+      const PointFeature & imaR = featsR[vec_PutativeMatches[k].j_];
       xL.col(k) = imaL.coords().cast<double>();
       xR.col(k) = imaR.coords().cast<double>();
     }

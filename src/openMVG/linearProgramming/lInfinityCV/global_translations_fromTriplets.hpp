@@ -163,7 +163,7 @@ struct Tifromtij_ConstraintBuilder_OneLambdaPerTrif
 {
   Tifromtij_ConstraintBuilder_OneLambdaPerTrif(
     const std::vector< relativeInfo > & vec_relative)
-  :_vec_relative(vec_relative)
+  :vec_relative_(vec_relative)
   {
     //Count the number of camera that are represented
     std::set<size_t> countSet;
@@ -172,7 +172,7 @@ struct Tifromtij_ConstraintBuilder_OneLambdaPerTrif
       countSet.insert(vec_relative[i].first.first);
       countSet.insert(vec_relative[i].first.second);
     }
-    _Ncam = countSet.size();
+    Ncam_ = countSet.size();
   }
 
   /// Setup constraints for the global translations problem,
@@ -180,29 +180,29 @@ struct Tifromtij_ConstraintBuilder_OneLambdaPerTrif
   bool Build(LP_Constraints_Sparse & constraint)
   {
     EncodeTi_from_tij_OneLambdaPerTrif(
-      _Ncam,
-      _vec_relative,
-      constraint._constraintMat,
-      constraint._Cst_objective,
-      constraint._vec_sign,
-      constraint._vec_cost,
-      constraint._vec_bounds);
+      Ncam_,
+      vec_relative_,
+      constraint.constraint_mat_,
+      constraint.constraint_objective_,
+      constraint.vec_sign_,
+      constraint.vec_cost_,
+      constraint.vec_bounds_);
 
     // it's a minimization problem over the gamma variable
-    constraint._bminimize = true;
+    constraint.bminimize_ = true;
 
     //-- Setup additional information about the Linear Program constraint.
     // We look for :
     //  - #translations parameters,
     //  - #relative lambda factors (one per triplet),
     //  - one gamma parameter.
-    constraint._nbParams = _Ncam * 3 + _vec_relative.size()/3 + 1;
+    constraint.nbParams_ = Ncam_ * 3 + vec_relative_.size()/3 + 1;
     return true;
   }
 
   // Internal data
-  size_t _Ncam;
-  const std::vector< relativeInfo > & _vec_relative; // /!\ memory Alias
+  size_t Ncam_;
+  const std::vector< relativeInfo > & vec_relative_; // /!\ memory Alias
 };
 
 } // namespace lInfinityCV

@@ -81,8 +81,8 @@ struct TracksBuilder
       // Retrieve all shared features and add them to a set
       for( size_t k = 0; k < vec_FilteredMatches.size(); ++k)
       {
-        allFeatures.emplace(I,vec_FilteredMatches[k]._i);
-        allFeatures.emplace(J,vec_FilteredMatches[k]._j);
+        allFeatures.emplace(I,vec_FilteredMatches[k].i_);
+        allFeatures.emplace(J,vec_FilteredMatches[k].j_);
       }
     }
 
@@ -113,8 +113,8 @@ struct TracksBuilder
       const std::vector<IndMatch> & vec_FilteredMatches = iter->second;
       for (const IndMatch & match : vec_FilteredMatches)
       {
-        const indexedFeaturePair pairI(I, match._i);
-        const indexedFeaturePair pairJ(J, match._j);
+        const indexedFeaturePair pairI(I, match.i_);
+        const indexedFeaturePair pairJ(J, match.j_);
         // Link feature correspondences to the corresponding containing sets.
         uf_tree.Union(map_node_to_index[pairI], map_node_to_index[pairJ]);
       }

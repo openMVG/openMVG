@@ -127,15 +127,15 @@ inline bool TRobustRegressionL1PD(
     for (unsigned i=0; i<M; ++i) {
       REAL& Adxi = Adx(i);
       REAL& dui = du(i);
-      const REAL Adx_du = Adxi-dui;
+      REAL Adx_du = Adxi-dui;
       if (Adx_du > 0) {
         const REAL tmp = -fu1(i)/Adx_du;
         if (s > tmp)
           s = tmp;
       }
-      const REAL _Adx_du = -Adxi-dui;
-      if (_Adx_du > 0) {
-        const REAL tmp = -fu2(i)/_Adx_du;
+      Adx_du = -Adxi-dui;
+      if (Adx_du > 0) {
+        const REAL tmp = -fu2(i)/Adx_du;
         if (s > tmp)
           s = tmp;
       }

@@ -19,18 +19,18 @@ namespace geometry
 struct Similarity3
 {
   /// Pose
-  Pose3 _pose;
+  Pose3 pose_;
 
   /// Scale
-  double _scale;
+  double scale_;
 
   /**
   * @brief Default constructor
   * @note This define identity transformation centered at origin of a cartesian frame
   */
   Similarity3()
-    : _pose( Pose3() ),
-      _scale( 1.0 )
+    : pose_( Pose3() ),
+      scale_( 1.0 )
   {
 
   }
@@ -41,8 +41,8 @@ struct Similarity3
   * @param scale a scale factor
   */
   Similarity3( const Pose3 & pose, const double scale )
-    : _pose( pose ),
-      _scale( scale )
+    : pose_( pose ),
+      scale_( scale )
   {
 
   }
@@ -54,7 +54,7 @@ struct Similarity3
   */
   Vec3 operator () ( const Vec3 & point ) const
   {
-    return _scale * _pose( point );
+    return scale_ * pose_( point );
   }
 
   /**
@@ -64,7 +64,7 @@ struct Similarity3
   */
   Pose3 operator () ( const Pose3 & pose ) const
   {
-    return Pose3( pose.rotation() * _pose.rotation().transpose(), this->operator()( pose.center() ) );
+    return Pose3( pose.rotation() * pose_.rotation().transpose(), this->operator()( pose.center() ) );
   }
 };
 

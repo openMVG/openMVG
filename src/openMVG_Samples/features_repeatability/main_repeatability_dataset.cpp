@@ -151,9 +151,9 @@ void PointsToMat(
 
   for( size_t i = 0; i < matches.size(); ++i)
   {
-    const ValueT & feat0 = vec_feats0[matches[i]._i];
+    const ValueT & feat0 = vec_feats0[matches[i].i_];
     m0.col(i) << feat0.x(), feat0.y();
-    const ValueT & feat1 = vec_feats1[matches[i]._j];
+    const ValueT & feat1 = vec_feats1[matches[i].j_];
     m1.col(i) << feat1.x(), feat1.y();
   }
 }
