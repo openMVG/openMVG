@@ -178,7 +178,7 @@ int main(int argc, char **argv)
       << "[-f|--focal] (pixels)\n"
       << "[-s|--sensorWidth] (mm)\n"
       << "[-k|--intrinsics] Kmatrix: \"f;0;ppx;0;f;ppy;0;0;1\"\n"
-      << "[-c|--camera_model] Camera model type (pinhole, radial1, radial3, brown or fisheye)\n"
+      << "[-c|--camera_model] Camera model type (pinhole, radial1, radial3, brown or fisheye4)\n"
       << "[-g|--group_camera_model]\n"
       << "\t 0-> each view have it's own camera intrinsic parameters,\n"
       << "\t 1-> (default) view can share some camera intrinsic parameters\n"

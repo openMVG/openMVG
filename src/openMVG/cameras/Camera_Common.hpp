@@ -37,7 +37,7 @@ inline std::string EINTRINSIC_enumToString(EINTRINSIC intrinsic)
     case PINHOLE_CAMERA_BROWN:
       return "brown";
     case PINHOLE_CAMERA_FISHEYE:
-      return "fisheye";
+      return "fisheye4";
     case PINHOLE_CAMERA_START:
     case PINHOLE_CAMERA_END:
       break;
@@ -55,7 +55,7 @@ inline EINTRINSIC EINTRINSIC_stringToEnum(const std::string& intrinsic)
     return PINHOLE_CAMERA_RADIAL3;
   if(intrinsic == "brown")
     return PINHOLE_CAMERA_BROWN;
-  if(intrinsic == "fisheye")
+  if(intrinsic == "fisheye4")
     return PINHOLE_CAMERA_FISHEYE;
   throw std::out_of_range(intrinsic);
 }

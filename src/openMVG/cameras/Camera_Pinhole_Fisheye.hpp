@@ -129,7 +129,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
   void save( Archive & ar) const
   {
     Pinhole_Intrinsic::save(ar);
-    ar(cereal::make_nvp("fisheye", _params));
+    ar(cereal::make_nvp("fisheye4", _params));
   }
 
   // Serialization
@@ -137,7 +137,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
   void load( Archive & ar)
   {
     Pinhole_Intrinsic::load(ar);
-    ar(cereal::make_nvp("fisheye", _params));
+    ar(cereal::make_nvp("fisheye4", _params));
   }
 };
 
@@ -148,6 +148,6 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/types/vector.hpp>
 
-CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::cameras::Pinhole_Intrinsic_Fisheye, "fisheye");
+CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::cameras::Pinhole_Intrinsic_Fisheye, "fisheye4");
 
 #endif // #ifndef OPENMVG_CAMERA_PINHOLE_FISHEYE_HPP
