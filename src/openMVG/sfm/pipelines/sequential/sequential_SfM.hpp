@@ -37,7 +37,7 @@ public:
 
   void setInitialPair(const Pair & initialPair)
   {
-    _initialpair = initialPair;
+    initial_pair_ = initialPair;
   }
 
   /// Initialize tracks
@@ -60,7 +60,7 @@ public:
    */
   void SetUnknownCameraType(const cameras::EINTRINSIC camType)
   {
-    _camType = camType;
+    cam_type_ = camType;
   }
 
 protected:
@@ -88,22 +88,22 @@ private:
   //----
 
   // HTML logger
-  std::shared_ptr<htmlDocument::htmlDocumentStream> _htmlDocStream;
-  std::string _sLoggingFile;
+  std::shared_ptr<htmlDocument::htmlDocumentStream> html_doc_stream_;
+  std::string sLogging_file_;
 
   // Parameter
-  Pair _initialpair;
-  cameras::EINTRINSIC _camType; // The camera type for the unknown cameras
+  Pair initial_pair_;
+  cameras::EINTRINSIC cam_type_; // The camera type for the unknown cameras
 
   //-- Data provider
-  Features_Provider  * _features_provider;
-  Matches_Provider  * _matches_provider;
+  Features_Provider  * features_provider_;
+  Matches_Provider  * matches_provider_;
 
   // Temporary data
-  openMVG::tracks::STLMAPTracks _map_tracks; // putative landmark tracks (visibility per 3D point)
-  Hash_Map<IndexT, double> _map_ACThreshold; // Per camera confidence (A contrario estimated threshold error)
+  openMVG::tracks::STLMAPTracks map_tracks_; // putative landmark tracks (visibility per 3D point)
+  Hash_Map<IndexT, double> map_ACThreshold_; // Per camera confidence (A contrario estimated threshold error)
 
-  std::set<size_t> _set_remainingViewId;     // Remaining camera index that can be used for resection
+  std::set<size_t> set_remaining_view_id_;     // Remaining camera index that can be used for resection
 };
 
 } // namespace sfm

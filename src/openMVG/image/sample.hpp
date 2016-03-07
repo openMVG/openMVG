@@ -102,7 +102,7 @@ struct SamplerCubic
      ** -0.5 gives better mathematically result (ie: approximation at 3 order precision)
      **/
     SamplerCubic( const double sharpness_coef = -0.5 )
-      : _sharpness( sharpness_coef )
+      : sharpness_( sharpness_coef )
     {
 
     }
@@ -124,10 +124,10 @@ struct SamplerCubic
       // weight[2] -> weight for C
       // weight[3] -> weigth for D
 
-      weigth[0] = CubicInter12( _sharpness , x + 1.0 ) ;
-      weigth[1] = CubicInter01( _sharpness , x ) ;
-      weigth[2] = CubicInter01( _sharpness , 1.0 - x ) ;
-      weigth[3] = CubicInter12( _sharpness , 2.0 - x ) ;
+      weigth[0] = CubicInter12( sharpness_ , x + 1.0 ) ;
+      weigth[1] = CubicInter01( sharpness_ , x ) ;
+      weigth[2] = CubicInter01( sharpness_ , 1.0 - x ) ;
+      weigth[3] = CubicInter12( sharpness_ , 2.0 - x ) ;
     }
 
   private:
@@ -159,7 +159,7 @@ struct SamplerCubic
     }
 
     /// Sharpness coefficient
-    double _sharpness ;
+    double sharpness_ ;
 } ;
 
 /**
@@ -475,8 +475,8 @@ template< typename SamplerFunc>
 struct Sampler2d
 {
     Sampler2d( const SamplerFunc & sampler = SamplerFunc() )
-      : _sampler( sampler ) ,
-        _half_width( SamplerFunc::neighbor_width / 2 )
+      : sampler_( sampler ) ,
+        half_width_( SamplerFunc::neighbor_width / 2 )
     {
 
     }
@@ -503,8 +503,8 @@ struct Sampler2d
       const double dy = static_cast<double>( y ) - floor( y ) ;
 
       // Get sampler weights
-      _sampler( dx , coefs_x ) ;
-      _sampler( dy , coefs_y ) ;
+      sampler_( dx , coefs_x ) ;
+      sampler_( dy , coefs_y ) ;
 
       typename RealPixel<T>::real_type res( 0 ) ;
 
@@ -518,7 +518,7 @@ struct Sampler2d
       {
         // Get current i value
         // +1 for correct scheme (draw it to be conviced)
-        const int cur_i = grid_y + 1 + i - _half_width ;
+        const int cur_i = grid_y + 1 + i - half_width_ ;
 
         // handle out of range
         if( cur_i < 0 || cur_i >= im_height )
@@ -530,7 +530,7 @@ struct Sampler2d
         {
           // Get current j value
           // +1 for the same reason
-          const int cur_j = grid_x + 1 + j - _half_width ;
+          const int cur_j = grid_x + 1 + j - half_width_ ;
 
           // handle out of range
           if( cur_j < 0 || cur_j >= im_width )
@@ -567,10 +567,10 @@ struct Sampler2d
   private:
 
     /// Sampler function used to resample input image
-    SamplerFunc _sampler ;
+    SamplerFunc sampler_ ;
 
     /// Sampling window
-    const int _half_width ;
+    const int half_width_ ;
 };
 
 } // namespace image

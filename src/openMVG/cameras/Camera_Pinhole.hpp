@@ -30,13 +30,15 @@ namespace cameras
 */
 class Pinhole_Intrinsic : public IntrinsicBase
 {
+  typedef Pinhole_Intrinsic class_type;
+
   protected:
 
     /// Intrinsic matrix : Focal & principal point are embed into the calibration matrix K
-    Mat3 _K;
+    Mat3 K_;
 
     /// Inverse of intrinsic matrix
-    Mat3 _Kinv;
+    Mat3 Kinv_;
 
   public:
 
@@ -54,8 +56,8 @@ class Pinhole_Intrinsic : public IntrinsicBase
       double ppx = 0.0, double ppy = 0.0 )
       : IntrinsicBase( w, h )
     {
-      _K << focal_length_pix, 0., ppx, 0., focal_length_pix, ppy, 0., 0., 1.;
-      _Kinv = _K.inverse();
+      K_ << focal_length_pix, 0., ppx, 0., focal_length_pix, ppy, 0., 0., 1.;
+      Kinv_ = K_.inverse();
     }
 
     /**
@@ -78,7 +80,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     */
     const Mat3& K() const
     {
-      return _K;
+      return K_;
     }
 
     /**
@@ -87,7 +89,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     */
     const Mat3& Kinv() const
     {
-      return _Kinv;
+      return Kinv_;
     }
 
 
@@ -97,7 +99,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     */
     inline double focal() const
     {
-      return _K( 0, 0 );
+      return K_( 0, 0 );
     }
 
     /**
@@ -106,7 +108,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     */
     inline Vec2 principal_point() const
     {
-      return Vec2( _K( 0, 2 ), _K( 1, 2 ) );
+      return Vec2( K_( 0, 2 ), K_( 1, 2 ) );
     }
 
 
@@ -117,7 +119,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     virtual Vec3 operator () ( const Vec2& p ) const
     {
       Vec3 p3( p( 0 ), p( 1 ), 1.0 );
-      return ( _Kinv * p3 ).normalized();
+      return ( Kinv_ * p3 ).normalized();
     }
 
     /**
@@ -198,7 +200,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     */
     virtual std::vector<double> getParams() const
     {
-      const std::vector<double> params = {_K( 0, 0 ), _K( 0, 2 ), _K( 1, 2 )};
+      const std::vector<double> params = {K_( 0, 0 ), K_( 0, 2 ), K_( 1, 2 )};
       return params;
     }
 
@@ -213,7 +215,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     {
       if ( params.size() == 3 )
       {
-        *this = Pinhole_Intrinsic( _w, _h, params[0], params[1], params[2] );
+        *this = Pinhole_Intrinsic( w_, h_, params[0], params[1], params[2] );
         return true;
       }
       else
@@ -250,8 +252,8 @@ class Pinhole_Intrinsic : public IntrinsicBase
     void save( Archive & ar ) const
     {
       IntrinsicBase::save( ar );
-      ar( cereal::make_nvp( "focal_length", _K( 0, 0 ) ) );
-      const std::vector<double> pp = {_K( 0, 2 ), _K( 1, 2 )};
+      ar( cereal::make_nvp( "focal_length", K_( 0, 0 ) ) );
+      const std::vector<double> pp = {K_( 0, 2 ), K_( 1, 2 )};
       ar( cereal::make_nvp( "principal_point", pp ) );
     }
 
@@ -268,7 +270,16 @@ class Pinhole_Intrinsic : public IntrinsicBase
       ar( cereal::make_nvp( "focal_length", focal_length ) );
       std::vector<double> pp( 2 );
       ar( cereal::make_nvp( "principal_point", pp ) );
-      *this = Pinhole_Intrinsic( _w, _h, focal_length, pp[0], pp[1] );
+      *this = Pinhole_Intrinsic( w_, h_, focal_length, pp[0], pp[1] );
+    }
+
+    /**
+    * @brief Clone the object
+    * @return A clone (copy of the stored object)
+    */
+    virtual IntrinsicBase * clone( void ) const
+    {
+      return new class_type( *this );
     }
 };
 

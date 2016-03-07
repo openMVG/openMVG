@@ -51,8 +51,8 @@ public:
           iter_putativeMatches != _vec_PutativeMatches.end();
           ++iter_putativeMatches )
     {
-      const features::SIOPointFeature & L = _vec_featsL[ iter_putativeMatches->_i ];
-      const features::SIOPointFeature & R = _vec_featsR[ iter_putativeMatches->_j ];
+      const features::SIOPointFeature & L = _vec_featsL[ iter_putativeMatches->i_ ];
+      const features::SIOPointFeature & R = _vec_featsR[ iter_putativeMatches->j_ ];
 
       image::FilledCircle( L.x(), L.y(), ( int )_radius, ( unsigned char ) 255, &maskLeft );
       image::FilledCircle( R.x(), R.y(), ( int )_radius, ( unsigned char ) 255, &maskRight );

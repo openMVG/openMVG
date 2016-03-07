@@ -37,8 +37,8 @@ void MatchesPointsToMat
   typedef typename MatT::Scalar Scalar; // Output matrix type
 
   for (size_t i=0; i < putativeMatches.size(); ++i)  {
-    const features::PointFeature & pt_I = feature_I[putativeMatches[i]._i];
-    const features::PointFeature & pt_J = feature_J[putativeMatches[i]._j];
+    const features::PointFeature & pt_I = feature_I[putativeMatches[i].i_];
+    const features::PointFeature & pt_J = feature_J[putativeMatches[i].j_];
     if (cam_I)
       x_I.col(i) = cam_I->get_ud_pixel(pt_I.coords().cast<double>());
     else

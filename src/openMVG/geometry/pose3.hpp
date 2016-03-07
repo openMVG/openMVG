@@ -25,10 +25,10 @@ class Pose3
   protected:
 
     /// Orientation matrix
-    Mat3 _rotation;
+    Mat3 rotation_;
 
     /// Center of rotation
-    Vec3 _center;
+    Vec3 center_;
 
   public:
 
@@ -37,8 +37,8 @@ class Pose3
     * @note This defines a Null transform (aligned with cartesian frame, centered at origin)
     */
     Pose3()
-      : _rotation( Mat3::Identity() ),
-        _center( Vec3::Zero() )
+      : rotation_( Mat3::Identity() ),
+        center_( Vec3::Zero() )
     {
 
     }
@@ -47,7 +47,7 @@ class Pose3
     * @param r Rotation
     * @param c Center
     */
-    Pose3( const Mat3& r, const Vec3& c ) : _rotation( r ), _center( c ) {}
+    Pose3( const Mat3& r, const Vec3& c ) : rotation_( r ), center_( c ) {}
 
     /**
     * @brief Get Rotation matrix
@@ -55,7 +55,7 @@ class Pose3
     */
     const Mat3& rotation() const
     {
-      return _rotation;
+      return rotation_;
     }
 
     /**
@@ -64,7 +64,7 @@ class Pose3
     */
     Mat3& rotation()
     {
-      return _rotation;
+      return rotation_;
     }
 
     /**
@@ -73,7 +73,7 @@ class Pose3
     */
     const Vec3& center() const
     {
-      return _center;
+      return center_;
     }
 
     /**
@@ -82,7 +82,7 @@ class Pose3
     */
     Vec3& center()
     {
-      return _center;
+      return center_;
     }
 
     /**
@@ -92,7 +92,7 @@ class Pose3
     */
     inline Vec3 translation() const
     {
-      return -( _rotation * _center );
+      return -( rotation_ * center_ );
     }
 
 
@@ -103,7 +103,7 @@ class Pose3
     */
     inline Mat3X operator () ( const Mat3X& p ) const
     {
-      return _rotation * ( p.colwise() - _center );
+      return rotation_ * ( p.colwise() - center_ );
     }
 
 
@@ -114,7 +114,7 @@ class Pose3
     */
     Pose3 operator * ( const Pose3& P ) const
     {
-      return Pose3( _rotation * P._rotation, P._center + P._rotation.transpose() * _center );
+      return Pose3( rotation_ * P.rotation_, P.center_ + P.rotation_.transpose() * center_ );
     }
 
 
@@ -124,7 +124,7 @@ class Pose3
     */
     Pose3 inverse() const
     {
-      return Pose3( _rotation.transpose(),  -( _rotation * _center ) );
+      return Pose3( rotation_.transpose(),  -( rotation_ * center_ ) );
     }
 
 
@@ -135,7 +135,7 @@ class Pose3
     */
     double depth( const Vec3 &X ) const
     {
-      return ( _rotation * ( X - _center ) )[2];
+      return ( rotation_ * ( X - center_ ) )[2];
     }
 
     /**
@@ -147,14 +147,14 @@ class Pose3
     {
       const std::vector<std::vector<double>> mat =
       {
-        { _rotation( 0, 0 ), _rotation( 0, 1 ), _rotation( 0, 2 ) },
-        { _rotation( 1, 0 ), _rotation( 1, 1 ), _rotation( 1, 2 ) },
-        { _rotation( 2, 0 ), _rotation( 2, 1 ), _rotation( 2, 2 ) }
+        { rotation_( 0, 0 ), rotation_( 0, 1 ), rotation_( 0, 2 ) },
+        { rotation_( 1, 0 ), rotation_( 1, 1 ), rotation_( 1, 2 ) },
+        { rotation_( 2, 0 ), rotation_( 2, 1 ), rotation_( 2, 2 ) }
       };
 
       ar( cereal::make_nvp( "rotation", mat ) );
 
-      const std::vector<double> vec = { _center( 0 ), _center( 1 ), _center( 2 ) };
+      const std::vector<double> vec = { center_( 0 ), center_( 1 ), center_( 2 ) };
       ar( cereal::make_nvp( "center", vec ) );
     }
 
@@ -168,13 +168,13 @@ class Pose3
       std::vector<std::vector<double>> mat( 3, std::vector<double>( 3 ) );
       ar( cereal::make_nvp( "rotation", mat ) );
       // copy back to the rotation
-      _rotation.row( 0 ) = Eigen::Map<const Vec3>( &( mat[0][0] ) );
-      _rotation.row( 1 ) = Eigen::Map<const Vec3>( &( mat[1][0] ) );
-      _rotation.row( 2 ) = Eigen::Map<const Vec3>( &( mat[2][0] ) );
+      rotation_.row( 0 ) = Eigen::Map<const Vec3>( &( mat[0][0] ) );
+      rotation_.row( 1 ) = Eigen::Map<const Vec3>( &( mat[1][0] ) );
+      rotation_.row( 2 ) = Eigen::Map<const Vec3>( &( mat[2][0] ) );
 
       std::vector<double> vec( 3 );
       ar( cereal::make_nvp( "center", vec ) );
-      _center = Eigen::Map<const Vec3>( &vec[0] );
+      center_ = Eigen::Map<const Vec3>( &vec[0] );
     }
 };
 } // namespace geometry

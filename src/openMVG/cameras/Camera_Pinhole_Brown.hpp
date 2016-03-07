@@ -25,10 +25,12 @@ namespace cameras
 */
 class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
 {
+  typedef Pinhole_Intrinsic_Brown_T2 class_type;
+
   protected:
 
     /// center of distortion is applied by the Intrinsics class
-    std::vector<double> _params; // K1, K2, K3, T1, T2
+    std::vector<double> params_; // K1, K2, K3, T1, T2
 
   public:
 
@@ -52,7 +54,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
       double t1 = 0.0, double t2 = 0.0 )
       : Pinhole_Intrinsic( w, h, focal, ppx, ppy )
     {
-      _params = {k1, k2, k3, t1, t2};
+      params_ = {k1, k2, k3, t1, t2};
     }
 
     /**
@@ -80,7 +82,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     */
     virtual Vec2 add_disto( const Vec2 & p ) const
     {
-      return ( p + distoFunction( _params, p ) );
+      return ( p + distoFunction( params_, p ) );
     }
 
     /**
@@ -98,7 +100,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
 
       while( ( add_disto( p_u ) - p ).lpNorm<1>() > epsilon ) //manhattan distance between the two points
       {
-        p_u = p - distoFunction( _params, p_u );
+        p_u = p - distoFunction( params_, p_u );
       }
 
       return p_u;
@@ -112,11 +114,11 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     virtual std::vector<double> getParams() const
     {
       std::vector<double> params = Pinhole_Intrinsic::getParams();
-      params.push_back( _params[0] );
-      params.push_back( _params[1] );
-      params.push_back( _params[2] );
-      params.push_back( _params[3] );
-      params.push_back( _params[4] );
+      params.push_back( params_[0] );
+      params.push_back( params_[1] );
+      params.push_back( params_[2] );
+      params.push_back( params_[3] );
+      params.push_back( params_[4] );
       return params;
     }
 
@@ -132,7 +134,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
       if ( params.size() == 8 )
       {
         *this = Pinhole_Intrinsic_Brown_T2(
-                  _w, _h,
+                  w_, h_,
                   params[0], params[1], params[2], // focal, ppx, ppy
                   params[3], params[4], params[5], // K1, K2, K3
                   params[6], params[7] );          // T1, T2
@@ -175,7 +177,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     void save( Archive & ar ) const
     {
       Pinhole_Intrinsic::save( ar );
-      ar( cereal::make_nvp( "disto_t2", _params ) );
+      ar( cereal::make_nvp( "disto_t2", params_ ) );
     }
 
 
@@ -187,7 +189,16 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     void load( Archive & ar )
     {
       Pinhole_Intrinsic::load( ar );
-      ar( cereal::make_nvp( "disto_t2", _params ) );
+      ar( cereal::make_nvp( "disto_t2", params_ ) );
+    }
+
+    /**
+    * @brief Clone the object
+    * @return A clone (copy of the stored object)
+    */
+    virtual IntrinsicBase * clone( void ) const
+    {
+      return new class_type( *this );
     }
 
   private:

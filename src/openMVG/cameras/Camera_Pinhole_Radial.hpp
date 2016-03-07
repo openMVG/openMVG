@@ -76,9 +76,11 @@ double bisection_Radius_Solve(
  */
 class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
 {
+  typedef Pinhole_Intrinsic_Radial_K1 class_type;
+
   protected:
     /// center of distortion is applied by the Intrinsics class
-    std::vector<double> _params; // K1
+    std::vector<double> params_; // K1
 
   public:
 
@@ -97,8 +99,8 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
       double k1 = 0.0 )
       : Pinhole_Intrinsic( w, h, focal, ppx, ppy )
     {
-      _params.resize( 1 );
-      _params[0] = k1;
+      params_.resize( 1 );
+      params_[0] = k1;
     }
 
     /**
@@ -129,7 +131,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     virtual Vec2 add_disto( const Vec2 & p ) const
     {
 
-      const double k1 = _params[0];
+      const double k1 = params_[0];
 
       const double r2 = p( 0 ) * p( 0 ) + p( 1 ) * p( 1 );
       const double r_coeff = ( 1. + k1 * r2 );
@@ -151,7 +153,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
       const double r2 = p( 0 ) * p( 0 ) + p( 1 ) * p( 1 );
       const double radius = ( r2 == 0 ) ?
                             1. :
-                            ::sqrt( radial_distortion::bisection_Radius_Solve( _params, r2, distoFunctor ) / r2 );
+                            ::sqrt( radial_distortion::bisection_Radius_Solve( params_, r2, distoFunctor ) / r2 );
       return radius * p;
     }
 
@@ -163,7 +165,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     virtual std::vector<double> getParams() const
     {
       std::vector<double> params = Pinhole_Intrinsic::getParams();
-      params.push_back( _params[0] );
+      params.push_back( params_[0] );
       return params;
     }
 
@@ -179,7 +181,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
       if ( params.size() == 4 )
       {
         *this = Pinhole_Intrinsic_Radial_K1(
-                  _w, _h,
+                  w_, h_,
                   params[0], params[1], params[2], // focal, ppx, ppy
                   params[3] ); //K1
         return true;
@@ -221,7 +223,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     void save( Archive & ar ) const
     {
       Pinhole_Intrinsic::save( ar );
-      ar( cereal::make_nvp( "disto_k1", _params ) );
+      ar( cereal::make_nvp( "disto_k1", params_ ) );
     }
 
 
@@ -233,7 +235,16 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     void load( Archive & ar )
     {
       Pinhole_Intrinsic::load( ar );
-      ar( cereal::make_nvp( "disto_k1", _params ) );
+      ar( cereal::make_nvp( "disto_k1", params_ ) );
+    }
+
+    /**
+    * @brief Clone the object
+    * @return A clone (copy of the stored object)
+    */
+    virtual IntrinsicBase * clone( void ) const
+    {
+      return new class_type( *this );
     }
 
   private:
@@ -258,10 +269,12 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
 */
 class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
 {
+  typedef Pinhole_Intrinsic_Radial_K3 class_type;
+
   protected:
     // center of distortion is applied by the Intrinsics class
     /// K1, K2, K3
-    std::vector<double> _params;
+    std::vector<double> params_;
 
   public:
 
@@ -282,10 +295,10 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
       double k1 = 0.0, double k2 = 0.0, double k3 = 0.0 )
       : Pinhole_Intrinsic( w, h, focal, ppx, ppy )
     {
-      _params.resize( 3 );
-      _params[0] = k1;
-      _params[1] = k2;
-      _params[2] = k3;
+      params_.resize( 3 );
+      params_[0] = k1;
+      params_[1] = k2;
+      params_[2] = k3;
     }
 
     /**
@@ -315,7 +328,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     virtual Vec2 add_disto( const Vec2 & p ) const
     {
 
-      const double k1 = _params[0], k2 = _params[1], k3 = _params[2];
+      const double k1 = params_[0], k2 = params_[1], k3 = params_[2];
 
       const double r2 = p( 0 ) * p( 0 ) + p( 1 ) * p( 1 );
       const double r4 = r2 * r2;
@@ -339,7 +352,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
       const double r2 = p( 0 ) * p( 0 ) + p( 1 ) * p( 1 );
       const double radius = ( r2 == 0 ) ? //1. : ::sqrt(bisectionSolve(_params, r2) / r2);
                             1. :
-                            ::sqrt( radial_distortion::bisection_Radius_Solve( _params, r2, distoFunctor ) / r2 );
+                            ::sqrt( radial_distortion::bisection_Radius_Solve( params_, r2, distoFunctor ) / r2 );
       return radius * p;
     }
 
@@ -351,9 +364,9 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     virtual std::vector<double> getParams() const
     {
       std::vector<double> params = Pinhole_Intrinsic::getParams();
-      params.push_back( _params[0] );
-      params.push_back( _params[1] );
-      params.push_back( _params[2] );
+      params.push_back( params_[0] );
+      params.push_back( params_[1] );
+      params.push_back( params_[2] );
       return params;
     }
 
@@ -369,7 +382,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
       if ( params.size() == 6 )
       {
         *this = Pinhole_Intrinsic_Radial_K3(
-                  _w, _h,
+                  w_, h_,
                   params[0], params[1], params[2], // focal, ppx, ppy
                   params[3], params[4], params[5] ); // K1, K2, K3
         return true;
@@ -411,7 +424,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     void save( Archive & ar ) const
     {
       Pinhole_Intrinsic::save( ar );
-      ar( cereal::make_nvp( "disto_k3", _params ) );
+      ar( cereal::make_nvp( "disto_k3", params_ ) );
     }
 
 
@@ -423,7 +436,16 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     void load( Archive & ar )
     {
       Pinhole_Intrinsic::load( ar );
-      ar( cereal::make_nvp( "disto_k3", _params ) );
+      ar( cereal::make_nvp( "disto_k3", params_ ) );
+    }
+
+    /**
+    * @brief Clone the object
+    * @return A clone (copy of the stored object)
+    */
+    virtual IntrinsicBase * clone( void ) const
+    {
+      return new class_type( *this );
     }
 
   private:
