@@ -20,7 +20,7 @@ using namespace openMVG::geometry;
 using namespace openMVG::cameras;
 
 SfM_Data_Structure_Computation_Basis::SfM_Data_Structure_Computation_Basis(bool bConsoleVerbose)
-  :_bConsoleVerbose(bConsoleVerbose)
+  :bConsole_verbose_(bConsoleVerbose)
 {
 }
 
@@ -33,7 +33,7 @@ void SfM_Data_Structure_Computation_Blind::triangulate(SfM_Data & sfm_data) cons
 {
   std::deque<IndexT> rejectedId;
   std::unique_ptr<C_Progress_display> my_progress_bar;
-  if (_bConsoleVerbose)
+  if (bConsole_verbose_)
     my_progress_bar.reset( new C_Progress_display(
     sfm_data.structure.size(),
     std::cout,
@@ -49,7 +49,7 @@ void SfM_Data_Structure_Computation_Blind::triangulate(SfM_Data & sfm_data) cons
   #pragma omp single nowait
 #endif
     {
-      if (_bConsoleVerbose)
+      if (bConsole_verbose_)
       {
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
@@ -125,7 +125,7 @@ void SfM_Data_Structure_Computation_Robust::robust_triangulation(SfM_Data & sfm_
 {
   std::deque<IndexT> rejectedId;
   std::unique_ptr<C_Progress_display> my_progress_bar;
-  if (_bConsoleVerbose)
+  if (bConsole_verbose_)
     my_progress_bar.reset( new C_Progress_display(
     sfm_data.structure.size(),
     std::cout,
@@ -141,7 +141,7 @@ void SfM_Data_Structure_Computation_Robust::robust_triangulation(SfM_Data & sfm_
   #pragma omp single nowait
 #endif
     {
-      if (_bConsoleVerbose)
+      if (bConsole_verbose_)
       {
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
@@ -216,7 +216,7 @@ bool SfM_Data_Structure_Computation_Robust::robust_triangulation(
       const View * view = sfm_data.views.at(itObs->first).get();
       const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
-      const double z = pose.depth(current_model); // TODO: cam->depth(pose(X));
+      const double z = pose.depth(current_model);
       bChierality &= z > 0;
     }
 

@@ -79,13 +79,13 @@ inline MSKboundkey_enum convertSign(LP_Constraints::eLP_SIGN sign) {
 
 bool MOSEK_SolveWrapper::setup(const LP_Constraints & cstraints) //cstraints <-> constraints
 {
-  assert(_nbParams == cstraints._nbParams);
+  assert(nbParams_ == cstraints.nbParams_);
 
   MSK_deletetask(&task);
 
-  int NUMVAR = cstraints._constraintMat.cols();
-  int NUMCON = cstraints._constraintMat.rows();
-  int NUMANZ = cstraints._constraintMat.cols() * cstraints._constraintMat.rows(); //DENSE MATRIX
+  int NUMVAR = cstraints.constraint_mat_.cols();
+  int NUMCON = cstraints.constraint_mat_.rows();
+  int NUMANZ = cstraints.constraint_mat_.cols() * cstraints.constraint_mat_.rows(); //DENSE MATRIX
 
   MSKrescodee r = MSK_RES_OK;
   if ( r==MSK_RES_OK )
@@ -118,9 +118,9 @@ bool MOSEK_SolveWrapper::setup(const LP_Constraints & cstraints) //cstraints <->
       r = MSK_append(task,MSK_ACC_VAR,NUMVAR);
   }
 
-  this->_nbParams = NUMVAR;
+  this->nbParams_ = NUMVAR;
 
-  if (cstraints._bminimize) {
+  if (cstraints.bminimize_) {
     r = MSK_putobjsense(task, MSK_OBJECTIVE_SENSE_MINIMIZE);
   }
   else  {
@@ -132,14 +132,14 @@ bool MOSEK_SolveWrapper::setup(const LP_Constraints & cstraints) //cstraints <->
     r = MSK_putcfix(task,0.0);
 
   // Add the objective function if any
-  if (!cstraints._vec_cost.empty())  {
+  if (!cstraints.vec_cost_.empty())  {
     // Set objective
-    for (size_t i = 0; i < cstraints._vec_cost.size(); ++i)
-      MSK_putcj(task, i, cstraints._vec_cost[i]);
+    for (size_t i = 0; i < cstraints.vec_cost_.size(); ++i)
+      MSK_putcj(task, i, cstraints.vec_cost_[i]);
   }
 
   //Add constraint row by row
-  const Mat & A = cstraints._constraintMat;
+  const Mat & A = cstraints.constraint_mat_;
 
   for (int i=0; i<A.rows() && r == MSK_RES_OK; ++i)
   {
@@ -159,15 +159,15 @@ bool MOSEK_SolveWrapper::setup(const LP_Constraints & cstraints) //cstraints <->
   }
 
   //Add bound on variables:
-  if (cstraints._vec_bounds.size() == 1) {
+  if (cstraints.vec_bounds_.size() == 1) {
     for (size_t i = 0; i < NUMVAR; ++i) {
       if (r == MSK_RES_OK)
         r = MSK_putbound(task,
                          MSK_ACC_VAR, // Put bounds on variables.
                          i,           // Index of variable.
-                         convertSign(cstraints._vec_sign[0]),      // Bound key.
-                         cstraints._vec_bounds[0].first,  // Numerical value of lower bound.
-                         cstraints._vec_bounds[0].second); // Numerical value of upper bound.
+                         convertSign(cstraints.vec_sign_[0]),      // Bound key.
+                         cstraints.vec_bounds_[0].first,  // Numerical value of lower bound.
+                         cstraints.vec_bounds_[0].second); // Numerical value of upper bound.
     }
   }
   else{
@@ -178,9 +178,9 @@ bool MOSEK_SolveWrapper::setup(const LP_Constraints & cstraints) //cstraints <->
         r = MSK_putbound(task,
                          MSK_ACC_VAR, // Put bounds on variables.
                          i,           // Index of variable.
-                         convertSign(cstraints._vec_sign[i]),      // Bound key.
-                         cstraints._vec_bounds[i].first,  // Numerical value of lower bound.
-                         cstraints._vec_bounds[i].second); // Numerical value of upper bound.
+                         convertSign(cstraints.vec_sign_[i]),      // Bound key.
+                         cstraints.vec_bounds_[i].first,  // Numerical value of lower bound.
+                         cstraints.vec_bounds_[i].second); // Numerical value of upper bound.
     // in order to add sparse bounds use: MSK_putboundlist
     }
   }
@@ -191,9 +191,9 @@ bool MOSEK_SolveWrapper::setup(const LP_Constraints & cstraints) //cstraints <->
     r = MSK_putbound(task,
                      MSK_ACC_CON, // Put bounds on constraints.
                      i,           // Index of constraint.
-                     convertSign(cstraints._vec_sign[i]),      // Bound key.
+                     convertSign(cstraints.vec_sign_[i]),      // Bound key.
                      -MSK_INFINITY,  // Numerical value of lower bound.
-                     cstraints._Cst_objective(i)); // Numerical value of upper bound.
+                     cstraints.constraint_objective_(i)); // Numerical value of upper bound.
   }
 
   return r == MSK_RES_OK;
@@ -201,13 +201,13 @@ bool MOSEK_SolveWrapper::setup(const LP_Constraints & cstraints) //cstraints <->
 
 bool MOSEK_SolveWrapper::setup(const LP_Constraints_Sparse & cstraints) //cstraints <-> constraints
 {
-  assert(_nbParams == cstraints._nbParams);
+  assert(nbParams_ == cstraints.nbParams_);
 
   MSK_deletetask(&task);
 
-  int NUMVAR = this->_nbParams;
-  int NUMCON = cstraints._constraintMat.rows();
-  int NUMANZ = cstraints._constraintMat.nonZeros();
+  int NUMVAR = this->nbParams_;
+  int NUMCON = cstraints.constraint_mat_.rows();
+  int NUMANZ = cstraints.constraint_mat_.nonZeros();
 
   MSKrescodee r = MSK_RES_OK;
   if ( r==MSK_RES_OK )
@@ -240,9 +240,9 @@ bool MOSEK_SolveWrapper::setup(const LP_Constraints_Sparse & cstraints) //cstrai
       r = MSK_append(task,MSK_ACC_VAR,NUMVAR);
   }
 
-  this->_nbParams = NUMVAR;
+  this->nbParams_ = NUMVAR;
 
-  if (cstraints._bminimize) {
+  if (cstraints.bminimize_) {
     r = MSK_putobjsense(task, MSK_OBJECTIVE_SENSE_MINIMIZE);
   }
   else  {
@@ -254,14 +254,14 @@ bool MOSEK_SolveWrapper::setup(const LP_Constraints_Sparse & cstraints) //cstrai
     r = MSK_putcfix(task,0.0);
 
   // Add the objective function if any
-  if (!cstraints._vec_cost.empty())  {
+  if (!cstraints.vec_cost_.empty())  {
     // Set objective
-    for (size_t i = 0; i < cstraints._vec_cost.size(); ++i)
-      r = MSK_putcj(task, i, cstraints._vec_cost[i]);
+    for (size_t i = 0; i < cstraints.vec_cost_.size(); ++i)
+      r = MSK_putcj(task, i, cstraints.vec_cost_[i]);
   }
 
   //Add constraint row by row
-  const sRMat & A = cstraints._constraintMat;
+  const sRMat & A = cstraints.constraint_mat_;
   std::vector<int> vec_colno;
   std::vector<double> vec_value;
   for (int i=0; i<A.rows(); ++i)
@@ -283,7 +283,7 @@ bool MOSEK_SolveWrapper::setup(const LP_Constraints_Sparse & cstraints) //cstrai
   }
 
   //Add bound on variables:
-  if (cstraints._vec_bounds.size() == 1) {
+  if (cstraints.vec_bounds_.size() == 1) {
 
     for( size_t i = 0; i < NUMVAR; ++i) {
       if(r == MSK_RES_OK)
@@ -291,8 +291,8 @@ bool MOSEK_SolveWrapper::setup(const LP_Constraints_Sparse & cstraints) //cstrai
                          MSK_ACC_VAR,                         // Put bounds on variables.
                          MSKidxt(i),                          // Index of variable.
                          MSK_BK_RA, // Bound key.
-                         cstraints._vec_bounds[0].first,      // Numerical value of lower bound.
-                         cstraints._vec_bounds[0].second);    // Numerical value of upper bound.
+                         cstraints.vec_bounds_[0].first,      // Numerical value of lower bound.
+                         cstraints.vec_bounds_[0].second);    // Numerical value of upper bound.
     }
   }
   else{
@@ -306,8 +306,8 @@ bool MOSEK_SolveWrapper::setup(const LP_Constraints_Sparse & cstraints) //cstrai
                          MSK_ACC_VAR,                         // Put bounds on variables.
                          MSKidxt(i),                          // Index of variable.
                          MSK_BK_RA, // Bound key.
-                         cstraints._vec_bounds[i].first,      // Numerical value of lower bound.
-                         cstraints._vec_bounds[i].second);    // Numerical value of upper bound.
+                         cstraints.vec_bounds_[i].first,      // Numerical value of lower bound.
+                         cstraints.vec_bounds_[i].second);    // Numerical value of upper bound.
     // in order to add sparse bounds use: MSK_putboundlist
     }
   }
@@ -315,28 +315,28 @@ bool MOSEK_SolveWrapper::setup(const LP_Constraints_Sparse & cstraints) //cstrai
   // Add bounds on constraint
   for(size_t i=0; i<NUMCON && r==MSK_RES_OK; ++i)
   {
-    MSKboundkey_enum cst = convertSign(cstraints._vec_sign[i]);
+    MSKboundkey_enum cst = convertSign(cstraints.vec_sign_[i]);
     if (cst == MSK_BK_UP || cst == MSK_BK_RA)
       r = MSK_putbound(task,
                      MSK_ACC_CON,   // Put bounds on constraints.
                      MSKidxt(i),    // Index of constraint.
                      cst,           // Bound key.
                      -MSK_INFINITY, // Numerical value of lower bound.
-                     cstraints._Cst_objective(i));      //upper bound.
+                     cstraints.constraint_objective_(i));      //upper bound.
     else if (cst == MSK_BK_LO)
       r = MSK_putbound(task,
                      MSK_ACC_CON,   // Put bounds on constraints.
                      MSKidxt(i),    // Index of constraint.
                      cst,           // Bound key.
-                     cstraints._Cst_objective(i),
+                     cstraints.constraint_objective_(i),
                     +MSK_INFINITY);
     else if (cst == MSK_BK_FX)
       r = MSK_putbound(task,
                      MSK_ACC_CON,   // Put bounds on constraints.
                      MSKidxt(i),    // Index of constraint.
                      cst,           // Bound key.
-                     cstraints._Cst_objective(i),
-                     cstraints._Cst_objective(i));
+                     cstraints.constraint_objective_(i),
+                     cstraints.constraint_objective_(i));
   }
 
   return r == MSK_RES_OK;

@@ -27,30 +27,30 @@ using namespace openMVG::linearProgramming;
 //  y >= 0
 void BuildLinearProblem(LP_Constraints & cstraint)
 {
-  cstraint._nbParams = 2;
-  cstraint._bminimize = false;
+  cstraint.nbParams_ = 2;
+  cstraint.bminimize_ = false;
 
   //Configure objective
-  cstraint._vec_cost.push_back(143);
-  cstraint._vec_cost.push_back(60);
+  cstraint.vec_cost_.push_back(143);
+  cstraint.vec_cost_.push_back(60);
 
-  cstraint._constraintMat = Mat(5,2);
-  cstraint._constraintMat <<
+  cstraint.constraint_mat_ = Mat(5,2);
+  cstraint.constraint_mat_ <<
     120, 210,
     110, 30,
     1, 1,
     1, 0,
     0, 1;
 
-  cstraint._Cst_objective = Vec(5);
-  cstraint._Cst_objective << 15000, 4000, 75, 0, 0;
+  cstraint.constraint_objective_ = Vec(5);
+  cstraint.constraint_objective_ << 15000, 4000, 75, 0, 0;
 
-  cstraint._vec_sign.resize(5);
-  std::fill_n(cstraint._vec_sign.begin(), 3, LP_Constraints::LP_LESS_OR_EQUAL);
-  std::fill_n(cstraint._vec_sign.begin()+3, 2, LP_Constraints::LP_GREATER_OR_EQUAL);
+  cstraint.vec_sign_.resize(5);
+  std::fill_n(cstraint.vec_sign_.begin(), 3, LP_Constraints::LP_LESS_OR_EQUAL);
+  std::fill_n(cstraint.vec_sign_.begin()+3, 2, LP_Constraints::LP_GREATER_OR_EQUAL);
 
-  cstraint._vec_bounds = std::vector< std::pair<double,double> >(cstraint._nbParams);
-  fill(cstraint._vec_bounds.begin(),cstraint._vec_bounds.end(),
+  cstraint.vec_bounds_ = std::vector< std::pair<double,double> >(cstraint.nbParams_);
+  fill(cstraint.vec_bounds_.begin(),cstraint.vec_bounds_.end(),
       std::make_pair((double)-1e+30, (double)1e+30));
 }
 
@@ -106,10 +106,10 @@ TEST(linearProgramming, osiclp_dense_sample) {
 void BuildSparseLinearProblem(LP_Constraints_Sparse & cstraint)
 {
   // Number of variable we are looking for
-  cstraint._nbParams = 4; // {x0, x1, x2, x3}
+  cstraint.nbParams_ = 4; // {x0, x1, x2, x3}
 
   // Constraint coefficient
-  sRMat & A = cstraint._constraintMat;
+  sRMat & A = cstraint.constraint_mat_;
   A.resize(3,4);
   A.coeffRef(0,0) = 3;
   A.coeffRef(0,1) = 1;
@@ -124,32 +124,32 @@ void BuildSparseLinearProblem(LP_Constraints_Sparse & cstraint)
   A.coeffRef(2,3) = 3;
 
   // Constraint objective
-  Vec & C = cstraint._Cst_objective;
+  Vec & C = cstraint.constraint_objective_;
   C.resize(3, 1);
   C[0] = 30;
   C[1] = 15;
   C[2] = 25;
 
   // Constraint sign
-  std::vector<LP_Constraints::eLP_SIGN> & vec_sign = cstraint._vec_sign;
+  std::vector<LP_Constraints::eLP_SIGN> & vec_sign = cstraint.vec_sign_;
   vec_sign.resize(3);
   vec_sign[0] = LP_Constraints::LP_EQUAL;
   vec_sign[1] = LP_Constraints::LP_GREATER_OR_EQUAL;
   vec_sign[2] = LP_Constraints::LP_LESS_OR_EQUAL;
 
   // Variable bounds
-  cstraint._vec_bounds = std::vector< std::pair<double,double> >(4);
-  fill(cstraint._vec_bounds.begin(),cstraint._vec_bounds.end(),
+  cstraint.vec_bounds_ = std::vector< std::pair<double,double> >(4);
+  fill(cstraint.vec_bounds_.begin(),cstraint.vec_bounds_.end(),
       std::make_pair(0.0, (double)1e+30));
-  cstraint._vec_bounds[1].second = 10;
+  cstraint.vec_bounds_[1].second = 10;
 
   // Objective to maximize
-  cstraint._bminimize = false;
-  cstraint._vec_cost.resize(4);
-  cstraint._vec_cost[0] = 3;
-  cstraint._vec_cost[1] = 1;
-  cstraint._vec_cost[2] = 5;
-  cstraint._vec_cost[3] = 1;
+  cstraint.bminimize_ = false;
+  cstraint.vec_cost_.resize(4);
+  cstraint.vec_cost_[0] = 3;
+  cstraint.vec_cost_[1] = 1;
+  cstraint.vec_cost_[2] = 5;
+  cstraint.vec_cost_[3] = 1;
 }
 
 #ifdef OPENMVG_HAVE_MOSEK

@@ -27,22 +27,22 @@ struct LP_Constraints
   {
     LP_LESS_OR_EQUAL    = 1,  // (<=)
     LP_GREATER_OR_EQUAL = 2,  // (>=)
-    LP_EQUAL            = 3,   // (=)
-    LP_FREE             = 4 //only supported in MOSEK
+    LP_EQUAL            = 3,  // (=)
+    LP_FREE             = 4   //only supported in MOSEK
   };
 
   LP_Constraints() {
-    _bminimize = false;
+    bminimize_ = false;
   }
 
-  int _nbParams; // The number of parameter/variable in constraint.
-  Mat _constraintMat; // Constraint under Matrix form.
-  Vec _Cst_objective; // Constraint objective value.
-  std::vector<eLP_SIGN> _vec_sign; // Constraint sign.
-  std::vector< std::pair<double, double> > _vec_bounds; // parameter/variable bounds.
+  int nbParams_; // The number of parameter/variable in constraint.
+  Mat constraint_mat_; // Constraint under Matrix form.
+  Vec constraint_objective_; // Constraint objective value.
+  std::vector<eLP_SIGN> vec_sign_; // Constraint sign.
+  std::vector< std::pair<double, double> > vec_bounds_; // parameter/variable bounds.
 
-  bool _bminimize; // minimize is true or maximize is false.
-  std::vector<double> _vec_cost; // Objective function
+  bool bminimize_; // minimize is true or maximize is false.
+  std::vector<double> vec_cost_; // Objective function
 };
 
 /// Generic Sparse container for LP (Linear Programming problems).
@@ -55,20 +55,20 @@ struct LP_Constraints
 struct LP_Constraints_Sparse
 {
   LP_Constraints_Sparse() {
-    _bminimize = false;
+    bminimize_ = false;
   }
 
   // Variable part
-  int _nbParams; // The number of parameter/variable in constraint.
-  std::vector< std::pair<double, double> > _vec_bounds; // parameter/variable bounds.
+  int nbParams_; // The number of parameter/variable in constraint.
+  std::vector< std::pair<double, double> > vec_bounds_; // parameter/variable bounds.
 
   // Constraint part
-  sRMat _constraintMat; // Constraint under Matrix form.
-  Vec _Cst_objective; // Constraint objective value.
-  std::vector<LP_Constraints::eLP_SIGN> _vec_sign; // Constraint sign.
+  sRMat constraint_mat_; // Constraint under Matrix form.
+  Vec constraint_objective_; // Constraint objective value.
+  std::vector<LP_Constraints::eLP_SIGN> vec_sign_; // Constraint sign.
 
-  bool _bminimize; // minimize is true or maximize is false.
-  std::vector<double> _vec_cost; // Objective function
+  bool bminimize_; // minimize is true or maximize is false.
+  std::vector<double> vec_cost_; // Objective function
 };
 
 /// Generic LP solver (Linear Programming)
@@ -78,7 +78,7 @@ class LP_Solver
 {
 public:
 
-  LP_Solver(int nbParams):_nbParams(nbParams){};
+  LP_Solver(int nbParams):nbParams_(nbParams){};
 
   /// Setup constraint for the given library.
   virtual bool setup(const LP_Constraints & constraints) = 0;
@@ -91,7 +91,7 @@ public:
   virtual bool getSolution(std::vector<double> & estimatedParams) = 0;
 
 protected :
-  int _nbParams; // The number of parameter considered in constraint formulation.
+  int nbParams_; // The number of parameter considered in constraint formulation.
 };
 
 } // namespace linearProgramming

@@ -102,8 +102,8 @@ namespace sfm {
     Mat2X pt2D_original(2, vec_putative_matches.size());
     for (size_t i = 0; i < vec_putative_matches.size(); ++i)
     {
-      resection_data.pt3D.col(i) = sfm_data_->GetLandmarks().at(index_to_landmark_id_[vec_putative_matches[i]._i]).X;
-      resection_data.pt2D.col(i) = query_regions.GetRegionPosition(vec_putative_matches[i]._j);
+      resection_data.pt3D.col(i) = sfm_data_->GetLandmarks().at(index_to_landmark_id_[vec_putative_matches[i].i_]).X;
+      resection_data.pt2D.col(i) = query_regions.GetRegionPosition(vec_putative_matches[i].j_);
       pt2D_original.col(i) = resection_data.pt2D.col(i);
       // Handle image distortion if intrinsic is known (to ease the resection)
       if (optional_intrinsics && optional_intrinsics->have_disto())

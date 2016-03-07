@@ -25,12 +25,12 @@ namespace matching {
 struct IndMatch
 {
   IndMatch(IndexT i = 0, IndexT j = 0)  {
-    _i = i;
-    _j = j;
+    i_ = i;
+    j_ = j;
   }
 
   friend bool operator==(const IndMatch& m1, const IndMatch& m2)  {
-    return (m1._i == m2._i && m1._j == m2._j);
+    return (m1.i_ == m2.i_ && m1.j_ == m2.j_);
   }
 
   friend bool operator!=(const IndMatch& m1, const IndMatch& m2)  {
@@ -39,10 +39,10 @@ struct IndMatch
 
   // Lexicographical ordering of matches. Used to remove duplicates.
   friend bool operator<(const IndMatch& m1, const IndMatch& m2) {
-    return (m1._i < m2._i || (m1._i == m2._i && m1._j < m2._j));
+    return (m1.i_ < m2.i_ || (m1.i_ == m2.i_ && m1.j_ < m2.j_));
   }
 
-  /// Remove duplicates ((_i, _j) that appears multiple times)
+  /// Remove duplicates ((i_, j_) that appears multiple times)
   static bool getDeduplicated(std::vector<IndMatch> & vec_match)  {
 
     const size_t sizeBefore = vec_match.size();
@@ -54,18 +54,18 @@ struct IndMatch
   // Serialization
   template <class Archive>
   void serialize( Archive & ar )  {
-    ar(_i, _j);
+    ar(i_, j_);
   }
 
-  IndexT _i, _j;  // Left, right index
+  IndexT i_, j_;  // Left, right index
 };
 
 static inline std::ostream& operator<<(std::ostream & out, const IndMatch & obj) {
-  return out << obj._i << " " << obj._j;
+  return out << obj.i_ << " " << obj.j_;
 }
 
 static inline std::istream& operator>>(std::istream & in, IndMatch & obj) {
-  return in >> obj._i >> obj._j;
+  return in >> obj.i_ >> obj.j_;
 }
 
 typedef std::vector<matching::IndMatch> IndMatches;

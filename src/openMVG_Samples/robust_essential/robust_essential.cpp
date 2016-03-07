@@ -117,8 +117,8 @@ int main() {
     svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
     for (size_t i = 0; i < vec_PutativeMatches.size(); ++i) {
       //Get back linked feature, draw a circle and link them by a line
-      const SIOPointFeature L = regionsL->Features()[vec_PutativeMatches[i]._i];
-      const SIOPointFeature R = regionsR->Features()[vec_PutativeMatches[i]._j];
+      const SIOPointFeature L = regionsL->Features()[vec_PutativeMatches[i].i_];
+      const SIOPointFeature R = regionsR->Features()[vec_PutativeMatches[i].j_];
       svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
       svgStream.drawCircle(L.x(), L.y(), L.scale(), svgStyle().stroke("yellow", 2.0));
       svgStream.drawCircle(R.x()+imageL.Width(), R.y(), R.scale(),svgStyle().stroke("yellow", 2.0));
@@ -143,8 +143,8 @@ int main() {
     Mat xL(2, vec_PutativeMatches.size());
     Mat xR(2, vec_PutativeMatches.size());
     for (size_t k = 0; k < vec_PutativeMatches.size(); ++k)  {
-      const PointFeature & imaL = featsL[vec_PutativeMatches[k]._i];
-      const PointFeature & imaR = featsR[vec_PutativeMatches[k]._j];
+      const PointFeature & imaL = featsL[vec_PutativeMatches[k].i_];
+      const PointFeature & imaR = featsR[vec_PutativeMatches[k].j_];
       xL.col(k) = imaL.coords().cast<double>();
       xR.col(k) = imaR.coords().cast<double>();
     }
@@ -171,8 +171,8 @@ int main() {
     svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
     svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
     for (size_t i = 0; i < relativePose_info.vec_inliers.size(); ++i)  {
-      const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]]._i];
-      const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]]._j];
+      const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]].i_];
+      const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]].j_];
       const Vec2f L = LL.coords();
       const Vec2f R = RR.coords();
       svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
@@ -200,8 +200,8 @@ int main() {
     std::vector<double> vec_residuals;
     vec_residuals.reserve(relativePose_info.vec_inliers.size() * 4);
     for (size_t i = 0; i < relativePose_info.vec_inliers.size(); ++i)  {
-      const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]]._i];
-      const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]]._j];
+      const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]].i_];
+      const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]].j_];
       // Point triangulation
       Vec3 X;
       TriangulateDLT(P1, LL.coords().cast<double>(), P2, RR.coords().cast<double>(), &X);

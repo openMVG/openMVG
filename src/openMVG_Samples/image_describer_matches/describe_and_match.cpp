@@ -133,8 +133,8 @@ int main(int argc, char **argv) {
     svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
     for (size_t i = 0; i < vec_PutativeMatches.size(); ++i) {
       //Get back linked feature, draw a circle and link them by a line
-      const PointFeature & L = featsL[vec_PutativeMatches[i]._i];
-      const PointFeature & R = featsR[vec_PutativeMatches[i]._j];
+      const PointFeature & L = featsL[vec_PutativeMatches[i].i_];
+      const PointFeature & R = featsR[vec_PutativeMatches[i].j_];
       svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
       svgStream.drawCircle(L.x(), L.y(), 3.0f, svgStyle().stroke("yellow", 2.0));
       svgStream.drawCircle(R.x()+imageL.Width(), R.y(), 3.0f,svgStyle().stroke("yellow", 2.0));

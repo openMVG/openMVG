@@ -37,9 +37,9 @@ class Matcher_Regions_AllInMemory : public Matcher
 
   private:
   // Distance ratio used to discard spurious correspondence
-  float _f_dist_ratio;
+  float f_dist_ratio_;
   // Matcher Type
-  matching::EMatcherType _eMatcherType;
+  matching::EMatcherType eMatcherType_;
 };
 
 } // namespace openMVG

@@ -159,8 +159,8 @@ int main(int argc, char **argv) {
     svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
     for (size_t i = 0; i < vec_PutativeMatches.size(); ++i) {
       //Get back linked feature, draw a circle and link them by a line
-      const SIOPointFeature L = regionsL->Features()[vec_PutativeMatches[i]._i];
-      const SIOPointFeature R = regionsR->Features()[vec_PutativeMatches[i]._j];
+      const SIOPointFeature L = regionsL->Features()[vec_PutativeMatches[i].i_];
+      const SIOPointFeature R = regionsR->Features()[vec_PutativeMatches[i].j_];
       svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
       svgStream.drawCircle(L.x(), L.y(), L.scale(), svgStyle().stroke("yellow", 2.0));
       svgStream.drawCircle(R.x()+imageL.Width(), R.y(), R.scale(),svgStyle().stroke("yellow", 2.0));
@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
 
   for (std::vector<IndMatch>::const_iterator i_match = vec_PutativeMatches.begin();
         i_match != vec_PutativeMatches.end(); ++i_match){
-    matchesPair.push_back(std::make_pair(i_match->_i, i_match->_j));
+    matchesPair.push_back(std::make_pair(i_match->i_, i_match->j_));
   }
   std::vector<double> vec_score;
 

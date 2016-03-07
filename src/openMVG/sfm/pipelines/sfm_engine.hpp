@@ -19,12 +19,14 @@ class ReconstructionEngine
 {
 public:
 
-  ReconstructionEngine(
+  ReconstructionEngine
+  (
     const SfM_Data & sfm_data,
-    const std::string & soutDirectory)
-    :_sOutDirectory(soutDirectory),
-    _sfm_data(sfm_data),
-    _bFixedIntrinsics(false)
+    const std::string & soutDirectory
+  )
+  :sOut_directory(soutDirectory),
+    sfm_data_(sfm_data),
+    bFixedIntrinsics_(false)
   {
   }
 
@@ -32,23 +34,23 @@ public:
 
   virtual bool Process() = 0;
 
-  bool Get_bFixedIntrinsics() const {return _bFixedIntrinsics;}
-  void Set_bFixedIntrinsics(bool bVal) {_bFixedIntrinsics = bVal;}
+  bool Get_bFixedIntrinsics() const {return bFixedIntrinsics_;}
+  void Set_bFixedIntrinsics(bool bVal) {bFixedIntrinsics_ = bVal;}
 
-  const SfM_Data & Get_SfM_Data() const {return _sfm_data;}
+  const SfM_Data & Get_SfM_Data() const {return sfm_data_;}
 
 protected:
-  std::string _sOutDirectory; // Output path where outputs will be stored
+  std::string sOut_directory; // Output path where outputs will be stored
 
   //-----
   //-- Reconstruction data
   //-----
-  SfM_Data _sfm_data; // internal SfM_Data
+  SfM_Data sfm_data_; // internal SfM_Data
 
   //-----
   //-- Reconstruction parameters
   //-----
-  bool _bFixedIntrinsics;
+  bool bFixedIntrinsics_;
 };
 
 } // namespace sfm

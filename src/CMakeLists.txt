@@ -234,8 +234,6 @@ FIND_PACKAGE(Eigen QUIET)
 IF(EIGEN_FOUND)
   INCLUDE_DIRECTORIES(${EIGEN_INCLUDE_DIRS})
 ENDIF(EIGEN_FOUND)
-# Configure Eigen to use only MPL2 licensed code
-ADD_DEFINITIONS(-DEIGEN_MPL2_ONLY)
 
 # ==============================================================================
 # Ceres
@@ -441,7 +439,7 @@ ADD_SUBDIRECTORY(nonFree)
 # --------------------------
 # Sphinx detection
 # ==============================================================================
-IF(OpenMVG_BUILD_DOC)
+IF (OpenMVG_BUILD_DOC)
   FIND_PACKAGE(Sphinx)
   IF (EXISTS ${SPHINX_EXECUTABLE})
     SET(SPHINX_HTML_DIR "${CMAKE_CURRENT_BINARY_DIR}/htmlDoc")
@@ -461,9 +459,29 @@ IF(OpenMVG_BUILD_DOC)
     SET_PROPERTY(TARGET doc PROPERTY FOLDER OpenMVG)
 
   ELSE (EXISTS ${SPHINX_EXECUTABLE})
-    MESSAGE("Sphinx need to be installed to generate the documentation")
+    MESSAGE("Sphinx need to be installed to generate the sphinx documentation")
   ENDIF (EXISTS ${SPHINX_EXECUTABLE})
+  
+  
+  # ------
+  # Doxygen detection
+  # ======
+  FIND_PACKAGE(Doxygen)
+  IF (DOXYGEN_FOUND)
+  
+    CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/../docs/doxygen/Doxyfile.in
+                    ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY )
+
+    ADD_CUSTOM_TARGET( doc_doxygen ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+                       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                       COMMENT "Generating API documentation with Doxygen" VERBATIM )
+  
+  ELSE (DOXYGEN_FOUND)
+    MESSAGE("Doxygen need to be installed to generate the doxygen documentation")
+  ENDIF (DOXYGEN_FOUND)
 ENDIF()
+
+
 
 MESSAGE("\n")
 

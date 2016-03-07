@@ -34,9 +34,10 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
   RelativeRotations relativeRotations = relativeRot_In;
   // We work on a copy, since inference can remove some relative motions
 
-  //-> Test there is only one graph and at least 3 camera?
   switch(eRelativeRotationInferenceMethod)
   {
+    case(TRIPLET_ROTATION_INFERENCE_NONE):
+    break;
     case(TRIPLET_ROTATION_INFERENCE_COMPOSITION_ERROR):
     {
       //-------------------
@@ -64,26 +65,26 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
   //  from ranging in [min(Id), max(Id)] to  [0, nbCam]
 
   const Pair_Set pairs = getPairs(relativeRotations);
-  Hash_Map<IndexT, IndexT> _reindexForward, _reindexBackward;
-  reindex(pairs, _reindexForward, _reindexBackward);
+  Hash_Map<IndexT, IndexT> reindexForward, reindexBackward;
+  reindex(pairs, reindexForward, reindexBackward);
 
   for(RelativeRotations::iterator iter = relativeRotations.begin();  iter != relativeRotations.end(); ++iter)
   {
     RelativeRotation & rel = *iter;
-    rel.i = _reindexForward[rel.i];
-    rel.j = _reindexForward[rel.j];
+    rel.i = reindexForward[rel.i];
+    rel.j = reindexForward[rel.j];
   }
 
   //- B. solve global rotation computation
   bool bSuccess = false;
-  std::vector<Mat3> vec_globalR(_reindexForward.size());
+  std::vector<Mat3> vec_globalR(reindexForward.size());
   switch(eRotationAveragingMethod)
   {
     case ROTATION_AVERAGING_L2:
     {
       //- Solve the global rotation estimation problem:
       bSuccess = rotation_averaging::l2::L2RotationAveraging(
-        _reindexForward.size(),
+        reindexForward.size(),
         relativeRotations,
         vec_globalR);
       //- Non linear refinement of the global rotations
@@ -96,8 +97,8 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
       for(RelativeRotations::iterator iter = relativeRotations.begin();  iter != relativeRotations.end(); ++iter)
       {
         RelativeRotation & rel = *iter;
-        rel.i = _reindexBackward[rel.i];
-        rel.j = _reindexBackward[rel.j];
+        rel.i = reindexBackward[rel.i];
+        rel.j = reindexBackward[rel.j];
       }
       used_pairs = getPairs(relativeRotations);
     }
@@ -122,8 +123,8 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
         if (vec_inliers[i])
         {
           used_pairs.insert(
-            Pair(_reindexBackward[relativeRotations[i].i],
-                 _reindexBackward[relativeRotations[i].j]));
+            Pair(reindexBackward[relativeRotations[i].i],
+                 reindexBackward[relativeRotations[i].j]));
         }
       }
     }
@@ -138,7 +139,7 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
   {
     //-- Setup the averaged rotations
     for (size_t i = 0; i < vec_globalR.size(); ++i)  {
-      map_globalR[_reindexBackward[i]] = vec_globalR[i];
+      map_globalR[reindexBackward[i]] = vec_globalR[i];
     }
   }
   else {

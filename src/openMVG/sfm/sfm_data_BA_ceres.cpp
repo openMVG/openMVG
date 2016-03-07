@@ -49,40 +49,40 @@ Bundle_Adjustment_Ceres::BA_options::BA_options
   const bool bVerbose,
   bool bmultithreaded
 )
-: m_bVerbose(bVerbose),
-  m_nbThreads(1),
+: bVerbose_(bVerbose),
+  nb_threads_(1),
   m_parameter_tolerance(1e-8) //~= numeric_limits<float>::epsilon()
 {
   #ifdef OPENMVG_USE_OPENMP
-    m_nbThreads = omp_get_max_threads();
+    nb_threads_ = omp_get_max_threads();
   #endif // OPENMVG_USE_OPENMP
   if (!bmultithreaded)
-    m_nbThreads = 1;
+    nb_threads_ = 1;
 
-  _bCeres_Summary = false;
+  bCeres_summary_ = false;
 
   // Default configuration use a DENSE representation
-  m_linear_solver_type = ceres::DENSE_SCHUR;
-  m_preconditioner_type = ceres::JACOBI;
+  linear_solver_type_ = ceres::DENSE_SCHUR;
+  preconditioner_type_ = ceres::JACOBI;
   // If Sparse linear solver are available
   // Descending priority order by efficiency (SUITE_SPARSE > CX_SPARSE > EIGEN_SPARSE)
   if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
   {
-    m_sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
-    m_linear_solver_type = ceres::SPARSE_SCHUR;
+    sparse_linear_algebra_library_type_ = ceres::SUITE_SPARSE;
+    linear_solver_type_ = ceres::SPARSE_SCHUR;
   }
   else
   {
     if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
     {
-      m_sparse_linear_algebra_library_type = ceres::CX_SPARSE;
-      m_linear_solver_type = ceres::SPARSE_SCHUR;
+      sparse_linear_algebra_library_type_ = ceres::CX_SPARSE;
+      linear_solver_type_ = ceres::SPARSE_SCHUR;
     }
     else
     if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
     {
-      m_sparse_linear_algebra_library_type = ceres::EIGEN_SPARSE;
-      m_linear_solver_type = ceres::SPARSE_SCHUR;
+      sparse_linear_algebra_library_type_ = ceres::EIGEN_SPARSE;
+      linear_solver_type_ = ceres::SPARSE_SCHUR;
     }
   }
 }
@@ -92,7 +92,7 @@ Bundle_Adjustment_Ceres::Bundle_Adjustment_Ceres
 (
   Bundle_Adjustment_Ceres::BA_options options
 )
-: m_openMVG_options(options)
+: openMVG_options_(options)
 {}
 
 bool Bundle_Adjustment_Ceres::Adjust
@@ -223,31 +223,30 @@ bool Bundle_Adjustment_Ceres::Adjust
   // Configure a BA engine and run it
   //  Make Ceres automatically detect the bundle structure.
   ceres::Solver::Options options;
-  options.preconditioner_type = m_openMVG_options.m_preconditioner_type;
-  options.linear_solver_type = m_openMVG_options.m_linear_solver_type;
-  options.sparse_linear_algebra_library_type = m_openMVG_options.m_sparse_linear_algebra_library_type;
+  options.preconditioner_type = openMVG_options_.preconditioner_type_;
+  options.linear_solver_type = openMVG_options_.linear_solver_type_;
+  options.sparse_linear_algebra_library_type = openMVG_options_.sparse_linear_algebra_library_type_;
   options.minimizer_progress_to_stdout = false;
   options.logging_type = ceres::SILENT;
-  options.num_threads = m_openMVG_options.m_nbThreads;
-  options.num_linear_solver_threads = m_openMVG_options.m_nbThreads;
-  options.parameter_tolerance = m_openMVG_options.m_parameter_tolerance;
+  options.num_threads = openMVG_options_.nb_threads_;
+  options.num_linear_solver_threads = openMVG_options_.nb_threads_;
 
   // Solve BA
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
-  if (m_openMVG_options._bCeres_Summary)
+  if (openMVG_options_.bCeres_summary_)
     std::cout << summary.FullReport() << std::endl;
 
   // If no error, get back refined parameters
   if (!summary.IsSolutionUsable())
   {
-    if (m_openMVG_options.m_bVerbose)
+    if (openMVG_options_.bVerbose_)
       std::cout << "Bundle Adjustment failed." << std::endl;
     return false;
   }
   else // Solution is usable
   {
-    if (m_openMVG_options.m_bVerbose)
+    if (openMVG_options_.bVerbose_)
     {
       // Display statistics about the minimization
       std::cout << std::endl

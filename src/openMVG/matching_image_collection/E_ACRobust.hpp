@@ -59,10 +59,10 @@ struct GeometricFilter_EMatrix_AC
      // Check that valid cameras can be retrieved for the pair of views
     const cameras::IntrinsicBase * cam_I =
       sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
-        sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
+        sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : nullptr;
     const cameras::IntrinsicBase * cam_J =
       sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
-        sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
+        sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
     if (!cam_I || !cam_J)
       return false;
@@ -138,10 +138,10 @@ struct GeometricFilter_EMatrix_AC
       // Check that valid cameras can be retrieved for the pair of views
       const cameras::IntrinsicBase * cam_I =
         sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
-          sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
+          sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : nullptr;
       const cameras::IntrinsicBase * cam_J =
         sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
-          sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
+          sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
       if (!cam_I || !cam_J)
         return false;

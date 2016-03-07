@@ -84,9 +84,9 @@ class Matcher_Regions_Database
 
   private:
   // Matcher Type
-  matching::EMatcherType _eMatcherType;
+  matching::EMatcherType eMatcherType_;
   // The matching interface
-  std::unique_ptr<RegionsMatcher> _matching_interface;
+  std::unique_ptr<RegionsMatcher> matching_interface_;
 };
 
 /**
@@ -168,7 +168,7 @@ public:
     for (size_t k=0; k < vec_nn_ratio_idx.size(); ++k)
     {
       const size_t index = vec_nn_ratio_idx[k];
-      vec_putative_matches.emplace_back(vec_nIndice[index*NNN__]._j, vec_nIndice[index*NNN__]._i);
+      vec_putative_matches.emplace_back(vec_nIndice[index*NNN__].j_, vec_nIndice[index*NNN__].i_);
     }
 
     // Remove duplicates

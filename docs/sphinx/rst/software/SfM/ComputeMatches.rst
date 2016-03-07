@@ -30,23 +30,31 @@ Arguments description:
 
   - **[-r|-ratio]**
 
-    - (Nearest Neighbor distance ratio, default value is set to 0.6). 0.8 is less restrictive and advised.
+    - (Nearest Neighbor distance ratio, default value is set to 0.8).
+        Using 0.6 is more restrictive => provides less false positive.
 
   - **[-g|-geometric_model]**
 
     - type of model used for robust estimation from the photometric putative matches
 
       - f: Fundamental matrix filtering
-      - e: Essential matrix filtering (all the image must have the same known focal length)
+      - e: Essential matrix filtering
       - h: Homography matrix filtering
 
   - **[-n|--nearest_matching_method]**
 
     - AUTO: auto choice from regions type,
-    - BRUTEFORCEL2: BruteForce L2 matching for Scalar based regions descriptor,
-    - BRUTEFORCEHAMMING: BruteForce Hamming matching for binary based regions descriptor,
-    - ANNL2: Approximate Nearest Neighbor L2 matching for Scalar based regions descriptor. 
-     
+    - For Scalar based descriptor you can use:
+    
+      - BRUTEFORCEL2: BruteForce L2 matching for Scalar based regions descriptor,
+      - ANNL2: Approximate Nearest Neighbor L2 matching for Scalar based regions descriptor,
+      - CASCADEHASHINGL2: L2 Cascade Hashing matching,
+      - FASTCASCADEHASHINGL2: (default).
+          L2 Cascade Hashing with precomputed hashed regions,
+          (faster than CASCADEHASHINGL2 but use more memory).
+    - For Binary based descriptor you must use:
+    
+      - BRUTEFORCEHAMMING: BruteForce Hamming matching for binary based regions descriptor,
 
   - **[-v|--video_mode_matching]**
   

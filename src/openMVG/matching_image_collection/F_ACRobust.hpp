@@ -114,10 +114,10 @@ struct GeometricFilter_FMatrix_AC
       // Retrieve corresponding pair camera intrinsic if any
       const cameras::IntrinsicBase * cam_I =
         sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
-          sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
+          sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : nullptr;
       const cameras::IntrinsicBase * cam_J =
         sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
-          sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
+          sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
       // Check the features correspondences that agree in the geometric and photometric domain
       geometry_aware::GuidedMatching
