@@ -10,11 +10,11 @@
 namespace openMVG{
 namespace voctree{
 
-std::ostream& operator<<(std::ostream& os, const Database::DocumentVector &dv)	
+std::ostream& operator<<(std::ostream& os, const Database::SparseHistogram &dv)	
 {
 	for( const auto &e : dv )
 	{
-		os << e.first << ", " << e.second << "; ";
+		os << e.first << ", " << e.second.size() << "; ";
 	}
 	os << "\n";
 	return os;
@@ -26,6 +26,9 @@ word_weights_( num_words, 1.0f ) { }
 
 DocId Database::insert(DocId doc_id, const std::vector<Word>& document)
 {
+  // Ensure that the new document to insert is not already there.
+  assert(database_.find(doc_id) == database_.end());
+
   // For each word, retrieve its inverted file and increment the count for doc_id.
   for(std::vector<Word>::const_iterator it = document.begin(), end = document.end(); it != end; ++it)
   {
@@ -38,7 +41,7 @@ DocId Database::insert(DocId doc_id, const std::vector<Word>& document)
   }
 
   // Precompute the document vector to compare queries against.
-  DocumentVector& newDoc = database_[doc_id];
+  SparseHistogram& newDoc = database_[doc_id];
   computeVector(document, newDoc);
 
   return doc_id;
@@ -81,15 +84,16 @@ void Database::sanityCheck(size_t N, std::map<size_t, DocMatches>& matches) cons
  * @param[in]  document The query document, a set of quantized words.
  * @param[in]  N        The number of matches to return.
  * @param[out] matches  IDs and scores for the top N matching database documents.
+ * @param[in] distanceMethod the method used to compute distance between histograms.
  */
-void Database::find(const std::vector<Word>& document, size_t N, std::vector<DocMatch>& matches) const
+void Database::find(const std::vector<Word>& document, size_t N, std::vector<DocMatch>& matches, const std::string &distanceMethod) const
 {
-  DocumentVector query;
+  SparseHistogram query;
   // from the list of visual words associated with each feature in the document/image
   // generate the (sparse) histogram of the visual words 
   computeVector(document, query);
 
-  find( query, N, matches );
+  find( query, N, matches, distanceMethod);
 }
 
 /**
@@ -98,8 +102,9 @@ void Database::find(const std::vector<Word>& document, size_t N, std::vector<Doc
  * @param      query The query document, a normalized set of quantized words.
  * @param      N        The number of matches to return.
  * @param[out] matches  IDs and scores for the top N matching database documents.
+ * @param[in] distanceMethod the method used to compute distance between histograms.
  */
-void Database::find( const DocumentVector& query, size_t N, std::vector<DocMatch>& matches ) const
+void Database::find( const SparseHistogram& query, size_t N, std::vector<DocMatch>& matches, const std::string &distanceMethod) const
 {
   // Accumulate the best N matches
   using namespace boost::accumulators;
@@ -111,7 +116,7 @@ void Database::find( const DocumentVector& query, size_t N, std::vector<DocMatch
   {
     // for each document/image in the database compute the distance between the 
     // histograms of the query image and the others
-    float distance = sparseDistance(query, document.second);
+    float distance = sparseDistance(query, document.second, distanceMethod);
     acc(DocMatch(document.first, distance));
   }
 
@@ -176,76 +181,271 @@ void Database::loadWeights(const std::string& file)
  * @param[in] document a list of (possibly repeated) visual words
  * @param[out] v the vector of visual words (ie the visual word histogram of the image)
  */
-void Database::computeVector(const std::vector<Word>& document, DocumentVector& v) const
+void Database::computeVector(const std::vector<Word>& document, SparseHistogram& v) const
 {
-  //for each visual word in the list
-  for(const Word &word : document)
+  // for each visual word in the list
+  for(std::size_t i = 0; i < document.size(); ++i)
   {
     // update its weighted count inside the map
     // the map v contains only the visual words that are associated to some features
     // the visual words in v are unique unlikely the document
-    if(v.find(word) == v.end())
-      v[word] = word_weights_[word];
-    else
-      v[word] += word_weights_[word];
+    Word word = document[i];
+    v[word].push_back(i);
   }
-  normalize(v);
 }
+
+///**
+// * Normalize a document vector representing the histogram of visual words for a given image
+// * 
+// * @param[in/out] v the unnormalized histogram of visual words
+// */
+//void Database::normalize(SparseHistogram& v) const
+//{
+//  float sum = 0.0f;
+//  for(SparseHistogram::iterator i = v.begin(), ie = v.end(); i != ie; ++i)
+//    sum += i->second;
+//  float inv_sum = 1.0f / sum;
+//  for(SparseHistogram::iterator i = v.begin(), ie = v.end(); i != ie; ++i)
+//    i->second *= inv_sum;
+//}
 
 /**
- * Normalize a document vector representing the histogram of visual words for a given image
+ * Compute the distance between two histograms
  * 
- * @param[in/out] v the unnormalized histogram of visual words
+ * @param[in] v1 the first histogram
+ * @param[in] v2 the second histogram
+ * @param[in] distanceMethod the method used to compute distance between histograms
  */
-void Database::normalize(DocumentVector& v)
+float Database::sparseDistance(const SparseHistogram& v1, const SparseHistogram& v2, const std::string &distanceMethod) const
 {
-  float sum = 0.0f;
-  for(DocumentVector::iterator i = v.begin(), ie = v.end(); i != ie; ++i)
-    sum += i->second;
-  float inv_sum = 1.0f / sum;
-  for(DocumentVector::iterator i = v.begin(), ie = v.end(); i != ie; ++i)
-    i->second *= inv_sum;
-}
 
-float Database::sparseDistance(const DocumentVector& v1, const DocumentVector& v2)
-{
   float distance = 0.0f;
-  DocumentVector::const_iterator i1 = v1.begin(), i1e = v1.end();
-  DocumentVector::const_iterator i2 = v2.begin(), i2e = v2.end();
-
-  while(i1 != i1e && i2 != i2e)
-  {
-    if(i2->first < i1->first)
+  float epsilon = 0.001;
+  
+  SparseHistogram::const_iterator i1 = v1.begin(), i1e = v1.end();
+  SparseHistogram::const_iterator i2 = v2.begin(), i2e = v2.end();
+  
+  if(distanceMethod.compare("classic") == 0) 
+  {      
+    while(i1 != i1e && i2 != i2e)
     {
-      distance += i2->second;
-      ++i2;
+      if(i2->first < i1->first)
+      {
+        distance += i2->second.size();
+        ++i2;
+      }
+      else if(i1->first < i2->first)
+      {
+        distance += i1->second.size();
+        ++i1;
+      }
+      else
+      {
+        distance += fabs(i1->second.size() - i2->second.size());
+        ++i1;
+        ++i2;
+      }
     }
-    else if(i1->first < i2->first)
+
+    while(i1 != i1e)
     {
-      distance += i1->second;
+      distance += i1->second.size();
       ++i1;
     }
-    else
+
+    while(i2 != i2e)
     {
-      distance += fabs(i1->second - i2->second);
-      ++i1;
+      distance += i2->second.size();
       ++i2;
     }
   }
-
-  while(i1 != i1e)
+  
+  else if(distanceMethod.compare("commonPoints") == 0) 
   {
-    distance += i1->second;
-    ++i1;
-  }
+    double score = 0.0;
+    double N1 = 0.0;
+    double N2 = 0.0;
+    
+    while(i1 != i1e && i2 != i2e)
+    {
+      if(i2->first < i1->first)
+      {
+        N2 += i2->second.size();
+        ++i2;
+      }
+      else if(i1->first < i2->first)
+      {
+        N1 += i1->second.size();
+         ++i1;
+      }
+      else
+      {
+        score += std::min(i1->second.size(), i2->second.size());
+        N1 += i1->second.size();
+        N2 += i2->second.size();
+        ++i1;
+        ++i2;
+      }
+    }
 
-  while(i2 != i2e)
+    while(i1 != i1e)
+    {
+      N1 += i1->second.size();
+      ++i1;
+    }
+
+    while(i2 != i2e)
+    {
+      N2 += i2->second.size();
+      ++i2;
+    }
+    
+    distance = - score;
+  }
+  
+  else if(distanceMethod.compare("strongCommonPoints") == 0) 
   {
-    distance += i2->second;
-    ++i2;
-  }
+    double score = 0.0;
+    double N1 = 0.0;
+    double N2 = 0.0;
+    
+    while(i1 != i1e && i2 != i2e)
+    {
+      if(i2->first < i1->first)
+      {
+        N2 += i2->second.size();
+        ++i2;
+      }
+      else if(i1->first < i2->first)
+      {
+        N1 += i1->second.size();
+        ++i1;
+      }
+      else
+      {
+        if( ( fabs(i1->second.size() - 1.0) < epsilon ) && ( fabs(i2->second.size() - 1.0) < epsilon) )
+        {
+          score += 1;
+          N1 += 1;
+          N2 += 1;
+        }
+        ++i1;
+        ++i2;
+      }
+    }
 
+    while(i1 != i1e)
+    {
+      N1 += i1->second.size();
+      ++i1;
+    }
+
+    while(i2 != i2e)
+    {
+      N2 += i2->second.size();
+      ++i2;
+    }
+    
+    distance = - score;
+  }
+  
+  else if(distanceMethod.compare("weightedStrongCommonPoints") == 0) 
+  {
+    double score = 0.0;
+    double N1 = 0.0;
+    double N2 = 0.0;
+    
+    while(i1 != i1e && i2 != i2e)
+    {
+      if(i2->first < i1->first)
+      {
+        N2 += i2->second.size()*word_weights_[i2->first];
+        ++i2;
+      }
+      else if(i1->first < i2->first)
+      {
+        N1 += i1->second.size()*word_weights_[i1->first];
+         ++i1;
+      }
+        if( ( fabs(i1->second.size() - 1.0) < epsilon ) && ( fabs(i2->second.size() - 1.0) < epsilon) )
+        {
+          score += word_weights_[i1->first];
+          N1 += word_weights_[i1->first];
+          N2 += word_weights_[i2->first];
+        }
+        ++i1;
+        ++i2;
+    }
+
+    while(i1 != i1e)
+    {
+      N1 += i1->second.size()*word_weights_[i1->first];
+      ++i1;
+    }
+
+    while(i2 != i2e)
+    {
+      N2 += i2->second.size()*word_weights_[i2->first];
+      ++i2;
+    }
+    
+    distance = - score;
+  }
+  
+  else if(distanceMethod.compare("inversedWeightedCommonPoints") == 0)
+  {
+    double score = 0.0;
+    double N1 = 0.0;
+    double N2 = 0.0;
+    std::map<int,int> compteur;
+    
+    while(i1 != i1e && i2 != i2e)
+    {
+      if(i2->first < i1->first)
+      {
+        N2 += i2->second.size() / word_weights_[i2->first];
+        ++i2;
+      }
+      else if(i1->first < i2->first)
+      {
+        N1 += i1->second.size() / word_weights_[i1->first];
+         ++i1;
+      }
+      else
+      {
+        compteur[i1->first] += std::min(i1->second.size(), i2->second.size());
+        N1 += i1->second.size() / word_weights_[i1->first];
+        N2 += i2->second.size() / word_weights_[i2->first];
+        ++i1;
+        ++i2;
+      }
+    }
+
+    while(i1 != i1e)
+    {
+      N1 += i1->second.size() / word_weights_[i1->first];
+      ++i1;
+    }
+
+    while(i2 != i2e)
+    {
+      N2 += i2->second.size() / word_weights_[i2->first];;
+      ++i2;
+    }
+    
+    for(auto iCompteur = compteur.begin(); iCompteur != compteur.end(); iCompteur++)
+      score += (1.0/iCompteur->second) * word_weights_[iCompteur->first];
+    
+    distance = - score;
+  }
+  else
+  {
+    std::cout << "Unknown distanceMethod" << std::endl;
+    exit(-1);
+  }
+  
   return distance;
+
 }
 
 /**

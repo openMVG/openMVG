@@ -31,6 +31,7 @@
 #include <functional>
 #include <limits>
 
+
 using namespace openMVG;
 using namespace openMVG::image;
 using namespace openMVG::features;
@@ -257,11 +258,20 @@ int main(int argc, char **argv)
     << "[-m|--describerMethod]\n"
     << "  (method to use to describe an image):\n"
     << "   SIFT (default),\n"
+    << "   SIFT_FLOAT to use SIFT stored as float,\n"
     << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
     << "   AKAZE_MLDB:  AKAZE with binary descriptors\n"
+#if HAVE_CCTAG
+      << "   CCTAG3: CCTAG markers with 3 crowns\n"
+      << "   CCTAG3: CCTAG markers with 4 crowns\n"
+      << "   SIFT_CCTAG3: CCTAG markers with 3 crowns\n" 
+      << "   SIFT_CCTAG4: CCTAG markers with 4 crowns\n" 
+#endif
     << "[-u|--upright] Use Upright feature 0 or 1\n"
     << "[-p|--describerPreset]\n"
     << "  (used to control the Image_describer configuration):\n"
+    << "   LOW,\n"
+    << "   MEDIUM,\n"
     << "   NORMAL (default),\n"
     << "   HIGH,\n"
     << "   ULTRA: !!Can take long time!!\n"
@@ -272,6 +282,7 @@ int main(int argc, char **argv)
 
     std::cerr << s << std::endl;
     return EXIT_FAILURE;
+
   }
 
   std::cout << " You called : " <<std::endl
@@ -315,11 +326,45 @@ int main(int argc, char **argv)
   // a. Load input scene
   //---------------------------------------
   SfM_Data sfm_data;
-  if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) 
+  if(sSfM_Data_Filename.empty())
   {
-    std::cerr << std::endl
-      << "The input file \""<< sSfM_Data_Filename << "\" cannot be read" << std::endl;
+    std::cerr << "\nError: The input file argument is required." << std::endl;
     return EXIT_FAILURE;
+  }
+  else if(stlplus::is_file( sSfM_Data_Filename))
+  {
+    if(!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS)))
+    {
+      std::cerr << std::endl
+        << "The input file \""<< sSfM_Data_Filename << "\" cannot be read" << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
+  else if(stlplus::is_folder(sSfM_Data_Filename))
+  {
+    // Retrieve image paths
+    std::vector<std::string> vec_images;
+    const std::vector<std::string> supportedExtensions {"jpg", "jpeg"};
+    
+    vec_images = stlplus::folder_files(sSfM_Data_Filename);
+    std::sort(vec_images.begin(), vec_images.end());
+    
+    sfm_data.s_root_path = "";
+    if(!sSfM_Data_Filename.empty())
+      sfm_data.s_root_path = sSfM_Data_Filename; // Setup main image root_path
+    Views & views = sfm_data.views;
+    
+    for(std::vector<std::string>::const_iterator iter_image = vec_images.begin();
+        iter_image != vec_images.end(); ++iter_image)
+    {
+      std::size_t id_view = 0;
+      stl::hash_combine(id_view, *iter_image);
+    
+      // Build the view corresponding to the image
+      View v(*iter_image, (IndexT)id_view);
+      v.id_intrinsic = UndefinedIndexT;
+      views[v.id_view] = std::make_shared<View>(v);
+    }
   }
 
   // b. Init the image_describer

@@ -39,6 +39,8 @@ public:
     const std::string& sfileNameFeats,
     const std::string& sfileNameDescs) const = 0;
 
+  virtual bool SaveDesc(const std::string& sfileNameDescs) const = 0;
+
   virtual bool LoadFeatures(
     const std::string& sfileNameFeats) = 0;
 
@@ -147,6 +149,11 @@ public:
   {
     return saveFeatsToFile(sfileNameFeats, this->_vec_feats)
           & saveDescsToBinFile(sfileNameDescs, _vec_descs);
+  }
+
+  bool SaveDesc(const std::string& sfileNameDescs) const
+  {
+    return saveDescsToBinFile(sfileNameDescs, _vec_descs);
   }
 
   /// Mutable and non-mutable DescriptorT getters.

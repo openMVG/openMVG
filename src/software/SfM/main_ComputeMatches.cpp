@@ -54,6 +54,26 @@ enum EPairMode
   PAIR_FROM_FILE  = 2
 };
 
+void getStatsMap(const PairWiseMatches& map)
+{
+      std::map<int,int> stats;
+      for( const auto& imgMatches: map)
+      {
+        for( const matching::IndMatch& featMatches: imgMatches.second)
+        {
+          int d = std::floor(featMatches._distance / 1000.0);
+          if( stats.find(d) != stats.end() )
+            stats[d] += 1;
+          else
+            stats[d] = 1;
+        }
+      }
+      for(const auto& stat: stats)
+      {
+        std::cout << stat.first << "\t" << stat.second << std::endl;
+      }
+}
+
 /// Compute corresponding features between a series of views:
 /// - Load view images description (regions: features & descriptors)
 /// - Compute putative local feature matches (descriptors matching)
@@ -377,7 +397,7 @@ int main(int argc, char **argv)
     {
       std::cout << "There are " << sfm_data.GetViews().size() << " views and " << pairs.size() << " image pairs." << std::endl;
 
-      // Photometric matching of putative pairs
+      // Photometric matching of putative pairs    
       collectionMatcher->Match(sfm_data, regions_provider, pairs, map_PutativesMatches);
       
       if(map_PutativesMatches.empty())
@@ -415,6 +435,12 @@ int main(int argc, char **argv)
       putativeGraph.g);
   }
 
+#ifdef OPENMVG_DEBUG_MATCHING
+    {
+      std::cout << "PUTATIVE" << std::endl;
+      getStatsMap(map_PutativesMatches);
+    }
+#endif
   //---------------------------------------
   // b. Geometric filtering of putative matches
   //    - AContrario Estimation of the desired geometric model
@@ -546,6 +572,13 @@ int main(int argc, char **argv)
     PairWiseMatchingToAdjacencyMatrixSVG(vec_fileNames.size(),
       finalMatches,
       stlplus::create_filespec(sMatchesDirectory, "GeometricAdjacencyMatrix", "svg"));
+
+#ifdef OPENMVG_DEBUG_MATCHING
+    {
+      std::cout << "GEOMETRIC" << std::endl;
+      getStatsMap(map_GeometricMatches);
+    }
+#endif
 
     //-- export view pair graph once geometric filter have been done
     {

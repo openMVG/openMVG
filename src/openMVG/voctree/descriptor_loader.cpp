@@ -1,4 +1,5 @@
 #include "descriptor_loader.hpp"
+#include <boost/algorithm/string/predicate.hpp>
 
 namespace openMVG {
 namespace voctree {
@@ -55,6 +56,20 @@ void getListOfDescriptorFiles(const std::string &fileFullPath, std::map<IndexT, 
 
   bfs::path bp(fileFullPath);
 
+  // If the input is a directory, list all .desc files recursively.
+  if(bfs::is_directory(bp))
+  {
+    std::size_t viewId = 0;
+    for(bfs::recursive_directory_iterator it(bp), end; it != end; ++it)
+    {
+        if(!bfs::is_directory(*it) && boost::algorithm::ends_with(it->path().string(), ".desc"))
+        {
+          descriptorsFiles[viewId++] = it->path().string();
+        }
+    }
+    return;
+  }
+  
   if(!bp.has_extension())
   {
     std::cerr << "File without extension not recognized! " << fileFullPath << std::endl;
