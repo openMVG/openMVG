@@ -269,6 +269,7 @@ Canon;Canon PowerShot G11;7.53
 Canon;Canon PowerShot SD940 IS;6.16
 Canon;Canon PowerShot SD980 IS;6.16
 Canon;Canon PowerShot SD960 IS;6.16
+Canon;Canon DIGITAL IXUS 70;5.7
 Canon;Canon Digital IXUS 100 IS;6.16
 Canon;Canon Digital IXUS 120 IS;6.17
 Canon;Canon PowerShot SD780 IS;6.16

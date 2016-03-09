@@ -35,17 +35,17 @@ struct AKAZEParams
   AKAZEParams(
     AKAZEConfig config = AKAZEConfig(),
     EAKAZE_DESCRIPTOR eAkazeDescriptor = AKAZE_MSURF
-  ):_options(config),_eAkazeDescriptor(eAkazeDescriptor){}
+  ):options_(config), eAkazeDescriptor_(eAkazeDescriptor){}
 
   template<class Archive>
   void serialize(Archive & ar)
   {
-    ar(_options, _eAkazeDescriptor);
+    ar(options_, eAkazeDescriptor_);
   }
 
   // Parameters
-  AKAZEConfig _options;
-  EAKAZE_DESCRIPTOR _eAkazeDescriptor;
+  AKAZEConfig options_;
+  EAKAZE_DESCRIPTOR eAkazeDescriptor_;
 };
 
 class AKAZE_Image_describer : public Image_describer
@@ -54,7 +54,7 @@ public:
   AKAZE_Image_describer(
     const AKAZEParams & params = AKAZEParams(),
     bool bOrientation = true
-  ):Image_describer(), _params(params), _bOrientation(bOrientation) {}
+  ):Image_describer(), params_(params), bOrientation_(bOrientation) {}
 
 
   bool Set_configuration_preset(EDESCRIBER_PRESET preset)
@@ -62,13 +62,13 @@ public:
     switch(preset)
     {
     case NORMAL_PRESET:
-      _params._options.fThreshold = AKAZEConfig().fThreshold;
+      params_.options_.fThreshold = AKAZEConfig().fThreshold;
     break;
     case HIGH_PRESET:
-      _params._options.fThreshold = AKAZEConfig().fThreshold/10.;
+      params_.options_.fThreshold = AKAZEConfig().fThreshold/10.;
     break;
     case ULTRA_PRESET:
-     _params._options.fThreshold = AKAZEConfig().fThreshold/100.;
+     params_.options_.fThreshold = AKAZEConfig().fThreshold/100.;
     break;
     default:
       return false;
@@ -87,12 +87,12 @@ public:
     std::unique_ptr<Regions> &regions,
     const image::Image<unsigned char> * mask = NULL)
   {
-    _params._options.fDesc_factor =
-      (_params._eAkazeDescriptor == AKAZE_MSURF ||
-      _params._eAkazeDescriptor == AKAZE_LIOP) ? 10.f*sqrtf(2.f)
+    params_.options_.fDesc_factor =
+      (params_.eAkazeDescriptor_ == AKAZE_MSURF ||
+      params_.eAkazeDescriptor_ == AKAZE_LIOP) ? 10.f*sqrtf(2.f)
       : 11.f*sqrtf(2.f); // MLDB
 
-    AKAZE akaze(image, _params._options);
+    AKAZE akaze(image, params_.options_);
     akaze.Compute_AKAZEScaleSpace();
     std::vector<AKAZEKeypoint> kpts;
     kpts.reserve(5000);
@@ -101,7 +101,7 @@ public:
 
     Allocate(regions);
 
-    switch(_params._eAkazeDescriptor)
+    switch(params_.eAkazeDescriptor_)
     {
       case AKAZE_MSURF:
       {
@@ -127,7 +127,7 @@ public:
 
           const TEvolution & cur_slice = akaze.getSlices()[ptAkaze.class_id];
 
-          if (_bOrientation)
+          if (bOrientation_)
             akaze.Compute_Main_Orientation(ptAkaze, cur_slice.Lx, cur_slice.Ly);
           else
             ptAkaze.angle = 0.0f;
@@ -168,7 +168,7 @@ public:
 
           const TEvolution & cur_slice = akaze.getSlices()[ptAkaze.class_id];
 
-          if (_bOrientation)
+          if (bOrientation_)
             akaze.Compute_Main_Orientation(ptAkaze, cur_slice.Lx, cur_slice.Ly);
           else
             ptAkaze.angle = 0.0f;
@@ -215,7 +215,7 @@ public:
 
           const TEvolution & cur_slice = akaze.getSlices()[ptAkaze.class_id];
 
-          if (_bOrientation)
+          if (bOrientation_)
             akaze.Compute_Main_Orientation(ptAkaze, cur_slice.Lx, cur_slice.Ly);
           else
             ptAkaze.angle = 0.0f;
@@ -247,7 +247,7 @@ public:
   /// Allocate Regions type depending of the Image_describer
   void Allocate(std::unique_ptr<Regions> &regions) const
   {
-    switch(_params._eAkazeDescriptor)
+    switch(params_.eAkazeDescriptor_)
     {
       case AKAZE_MSURF:
         return regions.reset(new AKAZE_Float_Regions);
@@ -264,14 +264,14 @@ public:
   void serialize(Archive & ar)
   {
     ar(
-     cereal::make_nvp("params", _params),
-     cereal::make_nvp("bOrientation", _bOrientation));
+     cereal::make_nvp("params", params_),
+     cereal::make_nvp("bOrientation", bOrientation_));
   }
 
 
 private:
-  AKAZEParams _params;
-  bool _bOrientation;
+  AKAZEParams params_;
+  bool bOrientation_;
 };
 
 } // namespace features

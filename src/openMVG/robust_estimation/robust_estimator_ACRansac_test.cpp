@@ -237,25 +237,24 @@ void generateLine(Mat & points, size_t nbPoints, int W, int H, float noise, floa
 // Structure used to avoid repetition in a given series
 struct IndMatchd
 {
-  IndMatchd(double i = 0, double j = 0): _i(i), _j(j)
+  IndMatchd(double i = 0, double j = 0): i_(i), j_(j)
   {}
 
   friend bool operator==(const IndMatchd& m1, const IndMatchd& m2)
-  {    return (m1._i == m2._i && m1._j == m2._j);  }
+  {    return (m1.i_ == m2.i_ && m1.j_ == m2.j_);  }
 
   // Lexicographical ordering of matches. Used to remove duplicates.
   friend bool operator<(const IndMatchd& m1, const IndMatchd& m2)
   {
-    if(m1._i < m2._i) return true;
-    if(m1._i > m2._i) return false;
+    if(m1.i_ < m2.i_) return true;
+    if(m1.i_ > m2.i_) return false;
 
-    if(m1._j < m2._j) return true;
+    if(m1.j_ < m2.j_) return true;
     else
       return false;
-
   }
 
-  double _i, _j;
+  double i_, j_;
 };
 
 // Test ACRANSAC adaptability to noise
@@ -302,7 +301,7 @@ TEST(RansacLineFitter, ACRANSACSimu) {
 
       points = Mat(2, vec_match.size());
       for (size_t i = 0; i  < vec_match.size(); ++i)  {
-        points.col(i) = Vec2(vec_match[i]._i, vec_match[i]._j);
+        points.col(i) = Vec2(vec_match[i].i_, vec_match[i].j_);
       }
       nbPoints = vec_match.size();
     }

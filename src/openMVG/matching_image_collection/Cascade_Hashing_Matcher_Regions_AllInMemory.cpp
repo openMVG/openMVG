@@ -190,7 +190,7 @@ void Match
       for (size_t k=0; k < vec_nn_ratio_idx.size(); ++k)
       {
         const size_t index = vec_nn_ratio_idx[k];
-        vec_putative_matches.emplace_back(pvec_indices[index*2]._j, pvec_indices[index*2]._i);
+        vec_putative_matches.emplace_back(pvec_indices[index*2].j_, pvec_indices[index*2].i_);
       }
 
       // Remove duplicates

@@ -16,7 +16,7 @@ namespace sfm {
 ///  in the SfM_Data scene structure.
 struct SfM_Data_Structure_Computation_Basis
 {
-  bool _bConsoleVerbose;
+  bool bConsole_verbose_;
 
   SfM_Data_Structure_Computation_Basis(bool bConsoleVerbose = false);
 

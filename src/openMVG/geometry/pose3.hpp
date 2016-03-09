@@ -10,83 +10,171 @@
 #include "openMVG/multiview/projection.hpp"
 #include <cereal/cereal.hpp> // Serialization
 
-namespace openMVG {
-namespace geometry {
+namespace openMVG
+{
+namespace geometry
+{
 
-// Define a 3D Pose as a 3D transform: [R|C] t = -RC
+
+/**
+* @brief Defines a pose in 3d space
+* [R|C] t = -RC
+*/
 class Pose3
 {
   protected:
-    Mat3 _rotation;
-    Vec3 _center;
+
+    /// Orientation matrix
+    Mat3 rotation_;
+
+    /// Center of rotation
+    Vec3 center_;
 
   public:
-    // Constructors
-    Pose3() : _rotation(Mat3::Identity()), _center(Vec3::Zero()) {}
-    Pose3(const Mat3& r, const Vec3& c) : _rotation(r), _center(c) {}
 
-    // Accessors
-    const Mat3& rotation() const { return _rotation; }
-    Mat3& rotation() { return _rotation; }
-    const Vec3& center() const { return _center; }
-    Vec3& center() { return _center; }
-
-    // Translation vector t = -RC
-    inline Vec3 translation() const { return -(_rotation * _center); }
-
-    // Apply pose
-    inline Mat3X operator () (const Mat3X& p) const
+    /**
+    * @brief Default constructor
+    * @note This defines a Null transform (aligned with cartesian frame, centered at origin)
+    */
+    Pose3()
+      : rotation_( Mat3::Identity() ),
+        center_( Vec3::Zero() )
     {
-      return _rotation * (p.colwise() - _center);
+
+    }
+    /**
+    * @brief Constructor
+    * @param r Rotation
+    * @param c Center
+    */
+    Pose3( const Mat3& r, const Vec3& c ) : rotation_( r ), center_( c ) {}
+
+    /**
+    * @brief Get Rotation matrix
+    * @return Rotation matrix
+    */
+    const Mat3& rotation() const
+    {
+      return rotation_;
     }
 
-    // Composition
-    Pose3 operator * (const Pose3& P) const
+    /**
+    * @brief Get Rotation matrix
+    * @return Rotation matrix
+    */
+    Mat3& rotation()
     {
-      return Pose3(_rotation * P._rotation, P._center + P._rotation.transpose() * _center );
+      return rotation_;
     }
 
-    // Inverse
+    /**
+    * @brief Get center of rotation
+    * @return center of rotation
+    */
+    const Vec3& center() const
+    {
+      return center_;
+    }
+
+    /**
+    * @brief Get center of rotation
+    * @return Center of rotation
+    */
+    Vec3& center()
+    {
+      return center_;
+    }
+
+    /**
+    * @brief Get translation vector
+    * @return translation vector
+    * @note t = -RC
+    */
+    inline Vec3 translation() const
+    {
+      return -( rotation_ * center_ );
+    }
+
+
+    /**
+    * @brief Apply pose
+    * @param p Point
+    * @return transformed point
+    */
+    inline Mat3X operator () ( const Mat3X& p ) const
+    {
+      return rotation_ * ( p.colwise() - center_ );
+    }
+
+
+    /**
+    * @brief Composition of poses
+    * @param P a Pose
+    * @return Composition of current pose and parameter pose
+    */
+    Pose3 operator * ( const Pose3& P ) const
+    {
+      return Pose3( rotation_ * P.rotation_, P.center_ + P.rotation_.transpose() * center_ );
+    }
+
+
+    /**
+    * @brief Get inverse of the pose
+    * @return Inverse of the pose
+    */
     Pose3 inverse() const
     {
-      return Pose3(_rotation.transpose(),  -(_rotation * _center));
+      return Pose3( rotation_.transpose(),  -( rotation_ * center_ ) );
     }
 
-    // Return the depth (distance) of a point respect to the camera center
-    double depth(const Vec3 &X) const {
-      return (_rotation * (X - _center))[2];
+
+    /**
+    * @brief Return the depth (distance) of a point respect to the camera center
+    * @param X Input point
+    * @return Distance to center
+    */
+    double depth( const Vec3 &X ) const
+    {
+      return ( rotation_ * ( X - center_ ) )[2];
     }
 
-    // Serialization
+    /**
+    * Serialization out
+    * @param ar Archive
+    */
     template <class Archive>
-    void save( Archive & ar) const
+    void save( Archive & ar ) const
     {
       const std::vector<std::vector<double>> mat =
-        {
-          { _rotation(0,0), _rotation(0,1), _rotation(0,2) },
-          { _rotation(1,0), _rotation(1,1), _rotation(1,2) },
-          { _rotation(2,0), _rotation(2,1), _rotation(2,2) }
-        };
+      {
+        { rotation_( 0, 0 ), rotation_( 0, 1 ), rotation_( 0, 2 ) },
+        { rotation_( 1, 0 ), rotation_( 1, 1 ), rotation_( 1, 2 ) },
+        { rotation_( 2, 0 ), rotation_( 2, 1 ), rotation_( 2, 2 ) }
+      };
 
-      ar(cereal::make_nvp("rotation", mat));
+      ar( cereal::make_nvp( "rotation", mat ) );
 
-      const std::vector<double> vec = { _center(0), _center(1), _center(2) };
-      ar(cereal::make_nvp("center", vec ));
+      const std::vector<double> vec = { center_( 0 ), center_( 1 ), center_( 2 ) };
+      ar( cereal::make_nvp( "center", vec ) );
     }
 
+    /**
+    * @brief Serialization in
+    * @param ar Archive
+    */
     template <class Archive>
-    void load( Archive & ar)
+    void load( Archive & ar )
     {
-      std::vector<std::vector<double>> mat(3, std::vector<double>(3));
-      ar(cereal::make_nvp("rotation", mat));
+      std::vector<std::vector<double>> mat( 3, std::vector<double>( 3 ) );
+      ar( cereal::make_nvp( "rotation", mat ) );
       // copy back to the rotation
-      _rotation.row(0) = Eigen::Map<const Vec3>(&(mat[0][0]));
-      _rotation.row(1) = Eigen::Map<const Vec3>(&(mat[1][0]));
-      _rotation.row(2) = Eigen::Map<const Vec3>(&(mat[2][0]));
+      rotation_.row( 0 ) = Eigen::Map<const Vec3>( &( mat[0][0] ) );
+      rotation_.row( 1 ) = Eigen::Map<const Vec3>( &( mat[1][0] ) );
+      rotation_.row( 2 ) = Eigen::Map<const Vec3>( &( mat[2][0] ) );
 
-      std::vector<double> vec(3);
-      ar(cereal::make_nvp("center", vec));
-      _center = Eigen::Map<const Vec3>(&vec[0]);
+      std::vector<double> vec( 3 );
+      ar( cereal::make_nvp( "center", vec ) );
+      center_ = Eigen::Map<const Vec3>( &vec[0] );
     }
 };
 } // namespace geometry

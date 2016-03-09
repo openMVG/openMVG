@@ -109,8 +109,8 @@ public:
     const std::string& sfileNameFeats,
     const std::string& sfileNameDescs)
   {
-    return loadFeatsFromFile(sfileNameFeats, _vec_feats)
-          & loadDescsFromBinFile(sfileNameDescs, _vec_descs);
+    return loadFeatsFromFile(sfileNameFeats, vec_feats_)
+          & loadDescsFromBinFile(sfileNameDescs, vec_descs_);
   }
 
   /// Export in two separate files the regions and their corresponding descriptors.
@@ -118,43 +118,43 @@ public:
     const std::string& sfileNameFeats,
     const std::string& sfileNameDescs) const
   {
-    return saveFeatsToFile(sfileNameFeats, _vec_feats)
-          & saveDescsToBinFile(sfileNameDescs, _vec_descs);
+    return saveFeatsToFile(sfileNameFeats, vec_feats_)
+          & saveDescsToBinFile(sfileNameDescs, vec_descs_);
   }
 
   bool LoadFeatures(const std::string& sfileNameFeats)
   {
-    return loadFeatsFromFile(sfileNameFeats, _vec_feats);
+    return loadFeatsFromFile(sfileNameFeats, vec_feats_);
   }
 
   PointFeatures GetRegionsPositions() const
   {
-    return PointFeatures(_vec_feats.begin(), _vec_feats.end());
+    return PointFeatures(vec_feats_.begin(), vec_feats_.end());
   }
 
   Vec2 GetRegionPosition(size_t i) const
   {
-    return Vec2f(_vec_feats[i].coords()).cast<double>();
+    return Vec2f(vec_feats_[i].coords()).cast<double>();
   }
 
   /// Return the number of defined regions
-  size_t RegionCount() const {return _vec_feats.size();}
+  size_t RegionCount() const {return vec_feats_.size();}
 
   /// Mutable and non-mutable FeatureT getters.
-  inline std::vector<FeatureT> & Features() { return _vec_feats; }
-  inline const std::vector<FeatureT> & Features() const { return _vec_feats; }
+  inline std::vector<FeatureT> & Features() { return vec_feats_; }
+  inline const std::vector<FeatureT> & Features() const { return vec_feats_; }
 
   /// Mutable and non-mutable DescriptorT getters.
-  inline std::vector<DescriptorT> & Descriptors() { return _vec_descs; }
-  inline const std::vector<DescriptorT> & Descriptors() const { return _vec_descs; }
+  inline std::vector<DescriptorT> & Descriptors() { return vec_descs_; }
+  inline const std::vector<DescriptorT> & Descriptors() const { return vec_descs_; }
 
-  const void * DescriptorRawData() const { return &_vec_descs[0];}
+  const void * DescriptorRawData() const { return &vec_descs_[0];}
 
   template<class Archive>
   void serialize(Archive & ar)
   {
-    ar(_vec_feats);
-    ar(_vec_descs);
+    ar(vec_feats_);
+    ar(vec_descs_);
   }
 
   Regions * EmptyClone() const
@@ -165,28 +165,28 @@ public:
   // Return the L2 distance between two descriptors
   double SquaredDescriptorDistance(size_t i, const Regions * regions, size_t j) const
   {
-    assert(i < _vec_descs.size());
+    assert(i < vec_descs_.size());
     assert(regions);
     assert(j < regions->RegionCount());
 
     const Scalar_Regions<FeatT, T, L> * regionsT = dynamic_cast<const Scalar_Regions<FeatT, T, L> *>(regions);
     static matching::L2_Vectorized<T> metric;
-    return metric(_vec_descs[i].getData(), regionsT->_vec_descs[j].getData(), DescriptorT::static_size);
+    return metric(vec_descs_[i].getData(), regionsT->vec_descs_[j].getData(), DescriptorT::static_size);
   }
 
   /// Add the Inth region to another Region container
   void CopyRegion(size_t i, Regions * region_container) const
   {
-    assert(i < _vec_feats.size() && i < _vec_descs.size());
-    static_cast<Scalar_Regions<FeatT, T, L> *>(region_container)->_vec_feats.push_back(_vec_feats[i]);
-    static_cast<Scalar_Regions<FeatT, T, L> *>(region_container)->_vec_descs.push_back(_vec_descs[i]);
+    assert(i < vec_feats_.size() && i < vec_descs_.size());
+    static_cast<Scalar_Regions<FeatT, T, L> *>(region_container)->vec_feats_.push_back(vec_feats_[i]);
+    static_cast<Scalar_Regions<FeatT, T, L> *>(region_container)->vec_descs_.push_back(vec_descs_[i]);
   }
 
 private:
   //--
   //-- internal data
-  std::vector<FeatureT> _vec_feats;    // region features
-  std::vector<DescriptorT> _vec_descs; // region descriptions
+  std::vector<FeatureT> vec_feats_;    // region features
+  std::vector<DescriptorT> vec_descs_; // region descriptions
 };
 
 /// Binary_Regions represented as uchar based array
@@ -223,8 +223,8 @@ public:
     const std::string& sfileNameFeats,
     const std::string& sfileNameDescs)
   {
-    return loadFeatsFromFile(sfileNameFeats, _vec_feats)
-          & loadDescsFromBinFile(sfileNameDescs, _vec_descs);
+    return loadFeatsFromFile(sfileNameFeats, vec_feats_)
+          & loadDescsFromBinFile(sfileNameDescs, vec_descs_);
   }
 
   /// Export in two separate files the regions and their corresponding descriptors.
@@ -232,43 +232,43 @@ public:
     const std::string& sfileNameFeats,
     const std::string& sfileNameDescs) const
   {
-    return saveFeatsToFile(sfileNameFeats, _vec_feats)
-          & saveDescsToBinFile(sfileNameDescs, _vec_descs);
+    return saveFeatsToFile(sfileNameFeats, vec_feats_)
+          & saveDescsToBinFile(sfileNameDescs, vec_descs_);
   }
 
   bool LoadFeatures(const std::string& sfileNameFeats)
   {
-    return loadFeatsFromFile(sfileNameFeats, _vec_feats);
+    return loadFeatsFromFile(sfileNameFeats, vec_feats_);
   }
 
   PointFeatures GetRegionsPositions() const
   {
-    return PointFeatures(_vec_feats.begin(), _vec_feats.end());
+    return PointFeatures(vec_feats_.begin(), vec_feats_.end());
   }
 
   Vec2 GetRegionPosition(size_t i) const
   {
-    return Vec2f(_vec_feats[i].coords()).cast<double>();
+    return Vec2f(vec_feats_[i].coords()).cast<double>();
   }
 
   /// Return the number of defined regions
-  size_t RegionCount() const {return _vec_feats.size();}
+  size_t RegionCount() const {return vec_feats_.size();}
 
   /// Mutable and non-mutable FeatureT getters.
-  inline std::vector<FeatureT> & Features() { return _vec_feats; }
-  inline const std::vector<FeatureT> & Features() const { return _vec_feats; }
+  inline std::vector<FeatureT> & Features() { return vec_feats_; }
+  inline const std::vector<FeatureT> & Features() const { return vec_feats_; }
 
   /// Mutable and non-mutable DescriptorT getters.
-  inline std::vector<DescriptorT> & Descriptors() { return _vec_descs; }
-  inline const std::vector<DescriptorT> & Descriptors() const { return _vec_descs; }
+  inline std::vector<DescriptorT> & Descriptors() { return vec_descs_; }
+  inline const std::vector<DescriptorT> & Descriptors() const { return vec_descs_; }
 
-  const void * DescriptorRawData() const { return &_vec_descs[0];}
+  const void * DescriptorRawData() const { return &vec_descs_[0];}
 
   template<class Archive>
   void serialize(Archive & ar)
   {
-    ar(_vec_feats);
-    ar(_vec_descs);
+    ar(vec_feats_);
+    ar(vec_descs_);
   }
 
   Regions * EmptyClone() const
@@ -279,30 +279,30 @@ public:
   // Return the squared Hamming distance between two descriptors
   double SquaredDescriptorDistance(size_t i, const Regions * regions, size_t j) const
   {
-    assert(i < _vec_descs.size());
+    assert(i < vec_descs_.size());
     assert(regions);
     assert(j < regions->RegionCount());
 
     const Binary_Regions<FeatT, L> * regionsT = dynamic_cast<const Binary_Regions<FeatT, L> *>(regions);
     static matching::Hamming<unsigned char> metric;
     const typename matching::Hamming<unsigned char>::ResultType descDist =
-      metric(_vec_descs[i].getData(), regionsT->_vec_descs[j].getData(), DescriptorT::static_size);
+      metric(vec_descs_[i].getData(), regionsT->vec_descs_[j].getData(), DescriptorT::static_size);
     return descDist * descDist;
   }
 
   /// Add the Inth region to another Region container
   void CopyRegion(size_t i, Regions * region_container) const
   {
-    assert(i < _vec_feats.size() && i < _vec_descs.size());
-    static_cast<Binary_Regions<FeatT, L> *>(region_container)->_vec_feats.push_back(_vec_feats[i]);
-    static_cast<Binary_Regions<FeatT, L> *>(region_container)->_vec_descs.push_back(_vec_descs[i]);
+    assert(i < vec_feats_.size() && i < vec_descs_.size());
+    static_cast<Binary_Regions<FeatT, L> *>(region_container)->vec_feats_.push_back(vec_feats_[i]);
+    static_cast<Binary_Regions<FeatT, L> *>(region_container)->vec_descs_.push_back(vec_descs_[i]);
   }
 
 private:
   //--
   //-- internal data
-  std::vector<FeatureT> _vec_feats; // region features
-  std::vector<DescriptorT> _vec_descs; // region descriptions
+  std::vector<FeatureT> vec_feats_; // region features
+  std::vector<DescriptorT> vec_descs_; // region descriptions
 };
 
 } // namespace features

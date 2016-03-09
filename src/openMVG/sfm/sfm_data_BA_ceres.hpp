@@ -25,17 +25,17 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
   public:
   struct BA_options
   {
-    bool _bVerbose;
-    unsigned int _nbThreads;
-    bool _bCeres_Summary;
-    ceres::LinearSolverType _linear_solver_type;
-    ceres::PreconditionerType _preconditioner_type;
-    ceres::SparseLinearAlgebraLibraryType _sparse_linear_algebra_library_type;
+    bool bVerbose_;
+    unsigned int nb_threads_;
+    bool bCeres_summary_;
+    ceres::LinearSolverType linear_solver_type_;
+    ceres::PreconditionerType preconditioner_type_;
+    ceres::SparseLinearAlgebraLibraryType sparse_linear_algebra_library_type_;
 
     BA_options(const bool bVerbose = true, bool bmultithreaded = true);
   };
   private:
-    BA_options _openMVG_options;
+    BA_options openMVG_options_;
 
   public:
   Bundle_Adjustment_Ceres(Bundle_Adjustment_Ceres::BA_options options = BA_options());

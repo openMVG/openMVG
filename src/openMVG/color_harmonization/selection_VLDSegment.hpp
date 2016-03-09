@@ -58,7 +58,7 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
           iter_match != _vec_PutativeMatches.end();
           ++iter_match )
     {
-      matchesPair.push_back( std::make_pair( iter_match->_i, iter_match->_j ) );
+      matchesPair.push_back( std::make_pair( iter_match->i_, iter_match->j_ ) );
     }
 
     std::vector< double > vec_score;

@@ -32,57 +32,57 @@ GlobalSfMReconstructionEngine_RelativeMotions::GlobalSfMReconstructionEngine_Rel
   const SfM_Data & sfm_data,
   const std::string & soutDirectory,
   const std::string & sloggingFile)
-  : ReconstructionEngine(sfm_data, soutDirectory), _sLoggingFile(sloggingFile), _normalized_features_provider(NULL) {
+  : ReconstructionEngine(sfm_data, soutDirectory), sLogging_file_(sloggingFile), normalized_features_provider_(NULL) {
 
-  if (!_sLoggingFile.empty())
+  if (!sLogging_file_.empty())
   {
     // setup HTML logger
-    _htmlDocStream = std::make_shared<htmlDocument::htmlDocumentStream>("GlobalReconstructionEngine SFM report.");
-    _htmlDocStream->pushInfo(
+    html_doc_stream_ = std::make_shared<htmlDocument::htmlDocumentStream>("GlobalReconstructionEngine SFM report.");
+    html_doc_stream_->pushInfo(
       htmlDocument::htmlMarkup("h1", std::string("GlobalSfMReconstructionEngine_RelativeMotions")));
-    _htmlDocStream->pushInfo("<hr>");
+    html_doc_stream_->pushInfo("<hr>");
 
-    _htmlDocStream->pushInfo( "Dataset info:");
-    _htmlDocStream->pushInfo( "Views count: " +
+    html_doc_stream_->pushInfo( "Dataset info:");
+    html_doc_stream_->pushInfo( "Views count: " +
       htmlDocument::toString( sfm_data.GetViews().size()) + "<br>");
   }
 
   // Set default motion Averaging methods
-  _eRotationAveragingMethod = ROTATION_AVERAGING_L2;
-  _eTranslationAveragingMethod = TRANSLATION_AVERAGING_L1;
+  eRotation_averaging_method_ = ROTATION_AVERAGING_L2;
+  eTranslation_averaging_method_ = TRANSLATION_AVERAGING_L1;
 }
 
 GlobalSfMReconstructionEngine_RelativeMotions::~GlobalSfMReconstructionEngine_RelativeMotions()
 {
-  if (!_sLoggingFile.empty())
+  if (!sLogging_file_.empty())
   {
     // Save the reconstruction Log
-    std::ofstream htmlFileStream(_sLoggingFile.c_str());
-    htmlFileStream << _htmlDocStream->getDoc();
+    std::ofstream htmlFileStream(sLogging_file_.c_str());
+    htmlFileStream << html_doc_stream_->getDoc();
   }
 }
 
 void GlobalSfMReconstructionEngine_RelativeMotions::SetFeaturesProvider(Features_Provider * provider)
 {
-  _features_provider = provider;
+  features_provider_ = provider;
 
   // Copy features and save a normalized version
-  _normalized_features_provider = std::make_shared<Features_Provider>(*provider);
+  normalized_features_provider_ = std::make_shared<Features_Provider>(*provider);
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel
 #endif
-  for (Hash_Map<IndexT, PointFeatures>::iterator iter = _normalized_features_provider->feats_per_view.begin();
-    iter != _normalized_features_provider->feats_per_view.end(); ++iter)
+  for (Hash_Map<IndexT, PointFeatures>::iterator iter = normalized_features_provider_->feats_per_view.begin();
+    iter != normalized_features_provider_->feats_per_view.end(); ++iter)
   {
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp single nowait
 #endif
     {
       // get the related view & camera intrinsic and compute the corresponding bearing vectors
-      const View * view = _sfm_data.GetViews().at(iter->first).get();
-      if (_sfm_data.GetIntrinsics().count(view->id_intrinsic))
+      const View * view = sfm_data_.GetViews().at(iter->first).get();
+      if (sfm_data_.GetIntrinsics().count(view->id_intrinsic))
       {
-        const std::shared_ptr<IntrinsicBase> cam = _sfm_data.GetIntrinsics().find(view->id_intrinsic)->second;
+        const std::shared_ptr<IntrinsicBase> cam = sfm_data_.GetIntrinsics().find(view->id_intrinsic)->second;
         for (PointFeatures::iterator iterPt = iter->second.begin();
           iterPt != iter->second.end(); ++iterPt)
         {
@@ -96,7 +96,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::SetFeaturesProvider(Features
 
 void GlobalSfMReconstructionEngine_RelativeMotions::SetMatchesProvider(Matches_Provider * provider)
 {
-  _matches_provider = provider;
+  matches_provider_ = provider;
 }
 
 void GlobalSfMReconstructionEngine_RelativeMotions::SetRotationAveragingMethod
@@ -104,7 +104,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::SetRotationAveragingMethod
   ERotationAveragingMethod eRotationAveragingMethod
 )
 {
-  _eRotationAveragingMethod = eRotationAveragingMethod;
+  eRotation_averaging_method_ = eRotationAveragingMethod;
 }
 
 void GlobalSfMReconstructionEngine_RelativeMotions::SetTranslationAveragingMethod
@@ -112,7 +112,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::SetTranslationAveragingMetho
   ETranslationAveragingMethod eTranslationAveragingMethod
 )
 {
-  _eTranslationAveragingMethod = eTranslationAveragingMethod;
+  eTranslation_averaging_method_ = eTranslationAveragingMethod;
 }
 
 bool GlobalSfMReconstructionEngine_RelativeMotions::Process() {
@@ -121,14 +121,14 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Process() {
   // Keep only the largest biedge connected subgraph
   //-------------------
   {
-    const Pair_Set pairs = _matches_provider->getPairs();
+    const Pair_Set pairs = matches_provider_->getPairs();
     const std::set<IndexT> set_remainingIds = graph::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs);
     if(set_remainingIds.empty())
     {
       std::cout << "Invalid input image graph for global SfM" << std::endl;
       return false;
     }
-    KeepOnlyReferencedElement(set_remainingIds, _matches_provider->_pairWise_matches);
+    KeepOnlyReferencedElement(set_remainingIds, matches_provider_->pairWise_matches_);
   }
 
   openMVG::rotation_averaging::RelativeRotations relatives_R;
@@ -158,22 +158,22 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Process() {
   }
 
   //-- Export statistics about the SfM process
-  if (!_sLoggingFile.empty())
+  if (!sLogging_file_.empty())
   {
     using namespace htmlDocument;
     std::ostringstream os;
     os << "Structure from Motion statistics.";
-    _htmlDocStream->pushInfo("<hr>");
-    _htmlDocStream->pushInfo(htmlMarkup("h1",os.str()));
+    html_doc_stream_->pushInfo("<hr>");
+    html_doc_stream_->pushInfo(htmlMarkup("h1",os.str()));
 
     os.str("");
     os << "-------------------------------" << "<br>"
-      << "-- View count: " << _sfm_data.GetViews().size() << "<br>"
-      << "-- Intrinsic count: " << _sfm_data.GetIntrinsics().size() << "<br>"
-      << "-- Pose count: " << _sfm_data.GetPoses().size() << "<br>"
-      << "-- Track count: "  << _sfm_data.GetLandmarks().size() << "<br>"
+      << "-- View count: " << sfm_data_.GetViews().size() << "<br>"
+      << "-- Intrinsic count: " << sfm_data_.GetIntrinsics().size() << "<br>"
+      << "-- Pose count: " << sfm_data_.GetPoses().size() << "<br>"
+      << "-- Track count: "  << sfm_data_.GetLandmarks().size() << "<br>"
       << "-------------------------------" << "<br>";
-    _htmlDocStream->pushInfo(os.str());
+    html_doc_stream_->pushInfo(os.str());
   }
 
   return true;
@@ -211,7 +211,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations
   system::Timer t;
   GlobalSfM_Rotation_AveragingSolver rotation_averaging_solver;
   const bool b_rotation_averaging = rotation_averaging_solver.Run(
-    _eRotationAveragingMethod, eRelativeRotationInferenceMethod,
+    eRotation_averaging_method_, eRelativeRotationInferenceMethod,
     relatives_R, global_rotations);
 
   std::cout
@@ -258,13 +258,13 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations
     }
 
     // Log input graph to the HTML report
-    if (!_sLoggingFile.empty() && !_sOutDirectory.empty())
+    if (!sLogging_file_.empty() && !sOut_directory.empty())
     {
       // Log a relative pose graph
       {
         std::set<IndexT> set_pose_ids;
         Pair_Set relative_pose_pairs;
-        for (const auto & view : _sfm_data.GetViews())
+        for (const auto & view : sfm_data_.GetViews())
         {
           const IndexT pose_id = view.second->id_pose;
           set_pose_ids.insert(pose_id);
@@ -272,7 +272,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations
         const std::string sGraph_name = "global_relative_rotation_pose_graph_final";
         graph::indexedGraph putativeGraph(set_pose_ids, rotation_averaging_solver.GetUsedPairs());
         graph::exportToGraphvizData(
-          stlplus::create_filespec(_sOutDirectory, sGraph_name),
+          stlplus::create_filespec(sOut_directory, sGraph_name),
           putativeGraph.g);
 
         using namespace htmlDocument;
@@ -280,10 +280,10 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations
 
         os << "<br>" << sGraph_name << "<br>"
            << "<img src=\""
-           << stlplus::create_filespec(_sOutDirectory, sGraph_name, "svg")
+           << stlplus::create_filespec(sOut_directory, sGraph_name, "svg")
            << "\" height=\"600\">\n";
 
-        _htmlDocStream->pushInfo(os.str());
+        html_doc_stream_->pushInfo(os.str());
       }
     }
   }
@@ -300,17 +300,17 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Translations
   // Translation averaging (compute translations & update them to a global common coordinates system)
   GlobalSfM_Translation_AveragingSolver translation_averaging_solver;
   const bool bTranslationAveraging = translation_averaging_solver.Run(
-    _eTranslationAveragingMethod,
-    _sfm_data,
-    _normalized_features_provider.get(),
-    _matches_provider,
+    eTranslation_averaging_method_,
+    sfm_data_,
+    normalized_features_provider_.get(),
+    matches_provider_,
     global_rotations,
     tripletWise_matches);
 
-  if (!_sLoggingFile.empty())
+  if (!sLogging_file_.empty())
   {
-    Save(_sfm_data,
-      stlplus::create_filespec(stlplus::folder_part(_sLoggingFile), "cameraPath_translation_averaging", "ply"),
+    Save(sfm_data_,
+      stlplus::create_filespec(stlplus::folder_part(sLogging_file_), "cameraPath_translation_averaging", "ply"),
       ESfM_Data(EXTRINSICS));
   }
 
@@ -329,11 +329,11 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
     TracksBuilder tracksBuilder;
 #if defined USE_ALL_VALID_MATCHES // not used by default
     matching::PairWiseMatches pose_supported_matches;
-    for (const std::pair< Pair, IndMatches > & match_info :  _matches_provider->_pairWise_matches)
+    for (const std::pair< Pair, IndMatches > & match_info :  matches_provider_->pairWise_matches_)
     {
-      const View * vI = _sfm_data.GetViews().at(match_info.first.first).get();
-      const View * vJ = _sfm_data.GetViews().at(match_info.first.second).get();
-      if (_sfm_data.IsPoseAndIntrinsicDefined(vI) && _sfm_data.IsPoseAndIntrinsicDefined(vJ))
+      const View * vI = sfm_data_.GetViews().at(match_info.first.first).get();
+      const View * vJ = sfm_data_.GetViews().at(match_info.first.second).get();
+      if (sfm_data_.IsPoseAndIntrinsicDefined(vI) && sfm_data_.IsPoseAndIntrinsicDefined(vJ))
       {
         pose_supported_matches.insert(match_info);
       }
@@ -348,7 +348,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
     tracksBuilder.ExportToSTL(map_selectedTracks);
 
     // Fill sfm_data with the computed tracks (no 3D yet)
-    Landmarks & structure = _sfm_data.structure;
+    Landmarks & structure = sfm_data_.structure;
     IndexT idx(0);
     for (STLMAPTracks::const_iterator itTracks = map_selectedTracks.begin();
       itTracks != map_selectedTracks.end();
@@ -361,7 +361,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
       {
         const size_t imaIndex = it->first;
         const size_t featIndex = it->second;
-        const PointFeature & pt = _features_provider->feats_per_view.at(imaIndex)[featIndex];
+        const PointFeature & pt = features_provider_->feats_per_view.at(imaIndex)[featIndex];
         obs[imaIndex] = Observation(pt.coords().cast<double>(), featIndex);
       }
     }
@@ -399,23 +399,23 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
   {
     openMVG::system::Timer timer;
 
-    const IndexT trackCountBefore = _sfm_data.GetLandmarks().size();
+    const IndexT trackCountBefore = sfm_data_.GetLandmarks().size();
     SfM_Data_Structure_Computation_Blind structure_estimator(true);
-    structure_estimator.triangulate(_sfm_data);
+    structure_estimator.triangulate(sfm_data_);
 
     std::cout << "\n#removed tracks (invalid triangulation): " <<
-      trackCountBefore - IndexT(_sfm_data.GetLandmarks().size()) << std::endl;
+      trackCountBefore - IndexT(sfm_data_.GetLandmarks().size()) << std::endl;
     std::cout << std::endl << "  Triangulation took (s): " << timer.elapsed() << std::endl;
 
     // Export initial structure
-    if (!_sLoggingFile.empty())
+    if (!sLogging_file_.empty())
     {
-      Save(_sfm_data,
-        stlplus::create_filespec(stlplus::folder_part(_sLoggingFile), "initial_structure", "ply"),
+      Save(sfm_data_,
+        stlplus::create_filespec(stlplus::folder_part(sLogging_file_), "initial_structure", "ply"),
         ESfM_Data(EXTRINSICS | STRUCTURE));
     }
   }
-  return !_sfm_data.structure.empty();
+  return !sfm_data_.structure.empty();
 }
 
 // Adjust the scene (& remove outliers)
@@ -425,72 +425,72 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
 
   Bundle_Adjustment_Ceres bundle_adjustment_obj;
   // - refine only Structure and translations
-  bool b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data, false, true, false);
+  bool b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data_, false, true, false);
   if (b_BA_Status)
   {
-    if (!_sLoggingFile.empty())
+    if (!sLogging_file_.empty())
     {
-      Save(_sfm_data,
-        stlplus::create_filespec(stlplus::folder_part(_sLoggingFile), "structure_00_refine_T_Xi", "ply"),
+      Save(sfm_data_,
+        stlplus::create_filespec(stlplus::folder_part(sLogging_file_), "structure_00_refine_T_Xi", "ply"),
         ESfM_Data(EXTRINSICS | STRUCTURE));
     }
 
     // - refine only Structure and Rotations & translations
-    b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data, true, true, false);
-    if (b_BA_Status && !_sLoggingFile.empty())
+    b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data_, true, true, false);
+    if (b_BA_Status && !sLogging_file_.empty())
     {
-      Save(_sfm_data,
-        stlplus::create_filespec(stlplus::folder_part(_sLoggingFile), "structure_01_refine_RT_Xi", "ply"),
+      Save(sfm_data_,
+        stlplus::create_filespec(stlplus::folder_part(sLogging_file_), "structure_01_refine_RT_Xi", "ply"),
         ESfM_Data(EXTRINSICS | STRUCTURE));
     }
   }
 
-  if (b_BA_Status && !_bFixedIntrinsics) {
+  if (b_BA_Status && !bFixedIntrinsics_) {
     // - refine all: Structure, motion:{rotations, translations} and optics:{intrinsics}
-    b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data, true, true, true);
-    if (b_BA_Status && !_sLoggingFile.empty())
+    b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data_, true, true, true);
+    if (b_BA_Status && !sLogging_file_.empty())
     {
-      Save(_sfm_data,
-        stlplus::create_filespec(stlplus::folder_part(_sLoggingFile), "structure_02_refine_KRT_Xi", "ply"),
+      Save(sfm_data_,
+        stlplus::create_filespec(stlplus::folder_part(sLogging_file_), "structure_02_refine_KRT_Xi", "ply"),
         ESfM_Data(EXTRINSICS | STRUCTURE));
     }
   }
 
   // Remove outliers (max_angle, residual error)
-  const size_t pointcount_initial = _sfm_data.structure.size();
-  RemoveOutliers_PixelResidualError(_sfm_data, 4.0);
-  const size_t pointcount_pixelresidual_filter = _sfm_data.structure.size();
-  RemoveOutliers_AngleError(_sfm_data, 2.0);
-  const size_t pointcount_angular_filter = _sfm_data.structure.size();
+  const size_t pointcount_initial = sfm_data_.structure.size();
+  RemoveOutliers_PixelResidualError(sfm_data_, 4.0);
+  const size_t pointcount_pixelresidual_filter = sfm_data_.structure.size();
+  RemoveOutliers_AngleError(sfm_data_, 2.0);
+  const size_t pointcount_angular_filter = sfm_data_.structure.size();
   std::cout << "Outlier removal (remaining #points):\n"
     << "\t initial structure size #3DPoints: " << pointcount_initial << "\n"
     << "\t\t pixel residual filter  #3DPoints: " << pointcount_pixelresidual_filter << "\n"
     << "\t\t angular filter         #3DPoints: " << pointcount_angular_filter << std::endl;
 
-  if (!_sLoggingFile.empty())
+  if (!sLogging_file_.empty())
   {
-    Save(_sfm_data,
-      stlplus::create_filespec(stlplus::folder_part(_sLoggingFile), "structure_03_outlier_removed", "ply"),
+    Save(sfm_data_,
+      stlplus::create_filespec(stlplus::folder_part(sLogging_file_), "structure_03_outlier_removed", "ply"),
       ESfM_Data(EXTRINSICS | STRUCTURE));
   }
 
   // Check that poses & intrinsic cover some measures (after outlier removal)
   const IndexT minPointPerPose = 12; // 6 min
   const IndexT minTrackLength = 3; // 2 min
-  if (eraseUnstablePosesAndObservations(_sfm_data, minPointPerPose, minTrackLength))
+  if (eraseUnstablePosesAndObservations(sfm_data_, minPointPerPose, minTrackLength))
   {
     // TODO: must ensure that track graph is producing a single connected component
 
-    const size_t pointcount_cleaning = _sfm_data.structure.size();
+    const size_t pointcount_cleaning = sfm_data_.structure.size();
     std::cout << "Point_cloud cleaning:\n"
       << "\t #3DPoints: " << pointcount_cleaning << "\n";
   }
 
-  b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data, true, true, !_bFixedIntrinsics);
-  if (b_BA_Status && !_sLoggingFile.empty())
+  b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data_, true, true, !bFixedIntrinsics_);
+  if (b_BA_Status && !sLogging_file_.empty())
   {
-    Save(_sfm_data,
-      stlplus::create_filespec(stlplus::folder_part(_sLoggingFile), "structure_04_outlier_removed", "ply"),
+    Save(sfm_data_,
+      stlplus::create_filespec(stlplus::folder_part(sLogging_file_), "structure_04_outlier_removed", "ply"),
       ESfM_Data(EXTRINSICS | STRUCTURE));
   }
 
@@ -510,12 +510,12 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
 
   // List shared correspondences (pairs) between poses
   PoseWiseMatches poseWiseMatches;
-  for (PairWiseMatches::const_iterator iterMatches = _matches_provider->_pairWise_matches.begin();
-    iterMatches != _matches_provider->_pairWise_matches.end(); ++iterMatches)
+  for (PairWiseMatches::const_iterator iterMatches = matches_provider_->pairWise_matches_.begin();
+    iterMatches != matches_provider_->pairWise_matches_.end(); ++iterMatches)
   {
     const Pair pair = iterMatches->first;
-    const View * v1 = _sfm_data.GetViews().at(pair.first).get();
-    const View * v2 = _sfm_data.GetViews().at(pair.second).get();
+    const View * v1 = sfm_data_.GetViews().at(pair.first).get();
+    const View * v2 = sfm_data_.GetViews().at(pair.second).get();
     poseWiseMatches[Pair(v1->id_pose, v2->id_pose)].insert(pair);
   }
 
@@ -559,27 +559,27 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
       const IndexT I = pairIterator.first;
       const IndexT J = pairIterator.second;
 
-      const View * view_I = _sfm_data.views[I].get();
-      const View * view_J = _sfm_data.views[J].get();
+      const View * view_I = sfm_data_.views[I].get();
+      const View * view_J = sfm_data_.views[J].get();
 
       // Check that valid cameras are existing for the pair of view
-      if (_sfm_data.GetIntrinsics().count(view_I->id_intrinsic) == 0 ||
-        _sfm_data.GetIntrinsics().count(view_J->id_intrinsic) == 0)
+      if (sfm_data_.GetIntrinsics().count(view_I->id_intrinsic) == 0 ||
+        sfm_data_.GetIntrinsics().count(view_J->id_intrinsic) == 0)
         continue;
 
       // Setup corresponding bearing vector
-      const matching::IndMatches & matches = _matches_provider->_pairWise_matches.at(pairIterator);
+      const matching::IndMatches & matches = matches_provider_->pairWise_matches_.at(pairIterator);
       size_t nbBearing = matches.size();
       Mat x1(2, nbBearing), x2(2, nbBearing);
       nbBearing = 0;
       for (const auto & match : matches)
       {
-        x1.col(nbBearing) = _normalized_features_provider->feats_per_view[I][match._i].coords().cast<double>();
-        x2.col(nbBearing++) = _normalized_features_provider->feats_per_view[J][match._j].coords().cast<double>();
+        x1.col(nbBearing) = normalized_features_provider_->feats_per_view[I][match.i_].coords().cast<double>();
+        x2.col(nbBearing++) = normalized_features_provider_->feats_per_view[J][match.j_].coords().cast<double>();
       }
 
-      const IntrinsicBase * cam_I = _sfm_data.GetIntrinsics().at(view_I->id_intrinsic).get();
-      const IntrinsicBase * cam_J = _sfm_data.GetIntrinsics().at(view_J->id_intrinsic).get();
+      const IntrinsicBase * cam_I = sfm_data_.GetIntrinsics().at(view_I->id_intrinsic).get();
+      const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
 
       RelativePose_Info relativePose_info;
       // Compute max authorized error as geometric mean of camera plane tolerated residual error
@@ -601,10 +601,10 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
       {
         // Refine the defined scene
         SfM_Data tiny_scene;
-        tiny_scene.views.insert(*_sfm_data.GetViews().find(view_I->id_view));
-        tiny_scene.views.insert(*_sfm_data.GetViews().find(view_J->id_view));
-        tiny_scene.intrinsics.insert(*_sfm_data.GetIntrinsics().find(view_I->id_intrinsic));
-        tiny_scene.intrinsics.insert(*_sfm_data.GetIntrinsics().find(view_J->id_intrinsic));
+        tiny_scene.views.insert(*sfm_data_.GetViews().find(view_I->id_view));
+        tiny_scene.views.insert(*sfm_data_.GetViews().find(view_J->id_view));
+        tiny_scene.intrinsics.insert(*sfm_data_.GetIntrinsics().find(view_I->id_intrinsic));
+        tiny_scene.intrinsics.insert(*sfm_data_.GetIntrinsics().find(view_J->id_intrinsic));
 
         // Init poses
         const Pose3 & Pose_I = tiny_scene.poses[view_I->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
@@ -615,19 +615,19 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
         const Mat34 P2 = cam_J->get_projective_equivalent(Pose_J);
         Landmarks & landmarks = tiny_scene.structure;
         for (size_t k = 0; k < x1.cols(); ++k) {
-          const Vec2 x1_ = _features_provider->feats_per_view[I][matches[k]._i].coords().cast<double>();
-          const Vec2 x2_ = _features_provider->feats_per_view[J][matches[k]._j].coords().cast<double>();
+          const Vec2 x1_ = features_provider_->feats_per_view[I][matches[k].i_].coords().cast<double>();
+          const Vec2 x2_ = features_provider_->feats_per_view[J][matches[k].j_].coords().cast<double>();
           Vec3 X;
           TriangulateDLT(P1, x1_, P2, x2_, &X);
           Observations obs;
-          obs[view_I->id_view] = Observation(x1_, matches[k]._i);
-          obs[view_J->id_view] = Observation(x2_, matches[k]._j);
+          obs[view_I->id_view] = Observation(x1_, matches[k].i_);
+          obs[view_J->id_view] = Observation(x2_, matches[k].j_);
           landmarks[k].obs = obs;
           landmarks[k].X = X;
         }
         // - refine only Structure and Rotations & translations (keep intrinsic constant)
         Bundle_Adjustment_Ceres::BA_options options(false, false);
-        options._linear_solver_type = ceres::DENSE_SCHUR;
+        options.linear_solver_type_ = ceres::DENSE_SCHUR;
         Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
         if (bundle_adjustment_obj.Adjust(tiny_scene, true, true, false))
         {
@@ -679,16 +679,16 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
   }
 
   // Log input graph to the HTML report
-  if (!_sLoggingFile.empty() && !_sOutDirectory.empty())
+  if (!sLogging_file_.empty() && !sOut_directory.empty())
   {
     // Log a relative view graph
     {
       std::set<IndexT> set_ViewIds;
-      std::transform(_sfm_data.GetViews().begin(), _sfm_data.GetViews().end(),
+      std::transform(sfm_data_.GetViews().begin(), sfm_data_.GetViews().end(),
         std::inserter(set_ViewIds, set_ViewIds.begin()), stl::RetrieveKey());
-      graph::indexedGraph putativeGraph(set_ViewIds, getPairs(_matches_provider->_pairWise_matches));
+      graph::indexedGraph putativeGraph(set_ViewIds, getPairs(matches_provider_->pairWise_matches_));
       graph::exportToGraphvizData(
-        stlplus::create_filespec(_sOutDirectory, "global_relative_rotation_view_graph"),
+        stlplus::create_filespec(sOut_directory, "global_relative_rotation_view_graph"),
         putativeGraph.g);
     }
 
@@ -706,17 +706,17 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
       const std::string sGraph_name = "global_relative_rotation_pose_graph";
       graph::indexedGraph putativeGraph(set_pose_ids, relative_pose_pairs);
       graph::exportToGraphvizData(
-        stlplus::create_filespec(_sOutDirectory, sGraph_name),
+        stlplus::create_filespec(sOut_directory, sGraph_name),
         putativeGraph.g);
-            using namespace htmlDocument;
+      using namespace htmlDocument;
       std::ostringstream os;
 
       os << "<br>" << "global_relative_rotation_pose_graph" << "<br>"
          << "<img src=\""
-         << stlplus::create_filespec(_sOutDirectory, "global_relative_rotation_pose_graph", "svg")
+         << stlplus::create_filespec(sOut_directory, "global_relative_rotation_pose_graph", "svg")
          << "\" height=\"600\">\n";
 
-      _htmlDocStream->pushInfo(os.str());
+      html_doc_stream_->pushInfo(os.str());
     }
   }
 }

@@ -23,7 +23,7 @@ using namespace openMVG::features;
 
 Matcher_Regions_AllInMemory::Matcher_Regions_AllInMemory(
   float distRatio, EMatcherType eMatcherType)
-  :Matcher(), _f_dist_ratio(distRatio), _eMatcherType(eMatcherType)
+  :Matcher(), f_dist_ratio_(distRatio), eMatcherType_(eMatcherType)
 {
 }
 
@@ -36,7 +36,7 @@ void Matcher_Regions_AllInMemory::Match(
 #ifdef OPENMVG_USE_OPENMP
   std::cout << "Using the OPENMP thread interface" << std::endl;
 #endif
-  const bool b_multithreaded_pair_search = (_eMatcherType == CASCADE_HASHING_L2);
+  const bool b_multithreaded_pair_search = (eMatcherType_ == CASCADE_HASHING_L2);
   // -> set to true for CASCADE_HASHING_L2, since OpenMP instructions are not used in this matcher
 
   C_Progress_display my_progress_bar( pairs.size() );
@@ -64,7 +64,7 @@ void Matcher_Regions_AllInMemory::Match(
     }
 
     // Initialize the matching interface
-    matching::Matcher_Regions_Database matcher(_eMatcherType, regionsI);
+    matching::Matcher_Regions_Database matcher(eMatcherType_, regionsI);
 
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for schedule(dynamic) if(b_multithreaded_pair_search)
@@ -85,7 +85,7 @@ void Matcher_Regions_AllInMemory::Match(
       }
 
       IndMatches vec_putatives_matches;
-      matcher.Match(_f_dist_ratio, regionsJ, vec_putatives_matches);
+      matcher.Match(f_dist_ratio_, regionsJ, vec_putatives_matches);
 
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp critical

@@ -161,7 +161,7 @@ int main(int argc, char ** argv)
       dimImage_J.first,
       dimImage_J.second, dimImage_I.first);
 
-    const vector<IndMatch> & vec_FilteredMatches = matches_provider->_pairWise_matches.at(*iter);
+    const vector<IndMatch> & vec_FilteredMatches = matches_provider->pairWise_matches_.at(*iter);
 
     if (!vec_FilteredMatches.empty()) {
 
@@ -170,8 +170,8 @@ int main(int argc, char ** argv)
 
       //-- Draw link between features :
       for (size_t i=0; i< vec_FilteredMatches.size(); ++i)  {
-        const PointFeature & imaA = vec_feat_I[vec_FilteredMatches[i]._i];
-        const PointFeature & imaB = vec_feat_J[vec_FilteredMatches[i]._j];
+        const PointFeature & imaA = vec_feat_I[vec_FilteredMatches[i].i_];
+        const PointFeature & imaB = vec_feat_J[vec_FilteredMatches[i].j_];
         // Compute a flashy colour for the correspondence
         unsigned char r,g,b;
         hslToRgb( (rand()%360) / 360., 1.0, .5, r, g, b);
@@ -183,8 +183,8 @@ int main(int argc, char ** argv)
 
       //-- Draw features (in two loop, in order to have the features upper the link, svg layer order):
       for (size_t i=0; i< vec_FilteredMatches.size(); ++i)  {
-        const PointFeature & imaA = vec_feat_I[vec_FilteredMatches[i]._i];
-        const PointFeature & imaB = vec_feat_J[vec_FilteredMatches[i]._j];
+        const PointFeature & imaA = vec_feat_I[vec_FilteredMatches[i].i_];
+        const PointFeature & imaB = vec_feat_J[vec_FilteredMatches[i].j_];
         svgStream.drawCircle(imaA.x(), imaA.y(), 3.0,
           svgStyle().stroke("yellow", 2.0));
         svgStream.drawCircle(imaB.x() + dimImage_I.first, imaB.y(), 3.0,

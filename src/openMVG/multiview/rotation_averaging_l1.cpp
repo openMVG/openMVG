@@ -82,7 +82,7 @@ typedef std::vector<Node> NodeArr;
 struct Link {
   size_t ID; // node index
   size_t parentID;// parent link
-  inline Link(size_t _ID=0, size_t _parentID=0) : ID(_ID), parentID(_parentID) {}
+  inline Link(size_t ID_=0, size_t parentID_=0) : ID(ID_), parentID(parentID_) {}
 };
 typedef std::queue<Link> LinkQue;
 

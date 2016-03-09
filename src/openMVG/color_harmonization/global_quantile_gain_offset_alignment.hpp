@@ -233,17 +233,17 @@ struct ConstraintBuilder_GainOffset
       _Nima,
       _vec_relative,
       _vec_indexToFix,
-      constraint._constraintMat,
-      constraint._Cst_objective,
-      constraint._vec_sign,
-      constraint._vec_cost,
-      constraint._vec_bounds);
+      constraint.constraint_mat_,
+      constraint.constraint_objective_,
+      constraint.vec_sign_,
+      constraint.vec_cost_,
+      constraint.vec_bounds_);
 
     // it's a minimization problem over the gamma variable
-    constraint._bminimize = true;
+    constraint.bminimize_ = true;
 
     //-- Setup additional information about the Linear Program constraint
-    constraint._nbParams = _Nima * 2 + 1;
+    constraint.nbParams_ = _Nima * 2 + 1;
     return true;
   }
   // Internal data

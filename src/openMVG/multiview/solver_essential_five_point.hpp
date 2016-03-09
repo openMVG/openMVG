@@ -44,29 +44,64 @@
 #include "openMVG/numeric/numeric.h"
 #include <vector>
 
-namespace openMVG {
-  using namespace std;
+namespace openMVG
+{
+using namespace std;
 
-/** Computes the relative pose of two calibrated cameras from 5 correspondences.
+/**
+ * @brief Computes the relative pose of two calibrated cameras from 5 correspondences.
  *
  * \param x1 Points in the first image.  One per column.
  * \param x2 Corresponding points in the second image. One per column.
  * \param E  A list of at most 10 candidate essential matrix solutions.
  */
-void FivePointsRelativePose(const Mat2X &x1, const Mat2X &x2,
-                            vector<Mat3> *E);
+void FivePointsRelativePose( const Mat2X &x1, const Mat2X &x2,
+                             vector<Mat3> *E );
 
-// Compute the nullspace of the linear constraints given by the matches.
-Mat FivePointsNullspaceBasis(const Mat2X &x1, const Mat2X &x2);
+/**
+* @brief Compute the nullspace of the linear constraints given by the matches.
+* @param x1 Match position in first camera
+* @param x2 Match position in second camera
+* @return Nullspace (homography) that maps x1 points to x2 points
+*/
+Mat FivePointsNullspaceBasis( const Mat2X &x1, const Mat2X &x2 );
 
-// Multiply two polynomials of degree 1.
-Vec o1(const Vec &a, const Vec &b);
+/**
+* @brief Multiply two polynomials of degree 1.
+* @param a Polynomial a1 + a2 x + a3 y + a4 z
+* @param b Polynomial b1 + b2 x + b3 y + b4 z
+* @return Product of a and b :
+* res = a1 b1 +
+        (a1b2 + b1a2) x +
+        (a1b3 + b1a3) y +
+        (a1b4 + b1a4) z +
+        (a2b3 + b2a3) xy +
+        (a2b4 + b2a4) xz +
+        (a3b4 + b3a4) yz +
+        a2b2 x^2 +
+        a3b3 y^2 +
+        a4b4 z^2
+* @note Ordering is defined as follow :
+* [xxx xxy xyy yyy xxz xyz yyz xzz yzz zzz xx xy yy xz yz zz x y z 1]
+*/
+Vec o1( const Vec &a, const Vec &b );
 
-// Multiply a polynomial of degree 2, a, by a polynomial of degree 1, b.
-Vec o2(const Vec &a, const Vec &b);
+/**
+* @brief Multiply two polynomials of degree 2
+* @param a Polynomial a1 + a2 x + a3 y + a4 z + a5 x^2 + a6 y^2 + a7 z^2
+* @param b Polynomial b1 + b2 x + b3 y + b4 z + b5 x^2 + b6 y^2 + b7 z^2
+* Product of a and b
+* @note Ordering is defined as follow :
+* [xxx xxy xyy yyy xxz xyz yyz xzz yzz zzz xx xy yy xz yz zz x y z 1]
+*/
+Vec o2( const Vec &a, const Vec &b );
 
-// Builds the polynomial constraint matrix M.
-Mat FivePointsPolynomialConstraints(const Mat &E_basis);
+/**
+* Builds the polynomial constraint matrix M.
+* @param E_basis Basis essential matrix
+* @return polynomial constraint associated to the essential matrix
+*/
+Mat FivePointsPolynomialConstraints( const Mat &E_basis );
 
 // In the following code, polynomials are expressed as vectors containing
 // their coeficients in the basis of monomials:
@@ -81,7 +116,8 @@ Mat FivePointsPolynomialConstraints(const Mat &E_basis);
 // But this is not the basis used in the rest of the paper, neither in
 // the code they provide.  I (pau) have spend 4 hours debugging and
 // reverse engineering their code to find the problem. :(
-enum {
+enum
+{
   coef_xxx,
   coef_xxy,
   coef_xyy,
