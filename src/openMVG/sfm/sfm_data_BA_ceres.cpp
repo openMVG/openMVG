@@ -5,6 +5,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
+#include "openMVG/sfm/sfm_data_BA_ceres_camera_functor.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/types.hpp"
 
 #include "ceres/rotation.h"
 
@@ -15,7 +18,11 @@ using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 
 /// Create the appropriate cost functor according the provided input camera intrinsic model
-ceres::CostFunction * IntrinsicsToCostFunction(IntrinsicBase * intrinsic, const Vec2 & observation)
+ceres::CostFunction * IntrinsicsToCostFunction
+(
+  IntrinsicBase * intrinsic,
+  const Vec2 & observation
+)
 {
   switch(intrinsic->getType())
   {
@@ -39,19 +46,18 @@ ceres::CostFunction * IntrinsicsToCostFunction(IntrinsicBase * intrinsic, const 
       return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye, 2, 7, 6, 3>(
               new ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye(observation.data()));
     default:
-      return NULL;
+      return nullptr;
   }
 }
 
-
-Bundle_Adjustment_Ceres::BA_options::BA_options
+Bundle_Adjustment_Ceres::BA_Ceres_options::BA_Ceres_options
 (
   const bool bVerbose,
   bool bmultithreaded
 )
 : bVerbose_(bVerbose),
   nb_threads_(1),
-  m_parameter_tolerance(1e-8) //~= numeric_limits<float>::epsilon()
+  parameter_tolerance_(1e-8) //~= numeric_limits<float>::epsilon()
 {
   #ifdef OPENMVG_USE_OPENMP
     nb_threads_ = omp_get_max_threads();
@@ -90,15 +96,15 @@ Bundle_Adjustment_Ceres::BA_options::BA_options
 
 Bundle_Adjustment_Ceres::Bundle_Adjustment_Ceres
 (
-  Bundle_Adjustment_Ceres::BA_options options
+  Bundle_Adjustment_Ceres::BA_Ceres_options options
 )
-: openMVG_options_(options)
+: ceres_options_(options)
 {}
 
 bool Bundle_Adjustment_Ceres::Adjust
 (
   SfM_Data & sfm_data,     // the SfM scene to refine
-  Parameter_Adjustment_Option adjustment_option
+  const Optimize_Options options
 )
 {
   //----------
@@ -117,7 +123,7 @@ bool Bundle_Adjustment_Ceres::Adjust
   Hash_Map<IndexT, std::vector<double> > map_poses;
 
   // Setup Poses data & subparametrization
-  for (Poses::const_iterator itPose = sfm_data.poses.begin(); itPose != sfm_data.poses.end(); ++itPose)
+ for (Poses::const_iterator itPose = sfm_data.poses.begin(); itPose != sfm_data.poses.end(); ++itPose)
   {
     const IndexT indexPose = itPose->first;
 
@@ -132,23 +138,26 @@ bool Bundle_Adjustment_Ceres::Adjust
 
     double * parameter_block = &map_poses[indexPose][0];
     problem.AddParameterBlock(parameter_block, 6);
-    if (!(adjustment_option & ADJUST_CAMERA_TRANSLATION)
-       && !(adjustment_option & ADJUST_CAMERA_ROTATION))
+    if (options.extrinsics == Extrinsic_Parameter_Type::NONE)
     {
       // set the whole parameter block as constant for best performance
       problem.SetParameterBlockConstant(parameter_block);
     }
-    else  {
-      // Subset parametrization
+    else  // Subset parametrization
+    {
       std::vector<int> vec_constant_extrinsic;
-      if(!(adjustment_option & ADJUST_CAMERA_ROTATION))
+      // If we adjust only the translation, we must set ROTATION as constant
+      if (options.extrinsics == Extrinsic_Parameter_Type::ADJUST_TRANSLATION)
       {
+        // Subset rotation parametrization
         vec_constant_extrinsic.push_back(0);
         vec_constant_extrinsic.push_back(1);
         vec_constant_extrinsic.push_back(2);
       }
-      if(!(adjustment_option & ADJUST_CAMERA_TRANSLATION))
+      // If we adjust only the rotation, we must set TRANSLATION as constant
+      if (options.extrinsics == Extrinsic_Parameter_Type::ADJUST_ROTATION)
       {
+        // Subset translation parametrization
         vec_constant_extrinsic.push_back(3);
         vec_constant_extrinsic.push_back(4);
         vec_constant_extrinsic.push_back(5);
@@ -174,10 +183,22 @@ bool Bundle_Adjustment_Ceres::Adjust
 
       double * parameter_block = &map_intrinsics[indexCam][0];
       problem.AddParameterBlock(parameter_block, map_intrinsics[indexCam].size());
-      if (!(adjustment_option & ADJUST_CAMERA_INTRINSIC))
+      if (options.intrinsics == Intrinsic_Parameter_Type::NONE)
       {
         // set the whole parameter block as constant for best performance
         problem.SetParameterBlockConstant(parameter_block);
+      }
+      else
+      {
+        const std::vector<int> vec_constant_intrinsic =
+          itIntrinsic->second->subsetParameterization(options.intrinsics);
+        if (!vec_constant_intrinsic.empty())
+        {
+          ceres::SubsetParameterization *subset_parameterization =
+            new ceres::SubsetParameterization(
+              map_intrinsics[indexCam].size(), vec_constant_intrinsic);
+          problem.SetParameterization(parameter_block, subset_parameterization);
+        }
       }
     }
     else
@@ -216,37 +237,38 @@ bool Bundle_Adjustment_Ceres::Adjust
           &map_poses[view->id_pose][0],
           iterTracks->second.X.data()); //Do we need to copy 3D point to avoid false motion, if failure ?
     }
-    if (!(adjustment_option & ADJUST_STRUCTURE))
+    if (options.structure == Structure_Parameter_Type::NONE)
       problem.SetParameterBlockConstant(iterTracks->second.X.data());
   }
 
   // Configure a BA engine and run it
   //  Make Ceres automatically detect the bundle structure.
-  ceres::Solver::Options options;
-  options.preconditioner_type = openMVG_options_.preconditioner_type_;
-  options.linear_solver_type = openMVG_options_.linear_solver_type_;
-  options.sparse_linear_algebra_library_type = openMVG_options_.sparse_linear_algebra_library_type_;
-  options.minimizer_progress_to_stdout = false;
-  options.logging_type = ceres::SILENT;
-  options.num_threads = openMVG_options_.nb_threads_;
-  options.num_linear_solver_threads = openMVG_options_.nb_threads_;
+  ceres::Solver::Options ceres_config_options;
+  ceres_config_options.preconditioner_type = ceres_options_.preconditioner_type_;
+  ceres_config_options.linear_solver_type = ceres_options_.linear_solver_type_;
+  ceres_config_options.sparse_linear_algebra_library_type = ceres_options_.sparse_linear_algebra_library_type_;
+  ceres_config_options.minimizer_progress_to_stdout = false;
+  ceres_config_options.logging_type = ceres::SILENT;
+  ceres_config_options.num_threads = ceres_options_.nb_threads_;
+  ceres_config_options.num_linear_solver_threads = ceres_options_.nb_threads_;
+  ceres_config_options.parameter_tolerance = ceres_options_.parameter_tolerance_;
 
   // Solve BA
   ceres::Solver::Summary summary;
-  ceres::Solve(options, &problem, &summary);
-  if (openMVG_options_.bCeres_summary_)
+  ceres::Solve(ceres_config_options, &problem, &summary);
+  if (ceres_options_.bCeres_summary_)
     std::cout << summary.FullReport() << std::endl;
 
   // If no error, get back refined parameters
   if (!summary.IsSolutionUsable())
   {
-    if (openMVG_options_.bVerbose_)
+    if (ceres_options_.bVerbose_)
       std::cout << "Bundle Adjustment failed." << std::endl;
     return false;
   }
   else // Solution is usable
   {
-    if (openMVG_options_.bVerbose_)
+    if (ceres_options_.bVerbose_)
     {
       // Display statistics about the minimization
       std::cout << std::endl
@@ -263,9 +285,7 @@ bool Bundle_Adjustment_Ceres::Adjust
     }
 
     // Update camera poses with refined data
-    if (
-         (adjustment_option & ADJUST_CAMERA_ROTATION)
-      || (adjustment_option & ADJUST_CAMERA_TRANSLATION))
+    if (options.extrinsics != Extrinsic_Parameter_Type::NONE)
     {
       for (Poses::iterator itPose = sfm_data.poses.begin();
         itPose != sfm_data.poses.end(); ++itPose)
@@ -282,7 +302,7 @@ bool Bundle_Adjustment_Ceres::Adjust
     }
 
     // Update camera intrinsics with refined data
-    if (adjustment_option & ADJUST_CAMERA_INTRINSIC)
+    if (options.intrinsics != Intrinsic_Parameter_Type::NONE)
     {
       for (Intrinsics::iterator itIntrinsic = sfm_data.intrinsics.begin();
         itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
@@ -293,6 +313,7 @@ bool Bundle_Adjustment_Ceres::Adjust
         itIntrinsic->second.get()->updateFromParams(vec_params);
       }
     }
+    // Structure is already updated directly if needed (no data wrapping)
     return true;
   }
 }

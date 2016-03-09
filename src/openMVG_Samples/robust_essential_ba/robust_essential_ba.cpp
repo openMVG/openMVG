@@ -257,7 +257,11 @@ int main() {
     //D. Perform Bundle Adjustment of the scene
 
     Bundle_Adjustment_Ceres bundle_adjustment_obj;
-    bundle_adjustment_obj.Adjust(tiny_scene);
+    bundle_adjustment_obj.Adjust(tiny_scene,
+      Optimize_Options(
+        Intrinsic_Parameter_Type::ADJUST_ALL,
+        Extrinsic_Parameter_Type::ADJUST_ALL,
+        Structure_Parameter_Type::ADJUST_ALL));
 
     Save(tiny_scene, "EssentialGeometry_refined.ply", ESfM_Data(ALL));
   }

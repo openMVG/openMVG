@@ -76,8 +76,6 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
     return h_;
   }
 
-
-
   /**
   * @brief Compute projection of a 3D point into the camera plane
   * (Apply pose, disto (if any) and Intrinsics)
@@ -99,7 +97,6 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
       return this->cam2ima( X.head<2>() / X( 2 ) );
     }
   }
-
 
   /**
   * @brief Compute the residual between the 3D projected point and an image observation
@@ -142,6 +139,12 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   */
   virtual bool updateFromParams( const std::vector<double> & params ) = 0;
 
+  /**
+  * @brief Return the list of parameter indexes that must be held constant
+  * @param parametrization The given parametrization
+  */
+  virtual std::vector<int> subsetParameterization(
+    const Intrinsic_Parameter_Type & parametrization) const = 0;
 
   /**
   * @brief Get bearing vector of a point given an image coordinate
@@ -173,14 +176,12 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
     return false;
   }
 
-
   /**
   * @brief Add the distortion field to a point (that is in normalized camera frame)
   * @param p Point before distortion computation (in normalized camera frame)
   * @return point with distortion
   */
   virtual Vec2 add_disto( const Vec2& p ) const = 0;
-
 
   /**
   * @brief Remove the distortion to a camera point (that is in normalized camera frame)
@@ -189,14 +190,12 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   */
   virtual Vec2 remove_disto( const Vec2& p ) const  = 0;
 
-
   /**
   * @brief Return the un-distorted pixel (with removed distortion)
   * @param p Input distorted pixel
   * @return Point without distortion
   */
   virtual Vec2 get_ud_pixel( const Vec2& p ) const = 0;
-
 
   /**
   * @brief Return the distorted pixel (with added distortion)
@@ -240,7 +239,6 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
     ar( cereal::make_nvp( "width", w_ ) );
     ar( cereal::make_nvp( "height", h_ ) );
   }
-
 
   /**
   * @brief Generate an unique Hash from the camera parameters (used for grouping)

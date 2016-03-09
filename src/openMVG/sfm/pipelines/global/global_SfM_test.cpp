@@ -9,7 +9,7 @@
 // Test summary:
 //-----------------
 // - Create features points and matching from the synthetic dataset
-// - Init a SfM_Data scene VIew and Intrinsic from a synthetic dataset
+// - Init a SfM_Data scene View and Intrinsic from a synthetic dataset
 // - Perform Global SfM on the data
 // - Assert that:
 //   - mean residual error is below the gaussian noise added to observation
@@ -65,10 +65,10 @@ TEST(GLOBAL_SFM, RotationAveragingL2_TranslationAveragingL1) {
   sfmEngine.SetFeaturesProvider(feats_provider.get());
   sfmEngine.SetMatchesProvider(matches_provider.get());
 
-  // Configure reconstruction parameters
-  sfmEngine.Set_bFixedIntrinsics(true);
+  // Configure reconstruction parameters (intrinsic parameters are held constant)
+  sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
 
-  // Configure motion averaging method
+  // Configure motion averaging methods
   sfmEngine.SetRotationAveragingMethod(ROTATION_AVERAGING_L2);
   sfmEngine.SetTranslationAveragingMethod(TRANSLATION_AVERAGING_L1);
 
@@ -116,10 +116,10 @@ TEST(GLOBAL_SFM, RotationAveragingL1_TranslationAveragingL1) {
   sfmEngine.SetFeaturesProvider(feats_provider.get());
   sfmEngine.SetMatchesProvider(matches_provider.get());
 
-  // Configure reconstruction parameters
-  sfmEngine.Set_bFixedIntrinsics(true);
+  // Configure reconstruction parameters (intrinsic parameters are held constant)
+  sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
 
-  // Configure motion averaging method
+  // Configure motion averaging methods
   sfmEngine.SetRotationAveragingMethod(ROTATION_AVERAGING_L1);
   sfmEngine.SetTranslationAveragingMethod(TRANSLATION_AVERAGING_L1);
 
@@ -167,8 +167,8 @@ TEST(GLOBAL_SFM, RotationAveragingL2_TranslationAveragingL2_Chordal) {
   sfmEngine.SetFeaturesProvider(feats_provider.get());
   sfmEngine.SetMatchesProvider(matches_provider.get());
 
-  // Configure reconstruction parameters
-  sfmEngine.Set_bFixedIntrinsics(true);
+  // Configure reconstruction parameters (intrinsic parameters are held constant)
+  sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
 
   // Configure motion averaging method
   sfmEngine.SetRotationAveragingMethod(ROTATION_AVERAGING_L2);
@@ -218,10 +218,10 @@ TEST(GLOBAL_SFM, RotationAveragingL2_TranslationAveragingSoftL1) {
   sfmEngine.SetFeaturesProvider(feats_provider.get());
   sfmEngine.SetMatchesProvider(matches_provider.get());
 
-  // Configure reconstruction parameters
-  sfmEngine.Set_bFixedIntrinsics(true);
+  // Configure reconstruction parameters (intrinsic parameters are held constant)
+  sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
 
-  // Configure motion averaging method
+  // Configure motion averaging methods
   sfmEngine.SetRotationAveragingMethod(ROTATION_AVERAGING_L2);
   sfmEngine.SetTranslationAveragingMethod(TRANSLATION_AVERAGING_SOFTL1);
 

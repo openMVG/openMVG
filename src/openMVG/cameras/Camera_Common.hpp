@@ -55,7 +55,6 @@ static inline bool isValid( EINTRINSIC eintrinsic )
   return eintrinsic > PINHOLE_CAMERA_START && eintrinsic < PINHOLE_CAMERA_END;
 }
 
-
 /**
 * @brief test if given intrinsic value corresponds to a pinhole
 * @param eintrinsic Intrinsic value to test
@@ -65,6 +64,43 @@ static inline bool isValid( EINTRINSIC eintrinsic )
 static inline bool isPinhole( EINTRINSIC eintrinsic )
 {
   return eintrinsic > PINHOLE_CAMERA_START && eintrinsic < PINHOLE_CAMERA_END;
+}
+
+/**
+* @enum Intrinsic_Parameter_Type Used to control which camera parameter must be \n
+   considered as variable of held constant for non linear refinement
+* @var NONE
+*   Intrinsic parameters will be considered as FIXED
+* @var ADJUST_FOCAL_LENGTH
+*   Focal length will be considered as variable for refinement
+* @var ADJUST_PRINCIPAL_POINT
+*   Principal point will be considered as variable for refinement
+* @var ADJUST_DISTORTION
+*   Distortion parameters will be considered as variable for refinement
+* @var ADJUST_ALL
+*   All parameters will be considered as variable for refinement
+*/
+enum class Intrinsic_Parameter_Type : int
+{
+  NONE                    = 0x01, // All parameters will be held constant
+  ADJUST_FOCAL_LENGTH     = 0x02,
+  ADJUST_PRINCIPAL_POINT  = 0x04,
+  ADJUST_DISTORTION       = 0x08,
+  ADJUST_ALL = ADJUST_FOCAL_LENGTH | ADJUST_PRINCIPAL_POINT | ADJUST_DISTORTION
+};
+
+inline constexpr Intrinsic_Parameter_Type
+operator|(Intrinsic_Parameter_Type x, Intrinsic_Parameter_Type y)
+{
+  return static_cast<Intrinsic_Parameter_Type>
+    (static_cast<int>(x) | static_cast<int>(y));
+}
+
+inline constexpr Intrinsic_Parameter_Type
+operator&(Intrinsic_Parameter_Type x, Intrinsic_Parameter_Type y)
+{
+  return static_cast<Intrinsic_Parameter_Type>
+    (static_cast<int>(x) & static_cast<int>(y));
 }
 
 } // namespace cameras

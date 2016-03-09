@@ -142,15 +142,16 @@ namespace sfm {
       sfm_data.structure[i] = std::move(landmark);
     }
 
-    // STRUCTURE must remain as fix
-    const unsigned int ba_refine_options =
-        (b_refine_pose ? ADJUST_CAMERA_ROTATION | ADJUST_CAMERA_TRANSLATION : 0)
-      | (b_refine_intrinsic ? ADJUST_CAMERA_INTRINSIC : 0);
-
+    // Configure BA options (refine the intrinsic and the pose parameter only if requested)
+    const Optimize_Options ba_refine_options(
+      (b_refine_intrinsic) ? cameras::Intrinsic_Parameter_Type::ADJUST_ALL : cameras::Intrinsic_Parameter_Type::NONE,
+      (b_refine_pose) ? Extrinsic_Parameter_Type::ADJUST_ALL : Extrinsic_Parameter_Type::NONE,
+      Structure_Parameter_Type::NONE // STRUCTURE must remain constant
+    );
     Bundle_Adjustment_Ceres bundle_adjustment_obj;
     const bool b_BA_Status = bundle_adjustment_obj.Adjust(
       sfm_data,
-      Parameter_Adjustment_Option(ba_refine_options));
+      ba_refine_options);
     if (b_BA_Status)
     {
       pose = sfm_data.poses[0];

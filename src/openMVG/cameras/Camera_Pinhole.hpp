@@ -225,6 +225,30 @@ class Pinhole_Intrinsic : public IntrinsicBase
     }
 
     /**
+    * @brief Return the list of parameter indexes that must be held constant
+    * @param parametrization The given parametrization
+    */
+    virtual std::vector<int> subsetParameterization
+    (
+      const Intrinsic_Parameter_Type & parametrization) const
+    {
+      std::vector<int> constant_index;
+      const int param = static_cast<int>(parametrization);
+      if ( !(param & (int)Intrinsic_Parameter_Type::ADJUST_FOCAL_LENGTH)
+           || param & (int)Intrinsic_Parameter_Type::NONE )
+      {
+        constant_index.push_back(0);
+      }
+      if ( !(param & (int)Intrinsic_Parameter_Type::ADJUST_PRINCIPAL_POINT)
+          || param & (int)Intrinsic_Parameter_Type::NONE )
+      {
+        constant_index.push_back(1);
+        constant_index.push_back(2);
+      }
+      return constant_index;
+    }
+
+    /**
     * @brief Return the un-distorted pixel (with removed distortion)
     * @param p Input distorted pixel
     * @return Point without distortion

@@ -9,7 +9,7 @@
 // Test summary:
 //-----------------
 // - Create features points and matching from the synthetic dataset
-// - Init a SfM_Data scene VIew and Intrinsic from a synthetic dataset
+// - Init a SfM_Data scene View and Intrinsic from a synthetic dataset
 // - Perform Sequential SfM on the data
 // - Assert that:
 //   - mean residual error is below the gaussian noise added to observation
@@ -69,8 +69,8 @@ TEST(SEQUENTIAL_SFM, Known_Intrinsics) {
   // Set an initial pair
   sfmEngine.setInitialPair(Pair(0,1));
 
-  // Configure reconstruction parameters
-  sfmEngine.Set_bFixedIntrinsics(true);
+  // Configure reconstruction parameters (intrinsic parameters are held constant)
+  sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
 
   EXPECT_TRUE (sfmEngine.Process());
 
@@ -130,8 +130,8 @@ TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
   // Set an initial pair
   sfmEngine.setInitialPair(Pair(0,1));
 
-  // Configure reconstruction parameters
-  sfmEngine.Set_bFixedIntrinsics(true);
+  // Configure reconstruction parameters (intrinsic parameters are held constant)
+  sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
 
   EXPECT_TRUE (sfmEngine.Process());
 

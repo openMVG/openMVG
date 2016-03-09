@@ -122,7 +122,6 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
       return true;
     }
 
-
     /**
     * @brief Add the distortion field to a point (that is in normalized camera frame)
     * @param p Point before distortion computation (in normalized camera frame)
@@ -138,7 +137,6 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
 
       return ( p * r_coeff );
     }
-
 
     /**
     * @brief Remove the distortion to a camera point (that is in normalized camera frame)
@@ -157,7 +155,6 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
       return radius * p;
     }
 
-
     /**
     * @brief Data wrapper for non linear optimization (get data)
     * @return vector of parameter of this intrinsic
@@ -168,7 +165,6 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
       params.push_back( params_[0] );
       return params;
     }
-
 
     /**
     * @brief Data wrapper for non linear optimization (update from data)
@@ -192,6 +188,34 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
       }
     }
 
+    /**
+    * @brief Return the list of parameter indexes that must be held constant
+    * @param parametrization The given parametrization
+    */
+    virtual std::vector<int> subsetParameterization
+    (
+      const Intrinsic_Parameter_Type & parametrization) const
+    {
+      std::vector<int> constant_index;
+      const int param = static_cast<int>(parametrization);
+      if ( !(param & (int)Intrinsic_Parameter_Type::ADJUST_FOCAL_LENGTH)
+          || param & (int)Intrinsic_Parameter_Type::NONE )
+      {
+        constant_index.push_back(0);
+      }
+      if ( !(param & (int)Intrinsic_Parameter_Type::ADJUST_PRINCIPAL_POINT)
+          || param & (int)Intrinsic_Parameter_Type::NONE )
+      {
+        constant_index.push_back(1);
+        constant_index.push_back(2);
+      }
+      if ( !(param & (int)Intrinsic_Parameter_Type::ADJUST_DISTORTION)
+          || param & (int)Intrinsic_Parameter_Type::NONE )
+      {
+        constant_index.push_back(3);
+      }
+      return constant_index;
+    }
 
     /**
     * @brief Return the un-distorted pixel (with removed distortion)
@@ -203,7 +227,6 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
       return cam2ima( remove_disto( ima2cam( p ) ) );
     }
 
-
     /**
     * @brief Return the distorted pixel (with added distortion)
     * @param p Input pixel
@@ -213,7 +236,6 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     {
       return cam2ima( add_disto( ima2cam( p ) ) );
     }
-
 
     /**
     * @brief Serialization out
@@ -225,7 +247,6 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
       Pinhole_Intrinsic::save( ar );
       ar( cereal::make_nvp( "disto_k1", params_ ) );
     }
-
 
     /**
     * @brief  Serialization in
@@ -319,7 +340,6 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
       return true;
     }
 
-
     /**
     * @brief Add the distortion field to a point (that is in normalized camera frame)
     * @param p Point before distortion computation (in normalized camera frame)
@@ -338,7 +358,6 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
       return ( p * r_coeff );
     }
 
-
     /**
     * @brief Remove the distortion to a camera point (that is in normalized camera frame)
     * @param p Point with distortion
@@ -356,7 +375,6 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
       return radius * p;
     }
 
-
     /**
     * @brief Data wrapper for non linear optimization (get data)
     * @return vector of parameter of this intrinsic
@@ -369,7 +387,6 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
       params.push_back( params_[2] );
       return params;
     }
-
 
     /**
     * @brief Data wrapper for non linear optimization (update from data)
@@ -393,6 +410,36 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
       }
     }
 
+    /**
+    * @brief Return the list of parameter indexes that must be held constant
+    * @param parametrization The given parametrization
+    */
+    virtual std::vector<int> subsetParameterization
+    (
+      const Intrinsic_Parameter_Type & parametrization) const
+    {
+      std::vector<int> constant_index;
+      const int param = static_cast<int>(parametrization);
+      if ( !(param & (int)Intrinsic_Parameter_Type::ADJUST_FOCAL_LENGTH)
+          || param & (int)Intrinsic_Parameter_Type::NONE )
+      {
+        constant_index.push_back(0);
+      }
+      if ( !(param & (int)Intrinsic_Parameter_Type::ADJUST_PRINCIPAL_POINT)
+          || param & (int)Intrinsic_Parameter_Type::NONE )
+      {
+        constant_index.push_back(1);
+        constant_index.push_back(2);
+      }
+      if ( !(param & (int)Intrinsic_Parameter_Type::ADJUST_DISTORTION)
+          || param & (int)Intrinsic_Parameter_Type::NONE )
+      {
+        constant_index.push_back(3);
+        constant_index.push_back(4);
+        constant_index.push_back(5);
+      }
+      return constant_index;
+    }
 
     /**
     * @brief Return the un-distorted pixel (with removed distortion)
@@ -404,7 +451,6 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
       return cam2ima( remove_disto( ima2cam( p ) ) );
     }
 
-
     /**
     * @brief Return the distorted pixel (with added distortion)
     * @param p Input pixel
@@ -414,7 +460,6 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     {
       return cam2ima( add_disto( ima2cam( p ) ) );
     }
-
 
     /**
     * @brief Serialization out
@@ -426,7 +471,6 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
       Pinhole_Intrinsic::save( ar );
       ar( cereal::make_nvp( "disto_k3", params_ ) );
     }
-
 
     /**
     * @brief  Serialization in

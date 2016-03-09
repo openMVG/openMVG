@@ -425,8 +425,14 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
 
   Bundle_Adjustment_Ceres bundle_adjustment_obj;
   // - refine only Structure and translations
-  bool b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data_,
-    Parameter_Adjustment_Option(ADJUST_STRUCTURE | ADJUST_CAMERA_TRANSLATION));
+  bool b_BA_Status = bundle_adjustment_obj.Adjust
+    (
+      sfm_data_,
+      Optimize_Options(
+        Intrinsic_Parameter_Type::NONE, // Intrinsics are held as constant
+        Extrinsic_Parameter_Type::ADJUST_TRANSLATION, // Rotations are held as constant
+        Structure_Parameter_Type::ADJUST_ALL)
+    );
   if (b_BA_Status)
   {
     if (!sLogging_file_.empty())
@@ -437,10 +443,15 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
     }
 
     // - refine only Structure and Rotations & translations
-    b_BA_Status = bundle_adjustment_obj.Adjust(
-      sfm_data_,
-      Parameter_Adjustment_Option(ADJUST_STRUCTURE | ADJUST_CAMERA_ROTATION | ADJUST_CAMERA_TRANSLATION));
-    if (b_BA_Status && !_sLoggingFile.empty())
+    b_BA_Status = bundle_adjustment_obj.Adjust
+      (
+        sfm_data_,
+        Optimize_Options(
+          Intrinsic_Parameter_Type::NONE, // Intrinsics are held as constant
+          Extrinsic_Parameter_Type::ADJUST_ALL,
+          Structure_Parameter_Type::ADJUST_ALL)
+      );
+    if (b_BA_Status && !sLogging_file_.empty())
     {
       Save(sfm_data_,
         stlplus::create_filespec(stlplus::folder_part(sLogging_file_), "structure_01_refine_RT_Xi", "ply"),
@@ -448,9 +459,16 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
     }
   }
 
-  if (b_BA_Status && !bFixedIntrinsics_) {
+  if (b_BA_Status && ReconstructionEngine::intrinsic_refinement_options_ != Intrinsic_Parameter_Type::NONE) {
     // - refine all: Structure, motion:{rotations, translations} and optics:{intrinsics}
-    b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data_, ADJUST_ALL);
+    b_BA_Status = bundle_adjustment_obj.Adjust
+      (
+        sfm_data_,
+        Optimize_Options(
+          ReconstructionEngine::intrinsic_refinement_options_,
+          Extrinsic_Parameter_Type::ADJUST_ALL,
+          Structure_Parameter_Type::ADJUST_ALL)
+      );
     if (b_BA_Status && !sLogging_file_.empty())
     {
       Save(sfm_data_,
@@ -489,10 +507,15 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
       << "\t #3DPoints: " << pointcount_cleaning << "\n";
   }
 
-  const Parameter_Adjustment_Option
-    ba_refine_options =
-    (bFixedIntrinsics_) ? ADJUST_MOTION_AND_STRUCTURE
-                        : ADJUST_ALL;
+  // --
+  // Final BA. We refine one more time,
+  // since some outlier have been removed and so a better solution can be found.
+  //--
+  const Optimize_Options ba_refine_options(
+    ReconstructionEngine::intrinsic_refinement_options_,
+    Extrinsic_Parameter_Type::ADJUST_ALL,  // adjust camera motion
+    Structure_Parameter_Type::ADJUST_ALL); // adjust scene structure
+
   b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
   if (b_BA_Status && !sLogging_file_.empty())
   {
@@ -633,10 +656,14 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
           landmarks[k].X = X;
         }
         // - refine only Structure and Rotations & translations (keep intrinsic constant)
-        Bundle_Adjustment_Ceres::BA_options options(false, false);
+        Bundle_Adjustment_Ceres::BA_Ceres_options options(false, false);
         options.linear_solver_type_ = ceres::DENSE_SCHUR;
         Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-        if (bundle_adjustment_obj.Adjust(tiny_scene, true, true, false))
+        const Optimize_Options ba_refine_options
+          (Intrinsic_Parameter_Type::NONE, // -> Keep intrinsic constant
+          Extrinsic_Parameter_Type::ADJUST_ALL, // adjust camera motion
+          Structure_Parameter_Type::ADJUST_ALL);// adjust scene structure
+        if (bundle_adjustment_obj.Adjust(tiny_scene, ba_refine_options))
         {
           // --> to debug: save relative pair geometry on disk
           // std::ostringstream os;

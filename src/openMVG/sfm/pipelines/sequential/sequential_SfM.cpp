@@ -10,6 +10,7 @@
 #include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
+#include "openMVG/cameras/cameras.hpp"
 #include "openMVG/sfm/sfm_data_filters.hpp"
 #include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
 
@@ -541,7 +542,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
   // Bound min precision at 1 pix.
   relativePose_info.found_residual_precision = std::max(relativePose_info.found_residual_precision, 1.0);
 
-  bool bRefine_using_BA = true;
+  const bool bRefine_using_BA = true;
   if (bRefine_using_BA)
   {
     // Refine the defined scene
@@ -584,10 +585,17 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
     Save(tiny_scene, stlplus::create_filespec(sOut_directory, "initialPair.ply"), ESfM_Data(ALL));
 
     // - refine only Structure and Rotations & translations (keep intrinsic constant)
-    Bundle_Adjustment_Ceres::BA_options options(true, false);
+    Bundle_Adjustment_Ceres::BA_Ceres_options options(true, false);
     options.linear_solver_type_ = ceres::DENSE_SCHUR;
     Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-    if (!bundle_adjustment_obj.Adjust(tiny_scene, ADJUST_MOTION_AND_STRUCTURE))
+    if (!bundle_adjustment_obj.Adjust(tiny_scene,
+        Optimize_Options
+        (
+          Intrinsic_Parameter_Type::NONE, // Keep intrinsic constant
+          Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
+          Structure_Parameter_Type::ADJUST_ALL) // Adjust structure
+        )
+      )
     {
       return false;
     }
@@ -1196,8 +1204,13 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
 /// Bundle adjustment to refine Structure; Motion and Intrinsics
 bool SequentialSfMReconstructionEngine::BundleAdjustment()
 {
-  Bundle_Adjustment_Ceres::BA_options options;
-  if (sfm_data_.GetPoses().size() > 100)
+  Bundle_Adjustment_Ceres::BA_Ceres_options options;
+  if ( sfm_data_.GetPoses().size() > 100 &&
+      (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE) ||
+       ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE) ||
+       ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+      )
+  // Enable sparse BA only if a sparse lib is available and if there more than 100 poses
   {
     options.preconditioner_type_ = ceres::JACOBI;
     options.linear_solver_type_ = ceres::SPARSE_SCHUR;
@@ -1207,11 +1220,11 @@ bool SequentialSfMReconstructionEngine::BundleAdjustment()
     options.linear_solver_type_ = ceres::DENSE_SCHUR;
   }
   Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-  const Parameter_Adjustment_Option
-    ba_refine_options =
-    (bFixedIntrinsics_) ? ADJUST_MOTION_AND_STRUCTURE
-                        : ADJUST_ALL;
-
+  const Optimize_Options ba_refine_options
+    ( ReconstructionEngine::intrinsic_refinement_options_,
+      Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
+      Structure_Parameter_Type::ADJUST_ALL // Adjust scene structure
+    );
   return bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
 }
 

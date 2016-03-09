@@ -8,6 +8,7 @@
 #pragma once
 
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/cameras/Camera_Common.hpp"
 #include <string>
 
 namespace openMVG {
@@ -26,7 +27,7 @@ public:
   )
   :sOut_directory(soutDirectory),
     sfm_data_(sfm_data),
-    bFixedIntrinsics_(false)
+    intrinsic_refinement_options_(cameras::Intrinsic_Parameter_Type::ADJUST_ALL)
   {
   }
 
@@ -34,8 +35,18 @@ public:
 
   virtual bool Process() = 0;
 
-  bool Get_bFixedIntrinsics() const {return bFixedIntrinsics_;}
-  void Set_bFixedIntrinsics(bool bVal) {bFixedIntrinsics_ = bVal;}
+  cameras::Intrinsic_Parameter_Type Get_Intrinsics_Refinement_Type() const
+  {
+    return intrinsic_refinement_options_;
+  }
+
+  void Set_Intrinsics_Refinement_Type
+  (
+    cameras::Intrinsic_Parameter_Type rhs
+  )
+  {
+    intrinsic_refinement_options_ = rhs;
+  }
 
   const SfM_Data & Get_SfM_Data() const {return sfm_data_;}
 
@@ -50,7 +61,7 @@ protected:
   //-----
   //-- Reconstruction parameters
   //-----
-  bool bFixedIntrinsics_;
+  cameras::Intrinsic_Parameter_Type intrinsic_refinement_options_;
 };
 
 } // namespace sfm
