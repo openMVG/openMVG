@@ -123,7 +123,7 @@
     #undef bool
     #undef vector
     #undef pixel
-  #elif defined  __ARM_NEON__
+  #elif defined  __ARM_NEON
     #define EIGEN_VECTORIZE
     #define EIGEN_VECTORIZE_NEON
     #include <arm_neon.h>

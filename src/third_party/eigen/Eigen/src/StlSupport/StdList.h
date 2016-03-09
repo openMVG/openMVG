@@ -12,32 +12,24 @@
 
 #include "details.h"
 
-// Define the explicit instantiation (e.g. necessary for the Intel compiler)
-#if defined(__INTEL_COMPILER) || defined(__GNUC__)
-  #define EIGEN_EXPLICIT_STL_LIST_INSTANTIATION(...) template class std::list<__VA_ARGS__, EIGEN_ALIGNED_ALLOCATOR<__VA_ARGS__> >;
-#else
-  #define EIGEN_EXPLICIT_STL_LIST_INSTANTIATION(...)
-#endif
-
 /**
  * This section contains a convenience MACRO which allows an easy specialization of
  * std::list such that for data types with alignment issues the correct allocator
  * is used automatically.
  */
 #define EIGEN_DEFINE_STL_LIST_SPECIALIZATION(...) \
-EIGEN_EXPLICIT_STL_LIST_INSTANTIATION(__VA_ARGS__) \
 namespace std \
 { \
-  template<typename _Ay> \
-  class list<__VA_ARGS__, _Ay>  \
+  template<> \
+  class list<__VA_ARGS__, std::allocator<__VA_ARGS__> >           \
     : public list<__VA_ARGS__, EIGEN_ALIGNED_ALLOCATOR<__VA_ARGS__> > \
   { \
     typedef list<__VA_ARGS__, EIGEN_ALIGNED_ALLOCATOR<__VA_ARGS__> > list_base; \
   public: \
     typedef __VA_ARGS__ value_type; \
-    typedef typename list_base::allocator_type allocator_type; \
-    typedef typename list_base::size_type size_type;  \
-    typedef typename list_base::iterator iterator;  \
+    typedef list_base::allocator_type allocator_type; \
+    typedef list_base::size_type size_type;  \
+    typedef list_base::iterator iterator;  \
     explicit list(const allocator_type& a = allocator_type()) : list_base(a) {}  \
     template<typename InputIterator> \
     list(InputIterator first, InputIterator last, const allocator_type& a = allocator_type()) : list_base(first, last, a) {} \

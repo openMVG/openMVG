@@ -283,11 +283,22 @@ bool L2RotationAveraging_Refine
       vec_Rot_AngleAxis[j].data());
   }
   ceres::Solver::Options solverOptions;
-  // Since the problem is sparse, use a sparse solver
-  if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE) ||
-      ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE) ||
-      ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+  solverOptions.minimizer_progress_to_stdout = false;
+  solverOptions.logging_type = ceres::SILENT;
+  // Since the problem is sparse, use a sparse solver iff available
+  if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
   {
+    solverOptions.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
+    solverOptions.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+  }
+  else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
+  {
+    solverOptions.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
+    solverOptions.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+  }
+  else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+  {
+    solverOptions.sparse_linear_algebra_library_type = ceres::EIGEN_SPARSE;
     solverOptions.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
   }
   else

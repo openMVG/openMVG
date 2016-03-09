@@ -691,7 +691,8 @@ class SparseMatrix
       m_data.swap(other.m_data);
     }
 
-    /** Sets *this to the identity matrix */
+    /** Sets *this to the identity matrix.
+      * This function also turns the matrix into compressed mode, and drop any reserved memory. */
     inline void setIdentity()
     {
       eigen_assert(rows() == cols() && "ONLY FOR SQUARED MATRICES");
@@ -699,6 +700,8 @@ class SparseMatrix
       Eigen::Map<Matrix<Index, Dynamic, 1> >(&this->m_data.index(0), rows()).setLinSpaced(0, rows()-1);
       Eigen::Map<Matrix<Scalar, Dynamic, 1> >(&this->m_data.value(0), rows()).setOnes();
       Eigen::Map<Matrix<Index, Dynamic, 1> >(this->m_outerIndex, rows()+1).setLinSpaced(0, rows());
+      std::free(m_innerNonZeros);
+      m_innerNonZeros = 0;
     }
     inline SparseMatrix& operator=(const SparseMatrix& other)
     {

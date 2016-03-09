@@ -64,7 +64,7 @@ struct SmallScaleError
   (
     double weight = 1.0
   )
-      : weight_(weight)
+  : weight_(weight)
   {}
 
   template <typename T>
@@ -176,10 +176,19 @@ bool solve_translations_problem_softl1
   // Solve
   ceres::Solver::Options options;
   options.minimizer_progress_to_stdout = false;
-  if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE) ||
-      ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE) ||
-      ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+  if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
   {
+    options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
+    options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+  }
+  else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
+  {
+    options.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
+    options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+  }
+  else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+  {
+    options.sparse_linear_algebra_library_type = ceres::EIGEN_SPARSE;
     options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
   }
   else

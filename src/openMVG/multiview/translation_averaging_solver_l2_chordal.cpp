@@ -130,14 +130,26 @@ bool solve_translations_problem_l2_chordal
   options.num_threads = omp_get_max_threads();
   options.num_linear_solver_threads = omp_get_max_threads();
 #endif // OPENMVG_USE_OPENMP
-  //options.minimizer_progress_to_stdout = true;
+  options.minimizer_progress_to_stdout = false;
+  options.logging_type = ceres::SILENT;
   options.max_num_iterations = max_iterations;
   options.function_tolerance = function_tolerance;
   options.parameter_tolerance = parameter_tolerance;
-  if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE) ||
-      ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE) ||
-      ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+  
+  // Since the problem is sparse, use a sparse solver iff available
+  if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
   {
+    options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
+    options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+  }
+  else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
+  {
+    options.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
+    options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+  }
+  else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+  {
+    options.sparse_linear_algebra_library_type = ceres::EIGEN_SPARSE;
     options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
   }
   else

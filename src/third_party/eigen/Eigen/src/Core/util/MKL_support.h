@@ -76,6 +76,38 @@
 #include <mkl_lapacke.h>
 #define EIGEN_MKL_VML_THRESHOLD 128
 
+/* MKL_DOMAIN_BLAS, etc are defined only in 10.3 update 7 */
+/* MKL_BLAS, etc are not defined in 11.2 */
+#ifdef MKL_DOMAIN_ALL
+#define EIGEN_MKL_DOMAIN_ALL MKL_DOMAIN_ALL
+#else
+#define EIGEN_MKL_DOMAIN_ALL MKL_ALL
+#endif
+
+#ifdef MKL_DOMAIN_BLAS
+#define EIGEN_MKL_DOMAIN_BLAS MKL_DOMAIN_BLAS
+#else
+#define EIGEN_MKL_DOMAIN_BLAS MKL_BLAS
+#endif
+
+#ifdef MKL_DOMAIN_FFT
+#define EIGEN_MKL_DOMAIN_FFT MKL_DOMAIN_FFT
+#else
+#define EIGEN_MKL_DOMAIN_FFT MKL_FFT
+#endif
+
+#ifdef MKL_DOMAIN_VML
+#define EIGEN_MKL_DOMAIN_VML MKL_DOMAIN_VML
+#else
+#define EIGEN_MKL_DOMAIN_VML MKL_VML
+#endif
+
+#ifdef MKL_DOMAIN_PARDISO
+#define EIGEN_MKL_DOMAIN_PARDISO MKL_DOMAIN_PARDISO
+#else
+#define EIGEN_MKL_DOMAIN_PARDISO MKL_PARDISO
+#endif
+
 namespace Eigen {
 
 typedef std::complex<double> dcomplex;

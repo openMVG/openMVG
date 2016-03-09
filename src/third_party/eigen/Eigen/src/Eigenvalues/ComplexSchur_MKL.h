@@ -45,7 +45,6 @@ ComplexSchur<Matrix<EIGTYPE, Dynamic, Dynamic, EIGCOLROW> >& \
 ComplexSchur<Matrix<EIGTYPE, Dynamic, Dynamic, EIGCOLROW> >::compute(const Matrix<EIGTYPE, Dynamic, Dynamic, EIGCOLROW>& matrix, bool computeU) \
 { \
   typedef Matrix<EIGTYPE, Dynamic, Dynamic, EIGCOLROW> MatrixType; \
-  typedef MatrixType::Scalar Scalar; \
   typedef MatrixType::RealScalar RealScalar; \
   typedef std::complex<RealScalar> ComplexScalar; \
 \

@@ -133,8 +133,8 @@ class DGMRES : public IterativeSolverBase<DGMRES<_MatrixType,_Preconditioner> >
     * this class becomes invalid. Call compute() to update it with the new
     * matrix A, or modify a copy of A.
     */
-  DGMRES(const MatrixType& A) : Base(A),m_restart(30),m_neig(0),m_r(0),m_maxNeig(5),m_isDeflAllocated(false),m_isDeflInitialized(false)
-  {}
+  template<typename MatrixDerived>
+  explicit DGMRES(const EigenBase<MatrixDerived>& A) : Base(A.derived()), m_restart(30),m_neig(0),m_r(0),m_maxNeig(5),m_isDeflAllocated(false),m_isDeflInitialized(false) {}
 
   ~DGMRES() {}
   

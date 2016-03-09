@@ -41,12 +41,8 @@
 // 
 //   The colamd/symamd library is available at
 // 
-//       http://www.cise.ufl.edu/research/sparse/colamd/
+//       http://www.suitesparse.com
 
-//   This is the http://www.cise.ufl.edu/research/sparse/colamd/colamd.h
-//   file.  It is required by the colamd.c, colamdmex.c, and symamdmex.c
-//   files, and by any C code that calls the routines whose prototypes are
-//   listed below, or that uses the colamd/symamd definitions listed below.
   
 #ifndef EIGEN_COLAMD_H
 #define EIGEN_COLAMD_H
@@ -101,9 +97,6 @@ namespace internal {
 /* ========================================================================== */
 /* === Definitions ========================================================== */
 /* ========================================================================== */
-
-#define COLAMD_MAX(a,b) (((a) > (b)) ? (a) : (b))
-#define COLAMD_MIN(a,b) (((a) < (b)) ? (a) : (b))
 
 #define ONES_COMPLEMENT(r) (-(r)-1)
 
@@ -516,7 +509,7 @@ static Index init_rows_cols  /* returns true if OK, or false otherwise */
     Col [col].start = p [col] ;
     Col [col].length = p [col+1] - p [col] ;
 
-    if (Col [col].length < 0)
+    if ((Col [col].length) < 0) // extra parentheses to work-around gcc bug 10200
     {
       /* column pointers must be non-decreasing */
       stats [COLAMD_STATUS] = COLAMD_ERROR_col_length_negative ;
@@ -739,8 +732,8 @@ static void init_scoring
 
   /* === Extract knobs ==================================================== */
 
-  dense_row_count = COLAMD_MAX (0, COLAMD_MIN (knobs [COLAMD_DENSE_ROW] * n_col, n_col)) ;
-  dense_col_count = COLAMD_MAX (0, COLAMD_MIN (knobs [COLAMD_DENSE_COL] * n_row, n_row)) ;
+  dense_row_count = std::max<Index>(0, (std::min)(Index(knobs [COLAMD_DENSE_ROW] * n_col), n_col)) ;
+  dense_col_count = std::max<Index>(0, (std::min)(Index(knobs [COLAMD_DENSE_COL] * n_row), n_row)) ;
   COLAMD_DEBUG1 (("colamd: densecount: %d %d\n", dense_row_count, dense_col_count)) ;
   max_deg = 0 ;
   n_col2 = n_col ;
@@ -804,7 +797,7 @@ static void init_scoring
     else
     {
       /* keep track of max degree of remaining rows */
-      max_deg = COLAMD_MAX (max_deg, deg) ;
+      max_deg = (std::max)(max_deg, deg) ;
     }
   }
   COLAMD_DEBUG1 (("colamd: Dense and null rows killed: %d\n", n_row - n_row2)) ;
@@ -842,7 +835,7 @@ static void init_scoring
       /* add row's external degree */
       score += Row [row].shared1.degree - 1 ;
       /* guard against integer overflow */
-      score = COLAMD_MIN (score, n_col) ;
+      score = (std::min)(score, n_col) ;
     }
     /* determine pruned column length */
     col_length = (Index) (new_cp - &A [Col [c].start]) ;
@@ -914,7 +907,7 @@ static void init_scoring
       head [score] = c ;
 
       /* see if this score is less than current min */
-      min_score = COLAMD_MIN (min_score, score) ;
+      min_score = (std::min)(min_score, score) ;
 
 
     }
@@ -1040,7 +1033,7 @@ static Index find_ordering /* return the number of garbage collections */
 
     /* === Garbage_collection, if necessary ============================= */
 
-    needed_memory = COLAMD_MIN (pivot_col_score, n_col - k) ;
+    needed_memory = (std::min)(pivot_col_score, n_col - k) ;
     if (pfree + needed_memory >= Alen)
     {
       pfree = Eigen::internal::garbage_collection (n_row, n_col, Row, Col, A, &A [pfree]) ;
@@ -1099,7 +1092,7 @@ static Index find_ordering /* return the number of garbage collections */
 
     /* clear tag on pivot column */
     Col [pivot_col].shared1.thickness = pivot_col_thickness ;
-    max_deg = COLAMD_MAX (max_deg, pivot_row_degree) ;
+    max_deg = (std::max)(max_deg, pivot_row_degree) ;
 
 
     /* === Kill all rows used to construct pivot row ==================== */
@@ -1273,7 +1266,7 @@ static Index find_ordering /* return the number of garbage collections */
 	/* add set difference */
 	cur_score += row_mark - tag_mark ;
 	/* integer overflow... */
-	cur_score = COLAMD_MIN (cur_score, n_col) ;
+	cur_score = (std::min)(cur_score, n_col) ;
       }
 
       /* recompute the column's length */
@@ -1386,7 +1379,7 @@ static Index find_ordering /* return the number of garbage collections */
       cur_score -= Col [col].shared1.thickness ;
 
       /* make sure score is less or equal than the max score */
-      cur_score = COLAMD_MIN (cur_score, max_score) ;
+      cur_score = (std::min)(cur_score, max_score) ;
       COLAMD_ASSERT (cur_score >= 0) ;
 
       /* store updated score */
@@ -1409,7 +1402,7 @@ static Index find_ordering /* return the number of garbage collections */
       head [cur_score] = col ;
 
       /* see if this score is less than current min */
-      min_score = COLAMD_MIN (min_score, cur_score) ;
+      min_score = (std::min)(min_score, cur_score) ;
 
     }
 

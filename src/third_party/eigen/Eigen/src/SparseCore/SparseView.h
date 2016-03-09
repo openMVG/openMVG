@@ -35,9 +35,9 @@ class SparseView : public SparseMatrixBase<SparseView<MatrixType> >
 public:
   EIGEN_SPARSE_PUBLIC_INTERFACE(SparseView)
 
-  SparseView(const MatrixType& mat, const Scalar& m_reference = Scalar(0),
-             typename NumTraits<Scalar>::Real m_epsilon = NumTraits<Scalar>::dummy_precision()) : 
-    m_matrix(mat), m_reference(m_reference), m_epsilon(m_epsilon) {}
+  explicit SparseView(const MatrixType& mat, const Scalar& reference = Scalar(0),
+                      const RealScalar &epsilon = NumTraits<Scalar>::dummy_precision())
+    : m_matrix(mat), m_reference(reference), m_epsilon(epsilon) {}
 
   class InnerIterator;
 

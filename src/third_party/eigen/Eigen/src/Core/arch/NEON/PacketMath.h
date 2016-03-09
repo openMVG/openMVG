@@ -384,6 +384,7 @@ template<> EIGEN_STRONG_INLINE int predux_max<Packet4i>(const Packet4i& a)
   a_lo = vget_low_s32(a);
   a_hi = vget_high_s32(a);
   max = vpmax_s32(a_lo, a_hi);
+  max = vpmax_s32(max, max);
 
   return vget_lane_s32(max, 0);
 }

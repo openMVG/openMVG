@@ -235,6 +235,11 @@ template<typename _MatrixType, int _UpLo> class LDLT
     }
 
   protected:
+    
+    static void check_template_parameters()
+    {
+      EIGEN_STATIC_ASSERT_NON_INTEGER(Scalar);
+    }
 
     /** \internal
       * Used to compute and store the Cholesky decomposition A = L D L^* = U^* D U.
@@ -434,6 +439,8 @@ template<typename MatrixType> struct LDLT_Traits<MatrixType,Upper>
 template<typename MatrixType, int _UpLo>
 LDLT<MatrixType,_UpLo>& LDLT<MatrixType,_UpLo>::compute(const MatrixType& a)
 {
+  check_template_parameters();
+  
   eigen_assert(a.rows()==a.cols());
   const Index size = a.rows();
 
@@ -457,7 +464,7 @@ LDLT<MatrixType,_UpLo>& LDLT<MatrixType,_UpLo>::compute(const MatrixType& a)
   */
 template<typename MatrixType, int _UpLo>
 template<typename Derived>
-LDLT<MatrixType,_UpLo>& LDLT<MatrixType,_UpLo>::rankUpdate(const MatrixBase<Derived>& w, const typename NumTraits<typename MatrixType::Scalar>::Real& sigma)
+LDLT<MatrixType,_UpLo>& LDLT<MatrixType,_UpLo>::rankUpdate(const MatrixBase<Derived>& w, const typename LDLT<MatrixType,_UpLo>::RealScalar& sigma)
 {
   const Index size = w.rows();
   if (m_isInitialized)

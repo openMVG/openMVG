@@ -45,8 +45,8 @@ JacobiSVD<Matrix<EIGTYPE, Dynamic, Dynamic, EIGCOLROW, Dynamic, Dynamic>, ColPiv
 JacobiSVD<Matrix<EIGTYPE, Dynamic, Dynamic, EIGCOLROW, Dynamic, Dynamic>, ColPivHouseholderQRPreconditioner>::compute(const Matrix<EIGTYPE, Dynamic, Dynamic, EIGCOLROW, Dynamic, Dynamic>& matrix, unsigned int computationOptions) \
 { \
   typedef Matrix<EIGTYPE, Dynamic, Dynamic, EIGCOLROW, Dynamic, Dynamic> MatrixType; \
-  typedef MatrixType::Scalar Scalar; \
-  typedef MatrixType::RealScalar RealScalar; \
+  /*typedef MatrixType::Scalar Scalar;*/ \
+  /*typedef MatrixType::RealScalar RealScalar;*/ \
   allocate(matrix.rows(), matrix.cols(), computationOptions); \
 \
   /*const RealScalar precision = RealScalar(2) * NumTraits<Scalar>::epsilon();*/ \

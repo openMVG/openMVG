@@ -159,13 +159,11 @@ template<typename Derived> class MatrixBase
     template<typename OtherDerived>
     Derived& operator=(const ReturnByValue<OtherDerived>& other);
 
-#ifndef EIGEN_PARSED_BY_DOXYGEN
     template<typename ProductDerived, typename Lhs, typename Rhs>
     Derived& lazyAssign(const ProductBase<ProductDerived, Lhs,Rhs>& other);
 
     template<typename MatrixPower, typename Lhs, typename Rhs>
     Derived& lazyAssign(const MatrixPowerProduct<MatrixPower, Lhs,Rhs>& other);
-#endif // not EIGEN_PARSED_BY_DOXYGEN
 
     template<typename OtherDerived>
     Derived& operator+=(const MatrixBase<OtherDerived>& other);
@@ -441,6 +439,15 @@ template<typename Derived> class MatrixBase
     void applyOnTheLeft(Index p, Index q, const JacobiRotation<OtherScalar>& j);
     template<typename OtherScalar>
     void applyOnTheRight(Index p, Index q, const JacobiRotation<OtherScalar>& j);
+
+///////// SparseCore module /////////
+
+    template<typename OtherDerived>
+    EIGEN_STRONG_INLINE const typename SparseMatrixBase<OtherDerived>::template CwiseProductDenseReturnType<Derived>::Type
+    cwiseProduct(const SparseMatrixBase<OtherDerived> &other) const
+    {
+      return other.cwiseProduct(derived());
+    }
 
 ///////// MatrixFunctions module /////////
 
