@@ -258,7 +258,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations
     }
 
     // Log input graph to the HTML report
-    if (!sLogging_file_.empty() && !sOut_directory.empty())
+    if (!sLogging_file_.empty() && !sOut_directory_.empty())
     {
       // Log a relative pose graph
       {
@@ -272,7 +272,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations
         const std::string sGraph_name = "global_relative_rotation_pose_graph_final";
         graph::indexedGraph putativeGraph(set_pose_ids, rotation_averaging_solver.GetUsedPairs());
         graph::exportToGraphvizData(
-          stlplus::create_filespec(sOut_directory, sGraph_name),
+          stlplus::create_filespec(sOut_directory_, sGraph_name),
           putativeGraph.g);
 
         using namespace htmlDocument;
@@ -280,7 +280,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations
 
         os << "<br>" << sGraph_name << "<br>"
            << "<img src=\""
-           << stlplus::create_filespec(sOut_directory, sGraph_name, "svg")
+           << stlplus::create_filespec(sOut_directory_, sGraph_name, "svg")
            << "\" height=\"600\">\n";
 
         html_doc_stream_->pushInfo(os.str());
@@ -713,7 +713,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
   }
 
   // Log input graph to the HTML report
-  if (!sLogging_file_.empty() && !sOut_directory.empty())
+  if (!sLogging_file_.empty() && !sOut_directory_.empty())
   {
     // Log a relative view graph
     {
@@ -722,7 +722,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
         std::inserter(set_ViewIds, set_ViewIds.begin()), stl::RetrieveKey());
       graph::indexedGraph putativeGraph(set_ViewIds, getPairs(matches_provider_->pairWise_matches_));
       graph::exportToGraphvizData(
-        stlplus::create_filespec(sOut_directory, "global_relative_rotation_view_graph"),
+        stlplus::create_filespec(sOut_directory_, "global_relative_rotation_view_graph"),
         putativeGraph.g);
     }
 
@@ -740,14 +740,14 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
       const std::string sGraph_name = "global_relative_rotation_pose_graph";
       graph::indexedGraph putativeGraph(set_pose_ids, relative_pose_pairs);
       graph::exportToGraphvizData(
-        stlplus::create_filespec(sOut_directory, sGraph_name),
+        stlplus::create_filespec(sOut_directory_, sGraph_name),
         putativeGraph.g);
       using namespace htmlDocument;
       std::ostringstream os;
 
       os << "<br>" << "global_relative_rotation_pose_graph" << "<br>"
          << "<img src=\""
-         << stlplus::create_filespec(sOut_directory, "global_relative_rotation_pose_graph", "svg")
+         << stlplus::create_filespec(sOut_directory_, "global_relative_rotation_pose_graph", "svg")
          << "\" height=\"600\">\n";
 
       html_doc_stream_->pushInfo(os.str());

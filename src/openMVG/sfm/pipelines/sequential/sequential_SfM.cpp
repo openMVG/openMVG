@@ -131,7 +131,7 @@ bool SequentialSfMReconstructionEngine::Process() {
       // Scene logging as ply for visual debug
       std::ostringstream os;
       os << std::setw(8) << std::setfill('0') << resectionGroupIndex << "_Resection";
-      Save(sfm_data_, stlplus::create_filespec(sOut_directory, os.str(), ".ply"), ESfM_Data(ALL));
+      Save(sfm_data_, stlplus::create_filespec(sOut_directory_, os.str(), ".ply"), ESfM_Data(ALL));
 
       // Perform BA until all point are under the given precision
       do
@@ -582,7 +582,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
       landmarks[iterT->first].obs = std::move(obs);
       landmarks[iterT->first].X = X;
     }
-    Save(tiny_scene, stlplus::create_filespec(sOut_directory, "initialPair.ply"), ESfM_Data(ALL));
+    Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialPair.ply"), ESfM_Data(ALL));
 
     // - refine only Structure and Rotations & translations (keep intrinsic constant)
     Bundle_Adjustment_Ceres::BA_Ceres_options options(true, false);
@@ -689,7 +689,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
 
       html_doc_stream_->pushInfo("<hr>");
 
-      ofstream htmlFileStream( string(stlplus::folder_append_separator(sOut_directory) +
+      ofstream htmlFileStream( string(stlplus::folder_append_separator(sOut_directory_) +
         "Reconstruction_Report.html").c_str());
       htmlFileStream << html_doc_stream_->getDoc();
     }
