@@ -97,8 +97,9 @@ bool exportToMVE2Format(
     std::pair<int,int> w_h_image_size;
     Image<RGBColor> image, image_ud, thumbnail;
     std::string sOutViewIteratorDirectory;
+    std::size_t view_index = 0;
     for(Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
+      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar, ++view_index)
     {
       const View * view = iter->second.get();
 
@@ -106,7 +107,9 @@ bool exportToMVE2Format(
       {
         // Create current view subdirectory 'view_xxxx.mve'
         std::ostringstream padding;
-        padding << std::setw(4) << std::setfill('0') << view->id_view;
+        // Warning: We use view_index instead of view->id_view because MVE use indexes instead of IDs.
+        padding << std::setw(4) << std::setfill('0') << view_index;
+
         sOutViewIteratorDirectory = stlplus::folder_append_separator(sOutViewsDirectory) + "view_" + padding.str() + ".mve";
         if (!stlplus::folder_exists(sOutViewIteratorDirectory))
         {
@@ -172,7 +175,7 @@ bool exportToMVE2Format(
           << translation[2] << " " << fileOut.widen('\n')
           << fileOut.widen('\n')
           << "[view]" << fileOut.widen('\n')
-          << "id = " << view->id_view << fileOut.widen('\n')
+          << "id = " << view_index << fileOut.widen('\n')
           << "name = " << stlplus::filename_part(srcImage.c_str()) << fileOut.widen('\n');
 
         // To do:  trim any extra separator(s) from openMVG name we receive, e.g.:
