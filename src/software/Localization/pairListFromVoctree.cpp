@@ -316,8 +316,6 @@ int main(int argc, char** argv)
   // Query the database to get all the pair list
   //**********************************************************
 
-  // Now query each document
-  std::vector<openMVG::voctree::DocMatch> matches;
 
   if(numImageQuery == 0)
   {
@@ -327,44 +325,59 @@ int main(int argc, char** argv)
 
   PairList allMatches;
 
-  for(const auto &doc : documents)
+  POPART_COUT("Query all documents");
+  detect_start = std::chrono::steady_clock::now();
+  // Now query each document
+  #ifdef OPENMVG_USE_OPENMP
+    #pragma omp parallel for
+  #endif
+  for(std::size_t i = 0; i < documents.size(); ++i)
   {
-    detect_start = std::chrono::steady_clock::now();
-    db.find(doc.second, numImageQuery, matches);
-    auto detect_end = std::chrono::steady_clock::now();
-    detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
-    POPART_COUT("query document " << doc.first 
-			<< " took " << detect_elapsed.count() 
-			<< " ms and has " << matches.size() 
-			<< " matches\tBest " << matches[0].id 
-			<< " with score " << matches[0].score << endl);
+    DocumentMap::const_iterator docIt = documents.begin();
+    std::advance(docIt, i);
+    std::vector<openMVG::voctree::DocMatch> matches;
+    
+    db.find(docIt->second, numImageQuery, matches);
+//    POPART_COUT("query document " << docIt->first
+//			<< " took " << detect_elapsed.count() 
+//			<< " ms and has " << matches.size() 
+//			<< " matches\tBest " << matches[0].id 
+//			<< " with score " << matches[0].score);
 
-    allMatches[ doc.first ] = ListOfImageID();
-    allMatches[ doc.first ].reserve(matches.size());
-
+    ListOfImageID idMatches;
+    idMatches.reserve(matches.size());
     for(const openMVG::voctree::DocMatch& m : matches)
     {
-      allMatches[ doc.first ].push_back(m.id);
+      idMatches.push_back(m.id);
+    }
+    #ifdef OPENMVG_USE_OPENMP
+      #pragma omp critical
+    #endif
+    {
+      allMatches[ docIt->first ] = idMatches;
     }
   }
+  detect_elapsed = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - detect_start);
+  POPART_COUT("Query of all documents took " << detect_elapsed.count() << " sec.");
 
   //**********************************************************
   // process pair list
   //**********************************************************
 
-  OrderedPairList final;
+  detect_start = std::chrono::steady_clock::now();
+  OrderedPairList selectedPairs;
 
-  convertAllMatchesToPairList(allMatches, numImageQuery, final);
+  POPART_COUT("Convert all matches to pairList");
+  convertAllMatchesToPairList(allMatches, numImageQuery, selectedPairs);
+  detect_elapsed = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - detect_start);
+  POPART_COUT("Convert all matches to pairList took " << detect_elapsed.count() << " sec.");
 
   // write it to file
   std::ofstream fileout;
   fileout.open(outfile, ofstream::out);
-  fileout << final;
+  fileout << selectedPairs;
   fileout.close();
 
-  //	fileout.open( "allMatches.txt", ofstream::out );
-  //	fileout << allMatches;
-  //	fileout.close();
-
+  POPART_COUT("pairList exported in: " << outfile);
   return EXIT_SUCCESS;
 }
