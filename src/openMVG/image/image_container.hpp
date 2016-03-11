@@ -179,6 +179,25 @@ class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::Row
     }
 
     /**
+    * @brief constant random pixel access (suppose image as a line array)
+    * @param p position
+    * @return Pixel reference at position (p)
+    */
+    inline const T& operator[](int p) const
+    {
+      return Base::operator()(p);
+    }
+    /**
+    * @brief constant random pixel access (suppose image as a line array)
+    * @param p position
+    * @return Pixel reference at position (p)
+    */
+    inline T& operator[](int p)
+    {
+      return Base::operator()(p);
+    }
+
+    /**
     * @brief Get low level access to the internal pixel data
     * @return const reference to internal matrix data
     */

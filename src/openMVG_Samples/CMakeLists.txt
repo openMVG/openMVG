@@ -15,3 +15,5 @@ ADD_SUBDIRECTORY(sensorWidthDatabase)
 ADD_SUBDIRECTORY(kvld_filter)
 
 ADD_SUBDIRECTORY(features_repeatability)
+ADD_SUBDIRECTORY(features_affine_demo)
+

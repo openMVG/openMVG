@@ -120,6 +120,106 @@ inline std::istream& operator>>(std::istream& in, SIOPointFeature& obj)
   return in >> *pf >> obj.scale_ >> obj.orientation_;
 }
 
+/// Return the coterminal angle between [0;2*PI].
+/// Angle value must be in Radian.
+inline float getCoterminalAngle(float angle)
+{
+  const float f2PI = 2.f*M_PI;
+  while (angle > f2PI) {
+    angle -= f2PI;
+  }
+  while (angle < 0.0f) {
+    angle += f2PI;
+  }
+  return angle;
+}
+
+/**
+* Base class for Affine "Point" features.
+* Add major & minor ellipse axis & orientation to the basis PointFeature.
+*/
+class AffinePointFeature : public PointFeature {
+
+  friend std::ostream& operator<<(std::ostream& out, const AffinePointFeature& obj);
+  friend std::istream& operator>>(std::istream& in, AffinePointFeature& obj);
+
+public:
+  virtual ~AffinePointFeature() {};
+
+  AffinePointFeature(float x = 0.0f, float y = 0.0f,
+    float a = 0.0f, float b = 0.0f, float c = 0.0f)
+    : PointFeature(x, y)
+    , a_(a), b_(b), c_(c)
+  {
+    l1_ = (a + c - std::sqrt(a*a + c*c + 4 * b*b - 2 * a*c)) / 2;
+    l2_ = (a + c + std::sqrt(a*a + c*c + 4 * b*b - 2 * a*c)) / 2;
+    l1_ = 1.0 / std::sqrt(l1_);
+    l2_ = 1.0 / std::sqrt(l2_);
+
+    phi_ = 0.0;
+    if (b == 0)
+    {
+      if (a > c)
+        phi_ = M_PI / 2; // else 0
+    }
+    else
+    {
+      const double t = std::atan(2 * b / (a - c));
+      if (a < c)
+        phi_ = t / 2;
+      else
+        phi_ = t / 2 + ((b > 0) ? -M_PI / 2 : M_PI / 2);
+    }
+
+    if (l1_ > l2_)
+    {
+      std::swap(l1_, l2_);
+      phi_ = getCoterminalAngle(M_PI / 2 - phi_);
+    }
+  }
+
+  float l1() const { return l1_; }
+  float l2() const { return l2_; }
+  float orientation() const { return phi_; }
+
+  bool operator ==(const AffinePointFeature& b) const {
+    return ((x() == b.x()) && (y() == b.y() &&
+      (l1_ == b.l1_) && (l2_ == b.l2_) && (phi_ == b.phi_)));
+  };
+
+  bool operator !=(const AffinePointFeature& rhs) const {
+    return !((*this) == rhs);
+  };
+
+  template<class Archive>
+  void serialize(Archive & ar)
+  {
+    ar (
+      coords_(0), coords_(1),
+      l1_, l2_, phi_, a_, b_, c_);
+  }
+
+  float a() const { return a_; }
+  float b() const { return b_; }
+  float c() const { return c_; }
+
+protected:
+  float l1_, l2_, phi_, a_, b_, c_;
+};
+
+inline std::ostream& operator<<(std::ostream& out, const AffinePointFeature& rhs)
+{
+  const PointFeature *pf = static_cast<const PointFeature*>(&rhs);
+  return out << *pf << " " << rhs.l1_ << " " << rhs.l2_ << " " << rhs.phi_
+    << " " << rhs.a_ << " " << rhs.b_ << " " << rhs.c_;
+}
+
+inline std::istream& operator>>(std::istream& in, AffinePointFeature& rhs)
+{
+  PointFeature *pf = static_cast<PointFeature*>(&rhs);
+  return in >> *pf >> rhs.l1_ >> rhs.l2_ >> rhs.phi_ >> rhs.a_ >> rhs.b_ >> rhs.c_;
+}
+
 /// Read feats from file
 template<typename FeaturesT >
 static bool loadFeatsFromFile(
