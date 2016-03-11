@@ -15,7 +15,7 @@
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 
 #include "nonFree/sift/SIFT_describer.hpp"
-#include "openMVG_Samples/robust_essential_spherical/spherical_cam.hpp"
+#include "openMVG_Samples/multiview_robust_essential_spherical/spherical_cam.hpp"
 
 #include "software/SfM/SfMPlyHelper.hpp"
 

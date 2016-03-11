@@ -48,7 +48,6 @@ int main(int argc, char **argv) {
       return EXIT_FAILURE;
   }
 
-  Image<RGBColor> image;
   const string jpg_filenameL = stlplus::folder_up(string(THIS_SOURCE_DIR))
     + "/imageData/StanfordMobileVisualSearch/Ace_0.png";
   const string jpg_filenameR = stlplus::folder_up(string(THIS_SOURCE_DIR))

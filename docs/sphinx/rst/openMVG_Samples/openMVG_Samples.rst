@@ -12,50 +12,75 @@ imageData
 
   - some pictures for each of the following examples.
 
-siftPutativeMatches
---------------------
+features_siftPutativeMatches
+----------------------------
 
 Show how:
   - extract SIFT features and descriptors,
   - match features descriptors,
   - display the computed matches.
 
-image_describer_matches
--------------------------
+features_affine_demo
+--------------------
+
+Show how:
+  - use the MSER/TBMR region detector
+  - display regions fitted ellipses
+
+features_image_matching
+-----------------------
 
 Show how:
   - use the Image_describer interface to extract features & descriptors
   - match the detected regions
   - display detected features & corresponding matches
 
-robust_homography
+features_kvld_filter
 --------------------
+
+Show how:
+  - filter putative matches with the K-VLD filter [KVLD12]_.
+
+features_repeatability
+----------------------
+
+Show how to use Oxford's "Affine Covariant Regions Datasets" image datasets in order to compute feature position and or descriptor matching repeatability measures.
+
+multiview_robust_homography
+---------------------------
 
 Show how:
   - estimate a robust homography between features matches.
 
-robust_homography_guided
----------------------------
+multiview_robust_homography_guided
+----------------------------------
 
 Show how:
   - estimate a robust homography between features matches,
-  - extent the putative matches with a guided filter,
+  - extend the putative matches with a H guided filter,
   - warp the query image over the reference image.
 
-robust_fundamental
---------------------
+multiview_robust_fundamental
+----------------------------
 
 Show how:
   - estimate a robust fundamental matrix between features matches.
+  
+multiview_robust_fundamental_guided
+------------------------------------
 
-robust_essential
---------------------
+Show how:
+  - estimate a robust fundamental matrix between features matches,
+  - extend the putative matches with a F guided filter.
+
+multiview_robust_essential
+--------------------------
 Show how:
   - estimate a robust essential matrix between features matches,
   - compute the 3D structure by triangulation of the corresponding inliers.
 
-robust_essential_ba 
---------------------
+multiview_robust_essential_ba 
+-----------------------------
 
 Show how:
   - refine with bundle_adjustment the Structure and Motion of a scene
@@ -65,33 +90,27 @@ Show how:
     - Refine ``[X],[R|t]``, shared ``[f]``,
     - Refine ``[X],[R|t]``, shared brown disto models.
 
-robust_essential_spherical
----------------------------
+multiview_robust_essential_spherical
+------------------------------------
 
 Show how:
   - estimate a robust essential matrix between two spherical panorama
   - triangulate remaning inliers.
 
-kvld_filter
---------------------
-
-Show how:
-  - filter putative matches with the K-VLD filter [KVLD12]_.
-
-exifParsing
---------------------
+exif_Parsing
+------------
 
 Show how:
   - parse JPEG EXIF metadata
 
-sensorWidthDatabase
---------------------
+exif_sensorWidthDatabase
+-------------------------
 
 Show how:
   - use the camera sensor width database
 
-undisto_Brown
---------------------
+cameras_undisto_Brown
+---------------------
 
 Show how:
   - undistord a picture according known Brown radial parameters.
