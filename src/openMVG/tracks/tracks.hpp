@@ -178,11 +178,7 @@ struct TracksBuilder
   /// Return the number of connected set in the UnionFind structure (tree forest)
   size_t NbTracks() const
   {
-    std::set<unsigned int> parent_id;
-    for (const unsigned int & id : uf_tree.m_cc_parent)
-    {
-      parent_id.insert(id);
-    }
+    std::set<unsigned int> parent_id(uf_tree.m_cc_parent.begin(), uf_tree.m_cc_parent.end());
     // Erase the "special marker" that depicted rejected tracks
     parent_id.erase(std::numeric_limits<unsigned int>::max());
     return parent_id.size();
