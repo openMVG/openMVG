@@ -9,7 +9,8 @@
 
 #include "openMVG/sfm/sfm_data_BA.hpp"
 #include "openMVG/numeric/numeric.h"
-#include "ceres/ceres.h"
+#include "ceres/types.h"
+#include "ceres/cost_function.h"
 
 namespace openMVG {
 

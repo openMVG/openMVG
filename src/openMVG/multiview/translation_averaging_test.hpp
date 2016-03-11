@@ -20,11 +20,7 @@ using namespace svg;
 
 #include <fstream>
 #include <map>
-#include <utility>
 #include <vector>
-
-#include "ceres/ceres.h"
-#include "ceres/rotation.h"
 #include <numeric>
 
 using namespace openMVG;

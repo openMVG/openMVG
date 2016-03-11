@@ -8,6 +8,7 @@
 #define OPENMVG_SFM_DATA_BA_CERES_CAMERA_FUNCTOR_HPP
 
 #include "openMVG/cameras/cameras.hpp"
+#include "ceres/ceres.h"
 #include "ceres/rotation.h"
 
 //--

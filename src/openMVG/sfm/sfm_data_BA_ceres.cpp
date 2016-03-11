@@ -9,6 +9,7 @@
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/types.hpp"
 
+#include "ceres/ceres.h"
 #include "ceres/rotation.h"
 
 namespace openMVG {
