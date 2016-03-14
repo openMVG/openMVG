@@ -474,10 +474,12 @@ int main( int argc, char** argv )
 
     if( inputFilename )
     {
-        if( !videofile && readStringList(inputFilename, imageList) )
-            mode = CAPTURING;
+        if( !videofile )
+	    readStringList(inputFilename, imageList);
         else
             capture.open(inputFilename);
+
+        mode = CAPTURING;
     }
     else
 	{
