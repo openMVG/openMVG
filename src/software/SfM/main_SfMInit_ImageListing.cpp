@@ -144,7 +144,7 @@ int main(int argc, char **argv)
   std::string sOutputDir;
   std::string sKmatrix;
 
-  std::string i_User_camera_model = EINTRINSIC_enumToString(PINHOLE_CAMERA_RADIAL3);
+  std::string i_User_camera_model;
 
   bool b_Group_camera_model = true;
   bool b_use_UID = false;
@@ -204,7 +204,9 @@ int main(int argc, char **argv)
             << "--use_UID " << b_use_UID << std::endl
             << "--storeMetadata " << b_storeMetadata << std::endl;
 
-  const EINTRINSIC e_User_camera_model = EINTRINSIC_stringToEnum(i_User_camera_model);
+  EINTRINSIC e_User_camera_model = PINHOLE_CAMERA_START;
+  if(!i_User_camera_model.empty())
+    e_User_camera_model = EINTRINSIC_stringToEnum(i_User_camera_model);
   double ppx = -1.0, ppy = -1.0;
 
   if(!sImageDir.empty() && !sJsonFile.empty())
@@ -370,6 +372,9 @@ int main(int argc, char **argv)
     }
 
     // Focal
+    float focalLength_mm = 0.0;
+    std::string sCamName;
+    std::string sCamModel;
     // Consider the case where the focal is provided manually
     if (sKmatrix.size() > 0) // Known user calibration K matrix
     {
@@ -384,11 +389,11 @@ int main(int argc, char **argv)
     // If image contains meta data
     else if(bHaveValidExifMetadata)
     {
-      const std::string sCamName = exifReader.getBrand();
-      const std::string sCamModel = exifReader.getModel();
-
+      sCamName = exifReader.getBrand();
+      sCamModel = exifReader.getModel();
+      focalLength_mm = exifReader.getFocal();
       // Handle case where focal length is equal to 0
-      if (exifReader.getFocal() == 0.0f)
+      if (focalLength_mm == 0.0f)
       {
         error_report_stream
           << stlplus::basename_part(imageAbsFilepath) << ": Focal length is missing in metadata." << "\n";
@@ -397,7 +402,7 @@ int main(int argc, char **argv)
       else
       {
         // Retrieve the focal from the metadata in mm and convert to pixel.
-        focalPix = std::max ( width, height ) * exifReader.getFocal() / ccdw;
+        focalPix = std::max ( width, height ) * focalLength_mm / ccdw;
       }
     }
     else
@@ -407,13 +412,23 @@ int main(int argc, char **argv)
       focalPix = -1.0;
     }
 
-
     // Build intrinsic parameter related to the view
     std::shared_ptr<IntrinsicBase> intrinsic (NULL);
     if (focalPix > 0 && ppx > 0 && ppy > 0 && width > 0 && height > 0)
     {
+      EINTRINSIC camera_model = e_User_camera_model;
+      // If no user input choose a default camera model
+      if(camera_model == PINHOLE_CAMERA_START)
+      {
+        // Use standard lens with radial distortion
+        camera_model = PINHOLE_CAMERA_RADIAL3;
+        // If the focal lens is short, the fisheye model should fit better.
+        if(focalLength_mm > 0.0 && focalLength_mm < 15)
+          camera_model = PINHOLE_CAMERA_FISHEYE;
+      }
+
       // Create the desired camera type
-      switch(e_User_camera_model)
+      switch(camera_model)
       {
         case PINHOLE_CAMERA:
           intrinsic = std::make_shared<Pinhole_Intrinsic>
