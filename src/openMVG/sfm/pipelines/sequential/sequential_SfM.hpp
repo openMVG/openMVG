@@ -122,7 +122,7 @@ private:
 
   // Extension of the file format to store intermediate reconstruction files.
   std::string _sfmdataInterFileExtension = ".ply";
-  ESfM_Data _sfmdataInterFilter = ESfM_Data(VIEWS | EXTRINSICS | INTRINSICS | STRUCTURE);
+  ESfM_Data _sfmdataInterFilter = ESfM_Data(ALL);
 
   // Parameter
   bool _userInteraction = true;
