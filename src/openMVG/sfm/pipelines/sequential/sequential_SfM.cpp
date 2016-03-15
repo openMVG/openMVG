@@ -97,8 +97,8 @@ void SequentialSfMReconstructionEngine::RobustResectionOfImages(
   std::vector<size_t> vec_possible_resection_indexes;
   while (FindImagesWithPossibleResection(vec_possible_resection_indexes, set_remainingViewId))
   {
-    // std::cout << "Resection group start " << resectionGroupIndex << " with " << vec_possible_resection_indexes.size() << " images.\n";
-
+    auto chrono_start = std::chrono::steady_clock::now();
+    std::cout << "Resection group start " << resectionGroupIndex << " with " << vec_possible_resection_indexes.size() << " images.\n";
     bool bImageAdded = false;
     // Add images to the 3D reconstruction
     for (const size_t possible_resection_index: vec_possible_resection_indexes )
@@ -110,33 +110,43 @@ void SequentialSfMReconstructionEngine::RobustResectionOfImages(
       if (!bResect)
       {
         set_rejectedViewId.insert(possible_resection_index);
-        std::cout << "\nResection of image: " << possible_resection_index << " was not possible." << std::endl;
+        std::cout << "\nResection of image " << currentIndex << " ID=" << possible_resection_index << " was not possible." << std::endl;
       }
       else
       {
         set_reconstructedViewId.insert(possible_resection_index);
-        std::cout << "\nResection of image: " << possible_resection_index << " succeed." << std::endl;
+        std::cout << "\nResection of image: " << currentIndex << " ID=" << possible_resection_index << " succeed." << std::endl;
       }
       set_remainingViewId.erase(possible_resection_index);
     }
+    std::cout << "Resection of " << vec_possible_resection_indexes.size() << " new images took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - chrono_start).count() << " msec." << std::endl;
 
     if (bImageAdded)
     {
-      // Scene logging as ply for visual debug
-      std::ostringstream os;
-      os << std::setw(8) << std::setfill('0') << resectionGroupIndex << "_Resection";
-      Save(_sfm_data, stlplus::create_filespec(_sOutDirectory, os.str(), _sfmdataInterFileExtension), _sfmdataInterFilter);
-
-      // std::cout << "Global Bundle start, resection group index: " << resectionGroupIndex << ".\n";
+      if((resectionGroupIndex % 30) == 0)
+      {
+        chrono_start = std::chrono::steady_clock::now();
+        // Scene logging as ply for visual debug
+        std::ostringstream os;
+        os << std::setw(8) << std::setfill('0') << resectionGroupIndex << "_Resection";
+        Save(_sfm_data, stlplus::create_filespec(_sOutDirectory, os.str(), _sfmdataInterFileExtension), _sfmdataInterFilter);
+        std::cout << "Save of file " << os.str() << " took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - chrono_start).count() << " msec." << std::endl;
+      }
+      std::cout << "Global Bundle start, resection group index: " << resectionGroupIndex << ".\n";
+      chrono_start = std::chrono::steady_clock::now();
       int bundleAdjustmentIteration = 0;
+      const std::size_t nbOutliersThreshold = 50;
       // Perform BA until all point are under the given precision
       do
       {
-        // std::cout << "Resection group index: " << resectionGroupIndex << ", bundle iteration: " << bundleAdjustmentIteration << "\n";
+        auto chrono2_start = std::chrono::steady_clock::now();
         BundleAdjustment();
+        std::cout << "Resection group index: " << resectionGroupIndex << ", bundle iteration: " << bundleAdjustmentIteration
+                  << " took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - chrono2_start).count() << " msec." << std::endl;
         ++bundleAdjustmentIteration;
       }
-      while (badTrackRejector(4.0, 50) != 0);
+      while (badTrackRejector(4.0, nbOutliersThreshold) != 0);
+      std::cout << "Bundle with " << bundleAdjustmentIteration << " iterations took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - chrono_start).count() << " msec." << std::endl;
     }
     ++resectionGroupIndex;
   }
@@ -869,6 +879,7 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
   std::vector<size_t> & vec_possible_indexes,
   std::set<size_t>& set_remainingViewId) const
 {
+  auto chrono_start = std::chrono::steady_clock::now();
   // Threshold used to select the best images
   static const float dThresholdGroup = 0.75f;
 
@@ -947,6 +958,7 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
   {
     vec_possible_indexes.push_back(vec_putative[i].first);
   }
+  std::cout << "FindImagesWithPossibleResection with " << vec_possible_indexes.size() << " images took: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - chrono_start).count() << " msec" << std::endl;
   return true;
 }
 
@@ -1284,7 +1296,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
         if (!map_tracksCommonIJ.empty())
         {
           std::cout
-            << "\n--Triangulated 3D points [" << I << "-" << J << "]:"
+            << "--Triangulated 3D points [" << I << "-" << J << "]:"
             << "\n\t#Track extented: " << extented_track
             << "\n\t#Validated/#Possible: " << new_added_track << "/" << new_putative_track
             << "\n\t#3DPoint for the entire scene: " << _sfm_data.GetLandmarks().size() << std::endl;
@@ -1326,6 +1338,7 @@ size_t SequentialSfMReconstructionEngine::badTrackRejector(double dPrecision, si
   const size_t nbOutliers_residualErr = RemoveOutliers_PixelResidualError(_sfm_data, dPrecision, 2);
   const size_t nbOutliers_angleErr = RemoveOutliers_AngleError(_sfm_data, 2.0);
 
+  std::cout << "badTrackRejector: nbOutliers_residualErr: " << nbOutliers_residualErr << ", nbOutliers_angleErr: " << nbOutliers_angleErr << "\n";
   return (nbOutliers_residualErr + nbOutliers_angleErr) > count;
 }
 
