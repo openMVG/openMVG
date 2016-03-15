@@ -447,8 +447,18 @@ int main(int argc, char **argv)
             (width, height, focalPix, ppx, ppy, 0.0, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
         break;
         case PINHOLE_CAMERA_FISHEYE:
-          intrinsic =std::make_shared<Pinhole_Intrinsic_Fisheye>
-            (width, height, focalPix, ppx, ppy, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
+        {
+          if(sCamName == "GoPro")
+          {
+            intrinsic =std::make_shared<Pinhole_Intrinsic_Fisheye>
+              (width, height, focalPix, ppx, ppy, 0.0524, 0.0094, -0.0037, -0.0004);
+          }
+          else
+          {
+            intrinsic =std::make_shared<Pinhole_Intrinsic_Fisheye>
+              (width, height, focalPix, ppx, ppy, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
+          }
+        }
         break;
         default:
           std::cerr << "Error: unknown camera model: " << (int) e_User_camera_model << std::endl;
