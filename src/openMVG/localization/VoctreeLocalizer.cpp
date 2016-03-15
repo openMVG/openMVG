@@ -363,8 +363,10 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
       return false;
     }
     
+    voctree::SparseHistogram histo;
     std::vector<voctree::Word> words = _voctree.quantize(currRecoRegions._regions.Descriptors());
-    _database.insert(id_view, words);
+    voctree::computeSparseHistogram(words, histo);
+    _database.insert(id_view, histo);
 
     // Filter descriptors to keep only the 3D reconstructed points
     currRecoRegions.filterRegions(observationsPerView[id_view]);

@@ -14,8 +14,6 @@
 namespace openMVG{
 namespace voctree{
 
-typedef uint32_t DocId;
-
 /**
  * @brief Struct representing a single database match.
  *
@@ -38,8 +36,6 @@ struct DocMatch
   }
 };
 
-// Remove these, just make docs more confusing
-typedef std::vector<Word> Document;
 typedef std::vector<DocMatch> DocMatches;
 
 /**
@@ -49,9 +45,6 @@ typedef std::vector<DocMatch> DocMatches;
 class Database
 {
 public:
-  
-  typedef std::map<Word, std::vector<IndexT>> SparseHistogram;
-
   /**
    * @brief Constructor
    *
@@ -67,7 +60,7 @@ public:
    * @param document The set of quantized words in a document/image.
    * \return An ID representing the inserted document.
    */
-  DocId insert(DocId doc_id, const std::vector<Word>& document);
+  DocId insert(DocId doc_id, const SparseHistogram& document);
 
   /**
    * @brief Perform a sanity check of the database by querying each document
@@ -95,15 +88,6 @@ public:
    * @param[out] matches  IDs and scores for the top N matching database documents.
    */
   void find(const SparseHistogram& query, size_t N, std::vector<DocMatch>& matches, const std::string &distanceMethod = "classic") const;
-  
-    /**
-   * Given a list of visual words associated to the features of a document it computes the 
-   * vector of unique weighted visual words
-   * 
-   * @param[in] document a list of (possibly repeated) visual words
-   * @param[out] v the vector of visual words
-   */
-  void computeVector(const std::vector<Word>& document, SparseHistogram& v) const;
 
   /**
    * @brief Compute the TF-IDF weights of all the words. To be called after inserting a corpus of
@@ -136,6 +120,11 @@ public:
     archive(word_files_, word_weights_, database_);
   }
 
+  const SparseHistogramPerImage& getSparseHistogramPerImage() const
+  {
+    return database_;
+  }
+  
 private:
 
   struct WordFrequency
@@ -166,11 +155,11 @@ private:
   /// @todo Use sorted vector?
   // typedef std::vector< std::pair<Word, float> > DocumentVector;
   
-  friend std::ostream& operator<<(std::ostream& os, const Database::SparseHistogram &dv);	
+  friend std::ostream& operator<<(std::ostream& os, const SparseHistogram &dv);	
 
   std::vector<InvertedFile> word_files_;
   std::vector<float> word_weights_;
-  std::map<DocId, SparseHistogram> database_; // Precomputed for inserted documents
+  SparseHistogramPerImage database_; // Precomputed for inserted documents
 
 
   /**

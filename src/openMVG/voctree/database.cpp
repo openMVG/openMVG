@@ -10,7 +10,7 @@
 namespace openMVG{
 namespace voctree{
 
-std::ostream& operator<<(std::ostream& os, const Database::SparseHistogram &dv)	
+std::ostream& operator<<(std::ostream& os, const SparseHistogram &dv)	
 {
 	for( const auto &e : dv )
 	{
@@ -24,25 +24,23 @@ Database::Database(uint32_t num_words)
 : word_files_(num_words),
 word_weights_( num_words, 1.0f ) { }
 
-DocId Database::insert(DocId doc_id, const std::vector<Word>& document)
+DocId Database::insert(DocId doc_id, const SparseHistogram& document)
 {
   // Ensure that the new document to insert is not already there.
   assert(database_.find(doc_id) == database_.end());
 
   // For each word, retrieve its inverted file and increment the count for doc_id.
-  for(std::vector<Word>::const_iterator it = document.begin(), end = document.end(); it != end; ++it)
+  for(SparseHistogram::const_iterator it = document.begin(), end = document.end(); it != end; ++it)
   {
-    Word word = *it;
+    Word word = it->first;
     InvertedFile& file = word_files_[word];
     if(file.empty() || file.back().id != doc_id)
-      file.push_back(WordFrequency(doc_id, 1));
+      file.push_back(WordFrequency(doc_id, it->second.size()));
     else
-      file.back().count++;
+      file.back().count += it->second.size();
   }
 
-  // Precompute the document vector to compare queries against.
-  SparseHistogram& newDoc = database_[doc_id];
-  computeVector(document, newDoc);
+  database_[doc_id] = document;
 
   return doc_id;
 }
@@ -91,7 +89,7 @@ void Database::find(const std::vector<Word>& document, size_t N, std::vector<Doc
   SparseHistogram query;
   // from the list of visual words associated with each feature in the document/image
   // generate the (sparse) histogram of the visual words 
-  computeVector(document, query);
+  computeSparseHistogram(document, query);
 
   find( query, N, matches, distanceMethod);
 }
@@ -171,26 +169,6 @@ void Database::loadWeights(const std::string& file)
   catch(std::ifstream::failure& e)
   {
     throw std::runtime_error((boost::format("Failed to load vocabulary weights file '%s'") % file).str());
-  }
-}
-
-/**
- * Given a list of visual words associated to the features of a document it computes the 
- * vector of unique weighted visual words
- * 
- * @param[in] document a list of (possibly repeated) visual words
- * @param[out] v the vector of visual words (ie the visual word histogram of the image)
- */
-void Database::computeVector(const std::vector<Word>& document, SparseHistogram& v) const
-{
-  // for each visual word in the list
-  for(std::size_t i = 0; i < document.size(); ++i)
-  {
-    // update its weighted count inside the map
-    // the map v contains only the visual words that are associated to some features
-    // the visual words in v are unique unlikely the document
-    Word word = document[i];
-    v[word].push_back(i);
   }
 }
 

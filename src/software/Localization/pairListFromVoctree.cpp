@@ -34,9 +34,6 @@ typedef openMVG::features::Descriptor<unsigned char, DIMENSION> DescriptorUChar;
 
 typedef size_t ImageID;
 
-// For each image ID it contains the list of visual words
-typedef std::map<ImageID, openMVG::voctree::Document> DocumentMap;
-
 // just a list of doc id
 typedef std::vector< ImageID > ListOfImageID;
 
@@ -290,10 +287,8 @@ int main(int argc, char** argv)
   //*********************************************************
 
   POPART_COUT("Reading descriptors from " << keylist);
-  DocumentMap documents;
-
   auto detect_start = std::chrono::steady_clock::now();
-  size_t numTotFeatures = openMVG::voctree::populateDatabase<DescriptorUChar>(keylist, tree, db, documents, nbMaxDescriptors);
+  size_t numTotFeatures = openMVG::voctree::populateDatabase<DescriptorUChar>(keylist, tree, db, nbMaxDescriptors);
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - detect_start);
 
   if(numTotFeatures == 0)
@@ -302,7 +297,7 @@ int main(int argc, char** argv)
     return EXIT_FAILURE;
   }
 
-  POPART_COUT("Done! " << documents.size() << " sets of descriptors read for a total of " << numTotFeatures << " features");
+  POPART_COUT("Done! " << db.getSparseHistogramPerImage().size() << " sets of descriptors read for a total of " << numTotFeatures << " features");
   POPART_COUT("Reading took " << detect_elapsed.count() << " sec");
 
   if(!withWeights)
@@ -331,9 +326,9 @@ int main(int argc, char** argv)
   #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for
   #endif
-  for(std::size_t i = 0; i < documents.size(); ++i)
+  for(std::size_t i = 0; i < db.getSparseHistogramPerImage().size(); ++i)
   {
-    DocumentMap::const_iterator docIt = documents.begin();
+    openMVG::voctree::SparseHistogramPerImage::const_iterator docIt = db.getSparseHistogramPerImage().cbegin();
     std::advance(docIt, i);
     std::vector<openMVG::voctree::DocMatch> matches;
     

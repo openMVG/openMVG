@@ -25,8 +25,6 @@ namespace po = boost::program_options;
 typedef openMVG::features::Descriptor<float, DIMENSION> DescriptorFloat;
 typedef openMVG::features::Descriptor<unsigned char, DIMENSION> DescriptorUChar;
 
-typedef std::map<size_t, openMVG::voctree::Document> DocumentMap;
-
 /*
  * This program is used to load the sift descriptors from a list of files and create a vocabulary tree
  */
@@ -129,10 +127,9 @@ int main(int argc, char** argv)
   POPART_COUT("Saving vocabulary tree as " << treeName);
   builder.tree().save(treeName);
 
-
-  DocumentMap documents;
+  openMVG::voctree::SparseHistogramPerImage allSparseHistograms;
   // temporary vector used to save all the visual word for each image before adding them to documents
-  vector<openMVG::voctree::Word> imgVisualWords;
+  std::vector<openMVG::voctree::Word> imgVisualWords;
   POPART_COUT("Quantizing the features");
   size_t offset = 0; ///< this is used to align to the features of a given image in 'feature'
   detect_start = std::chrono::steady_clock::now();
@@ -146,17 +143,19 @@ int main(int argc, char** argv)
     // allocate as many visual words as the number of the features in the image
     imgVisualWords.resize(descRead[i], 0);
 
-	#pragma omp parallel for
+    #pragma omp parallel for
     for(size_t j = 0; j < descRead[i]; ++j)
     {
       //	store the visual word associated to the feature in the temporary list
       imgVisualWords[j] = builder.tree().quantize(descriptors[ j + offset ]);
     }
+    openMVG::voctree::SparseHistogram histo;
+    openMVG::voctree::computeSparseHistogram(imgVisualWords, histo);
     // add the vector to the documents
-    documents[ i ] = imgVisualWords;
+    allSparseHistograms[i] = histo;
 
     // update the offset
-    offset += descRead[ i ];
+    offset += descRead[i];
   }
   detect_end = std::chrono::steady_clock::now();
   detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
@@ -166,8 +165,8 @@ int main(int argc, char** argv)
   POPART_COUT("Creating the database...");
   // Add each object (document) to the database
   openMVG::voctree::Database db(builder.tree().words());
-  POPART_COUT("\tfound " << documents.size() << " documents");
-  for(const auto &doc : documents)
+  POPART_COUT("\tfound " << allSparseHistograms.size() << " documents");
+  for(const auto &doc : allSparseHistograms)
   {
     db.insert(doc.first, doc.second);
   }
@@ -192,7 +191,7 @@ int main(int argc, char** argv)
     double recval = 0;
     POPART_COUT("Sanity check: querying the database with the same documents");
     // for each document
-    for(const auto &doc : documents)
+    for(const auto &doc : allSparseHistograms)
     {
       detect_start = std::chrono::steady_clock::now();
       // retrieve the best 4 matches
@@ -224,7 +223,7 @@ int main(int argc, char** argv)
       POPART_COUT("there are " << wrong << " wrong matches");
     else
       POPART_COUT("Yay! no wrong matches!");
-    POPART_COUT("\nrecval: " << recval / (double) (documents.size()));
+    POPART_COUT("\nrecval: " << recval / (double) (allSparseHistograms.size()));
   }
 
 

@@ -40,7 +40,6 @@ namespace bfs = boost::filesystem;
 typedef openMVG::features::Descriptor<float, DIMENSION> DescriptorFloat;
 typedef openMVG::features::Descriptor<unsigned char, DIMENSION> DescriptorUChar;
 
-typedef std::map<size_t, openMVG::voctree::Document> DocumentMap;
 
 std::ostream& operator<<(std::ostream& os, const openMVG::voctree::DocMatches &matches)
 {
@@ -71,15 +70,18 @@ std::string myToString(std::size_t i, std::size_t zeroPadding)
   return ss.str();
 }
 
-bool saveDocumentMap(const std::string &filename, const DocumentMap &docs)
+bool saveSparseHistogramPerImage(const std::string &filename, const openMVG::voctree::SparseHistogramPerImage &docs)
 {
   std::ofstream fileout(filename);
   if(!fileout.is_open())
     return false;
 
-  for(const auto &d : docs)
+  for(const auto& d: docs)
   {
-    fileout << "d{" << d.first << "} = " << d.second << "\n";
+    fileout << "d{" << d.first << "} = [";
+    for(const auto& i: d.second)
+      fileout << i.first << ", ";
+    fileout << "]\n";
   }
 
   fileout.close();
@@ -224,10 +226,8 @@ int main(int argc, char** argv)
   //*********************************************************
 
   POPART_COUT("Reading descriptors from " << keylist);
-  DocumentMap documents;
-
   auto detect_start = std::chrono::steady_clock::now();
-  size_t numTotFeatures = openMVG::voctree::populateDatabase<DescriptorUChar>(keylist, tree, db, documents, Nmax);
+  size_t numTotFeatures = openMVG::voctree::populateDatabase<DescriptorUChar>(keylist, tree, db, Nmax);
   auto detect_end = std::chrono::steady_clock::now();
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
 
@@ -237,12 +237,12 @@ int main(int argc, char** argv)
     return EXIT_FAILURE;
   }
 
-  POPART_COUT("Done! " << documents.size() << " sets of descriptors read for a total of " << numTotFeatures << " features");
+  POPART_COUT("Done! " << db.getSparseHistogramPerImage().size() << " sets of descriptors read for a total of " << numTotFeatures << " features");
   POPART_COUT("Reading took " << detect_elapsed.count() << " sec");
   
   if(vm.count("saveDocumentMap"))
   {
-    saveDocumentMap(documentMapFile, documents);
+    saveSparseHistogramPerImage(documentMapFile, db.getSparseHistogramPerImage());
   }
 
   if(!withWeights)
@@ -271,8 +271,7 @@ int main(int argc, char** argv)
     fileout.open(outfile, ofstream::out);
   }
 
-
-  std::map<size_t, openMVG::voctree::Database::SparseHistogram> histograms;
+  std::map<size_t, openMVG::voctree::SparseHistogram> histograms;
 
   // if the query list is not provided
   if(!withQuery)
@@ -403,11 +402,11 @@ int main(int argc, char** argv)
       bfs::create_symlink(absoluteFilename, dirname / sylinkName);
       
       // Perform features matching
-      const openMVG::voctree::Database::SparseHistogram& currentHistogram = histograms.at(docMatches.first);
+      const openMVG::voctree::SparseHistogram& currentHistogram = histograms.at(docMatches.first);
       
       for (const auto comparedPicture : matches)
       {
-        openMVG::voctree::Database::SparseHistogram comparedHistogram = histograms.at(comparedPicture.id);
+        openMVG::voctree::SparseHistogram comparedHistogram = histograms.at(comparedPicture.id);
         openMVG::Pair indexImagePair = openMVG::Pair(docMatches.first, comparedPicture.id);
         
         //Get the regions for the current view pair.
@@ -433,7 +432,11 @@ int main(int argc, char** argv)
             Regions* siftRegionsRight = regions_provider->regions_per_view[comparedPicture.id].get();
 
             double dist = siftRegionsLeft->SquaredDescriptorDistance(currentLeaf.second[0], siftRegionsRight, leafRightIt->second[0]);
-            openMVG::matching::IndMatch currentMatch = openMVG::matching::IndMatch( currentLeaf.second[0], leafRightIt->second[0], dist);
+            openMVG::matching::IndMatch currentMatch = openMVG::matching::IndMatch( currentLeaf.second[0], leafRightIt->second[0]
+#ifdef OPENMVG_DEBUG_MATCHING
+                    , dist
+#endif
+                    );
             featureMatches.push_back(currentMatch);
 
             // TODO: distance computation
@@ -489,7 +492,8 @@ int main(int argc, char** argv)
       }
     }
   }
-  
+
+#ifdef OPENMVG_DEBUG_MATCHING
   std::cout << " ---------------------------- \n" << endl;
   std::cout << "Matching distances - Histogram: \n" << endl;
   std::map<int,int> stats;
@@ -512,7 +516,8 @@ int main(int argc, char** argv)
   {
     std::cout << stat.first << "\t" << stat.second << std::endl;
   }
-  
+#endif
+
   if(!withQuery)
   {
     if(wrong)

@@ -25,7 +25,6 @@ template<class DescriptorT, class VocDescriptorT>
 std::size_t populateDatabase(const std::string &fileFullPath,
                              const VocabularyTree<VocDescriptorT> &tree,
                              Database &db,
-                             std::map<size_t, Document> &documents,
                              const int Nmax = 0);
 
 /**

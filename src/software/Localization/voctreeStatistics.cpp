@@ -38,8 +38,6 @@ namespace bfs = boost::filesystem;
 typedef openMVG::features::Descriptor<float, DIMENSION> DescriptorFloat;
 typedef openMVG::features::Descriptor<unsigned char, DIMENSION> DescriptorUChar;
 
-typedef std::map<size_t, openMVG::voctree::Document> DocumentMap;
-
 std::ostream& operator<<(std::ostream& os, const openMVG::voctree::DocMatches &matches)
 {
   os << "[ ";
@@ -67,21 +65,6 @@ std::string myToString(std::size_t i, std::size_t zeroPadding)
   stringstream ss;
   ss << std::setw(zeroPadding) << std::setfill('0') << i;
   return ss.str();
-}
-
-bool saveDocumentMap(const std::string &filename, const DocumentMap &docs)
-{
-  std::ofstream fileout(filename);
-  if(!fileout.is_open())
-    return false;
-
-  for(const auto &d : docs)
-  {
-    fileout << "d{" << d.first << "} = " << d.second << "\n";
-  }
-
-  fileout.close();
-  return true;
 }
 
 static const std::string programDescription =
@@ -192,10 +175,8 @@ int main(int argc, char** argv)
   //*********************************************************
 
   POPART_COUT("Reading descriptors from " << keylist);
-  DocumentMap documents;
-
   auto detect_start = std::chrono::steady_clock::now();
-  size_t numTotFeatures = openMVG::voctree::populateDatabase<DescriptorUChar>(keylist, tree, db, documents);
+  size_t numTotFeatures = openMVG::voctree::populateDatabase<DescriptorUChar>(keylist, tree, db);
   auto detect_end = std::chrono::steady_clock::now();
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
 
@@ -205,7 +186,7 @@ int main(int argc, char** argv)
     return EXIT_FAILURE;
   }
 
-  POPART_COUT("Done! " << documents.size() << " sets of descriptors read for a total of " << numTotFeatures << " features");
+  POPART_COUT("Done! " << db.getSparseHistogramPerImage().size() << " sets of descriptors read for a total of " << numTotFeatures << " features");
   POPART_COUT("Reading took " << detect_elapsed.count() << " sec");
   
 

@@ -27,7 +27,6 @@ template<class DescriptorT, class VocDescriptorT>
 std::size_t populateDatabase(const std::string &fileFullPath,
                              const VocabularyTree<VocDescriptorT> &tree,
                              Database &db,
-                             std::map<size_t, Document> &documents,
                              const int Nmax)
 {
   std::map<IndexT, std::string> descriptorsFiles;
@@ -38,7 +37,6 @@ std::size_t populateDatabase(const std::string &fileFullPath,
   std::cout << "Reading the descriptors from " << descriptorsFiles.size() <<" files..." << std::endl;
   boost::progress_display display(descriptorsFiles.size());
 
-  
   // Run through the path vector and read the descriptors
   for(const auto &currentFile : descriptorsFiles)
   {
@@ -49,13 +47,10 @@ std::size_t populateDatabase(const std::string &fileFullPath,
     loadDescsFromBinFile(currentFile.second, descriptors, false, Nmax);
     size_t result = descriptors.size();
     
-    std::vector<openMVG::voctree::Word> imgVisualWords = tree.quantize(descriptors);
-    
-    // Add the vector to the documents
-    documents[currentFile.first] = imgVisualWords;
+    SparseHistogram newDoc =  tree.quantizeToSparse(descriptors);
 
     // Insert document in database
-    db.insert(currentFile.first, imgVisualWords);
+    db.insert(currentFile.first, newDoc);
 
     // Update the overall counter
     numDescriptors += result;
@@ -67,28 +62,24 @@ std::size_t populateDatabase(const std::string &fileFullPath,
   return numDescriptors;
 }
 
-
 template<class DescriptorT, class VocDescriptorT>
 std::size_t populateDatabase(const std::string &fileFullPath,
                              const VocabularyTree<VocDescriptorT> &tree,
                              Database &db,
-                             std::map<size_t, Document> &documents,
                              std::map<size_t, std::vector<DescriptorT>> &allDescriptors,
                              const int Nmax)
 {
   std::map<IndexT, std::string> descriptorsFiles;
   getListOfDescriptorFiles(fileFullPath, descriptorsFiles);
   std::size_t numDescriptors = 0;
-  
+
   // Read the descriptors
   std::cout << "Reading the descriptors from " << descriptorsFiles.size() <<" files..." << std::endl;
   boost::progress_display display(descriptorsFiles.size());
 
-  
   // Run through the path vector and read the descriptors
   for(const auto &currentFile : descriptorsFiles)
   {
-    
     std::vector<DescriptorT> descriptors;
 
     // Read the descriptors
@@ -97,13 +88,10 @@ std::size_t populateDatabase(const std::string &fileFullPath,
     
     allDescriptors[currentFile.first] = descriptors;
     
-    std::vector<openMVG::voctree::Word> imgVisualWords = tree.quantize(descriptors);
+    SparseHistogram newDoc = tree.quantizeToSparse(descriptors);
     
-    // Add the vector to the documents
-    documents[currentFile.first] = imgVisualWords;
-
     // Insert document in database
-    db.insert(currentFile.first, imgVisualWords);
+    db.insert(currentFile.first, newDoc);
 
     // Update the overall counter
     numDescriptors += result;
@@ -162,7 +150,7 @@ void queryDatabase(const std::string &fileFullPath,
                    const Database &db,
                    size_t numResults,
                    std::map<size_t, DocMatches> &allDocMatches,
-                   std::map<size_t, Database::SparseHistogram> &documents,
+                   std::map<size_t, SparseHistogram> &documents,
                    const std::string &distanceMethod,
                    const int Nmax)
 {
@@ -170,39 +158,41 @@ void queryDatabase(const std::string &fileFullPath,
   getListOfDescriptorFiles(fileFullPath, descriptorsFiles);
   
   // Read the descriptors
-  std::cout << "Reading the descriptors from " << descriptorsFiles.size() <<" files..." << std::endl;
+  std::cout << "queryDatabase: Reading the descriptors from " << descriptorsFiles.size() <<" files..." << std::endl;
   boost::progress_display display(descriptorsFiles.size());
 
+  #ifdef OPENMVG_USE_OPENMP
+    #pragma omp parallel for
+  #endif
   // Run through the path vector and read the descriptors
-  for(const auto &currentFile : descriptorsFiles)
+  for(std::size_t i = 0; i < descriptorsFiles.size(); ++i)
   {
+    std::map<IndexT, std::string>::const_iterator currentFileIt = descriptorsFiles.cbegin();
+    std::advance(currentFileIt, i);
     std::vector<DescriptorT> descriptors;
 
     // Read the descriptors
-    loadDescsFromBinFile(currentFile.second, descriptors, false, Nmax);
-    
-    // quantize the descriptors
-    std::vector<openMVG::voctree::Word> imgVisualWords = tree.quantize(descriptors);
+    loadDescsFromBinFile(currentFileIt->second, descriptors, false, Nmax);
 
+    // quantize the descriptors
+    SparseHistogram query = tree.quantizeToSparse(descriptors);
 
     openMVG::voctree::DocMatches docMatches;
     // query the database
-    
-    Database::SparseHistogram query;
-    // from the list of visual words associated with each feature in the document/image
-    // generate the (sparse) histogram of the visual words 
-    db.computeVector(imgVisualWords, query);
-
     db.find(query, numResults, docMatches, distanceMethod);
-    // db.find(imgVisualWords, numResults, docMatches, distanceMethod);
-    
-    // add the vector to the documents
-    documents[currentFile.first] = query;
-    
-    // add the matches to the result vector
-    allDocMatches[currentFile.first] = docMatches;
-    
-    ++display;
+
+    #ifdef OPENMVG_USE_OPENMP
+      #pragma omp critical
+    #endif
+    {
+      // add the vector to the documents
+      documents[currentFileIt->first] = query;
+
+      // add the matches to the result vector
+      allDocMatches[currentFileIt->first] = docMatches;
+
+      ++display;
+    }
   }
 }
 
@@ -228,7 +218,7 @@ void voctreeStatistics(
   getListOfDescriptorFiles(fileFullPath, descriptorsFiles);
   
   // Read the descriptors
-  std::cout << "Reading the descriptors from " << descriptorsFiles.size() << " files..." << std::endl;
+  std::cout << "Reading the descriptors from " << descriptorsFiles.size() << " files." << std::endl;
 
   // Run through the path vector and read the descriptors
   for(const auto &currentFile : descriptorsFiles)
@@ -237,13 +227,9 @@ void voctreeStatistics(
 
     // Read the descriptors
     loadDescsFromBinFile(currentFile.second, descriptors, false);
-    
-    // quantize the descriptors
-    std::vector<openMVG::voctree::Word> imgVisualWords = tree.quantize(descriptors);
 
     // query the database
-    Database::SparseHistogram query;
-    db.computeVector(imgVisualWords, query);
+    SparseHistogram query = tree.quantizeToSparse(descriptors);
     std::map<int,int> localHisto;
     
     for(auto q: query)
@@ -260,7 +246,7 @@ void voctreeStatistics(
         localHisto[nb] += 1;   
     }
     
-    std::cout << "Histogramme de " << currentFile.first << std::endl;
+    std::cout << "Histogram of " << currentFile.first << std::endl;
     
     for(auto itHisto = localHisto.begin(); itHisto != localHisto.end(); itHisto++)
     {

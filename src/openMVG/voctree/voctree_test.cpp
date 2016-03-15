@@ -31,7 +31,11 @@ TEST(database, databaseIO) {
   // Create the databases
   Database source_db( documents_to_insert.size() * documents_to_insert[0].size() ) ;
   for(int i = 0; i < documents_to_insert.size(); ++i)
-    source_db.insert(i, documents_to_insert[i]);
+  {
+    SparseHistogram histo;
+    computeSparseHistogram(documents_to_insert[i], histo);
+    source_db.insert(i, histo);
+  }
 
   // Compute weights
   source_db.computeTfIdfWeights( );

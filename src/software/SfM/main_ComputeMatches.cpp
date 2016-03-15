@@ -56,6 +56,7 @@ enum EPairMode
 
 void getStatsMap(const PairWiseMatches& map)
 {
+#ifdef OPENMVG_DEBUG_MATCHING
       std::map<int,int> stats;
       for( const auto& imgMatches: map)
       {
@@ -72,6 +73,7 @@ void getStatsMap(const PairWiseMatches& map)
       {
         std::cout << stat.first << "\t" << stat.second << std::endl;
       }
+#endif
 }
 
 /// Compute corresponding features between a series of views:
