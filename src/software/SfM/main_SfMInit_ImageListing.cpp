@@ -464,6 +464,17 @@ int main(int argc, char **argv)
           std::cerr << "Error: unknown camera model: " << (int) e_User_camera_model << std::endl;
           return EXIT_FAILURE;
       }
+
+      // Add serial number
+      if( bHaveValidExifMetadata )
+      {
+        // Create custom serial number
+        std::string customSerialNumber = "";
+        customSerialNumber += exifReader.getSerialNumber();
+        customSerialNumber += exifReader.getLensSerialNumber();
+
+        intrinsic->setSerialNumber(customSerialNumber);
+      }
     }
     else
     {
