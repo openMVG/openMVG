@@ -9,7 +9,6 @@ ADD_SUBDIRECTORY(multiview_robust_essential_spherical)
 ADD_SUBDIRECTORY(multiview_robust_essential_ba)
 
 ADD_SUBDIRECTORY(exif_Parsing)
-ADD_SUBDIRECTORY(exif_sensorWidthDatabase)
 
 ADD_SUBDIRECTORY(features_repeatability)
 ADD_SUBDIRECTORY(features_affine_demo)
