@@ -23,7 +23,7 @@ Arguments description:
 
 **Optional parameters:**
  
-  - [-f|--force: Force to recompute data]
+  - **[-f|--force: Force to recompute data]**
 
     - 0: (default) reload previously computed data (useful when you have kill the process and want to continue to compute)
     - 1: useful when you change have changed a command line parameter, force recomputing and re-saving.
