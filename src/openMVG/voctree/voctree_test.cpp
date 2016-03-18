@@ -62,9 +62,9 @@ TEST(database, databaseIO) {
     // Create match vectors
     vector<DocMatch> source_match(1), reload_match(1);
     // Query both databases with the same document
-    source_db.find(documents_to_insert[i], 1, source_match);
-    reload_db.find(documents_to_insert[i], 1, reload_match);
-    // Check we have the same matche
+    source_db.find(documents_to_insert[i], 1, source_match, "classic");
+    reload_db.find(documents_to_insert[i], 1, reload_match, "classic");
+    // Check we have the same match
     EXPECT_EQ(source_match[0].id, reload_match[0].id);
     // Check the matches scores are 0 (or near)
     EXPECT_NEAR(0, source_match[0].score, 0.001);

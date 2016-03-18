@@ -138,7 +138,7 @@ int main(int argc, char** argv)
           ("matlab,", bpo::bool_switch(&matlabOutput)->default_value(matlabOutput), "It produces an output readable by matlab")
           ("outfile,o", bpo::value<string>(&outfile), "Name of the output file")
           ("Nmax,n", bpo::value<int>(&Nmax)->default_value(0), "Number of features extracted from the .feat files")
-          ("distance,d",bpo::value<string>(&distance)->default_value("classic"), "Distance used");
+          ("distance,d",bpo::value<string>(&distance)->default_value("strongCommonPoints"), "Distance used");
 
 
   bpo::variables_map vm;

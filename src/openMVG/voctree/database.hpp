@@ -78,7 +78,7 @@ public:
    * @param      N        The number of matches to return.
    * @param[out] matches  IDs and scores for the top N matching database documents.
    */
-  void find(const std::vector<Word>& document, size_t N, std::vector<DocMatch>& matches, const std::string &distanceMethod = "classic") const;
+  void find(const std::vector<Word>& document, size_t N, std::vector<DocMatch>& matches, const std::string &distanceMethod = "strongCommonPoints") const;
   
     /**
    * @brief Find the top N matches in the database for the query document.
@@ -87,7 +87,7 @@ public:
    * @param      N        The number of matches to return.
    * @param[out] matches  IDs and scores for the top N matching database documents.
    */
-  void find(const SparseHistogram& query, size_t N, std::vector<DocMatch>& matches, const std::string &distanceMethod = "classic") const;
+  void find(const SparseHistogram& query, size_t N, std::vector<DocMatch>& matches, const std::string &distanceMethod = "strongCommonPoints") const;
 
   /**
    * @brief Compute the TF-IDF weights of all the words. To be called after inserting a corpus of
