@@ -16,6 +16,12 @@ class SfM_Data_Structure_Estimation_From_Known_Poses
 {
 public:
 
+  SfM_Data_Structure_Estimation_From_Known_Poses
+  (
+    double max_reprojection_error // pixels
+  );
+
+
   /// Use geometry of the views to compute a putative structure from features and descriptors.
   void run(
     SfM_Data & sfm_data,
@@ -47,6 +53,7 @@ private:
   //--
   matching::PairWiseMatches putatives_matches;
   matching::PairWiseMatches triplets_matches;
+  double max_reprojection_error_;
 };
 
 } // namespace sfm
