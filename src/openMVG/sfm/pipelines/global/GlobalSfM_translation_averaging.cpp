@@ -86,7 +86,6 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
     openMVG::graph::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs);
   KeepOnlyReferencedElement(set_remainingIds, m_vec_initialRijTijEstimates);
 
-  const std::string sOut_directory_("./");
   {
     const std::set<IndexT> index = getIndexT(m_vec_initialRijTijEstimates);
 
