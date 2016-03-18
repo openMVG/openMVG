@@ -79,6 +79,7 @@ TEST(GLOBAL_SFM, RotationAveragingL2_TranslationAveragingL1) {
   EXPECT_TRUE( dResidual < 0.5);
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
+  EXPECT_TRUE( IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
 
 TEST(GLOBAL_SFM, RotationAveragingL1_TranslationAveragingL1) {
@@ -130,6 +131,7 @@ TEST(GLOBAL_SFM, RotationAveragingL1_TranslationAveragingL1) {
   EXPECT_TRUE( dResidual < 0.5);
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
+  EXPECT_TRUE( IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
 
 TEST(GLOBAL_SFM, RotationAveragingL2_TranslationAveragingL2_Chordal) {
@@ -181,6 +183,7 @@ TEST(GLOBAL_SFM, RotationAveragingL2_TranslationAveragingL2_Chordal) {
   EXPECT_TRUE( dResidual < 0.5);
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
+  EXPECT_TRUE( IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
 
 TEST(GLOBAL_SFM, RotationAveragingL2_TranslationAveragingSoftL1) {
@@ -232,6 +235,7 @@ TEST(GLOBAL_SFM, RotationAveragingL2_TranslationAveragingSoftL1) {
   EXPECT_TRUE( dResidual < 0.5);
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
+  EXPECT_TRUE( IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
 
 /* ************************************************************************* */
