@@ -10,7 +10,7 @@ OpenMVS uses OpenMVG scene thanks to a scene importer.
 .. code-block:: c++
 
   # Import the OpenMVG scene to the OpenMVS data format
-  $ InterfaceOpenMVG2 -i PATH/sfm_data.json -o scene.mvs
+  $ InterfaceOpenMVG -i PATH/sfm_data.json -o scene.mvs
 
 **Dense point-cloud reconstruction** for obtaining a complete and accurate as possible point-cloud
 
