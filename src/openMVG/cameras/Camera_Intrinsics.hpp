@@ -25,7 +25,7 @@ struct IntrinsicBase
   unsigned int _w, _h;
   std::string _serialNumber;
 
-  IntrinsicBase(unsigned int w = 0, unsigned int h = 0, std::string serialNumber = ""):_w(w), _h(h), _serialNumber(serialNumber) {}
+  IntrinsicBase(unsigned int w = 0, unsigned int h = 0, const std::string& serialNumber = ""):_w(w), _h(h), _serialNumber(serialNumber) {}
   virtual ~IntrinsicBase() {}
 
   unsigned int w() const {return _w;}
