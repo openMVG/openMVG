@@ -50,16 +50,6 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
   
-  // Create output dir
-  if (!stlplus::folder_exists(sOutFile))
-  {
-    if (!stlplus::folder_create(sOutFile))
-    {
-      std::cerr << "Cannot create output directory." << std::endl;
-      return EXIT_FAILURE;
-    }
-  }
-
   // Load input SfM_Data scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS))) {
