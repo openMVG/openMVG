@@ -109,6 +109,12 @@ bool Rig::initializeCalibration()
                                                      resWitnessCamera[iView].getPose()));
       }
     }
+    if(vRelativePoses.empty())
+    {
+      POPART_CERR("Unable to find candidate poses between the main camera and "
+              "the witness camera " << iLocalizer << "\nAborting...");
+      return false;
+    }
     geometry::Pose3 optimalRelativePose;
     findBestRelativePose(vRelativePoses, iLocalizer, optimalRelativePose );
   
