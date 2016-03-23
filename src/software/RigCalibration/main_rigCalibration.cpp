@@ -302,11 +302,12 @@ int main(int argc, char** argv)
       POPART_COUT("******************************");
       auto detect_start = std::chrono::steady_clock::now();
       localization::LocalizationResult localizationResult;
-      localizer->localize(imageGrey,
-                         param,
-                         hasIntrinsics/*useInputIntrinsics*/,
-                         queryIntrinsics,
-                         localizationResult);
+      const bool ok = localizer->localize(imageGrey,
+                                          param,
+                                          hasIntrinsics/*useInputIntrinsics*/,
+                                          queryIntrinsics,
+                                          localizationResult);
+      assert( ok == localizationResult.isValid() );
       vLocalizationResults.emplace_back(localizationResult);
       auto detect_end = std::chrono::steady_clock::now();
       auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
@@ -337,10 +338,38 @@ int main(int argc, char** argv)
     POPART_COUT("Max time for localization:   " << bacc::max(stats) << " [ms]");
     POPART_COUT("Min time for localization:   " << bacc::min(stats) << " [ms]");
   }
-  POPART_COUT("Rig calibration initialization");
-  rig.initializeCalibration();
-  POPART_COUT("Rig calibration optimization");
-  rig.optimizeCalibration();
+  
+  {
+    // just for statistics purposes
+    const std::size_t numRigCam = rig.nCams();
+    POPART_COUT("\n\n******************************");
+    for(std::size_t idCam = 0; idCam < numRigCam; ++idCam)
+    {
+      auto & currResult = rig.getLocalizationResults(idCam);
+      std::size_t numLocalized = 0;
+      for( auto &curr : currResult)
+      {
+        if(curr.isValid())
+          ++numLocalized;
+      }
+      POPART_COUT("Camera " << idCam << " localized " 
+              << numLocalized << "/" << currResult.size());
+    }
+    
+  }
+  
+  POPART_COUT("Rig calibration initialization...");
+  if(!rig.initializeCalibration())
+  {
+    POPART_CERR("Unable to find a proper initialization for the relative poses! Aborting...");
+    return EXIT_FAILURE;
+  }
+  POPART_COUT("Rig calibration optimization...");
+  if(!rig.optimizeCalibration())
+  {
+    POPART_CERR("Unable to optimize the relative poses! Aborting...");
+    return EXIT_FAILURE;
+  }
   
   // save the rig calibration (subposes)
   rig.saveCalibration(outputFile);
