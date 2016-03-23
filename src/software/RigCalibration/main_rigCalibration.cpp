@@ -187,6 +187,7 @@ int main(int argc, char** argv)
       // parameters for voctree localizer
       POPART_COUT("\tvoctree: " << vocTreeFilepath);
       POPART_COUT("\tweights: " << weightsFilepath);
+      POPART_COUT("\toutfile: " << outputFile);
       POPART_COUT("\talgorithm: " << algostring);
       POPART_COUT("\tresults: " << numResults);
     }
@@ -257,7 +258,7 @@ int main(int argc, char** argv)
   rig::Rig rig;
 
   // Loop over all cameras of the rig
-  for(int idCamera = 0; idCamera < nCam; ++idCamera)
+  for(std::size_t idCamera = 0; idCamera < nCam; ++idCamera)
   {
     POPART_COUT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     POPART_COUT("CAMERA " << idCamera);
@@ -330,7 +331,7 @@ int main(int argc, char** argv)
 
     // print out some time stats
     POPART_COUT("\n\n******************************");
-    POPART_COUT("Localized " << frameCounter << " images");
+    POPART_COUT("Processed " << frameCounter << " images for camera " << idCamera);
     POPART_COUT("Processing took " << bacc::sum(stats) / 1000 << " [s] overall");
     POPART_COUT("Mean time for localization:   " << bacc::mean(stats) << " [ms]");
     POPART_COUT("Max time for localization:   " << bacc::max(stats) << " [ms]");
@@ -369,4 +370,6 @@ int main(int argc, char** argv)
     POPART_COUT("t\n" << pose.translation());
     POPART_COUT("--------------------\n");
   }
+  
+  return EXIT_SUCCESS;
 }
