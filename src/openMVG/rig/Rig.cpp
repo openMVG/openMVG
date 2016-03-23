@@ -1,5 +1,7 @@
 #include "Rig.hpp"
 #include "rig_BA_ceres.hpp"
+
+#include <openMVG/logger.hpp>
 #include <openMVG/sfm/sfm_data_BA_ceres.hpp>
 
 #include <ceres/rotation.h>
@@ -57,6 +59,11 @@ void Rig::setTrackingResult(
 
 bool Rig::initializeCalibration()
 {
+  if(_isInitialized)
+  {
+    POPART_COUT("The rig is already initialized");
+    return _isInitialized;
+  }
   // check that there are cameras
   assert(_vLocalizationResults.size()>0);
   
@@ -125,7 +132,8 @@ bool Rig::initializeCalibration()
       }
     }
   }
-  return true;
+  _isInitialized = true;
+  return _isInitialized;
 }
 
 // From a set of relative pose, find the optimal one for a given tracker iTraker which
@@ -234,6 +242,12 @@ void Rig::displayRelativePoseReprojection(const geometry::Pose3 & relativePose, 
 
 bool Rig::optimizeCalibration()
 {
+  if(!_isInitialized)
+  {
+    POPART_COUT("The rig is yet initialized");
+    return _isInitialized;
+  }
+  
   assert(_vRelativePoses.size() > 0);
   assert(_vLocalizationResults.size() > 0);
   
