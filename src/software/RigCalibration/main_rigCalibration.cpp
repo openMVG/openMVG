@@ -347,7 +347,7 @@ int main(int argc, char** argv)
     {
       auto & currResult = rig.getLocalizationResults(idCam);
       std::size_t numLocalized = 0;
-      for( auto &curr : currResult)
+      for(const auto &curr : currResult)
       {
         if(curr.isValid())
           ++numLocalized;
