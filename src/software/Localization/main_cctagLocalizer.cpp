@@ -11,6 +11,7 @@
 #include <openMVG/image/image_io.hpp>
 #include <openMVG/dataio/FeedProvider.hpp>
 #include <openMVG/localization/LocalizationResult.hpp>
+#include <openMVG/logger.hpp>
 
 #include <boost/filesystem.hpp>
 #include <boost/progress.hpp>
@@ -27,11 +28,8 @@
 #include <chrono>
 
 #if HAVE_ALEMBIC
-#include <openMVG/dataio/AlembicExporter.hpp>
+#include <openMVG/sfm/AlembicExporter.hpp>
 #endif // HAVE_ALEMBIC
-
-#define POPART_COUT(x) std::cout << x << std::endl
-#define POPART_CERR(x) std::cerr << x << std::endl
 
 
 namespace bfs = boost::filesystem;
@@ -205,10 +203,7 @@ int main(int argc, char** argv)
     else
     {
 #if HAVE_ALEMBIC
-      // @fixme for now just add a fake camera so that it still can be see in MAYA
-      //exporter.appendCamera("camera.V." + myToString(frameCounter, 4), geometry::Pose3(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
-      std::cout << "frameCounter = " << frameCounter << std::endl;
-      exporter.addCameraKeyframe(geometry::Pose3(), &queryIntrinsics, currentImgName, frameCounter, frameCounter);
+      exporter.jumpKeyframe();
 #endif
       POPART_CERR("Unable to localize frame " << frameCounter);
     }
@@ -232,18 +227,18 @@ int main(int argc, char** argv)
 #if HAVE_ALEMBIC
       // now copy back in a new abc with the same name file and BUNDLE appended at the end
       dataio::AlembicExporter exporterBA(bfs::path(exportFile).stem().string() + ".BUNDLE.abc");
+      exporterBA.initAnimatedCamera("camera");
       size_t idx = 0;
       for(const localization::LocalizationResult &res : vec_localizationResults)
       {
         if(res.isValid())
         {
           assert(idx < vec_localizationResults.size());
-//          exporterBA.appendCamera("camera." + myToString(idx, 4), res.getPose(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
-          exporterBA.appendCamera("camera." + myToString(idx, 4), res.getPose(), &res.getIntrinsics(), mediaFilepath, frameCounter, frameCounter);
+          exporterBA.addCameraKeyframe(res.getPose(), &res.getIntrinsics(), currentImgName, frameCounter, frameCounter);
         }
         else
         {
-          exporterBA.appendCamera("camera.V." + myToString(idx, 4), geometry::Pose3(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
+          exporterBA.jumpKeyframe();
         }
         idx++;
       }

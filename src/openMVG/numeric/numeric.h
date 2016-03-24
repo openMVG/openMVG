@@ -213,6 +213,36 @@ inline double DistanceLInfinity(const TVec &x, const TVec &y)
   return NormLInfinity(x - y);
 }
 
+template<typename TVec>
+inline bool AreVecNearEqual(const TVec& x, const TVec& y, const double epsilon)
+{
+  assert(x.cols() == y.cols());
+  for(int i=0; i < x.cols(); ++i)
+  {
+    if((y(i) - epsilon > x(i)) 
+      || (x(i) > y(i) + epsilon))
+      return false;
+  }
+  return true;
+}
+
+template<typename TMat>
+inline bool AreMatNearEqual(const TMat& X, const TMat& Y, const double epsilon)
+{
+  assert(X.cols() == Y.cols());
+  assert(X.rows() == Y.rows());
+  for(int i=0; i < X.cols(); ++i)
+  {
+    for(int j=0; j < X.rows(); ++j)
+    {
+      if((Y(i,j) - epsilon > X(i,j)) 
+        || (X(i,j) > Y(i,j) + epsilon))
+        return false;    
+    }
+  }
+  return true;
+}
+
 // Solve the linear system Ax = 0 via SVD. Store the solution in x, such that
 // ||x|| = 1.0. Return the singular value corresponding to the solution.
 // Destroys A and resizes x if necessary.

@@ -34,6 +34,10 @@ ceres::CostFunction * IntrinsicsToCostFunction(IntrinsicBase * intrinsic, const 
     case PINHOLE_CAMERA_BROWN:
       return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2, 2, 8, 6, 3>(
         new ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2(observation.data()));
+    break;
+    case PINHOLE_CAMERA_FISHEYE:
+      return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye, 2, 7, 6, 3>(
+              new ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye(observation.data()));
     default:
       return NULL;
   }
@@ -220,7 +224,7 @@ bool Bundle_Adjustment_Ceres::Adjust(
   options.preconditioner_type = _openMVG_options._preconditioner_type;
   options.linear_solver_type = _openMVG_options._linear_solver_type;
   options.sparse_linear_algebra_library_type = _openMVG_options._sparse_linear_algebra_library_type;
-  options.minimizer_progress_to_stdout = false;
+  options.minimizer_progress_to_stdout = _openMVG_options._bVerbose;
   options.logging_type = ceres::SILENT;
   options.num_threads = _openMVG_options._nbThreads;
   options.num_linear_solver_threads = _openMVG_options._nbThreads;

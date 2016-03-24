@@ -1794,6 +1794,7 @@ Olympus;Olympus TG-320;6.16
 Olympus;Olympus TG-820 iHS;6.16
 Olympus;Olympus SZ-31MR iHS;6.16
 Olympus;Olympus OM-D E-M5;17.3
+Olympus;Olympus OM-D E-M1;17.3
 Olympus;Olympus SH-25MR;6.16
 Olympus;Olympus VR-340;6.16
 Olympus;Olympus VR-360;6.16

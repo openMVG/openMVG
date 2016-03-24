@@ -75,13 +75,15 @@ public:
   {
     if( x < Start )
       ++underflow;
+    else if( x > End )
+      ++overflow;
     else
     {
       const size_t i(
         static_cast<size_t>(
         (x-Start)*nBins_by_interval) );
-      if( i < nBins ) ++freq[i];
-      else ++overflow;
+      // clamp for the particular case when (x == End)
+      ++freq[std::min(i, nBins-1)];
     }
   }
   // Get the sum of all counts in the histogram.
@@ -123,7 +125,7 @@ public:
     for (size_t i = 0; i < n; ++i)
     {
        os << std::setprecision(3)
-          << static_cast<float>(End-Start)/n*static_cast<float>(i)
+          << Start + static_cast<float>(End-Start)/n*static_cast<float>(i)
           << "\t|\t" << freq[i] << "\n";
     }
     os << std::setprecision(3) << End << std::endl;

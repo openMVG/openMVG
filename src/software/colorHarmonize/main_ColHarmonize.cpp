@@ -5,14 +5,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <cstdlib>
-#include <memory>
-
 #include "software/colorHarmonize/colorHarmonizeEngineGlobal.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "openMVG/system/timer.hpp"
+
+#include <cstdlib>
+#include <memory>
 
 using namespace openMVG;
 
@@ -25,16 +25,18 @@ int main( int argc, char **argv )
   CmdLine cmd;
 
   std::string sSfM_Data_Filename;
-  std::string sMatchesDir, sMatchesFile;
+  std::string sMatchesDir;
+  std::string sMatchesGeometricModel = "f";
   std::string sOutDir = "";
   int selectionMethod = -1;
   int imgRef = -1;
 
-  cmd.add( make_option( 'i', sSfM_Data_Filename, "input_file" ) );
-  cmd.add( make_option( 'm', sMatchesFile, "matchesFile" ) );
-  cmd.add( make_option( 'o', sOutDir, "outdir" ) );
-  cmd.add( make_option( 's', selectionMethod, "selectionMethod" ) );
-  cmd.add( make_option( 'r', imgRef, "referenceImage" ) );
+  cmd.add( make_option('i', sSfM_Data_Filename, "input_file" ));
+  cmd.add( make_option('m', sMatchesDir, "matchesDir" ));
+  cmd.add( make_option('o', sOutDir, "outdir" ));
+  cmd.add( make_option('s', selectionMethod, "selectionMethod" ));
+  cmd.add( make_option('r', imgRef, "referenceImage" ));
+  cmd.add( make_option('g', sMatchesGeometricModel, "matchesGeometricModel"));
 
   try
   {
@@ -45,10 +47,12 @@ int main( int argc, char **argv )
   {
     std::cerr << "Usage: " << argv[ 0 ] << ' '
     << "[-i|--input_file] path to a SfM_Data scene"
-    << "[-m|--sMatchesFile path] "
+    << "[-m|--matchesDir path] "
     << "[-o|--outdir path] "
     << "[-s|--selectionMethod int] "
     << "[-r|--referenceImage int]"
+    << "\n[Optional]\n"
+    << "[-g|--matchesGeometricModel MODEL] matching geometric model used: 'f' (default), 'e' or 'h'"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -70,11 +74,10 @@ int main( int argc, char **argv )
 
   openMVG::system::Timer timer;
 
-  sMatchesDir = stlplus::folder_part(sMatchesFile);
-  std::auto_ptr<ColorHarmonizationEngineGlobal> m_colorHarmonizeEngine(
+  std::unique_ptr<ColorHarmonizationEngineGlobal> m_colorHarmonizeEngine(
     new ColorHarmonizationEngineGlobal(sSfM_Data_Filename,
     sMatchesDir,
-    sMatchesFile,
+    sMatchesGeometricModel,
     sOutDir,
     selectionMethod,
     imgRef));

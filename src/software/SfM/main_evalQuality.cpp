@@ -148,6 +148,8 @@ int main(int argc, char **argv)
   {
     std::cerr << std::endl
       << "There is missing camera in the loaded scene." << std::endl;
+    std::cerr << "number of poses in GT    : " << sfm_data_gt.poses.size() << std::endl;
+    std::cerr << "number of poses in scene :" << sfm_data.GetPoses().size() << std::endl;
     return EXIT_FAILURE;
   }
 

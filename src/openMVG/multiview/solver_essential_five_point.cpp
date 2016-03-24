@@ -165,85 +165,47 @@ Mat FivePointsPolynomialConstraints(const Mat &E_basis) {
   return M;
 }
 
-void FivePointsGaussJordan(Mat *Mp) {
-  Mat &M = *Mp;
-
-  // Gauss Elimination.
-  for (int i = 0; i < 10; ++i) {
-    M.row(i) /= M(i,i);
-    for (int j = i + 1; j < 10; ++j) {
-      M.row(j) = M.row(j) / M(j,i) - M.row(i);
-    }
-  }
-  // Backsubstitution.
-  for (int i = 9; i >= 0; --i) {
-    for (int j = 0; j < i; ++j) {
-      M.row(j) = M.row(j) - M(j,i) * M.row(i);
-    }
-  }
-}
-
 void FivePointsRelativePose(const Mat2X &x1,
                             const Mat2X &x2,
                             vector<Mat3> *Es) {
   // Step 1: Nullspace Extraction.
-  Mat E_basis = FivePointsNullspaceBasis(x1, x2);
+  const Eigen::Matrix<double, 9, 4> E_basis = FivePointsNullspaceBasis(x1, x2);
 
   // Step 2: Constraint Expansion.
-  Mat M = FivePointsPolynomialConstraints(E_basis);
+  const Eigen::Matrix<double, 10, 20> E_constraints = FivePointsPolynomialConstraints(E_basis);
 
-  // Step 3: Gauss-Jordan Elimination.
-  FivePointsGaussJordan(&M);
+  // Step 3: Gauss-Jordan Elimination (done thanks to a LU decomposition).
+  typedef Eigen::Matrix<double, 10, 10> Mat10;
+  Eigen::FullPivLU<Mat10> c_lu(E_constraints.block<10, 10>(0, 0));
+  const Mat10 M = c_lu.solve(E_constraints.block<10, 10>(0, 10));
 
   // For next steps we follow the matlab code given in Stewenius et al [1].
 
   // Build action matrix.
-  Mat B = M.topRightCorner<10,10>();
-  Mat At = Mat::Zero(10,10);
-  At.row(0) = -B.row(0);
-  At.row(1) = -B.row(1);
-  At.row(2) = -B.row(2);
-  At.row(3) = -B.row(4);
-  At.row(4) = -B.row(5);
-  At.row(5) = -B.row(7);
-  At(6,0) = 1;
-  At(7,1) = 1;
-  At(8,3) = 1;
-  At(9,6) = 1;
 
-  // Compute solutions from action matrix's eigenvectors.
-  Eigen::EigenSolver<Mat> es(At);
-  typedef Eigen::EigenSolver<Mat>::EigenvectorsType Matc;
-  Matc V = es.eigenvectors();
-  Matc SOLS(4, 10);
-  SOLS.row(0) = V.row(6).array() / V.row(9).array();
-  SOLS.row(1) = V.row(7).array() / V.row(9).array();
-  SOLS.row(2) = V.row(8).array() / V.row(9).array();
-  SOLS.row(3).setOnes();
+  const Mat10 & B = M.topRightCorner<10,10>();
+  Mat10 At = Mat10::Zero(10,10);
+  At.block<3, 10>(0, 0) = B.block<3, 10>(0, 0);
+  At.row(3) = B.row(4);
+  At.row(4) = B.row(5);
+  At.row(5) = B.row(7);
+  At(6,0) = At(7,1) = At(8,3) = At(9,6) = -1;
 
-  // Get the ten candidate E matrices in vector form.
-  Matc Evec = E_basis * SOLS;
+  Eigen::EigenSolver<Mat10> eigensolver(At);
+  const auto& eigenvectors = eigensolver.eigenvectors();
+  const auto& eigenvalues = eigensolver.eigenvalues();
 
   // Build essential matrices for the real solutions.
   Es->reserve(10);
   for (int s = 0; s < 10; ++s) {
-    Evec.col(s) /= Evec.col(s).norm();
-    bool is_real = true;
-    for (int i = 0; i < 9; ++i) {
-      if (Evec(i,s).imag() != 0) {
-        is_real = false;
-        break;
-      }
+    // Only consider real solutions.
+    if (eigenvalues(s).imag() != 0) {
+      continue;
     }
-    if (is_real) {
-      Mat3 E;
-      for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-          E(i, j) = Evec(3 * i + j, s).real();
-        }
-      }
-      Es->push_back(E);
-    }
+    Mat3 E;
+    Eigen::Map<Vec9 >(E.data()) =
+        E_basis * eigenvectors.col(s).tail<4>().real();
+    Es->emplace_back(E.transpose());
   }
 }
 

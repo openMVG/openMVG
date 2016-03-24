@@ -25,9 +25,12 @@ target_link_libraries(
   openMVG_lInftyComputerVision
   openMVG_system
   openMVG_matching
-  openMVG_dataio
 )
 set_target_properties(openMVG_sfm PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
+
+if(OpenMVG_USE_ALEMBIC)
+  target_link_libraries( openMVG_sfm ${ABC_LIBRARIES})
+endif(OpenMVG_USE_ALEMBIC)
 
 install(TARGETS openMVG_sfm DESTINATION lib EXPORT openMVG-targets)
 
@@ -37,6 +40,10 @@ UNIT_TEST(openMVG sfm_data_BA
   "openMVG_multiview_test_data;openMVG_features;openMVG_multiview;openMVG_sfm;openMVG_system;stlplus")
 UNIT_TEST(openMVG sfm_data_utils
   "openMVG_features;openMVG_multiview;openMVG_system;openMVG_sfm;stlplus")
+
+if(OpenMVG_USE_ALEMBIC)
+  UNIT_TEST(openMVG AlembicImporter "openMVG_sfm;${ABC_LIBRARIES}")
+endif(OpenMVG_USE_ALEMBIC)
 
 add_subdirectory(pipelines)
 

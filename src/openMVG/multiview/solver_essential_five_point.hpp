@@ -68,9 +68,6 @@ Vec o2(const Vec &a, const Vec &b);
 // Builds the polynomial constraint matrix M.
 Mat FivePointsPolynomialConstraints(const Mat &E_basis);
 
-// Gauss--Jordan elimination for the constraint matrix.
-void FivePointsGaussJordan(Mat *Mp);
-
 // In the following code, polynomials are expressed as vectors containing
 // their coeficients in the basis of monomials:
 //

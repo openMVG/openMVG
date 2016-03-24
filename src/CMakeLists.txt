@@ -41,11 +41,18 @@ OPTION(OpenMVG_USE_OPENCV "Build or not opencv+openMVG samples programs" OFF)
 # ==============================================================================
 OPTION(OpenMVG_USE_OCVSIFT "Add or not OpenCV SIFT in available features" OFF)
 
-SET(OPENMVG_VERSION_MAJOR 0)
-SET(OPENMVG_VERSION_MINOR 8)
-SET(OPENMVG_VERSION_PATCH 1)
-SET(OPENMVG_VERSION
-    ${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}.${OPENMVG_VERSION_PATCH})
+# ==============================================================================
+# OpenMVG version
+# ==============================================================================
+  file(STRINGS "openMVG/version.hpp" _OPENMVG_VERSION_HPP_CONTENTS REGEX "#define OPENMVG_VERSION_")
+  foreach(v MAJOR MINOR REVISION)
+    if("${_OPENMVG_VERSION_HPP_CONTENTS}" MATCHES "#define OPENMVG_VERSION_${v} ([0-9]+)")
+      set(OPENMVG_VERSION_${v} "${CMAKE_MATCH_1}")
+    else()
+      message(FATAL_ERROR "Failed to retrieve the OpenMVG version the source code. Missing OPENMVG_VERSION_${v}.")
+    endif()
+  endforeach()
+SET(OPENMVG_VERSION ${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}.${OPENMVG_VERSION_REVISION})
 
 # Default build is in Release mode
 IF(NOT CMAKE_BUILD_TYPE AND NOT MSVC)
@@ -274,25 +281,6 @@ ELSE()
 ENDIF()
 
 # ==============================================================================
-# CCTag TODO (todo)
-# ==============================================================================
-IF(OpenMVG_USE_CCTAG)
-  FIND_PACKAGE(CCTag)
-  IF(NOT CCTAG_FOUND)
-    MESSAGE(STATUS "CCTAG package not found, CCTAG will be disabled")
-    UPDATE_CACHE_VARIABLE(OpenMVG_USE_CCTAG OFF)
-  ELSE(NOT CCTAG_FOUND)
-    MESSAGE(STATUS "CCTAG package found")
-    MESSAGE(STATUS "CCTAG library directory ${CCTAG_LIBRARY_DIR}")
-    MESSAGE(STATUS "CCTAG library names     ${CCTAG_LIBRARIES_NAMES}")
-    MESSAGE(STATUS "CCTAG include directory ${CCTAG_INCLUDE_DIR}")
-    LINK_DIRECTORIES(${CCTAG_LIBRARY_DIR})
-    INCLUDE_DIRECTORIES(${CCTAG_INCLUDE_DIRS})
-    ADD_DEFINITIONS(-DHAVE_CCTAG)
-  ENDIF(NOT CCTAG_FOUND)
-ENDIF(OpenMVG_USE_CCTAG)
-
-# ==============================================================================
 # Flann
 # ==============================================================================
 # - internal by default (flann),
@@ -414,22 +402,20 @@ ENDIF(OpenMVG_USE_OPENCV)
 # ==============================================================================
 # - optional, it allows to compile the vocabulary tree
 # ==============================================================================
-IF(OpenMVG_BUILD_VOCTREE)
-  OPTION(BOOST_NO_CXX11 "If Boost is not build with C++11 support this must be enabled to avoid symbol conflicts (SCOPED_ENUM)" OFF)
-  FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS system filesystem program_options)
-  IF(Boost_FOUND)
-     MESSAGE(STATUS "Boost ${Boost_LIB_VERSION} found")
-     if(BOOST_NO_CXX11)
-       add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
-     endif(BOOST_NO_CXX11)
-     include_directories(${Boost_INCLUDE_DIRS})
-     link_directories(${Boost_LIBRARIES})
-     add_definitions(${Boost_DEFINITIONS})
-  ELSE()
-    MESSAGE(STATUS "Boost not found -- disabling the vocabulary tree")
-    UPDATE_CACHE_VARIABLE(OpenMVG_BUILD_VOCTREE OFF)
-  ENDIF(Boost_FOUND)
-ENDIF(OpenMVG_BUILD_VOCTREE)
+OPTION(BOOST_NO_CXX11 "If Boost is not build with C++11 support this must be enabled to avoid symbol conflicts (SCOPED_ENUM)" OFF)
+FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS system filesystem program_options thread serialization)
+IF(Boost_FOUND)
+   MESSAGE(STATUS "Boost ${Boost_LIB_VERSION} found")
+   if(BOOST_NO_CXX11)
+     add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
+   endif(BOOST_NO_CXX11)
+   include_directories(${Boost_INCLUDE_DIRS})
+   link_directories(${Boost_LIBRARIES})
+   add_definitions(${Boost_DEFINITIONS})
+ELSE()
+  MESSAGE(STATUS "Boost not found -- disabling the vocabulary tree")
+  UPDATE_CACHE_VARIABLE(OpenMVG_BUILD_VOCTREE OFF)
+ENDIF(Boost_FOUND)
 
 # ==============================================================================
 # Alembic
@@ -452,6 +438,26 @@ ENDIF(OpenMVG_USE_ALEMBIC)
 # Third-party libraries:
 # ==============================================================================
 ADD_SUBDIRECTORY(third_party)
+
+# ==============================================================================
+# CCTag
+# ==============================================================================
+IF(OpenMVG_USE_CCTAG)
+  FIND_PACKAGE(LAPACK)
+  FIND_PACKAGE(CCTag)
+  IF(NOT CCTAG_FOUND)
+    MESSAGE(STATUS "CCTAG package not found, CCTAG will be disabled")
+    UPDATE_CACHE_VARIABLE(OpenMVG_USE_CCTAG OFF)
+  ELSE(NOT CCTAG_FOUND)
+    MESSAGE(STATUS "CCTAG package found")
+    MESSAGE(STATUS "CCTAG library directory ${CCTAG_LIBRARY_DIR}")
+    MESSAGE(STATUS "CCTAG library names     ${CCTAG_LIBRARIES_NAMES}")
+    MESSAGE(STATUS "CCTAG include directory ${CCTAG_INCLUDE_DIR}")
+    LINK_DIRECTORIES(${CCTAG_LIBRARY_DIR})
+    INCLUDE_DIRECTORIES(${CCTAG_INCLUDE_DIRS})
+    ADD_DEFINITIONS(-DHAVE_CCTAG)
+  ENDIF(NOT CCTAG_FOUND)
+ENDIF(OpenMVG_USE_CCTAG)
 
 # ==============================================================================
 # Include directories

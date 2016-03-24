@@ -1,10 +1,10 @@
 #include "VoctreeLocalizer.hpp"
-#include "svgVisualization.hpp"
 
 #include <openMVG/sfm/sfm_data_io.hpp>
 #include <openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp>
 #include <openMVG/sfm/sfm_data_BA_ceres.hpp>
 #include <openMVG/features/io_regions_type.hpp>
+#include <openMVG/features/svgVisualization.hpp>
 #ifdef HAVE_CCTAG
 #include <openMVG/features/cctag/SIFT_CCTAG_describer.hpp>
 #endif
@@ -15,6 +15,8 @@
 #include <openMVG/matching_image_collection/F_ACRobust.hpp>
 #include <openMVG/numeric/numeric.h>
 #include <openMVG/robust_estimation/guided_matching.hpp>
+#include <openMVG/logger.hpp>
+
 #include <third_party/progress/progress.hpp>
 //#include <cereal/archives/json.hpp>
 
@@ -22,10 +24,6 @@
 
 #include <algorithm>
 #include <chrono>
-
-//@fixme move/redefine
-#define POPART_COUT(x) std::cout << x << std::endl
-#define POPART_CERR(x) std::cerr << x << std::endl
 
 namespace openMVG {
 namespace localization {

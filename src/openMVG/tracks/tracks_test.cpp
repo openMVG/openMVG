@@ -18,22 +18,22 @@ using namespace openMVG::matching;
 
 TEST(Tracks, Simple) {
 
-  /*
-  A    B    C
-  0 -> 0 -> 0
-  1 -> 1 -> 6
-  2 -> 3
-  */
+  // Create some tracks for image (A,B,C)
+  // {A,B,C} imageId will be {0,1,2}
+  // For those image link some features id depicted below
+  //A    B    C
+  //0 -> 0 -> 0
+  //1 -> 1 -> 6
+  //2 -> 3
 
   // Create the input pairwise correspondences
   PairWiseMatches map_pairwisematches;
 
-  IndMatch testAB[] = {IndMatch(0,0), IndMatch(1,1), IndMatch(2,3)};
-  IndMatch testBC[] = {IndMatch(0,0), IndMatch(1,6)};
+  const IndMatch testAB[] = {IndMatch(0,0), IndMatch(1,1), IndMatch(2,3)};
+  const IndMatch testBC[] = {IndMatch(0,0), IndMatch(1,6)};
 
-
-  std::vector<IndMatch> ab(testAB, testAB+3);
-  std::vector<IndMatch> bc(testBC, testBC+2);
+  const std::vector<IndMatch> ab(testAB, testAB+3);
+  const std::vector<IndMatch> bc(testBC, testBC+2);
   const int A = 0;
   const int B = 1;
   const int C = 2;
@@ -57,9 +57,11 @@ TEST(Tracks, Simple) {
   //1, {(0,1) (1,1) (2,6)}
   //2, {(0,2) (1,3)}
   const std::pair<size_t,size_t> GT_Tracks[] =
-    {std::make_pair(0,0), std::make_pair(1,0), std::make_pair(2,0),
-     std::make_pair(0,1), std::make_pair(1,1), std::make_pair(2,6),
-     std::make_pair(0,2), std::make_pair(1,3)};
+  {
+    std::make_pair(0,0), std::make_pair(1,0), std::make_pair(2,0),
+    std::make_pair(0,1), std::make_pair(1,1), std::make_pair(2,6),
+    std::make_pair(0,2), std::make_pair(1,3)
+  };
 
   CHECK_EQUAL(3,  map_tracks.size());
   size_t cpt = 0, i = 0;
@@ -80,12 +82,12 @@ TEST(Tracks, Simple) {
 
 TEST(Tracks, filter_3viewAtLeast) {
 
-  /*
-  A    B    C
-  0 -> 0 -> 0
-  1 -> 1 -> 6
-  2 -> 3
-  */
+  //
+  //A    B    C
+  //0 -> 0 -> 0
+  //1 -> 1 -> 6
+  //2 -> 3
+  //
 
   // Create the input pairwise correspondences
   PairWiseMatches map_pairwisematches;
@@ -112,19 +114,19 @@ TEST(Tracks, filter_3viewAtLeast) {
 
 TEST(Tracks, Conflict) {
 
-  /*
-  A    B    C
-  0 -> 0 -> 0
-  1 -> 1 -> 6
-  2 -> 3 -> 2}
-       3 -> 8 } This track must be deleted, index 3 appears two times
-  */
+  //
+  //A    B    C
+  //0 -> 0 -> 0
+  //1 -> 1 -> 6
+  //{2 -> 3 -> 2
+  //      3 -> 8 } This track must be deleted, index 3 appears two times
+  //
 
   // Create the input pairwise correspondences
   PairWiseMatches map_pairwisematches;
 
-  IndMatch testAB[] = {IndMatch(0,0), IndMatch(1,1), IndMatch(2,3)};
-  IndMatch testBC[] = {IndMatch(0,0), IndMatch(1,6), IndMatch(3,2), IndMatch(3,8)};
+  const IndMatch testAB[] = {IndMatch(0,0), IndMatch(1,1), IndMatch(2,3)};
+  const IndMatch testBC[] = {IndMatch(0,0), IndMatch(1,6), IndMatch(3,2), IndMatch(3,8)};
 
   std::vector<IndMatch> ab(testAB, testAB+3);
   std::vector<IndMatch> bc(testBC, testBC+4);
@@ -138,8 +140,9 @@ TEST(Tracks, Conflict) {
   TracksBuilder trackBuilder;
   trackBuilder.Build( map_pairwisematches );
 
-  trackBuilder.ExportToStream(std::cout); //Export to console
+  CHECK_EQUAL(3, trackBuilder.NbTracks());
   trackBuilder.Filter(); // Key feature tested here to kill the conflicted track
+  CHECK_EQUAL(2, trackBuilder.NbTracks());
 
   STLMAPTracks map_tracks;
   trackBuilder.ExportToSTL(map_tracks);

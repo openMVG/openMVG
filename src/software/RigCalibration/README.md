@@ -66,7 +66,7 @@ mediapath
 ```
 so that `image0000.jpg` and `image_0000.png` refers to the images taken at the same time stamp.
 
-`intrinsics.txt` is a plain text file containing the internal camera parameters in the following format:
+`intrinsics.txt` is a plain text file containing the internal camera parameters in the following format (as output by `main_cameraCalibration.cpp`):
 ```
  int #image width
  int #image height

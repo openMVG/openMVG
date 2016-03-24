@@ -23,7 +23,7 @@ struct L2
 
   result_type operator()(const DescriptorA& a, const DescriptorB& b) const
   {
-    result_type result = result_type();
+    result_type result = result_type(0);
     for(std::size_t i = 0; i < a.size(); ++i)
     {
       result_type diff = (result_type)a[i] - (result_type)b[i];

@@ -178,6 +178,13 @@ int main(int argc, char **argv)
       return EXIT_FAILURE;
   }
 
+  if (sOutputPLY_Out.empty())
+  {
+    std::cerr << std::endl
+      << "No output PLY filename specified." << std::endl;
+    return EXIT_FAILURE;
+  }
+
   // Load input SfM_Data scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename_In, ESfM_Data(ALL)))

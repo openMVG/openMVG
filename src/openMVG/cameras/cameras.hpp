@@ -12,6 +12,7 @@
 #include "openMVG/cameras/Camera_Pinhole.hpp"
 #include "openMVG/cameras/Camera_Pinhole_Radial.hpp"
 #include "openMVG/cameras/Camera_Pinhole_Brown.hpp"
+#include "openMVG/cameras/Camera_Pinhole_Fisheye.hpp"
 #include "openMVG/cameras/Camera_undistort_image.hpp"
 
 namespace openMVG {
@@ -29,6 +30,8 @@ inline std::shared_ptr<Pinhole_Intrinsic> createPinholeIntrinsic( EINTRINSIC int
       return std::make_shared<Pinhole_Intrinsic_Radial_K3>();
     case EINTRINSIC::PINHOLE_CAMERA_BROWN:
       return std::make_shared<Pinhole_Intrinsic_Brown_T2>();
+    case EINTRINSIC::PINHOLE_CAMERA_FISHEYE:
+      return std::make_shared<Pinhole_Intrinsic_Fisheye>();       
     case EINTRINSIC::PINHOLE_CAMERA_END:
     case EINTRINSIC::PINHOLE_CAMERA_START:
       break;

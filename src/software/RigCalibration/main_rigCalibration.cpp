@@ -6,6 +6,7 @@
 #include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 #include <openMVG/image/image_io.hpp>
 #include <openMVG/dataio/FeedProvider.hpp>
+#include <openMVG/logger.hpp>
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
@@ -23,11 +24,8 @@
 #include <chrono>
 
 #if HAVE_ALEMBIC
-#include <openMVG/dataio/AlembicExporter.hpp>
+#include <openMVG/sfm/AlembicExporter.hpp>
 #endif // HAVE_ALEMBIC
-
-#define POPART_COUT(x) std::cout << x << std::endl
-#define POPART_CERR(x) std::cerr << x << std::endl
 
 
 namespace bfs = boost::filesystem;
@@ -138,7 +136,7 @@ int main(int argc, char** argv)
           ("nNearestKeyFrames", po::value<size_t>(&nNearestKeyFrames)->default_value(nNearestKeyFrames), "Number of images to retrieve in database")
 #endif
 #if HAVE_ALEMBIC
-          ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), "Filename for the SfM_Data export file (where camera poses will be stored). Default : trackedcameras.json If Alambic is enable it will also export an .abc file of the scene with the same name")
+          ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), "If Alambic is enabled, filename for the file containing the camera poses. Default : trackedcameras.abc")
 #endif
           ;
 

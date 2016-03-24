@@ -443,8 +443,8 @@ bool Rig::optimizeCalibration()
   options.preconditioner_type = openMVG_options._preconditioner_type;
   options.linear_solver_type = openMVG_options._linear_solver_type;
   options.sparse_linear_algebra_library_type = openMVG_options._sparse_linear_algebra_library_type;
-  options.minimizer_progress_to_stdout = true;
-  //options.logging_type = ceres::SILENT;
+  options.minimizer_progress_to_stdout = openMVG_options._bVerbose;
+  options.logging_type = ceres::SILENT;
   options.num_threads = 1;//openMVG_options._nbThreads;
   options.num_linear_solver_threads = 1;//openMVG_options._nbThreads;
   
@@ -630,7 +630,7 @@ bool loadRigCalibration(const std::string &filename, std::vector<geometry::Pose3
   
   for(std::size_t cam = 0; cam < numCameras; ++cam)
   {
-    // load the rotatiop part
+    // load the rotation part
     Mat3 rot;
     for(std::size_t i = 0; i < 3; ++i)
       for(std::size_t j = 0; j < 3; ++j)
@@ -641,6 +641,9 @@ bool loadRigCalibration(const std::string &filename, std::vector<geometry::Pose3
     fs >> center(0);
     fs >> center(1);
     fs >> center(2);
+    
+    // add the pose in the vector
+    subposes.push_back(geometry::Pose3(rot, center));
   }
   
   bool isOk = fs.good();

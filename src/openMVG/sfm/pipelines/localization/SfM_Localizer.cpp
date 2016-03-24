@@ -62,7 +62,7 @@ bool SfM_Localizer::Localize
       resection_data.pt3D);
     // Robust estimation of the Projection matrix and its precision
     const std::pair<double,double> ACRansacOut =
-      openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision, true);
+      openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision);
     // Update the upper bound precision of the model found by AC-RANSAC
     resection_data.error_max = ACRansacOut.first;
   }
@@ -91,7 +91,7 @@ bool SfM_Localizer::Localize
       KernelType kernel = KernelType(pt2Dundistorted, resection_data.pt3D, pinhole_cam->K());
       // Robust estimation of the Projection matrix and its precision
       const std::pair<double,double> ACRansacOut =
-        openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision, true);
+        openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision);
       // Update the upper bound precision of the model found by AC-RANSAC
       resection_data.error_max = ACRansacOut.first;
     }
@@ -101,7 +101,7 @@ bool SfM_Localizer::Localize
       KernelType kernel = KernelType(resection_data.pt2D, resection_data.pt3D, pinhole_cam->K());
       // Robust estimation of the Projection matrix and its precision
       const std::pair<double,double> ACRansacOut =
-        openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision, true);
+        openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision);
       // Update the upper bound precision of the model found by AC-RANSAC
       resection_data.error_max = ACRansacOut.first;
     }
@@ -112,11 +112,13 @@ bool SfM_Localizer::Localize
   // pass to the function
 #ifdef HAVE_CCTAG
   const bool bResection = (resection_data.vec_inliers.size() > MINIMUM_SAMPLES);
+#ifdef WANTS_POPART_COUT
   if (!bResection) {
     std::cout << "bResection is false";
     std::cout << " because resection_data.vec_inliers.size() = " << resection_data.vec_inliers.size();
     std::cout << " and MINIMUM_SAMPLES = " << MINIMUM_SAMPLES << std::endl;
   }
+#endif
 #else
   const bool bResection = (resection_data.vec_inliers.size() > 2.5 * MINIMUM_SAMPLES);
 #endif
@@ -129,7 +131,7 @@ bool SfM_Localizer::Localize
     KRt_From_P(P, &K, &R, &t);
     pose = geometry::Pose3(R, -R.transpose() * t);
   }
-
+#ifdef WANTS_POPART_COUT
   std::cout << "\n"
     << "-------------------------------" << "\n"
     << "-- Robust Resection " << "\n"
@@ -138,7 +140,7 @@ bool SfM_Localizer::Localize
     << "-- #Points validated by robust Resection: " << resection_data.vec_inliers.size() << "\n"
     << "-- Threshold: " << resection_data.error_max << "\n"
     << "-------------------------------" << std::endl;
-
+#endif
   return bResection;
 }
 

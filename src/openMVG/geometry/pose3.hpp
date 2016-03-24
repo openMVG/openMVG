@@ -41,15 +41,22 @@ class Pose3
     inline Vec3 translation() const { return -(_rotation * _center); }
 
     // Apply pose
-    inline Vec3 operator () (const Vec3& p) const
+    inline Mat3X operator () (const Mat3X& p) const
     {
-      return _rotation * (p - _center);
+      return _rotation * (p.colwise() - _center);
     }
 
     // Composition
     Pose3 operator * (const Pose3& P) const
     {
       return Pose3(_rotation * P._rotation, P._center + P._rotation.transpose() * _center );
+    }
+
+    // Operator ==
+    bool operator==(const Pose3& other) const
+    {
+      return AreMatNearEqual(_rotation, other._rotation, 1e-6) &&
+              AreVecNearEqual(_center, other._center, 1e-6);
     }
 
     // Inverse

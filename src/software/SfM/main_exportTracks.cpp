@@ -86,16 +86,17 @@ int main(int argc, char ** argv)
 
   // Read the features
   std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
-  if (!feats_provider->load(sfm_data, sMatchesDir, regions_type)) {
+  if (!feats_provider->load(sfm_data, sMatchesDir, regions_type))
+  {
     std::cerr << std::endl
       << "Invalid features." << std::endl;
     return EXIT_FAILURE;
   }
   // Read the matches
   std::shared_ptr<Matches_Provider> matches_provider = std::make_shared<Matches_Provider>();
-  if (!matches_provider->load(sfm_data, sMatchFile)) {
-    std::cerr << std::endl
-      << "Invalid matches file." << std::endl;
+  if (!matches_provider->load(sfm_data, stlplus::folder_part(sMatchFile), stlplus::filename_part(sMatchFile)))
+  {
+    std::cerr << "\nInvalid matches file." << std::endl;
     return EXIT_FAILURE;
   }
 

@@ -76,19 +76,19 @@ FIND_LIBRARY(CCTAGCUDA_LIBRARY NAMES CCTagCuda
 )
 # To work with cuda, cctags needs additional CUDA cudadevrt library
 IF(CCTAGCUDA_LIBRARY)
-  SET(CCTAGCUDA_LIBRARIES ${CCTAGCUDA_LIBRARY} cudadevrt)
+  SET(CCTAGCUDA_LIBRARIES ${CCTAGCUDA_LIBRARY} cudart cudadevrt)
 ENDIF()
 
 # Sets the libraries needed to link with CCTag
 SET(CCTAG_LIBRARIES
   ${CCTAG_LIBRARY} 
   ${CCTAGCUDA_LIBRARIES}
-#  boost_filesystem boost_system boost_serialization
+  ${Boost_LIBRARIES}
   dl
   ${OpenCV_LIBS}
   ${OPTPP_LIBRARIES}
   ${Ceres_LIBRARIES}
-#  lapack
+  ${LAPACK_LIBRARIES}
 )
 
 GET_FILENAME_COMPONENT(CCTAG_LIBRARY_DIR "${CCTAG_LIBRARY}" PATH)
