@@ -488,83 +488,81 @@ bool Rig::optimizeCalibration()
       POPART_COUT("Bundle Adjustment failed.");
     return false;
   }
-  else // Solution is usable
+
+  if (openMVG_options._bVerbose)
   {
-    if (openMVG_options._bVerbose)
-    {
-      // Display statistics about the minimization
-      POPART_COUT( "\n"
-        << "Bundle Adjustment statistics (approximated RMSE):\n"
-        << " #localizers: " << _vLocalizationResults.size() << "\n"
-        << " #views: " << _vLocalizationResults[0].size() << "\n"
-        << " #residuals: " << summary.num_residuals << "\n"
-        << " Initial RMSE: " << std::sqrt( summary.initial_cost / summary.num_residuals) << "\n"
-        << " Final RMSE: " << std::sqrt( summary.final_cost / summary.num_residuals) << "\n");
-    }
-    
-    // Update relative pose after optimization
-    for (int iRelativePose = 0 ; iRelativePose < _vRelativePoses.size() ; ++iRelativePose )
+    // Display statistics about the minimization
+    POPART_COUT( "\n"
+      << "Bundle Adjustment statistics (approximated RMSE):\n"
+      << " #localizers: " << _vLocalizationResults.size() << "\n"
+      << " #views: " << _vLocalizationResults[0].size() << "\n"
+      << " #residuals: " << summary.num_residuals << "\n"
+      << " Initial RMSE: " << std::sqrt( summary.initial_cost / summary.num_residuals) << "\n"
+      << " Final RMSE: " << std::sqrt( summary.final_cost / summary.num_residuals) << "\n");
+  }
+
+  // Update relative pose after optimization
+  for (int iRelativePose = 0 ; iRelativePose < _vRelativePoses.size() ; ++iRelativePose )
+  {
+    openMVG::Mat3 R_refined;
+    std::vector<double> vPose;
+    vPose.reserve(6);
+    ceres::AngleAxisToRotationMatrix(&vRelativePoses[iRelativePose][0], R_refined.data());
+    openMVG::Vec3 t_refined(vRelativePoses[iRelativePose][3], vRelativePoses[iRelativePose][4], vRelativePoses[iRelativePose][5]);
+    // Update the pose
+    geometry::Pose3 & pose = _vRelativePoses[iRelativePose];
+    pose = geometry::Pose3(R_refined, -R_refined.transpose() * t_refined);
+  }
+
+  // Update the main camera pose after optimization
+  for (int iView = 0 ; iView < _vLocalizationResults[0].size() ; ++iView )
+  {
+    if( _vLocalizationResults[0][iView].isValid() )
     {
       openMVG::Mat3 R_refined;
       std::vector<double> vPose;
       vPose.reserve(6);
-      ceres::AngleAxisToRotationMatrix(&vRelativePoses[iRelativePose][0], R_refined.data());
-      openMVG::Vec3 t_refined(vRelativePoses[iRelativePose][3], vRelativePoses[iRelativePose][4], vRelativePoses[iRelativePose][5]);
-      // Update the pose
-      geometry::Pose3 & pose = _vRelativePoses[iRelativePose];
-      pose = geometry::Pose3(R_refined, -R_refined.transpose() * t_refined);
+      ceres::AngleAxisToRotationMatrix(&vMainPoses[iView][0], R_refined.data());
+      openMVG::Vec3 t_refined(vMainPoses[iView][3], vMainPoses[iView][4], vMainPoses[iView][5]);
+      // Push the optimized pose
+      geometry::Pose3 pose = geometry::Pose3(R_refined, -R_refined.transpose() * t_refined);
+      _vLocalizationResults[0][iView].setPose(pose);
+      _vPoses.push_back(pose);
     }
-    
-    // Update the main camera pose after optimization
-    for (int iView = 0 ; iView < _vLocalizationResults[0].size() ; ++iView )
-    {
-      if( _vLocalizationResults[0][iView].isValid() )
-      {
-        openMVG::Mat3 R_refined;
-        std::vector<double> vPose;
-        vPose.reserve(6);
-        ceres::AngleAxisToRotationMatrix(&vMainPoses[iView][0], R_refined.data());
-        openMVG::Vec3 t_refined(vMainPoses[iView][3], vMainPoses[iView][4], vMainPoses[iView][5]);
-        // Push the optimized pose
-        geometry::Pose3 pose = geometry::Pose3(R_refined, -R_refined.transpose() * t_refined);
-        _vLocalizationResults[0][iView].setPose(pose);
-        _vPoses.push_back(pose);
-      }
-    }
-    
-    displayRelativePoseReprojection(geometry::Pose3(openMVG::Mat3::Identity(), openMVG::Vec3::Zero()), 0);
-    
-    // Update all poses over all witness cameras after optimization
-    for (int iRelativePose = 0 ; iRelativePose < _vRelativePoses.size() ; ++iRelativePose )
-    {
-      std::size_t iLocalizer = iRelativePose+1;
-      // Loop over all views
-      for (int iView = 0 ; iView < _vLocalizationResults[iLocalizer].size() ; ++iView )
-      {
-        // If the localization has succeeded then if the witness camera localization succeeded 
-        // then update the pose else continue.
-        if( _vLocalizationResults[0][iView].isValid() && _vLocalizationResults[iLocalizer][iView].isValid() )
-        {
-          // Retrieve the witness camera pose from the main camera one.
-          const geometry::Pose3 poseWitnessCamera = poseFromMainToWitness(_vLocalizationResults[0][iView].getPose(), _vRelativePoses[iRelativePose]);
-          _vLocalizationResults[iLocalizer][iView].setPose(poseWitnessCamera);
-        }
-      }
-      displayRelativePoseReprojection(_vRelativePoses[iRelativePose], iLocalizer);
-    }
-    // Possibility to update the intrinsics here
-
-    // Update camera intrinsics with refined data
-    //    for (Intrinsics::iterator itIntrinsic = sfm_data.intrinsics.begin();
-    //      itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
-    //    {
-    //      const IndexT indexCam = itIntrinsic->first;
-    //
-    //      const std::vector<double> & vec_params = map_intrinsics[indexCam];
-    //      itIntrinsic->second.get()->updateFromParams(vec_params);
-    //    }
-    return true;
   }
+
+  displayRelativePoseReprojection(geometry::Pose3(openMVG::Mat3::Identity(), openMVG::Vec3::Zero()), 0);
+
+  // Update all poses over all witness cameras after optimization
+  for (int iRelativePose = 0 ; iRelativePose < _vRelativePoses.size() ; ++iRelativePose )
+  {
+    std::size_t iLocalizer = iRelativePose+1;
+    // Loop over all views
+    for (int iView = 0 ; iView < _vLocalizationResults[iLocalizer].size() ; ++iView )
+    {
+      // If the localization has succeeded then if the witness camera localization succeeded 
+      // then update the pose else continue.
+      if( _vLocalizationResults[0][iView].isValid() && _vLocalizationResults[iLocalizer][iView].isValid() )
+      {
+        // Retrieve the witness camera pose from the main camera one.
+        const geometry::Pose3 poseWitnessCamera = poseFromMainToWitness(_vLocalizationResults[0][iView].getPose(), _vRelativePoses[iRelativePose]);
+        _vLocalizationResults[iLocalizer][iView].setPose(poseWitnessCamera);
+      }
+    }
+    displayRelativePoseReprojection(_vRelativePoses[iRelativePose], iLocalizer);
+  }
+  // Possibility to update the intrinsics here
+
+  // Update camera intrinsics with refined data
+  //    for (Intrinsics::iterator itIntrinsic = sfm_data.intrinsics.begin();
+  //      itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
+  //    {
+  //      const IndexT indexCam = itIntrinsic->first;
+  //
+  //      const std::vector<double> & vec_params = map_intrinsics[indexCam];
+  //      itIntrinsic->second.get()->updateFromParams(vec_params);
+  //    }
+  return true;
 }
 
 
