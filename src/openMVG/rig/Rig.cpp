@@ -294,26 +294,26 @@ bool Rig::optimizeCalibration()
   std::map<std::size_t, std::vector<double> > vMainPoses;
   for(std::size_t iView = 0 ; iView < _vLocalizationResults[0].size() ; ++iView )
   {
-    if(_vLocalizationResults[0][iView].isValid())
-    {
-      const geometry::Pose3 & pose = _vLocalizationResults[0][iView].getPose();
-      const openMVG::Mat3 & R = pose.rotation();
-      const openMVG::Vec3 & t = pose.translation();
+    if(!_vLocalizationResults[0][iView].isValid())
+      continue;
+    
+    const geometry::Pose3 & pose = _vLocalizationResults[0][iView].getPose();
+    const openMVG::Mat3 & R = pose.rotation();
+    const openMVG::Vec3 & t = pose.translation();
 
-      double angleAxis[3];
-      ceres::RotationMatrixToAngleAxis((const double*)R.data(), angleAxis);
+    double angleAxis[3];
+    ceres::RotationMatrixToAngleAxis((const double*)R.data(), angleAxis);
 
-      std::vector<double> mainPose;
-      mainPose.reserve(6); //angleAxis + translation
-      mainPose.push_back(angleAxis[0]);
-      mainPose.push_back(angleAxis[1]);
-      mainPose.push_back(angleAxis[2]);
-      mainPose.push_back(t(0));
-      mainPose.push_back(t(1));
-      mainPose.push_back(t(2));
+    std::vector<double> mainPose;
+    mainPose.reserve(6); //angleAxis + translation
+    mainPose.push_back(angleAxis[0]);
+    mainPose.push_back(angleAxis[1]);
+    mainPose.push_back(angleAxis[2]);
+    mainPose.push_back(t(0));
+    mainPose.push_back(t(1));
+    mainPose.push_back(t(2));
 
-      vMainPoses.emplace(iView, mainPose);
-    }
+    vMainPoses.emplace(iView, mainPose);
   }
   for(auto &elem : vMainPoses)
   {
