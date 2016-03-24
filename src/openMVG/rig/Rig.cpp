@@ -293,8 +293,9 @@ bool Rig::optimizeCalibration()
   std::vector<std::vector<double> > vMainPoses;
   vMainPoses.reserve(_vLocalizationResults[0].size());
   for (int iView = 0 ; iView < _vLocalizationResults[0].size() ; ++iView )
+  for(std::size_t iView = 0 ; iView < _vLocalizationResults[0].size() ; ++iView )
   {
-    if ( _vLocalizationResults[0][iView].isValid() )
+    if(_vLocalizationResults[0][iView].isValid())
     {
       const geometry::Pose3 & pose = _vLocalizationResults[0][iView].getPose();
       const openMVG::Mat3 & R = pose.rotation();
@@ -385,19 +386,19 @@ bool Rig::optimizeCalibration()
   // todo: make the LOSS function and the parameter an option
 
   // For all visibility add reprojections errors:
-  for (int iLocalizer = 0 ; iLocalizer < _vLocalizationResults.size() ; ++iLocalizer)
+  for(std::size_t iLocalizer = 0 ; iLocalizer < _vLocalizationResults.size() ; ++iLocalizer)
   {
-    const std::vector<localization::LocalizationResult> & localizationResults = _vLocalizationResults[iLocalizer];
+    const std::vector<localization::LocalizationResult> & currentResult = _vLocalizationResults[iLocalizer];
     
-    for (int iView = 0 ; iView < localizationResults.size() ; ++iView)
+    for(std::size_t iView = 0 ; iView < currentResult.size() ; ++iView)
     {
       // Get the inliers 3D points
-      const Mat & points3D = localizationResults[iView].getPt3D();
+      const Mat & points3D = currentResult[iView].getPt3D();
       // Get their image locations (also referred as observations)
-      const Mat & points2D = localizationResults[iView].getPt2D();
+      const Mat & points2D = currentResult[iView].getPt2D();
       
       // Add a residual block for all inliers
-      for (const IndexT iPoint : localizationResults[iView].getInliers() )
+      for(const IndexT iPoint : currentResult[iView].getInliers() )
       {
         // Each Residual block takes a point and a camera as input and outputs a 2
         // dimensional residual. Internally, the cost function stores the observations
@@ -408,11 +409,11 @@ bool Rig::optimizeCalibration()
         if ( iLocalizer == 0 )
         {
           // Add the residual block if the resection (of the main camera) succeeded
-          if ( _vLocalizationResults[iLocalizer][iView].isValid() )
+          if ( currentResult[iView].isValid() )
           {
             // Vector-2 residual, pose of the rig parameterized by 6 parameters
             cost_function = new ceres::AutoDiffCostFunction<ResidualErrorMainCameraFunctor, 2, 6>(
-            new ResidualErrorMainCameraFunctor(_vLocalizationResults[iLocalizer][iView].getIntrinsics(), points2D.col(iPoint), points3D.col(iPoint) ));
+            new ResidualErrorMainCameraFunctor(currentResult[iView].getIntrinsics(), points2D.col(iPoint), points3D.col(iPoint) ));
             
             if (cost_function)
             {
@@ -429,15 +430,15 @@ bool Rig::optimizeCalibration()
         // Add a residual block for a secondary camera
         {
           // Add the residual block if the resection (of the secondary camera) succeeded
-          if ( _vLocalizationResults[0][iView].isValid() && _vLocalizationResults[iLocalizer][iView].isValid() )
+          if( _vLocalizationResults[0][iView].isValid() && currentResult[iView].isValid() )
           {
             // Vector-2 residual, pose of the rig parameterized by 6 parameters
             //                  + relative pose of the secondary camera parameterized by 6 parameters
             
             cost_function = new ceres::AutoDiffCostFunction<ResidualErrorSecondaryCameraFunctor, 2, 6, 6>(
-            new ResidualErrorSecondaryCameraFunctor(_vLocalizationResults[iLocalizer][iView].getIntrinsics(), points2D.col(iPoint), points3D.col(iPoint)));
+            new ResidualErrorSecondaryCameraFunctor(currentResult[iView].getIntrinsics(), points2D.col(iPoint), points3D.col(iPoint)));
             
-            if (cost_function)
+            if(cost_function)
             {
               problem.AddResidualBlock( cost_function,
                                         p_LossFunction,
