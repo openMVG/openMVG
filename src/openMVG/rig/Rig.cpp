@@ -393,6 +393,15 @@ bool Rig::optimizeCalibration()
     
     for(std::size_t iView = 0 ; iView < currentResult.size() ; ++iView)
     {
+      // if the current localization is not valid skip it
+      if(!currentResult[iView].isValid())
+        continue;
+      
+      // if it is not the main camera and the same view was not localized for the 
+      // main camera, skip it
+      if( (iLocalizer != 0) && (!_vLocalizationResults[0][iView].isValid()) )
+        continue;
+      
       // Get the inliers 3D points
       const Mat & points3D = currentResult[iView].getPt3D();
       // Get their image locations (also referred as observations)
@@ -409,49 +418,41 @@ bool Rig::optimizeCalibration()
         // Add a residual block for the main camera
         if ( iLocalizer == 0 )
         {
-          // Add the residual block if the resection (of the main camera) succeeded
-          if ( currentResult[iView].isValid() )
+          // Vector-2 residual, pose of the rig parameterized by 6 parameters
+          cost_function = new ceres::AutoDiffCostFunction<ResidualErrorMainCameraFunctor, 2, 6>(
+          new ResidualErrorMainCameraFunctor(currentResult[iView].getIntrinsics(), points2D.col(iPoint), points3D.col(iPoint) ));
+
+          if (cost_function)
           {
-            // Vector-2 residual, pose of the rig parameterized by 6 parameters
-            cost_function = new ceres::AutoDiffCostFunction<ResidualErrorMainCameraFunctor, 2, 6>(
-            new ResidualErrorMainCameraFunctor(currentResult[iView].getIntrinsics(), points2D.col(iPoint), points3D.col(iPoint) ));
-            
-            if (cost_function)
-            {
-              assert(vMainPoses.find(iView) != vMainPoses.end());
-              problem.AddResidualBlock( cost_function,
-                                        p_LossFunction,
-                                        &vMainPoses[iView][0]);
-            }else
-            {
-              POPART_CERR("Fail in adding residual block for the main camera");
-            }
+            assert(vMainPoses.find(iView) != vMainPoses.end());
+            problem.AddResidualBlock( cost_function,
+                                      p_LossFunction,
+                                      &vMainPoses[iView][0]);
+          }else
+          {
+            POPART_CERR("Fail in adding residual block for the main camera");
           }
 
         }else
         // Add a residual block for a secondary camera
         {
-          // Add the residual block if the resection (of the secondary camera) succeeded
-          if( _vLocalizationResults[0][iView].isValid() && currentResult[iView].isValid() )
+          // Vector-2 residual, pose of the rig parameterized by 6 parameters
+          //                  + relative pose of the secondary camera parameterized by 6 parameters
+
+          cost_function = new ceres::AutoDiffCostFunction<ResidualErrorSecondaryCameraFunctor, 2, 6, 6>(
+          new ResidualErrorSecondaryCameraFunctor(currentResult[iView].getIntrinsics(), points2D.col(iPoint), points3D.col(iPoint)));
+
+          if(cost_function)
           {
-            // Vector-2 residual, pose of the rig parameterized by 6 parameters
-            //                  + relative pose of the secondary camera parameterized by 6 parameters
-            
-            cost_function = new ceres::AutoDiffCostFunction<ResidualErrorSecondaryCameraFunctor, 2, 6, 6>(
-            new ResidualErrorSecondaryCameraFunctor(currentResult[iView].getIntrinsics(), points2D.col(iPoint), points3D.col(iPoint)));
-            
-            if(cost_function)
-            {
-              assert(vMainPoses.find(iView) != vMainPoses.end());
-              assert(iLocalizer-1 < vRelativePoses.size());
-              problem.AddResidualBlock( cost_function,
-                                        p_LossFunction,
-                                        &vMainPoses[iView][0],
-                                        &vRelativePoses[iLocalizer-1][0]);
-            }else
-            {
-              POPART_CERR("Fail in adding residual block for a secondary camera");
-            }
+            assert(vMainPoses.find(iView) != vMainPoses.end());
+            assert(iLocalizer-1 < vRelativePoses.size());
+            problem.AddResidualBlock( cost_function,
+                                      p_LossFunction,
+                                      &vMainPoses[iView][0],
+                                      &vRelativePoses[iLocalizer-1][0]);
+          }else
+          {
+            POPART_CERR("Fail in adding residual block for a secondary camera");
           }
         }
       }
