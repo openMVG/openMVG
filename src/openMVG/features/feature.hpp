@@ -28,6 +28,8 @@ class PointFeature {
   friend std::istream& operator>>(std::istream& in, PointFeature& obj);
 
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   PointFeature(float x=0.0f, float y=0.0f)
    : coords_(x, y) {}
 

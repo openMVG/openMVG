@@ -66,8 +66,8 @@ public:
 
   /// Return the squared distance between two descriptors
   // A default metric is used according the descriptor type:
-  // - Scalar: L2,
-  // - Binary: Hamming
+  // - Scalar: SquaredL2,
+  // - Binary: SquaredHamming
   virtual double SquaredDescriptorDistance(size_t i, const Regions *, size_t j) const = 0;
 
   /// Add the Inth region to another Region container
@@ -159,7 +159,7 @@ public:
 
   Regions * EmptyClone() const
   {
-    return new Scalar_Regions();
+    return new Scalar_Regions;
   }
 
   // Return the L2 distance between two descriptors
@@ -171,7 +171,7 @@ public:
 
     const Scalar_Regions<FeatT, T, L> * regionsT = dynamic_cast<const Scalar_Regions<FeatT, T, L> *>(regions);
     static matching::L2_Vectorized<T> metric;
-    return metric(vec_descs_[i].getData(), regionsT->vec_descs_[j].getData(), DescriptorT::static_size);
+    return metric(vec_descs_[i].data(), regionsT->vec_descs_[j].data(), DescriptorT::static_size);
   }
 
   /// Add the Inth region to another Region container
@@ -273,7 +273,7 @@ public:
 
   Regions * EmptyClone() const
   {
-    return new Binary_Regions();
+    return new Binary_Regions;
   }
 
   // Return the squared Hamming distance between two descriptors
@@ -286,7 +286,7 @@ public:
     const Binary_Regions<FeatT, L> * regionsT = dynamic_cast<const Binary_Regions<FeatT, L> *>(regions);
     static matching::Hamming<unsigned char> metric;
     const typename matching::Hamming<unsigned char>::ResultType descDist =
-      metric(vec_descs_[i].getData(), regionsT->vec_descs_[j].getData(), DescriptorT::static_size);
+      metric(vec_descs_[i].data(), regionsT->vec_descs_[j].data(), DescriptorT::static_size);
     return descDist * descDist;
   }
 

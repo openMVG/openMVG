@@ -107,7 +107,7 @@ public:
         SIOPointFeature feat((*i_keypoint).pt.x, (*i_keypoint).pt.y, (*i_keypoint).size, (*i_keypoint).angle);
         regionsCasted->Features().push_back(feat);
 
-        memcpy(descriptor.getData(),
+        memcpy(descriptor.data(),
                m_desc.ptr<typename DescriptorT::bin_type>(cpt),
                DescriptorT::static_size*sizeof(DescriptorT::bin_type));
         regionsCasted->Descriptors().push_back(descriptor);
