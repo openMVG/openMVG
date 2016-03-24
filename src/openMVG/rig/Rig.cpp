@@ -286,13 +286,12 @@ bool Rig::optimizeCalibration()
   for(std::vector<double> &pose : vRelativePoses)
   {
     double * parameter_block = &pose[0];
+    assert(parameter_block && "parameter_block is null in vRelativePoses");
     problem.AddParameterBlock(parameter_block, 6);
   }
   
   // Add rig pose (i.e. main camera pose) as a parameter block over all views (i.e. timestamps).
-  std::vector<std::vector<double> > vMainPoses;
-  vMainPoses.reserve(_vLocalizationResults[0].size());
-  for (int iView = 0 ; iView < _vLocalizationResults[0].size() ; ++iView )
+  std::map<std::size_t, std::vector<double> > vMainPoses;
   for(std::size_t iView = 0 ; iView < _vLocalizationResults[0].size() ; ++iView )
   {
     if(_vLocalizationResults[0][iView].isValid())
@@ -313,12 +312,14 @@ bool Rig::optimizeCalibration()
       mainPose.push_back(t(1));
       mainPose.push_back(t(2));
 
-      vMainPoses.push_back(mainPose);
+      vMainPoses.emplace(iView, mainPose);
     }
   }
-  for(std::vector<double> &pose : vMainPoses)
+  for(auto &elem : vMainPoses)
   {
+    auto pose = elem.second;
     double * parameter_block = &pose[0];
+    assert(parameter_block && "parameter_block is null in vMainPoses");
     problem.AddParameterBlock(parameter_block, 6);
   }
 
@@ -417,6 +418,7 @@ bool Rig::optimizeCalibration()
             
             if (cost_function)
             {
+              assert(vMainPoses.find(iView) != vMainPoses.end());
               problem.AddResidualBlock( cost_function,
                                         p_LossFunction,
                                         &vMainPoses[iView][0]);
@@ -440,6 +442,8 @@ bool Rig::optimizeCalibration()
             
             if(cost_function)
             {
+              assert(vMainPoses.find(iView) != vMainPoses.end());
+              assert(iLocalizer-1 < vRelativePoses.size());
               problem.AddResidualBlock( cost_function,
                                         p_LossFunction,
                                         &vMainPoses[iView][0],
