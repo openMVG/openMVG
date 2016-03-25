@@ -56,6 +56,7 @@ int main(int argc, char **argv)
   std::string sImage_Describer_Method = "SIFT";
   bool bForce = false;
   std::string sFeaturePreset = "";
+  bool bUseMask = false;
 
   // required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -65,6 +66,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('u', bUpRight, "upright") );
   cmd.add( make_option('f', bForce, "force") );
   cmd.add( make_option('p', sFeaturePreset, "describerPreset") );
+  cmd.add( make_option('k', bUseMask, "mask") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -86,6 +88,8 @@ int main(int argc, char **argv)
       << "   NORMAL (default),\n"
       << "   HIGH,\n"
       << "   ULTRA: !!Can take long time!!\n"
+      << "[-k|--mask]\n"
+      << "use mask to filter regions"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -99,7 +103,8 @@ int main(int argc, char **argv)
             << "--describerMethod " << sImage_Describer_Method << std::endl
             << "--upright " << bUpRight << std::endl
             << "--describerPreset " << (sFeaturePreset.empty() ? "NORMAL" : sFeaturePreset) << std::endl
-            << "--force " << bForce << std::endl;
+            << "--force " << bForce << std::endl
+            << "--mask " << bUseMask << std::endl;
 
 
   if (sOutDir.empty())  {
@@ -211,6 +216,13 @@ int main(int argc, char **argv)
   {
     system::Timer timer;
     Image<unsigned char> imageGray;
+    Image<unsigned char> globalMask;
+    Image<unsigned char> imageMask;
+
+    const std::string sGlobalMask_filename = stlplus::create_filespec(sfm_data.s_root_path, "mask.png");
+    if(bUseMask && stlplus::file_exists(sGlobalMask_filename))
+      ReadImage(sGlobalMask_filename.c_str(), &globalMask);
+
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
     for(Views::const_iterator iterViews = sfm_data.views.begin();
@@ -231,9 +243,22 @@ int main(int argc, char **argv)
         if (!ReadImage(sView_filename.c_str(), &imageGray))
           continue;
 
+        Image<unsigned char> * mask = nullptr;
+
+        const std::string sImageMask_filename = stlplus::create_filespec(sfm_data.s_root_path,
+         stlplus::basename_part(sView_filename), "_mask.png");
+
+        if(bUseMask && stlplus::file_exists(sImageMask_filename))
+          ReadImage(sImageMask_filename.c_str(), &imageMask);
+
+        if(globalMask.size() == imageGray.size())
+          mask = &globalMask;
+        if(imageMask.size() == imageGray.size())
+          mask = &imageMask;
+
         // Compute features and descriptors and export them to files
         std::unique_ptr<Regions> regions;
-        image_describer->Describe(imageGray, regions);
+        image_describer->Describe(imageGray, regions, mask);
         image_describer->Save(regions.get(), sFeat, sDesc);
       }
     }
