@@ -103,7 +103,6 @@ OpenMVG Pinhole camera models
   * :class:`Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic`
 
     * classic pinhole camera (Focal + principal point and image size) + fish-eye distortion by four factors.
-    * can only be applied to a full frame fish-eye (i.e not to hemispherical ones)
     * can add and remove distortion
 
 
