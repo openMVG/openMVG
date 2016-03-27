@@ -208,6 +208,17 @@ TARGET_LINK_LIBRARIES(openMVG_main_openMVG2PMVS
   stlplus
   )
 
+# - Export a SfM openMVG scene to openMVS format
+#
+ADD_EXECUTABLE(openMVG_main_openMVG2openMVS main_openMVG2openMVS.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_openMVG2openMVS
+  openMVG_system
+  openMVG_image
+  openMVG_features
+  openMVG_sfm
+  stlplus
+  )
+
 # - Export a SfM openMVG scene to CMPMVS format
 #
 ADD_EXECUTABLE(openMVG_main_openMVG2CMPMVS main_openMVG2CMPMVS.cpp)
@@ -266,6 +277,8 @@ TARGET_LINK_LIBRARIES(openMVG_main_ExportCameraFrustums
 # installation rules
 SET_PROPERTY(TARGET openMVG_main_openMVG2PMVS PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_openMVG2PMVS DESTINATION bin/)
+SET_PROPERTY(TARGET openMVG_main_openMVG2openMVS PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_openMVG2openMVS DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_openMVG2CMPMVS PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_openMVG2CMPMVS DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_openMVG2MESHLAB PROPERTY FOLDER OpenMVG/software)
