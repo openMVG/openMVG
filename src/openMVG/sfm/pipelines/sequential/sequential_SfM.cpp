@@ -973,11 +973,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
 
   // A. Compute 2D/3D matches
   // A1. list tracks ids used by the view
-  openMVG::tracks::STLMAPTracks map_tracksCommon;
-  const std::set<size_t> set_viewIndex = {viewIndex};
-  TracksUtilsMap::GetTracksInImages(set_viewIndex, _map_tracks, map_tracksCommon);
-  std::set<size_t> set_tracksIds;
-  TracksUtilsMap::GetTracksIdVector(map_tracksCommon, &set_tracksIds);
+  const openMVG::tracks::TracksSet& set_tracksIds = _map_tracksPerView.at(viewIndex);
 
   // A2. intersects the track list with the reconstructed
   std::set<size_t> reconstructed_trackId;
@@ -1006,7 +1002,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
   // Get back featId associated to a tracksID already reconstructed.
   // These 2D/3D associations will be used for the resection.
   std::vector<size_t> vec_featIdForResection;
-  TracksUtilsMap::GetFeatIndexPerViewAndTrackId(map_tracksCommon,
+  TracksUtilsMap::GetFeatIndexPerViewAndTrackId(_map_tracks,
     set_trackIdForResection,
     viewIndex,
     &vec_featIdForResection);
