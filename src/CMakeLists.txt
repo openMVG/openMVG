@@ -406,6 +406,7 @@ OPTION(BOOST_NO_CXX11 "If Boost is not build with C++11 support this must be ena
 FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS system filesystem program_options thread serialization)
 IF(Boost_FOUND)
    MESSAGE(STATUS "Boost ${Boost_LIB_VERSION} found")
+   add_definitions(-DHAVE_BOOST)
    if(BOOST_NO_CXX11)
      add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
    endif(BOOST_NO_CXX11)

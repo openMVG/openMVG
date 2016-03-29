@@ -7,7 +7,7 @@
 
 #include "openMVG/multiview/rotation_averaging_l1.hpp"
 
-#ifdef HAVE_BOOST
+#ifdef OPENMVG_ROTATION_AVERAGING_WITH_BOOST
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/kruskal_min_spanning_tree.hpp>
 #include <boost/graph/prim_minimum_spanning_tree.hpp>
@@ -329,7 +329,7 @@ struct Link {
 };
 typedef std::queue<Link> LinkQue;
 
-#ifdef HAVE_BOOST
+#ifdef OPENMVG_ROTATION_AVERAGING_WITH_BOOST
 typedef boost::property<boost::edge_weight_t, float> edge_property_t;
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, size_t, edge_property_t> graph_t;
 typedef graph_t::vertex_descriptor vertex_t;
@@ -347,7 +347,7 @@ typedef std::map<std::pair<size_t,size_t>, Matrix3x3> MapEdgeIJ2R;
 size_t FindMaximumSpanningTree(const RelativeRotations& RelRs, graph_t& g, MapEdgeIJ2R& mapIJ2R, NodeArr& minGraph)
 {
   assert(!RelRs.empty());
-#ifdef HAVE_BOOST
+#ifdef OPENMVG_ROTATION_AVERAGING_WITH_BOOST
   for (size_t p = 0; p < RelRs.size(); ++p) {
     const RelativeRotation& relR = RelRs[p];
     boost::add_edge(relR.i, relR.j, - relR.weight, g);
@@ -463,7 +463,7 @@ unsigned int FilterRelativeRotations(
 
 REAL RelRotationAvgError(const RelativeRotations& RelRs, const Matrix3x3Arr& Rs, REAL* pMin=NULL, REAL* pMax=NULL)
 {
-#ifdef HAVE_BOOST
+#ifdef OPENMVG_ROTATION_AVERAGING_WITH_BOOST
   boost::accumulators::accumulator_set<REAL,
     boost::accumulators::stats<
       boost::accumulators::tag::min,
