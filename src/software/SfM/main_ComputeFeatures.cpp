@@ -88,8 +88,7 @@ int main(int argc, char **argv)
       << "   NORMAL (default),\n"
       << "   HIGH,\n"
       << "   ULTRA: !!Can take long time!!\n"
-      << "[-k|--mask]\n"
-      << "use mask to filter regions"
+      << "[-k|--mask] use mask to filter regions\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -247,7 +246,6 @@ int main(int argc, char **argv)
 
         const std::string sImageMask_filename = stlplus::create_filespec(sfm_data.s_root_path,
          stlplus::basename_part(sView_filename) + "_mask", "png");
-
         if(bUseMask && stlplus::file_exists(sImageMask_filename))
           ReadImage(sImageMask_filename.c_str(), &imageMask);
 

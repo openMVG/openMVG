@@ -234,6 +234,7 @@ int main(int argc, char **argv)
 #ifdef USE_OCVSIFT
   std::string sImage_Describer_Method = "AKAZE_OPENCV";
 #endif
+  bool bUseMask = false;
 
   // required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -243,6 +244,7 @@ int main(int argc, char **argv)
 #ifdef USE_OCVSIFT
   cmd.add( make_option('m', sImage_Describer_Method, "describerMethod") );
 #endif
+  cmd.add( make_option('k', bUseMask, "mask") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -252,13 +254,14 @@ int main(int argc, char **argv)
       << "[-i|--input_file]: a SfM_Data file \n"
       << "[-o|--outdir] path \n"
       << "\n[Optional]\n"
-      << "[-f|--force: Force to recompute data]\n"
+      << "[-f|--force] Force to recompute data\n"
 #ifdef USE_OCVSIFT
-      << "[-m|--describerMethod\n"
+      << "[-m|--describerMethod]\n"
       << "  (method to use to describe an image):\n"
       << "   AKAZE_OPENCV (default),\n"
-      << "   SIFT_OPENCV: SIFT FROM OPENCV,\n"
+      << "   SIFT_OPENCV: SIFT FROM OPENCV\n"
 #endif
+      << "[-k|--mask] use mask to filter regions\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -272,7 +275,8 @@ int main(int argc, char **argv)
 #ifdef USE_OCVSIFT
             << "--describerMethod " << sImage_Describer_Method << std::endl
 #endif
-            ;
+            << "--force " << bForce << std::endl
+            << "--mask " << bUseMask << std::endl;
 
   if (sOutDir.empty())  {
     std::cerr << "\nIt is an invalid output directory" << std::endl;
@@ -360,6 +364,13 @@ int main(int argc, char **argv)
   {
     system::Timer timer;
     Image<unsigned char> imageGray;
+    Image<unsigned char> globalMask;
+    Image<unsigned char> imageMask;
+
+    const std::string sGlobalMask_filename = stlplus::create_filespec(sfm_data.s_root_path, "mask.png");
+    if(bUseMask && stlplus::file_exists(sGlobalMask_filename))
+      ReadImage(sGlobalMask_filename.c_str(), &globalMask);
+
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
     for(Views::const_iterator iterViews = sfm_data.views.begin();
@@ -380,9 +391,23 @@ int main(int argc, char **argv)
         if (!ReadImage(sView_filename.c_str(), &imageGray))
           continue;
 
+        Image<unsigned char> * mask = nullptr; // The mask is null by default
+
+        const std::string sImageMask_filename = stlplus::create_filespec(sfm_data.s_root_path,
+                                                                         stlplus::basename_part(sView_filename) + "_mask", "png");
+        if(bUseMask && stlplus::file_exists(sImageMask_filename))
+          ReadImage(sImageMask_filename.c_str(), &imageMask);
+
+        // The mask point to the globalMask, if a valid one exists for the current image
+        if(globalMask.size() == imageGray.size())
+          mask = &globalMask;
+        // The mask point to the imageMask (individual mask) if a valid one exists for the current image
+        if(imageMask.size() == imageGray.size())
+          mask = &imageMask;
+
         // Compute features and descriptors and export them to files
         std::unique_ptr<Regions> regions;
-        image_describer->Describe(imageGray, regions);
+        image_describer->Describe(imageGray, regions, mask);
         image_describer->Save(regions.get(), sFeat, sDesc);
       }
     }
