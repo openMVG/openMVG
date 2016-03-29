@@ -371,7 +371,8 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
     std::cout << "\n" << "Track export to internal struct" << std::endl;
     //-- Build tracks with STL compliant type :
     tracksBuilder.ExportToSTL(_map_tracks);
-
+    tracks::TracksUtilsMap::computeTracksPerView(_map_tracks, _map_tracksPerView);
+    
     std::cout << "\n" << "Track stats" << std::endl;
     {
       std::ostringstream osTrack;
@@ -905,15 +906,10 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
     const size_t viewId = *iter;
 
     // Compute 2D - 3D possible content
-    openMVG::tracks::STLMAPTracks map_tracksCommon;
-    const std::set<size_t> set_viewId = {viewId};
-    tracks::TracksUtilsMap::GetTracksInImages(set_viewId, _map_tracks, map_tracksCommon);
+    const openMVG::tracks::TracksSet& set_tracksIds = _map_tracksPerView.at(viewId);
 
-    if (!map_tracksCommon.empty())
+    if (!set_tracksIds.empty())
     {
-      std::set<size_t> set_tracksIds;
-      tracks::TracksUtilsMap::GetTracksIdVector(map_tracksCommon, &set_tracksIds);
-
       // Count the common possible putative point
       //  with the already 3D reconstructed trackId
       std::vector<size_t> vec_trackIdForResection;

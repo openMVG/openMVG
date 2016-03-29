@@ -135,7 +135,8 @@ private:
   Matches_Provider  * _matches_provider;
 
   // Temporary data
-  openMVG::tracks::STLMAPTracks _map_tracks; // putative landmark tracks (visibility per 3D point)
+  openMVG::tracks::STLMAPTracks _map_tracks; // putative landmark tracks (visibility per potential 3D point)
+  openMVG::tracks::TracksPerView _map_tracksPerView; // putative tracks per view
   Hash_Map<IndexT, double> _map_ACThreshold; // Per camera confidence (A contrario estimated threshold error)
 
   std::set<size_t> _set_remainingViewId;     // Remaining camera index that can be used for resection

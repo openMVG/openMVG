@@ -39,6 +39,7 @@
 
 #ifdef HAVE_BOOST
 #include <boost/container/flat_map.hpp>
+#include <boost/container/flat_set.hpp>
 #endif
 
 #include <algorithm>
@@ -90,9 +91,13 @@ namespace tracks  {
 typedef boost::container::flat_map<size_t,size_t> submapTrack;
 // A track is a collection of {trackId, submapTrack}
 typedef boost::container::flat_map< size_t, submapTrack > STLMAPTracks;
+typedef boost::container::flat_set<size_t> TracksSet;
+typedef boost::container::flat_map< size_t, TracksSet > TracksPerView;
 #else
 typedef std::map<size_t,size_t> submapTrack;
 typedef std::map< size_t, submapTrack > STLMAPTracks;
+typedef std::set<size_t> TracksSet;
+typedef std::map< size_t, TracksSet > TracksPerView;
 #endif
 
 struct TracksBuilder
@@ -283,27 +288,51 @@ struct TracksUtilsMap
     map_tracksOut.clear();
 
     // Go along the tracks
-    for (STLMAPTracks::const_iterator iterT = map_tracksIn.begin();
-      iterT != map_tracksIn.end(); ++iterT)
+    for (auto& trackIn: map_tracksIn)
     {
       // Look if the track contains the provided view index & save the point ids
       submapTrack map_temp;
-      for (std::set<size_t>::const_iterator iterIndex = set_imageIndex.begin();
-        iterIndex != set_imageIndex.end(); ++iterIndex)
+      for (size_t imageIndex: set_imageIndex)
       {
-        submapTrack::const_iterator iterSearch = iterT->second.find(*iterIndex);
-        if (iterSearch == iterT->second.end())
+        submapTrack::const_iterator iterSearch = trackIn.second.find(imageIndex);
+        if (iterSearch == trackIn.second.end())
             break; // at least one request image is not in the track
         map_temp[iterSearch->first] = iterSearch->second;
       }
       // if we have a feature for each input image
       // we can add it to the output tracks.
       if (map_temp.size() == set_imageIndex.size())
-        map_tracksOut[iterT->first] = std::move(map_temp);
+        map_tracksOut[trackIn.first] = std::move(map_temp);
     }
     return !map_tracksOut.empty();
   }
 
+  /// Return the tracksId of one image
+  static void GetImageTracksId(
+    const STLMAPTracks & map_tracks,
+    const size_t & imageIndex,
+    std::set<size_t> * set_tracksIds)
+  {
+    set_tracksIds->clear();
+    for (auto& track: map_tracks)
+    {
+      submapTrack::const_iterator iterSearch = track.second.find(imageIndex);
+      if (iterSearch != track.second.end())
+        set_tracksIds->insert(track.first);
+    }
+  }
+
+  static void computeTracksPerView(const STLMAPTracks & map_tracks, TracksPerView& map_tracksPerView)
+  {
+    for (auto& track: map_tracks)
+    {
+      for (auto& feat: track.second)
+      {
+        map_tracksPerView[feat.first].insert(track.first);
+      }
+    }
+  }
+  
   /// Return the tracksId as a set (sorted increasing)
   static void GetTracksIdVector(
     const STLMAPTracks & map_tracks,
@@ -408,6 +437,16 @@ struct TracksUtilsMap
     }
   }
 
+  /// Return a set containing the image Id considered in the tracks container.
+  static void ImageIdInTracks(const TracksPerView & map_tracksPerView,
+    std::set<size_t> & set_imagesId)
+  {
+    for (auto& viewTracks: map_tracksPerView)
+    {
+      set_imagesId.insert(viewTracks.first);
+    }
+  }
+  
   /// Return a set containing the image Id considered in the tracks container.
   static void ImageIdInTracks(const STLMAPTracks & map_tracks,
     std::set<size_t> & set_imagesId)
