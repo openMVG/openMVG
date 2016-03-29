@@ -1,34 +1,18 @@
-#ifndef _INTERFACE_H_
-#define _INTERFACE_H_
+#ifndef _INTERFACE_MVS_H_
+#define _INTERFACE_MVS_H_
 
 
 // I N C L U D E S /////////////////////////////////////////////////
 
+#include <fstream>
+
 
 // D E F I N E S ///////////////////////////////////////////////////
 
-// uncomment to enable BOOST serialization support
-// (should be uncommented)
-#ifndef _USE_BOOST
-//#define _USE_BOOST
-#endif
-
-// uncomment to enable BOOST serialization type specializations
-// (should be uncommented if serialization specialization not previously implemented)
-#ifndef _USE_BOOST_SERIALIZATION
-//#defined _USE_BOOST_SERIALIZATION
-#endif
-
 // uncomment to enable custom OpenCV data types
 // (should be uncommented if OpenCV is not available)
-#ifndef _USE_CUSTOM_CV
-//#define _USE_CUSTOM_CV
-#endif
-
-// uncomment to enable custom serialization code
-// (should be uncommented if BOOST is not available)
-#if !defined(_USE_BOOST) && !defined(_USE_CUSTOM_ARCHIVE)
-#define _USE_CUSTOM_ARCHIVE
+#if !defined(_USE_OPENCV) && !defined(_USE_CUSTOM_CV)
+#define _USE_CUSTOM_CV
 #endif
 
 #ifndef NO_ID
@@ -90,11 +74,7 @@ public:
 /*----------------------------------------------------------------*/
 
 
-#if defined(_USE_CUSTOM_ARCHIVE) || !defined(_USE_BOOST)
-
 // custom serialization
-#include <fstream>
-
 namespace ARCHIVE {
 
 struct ArchiveSave;
@@ -236,34 +216,8 @@ bool Load(ArchiveLoad& a, std::vector<_Tp>& v) {
 	}
 	return true;
 }
+
 } // namespace ARCHIVE
-
-#elif defined(_USE_BOOST_SERIALIZATION)
-
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/utility.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/vector.hpp>
-
-namespace boost {
-namespace serialization {
-
-// Serialization support for cv::Matx
-template<class Archive, typename _Tp, int m, int n>
-void serialize(Archive& ar, cv::Matx<_Tp,m,n>& _m, const unsigned int /*version*/) {
-	ar & _m.val;
-}
-
-// Serialization support for cv::Point3_
-template<class Archive, typename _Tp>
-void serialize(Archive& ar, cv::Point3_<_Tp>& pt, const unsigned int /*version*/) {
-	ar & pt.x & pt.y & pt.z;
-}
-
-} // namespace serialization
-} // namespace boost
-
-#endif
 /*----------------------------------------------------------------*/
 
 
@@ -414,5 +368,4 @@ struct Interface
 
 } // namespace MVS
 
-#endif // _INTERFACE_H_
-
+#endif // _INTERFACE_MVS_H_

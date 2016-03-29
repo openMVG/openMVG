@@ -13,7 +13,6 @@
 #include "openMVG/image/image.hpp"
 
 #define _USE_EIGEN
-#define _USE_CUSTOM_CV
 #include "InterfaceMVS.h"
 
 using namespace openMVG;
@@ -132,6 +131,11 @@ bool exportToOpenMVS(
 		}
 		if (views.size() < 2)
 			continue;
+		std::sort(views.begin(), views.end(),
+			[] (const MVS::Interface::Vertex::View& view0, const MVS::Interface::Vertex::View& view1) {
+				return view0.imageID < view1.imageID;
+			}
+		);
 		vert.X = landmark.X.cast<float>();
 		scene.vertices.push_back(vert);
 	}
@@ -165,11 +169,7 @@ bool exportToOpenMVS(
 	}
 
 	// write OpenMVS data
-	#if defined(_USE_CUSTOM_ARCHIVE)
 	if (!ARCHIVE::SerializeSave(scene, sOutFile))
-	#elif defined(_USE_BOOST)
-	if (!SerializeSave(scene, sOutDir, ARCHIVE_BINARY_ZIP))
-	#endif
 		return false;
 
 	std::cout
