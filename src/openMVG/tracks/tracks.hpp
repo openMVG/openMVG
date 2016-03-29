@@ -37,6 +37,10 @@
 
 #include "openMVG/matching/indMatch.hpp"
 
+#ifdef HAVE_BOOST
+#include <boost/container/flat_map.hpp>
+#endif
+
 #include <algorithm>
 #include <iostream>
 #include <functional>
@@ -80,11 +84,16 @@ private:
 
 namespace tracks  {
 
+#ifdef HAVE_BOOST
 // Data structure to store a track: collection of {ImageId,FeatureId}
 //  The corresponding image points with their imageId and FeatureId.
-typedef std::map<size_t,size_t> submapTrack;
+typedef boost::container::flat_map<size_t,size_t> submapTrack;
 // A track is a collection of {trackId, submapTrack}
+typedef boost::container::flat_map< size_t, submapTrack > STLMAPTracks;
+#else
+typedef std::map<size_t,size_t> submapTrack;
 typedef std::map< size_t, submapTrack > STLMAPTracks;
+#endif
 
 struct TracksBuilder
 {
