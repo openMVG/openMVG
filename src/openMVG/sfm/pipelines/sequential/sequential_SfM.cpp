@@ -895,42 +895,38 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
     stl::RetrieveKey());
 
   Pair_Vec vec_putative; // ImageId, NbPutativeCommonPoint
-#ifdef OPENMVG_USE_OPENMP
-  #pragma omp parallel
-#endif
-  for (std::set<size_t>::const_iterator iter = set_remainingViewId.begin();
-        iter != set_remainingViewId.end(); ++iter)
+  #ifdef OPENMVG_USE_OPENMP
+    #pragma omp parallel for
+  #endif
+  for (std::size_t i = 0; i < set_remainingViewId.size(); ++i)
   {
-#ifdef OPENMVG_USE_OPENMP
-  #pragma omp single nowait
-#endif
+    std::set<size_t>::const_iterator iter = set_remainingViewId.cbegin();
+    std::advance(iter, i);
+    const size_t viewId = *iter;
+
+    // Compute 2D - 3D possible content
+    openMVG::tracks::STLMAPTracks map_tracksCommon;
+    const std::set<size_t> set_viewId = {viewId};
+    tracks::TracksUtilsMap::GetTracksInImages(set_viewId, _map_tracks, map_tracksCommon);
+
+    if (!map_tracksCommon.empty())
     {
-      const size_t viewId = *iter;
+      std::set<size_t> set_tracksIds;
+      tracks::TracksUtilsMap::GetTracksIdVector(map_tracksCommon, &set_tracksIds);
 
-      // Compute 2D - 3D possible content
-      openMVG::tracks::STLMAPTracks map_tracksCommon;
-      const std::set<size_t> set_viewId = {viewId};
-      tracks::TracksUtilsMap::GetTracksInImages(set_viewId, _map_tracks, map_tracksCommon);
-
-      if (!map_tracksCommon.empty())
-      {
-        std::set<size_t> set_tracksIds;
-        tracks::TracksUtilsMap::GetTracksIdVector(map_tracksCommon, &set_tracksIds);
-
-        // Count the common possible putative point
-        //  with the already 3D reconstructed trackId
-        std::vector<size_t> vec_trackIdForResection;
-        std::set_intersection(set_tracksIds.begin(), set_tracksIds.end(),
-          reconstructed_trackId.begin(),
-          reconstructed_trackId.end(),
-          std::back_inserter(vec_trackIdForResection));
+      // Count the common possible putative point
+      //  with the already 3D reconstructed trackId
+      std::vector<size_t> vec_trackIdForResection;
+      std::set_intersection(set_tracksIds.begin(), set_tracksIds.end(),
+        reconstructed_trackId.begin(),
+        reconstructed_trackId.end(),
+        std::back_inserter(vec_trackIdForResection));
 
 #ifdef OPENMVG_USE_OPENMP
         #pragma omp critical
 #endif
-        {
-          vec_putative.push_back( make_pair(viewId, vec_trackIdForResection.size()));
-        }
+      {
+        vec_putative.emplace_back(viewId, vec_trackIdForResection.size());
       }
     }
   }
