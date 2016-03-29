@@ -243,16 +243,18 @@ int main(int argc, char **argv)
         if (!ReadImage(sView_filename.c_str(), &imageGray))
           continue;
 
-        Image<unsigned char> * mask = nullptr;
+        Image<unsigned char> * mask = nullptr; // The mask is null by default
 
         const std::string sImageMask_filename = stlplus::create_filespec(sfm_data.s_root_path,
-         stlplus::basename_part(sView_filename), "_mask.png");
+         stlplus::basename_part(sView_filename) + "_mask", "png");
 
         if(bUseMask && stlplus::file_exists(sImageMask_filename))
           ReadImage(sImageMask_filename.c_str(), &imageMask);
 
+        // The mask point to the globalMask, if a valid one exists for the current image
         if(globalMask.size() == imageGray.size())
           mask = &globalMask;
+        // The mask point to the imageMask (individual mask) if a valid one exists for the current image
         if(imageMask.size() == imageGray.size())
           mask = &imageMask;
 
