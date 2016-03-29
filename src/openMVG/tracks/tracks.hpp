@@ -353,19 +353,15 @@ struct TracksUtilsMap
     size_t nImageIndex,
     std::vector<size_t> * pvec_featIndex)
   {
-    for (STLMAPTracks::const_iterator iterT = map_tracks.begin();
-      iterT != map_tracks.end(); ++iterT)
+    for (size_t trackId: set_trackId)
     {
-      const size_t trackId = iterT->first;
-      if (set_trackId.find(trackId) != set_trackId.end())
+      STLMAPTracks::const_iterator iterT = map_tracks.find(trackId);
+      //try to find imageIndex
+      const submapTrack & map_ref = iterT->second;
+      submapTrack::const_iterator iterSearch = map_ref.find(nImageIndex);
+      if (iterSearch != map_ref.end())
       {
-        //try to find imageIndex
-        const submapTrack & map_ref = iterT->second;
-        submapTrack::const_iterator iterSearch = map_ref.find(nImageIndex);
-        if (iterSearch != map_ref.end())
-        {
-          pvec_featIndex->emplace_back(iterSearch->second);
-        }
+        pvec_featIndex->emplace_back(iterSearch->second);
       }
     }
     return !pvec_featIndex->empty();
