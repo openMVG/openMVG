@@ -86,7 +86,7 @@ bool Rig::initializeCalibration()
   _vRelativePoses.reserve(nCams-1);
   
   // Loop over all witness cameras
-  for (int iLocalizer=1 ; iLocalizer < nCams ; ++iLocalizer)
+  for(std::size_t iLocalizer=1 ; iLocalizer < nCams ; ++iLocalizer)
   {
     // Perform the pose averaging over all relative pose between the main camera
     // (index 0) and the witness camera (index i)
@@ -97,7 +97,7 @@ bool Rig::initializeCalibration()
     std::vector<geometry::Pose3> vRelativePoses;
     vRelativePoses.reserve(resWitnessCamera.size());
     
-    for(int iView=0 ; iView < resWitnessCamera.size() ; ++iView )
+    for(std::size_t iView=0 ; iView < resWitnessCamera.size() ; ++iView )
     {
       // Check that both pose computations succeeded 
       if ( resMainCamera[iView].isValid() && resWitnessCamera[iView].isValid() )
@@ -123,12 +123,12 @@ bool Rig::initializeCalibration()
   }
   
   // Update all poses in all localization results
-  for (int iRelativePose = 0 ; iRelativePose < _vRelativePoses.size() ; ++iRelativePose )
+  for(std::size_t iRelativePose = 0 ; iRelativePose < _vRelativePoses.size() ; ++iRelativePose )
   {
     std::size_t iRes = iRelativePose+1;
-    for (int iView = 0 ; iView < _vLocalizationResults[iRes].size() ; ++iView )
+    for(std::size_t iView = 0 ; iView < _vLocalizationResults[iRes].size() ; ++iView )
     {
-      if(  _vLocalizationResults[0][iView].isValid() )
+      if(_vLocalizationResults[0][iView].isValid())
       {
         const geometry::Pose3 & relativePose = _vRelativePoses[iRelativePose];
         
@@ -165,7 +165,7 @@ void Rig::findBestRelativePose(
     const geometry::Pose3 & relativePose = vPoses[i];
 
     double error = 0;
-    for(int j=0 ; j < resWitnessCamera.size() ; ++j )
+    for(std::size_t j=0 ; j < resWitnessCamera.size() ; ++j )
     {
       // Check that both pose computations succeeded 
       if ( ( resMainCamera[j].isValid() ) && ( resWitnessCamera[j].isValid() ) )
@@ -383,7 +383,7 @@ bool Rig::optimizeCalibration()
 
   // Set a LossFunction to be less penalized by false measurements
   //  - set it to NULL if you don't want use a lossFunction.
-  ceres::LossFunction * p_LossFunction = NULL;//new ceres::HuberLoss(Square(4.0));
+  ceres::LossFunction * p_LossFunction = nullptr;//new ceres::HuberLoss(Square(4.0));
   // todo: make the LOSS function and the parameter an option
 
   // For all visibility add reprojections errors:
@@ -478,18 +478,18 @@ bool Rig::optimizeCalibration()
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
   
-  if (openMVG_options._bCeres_Summary)
+  if(openMVG_options._bCeres_Summary)
     POPART_COUT(summary.FullReport());
 
   // If no error, get back refined parameters
-  if (!summary.IsSolutionUsable())
+  if(!summary.IsSolutionUsable())
   {
     if (openMVG_options._bVerbose)
       POPART_COUT("Bundle Adjustment failed.");
     return false;
   }
 
-  if (openMVG_options._bVerbose)
+  if(openMVG_options._bVerbose)
   {
     // Display statistics about the minimization
     POPART_COUT( "\n"
@@ -502,7 +502,7 @@ bool Rig::optimizeCalibration()
   }
 
   // Update relative pose after optimization
-  for (int iRelativePose = 0 ; iRelativePose < _vRelativePoses.size() ; ++iRelativePose )
+  for(std::size_t iRelativePose = 0 ; iRelativePose < _vRelativePoses.size() ; ++iRelativePose)
   {
     openMVG::Mat3 R_refined;
     std::vector<double> vPose;
@@ -515,9 +515,9 @@ bool Rig::optimizeCalibration()
   }
 
   // Update the main camera pose after optimization
-  for (int iView = 0 ; iView < _vLocalizationResults[0].size() ; ++iView )
+  for(std::size_t iView = 0 ; iView < _vLocalizationResults[0].size() ; ++iView)
   {
-    if( _vLocalizationResults[0][iView].isValid() )
+    if(_vLocalizationResults[0][iView].isValid())
     {
       openMVG::Mat3 R_refined;
       std::vector<double> vPose;
@@ -534,15 +534,15 @@ bool Rig::optimizeCalibration()
   displayRelativePoseReprojection(geometry::Pose3(openMVG::Mat3::Identity(), openMVG::Vec3::Zero()), 0);
 
   // Update all poses over all witness cameras after optimization
-  for (int iRelativePose = 0 ; iRelativePose < _vRelativePoses.size() ; ++iRelativePose )
+  for(std::size_t iRelativePose = 0; iRelativePose < _vRelativePoses.size(); ++iRelativePose)
   {
-    std::size_t iLocalizer = iRelativePose+1;
+    const std::size_t iLocalizer = iRelativePose+1;
     // Loop over all views
-    for (int iView = 0 ; iView < _vLocalizationResults[iLocalizer].size() ; ++iView )
+    for(std::size_t iView = 0; iView < _vLocalizationResults[iLocalizer].size(); ++iView)
     {
       // If the localization has succeeded then if the witness camera localization succeeded 
       // then update the pose else continue.
-      if( _vLocalizationResults[0][iView].isValid() && _vLocalizationResults[iLocalizer][iView].isValid() )
+      if(_vLocalizationResults[0][iView].isValid() && _vLocalizationResults[iLocalizer][iView].isValid())
       {
         // Retrieve the witness camera pose from the main camera one.
         const geometry::Pose3 poseWitnessCamera = poseFromMainToWitness(_vLocalizationResults[0][iView].getPose(), _vRelativePoses[iRelativePose]);
@@ -669,7 +669,7 @@ bool loadRigCalibration(const std::string &filename, std::vector<geometry::Pose3
     subposes.push_back(geometry::Pose3(rot, center));
   }
   
-  bool isOk = fs.good();
+  const bool isOk = fs.good();
   fs.close();
   return isOk;
 }
@@ -707,7 +707,7 @@ bool saveRigCalibration(const std::string &filename, const std::vector<geometry:
     fs << center(1) << std::endl;
     fs << center(2) << std::endl;
   }
-  bool isOk = fs.good();
+  const bool isOk = fs.good();
   fs.close();
   return isOk;
 }
