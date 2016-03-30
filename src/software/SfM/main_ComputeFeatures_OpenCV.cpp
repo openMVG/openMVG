@@ -77,16 +77,21 @@ public:
   */
   bool Describe(const Image<unsigned char>& image,
     std::unique_ptr<Regions> &regions,
-    const Image<unsigned char> * mask = NULL)
+    const Image<unsigned char> * mask = nullptr)
   {
     cv::Mat img;
     cv::eigen2cv(image.GetMat(), img);
+
+    cv::Mat m_mask;
+    if(mask != nullptr) {
+      cv::eigen2cv(mask->GetMat(), m_mask);
+    }
 
     std::vector< cv::KeyPoint > vec_keypoints;
     cv::Mat m_desc;
 
     cv::Ptr<cv::Feature2D> extractor = cv::AKAZE::create(cv::AKAZE::DESCRIPTOR_KAZE);
-    extractor->detectAndCompute(img, cv::Mat(), vec_keypoints, m_desc);
+    extractor->detectAndCompute(img, m_mask, vec_keypoints, m_desc);
 
     if (!vec_keypoints.empty())
     {
@@ -157,11 +162,17 @@ public:
   */
   bool Describe(const image::Image<unsigned char>& image,
     std::unique_ptr<Regions> &regions,
-    const image::Image<unsigned char> * mask = NULL)
+    const image::Image<unsigned char> * mask = nullptr)
   {
     // Convert for opencv
     cv::Mat img;
     cv::eigen2cv(image.GetMat(), img);
+
+    // Convert mask image into cv::Mat
+    cv::Mat m_mask;
+    if(mask != nullptr) {
+      cv::eigen2cv(mask->GetMat(), m_mask);
+    }
 
     // Create a SIFT detector
     std::vector< cv::KeyPoint > v_keypoints;
@@ -169,7 +180,7 @@ public:
     cv::Ptr<cv::Feature2D> siftdetector = cv::xfeatures2d::SIFT::create();
 
     // Process SIFT computation
-    siftdetector->detectAndCompute(img, cv::Mat(), v_keypoints, m_desc);
+    siftdetector->detectAndCompute(img, m_mask, v_keypoints, m_desc);
 
     Allocate(regions);
 
