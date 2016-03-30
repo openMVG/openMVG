@@ -6,7 +6,6 @@
 
 #include <fstream>
 
-
 // D E F I N E S ///////////////////////////////////////////////////
 
 // uncomment to enable custom OpenCV data types
@@ -35,7 +34,7 @@ public:
 	inline Matx() {}
 	#ifdef _USE_EIGEN
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW_IF_VECTORIZABLE_FIXED_SIZE(Type,m*n)
-	typedef Eigen::Matrix<Type,m,n,(n>1?Eigen::RowMajor:Eigen::Default)> EMat;
+	typedef Eigen::Matrix<Type,m,n,(n>1?Eigen::RowMajor : Eigen::ColMajor)> EMat;
 	typedef Eigen::Map<const EMat> CEMatMap;
 	typedef Eigen::Map<EMat> EMatMap;
 	inline Matx(const EMat& rhs) { operator EMatMap () = rhs; }

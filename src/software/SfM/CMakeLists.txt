@@ -192,6 +192,7 @@ INSTALL(TARGETS openMVG_main_ExportUndistortedImages DESTINATION bin/)
 ###
 # SfM export to X
 # - PMVS + bundler data format
+# - OpenMVS
 # - CMPMVS
 # - Meshlab
 # - MVE (File format v2)
