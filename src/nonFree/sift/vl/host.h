@@ -18,7 +18,7 @@ the terms of the BSD license (see the COPYING file).
  ** @name Configuration options
  ** @{ */
 
- #if defined __clang__
+#if defined __clang__
 #define VL_DISABLE_THREADS
 #endif
 

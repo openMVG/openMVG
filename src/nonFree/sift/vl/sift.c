@@ -1614,9 +1614,6 @@ vl_sift_calc_keypoint_orientations (VlSiftFilt *f,
     return 0 ;
   }
 
-  /* make gradient up to date */
-  vl_sift_update_gradient (f) ;
-
   /* clear histogram */
   memset (hist, 0, sizeof(double) * nbins) ;
 
@@ -1994,9 +1991,6 @@ vl_sift_calc_keypoint_descriptor (VlSiftFilt *f,
      si    <  f->s_min + 1    ||
      si    >  f->s_max - 2     )
     return ;
-
-  /* synchronize gradient buffer */
-  vl_sift_update_gradient (f) ;
 
   /* VL_PRINTF("W = %d ; magnif = %g ; SBP = %g\n", W,magnif,SBP) ; */
 

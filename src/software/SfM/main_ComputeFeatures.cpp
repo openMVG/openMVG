@@ -224,21 +224,24 @@ int main(int argc, char **argv)
 
   // Feature extraction routines
   // For each View of the SfM_Data container:
-  // - if regions file exist continue,
+  // - if regions file exists continue,
   // - if no file, compute features
   {
     system::Timer timer;
-    Image<unsigned char> imageGray;
+
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
 
 #ifdef OPENMVG_USE_OPENMP
     omp_set_num_threads(iNumThreads);
-    #pragma omp parallel for schedule(dynamic) firstprivate(imageGray) if(iNumThreads > 0)
+    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0)
 #endif
     for(int i = 0; i < sfm_data.views.size(); ++i)
     {
-      const View * view = sfm_data.views[i].get();
+      Views::const_iterator iterViews = sfm_data.views.begin();
+      std::advance(iterViews, i);
+      const View * view = iterViews->second.get();
+
       const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
         view->s_Img_path);
       const std::string sFeat = stlplus::create_filespec(sOutDir,
@@ -249,19 +252,20 @@ int main(int argc, char **argv)
       //If features or descriptors file are missing, compute them
       if (bForce || !stlplus::file_exists(sFeat) || !stlplus::file_exists(sDesc))
       {
-        if (!ReadImage(sView_filename.c_str(), &imageGray))
-          continue;
-
-        // Compute features and descriptors and export them to files
-        std::unique_ptr<Regions> regions;
-        image_describer->Describe(imageGray, regions);
-        image_describer->Save(regions.get(), sFeat, sDesc);
+        Image<unsigned char> imageGray;
+        if (ReadImage(sView_filename.c_str(), &imageGray))
+        {
+          // Compute features and descriptors and export them to files
+          std::unique_ptr<Regions> regions;
+          image_describer->Describe(imageGray, regions);
+          image_describer->Save(regions.get(), sFeat, sDesc);
+        }
       }
 
 #ifdef OPENMVG_USE_OPENMP
-    #pragma omp critical
+      #pragma omp critical
 #endif
-    ++my_progress_bar;
+      ++my_progress_bar;
 
     }
     std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
