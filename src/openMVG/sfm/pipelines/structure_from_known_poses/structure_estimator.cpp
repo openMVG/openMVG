@@ -152,8 +152,8 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
   #endif // OPENMVG_USE_OPENMP
         {
           ++my_progress_bar;
-          for (size_t i = 0; i < vec_corresponding_indexes.size(); ++i)
-            putatives_matches[*it].push_back(vec_corresponding_indexes[i]);
+          putatives_matches[*it].insert(putatives_matches[*it].end(),
+            vec_corresponding_indexes.begin(), vec_corresponding_indexes.end());
         }
       }
     }
