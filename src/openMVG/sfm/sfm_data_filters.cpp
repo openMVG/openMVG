@@ -385,7 +385,6 @@ void KeepLargestViewCCTracks
       }
     }
   }
-  IsTracksOneCC(sfm_data);
 }
 
 } // namespace sfm
