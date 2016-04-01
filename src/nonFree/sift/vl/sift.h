@@ -47,6 +47,8 @@ typedef struct _VlSiftKeypoint
  ** This filter implements the SIFT detector and descriptor.
  **/
 
+#define EXPN_SZ  256          /**< ::fast_expn table size @internal */
+
 typedef struct _VlSiftFilt
 {
   double sigman ;       /**< nominal image smoothing. */
@@ -85,6 +87,8 @@ typedef struct _VlSiftFilt
 
   vl_sift_pix *grad ;   /**< GSS gradient data. */
   int grad_o ;          /**< GSS gradient data octave. */
+
+  double expn_tab [EXPN_SZ+1] ; /**< ::fast_expn table @internal */
 
 } VlSiftFilt ;
 
