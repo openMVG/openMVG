@@ -10,6 +10,7 @@
 
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/geometry/pose3.hpp"
 
 #include <vector>
@@ -36,47 +37,47 @@ class Pinhole_Intrinsic : public IntrinsicBase
     _Kinv = _K.inverse();
   }
 
-  virtual ~Pinhole_Intrinsic() {}
+  ~Pinhole_Intrinsic() override = default ; 
 
-  virtual EINTRINSIC getType() const { return PINHOLE_CAMERA; }
+  EINTRINSIC getType() const override { return PINHOLE_CAMERA; }
 
-  const Mat3& K() const { return _K; }
-  const Mat3& Kinv() const { return _Kinv; }
+  const Mat3& K() const  { return _K; }
+  const Mat3& Kinv() const  { return _Kinv; }
   /// Return the value of the focal in pixels
-  inline double focal() const {return _K(0,0);}
-  inline Vec2 principal_point() const {return Vec2(_K(0,2), _K(1,2));}
+  inline double focal() const  {return _K(0,0);}
+  inline Vec2 principal_point() const  {return Vec2(_K(0,2), _K(1,2));}
 
   // Get bearing vector of p point (image coord)
-  Vec3 operator () (const Vec2& p) const
+  Vec3 operator () (const Vec2& p) const override
   {
     Vec3 p3(p(0),p(1),1.0);
     return (_Kinv * p3).normalized();
   }
 
   // Transform a point from the camera plane to the image plane
-  Vec2 cam2ima(const Vec2& p) const
+  Vec2 cam2ima(const Vec2& p) const override
   {
     return focal() * p + principal_point();
   }
 
   // Transform a point from the image plane to the camera plane
-  Vec2 ima2cam(const Vec2& p) const
+  Vec2 ima2cam(const Vec2& p) const override
   {
     return ( p -  principal_point() ) / focal();
   }
 
-  virtual bool have_disto() const {  return false; }
+  bool have_disto() const override {  return false; }
 
-  virtual Vec2 add_disto(const Vec2& p) const  { return p; }
+  Vec2 add_disto(const Vec2& p) const override  { return p; }
 
-  virtual Vec2 remove_disto(const Vec2& p) const  { return p; }
+  Vec2 remove_disto(const Vec2& p) const override { return p; }
 
-  virtual double imagePlane_toCameraPlaneError(double value) const
+  double imagePlane_toCameraPlaneError(double value) const override 
   {
     return value / focal();
   }
 
-  virtual Mat34 get_projective_equivalent(const geometry::Pose3 & pose) const
+  Mat34 get_projective_equivalent(const geometry::Pose3 & pose) const override 
   {
     Mat34 P;
     P_From_KRt(K(), pose.rotation(), pose.translation(), &P);
@@ -84,14 +85,14 @@ class Pinhole_Intrinsic : public IntrinsicBase
   }
 
   // Data wrapper for non linear optimization (get data)
-  virtual std::vector<double> getParams() const
+  std::vector<double> getParams() const override
   {
     const std::vector<double> params = {_K(0,0), _K(0,2), _K(1,2)};
     return params;
   }
 
   // Data wrapper for non linear optimization (update from data)
-  virtual bool updateFromParams(const std::vector<double> & params)
+  bool updateFromParams(const std::vector<double> & params) override
   {
     if (params.size() == 3) {
       *this = Pinhole_Intrinsic(_w, _h, params[0], params[1], params[2]);
@@ -103,10 +104,10 @@ class Pinhole_Intrinsic : public IntrinsicBase
   }
 
   /// Return the un-distorted pixel (with removed distortion)
-  virtual Vec2 get_ud_pixel(const Vec2& p) const {return p;}
+  Vec2 get_ud_pixel(const Vec2& p) const override {return p;}
 
   /// Return the distorted pixel (with added distortion)
-  virtual Vec2 get_d_pixel(const Vec2& p) const {return p;}
+  Vec2 get_d_pixel(const Vec2& p) const override {return p;}
 
   // Serialization
   template <class Archive>

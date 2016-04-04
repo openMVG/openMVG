@@ -25,7 +25,7 @@ struct IntrinsicBase
   unsigned int _w, _h;
 
   IntrinsicBase(unsigned int w = 0, unsigned int h = 0):_w(w), _h(h) {}
-  virtual ~IntrinsicBase() {}
+  virtual ~IntrinsicBase() = default ;
 
   unsigned int w() const {return _w;}
   unsigned int h() const {return _h;}
@@ -119,8 +119,8 @@ struct IntrinsicBase
     stl::hash_combine(seed, _w);
     stl::hash_combine(seed, _h);
     const std::vector<double> params = this->getParams();
-    for (size_t i=0; i < params.size(); ++i)
-      stl::hash_combine(seed, params[i]);
+    for ( auto & param : params ) 
+      stl::hash_combine( seed , param );
     return seed;
   }
 };

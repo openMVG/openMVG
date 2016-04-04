@@ -10,6 +10,8 @@
 
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+
 
 #include <vector>
 
@@ -37,11 +39,11 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
         _params = {k1, k2, k3, t1, t2};
     }
 
-    EINTRINSIC getType() const { return PINHOLE_CAMERA_BROWN; }
+    EINTRINSIC getType() const override { return PINHOLE_CAMERA_BROWN; }
 
-    virtual bool have_disto() const { return true;}
+    bool have_disto() const override { return true;}
 
-    virtual Vec2 add_disto(const Vec2 & p) const{
+    Vec2 add_disto(const Vec2 & p) const override {
         return (p + distoFunction(_params, p));
     }
 
@@ -49,7 +51,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     // Heikkila J (2000) Geometric Camera Calibration Using Circular Control Points.
     // IEEE Trans. Pattern Anal. Mach. Intell., 22:1066-1077
 
-    virtual Vec2 remove_disto(const Vec2 & p) const{
+    Vec2 remove_disto(const Vec2 & p) const override {
         const double epsilon = 1e-8; //criteria to stop the iteration
         Vec2 p_u = p;
 
@@ -62,7 +64,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     }
 
     // Data wrapper for non linear optimization (get data)
-    virtual std::vector<double> getParams() const
+    std::vector<double> getParams() const override
     {
         std::vector<double> params = Pinhole_Intrinsic::getParams();
         params.push_back(_params[0]);
@@ -74,7 +76,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     }
 
     // Data wrapper for non linear optimization (update from data)
-    virtual bool updateFromParams(const std::vector<double> & params)
+    bool updateFromParams(const std::vector<double> & params) override
     {
         if (params.size() == 8) {
           *this = Pinhole_Intrinsic_Brown_T2(
@@ -90,13 +92,13 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     }
 
     /// Return the un-distorted pixel (with removed distortion)
-    virtual Vec2 get_ud_pixel(const Vec2& p) const
+    Vec2 get_ud_pixel(const Vec2& p) const override
     {
       return cam2ima( remove_disto(ima2cam(p)) );
     }
 
     /// Return the distorted pixel (with added distortion)
-    virtual Vec2 get_d_pixel(const Vec2& p) const
+    Vec2 get_d_pixel(const Vec2& p) const override
     {
       return cam2ima( add_disto(ima2cam(p)) );
     }

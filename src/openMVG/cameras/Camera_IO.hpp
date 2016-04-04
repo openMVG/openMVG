@@ -24,15 +24,22 @@ static bool save(
   const PinholeCamera & cam)
 {
   if (stlplus::extension_part(scameraFile) != "bin")
-    return false;
+  {
+    return false;    
+  }
+  else 
+  {
+    const Mat34 & PMat = cam._P;
+    std::ofstream file( scameraFile.c_str(), std::ios::out|std::ios::binary);
+    if( ! file )
+      return false ; 
+    
+    file.write(reinterpret_cast<const char*>(PMat.data()),(std::streamsize)(3*4)*sizeof(double));
 
-  const Mat34 & PMat = cam._P;
-  std::ofstream file( scameraFile.c_str(), std::ios::out|std::ios::binary);
-  file.write((const char*)PMat.data(),(std::streamsize)(3*4)*sizeof(double));
-
-  bool bOk = (!file.fail());
-  file.close();
-  return bOk;
+    const bool bOk = (!file.fail());
+    file.close();
+    return bOk;    
+  }
 }
 
 /// Load a Pinhole camera from a file (read 12 doubles saved in binary values)
@@ -51,7 +58,7 @@ static bool load(
       return false;
     }
     val.resize(12);
-    in.read((char*)&val[0],(std::streamsize)12*sizeof(double));
+    in.read(reinterpret_cast<char*>(&val[0]),(std::streamsize)12*sizeof(double));
     if (in.fail())  {
       val.clear();
     }
