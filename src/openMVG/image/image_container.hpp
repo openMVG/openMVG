@@ -97,7 +97,7 @@ namespace openMVG
       /**
       * @brief destructor
       */
-      virtual inline ~Image() {};
+      virtual inline ~Image() = default ; 
       //-- Image construction method
       //------------------------------
 
