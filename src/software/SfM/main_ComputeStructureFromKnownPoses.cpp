@@ -138,9 +138,9 @@ int main(int argc, char **argv)
     << "\nStructure estimation took (s): " << timer.elapsed() << "." << std::endl
     << "#landmark found: " << sfm_data.GetLandmarks().size() << std::endl;
 
-    std::cout << "...Generating SfM_Report.html" << std::endl;
-    Generate_SfM_Report(sfm_data,
-      stlplus::create_filespec(stlplus::folder_part(sOutFile), "SfMStructureFromKnownPoses_Report.html"));
+  std::cout << "...Generating SfM_Report.html" << std::endl;
+  Generate_SfM_Report(sfm_data,
+    stlplus::create_filespec(stlplus::folder_part(sOutFile), "SfMStructureFromKnownPoses_Report.html"));
 
   if (cmd.used('b'))
   {
