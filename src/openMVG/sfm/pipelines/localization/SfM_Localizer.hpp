@@ -25,13 +25,12 @@ struct Image_Localizer_Match_Data
             // found through the feature matching procedure.
   
   // pt2D and pt3D have the same number of columns.
-            
   std::vector<size_t> vec_inliers; // Index mask for both pt3D and pt2D whose elements
                                    // represent the column indices of inliers in  pt2D 
-                                   // and pt3D.   
+                                   // and pt3D.
   
   // Upper bound pixel(s) tolerance for residual errors
-  double error_max = std::numeric_limits<double>::infinity();
+  double error_max = 100;
   size_t max_iteration = 4096;
 };
 
