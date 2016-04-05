@@ -195,15 +195,15 @@ int main(int argc, char **argv)
   sfmEngine.setSfmdataInterFileExtension(sOutInterFileExtension);
   sfmEngine.setAllowUserInteraction(allowUserInteraction);
 
-  if (initialPairString.first == initialPairString.second)
-  {
-    std::cerr << "\nInvalid image names. You cannot use the same image to initialize a pair." << std::endl;
-    return false;
-  }
-  
   // Handle Initial pair parameter
   if (!initialPairString.first.empty() && !initialPairString.second.empty())
   {
+    if (initialPairString.first == initialPairString.second)
+    {
+      std::cerr << "\nInvalid image names. You cannot use the same image to initialize a pair." << std::endl;
+      return EXIT_FAILURE;
+    }
+
     Pair initialPairIndex;
     if(!computeIndexFromImageName(sfm_data, initialPairString.first, initialPairIndex.first)
             || !computeIndexFromImageName(sfm_data, initialPairString.second, initialPairIndex.second))
