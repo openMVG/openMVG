@@ -930,10 +930,24 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
   // Sort by the number of matches to the 3D scene.
   std::sort(vec_putative.begin(), vec_putative.end(), sort_pair_second<size_t, size_t, std::greater<size_t> >());
 
+  std::size_t minPointsThreshold = 30;
+
   // If the list is empty or if the list contains images with no correspondences
   // -> (no resection will be possible)
-  if (vec_putative.empty() || vec_putative[0].second == 0)
+  if (vec_putative.empty() || vec_putative[0].second < minPointsThreshold)
   {
+    std::cout << "FindImagesWithPossibleResection failed: ";
+    if(vec_putative.empty())
+    {
+      std::cout << "No putative image.";
+    }
+    else
+    {
+      std::cout << "Not enough point in the putative images: ";
+      for(auto v: vec_putative)
+        std::cout << v.second << ", ";
+    }
+    std::cout << std::endl;
     // All remaining images cannot be used for pose estimation
     set_remainingViewId.clear();
     return false;
@@ -944,7 +958,7 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
 
   // Then, add all the image view indexes that have at least N% of the number of the matches of the best image.
   const IndexT M = vec_putative[0].second; // Number of 2D-3D correspondences
-  const size_t threshold = static_cast<size_t>(dThresholdGroup * M);
+  const size_t threshold = std::max(static_cast<size_t>(dThresholdGroup * M), minPointsThreshold);
   for (size_t i = 1; i < vec_putative.size() &&
     vec_putative[i].second > threshold; ++i)
   {
