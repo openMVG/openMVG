@@ -408,9 +408,8 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
 bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initial_pair) const
 {
   // From the k view pairs with the highest number of verified matches
-  // select a pair that have the largest basline (mean angle between it's bearing vectors).
+  // select a pair that have the largest baseline (mean angle between its bearing vectors).
 
-  const unsigned k = 20;
   const unsigned iMin_inliers_count = 100;
   const float fRequired_min_angle = 3.0f;
   const float fLimit_max_angle = 60.0f; // More than 60 degree, we cannot rely on matches for initial pair seeding
