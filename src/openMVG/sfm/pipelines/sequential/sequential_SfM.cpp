@@ -383,11 +383,12 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
       tracks::TracksUtilsMap::ImageIdInTracks(_map_tracksPerView, set_imagesId);
       osTrack << "------------------" << "\n"
         << "-- Tracks Stats --" << "\n"
-        << " Tracks number: " << tracksBuilder.NbTracks() << "\n"
-        << " Images Id: " << "\n";
-      std::copy(set_imagesId.begin(),
-        set_imagesId.end(),
-        std::ostream_iterator<size_t>(osTrack, ", "));
+        << " Number of tracks: " << tracksBuilder.NbTracks() << "\n"
+        << " Number of images in tracks: " << set_imagesId.size() << "\n";
+//        << " Images Id: " << "\n";
+//      std::copy(set_imagesId.begin(),
+//        set_imagesId.end(),
+//        std::ostream_iterator<size_t>(osTrack, ", "));
       osTrack << "\n------------------" << "\n";
 
       std::map<size_t, size_t> map_Occurence_TrackLength;
