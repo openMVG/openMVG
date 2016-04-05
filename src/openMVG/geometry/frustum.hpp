@@ -26,13 +26,10 @@ using namespace openMVG::geometry::halfPlane;
 *  - truncated Frustum (6 Half Spaces) (a truncated pyramid)
 *  - This structure is used for testing frustum intersection (see if two cam can share visual content)
 */
-struct Frustum
+struct Frustum : public HalfPlaneObject
 {
   /// Camera centre and the 4 points that define the image plane
   Vec3 cones[5];
-
-  /// Define infinite frustum planes + 2 optional Near and Far Half Space
-  Half_planes planes;
 
   /// Near clip plane distance
   double z_near;
@@ -48,11 +45,10 @@ struct Frustum
   */
   Frustum()
     : z_near( -1. ),
-      z_far( -1. )
+      z_far ( -1. )
   {
 
   }
-
 
   /**
   * @brief Build a frustum from the image size, camera intrinsic and pose
@@ -62,9 +58,16 @@ struct Frustum
   * @param R Extrinsic rotation matrix
   * @param C Center of the camera (optical center)
   */
-  Frustum( const int w, const int h, const Mat3 & K, const Mat3 & R, const Vec3 & C )
+  Frustum
+  (
+    const int w,
+    const int h,
+    const Mat3 & K,
+    const Mat3 & R,
+    const Vec3 & C
+  )
     : z_near( -1. ),
-      z_far( -1. )
+      z_far ( -1. )
   {
     const Mat3 Kinv = K.inverse();
     const Mat3 Rt = R.transpose();
@@ -86,18 +89,26 @@ struct Frustum
     points = std::vector<Vec3>( &cones[0], &cones[0] + 5 );
   }
 
-
   /**
   * @brief Build a frustum from image size, camera intrinsics, pose and clip planes
   * @param w Width of image plane
   * @param h Height of image plane
-  * @param K Intrindic matrix
+  * @param K Intrinsic matrix
   * @param R Extrinsic rotation matrix
   * @param C Center of the camera (optical center)
   * @param zNear Near clip plane distance
   * @param zFar Far clip plane distance
   */
-  Frustum( const int w, const int h, const Mat3 & K, const Mat3 & R, const Vec3 & C, const double zNear, const double zFar )
+  Frustum
+  (
+    const int w,
+    const int h,
+    const Mat3 & K,
+    const Mat3 & R,
+    const Vec3 & C,
+    const double zNear,
+    const double zFar
+  )
   {
     *this = Frustum( w, h, K, R, C );
 
@@ -129,24 +140,6 @@ struct Frustum
     points.push_back( Rt * ( z_far * ( Kinv * Vec3( 0, h, 1.0 ) ) ) + C );
   }
 
-
-  /**
-  * @brief Test if two frustums intersects
-  * @param f Another frustum
-  * @retval true If non empty intersection exists
-  * @retval false If there's no intersection
-  */
-  bool intersect( const Frustum & f ) const
-  {
-    // Concatenate the Half Planes and see if an intersection exists
-    std::vector<Half_plane> vec_planes( planes.size() + f.planes.size() );
-    std::copy( &planes[0], &planes[0] + planes.size(), &vec_planes[0] );
-    std::copy( &f.planes[0], &f.planes[0] + f.planes.size(), &vec_planes[planes.size()] );
-
-    return halfPlane::isNotEmpty( vec_planes );
-  }
-
-
   /**
   * @brief Tells if the Frustum is an infinite one
   * @retval true If frustum is infinite
@@ -157,7 +150,6 @@ struct Frustum
     return planes.size() == 4;
   }
 
-
   /**
   * @brief Tells if the Frustum is truncated
   * @retval true If frustum is truncated
@@ -167,7 +159,6 @@ struct Frustum
   {
     return planes.size() == 6;
   }
-
 
   /**
   * @brief Return the supporting frustum points
