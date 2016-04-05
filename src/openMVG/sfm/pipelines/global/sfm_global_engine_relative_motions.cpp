@@ -438,11 +438,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
 
   // Check that poses & intrinsic cover some measures (after outlier removal)
 
-#ifdef HAVE_CCTAG
-  const IndexT minPointPerPose = 7; // 6 min todo param@L
-#else
   const IndexT minPointPerPose = 12; // 6 min
-#endif
   const IndexT minTrackLength = 3; // 2 min todo param@L
   
   if (eraseUnstablePosesAndObservations(_sfm_data, minPointPerPose, minTrackLength))

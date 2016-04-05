@@ -122,11 +122,7 @@ struct GeometricFilter_FMatrix_AC
     const std::pair<double,double> ACRansacOut =
       ACRANSAC(kernel, vec_inliers, m_stIteration, &m_F, upper_bound_precision);
     
-#ifdef HAVE_CCTAG
-    bool valid = ( (vec_inliers.size() > KernelType::MINIMUM_SAMPLES) );
-#else
-    bool valid = ( (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5) );
-#endif
+    bool valid = ( (vec_inliers.size() > KernelType::MINIMUM_SAMPLES * OPENMVG_MINIMUM_SAMPLES_COEF) );
     
     // if the estimation has enough support set its precision
     if(valid) m_dPrecision_robust = ACRansacOut.first;

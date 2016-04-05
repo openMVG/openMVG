@@ -108,20 +108,7 @@ bool SfM_Localizer::Localize
   }
 
   // Test if the mode support some points (more than those required for estimation)
-  // @fixme this is a compilation flag, this should be rather some sort of param to
-  // pass to the function
-#ifdef HAVE_CCTAG
-  const bool bResection = (resection_data.vec_inliers.size() > MINIMUM_SAMPLES);
-#ifdef WANTS_POPART_COUT
-  if (!bResection) {
-    std::cout << "bResection is false";
-    std::cout << " because resection_data.vec_inliers.size() = " << resection_data.vec_inliers.size();
-    std::cout << " and MINIMUM_SAMPLES = " << MINIMUM_SAMPLES << std::endl;
-  }
-#endif
-#else
-  const bool bResection = (resection_data.vec_inliers.size() > 2.5 * MINIMUM_SAMPLES);
-#endif
+  const bool bResection = (resection_data.vec_inliers.size() > MINIMUM_SAMPLES * OPENMVG_MINIMUM_SAMPLES_COEF);
 
   if (bResection)
   {

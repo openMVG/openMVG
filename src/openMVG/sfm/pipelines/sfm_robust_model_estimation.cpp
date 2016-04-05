@@ -102,11 +102,7 @@ bool robustRelativePose(
     max_iteration_count, &relativePose_info.essential_matrix, relativePose_info.initial_residual_tolerance, false);
   relativePose_info.found_residual_precision = acRansacOut.first;
 
-#ifdef HAVE_CCTAG
-  if (relativePose_info.vec_inliers.size() < SolverType::MINIMUM_SAMPLES )
-#else
-  if (relativePose_info.vec_inliers.size() < 2.5 * SolverType::MINIMUM_SAMPLES )  
-#endif
+  if (relativePose_info.vec_inliers.size() < SolverType::MINIMUM_SAMPLES * OPENMVG_MINIMUM_SAMPLES_COEF )  
     return false; // no sufficient coverage (the model does not support enough samples)
 
   // estimation of the relative poses
