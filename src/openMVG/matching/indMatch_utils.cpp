@@ -110,15 +110,32 @@ bool LoadMatchFilePerImage(
 {
   int nbLoadedMatchFiles = 0;
   // Load one match file per image
-  for(IndexT idView: viewsKeys)
+#ifdef OPENMVG_USE_OPENMP
+    #pragma omp parallel for
+#endif
+  for(size_t i = 0; i < viewsKeys.size(); ++i)
   {
+    std::set<IndexT>::const_iterator it = viewsKeys.begin();
+    std::advance(it, i);
+    const IndexT idView = *it;
     const std::string matchFilename = std::to_string(idView) + "." + basename;
-    if(!LoadMatchFile(matches, folder, matchFilename))
+    PairWiseMatches fileMatches;
+    if(!LoadMatchFile(fileMatches, folder, matchFilename))
     {
       std::cerr << "Unable to load match file: " << folder << "/" << matchFilename << std::endl;
       continue;
     }
-    ++nbLoadedMatchFiles;
+#ifdef OPENMVG_USE_OPENMP
+      #pragma omp critical
+#endif
+    {
+      ++nbLoadedMatchFiles;
+      // merge the loaded matches into the output
+      for(const auto& v: fileMatches)
+      {
+          matches[v.first] = v.second;
+      }
+    }
   }
   if( nbLoadedMatchFiles == 0 )
   {
