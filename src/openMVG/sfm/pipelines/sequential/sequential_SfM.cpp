@@ -437,105 +437,106 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
     std::cout,
     "Automatic selection of an initial pair:\n" );
 #ifdef OPENMVG_USE_OPENMP
-  #pragma omp parallel
+  #pragma omp parallel for schedule(dynamic)
 #endif
-  for (const std::pair< Pair, IndMatches > & match_pair : _matches_provider->_pairWise_matches)
+  for (std::size_t i = 0; i < _matches_provider->_pairWise_matches.size(); ++i)
   {
+    matching::PairWiseMatches::const_iterator iter = _matches_provider->_pairWise_matches.begin();
+    std::advance(iter, i);
+    const std::pair< Pair, IndMatches > & match_pair = *iter;
+
 #ifdef OPENMVG_USE_OPENMP
-  #pragma omp single nowait
+    #pragma omp critical
 #endif
+    ++my_progress_bar;
+
+    const Pair current_pair = match_pair.first;
+
+    const size_t I = min(current_pair.first, current_pair.second);
+    const size_t J = max(current_pair.first, current_pair.second);
+    if (!valid_views.count(I) || !valid_views.count(J))
+      continue;
+
+    const View * view_I = _sfm_data.GetViews().at(I).get();
+    const Intrinsics::const_iterator iterIntrinsic_I = _sfm_data.GetIntrinsics().find(view_I->id_intrinsic);
+    const View * view_J = _sfm_data.GetViews().at(J).get();
+    const Intrinsics::const_iterator iterIntrinsic_J = _sfm_data.GetIntrinsics().find(view_J->id_intrinsic);
+
+    const Pinhole_Intrinsic * cam_I = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_I->second.get());
+    const Pinhole_Intrinsic * cam_J = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_J->second.get());
+    if (cam_I == NULL || cam_J == NULL)
+      continue;
+
+    openMVG::tracks::STLMAPTracks map_tracksCommon;
+    const std::set<size_t> set_imageIndex= {I, J};
+    tracks::TracksUtilsMap::GetTracksInImagesFast(set_imageIndex, _map_tracks, _map_tracksPerView, map_tracksCommon);
+
+    // Copy points correspondences to arrays for relative pose estimation
+    const size_t n = map_tracksCommon.size();
+    Mat xI(2,n), xJ(2,n);
+    size_t cptIndex = 0;
+    for (openMVG::tracks::STLMAPTracks::const_iterator
+      iterT = map_tracksCommon.begin(); iterT != map_tracksCommon.end();
+      ++iterT, ++cptIndex)
     {
-#ifdef OPENMVG_USE_OPENMP
-      #pragma omp critical
-#endif
-      ++my_progress_bar;
+      tracks::submapTrack::const_iterator iter = iterT->second.begin();
+      const size_t i = iter->second;
+      const size_t j = (++iter)->second;
 
-      const Pair current_pair = match_pair.first;
+      Vec2 feat = _features_provider->feats_per_view[I][i].coords().cast<double>();
+      xI.col(cptIndex) = cam_I->get_ud_pixel(feat);
+      feat = _features_provider->feats_per_view[J][j].coords().cast<double>();
+      xJ.col(cptIndex) = cam_J->get_ud_pixel(feat);
+    }
 
-      const size_t I = min(current_pair.first, current_pair.second);
-      const size_t J = max(current_pair.first, current_pair.second);
-      if (valid_views.count(I) && valid_views.count(J))
+    // Robust estimation of the relative pose
+    RelativePose_Info relativePose_info;
+    relativePose_info.initial_residual_tolerance = Square(4.0);
+
+    bool relativePoseSuccess = robustRelativePose(
+      cam_I->K(), cam_J->K(),
+      xI, xJ, relativePose_info,
+      std::make_pair(cam_I->w(), cam_I->h()), std::make_pair(cam_J->w(), cam_J->h()),
+      256);
+
+    if (relativePoseSuccess && relativePose_info.vec_inliers.size() > iMin_inliers_count)
+    {
+      // Triangulate inliers & compute angle between bearing vectors
+      std::vector<float> vec_angles;
+      vec_angles.reserve(relativePose_info.vec_inliers.size());
+      const Pose3 pose_I = Pose3(Mat3::Identity(), Vec3::Zero());
+      const Pose3 pose_J = relativePose_info.relativePose;
+      const Mat34 PI = cam_I->get_projective_equivalent(pose_I);
+      const Mat34 PJ = cam_J->get_projective_equivalent(pose_J);
+      for (const size_t inlier_idx : relativePose_info.vec_inliers)
       {
-        const View * view_I = _sfm_data.GetViews().at(I).get();
-        const Intrinsics::const_iterator iterIntrinsic_I = _sfm_data.GetIntrinsics().find(view_I->id_intrinsic);
-        const View * view_J = _sfm_data.GetViews().at(J).get();
-        const Intrinsics::const_iterator iterIntrinsic_J = _sfm_data.GetIntrinsics().find(view_J->id_intrinsic);
+        Vec3 X;
+        TriangulateDLT(PI, xI.col(inlier_idx), PJ, xJ.col(inlier_idx), &X);
 
-        const Pinhole_Intrinsic * cam_I = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_I->second.get());
-        const Pinhole_Intrinsic * cam_J = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_J->second.get());
-        if (cam_I != NULL && cam_J != NULL)
-        {
-          openMVG::tracks::STLMAPTracks map_tracksCommon;
-          const std::set<size_t> set_imageIndex= {I, J};
-          tracks::TracksUtilsMap::GetTracksInImages(set_imageIndex, _map_tracks, map_tracksCommon);
-
-          // Copy points correspondences to arrays for relative pose estimation
-          const size_t n = map_tracksCommon.size();
-          Mat xI(2,n), xJ(2,n);
-          size_t cptIndex = 0;
-          for (openMVG::tracks::STLMAPTracks::const_iterator
-            iterT = map_tracksCommon.begin(); iterT != map_tracksCommon.end();
-            ++iterT, ++cptIndex)
-          {
-            tracks::submapTrack::const_iterator iter = iterT->second.begin();
-            const size_t i = iter->second;
-            const size_t j = (++iter)->second;
-
-            Vec2 feat = _features_provider->feats_per_view[I][i].coords().cast<double>();
-            xI.col(cptIndex) = cam_I->get_ud_pixel(feat);
-            feat = _features_provider->feats_per_view[J][j].coords().cast<double>();
-            xJ.col(cptIndex) = cam_J->get_ud_pixel(feat);
-          }
-
-          // Robust estimation of the relative pose
-          RelativePose_Info relativePose_info;
-          relativePose_info.initial_residual_tolerance = Square(4.0);
-
-          if (robustRelativePose(
-            cam_I->K(), cam_J->K(),
-            xI, xJ, relativePose_info,
-            std::make_pair(cam_I->w(), cam_I->h()), std::make_pair(cam_J->w(), cam_J->h()),
-            256) && relativePose_info.vec_inliers.size() > iMin_inliers_count)
-          {
-            // Triangulate inliers & compute angle between bearing vectors
-            std::vector<float> vec_angles;
-            vec_angles.reserve(relativePose_info.vec_inliers.size());
-            const Pose3 pose_I = Pose3(Mat3::Identity(), Vec3::Zero());
-            const Pose3 pose_J = relativePose_info.relativePose;
-            const Mat34 PI = cam_I->get_projective_equivalent(pose_I);
-            const Mat34 PJ = cam_J->get_projective_equivalent(pose_J);
-            for (const size_t inlier_idx : relativePose_info.vec_inliers)
-            {
-              Vec3 X;
-              TriangulateDLT(PI, xI.col(inlier_idx), PJ, xJ.col(inlier_idx), &X);
-
-              openMVG::tracks::STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
-              std::advance(iterT, inlier_idx);
-              tracks::submapTrack::const_iterator iter = iterT->second.begin();
-              const Vec2 featI = _features_provider->feats_per_view[I][iter->second].coords().cast<double>();
-              const Vec2 featJ = _features_provider->feats_per_view[J][(++iter)->second].coords().cast<double>();
-              vec_angles.push_back(AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, featI, featJ));
-            }
-            // Compute the median triangulation angle
-            const unsigned median_index = vec_angles.size() / 2;
-            std::nth_element(
-              vec_angles.begin(),
-              vec_angles.begin() + median_index,
-              vec_angles.end());
-            const float scoring_angle = vec_angles[median_index];
-            // Store the pair iff the pair is in the asked angle range [fRequired_min_angle;fLimit_max_angle]
-            if (scoring_angle > fRequired_min_angle &&
-                scoring_angle < fLimit_max_angle)
-            {
-  #ifdef OPENMVG_USE_OPENMP
-              #pragma omp critical
-  #endif
-              scoring_per_pair.emplace_back(scoring_angle, current_pair);
-            }
-          }
-        }
+        openMVG::tracks::STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
+        std::advance(iterT, inlier_idx);
+        tracks::submapTrack::const_iterator iter = iterT->second.begin();
+        const Vec2 featI = _features_provider->feats_per_view[I][iter->second].coords().cast<double>();
+        const Vec2 featJ = _features_provider->feats_per_view[J][(++iter)->second].coords().cast<double>();
+        vec_angles.push_back(AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, featI, featJ));
       }
-    } // omp section
+      // Compute the median triangulation angle
+      const unsigned median_index = vec_angles.size() / 2;
+      std::nth_element(
+        vec_angles.begin(),
+        vec_angles.begin() + median_index,
+        vec_angles.end());
+      const float scoring_angle = vec_angles[median_index];
+      // Store the pair iff the pair is in the asked angle range [fRequired_min_angle;fLimit_max_angle]
+      if (scoring_angle > fRequired_min_angle &&
+          scoring_angle < fLimit_max_angle)
+      {
+#ifdef OPENMVG_USE_OPENMP
+        #pragma omp critical
+#endif
+        scoring_per_pair.emplace_back(scoring_angle, current_pair);
+      }
+    }
   }
   std::sort(scoring_per_pair.begin(), scoring_per_pair.end());
   // Since scoring is ordered in increasing order, reverse the order
@@ -586,7 +587,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
   // use the track to have a more dense match correspondence set
   openMVG::tracks::STLMAPTracks map_tracksCommon;
   const std::set<size_t> set_imageIndex= {I, J};
-  tracks::TracksUtilsMap::GetTracksInImages(set_imageIndex, _map_tracks, map_tracksCommon);
+  tracks::TracksUtilsMap::GetTracksInImagesFast(set_imageIndex, _map_tracks, _map_tracksPerView, map_tracksCommon);
 
   //-- Copy point to arrays
   const size_t n = map_tracksCommon.size();
@@ -906,24 +907,27 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
     const size_t viewId = *iter;
 
     // Compute 2D - 3D possible content
-    const openMVG::tracks::TracksSet& set_tracksIds = _map_tracksPerView.at(viewId);
+    openMVG::tracks::TracksPerView::const_iterator tracksIdsIt = _map_tracksPerView.find(viewId);
+    if(tracksIdsIt == _map_tracksPerView.end())
+      continue;
 
-    if (!set_tracksIds.empty())
-    {
-      // Count the common possible putative point
-      //  with the already 3D reconstructed trackId
-      std::vector<size_t> vec_trackIdForResection;
-      std::set_intersection(set_tracksIds.begin(), set_tracksIds.end(),
-        reconstructed_trackId.begin(),
-        reconstructed_trackId.end(),
-        std::back_inserter(vec_trackIdForResection));
+    const openMVG::tracks::TracksSet& set_tracksIds = tracksIdsIt->second;
+    if (set_tracksIds.empty())
+      continue;
+
+    // Count the common possible putative point
+    //  with the already 3D reconstructed trackId
+    std::vector<size_t> vec_trackIdForResection;
+    std::set_intersection(set_tracksIds.begin(), set_tracksIds.end(),
+      reconstructed_trackId.begin(),
+      reconstructed_trackId.end(),
+      std::back_inserter(vec_trackIdForResection));
 
 #ifdef OPENMVG_USE_OPENMP
-        #pragma omp critical
+      #pragma omp critical
 #endif
-      {
-        vec_putative.emplace_back(viewId, vec_trackIdForResection.size());
-      }
+    {
+      vec_putative.emplace_back(viewId, vec_trackIdForResection.size());
     }
   }
 
@@ -965,6 +969,8 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
     vec_possible_indexes.push_back(vec_putative[i].first);
   }
   std::cout << "FindImagesWithPossibleResection with " << vec_possible_indexes.size() << " images took: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - chrono_start).count() << " msec" << std::endl;
+  std::cout << "FindImagesWithPossibleResection: 2D-3D associations is between " << vec_putative.front().second << " and " << vec_putative[vec_possible_indexes.size()-1].second
+            << " (threshold was " << threshold << ")" << std::endl;
   return true;
 }
 
@@ -1187,123 +1193,124 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
     // For all reconstructed images look for common content in the tracks.
     const std::set<IndexT> valid_views = Get_Valid_Views(_sfm_data);
 #ifdef OPENMVG_USE_OPENMP
-    #pragma omp parallel
+    #pragma omp parallel for schedule(dynamic)
 #endif
-    for (const IndexT & indexI : valid_views)
+    for (std::size_t i = 0; i < valid_views.size(); ++i)
     {
+      std::set<IndexT>::const_iterator iter = valid_views.begin();
+      std::advance(iter, i);
+      const IndexT indexI = *iter;
+
       // Ignore the current view
-      if (indexI == viewIndex) {  continue; }
-#ifdef OPENMVG_USE_OPENMP
-      #pragma omp single nowait
-#endif
+      if (indexI == viewIndex)
+        continue;
+
+      const size_t I = std::min((IndexT)viewIndex, indexI);
+      const size_t J = std::max((IndexT)viewIndex, indexI);
+
+      // Find track correspondences between I and J
+      const std::set<size_t> set_viewIndex = { I,J };
+      openMVG::tracks::STLMAPTracks map_tracksCommonIJ;
+      TracksUtilsMap::GetTracksInImagesFast(set_viewIndex, _map_tracks, _map_tracksPerView, map_tracksCommonIJ);
+
+      const View * view_I = _sfm_data.GetViews().at(I).get();
+      const View * view_J = _sfm_data.GetViews().at(J).get();
+      const IntrinsicBase * cam_I = _sfm_data.GetIntrinsics().at(view_I->id_intrinsic).get();
+      const IntrinsicBase * cam_J = _sfm_data.GetIntrinsics().at(view_J->id_intrinsic).get();
+      const Pose3 pose_I = _sfm_data.GetPoseOrDie(view_I);
+      const Pose3 pose_J = _sfm_data.GetPoseOrDie(view_J);
+
+      size_t new_putative_track = 0, new_added_track = 0, extented_track = 0;
+      for (const std::pair< size_t, tracks::submapTrack >& trackIt : map_tracksCommonIJ)
       {
-        const size_t I = std::min((IndexT)viewIndex, indexI);
-        const size_t J = std::max((IndexT)viewIndex, indexI);
+        const size_t trackId = trackIt.first;
+        const tracks::submapTrack & track = trackIt.second;
 
-        // Find track correspondences between I and J
-        const std::set<size_t> set_viewIndex = { I,J };
-        openMVG::tracks::STLMAPTracks map_tracksCommonIJ;
-        TracksUtilsMap::GetTracksInImages(set_viewIndex, _map_tracks, map_tracksCommonIJ);
+        const Vec2 xI = _features_provider->feats_per_view.at(I)[track.at(I)].coords().cast<double>();
+        const Vec2 xJ = _features_provider->feats_per_view.at(J)[track.at(J)].coords().cast<double>();
 
-        const View * view_I = _sfm_data.GetViews().at(I).get();
-        const View * view_J = _sfm_data.GetViews().at(J).get();
-        const IntrinsicBase * cam_I = _sfm_data.GetIntrinsics().at(view_I->id_intrinsic).get();
-        const IntrinsicBase * cam_J = _sfm_data.GetIntrinsics().at(view_J->id_intrinsic).get();
-        const Pose3 pose_I = _sfm_data.GetPoseOrDie(view_I);
-        const Pose3 pose_J = _sfm_data.GetPoseOrDie(view_J);
-
-        size_t new_putative_track = 0, new_added_track = 0, extented_track = 0;
-        for (const std::pair< size_t, tracks::submapTrack >& trackIt : map_tracksCommonIJ)
+        // test if the track already exists in 3D
+        if (_sfm_data.structure.count(trackId) != 0)
         {
-          const size_t trackId = trackIt.first;
-          const tracks::submapTrack & track = trackIt.second;
-
-          const Vec2 xI = _features_provider->feats_per_view.at(I)[track.at(I)].coords().cast<double>();
-          const Vec2 xJ = _features_provider->feats_per_view.at(J)[track.at(J)].coords().cast<double>();
-
-          // test if the track already exists in 3D
-          if (_sfm_data.structure.count(trackId) != 0)
-          {
-            // 3D point triangulated before, only add image observation if needed
+          // 3D point triangulated before, only add image observation if needed
 #ifdef OPENMVG_USE_OPENMP
-            #pragma omp critical
+          #pragma omp critical
 #endif
+          {
+            Landmark & landmark = _sfm_data.structure[trackId];
+            if (landmark.obs.count(I) == 0)
             {
-              Landmark & landmark = _sfm_data.structure[trackId];
-              if (landmark.obs.count(I) == 0)
+              const Vec2 residual = cam_I->residual(pose_I, landmark.X, xI);
+              if (pose_I.depth(landmark.X) > 0 && residual.norm() < std::max(4.0, _map_ACThreshold.at(I)))
               {
-                const Vec2 residual = cam_I->residual(pose_I, landmark.X, xI);
-                if (pose_I.depth(landmark.X) > 0 && residual.norm() < std::max(4.0, _map_ACThreshold.at(I)))
-                {
-                  landmark.obs[I] = Observation(xI, track.at(I));
-                  ++extented_track;
-                }
+                landmark.obs[I] = Observation(xI, track.at(I));
+                ++extented_track;
               }
-              if (landmark.obs.count(J) == 0)
+            }
+            if (landmark.obs.count(J) == 0)
+            {
+              const Vec2 residual = cam_J->residual(pose_J, landmark.X, xJ);
+              if (pose_J.depth(landmark.X) > 0 && residual.norm() < std::max(4.0, _map_ACThreshold.at(J)))
               {
-                const Vec2 residual = cam_J->residual(pose_J, landmark.X, xJ);
-                if (pose_J.depth(landmark.X) > 0 && residual.norm() < std::max(4.0, _map_ACThreshold.at(J)))
-                {
-                  landmark.obs[J] = Observation(xJ, track.at(J));
-                  ++extented_track;
-                }
+                landmark.obs[J] = Observation(xJ, track.at(J));
+                ++extented_track;
               }
             }
           }
-          else
+        }
+        else
+        {
+          // A new 3D point must be added
+#ifdef OPENMVG_USE_OPENMP
+          #pragma omp critical
+#endif
           {
-            // A new 3D point must be added
+            ++new_putative_track;
+          }
+          Vec3 X_euclidean = Vec3::Zero();
+          const Vec2 xI_ud = cam_I->get_ud_pixel(xI);
+          const Vec2 xJ_ud = cam_J->get_ud_pixel(xJ);
+          const Mat34 P_I = cam_I->get_projective_equivalent(pose_I);
+          const Mat34 P_J = cam_J->get_projective_equivalent(pose_J);
+          TriangulateDLT(P_I, xI_ud, P_J, xJ_ud, &X_euclidean);
+          // Check triangulation results
+          //  - Check angle (small angle leads imprecise triangulation)
+          //  - Check positive depth
+          //  - Check residual values
+          const double angle = AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, xI, xJ);
+          const Vec2 residual_I = cam_I->residual(pose_I, X_euclidean, xI);
+          const Vec2 residual_J = cam_J->residual(pose_J, X_euclidean, xJ);
+          if (angle > 2.0 &&
+            pose_I.depth(X_euclidean) > 0 &&
+            pose_J.depth(X_euclidean) > 0 &&
+            residual_I.norm() < std::max(4.0, _map_ACThreshold.at(I)) &&
+            residual_J.norm() < std::max(4.0, _map_ACThreshold.at(J)))
+          {
 #ifdef OPENMVG_USE_OPENMP
             #pragma omp critical
 #endif
             {
-              ++new_putative_track;
-            }
-            Vec3 X_euclidean = Vec3::Zero();
-            const Vec2 xI_ud = cam_I->get_ud_pixel(xI);
-            const Vec2 xJ_ud = cam_J->get_ud_pixel(xJ);
-            const Mat34 P_I = cam_I->get_projective_equivalent(pose_I);
-            const Mat34 P_J = cam_J->get_projective_equivalent(pose_J);
-            TriangulateDLT(P_I, xI_ud, P_J, xJ_ud, &X_euclidean);
-            // Check triangulation results
-            //  - Check angle (small angle leads imprecise triangulation)
-            //  - Check positive depth
-            //  - Check residual values
-            const double angle = AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, xI, xJ);
-            const Vec2 residual_I = cam_I->residual(pose_I, X_euclidean, xI);
-            const Vec2 residual_J = cam_J->residual(pose_J, X_euclidean, xJ);
-            if (angle > 2.0 &&
-              pose_I.depth(X_euclidean) > 0 &&
-              pose_J.depth(X_euclidean) > 0 &&
-              residual_I.norm() < std::max(4.0, _map_ACThreshold.at(I)) &&
-              residual_J.norm() < std::max(4.0, _map_ACThreshold.at(J)))
-            {
-#ifdef OPENMVG_USE_OPENMP
-              #pragma omp critical
-#endif
-              {
-                // Add a new track
-                Landmark & landmark = _sfm_data.structure[trackId];
-                landmark.X = X_euclidean;
-                landmark.obs[I] = Observation(xI, track.at(I));
-                landmark.obs[J] = Observation(xJ, track.at(J));
-                ++new_added_track;
-              } // critical
-            } // 3D point is valid
-          } // else (New 3D point)
-        }// For all correspondences
-#ifdef OPENMVG_USE_OPENMP
-        #pragma omp critical
-#endif
-        if (!map_tracksCommonIJ.empty())
-        {
-          std::cout
-            << "--Triangulated 3D points [" << I << "-" << J << "]:"
-            << "\n\t#Track extented: " << extented_track
-            << "\n\t#Validated/#Possible: " << new_added_track << "/" << new_putative_track
-            << "\n\t#3DPoint for the entire scene: " << _sfm_data.GetLandmarks().size() << std::endl;
-        }
-      }
+              // Add a new track
+              Landmark & landmark = _sfm_data.structure[trackId];
+              landmark.X = X_euclidean;
+              landmark.obs[I] = Observation(xI, track.at(I));
+              landmark.obs[J] = Observation(xJ, track.at(J));
+              ++new_added_track;
+            } // critical
+          } // 3D point is valid
+        } // else (New 3D point)
+      }// For all correspondences
+//#ifdef OPENMVG_USE_OPENMP
+//        #pragma omp critical
+//#endif
+//        if (!map_tracksCommonIJ.empty())
+//        {
+//          std::cout
+//            << "--Triangulated 3D points [" << I << "-" << J << "]:"
+//            << "\n\t#Track extented: " << extented_track
+//            << "\n\t#Validated/#Possible: " << new_added_track << "/" << new_putative_track
+//            << "\n\t#3DPoint for the entire scene: " << _sfm_data.GetLandmarks().size() << std::endl;
+//        }
     }
   }
   return true;

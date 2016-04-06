@@ -306,6 +306,75 @@ struct TracksUtilsMap
     }
     return !map_tracksOut.empty();
   }
+  
+  static void GetCommonTracksInImages(
+    const std::set<size_t> & set_imageIndex,
+    const TracksPerView & map_tracksPerView,
+    std::set<size_t> & set_visibleTracks)
+  {
+    assert(!set_imageIndex.empty());
+    set_visibleTracks.clear();
+    
+    std::set<size_t>::const_iterator it = set_imageIndex.cbegin();
+    {
+      TracksPerView::const_iterator tracksPerViewIt = map_tracksPerView.find(*it);
+      if(tracksPerViewIt == map_tracksPerView.end())
+        return;
+      const TracksSet& imageTracks = tracksPerViewIt->second;
+      set_visibleTracks.insert(imageTracks.cbegin(), imageTracks.cend());
+    }
+    ++it;
+    for(; it != set_imageIndex.cend(); ++it)
+    {
+      TracksPerView::const_iterator tracksPerViewIt = map_tracksPerView.find(*it);
+      if(tracksPerViewIt == map_tracksPerView.end())
+        return;
+      const TracksSet& imageTracks = tracksPerViewIt->second;
+      std::set<size_t> tmp;
+      std::set_intersection(
+          set_visibleTracks.cbegin(), set_visibleTracks.cend(),
+          imageTracks.cbegin(), imageTracks.cend(),
+          std::inserter(tmp, tmp.begin()));
+      set_visibleTracks.swap(tmp);
+    }
+  }
+  
+  /**
+   * @brief Find common tracks between images.
+   *
+   * @param[in] set_imageIndex: set of images we are looking for common tracks
+   * @param[in] map_tracksIn: all tracks of the scene
+   * @param[out] map_tracksOut: output with only the common tracks
+   */
+  static bool GetTracksInImagesFast(
+    const std::set<size_t> & set_imageIndex,
+    const STLMAPTracks & map_tracksIn,
+    const TracksPerView & map_tracksPerView,
+    STLMAPTracks & map_tracksOut)
+  {
+    assert(!set_imageIndex.empty());
+    map_tracksOut.clear();
+    
+    std::set<size_t> set_visibleTracks;
+    GetCommonTracksInImages(set_imageIndex, map_tracksPerView, set_visibleTracks);
+    
+    // Go along the tracks
+    for (size_t visibleTrack: set_visibleTracks)
+    {
+      STLMAPTracks::const_iterator itTrackIn = map_tracksIn.find(visibleTrack);
+      if(itTrackIn == map_tracksIn.end())
+        continue;
+      const submapTrack& trackFeatsIn = itTrackIn->second;
+      submapTrack& trackFeatsOut = map_tracksOut[visibleTrack];
+      for (size_t imageIndex: set_imageIndex)
+      {
+        submapTrack::const_iterator trackFeatsInIt = trackFeatsIn.find(imageIndex);
+        if(trackFeatsInIt != trackFeatsIn.end())
+          trackFeatsOut[imageIndex] = trackFeatsInIt->second;
+      }
+    }
+    return !map_tracksOut.empty();
+  }
 
   /// Return the tracksId of one image
   static void GetImageTracksId(
