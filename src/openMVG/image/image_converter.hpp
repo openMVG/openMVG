@@ -113,8 +113,12 @@ static void rgbFloat2rgbInt(
   (*imaOut).resize(imaIn.Width(), imaIn.Height());
   // Convert each int RGB to float RGB values
   for( int j = 0; j < imaIn.Height(); ++j )
+  {
     for( int i = 0; i < imaIn.Width(); ++i )
-      convertFloatToInt( imaIn( j, i ), (*imaOut)( j, i ), factor  );
+    {
+      convertFloatToInt( imaIn( j, i ), (*imaOut)( j, i ), factor  );      
+    }    
+  }
 }
 
 } // namespace image
