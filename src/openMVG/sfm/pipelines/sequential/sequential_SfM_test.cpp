@@ -34,7 +34,7 @@ using namespace openMVG::sfm;
 TEST(SEQUENTIAL_SFM, Known_Intrinsics) {
 
   const int nviews = 6;
-  const int npoints = 32;
+  const int npoints = 64;
   const nViewDatasetConfigurator config;
   const NViewDataSet d = NRealisticCamerasRing(nviews, npoints, config);
 
@@ -85,7 +85,7 @@ TEST(SEQUENTIAL_SFM, Known_Intrinsics) {
 TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
 
   const int nviews = 6;
-  const int npoints = 32;
+  const int npoints = 64;
   const nViewDatasetConfigurator config;
   const NViewDataSet d = NRealisticCamerasRing(nviews, npoints, config);
 
