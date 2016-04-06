@@ -87,6 +87,11 @@ public:
     _minInputTrackLength = minInputTrackLength;
   }
 
+  void setMinTrackLength(int minTrackLength)
+  {
+    _minTrackLength = minTrackLength;
+  }
+
 protected:
 
 
@@ -129,6 +134,8 @@ private:
   Pair _initialpair;
   cameras::EINTRINSIC _camType; // The camera type for the unknown cameras
   int _minInputTrackLength = 2;
+  int _minTrackLength = 2;
+  int _minPointsPerPose = 30;
 
   //-- Data provider
   Features_Provider  * _features_provider;

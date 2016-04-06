@@ -147,11 +147,15 @@ void SequentialSfMReconstructionEngine::RobustResectionOfImages(
       }
       while (badTrackRejector(4.0, nbOutliersThreshold) != 0);
       std::cout << "Bundle with " << bundleAdjustmentIteration << " iterations took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - chrono_start).count() << " msec." << std::endl;
+      chrono_start = std::chrono::steady_clock::now();
+      eraseUnstablePosesAndObservations(this->_sfm_data, _minPointsPerPose, _minTrackLength);
+      std::cout << "eraseUnstablePosesAndObservations took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - chrono_start).count() << " msec." << std::endl;
     }
     ++resectionGroupIndex;
   }
   // Ensure there is no remaining outliers
   badTrackRejector(4.0, 0);
+  eraseUnstablePosesAndObservations(this->_sfm_data, _minPointsPerPose, _minTrackLength);
 }
 
 bool SequentialSfMReconstructionEngine::Process()
