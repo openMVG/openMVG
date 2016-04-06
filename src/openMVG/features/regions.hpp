@@ -25,7 +25,7 @@ class Regions
 {
 public:
 
-  virtual ~Regions() {}
+  virtual ~Regions() = default ; 
 
   //--
   // IO - one file for region features, one file for region descriptors
@@ -99,15 +99,15 @@ public:
   //-- Class functions
   //--
 
-  bool IsScalar() const {return true;}
-  bool IsBinary() const {return false;}
-  std::string Type_id() const {return typeid(T).name();}
-  size_t DescriptorLength() const {return static_cast<size_t>(L);}
+  bool IsScalar() const override {return true;}
+  bool IsBinary() const override {return false;}
+  std::string Type_id() const override {return typeid(T).name();}
+  size_t DescriptorLength() const override {return static_cast<size_t>(L);}
 
   /// Read from files the regions and their corresponding descriptors.
   bool Load(
     const std::string& sfileNameFeats,
-    const std::string& sfileNameDescs)
+    const std::string& sfileNameDescs) override 
   {
     return loadFeatsFromFile(sfileNameFeats, _vec_feats)
           & loadDescsFromBinFile(sfileNameDescs, _vec_descs);
@@ -116,29 +116,29 @@ public:
   /// Export in two separate files the regions and their corresponding descriptors.
   bool Save(
     const std::string& sfileNameFeats,
-    const std::string& sfileNameDescs) const
+    const std::string& sfileNameDescs) const override 
   {
     return saveFeatsToFile(sfileNameFeats, _vec_feats)
           & saveDescsToBinFile(sfileNameDescs, _vec_descs);
   }
 
-  bool LoadFeatures(const std::string& sfileNameFeats)
+  bool LoadFeatures(const std::string& sfileNameFeats) override 
   {
     return loadFeatsFromFile(sfileNameFeats, _vec_feats);
   }
 
-  PointFeatures GetRegionsPositions() const
+  PointFeatures GetRegionsPositions() const override 
   {
     return PointFeatures(_vec_feats.begin(), _vec_feats.end());
   }
 
-  Vec2 GetRegionPosition(size_t i) const
+  Vec2 GetRegionPosition(size_t i) const override 
   {
     return Vec2f(_vec_feats[i].coords()).cast<double>();
   }
 
   /// Return the number of defined regions
-  size_t RegionCount() const {return _vec_feats.size();}
+  size_t RegionCount() const override {return _vec_feats.size();}
 
   /// Mutable and non-mutable FeatureT getters.
   inline std::vector<FeatureT> & Features() { return _vec_feats; }
@@ -148,7 +148,7 @@ public:
   inline std::vector<DescriptorT> & Descriptors() { return _vec_descs; }
   inline const std::vector<DescriptorT> & Descriptors() const { return _vec_descs; }
 
-  const void * DescriptorRawData() const { return &_vec_descs[0];}
+  const void * DescriptorRawData() const override { return &_vec_descs[0];}
 
   template<class Archive>
   void serialize(Archive & ar)
@@ -157,13 +157,13 @@ public:
     ar(_vec_descs);
   }
 
-  Regions * EmptyClone() const
+  Regions * EmptyClone() const override 
   {
     return new Scalar_Regions();
   }
 
   // Return the L2 distance between two descriptors
-  double SquaredDescriptorDistance(size_t i, const Regions * regions, size_t j) const
+  double SquaredDescriptorDistance(size_t i, const Regions * regions, size_t j) const override 
   {
     assert(i < _vec_descs.size());
     assert(regions);
@@ -175,7 +175,7 @@ public:
   }
 
   /// Add the Inth region to another Region container
-  void CopyRegion(size_t i, Regions * region_container) const
+  void CopyRegion(size_t i, Regions * region_container) const override 
   {
     assert(i < _vec_feats.size() && i < _vec_descs.size());
     static_cast<Scalar_Regions<FeatT, T, L> *>(region_container)->_vec_feats.push_back(_vec_feats[i]);
@@ -213,15 +213,15 @@ public:
   //-- Class functions
   //--
 
-  bool IsScalar() const {return false;}
-  bool IsBinary() const {return true;}
-  std::string Type_id() const {return typeid(typename DescriptorT::bin_type).name();}
-  size_t DescriptorLength() const {return static_cast<size_t>(L);}
+  bool IsScalar() const override {return false;}
+  bool IsBinary() const override {return true;}
+  std::string Type_id() const override {return typeid(typename DescriptorT::bin_type).name();}
+  size_t DescriptorLength() const override {return static_cast<size_t>(L);}
 
   /// Read from files the regions and their corresponding descriptors.
   bool Load(
     const std::string& sfileNameFeats,
-    const std::string& sfileNameDescs)
+    const std::string& sfileNameDescs) override 
   {
     return loadFeatsFromFile(sfileNameFeats, _vec_feats)
           & loadDescsFromBinFile(sfileNameDescs, _vec_descs);
@@ -230,29 +230,29 @@ public:
   /// Export in two separate files the regions and their corresponding descriptors.
   bool Save(
     const std::string& sfileNameFeats,
-    const std::string& sfileNameDescs) const
+    const std::string& sfileNameDescs) const override
   {
     return saveFeatsToFile(sfileNameFeats, _vec_feats)
           & saveDescsToBinFile(sfileNameDescs, _vec_descs);
   }
 
-  bool LoadFeatures(const std::string& sfileNameFeats)
+  bool LoadFeatures(const std::string& sfileNameFeats) override
   {
     return loadFeatsFromFile(sfileNameFeats, _vec_feats);
   }
 
-  PointFeatures GetRegionsPositions() const
+  PointFeatures GetRegionsPositions() const override
   {
     return PointFeatures(_vec_feats.begin(), _vec_feats.end());
   }
 
-  Vec2 GetRegionPosition(size_t i) const
+  Vec2 GetRegionPosition(size_t i) const override
   {
     return Vec2f(_vec_feats[i].coords()).cast<double>();
   }
 
   /// Return the number of defined regions
-  size_t RegionCount() const {return _vec_feats.size();}
+  size_t RegionCount() const override {return _vec_feats.size();}
 
   /// Mutable and non-mutable FeatureT getters.
   inline std::vector<FeatureT> & Features() { return _vec_feats; }
@@ -262,7 +262,7 @@ public:
   inline std::vector<DescriptorT> & Descriptors() { return _vec_descs; }
   inline const std::vector<DescriptorT> & Descriptors() const { return _vec_descs; }
 
-  const void * DescriptorRawData() const { return &_vec_descs[0];}
+  const void * DescriptorRawData() const override { return &_vec_descs[0];}
 
   template<class Archive>
   void serialize(Archive & ar)
@@ -271,13 +271,13 @@ public:
     ar(_vec_descs);
   }
 
-  Regions * EmptyClone() const
+  Regions * EmptyClone() const override 
   {
     return new Binary_Regions();
   }
 
   // Return the squared Hamming distance between two descriptors
-  double SquaredDescriptorDistance(size_t i, const Regions * regions, size_t j) const
+  double SquaredDescriptorDistance(size_t i, const Regions * regions, size_t j) const override 
   {
     assert(i < _vec_descs.size());
     assert(regions);
@@ -291,7 +291,7 @@ public:
   }
 
   /// Add the Inth region to another Region container
-  void CopyRegion(size_t i, Regions * region_container) const
+  void CopyRegion(size_t i, Regions * region_container) const override 
   {
     assert(i < _vec_feats.size() && i < _vec_descs.size());
     static_cast<Binary_Regions<FeatT, L> *>(region_container)->_vec_feats.push_back(_vec_feats[i]);

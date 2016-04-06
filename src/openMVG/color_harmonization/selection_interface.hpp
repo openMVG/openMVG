@@ -25,7 +25,7 @@ public:
     _sLeftImage( sLeftImage ), _sRightImage( sRightImage )
   {}
 
-  virtual ~commonDataByPair() {}
+  virtual ~commonDataByPair() = default ; 
 
   /**
    * Compute mask forthe two images

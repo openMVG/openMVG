@@ -35,7 +35,7 @@ public:
   static const size_type static_size = N;
 
   /// Constructor
-  inline Descriptor() {}
+  inline Descriptor() = default ; 
 
   /// capacity
   inline size_type size() const { return N; }
@@ -187,7 +187,7 @@ static bool loadDescsFromBinFile(
   vec_desc.resize(cardDesc);
   for (typename DescriptorsT::const_iterator iter = vec_desc.begin();
     iter != vec_desc.end(); ++iter) {
-    fileIn.read((char*) (*iter).getData(),
+    fileIn.read( reinterpret_cast<char*>( (*iter).getData() ) ,
       VALUE::static_size*sizeof(typename VALUE::bin_type));
   }
   const bool bOk = !fileIn.bad();

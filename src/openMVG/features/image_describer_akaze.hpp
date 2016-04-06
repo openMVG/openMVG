@@ -57,7 +57,7 @@ public:
   ):Image_describer(), _params(params), _bOrientation(bOrientation) {}
 
 
-  bool Set_configuration_preset(EDESCRIBER_PRESET preset)
+  bool Set_configuration_preset(EDESCRIBER_PRESET preset) override 
   {
     switch(preset)
     {
@@ -85,7 +85,7 @@ public:
   */
   bool Describe(const image::Image<unsigned char>& image,
     std::unique_ptr<Regions> &regions,
-    const image::Image<unsigned char> * mask = NULL)
+    const image::Image<unsigned char> * mask = nullptr ) override 
   {
     _params._options.fDesc_factor =
       (_params._eAkazeDescriptor == AKAZE_MSURF ||
@@ -245,7 +245,7 @@ public:
   };
 
   /// Allocate Regions type depending of the Image_describer
-  void Allocate(std::unique_ptr<Regions> &regions) const
+  void Allocate(std::unique_ptr<Regions> &regions) const override
   {
     switch(_params._eAkazeDescriptor)
     {

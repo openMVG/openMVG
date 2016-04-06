@@ -27,7 +27,7 @@ struct relativeColorHistogramEdge
   size_t I,J;
   std::vector<size_t> histoI, histoJ;
 
-  relativeColorHistogramEdge() {}
+  relativeColorHistogramEdge() = default ;
 
   relativeColorHistogramEdge(
     size_t i, size_t j,
@@ -60,7 +60,7 @@ static void cdf(const std::vector<T> & vec_df, std::vector<T> & vec_cdf)
       vec_cdf[i] = vec_cdf[i] + vec_cdf[i-1];
 }
 
-};
+}; // namespace histogram
 
 // Implementation of the formula (1) of [1] with 10 quantiles.
 //-- L_infinity alignment of pair of histograms over a graph thanks to a linear program.

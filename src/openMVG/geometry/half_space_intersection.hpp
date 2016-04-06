@@ -84,8 +84,8 @@ static bool isNotEmpty(const Half_planes & hplanes)
   return bIntersect;
 }
 
+} // namespace halfPlane
 } // namespace geometry
 } // namespace openMVG
-} // namespace halfPlane
 
 #endif // OPENMVG_GEOMETRY_HALF_SPACE_HPP_

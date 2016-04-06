@@ -44,7 +44,7 @@ class Exif_IO_EasyExif : public Exif_IO
       open(sFileName);
     }
 
-    bool open( const std::string & sFileName )
+    bool open( const std::string & sFileName ) override 
     {
       // Read the file into a buffer
       FILE *fp = fopen(sFileName.c_str(), "rb");
@@ -67,49 +67,49 @@ class Exif_IO_EasyExif : public Exif_IO
       return bHaveExifInfo_;
     }
 
-    size_t getWidth() const
+    size_t getWidth() const override
     {
       return exifInfo_.ImageWidth;
     }
 
-    size_t getHeight() const
+    size_t getHeight() const override
     {
       return exifInfo_.ImageHeight;
     }
 
-    float getFocal() const
+    float getFocal() const override
     {
       return static_cast<float>(exifInfo_.FocalLength);
     }
 
-    std::string getBrand() const
+    std::string getBrand() const override
     {
       return trim_copy(exifInfo_.Make);
     }
 
-    std::string getModel() const
+    std::string getModel() const override
     {
       return trim_copy(exifInfo_.Model);
     }
 
-    std::string getLensModel() const
+    std::string getLensModel() const override
     {
       return trim_copy(exifInfo_.LensInfo.Model);
     }
 
-     std::string getImageUniqueID() const
+     std::string getImageUniqueID() const override
     {
       return exifInfo_.ImageUniqueID;
     }
 
     /**Verify if the file has metadata*/
-    bool doesHaveExifInfo() const
+    bool doesHaveExifInfo() const override
     {
       return bHaveExifInfo_;
     }
 
     /** Print all data*/
-    std::string allExifData() const
+    std::string allExifData() const override
     {
       std::ostringstream os;
       os
