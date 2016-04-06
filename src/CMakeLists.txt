@@ -106,6 +106,14 @@ IF (UNIX AND NOT OpenMVG_BUILD_COVERAGE)
 ENDIF ()
 include(UpdateCacheVariable)
 
+if(CMAKE_COMPILER_IS_GNUCXX)
+  include(AddCompilerFlag)
+
+  # This flag is useful as not returning from a non-void function is an error with MSVC
+  AddCompilerFlag("-Werror=return-type")
+  AddCompilerFlag("-Werror=switch")
+endif()
+
 # ==============================================================================
 # Check C++11 support
 # ==============================================================================
