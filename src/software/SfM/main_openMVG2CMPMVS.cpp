@@ -55,7 +55,7 @@ bool exportToCMPMVSFormat(
   if (!bOk)
   {
     std::cerr << "Cannot access to one of the desired output directory" << std::endl;
-	return false;
+    return false;
   }
   else
   {
@@ -77,7 +77,11 @@ bool exportToCMPMVSFormat(
 
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
       Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
-
+      const IntrinsicBase * cam = iterIntrinsic->second.get();
+      if(cam->w() == 0 || cam->h() == 0)
+      {
+        continue;
+      }
       // View Id re-indexing
       // Need to start at 1 for CMPMVS
       map_viewIdToContiguous.insert(std::make_pair(view->id_view, map_viewIdToContiguous.size() + 1));
@@ -116,14 +120,23 @@ bool exportToCMPMVSFormat(
 
       const IntrinsicBase * cam = iterIntrinsic->second.get();
       if (map_viewIdToContiguous[view->id_view] == 1)
+      {
         w_h_image_size = std::make_pair(cam->w(), cam->h());
+      }
+      else if(cam->w() == 0 || cam->h() == 0)
+      {
+        std::cerr << "Skip image: \"" << srcImage << "\" with a resolution of " << cam->w() << "x" << cam->h() << std::endl;
+        continue;
+      }
       else
       {
         // check that there is no image sizing change (CMPMVS support only images of the same size)
         if (cam->w() != w_h_image_size.first ||
             cam->h() != w_h_image_size.second)
         {
-          std::cerr << "CMPMVS support only image having the same image size";
+          std::cerr << "CMPMVS only supports images of the same size." << std::endl;
+          std::cerr << "  * First image resolution is: " << w_h_image_size.first << "x" << w_h_image_size.second << std::endl;
+          std::cerr << "  * Image \"" << srcImage << "\" has a resolution of " << cam->w() << "x" << cam->h() << std::endl;
           return false;
         }
       }
