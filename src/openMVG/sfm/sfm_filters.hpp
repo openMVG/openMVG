@@ -34,7 +34,6 @@ inline void KeepOnlyReferencedElement(
 }
 
 // Specialization for RelativeInfo_Map
-template<>
 inline
 void KeepOnlyReferencedElement(
   const std::set<IndexT> & set_remainingIds,
