@@ -162,7 +162,7 @@ void rgb2Float( const ImageIn& imaIn,
 * @param[out] Output color
 * @param factor scaling factor applied to input color components
 */
-static inline
+inline
 void convertFloatToInt
 (
   const RGBfColor& valIn,
@@ -182,7 +182,7 @@ void convertFloatToInt
 * @param[out] imaOut Output image
 * @param factor scaling factor applied to each input color component
 */
-static void rgbFloat2rgbInt(
+inline void rgbFloat2rgbInt(
   const Image< RGBfColor >& imaIn,
   Image< RGBColor > *imaOut,
   float factor = 255.f )

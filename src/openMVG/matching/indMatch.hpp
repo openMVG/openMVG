@@ -60,11 +60,11 @@ struct IndMatch
   IndexT i_, j_;  // Left, right index
 };
 
-static inline std::ostream& operator<<(std::ostream & out, const IndMatch & obj) {
+inline std::ostream& operator<<(std::ostream & out, const IndMatch & obj) {
   return out << obj.i_ << " " << obj.j_;
 }
 
-static inline std::istream& operator>>(std::istream & in, IndMatch & obj) {
+inline std::istream& operator>>(std::istream & in, IndMatch & obj) {
   return in >> obj.i_ >> obj.j_;
 }
 
@@ -74,7 +74,7 @@ typedef std::vector<matching::IndMatch> IndMatches;
 /// The structure used to store corresponding point indexes per images pairs
 typedef std::map< Pair, IndMatches > PairWiseMatches;
 
-static Pair_Set getPairs(const PairWiseMatches & matches)
+inline Pair_Set getPairs(const PairWiseMatches & matches)
 {
   Pair_Set pairs;
   for(PairWiseMatches::const_iterator it = matches.begin(); it != matches.end(); ++it)

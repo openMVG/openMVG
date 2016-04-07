@@ -15,7 +15,7 @@ namespace openMVG {
 namespace sfm {
 
 /// Save the structure and camera positions of a SfM_Data container as 3D points in a PLY ASCII file.
-static bool Save_PLY(
+inline bool Save_PLY(
   const SfM_Data & sfm_data,
   const std::string & filename,
   ESfM_Data flags_part)

@@ -29,7 +29,7 @@ namespace sfm {
 // The ids allow to establish a link between 3D point observations & the corresponding views
 //--
 // Export missing poses as Identity pose to keep tracking of the original id_pose indexes
-static bool Save_BAF(
+inline bool Save_BAF(
   const SfM_Data & sfm_data,
   const std::string & filename,
   ESfM_Data flags_part)

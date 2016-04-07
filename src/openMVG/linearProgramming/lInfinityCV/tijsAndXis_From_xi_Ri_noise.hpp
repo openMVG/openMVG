@@ -48,7 +48,7 @@ using namespace linearProgramming;
 
 /// Encode translation and structure linear program with slack variables
 ///  in order to handle noisy measurements.
-static void EncodeTiXi_withNoise(const Mat & M, //Scene representation
+inline void EncodeTiXi_withNoise(const Mat & M, //Scene representation
                            const std::vector<Mat3> & Ri,
                            double sigma, // Start upper bound
                            sRMat & A, Vec & C,

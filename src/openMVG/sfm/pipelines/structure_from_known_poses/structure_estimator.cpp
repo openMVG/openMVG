@@ -25,7 +25,7 @@ using namespace openMVG::geometry;
 
 
 /// Camera pair epipole (Projection of camera center 2 in the image plane 1)
-static Vec3 epipole_from_P(const Mat34& P1, const Pose3& P2)
+inline Vec3 epipole_from_P(const Mat34& P1, const Pose3& P2)
 {
   const Vec3 c = P2.center();
   Vec4 center;
@@ -36,7 +36,7 @@ static Vec3 epipole_from_P(const Mat34& P1, const Pose3& P2)
 /// Export point feature based vector to a matrix [(x,y)'T, (x,y)'T]
 /// Use the camera intrinsics in order to get undistorted pixel coordinates
 template<typename MatT >
-static void PointsToMat(
+void PointsToMat(
   const IntrinsicBase * cam,
   const PointFeatures & vec_feats,
   MatT & m)
