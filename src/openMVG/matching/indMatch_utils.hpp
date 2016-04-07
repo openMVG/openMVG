@@ -26,7 +26,7 @@
 namespace openMVG {
 namespace matching {
 
-static bool Load
+inline bool Load
 (
   PairWiseMatches & matches,
   const std::string & filename
@@ -75,7 +75,7 @@ static bool Load
   return false;
 }
 
-static bool Save
+inline bool Save
 (
   const PairWiseMatches & matches,
   const std::string & filename

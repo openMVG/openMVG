@@ -21,9 +21,9 @@ using namespace std;
 namespace openMVG {
 namespace image {
 
-static bool CmpFormatExt(const char *a, const char *b) {
-  size_t len_a = strlen(a);
-  size_t len_b = strlen(b);
+inline bool CmpFormatExt(const char *a, const char *b) {
+  const size_t len_a = strlen(a);
+  const size_t len_b = strlen(b);
   if (len_a != len_b) return false;
   for (size_t i = 0; i < len_a; ++i)
     if (tolower(a[i]) != tolower(b[i]))
