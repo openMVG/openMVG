@@ -18,34 +18,31 @@ namespace sfm {
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 
-/// Create the appropriate cost functor according the provided input camera intrinsic model
+/// Create the appropriate cost functor according the provided input camera intrinsic model.
+/// The residual can be weighetd if desired (default 0.0 means no weight).
 ceres::CostFunction * IntrinsicsToCostFunction
 (
   IntrinsicBase * intrinsic,
-  const Vec2 & observation
+  const Vec2 & observation,
+  const double weight
 )
 {
   switch(intrinsic->getType())
   {
     case PINHOLE_CAMERA:
-      return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic, 2, 3, 6, 3>(
-        new ResidualErrorFunctor_Pinhole_Intrinsic(observation.data()));
-    break;
+        return ResidualErrorFunctor_Pinhole_Intrinsic::Create(observation, weight);
+     break;
     case PINHOLE_CAMERA_RADIAL1:
-      return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1, 2, 4, 6, 3>(
-        new ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1(observation.data()));
+      return ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1::Create(observation, weight);
     break;
     case PINHOLE_CAMERA_RADIAL3:
-      return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3, 2, 6, 6, 3>(
-        new ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3(observation.data()));
+      return ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3::Create(observation, weight);
     break;
     case PINHOLE_CAMERA_BROWN:
-      return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2, 2, 8, 6, 3>(
-        new ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2(observation.data()));
+      return ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2::Create(observation, weight);
     break;
     case PINHOLE_CAMERA_FISHEYE:
-      return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye, 2, 7, 6, 3>(
-              new ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye(observation.data()));
+      return ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye::Create(observation, weight);
     default:
       return nullptr;
   }
