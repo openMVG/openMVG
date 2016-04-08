@@ -1,6 +1,7 @@
 #include "Rig.hpp"
 #include "rig_BA_ceres.hpp"
 #include <openMVG/sfm/sfm_data_BA_ceres.hpp>
+#include <openMVG/logger.hpp>
 
 #include <ceres/rotation.h>
 
@@ -60,16 +61,21 @@ bool Rig::initializeCalibration()
   // check that there are cameras
   assert(_vLocalizationResults.size()>0);
   
-  // check that all the cameras have the same number of localizationResults
-  const std::size_t sequenceLength = _vLocalizationResults[0].size();
+  // make all the cameras have the same number of localizationResults (equal to the shortest clip)
   const std::size_t nCams = _vLocalizationResults.size();
-  
-  for(std::size_t i = 1; i < nCams; ++i)
   {
-    assert(_vLocalizationResults[i].size() == sequenceLength 
-            && "All cameras must have the same number of images");
+    std::size_t shortestSeqLength = std::numeric_limits<std::size_t>::max();
+    for (const auto& v: _vLocalizationResults)
+      shortestSeqLength = std::min(shortestSeqLength, v.second.size());
+    for (auto& v: _vLocalizationResults)
+      v.second.resize(shortestSeqLength);
+
+    if(shortestSeqLength == 0)
+    {
+        POPART_COUT("The calibration results are empty!");
+        return false;
+    }
   }
-  
   
   // Tracker of the main cameras
   std::vector<localization::LocalizationResult> & resMainCamera = _vLocalizationResults[0];
