@@ -21,12 +21,13 @@ inline bool Save_PLY(
   ESfM_Data flags_part)
 {
   const bool b_structure = (flags_part & STRUCTURE) == STRUCTURE;
+  const bool b_control_points = (flags_part & CONTROL_POINTS) == CONTROL_POINTS;
   const bool b_extrinsics = (flags_part & EXTRINSICS) == EXTRINSICS;
 
-  if (!(b_structure || b_extrinsics))
-    return false;
+  if (!(b_structure || b_extrinsics || b_control_points))
+    return false; // No 3D points to display, so it would produce an empty PLY file
 
-  //Create the stream and check it is ok
+  // Create the stream and check its status
   std::ofstream stream(filename.c_str());
   if (!stream.is_open())
     return false;
@@ -45,9 +46,10 @@ inline bool Save_PLY(
     stream << "ply"
       << '\n' << "format ascii 1.0"
       << '\n' << "element vertex "
-        // Vertex count: (#landmark + #view_with_valid_pose)
-        << ((b_structure ? sfm_data.GetLandmarks().size() : 0) +
-            view_with_pose_count)
+        // Vertex count: (#landmark + #GCP + #view_with_valid_pose)
+        << (  (b_structure ? sfm_data.GetLandmarks().size() : 0)
+            + (b_control_points ? sfm_data.GetControl_Points().size() : 0)
+            + view_with_pose_count)
       << '\n' << "property float x"
       << '\n' << "property float y"
       << '\n' << "property float z"
@@ -64,20 +66,33 @@ inline bool Save_PLY(
           {
             const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view.second.get());
             stream << pose.center().transpose()
-              << " 0 255 0" << "\n";
+              << " 0 255 0" << '\n';
           }
         }
       }
 
       if (b_structure)
       {
+        // Export structure points as White points
         const Landmarks & landmarks = sfm_data.GetLandmarks();
         for (Landmarks::const_iterator iterLandmarks = landmarks.begin();
           iterLandmarks != landmarks.end();
           ++iterLandmarks)  {
-          stream << iterLandmarks->second.X.transpose() << " 255 255 255" << "\n";
+          stream << iterLandmarks->second.X.transpose() << " 255 255 255" << '\n';
         }
       }
+
+      if (b_control_points)
+      {
+        // Export GCP as Yellow points
+        const Landmarks & landmarks = sfm_data.GetControl_Points();
+        for (Landmarks::const_iterator iterGCP = landmarks.begin();
+          iterGCP != landmarks.end();
+          ++iterGCP)  {
+          stream << iterGCP->second.X.transpose() << " 255 255 0" << '\n';
+        }
+      }
+
       stream.flush();
       bOk = stream.good();
       stream.close();

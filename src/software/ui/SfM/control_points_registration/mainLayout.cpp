@@ -18,6 +18,7 @@
 #include "openMVG/sfm/sfm_data_triangulation.hpp"
 #include "openMVG/geometry/rigid_transformation3D_srt.hpp"
 #include "openMVG/geometry/Similarity3.hpp"
+#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 
 void MainWindow::removeAllControlPoints()
 {
@@ -326,6 +327,31 @@ void MainWindow::registerProject()
     {
       QMessageBox msgBox;
       msgBox.setText("Registration failed. Please check your Control Points coordinates.");
+      msgBox.exec();
+    }
+  }
+
+  //---
+  // Bundle adjustment with GCP
+  //---
+  {
+    using namespace openMVG::sfm;
+    Bundle_Adjustment_Ceres::BA_Ceres_options options;
+    Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
+    Control_Point_Parameter control_point_opt(20.0, true);
+    if (!bundle_adjustment_obj.Adjust(m_doc._sfm_data,
+        Optimize_Options
+        (
+          cameras::Intrinsic_Parameter_Type::NONE, // Keep intrinsic constant
+          Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
+          Structure_Parameter_Type::ADJUST_ALL, // Adjust structure
+          control_point_opt // Use GCP and weight more their observation residuals
+          )
+        )
+      )
+    {
+      QMessageBox msgBox;
+      msgBox.setText("BA with GCP failed.");
       msgBox.exec();
     }
   }
