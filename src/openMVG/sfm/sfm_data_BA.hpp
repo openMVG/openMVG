@@ -30,22 +30,38 @@ enum class Structure_Parameter_Type : bool
   ADJUST_ALL = true
 };
 
+/// Structure to tell to BA if GCP must be use and with which weight
+struct Control_Point_Parameter
+{
+  Control_Point_Parameter
+  (
+    double weight_val = 20.0,
+    bool use_control_points = false
+  ): weight(weight_val), bUse_control_points(use_control_points)
+  {}
+  double weight;
+  bool bUse_control_points;
+};
+
 /// Structure to control which parameter will be refined during the BundleAjdustment process
 struct Optimize_Options
 {
-  cameras::Intrinsic_Parameter_Type intrinsics;
-  Extrinsic_Parameter_Type extrinsics;
-  Structure_Parameter_Type structure;
+  cameras::Intrinsic_Parameter_Type intrinsics_opt;
+  Extrinsic_Parameter_Type extrinsics_opt;
+  Structure_Parameter_Type structure_opt;
+  Control_Point_Parameter control_point_opt;
 
   Optimize_Options
   (
-    cameras::Intrinsic_Parameter_Type intrinsics_opt = cameras::Intrinsic_Parameter_Type::ADJUST_ALL,
-    Extrinsic_Parameter_Type extrinsics_opt = Extrinsic_Parameter_Type::ADJUST_ALL,
-    Structure_Parameter_Type structure_opt = Structure_Parameter_Type::ADJUST_ALL
+    cameras::Intrinsic_Parameter_Type intrinsics = cameras::Intrinsic_Parameter_Type::ADJUST_ALL,
+    Extrinsic_Parameter_Type extrinsics = Extrinsic_Parameter_Type::ADJUST_ALL,
+    Structure_Parameter_Type structure = Structure_Parameter_Type::ADJUST_ALL,
+    Control_Point_Parameter control_point = Control_Point_Parameter(0.0, false) // Default setting does not use GCP in the BA
   )
-  :intrinsics(intrinsics_opt),
-   extrinsics(extrinsics_opt),
-   structure(structure_opt)
+  :intrinsics_opt(intrinsics),
+   extrinsics_opt(extrinsics),
+   structure_opt(structure),
+   control_point_opt(control_point)
   {
   }
 };

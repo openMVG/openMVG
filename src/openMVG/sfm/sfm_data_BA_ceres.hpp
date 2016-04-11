@@ -20,7 +20,7 @@ class IntrinsicBase;
 
 namespace sfm {
 
-class SfM_Data;
+struct SfM_Data;
 
 /// Create the appropriate cost functor according the provided input camera intrinsic model
 /// Can be residual cost functor can be weighetd if desired (default 0.0 means no weight).
