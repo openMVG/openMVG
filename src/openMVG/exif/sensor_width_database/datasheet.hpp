@@ -64,13 +64,13 @@ struct Datasheet
       {
         // Split the model string and ensure that the digit part is found
         std::vector<std::string> vec_model_rhs;
-        stl::split(rhs_model, " ", vec_model_rhs);
+        stl::split(rhs_model, ' ', vec_model_rhs);
         for (const std::string & rhs_sub_model : vec_model_rhs)
         {
           // Check if we have a digit based part
           const bool sub_has_digit =
             std::find_if(rhs_sub_model.begin(), rhs_sub_model.end(), isdigit) != rhs_sub_model.end();
-          // Check that substring containing the camera digit model is corresponding 
+          // Check that substring containing the camera digit model is corresponding
           if (sub_has_digit && this_model.find(rhs_sub_model) != std::string::npos)
           {
             return true; // substring that contains digit got a match

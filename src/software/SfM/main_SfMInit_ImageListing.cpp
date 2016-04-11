@@ -33,7 +33,7 @@ using namespace openMVG::sfm;
 bool checkIntrinsicStringValidity(const std::string & Kmatrix, double & focal, double & ppx, double & ppy)
 {
   std::vector<std::string> vec_str;
-  stl::split(Kmatrix, ";", vec_str);
+  stl::split(Kmatrix, ';', vec_str);
   if (vec_str.size() != 9)  {
     std::cerr << "\n Missing ';' character" << std::endl;
     return false;
