@@ -9,6 +9,7 @@
 
 #include "openMVG/sfm/pipelines/global/sfm_global_engine_relative_motions.hpp"
 #include "openMVG/system/timer.hpp"
+#include "openMVG/cameras/Cameras_Common_command_line_helper.hpp"
 
 using namespace openMVG;
 using namespace openMVG::sfm;
@@ -40,14 +41,14 @@ int main(int argc, char **argv)
   std::string sOutDir = "";
   int iRotationAveragingMethod = int (ROTATION_AVERAGING_L2);
   int iTranslationAveragingMethod = int (TRANSLATION_AVERAGING_SOFTL1);
-  int iIntrinsic_refinement_options = (int) cameras::Intrinsic_Parameter_Type::ADJUST_ALL;
+  std::string sIntrinsic_refinement_options = "ADJUST_ALL";
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
   cmd.add( make_option('o', sOutDir, "outdir") );
   cmd.add( make_option('r', iRotationAveragingMethod, "rotationAveraging") );
   cmd.add( make_option('t', iTranslationAveragingMethod, "translationAveraging") );
-  cmd.add( make_option('f', iIntrinsic_refinement_options, "refineIntrinsics") );
+  cmd.add( make_option('f', sIntrinsic_refinement_options, "refineIntrinsics") );
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -66,17 +67,18 @@ int main(int argc, char **argv)
       << "\t 2 -> L2 minimization of sum of squared Chordal distances\n"
       << "\t 3 -> SoftL1 minimization (default)\n"
     << "[-f|--refineIntrinsics] Intrinsic parameters refinement option\n"
-      << "\t 1: NONE -> intrinsic parameters are held as constant\n"
-      << "\t 2: ADJUST_FOCAL_LENGTH -> refine only the focal length\n"
-      << "\t 4: ADJUST_PRINCIPAL_POINT -> refine only the principal point position\n"
-      << "\t 8: ADJUST_DISTORTION -> refine only the distortion coefficient(s) (if any)\n"
-      << "\t 6: ADJUST_FOCAL_LENGTH|ADJUST_PRINCIPAL_POINT\n"
+      << "\t ADJUST_ALL -> refine all existing parameters (default) \n"
+      << "\t NONE -> intrinsic parameters are held as constant\n"
+      << "\t ADJUST_FOCAL_LENGTH -> refine only the focal length\n"
+      << "\t ADJUST_PRINCIPAL_POINT -> refine only the principal point position\n"
+      << "\t ADJUST_DISTORTION -> refine only the distortion coefficient(s) (if any)\n"
+      << "\t -> NOTE: options can be combined thanks to '|'\n"
+      << "\t ADJUST_FOCAL_LENGTH|ADJUST_PRINCIPAL_POINT\n"
       <<      "\t\t-> refine the focal length & the principal point position\n"
-      << "\t 10: ADJUST_FOCAL_LENGTH|ADJUST_DISTORTION\n"
+      << "\t ADJUST_FOCAL_LENGTH|ADJUST_DISTORTION\n"
       <<      "\t\t-> refine the focal length & the distortion coefficient(s) (if any)\n"
-      << "\t 12: ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION\n"
+      << "\t ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION\n"
       <<      "\t\t-> refine the principal point position & the distortion coefficient(s) (if any)\n"
-      << "\t 14: ADJUST_ALL -> refine all existing parameters (default) \n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -89,13 +91,8 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  if (iIntrinsic_refinement_options < (int)cameras::Intrinsic_Parameter_Type::NONE ||
-      iIntrinsic_refinement_options > (int)cameras::Intrinsic_Parameter_Type::ADJUST_ALL )  {
-    std::cerr << "\n Invalid option for intrinsic refinement option" << std::endl;
-    return EXIT_FAILURE;
-  }
   const cameras::Intrinsic_Parameter_Type intrinsic_refinement_options =
-    static_cast<cameras::Intrinsic_Parameter_Type>(iIntrinsic_refinement_options);
+    cameras::StringTo_Intrinsic_Parameter_Type(sIntrinsic_refinement_options);
 
   if (iTranslationAveragingMethod < TRANSLATION_AVERAGING_L1 ||
       iTranslationAveragingMethod > TRANSLATION_AVERAGING_SOFTL1 )  {

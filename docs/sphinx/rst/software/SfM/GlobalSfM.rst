@@ -71,19 +71,24 @@ Arguments description:
     - 3: (default) SoftL1 minimization _[GlobalACSfM]
 
   - **[-f|--refineIntrinsics]**
-      User can control exactly which parameter will be considered as constant/variable
+      User can control exactly which parameter will be considered as constant/variable and combine them by using the '|' operator.
+      
+    - ADJUST_ALL -> refine all existing parameters (default)
+    - NONE -> intrinsic parameters are held as constant
+    - ADJUST_FOCAL_LENGTH -> refine only the focal length
+    - ADJUST_PRINCIPAL_POINT -> refine only the principal point position
+    - ADJUST_DISTORTION -> refine only the distortion coefficient(s) (if any)
+    
+    - NOTE Options can be combined thanks to '|':
 
-      - 1: NONE -> intrinsic parameters are held as constant
-      - 2: ADJUST_FOCAL_LENGTH -> refine only the focal length
-      - 4: ADJUST_PRINCIPAL_POINT -> refine only the principal point position
-      - 8: ADJUST_DISTORTION -> refine only the distortion coefficient(s) (if any)
-      - 6: ADJUST_FOCAL_LENGTH|ADJUST_PRINCIPAL_POINT
-           -> refine the focal length & the principal point position
-      - 10: ADJUST_FOCAL_LENGTH|ADJUST_DISTORTION
-            -> refine the focal length & the distortion coefficient(s) (if any)
-      - 12: ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION
-            -> refine the principal point position & the distortion coefficient(s) (if any)
-      - 14: ADJUST_ALL -> refine all existing parameters (default)
+      - ADJUST_FOCAL_LENGTH|ADJUST_PRINCIPAL_POINT
+        -> refine the focal length & the principal point position
+      
+      - ADJUST_FOCAL_LENGTH|ADJUST_DISTORTION
+        -> refine the focal length & the distortion coefficient(s) (if any)
+      
+      - ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION
+        -> refine the principal point position & the distortion coefficient(s) (if any)
 
 *_[GlobalACSfM]* default settings are "-r 2 -t 3".
 
