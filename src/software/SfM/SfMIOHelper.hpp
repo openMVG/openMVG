@@ -74,7 +74,7 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
   while(getline( in, sValue ) )
   {
     vec_str.clear();
-    stl::split(sValue, ";", vec_str);
+    stl::split(sValue, ';', vec_str);
     if (vec_str.size() == 1)
     {
       std::cerr << "Invalid input file" << std::endl;
@@ -176,7 +176,7 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
     {
       id = std::distance( std::vector<IntrinsicCameraInfo>::const_iterator(vec_focalGroup.begin()), iterIntrinsicGroup);
     }
-    
+
     CameraInfo camInfo;
     camInfo.m_sImageName = vec_str[0];
     camInfo.m_intrinsicId = id;
