@@ -245,7 +245,6 @@ int main(int argc, char **argv)
 #ifdef USE_OCVSIFT
   std::string sImage_Describer_Method = "AKAZE_OPENCV";
 #endif
-  bool bUseMask = false;
 
   // required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -255,7 +254,6 @@ int main(int argc, char **argv)
 #ifdef USE_OCVSIFT
   cmd.add( make_option('m', sImage_Describer_Method, "describerMethod") );
 #endif
-  cmd.add( make_option('k', bUseMask, "mask") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -272,7 +270,6 @@ int main(int argc, char **argv)
       << "   AKAZE_OPENCV (default),\n"
       << "   SIFT_OPENCV: SIFT FROM OPENCV\n"
 #endif
-      << "[-k|--mask] use mask to filter regions\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -286,8 +283,7 @@ int main(int argc, char **argv)
 #ifdef USE_OCVSIFT
             << "--describerMethod " << sImage_Describer_Method << std::endl
 #endif
-            << "--force " << bForce << std::endl
-            << "--mask " << bUseMask << std::endl;
+            << "--force " << bForce << std::endl;
 
   if (sOutDir.empty())  {
     std::cerr << "\nIt is an invalid output directory" << std::endl;
@@ -379,7 +375,7 @@ int main(int argc, char **argv)
     Image<unsigned char> imageMask;
 
     const std::string sGlobalMask_filename = stlplus::create_filespec(sfm_data.s_root_path, "mask.png");
-    if(bUseMask && stlplus::file_exists(sGlobalMask_filename))
+    if(stlplus::file_exists(sGlobalMask_filename))
       ReadImage(sGlobalMask_filename.c_str(), &globalMask);
 
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
@@ -406,14 +402,14 @@ int main(int argc, char **argv)
 
         const std::string sImageMask_filename = stlplus::create_filespec(sfm_data.s_root_path,
                                                                          stlplus::basename_part(sView_filename) + "_mask", "png");
-        if(bUseMask && stlplus::file_exists(sImageMask_filename))
+        if(stlplus::file_exists(sImageMask_filename))
           ReadImage(sImageMask_filename.c_str(), &imageMask);
 
         // The mask point to the globalMask, if a valid one exists for the current image
-        if(globalMask.size() == imageGray.size())
+        if(globalMask.Width() == imageGray.Width() && globalMask.Height() == imageGray.Height())
           mask = &globalMask;
         // The mask point to the imageMask (individual mask) if a valid one exists for the current image
-        if(imageMask.size() == imageGray.size())
+        if(imageMask.Width() == imageGray.Width() && imageMask.Height() == imageGray.Height())
           mask = &imageMask;
 
         // Compute features and descriptors and export them to files

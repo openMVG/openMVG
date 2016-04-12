@@ -52,27 +52,24 @@ Arguments description:
       - HIGH,
       - ULTRA: !!Can be time consumming!!
 
-  - **[-k|--mask]** 
 
-    - Use mask to filter regions
+**Use mask to filter keypoints/regions**
 
-      - 0: (default) masks are ignored
-      - 1: masks are used
+  Sometime you may want to compute features/regions only on some parts of your images. It could include the folowing cases: 
 
-      Sometime you may want to compute features/regions only on some parts of your images. It could include the folowing cases: 
+  - You know that in your acquistion some areas may disturb the SfM pipeline (even if OpenMVG is known to be robust to a fair amount of outliers) 
+    and lower the quality of the subsequent reconstruction. For exemple, in some close range configurations, you may prefer to move the object itself 
+    instead of moving the camera. Masks can also help you to deal with hemispherical fish-eyes, by masking useless zone of the sensor.
+  - You want to speed up the computation by reducing the number features/regions and thus the number of tie points.
 
-      - You know that in your acquistion some areas may disturb the SfM pipeline (even if OpenMVG is known to be robust to a fair amount of outliers) 
-        and lower the quality of the subsequent reconstruction. For exemple, in some close range configurations, you may prefer to move the object itself 
-        instead of moving the camera.
-      - You want to speed up the computation by reducing the number features/regions and thus the number of tie points.
+  For this kind of needs you can use a mask. A mask is simply a binary image having the same size (width and height) than the target image.
+  The black areas on a mask denote the "bad parts", *i.e.* the areas to be masked and for which descriptors are not computed.
+  In openMVG_main_ComputeFeatures, the association of a mask and an image is implicit. It uses the following conventions:
 
-      For this kind of needs you can use a mask. A mask is simply a binary image having the same size (width and height) than the target image.
-      The black areas on a mask denote the "bad part", *i.e.* the areas  to be masked and for which descriptors are not computed.
-      To associate a mask and an image openMVG_main_ComputeFeatures uses the following conventions:
+  - It tries to load a global mask.png file from directory where the the SfM container file (sfm_data.*) is stored.
+  - It tries to load an individual <image_name>_mask.png from directory where the current image is stored 
 
-      - It tries to load a global mask.png file from directory where the the SfM container file (sfm_data.*) is stored.
-      - It tries to load an individual <image_name>_mask.png from directory where the current image is stored 
-        The individual mask always take precedence over the global one 
+  The individual mask **always** takes precedence over the global one 
 
 Once openMVG_main_ComputeFeatures is done you can compute the Matches between the computed description.
 
