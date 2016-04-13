@@ -32,7 +32,7 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
     ceres::PreconditionerType _preconditioner_type;
     ceres::SparseLinearAlgebraLibraryType _sparse_linear_algebra_library_type;
 
-    BA_options(const bool bVerbose = false, bool bmultithreaded = true);
+    BA_options(const bool bVerbose = true, bool bmultithreaded = true);
   };
   private:
     BA_options _openMVG_options;
