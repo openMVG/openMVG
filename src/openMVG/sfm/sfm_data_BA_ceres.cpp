@@ -265,7 +265,7 @@ bool Bundle_Adjustment_Ceres::Adjust
 
         if (cost_function)
           problem.AddResidualBlock(cost_function,
-            p_LossFunction,
+            nullptr,
             &map_intrinsics[view->id_intrinsic][0],
             &map_poses[view->id_pose][0],
             iterGCPTracks->second.X.data());
