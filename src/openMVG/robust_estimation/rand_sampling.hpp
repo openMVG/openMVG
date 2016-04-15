@@ -37,7 +37,7 @@ namespace robust{
 
 namespace
 {
-  std::default_random_engine random_generator;
+  thread_local std::default_random_engine random_generator;
 }
 
 /**
