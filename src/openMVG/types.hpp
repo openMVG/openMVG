@@ -51,7 +51,7 @@ typedef std::vector<Pair> Pair_Vec;
 */
 template<typename K, typename V>
 struct Hash_Map : std::map<K, V, std::less<K>,
-  Eigen::aligned_allocator<std::pair<K, V> > > {};
+  Eigen::aligned_allocator<std::pair<const K, V> > > {};
 #endif
 
 #if defined OPENMVG_STD_UNORDERED_MAP
