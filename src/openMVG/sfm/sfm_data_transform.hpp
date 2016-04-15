@@ -20,7 +20,7 @@ namespace sfm {
 struct SfM_Data;
 
 /// Apply a similarity to the SfM_Data scene (transform landmarks & camera poses)
-bool ApplySimilarity
+void ApplySimilarity
 (
   const geometry::Similarity3 & sim,
   SfM_Data & sfm_data
