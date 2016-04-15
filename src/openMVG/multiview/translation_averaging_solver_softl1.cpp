@@ -147,11 +147,11 @@ bool solve_translations_problem_softl1
             new RelativeTranslationError(t_ij(0), t_ij(1), t_ij(2)));
     problem.AddResidualBlock(
       cost_function,
-       loss,
-       &vec_translations[I*3],
-       &vec_translations[J*3],
-       &vec_relative_rotations[cpt*3],
-       &vec_scales[scale_idx]);
+      loss,
+      &vec_translations[I*3],
+      &vec_translations[J*3],
+      &vec_relative_rotations[cpt*3],
+      &vec_scales[scale_idx]);
     // the relative rotation is set as constant
     problem.SetParameterBlockConstant(&vec_relative_rotations[cpt*3]);
     if (cpt % (b_translation_triplets ? 3 : 1) == 0 && cpt != 0)

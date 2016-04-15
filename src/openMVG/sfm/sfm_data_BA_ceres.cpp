@@ -18,34 +18,31 @@ namespace sfm {
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 
-/// Create the appropriate cost functor according the provided input camera intrinsic model
+/// Create the appropriate cost functor according the provided input camera intrinsic model.
+/// The residual can be weighetd if desired (default 0.0 means no weight).
 ceres::CostFunction * IntrinsicsToCostFunction
 (
   IntrinsicBase * intrinsic,
-  const Vec2 & observation
+  const Vec2 & observation,
+  const double weight
 )
 {
   switch(intrinsic->getType())
   {
     case PINHOLE_CAMERA:
-      return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic, 2, 3, 6, 3>(
-        new ResidualErrorFunctor_Pinhole_Intrinsic(observation.data()));
-    break;
+        return ResidualErrorFunctor_Pinhole_Intrinsic::Create(observation, weight);
+     break;
     case PINHOLE_CAMERA_RADIAL1:
-      return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1, 2, 4, 6, 3>(
-        new ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1(observation.data()));
+      return ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1::Create(observation, weight);
     break;
     case PINHOLE_CAMERA_RADIAL3:
-      return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3, 2, 6, 6, 3>(
-        new ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3(observation.data()));
+      return ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3::Create(observation, weight);
     break;
     case PINHOLE_CAMERA_BROWN:
-      return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2, 2, 8, 6, 3>(
-        new ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2(observation.data()));
+      return ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2::Create(observation, weight);
     break;
     case PINHOLE_CAMERA_FISHEYE:
-      return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye, 2, 7, 6, 3>(
-              new ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye(observation.data()));
+      return ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye::Create(observation, weight);
     default:
       return nullptr;
   }
@@ -139,7 +136,7 @@ bool Bundle_Adjustment_Ceres::Adjust
 
     double * parameter_block = &map_poses[indexPose][0];
     problem.AddParameterBlock(parameter_block, 6);
-    if (options.extrinsics == Extrinsic_Parameter_Type::NONE)
+    if (options.extrinsics_opt == Extrinsic_Parameter_Type::NONE)
     {
       // set the whole parameter block as constant for best performance
       problem.SetParameterBlockConstant(parameter_block);
@@ -148,7 +145,7 @@ bool Bundle_Adjustment_Ceres::Adjust
     {
       std::vector<int> vec_constant_extrinsic;
       // If we adjust only the translation, we must set ROTATION as constant
-      if (options.extrinsics == Extrinsic_Parameter_Type::ADJUST_TRANSLATION)
+      if (options.extrinsics_opt == Extrinsic_Parameter_Type::ADJUST_TRANSLATION)
       {
         // Subset rotation parametrization
         vec_constant_extrinsic.push_back(0);
@@ -156,7 +153,7 @@ bool Bundle_Adjustment_Ceres::Adjust
         vec_constant_extrinsic.push_back(2);
       }
       // If we adjust only the rotation, we must set TRANSLATION as constant
-      if (options.extrinsics == Extrinsic_Parameter_Type::ADJUST_ROTATION)
+      if (options.extrinsics_opt == Extrinsic_Parameter_Type::ADJUST_ROTATION)
       {
         // Subset translation parametrization
         vec_constant_extrinsic.push_back(3);
@@ -184,7 +181,7 @@ bool Bundle_Adjustment_Ceres::Adjust
 
       double * parameter_block = &map_intrinsics[indexCam][0];
       problem.AddParameterBlock(parameter_block, map_intrinsics[indexCam].size());
-      if (options.intrinsics == Intrinsic_Parameter_Type::NONE)
+      if (options.intrinsics_opt == Intrinsic_Parameter_Type::NONE)
       {
         // set the whole parameter block as constant for best performance
         problem.SetParameterBlockConstant(parameter_block);
@@ -192,7 +189,7 @@ bool Bundle_Adjustment_Ceres::Adjust
       else
       {
         const std::vector<int> vec_constant_intrinsic =
-          itIntrinsic->second->subsetParameterization(options.intrinsics);
+          itIntrinsic->second->subsetParameterization(options.intrinsics_opt);
         if (!vec_constant_intrinsic.empty())
         {
           ceres::SubsetParameterization *subset_parameterization =
@@ -236,10 +233,46 @@ bool Bundle_Adjustment_Ceres::Adjust
           p_LossFunction,
           &map_intrinsics[view->id_intrinsic][0],
           &map_poses[view->id_pose][0],
-          iterTracks->second.X.data()); //Do we need to copy 3D point to avoid false motion, if failure ?
+          iterTracks->second.X.data());
     }
-    if (options.structure == Structure_Parameter_Type::NONE)
+    if (options.structure_opt == Structure_Parameter_Type::NONE)
       problem.SetParameterBlockConstant(iterTracks->second.X.data());
+  }
+
+  if (options.control_point_opt.bUse_control_points)
+  {
+    // Use Ground Control Point:
+    // - fixed 3D points with weighted observations
+    for (Landmarks::iterator iterGCPTracks = sfm_data.control_points.begin();
+      iterGCPTracks!= sfm_data.control_points.end(); ++iterGCPTracks)
+    {
+      const Observations & obs = iterGCPTracks->second.obs;
+
+      for (Observations::const_iterator itObs = obs.begin();
+        itObs != obs.end(); ++itObs)
+      {
+        // Build the residual block corresponding to the track observation:
+        const View * view = sfm_data.views.at(itObs->first).get();
+
+        // Each Residual block takes a point and a camera as input and outputs a 2
+        // dimensional residual. Internally, the cost function stores the observed
+        // image location and compares the reprojection against the observation.
+        ceres::CostFunction* cost_function =
+          IntrinsicsToCostFunction(
+            sfm_data.intrinsics[view->id_intrinsic].get(),
+            itObs->second.x,
+            options.control_point_opt.weight);
+
+        if (cost_function)
+          problem.AddResidualBlock(cost_function,
+            nullptr,
+            &map_intrinsics[view->id_intrinsic][0],
+            &map_poses[view->id_pose][0],
+            iterGCPTracks->second.X.data());
+      }
+      // Set the 3D point as FIXED (it's a GCP)
+      problem.SetParameterBlockConstant(iterGCPTracks->second.X.data());
+    }
   }
 
   // Configure a BA engine and run it
@@ -286,7 +319,7 @@ bool Bundle_Adjustment_Ceres::Adjust
     }
 
     // Update camera poses with refined data
-    if (options.extrinsics != Extrinsic_Parameter_Type::NONE)
+    if (options.extrinsics_opt != Extrinsic_Parameter_Type::NONE)
     {
       for (Poses::iterator itPose = sfm_data.poses.begin();
         itPose != sfm_data.poses.end(); ++itPose)
@@ -303,7 +336,7 @@ bool Bundle_Adjustment_Ceres::Adjust
     }
 
     // Update camera intrinsics with refined data
-    if (options.intrinsics != Intrinsic_Parameter_Type::NONE)
+    if (options.intrinsics_opt != Intrinsic_Parameter_Type::NONE)
     {
       for (Intrinsics::iterator itIntrinsic = sfm_data.intrinsics.begin();
         itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)

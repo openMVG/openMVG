@@ -132,15 +132,16 @@ int main(int argc, char **argv)
   //------------------------------------------
   SfM_Data_Structure_Estimation_From_Known_Poses structure_estimator(dMax_reprojection_error);
   structure_estimator.run(sfm_data, pairs, regions_provider);
+  regions_provider.reset(); // Regions are not longer needed.
   RemoveOutliers_AngleError(sfm_data, 2.0);
 
   std::cout
     << "\nStructure estimation took (s): " << timer.elapsed() << "." << std::endl
     << "#landmark found: " << sfm_data.GetLandmarks().size() << std::endl;
 
-    std::cout << "...Generating SfM_Report.html" << std::endl;
-    Generate_SfM_Report(sfm_data,
-      stlplus::create_filespec(stlplus::folder_part(sOutFile), "SfMStructureFromKnownPoses_Report.html"));
+  std::cout << "...Generating SfM_Report.html" << std::endl;
+  Generate_SfM_Report(sfm_data,
+    stlplus::create_filespec(stlplus::folder_part(sOutFile), "SfMStructureFromKnownPoses_Report.html"));
 
   if (cmd.used('b'))
   {

@@ -48,7 +48,11 @@ TEST(frustum, intersection)
     // Check that frustums have an overlap
     for (int i = 0; i < iNviews; ++i)
       for (int j = 0; j < iNviews; ++j)
+      {
         EXPECT_TRUE(vec_frustum[i].intersect(vec_frustum[j]));
+        // check test symmetry
+        EXPECT_TRUE(vec_frustum[j].intersect(vec_frustum[i]));
+      }
   }
 
   // Test with truncated frustum
@@ -76,7 +80,11 @@ TEST(frustum, intersection)
     // Check that frustums have an overlap
     for (int i = 0; i < iNviews; ++i)
       for (int j = 0; j < iNviews; ++j)
+      {
         EXPECT_TRUE(vec_frustum[i].intersect(vec_frustum[j]));
+        // Check test symmetry
+        EXPECT_TRUE(vec_frustum[j].intersect(vec_frustum[i]));
+      }
   }
 }
 

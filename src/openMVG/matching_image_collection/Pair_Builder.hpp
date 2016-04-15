@@ -57,7 +57,7 @@ static bool loadPairs(
   while(std::getline( in, sValue ) )
   {
     vec_str.clear();
-    stl::split(sValue, " ", vec_str);
+    stl::split(sValue, ' ', vec_str);
     const size_t str_size = vec_str.size();
     if (str_size < 2)
     {

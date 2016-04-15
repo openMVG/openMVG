@@ -15,7 +15,7 @@
 namespace openMVG {
 namespace sfm {
 
-static bool Generate_SfM_Report
+inline bool Generate_SfM_Report
 (
   const SfM_Data & sfm_data,
   const std::string & htmlFilename

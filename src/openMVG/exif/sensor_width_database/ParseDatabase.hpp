@@ -32,7 +32,7 @@ bool parseDatabase( const std::string& sfileDatabase, std::vector<Datasheet>& ve
         if ( line[0] != '#' )
         {
           std::vector<std::string> values;
-          stl::split(line, ";", values);
+          stl::split(line, ';', values);
           if ( values.size() == 2 )
           {
             vec_database.emplace_back(

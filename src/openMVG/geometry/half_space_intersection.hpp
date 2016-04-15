@@ -110,6 +110,31 @@ static bool isNotEmpty( const Half_planes & hplanes )
   return bIntersect;
 }
 
+/**
+* @brief Define a Volume 'object' thanks to a series of half_plane:
+*  - This structure is used for testing generic HalfPlaneObject/HalfPlaneObject intersection
+*/
+struct HalfPlaneObject
+{
+  Half_planes planes;
+
+  /**
+  * @brief Test if two defined 'volume' intersects
+  * @param f Another HalfPlaneObject
+  * @retval true If an none empty intersection exists
+  * @retval false If there's no intersection
+  */
+  bool intersect(const HalfPlaneObject & rhs) const
+  {
+    // Concatenate the Half Planes and see if an intersection exists
+    std::vector<Half_plane> vec_planes(planes.size() + rhs.planes.size());
+    std::copy(&planes[0], &planes[0] + planes.size(), &vec_planes[0]);
+    std::copy(&rhs.planes[0], &rhs.planes[0] + rhs.planes.size(), &vec_planes[planes.size()]);
+
+    return halfPlane::isNotEmpty(vec_planes);
+  }
+};
+
 } // namespace geometry
 } // namespace openMVG
 } // namespace halfPlane

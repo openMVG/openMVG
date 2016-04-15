@@ -33,7 +33,7 @@ using namespace openMVG::sfm;
 bool checkIntrinsicStringValidity(const std::string & Kmatrix, double & focal, double & ppx, double & ppy)
 {
   std::vector<std::string> vec_str;
-  stl::split(Kmatrix, ";", vec_str);
+  stl::split(Kmatrix, ';', vec_str);
   if (vec_str.size() != 9)  {
     std::cerr << "\n Missing ';' character" << std::endl;
     return false;
@@ -187,13 +187,22 @@ int main(int argc, char **argv)
     width = height = ppx = ppy = focal = -1.0;
 
     const std::string sImageFilename = stlplus::create_filespec( sImageDir, *iter_image );
+    const std::string sImFilenamePart = stlplus::filename_part(sImageFilename);
 
     // Test if the image format is supported:
     if (openMVG::image::GetFormat(sImageFilename.c_str()) == openMVG::image::Unknown)
     {
       error_report_stream
-          << stlplus::filename_part(sImageFilename) << ": Unkown image file format." << "\n";
+          << sImFilenamePart << ": Unkown image file format." << "\n";
       continue; // image cannot be opened
+    }
+
+    if(sImFilenamePart.find("mask.png") != std::string::npos
+       || sImFilenamePart.find("_mask.png") != std::string::npos)
+    {
+      error_report_stream
+          << sImFilenamePart << " is a mask image" << "\n";
+      continue;
     }
 
     ImageHeader imgHeader;

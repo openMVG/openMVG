@@ -20,13 +20,15 @@ class IntrinsicBase;
 
 namespace sfm {
 
-class SfM_Data;
+struct SfM_Data;
 
 /// Create the appropriate cost functor according the provided input camera intrinsic model
+/// Can be residual cost functor can be weighetd if desired (default 0.0 means no weight).
 ceres::CostFunction * IntrinsicsToCostFunction
 (
   cameras::IntrinsicBase * intrinsic,
-  const Vec2 & observation
+  const Vec2 & observation,
+  const double weight = 0.0
 );
 
 class Bundle_Adjustment_Ceres : public Bundle_Adjustment

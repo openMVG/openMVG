@@ -164,7 +164,7 @@ public:
         if (mask)
         {
           const image::Image<unsigned char> & maskIma = *mask;
-          if (maskIma(keys[i].y, keys[i].x) > 0)
+          if (maskIma(keys[i].y, keys[i].x) < 255)
             continue;
         }
 

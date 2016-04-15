@@ -121,7 +121,7 @@ public:
           if (mask)
           {
             const image::Image<unsigned char> & maskIma = *mask;
-            if (maskIma(ptAkaze.y, ptAkaze.x) > 0)
+            if (maskIma(ptAkaze.y, ptAkaze.x) < 255)
               continue;
           }
 

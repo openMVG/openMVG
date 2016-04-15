@@ -319,7 +319,7 @@ static void UniformSample
 {
   sample->resize(sizeSample);
   robust::UniformSample(sizeSample, vec_index.size(), sample);
-  for(int i = 0; i < sizeSample; ++i)
+  for (int i = 0; i < sizeSample; ++i)
     (*sample)[i] = vec_index[ (*sample)[i] ];
 }
 

@@ -577,9 +577,9 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
       }
     }
     // Merge thread(s) estimates
-    for (const auto vec : initial_estimates)
+    for (const auto & vec : initial_estimates)
     {
-      for (const auto val : vec)
+      for (const auto & val : vec)
       {
         vec_initialEstimates.emplace_back(val);
       }

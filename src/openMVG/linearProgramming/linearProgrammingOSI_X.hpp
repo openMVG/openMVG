@@ -220,8 +220,8 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints_Sparse & c
       row_lb[rowindex] = -1.0 * si->getInfinity();
       row_ub[rowindex] = coef * cstraints.constraint_objective_(i);
       matrix->appendRow( vec_colno.size(),
-	                 &vec_colno[0],
-	                 &vec_value[0] );
+                   &vec_colno[0],
+                   &vec_value[0] );
       rowindex++;
     }
 
@@ -229,16 +229,16 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints_Sparse & c
     {
       int coef = -1;
       for ( std::vector<double>::iterator iter_val = vec_value.begin();
-	      iter_val != vec_value.end();
-	      iter_val++)
+        iter_val != vec_value.end();
+        iter_val++)
       {
-  	    *iter_val *= coef;
+        *iter_val *= coef;
       }
       row_lb[rowindex] = -1.0 * si->getInfinity();
       row_ub[rowindex] = coef * cstraints.constraint_objective_(i);
       matrix->appendRow( vec_colno.size(),
-	                 &vec_colno[0],
-	                 &vec_value[0] );
+                   &vec_colno[0],
+                   &vec_value[0] );
       rowindex++;
     }
   }

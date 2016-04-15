@@ -78,7 +78,7 @@ TEST(MaxConsensusLineFitter, RealisticCase) {
   Mat2X xy(2, NbPoints);
 
   Vec2 GTModel; // y = 2x + 1
-  GTModel <<  -2.0, 6.3;
+  GTModel << -2.0, 6.3;
 
   //-- Build the point list according the given model
   for(int i = 0; i < NbPoints; ++i)  {

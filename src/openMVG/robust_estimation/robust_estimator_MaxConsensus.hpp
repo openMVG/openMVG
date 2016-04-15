@@ -38,7 +38,7 @@ typename Kernel::Model MaxConsensus(const Kernel &kernel,
     const size_t min_samples = Kernel::MINIMUM_SAMPLES;
     const size_t total_samples = kernel.NumSamples();
 
-    double best_cost = std::numeric_limits<double>::infinity();
+    size_t best_num_inliers = 0;
     typename Kernel::Model best_model;
 
     // Test if we have sufficient points to for the kernel.
@@ -66,12 +66,10 @@ typename Kernel::Model MaxConsensus(const Kernel &kernel,
         // Compute costs for each fit.
         for (size_t i = 0; i < models.size(); ++i) {
           std::vector<size_t> inliers;
-          double cost = scorer.Score(kernel, models[i], all_samples, &inliers);
+          scorer.Score(kernel, models[i], all_samples, &inliers);
 
-          if (cost < best_cost) {
-            //std::cout << "Fit cost: " << cost/inliers.size()
-            //  << ", number of inliers: " << inliers.size() << "\n";
-            best_cost = cost;
+          if (best_num_inliers < inliers.size()) {
+            best_num_inliers = inliers.size();
             best_model = models[i];
             if (best_inliers) {
               best_inliers->swap(inliers);

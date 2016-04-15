@@ -283,36 +283,6 @@ inline double SIGN( double x )
   return x < 0.0 ? -1.0 : 1.0;
 }
 
-
-/**
-* @brief Compute L1 norm
-* \f$ \| v \|_1 = | v_0 | + | v_1 | + \dots + | v_n | \f$
-* @param x Input vector
-* @return L1 norm of input vector
-* @todo Use static_assert to check if input parameter is a vector ?
-* @todo Use decltype to get correct return value (if using VecXf value should return a float)
-* @todo Provide additional overloading to use std::vector<double>
-*/
-template<typename TVec>
-inline double NormL1( const TVec &x )
-{
-  return x.array().abs().sum();
-}
-
-
-/**
-* @brief Compute L2 norm
-* \f$ \| v \|_2 = \sqrt{ v_0^2 + v_1^2 + \dots + v_n^2 } \f$
-* @param x Input vector
-* @return L2 norm of input vector
-*/
-template<typename TVec>
-inline double NormL2( const TVec &x )
-{
-  return x.norm();
-}
-
-
 /**
 * @brief Compute L infinity norm
 * \f$ \| v \|_{\infty} = \max ( |v_0| , |v_1| , \dots , |v_n| ) \f$
@@ -323,30 +293,6 @@ template<typename TVec>
 inline double NormLInfinity( const TVec &x )
 {
   return x.array().abs().maxCoeff();
-}
-
-/**
-* @brief Compute L1 distance between two vectors
-* @param x first vector
-* @param y second vector
-* @return distance between input vectors using L1 norm
-*/
-template<typename TVec>
-inline double DistanceL1( const TVec &x, const TVec &y )
-{
-  return ( x - y ).array().abs().sum();
-}
-
-/**
-* @brief Compute L2 distance between two vectors
-* @param x first vector
-* @param y second vector
-* @return distance between input vectors using L2 norm
-*/
-template<typename TVec>
-inline double DistanceL2( const TVec &x, const TVec &y )
-{
-  return ( x - y ).norm();
 }
 
 /**
@@ -622,15 +568,15 @@ inline int is_finite( const double val )
 * @param[out] max Maximum value of range
 * @param[out] mean Mean value of range
 * @param[out] median Median value of range
-* @note If input range is empty, returned values are undefined
+* @return true if the statistical values can be estimated
 */
 template <typename Type, typename DataInputIterator>
-void minMaxMeanMedian( DataInputIterator begin, DataInputIterator end,
+bool minMaxMeanMedian( DataInputIterator begin, DataInputIterator end,
                        Type & min, Type & max, Type & mean, Type & median )
 {
   if( std::distance( begin, end ) < 1 )
   {
-    return;
+    return false;
   }
 
   std::vector<Type> vec_val( begin, end );
@@ -640,6 +586,7 @@ void minMaxMeanMedian( DataInputIterator begin, DataInputIterator end,
   mean = accumulate( vec_val.begin(), vec_val.end(), Type( 0 ) )
          / static_cast<Type>( vec_val.size() );
   median = vec_val[vec_val.size() / 2];
+  return true;
 }
 
 

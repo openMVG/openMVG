@@ -45,7 +45,7 @@ using namespace linearProgramming;
 //
 
 /// Encode translation and structure linear program
-static void EncodeTiXi(const Mat & M, //Scene representation
+inline void EncodeTiXi(const Mat & M, //Scene representation
                            const std::vector<Mat3> & Ri,
                            double sigma, // Start upper bound
                            sRMat & A, Vec & C,

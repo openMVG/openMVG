@@ -192,6 +192,7 @@ INSTALL(TARGETS openMVG_main_ExportUndistortedImages DESTINATION bin/)
 ###
 # SfM export to X
 # - PMVS + bundler data format
+# - OpenMVS
 # - CMPMVS
 # - Meshlab
 # - MVE (File format v2)
@@ -201,6 +202,17 @@ INSTALL(TARGETS openMVG_main_ExportUndistortedImages DESTINATION bin/)
 #
 ADD_EXECUTABLE(openMVG_main_openMVG2PMVS main_openMVG2PMVS.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_openMVG2PMVS
+  openMVG_system
+  openMVG_image
+  openMVG_features
+  openMVG_sfm
+  stlplus
+  )
+
+# - Export a SfM openMVG scene to openMVS format
+#
+ADD_EXECUTABLE(openMVG_main_openMVG2openMVS main_openMVG2openMVS.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_openMVG2openMVS
   openMVG_system
   openMVG_image
   openMVG_features
@@ -266,6 +278,8 @@ TARGET_LINK_LIBRARIES(openMVG_main_ExportCameraFrustums
 # installation rules
 SET_PROPERTY(TARGET openMVG_main_openMVG2PMVS PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_openMVG2PMVS DESTINATION bin/)
+SET_PROPERTY(TARGET openMVG_main_openMVG2openMVS PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_openMVG2openMVS DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_openMVG2CMPMVS PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_openMVG2CMPMVS DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_openMVG2MESHLAB PROPERTY FOLDER OpenMVG/software)

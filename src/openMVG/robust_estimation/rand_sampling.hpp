@@ -37,7 +37,7 @@ namespace robust{
 
 namespace
 {
-  std::default_random_engine random_generator;
+  thread_local std::default_random_engine random_generator;
 }
 
 /**
@@ -53,7 +53,7 @@ namespace
 * \param samples       num_samples of numbers in [0, total_samples) is placed
 *                      here on return.
 */
-static void UniformSample
+inline void UniformSample
 (
   size_t num_samples,
   size_t total_samples,

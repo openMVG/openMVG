@@ -34,7 +34,7 @@ typename Kernel::Model RANSAC(
   const Kernel &kernel,
   const Scorer &scorer,
   std::vector<size_t> *best_inliers = NULL,
-  double *best_score = NULL,
+  double *best_score = NULL, // Found number of inliers
   double outliers_probability = 1e-2)
 {
   assert(outliers_probability < 1.0);
@@ -47,7 +47,6 @@ typename Kernel::Model RANSAC(
   const size_t really_max_iterations = 4096;
 
   size_t best_num_inliers = 0;
-  double best_cost = std::numeric_limits<double>::infinity();
   double best_inlier_ratio = 0.0;
   typename Kernel::Model best_model;
 
@@ -73,15 +72,14 @@ typename Kernel::Model RANSAC(
       std::vector<typename Kernel::Model> models;
       kernel.Fit(sample, &models);
 
-      // Compute costs for each fit.
+      // Compute the inlier list for each fit.
       for (size_t i = 0; i < models.size(); ++i) {
         std::vector<size_t> inliers;
-        double cost = scorer.Score(kernel, models[i], all_samples, &inliers);
+        scorer.Score(kernel, models[i], all_samples, &inliers);
 
-        if (cost < best_cost) {
-          best_cost = cost;
-          best_inlier_ratio = inliers.size() / double(total_samples);
+        if (best_num_inliers < inliers.size()) {
           best_num_inliers = inliers.size();
+          best_inlier_ratio = inliers.size() / double(total_samples);
           best_model = models[i];
           if (best_inliers) {
             best_inliers->swap(inliers);
@@ -95,7 +93,7 @@ typename Kernel::Model RANSAC(
       }
   }
   if (best_score)
-    *best_score = best_cost;
+    *best_score = best_num_inliers;
   return best_model;
 }
 

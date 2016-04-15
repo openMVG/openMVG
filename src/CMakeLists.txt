@@ -37,11 +37,18 @@ OPTION(OpenMVG_USE_OPENCV "Build or not opencv+openMVG samples programs" OFF)
 # ==============================================================================
 OPTION(OpenMVG_USE_OCVSIFT "Add or not OpenCV SIFT in available features" OFF)
 
-SET(OPENMVG_VERSION_MAJOR 0)
-SET(OPENMVG_VERSION_MINOR 8)
-SET(OPENMVG_VERSION_PATCH 1)
-SET(OPENMVG_VERSION
-    ${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}.${OPENMVG_VERSION_PATCH})
+# ==============================================================================
+# OpenMVG version
+# ==============================================================================
+file(STRINGS "openMVG/version.hpp" _OPENMVG_VERSION_HPP_CONTENTS REGEX "#define OPENMVG_VERSION_")
+foreach(v MAJOR MINOR REVISION)
+  if("${_OPENMVG_VERSION_HPP_CONTENTS}" MATCHES "#define OPENMVG_VERSION_${v} ([0-9]+)")
+    set(OPENMVG_VERSION_${v} "${CMAKE_MATCH_1}")
+ else()
+    message(FATAL_ERROR "Failed to retrieve the OpenMVG version from the source code. Missing OPENMVG_VERSION_${v}.")
+  endif()
+endforeach()
+SET(OPENMVG_VERSION ${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}.${OPENMVG_VERSION_REVISION})
 
 # Default build is in Release mode
 IF(NOT CMAKE_BUILD_TYPE AND NOT MSVC)
