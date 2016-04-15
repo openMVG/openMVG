@@ -50,15 +50,15 @@ Arguments description:
 
       - NORMAL,
       - HIGH,
-      - ULTRA: !!Can be time consumming!!
+      - ULTRA: !!Can be time consuming!!
 
 
 **Use mask to filter keypoints/regions**
 
-  Sometime you may want to compute features/regions only on some parts of your images. It could include the folowing cases: 
+  Sometime you may want to compute features/regions only on some parts of your images. It could include the following cases: 
 
-  - You know that in your acquistion some areas may disturb the SfM pipeline (even if OpenMVG is known to be robust to a fair amount of outliers) 
-    and lower the quality of the subsequent reconstruction. For exemple, in some close range configurations, you may prefer to move the object itself 
+  - You know that in your acquisition some areas may disturb the SfM pipeline (even if OpenMVG is known to be robust to a fair amount of outliers) 
+    and lower the quality of the subsequent reconstruction. For example, in some close range configurations, you may prefer to move the object itself 
     instead of moving the camera. Masks can also help you to deal with hemispherical fish-eyes, by masking useless zone of the sensor.
   - You want to speed up the computation by reducing the number features/regions and thus the number of tie points.
 

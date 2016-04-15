@@ -210,11 +210,9 @@ int main(int argc, char **argv)
   // - if no file, compute features
   {
     system::Timer timer;
-    Image<unsigned char> imageGray;
-    Image<unsigned char> globalMask;
-    Image<unsigned char> imageMask;
+    Image<unsigned char> imageGray, globalMask, imageMask;
 
-    const std::string sGlobalMask_filename = stlplus::create_filespec(sfm_data.s_root_path, "mask.png");
+    const std::string sGlobalMask_filename = stlplus::create_filespec(sOutDir, "mask.png");
     if(stlplus::file_exists(sGlobalMask_filename))
       ReadImage(sGlobalMask_filename.c_str(), &globalMask);
 
@@ -225,12 +223,10 @@ int main(int argc, char **argv)
         ++iterViews, ++my_progress_bar)
     {
       const View * view = iterViews->second.get();
-      const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
-        view->s_Img_path);
-      const std::string sFeat = stlplus::create_filespec(sOutDir,
-        stlplus::basename_part(sView_filename), "feat");
-      const std::string sDesc = stlplus::create_filespec(sOutDir,
-        stlplus::basename_part(sView_filename), "desc");
+      const std::string
+        sView_filename = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path),
+        sFeat = stlplus::create_filespec(sOutDir, stlplus::basename_part(sView_filename), "feat"),
+        sDesc = stlplus::create_filespec(sOutDir, stlplus::basename_part(sView_filename), "desc");
 
       //If features or descriptors file are missing, compute them
       if (bForce || !stlplus::file_exists(sFeat) || !stlplus::file_exists(sDesc))
@@ -240,8 +236,10 @@ int main(int argc, char **argv)
 
         Image<unsigned char> * mask = nullptr; // The mask is null by default
 
-        const std::string sImageMask_filename = stlplus::create_filespec(sfm_data.s_root_path,
-         stlplus::basename_part(sView_filename) + "_mask", "png");
+        const std::string sImageMask_filename =
+          stlplus::create_filespec(sfm_data.s_root_path,
+            stlplus::basename_part(sView_filename) + "_mask", "png");
+
         if(stlplus::file_exists(sImageMask_filename))
           ReadImage(sImageMask_filename.c_str(), &imageMask);
 
