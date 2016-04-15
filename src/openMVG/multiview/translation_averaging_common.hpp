@@ -33,6 +33,20 @@ inline Pair_Set getPairs(const RelativeInfo_Vec & vec_relative)
   return pair_set;
 }
 
+inline Pair_Set getPairs(const std::vector<RelativeInfo_Vec> & vec_relative)
+{
+  Pair_Set pair_set;
+  for (const auto & it : vec_relative)
+  {
+    for (const relativeInfo & iter : it)
+    {
+      pair_set.insert(Pair(iter.first.first, iter.first.second));
+    }
+  }
+
+  return pair_set;
+}
+
 // List the index used by the relative motions
 inline std::set<IndexT> getIndexT(const RelativeInfo_Vec & vec_relative)
 {
@@ -42,6 +56,21 @@ inline std::set<IndexT> getIndexT(const RelativeInfo_Vec & vec_relative)
   {
     indexT_set.insert(iter->first.first);
     indexT_set.insert(iter->first.second);
+  }
+  return indexT_set;
+}
+
+// List the index used by the relative motions
+inline std::set<IndexT> getIndexT(const std::vector<RelativeInfo_Vec> & vec_relative)
+{
+  std::set<IndexT> indexT_set;
+  for (const auto & it : vec_relative)
+  {
+    for (const relativeInfo & iter : it)
+    {
+      indexT_set.insert(iter.first.first);
+      indexT_set.insert(iter.first.second);
+    }
   }
   return indexT_set;
 }

@@ -21,9 +21,7 @@
 //-------------
 //-- Global SfM
 //-------------
-// Compute from global translation by using 2-views relative translations guess
+// Compute from global translation by using X-views relative translations guess
 #include "openMVG/linearProgramming/lInfinityCV/global_translations_fromTij.hpp"
-// Compute from global translation by using 3-views relative translations guess
-#include "openMVG/linearProgramming/lInfinityCV/global_translations_fromTriplets.hpp"
 
 #endif // OPENMVG_L_INFINITY_COMPUTER_VISION_H_

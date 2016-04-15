@@ -77,8 +77,8 @@ TEST(GLOBAL_SFM, RotationAveragingL2_TranslationAveragingL1) {
   const double dResidual = RMSE(sfmEngine.Get_SfM_Data());
   std::cout << "RMSE residual: " << dResidual << std::endl;
   EXPECT_TRUE( dResidual < 0.5);
-  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
-  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
+  EXPECT_EQ( nviews, sfmEngine.Get_SfM_Data().GetPoses().size());
+  EXPECT_EQ( npoints, sfmEngine.Get_SfM_Data().GetLandmarks().size());
   EXPECT_TRUE( IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
 
@@ -129,10 +129,11 @@ TEST(GLOBAL_SFM, RotationAveragingL1_TranslationAveragingL1) {
   const double dResidual = RMSE(sfmEngine.Get_SfM_Data());
   std::cout << "RMSE residual: " << dResidual << std::endl;
   EXPECT_TRUE( dResidual < 0.5);
-  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
-  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
+  EXPECT_EQ( nviews, sfmEngine.Get_SfM_Data().GetPoses().size());
+  EXPECT_EQ( npoints, sfmEngine.Get_SfM_Data().GetLandmarks().size());
   EXPECT_TRUE( IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
+
 
 TEST(GLOBAL_SFM, RotationAveragingL2_TranslationAveragingL2_Chordal) {
 
@@ -181,8 +182,8 @@ TEST(GLOBAL_SFM, RotationAveragingL2_TranslationAveragingL2_Chordal) {
   const double dResidual = RMSE(sfmEngine.Get_SfM_Data());
   std::cout << "RMSE residual: " << dResidual << std::endl;
   EXPECT_TRUE( dResidual < 0.5);
-  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
-  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
+  EXPECT_EQ( nviews, sfmEngine.Get_SfM_Data().GetPoses().size());
+  EXPECT_EQ( npoints, sfmEngine.Get_SfM_Data().GetLandmarks().size());
   EXPECT_TRUE( IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
 
@@ -233,8 +234,8 @@ TEST(GLOBAL_SFM, RotationAveragingL2_TranslationAveragingSoftL1) {
   const double dResidual = RMSE(sfmEngine.Get_SfM_Data());
   std::cout << "RMSE residual: " << dResidual << std::endl;
   EXPECT_TRUE( dResidual < 0.5);
-  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
-  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
+  EXPECT_EQ( nviews, sfmEngine.Get_SfM_Data().GetPoses().size());
+  EXPECT_EQ( npoints, sfmEngine.Get_SfM_Data().GetLandmarks().size());
   EXPECT_TRUE( IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
 
