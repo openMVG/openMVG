@@ -10,6 +10,15 @@
 #include <cmath>
 #include <iterator>
 
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#include <GLUT/glut.h>
+#else
+#ifdef _WIN32
+#include <windows.h>
+#endif
+#endif
+
 #include <GLFW/glfw3.h>
 
 #include "openMVG/sfm/sfm.hpp"
