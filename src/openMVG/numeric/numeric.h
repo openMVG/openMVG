@@ -568,15 +568,15 @@ inline int is_finite( const double val )
 * @param[out] max Maximum value of range
 * @param[out] mean Mean value of range
 * @param[out] median Median value of range
-* @note If input range is empty, returned values are undefined
+* @return true if the statistical values can be estimated
 */
 template <typename Type, typename DataInputIterator>
-void minMaxMeanMedian( DataInputIterator begin, DataInputIterator end,
+bool minMaxMeanMedian( DataInputIterator begin, DataInputIterator end,
                        Type & min, Type & max, Type & mean, Type & median )
 {
   if( std::distance( begin, end ) < 1 )
   {
-    return;
+    return false;
   }
 
   std::vector<Type> vec_val( begin, end );
@@ -586,6 +586,7 @@ void minMaxMeanMedian( DataInputIterator begin, DataInputIterator end,
   mean = accumulate( vec_val.begin(), vec_val.end(), Type( 0 ) )
          / static_cast<Type>( vec_val.size() );
   median = vec_val[vec_val.size() / 2];
+  return true;
 }
 
 
