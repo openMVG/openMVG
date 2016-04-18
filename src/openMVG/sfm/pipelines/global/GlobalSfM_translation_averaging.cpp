@@ -358,47 +358,9 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     // Avoid to cover each edge of the graph by using an edge coverage algorithm
     // An estimated triplets of translation mark three edges as estimated.
 
-    //-- precompute the number of track per triplet:
-    Hash_Map<IndexT, IndexT> map_tracksPerTriplets;
-    #ifdef OPENMVG_USE_OPENMP
-      #pragma omp parallel for schedule(dynamic)
-    #endif
-    for (int i = 0; i < (int)vec_triplets.size(); ++i)
-    {
-      // List matches that belong to the triplet of poses
-      const graph::Triplet & triplet = vec_triplets[i];
-      PairWiseMatches map_triplet_matches;
-      const std::set<IndexT> set_triplet_pose_ids = {triplet.i, triplet.j, triplet.k};
-      // List shared correspondences (pairs) between the triplet poses
-      for (const auto & match_iterator : matches_provider->pairWise_matches_)
-      {
-        const Pair pair = match_iterator.first;
-        const View * v1 = sfm_data.GetViews().at(pair.first).get();
-        const View * v2 = sfm_data.GetViews().at(pair.second).get();
-        if (// Consider the pair iff it is supported by the triplet graph & 2 different pose id
-            (v1->id_pose != v2->id_pose)
-            && set_triplet_pose_ids.count(v1->id_pose)
-            && set_triplet_pose_ids.count(v2->id_pose))
-        {
-          map_triplet_matches.insert( match_iterator );
-        }
-      }
-      // Compute tracks:
-      {
-        openMVG::tracks::TracksBuilder tracksBuilder;
-        tracksBuilder.Build(map_triplet_matches);
-        tracksBuilder.Filter(3);
-        #ifdef OPENMVG_USE_OPENMP
-          #pragma omp critical
-        #endif
-        map_tracksPerTriplets[i] = tracksBuilder.NbTracks(); //count the # of matches in the UF tree
-      }
-    }
-
-    typedef Pair myEdge;
-
-    //-- Alias (list triplet ids used per pose id edges)
-    std::map<myEdge, std::vector<size_t> > map_tripletIds_perEdge;
+    //-- Alias (list triplet ids used per edges)
+    typedef Pair myEdge; // An edge between two pose id
+    Hash_Map<myEdge, std::vector<size_t> > map_tripletIds_perEdge;
     for (size_t i = 0; i < vec_triplets.size(); ++i)
     {
       const graph::Triplet & triplet = vec_triplets[i];
@@ -407,6 +369,30 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
       map_tripletIds_perEdge[std::make_pair(triplet.j, triplet.k)].push_back(i);
     }
 
+    //-- precompute the visibility count per triplets (sum of their 2 view matches)
+    Hash_Map<IndexT, IndexT> map_tracksPerTriplets;
+    for (const auto & match_iterator : matches_provider->pairWise_matches_)
+    {
+      const Pair pair = match_iterator.first;
+      const View * v1 = sfm_data.GetViews().at(pair.first).get();
+      const View * v2 = sfm_data.GetViews().at(pair.second).get();
+      if (v1->id_pose != v2->id_pose)
+      {
+        // Consider the pair iff it is supported by 2 different pose id
+        const myEdge edge(v1->id_pose,v2->id_pose);
+        if (map_tripletIds_perEdge.count(edge) != 0)
+        {
+          const std::vector<size_t> & edge_tripletIds = map_tripletIds_perEdge.at(edge);
+          for (const size_t triplet_id : edge_tripletIds)
+          {
+            if (map_tracksPerTriplets.count(triplet_id) == 0)
+              map_tracksPerTriplets[triplet_id] = match_iterator.second.size();
+            else
+              map_tracksPerTriplets[triplet_id] += match_iterator.second.size();
+          }
+        }
+      }
+    }
     // Collect edges that are covered by the triplets
     std::vector<myEdge > vec_edges;
     std::transform(map_tripletIds_perEdge.begin(), map_tripletIds_perEdge.end(), std::back_inserter(vec_edges), stl::RetrieveKey());
@@ -498,9 +484,14 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
           if (bTriplet_estimation)
           {
             // Since new translation edges have been computed, mark their corresponding edges as estimated
-            m_mutexSet.insert(std::make_pair(triplet.i, triplet.j));
-            m_mutexSet.insert(std::make_pair(triplet.j, triplet.k));
-            m_mutexSet.insert(std::make_pair(triplet.i, triplet.k));
+            #ifdef OPENMVG_USE_OPENMP
+            #pragma omp critical
+            #endif
+            {
+              m_mutexSet.insert(std::make_pair(triplet.i, triplet.j));
+              m_mutexSet.insert(std::make_pair(triplet.j, triplet.k));
+              m_mutexSet.insert(std::make_pair(triplet.i, triplet.k));
+            }
 
             // Compute the triplet relative motions (IJ, JK, IK)
             {
