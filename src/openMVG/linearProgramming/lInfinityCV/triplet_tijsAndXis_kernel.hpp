@@ -67,8 +67,11 @@ struct translations_Triplet_Solver {
     const std::vector<Mat3> & vec_KR, std::vector<TrifocalTensorModel> *P,
     const double ThresholdUpperBound)
   {
-    //Build the megaMatMatrix
     const int n_obs = pt0.cols();
+    if (n_obs < MINIMUM_SAMPLES)
+      return;
+
+    // Build the megaMatMatrix (compact form of point coordinates & their view index)
     Mat4X megaMat(4, n_obs*3);
     {
       size_t cpt = 0;

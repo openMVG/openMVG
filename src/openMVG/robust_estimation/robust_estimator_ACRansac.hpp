@@ -251,7 +251,7 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
         if (m_residuals[index] <= nfa_threshold.second)
           inliers.push_back(index);
       }
-      return true;
+      return inliers.size() > Kernel::MINIMUM_SAMPLES;
     }
   }
   else // exhaustive computation
@@ -317,7 +317,6 @@ static void UniformSample
   std::vector<size_t> *sample
 )
 {
-  sample->resize(sizeSample);
   robust::UniformSample(sizeSample, vec_index.size(), sample);
   for (int i = 0; i < sizeSample; ++i)
     (*sample)[i] = vec_index[ (*sample)[i] ];
