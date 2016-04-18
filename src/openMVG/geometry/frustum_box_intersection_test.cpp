@@ -22,15 +22,20 @@ using namespace openMVG::geometry;
 using namespace openMVG::geometry::halfPlane;
 using namespace std;
 
-// Export defined frustum in PLY file for viewing
-bool export_Ply(const Frustum & frustum, const std::string & filename);
-
-// Export defined Box in PLY file for viewing
-bool export_Ply(const Box & box, const std::string & filename, const Vec3 color = Vec3(0, 255, 0));
-
 //--
 // Box/Camera frustum intersection unit test
 //--
+
+TEST(box_point, intersection)
+{
+  const Box box(Vec3::Zero(), sqrt(1.));
+
+  // Test with a point that is inside the defined volume
+  EXPECT_TRUE( box.contains(Vec3(0,0,0)) );
+
+  // Test with a point that is outside the defined volume
+  EXPECT_FALSE( box.contains(Vec3(1,1,1)) );
+}
 
 TEST(box_frustum, intersection)
 {
@@ -44,12 +49,11 @@ TEST(box_frustum, intersection)
     iNviews, iNbPoints,
     nViewDatasetConfigurator(focal, focal, principal_Point, principal_Point, 5, 0));
 
-
   const Box box(Vec3::Zero(), sqrt(1.));
   {
     std::ostringstream os;
     os << "box.ply";
-    export_Ply(box, os.str());
+    Box::export_Ply(box, os.str());
   }
 
   // Test with infinite Frustum for each camera
@@ -63,7 +67,7 @@ TEST(box_frustum, intersection)
 
       std::ostringstream os;
       os << i << "frust.ply";
-      export_Ply(f, os.str());
+      Frustum::export_Ply(f, os.str());
     }
   }
 
@@ -84,10 +88,10 @@ TEST(box_frustum, intersection)
       }
       const Frustum f(principal_Point*2, principal_Point*2,
           d._K[i], d._R[i], d._C[i], minDepth, maxDepth);
-      
+
       EXPECT_TRUE(f.intersect(box));
       EXPECT_TRUE(box.intersect(f));
-    }    
+    }
   }
 }
 
@@ -110,7 +114,7 @@ TEST(box_frustum, no_intersection)
   {
     std::ostringstream os;
     os << "box.ply";
-    export_Ply(box, os.str());
+    Box::export_Ply(box, os.str());
   }
 
   // Test with infinite Frustum for each camera
@@ -124,7 +128,7 @@ TEST(box_frustum, no_intersection)
 
       std::ostringstream os;
       os << i << "frust.ply";
-      export_Ply(f, os.str());
+      Frustum::export_Ply(f, os.str());
     }
   }
 
@@ -150,108 +154,6 @@ TEST(box_frustum, no_intersection)
       EXPECT_FALSE(box.intersect(f));
     }
   }
-}
-
-// Export defined frustum in PLY file for viewing
-bool export_Ply(const Frustum & frustum, const std::string & filename)
-{
-  std::ofstream of(filename.c_str());
-  if (!of.is_open())
-    return false;
-  // Vertex count evaluation
-  // Faces count evaluation
-  const size_t vertex_count = frustum.frustum_points().size();
-  const size_t face_count = frustum.isInfinite() ? 4 : 6;
-
-  of << "ply" << '\n'
-    << "format ascii 1.0" << '\n'
-    << "element vertex " << vertex_count << '\n'
-    << "property float x" << '\n'
-    << "property float y" << '\n'
-    << "property float z" << '\n'
-    << "element face " << face_count << '\n'
-    << "property list uchar int vertex_index" << '\n'
-    << "end_header" << '\n';
-
-  // Export frustums points
-  {
-    const std::vector<Vec3> & points = frustum.frustum_points();
-    for (int i = 0; i < points.size(); ++i)
-      of << points[i].transpose() << '\n';
-  }
-
-  // Export frustums faces
-  {
-    if (frustum.isInfinite())
-    {
-      // infinite frustum: drawn normalized cone: 4 faces
-      of
-        << "3 " << 0 << ' ' << 4 << ' ' << 1 << '\n'
-        << "3 " << 0 << ' ' << 1 << ' ' << 2 << '\n'
-        << "3 " << 0 << ' ' << 2 << ' ' << 3 << '\n'
-        << "3 " << 0 << ' ' << 3 << ' ' << 4 << '\n';
-    }
-    else
-    {
-      of
-        << "4 " << 0 << ' ' << 1 << ' ' << 2 << ' ' << 3 << '\n'
-        << "4 " << 0 << ' ' << 1 << ' ' << 5 << ' ' << 4 << '\n'
-        << "4 " << 1 << ' ' << 5 << ' ' << 6 << ' ' << 2 << '\n'
-        << "4 " << 3 << ' ' << 7 << ' ' << 6 << ' ' << 2 << '\n'
-        << "4 " << 0 << ' ' << 4 << ' ' << 7 << ' ' << 3 << '\n'
-        << "4 " << 4 << ' ' << 5 << ' ' << 6 << ' ' << 7 << '\n';
-    }
-  }
-  of.flush();
-  const bool bOk = of.good();
-  of.close();
-  return bOk;
-}
-
-// Export defined Box in PLY file for viewing
-bool export_Ply(const Box & box, const std::string & filename, const Vec3 color)
-{
-  std::ofstream of(filename.c_str());
-  if (!of.is_open())
-    return false;
-  // Vertex count evaluation
-  // Faces count evaluation
-  const size_t vertex_count = 8;
-  const size_t face_count = 6;
-
-  of << "ply" << '\n'
-    << "format ascii 1.0" << '\n'
-    << "element vertex " << vertex_count << '\n'
-    << "property float x" << '\n'
-    << "property float y" << '\n'
-    << "property float z" << '\n'
-    << "property uchar red" << '\n'
-    << "property uchar green" << '\n'
-    << "property uchar blue" << '\n'
-    << "element face " << face_count << '\n'
-    << "property list uchar int vertex_index" << '\n'
-    << "end_header" << '\n';
-
-  // Export box points
-  {
-    for (int i = 0; i < 8; ++i)
-      of << box.points[i].transpose() << " " << color.cast<int>() << '\n';
-  }
-
-  of
-    // top & bottom planes
-    << "3 " << 0 << ' ' << 1 << ' ' << 3 << '\n'
-    << "3 " << 4 << ' ' << 7 << ' ' << 5 << '\n'
-    // remaining planes
-    << "3 " << 0 << ' ' << 4 << ' ' << 1 << '\n'
-    << "3 " << 0 << ' ' << 3 << ' ' << 4 << '\n'
-    << "3 " << 3 << ' ' << 2 << ' ' << 7 << '\n'
-    << "3 " << 1 << ' ' << 5 << ' ' << 2 << '\n';
-
-  of.flush();
-  const bool bOk = of.good();
-  of.close();
-  return bOk;
 }
 
 /* ************************************************************************* */

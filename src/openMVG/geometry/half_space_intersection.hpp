@@ -36,22 +36,16 @@ typedef std::vector<Half_plane> Half_planes;
 * @return Plane formed by p,q,r
 * @note The plane is oriented such that p, q and r are oriented in a positive sense (that is counterclockwise).
 */
-static Half_plane Half_plane_p( const Vec3 & p, const Vec3 & q, const Vec3 & r )
+inline Half_plane
+Half_plane_p
+(
+  const Vec3 & p,
+  const Vec3 & q,
+  const Vec3 & r
+)
 {
-  const Vec3 abc = ( p - r ).cross( q - r );
-  const double d = - abc.dot( r );
-  Half_plane hp;
-  hp.coeffs() << abc( 0 ), abc( 1 ), abc( 2 ), d;
-  return hp;
+  return Half_plane::Through(r,q,p);
 }
-
-// [1] Paper: Finding the intersection of n half-spaces in time O(n log n).
-// Author: F.P. Preparata, D.E. Muller
-// Published in: Theoretical Computer Science, Volume 8, Issue 1, Pages 45-55
-// Year: 1979
-// More: ISSN 0304-3975, http://dx.doi.org/10.1016/0304-3975(79)90055-0.
-
-
 
 /**
 * @brief Test if half-planes defines a non empty volume
@@ -66,7 +60,11 @@ static Half_plane Half_plane_p( const Vec3 & p, const Vec3 & q, const Vec3 & r )
  Year: 1979
  More: ISSN 0304-3975, http://dx.doi.org/10.1016/0304-3975(79)90055-0.
 */
-static bool isNotEmpty( const Half_planes & hplanes )
+inline bool
+isNotEmpty
+(
+  const Half_planes & hplanes
+)
 {
   // Check if it exists a point on all positive side of the half plane thanks to a Linear Program formulation [1].
   // => If a point exists: there is a common subspace defined and so intersections.
@@ -120,7 +118,7 @@ struct HalfPlaneObject
 
   /**
   * @brief Test if two defined 'volume' intersects
-  * @param f Another HalfPlaneObject
+  * @param rhs Another HalfPlaneObject
   * @retval true If an none empty intersection exists
   * @retval false If there's no intersection
   */
@@ -132,6 +130,21 @@ struct HalfPlaneObject
     std::copy(&rhs.planes[0], &rhs.planes[0] + rhs.planes.size(), &vec_planes[planes.size()]);
 
     return halfPlane::isNotEmpty(vec_planes);
+  }
+
+  /**
+  * @brief Test if a point is on the positive side of the HalfPlanes
+  * @param rhs The 3D point to test
+  * @retval true If The point is in the half plane defined 'volume'
+  */
+  bool contains(const Vec3 & rhs) const
+  {
+    unsigned int count_positive = 0;
+    for (const Half_plane & hp : planes)
+    {
+      count_positive += (hp.signedDistance(rhs) > 0) ? 1 : 0;
+    }
+    return (count_positive == planes.size()) && !planes.empty();
   }
 };
 

@@ -8,6 +8,7 @@
 #define OPENMVG_GEOMETRY_FRUSTUM_HPP_
 
 #include "openMVG/geometry/half_space_intersection.hpp"
+#include <fstream>
 
 namespace openMVG
 {
@@ -169,6 +170,70 @@ struct Frustum : public HalfPlaneObject
   const std::vector<Vec3> & frustum_points() const
   {
     return points;
+  }
+
+  /**
+  * @brief Export the Frustum as a PLY file (infinite frustum as exported as a normalized cone)
+  * @return true if the file can be saved on disk
+  */
+  static bool export_Ply
+  (
+    const Frustum & frustum,
+    const std::string & filename
+  )
+  {
+    std::ofstream of(filename.c_str());
+    if (!of.is_open())
+      return false;
+
+    // Vertex count evaluation
+    const size_t vertex_count = frustum.frustum_points().size();
+    // Faces count evaluation
+    const size_t face_count = frustum.isInfinite() ? 4 : 6;
+
+    of << "ply" << '\n'
+      << "format ascii 1.0" << '\n'
+      << "element vertex " << vertex_count << '\n'
+      << "property float x" << '\n'
+      << "property float y" << '\n'
+      << "property float z" << '\n'
+      << "element face " << face_count << '\n'
+      << "property list uchar int vertex_index" << '\n'
+      << "end_header" << '\n';
+
+    // Export frustums points
+    {
+      const std::vector<Vec3> & points = frustum.frustum_points();
+      for (int i = 0; i < points.size(); ++i)
+        of << points[i].transpose() << '\n';
+    }
+
+    // Export frustums faces
+    {
+      if (frustum.isInfinite())
+      {
+        // infinite frustum: drawn normalized cone: 4 faces
+        of
+          << "3 0 4 1\n"
+          << "3 0 1 2\n"
+          << "3 0 2 3\n"
+          << "3 0 3 4\n";
+      }
+      else
+      {
+        of
+          << "4 0 1 2 3\n"
+          << "4 0 1 5 4\n"
+          << "4 1 5 6 2\n"
+          << "4 3 7 6 2\n"
+          << "4 0 4 7 3\n"
+          << "4 4 5 6 7\n";
+      }
+    }
+    of.flush();
+    const bool bOk = of.good();
+    of.close();
+    return bOk;
   }
 
 }; // struct Frustum
