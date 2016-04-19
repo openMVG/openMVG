@@ -64,12 +64,16 @@ public:
     const std::vector<features::SIOPointFeature> & rightFeat)
     :_vec_matches(vec_matches)
   {
-    for (size_t i = 0; i < vec_matches.size(); ++i) {
-      const size_t I = vec_matches[i]._i;
-      const size_t J = vec_matches[i]._j;
+    for ( const auto & cur_vec_match : vec_matches ) // size_t i = 0; i < vec_matches.size(); ++i) 
+    {
+      const size_t I = cur_vec_match._i ;
+      const size_t J = cur_vec_match._j ; 
+      
+      // const size_t I = vec_matches[i]._i;
+      // const size_t J = vec_matches[i]._j;
       _vecDecoredMatches.push_back(
         IndMatchDecoratorStruct(leftFeat[I].x(),leftFeat[I].y(),
-        rightFeat[J].x(), rightFeat[J].y(), vec_matches[i]));
+        rightFeat[J].x(), rightFeat[J].y(), cur_vec_match ) );
     }
   }
 
@@ -78,12 +82,16 @@ public:
     const std::vector<features::PointFeature> & rightFeat)
     :_vec_matches(vec_matches)
   {
-    for (size_t i = 0; i < vec_matches.size(); ++i) {
-      const size_t I = vec_matches[i]._i;
-      const size_t J = vec_matches[i]._j;
+    for ( const auto & cur_vec_match : vec_matches ) 
+    {
+      //  size_t i = 0; i < vec_matches.size(); ++i) {
+      const size_t I = cur_vec_match._i ;
+      const size_t J = cur_vec_match._j ;      
+      // const size_t I = vec_matches[i]._i;
+      // const size_t J = vec_matches[i]._j;
       _vecDecoredMatches.push_back(
         IndMatchDecoratorStruct(leftFeat[I].x(),leftFeat[I].y(),
-        rightFeat[J].x(), rightFeat[J].y(), vec_matches[i]));
+        rightFeat[J].x(), rightFeat[J].y(), cur_vec_match ) );
     }
   }
 
@@ -92,12 +100,17 @@ public:
     const Mat & rightFeat)
     :_vec_matches(vec_matches)
   {
-    for (size_t i = 0; i < vec_matches.size(); ++i) {
-      const size_t I = vec_matches[i]._i;
-      const size_t J = vec_matches[i]._j;
+    for ( const auto & cur_vec_match : vec_matches )
+    {
+      //size_t i = 0; i < vec_matches.size(); ++i) {
+        const size_t I = cur_vec_match._i ;
+        const size_t J = cur_vec_match._j ;
+        
+      // const size_t I = vec_matches[i]._i;
+      // const size_t J = vec_matches[i]._j;
       _vecDecoredMatches.push_back(
         IndMatchDecoratorStruct(leftFeat.col(I)(0),leftFeat.col(I)(1),
-        rightFeat.col(J)(0), rightFeat.col(J)(1), vec_matches[i]));
+        rightFeat.col(J)(0), rightFeat.col(J)(1), cur_vec_match ) ) ;
     }
   }
 

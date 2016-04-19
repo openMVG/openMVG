@@ -27,7 +27,7 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
   public:
   typedef typename Metric::ResultType DistanceType;
 
-  ArrayMatcher_Kdtree_Flann() {}
+  ArrayMatcher_Kdtree_Flann() = default ; 
 
   virtual ~ArrayMatcher_Kdtree_Flann()  {
     _datasetM.reset();
@@ -134,7 +134,7 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
         {
           for (size_t j = 0; j < NN; ++j)
           {
-            if (indices[i] > 0)
+            if (indices[i] > 0) // rperrot : nullptr here ? 
             {
               pvec_indices->emplace_back(IndMatch(i, vec_indices[i*NN+j]));
               pvec_distances->emplace_back(vec_distances[i*NN+j]);

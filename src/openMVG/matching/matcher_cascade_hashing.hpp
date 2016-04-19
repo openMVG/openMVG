@@ -34,7 +34,7 @@ class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
   public:
   typedef typename Metric::ResultType DistanceType;
 
-  ArrayMatcherCascadeHashing()   {}
+  ArrayMatcherCascadeHashing() = default ; 
   virtual ~ArrayMatcherCascadeHashing() {
     memMapping.reset();
   }

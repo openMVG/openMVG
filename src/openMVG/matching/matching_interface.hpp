@@ -25,8 +25,8 @@ class ArrayMatcher
   typedef typename Metric::ResultType DistanceType;
   typedef Metric MetricT;
 
-  ArrayMatcher() {}
-  virtual ~ArrayMatcher() {};
+  ArrayMatcher() = default ; 
+  virtual ~ArrayMatcher() = default ;
 
   /**
    * Build the matching structure

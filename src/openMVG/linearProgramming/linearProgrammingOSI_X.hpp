@@ -41,7 +41,7 @@ public :
 
   bool solve() override ;
 
-  bool getSolution(std::vector<double> & estimatedParams);
+  bool getSolution(std::vector<double> & estimatedParams) override;
 
 private :
   SOLVERINTERFACE *si;
