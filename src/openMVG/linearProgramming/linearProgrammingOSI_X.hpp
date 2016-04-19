@@ -36,10 +36,10 @@ public :
   // Inherited functions :
   //--
 
-  bool setup(const LP_Constraints & constraints);
-  bool setup(const LP_Constraints_Sparse & constraints);
+  bool setup(const LP_Constraints & constraints) override;
+  bool setup(const LP_Constraints_Sparse & constraints) override ;
 
-  bool solve();
+  bool solve() override ;
 
   bool getSolution(std::vector<double> & estimatedParams);
 
