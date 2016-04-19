@@ -70,19 +70,17 @@ struct TracksBuilder
     typedef std::set<indexedFeaturePair> SetIndexedPair;
     SetIndexedPair allFeatures;
     // For each couple of images list the used features
-    for (PairWiseMatches::const_iterator iter = map_pair_wise_matches.begin();
-      iter != map_pair_wise_matches.end();
-      ++iter)
+    for ( const auto & iter : map_pair_wise_matches )
     {
-      const size_t & I = iter->first.first;
-      const size_t & J = iter->first.second;
-      const std::vector<IndMatch> & vec_FilteredMatches = iter->second;
+      const size_t & I = iter.first.first;
+      const size_t & J = iter.first.second;
+      const std::vector<IndMatch> & vec_FilteredMatches = iter.second;
 
       // Retrieve all shared features and add them to a set
-      for( size_t k = 0; k < vec_FilteredMatches.size(); ++k)
+      for( const auto & cur_filtered_match : vec_FilteredMatches ) 
       {
-        allFeatures.emplace(I,vec_FilteredMatches[k]._i);
-        allFeatures.emplace(J,vec_FilteredMatches[k]._j);
+        allFeatures.emplace(I,cur_filtered_match._i);
+        allFeatures.emplace(J,cur_filtered_match._j);
       }
     }
 
@@ -104,13 +102,11 @@ struct TracksBuilder
     uf_tree.InitSets(map_node_to_index.size());
 
     // 4. Union of the matched features corresponding UF tree sets
-    for (PairWiseMatches::const_iterator iter = map_pair_wise_matches.begin();
-      iter != map_pair_wise_matches.end();
-      ++iter)
+    for ( const auto & iter : map_pair_wise_matches )
     {
-      const auto & I = iter->first.first;
-      const auto & J = iter->first.second;
-      const std::vector<IndMatch> & vec_FilteredMatches = iter->second;
+      const auto & I = iter.first.first;
+      const auto & J = iter.first.second;
+      const std::vector<IndMatch> & vec_FilteredMatches = iter.second;
       for (const IndMatch & match : vec_FilteredMatches)
       {
         const indexedFeaturePair pairI(I, match._i);
@@ -228,24 +224,23 @@ struct TracksUtilsMap
     map_tracksOut.clear();
 
     // Go along the tracks
-    for (STLMAPTracks::const_iterator iterT = map_tracksIn.begin();
-      iterT != map_tracksIn.end(); ++iterT)
+    for ( const auto & iterT : map_tracksIn )
     {
       // Look if the track contains the provided view index & save the point ids
       submapTrack map_temp;
       bool bTest = true;
-      for (std::set<size_t>::const_iterator iterIndex = set_imageIndex.begin();
+      for (auto iterIndex = set_imageIndex.begin();
         iterIndex != set_imageIndex.end() && bTest; ++iterIndex)
       {
-        submapTrack::const_iterator iterSearch = iterT->second.find(*iterIndex);
-        if (iterSearch != iterT->second.end())
+        auto iterSearch = iterT.second.find(*iterIndex);
+        if (iterSearch != iterT.second.end())
           map_temp[iterSearch->first] = iterSearch->second;
         else
           bTest = false;
       }
 
       if (!map_temp.empty() && map_temp.size() == set_imageIndex.size())
-        map_tracksOut[iterT->first] = std::move(map_temp);
+        map_tracksOut[iterT.first] = std::move(map_temp);
     }
     return !map_tracksOut.empty();
   }
@@ -256,10 +251,9 @@ struct TracksUtilsMap
     std::set<size_t> * set_tracksIds)
   {
     set_tracksIds->clear();
-    for (STLMAPTracks::const_iterator iterT = map_tracks.begin();
-      iterT != map_tracks.end(); ++iterT)
+    for ( const auto & iterT : map_tracks ) 
     {
-      set_tracksIds->insert(iterT->first);
+      set_tracksIds->insert(iterT.first);
     }
   }
 
@@ -270,15 +264,14 @@ struct TracksUtilsMap
     size_t nImageIndex,
     std::vector<size_t> * pvec_featIndex)
   {
-    for (STLMAPTracks::const_iterator iterT = map_tracks.begin();
-      iterT != map_tracks.end(); ++iterT)
+    for ( const auto & iterT : map_tracks )
     {
-      const size_t trackId = iterT->first;
+      const size_t trackId = iterT.first;
       if (set_trackId.find(trackId) != set_trackId.end())
       {
         //try to find imageIndex
-        const submapTrack & map_ref = iterT->second;
-        submapTrack::const_iterator iterSearch = map_ref.find(nImageIndex);
+        const submapTrack & map_ref = iterT.second;
+        auto iterSearch = map_ref.find(nImageIndex);
         if (iterSearch != map_ref.end())
         {
           pvec_featIndex->emplace_back(iterSearch->second);
@@ -317,11 +310,11 @@ struct TracksUtilsMap
 
     std::vector<IndMatch> & vec_indexref = *pvec_index;
     vec_indexref.clear();
-    for (size_t i = 0; i < vec_filterIndex.size(); ++i)
+    for ( const auto & filter_index : vec_filterIndex ) 
     {
       // Retrieve the track information from the current index i.
-      STLMAPTracks::const_iterator itF =
-        find_if(map_tracks.begin(), map_tracks.end(), FunctorMapFirstEqual(vec_filterIndex[i]));
+      auto itF =
+        find_if(map_tracks.begin(), map_tracks.end(), FunctorMapFirstEqual( filter_index ) ) ;
       // The current track.
       const submapTrack & map_ref = itF->second;
 
@@ -338,10 +331,9 @@ struct TracksUtilsMap
   static void TracksLength(const STLMAPTracks & map_tracks,
     std::map<size_t, size_t> & map_Occurence_TrackLength)
   {
-    for (STLMAPTracks::const_iterator iterT = map_tracks.begin();
-      iterT != map_tracks.end(); ++iterT)
+    for ( const auto & iterT : map_tracks ) 
     {
-      const size_t trLength = iterT->second.size();
+      const size_t trLength = iterT.second.size();
       if (map_Occurence_TrackLength.end() ==
         map_Occurence_TrackLength.find(trLength))
       {
@@ -358,15 +350,12 @@ struct TracksUtilsMap
   static void ImageIdInTracks(const STLMAPTracks & map_tracks,
     std::set<size_t> & set_imagesId)
   {
-    for (STLMAPTracks::const_iterator iterT = map_tracks.begin();
-      iterT != map_tracks.end(); ++iterT)
+    for ( const auto & iterT : map_tracks ) 
     {
-      const submapTrack & map_ref = iterT->second;
-      for (submapTrack::const_iterator iter = map_ref.begin();
-        iter != map_ref.end();
-        ++iter)
+      const submapTrack & map_ref = iterT.second;
+      for ( const auto & iter : map_ref )
       {
-        set_imagesId.insert(iter->first);
+        set_imagesId.insert(iter.first);
       }
     }
   }
