@@ -184,7 +184,7 @@ struct GeometricFilter_HMatrix_AC
   double m_dPrecision_robust;
 };
 
+} //namespace matching_image_collection 
 } // namespace openMVG
-} //namespace matching_image_collection
 
 
