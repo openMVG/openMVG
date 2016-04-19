@@ -127,9 +127,9 @@ static std::vector< graph::Triplet > tripletListing(
   graph::List_Triplets<indexedGraph::GraphT>(putativeGraph.g, vec_triplets);
 
   //Change triplets to ImageIds
-  for (size_t i = 0; i < vec_triplets.size(); ++i)
+  for ( auto & triplet : vec_triplets ) //  size_t i = 0; i < vec_triplets.size(); ++i)
   {
-    graph::Triplet & triplet = vec_triplets[i];
+    // graph::Triplet & triplet = vec_triplets[i];
     IndexT I = triplet.i, J = triplet.j , K = triplet.k;
     I = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.nodeFromId(I)];
     J = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.nodeFromId(J)];

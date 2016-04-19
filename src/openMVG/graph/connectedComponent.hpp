@@ -107,10 +107,9 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes(
       {
         // list all nodes that belong to the current CC and update the Node Ids list
         const std::set<lemon::ListGraph::Node> & ccSet = iter->second;
-        for (std::set<lemon::ListGraph::Node>::const_iterator iter2 = ccSet.begin();
-          iter2 != ccSet.end(); ++iter2)
+        for (auto & elt : ccSet ) 
         {
-          const IndexT Id = (*putativeGraph.map_nodeMapIndex)[*iter2];
+          const IndexT Id = (*putativeGraph.map_nodeMapIndex)[elt];
           largestBiEdgeCC.insert(Id);
         }
       }
@@ -118,11 +117,10 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes(
       {
         // remove the edges from the graph
         const std::set<lemon::ListGraph::Node> & ccSet = iter->second;
-        for (std::set<lemon::ListGraph::Node>::const_iterator iter2 = ccSet.begin();
-          iter2 != ccSet.end(); ++iter2)
+        for ( auto & elt : ccSet ) 
         {
           typedef Graph::OutArcIt OutArcIt;
-          for (OutArcIt e(putativeGraph.g, *iter2); e!=lemon::INVALID; ++e)
+          for (OutArcIt e(putativeGraph.g, elt ); e!=lemon::INVALID; ++e)
           {
             putativeGraph.g.erase(e);
           }

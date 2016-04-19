@@ -7,8 +7,14 @@
 #ifndef OPENMVG_GRAPH_BUILDER_H_
 #define OPENMVG_GRAPH_BUILDER_H_
 
+#include "openMVG/types.hpp"
+
+#include "lemon/list_graph.h"
+
 #include <memory>
 #include <set>
+#include <map>
+
 
 namespace openMVG {
 namespace graph  {
@@ -42,12 +48,14 @@ struct indexedGraph
     }
 
     //B-- Create a node graph for each element of the set
-    for (std::set<IndexT>::const_iterator iter = setNodes.begin();
+    for ( const auto & elt : setNodes ) 
+      /*
+      std::set<IndexT>::const_iterator iter = setNodes.begin();
       iter != setNodes.end();
-      ++iter)
+      ++iter) */
     {
-      map_size_t_to_node[*iter] = g.addNode();
-      (*map_nodeMapIndex) [map_size_t_to_node.at(*iter)] = *iter;
+      map_size_t_to_node[ elt ] = g.addNode();
+      (*map_nodeMapIndex) [map_size_t_to_node.at( elt )] = elt ;
     }
 
     //C-- Add weighted edges from the pairs object
