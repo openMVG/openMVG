@@ -28,10 +28,10 @@
 #ifndef OPENMVG_ROBUST_ESTIMATION_SCORE_EVALUATOR_H_
 #define OPENMVG_ROBUST_ESTIMATION_SCORE_EVALUATOR_H_
 
+#include <vector>
+
 namespace openMVG {
 namespace robust{
-
-using namespace std;
 
 /// Templated Functor class to evaluate a given model over a set of samples.
 template<typename Kernel>

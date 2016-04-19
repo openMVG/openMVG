@@ -35,10 +35,11 @@
 namespace openMVG {
 namespace robust{
 
+// rperrot : is this legal ? why using an anonymous namespace here ? 
 namespace
 {
   std::default_random_engine random_generator;
-}
+} // 
 
 /**
 * Pick a random subset of the integers [0, total), in random order.

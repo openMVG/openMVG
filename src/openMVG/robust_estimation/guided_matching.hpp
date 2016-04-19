@@ -368,9 +368,8 @@ void GuidedMatching_Fundamental_Fast(
       itBs != buckets.begin() + bucket_stop; ++itBs)
     {
       const Bucket_vec & bucket = *itBs;
-      for(Bucket_vec::const_iterator itB = bucket.begin(); itB != bucket.end(); ++itB)
+      for( const auto & i : bucket )
       {
-        const IndexT i = *itB;
         // Compute descriptor distance
         const double descDist = lRegions.SquaredDescriptorDistance(i, &rRegions, j);
         // Update the corresponding points & distance (if required)

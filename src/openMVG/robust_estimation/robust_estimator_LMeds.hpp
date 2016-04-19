@@ -28,8 +28,8 @@ namespace robust{
 /// IJCV 1998
 template <typename Kernel>
   double LeastMedianOfSquares(const Kernel &kernel,
-	  typename Kernel::Model * model = NULL,
-    double* outlierThreshold = NULL,
+	  typename Kernel::Model * model = nullptr ,
+    double* outlierThreshold = nullptr ,
     double outlierRatio=0.5,
 	  double minProba=0.99)
 {
@@ -63,7 +63,7 @@ template <typename Kernel>
       }
 
 			// Compute median
-			std::vector<double>::iterator itMedian = residuals.begin() +
+			auto itMedian = residuals.begin() +
 				std::size_t( total_samples*(1.-outlierRatio) );
 			std::nth_element(residuals.begin(), itMedian, residuals.end());
 			double median = *itMedian;

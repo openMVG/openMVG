@@ -33,7 +33,7 @@ namespace robust{
 template<typename Kernel, typename Scorer>
 typename Kernel::Model MaxConsensus(const Kernel &kernel,
   const Scorer &scorer,
-  std::vector<size_t> *best_inliers = NULL, size_t max_iteration = 1024) {
+  std::vector<size_t> *best_inliers = nullptr , size_t max_iteration = 1024) {
 
     const size_t min_samples = Kernel::MINIMUM_SAMPLES;
     const size_t total_samples = kernel.NumSamples();
