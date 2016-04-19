@@ -34,8 +34,8 @@ typedef std::map<Pair, RelativeRotation> RelativeRotations_map;
 static Pair_Set getPairs(const RelativeRotations & relRots)
 {
   Pair_Set pairs;
-  for(RelativeRotations::const_iterator it = relRots.begin(); it != relRots.end(); ++it)
-    pairs.insert(std::make_pair(it->i, it->j));
+  for( const auto & cur_rotation : relRots ) 
+    pairs.insert(std::make_pair(cur_rotation.i, cur_rotation.j));
   return pairs;
 }
 
@@ -43,8 +43,8 @@ static Pair_Set getPairs(const RelativeRotations & relRots)
 static RelativeRotations_map getMap(const RelativeRotations & relRots)
 {
   RelativeRotations_map map_rots;
-  for(RelativeRotations::const_iterator it = relRots.begin(); it != relRots.end(); ++it)
-    map_rots[std::make_pair(it->i, it->j)] = *it;
+  for( const auto & cur_rotation : relRots ) 
+    map_rots[std::make_pair(cur_rotation.i, cur_rotation.j)] = cur_rotation ;
   return map_rots;
 }
 

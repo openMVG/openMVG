@@ -53,7 +53,7 @@ bool GlobalRotationsRobust(
   Matrix3x3Arr& Rs,
   const size_t nMainViewID,
   float threshold = 0.f,
-  std::vector<bool> * vec_inliers = NULL);
+  std::vector<bool> * vec_inliers = nullptr );
 
 /**
  * @brief Implementation of Iteratively Reweighted Least Squares (IRLS) [1].
@@ -81,7 +81,7 @@ unsigned int FilterRelativeRotations(
   const RelativeRotations& RelRs,
   const Matrix3x3Arr& Rs,
   float threshold = 0.f,
-  std::vector<bool> * vec_inliers = NULL);
+  std::vector<bool> * vec_inliers = nullptr );
 
 } // namespace l1
 } // namespace rotation_averaging

@@ -35,8 +35,11 @@
 #ifndef OPENMVG_MULTIVIEW_RESECTION_P3P_H_
 #define OPENMVG_MULTIVIEW_RESECTION_P3P_H_
 
-#include <iostream>
 #include "openMVG/numeric/numeric.h"
+#include "openMVG/multiview/projection.hpp"
+
+#include <iostream>
+#include <cmath>
 
 namespace openMVG {
 namespace euclidean_resection {

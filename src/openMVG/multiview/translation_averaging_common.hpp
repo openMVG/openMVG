@@ -25,9 +25,8 @@ typedef std::map< Pair, std::pair<Mat3, Vec3> > RelativeInfo_Map;
 static Pair_Set getPairs(const RelativeInfo_Vec & vec_relative)
 {
   Pair_Set pair_set;
-  for(size_t i = 0; i < vec_relative.size(); ++i)
+  for( const auto & rel : vec_relative ) 
   {
-    const relativeInfo & rel = vec_relative[i];
     pair_set.insert(Pair(rel.first.first, rel.first.second));
   }
   return pair_set;
@@ -37,11 +36,10 @@ static Pair_Set getPairs(const RelativeInfo_Vec & vec_relative)
 static std::set<IndexT> getIndexT(const RelativeInfo_Vec & vec_relative)
 {
   std::set<IndexT> indexT_set;
-  for (RelativeInfo_Vec::const_iterator iter = vec_relative.begin();
-    iter != vec_relative.end(); ++iter)
+  for ( const auto & rel : vec_relative ) 
   {
-    indexT_set.insert(iter->first.first);
-    indexT_set.insert(iter->first.second);
+    indexT_set.insert(rel.first.first);
+    indexT_set.insert(rel.first.second);
   }
   return indexT_set;
 }
