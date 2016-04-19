@@ -72,10 +72,9 @@ static bool Save_PLY(
       if (b_structure)
       {
         const Landmarks & landmarks = sfm_data.GetLandmarks();
-        for (Landmarks::const_iterator iterLandmarks = landmarks.begin();
-          iterLandmarks != landmarks.end();
-          ++iterLandmarks)  {
-          stream << iterLandmarks->second.X.transpose() << " 255 255 255" << "\n";
+        for ( const auto & iterLandmarks : landmarks )
+        {
+          stream << iterLandmarks.second.X.transpose() << " 255 255 255" << "\n";
         }
       }
       stream.flush();

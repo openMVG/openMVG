@@ -7,6 +7,9 @@
 #ifndef OPENMVG_SFM_VIEW_HPP
 #define OPENMVG_SFM_VIEW_HPP
 
+#include "openMVG/types.hpp"
+
+
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include <cereal/cereal.hpp> // Serialization
 

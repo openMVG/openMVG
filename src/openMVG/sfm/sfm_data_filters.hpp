@@ -8,8 +8,12 @@
 #ifndef OPENMVG_SFM_DATA_FILTERS_HPP
 #define OPENMVG_SFM_DATA_FILTERS_HPP
 
+#include "openMVG/types.hpp"
 #include "openMVG/stl/stl.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+
 #include <iterator>
+#include <set>
 
 namespace openMVG {
 namespace sfm {
@@ -21,10 +25,9 @@ static std::set<IndexT> Get_Valid_Views
 )
 {
   std::set<IndexT> valid_idx;
-  for (Views::const_iterator it = sfm_data.GetViews().begin();
-    it != sfm_data.GetViews().end(); ++it)
+  for (const auto & it : sfm_data.GetViews() ) 
   {
-    const View * v = it->second.get();
+    const View * v = it.second.get();
     if (sfm_data.IsPoseAndIntrinsicDefined(v))
     {
       valid_idx.insert(v->id_view);
@@ -61,11 +64,11 @@ static IndexT RemoveOutliers_PixelResidualError
 )
 {
   IndexT outlier_count = 0;
-  Landmarks::iterator iterTracks = sfm_data.structure.begin();
+  auto iterTracks = sfm_data.structure.begin();
   while (iterTracks != sfm_data.structure.end())
   {
     Observations & obs = iterTracks->second.obs;
-    Observations::iterator itObs = obs.begin();
+    auto itObs = obs.begin();
     while (itObs != obs.end())
     {
       const View * view = sfm_data.views.at(itObs->first).get();
@@ -109,7 +112,7 @@ static IndexT RemoveOutliers_AngleError
       const geometry::Pose3 pose1 = sfm_data.GetPoseOrDie(view1);
       const cameras::IntrinsicBase * intrinsic1 = sfm_data.intrinsics.at(view1->id_intrinsic).get();
 
-      Observations::const_iterator itObs2 = itObs1;
+      auto itObs2 = itObs1;
       ++itObs2;
       for (; itObs2 != obs.end(); ++itObs2)
       {
@@ -142,21 +145,18 @@ static bool eraseMissingPoses(SfM_Data & sfm_data, const IndexT min_points_per_p
   // Count the observation poses occurence
   Hash_Map<IndexT, IndexT> map_PoseId_Count;
   // Init with 0 count (in order to be able to remove non referenced elements)
-  for (Poses::const_iterator itPoses = sfm_data.GetPoses().begin();
-    itPoses != sfm_data.GetPoses().end(); ++itPoses)
+  for (const auto & itPoses : sfm_data.GetPoses() )
   {
-    map_PoseId_Count[itPoses->first] = 0;
+    map_PoseId_Count[itPoses.first] = 0;
   }
 
   // Count occurence of the poses in the Landmark observations
-  for (Landmarks::const_iterator itLandmarks = landmarks.begin();
-    itLandmarks != landmarks.end(); ++itLandmarks)
+  for (const auto & itLandmarks : landmarks )
   {
-    const Observations & obs = itLandmarks->second.obs;
-    for (Observations::const_iterator itObs = obs.begin();
-      itObs != obs.end(); ++itObs)
+    const Observations & obs = itLandmarks.second.obs;
+    for ( const auto & itObs : obs ) 
     {
-      const IndexT ViewId = itObs->first;
+      const IndexT ViewId = itObs.first;
       const View * v = sfm_data.GetViews().at(ViewId).get();
       if (map_PoseId_Count.count(v->id_pose))
         map_PoseId_Count.at(v->id_pose) += 1;
@@ -187,11 +187,11 @@ static bool eraseObservationsWithMissingPoses(SfM_Data & sfm_data, const IndexT 
 
   // For each landmark:
   //  - Check if we need to keep the observations & the track
-  Landmarks::iterator itLandmarks = sfm_data.structure.begin();
+  auto itLandmarks = sfm_data.structure.begin();
   while (itLandmarks != sfm_data.structure.end())
   {
     Observations & obs = itLandmarks->second.obs;
-    Observations::iterator itObs = obs.begin();
+    auto itObs = obs.begin();
     while (itObs != obs.end())
     {
       const IndexT ViewId = itObs->first;

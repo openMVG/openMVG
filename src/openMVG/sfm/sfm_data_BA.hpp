@@ -7,6 +7,8 @@
 #ifndef OPENMVG_SFM_DATA_BA_HPP
 #define OPENMVG_SFM_DATA_BA_HPP
 
+#include "openMVG/sfm/sfm_data.hpp"
+
 namespace openMVG {
 namespace sfm {
 

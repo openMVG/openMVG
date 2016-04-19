@@ -45,7 +45,7 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
     bool bRefineRotations = true,   // tell if pose rotations will be refined
     bool bRefineTranslations = true,// tell if the pose translation will be refined
     bool bRefineIntrinsics = true,  // tell if the camera intrinsic will be refined
-    bool bRefineStructure = true);  // tell if the structure will be refined
+    bool bRefineStructure = true) override ;  // tell if the structure will be refined
 };
 
 } // namespace sfm
