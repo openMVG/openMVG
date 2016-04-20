@@ -93,8 +93,10 @@ bool exportToCMPMVSFormat(
       std::ofstream file(
         stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory),
         os.str() ,"txt").c_str());
-      file << "CONTOUR" << os.widen('\n')
-        << P.row(0) <<"\n"<< P.row(1) <<"\n"<< P.row(2) << os.widen('\n');
+      file << "CONTOUR" << "\n"
+        << P(0, 0) << " " << P(0, 1) << " "  << P(0, 2) << " "  << P(0, 3) << "\n"
+        << P(1, 0) << " " << P(1, 1) << " "  << P(1, 2) << " "  << P(1, 3) << "\n"
+        << P(2, 0) << " " << P(2, 1) << " "  << P(2, 2) << " "  << P(2, 3) << "\n";
       file.close();
     }
 
