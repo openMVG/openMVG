@@ -70,7 +70,7 @@ void ImageCollectionGeometricFilter::Robust_model_estimation
     PairWiseMatches::const_iterator iter = putative_matches.begin();
     advance(iter,i);
 
-    const Pair current_pair = iter->first;
+    Pair current_pair = iter->first;
     const std::vector<IndMatch> & vec_PutativeMatches = iter->second;
 
     //-- Apply the geometric filter (robust model estimation)
