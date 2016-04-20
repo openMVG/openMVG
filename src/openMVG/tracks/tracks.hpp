@@ -212,10 +212,12 @@ struct TracksUtilsMap
    * @param[in] map_tracksIn: all tracks of the scene
    * @param[out] map_tracksOut: output with only the common tracks
    */
-  static bool GetTracksInImages(
+  static bool GetTracksInImages
+  (
     const std::set<size_t> & set_imageIndex,
     const STLMAPTracks & map_tracksIn,
-    STLMAPTracks & map_tracksOut)
+    STLMAPTracks & map_tracksOut
+  )
   {
     map_tracksOut.clear();
 
@@ -242,9 +244,11 @@ struct TracksUtilsMap
   }
 
   /// Return the tracksId as a set (sorted increasing)
-  static void GetTracksIdVector(
+  static void GetTracksIdVector
+  (
     const STLMAPTracks & map_tracks,
-    std::set<size_t> * set_tracksIds)
+    std::set<size_t> * set_tracksIds
+  )
   {
     set_tracksIds->clear();
     for ( const auto & iterT : map_tracks ) 
@@ -254,20 +258,22 @@ struct TracksUtilsMap
   }
 
   /// Get feature index PerView and TrackId
-  static bool GetFeatIndexPerViewAndTrackId(
+  static bool GetFeatIndexPerViewAndTrackId
+  (
     const STLMAPTracks & map_tracks,
     const std::set<size_t> & set_trackId,
     size_t nImageIndex,
-    std::vector<size_t> * pvec_featIndex)
+    std::vector<size_t> * pvec_featIndex
+  )
   {
-    for ( const auto & iterT : map_tracks )
+    for (const size_t & trackId: set_trackId)
     {
-      const size_t trackId = iterT.first;
-      if (set_trackId.find(trackId) != set_trackId.end())
+      STLMAPTracks::const_iterator iterT = map_tracks.find(trackId);
+      if (iterT != map_tracks.end())
       {
         //try to find imageIndex
-        const submapTrack & map_ref = iterT.second;
-        auto iterSearch = map_ref.find(nImageIndex);
+        const submapTrack & map_ref = iterT->second;
+        submapTrack::const_iterator iterSearch = map_ref.find(nImageIndex);
         if (iterSearch != map_ref.end())
         {
           pvec_featIndex->emplace_back(iterSearch->second);
@@ -299,9 +305,12 @@ struct TracksUtilsMap
    * @warning The input tracks must be composed of only two images index.
    * @warning Image index are considered sorted (increasing order).
    */
-  static void TracksToIndexedMatches(const STLMAPTracks & map_tracks,
+  static void TracksToIndexedMatches
+  (
+    const STLMAPTracks & map_tracks,
     const std::vector<IndexT> & vec_filterIndex,
-    std::vector<IndMatch> * pvec_index)
+    std::vector<IndMatch> * pvec_index
+  )
   {
 
     std::vector<IndMatch> & vec_indexref = *pvec_index;
@@ -324,8 +333,11 @@ struct TracksUtilsMap
   }
 
   /// Return the occurrence of tracks length.
-  static void TracksLength(const STLMAPTracks & map_tracks,
-    std::map<size_t, size_t> & map_Occurence_TrackLength)
+  static void TracksLength
+  (
+    const STLMAPTracks & map_tracks,
+    std::map<size_t, size_t> & map_Occurence_TrackLength
+  )
   {
     for ( const auto & iterT : map_tracks ) 
     {
@@ -343,8 +355,11 @@ struct TracksUtilsMap
   }
 
   /// Return a set containing the image Id considered in the tracks container.
-  static void ImageIdInTracks(const STLMAPTracks & map_tracks,
-    std::set<size_t> & set_imagesId)
+  static void ImageIdInTracks
+  (
+    const STLMAPTracks & map_tracks,
+    std::set<size_t> & set_imagesId
+  )
   {
     for ( const auto & iterT : map_tracks ) 
     {
