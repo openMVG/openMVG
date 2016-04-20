@@ -27,6 +27,11 @@ OPTION(OpenMVG_BUILD_VOCTREE "Build the vocabulary tree and localization module"
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
 OPTION(OpenMVG_USE_CCTAG "Enable CCTAG markers" ON)
 OPTION(OpenMVG_USE_ALEMBIC "Enable Alembic I/O" OFF)
+OPTION(OpenMVG_USE_POPART_LOG "Enable POPART logger" ON)
+
+IF(OpenMVG_USE_POPART_LOG)
+  ADD_DEFINITIONS(-DWANTS_POPART_COUT)
+ENDIF()
 
 # ==============================================================================
 # Opencv is not used by openMVG but some samples show how to use openCV
@@ -572,6 +577,7 @@ MESSAGE("** Build OpenCV+OpenMVG samples programs: " ${OpenMVG_USE_OPENCV})
 MESSAGE("** Use OpenCV SIFT features: " ${OpenMVG_USE_OCVSIFT})
 MESSAGE("** Use CCTAG markers: " ${OpenMVG_USE_CCTAG})
 MESSAGE("** Build Alembic exporter: " ${OpenMVG_USE_ALEMBIC})
+MESSAGE("** Use POPART logger: " ${OpenMVG_USE_POPART_LOG})
 
 MESSAGE("\n")
 

@@ -76,7 +76,7 @@ FIND_LIBRARY(CCTAGCUDA_LIBRARY NAMES CCTagCuda
 )
 # To work with cuda, cctags needs additional CUDA cudadevrt library
 IF(CCTAGCUDA_LIBRARY)
-  SET(CCTAGCUDA_LIBRARIES ${CCTAGCUDA_LIBRARY} cudadevrt)
+  SET(CCTAGCUDA_LIBRARIES ${CCTAGCUDA_LIBRARY} cudart cudadevrt)
 ENDIF()
 
 # Sets the libraries needed to link with CCTag

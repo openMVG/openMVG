@@ -62,7 +62,7 @@ bool SfM_Localizer::Localize
       resection_data.pt3D);
     // Robust estimation of the Projection matrix and its precision
     const std::pair<double,double> ACRansacOut =
-      openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision);
+      openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision, true);
     // Update the upper bound precision of the model found by AC-RANSAC
     resection_data.error_max = ACRansacOut.first;
   }
@@ -91,7 +91,7 @@ bool SfM_Localizer::Localize
       KernelType kernel = KernelType(pt2Dundistorted, resection_data.pt3D, pinhole_cam->K());
       // Robust estimation of the Projection matrix and its precision
       const std::pair<double,double> ACRansacOut =
-        openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision);
+        openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision, true);
       // Update the upper bound precision of the model found by AC-RANSAC
       resection_data.error_max = ACRansacOut.first;
     }
@@ -101,7 +101,7 @@ bool SfM_Localizer::Localize
       KernelType kernel = KernelType(resection_data.pt2D, resection_data.pt3D, pinhole_cam->K());
       // Robust estimation of the Projection matrix and its precision
       const std::pair<double,double> ACRansacOut =
-        openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision);
+        openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision, true);
       // Update the upper bound precision of the model found by AC-RANSAC
       resection_data.error_max = ACRansacOut.first;
     }
@@ -109,6 +109,14 @@ bool SfM_Localizer::Localize
 
   // Test if the mode support some points (more than those required for estimation)
   const bool bResection = (resection_data.vec_inliers.size() > MINIMUM_SAMPLES * OPENMVG_MINIMUM_SAMPLES_COEF);
+#ifdef WANTS_POPART_COUT
+  if (!bResection) 
+  {
+    std::cout << "bResection is false";
+    std::cout << " because resection_data.vec_inliers.size() = " << resection_data.vec_inliers.size();
+    std::cout << " and MINIMUM_SAMPLES = " << MINIMUM_SAMPLES << std::endl;
+  }
+#endif
 
   if (bResection)
   {

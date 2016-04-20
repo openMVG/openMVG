@@ -136,7 +136,7 @@ int main(int argc, char** argv)
           ("nNearestKeyFrames", po::value<size_t>(&nNearestKeyFrames)->default_value(nNearestKeyFrames), "Number of images to retrieve in database")
 #endif
 #if HAVE_ALEMBIC
-          ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), "Filename for the SfM_Data export file (where camera poses will be stored). Default : trackedcameras.json If Alambic is enable it will also export an .abc file of the scene with the same name")
+          ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), "If Alambic is enabled, filename for the file containing the camera poses. Default : trackedcameras.abc")
 #endif
           ;
 
