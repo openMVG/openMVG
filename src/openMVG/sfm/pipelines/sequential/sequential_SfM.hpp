@@ -81,7 +81,7 @@ private:
   bool BundleAdjustment();
 
   /// Discard track with too large residual error
-  size_t badTrackRejector(double dPrecision, size_t count = 0);
+  bool badTrackRejector(double dPrecision, size_t count = 0);
 
   //----
   //-- Data
