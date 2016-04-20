@@ -41,7 +41,6 @@ int main(int argc, char **argv)
   int iRotationAveragingMethod = int (ROTATION_AVERAGING_L2);
   int iTranslationAveragingMethod = int (TRANSLATION_AVERAGING_SOFTL1);
   bool bRefineIntrinsics = true;
-  bool matchFilePerImage = false;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
@@ -49,7 +48,6 @@ int main(int argc, char **argv)
   cmd.add( make_option('r', iRotationAveragingMethod, "rotationAveraging") );
   cmd.add( make_option('t', iTranslationAveragingMethod, "translationAveraging") );
   cmd.add( make_option('f', bRefineIntrinsics, "refineIntrinsics") );
-  cmd.add( make_option('p', matchFilePerImage, "matchFilePerImage") );
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -70,8 +68,6 @@ int main(int argc, char **argv)
     << "[-f|--refineIntrinsics]\n"
     << "\t 0-> intrinsic parameters are kept as constant\n"
     << "\t 1-> refine intrinsic parameters (default). \n"
-    << "[-p|--matchFilePerImage] \n"
-    << "\t To use one match file per image instead of a global file.\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -118,37 +114,11 @@ int main(int argc, char **argv)
   }
   // Matches reading
   std::shared_ptr<Matches_Provider> matches_provider = std::make_shared<Matches_Provider>();
-  if( !matchFilePerImage )
+  // Load the match file (try to read the two matches file formats)
+  if(!(matches_provider->load(sfm_data, sMatchesDir, "e")))
   {
-    // Load the match file (try to read the two matches file formats)
-    if( !(matches_provider->load(sfm_data, sMatchesDir, "matches.e.txt") ||
-          matches_provider->load(sfm_data, sMatchesDir, "matches.e.bin")))
-    {
-      std::cerr << std::endl << "Unable to load matches files from: " << sMatchesDir << std::endl;
-      return EXIT_FAILURE;
-    }
-  }
-  else
-  {
-    int nbLoadedMatchFiles = 0;
-    // Load one match file per image
-    for(Views::const_iterator it = sfm_data.GetViews().begin();
-        it != sfm_data.GetViews().end(); ++it)
-    {
-      const View * v = it->second.get();
-      if( !(matches_provider->load(sfm_data, sMatchesDir, std::to_string(v->id_view) + ".matches.e.txt") ||
-            matches_provider->load(sfm_data, sMatchesDir, std::to_string(v->id_view) + ".matches.e.bin")))
-      {
-        std::cerr << std::endl << "Unable to load matches files from: " << sMatchesDir << std::endl;
-        continue;
-      }
-      ++nbLoadedMatchFiles;
-    }
-    if( nbLoadedMatchFiles == 0 )
-    {
-      std::cerr << std::endl << "No matches file loaded in: " << sMatchesDir << std::endl;
-      return EXIT_FAILURE;
-    }
+    std::cerr << std::endl << "Unable to load matches files from: " << sMatchesDir << std::endl;
+    return EXIT_FAILURE;
   }
 
   if (sOutDir.empty())
