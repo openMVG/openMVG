@@ -91,7 +91,7 @@ bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmd
   ICompoundProperty arbGeom = ms.getArbGeomParams();
 
   C3fArraySamplePtr sampleColors;
-  if(arbGeom.getPropertyHeader("color"))
+  if(arbGeom && arbGeom.getPropertyHeader("color"))
   {
     IC3fArrayProperty propColor(arbGeom, "color");
     propColor.get(sampleColors);
@@ -117,7 +117,8 @@ bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmd
     }
   }
 
-  if(userProps.getPropertyHeader("mvg_visibilitySize") &&
+  if(userProps &&
+     userProps.getPropertyHeader("mvg_visibilitySize") &&
      userProps.getPropertyHeader("mvg_visibilityIds") &&
      userProps.getPropertyHeader("mvg_visibilityFeatPos")
      )
