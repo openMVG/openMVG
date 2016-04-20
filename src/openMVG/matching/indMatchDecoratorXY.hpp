@@ -76,12 +76,13 @@ public:
   )
   :vec_matches_(vec_matches)
   {
-    for (size_t i = 0; i < vec_matches.size(); ++i) {
-      const size_t I = vec_matches[i].i_;
-      const size_t J = vec_matches[i].j_;
+    for ( const auto & cur_vec_match : vec_matches )
+    {
+      const size_t I = cur_vec_match.i_;
+      const size_t J = cur_vec_match.j_;
       vecDecoredMatches_.push_back(
         IndMatchDecoratorStruct(leftFeat[I].x(),leftFeat[I].y(),
-        rightFeat[J].x(), rightFeat[J].y(), vec_matches[i]));
+        rightFeat[J].x(), rightFeat[J].y(), cur_vec_match));
     }
   }
 
@@ -93,12 +94,13 @@ public:
   )
   :vec_matches_(vec_matches)
   {
-    for (size_t i = 0; i < vec_matches.size(); ++i) {
-      const size_t I = vec_matches[i].i_;
-      const size_t J = vec_matches[i].j_;
+    for ( const auto & cur_vec_match : vec_matches )
+    {
+      const size_t I = cur_vec_match.i_;
+      const size_t J = cur_vec_match.j_;
       vecDecoredMatches_.push_back(
         IndMatchDecoratorStruct(leftFeat[I].x(),leftFeat[I].y(),
-        rightFeat[J].x(), rightFeat[J].y(), vec_matches[i]));
+        rightFeat[J].x(), rightFeat[J].y(), cur_vec_match));
     }
   }
 
@@ -110,19 +112,20 @@ public:
   )
   :vec_matches_(vec_matches)
   {
-    for (size_t i = 0; i < vec_matches.size(); ++i) {
-      const size_t I = vec_matches[i].i_;
-      const size_t J = vec_matches[i].j_;
+    for ( const auto & cur_vec_match : vec_matches )
+    {
+      const size_t I = cur_vec_match.i_;
+      const size_t J = cur_vec_match.j_;
       vecDecoredMatches_.push_back(
         IndMatchDecoratorStruct(leftFeat.col(I)(0),leftFeat.col(I)(1),
-        rightFeat.col(J)(0), rightFeat.col(J)(1), vec_matches[i]));
+        rightFeat.col(J)(0), rightFeat.col(J)(1), cur_vec_match));
     }
   }
 
   /// Remove duplicates (same (x1,y1) coords that appears multiple times)
   size_t getDeduplicated(std::vector<IndMatch> & vec_matches)
   {
-    size_t sizeBefore = vecDecoredMatches_.size();
+    const size_t sizeBefore = vecDecoredMatches_.size();
     std::set<IndMatchDecoratorStruct> set_deduplicated(
       vecDecoredMatches_.begin(),vecDecoredMatches_.end());
     vecDecoredMatches_.assign(set_deduplicated.begin(), set_deduplicated.end());

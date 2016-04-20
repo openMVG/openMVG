@@ -77,8 +77,8 @@ typedef std::map< Pair, IndMatches > PairWiseMatches;
 inline Pair_Set getPairs(const PairWiseMatches & matches)
 {
   Pair_Set pairs;
-  for(PairWiseMatches::const_iterator it = matches.begin(); it != matches.end(); ++it)
-    pairs.insert(it->first);
+  for( const auto & cur_pair : matches ) 
+    pairs.insert(cur_pair.first);
   return pairs;
 }
 

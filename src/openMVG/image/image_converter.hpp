@@ -15,20 +15,6 @@ namespace openMVG
 namespace image
 {
 
-
-
-/**
-* @brief Convert RGB color to gray color
-* @note The factor comes from http://www.easyrgb.com/
-* RGB to XYZ : Y is the luminance channel
-* var_R * 0.2126 + var_G * 0.7152 + var_B * 0.0722
-*/
-template<typename T>
-inline T Rgb2Gray( const T r, const T g, const T b )
-{
-  return r * 0.2126 + g * 0.7152 + b * 0.0722;
-}
-
 /**
 * @brief Convert from one color type to another one
 * @param valin Input color value
@@ -51,8 +37,6 @@ template<>
 inline void Convert<RGBColor, unsigned char>(
   const RGBColor& valin, unsigned char& valOut )
 {
-  /// TODO : why not using Rgb2Gray ?
-  /// TODO need to check value > 255 before conversion ?
   valOut = static_cast<unsigned char>( 0.3 * valin.r() + 0.59 * valin.g() + 0.11 * valin.b() );
 }
 
@@ -191,10 +175,12 @@ inline void rgbFloat2rgbInt(
   ( *imaOut ).resize( imaIn.Width(), imaIn.Height() );
   // Convert each int RGB to float RGB values
   for( int j = 0; j < imaIn.Height(); ++j )
+  {
     for( int i = 0; i < imaIn.Width(); ++i )
     {
       convertFloatToInt( imaIn( j, i ), ( *imaOut )( j, i ), factor  );
     }
+  }
 }
 
 } // namespace image

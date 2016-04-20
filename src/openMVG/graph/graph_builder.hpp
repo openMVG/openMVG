@@ -7,8 +7,13 @@
 #ifndef OPENMVG_GRAPH_BUILDER_H_
 #define OPENMVG_GRAPH_BUILDER_H_
 
+#include "openMVG/types.hpp"
+#include "lemon/list_graph.h"
+
 #include <memory>
+#include <map>
 #include <set>
+
 
 namespace openMVG
 {

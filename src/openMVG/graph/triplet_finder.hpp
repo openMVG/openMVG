@@ -192,8 +192,10 @@ bool List_Triplets( const GraphT & g, std::vector< Triplet > & vec_triplets )
 * @return List of triplet found in graph
 */
 template <typename IterablePairs>
-static std::vector< graph::Triplet > tripletListing(
-  const IterablePairs & pairs )
+static std::vector< graph::Triplet > tripletListing
+(
+  const IterablePairs & pairs
+)
 {
   std::vector< graph::Triplet > vec_triplets;
 
@@ -202,13 +204,11 @@ static std::vector< graph::Triplet > tripletListing(
   graph::List_Triplets<indexedGraph::GraphT>( putativeGraph.g, vec_triplets );
 
   //Change triplets to ImageIds
-  for ( size_t i = 0; i < vec_triplets.size(); ++i )
+  for ( auto & triplet : vec_triplets )
   {
-    graph::Triplet & triplet = vec_triplets[i];
-    IndexT I = triplet.i, J = triplet.j , K = triplet.k;
-    I = ( *putativeGraph.map_nodeMapIndex )[putativeGraph.g.nodeFromId( I )];
-    J = ( *putativeGraph.map_nodeMapIndex )[putativeGraph.g.nodeFromId( J )];
-    K = ( *putativeGraph.map_nodeMapIndex )[putativeGraph.g.nodeFromId( K )];
+    const IndexT I = ( *putativeGraph.map_nodeMapIndex )[putativeGraph.g.nodeFromId( triplet.i )];
+    const IndexT J = ( *putativeGraph.map_nodeMapIndex )[putativeGraph.g.nodeFromId( triplet.j )];
+    const IndexT K = ( *putativeGraph.map_nodeMapIndex )[putativeGraph.g.nodeFromId( triplet.k )];
     IndexT triplet_[3] = { I, J, K };
     std::sort( &triplet_[0], &triplet_[3] );
     triplet = graph::Triplet( triplet_[0], triplet_[1], triplet_[2] );

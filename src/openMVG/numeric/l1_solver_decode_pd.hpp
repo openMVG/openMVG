@@ -7,6 +7,8 @@
 #ifndef OPENMVG_NUMERIC_L1_SOLVER_DECODE_PD_H_
 #define OPENMVG_NUMERIC_L1_SOLVER_DECODE_PD_H_
 
+#include <Eigen/Dense>
+
 namespace openMVG {
 
 // Minimum l1 error approximation:

@@ -33,7 +33,7 @@ class Matcher_Regions_AllInMemory : public Matcher
     const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
     const Pair_Set & pairs,
     matching::PairWiseMatches & map_PutativesMatches // the pairwise photometric corresponding points
-  )const;
+  )const override ;
 
   private:
   // Distance ratio used to discard spurious correspondence
@@ -42,5 +42,5 @@ class Matcher_Regions_AllInMemory : public Matcher
   matching::EMatcherType eMatcherType_;
 };
 
-} // namespace openMVG
 } // namespace matching_image_collection
+} // namespace openMVG 

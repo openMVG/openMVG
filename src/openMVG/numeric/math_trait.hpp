@@ -398,6 +398,6 @@ namespace openMVG
   {
     return fabsl( val ) ;
   }
-}
+} // namespace openMVG 
 
 #endif

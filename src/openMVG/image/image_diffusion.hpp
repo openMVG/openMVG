@@ -11,6 +11,11 @@
   #pragma warning(once:4244)
 #endif
 
+#include "openMVG/numeric/numeric.h"
+
+#include <vector>
+#include <cmath>
+
 namespace openMVG
 {
 namespace image

@@ -31,8 +31,7 @@ public:
      _vec_featsL( vec_featsL ), _vec_featsR( vec_featsR ), _radius( radius )
   {}
 
-  virtual ~commonDataByPair_MatchedPoints()
-  {}
+  ~commonDataByPair_MatchedPoints() override = default ; 
 
   /**
    * Fill mask from corresponding points (each point pictured by a disk of radius _radius)
@@ -42,7 +41,7 @@ public:
    *
    * \return True if some pixel have been set to true.
    */
-  virtual bool computeMask( image::Image< unsigned char > & maskLeft, image::Image< unsigned char > & maskRight )
+  bool computeMask( image::Image< unsigned char > & maskLeft, image::Image< unsigned char > & maskRight ) override 
   {
     maskLeft.fill(0);
     maskRight.fill(0);

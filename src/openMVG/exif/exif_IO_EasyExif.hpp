@@ -68,7 +68,7 @@ class Exif_IO_EasyExif : public Exif_IO
     * @retval true if image file could be parsed correctly
     * @retval false if image file could not be parsed and analysed
     */
-    bool open( const std::string & sFileName )
+    bool open( const std::string & sFileName ) override
     {
       // Read the file into a buffer
       FILE *fp = fopen( sFileName.c_str(), "rb" );
@@ -97,7 +97,7 @@ class Exif_IO_EasyExif : public Exif_IO
     * @brief Get image width
     * @return Width of the image (in pixel)
     */
-    size_t getWidth() const
+    size_t getWidth() const override
     {
       return exifInfo_.ImageWidth;
     }
@@ -106,7 +106,7 @@ class Exif_IO_EasyExif : public Exif_IO
     * @brief Get image height
     * @return Height of the image (in pixel)
     */
-    size_t getHeight() const
+    size_t getHeight() const override
     {
       return exifInfo_.ImageHeight;
     }
@@ -115,7 +115,7 @@ class Exif_IO_EasyExif : public Exif_IO
     * @brief Get Focal (in mm)
     * @return Focal of the lens when image was shot (in mm)
     */
-    float getFocal() const
+    float getFocal() const override
     {
       return static_cast<float>( exifInfo_.FocalLength );
     }
@@ -124,7 +124,7 @@ class Exif_IO_EasyExif : public Exif_IO
     * @brief Get Brand of the camera
     * @return Brand name
     */
-    std::string getBrand() const
+    std::string getBrand() const override
     {
       return trim_copy( exifInfo_.Make );
     }
@@ -133,7 +133,7 @@ class Exif_IO_EasyExif : public Exif_IO
     * @brief Get Model of the camera
     * @return Camera model name
     */
-    std::string getModel() const
+    std::string getModel() const override
     {
       return trim_copy( exifInfo_.Model );
     }
@@ -142,7 +142,7 @@ class Exif_IO_EasyExif : public Exif_IO
     * @brief Get Lens model
     * @return Lens model name
     */
-    std::string getLensModel() const
+    std::string getLensModel() const override
     {
       return trim_copy( exifInfo_.LensInfo.Model );
     }
@@ -151,7 +151,7 @@ class Exif_IO_EasyExif : public Exif_IO
     * @brief Get an unique indentifier for this image
     * @return Unique ID
     */
-    std::string getImageUniqueID() const
+    std::string getImageUniqueID() const override
     {
       return exifInfo_.ImageUniqueID;
     }
@@ -161,7 +161,7 @@ class Exif_IO_EasyExif : public Exif_IO
       * @retval true If EXIF value are present
       * @retval false If EXIF value are not present
       */
-    bool doesHaveExifInfo() const
+    bool doesHaveExifInfo() const override
     {
       return bHaveExifInfo_;
     }
@@ -171,7 +171,7 @@ class Exif_IO_EasyExif : public Exif_IO
     * @brief Print all data
     * @return string containing all EXIF data
     */
-    std::string allExifData() const
+    std::string allExifData() const override
     {
       std::ostringstream os;
       os

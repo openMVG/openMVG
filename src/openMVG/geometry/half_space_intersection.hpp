@@ -8,10 +8,8 @@
 #define OPENMVG_GEOMETRY_HALF_SPACE_HPP_
 
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
-
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
-
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION( Eigen::Hyperplane<double, 3> )
 
 namespace openMVG
@@ -148,8 +146,8 @@ struct HalfPlaneObject
   }
 };
 
+} // namespace halfPlane
 } // namespace geometry
 } // namespace openMVG
-} // namespace halfPlane
 
 #endif // OPENMVG_GEOMETRY_HALF_SPACE_HPP_

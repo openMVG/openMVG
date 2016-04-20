@@ -8,6 +8,7 @@
 #ifndef OPENMVG_SFM_DATA_FILTERS_HPP
 #define OPENMVG_SFM_DATA_FILTERS_HPP
 
+#include <iterator>
 #include <set>
 #include "openMVG/types.hpp"
 

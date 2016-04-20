@@ -30,6 +30,7 @@ class Descriptor : public Eigen::Matrix<T, N, 1>
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   typedef T bin_type;
+  typedef std::size_t size_type;
 
   /// Compile-time length of the descriptor
   static const std::size_t static_size = N;

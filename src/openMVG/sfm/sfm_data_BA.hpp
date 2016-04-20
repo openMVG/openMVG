@@ -12,7 +12,7 @@
 namespace openMVG {
 namespace sfm {
 
-class SfM_Data;
+struct SfM_Data;
 
 /// Enum to control which parameter(s) of the Camera motion must be refined or not
 enum class Extrinsic_Parameter_Type : int

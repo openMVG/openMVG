@@ -41,7 +41,7 @@ static bool save(
   std::ofstream file( scameraFile.c_str(), std::ios::out | std::ios::binary );
   file.write( ( const char* )PMat.data(), ( std::streamsize )( 3 * 4 )*sizeof( double ) );
 
-  bool bOk = ( !file.fail() );
+  const bool bOk = ( !file.fail() );
   file.close();
   return bOk;
 }
@@ -69,9 +69,9 @@ static bool load(
                 << "' for reading" << std::endl;
       return false;
     }
-    val.resize( 12 );
-    in.read( ( char* )&val[0], ( std::streamsize )12 * sizeof( double ) );
-    if ( in.fail() )
+    val.resize(12);
+    in.read(reinterpret_cast<char*>(&val[0]),(std::streamsize)12*sizeof(double));
+    if (in.fail())
     {
       val.clear();
     }

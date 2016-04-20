@@ -10,6 +10,7 @@
 
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/geometry/pose3.hpp"
 
 #include <vector>
@@ -63,13 +64,13 @@ class Pinhole_Intrinsic : public IntrinsicBase
     /**
     * @brief Destructor
     */
-    virtual ~Pinhole_Intrinsic() {}
+    virtual ~Pinhole_Intrinsic() override = default;
 
     /**
     * @brief Get type of the intrinsic
     * @retval PINHOLE_CAMERA
     */
-    virtual EINTRINSIC getType() const
+    EINTRINSIC getType() const override
     {
       return PINHOLE_CAMERA;
     }
@@ -78,7 +79,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     * @brief Get the intrinsic matrix
     * @return 3x3 intrinsic matrix
     */
-    const Mat3& K() const
+    const Mat3& K() const 
     {
       return K_;
     }
@@ -116,7 +117,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     * @brief Get bearing vector of a point given an image coordinate
     * @return bearing vector
     */
-    virtual Vec3 operator () ( const Vec2& p ) const
+    Vec3 operator () ( const Vec2& p ) const override
     {
       Vec3 p3( p( 0 ), p( 1 ), 1.0 );
       return ( Kinv_ * p3 ).normalized();
@@ -127,7 +128,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     * @param p Camera plane point
     * @return Point on image plane
     */
-    virtual Vec2 cam2ima( const Vec2& p ) const
+    Vec2 cam2ima( const Vec2& p ) const override
     {
       return focal() * p + principal_point();
     }
@@ -137,7 +138,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     * @param p Image plane point
     * @return camera plane point
     */
-    virtual Vec2 ima2cam( const Vec2& p ) const
+    Vec2 ima2cam( const Vec2& p ) const override
     {
       return ( p -  principal_point() ) / focal();
     }
@@ -146,7 +147,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     * @brief Does the camera model handle a distortion field?
     * @retval false if intrinsic does not hold distortion
     */
-    virtual bool have_disto() const
+    bool have_disto() const override
     {
       return false;
     }
@@ -156,7 +157,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     * @param p Point before distortion computation (in normalized camera frame)
     * @return point with distortion
     */
-    virtual Vec2 add_disto( const Vec2& p ) const
+    Vec2 add_disto( const Vec2& p ) const override
     {
       return p;
     }
@@ -166,7 +167,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     * @param p Point with distortion
     * @return Point without distortion
     */
-    virtual Vec2 remove_disto( const Vec2& p ) const
+    Vec2 remove_disto( const Vec2& p ) const override
     {
       return p;
     }
@@ -176,7 +177,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     * @param value Error in image plane
     * @return error of passing from the image plane to the camera plane
     */
-    virtual double imagePlane_toCameraPlaneError( double value ) const
+    double imagePlane_toCameraPlaneError( double value ) const
     {
       return value / focal();
     }
@@ -186,7 +187,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     * @param pose Extrinsic matrix
     * @return Concatenation of intrinsic matrix and extrinsic matrix
     */
-    virtual Mat34 get_projective_equivalent( const geometry::Pose3 & pose ) const
+    Mat34 get_projective_equivalent( const geometry::Pose3 & pose ) const
     {
       Mat34 P;
       P_From_KRt( K(), pose.rotation(), pose.translation(), &P );
@@ -198,7 +199,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     * @brief Data wrapper for non linear optimization (get data)
     * @return vector of parameter of this intrinsic
     */
-    virtual std::vector<double> getParams() const
+    std::vector<double> getParams() const override
     {
       const std::vector<double> params = {K_( 0, 0 ), K_( 0, 2 ), K_( 1, 2 )};
       return params;
@@ -211,7 +212,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     * @retval true if update is correct
     * @retval false if there was an error during update
     */
-    virtual bool updateFromParams( const std::vector<double> & params )
+    bool updateFromParams(const std::vector<double> & params) override
     {
       if ( params.size() == 3 )
       {
@@ -228,9 +229,9 @@ class Pinhole_Intrinsic : public IntrinsicBase
     * @brief Return the list of parameter indexes that must be held constant
     * @param parametrization The given parametrization
     */
-    virtual std::vector<int> subsetParameterization
+    std::vector<int> subsetParameterization
     (
-      const Intrinsic_Parameter_Type & parametrization) const
+      const Intrinsic_Parameter_Type & parametrization) const override
     {
       std::vector<int> constant_index;
       const int param = static_cast<int>(parametrization);
@@ -253,7 +254,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     * @param p Input distorted pixel
     * @return Point without distortion
     */
-    virtual Vec2 get_ud_pixel( const Vec2& p ) const
+    Vec2 get_ud_pixel( const Vec2& p ) const override
     {
       return p;
     }
@@ -263,7 +264,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     * @param p Input pixel
     * @return Distorted pixel
     */
-    virtual Vec2 get_d_pixel( const Vec2& p ) const
+    Vec2 get_d_pixel( const Vec2& p ) const override
     {
       return p;
     }
@@ -301,7 +302,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     * @brief Clone the object
     * @return A clone (copy of the stored object)
     */
-    virtual IntrinsicBase * clone( void ) const
+    IntrinsicBase * clone( void ) const override
     {
       return new class_type( *this );
     }

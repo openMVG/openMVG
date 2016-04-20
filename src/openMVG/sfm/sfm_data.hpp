@@ -58,7 +58,7 @@ struct SfM_Data
   /// Check if the View have defined intrinsic and pose
   bool IsPoseAndIntrinsicDefined(const View * view) const
   {
-    if (view == NULL) return false;
+    if (view == nullptr ) return false;
     return (
       view->id_intrinsic != UndefinedIndexT &&
       view->id_pose != UndefinedIndexT &&

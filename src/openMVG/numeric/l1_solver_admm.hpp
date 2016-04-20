@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <string>
+#include <iostream>
 
 namespace openMVG {
 

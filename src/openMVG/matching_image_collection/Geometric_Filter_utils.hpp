@@ -7,6 +7,12 @@
 
 #pragma once
 
+#include "openMVG/features/feature.hpp"
+#include "openMVG/matching/indMatch.hpp"
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+
+
 namespace openMVG {
 namespace matching_image_collection {
 
@@ -76,10 +82,10 @@ void MatchesPairToMat
   // Retrieve corresponding pair camera intrinsic if any
   const cameras::IntrinsicBase * cam_I =
     sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
-      sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
+      sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : nullptr ;
   const cameras::IntrinsicBase * cam_J =
     sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
-      sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
+      sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr ;
 
   // Load features of Inth and Jnth images
   const features::PointFeatures feature_I = regions_provider->regions_per_view.at(pairIndex.first)->GetRegionsPositions();
@@ -117,10 +123,10 @@ void MatchesPairToMat
   // Retrieve corresponding pair camera intrinsic if any
   const cameras::IntrinsicBase * cam_I =
     sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
-      sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
+      sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : nullptr ;
   const cameras::IntrinsicBase * cam_J =
     sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
-      sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
+      sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr ;
 
   // Load features of Inth and Jnth images
   const features::PointFeatures feature_I = features_provider->feats_per_view.at(pairIndex.first);
@@ -133,5 +139,5 @@ void MatchesPairToMat
     x_I, x_J);
 }
 
-} // namespace openMVG
 } //namespace matching_image_collection
+} // namespace openMVG 

@@ -12,6 +12,7 @@
 
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
 
 #include <vector>
 
@@ -55,12 +56,14 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     {
       params_ = {k1, k2, k3, k4};
     }
+    
+    ~Pinhole_Intrinsic_Fisheye() override = default;
 
     /**
     * @brief Tell from which type the embed camera is
     * @retval PINHOLE_CAMERA_FISHEYE
     */
-    EINTRINSIC getType() const
+    EINTRINSIC getType() const override
     {
       return PINHOLE_CAMERA_FISHEYE;
     }
@@ -69,7 +72,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     * @brief Does the camera model handle a distortion field?
     * @retval true
     */
-    virtual bool have_disto() const
+    bool have_disto() const override
     {
       return true;
     }
@@ -79,7 +82,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     * @param p Point before distortion computation (in normalized camera frame)
     * @return point with distortion
     */
-    virtual Vec2 add_disto( const Vec2 & p ) const
+    Vec2 add_disto( const Vec2 & p ) const override
     {
       const double eps = 1e-8;
       const double k1 = params_[0], k2 = params_[1], k3 = params_[2], k4 = params_[3];
@@ -105,7 +108,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     * @param p Point with distortion
     * @return Point without distortion
     */
-    virtual Vec2 remove_disto( const Vec2 & p ) const
+    Vec2 remove_disto( const Vec2 & p ) const override
     {
       const double eps = 1e-8;
       double scale = 1.0;
@@ -135,7 +138,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     * @brief Data wrapper for non linear optimization (get data)
     * @return vector of parameter of this intrinsic
     */
-    virtual std::vector<double> getParams() const
+    std::vector<double> getParams() const override
     {
       std::vector<double> params = Pinhole_Intrinsic::getParams();
       params.push_back( params_[0] );
@@ -151,7 +154,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     * @retval true if update is correct
     * @retval false if there was an error during update
     */
-    virtual bool updateFromParams( const std::vector<double> & params )
+    bool updateFromParams( const std::vector<double> & params ) override
     {
       if ( params.size() == 7 )
       {
@@ -171,9 +174,9 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     * @brief Return the list of parameter indexes that must be held constant
     * @param parametrization The given parametrization
     */
-    virtual std::vector<int> subsetParameterization
+    std::vector<int> subsetParameterization
     (
-      const Intrinsic_Parameter_Type & parametrization) const
+      const Intrinsic_Parameter_Type & parametrization) const override
     {
       std::vector<int> constant_index;
       const int param = static_cast<int>(parametrization);
@@ -204,7 +207,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     * @param p Input distorted pixel
     * @return Point without distortion
     */
-    virtual Vec2 get_ud_pixel( const Vec2& p ) const
+    Vec2 get_ud_pixel( const Vec2& p ) const override
     {
       return cam2ima( remove_disto( ima2cam( p ) ) );
     }
@@ -214,7 +217,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     * @param p Input pixel
     * @return Distorted pixel
     */
-    virtual Vec2 get_d_pixel( const Vec2& p ) const
+    Vec2 get_d_pixel( const Vec2& p ) const override
     {
       return cam2ima( add_disto( ima2cam( p ) ) );
     }
@@ -245,7 +248,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     * @brief Clone the object
     * @return A clone (copy of the stored object)
     */
-    virtual IntrinsicBase * clone( void ) const
+    IntrinsicBase * clone( void ) const override
     {
       return new class_type( *this );
     }

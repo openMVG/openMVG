@@ -49,7 +49,7 @@
 namespace openMVG {
 namespace robust{
 
-namespace acrancac_nfa_internal {
+namespace acransac_nfa_internal {
 
 /// logarithm (base 10) of binomial coefficient
 template <typename T>
@@ -367,7 +367,7 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
 
   // Initialize the NFA computation interface
   // (quantified NFA computation is used if a valid upper bound is provided)
-  acrancac_nfa_internal::NFA_Interface<Kernel> nfa_interface
+  acransac_nfa_internal::NFA_Interface<Kernel> nfa_interface
     (kernel, maxThreshold, (precision!=std::numeric_limits<double>::infinity()));
 
   // Output parameters

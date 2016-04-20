@@ -7,6 +7,10 @@
 #ifndef __TRANS_SOLVER_H__
 #define __TRANS_SOLVER_H__
 
+#include "openMVG/multiview/translation_averaging_common.hpp"
+
+#include <vector>
+
 //------------------
 //-- Bibliography --
 //------------------

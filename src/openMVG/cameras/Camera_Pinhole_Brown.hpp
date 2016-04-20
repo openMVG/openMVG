@@ -61,7 +61,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @brief Get type of the intrinsic
     * @retval PINHOLE_CAMERA_BROWN
     */
-    EINTRINSIC getType() const
+    EINTRINSIC getType() const override
     {
       return PINHOLE_CAMERA_BROWN;
     }
@@ -70,7 +70,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @brief Does the camera model handle a distortion field?
     * @retval true
     */
-    virtual bool have_disto() const
+    virtual bool have_disto() const override
     {
       return true;
     }
@@ -80,7 +80,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @param p Point before distortion computation (in normalized camera frame)
     * @return point with distortion
     */
-    virtual Vec2 add_disto( const Vec2 & p ) const
+    virtual Vec2 add_disto( const Vec2 & p ) const override
     {
       return ( p + distoFunction( params_, p ) );
     }
@@ -93,7 +93,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * Heikkila J (2000) Geometric Camera Calibration Using Circular Control Points.
     * IEEE Trans. Pattern Anal. Mach. Intell., 22:1066-1077
     */
-    virtual Vec2 remove_disto( const Vec2 & p ) const
+    virtual Vec2 remove_disto( const Vec2 & p ) const override
     {
       const double epsilon = 1e-8; //criteria to stop the iteration
       Vec2 p_u = p;
@@ -110,7 +110,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @brief Data wrapper for non linear optimization (get data)
     * @return vector of parameter of this intrinsic
     */
-    virtual std::vector<double> getParams() const
+    virtual std::vector<double> getParams() const override
     {
       std::vector<double> params = Pinhole_Intrinsic::getParams();
       params.push_back( params_[0] );
@@ -127,7 +127,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @retval true if update is correct
     * @retval false if there was an error during update
     */
-    virtual bool updateFromParams( const std::vector<double> & params )
+    virtual bool updateFromParams( const std::vector<double> & params ) override
     {
       if ( params.size() == 8 )
       {
@@ -150,7 +150,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     */
     virtual std::vector<int> subsetParameterization
     (
-      const Intrinsic_Parameter_Type & parametrization) const
+      const Intrinsic_Parameter_Type & parametrization) const override
     {
       std::vector<int> constant_index;
       const int param = static_cast<int>(parametrization);
@@ -182,7 +182,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @param p Input distorted pixel
     * @return Point without distortion
     */
-    virtual Vec2 get_ud_pixel( const Vec2& p ) const
+    virtual Vec2 get_ud_pixel( const Vec2& p ) const override
     {
       return cam2ima( remove_disto( ima2cam( p ) ) );
     }
@@ -223,7 +223,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @brief Clone the object
     * @return A clone (copy of the stored object)
     */
-    virtual IntrinsicBase * clone( void ) const
+    virtual IntrinsicBase * clone( void ) const override
     {
       return new class_type( *this );
     }

@@ -197,7 +197,7 @@ inline void Filter( int NN,
   // Remove multi-index
   {
     std::sort(vec_outIndex.begin(), vec_outIndex.end());
-    std::vector<IndMatch>::iterator end = std::unique(vec_outIndex.begin(), vec_outIndex.end());
+    auto end = std::unique(vec_outIndex.begin(), vec_outIndex.end());
     if(end != vec_outIndex.end()) {
       vec_outIndex.erase(end, vec_outIndex.end());
     }

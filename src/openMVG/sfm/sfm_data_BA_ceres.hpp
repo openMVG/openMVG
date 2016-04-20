@@ -58,7 +58,7 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
     SfM_Data & sfm_data,
     // tell which parameter needs to be adjusted
     const Optimize_Options options
-  );
+  ) override;
 };
 
 } // namespace sfm

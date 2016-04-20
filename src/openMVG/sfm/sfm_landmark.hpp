@@ -7,7 +7,9 @@
 #ifndef OPENMVG_SFM_LANDMARK_HPP
 #define OPENMVG_SFM_LANDMARK_HPP
 
+#include "openMVG/types.hpp"
 #include "openMVG/numeric/numeric.h"
+
 #include <cereal/cereal.hpp> // Serialization
 
 namespace openMVG {

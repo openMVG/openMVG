@@ -15,7 +15,6 @@
 
 #include <cereal/cereal.hpp> // Serialization
 
-#include <vector>
 
 namespace openMVG
 {
@@ -56,7 +55,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   /**
   * @brief Destructor
   */
-  virtual ~IntrinsicBase() {}
+  virtual ~IntrinsicBase() = default;
 
   /**
   * @brief Get width of the image
@@ -118,7 +117,6 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   // Virtual members
   // --
 
-  /// Tell from which type the embed camera is
   /**
   * @brief Tell from which type the embed camera is
   * @return Corresponding intrinsic
@@ -251,10 +249,8 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
     stl::hash_combine( seed, w_ );
     stl::hash_combine( seed, h_ );
     const std::vector<double> params = this->getParams();
-    for ( size_t i = 0; i < params.size(); ++i )
-    {
-      stl::hash_combine( seed, params[i] );
-    }
+    for ( const auto & param : params ) 
+      stl::hash_combine( seed , param );
     return seed;
   }
 };

@@ -105,7 +105,7 @@ TEST(MaxConsensusLineFitter, RealisticCase) {
 
   //-- Add some noise (for the asked percentage amount)
   int nbPtToNoise = (int) NbPoints*inlierPourcentAmount/100.0;
-  vector<size_t> vec_samples; // Fit with unique random index
+  std::vector<size_t> vec_samples; // Fit with unique random index
   UniformSample(nbPtToNoise, NbPoints, &vec_samples);
   for(size_t i = 0; i <vec_samples.size(); ++i)
   {

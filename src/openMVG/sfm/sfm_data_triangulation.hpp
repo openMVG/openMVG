@@ -32,7 +32,7 @@ struct SfM_Data_Structure_Computation_Blind: public SfM_Data_Structure_Computati
 {
   SfM_Data_Structure_Computation_Blind(bool bConsoleVerbose = false);
 
-  virtual void triangulate(SfM_Data & sfm_data) const;
+  void triangulate(SfM_Data & sfm_data) const override;
 };
 
 /// Triangulation of track data contained in the structure of a SfM_Data scene.
@@ -47,7 +47,7 @@ struct SfM_Data_Structure_Computation_Robust: public SfM_Data_Structure_Computat
     bool bConsoleVerbose = false
   );
 
-  virtual void triangulate(SfM_Data & sfm_data) const;
+  void triangulate(SfM_Data & sfm_data) const override;
 
   /// Robust triangulation of track data contained in the structure
   /// All observations must have View with valid Intrinsic and Pose data

@@ -89,12 +89,12 @@ inline bool Save
     {
       return false;
     }
-    for (PairWiseMatches::const_iterator iter = matches.begin();
-      iter != matches.end(); ++iter)
+    for ( const auto & cur_match : matches ) 
     {
-      const size_t I = iter->first.first;
-      const size_t J = iter->first.second;
-      const std::vector<IndMatch> & pair_matches = iter->second;
+      const size_t I = cur_match.first.first ;
+      const size_t J = cur_match.first.second ; 
+      
+      const std::vector<IndMatch> & pair_matches = cur_match.second ;
       stream << I << " " << J << '\n' << pair_matches.size() << '\n';
       copy(pair_matches.begin(), pair_matches.end(),
            std::ostream_iterator<IndMatch>(stream, "\n"));

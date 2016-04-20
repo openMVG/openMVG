@@ -13,6 +13,7 @@
 #include <limits>
 #include <numeric>
 #include <vector>
+#include <cassert>
 
 namespace openMVG {
 namespace robust{
@@ -33,8 +34,8 @@ template<typename Kernel, typename Scorer>
 typename Kernel::Model RANSAC(
   const Kernel &kernel,
   const Scorer &scorer,
-  std::vector<size_t> *best_inliers = NULL,
-  double *best_score = NULL, // Found number of inliers
+  std::vector<size_t> *best_inliers = nullptr ,
+  double *best_score = nullptr , // Found number of inliers
   double outliers_probability = 1e-2)
 {
   assert(outliers_probability < 1.0);

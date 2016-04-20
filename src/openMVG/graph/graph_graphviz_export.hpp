@@ -8,9 +8,14 @@
 #ifndef OPENMVG_GRAPH_EXPORT_H_
 #define OPENMVG_GRAPH_EXPORT_H_
 
+#include "openMVG/types.hpp"
+
+#include "lemon/list_graph.h"
+
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <map>
 
 namespace openMVG {
 namespace graph {

@@ -7,6 +7,7 @@
 #ifndef OPENMVG_IMAGE_IMAGE_RESAMPLING_HPP_
 #define OPENMVG_IMAGE_IMAGE_RESAMPLING_HPP_
 
+#include "openMVG/image/sample.hpp"
 
 namespace openMVG
 {

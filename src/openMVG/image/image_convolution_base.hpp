@@ -7,6 +7,8 @@
 #ifndef OPENMVG_IMAGE_IMAGE_CONVOLUTION_BASE_HPP
 #define OPENMVG_IMAGE_IMAGE_CONVOLUTION_BASE_HPP
 
+#include <cstddef>
+
 namespace openMVG
 {
 namespace image
