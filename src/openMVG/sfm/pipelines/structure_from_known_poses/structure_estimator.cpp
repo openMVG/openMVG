@@ -241,7 +241,6 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
 
               triplets_matches[std::make_pair(I,J)].emplace_back(iterI->second, iterJ->second);
               triplets_matches[std::make_pair(J,K)].emplace_back(iterJ->second, iterK->second);
-              triplets_matches[std::make_pair(I,K)].emplace_back(iterI->second, iterK->second);
             }
           }
         }

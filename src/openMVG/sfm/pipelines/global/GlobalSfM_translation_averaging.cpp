@@ -547,28 +547,16 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
                   std::advance(it_tracks, *iterInliers);
                   const submapTrack & subTrack = it_tracks->second;
 
-                  // create pairwise matches from inlier track
-                  for (size_t index_I = 0; index_I < subTrack.size() ; ++index_I)
-                  {
-                    submapTrack::const_iterator iter_I = subTrack.begin();
-                    std::advance(iter_I, index_I);
-
-                    // extract camera indexes
-                    const size_t id_view_I = iter_I->first;
-                    const size_t id_feat_I = iter_I->second;
-
-                    // loop on subtracks
-                    for (size_t index_J = index_I+1; index_J < subTrack.size() ; ++index_J)
-                    {
-                      submapTrack::const_iterator iter_J = subTrack.begin();
-                      std::advance(iter_J, index_J);
-
-                      // extract camera indexes
-                      const size_t id_view_J = iter_J->first;
-                      const size_t id_feat_J = iter_J->second;
-
-                      newpairMatches[std::make_pair(id_view_I, id_view_J)].emplace_back(id_feat_I, id_feat_J);
-                    }
+                  // create pairwise matches from the inlier track
+                  submapTrack::const_iterator iter_I = subTrack.begin();
+                  submapTrack::const_iterator iter_J = subTrack.begin();
+                  std::advance(iter_J, 1);
+                  while (iter_J != subTrack.end())
+                  { // matches(pair(view_id(I), view_id(J))) <= IndMatch(feat_id(I), feat_id(J))
+                    newpairMatches[std::make_pair(iter_I->first, iter_J->first)]
+                     .emplace_back(iter_I->second, iter_J->second);
+                    ++iter_I;
+                    ++iter_J;
                   }
                 }
               }
