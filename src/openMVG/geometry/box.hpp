@@ -31,6 +31,8 @@ struct Box : public HalfPlaneObject
   /// Points that define the bounding box
   Vec3 points[8];
 
+  Box() = default ;
+
   /// Define a Square bounding box from a center position and radius (center to corner distance)
   Box
   (
