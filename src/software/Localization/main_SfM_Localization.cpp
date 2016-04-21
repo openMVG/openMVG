@@ -176,7 +176,7 @@ int main(int argc, char **argv)
       std::cout << "#regions detected in query image: " << query_regions->RegionCount() << std::endl;
     }
 
-    // Suppose intrinsic as unkown
+    // Suppose intrinsic as unknown
     std::shared_ptr<cameras::IntrinsicBase> optional_intrinsic (nullptr);
 
     geometry::Pose3 pose;
