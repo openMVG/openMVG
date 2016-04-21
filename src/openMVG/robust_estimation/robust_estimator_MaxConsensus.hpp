@@ -51,14 +51,12 @@ typename Kernel::Model MaxConsensus(const Kernel &kernel,
 
     // In this robust estimator, the scorer always works on all the data points
     // at once. So precompute the list ahead of time.
-    std::vector<size_t> all_samples;
-    for (size_t i = 0; i < total_samples; ++i) {
-      all_samples.push_back(i);
-    }
+    std::vector<size_t> all_samples(total_samples);
+    std::iota(all_samples.begin(), all_samples.end(), 0);
 
     std::vector<size_t> sample;
     for (size_t iteration = 0;  iteration < max_iteration; ++iteration) {
-        UniformSample(min_samples, total_samples, &sample);
+      UniformSample(min_samples, total_samples, &sample);
 
         std::vector<typename Kernel::Model> models;
         kernel.Fit(sample, &models);
