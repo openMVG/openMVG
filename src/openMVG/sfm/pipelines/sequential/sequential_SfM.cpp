@@ -443,7 +443,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
-  for (std::size_t i = 0; i < _matches_provider->_pairWise_matches.size(); ++i)
+  for (int i = 0; i < _matches_provider->_pairWise_matches.size(); ++i)
   {
     matching::PairWiseMatches::const_iterator iter = _matches_provider->_pairWise_matches.begin();
     std::advance(iter, i);
@@ -904,7 +904,7 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
   #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for
   #endif
-  for (std::size_t i = 0; i < set_remainingViewId.size(); ++i)
+  for (int i = 0; i < set_remainingViewId.size(); ++i)
   {
     std::set<size_t>::const_iterator iter = set_remainingViewId.cbegin();
     std::advance(iter, i);
