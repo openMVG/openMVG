@@ -37,10 +37,10 @@ struct Regions_Provider
       std::cout, "\n- Regions Loading -\n");
     // Read for each view the corresponding regions and store them
     bool bContinue = true;
+
 #ifdef OPENMVG_USE_OPENMP
-    #pragma omp parallel
+    #pragma omp parallel num_threads(3)
 #endif
-    
     for (Views::const_iterator iter = sfm_data.GetViews().begin();
       iter != sfm_data.GetViews().end() && bContinue; ++iter)
     {

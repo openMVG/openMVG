@@ -111,7 +111,7 @@ bool LoadMatchFilePerImage(
   int nbLoadedMatchFiles = 0;
   // Load one match file per image
 #ifdef OPENMVG_USE_OPENMP
-    #pragma omp parallel for
+    #pragma omp parallel for num_threads(3)
 #endif
   for(size_t i = 0; i < viewsKeys.size(); ++i)
   {
