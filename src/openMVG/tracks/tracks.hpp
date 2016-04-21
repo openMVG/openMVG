@@ -425,7 +425,10 @@ struct TracksUtilsMap
     for (size_t trackId: set_trackId)
     {
       STLMAPTracks::const_iterator iterT = map_tracks.find(trackId);
-      //try to find imageIndex
+      // Ignore it if the track doesn't exist
+      if(iterT == map_tracks.end())
+        continue;
+      // Try to find imageIndex
       const submapTrack & map_ref = iterT->second;
       submapTrack::const_iterator iterSearch = map_ref.find(nImageIndex);
       if (iterSearch != map_ref.end())
