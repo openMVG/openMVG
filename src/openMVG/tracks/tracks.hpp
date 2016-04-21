@@ -37,6 +37,7 @@
 #include "openMVG/tracks/flat_pair_map.hpp"
 
 #include <algorithm>
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <memory>
@@ -51,15 +52,15 @@ namespace tracks  {
 
 // Data structure to store a track: collection of {ImageId,FeatureId}
 //  The corresponding image points with their imageId and FeatureId.
-typedef std::map<size_t,size_t> submapTrack;
+typedef std::map<uint32_t,uint32_t> submapTrack;
 // A track is a collection of {trackId, submapTrack}
 typedef std::map< size_t, submapTrack > STLMAPTracks;
 
 struct TracksBuilder
 {
-  typedef std::pair<size_t, size_t> indexedFeaturePair;
+  typedef std::pair<uint32_t, uint32_t>indexedFeaturePair;
 
-  flat_pair_map<indexedFeaturePair, unsigned int> map_node_to_index;
+  flat_pair_map<indexedFeaturePair, uint32_t> map_node_to_index;
   UnionFind uf_tree;
 
   /// Build tracks for a given series of pairWise matches
@@ -72,12 +73,12 @@ struct TracksBuilder
     // For each couple of images list the used features
     for ( const auto & iter : map_pair_wise_matches )
     {
-      const size_t & I = iter.first.first;
-      const size_t & J = iter.first.second;
+      const auto & I = iter.first.first;
+      const auto & J = iter.first.second;
       const std::vector<IndMatch> & vec_FilteredMatches = iter.second;
 
       // Retrieve all shared features and add them to a set
-      for( const auto & cur_filtered_match : vec_FilteredMatches ) 
+      for( const auto & cur_filtered_match : vec_FilteredMatches )
       {
         allFeatures.emplace(I,cur_filtered_match.i_);
         allFeatures.emplace(J,cur_filtered_match.j_);
@@ -251,7 +252,7 @@ struct TracksUtilsMap
   )
   {
     set_tracksIds->clear();
-    for ( const auto & iterT : map_tracks ) 
+    for ( const auto & iterT : map_tracks )
     {
       set_tracksIds->insert(iterT.first);
     }
@@ -288,7 +289,7 @@ struct TracksUtilsMap
     size_t id;
     FunctorMapFirstEqual(size_t val):id(val){};
     bool operator()(const std::pair<size_t, submapTrack > & val) {
-      return ( id == val.first);
+      return (id == val.first);
     }
   };
 
@@ -315,7 +316,7 @@ struct TracksUtilsMap
 
     std::vector<IndMatch> & vec_indexref = *pvec_index;
     vec_indexref.clear();
-    for ( const auto & filter_index : vec_filterIndex ) 
+    for ( const auto & filter_index : vec_filterIndex )
     {
       // Retrieve the track information from the current index i.
       auto itF =
@@ -339,7 +340,7 @@ struct TracksUtilsMap
     std::map<size_t, size_t> & map_Occurence_TrackLength
   )
   {
-    for ( const auto & iterT : map_tracks ) 
+    for ( const auto & iterT : map_tracks )
     {
       const size_t trLength = iterT.second.size();
       if (map_Occurence_TrackLength.end() ==
@@ -361,7 +362,7 @@ struct TracksUtilsMap
     std::set<size_t> & set_imagesId
   )
   {
-    for ( const auto & iterT : map_tracks ) 
+    for ( const auto & iterT : map_tracks )
     {
       const submapTrack & map_ref = iterT.second;
       for ( const auto & iter : map_ref )
