@@ -38,6 +38,7 @@ int main(int argc, char **argv)
   std::string sSfM_Data_Filename;
   std::string sMatchesDir;
   std::string sOutDir = "";
+  std::string sOutSfMDataFilepath = "";
   int iRotationAveragingMethod = int (ROTATION_AVERAGING_L2);
   int iTranslationAveragingMethod = int (TRANSLATION_AVERAGING_SOFTL1);
   bool bRefineIntrinsics = true;
@@ -45,6 +46,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
   cmd.add( make_option('o', sOutDir, "outdir") );
+  cmd.add( make_option('s', sOutSfMDataFilepath, "out_sfmdata_file") );
   cmd.add( make_option('r', iRotationAveragingMethod, "rotationAveraging") );
   cmd.add( make_option('t', iTranslationAveragingMethod, "translationAveraging") );
   cmd.add( make_option('f', bRefineIntrinsics, "refineIntrinsics") );
@@ -58,6 +60,7 @@ int main(int argc, char **argv)
     << "[-m|--matchdir] path to the matches that corresponds to the provided SfM_Data scene\n"
     << "[-o|--outdir] path where the output data will be stored\n"
     << "\n[Optional]\n"
+    << "[-s|--out_sfmdata_file] path of the output sfmdata file (default: $outdir/sfm_data.json)\n"
     << "[-r|--rotationAveraging]\n"
     << "\t 1 -> L1 minimization\n"
     << "\t 2 -> L2 minimization (default)\n"
@@ -73,6 +76,9 @@ int main(int argc, char **argv)
     std::cerr << s << std::endl;
     return EXIT_FAILURE;
   }
+
+  if(sOutSfMDataFilepath.empty())
+    sOutSfMDataFilepath = stlplus::create_filespec(sOutDir, "sfm_data", "json");
 
   if (iRotationAveragingMethod < ROTATION_AVERAGING_L1 ||
       iRotationAveragingMethod > ROTATION_AVERAGING_L2 )  {
@@ -169,9 +175,7 @@ int main(int argc, char **argv)
 
   //-- Export to disk computed scene (data & visualizable results)
   std::cout << "...Export SfM_Data to disk." << std::endl;
-  Save(sfmEngine.Get_SfM_Data(),
-    stlplus::create_filespec(sOutDir, "sfm_data", ".bin"),
-    ESfM_Data(ALL));
+  Save(sfmEngine.Get_SfM_Data(), sOutSfMDataFilepath, ESfM_Data(ALL));
 
   Save(sfmEngine.Get_SfM_Data(),
     stlplus::create_filespec(sOutDir, "cloud_and_poses", ".ply"),
