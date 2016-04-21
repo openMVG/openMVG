@@ -86,17 +86,11 @@ int main(int argc, char **argv)
   }
 
   // Export the SfM_Data scene in the expected format
-  if (Save(
-    sfm_data,
-    sSfM_Data_Filename_Out.c_str(),
-    ESfM_Data(flags)))
-  {
-    return EXIT_SUCCESS;
-  }
-  else
+  if (!Save(sfm_data, sSfM_Data_Filename_Out.c_str(), ESfM_Data(flags)))
   {
     std::cerr << std::endl
       << "An error occured while trying to save \"" << sSfM_Data_Filename_Out << "\"." << std::endl;
     return EXIT_FAILURE;
   }
+  return EXIT_SUCCESS;
 }
