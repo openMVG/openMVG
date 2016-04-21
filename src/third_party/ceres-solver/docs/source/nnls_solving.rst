@@ -97,8 +97,8 @@ The basic trust region algorithm looks something like this.
       \|F(x)\|^2}{\displaystyle \|J(x)\Delta x + F(x)\|^2 -
       \|F(x)\|^2}`
    4. if :math:`\rho > \epsilon` then  :math:`x = x + \Delta x`.
-   5. if :math:`\rho > \eta_1` then :math:`\rho = 2  \rho`
-   6. else if :math:`\rho < \eta_2` then :math:`\rho = 0.5 * \rho`
+   5. if :math:`\rho > \eta_1` then :math:`\mu = 2  \mu`
+   6. else if :math:`\rho < \eta_2` then :math:`\mu = 0.5 * \mu`
    7. Go to 2.
 
 Here, :math:`\mu` is the trust region radius, :math:`D(x)` is some
@@ -494,6 +494,31 @@ Professor Tim Davis' ``SuiteSparse`` or ``CXSparse`` packages [Chen]_
 or the sparse Cholesky factorization algorithm in ``Eigen`` (which
 incidently is a port of the algorithm implemented inside ``CXSparse``)
 
+.. _section-cgnr:
+
+``CGNR``
+--------
+
+For general sparse problems, if the problem is too large for
+``CHOLMOD`` or a sparse linear algebra library is not linked into
+Ceres, another option is the ``CGNR`` solver. This solver uses the
+Conjugate Gradients solver on the *normal equations*, but without
+forming the normal equations explicitly. It exploits the relation
+
+.. math::
+    H x = J^\top J x = J^\top(J x)
+
+The convergence of Conjugate Gradients depends on the conditioner
+number :math:`\kappa(H)`. Usually :math:`H` is poorly conditioned and
+a :ref:`section-preconditioner` must be used to get reasonable
+performance. Currently only the ``JACOBI`` preconditioner is available
+for use with ``CGNR``. It uses the block diagonal of :math:`H` to
+precondition the normal equations.
+
+When the user chooses ``CGNR`` as the linear solver, Ceres
+automatically switches from the exact step algorithm to an inexact
+step algorithm.
+
 .. _section-schur:
 
 ``DENSE_SCHUR`` & ``SPARSE_SCHUR``
@@ -594,25 +619,6 @@ complement, allow bundle adjustment algorithms to significantly scale
 up over those based on dense factorization. Ceres implements this
 strategy as the ``SPARSE_SCHUR`` solver.
 
-.. _section-cgnr:
-
-``CGNR``
---------
-
-For general sparse problems, if the problem is too large for
-``CHOLMOD`` or a sparse linear algebra library is not linked into
-Ceres, another option is the ``CGNR`` solver. This solver uses the
-Conjugate Gradients solver on the *normal equations*, but without
-forming the normal equations explicitly. It exploits the relation
-
-.. math::
-    H x = J^\top J x = J^\top(J x)
-
-
-When the user chooses ``ITERATIVE_SCHUR`` as the linear solver, Ceres
-automatically switches from the exact step algorithm to an inexact
-step algorithm.
-
 .. _section-iterative_schur:
 
 ``ITERATIVE_SCHUR``
@@ -671,6 +677,9 @@ can be quite substantial.
      better to construct it explicitly in memory and use it to
      evaluate the product :math:`Sx`.
 
+When the user chooses ``ITERATIVE_SCHUR`` as the linear solver, Ceres
+automatically switches from the exact step algorithm to an inexact
+step algorithm.
 
   .. NOTE::
 
@@ -717,18 +726,19 @@ expensive it is use. For example, Incomplete Cholesky factorization
 based preconditioners have much better convergence behavior than the
 Jacobi preconditioner, but are also much more expensive.
 
-
 The simplest of all preconditioners is the diagonal or Jacobi
 preconditioner, i.e., :math:`M=\operatorname{diag}(A)`, which for
 block structured matrices like :math:`H` can be generalized to the
-block Jacobi preconditioner.
+block Jacobi preconditioner. Ceres implements the block Jacobi
+preconditioner and refers to it as ``JACOBI``. When used with
+:ref:`section-cgnr` it refers to the block diagonal of :math:`H` and
+when used with :ref:`section-iterative_schur` it refers to the block
+diagonal of :math:`B` [Mandel]_.
 
-For ``ITERATIVE_SCHUR`` there are two obvious choices for block
-diagonal preconditioners for :math:`S`. The block diagonal of the
-matrix :math:`B` [Mandel]_ and the block diagonal :math:`S`, i.e, the
-block Jacobi preconditioner for :math:`S`. Ceres's implements both of
-these preconditioners and refers to them as ``JACOBI`` and
-``SCHUR_JACOBI`` respectively.
+Another obvious choice for :ref:`section-iterative_schur` is the block
+diagonal of the Schur complement matrix :math:`S`, i.e, the block
+Jacobi preconditioner for :math:`S`. Ceres implements it and refers to
+is as the ``SCHUR_JACOBI`` preconditioner.
 
 For bundle adjustment problems arising in reconstruction from
 community photo collections, more effective preconditioners can be
@@ -1146,7 +1156,7 @@ elimination group [LiSaad]_.
 
    Solver terminates if
 
-   .. math:: \frac{|\Delta \text{cost}|}{\text{cost}} < \text{function_tolerance}
+   .. math:: \frac{|\Delta \text{cost}|}{\text{cost}} <= \text{function_tolerance}
 
    where, :math:`\Delta \text{cost}` is the change in objective
    function value (up or down) in the current iteration of
@@ -1158,7 +1168,7 @@ elimination group [LiSaad]_.
 
    Solver terminates if
 
-   .. math:: \|x - \Pi \boxplus(x, -g(x))\|_\infty < \text{gradient_tolerance}
+   .. math:: \|x - \Pi \boxplus(x, -g(x))\|_\infty <= \text{gradient_tolerance}
 
    where :math:`\|\cdot\|_\infty` refers to the max norm, :math:`\Pi`
    is projection onto the bounds constraints and :math:`\boxplus` is
@@ -1171,10 +1181,10 @@ elimination group [LiSaad]_.
 
    Solver terminates if
 
-   .. math:: \|\Delta x\| < (\|x\| + \text{parameter_tolerance}) * \text{parameter_tolerance}
+   .. math:: \|\Delta x\| <= (\|x\| + \text{parameter_tolerance}) * \text{parameter_tolerance}
 
    where :math:`\Delta x` is the step computed by the linear solver in
-   the current iteration of Levenberg-Marquardt.
+   the current iteration.
 
 .. member:: LinearSolverType Solver::Options::linear_solver_type
 
@@ -1237,13 +1247,16 @@ elimination group [LiSaad]_.
 
 .. member:: SparseLinearAlgebraLibrary Solver::Options::sparse_linear_algebra_library_type
 
-   Default:``SUITE_SPARSE``
+   Default: The highest available according to: ``SUITE_SPARSE`` >
+   ``CX_SPARSE`` > ``EIGEN_SPARSE`` > ``NO_SPARSE``
 
    Ceres supports the use of three sparse linear algebra libraries,
    ``SuiteSparse``, which is enabled by setting this parameter to
    ``SUITE_SPARSE``, ``CXSparse``, which can be selected by setting
-   this parameter to ```CX_SPARSE`` and ``Eigen`` which is enabled by
-   setting this parameter to ``EIGEN_SPARSE``.
+   this parameter to ``CX_SPARSE`` and ``Eigen`` which is enabled by
+   setting this parameter to ``EIGEN_SPARSE``.  Lastly, ``NO_SPARSE``
+   means that no sparse linear solver should be used; note that this is
+   irrespective of whether Ceres was compiled with support for one.
 
    ``SuiteSparse`` is a sophisticated and complex sparse linear
    algebra library and should be used in general.
@@ -2506,7 +2519,7 @@ cases.
 
 .. function:: bool GetCovarianceBlock(const double* parameter_block1, const double* parameter_block2, double* covariance_block) const
 
-   Return the block of the covariance matrix corresponding to
+   Return the block of the cross-covariance matrix corresponding to
    ``parameter_block1`` and ``parameter_block2``.
 
    Compute must be called before the first call to ``GetCovarianceBlock``
@@ -2517,6 +2530,24 @@ cases.
 
    ``covariance_block`` must point to a memory location that can store
    a ``parameter_block1_size x parameter_block2_size`` matrix. The
+   returned covariance will be a row-major matrix.
+
+.. function:: bool GetCovarianceBlockInTangentSpace(const double* parameter_block1, const double* parameter_block2, double* covariance_block) const
+
+   Return the block of the cross-covariance matrix corresponding to
+   ``parameter_block1`` and ``parameter_block2``.
+   Returns cross-covariance in the tangent space if a local
+   parameterization is associated with either parameter block;
+   else returns cross-covariance in the ambient space.
+
+   Compute must be called before the first call to ``GetCovarianceBlock``
+   and the pair ``<parameter_block1, parameter_block2>`` OR the pair
+   ``<parameter_block2, parameter_block1>`` must have been present in the
+   vector covariance_blocks when ``Compute`` was called. Otherwise
+   ``GetCovarianceBlock`` will return false.
+
+   ``covariance_block`` must point to a memory location that can store
+   a ``parameter_block1_local_size x parameter_block2_local_size`` matrix. The
    returned covariance will be a row-major matrix.
 
 Example Usage

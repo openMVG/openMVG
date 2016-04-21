@@ -231,7 +231,7 @@ Solving
 
    In each iteration of the line search,
 
-   .. math:: \text{new_step_size} >= \text{max_line_search_step_contraction} * \text{step_size}
+   .. math:: \text{new_step_size} \geq \text{max_line_search_step_contraction} * \text{step_size}
 
    Note that by definition, for contraction:
 
@@ -243,7 +243,7 @@ Solving
 
    In each iteration of the line search,
 
-   .. math:: \text{new_step_size} <= \text{min_line_search_step_contraction} * \text{step_size}
+   .. math:: \text{new_step_size} \leq \text{min_line_search_step_contraction} * \text{step_size}
 
    Note that by definition, for contraction:
 
@@ -260,7 +260,7 @@ Solving
    As this is an 'artificial' constraint (one imposed by the user, not
    the underlying math), if ``WOLFE`` line search is being used, *and*
    points satisfying the Armijo sufficient (function) decrease
-   condition have been found during the current search (in :math:`<=`
+   condition have been found during the current search (in :math:`\leq`
    ``max_num_line_search_step_size_iterations``).  Then, the step size
    with the lowest function value which satisfies the Armijo condition
    will be returned as the new valid step, even though it does *not*
@@ -289,7 +289,7 @@ Solving
    decreases sufficiently. Precisely, this second condition
    is that we seek a step size s.t.
 
-   .. math:: \|f'(\text{step_size})\| <= \text{sufficient_curvature_decrease} * \|f'(0)\|
+   .. math:: \|f'(\text{step_size})\| \leq \text{sufficient_curvature_decrease} * \|f'(0)\|
 
    Where :math:`f()` is the line search objective and :math:`f'()` is the derivative
    of :math:`f` with respect to the step size: :math:`\frac{d f}{d~\text{step size}}`.
@@ -304,7 +304,7 @@ Solving
    satisfying the conditions is found.  Precisely, at each iteration
    of the expansion:
 
-   .. math:: \text{new_step_size} <= \text{max_step_expansion} * \text{step_size}
+   .. math:: \text{new_step_size} \leq \text{max_step_expansion} * \text{step_size}
 
    By definition for expansion
 
@@ -327,11 +327,10 @@ Solving
 
    Solver terminates if
 
-   .. math:: \frac{|\Delta \text{cost}|}{\text{cost}} < \text{function_tolerance}
+   .. math:: \frac{|\Delta \text{cost}|}{\text{cost}} \leq \text{function_tolerance}
 
    where, :math:`\Delta \text{cost}` is the change in objective
-   function value (up or down) in the current iteration of
-   Levenberg-Marquardt.
+   function value (up or down) in the current iteration of the line search.
 
 .. member:: double GradientProblemSolver::Options::gradient_tolerance
 
@@ -339,12 +338,23 @@ Solving
 
    Solver terminates if
 
-   .. math:: \|x - \Pi \boxplus(x, -g(x))\|_\infty < \text{gradient_tolerance}
+   .. math:: \|x - \Pi \boxplus(x, -g(x))\|_\infty \leq \text{gradient_tolerance}
 
    where :math:`\|\cdot\|_\infty` refers to the max norm, :math:`\Pi`
    is projection onto the bounds constraints and :math:`\boxplus` is
    Plus operation for the overall local parameterization associated
    with the parameter vector.
+
+.. member:: double GradientProblemSolver::Options::parameter_tolerance
+
+   Default: ``1e-8``
+
+   Solver terminates if
+
+   .. math:: \|\Delta x\| \leq (\|x\| + \text{parameter_tolerance}) * \text{parameter_tolerance}
+
+   where :math:`\Delta x` is the step computed by the linear solver in
+   the current iteration of the line search.
 
 .. member:: LoggingType GradientProblemSolver::Options::logging_type
 

@@ -1,6 +1,6 @@
 # Ceres Solver - A fast non-linear least squares minimizer
-# Copyright 2014 Google Inc. All rights reserved.
-# http://code.google.com/p/ceres-solver/
+# Copyright 2015 Google Inc. All rights reserved.
+# http://ceres-solver.org/
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,7 @@
 # we can determine where *this* file is, and thus the relative path to
 # config.h.in.  Inside of CONFIGURE_CERES_CONFIG(), CMAKE_CURRENT_LIST_DIR
 # refers to the caller of CONFIGURE_CERES_CONFIG(), not this file.
-SET(CERES_CONFIG_IN_FILE "${CMAKE_CURRENT_LIST_DIR}/config.h.in")
+set(CERES_CONFIG_IN_FILE "${CMAKE_CURRENT_LIST_DIR}/config.h.in")
 
 # CreateCeresConfig.cmake - Create the config.h for Ceres.
 #
@@ -55,61 +55,61 @@ SET(CERES_CONFIG_IN_FILE "${CMAKE_CURRENT_LIST_DIR}/config.h.in")
 #                                  the configured config.h.  Typically this
 #                                  will be <src>/include/ceres/internal.
 
-FUNCTION(CREATE_CERES_CONFIG CURRENT_CERES_COMPILE_OPTIONS CERES_CONFIG_OUTPUT_DIRECTORY)
+function(CREATE_CERES_CONFIG CURRENT_CERES_COMPILE_OPTIONS CERES_CONFIG_OUTPUT_DIRECTORY)
   # Create the specified output directory if it does not exist.
-  IF (NOT EXISTS "${CERES_CONFIG_OUTPUT_DIRECTORY}")
-    MESSAGE(STATUS "Creating configured Ceres config.h output directory: "
+  if (NOT EXISTS "${CERES_CONFIG_OUTPUT_DIRECTORY}")
+    message(STATUS "Creating configured Ceres config.h output directory: "
       "${CERES_CONFIG_OUTPUT_DIRECTORY}")
-    FILE(MAKE_DIRECTORY "${CERES_CONFIG_OUTPUT_DIRECTORY}")
-  ENDIF()
-  IF (EXISTS "${CERES_CONFIG_OUTPUT_DIRECTORY}" AND
+    file(MAKE_DIRECTORY "${CERES_CONFIG_OUTPUT_DIRECTORY}")
+  endif()
+  if (EXISTS "${CERES_CONFIG_OUTPUT_DIRECTORY}" AND
       NOT IS_DIRECTORY "${CERES_CONFIG_OUTPUT_DIRECTORY}")
-    MESSAGE(FATAL_ERROR "Ceres Bug: Specified CERES_CONFIG_OUTPUT_DIRECTORY: "
+    message(FATAL_ERROR "Ceres Bug: Specified CERES_CONFIG_OUTPUT_DIRECTORY: "
       "${CERES_CONFIG_OUTPUT_DIRECTORY} exists, but is not a directory.")
-  ENDIF()
+  endif()
 
   # Read all possible configurable compile options from config.h.in, this avoids
   # us having to hard-code in this file what the valid options are.
-  FILE(READ ${CERES_CONFIG_IN_FILE} CERES_CONFIG_IN_CONTENTS)
-  STRING(REGEX MATCHALL "@[^@ $]+@"
+  file(READ ${CERES_CONFIG_IN_FILE} CERES_CONFIG_IN_CONTENTS)
+  string(REGEX MATCHALL "@[^@ $]+@"
     ALL_CONFIGURABLE_CERES_OPTIONS "${CERES_CONFIG_IN_CONTENTS}")
   # Removing @ symbols at beginning and end of each option.
-  STRING(REPLACE "@" ""
+  string(REPLACE "@" ""
     ALL_CONFIGURABLE_CERES_OPTIONS "${ALL_CONFIGURABLE_CERES_OPTIONS}")
 
   # Ensure that there are no repetitions in the current compile options.
-  LIST(REMOVE_DUPLICATES CURRENT_CERES_COMPILE_OPTIONS)
+  list(REMOVE_DUPLICATES CURRENT_CERES_COMPILE_OPTIONS)
 
-  FOREACH (CERES_OPTION ${ALL_CONFIGURABLE_CERES_OPTIONS})
+  foreach (CERES_OPTION ${ALL_CONFIGURABLE_CERES_OPTIONS})
     # Try and find the option in the list of current compile options, if it
     # is present, then the option is enabled, otherwise it is disabled.
-    LIST(FIND CURRENT_CERES_COMPILE_OPTIONS ${CERES_OPTION} OPTION_ENABLED)
+    list(FIND CURRENT_CERES_COMPILE_OPTIONS ${CERES_OPTION} OPTION_ENABLED)
 
     # list(FIND ..) returns -1 if the element was not in the list, but CMake
     # interprets if (VAR) to be true if VAR is any non-zero number, even
     # negative ones, hence we have to explicitly check for >= 0.
-    IF (OPTION_ENABLED GREATER -1)
-      MESSAGE(STATUS "Enabling ${CERES_OPTION} in Ceres config.h")
-      SET(${CERES_OPTION} "#define ${CERES_OPTION}")
+    if (OPTION_ENABLED GREATER -1)
+      message(STATUS "Enabling ${CERES_OPTION} in Ceres config.h")
+      set(${CERES_OPTION} "#define ${CERES_OPTION}")
 
       # Remove the item from the list of current options so that we can identify
       # any options that were in CURRENT_CERES_COMPILE_OPTIONS, but not in
       # ALL_CONFIGURABLE_CERES_OPTIONS (which is an error).
-      LIST(REMOVE_ITEM CURRENT_CERES_COMPILE_OPTIONS ${CERES_OPTION})
-    ELSE()
-      SET(${CERES_OPTION} "// #define ${CERES_OPTION}")
-    ENDIF()
-  ENDFOREACH()
+      list(REMOVE_ITEM CURRENT_CERES_COMPILE_OPTIONS ${CERES_OPTION})
+    else()
+      set(${CERES_OPTION} "// #define ${CERES_OPTION}")
+    endif()
+  endforeach()
 
   # CURRENT_CERES_COMPILE_OPTIONS should now be an empty list, any elements
   # remaining were not present in ALL_CONFIGURABLE_CERES_OPTIONS read from
   # config.h.in.
-  IF (CURRENT_CERES_COMPILE_OPTIONS)
-    MESSAGE(FATAL_ERROR "Ceres Bug: CURRENT_CERES_COMPILE_OPTIONS contained "
+  if (CURRENT_CERES_COMPILE_OPTIONS)
+    message(FATAL_ERROR "Ceres Bug: CURRENT_CERES_COMPILE_OPTIONS contained "
       "the following options which were not present in config.h.in: "
       "${CURRENT_CERES_COMPILE_OPTIONS}")
-  ENDIF()
+  endif()
 
-  CONFIGURE_FILE(${CERES_CONFIG_IN_FILE}
+  configure_file(${CERES_CONFIG_IN_FILE}
     "${CERES_CONFIG_OUTPUT_DIRECTORY}/config.h" @ONLY)
-ENDFUNCTION()
+endfunction()

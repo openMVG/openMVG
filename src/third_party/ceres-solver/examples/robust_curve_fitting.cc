@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2010, 2011, 2012 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -147,7 +147,9 @@ int main(int argc, char** argv) {
     CostFunction* cost_function =
         new AutoDiffCostFunction<ExponentialResidual, 1, 1, 1>(
             new ExponentialResidual(data[2 * i], data[2 * i + 1]));
-    problem.AddResidualBlock(cost_function, NULL, &m, &c);
+    problem.AddResidualBlock(cost_function,
+                             new CauchyLoss(0.5),
+                             &m, &c);
   }
 
   Solver::Options options;

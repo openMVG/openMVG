@@ -1,6 +1,6 @@
 # Ceres Solver - A fast non-linear least squares minimizer
-# Copyright 2014 Google Inc. All rights reserved.
-# http://code.google.com/p/ceres-solver/
+# Copyright 2015 Google Inc. All rights reserved.
+# http://ceres-solver.org/
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -36,8 +36,8 @@
 # This function automates this process by getting the current help string
 # for the cache variable to update, then reinitialising it with the new
 # value, but with the original help string.
-FUNCTION(UPDATE_CACHE_VARIABLE VAR_NAME VALUE)
-  GET_PROPERTY(HELP_STRING CACHE ${VAR_NAME} PROPERTY HELPSTRING)
-  GET_PROPERTY(VAR_TYPE CACHE ${VAR_NAME} PROPERTY TYPE)
-  SET(${VAR_NAME} ${VALUE} CACHE ${VAR_TYPE} "${HELP_STRING}" FORCE)
-ENDFUNCTION()
+function(UPDATE_CACHE_VARIABLE VAR_NAME VALUE)
+  get_property(HELP_STRING CACHE ${VAR_NAME} PROPERTY HELPSTRING)
+  get_property(VAR_TYPE CACHE ${VAR_NAME} PROPERTY TYPE)
+  set(${VAR_NAME} ${VALUE} CACHE ${VAR_TYPE} "${HELP_STRING}" FORCE)
+endfunction()

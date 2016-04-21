@@ -1,6 +1,6 @@
 # Ceres Solver - A fast non-linear least squares minimizer
-# Copyright 2013 Google Inc. All rights reserved.
-# http://code.google.com/p/ceres-solver/
+# Copyright 2015 Google Inc. All rights reserved.
+# http://ceres-solver.org/
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -38,13 +38,13 @@
 # version string are exactly the same and it sets PACKAGE_VERSION_COMPATIBLE
 # if the current version is >= requested version.
 
-SET(PACKAGE_VERSION @CERES_VERSION@)
+set(PACKAGE_VERSION @CERES_VERSION@)
 
-IF ("${PACKAGE_VERSION}" VERSION_LESS "${PACKAGE_FIND_VERSION}")
-   SET(PACKAGE_VERSION_COMPATIBLE FALSE)
-ELSE ("${PACKAGE_VERSION}" VERSION_LESS "${PACKAGE_FIND_VERSION}")
-   SET(PACKAGE_VERSION_COMPATIBLE TRUE)
-   IF ("${PACKAGE_FIND_VERSION}" STREQUAL "${PACKAGE_VERSION}")
-      SET(PACKAGE_VERSION_EXACT TRUE)
-   ENDIF ("${PACKAGE_FIND_VERSION}" STREQUAL "${PACKAGE_VERSION}")
-ENDIF ("${PACKAGE_VERSION}" VERSION_LESS "${PACKAGE_FIND_VERSION}")
+if ("${PACKAGE_VERSION}" VERSION_LESS "${PACKAGE_FIND_VERSION}")
+   set(PACKAGE_VERSION_COMPATIBLE FALSE)
+else ("${PACKAGE_VERSION}" VERSION_LESS "${PACKAGE_FIND_VERSION}")
+   set(PACKAGE_VERSION_COMPATIBLE TRUE)
+   if ("${PACKAGE_FIND_VERSION}" STREQUAL "${PACKAGE_VERSION}")
+      set(PACKAGE_VERSION_EXACT TRUE)
+   endif ("${PACKAGE_FIND_VERSION}" STREQUAL "${PACKAGE_VERSION}")
+endif ("${PACKAGE_VERSION}" VERSION_LESS "${PACKAGE_FIND_VERSION}")

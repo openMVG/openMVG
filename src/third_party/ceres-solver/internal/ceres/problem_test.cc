@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2013 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -35,7 +35,7 @@
 #include "ceres/casts.h"
 #include "ceres/cost_function.h"
 #include "ceres/crs_matrix.h"
-#include "ceres/evaluator_test_utils.cc"
+#include "ceres/evaluator_test_utils.h"
 #include "ceres/internal/eigen.h"
 #include "ceres/internal/scoped_ptr.h"
 #include "ceres/local_parameterization.h"
@@ -50,6 +50,8 @@
 
 namespace ceres {
 namespace internal {
+
+using std::vector;
 
 // The following three classes are for the purposes of defining
 // function signatures. They have dummy Evaluate functions.

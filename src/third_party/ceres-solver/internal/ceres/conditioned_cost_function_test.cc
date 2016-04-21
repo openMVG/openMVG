@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2010, 2011, 2012 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -87,7 +87,7 @@ TEST(CostFunctionTest, ConditionedCostFunction) {
   identity.setIdentity();
   NormalPrior* difference_cost_function = new NormalPrior(identity, v2_vector);
 
-  vector<CostFunction*> conditioners;
+  std::vector<CostFunction*> conditioners;
   for (int i = 0; i < kTestCostFunctionSize; i++) {
     conditioners.push_back(new LinearCostFunction(i + 2, i * 7));
   }

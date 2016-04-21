@@ -392,7 +392,7 @@ gives us:
       12  2.865573e-13    4.30e-12    2.33e-09   6.02e-04   9.37e-01  5.31e+09       1    5.96e-06    2.67e-03
       13  1.791438e-14    2.69e-13    2.91e-10   3.01e-04   9.37e-01  1.59e+10       1    7.15e-06    2.69e-03
 
-    Ceres Solver v1.10.0 Solve Report
+    Ceres Solver v1.11.0 Solve Report
     ----------------------------------
                                          Original                  Reduced
     Parameter blocks                            4                        4

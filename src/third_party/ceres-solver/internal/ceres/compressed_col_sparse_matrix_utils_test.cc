@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2013 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -38,6 +38,8 @@
 
 namespace ceres {
 namespace internal {
+
+using std::vector;
 
 TEST(_, BlockPermutationToScalarPermutation) {
   vector<int> blocks;
@@ -133,7 +135,7 @@ TEST(_, ScalarMatrixToBlockMatrix) {
   TripletSparseMatrix tsm(5, 8, 18);
   int* rows = tsm.mutable_rows();
   int* cols = tsm.mutable_cols();
-  fill(tsm.mutable_values(), tsm.mutable_values() + 18, 1.0);
+  std::fill(tsm.mutable_values(), tsm.mutable_values() + 18, 1.0);
   int offset = 0;
 
 #define CERES_TEST_FILL_BLOCK(row_block_id, col_block_id) \

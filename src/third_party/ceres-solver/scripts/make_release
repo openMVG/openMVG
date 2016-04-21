@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # Ceres Solver - A fast non-linear least squares minimizer
-# Copyright 2012 Google Inc. All rights reserved.
-# http://code.google.com/p/ceres-solver/
+# Copyright 2015 Google Inc. All rights reserved.
+# http://ceres-solver.org/
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -40,14 +40,9 @@ fi
 
 TMP="/tmp/ceres-solver-$1"
 DOCS_TMP="/tmp/ceres-solver-docs-$1"
-VERSION=$(grep 'SET(CERES_VERSION_' CMakeLists.txt | \
+VERSION=$(grep 'set(CERES_VERSION_' CMakeLists.txt | \
           sed -e 's/\(.*\) \(.*\))/\2/' | \
           tr '\n' '.' | sed -e 's/.$//')
-ABI_VERSION=$(grep 'SET(CERES_ABI_VERSION' CMakeLists.txt | \
-              sed -e 's/SET(CERES_ABI_VERSION //' | \
-              sed -e 's/)//')
-VERSION_IN_SPEC=$(grep '^Version:' scripts/ceres-solver.spec | \
-                  sed -e 's/Version: *//')
 GIT_COMMIT=$(git log -1 HEAD |grep commit)
 
 if [[ $1 != $VERSION ]] ; then
@@ -57,22 +52,12 @@ if [[ $1 != $VERSION ]] ; then
   exit 1
 fi
 
-if [[ $VERSION_IN_SPEC != $VERSION ]] ; then
-  echo "ERROR: Version string from scripts/ceres-solver.spec, which is"
-  echo "       $VERSION_IN_SPEC, does not match the version"
-  echo "       from the toplevel CMakeLists.txt, which is $ABI_VERSION."
-  echo "       You may not be in the toplevel source directory, or the"
-  echo "       versions are out of sync."
-  exit 1
-fi
-
 # Export repository.
 git checkout-index -f -a --prefix=$TMP/
 
 # Build the VERSION file.
 VERSIONFILE=$TMP/VERSION
 echo "version $VERSION" >> $VERSIONFILE
-echo "abi_version $VERSION" >> $VERSIONFILE
 echo "$GIT_COMMIT" >> $VERSIONFILE
 
 # Build the documentation.
@@ -92,10 +77,4 @@ cat <<EOF
 
 TODO:
   - Upload /tmp/ceres-solver-$1.tar.gz
-
-  - Update the release string in scripts/ceres-solver.spec if this is a RC
-    release or the first release after a RC release.
-
-  - Build and upload RPM package.
-
 EOF

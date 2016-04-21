@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2010, 2011, 2012 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -39,6 +39,8 @@
 
 namespace ceres {
 namespace internal {
+
+using std::vector;
 
 TEST(IndependentSetOrdering, Chain) {
   Graph<int> graph;
@@ -238,7 +240,7 @@ TEST(StableIndependentSet, BreakTies) {
     EXPECT_EQ(independent_set_size, 1);
     EXPECT_EQ(ordering[0], 1);
   }
-
 }
+
 }  // namespace internal
 }  // namespace ceres

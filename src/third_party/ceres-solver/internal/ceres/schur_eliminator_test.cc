@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2010, 2011, 2012 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -129,7 +129,7 @@ class SchurEliminatorTest : public ::testing::Test {
                                 const double relative_tolerance) {
     const CompressedRowBlockStructure* bs = A->block_structure();
     const int num_col_blocks = bs->cols.size();
-    vector<int> blocks(num_col_blocks - num_eliminate_blocks, 0);
+    std::vector<int> blocks(num_col_blocks - num_eliminate_blocks, 0);
     for (int i = num_eliminate_blocks; i < num_col_blocks; ++i) {
       blocks[i - num_eliminate_blocks] = bs->cols[i].size;
     }
@@ -193,7 +193,7 @@ class SchurEliminatorTest : public ::testing::Test {
   Vector sol_expected;
 };
 
-TEST_F(SchurEliminatorTest, ScalarProblem) {
+TEST_F(SchurEliminatorTest, ScalarProblemNoRegularization) {
   SetUpFromId(2);
   Vector zero(A->num_cols());
   zero.setZero();
@@ -201,9 +201,24 @@ TEST_F(SchurEliminatorTest, ScalarProblem) {
   ComputeReferenceSolution(VectorRef(zero.data(), A->num_cols()));
   EliminateSolveAndCompare(VectorRef(zero.data(), A->num_cols()), true, 1e-14);
   EliminateSolveAndCompare(VectorRef(zero.data(), A->num_cols()), false, 1e-14);
+}
 
+TEST_F(SchurEliminatorTest, ScalarProblemWithRegularization) {
+  SetUpFromId(2);
   ComputeReferenceSolution(VectorRef(D.get(), A->num_cols()));
   EliminateSolveAndCompare(VectorRef(D.get(), A->num_cols()), true, 1e-14);
+  EliminateSolveAndCompare(VectorRef(D.get(), A->num_cols()), false, 1e-14);
+}
+
+TEST_F(SchurEliminatorTest, VaryingFBlockSizeWithStaticStructure) {
+  SetUpFromId(4);
+  ComputeReferenceSolution(VectorRef(D.get(), A->num_cols()));
+  EliminateSolveAndCompare(VectorRef(D.get(), A->num_cols()), true, 1e-14);
+}
+
+TEST_F(SchurEliminatorTest, VaryingFBlockSizeWithoutStaticStructure) {
+  SetUpFromId(4);
+  ComputeReferenceSolution(VectorRef(D.get(), A->num_cols()));
   EliminateSolveAndCompare(VectorRef(D.get(), A->num_cols()), false, 1e-14);
 }
 

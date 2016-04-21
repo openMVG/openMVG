@@ -1,6 +1,6 @@
 # Ceres Solver - A fast non-linear least squares minimizer
-# Copyright 2013 Google Inc. All rights reserved.
-# http://code.google.com/p/ceres-solver/
+# Copyright 2015 Google Inc. All rights reserved.
+# http://ceres-solver.org/
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -60,73 +60,108 @@
 # GLOG_LIBRARY: glog library, not including the libraries of any
 #               dependencies.
 
+# Reset CALLERS_CMAKE_FIND_LIBRARY_PREFIXES to its value when
+# FindGlog was invoked.
+macro(GLOG_RESET_FIND_LIBRARY_PREFIX)
+  if (MSVC)
+    set(CMAKE_FIND_LIBRARY_PREFIXES "${CALLERS_CMAKE_FIND_LIBRARY_PREFIXES}")
+  endif (MSVC)
+endmacro(GLOG_RESET_FIND_LIBRARY_PREFIX)
+
 # Called if we failed to find glog or any of it's required dependencies,
 # unsets all public (designed to be used externally) variables and reports
 # error message at priority depending upon [REQUIRED/QUIET/<NONE>] argument.
-MACRO(GLOG_REPORT_NOT_FOUND REASON_MSG)
-  UNSET(GLOG_FOUND)
-  UNSET(GLOG_INCLUDE_DIRS)
-  UNSET(GLOG_LIBRARIES)
+macro(GLOG_REPORT_NOT_FOUND REASON_MSG)
+  unset(GLOG_FOUND)
+  unset(GLOG_INCLUDE_DIRS)
+  unset(GLOG_LIBRARIES)
   # Make results of search visible in the CMake GUI if glog has not
   # been found so that user does not have to toggle to advanced view.
-  MARK_AS_ADVANCED(CLEAR GLOG_INCLUDE_DIR
+  mark_as_advanced(CLEAR GLOG_INCLUDE_DIR
                          GLOG_LIBRARY)
+
+  glog_reset_find_library_prefix()
+
   # Note <package>_FIND_[REQUIRED/QUIETLY] variables defined by FindPackage()
   # use the camelcase library name, not uppercase.
-  IF (Glog_FIND_QUIETLY)
-    MESSAGE(STATUS "Failed to find glog - " ${REASON_MSG} ${ARGN})
-  ELSEIF (Glog_FIND_REQUIRED)
-    MESSAGE(FATAL_ERROR "Failed to find glog - " ${REASON_MSG} ${ARGN})
-  ELSE()
+  if (Glog_FIND_QUIETLY)
+    message(STATUS "Failed to find glog - " ${REASON_MSG} ${ARGN})
+  elseif (Glog_FIND_REQUIRED)
+    message(FATAL_ERROR "Failed to find glog - " ${REASON_MSG} ${ARGN})
+  else()
     # Neither QUIETLY nor REQUIRED, use no priority which emits a message
     # but continues configuration and allows generation.
-    MESSAGE("-- Failed to find glog - " ${REASON_MSG} ${ARGN})
-  ENDIF ()
-ENDMACRO(GLOG_REPORT_NOT_FOUND)
+    message("-- Failed to find glog - " ${REASON_MSG} ${ARGN})
+  endif ()
+endmacro(GLOG_REPORT_NOT_FOUND)
+
+# Handle possible presence of lib prefix for libraries on MSVC, see
+# also GLOG_RESET_FIND_LIBRARY_PREFIX().
+if (MSVC)
+  # Preserve the caller's original values for CMAKE_FIND_LIBRARY_PREFIXES
+  # s/t we can set it back before returning.
+  set(CALLERS_CMAKE_FIND_LIBRARY_PREFIXES "${CMAKE_FIND_LIBRARY_PREFIXES}")
+  # The empty string in this list is important, it represents the case when
+  # the libraries have no prefix (shared libraries / DLLs).
+  set(CMAKE_FIND_LIBRARY_PREFIXES "lib" "" "${CMAKE_FIND_LIBRARY_PREFIXES}")
+endif (MSVC)
 
 # Search user-installed locations first, so that we prefer user installs
 # to system installs where both exist.
-#
-# TODO: Add standard Windows search locations for glog.
-LIST(APPEND GLOG_CHECK_INCLUDE_DIRS
+list(APPEND GLOG_CHECK_INCLUDE_DIRS
   /usr/local/include
   /usr/local/homebrew/include # Mac OS X
   /opt/local/var/macports/software # Mac OS X.
   /opt/local/include
   /usr/include)
-LIST(APPEND GLOG_CHECK_LIBRARY_DIRS
+# Windows (for C:/Program Files prefix).
+list(APPEND GLOG_CHECK_PATH_SUFFIXES
+  glog/include
+  glog/Include
+  Glog/include
+  Glog/Include)
+
+list(APPEND GLOG_CHECK_LIBRARY_DIRS
   /usr/local/lib
   /usr/local/homebrew/lib # Mac OS X.
   /opt/local/lib
   /usr/lib)
+# Windows (for C:/Program Files prefix).
+list(APPEND GLOG_CHECK_LIBRARY_SUFFIXES
+  glog/lib
+  glog/Lib
+  Glog/lib
+  Glog/Lib)
 
 # Search supplied hint directories first if supplied.
-FIND_PATH(GLOG_INCLUDE_DIR
+find_path(GLOG_INCLUDE_DIR
   NAMES glog/logging.h
   PATHS ${GLOG_INCLUDE_DIR_HINTS}
-  ${GLOG_CHECK_INCLUDE_DIRS})
-IF (NOT GLOG_INCLUDE_DIR OR
+  ${GLOG_CHECK_INCLUDE_DIRS}
+  PATH_SUFFIXES ${GLOG_CHECK_PATH_SUFFIXES})
+if (NOT GLOG_INCLUDE_DIR OR
     NOT EXISTS ${GLOG_INCLUDE_DIR})
-  GLOG_REPORT_NOT_FOUND(
+  glog_report_not_found(
     "Could not find glog include directory, set GLOG_INCLUDE_DIR "
     "to directory containing glog/logging.h")
-ENDIF (NOT GLOG_INCLUDE_DIR OR
+endif (NOT GLOG_INCLUDE_DIR OR
        NOT EXISTS ${GLOG_INCLUDE_DIR})
 
-FIND_LIBRARY(GLOG_LIBRARY NAMES glog
+find_library(GLOG_LIBRARY NAMES glog
   PATHS ${GLOG_LIBRARY_DIR_HINTS}
-  ${GLOG_CHECK_LIBRARY_DIRS})
-IF (NOT GLOG_LIBRARY OR
+  ${GLOG_CHECK_LIBRARY_DIRS}
+  PATH_SUFFIXES ${GLOG_CHECK_LIBRARY_SUFFIXES})
+if (NOT GLOG_LIBRARY OR
     NOT EXISTS ${GLOG_LIBRARY})
-  GLOG_REPORT_NOT_FOUND(
+  glog_report_not_found(
     "Could not find glog library, set GLOG_LIBRARY "
     "to full path to libglog.")
-ENDIF (NOT GLOG_LIBRARY OR
+endif (NOT GLOG_LIBRARY OR
        NOT EXISTS ${GLOG_LIBRARY})
 
 # Mark internally as found, then verify. GLOG_REPORT_NOT_FOUND() unsets
 # if called.
-SET(GLOG_FOUND TRUE)
+set(GLOG_FOUND TRUE)
 
 # Glog does not seem to provide any record of the version in its
 # source tree, thus cannot extract version.
@@ -134,39 +169,41 @@ SET(GLOG_FOUND TRUE)
 # Catch case when caller has set GLOG_INCLUDE_DIR in the cache / GUI and
 # thus FIND_[PATH/LIBRARY] are not called, but specified locations are
 # invalid, otherwise we would report the library as found.
-IF (GLOG_INCLUDE_DIR AND
+if (GLOG_INCLUDE_DIR AND
     NOT EXISTS ${GLOG_INCLUDE_DIR}/glog/logging.h)
-  GLOG_REPORT_NOT_FOUND(
+  glog_report_not_found(
     "Caller defined GLOG_INCLUDE_DIR:"
     " ${GLOG_INCLUDE_DIR} does not contain glog/logging.h header.")
-ENDIF (GLOG_INCLUDE_DIR AND
+endif (GLOG_INCLUDE_DIR AND
        NOT EXISTS ${GLOG_INCLUDE_DIR}/glog/logging.h)
 # TODO: This regex for glog library is pretty primitive, we use lowercase
 #       for comparison to handle Windows using CamelCase library names, could
 #       this check be better?
-STRING(TOLOWER "${GLOG_LIBRARY}" LOWERCASE_GLOG_LIBRARY)
-IF (GLOG_LIBRARY AND
+string(TOLOWER "${GLOG_LIBRARY}" LOWERCASE_GLOG_LIBRARY)
+if (GLOG_LIBRARY AND
     NOT "${LOWERCASE_GLOG_LIBRARY}" MATCHES ".*glog[^/]*")
-  GLOG_REPORT_NOT_FOUND(
+  glog_report_not_found(
     "Caller defined GLOG_LIBRARY: "
     "${GLOG_LIBRARY} does not match glog.")
-ENDIF (GLOG_LIBRARY AND
+endif (GLOG_LIBRARY AND
        NOT "${LOWERCASE_GLOG_LIBRARY}" MATCHES ".*glog[^/]*")
 
 # Set standard CMake FindPackage variables if found.
-IF (GLOG_FOUND)
-  SET(GLOG_INCLUDE_DIRS ${GLOG_INCLUDE_DIR})
-  SET(GLOG_LIBRARIES ${GLOG_LIBRARY})
-ENDIF (GLOG_FOUND)
+if (GLOG_FOUND)
+  set(GLOG_INCLUDE_DIRS ${GLOG_INCLUDE_DIR})
+  set(GLOG_LIBRARIES ${GLOG_LIBRARY})
+endif (GLOG_FOUND)
+
+glog_reset_find_library_prefix()
 
 # Handle REQUIRED / QUIET optional arguments.
-INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(Glog DEFAULT_MSG
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(Glog DEFAULT_MSG
   GLOG_INCLUDE_DIRS GLOG_LIBRARIES)
 
 # Only mark internal variables as advanced if we found glog, otherwise
 # leave them visible in the standard GUI for the user to set manually.
-IF (GLOG_FOUND)
-  MARK_AS_ADVANCED(FORCE GLOG_INCLUDE_DIR
+if (GLOG_FOUND)
+  mark_as_advanced(FORCE GLOG_INCLUDE_DIR
                          GLOG_LIBRARY)
-ENDIF (GLOG_FOUND)
+endif (GLOG_FOUND)

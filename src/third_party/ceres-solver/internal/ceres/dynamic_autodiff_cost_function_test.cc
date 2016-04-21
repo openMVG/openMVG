@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2012 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -38,6 +38,8 @@
 
 namespace ceres {
 namespace internal {
+
+using std::vector;
 
 // Takes 2 parameter blocks:
 //     parameters[0] is size 10.
@@ -212,7 +214,7 @@ TEST(DynamicAutodiffCostFunctionTest, JacobianWithFirstParameterBlockConstant) {
   }
 }
 
-TEST(DynamicAutodiffCostFunctionTest, JacobianWithSecondParameterBlockConstant) {
+TEST(DynamicAutodiffCostFunctionTest, JacobianWithSecondParameterBlockConstant) {  // NOLINT
   // Test the residual counting.
   vector<double> param_block_0(10, 0.0);
   for (int i = 0; i < 10; ++i) {

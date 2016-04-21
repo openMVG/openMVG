@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2014 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -31,8 +31,8 @@
 #include "ceres/trust_region_minimizer.h"
 
 #include <algorithm>
-#include <cstdlib>
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
 #include <limits>
 #include <string>
@@ -85,7 +85,7 @@ LineSearch::Summary DoLineSearch(const Minimizer::Options& options,
       options.max_line_search_step_expansion;
   line_search_options.function = &line_search_function;
 
-  string message;
+  std::string message;
   scoped_ptr<LineSearch> line_search(
       CHECK_NOTNULL(LineSearch::Create(ceres::ARMIJO,
                                        line_search_options,
@@ -417,7 +417,7 @@ void TrustRegionMinimizer::Minimize(const Minimizer::Options& options,
           LOG_IF(WARNING, is_not_silent)
               << "Step failed to evaluate. "
               << "Treating it as a step with infinite cost";
-          new_cost = numeric_limits<double>::max();
+          new_cost = std::numeric_limits<double>::max();
         }
       } else {
         LOG_IF(WARNING, is_not_silent)
@@ -489,7 +489,7 @@ void TrustRegionMinimizer::Minimize(const Minimizer::Options& options,
       iteration_summary.cost_change =  cost - new_cost;
       const double absolute_function_tolerance =
           options_.function_tolerance * cost;
-      if (fabs(iteration_summary.cost_change) < absolute_function_tolerance) {
+      if (fabs(iteration_summary.cost_change) <= absolute_function_tolerance) {
         summary->message =
             StringPrintf("Function tolerance reached. "
                          "|cost_change|/cost: %e <= %e",
@@ -521,7 +521,7 @@ void TrustRegionMinimizer::Minimize(const Minimizer::Options& options,
       // reference iteration, allowing for non-monotonic steps.
       iteration_summary.relative_decrease =
           options.use_nonmonotonic_steps
-          ? max(relative_decrease, historical_relative_decrease)
+          ? std::max(relative_decrease, historical_relative_decrease)
           : relative_decrease;
 
       // Normally, the quality of a trust region step is measured by

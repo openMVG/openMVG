@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2010, 2011, 2012 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -37,6 +37,11 @@
 
 namespace ceres {
 namespace internal {
+
+using std::make_pair;
+using std::pair;
+using std::set;
+using std::vector;
 
 TEST(BlockRandomAccessSparseMatrix, GetCell) {
   vector<int> blocks;
@@ -169,7 +174,8 @@ class BlockRandomAccessSparseMatrixTest : public ::testing::Test {
 };
 
 TEST_F(BlockRandomAccessSparseMatrixTest, IntPairToLongOverflow) {
-  CheckIntPairToLong(numeric_limits<int>::max(), numeric_limits<int>::max());
+  CheckIntPairToLong(std::numeric_limits<int>::max(),
+                     std::numeric_limits<int>::max());
 }
 
 TEST_F(BlockRandomAccessSparseMatrixTest, LongToIntPair) {

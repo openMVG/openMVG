@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2013 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -38,6 +38,12 @@
 namespace ceres {
 namespace internal {
 
+// Noise factor for randomized cost function.
+static const double kNoiseFactor = 0.01;
+
+// Default random seed for randomized cost function.
+static const unsigned int kRandomSeed = 1234;
+
 // y1 = x1'x2      -> dy1/dx1 = x2,               dy1/dx2 = x1
 // y2 = (x1'x2)^2  -> dy2/dx1 = 2 * x2 * (x1'x2), dy2/dx2 = 2 * x1 * (x1'x2)
 // y3 = x2'x2      -> dy3/dx1 = 0,                dy3/dx2 = 2 * x2
@@ -46,7 +52,7 @@ class EasyFunctor {
   bool operator()(const double* x1, const double* x2, double* residuals) const;
   void ExpectCostFunctionEvaluationIsNearlyCorrect(
       const CostFunction& cost_function,
-      NumericDiffMethod method) const;
+      NumericDiffMethodType method) const;
 };
 
 class EasyCostFunction : public SizedCostFunction<3, 5, 5> {
@@ -71,7 +77,7 @@ class TranscendentalFunctor {
   bool operator()(const double* x1, const double* x2, double* residuals) const;
   void ExpectCostFunctionEvaluationIsNearlyCorrect(
       const CostFunction& cost_function,
-      NumericDiffMethod method) const;
+      NumericDiffMethodType method) const;
 };
 
 class TranscendentalCostFunction : public SizedCostFunction<2, 5, 5> {
@@ -84,6 +90,61 @@ class TranscendentalCostFunction : public SizedCostFunction<2, 5, 5> {
  private:
   TranscendentalFunctor functor_;
 };
+
+// y = exp(x), dy/dx = exp(x)
+class ExponentialFunctor {
+ public:
+  bool operator()(const double* x1, double* residuals) const;
+  void ExpectCostFunctionEvaluationIsNearlyCorrect(
+      const CostFunction& cost_function) const;
+};
+
+class ExponentialCostFunction : public SizedCostFunction<1, 1> {
+ public:
+  virtual bool Evaluate(double const* const* parameters,
+                        double* residuals,
+                        double** /* not used */) const {
+    return functor_(parameters[0], residuals);
+  }
+
+ private:
+  ExponentialFunctor functor_;
+};
+
+// Test adaptive numeric differentiation by synthetically adding random noise
+// to a functor.
+// y = x^2 + [random noise], dy/dx ~ 2x
+class RandomizedFunctor {
+ public:
+  RandomizedFunctor(double noise_factor, unsigned int random_seed)
+      : noise_factor_(noise_factor), random_seed_(random_seed) {
+  }
+
+  bool operator()(const double* x1, double* residuals) const;
+  void ExpectCostFunctionEvaluationIsNearlyCorrect(
+      const CostFunction& cost_function) const;
+
+ private:
+  double noise_factor_;
+  unsigned int random_seed_;
+};
+
+class RandomizedCostFunction : public SizedCostFunction<1, 1> {
+ public:
+  RandomizedCostFunction(double noise_factor, unsigned int random_seed)
+      : functor_(noise_factor, random_seed) {
+  }
+
+  virtual bool Evaluate(double const* const* parameters,
+                        double* residuals,
+                        double** /* not used */) const {
+    return functor_(parameters[0], residuals);
+  }
+
+ private:
+  RandomizedFunctor functor_;
+};
+
 
 }  // namespace internal
 }  // namespace ceres
