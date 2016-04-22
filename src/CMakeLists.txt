@@ -133,7 +133,7 @@ IF(OpenMVG_USE_OPENMP)
     IF (NOT MSVC)
       IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         # for those using the clang with OpenMP support
-        LIST(APPEND OPENMVG_LIBRARY_DEPENDENCIES iomp)
+        LIST(APPEND OPENMVG_LIBRARY_DEPENDENCIES omp)
       ELSE()
         LIST(APPEND OPENMVG_LIBRARY_DEPENDENCIES gomp)
       ENDIF()
