@@ -39,12 +39,14 @@ int main(int argc, char **argv)
   std::string sMatchesDir;
   std::string sOutFile;
   std::string sDebugOutputDir;
+  bool sUseSfmVisibility = false;
   bool sKeepSift = false;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "match_dir") );
   cmd.add( make_option('o', sOutFile, "output_file") );
   cmd.add( make_option('s', sKeepSift, "keep_sift") );
+  cmd.add( make_option('r', sUseSfmVisibility, "use_sfm_visibility") );
   cmd.add( make_option('d', sDebugOutputDir, "debug_dir") );
 
   try {
@@ -58,7 +60,8 @@ int main(int argc, char **argv)
     << "[-f|--match_file] (opt.) path to a matches file (used pairs will be used)\n"
     << "[-o|--output_file] file where the output data will be stored\n"
     << "[-s|--keep_sift] keep SIFT points (default false)\n"
-    << "[-d|--debug_dir] debug output diretory to generate svg files with detected CCTags (default \"\")\n"
+    << "[-r|--use_sfm_visibility] Use connections between views based on SfM observations instead of relying on frustums intersections (default false)\n"
+    << "[-d|--debug_dir] debug output directory to generate svg files with detected CCTags (default \"\")\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -101,13 +104,7 @@ int main(int argc, char **argv)
   std::map<IndexT, std::set<IndexT>> connectedViews;
   {
     Pair_Set viewPairs;
-    if (sMatchesDir.empty())
-    {
-      // No image pair provided, so we use cameras frustum intersection.
-      // Build the list of connected images pairs from frustum intersections
-      viewPairs = Frustum_Filter(reconstructionSfmData).getFrustumIntersectionPairs();
-    }
-    else
+    if (sUseSfmVisibility)
     {
       PairWiseMatches matches;
       if (!matching::Load(matches, reconstructionSfmData.GetViewsKeys(), sMatchesDir, "f"))
@@ -120,6 +117,13 @@ int main(int argc, char **argv)
       // Keep only Pairs that belong to valid view indexes.
       viewPairs = Pair_filter(viewPairs, Get_Valid_Views(reconstructionSfmData));
     }
+    else
+    {
+      // No image pair provided, so we use cameras frustum intersection.
+      // Build the list of connected images pairs from frustum intersections
+      viewPairs = Frustum_Filter(reconstructionSfmData).getFrustumIntersectionPairs();
+    }
+    
     // Convert pair to map
     for(auto& p: viewPairs)
     {
@@ -129,7 +133,7 @@ int main(int argc, char **argv)
   }
   
   std::cout << "Database of all CCTags" << std::endl;
-  // Database of all CCTags
+  // Database of all CCTags: <CCTagId, set<ViewID>>
   std::map<IndexT, std::set<IndexT>> cctagsVisibility;
   // Database of all CCTag observations: <(CCTagId, ViewID), Observation>
   std::map<std::pair<IndexT, IndexT>, Observation> cctagsObservations;
