@@ -187,7 +187,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     * @param pose Extrinsic matrix
     * @return Concatenation of intrinsic matrix and extrinsic matrix
     */
-    Mat34 get_projective_equivalent( const geometry::Pose3 & pose ) const
+    Mat34 get_projective_equivalent( const geometry::Pose3 & pose ) const override
     {
       Mat34 P;
       P_From_KRt( K(), pose.rotation(), pose.translation(), &P );
