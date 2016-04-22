@@ -226,33 +226,9 @@ int main(int argc, char **argv)
         // Create a new landmark for this CCTag subgroup
         Landmark& landmark = cctagSfmData.structure[landmarkIndex];
         // landmark.X; keep default value, will be set by triangulation in the next step.
-//        bfs::create_directory("cctag");
-//        bfs::path cctagDir("cctag/cctag_"+std::to_string(landmarkIndex)+"_"+std::to_string(cctagVisibility.first));
-//        bfs::create_directory(cctagDir);
         for(IndexT iObsViewId: cctagSubGroup)
         {
           landmark.obs[iObsViewId] = cctagsObservations[std::make_pair(cctagVisibility.first, iObsViewId)];
-          
-//          // DEBUG
-//          {
-//            const features::Regions* regions = regions_provider->regions_per_view.at(iObsViewId).get();
-//            const features::SIFT_Regions* siftRegions = dynamic_cast<const features::SIFT_Regions*>(regions);
-//            if(siftRegions == nullptr)
-//            {
-//              throw std::runtime_error("Only works with SIFT regions in input.");
-//            }
-//            IndexT id_feat = landmark.obs[iObsViewId].id_feat;
-//            features::SIFT_Regions cctagRegions_debug;
-//            cctagRegions_debug.Features().push_back(siftRegions->Features()[id_feat]);
-//            cctagRegions_debug.Descriptors().push_back(siftRegions->Descriptors()[id_feat]);
-//
-//            View* view = reconstructionSfmData.GetViews().at(iObsViewId).get();
-//            cameras::IntrinsicBase* intrinsics = reconstructionSfmData.GetIntrinsics().at(view->id_intrinsic).get();
-//            features::saveCCTag2SVG(view->s_Img_path, 
-//                    std::make_pair(intrinsics->w(), intrinsics->h()),
-//                    cctagRegions_debug,
-//                    (cctagDir/(bfs::path(view->s_Img_path).stem().string()+".svg")).string());
-//          }
         }
         ++landmarkIndex;
       }
