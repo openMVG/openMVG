@@ -79,7 +79,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     * @brief Get the intrinsic matrix
     * @return 3x3 intrinsic matrix
     */
-    const Mat3& K() const 
+    const Mat3& K() const
     {
       return K_;
     }
@@ -177,7 +177,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     * @param value Error in image plane
     * @return error of passing from the image plane to the camera plane
     */
-    double imagePlane_toCameraPlaneError( double value ) const
+    double imagePlane_toCameraPlaneError( double value ) const override
     {
       return value / focal();
     }

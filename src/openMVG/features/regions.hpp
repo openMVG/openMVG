@@ -25,7 +25,7 @@ class Regions
 {
 public:
 
-  virtual ~Regions() = default ; 
+  virtual ~Regions() = default ;
 
   //--
   // IO - one file for region features, one file for region descriptors
@@ -107,7 +107,7 @@ public:
   /// Read from files the regions and their corresponding descriptors.
   bool Load(
     const std::string& sfileNameFeats,
-    const std::string& sfileNameDescs) override 
+    const std::string& sfileNameDescs) override
   {
     return loadFeatsFromFile(sfileNameFeats, vec_feats_)
           & loadDescsFromBinFile(sfileNameDescs, vec_descs_);
@@ -116,23 +116,23 @@ public:
   /// Export in two separate files the regions and their corresponding descriptors.
   bool Save(
     const std::string& sfileNameFeats,
-    const std::string& sfileNameDescs) const override 
+    const std::string& sfileNameDescs) const override
   {
     return saveFeatsToFile(sfileNameFeats, vec_feats_)
           & saveDescsToBinFile(sfileNameDescs, vec_descs_);
   }
 
-  bool LoadFeatures(const std::string& sfileNameFeats) override 
+  bool LoadFeatures(const std::string& sfileNameFeats) override
   {
     return loadFeatsFromFile(sfileNameFeats, vec_feats_);
   }
 
-  PointFeatures GetRegionsPositions() const override 
+  PointFeatures GetRegionsPositions() const override
   {
     return PointFeatures(vec_feats_.begin(), vec_feats_.end());
   }
 
-  Vec2 GetRegionPosition(size_t i) const override 
+  Vec2 GetRegionPosition(size_t i) const override
   {
     return Vec2f(vec_feats_[i].coords()).cast<double>();
   }
@@ -157,7 +157,7 @@ public:
     ar(vec_descs_);
   }
 
-  Regions * EmptyClone() const override 
+  Regions * EmptyClone() const override
   {
     return new Scalar_Regions();
   }
@@ -175,7 +175,7 @@ public:
   }
 
   /// Add the Inth region to another Region container
-  void CopyRegion(size_t i, Regions * region_container) const
+  void CopyRegion(size_t i, Regions * region_container) const override
   {
     assert(i < vec_feats_.size() && i < vec_descs_.size());
     static_cast<Scalar_Regions<FeatT, T, L> *>(region_container)->vec_feats_.push_back(vec_feats_[i]);
@@ -291,7 +291,7 @@ public:
   }
 
   /// Add the Inth region to another Region container
-  void CopyRegion(size_t i, Regions * region_container) const
+  void CopyRegion(size_t i, Regions * region_container) const override
   {
     assert(i < vec_feats_.size() && i < vec_descs_.size());
     static_cast<Binary_Regions<FeatT, L> *>(region_container)->vec_feats_.push_back(vec_feats_[i]);

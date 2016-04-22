@@ -182,7 +182,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @param p Input distorted pixel
     * @return Point without distortion
     */
-    virtual Vec2 get_ud_pixel( const Vec2& p ) const override
+    Vec2 get_ud_pixel( const Vec2& p ) const override
     {
       return cam2ima( remove_disto( ima2cam( p ) ) );
     }
@@ -192,7 +192,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @param p Input pixel
     * @return Distorted pixel
     */
-    virtual Vec2 get_d_pixel( const Vec2& p ) const
+    Vec2 get_d_pixel( const Vec2& p ) const override
     {
       return cam2ima( add_disto( ima2cam( p ) ) );
     }
