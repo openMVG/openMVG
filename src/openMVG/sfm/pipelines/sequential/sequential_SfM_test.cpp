@@ -66,9 +66,6 @@ TEST(SEQUENTIAL_SFM, Known_Intrinsics) {
   sfmEngine.SetFeaturesProvider(feats_provider.get());
   sfmEngine.SetMatchesProvider(matches_provider.get());
 
-  // Set an initial pair
-  sfmEngine.setInitialPair(Pair(0,1));
-
   // Configure reconstruction parameters (intrinsic parameters are held constant)
   sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
 
@@ -127,9 +124,6 @@ TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
   // Configure data provider (Features and Matches)
   sfmEngine.SetFeaturesProvider(feats_provider.get());
   sfmEngine.SetMatchesProvider(matches_provider.get());
-
-  // Set an initial pair
-  sfmEngine.setInitialPair(Pair(0,1));
 
   // Configure reconstruction parameters (intrinsic parameters are held constant)
   sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
