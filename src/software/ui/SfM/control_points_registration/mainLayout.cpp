@@ -21,6 +21,8 @@
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 #include "openMVG/sfm/sfm_data_transform.hpp"
 
+#include "openMVG/stl/stl.hpp"
+
 void MainWindow::removeAllControlPoints()
 {
   m_doc._sfm_data.control_points = Landmarks();
@@ -118,10 +120,17 @@ void MainWindow::openProject()
       model->setHeaderData(0, Qt::Horizontal, QObject::tr("Views"));
       m_treeView_Images->setModel(model);
 
-      for (Views::const_reverse_iterator iterV = m_doc._sfm_data.GetViews().rbegin();
-        iterV != m_doc._sfm_data.GetViews().rend();
-        ++iterV)
+      std::vector<IndexT> view_ids;
+      view_ids.reserve(m_doc._sfm_data.GetViews().size());
+      std::transform(m_doc._sfm_data.GetViews().begin(), m_doc._sfm_data.GetViews().end(),
+        std::back_inserter(view_ids), stl::RetrieveKey());
+      std::sort(view_ids.begin(), view_ids.end());
+
+      // Add view in reverse order to have them ordered by ID
+      for (std::vector<IndexT>::const_reverse_iterator iter = view_ids.rbegin();
+        iter != view_ids.rend(); ++iter)
       {
+        Views::const_iterator iterV = m_doc._sfm_data.GetViews().find(*iter);
         const View * view = iterV->second.get();
         if (m_doc._sfm_data.IsPoseAndIntrinsicDefined(view))
         {
