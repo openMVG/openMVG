@@ -63,7 +63,7 @@ Arguments description:
   - You want to speed up the computation by reducing the number features/regions and thus the number of tie points.
 
   For this kind of needs you can use a mask. A mask is simply a binary image having the same size (width and height) than the target image.
-  The black areas on a mask denote the "bad parts", *i.e.* the areas to be masked and for which descriptors are not computed.
+  The black areas on a mask denote the "bad parts", *i.e.* the areas to be masked and for which descriptors are not computed. A point is kept if the mask value at the point position is different than 0.
   In openMVG_main_ComputeFeatures, the association of a mask and an image is implicit. It uses the following conventions:
 
   - It tries to load a global mask.png file from directory where the the SfM container file (sfm_data.*) is stored.
