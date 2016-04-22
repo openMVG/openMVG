@@ -619,9 +619,8 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
       const IndexT trackId = iter->first;
       const Landmark & landmark = iter->second;
       const Observations & obs = landmark.obs;
-      Observations::const_iterator iterObs_xI = obs.begin();
-      Observations::const_iterator iterObs_xJ = obs.begin();
-      std::advance(iterObs_xJ, 1);
+      Observations::const_iterator iterObs_xI = obs.find(view_I->id_view);
+      Observations::const_iterator iterObs_xJ = obs.find(view_J->id_view);
 
       const Observation & ob_xI = iterObs_xI->second;
       const IndexT & viewId_xI = iterObs_xI->first;
