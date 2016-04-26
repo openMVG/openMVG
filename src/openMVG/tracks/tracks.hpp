@@ -36,11 +36,8 @@
 #include "lemon/unionfind.h"
 
 #include "openMVG/matching/indMatch.hpp"
-
-#ifdef HAVE_BOOST
-#include <boost/container/flat_map.hpp>
-#include <boost/container/flat_set.hpp>
-#endif
+#include "openMVG/stl/flatMap.hpp"
+#include "openMVG/stl/flatSet.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -83,22 +80,15 @@ private:
   static bool superiorToFirst(const P &a, const T1 &b) {return a.first<b;}
 };
 
-namespace tracks  {
+namespace tracks {
 
-#ifdef HAVE_BOOST
 // Data structure to store a track: collection of {ImageId,FeatureId}
 //  The corresponding image points with their imageId and FeatureId.
-typedef boost::container::flat_map<size_t,size_t> submapTrack;
+typedef stl::flat_map<size_t,size_t> submapTrack;
 // A track is a collection of {trackId, submapTrack}
-typedef boost::container::flat_map< size_t, submapTrack > STLMAPTracks;
-typedef boost::container::flat_set<size_t> TracksSet;
-typedef boost::container::flat_map< size_t, TracksSet > TracksPerView;
-#else
-typedef std::map<size_t,size_t> submapTrack;
-typedef std::map< size_t, submapTrack > STLMAPTracks;
-typedef std::set<size_t> TracksSet;
-typedef std::map< size_t, TracksSet > TracksPerView;
-#endif
+typedef stl::flat_map< size_t, submapTrack > STLMAPTracks;
+typedef stl::flat_set<size_t> TracksSet;
+typedef stl::flat_map< size_t, TracksSet > TracksPerView;
 
 struct TracksBuilder
 {

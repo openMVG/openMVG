@@ -9,6 +9,7 @@
 
 #include "openMVG/image/pixel_types.hpp"
 #include "openMVG/numeric/numeric.h"
+#include "openMVG/stl/flatMap.hpp"
 #include <cereal/cereal.hpp> // Serialization
 
 namespace openMVG {
@@ -47,8 +48,9 @@ struct Observation
     x = Eigen::Map<const Vec2>(&p[0]);
   }
 };
+
 /// Observations are indexed by their View_id
-typedef Hash_Map<IndexT, Observation> Observations;
+typedef stl::flat_map<IndexT, Observation> Observations;
 
 /**
  * @brief Landmark is a 3D point with its 2d observations.
@@ -68,7 +70,8 @@ struct Landmark
   image::RGBColor rgb;    //!> the color associated to the point
   Observations obs;
 
-  bool operator==(const Landmark& other) const {
+  bool operator==(const Landmark& other) const
+  {
     return AreVecNearEqual(X, other.X, 1e-3) &&
            AreVecNearEqual(rgb, other.rgb, 1e-3) &&
             obs == other.obs;
@@ -103,8 +106,8 @@ struct Landmark
       // if it fails just use a default color
       rgb = openMVG::image::WHITE;
     }
-      ar(cereal::make_nvp("observations", obs));
-    }
+    ar(cereal::make_nvp("observations", obs));
+  }
 };
 
 } // namespace sfm
