@@ -106,7 +106,8 @@ int main(int argc, char **argv)
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--input_file] a SfM_Data file\n"
-      << "[-o|--out_dir path] output path where computed matches are stored\n"
+      << "[-o|--out_dir path]\n"
+      << "   path of the directory containing the extracted features and in which computed matches will be stored\n"
       << "\n[Optional]\n"
       << "[-f|--force] Force to recompute data\n"
       << "[-p|--save_putative_matches] Save putative matches\n"
