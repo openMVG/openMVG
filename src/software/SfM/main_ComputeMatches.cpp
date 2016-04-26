@@ -144,6 +144,8 @@ int main(int argc, char **argv)
       << "    BRUTEFORCEHAMMING: BruteForce Hamming matching.\n"
       << "[-m|--guided_matching]\n"
       << "  use the found model to improve the pairwise correspondences.\n"
+      << "[-I|--max_iteration]\n"
+      << "  number of maximum iterations allowed in ransac step.\n"
       << "[-x|--match_file_per_image]\n"
       << "  Save matches in a separate file per image\n"
       << "[-u|--max_matches]\n"
@@ -170,6 +172,7 @@ int main(int argc, char **argv)
             << "--range_size " << rangeSize <<  "\n"
             << "--nearest_matching_method " << sNearestMatchingMethod << "\n"
             << "--guided_matching " << bGuided_matching << "\n"
+            << "--max_iteration " << imax_iteration << "\n"
             << "--match_file_per_image " << matchFilePerImage << std::endl;
 
   EPairMode ePairmode = (iMatchingVideoMode == -1 ) ? PAIR_EXHAUSTIVE : PAIR_CONTIGUOUS;
