@@ -28,17 +28,13 @@ typedef std::pair<IndexT,IndexT> Pair;
 typedef std::set<Pair> Pair_Set;
 typedef std::vector<Pair> Pair_Vec;
 
-#define OPENMVG_NO_UNORDERED_MAP 1
-
-#if defined OPENMVG_NO_UNORDERED_MAP
+#if defined OPENMVG_UNORDERED_MAP
+template<typename Key, typename Value>
+struct Hash_Map : std::unordered_map<Key, Value> {};
+#else
 template<typename K, typename V>
 struct Hash_Map : std::map<K, V, std::less<K>,
  Eigen::aligned_allocator<std::pair<K,V> > > {};
-#endif
-
-#if defined OPENMVG_STD_UNORDERED_MAP
-template<typename Key, typename Value>
-struct Hash_Map : std::unordered_map<Key, Value> {};
 #endif
 
 } // namespace openMVG
