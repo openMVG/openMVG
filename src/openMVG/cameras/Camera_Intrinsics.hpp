@@ -25,15 +25,20 @@ struct IntrinsicBase
   unsigned int _w, _h;
   std::string _serialNumber;
 
-  IntrinsicBase(unsigned int w = 0, unsigned int h = 0, const std::string& serialNumber = ""):_w(w), _h(h), _serialNumber(serialNumber) {}
-  virtual ~IntrinsicBase() {}
+  IntrinsicBase(unsigned int w = 0, unsigned int h = 0, const std::string& serialNumber = ""):_w(w), _h(h), _serialNumber(serialNumber)
+  {}
+  virtual ~IntrinsicBase()
+  {}
 
   unsigned int w() const {return _w;}
   unsigned int h() const {return _h;}
-  std::string serialNumber() const {return _serialNumber;}
+  const std::string& serialNumber() const {return _serialNumber;}
   void setWidth(unsigned int w) { _w = w;}
   void setHeight(unsigned int h) { _h = h;}
-  void setSerialNumber(const std::string& serialNumber) { _serialNumber = serialNumber;}
+  void setSerialNumber(const std::string& serialNumber)
+  {
+    _serialNumber = serialNumber;
+  }
 
   // Operator ==
   bool operator==(const IntrinsicBase& other) const {

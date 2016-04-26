@@ -100,14 +100,14 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
   // Data wrapper for non linear optimization (update from data)
   virtual bool updateFromParams(const std::vector<double> & params)
   {
-    if (params.size() == 7) {
-      *this = Pinhole_Intrinsic_Fisheye(
-      _w, _h,
-      params[0], params[1], params[2], // focal, ppx, ppy
-      params[3], params[4], params[5], params[6]); // k1, k2, k3, k4
+    if (params.size() == 7)
+    {
+      this->setK(params[0], params[1], params[2]);
+      _params = {params[3], params[4], params[5], params[6]};
       return true;
     }
-    else  {
+    else
+    {
       return false;
     }
   }

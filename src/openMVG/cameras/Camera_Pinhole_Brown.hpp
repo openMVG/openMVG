@@ -76,17 +76,19 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     // Data wrapper for non linear optimization (update from data)
     virtual bool updateFromParams(const std::vector<double> & params)
     {
-        if (params.size() == 8) {
-          *this = Pinhole_Intrinsic_Brown_T2(
-            _w, _h,
-            params[0], params[1], params[2], // focal, ppx, ppy
-            params[3], params[4], params[5], // K1, K2, K3
-            params[6], params[7]);           // T1, T2
-            return true;
-        }
-        else  {
-            return false;
-        }
+      if (params.size() == 8)
+      {
+        this->setK(params[0], params[1], params[2]);
+        _params = {
+          params[3], params[4], params[5], // K1, K2, K3
+          params[6], params[7]             // T1, T2
+        };
+        return true;
+      }
+      else
+      {
+        return false;
+      }
     }
 
     /// Return the un-distorted pixel (with removed distortion)

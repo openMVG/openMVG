@@ -108,11 +108,13 @@ class Pinhole_Intrinsic : public IntrinsicBase
   // Data wrapper for non linear optimization (update from data)
   virtual bool updateFromParams(const std::vector<double> & params)
   {
-    if (params.size() == 3) {
-      *this = Pinhole_Intrinsic(_w, _h, params[0], params[1], params[2]);
+    if (params.size() == 3)
+    {
+      this->setK(params[0], params[1], params[2]);
       return true;
     }
-    else  {
+    else
+    {
       return false;
     }
   }
@@ -142,7 +144,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     ar(cereal::make_nvp("focal_length", focal_length ));
     std::vector<double> pp(2);
     ar(cereal::make_nvp("principal_point", pp));
-    *this = Pinhole_Intrinsic(_w, _h, focal_length, pp[0], pp[1]);
+    this->setK(focal_length, pp[0], pp[1]);
   }
 };
 

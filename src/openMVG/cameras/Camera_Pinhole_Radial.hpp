@@ -105,14 +105,16 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
   // Data wrapper for non linear optimization (update from data)
   virtual bool updateFromParams(const std::vector<double> & params)
   {
-    if (params.size() == 4) {
-      *this = Pinhole_Intrinsic_Radial_K1(
-        _w, _h,
-        params[0], params[1], params[2], // focal, ppx, ppy
-        params[3]); //K1
+    if (params.size() == 4)
+    {
+      this->setK(params[0], params[1], params[2]);
+      _params = {
+        params[3] // K1
+      };
       return true;
     }
-    else  {
+    else
+    {
       return false;
     }
   }
@@ -219,14 +221,16 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
   // Data wrapper for non linear optimization (update from data)
   virtual bool updateFromParams(const std::vector<double> & params)
   {
-    if (params.size() == 6) {
-      *this = Pinhole_Intrinsic_Radial_K3(
-        _w, _h,
-        params[0], params[1], params[2], // focal, ppx, ppy
-        params[3], params[4], params[5]); // K1, K2, K3
+    if (params.size() == 6)
+    {
+      this->setK(params[0], params[1], params[2]);
+      _params = {
+        params[3], params[4], params[5] // K1, K2, K3
+      };
       return true;
     }
-    else  {
+    else
+    {
       return false;
     }
   }
