@@ -68,7 +68,7 @@ typename Kernel::Model RANSAC(
   for (iteration = 0;
     iteration < max_iterations &&
     iteration < really_max_iterations; ++iteration) {
-      UniformSample(min_samples, total_samples, &sample);
+      UniformSample(min_samples, &all_samples, &sample);
 
       std::vector<typename Kernel::Model> models;
       kernel.Fit(sample, &models);

@@ -1,24 +1,4 @@
 
-// Copyright (c) 2007, 2008 libmv authors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to
-// deal in the Software without restriction, including without limitation the
-// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-// sell copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-// IN THE SOFTWARE.
-
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -73,6 +53,45 @@ inline void UniformSample
     }
   }
 }
+
+/**
+* Pick n random sample from an array of indices.
+* Use a Fisher Yates sampling (shuffling) to avoid picking the same index many time.
+*
+*
+* \param num_samples The number of randomly picked value in the vec_index array.
+* \param vec_index An array of unique index value. The function shuffle this vector.
+* \param samples Output randomly picked value.
+* \return true if the sampling can be performed
+*/
+//
+template<typename T>
+inline bool UniformSample
+(
+  const uint32_t num_samples,
+  std::vector<T> * vec_index, // the array that provide the index (will be shuffled)
+  std::vector<T> * samples // output found indices
+)
+{
+  if (vec_index->size() < num_samples)
+    return false;
+
+  const uint32_t last_idx (vec_index->size() - 1);
+  for (uint32_t i = 0; i < num_samples; ++i)
+  {
+    std::uniform_int_distribution<uint32_t> distribution(i, last_idx);
+    const uint32_t sample = distribution(random_generator);
+
+    std::swap((*vec_index)[i], (*vec_index)[sample]);
+  }
+  samples->resize(num_samples);
+  for (size_t i=0; i < num_samples; ++i)
+  {
+    (*samples)[i] = (*vec_index)[i];
+  }
+  return true;
+}
+
 
 } // namespace robust
 } // namespace openMVG
