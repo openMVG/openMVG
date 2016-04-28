@@ -16,7 +16,7 @@
 #include <vector>
 
 namespace openMVG {
-namespace localization {
+namespace features {
 
 /**
  * @brief
@@ -118,6 +118,6 @@ void saveCCTagMatches2SVG(const std::string &imagePathLeft,
                      bool showNotMatched);
 #endif
 
-} // namespace localization
+} // namespace features
 } // namespace openMVG
 
