@@ -38,49 +38,56 @@ inline void siftDescToUChar(
     descriptor[k] = static_cast<unsigned char>(512.f*descr[k]);
 }
 
-struct SiftParams
-{
-  SiftParams(
-    int first_octave = 0,
-    int num_octaves = 6,
-    int num_scales = 3,
-    float edge_threshold = 10.0f,
-    float peak_threshold = 0.04f,
-    bool root_sift = true
-  ):
-    _first_octave(first_octave),
-    _num_octaves(num_octaves),
-    _num_scales(num_scales),
-    _edge_threshold(edge_threshold),
-    _peak_threshold(peak_threshold),
-    _root_sift(root_sift) {}
-
-  template<class Archive>
-  void serialize( Archive & ar )
-  {
-    ar(
-      cereal::make_nvp("first_octave", _first_octave),
-      cereal::make_nvp("num_octaves",_num_octaves),
-      cereal::make_nvp("num_scales",_num_scales),
-      cereal::make_nvp("edge_threshold",_edge_threshold),
-      cereal::make_nvp("peak_threshold",_peak_threshold),
-      cereal::make_nvp("root_sift",_root_sift));
-  }
-
-  // Parameters
-  int _first_octave;      // Use original image, or perform an upscale if == -1
-  int _num_octaves;       // Max octaves count
-  int _num_scales;        // Scales per octave
-  float _edge_threshold;  // Max ratio of Hessian eigenvalues
-  float _peak_threshold;  // Min contrast
-  bool _root_sift;        // see [1]
-};
-
 class SIFT_Image_describer : public Image_describer
 {
 public:
-  SIFT_Image_describer(const SiftParams & params = SiftParams(), bool bOrientation = true)
-    :Image_describer(), _params(params), _bOrientation(bOrientation)
+
+  struct Params
+  {
+    Params(
+      int first_octave = 0,
+      int num_octaves = 6,
+      int num_scales = 3,
+      float edge_threshold = 10.0f,
+      float peak_threshold = 0.04f,
+      bool root_sift = true
+    ):
+      _first_octave(first_octave),
+      _num_octaves(num_octaves),
+      _num_scales(num_scales),
+      _edge_threshold(edge_threshold),
+      _peak_threshold(peak_threshold),
+      _root_sift(root_sift) {}
+
+    template<class Archive>
+    void serialize( Archive & ar )
+    {
+      ar(
+        cereal::make_nvp("first_octave", _first_octave),
+        cereal::make_nvp("num_octaves",_num_octaves),
+        cereal::make_nvp("num_scales",_num_scales),
+        cereal::make_nvp("edge_threshold",_edge_threshold),
+        cereal::make_nvp("peak_threshold",_peak_threshold),
+        cereal::make_nvp("root_sift",_root_sift));
+    }
+
+    // Parameters
+    int _first_octave;      // Use original image, or perform an upscale if == -1
+    int _num_octaves;       // Max octaves count
+    int _num_scales;        // Scales per octave
+    float _edge_threshold;  // Max ratio of Hessian eigenvalues
+    float _peak_threshold;  // Min contrast
+    bool _root_sift;        // see [1]
+  };
+
+  //--
+  // Constructor
+  //--
+  SIFT_Image_describer
+  (
+    const Params params = Params(),
+    bool bOrientation = true
+  ):Image_describer(), _params(params), _bOrientation(bOrientation)
   {
     vl_constructor();
   }
@@ -90,7 +97,7 @@ public:
     vl_destructor();
   }
 
-  bool Set_configuration_preset(EDESCRIBER_PRESET preset)
+  bool Set_configuration_preset(EDESCRIBER_PRESET preset) override
   {
     switch(preset)
     {
@@ -117,9 +124,12 @@ public:
   @param mask 8-bit gray image for keypoint filtering (optional).
      Non-zero values depict the region of interest.
   */
-  bool Describe(const image::Image<unsigned char>& image,
+  bool Describe
+  (
+    const image::Image<unsigned char>& image,
     std::unique_ptr<Regions> &regions,
-    const image::Image<unsigned char> * mask = NULL)
+    const image::Image<unsigned char> * mask = nullptr
+  ) override
   {
     const int w = image.Width(), h = image.Height();
     //Convert to float
@@ -199,7 +209,7 @@ public:
   };
 
   /// Allocate Regions type depending of the Image_describer
-  void Allocate(std::unique_ptr<Regions> &regions) const
+  void Allocate(std::unique_ptr<Regions> &regions) const override
   {
     regions.reset( new SIFT_Regions );
   }
@@ -213,7 +223,7 @@ public:
   }
 
 private:
-  SiftParams _params;
+  Params _params;
   bool _bOrientation;
 };
 

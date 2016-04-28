@@ -290,12 +290,13 @@ int main(int argc, char **argv)
       std::unique_ptr<Image_describer> image_describer;
       if (sImage_Describer_Method == "SIFT")
       {
-        image_describer.reset(new SIFT_Image_describer(SiftParams()));
+        image_describer.reset(new SIFT_Image_describer);
       }
       else
       if (sImage_Describer_Method == "AKAZE_FLOAT")
       {
-        image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_MSURF)));
+        image_describer.reset(new AKAZE_Image_describer
+          (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MSURF)));
       }
 
       if (!image_describer)

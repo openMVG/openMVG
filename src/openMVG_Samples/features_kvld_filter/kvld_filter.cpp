@@ -105,7 +105,8 @@ int main(int argc, char **argv) {
   // Detect regions thanks to an image_describer
   //--
   using namespace openMVG::features;
-  std::unique_ptr<Image_describer> image_describer(new SIFT_Image_describer(SiftParams(-1)));
+  std::unique_ptr<Image_describer> image_describer
+    (new SIFT_Image_describer(SIFT_Image_describer::Params(-1)));
   std::map<IndexT, std::unique_ptr<features::Regions> > regions_perImage;
   image_describer->Describe(imageL, regions_perImage[0]);
   image_describer->Describe(imageR, regions_perImage[1]);

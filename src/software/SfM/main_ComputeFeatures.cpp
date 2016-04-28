@@ -178,19 +178,21 @@ int main(int argc, char **argv)
     // Don't use a factory, perform direct allocation
     if (sImage_Describer_Method == "SIFT")
     {
-      image_describer.reset(new SIFT_Image_describer(SiftParams(), !bUpRight));
+      image_describer.reset(new SIFT_Image_describer
+        (SIFT_Image_describer::Params(), !bUpRight));
     }
     else
     if (sImage_Describer_Method == "AKAZE_FLOAT")
     {
-      image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_MSURF), !bUpRight));
+      image_describer.reset(new AKAZE_Image_describer
+        (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MSURF), !bUpRight));
     }
     else
     if (sImage_Describer_Method == "AKAZE_MLDB")
     {
-      image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_MLDB), !bUpRight));
+      image_describer.reset(new AKAZE_Image_describer
+        (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MLDB), !bUpRight));
     }
-    //image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_LIOP), !bUpRight));
     if (!image_describer)
     {
       std::cerr << "Cannot create the designed Image_describer:"

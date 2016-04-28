@@ -192,8 +192,11 @@ void convert_scale(Image &src)
 }
 
 /// Constructor with input arguments
-AKAZE::AKAZE(const Image<unsigned char> & in, const AKAZEConfig & options):
-    options_(options)
+AKAZE::AKAZE
+(
+  const Image<unsigned char> & in,
+  const AKAZE::Params & options
+):options_(options)
 {
   in_ = in.GetMat().cast<float>() / 255.f;
   options_.fDesc_factor = std::max(6.f*sqrtf(2.f), options_.fDesc_factor);

@@ -44,35 +44,6 @@
 namespace openMVG {
 namespace features {
 
-struct AKAZEConfig
-{
-  AKAZEConfig():
-    iNbOctave(4),
-    iNbSlicePerOctave(4),
-    fSigma0(1.6f),
-    fThreshold(0.0008f),
-    fDesc_factor(1.f)
-  {
-  }
-
-  template<class Archive>
-  void serialize(Archive & ar)
-  {
-    ar(
-      cereal::make_nvp("iNbOctave", iNbOctave),
-      cereal::make_nvp("iNbSlicePerOctave", iNbSlicePerOctave),
-      cereal::make_nvp("fSigma0", fSigma0),
-      cereal::make_nvp("fThreshold", fThreshold),
-      cereal::make_nvp("fDesc_factor", fDesc_factor));
-  }
-
-  int iNbOctave; ///< Octave to process
-  int iNbSlicePerOctave; ///< Levels per octave
-  float fSigma0; ///< Initial sigma offset (used to suppress low level noise)
-  float fThreshold;  ///< Hessian determinant threshold
-  float fDesc_factor;   ///< Magnifier used to describe an interest point
-};
-
 struct AKAZEKeypoint{
 
   AKAZEKeypoint()
@@ -104,16 +75,46 @@ struct TEvolution
 // AKAZE Class Declaration
 class AKAZE {
 
+public:
+  struct Params
+  {
+    Params():
+      iNbOctave(4),
+      iNbSlicePerOctave(4),
+      fSigma0(1.6f),
+      fThreshold(0.0008f),
+      fDesc_factor(1.f)
+    {
+    }
+
+    template<class Archive>
+    void serialize(Archive & ar)
+    {
+      ar(
+        cereal::make_nvp("iNbOctave", iNbOctave),
+        cereal::make_nvp("iNbSlicePerOctave", iNbSlicePerOctave),
+        cereal::make_nvp("fSigma0", fSigma0),
+        cereal::make_nvp("fThreshold", fThreshold),
+        cereal::make_nvp("fDesc_factor", fDesc_factor));
+    }
+
+    int iNbOctave; ///< Octave to process
+    int iNbSlicePerOctave; ///< Levels per octave
+    float fSigma0; ///< Initial sigma offset (used to suppress low level noise)
+    float fThreshold;  ///< Hessian determinant threshold
+    float fDesc_factor;   ///< Magnifier used to describe an interest point
+  };
+
 private:
 
-  AKAZEConfig options_;               ///< Configuration options for AKAZE
+  Params options_;               ///< Configuration options for AKAZE
   std::vector<TEvolution> evolution_;	///< Vector of nonlinear diffusion evolution (Scale Space)
   image::Image<float> in_;            ///< Input image
 
 public:
 
   /// Constructor
-  AKAZE(const image::Image<unsigned char> & in, const AKAZEConfig & options);
+  AKAZE(const image::Image<unsigned char> & in, const Params & options);
 
   /// Compute the AKAZE non linear diffusion scale space per slice
   void Compute_AKAZEScaleSpace(void);

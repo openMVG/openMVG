@@ -30,29 +30,30 @@ enum EAKAZE_DESCRIPTOR
   AKAZE_MLDB
 };
 
-struct AKAZEParams
-{
-  AKAZEParams(
-    AKAZEConfig config = AKAZEConfig(),
-    EAKAZE_DESCRIPTOR eAkazeDescriptor = AKAZE_MSURF
-  ):options_(config), eAkazeDescriptor_(eAkazeDescriptor){}
-
-  template<class Archive>
-  void serialize(Archive & ar)
-  {
-    ar(options_, eAkazeDescriptor_);
-  }
-
-  // Parameters
-  AKAZEConfig options_;
-  EAKAZE_DESCRIPTOR eAkazeDescriptor_;
-};
-
 class AKAZE_Image_describer : public Image_describer
 {
 public:
+
+  struct Params
+  {
+    Params(
+      const features::AKAZE::Params config = features::AKAZE::Params(),
+      EAKAZE_DESCRIPTOR eAkazeDescriptor = AKAZE_MSURF
+    ):options_(config), eAkazeDescriptor_(eAkazeDescriptor){}
+
+    template<class Archive>
+    void serialize(Archive & ar)
+    {
+      ar(options_, eAkazeDescriptor_);
+    }
+
+    // Parameters
+    features::AKAZE::Params options_;
+    EAKAZE_DESCRIPTOR eAkazeDescriptor_;
+  };
+
   AKAZE_Image_describer(
-    const AKAZEParams & params = AKAZEParams(),
+    const Params & params = Params(),
     bool bOrientation = true
   ):Image_describer(), params_(params), bOrientation_(bOrientation) {}
 
@@ -62,13 +63,13 @@ public:
     switch(preset)
     {
     case NORMAL_PRESET:
-      params_.options_.fThreshold = AKAZEConfig().fThreshold;
+      params_.options_.fThreshold = features::AKAZE::Params().fThreshold;
     break;
     case HIGH_PRESET:
-      params_.options_.fThreshold = AKAZEConfig().fThreshold/10.;
+      params_.options_.fThreshold = features::AKAZE::Params().fThreshold/10.;
     break;
     case ULTRA_PRESET:
-     params_.options_.fThreshold = AKAZEConfig().fThreshold/100.;
+     params_.options_.fThreshold = features::AKAZE::Params().fThreshold/100.;
     break;
     default:
       return false;
@@ -83,9 +84,12 @@ public:
   @param mask 8-bit gray image for keypoint filtering (optional).
      Non-zero values depict the region of interest.
   */
-  bool Describe(const image::Image<unsigned char>& image,
+  bool Describe
+  (
+    const image::Image<unsigned char>& image,
     std::unique_ptr<Regions> &regions,
-    const image::Image<unsigned char> * mask = nullptr ) override
+    const image::Image<unsigned char> * mask = nullptr
+  ) override
   {
     params_.options_.fDesc_factor =
       (params_.eAkazeDescriptor_ == AKAZE_MSURF ||
@@ -268,9 +272,8 @@ public:
      cereal::make_nvp("bOrientation", bOrientation_));
   }
 
-
 private:
-  AKAZEParams params_;
+  Params params_;
   bool bOrientation_;
 };
 
