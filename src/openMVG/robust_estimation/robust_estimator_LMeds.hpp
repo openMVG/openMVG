@@ -51,7 +51,6 @@ template <typename Kernel>
 
   for (size_t i=0; i < N; i++)
   {
-
     // Get Samples indexes
     UniformSample(min_samples, &all_samples, &vec_sample);
 
@@ -65,15 +64,14 @@ template <typename Kernel>
       //Compute Residuals :
       for (size_t l = 0; l < total_samples; ++l)
       {
-        double error = kernel.Error(l, models[k]);
-        residuals[l] = error;
+        residuals[l] = kernel.Error(l, models[k]);
       }
 
       // Compute median
-      auto itMedian = residuals.begin() +
+      const auto itMedian = residuals.begin() +
         std::size_t( total_samples*(1.-outlierRatio) );
       std::nth_element(residuals.begin(), itMedian, residuals.end());
-      double median = *itMedian;
+      const double median = *itMedian;
 
       // Store best solution
       if(median < dBestMedian)

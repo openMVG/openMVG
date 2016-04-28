@@ -35,7 +35,7 @@ typename Kernel::Model RANSAC(
   const Kernel &kernel,
   const Scorer &scorer,
   std::vector<size_t> *best_inliers = nullptr ,
-  double *best_score = nullptr , // Found number of inliers
+  size_t *best_score = nullptr , // Found number of inliers
   double outliers_probability = 1e-2)
 {
   assert(outliers_probability < 1.0);

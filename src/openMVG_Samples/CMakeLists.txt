@@ -1,5 +1,6 @@
 ADD_SUBDIRECTORY(cameras_undisto_Brown)
 
+ADD_SUBDIRECTORY(multiview_robust_estimation_tutorial)
 ADD_SUBDIRECTORY(multiview_robust_homography)
 ADD_SUBDIRECTORY(multiview_robust_homography_guided)
 ADD_SUBDIRECTORY(multiview_robust_fundamental)
