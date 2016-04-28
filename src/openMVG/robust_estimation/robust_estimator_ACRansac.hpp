@@ -403,7 +403,7 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
         }
         if (nInlier > 2.5 * sizeSample) // does the model is meaningful
           bACRansacMode = true;
-        if (!bACRansacMode && nIter > nIterReserve*2)
+        if (!bACRansacMode && iter > nIterReserve*2) // Early exit (no meaningful model found so far)
           nIter = 0;
       }
 
