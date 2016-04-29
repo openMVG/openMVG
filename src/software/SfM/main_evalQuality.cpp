@@ -45,7 +45,11 @@ int main(int argc, char **argv)
   } catch(const std::string& s) {
     std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--gt] path (where ground truth camera trajectory are saved)\n"
-      << "[-c|--computed] path (openMVG SfM_Output directory)\n"
+      << "[-c|--computed] path to a .json/.bin"
+#if HAVE_ALEMBIC            
+            " or an alembic file .abc"
+#endif            
+            " containing the reconstruction or the localization result\n"
       << "[-o|--output] path (where statistics will be saved)\n"
       << "[-t|--camtype] Type of the camera:\n"
       << " -1: autoguess (try 1,2,3),\n"
