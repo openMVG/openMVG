@@ -216,7 +216,7 @@ bool checkElements(const Feature &f, const char* str)
   // here we are supposing that Feature has a size method... (bleah!)
   for(size_t i = 0; i < f.size(); ++i)
   {
-    if(f[i] > 10e6 || isnan(f[i]))
+    if(f[i] > 10e6 || std::isnan(f[i]))
     {
       correct = false;
       printf("%s\t%.3f %ld", str, (float) f[i], i);
