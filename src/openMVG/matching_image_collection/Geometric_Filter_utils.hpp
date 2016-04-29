@@ -88,8 +88,10 @@ void MatchesPairToMat
       sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr ;
 
   // Load features of Inth and Jnth images
-  const features::PointFeatures feature_I = regions_provider->regions_per_view.at(pairIndex.first)->GetRegionsPositions();
-  const features::PointFeatures feature_J = regions_provider->regions_per_view.at(pairIndex.second)->GetRegionsPositions();
+  std::shared_ptr<features::Regions> regionsI = regions_provider->get(pairIndex.first);
+  std::shared_ptr<features::Regions> regionsJ = regions_provider->get(pairIndex.second);
+  const features::PointFeatures feature_I = regionsI->GetRegionsPositions();
+  const features::PointFeatures feature_J = regionsJ->GetRegionsPositions();
 
   MatchesPointsToMat(
     putativeMatches,
@@ -140,4 +142,4 @@ void MatchesPairToMat
 }
 
 } //namespace matching_image_collection
-} // namespace openMVG 
+} // namespace openMVG
