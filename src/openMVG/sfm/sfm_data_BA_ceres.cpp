@@ -55,7 +55,8 @@ Bundle_Adjustment_Ceres::BA_Ceres_options::BA_Ceres_options
 )
 : bVerbose_(bVerbose),
   nb_threads_(1),
-  parameter_tolerance_(1e-8) //~= numeric_limits<float>::epsilon()
+  parameter_tolerance_(1e-8), //~= numeric_limits<float>::epsilon()
+  bUse_loss_function_(true)
 {
   #ifdef OPENMVG_USE_OPENMP
     nb_threads_ = omp_get_max_threads();
@@ -98,6 +99,12 @@ Bundle_Adjustment_Ceres::Bundle_Adjustment_Ceres
 )
 : ceres_options_(options)
 {}
+
+Bundle_Adjustment_Ceres::BA_Ceres_options &
+Bundle_Adjustment_Ceres::ceres_options()
+{
+  return ceres_options_;
+}
 
 bool Bundle_Adjustment_Ceres::Adjust
 (
@@ -207,8 +214,10 @@ bool Bundle_Adjustment_Ceres::Adjust
 
   // Set a LossFunction to be less penalized by false measurements
   //  - set it to NULL if you don't want use a lossFunction.
-  ceres::LossFunction * p_LossFunction = new ceres::HuberLoss(Square(4.0));
-  // TODO: make the LOSS function and the parameter an option
+  ceres::LossFunction * p_LossFunction =
+    ceres_options_.bUse_loss_function_ ?
+      new ceres::HuberLoss(Square(4.0))
+      : nullptr;
 
   // For all visibility add reprojections errors:
   for (Landmarks::iterator iterTracks = sfm_data.structure.begin();

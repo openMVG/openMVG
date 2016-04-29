@@ -43,6 +43,7 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
     ceres::PreconditionerType preconditioner_type_;
     ceres::SparseLinearAlgebraLibraryType sparse_linear_algebra_library_type_;
     double parameter_tolerance_;
+    bool bUse_loss_function_;
 
     BA_Ceres_options(const bool bVerbose = true, bool bmultithreaded = true);
   };
@@ -51,6 +52,8 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
 
   public:
   Bundle_Adjustment_Ceres(Bundle_Adjustment_Ceres::BA_Ceres_options options = BA_Ceres_options());
+
+  BA_Ceres_options & ceres_options();
 
   bool Adjust
   (
