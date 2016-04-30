@@ -24,6 +24,7 @@ struct Matches_Provider
   // Load matches from the provided matches file
   virtual bool load(const SfM_Data & sfm_data, const std::string & folder, const std::string & matchesMode)
   {
+    std::cout << "- Loading matches..." << std::endl;
     if (!matching::Load(_pairWise_matches, sfm_data.GetViewsKeys(), folder, matchesMode))
     {
       std::cerr<< "Unable to read the matches file: " << folder << "/" << matchesMode << std::endl;
