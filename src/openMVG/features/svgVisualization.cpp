@@ -12,8 +12,6 @@
 #endif
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
-#include <algorithm> 
-
 namespace openMVG {
 namespace features {
 
