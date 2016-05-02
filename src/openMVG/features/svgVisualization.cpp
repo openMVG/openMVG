@@ -1,13 +1,5 @@
-/* 
- * File:   svgVisualization.cpp
- * Author: sgaspari
- * 
- * Created on October 19, 2015, 9:46 AM
- */
-
 #include "svgVisualization.hpp"
 #if HAVE_CCTAG
-// #include <openMVG/localization/CCTagLocalizer.hpp>
 #include "cctag/CCTAG_describer.hpp"
 #endif
 #include "third_party/vectorGraphics/svgDrawer.hpp"
