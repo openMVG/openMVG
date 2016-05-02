@@ -7,7 +7,7 @@
 
 #include "svgVisualization.hpp"
 #if HAVE_CCTAG
-#include <openMVG/localization/CCTagLocalizer.hpp>
+// #include <openMVG/localization/CCTagLocalizer.hpp>
 #include "cctag/CCTAG_describer.hpp"
 #endif
 #include "third_party/vectorGraphics/svgDrawer.hpp"
@@ -119,7 +119,7 @@ void saveCCTag2SVG(const std::string &inputImagePath,
   svgStream.drawImage(inputImagePath, imageSize.first, imageSize.second);
     
   const auto &feat = cctags.Features();
-  const std::vector<localization::CCTagDescriptor > &desc = cctags.Descriptors();
+  const auto &desc = cctags.Descriptors();
   
   for(std::size_t i = 0; i < desc.size(); ++i) 
   {
@@ -128,7 +128,7 @@ void saveCCTag2SVG(const std::string &inputImagePath,
     {
       continue;
     }
-    const localization::CCTagKeypoint &kpt = feat[i];
+    const auto &kpt = feat[i];
     svgStream.drawCircle(kpt.x(), kpt.y(), 3.0f, svg::svgStyle().stroke("yellow", 2.0));
     svgStream.drawText(kpt.x(), kpt.y(), textSize, std::to_string(cctagId), "yellow");
   }
@@ -157,8 +157,8 @@ void saveCCTagMatches2SVG(const std::string &imagePathLeft,
 
   const auto &keypointsLeft = cctagLeft.Features();
   const auto &keypointsRight = cctagRight.Features();
-  const std::vector<localization::CCTagDescriptor > &descLeft = cctagLeft.Descriptors();
-  const std::vector<localization::CCTagDescriptor > &descRight = cctagRight.Descriptors();
+  const auto &descLeft = cctagLeft.Descriptors();
+  const auto &descRight = cctagRight.Descriptors();
   
   //just to be sure...
   assert(keypointsLeft.size() == descLeft.size());
