@@ -252,7 +252,7 @@ int main(int argc, char **argv)
   {
     std::cerr << "Usage: " << argv[0] << '\n'
     << "[-i|--input_file] a SfM_Data file \n"
-    << "[-o|--outdir path] \n"
+    << "[-o|--outdir path] output path for the features and descriptors files (*.feat, *.desc)\n"
     << "\n[Optional]\n"
     << "[-f|--force] Force to recompute data\n"
     << "[-m|--describerMethod]\n"
