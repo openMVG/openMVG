@@ -106,10 +106,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
       _params = {params[3], params[4], params[5], params[6]};
       return true;
     }
-    else
-    {
-      return false;
-    }
+    return false;
   }
 
   /// Return the un-distorted pixel (with removed distortion)

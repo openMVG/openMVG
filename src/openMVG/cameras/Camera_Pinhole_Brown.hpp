@@ -85,10 +85,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
         };
         return true;
       }
-      else
-      {
-        return false;
-      }
+      return false;
     }
 
     /// Return the un-distorted pixel (with removed distortion)

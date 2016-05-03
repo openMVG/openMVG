@@ -113,10 +113,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
       this->setK(params[0], params[1], params[2]);
       return true;
     }
-    else
-    {
-      return false;
-    }
+    return false;
   }
 
   /// Return the un-distorted pixel (with removed distortion)
