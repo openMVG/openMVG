@@ -39,12 +39,13 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
 
   public:
   Bundle_Adjustment_Ceres(Bundle_Adjustment_Ceres::BA_options options = BA_options());
+
+  /**
+   * @see Bundle_Adjustment::Adjust
+   */
   bool Adjust(
-    SfM_Data & sfm_data,            // the SfM scene to refine
-    bool bRefineRotations = true,   // tell if pose rotations will be refined
-    bool bRefineTranslations = true,// tell if the pose translation will be refined
-    bool bRefineIntrinsics = true,  // tell if the camera intrinsic will be refined
-    bool bRefineStructure = true);  // tell if the structure will be refined
+    SfM_Data & sfm_data,
+    BA_Refine refineOptions = BA_REFINE_ALL);
 };
 
 } // namespace sfm

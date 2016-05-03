@@ -387,7 +387,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
 
   Bundle_Adjustment_Ceres bundle_adjustment_obj;
   // - refine only Structure and translations
-  bool b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data, false, true, false);
+  bool b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data, BA_REFINE_TRANSLATION | BA_REFINE_STRUCTURE);
   if (b_BA_Status)
   {
     if (!_sLoggingFile.empty())
@@ -398,7 +398,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
     }
 
     // - refine only Structure and Rotations & translations
-    b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data, true, true, false);
+    b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data, BA_REFINE_ROTATION | BA_REFINE_TRANSLATION | BA_REFINE_STRUCTURE);
     if (b_BA_Status && !_sLoggingFile.empty())
     {
       Save(_sfm_data,
@@ -409,7 +409,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
 
   if (b_BA_Status && !_bFixedIntrinsics) {
     // - refine all: Structure, motion:{rotations, translations} and optics:{intrinsics}
-    b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data, true, true, true);
+    b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data, BA_REFINE_ALL);
     if (b_BA_Status && !_sLoggingFile.empty())
     {
       Save(_sfm_data,
@@ -449,8 +449,10 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
     std::cout << "Point_cloud cleaning:\n"
       << "\t #3DPoints: " << pointcount_cleaning << "\n";
   }
-
-  b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data, true, true, !_bFixedIntrinsics);
+  BA_Refine refineOptions = BA_REFINE_ROTATION | BA_REFINE_TRANSLATION | BA_REFINE_STRUCTURE;
+  if(!_bFixedIntrinsics)
+    refineOptions |= BA_REFINE_INTRINSICS;
+  b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data, refineOptions);
   if (b_BA_Status && !_sLoggingFile.empty())
   {
     Save(_sfm_data,
@@ -593,7 +595,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
         Bundle_Adjustment_Ceres::BA_options options(false, false);
         options._linear_solver_type = ceres::DENSE_SCHUR;
         Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-        if (bundle_adjustment_obj.Adjust(tiny_scene, true, true, false))
+        if (bundle_adjustment_obj.Adjust(tiny_scene, BA_REFINE_ROTATION | BA_REFINE_TRANSLATION | BA_REFINE_STRUCTURE))
         {
           // --> to debug: save relative pair geometry on disk
           // std::ostringstream os;

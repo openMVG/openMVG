@@ -167,12 +167,18 @@ bool SfM_Localizer::RefinePose
   }
 
   Bundle_Adjustment_Ceres bundle_adjustment_obj;
-  const bool b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data, b_refine_pose, b_refine_pose, b_refine_intrinsic, false);
-  if (b_BA_Status)
-  {
-    pose = sfm_data.poses[0];
-  }
-  return b_BA_Status;
+  BA_Refine refineOptions = BA_REFINE_NONE;
+  if(b_refine_pose)
+    refineOptions |= BA_REFINE_ROTATION | BA_REFINE_TRANSLATION;
+  if(b_refine_intrinsic)
+    refineOptions |= BA_REFINE_INTRINSICS;
+
+  const bool b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data, refineOptions);
+  if (!b_BA_Status)
+    return false;
+
+  pose = sfm_data.poses[0];
+  return true;
 }
 
 } // namespace sfm

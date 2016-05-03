@@ -677,7 +677,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
     Bundle_Adjustment_Ceres::BA_options options(true, false);
     options._linear_solver_type = ceres::DENSE_SCHUR;
     Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-    if (!bundle_adjustment_obj.Adjust(tiny_scene, true, true, false))
+    if (!bundle_adjustment_obj.Adjust(tiny_scene, BA_REFINE_ROTATION | BA_REFINE_TRANSLATION | BA_REFINE_STRUCTURE))
     {
       return false;
     }
@@ -1334,7 +1334,10 @@ bool SequentialSfMReconstructionEngine::BundleAdjustment()
     options._linear_solver_type = ceres::DENSE_SCHUR;
   }
   Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-  return bundle_adjustment_obj.Adjust(_sfm_data, true, true, !_bFixedIntrinsics);
+  BA_Refine refineOptions = BA_REFINE_ROTATION | BA_REFINE_TRANSLATION | BA_REFINE_STRUCTURE;
+  if(!_bFixedIntrinsics)
+    refineOptions |= BA_REFINE_INTRINSICS;
+  return bundle_adjustment_obj.Adjust(_sfm_data, refineOptions);
 }
 
 /**

@@ -90,10 +90,7 @@ Bundle_Adjustment_Ceres::Bundle_Adjustment_Ceres(
 
 bool Bundle_Adjustment_Ceres::Adjust(
   SfM_Data & sfm_data,     // the SfM scene to refine
-  bool bRefineRotations,   // tell if pose rotations will be refined
-  bool bRefineTranslations,// tell if the pose translation will be refined
-  bool bRefineIntrinsics,  // tell if the camera intrinsic will be refined
-  bool bRefineStructure)   // tell if the structure will be refined
+  BA_Refine refineOptions)
 {
   //----------
   // Add camera parameters
@@ -109,7 +106,7 @@ bool Bundle_Adjustment_Ceres::Adjust(
   // Data wrapper for refinement:
   Hash_Map<IndexT, std::vector<double> > map_intrinsics;
   Hash_Map<IndexT, std::vector<double> > map_poses;
-
+  
   // Setup Poses data & subparametrization
   for (Poses::const_iterator itPose = sfm_data.poses.begin(); itPose != sfm_data.poses.end(); ++itPose)
   {
@@ -131,21 +128,25 @@ bool Bundle_Adjustment_Ceres::Adjust(
 
     double * parameter_block = &map_poses[indexPose][0];
     problem.AddParameterBlock(parameter_block, 6);
-    if (!bRefineTranslations && !bRefineRotations)
+    // Keep the camera extrinsics constants
+    if (!(refineOptions & BA_REFINE_TRANSLATION) && !(refineOptions & BA_REFINE_ROTATION))
     {
       //set the whole parameter block as constant for best performance.
       problem.SetParameterBlockConstant(parameter_block);
     }
-    else  {
+    else
+    {
       // Subset parametrization
       std::vector<int> vec_constant_extrinsic;
-      if(!bRefineRotations)
+      // Don't refine rotations (if BA_REFINE_ROTATION is not specified)
+      if(!(refineOptions & BA_REFINE_ROTATION))
       {
         vec_constant_extrinsic.push_back(0);
         vec_constant_extrinsic.push_back(1);
         vec_constant_extrinsic.push_back(2);
       }
-      if(!bRefineTranslations)
+      // Don't refine translations (if BA_REFINE_TRANSLATION is not specified)
+      if(!(refineOptions & BA_REFINE_TRANSLATION))
       {
         vec_constant_extrinsic.push_back(3);
         vec_constant_extrinsic.push_back(4);
@@ -172,7 +173,7 @@ bool Bundle_Adjustment_Ceres::Adjust(
 
       double * parameter_block = &map_intrinsics[indexCam][0];
       problem.AddParameterBlock(parameter_block, map_intrinsics[indexCam].size());
-      if (!bRefineIntrinsics)
+      if (!(refineOptions & BA_REFINE_INTRINSICS))
       {
         //set the whole parameter block as constant for best performance.
         problem.SetParameterBlockConstant(parameter_block);
@@ -214,7 +215,7 @@ bool Bundle_Adjustment_Ceres::Adjust(
           &map_poses[view->id_pose][0],
           iterTracks->second.X.data()); //Do we need to copy 3D point to avoid false motion, if failure ?
     }
-    if (!bRefineStructure)
+    if (!(refineOptions & BA_REFINE_STRUCTURE))
       problem.SetParameterBlockConstant(iterTracks->second.X.data());
   }
 
@@ -238,59 +239,57 @@ bool Bundle_Adjustment_Ceres::Adjust(
   // If no error, get back refined parameters
   if (!summary.IsSolutionUsable())
   {
-    if (_openMVG_options._bVerbose)
-      std::cout << "Bundle Adjustment failed." << std::endl;
+    std::cout << "WARNING: Bundle Adjustment failed." << std::endl;
     return false;
   }
-  else // Solution is usable
+
+  // Solution is usable
+  if (_openMVG_options._bVerbose)
   {
-    if (_openMVG_options._bVerbose)
-    {
-      // Display statistics about the minimization
-      std::cout << std::endl
-        << "Bundle Adjustment statistics (approximated RMSE):\n"
-        << " #views: " << sfm_data.views.size() << "\n"
-        << " #poses: " << sfm_data.poses.size() << "\n"
-        << " #intrinsics: " << sfm_data.intrinsics.size() << "\n"
-        << " #tracks: " << sfm_data.structure.size() << "\n"
-        << " #residuals: " << summary.num_residuals << "\n"
-        << " Initial RMSE: " << std::sqrt( summary.initial_cost / summary.num_residuals) << "\n"
-        << " Final RMSE: " << std::sqrt( summary.final_cost / summary.num_residuals) << "\n"
-        << " Time (s): " << summary.total_time_in_seconds << "\n"
-        << std::endl;
-    }
-
-    // Update camera poses with refined data
-    if (bRefineRotations || bRefineTranslations)
-    {
-      for (Poses::iterator itPose = sfm_data.poses.begin();
-        itPose != sfm_data.poses.end(); ++itPose)
-      {
-        const IndexT indexPose = itPose->first;
-
-        Mat3 R_refined;
-        ceres::AngleAxisToRotationMatrix(&map_poses[indexPose][0], R_refined.data());
-        Vec3 t_refined(map_poses[indexPose][3], map_poses[indexPose][4], map_poses[indexPose][5]);
-        // Update the pose
-        Pose3 & pose = itPose->second;
-        pose = Pose3(R_refined, -R_refined.transpose() * t_refined);
-      }
-    }
-
-    // Update camera intrinsics with refined data
-    if (bRefineIntrinsics)
-    {
-      for (Intrinsics::iterator itIntrinsic = sfm_data.intrinsics.begin();
-        itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
-      {
-        const IndexT indexCam = itIntrinsic->first;
-
-        const std::vector<double> & vec_params = map_intrinsics[indexCam];
-        itIntrinsic->second.get()->updateFromParams(vec_params);
-      }
-    }
-    return true;
+    // Display statistics about the minimization
+    std::cout << std::endl
+      << "Bundle Adjustment statistics (approximated RMSE):\n"
+      << " #views: " << sfm_data.views.size() << "\n"
+      << " #poses: " << sfm_data.poses.size() << "\n"
+      << " #intrinsics: " << sfm_data.intrinsics.size() << "\n"
+      << " #tracks: " << sfm_data.structure.size() << "\n"
+      << " #residuals: " << summary.num_residuals << "\n"
+      << " Initial RMSE: " << std::sqrt( summary.initial_cost / summary.num_residuals) << "\n"
+      << " Final RMSE: " << std::sqrt( summary.final_cost / summary.num_residuals) << "\n"
+      << " Time (s): " << summary.total_time_in_seconds << "\n"
+      << std::endl;
   }
+
+  // Update camera poses with refined data
+  if ((refineOptions & BA_REFINE_ROTATION) || (refineOptions & BA_REFINE_TRANSLATION))
+  {
+    for (Poses::iterator itPose = sfm_data.poses.begin();
+      itPose != sfm_data.poses.end(); ++itPose)
+    {
+      const IndexT indexPose = itPose->first;
+
+      Mat3 R_refined;
+      ceres::AngleAxisToRotationMatrix(&map_poses[indexPose][0], R_refined.data());
+      Vec3 t_refined(map_poses[indexPose][3], map_poses[indexPose][4], map_poses[indexPose][5]);
+      // Update the pose
+      Pose3 & pose = itPose->second;
+      pose = Pose3(R_refined, -R_refined.transpose() * t_refined);
+    }
+  }
+
+  // Update camera intrinsics with refined data
+  if ((refineOptions & BA_REFINE_INTRINSICS))
+  {
+    for (Intrinsics::iterator itIntrinsic = sfm_data.intrinsics.begin();
+      itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
+    {
+      const IndexT indexCam = itIntrinsic->first;
+
+      const std::vector<double> & vec_params = map_intrinsics[indexCam];
+      itIntrinsic->second.get()->updateFromParams(vec_params);
+    }
+  }
+  return true;
 }
 
 } // namespace sfm
