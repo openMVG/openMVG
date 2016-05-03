@@ -241,6 +241,8 @@ void convertDesc(
  * @param[out] vec_desc A vector of descriptors that stores the descriptors to load
  * @param[in] append If true, the loaded descriptors will be appended at the end 
  * of the vector \p vec_desc
+ * @param[in] Nmax Limit the number of descriptors to load
+ *            (default value is 0 which means all descriptors).
  * @return true if everything went well
  */
 template<typename DescriptorT, typename FileDescriptorT = DescriptorT>
