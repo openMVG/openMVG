@@ -589,7 +589,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
     Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialPair.ply"), ESfM_Data(ALL));
 
     // - refine only Structure and Rotations & translations (keep intrinsic constant)
-    Bundle_Adjustment_Ceres::BA_Ceres_options options(true, false);
+    Bundle_Adjustment_Ceres::BA_Ceres_options options(true, true);
     options.linear_solver_type_ = ceres::DENSE_SCHUR;
     Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
     if (!bundle_adjustment_obj.Adjust(tiny_scene,
