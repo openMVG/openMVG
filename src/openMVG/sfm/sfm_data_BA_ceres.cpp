@@ -55,9 +55,21 @@ Bundle_Adjustment_Ceres::BA_options::BA_options(const bool bVerbose, bool bmulti
     _nbThreads = 1;
 
   _bCeres_Summary = false;
+  
+  // Use dense BA by default
+  setDenseBA();
+}
 
+void Bundle_Adjustment_Ceres::BA_options::setDenseBA()
+{
   // Default configuration use a DENSE representation
+  _preconditioner_type = ceres::JACOBI;
   _linear_solver_type = ceres::DENSE_SCHUR;
+    std::cout << "Bundle_Adjustment_Ceres: DENSE_SCHUR" << std::endl;
+}
+
+void Bundle_Adjustment_Ceres::BA_options::setSparseBA()
+{
   _preconditioner_type = ceres::JACOBI;
   // If Sparse linear solver are available
   // Descending priority order by efficiency (SUITE_SPARSE > CX_SPARSE > EIGEN_SPARSE)
@@ -65,20 +77,24 @@ Bundle_Adjustment_Ceres::BA_options::BA_options(const bool bVerbose, bool bmulti
   {
     _sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
     _linear_solver_type = ceres::SPARSE_SCHUR;
+    std::cout << "Bundle_Adjustment_Ceres: SPARSE_SCHUR, SUITE_SPARSE" << std::endl;
+  }
+  else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
+  {
+    _sparse_linear_algebra_library_type = ceres::CX_SPARSE;
+    _linear_solver_type = ceres::SPARSE_SCHUR;
+    std::cout << "Bundle_Adjustment_Ceres: SPARSE_SCHUR, CX_SPARSE" << std::endl;
+  }
+  else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+  {
+    _sparse_linear_algebra_library_type = ceres::EIGEN_SPARSE;
+    _linear_solver_type = ceres::SPARSE_SCHUR;
+    std::cout << "Bundle_Adjustment_Ceres: SPARSE_SCHUR, EIGEN_SPARSE" << std::endl;
   }
   else
   {
-    if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
-    {
-      _sparse_linear_algebra_library_type = ceres::CX_SPARSE;
-      _linear_solver_type = ceres::SPARSE_SCHUR;
-    }
-    else
-    if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
-    {
-      _sparse_linear_algebra_library_type = ceres::EIGEN_SPARSE;
-      _linear_solver_type = ceres::SPARSE_SCHUR;
-    }
+    _linear_solver_type = ceres::DENSE_SCHUR;
+    std::cout << "Bundle_Adjustment_Ceres: no sparse BA available, fallback to dense BA." << std::endl;
   }
 }
 

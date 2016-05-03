@@ -674,8 +674,8 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
     Save(tiny_scene, stlplus::create_filespec(_sOutDirectory, "initialPair", _sfmdataInterFileExtension), _sfmdataInterFilter);
 
     // - refine only Structure and Rotations & translations (keep intrinsic constant)
-    Bundle_Adjustment_Ceres::BA_options options(true, false);
-    options._linear_solver_type = ceres::DENSE_SCHUR;
+    Bundle_Adjustment_Ceres::BA_options options(true);
+    options.setDenseBA();
     Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
     if (!bundle_adjustment_obj.Adjust(tiny_scene, BA_REFINE_ROTATION | BA_REFINE_TRANSLATION | BA_REFINE_STRUCTURE))
     {
@@ -1326,12 +1326,11 @@ bool SequentialSfMReconstructionEngine::BundleAdjustment()
   Bundle_Adjustment_Ceres::BA_options options;
   if (_sfm_data.GetPoses().size() > 100)
   {
-    options._preconditioner_type = ceres::JACOBI;
-    options._linear_solver_type = ceres::SPARSE_SCHUR;
+    options.setSparseBA();
   }
   else
   {
-    options._linear_solver_type = ceres::DENSE_SCHUR;
+    options.setDenseBA();
   }
   Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
   BA_Refine refineOptions = BA_REFINE_ROTATION | BA_REFINE_TRANSLATION | BA_REFINE_STRUCTURE;

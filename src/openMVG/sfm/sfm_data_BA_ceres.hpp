@@ -33,6 +33,8 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
     ceres::SparseLinearAlgebraLibraryType _sparse_linear_algebra_library_type;
 
     BA_options(const bool bVerbose = true, bool bmultithreaded = true);
+    void setDenseBA();
+    void setSparseBA();
   };
   private:
     BA_options _openMVG_options;
