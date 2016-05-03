@@ -87,6 +87,24 @@ class Exif_IO
     */
     virtual std::string allExifData() const = 0;
 
+    /**
+    * @brief Try to read and save the EXIF GPS latitude
+    * @return If GPS Latitude can be read & exported, return true
+    */
+    virtual bool GPSLatitude(double * latitude) const = 0;
+
+    /**
+    * @brief Try to read and save the EXIF GPS longitude
+    * @return If GPS Longitude can be read & exported, return true
+    */
+    virtual bool GPSLongitude(double * longitude) const = 0;
+
+   /**
+    * @brief Try to read and save the EXIF GPS altitude
+    * @return If GPS Altitude can be read & exported, return true
+    */
+    virtual bool GPSAltitude(double * altitude) const = 0;
+
 };
 
 } // namespace exif
