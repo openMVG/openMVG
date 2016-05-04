@@ -67,6 +67,9 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     _params[0] = k1;
   }
 
+  Pinhole_Intrinsic_Radial_K1* clone() const { return new Pinhole_Intrinsic_Radial_K1(*this); }
+  void assign(const IntrinsicBase& other) { *this = dynamic_cast<const Pinhole_Intrinsic_Radial_K1&>(other); }
+
   EINTRINSIC getType() const { return PINHOLE_CAMERA_RADIAL1; }
 
   virtual bool have_disto() const {  return true; }
@@ -178,6 +181,9 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     _params[1] = k2;
     _params[2] = k3;
   }
+
+  Pinhole_Intrinsic_Radial_K3* clone() const { return new Pinhole_Intrinsic_Radial_K3(*this); }
+  void assign(const IntrinsicBase& other) { *this = dynamic_cast<const Pinhole_Intrinsic_Radial_K3&>(other); }
 
   EINTRINSIC getType() const { return PINHOLE_CAMERA_RADIAL3; }
 

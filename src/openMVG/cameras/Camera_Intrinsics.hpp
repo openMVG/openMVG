@@ -29,7 +29,10 @@ struct IntrinsicBase
   {}
   virtual ~IntrinsicBase()
   {}
-
+  
+  virtual IntrinsicBase* clone() const = 0;
+  virtual void assign(const IntrinsicBase& other) = 0;
+  
   unsigned int w() const {return _w;}
   unsigned int h() const {return _h;}
   const std::string& serialNumber() const {return _serialNumber;}

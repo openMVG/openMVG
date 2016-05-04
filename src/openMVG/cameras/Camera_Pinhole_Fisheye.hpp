@@ -37,6 +37,9 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     _params = {k1, k2, k3, k4};
   }
 
+  Pinhole_Intrinsic_Fisheye* clone() const { return new Pinhole_Intrinsic_Fisheye(*this); }
+  void assign(const IntrinsicBase& other) { *this = dynamic_cast<const Pinhole_Intrinsic_Fisheye&>(other); }
+
   EINTRINSIC getType() const { return PINHOLE_CAMERA_FISHEYE; }
 
   virtual bool have_disto() const { return true;}

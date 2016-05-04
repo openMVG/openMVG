@@ -46,6 +46,9 @@ class Pinhole_Intrinsic : public IntrinsicBase
   
   virtual ~Pinhole_Intrinsic() {}
 
+  virtual Pinhole_Intrinsic* clone() const { return new Pinhole_Intrinsic(*this); }
+  virtual void assign(const IntrinsicBase& other) { *this = dynamic_cast<const Pinhole_Intrinsic&>(other); }
+  
   virtual EINTRINSIC getType() const { return PINHOLE_CAMERA; }
   std::string getTypeStr() const { return EINTRINSIC_enumToString(getType()); }
 

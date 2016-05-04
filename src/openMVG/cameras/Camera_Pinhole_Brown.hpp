@@ -37,6 +37,9 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
         _params = {k1, k2, k3, t1, t2};
     }
 
+    Pinhole_Intrinsic_Brown_T2* clone() const { return new Pinhole_Intrinsic_Brown_T2(*this); }
+    void assign(const IntrinsicBase& other) { *this = dynamic_cast<const Pinhole_Intrinsic_Brown_T2&>(other); }
+  
     EINTRINSIC getType() const { return PINHOLE_CAMERA_BROWN; }
 
     virtual bool have_disto() const { return true;}
