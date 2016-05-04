@@ -238,6 +238,8 @@ int main(int argc, char **argv)
       << "  (method to use to describe an image):\n"
       << "   SIFT (default),\n"
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors.\n"
+      << "   LATCH: LATCH with CPU (not working just yet)\n"
+      << "   LATCH_GPU: LATCH with GPU\n"
       << "[-p|--describer_preset]\n"
       << "  (used to control the Image_describer configuration):\n"
       << "   NORMAL (default),\n"
@@ -296,6 +298,11 @@ int main(int argc, char **argv)
       if (sImage_Describer_Method == "AKAZE_FLOAT")
       {
         image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_MSURF)));
+      }
+      else
+      if (sImage_Describer_Method == "LATCH")
+      {
+        // image_describer.reset(new LATCH_Image_describer(LATCHParams()));
       }
 
       if (!image_describer)
