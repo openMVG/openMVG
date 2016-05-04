@@ -711,7 +711,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
         pose_I, cam_I, pose_J, cam_J, ob_xI.x, ob_xJ.x);
       const Vec2 residual_I = cam_I->residual(pose_I, landmark.X, ob_xI.x);
       const Vec2 residual_J = cam_J->residual(pose_J, landmark.X, ob_xJ.x);
-      if ( angle > 2.0 &&
+      if ( angle > 3.0 &&
            pose_I.depth(landmark.X) > 0 &&
            pose_J.depth(landmark.X) > 0 &&
            residual_I.norm() < relativePose_info.found_residual_precision &&
@@ -1284,7 +1284,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
           const double angle = AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, xI, xJ);
           const Vec2 residual_I = cam_I->residual(pose_I, X_euclidean, xI);
           const Vec2 residual_J = cam_J->residual(pose_J, X_euclidean, xJ);
-          if (angle > 2.0 &&
+          if (angle > 3.0 &&
             pose_I.depth(X_euclidean) > 0 &&
             pose_J.depth(X_euclidean) > 0 &&
             residual_I.norm() < std::max(4.0, _map_ACThreshold.at(I)) &&
