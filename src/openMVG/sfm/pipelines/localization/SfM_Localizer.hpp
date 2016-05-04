@@ -30,7 +30,7 @@ struct Image_Localizer_Match_Data
                                    // and pt3D.
   
   // Upper bound pixel(s) tolerance for residual errors
-  double error_max = 100;
+  double error_max = std::numeric_limits<double>::infinity();
   size_t max_iteration = 4096;
 };
 
