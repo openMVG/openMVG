@@ -42,6 +42,7 @@ int main(int argc, char **argv) {
       << "  (choose an image_describer interface):\n"
       << "   SIFT: SIFT keypoint & descriptor,\n"
       << "   AKAZE: AKAZE keypoint & floating point descriptor]"
+      << "   LATCH: LATCH keypoint and floating point descriptor"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -66,6 +67,8 @@ int main(int argc, char **argv) {
     image_describer = std::make_shared<AKAZE_Image_describer>(AKAZEParams(AKAZEConfig(), AKAZE_MSURF));
   else if (sImage_describer_type == "AKAZE_MLDB")
     image_describer = std::make_shared<AKAZE_Image_describer>(AKAZEParams(AKAZEConfig(), AKAZE_MLDB));
+  else if (sImage_describer_type == "LATCH")
+    image_describer = std::make_shared<LATCH_Image_describer>();
 
   if (image_describer.use_count()==0)
   {

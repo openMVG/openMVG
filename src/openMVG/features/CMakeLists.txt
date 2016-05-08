@@ -1,17 +1,24 @@
 
 project(features)
 
-file(
-  GLOB_RECURSE
-  features_files_headers
-  *.hpp
-)
+add_subdirectory(latch)
 
-file(
-  GLOB_RECURSE
-  features_files_sources
-  *.cpp
-)
+set(EXCLUDE_DIR "/latch/")
+
+file(GLOB features_files_headers
+       *.hpp
+       akaze/*.hpp
+       liop/*.hpp
+       mser/*.hpp
+       tbmr/*.hpp)
+
+file(GLOB features_files_sources
+       *.cpp
+       akaze/*.cpp
+       liop/*.cpp
+       mser/*.cpp
+       tbmr/*.cpp)
+
 
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 #Remove the future main files
@@ -27,4 +34,3 @@ UNIT_TEST(openMVG features "openMVG_features;stlplus")
 
 add_subdirectory(mser)
 add_subdirectory(tbmr)
-
