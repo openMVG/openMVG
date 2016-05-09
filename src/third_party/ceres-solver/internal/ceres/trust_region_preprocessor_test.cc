@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2014 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -201,16 +201,16 @@ TEST_F(LinearSolverAndEvaluatorCreationTest, DenseSchur) {
 }
 
 #if defined(CERES_USE_EIGEN_SPARSE) || \
-  !defined(CERES_NO_SUITE_SPARSE) ||   \
-  !defined(CERES_NO_CX_SPARSE)
+  !defined(CERES_NO_SUITESPARSE) ||   \
+  !defined(CERES_NO_CXSPARSE)
 TEST_F(LinearSolverAndEvaluatorCreationTest, SparseNormalCholesky) {
   PreprocessForGivenLinearSolverAndVerify(SPARSE_NORMAL_CHOLESKY);
 }
 #endif
 
 #if defined(CERES_USE_EIGEN_SPARSE) || \
-  !defined(CERES_NO_SUITE_SPARSE) ||   \
-  !defined(CERES_NO_CX_SPARSE)
+  !defined(CERES_NO_SUITESPARSE) ||   \
+  !defined(CERES_NO_CXSPARSE)
 TEST_F(LinearSolverAndEvaluatorCreationTest, SparseSchur) {
   PreprocessForGivenLinearSolverAndVerify(SPARSE_SCHUR);
 }

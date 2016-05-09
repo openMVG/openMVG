@@ -257,7 +257,7 @@ template<typename Lhs, typename Rhs>
 class GeneralProduct<Lhs, Rhs, OuterProduct>
   : public ProductBase<GeneralProduct<Lhs,Rhs,OuterProduct>, Lhs, Rhs>
 {
-    template<typename T> struct IsRowMajor : internal::conditional<(int(T::Flags)&RowMajorBit), internal::true_type, internal::false_type>::type {};
+    template<typename T> struct is_row_major : internal::conditional<(int(T::Flags)&RowMajorBit), internal::true_type, internal::false_type>::type {};
     
   public:
     EIGEN_PRODUCT_PUBLIC_INTERFACE(GeneralProduct)
@@ -281,22 +281,22 @@ class GeneralProduct<Lhs, Rhs, OuterProduct>
     
     template<typename Dest>
     inline void evalTo(Dest& dest) const {
-      internal::outer_product_selector_run(*this, dest, set(), IsRowMajor<Dest>());
+      internal::outer_product_selector_run(*this, dest, set(), is_row_major<Dest>());
     }
     
     template<typename Dest>
     inline void addTo(Dest& dest) const {
-      internal::outer_product_selector_run(*this, dest, add(), IsRowMajor<Dest>());
+      internal::outer_product_selector_run(*this, dest, add(), is_row_major<Dest>());
     }
 
     template<typename Dest>
     inline void subTo(Dest& dest) const {
-      internal::outer_product_selector_run(*this, dest, sub(), IsRowMajor<Dest>());
+      internal::outer_product_selector_run(*this, dest, sub(), is_row_major<Dest>());
     }
 
     template<typename Dest> void scaleAndAddTo(Dest& dest, const Scalar& alpha) const
     {
-      internal::outer_product_selector_run(*this, dest, adds(alpha), IsRowMajor<Dest>());
+      internal::outer_product_selector_run(*this, dest, adds(alpha), is_row_major<Dest>());
     }
 };
 
@@ -425,15 +425,18 @@ template<> struct gemv_selector<OnTheRight,ColMajor,true>
     ResScalar actualAlpha = alpha * LhsBlasTraits::extractScalarFactor(prod.lhs())
                                   * RhsBlasTraits::extractScalarFactor(prod.rhs());
 
+    // make sure Dest is a compile-time vector type (bug 1166)
+    typedef typename conditional<Dest::IsVectorAtCompileTime, Dest, typename Dest::ColXpr>::type ActualDest;
+
     enum {
       // FIXME find a way to allow an inner stride on the result if packet_traits<Scalar>::size==1
       // on, the other hand it is good for the cache to pack the vector anyways...
-      EvalToDestAtCompileTime = Dest::InnerStrideAtCompileTime==1,
+      EvalToDestAtCompileTime = (ActualDest::InnerStrideAtCompileTime==1),
       ComplexByReal = (NumTraits<LhsScalar>::IsComplex) && (!NumTraits<RhsScalar>::IsComplex),
-      MightCannotUseDest = (Dest::InnerStrideAtCompileTime!=1) || ComplexByReal
+      MightCannotUseDest = (ActualDest::InnerStrideAtCompileTime!=1) || ComplexByReal
     };
 
-    gemv_static_vector_if<ResScalar,Dest::SizeAtCompileTime,Dest::MaxSizeAtCompileTime,MightCannotUseDest> static_dest;
+    gemv_static_vector_if<ResScalar,ActualDest::SizeAtCompileTime,ActualDest::MaxSizeAtCompileTime,MightCannotUseDest> static_dest;
 
     bool alphaIsCompatible = (!ComplexByReal) || (numext::imag(actualAlpha)==RealScalar(0));
     bool evalToDest = EvalToDestAtCompileTime && alphaIsCompatible;
@@ -522,7 +525,7 @@ template<> struct gemv_selector<OnTheRight,RowMajor,true>
         actualLhs.rows(), actualLhs.cols(),
         actualLhs.data(), actualLhs.outerStride(),
         actualRhsPtr, 1,
-        dest.data(), dest.innerStride(),
+        dest.data(), dest.col(0).innerStride(), //NOTE  if dest is not a vector at compile-time, then dest.innerStride() might be wrong. (bug 1166)
         actualAlpha);
   }
 };

@@ -29,8 +29,7 @@ void PairWiseMatchingToAdjacencyMatrixSVG(const size_t NbImages,
     for (size_t I = 0; I < NbImages; ++I) {
       for (size_t J = 0; J < NbImages; ++J) {
         // If the pair have matches display a blue boxes at I,J position.
-        matching::PairWiseMatches::const_iterator iterSearch =
-          map_Matches.find(std::make_pair(I,J));
+        auto iterSearch = map_Matches.find(std::make_pair(I,J));
         if (iterSearch != map_Matches.end() && !iterSearch->second.empty())
         {
           // Display as a tooltip: (IndexI, IndexJ NbMatches)

@@ -74,7 +74,8 @@ struct ChordFunctor {
 
 void reindex_problem(int* edges, int num_edges, std::vector<int> &reindex_lookup);
 
-bool solve_translations_problem_l2_chordal(
+bool solve_translations_problem_l2_chordal
+(
   const int* edges,
   const double* poses,
   const double* weights,
@@ -83,16 +84,17 @@ bool solve_translations_problem_l2_chordal(
   double* X,
   double function_tolerance,
   double parameter_tolerance,
-  int max_iterations)
+  int max_iterations
+)
 {
   // seed the random number generator
   std::srand( std::time( NULL ) );
 
   // re index the edges to be a sequential set
-  std::vector<int> _edges(edges, edges+2*num_edges);
-  std::vector<int> reindex_lookup;
-  reindex_problem(&_edges[0], num_edges, reindex_lookup);
-  const int num_nodes = reindex_lookup.size();
+  std::vector<int> reindexed_edges(edges, edges+2*num_edges);
+  std::vector<int> reindexed_lookup;
+  reindex_problem(&reindexed_edges[0], num_edges, reindexed_lookup);
+  const int num_nodes = reindexed_lookup.size();
 
   // Init with a random guess solution
   std::vector<double> x(3*num_nodes);
@@ -112,9 +114,9 @@ bool solve_translations_problem_l2_chordal(
 
     if (loss_width == 0.0) {
       // No robust loss function
-      problem.AddResidualBlock(cost_function, NULL, &x[3*_edges[2*i+0]], &x[3*_edges[2*i+1]]);
+      problem.AddResidualBlock(cost_function, NULL, &x[3*reindexed_edges[2*i+0]], &x[3*reindexed_edges[2*i+1]]);
     } else {
-      problem.AddResidualBlock(cost_function, new ceres::HuberLoss(loss_width), &x[3*_edges[2*i+0]], &x[3*_edges[2*i+1]]);
+      problem.AddResidualBlock(cost_function, new ceres::HuberLoss(loss_width), &x[3*reindexed_edges[2*i+0]], &x[3*reindexed_edges[2*i+1]]);
     }
   }
 
@@ -128,14 +130,26 @@ bool solve_translations_problem_l2_chordal(
   options.num_threads = omp_get_max_threads();
   options.num_linear_solver_threads = omp_get_max_threads();
 #endif // OPENMVG_USE_OPENMP
-  //options.minimizer_progress_to_stdout = true;
+  options.minimizer_progress_to_stdout = false;
+  options.logging_type = ceres::SILENT;
   options.max_num_iterations = max_iterations;
   options.function_tolerance = function_tolerance;
   options.parameter_tolerance = parameter_tolerance;
-  if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE) ||
-      ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE) ||
-      ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+  
+  // Since the problem is sparse, use a sparse solver iff available
+  if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
   {
+    options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
+    options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+  }
+  else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
+  {
+    options.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
+    options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+  }
+  else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+  {
+    options.sparse_linear_algebra_library_type = ceres::EIGEN_SPARSE;
     options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
   }
   else
@@ -152,7 +166,7 @@ bool solve_translations_problem_l2_chordal(
   {
     // undo the re indexing
     for (int i=0; i<num_nodes; ++i) {
-      const int j = reindex_lookup[i];
+      const int j = reindexed_lookup[i];
       X[3*j+0] = x[3*i+0];
       X[3*j+1] = x[3*i+1];
       X[3*j+2] = x[3*i+2];
@@ -162,28 +176,33 @@ bool solve_translations_problem_l2_chordal(
 }
 
 void
-reindex_problem(int* edges, int num_edges, std::vector<int> &reindex_lookup)
+reindex_problem
+(
+  int* edges,
+  int num_edges,
+  std::vector<int> &reindexed_lookup
+)
 {
   // get the unique set of nodes
   std::set<int> nodes;
   for (int i=0; i<2*num_edges; ++i)
     nodes.insert(edges[i]);
 
-  reindex_lookup.clear();
-  reindex_lookup.reserve(nodes.size());
+  reindexed_lookup.clear();
+  reindexed_lookup.reserve(nodes.size());
 
-  std::map<int, int> reindexing_key;
+  std::map<int, int> reindexed_key;
   // iterator through them and assign a new Id to each vertex
   std::set<int>::const_iterator it;
   int n=0;
   for (it = nodes.begin(); it != nodes.end(); ++it, ++n) {
-    reindex_lookup.push_back(*it);
-    reindexing_key[*it] = n;
+    reindexed_lookup.push_back(*it);
+    reindexed_key[*it] = n;
   }
 
   // now renumber the edges
   for (int i=0; i<2*num_edges; ++i)
-    edges[i]  = reindexing_key[edges[i]];
+    edges[i]  = reindexed_key[edges[i]];
 }
 
 } // namespace openMVG

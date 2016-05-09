@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2014 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -43,6 +43,12 @@
 
 namespace ceres {
 namespace internal {
+
+using std::min;
+using std::max;
+using std::numeric_limits;
+using std::string;
+using std::swap;
 
 const double kPi = 3.14159265358979323846;
 const double kHalfSqrt2 = 0.707106781186547524401;
@@ -140,12 +146,12 @@ MATCHER_P(IsNearAngleAxis, expected, "") {
   Eigen::Vector3d e(expected[0], expected[1], expected[2]);
   const double e_norm = e.norm();
 
-  double delta_norm = std::numeric_limits<double>::max();
+  double delta_norm = numeric_limits<double>::max();
   if (e_norm > 0) {
     // Deal with the sign ambiguity near PI. Since the sign can flip,
     // we take the smaller of the two differences.
     if (fabs(e_norm - kPi) < kLooseTolerance) {
-      delta_norm = std::min((a - e).norm(), (a + e).norm()) / e_norm;
+      delta_norm = min((a - e).norm(), (a + e).norm()) / e_norm;
     } else {
       delta_norm = (a - e).norm() / e_norm;
     }
@@ -596,7 +602,7 @@ TEST(Rotation, AngleAxisToRotationMatrixAndBackNearZero) {
 
     for (int i = 0; i < 3; ++i) {
       EXPECT_NEAR(round_trip[i], axis_angle[i],
-                  std::numeric_limits<double>::epsilon());
+                  numeric_limits<double>::epsilon());
     }
   }
 }
@@ -604,9 +610,9 @@ TEST(Rotation, AngleAxisToRotationMatrixAndBackNearZero) {
 
 // Transposes a 3x3 matrix.
 static void Transpose3x3(double m[9]) {
-  std::swap(m[1], m[3]);
-  std::swap(m[2], m[6]);
-  std::swap(m[5], m[7]);
+  swap(m[1], m[3]);
+  swap(m[2], m[6]);
+  swap(m[5], m[7]);
 }
 
 // Convert Euler angles from radians to degrees.

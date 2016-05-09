@@ -1,15 +1,19 @@
+// Copyright (c) 2013 Pierre Moulon, Bruno Duisit.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #ifndef PARSE_DATABASE_HPP
 #define PARSE_DATABASE_HPP
 
 #include "openMVG/stl/split.hpp"
 #include "datasheet.hpp"
 
-#include <vector>
-#include <string>
-#include <iostream>
 #include <algorithm>
 #include <fstream>
-#include <iterator>
+#include <vector>
+#include <string>
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
@@ -25,17 +29,16 @@ bool parseDatabase( const std::string& sfileDatabase, std::vector<Datasheet>& ve
       getline( iFilein, line );
       if ( !line.empty() )
       {
-        //std::stringstream sStream( line );
         if ( line[0] != '#' )
         {
           std::vector<std::string> values;
-          stl::split(line, ";", values);
-          if ( values.size() == 3 )
+          stl::split(line, ';', values);
+          if ( values.size() == 2 )
           {
-            const std::string brand = values[0];
-            const std::string model = values[1];
-            const double sensorSize = atof( values[2].c_str() );
-            vec_database.push_back( Datasheet( brand, model, sensorSize ) );
+            vec_database.emplace_back(
+              values[0], // model
+              atof( values[1].c_str() ) // sensor size
+              );
           }
         }
       }
@@ -48,12 +51,18 @@ bool parseDatabase( const std::string& sfileDatabase, std::vector<Datasheet>& ve
   }
 }
 
-// Get information for the given camera model
-bool getInfo( const std::string& sBrand, const std::string& sModel, const std::vector<Datasheet>& vec_database, Datasheet& datasheetContent )
+// Retrieve camera 'Datasheet' information for the given camera model model name
+//  iff it is found in the database
+bool getInfo
+(
+  const std::string & sModel,
+  const std::vector<Datasheet>& vec_database,
+  Datasheet& datasheetContent
+)
 {
   bool existInDatabase = false;
 
-  Datasheet refDatasheet( sBrand, sModel, -1. );
+  const Datasheet refDatasheet( sModel, -1. );
   std::vector<Datasheet>::const_iterator datasheet = std::find( vec_database.begin(), vec_database.end(), refDatasheet );
   if ( datasheet != vec_database.end() )
   {

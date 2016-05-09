@@ -51,7 +51,7 @@ struct Synthetic_Matches_Provider : public Matches_Provider
       {
         for (int idx = 0; idx < synthetic_data._x[j].cols(); ++idx)
         {
-          _pairWise_matches[Pair(j,(jj)%synthetic_data._n)].push_back(IndMatch(idx,idx));
+          pairWise_matches_[Pair(j,(jj)%synthetic_data._n)].push_back(IndMatch(idx,idx));
         }
       }
     }

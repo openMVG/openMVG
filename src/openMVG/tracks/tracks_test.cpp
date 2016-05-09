@@ -54,7 +54,7 @@ TEST(Tracks, Simple) {
   //0, {(0,0) (1,0) (2,0)}
   //1, {(0,1) (1,1) (2,6)}
   //2, {(0,2) (1,3)}
-  const std::pair<size_t,size_t> GT_Tracks[] =
+  const std::pair<uint32_t,uint32_t> GT_Tracks[] =
   {
     std::make_pair(0,0), std::make_pair(1,0), std::make_pair(2,0),
     std::make_pair(0,1), std::make_pair(1,1), std::make_pair(2,6),
@@ -151,7 +151,7 @@ TEST(Tracks, Conflict) {
 
   //0, {(0,0) (1,0) (2,0)}
   //1, {(0,1) (1,1) (2,6)}
-  const std::pair<size_t,size_t> GT_Tracks[] =
+  const std::pair<uint32_t,uint32_t> GT_Tracks[] =
     {std::make_pair(0,0), std::make_pair(1,0), std::make_pair(2,0),
      std::make_pair(0,1), std::make_pair(1,1), std::make_pair(2,6)};
 

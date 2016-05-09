@@ -15,18 +15,19 @@ namespace openMVG {
 namespace sfm {
 
 /// Save the structure and camera positions of a SfM_Data container as 3D points in a PLY ASCII file.
-static bool Save_PLY(
+inline bool Save_PLY(
   const SfM_Data & sfm_data,
   const std::string & filename,
   ESfM_Data flags_part)
 {
   const bool b_structure = (flags_part & STRUCTURE) == STRUCTURE;
+  const bool b_control_points = (flags_part & CONTROL_POINTS) == CONTROL_POINTS;
   const bool b_extrinsics = (flags_part & EXTRINSICS) == EXTRINSICS;
 
-  if (!(b_structure || b_extrinsics))
-    return false;
+  if (!(b_structure || b_extrinsics || b_control_points))
+    return false; // No 3D points to display, so it would produce an empty PLY file
 
-  //Create the stream and check it is ok
+  // Create the stream and check its status
   std::ofstream stream(filename.c_str());
   if (!stream.is_open())
     return false;
@@ -45,9 +46,10 @@ static bool Save_PLY(
     stream << "ply"
       << '\n' << "format ascii 1.0"
       << '\n' << "element vertex "
-        // Vertex count: (#landmark + #view_with_valid_pose)
-        << ((b_structure ? sfm_data.GetLandmarks().size() : 0) +
-            view_with_pose_count)
+        // Vertex count: (#landmark + #GCP + #view_with_valid_pose)
+        << (  (b_structure ? sfm_data.GetLandmarks().size() : 0)
+            + (b_control_points ? sfm_data.GetControl_Points().size() : 0)
+            + view_with_pose_count)
       << '\n' << "property float x"
       << '\n' << "property float y"
       << '\n' << "property float z"
@@ -63,21 +65,32 @@ static bool Save_PLY(
           if (sfm_data.IsPoseAndIntrinsicDefined(view.second.get()))
           {
             const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view.second.get());
-            stream << pose.center().transpose()
-              << " 0 255 0" << "\n";
+            stream << pose.center().transpose().cast<float>()
+              << " 0 255 0" << '\n';
           }
         }
       }
 
       if (b_structure)
       {
+        // Export structure points as White points
         const Landmarks & landmarks = sfm_data.GetLandmarks();
-        for (Landmarks::const_iterator iterLandmarks = landmarks.begin();
-          iterLandmarks != landmarks.end();
-          ++iterLandmarks)  {
-          stream << iterLandmarks->second.X.transpose() << " 255 255 255" << "\n";
+        for ( const auto & iterLandmarks : landmarks )
+        {
+          stream << iterLandmarks.second.X.transpose().cast<float>() << " 255 255 255" << '\n';
         }
       }
+
+      if (b_control_points)
+      {
+        // Export GCP as Yellow points
+        const Landmarks & landmarks = sfm_data.GetControl_Points();
+        for ( const auto & iterGCP : landmarks )
+        {
+          stream << iterGCP.second.X.transpose().cast<float>() << " 255 255 0" << '\n';
+        }
+      }
+
       stream.flush();
       bOk = stream.good();
       stream.close();

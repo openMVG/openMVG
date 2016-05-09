@@ -140,8 +140,10 @@ static void run(Index rows, Index cols, Index depth,
       // Release all the sub blocks B'_j of B' for the current thread,
       // i.e., we simply decrement the number of users by 1
       for(Index j=0; j<threads; ++j)
+      {
         #pragma omp atomic
-        --(info[j].users);
+        info[j].users -= 1;
+      }
     }
   }
   else
@@ -390,13 +392,17 @@ class GeneralProduct<Lhs, Rhs, GemmProduct>
 
     GeneralProduct(const Lhs& lhs, const Rhs& rhs) : Base(lhs,rhs)
     {
+#if !(defined(EIGEN_NO_STATIC_ASSERT) && defined(EIGEN_NO_DEBUG))
       typedef internal::scalar_product_op<LhsScalar,RhsScalar> BinOp;
       EIGEN_CHECK_BINARY_COMPATIBILIY(BinOp,LhsScalar,RhsScalar);
+#endif
     }
 
     template<typename Dest> void scaleAndAddTo(Dest& dst, const Scalar& alpha) const
     {
       eigen_assert(dst.rows()==m_lhs.rows() && dst.cols()==m_rhs.cols());
+      if(m_lhs.cols()==0 || m_lhs.rows()==0 || m_rhs.cols()==0)
+        return;
 
       typename internal::add_const_on_value_type<ActualLhsType>::type lhs = LhsBlasTraits::extract(m_lhs);
       typename internal::add_const_on_value_type<ActualRhsType>::type rhs = RhsBlasTraits::extract(m_rhs);

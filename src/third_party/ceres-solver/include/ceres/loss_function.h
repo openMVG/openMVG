@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2014 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -295,7 +295,7 @@ class CERES_EXPORT TukeyLoss : public ceres::LossFunction {
 // Composition of two loss functions.  The error is the result of first
 // evaluating g followed by f to yield the composition f(g(s)).
 // The loss functions must not be NULL.
-class ComposedLoss : public LossFunction {
+class CERES_EXPORT ComposedLoss : public LossFunction {
  public:
   explicit ComposedLoss(const LossFunction* f, Ownership ownership_f,
                         const LossFunction* g, Ownership ownership_g);
@@ -358,6 +358,9 @@ class CERES_EXPORT ScaledLoss : public LossFunction {
 // whose scale can be mutated after an optimization problem has been
 // constructed.
 //
+// Since we treat the a NULL Loss function as the Identity loss
+// function, rho = NULL is a valid input.
+//
 // Example usage
 //
 //  Problem problem;
@@ -394,8 +397,14 @@ class CERES_EXPORT LossFunctionWrapper : public LossFunction {
   }
 
   virtual void Evaluate(double sq_norm, double out[3]) const {
-    CHECK_NOTNULL(rho_.get());
-    rho_->Evaluate(sq_norm, out);
+    if (rho_.get() == NULL) {
+      out[0] = sq_norm;
+      out[1] = 1.0;
+      out[2] = 0.0;
+    }
+    else {
+      rho_->Evaluate(sq_norm, out);
+    }
   }
 
   void Reset(LossFunction* rho, Ownership ownership) {

@@ -11,8 +11,12 @@
 
 namespace openMVG
 {
-  /* Type trait used to specialize math functions */
 
+
+  /**
+  * @brief Type trait used to specialize math functions
+  * @tparam T type used for computation 
+  */
   template <typename T>
   class MathTrait
   {
@@ -394,6 +398,6 @@ namespace openMVG
   {
     return fabsl( val ) ;
   }
-}
+} // namespace openMVG 
 
 #endif

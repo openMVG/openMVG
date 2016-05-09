@@ -2,8 +2,8 @@
 # encoding: utf-8
 #
 # Ceres Solver - A fast non-linear least squares minimizer
-# Copyright 2014 Google Inc. All rights reserved.
-# http://code.google.com/p/ceres-solver/
+# Copyright 2015 Google Inc. All rights reserved.
+# http://ceres-solver.org/
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -33,6 +33,7 @@
 #
 # Note: You will need Sphinx and Pygments installed for this to work.
 
+from __future__ import print_function
 import glob
 import os
 import sys
@@ -41,7 +42,7 @@ import sys
 N = len(sys.argv)
 
 if N < 3:
-  print 'make_docs.py src_root destination_root'
+  print('make_docs.py src_root destination_root')
   sys.exit(1)
 
 src_dir    = sys.argv[1] + '/docs/source'
@@ -100,7 +101,7 @@ breadcrumb_end = \
 </div>'''
 
 for name in glob.glob('%s/*.html' % html_dir):
-  print 'Postprocessing: ', name
+  print('Postprocessing: ', name)
   with open(name) as fptr:
     out = fptr.read()
 
@@ -113,10 +114,10 @@ for name in glob.glob('%s/*.html' % html_dir):
                        else breadcrumb_start_other
     pre_breadcrumb_start, post_breadcrumb_start = out.split(breadcrumb_start)
     title, post_breadcrumb_end = post_breadcrumb_start.split(breadcrumb_end)
-    print 'Stripping breadcrumb for -', title
+    print('Stripping breadcrumb for -', title)
     out = pre_breadcrumb_start + post_breadcrumb_end
   except ValueError:
-    print 'Skipping breadcrumb strip for', name
+    print('Skipping breadcrumb strip for', name)
 
   with open(name, 'w') as fptr:
     fptr.write(out)

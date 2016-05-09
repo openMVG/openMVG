@@ -8,11 +8,18 @@
 #define OPENMVG_IMAGE_IMAGE_DIFFUSION_HPP_
 
 #ifdef _MSC_VER
-#pragma warning(once:4244)
+  #pragma warning(once:4244)
 #endif
 
-namespace openMVG {
-namespace image {
+#include "openMVG/numeric/numeric.h"
+
+#include <vector>
+#include <cmath>
+
+namespace openMVG
+{
+namespace image
+{
 
 /**
  ** Compute Perona and Malik G2 diffusion coefficient
@@ -28,12 +35,13 @@ void ImagePeronaMalikG2DiffusionCoef( const Image & Lx , const Image & Ly , cons
   const int width = Lx.Width();
   const int height = Lx.Height();
 
-  if( width != out.Width() || height != out.Height() )  {
+  if( width != out.Width() || height != out.Height() )
+  {
     out.resize( width , height ) ;
   }
 
   typedef typename Image::Tpixel Real;
-  out.array() = ( static_cast<Real>(1.f) + (Lx.array().square()+Ly.array().square() )/(k*k) ).inverse();
+  out.array() = ( static_cast<Real>( 1.f ) + ( Lx.array().square() + Ly.array().square() ) / ( k * k ) ).inverse();
 }
 
 /**
@@ -99,13 +107,14 @@ void ImageFEDCentralCPPThread( const Image & src , const Image & diff , const ty
 
   // Compute ranges
   std::vector< int > range;
-  SplitRange( 1 , (int) ( src.rows() - 1 ) , nb_thread , range ) ;
+  SplitRange( 1 , ( int ) ( src.rows() - 1 ) , nb_thread , range ) ;
 
 #ifdef OPENMVG_USE_OPENMP
-#pragma omp parallel for schedule(dynamic)
+  #pragma omp parallel for schedule(dynamic)
 #endif
-  for( int i = 1 ; i < static_cast<int>(range.size()) ; ++i ) {
-    ImageFEDCentral( src, diff, half_t, out, range[i-1] , range[i]) ;
+  for( int i = 1 ; i < static_cast<int>( range.size() ) ; ++i )
+  {
+    ImageFEDCentral( src, diff, half_t, out, range[i - 1] , range[i] ) ;
   }
 }
 
@@ -235,8 +244,14 @@ void ImageFEDCycle( Image & self , const Image & diff , const std::vector< typen
   }
 }
 
-// Compute if a number is prime of not
-static bool IsPrime( const int i )
+/**
+* Compute if a number is prime of not
+* @param i Input number to test
+* @retval true if number is prime
+* @retval false if number is not prime
+* @todo Move this function elsewhere since it's not an image related function
+*/
+inline bool IsPrime( const int i )
 {
   if( i == 1 )
   {
@@ -263,7 +278,12 @@ static bool IsPrime( const int i )
   return true;
 }
 
-static inline int NextPrimeGreaterOrEqualTo( const int i )
+/**
+* @brief Get the next prime number greater or equal to input
+* @param i Input number
+* @return next prime greater or equal to input
+*/
+inline int NextPrimeGreaterOrEqualTo( const int i )
 {
   if( IsPrime( i ) )
   {

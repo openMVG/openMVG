@@ -77,9 +77,26 @@ Arguments description:
       - 1: Pinhole
       - 2: Pinhole radial 1
       - 3: Pinhole radial 3 (default)
+      - 4: Pinhole radial 3 + tangential 2
+      - 5: Pinhole fisheye
 
   - **[-f|--refineIntrinsics]**
+      User can control exactly which parameter will be considered as constant/variable and combine them by using the '|' operator.
+      
+    - ADJUST_ALL -> refine all existing parameters (default)
+    - NONE -> intrinsic parameters are held as constant
+    - ADJUST_FOCAL_LENGTH -> refine only the focal length
+    - ADJUST_PRINCIPAL_POINT -> refine only the principal point position
+    - ADJUST_DISTORTION -> refine only the distortion coefficient(s) (if any)
+    
+    - NOTE Options can be combined thanks to '|':
 
-    - 0: intrinsic parameters are kept as constant
-    - 1: refine intrinsic parameters (default)
+      - ADJUST_FOCAL_LENGTH|ADJUST_PRINCIPAL_POINT
+        -> refine the focal length & the principal point position
+      
+      - ADJUST_FOCAL_LENGTH|ADJUST_DISTORTION
+        -> refine the focal length & the distortion coefficient(s) (if any)
+      
+      - ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION
+        -> refine the principal point position & the distortion coefficient(s) (if any)
 

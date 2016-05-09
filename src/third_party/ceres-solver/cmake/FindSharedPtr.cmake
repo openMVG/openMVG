@@ -1,6 +1,6 @@
 # Ceres Solver - A fast non-linear least squares minimizer
-# Copyright 2014 Google Inc. All rights reserved.
-# http://code.google.com/p/ceres-solver/
+# Copyright 2015 Google Inc. All rights reserved.
+# http://ceres-solver.org/
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -39,61 +39,70 @@
 # SHARED_PTR_TR1_NAMESPACE: TRUE if shared_ptr is defined in std::tr1 namespace,
 # otherwise it's assumed to be defined in std namespace.
 
-MACRO(FIND_SHARED_PTR)
-  SET(SHARED_PTR_FOUND FALSE)
-  CHECK_INCLUDE_FILE_CXX(memory HAVE_STD_MEMORY_HEADER)
-  IF (HAVE_STD_MEMORY_HEADER)
+macro(FIND_SHARED_PTR)
+  # To support CXX11 option, clear the results of all check_xxx() functions
+  # s/t we always perform the checks each time, otherwise CMake fails to
+  # detect that the tests should be performed again after CXX11 is toggled.
+  unset(HAVE_STD_MEMORY_HEADER CACHE)
+  unset(HAVE_SHARED_PTR_IN_STD_NAMESPACE CACHE)
+  unset(HAVE_SHARED_PTR_IN_TR1_NAMESPACE CACHE)
+  unset(HAVE_TR1_MEMORY_HEADER CACHE)
+  unset(HAVE_SHARED_PTR_IN_TR1_NAMESPACE_FROM_TR1_MEMORY_HEADER CACHE)
+
+  set(SHARED_PTR_FOUND FALSE)
+  check_include_file_cxx(memory HAVE_STD_MEMORY_HEADER)
+  if (HAVE_STD_MEMORY_HEADER)
     # Finding the memory header doesn't mean that shared_ptr is in std
     # namespace.
     #
     # In particular, MSVC 2008 has shared_ptr declared in std::tr1.  In
     # order to support this, we do an extra check to see which namespace
     # should be used.
-    INCLUDE(CheckCXXSourceCompiles)
-    CHECK_CXX_SOURCE_COMPILES("#include <memory>
+    include(CheckCXXSourceCompiles)
+    check_cxx_source_compiles("#include <memory>
                                int main() {
                                  std::shared_ptr<int> int_ptr;
                                  return 0;
                                }"
                               HAVE_SHARED_PTR_IN_STD_NAMESPACE)
 
-    IF (HAVE_SHARED_PTR_IN_STD_NAMESPACE)
-      MESSAGE("-- Found shared_ptr in std namespace using <memory> header.")
-      SET(SHARED_PTR_FOUND TRUE)
-    ELSE (HAVE_SHARED_PTR_IN_STD_NAMESPACE)
-      CHECK_CXX_SOURCE_COMPILES("#include <memory>
+    if (HAVE_SHARED_PTR_IN_STD_NAMESPACE)
+      message("-- Found shared_ptr in std namespace using <memory> header.")
+      set(SHARED_PTR_FOUND TRUE)
+    else (HAVE_SHARED_PTR_IN_STD_NAMESPACE)
+      check_cxx_source_compiles("#include <memory>
                                  int main() {
                                    std::tr1::shared_ptr<int> int_ptr;
                                    return 0;
                                  }"
                                 HAVE_SHARED_PTR_IN_TR1_NAMESPACE)
-      IF (HAVE_SHARED_PTR_IN_TR1_NAMESPACE)
-        MESSAGE("-- Found shared_ptr in std::tr1 namespace using <memory> header.")
-        SET(SHARED_PTR_TR1_NAMESPACE TRUE)
-        SET(SHARED_PTR_FOUND TRUE)
-      ENDIF (HAVE_SHARED_PTR_IN_TR1_NAMESPACE)
-    ENDIF (HAVE_SHARED_PTR_IN_STD_NAMESPACE)
-  ENDIF (HAVE_STD_MEMORY_HEADER)
+      if (HAVE_SHARED_PTR_IN_TR1_NAMESPACE)
+        message("-- Found shared_ptr in std::tr1 namespace using <memory> header.")
+        set(SHARED_PTR_TR1_NAMESPACE TRUE)
+        set(SHARED_PTR_FOUND TRUE)
+      endif (HAVE_SHARED_PTR_IN_TR1_NAMESPACE)
+    endif (HAVE_SHARED_PTR_IN_STD_NAMESPACE)
+  endif (HAVE_STD_MEMORY_HEADER)
 
-  IF (NOT SHARED_PTR_FOUND)
+  if (NOT SHARED_PTR_FOUND)
     # Further, gcc defines shared_ptr in std::tr1 namespace and
     # <tr1/memory> is to be included for this. And what makes things
     # even more tricky is that gcc does have <memory> header, so
     # all the checks above wouldn't find shared_ptr.
-    CHECK_INCLUDE_FILE_CXX("tr1/memory" HAVE_TR1_MEMORY_HEADER)
-    IF (HAVE_TR1_MEMORY_HEADER)
-      CHECK_CXX_SOURCE_COMPILES("#include <tr1/memory>
+    check_include_file_cxx("tr1/memory" HAVE_TR1_MEMORY_HEADER)
+    if (HAVE_TR1_MEMORY_HEADER)
+      check_cxx_source_compiles("#include <tr1/memory>
                                  int main() {
                                    std::tr1::shared_ptr<int> int_ptr;
                                    return 0;
                                  }"
                                 HAVE_SHARED_PTR_IN_TR1_NAMESPACE_FROM_TR1_MEMORY_HEADER)
-      IF (HAVE_SHARED_PTR_IN_TR1_NAMESPACE_FROM_TR1_MEMORY_HEADER)
-        MESSAGE("-- Found shared_ptr in std::tr1 namespace using <tr1/memory> header.")
-          SET(SHARED_PTR_TR1_MEMORY_HEADER TRUE)
-          SET(SHARED_PTR_TR1_NAMESPACE TRUE)
-        SET(SHARED_PTR_FOUND TRUE)
-      ENDIF (HAVE_SHARED_PTR_IN_TR1_NAMESPACE_FROM_TR1_MEMORY_HEADER)
-    ENDIF (HAVE_TR1_MEMORY_HEADER)
-  ENDIF (NOT SHARED_PTR_FOUND)
-ENDMACRO(FIND_SHARED_PTR)
+      if (HAVE_SHARED_PTR_IN_TR1_NAMESPACE_FROM_TR1_MEMORY_HEADER)
+        message("-- Found shared_ptr in std::tr1 namespace using <tr1/memory> header.")
+          set(SHARED_PTR_TR1_MEMORY_HEADER TRUE)
+          set(SHARED_PTR_TR1_NAMESPACE TRUE)
+        set(SHARED_PTR_FOUND TRUE)
+      endif (HAVE_SHARED_PTR_IN_TR1_NAMESPACE_FROM_TR1_MEMORY_HEADER)
+    endif (HAVE_TR1_MEMORY_HEADER)
+  endif (NOT SHARED_PTR_FOUND)
+endmacro(FIND_SHARED_PTR)

@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2010, 2011, 2012 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -29,168 +29,21 @@
 // Author: keir@google.com (Keir Mierle)
 //         sameeragarwal@google.com (Sameer Agarwal)
 //
-// System level tests for Ceres. The current suite of two tests. The
-// first test is a small test based on Powell's Function. It is a
-// scalar problem with 4 variables. The second problem is a bundle
-// adjustment problem with 16 cameras and two thousand cameras. The
-// first problem is to test the sanity test the factorization based
-// solvers. The second problem is used to test the various
-// combinations of solvers, orderings, preconditioners and
-// multithreading.
+// End-to-end tests for Ceres using Powell's function.
 
 #include <cmath>
-#include <cstdio>
 #include <cstdlib>
-#include <string>
-
-#include "ceres/internal/port.h"
 
 #include "ceres/autodiff_cost_function.h"
-#include "ceres/ordered_groups.h"
 #include "ceres/problem.h"
-#include "ceres/rotation.h"
 #include "ceres/solver.h"
-#include "ceres/stringprintf.h"
 #include "ceres/test_util.h"
 #include "ceres/types.h"
-#include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "gtest/gtest.h"
 
 namespace ceres {
 namespace internal {
-
-const bool kAutomaticOrdering = true;
-const bool kUserOrdering = false;
-
-// Struct used for configuring the solver.
-struct SolverConfig {
-  SolverConfig(
-      LinearSolverType linear_solver_type,
-      SparseLinearAlgebraLibraryType sparse_linear_algebra_library_type,
-      bool use_automatic_ordering)
-      : linear_solver_type(linear_solver_type),
-        sparse_linear_algebra_library_type(sparse_linear_algebra_library_type),
-        use_automatic_ordering(use_automatic_ordering),
-        preconditioner_type(IDENTITY),
-        num_threads(1) {
-  }
-
-  SolverConfig(
-      LinearSolverType linear_solver_type,
-      SparseLinearAlgebraLibraryType sparse_linear_algebra_library_type,
-      bool use_automatic_ordering,
-      PreconditionerType preconditioner_type)
-      : linear_solver_type(linear_solver_type),
-        sparse_linear_algebra_library_type(sparse_linear_algebra_library_type),
-        use_automatic_ordering(use_automatic_ordering),
-        preconditioner_type(preconditioner_type),
-        num_threads(1) {
-  }
-
-  string ToString() const {
-    return StringPrintf(
-        "(%s, %s, %s, %s, %d)",
-        LinearSolverTypeToString(linear_solver_type),
-        SparseLinearAlgebraLibraryTypeToString(
-            sparse_linear_algebra_library_type),
-        use_automatic_ordering ? "AUTOMATIC" : "USER",
-        PreconditionerTypeToString(preconditioner_type),
-        num_threads);
-  }
-
-  LinearSolverType linear_solver_type;
-  SparseLinearAlgebraLibraryType sparse_linear_algebra_library_type;
-  bool use_automatic_ordering;
-  PreconditionerType preconditioner_type;
-  int num_threads;
-};
-
-// Templated function that given a set of solver configurations,
-// instantiates a new copy of SystemTestProblem for each configuration
-// and solves it. The solutions are expected to have residuals with
-// coordinate-wise maximum absolute difference less than or equal to
-// max_abs_difference.
-//
-// The template parameter SystemTestProblem is expected to implement
-// the following interface.
-//
-//   class SystemTestProblem {
-//     public:
-//       SystemTestProblem();
-//       Problem* mutable_problem();
-//       Solver::Options* mutable_solver_options();
-//   };
-template <typename SystemTestProblem>
-void RunSolversAndCheckTheyMatch(const vector<SolverConfig>& configurations,
-                                 const double max_abs_difference) {
-  int num_configurations = configurations.size();
-  vector<SystemTestProblem*> problems;
-  vector<vector<double> > final_residuals(num_configurations);
-
-  for (int i = 0; i < num_configurations; ++i) {
-    SystemTestProblem* system_test_problem = new SystemTestProblem();
-
-    const SolverConfig& config = configurations[i];
-
-    Solver::Options& options = *(system_test_problem->mutable_solver_options());
-    options.linear_solver_type = config.linear_solver_type;
-    options.sparse_linear_algebra_library_type =
-        config.sparse_linear_algebra_library_type;
-    options.preconditioner_type = config.preconditioner_type;
-    options.num_threads = config.num_threads;
-    options.num_linear_solver_threads = config.num_threads;
-
-    if (config.use_automatic_ordering) {
-      options.linear_solver_ordering.reset();
-    }
-
-    LOG(INFO) << "Running solver configuration: "
-              << config.ToString();
-
-    Solver::Summary summary;
-    Solve(options,
-          system_test_problem->mutable_problem(),
-          &summary);
-
-    system_test_problem
-        ->mutable_problem()
-        ->Evaluate(Problem::EvaluateOptions(),
-                   NULL,
-                   &final_residuals[i],
-                   NULL,
-                   NULL);
-
-    CHECK_NE(summary.termination_type, ceres::FAILURE)
-        << "Solver configuration " << i << " failed.";
-    problems.push_back(system_test_problem);
-
-    // Compare the resulting solutions to each other. Arbitrarily take
-    // SPARSE_NORMAL_CHOLESKY as the golden solve. We compare
-    // solutions by comparing their residual vectors. We do not
-    // compare parameter vectors because it is much more brittle and
-    // error prone to do so, since the same problem can have nearly
-    // the same residuals at two completely different positions in
-    // parameter space.
-    if (i > 0) {
-      const vector<double>& reference_residuals = final_residuals[0];
-      const vector<double>& current_residuals = final_residuals[i];
-
-      for (int j = 0; j < reference_residuals.size(); ++j) {
-        EXPECT_NEAR(current_residuals[j],
-                    reference_residuals[j],
-                    max_abs_difference)
-            << "Not close enough residual:" << j
-            << " reference " << reference_residuals[j]
-            << " current " << current_residuals[j];
-      }
-    }
-  }
-
-  for (int i = 0; i < num_configurations; ++i) {
-    delete problems[i];
-  }
-}
 
 // This class implements the SystemTestProblem interface and provides
 // access to an implementation of Powell's singular function.
@@ -225,11 +78,16 @@ class PowellsFunction {
     problem_.AddResidualBlock(
         new AutoDiffCostFunction<F4, 1, 1, 1>(new F4), NULL, &x_[0], &x_[3]);
 
+    // Settings for the reference solution.
+    options_.linear_solver_type = ceres::DENSE_QR;
     options_.max_num_iterations = 10;
+    options_.num_threads = 1;
   }
 
   Problem* mutable_problem() { return &problem_; }
   Solver::Options* mutable_solver_options() { return &options_; }
+
+  static double kResidualTolerance;
 
  private:
   // Templated functions used for automatically differentiated cost
@@ -283,274 +141,51 @@ class PowellsFunction {
   Solver::Options options_;
 };
 
-TEST(SystemTest, PowellsFunction) {
-  vector<SolverConfig> configs;
-#define CONFIGURE(linear_solver, sparse_linear_algebra_library_type, ordering) \
-  configs.push_back(SolverConfig(linear_solver,                         \
-                                 sparse_linear_algebra_library_type,    \
-                                 ordering))
+double PowellsFunction::kResidualTolerance = 1e-8;
 
-  CONFIGURE(DENSE_QR,               SUITE_SPARSE, kAutomaticOrdering);
-  CONFIGURE(DENSE_NORMAL_CHOLESKY,  SUITE_SPARSE, kAutomaticOrdering);
-  CONFIGURE(DENSE_SCHUR,            SUITE_SPARSE, kAutomaticOrdering);
+typedef SystemTest<PowellsFunction> PowellTest;
+const bool kAutomaticOrdering = true;
 
-#ifndef CERES_NO_SUITESPARSE
-  CONFIGURE(SPARSE_NORMAL_CHOLESKY, SUITE_SPARSE, kAutomaticOrdering);
-#endif  // CERES_NO_SUITESPARSE
-
-#ifndef CERES_NO_CXSPARSE
-  CONFIGURE(SPARSE_NORMAL_CHOLESKY, CX_SPARSE,    kAutomaticOrdering);
-#endif  // CERES_NO_CXSPARSE
-
-  CONFIGURE(ITERATIVE_SCHUR,        SUITE_SPARSE, kAutomaticOrdering);
-
-#undef CONFIGURE
-
-  const double kMaxAbsoluteDifference = 1e-8;
-  RunSolversAndCheckTheyMatch<PowellsFunction>(configs, kMaxAbsoluteDifference);
+TEST_F(PowellTest, DenseQR) {
+  RunSolverForConfigAndExpectResidualsMatch(
+      SolverConfig(DENSE_QR, NO_SPARSE));
 }
 
-// This class implements the SystemTestProblem interface and provides
-// access to a bundle adjustment problem. It is based on
-// examples/bundle_adjustment_example.cc. Currently a small 16 camera
-// problem is hard coded in the constructor. Going forward we may
-// extend this to a larger number of problems.
-class BundleAdjustmentProblem {
- public:
-  BundleAdjustmentProblem() {
-    const string input_file = TestFileAbsolutePath("problem-16-22106-pre.txt");
-    ReadData(input_file);
-    BuildProblem();
-  }
+TEST_F(PowellTest, DenseNormalCholesky) {
+  RunSolverForConfigAndExpectResidualsMatch(
+      SolverConfig(DENSE_NORMAL_CHOLESKY));
+}
 
-  ~BundleAdjustmentProblem() {
-    delete []point_index_;
-    delete []camera_index_;
-    delete []observations_;
-    delete []parameters_;
-  }
+TEST_F(PowellTest, DenseSchur) {
+  RunSolverForConfigAndExpectResidualsMatch(
+      SolverConfig(DENSE_SCHUR));
+}
 
-  Problem* mutable_problem() { return &problem_; }
-  Solver::Options* mutable_solver_options() { return &options_; }
-
-  int num_cameras()            const { return num_cameras_;        }
-  int num_points()             const { return num_points_;         }
-  int num_observations()       const { return num_observations_;   }
-  const int* point_index()     const { return point_index_;  }
-  const int* camera_index()    const { return camera_index_; }
-  const double* observations() const { return observations_; }
-  double* mutable_cameras() { return parameters_; }
-  double* mutable_points() { return parameters_  + 9 * num_cameras_; }
-
- private:
-  void ReadData(const string& filename) {
-    FILE * fptr = fopen(filename.c_str(), "r");
-
-    if (!fptr) {
-      LOG(FATAL) << "File Error: unable to open file " << filename;
-    };
-
-    // This will die horribly on invalid files. Them's the breaks.
-    FscanfOrDie(fptr, "%d", &num_cameras_);
-    FscanfOrDie(fptr, "%d", &num_points_);
-    FscanfOrDie(fptr, "%d", &num_observations_);
-
-    VLOG(1) << "Header: " << num_cameras_
-            << " " << num_points_
-            << " " << num_observations_;
-
-    point_index_ = new int[num_observations_];
-    camera_index_ = new int[num_observations_];
-    observations_ = new double[2 * num_observations_];
-
-    num_parameters_ = 9 * num_cameras_ + 3 * num_points_;
-    parameters_ = new double[num_parameters_];
-
-    for (int i = 0; i < num_observations_; ++i) {
-      FscanfOrDie(fptr, "%d", camera_index_ + i);
-      FscanfOrDie(fptr, "%d", point_index_ + i);
-      for (int j = 0; j < 2; ++j) {
-        FscanfOrDie(fptr, "%lf", observations_ + 2*i + j);
-      }
-    }
-
-    for (int i = 0; i < num_parameters_; ++i) {
-      FscanfOrDie(fptr, "%lf", parameters_ + i);
-    }
-  }
-
-  void BuildProblem() {
-    double* points = mutable_points();
-    double* cameras = mutable_cameras();
-
-    for (int i = 0; i < num_observations(); ++i) {
-      // Each Residual block takes a point and a camera as input and
-      // outputs a 2 dimensional residual.
-      CostFunction* cost_function =
-          new AutoDiffCostFunction<BundlerResidual, 2, 9, 3>(
-              new BundlerResidual(observations_[2*i + 0],
-                                  observations_[2*i + 1]));
-
-      // Each observation correponds to a pair of a camera and a point
-      // which are identified by camera_index()[i] and
-      // point_index()[i] respectively.
-      double* camera = cameras + 9 * camera_index_[i];
-      double* point = points + 3 * point_index()[i];
-      problem_.AddResidualBlock(cost_function, NULL, camera, point);
-    }
-
-    options_.linear_solver_ordering.reset(new ParameterBlockOrdering);
-
-    // The points come before the cameras.
-    for (int i = 0; i < num_points_; ++i) {
-      options_.linear_solver_ordering->AddElementToGroup(points + 3 * i, 0);
-    }
-
-    for (int i = 0; i < num_cameras_; ++i) {
-      options_.linear_solver_ordering->AddElementToGroup(cameras + 9 * i, 1);
-    }
-
-    options_.max_num_iterations = 25;
-    options_.function_tolerance = 1e-10;
-    options_.gradient_tolerance = 1e-10;
-    options_.parameter_tolerance = 1e-10;
-  }
-
-  template<typename T>
-  void FscanfOrDie(FILE *fptr, const char *format, T *value) {
-    int num_scanned = fscanf(fptr, format, value);
-    if (num_scanned != 1) {
-      LOG(FATAL) << "Invalid UW data file.";
-    }
-  }
-
-  // Templated pinhole camera model.  The camera is parameterized
-  // using 9 parameters. 3 for rotation, 3 for translation, 1 for
-  // focal length and 2 for radial distortion. The principal point is
-  // not modeled (i.e. it is assumed be located at the image center).
-  struct BundlerResidual {
-    // (u, v): the position of the observation with respect to the image
-    // center point.
-    BundlerResidual(double u, double v): u(u), v(v) {}
-
-    template <typename T>
-    bool operator()(const T* const camera,
-                    const T* const point,
-                    T* residuals) const {
-      T p[3];
-      AngleAxisRotatePoint(camera, point, p);
-
-      // Add the translation vector
-      p[0] += camera[3];
-      p[1] += camera[4];
-      p[2] += camera[5];
-
-      const T& focal = camera[6];
-      const T& l1 = camera[7];
-      const T& l2 = camera[8];
-
-      // Compute the center of distortion.  The sign change comes from
-      // the camera model that Noah Snavely's Bundler assumes, whereby
-      // the camera coordinate system has a negative z axis.
-      T xp = - focal * p[0] / p[2];
-      T yp = - focal * p[1] / p[2];
-
-      // Apply second and fourth order radial distortion.
-      T r2 = xp*xp + yp*yp;
-      T distortion = T(1.0) + r2  * (l1 + l2  * r2);
-
-      residuals[0] = distortion * xp - T(u);
-      residuals[1] = distortion * yp - T(v);
-
-      return true;
-    }
-
-    double u;
-    double v;
-  };
-
-
-  Problem problem_;
-  Solver::Options options_;
-
-  int num_cameras_;
-  int num_points_;
-  int num_observations_;
-  int num_parameters_;
-
-  int* point_index_;
-  int* camera_index_;
-  double* observations_;
-  // The parameter vector is laid out as follows
-  // [camera_1, ..., camera_n, point_1, ..., point_m]
-  double* parameters_;
-};
-
-TEST(SystemTest, BundleAdjustmentProblem) {
-  vector<SolverConfig> configs;
-
-#define CONFIGURE(linear_solver, sparse_linear_algebra_library_type, ordering, preconditioner) \
-  configs.push_back(SolverConfig(linear_solver,                         \
-                                 sparse_linear_algebra_library_type,    \
-                                 ordering,                              \
-                                 preconditioner))
-
-  CONFIGURE(DENSE_SCHUR,            SUITE_SPARSE, kAutomaticOrdering, IDENTITY);
-  CONFIGURE(DENSE_SCHUR,            SUITE_SPARSE, kUserOrdering,      IDENTITY);
-
-  CONFIGURE(CGNR,                   SUITE_SPARSE, kAutomaticOrdering, JACOBI);
-
-  CONFIGURE(ITERATIVE_SCHUR,        SUITE_SPARSE, kUserOrdering,      JACOBI);
-  CONFIGURE(ITERATIVE_SCHUR,        SUITE_SPARSE, kAutomaticOrdering, JACOBI);
-
-  CONFIGURE(ITERATIVE_SCHUR,        SUITE_SPARSE, kUserOrdering,      SCHUR_JACOBI);
-  CONFIGURE(ITERATIVE_SCHUR,        SUITE_SPARSE, kAutomaticOrdering, SCHUR_JACOBI);
+TEST_F(PowellTest, IterativeSchurWithJacobi) {
+  RunSolverForConfigAndExpectResidualsMatch(
+      SolverConfig(ITERATIVE_SCHUR, NO_SPARSE, kAutomaticOrdering, JACOBI));
+}
 
 #ifndef CERES_NO_SUITESPARSE
-  CONFIGURE(SPARSE_NORMAL_CHOLESKY, SUITE_SPARSE, kAutomaticOrdering, IDENTITY);
-  CONFIGURE(SPARSE_NORMAL_CHOLESKY, SUITE_SPARSE, kUserOrdering,      IDENTITY);
-
-  CONFIGURE(SPARSE_SCHUR,           SUITE_SPARSE, kAutomaticOrdering, IDENTITY);
-  CONFIGURE(SPARSE_SCHUR,           SUITE_SPARSE, kUserOrdering,      IDENTITY);
-
-  CONFIGURE(ITERATIVE_SCHUR,        SUITE_SPARSE, kAutomaticOrdering, CLUSTER_JACOBI);
-  CONFIGURE(ITERATIVE_SCHUR,        SUITE_SPARSE, kUserOrdering,      CLUSTER_JACOBI);
-
-  CONFIGURE(ITERATIVE_SCHUR,        SUITE_SPARSE, kAutomaticOrdering, CLUSTER_TRIDIAGONAL);
-  CONFIGURE(ITERATIVE_SCHUR,        SUITE_SPARSE, kUserOrdering,      CLUSTER_TRIDIAGONAL);
+TEST_F(PowellTest, SparseNormalCholeskyUsingSuiteSparse) {
+  RunSolverForConfigAndExpectResidualsMatch(
+      SolverConfig(SPARSE_NORMAL_CHOLESKY, SUITE_SPARSE, kAutomaticOrdering));
+}
 #endif  // CERES_NO_SUITESPARSE
 
 #ifndef CERES_NO_CXSPARSE
-  CONFIGURE(SPARSE_NORMAL_CHOLESKY, CX_SPARSE,    kAutomaticOrdering, IDENTITY);
-  CONFIGURE(SPARSE_NORMAL_CHOLESKY, CX_SPARSE,    kUserOrdering,      IDENTITY);
-
-  CONFIGURE(SPARSE_SCHUR,           CX_SPARSE,    kAutomaticOrdering, IDENTITY);
-  CONFIGURE(SPARSE_SCHUR,           CX_SPARSE,    kUserOrdering,      IDENTITY);
+TEST_F(PowellTest, SparseNormalCholeskyUsingCXSparse) {
+  RunSolverForConfigAndExpectResidualsMatch(
+      SolverConfig(SPARSE_NORMAL_CHOLESKY, CX_SPARSE, kAutomaticOrdering));
+}
 #endif  // CERES_NO_CXSPARSE
 
 #ifdef CERES_USE_EIGEN_SPARSE
-  CONFIGURE(SPARSE_SCHUR,           EIGEN_SPARSE, kAutomaticOrdering, IDENTITY);
-  CONFIGURE(SPARSE_SCHUR,           EIGEN_SPARSE, kUserOrdering,      IDENTITY);
-  CONFIGURE(SPARSE_NORMAL_CHOLESKY, EIGEN_SPARSE, kAutomaticOrdering, IDENTITY);
-  CONFIGURE(SPARSE_NORMAL_CHOLESKY, EIGEN_SPARSE, kUserOrdering,      IDENTITY);
-#endif  // CERES_USE_EIGEN_SPARSE
-
-#undef CONFIGURE
-
-  // Single threaded evaluators and linear solvers.
-  const double kMaxAbsoluteDifference = 1e-4;
-  RunSolversAndCheckTheyMatch<BundleAdjustmentProblem>(configs,
-                                                       kMaxAbsoluteDifference);
-
-#ifdef CERES_USE_OPENMP
-  // Multithreaded evaluators and linear solvers.
-  for (int i = 0; i < configs.size(); ++i) {
-    configs[i].num_threads = 2;
-  }
-  RunSolversAndCheckTheyMatch<BundleAdjustmentProblem>(configs,
-                                                       kMaxAbsoluteDifference);
-#endif  // CERES_USE_OPENMP
+TEST_F(PowellTest, SparseNormalCholeskyUsingEigenSparse) {
+  RunSolverForConfigAndExpectResidualsMatch(
+      SolverConfig(SPARSE_NORMAL_CHOLESKY, EIGEN_SPARSE, kAutomaticOrdering));
 }
+#endif  // CERES_USE_EIGEN_SPARSE
 
 }  // namespace internal
 }  // namespace ceres

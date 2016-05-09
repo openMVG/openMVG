@@ -24,7 +24,7 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
   public:
   typedef typename Metric::ResultType DistanceType;
 
-  ArrayMatcherBruteForce()   {}
+  ArrayMatcherBruteForce() = default ;
   virtual ~ArrayMatcherBruteForce() {
     memMapping.reset();
   }
@@ -135,9 +135,8 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
 
       // Find the N minimum distances:
       const int maxMinFound = (int) min( size_t(NN), vec_distance.size());
-      using namespace stl::indexed_sort;
-      vector< sort_index_packet_ascend< DistanceType, int> > packet_vec(vec_distance.size());
-      sort_index_helper(packet_vec, &vec_distance[0], maxMinFound);
+      std::vector< stl::indexed_sort::sort_index_packet_ascend< DistanceType, int> > packet_vec(vec_distance.size());
+      stl::indexed_sort::sort_index_helper(packet_vec, &vec_distance[0], maxMinFound);
 
       for (int i = 0; i < maxMinFound; ++i) {
         (*pvec_distances)[queryIndex*NN+i] = packet_vec[i].val;

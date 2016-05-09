@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2010, 2011, 2012 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -120,6 +120,9 @@ DEFINE_int32(random_seed, 38401, "Random seed used to set the state "
              "the pertubations.");
 DEFINE_bool(line_search, false, "Use a line search instead of trust region "
             "algorithm.");
+DEFINE_string(initial_ply, "", "Export the BAL file data as a PLY file.");
+DEFINE_string(final_ply, "", "Export the refined BAL file data as a PLY "
+              "file.");
 
 namespace ceres {
 namespace examples {
@@ -311,6 +314,11 @@ void BuildProblem(BALProblem* bal_problem, Problem* problem) {
 
 void SolveProblem(const char* filename) {
   BALProblem bal_problem(filename, FLAGS_use_quaternions);
+
+  if (!FLAGS_initial_ply.empty()) {
+    bal_problem.WriteToPLYFile(FLAGS_initial_ply);
+  }
+
   Problem problem;
 
   srand(FLAGS_random_seed);
@@ -327,6 +335,10 @@ void SolveProblem(const char* filename) {
   Solver::Summary summary;
   Solve(options, &problem, &summary);
   std::cout << summary.FullReport() << "\n";
+
+  if (!FLAGS_final_ply.empty()) {
+    bal_problem.WriteToPLYFile(FLAGS_final_ply);
+  }
 }
 
 }  // namespace examples
@@ -336,7 +348,7 @@ int main(int argc, char** argv) {
   CERES_GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
   if (FLAGS_input.empty()) {
-    LOG(ERROR) << "Usage: bundle_adjustment_example --input=bal_problem";
+    LOG(ERROR) << "Usage: bundle_adjuster --input=bal_problem";
     return 1;
   }
 

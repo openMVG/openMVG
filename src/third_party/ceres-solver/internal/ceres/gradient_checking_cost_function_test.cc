@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2010, 2011, 2012 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -48,14 +48,15 @@
 #include "gmock/mock-log.h"
 #include "gtest/gtest.h"
 
+namespace ceres {
+namespace internal {
+
+using std::vector;
 using testing::AllOf;
 using testing::AnyNumber;
 using testing::HasSubstr;
 using testing::ScopedMockLog;
 using testing::_;
-
-namespace ceres {
-namespace internal {
 
 // Pick a (non-quadratic) function whose derivative are easy:
 //

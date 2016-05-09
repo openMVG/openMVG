@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2013 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -30,14 +30,16 @@
 
 #include "ceres/small_blas.h"
 
+#include <limits>
 #include "gtest/gtest.h"
 #include "ceres/internal/eigen.h"
 
 namespace ceres {
 namespace internal {
 
+const double kTolerance = 3.0 * std::numeric_limits<double>::epsilon();
+
 TEST(BLAS, MatrixMatrixMultiply) {
-  const double kTolerance = 1e-16;
   const int kRowA = 3;
   const int kColA = 5;
   Matrix A(kRowA, kColA);
@@ -120,7 +122,6 @@ TEST(BLAS, MatrixMatrixMultiply) {
 }
 
 TEST(BLAS, MatrixTransposeMatrixMultiply) {
-  const double kTolerance = 1e-16;
   const int kRowA = 5;
   const int kColA = 3;
   Matrix A(kRowA, kColA);
@@ -202,7 +203,6 @@ TEST(BLAS, MatrixTransposeMatrixMultiply) {
 }
 
 TEST(BLAS, MatrixVectorMultiply) {
-  const double kTolerance = 1e-16;
   const int kRowA = 5;
   const int kColA = 3;
   Matrix A(kRowA, kColA);
@@ -251,7 +251,6 @@ TEST(BLAS, MatrixVectorMultiply) {
 }
 
 TEST(BLAS, MatrixTransposeVectorMultiply) {
-  const double kTolerance = 1e-16;
   const int kRowA = 5;
   const int kColA = 3;
   Matrix A(kRowA, kColA);
@@ -282,8 +281,8 @@ TEST(BLAS, MatrixTransposeVectorMultiply) {
 
   c_minus_ref -= A.transpose() * b;
   MatrixTransposeVectorMultiply<kRowA, kColA, -1>(A.data(), kRowA, kColA,
-                                                 b.data(),
-                                                 c_minus.data());
+                                                  b.data(),
+                                                  c_minus.data());
   EXPECT_NEAR((c_minus_ref - c_minus).norm(), 0.0, kTolerance)
       << "c += A' * b \n"
       << "c_ref : \n" << c_minus_ref << "\n"

@@ -5,6 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/sfm/sfm.hpp"
+#include "openMVG/stl/stl.hpp"
 #include "software/SfM/SfMPlyHelper.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"

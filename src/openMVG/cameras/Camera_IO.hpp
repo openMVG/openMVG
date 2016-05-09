@@ -15,61 +15,83 @@
 #include <iostream>
 #include <fstream>
 
-namespace openMVG {
-namespace cameras {
+namespace openMVG
+{
+namespace cameras
+{
 
-/// Save a Pinhole camera to a file as a P matrix (12 doubles as binary values)
+
+/**
+* @brief Save a Pinhole camera to a file as a Projection matrix (12 doubles as binary values)
+* @param scameraFile path to the file in which matrix will be written
+* @param cam Camera to write
+* @retval true If write is correct
+* @retval false If there was an error during export
+*/
 static bool save(
   const std::string & scameraFile,
-  const PinholeCamera & cam)
+  const PinholeCamera & cam )
 {
-  if (stlplus::extension_part(scameraFile) != "bin")
+  if ( stlplus::extension_part( scameraFile ) != "bin" )
+  {
     return false;
+  }
 
   const Mat34 & PMat = cam._P;
-  std::ofstream file( scameraFile.c_str(), std::ios::out|std::ios::binary);
-  file.write((const char*)PMat.data(),(std::streamsize)(3*4)*sizeof(double));
+  std::ofstream file( scameraFile.c_str(), std::ios::out | std::ios::binary );
+  file.write( ( const char* )PMat.data(), ( std::streamsize )( 3 * 4 )*sizeof( double ) );
 
-  bool bOk = (!file.fail());
+  const bool bOk = ( !file.fail() );
   file.close();
   return bOk;
 }
 
-/// Load a Pinhole camera from a file (read 12 doubles saved in binary values)
+
+/**
+* @brief Load a Pinhole camera from a file (read 12 doubles saved in binary values)
+* @param scameraFile path where camera is stored
+* @param[out] cam output camera after read
+* @retval true If loading is correct
+* @retval false If there was an error during loading
+*/
 static bool load(
   const std::string & scameraFile,
-  PinholeCamera & cam)
+  PinholeCamera & cam )
 {
   std::vector<double> val;
 
-  if (stlplus::extension_part(scameraFile) == "bin")
+  if ( stlplus::extension_part( scameraFile ) == "bin" )
   {
-    std::ifstream in(scameraFile.c_str(), std::ios::in|std::ios::binary);
-    if (!in.is_open())	{
+    std::ifstream in( scameraFile.c_str(), std::ios::in | std::ios::binary );
+    if ( !in.is_open() )
+    {
       std::cerr << "Error: failed to open file '" << scameraFile
-        << "' for reading" << std::endl;
+                << "' for reading" << std::endl;
       return false;
     }
     val.resize(12);
-    in.read((char*)&val[0],(std::streamsize)12*sizeof(double));
-    if (in.fail())  {
+    in.read(reinterpret_cast<char*>(&val[0]),(std::streamsize)12*sizeof(double));
+    if (in.fail())
+    {
       val.clear();
     }
   }
   else
+  {
     return false;
+  }
 
-  if (val.size() == 3*4) //P Matrix
+  if ( val.size() == 3 * 4 ) //P Matrix
   {
     Mat34 P;
     P << val[0], val[3], val[6], val[9],
-      val[1], val[4], val[7], val[10],
-      val[2], val[5], val[8], val[11];
+    val[1], val[4], val[7], val[10],
+    val[2], val[5], val[8], val[11];
 
-    Mat3 R,K;
+    Mat3 R, K;
     Vec3 t;
-    KRt_From_P(P, &K, &R, &t);
-    cam = PinholeCamera(K, R, t);
+    KRt_From_P( P, &K, &R, &t );
+    cam = PinholeCamera( K, R, t );
     return true;
   }
   return false;

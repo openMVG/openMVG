@@ -4,6 +4,161 @@
 Version History
 ===============
 
+1.11.0
+======
+
+New Features
+------------
+#. Adaptive numeric differentiation using Ridders' method. (Tal Ben-Nun)
+#. Add ``CubicInterpolator`` and ``BiCubicInterpolator`` to allow
+   smooth interpolation of sampled functions and integration with
+   automatic differentiation.
+#. Add method to return covariance in tangent space. (Michael Vitus &
+   Steve Hsu)
+#. Add Homogeneous vector parameterization. (Michael Vitus)
+#. Add a ``ProductParameterization``, a local parameterization that
+   can be constructed as a cartesian product of other local
+   parameterization.
+#. Add DynamicCostFunctionToFunctor. (David Gossow)
+#. Optionally export Ceres build directory into local CMake package
+   registry.
+#. Faster ``SPARSE_NORMAL_CHOLESKY`` in the presence of dynamic
+   sparsity.
+
+Bug Fixes & Minor Changes
+-------------------------
+#. Remove use of link-time optimisation (LTO) for all compilers due to
+   portability issues with gtest / type_info::operator== & Eigen with
+   Clang on OS X vs GCC 4.9+ on Linux requiring contradictory 'fixes'.
+#. Use link-time optimisation (LTO) only when compiling Ceres itself,
+   not tests or examples, to bypass gtest / type_info::operator== issue.
+#. Use old minimum iOS version flags on Xcode < 7.0.
+#. Add gtest-specific flags when building/using as a shared library.
+#. Clean up iOS.cmake to use xcrun/xcodebuild & libtool.
+#. Import the latest version of ``googletest``.
+#. Refactored ``system_test`` into ``bundle_adjustment_test`` and
+   ``system_test``, where each test case is its own test.
+#. Fix invalid memory access bug in
+   ``CompressedRowSparseMatrix::AppendRows`` when it was called with a
+   matrix of size zero.
+#. Build position independent code when compiling Ceres statically
+   (Alexander Alekhin).
+#. Fix a bug in DetectStructure (Johannes Schonberger).
+#. Reduce memory footprint of SubsetParameterization (Johannes
+   Schonberger).
+#. Fix for reorder program unit test when built without suitesparse
+   (Sergey Sharybin).
+#. Fix a bug in the Schur eliminator (Werner Trobin).
+#. Fix a bug in the reordering code (Bernhard Zeisl).
+#. Add missing CERES_EXPORT to ComposedLoss (Simon Rutishauser).
+#. Add the option to use numeric differentiation to ``nist`` and
+   ``more_garbow_hillstrom``.
+#. Fix EIGENSPARSE option help s/t it displays in CMake ncurses GUI.
+#. Fix SparseNormalCholeskySolver with dynamic sparsity (Richie Stebbing).
+#. Remove legacy dependency detection macros.
+#. Fix failed if() condition expansion if gflags is not found.
+#. Update all CMake to lowercase function name style.
+#. Update minimum iOS version to 7.0 for shared_ptr/unordered_map.
+#. Fix bug in gflags' <= 2.1.2 exported CMake configuration.
+#. Remove the spec file needed for generating RPMs.
+#. Fix a typo in small_blas.h (Werber Trobin).
+#. Cleanup FindGflags & use installed gflags CMake config if present.
+#. Add default glog install location on Windows to search paths (bvanevery).
+#. Add default Eigen install location on Windows to search paths (bvanevery).
+#. Fix explanation of config.h generation in bare config.h.
+#. Fix unused parameter compiler warnings in numeric_diff.h.
+#. Increase tolerance for a test in polynomial_test (Taylor Braun
+   Jones).
+#. Fix addition of Gerrit commit hook when Ceres is a git submodule
+   (Chris Cooper).
+#. Fix missing EIGEN_VERSION expansion typo.
+#. Fix links to SuiteSparse & CXSparse (Henrique Mendonça).
+#. Ensure Eigen is at least 3.1.0 for Eigen/SparseCore.
+#. Add option to use C++11 (not TR1) shared_ptr & unordered_map
+   (Norman Goldstein).
+#. Fix an incorrect usage message in bundle_adjuster.cc
+#. Gracefully disable docs if Sphinx is not found.
+#. Explicitly use (new) default OS X rpath policy if present.
+#. Add support of EIGEN_SPARSE type in
+   IsSparseLinearAlgebraLibraryTypeAvailable function (Pierre Moulon).
+#. Allow the LossFunction contained in a LossFunctionWrapper to be
+   NULL. This is consistent with how NULL LossFunctions are treated
+   everywhere else. (Simon Rutishauser).
+#. Improve numeric differentation near zero.
+#. Refactored DynamicNumericDiffCostFunction to use NumericDiff (Tal
+   Ben-Nun).
+#. Remove use of :caption tag in Sphinx.
+#. Add a small test to make sure GradientProblemSolver works correctly
+   (Petter Strandmark).
+#. Add simple unit tests for GradientProblem (Petter Strandmark).
+#. Make the robust curve fitting example robust.
+#. Homogenize convergence operators in docs and code (Johannes
+   Schonberger).
+#. Add parameter_tolerance convergence to line search minimizer
+   (Johannes Schonberger).
+#. Fix bug where pow(JetA,JetB) returned wrong result for JetA==0
+   (Russell Smith).
+#. Remove duplicate step norm computation (Johannes Schonberger).
+#. Enhance usability when encountering Eigen version mismatches (Andrew Hundt).
+#. Add PLY file logger before and after BA in order to ease visual
+   comparison (Pierre Moulon).
+#. Fix CMake config file docs to include 2.8.x & 3.x styles.
+#. Python3 fixes (Markus Moll).
+#. Remove confusing code from DenseJacobianWriter (Michael Vitus).
+#. Add documentation on CMake package installation process.
+#. Revert a call to SolveUpperTriangularUsingCholesky.
+#. Make CERES_EIGEN_VERSION macro independent of CMake.
+#. Add versions of dependencies used to FullReport().
+#. Ensure local config.h is used if Ceres is already installed.
+#. Small messaging and comment updates in CMake
+#. Handle possible presence of library prefixes in MSVC (Sylvain Duchêne).
+#. Use -O2 not -O3 on MinGW to workaround issue with Eigen (s1m3mu3@gmail.com).
+#. Increase tolerance in small_blas test for Cygwin (s1m3mu3@gmail.com).
+#. Fix iOS cmake file for cmake 3.0 (Jack Feng)
+#. Fix missing gflags shlwapi dependency on MinGW (s1m3mu3@gmail.com).
+#. Add thread dependency & fix namespace detection on Windows for gflags
+   (arrigo.benedetti@gmail.com).
+#. Rename macros in the public API to have a ``CERES_`` prefix.
+#. Fix ``OrderedGroup::Reverse()`` when it is empty (Chris Sweeney).
+#. Update the code to point to ceres-solver.org.
+#. Update documentation to point to the GitHub issue tracker.
+#. Disable ``LAPACK`` for iOS builds. (Greg Coombe)
+#. Force use of single-thread in ``Problem::Evaluate()`` without OpenMP.
+#. Less strict check for multithreading. (Chris Sweeney)
+#. Update tolerances in small_blas_test.cc (Philipp Hubner)
+#. Documentation corrections (Steve Hsu)
+#. Fixed ``sampled_function.cc`` (Pablo Speciale)
+#. Fix example code in the documentation. (Rodney Hoskinson)
+#. Improve the error handling in Conjugate Gradients.
+#. Improve preconditioner documentation.
+#. Remove dead code from fpclassify.h.
+#. Make Android.mk threads sensitive.
+#. Changed the ``CURRENT_CONFIG_INSTALL_DIR`` to be a variable local
+   to Ceres. (Chris Sweeney)
+#. Fix typo in the comments in ``Jet.h``. (Julius Ziegler)
+#. Add the ASL at ETH Zurich, Theia & OpenPTrack to the list of users.
+#. Fixed a typo in the documentation. (Richard Stebbing)
+#. Fixed a boundary handling bug in the BiCubic interpolation
+   code. (Bernhard Zeisl)
+#. Fixed a ``MSVC`` compilation bug in the cubic interpolation code
+   (Johannes Schönberger)
+#. Add covariance related files to the Android build.
+#. Update Ubuntu 14.04 installation instructions. (Filippo Basso)
+#. Improved logging for linear solver failures.
+#. Improved crash messages in ``Problem``.
+#. Hide Homebrew related variables in CMake GUI.
+#. Add SuiteSparse link dependency for
+   compressed_col_sparse_matrix_utils_test.
+#. Autodetect Homebrew install prefix on OSX.
+#. Lint changes from William Rucklidge and Jim Roseborough.
+#. Remove ``using namespace std:`` from ``port.h``
+#. Add note about glog not currently compiling against gflags 2.1.
+#. Add explicit no sparse linear algebra library available option.
+#. Improve some wording in the FAQ. (Vasily Vylkov)
+#. Delete Incomplete LQ Factorization.
+#. Add a pointer to MacPorts. (Markus Moll)
+
+
 1.10.0
 ======
 

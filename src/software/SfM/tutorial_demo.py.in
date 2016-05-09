@@ -53,12 +53,12 @@ pFeatures = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_Compu
 pFeatures.wait()
 
 print ("2. Compute matches")
-pMatches = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeMatches"),  "-i", matches_dir+"/sfm_data.json", "-o", matches_dir, "-f", "1"] )
+pMatches = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeMatches"),  "-i", matches_dir+"/sfm_data.json", "-o", matches_dir, "-f", "1", "-n", "ANNL2"] )
 pMatches.wait()
 
 reconstruction_dir = os.path.join(output_dir,"reconstruction_sequential")
 print ("3. Do Incremental/Sequential reconstruction") #set manually the initial pair to avoid the prompt question
-pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_IncrementalSfM"),  "-i", matches_dir+"/sfm_data.json", "-m", matches_dir, "-o", reconstruction_dir, "-a", "100_7104.JPG", "-b", "100_7105.JPG"] )
+pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_IncrementalSfM"),  "-i", matches_dir+"/sfm_data.json", "-m", matches_dir, "-o", reconstruction_dir] )
 pRecons.wait()
 
 print ("5. Colorize Structure")

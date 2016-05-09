@@ -55,5 +55,13 @@ Arguments description:
   - **[-f|--match_file]**
 
     - path to a matches file (pairs of the match files will be listed and used)
+    
+  - **[-b|--bundle_adjustment]**
+
+    - perform a bundle adjustment on the scene (OFF by default)
+
+  - **[-r|--residual_threshold]**
+
+    - maximal pixels reprojection error that will be considered for triangulations (4.0 by default)
 
 

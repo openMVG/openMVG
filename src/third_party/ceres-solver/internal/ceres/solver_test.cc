@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2014 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -43,6 +43,8 @@
 namespace ceres {
 namespace internal {
 
+using std::string;
+
 TEST(SolverOptions, DefaultTrustRegionOptionsAreValid) {
   Solver::Options options;
   options.minimizer_type = TRUST_REGION;
@@ -79,7 +81,7 @@ struct RememberingCallback : public IterationCallback {
   }
   int calls;
   double *x;
-  vector<double> x_values;
+  std::vector<double> x_values;
 };
 
 TEST(Solver, UpdateStateEveryIterationOption) {
@@ -292,6 +294,42 @@ TEST(Solver, SparseSchurNoEigenSparse) {
   EXPECT_FALSE(options.IsValid(&message));
 }
 #endif
+
+TEST(Solver, SparseNormalCholeskyNoSparseLibrary) {
+  Solver::Options options;
+  options.sparse_linear_algebra_library_type = NO_SPARSE;
+  options.linear_solver_type = SPARSE_NORMAL_CHOLESKY;
+  string message;
+  EXPECT_FALSE(options.IsValid(&message));
+}
+
+TEST(Solver, SparseSchurNoSparseLibrary) {
+  Solver::Options options;
+  options.sparse_linear_algebra_library_type = NO_SPARSE;
+  options.linear_solver_type = SPARSE_SCHUR;
+  string message;
+  EXPECT_FALSE(options.IsValid(&message));
+}
+
+TEST(Solver, IterativeSchurWithClusterJacobiPerconditionerNoSparseLibrary) {
+  Solver::Options options;
+  options.sparse_linear_algebra_library_type = NO_SPARSE;
+  options.linear_solver_type = ITERATIVE_SCHUR;
+  // Requires SuiteSparse.
+  options.preconditioner_type = CLUSTER_JACOBI;
+  string message;
+  EXPECT_FALSE(options.IsValid(&message));
+}
+
+TEST(Solver, IterativeSchurWithClusterTridiagonalPerconditionerNoSparseLibrary) {
+  Solver::Options options;
+  options.sparse_linear_algebra_library_type = NO_SPARSE;
+  options.linear_solver_type = ITERATIVE_SCHUR;
+  // Requires SuiteSparse.
+  options.preconditioner_type = CLUSTER_TRIDIAGONAL;
+  string message;
+  EXPECT_FALSE(options.IsValid(&message));
+}
 
 TEST(Solver, IterativeLinearSolverForDogleg) {
   Solver::Options options;

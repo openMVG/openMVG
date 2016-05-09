@@ -31,8 +31,7 @@ public:
      _vec_featsL( vec_featsL ), _vec_featsR( vec_featsR ), _radius( radius )
   {}
 
-  virtual ~commonDataByPair_MatchedPoints()
-  {}
+  ~commonDataByPair_MatchedPoints() override = default ; 
 
   /**
    * Fill mask from corresponding points (each point pictured by a disk of radius _radius)
@@ -42,7 +41,7 @@ public:
    *
    * \return True if some pixel have been set to true.
    */
-  virtual bool computeMask( image::Image< unsigned char > & maskLeft, image::Image< unsigned char > & maskRight )
+  bool computeMask( image::Image< unsigned char > & maskLeft, image::Image< unsigned char > & maskRight ) override 
   {
     maskLeft.fill(0);
     maskRight.fill(0);
@@ -51,8 +50,8 @@ public:
           iter_putativeMatches != _vec_PutativeMatches.end();
           ++iter_putativeMatches )
     {
-      const features::SIOPointFeature & L = _vec_featsL[ iter_putativeMatches->_i ];
-      const features::SIOPointFeature & R = _vec_featsR[ iter_putativeMatches->_j ];
+      const features::SIOPointFeature & L = _vec_featsL[ iter_putativeMatches->i_ ];
+      const features::SIOPointFeature & R = _vec_featsR[ iter_putativeMatches->j_ ];
 
       image::FilledCircle( L.x(), L.y(), ( int )_radius, ( unsigned char ) 255, &maskLeft );
       image::FilledCircle( R.x(), R.y(), ( int )_radius, ( unsigned char ) 255, &maskRight );

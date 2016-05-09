@@ -151,9 +151,9 @@ void PointsToMat(
 
   for( size_t i = 0; i < matches.size(); ++i)
   {
-    const ValueT & feat0 = vec_feats0[matches[i]._i];
+    const ValueT & feat0 = vec_feats0[matches[i].i_];
     m0.col(i) << feat0.x(), feat0.y();
-    const ValueT & feat1 = vec_feats1[matches[i]._j];
+    const ValueT & feat1 = vec_feats1[matches[i].j_];
     m1.col(i) << feat1.x(), feat1.y();
   }
 }
@@ -290,12 +290,13 @@ int main(int argc, char **argv)
       std::unique_ptr<Image_describer> image_describer;
       if (sImage_Describer_Method == "SIFT")
       {
-        image_describer.reset(new SIFT_Image_describer(SiftParams()));
+        image_describer.reset(new SIFT_Image_describer);
       }
       else
       if (sImage_Describer_Method == "AKAZE_FLOAT")
       {
-        image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_MSURF)));
+        image_describer.reset(new AKAZE_Image_describer
+          (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MSURF)));
       }
 
       if (!image_describer)

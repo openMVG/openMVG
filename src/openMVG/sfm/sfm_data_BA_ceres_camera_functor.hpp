@@ -8,6 +8,7 @@
 #define OPENMVG_SFM_DATA_BA_CERES_CAMERA_FUNCTOR_HPP
 
 #include "openMVG/cameras/cameras.hpp"
+#include "ceres/ceres.h"
 #include "ceres/rotation.h"
 
 //--
@@ -16,6 +17,47 @@
 
 namespace openMVG {
 namespace sfm {
+
+
+/// Decorator used to Weight a given cost camera functor
+/// i.e useful to weight GCP (Ground Control Points)
+template <typename CostFunctor>
+struct WeightedCostFunction
+{
+  WeightedCostFunction() :weight_(1.0) {}
+
+  explicit WeightedCostFunction
+  (
+    CostFunctor * func,
+    const double weight
+  )
+    :functor_(func), weight_(weight)
+  {}
+
+  template <typename T>
+  bool operator()
+  (
+    const T* const cam_intrinsic,
+    const T* const cam_extrinsics,
+    const T* const pos_3dpoint,
+    T* out_residuals
+  ) const
+  {
+    if (functor_->operator()(cam_intrinsic, cam_extrinsics, pos_3dpoint, out_residuals))
+    {
+      // Reweight the residual values
+      for (int i = 0; i < CostFunctor::num_residuals(); ++i)
+      {
+        out_residuals[i] *= T(weight_);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  ceres::internal::scoped_ptr<CostFunctor> functor_;
+  const double weight_;
+};
 
 /**
  * @brief Ceres functor to use a Pinhole_Intrinsic (pinhole camera model K[R[t]) and a 3D point.
@@ -44,16 +86,16 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic
   };
 
   /**
-   * @param[in] cam_K: Camera intrinsics( focal, principal point [x,y] )
-   * @param[in] cam_Rt: Camera parameterized using one block of 6 parameters [R;t]:
+   * @param[in] cam_intrinsics: Camera intrinsics( focal, principal point [x,y] )
+   * @param[in] cam_extrinsics: Camera parameterized using one block of 6 parameters [R;t]:
    *   - 3 for rotation(angle axis), 3 for translation
    * @param[in] pos_3dpoint
    * @param[out] out_residuals
    */
   template <typename T>
   bool operator()(
-    const T* const cam_K,
-    const T* const cam_Rt,
+    const T* const cam_intrinsics,
+    const T* const cam_extrinsics,
     const T* const pos_3dpoint,
     T* out_residuals) const
   {
@@ -61,8 +103,8 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic
     // Apply external parameters (Pose)
     //--
 
-    const T * cam_R = cam_Rt;
-    const T * cam_t = &cam_Rt[3];
+    const T * cam_R = cam_extrinsics;
+    const T * cam_t = &cam_extrinsics[3];
 
     T pos_proj[3];
     // Rotate the point according the camera rotation
@@ -81,9 +123,9 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic
     // Apply intrinsic parameters
     //--
 
-    const T& focal = cam_K[OFFSET_FOCAL_LENGTH];
-    const T& principal_point_x = cam_K[OFFSET_PRINCIPAL_POINT_X];
-    const T& principal_point_y = cam_K[OFFSET_PRINCIPAL_POINT_Y];
+    const T& focal = cam_intrinsics[OFFSET_FOCAL_LENGTH];
+    const T& principal_point_x = cam_intrinsics[OFFSET_PRINCIPAL_POINT_X];
+    const T& principal_point_y = cam_intrinsics[OFFSET_PRINCIPAL_POINT_Y];
 
     // Apply focal length and principal point to get the final image coordinates
     const T projected_x = principal_point_x + focal * x_u;
@@ -95,6 +137,33 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic
     out_residuals[1] = projected_y - T(m_pos_2dpoint[1]);
 
     return true;
+  }
+
+  static const int num_residuals() { return 2; }
+
+  // Factory to hide the construction of the CostFunction object from
+  // the client code.
+  static ceres::CostFunction* Create
+  (
+    const Vec2 & observation,
+    const double weight = 0.0
+  )
+  {
+    if (weight == 0.0)
+    {
+      return
+        (new ceres::AutoDiffCostFunction
+          <ResidualErrorFunctor_Pinhole_Intrinsic, 2, 3, 6, 3>(
+            new ResidualErrorFunctor_Pinhole_Intrinsic(observation.data())));
+    }
+    else
+    {
+      return
+        (new ceres::AutoDiffCostFunction
+          <WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic>, 2, 3, 6, 3>
+          (new WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic>
+            (new ResidualErrorFunctor_Pinhole_Intrinsic(observation.data()), weight)));
+    }
   }
 
   double m_pos_2dpoint[2]; // The 2D observation
@@ -128,16 +197,16 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1
   };
 
   /**
-   * @param[in] cam_K: Camera intrinsics( focal, principal point [x,y], K1 )
-   * @param[in] cam_Rt: Camera parameterized using one block of 6 parameters [R;t]:
+   * @param[in] cam_intrinsics: Camera intrinsics( focal, principal point [x,y], K1 )
+   * @param[in] cam_extrinsics: Camera parameterized using one block of 6 parameters [R;t]:
    *   - 3 for rotation(angle axis), 3 for translation
    * @param[in] pos_3dpoint
    * @param[out] out_residuals
    */
   template <typename T>
   bool operator()(
-    const T* const cam_K,
-    const T* const cam_Rt,
+    const T* const cam_intrinsics,
+    const T* const cam_extrinsics,
     const T* const pos_3dpoint,
     T* out_residuals) const
   {
@@ -145,8 +214,8 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1
     // Apply external parameters (Pose)
     //--
 
-    const T * cam_R = cam_Rt;
-    const T * cam_t = &cam_Rt[3];
+    const T * cam_R = cam_extrinsics;
+    const T * cam_t = &cam_extrinsics[3];
 
     T pos_proj[3];
     // Rotate the point according the camera rotation
@@ -165,10 +234,10 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1
     // Apply intrinsic parameters
     //--
 
-    const T& focal = cam_K[OFFSET_FOCAL_LENGTH];
-    const T& principal_point_x = cam_K[OFFSET_PRINCIPAL_POINT_X];
-    const T& principal_point_y = cam_K[OFFSET_PRINCIPAL_POINT_Y];
-    const T& k1 = cam_K[OFFSET_DISTO_K1];
+    const T& focal = cam_intrinsics[OFFSET_FOCAL_LENGTH];
+    const T& principal_point_x = cam_intrinsics[OFFSET_PRINCIPAL_POINT_X];
+    const T& principal_point_y = cam_intrinsics[OFFSET_PRINCIPAL_POINT_Y];
+    const T& k1 = cam_intrinsics[OFFSET_DISTO_K1];
 
     // Apply distortion (xd,yd) = disto(x_u,y_u)
     const T r2 = x_u*x_u + y_u*y_u;
@@ -186,6 +255,33 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1
     out_residuals[1] = projected_y - T(m_pos_2dpoint[1]);
 
     return true;
+  }
+  
+  static const int num_residuals() { return 2; }
+
+  // Factory to hide the construction of the CostFunction object from
+  // the client code.
+  static ceres::CostFunction* Create
+  (
+    const Vec2 & observation,
+    const double weight = 0.0
+  )
+  {
+    if (weight == 0.0)
+    {
+      return
+        (new ceres::AutoDiffCostFunction
+          <ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1, 2, 4, 6, 3>(
+            new ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1(observation.data())));
+    }
+    else
+    {
+      return
+        (new ceres::AutoDiffCostFunction
+          <WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1>, 2, 4, 6, 3>
+          (new WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1>
+            (new ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1(observation.data()), weight)));
+    }
   }
 
   double m_pos_2dpoint[2]; // The 2D observation
@@ -221,16 +317,16 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3
   };
 
   /**
-   * @param[in] cam_K: Camera intrinsics( focal, principal point [x,y], k1, k2, k3 )
-   * @param[in] cam_Rt: Camera parameterized using one block of 6 parameters [R;t]:
+   * @param[in] cam_intrinsics: Camera intrinsics( focal, principal point [x,y], k1, k2, k3 )
+   * @param[in] cam_extrinsics: Camera parameterized using one block of 6 parameters [R;t]:
    *   - 3 for rotation(angle axis), 3 for translation
    * @param[in] pos_3dpoint
    * @param[out] out_residuals
    */
   template <typename T>
   bool operator()(
-    const T* const cam_K,
-    const T* const cam_Rt,
+    const T* const cam_intrinsics,
+    const T* const cam_extrinsics,
     const T* const pos_3dpoint,
     T* out_residuals) const
   {
@@ -238,8 +334,8 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3
     // Apply external parameters (Pose)
     //--
 
-    const T * cam_R = cam_Rt;
-    const T * cam_t = &cam_Rt[3];
+    const T * cam_R = cam_extrinsics;
+    const T * cam_t = &cam_extrinsics[3];
 
     T pos_proj[3];
     // Rotate the point according the camera rotation
@@ -258,12 +354,12 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3
     // Apply intrinsic parameters
     //--
 
-    const T& focal = cam_K[OFFSET_FOCAL_LENGTH];
-    const T& principal_point_x = cam_K[OFFSET_PRINCIPAL_POINT_X];
-    const T& principal_point_y = cam_K[OFFSET_PRINCIPAL_POINT_Y];
-    const T& k1 = cam_K[OFFSET_DISTO_K1];
-    const T& k2 = cam_K[OFFSET_DISTO_K2];
-    const T& k3 = cam_K[OFFSET_DISTO_K3];
+    const T& focal = cam_intrinsics[OFFSET_FOCAL_LENGTH];
+    const T& principal_point_x = cam_intrinsics[OFFSET_PRINCIPAL_POINT_X];
+    const T& principal_point_y = cam_intrinsics[OFFSET_PRINCIPAL_POINT_Y];
+    const T& k1 = cam_intrinsics[OFFSET_DISTO_K1];
+    const T& k2 = cam_intrinsics[OFFSET_DISTO_K2];
+    const T& k3 = cam_intrinsics[OFFSET_DISTO_K3];
 
     // Apply distortion (xd,yd) = disto(x_u,y_u)
     const T r2 = x_u*x_u + y_u*y_u;
@@ -283,6 +379,33 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3
     out_residuals[1] = projected_y - T(m_pos_2dpoint[1]);
 
     return true;
+  }
+
+  static const int num_residuals() { return 2; }
+
+  // Factory to hide the construction of the CostFunction object from
+  // the client code.
+  static ceres::CostFunction* Create  
+  (
+    const Vec2 & observation,
+    const double weight = 0.0
+  )
+  {
+    if (weight == 0.0)
+    {
+      return
+        (new ceres::AutoDiffCostFunction
+          <ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3, 2, 6, 6, 3>(
+            new ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3(observation.data())));
+    }
+    else
+    {
+      return
+        (new ceres::AutoDiffCostFunction
+          <WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3>, 2, 6, 6, 3>
+          (new WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3>
+            (new ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3(observation.data()), weight)));
+    }
   }
 
   double m_pos_2dpoint[2]; // The 2D observation
@@ -320,16 +443,16 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2
   };
 
   /**
-   * @param[in] cam_K: Camera intrinsics( focal, principal point [x,y], k1, k2, k3, t1, t2 )
-   * @param[in] cam_Rt: Camera parameterized using one block of 6 parameters [R;t]:
+   * @param[in] cam_intrinsics: Camera intrinsics( focal, principal point [x,y], k1, k2, k3, t1, t2 )
+   * @param[in] cam_extrinsics: Camera parameterized using one block of 6 parameters [R;t]:
    *   - 3 for rotation(angle axis), 3 for translation
    * @param[in] pos_3dpoint
    * @param[out] out_residuals
    */
   template <typename T>
   bool operator()(
-    const T* const cam_K,
-    const T* const cam_Rt,
+    const T* const cam_intrinsics,
+    const T* const cam_extrinsics,
     const T* const pos_3dpoint,
     T* out_residuals) const
   {
@@ -337,8 +460,8 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2
     // Apply external parameters (Pose)
     //--
 
-    const T * cam_R = cam_Rt;
-    const T * cam_t = &cam_Rt[3];
+    const T * cam_R = cam_extrinsics;
+    const T * cam_t = &cam_extrinsics[3];
 
     T pos_proj[3];
     // Rotate the point according the camera rotation
@@ -357,14 +480,14 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2
     // Apply intrinsic parameters
     //--
 
-    const T& focal = cam_K[OFFSET_FOCAL_LENGTH];
-    const T& principal_point_x = cam_K[OFFSET_PRINCIPAL_POINT_X];
-    const T& principal_point_y = cam_K[OFFSET_PRINCIPAL_POINT_Y];
-    const T& k1 = cam_K[OFFSET_DISTO_K1];
-    const T& k2 = cam_K[OFFSET_DISTO_K2];
-    const T& k3 = cam_K[OFFSET_DISTO_K3];
-    const T& t1 = cam_K[OFFSET_DISTO_T1];
-    const T& t2 = cam_K[OFFSET_DISTO_T2];
+    const T& focal = cam_intrinsics[OFFSET_FOCAL_LENGTH];
+    const T& principal_point_x = cam_intrinsics[OFFSET_PRINCIPAL_POINT_X];
+    const T& principal_point_y = cam_intrinsics[OFFSET_PRINCIPAL_POINT_Y];
+    const T& k1 = cam_intrinsics[OFFSET_DISTO_K1];
+    const T& k2 = cam_intrinsics[OFFSET_DISTO_K2];
+    const T& k3 = cam_intrinsics[OFFSET_DISTO_K3];
+    const T& t1 = cam_intrinsics[OFFSET_DISTO_T1];
+    const T& t2 = cam_intrinsics[OFFSET_DISTO_T2];
 
     // Apply distortion (xd,yd) = disto(x_u,y_u)
     const T r2 = x_u*x_u + y_u*y_u;
@@ -386,6 +509,33 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2
     out_residuals[1] = projected_y - T(m_pos_2dpoint[1]);
 
     return true;
+  }
+
+  static const int num_residuals() { return 2; }
+
+  // Factory to hide the construction of the CostFunction object from
+  // the client code.
+  static ceres::CostFunction* Create
+  (
+    const Vec2 & observation,
+    const double weight = 0.0
+  )
+  {
+    if (weight == 0.0)
+    {
+      return
+        (new ceres::AutoDiffCostFunction
+          <ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2, 2, 8, 6, 3>(
+            new ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2(observation.data())));
+    }
+    else
+    {
+      return
+        (new ceres::AutoDiffCostFunction
+          <WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2>, 2, 8, 6, 3>
+          (new WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2>
+            (new ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2(observation.data()), weight)));
+    }
   }
 
   double m_pos_2dpoint[2]; // The 2D observation
@@ -424,16 +574,16 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye
   };
 
   /**
-   * @param[in] cam_K: Camera intrinsics( focal, principal point [x,y], k1, k2, k3, k4 )
-   * @param[in] cam_Rt: Camera parameterized using one block of 6 parameters [R;t]:
+   * @param[in] cam_intrinsics: Camera intrinsics( focal, principal point [x,y], k1, k2, k3, k4 )
+   * @param[in] cam_extrinsics: Camera parameterized using one block of 6 parameters [R;t]:
    *   - 3 for rotation(angle axis), 3 for translation
    * @param[in] pos_3dpoint
    * @param[out] out_residuals
    */
   template <typename T>
   bool operator()(
-    const T* const cam_K,
-    const T* const cam_Rt,
+    const T* const cam_intrinsics,
+    const T* const cam_extrinsics,
     const T* const pos_3dpoint,
     T* out_residuals) const
   {
@@ -441,8 +591,8 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye
     // Apply external parameters (Pose)
     //--
 
-    const T * cam_R = cam_Rt;
-    const T * cam_t = &cam_Rt[3];
+    const T * cam_R = cam_extrinsics;
+    const T * cam_t = &cam_extrinsics[3];
 
     T pos_proj[3];
     // Rotate the point according the camera rotation
@@ -460,20 +610,26 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye
     //--
     // Apply intrinsic parameters
     //--
-    const T& focal = cam_K[OFFSET_FOCAL_LENGTH];
-    const T& principal_point_x = cam_K[OFFSET_PRINCIPAL_POINT_X];
-    const T& principal_point_y = cam_K[OFFSET_PRINCIPAL_POINT_Y];
-    const T& k1 = cam_K[OFFSET_DISTO_K1];
-    const T& k2 = cam_K[OFFSET_DISTO_K2];
-    const T& k3 = cam_K[OFFSET_DISTO_K3];
-    const T& k4 = cam_K[OFFSET_DISTO_K4];
+    const T& focal = cam_intrinsics[OFFSET_FOCAL_LENGTH];
+    const T& principal_point_x = cam_intrinsics[OFFSET_PRINCIPAL_POINT_X];
+    const T& principal_point_y = cam_intrinsics[OFFSET_PRINCIPAL_POINT_Y];
+    const T& k1 = cam_intrinsics[OFFSET_DISTO_K1];
+    const T& k2 = cam_intrinsics[OFFSET_DISTO_K2];
+    const T& k3 = cam_intrinsics[OFFSET_DISTO_K3];
+    const T& k4 = cam_intrinsics[OFFSET_DISTO_K4];
 
     // Apply distortion (xd,yd) = disto(x_u,y_u)
     const T r2 = x_u*x_u + y_u*y_u;
     const T r = sqrt(r2);
-    const T theta = atan(r);
-    const T theta2 = theta*theta, theta3 = theta2*theta, theta4 = theta2*theta2, theta5 = theta4*theta,
-    theta6 = theta3*theta3, theta7 = theta6*theta, theta8 = theta4*theta4, theta9 = theta8*theta;
+    const T
+      theta = atan(r),
+      theta2 = theta*theta,
+      theta3 = theta2*theta,
+      theta4 = theta2*theta2,
+      theta5 = theta4*theta,
+      theta7 = theta3*theta3*theta, //thetha6*theta
+      theta8 = theta4*theta4,
+      theta9 = theta8*theta;
     const T theta_dist = theta + k1*theta3 + k2*theta5 + k3*theta7 + k4*theta9;
     const T inv_r = r > T(1e-8) ? T(1.0)/r : T(1.0);
     const T cdist = r > T(1e-8) ? theta_dist * inv_r : T(1);
@@ -493,9 +649,35 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye
     return true;
   }
 
+  static const int num_residuals() { return 2; }
+
+  // Factory to hide the construction of the CostFunction object from
+  // the client code.
+  static ceres::CostFunction* Create
+  (
+    const Vec2 & observation,
+    const double weight = 0.0
+  )
+  {
+    if (weight == 0.0)
+    {
+      return
+        (new ceres::AutoDiffCostFunction
+          <ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye, 2, 7, 6, 3>(
+            new ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye(observation.data())));
+    }
+    else
+    {
+      return
+        (new ceres::AutoDiffCostFunction
+          <WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye>, 2, 7, 6, 3>
+          (new WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye>
+            (new ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye(observation.data()), weight)));
+    }
+  }
+
   double m_pos_2dpoint[2]; // The 2D observation
 };
-
 
 } // namespace sfm
 } // namespace openMVG

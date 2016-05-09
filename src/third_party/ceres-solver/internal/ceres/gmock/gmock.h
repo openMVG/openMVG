@@ -240,6 +240,52 @@
 // here, as Google Mock depends on Google Test.  Only add a utility
 // here if it's truly specific to Google Mock.
 #include "gtest/gtest.h"
+// Copyright 2015, Google Inc.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//     * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//     * Neither the name of Google Inc. nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Injection point for custom user configurations.
+// The following macros can be defined:
+//
+//   Flag related macros:
+//     GMOCK_DECLARE_bool_(name)
+//     GMOCK_DECLARE_int32_(name)
+//     GMOCK_DECLARE_string_(name)
+//     GMOCK_DEFINE_bool_(name, default_val, doc)
+//     GMOCK_DEFINE_int32_(name, default_val, doc)
+//     GMOCK_DEFINE_string_(name, default_val, doc)
+//
+// ** Custom implementation starts here **
+
+#ifndef GMOCK_INCLUDE_GMOCK_INTERNAL_CUSTOM_GMOCK_PORT_H_
+#define GMOCK_INCLUDE_GMOCK_INTERNAL_CUSTOM_GMOCK_PORT_H_
+
+#endif  // GMOCK_INCLUDE_GMOCK_INTERNAL_CUSTOM_GMOCK_PORT_H_
 
 // To avoid conditional compilation everywhere, we make it
 // gmock-port.h's responsibility to #include the header implementing
@@ -256,6 +302,8 @@
 // use this syntax to reference Google Mock flags.
 #define GMOCK_FLAG(name) FLAGS_gmock_##name
 
+#if !defined(GMOCK_DECLARE_bool_)
+
 // Macros for declaring flags.
 #define GMOCK_DECLARE_bool_(name) extern GTEST_API_ bool GMOCK_FLAG(name)
 #define GMOCK_DECLARE_int32_(name) \
@@ -270,6 +318,8 @@
     GTEST_API_ ::testing::internal::Int32 GMOCK_FLAG(name) = (default_val)
 #define GMOCK_DEFINE_string_(name, default_val, doc) \
     GTEST_API_ ::std::string GMOCK_FLAG(name) = (default_val)
+
+#endif  // !defined(GMOCK_DECLARE_bool_)
 
 #endif  // GMOCK_INCLUDE_GMOCK_INTERNAL_GMOCK_PORT_H_
 
@@ -299,70 +349,70 @@ template <typename Tuple>
 struct MatcherTuple;
 
 template <>
-struct MatcherTuple< ::std::tr1::tuple<> > {
-  typedef ::std::tr1::tuple< > type;
+struct MatcherTuple< ::testing::tuple<> > {
+  typedef ::testing::tuple< > type;
 };
 
 template <typename A1>
-struct MatcherTuple< ::std::tr1::tuple<A1> > {
-  typedef ::std::tr1::tuple<Matcher<A1> > type;
+struct MatcherTuple< ::testing::tuple<A1> > {
+  typedef ::testing::tuple<Matcher<A1> > type;
 };
 
 template <typename A1, typename A2>
-struct MatcherTuple< ::std::tr1::tuple<A1, A2> > {
-  typedef ::std::tr1::tuple<Matcher<A1>, Matcher<A2> > type;
+struct MatcherTuple< ::testing::tuple<A1, A2> > {
+  typedef ::testing::tuple<Matcher<A1>, Matcher<A2> > type;
 };
 
 template <typename A1, typename A2, typename A3>
-struct MatcherTuple< ::std::tr1::tuple<A1, A2, A3> > {
-  typedef ::std::tr1::tuple<Matcher<A1>, Matcher<A2>, Matcher<A3> > type;
+struct MatcherTuple< ::testing::tuple<A1, A2, A3> > {
+  typedef ::testing::tuple<Matcher<A1>, Matcher<A2>, Matcher<A3> > type;
 };
 
 template <typename A1, typename A2, typename A3, typename A4>
-struct MatcherTuple< ::std::tr1::tuple<A1, A2, A3, A4> > {
-  typedef ::std::tr1::tuple<Matcher<A1>, Matcher<A2>, Matcher<A3>,
+struct MatcherTuple< ::testing::tuple<A1, A2, A3, A4> > {
+  typedef ::testing::tuple<Matcher<A1>, Matcher<A2>, Matcher<A3>,
       Matcher<A4> > type;
 };
 
 template <typename A1, typename A2, typename A3, typename A4, typename A5>
-struct MatcherTuple< ::std::tr1::tuple<A1, A2, A3, A4, A5> > {
-  typedef ::std::tr1::tuple<Matcher<A1>, Matcher<A2>, Matcher<A3>, Matcher<A4>,
+struct MatcherTuple< ::testing::tuple<A1, A2, A3, A4, A5> > {
+  typedef ::testing::tuple<Matcher<A1>, Matcher<A2>, Matcher<A3>, Matcher<A4>,
       Matcher<A5> > type;
 };
 
 template <typename A1, typename A2, typename A3, typename A4, typename A5,
     typename A6>
-struct MatcherTuple< ::std::tr1::tuple<A1, A2, A3, A4, A5, A6> > {
-  typedef ::std::tr1::tuple<Matcher<A1>, Matcher<A2>, Matcher<A3>, Matcher<A4>,
+struct MatcherTuple< ::testing::tuple<A1, A2, A3, A4, A5, A6> > {
+  typedef ::testing::tuple<Matcher<A1>, Matcher<A2>, Matcher<A3>, Matcher<A4>,
       Matcher<A5>, Matcher<A6> > type;
 };
 
 template <typename A1, typename A2, typename A3, typename A4, typename A5,
     typename A6, typename A7>
-struct MatcherTuple< ::std::tr1::tuple<A1, A2, A3, A4, A5, A6, A7> > {
-  typedef ::std::tr1::tuple<Matcher<A1>, Matcher<A2>, Matcher<A3>, Matcher<A4>,
+struct MatcherTuple< ::testing::tuple<A1, A2, A3, A4, A5, A6, A7> > {
+  typedef ::testing::tuple<Matcher<A1>, Matcher<A2>, Matcher<A3>, Matcher<A4>,
       Matcher<A5>, Matcher<A6>, Matcher<A7> > type;
 };
 
 template <typename A1, typename A2, typename A3, typename A4, typename A5,
     typename A6, typename A7, typename A8>
-struct MatcherTuple< ::std::tr1::tuple<A1, A2, A3, A4, A5, A6, A7, A8> > {
-  typedef ::std::tr1::tuple<Matcher<A1>, Matcher<A2>, Matcher<A3>, Matcher<A4>,
+struct MatcherTuple< ::testing::tuple<A1, A2, A3, A4, A5, A6, A7, A8> > {
+  typedef ::testing::tuple<Matcher<A1>, Matcher<A2>, Matcher<A3>, Matcher<A4>,
       Matcher<A5>, Matcher<A6>, Matcher<A7>, Matcher<A8> > type;
 };
 
 template <typename A1, typename A2, typename A3, typename A4, typename A5,
     typename A6, typename A7, typename A8, typename A9>
-struct MatcherTuple< ::std::tr1::tuple<A1, A2, A3, A4, A5, A6, A7, A8, A9> > {
-  typedef ::std::tr1::tuple<Matcher<A1>, Matcher<A2>, Matcher<A3>, Matcher<A4>,
+struct MatcherTuple< ::testing::tuple<A1, A2, A3, A4, A5, A6, A7, A8, A9> > {
+  typedef ::testing::tuple<Matcher<A1>, Matcher<A2>, Matcher<A3>, Matcher<A4>,
       Matcher<A5>, Matcher<A6>, Matcher<A7>, Matcher<A8>, Matcher<A9> > type;
 };
 
 template <typename A1, typename A2, typename A3, typename A4, typename A5,
     typename A6, typename A7, typename A8, typename A9, typename A10>
-struct MatcherTuple< ::std::tr1::tuple<A1, A2, A3, A4, A5, A6, A7, A8, A9,
+struct MatcherTuple< ::testing::tuple<A1, A2, A3, A4, A5, A6, A7, A8, A9,
     A10> > {
-  typedef ::std::tr1::tuple<Matcher<A1>, Matcher<A2>, Matcher<A3>, Matcher<A4>,
+  typedef ::testing::tuple<Matcher<A1>, Matcher<A2>, Matcher<A3>, Matcher<A4>,
       Matcher<A5>, Matcher<A6>, Matcher<A7>, Matcher<A8>, Matcher<A9>,
       Matcher<A10> > type;
 };
@@ -386,7 +436,7 @@ struct Function;
 template <typename R>
 struct Function<R()> {
   typedef R Result;
-  typedef ::std::tr1::tuple<> ArgumentTuple;
+  typedef ::testing::tuple<> ArgumentTuple;
   typedef typename MatcherTuple<ArgumentTuple>::type ArgumentMatcherTuple;
   typedef void MakeResultVoid();
   typedef IgnoredValue MakeResultIgnoredValue();
@@ -396,7 +446,7 @@ template <typename R, typename A1>
 struct Function<R(A1)>
     : Function<R()> {
   typedef A1 Argument1;
-  typedef ::std::tr1::tuple<A1> ArgumentTuple;
+  typedef ::testing::tuple<A1> ArgumentTuple;
   typedef typename MatcherTuple<ArgumentTuple>::type ArgumentMatcherTuple;
   typedef void MakeResultVoid(A1);
   typedef IgnoredValue MakeResultIgnoredValue(A1);
@@ -406,7 +456,7 @@ template <typename R, typename A1, typename A2>
 struct Function<R(A1, A2)>
     : Function<R(A1)> {
   typedef A2 Argument2;
-  typedef ::std::tr1::tuple<A1, A2> ArgumentTuple;
+  typedef ::testing::tuple<A1, A2> ArgumentTuple;
   typedef typename MatcherTuple<ArgumentTuple>::type ArgumentMatcherTuple;
   typedef void MakeResultVoid(A1, A2);
   typedef IgnoredValue MakeResultIgnoredValue(A1, A2);
@@ -416,7 +466,7 @@ template <typename R, typename A1, typename A2, typename A3>
 struct Function<R(A1, A2, A3)>
     : Function<R(A1, A2)> {
   typedef A3 Argument3;
-  typedef ::std::tr1::tuple<A1, A2, A3> ArgumentTuple;
+  typedef ::testing::tuple<A1, A2, A3> ArgumentTuple;
   typedef typename MatcherTuple<ArgumentTuple>::type ArgumentMatcherTuple;
   typedef void MakeResultVoid(A1, A2, A3);
   typedef IgnoredValue MakeResultIgnoredValue(A1, A2, A3);
@@ -426,7 +476,7 @@ template <typename R, typename A1, typename A2, typename A3, typename A4>
 struct Function<R(A1, A2, A3, A4)>
     : Function<R(A1, A2, A3)> {
   typedef A4 Argument4;
-  typedef ::std::tr1::tuple<A1, A2, A3, A4> ArgumentTuple;
+  typedef ::testing::tuple<A1, A2, A3, A4> ArgumentTuple;
   typedef typename MatcherTuple<ArgumentTuple>::type ArgumentMatcherTuple;
   typedef void MakeResultVoid(A1, A2, A3, A4);
   typedef IgnoredValue MakeResultIgnoredValue(A1, A2, A3, A4);
@@ -437,7 +487,7 @@ template <typename R, typename A1, typename A2, typename A3, typename A4,
 struct Function<R(A1, A2, A3, A4, A5)>
     : Function<R(A1, A2, A3, A4)> {
   typedef A5 Argument5;
-  typedef ::std::tr1::tuple<A1, A2, A3, A4, A5> ArgumentTuple;
+  typedef ::testing::tuple<A1, A2, A3, A4, A5> ArgumentTuple;
   typedef typename MatcherTuple<ArgumentTuple>::type ArgumentMatcherTuple;
   typedef void MakeResultVoid(A1, A2, A3, A4, A5);
   typedef IgnoredValue MakeResultIgnoredValue(A1, A2, A3, A4, A5);
@@ -448,7 +498,7 @@ template <typename R, typename A1, typename A2, typename A3, typename A4,
 struct Function<R(A1, A2, A3, A4, A5, A6)>
     : Function<R(A1, A2, A3, A4, A5)> {
   typedef A6 Argument6;
-  typedef ::std::tr1::tuple<A1, A2, A3, A4, A5, A6> ArgumentTuple;
+  typedef ::testing::tuple<A1, A2, A3, A4, A5, A6> ArgumentTuple;
   typedef typename MatcherTuple<ArgumentTuple>::type ArgumentMatcherTuple;
   typedef void MakeResultVoid(A1, A2, A3, A4, A5, A6);
   typedef IgnoredValue MakeResultIgnoredValue(A1, A2, A3, A4, A5, A6);
@@ -459,7 +509,7 @@ template <typename R, typename A1, typename A2, typename A3, typename A4,
 struct Function<R(A1, A2, A3, A4, A5, A6, A7)>
     : Function<R(A1, A2, A3, A4, A5, A6)> {
   typedef A7 Argument7;
-  typedef ::std::tr1::tuple<A1, A2, A3, A4, A5, A6, A7> ArgumentTuple;
+  typedef ::testing::tuple<A1, A2, A3, A4, A5, A6, A7> ArgumentTuple;
   typedef typename MatcherTuple<ArgumentTuple>::type ArgumentMatcherTuple;
   typedef void MakeResultVoid(A1, A2, A3, A4, A5, A6, A7);
   typedef IgnoredValue MakeResultIgnoredValue(A1, A2, A3, A4, A5, A6, A7);
@@ -470,7 +520,7 @@ template <typename R, typename A1, typename A2, typename A3, typename A4,
 struct Function<R(A1, A2, A3, A4, A5, A6, A7, A8)>
     : Function<R(A1, A2, A3, A4, A5, A6, A7)> {
   typedef A8 Argument8;
-  typedef ::std::tr1::tuple<A1, A2, A3, A4, A5, A6, A7, A8> ArgumentTuple;
+  typedef ::testing::tuple<A1, A2, A3, A4, A5, A6, A7, A8> ArgumentTuple;
   typedef typename MatcherTuple<ArgumentTuple>::type ArgumentMatcherTuple;
   typedef void MakeResultVoid(A1, A2, A3, A4, A5, A6, A7, A8);
   typedef IgnoredValue MakeResultIgnoredValue(A1, A2, A3, A4, A5, A6, A7, A8);
@@ -481,7 +531,7 @@ template <typename R, typename A1, typename A2, typename A3, typename A4,
 struct Function<R(A1, A2, A3, A4, A5, A6, A7, A8, A9)>
     : Function<R(A1, A2, A3, A4, A5, A6, A7, A8)> {
   typedef A9 Argument9;
-  typedef ::std::tr1::tuple<A1, A2, A3, A4, A5, A6, A7, A8, A9> ArgumentTuple;
+  typedef ::testing::tuple<A1, A2, A3, A4, A5, A6, A7, A8, A9> ArgumentTuple;
   typedef typename MatcherTuple<ArgumentTuple>::type ArgumentMatcherTuple;
   typedef void MakeResultVoid(A1, A2, A3, A4, A5, A6, A7, A8, A9);
   typedef IgnoredValue MakeResultIgnoredValue(A1, A2, A3, A4, A5, A6, A7, A8,
@@ -494,7 +544,7 @@ template <typename R, typename A1, typename A2, typename A3, typename A4,
 struct Function<R(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10)>
     : Function<R(A1, A2, A3, A4, A5, A6, A7, A8, A9)> {
   typedef A10 Argument10;
-  typedef ::std::tr1::tuple<A1, A2, A3, A4, A5, A6, A7, A8, A9,
+  typedef ::testing::tuple<A1, A2, A3, A4, A5, A6, A7, A8, A9,
       A10> ArgumentTuple;
   typedef typename MatcherTuple<ArgumentTuple>::type ArgumentMatcherTuple;
   typedef void MakeResultVoid(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10);
@@ -909,16 +959,17 @@ class StlContainerView<Element[N]> {
     //     ConstReference(const char * (&)[4])')
     // (and though the N parameter type is mismatched in the above explicit
     // conversion of it doesn't help - only the conversion of the array).
-    return type(const_cast<Element*>(&array[0]), N, kReference);
+    return type(const_cast<Element*>(&array[0]), N,
+                RelationToSourceReference());
 #else
-    return type(array, N, kReference);
+    return type(array, N, RelationToSourceReference());
 #endif  // GTEST_OS_SYMBIAN
   }
   static type Copy(const Element (&array)[N]) {
 #if GTEST_OS_SYMBIAN
-    return type(const_cast<Element*>(&array[0]), N, kCopy);
+    return type(const_cast<Element*>(&array[0]), N, RelationToSourceCopy());
 #else
-    return type(array, N, kCopy);
+    return type(array, N, RelationToSourceCopy());
 #endif  // GTEST_OS_SYMBIAN
   }
 };
@@ -926,7 +977,7 @@ class StlContainerView<Element[N]> {
 // This specialization is used when RawContainer is a native array
 // represented as a (pointer, size) tuple.
 template <typename ElementPointer, typename Size>
-class StlContainerView< ::std::tr1::tuple<ElementPointer, Size> > {
+class StlContainerView< ::testing::tuple<ElementPointer, Size> > {
  public:
   typedef GTEST_REMOVE_CONST_(
       typename internal::PointeeOf<ElementPointer>::type) RawElement;
@@ -934,13 +985,11 @@ class StlContainerView< ::std::tr1::tuple<ElementPointer, Size> > {
   typedef const type const_reference;
 
   static const_reference ConstReference(
-      const ::std::tr1::tuple<ElementPointer, Size>& array) {
-    using ::std::tr1::get;
-    return type(get<0>(array), get<1>(array), kReference);
+      const ::testing::tuple<ElementPointer, Size>& array) {
+    return type(get<0>(array), get<1>(array), RelationToSourceReference());
   }
-  static type Copy(const ::std::tr1::tuple<ElementPointer, Size>& array) {
-    using ::std::tr1::get;
-    return type(get<0>(array), get<1>(array), kCopy);
+  static type Copy(const ::testing::tuple<ElementPointer, Size>& array) {
+    return type(get<0>(array), get<1>(array), RelationToSourceCopy());
   }
 };
 
@@ -972,6 +1021,11 @@ struct BooleanConstant {};
 
 #endif  // GMOCK_INCLUDE_GMOCK_INTERNAL_GMOCK_INTERNAL_UTILS_H_
 
+
+#if GTEST_LANG_CXX11  // Defined by gtest-port.h via gmock-port.h.
+#include <type_traits>
+#endif
+
 namespace testing {
 
 // To implement an action Foo, define:
@@ -988,16 +1042,17 @@ namespace internal {
 template <typename F1, typename F2>
 class ActionAdaptor;
 
-// BuiltInDefaultValue<T>::Get() returns the "built-in" default
-// value for type T, which is NULL when T is a pointer type, 0 when T
-// is a numeric type, false when T is bool, or "" when T is string or
-// std::string.  For any other type T, this value is undefined and the
-// function will abort the process.
+// BuiltInDefaultValueGetter<T, true>::Get() returns a
+// default-constructed T value.  BuiltInDefaultValueGetter<T,
+// false>::Get() crashes with an error.
+//
+// This primary template is used when kDefaultConstructible is true.
+template <typename T, bool kDefaultConstructible>
+struct BuiltInDefaultValueGetter {
+  static T Get() { return T(); }
+};
 template <typename T>
-class BuiltInDefaultValue {
- public:
-  // This function returns true iff type T has a built-in default value.
-  static bool Exists() { return false; }
+struct BuiltInDefaultValueGetter<T, false> {
   static T Get() {
     Assert(false, __FILE__, __LINE__,
            "Default action undefined for the function return type.");
@@ -1005,6 +1060,40 @@ class BuiltInDefaultValue {
     // The above statement will never be reached, but is required in
     // order for this function to compile.
   }
+};
+
+// BuiltInDefaultValue<T>::Get() returns the "built-in" default value
+// for type T, which is NULL when T is a raw pointer type, 0 when T is
+// a numeric type, false when T is bool, or "" when T is string or
+// std::string.  In addition, in C++11 and above, it turns a
+// default-constructed T value if T is default constructible.  For any
+// other type T, the built-in default T value is undefined, and the
+// function will abort the process.
+template <typename T>
+class BuiltInDefaultValue {
+ public:
+#if GTEST_LANG_CXX11
+  // This function returns true iff type T has a built-in default value.
+  static bool Exists() {
+    return ::std::is_default_constructible<T>::value;
+  }
+
+  static T Get() {
+    return BuiltInDefaultValueGetter<
+        T, ::std::is_default_constructible<T>::value>::Get();
+  }
+
+#else  // GTEST_LANG_CXX11
+  // This function returns true iff type T has a built-in default value.
+  static bool Exists() {
+    return false;
+  }
+
+  static T Get() {
+    return BuiltInDefaultValueGetter<T, false>::Get();
+  }
+
+#endif  // GTEST_LANG_CXX11
 };
 
 // This partial specialization says that we use the same built-in
@@ -1385,6 +1474,14 @@ class ActionAdaptor : public ActionInterface<F1> {
   GTEST_DISALLOW_ASSIGN_(ActionAdaptor);
 };
 
+// Helper struct to specialize ReturnAction to execute a move instead of a copy
+// on return. Useful for move-only types, but could be used on any type.
+template <typename T>
+struct ByMoveWrapper {
+  explicit ByMoveWrapper(T value) : payload(internal::move(value)) {}
+  T payload;
+};
+
 // Implements the polymorphic Return(x) action, which can be used in
 // any function that returns the type of x, regardless of the argument
 // types.
@@ -1415,7 +1512,7 @@ class ReturnAction {
   // Constructs a ReturnAction object from the value to be returned.
   // 'value' is passed by value instead of by const reference in order
   // to allow Return("string literal") to compile.
-  explicit ReturnAction(R value) : value_(value) {}
+  explicit ReturnAction(R value) : value_(new R(internal::move(value))) {}
 
   // This template type conversion operator allows Return(x) to be
   // used in ANY function that returns x's type.
@@ -1431,14 +1528,14 @@ class ReturnAction {
     // in the Impl class. But both definitions must be the same.
     typedef typename Function<F>::Result Result;
     GTEST_COMPILE_ASSERT_(
-        !internal::is_reference<Result>::value,
+        !is_reference<Result>::value,
         use_ReturnRef_instead_of_Return_to_return_a_reference);
-    return Action<F>(new Impl<F>(value_));
+    return Action<F>(new Impl<R, F>(value_));
   }
 
  private:
   // Implements the Return(x) action for a particular function type F.
-  template <typename F>
+  template <typename R_, typename F>
   class Impl : public ActionInterface<F> {
    public:
     typedef typename Function<F>::Result Result;
@@ -1451,20 +1548,49 @@ class ReturnAction {
     // Result to call.  ImplicitCast_ forces the compiler to convert R to
     // Result without considering explicit constructors, thus resolving the
     // ambiguity. value_ is then initialized using its copy constructor.
-    explicit Impl(R value)
-        : value_(::testing::internal::ImplicitCast_<Result>(value)) {}
+    explicit Impl(const linked_ptr<R>& value)
+        : value_before_cast_(*value),
+          value_(ImplicitCast_<Result>(value_before_cast_)) {}
 
     virtual Result Perform(const ArgumentTuple&) { return value_; }
 
    private:
-    GTEST_COMPILE_ASSERT_(!internal::is_reference<Result>::value,
+    GTEST_COMPILE_ASSERT_(!is_reference<Result>::value,
                           Result_cannot_be_a_reference_type);
+    // We save the value before casting just in case it is being cast to a
+    // wrapper type.
+    R value_before_cast_;
     Result value_;
+
+    GTEST_DISALLOW_COPY_AND_ASSIGN_(Impl);
+  };
+
+  // Partially specialize for ByMoveWrapper. This version of ReturnAction will
+  // move its contents instead.
+  template <typename R_, typename F>
+  class Impl<ByMoveWrapper<R_>, F> : public ActionInterface<F> {
+   public:
+    typedef typename Function<F>::Result Result;
+    typedef typename Function<F>::ArgumentTuple ArgumentTuple;
+
+    explicit Impl(const linked_ptr<R>& wrapper)
+        : performed_(false), wrapper_(wrapper) {}
+
+    virtual Result Perform(const ArgumentTuple&) {
+      GTEST_CHECK_(!performed_)
+          << "A ByMove() action should only be performed once.";
+      performed_ = true;
+      return internal::move(wrapper_->payload);
+    }
+
+   private:
+    bool performed_;
+    const linked_ptr<R> wrapper_;
 
     GTEST_DISALLOW_ASSIGN_(Impl);
   };
 
-  R value_;
+  const linked_ptr<R> value_;
 
   GTEST_DISALLOW_ASSIGN_(ReturnAction);
 };
@@ -1472,12 +1598,18 @@ class ReturnAction {
 // Implements the ReturnNull() action.
 class ReturnNullAction {
  public:
-  // Allows ReturnNull() to be used in any pointer-returning function.
+  // Allows ReturnNull() to be used in any pointer-returning function. In C++11
+  // this is enforced by returning nullptr, and in non-C++11 by asserting a
+  // pointer type on compile time.
   template <typename Result, typename ArgumentTuple>
   static Result Perform(const ArgumentTuple&) {
+#if GTEST_LANG_CXX11
+    return nullptr;
+#else
     GTEST_COMPILE_ASSERT_(internal::is_pointer<Result>::value,
                           ReturnNull_can_be_used_to_return_a_pointer_only);
     return NULL;
+#endif  // GTEST_LANG_CXX11
   }
 };
 
@@ -1654,7 +1786,7 @@ class SetArgumentPointeeAction {
   template <typename Result, typename ArgumentTuple>
   void Perform(const ArgumentTuple& args) const {
     CompileAssertTypesEqual<void, Result>();
-    *::std::tr1::get<N>(args) = value_;
+    *::testing::get<N>(args) = value_;
   }
 
  private:
@@ -1677,7 +1809,7 @@ class SetArgumentPointeeAction<N, Proto, true> {
   template <typename Result, typename ArgumentTuple>
   void Perform(const ArgumentTuple& args) const {
     CompileAssertTypesEqual<void, Result>();
-    ::std::tr1::get<N>(args)->CopyFrom(*proto_);
+    ::testing::get<N>(args)->CopyFrom(*proto_);
   }
 
  private:
@@ -1903,7 +2035,7 @@ Action<To>::Action(const Action<From>& from)
 // will trigger a compiler error about using array as initializer.
 template <typename R>
 internal::ReturnAction<R> Return(R value) {
-  return internal::ReturnAction<R>(value);
+  return internal::ReturnAction<R>(internal::move(value));
 }
 
 // Creates an action that returns NULL.
@@ -1928,6 +2060,15 @@ inline internal::ReturnRefAction<R> ReturnRef(R& x) {  // NOLINT
 template <typename R>
 inline internal::ReturnRefOfCopyAction<R> ReturnRefOfCopy(const R& x) {
   return internal::ReturnRefOfCopyAction<R>(x);
+}
+
+// Modifies the parent action (a Return() action) to perform a move of the
+// argument instead of a copy.
+// Return(ByMove()) actions can only be executed once and will assert this
+// invariant.
+template <typename R>
+internal::ByMoveWrapper<R> ByMove(R x) {
+  return internal::ByMoveWrapper<R>(internal::move(x));
 }
 
 // Creates an action that does the default action for the give mock function.
@@ -2234,356 +2375,240 @@ template <typename Result, typename ArgumentTuple>
 class InvokeHelper;
 
 template <typename R>
-class InvokeHelper<R, ::std::tr1::tuple<> > {
+class InvokeHelper<R, ::testing::tuple<> > {
  public:
   template <typename Function>
-  static R Invoke(Function function, const ::std::tr1::tuple<>&) {
-    return function();
+  static R Invoke(Function function, const ::testing::tuple<>&) {
+           return function();
   }
 
   template <class Class, typename MethodPtr>
   static R InvokeMethod(Class* obj_ptr,
                         MethodPtr method_ptr,
-                        const ::std::tr1::tuple<>&) {
-    return (obj_ptr->*method_ptr)();
+                        const ::testing::tuple<>&) {
+           return (obj_ptr->*method_ptr)();
   }
 };
 
 template <typename R, typename A1>
-class InvokeHelper<R, ::std::tr1::tuple<A1> > {
+class InvokeHelper<R, ::testing::tuple<A1> > {
  public:
   template <typename Function>
-  static R Invoke(Function function, const ::std::tr1::tuple<A1>& args) {
-    using ::std::tr1::get;
-    return function(get<0>(args));
+  static R Invoke(Function function, const ::testing::tuple<A1>& args) {
+           return function(get<0>(args));
   }
 
   template <class Class, typename MethodPtr>
   static R InvokeMethod(Class* obj_ptr,
                         MethodPtr method_ptr,
-                        const ::std::tr1::tuple<A1>& args) {
-    using ::std::tr1::get;
-    return (obj_ptr->*method_ptr)(get<0>(args));
+                        const ::testing::tuple<A1>& args) {
+           return (obj_ptr->*method_ptr)(get<0>(args));
   }
 };
 
 template <typename R, typename A1, typename A2>
-class InvokeHelper<R, ::std::tr1::tuple<A1, A2> > {
+class InvokeHelper<R, ::testing::tuple<A1, A2> > {
  public:
   template <typename Function>
-  static R Invoke(Function function, const ::std::tr1::tuple<A1, A2>& args) {
-    using ::std::tr1::get;
-    return function(get<0>(args), get<1>(args));
+  static R Invoke(Function function, const ::testing::tuple<A1, A2>& args) {
+           return function(get<0>(args), get<1>(args));
   }
 
   template <class Class, typename MethodPtr>
   static R InvokeMethod(Class* obj_ptr,
                         MethodPtr method_ptr,
-                        const ::std::tr1::tuple<A1, A2>& args) {
-    using ::std::tr1::get;
-    return (obj_ptr->*method_ptr)(get<0>(args), get<1>(args));
+                        const ::testing::tuple<A1, A2>& args) {
+           return (obj_ptr->*method_ptr)(get<0>(args), get<1>(args));
   }
 };
 
 template <typename R, typename A1, typename A2, typename A3>
-class InvokeHelper<R, ::std::tr1::tuple<A1, A2, A3> > {
+class InvokeHelper<R, ::testing::tuple<A1, A2, A3> > {
  public:
   template <typename Function>
-  static R Invoke(Function function, const ::std::tr1::tuple<A1, A2,
-      A3>& args) {
-    using ::std::tr1::get;
-    return function(get<0>(args), get<1>(args), get<2>(args));
+  static R Invoke(Function function, const ::testing::tuple<A1, A2, A3>& args) {
+           return function(get<0>(args), get<1>(args), get<2>(args));
   }
 
   template <class Class, typename MethodPtr>
   static R InvokeMethod(Class* obj_ptr,
                         MethodPtr method_ptr,
-                        const ::std::tr1::tuple<A1, A2, A3>& args) {
-    using ::std::tr1::get;
-    return (obj_ptr->*method_ptr)(get<0>(args), get<1>(args), get<2>(args));
+                        const ::testing::tuple<A1, A2, A3>& args) {
+           return (obj_ptr->*method_ptr)(get<0>(args), get<1>(args),
+               get<2>(args));
   }
 };
 
 template <typename R, typename A1, typename A2, typename A3, typename A4>
-class InvokeHelper<R, ::std::tr1::tuple<A1, A2, A3, A4> > {
+class InvokeHelper<R, ::testing::tuple<A1, A2, A3, A4> > {
  public:
   template <typename Function>
-  static R Invoke(Function function, const ::std::tr1::tuple<A1, A2, A3,
+  static R Invoke(Function function, const ::testing::tuple<A1, A2, A3,
       A4>& args) {
-    using ::std::tr1::get;
-    return function(get<0>(args), get<1>(args), get<2>(args), get<3>(args));
+           return function(get<0>(args), get<1>(args), get<2>(args),
+               get<3>(args));
   }
 
   template <class Class, typename MethodPtr>
   static R InvokeMethod(Class* obj_ptr,
                         MethodPtr method_ptr,
-                        const ::std::tr1::tuple<A1, A2, A3, A4>& args) {
-    using ::std::tr1::get;
-    return (obj_ptr->*method_ptr)(get<0>(args), get<1>(args), get<2>(args),
-        get<3>(args));
+                        const ::testing::tuple<A1, A2, A3, A4>& args) {
+           return (obj_ptr->*method_ptr)(get<0>(args), get<1>(args),
+               get<2>(args), get<3>(args));
   }
 };
 
 template <typename R, typename A1, typename A2, typename A3, typename A4,
     typename A5>
-class InvokeHelper<R, ::std::tr1::tuple<A1, A2, A3, A4, A5> > {
+class InvokeHelper<R, ::testing::tuple<A1, A2, A3, A4, A5> > {
  public:
   template <typename Function>
-  static R Invoke(Function function, const ::std::tr1::tuple<A1, A2, A3, A4,
+  static R Invoke(Function function, const ::testing::tuple<A1, A2, A3, A4,
       A5>& args) {
-    using ::std::tr1::get;
-    return function(get<0>(args), get<1>(args), get<2>(args), get<3>(args),
-        get<4>(args));
+           return function(get<0>(args), get<1>(args), get<2>(args),
+               get<3>(args), get<4>(args));
   }
 
   template <class Class, typename MethodPtr>
   static R InvokeMethod(Class* obj_ptr,
                         MethodPtr method_ptr,
-                        const ::std::tr1::tuple<A1, A2, A3, A4, A5>& args) {
-    using ::std::tr1::get;
-    return (obj_ptr->*method_ptr)(get<0>(args), get<1>(args), get<2>(args),
-        get<3>(args), get<4>(args));
+                        const ::testing::tuple<A1, A2, A3, A4, A5>& args) {
+           return (obj_ptr->*method_ptr)(get<0>(args), get<1>(args),
+               get<2>(args), get<3>(args), get<4>(args));
   }
 };
 
 template <typename R, typename A1, typename A2, typename A3, typename A4,
     typename A5, typename A6>
-class InvokeHelper<R, ::std::tr1::tuple<A1, A2, A3, A4, A5, A6> > {
+class InvokeHelper<R, ::testing::tuple<A1, A2, A3, A4, A5, A6> > {
  public:
   template <typename Function>
-  static R Invoke(Function function, const ::std::tr1::tuple<A1, A2, A3, A4,
-      A5, A6>& args) {
-    using ::std::tr1::get;
-    return function(get<0>(args), get<1>(args), get<2>(args), get<3>(args),
-        get<4>(args), get<5>(args));
+  static R Invoke(Function function, const ::testing::tuple<A1, A2, A3, A4, A5,
+      A6>& args) {
+           return function(get<0>(args), get<1>(args), get<2>(args),
+               get<3>(args), get<4>(args), get<5>(args));
   }
 
   template <class Class, typename MethodPtr>
   static R InvokeMethod(Class* obj_ptr,
                         MethodPtr method_ptr,
-                        const ::std::tr1::tuple<A1, A2, A3, A4, A5, A6>& args) {
-    using ::std::tr1::get;
-    return (obj_ptr->*method_ptr)(get<0>(args), get<1>(args), get<2>(args),
-        get<3>(args), get<4>(args), get<5>(args));
+                        const ::testing::tuple<A1, A2, A3, A4, A5, A6>& args) {
+           return (obj_ptr->*method_ptr)(get<0>(args), get<1>(args),
+               get<2>(args), get<3>(args), get<4>(args), get<5>(args));
   }
 };
 
 template <typename R, typename A1, typename A2, typename A3, typename A4,
     typename A5, typename A6, typename A7>
-class InvokeHelper<R, ::std::tr1::tuple<A1, A2, A3, A4, A5, A6, A7> > {
+class InvokeHelper<R, ::testing::tuple<A1, A2, A3, A4, A5, A6, A7> > {
  public:
   template <typename Function>
-  static R Invoke(Function function, const ::std::tr1::tuple<A1, A2, A3, A4,
-      A5, A6, A7>& args) {
-    using ::std::tr1::get;
-    return function(get<0>(args), get<1>(args), get<2>(args), get<3>(args),
-        get<4>(args), get<5>(args), get<6>(args));
+  static R Invoke(Function function, const ::testing::tuple<A1, A2, A3, A4, A5,
+      A6, A7>& args) {
+           return function(get<0>(args), get<1>(args), get<2>(args),
+               get<3>(args), get<4>(args), get<5>(args), get<6>(args));
   }
 
   template <class Class, typename MethodPtr>
   static R InvokeMethod(Class* obj_ptr,
                         MethodPtr method_ptr,
-                        const ::std::tr1::tuple<A1, A2, A3, A4, A5, A6,
+                        const ::testing::tuple<A1, A2, A3, A4, A5, A6,
                             A7>& args) {
-    using ::std::tr1::get;
-    return (obj_ptr->*method_ptr)(get<0>(args), get<1>(args), get<2>(args),
-        get<3>(args), get<4>(args), get<5>(args), get<6>(args));
+           return (obj_ptr->*method_ptr)(get<0>(args), get<1>(args),
+               get<2>(args), get<3>(args), get<4>(args), get<5>(args),
+               get<6>(args));
   }
 };
 
 template <typename R, typename A1, typename A2, typename A3, typename A4,
     typename A5, typename A6, typename A7, typename A8>
-class InvokeHelper<R, ::std::tr1::tuple<A1, A2, A3, A4, A5, A6, A7, A8> > {
+class InvokeHelper<R, ::testing::tuple<A1, A2, A3, A4, A5, A6, A7, A8> > {
  public:
   template <typename Function>
-  static R Invoke(Function function, const ::std::tr1::tuple<A1, A2, A3, A4,
-      A5, A6, A7, A8>& args) {
-    using ::std::tr1::get;
-    return function(get<0>(args), get<1>(args), get<2>(args), get<3>(args),
-        get<4>(args), get<5>(args), get<6>(args), get<7>(args));
+  static R Invoke(Function function, const ::testing::tuple<A1, A2, A3, A4, A5,
+      A6, A7, A8>& args) {
+           return function(get<0>(args), get<1>(args), get<2>(args),
+               get<3>(args), get<4>(args), get<5>(args), get<6>(args),
+               get<7>(args));
   }
 
   template <class Class, typename MethodPtr>
   static R InvokeMethod(Class* obj_ptr,
                         MethodPtr method_ptr,
-                        const ::std::tr1::tuple<A1, A2, A3, A4, A5, A6, A7,
+                        const ::testing::tuple<A1, A2, A3, A4, A5, A6, A7,
                             A8>& args) {
-    using ::std::tr1::get;
-    return (obj_ptr->*method_ptr)(get<0>(args), get<1>(args), get<2>(args),
-        get<3>(args), get<4>(args), get<5>(args), get<6>(args), get<7>(args));
+           return (obj_ptr->*method_ptr)(get<0>(args), get<1>(args),
+               get<2>(args), get<3>(args), get<4>(args), get<5>(args),
+               get<6>(args), get<7>(args));
   }
 };
 
 template <typename R, typename A1, typename A2, typename A3, typename A4,
     typename A5, typename A6, typename A7, typename A8, typename A9>
-class InvokeHelper<R, ::std::tr1::tuple<A1, A2, A3, A4, A5, A6, A7, A8, A9> > {
+class InvokeHelper<R, ::testing::tuple<A1, A2, A3, A4, A5, A6, A7, A8, A9> > {
  public:
   template <typename Function>
-  static R Invoke(Function function, const ::std::tr1::tuple<A1, A2, A3, A4,
-      A5, A6, A7, A8, A9>& args) {
-    using ::std::tr1::get;
-    return function(get<0>(args), get<1>(args), get<2>(args), get<3>(args),
-        get<4>(args), get<5>(args), get<6>(args), get<7>(args), get<8>(args));
+  static R Invoke(Function function, const ::testing::tuple<A1, A2, A3, A4, A5,
+      A6, A7, A8, A9>& args) {
+           return function(get<0>(args), get<1>(args), get<2>(args),
+               get<3>(args), get<4>(args), get<5>(args), get<6>(args),
+               get<7>(args), get<8>(args));
   }
 
   template <class Class, typename MethodPtr>
   static R InvokeMethod(Class* obj_ptr,
                         MethodPtr method_ptr,
-                        const ::std::tr1::tuple<A1, A2, A3, A4, A5, A6, A7, A8,
+                        const ::testing::tuple<A1, A2, A3, A4, A5, A6, A7, A8,
                             A9>& args) {
-    using ::std::tr1::get;
-    return (obj_ptr->*method_ptr)(get<0>(args), get<1>(args), get<2>(args),
-        get<3>(args), get<4>(args), get<5>(args), get<6>(args), get<7>(args),
-        get<8>(args));
+           return (obj_ptr->*method_ptr)(get<0>(args), get<1>(args),
+               get<2>(args), get<3>(args), get<4>(args), get<5>(args),
+               get<6>(args), get<7>(args), get<8>(args));
   }
 };
 
 template <typename R, typename A1, typename A2, typename A3, typename A4,
     typename A5, typename A6, typename A7, typename A8, typename A9,
     typename A10>
-class InvokeHelper<R, ::std::tr1::tuple<A1, A2, A3, A4, A5, A6, A7, A8, A9,
+class InvokeHelper<R, ::testing::tuple<A1, A2, A3, A4, A5, A6, A7, A8, A9,
     A10> > {
  public:
   template <typename Function>
-  static R Invoke(Function function, const ::std::tr1::tuple<A1, A2, A3, A4,
-      A5, A6, A7, A8, A9, A10>& args) {
-    using ::std::tr1::get;
-    return function(get<0>(args), get<1>(args), get<2>(args), get<3>(args),
-        get<4>(args), get<5>(args), get<6>(args), get<7>(args), get<8>(args),
-        get<9>(args));
+  static R Invoke(Function function, const ::testing::tuple<A1, A2, A3, A4, A5,
+      A6, A7, A8, A9, A10>& args) {
+           return function(get<0>(args), get<1>(args), get<2>(args),
+               get<3>(args), get<4>(args), get<5>(args), get<6>(args),
+               get<7>(args), get<8>(args), get<9>(args));
   }
 
   template <class Class, typename MethodPtr>
   static R InvokeMethod(Class* obj_ptr,
                         MethodPtr method_ptr,
-                        const ::std::tr1::tuple<A1, A2, A3, A4, A5, A6, A7, A8,
+                        const ::testing::tuple<A1, A2, A3, A4, A5, A6, A7, A8,
                             A9, A10>& args) {
-    using ::std::tr1::get;
-    return (obj_ptr->*method_ptr)(get<0>(args), get<1>(args), get<2>(args),
-        get<3>(args), get<4>(args), get<5>(args), get<6>(args), get<7>(args),
-        get<8>(args), get<9>(args));
+           return (obj_ptr->*method_ptr)(get<0>(args), get<1>(args),
+               get<2>(args), get<3>(args), get<4>(args), get<5>(args),
+               get<6>(args), get<7>(args), get<8>(args), get<9>(args));
   }
 };
-
-// CallableHelper has static methods for invoking "callables",
-// i.e. function pointers and functors.  It uses overloading to
-// provide a uniform interface for invoking different kinds of
-// callables.  In particular, you can use:
-//
-//   CallableHelper<R>::Call(callable, a1, a2, ..., an)
-//
-// to invoke an n-ary callable, where R is its return type.  If an
-// argument, say a2, needs to be passed by reference, you should write
-// ByRef(a2) instead of a2 in the above expression.
-template <typename R>
-class CallableHelper {
- public:
-  // Calls a nullary callable.
-  template <typename Function>
-  static R Call(Function function) { return function(); }
-
-  // Calls a unary callable.
-
-  // We deliberately pass a1 by value instead of const reference here
-  // in case it is a C-string literal.  If we had declared the
-  // parameter as 'const A1& a1' and write Call(function, "Hi"), the
-  // compiler would've thought A1 is 'char[3]', which causes trouble
-  // when you need to copy a value of type A1.  By declaring the
-  // parameter as 'A1 a1', the compiler will correctly infer that A1
-  // is 'const char*' when it sees Call(function, "Hi").
-  //
-  // Since this function is defined inline, the compiler can get rid
-  // of the copying of the arguments.  Therefore the performance won't
-  // be hurt.
-  template <typename Function, typename A1>
-  static R Call(Function function, A1 a1) { return function(a1); }
-
-  // Calls a binary callable.
-  template <typename Function, typename A1, typename A2>
-  static R Call(Function function, A1 a1, A2 a2) {
-    return function(a1, a2);
-  }
-
-  // Calls a ternary callable.
-  template <typename Function, typename A1, typename A2, typename A3>
-  static R Call(Function function, A1 a1, A2 a2, A3 a3) {
-    return function(a1, a2, a3);
-  }
-
-  // Calls a 4-ary callable.
-  template <typename Function, typename A1, typename A2, typename A3,
-      typename A4>
-  static R Call(Function function, A1 a1, A2 a2, A3 a3, A4 a4) {
-    return function(a1, a2, a3, a4);
-  }
-
-  // Calls a 5-ary callable.
-  template <typename Function, typename A1, typename A2, typename A3,
-      typename A4, typename A5>
-  static R Call(Function function, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5) {
-    return function(a1, a2, a3, a4, a5);
-  }
-
-  // Calls a 6-ary callable.
-  template <typename Function, typename A1, typename A2, typename A3,
-      typename A4, typename A5, typename A6>
-  static R Call(Function function, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6) {
-    return function(a1, a2, a3, a4, a5, a6);
-  }
-
-  // Calls a 7-ary callable.
-  template <typename Function, typename A1, typename A2, typename A3,
-      typename A4, typename A5, typename A6, typename A7>
-  static R Call(Function function, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6,
-      A7 a7) {
-    return function(a1, a2, a3, a4, a5, a6, a7);
-  }
-
-  // Calls a 8-ary callable.
-  template <typename Function, typename A1, typename A2, typename A3,
-      typename A4, typename A5, typename A6, typename A7, typename A8>
-  static R Call(Function function, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6,
-      A7 a7, A8 a8) {
-    return function(a1, a2, a3, a4, a5, a6, a7, a8);
-  }
-
-  // Calls a 9-ary callable.
-  template <typename Function, typename A1, typename A2, typename A3,
-      typename A4, typename A5, typename A6, typename A7, typename A8,
-      typename A9>
-  static R Call(Function function, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6,
-      A7 a7, A8 a8, A9 a9) {
-    return function(a1, a2, a3, a4, a5, a6, a7, a8, a9);
-  }
-
-  // Calls a 10-ary callable.
-  template <typename Function, typename A1, typename A2, typename A3,
-      typename A4, typename A5, typename A6, typename A7, typename A8,
-      typename A9, typename A10>
-  static R Call(Function function, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6,
-      A7 a7, A8 a8, A9 a9, A10 a10) {
-    return function(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
-  }
-};  // class CallableHelper
 
 // An INTERNAL macro for extracting the type of a tuple field.  It's
 // subject to change without notice - DO NOT USE IN USER CODE!
 #define GMOCK_FIELD_(Tuple, N) \
-    typename ::std::tr1::tuple_element<N, Tuple>::type
+    typename ::testing::tuple_element<N, Tuple>::type
 
 // SelectArgs<Result, ArgumentTuple, k1, k2, ..., k_n>::type is the
 // type of an n-ary function whose i-th (1-based) argument type is the
 // k{i}-th (0-based) field of ArgumentTuple, which must be a tuple
 // type, and whose return type is Result.  For example,
-//   SelectArgs<int, ::std::tr1::tuple<bool, char, double, long>, 0, 3>::type
+//   SelectArgs<int, ::testing::tuple<bool, char, double, long>, 0, 3>::type
 // is int(bool, long).
 //
 // SelectArgs<Result, ArgumentTuple, k1, k2, ..., k_n>::Select(args)
 // returns the selected fields (k1, k2, ..., k_n) of args as a tuple.
 // For example,
-//   SelectArgs<int, ::std::tr1::tuple<bool, char, double>, 2, 0>::Select(
-//       ::std::tr1::make_tuple(true, 'a', 2.5))
-// returns ::std::tr1::tuple (2.5, true).
+//   SelectArgs<int, tuple<bool, char, double>, 2, 0>::Select(
+//       ::testing::make_tuple(true, 'a', 2.5))
+// returns tuple (2.5, true).
 //
 // The numbers in list k1, k2, ..., k_n must be >= 0, where n can be
 // in the range [0, 10].  Duplicates are allowed and they don't have
@@ -2601,7 +2626,6 @@ class SelectArgs {
       GMOCK_FIELD_(ArgumentTuple, k10));
   typedef typename Function<type>::ArgumentTuple SelectedArgs;
   static SelectedArgs Select(const ArgumentTuple& args) {
-    using ::std::tr1::get;
     return SelectedArgs(get<k1>(args), get<k2>(args), get<k3>(args),
         get<k4>(args), get<k5>(args), get<k6>(args), get<k7>(args),
         get<k8>(args), get<k9>(args), get<k10>(args));
@@ -2615,7 +2639,6 @@ class SelectArgs<Result, ArgumentTuple,
   typedef Result type();
   typedef typename Function<type>::ArgumentTuple SelectedArgs;
   static SelectedArgs Select(const ArgumentTuple& /* args */) {
-    using ::std::tr1::get;
     return SelectedArgs();
   }
 };
@@ -2627,7 +2650,6 @@ class SelectArgs<Result, ArgumentTuple,
   typedef Result type(GMOCK_FIELD_(ArgumentTuple, k1));
   typedef typename Function<type>::ArgumentTuple SelectedArgs;
   static SelectedArgs Select(const ArgumentTuple& args) {
-    using ::std::tr1::get;
     return SelectedArgs(get<k1>(args));
   }
 };
@@ -2640,7 +2662,6 @@ class SelectArgs<Result, ArgumentTuple,
       GMOCK_FIELD_(ArgumentTuple, k2));
   typedef typename Function<type>::ArgumentTuple SelectedArgs;
   static SelectedArgs Select(const ArgumentTuple& args) {
-    using ::std::tr1::get;
     return SelectedArgs(get<k1>(args), get<k2>(args));
   }
 };
@@ -2653,7 +2674,6 @@ class SelectArgs<Result, ArgumentTuple,
       GMOCK_FIELD_(ArgumentTuple, k2), GMOCK_FIELD_(ArgumentTuple, k3));
   typedef typename Function<type>::ArgumentTuple SelectedArgs;
   static SelectedArgs Select(const ArgumentTuple& args) {
-    using ::std::tr1::get;
     return SelectedArgs(get<k1>(args), get<k2>(args), get<k3>(args));
   }
 };
@@ -2668,7 +2688,6 @@ class SelectArgs<Result, ArgumentTuple,
       GMOCK_FIELD_(ArgumentTuple, k4));
   typedef typename Function<type>::ArgumentTuple SelectedArgs;
   static SelectedArgs Select(const ArgumentTuple& args) {
-    using ::std::tr1::get;
     return SelectedArgs(get<k1>(args), get<k2>(args), get<k3>(args),
         get<k4>(args));
   }
@@ -2684,7 +2703,6 @@ class SelectArgs<Result, ArgumentTuple,
       GMOCK_FIELD_(ArgumentTuple, k4), GMOCK_FIELD_(ArgumentTuple, k5));
   typedef typename Function<type>::ArgumentTuple SelectedArgs;
   static SelectedArgs Select(const ArgumentTuple& args) {
-    using ::std::tr1::get;
     return SelectedArgs(get<k1>(args), get<k2>(args), get<k3>(args),
         get<k4>(args), get<k5>(args));
   }
@@ -2701,7 +2719,6 @@ class SelectArgs<Result, ArgumentTuple,
       GMOCK_FIELD_(ArgumentTuple, k6));
   typedef typename Function<type>::ArgumentTuple SelectedArgs;
   static SelectedArgs Select(const ArgumentTuple& args) {
-    using ::std::tr1::get;
     return SelectedArgs(get<k1>(args), get<k2>(args), get<k3>(args),
         get<k4>(args), get<k5>(args), get<k6>(args));
   }
@@ -2718,7 +2735,6 @@ class SelectArgs<Result, ArgumentTuple,
       GMOCK_FIELD_(ArgumentTuple, k6), GMOCK_FIELD_(ArgumentTuple, k7));
   typedef typename Function<type>::ArgumentTuple SelectedArgs;
   static SelectedArgs Select(const ArgumentTuple& args) {
-    using ::std::tr1::get;
     return SelectedArgs(get<k1>(args), get<k2>(args), get<k3>(args),
         get<k4>(args), get<k5>(args), get<k6>(args), get<k7>(args));
   }
@@ -2736,7 +2752,6 @@ class SelectArgs<Result, ArgumentTuple,
       GMOCK_FIELD_(ArgumentTuple, k8));
   typedef typename Function<type>::ArgumentTuple SelectedArgs;
   static SelectedArgs Select(const ArgumentTuple& args) {
-    using ::std::tr1::get;
     return SelectedArgs(get<k1>(args), get<k2>(args), get<k3>(args),
         get<k4>(args), get<k5>(args), get<k6>(args), get<k7>(args),
         get<k8>(args));
@@ -2755,7 +2770,6 @@ class SelectArgs<Result, ArgumentTuple,
       GMOCK_FIELD_(ArgumentTuple, k8), GMOCK_FIELD_(ArgumentTuple, k9));
   typedef typename Function<type>::ArgumentTuple SelectedArgs;
   static SelectedArgs Select(const ArgumentTuple& args) {
-    using ::std::tr1::get;
     return SelectedArgs(get<k1>(args), get<k2>(args), get<k3>(args),
         get<k4>(args), get<k5>(args), get<k6>(args), get<k7>(args),
         get<k8>(args), get<k9>(args));
@@ -2821,8 +2835,7 @@ struct ExcessiveArg {};
 template <typename Result, class Impl>
 class ActionHelper {
  public:
-  static Result Perform(Impl* impl, const ::std::tr1::tuple<>& args) {
-    using ::std::tr1::get;
+  static Result Perform(Impl* impl, const ::testing::tuple<>& args) {
     return impl->template gmock_PerformImpl<>(args, ExcessiveArg(),
         ExcessiveArg(), ExcessiveArg(), ExcessiveArg(), ExcessiveArg(),
         ExcessiveArg(), ExcessiveArg(), ExcessiveArg(), ExcessiveArg(),
@@ -2830,8 +2843,7 @@ class ActionHelper {
   }
 
   template <typename A0>
-  static Result Perform(Impl* impl, const ::std::tr1::tuple<A0>& args) {
-    using ::std::tr1::get;
+  static Result Perform(Impl* impl, const ::testing::tuple<A0>& args) {
     return impl->template gmock_PerformImpl<A0>(args, get<0>(args),
         ExcessiveArg(), ExcessiveArg(), ExcessiveArg(), ExcessiveArg(),
         ExcessiveArg(), ExcessiveArg(), ExcessiveArg(), ExcessiveArg(),
@@ -2839,8 +2851,7 @@ class ActionHelper {
   }
 
   template <typename A0, typename A1>
-  static Result Perform(Impl* impl, const ::std::tr1::tuple<A0, A1>& args) {
-    using ::std::tr1::get;
+  static Result Perform(Impl* impl, const ::testing::tuple<A0, A1>& args) {
     return impl->template gmock_PerformImpl<A0, A1>(args, get<0>(args),
         get<1>(args), ExcessiveArg(), ExcessiveArg(), ExcessiveArg(),
         ExcessiveArg(), ExcessiveArg(), ExcessiveArg(), ExcessiveArg(),
@@ -2848,8 +2859,7 @@ class ActionHelper {
   }
 
   template <typename A0, typename A1, typename A2>
-  static Result Perform(Impl* impl, const ::std::tr1::tuple<A0, A1, A2>& args) {
-    using ::std::tr1::get;
+  static Result Perform(Impl* impl, const ::testing::tuple<A0, A1, A2>& args) {
     return impl->template gmock_PerformImpl<A0, A1, A2>(args, get<0>(args),
         get<1>(args), get<2>(args), ExcessiveArg(), ExcessiveArg(),
         ExcessiveArg(), ExcessiveArg(), ExcessiveArg(), ExcessiveArg(),
@@ -2857,9 +2867,8 @@ class ActionHelper {
   }
 
   template <typename A0, typename A1, typename A2, typename A3>
-  static Result Perform(Impl* impl, const ::std::tr1::tuple<A0, A1, A2,
+  static Result Perform(Impl* impl, const ::testing::tuple<A0, A1, A2,
       A3>& args) {
-    using ::std::tr1::get;
     return impl->template gmock_PerformImpl<A0, A1, A2, A3>(args, get<0>(args),
         get<1>(args), get<2>(args), get<3>(args), ExcessiveArg(),
         ExcessiveArg(), ExcessiveArg(), ExcessiveArg(), ExcessiveArg(),
@@ -2867,9 +2876,8 @@ class ActionHelper {
   }
 
   template <typename A0, typename A1, typename A2, typename A3, typename A4>
-  static Result Perform(Impl* impl, const ::std::tr1::tuple<A0, A1, A2, A3,
+  static Result Perform(Impl* impl, const ::testing::tuple<A0, A1, A2, A3,
       A4>& args) {
-    using ::std::tr1::get;
     return impl->template gmock_PerformImpl<A0, A1, A2, A3, A4>(args,
         get<0>(args), get<1>(args), get<2>(args), get<3>(args), get<4>(args),
         ExcessiveArg(), ExcessiveArg(), ExcessiveArg(), ExcessiveArg(),
@@ -2878,9 +2886,8 @@ class ActionHelper {
 
   template <typename A0, typename A1, typename A2, typename A3, typename A4,
       typename A5>
-  static Result Perform(Impl* impl, const ::std::tr1::tuple<A0, A1, A2, A3, A4,
+  static Result Perform(Impl* impl, const ::testing::tuple<A0, A1, A2, A3, A4,
       A5>& args) {
-    using ::std::tr1::get;
     return impl->template gmock_PerformImpl<A0, A1, A2, A3, A4, A5>(args,
         get<0>(args), get<1>(args), get<2>(args), get<3>(args), get<4>(args),
         get<5>(args), ExcessiveArg(), ExcessiveArg(), ExcessiveArg(),
@@ -2889,9 +2896,8 @@ class ActionHelper {
 
   template <typename A0, typename A1, typename A2, typename A3, typename A4,
       typename A5, typename A6>
-  static Result Perform(Impl* impl, const ::std::tr1::tuple<A0, A1, A2, A3, A4,
+  static Result Perform(Impl* impl, const ::testing::tuple<A0, A1, A2, A3, A4,
       A5, A6>& args) {
-    using ::std::tr1::get;
     return impl->template gmock_PerformImpl<A0, A1, A2, A3, A4, A5, A6>(args,
         get<0>(args), get<1>(args), get<2>(args), get<3>(args), get<4>(args),
         get<5>(args), get<6>(args), ExcessiveArg(), ExcessiveArg(),
@@ -2900,9 +2906,8 @@ class ActionHelper {
 
   template <typename A0, typename A1, typename A2, typename A3, typename A4,
       typename A5, typename A6, typename A7>
-  static Result Perform(Impl* impl, const ::std::tr1::tuple<A0, A1, A2, A3, A4,
+  static Result Perform(Impl* impl, const ::testing::tuple<A0, A1, A2, A3, A4,
       A5, A6, A7>& args) {
-    using ::std::tr1::get;
     return impl->template gmock_PerformImpl<A0, A1, A2, A3, A4, A5, A6,
         A7>(args, get<0>(args), get<1>(args), get<2>(args), get<3>(args),
         get<4>(args), get<5>(args), get<6>(args), get<7>(args), ExcessiveArg(),
@@ -2911,9 +2916,8 @@ class ActionHelper {
 
   template <typename A0, typename A1, typename A2, typename A3, typename A4,
       typename A5, typename A6, typename A7, typename A8>
-  static Result Perform(Impl* impl, const ::std::tr1::tuple<A0, A1, A2, A3, A4,
+  static Result Perform(Impl* impl, const ::testing::tuple<A0, A1, A2, A3, A4,
       A5, A6, A7, A8>& args) {
-    using ::std::tr1::get;
     return impl->template gmock_PerformImpl<A0, A1, A2, A3, A4, A5, A6, A7,
         A8>(args, get<0>(args), get<1>(args), get<2>(args), get<3>(args),
         get<4>(args), get<5>(args), get<6>(args), get<7>(args), get<8>(args),
@@ -2922,9 +2926,8 @@ class ActionHelper {
 
   template <typename A0, typename A1, typename A2, typename A3, typename A4,
       typename A5, typename A6, typename A7, typename A8, typename A9>
-  static Result Perform(Impl* impl, const ::std::tr1::tuple<A0, A1, A2, A3, A4,
+  static Result Perform(Impl* impl, const ::testing::tuple<A0, A1, A2, A3, A4,
       A5, A6, A7, A8, A9>& args) {
-    using ::std::tr1::get;
     return impl->template gmock_PerformImpl<A0, A1, A2, A3, A4, A5, A6, A7, A8,
         A9>(args, get<0>(args), get<1>(args), get<2>(args), get<3>(args),
         get<4>(args), get<5>(args), get<6>(args), get<7>(args), get<8>(args),
@@ -3236,7 +3239,7 @@ DoAll(Action1 a1, Action2 a2, Action3 a3, Action4 a4, Action5 a5, Action6 a6,
 //   ACTION_TEMPLATE(DuplicateArg,
 //                   HAS_2_TEMPLATE_PARAMS(int, k, typename, T),
 //                   AND_1_VALUE_PARAMS(output)) {
-//     *output = T(std::tr1::get<k>(args));
+//     *output = T(::testing::get<k>(args));
 //   }
 //   ...
 //     int n;
@@ -3567,7 +3570,7 @@ DoAll(Action1 a1, Action2 a2, Action3 a3, Action4 a4, Action5 a5, Action6 a6,
             GMOCK_INTERNAL_DECL_TYPE_##value_params>\
   class GMOCK_ACTION_CLASS_(name, value_params) {\
    public:\
-    GMOCK_ACTION_CLASS_(name, value_params)\
+    explicit GMOCK_ACTION_CLASS_(name, value_params)\
         GMOCK_INTERNAL_INIT_##value_params {}\
     template <typename F>\
     class gmock_Impl : public ::testing::ActionInterface<F> {\
@@ -3675,7 +3678,7 @@ DoAll(Action1 a1, Action2 a2, Action3 a3, Action4 a4, Action5 a5, Action6 a6,
   template <typename p0##_type>\
   class name##ActionP {\
    public:\
-    name##ActionP(p0##_type gmock_p0) : p0(gmock_p0) {}\
+    explicit name##ActionP(p0##_type gmock_p0) : p0(gmock_p0) {}\
     template <typename F>\
     class gmock_Impl : public ::testing::ActionInterface<F> {\
      public:\
@@ -4401,6 +4404,7 @@ DoAll(Action1 a1, Action2 a2, Action3 a3, Action4 a4, Action5 a5, Action6 a6,
 
 namespace testing {
 
+
 // The ACTION*() macros trigger warning C4100 (unreferenced formal
 // parameter) in MSVC with -W4.  Unfortunately they cannot be fixed in
 // the macro definition, as the warnings are generated when the macro
@@ -4441,81 +4445,175 @@ namespace testing {
 //   InvokeArgument action from temporary values and have it performed
 //   later.
 
+namespace internal {
+namespace invoke_argument {
+
+// Appears in InvokeArgumentAdl's argument list to help avoid
+// accidental calls to user functions of the same name.
+struct AdlTag {};
+
+// InvokeArgumentAdl - a helper for InvokeArgument.
+// The basic overloads are provided here for generic functors.
+// Overloads for other custom-callables are provided in the
+// internal/custom/callback-actions.h header.
+
+template <typename R, typename F>
+R InvokeArgumentAdl(AdlTag, F f) {
+  return f();
+}
+template <typename R, typename F, typename A1>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1) {
+  return f(a1);
+}
+template <typename R, typename F, typename A1, typename A2>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1, A2 a2) {
+  return f(a1, a2);
+}
+template <typename R, typename F, typename A1, typename A2, typename A3>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1, A2 a2, A3 a3) {
+  return f(a1, a2, a3);
+}
+template <typename R, typename F, typename A1, typename A2, typename A3,
+    typename A4>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1, A2 a2, A3 a3, A4 a4) {
+  return f(a1, a2, a3, a4);
+}
+template <typename R, typename F, typename A1, typename A2, typename A3,
+    typename A4, typename A5>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5) {
+  return f(a1, a2, a3, a4, a5);
+}
+template <typename R, typename F, typename A1, typename A2, typename A3,
+    typename A4, typename A5, typename A6>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6) {
+  return f(a1, a2, a3, a4, a5, a6);
+}
+template <typename R, typename F, typename A1, typename A2, typename A3,
+    typename A4, typename A5, typename A6, typename A7>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6,
+    A7 a7) {
+  return f(a1, a2, a3, a4, a5, a6, a7);
+}
+template <typename R, typename F, typename A1, typename A2, typename A3,
+    typename A4, typename A5, typename A6, typename A7, typename A8>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6,
+    A7 a7, A8 a8) {
+  return f(a1, a2, a3, a4, a5, a6, a7, a8);
+}
+template <typename R, typename F, typename A1, typename A2, typename A3,
+    typename A4, typename A5, typename A6, typename A7, typename A8,
+    typename A9>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6,
+    A7 a7, A8 a8, A9 a9) {
+  return f(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+}
+template <typename R, typename F, typename A1, typename A2, typename A3,
+    typename A4, typename A5, typename A6, typename A7, typename A8,
+    typename A9, typename A10>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6,
+    A7 a7, A8 a8, A9 a9, A10 a10) {
+  return f(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+}
+}  // namespace invoke_argument
+}  // namespace internal
+
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_0_VALUE_PARAMS()) {
-  return internal::CallableHelper<return_type>::Call(
-      ::std::tr1::get<k>(args));
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
+      ::testing::get<k>(args));
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_1_VALUE_PARAMS(p0)) {
-  return internal::CallableHelper<return_type>::Call(
-      ::std::tr1::get<k>(args), p0);
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
+      ::testing::get<k>(args), p0);
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_2_VALUE_PARAMS(p0, p1)) {
-  return internal::CallableHelper<return_type>::Call(
-      ::std::tr1::get<k>(args), p0, p1);
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
+      ::testing::get<k>(args), p0, p1);
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_3_VALUE_PARAMS(p0, p1, p2)) {
-  return internal::CallableHelper<return_type>::Call(
-      ::std::tr1::get<k>(args), p0, p1, p2);
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
+      ::testing::get<k>(args), p0, p1, p2);
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_4_VALUE_PARAMS(p0, p1, p2, p3)) {
-  return internal::CallableHelper<return_type>::Call(
-      ::std::tr1::get<k>(args), p0, p1, p2, p3);
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
+      ::testing::get<k>(args), p0, p1, p2, p3);
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_5_VALUE_PARAMS(p0, p1, p2, p3, p4)) {
-  return internal::CallableHelper<return_type>::Call(
-      ::std::tr1::get<k>(args), p0, p1, p2, p3, p4);
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
+      ::testing::get<k>(args), p0, p1, p2, p3, p4);
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_6_VALUE_PARAMS(p0, p1, p2, p3, p4, p5)) {
-  return internal::CallableHelper<return_type>::Call(
-      ::std::tr1::get<k>(args), p0, p1, p2, p3, p4, p5);
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
+      ::testing::get<k>(args), p0, p1, p2, p3, p4, p5);
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_7_VALUE_PARAMS(p0, p1, p2, p3, p4, p5, p6)) {
-  return internal::CallableHelper<return_type>::Call(
-      ::std::tr1::get<k>(args), p0, p1, p2, p3, p4, p5, p6);
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
+      ::testing::get<k>(args), p0, p1, p2, p3, p4, p5, p6);
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_8_VALUE_PARAMS(p0, p1, p2, p3, p4, p5, p6, p7)) {
-  return internal::CallableHelper<return_type>::Call(
-      ::std::tr1::get<k>(args), p0, p1, p2, p3, p4, p5, p6, p7);
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
+      ::testing::get<k>(args), p0, p1, p2, p3, p4, p5, p6, p7);
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_9_VALUE_PARAMS(p0, p1, p2, p3, p4, p5, p6, p7, p8)) {
-  return internal::CallableHelper<return_type>::Call(
-      ::std::tr1::get<k>(args), p0, p1, p2, p3, p4, p5, p6, p7, p8);
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
+      ::testing::get<k>(args), p0, p1, p2, p3, p4, p5, p6, p7, p8);
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_10_VALUE_PARAMS(p0, p1, p2, p3, p4, p5, p6, p7, p8, p9)) {
-  return internal::CallableHelper<return_type>::Call(
-      ::std::tr1::get<k>(args), p0, p1, p2, p3, p4, p5, p6, p7, p8, p9);
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
+      ::testing::get<k>(args), p0, p1, p2, p3, p4, p5, p6, p7, p8, p9);
 }
 
 // Various overloads for ReturnNew<T>().
@@ -4594,6 +4692,18 @@ ACTION_TEMPLATE(ReturnNew,
 #endif
 
 }  // namespace testing
+
+// Include any custom actions added by the local installation.
+// We must include this header at the end to make sure it can use the
+// declarations from this file.
+// This file was GENERATED by command:
+//     pump.py gmock-generated-actions.h.pump
+// DO NOT EDIT BY HAND!!!
+
+#ifndef GMOCK_INCLUDE_GMOCK_INTERNAL_CUSTOM_GMOCK_GENERATED_ACTIONS_H_
+#define GMOCK_INCLUDE_GMOCK_INTERNAL_CUSTOM_GMOCK_GENERATED_ACTIONS_H_
+
+#endif  // GMOCK_INCLUDE_GMOCK_INTERNAL_CUSTOM_GMOCK_GENERATED_ACTIONS_H_
 
 #endif  // GMOCK_INCLUDE_GMOCK_GMOCK_GENERATED_ACTIONS_H_
 // This file was GENERATED by command:
@@ -4908,6 +5018,31 @@ class StringMatchResultListener : public MatchResultListener {
 
 namespace internal {
 
+struct AnyEq {
+  template <typename A, typename B>
+  bool operator()(const A& a, const B& b) const { return a == b; }
+};
+struct AnyNe {
+  template <typename A, typename B>
+  bool operator()(const A& a, const B& b) const { return a != b; }
+};
+struct AnyLt {
+  template <typename A, typename B>
+  bool operator()(const A& a, const B& b) const { return a < b; }
+};
+struct AnyGt {
+  template <typename A, typename B>
+  bool operator()(const A& a, const B& b) const { return a > b; }
+};
+struct AnyLe {
+  template <typename A, typename B>
+  bool operator()(const A& a, const B& b) const { return a <= b; }
+};
+struct AnyGe {
+  template <typename A, typename B>
+  bool operator()(const A& a, const B& b) const { return a >= b; }
+};
+
 // A match result listener that ignores the explanation.
 class DummyMatchResultListener : public MatchResultListener {
  public:
@@ -5005,7 +5140,7 @@ class Matcher : public internal::MatcherBase<T> {
   // Constructs a null matcher.  Needed for storing Matcher objects in STL
   // containers.  A default-constructed matcher is not yet initialized.  You
   // cannot use it until a valid value has been assigned to it.
-  Matcher() {}
+  explicit Matcher() {}  // NOLINT
 
   // Constructs a matcher from its implementation.
   explicit Matcher(const MatcherInterface<T>* impl)
@@ -5415,7 +5550,6 @@ class TuplePrefix {
   template <typename MatcherTuple, typename ValueTuple>
   static bool Matches(const MatcherTuple& matcher_tuple,
                       const ValueTuple& value_tuple) {
-    using ::std::tr1::get;
     return TuplePrefix<N - 1>::Matches(matcher_tuple, value_tuple)
         && get<N - 1>(matcher_tuple).Matches(get<N - 1>(value_tuple));
   }
@@ -5428,9 +5562,6 @@ class TuplePrefix {
   static void ExplainMatchFailuresTo(const MatcherTuple& matchers,
                                      const ValueTuple& values,
                                      ::std::ostream* os) {
-    using ::std::tr1::tuple_element;
-    using ::std::tr1::get;
-
     // First, describes failures in the first N - 1 fields.
     TuplePrefix<N - 1>::ExplainMatchFailuresTo(matchers, values, os);
 
@@ -5483,7 +5614,6 @@ class TuplePrefix<0> {
 template <typename MatcherTuple, typename ValueTuple>
 bool TupleMatches(const MatcherTuple& matcher_tuple,
                   const ValueTuple& value_tuple) {
-  using ::std::tr1::tuple_size;
   // Makes sure that matcher_tuple and value_tuple have the same
   // number of fields.
   GTEST_COMPILE_ASSERT_(tuple_size<MatcherTuple>::value ==
@@ -5499,7 +5629,6 @@ template <typename MatcherTuple, typename ValueTuple>
 void ExplainMatchFailureTupleTo(const MatcherTuple& matchers,
                                 const ValueTuple& values,
                                 ::std::ostream* os) {
-  using ::std::tr1::tuple_size;
   TuplePrefix<tuple_size<MatcherTuple>::value>::ExplainMatchFailuresTo(
       matchers, values, os);
 }
@@ -5511,7 +5640,7 @@ void ExplainMatchFailureTupleTo(const MatcherTuple& matchers,
 template <typename Tuple, typename Func, typename OutIter>
 class TransformTupleValuesHelper {
  private:
-  typedef typename ::std::tr1::tuple_size<Tuple> TupleSize;
+  typedef ::testing::tuple_size<Tuple> TupleSize;
 
  public:
   // For each member of tuple 't', taken in order, evaluates '*out++ = f(t)'.
@@ -5524,7 +5653,7 @@ class TransformTupleValuesHelper {
   template <typename Tup, size_t kRemainingSize>
   struct IterateOverTuple {
     OutIter operator() (Func f, const Tup& t, OutIter out) const {
-      *out++ = f(::std::tr1::get<TupleSize::value - kRemainingSize>(t));
+      *out++ = f(::testing::get<TupleSize::value - kRemainingSize>(t));
       return IterateOverTuple<Tup, kRemainingSize - 1>()(f, t, out);
     }
   };
@@ -5577,55 +5706,90 @@ class AnythingMatcher {
 // used to match an int, a short, a double, etc).  Therefore we use
 // a template type conversion operator in the implementation.
 //
-// We define this as a macro in order to eliminate duplicated source
-// code.
-//
 // The following template definition assumes that the Rhs parameter is
 // a "bare" type (i.e. neither 'const T' nor 'T&').
-#define GMOCK_IMPLEMENT_COMPARISON_MATCHER_( \
-    name, op, relation, negated_relation) \
-  template <typename Rhs> class name##Matcher { \
-   public: \
-    explicit name##Matcher(const Rhs& rhs) : rhs_(rhs) {} \
-    template <typename Lhs> \
-    operator Matcher<Lhs>() const { \
-      return MakeMatcher(new Impl<Lhs>(rhs_)); \
-    } \
-   private: \
-    template <typename Lhs> \
-    class Impl : public MatcherInterface<Lhs> { \
-     public: \
-      explicit Impl(const Rhs& rhs) : rhs_(rhs) {} \
-      virtual bool MatchAndExplain(\
-          Lhs lhs, MatchResultListener* /* listener */) const { \
-        return lhs op rhs_; \
-      } \
-      virtual void DescribeTo(::std::ostream* os) const { \
-        *os << relation  " "; \
-        UniversalPrint(rhs_, os); \
-      } \
-      virtual void DescribeNegationTo(::std::ostream* os) const { \
-        *os << negated_relation  " "; \
-        UniversalPrint(rhs_, os); \
-      } \
-     private: \
-      Rhs rhs_; \
-      GTEST_DISALLOW_ASSIGN_(Impl); \
-    }; \
-    Rhs rhs_; \
-    GTEST_DISALLOW_ASSIGN_(name##Matcher); \
+template <typename D, typename Rhs, typename Op>
+class ComparisonBase {
+ public:
+  explicit ComparisonBase(const Rhs& rhs) : rhs_(rhs) {}
+  template <typename Lhs>
+  operator Matcher<Lhs>() const {
+    return MakeMatcher(new Impl<Lhs>(rhs_));
   }
 
-// Implements Eq(v), Ge(v), Gt(v), Le(v), Lt(v), and Ne(v)
-// respectively.
-GMOCK_IMPLEMENT_COMPARISON_MATCHER_(Eq, ==, "is equal to", "isn't equal to");
-GMOCK_IMPLEMENT_COMPARISON_MATCHER_(Ge, >=, "is >=", "isn't >=");
-GMOCK_IMPLEMENT_COMPARISON_MATCHER_(Gt, >, "is >", "isn't >");
-GMOCK_IMPLEMENT_COMPARISON_MATCHER_(Le, <=, "is <=", "isn't <=");
-GMOCK_IMPLEMENT_COMPARISON_MATCHER_(Lt, <, "is <", "isn't <");
-GMOCK_IMPLEMENT_COMPARISON_MATCHER_(Ne, !=, "isn't equal to", "is equal to");
+ private:
+  template <typename Lhs>
+  class Impl : public MatcherInterface<Lhs> {
+   public:
+    explicit Impl(const Rhs& rhs) : rhs_(rhs) {}
+    virtual bool MatchAndExplain(
+        Lhs lhs, MatchResultListener* /* listener */) const {
+      return Op()(lhs, rhs_);
+    }
+    virtual void DescribeTo(::std::ostream* os) const {
+      *os << D::Desc() << " ";
+      UniversalPrint(rhs_, os);
+    }
+    virtual void DescribeNegationTo(::std::ostream* os) const {
+      *os << D::NegatedDesc() <<  " ";
+      UniversalPrint(rhs_, os);
+    }
+   private:
+    Rhs rhs_;
+    GTEST_DISALLOW_ASSIGN_(Impl);
+  };
+  Rhs rhs_;
+  GTEST_DISALLOW_ASSIGN_(ComparisonBase);
+};
 
-#undef GMOCK_IMPLEMENT_COMPARISON_MATCHER_
+template <typename Rhs>
+class EqMatcher : public ComparisonBase<EqMatcher<Rhs>, Rhs, AnyEq> {
+ public:
+  explicit EqMatcher(const Rhs& rhs)
+      : ComparisonBase<EqMatcher<Rhs>, Rhs, AnyEq>(rhs) { }
+  static const char* Desc() { return "is equal to"; }
+  static const char* NegatedDesc() { return "isn't equal to"; }
+};
+template <typename Rhs>
+class NeMatcher : public ComparisonBase<NeMatcher<Rhs>, Rhs, AnyNe> {
+ public:
+  explicit NeMatcher(const Rhs& rhs)
+      : ComparisonBase<NeMatcher<Rhs>, Rhs, AnyNe>(rhs) { }
+  static const char* Desc() { return "isn't equal to"; }
+  static const char* NegatedDesc() { return "is equal to"; }
+};
+template <typename Rhs>
+class LtMatcher : public ComparisonBase<LtMatcher<Rhs>, Rhs, AnyLt> {
+ public:
+  explicit LtMatcher(const Rhs& rhs)
+      : ComparisonBase<LtMatcher<Rhs>, Rhs, AnyLt>(rhs) { }
+  static const char* Desc() { return "is <"; }
+  static const char* NegatedDesc() { return "isn't <"; }
+};
+template <typename Rhs>
+class GtMatcher : public ComparisonBase<GtMatcher<Rhs>, Rhs, AnyGt> {
+ public:
+  explicit GtMatcher(const Rhs& rhs)
+      : ComparisonBase<GtMatcher<Rhs>, Rhs, AnyGt>(rhs) { }
+  static const char* Desc() { return "is >"; }
+  static const char* NegatedDesc() { return "isn't >"; }
+};
+template <typename Rhs>
+class LeMatcher : public ComparisonBase<LeMatcher<Rhs>, Rhs, AnyLe> {
+ public:
+  explicit LeMatcher(const Rhs& rhs)
+      : ComparisonBase<LeMatcher<Rhs>, Rhs, AnyLe>(rhs) { }
+  static const char* Desc() { return "is <="; }
+  static const char* NegatedDesc() { return "isn't <="; }
+};
+template <typename Rhs>
+class GeMatcher : public ComparisonBase<GeMatcher<Rhs>, Rhs, AnyGe> {
+ public:
+  explicit GeMatcher(const Rhs& rhs)
+      : ComparisonBase<GeMatcher<Rhs>, Rhs, AnyGe>(rhs) { }
+  static const char* Desc() { return "is >="; }
+  static const char* NegatedDesc() { return "isn't >="; }
+};
 
 // Implements the polymorphic IsNull() matcher, which matches any raw or smart
 // pointer that is NULL.
@@ -5634,7 +5798,11 @@ class IsNullMatcher {
   template <typename Pointer>
   bool MatchAndExplain(const Pointer& p,
                        MatchResultListener* /* listener */) const {
+#if GTEST_LANG_CXX11
+    return p == nullptr;
+#else  // GTEST_LANG_CXX11
     return GetRawPointer(p) == NULL;
+#endif  // GTEST_LANG_CXX11
   }
 
   void DescribeTo(::std::ostream* os) const { *os << "is NULL"; }
@@ -5650,7 +5818,11 @@ class NotNullMatcher {
   template <typename Pointer>
   bool MatchAndExplain(const Pointer& p,
                        MatchResultListener* /* listener */) const {
+#if GTEST_LANG_CXX11
+    return p != nullptr;
+#else  // GTEST_LANG_CXX11
     return GetRawPointer(p) != NULL;
+#endif  // GTEST_LANG_CXX11
   }
 
   void DescribeTo(::std::ostream* os) const { *os << "isn't NULL"; }
@@ -6024,51 +6196,64 @@ class MatchesRegexMatcher {
 // used to match a tuple<int, short>, a tuple<const long&, double>,
 // etc).  Therefore we use a template type conversion operator in the
 // implementation.
-//
-// We define this as a macro in order to eliminate duplicated source
-// code.
-#define GMOCK_IMPLEMENT_COMPARISON2_MATCHER_(name, op, relation) \
-  class name##2Matcher { \
-   public: \
-    template <typename T1, typename T2> \
-    operator Matcher< ::std::tr1::tuple<T1, T2> >() const { \
-      return MakeMatcher(new Impl< ::std::tr1::tuple<T1, T2> >); \
-    } \
-    template <typename T1, typename T2> \
-    operator Matcher<const ::std::tr1::tuple<T1, T2>&>() const { \
-      return MakeMatcher(new Impl<const ::std::tr1::tuple<T1, T2>&>); \
-    } \
-   private: \
-    template <typename Tuple> \
-    class Impl : public MatcherInterface<Tuple> { \
-     public: \
-      virtual bool MatchAndExplain( \
-          Tuple args, \
-          MatchResultListener* /* listener */) const { \
-        return ::std::tr1::get<0>(args) op ::std::tr1::get<1>(args); \
-      } \
-      virtual void DescribeTo(::std::ostream* os) const { \
-        *os << "are " relation;                                 \
-      } \
-      virtual void DescribeNegationTo(::std::ostream* os) const { \
-        *os << "aren't " relation; \
-      } \
-    }; \
+template <typename D, typename Op>
+class PairMatchBase {
+ public:
+  template <typename T1, typename T2>
+  operator Matcher< ::testing::tuple<T1, T2> >() const {
+    return MakeMatcher(new Impl< ::testing::tuple<T1, T2> >);
+  }
+  template <typename T1, typename T2>
+  operator Matcher<const ::testing::tuple<T1, T2>&>() const {
+    return MakeMatcher(new Impl<const ::testing::tuple<T1, T2>&>);
   }
 
-// Implements Eq(), Ge(), Gt(), Le(), Lt(), and Ne() respectively.
-GMOCK_IMPLEMENT_COMPARISON2_MATCHER_(Eq, ==, "an equal pair");
-GMOCK_IMPLEMENT_COMPARISON2_MATCHER_(
-    Ge, >=, "a pair where the first >= the second");
-GMOCK_IMPLEMENT_COMPARISON2_MATCHER_(
-    Gt, >, "a pair where the first > the second");
-GMOCK_IMPLEMENT_COMPARISON2_MATCHER_(
-    Le, <=, "a pair where the first <= the second");
-GMOCK_IMPLEMENT_COMPARISON2_MATCHER_(
-    Lt, <, "a pair where the first < the second");
-GMOCK_IMPLEMENT_COMPARISON2_MATCHER_(Ne, !=, "an unequal pair");
+ private:
+  static ::std::ostream& GetDesc(::std::ostream& os) {  // NOLINT
+    return os << D::Desc();
+  }
 
-#undef GMOCK_IMPLEMENT_COMPARISON2_MATCHER_
+  template <typename Tuple>
+  class Impl : public MatcherInterface<Tuple> {
+   public:
+    virtual bool MatchAndExplain(
+        Tuple args,
+        MatchResultListener* /* listener */) const {
+      return Op()(::testing::get<0>(args), ::testing::get<1>(args));
+    }
+    virtual void DescribeTo(::std::ostream* os) const {
+      *os << "are " << GetDesc;
+    }
+    virtual void DescribeNegationTo(::std::ostream* os) const {
+      *os << "aren't " << GetDesc;
+    }
+  };
+};
+
+class Eq2Matcher : public PairMatchBase<Eq2Matcher, AnyEq> {
+ public:
+  static const char* Desc() { return "an equal pair"; }
+};
+class Ne2Matcher : public PairMatchBase<Ne2Matcher, AnyNe> {
+ public:
+  static const char* Desc() { return "an unequal pair"; }
+};
+class Lt2Matcher : public PairMatchBase<Lt2Matcher, AnyLt> {
+ public:
+  static const char* Desc() { return "a pair where the first < the second"; }
+};
+class Gt2Matcher : public PairMatchBase<Gt2Matcher, AnyGt> {
+ public:
+  static const char* Desc() { return "a pair where the first > the second"; }
+};
+class Le2Matcher : public PairMatchBase<Le2Matcher, AnyLe> {
+ public:
+  static const char* Desc() { return "a pair where the first <= the second"; }
+};
+class Ge2Matcher : public PairMatchBase<Ge2Matcher, AnyGe> {
+ public:
+  static const char* Desc() { return "a pair where the first >= the second"; }
+};
 
 // Implements the Not(...) matcher for a particular argument type T.
 // We do not nest it inside the NotMatcher class template, as that
@@ -6467,7 +6652,7 @@ class MatcherAsPredicate {
 template <typename M>
 class PredicateFormatterFromMatcher {
  public:
-  explicit PredicateFormatterFromMatcher(const M& m) : matcher_(m) {}
+  explicit PredicateFormatterFromMatcher(M m) : matcher_(internal::move(m)) {}
 
   // This template () operator allows a PredicateFormatterFromMatcher
   // object to act as a predicate-formatter suitable for using with
@@ -6507,10 +6692,11 @@ class PredicateFormatterFromMatcher {
 // A helper function for converting a matcher to a predicate-formatter
 // without the user needing to explicitly write the type.  This is
 // used for implementing ASSERT_THAT() and EXPECT_THAT().
+// Implementation detail: 'matcher' is received by-value to force decaying.
 template <typename M>
 inline PredicateFormatterFromMatcher<M>
-MakePredicateFormatterFromMatcher(const M& matcher) {
-  return PredicateFormatterFromMatcher<M>(matcher);
+MakePredicateFormatterFromMatcher(M matcher) {
+  return PredicateFormatterFromMatcher<M>(internal::move(matcher));
 }
 
 // Implements the polymorphic floating point equality matcher, which matches
@@ -6521,20 +6707,23 @@ template <typename FloatType>
 class FloatingEqMatcher {
  public:
   // Constructor for FloatingEqMatcher.
-  // The matcher's input will be compared with rhs.  The matcher treats two
+  // The matcher's input will be compared with expected.  The matcher treats two
   // NANs as equal if nan_eq_nan is true.  Otherwise, under IEEE standards,
   // equality comparisons between NANs will always return false.  We specify a
   // negative max_abs_error_ term to indicate that ULP-based approximation will
   // be used for comparison.
-  FloatingEqMatcher(FloatType rhs, bool nan_eq_nan) :
-    rhs_(rhs), nan_eq_nan_(nan_eq_nan), max_abs_error_(-1) {
+  FloatingEqMatcher(FloatType expected, bool nan_eq_nan) :
+    expected_(expected), nan_eq_nan_(nan_eq_nan), max_abs_error_(-1) {
   }
 
   // Constructor that supports a user-specified max_abs_error that will be used
   // for comparison instead of ULP-based approximation.  The max absolute
   // should be non-negative.
-  FloatingEqMatcher(FloatType rhs, bool nan_eq_nan, FloatType max_abs_error) :
-    rhs_(rhs), nan_eq_nan_(nan_eq_nan), max_abs_error_(max_abs_error) {
+  FloatingEqMatcher(FloatType expected, bool nan_eq_nan,
+                    FloatType max_abs_error)
+      : expected_(expected),
+        nan_eq_nan_(nan_eq_nan),
+        max_abs_error_(max_abs_error) {
     GTEST_CHECK_(max_abs_error >= 0)
         << ", where max_abs_error is" << max_abs_error;
   }
@@ -6543,16 +6732,18 @@ class FloatingEqMatcher {
   template <typename T>
   class Impl : public MatcherInterface<T> {
    public:
-    Impl(FloatType rhs, bool nan_eq_nan, FloatType max_abs_error) :
-      rhs_(rhs), nan_eq_nan_(nan_eq_nan), max_abs_error_(max_abs_error) {}
+    Impl(FloatType expected, bool nan_eq_nan, FloatType max_abs_error)
+        : expected_(expected),
+          nan_eq_nan_(nan_eq_nan),
+          max_abs_error_(max_abs_error) {}
 
     virtual bool MatchAndExplain(T value,
-                                 MatchResultListener* /* listener */) const {
-      const FloatingPoint<FloatType> lhs(value), rhs(rhs_);
+                                 MatchResultListener* listener) const {
+      const FloatingPoint<FloatType> actual(value), expected(expected_);
 
       // Compares NaNs first, if nan_eq_nan_ is true.
-      if (lhs.is_nan() || rhs.is_nan()) {
-        if (lhs.is_nan() && rhs.is_nan()) {
+      if (actual.is_nan() || expected.is_nan()) {
+        if (actual.is_nan() && expected.is_nan()) {
           return nan_eq_nan_;
         }
         // One is nan; the other is not nan.
@@ -6560,12 +6751,24 @@ class FloatingEqMatcher {
       }
       if (HasMaxAbsError()) {
         // We perform an equality check so that inf will match inf, regardless
-        // of error bounds.  If the result of value - rhs_ would result in
+        // of error bounds.  If the result of value - expected_ would result in
         // overflow or if either value is inf, the default result is infinity,
         // which should only match if max_abs_error_ is also infinity.
-        return value == rhs_ || fabs(value - rhs_) <= max_abs_error_;
+        if (value == expected_) {
+          return true;
+        }
+
+        const FloatType diff = value - expected_;
+        if (fabs(diff) <= max_abs_error_) {
+          return true;
+        }
+
+        if (listener->IsInterested()) {
+          *listener << "which is " << diff << " from " << expected_;
+        }
+        return false;
       } else {
-        return lhs.AlmostEquals(rhs);
+        return actual.AlmostEquals(expected);
       }
     }
 
@@ -6575,14 +6778,14 @@ class FloatingEqMatcher {
       // after outputting.
       const ::std::streamsize old_precision = os->precision(
           ::std::numeric_limits<FloatType>::digits10 + 2);
-      if (FloatingPoint<FloatType>(rhs_).is_nan()) {
+      if (FloatingPoint<FloatType>(expected_).is_nan()) {
         if (nan_eq_nan_) {
           *os << "is NaN";
         } else {
           *os << "never matches";
         }
       } else {
-        *os << "is approximately " << rhs_;
+        *os << "is approximately " << expected_;
         if (HasMaxAbsError()) {
           *os << " (absolute error <= " << max_abs_error_ << ")";
         }
@@ -6594,14 +6797,14 @@ class FloatingEqMatcher {
       // As before, get original precision.
       const ::std::streamsize old_precision = os->precision(
           ::std::numeric_limits<FloatType>::digits10 + 2);
-      if (FloatingPoint<FloatType>(rhs_).is_nan()) {
+      if (FloatingPoint<FloatType>(expected_).is_nan()) {
         if (nan_eq_nan_) {
           *os << "isn't NaN";
         } else {
           *os << "is anything";
         }
       } else {
-        *os << "isn't approximately " << rhs_;
+        *os << "isn't approximately " << expected_;
         if (HasMaxAbsError()) {
           *os << " (absolute error > " << max_abs_error_ << ")";
         }
@@ -6615,7 +6818,7 @@ class FloatingEqMatcher {
       return max_abs_error_ >= 0;
     }
 
-    const FloatType rhs_;
+    const FloatType expected_;
     const bool nan_eq_nan_;
     // max_abs_error will be used for value comparison when >= 0.
     const FloatType max_abs_error_;
@@ -6623,27 +6826,29 @@ class FloatingEqMatcher {
     GTEST_DISALLOW_ASSIGN_(Impl);
   };
 
-  // The following 3 type conversion operators allow FloatEq(rhs) and
-  // NanSensitiveFloatEq(rhs) to be used as a Matcher<float>, a
+  // The following 3 type conversion operators allow FloatEq(expected) and
+  // NanSensitiveFloatEq(expected) to be used as a Matcher<float>, a
   // Matcher<const float&>, or a Matcher<float&>, but nothing else.
   // (While Google's C++ coding style doesn't allow arguments passed
   // by non-const reference, we may see them in code not conforming to
   // the style.  Therefore Google Mock needs to support them.)
   operator Matcher<FloatType>() const {
-    return MakeMatcher(new Impl<FloatType>(rhs_, nan_eq_nan_, max_abs_error_));
+    return MakeMatcher(
+        new Impl<FloatType>(expected_, nan_eq_nan_, max_abs_error_));
   }
 
   operator Matcher<const FloatType&>() const {
     return MakeMatcher(
-        new Impl<const FloatType&>(rhs_, nan_eq_nan_, max_abs_error_));
+        new Impl<const FloatType&>(expected_, nan_eq_nan_, max_abs_error_));
   }
 
   operator Matcher<FloatType&>() const {
-    return MakeMatcher(new Impl<FloatType&>(rhs_, nan_eq_nan_, max_abs_error_));
+    return MakeMatcher(
+        new Impl<FloatType&>(expected_, nan_eq_nan_, max_abs_error_));
   }
 
  private:
-  const FloatType rhs_;
+  const FloatType expected_;
   const bool nan_eq_nan_;
   // max_abs_error will be used for value comparison when >= 0.
   const FloatType max_abs_error_;
@@ -6710,6 +6915,83 @@ class PointeeMatcher {
   const InnerMatcher matcher_;
 
   GTEST_DISALLOW_ASSIGN_(PointeeMatcher);
+};
+
+// Implements the WhenDynamicCastTo<T>(m) matcher that matches a pointer or
+// reference that matches inner_matcher when dynamic_cast<T> is applied.
+// The result of dynamic_cast<To> is forwarded to the inner matcher.
+// If To is a pointer and the cast fails, the inner matcher will receive NULL.
+// If To is a reference and the cast fails, this matcher returns false
+// immediately.
+template <typename To>
+class WhenDynamicCastToMatcherBase {
+ public:
+  explicit WhenDynamicCastToMatcherBase(const Matcher<To>& matcher)
+      : matcher_(matcher) {}
+
+  void DescribeTo(::std::ostream* os) const {
+    GetCastTypeDescription(os);
+    matcher_.DescribeTo(os);
+  }
+
+  void DescribeNegationTo(::std::ostream* os) const {
+    GetCastTypeDescription(os);
+    matcher_.DescribeNegationTo(os);
+  }
+
+ protected:
+  const Matcher<To> matcher_;
+
+  static string GetToName() {
+#if GTEST_HAS_RTTI
+    return GetTypeName<To>();
+#else  // GTEST_HAS_RTTI
+    return "the target type";
+#endif  // GTEST_HAS_RTTI
+  }
+
+ private:
+  static void GetCastTypeDescription(::std::ostream* os) {
+    *os << "when dynamic_cast to " << GetToName() << ", ";
+  }
+
+  GTEST_DISALLOW_ASSIGN_(WhenDynamicCastToMatcherBase);
+};
+
+// Primary template.
+// To is a pointer. Cast and forward the result.
+template <typename To>
+class WhenDynamicCastToMatcher : public WhenDynamicCastToMatcherBase<To> {
+ public:
+  explicit WhenDynamicCastToMatcher(const Matcher<To>& matcher)
+      : WhenDynamicCastToMatcherBase<To>(matcher) {}
+
+  template <typename From>
+  bool MatchAndExplain(From from, MatchResultListener* listener) const {
+    // TODO(sbenza): Add more detail on failures. ie did the dyn_cast fail?
+    To to = dynamic_cast<To>(from);
+    return MatchPrintAndExplain(to, this->matcher_, listener);
+  }
+};
+
+// Specialize for references.
+// In this case we return false if the dynamic_cast fails.
+template <typename To>
+class WhenDynamicCastToMatcher<To&> : public WhenDynamicCastToMatcherBase<To&> {
+ public:
+  explicit WhenDynamicCastToMatcher(const Matcher<To&>& matcher)
+      : WhenDynamicCastToMatcherBase<To&>(matcher) {}
+
+  template <typename From>
+  bool MatchAndExplain(From& from, MatchResultListener* listener) const {
+    // We don't want an std::bad_cast here, so do the cast with pointers.
+    To* to = dynamic_cast<To*>(&from);
+    if (to == NULL) {
+      *listener << "which cannot be dynamic_cast to " << this->GetToName();
+      return false;
+    }
+    return MatchPrintAndExplain(*to, this->matcher_, listener);
+  }
 };
 
 // Implements the Field() matcher for matching a field (i.e. member
@@ -6809,8 +7091,15 @@ class PropertyMatcher {
     *listener << "whose given property is ";
     // Cannot pass the return value (for example, int) to MatchPrintAndExplain,
     // which takes a non-const reference as argument.
+#if defined(_PREFAST_ ) && _MSC_VER == 1800
+    // Workaround bug in VC++ 2013's /analyze parser.
+    // https://connect.microsoft.com/VisualStudio/feedback/details/1106363/internal-compiler-error-with-analyze-due-to-failure-to-infer-move
+    posix::Abort();  // To make sure it is never run.
+    return false;
+#else
     RefToConstProperty result = (obj.*property_)();
     return MatchPrintAndExplain(result, matcher_, listener);
+#endif
   }
 
   bool MatchAndExplainImpl(true_type /* is_pointer */, const Class* p,
@@ -6976,6 +7265,67 @@ class SizeIsMatcher {
   GTEST_DISALLOW_ASSIGN_(SizeIsMatcher);
 };
 
+// Implements a matcher that checks the begin()..end() distance of an STL-style
+// container.
+template <typename DistanceMatcher>
+class BeginEndDistanceIsMatcher {
+ public:
+  explicit BeginEndDistanceIsMatcher(const DistanceMatcher& distance_matcher)
+      : distance_matcher_(distance_matcher) {}
+
+  template <typename Container>
+  operator Matcher<Container>() const {
+    return MakeMatcher(new Impl<Container>(distance_matcher_));
+  }
+
+  template <typename Container>
+  class Impl : public MatcherInterface<Container> {
+   public:
+    typedef internal::StlContainerView<
+        GTEST_REMOVE_REFERENCE_AND_CONST_(Container)> ContainerView;
+    typedef typename std::iterator_traits<
+        typename ContainerView::type::const_iterator>::difference_type
+        DistanceType;
+    explicit Impl(const DistanceMatcher& distance_matcher)
+        : distance_matcher_(MatcherCast<DistanceType>(distance_matcher)) {}
+
+    virtual void DescribeTo(::std::ostream* os) const {
+      *os << "distance between begin() and end() ";
+      distance_matcher_.DescribeTo(os);
+    }
+    virtual void DescribeNegationTo(::std::ostream* os) const {
+      *os << "distance between begin() and end() ";
+      distance_matcher_.DescribeNegationTo(os);
+    }
+
+    virtual bool MatchAndExplain(Container container,
+                                 MatchResultListener* listener) const {
+#if GTEST_HAS_STD_BEGIN_AND_END_
+      using std::begin;
+      using std::end;
+      DistanceType distance = std::distance(begin(container), end(container));
+#else
+      DistanceType distance = std::distance(container.begin(), container.end());
+#endif
+      StringMatchResultListener distance_listener;
+      const bool result =
+          distance_matcher_.MatchAndExplain(distance, &distance_listener);
+      *listener << "whose distance between begin() and end() " << distance
+                << (result ? " matches" : " doesn't match");
+      PrintIfNotEmpty(distance_listener.str(), listener->stream());
+      return result;
+    }
+
+   private:
+    const Matcher<DistanceType> distance_matcher_;
+    GTEST_DISALLOW_ASSIGN_(Impl);
+  };
+
+ private:
+  const DistanceMatcher distance_matcher_;
+  GTEST_DISALLOW_ASSIGN_(BeginEndDistanceIsMatcher);
+};
+
 // Implements an equality matcher for any STL-style container whose elements
 // support ==. This matcher is like Eq(), but its failure explanations provide
 // more detailed information that is useful when the container is used as a set.
@@ -6993,9 +7343,10 @@ class ContainerEqMatcher {
   typedef typename View::type StlContainer;
   typedef typename View::const_reference StlContainerReference;
 
-  // We make a copy of rhs in case the elements in it are modified
+  // We make a copy of expected in case the elements in it are modified
   // after this matcher is created.
-  explicit ContainerEqMatcher(const Container& rhs) : rhs_(View::Copy(rhs)) {
+  explicit ContainerEqMatcher(const Container& expected)
+      : expected_(View::Copy(expected)) {
     // Makes sure the user doesn't instantiate this class template
     // with a const or reference type.
     (void)testing::StaticAssertTypeEq<Container,
@@ -7004,11 +7355,11 @@ class ContainerEqMatcher {
 
   void DescribeTo(::std::ostream* os) const {
     *os << "equals ";
-    UniversalPrint(rhs_, os);
+    UniversalPrint(expected_, os);
   }
   void DescribeNegationTo(::std::ostream* os) const {
     *os << "does not equal ";
-    UniversalPrint(rhs_, os);
+    UniversalPrint(expected_, os);
   }
 
   template <typename LhsContainer>
@@ -7020,7 +7371,7 @@ class ContainerEqMatcher {
         LhsView;
     typedef typename LhsView::type LhsStlContainer;
     StlContainerReference lhs_stl_container = LhsView::ConstReference(lhs);
-    if (lhs_stl_container == rhs_)
+    if (lhs_stl_container == expected_)
       return true;
 
     ::std::ostream* const os = listener->stream();
@@ -7030,8 +7381,8 @@ class ContainerEqMatcher {
       for (typename LhsStlContainer::const_iterator it =
                lhs_stl_container.begin();
            it != lhs_stl_container.end(); ++it) {
-        if (internal::ArrayAwareFind(rhs_.begin(), rhs_.end(), *it) ==
-            rhs_.end()) {
+        if (internal::ArrayAwareFind(expected_.begin(), expected_.end(), *it) ==
+            expected_.end()) {
           if (printed_header) {
             *os << ", ";
           } else {
@@ -7044,8 +7395,8 @@ class ContainerEqMatcher {
 
       // Now check for missing values.
       bool printed_header2 = false;
-      for (typename StlContainer::const_iterator it = rhs_.begin();
-           it != rhs_.end(); ++it) {
+      for (typename StlContainer::const_iterator it = expected_.begin();
+           it != expected_.end(); ++it) {
         if (internal::ArrayAwareFind(
                 lhs_stl_container.begin(), lhs_stl_container.end(), *it) ==
             lhs_stl_container.end()) {
@@ -7065,7 +7416,7 @@ class ContainerEqMatcher {
   }
 
  private:
-  const StlContainer rhs_;
+  const StlContainer expected_;
 
   GTEST_DISALLOW_ASSIGN_(ContainerEqMatcher);
 };
@@ -7191,7 +7542,7 @@ class PointwiseMatcher {
     // reference, as they may be expensive to copy.  We must use tuple
     // instead of pair here, as a pair cannot hold references (C++ 98,
     // 20.2.2 [lib.pairs]).
-    typedef ::std::tr1::tuple<const LhsValue&, const RhsValue&> InnerMatcherArg;
+    typedef ::testing::tuple<const LhsValue&, const RhsValue&> InnerMatcherArg;
 
     Impl(const TupleMatcher& tuple_matcher, const RhsStlContainer& rhs)
         // mono_tuple_matcher_ holds a monomorphic version of the tuple matcher.
@@ -7928,7 +8279,7 @@ class UnorderedElementsAreMatcher {
     typedef typename View::value_type Element;
     typedef ::std::vector<Matcher<const Element&> > MatcherVec;
     MatcherVec matchers;
-    matchers.reserve(::std::tr1::tuple_size<MatcherTuple>::value);
+    matchers.reserve(::testing::tuple_size<MatcherTuple>::value);
     TransformTupleValues(CastAndAppendTransform<const Element&>(), matchers_,
                          ::std::back_inserter(matchers));
     return MakeMatcher(new UnorderedElementsAreMatcherImpl<Container>(
@@ -7953,7 +8304,7 @@ class ElementsAreMatcher {
     typedef typename View::value_type Element;
     typedef ::std::vector<Matcher<const Element&> > MatcherVec;
     MatcherVec matchers;
-    matchers.reserve(::std::tr1::tuple_size<MatcherTuple>::value);
+    matchers.reserve(::testing::tuple_size<MatcherTuple>::value);
     TransformTupleValues(CastAndAppendTransform<const Element&>(), matchers_,
                          ::std::back_inserter(matchers));
     return MakeMatcher(new ElementsAreMatcherImpl<Container>(
@@ -8007,6 +8358,81 @@ class ElementsAreArrayMatcher {
   GTEST_DISALLOW_ASSIGN_(ElementsAreArrayMatcher);
 };
 
+// Given a 2-tuple matcher tm of type Tuple2Matcher and a value second
+// of type Second, BoundSecondMatcher<Tuple2Matcher, Second>(tm,
+// second) is a polymorphic matcher that matches a value x iff tm
+// matches tuple (x, second).  Useful for implementing
+// UnorderedPointwise() in terms of UnorderedElementsAreArray().
+//
+// BoundSecondMatcher is copyable and assignable, as we need to put
+// instances of this class in a vector when implementing
+// UnorderedPointwise().
+template <typename Tuple2Matcher, typename Second>
+class BoundSecondMatcher {
+ public:
+  BoundSecondMatcher(const Tuple2Matcher& tm, const Second& second)
+      : tuple2_matcher_(tm), second_value_(second) {}
+
+  template <typename T>
+  operator Matcher<T>() const {
+    return MakeMatcher(new Impl<T>(tuple2_matcher_, second_value_));
+  }
+
+  // We have to define this for UnorderedPointwise() to compile in
+  // C++98 mode, as it puts BoundSecondMatcher instances in a vector,
+  // which requires the elements to be assignable in C++98.  The
+  // compiler cannot generate the operator= for us, as Tuple2Matcher
+  // and Second may not be assignable.
+  //
+  // However, this should never be called, so the implementation just
+  // need to assert.
+  void operator=(const BoundSecondMatcher& /*rhs*/) {
+    GTEST_LOG_(FATAL) << "BoundSecondMatcher should never be assigned.";
+  }
+
+ private:
+  template <typename T>
+  class Impl : public MatcherInterface<T> {
+   public:
+    typedef ::testing::tuple<T, Second> ArgTuple;
+
+    Impl(const Tuple2Matcher& tm, const Second& second)
+        : mono_tuple2_matcher_(SafeMatcherCast<const ArgTuple&>(tm)),
+          second_value_(second) {}
+
+    virtual void DescribeTo(::std::ostream* os) const {
+      *os << "and ";
+      UniversalPrint(second_value_, os);
+      *os << " ";
+      mono_tuple2_matcher_.DescribeTo(os);
+    }
+
+    virtual bool MatchAndExplain(T x, MatchResultListener* listener) const {
+      return mono_tuple2_matcher_.MatchAndExplain(ArgTuple(x, second_value_),
+                                                  listener);
+    }
+
+   private:
+    const Matcher<const ArgTuple&> mono_tuple2_matcher_;
+    const Second second_value_;
+
+    GTEST_DISALLOW_ASSIGN_(Impl);
+  };
+
+  const Tuple2Matcher tuple2_matcher_;
+  const Second second_value_;
+};
+
+// Given a 2-tuple matcher tm and a value second,
+// MatcherBindSecond(tm, second) returns a matcher that matches a
+// value x iff tm matches tuple (x, second).  Useful for implementing
+// UnorderedPointwise() in terms of UnorderedElementsAreArray().
+template <typename Tuple2Matcher, typename Second>
+BoundSecondMatcher<Tuple2Matcher, Second> MatcherBindSecond(
+    const Tuple2Matcher& tm, const Second& second) {
+  return BoundSecondMatcher<Tuple2Matcher, Second>(tm, second);
+}
+
 // Returns the description for a matcher defined using the MATCHER*()
 // macro where the user-supplied description string is "", if
 // 'negation' is false; otherwise returns the description of the
@@ -8021,7 +8447,7 @@ GTEST_API_ string FormatMatcherDescription(bool negation,
 // ElementsAreArray(first, last)
 // ElementsAreArray(pointer, count)
 // ElementsAreArray(array)
-// ElementsAreArray(vector)
+// ElementsAreArray(container)
 // ElementsAreArray({ e1, e2, ..., en })
 //
 // The ElementsAreArray() functions are like ElementsAre(...), except
@@ -8053,10 +8479,10 @@ inline internal::ElementsAreArrayMatcher<T> ElementsAreArray(
   return ElementsAreArray(array, N);
 }
 
-template <typename T, typename A>
-inline internal::ElementsAreArrayMatcher<T> ElementsAreArray(
-    const ::std::vector<T, A>& vec) {
-  return ElementsAreArray(vec.begin(), vec.end());
+template <typename Container>
+inline internal::ElementsAreArrayMatcher<typename Container::value_type>
+ElementsAreArray(const Container& container) {
+  return ElementsAreArray(container.begin(), container.end());
 }
 
 #if GTEST_HAS_STD_INITIALIZER_LIST_
@@ -8070,7 +8496,7 @@ ElementsAreArray(::std::initializer_list<T> xs) {
 // UnorderedElementsAreArray(first, last)
 // UnorderedElementsAreArray(pointer, count)
 // UnorderedElementsAreArray(array)
-// UnorderedElementsAreArray(vector)
+// UnorderedElementsAreArray(container)
 // UnorderedElementsAreArray({ e1, e2, ..., en })
 //
 // The UnorderedElementsAreArray() functions are like
@@ -8095,10 +8521,11 @@ UnorderedElementsAreArray(const T (&array)[N]) {
   return UnorderedElementsAreArray(array, N);
 }
 
-template <typename T, typename A>
-inline internal::UnorderedElementsAreArrayMatcher<T>
-UnorderedElementsAreArray(const ::std::vector<T, A>& vec) {
-  return UnorderedElementsAreArray(vec.begin(), vec.end());
+template <typename Container>
+inline internal::UnorderedElementsAreArrayMatcher<
+    typename Container::value_type>
+UnorderedElementsAreArray(const Container& container) {
+  return UnorderedElementsAreArray(container.begin(), container.end());
 }
 
 #if GTEST_HAS_STD_INITIALIZER_LIST_
@@ -8264,6 +8691,19 @@ template <typename InnerMatcher>
 inline internal::PointeeMatcher<InnerMatcher> Pointee(
     const InnerMatcher& inner_matcher) {
   return internal::PointeeMatcher<InnerMatcher>(inner_matcher);
+}
+
+// Creates a matcher that matches a pointer or reference that matches
+// inner_matcher when dynamic_cast<To> is applied.
+// The result of dynamic_cast<To> is forwarded to the inner matcher.
+// If To is a pointer and the cast fails, the inner matcher will receive NULL.
+// If To is a reference and the cast fails, this matcher returns false
+// immediately.
+template <typename To>
+inline PolymorphicMatcher<internal::WhenDynamicCastToMatcher<To> >
+WhenDynamicCastTo(const Matcher<To>& inner_matcher) {
+  return MakePolymorphicMatcher(
+      internal::WhenDynamicCastToMatcher<To>(inner_matcher));
 }
 
 // Creates a matcher that matches an object whose given field matches
@@ -8508,6 +8948,17 @@ SizeIs(const SizeMatcher& size_matcher) {
   return internal::SizeIsMatcher<SizeMatcher>(size_matcher);
 }
 
+// Returns a matcher that matches the distance between the container's begin()
+// iterator and its end() iterator, i.e. the size of the container. This matcher
+// can be used instead of SizeIs with containers such as std::forward_list which
+// do not implement size(). The container must provide const_iterator (with
+// valid iterator_traits), begin() and end().
+template <typename DistanceMatcher>
+inline internal::BeginEndDistanceIsMatcher<DistanceMatcher>
+BeginEndDistanceIs(const DistanceMatcher& distance_matcher) {
+  return internal::BeginEndDistanceIsMatcher<DistanceMatcher>(distance_matcher);
+}
+
 // Returns a matcher that matches an equal container.
 // This matcher behaves like Eq(), but in the event of mismatch lists the
 // values that are included in one container but not the other. (Duplicate
@@ -8554,11 +9005,79 @@ inline internal::PointwiseMatcher<TupleMatcher,
                                   GTEST_REMOVE_CONST_(Container)>
 Pointwise(const TupleMatcher& tuple_matcher, const Container& rhs) {
   // This following line is for working around a bug in MSVC 8.0,
-  // which causes Container to be a const type sometimes.
+  // which causes Container to be a const type sometimes (e.g. when
+  // rhs is a const int[])..
   typedef GTEST_REMOVE_CONST_(Container) RawContainer;
   return internal::PointwiseMatcher<TupleMatcher, RawContainer>(
       tuple_matcher, rhs);
 }
+
+#if GTEST_HAS_STD_INITIALIZER_LIST_
+
+// Supports the Pointwise(m, {a, b, c}) syntax.
+template <typename TupleMatcher, typename T>
+inline internal::PointwiseMatcher<TupleMatcher, std::vector<T> > Pointwise(
+    const TupleMatcher& tuple_matcher, std::initializer_list<T> rhs) {
+  return Pointwise(tuple_matcher, std::vector<T>(rhs));
+}
+
+#endif  // GTEST_HAS_STD_INITIALIZER_LIST_
+
+// UnorderedPointwise(pair_matcher, rhs) matches an STL-style
+// container or a native array that contains the same number of
+// elements as in rhs, where in some permutation of the container, its
+// i-th element and rhs's i-th element (as a pair) satisfy the given
+// pair matcher, for all i.  Tuple2Matcher must be able to be safely
+// cast to Matcher<tuple<const T1&, const T2&> >, where T1 and T2 are
+// the types of elements in the LHS container and the RHS container
+// respectively.
+//
+// This is like Pointwise(pair_matcher, rhs), except that the element
+// order doesn't matter.
+template <typename Tuple2Matcher, typename RhsContainer>
+inline internal::UnorderedElementsAreArrayMatcher<
+    typename internal::BoundSecondMatcher<
+        Tuple2Matcher, typename internal::StlContainerView<GTEST_REMOVE_CONST_(
+                           RhsContainer)>::type::value_type> >
+UnorderedPointwise(const Tuple2Matcher& tuple2_matcher,
+                   const RhsContainer& rhs_container) {
+  // This following line is for working around a bug in MSVC 8.0,
+  // which causes RhsContainer to be a const type sometimes (e.g. when
+  // rhs_container is a const int[]).
+  typedef GTEST_REMOVE_CONST_(RhsContainer) RawRhsContainer;
+
+  // RhsView allows the same code to handle RhsContainer being a
+  // STL-style container and it being a native C-style array.
+  typedef typename internal::StlContainerView<RawRhsContainer> RhsView;
+  typedef typename RhsView::type RhsStlContainer;
+  typedef typename RhsStlContainer::value_type Second;
+  const RhsStlContainer& rhs_stl_container =
+      RhsView::ConstReference(rhs_container);
+
+  // Create a matcher for each element in rhs_container.
+  ::std::vector<internal::BoundSecondMatcher<Tuple2Matcher, Second> > matchers;
+  for (typename RhsStlContainer::const_iterator it = rhs_stl_container.begin();
+       it != rhs_stl_container.end(); ++it) {
+    matchers.push_back(
+        internal::MatcherBindSecond(tuple2_matcher, *it));
+  }
+
+  // Delegate the work to UnorderedElementsAreArray().
+  return UnorderedElementsAreArray(matchers);
+}
+
+#if GTEST_HAS_STD_INITIALIZER_LIST_
+
+// Supports the UnorderedPointwise(m, {a, b, c}) syntax.
+template <typename Tuple2Matcher, typename T>
+inline internal::UnorderedElementsAreArrayMatcher<
+    typename internal::BoundSecondMatcher<Tuple2Matcher, T> >
+UnorderedPointwise(const Tuple2Matcher& tuple2_matcher,
+                   std::initializer_list<T> rhs) {
+  return UnorderedPointwise(tuple2_matcher, std::vector<T>(rhs));
+}
+
+#endif  // GTEST_HAS_STD_INITIALIZER_LIST_
 
 // Matches an STL-style container or a native array that contains at
 // least one element matching the given value or matcher.
@@ -8692,6 +9211,48 @@ inline InnerMatcher AllArgs(const InnerMatcher& matcher) { return matcher; }
 
 }  // namespace testing
 
+// Include any custom callback matchers added by the local installation.
+// We must include this header at the end to make sure it can use the
+// declarations from this file.
+// Copyright 2015, Google Inc.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//     * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//     * Neither the name of Google Inc. nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// ============================================================
+// An installation-specific extension point for gmock-matchers.h.
+// ============================================================
+//
+// Adds google3 callback support to CallableTraits.
+//
+#ifndef GMOCK_INCLUDE_GMOCK_INTERNAL_CUSTOM_CALLBACK_MATCHERS_H_
+#define GMOCK_INCLUDE_GMOCK_INTERNAL_CUSTOM_CALLBACK_MATCHERS_H_
+
+#endif  //  GMOCK_INCLUDE_GMOCK_INTERNAL_CUSTOM_CALLBACK_MATCHERS_H_
 #endif  // GMOCK_INCLUDE_GMOCK_GMOCK_MATCHERS_H_
 
 namespace testing {
@@ -9920,14 +10481,13 @@ class ReferenceOrValueWrapper {
  public:
   // Constructs a wrapper from the given value/reference.
   explicit ReferenceOrValueWrapper(T value)
-      : value_(GTEST_MOVE_(value)) {}
+      : value_(::testing::internal::move(value)) {
+  }
 
   // Unwraps and returns the underlying value/reference, exactly as
   // originally passed. The behavior of calling this more than once on
   // the same object is unspecified.
-  T Unwrap() {
-    return GTEST_MOVE_(value_);
-  }
+  T Unwrap() { return ::testing::internal::move(value_); }
 
   // Provides nondestructive access to the underlying value/reference.
   // Always returns a const reference (more precisely,
@@ -10025,7 +10585,8 @@ class ActionResultHolder : public UntypedActionResultHolderBase {
   typedef ReferenceOrValueWrapper<T> Wrapper;
 
   explicit ActionResultHolder(Wrapper result)
-      : result_(GTEST_MOVE_(result)) {}
+      : result_(::testing::internal::move(result)) {
+  }
 
   Wrapper result_;
 
@@ -10463,6 +11024,10 @@ inline Expectation::Expectation(internal::ExpectationBase& exp)  // NOLINT
 
 #endif  // GMOCK_INCLUDE_GMOCK_GMOCK_SPEC_BUILDERS_H_
 
+#if GTEST_HAS_STD_FUNCTION_
+# include <functional>
+#endif
+
 namespace testing {
 namespace internal {
 
@@ -10505,7 +11070,7 @@ class FunctionMocker<R(A1)> : public
   typedef typename internal::Function<F>::ArgumentTuple ArgumentTuple;
 
   MockSpec<F>& With(const Matcher<A1>& m1) {
-    this->current_spec().SetMatchers(::std::tr1::make_tuple(m1));
+    this->current_spec().SetMatchers(::testing::make_tuple(m1));
     return this->current_spec();
   }
 
@@ -10526,7 +11091,7 @@ class FunctionMocker<R(A1, A2)> : public
   typedef typename internal::Function<F>::ArgumentTuple ArgumentTuple;
 
   MockSpec<F>& With(const Matcher<A1>& m1, const Matcher<A2>& m2) {
-    this->current_spec().SetMatchers(::std::tr1::make_tuple(m1, m2));
+    this->current_spec().SetMatchers(::testing::make_tuple(m1, m2));
     return this->current_spec();
   }
 
@@ -10548,7 +11113,7 @@ class FunctionMocker<R(A1, A2, A3)> : public
 
   MockSpec<F>& With(const Matcher<A1>& m1, const Matcher<A2>& m2,
       const Matcher<A3>& m3) {
-    this->current_spec().SetMatchers(::std::tr1::make_tuple(m1, m2, m3));
+    this->current_spec().SetMatchers(::testing::make_tuple(m1, m2, m3));
     return this->current_spec();
   }
 
@@ -10570,7 +11135,7 @@ class FunctionMocker<R(A1, A2, A3, A4)> : public
 
   MockSpec<F>& With(const Matcher<A1>& m1, const Matcher<A2>& m2,
       const Matcher<A3>& m3, const Matcher<A4>& m4) {
-    this->current_spec().SetMatchers(::std::tr1::make_tuple(m1, m2, m3, m4));
+    this->current_spec().SetMatchers(::testing::make_tuple(m1, m2, m3, m4));
     return this->current_spec();
   }
 
@@ -10593,8 +11158,7 @@ class FunctionMocker<R(A1, A2, A3, A4, A5)> : public
 
   MockSpec<F>& With(const Matcher<A1>& m1, const Matcher<A2>& m2,
       const Matcher<A3>& m3, const Matcher<A4>& m4, const Matcher<A5>& m5) {
-    this->current_spec().SetMatchers(::std::tr1::make_tuple(m1, m2, m3, m4,
-        m5));
+    this->current_spec().SetMatchers(::testing::make_tuple(m1, m2, m3, m4, m5));
     return this->current_spec();
   }
 
@@ -10618,7 +11182,7 @@ class FunctionMocker<R(A1, A2, A3, A4, A5, A6)> : public
   MockSpec<F>& With(const Matcher<A1>& m1, const Matcher<A2>& m2,
       const Matcher<A3>& m3, const Matcher<A4>& m4, const Matcher<A5>& m5,
       const Matcher<A6>& m6) {
-    this->current_spec().SetMatchers(::std::tr1::make_tuple(m1, m2, m3, m4, m5,
+    this->current_spec().SetMatchers(::testing::make_tuple(m1, m2, m3, m4, m5,
         m6));
     return this->current_spec();
   }
@@ -10643,7 +11207,7 @@ class FunctionMocker<R(A1, A2, A3, A4, A5, A6, A7)> : public
   MockSpec<F>& With(const Matcher<A1>& m1, const Matcher<A2>& m2,
       const Matcher<A3>& m3, const Matcher<A4>& m4, const Matcher<A5>& m5,
       const Matcher<A6>& m6, const Matcher<A7>& m7) {
-    this->current_spec().SetMatchers(::std::tr1::make_tuple(m1, m2, m3, m4, m5,
+    this->current_spec().SetMatchers(::testing::make_tuple(m1, m2, m3, m4, m5,
         m6, m7));
     return this->current_spec();
   }
@@ -10668,7 +11232,7 @@ class FunctionMocker<R(A1, A2, A3, A4, A5, A6, A7, A8)> : public
   MockSpec<F>& With(const Matcher<A1>& m1, const Matcher<A2>& m2,
       const Matcher<A3>& m3, const Matcher<A4>& m4, const Matcher<A5>& m5,
       const Matcher<A6>& m6, const Matcher<A7>& m7, const Matcher<A8>& m8) {
-    this->current_spec().SetMatchers(::std::tr1::make_tuple(m1, m2, m3, m4, m5,
+    this->current_spec().SetMatchers(::testing::make_tuple(m1, m2, m3, m4, m5,
         m6, m7, m8));
     return this->current_spec();
   }
@@ -10694,7 +11258,7 @@ class FunctionMocker<R(A1, A2, A3, A4, A5, A6, A7, A8, A9)> : public
       const Matcher<A3>& m3, const Matcher<A4>& m4, const Matcher<A5>& m5,
       const Matcher<A6>& m6, const Matcher<A7>& m7, const Matcher<A8>& m8,
       const Matcher<A9>& m9) {
-    this->current_spec().SetMatchers(::std::tr1::make_tuple(m1, m2, m3, m4, m5,
+    this->current_spec().SetMatchers(::testing::make_tuple(m1, m2, m3, m4, m5,
         m6, m7, m8, m9));
     return this->current_spec();
   }
@@ -10721,7 +11285,7 @@ class FunctionMocker<R(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10)> : public
       const Matcher<A3>& m3, const Matcher<A4>& m4, const Matcher<A5>& m5,
       const Matcher<A6>& m6, const Matcher<A7>& m7, const Matcher<A8>& m8,
       const Matcher<A9>& m9, const Matcher<A10>& m10) {
-    this->current_spec().SetMatchers(::std::tr1::make_tuple(m1, m2, m3, m4, m5,
+    this->current_spec().SetMatchers(::testing::make_tuple(m1, m2, m3, m4, m5,
         m6, m7, m8, m9, m10));
     return this->current_spec();
   }
@@ -10773,7 +11337,7 @@ using internal::FunctionMocker;
 #define GMOCK_METHOD0_(tn, constness, ct, Method, ...) \
   GMOCK_RESULT_(tn, __VA_ARGS__) ct Method( \
       ) constness { \
-    GTEST_COMPILE_ASSERT_((::std::tr1::tuple_size<                          \
+    GTEST_COMPILE_ASSERT_((::testing::tuple_size<                          \
         tn ::testing::internal::Function<__VA_ARGS__>::ArgumentTuple>::value \
             == 0), \
         this_method_does_not_take_0_arguments); \
@@ -10792,7 +11356,7 @@ using internal::FunctionMocker;
 #define GMOCK_METHOD1_(tn, constness, ct, Method, ...) \
   GMOCK_RESULT_(tn, __VA_ARGS__) ct Method( \
       GMOCK_ARG_(tn, 1, __VA_ARGS__) gmock_a1) constness { \
-    GTEST_COMPILE_ASSERT_((::std::tr1::tuple_size<                          \
+    GTEST_COMPILE_ASSERT_((::testing::tuple_size<                          \
         tn ::testing::internal::Function<__VA_ARGS__>::ArgumentTuple>::value \
             == 1), \
         this_method_does_not_take_1_argument); \
@@ -10812,7 +11376,7 @@ using internal::FunctionMocker;
   GMOCK_RESULT_(tn, __VA_ARGS__) ct Method( \
       GMOCK_ARG_(tn, 1, __VA_ARGS__) gmock_a1, \
       GMOCK_ARG_(tn, 2, __VA_ARGS__) gmock_a2) constness { \
-    GTEST_COMPILE_ASSERT_((::std::tr1::tuple_size<                          \
+    GTEST_COMPILE_ASSERT_((::testing::tuple_size<                          \
         tn ::testing::internal::Function<__VA_ARGS__>::ArgumentTuple>::value \
             == 2), \
         this_method_does_not_take_2_arguments); \
@@ -10834,7 +11398,7 @@ using internal::FunctionMocker;
       GMOCK_ARG_(tn, 1, __VA_ARGS__) gmock_a1, \
       GMOCK_ARG_(tn, 2, __VA_ARGS__) gmock_a2, \
       GMOCK_ARG_(tn, 3, __VA_ARGS__) gmock_a3) constness { \
-    GTEST_COMPILE_ASSERT_((::std::tr1::tuple_size<                          \
+    GTEST_COMPILE_ASSERT_((::testing::tuple_size<                          \
         tn ::testing::internal::Function<__VA_ARGS__>::ArgumentTuple>::value \
             == 3), \
         this_method_does_not_take_3_arguments); \
@@ -10860,7 +11424,7 @@ using internal::FunctionMocker;
       GMOCK_ARG_(tn, 2, __VA_ARGS__) gmock_a2, \
       GMOCK_ARG_(tn, 3, __VA_ARGS__) gmock_a3, \
       GMOCK_ARG_(tn, 4, __VA_ARGS__) gmock_a4) constness { \
-    GTEST_COMPILE_ASSERT_((::std::tr1::tuple_size<                          \
+    GTEST_COMPILE_ASSERT_((::testing::tuple_size<                          \
         tn ::testing::internal::Function<__VA_ARGS__>::ArgumentTuple>::value \
             == 4), \
         this_method_does_not_take_4_arguments); \
@@ -10888,7 +11452,7 @@ using internal::FunctionMocker;
       GMOCK_ARG_(tn, 3, __VA_ARGS__) gmock_a3, \
       GMOCK_ARG_(tn, 4, __VA_ARGS__) gmock_a4, \
       GMOCK_ARG_(tn, 5, __VA_ARGS__) gmock_a5) constness { \
-    GTEST_COMPILE_ASSERT_((::std::tr1::tuple_size<                          \
+    GTEST_COMPILE_ASSERT_((::testing::tuple_size<                          \
         tn ::testing::internal::Function<__VA_ARGS__>::ArgumentTuple>::value \
             == 5), \
         this_method_does_not_take_5_arguments); \
@@ -10918,7 +11482,7 @@ using internal::FunctionMocker;
       GMOCK_ARG_(tn, 4, __VA_ARGS__) gmock_a4, \
       GMOCK_ARG_(tn, 5, __VA_ARGS__) gmock_a5, \
       GMOCK_ARG_(tn, 6, __VA_ARGS__) gmock_a6) constness { \
-    GTEST_COMPILE_ASSERT_((::std::tr1::tuple_size<                          \
+    GTEST_COMPILE_ASSERT_((::testing::tuple_size<                          \
         tn ::testing::internal::Function<__VA_ARGS__>::ArgumentTuple>::value \
             == 6), \
         this_method_does_not_take_6_arguments); \
@@ -10950,7 +11514,7 @@ using internal::FunctionMocker;
       GMOCK_ARG_(tn, 5, __VA_ARGS__) gmock_a5, \
       GMOCK_ARG_(tn, 6, __VA_ARGS__) gmock_a6, \
       GMOCK_ARG_(tn, 7, __VA_ARGS__) gmock_a7) constness { \
-    GTEST_COMPILE_ASSERT_((::std::tr1::tuple_size<                          \
+    GTEST_COMPILE_ASSERT_((::testing::tuple_size<                          \
         tn ::testing::internal::Function<__VA_ARGS__>::ArgumentTuple>::value \
             == 7), \
         this_method_does_not_take_7_arguments); \
@@ -10984,7 +11548,7 @@ using internal::FunctionMocker;
       GMOCK_ARG_(tn, 6, __VA_ARGS__) gmock_a6, \
       GMOCK_ARG_(tn, 7, __VA_ARGS__) gmock_a7, \
       GMOCK_ARG_(tn, 8, __VA_ARGS__) gmock_a8) constness { \
-    GTEST_COMPILE_ASSERT_((::std::tr1::tuple_size<                          \
+    GTEST_COMPILE_ASSERT_((::testing::tuple_size<                          \
         tn ::testing::internal::Function<__VA_ARGS__>::ArgumentTuple>::value \
             == 8), \
         this_method_does_not_take_8_arguments); \
@@ -11020,7 +11584,7 @@ using internal::FunctionMocker;
       GMOCK_ARG_(tn, 7, __VA_ARGS__) gmock_a7, \
       GMOCK_ARG_(tn, 8, __VA_ARGS__) gmock_a8, \
       GMOCK_ARG_(tn, 9, __VA_ARGS__) gmock_a9) constness { \
-    GTEST_COMPILE_ASSERT_((::std::tr1::tuple_size<                          \
+    GTEST_COMPILE_ASSERT_((::testing::tuple_size<                          \
         tn ::testing::internal::Function<__VA_ARGS__>::ArgumentTuple>::value \
             == 9), \
         this_method_does_not_take_9_arguments); \
@@ -11060,7 +11624,7 @@ using internal::FunctionMocker;
       GMOCK_ARG_(tn, 8, __VA_ARGS__) gmock_a8, \
       GMOCK_ARG_(tn, 9, __VA_ARGS__) gmock_a9, \
       GMOCK_ARG_(tn, 10, __VA_ARGS__) gmock_a10) constness { \
-    GTEST_COMPILE_ASSERT_((::std::tr1::tuple_size<                          \
+    GTEST_COMPILE_ASSERT_((::testing::tuple_size<                          \
         tn ::testing::internal::Function<__VA_ARGS__>::ArgumentTuple>::value \
             == 10), \
         this_method_does_not_take_10_arguments); \
@@ -11275,6 +11839,17 @@ using internal::FunctionMocker;
 // point "2", and nothing should happen between the two check
 // points. The explicit check points make it easy to tell which
 // Bar("a") is called by which call to Foo().
+//
+// MockFunction<F> can also be used to exercise code that accepts
+// std::function<F> callbacks. To do so, use AsStdFunction() method
+// to create std::function proxy forwarding to original object's Call.
+// Example:
+//
+// TEST(FooTest, RunsCallbackWithBarArgument) {
+//   MockFunction<int(string)> callback;
+//   EXPECT_CALL(callback, Call("bar")).WillOnce(Return(1));
+//   Foo(callback.AsStdFunction());
+// }
 template <typename F>
 class MockFunction;
 
@@ -11284,6 +11859,14 @@ class MockFunction<R()> {
   MockFunction() {}
 
   MOCK_METHOD0_T(Call, R());
+
+#if GTEST_HAS_STD_FUNCTION_
+  std::function<R()> AsStdFunction() {
+    return [this]() -> R {
+      return this->Call();
+    };
+  }
+#endif  // GTEST_HAS_STD_FUNCTION_
 
  private:
   GTEST_DISALLOW_COPY_AND_ASSIGN_(MockFunction);
@@ -11296,6 +11879,14 @@ class MockFunction<R(A0)> {
 
   MOCK_METHOD1_T(Call, R(A0));
 
+#if GTEST_HAS_STD_FUNCTION_
+  std::function<R(A0)> AsStdFunction() {
+    return [this](A0 a0) -> R {
+      return this->Call(a0);
+    };
+  }
+#endif  // GTEST_HAS_STD_FUNCTION_
+
  private:
   GTEST_DISALLOW_COPY_AND_ASSIGN_(MockFunction);
 };
@@ -11306,6 +11897,14 @@ class MockFunction<R(A0, A1)> {
   MockFunction() {}
 
   MOCK_METHOD2_T(Call, R(A0, A1));
+
+#if GTEST_HAS_STD_FUNCTION_
+  std::function<R(A0, A1)> AsStdFunction() {
+    return [this](A0 a0, A1 a1) -> R {
+      return this->Call(a0, a1);
+    };
+  }
+#endif  // GTEST_HAS_STD_FUNCTION_
 
  private:
   GTEST_DISALLOW_COPY_AND_ASSIGN_(MockFunction);
@@ -11318,6 +11917,14 @@ class MockFunction<R(A0, A1, A2)> {
 
   MOCK_METHOD3_T(Call, R(A0, A1, A2));
 
+#if GTEST_HAS_STD_FUNCTION_
+  std::function<R(A0, A1, A2)> AsStdFunction() {
+    return [this](A0 a0, A1 a1, A2 a2) -> R {
+      return this->Call(a0, a1, a2);
+    };
+  }
+#endif  // GTEST_HAS_STD_FUNCTION_
+
  private:
   GTEST_DISALLOW_COPY_AND_ASSIGN_(MockFunction);
 };
@@ -11328,6 +11935,14 @@ class MockFunction<R(A0, A1, A2, A3)> {
   MockFunction() {}
 
   MOCK_METHOD4_T(Call, R(A0, A1, A2, A3));
+
+#if GTEST_HAS_STD_FUNCTION_
+  std::function<R(A0, A1, A2, A3)> AsStdFunction() {
+    return [this](A0 a0, A1 a1, A2 a2, A3 a3) -> R {
+      return this->Call(a0, a1, a2, a3);
+    };
+  }
+#endif  // GTEST_HAS_STD_FUNCTION_
 
  private:
   GTEST_DISALLOW_COPY_AND_ASSIGN_(MockFunction);
@@ -11341,6 +11956,14 @@ class MockFunction<R(A0, A1, A2, A3, A4)> {
 
   MOCK_METHOD5_T(Call, R(A0, A1, A2, A3, A4));
 
+#if GTEST_HAS_STD_FUNCTION_
+  std::function<R(A0, A1, A2, A3, A4)> AsStdFunction() {
+    return [this](A0 a0, A1 a1, A2 a2, A3 a3, A4 a4) -> R {
+      return this->Call(a0, a1, a2, a3, a4);
+    };
+  }
+#endif  // GTEST_HAS_STD_FUNCTION_
+
  private:
   GTEST_DISALLOW_COPY_AND_ASSIGN_(MockFunction);
 };
@@ -11352,6 +11975,14 @@ class MockFunction<R(A0, A1, A2, A3, A4, A5)> {
   MockFunction() {}
 
   MOCK_METHOD6_T(Call, R(A0, A1, A2, A3, A4, A5));
+
+#if GTEST_HAS_STD_FUNCTION_
+  std::function<R(A0, A1, A2, A3, A4, A5)> AsStdFunction() {
+    return [this](A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5) -> R {
+      return this->Call(a0, a1, a2, a3, a4, a5);
+    };
+  }
+#endif  // GTEST_HAS_STD_FUNCTION_
 
  private:
   GTEST_DISALLOW_COPY_AND_ASSIGN_(MockFunction);
@@ -11365,6 +11996,14 @@ class MockFunction<R(A0, A1, A2, A3, A4, A5, A6)> {
 
   MOCK_METHOD7_T(Call, R(A0, A1, A2, A3, A4, A5, A6));
 
+#if GTEST_HAS_STD_FUNCTION_
+  std::function<R(A0, A1, A2, A3, A4, A5, A6)> AsStdFunction() {
+    return [this](A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6) -> R {
+      return this->Call(a0, a1, a2, a3, a4, a5, a6);
+    };
+  }
+#endif  // GTEST_HAS_STD_FUNCTION_
+
  private:
   GTEST_DISALLOW_COPY_AND_ASSIGN_(MockFunction);
 };
@@ -11376,6 +12015,14 @@ class MockFunction<R(A0, A1, A2, A3, A4, A5, A6, A7)> {
   MockFunction() {}
 
   MOCK_METHOD8_T(Call, R(A0, A1, A2, A3, A4, A5, A6, A7));
+
+#if GTEST_HAS_STD_FUNCTION_
+  std::function<R(A0, A1, A2, A3, A4, A5, A6, A7)> AsStdFunction() {
+    return [this](A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7) -> R {
+      return this->Call(a0, a1, a2, a3, a4, a5, a6, a7);
+    };
+  }
+#endif  // GTEST_HAS_STD_FUNCTION_
 
  private:
   GTEST_DISALLOW_COPY_AND_ASSIGN_(MockFunction);
@@ -11389,6 +12036,15 @@ class MockFunction<R(A0, A1, A2, A3, A4, A5, A6, A7, A8)> {
 
   MOCK_METHOD9_T(Call, R(A0, A1, A2, A3, A4, A5, A6, A7, A8));
 
+#if GTEST_HAS_STD_FUNCTION_
+  std::function<R(A0, A1, A2, A3, A4, A5, A6, A7, A8)> AsStdFunction() {
+    return [this](A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7,
+        A8 a8) -> R {
+      return this->Call(a0, a1, a2, a3, a4, a5, a6, a7, a8);
+    };
+  }
+#endif  // GTEST_HAS_STD_FUNCTION_
+
  private:
   GTEST_DISALLOW_COPY_AND_ASSIGN_(MockFunction);
 };
@@ -11401,6 +12057,15 @@ class MockFunction<R(A0, A1, A2, A3, A4, A5, A6, A7, A8, A9)> {
   MockFunction() {}
 
   MOCK_METHOD10_T(Call, R(A0, A1, A2, A3, A4, A5, A6, A7, A8, A9));
+
+#if GTEST_HAS_STD_FUNCTION_
+  std::function<R(A0, A1, A2, A3, A4, A5, A6, A7, A8, A9)> AsStdFunction() {
+    return [this](A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7,
+        A8 a8, A9 a9) -> R {
+      return this->Call(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9);
+    };
+  }
+#endif  // GTEST_HAS_STD_FUNCTION_
 
  private:
   GTEST_DISALLOW_COPY_AND_ASSIGN_(MockFunction);
@@ -11854,7 +12519,7 @@ namespace internal {
 
 // The type of the i-th (0-based) field of Tuple.
 #define GMOCK_FIELD_TYPE_(Tuple, i) \
-    typename ::std::tr1::tuple_element<i, Tuple>::type
+    typename ::testing::tuple_element<i, Tuple>::type
 
 // TupleFields<Tuple, k0, ..., kn> is for selecting fields from a
 // tuple of type Tuple.  It has two members:
@@ -11877,14 +12542,13 @@ template <class Tuple, int k0, int k1, int k2, int k3, int k4, int k5, int k6,
     int k7, int k8, int k9>
 class TupleFields {
  public:
-  typedef ::std::tr1::tuple<GMOCK_FIELD_TYPE_(Tuple, k0),
+  typedef ::testing::tuple<GMOCK_FIELD_TYPE_(Tuple, k0),
       GMOCK_FIELD_TYPE_(Tuple, k1), GMOCK_FIELD_TYPE_(Tuple, k2),
       GMOCK_FIELD_TYPE_(Tuple, k3), GMOCK_FIELD_TYPE_(Tuple, k4),
       GMOCK_FIELD_TYPE_(Tuple, k5), GMOCK_FIELD_TYPE_(Tuple, k6),
       GMOCK_FIELD_TYPE_(Tuple, k7), GMOCK_FIELD_TYPE_(Tuple, k8),
       GMOCK_FIELD_TYPE_(Tuple, k9)> type;
   static type GetSelectedFields(const Tuple& t) {
-    using ::std::tr1::get;
     return type(get<k0>(t), get<k1>(t), get<k2>(t), get<k3>(t), get<k4>(t),
         get<k5>(t), get<k6>(t), get<k7>(t), get<k8>(t), get<k9>(t));
   }
@@ -11895,9 +12559,8 @@ class TupleFields {
 template <class Tuple>
 class TupleFields<Tuple, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1> {
  public:
-  typedef ::std::tr1::tuple<> type;
+  typedef ::testing::tuple<> type;
   static type GetSelectedFields(const Tuple& /* t */) {
-    using ::std::tr1::get;
     return type();
   }
 };
@@ -11905,9 +12568,8 @@ class TupleFields<Tuple, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1> {
 template <class Tuple, int k0>
 class TupleFields<Tuple, k0, -1, -1, -1, -1, -1, -1, -1, -1, -1> {
  public:
-  typedef ::std::tr1::tuple<GMOCK_FIELD_TYPE_(Tuple, k0)> type;
+  typedef ::testing::tuple<GMOCK_FIELD_TYPE_(Tuple, k0)> type;
   static type GetSelectedFields(const Tuple& t) {
-    using ::std::tr1::get;
     return type(get<k0>(t));
   }
 };
@@ -11915,10 +12577,9 @@ class TupleFields<Tuple, k0, -1, -1, -1, -1, -1, -1, -1, -1, -1> {
 template <class Tuple, int k0, int k1>
 class TupleFields<Tuple, k0, k1, -1, -1, -1, -1, -1, -1, -1, -1> {
  public:
-  typedef ::std::tr1::tuple<GMOCK_FIELD_TYPE_(Tuple, k0),
+  typedef ::testing::tuple<GMOCK_FIELD_TYPE_(Tuple, k0),
       GMOCK_FIELD_TYPE_(Tuple, k1)> type;
   static type GetSelectedFields(const Tuple& t) {
-    using ::std::tr1::get;
     return type(get<k0>(t), get<k1>(t));
   }
 };
@@ -11926,10 +12587,9 @@ class TupleFields<Tuple, k0, k1, -1, -1, -1, -1, -1, -1, -1, -1> {
 template <class Tuple, int k0, int k1, int k2>
 class TupleFields<Tuple, k0, k1, k2, -1, -1, -1, -1, -1, -1, -1> {
  public:
-  typedef ::std::tr1::tuple<GMOCK_FIELD_TYPE_(Tuple, k0),
+  typedef ::testing::tuple<GMOCK_FIELD_TYPE_(Tuple, k0),
       GMOCK_FIELD_TYPE_(Tuple, k1), GMOCK_FIELD_TYPE_(Tuple, k2)> type;
   static type GetSelectedFields(const Tuple& t) {
-    using ::std::tr1::get;
     return type(get<k0>(t), get<k1>(t), get<k2>(t));
   }
 };
@@ -11937,11 +12597,10 @@ class TupleFields<Tuple, k0, k1, k2, -1, -1, -1, -1, -1, -1, -1> {
 template <class Tuple, int k0, int k1, int k2, int k3>
 class TupleFields<Tuple, k0, k1, k2, k3, -1, -1, -1, -1, -1, -1> {
  public:
-  typedef ::std::tr1::tuple<GMOCK_FIELD_TYPE_(Tuple, k0),
+  typedef ::testing::tuple<GMOCK_FIELD_TYPE_(Tuple, k0),
       GMOCK_FIELD_TYPE_(Tuple, k1), GMOCK_FIELD_TYPE_(Tuple, k2),
       GMOCK_FIELD_TYPE_(Tuple, k3)> type;
   static type GetSelectedFields(const Tuple& t) {
-    using ::std::tr1::get;
     return type(get<k0>(t), get<k1>(t), get<k2>(t), get<k3>(t));
   }
 };
@@ -11949,11 +12608,10 @@ class TupleFields<Tuple, k0, k1, k2, k3, -1, -1, -1, -1, -1, -1> {
 template <class Tuple, int k0, int k1, int k2, int k3, int k4>
 class TupleFields<Tuple, k0, k1, k2, k3, k4, -1, -1, -1, -1, -1> {
  public:
-  typedef ::std::tr1::tuple<GMOCK_FIELD_TYPE_(Tuple, k0),
+  typedef ::testing::tuple<GMOCK_FIELD_TYPE_(Tuple, k0),
       GMOCK_FIELD_TYPE_(Tuple, k1), GMOCK_FIELD_TYPE_(Tuple, k2),
       GMOCK_FIELD_TYPE_(Tuple, k3), GMOCK_FIELD_TYPE_(Tuple, k4)> type;
   static type GetSelectedFields(const Tuple& t) {
-    using ::std::tr1::get;
     return type(get<k0>(t), get<k1>(t), get<k2>(t), get<k3>(t), get<k4>(t));
   }
 };
@@ -11961,12 +12619,11 @@ class TupleFields<Tuple, k0, k1, k2, k3, k4, -1, -1, -1, -1, -1> {
 template <class Tuple, int k0, int k1, int k2, int k3, int k4, int k5>
 class TupleFields<Tuple, k0, k1, k2, k3, k4, k5, -1, -1, -1, -1> {
  public:
-  typedef ::std::tr1::tuple<GMOCK_FIELD_TYPE_(Tuple, k0),
+  typedef ::testing::tuple<GMOCK_FIELD_TYPE_(Tuple, k0),
       GMOCK_FIELD_TYPE_(Tuple, k1), GMOCK_FIELD_TYPE_(Tuple, k2),
       GMOCK_FIELD_TYPE_(Tuple, k3), GMOCK_FIELD_TYPE_(Tuple, k4),
       GMOCK_FIELD_TYPE_(Tuple, k5)> type;
   static type GetSelectedFields(const Tuple& t) {
-    using ::std::tr1::get;
     return type(get<k0>(t), get<k1>(t), get<k2>(t), get<k3>(t), get<k4>(t),
         get<k5>(t));
   }
@@ -11975,12 +12632,11 @@ class TupleFields<Tuple, k0, k1, k2, k3, k4, k5, -1, -1, -1, -1> {
 template <class Tuple, int k0, int k1, int k2, int k3, int k4, int k5, int k6>
 class TupleFields<Tuple, k0, k1, k2, k3, k4, k5, k6, -1, -1, -1> {
  public:
-  typedef ::std::tr1::tuple<GMOCK_FIELD_TYPE_(Tuple, k0),
+  typedef ::testing::tuple<GMOCK_FIELD_TYPE_(Tuple, k0),
       GMOCK_FIELD_TYPE_(Tuple, k1), GMOCK_FIELD_TYPE_(Tuple, k2),
       GMOCK_FIELD_TYPE_(Tuple, k3), GMOCK_FIELD_TYPE_(Tuple, k4),
       GMOCK_FIELD_TYPE_(Tuple, k5), GMOCK_FIELD_TYPE_(Tuple, k6)> type;
   static type GetSelectedFields(const Tuple& t) {
-    using ::std::tr1::get;
     return type(get<k0>(t), get<k1>(t), get<k2>(t), get<k3>(t), get<k4>(t),
         get<k5>(t), get<k6>(t));
   }
@@ -11990,13 +12646,12 @@ template <class Tuple, int k0, int k1, int k2, int k3, int k4, int k5, int k6,
     int k7>
 class TupleFields<Tuple, k0, k1, k2, k3, k4, k5, k6, k7, -1, -1> {
  public:
-  typedef ::std::tr1::tuple<GMOCK_FIELD_TYPE_(Tuple, k0),
+  typedef ::testing::tuple<GMOCK_FIELD_TYPE_(Tuple, k0),
       GMOCK_FIELD_TYPE_(Tuple, k1), GMOCK_FIELD_TYPE_(Tuple, k2),
       GMOCK_FIELD_TYPE_(Tuple, k3), GMOCK_FIELD_TYPE_(Tuple, k4),
       GMOCK_FIELD_TYPE_(Tuple, k5), GMOCK_FIELD_TYPE_(Tuple, k6),
       GMOCK_FIELD_TYPE_(Tuple, k7)> type;
   static type GetSelectedFields(const Tuple& t) {
-    using ::std::tr1::get;
     return type(get<k0>(t), get<k1>(t), get<k2>(t), get<k3>(t), get<k4>(t),
         get<k5>(t), get<k6>(t), get<k7>(t));
   }
@@ -12006,13 +12661,12 @@ template <class Tuple, int k0, int k1, int k2, int k3, int k4, int k5, int k6,
     int k7, int k8>
 class TupleFields<Tuple, k0, k1, k2, k3, k4, k5, k6, k7, k8, -1> {
  public:
-  typedef ::std::tr1::tuple<GMOCK_FIELD_TYPE_(Tuple, k0),
+  typedef ::testing::tuple<GMOCK_FIELD_TYPE_(Tuple, k0),
       GMOCK_FIELD_TYPE_(Tuple, k1), GMOCK_FIELD_TYPE_(Tuple, k2),
       GMOCK_FIELD_TYPE_(Tuple, k3), GMOCK_FIELD_TYPE_(Tuple, k4),
       GMOCK_FIELD_TYPE_(Tuple, k5), GMOCK_FIELD_TYPE_(Tuple, k6),
       GMOCK_FIELD_TYPE_(Tuple, k7), GMOCK_FIELD_TYPE_(Tuple, k8)> type;
   static type GetSelectedFields(const Tuple& t) {
-    using ::std::tr1::get;
     return type(get<k0>(t), get<k1>(t), get<k2>(t), get<k3>(t), get<k4>(t),
         get<k5>(t), get<k6>(t), get<k7>(t), get<k8>(t));
   }
@@ -12382,29 +13036,29 @@ Args(const InnerMatcher& matcher) {
 // undefined (e.g. hash_map).
 
 inline internal::ElementsAreMatcher<
-    std::tr1::tuple<> >
+    ::testing::tuple<> >
 ElementsAre() {
-  typedef std::tr1::tuple<> Args;
+  typedef ::testing::tuple<> Args;
   return internal::ElementsAreMatcher<Args>(Args());
 }
 
 template <typename T1>
 inline internal::ElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type> >
 ElementsAre(const T1& e1) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type> Args;
   return internal::ElementsAreMatcher<Args>(Args(e1));
 }
 
 template <typename T1, typename T2>
 inline internal::ElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type,
         typename internal::DecayArray<T2>::type> >
 ElementsAre(const T1& e1, const T2& e2) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type,
       typename internal::DecayArray<T2>::type> Args;
   return internal::ElementsAreMatcher<Args>(Args(e1, e2));
@@ -12412,12 +13066,12 @@ ElementsAre(const T1& e1, const T2& e2) {
 
 template <typename T1, typename T2, typename T3>
 inline internal::ElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type,
         typename internal::DecayArray<T2>::type,
         typename internal::DecayArray<T3>::type> >
 ElementsAre(const T1& e1, const T2& e2, const T3& e3) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type,
       typename internal::DecayArray<T2>::type,
       typename internal::DecayArray<T3>::type> Args;
@@ -12426,13 +13080,13 @@ ElementsAre(const T1& e1, const T2& e2, const T3& e3) {
 
 template <typename T1, typename T2, typename T3, typename T4>
 inline internal::ElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type,
         typename internal::DecayArray<T2>::type,
         typename internal::DecayArray<T3>::type,
         typename internal::DecayArray<T4>::type> >
 ElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type,
       typename internal::DecayArray<T2>::type,
       typename internal::DecayArray<T3>::type,
@@ -12442,7 +13096,7 @@ ElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4) {
 
 template <typename T1, typename T2, typename T3, typename T4, typename T5>
 inline internal::ElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type,
         typename internal::DecayArray<T2>::type,
         typename internal::DecayArray<T3>::type,
@@ -12450,7 +13104,7 @@ inline internal::ElementsAreMatcher<
         typename internal::DecayArray<T5>::type> >
 ElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
     const T5& e5) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type,
       typename internal::DecayArray<T2>::type,
       typename internal::DecayArray<T3>::type,
@@ -12462,7 +13116,7 @@ ElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
 template <typename T1, typename T2, typename T3, typename T4, typename T5,
     typename T6>
 inline internal::ElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type,
         typename internal::DecayArray<T2>::type,
         typename internal::DecayArray<T3>::type,
@@ -12471,7 +13125,7 @@ inline internal::ElementsAreMatcher<
         typename internal::DecayArray<T6>::type> >
 ElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
     const T5& e5, const T6& e6) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type,
       typename internal::DecayArray<T2>::type,
       typename internal::DecayArray<T3>::type,
@@ -12484,7 +13138,7 @@ ElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
 template <typename T1, typename T2, typename T3, typename T4, typename T5,
     typename T6, typename T7>
 inline internal::ElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type,
         typename internal::DecayArray<T2>::type,
         typename internal::DecayArray<T3>::type,
@@ -12494,7 +13148,7 @@ inline internal::ElementsAreMatcher<
         typename internal::DecayArray<T7>::type> >
 ElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
     const T5& e5, const T6& e6, const T7& e7) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type,
       typename internal::DecayArray<T2>::type,
       typename internal::DecayArray<T3>::type,
@@ -12508,7 +13162,7 @@ ElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
 template <typename T1, typename T2, typename T3, typename T4, typename T5,
     typename T6, typename T7, typename T8>
 inline internal::ElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type,
         typename internal::DecayArray<T2>::type,
         typename internal::DecayArray<T3>::type,
@@ -12519,7 +13173,7 @@ inline internal::ElementsAreMatcher<
         typename internal::DecayArray<T8>::type> >
 ElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
     const T5& e5, const T6& e6, const T7& e7, const T8& e8) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type,
       typename internal::DecayArray<T2>::type,
       typename internal::DecayArray<T3>::type,
@@ -12535,7 +13189,7 @@ ElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
 template <typename T1, typename T2, typename T3, typename T4, typename T5,
     typename T6, typename T7, typename T8, typename T9>
 inline internal::ElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type,
         typename internal::DecayArray<T2>::type,
         typename internal::DecayArray<T3>::type,
@@ -12547,7 +13201,7 @@ inline internal::ElementsAreMatcher<
         typename internal::DecayArray<T9>::type> >
 ElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
     const T5& e5, const T6& e6, const T7& e7, const T8& e8, const T9& e9) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type,
       typename internal::DecayArray<T2>::type,
       typename internal::DecayArray<T3>::type,
@@ -12564,7 +13218,7 @@ ElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
 template <typename T1, typename T2, typename T3, typename T4, typename T5,
     typename T6, typename T7, typename T8, typename T9, typename T10>
 inline internal::ElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type,
         typename internal::DecayArray<T2>::type,
         typename internal::DecayArray<T3>::type,
@@ -12578,7 +13232,7 @@ inline internal::ElementsAreMatcher<
 ElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
     const T5& e5, const T6& e6, const T7& e7, const T8& e8, const T9& e9,
     const T10& e10) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type,
       typename internal::DecayArray<T2>::type,
       typename internal::DecayArray<T3>::type,
@@ -12597,29 +13251,29 @@ ElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
 // that matches n elements in any order.  We support up to n=10 arguments.
 
 inline internal::UnorderedElementsAreMatcher<
-    std::tr1::tuple<> >
+    ::testing::tuple<> >
 UnorderedElementsAre() {
-  typedef std::tr1::tuple<> Args;
+  typedef ::testing::tuple<> Args;
   return internal::UnorderedElementsAreMatcher<Args>(Args());
 }
 
 template <typename T1>
 inline internal::UnorderedElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type> >
 UnorderedElementsAre(const T1& e1) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type> Args;
   return internal::UnorderedElementsAreMatcher<Args>(Args(e1));
 }
 
 template <typename T1, typename T2>
 inline internal::UnorderedElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type,
         typename internal::DecayArray<T2>::type> >
 UnorderedElementsAre(const T1& e1, const T2& e2) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type,
       typename internal::DecayArray<T2>::type> Args;
   return internal::UnorderedElementsAreMatcher<Args>(Args(e1, e2));
@@ -12627,12 +13281,12 @@ UnorderedElementsAre(const T1& e1, const T2& e2) {
 
 template <typename T1, typename T2, typename T3>
 inline internal::UnorderedElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type,
         typename internal::DecayArray<T2>::type,
         typename internal::DecayArray<T3>::type> >
 UnorderedElementsAre(const T1& e1, const T2& e2, const T3& e3) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type,
       typename internal::DecayArray<T2>::type,
       typename internal::DecayArray<T3>::type> Args;
@@ -12641,13 +13295,13 @@ UnorderedElementsAre(const T1& e1, const T2& e2, const T3& e3) {
 
 template <typename T1, typename T2, typename T3, typename T4>
 inline internal::UnorderedElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type,
         typename internal::DecayArray<T2>::type,
         typename internal::DecayArray<T3>::type,
         typename internal::DecayArray<T4>::type> >
 UnorderedElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type,
       typename internal::DecayArray<T2>::type,
       typename internal::DecayArray<T3>::type,
@@ -12657,7 +13311,7 @@ UnorderedElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4) {
 
 template <typename T1, typename T2, typename T3, typename T4, typename T5>
 inline internal::UnorderedElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type,
         typename internal::DecayArray<T2>::type,
         typename internal::DecayArray<T3>::type,
@@ -12665,7 +13319,7 @@ inline internal::UnorderedElementsAreMatcher<
         typename internal::DecayArray<T5>::type> >
 UnorderedElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
     const T5& e5) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type,
       typename internal::DecayArray<T2>::type,
       typename internal::DecayArray<T3>::type,
@@ -12677,7 +13331,7 @@ UnorderedElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
 template <typename T1, typename T2, typename T3, typename T4, typename T5,
     typename T6>
 inline internal::UnorderedElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type,
         typename internal::DecayArray<T2>::type,
         typename internal::DecayArray<T3>::type,
@@ -12686,7 +13340,7 @@ inline internal::UnorderedElementsAreMatcher<
         typename internal::DecayArray<T6>::type> >
 UnorderedElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
     const T5& e5, const T6& e6) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type,
       typename internal::DecayArray<T2>::type,
       typename internal::DecayArray<T3>::type,
@@ -12700,7 +13354,7 @@ UnorderedElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
 template <typename T1, typename T2, typename T3, typename T4, typename T5,
     typename T6, typename T7>
 inline internal::UnorderedElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type,
         typename internal::DecayArray<T2>::type,
         typename internal::DecayArray<T3>::type,
@@ -12710,7 +13364,7 @@ inline internal::UnorderedElementsAreMatcher<
         typename internal::DecayArray<T7>::type> >
 UnorderedElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
     const T5& e5, const T6& e6, const T7& e7) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type,
       typename internal::DecayArray<T2>::type,
       typename internal::DecayArray<T3>::type,
@@ -12725,7 +13379,7 @@ UnorderedElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
 template <typename T1, typename T2, typename T3, typename T4, typename T5,
     typename T6, typename T7, typename T8>
 inline internal::UnorderedElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type,
         typename internal::DecayArray<T2>::type,
         typename internal::DecayArray<T3>::type,
@@ -12736,7 +13390,7 @@ inline internal::UnorderedElementsAreMatcher<
         typename internal::DecayArray<T8>::type> >
 UnorderedElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
     const T5& e5, const T6& e6, const T7& e7, const T8& e8) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type,
       typename internal::DecayArray<T2>::type,
       typename internal::DecayArray<T3>::type,
@@ -12752,7 +13406,7 @@ UnorderedElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
 template <typename T1, typename T2, typename T3, typename T4, typename T5,
     typename T6, typename T7, typename T8, typename T9>
 inline internal::UnorderedElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type,
         typename internal::DecayArray<T2>::type,
         typename internal::DecayArray<T3>::type,
@@ -12764,7 +13418,7 @@ inline internal::UnorderedElementsAreMatcher<
         typename internal::DecayArray<T9>::type> >
 UnorderedElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
     const T5& e5, const T6& e6, const T7& e7, const T8& e8, const T9& e9) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type,
       typename internal::DecayArray<T2>::type,
       typename internal::DecayArray<T3>::type,
@@ -12781,7 +13435,7 @@ UnorderedElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
 template <typename T1, typename T2, typename T3, typename T4, typename T5,
     typename T6, typename T7, typename T8, typename T9, typename T10>
 inline internal::UnorderedElementsAreMatcher<
-    std::tr1::tuple<
+    ::testing::tuple<
         typename internal::DecayArray<T1>::type,
         typename internal::DecayArray<T2>::type,
         typename internal::DecayArray<T3>::type,
@@ -12795,7 +13449,7 @@ inline internal::UnorderedElementsAreMatcher<
 UnorderedElementsAre(const T1& e1, const T2& e2, const T3& e3, const T4& e4,
     const T5& e5, const T6& e6, const T7& e7, const T8& e8, const T9& e9,
     const T10& e10) {
-  typedef std::tr1::tuple<
+  typedef ::testing::tuple<
       typename internal::DecayArray<T1>::type,
       typename internal::DecayArray<T2>::type,
       typename internal::DecayArray<T3>::type,
@@ -13218,7 +13872,7 @@ AnyOf(M1 m1, M2 m2, M3 m3, M4 m4, M5 m5, M6 m6, M7 m7, M8 m8, M9 m9, M10 m10) {
         return ::testing::internal::FormatMatcherDescription(\
             negation, #name, \
             ::testing::internal::UniversalTersePrintTupleFieldsToStrings(\
-                ::std::tr1::tuple<>()));\
+                ::testing::tuple<>()));\
       }\
       GTEST_DISALLOW_ASSIGN_(gmock_Impl);\
     };\
@@ -13267,7 +13921,7 @@ AnyOf(M1 m1, M2 m2, M3 m3, M4 m4, M5 m5, M6 m6, M7 m7, M8 m8, M9 m9, M10 m10) {
         return ::testing::internal::FormatMatcherDescription(\
             negation, #name, \
             ::testing::internal::UniversalTersePrintTupleFieldsToStrings(\
-                ::std::tr1::tuple<p0##_type>(p0)));\
+                ::testing::tuple<p0##_type>(p0)));\
       }\
       GTEST_DISALLOW_ASSIGN_(gmock_Impl);\
     };\
@@ -13276,7 +13930,7 @@ AnyOf(M1 m1, M2 m2, M3 m3, M4 m4, M5 m5, M6 m6, M7 m7, M8 m8, M9 m9, M10 m10) {
       return ::testing::Matcher<arg_type>(\
           new gmock_Impl<arg_type>(p0));\
     }\
-    name##MatcherP(p0##_type gmock_p0) : p0(gmock_p0) {\
+    explicit name##MatcherP(p0##_type gmock_p0) : p0(gmock_p0) {\
     }\
     p0##_type p0;\
    private:\
@@ -13320,7 +13974,7 @@ AnyOf(M1 m1, M2 m2, M3 m3, M4 m4, M5 m5, M6 m6, M7 m7, M8 m8, M9 m9, M10 m10) {
         return ::testing::internal::FormatMatcherDescription(\
             negation, #name, \
             ::testing::internal::UniversalTersePrintTupleFieldsToStrings(\
-                ::std::tr1::tuple<p0##_type, p1##_type>(p0, p1)));\
+                ::testing::tuple<p0##_type, p1##_type>(p0, p1)));\
       }\
       GTEST_DISALLOW_ASSIGN_(gmock_Impl);\
     };\
@@ -13378,7 +14032,7 @@ AnyOf(M1 m1, M2 m2, M3 m3, M4 m4, M5 m5, M6 m6, M7 m7, M8 m8, M9 m9, M10 m10) {
         return ::testing::internal::FormatMatcherDescription(\
             negation, #name, \
             ::testing::internal::UniversalTersePrintTupleFieldsToStrings(\
-                ::std::tr1::tuple<p0##_type, p1##_type, p2##_type>(p0, p1, \
+                ::testing::tuple<p0##_type, p1##_type, p2##_type>(p0, p1, \
                     p2)));\
       }\
       GTEST_DISALLOW_ASSIGN_(gmock_Impl);\
@@ -13441,7 +14095,7 @@ AnyOf(M1 m1, M2 m2, M3 m3, M4 m4, M5 m5, M6 m6, M7 m7, M8 m8, M9 m9, M10 m10) {
         return ::testing::internal::FormatMatcherDescription(\
             negation, #name, \
             ::testing::internal::UniversalTersePrintTupleFieldsToStrings(\
-                ::std::tr1::tuple<p0##_type, p1##_type, p2##_type, \
+                ::testing::tuple<p0##_type, p1##_type, p2##_type, \
                     p3##_type>(p0, p1, p2, p3)));\
       }\
       GTEST_DISALLOW_ASSIGN_(gmock_Impl);\
@@ -13512,7 +14166,7 @@ AnyOf(M1 m1, M2 m2, M3 m3, M4 m4, M5 m5, M6 m6, M7 m7, M8 m8, M9 m9, M10 m10) {
         return ::testing::internal::FormatMatcherDescription(\
             negation, #name, \
             ::testing::internal::UniversalTersePrintTupleFieldsToStrings(\
-                ::std::tr1::tuple<p0##_type, p1##_type, p2##_type, p3##_type, \
+                ::testing::tuple<p0##_type, p1##_type, p2##_type, p3##_type, \
                     p4##_type>(p0, p1, p2, p3, p4)));\
       }\
       GTEST_DISALLOW_ASSIGN_(gmock_Impl);\
@@ -13586,7 +14240,7 @@ AnyOf(M1 m1, M2 m2, M3 m3, M4 m4, M5 m5, M6 m6, M7 m7, M8 m8, M9 m9, M10 m10) {
         return ::testing::internal::FormatMatcherDescription(\
             negation, #name, \
             ::testing::internal::UniversalTersePrintTupleFieldsToStrings(\
-                ::std::tr1::tuple<p0##_type, p1##_type, p2##_type, p3##_type, \
+                ::testing::tuple<p0##_type, p1##_type, p2##_type, p3##_type, \
                     p4##_type, p5##_type>(p0, p1, p2, p3, p4, p5)));\
       }\
       GTEST_DISALLOW_ASSIGN_(gmock_Impl);\
@@ -13664,7 +14318,7 @@ AnyOf(M1 m1, M2 m2, M3 m3, M4 m4, M5 m5, M6 m6, M7 m7, M8 m8, M9 m9, M10 m10) {
         return ::testing::internal::FormatMatcherDescription(\
             negation, #name, \
             ::testing::internal::UniversalTersePrintTupleFieldsToStrings(\
-                ::std::tr1::tuple<p0##_type, p1##_type, p2##_type, p3##_type, \
+                ::testing::tuple<p0##_type, p1##_type, p2##_type, p3##_type, \
                     p4##_type, p5##_type, p6##_type>(p0, p1, p2, p3, p4, p5, \
                     p6)));\
       }\
@@ -13749,7 +14403,7 @@ AnyOf(M1 m1, M2 m2, M3 m3, M4 m4, M5 m5, M6 m6, M7 m7, M8 m8, M9 m9, M10 m10) {
         return ::testing::internal::FormatMatcherDescription(\
             negation, #name, \
             ::testing::internal::UniversalTersePrintTupleFieldsToStrings(\
-                ::std::tr1::tuple<p0##_type, p1##_type, p2##_type, p3##_type, \
+                ::testing::tuple<p0##_type, p1##_type, p2##_type, p3##_type, \
                     p4##_type, p5##_type, p6##_type, p7##_type>(p0, p1, p2, \
                     p3, p4, p5, p6, p7)));\
       }\
@@ -13840,7 +14494,7 @@ AnyOf(M1 m1, M2 m2, M3 m3, M4 m4, M5 m5, M6 m6, M7 m7, M8 m8, M9 m9, M10 m10) {
         return ::testing::internal::FormatMatcherDescription(\
             negation, #name, \
             ::testing::internal::UniversalTersePrintTupleFieldsToStrings(\
-                ::std::tr1::tuple<p0##_type, p1##_type, p2##_type, p3##_type, \
+                ::testing::tuple<p0##_type, p1##_type, p2##_type, p3##_type, \
                     p4##_type, p5##_type, p6##_type, p7##_type, \
                     p8##_type>(p0, p1, p2, p3, p4, p5, p6, p7, p8)));\
       }\
@@ -13936,7 +14590,7 @@ AnyOf(M1 m1, M2 m2, M3 m3, M4 m4, M5 m5, M6 m6, M7 m7, M8 m8, M9 m9, M10 m10) {
         return ::testing::internal::FormatMatcherDescription(\
             negation, #name, \
             ::testing::internal::UniversalTersePrintTupleFieldsToStrings(\
-                ::std::tr1::tuple<p0##_type, p1##_type, p2##_type, p3##_type, \
+                ::testing::tuple<p0##_type, p1##_type, p2##_type, p3##_type, \
                     p4##_type, p5##_type, p6##_type, p7##_type, p8##_type, \
                     p9##_type>(p0, p1, p2, p3, p4, p5, p6, p7, p8, p9)));\
       }\
@@ -14066,7 +14720,7 @@ template <class Class, typename MethodPtr>
 class InvokeMethodAction {
  public:
   InvokeMethodAction(Class* obj_ptr, MethodPtr method_ptr)
-      : obj_ptr_(obj_ptr), method_ptr_(method_ptr) {}
+      : method_ptr_(method_ptr), obj_ptr_(obj_ptr) {}
 
   template <typename Result, typename ArgumentTuple>
   Result Perform(const ArgumentTuple& args) const {
@@ -14075,8 +14729,11 @@ class InvokeMethodAction {
   }
 
  private:
-  Class* const obj_ptr_;
+  // The order of these members matters.  Reversing the order can trigger
+  // warning C4121 in MSVC (see
+  // http://computer-programming-forum.com/7-vc.net/6fbc30265f860ad1.htm ).
   const MethodPtr method_ptr_;
+  Class* const obj_ptr_;
 
   GTEST_DISALLOW_ASSIGN_(InvokeMethodAction);
 };
@@ -14152,7 +14809,7 @@ WithArg(const InnerAction& action) {
 ACTION_TEMPLATE(ReturnArg,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_0_VALUE_PARAMS()) {
-  return std::tr1::get<k>(args);
+  return ::testing::get<k>(args);
 }
 
 // Action SaveArg<k>(pointer) saves the k-th (0-based) argument of the
@@ -14160,7 +14817,7 @@ ACTION_TEMPLATE(ReturnArg,
 ACTION_TEMPLATE(SaveArg,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_1_VALUE_PARAMS(pointer)) {
-  *pointer = ::std::tr1::get<k>(args);
+  *pointer = ::testing::get<k>(args);
 }
 
 // Action SaveArgPointee<k>(pointer) saves the value pointed to
@@ -14168,7 +14825,7 @@ ACTION_TEMPLATE(SaveArg,
 ACTION_TEMPLATE(SaveArgPointee,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_1_VALUE_PARAMS(pointer)) {
-  *pointer = *::std::tr1::get<k>(args);
+  *pointer = *::testing::get<k>(args);
 }
 
 // Action SetArgReferee<k>(value) assigns 'value' to the variable
@@ -14176,13 +14833,13 @@ ACTION_TEMPLATE(SaveArgPointee,
 ACTION_TEMPLATE(SetArgReferee,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_1_VALUE_PARAMS(value)) {
-  typedef typename ::std::tr1::tuple_element<k, args_type>::type argk_type;
+  typedef typename ::testing::tuple_element<k, args_type>::type argk_type;
   // Ensures that argument #k is a reference.  If you get a compiler
   // error on the next line, you are using SetArgReferee<k>(value) in
   // a mock function whose k-th (0-based) argument is not a reference.
   GTEST_COMPILE_ASSERT_(internal::is_reference<argk_type>::value,
                         SetArgReferee_must_be_used_with_a_reference_argument);
-  ::std::tr1::get<k>(args) = value;
+  ::testing::get<k>(args) = value;
 }
 
 // Action SetArrayArgument<k>(first, last) copies the elements in
@@ -14195,9 +14852,9 @@ ACTION_TEMPLATE(SetArrayArgument,
                 AND_2_VALUE_PARAMS(first, last)) {
   // Visual Studio deprecates ::std::copy, so we use our own copy in that case.
 #ifdef _MSC_VER
-  internal::CopyElements(first, last, ::std::tr1::get<k>(args));
+  internal::CopyElements(first, last, ::testing::get<k>(args));
 #else
-  ::std::copy(first, last, ::std::tr1::get<k>(args));
+  ::std::copy(first, last, ::testing::get<k>(args));
 #endif
 }
 
@@ -14206,7 +14863,7 @@ ACTION_TEMPLATE(SetArrayArgument,
 ACTION_TEMPLATE(DeleteArg,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_0_VALUE_PARAMS()) {
-  delete ::std::tr1::get<k>(args);
+  delete ::testing::get<k>(args);
 }
 
 // This action returns the value pointed to by 'pointer'.

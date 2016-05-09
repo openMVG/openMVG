@@ -59,10 +59,10 @@ struct GeometricFilter_EMatrix_AC
      // Check that valid cameras can be retrieved for the pair of views
     const cameras::IntrinsicBase * cam_I =
       sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
-        sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
+        sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : nullptr;
     const cameras::IntrinsicBase * cam_J =
       sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
-        sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
+        sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
     if (!cam_I || !cam_J)
       return false;
@@ -88,8 +88,8 @@ struct GeometricFilter_EMatrix_AC
         Mat3>
         KernelType;
 
-    const cameras::Pinhole_Intrinsic * ptrPinhole_I = (const cameras::Pinhole_Intrinsic*)(cam_I);
-    const cameras::Pinhole_Intrinsic * ptrPinhole_J = (const cameras::Pinhole_Intrinsic*)(cam_J);
+    const cameras::Pinhole_Intrinsic * ptrPinhole_I = dynamic_cast<const cameras::Pinhole_Intrinsic*>(cam_I);
+    const cameras::Pinhole_Intrinsic * ptrPinhole_J = dynamic_cast<const cameras::Pinhole_Intrinsic*>(cam_J);
 
     KernelType kernel(
       xI, sfm_data->GetViews().at(iIndex)->ui_width, sfm_data->GetViews().at(iIndex)->ui_height,
@@ -138,10 +138,10 @@ struct GeometricFilter_EMatrix_AC
       // Check that valid cameras can be retrieved for the pair of views
       const cameras::IntrinsicBase * cam_I =
         sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
-          sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
+          sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : nullptr;
       const cameras::IntrinsicBase * cam_J =
         sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
-          sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
+          sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
       if (!cam_I || !cam_J)
         return false;
@@ -149,8 +149,8 @@ struct GeometricFilter_EMatrix_AC
       if ( !isPinhole(cam_I->getType()) || !isPinhole(cam_J->getType()))
         return false;
 
-      const cameras::Pinhole_Intrinsic * ptrPinhole_I = (const cameras::Pinhole_Intrinsic*)(cam_I);
-      const cameras::Pinhole_Intrinsic * ptrPinhole_J = (const cameras::Pinhole_Intrinsic*)(cam_J);
+      const cameras::Pinhole_Intrinsic * ptrPinhole_I = dynamic_cast<const cameras::Pinhole_Intrinsic*>(cam_I);
+      const cameras::Pinhole_Intrinsic * ptrPinhole_J = dynamic_cast<const cameras::Pinhole_Intrinsic*>(cam_J);
 
       Mat3 F;
       FundamentalFromEssential(m_E, ptrPinhole_I->K(), ptrPinhole_J->K(), &F);
@@ -176,6 +176,6 @@ struct GeometricFilter_EMatrix_AC
   double m_dPrecision_robust;
 };
 
-} // namespace openMVG
 } //namespace matching_image_collection
+}  // namespace openMVG
 

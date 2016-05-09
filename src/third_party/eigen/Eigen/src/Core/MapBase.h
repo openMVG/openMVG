@@ -123,7 +123,7 @@ template<typename Derived> class MapBase<Derived, ReadOnlyAccessors>
       return internal::ploadt<PacketScalar, LoadMode>(m_data + index * innerStride());
     }
 
-    inline MapBase(PointerType dataPtr) : m_data(dataPtr), m_rows(RowsAtCompileTime), m_cols(ColsAtCompileTime)
+    explicit inline MapBase(PointerType dataPtr) : m_data(dataPtr), m_rows(RowsAtCompileTime), m_cols(ColsAtCompileTime)
     {
       EIGEN_STATIC_ASSERT_FIXED_SIZE(Derived)
       checkSanity();
@@ -149,6 +149,10 @@ template<typename Derived> class MapBase<Derived, ReadOnlyAccessors>
       checkSanity();
     }
 
+    #ifdef EIGEN_MAPBASE_PLUGIN
+    #include EIGEN_MAPBASE_PLUGIN
+    #endif
+
   protected:
 
     void checkSanity() const
@@ -157,7 +161,7 @@ template<typename Derived> class MapBase<Derived, ReadOnlyAccessors>
                                         internal::inner_stride_at_compile_time<Derived>::ret==1),
                           PACKET_ACCESS_REQUIRES_TO_HAVE_INNER_STRIDE_FIXED_TO_1);
       eigen_assert(EIGEN_IMPLIES(internal::traits<Derived>::Flags&AlignedBit, (size_t(m_data) % 16) == 0)
-                   && "data is not aligned");
+                   && "input pointer is not aligned on a 16 byte boundary");
     }
 
     PointerType m_data;

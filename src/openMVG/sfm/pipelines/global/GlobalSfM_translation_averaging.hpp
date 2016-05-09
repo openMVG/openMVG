@@ -33,7 +33,7 @@ namespace sfm{
 
 class GlobalSfM_Translation_AveragingSolver
 {
-  RelativeInfo_Vec m_vec_initialRijTijEstimates;
+  std::vector<RelativeInfo_Vec> vec_relative_motion_;
 
 public:
 
@@ -69,10 +69,10 @@ private:
     const Hash_Map<IndexT, Mat3> & map_globalR,
     const Features_Provider * normalized_features_provider,
     const Matches_Provider * matches_provider,
-    RelativeInfo_Vec & vec_initialEstimates,
+    std::vector<RelativeInfo_Vec> & vec_triplet_relative_motion,
     matching::PairWiseMatches & newpairMatches);
 
-  // Robust estimation and refinement of a translation and 3D points of an image triplets.
+  // Robust estimation and refinement of triplet of translations
   bool Estimate_T_triplet(
     const SfM_Data & sfm_data,
     const Hash_Map<IndexT, Mat3> & map_globalR,

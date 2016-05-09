@@ -89,31 +89,29 @@
 <li class="toctree-l2"><a class="reference internal" href="faqs.html#further-reading">Further Reading</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="users.html">Users</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="users.html#publications">Publications</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="users.html">Users</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="contributing.html#setting-up-your-environment">Setting up your Environment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="contributing.html#submitting-a-change">Submitting a change</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Version History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id1">1.10.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id2">1.9.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id6">1.8.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id9">1.7.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id13">1.6.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id16">1.5.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id20">1.4.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id24">1.3.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id27">1.2.3</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id29">1.2.2</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id31">1.2.1</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id34">1.2.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id37">1.1.1</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id39">1.1.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id42">1.0.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">1.11.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">1.10.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">1.9.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id8">1.8.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id11">1.7.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id15">1.6.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id18">1.5.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id22">1.4.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id26">1.3.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id29">1.2.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id31">1.2.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id33">1.2.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id36">1.2.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id39">1.1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id41">1.1.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id44">1.0.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#origins">Origins</a></li>
 </ul>
 </li>
@@ -144,9 +142,167 @@
   <div class="section" id="version-history">
 <span id="chapter-version-history"></span><h1>Version History<a class="headerlink" href="#version-history" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="id1">
-<h2>1.10.0<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<h2>1.11.0<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="new-features">
 <h3>New Features<a class="headerlink" href="#new-features" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>Adaptive numeric differentiation using Ridders&#8217; method. (Tal Ben-Nun)</li>
+<li>Add <tt class="docutils literal"><span class="pre">CubicInterpolator</span></tt> and <tt class="docutils literal"><span class="pre">BiCubicInterpolator</span></tt> to allow
+smooth interpolation of sampled functions and integration with
+automatic differentiation.</li>
+<li>Add method to return covariance in tangent space. (Michael Vitus &amp;
+Steve Hsu)</li>
+<li>Add Homogeneous vector parameterization. (Michael Vitus)</li>
+<li>Add a <tt class="docutils literal"><span class="pre">ProductParameterization</span></tt>, a local parameterization that
+can be constructed as a cartesian product of other local
+parameterization.</li>
+<li>Add DynamicCostFunctionToFunctor. (David Gossow)</li>
+<li>Optionally export Ceres build directory into local CMake package
+registry.</li>
+<li>Faster <tt class="docutils literal"><span class="pre">SPARSE_NORMAL_CHOLESKY</span></tt> in the presence of dynamic
+sparsity.</li>
+</ol>
+</div>
+<div class="section" id="bug-fixes-minor-changes">
+<h3>Bug Fixes &amp; Minor Changes<a class="headerlink" href="#bug-fixes-minor-changes" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>Remove use of link-time optimisation (LTO) for all compilers due to
+portability issues with gtest / type_info::operator== &amp; Eigen with
+Clang on OS X vs GCC 4.9+ on Linux requiring contradictory &#8216;fixes&#8217;.</li>
+<li>Use link-time optimisation (LTO) only when compiling Ceres itself,
+not tests or examples, to bypass gtest / type_info::operator== issue.</li>
+<li>Use old minimum iOS version flags on Xcode &lt; 7.0.</li>
+<li>Add gtest-specific flags when building/using as a shared library.</li>
+<li>Clean up iOS.cmake to use xcrun/xcodebuild &amp; libtool.</li>
+<li>Import the latest version of <tt class="docutils literal"><span class="pre">googletest</span></tt>.</li>
+<li>Refactored <tt class="docutils literal"><span class="pre">system_test</span></tt> into <tt class="docutils literal"><span class="pre">bundle_adjustment_test</span></tt> and
+<tt class="docutils literal"><span class="pre">system_test</span></tt>, where each test case is its own test.</li>
+<li>Fix invalid memory access bug in
+<tt class="docutils literal"><span class="pre">CompressedRowSparseMatrix::AppendRows</span></tt> when it was called with a
+matrix of size zero.</li>
+<li>Build position independent code when compiling Ceres statically
+(Alexander Alekhin).</li>
+<li>Fix a bug in DetectStructure (Johannes Schonberger).</li>
+<li>Reduce memory footprint of SubsetParameterization (Johannes
+Schonberger).</li>
+<li>Fix for reorder program unit test when built without suitesparse
+(Sergey Sharybin).</li>
+<li>Fix a bug in the Schur eliminator (Werner Trobin).</li>
+<li>Fix a bug in the reordering code (Bernhard Zeisl).</li>
+<li>Add missing CERES_EXPORT to ComposedLoss (Simon Rutishauser).</li>
+<li>Add the option to use numeric differentiation to <tt class="docutils literal"><span class="pre">nist</span></tt> and
+<tt class="docutils literal"><span class="pre">more_garbow_hillstrom</span></tt>.</li>
+<li>Fix EIGENSPARSE option help s/t it displays in CMake ncurses GUI.</li>
+<li>Fix SparseNormalCholeskySolver with dynamic sparsity (Richie Stebbing).</li>
+<li>Remove legacy dependency detection macros.</li>
+<li>Fix failed if() condition expansion if gflags is not found.</li>
+<li>Update all CMake to lowercase function name style.</li>
+<li>Update minimum iOS version to 7.0 for shared_ptr/unordered_map.</li>
+<li>Fix bug in gflags&#8217; &lt;= 2.1.2 exported CMake configuration.</li>
+<li>Remove the spec file needed for generating RPMs.</li>
+<li>Fix a typo in small_blas.h (Werber Trobin).</li>
+<li>Cleanup FindGflags &amp; use installed gflags CMake config if present.</li>
+<li>Add default glog install location on Windows to search paths (bvanevery).</li>
+<li>Add default Eigen install location on Windows to search paths (bvanevery).</li>
+<li>Fix explanation of config.h generation in bare config.h.</li>
+<li>Fix unused parameter compiler warnings in numeric_diff.h.</li>
+<li>Increase tolerance for a test in polynomial_test (Taylor Braun
+Jones).</li>
+<li>Fix addition of Gerrit commit hook when Ceres is a git submodule
+(Chris Cooper).</li>
+<li>Fix missing EIGEN_VERSION expansion typo.</li>
+<li>Fix links to SuiteSparse &amp; CXSparse (Henrique Mendonça).</li>
+<li>Ensure Eigen is at least 3.1.0 for Eigen/SparseCore.</li>
+<li>Add option to use C++11 (not TR1) shared_ptr &amp; unordered_map
+(Norman Goldstein).</li>
+<li>Fix an incorrect usage message in bundle_adjuster.cc</li>
+<li>Gracefully disable docs if Sphinx is not found.</li>
+<li>Explicitly use (new) default OS X rpath policy if present.</li>
+<li>Add support of EIGEN_SPARSE type in
+IsSparseLinearAlgebraLibraryTypeAvailable function (Pierre Moulon).</li>
+<li>Allow the LossFunction contained in a LossFunctionWrapper to be
+NULL. This is consistent with how NULL LossFunctions are treated
+everywhere else. (Simon Rutishauser).</li>
+<li>Improve numeric differentation near zero.</li>
+<li>Refactored DynamicNumericDiffCostFunction to use NumericDiff (Tal
+Ben-Nun).</li>
+<li>Remove use of :caption tag in Sphinx.</li>
+<li>Add a small test to make sure GradientProblemSolver works correctly
+(Petter Strandmark).</li>
+<li>Add simple unit tests for GradientProblem (Petter Strandmark).</li>
+<li>Make the robust curve fitting example robust.</li>
+<li>Homogenize convergence operators in docs and code (Johannes
+Schonberger).</li>
+<li>Add parameter_tolerance convergence to line search minimizer
+(Johannes Schonberger).</li>
+<li>Fix bug where pow(JetA,JetB) returned wrong result for JetA==0
+(Russell Smith).</li>
+<li>Remove duplicate step norm computation (Johannes Schonberger).</li>
+<li>Enhance usability when encountering Eigen version mismatches (Andrew Hundt).</li>
+<li>Add PLY file logger before and after BA in order to ease visual
+comparison (Pierre Moulon).</li>
+<li>Fix CMake config file docs to include 2.8.x &amp; 3.x styles.</li>
+<li>Python3 fixes (Markus Moll).</li>
+<li>Remove confusing code from DenseJacobianWriter (Michael Vitus).</li>
+<li>Add documentation on CMake package installation process.</li>
+<li>Revert a call to SolveUpperTriangularUsingCholesky.</li>
+<li>Make CERES_EIGEN_VERSION macro independent of CMake.</li>
+<li>Add versions of dependencies used to FullReport().</li>
+<li>Ensure local config.h is used if Ceres is already installed.</li>
+<li>Small messaging and comment updates in CMake</li>
+<li>Handle possible presence of library prefixes in MSVC (Sylvain Duchêne).</li>
+<li>Use -O2 not -O3 on MinGW to workaround issue with Eigen (<a class="reference external" href="mailto:s1m3mu3&#37;&#52;&#48;gmail&#46;com">s1m3mu3<span>&#64;</span>gmail<span>&#46;</span>com</a>).</li>
+<li>Increase tolerance in small_blas test for Cygwin (<a class="reference external" href="mailto:s1m3mu3&#37;&#52;&#48;gmail&#46;com">s1m3mu3<span>&#64;</span>gmail<span>&#46;</span>com</a>).</li>
+<li>Fix iOS cmake file for cmake 3.0 (Jack Feng)</li>
+<li>Fix missing gflags shlwapi dependency on MinGW (<a class="reference external" href="mailto:s1m3mu3&#37;&#52;&#48;gmail&#46;com">s1m3mu3<span>&#64;</span>gmail<span>&#46;</span>com</a>).</li>
+<li>Add thread dependency &amp; fix namespace detection on Windows for gflags
+(<a class="reference external" href="mailto:arrigo&#46;benedetti&#37;&#52;&#48;gmail&#46;com">arrigo<span>&#46;</span>benedetti<span>&#64;</span>gmail<span>&#46;</span>com</a>).</li>
+<li>Rename macros in the public API to have a <tt class="docutils literal"><span class="pre">CERES_</span></tt> prefix.</li>
+<li>Fix <tt class="docutils literal"><span class="pre">OrderedGroup::Reverse()</span></tt> when it is empty (Chris Sweeney).</li>
+<li>Update the code to point to ceres-solver.org.</li>
+<li>Update documentation to point to the GitHub issue tracker.</li>
+<li>Disable <tt class="docutils literal"><span class="pre">LAPACK</span></tt> for iOS builds. (Greg Coombe)</li>
+<li>Force use of single-thread in <tt class="docutils literal"><span class="pre">Problem::Evaluate()</span></tt> without OpenMP.</li>
+<li>Less strict check for multithreading. (Chris Sweeney)</li>
+<li>Update tolerances in small_blas_test.cc (Philipp Hubner)</li>
+<li>Documentation corrections (Steve Hsu)</li>
+<li>Fixed <tt class="docutils literal"><span class="pre">sampled_function.cc</span></tt> (Pablo Speciale)</li>
+<li>Fix example code in the documentation. (Rodney Hoskinson)</li>
+<li>Improve the error handling in Conjugate Gradients.</li>
+<li>Improve preconditioner documentation.</li>
+<li>Remove dead code from fpclassify.h.</li>
+<li>Make Android.mk threads sensitive.</li>
+<li>Changed the <tt class="docutils literal"><span class="pre">CURRENT_CONFIG_INSTALL_DIR</span></tt> to be a variable local
+to Ceres. (Chris Sweeney)</li>
+<li>Fix typo in the comments in <tt class="docutils literal"><span class="pre">Jet.h</span></tt>. (Julius Ziegler)</li>
+<li>Add the ASL at ETH Zurich, Theia &amp; OpenPTrack to the list of users.</li>
+<li>Fixed a typo in the documentation. (Richard Stebbing)</li>
+<li>Fixed a boundary handling bug in the BiCubic interpolation
+code. (Bernhard Zeisl)</li>
+<li>Fixed a <tt class="docutils literal"><span class="pre">MSVC</span></tt> compilation bug in the cubic interpolation code
+(Johannes Schönberger)</li>
+<li>Add covariance related files to the Android build.</li>
+<li>Update Ubuntu 14.04 installation instructions. (Filippo Basso)</li>
+<li>Improved logging for linear solver failures.</li>
+<li>Improved crash messages in <tt class="docutils literal"><span class="pre">Problem</span></tt>.</li>
+<li>Hide Homebrew related variables in CMake GUI.</li>
+<li>Add SuiteSparse link dependency for
+compressed_col_sparse_matrix_utils_test.</li>
+<li>Autodetect Homebrew install prefix on OSX.</li>
+<li>Lint changes from William Rucklidge and Jim Roseborough.</li>
+<li>Remove <tt class="docutils literal"><span class="pre">using</span> <span class="pre">namespace</span> <span class="pre">std:</span></tt> from <tt class="docutils literal"><span class="pre">port.h</span></tt></li>
+<li>Add note about glog not currently compiling against gflags 2.1.</li>
+<li>Add explicit no sparse linear algebra library available option.</li>
+<li>Improve some wording in the FAQ. (Vasily Vylkov)</li>
+<li>Delete Incomplete LQ Factorization.</li>
+<li>Add a pointer to MacPorts. (Markus Moll)</li>
+</ol>
+</div>
+</div>
+<div class="section" id="id2">
+<h2>1.10.0<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id3">
+<h3>New Features<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic">
 <li><p class="first">Ceres Solver can now be used to solve general unconstrained
 optimization problems. See the documentation for
@@ -297,10 +453,10 @@ Solver::Options::function_tolerance. (Alessandro Gentilini)</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id2">
-<h2>1.9.0<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id3">
-<h3>New Features<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id4">
+<h2>1.9.0<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id5">
+<h3>New Features<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Bounds constraints: Support for upper and/or lower bounds on
 parameters when using the trust region minimizer.</li>
@@ -336,8 +492,8 @@ a custom <tt class="docutils literal"><span class="pre">IterationCallback</span>
 LAPACK).</li>
 </ol>
 </div>
-<div class="section" id="id4">
-<h3>Backward Incompatible API Changes<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id6">
+<h3>Backward Incompatible API Changes<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic">
 <li><p class="first"><tt class="docutils literal"><span class="pre">Solver::Options::linear_solver_ordering</span></tt> used to be a naked
 pointer that Ceres took ownership of. This is error prone behaviour
@@ -375,8 +531,8 @@ anymore. Thus the preprocessor define
 </li>
 </ol>
 </div>
-<div class="section" id="id5">
-<h3>Bug Fixes<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id7">
+<h3>Bug Fixes<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Disabled warning C4251. (Björn Piltz)</li>
 <li>Do not propagate 3d party libs through
@@ -424,10 +580,10 @@ the other #._FOUND definitions. (Andreas Franek)</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id6">
-<h2>1.8.0<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id7">
-<h3>New Features<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id8">
+<h2>1.8.0<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id9">
+<h3>New Features<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Significant improved <tt class="docutils literal"><span class="pre">CMake</span></tt> files with better robustness,
 dependency checking and GUI support. (Alex Stewart)</li>
@@ -449,8 +605,8 @@ based preconditioning, including a new fast single linkage
 clustering algorithm.</li>
 </ol>
 </div>
-<div class="section" id="id8">
-<h3>Bug Fixes<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id10">
+<h3>Bug Fixes<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Fix ordering of ParseCommandLineFlags() &amp; InitGoogleTest() for
 Windows. (Alex Stewart)</li>
@@ -480,17 +636,17 @@ Clang. (Alex Stewart)</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id9">
-<h2>1.7.0<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id10">
-<h3>Backward Incompatible API Changes<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id11">
+<h2>1.7.0<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id12">
+<h3>Backward Incompatible API Changes<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li><tt class="docutils literal"><span class="pre">Solver::Options::sparse_linear_algebra_library</span></tt> has been renamed
 to <tt class="docutils literal"><span class="pre">Solver::Options::sparse_linear_algebra_library_type</span></tt>.</li>
 </ol>
 </div>
-<div class="section" id="id11">
-<h3>New Features<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id13">
+<h3>New Features<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Sparse and dense covariance estimation.</li>
 <li>A new Wolfe line search. (Alex Stewart)</li>
@@ -525,8 +681,8 @@ shared. Turn on BUILD_SHARED_LIBS to get shared Ceres libraries.</li>
 on non Android platforms. (This is NOT recommended).</li>
 </ol>
 </div>
-<div class="section" id="id12">
-<h3>Bug Fixes<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id14">
+<h3>Bug Fixes<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Fix <tt class="docutils literal"><span class="pre">ITERATIVE_SCHUR</span></tt> solver to work correctly when the schur
 complement is of size zero. (Soohyun Bae)</li>
@@ -580,10 +736,10 @@ Schönberger)</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id13">
-<h2>1.6.0<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id14">
-<h3>New Features<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id15">
+<h2>1.6.0<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id16">
+<h3>New Features<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Major Performance improvements.<ol class="loweralpha">
 <li>Schur type solvers (<tt class="docutils literal"><span class="pre">SPARSE_SCHUR</span></tt>, <tt class="docutils literal"><span class="pre">DENSE_SCHUR</span></tt>,
@@ -611,8 +767,8 @@ instead of a matrix vector multiply.</li>
 <li>Enable larger tuple sizes for Visual Studio 2012. (Petter Strandmark)</li>
 </ol>
 </div>
-<div class="section" id="id15">
-<h3>Bug Fixes<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id17">
+<h3>Bug Fixes<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Update the documentation for <tt class="docutils literal"><span class="pre">CostFunction</span></tt>.</li>
 <li>Fixed a typo in the documentation. (Pablo Speciale)</li>
@@ -628,10 +784,10 @@ instead of a matrix vector multiply.</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id16">
-<h2>1.5.0<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id17">
-<h3>Backward Incompatible API Changes<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id18">
+<h2>1.5.0<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id19">
+<h3>Backward Incompatible API Changes<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic">
 <li><p class="first">Added <tt class="docutils literal"><span class="pre">Problem::Evaluate</span></tt>. Now you can evaluate a problem or any
 part of it without calling the solver.</p>
@@ -671,8 +827,8 @@ removed from the API.</p>
 </li>
 </ol>
 </div>
-<div class="section" id="id18">
-<h3>New Features<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id20">
+<h3>New Features<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Problem now supports removal of ParameterBlocks and
 ResidualBlocks. There is a space/time tradeoff in doing this which
@@ -735,8 +891,8 @@ size and/or compile time is a concern, larger parts of the solver
 can be disabled at compile time.</li>
 </ol>
 </div>
-<div class="section" id="id19">
-<h3>Bug Fixes<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id21">
+<h3>Bug Fixes<a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Compilation fixes for MSVC2010 (Sergey Sharybin)</li>
 <li>Fixed &#8220;deprecated conversion from string constant to char*&#8221;
@@ -772,10 +928,10 @@ solution rather than the ground truth function value.</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id20">
-<h2>1.4.0<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id21">
-<h3>Backward Incompatible API Changes<a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id22">
+<h2>1.4.0<a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id23">
+<h3>Backward Incompatible API Changes<a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h3>
 <p>The new ordering API breaks existing code. Here the common case fixes.</p>
 <p><strong>Before</strong></p>
 <div class="highlight-c++"><div class="highlight"><pre><span class="n">options</span><span class="p">.</span><span class="n">linear_solver_type</span> <span class="o">=</span> <span class="n">ceres</span><span class="o">::</span><span class="n">DENSE_SCHUR</span>
@@ -810,8 +966,8 @@ solution rather than the ground truth function value.</li>
 </pre></div>
 </div>
 </div>
-<div class="section" id="id22">
-<h3>New Features<a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id24">
+<h3>New Features<a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>A new richer, more expressive and consistent API for ordering
 parameter blocks.</li>
@@ -834,8 +990,8 @@ non-monotonic step.</li>
 <li>Add support for 10 parameter blocks in <tt class="docutils literal"><span class="pre">AutoDiffCostFunction</span></tt>.</li>
 </ol>
 </div>
-<div class="section" id="id23">
-<h3>Bug Fixes<a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id25">
+<h3>Bug Fixes<a class="headerlink" href="#id25" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>static cast to force Eigen::Index to long conversion</li>
 <li>Change LOG(ERROR) to LOG(WARNING) in <tt class="docutils literal"><span class="pre">schur_complement_solver.cc</span></tt>.</li>
@@ -860,10 +1016,10 @@ Snavely&#8217;s camera model. (Ricardo Martin)</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id24">
-<h2>1.3.0<a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id25">
-<h3>New Features<a class="headerlink" href="#id25" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id26">
+<h2>1.3.0<a class="headerlink" href="#id26" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id27">
+<h3>New Features<a class="headerlink" href="#id27" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Android Port (Scott Ettinger also contributed to the port)</li>
 <li>Windows port. (Changchang Wu and Pierre Moulon also contributed to the port)</li>
@@ -900,8 +1056,8 @@ associated versioning and build release script changes.</li>
 <li>Portable floating point classification API.</li>
 </ol>
 </div>
-<div class="section" id="id26">
-<h3>Bug Fixes<a class="headerlink" href="#id26" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id28">
+<h3>Bug Fixes<a class="headerlink" href="#id28" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Fix how invalid step evaluations are handled.</li>
 <li>Change the slop handling around zero for model cost changes to use
@@ -946,10 +1102,10 @@ namespace conflicts.</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id27">
-<h2>1.2.3<a class="headerlink" href="#id27" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id28">
-<h3>Bug Fixes<a class="headerlink" href="#id28" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id29">
+<h2>1.2.3<a class="headerlink" href="#id29" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id30">
+<h3>Bug Fixes<a class="headerlink" href="#id30" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li><tt class="docutils literal"><span class="pre">suitesparse_test</span></tt> is enabled even when <tt class="docutils literal"><span class="pre">-DSUITESPARSE=OFF</span></tt>.</li>
 <li><tt class="docutils literal"><span class="pre">FixedArray</span></tt> internal struct did not respect <tt class="docutils literal"><span class="pre">Eigen</span></tt>
@@ -959,10 +1115,10 @@ alignment requirements (Koichi Akabe &amp; Stephan Kassemeyer).</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id29">
-<h2>1.2.2<a class="headerlink" href="#id29" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id30">
-<h3>Bug Fixes<a class="headerlink" href="#id30" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id31">
+<h2>1.2.2<a class="headerlink" href="#id31" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id32">
+<h3>Bug Fixes<a class="headerlink" href="#id32" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Fix constant parameter blocks, and other minor fixes (Markus Moll)</li>
 <li>Fix alignment issues when combining <tt class="docutils literal"><span class="pre">Jet</span></tt> and
@@ -971,18 +1127,18 @@ alignment requirements (Koichi Akabe &amp; Stephan Kassemeyer).</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id31">
-<h2>1.2.1<a class="headerlink" href="#id31" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id32">
-<h3>New Features<a class="headerlink" href="#id32" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id33">
+<h2>1.2.1<a class="headerlink" href="#id33" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id34">
+<h3>New Features<a class="headerlink" href="#id34" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Powell&#8217;s Dogleg solver</li>
 <li>Documentation now has a brief overview of Trust Region methods and
 how the Levenberg-Marquardt and Dogleg methods work.</li>
 </ol>
 </div>
-<div class="section" id="id33">
-<h3>Bug Fixes<a class="headerlink" href="#id33" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id35">
+<h3>Bug Fixes<a class="headerlink" href="#id35" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Destructor for <tt class="docutils literal"><span class="pre">TrustRegionStrategy</span></tt> was not virtual (Markus Moll)</li>
 <li>Invalid <tt class="docutils literal"><span class="pre">DCHECK</span></tt> in <tt class="docutils literal"><span class="pre">suitesparse.cc</span></tt> (Markus Moll)</li>
@@ -994,10 +1150,10 @@ how the Levenberg-Marquardt and Dogleg methods work.</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id34">
-<h2>1.2.0<a class="headerlink" href="#id34" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id35">
-<h3>New Features<a class="headerlink" href="#id35" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id36">
+<h2>1.2.0<a class="headerlink" href="#id36" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id37">
+<h3>New Features<a class="headerlink" href="#id37" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li><tt class="docutils literal"><span class="pre">CXSparse</span></tt> support.</li>
 <li>Block oriented fill reducing orderings. This reduces the
@@ -1010,8 +1166,8 @@ this refactoring opens the door for Dog-leg, Stiehaug and others.</li>
 organization.</li>
 </ol>
 </div>
-<div class="section" id="id36">
-<h3>Bug Fixes<a class="headerlink" href="#id36" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id38">
+<h3>Bug Fixes<a class="headerlink" href="#id38" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Fixed integer overflow bug in <tt class="docutils literal"><span class="pre">block_random_access_sparse_matrix.cc</span></tt>.</li>
 <li>Renamed some macros to prevent name conflicts.</li>
@@ -1021,10 +1177,10 @@ organization.</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id37">
-<h2>1.1.1<a class="headerlink" href="#id37" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id38">
-<h3>Bug Fixes<a class="headerlink" href="#id38" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id39">
+<h2>1.1.1<a class="headerlink" href="#id39" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id40">
+<h3>Bug Fixes<a class="headerlink" href="#id40" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Fix a bug in the handling of constant blocks. (Louis Simard)</li>
 <li>Add an optional lower bound to the Levenberg-Marquardt regularizer
@@ -1033,10 +1189,10 @@ to prevent oscillating between well and ill posed linear problems.</li>
 </ol>
 </div>
 </div>
-<div class="section" id="id39">
-<h2>1.1.0<a class="headerlink" href="#id39" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id40">
-<h3>New Features<a class="headerlink" href="#id40" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id41">
+<h2>1.1.0<a class="headerlink" href="#id41" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id42">
+<h3>New Features<a class="headerlink" href="#id42" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>New iterative linear solver for general sparse problems - <tt class="docutils literal"><span class="pre">CGNR</span></tt>
 and a block Jacobi preconditioner for it.</li>
@@ -1051,8 +1207,8 @@ text format so that they can loaded into <tt class="docutils literal"><span clas
 <li>A better more robust build system.</li>
 </ol>
 </div>
-<div class="section" id="id41">
-<h3>Bug Fixes<a class="headerlink" href="#id41" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id43">
+<h3>Bug Fixes<a class="headerlink" href="#id43" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Fixed a strict weak ordering bug in the schur ordering.</li>
 <li>Grammar and typos in the documents and code comments.</li>
@@ -1060,8 +1216,8 @@ text format so that they can loaded into <tt class="docutils literal"><span clas
 </ol>
 </div>
 </div>
-<div class="section" id="id42">
-<h2>1.0.0<a class="headerlink" href="#id42" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id44">
+<h2>1.0.0<a class="headerlink" href="#id44" title="Permalink to this headline">¶</a></h2>
 <p>Initial open source release. Nathan Wiegand contributed to the Mac OSX
 port.</p>
 </div>
@@ -1114,7 +1270,7 @@ source in May of 2012.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.10.0',
+            VERSION:'1.11.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

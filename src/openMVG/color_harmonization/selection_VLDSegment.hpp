@@ -28,8 +28,7 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
            _vec_featsL( vec_featsL ), _vec_featsR( vec_featsR )
   {}
 
-  virtual ~commonDataByPair_VLDSegment()
-  {}
+  ~commonDataByPair_VLDSegment() override = default ; 
 
   /**
    * Put masks to white, images are conserved
@@ -39,9 +38,9 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
    *
    * \return True.
    */
-  virtual bool computeMask(
+  bool computeMask(
     image::Image< unsigned char > & maskLeft,
-    image::Image< unsigned char > & maskRight )
+    image::Image< unsigned char > & maskRight ) override
   {
     std::vector< matching::IndMatch > vec_KVLDMatches;
 
@@ -58,7 +57,7 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
           iter_match != _vec_PutativeMatches.end();
           ++iter_match )
     {
-      matchesPair.push_back( std::make_pair( iter_match->_i, iter_match->_j ) );
+      matchesPair.push_back( std::make_pair( iter_match->i_, iter_match->j_ ) );
     }
 
     std::vector< double > vec_score;

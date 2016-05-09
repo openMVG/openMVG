@@ -45,7 +45,7 @@ using namespace linearProgramming;
 //
 
 /// Encode translation and structure linear program
-static void EncodeTiXi(const Mat & M, //Scene representation
+inline void EncodeTiXi(const Mat & M, //Scene representation
                            const std::vector<Mat3> & Ri,
                            double sigma, // Start upper bound
                            sRMat & A, Vec & C,
@@ -160,34 +160,34 @@ struct Translation_Structure_L1_ConstraintBuilder
     const std::vector<Mat3> & vec_Ri,
     const Mat & M)
   {
-    _M = M;
-    _vec_Ri = vec_Ri;
+    M_ = M;
+    vec_Ri_ = vec_Ri;
   }
 
   /// Setup constraints for the translation and structure problem,
   ///  in the LP_Constraints object.
   bool Build(double gamma, LP_Constraints_Sparse & constraint)
   {
-    EncodeTiXi(_M, _vec_Ri,
+    EncodeTiXi(M_, vec_Ri_,
       gamma,
-      constraint._constraintMat,
-      constraint._Cst_objective,
-      constraint._vec_sign,
-      constraint._vec_cost,
-      constraint._vec_bounds);
+      constraint.constraint_mat_,
+      constraint.constraint_objective_,
+      constraint.vec_sign_,
+      constraint.vec_cost_,
+      constraint.vec_bounds_);
 
     //-- Setup additional information about the Linear Program constraint
     // We look for nb translations and nb 3D points.
-    const size_t N3D  = (size_t) _M.row(2).maxCoeff() + 1;
-    const size_t Ncam = (size_t) _M.row(3).maxCoeff() + 1;
+    const size_t N3D  = (size_t) M_.row(2).maxCoeff() + 1;
+    const size_t Ncam = (size_t) M_.row(3).maxCoeff() + 1;
 
-    constraint._nbParams = (Ncam + N3D) * 3;
+    constraint.nbParams_ = (Ncam + N3D) * 3;
 
     return true;
   }
 
-  std::vector<Mat3> _vec_Ri;  // Rotation matrix
-  Mat _M; // M contains (X,Y,index3dPoint, indexCam)^T
+  std::vector<Mat3> vec_Ri_;  // Rotation matrix
+  Mat M_; // M contains (X,Y,index3dPoint, indexCam)^T
 };
 
 } // namespace lInfinityCV

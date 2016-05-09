@@ -8,6 +8,8 @@
 #ifndef OPENMVG_STL_INDEXED_SORT_H
 #define OPENMVG_STL_INDEXED_SORT_H
 
+#include <vector>
+
 namespace stl
 {
 namespace indexed_sort
@@ -42,9 +44,7 @@ namespace indexed_sort
 
   /// Sort by default all indexed value, else sort only the NN smallest element of the indexed array.
   template<typename packet_type, typename eT>
-  void
-    inline
-    sort_index_helper(std::vector<packet_type>& packet_vec,
+  inline void sort_index_helper(std::vector<packet_type>& packet_vec,
                       const eT* in_mem, int NN = -1)  {
     const size_t n_elem = packet_vec.size();
 

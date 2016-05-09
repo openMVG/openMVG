@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2012 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -252,7 +252,7 @@ void IsTrustRegionSolveSuccessful(TrustRegionStrategyType strategy_type) {
   EXPECT_NEAR(0.0, parameters[1], 0.001);
   EXPECT_NEAR(0.0, parameters[2], 0.001);
   EXPECT_NEAR(0.0, parameters[3], 0.001);
-};
+}
 
 TEST(TrustRegionMinimizer, PowellsSingularFunctionUsingLevenbergMarquardt) {
   // This case is excluded because this has a local minimum and does
@@ -373,7 +373,7 @@ class CurveCostFunction : public CostFunction {
 
 TEST(TrustRegionMinimizer, JacobiScalingTest) {
   int N = 6;
-  std::vector< double* > y(N);
+  std::vector<double*> y(N);
   const double pi = 3.1415926535897932384626433;
   for (int i = 0; i < N; i++) {
     double theta = i * 2. * pi/ static_cast< double >(N);

@@ -77,16 +77,21 @@ public:
   */
   bool Describe(const Image<unsigned char>& image,
     std::unique_ptr<Regions> &regions,
-    const Image<unsigned char> * mask = NULL)
+    const Image<unsigned char> * mask = nullptr)
   {
     cv::Mat img;
     cv::eigen2cv(image.GetMat(), img);
+
+    cv::Mat m_mask;
+    if(mask != nullptr) {
+      cv::eigen2cv(mask->GetMat(), m_mask);
+    }
 
     std::vector< cv::KeyPoint > vec_keypoints;
     cv::Mat m_desc;
 
     cv::Ptr<cv::Feature2D> extractor = cv::AKAZE::create(cv::AKAZE::DESCRIPTOR_KAZE);
-    extractor->detectAndCompute(img, cv::Mat(), vec_keypoints, m_desc);
+    extractor->detectAndCompute(img, m_mask, vec_keypoints, m_desc);
 
     if (!vec_keypoints.empty())
     {
@@ -107,7 +112,7 @@ public:
         SIOPointFeature feat((*i_keypoint).pt.x, (*i_keypoint).pt.y, (*i_keypoint).size, (*i_keypoint).angle);
         regionsCasted->Features().push_back(feat);
 
-        memcpy(descriptor.getData(),
+        memcpy(descriptor.data(),
                m_desc.ptr<typename DescriptorT::bin_type>(cpt),
                DescriptorT::static_size*sizeof(DescriptorT::bin_type));
         regionsCasted->Descriptors().push_back(descriptor);
@@ -157,11 +162,17 @@ public:
   */
   bool Describe(const image::Image<unsigned char>& image,
     std::unique_ptr<Regions> &regions,
-    const image::Image<unsigned char> * mask = NULL)
+    const image::Image<unsigned char> * mask = nullptr)
   {
     // Convert for opencv
     cv::Mat img;
     cv::eigen2cv(image.GetMat(), img);
+
+    // Convert mask image into cv::Mat
+    cv::Mat m_mask;
+    if(mask != nullptr) {
+      cv::eigen2cv(mask->GetMat(), m_mask);
+    }
 
     // Create a SIFT detector
     std::vector< cv::KeyPoint > v_keypoints;
@@ -169,7 +180,7 @@ public:
     cv::Ptr<cv::Feature2D> siftdetector = cv::xfeatures2d::SIFT::create();
 
     // Process SIFT computation
-    siftdetector->detectAndCompute(img, cv::Mat(), v_keypoints, m_desc);
+    siftdetector->detectAndCompute(img, m_mask, v_keypoints, m_desc);
 
     Allocate(regions);
 
@@ -252,12 +263,12 @@ int main(int argc, char **argv)
       << "[-i|--input_file]: a SfM_Data file \n"
       << "[-o|--outdir] path \n"
       << "\n[Optional]\n"
-      << "[-f|--force: Force to recompute data]\n"
+      << "[-f|--force] Force to recompute data\n"
 #ifdef USE_OCVSIFT
-      << "[-m|--describerMethod\n"
+      << "[-m|--describerMethod]\n"
       << "  (method to use to describe an image):\n"
       << "   AKAZE_OPENCV (default),\n"
-      << "   SIFT_OPENCV: SIFT FROM OPENCV,\n"
+      << "   SIFT_OPENCV: SIFT FROM OPENCV\n"
 #endif
       << std::endl;
 
@@ -272,7 +283,7 @@ int main(int argc, char **argv)
 #ifdef USE_OCVSIFT
             << "--describerMethod " << sImage_Describer_Method << std::endl
 #endif
-            ;
+            << "--force " << bForce << std::endl;
 
   if (sOutDir.empty())  {
     std::cerr << "\nIt is an invalid output directory" << std::endl;
@@ -359,7 +370,12 @@ int main(int argc, char **argv)
   // - if no file, compute features
   {
     system::Timer timer;
-    Image<unsigned char> imageGray;
+    Image<unsigned char> imageGray, globalMask, imageMask;
+
+    const std::string sGlobalMask_filename = stlplus::create_filespec(sOutDir, "mask.png");
+    if(stlplus::file_exists(sGlobalMask_filename))
+      ReadImage(sGlobalMask_filename.c_str(), &globalMask);
+
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
     for(Views::const_iterator iterViews = sfm_data.views.begin();
@@ -367,12 +383,10 @@ int main(int argc, char **argv)
         ++iterViews, ++my_progress_bar)
     {
       const View * view = iterViews->second.get();
-      const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
-        view->s_Img_path);
-      const std::string sFeat = stlplus::create_filespec(sOutDir,
-        stlplus::basename_part(sView_filename), "feat");
-      const std::string sDesc = stlplus::create_filespec(sOutDir,
-        stlplus::basename_part(sView_filename), "desc");
+      const std::string
+        sView_filename = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path),
+        sFeat = stlplus::create_filespec(sOutDir, stlplus::basename_part(sView_filename), "feat"),
+        sDesc = stlplus::create_filespec(sOutDir, stlplus::basename_part(sView_filename), "desc");
 
       //If features or descriptors file are missing, compute them
       if (bForce || !stlplus::file_exists(sFeat) || !stlplus::file_exists(sDesc))
@@ -380,9 +394,25 @@ int main(int argc, char **argv)
         if (!ReadImage(sView_filename.c_str(), &imageGray))
           continue;
 
+        Image<unsigned char> * mask = nullptr; // The mask is null by default
+
+        const std::string sImageMask_filename =
+          stlplus::create_filespec(sfm_data.s_root_path,
+            stlplus::basename_part(sView_filename) + "_mask", "png");
+
+        if(stlplus::file_exists(sImageMask_filename))
+          ReadImage(sImageMask_filename.c_str(), &imageMask);
+
+        // The mask point to the globalMask, if a valid one exists for the current image
+        if(globalMask.Width() == imageGray.Width() && globalMask.Height() == imageGray.Height())
+          mask = &globalMask;
+        // The mask point to the imageMask (individual mask) if a valid one exists for the current image
+        if(imageMask.Width() == imageGray.Width() && imageMask.Height() == imageGray.Height())
+          mask = &imageMask;
+
         // Compute features and descriptors and export them to files
         std::unique_ptr<Regions> regions;
-        image_describer->Describe(imageGray, regions);
+        image_describer->Describe(imageGray, regions, mask);
         image_describer->Save(regions.get(), sFeat, sDesc);
       }
     }

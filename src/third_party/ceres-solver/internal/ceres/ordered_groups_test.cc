@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2012 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -159,6 +159,20 @@ TEST(OrderedGroups, ReverseOrdering) {
   EXPECT_EQ(ordering.GroupId(x + 2), 2);
 }
 
+TEST(OrderedGroups, ReverseOrderingWithEmptyOrderedGroups) {
+  ParameterBlockOrdering ordering;
+  // This should be a no-op.
+  ordering.Reverse();
+
+  // Ensure the properties of an empty OrderedGroups still hold after Reverse().
+  EXPECT_EQ(ordering.NumGroups(), 0);
+  EXPECT_EQ(ordering.NumElements(), 0);
+  EXPECT_EQ(ordering.GroupSize(1), 0);
+  double x;
+  EXPECT_EQ(ordering.GroupId(&x), -1);
+  EXPECT_FALSE(ordering.Remove(&x));
+}
+
 TEST(OrderedGroups, BulkRemove) {
   ParameterBlockOrdering ordering;
   double x[3];
@@ -166,7 +180,7 @@ TEST(OrderedGroups, BulkRemove) {
   ordering.AddElementToGroup(x + 1, 2);
   ordering.AddElementToGroup(x + 2, 2);
 
-  vector<double*> elements_to_remove;
+  std::vector<double*> elements_to_remove;
   elements_to_remove.push_back(x);
   elements_to_remove.push_back(x + 2);
 
@@ -181,7 +195,7 @@ TEST(OrderedGroups, BulkRemoveWithNoElements) {
   ParameterBlockOrdering ordering;
 
   double x[3];
-  vector<double*> elements_to_remove;
+  std::vector<double*> elements_to_remove;
   elements_to_remove.push_back(x);
   elements_to_remove.push_back(x + 2);
 

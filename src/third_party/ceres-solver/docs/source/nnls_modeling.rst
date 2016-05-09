@@ -67,8 +67,8 @@ x_{i_k}\right]`, compute the vector
 :math:`f_i\left(x_{i_1},...,x_{i_k}\right)` and the matrices
 
  .. math:: J_{ij} = \frac{\partial}{\partial
-	   x_{i_j}}f_i\left(x_{i_1},...,x_{i_k}\right),\quad \forall j
-	   \in \{1, \ldots, k\}
+           x_{i_j}}f_i\left(x_{i_1},...,x_{i_k}\right),\quad \forall j
+           \in \{1, \ldots, k\}
 
 .. class:: CostFunction
 
@@ -332,11 +332,12 @@ the corresponding accessors. This information will be verified by the
 
      .. code-block:: c++
 
-       DynamicAutoDiffCostFunction<MyCostFunctor, 4> cost_function(
+       DynamicAutoDiffCostFunction<MyCostFunctor, 4>* cost_function =
+         new DynamicAutoDiffCostFunction<MyCostFunctor, 4>(
            new MyCostFunctor());
-       cost_function.AddParameterBlock(5);
-       cost_function.AddParameterBlock(10);
-       cost_function.SetNumResiduals(21);
+       cost_function->AddParameterBlock(5);
+       cost_function->AddParameterBlock(10);
+       cost_function->SetNumResiduals(21);
 
    Under the hood, the implementation evaluates the cost function
    multiple times, computing a small set of the derivatives (four by
@@ -366,7 +367,7 @@ the corresponding accessors. This information will be verified by the
     .. code-block:: c++
 
       template <typename CostFunctor,
-                NumericDiffMethod method = CENTRAL,
+                NumericDiffMethodType method = CENTRAL,
                 int kNumResiduals,  // Number of residuals, or ceres::DYNAMIC.
                 int N0,       // Number of parameters in block 0.
                 int N1 = 0,   // Number of parameters in block 1.
@@ -480,10 +481,30 @@ the corresponding accessors. This information will be verified by the
    independent variables, and there is no limit on the dimensionality
    of each of them.
 
-   The ``CENTRAL`` difference method is considerably more accurate at
+   There are three available numeric differentiation schemes in ceres-solver:
+
+   The ``FORWARD`` difference method, which approximates :math:`f'(x)`
+   by computing :math:`\frac{f(x+h)-f(x)}{h}`, computes the cost function
+   one additional time at :math:`x+h`. It is the fastest but least accurate
+   method.
+
+   The ``CENTRAL`` difference method is more accurate at
    the cost of twice as many function evaluations than forward
-   difference. Consider using central differences begin with, and only
-   after that works, trying forward difference to improve performance.
+   difference, estimating :math:`f'(x)` by computing
+   :math:`\frac{f(x+h)-f(x-h)}{2h}`.
+
+   The ``RIDDERS`` difference method[Ridders]_ is an adaptive scheme that
+   estimates derivatives by performing multiple central differences
+   at varying scales. Specifically, the algorithm starts at a certain
+   :math:`h` and as the derivative is estimated, this step size decreases.
+   To conserve function evaluations and estimate the derivative error, the 
+   method performs Richardson extrapolations between the tested step sizes.
+   The algorithm exhibits considerably higher accuracy, but does so by
+   additional evaluations of the cost function.
+
+   Consider using ``CENTRAL`` differences to begin with. Based on the
+   results, either try forward difference to improve performance or
+   Ridders' method to improve accuracy.
 
    **WARNING** A common beginner's error when first using
    NumericDiffCostFunction is to get the sizing wrong. In particular,
@@ -494,9 +515,42 @@ the corresponding accessors. This information will be verified by the
    argument. Please be careful when setting the size parameters.
 
 
+Numeric Differentiation & LocalParameterization
+-----------------------------------------------
+
+   If your cost function depends on a parameter block that must lie on
+   a manifold and the functor cannot be evaluated for values of that
+   parameter block not on the manifold then you may have problems
+   numerically differentiating such functors.
+
+   This is because numeric differentiation in Ceres is performed by
+   perturbing the individual coordinates of the parameter blocks that
+   a cost functor depends on. In doing so, we assume that the
+   parameter blocks live in an Euclidean space and ignore the
+   structure of manifold that they live As a result some of the
+   perturbations may not lie on the manifold corresponding to the
+   parameter block.
+
+   For example consider a four dimensional parameter block that is
+   interpreted as a unit Quaternion. Perturbing the coordinates of
+   this parameter block will violate the unit norm property of the
+   parameter block.
+
+   Fixing this problem requires that :class:`NumericDiffCostFunction`
+   be aware of the :class:`LocalParameterization` associated with each
+   parameter block and only generate perturbations in the local
+   tangent space of each parameter block.
+
+   For now this is not considered to be a serious enough problem to
+   warrant changing the :class:`NumericDiffCostFunction` API. Further,
+   in most cases it is relatively straightforward to project a point
+   off the manifold back onto the manifold before using it in the
+   functor. For example in case of the Quaternion, normalizing the
+   4-vector before using it does the trick.
+
    **Alternate Interface**
 
-   For a variety of reason, including compatibility with legacy code,
+   For a variety of reasons, including compatibility with legacy code,
    :class:`NumericDiffCostFunction` can also take
    :class:`CostFunction` objects as input. The following describes
    how.
@@ -537,7 +591,7 @@ the corresponding accessors. This information will be verified by the
 
      .. code-block:: c++
 
-      template <typename CostFunctor, NumericDiffMethod method = CENTRAL>
+      template <typename CostFunctor, NumericDiffMethodType method = CENTRAL>
       class DynamicNumericDiffCostFunction : public CostFunction {
       };
 
@@ -561,14 +615,18 @@ the corresponding accessors. This information will be verified by the
 
      .. code-block:: c++
 
-       DynamicNumericDiffCostFunction<MyCostFunctor> cost_function(
-           new MyCostFunctor());
-       cost_function.AddParameterBlock(5);
-       cost_function.AddParameterBlock(10);
-       cost_function.SetNumResiduals(21);
+       DynamicNumericDiffCostFunction<MyCostFunctor>* cost_function =
+         new DynamicNumericDiffCostFunction<MyCostFunctor>(new MyCostFunctor);
+       cost_function->AddParameterBlock(5);
+       cost_function->AddParameterBlock(10);
+       cost_function->SetNumResiduals(21);
 
    As a rule of thumb, try using :class:`NumericDiffCostFunction` before
    you use :class:`DynamicNumericDiffCostFunction`.
+
+   **WARNING** The same caution about mixing local parameterizations
+   with numeric differentiation applies as is the case with
+   :class:`NumericDiffCostFunction`.
 
 :class:`CostFunctionToFunctor`
 ==============================
@@ -587,7 +645,7 @@ the corresponding accessors. This information will be verified by the
 
      class IntrinsicProjection : public SizedCostFunction<2, 5, 3> {
        public:
-         IntrinsicProjection(const double* observations);
+         IntrinsicProjection(const double* observation);
          virtual bool Evaluate(double const* const* parameters,
                                double* residuals,
                                double** jacobians) const;
@@ -618,7 +676,7 @@ the corresponding accessors. This information will be verified by the
 
     struct CameraProjection {
       CameraProjection(double* observation)
-      : intrinsic_projection_(new IntrinsicProjection(observation_)) {
+      : intrinsic_projection_(new IntrinsicProjection(observation)) {
       }
 
       template <typename T>
@@ -639,6 +697,8 @@ the corresponding accessors. This information will be verified by the
       CostFunctionToFunctor<2,5,3> intrinsic_projection_;
     };
 
+   Note that :class:`CostFunctionToFunctor` takes ownership of the
+   :class:`CostFunction` that was passed in to the constructor.
 
    In the above example, we assumed that ``IntrinsicProjection`` is a
    ``CostFunction`` capable of evaluating its value and its
@@ -648,9 +708,9 @@ the corresponding accessors. This information will be verified by the
    .. code-block:: c++
 
     struct IntrinsicProjection
-      IntrinsicProjection(const double* observations) {
-        observations_[0] = observations[0];
-        observations_[1] = observations[1];
+      IntrinsicProjection(const double* observation) {
+        observation_[0] = observation[0];
+        observation_[1] = observation[1];
       }
 
       bool operator()(const double* calibration,
@@ -658,11 +718,11 @@ the corresponding accessors. This information will be verified by the
                       double* residuals) {
         double projection[2];
         ThirdPartyProjectionFunction(calibration, point, projection);
-        residuals[0] = observations_[0] - projection[0];
-        residuals[1] = observations_[1] - projection[1];
+        residuals[0] = observation_[0] - projection[0];
+        residuals[1] = observation_[1] - projection[1];
         return true;
       }
-     double observations_[2];
+     double observation_[2];
     };
 
 
@@ -679,7 +739,7 @@ the corresponding accessors. This information will be verified by the
      CameraProjection(double* observation)
        intrinsic_projection_(
          new NumericDiffCostFunction<IntrinsicProjection, CENTRAL, 2, 5, 3>(
-           new IntrinsicProjection(observations)) {
+           new IntrinsicProjection(observation)) {
      }
 
      template <typename T>
@@ -697,6 +757,74 @@ the corresponding accessors. This information will be verified by the
      CostFunctionToFunctor<2,5,3> intrinsic_projection_;
    };
 
+:class:`DynamicCostFunctionToFunctor`
+=====================================
+
+.. class:: DynamicCostFunctionToFunctor
+
+   :class:`DynamicCostFunctionToFunctor` provides the same functionality as
+   :class:`CostFunctionToFunctor` for cases where the number and size of the
+   parameter vectors and residuals are not known at compile-time. The API
+   provided by :class:`DynamicCostFunctionToFunctor` matches what would be
+   expected by :class:`DynamicAutoDiffCostFunction`, i.e. it provides a
+   templated functor of this form:
+
+   .. code-block:: c++
+
+    template<typename T>
+    bool operator()(T const* const* parameters, T* residuals) const;
+
+   Similar to the example given for :class:`CostFunctionToFunctor`, let us
+   assume that
+
+   .. code-block:: c++
+
+     class IntrinsicProjection : public CostFunction {
+       public:
+         IntrinsicProjection(const double* observation);
+         virtual bool Evaluate(double const* const* parameters,
+                               double* residuals,
+                               double** jacobians) const;
+     };
+
+   is a :class:`CostFunction` that projects a point in its local coordinate
+   system onto its image plane and subtracts it from the observed point
+   projection.
+
+   Using this :class:`CostFunction` in a templated functor would then look like
+   this:
+
+   .. code-block:: c++
+
+    struct CameraProjection {
+      CameraProjection(double* observation)
+          : intrinsic_projection_(new IntrinsicProjection(observation)) {
+      }
+
+      template <typename T>
+      bool operator()(T const* const* parameters,
+                      T* residual) const {
+        const T* rotation = parameters[0];
+        const T* translation = parameters[1];
+        const T* intrinsics = parameters[2];
+        const T* point = parameters[3];
+
+        T transformed_point[3];
+        RotateAndTranslatePoint(rotation, translation, point, transformed_point);
+
+        const T* projection_parameters[2];
+        projection_parameters[0] = intrinsics;
+        projection_parameters[1] = transformed_point;
+        return intrinsic_projection_(projection_parameters, residual);
+      }
+
+     private:
+      DynamicCostFunctionToFunctor intrinsic_projection_;
+    };
+
+   Like :class:`CostFunctionToFunctor`, :class:`DynamicCostFunctionToFunctor`
+   takes ownership of the :class:`CostFunction` that was passed in to the
+   constructor.
 
 :class:`ConditionedCostFunction`
 ================================
@@ -1070,7 +1198,7 @@ problems.
    The dimension of the ambient space in which the parameter block
    :math:`x` lives.
 
-.. function:: int LocalParamterization::LocaLocalSize()
+.. function:: int LocalParameterization::LocalSize()
 
    The size of the tangent space
    that :math:`\Delta x` lives in.
@@ -1139,6 +1267,54 @@ Instances
    product. :class:`QuaternionParameterization` is an implementation
    of :eq:`quaternion`.
 
+.. class:: HomogeneousVectorParameterization
+
+   In computer vision, homogeneous vectors are commonly used to
+   represent entities in projective geometry such as points in
+   projective space. One example where it is useful to use this
+   over-parameterization is in representing points whose triangulation
+   is ill-conditioned. Here it is advantageous to use homogeneous
+   vectors, instead of an Euclidean vector, because it can represent
+   points at infinity.
+
+   When using homogeneous vectors it is useful to only make updates
+   orthogonal to that :math:`n`-vector defining the homogeneous
+   vector [HartleyZisserman]_. One way to do this is to let :math:`\Delta x`
+   be a :math:`n-1` dimensional vector and define :math:`\boxplus` to be
+
+    .. math:: \boxplus(x, \Delta x) = \left[ \frac{\sin\left(0.5 |\Delta x|\right)}{|\Delta x|} \Delta x, \cos(0.5 |\Delta x|) \right] * x
+
+   The multiplication between the two vectors on the right hand side
+   is defined as an operator which applies the update orthogonal to
+   :math:`x` to remain on the sphere. Note, it is assumed that
+   last element of :math:`x` is the scalar component of the homogeneous
+   vector.
+
+
+.. class:: ProductParameterization
+
+   Consider an optimization problem over the space of rigid
+   transformations :math:`SE(3)`, which is the Cartesian product of
+   :math:`SO(3)` and :math:`\mathbb{R}^3`. Suppose you are using
+   Quaternions to represent the rotation, Ceres ships with a local
+   parameterization for that and :math:`\mathbb{R}^3` requires no, or
+   :class:`IdentityParameterization` parameterization. So how do we
+   construct a local parameterization for a parameter block a rigid
+   transformation?
+
+   In cases, where a parameter block is the Cartesian product of a
+   number of manifolds and you have the local parameterization of the
+   individual manifolds available, :class:`ProductParameterization`
+   can be used to construct a local parameterization of the cartesian
+   product. For the case of the rigid transformation, where say you
+   have a parameter block of size 7, where the first four entries
+   represent the rotation as a quaternion, a local parameterization
+   can be constructed as
+
+   .. code-block:: c++
+
+     ProductParameterization se3_param(new QuaternionParameterization(),
+                                       new IdentityTransformation(3));
 
 
 :class:`AutoDiffLocalParameterization`
@@ -1662,3 +1838,116 @@ within Ceres Solver's automatic differentiation framework.
 .. function:: void AngleAxisRotatePoint<T>(const T angle_axis[3], const T pt[3], T result[3])
 
    .. math:: y = R(\text{angle_axis}) x
+
+
+Cubic Interpolation
+===================
+
+Optimization problems often involve functions that are given in the
+form of a table of values, for example an image. Evaluating these
+functions and their derivatives requires interpolating these
+values. Interpolating tabulated functions is a vast area of research
+and there are a lot of libraries which implement a variety of
+interpolation schemes. However, using them within the automatic
+differentiation framework in Ceres is quite painful. To this end,
+Ceres provides the ability to interpolate one dimensional and two
+dimensional tabular functions.
+
+The one dimensional interpolation is based on the Cubic Hermite
+Spline, also known as the Catmull-Rom Spline. This produces a first
+order differentiable interpolating function. The two dimensional
+interpolation scheme is a generalization of the one dimensional scheme
+where the interpolating function is assumed to be separable in the two
+dimensions,
+
+More details of the construction can be found `Linear Methods for
+Image Interpolation <http://www.ipol.im/pub/art/2011/g_lmii/>`_ by
+Pascal Getreuer.
+
+.. class:: CubicInterpolator
+
+Given as input an infinite one dimensional grid, which provides the
+following interface.
+
+.. code::
+
+  struct Grid1D {
+    enum { DATA_DIMENSION = 2; };
+    void GetValue(int n, double* f) const;
+  };
+
+Where, ``GetValue`` gives us the value of a function :math:`f`
+(possibly vector valued) for any integer :math:`n` and the enum
+``DATA_DIMENSION`` indicates the dimensionality of the function being
+interpolated. For example if you are interpolating rotations in
+axis-angle format over time, then ``DATA_DIMENSION = 3``.
+
+:class:`CubicInterpolator` uses Cubic Hermite splines to produce a
+smooth approximation to it that can be used to evaluate the
+:math:`f(x)` and :math:`f'(x)` at any point on the real number
+line. For example, the following code interpolates an array of four
+numbers.
+
+.. code::
+
+  const double data[] = {1.0, 2.0, 5.0, 6.0};
+  Grid1D<double, 1> array(x, 0, 4);
+  CubicInterpolator interpolator(array);
+  double f, dfdx;
+  interpolator.Evaluate(1.5, &f, &dfdx);
+
+
+In the above code we use ``Grid1D`` a templated helper class that
+allows easy interfacing between ``C++`` arrays and
+:class:`CubicInterpolator`.
+
+``Grid1D`` supports vector valued functions where the various
+coordinates of the function can be interleaved or stacked. It also
+allows the use of any numeric type as input, as long as it can be
+safely cast to a double.
+
+.. class:: BiCubicInterpolator
+
+Given as input an infinite two dimensional grid, which provides the
+following interface:
+
+.. code::
+
+  struct Grid2D {
+    enum { DATA_DIMENSION = 2 };
+    void GetValue(int row, int col, double* f) const;
+  };
+
+Where, ``GetValue`` gives us the value of a function :math:`f`
+(possibly vector valued) for any pair of integers :code:`row` and
+:code:`col` and the enum ``DATA_DIMENSION`` indicates the
+dimensionality of the function being interpolated. For example if you
+are interpolating a color image with three channels (Red, Green &
+Blue), then ``DATA_DIMENSION = 3``.
+
+:class:`BiCubicInterpolator` uses the cubic convolution interpolation
+algorithm of R. Keys [Keys]_, to produce a smooth approximation to it
+that can be used to evaluate the :math:`f(r,c)`, :math:`\frac{\partial
+f(r,c)}{\partial r}` and :math:`\frac{\partial f(r,c)}{\partial c}` at
+any any point in the real plane.
+
+For example the following code interpolates a two dimensional array.
+
+.. code::
+
+   const double data[] = {1.0, 3.0, -1.0, 4.0,
+                          3.6, 2.1,  4.2, 2.0,
+                          2.0, 1.0,  3.1, 5.2};
+   Grid2D<double, 1>  array(data, 0, 3, 0, 4);
+   BiCubicInterpolator interpolator(array);
+   double f, dfdr, dfdc;
+   interpolator.Evaluate(1.2, 2.5, &f, &dfdr, &dfdc);
+
+In the above code, the templated helper class ``Grid2D`` is used to
+make a ``C++`` array look like a two dimensional table to
+:class:`BiCubicInterpolator`.
+
+``Grid2D`` supports row or column major layouts. It also supports
+vector valued functions where the individual coordinates of the
+function may be interleaved or stacked. It also allows the use of any
+numeric type as input, as long as it can be safely cast to double.

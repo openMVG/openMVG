@@ -7,45 +7,61 @@
 #ifndef OPENMVG_SFM_DATA_BA_CERES_HPP
 #define OPENMVG_SFM_DATA_BA_CERES_HPP
 
-#include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_BA.hpp"
-#include "openMVG/sfm/sfm_data_BA_ceres_camera_functor.hpp"
-#include "ceres/ceres.h"
+#include "openMVG/numeric/numeric.h"
+#include "ceres/types.h"
+#include "ceres/cost_function.h"
 
 namespace openMVG {
+
+namespace cameras{
+class IntrinsicBase;
+}
+
 namespace sfm {
 
+struct SfM_Data;
+
 /// Create the appropriate cost functor according the provided input camera intrinsic model
-ceres::CostFunction * IntrinsicsToCostFunction(
+/// Can be residual cost functor can be weighetd if desired (default 0.0 means no weight).
+ceres::CostFunction * IntrinsicsToCostFunction
+(
   cameras::IntrinsicBase * intrinsic,
-  const Vec2 & observation);
+  const Vec2 & observation,
+  const double weight = 0.0
+);
 
 class Bundle_Adjustment_Ceres : public Bundle_Adjustment
 {
   public:
-  struct BA_options
+  struct BA_Ceres_options
   {
-    bool _bVerbose;
-    unsigned int _nbThreads;
-    bool _bCeres_Summary;
-    ceres::LinearSolverType _linear_solver_type;
-    ceres::PreconditionerType _preconditioner_type;
-    ceres::SparseLinearAlgebraLibraryType _sparse_linear_algebra_library_type;
+    bool bVerbose_;
+    unsigned int nb_threads_;
+    bool bCeres_summary_;
+    ceres::LinearSolverType linear_solver_type_;
+    ceres::PreconditionerType preconditioner_type_;
+    ceres::SparseLinearAlgebraLibraryType sparse_linear_algebra_library_type_;
+    double parameter_tolerance_;
+    bool bUse_loss_function_;
 
-    BA_options(const bool bVerbose = true, bool bmultithreaded = true);
+    BA_Ceres_options(const bool bVerbose = true, bool bmultithreaded = true);
   };
   private:
-    BA_options _openMVG_options;
+    BA_Ceres_options ceres_options_;
 
   public:
-  Bundle_Adjustment_Ceres(Bundle_Adjustment_Ceres::BA_options options = BA_options());
+  Bundle_Adjustment_Ceres(Bundle_Adjustment_Ceres::BA_Ceres_options options = BA_Ceres_options());
 
-  bool Adjust(
-    SfM_Data & sfm_data,            // the SfM scene to refine
-    bool bRefineRotations = true,   // tell if pose rotations will be refined
-    bool bRefineTranslations = true,// tell if the pose translation will be refined
-    bool bRefineIntrinsics = true,  // tell if the camera intrinsic will be refined
-    bool bRefineStructure = true);  // tell if the structure will be refined
+  BA_Ceres_options & ceres_options();
+
+  bool Adjust
+  (
+    // the SfM scene to refine
+    SfM_Data & sfm_data,
+    // tell which parameter needs to be adjusted
+    const Optimize_Options options
+  ) override;
 };
 
 } // namespace sfm

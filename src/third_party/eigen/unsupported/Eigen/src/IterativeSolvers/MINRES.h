@@ -37,22 +37,31 @@ namespace Eigen {
             typedef typename Dest::Scalar Scalar;
             typedef Matrix<Scalar,Dynamic,1> VectorType;
 
+            // Check for zero rhs
+            const RealScalar rhsNorm2(rhs.squaredNorm());
+            if(rhsNorm2 == 0)
+            {
+                x.setZero();
+                iters = 0;
+                tol_error = 0;
+                return;
+            }
+            
             // initialize
             const int maxIters(iters);  // initialize maxIters to iters
             const int N(mat.cols());    // the size of the matrix
-            const RealScalar rhsNorm2(rhs.squaredNorm());
             const RealScalar threshold2(tol_error*tol_error*rhsNorm2); // convergence threshold (compared to residualNorm2)
             
             // Initialize preconditioned Lanczos
-//            VectorType v_old(N); // will be initialized inside loop
+            VectorType v_old(N); // will be initialized inside loop
             VectorType v( VectorType::Zero(N) ); //initialize v
             VectorType v_new(rhs-mat*x); //initialize v_new
             RealScalar residualNorm2(v_new.squaredNorm());
-//            VectorType w(N); // will be initialized inside loop
+            VectorType w(N); // will be initialized inside loop
             VectorType w_new(precond.solve(v_new)); // initialize w_new
 //            RealScalar beta; // will be initialized inside loop
             RealScalar beta_new2(v_new.dot(w_new));
-            eigen_assert(beta_new2 >= 0 && "PRECONDITIONER IS NOT POSITIVE DEFINITE");
+            eigen_assert(beta_new2 >= 0.0 && "PRECONDITIONER IS NOT POSITIVE DEFINITE");
             RealScalar beta_new(sqrt(beta_new2));
             const RealScalar beta_one(beta_new);
             v_new /= beta_new;
@@ -62,14 +71,14 @@ namespace Eigen {
             RealScalar c_old(1.0);
             RealScalar s(0.0); // the sine of the Givens rotation
             RealScalar s_old(0.0); // the sine of the Givens rotation
-//            VectorType p_oold(N); // will be initialized in loop
+            VectorType p_oold(N); // will be initialized in loop
             VectorType p_old(VectorType::Zero(N)); // initialize p_old=0
             VectorType p(p_old); // initialize p=0
             RealScalar eta(1.0);
                         
             iters = 0; // reset iters
-            while ( iters < maxIters ){
-                
+            while ( iters < maxIters )
+            {
                 // Preconditioned Lanczos
                 /* Note that there are 4 variants on the Lanczos algorithm. These are
                  * described in Paige, C. C. (1972). Computational variants of
@@ -81,17 +90,17 @@ namespace Eigen {
                  * A. Greenbaum, Iterative Methods for Solving Linear Systems, SIAM (1987).
                  */
                 const RealScalar beta(beta_new);
-//                v_old = v; // update: at first time step, this makes v_old = 0 so value of beta doesn't matter
-                const VectorType v_old(v); // NOT SURE IF CREATING v_old EVERY ITERATION IS EFFICIENT
+                v_old = v; // update: at first time step, this makes v_old = 0 so value of beta doesn't matter
+//                const VectorType v_old(v); // NOT SURE IF CREATING v_old EVERY ITERATION IS EFFICIENT
                 v = v_new; // update
-//                w = w_new; // update
-                const VectorType w(w_new); // NOT SURE IF CREATING w EVERY ITERATION IS EFFICIENT
+                w = w_new; // update
+//                const VectorType w(w_new); // NOT SURE IF CREATING w EVERY ITERATION IS EFFICIENT
                 v_new.noalias() = mat*w - beta*v_old; // compute v_new
                 const RealScalar alpha = v_new.dot(w);
                 v_new -= alpha*v; // overwrite v_new
                 w_new = precond.solve(v_new); // overwrite w_new
                 beta_new2 = v_new.dot(w_new); // compute beta_new
-                eigen_assert(beta_new2 >= 0 && "PRECONDITIONER IS NOT POSITIVE DEFINITE");
+                eigen_assert(beta_new2 >= 0.0 && "PRECONDITIONER IS NOT POSITIVE DEFINITE");
                 beta_new = sqrt(beta_new2); // compute beta_new
                 v_new /= beta_new; // overwrite v_new for next iteration
                 w_new /= beta_new; // overwrite w_new for next iteration
@@ -107,21 +116,28 @@ namespace Eigen {
                 s=beta_new/r1; // new sine
                 
                 // Update solution
-//                p_oold = p_old;
-                const VectorType p_oold(p_old); // NOT SURE IF CREATING p_oold EVERY ITERATION IS EFFICIENT
+                p_oold = p_old;
+//                const VectorType p_oold(p_old); // NOT SURE IF CREATING p_oold EVERY ITERATION IS EFFICIENT
                 p_old = p;
                 p.noalias()=(w-r2*p_old-r3*p_oold) /r1; // IS NOALIAS REQUIRED?
                 x += beta_one*c*eta*p;
+                
+                /* Update the squared residual. Note that this is the estimated residual.
+                The real residual |Ax-b|^2 may be slightly larger */
                 residualNorm2 *= s*s;
                 
-                if ( residualNorm2 < threshold2){
+                if ( residualNorm2 < threshold2)
+                {
                     break;
                 }
                 
                 eta=-s*eta; // update eta
                 iters++; // increment iteration number (for output purposes)
             }
-            tol_error = std::sqrt(residualNorm2 / rhsNorm2); // return error. Note that this is the estimated error. The real error |Ax-b|/|b| may be slightly larger 
+            
+            /* Compute error. Note that this is the estimated error. The real 
+             error |Ax-b|/|b| may be slightly larger */
+            tol_error = std::sqrt(residualNorm2 / rhsNorm2);
         }
         
     }
@@ -174,20 +190,7 @@ namespace Eigen {
      * \endcode
      *
      * By default the iterations start with x=0 as an initial guess of the solution.
-     * One can control the start using the solveWithGuess() method. Here is a step by
-     * step execution example starting with a random guess and printing the evolution
-     * of the estimated error:
-     * * \code
-     * x = VectorXd::Random(n);
-     * mr.setMaxIterations(1);
-     * int i = 0;
-     * do {
-     *   x = mr.solveWithGuess(b,x);
-     *   std::cout << i << " : " << mr.error() << std::endl;
-     *   ++i;
-     * } while (mr.info()!=Success && i<100);
-     * \endcode
-     * Note that such a step by step excution is slightly slower.
+     * One can control the start using the solveWithGuess() method.
      *
      * \sa class ConjugateGradient, BiCGSTAB, SimplicialCholesky, DiagonalPreconditioner, IdentityPreconditioner
      */
@@ -225,7 +228,8 @@ namespace Eigen {
          * this class becomes invalid. Call compute() to update it with the new
          * matrix A, or modify a copy of A.
          */
-        MINRES(const MatrixType& A) : Base(A) {}
+        template<typename MatrixDerived>
+        explicit MINRES(const EigenBase<MatrixDerived>& A) : Base(A.derived()) {}
         
         /** Destructor. */
         ~MINRES(){}
@@ -250,6 +254,11 @@ namespace Eigen {
         template<typename Rhs,typename Dest>
         void _solveWithGuess(const Rhs& b, Dest& x) const
         {
+            typedef typename internal::conditional<UpLo==(Lower|Upper),
+                                                   const MatrixType&,
+                                                   SparseSelfAdjointView<const MatrixType, UpLo>
+                                                  >::type MatrixWrapperType;
+                                          
             m_iterations = Base::maxIterations();
             m_error = Base::m_tolerance;
             
@@ -259,7 +268,7 @@ namespace Eigen {
                 m_error = Base::m_tolerance;
                 
                 typename Dest::ColXpr xj(x,j);
-                internal::minres(mp_matrix->template selfadjointView<UpLo>(), b.col(j), xj,
+                internal::minres(MatrixWrapperType(*mp_matrix), b.col(j), xj,
                                  Base::m_preconditioner, m_iterations, m_error);
             }
             

@@ -78,7 +78,7 @@ TEST(MaxConsensusLineFitter, RealisticCase) {
   Mat2X xy(2, NbPoints);
 
   Vec2 GTModel; // y = 2x + 1
-  GTModel <<  -2.0, 6.3;
+  GTModel << -2.0, 6.3;
 
   //-- Build the point list according the given model
   for(int i = 0; i < NbPoints; ++i)  {
@@ -87,7 +87,7 @@ TEST(MaxConsensusLineFitter, RealisticCase) {
 
   //-- Add some noise (for the asked percentage amount)
   int nbPtToNoise = (int) NbPoints*inlierPourcentAmount/100.0;
-  vector<size_t> vec_samples; // Fit with unique random index
+  std::vector<size_t> vec_samples; // Fit with unique random index
   UniformSample(nbPtToNoise, NbPoints, &vec_samples);
   for(size_t i = 0; i <vec_samples.size(); ++i)
   {

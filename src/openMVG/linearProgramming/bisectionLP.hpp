@@ -30,7 +30,7 @@ bool BisectionLP(
   double gammaLow = 0.0,  // lower bound
   double eps      = 1e-8, // precision that stop dichotomy
   const int maxIteration = 20, // max number of iteration
-  double * bestFeasibleGamma = NULL, // value of best bisection found value
+  double * bestFeasibleGamma = nullptr , // value of best bisection found value
   bool bVerbose = false)
 {
   int k = 0;

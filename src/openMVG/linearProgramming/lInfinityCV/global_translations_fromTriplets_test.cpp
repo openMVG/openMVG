@@ -6,7 +6,7 @@
 
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
-#include "openMVG/linearProgramming/lInfinityCV/global_translations_fromTriplets.hpp"
+#include "openMVG/linearProgramming/lInfinityCV/global_translations_fromTij.hpp"
 
 #include "openMVG/multiview/translation_averaging_test.hpp"
 #include "testing/testing.h"
@@ -26,7 +26,7 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
 
   const bool bCardiod = true;
   const bool bRelative_Translation_PerTriplet = true;
-  std::vector<openMVG::relativeInfo > vec_relative_estimates;
+  std::vector<openMVG::RelativeInfo_Vec > vec_relative_estimates;
 
   const NViewDataSet d =
     Setup_RelativeTranslations_AndNviewDataset
@@ -42,7 +42,7 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
   //-- Compute the global translations from the triplets of heading directions
   //-   with the L_infinity optimization
 
-  std::vector<double> vec_solution(iNviews*3 + vec_relative_estimates.size()/3 + 1);
+  std::vector<double> vec_solution(iNviews*3 + vec_relative_estimates.size() + 1);
   double gamma = -1.0;
 
   //- a. Setup the LP solver,
@@ -54,7 +54,7 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
   OSI_CLP_SolverWrapper solverLP(vec_solution.size());
 
   //- b. Setup the constraints generator (for the dedicated L_inf problem),
-  Tifromtij_ConstraintBuilder_OneLambdaPerTrif cstBuilder(vec_relative_estimates);
+  Tifromtij_ConstraintBuilder cstBuilder(vec_relative_estimates);
 
   //- c. Build constraints and solve the problem (Setup constraints and solver)
   LP_Constraints_Sparse constraint;
@@ -79,9 +79,9 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
   std::copy(&vec_solution[0], &vec_solution[iNviews*3], &vec_camTranslation[0]);
 
   //-- Get back computed lambda factors
-  std::vector<double> vec_camRelLambdas(&vec_solution[iNviews*3], &vec_solution[iNviews*3 + vec_relative_estimates.size()/3]);
+  std::vector<double> vec_camRelLambdas(&vec_solution[iNviews*3], &vec_solution[iNviews*3 + vec_relative_estimates.size()]);
   // lambda factors must be equal to 1.0 (no compression, no dilation);
-  EXPECT_NEAR(vec_relative_estimates.size()/3, std::accumulate (vec_camRelLambdas.begin(), vec_camRelLambdas.end(), 0.0), 1e-6);
+  EXPECT_NEAR(vec_relative_estimates.size(), std::accumulate (vec_camRelLambdas.begin(), vec_camRelLambdas.end(), 0.0), 1e-6);
 
   // Get back the camera translations in the global frame:
   std::cout << std::endl << "Camera centers (Computed): " << std::endl;

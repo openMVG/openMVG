@@ -7,7 +7,12 @@
 #ifndef OPENMVG_IMAGE_IMAGE_CONVOLUTION_HPP_
 #define OPENMVG_IMAGE_IMAGE_CONVOLUTION_HPP_
 
+#include "openMVG/numeric/numeric.h"
 #include "openMVG/numeric/accumulator_trait.hpp"
+#include "openMVG/image/image_container.hpp"
+
+#include <cassert>
+#include <vector>
 
 /**
  ** @file Standard 2D image convolution functions :
@@ -16,8 +21,10 @@
  ** - 2D (using standard 2d kernel of with separable kernels)
  **/
 
-namespace openMVG {
-namespace image {
+namespace openMVG
+{
+namespace image
+{
 
 /**
  ** General image convolution by a kernel
@@ -27,7 +34,7 @@ namespace image {
  ** @param out resulting image
  **/
 template< typename Image >
-void ImageConvolution( const Image & img , const Mat & kernel , Image & out)
+void ImageConvolution( const Image & img , const Mat & kernel , Image & out )
 {
   const int kernel_width  = kernel.cols() ;
   const int kernel_height = kernel.rows() ;
@@ -72,7 +79,7 @@ void ImageConvolution( const Image & img , const Mat & kernel , Image & out)
  ** @param out Output image
  **/
 template< typename ImageTypeIn , typename ImageTypeOut, typename Kernel >
-static void ImageHorizontalConvolution( const ImageTypeIn & img , const Kernel & kernel , ImageTypeOut & out)
+void ImageHorizontalConvolution( const ImageTypeIn & img , const Kernel & kernel , ImageTypeOut & out )
 {
   typedef typename ImageTypeIn::Tpixel pix_t ;
 
@@ -94,7 +101,7 @@ static void ImageHorizontalConvolution( const ImageTypeIn & img , const Kernel &
     {
       line[ k ] = start_pix ;
     }
-    memcpy(&line[0] + half_kernel_width, img.data() + row * cols, sizeof(pix_t) * cols);
+    memcpy( &line[0] + half_kernel_width, img.data() + row * cols, sizeof( pix_t ) * cols );
     const pix_t end_pix = img.coeffRef( row , cols - 1 ) ;
     for( int k = 0 ; k < half_kernel_width ; ++k ) // pad after
     {
@@ -104,7 +111,7 @@ static void ImageHorizontalConvolution( const ImageTypeIn & img , const Kernel &
     // Apply convolution
     conv_buffer_( &line[0] , kernel.data() , cols , kernel_width );
 
-    memcpy(out.data() + row * cols, &line[0], sizeof(pix_t) * cols);
+    memcpy( out.data() + row * cols, &line[0], sizeof( pix_t ) * cols );
   }
 }
 
@@ -116,7 +123,7 @@ static void ImageHorizontalConvolution( const ImageTypeIn & img , const Kernel &
  ** @param out Output image
  **/
 template< typename ImageTypeIn , typename ImageTypeOut, typename Kernel >
-void ImageVerticalConvolution( const ImageTypeIn & img , const Kernel & kernel , ImageTypeOut & out)
+void ImageVerticalConvolution( const ImageTypeIn & img , const Kernel & kernel , ImageTypeOut & out )
 {
   typedef typename ImageTypeIn::Tpixel pix_t ;
 
@@ -168,7 +175,7 @@ template< typename ImageType, typename Kernel >
 void ImageSeparableConvolution( const ImageType & img ,
                                 const Kernel & horiz_k ,
                                 const Kernel & vert_k ,
-                                ImageType & out)
+                                ImageType & out )
 {
   // Cast the Kernel to the appropriate type
   typedef typename ImageType::Tpixel pix_t;
@@ -184,10 +191,11 @@ void ImageSeparableConvolution( const ImageType & img ,
 typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMatrixXf;
 
 /// Specialization for Float based image (for arbitrary sized kernel)
-static void SeparableConvolution2d(const RowMatrixXf& image,
-                            const Eigen::Matrix<float, 1, Eigen::Dynamic>& kernel_x,
-                            const Eigen::Matrix<float, 1, Eigen::Dynamic>& kernel_y,
-                            RowMatrixXf* out) {
+inline void SeparableConvolution2d( const RowMatrixXf& image,
+                                    const Eigen::Matrix<float, 1, Eigen::Dynamic>& kernel_x,
+                                    const Eigen::Matrix<float, 1, Eigen::Dynamic>& kernel_y,
+                                    RowMatrixXf* out )
+{
   const int sigma_y = static_cast<int>( kernel_y.cols() );
   const int half_sigma_y = static_cast<int>( kernel_y.cols() ) / 2;
 
@@ -196,68 +204,79 @@ static void SeparableConvolution2d(const RowMatrixXf& image,
   // each row. However, care must be taken at the top and bottom borders.
   const Eigen::Matrix<float, 1, Eigen::Dynamic> reverse_kernel_y = kernel_y.reverse();
 #if defined(OPENMVG_USE_OPENMP)
-#pragma omp parallel for schedule(dynamic)
+  #pragma omp parallel for schedule(dynamic)
 #endif
-  for (int i = 0; i < half_sigma_y; i++) {
+  for ( int i = 0; i < half_sigma_y; i++ )
+  {
     const int forward_size = i + half_sigma_y + 1;
     const int reverse_size = sigma_y - forward_size;
-    out->row(i) = kernel_y.tail(forward_size) *
-                  image.block(0, 0, forward_size, image.cols()) +
-                  reverse_kernel_y.tail(reverse_size) *
-                  image.block(1, 0, reverse_size, image.cols());
+    out->row( i ) = kernel_y.tail( forward_size ) *
+                    image.block( 0, 0, forward_size, image.cols() ) +
+                    reverse_kernel_y.tail( reverse_size ) *
+                    image.block( 1, 0, reverse_size, image.cols() );
 
     // Apply the same technique for the end rows.
-    out->row(image.rows() - i - 1) =
-      kernel_y.head(forward_size) *
-      image.block(image.rows() - forward_size, 0, forward_size, image.cols())
+    out->row( image.rows() - i - 1 ) =
+      kernel_y.head( forward_size ) *
+      image.block( image.rows() - forward_size, 0, forward_size, image.cols() )
       +
-      reverse_kernel_y.head(reverse_size) *
-      image.block(image.rows() - reverse_size - 1, 0, reverse_size, image.cols());
+      reverse_kernel_y.head( reverse_size ) *
+      image.block( image.rows() - reverse_size - 1, 0, reverse_size, image.cols() );
   }
 
   // Applying the rest of the y filter.
 #if defined(OPENMVG_USE_OPENMP)
-#pragma omp parallel for schedule(dynamic)
+  #pragma omp parallel for schedule(dynamic)
 #endif
-  for (int row = half_sigma_y; row < image.rows() - half_sigma_y; row++) {
-    out->row(row) =  kernel_y * image.block(row - half_sigma_y, 0, sigma_y, out->cols());
+  for ( int row = half_sigma_y; row < image.rows() - half_sigma_y; row++ )
+  {
+    out->row( row ) =  kernel_y * image.block( row - half_sigma_y, 0, sigma_y, out->cols() );
   }
 
-  const int sigma_x = static_cast<int>(kernel_x.cols());
-  const int half_sigma_x = static_cast<int>(kernel_x.cols() / 2);
+  const int sigma_x = static_cast<int>( kernel_x.cols() );
+  const int half_sigma_x = static_cast<int>( kernel_x.cols() / 2 );
 
   // Convolving with the horizontal filter is easy. Rather than using the kernel
   // as a sliding window, we use the row pixels as a sliding window around the
   // filter. We prepend and append the proper border values so that we are sure
   // to end up with the correct convolved values.
-  Eigen::RowVectorXf temp_row(image.cols() + sigma_x - 1);
+  Eigen::RowVectorXf temp_row( image.cols() + sigma_x - 1 );
 #if defined(OPENMVG_USE_OPENMP)
-#pragma omp parallel for firstprivate(temp_row), schedule(dynamic)
+  #pragma omp parallel for firstprivate(temp_row), schedule(dynamic)
 #endif
-  for (int row = 0; row < out->rows(); row++) {
-    temp_row.head(half_sigma_x) =
-      out->row(row).segment(1, half_sigma_x).reverse();
-    temp_row.segment(half_sigma_x, image.cols()) = out->row(row);
-    temp_row.tail(half_sigma_x) =
-      out->row(row)
-      .segment(image.cols() - 2 - half_sigma_x, half_sigma_x)
+  for ( int row = 0; row < out->rows(); row++ )
+  {
+    temp_row.head( half_sigma_x ) =
+      out->row( row ).segment( 1, half_sigma_x ).reverse();
+    temp_row.segment( half_sigma_x, image.cols() ) = out->row( row );
+    temp_row.tail( half_sigma_x ) =
+      out->row( row )
+      .segment( image.cols() - 2 - half_sigma_x, half_sigma_x )
       .reverse();
 
     // Convolve the row. We perform the first step here explicitly so that we
     // avoid setting the row equal to zero.
-    out->row(row) = kernel_x(0) * temp_row.head(image.cols());
-    for (int i = 1; i < sigma_x; i++) {
-      out->row(row) += kernel_x(i) * temp_row.segment(i, image.cols());
+    out->row( row ) = kernel_x( 0 ) * temp_row.head( image.cols() );
+    for ( int i = 1; i < sigma_x; i++ )
+    {
+      out->row( row ) += kernel_x( i ) * temp_row.segment( i, image.cols() );
     }
   }
 }
 
-// Specialization for Image<float> in order to use SeparableConvolution2d
+
+/**
+* @brief Specialization for Image<float> in order to use SeparableConvolution2d
+* @param img Input image
+* @param horiz_k Kernel used for horizontal convolution
+* @param vert_k Kernl used for vertical convolution
+* @param[out] out Convolved image
+*/
 template<typename Kernel>
 void ImageSeparableConvolution( const Image<float> & img ,
                                 const Kernel & horiz_k ,
                                 const Kernel & vert_k ,
-                                Image<float> & out)
+                                Image<float> & out )
 {
   // Cast the Kernel to the appropriate type
   typedef Image<float>::Tpixel pix_t;
@@ -265,8 +284,8 @@ void ImageSeparableConvolution( const Image<float> & img ,
   const VecKernel horiz_k_cast = horiz_k.template cast< typename openMVG::Accumulator<pix_t>::Type >();
   const VecKernel vert_k_cast = vert_k.template cast< typename openMVG::Accumulator<pix_t>::Type >();
 
-  out.resize(img.Width(), img.Height());
-  SeparableConvolution2d(img.GetMat(), horiz_k_cast, vert_k_cast, &((Image<float>::Base&)out));
+  out.resize( img.Width(), img.Height() );
+  SeparableConvolution2d( img.GetMat(), horiz_k_cast, vert_k_cast, &( ( Image<float>::Base& )out ) );
 }
 
 } // namespace image

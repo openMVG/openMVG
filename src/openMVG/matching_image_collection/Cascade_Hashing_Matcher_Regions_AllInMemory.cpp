@@ -109,7 +109,7 @@ void Match
     const size_t dimension = regionsI.DescriptorLength();
 
     Eigen::Map<BaseMat> mat_I( (ScalarT*)tabI, regionsI.RegionCount(), dimension);
-    const HashedDescriptions hashed_description = cascade_hasher.CreateHashedDescriptions(mat_I,
+    HashedDescriptions hashed_description = cascade_hasher.CreateHashedDescriptions(mat_I,
       zero_mean_descriptor);
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp critical
@@ -144,7 +144,7 @@ void Match
 #endif
     for (int j = 0; j < (int)indexToCompare.size(); ++j)
     {
-      const size_t J = indexToCompare[j];
+      size_t J = indexToCompare[j];
       const features::Regions &regionsJ = *regions_provider.regions_per_view.at(J).get();
 
       if (regions_provider.regions_per_view.count(J) == 0
@@ -190,7 +190,7 @@ void Match
       for (size_t k=0; k < vec_nn_ratio_idx.size(); ++k)
       {
         const size_t index = vec_nn_ratio_idx[k];
-        vec_putative_matches.emplace_back(pvec_indices[index*2]._j, pvec_indices[index*2]._i);
+        vec_putative_matches.emplace_back(pvec_indices[index*2].j_, pvec_indices[index*2].i_);
       }
 
       // Remove duplicates

@@ -35,15 +35,18 @@
 #ifndef OPENMVG_MULTIVIEW_RESECTION_P3P_H_
 #define OPENMVG_MULTIVIEW_RESECTION_P3P_H_
 
-#include <iostream>
 #include "openMVG/numeric/numeric.h"
+#include "openMVG/multiview/projection.hpp"
+
+#include <iostream>
+#include <cmath>
 
 namespace openMVG {
 namespace euclidean_resection {
 
 typedef Eigen::Matrix<double, 5, 1> Vec5;
 
-static void solveQuartic( const Vec5 & factors, Vec4 & realRoots)
+inline void solveQuartic( const Vec5 & factors, Vec4 & realRoots)
 {
   double A = factors[0];
   double B = factors[1];
@@ -108,7 +111,7 @@ static void solveQuartic( const Vec5 & factors, Vec4 & realRoots)
  *                    false if world points aligned
  */
 
-static bool compute_P3P_Poses( const Mat3 & featureVectors, const Mat3 & worldPoints, Mat & solutions )
+inline bool compute_P3P_Poses( const Mat3 & featureVectors, const Mat3 & worldPoints, Mat & solutions )
 {
   solutions = Mat(3, 4*4);
 

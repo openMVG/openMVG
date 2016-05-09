@@ -14,34 +14,34 @@ namespace sfm{
 template<typename IterablePairs, typename PairValueType>
 void reindex(
   const IterablePairs& pairs,
-  Hash_Map<PairValueType, PairValueType> & _reindexForward,
-  Hash_Map<PairValueType, PairValueType> & _reindexBackward)
+  Hash_Map<PairValueType, PairValueType> & reindex_forward,
+  Hash_Map<PairValueType, PairValueType> & reindex_backward)
 {
   typedef std::pair<PairValueType,PairValueType> PairT;
   // get an unique set of Ids
-  std::set<size_t> _uniqueId;
+  std::set<size_t> unique_id;
   for(typename IterablePairs::const_iterator iter = pairs.begin();
         iter != pairs.end(); ++iter)
   {
-    _uniqueId.insert(iter->first);
-    _uniqueId.insert(iter->second);
+    unique_id.insert(iter->first);
+    unique_id.insert(iter->second);
   }
 
   // Build the Forward and Backward mapping
   for(typename IterablePairs::const_iterator iter = pairs.begin();
         iter != pairs.end(); ++iter)
   {
-    if (_reindexForward.find(iter->first) == _reindexForward.end())
+    if (reindex_forward.find(iter->first) == reindex_forward.end())
     {
-      const size_t dist = std::distance(_uniqueId.begin(), _uniqueId.find(iter->first));
-      _reindexForward[iter->first] = dist;
-      _reindexBackward[dist] = iter->first;
+      const size_t dist = std::distance(unique_id.begin(), unique_id.find(iter->first));
+      reindex_forward[iter->first] = dist;
+      reindex_backward[dist] = iter->first;
     }
-    if (_reindexForward.find(iter->second) == _reindexForward.end())
+    if (reindex_forward.find(iter->second) == reindex_forward.end())
     {
-      const size_t dist = std::distance(_uniqueId.begin(), _uniqueId.find(iter->second));
-      _reindexForward[iter->second] = dist;
-      _reindexBackward[dist] = iter->second;
+      const size_t dist = std::distance(unique_id.begin(), unique_id.find(iter->second));
+      reindex_forward[iter->second] = dist;
+      reindex_backward[dist] = iter->second;
     }
   }
 }

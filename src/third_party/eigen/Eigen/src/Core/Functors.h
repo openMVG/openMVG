@@ -259,6 +259,47 @@ template<> struct functor_traits<scalar_boolean_or_op> {
   };
 };
 
+/** \internal
+  * \brief Template functors for comparison of two scalars
+  * \todo Implement packet-comparisons
+  */
+template<typename Scalar, ComparisonName cmp> struct scalar_cmp_op;
+
+template<typename Scalar, ComparisonName cmp>
+struct functor_traits<scalar_cmp_op<Scalar, cmp> > {
+  enum {
+    Cost = NumTraits<Scalar>::AddCost,
+    PacketAccess = false
+  };
+};
+
+template<ComparisonName Cmp, typename Scalar>
+struct result_of<scalar_cmp_op<Scalar, Cmp>(Scalar,Scalar)> {
+  typedef bool type;
+};
+
+
+template<typename Scalar> struct scalar_cmp_op<Scalar, cmp_EQ> {
+  EIGEN_EMPTY_STRUCT_CTOR(scalar_cmp_op)
+  EIGEN_STRONG_INLINE bool operator()(const Scalar& a, const Scalar& b) const {return a==b;}
+};
+template<typename Scalar> struct scalar_cmp_op<Scalar, cmp_LT> {
+  EIGEN_EMPTY_STRUCT_CTOR(scalar_cmp_op)
+  EIGEN_STRONG_INLINE bool operator()(const Scalar& a, const Scalar& b) const {return a<b;}
+};
+template<typename Scalar> struct scalar_cmp_op<Scalar, cmp_LE> {
+  EIGEN_EMPTY_STRUCT_CTOR(scalar_cmp_op)
+  EIGEN_STRONG_INLINE bool operator()(const Scalar& a, const Scalar& b) const {return a<=b;}
+};
+template<typename Scalar> struct scalar_cmp_op<Scalar, cmp_UNORD> {
+  EIGEN_EMPTY_STRUCT_CTOR(scalar_cmp_op)
+  EIGEN_STRONG_INLINE bool operator()(const Scalar& a, const Scalar& b) const {return !(a<=b || b<=a);}
+};
+template<typename Scalar> struct scalar_cmp_op<Scalar, cmp_NEQ> {
+  EIGEN_EMPTY_STRUCT_CTOR(scalar_cmp_op)
+  EIGEN_STRONG_INLINE bool operator()(const Scalar& a, const Scalar& b) const {return a!=b;}
+};
+
 // unary functors:
 
 /** \internal

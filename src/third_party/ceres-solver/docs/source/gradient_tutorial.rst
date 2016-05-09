@@ -110,7 +110,7 @@ algorithm.
     33: f: 4.835994e-17 d: 1.00e-12 g: 1.05e-07 h: 1.13e-06 s: 1.00e+00 e:  1 it: 4.05e-06 tt: 9.81e-04
     34: f: 1.885250e-22 d: 4.84e-17 g: 2.69e-10 h: 1.45e-08 s: 1.00e+00 e:  1 it: 4.05e-06 tt: 1.00e-03
 
-  Solver Summary (v 1.10.0-lapack-suitesparse-cxsparse-no_openmp)
+  Solver Summary (v 1.11.0-lapack-suitesparse-cxsparse-no_openmp)
 
   Parameters                                  2
   Line search direction              LBFGS (20)

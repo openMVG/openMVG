@@ -44,6 +44,10 @@ Bibliography
    with indeterminacy**, *IEEE Transactions on Information Theory*
    47(5):2017-2028, 2001.
 
+.. [Keys] R. G. Keys, **Cubic convolution interpolation for digital
+   image processing**, *IEEE Trans. on Acoustics, Speech, and Signal
+   Processing*, 29(6), 1981.
+
 .. [KushalAgarwal] A. Kushal and S. Agarwal, **Visibility based
    preconditioning for bundle adjustment**, *In Proceedings of the
    IEEE Conference on Computer Vision and Pattern Recognition*, 2012.
@@ -89,6 +93,9 @@ Bibliography
 .. [Oren] S. S. Oren, **Self-scaling Variable Metric (SSVM) Algorithms
    Part II: Implementation and Experiments**, Management Science,
    20(5), 863-874, 1974.
+
+.. [Ridders] C. J. F. Ridders, **Accurate computation of F'(x) and
+   F'(x) F"(x)**, Advances in Engineering Software 4(2), 75-76, 1978.
 
 .. [RuheWedin] A. Ruhe and P.Å. Wedin, **Algorithms for separable
    nonlinear least squares problems**, Siam Review, 22(3):318–337,

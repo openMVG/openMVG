@@ -133,10 +133,7 @@ namespace features {
     }
 
     // convert to unit vector (L2 norm)
-    typedef Eigen::Matrix<Real, Eigen::Dynamic, 1> VecReal;
-    Eigen::Map< VecReal > dataMap( &desc[0], 64);
-    dataMap.normalize();
-    //std::cout << dataMap.transpose() << std::endl << std::endl;
+    desc.normalize();
   }
 
   template<typename ImageT>

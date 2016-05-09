@@ -21,30 +21,19 @@ namespace features {
 /**
  * Class that handle descriptor (a data container of N values of type T).
  * SiftDescriptor => <uchar,128> or <float,128>
-
  * Surf 64 => <float,64>
+ * Brief 512 bits => <unsigned char,512/sizeof(unsigned char)>
  */
 template <typename T, std::size_t N>
-class Descriptor
+class Descriptor : public Eigen::Matrix<T, N, 1>
 {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   typedef T bin_type;
   typedef std::size_t size_type;
 
   /// Compile-time length of the descriptor
-  static const size_type static_size = N;
-
-  /// Constructor
-  inline Descriptor() {}
-
-  /// capacity
-  inline size_type size() const { return N; }
-
-  /// Mutable and non-mutable bin getters
-  inline bin_type& operator[](std::size_t i) { return data[i]; }
-  inline bin_type operator[](std::size_t i) const { return data[i]; }
-
-  inline bin_type* getData() const {return (bin_type* ) (&data[0]);}
+  static const std::size_t static_size = N;
 
   /// Ostream interface
   std::ostream& print(std::ostream& os) const;
@@ -54,7 +43,7 @@ public:
   template<class Archive>
   void save(Archive & archive) const
   {
-    std::vector<T> array(data,data+N);
+    const std::vector<T> array(this->data(), this->data()+N);
     archive( array );
   }
 
@@ -63,11 +52,8 @@ public:
   {
     std::vector<T> array(N);
     archive( array );
-    std::memcpy(data, array.data(), sizeof(T)*N);
+    std::memcpy(this->data(), array.data(), sizeof(T)*N);
   }
-
-private:
-  bin_type data[N];
 };
 
 // Output stream definition
@@ -122,18 +108,18 @@ inline std::istream& readT<unsigned char>(std::istream& is, unsigned char *tab, 
 template<typename T, std::size_t N>
 std::ostream& Descriptor<T,N>::print(std::ostream& os) const
 {
-  return printT<T>(os, (T*) &data[0], N);
+  return printT<T>(os, (T*) this->data(), N);
 }
 
 template<typename T, std::size_t N>
 std::istream& Descriptor<T,N>::read(std::istream& in)
 {
-  return readT<T>(in, (T*) &data[0], N);
+  return readT<T>(in, (T*) this->data(), N);
 }
 
 /// Read descriptors from file
 template<typename DescriptorsT >
-static bool loadDescsFromFile(
+inline bool loadDescsFromFile(
   const std::string & sfileNameDescs,
   DescriptorsT & vec_desc)
 {
@@ -154,7 +140,7 @@ static bool loadDescsFromFile(
 
 /// Write descriptors to file
 template<typename DescriptorsT >
-static bool saveDescsToFile(
+inline bool saveDescsToFile(
   const std::string & sfileNameDescs,
   DescriptorsT & vec_desc)
 {
@@ -171,7 +157,7 @@ static bool saveDescsToFile(
 
 /// Read descriptors from file (in binary mode)
 template<typename DescriptorsT >
-static bool loadDescsFromBinFile(
+inline bool loadDescsFromBinFile(
   const std::string & sfileNameDescs,
   DescriptorsT & vec_desc)
 {
@@ -187,7 +173,7 @@ static bool loadDescsFromBinFile(
   vec_desc.resize(cardDesc);
   for (typename DescriptorsT::const_iterator iter = vec_desc.begin();
     iter != vec_desc.end(); ++iter) {
-    fileIn.read((char*) (*iter).getData(),
+    fileIn.read((char*) (*iter).data(),
       VALUE::static_size*sizeof(typename VALUE::bin_type));
   }
   const bool bOk = !fileIn.bad();
@@ -197,7 +183,7 @@ static bool loadDescsFromBinFile(
 
 /// Write descriptors to file (in binary mode)
 template<typename DescriptorsT >
-static bool saveDescsToBinFile(
+inline bool saveDescsToBinFile(
   const std::string & sfileNameDescs,
   DescriptorsT & vec_desc)
 {
@@ -211,7 +197,7 @@ static bool saveDescsToBinFile(
   file.write((const char*) &cardDesc,  sizeof(std::size_t));
   for (typename DescriptorsT::const_iterator iter = vec_desc.begin();
     iter != vec_desc.end(); ++iter) {
-    file.write((const char*) (*iter).getData(),
+    file.write((const char*) (*iter).data(),
       VALUE::static_size*sizeof(typename VALUE::bin_type));
   }
   const bool bOk = file.good();

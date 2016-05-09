@@ -33,12 +33,12 @@ namespace robust{
 template<typename Kernel, typename Scorer>
 typename Kernel::Model MaxConsensus(const Kernel &kernel,
   const Scorer &scorer,
-  std::vector<size_t> *best_inliers = NULL, size_t max_iteration = 1024) {
+  std::vector<size_t> *best_inliers = nullptr , size_t max_iteration = 1024) {
 
     const size_t min_samples = Kernel::MINIMUM_SAMPLES;
     const size_t total_samples = kernel.NumSamples();
 
-    double best_cost = std::numeric_limits<double>::infinity();
+    size_t best_num_inliers = 0;
     typename Kernel::Model best_model;
 
     // Test if we have sufficient points to for the kernel.
@@ -51,14 +51,12 @@ typename Kernel::Model MaxConsensus(const Kernel &kernel,
 
     // In this robust estimator, the scorer always works on all the data points
     // at once. So precompute the list ahead of time.
-    std::vector<size_t> all_samples;
-    for (size_t i = 0; i < total_samples; ++i) {
-      all_samples.push_back(i);
-    }
+    std::vector<size_t> all_samples(total_samples);
+    std::iota(all_samples.begin(), all_samples.end(), 0);
 
     std::vector<size_t> sample;
     for (size_t iteration = 0;  iteration < max_iteration; ++iteration) {
-        UniformSample(min_samples, total_samples, &sample);
+      UniformSample(min_samples, &all_samples, &sample);
 
         std::vector<typename Kernel::Model> models;
         kernel.Fit(sample, &models);
@@ -66,12 +64,10 @@ typename Kernel::Model MaxConsensus(const Kernel &kernel,
         // Compute costs for each fit.
         for (size_t i = 0; i < models.size(); ++i) {
           std::vector<size_t> inliers;
-          double cost = scorer.Score(kernel, models[i], all_samples, &inliers);
+          scorer.Score(kernel, models[i], all_samples, &inliers);
 
-          if (cost < best_cost) {
-            //std::cout << "Fit cost: " << cost/inliers.size()
-            //  << ", number of inliers: " << inliers.size() << "\n";
-            best_cost = cost;
+          if (best_num_inliers < inliers.size()) {
+            best_num_inliers = inliers.size();
             best_model = models[i];
             if (best_inliers) {
               best_inliers->swap(inliers);

@@ -76,14 +76,17 @@ template<typename Derived>
 template<typename Visitor>
 void DenseBase<Derived>::visit(Visitor& visitor) const
 {
+  typedef typename internal::remove_all<typename Derived::Nested>::type ThisNested;
+  typename Derived::Nested thisNested(derived());
+
   enum { unroll = SizeAtCompileTime != Dynamic
                    && CoeffReadCost != Dynamic
                    && (SizeAtCompileTime == 1 || internal::functor_traits<Visitor>::Cost != Dynamic)
                    && SizeAtCompileTime * CoeffReadCost + (SizeAtCompileTime-1) * internal::functor_traits<Visitor>::Cost
                       <= EIGEN_UNROLLING_LIMIT };
-  return internal::visitor_impl<Visitor, Derived,
+  return internal::visitor_impl<Visitor, ThisNested,
       unroll ? int(SizeAtCompileTime) : Dynamic
-    >::run(derived(), visitor);
+    >::run(thisNested, visitor);
 }
 
 namespace internal {

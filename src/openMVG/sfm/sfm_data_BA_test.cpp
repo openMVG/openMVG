@@ -47,7 +47,11 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole) {
 
   // Call the BA interface and let it refine (Structure and Camera parameters [Intrinsics|Motion])
   std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
-  EXPECT_TRUE( ba_object->Adjust(sfm_data) );
+  EXPECT_TRUE( ba_object->Adjust(sfm_data,
+    Optimize_Options(
+      Intrinsic_Parameter_Type::ADJUST_ALL,
+      Extrinsic_Parameter_Type::ADJUST_ALL,
+      Structure_Parameter_Type::ADJUST_ALL)) );
 
   const double dResidual_after = RMSE(sfm_data);
   EXPECT_TRUE( dResidual_before > dResidual_after);
@@ -67,7 +71,11 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_Radial_K1) {
 
   // Call the BA interface and let it refine (Structure and Camera parameters [Intrinsics|Motion])
   std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
-  EXPECT_TRUE( ba_object->Adjust(sfm_data) );
+  EXPECT_TRUE( ba_object->Adjust(sfm_data,
+    Optimize_Options(
+      Intrinsic_Parameter_Type::ADJUST_ALL,
+      Extrinsic_Parameter_Type::ADJUST_ALL,
+      Structure_Parameter_Type::ADJUST_ALL)) );
 
   const double dResidual_after = RMSE(sfm_data);
   EXPECT_TRUE( dResidual_before > dResidual_after);
@@ -87,7 +95,11 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_Radial_K3) {
 
   // Call the BA interface and let it refine (Structure and Camera parameters [Intrinsics|Motion])
   std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
-  EXPECT_TRUE( ba_object->Adjust(sfm_data) );
+  EXPECT_TRUE( ba_object->Adjust(sfm_data,
+    Optimize_Options(
+      Intrinsic_Parameter_Type::ADJUST_ALL,
+      Extrinsic_Parameter_Type::ADJUST_ALL,
+      Structure_Parameter_Type::ADJUST_ALL)) );
 
   const double dResidual_after = RMSE(sfm_data);
   EXPECT_TRUE( dResidual_before > dResidual_after);
@@ -107,7 +119,11 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_Intrinsic_Brown_T2) {
 
   // Call the BA interface and let it refine (Structure and Camera parameters [Intrinsics|Motion])
   std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
-  EXPECT_TRUE( ba_object->Adjust(sfm_data) );
+  EXPECT_TRUE( ba_object->Adjust(sfm_data,
+    Optimize_Options(
+      Intrinsic_Parameter_Type::ADJUST_ALL,
+      Extrinsic_Parameter_Type::ADJUST_ALL,
+      Structure_Parameter_Type::ADJUST_ALL)) );
 
   const double dResidual_after = RMSE(sfm_data);
   EXPECT_TRUE( dResidual_before > dResidual_after);
@@ -127,7 +143,11 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_Intrinsic_Fisheye) {
 
   // Call the BA interface and let it refine (Structure and Camera parameters [Intrinsics|Motion])
   std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
-  EXPECT_TRUE( ba_object->Adjust(sfm_data) );
+  EXPECT_TRUE( ba_object->Adjust(sfm_data,
+    Optimize_Options(
+      Intrinsic_Parameter_Type::ADJUST_ALL,
+      Extrinsic_Parameter_Type::ADJUST_ALL,
+      Structure_Parameter_Type::ADJUST_ALL)) );
 
   const double dResidual_after = RMSE(sfm_data);
   EXPECT_TRUE( dResidual_before > dResidual_after);
@@ -222,7 +242,7 @@ SfM_Data getInputScene(const NViewDataSet & d, const nViewDatasetConfigurator & 
 
   // 4. Landmarks
   for (int i = 0; i < npoints; ++i) {
-    // Collect the image of point i in each frame.
+    // Collect observation of the landmarks X in each frame.
     Landmark landmark;
     landmark.X = d._X.col(i);
     for (int j = 0; j < nviews; ++j) {

@@ -12,7 +12,7 @@ extern "C" {
 /** \ingroup Support_modules
   * \defgroup UmfPackSupport_Module UmfPackSupport module
   *
-  * This module provides an interface to the UmfPack library which is part of the <a href="http://www.cise.ufl.edu/research/sparse/SuiteSparse/">suitesparse</a> package.
+  * This module provides an interface to the UmfPack library which is part of the <a href="http://www.suitesparse.com">suitesparse</a> package.
   * It provides the following factorization class:
   * - class UmfPackLU: a multifrontal sequential LU factorization.
   *

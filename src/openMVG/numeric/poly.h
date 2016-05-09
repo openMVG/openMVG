@@ -30,20 +30,26 @@
 #include <cmath>
 #include <stdio.h>
 
-namespace openMVG {
+namespace openMVG
+{
 
-// Solve the cubic polynomial
-//
-//   x^3 + a*x^2 + b*x + c = 0
-//
-// The number of roots (from zero to three) is returned. If the number of roots
-// is less than three, then higher numbered x's are not changed. For example,
-// if there are 2 roots, only x0 and x1 are set.
-//
-// The GSL cubic solver was used as a reference for this routine.
+/**
+* @brief Solve roots of a cubic polynomial
+* \f$ x^3 + a x^2 + b x + c = 0 \f$
+* @param a Coefficient of cubic parameter
+* @param b Coefficient of linear parameter
+* @param c Coefficient of scalar parameter
+* @param[out] x0 potential solution
+* @param[out] x1 potential solution
+* @param[out] x2 potential solution
+* @return Number of solution
+* @note If number of solution is less than 3, only the first output parameters are computed
+* @note The GSL cubic solver was used as a reference for this routine.
+*/
 template<typename Real>
-int SolveCubicPolynomial(Real a, Real b, Real c,
-                         Real *x0, Real *x1, Real *x2) {
+int SolveCubicPolynomial( Real a, Real b, Real c,
+                          Real *x0, Real *x1, Real *x2 )
+{
   Real q = a * a - 3 * b;
   Real r = 2 * a * a * a - 9 * a * b + 27 * c;
 
@@ -56,63 +62,85 @@ int SolveCubicPolynomial(Real a, Real b, Real c,
   Real CR2 = 729 * r * r;
   Real CQ3 = 2916 * q * q * q;
 
-  if (R == 0 && Q == 0) {
+  if ( R == 0 && Q == 0 )
+  {
     // Tripple root in one place.
     *x0 = *x1 = *x2 = -a / 3 ;
     return 3;
 
-  } else if (CR2 == CQ3) {
+  }
+  else if ( CR2 == CQ3 )
+  {
     // This test is actually R2 == Q3, written in a form suitable for exact
     // computation with integers.
     //
     // Due to finite precision some double roots may be missed, and considered
     // to be a pair of complex roots z = x +/- epsilon i close to the real
     // axis.
-    Real sqrtQ = sqrt (Q);
-    if (R > 0) {
+    Real sqrtQ = sqrt ( Q );
+    if ( R > 0 )
+    {
       *x0 = -2 * sqrtQ - a / 3;
       *x1 =      sqrtQ - a / 3;
       *x2 =      sqrtQ - a / 3;
-    } else {
+    }
+    else
+    {
       *x0 =     -sqrtQ - a / 3;
       *x1 =     -sqrtQ - a / 3;
       *x2 =  2 * sqrtQ - a / 3;
     }
     return 3;
 
-  } else if (CR2 < CQ3) {
+  }
+  else if ( CR2 < CQ3 )
+  {
     // This case is equivalent to R2 < Q3.
-    Real sqrtQ = sqrt (Q);
+    Real sqrtQ = sqrt ( Q );
     Real sqrtQ3 = sqrtQ * sqrtQ * sqrtQ;
-    Real theta = acos (R / sqrtQ3);
+    Real theta = acos ( R / sqrtQ3 );
     Real norm = -2 * sqrtQ;
-    *x0 = norm * cos (theta / 3) - a / 3;
-    *x1 = norm * cos ((theta + 2.0 * M_PI) / 3) - a / 3;
-    *x2 = norm * cos ((theta - 2.0 * M_PI) / 3) - a / 3;
+    *x0 = norm * cos ( theta / 3 ) - a / 3;
+    *x1 = norm * cos ( ( theta + 2.0 * M_PI ) / 3 ) - a / 3;
+    *x2 = norm * cos ( ( theta - 2.0 * M_PI ) / 3 ) - a / 3;
 
     // Put the roots in ascending order.
-    if (*x0 > *x1) {
-      std::swap(*x0, *x1);
+    if ( *x0 > *x1 )
+    {
+      std::swap( *x0, *x1 );
     }
-    if (*x1 > *x2) {
-      std::swap(*x1, *x2);
-      if (*x0 > *x1) {
-        std::swap(*x0, *x1);
+    if ( *x1 > *x2 )
+    {
+      std::swap( *x1, *x2 );
+      if ( *x0 > *x1 )
+      {
+        std::swap( *x0, *x1 );
       }
     }
     return 3;
   }
-  Real sgnR = (R >= 0 ? 1 : -1);
-  Real A = -sgnR * pow (fabs (R) + sqrt (R2 - Q3), 1.0/3.0);
+  Real sgnR = ( R >= 0 ? 1 : -1 );
+  Real A = -sgnR * pow ( fabs ( R ) + sqrt ( R2 - Q3 ), 1.0 / 3.0 );
   Real B = Q / A ;
   *x0 = A + B - a / 3;
   return 1;
 }
 
-// The coefficients are in ascending powers, i.e. coeffs[N]*x^N.
+
+/**
+* @brief Solve roots of a cubic polynomial
+* @param coeffs Coefficients of the polynomial
+* @param[out] solutions Solutions of the polynomial
+* @return The number of solutions
+*
+* @note Input coefficients are in ascending order ( coeffs[N] * x^N )
+* @note Assuming coeffs and solutions vectors have 4 values
+*/
 template<typename Real>
-int SolveCubicPolynomial(const Real *coeffs, Real *solutions) {
-  if (coeffs[0] == 0.0) {
+int SolveCubicPolynomial( const Real *coeffs, Real *solutions )
+{
+  if ( coeffs[0] == 0.0 )
+  {
     // TODO(keir): This is a quadratic not a cubic. Implement a quadratic
     // solver!
     return 0;
@@ -120,10 +148,10 @@ int SolveCubicPolynomial(const Real *coeffs, Real *solutions) {
   Real a = coeffs[2] / coeffs[3];
   Real b = coeffs[1] / coeffs[3];
   Real c = coeffs[0] / coeffs[3];
-  return SolveCubicPolynomial(a, b, c,
-                              solutions + 0,
-                              solutions + 1,
-                              solutions + 2);
+  return SolveCubicPolynomial( a, b, c,
+                               solutions + 0,
+                               solutions + 1,
+                               solutions + 2 );
 }
 }  // namespace openMVG
 #endif  // OPENMVG_NUMERIC_POLY_H_

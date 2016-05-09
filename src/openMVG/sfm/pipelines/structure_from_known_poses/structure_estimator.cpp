@@ -25,7 +25,7 @@ using namespace openMVG::geometry;
 
 
 /// Camera pair epipole (Projection of camera center 2 in the image plane 1)
-static Vec3 epipole_from_P(const Mat34& P1, const Pose3& P2)
+inline Vec3 epipole_from_P(const Mat34& P1, const Pose3& P2)
 {
   const Vec3 c = P2.center();
   Vec4 center;
@@ -36,7 +36,7 @@ static Vec3 epipole_from_P(const Mat34& P1, const Pose3& P2)
 /// Export point feature based vector to a matrix [(x,y)'T, (x,y)'T]
 /// Use the camera intrinsics in order to get undistorted pixel coordinates
 template<typename MatT >
-static void PointsToMat(
+void PointsToMat(
   const IntrinsicBase * cam,
   const PointFeatures & vec_feats,
   MatT & m)
@@ -53,6 +53,14 @@ static void PointsToMat(
     else
       m.col(i) << iter->x(), iter->y();
   }
+}
+
+SfM_Data_Structure_Estimation_From_Known_Poses::SfM_Data_Structure_Estimation_From_Known_Poses
+(
+  double max_reprojection_error // pixels
+):
+  max_reprojection_error_(max_reprojection_error)
+{
 }
 
 /// Use geometry of the views to compute a putative structure from features and descriptors.
@@ -106,7 +114,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
       const Mat34 P_R = iterIntrinsicR->second.get()->get_projective_equivalent(poseR);
 
       const Mat3 F_lr = F_from_P(P_L, P_R);
-      const double thresholdF = 4.0;
+      const double thresholdF = max_reprojection_error_;
 
     #if defined(EXHAUSTIVE_MATCHING)
       geometry_aware::GuidedMatching
@@ -144,8 +152,8 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
   #endif // OPENMVG_USE_OPENMP
         {
           ++my_progress_bar;
-          for (size_t i = 0; i < vec_corresponding_indexes.size(); ++i)
-            putatives_matches[*it].push_back(vec_corresponding_indexes[i]);
+          putatives_matches[*it].insert(putatives_matches[*it].end(),
+            vec_corresponding_indexes.begin(), vec_corresponding_indexes.end());
         }
       }
     }
@@ -170,7 +178,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel
 #endif // OPENMVG_USE_OPENMP
-  for( Triplets::const_iterator it = triplets.begin(); it != triplets.end(); ++it)
+  for (Triplets::const_iterator it = triplets.begin(); it != triplets.end(); ++it)
   {
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp single nowait
@@ -205,36 +213,34 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
 
         // Triangulate the tracks
         for (tracks::STLMAPTracks::const_iterator iterTracks = map_tracksCommon.begin();
-          iterTracks != map_tracksCommon.end(); ++iterTracks) {
+          iterTracks != map_tracksCommon.end(); ++iterTracks)
+        {
+          const tracks::submapTrack & subTrack = iterTracks->second;
+          Triangulation trianObj;
+          for (tracks::submapTrack::const_iterator iter = subTrack.begin(); iter != subTrack.end(); ++iter) {
+            const size_t imaIndex = iter->first;
+            const size_t featIndex = iter->second;
+            const View * view = sfm_data.GetViews().at(imaIndex).get();
+            const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
+            const Pose3 pose = sfm_data.GetPoseOrDie(view);
+            const Vec2 pt = regions_provider->regions_per_view.at(imaIndex)->GetRegionPosition(featIndex);
+            trianObj.add(cam->get_projective_equivalent(pose), cam->get_ud_pixel(pt));
+          }
+          const Vec3 Xs = trianObj.compute();
+          if (trianObj.minDepth() > 0 && trianObj.error()/(double)trianObj.size() < max_reprojection_error_)
+          // TODO: Add an angular check ?
           {
-            const tracks::submapTrack & subTrack = iterTracks->second;
-            Triangulation trianObj;
-            for (tracks::submapTrack::const_iterator iter = subTrack.begin(); iter != subTrack.end(); ++iter) {
-              const size_t imaIndex = iter->first;
-              const size_t featIndex = iter->second;
-              const View * view = sfm_data.GetViews().at(imaIndex).get();
-              const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
-              const Pose3 pose = sfm_data.GetPoseOrDie(view);
-              const Vec2 pt = regions_provider->regions_per_view.at(imaIndex)->GetRegionPosition(featIndex);
-              trianObj.add(cam->get_projective_equivalent(pose), cam->get_ud_pixel(pt));
-            }
-            const Vec3 Xs = trianObj.compute();
-            if (trianObj.minDepth() > 0 && trianObj.error()/(double)trianObj.size() < 4.0)
-            // TODO: Add an angular check ?
+            #ifdef OPENMVG_USE_OPENMP
+              #pragma omp critical
+            #endif // OPENMVG_USE_OPENMP
             {
-              #ifdef OPENMVG_USE_OPENMP
-                #pragma omp critical
-              #endif // OPENMVG_USE_OPENMP
-              {
-                openMVG::tracks::submapTrack::const_iterator iterI, iterJ, iterK;
-                iterI = iterJ = iterK = subTrack.begin();
-                std::advance(iterJ,1);
-                std::advance(iterK,2);
+              openMVG::tracks::submapTrack::const_iterator iterI, iterJ, iterK;
+              iterI = iterJ = iterK = subTrack.begin();
+              std::advance(iterJ,1);
+              std::advance(iterK,2);
 
-                triplets_matches[std::make_pair(I,J)].emplace_back(iterI->second, iterJ->second);
-                triplets_matches[std::make_pair(J,K)].emplace_back(iterJ->second, iterK->second);
-                triplets_matches[std::make_pair(I,K)].emplace_back(iterI->second, iterK->second);
-              }
+              triplets_matches[std::make_pair(I,J)].emplace_back(iterI->second, iterJ->second);
+              triplets_matches[std::make_pair(J,K)].emplace_back(iterJ->second, iterK->second);
             }
           }
         }
@@ -280,7 +286,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::triangulate(
   }
 
   // Triangulate them using a robust triangulation scheme
-  SfM_Data_Structure_Computation_Robust structure_estimator(true);
+  SfM_Data_Structure_Computation_Robust structure_estimator(max_reprojection_error_, true);
   structure_estimator.triangulate(sfm_data);
 }
 

@@ -20,11 +20,7 @@ using namespace svg;
 
 #include <fstream>
 #include <map>
-#include <utility>
 #include <vector>
-
-#include "ceres/ceres.h"
-#include "ceres/rotation.h"
 #include <numeric>
 
 using namespace openMVG;
@@ -85,7 +81,7 @@ void visibleCamPosToSVGSurface
 
 NViewDataSet Setup_RelativeTranslations_AndNviewDataset
 (
-  std::vector<openMVG::relativeInfo > & vec_relative_estimates,
+  std::vector<openMVG::RelativeInfo_Vec > & vec_relative_estimates,
   const int focal = 1000,
   const int principal_Point = 500,
   const int iNviews = 12,
@@ -106,7 +102,7 @@ NViewDataSet Setup_RelativeTranslations_AndNviewDataset
   // Init the relative pair of motion depending of the asked configuration:
   // -2-view: bearing direction,
   // -3-view: triplet of bearing direction.
-  std::vector< std::pair<size_t,size_t> > map_pairs;
+  std::vector< Pair_Vec > motion_group;
   if (bRelative_Translation_PerTriplet)
   {
     std::vector< graph::Triplet > vec_triplets;
@@ -117,16 +113,18 @@ NViewDataSet Setup_RelativeTranslations_AndNviewDataset
       //-- sort the triplet index to have a monotonic ascending series of value
       IndexT triplet[3] = {i, iPlus1, iPlus2};
       std::sort(&triplet[0], &triplet[3]);
-      vec_triplets.push_back(Triplet(triplet[0],triplet[1],triplet[2]));
+      vec_triplets.emplace_back(triplet[0],triplet[1],triplet[2]);
     }
     for (size_t i = 0; i < vec_triplets.size(); ++i)
     {
       const graph::Triplet & triplet = vec_triplets[i];
       const size_t I = triplet.i, J = triplet.j , K = triplet.k;
 
-      map_pairs.emplace_back(I,J);
-      map_pairs.emplace_back(J,K);
-      map_pairs.emplace_back(I,K);
+      Pair_Vec pairs;
+      pairs.emplace_back(I,J);
+      pairs.emplace_back(J,K);
+      pairs.emplace_back(I,K);
+      motion_group.push_back(pairs);
     }
   }
   else
@@ -138,30 +136,37 @@ NViewDataSet Setup_RelativeTranslations_AndNviewDataset
       {
         const size_t jj = modifiedMod(j,iNviews);
         if (i != jj)
-          map_pairs.emplace_back(i,jj);
+        {
+          const Pair_Vec pairs = {Pair(i,jj)};
+          motion_group.push_back(pairs);
+        }
       }
     }
   }
   // Compute all the required relative motions
-  for (const std::pair<size_t,size_t> & iter : map_pairs)
+  for (const auto & iterGroup : motion_group)
   {
-    const size_t I = iter.first;
-    const size_t J = iter.second;
-
-    //-- Build camera alias over GT translations and rotations:
-    const Mat3 & RI = d._R[I];
-    const Mat3 & RJ = d._R[J];
-    const Vec3 & ti = d._t[I];
-    const Vec3 & tj = d._t[J];
-
-    //-- Build relative motions (that feeds the Linear program formulation)
+    RelativeInfo_Vec relative_motion;
+    for (const Pair & iter : iterGroup)
     {
-      Mat3 RijGt;
-      Vec3 tij;
-      RelativeCameraMotion(RI, ti, RJ, tj, &RijGt, &tij);
-      vec_relative_estimates.push_back(
-        std::make_pair(std::make_pair(I, J), std::make_pair(RijGt, tij)));
+      const size_t I = iter.first;
+      const size_t J = iter.second;
+
+      //-- Build camera alias over GT translations and rotations:
+      const Mat3 & RI = d._R[I];
+      const Mat3 & RJ = d._R[J];
+      const Vec3 & ti = d._t[I];
+      const Vec3 & tj = d._t[J];
+
+      //-- Build relative motions (that feeds the Linear program formulation)
+      {
+        Mat3 RijGt;
+        Vec3 tij;
+        RelativeCameraMotion(RI, ti, RJ, tj, &RijGt, &tij);
+        relative_motion.emplace_back(std::make_pair(I, J), std::make_pair(RijGt, tij));
+      }
     }
+    vec_relative_estimates.push_back(relative_motion);
   }
   return d;
 }

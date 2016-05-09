@@ -38,7 +38,7 @@ struct traits<CwiseUnaryView<ViewOp, MatrixType> >
   typedef typename remove_all<MatrixTypeNested>::type _MatrixTypeNested;
   enum {
     Flags = (traits<_MatrixTypeNested>::Flags & (HereditaryBits | LvalueBit | LinearAccessBit | DirectAccessBit)),
-    CoeffReadCost = traits<_MatrixTypeNested>::CoeffReadCost + functor_traits<ViewOp>::Cost,
+    CoeffReadCost = EIGEN_ADD_COST(traits<_MatrixTypeNested>::CoeffReadCost, functor_traits<ViewOp>::Cost),
     MatrixTypeInnerStride =  inner_stride_at_compile_time<MatrixType>::ret,
     // need to cast the sizeof's from size_t to int explicitly, otherwise:
     // "error: no integral type can represent all of the enumerator values

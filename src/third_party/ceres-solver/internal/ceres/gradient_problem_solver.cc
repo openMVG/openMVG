@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2014 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -46,6 +46,7 @@
 namespace ceres {
 using internal::StringPrintf;
 using internal::StringAppendF;
+using std::string;
 
 namespace {
 
@@ -155,7 +156,7 @@ void GradientProblemSolver::Solve(const GradientProblemSolver::Options& options,
     SetSummaryFinalCost(summary);
   }
 
-  const map<string, double>& evaluator_time_statistics =
+  const std::map<string, double>& evaluator_time_statistics =
        minimizer_options.evaluator->TimeStatistics();
   summary->cost_evaluation_time_in_seconds =
       FindWithDefault(evaluator_time_statistics, "Evaluator::Residual", 0.0);
@@ -199,7 +200,7 @@ string GradientProblemSolver::Summary::BriefReport() const {
                       initial_cost,
                       final_cost,
                       TerminationTypeToString(termination_type));
-};
+}
 
 string GradientProblemSolver::Summary::FullReport() const {
   using internal::VersionString;
@@ -263,7 +264,7 @@ string GradientProblemSolver::Summary::FullReport() const {
   StringAppendF(&report, "Termination:        %25s (%s)\n",
                 TerminationTypeToString(termination_type), message.c_str());
   return report;
-};
+}
 
 void Solve(const GradientProblemSolver::Options& options,
            const GradientProblem& problem,

@@ -83,10 +83,17 @@ public:
   template<typename Derived>
   inline explicit AngleAxis(const MatrixBase<Derived>& m) { *this = m; }
 
+  /** \returns the value of the rotation angle in radian */
   Scalar angle() const { return m_angle; }
+  /** \returns a read-write reference to the stored angle in radian */
   Scalar& angle() { return m_angle; }
 
+  /** \returns the rotation axis */
   const Vector3& axis() const { return m_axis; }
+  /** \returns a read-write reference to the stored rotation axis.
+    *
+    * \warning The rotation axis must remain a \b unit vector.
+    */
   Vector3& axis() { return m_axis; }
 
   /** Concatenates two rotations */
@@ -131,7 +138,7 @@ public:
     m_angle = Scalar(other.angle());
   }
 
-  static inline const AngleAxis Identity() { return AngleAxis(0, Vector3::UnitX()); }
+  static inline const AngleAxis Identity() { return AngleAxis(Scalar(0), Vector3::UnitX()); }
 
   /** \returns \c true if \c *this is approximately equal to \a other, within the precision
     * determined by \a prec.
@@ -165,8 +172,8 @@ AngleAxis<Scalar>& AngleAxis<Scalar>::operator=(const QuaternionBase<QuatDerived
   Scalar n2 = q.vec().squaredNorm();
   if (n2 < NumTraits<Scalar>::dummy_precision()*NumTraits<Scalar>::dummy_precision())
   {
-    m_angle = 0;
-    m_axis << 1, 0, 0;
+    m_angle = Scalar(0);
+    m_axis << Scalar(1), Scalar(0), Scalar(0);
   }
   else
   {

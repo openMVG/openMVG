@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2012 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -65,7 +65,7 @@
 // solver had the highest LRE.
 
 // In this file, we implement the same evaluation methodology using
-// Ceres. Currently using Levenberg-Marquard with DENSE_QR, we get
+// Ceres. Currently using Levenberg-Marquardt with DENSE_QR, we get
 //
 //               Excel  Gnuplot  GaussFit  HBN  MinPack  Ceres
 // Average LRE     2.3      4.3       4.0  6.8      4.4    9.4
@@ -115,6 +115,16 @@ DEFINE_int32(num_iterations, 10000, "Number of iterations");
 DEFINE_bool(nonmonotonic_steps, false, "Trust region algorithm can use"
             " nonmonotic steps");
 DEFINE_double(initial_trust_region_radius, 1e4, "Initial trust region radius");
+DEFINE_bool(use_numeric_diff, false,
+            "Use numeric differentiation instead of automatic "
+            "differentiation.");
+DEFINE_string(numeric_diff_method, "ridders", "When using numeric "
+              "differentiation, selects algorithm. Options are: central, "
+              "forward, ridders.");
+DEFINE_double(ridders_step_size, 1e-9, "Initial step size for Ridders "
+              "numeric differentiation.");
+DEFINE_int32(ridders_extrapolations, 3, "Maximal number of Ridders "
+             "extrapolations.");
 
 namespace ceres {
 namespace examples {
@@ -124,10 +134,17 @@ using Eigen::RowMajor;
 typedef Eigen::Matrix<double, Dynamic, 1> Vector;
 typedef Eigen::Matrix<double, Dynamic, Dynamic, RowMajor> Matrix;
 
+using std::atof;
+using std::atoi;
+using std::cout;
+using std::ifstream;
+using std::string;
+using std::vector;
+
 void SplitStringUsingChar(const string& full,
                           const char delim,
                           vector<string>* result) {
-  back_insert_iterator< vector<string> > it(*result);
+  std::back_insert_iterator< vector<string> > it(*result);
 
   const char* p = full.data();
   const char* end = p + full.size();
@@ -144,15 +161,15 @@ void SplitStringUsingChar(const string& full,
   }
 }
 
-bool GetAndSplitLine(std::ifstream& ifs, std::vector<std::string>* pieces) {
+bool GetAndSplitLine(ifstream& ifs, vector<string>* pieces) {
   pieces->clear();
   char buf[256];
   ifs.getline(buf, 256);
-  SplitStringUsingChar(std::string(buf), ' ', pieces);
+  SplitStringUsingChar(string(buf), ' ', pieces);
   return true;
 }
 
-void SkipLines(std::ifstream& ifs, int num_lines) {
+void SkipLines(ifstream& ifs, int num_lines) {
   char buf[256];
   for (int i = 0; i < num_lines; ++i) {
     ifs.getline(buf, 256);
@@ -161,23 +178,23 @@ void SkipLines(std::ifstream& ifs, int num_lines) {
 
 class NISTProblem {
  public:
-  explicit NISTProblem(const std::string& filename) {
-    std::ifstream ifs(filename.c_str(), std::ifstream::in);
+  explicit NISTProblem(const string& filename) {
+    ifstream ifs(filename.c_str(), ifstream::in);
 
-    std::vector<std::string> pieces;
+    vector<string> pieces;
     SkipLines(ifs, 24);
     GetAndSplitLine(ifs, &pieces);
-    const int kNumResponses = std::atoi(pieces[1].c_str());
+    const int kNumResponses = atoi(pieces[1].c_str());
 
     GetAndSplitLine(ifs, &pieces);
-    const int kNumPredictors = std::atoi(pieces[0].c_str());
+    const int kNumPredictors = atoi(pieces[0].c_str());
 
     GetAndSplitLine(ifs, &pieces);
-    const int kNumObservations = std::atoi(pieces[0].c_str());
+    const int kNumObservations = atoi(pieces[0].c_str());
 
     SkipLines(ifs, 4);
     GetAndSplitLine(ifs, &pieces);
-    const int kNumParameters = std::atoi(pieces[0].c_str());
+    const int kNumParameters = atoi(pieces[0].c_str());
     SkipLines(ifs, 8);
 
     // Get the first line of initial and final parameter values to
@@ -193,24 +210,24 @@ class NISTProblem {
     // Parse the line for parameter b1.
     int parameter_id = 0;
     for (int i = 0; i < kNumTries; ++i) {
-      initial_parameters_(i, parameter_id) = std::atof(pieces[i + 2].c_str());
+      initial_parameters_(i, parameter_id) = atof(pieces[i + 2].c_str());
     }
-    final_parameters_(0, parameter_id) = std::atof(pieces[2 + kNumTries].c_str());
+    final_parameters_(0, parameter_id) = atof(pieces[2 + kNumTries].c_str());
 
     // Parse the remaining parameter lines.
     for (int parameter_id = 1; parameter_id < kNumParameters; ++parameter_id) {
      GetAndSplitLine(ifs, &pieces);
      // b2, b3, ....
      for (int i = 0; i < kNumTries; ++i) {
-       initial_parameters_(i, parameter_id) = std::atof(pieces[i + 2].c_str());
+       initial_parameters_(i, parameter_id) = atof(pieces[i + 2].c_str());
      }
-     final_parameters_(0, parameter_id) = std::atof(pieces[2 + kNumTries].c_str());
+     final_parameters_(0, parameter_id) = atof(pieces[2 + kNumTries].c_str());
     }
 
     // Certfied cost
     SkipLines(ifs, 1);
     GetAndSplitLine(ifs, &pieces);
-    certified_cost_ = std::atof(pieces[4].c_str()) / 2.0;
+    certified_cost_ = atof(pieces[4].c_str()) / 2.0;
 
     // Read the observations.
     SkipLines(ifs, 18 - kNumParameters);
@@ -218,17 +235,17 @@ class NISTProblem {
       GetAndSplitLine(ifs, &pieces);
       // Response.
       for (int j = 0; j < kNumResponses; ++j) {
-        response_(i, j) =  std::atof(pieces[j].c_str());
+        response_(i, j) =  atof(pieces[j].c_str());
       }
 
       // Predictor variables.
       for (int j = 0; j < kNumPredictors; ++j) {
-        predictor_(i, j) =  std::atof(pieces[j + kNumResponses].c_str());
+        predictor_(i, j) =  atof(pieces[j + kNumResponses].c_str());
       }
     }
   }
 
-  Matrix initial_parameters(int start) const { return initial_parameters_.row(start); }
+  Matrix initial_parameters(int start) const { return initial_parameters_.row(start); }  // NOLINT
   Matrix final_parameters() const  { return final_parameters_; }
   Matrix predictor()        const { return predictor_;         }
   Matrix response()         const { return response_;          }
@@ -287,7 +304,7 @@ NIST_END
 NIST_BEGIN(Gauss)
   b[0] * exp(-b[1] * x) +
   b[2] * exp(-pow((x - b[3])/b[4], 2)) +
-  b[5] * exp(-pow((x - b[6])/b[7],2))
+  b[5] * exp(-pow((x - b[6])/b[7], 2))
 NIST_END
 
 // y = b1*exp(-b2*x) + b3*exp(-b4*x) + b5*exp(-b6*x)  +  e
@@ -331,7 +348,7 @@ NIST_END
 
 // y = b1 * (1-(1+b2*x/2)**(-2))  +  e
 NIST_BEGIN(Misra1b)
-  b[0] * (T(1.0) - T(1.0)/ ((T(1.0) + b[1] * x / 2.0) * (T(1.0) + b[1] * x / 2.0)))
+  b[0] * (T(1.0) - T(1.0)/ ((T(1.0) + b[1] * x / 2.0) * (T(1.0) + b[1] * x / 2.0)))  // NOLINT
 NIST_END
 
 // y = b1 * (1-(1+2*b2*x)**(-.5))  +  e
@@ -403,8 +420,13 @@ struct Nelson {
   double y_;
 };
 
+static void SetNumericDiffOptions(ceres::NumericDiffOptions* options) {
+  options->max_num_ridders_extrapolations = FLAGS_ridders_extrapolations;
+  options->ridders_relative_initial_step_size = FLAGS_ridders_step_size;
+}
+
 template <typename Model, int num_residuals, int num_parameters>
-int RegressionDriver(const std::string& filename,
+int RegressionDriver(const string& filename,
                      const ceres::Solver::Options& options) {
   NISTProblem nist_problem(FLAGS_nist_data_dir + filename);
   CHECK_EQ(num_residuals, nist_problem.response_size());
@@ -424,12 +446,45 @@ int RegressionDriver(const std::string& filename,
 
     ceres::Problem problem;
     for (int i = 0; i < nist_problem.num_observations(); ++i) {
-      problem.AddResidualBlock(
-          new ceres::AutoDiffCostFunction<Model, num_residuals, num_parameters>(
-              new Model(predictor.data() + nist_problem.predictor_size() * i,
-                        response.data() + nist_problem.response_size() * i)),
-          NULL,
-          initial_parameters.data());
+      Model* model = new Model(
+          predictor.data() + nist_problem.predictor_size() * i,
+          response.data() + nist_problem.response_size() * i);
+      ceres::CostFunction* cost_function = NULL;
+      if (FLAGS_use_numeric_diff) {
+        ceres::NumericDiffOptions options;
+        SetNumericDiffOptions(&options);
+        if (FLAGS_numeric_diff_method == "central") {
+          cost_function = new NumericDiffCostFunction<Model,
+                                                      ceres::CENTRAL,
+                                                      num_residuals,
+                                                      num_parameters>(
+              model, ceres::TAKE_OWNERSHIP, num_residuals, options);
+        } else if (FLAGS_numeric_diff_method == "forward") {
+          cost_function = new NumericDiffCostFunction<Model,
+                                                      ceres::FORWARD,
+                                                      num_residuals,
+                                                      num_parameters>(
+              model, ceres::TAKE_OWNERSHIP, num_residuals, options);
+        } else if (FLAGS_numeric_diff_method == "ridders") {
+          cost_function = new NumericDiffCostFunction<Model,
+                                                      ceres::RIDDERS,
+                                                      num_residuals,
+                                                      num_parameters>(
+              model, ceres::TAKE_OWNERSHIP, num_residuals, options);
+        } else {
+          LOG(ERROR) << "Invalid numeric diff method specified";
+          return 0;
+        }
+      } else {
+         cost_function =
+             new ceres::AutoDiffCostFunction<Model,
+                                             num_residuals,
+                                             num_parameters>(model);
+      }
+
+      problem.AddResidualBlock(cost_function,
+                               NULL,
+                               initial_parameters.data());
     }
 
     ceres::Solver::Summary summary;
@@ -518,7 +573,7 @@ void SolveNISTProblems() {
   ceres::Solver::Options options;
   SetMinimizerOptions(&options);
 
-  std::cout << "Lower Difficulty\n";
+  cout << "Lower Difficulty\n";
   int easy_success = 0;
   easy_success += RegressionDriver<Misra1a,  1, 2>("Misra1a.dat",  options);
   easy_success += RegressionDriver<Chwirut,  1, 3>("Chwirut1.dat", options);
@@ -529,7 +584,7 @@ void SolveNISTProblems() {
   easy_success += RegressionDriver<DanWood,  1, 2>("DanWood.dat",  options);
   easy_success += RegressionDriver<Misra1b,  1, 2>("Misra1b.dat",  options);
 
-  std::cout << "\nMedium Difficulty\n";
+  cout << "\nMedium Difficulty\n";
   int medium_success = 0;
   medium_success += RegressionDriver<Kirby2,   1, 5>("Kirby2.dat",   options);
   medium_success += RegressionDriver<Hahn1,    1, 7>("Hahn1.dat",    options);
@@ -543,7 +598,7 @@ void SolveNISTProblems() {
   medium_success += RegressionDriver<Roszman1, 1, 4>("Roszman1.dat", options);
   medium_success += RegressionDriver<ENSO,     1, 9>("ENSO.dat",     options);
 
-  std::cout << "\nHigher Difficulty\n";
+  cout << "\nHigher Difficulty\n";
   int hard_success = 0;
   hard_success += RegressionDriver<MGH09,    1, 4>("MGH09.dat",    options);
   hard_success += RegressionDriver<Thurber,  1, 7>("Thurber.dat",  options);
@@ -555,11 +610,12 @@ void SolveNISTProblems() {
   hard_success += RegressionDriver<Rat43,    1, 4>("Rat43.dat",    options);
   hard_success += RegressionDriver<Bennet5,  1, 3>("Bennett5.dat", options);
 
-  std::cout << "\n";
-  std::cout << "Easy    : " << easy_success << "/16\n";
-  std::cout << "Medium  : " << medium_success << "/22\n";
-  std::cout << "Hard    : " << hard_success << "/16\n";
-  std::cout << "Total   : " << easy_success + medium_success + hard_success << "/54\n";
+  cout << "\n";
+  cout << "Easy    : " << easy_success << "/16\n";
+  cout << "Medium  : " << medium_success << "/22\n";
+  cout << "Hard    : " << hard_success << "/16\n";
+  cout << "Total   : "
+       << easy_success + medium_success + hard_success << "/54\n";
 }
 
 }  // namespace examples
@@ -570,4 +626,4 @@ int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
   ceres::examples::SolveNISTProblems();
   return 0;
-};
+}

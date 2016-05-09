@@ -7,6 +7,8 @@
 #ifndef OPENMVG_SFM_REPORT_HPP
 #define OPENMVG_SFM_REPORT_HPP
 
+#include "openMVG/sfm/sfm_data.hpp"
+
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/htmlDoc/htmlDoc.hpp"
 #include "third_party/histogram/histogram.hpp"
@@ -15,7 +17,7 @@
 namespace openMVG {
 namespace sfm {
 
-static bool Generate_SfM_Report
+inline bool Generate_SfM_Report
 (
   const SfM_Data & sfm_data,
   const std::string & htmlFilename
@@ -24,22 +26,18 @@ static bool Generate_SfM_Report
   // Compute mean,max,median residual values per View
   IndexT residualCount = 0;
   Hash_Map< IndexT, std::vector<double> > residuals_per_view;
-  for (Landmarks::const_iterator iterTracks = sfm_data.GetLandmarks().begin();
-    iterTracks != sfm_data.GetLandmarks().end();
-    ++iterTracks
-  )
+  for ( const auto & iterTracks : sfm_data.GetLandmarks() )
   {
-    const Observations & obs = iterTracks->second.obs;
-    for (Observations::const_iterator itObs = obs.begin();
-      itObs != obs.end(); ++itObs)
+    const Observations & obs = iterTracks.second.obs;
+    for ( const auto & itObs : obs ) 
     {
-      const View * view = sfm_data.GetViews().at(itObs->first).get();
+      const View * view = sfm_data.GetViews().at(itObs.first).get();
       const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view);
       const cameras::IntrinsicBase * intrinsic = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       // Use absolute values
-      const Vec2 residual = intrinsic->residual(pose, iterTracks->second.X, itObs->second.x).array().abs();
-      residuals_per_view[itObs->first].push_back(residual(0));
-      residuals_per_view[itObs->first].push_back(residual(1));
+      const Vec2 residual = intrinsic->residual(pose, iterTracks.second.X, itObs.second.x).array().abs();
+      residuals_per_view[itObs.first].push_back(residual(0));
+      residuals_per_view[itObs.first].push_back(residual(1));
       ++residualCount;
     }
   }
@@ -81,11 +79,9 @@ static bool Generate_SfM_Report
     << sRowEnd;
   htmlDocStream.pushInfo( os.str() );
 
-  for (Views::const_iterator iterV = sfm_data.GetViews().begin();
-    iterV != sfm_data.GetViews().end();
-    ++iterV)
+  for (const auto & iterV : sfm_data.GetViews() )
   {
-    const View * v = iterV->second.get();
+    const View * v = iterV.second.get();
     const IndexT id_view = v->id_view;
 
     os.str("");

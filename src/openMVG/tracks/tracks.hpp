@@ -37,6 +37,7 @@
 #include "openMVG/tracks/flat_pair_map.hpp"
 
 #include <algorithm>
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <memory>
@@ -51,15 +52,15 @@ namespace tracks  {
 
 // Data structure to store a track: collection of {ImageId,FeatureId}
 //  The corresponding image points with their imageId and FeatureId.
-typedef std::map<size_t,size_t> submapTrack;
+typedef std::map<uint32_t,uint32_t> submapTrack;
 // A track is a collection of {trackId, submapTrack}
 typedef std::map< size_t, submapTrack > STLMAPTracks;
 
 struct TracksBuilder
 {
-  typedef std::pair<size_t, size_t> indexedFeaturePair;
+  typedef std::pair<uint32_t, uint32_t>indexedFeaturePair;
 
-  flat_pair_map<indexedFeaturePair, unsigned int> map_node_to_index;
+  flat_pair_map<indexedFeaturePair, uint32_t> map_node_to_index;
   UnionFind uf_tree;
 
   /// Build tracks for a given series of pairWise matches
@@ -70,19 +71,17 @@ struct TracksBuilder
     typedef std::set<indexedFeaturePair> SetIndexedPair;
     SetIndexedPair allFeatures;
     // For each couple of images list the used features
-    for (PairWiseMatches::const_iterator iter = map_pair_wise_matches.begin();
-      iter != map_pair_wise_matches.end();
-      ++iter)
+    for ( const auto & iter : map_pair_wise_matches )
     {
-      const size_t & I = iter->first.first;
-      const size_t & J = iter->first.second;
-      const std::vector<IndMatch> & vec_FilteredMatches = iter->second;
+      const auto & I = iter.first.first;
+      const auto & J = iter.first.second;
+      const std::vector<IndMatch> & vec_FilteredMatches = iter.second;
 
       // Retrieve all shared features and add them to a set
-      for( size_t k = 0; k < vec_FilteredMatches.size(); ++k)
+      for( const auto & cur_filtered_match : vec_FilteredMatches )
       {
-        allFeatures.emplace(I,vec_FilteredMatches[k]._i);
-        allFeatures.emplace(J,vec_FilteredMatches[k]._j);
+        allFeatures.emplace(I,cur_filtered_match.i_);
+        allFeatures.emplace(J,cur_filtered_match.j_);
       }
     }
 
@@ -104,17 +103,15 @@ struct TracksBuilder
     uf_tree.InitSets(map_node_to_index.size());
 
     // 4. Union of the matched features corresponding UF tree sets
-    for (PairWiseMatches::const_iterator iter = map_pair_wise_matches.begin();
-      iter != map_pair_wise_matches.end();
-      ++iter)
+    for ( const auto & iter : map_pair_wise_matches )
     {
-      const auto & I = iter->first.first;
-      const auto & J = iter->first.second;
-      const std::vector<IndMatch> & vec_FilteredMatches = iter->second;
+      const auto & I = iter.first.first;
+      const auto & J = iter.first.second;
+      const std::vector<IndMatch> & vec_FilteredMatches = iter.second;
       for (const IndMatch & match : vec_FilteredMatches)
       {
-        const indexedFeaturePair pairI(I, match._i);
-        const indexedFeaturePair pairJ(J, match._j);
+        const indexedFeaturePair pairI(I, match.i_);
+        const indexedFeaturePair pairJ(J, match.j_);
         // Link feature correspondences to the corresponding containing sets.
         uf_tree.Union(map_node_to_index[pairI], map_node_to_index[pairJ]);
       }
@@ -178,11 +175,7 @@ struct TracksBuilder
   /// Return the number of connected set in the UnionFind structure (tree forest)
   size_t NbTracks() const
   {
-    std::set<unsigned int> parent_id;
-    for (const unsigned int & id : uf_tree.m_cc_parent)
-    {
-      parent_id.insert(id);
-    }
+    std::set<unsigned int> parent_id(uf_tree.m_cc_parent.begin(), uf_tree.m_cc_parent.end());
     // Erase the "special marker" that depicted rejected tracks
     parent_id.erase(std::numeric_limits<unsigned int>::max());
     return parent_id.size();
@@ -220,61 +213,64 @@ struct TracksUtilsMap
    * @param[in] map_tracksIn: all tracks of the scene
    * @param[out] map_tracksOut: output with only the common tracks
    */
-  static bool GetTracksInImages(
+  static bool GetTracksInImages
+  (
     const std::set<size_t> & set_imageIndex,
     const STLMAPTracks & map_tracksIn,
-    STLMAPTracks & map_tracksOut)
+    STLMAPTracks & map_tracksOut
+  )
   {
     map_tracksOut.clear();
 
     // Go along the tracks
-    for (STLMAPTracks::const_iterator iterT = map_tracksIn.begin();
-      iterT != map_tracksIn.end(); ++iterT)
+    for ( const auto & iterT : map_tracksIn )
     {
       // Look if the track contains the provided view index & save the point ids
       submapTrack map_temp;
       bool bTest = true;
-      for (std::set<size_t>::const_iterator iterIndex = set_imageIndex.begin();
+      for (auto iterIndex = set_imageIndex.begin();
         iterIndex != set_imageIndex.end() && bTest; ++iterIndex)
       {
-        submapTrack::const_iterator iterSearch = iterT->second.find(*iterIndex);
-        if (iterSearch != iterT->second.end())
+        auto iterSearch = iterT.second.find(*iterIndex);
+        if (iterSearch != iterT.second.end())
           map_temp[iterSearch->first] = iterSearch->second;
         else
           bTest = false;
       }
 
       if (!map_temp.empty() && map_temp.size() == set_imageIndex.size())
-        map_tracksOut[iterT->first] = std::move(map_temp);
+        map_tracksOut[iterT.first] = std::move(map_temp);
     }
     return !map_tracksOut.empty();
   }
 
   /// Return the tracksId as a set (sorted increasing)
-  static void GetTracksIdVector(
+  static void GetTracksIdVector
+  (
     const STLMAPTracks & map_tracks,
-    std::set<size_t> * set_tracksIds)
+    std::set<size_t> * set_tracksIds
+  )
   {
     set_tracksIds->clear();
-    for (STLMAPTracks::const_iterator iterT = map_tracks.begin();
-      iterT != map_tracks.end(); ++iterT)
+    for ( const auto & iterT : map_tracks )
     {
-      set_tracksIds->insert(iterT->first);
+      set_tracksIds->insert(iterT.first);
     }
   }
 
   /// Get feature index PerView and TrackId
-  static bool GetFeatIndexPerViewAndTrackId(
+  static bool GetFeatIndexPerViewAndTrackId
+  (
     const STLMAPTracks & map_tracks,
     const std::set<size_t> & set_trackId,
     size_t nImageIndex,
-    std::vector<size_t> * pvec_featIndex)
+    std::vector<size_t> * pvec_featIndex
+  )
   {
-    for (STLMAPTracks::const_iterator iterT = map_tracks.begin();
-      iterT != map_tracks.end(); ++iterT)
+    for (const size_t & trackId: set_trackId)
     {
-      const size_t trackId = iterT->first;
-      if (set_trackId.find(trackId) != set_trackId.end())
+      STLMAPTracks::const_iterator iterT = map_tracks.find(trackId);
+      if (iterT != map_tracks.end())
       {
         //try to find imageIndex
         const submapTrack & map_ref = iterT->second;
@@ -293,7 +289,7 @@ struct TracksUtilsMap
     size_t id;
     FunctorMapFirstEqual(size_t val):id(val){};
     bool operator()(const std::pair<size_t, submapTrack > & val) {
-      return ( id == val.first);
+      return (id == val.first);
     }
   };
 
@@ -310,18 +306,21 @@ struct TracksUtilsMap
    * @warning The input tracks must be composed of only two images index.
    * @warning Image index are considered sorted (increasing order).
    */
-  static void TracksToIndexedMatches(const STLMAPTracks & map_tracks,
+  static void TracksToIndexedMatches
+  (
+    const STLMAPTracks & map_tracks,
     const std::vector<IndexT> & vec_filterIndex,
-    std::vector<IndMatch> * pvec_index)
+    std::vector<IndMatch> * pvec_index
+  )
   {
 
     std::vector<IndMatch> & vec_indexref = *pvec_index;
     vec_indexref.clear();
-    for (size_t i = 0; i < vec_filterIndex.size(); ++i)
+    for ( const auto & filter_index : vec_filterIndex )
     {
       // Retrieve the track information from the current index i.
-      STLMAPTracks::const_iterator itF =
-        find_if(map_tracks.begin(), map_tracks.end(), FunctorMapFirstEqual(vec_filterIndex[i]));
+      auto itF =
+        find_if(map_tracks.begin(), map_tracks.end(), FunctorMapFirstEqual( filter_index ) ) ;
       // The current track.
       const submapTrack & map_ref = itF->second;
 
@@ -335,13 +334,15 @@ struct TracksUtilsMap
   }
 
   /// Return the occurrence of tracks length.
-  static void TracksLength(const STLMAPTracks & map_tracks,
-    std::map<size_t, size_t> & map_Occurence_TrackLength)
+  static void TracksLength
+  (
+    const STLMAPTracks & map_tracks,
+    std::map<size_t, size_t> & map_Occurence_TrackLength
+  )
   {
-    for (STLMAPTracks::const_iterator iterT = map_tracks.begin();
-      iterT != map_tracks.end(); ++iterT)
+    for ( const auto & iterT : map_tracks )
     {
-      const size_t trLength = iterT->second.size();
+      const size_t trLength = iterT.second.size();
       if (map_Occurence_TrackLength.end() ==
         map_Occurence_TrackLength.find(trLength))
       {
@@ -355,18 +356,18 @@ struct TracksUtilsMap
   }
 
   /// Return a set containing the image Id considered in the tracks container.
-  static void ImageIdInTracks(const STLMAPTracks & map_tracks,
-    std::set<size_t> & set_imagesId)
+  static void ImageIdInTracks
+  (
+    const STLMAPTracks & map_tracks,
+    std::set<size_t> & set_imagesId
+  )
   {
-    for (STLMAPTracks::const_iterator iterT = map_tracks.begin();
-      iterT != map_tracks.end(); ++iterT)
+    for ( const auto & iterT : map_tracks )
     {
-      const submapTrack & map_ref = iterT->second;
-      for (submapTrack::const_iterator iter = map_ref.begin();
-        iter != map_ref.end();
-        ++iter)
+      const submapTrack & map_ref = iterT.second;
+      for ( const auto & iter : map_ref )
       {
-        set_imagesId.insert(iter->first);
+        set_imagesId.insert(iter.first);
       }
     }
   }

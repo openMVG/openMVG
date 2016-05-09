@@ -64,7 +64,7 @@ struct SmallScaleError
   (
     double weight = 1.0
   )
-      : weight_(weight)
+  : weight_(weight)
   {}
 
   template <typename T>
@@ -83,83 +83,91 @@ struct SmallScaleError
 
 bool solve_translations_problem_softl1
 (
-  const std::vector<openMVG::relativeInfo > & vec_initial_estimates,
-  const bool b_translation_triplets,
-  const int nb_poses,
+  const std::vector< openMVG::RelativeInfo_Vec > & vec_relative_group_estimates,
   std::vector<Eigen::Vector3d> & translations,
   const double d_l1_loss_threshold
 )
 {
-  ceres::Problem problem;
+  //-- Count:
+  //- #poses are used by the relative position estimates
+  //- #relative estimates we will use
 
-  // Build the parameters arrays:
-  // - camera translation
-  // - relative translation group scales
-  // - relative rotations
-
-  std::vector<double> vec_translations(3*nb_poses, 1.0);
-  const unsigned nb_scales = vec_initial_estimates.size() / (b_translation_triplets ? 3 : 1);
-  std::vector<double> vec_scales(nb_scales, 1.0);
-
-  if (!b_translation_triplets)
+  std::set<unsigned int> count_set;
+  unsigned int relative_info_count = 0;
+  for (const openMVG::RelativeInfo_Vec & iter : vec_relative_group_estimates)
   {
-    // use random initialization, since using only single bearing vector results
-    //  in a is less conditionned system.
-    for (int i=0; i<nb_scales; ++i) {
-      vec_scales[i] = (double)rand() / RAND_MAX;
-    }
-
-    for (int i=0; i<3*nb_poses; ++i) {
-      vec_translations[i] = (double)rand() / RAND_MAX;
+    for (const relativeInfo & it_relative_motion : iter)
+    {
+      ++relative_info_count;
+      count_set.insert(it_relative_motion.first.first);
+      count_set.insert(it_relative_motion.first.second);
     }
   }
+  const IndexT nb_poses = count_set.size();
 
-  // Relative rotations array
-  std::vector<double> vec_relative_rotations(vec_initial_estimates.size()*3, 0.0);
-  size_t cpt = 0;
-  for (const openMVG::relativeInfo & info : vec_initial_estimates)
+  //--
+  // Build the parameters arrays:
+  //--
+  // - camera translations
+  // - relative translation scales (one per group)
+  // - relative rotations
+
+  std::vector<double> vec_translations(relative_info_count*3, 1.0);
+  const unsigned nb_scales = vec_relative_group_estimates.size();
+  std::vector<double> vec_scales(nb_scales, 1.0);
+
+  // Setup the relative rotations array (angle axis parametrization)
+  std::vector<double> vec_relative_rotations(relative_info_count*3, 0.0);
+  unsigned int cpt = 0;
+  for (const openMVG::RelativeInfo_Vec & iter : vec_relative_group_estimates)
   {
-    ceres::RotationMatrixToAngleAxis(
-      (const double*)info.second.first.data(),
-      &vec_relative_rotations[cpt]);
-    cpt += 3;
+    for (const relativeInfo & info : iter)
+    {
+      ceres::RotationMatrixToAngleAxis(
+        (const double*)info.second.first.data(),
+        &vec_relative_rotations[cpt]);
+      cpt += 3;
+    }
   }
 
   ceres::LossFunction * loss =
     (d_l1_loss_threshold < 0) ? nullptr : new ceres::SoftLOneLoss(d_l1_loss_threshold);
 
-  // Add constraints to the minimization
+  // Add constraints to the minimization problem
+  ceres::Problem problem;
   //
-  // A. Add cost functor from camera translation to the relative informations
+  // A. Add cost functors:
   cpt = 0;
   IndexT scale_idx = 0;
-  for (const openMVG::relativeInfo & info : vec_initial_estimates)
+  for (const openMVG::RelativeInfo_Vec & iter : vec_relative_group_estimates)
   {
-    const Pair & ids = info.first;
-    const IndexT I = ids.first;
-    const IndexT J = ids.second;
-    const Vec3 t_ij = info.second.second;
+    for (const relativeInfo & info : iter)
+    {
+      const Pair & ids = info.first;
+      const IndexT I = ids.first;
+      const IndexT J = ids.second;
+      const Vec3 t_ij = info.second.second;
 
-    // Each Residual block takes 2 camera translations & the relative rotation & a scale
-    // and outputs a 3 dimensional residual.
-    ceres::CostFunction* cost_function =
-        new ceres::AutoDiffCostFunction<RelativeTranslationError, 3, 3, 3, 3,1>(
-            new RelativeTranslationError(t_ij(0), t_ij(1), t_ij(2)));
-    problem.AddResidualBlock(
-      cost_function,
-       loss,
-       &vec_translations[I*3],
-       &vec_translations[J*3],
-       &vec_relative_rotations[cpt*3],
-       &vec_scales[scale_idx]);
-    // the relative rotation is set as constant
-    problem.SetParameterBlockConstant(&vec_relative_rotations[cpt*3]);
-    if (cpt % (b_translation_triplets ? 3 : 1) == 0 && cpt != 0)
-      scale_idx += 1;
-    ++cpt;
+      // Each Residual block takes 2 camera translations & the relative rotation & a scale
+      // and outputs a 3 dimensional residual.
+      ceres::CostFunction* cost_function =
+          new ceres::AutoDiffCostFunction<RelativeTranslationError, 3, 3, 3, 3,1>(
+              new RelativeTranslationError(t_ij(0), t_ij(1), t_ij(2)));
+      problem.AddResidualBlock(
+        cost_function,
+        loss,
+        &vec_translations[I*3],
+        &vec_translations[J*3],
+        &vec_relative_rotations[cpt],
+        &vec_scales[scale_idx]);
+      // the relative rotation is set as constant
+      problem.SetParameterBlockConstant(&vec_relative_rotations[cpt]);
+      cpt+=3;
+    }
+    ++scale_idx; // One scale per relative_motion group
   }
 
-  // B. Constraint the scale factors:
+  // B. Add constraint over the scale factors:
   //  Prefer scale > 1, since a trivial solution is translations = {0,...,0}).
   for (unsigned i = 0; i < nb_scales; ++i)
   {
@@ -176,10 +184,19 @@ bool solve_translations_problem_softl1
   // Solve
   ceres::Solver::Options options;
   options.minimizer_progress_to_stdout = false;
-  if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE) ||
-      ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE) ||
-      ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+  if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
   {
+    options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
+    options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+  }
+  else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
+  {
+    options.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
+    options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+  }
+  else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+  {
+    options.sparse_linear_algebra_library_type = ceres::EIGEN_SPARSE;
     options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
   }
   else
@@ -205,7 +222,7 @@ bool solve_translations_problem_softl1
   // Fill the global translations array
   translations.resize(nb_poses);
   cpt = 0;
-  for (unsigned i = 0; i < nb_poses; ++i, cpt+=3)
+  for (unsigned int i = 0; i < nb_poses; ++i, cpt+=3)
   {
     translations[i] << vec_translations[cpt], vec_translations[cpt+1], vec_translations[cpt+2];
   }

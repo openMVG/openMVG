@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2012 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -179,7 +179,7 @@ class LineSearch {
     // the next candidate step size across all iterations.
     double polynomial_minimization_time_in_seconds;
     double total_time_in_seconds;
-    string error;
+    std::string error;
   };
 
   explicit LineSearch(const LineSearch::Options& options);
@@ -187,7 +187,7 @@ class LineSearch {
 
   static LineSearch* Create(const LineSearchType line_search_type,
                             const LineSearch::Options& options,
-                            string* error);
+                            std::string* error);
 
   // Perform the line search.
   //

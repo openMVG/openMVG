@@ -15,7 +15,7 @@ Users
     Tango`_.
 
 * `Willow Garage`_ uses Ceres to solve `SLAM`_ problems.
-* `Southwest Research Insitute <http://www.swri.org/>`_ uses Ceres for
+* `Southwest Research Institute <http://www.swri.org/>`_ uses Ceres for
   `calibrating robot-camera systems`_.
 * `Blender <http://www.blender.org>`_ uses Ceres for `planar
   tracking`_ and `bundle adjustment`_.
@@ -29,6 +29,29 @@ Users
 * `Obvious Engineering <http://obviousengine.com/>`_ uses Ceres for
   bundle adjustment for their 3D photography app `Seene
   <http://seene.co/>`_.
+* The `Autonomous Systems Lab <http://www.asl.ethz.ch/>`_ at ETH
+  Zurich uses Ceres for
+
+  * Camera and Camera/IMU Calibration.
+  * Large scale optimization of visual, inertial, gps and
+    wheel-odometry data for long term autonomy.
+
+* `OpenPTrack <http://openptrack.org/>`_ uses Ceres for camera
+  calibration.
+* The `Intelligent Autonomous System Lab <http://robotics.dei.unipd.it/>`_
+  at University of Padova, Italy, uses Ceres for
+
+  * Camera/depth sensors network calibration.
+  * Depth sensor distortion map estimation.
+
+* `Theia <http://cs.ucsb.edu/~cmsweeney/theia>`_ is an open source
+  Structure from Motion library that uses Ceres for `bundle adjustment`_
+  and camera pose estimation.
+
+* The `Applied Research Laboratory <https://www.arl.psu.edu/>`_ at
+  Pennsylvania State University uses in their synthetic aperture Sonar
+  beamforming engine, called ASASIN , for estimating platform
+  kinematics.
 
 .. _bundle adjustment: http://en.wikipedia.org/wiki/Structure_from_motion
 .. _Street View: http://youtu.be/z00ORu4bU-A
@@ -42,29 +65,3 @@ Users
 .. _calibrating robot-camera systems:
    http://rosindustrial.org/news/2014/9/24/industrial-calibration-library-update-and-presentation
 .. _skinned control meshes: http://research.microsoft.com/en-us/projects/handmodelingfrommonoculardepth/
-
-
-Publications
-============
-
-Ceres Solver is used (and cited) in the following publications:
-
-#. **User-Specific Hand Modeling from Monocular Depth
-   Sequences**, J. Taylor, R. Stebbing, V. Ramakrishna, C. Keskin, J. Shotton, S. Izadi, A. Hertzmann,
-   and A. Fitzgibbon, CVPR 2014.
-
-#. **Global Fusion of Relative Motions for Robust, Accurate and
-   Scalable Structure from Motion**, P. Moulon, P. Monasse
-   and R. Marlet, ICCV 2013.
-
-#. **Recurrent neural networks for voice activity
-   detection**, T. Hughes and K. Mierle, ICASSP 2013.
-
-#. **Street View Motion-from-Structure-from-Motion**, B. Klingner, D. Martin
-   and J. Roseborough, ICCV 2013.
-
-#. **Adaptive Structure from Motion with a contrario model
-   estimation**, P. Moulon, P. Monasse and R. Marlet, ACCV 2012.
-
-#. **Visibility based preconditioning for bundle
-   adjustment**, A. Kushal and S. Agarwal, CVPR 2012.

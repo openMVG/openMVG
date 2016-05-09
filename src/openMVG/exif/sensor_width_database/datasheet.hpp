@@ -1,101 +1,88 @@
+// Copyright (c) 2013 Pierre Moulon, Bruno Duisit.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #ifndef DATASHEET_HPP
 #define DATASHEET_HPP
 
 #include "openMVG/stl/split.hpp"
-#include <iterator>
-#include <algorithm>
 
-// Database structure
+#include <algorithm>
+#include <string>
+
+// Database structure to store camera model and sensor size
 struct Datasheet
 {
   Datasheet()
   {}
 
-  Datasheet( const std::string& brand,
-             const std::string& model,
-             const double& sensorSize ):
-                  _brand(brand),
-                  _model(model),
-                  _sensorSize(sensorSize)
+  Datasheet
+  (
+    const std::string& model,
+    const double& sensorSize
+  ):
+    model_(model),
+    sensorSize_(sensorSize)
   {}
 
-  bool operator==(const Datasheet& ds) const
+  bool operator==(const Datasheet& rhs) const
   {
-    bool isEqual = false;
-    std::vector<std::string> vec_brand;
-    stl::split(ds._brand, " ", vec_brand);
-    std::string brandlower = _brand;
+    // Check if brand & model are equals or not
+    // Camera model is construct as the following:
+    // MAKER MODELNAME
+    // There is some point to care about for the comparison:
+    // since camera model can be formatted differently:
+    //  -> "KODAK Z612 ZOOM DIGITAL CAMERA" to "Kodak EasyShare Z612"
+    // - we use lower case comparison
+    // - we ensure that DIGIT based substring have a match
 
-    std::transform(brandlower.begin(), brandlower.end(),
-      brandlower.begin(), ::tolower);
+    std::string this_model = model_;
+    std::transform(this_model.begin(), this_model.end(), this_model.begin(), ::tolower);
+    std::string rhs_model = rhs.model_;
+    std::transform(rhs_model.begin(), rhs_model.end(), rhs_model.begin(), ::tolower);
 
-    for ( std::vector<std::string>::const_iterator iter_brand = vec_brand.begin();
-            iter_brand != vec_brand.end();
-            iter_brand++ )
+    // retrieve camera maker sustring [0->first space]
+    std::string this_maker( this_model );
+    this_maker = this_maker.substr( 0, this_maker.find( ' ' ) );
+    std::string rhs_maker( rhs_model );
+    rhs_maker = rhs_maker.substr( 0, rhs_maker.find( ' ' ) );
+
+    if (this_maker.compare(rhs_maker) == 0)
     {
-      std::string brandlower2 = *iter_brand;
-      std::transform(brandlower2.begin(), brandlower2.end(),
-        brandlower2.begin(), ::tolower);
-      //std::cout << brandlower << "\t" << brandlower2 << std::endl;
-      if ( brandlower.compare( brandlower2 ) == 0 )
+      // Search for digit substring and if there is a match
+
+      const bool has_digit =
+        std::find_if(rhs_model.begin(), rhs_model.end(), isdigit) != rhs_model.end();
+      if (!has_digit)
       {
-        std::vector<std::string> vec_model1;
-        stl::split(ds._model, " ", vec_model1);
-        std::vector<std::string> vec_model2;
-        stl::split(_model, " ", vec_model2);
-        bool isAllFind = true;
-        for ( std::vector<std::string>::const_iterator iter_model1 = vec_model1.begin();
-            iter_model1 != vec_model1.end();
-            iter_model1++ )
+        // If there is no digit compare the full model string
+        return (this_model.compare(rhs_model) == 0);
+      }
+      else
+      {
+        // Split the model string and ensure that the digit part is found
+        std::vector<std::string> vec_model_rhs;
+        stl::split(rhs_model, ' ', vec_model_rhs);
+        for (const std::string & rhs_sub_model : vec_model_rhs)
         {
-          bool hasDigit = false;
-          for(std::string::const_iterator c = (*iter_model1).begin(); c != (*iter_model1).end(); ++c )
+          // Check if we have a digit based part
+          const bool sub_has_digit =
+            std::find_if(rhs_sub_model.begin(), rhs_sub_model.end(), isdigit) != rhs_sub_model.end();
+          // Check that substring containing the camera digit model is corresponding
+          if (sub_has_digit && this_model.find(rhs_sub_model) != std::string::npos)
           {
-            if(isdigit(*c))
-            {
-              hasDigit = true;
-              break;
-            }
-          }
-          if ( hasDigit )
-          {
-            std::string modellower1 = *iter_model1;
-            for ( int index = 0; index < modellower1.length(); index++ )
-            {
-              modellower1[index] = tolower(modellower1[index]);
-            }
-            bool isFind = false;
-            for ( std::vector<std::string>::const_iterator iter_model2 = vec_model2.begin();
-                  iter_model2 != vec_model2.end();
-                  iter_model2++ )
-            {
-              std::string modellower2 = *iter_model2;
-              for ( int index = 0; index < modellower2.length(); index++ )
-              {
-                modellower2[index] = tolower(modellower2[index]);
-              }
-              if ( modellower2.compare( modellower1 ) == 0 )
-              {
-                isFind = true;
-              }
-            }
-            if ( !isFind )
-            {
-              isAllFind = false;
-              break;
-            }
+            return true; // substring that contains digit got a match
           }
         }
-        if ( isAllFind )
-          isEqual = true;
       }
     }
-    return isEqual;
+    return false;
   }
 
-  std::string _brand;
-  std::string _model;
-  double _sensorSize;
+  std::string model_;
+  double sensorSize_;
 };
 
 

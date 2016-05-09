@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2014 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,6 @@
 
 #include "ceres/casts.h"
 #include "ceres/compressed_row_sparse_matrix.h"
-#include "ceres/casts.h"
 #include "ceres/internal/eigen.h"
 #include "ceres/internal/scoped_ptr.h"
 #include "ceres/linear_least_squares_problems.h"
@@ -41,6 +40,9 @@
 
 namespace ceres {
 namespace internal {
+
+using std::copy;
+using std::vector;
 
 class DynamicCompressedRowSparseMatrixTest : public ::testing::Test {
  protected:
@@ -53,7 +55,7 @@ class DynamicCompressedRowSparseMatrixTest : public ::testing::Test {
     // Set this to some nonzero value to be sure.
     num_additional_elements = 13;
 
-    expected_num_nonzeros = num_rows * num_cols - min(num_rows, num_cols);
+    expected_num_nonzeros = num_rows * num_cols - std::min(num_rows, num_cols);
 
     InitialiseDenseReference();
     InitialiseSparseMatrixReferences();
@@ -82,8 +84,8 @@ class DynamicCompressedRowSparseMatrixTest : public ::testing::Test {
   }
 
   void InitialiseSparseMatrixReferences() {
-    std::vector<int> rows, cols;
-    std::vector<double> values;
+    vector<int> rows, cols;
+    vector<double> values;
     for (int i = 0; i < (num_rows * num_cols); ++i) {
       const int r = i / num_cols, c = i % num_cols;
       if (r != c) {
@@ -97,9 +99,9 @@ class DynamicCompressedRowSparseMatrixTest : public ::testing::Test {
     tsm.reset(new TripletSparseMatrix(num_rows,
                                       num_cols,
                                       expected_num_nonzeros));
-    std::copy(rows.begin(), rows.end(), tsm->mutable_rows());
-    std::copy(cols.begin(), cols.end(), tsm->mutable_cols());
-    std::copy(values.begin(), values.end(), tsm->mutable_values());
+    copy(rows.begin(), rows.end(), tsm->mutable_rows());
+    copy(cols.begin(), cols.end(), tsm->mutable_cols());
+    copy(values.begin(), values.end(), tsm->mutable_values());
     tsm->set_num_nonzeros(values.size());
 
     Matrix dense_from_tsm;

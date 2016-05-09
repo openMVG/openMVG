@@ -71,6 +71,8 @@ class Kernel {
   Kernel(const Mat &x1, const Mat &x2) : x1_(x1), x2_(x2) {}
   typedef SolverArg Solver;
   typedef ModelArg  Model;
+  typedef ErrorArg  ErrorT;
+
   /// The minimal number of point required for the model estimation
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   /// The number of models that the minimal solver could return.
@@ -90,7 +92,7 @@ class Kernel {
   size_t NumSamples() const {
     return x1_.cols();
   }
-  /// Compute a model on sampled point
+  /// Compute a model on sampled datum
   static void Solve(const Mat &x1, const Mat &x2, vector<Model> *models) {
     // By offering this, Kernel types can be passed to templates.
     Solver::Solve(x1, x2, models);

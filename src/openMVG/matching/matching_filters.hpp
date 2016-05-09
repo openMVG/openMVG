@@ -36,7 +36,7 @@ using namespace std;
   * \return void.
   */
 template <typename DataInputIterator>
-static void NNdistanceRatio
+inline void NNdistanceRatio
 (
   DataInputIterator first, // distance start
   DataInputIterator last,  // distance end
@@ -74,7 +74,7 @@ static void NNdistanceRatio
   * \return void.
   */
 // TODO
-static void SymmetricMatches(const vector<int> & vec_matches,
+inline void SymmetricMatches(const vector<int> & vec_matches,
   const vector<int> & vec_reversematches,
   int NN,
   vector<int> & vec_goodIndex)
@@ -104,7 +104,7 @@ static void SymmetricMatches(const vector<int> & vec_matches,
   * \return void.
   */
 template <typename Iterator, typename Type>
-static void IntersectMatches( Iterator aStart, Iterator aEnd,
+inline void IntersectMatches( Iterator aStart, Iterator aEnd,
                        Iterator bStart, Iterator bEnd,
                        vector<Type> & vec_out)
 {
@@ -125,7 +125,7 @@ enum eMatchFilter
   MATCHFILER_SYM_AND_NNDISTANCERATIO = MATCHFILTER_SYMMETRIC | MATCHFILTER_NNDISTANCERATIO
 };
 
-static void Filter( int NN,
+inline void Filter( int NN,
        const vector<int> & vec_Matches01,
        const vector<float> & vec_distance01,
        const vector<int> & vec_Matches10,
@@ -197,7 +197,7 @@ static void Filter( int NN,
   // Remove multi-index
   {
     std::sort(vec_outIndex.begin(), vec_outIndex.end());
-    std::vector<IndMatch>::iterator end = std::unique(vec_outIndex.begin(), vec_outIndex.end());
+    auto end = std::unique(vec_outIndex.begin(), vec_outIndex.end());
     if(end != vec_outIndex.end()) {
       vec_outIndex.erase(end, vec_outIndex.end());
     }

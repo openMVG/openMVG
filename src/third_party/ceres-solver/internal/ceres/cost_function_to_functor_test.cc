@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2013 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -29,12 +29,15 @@
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
 #include "ceres/cost_function_to_functor.h"
+#include "ceres/dynamic_autodiff_cost_function.h"
+#include "ceres/dynamic_cost_function_to_functor.h"
 #include "ceres/autodiff_cost_function.h"
 #include "gtest/gtest.h"
 
 namespace ceres {
 namespace internal {
 
+using std::vector;
 const double kTolerance = 1e-18;
 
 void ExpectCostFunctionsAreEqual(const CostFunction& cost_function,
@@ -109,7 +112,7 @@ void ExpectCostFunctionsAreEqual(const CostFunction& cost_function,
         << "jacobian : " << i << " "
         << jacobians[i] << " " << actual_jacobians[i];
   }
-};
+}
 
 struct OneParameterBlockFunctor {
  public:
@@ -241,6 +244,18 @@ struct TenParameterBlockFunctor {
   }
 };
 
+class DynamicTwoParameterBlockFunctor {
+ public:
+  template <typename T>
+  bool operator()(T const* const* parameters, T* residuals) const {
+    for (int i = 0; i < 2; ++i) {
+      residuals[0] = parameters[i][0] * parameters[i][0];
+      residuals[1] = parameters[i][1] * parameters[i][1];
+    }
+    return true;
+  }
+};
+
 #define TEST_BODY(NAME)                                                 \
   TEST(CostFunctionToFunctor, NAME) {                                   \
     scoped_ptr<CostFunction> cost_function(                             \
@@ -312,6 +327,24 @@ TEST(CostFunctionToFunctor, DynamicNumberOfResiduals) {
       new AutoDiffCostFunction<TwoParameterBlockFunctor, 2, 2, 2 >(
           new TwoParameterBlockFunctor));
   ExpectCostFunctionsAreEqual(*cost_function, *actual_cost_function);
+}
+
+TEST(CostFunctionToFunctor, DynamicCostFunctionToFunctor) {
+  DynamicAutoDiffCostFunction<DynamicTwoParameterBlockFunctor>*
+      actual_cost_function(
+      new DynamicAutoDiffCostFunction<DynamicTwoParameterBlockFunctor>(
+          new DynamicTwoParameterBlockFunctor));
+  actual_cost_function->AddParameterBlock(2);
+  actual_cost_function->AddParameterBlock(2);
+  actual_cost_function->SetNumResiduals(2);
+
+  DynamicAutoDiffCostFunction<DynamicCostFunctionToFunctor> cost_function(
+      new DynamicCostFunctionToFunctor(actual_cost_function));
+  cost_function.AddParameterBlock(2);
+  cost_function.AddParameterBlock(2);
+  cost_function.SetNumResiduals(2);
+
+  ExpectCostFunctionsAreEqual(cost_function, *actual_cost_function);
 }
 
 }  // namespace internal

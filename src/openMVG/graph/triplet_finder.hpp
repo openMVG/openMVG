@@ -16,49 +16,109 @@ using namespace lemon;
 #include <algorithm>
 #include <vector>
 
-namespace openMVG {
-namespace graph {
+namespace openMVG
+{
+namespace graph
+{
 
-/// Simple container for tuple of three value
-/// It is used to store the node id of triplets of a graph.
+/**
+* @brief Simple container for tuple of three value
+* @note It is used to store the node id of triplets of a graph.
+* @todo Why not using std::tuple ?
+*/
 struct Triplet
 {
-  Triplet(IndexT ii, IndexT jj, IndexT kk)
-    :i(ii), j(jj), k(kk)
-  { }
-  IndexT i,j,k;
 
-  bool contain(const std::pair<IndexT,IndexT> & edge) const
+  /**
+  * @brief Constructor
+  * @param ii First element of the triplet
+  * @param jj Second element of the triplet
+  * @param kk Third element of the triplet
+  */
+  Triplet( IndexT ii, IndexT jj, IndexT kk )
+    : i( ii ), j( jj ), k( kk )
+  { }
+
+  /**
+  * @brief Indicate if an edge contains one of the element of the triplet
+  * @param edge Edge to test
+  * @retval true if edge contains at least one of index of the triplet
+  * @retval false if edge contains none of the index of the triplet
+  */
+  bool contain( const std::pair<IndexT, IndexT> & edge ) const
   {
     const IndexT It = edge.first;
     const IndexT Jt = edge.second;
-    if ( (It == i || It == j || It == k ) &&
-         (Jt == i || Jt == j || Jt == k ) && It != Jt)
+    if ( ( It == i || It == j || It == k ) &&
+         ( Jt == i || Jt == j || Jt == k ) && It != Jt )
+    {
       return true;
+    }
     else
+    {
       return false;
+    }
   }
 
-  friend bool operator==(const Triplet& m1, const Triplet& m2)  {
-    return m1.contain(std::make_pair(m2.i, m2.j))
-     && m1.contain(std::make_pair(m2.i, m2.k));
+  /**
+  * @brief Indicate if triplet are the same
+  * @param m1 First triplet
+  * @param m2 Second triplet
+  * @retval true if triplets are the same
+  * @retval false if triplets are differents
+  */
+  friend bool operator==( const Triplet& m1, const Triplet& m2 )
+  {
+    return m1.contain( std::make_pair( m2.i, m2.j ) )
+           && m1.contain( std::make_pair( m2.i, m2.k ) );
   }
 
-  friend bool operator!=(const Triplet& m1, const Triplet& m2)  {
-    return !(m1 == m2);
+  /**
+  * @brief Indicate if triplet are differents
+  * @param m1 First triplet
+  * @param m2 Second triplet
+  * @retval true if triplets are differents
+  * @retval false if triplets are the same
+  */
+  friend bool operator!=( const Triplet& m1, const Triplet& m2 )
+  {
+    return !( m1 == m2 );
   }
 
-  friend std::ostream & operator<<(std::ostream & os, const Triplet & t)
+  /**
+  * @brief Stream operation
+  * @param os Stream in which triplet is written
+  * @param t Triplet to write
+  * @return stream after write operation
+  */
+  friend std::ostream & operator<<( std::ostream & os, const Triplet & t )
   {
     os << t.i << " " << t.j << " " << t.k << std::endl;
     return os;
   }
+
+  /// First index id
+  IndexT i;
+
+  /// Second index id
+  IndexT j;
+
+  /// Third index id
+  IndexT k;
+
 };
 
-/// Function that return all the triplets found in a graph
-/// vec_triplets must be empty.
+
+/**
+* @brief Function that return all the triplets found in a graph
+* @param g Input graph
+* @param[out] vec_triplets Output list of triplet found in the graph
+* @retval true If at least one triplet is found
+* @retval false If no triplet is found
+* @note vec_triplets must be empty.
+*/
 template<typename GraphT>
-bool List_Triplets(const GraphT & g, std::vector< Triplet > & vec_triplets)
+bool List_Triplets( const GraphT & g, std::vector< Triplet > & vec_triplets )
 {
   // Algorithm
   //
@@ -69,74 +129,89 @@ bool List_Triplets(const GraphT & g, std::vector< Triplet > & vec_triplets)
   //          Detected cycle of length 3
   //          Mark first edge as visited
 
+  /// Type of graph iterator
   typedef typename GraphT::OutArcIt OutArcIt;
+
+  /// Type of node iterator
   typedef typename GraphT::NodeIt NodeIterator;
+
+  /// Type for edge maps
   typedef typename GraphT::template EdgeMap<bool> BoolEdgeMap;
 
-  BoolEdgeMap map_edge(g, false); // Visited edge map
+  /// List of visited edge map
+  BoolEdgeMap map_edge( g, false ); // Visited edge map
 
   // For each nodes
-  for (NodeIterator itNode(g); itNode != INVALID; ++itNode)
+  for ( NodeIterator itNode( g ); itNode != INVALID; ++itNode )
   {
 
     // For each edges (list the not visited outgoing edges)
     std::vector<OutArcIt> vec_edges;
-    for (OutArcIt e(g, itNode); e!=INVALID; ++e)
+    for ( OutArcIt e( g, itNode ); e != INVALID; ++e )
     {
-      if (!map_edge[e]) // If not visited
-        vec_edges.push_back(e);
+      if ( !map_edge[e] ) // If not visited
+      {
+        vec_edges.push_back( e );
+      }
     }
 
     // For all tuples look of ends of edges are linked
-    while(vec_edges.size()>1)
+    while( vec_edges.size() > 1 )
     {
       OutArcIt itPrev = vec_edges[0]; // For all tuple (0,Inth)
-      for(size_t i=1; i < vec_edges.size(); ++i)
+      for( size_t i = 1; i < vec_edges.size(); ++i )
       {
         // Check if the extremity is linked
-        typename GraphT::Arc cycleEdge = findArc(g, g.target(itPrev), g.target(vec_edges[i]));
-        if (cycleEdge!= INVALID && !map_edge[cycleEdge])
+        typename GraphT::Arc cycleEdge = findArc( g, g.target( itPrev ), g.target( vec_edges[i] ) );
+        if ( cycleEdge != INVALID && !map_edge[cycleEdge] )
         {
           // Elementary cycle found (make value follow a monotonic ascending serie)
-          int triplet[3] = {
-            g.id(itNode),
-            g.id(g.target(itPrev)),
-            g.id(g.target(vec_edges[i]))};
-          std::sort(&triplet[0], &triplet[3]);
-          vec_triplets.push_back(Triplet(triplet[0],triplet[1],triplet[2]));
+          int triplet[3] =
+          {
+            g.id( itNode ),
+            g.id( g.target( itPrev ) ),
+            g.id( g.target( vec_edges[i] ) )
+          };
+          std::sort( &triplet[0], &triplet[3] );
+          vec_triplets.push_back( Triplet( triplet[0], triplet[1], triplet[2] ) );
         }
       }
       // Mark the current ref edge as visited
       map_edge[itPrev] = true;
       // remove head to list remaining tuples
-      vec_edges.erase(vec_edges.begin());
+      vec_edges.erase( vec_edges.begin() );
     }
   }
-  return (!vec_triplets.empty());
+  return ( !vec_triplets.empty() );
 }
 
-/// Return triplets contained in the graph build from IterablePairs
+
+/**
+* @brief Return triplets contained in the graph build from IterablePairs
+* @param pairs Graph pairs
+* @return List of triplet found in graph
+*/
 template <typename IterablePairs>
-static std::vector< graph::Triplet > tripletListing(
-  const IterablePairs & pairs)
+static std::vector< graph::Triplet > tripletListing
+(
+  const IterablePairs & pairs
+)
 {
   std::vector< graph::Triplet > vec_triplets;
 
-  indexedGraph putativeGraph(pairs);
+  indexedGraph putativeGraph( pairs );
 
-  graph::List_Triplets<indexedGraph::GraphT>(putativeGraph.g, vec_triplets);
+  graph::List_Triplets<indexedGraph::GraphT>( putativeGraph.g, vec_triplets );
 
   //Change triplets to ImageIds
-  for (size_t i = 0; i < vec_triplets.size(); ++i)
+  for ( auto & triplet : vec_triplets )
   {
-    graph::Triplet & triplet = vec_triplets[i];
-    IndexT I = triplet.i, J = triplet.j , K = triplet.k;
-    I = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.nodeFromId(I)];
-    J = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.nodeFromId(J)];
-    K = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.nodeFromId(K)];
+    const IndexT I = ( *putativeGraph.map_nodeMapIndex )[putativeGraph.g.nodeFromId( triplet.i )];
+    const IndexT J = ( *putativeGraph.map_nodeMapIndex )[putativeGraph.g.nodeFromId( triplet.j )];
+    const IndexT K = ( *putativeGraph.map_nodeMapIndex )[putativeGraph.g.nodeFromId( triplet.k )];
     IndexT triplet_[3] = { I, J, K };
-    std::sort(&triplet_[0], &triplet_[3]);
-    triplet = graph::Triplet(triplet_[0],triplet_[1],triplet_[2]);
+    std::sort( &triplet_[0], &triplet_[3] );
+    triplet = graph::Triplet( triplet_[0], triplet_[1], triplet_[2] );
   }
   return vec_triplets;
 }

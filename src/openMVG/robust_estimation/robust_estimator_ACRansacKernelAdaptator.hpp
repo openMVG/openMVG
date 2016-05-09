@@ -27,6 +27,8 @@
 //  by the generic ACRANSAC routine.
 //
 
+#include "openMVG/numeric/numeric.h"
+
 namespace openMVG {
 namespace robust{
 

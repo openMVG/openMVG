@@ -38,7 +38,7 @@ using namespace linearProgramming;
 //      Implementation by Pierre Moulon
 //
 
-static void EncodeTriangulation(
+inline void EncodeTriangulation(
   const std::vector<Mat34> & Pi, // Projection matrices
   const Mat2X & x_ij, // corresponding observations
   double gamma, // Start upper bound
@@ -89,35 +89,35 @@ struct Triangulation_L1_ConstraintBuilder
     const std::vector<Mat34> & vec_Pi,
     const Mat2X & x_ij)
   {
-    _vec_Pi = vec_Pi;
-    _x_ij = x_ij;
+    vec_Pi_ = vec_Pi;
+    x_ij_ = x_ij;
   }
 
   /// Setup constraints of the triangulation problem as a Linear program
   bool Build(double gamma, LP_Constraints & constraint)
   {
-    EncodeTriangulation(_vec_Pi, _x_ij,
+    EncodeTriangulation(vec_Pi_, x_ij_,
       gamma,
-      constraint._constraintMat,
-      constraint._Cst_objective);
+      constraint.constraint_mat_,
+      constraint.constraint_objective_);
     //-- Setup additional information about the Linear Program constraint
     // We look for 3 variables [X,Y,Z] with no bounds.
     // Constraint sign are all less or equal (<=)
-    constraint._nbParams = 3;
-    constraint._vec_bounds = std::vector< std::pair<double,double> >(1);
-    fill(constraint._vec_bounds.begin(),constraint._vec_bounds.end(),
+    constraint.nbParams_ = 3;
+    constraint.vec_bounds_ = std::vector< std::pair<double,double> >(1);
+    fill(constraint.vec_bounds_.begin(),constraint.vec_bounds_.end(),
       std::make_pair((double)-1e+30, (double)1e+30));
     // Setup constraint sign
-    constraint._vec_sign.resize(constraint._constraintMat.rows());
-    fill(constraint._vec_sign.begin(), constraint._vec_sign.end(),
+    constraint.vec_sign_.resize(constraint.constraint_mat_.rows());
+    fill(constraint.vec_sign_.begin(), constraint.vec_sign_.end(),
       LP_Constraints::LP_LESS_OR_EQUAL);
 
     return true;
   }
 
   //-- Data required for triangulation :
-  std::vector<Mat34> _vec_Pi;  // Projection matrix
-  Mat2X _x_ij;                 // 2d projection : xij = Pj*Xi
+  std::vector<Mat34> vec_Pi_;  // Projection matrix
+  Mat2X x_ij_;                 // 2d projection : xij = Pj*Xi
 };
 
 

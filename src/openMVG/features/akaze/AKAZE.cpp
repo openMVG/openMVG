@@ -192,8 +192,11 @@ void convert_scale(Image &src)
 }
 
 /// Constructor with input arguments
-AKAZE::AKAZE(const Image<unsigned char> & in, const AKAZEConfig & options):
-    options_(options)
+AKAZE::AKAZE
+(
+  const Image<unsigned char> & in,
+  const AKAZE::Params & options
+):options_(options)
 {
   in_ = in.GetMat().cast<float>() / 255.f;
   options_.fDesc_factor = std::max(6.f*sqrtf(2.f), options_.fDesc_factor);
@@ -276,7 +279,7 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
     for( int q = 0 ; q < options_.iNbSlicePerOctave ; ++q )
     {
       const float sigma_cur = Sigma( options_.fSigma0 , p , q , options_.iNbSlicePerOctave ) ;
-      const Image<float> & LDetHess = evolution_[options_.iNbOctave * p + q].Lhess;
+      const Image<float> & LDetHess = evolution_[options_.iNbSlicePerOctave * p + q].Lhess;
 
       // Check that the point is under the image limits for the descriptor computation
       const float borderLimit =

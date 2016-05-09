@@ -3,7 +3,7 @@
  * @brief Command line option parsing
  * @author Pascal Monasse
  * 
- * Copyright (c) 2012-2013 Pascal Monasse
+ * Copyright (c) 2012-2014 Pascal Monasse
  * All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -29,6 +29,10 @@
 #include <string>
 #include <sstream>
 #include <cassert>
+
+#ifdef _WIN32
+#pragma warning(disable:4290) // exception specification ignored...
+#endif
 
 /// Base class for option/switch
 class Option {
@@ -73,7 +77,7 @@ public:
     }
 };
 
-/// Option with an argument of type T. The type must be readable by operator>>
+/// Option with an argument of type T, which must be readable by operator>>
 template <class T>
 class OptionField : public Option {
 public:
@@ -108,9 +112,10 @@ public:
         }
         return false;
     }
+    /// Decode the string as template type T
     bool read_param(const std::string& param) {
-        std::stringstream str(param);
-        return !((str >> _field).fail() || !str.eof());
+        std::stringstream str(param); char unused;
+        return !((str >> _field).fail() || !(str>>unused).fail());
     }
     /// Copy
     Option* clone() const {
@@ -121,7 +126,7 @@ private:
 };
 
 /// Template specialization to be able to take parameter including space.
-/// Generic method would do >>_field (stops at space) and test eof (false).
+/// Generic method would do >>_field (stops at space) and signal unused chars.
 template <>
 inline bool OptionField<std::string>::read_param(const std::string& param) {
     _field = param;
@@ -174,7 +179,7 @@ public:
                     break;
                 }
             }
-            if(! found) { // A single dash and a negative number are not options
+            if(! found) { // A negative number is not an option
                 if(std::string(argv[i]).size()>1 && argv[i][0] == '-') {
                     std::istringstream str(argv[i]);
                     float v;

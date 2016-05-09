@@ -9,7 +9,7 @@
 // Test summary:
 //-----------------
 // - Create features points and matching from the synthetic dataset
-// - Init a SfM_Data scene VIew and Intrinsic from a synthetic dataset
+// - Init a SfM_Data scene View and Intrinsic from a synthetic dataset
 // - Perform Sequential SfM on the data
 // - Assert that:
 //   - mean residual error is below the gaussian noise added to observation
@@ -66,11 +66,15 @@ TEST(SEQUENTIAL_SFM, Known_Intrinsics) {
   sfmEngine.SetFeaturesProvider(feats_provider.get());
   sfmEngine.SetMatchesProvider(matches_provider.get());
 
-  // Set an initial pair
-  sfmEngine.setInitialPair(Pair(0,1));
+  // Configure reconstruction parameters (intrinsic parameters are held constant)
+  sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
 
-  // Configure reconstruction parameters
-  sfmEngine.Set_bFixedIntrinsics(true);
+  // Will use view ids (0,1) as the initial pair
+  Views::const_iterator iter_view_0 = sfm_data_2.GetViews().begin();
+  Views::const_iterator iter_view_1 = sfm_data_2.GetViews().begin();
+  std::advance(iter_view_1, 1);
+  sfmEngine.setInitialPair(
+    Pair(iter_view_0->second.get()->id_view, iter_view_1->second.get()->id_view));
 
   EXPECT_TRUE (sfmEngine.Process());
 
@@ -79,6 +83,7 @@ TEST(SEQUENTIAL_SFM, Known_Intrinsics) {
   EXPECT_TRUE( dResidual < 0.5);
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
+  EXPECT_TRUE( IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
 
 // Test a scene where only the two first camera have known intrinsics
@@ -127,11 +132,15 @@ TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
   sfmEngine.SetFeaturesProvider(feats_provider.get());
   sfmEngine.SetMatchesProvider(matches_provider.get());
 
-  // Set an initial pair
-  sfmEngine.setInitialPair(Pair(0,1));
+  // Configure reconstruction parameters (intrinsic parameters are held constant)
+  sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
 
-  // Configure reconstruction parameters
-  sfmEngine.Set_bFixedIntrinsics(true);
+  // Will use view ids (0,1) as the initial pair
+  Views::const_iterator iter_view_0 = sfm_data_2.GetViews().begin();
+  Views::const_iterator iter_view_1 = sfm_data_2.GetViews().begin();
+  std::advance(iter_view_1, 1);
+  sfmEngine.setInitialPair(Pair(iter_view_0->second.get()->id_view,
+    iter_view_1->second.get()->id_view));
 
   EXPECT_TRUE (sfmEngine.Process());
 
@@ -140,6 +149,7 @@ TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
   EXPECT_TRUE( dResidual < 0.5);
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
+  EXPECT_TRUE( IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
 
 /* ************************************************************************* */

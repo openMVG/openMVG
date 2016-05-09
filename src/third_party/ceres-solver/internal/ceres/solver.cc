@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2014 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -48,6 +48,10 @@
 
 namespace ceres {
 namespace {
+
+using std::map;
+using std::string;
+using std::vector;
 
 #define OPTION_OP(x, y, OP)                                             \
   if (!(options.x OP y)) {                                              \
@@ -150,15 +154,11 @@ bool TrustRegionOptionsAreValid(const Solver::Options& options, string* error) {
       *error = "Can't use DENSE_NORMAL_CHOLESKY with LAPACK because "
           "LAPACK was not enabled when Ceres was built.";
       return false;
-    }
-
-    if (options.linear_solver_type == DENSE_QR) {
+    } else if (options.linear_solver_type == DENSE_QR) {
       *error = "Can't use DENSE_QR with LAPACK because "
           "LAPACK was not enabled when Ceres was built.";
       return false;
-    }
-
-    if (options.linear_solver_type == DENSE_SCHUR) {
+    } else if (options.linear_solver_type == DENSE_SCHUR) {
       *error = "Can't use DENSE_SCHUR with LAPACK because "
           "LAPACK was not enabled when Ceres was built.";
       return false;
@@ -172,21 +172,15 @@ bool TrustRegionOptionsAreValid(const Solver::Options& options, string* error) {
       *error = "Can't use SPARSE_NORMAL_CHOLESKY with SUITESPARSE because "
              "SuiteSparse was not enabled when Ceres was built.";
       return false;
-    }
-
-    if (options.linear_solver_type == SPARSE_SCHUR) {
+    } else if (options.linear_solver_type == SPARSE_SCHUR) {
       *error = "Can't use SPARSE_SCHUR with SUITESPARSE because "
           "SuiteSparse was not enabled when Ceres was built.";
       return false;
-    }
-
-    if (options.preconditioner_type == CLUSTER_JACOBI) {
+    } else if (options.preconditioner_type == CLUSTER_JACOBI) {
       *error =  "CLUSTER_JACOBI preconditioner not supported. "
           "SuiteSparse was not enabled when Ceres was built.";
       return false;
-    }
-
-    if (options.preconditioner_type == CLUSTER_TRIDIAGONAL) {
+    } else if (options.preconditioner_type == CLUSTER_TRIDIAGONAL) {
       *error =  "CLUSTER_TRIDIAGONAL preconditioner not supported. "
           "SuiteSparse was not enabled when Ceres was built.";
     return false;
@@ -200,9 +194,7 @@ bool TrustRegionOptionsAreValid(const Solver::Options& options, string* error) {
       *error = "Can't use SPARSE_NORMAL_CHOLESKY with CX_SPARSE because "
              "CXSparse was not enabled when Ceres was built.";
       return false;
-    }
-
-    if (options.linear_solver_type == SPARSE_SCHUR) {
+    } else if (options.linear_solver_type == SPARSE_SCHUR) {
       *error = "Can't use SPARSE_SCHUR with CX_SPARSE because "
           "CXSparse was not enabled when Ceres was built.";
       return false;
@@ -217,9 +209,7 @@ bool TrustRegionOptionsAreValid(const Solver::Options& options, string* error) {
           "Eigen's sparse linear algebra was not enabled when Ceres was "
           "built.";
       return false;
-    }
-
-    if (options.linear_solver_type == SPARSE_SCHUR) {
+    } else if (options.linear_solver_type == SPARSE_SCHUR) {
       *error = "Can't use SPARSE_SCHUR with EIGEN_SPARSE because "
           "Eigen's sparse linear algebra was not enabled when Ceres was "
           "built.";
@@ -227,6 +217,18 @@ bool TrustRegionOptionsAreValid(const Solver::Options& options, string* error) {
     }
   }
 #endif
+
+  if (options.sparse_linear_algebra_library_type == NO_SPARSE) {
+    if (options.linear_solver_type == SPARSE_NORMAL_CHOLESKY) {
+      *error = "Can't use SPARSE_NORMAL_CHOLESKY as "
+          "sparse_linear_algebra_library_type is NO_SPARSE.";
+      return false;
+    } else if (options.linear_solver_type == SPARSE_SCHUR) {
+      *error = "Can't use SPARSE_SCHUR as "
+          "sparse_linear_algebra_library_type is NO_SPARSE.";
+      return false;
+    }
+  }
 
   if (options.trust_region_strategy_type == DOGLEG) {
     if (options.linear_solver_type == ITERATIVE_SCHUR ||
@@ -611,7 +613,7 @@ string Solver::Summary::BriefReport() const {
                       initial_cost,
                       final_cost,
                       TerminationTypeToString(termination_type));
-};
+}
 
 string Solver::Summary::FullReport() const {
   using internal::VersionString;
@@ -830,7 +832,7 @@ string Solver::Summary::FullReport() const {
   StringAppendF(&report, "Termination:        %25s (%s)\n",
                 TerminationTypeToString(termination_type), message.c_str());
   return report;
-};
+}
 
 bool Solver::Summary::IsSolutionUsable() const {
   return internal::IsSolutionUsable(*this);

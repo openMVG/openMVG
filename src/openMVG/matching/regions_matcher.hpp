@@ -35,7 +35,7 @@ void DistanceRatioMatch
 class RegionsMatcher
 {
   public:
-  ~RegionsMatcher() {}
+  ~RegionsMatcher() = default ; 
 
   /**
    * @brief Initialize the retrieval database
@@ -84,9 +84,9 @@ class Matcher_Regions_Database
 
   private:
   // Matcher Type
-  matching::EMatcherType _eMatcherType;
+  matching::EMatcherType eMatcherType_;
   // The matching interface
-  std::unique_ptr<RegionsMatcher> _matching_interface;
+  std::unique_ptr<RegionsMatcher> matching_interface_;
 };
 
 /**
@@ -103,7 +103,7 @@ public:
   typedef typename ArrayMatcherT::ScalarT Scalar;
   typedef typename ArrayMatcherT::DistanceType DistanceType;
 
-  RegionsMatcherT() :regions_(NULL) {}
+  RegionsMatcherT() :regions_(nullptr) {}
 
   /**
    * @brief Init the matcher with some reference regions.
@@ -121,7 +121,7 @@ public:
   void Init_database
   (
     const features::Regions& regions
-  )
+  ) override
   {
     regions_ = &regions;
     if (regions_->RegionCount() == 0)
@@ -137,7 +137,7 @@ public:
   bool Match(
     const float f_dist_ratio,
     const features::Regions& queryregions_,
-    matching::IndMatches & vec_putative_matches)
+    matching::IndMatches & vec_putative_matches) override
   {
     if (regions_ == nullptr)
       return false;
@@ -165,10 +165,9 @@ public:
       b_squared_metric_ ? Square(f_dist_ratio) : f_dist_ratio);
 
     vec_putative_matches.reserve(vec_nn_ratio_idx.size());
-    for (size_t k=0; k < vec_nn_ratio_idx.size(); ++k)
+    for ( const auto & index : vec_nn_ratio_idx )
     {
-      const size_t index = vec_nn_ratio_idx[k];
-      vec_putative_matches.emplace_back(vec_nIndice[index*NNN__]._j, vec_nIndice[index*NNN__]._i);
+      vec_putative_matches.emplace_back(vec_nIndice[index*NNN__].j_, vec_nIndice[index*NNN__].i_);
     }
 
     // Remove duplicates

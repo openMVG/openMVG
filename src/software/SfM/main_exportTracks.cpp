@@ -103,7 +103,7 @@ int main(int argc, char ** argv)
   //---------------------------------------
   tracks::STLMAPTracks map_tracks;
   {
-    const openMVG::matching::PairWiseMatches & map_Matches = matches_provider->_pairWise_matches;
+    const openMVG::matching::PairWiseMatches & map_Matches = matches_provider->pairWise_matches_;
     tracks::TracksBuilder tracksBuilder;
     tracksBuilder.Build(map_Matches);
     tracksBuilder.Filter();

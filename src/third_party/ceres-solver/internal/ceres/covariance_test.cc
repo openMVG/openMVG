@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2013 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,6 +32,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <map>
+#include <utility>
 #include "ceres/compressed_row_sparse_matrix.h"
 #include "ceres/cost_function.h"
 #include "ceres/covariance_impl.h"
@@ -42,6 +44,11 @@
 
 namespace ceres {
 namespace internal {
+
+using std::make_pair;
+using std::map;
+using std::pair;
+using std::vector;
 
 TEST(CovarianceImpl, ComputeCovarianceSparsity) {
   double parameters[10];
@@ -223,6 +230,8 @@ class PolynomialParameterization : public LocalParameterization {
 
 class CovarianceTest : public ::testing::Test {
  protected:
+  typedef map<const double*, pair<int, int> > BoundsMap;
+
   virtual void SetUp() {
     double* x = parameters_;
     double* y = x + 2;
@@ -247,7 +256,9 @@ class CovarianceTest : public ::testing::Test {
 
     {
       double jacobian = 5.0;
-      problem_.AddResidualBlock(new UnaryCostFunction(1, 1, &jacobian), NULL, z);
+      problem_.AddResidualBlock(new UnaryCostFunction(1, 1, &jacobian),
+                                NULL,
+                                z);
     }
 
     {
@@ -282,8 +293,29 @@ class CovarianceTest : public ::testing::Test {
     column_bounds_[z] = make_pair(5, 6);
   }
 
+  // Computes covariance in ambient space.
   void ComputeAndCompareCovarianceBlocks(const Covariance::Options& options,
                                          const double* expected_covariance) {
+    ComputeAndCompareCovarianceBlocksInTangentOrAmbientSpace(
+        options,
+        true,  // ambient
+        expected_covariance);
+  }
+
+  // Computes covariance in tangent space.
+  void ComputeAndCompareCovarianceBlocksInTangentSpace(
+                                         const Covariance::Options& options,
+                                         const double* expected_covariance) {
+    ComputeAndCompareCovarianceBlocksInTangentOrAmbientSpace(
+        options,
+        false,  // tangent
+        expected_covariance);
+  }
+
+  void ComputeAndCompareCovarianceBlocksInTangentOrAmbientSpace(
+      const Covariance::Options& options,
+      bool lift_covariance_to_ambient_space,
+      const double* expected_covariance) {
     // Generate all possible combination of block pairs and check if the
     // covariance computation is correct.
     for (int i = 1; i <= 64; ++i) {
@@ -319,28 +351,50 @@ class CovarianceTest : public ::testing::Test {
         const double* block1 = covariance_blocks[i].first;
         const double* block2 = covariance_blocks[i].second;
         // block1, block2
-        GetCovarianceBlockAndCompare(block1, block2, covariance, expected_covariance);
+        GetCovarianceBlockAndCompare(block1,
+                                     block2,
+                                     lift_covariance_to_ambient_space,
+                                     covariance,
+                                     expected_covariance);
         // block2, block1
-        GetCovarianceBlockAndCompare(block2, block1, covariance, expected_covariance);
+        GetCovarianceBlockAndCompare(block2,
+                                     block1,
+                                     lift_covariance_to_ambient_space,
+                                     covariance,
+                                     expected_covariance);
       }
     }
   }
 
   void GetCovarianceBlockAndCompare(const double* block1,
                                     const double* block2,
+                                    bool lift_covariance_to_ambient_space,
                                     const Covariance& covariance,
                                     const double* expected_covariance) {
-    const int row_begin = FindOrDie(column_bounds_, block1).first;
-    const int row_end = FindOrDie(column_bounds_, block1).second;
-    const int col_begin = FindOrDie(column_bounds_, block2).first;
-    const int col_end = FindOrDie(column_bounds_, block2).second;
+    const BoundsMap& column_bounds = lift_covariance_to_ambient_space ?
+        column_bounds_ : local_column_bounds_;
+    const int row_begin = FindOrDie(column_bounds, block1).first;
+    const int row_end = FindOrDie(column_bounds, block1).second;
+    const int col_begin = FindOrDie(column_bounds, block2).first;
+    const int col_end = FindOrDie(column_bounds, block2).second;
 
     Matrix actual(row_end - row_begin, col_end - col_begin);
-    EXPECT_TRUE(covariance.GetCovarianceBlock(block1,
-                                              block2,
-                                              actual.data()));
+    if (lift_covariance_to_ambient_space) {
+      EXPECT_TRUE(covariance.GetCovarianceBlock(block1,
+                                                block2,
+                                                actual.data()));
+    } else {
+      EXPECT_TRUE(covariance.GetCovarianceBlockInTangentSpace(block1,
+                                                              block2,
+                                                              actual.data()));
+    }
 
-    ConstMatrixRef expected(expected_covariance, 6, 6);
+    int dof = 0;  // degrees of freedom = sum of LocalSize()s
+    for (BoundsMap::const_iterator iter = column_bounds.begin();
+         iter != column_bounds.end(); ++iter) {
+      dof = std::max(dof, iter->second.second);
+    }
+    ConstMatrixRef expected(expected_covariance, dof, dof);
     double diff_norm = (expected.block(row_begin,
                                        col_begin,
                                        row_end - row_begin,
@@ -359,10 +413,11 @@ class CovarianceTest : public ::testing::Test {
         << "\n\n full expected: \n" << expected;
   }
 
-  double parameters_[10];
+  double parameters_[6];
   Problem problem_;
   vector<pair<const double*, const double*> > all_covariance_blocks_;
-  map<const double*, pair<int, int> > column_bounds_;
+  BoundsMap column_bounds_;
+  BoundsMap local_column_bounds_;
 };
 
 
@@ -524,22 +579,21 @@ TEST_F(CovarianceTest, LocalParameterization) {
   //   0   1  0  0  0  0
   //   0   0  2  0  0  0
   //   0   0  0  2  0  0
-  //   0   0  0  0  0  0
+  //   0   0  0  0  2  0
   //   0   0  0  0  0  5
-  //  -5  -6  1  2  0  0
+  //  -5  -6  1  2  3  0
   //   3  -2  0  0  0  2
 
-  // Global to local jacobian: A
+  // Local to global jacobian: A
   //
-  //
-  //  1   0   0   0   0
-  //  1   0   0   0   0
-  //  0   1   0   0   0
-  //  0   0   1   0   0
-  //  0   0   0   1   0
-  //  0   0   0   0   1
+  //  1   0   0   0
+  //  1   0   0   0
+  //  0   1   0   0
+  //  0   0   1   0
+  //  0   0   0   0
+  //  0   0   0   1
 
-  // A * pinv((J*A)'*(J*A)) * A'
+  // A * inv((J*A)'*(J*A)) * A'
   // Computed using octave.
   double expected_covariance[] = {
     0.01766,   0.01766,   0.02158,   0.04316,   0.00000,  -0.00122,
@@ -562,6 +616,64 @@ TEST_F(CovarianceTest, LocalParameterization) {
 
   options.algorithm_type = EIGEN_SPARSE_QR;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
+}
+
+TEST_F(CovarianceTest, LocalParameterizationInTangentSpace) {
+  double* x = parameters_;
+  double* y = x + 2;
+  double* z = y + 3;
+
+  problem_.SetParameterization(x, new PolynomialParameterization);
+
+  vector<int> subset;
+  subset.push_back(2);
+  problem_.SetParameterization(y, new SubsetParameterization(3, subset));
+
+  local_column_bounds_[x] = make_pair(0, 1);
+  local_column_bounds_[y] = make_pair(1, 3);
+  local_column_bounds_[z] = make_pair(3, 4);
+
+  // Raw Jacobian: J
+  //
+  //   1   0  0  0  0  0
+  //   0   1  0  0  0  0
+  //   0   0  2  0  0  0
+  //   0   0  0  2  0  0
+  //   0   0  0  0  2  0
+  //   0   0  0  0  0  5
+  //  -5  -6  1  2  3  0
+  //   3  -2  0  0  0  2
+
+  // Local to global jacobian: A
+  //
+  //  1   0   0   0
+  //  1   0   0   0
+  //  0   1   0   0
+  //  0   0   1   0
+  //  0   0   0   0
+  //  0   0   0   1
+
+  // inv((J*A)'*(J*A))
+  // Computed using octave.
+  double expected_covariance[] = {
+    0.01766,   0.02158,   0.04316,   -0.00122,
+    0.02158,   0.24860,  -0.00281,   -0.00149,
+    0.04316,  -0.00281,   0.24439,   -0.00298,
+   -0.00122,  -0.00149,  -0.00298,    0.03457  // NOLINT
+  };
+
+  Covariance::Options options;
+
+#ifndef CERES_NO_SUITESPARSE
+  options.algorithm_type = SUITE_SPARSE_QR;
+  ComputeAndCompareCovarianceBlocksInTangentSpace(options, expected_covariance);
+#endif
+
+  options.algorithm_type = DENSE_SVD;
+  ComputeAndCompareCovarianceBlocksInTangentSpace(options, expected_covariance);
+
+  options.algorithm_type = EIGEN_SPARSE_QR;
+  ComputeAndCompareCovarianceBlocksInTangentSpace(options, expected_covariance);
 }
 
 
@@ -590,12 +702,12 @@ TEST_F(CovarianceTest, TruncatedRank) {
   // was obtained by dropping the eigenvector corresponding to this
   // eigenvalue.
   double expected_covariance[] = {
-     5.4135e-02,  -3.5121e-02,   1.7257e-04,   3.4514e-04,   5.1771e-04,  -1.6076e-02,
-    -3.5121e-02,   3.8667e-02,  -1.9288e-03,  -3.8576e-03,  -5.7864e-03,   1.2549e-02,
-     1.7257e-04,  -1.9288e-03,   2.3235e-01,  -3.5297e-02,  -5.2946e-02,  -3.3329e-04,
-     3.4514e-04,  -3.8576e-03,  -3.5297e-02,   1.7941e-01,  -1.0589e-01,  -6.6659e-04,
-     5.1771e-04,  -5.7864e-03,  -5.2946e-02,  -1.0589e-01,   9.1162e-02,  -9.9988e-04,
-    -1.6076e-02,   1.2549e-02,  -3.3329e-04,  -6.6659e-04,  -9.9988e-04,   3.9539e-02
+     5.4135e-02,  -3.5121e-02,   1.7257e-04,   3.4514e-04,   5.1771e-04,  -1.6076e-02,  // NOLINT
+    -3.5121e-02,   3.8667e-02,  -1.9288e-03,  -3.8576e-03,  -5.7864e-03,   1.2549e-02,  // NOLINT
+     1.7257e-04,  -1.9288e-03,   2.3235e-01,  -3.5297e-02,  -5.2946e-02,  -3.3329e-04,  // NOLINT
+     3.4514e-04,  -3.8576e-03,  -3.5297e-02,   1.7941e-01,  -1.0589e-01,  -6.6659e-04,  // NOLINT
+     5.1771e-04,  -5.7864e-03,  -5.2946e-02,  -1.0589e-01,   9.1162e-02,  -9.9988e-04,  // NOLINT
+    -1.6076e-02,   1.2549e-02,  -3.3329e-04,  -6.6659e-04,  -9.9988e-04,   3.9539e-02   // NOLINT
   };
 
 
@@ -637,7 +749,9 @@ class RankDeficientCovarianceTest : public CovarianceTest {
 
     {
       double jacobian = 5.0;
-      problem_.AddResidualBlock(new UnaryCostFunction(1, 1, &jacobian), NULL, z);
+      problem_.AddResidualBlock(new UnaryCostFunction(1, 1, &jacobian),
+                                NULL,
+                                z);
     }
 
     {
@@ -715,7 +829,8 @@ class LargeScaleCovarianceTest : public ::testing::Test {
   virtual void SetUp() {
     num_parameter_blocks_ = 2000;
     parameter_block_size_ = 5;
-    parameters_.reset(new double[parameter_block_size_ * num_parameter_blocks_]);
+    parameters_.reset(
+        new double[parameter_block_size_ * num_parameter_blocks_]);
 
     Matrix jacobian(parameter_block_size_, parameter_block_size_);
     for (int i = 0; i < num_parameter_blocks_; ++i) {

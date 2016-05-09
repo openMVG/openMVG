@@ -8,6 +8,7 @@
 #pragma once
 
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/cameras/Camera_Common.hpp"
 #include <string>
 
 namespace openMVG {
@@ -19,12 +20,14 @@ class ReconstructionEngine
 {
 public:
 
-  ReconstructionEngine(
+  ReconstructionEngine
+  (
     const SfM_Data & sfm_data,
-    const std::string & soutDirectory)
-    :_sOutDirectory(soutDirectory),
-    _sfm_data(sfm_data),
-    _bFixedIntrinsics(false)
+    const std::string & soutDirectory
+  )
+  :sOut_directory_(soutDirectory),
+    sfm_data_(sfm_data),
+    intrinsic_refinement_options_(cameras::Intrinsic_Parameter_Type::ADJUST_ALL)
   {
   }
 
@@ -32,23 +35,33 @@ public:
 
   virtual bool Process() = 0;
 
-  bool Get_bFixedIntrinsics() const {return _bFixedIntrinsics;}
-  void Set_bFixedIntrinsics(bool bVal) {_bFixedIntrinsics = bVal;}
+  cameras::Intrinsic_Parameter_Type Get_Intrinsics_Refinement_Type() const
+  {
+    return intrinsic_refinement_options_;
+  }
 
-  const SfM_Data & Get_SfM_Data() const {return _sfm_data;}
+  void Set_Intrinsics_Refinement_Type
+  (
+    cameras::Intrinsic_Parameter_Type rhs
+  )
+  {
+    intrinsic_refinement_options_ = rhs;
+  }
+
+  const SfM_Data & Get_SfM_Data() const {return sfm_data_;}
 
 protected:
-  std::string _sOutDirectory; // Output path where outputs will be stored
+  std::string sOut_directory_; // Output path where outputs will be stored
 
   //-----
   //-- Reconstruction data
   //-----
-  SfM_Data _sfm_data; // internal SfM_Data
+  SfM_Data sfm_data_; // internal SfM_Data
 
   //-----
   //-- Reconstruction parameters
   //-----
-  bool _bFixedIntrinsics;
+  cameras::Intrinsic_Parameter_Type intrinsic_refinement_options_;
 };
 
 } // namespace sfm

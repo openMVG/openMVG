@@ -24,9 +24,9 @@ namespace matching_image_collection {
 class Matcher
 {
   public:
-  Matcher() {};
+  Matcher() = default ;
 
-  virtual ~Matcher() {};
+  virtual ~Matcher() = default ;
 
   /// Find corresponding points between some pair of view Ids
   virtual void Match(
@@ -37,5 +37,5 @@ class Matcher
     )const = 0;
 };
 
-} // namespace openMVG
 } // namespace matching_image_collection
+} // namespace openMVG 

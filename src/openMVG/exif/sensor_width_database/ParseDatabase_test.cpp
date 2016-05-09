@@ -1,3 +1,9 @@
+// Copyright (c) 2013 Pierre Moulon, Bruno Duisit.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #include "testing/testing.h"
 #include "ParseDatabase.hpp"
 
@@ -22,7 +28,6 @@ TEST(Matching, ValidDatabase)
 
   EXPECT_TRUE( parseDatabase( sfileDatabase, vec_database ) );
   EXPECT_TRUE( !vec_database.empty() );
-
 }
 
 TEST(Matching, ParseDatabaseSD900)
@@ -31,13 +36,11 @@ TEST(Matching, ParseDatabaseSD900)
   Datasheet datasheet;
   const std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), sDatabase );
   const std::string sModel = "Canon PowerShot SD900";
-  const std::string sBrand = "Canon";
 
   EXPECT_TRUE( parseDatabase( sfileDatabase, vec_database ) );
-  EXPECT_TRUE( getInfo( sBrand, sModel, vec_database, datasheet ) );
-  EXPECT_EQ( "Canon", datasheet._brand );
-  EXPECT_EQ( "Canon PowerShot SD900", datasheet._model );
-  EXPECT_EQ( 7.11, datasheet._sensorSize );
+  EXPECT_TRUE( getInfo( sModel, vec_database, datasheet ) );
+  EXPECT_EQ( "Canon PowerShot SD900", datasheet.model_ );
+  EXPECT_EQ( 7.11, datasheet.sensorSize_ );
 }
 
 TEST(Matching, ParseDatabaseA710_IS)
@@ -46,13 +49,11 @@ TEST(Matching, ParseDatabaseA710_IS)
   Datasheet datasheet;
   const std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), sDatabase );
   const std::string sModel = "Canon PowerShot A710 IS";
-  const std::string sBrand = "Canon";
 
   EXPECT_TRUE( parseDatabase( sfileDatabase, vec_database ) );
-  EXPECT_TRUE( getInfo( sBrand, sModel, vec_database, datasheet ) );
-  EXPECT_EQ( "Canon", datasheet._brand );
-  EXPECT_EQ( "Canon PowerShot A710 IS", datasheet._model );
-  EXPECT_EQ( 5.75, datasheet._sensorSize );
+  EXPECT_TRUE( getInfo( sModel, vec_database, datasheet ) );
+  EXPECT_EQ( "Canon PowerShot A710 IS", datasheet.model_ );
+  EXPECT_EQ( 5.75, datasheet.sensorSize_ );
 }
 
 TEST(Matching, ParseDatabaseNotExist)
@@ -61,12 +62,10 @@ TEST(Matching, ParseDatabaseNotExist)
   Datasheet datasheet;
   const std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), sDatabase );
   const std::string sModel = "NotExistModel";
-  const std::string sBrand = "NotExistBrand";
 
   EXPECT_TRUE( parseDatabase( sfileDatabase, vec_database ) );
-  EXPECT_FALSE( getInfo( sBrand, sModel, vec_database, datasheet ) );
+  EXPECT_FALSE( getInfo( sModel, vec_database, datasheet ) );
 }
-
 
 TEST(Matching, ParseDatabaseCanon_EOS_550D)
 {
@@ -74,11 +73,10 @@ TEST(Matching, ParseDatabaseCanon_EOS_550D)
   Datasheet datasheet;
   const std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), sDatabase );
   const std::string sModel = "Canon EOS 550D";
-  const std::string sBrand = "Canon";
 
   EXPECT_TRUE( parseDatabase( sfileDatabase, vec_database ) );
-  EXPECT_TRUE( getInfo( sBrand, sModel, vec_database, datasheet ) );
-  EXPECT_EQ( 22.3, datasheet._sensorSize );
+  EXPECT_TRUE( getInfo( sModel, vec_database, datasheet ) );
+  EXPECT_EQ( 22.3, datasheet.sensorSize_ );
 }
 
 TEST(Matching, ParseDatabaseCanon_EOS_5D_Mark_II)
@@ -87,11 +85,10 @@ TEST(Matching, ParseDatabaseCanon_EOS_5D_Mark_II)
   Datasheet datasheet;
   const std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), sDatabase );
   const std::string sModel = "Canon EOS 5D Mark II";
-  const std::string sBrand = "Canon";
 
   EXPECT_TRUE( parseDatabase( sfileDatabase, vec_database ) );
-  EXPECT_TRUE( getInfo( sBrand, sModel, vec_database, datasheet ) );
-  EXPECT_EQ( 36, datasheet._sensorSize );
+  EXPECT_TRUE( getInfo( sModel, vec_database, datasheet ) );
+  EXPECT_EQ( 36, datasheet.sensorSize_ );
 }
 
 TEST(Matching, ParseDatabaseCanon_EOS_1100D)
@@ -100,13 +97,11 @@ TEST(Matching, ParseDatabaseCanon_EOS_1100D)
   Datasheet datasheet;
   const std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), sDatabase );
   const std::string sModel = "Canon EOS 1100D";
-  const std::string sBrand = "Canon";
 
   EXPECT_TRUE( parseDatabase( sfileDatabase, vec_database ) );
-  EXPECT_TRUE( getInfo( sBrand, sModel, vec_database, datasheet ) );
-  EXPECT_EQ( 22.2, datasheet._sensorSize );
+  EXPECT_TRUE( getInfo( sModel, vec_database, datasheet ) );
+  EXPECT_EQ( 22.2, datasheet.sensorSize_ );
 }
-
 
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}

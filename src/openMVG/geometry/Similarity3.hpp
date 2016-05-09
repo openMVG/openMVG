@@ -7,28 +7,66 @@
 #ifndef OPENMVG_GEOMETRY_SIMILARITY3_H_
 #define OPENMVG_GEOMETRY_SIMILARITY3_H_
 
+#include "openMVG/types.hpp"
+#include "openMVG/geometry/pose3.hpp"
 
-namespace openMVG {
-namespace geometry {
+namespace openMVG
+{
+namespace geometry
+{
 
-// Define a 3D Similarity transform encoded as a 3D pose plus a scale
+/**
+* @brief Define a 3D Similarity transform encoded as a 3D pose plus a scale
+*/
 struct Similarity3
 {
-  Pose3 _pose;
-  double _scale;
+  /// Pose
+  Pose3 pose_;
 
-  Similarity3(): _pose(Pose3()), _scale(1.0) {}
-  Similarity3(const Pose3 & pose, const double scale) : _pose(pose), _scale(scale) {}
+  /// Scale
+  double scale_;
 
-  // Operators
-  Vec3 operator () (const Vec3 & point) const
+  /**
+  * @brief Default constructor
+  * @note This define identity transformation centered at origin of a cartesian frame
+  */
+  Similarity3()
+    : pose_( Pose3() ),
+      scale_( 1.0 )
   {
-    return _scale * _pose(point);
+
   }
 
-  Pose3 operator () (const Pose3 & pose) const
+  /**
+  * @brief Constructor
+  * @param pose a 3d pose
+  * @param scale a scale factor
+  */
+  Similarity3( const Pose3 & pose, const double scale )
+    : pose_( pose ),
+      scale_( scale )
   {
-    return Pose3( pose.rotation() * _pose.rotation().transpose(), this->operator()(pose.center()));
+
+  }
+
+  /**
+  * @brief Apply transformation to a point
+  * @param point Input point
+  * @return transformed point
+  */
+  Vec3 operator () ( const Vec3 & point ) const
+  {
+    return scale_ * pose_( point );
+  }
+
+  /**
+  * @brief Concatenation of pose
+  * @param pose Pose to be concatenated with the current one
+  * @return Concatenation of poses
+  */
+  Pose3 operator () ( const Pose3 & pose ) const
+  {
+    return Pose3( pose.rotation() * pose_.rotation().transpose(), this->operator()( pose.center() ) );
   }
 };
 

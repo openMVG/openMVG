@@ -71,7 +71,7 @@ int main(int argc, char **argv)
   std::string sMatchesDir;
   std::string sOutDir = "";
   std::pair<std::string,std::string> initialPairString("","");
-  bool bRefineIntrinsics = true;
+  std::string sIntrinsic_refinement_options = "ADJUST_ALL";
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('a', initialPairString.first, "initialPairA") );
   cmd.add( make_option('b', initialPairString.second, "initialPairB") );
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
-  cmd.add( make_option('f', bRefineIntrinsics, "refineIntrinsics") );
+  cmd.add( make_option('f', sIntrinsic_refinement_options, "refineIntrinsics") );
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -98,12 +98,30 @@ int main(int argc, char **argv)
       << "\t 1: Pinhole \n"
       << "\t 2: Pinhole radial 1\n"
       << "\t 3: Pinhole radial 3 (default)\n"
-    << "[-f|--refineIntrinsics] \n"
-    << "\t 0-> intrinsic parameters are kept as constant\n"
-    << "\t 1-> refine intrinsic parameters (default). \n"
+      << "\t 4: Pinhole radial 3 + tangential 2\n"
+      << "\t 5: Pinhole fisheye\n"
+    << "[-f|--refineIntrinsics] Intrinsic parameters refinement option\n"
+      << "\t ADJUST_ALL -> refine all existing parameters (default) \n"
+      << "\t NONE -> intrinsic parameters are held as constant\n"
+      << "\t ADJUST_FOCAL_LENGTH -> refine only the focal length\n"
+      << "\t ADJUST_PRINCIPAL_POINT -> refine only the principal point position\n"
+      << "\t ADJUST_DISTORTION -> refine only the distortion coefficient(s) (if any)\n"
+      << "\t -> NOTE: options can be combined thanks to '|'\n"
+      << "\t ADJUST_FOCAL_LENGTH|ADJUST_PRINCIPAL_POINT\n"
+      <<      "\t\t-> refine the focal length & the principal point position\n"
+      << "\t ADJUST_FOCAL_LENGTH|ADJUST_DISTORTION\n"
+      <<      "\t\t-> refine the focal length & the distortion coefficient(s) (if any)\n"
+      << "\t ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION\n"
+      <<      "\t\t-> refine the principal point position & the distortion coefficient(s) (if any)\n"
     << std::endl;
 
     std::cerr << s << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  if (i_User_camera_model < PINHOLE_CAMERA ||
+      i_User_camera_model > PINHOLE_CAMERA_FISHEYE )  {
+    std::cerr << "\n Invalid camera type" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -131,6 +149,9 @@ int main(int argc, char **argv)
   //---------------------------------------
   // Incremental SfM
   //---------------------------------------
+
+  const cameras::Intrinsic_Parameter_Type intrinsic_refinement_options =
+    cameras::StringTo_Intrinsic_Parameter_Type(sIntrinsic_refinement_options);
 
   // Load input SfM_Data scene
   SfM_Data sfm_data;
@@ -177,7 +198,12 @@ int main(int argc, char **argv)
   }
 
   if (!stlplus::folder_exists(sOutDir))
-    stlplus::folder_create(sOutDir);
+  {
+    if (!stlplus::folder_create(sOutDir))
+    {
+      std::cerr << "\nCannot create the output directory" << std::endl;
+    }
+  }
 
   //---------------------------------------
   // Sequential reconstruction process
@@ -197,7 +223,7 @@ int main(int argc, char **argv)
   sfmEngine.SetMatchesProvider(matches_provider.get());
 
   // Configure reconstruction parameters
-  sfmEngine.Set_bFixedIntrinsics(!bRefineIntrinsics);
+  sfmEngine.Set_Intrinsics_Refinement_Type(intrinsic_refinement_options);
   sfmEngine.SetUnknownCameraType(EINTRINSIC(i_User_camera_model));
 
   // Handle Initial pair parameter

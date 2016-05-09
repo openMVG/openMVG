@@ -14,6 +14,10 @@
 
 #pragma once
 
+#include <limits>
+#include <cassert>
+#include <vector>
+
 namespace stl
 {
 

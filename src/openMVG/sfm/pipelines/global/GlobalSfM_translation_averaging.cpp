@@ -80,21 +80,25 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
 
   // Keep the largest Biedge connected component graph of relative translations
   Pair_Set pairs;
-  std::transform(m_vec_initialRijTijEstimates.begin(), m_vec_initialRijTijEstimates.end(),
-    std::inserter(pairs, pairs.begin()), stl::RetrieveKey());
-  const std::set<IndexT> set_remainingIds =
-    openMVG::graph::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs, "./");
-  KeepOnlyReferencedElement(set_remainingIds, m_vec_initialRijTijEstimates);
-
-  const std::string _sOutDirectory("./");
+  for (const openMVG::RelativeInfo_Vec & iter : vec_relative_motion_)
   {
-    const std::set<IndexT> index = getIndexT(m_vec_initialRijTijEstimates);
+    for (const relativeInfo & rel : iter)
+    {
+      pairs.insert(rel.first);
+    }
+  }
+  const std::set<IndexT> set_remainingIds =
+    openMVG::graph::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs);
+  KeepOnlyReferencedElement(set_remainingIds, vec_relative_motion_);
+
+  {
+    const std::set<IndexT> index = getIndexT(vec_relative_motion_);
 
     const size_t iNview = index.size();
     std::cout << "\n-------------------------------" << "\n"
       << " Global translations computation: " << "\n"
       << "   - Ready to compute " << iNview << " global translations." << "\n"
-      << "     from #relative translations: " << m_vec_initialRijTijEstimates.size() << std::endl;
+      << "     from #relative translations: " << vec_relative_motion_.size()*3 << std::endl;
 
     if (iNview < 3)
     {
@@ -102,14 +106,16 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
       return false;
     }
     //-- Update initial estimates from [minId,maxId] to range [0->Ncam]
-    RelativeInfo_Vec vec_initialRijTijEstimates_cpy = m_vec_initialRijTijEstimates;
-    const Pair_Set pairs = getPairs(vec_initialRijTijEstimates_cpy);
-    Hash_Map<IndexT,IndexT> _reindexForward, _reindexBackward;
-    reindex(pairs, _reindexForward, _reindexBackward);
-    for(size_t i = 0; i < vec_initialRijTijEstimates_cpy.size(); ++i)
+    std::vector<RelativeInfo_Vec> vec_relative_motion_cpy = vec_relative_motion_;
+    const Pair_Set pairs = getPairs(vec_relative_motion_cpy);
+    Hash_Map<IndexT,IndexT> reindex_forward, reindex_backward;
+    reindex(pairs, reindex_forward, reindex_backward);
+    for (openMVG::RelativeInfo_Vec & iter : vec_relative_motion_cpy)
     {
-      openMVG::relativeInfo & rel = vec_initialRijTijEstimates_cpy[i];
-      rel.first = Pair(_reindexForward[rel.first.first], _reindexForward[rel.first.second]);
+      for (relativeInfo & it : iter)
+      {
+        it.first = Pair(reindex_forward[it.first.first], reindex_forward[it.first.second]);
+      }
     }
 
     openMVG::system::Timer timerLP_translation;
@@ -121,7 +127,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
         double gamma = -1.0;
         std::vector<double> vec_solution;
         {
-          vec_solution.resize(iNview*3 + vec_initialRijTijEstimates_cpy.size()/3 + 1);
+          vec_solution.resize(iNview*3 + vec_relative_motion_cpy.size() + 1);
           using namespace openMVG::linearProgramming;
           #ifdef OPENMVG_HAVE_MOSEK
             MOSEK_SolveWrapper solverLP(vec_solution.size());
@@ -129,7 +135,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
             OSI_CLP_SolverWrapper solverLP(vec_solution.size());
           #endif
 
-          lInfinityCV::Tifromtij_ConstraintBuilder_OneLambdaPerTrif cstBuilder(vec_initialRijTijEstimates_cpy);
+          lInfinityCV::Tifromtij_ConstraintBuilder cstBuilder(vec_relative_motion_cpy);
 
           LP_Constraints_Sparse constraint;
           //-- Setup constraint and solver
@@ -158,7 +164,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
           os << "Translation fusion statistics.";
           os.str("");
           os << "-------------------------------" << "\n"
-            << "-- #relative estimates: " << vec_initialRijTijEstimates_cpy.size()
+            << "-- #relative estimates: " << vec_relative_motion_cpy.size()
             << " converge with gamma: " << gamma << ".\n"
             << " timing (s): " << timeLP_translation << ".\n"
             << "-------------------------------" << "\n";
@@ -171,7 +177,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
         std::vector<double> vec_camTranslation(iNview*3,0);
         std::copy(&vec_solution[0], &vec_solution[iNview*3], &vec_camTranslation[0]);
 
-        std::vector<double> vec_camRelLambdas(&vec_solution[iNview*3], &vec_solution[iNview*3 + vec_initialRijTijEstimates_cpy.size()/3]);
+        std::vector<double> vec_camRelLambdas(&vec_solution[iNview*3], &vec_solution[iNview*3 + vec_relative_motion_cpy.size()]);
         std::cout << "\ncam position: " << std::endl;
         std::copy(vec_camTranslation.begin(), vec_camTranslation.end(), std::ostream_iterator<double>(std::cout, " "));
         std::cout << "\ncam Lambdas: " << std::endl;
@@ -182,7 +188,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
         for (size_t i = 0; i < iNview; ++i)
         {
           const Vec3 t(vec_camTranslation[i*3], vec_camTranslation[i*3+1], vec_camTranslation[i*3+2]);
-          const IndexT pose_id = _reindexBackward[i];
+          const IndexT pose_id = reindex_backward[i];
           const Mat3 & Ri = map_globalR.at(pose_id);
           sfm_data.poses[pose_id] = Pose3(Ri, -Ri.transpose()*t);
         }
@@ -193,7 +199,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
       {
         std::vector<Vec3> vec_translations;
         if (!solve_translations_problem_softl1(
-          vec_initialRijTijEstimates_cpy, true, iNview, vec_translations))
+          vec_relative_motion_cpy, vec_translations))
         {
           std::cerr << "Compute global translations: failed" << std::endl;
           return false;
@@ -204,7 +210,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
         for (size_t i = 0; i < iNview; ++i)
         {
           const Vec3 & t = vec_translations[i];
-          const IndexT pose_id = _reindexBackward[i];
+          const IndexT pose_id = reindex_backward[i];
           const Mat3 & Ri = map_globalR.at(pose_id);
           sfm_data.poses[pose_id] = Pose3(Ri, -Ri.transpose()*t);
         }
@@ -214,29 +220,31 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
       case TRANSLATION_AVERAGING_L2_DISTANCE_CHORDAL:
       {
         std::vector<int> vec_edges;
-        vec_edges.reserve(vec_initialRijTijEstimates_cpy.size() * 2);
+        vec_edges.reserve(vec_relative_motion_cpy.size() * 2);
         std::vector<double> vec_poses;
-        vec_poses.reserve(vec_initialRijTijEstimates_cpy.size() * 3);
+        vec_poses.reserve(vec_relative_motion_cpy.size() * 3);
         std::vector<double> vec_weights;
-        vec_weights.reserve(vec_initialRijTijEstimates_cpy.size());
+        vec_weights.reserve(vec_relative_motion_cpy.size());
 
-        for(int i=0; i < vec_initialRijTijEstimates_cpy.size(); ++i)
+        for (const openMVG::RelativeInfo_Vec & iter : vec_relative_motion_cpy)
         {
-          const openMVG::relativeInfo & rel = vec_initialRijTijEstimates_cpy[i];
-          vec_edges.push_back(rel.first.first);
-          vec_edges.push_back(rel.first.second);
-          // Since index have been remapped
-          // (use the backward indexing to retrieve the second global rotation)
-          const IndexT secondId = _reindexBackward[rel.first.second];
-          const View * view = sfm_data.views.at(secondId).get();
-          const Mat3 & Ri = map_globalR.at(view->id_pose);
-          const Vec3 direction = -(Ri.transpose() * rel.second.second.normalized());
+          for (const relativeInfo & rel : iter)
+          {
+            vec_edges.push_back(rel.first.first);
+            vec_edges.push_back(rel.first.second);
+            // Since index have been remapped
+            // (use the backward indexing to retrieve the second global rotation)
+            const IndexT secondId = reindex_backward[rel.first.second];
+            const View * view = sfm_data.views.at(secondId).get();
+            const Mat3 & Ri = map_globalR.at(view->id_pose);
+            const Vec3 direction = -(Ri.transpose() * rel.second.second.normalized());
 
-          vec_poses.push_back(direction(0));
-          vec_poses.push_back(direction(1));
-          vec_poses.push_back(direction(2));
+            vec_poses.push_back(direction(0));
+            vec_poses.push_back(direction(1));
+            vec_poses.push_back(direction(2));
 
-          vec_weights.push_back(1.0);
+            vec_weights.push_back(1.0);
+          }
         }
 
         const double function_tolerance = 1e-7, parameter_tolerance = 1e-8;
@@ -249,7 +257,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
           &vec_edges[0],
           &vec_poses[0],
           &vec_weights[0],
-          vec_initialRijTijEstimates_cpy.size(),
+          vec_relative_motion_cpy.size()*3,
           loss_width,
           &X[0],
           function_tolerance,
@@ -263,7 +271,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
         for (size_t i = 0; i < iNview; ++i)
         {
           const Vec3 C(X[i*3], X[i*3+1], X[i*3+2]);
-          const IndexT pose_id = _reindexBackward[i]; // undo the reindexing
+          const IndexT pose_id = reindex_backward[i]; // undo the reindexing
           const Mat3 & Ri = map_globalR.at(pose_id);
           sfm_data.poses[pose_id] = Pose3(Ri, C);
         }
@@ -297,7 +305,7 @@ void GlobalSfM_Translation_AveragingSolver::Compute_translations(
     map_globalR,
     normalized_features_provider,
     matches_provider,
-    m_vec_initialRijTijEstimates,
+    vec_relative_motion_,
     tripletWise_matches);
 }
 
@@ -308,7 +316,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
   const Hash_Map<IndexT, Mat3> & map_globalR,
   const Features_Provider * normalized_features_provider,
   const Matches_Provider * matches_provider,
-  RelativeInfo_Vec & vec_initialEstimates,
+  std::vector<RelativeInfo_Vec> & vec_triplet_relative_motion,
   matching::PairWiseMatches & newpairMatches)
 {
   openMVG::system::Timer timerLP_triplet;
@@ -325,7 +333,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
   std::transform(map_globalR.begin(), map_globalR.end(),
     std::inserter(set_pose_ids, set_pose_ids.begin()), stl::RetrieveKey());
   // List shared correspondences (pairs) between poses
-  for (const auto & match_iterator : matches_provider->_pairWise_matches)
+  for (const auto & match_iterator : matches_provider->pairWise_matches_)
   {
     const Pair pair = match_iterator.first;
     const View * v1 = sfm_data.GetViews().at(pair.first).get();
@@ -350,47 +358,9 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     // Avoid to cover each edge of the graph by using an edge coverage algorithm
     // An estimated triplets of translation mark three edges as estimated.
 
-    //-- precompute the number of track per triplet:
-    Hash_Map<IndexT, IndexT> map_tracksPerTriplets;
-    #ifdef OPENMVG_USE_OPENMP
-      #pragma omp parallel for schedule(dynamic)
-    #endif
-    for (int i = 0; i < (int)vec_triplets.size(); ++i)
-    {
-      // List matches that belong to the triplet of poses
-      const graph::Triplet & triplet = vec_triplets[i];
-      PairWiseMatches map_triplet_matches;
-      const std::set<IndexT> set_triplet_pose_ids = {triplet.i, triplet.j, triplet.k};
-      // List shared correspondences (pairs) between the triplet poses
-      for (const auto & match_iterator : matches_provider->_pairWise_matches)
-      {
-        const Pair pair = match_iterator.first;
-        const View * v1 = sfm_data.GetViews().at(pair.first).get();
-        const View * v2 = sfm_data.GetViews().at(pair.second).get();
-        if (// Consider the pair iff it is supported by the triplet graph & 2 different pose id
-            (v1->id_pose != v2->id_pose)
-            && set_triplet_pose_ids.count(v1->id_pose)
-            && set_triplet_pose_ids.count(v2->id_pose))
-        {
-          map_triplet_matches.insert( match_iterator );
-        }
-      }
-      // Compute tracks:
-      {
-        openMVG::tracks::TracksBuilder tracksBuilder;
-        tracksBuilder.Build(map_triplet_matches);
-        tracksBuilder.Filter(3);
-        #ifdef OPENMVG_USE_OPENMP
-          #pragma omp critical
-        #endif
-        map_tracksPerTriplets[i] = tracksBuilder.NbTracks(); //count the # of matches in the UF tree
-      }
-    }
-
-    typedef Pair myEdge;
-
-    //-- Alias (list triplet ids used per pose id edges)
-    std::map<myEdge, std::vector<size_t> > map_tripletIds_perEdge;
+    //-- Alias (list triplet ids used per edges)
+    typedef Pair myEdge; // An edge between two pose id
+    Hash_Map<myEdge, std::vector<size_t> > map_tripletIds_perEdge;
     for (size_t i = 0; i < vec_triplets.size(); ++i)
     {
       const graph::Triplet & triplet = vec_triplets[i];
@@ -399,6 +369,30 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
       map_tripletIds_perEdge[std::make_pair(triplet.j, triplet.k)].push_back(i);
     }
 
+    //-- precompute the visibility count per triplets (sum of their 2 view matches)
+    Hash_Map<IndexT, IndexT> map_tracksPerTriplets;
+    for (const auto & match_iterator : matches_provider->pairWise_matches_)
+    {
+      const Pair pair = match_iterator.first;
+      const View * v1 = sfm_data.GetViews().at(pair.first).get();
+      const View * v2 = sfm_data.GetViews().at(pair.second).get();
+      if (v1->id_pose != v2->id_pose)
+      {
+        // Consider the pair iff it is supported by 2 different pose id
+        const myEdge edge(v1->id_pose,v2->id_pose);
+        if (map_tripletIds_perEdge.count(edge) != 0)
+        {
+          const std::vector<size_t> & edge_tripletIds = map_tripletIds_perEdge.at(edge);
+          for (const size_t triplet_id : edge_tripletIds)
+          {
+            if (map_tracksPerTriplets.count(triplet_id) == 0)
+              map_tracksPerTriplets[triplet_id] = match_iterator.second.size();
+            else
+              map_tracksPerTriplets[triplet_id] += match_iterator.second.size();
+          }
+        }
+      }
+    }
     // Collect edges that are covered by the triplets
     std::vector<myEdge > vec_edges;
     std::transform(map_tripletIds_perEdge.begin(), map_tripletIds_perEdge.end(), std::back_inserter(vec_edges), stl::RetrieveKey());
@@ -411,9 +405,9 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
       "\nRelative translations computation (edge coverage algorithm)\n");
 
 #  ifdef OPENMVG_USE_OPENMP
-    std::vector< RelativeInfo_Vec > initial_estimates(omp_get_max_threads());
+    std::vector< std::vector<RelativeInfo_Vec> > initial_estimates(omp_get_max_threads());
 #  else
-    std::vector< RelativeInfo_Vec > initial_estimates(1);
+    std::vector< std::vector<RelativeInfo_Vec> > initial_estimates(1);
 #  endif
 
     const bool bVerbose = false;
@@ -432,10 +426,10 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
       }
       if (m_mutexSet.count(edge) == 0 && m_mutexSet.size() != vec_edges.size())
       {
-        // Find the triplets that support the given edge
+        // Find the triplets that are supporting the given edge
         const auto & vec_possibleTripletIndexes = map_tripletIds_perEdge.at(edge);
 
-        //-- Sort the triplets according the number of track they are supporting
+        //-- Sort the triplets according their number of track
         std::vector<size_t> vec_commonTracksPerTriplets;
         for (const size_t triplet_index : vec_possibleTripletIndexes)
         {
@@ -461,7 +455,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
               m_mutexSet.count(Pair(triplet.i, triplet.k)) &&
               m_mutexSet.count(Pair(triplet.j, triplet.k)))
           {
-            break;
+            continue;
           }
 
           //--
@@ -474,6 +468,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
           openMVG::tracks::STLMAPTracks pose_triplet_tracks;
 
           const std::string sOutDirectory = "./";
+
           const bool bTriplet_estimation = Estimate_T_triplet(
               sfm_data,
               map_globalR,
@@ -489,9 +484,14 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
           if (bTriplet_estimation)
           {
             // Since new translation edges have been computed, mark their corresponding edges as estimated
-            m_mutexSet.insert(std::make_pair(triplet.i, triplet.j));
-            m_mutexSet.insert(std::make_pair(triplet.j, triplet.k));
-            m_mutexSet.insert(std::make_pair(triplet.i, triplet.k));
+            #ifdef OPENMVG_USE_OPENMP
+            #pragma omp critical
+            #endif
+            {
+              m_mutexSet.insert(std::make_pair(triplet.i, triplet.j));
+              m_mutexSet.insert(std::make_pair(triplet.j, triplet.k));
+              m_mutexSet.insert(std::make_pair(triplet.i, triplet.k));
+            }
 
             // Compute the triplet relative motions (IJ, JK, IK)
             {
@@ -522,12 +522,15 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
                 const int thread_id = 0;
               #endif
 
-              initial_estimates[thread_id].emplace_back(
+              RelativeInfo_Vec triplet_relative_motion;
+              triplet_relative_motion.emplace_back(
                 std::make_pair(triplet.i, triplet.j), std::make_pair(Rij, tij));
-              initial_estimates[thread_id].emplace_back(
+              triplet_relative_motion.emplace_back(
                 std::make_pair(triplet.j, triplet.k), std::make_pair(Rjk, tjk));
-              initial_estimates[thread_id].emplace_back(
+              triplet_relative_motion.emplace_back(
                 std::make_pair(triplet.i, triplet.k), std::make_pair(Rik, tik));
+
+              initial_estimates[thread_id].emplace_back(triplet_relative_motion);
 
               //--- ATOMIC
 
@@ -544,28 +547,16 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
                   std::advance(it_tracks, *iterInliers);
                   const submapTrack & subTrack = it_tracks->second;
 
-                  // create pairwise matches from inlier track
-                  for (size_t index_I = 0; index_I < subTrack.size() ; ++index_I)
-                  {
-                    submapTrack::const_iterator iter_I = subTrack.begin();
-                    std::advance(iter_I, index_I);
-
-                    // extract camera indexes
-                    const size_t id_view_I = iter_I->first;
-                    const size_t id_feat_I = iter_I->second;
-
-                    // loop on subtracks
-                    for (size_t index_J = index_I+1; index_J < subTrack.size() ; ++index_J)
-                    {
-                      submapTrack::const_iterator iter_J = subTrack.begin();
-                      std::advance(iter_J, index_J);
-
-                      // extract camera indexes
-                      const size_t id_view_J = iter_J->first;
-                      const size_t id_feat_J = iter_J->second;
-
-                      newpairMatches[std::make_pair(id_view_I, id_view_J)].emplace_back(id_feat_I, id_feat_J);
-                    }
+                  // create pairwise matches from the inlier track
+                  submapTrack::const_iterator iter_I = subTrack.begin();
+                  submapTrack::const_iterator iter_J = subTrack.begin();
+                  std::advance(iter_J, 1);
+                  while (iter_J != subTrack.end())
+                  { // matches(pair(view_id(I), view_id(J))) <= IndMatch(feat_id(I), feat_id(J))
+                    newpairMatches[std::make_pair(iter_I->first, iter_J->first)]
+                     .emplace_back(iter_I->second, iter_J->second);
+                    ++iter_I;
+                    ++iter_J;
                   }
                 }
               }
@@ -577,30 +568,25 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
         }
       }
     }
-    // Merge thread estimates
-    for (const auto vec : initial_estimates)
+    // Merge thread(s) estimates
+    for (auto & vec : initial_estimates)
     {
-      for (const auto val : vec)
-      {
-        vec_initialEstimates.emplace_back(val);
-      }
+      vec_triplet_relative_motion.insert( vec_triplet_relative_motion.end(),
+        std::make_move_iterator(vec.begin()), std::make_move_iterator(vec.end()));
     }
   }
 
-
-
   const double timeLP_triplet = timerLP_triplet.elapsed();
-  std::cout << "TRIPLET COVERAGE TIMING: " << timeLP_triplet << " seconds" << std::endl;
-
-  std::cout << "-------------------------------" << "\n"
-      << "-- #Relative translations estimates: " << m_vec_initialRijTijEstimates.size()/3
-      << " computed from " << vec_triplets.size() << " triplets.\n"
-      << "-- resulting in " << m_vec_initialRijTijEstimates.size() << " translations estimation.\n"
-      << "-- timing to obtain the relative translations: " << timeLP_triplet << " seconds.\n"
-      << "-------------------------------" << std::endl;
+  std::cout << "TRIPLET COVERAGE TIMING:\n"
+    << "-------------------------------" << "\n"
+    << "-- #Relative triplet of translations estimates: " << vec_triplet_relative_motion.size()
+    << " computed from " << vec_triplets.size() << " triplets.\n"
+    << "-- resulting in " << vec_triplet_relative_motion.size()*3 << " translations estimation.\n"
+    << "-- time to compute triplets of relative translations: " << timeLP_triplet << " seconds.\n"
+    << "-------------------------------" << std::endl;
 }
 
-// Robust estimation and refinement of a translation and 3D points of an image triplets.
+// Robust estimation and refinement of a triplet of translations
 bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
   const SfM_Data & sfm_data,
   const Hash_Map<IndexT, Mat3> & map_globalR,
@@ -617,7 +603,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
   PairWiseMatches map_triplet_matches;
   const std::set<IndexT> set_pose_ids = {poses_id.i, poses_id.j, poses_id.k};
   // List shared correspondences (pairs) between poses
-  for (const auto & match_iterator : matches_provider->_pairWise_matches)
+  for (const auto & match_iterator : matches_provider->pairWise_matches_)
   {
     const Pair & pair = match_iterator.first;
     const View * v1 = sfm_data.GetViews().at(pair.first).get();
@@ -739,7 +725,10 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
   for (size_t idx=0; idx < vec_inliers.size(); ++idx)
   {
     const size_t trackId = vec_inliers[idx];
-    const tracks::submapTrack & track = tracks.at(trackId);
+    openMVG::tracks::STLMAPTracks::const_iterator iter = tracks.begin();
+    std::advance(iter, trackId);
+
+    const tracks::submapTrack & track = iter->second;
     Observations & obs = structure[idx].obs;
     for (tracks::submapTrack::const_iterator it = track.begin(); it != track.end(); ++it)
     {
@@ -767,10 +756,15 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
   }
 
   // Refine structure and poses (keep intrinsic constant)
-  Bundle_Adjustment_Ceres::BA_options options(false, false);
-  options._linear_solver_type = ceres::SPARSE_SCHUR;
+  Bundle_Adjustment_Ceres::BA_Ceres_options options(false, false);
   Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-  if (bundle_adjustment_obj.Adjust(tiny_scene, false, true, false))
+  if (bundle_adjustment_obj.Adjust(tiny_scene,
+        Optimize_Options(
+          cameras::Intrinsic_Parameter_Type::NONE,
+          Extrinsic_Parameter_Type::ADJUST_ALL,
+          Structure_Parameter_Type::ADJUST_ALL)
+        )
+      )
   {
     // export scene for visualization
     std::ostringstream os;
@@ -782,6 +776,11 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
     vec_tis[1] = tiny_scene.poses[poses_id.j].translation();
     vec_tis[2] = tiny_scene.poses[poses_id.k].translation();
   }
+
+  std::ostringstream os;
+  os << poses_id.i << "_" << poses_id.j << "_" << poses_id.k << ".ply";
+  Save(tiny_scene, os.str(), ESfM_Data(STRUCTURE | EXTRINSICS));
+
 #endif
 
   // Keep the model iff it has a sufficient inlier count
@@ -790,7 +789,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
 #ifdef DEBUG_TRIPLET
   {
     std::cout << "Triplet : status: " << bTest
-      << " AC: " << dPrecision
+      << " AC: " << std::sqrt(dPrecision)
       << " inliers % " << double(vec_inliers.size()) / tracks.size() * 100.0
       << " total putative " << tracks.size() << std::endl;
   }

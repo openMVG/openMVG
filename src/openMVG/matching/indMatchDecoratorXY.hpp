@@ -22,20 +22,25 @@ class IndMatchDecorator
 {
   struct IndMatchDecoratorStruct
   {
-    IndMatchDecoratorStruct(
+    IndMatchDecoratorStruct
+    (
       T xa, T ya,
       T xb, T yb,
-      const IndMatch & ind) {
-
+      const IndMatch & ind
+    )
+    {
       x1 = xa; y1 = ya;
       x2 = xb; y2 = yb;
       index = ind;
     }
 
     /// Lexicographical ordering of matches. Used to remove duplicates.
-    friend bool operator<(const IndMatchDecoratorStruct& m1,
-      const IndMatchDecoratorStruct& m2)  {
-
+    friend bool operator<
+    (
+      const IndMatchDecoratorStruct& m1,
+      const IndMatchDecoratorStruct& m2
+    )
+    {
       if (m1 == m2) return false;
 
       if (m1.x1 < m2.x1)
@@ -47,8 +52,12 @@ class IndMatchDecorator
     }
 
     /// Comparison Operator
-    friend bool operator==(const IndMatchDecoratorStruct& m1,
-      const IndMatchDecoratorStruct& m2)  {
+    friend bool operator==
+    (
+      const IndMatchDecoratorStruct& m1,
+      const IndMatchDecoratorStruct& m2
+    )
+    {
 
       return (m1.x1==m2.x1 && m1.y1==m2.y1 &&
         m1.x2==m2.x2 && m1.y2==m2.y2);
@@ -59,59 +68,71 @@ class IndMatchDecorator
   };
 public:
 
-  IndMatchDecorator(const std::vector<IndMatch> & vec_matches,
+  IndMatchDecorator
+  (
+    const std::vector<IndMatch> & vec_matches,
     const std::vector<features::SIOPointFeature> & leftFeat,
-    const std::vector<features::SIOPointFeature> & rightFeat)
-    :_vec_matches(vec_matches)
+    const std::vector<features::SIOPointFeature> & rightFeat
+  )
+  :vec_matches_(vec_matches)
   {
-    for (size_t i = 0; i < vec_matches.size(); ++i) {
-      const size_t I = vec_matches[i]._i;
-      const size_t J = vec_matches[i]._j;
-      _vecDecoredMatches.push_back(
+    for ( const auto & cur_vec_match : vec_matches )
+    {
+      const size_t I = cur_vec_match.i_;
+      const size_t J = cur_vec_match.j_;
+      vecDecoredMatches_.push_back(
         IndMatchDecoratorStruct(leftFeat[I].x(),leftFeat[I].y(),
-        rightFeat[J].x(), rightFeat[J].y(), vec_matches[i]));
+        rightFeat[J].x(), rightFeat[J].y(), cur_vec_match));
     }
   }
 
-  IndMatchDecorator(const std::vector<IndMatch> & vec_matches,
+  IndMatchDecorator
+  (
+    const std::vector<IndMatch> & vec_matches,
     const std::vector<features::PointFeature> & leftFeat,
-    const std::vector<features::PointFeature> & rightFeat)
-    :_vec_matches(vec_matches)
+    const std::vector<features::PointFeature> & rightFeat
+  )
+  :vec_matches_(vec_matches)
   {
-    for (size_t i = 0; i < vec_matches.size(); ++i) {
-      const size_t I = vec_matches[i]._i;
-      const size_t J = vec_matches[i]._j;
-      _vecDecoredMatches.push_back(
+    for ( const auto & cur_vec_match : vec_matches )
+    {
+      const size_t I = cur_vec_match.i_;
+      const size_t J = cur_vec_match.j_;
+      vecDecoredMatches_.push_back(
         IndMatchDecoratorStruct(leftFeat[I].x(),leftFeat[I].y(),
-        rightFeat[J].x(), rightFeat[J].y(), vec_matches[i]));
+        rightFeat[J].x(), rightFeat[J].y(), cur_vec_match));
     }
   }
 
-  IndMatchDecorator(const std::vector<IndMatch> & vec_matches,
+  IndMatchDecorator
+  (
+    const std::vector<IndMatch> & vec_matches,
     const Mat & leftFeat,
-    const Mat & rightFeat)
-    :_vec_matches(vec_matches)
+    const Mat & rightFeat
+  )
+  :vec_matches_(vec_matches)
   {
-    for (size_t i = 0; i < vec_matches.size(); ++i) {
-      const size_t I = vec_matches[i]._i;
-      const size_t J = vec_matches[i]._j;
-      _vecDecoredMatches.push_back(
+    for ( const auto & cur_vec_match : vec_matches )
+    {
+      const size_t I = cur_vec_match.i_;
+      const size_t J = cur_vec_match.j_;
+      vecDecoredMatches_.push_back(
         IndMatchDecoratorStruct(leftFeat.col(I)(0),leftFeat.col(I)(1),
-        rightFeat.col(J)(0), rightFeat.col(J)(1), vec_matches[i]));
+        rightFeat.col(J)(0), rightFeat.col(J)(1), cur_vec_match));
     }
   }
 
   /// Remove duplicates (same (x1,y1) coords that appears multiple times)
   size_t getDeduplicated(std::vector<IndMatch> & vec_matches)
   {
-    size_t sizeBefore = _vecDecoredMatches.size();
+    const size_t sizeBefore = vecDecoredMatches_.size();
     std::set<IndMatchDecoratorStruct> set_deduplicated(
-      _vecDecoredMatches.begin(),_vecDecoredMatches.end());
-    _vecDecoredMatches.assign(set_deduplicated.begin(), set_deduplicated.end());
+      vecDecoredMatches_.begin(),vecDecoredMatches_.end());
+    vecDecoredMatches_.assign(set_deduplicated.begin(), set_deduplicated.end());
 
-    vec_matches.resize(_vecDecoredMatches.size());
-    for (size_t i = 0; i < _vecDecoredMatches.size(); ++i)  {
-      const IndMatch & idxM = _vecDecoredMatches[i].index;
+    vec_matches.resize(vecDecoredMatches_.size());
+    for (size_t i = 0; i < vecDecoredMatches_.size(); ++i)  {
+      const IndMatch & idxM = vecDecoredMatches_[i].index;
       vec_matches[i] = idxM;
     }
 
@@ -124,10 +145,11 @@ public:
     * \param vec_match  The matches that we want to save.
     * \return bool True if everything was ok, otherwise false.
     */
-    bool saveMatch(const char* nameFile) const  {
+    bool saveMatch(const char* nameFile) const
+    {
       std::ofstream f(nameFile);
       if( f.is_open() ) {
-        std::copy(_vecDecoredMatches.begin(), _vecDecoredMatches.end(),
+        std::copy(vecDecoredMatches_.begin(), vecDecoredMatches_.end(),
           std::ostream_iterator<IndMatchDecoratorStruct>(f, ""));
       }
       return f.is_open();
@@ -139,8 +161,8 @@ public:
     }
 
 private :
-  std::vector<IndMatch> _vec_matches;
-  std::vector<IndMatchDecoratorStruct> _vecDecoredMatches;
+  std::vector<IndMatch> vec_matches_;
+  std::vector<IndMatchDecoratorStruct> vecDecoredMatches_;
 };
 
 }  // namespace matching

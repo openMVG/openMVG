@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2010, 2011, 2012 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -228,6 +228,24 @@ TEST(LossFunction, LossFunctionWrapper) {
   for (int i = 0; i < 3; ++i) {
     EXPECT_NEAR(rho[i], rho_gold[i], 1e-12);
   }
+
+  // Set to NULL
+  TrivialLoss loss_function4;
+  loss_function_wrapper.Reset(NULL, TAKE_OWNERSHIP);
+  loss_function_wrapper.Evaluate(s, rho);
+  loss_function4.Evaluate(s, rho_gold);
+  for (int i = 0; i < 3; ++i) {
+    EXPECT_NEAR(rho[i], rho_gold[i], 1e-12);
+  }
+
+  // Set to NULL, not taking ownership
+  loss_function_wrapper.Reset(NULL, DO_NOT_TAKE_OWNERSHIP);
+  loss_function_wrapper.Evaluate(s, rho);
+  loss_function4.Evaluate(s, rho_gold);
+  for (int i = 0; i < 3; ++i) {
+    EXPECT_NEAR(rho[i], rho_gold[i], 1e-12);
+  }
+
 }
 
 }  // namespace internal

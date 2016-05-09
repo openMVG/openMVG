@@ -7,6 +7,7 @@
 
 #include "openMVG/sfm/sfm_data_filters_frustum.hpp"
 #include "openMVG/sfm/sfm.hpp"
+#include "openMVG/stl/stl.hpp"
 #include "openMVG/types.hpp"
 #include "openMVG/geometry/half_space_intersection.hpp"
 

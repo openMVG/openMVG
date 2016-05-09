@@ -57,7 +57,7 @@ static bool loadPairs(
   while(std::getline( in, sValue ) )
   {
     vec_str.clear();
-    stl::split(sValue, " ", vec_str);
+    stl::split(sValue, ' ', vec_str);
     const size_t str_size = vec_str.size();
     if (str_size < 2)
     {
@@ -103,10 +103,9 @@ static bool savePairs(const std::string &sFileName, const Pair_Set & pairs)
       << "savePairs: Impossible to open the output specified file: \"" << sFileName << "\"." << std::endl;
     return false;
   }
-  for (Pair_Set::const_iterator iterP = pairs.begin();
-    iterP != pairs.end(); ++iterP)
-  {
-    outStream << iterP->first << ' ' << iterP->second << '\n';
+  for ( const auto & cur_pair : pairs ) 
+    {
+    outStream << cur_pair.first << ' ' << cur_pair.second << '\n';
   }
   bool bOk = !outStream.bad();
   outStream.close();

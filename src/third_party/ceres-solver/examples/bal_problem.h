@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2010, 2011, 2012 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -48,6 +48,7 @@ class BALProblem {
   ~BALProblem();
 
   void WriteToFile(const std::string& filename) const;
+  void WriteToPLYFile(const std::string& filename) const;
 
   // Move the "center" of the reconstruction to the origin, where the
   // center is determined by computing the marginal median of the
@@ -74,6 +75,7 @@ class BALProblem {
   const int* camera_index()    const { return camera_index_;             }
   const double* observations() const { return observations_;             }
   const double* parameters()   const { return parameters_;               }
+  const double* cameras()      const { return parameters_;               }
   double* mutable_cameras()          { return parameters_;               }
   double* mutable_points() {
     return parameters_  + camera_block_size() * num_cameras_;
@@ -82,11 +84,11 @@ class BALProblem {
  private:
   void CameraToAngleAxisAndCenter(const double* camera,
                                   double* angle_axis,
-                                  double* center);
+                                  double* center) const;
 
   void AngleAxisAndCenterToCamera(const double* angle_axis,
                                   const double* center,
-                                  double* camera);
+                                  double* camera) const;
   int num_cameras_;
   int num_points_;
   int num_observations_;

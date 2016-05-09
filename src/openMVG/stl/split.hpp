@@ -1,32 +1,38 @@
+// Copyright (c) 2013 Pierre MOULON.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #ifndef SPLIT_HPP
 #define SPLIT_HPP
 
-#include <vector>
+#include <sstream>
 #include <string>
+#include <vector>
 
 namespace stl
 {
 /**
  * Split an input string with a delimiter and fill a string vector
  */
-static bool split ( const std::string src, const std::string& delim, std::vector<std::string>& vec_value )
+inline bool split
+(
+  const std::string rhs,
+  const char delim,
+  std::vector<std::string> & items
+)
 {
-  bool bDelimiterExist = false;
-  if ( !delim.empty() )
+  items.clear();
+  std::stringstream ss(rhs);
+  std::string item;
+  while (std::getline(ss, item, delim))
   {
-    vec_value.clear();
-    std::string::size_type start = 0;
-    std::string::size_type end = std::string::npos -1;
-    while ( end != std::string::npos )
-    {
-      end = src.find ( delim, start );
-      vec_value.push_back ( src.substr ( start, end - start ) );
-      start = end + delim.size();
-    }
-    if ( vec_value.size() >= 2 )
-      bDelimiterExist = true;
+    items.emplace_back(item);
   }
-  return bDelimiterExist;
+
+  // return true if the delimiter is present in the input string
+  return ( rhs.find(delim) != std::string::npos );
 }
 } // namespace stl
 #endif // SPLIT_HPP

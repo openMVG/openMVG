@@ -16,7 +16,7 @@ namespace sfm {
 ///  in the SfM_Data scene structure.
 struct SfM_Data_Structure_Computation_Basis
 {
-  bool _bConsoleVerbose;
+  bool bConsole_verbose_;
 
   SfM_Data_Structure_Computation_Basis(bool bConsoleVerbose = false);
 
@@ -32,7 +32,7 @@ struct SfM_Data_Structure_Computation_Blind: public SfM_Data_Structure_Computati
 {
   SfM_Data_Structure_Computation_Blind(bool bConsoleVerbose = false);
 
-  virtual void triangulate(SfM_Data & sfm_data) const;
+  void triangulate(SfM_Data & sfm_data) const override;
 };
 
 /// Triangulation of track data contained in the structure of a SfM_Data scene.
@@ -41,9 +41,13 @@ struct SfM_Data_Structure_Computation_Blind: public SfM_Data_Structure_Computati
 // - Check cheirality and a pixel residual error (TODO: make it a parameter)
 struct SfM_Data_Structure_Computation_Robust: public SfM_Data_Structure_Computation_Basis
 {
-  SfM_Data_Structure_Computation_Robust(bool bConsoleVerbose = false);
+  SfM_Data_Structure_Computation_Robust
+  (
+    const double max_reprojection_error = 4, // pixels
+    bool bConsoleVerbose = false
+  );
 
-  virtual void triangulate(SfM_Data & sfm_data) const;
+  void triangulate(SfM_Data & sfm_data) const override;
 
   /// Robust triangulation of track data contained in the structure
   /// All observations must have View with valid Intrinsic and Pose data
@@ -55,7 +59,7 @@ struct SfM_Data_Structure_Computation_Robust: public SfM_Data_Structure_Computat
   bool robust_triangulation(
     const SfM_Data & sfm_data,
     const Observations & obs,
-    Vec3 & X,
+    Landmark & landmark,
     const IndexT min_required_inliers = 3,
     const IndexT min_sample_index = 3) const;
 
@@ -65,6 +69,9 @@ private:
     const SfM_Data & sfm_data,
     const Observations & obs,
     const std::set<IndexT> & samples) const;
+
+  // -- DATA
+  double max_reprojection_error_;
 };
 
 } // namespace sfm

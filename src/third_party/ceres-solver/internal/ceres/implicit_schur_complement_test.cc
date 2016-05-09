@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2010, 2011, 2012 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -74,7 +74,7 @@ class ImplicitSchurComplementTest : public ::testing::Test {
                                       Vector* solution) {
     const CompressedRowBlockStructure* bs = A_->block_structure();
     const int num_col_blocks = bs->cols.size();
-    vector<int> blocks(num_col_blocks - num_eliminate_blocks_, 0);
+    std::vector<int> blocks(num_col_blocks - num_eliminate_blocks_, 0);
     for (int i = num_eliminate_blocks_; i < num_col_blocks; ++i) {
       blocks[i - num_eliminate_blocks_] = bs->cols[i].size;
     }

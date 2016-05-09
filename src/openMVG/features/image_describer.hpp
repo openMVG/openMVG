@@ -27,8 +27,8 @@ enum EDESCRIBER_PRESET
 class Image_describer
 {
 public:
-  Image_describer() {}
-  virtual ~Image_describer() {}
+  Image_describer() = default ; 
+  virtual ~Image_describer() = default ; 
 
   /**
   @brief Use a preset to control the number of detected regions
@@ -46,7 +46,7 @@ public:
   */
   virtual bool Describe(const image::Image<unsigned char> & image,
     std::unique_ptr<Regions> &regions,
-    const image::Image<unsigned char> * mask = NULL) = 0;
+    const image::Image<unsigned char> * mask = nullptr ) = 0;
 
   /// Allocate regions depending of the Image_describer
   virtual void Allocate(std::unique_ptr<Regions> &regions) const = 0;

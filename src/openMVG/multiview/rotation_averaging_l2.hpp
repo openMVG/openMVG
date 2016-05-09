@@ -9,7 +9,6 @@
 #define OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L2_H_
 
 #include "openMVG/multiview/rotation_averaging_common.hpp"
-#include <vector>
 
 #ifdef _MSC_VER
 #pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data

@@ -682,9 +682,7 @@ Gaussian window size is set to have standard deviation
 /** @internal @brief Use bilinear interpolation to compute orientations */
 #define VL_SIFT_BILINEAR_ORIENTATIONS 1
 
-#define EXPN_SZ  256          /**< ::fast_expn table size @internal */
 #define EXPN_MAX 25.0         /**< ::fast_expn table max  @internal */
-double expn_tab [EXPN_SZ+1] ; /**< ::fast_expn table      @internal */
 
 #define NBO 8
 #define NBP 4
@@ -703,7 +701,7 @@ double expn_tab [EXPN_SZ+1] ; /**< ::fast_expn table      @internal */
  **/
 
 VL_INLINE double
-fast_expn (double x)
+fast_expn (VlSiftFilt * filter, double x)
 {
   double a,b,r ;
   int i ;
@@ -714,8 +712,8 @@ fast_expn (double x)
   x *= EXPN_SZ / EXPN_MAX ;
   i = (int)vl_floor_d (x) ;
   r = x - i ;
-  a = expn_tab [i    ] ;
-  b = expn_tab [i + 1] ;
+  a = filter->expn_tab [i    ] ;
+  b = filter->expn_tab [i + 1] ;
   return a + r * (b - a) ;
 }
 
@@ -725,11 +723,11 @@ fast_expn (double x)
  **/
 
 VL_INLINE void
-fast_expn_init ()
+fast_expn_init (VlSiftFilt * filter)
 {
   int k  ;
   for(k = 0 ; k < EXPN_SZ + 1 ; ++ k) {
-    expn_tab [k] = exp (- (double) k * (EXPN_MAX / EXPN_SZ)) ;
+    filter->expn_tab [k] = exp (- (double) k * (EXPN_MAX / EXPN_SZ)) ;
   }
 }
 
@@ -942,7 +940,7 @@ vl_sift_new (int width, int height,
   f-> grad_o  = o_min - 1 ;
 
   /* initialize fast_expn stuff */
-  fast_expn_init () ;
+  fast_expn_init (f) ;
 
   return f ;
 }
@@ -1614,9 +1612,6 @@ vl_sift_calc_keypoint_orientations (VlSiftFilt *f,
     return 0 ;
   }
 
-  /* make gradient up to date */
-  vl_sift_update_gradient (f) ;
-
   /* clear histogram */
   memset (hist, 0, sizeof(double) * nbins) ;
 
@@ -1641,7 +1636,7 @@ vl_sift_calc_keypoint_orientations (VlSiftFilt *f,
       /* limit to a circular window */
       if (r2 >= W*W + 0.6) continue ;
 
-      wgt  = fast_expn (r2 / (2*sigmaw*sigmaw)) ;
+      wgt  = fast_expn (f, r2 / (2*sigmaw*sigmaw)) ;
       mod  = *(pt + xs*xo + ys*yo    ) ;
       ang  = *(pt + xs*xo + ys*yo + 1) ;
       fbin = nbins * ang / (2 * VL_PI) ;
@@ -1846,7 +1841,7 @@ vl_sift_calc_raw_descriptor (VlSiftFilt const *f,
        * NBP/2. */
       vl_sift_pix const wsigma = f->windowSize ;
       vl_sift_pix win = fast_expn
-        ((nx*nx + ny*ny)/(2.0 * wsigma * wsigma)) ;
+        (f, (nx*nx + ny*ny)/(2.0 * wsigma * wsigma)) ;
 
       /* The sample will be distributed in 8 adjacent bins.
          We start from the ``lower-left'' bin. */
@@ -1995,9 +1990,6 @@ vl_sift_calc_keypoint_descriptor (VlSiftFilt *f,
      si    >  f->s_max - 2     )
     return ;
 
-  /* synchronize gradient buffer */
-  vl_sift_update_gradient (f) ;
-
   /* VL_PRINTF("W = %d ; magnif = %g ; SBP = %g\n", W,magnif,SBP) ; */
 
   /* clear descriptor */
@@ -2043,7 +2035,7 @@ vl_sift_calc_keypoint_descriptor (VlSiftFilt *f,
        * NBP/2. */
       vl_sift_pix const wsigma = f->windowSize ;
       vl_sift_pix win = fast_expn
-        ((nx*nx + ny*ny)/(2.0 * wsigma * wsigma)) ;
+        (f, (nx*nx + ny*ny)/(2.0 * wsigma * wsigma)) ;
 
       /* The sample will be distributed in 8 adjacent bins.
          We start from the ``lower-left'' bin. */

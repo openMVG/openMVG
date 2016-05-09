@@ -67,7 +67,6 @@ const int InnerRandomAccessPattern  = 0x2 | CoherentAccessPattern;
 const int OuterRandomAccessPattern  = 0x4 | CoherentAccessPattern;
 const int RandomAccessPattern       = 0x8 | OuterRandomAccessPattern | InnerRandomAccessPattern;
 
-template<typename Derived> class SparseMatrixBase;
 template<typename _Scalar, int _Flags = 0, typename _Index = int>  class SparseMatrix;
 template<typename _Scalar, int _Flags = 0, typename _Index = int>  class DynamicSparseMatrix;
 template<typename _Scalar, int _Flags = 0, typename _Index = int>  class SparseVector;

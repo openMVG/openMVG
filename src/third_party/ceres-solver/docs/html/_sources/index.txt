@@ -36,7 +36,7 @@ Getting started
 ===============
 
 * Download the `latest stable release
-  <http://ceres-solver.org/ceres-solver-1.10.0.tar.gz>`_ or clone the
+  <http://ceres-solver.org/ceres-solver-1.11.0.tar.gz>`_ or clone the
   Git repository for the latest development version.
 
   .. code-block:: bash
@@ -47,8 +47,8 @@ Getting started
 * Join the `mailing list
   <https://groups.google.com/forum/?fromgroups#!forum/ceres-solver>`_
   and ask questions.
-* File bugs, feature requests in the `issue tracker
-  <https://code.google.com/p/ceres-solver/issues/list>`_.
+* File bugs, feature requests on `GitHub
+  <https://github.com/ceres-solver/ceres-solver/issues>`_.
 
 
 Cite Us

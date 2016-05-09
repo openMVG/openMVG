@@ -17,6 +17,8 @@
 #include "openMVG/features/regions_factory.hpp"
 #include "openMVG/features/image_describer.hpp"
 #include "openMVG/features/image_describer_akaze.hpp"
+#include "openMVG/features/tbmr/tbmr.hpp"
+#include "openMVG/features/mser/mser.hpp"
 #include "openMVG/features/io_regions_type.hpp"
 
 #endif // OPENMVG_FEATURES_HPP

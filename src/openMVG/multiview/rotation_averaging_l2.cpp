@@ -32,13 +32,22 @@ namespace l2  {
 // [1] 6.7.2 Consistent Rotation page 89
 // Closest Rotation Estimation R = U*transpose(V)
 //  approximate rotation in the Frobenius norm using SVD
-Mat3 ClosestSVDRotationMatrix(const Mat3 & rotMat)
+Mat3 ClosestSVDRotationMatrix
+(
+  const Mat3 & rotMat
+)
 {
   // Closest orthogonal matrix
   Eigen::JacobiSVD<Mat3> svd(rotMat,Eigen::ComputeFullV|Eigen::ComputeFullU);
-  const Mat3 U = svd.matrixU();
-  const Mat3 V = svd.matrixV();
-  return U*V.transpose();
+  const Mat3 & U = svd.matrixU();
+  const Mat3 & V = svd.matrixV();
+
+  Mat3 rot_mat = U*V.transpose();
+  // Ensure that the projection will have a +1 determinant (SO3).
+  if (rot_mat.determinant() < 0) {
+    rot_mat *= -1.0;
+  }
+  return rot_mat;
 }
 
 // <eigenvalue, eigenvector> pair comparator
@@ -53,10 +62,6 @@ bool compare_first_abs(std::pair<double, Vec> const &x, std::pair<double, Vec> c
 //- nCamera:               The number of camera to solve
 //- vec_rotationEstimate:  The relative rotation i->j
 //- vec_ApprRotMatrix:     The output global rotation
-
-// Minimization of the norm of:
-// => || wij * (rj - Rij * ri) ||= 0
-// With rj et rj the global rotation and Rij the relative rotation from i to j.
 //
 // Example:
 // 0_______2
@@ -70,10 +75,23 @@ bool compare_first_abs(std::pair<double, Vec> const &x, std::pair<double, Vec> c
 // vector.add( RelativeRotation(1,2, R12) );
 // vector.add( RelativeRotation(0,2, R02) );
 //
-bool L2RotationAveraging( size_t nCamera,
+// It solves the following linear system:
+// => wij * (R_j - R_{i,j} * R_i) = 0
+// Note:
+// R_j, R_j are the global rotations
+// R_{i,j} are the relative rotations from i to j.
+//
+// It creates a (3 * m) x (3 * n) system.
+// => m = #R_{i,j} => the number of relative rotations.
+// => n => the number of view (camera)
+//
+bool L2RotationAveraging
+(
+  size_t nCamera,
   const RelativeRotations& vec_relativeRot,
   // Output
-  std::vector<Mat3> & vec_ApprRotMatrix)
+  std::vector<Mat3> & global_rotations
+)
 {
   const size_t nRotationEstimation = vec_relativeRot.size();
   //--
@@ -88,36 +106,40 @@ bool L2RotationAveraging( size_t nCamera,
     iter != vec_relativeRot.end();
     iter++, cpt++)
   {
-   const RelativeRotation & Elem = *iter;
+    const RelativeRotation & Elem = *iter;
 
-   //-- Encode weight * ( rj - Rij * ri ) = 0
-   const size_t i = iter->i;
-   const size_t j = iter->j;
+    //-- Encode weight * ( rj - Rij * ri ) = 0
+    const sMat::Index i = iter->i;
+    const sMat::Index j = iter->j;
 
-   // A.block<3,3>(3 * cpt, 3 * i) = - Rij * weight;
-   tripletList.push_back(Eigen::Triplet<double>(3 * cpt, 3 * i, - iter->Rij(0,0) * iter->weight));
-   tripletList.push_back(Eigen::Triplet<double>(3 * cpt, 3 * i + 1, - iter->Rij(0,1) * iter->weight));
-   tripletList.push_back(Eigen::Triplet<double>(3 * cpt, 3 * i + 2, - iter->Rij(0,2) * iter->weight));
-   tripletList.push_back(Eigen::Triplet<double>(3 * cpt + 1, 3 * i, - iter->Rij(1,0) * iter->weight));
-   tripletList.push_back(Eigen::Triplet<double>(3 * cpt + 1, 3 * i + 1, - iter->Rij(1,1) * iter->weight));
-   tripletList.push_back(Eigen::Triplet<double>(3 * cpt + 1, 3 * i + 2, - iter->Rij(1,2) * iter->weight));
-   tripletList.push_back(Eigen::Triplet<double>(3 * cpt + 2, 3 * i, - iter->Rij(2,0) * iter->weight));
-   tripletList.push_back(Eigen::Triplet<double>(3 * cpt + 2, 3 * i + 1, - iter->Rij(2,1) * iter->weight));
-   tripletList.push_back(Eigen::Triplet<double>(3 * cpt + 2, 3 * i + 2, - iter->Rij(2,2) * iter->weight));
+    // A.block<3,3>(3 * cpt, 3 * i) = - Rij * weight;
+    tripletList.emplace_back(3 * cpt, 3 * i, - iter->Rij(0,0) * iter->weight);
+    tripletList.emplace_back(3 * cpt, 3 * i + 1, - iter->Rij(0,1) * iter->weight);
+    tripletList.emplace_back(3 * cpt, 3 * i + 2, - iter->Rij(0,2) * iter->weight);
+    tripletList.emplace_back(3 * cpt + 1, 3 * i, - iter->Rij(1,0) * iter->weight);
+    tripletList.emplace_back(3 * cpt + 1, 3 * i + 1, - iter->Rij(1,1) * iter->weight);
+    tripletList.emplace_back(3 * cpt + 1, 3 * i + 2, - iter->Rij(1,2) * iter->weight);
+    tripletList.emplace_back(3 * cpt + 2, 3 * i, - iter->Rij(2,0) * iter->weight);
+    tripletList.emplace_back(3 * cpt + 2, 3 * i + 1, - iter->Rij(2,1) * iter->weight);
+    tripletList.emplace_back(3 * cpt + 2, 3 * i + 2, - iter->Rij(2,2) * iter->weight);
 
    // A.block<3,3>(3 * cpt, 3 * j) = Id * weight;
-   tripletList.push_back(Eigen::Triplet<double>(3 * cpt, 3 * j, 1.0 * iter->weight));
-   tripletList.push_back(Eigen::Triplet<double>(3 * cpt + 1, 3 * j + 1, 1.0 * iter->weight));
-   tripletList.push_back(Eigen::Triplet<double>(3 * cpt + 2, 3 * j + 2, 1.0 * iter->weight));
+    tripletList.emplace_back(3 * cpt, 3 * j, iter->weight);
+    tripletList.emplace_back(3 * cpt + 1, 3 * j + 1, iter->weight);
+    tripletList.emplace_back(3 * cpt + 2, 3 * j + 2, iter->weight);
   }
 
   // nCamera * 3 because each columns have 3 elements.
-  sMat A(nRotationEstimation*3, 3*nCamera);
-  A.setFromTriplets(tripletList.begin(), tripletList.end());
-  tripletList.clear();
+  Mat AtA(3*nCamera,3*nCamera);
+  {
+    sMat A(nRotationEstimation*3, 3*nCamera);
+    A.setFromTriplets(tripletList.begin(), tripletList.end());
+    tripletList.clear();
+    tripletList.shrink_to_fit();
 
-  sMat AtAsparse = A.transpose() * A;
-  const Mat AtA = Mat(AtAsparse); // convert to dense
+    const sMat AtAsparse = A.transpose() * A;
+    AtA = Mat(AtAsparse); // convert to dense
+  }
 
   // You can use either SVD or eigen solver (eigen solver will be faster) to solve Ax=0
 
@@ -154,8 +176,8 @@ bool L2RotationAveraging( size_t nCamera,
     //  - Enforce the orthogonality constraint
     //     (approximate rotation in the Frobenius norm using SVD).
     //--
-    vec_ApprRotMatrix.clear();
-    vec_ApprRotMatrix.reserve(nCamera);
+    global_rotations.clear();
+    global_rotations.reserve(nCamera);
     for(size_t i=0; i < nCamera; ++i)
     {
       Mat3 Rotation;
@@ -164,17 +186,15 @@ bool L2RotationAveraging( size_t nCamera,
                   NullspaceVector2.segment(3 * i, 3);
 
       //-- Compute the closest SVD rotation matrix
-      Rotation = ClosestSVDRotationMatrix(Rotation);
-      vec_ApprRotMatrix.push_back(Rotation);
+      global_rotations.emplace_back(ClosestSVDRotationMatrix(Rotation));
     }
     // Force R0 to be Identity
-    const Mat3 R0T = vec_ApprRotMatrix[0].transpose();
+    const Mat3 R0T = global_rotations[0].transpose();
     for(size_t i = 0; i < nCamera; ++i) {
-      vec_ApprRotMatrix[i] *= R0T;
+      global_rotations[i] *= R0T;
     }
-
-    return true;
   }
+  return true;
 }
 
 // Ceres Functor to minimize global rotation regarding fixed relative rotation
@@ -184,7 +204,13 @@ struct CeresPairRotationError {
 
   // The error is given by the rotation cycle error (R2 * R1.t) * RRel.t
   template <typename T>
-  bool operator() (const T* angleAxis1, const T* angleAxis2, T* residuals) const
+  bool operator()
+  (
+    const T* angleAxis1,
+    const T* angleAxis2,
+    T* residuals
+  )
+  const
   {
     const T relative_rotation[3] = {
       T(relative_rotation_[0]),
@@ -214,14 +240,16 @@ struct CeresPairRotationError {
   const double weight_;
 };
 
-bool L2RotationAveraging_Refine(
+bool L2RotationAveraging_Refine
+(
   const RelativeRotations & vec_relativeRot,
-  std::vector<openMVG::Mat3> & vec_ApprRotMatrix)
+  std::vector<openMVG::Mat3> & vec_ApprRotMatrix
+)
 {
   if (vec_relativeRot.size() == 0 ||vec_ApprRotMatrix.size() == 0 ) {
     std::cout << "Skip nonlinear rotation optimization, no sufficient data provided " << std::endl;
     return false;
-}
+  }
 
   // Convert global rotation to AngleAxis representation
   std::vector<openMVG::Vec3> vec_Rot_AngleAxis(vec_ApprRotMatrix.size());
@@ -255,11 +283,22 @@ bool L2RotationAveraging_Refine(
       vec_Rot_AngleAxis[j].data());
   }
   ceres::Solver::Options solverOptions;
-  // Since the problem is sparse, use a sparse solver
-  if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE) ||
-      ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE) ||
-      ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+  solverOptions.minimizer_progress_to_stdout = false;
+  solverOptions.logging_type = ceres::SILENT;
+  // Since the problem is sparse, use a sparse solver iff available
+  if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
   {
+    solverOptions.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
+    solverOptions.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+  }
+  else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
+  {
+    solverOptions.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
+    solverOptions.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+  }
+  else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+  {
+    solverOptions.sparse_linear_algebra_library_type = ceres::EIGEN_SPARSE;
     solverOptions.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
   }
   else
@@ -280,11 +319,11 @@ bool L2RotationAveraging_Refine(
     // Convert back the AngleAxis rotations to rotations matrices
     for (int i=0; i < vec_ApprRotMatrix.size(); ++i)
     {
-      ceres::AngleAxisToRotationMatrix(vec_Rot_AngleAxis[i].data(), vec_ApprRotMatrix[i].data());
+      ceres::AngleAxisToRotationMatrix(
+        vec_Rot_AngleAxis[i].data(), vec_ApprRotMatrix[i].data());
     }
-    return true;
   }
-  return false;
+  return summary.IsSolutionUsable();
 }
 
 } // namespace l2

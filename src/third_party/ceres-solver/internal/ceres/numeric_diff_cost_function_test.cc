@@ -1,6 +1,6 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2010, 2011, 2012 Google Inc. All rights reserved.
-// http://code.google.com/p/ceres-solver/
+// Copyright 2015 Google Inc. All rights reserved.
+// http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -27,6 +27,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 // Author: keir@google.com (Keir Mierle)
+//         tbennun@gmail.com (Tal Ben-Nun)
 
 #include "ceres/numeric_diff_cost_function.h"
 
@@ -71,6 +72,19 @@ TEST(NumericDiffCostFunction, EasyCaseFunctorForwardDifferences) {
   functor.ExpectCostFunctionEvaluationIsNearlyCorrect(*cost_function, FORWARD);
 }
 
+TEST(NumericDiffCostFunction, EasyCaseFunctorRidders) {
+  internal::scoped_ptr<CostFunction> cost_function;
+  cost_function.reset(
+      new NumericDiffCostFunction<EasyFunctor,
+                                  RIDDERS,
+                                  3,  /* number of residuals */
+                                  5,  /* size of x1 */
+                                  5   /* size of x2 */>(
+          new EasyFunctor));
+  EasyFunctor functor;
+  functor.ExpectCostFunctionEvaluationIsNearlyCorrect(*cost_function, RIDDERS);
+}
+
 TEST(NumericDiffCostFunction, EasyCaseCostFunctionCentralDifferences) {
   internal::scoped_ptr<CostFunction> cost_function;
   cost_function.reset(
@@ -97,7 +111,21 @@ TEST(NumericDiffCostFunction, EasyCaseCostFunctionForwardDifferences) {
   functor.ExpectCostFunctionEvaluationIsNearlyCorrect(*cost_function, FORWARD);
 }
 
-TEST(NumericDiffCostFunction, TranscendentalCaseFunctorCentralDifferences) {
+TEST(NumericDiffCostFunction, EasyCaseCostFunctionRidders) {
+  internal::scoped_ptr<CostFunction> cost_function;
+  cost_function.reset(
+      new NumericDiffCostFunction<EasyCostFunction,
+                                  RIDDERS,
+                                  3,  /* number of residuals */
+                                  5,  /* size of x1 */
+                                  5   /* size of x2 */>(
+          new EasyCostFunction, TAKE_OWNERSHIP));
+  EasyFunctor functor;
+  functor.ExpectCostFunctionEvaluationIsNearlyCorrect(*cost_function, RIDDERS);
+}
+
+TEST(NumericDiffCostFunction,
+     TranscendentalCaseFunctorCentralDifferences) {
   internal::scoped_ptr<CostFunction> cost_function;
   cost_function.reset(
       new NumericDiffCostFunction<TranscendentalFunctor,
@@ -110,7 +138,8 @@ TEST(NumericDiffCostFunction, TranscendentalCaseFunctorCentralDifferences) {
   functor.ExpectCostFunctionEvaluationIsNearlyCorrect(*cost_function, CENTRAL);
 }
 
-TEST(NumericDiffCostFunction, TranscendentalCaseFunctorForwardDifferences) {
+TEST(NumericDiffCostFunction,
+     TranscendentalCaseFunctorForwardDifferences) {
   internal::scoped_ptr<CostFunction> cost_function;
   cost_function.reset(
       new NumericDiffCostFunction<TranscendentalFunctor,
@@ -123,7 +152,28 @@ TEST(NumericDiffCostFunction, TranscendentalCaseFunctorForwardDifferences) {
   functor.ExpectCostFunctionEvaluationIsNearlyCorrect(*cost_function, FORWARD);
 }
 
-TEST(NumericDiffCostFunction, TranscendentalCaseCostFunctionCentralDifferences) {
+TEST(NumericDiffCostFunction,
+     TranscendentalCaseFunctorRidders) {
+  NumericDiffOptions options;
+
+  // Using a smaller initial step size to overcome oscillatory function
+  // behavior.
+  options.ridders_relative_initial_step_size = 1e-3;
+
+  internal::scoped_ptr<CostFunction> cost_function;
+  cost_function.reset(
+      new NumericDiffCostFunction<TranscendentalFunctor,
+                                  RIDDERS,
+                                  2,  /* number of residuals */
+                                  5,  /* size of x1 */
+                                  5   /* size of x2 */>(
+          new TranscendentalFunctor, TAKE_OWNERSHIP, 2, options));
+  TranscendentalFunctor functor;
+  functor.ExpectCostFunctionEvaluationIsNearlyCorrect(*cost_function, RIDDERS);
+}
+
+TEST(NumericDiffCostFunction,
+     TranscendentalCaseCostFunctionCentralDifferences) {
   internal::scoped_ptr<CostFunction> cost_function;
   cost_function.reset(
       new NumericDiffCostFunction<TranscendentalCostFunction,
@@ -136,7 +186,8 @@ TEST(NumericDiffCostFunction, TranscendentalCaseCostFunctionCentralDifferences) 
   functor.ExpectCostFunctionEvaluationIsNearlyCorrect(*cost_function, CENTRAL);
 }
 
-TEST(NumericDiffCostFunction, TranscendentalCaseCostFunctionForwardDifferences) {
+TEST(NumericDiffCostFunction,
+     TranscendentalCaseCostFunctionForwardDifferences) {
   internal::scoped_ptr<CostFunction> cost_function;
   cost_function.reset(
       new NumericDiffCostFunction<TranscendentalCostFunction,
@@ -147,6 +198,26 @@ TEST(NumericDiffCostFunction, TranscendentalCaseCostFunctionForwardDifferences) 
           new TranscendentalCostFunction, TAKE_OWNERSHIP));
   TranscendentalFunctor functor;
   functor.ExpectCostFunctionEvaluationIsNearlyCorrect(*cost_function, FORWARD);
+}
+
+TEST(NumericDiffCostFunction,
+     TranscendentalCaseCostFunctionRidders) {
+  NumericDiffOptions options;
+
+  // Using a smaller initial step size to overcome oscillatory function
+  // behavior.
+  options.ridders_relative_initial_step_size = 1e-3;
+
+  internal::scoped_ptr<CostFunction> cost_function;
+  cost_function.reset(
+      new NumericDiffCostFunction<TranscendentalCostFunction,
+                                  RIDDERS,
+                                  2,  /* number of residuals */
+                                  5,  /* size of x1 */
+                                  5   /* size of x2 */>(
+          new TranscendentalCostFunction, TAKE_OWNERSHIP, 2, options));
+  TranscendentalFunctor functor;
+  functor.ExpectCostFunctionEvaluationIsNearlyCorrect(*cost_function, RIDDERS);
 }
 
 template<int num_rows, int num_cols>
@@ -208,7 +279,8 @@ TEST(NumericDiffCostFunction, EigenRowMajorColMajorTest) {
           new EasyFunctor, TAKE_OWNERSHIP, 2));
 }
 
-TEST(NumericDiffCostFunction, EasyCaseFunctorCentralDifferencesAndDynamicNumResiduals) {
+TEST(NumericDiffCostFunction,
+     EasyCaseFunctorCentralDifferencesAndDynamicNumResiduals) {
   internal::scoped_ptr<CostFunction> cost_function;
   cost_function.reset(
       new NumericDiffCostFunction<EasyFunctor,
@@ -220,6 +292,67 @@ TEST(NumericDiffCostFunction, EasyCaseFunctorCentralDifferencesAndDynamicNumResi
   EasyFunctor functor;
   functor.ExpectCostFunctionEvaluationIsNearlyCorrect(*cost_function, CENTRAL);
 }
+
+TEST(NumericDiffCostFunction, ExponentialFunctorRidders) {
+  internal::scoped_ptr<CostFunction> cost_function;
+  cost_function.reset(
+      new NumericDiffCostFunction<ExponentialFunctor,
+                                  RIDDERS,
+                                  1,  /* number of residuals */
+                                  1   /* size of x1 */>(
+             new ExponentialFunctor));
+  ExponentialFunctor functor;
+  functor.ExpectCostFunctionEvaluationIsNearlyCorrect(*cost_function);
+}
+
+TEST(NumericDiffCostFunction, ExponentialCostFunctionRidders) {
+  internal::scoped_ptr<CostFunction> cost_function;
+  cost_function.reset(
+      new NumericDiffCostFunction<ExponentialCostFunction,
+                                  RIDDERS,
+                                  1,  /* number of residuals */
+                                  1   /* size of x1 */>(
+             new ExponentialCostFunction));
+  ExponentialFunctor functor;
+  functor.ExpectCostFunctionEvaluationIsNearlyCorrect(*cost_function);
+}
+
+TEST(NumericDiffCostFunction, RandomizedFunctorRidders) {
+  internal::scoped_ptr<CostFunction> cost_function;
+  NumericDiffOptions options;
+  // Larger initial step size is chosen to produce robust results in the
+  // presence of random noise.
+  options.ridders_relative_initial_step_size = 10.0;
+
+  cost_function.reset(
+      new NumericDiffCostFunction<RandomizedFunctor,
+                                  RIDDERS,
+                                  1,  /* number of residuals */
+                                  1   /* size of x1 */>(
+             new RandomizedFunctor(kNoiseFactor, kRandomSeed), TAKE_OWNERSHIP,
+             1, options));
+  RandomizedFunctor functor (kNoiseFactor, kRandomSeed);
+  functor.ExpectCostFunctionEvaluationIsNearlyCorrect(*cost_function);
+}
+
+TEST(NumericDiffCostFunction, RandomizedCostFunctionRidders) {
+  internal::scoped_ptr<CostFunction> cost_function;
+  NumericDiffOptions options;
+  // Larger initial step size is chosen to produce robust results in the
+  // presence of random noise.
+  options.ridders_relative_initial_step_size = 10.0;
+
+  cost_function.reset(
+      new NumericDiffCostFunction<RandomizedCostFunction,
+                                  RIDDERS,
+                                  1,  /* number of residuals */
+                                  1   /* size of x1 */>(
+             new RandomizedCostFunction(kNoiseFactor, kRandomSeed),
+             TAKE_OWNERSHIP, 1, options));
+  RandomizedFunctor functor (kNoiseFactor, kRandomSeed);
+  functor.ExpectCostFunctionEvaluationIsNearlyCorrect(*cost_function);
+}
+
 
 }  // namespace internal
 }  // namespace ceres

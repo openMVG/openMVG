@@ -1,6 +1,6 @@
 # Ceres Solver - A fast non-linear least squares minimizer
-# Copyright 2013 Google Inc. All rights reserved.
-# http://code.google.com/p/ceres-solver/
+# Copyright 2015 Google Inc. All rights reserved.
+# http://ceres-solver.org/
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -35,7 +35,7 @@
 #  SPHINX_EXECUTABLE
 #  SPHINX_FOUND
 
-FIND_PROGRAM(SPHINX_EXECUTABLE
+find_program(SPHINX_EXECUTABLE
              NAMES sphinx-build
              PATHS
                /usr/bin
@@ -43,24 +43,24 @@ FIND_PROGRAM(SPHINX_EXECUTABLE
                /opt/local/bin
              DOC "Sphinx documentation generator")
 
-IF (NOT SPHINX_EXECUTABLE)
-  SET(_Python_VERSIONS 2.7 2.6 2.5 2.4 2.3 2.2 2.1 2.0 1.6 1.5)
+if (NOT SPHINX_EXECUTABLE)
+  set(_Python_VERSIONS 2.7 2.6 2.5 2.4 2.3 2.2 2.1 2.0 1.6 1.5)
 
-  FOREACH (_version ${_Python_VERSIONS})
-    SET(_sphinx_NAMES sphinx-build-${_version})
+  foreach (_version ${_Python_VERSIONS})
+    set(_sphinx_NAMES sphinx-build-${_version})
 
-    FIND_PROGRAM(SPHINX_EXECUTABLE
+    find_program(SPHINX_EXECUTABLE
                  NAMES ${_sphinx_NAMES}
                  PATHS
                    /usr/bin
                    /usr/local/bin
-                   /opt/loca/bin
+                   /opt/local/bin
                  DOC "Sphinx documentation generator")
-  ENDFOREACH ()
-ENDIF ()
+  endforeach ()
+endif ()
 
-INCLUDE(FindPackageHandleStandardArgs)
+include(FindPackageHandleStandardArgs)
 
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(Sphinx DEFAULT_MSG SPHINX_EXECUTABLE)
+find_package_handle_standard_args(Sphinx DEFAULT_MSG SPHINX_EXECUTABLE)
 
-MARK_AS_ADVANCED(SPHINX_EXECUTABLE)
+mark_as_advanced(SPHINX_EXECUTABLE)

@@ -19,21 +19,31 @@ namespace sfm {
 using namespace openMVG::geometry;
 using namespace openMVG::cameras;
 
-SfM_Data_Structure_Computation_Basis::SfM_Data_Structure_Computation_Basis(bool bConsoleVerbose)
-  :_bConsoleVerbose(bConsoleVerbose)
+SfM_Data_Structure_Computation_Basis::SfM_Data_Structure_Computation_Basis
+(
+  bool bConsoleVerbose
+):
+  bConsole_verbose_(bConsoleVerbose)
 {
 }
 
-SfM_Data_Structure_Computation_Blind::SfM_Data_Structure_Computation_Blind(bool bConsoleVerbose)
+SfM_Data_Structure_Computation_Blind::SfM_Data_Structure_Computation_Blind
+(
+  bool bConsoleVerbose
+)
   :SfM_Data_Structure_Computation_Basis(bConsoleVerbose)
 {
 }
 
-void SfM_Data_Structure_Computation_Blind::triangulate(SfM_Data & sfm_data) const
+void SfM_Data_Structure_Computation_Blind::triangulate
+(
+  SfM_Data & sfm_data
+)
+const
 {
   std::deque<IndexT> rejectedId;
   std::unique_ptr<C_Progress_display> my_progress_bar;
-  if (_bConsoleVerbose)
+  if (bConsole_verbose_)
     my_progress_bar.reset( new C_Progress_display(
     sfm_data.structure.size(),
     std::cout,
@@ -49,7 +59,7 @@ void SfM_Data_Structure_Computation_Blind::triangulate(SfM_Data & sfm_data) cons
   #pragma omp single nowait
 #endif
     {
-      if (_bConsoleVerbose)
+      if (bConsole_verbose_)
       {
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
@@ -108,12 +118,21 @@ void SfM_Data_Structure_Computation_Blind::triangulate(SfM_Data & sfm_data) cons
   }
 }
 
-SfM_Data_Structure_Computation_Robust::SfM_Data_Structure_Computation_Robust(bool bConsoleVerbose)
-  :SfM_Data_Structure_Computation_Basis(bConsoleVerbose)
+SfM_Data_Structure_Computation_Robust::SfM_Data_Structure_Computation_Robust
+(
+  const double max_reprojection_error,
+  bool bConsoleVerbose
+):
+  SfM_Data_Structure_Computation_Basis(bConsoleVerbose),
+  max_reprojection_error_(max_reprojection_error)
 {
 }
 
-void SfM_Data_Structure_Computation_Robust::triangulate(SfM_Data & sfm_data) const
+void SfM_Data_Structure_Computation_Robust::triangulate
+(
+  SfM_Data & sfm_data
+)
+const
 {
   robust_triangulation(sfm_data);
 }
@@ -121,11 +140,15 @@ void SfM_Data_Structure_Computation_Robust::triangulate(SfM_Data & sfm_data) con
 /// Robust triangulation of track data contained in the structure
 /// All observations must have View with valid Intrinsic and Pose data
 /// Invalid landmark are removed.
-void SfM_Data_Structure_Computation_Robust::robust_triangulation(SfM_Data & sfm_data) const
+void SfM_Data_Structure_Computation_Robust::robust_triangulation
+(
+  SfM_Data & sfm_data
+)
+const
 {
   std::deque<IndexT> rejectedId;
   std::unique_ptr<C_Progress_display> my_progress_bar;
-  if (_bConsoleVerbose)
+  if (bConsole_verbose_)
     my_progress_bar.reset( new C_Progress_display(
     sfm_data.structure.size(),
     std::cout,
@@ -141,19 +164,21 @@ void SfM_Data_Structure_Computation_Robust::robust_triangulation(SfM_Data & sfm_
   #pragma omp single nowait
 #endif
     {
-      if (_bConsoleVerbose)
+      if (bConsole_verbose_)
       {
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
 #endif
         ++(*my_progress_bar);
       }
-      Vec3 X;
-      if (robust_triangulation(sfm_data, iterTracks->second.obs, X)) {
-        iterTracks->second.X = X;
+      Landmark landmark;
+      if (robust_triangulation(sfm_data, iterTracks->second.obs, landmark))
+      {
+        iterTracks->second = landmark;
       }
-      else {
-        iterTracks->second.X = Vec3::Zero();
+      else
+      {
+        // Track must be deleted
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
 #endif
@@ -173,25 +198,28 @@ void SfM_Data_Structure_Computation_Robust::robust_triangulation(SfM_Data & sfm_
 /// Robustly try to estimate the best 3D point using a ransac Scheme
 /// A point must be seen in at least 3 views
 /// Return true for a successful triangulation
-bool SfM_Data_Structure_Computation_Robust::robust_triangulation(
+bool SfM_Data_Structure_Computation_Robust::robust_triangulation
+(
   const SfM_Data & sfm_data,
   const Observations & obs,
-  Vec3 & X,
+  Landmark & landmark, // X & valid observations
   const IndexT min_required_inliers,
-  const IndexT min_sample_index) const
+  const IndexT min_sample_index
+)
+const
 {
   if (obs.size() < 3)
   {
     return false;
   }
 
-  const double dThresholdPixel = 4.0; // TODO: make this parameter customizable
+  const double dSquared_pixel_threshold = Square(max_reprojection_error_);
 
   const IndexT nbIter = obs.size(); // TODO: automatic computation of the number of iterations?
 
   // - Ransac variables
   Vec3 best_model;
-  std::set<IndexT> best_inlier_set;
+  std::deque<IndexT> best_inlier_set;
   double best_error = std::numeric_limits<double>::max();
 
   // - Ransac loop
@@ -210,22 +238,27 @@ bool SfM_Data_Structure_Computation_Robust::robust_triangulation(
 
     // Chierality (Check the point is in front of the sampled cameras)
     bool bChierality = true;
-    for (auto& it : samples){
+    bool bReprojection_error = true;
+    for (std::set<IndexT>::const_iterator it = samples.begin();
+      it != samples.end() && bChierality && bReprojection_error; ++it)
+    {
       Observations::const_iterator itObs = obs.begin();
-      std::advance(itObs, it);
+      std::advance(itObs, *it);
       const View * view = sfm_data.views.at(itObs->first).get();
       const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
-      const double z = pose.depth(current_model); // TODO: cam->depth(pose(X));
+      const double z = pose.depth(current_model);
       bChierality &= z > 0;
+      const Vec2 residual = cam->residual(pose, current_model, itObs->second.x);
+      bReprojection_error &= residual.squaredNorm() < dSquared_pixel_threshold;
     }
 
-    if (!bChierality)
+    if (!bChierality || !bReprojection_error)
       continue;
 
-    std::set<IndexT> inlier_set;
+    std::deque<IndexT> inlier_set;
     double current_error = 0.0;
-    // Classification as inlier/outlier according pixel residual errors.
+    // inlier/outlier classification according pixel residual errors.
     for (Observations::const_iterator itObs = obs.begin();
         itObs != obs.end(); ++itObs)
     {
@@ -233,23 +266,32 @@ bool SfM_Data_Structure_Computation_Robust::robust_triangulation(
       const IntrinsicBase * intrinsic = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
       const Vec2 residual = intrinsic->residual(pose, current_model, itObs->second.x);
-      const double residual_d = residual.norm();
-      if (residual_d < dThresholdPixel)
+      const double residual_d = residual.squaredNorm();
+      if (residual_d < dSquared_pixel_threshold)
       {
-        inlier_set.insert(itObs->first);
+        inlier_set.push_front(itObs->first);
         current_error += residual_d;
       }
       else
       {
-        current_error += dThresholdPixel;
+        current_error += dSquared_pixel_threshold;
       }
     }
     // Does the hypothesis is the best one we have seen and have sufficient inliers.
     if (current_error < best_error && inlier_set.size() >= min_required_inliers)
     {
-      X = best_model = current_model;
+      best_model = current_model;
       best_inlier_set = inlier_set;
       best_error = current_error;
+    }
+  }
+  if (!best_inlier_set.empty())
+  {
+    // Update information (3D landmark position & valid observations)
+    landmark.X = best_model;
+    for (const IndexT & val : best_inlier_set)
+    {
+      landmark.obs[val] = obs.at(val);
     }
   }
   return !best_inlier_set.empty();
