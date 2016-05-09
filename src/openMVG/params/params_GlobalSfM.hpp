@@ -22,10 +22,20 @@ namespace params {
 struct paramsGlobalSfM
 {
 	bool valid;
-	// RefineIntrinsics
-    //		- 0 intrinsic parameters are kept as constant"
-	//		- 1 refine intrinsic parameters (default)"
-	bool refineIntrinsics;
+	// Intrinsic parameters refinement option
+  //    ADJUST_ALL -> refine all existing parameters (default) \n"
+	//    NONE -> intrinsic parameters are held as constant\n"
+	//    ADJUST_FOCAL_LENGTH -> refine only the focal length\n"
+	//    ADJUST_PRINCIPAL_POINT -> refine only the principal point position\n"
+//      ADJUST_DISTORTION -> refine only the distortion coefficient(s) (if any)\n"
+	//      -> NOTE: options can be combined thanks to '|'\n"
+	//    ADJUST_FOCAL_LENGTH|ADJUST_PRINCIPAL_POINT\n"
+	//      -> refine the focal length & the principal point position\n"
+	//    ADJUST_FOCAL_LENGTH|ADJUST_DISTORTION\n"
+	//      -> refine the focal length & the distortion coefficient(s) (if any)\n"
+	//    ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION\n"
+	//      -> refine the principal point position & the distortion coefficient(s) (if any)\n"
+	std::string refineIntrinsics;
 
     // RotationAveraging method:"
 	//		- 1: L1 minimization
@@ -50,7 +60,7 @@ struct paramsGlobalSfM
 
 	paramsGlobalSfM(
 	bool _valid=false,
-	bool _refineIntrinsics=1,
+	std::string _refineIntrinsics="ADJUST_ALL",
 	int _rotationAveragingMethod=2,
 	int _translationAveragingMethod=3,
 	size_t _min_obs_per_track=3,

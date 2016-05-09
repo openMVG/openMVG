@@ -676,16 +676,20 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
           Vec3 X;
           TriangulateDLT(P1, x1_, P2, x2_, &X);
           Observations obs;
-          obs[view_I->id_view] = Observation(x1_, matches[k]._i);
-          obs[view_J->id_view] = Observation(x2_, matches[k]._j);
+          obs[view_I->id_view] = Observation(x1_, matches[k].i_);
+          obs[view_J->id_view] = Observation(x2_, matches[k].j_);
           landmarks[k].obs = obs;
           landmarks[k].X = X;
         }
         // - refine only Structure and Rotations & translations (keep intrinsic constant)
-        Bundle_Adjustment_Ceres::BA_options options(false, false);
-        options._linear_solver_type = ceres::DENSE_SCHUR;
+        Bundle_Adjustment_Ceres::BA_Ceres_options options(false, false);
+        options.linear_solver_type_ = ceres::DENSE_SCHUR;
         Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-        if (bundle_adjustment_obj.Adjust(tiny_scene, true, true, false))
+        const Optimize_Options ba_refine_options
+          (Intrinsic_Parameter_Type::NONE, // -> Keep intrinsic constant
+          Extrinsic_Parameter_Type::ADJUST_ALL, // adjust camera motion
+          Structure_Parameter_Type::ADJUST_ALL);// adjust scene structure
+        if (bundle_adjustment_obj.Adjust(tiny_scene, ba_refine_options))
         {
           // --> to debug: save relative pair geometry on disk
           // std::ostringstream os;

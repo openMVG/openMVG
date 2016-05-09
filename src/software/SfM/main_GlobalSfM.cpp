@@ -105,7 +105,7 @@ int main(int argc, char **argv)
 		  // Set loaded parameters
 		  std::cout << std::endl
 		  		  << "Parameters loaded from: \""<< sParams_Data_Filename << "\"" << std::endl << std::endl;
-		  bRefineIntrinsics = params_globalSfM.refineIntrinsics;
+		  sIntrinsic_refinement_options = params_globalSfM.refineIntrinsics;
 		  iRotationAveragingMethod = params_globalSfM.rotationAveragingMethod;
 		  iTranslationAveragingMethod = params_globalSfM.translationAveragingMethod;
 	  }

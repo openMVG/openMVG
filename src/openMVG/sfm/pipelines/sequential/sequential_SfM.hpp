@@ -66,7 +66,7 @@ public:
    */
   void SetUnknownCameraType(const cameras::EINTRINSIC camType)
   {
-    _camType = camType;
+    cam_type_ = camType;
   }
 
 protected:
@@ -104,7 +104,7 @@ private:
   //-- Data provider
   Features_Provider  * features_provider_;
   Matches_Provider  * matches_provider_;
-
+  paramsIncrementalSfM params_data_;
   // Temporary data
   openMVG::tracks::STLMAPTracks map_tracks_; // putative landmark tracks (visibility per 3D point)
   Hash_Map<IndexT, double> map_ACThreshold_; // Per camera confidence (A contrario estimated threshold error)

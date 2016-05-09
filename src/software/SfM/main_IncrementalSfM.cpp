@@ -11,6 +11,7 @@
 /// Parameterization
 #include "openMVG/sfm/sfm.hpp"
 #include "openMVG/system/timer.hpp"
+#include "openMVG/cameras/Cameras_Common_command_line_helper.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -141,7 +142,7 @@ int main(int argc, char **argv)
 		  std::cout << std::endl
 		  		  << "Parameters loaded from: \""<< sParams_Data_Filename << "\"" << std::endl << std::endl;
 		  params_loaded = true;
-		  bRefineIntrinsics = params_incSfM.refineIntrinsics;
+		  sIntrinsic_refinement_options = params_incSfM.refineIntrinsics;
 		  i_User_camera_model = params_incSfM.camera_type;
 	  }
   }
@@ -151,7 +152,7 @@ int main(int argc, char **argv)
   //---------------------------------------
 
   const cameras::Intrinsic_Parameter_Type intrinsic_refinement_options =
-    cameras::StringTo_Intrinsic_Parameter_Type(sIntrinsic_refinement_options);
+      cameras::StringTo_Intrinsic_Parameter_Type(sIntrinsic_refinement_options);
 
   // Load input SfM_Data scene
   SfM_Data sfm_data;
