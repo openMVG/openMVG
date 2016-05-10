@@ -7,6 +7,7 @@
 
 #include "openMVG/sfm/sfm.hpp"
 #include "openMVG/image/image.hpp"
+#include "openMVG/system/timer.hpp"
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -19,14 +20,25 @@ using namespace openMVG::sfm;
 
 #include <stdlib.h>
 
+#ifdef OPENMVG_USE_OPENMP
+#include <omp.h>
+#endif
+
 int main(int argc, char *argv[]) {
 
   CmdLine cmd;
   std::string sSfM_Data_Filename;
   std::string sOutDir = "";
+#ifdef OPENMVG_USE_OPENMP
+  int iNumThreads = 0;
+#endif
 
   cmd.add( make_option('i', sSfM_Data_Filename, "sfmdata") );
   cmd.add( make_option('o', sOutDir, "outdir") );
+
+#ifdef OPENMVG_USE_OPENMP
+  cmd.add( make_option('n', iNumThreads, "numThreads") );
+#endif
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -37,6 +49,9 @@ int main(int argc, char *argv[]) {
       << "Usage: " << argv[0] << '\n'
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
       << "[-o|--outdir] path\n"
+#ifdef OPENMVG_USE_OPENMP
+      << "[-n|--numThreads] number of parallel computations\n"
+#endif
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -56,13 +71,29 @@ int main(int argc, char *argv[]) {
 
   bool bOk = true;
   {
+  
+    system::Timer timer;
     // Export views as undistorted images (those with valid Intrinsics)
     Image<RGBColor> image, image_ud;
-    C_Progress_display my_progress_bar( sfm_data.GetViews().size() );
-    for(Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
+    C_Progress_display my_progress_bar( sfm_data.GetViews().size(), std::cout, "\n- EXTRACT UNDISTORTED IMAGES -\n" );
+    
+    #ifdef OPENMVG_USE_OPENMP
+    const unsigned int nb_max_thread = omp_get_max_threads();
+    #endif
+    
+#ifdef OPENMVG_USE_OPENMP
+    omp_set_num_threads(iNumThreads);
+    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) private(image,image_ud)
+#endif
+    for(int i = 0; i < sfm_data.views.size(); ++i)
     {
-      const View * view = iter->second.get();
+#ifdef OPENMVG_USE_OPENMP
+      if(iNumThreads == 0) omp_set_num_threads(nb_max_thread);
+#endif
+      Views::const_iterator iterViews = sfm_data.views.begin();
+      std::advance(iterViews, i);     
+    
+      const View * view = iterViews->second.get();
       bool bIntrinsicDefined = view->id_intrinsic != UndefinedIndexT &&
         sfm_data.GetIntrinsics().find(view->id_intrinsic) != sfm_data.GetIntrinsics().end();
 
@@ -87,7 +118,12 @@ int main(int argc, char *argv[]) {
         // copy the image since there is no distortion
         stlplus::file_copy(srcImage, dstImage);
       }
+#ifdef OPENMVG_USE_OPENMP
+      #pragma omp critical
+#endif
+      ++my_progress_bar;
     }
+    std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
   }
 
   // Exit program
