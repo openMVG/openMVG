@@ -29,12 +29,14 @@ int main(int argc, char *argv[]) {
   CmdLine cmd;
   std::string sSfM_Data_Filename;
   std::string sOutDir = "";
+  bool bExportOnlyReconstructedViews = false;
 #ifdef OPENMVG_USE_OPENMP
   int iNumThreads = 0;
 #endif
 
   cmd.add( make_option('i', sSfM_Data_Filename, "sfmdata") );
   cmd.add( make_option('o', sOutDir, "outdir") );
+  cmd.add( make_option('r', bExportOnlyReconstructedViews, "exportOnlyReconstructed") );
 
 #ifdef OPENMVG_USE_OPENMP
   cmd.add( make_option('n', iNumThreads, "numThreads") );
@@ -49,6 +51,7 @@ int main(int argc, char *argv[]) {
       << "Usage: " << argv[0] << '\n'
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
       << "[-o|--outdir] path\n"
+      << "[-r|--exportOnlyReconstructed] path\n"
 #ifdef OPENMVG_USE_OPENMP
       << "[-n|--numThreads] number of parallel computations\n"
 #endif
@@ -94,6 +97,10 @@ int main(int argc, char *argv[]) {
       std::advance(iterViews, i);     
     
       const View * view = iterViews->second.get();
+      // Check if the view is in reconstruction
+      if(bExportOnlyReconstructedViews && !sfm_data.IsPoseAndIntrinsicDefined(view))
+        continue;
+        
       bool bIntrinsicDefined = view->id_intrinsic != UndefinedIndexT &&
         sfm_data.GetIntrinsics().find(view->id_intrinsic) != sfm_data.GetIntrinsics().end();
 
