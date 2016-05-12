@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <stdio.h>
+#include <limits>
 #include <vector>
 
 using std::string;
@@ -880,18 +881,18 @@ void easyexif::EXIFInfo::clear() {
   ImageHeight = 0;
 
   // Geolocation
-  GeoLocation.Latitude = 0;
-  GeoLocation.Longitude = 0;
-  GeoLocation.Altitude = 0;
+  GeoLocation.Latitude = std::numeric_limits<double>::infinity();
+  GeoLocation.Longitude = std::numeric_limits<double>::infinity();
+  GeoLocation.Altitude = std::numeric_limits<double>::infinity();
   GeoLocation.AltitudeRef = 0;
-  GeoLocation.DOP = 0;
-  GeoLocation.LatComponents.degrees = 0;
-  GeoLocation.LatComponents.minutes = 0;
-  GeoLocation.LatComponents.seconds = 0;
+  GeoLocation.DOP = std::numeric_limits<double>::infinity();
+  GeoLocation.LatComponents.degrees = std::numeric_limits<double>::infinity();
+  GeoLocation.LatComponents.minutes = std::numeric_limits<double>::infinity();
+  GeoLocation.LatComponents.seconds = std::numeric_limits<double>::infinity();
   GeoLocation.LatComponents.direction = '?';
-  GeoLocation.LonComponents.degrees = 0;
-  GeoLocation.LonComponents.minutes = 0;
-  GeoLocation.LonComponents.seconds = 0;
+  GeoLocation.LonComponents.degrees = std::numeric_limits<double>::infinity();
+  GeoLocation.LonComponents.minutes = std::numeric_limits<double>::infinity();
+  GeoLocation.LonComponents.seconds = std::numeric_limits<double>::infinity();
   GeoLocation.LonComponents.direction = '?';
 
   // LensInfo
