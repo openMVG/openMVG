@@ -40,6 +40,49 @@ void ImageHalfSample( const Image & src , Image & out )
 }
 
 /**
+* @brief Image decimation (get only one pixel over two - no interpolation)
+*/
+template< typename Image >
+void ImageDecimate( const Image & src , Image & out )
+{
+  const int new_width  = src.Width() / 2;
+  const int new_height = src.Height() / 2;
+
+  out.resize( new_width , new_height );
+
+  for ( int i = 0 ; i < new_height ; ++i )
+  {
+    for ( int j = 0 ; j < new_width ; ++j )
+    {
+      out( i , j ) =  src( 2 * i, 2 * j );
+    }
+  }
+}
+
+/**
+* @brief Image Upsample (by a factor of 2 by using linear interpolation)
+*/
+template< typename Image >
+void ImageUpsample( const Image & src , Image & out )
+{
+  const int new_width  = src.Width() * 2;
+  const int new_height = src.Height() * 2;
+
+  out.resize( new_width , new_height );
+
+  const Sampler2d<SamplerLinear> sampler;
+
+  for( int i = 0 ; i < new_height ; ++i )
+  {
+    for( int j = 0 ; j < new_width ; ++j )
+    {
+      out( i , j ) =  sampler( src, i / 2.f, j / 2.f );
+
+    }
+  }
+}
+
+/**
  ** @brief Ressample an image using given sampling positions
  ** @param src Input image
  ** @param sampling_pos A list of coordinates where the image needs to be ressampled (samples are (Y,X) )
