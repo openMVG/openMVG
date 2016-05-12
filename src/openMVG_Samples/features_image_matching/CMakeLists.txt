@@ -9,4 +9,6 @@ TARGET_LINK_LIBRARIES(openMVG_sample_image_matching
   stlplus
   vlsift)
 
+LIST(APPEND CMAKE_CXX_FLAGS "-std=c++11 -O3 -I/opt/cuda/include -L/opt/cuda/lib64 -lcuda -lcudart")
+
 SET_PROPERTY(TARGET openMVG_sample_image_matching PROPERTY FOLDER OpenMVG/Samples)

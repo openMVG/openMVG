@@ -3,11 +3,12 @@ project(features)
 
 add_subdirectory(latch)
 
-set(EXCLUDE_DIR "/latch/")
-
 file(GLOB features_files_headers
        *.hpp
        akaze/*.hpp
+       latch/LatchClassifier.h
+       latch/latch.h
+       latch/bitMatcher.h
        liop/*.hpp
        mser/*.hpp
        tbmr/*.hpp)
@@ -15,6 +16,7 @@ file(GLOB features_files_headers
 file(GLOB features_files_sources
        *.cpp
        akaze/*.cpp
+       latch/LatchClassifier.cpp
        liop/*.cpp
        mser/*.cpp
        tbmr/*.cpp)

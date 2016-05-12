@@ -25,7 +25,7 @@ class LATCH_Image_describer : public Image_describer
 public:
   LATCH_Image_describer(
   ):Image_describer(),
-    latch(new LatchClassifier()){}
+    latch(LatchClassifier()){}
 
   // Don't need to really define this for the LATCH class yet, until more descriptors come out.
   bool Set_configuration_preset(EDESCRIBER_PRESET preset) override
@@ -48,7 +48,11 @@ public:
     std::unique_ptr<Regions> &regions,
     const image::Image<unsigned char> * mask = nullptr ) override
   {
-    std::vector<LatchClassifierKeypoint> kpts = latch.identifyFeaturePointsOpenMVG(image);
+//    std::vector<LatchClassifierKeypoint> kpts = latch.identifyFeaturePointsOpenMVG(static_cast<Eigen::Matrix<unsigned
+//    char, -1, -1, 1, -1, -1>>(image.GetMat()));
+    
+    std::vector<LatchClassifierKeypoint> kpts = latch.identifyFeaturePointsOpenMVG(image.GetMat());
+
 
     Allocate(regions);
 
@@ -68,7 +72,7 @@ public:
           if (mask)
           {
             const image::Image<unsigned char> & maskIma = *mask;
-            if (maskIma(ptAkaze.y, ptAkaze.x) == 0)
+            if (maskIma(ptLatch.y, ptLatch.x) == 0)
               continue;
           }
           // Compute features
@@ -76,7 +80,7 @@ public:
             SIOPointFeature(ptLatch.x, ptLatch.y, ptLatch.size, ptLatch.angle);
           // Compute descriptors
           for (int j = 0; j < 16; j++) {
-            const index = i * 64 + j;
+            const unsigned int index = i * 64 + j;
             regionsCasted->Descriptors()[i][j] = static_cast<unsigned int>(latch.getDescriptorSet1()[index]);
           }
         }
@@ -100,7 +104,7 @@ public:
 
 private:
   bool bOrientation_;
-  LatchClassifier& latch;
+  LatchClassifier latch;
 };
 
 } // namespace features
