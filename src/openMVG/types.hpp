@@ -54,13 +54,13 @@ typedef uint32_t IndexT;
 /// Portable value used to save an undefined index value
 static const IndexT UndefinedIndexT = std::numeric_limits<IndexT>::max();
 
-/// Standard Pair of int
+/// Standard Pair of IndexT
 typedef std::pair<IndexT, IndexT> Pair;
 
-/// A set of int-pair
+/// Set of Pair
 typedef std::set<Pair> Pair_Set;
 
-/// Vector of Pairs
+/// Vector of Pair
 typedef std::vector<Pair> Pair_Vec;
 
 #if defined OPENMVG_STD_UNORDERED_MAP
