@@ -14,9 +14,9 @@
 #include "third_party/htmlDoc/htmlDoc.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cstdlib>
+#include <iostream>
 
 using namespace openMVG;
 using namespace openMVG::sfm;
@@ -128,12 +128,10 @@ int main(int argc, char **argv)
   //-- Load GT camera rotations & positions [R|C]:
   SfM_Data sfm_data_gt;
   // READ DATA FROM GT
-  {
-    std::cout << "\nTry to read data from GT";
-    std::vector<std::string> vec_fileNames;
-    readGt(fcnReadCamPtr, sGTDirectory, suffix, vec_fileNames, sfm_data_gt.poses, sfm_data_gt.intrinsics);
-    std::cout << sfm_data_gt.poses.size() << " gt cameras have been found" << std::endl;
-  }
+  std::cout << "\nTry to read data from GT";
+  std::vector<std::string> vec_fileNames;
+  readGt(fcnReadCamPtr, sGTDirectory, suffix, vec_fileNames, sfm_data_gt.poses, sfm_data_gt.intrinsics);
+  std::cout << sfm_data_gt.poses.size() << " gt cameras have been found" << std::endl;
 
   //-- Load the camera that we have to evaluate
   SfM_Data sfm_data;
@@ -143,32 +141,31 @@ int main(int argc, char **argv)
       << "The input SfM_Data file \""<< sComputedDirectory << "\" cannot be read." << std::endl;
     return EXIT_FAILURE;
   }
-  // Assert that GT and loaded scene have the same camera count
-  if (sfm_data_gt.poses.size() != sfm_data.GetPoses().size())
-  {
-    std::cerr << std::endl
-      << "There is missing camera in the loaded scene." << std::endl;
-    std::cerr << "number of poses in GT    : " << sfm_data_gt.poses.size() << std::endl;
-    std::cerr << "number of poses in scene :" << sfm_data.GetPoses().size() << std::endl;
-    return EXIT_FAILURE;
-  }
 
-  // Prepare data for comparison (corresponding camera centers and rotations)
-  Poses::const_iterator iter_poses_eval = sfm_data.GetPoses().begin();
-  Poses::const_iterator iter_poses_gt = sfm_data_gt.GetPoses().begin();
+  // Fill vectors of valid views for evaluation
   std::vector<Vec3> vec_camPosGT, vec_C;
   std::vector<Mat3> vec_camRotGT, vec_camRot;
-  for(; iter_poses_gt != sfm_data_gt.GetPoses().end(); ++iter_poses_gt, ++iter_poses_eval)
+  for(Views::const_iterator iter_views_eval = sfm_data.GetViews().begin(); iter_views_eval != sfm_data.GetViews().end(); ++iter_views_eval)
   {
-    //-- GT
-    const geometry::Pose3& pose_gt = iter_poses_gt->second;
-    vec_camPosGT.push_back(pose_gt.center());
-    vec_camRotGT.push_back(pose_gt.rotation());
+    // A pose in the reconstruction exists for this view
+    if(sfm_data.GetPoses().find(iter_views_eval->second->id_pose) != sfm_data.GetPoses().end())
+    {
+      int id_gt = findIdGT(iter_views_eval->second->s_Img_path, vec_fileNames);
+      // A pose in the ground truth exists for this view
+      // This view is valid for evaluation, we add the both extrinsics in the vectors
+      if (id_gt != -1)
+      {
+        //-- GT
+        const geometry::Pose3 pose_gt = sfm_data_gt.GetPoses().at(id_gt);
+        vec_camPosGT.push_back(pose_gt.center());
+        vec_camRotGT.push_back(pose_gt.rotation());
 
-    //-- Data to evaluate
-    const geometry::Pose3& pose_eval = iter_poses_eval->second;
-    vec_C.push_back(pose_eval.center());
-    vec_camRot.push_back(pose_eval.rotation());
+        //-- Data to evaluate
+        const geometry::Pose3 pose_eval = sfm_data.GetPoses().at(iter_views_eval->second->id_pose);
+        vec_C.push_back(pose_eval.center());
+        vec_camRot.push_back(pose_eval.rotation());
+      }
+    }
   }
 
   // Visual output of the camera location
