@@ -12,7 +12,7 @@
 
 #include "openMVG/features/image_describer.hpp"
 #include "openMVG/features/regions_factory.hpp"
-#include "openMVG/features/latch/LatchClassifier.h"
+#include "openMVG/features/latch/LatchClassifier.hpp"
 #include <cereal/cereal.hpp>
 
 using namespace std;

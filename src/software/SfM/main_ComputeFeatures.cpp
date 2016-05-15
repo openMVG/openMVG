@@ -91,6 +91,7 @@ int main(int argc, char **argv)
       << "   SIFT (default),\n"
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
       << "   AKAZE_MLDB:  AKAZE with binary descriptors\n"
+      << "   LATCH: Latch descriptor\n"
       << "[-u|--upright] Use Upright feature 0 or 1\n"
       << "[-p|--describerPreset]\n"
       << "  (used to control the Image_describer configuration):\n"
@@ -189,6 +190,11 @@ int main(int argc, char **argv)
     if (sImage_Describer_Method == "AKAZE_MLDB")
     {
       image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_MLDB), !bUpRight));
+    }
+    else
+    if (sImage_Describer_Method == "LATCH")
+    {
+      image_describer.reset(new LATCH_Image_describer());
     }
     //image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_LIOP), !bUpRight));
     if (!image_describer)

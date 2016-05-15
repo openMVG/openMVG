@@ -67,8 +67,8 @@ int main(int argc, char **argv) {
     image_describer = std::make_shared<AKAZE_Image_describer>(AKAZEParams(AKAZEConfig(), AKAZE_MSURF));
   else if (sImage_describer_type == "AKAZE_MLDB")
     image_describer = std::make_shared<AKAZE_Image_describer>(AKAZEParams(AKAZEConfig(), AKAZE_MLDB));
-  else if (sImage_describer_type == "LATCH")
-    image_describer = std::make_shared<LATCH_Image_describer>();
+//  else if (sImage_describer_type == "LATCH")
+//    image_describer = std::make_shared<LATCH_Image_describer>();
 
   if (image_describer.use_count()==0)
   {
