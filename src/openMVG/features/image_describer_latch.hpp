@@ -48,9 +48,6 @@ public:
     std::unique_ptr<Regions> &regions,
     const image::Image<unsigned char> * mask = nullptr ) override
   {
-//    std::vector<LatchClassifierKeypoint> kpts = latch.identifyFeaturePointsOpenMVG(static_cast<Eigen::Matrix<unsigned
-//    char, -1, -1, 1, -1, -1>>(image.GetMat()));
-    
     std::vector<LatchClassifierKeypoint> kpts = latch.identifyFeaturePointsOpenMVG(image.GetMat());
 
 

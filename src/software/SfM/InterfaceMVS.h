@@ -10,9 +10,9 @@
 
 // uncomment to enable custom OpenCV data types
 // (should be uncommented if OpenCV is not available)
-//#if !defined(_USE_OPENCV) && !defined(_USE_CUSTOM_CV)
-//#define _USE_CUSTOM_CV
-//#endif
+#if !defined(_USE_OPENCV) && !defined(_USE_CUSTOM_CV)
+#define _USE_CUSTOM_CV
+#endif
 
 #ifndef NO_ID
 #define NO_ID std::numeric_limits<uint32_t>::max()
