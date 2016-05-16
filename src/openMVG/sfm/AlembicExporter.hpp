@@ -38,7 +38,8 @@ public:
                     const std::string &imagePath,
                     const IndexT id_view,
                     const IndexT id_intrinsic,
-                    const float sensorWidth_mm=36.0);
+                    const float sensorWidth_mm=36.0,
+                    const IndexT id_pose=UndefinedIndexT);
   
   /**
    * @brief Initiate an animated camera
