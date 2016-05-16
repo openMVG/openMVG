@@ -8,6 +8,8 @@
 #ifndef OPENMVG_SFM_DATA_FILTERS_HPP
 #define OPENMVG_SFM_DATA_FILTERS_HPP
 
+#include "sfm_view.hpp"
+
 #include "openMVG/stl/stl.hpp"
 #include <iterator>
 
@@ -28,6 +30,25 @@ static std::set<IndexT> Get_Valid_Views
     if (sfm_data.IsPoseAndIntrinsicDefined(v))
     {
       valid_idx.insert(v->id_view);
+    }
+  }
+  return valid_idx;
+}
+
+/// List the view indexes that have valid camera intrinsic and pose.
+static std::set<IndexT> Get_Reconstructed_Intrinsics
+(
+  const SfM_Data & sfm_data
+)
+{
+  std::set<IndexT> valid_idx;
+  for (Views::const_iterator it = sfm_data.GetViews().begin();
+    it != sfm_data.GetViews().end(); ++it)
+  {
+    const View * v = it->second.get();
+    if (sfm_data.IsPoseAndIntrinsicDefined(v))
+    {
+      valid_idx.insert(v->id_intrinsic);
     }
   }
   return valid_idx;

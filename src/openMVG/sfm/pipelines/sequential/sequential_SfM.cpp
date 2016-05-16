@@ -1145,9 +1145,13 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
           return false;
       }
     }
+    const std::set<IndexT> reconstructedIntrinsics = Get_Reconstructed_Intrinsics(_sfm_data);
+    // If we use a camera intrinsic for the first time we need to refine it.
+    const bool intrinsicsFirstUsage = (reconstructedIntrinsics.count(view_I->id_intrinsic) == 0);
+
     if(!sfm::SfM_Localizer::RefinePose(
       optional_intrinsic.get(), pose,
-      resection_data, true, b_new_intrinsic))
+      resection_data, true, b_new_intrinsic || intrinsicsFirstUsage))
     {
       return false;
     }
