@@ -101,6 +101,14 @@ TARGET_LINK_LIBRARIES(openMVG_main_ConvertSfM_DataFormat
   stlplus
   )
 
+ADD_EXECUTABLE(openMVG_main_Align main_Align.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_Align
+  openMVG_system
+  openMVG_features
+  openMVG_sfm
+  stlplus
+  )
+
 ADD_EXECUTABLE(openMVG_main_FrustumFiltering main_FrustumFiltering.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_FrustumFiltering
   openMVG_system
@@ -146,6 +154,8 @@ SET_PROPERTY(TARGET openMVG_main_GlobalSfM PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_GlobalSfM DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_ConvertSfM_DataFormat PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ConvertSfM_DataFormat DESTINATION bin/)
+SET_PROPERTY(TARGET openMVG_main_Align PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_Align DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_FrustumFiltering PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_FrustumFiltering DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_ComputeStructureFromKnownPoses PROPERTY FOLDER OpenMVG/software)
