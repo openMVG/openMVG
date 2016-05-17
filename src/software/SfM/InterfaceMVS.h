@@ -23,6 +23,8 @@
 
 #ifdef _USE_CUSTOM_CV
 
+namespace openMVG {
+
 namespace cv {
 
 // simple cv::Matx
@@ -69,6 +71,8 @@ public:
 };
 
 } // namespace cv
+
+} // namespace openMVG
 #endif
 /*----------------------------------------------------------------*/
 
