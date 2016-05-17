@@ -23,7 +23,6 @@ add_library(openMVG_matching
   ${matching_files_header}
   ${matching_files_cpp})
 set_target_properties(openMVG_matching PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
-SET(CUDA_PROPAGATE_HOST_FLAGS OFF)
 add_dependencies(openMVG_matching bitMatcher_cuda)
 target_link_libraries(openMVG_matching bitMatcher_cuda ${FLANN_LIBRARY})
 set_property(TARGET openMVG_matching PROPERTY FOLDER OpenMVG/OpenMVG)
