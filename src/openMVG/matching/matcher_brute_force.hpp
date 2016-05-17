@@ -81,7 +81,7 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
       }
       return true;
     }
-    else  {
+    else {
       return false;
     }
   }
