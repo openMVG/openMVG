@@ -19,10 +19,10 @@ namespace matching_image_collection {
 /// Using a Cascade Hashing matching
 /// Cascade hashing tables are computed once and used for all the regions.
 ///
-class Cascade_Hashing_Matcher_Regions_AllInMemory : public Matcher
+class GPU_Hashing_Matcher_Regions_AllInMemory : public Matcher
 {
   public:
-  Cascade_Hashing_Matcher_Regions_AllInMemory
+  GPU_Hashing_Matcher_Regions_AllInMemory
   (
     float dist_ratio
   );
