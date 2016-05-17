@@ -227,6 +227,7 @@ int main(int argc, char** argv)
     localization::VoctreeLocalizer::Parameters *casted = static_cast<localization::VoctreeLocalizer::Parameters *>(param);
     casted->_algorithm = localization::VoctreeLocalizer::initFromString(algostring);;
     casted->_numResults = numResults;
+    casted->_ccTagUseCuda = false;
   }
 #if HAVE_CCTAG
   else
