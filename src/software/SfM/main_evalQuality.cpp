@@ -145,27 +145,25 @@ int main(int argc, char **argv)
   // Fill vectors of valid views for evaluation
   std::vector<Vec3> vec_camPosGT, vec_C;
   std::vector<Mat3> vec_camRotGT, vec_camRot;
-  for(Views::const_iterator iter_views_eval = sfm_data.GetViews().begin(); iter_views_eval != sfm_data.GetViews().end(); ++iter_views_eval)
+  for(const auto &iter : sfm_data.GetViews())
   {
-    // A pose in the reconstruction exists for this view
-    if(sfm_data.GetPoses().find(iter_views_eval->second->id_pose) != sfm_data.GetPoses().end())
-    {
-      int id_gt = findIdGT(iter_views_eval->second->s_Img_path, vec_fileNames);
-      // A pose in the ground truth exists for this view
-      // This view is valid for evaluation, we add the both extrinsics in the vectors
-      if (id_gt != -1)
-      {
-        //-- GT
-        const geometry::Pose3 pose_gt = sfm_data_gt.GetPoses().at(id_gt);
-        vec_camPosGT.push_back(pose_gt.center());
-        vec_camRotGT.push_back(pose_gt.rotation());
+    const auto &view = iter.second;
+    if(sfm_data.GetPoses().find(view->id_pose) == sfm_data.GetPoses().end())
+      continue;
 
-        //-- Data to evaluate
-        const geometry::Pose3 pose_eval = sfm_data.GetPoses().at(iter_views_eval->second->id_pose);
-        vec_C.push_back(pose_eval.center());
-        vec_camRot.push_back(pose_eval.rotation());
-      }
-    }
+    int id_gt = findIdGT(view->s_Img_path, vec_fileNames);
+    if(id_gt == -1)
+      continue;
+
+    //-- GT
+    const geometry::Pose3 pose_gt = sfm_data_gt.GetPoses().at(id_gt);
+    vec_camPosGT.push_back(pose_gt.center());
+    vec_camRotGT.push_back(pose_gt.rotation());
+
+    //-- Data to evaluate
+    const geometry::Pose3 pose_eval = sfm_data.GetPoses().at(view->id_pose);
+    vec_C.push_back(pose_eval.center());
+    vec_camRot.push_back(pose_eval.rotation());
   }
 
   // Visual output of the camera location
