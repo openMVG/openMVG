@@ -27,7 +27,7 @@ class Pose3
     Pose3(const Mat34& Rt)
     : _rotation(Rt.block<3,3>(0,0))
     {
-      Vec3 t = Rt.block<1, 3>(3,0);
+      Vec3 t = Rt.block<3, 1>(0,3);
       _center = -_rotation.transpose() * t;
     }
 
