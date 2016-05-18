@@ -415,8 +415,10 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
   // select a pair that have the largest baseline (mean angle between its bearing vectors).
 
   const unsigned iMin_inliers_count = 100;
-  const float fRequired_min_angle = 3.0f;
-  const float fLimit_max_angle = 60.0f; // More than 60 degree, we cannot rely on matches for initial pair seeding
+  // Use a min angle limit to ensure quality of the geometric evaluation.
+  const float fRequired_min_angle = 15.0f;
+  // Use a max angle limit to ensure good matching quality.
+  const float fLimit_max_angle = 40.0f;
 
   // List Views that support valid intrinsic (view that could be used for Essential matrix computation)
   std::set<IndexT> valid_views;
