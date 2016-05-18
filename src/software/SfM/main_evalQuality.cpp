@@ -151,7 +151,7 @@ int main(int argc, char **argv)
     if(sfm_data.GetPoses().find(view->id_pose) == sfm_data.GetPoses().end())
       continue;
 
-    int id_gt = findIdGT(view->s_Img_path, vec_fileNames);
+    const int id_gt = findIdGT(view->s_Img_path, vec_fileNames);
     if(id_gt == -1)
       continue;
 
