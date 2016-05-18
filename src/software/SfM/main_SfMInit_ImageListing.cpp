@@ -458,6 +458,21 @@ int main(int argc, char **argv)
             intrinsic =std::make_shared<Pinhole_Intrinsic_Fisheye>
               (width, height, focalPix, ppx, ppy, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
           }
+          break;
+        }
+        case PINHOLE_CAMERA_FISHEYE1:
+        {
+          if(sCamName == "GoPro")
+          {
+            intrinsic = std::make_shared<Pinhole_Intrinsic_Fisheye1>
+              (width, height, focalPix, ppx, ppy, 1.04);
+          }
+          else
+          {
+            intrinsic = std::make_shared<Pinhole_Intrinsic_Fisheye1>
+              (width, height, focalPix, ppx, ppy, 0.0); // setup no distortion as initial guess
+          }
+          break;
         }
         break;
         default:

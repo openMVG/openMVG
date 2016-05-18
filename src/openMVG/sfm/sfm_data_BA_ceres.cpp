@@ -38,6 +38,9 @@ ceres::CostFunction * IntrinsicsToCostFunction(IntrinsicBase * intrinsic, const 
     case PINHOLE_CAMERA_FISHEYE:
       return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye, 2, 7, 6, 3>(
               new ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye(observation.data()));
+    case PINHOLE_CAMERA_FISHEYE1:
+      return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye1, 2, 4, 6, 3>(
+              new ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye1(observation.data()));
     default:
       return NULL;
   }

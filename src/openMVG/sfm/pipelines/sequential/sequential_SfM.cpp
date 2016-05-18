@@ -1113,37 +1113,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
       const Vec2 principal_point(K(0,2), K(1,2));
 
       // Create the new camera intrinsic group
-      switch (_camType)
-      {
-        case PINHOLE_CAMERA:
-          optional_intrinsic =
-            std::make_shared<Pinhole_Intrinsic>
-            (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
-        break;
-        case PINHOLE_CAMERA_RADIAL1:
-          optional_intrinsic =
-            std::make_shared<Pinhole_Intrinsic_Radial_K1>
-            (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
-        break;
-        case PINHOLE_CAMERA_RADIAL3:
-          optional_intrinsic =
-            std::make_shared<Pinhole_Intrinsic_Radial_K3>
-            (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
-        break;
-        case PINHOLE_CAMERA_BROWN:
-          optional_intrinsic =
-            std::make_shared<Pinhole_Intrinsic_Brown_T2>
-            (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
-        break;
-        case PINHOLE_CAMERA_FISHEYE:
-            optional_intrinsic =
-                std::make_shared<Pinhole_Intrinsic_Fisheye>
-            (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
-        break;
-        default:
-          std::cerr << "Try to create an unknown camera type." << std::endl;
-          return false;
-      }
+      optional_intrinsic = createPinholeIntrinsic(_camType, view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
     }
     const std::set<IndexT> reconstructedIntrinsics = Get_Reconstructed_Intrinsics(_sfm_data);
     // If we use a camera intrinsic for the first time we need to refine it.
