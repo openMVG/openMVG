@@ -276,10 +276,7 @@ bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata,
 
   // Add imported data to the SfM_Data container TODO use UID
   sfmdata.views.emplace(id_view, std::make_shared<View>(imagePath, id_view, id_intrinsic, id_view, imgWidth, imgHeight));
-  if(cam_r != Mat3::Identity() || cam_t != Vec3::Zero())
-  {
-    sfmdata.poses.emplace(id_view, pose);
-  }
+  sfmdata.poses.emplace(id_view, pose);
   sfmdata.intrinsics.emplace(id_intrinsic, pinholeIntrinsic);
 
   return true;
