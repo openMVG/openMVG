@@ -463,31 +463,39 @@ int main(int argc, char **argv)
       switch(camera_model)
       {
         case PINHOLE_CAMERA:
+        {
           intrinsic = std::make_shared<Pinhole_Intrinsic>
             (width, height, focalPix, ppx, ppy);
-        break;
+          break;
+        }
         case PINHOLE_CAMERA_RADIAL1:
+        {
           intrinsic = std::make_shared<Pinhole_Intrinsic_Radial_K1>
             (width, height, focalPix, ppx, ppy, 0.0); // setup no distortion as initial guess
-        break;
+          break;
+        }
         case PINHOLE_CAMERA_RADIAL3:
+        {
           intrinsic = std::make_shared<Pinhole_Intrinsic_Radial_K3>
             (width, height, focalPix, ppx, ppy, 0.0, 0.0, 0.0);  // setup no distortion as initial guess
-        break;
+          break;
+        }
         case PINHOLE_CAMERA_BROWN:
-          intrinsic =std::make_shared<Pinhole_Intrinsic_Brown_T2>
+        {
+          intrinsic = std::make_shared<Pinhole_Intrinsic_Brown_T2>
             (width, height, focalPix, ppx, ppy, 0.0, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
-        break;
+          break;
+        }
         case PINHOLE_CAMERA_FISHEYE:
         {
           if(sCamName == "GoPro")
           {
-            intrinsic =std::make_shared<Pinhole_Intrinsic_Fisheye>
+            intrinsic = std::make_shared<Pinhole_Intrinsic_Fisheye>
               (width, height, focalPix, ppx, ppy, 0.0524, 0.0094, -0.0037, -0.0004);
           }
           else
           {
-            intrinsic =std::make_shared<Pinhole_Intrinsic_Fisheye>
+            intrinsic = std::make_shared<Pinhole_Intrinsic_Fisheye>
               (width, height, focalPix, ppx, ppy, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
           }
           break;
@@ -506,7 +514,6 @@ int main(int argc, char **argv)
           }
           break;
         }
-        break;
         default:
           std::cerr << "Error: unknown camera model: " << (int) e_User_camera_model << std::endl;
           return EXIT_FAILURE;
