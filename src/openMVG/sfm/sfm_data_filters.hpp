@@ -204,9 +204,9 @@ static bool eraseObservationsWithMissingPoses(SfM_Data & sfm_data, const IndexT 
 {
   IndexT removed_elements = 0;
 
-  std::set<IndexT> pose_Index;
+  std::set<IndexT> reconstructedPoseIndexes;
   std::transform(sfm_data.poses.begin(), sfm_data.poses.end(),
-    std::inserter(pose_Index, pose_Index.begin()), stl::RetrieveKey());
+    std::inserter(reconstructedPoseIndexes, reconstructedPoseIndexes.begin()), stl::RetrieveKey());
 
   // For each landmark:
   //  - Check if we need to keep the observations & the track
@@ -219,7 +219,7 @@ static bool eraseObservationsWithMissingPoses(SfM_Data & sfm_data, const IndexT 
     {
       const IndexT ViewId = itObs->first;
       const View * v = sfm_data.GetViews().at(ViewId).get();
-      if (pose_Index.count(v->id_pose) == 0)
+      if (reconstructedPoseIndexes.count(v->id_pose) == 0)
       {
         itObs = obs.erase(itObs);
         ++removed_elements;
