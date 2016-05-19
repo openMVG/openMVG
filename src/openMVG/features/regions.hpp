@@ -65,6 +65,8 @@ public:
   // Used to avoid complex template imbrication
   virtual const void * DescriptorRawData() const = 0;
 
+  virtual void clearDescriptors() = 0;
+
   /// Return the squared distance between two descriptors
   // A default metric is used according the descriptor type:
   // - Scalar: L2,
@@ -161,6 +163,8 @@ public:
   inline const std::vector<DescriptorT> & Descriptors() const { return _vec_descs; }
 
   const void * DescriptorRawData() const { return &_vec_descs[0];}
+
+  void clearDescriptors() { _vec_descs.clear(); }
 
   void swap(This& other)
   {

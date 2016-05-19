@@ -26,6 +26,14 @@ struct Regions_Provider
   /// Regions per ViewId of the considered SfM_Data container
   Hash_Map<IndexT, std::unique_ptr<features::Regions> > regions_per_view;
 
+  void clearDescriptors()
+  {
+    for(auto& it: regions_per_view)
+    {
+      it.second->clearDescriptors();
+    }
+  }
+
   // Load Regions related to a provided SfM_Data View container
   virtual bool load(
     const SfM_Data & sfm_data,

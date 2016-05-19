@@ -111,11 +111,23 @@ int main(int argc, char **argv)
 
   openMVG::system::Timer timer;
 
+  // Clear previous 3D landmarks
+  sfm_data.structure.clear();
+
   //------------------------------------------
   // Compute Structure from known camera poses
   //------------------------------------------
   SfM_Data_Structure_Estimation_From_Known_Poses structure_estimator;
-  structure_estimator.run(sfm_data, pairs, regions_provider);
+  structure_estimator.match(sfm_data, pairs, regions_provider);
+
+  // Unload descriptors before triangulation
+  regions_provider->clearDescriptors();
+
+  // Filter matches
+  structure_estimator.filter(sfm_data, pairs, regions_provider);
+  // Create 3D landmarks
+  structure_estimator.triangulate(sfm_data, regions_provider);
+
   RemoveOutliers_AngleError(sfm_data, 2.0);
 
   std::cout
