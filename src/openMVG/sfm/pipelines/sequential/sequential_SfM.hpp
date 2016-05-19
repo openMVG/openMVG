@@ -103,6 +103,25 @@ private:
   /// Return MSE (Mean Square Error) and a histogram of tracks size.
   double ComputeTracksLengthsHistogram(Histogram<double> * histo) const;
 
+  /**
+   * @brief Compute a score of the view for a subset of features. This is
+   *        used for the next best view choice.
+   *
+   * The score is based on a pyramid which allows to compute a weighting
+   * strategy to promote a good repartition in the image (instead of relying
+   * only on the number of features).
+   * Inspired from "Structure-from-Motion Revisited",
+   *   Johannes L. Schonberger, Jan-Michael Frahm
+   * http://people.inf.ethz.ch/jschoenb/papers/schoenberger2016sfm.pdf
+   * We don't use the same weighting strategy. The weighting choice
+   * is not justified in the paper.
+   *
+   * @param viewId: the ID of the view
+   * @param trackIds: set of track IDs contained in viewId
+   * @return the computed score
+   */
+  std::size_t computeImageScore(std::size_t viewId, const std::vector<std::size_t>& trackIds) const;
+  
   /// List the images that the greatest number of matches to the current 3D reconstruction.
   bool FindImagesWithPossibleResection(
     std::vector<size_t>& vec_possible_indexes,
@@ -136,17 +155,29 @@ private:
   int _minInputTrackLength = 2;
   int _minTrackLength = 2;
   int _minPointsPerPose = 30;
-
+  
   //-- Data provider
   Features_Provider  * _features_provider;
   Matches_Provider  * _matches_provider;
 
-  // Temporary data
-  openMVG::tracks::STLMAPTracks _map_tracks; // putative landmark tracks (visibility per potential 3D point)
-  openMVG::tracks::TracksPerView _map_tracksPerView; // putative tracks per view
-  Hash_Map<IndexT, double> _map_ACThreshold; // Per camera confidence (A contrario estimated threshold error)
+  // Pyramid scoring
+  int _pyramidDepth = 5;
+  /// internal cache of precomputed values for the weighting of the pyramid levels
+  std::vector<int> _pyramidWeights;
+  int _pyramidThreshold;
 
-  std::set<size_t> _set_remainingViewId;     // Remaining camera index that can be used for resection
+  // Temporary data
+  /// Putative landmark tracks (visibility per potential 3D point)
+  tracks::STLMAPTracks _map_tracks;
+  /// Putative tracks per view
+  tracks::TracksPerView _map_tracksPerView;
+  /// Precomputed pyramid index for each trackId of each viewId.
+  tracks::TracksPyramidPerView _map_featsPyramidPerView;
+  /// Per camera confidence (A contrario estimated threshold error)
+  Hash_Map<IndexT, double> _map_ACThreshold;
+
+  /// Remaining camera index that can be used for resection
+  std::set<size_t> _set_remainingViewId;
 };
 
 } // namespace sfm

@@ -180,13 +180,13 @@ TEST(Tracks, GetCommonTracksInImages)
     std::set<size_t> set_imageIndex {15, 20};
     TracksPerView map_tracksPerView;
 
-    std::set<size_t> base{1,2,3,4};
-    map_tracksPerView[10].insert(base.begin(), base.end());
-    map_tracksPerView[15].insert(base.begin(), base.end());
-    map_tracksPerView[20].insert(base.begin(), base.end());
-    map_tracksPerView[40].insert(base.begin(), base.end());
-    map_tracksPerView[15].insert(5);
-    map_tracksPerView[20].insert(6);
+    std::vector<size_t> base{1,2,3,4};
+    map_tracksPerView[10] = base;
+    map_tracksPerView[15] = base;
+    map_tracksPerView[20] = base;
+    map_tracksPerView[40] = base;
+    map_tracksPerView[15].push_back(5);
+    map_tracksPerView[20].push_back(6);
 
     std::set<size_t> set_visibleTracks;
     TracksUtilsMap::GetCommonTracksInImages(set_imageIndex, map_tracksPerView, set_visibleTracks);
@@ -196,22 +196,22 @@ TEST(Tracks, GetCommonTracksInImages)
     std::set<size_t> set_imageIndex {15, 20, 10, 40};
     TracksPerView map_tracksPerView;
 
-    std::set<size_t> base{1,2,3,4};
-    map_tracksPerView[10].insert(base.begin(), base.end());
-    map_tracksPerView[15].insert(base.begin(), base.end());
-    map_tracksPerView[20].insert(base.begin(), base.end());
-    map_tracksPerView[40].insert(base.begin(), base.end());
+    std::vector<size_t> base{1,2,3,4};
+    map_tracksPerView[10] = base;
+    map_tracksPerView[15] = base;
+    map_tracksPerView[20] = base;
+    map_tracksPerView[40] = base;
 
-    map_tracksPerView[10].insert(100);
-    map_tracksPerView[15].insert(100);
-    map_tracksPerView[20].insert(100);
+    map_tracksPerView[10].push_back(100);
+    map_tracksPerView[15].push_back(100);
+    map_tracksPerView[20].push_back(100);
 
-    map_tracksPerView[15].insert(200);
-    map_tracksPerView[20].insert(200);
-    map_tracksPerView[40].insert(200);
+    map_tracksPerView[15].push_back(200);
+    map_tracksPerView[20].push_back(200);
+    map_tracksPerView[40].push_back(200);
 
-    map_tracksPerView[15].insert(5);
-    map_tracksPerView[20].insert(6);
+    map_tracksPerView[15].push_back(5);
+    map_tracksPerView[20].push_back(6);
 
     std::set<size_t> set_visibleTracks;
     TracksUtilsMap::GetCommonTracksInImages(set_imageIndex, map_tracksPerView, set_visibleTracks);

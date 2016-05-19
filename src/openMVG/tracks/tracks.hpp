@@ -87,8 +87,10 @@ namespace tracks {
 typedef stl::flat_map<size_t,size_t> submapTrack;
 // A track is a collection of {trackId, submapTrack}
 typedef stl::flat_map< size_t, submapTrack > STLMAPTracks;
-typedef stl::flat_set<size_t> TracksSet;
-typedef stl::flat_map< size_t, TracksSet > TracksPerView;
+typedef std::vector<size_t> TrackIdSet;
+// FeatsPyramidPerView contains map<viewId, map<trackId*N, pyramidIndex>>
+typedef stl::flat_map< size_t, stl::flat_map<size_t, size_t> > TracksPyramidPerView;
+typedef stl::flat_map< size_t, TrackIdSet > TracksPerView;
 
 struct TracksBuilder
 {
@@ -310,7 +312,7 @@ struct TracksUtilsMap
       TracksPerView::const_iterator tracksPerViewIt = map_tracksPerView.find(*it);
       if(tracksPerViewIt == map_tracksPerView.end())
         return;
-      const TracksSet& imageTracks = tracksPerViewIt->second;
+      const TrackIdSet& imageTracks = tracksPerViewIt->second;
       set_visibleTracks.insert(imageTracks.cbegin(), imageTracks.cend());
     }
     ++it;
@@ -319,7 +321,7 @@ struct TracksUtilsMap
       TracksPerView::const_iterator tracksPerViewIt = map_tracksPerView.find(*it);
       if(tracksPerViewIt == map_tracksPerView.end())
         return;
-      const TracksSet& imageTracks = tracksPerViewIt->second;
+      const TrackIdSet& imageTracks = tracksPerViewIt->second;
       std::set<size_t> tmp;
       std::set_intersection(
           set_visibleTracks.cbegin(), set_visibleTracks.cend(),
@@ -387,11 +389,24 @@ struct TracksUtilsMap
     {
       for (auto& feat: track.second)
       {
-        map_tracksPerView[feat.first].insert(track.first);
+        TrackIdSet& tracksSet = map_tracksPerView[feat.first];
+        if(tracksSet.empty())
+          tracksSet.reserve(1000);
+        tracksSet.push_back(track.first);
       }
     }
+    // sort tracks Ids in each view
+#ifdef OPENMVG_USE_OPENMP
+    #pragma omp parallel for
+#endif
+    for(int i = 0; i < map_tracksPerView.size(); ++i)
+    {
+      TracksPerView::iterator it = map_tracksPerView.begin();
+      std::advance(it, i);
+      std::sort(it->second.begin(), it->second.end());
+    }
   }
-  
+
   /// Return the tracksId as a set (sorted increasing)
   static void GetTracksIdVector(
     const STLMAPTracks & map_tracks,

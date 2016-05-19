@@ -57,7 +57,7 @@ NViewDataSet NRealisticCamerasRing(size_t nviews, size_t npoints,
 
   d._X.resize(3, npoints);
   d._X.setRandom();
-  d._X *= 0.6;
+  d._X *= 0.45;
 
   Vecu all_point_ids(npoints);
   for (size_t j = 0; j < npoints; ++j)
