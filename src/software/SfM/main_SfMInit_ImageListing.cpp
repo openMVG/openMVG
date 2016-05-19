@@ -337,6 +337,30 @@ int main(int argc, char **argv)
     if( bHaveValidExifMetadata )
       allExifData = exifReader.getExifData();
 
+    int metadataImageWidth = imgHeader.width;
+    int metadataImageHeight = imgHeader.height;
+    if(allExifData.count("image_width"))
+    {
+      metadataImageWidth = std::stoi(allExifData.at("image_width"));
+      // If the metadata is bad, use the real image size
+      if(metadataImageWidth <= 0)
+        metadataImageWidth = imgHeader.width;
+    }
+    if(allExifData.count("image_height"))
+    {
+      metadataImageHeight = std::stoi(allExifData.at("image_height"));
+      // If the metadata is bad, use the real image size
+      if(metadataImageHeight <= 0)
+        metadataImageHeight = imgHeader.height;
+    }
+    const bool resizedImage = metadataImageWidth != width || metadataImageHeight != height;
+    if(resizedImage)
+    {
+      std::cout << "Resized image detected:" << std::endl;
+      std::cout << " * real image size: " << imgHeader.width << "x" << imgHeader.height << std::endl;
+      std::cout << " * image size from metadata is: " << metadataImageWidth << "x" << metadataImageHeight << std::endl;
+    }
+
     // Sensor width
     double ccdw = 0.0;
     if(userSensorWidth != -1.0)
@@ -402,7 +426,7 @@ int main(int argc, char **argv)
       else
       {
         // Retrieve the focal from the metadata in mm and convert to pixel.
-        focalPix = std::max ( width, height ) * focalLength_mm / ccdw;
+        focalPix = std::max ( metadataImageWidth, metadataImageHeight ) * focalLength_mm / ccdw;
       }
     }
     else
@@ -420,11 +444,19 @@ int main(int argc, char **argv)
       // If no user input choose a default camera model
       if(camera_model == PINHOLE_CAMERA_START)
       {
-        // Use standard lens with radial distortion
+        // Use standard lens with radial distortion by default
         camera_model = PINHOLE_CAMERA_RADIAL3;
-        // If the focal lens is short, the fisheye model should fit better.
-        if(focalLength_mm > 0.0 && focalLength_mm < 15)
+        if(resizedImage)
+        {
+          // If the image has been resized, we assume that it has been undistorted
+          // and we use a camera without lens distortion.
+          camera_model = PINHOLE_CAMERA;
+        }
+        else if(focalLength_mm > 0.0 && focalLength_mm < 15)
+        {
+          // If the focal lens is short, the fisheye model should fit better.
           camera_model = PINHOLE_CAMERA_FISHEYE;
+        }
       }
 
       // Create the desired camera type
