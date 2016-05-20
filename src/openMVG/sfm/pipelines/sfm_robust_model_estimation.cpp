@@ -90,7 +90,6 @@ bool robustRelativePose(
   typedef ACKernelAdaptorEssential<
       SolverType,
       openMVG::fundamental::kernel::EpipolarDistanceError,
-      UnnormalizerT,
       Mat3>
       KernelType;
 

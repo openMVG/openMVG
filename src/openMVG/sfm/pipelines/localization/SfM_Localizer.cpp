@@ -74,8 +74,7 @@ namespace sfm {
       MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
 
       typedef openMVG::robust::ACKernelAdaptorResection_K<
-        SolverType, ResectionSquaredResidualError,
-        openMVG::robust::UnnormalizerResection, Mat34>  KernelType;
+        SolverType, ResectionSquaredResidualError, Mat34>  KernelType;
 
       KernelType kernel(resection_data.pt2D, resection_data.pt3D, pinhole_cam->K());
       // Robust estimation of the Projection matrix and it's precision
