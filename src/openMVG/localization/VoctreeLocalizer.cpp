@@ -394,6 +394,10 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
 #endif
   auto detect_start = std::chrono::steady_clock::now();
   _image_describer->Set_configuration_preset(param._featurePreset);
+#if HAVE_CCTAG
+  if (auto* p = dynamic_cast<features::SIFT_CCTAG_Image_describer*>(_image_describer))
+    p->Set_cctag_use_cuda(param._ccTagUseCuda);
+#endif
   _image_describer->Describe(imageGrey, tmpQueryRegions, nullptr);
   auto detect_end = std::chrono::steady_clock::now();
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
@@ -514,7 +518,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
       const std::string matchedImage = bfs::path(mview->s_Img_path).stem().string();
       const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
       
-      saveMatches2SVG(imagePath,
+      features::saveMatches2SVG(imagePath,
                       queryImageSize,
                       queryRegions.GetRegionsPositions(),
                       matchedPath,
@@ -635,6 +639,10 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
 #endif
   auto detect_start = std::chrono::steady_clock::now();
   _image_describer->Set_configuration_preset(param._featurePreset);
+#if HAVE_CCTAG
+  if (auto* p = dynamic_cast<features::SIFT_CCTAG_Image_describer*>(_image_describer))
+    p->Set_cctag_use_cuda(param._ccTagUseCuda);
+#endif
   _image_describer->Describe(imageGrey, tmpQueryRegions, nullptr);
   auto detect_end = std::chrono::steady_clock::now();
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
@@ -650,7 +658,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   if(!param._visualDebug.empty() && !imagePath.empty())
   {
     namespace bfs = boost::filesystem;
-    saveFeatures2SVG(imagePath, 
+    features::saveFeatures2SVG(imagePath, 
                      queryImageSize, 
                      tmpQueryRegions->GetRegionsPositions(),
                      param._visualDebug+"/"+bfs::path(imagePath).stem().string()+".svg");
@@ -755,7 +763,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
       const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
       
 
-      saveMatches2SVG(imagePath,
+      features::saveMatches2SVG(imagePath,
                       queryImageSize,
                       queryRegions.GetRegionsPositions(),
                       matchedPath,
@@ -827,7 +835,7 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
   if(!param._visualDebug.empty() && !imagePath.empty())
   {
     namespace bfs = boost::filesystem;
-    saveFeatures2SVG(imagePath, 
+    features::saveFeatures2SVG(imagePath, 
                      queryImageSize, 
                      resectionData.pt2D,
                      param._visualDebug+"/"+bfs::path(imagePath).stem().string()+".associations.svg");

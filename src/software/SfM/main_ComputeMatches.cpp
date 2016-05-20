@@ -130,7 +130,8 @@ int main(int argc, char **argv)
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--input_file] a SfM_Data file\n"
-      << "[-o|--out_dir path] output path where computed matches are stored\n"
+      << "[-o|--out_dir path]\n"
+      << "   path of the directory containing the extracted features and in which computed matches will be stored\n"
       << "\n[Optional]\n"
       << "[-f|--force] Force to recompute data\n"
       << "[-p|--save_putative_matches] Save putative matches\n"
@@ -167,6 +168,8 @@ int main(int argc, char **argv)
       << "    BRUTEFORCEHAMMING: BruteForce Hamming matching.\n"
       << "[-m|--guided_matching]\n"
       << "  use the found model to improve the pairwise correspondences.\n"
+      << "[-I|--max_iteration]\n"
+      << "  number of maximum iterations allowed in ransac step.\n"
       << "[-x|--match_file_per_image]\n"
       << "  Save matches in a separate file per image\n"
       << "[-u|--max_matches]\n"
@@ -197,6 +200,7 @@ int main(int argc, char **argv)
             << "--match_file_per_image " << matchFilePerImage << "\n"
             << "--max_matches " << uNumMatchesToKeep  << "\n"
             << "--use_grid_sort " << bUseGridSort << "\n"
+            << "--max_iteration " << imax_iteration << "\n"
             << "--export_debug_files " << bExportDebugFiles
             << std::endl;
 
@@ -335,7 +339,7 @@ int main(int argc, char **argv)
   std::cout << std::endl << " - PUTATIVE MATCHES - " << std::endl;
 
   // If the matches already exists, reload them
-  if(!bForce && !matchFilePerImage && stlplus::is_file(stlplus::create_filespec(sMatchesDirectory, "putative.bin")))
+  if(!bForce && !matchFilePerImage && stlplus::is_file(stlplus::create_filespec(sMatchesDirectory, "matches.putative.bin")))
   {
     Load(map_PutativesMatches, sfm_data.GetViewsKeys(), sMatchesDirectory, "putative");
     std::cout << "\t PREVIOUS RESULTS LOADED" << std::endl;
@@ -462,153 +466,155 @@ int main(int argc, char **argv)
   std::unique_ptr<ImageCollectionGeometricFilter> filter_ptr(
     new ImageCollectionGeometricFilter(&sfm_data, regions_provider));
 
-  if(filter_ptr)
+  if(!filter_ptr)
   {
-    system::Timer timer;
-    std::cout << std::endl << " - Geometric filtering - " << std::endl;
+    std::cerr << "An error occurred while generating the geometric filter! Aborting..." << std::endl;
+    return EXIT_FAILURE;
+  }
+  
+  system::Timer timer;
+  std::cout << std::endl << " - Geometric filtering - " << std::endl;
 
-    PairWiseMatches map_GeometricMatches;
-    switch(eGeometricModelToCompute)
+  PairWiseMatches map_GeometricMatches;
+  switch(eGeometricModelToCompute)
+  {
+    case HOMOGRAPHY_MATRIX:
     {
-      case HOMOGRAPHY_MATRIX:
-      {
-        const bool bGeometric_only_guided_matching = true;
-        filter_ptr->Robust_model_estimation(GeometricFilter_HMatrix_AC(4.0, imax_iteration),
-          map_PutativesMatches, bGuided_matching,
-          bGeometric_only_guided_matching ? -1.0 : 0.6);
-        map_GeometricMatches = filter_ptr->Get_geometric_matches();
-      }
-      break;
-      case FUNDAMENTAL_MATRIX:
-      {
-        filter_ptr->Robust_model_estimation(GeometricFilter_FMatrix_AC(4.0, imax_iteration),
-          map_PutativesMatches, bGuided_matching);
-        map_GeometricMatches = filter_ptr->Get_geometric_matches();
-      }
-      break;
-      case ESSENTIAL_MATRIX:
-      {
-        filter_ptr->Robust_model_estimation(GeometricFilter_EMatrix_AC(4.0, imax_iteration),
-          map_PutativesMatches, bGuided_matching);
-        map_GeometricMatches = filter_ptr->Get_geometric_matches();
-
-        //-- Perform an additional check to remove pairs with poor overlap
-        std::vector<PairWiseMatches::key_type> vec_toRemove;
-        for(PairWiseMatches::const_iterator iterMap = map_GeometricMatches.begin();
-          iterMap != map_GeometricMatches.end(); ++iterMap)
-        {
-          const size_t putativePhotometricCount = map_PutativesMatches.find(iterMap->first)->second.size();
-          const size_t putativeGeometricCount = iterMap->second.size();
-          const float ratio = putativeGeometricCount / (float)putativePhotometricCount;
-          if (putativeGeometricCount < 50 || ratio < .3f)  {
-            // the pair will be removed
-            vec_toRemove.push_back(iterMap->first);
-          }
-        }
-        //-- remove discarded pairs
-        for(std::vector<PairWiseMatches::key_type>::const_iterator
-          iter =  vec_toRemove.begin(); iter != vec_toRemove.end(); ++iter)
-        {
-          map_GeometricMatches.erase(*iter);
-        }
-      }
-      break;
+      const bool bGeometric_only_guided_matching = true;
+      filter_ptr->Robust_model_estimation(GeometricFilter_HMatrix_AC(4.0, imax_iteration),
+        map_PutativesMatches, bGuided_matching,
+        bGeometric_only_guided_matching ? -1.0 : 0.6);
+      map_GeometricMatches = filter_ptr->Get_geometric_matches();
     }
-    
-    std::cout << map_GeometricMatches.size() << " geometric image pair matches:" << std::endl;
+    break;
+    case FUNDAMENTAL_MATRIX:
+    {
+      filter_ptr->Robust_model_estimation(GeometricFilter_FMatrix_AC(4.0, imax_iteration),
+        map_PutativesMatches, bGuided_matching);
+      map_GeometricMatches = filter_ptr->Get_geometric_matches();
+    }
+    break;
+    case ESSENTIAL_MATRIX:
+    {
+      filter_ptr->Robust_model_estimation(GeometricFilter_EMatrix_AC(4.0, imax_iteration),
+        map_PutativesMatches, bGuided_matching);
+      map_GeometricMatches = filter_ptr->Get_geometric_matches();
+
+      //-- Perform an additional check to remove pairs with poor overlap
+      std::vector<PairWiseMatches::key_type> vec_toRemove;
+      for(PairWiseMatches::const_iterator iterMap = map_GeometricMatches.begin();
+        iterMap != map_GeometricMatches.end(); ++iterMap)
+      {
+        const size_t putativePhotometricCount = map_PutativesMatches.find(iterMap->first)->second.size();
+        const size_t putativeGeometricCount = iterMap->second.size();
+        const float ratio = putativeGeometricCount / (float)putativePhotometricCount;
+        if (putativeGeometricCount < 50 || ratio < .3f)  {
+          // the pair will be removed
+          vec_toRemove.push_back(iterMap->first);
+        }
+      }
+      //-- remove discarded pairs
+      for(std::vector<PairWiseMatches::key_type>::const_iterator
+        iter =  vec_toRemove.begin(); iter != vec_toRemove.end(); ++iter)
+      {
+        map_GeometricMatches.erase(*iter);
+      }
+    }
+    break;
+  }
+
+  std::cout << map_GeometricMatches.size() << " geometric image pair matches:" << std::endl;
+  for(const auto& matchGeo: map_GeometricMatches)
+  {
+    std::cout << " * Image pair (" << matchGeo.first.first << ", " << matchGeo.first.second << ") contains " << matchGeo.second.size() << " geometric matches." << std::endl;
+  }
+
+  //---------------------------------------
+  //-- Grid Filtering
+  //---------------------------------------
+  PairWiseMatches finalMatches;
+
+  if(uNumMatchesToKeep == 0)
+  {
+    finalMatches.swap(map_GeometricMatches);
+  }
+  else
+  {
     for(const auto& matchGeo: map_GeometricMatches)
     {
-      std::cout << " * Image pair (" << matchGeo.first.first << ", " << matchGeo.first.second << ") contains " << matchGeo.second.size() << " geometric matches." << std::endl;
-    }
+      //Get the image pair and their matches.
+      const Pair& indexImagePair = matchGeo.first;
+      const openMVG::matching::IndMatches& inputMatches = matchGeo.second;
 
-    //---------------------------------------
-    //-- Grid Filtering
-    //---------------------------------------
-    PairWiseMatches finalMatches;
-            
-    if(uNumMatchesToKeep == 0)
-    {
-      finalMatches.swap(map_GeometricMatches);
-    }
-    else
-    {
-      for(const auto& matchGeo: map_GeometricMatches)
+      const features::Feat_Regions<features::SIOPointFeature>* rRegions = dynamic_cast<features::Feat_Regions<features::SIOPointFeature>*>(regions_provider->regions_per_view[indexImagePair.second].get());
+      const features::Feat_Regions<features::SIOPointFeature>* lRegions = dynamic_cast<features::Feat_Regions<features::SIOPointFeature>*>(regions_provider->regions_per_view[indexImagePair.first].get());
+
+      //Get the regions for the current view pair:
+      if(rRegions && lRegions)
       {
-        //Get the image pair and their matches.
-        const Pair& indexImagePair = matchGeo.first;
-        const openMVG::matching::IndMatches& inputMatches = matchGeo.second;
-        
-        const features::Feat_Regions<features::SIOPointFeature>* rRegions = dynamic_cast<features::Feat_Regions<features::SIOPointFeature>*>(regions_provider->regions_per_view[indexImagePair.second].get());
-        const features::Feat_Regions<features::SIOPointFeature>* lRegions = dynamic_cast<features::Feat_Regions<features::SIOPointFeature>*>(regions_provider->regions_per_view[indexImagePair.first].get());
-        
-        //Get the regions for the current view pair:
-        if(rRegions && lRegions)
+         //Sorting function:
+        openMVG::matching::IndMatches outMatches;
+        sortMatches(inputMatches, lRegions, rRegions, outMatches);
+
+        if(bUseGridSort) 
         {
-           //Sorting function:
-          openMVG::matching::IndMatches outMatches;
-          sortMatches(inputMatches, lRegions, rRegions, outMatches);
-
-          if(bUseGridSort) 
-          {
-            matchesGridFiltering(lRegions, rRegions, indexImagePair, sfm_data, outMatches);
-          }
-
-          size_t finalSize = min(uNumMatchesToKeep, outMatches.size());
-          outMatches.resize(finalSize);
-
-          // std::cout << "Left features: " << lRegions->Features().size() << ", right features: " << rRegions->Features().size() << ", num matches: " << inputMatches.size() << ", num filtered matches: " << outMatches.size() << std::endl;
-          finalMatches.insert(std::pair<Pair, IndMatches> (indexImagePair,outMatches));
+          matchesGridFiltering(lRegions, rRegions, indexImagePair, sfm_data, outMatches);
         }
-        else
-        {
-          std::cout << "You cannot perform the grid filtering with these regions" << std::endl;
-        }
+
+        size_t finalSize = min(uNumMatchesToKeep, outMatches.size());
+        outMatches.resize(finalSize);
+
+        // std::cout << "Left features: " << lRegions->Features().size() << ", right features: " << rRegions->Features().size() << ", num matches: " << inputMatches.size() << ", num filtered matches: " << outMatches.size() << std::endl;
+        finalMatches.insert(std::pair<Pair, IndMatches> (indexImagePair,outMatches));
       }
-      
-      std::cout << "After grid filtering:" << std::endl;
-      for(const auto& matchGridFiltering: finalMatches)
+      else
       {
-        std::cout << " * Image pair (" << matchGridFiltering.first.first << ", " << matchGridFiltering.first.second << ") contains " << matchGridFiltering.second.size() << " geometric matches." << std::endl;
+        std::cout << "You cannot perform the grid filtering with these regions" << std::endl;
       }
     }
     
-    //---------------------------------------
-    //-- Export geometric filtered matches
-    //---------------------------------------
-    std::cout << "Save geometric matches." << std::endl;
-    Save(finalMatches, sMatchesDirectory, sGeometricMode, "bin", matchFilePerImage);
-
-    std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
-
-    if(bExportDebugFiles)
+    std::cout << "After grid filtering:" << std::endl;
+    for(const auto& matchGridFiltering: finalMatches)
     {
-      //-- export Adjacency matrix
-      std::cout << "\n Export Adjacency Matrix of the pairwise's geometric matches"
-        << std::endl;
-      PairWiseMatchingToAdjacencyMatrixSVG(vec_fileNames.size(),
-        finalMatches,
-        stlplus::create_filespec(sMatchesDirectory, "GeometricAdjacencyMatrix", "svg"));
-      
-      //-- export view pair graph once geometric filter have been done
-      {
-        std::set<IndexT> set_ViewIds;
-        std::transform(sfm_data.GetViews().begin(), sfm_data.GetViews().end(),
-          std::inserter(set_ViewIds, set_ViewIds.begin()), stl::RetrieveKey());
-        graph::indexedGraph putativeGraph(set_ViewIds, getPairs(finalMatches));
-        graph::exportToGraphvizData(
-          stlplus::create_filespec(sMatchesDirectory, "geometric_matches.dot"),
-          putativeGraph.g);
-      }
+      std::cout << " * Image pair (" << matchGridFiltering.first.first << ", " << matchGridFiltering.first.second << ") contains " << matchGridFiltering.second.size() << " geometric matches." << std::endl;
     }
+  }
+
+  //---------------------------------------
+  //-- Export geometric filtered matches
+  //---------------------------------------
+  std::cout << "Save geometric matches." << std::endl;
+  Save(finalMatches, sMatchesDirectory, sGeometricMode, "bin", matchFilePerImage);
+
+  std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
+
+  if(bExportDebugFiles)
+  {
+    //-- export Adjacency matrix
+    std::cout << "\n Export Adjacency Matrix of the pairwise's geometric matches"
+      << std::endl;
+    PairWiseMatchingToAdjacencyMatrixSVG(vec_fileNames.size(),
+      finalMatches,
+      stlplus::create_filespec(sMatchesDirectory, "GeometricAdjacencyMatrix", "svg"));
+    
+    //-- export view pair graph once geometric filter have been done
+    {
+      std::set<IndexT> set_ViewIds;
+      std::transform(sfm_data.GetViews().begin(), sfm_data.GetViews().end(),
+        std::inserter(set_ViewIds, set_ViewIds.begin()), stl::RetrieveKey());
+      graph::indexedGraph putativeGraph(set_ViewIds, getPairs(finalMatches));
+      graph::exportToGraphvizData(
+        stlplus::create_filespec(sMatchesDirectory, "geometric_matches.dot"),
+        putativeGraph.g);
+    }
+  }
 
 #ifdef OPENMVG_DEBUG_MATCHING
-    {
-      std::cout << "GEOMETRIC" << std::endl;
-      getStatsMap(map_GeometricMatches);
-    }
-#endif
-
+  {
+    std::cout << "GEOMETRIC" << std::endl;
+    getStatsMap(map_GeometricMatches);
   }
+#endif
 
   return EXIT_SUCCESS;
 }
