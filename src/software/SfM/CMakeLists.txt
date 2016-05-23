@@ -332,9 +332,19 @@ TARGET_LINK_LIBRARIES(openMVG_main_evalQuality
   stlplus
   )
 
+# - Transform ground truch files to JSON/Alembic
+ADD_EXECUTABLE(openMVG_main_ConvertGT main_ConvertGT.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_ConvertGT
+  openMVG_features
+  openMVG_sfm
+  openMVG_system
+  )
+
 #installation rules
 SET_PROPERTY(TARGET openMVG_main_evalQuality PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_evalQuality DESTINATION bin/)
+SET_PROPERTY(TARGET openMVG_main_ConvertGT PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_ConvertGT DESTINATION bin/)
 
 ##
 # Export tutorial with valid path thanks to a configuration file
