@@ -12,7 +12,7 @@
 
 #include "openMVG/features/image_describer.hpp"
 #include "openMVG/features/regions_factory.hpp"
-#include "openMVG/features/latch/LatchClassifier.hpp"
+#include "openMVG/features/latch/LatchClassifierOpenMVG.hpp"
 #include <cereal/cereal.hpp>
 
 using namespace std;
@@ -25,7 +25,7 @@ class LATCH_Image_describer : public Image_describer
 public:
   LATCH_Image_describer(
   ):Image_describer(),
-    latch(LatchClassifier()){}
+    latch(LatchClassifierOpenMVG()){}
 
   // Don't need to really define this for the LATCH class yet, until more descriptors come out.
   bool Set_configuration_preset(EDESCRIBER_PRESET preset) override
@@ -101,7 +101,7 @@ public:
 
 private:
   bool bOrientation_;
-  LatchClassifier latch;
+  LatchClassifierOpenMVG latch;
 };
 
 } // namespace features

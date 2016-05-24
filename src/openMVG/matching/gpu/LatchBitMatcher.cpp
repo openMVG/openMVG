@@ -40,7 +40,7 @@ LatchBitMatcher::LatchBitMatcher() :
 	cudaCalloc((void**) &m_dM2, sizeM);
 }
 
-std::vector<LatchBitMatcherMatches> LatchBitMatcher::match(unsigned int* h_descriptors1, unsigned int* h_descriptors2, int numKP0, int numKP1) {
+std::vector<LatchBitMatcherMatch> LatchBitMatcher::match(unsigned int* h_descriptors1, unsigned int* h_descriptors2, int numKP0, int numKP1) {
     size_t sizeD = m_maxKP * (2048 / 32) * sizeof(unsigned int); // D for descriptor
 
     cudaMemcpyAsync(m_dD1, h_descriptors1, sizeD, cudaMemcpyHostToDevice, m_stream1);
@@ -57,12 +57,12 @@ std::vector<LatchBitMatcherMatches> LatchBitMatcher::match(unsigned int* h_descr
     getMatches(m_maxKP, h_M1, m_dM1);
     getMatches(m_maxKP, h_M2, m_dM2);
 
-    std::vector<LatchBitMatcherMatches> matches;
+    std::vector<LatchBitMatcherMatch> matches;
 
     for (size_t i = 0; i < numKP0; i++) {
         if (h_M1[i] >= 0 && h_M1[i] < numKP1 && h_M2[h_M1[i]] == i) {
             // Add matches
-            matches.push_back(LatchBitMatcherMatches(i, h_M1[i], 0));
+            matches.push_back(LatchBitMatcherMatch(i, h_M1[i], 0));
         }
     }
 

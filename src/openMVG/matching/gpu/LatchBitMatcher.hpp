@@ -6,29 +6,29 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-struct LatchBitMatcherMatches {
-    LatchBitMatcherMatches() :
+struct LatchBitMatcherMatch {
+    LatchBitMatcherMatch() :
         queryIdx(0),
         trainIdx(0),
-        accuracy(0) {
+        distance(0.0) {
     }
 
-    LatchBitMatcherMatches(int _queryIdx, int _trainIdx, int _accuracy) :
+    LatchBitMatcherMatch(int _queryIdx, int _trainIdx, int _distance) :
         queryIdx(_queryIdx),
         trainIdx(_trainIdx),
-        accuracy(_accuracy) {
+        distance(_distance) {
 
     }
 
     int queryIdx;
     int trainIdx;
-    int accuracy;
+    float distance;
 };
 
 class LatchBitMatcher {
     public:
         LatchBitMatcher();
-        std::vector<LatchBitMatcherMatches> match(unsigned int*, unsigned int*, int, int);
+        std::vector<LatchBitMatcherMatch> match(unsigned int*, unsigned int*, int, int);
         ~LatchBitMatcher();
     private:
         const int m_maxKP;
