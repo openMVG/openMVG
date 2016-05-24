@@ -3,7 +3,7 @@ PROJECT(bitMatcher_cuda)
 FIND_PACKAGE(CUDA REQUIRED)
 
 FILE(GLOB 
-    SOURCES "*.h" ".hpp")
+    SOURCES "*.h" ".hpp" ".cpp")
 
 INCLUDE(FindCUDA)
 
