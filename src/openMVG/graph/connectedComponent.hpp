@@ -63,8 +63,8 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes
   // - remove not biedge connected component,
   // - keep the largest connected component.
 
-  typedef lemon::ListGraph Graph;
   graph::indexedGraph putativeGraph(edges);
+  typedef indexedGraph::GraphT Graph;
 
   // Remove not bi-edge connected edges
   typedef Graph::EdgeMap<bool> EdgeMapAlias;
@@ -120,7 +120,7 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes
         for ( std::set<lemon::ListGraph::Node>::const_iterator iter2 = ccSet.begin();
               iter2 != ccSet.end(); ++iter2 )
         {
-          const IndexT Id = ( *putativeGraph.map_nodeMapIndex )[*iter2];
+          const IndexT Id = ( *putativeGraph.node_map_id )[*iter2];
           largestBiEdgeCC.insert( Id );
         }
       }

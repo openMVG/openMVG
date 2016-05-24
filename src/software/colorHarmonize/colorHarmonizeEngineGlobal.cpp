@@ -120,7 +120,7 @@ bool ColorHarmonizationEngineGlobal::Process()
     // Save the graph before cleaning:
     graph::exportToGraphvizData(
       stlplus::create_filespec(_sOutDirectory, "input_graph_poor_supportRemoved"),
-      putativeGraph.g);
+      putativeGraph);
   }
 
   //-------------------
@@ -511,7 +511,7 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
   // Save the graph before cleaning:
   graph::exportToGraphvizData(
       stlplus::create_filespec( _sOutDirectory, "initialGraph" ),
-      putativeGraph.g );
+      putativeGraph);
 
   return true;
 }
@@ -526,7 +526,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
   // Save the graph before cleaning:
   graph::exportToGraphvizData(
     stlplus::create_filespec(_sOutDirectory, "initialGraph"),
-    putativeGraph.g);
+    putativeGraph);
 
   const int connectedComponentCount = lemon::countConnectedComponents(putativeGraph.g);
   std::cout << "\n"
@@ -565,8 +565,8 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
         for (lemon::ListGraph::OutArcIt e(putativeGraph.g, *iter2); e!=INVALID; ++e)
         {
           putativeGraph.g.erase(e);
-          const IndexT Idu = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.target(e)];
-          const IndexT Idv = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.source(e)];
+          const IndexT Idu = (*putativeGraph.node_map_id)[putativeGraph.g.target(e)];
+          const IndexT Idv = (*putativeGraph.node_map_id)[putativeGraph.g.source(e)];
           matching::PairWiseMatches::iterator iterM = _map_Matches.find(std::make_pair(Idu,Idv));
           if( iterM != _map_Matches.end())
           {
@@ -586,7 +586,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
   // Save the graph after cleaning:
   graph::exportToGraphvizData(
     stlplus::create_filespec(_sOutDirectory, "cleanedGraph"),
-    putativeGraph.g);
+    putativeGraph);
 
   std::cout << "\n"
     << "Cardinal of nodes: " << lemon::countNodes(putativeGraph.g) << "\n"
