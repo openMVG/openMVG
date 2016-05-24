@@ -1,5 +1,4 @@
-#ifndef LATCH_BIT_MATCHER_H
-#define LATCH_BIT_MATCHER_H
+#pragma once
 
 #include <vector>
 
@@ -45,5 +44,3 @@ class LatchBitMatcher {
         cudaStream_t m_stream2;
         cudaEvent_t m_finished;
 };
-
-#endif
