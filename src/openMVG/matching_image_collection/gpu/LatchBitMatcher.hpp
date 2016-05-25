@@ -5,24 +5,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-struct LatchBitMatcherMatch {
-    LatchBitMatcherMatch() :
-        queryIdx(0),
-        trainIdx(0),
-        distance(0.0) {
-    }
-
-    LatchBitMatcherMatch(int _queryIdx, int _trainIdx, int _distance) :
-        queryIdx(_queryIdx),
-        trainIdx(_trainIdx),
-        distance(_distance) {
-
-    }
-
-    int queryIdx;
-    int trainIdx;
-    float distance;
-};
+#include "openMVG/features/latch/LatchBitMatcherMatch.hpp"
 
 class LatchBitMatcher {
     public:

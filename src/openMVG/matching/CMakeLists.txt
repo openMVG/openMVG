@@ -1,8 +1,6 @@
 
 project(matching)
 
-add_subdirectory(gpu)
-
 file(
 	GLOB
 	matching_files_header
