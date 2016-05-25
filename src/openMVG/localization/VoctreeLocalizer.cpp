@@ -96,18 +96,27 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
 #ifdef HAVE_CCTAG
   if(useSIFT_CCTAG)
   {
+    POPART_COUT("SIFT_CCTAG_Image_describer");
     _image_describer = new features::SIFT_CCTAG_Image_describer();  
   }
   else
   {
 #if USE_SIFT_FLOAT
+    POPART_COUT(SIFT_float_describer");
     _image_describer = new features::SIFT_float_describer();
 #else
+    POPART_COUT("SIFT_Image_describer");
     _image_describer = new features::SIFT_Image_describer();
 #endif
   }
 #else
-  _image_describer = new features::SIFT_float_describer();
+#if USE_SIFT_FLOAT
+    POPART_COUT(SIFT_float_describer");
+    _image_describer = new features::SIFT_float_describer();
+#else
+    POPART_COUT("SIFT_Image_describer");
+    _image_describer = new features::SIFT_Image_describer();
+#endif
 #endif
   
   // load the sfm data containing the 3D reconstruction info
@@ -199,11 +208,16 @@ bool VoctreeLocalizer::localize(const image::Image<unsigned char> & imageGrey,
 #if USE_SIFT_FLOAT
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Float_Regions());
 #else
+  POPART_COUT("[features]\t1");
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Regions());
+  POPART_COUT("[features]\t2");
 #endif
   auto detect_start = std::chrono::steady_clock::now();
+  POPART_COUT("[features]\t3");
   _image_describer->Set_configuration_preset(param->_featurePreset);
+  POPART_COUT("[features]\t4");
   _image_describer->Describe(imageGrey, tmpQueryRegions, nullptr);
+  POPART_COUT("[features]\t5");
   auto detect_end = std::chrono::steady_clock::now();
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
   POPART_COUT("[features]\tExtract SIFT done: found " << tmpQueryRegions->RegionCount() << " features in " << detect_elapsed.count() << " [ms]");
