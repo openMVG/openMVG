@@ -22,6 +22,8 @@ public:
 
   bool Set_configuration_preset(EDESCRIBER_PRESET preset);
 
+  void Set_use_cuda(bool);
+
   /**
   @brief Detect regions on the image and compute their attributes (description)
   @param image Image.

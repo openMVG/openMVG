@@ -52,13 +52,16 @@ public:
       _algorithm(Algorithm::FirstBest),
       _numResults(4),
       _maxResults(10),
-      _numCommonViews(3) { }
+      _numCommonViews(3),
+      _ccTagUseCuda(true)
+    { }
     
     bool _useGuidedMatching;    //< Enable/disable guided matching when matching images
     Algorithm _algorithm;       //< algorithm to use for localization
     size_t _numResults;         //< number of best matching images to retrieve from the database
     size_t _maxResults;         //< for algorithm AllResults, it stops the image matching when this number of matched images is reached
     size_t _numCommonViews;     //< number minimum common images in which a point must be seen to be used in cluster tracking
+    bool _ccTagUseCuda;         //< ccTag-CUDA cannot process frames at different resolutions ATM, so set to false if localizer is used on images of differing sizes
   };
   
 public:

@@ -229,7 +229,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
     features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (tmpQueryRegions.get());
     
     // just debugging -- save the svg image with detected cctag
-    saveCCTag2SVG(imagePath, 
+    features::saveCCTag2SVG(imagePath, 
                   imageSize, 
                   queryRegions, 
                   param->_visualDebug+"/"+bfs::path(imagePath).stem().string()+".svg");
@@ -302,7 +302,7 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
       const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
       
       
-      saveCCTagMatches2SVG(imagePath, 
+      features::saveCCTagMatches2SVG(imagePath, 
                            imageSize, 
                            queryRegions,
                            matchedPath,
