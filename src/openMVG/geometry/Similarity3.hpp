@@ -54,7 +54,7 @@ struct Similarity3
   * @param point Input point
   * @return transformed point
   */
-  Vec3 operator () ( const Vec3 & point ) const
+  Mat3X operator () ( const Mat3X & point ) const
   {
     return scale_ * pose_( point );
   }
