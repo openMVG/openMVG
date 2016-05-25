@@ -17,7 +17,7 @@ using namespace std;
 #define vectorsPerGroup (8)
 #define warpsPerBlock (32)
 // The total number of int32's needed to store a vector. We should drop this down to 16 for an optimized implementation for canonical LATCH.
-#define vectorDimension (64)
+#define vectorDimension (16)
 #define _warpSize (32)
 #define cacheSize (128)
 #define halfCacheSize (64)
