@@ -158,7 +158,7 @@ bool ColorHarmonizationEngineGlobal::Process()
       << "- VLD Segment: 2\n";
     while( ! ( cin >> _selectionMethod ) || _selectionMethod < 0 || _selectionMethod > 2 )
     {
-      cout << _selectionMethod << " is not accepted.\nTo use: \n- FullFrame enter: 0\n- Matched Points enter: 1\n- VLD Segment enter: 2\n";
+      cout << _selectionMethod << " is not accepted.\nPlease use a valid method number.\n";
     }
   }
 
@@ -456,13 +456,13 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
   if ( !stlplus::is_file( _sSfM_Data_Path ))
   {
     std::cerr << std::endl
-      << "Invalid input sfm_data file: (" << stlplus::basename_part(_sMatchesFile) << ")" << std::endl;
+      << "Invalid input sfm_data file: (" << _sSfM_Data_Path << ")" << std::endl;
     return false;
   }
   if (!stlplus::is_file( _sMatchesFile ))
   {
     std::cerr << std::endl
-      << "Invalid match file: (" << stlplus::basename_part(_sMatchesFile) << ")"<< std::endl;
+      << "Invalid match file: (" << _sMatchesFile << ")"<< std::endl;
     return false;
   }
 
