@@ -159,9 +159,9 @@ int main() {
     xL.col(k) = imaL.coords().cast<double>();
     xR.col(k) = imaR.coords().cast<double>();
   }
-  
+
   // Then we use a robust_estimator to find if a model can be fitted in the defined datum
-  
+
   //--
   //-- Max Consensus
   //- Return the Model that have the most of inliers
