@@ -25,7 +25,9 @@ class LATCH_Image_describer : public Image_describer
 public:
   LATCH_Image_describer(
   ):Image_describer(),
-    latch(LatchClassifierOpenMVG()){}
+    latch(LatchClassifierOpenMVG()){
+        latch.setImageSize(4000, 3000);
+        }
 
   // Don't need to really define this for the LATCH class yet, until more descriptors come out.
   bool Set_configuration_preset(EDESCRIBER_PRESET preset) override
