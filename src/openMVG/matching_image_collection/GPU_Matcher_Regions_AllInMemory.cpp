@@ -82,12 +82,14 @@ void GPU_Matcher_Regions_AllInMemory::Match(
 
       IndMatches vec_putatives_matches;
       // Perform matching in-class. Don't write needless code
+   
       auto matchedPoints = matcher.match(
         const_cast<unsigned int*>(static_cast<const unsigned int*>(regionsI.DescriptorRawData())),
         const_cast<unsigned int*>(static_cast<const unsigned int*>(regionsJ.DescriptorRawData())), 
         regionsI.RegionCount(), 
         regionsJ.RegionCount());
       for (size_t k = 0; k < matchedPoints.size(); k++) {
+          std::cout << "Matched indices: " << matchedPoints[k].queryIdx << " and " << matchedPoints[k].trainIdx << std::endl;
           vec_putatives_matches.push_back(IndMatch(matchedPoints[k].queryIdx, matchedPoints[k].trainIdx));
       }
 

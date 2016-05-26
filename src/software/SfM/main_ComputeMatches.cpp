@@ -12,6 +12,7 @@
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 
 /// Generic Image Collection image matching
+#include "openMVG/matching_image_collection/GPU_Matcher_Regions_AllInMemory.hpp"
 #include "openMVG/matching_image_collection/Matcher_Regions_AllInMemory.hpp"
 #include "openMVG/matching_image_collection/Cascade_Hashing_Matcher_Regions_AllInMemory.hpp"
 #include "openMVG/matching_image_collection/GeometricFilter.hpp"
@@ -313,6 +314,12 @@ int main(int argc, char **argv)
     {
       std::cout << "Using FAST_CASCADE_HASHING_L2 matcher" << std::endl;
       collectionMatcher.reset(new Cascade_Hashing_Matcher_Regions_AllInMemory(fDistRatio));
+    }
+    else
+    if (sNearestMatchingMethod == "GPU_LATCH")
+    {
+      std::cout << "Using GPU_LATCH matcher" << std::endl;
+      collectionMatcher.reset(new GPU_Matcher_Regions_AllInMemory(fDistRatio));
     }
     if (!collectionMatcher)
     {

@@ -72,7 +72,6 @@ public:
             if (maskIma(ptLatch.y, ptLatch.x) == 0)
               continue;
           }
-          // Compute features
           regionsCasted->Features()[i] =
             SIOPointFeature(ptLatch.x, ptLatch.y, ptLatch.size, ptLatch.angle);
           // Compute descriptors
