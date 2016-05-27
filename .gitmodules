@@ -1,7 +1,7 @@
 [submodule "src/openMVG/features/latch"]
 	path = src/openMVG/features/latch
 	url = https://github.com/mdaiter/cudaLATCH.git
-	branch = openMVGIntegrate
+	branch = deleteBitMatchClass
 [submodule "src/dependencies/glfw"]
 	path = src/dependencies/glfw
 	url = https://github.com/elmindreda/glfw.git
