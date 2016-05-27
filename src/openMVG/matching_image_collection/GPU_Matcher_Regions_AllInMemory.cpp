@@ -88,7 +88,9 @@ void GPU_Matcher_Regions_AllInMemory::Match(
         const_cast<unsigned int*>(static_cast<const unsigned int*>(regionsJ.DescriptorRawData())), 
         regionsI.RegionCount(), 
         regionsJ.RegionCount());
-      vec_putatives_matches.push_back(IndMatch(matchedPoints[k].queryIdx, matchedPoints[k].trainIdx));
+      for (size_t k = 0; k < matchedPoints.size(); k++) {
+        vec_putatives_matches.push_back(IndMatch(matchedPoints[k].queryIdx, matchedPoints[k].trainIdx));
+      }
 
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
