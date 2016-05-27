@@ -94,6 +94,9 @@ ENDIF()
 SET(EASYEXIF_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/easyexif)
 ADD_SUBDIRECTORY(easyexif)
 
+# Fast corner detector
+ADD_SUBDIRECTORY(fast)
+
 ##
 # Install Header only libraries if necessary
 ## 
