@@ -35,10 +35,6 @@ public:
     return true;
   }
 
-  void setImageSize(int width, int height) {
-    latch.setImageSize(width, height);
-  }
-
   /**
   @brief Detect regions on the image and compute their attributes (description)
   @param image Image.
