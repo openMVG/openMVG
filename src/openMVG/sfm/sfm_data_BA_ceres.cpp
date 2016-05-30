@@ -128,11 +128,11 @@ bool Bundle_Adjustment_Ceres::Adjust
   Hash_Map<IndexT, std::vector<double> > map_poses;
 
   // Setup Poses data & subparametrization
- for (Poses::const_iterator itPose = sfm_data.poses.begin(); itPose != sfm_data.poses.end(); ++itPose)
+ for (const auto & pose_it : sfm_data.poses)
   {
-    const IndexT indexPose = itPose->first;
+    const IndexT indexPose = pose_it.first;
 
-    const Pose3 & pose = itPose->second;
+    const Pose3 & pose = pose_it.second;
     const Mat3 R = pose.rotation();
     const Vec3 t = pose.translation();
 
@@ -177,14 +177,13 @@ bool Bundle_Adjustment_Ceres::Adjust
   }
 
   // Setup Intrinsics data & subparametrization
-  for (Intrinsics::const_iterator itIntrinsic = sfm_data.intrinsics.begin();
-    itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
+  for (const auto & intrinsic_it : sfm_data.intrinsics)
   {
-    const IndexT indexCam = itIntrinsic->first;
+    const IndexT indexCam = intrinsic_it.first;
 
-    if (isValid(itIntrinsic->second->getType()))
+    if (isValid(intrinsic_it.second->getType()))
     {
-      map_intrinsics[indexCam] = itIntrinsic->second->getParams();
+      map_intrinsics[indexCam] = intrinsic_it.second->getParams();
 
       double * parameter_block = &map_intrinsics[indexCam][0];
       problem.AddParameterBlock(parameter_block, map_intrinsics[indexCam].size());
@@ -196,7 +195,7 @@ bool Bundle_Adjustment_Ceres::Adjust
       else
       {
         const std::vector<int> vec_constant_intrinsic =
-          itIntrinsic->second->subsetParameterization(options.intrinsics_opt);
+          intrinsic_it.second->subsetParameterization(options.intrinsics_opt);
         if (!vec_constant_intrinsic.empty())
         {
           ceres::SubsetParameterization *subset_parameterization =
@@ -220,48 +219,44 @@ bool Bundle_Adjustment_Ceres::Adjust
       : nullptr;
 
   // For all visibility add reprojections errors:
-  for (Landmarks::iterator iterTracks = sfm_data.structure.begin();
-    iterTracks!= sfm_data.structure.end(); ++iterTracks)
+  for (auto & structure_landmark_it : sfm_data.structure)
   {
-    const Observations & obs = iterTracks->second.obs;
+    const Observations & obs = structure_landmark_it.second.obs;
 
-    for (Observations::const_iterator itObs = obs.begin();
-      itObs != obs.end(); ++itObs)
+    for (const auto & obs_it : obs)
     {
       // Build the residual block corresponding to the track observation:
-      const View * view = sfm_data.views.at(itObs->first).get();
+      const View * view = sfm_data.views.at(obs_it.first).get();
 
       // Each Residual block takes a point and a camera as input and outputs a 2
       // dimensional residual. Internally, the cost function stores the observed
       // image location and compares the reprojection against the observation.
       ceres::CostFunction* cost_function =
-        IntrinsicsToCostFunction(sfm_data.intrinsics[view->id_intrinsic].get(), itObs->second.x);
+        IntrinsicsToCostFunction(sfm_data.intrinsics[view->id_intrinsic].get(), obs_it.second.x);
 
       if (cost_function)
         problem.AddResidualBlock(cost_function,
           p_LossFunction,
           &map_intrinsics[view->id_intrinsic][0],
           &map_poses[view->id_pose][0],
-          iterTracks->second.X.data());
+          structure_landmark_it.second.X.data());
     }
     if (options.structure_opt == Structure_Parameter_Type::NONE)
-      problem.SetParameterBlockConstant(iterTracks->second.X.data());
+      problem.SetParameterBlockConstant(structure_landmark_it.second.X.data());
   }
 
   if (options.control_point_opt.bUse_control_points)
   {
     // Use Ground Control Point:
     // - fixed 3D points with weighted observations
-    for (Landmarks::iterator iterGCPTracks = sfm_data.control_points.begin();
-      iterGCPTracks!= sfm_data.control_points.end(); ++iterGCPTracks)
+    for (auto & gcp_landmark_it : sfm_data.control_points)
     {
-      const Observations & obs = iterGCPTracks->second.obs;
+      const Observations & obs = gcp_landmark_it.second.obs;
 
-      for (Observations::const_iterator itObs = obs.begin();
-        itObs != obs.end(); ++itObs)
+      for (const auto & obs_it : obs)
       {
         // Build the residual block corresponding to the track observation:
-        const View * view = sfm_data.views.at(itObs->first).get();
+        const View * view = sfm_data.views.at(obs_it.first).get();
 
         // Each Residual block takes a point and a camera as input and outputs a 2
         // dimensional residual. Internally, the cost function stores the observed
@@ -269,7 +264,7 @@ bool Bundle_Adjustment_Ceres::Adjust
         ceres::CostFunction* cost_function =
           IntrinsicsToCostFunction(
             sfm_data.intrinsics[view->id_intrinsic].get(),
-            itObs->second.x,
+            obs_it.second.x,
             options.control_point_opt.weight);
 
         if (cost_function)
@@ -277,10 +272,19 @@ bool Bundle_Adjustment_Ceres::Adjust
             nullptr,
             &map_intrinsics[view->id_intrinsic][0],
             &map_poses[view->id_pose][0],
-            iterGCPTracks->second.X.data());
+            gcp_landmark_it.second.X.data());
       }
-      // Set the 3D point as FIXED (it's a GCP)
-      problem.SetParameterBlockConstant(iterGCPTracks->second.X.data());
+      if (obs.empty())
+      {
+        std::cerr
+          << "Cannot use this GCP id: " << gcp_landmark_it.first
+          << ". It is linked to no image observation." << std::endl;
+      }
+      else
+      {
+        // Set the 3D point as FIXED (it's a valid GCP)
+        problem.SetParameterBlockConstant(gcp_landmark_it.second.X.data());
+      }
     }
   }
 
@@ -330,16 +334,15 @@ bool Bundle_Adjustment_Ceres::Adjust
     // Update camera poses with refined data
     if (options.extrinsics_opt != Extrinsic_Parameter_Type::NONE)
     {
-      for (Poses::iterator itPose = sfm_data.poses.begin();
-        itPose != sfm_data.poses.end(); ++itPose)
+      for (auto & pose_it : sfm_data.poses)
       {
-        const IndexT indexPose = itPose->first;
+        const IndexT indexPose = pose_it.first;
 
         Mat3 R_refined;
         ceres::AngleAxisToRotationMatrix(&map_poses[indexPose][0], R_refined.data());
         Vec3 t_refined(map_poses[indexPose][3], map_poses[indexPose][4], map_poses[indexPose][5]);
         // Update the pose
-        Pose3 & pose = itPose->second;
+        Pose3 & pose = pose_it.second;
         pose = Pose3(R_refined, -R_refined.transpose() * t_refined);
       }
     }
@@ -347,13 +350,12 @@ bool Bundle_Adjustment_Ceres::Adjust
     // Update camera intrinsics with refined data
     if (options.intrinsics_opt != Intrinsic_Parameter_Type::NONE)
     {
-      for (Intrinsics::iterator itIntrinsic = sfm_data.intrinsics.begin();
-        itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
+      for (auto & intrinsic_it : sfm_data.intrinsics)
       {
-        const IndexT indexCam = itIntrinsic->first;
+        const IndexT indexCam = intrinsic_it.first;
 
         const std::vector<double> & vec_params = map_intrinsics[indexCam];
-        itIntrinsic->second.get()->updateFromParams(vec_params);
+        intrinsic_it.second.get()->updateFromParams(vec_params);
       }
     }
     // Structure is already updated directly if needed (no data wrapping)
