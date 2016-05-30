@@ -14,9 +14,9 @@ using namespace openMVG::sfm;
 
 int main(int argc, char **argv)
 {
-	// Command line configuration
-	//
-	CmdLine cmd;
+  // Command line configuration
+  //
+  CmdLine cmd;
 
   std::string
     sSfmFile,
@@ -100,9 +100,9 @@ int main(int argc, char **argv)
   SfM_Data sfm_data_in;
   if (!Load(sfm_data_in, sSfmFile, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS)))
   {
-  	std::cerr << "ERROR" << std::endl;
-  	std::cerr << "The input SfM_Data file \"" << sSfmFile << "\" cannot be read." << std::endl;
-  	return EXIT_FAILURE;
+    std::cerr << "ERROR" << std::endl;
+    std::cerr << "The input SfM_Data file \"" << sSfmFile << "\" cannot be read." << std::endl;
+    return EXIT_FAILURE;
   }
 
   // Load GT
@@ -116,31 +116,31 @@ int main(int argc, char **argv)
   //
   for(const auto &iter : sfm_data_in.GetViews())
   {
-  	const auto &view = iter.second;
-  	const std::string sImageName = stlplus::filename_part(view->s_Img_path);
-  	int idGT = findIdGT(sImageName, vec_fileNames);
-  	if(idGT == -1)
-  	{
-  		std::cerr << "No ground truth for file: " << sImageName << std::endl;
-  		continue;
-  	}
-  	else
-  	{
-  		geometry::Pose3 poseGT = sfm_data_gt.GetPoses().at(idGT);
-  		Vec3 vecMaya;
-  		if(mayaTransform)
-  			vecMaya = {1,-1,-1};
-  		else
-  			vecMaya = {1,1,1};
-  		geometry::Pose3 poseIN(vecMaya.asDiagonal() * poseGT.rotation(), poseGT.center());
+    const auto &view = iter.second;
+    const std::string sImageName = stlplus::filename_part(view->s_Img_path);
+    int idGT = findIdGT(sImageName, vec_fileNames);
+    if(idGT == -1)
+    {
+      std::cerr << "No ground truth for file: " << sImageName << std::endl;
+      continue;
+    }
+    else
+    {
+      geometry::Pose3 poseGT = sfm_data_gt.GetPoses().at(idGT);
+      Vec3 vecMaya;
+      if(mayaTransform)
+        vecMaya = {1,-1,-1};
+      else
+        vecMaya = {1,1,1};
+      geometry::Pose3 poseIN(vecMaya.asDiagonal() * poseGT.rotation(), poseGT.center());
 
-  		sfm_data_in.poses.emplace(view->id_pose, poseIN);
-  		sfm_data_in.intrinsics[view->id_intrinsic] = sfm_data_gt.intrinsics.at(idGT);
-  	}
+      sfm_data_in.poses.emplace(view->id_pose, poseIN);
+      sfm_data_in.intrinsics[view->id_intrinsic] = sfm_data_gt.intrinsics.at(idGT);
+    }
   }
 
   std::cout << "Saved: " << Save(sfm_data_in, sOutFile, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS)) << std::endl;
 
-	return 0;
+  return 0;
 }
 
