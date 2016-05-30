@@ -118,7 +118,7 @@ int main(int argc, char **argv)
   {
     const auto &view = iter.second;
     const std::string sImageName = stlplus::filename_part(view->s_Img_path);
-    int idGT = findIdGT(sImageName, vec_fileNames);
+    const int idGT = findIdGT(sImageName, vec_fileNames);
     if(idGT == -1)
     {
       std::cerr << "No ground truth for file: " << sImageName << std::endl;
@@ -126,7 +126,7 @@ int main(int argc, char **argv)
     }
     else
     {
-      geometry::Pose3 poseGT = sfm_data_gt.GetPoses().at(idGT);
+      const geometry::Pose3 poseGT = sfm_data_gt.GetPoses().at(idGT);
       Vec3 vecMaya;
       if(mayaTransform)
         vecMaya = {1,-1,-1};
@@ -141,6 +141,6 @@ int main(int argc, char **argv)
 
   std::cout << "Saved: " << Save(sfm_data_in, sOutFile, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS)) << std::endl;
 
-  return 0;
+  return EXIT_SUCCESS;
 }
 
