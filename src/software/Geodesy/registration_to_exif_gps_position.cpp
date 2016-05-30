@@ -105,11 +105,11 @@ int main(int argc, char **argv)
   for (const auto & view_it : sfm_data.GetViews() )
   {
     if (!sfm_data.IsPoseAndIntrinsicDefined(view_it.second.get()))
-      continue;  
-    
+      continue;
+
     const std::string view_filename =
       stlplus::create_filespec(sfm_data.s_root_path, view_it.second->s_Img_path);
-    
+
     // Try to parse EXIF metada & check existence of EXIF data
     if (! (exifReader->open( view_filename ) &&
            exifReader->doesHaveExifInfo()) )
@@ -124,7 +124,7 @@ int main(int argc, char **argv)
       // Add ECEF XYZ position to the GPS position array
       vec_gps_center.push_back( lla_to_ecef( latitude, longitude, altitude ) );
       const openMVG::geometry::Pose3 pose(sfm_data.GetPoseOrDie(view_it.second.get()));
-      vec_sfm_center.push_back( pose.center() );    
+      vec_sfm_center.push_back( pose.center() );
     }
   }
 
@@ -140,7 +140,7 @@ int main(int argc, char **argv)
     << std::endl;
 
   // Export the corresponding poses (for debugging & see the transformation)
-  plyHelper::exportToPly( vec_gps_center, 
+  plyHelper::exportToPly( vec_gps_center,
     stlplus::create_filespec(stlplus::folder_part(sSfM_Data_Filename_Out), "GPS_position", "ply"));
   plyHelper::exportToPly( vec_sfm_center,
     stlplus::create_filespec(stlplus::folder_part(sSfM_Data_Filename_Out), "SFM_position", "ply"));
@@ -194,7 +194,7 @@ int main(int argc, char **argv)
               vec_fitting_errors.push_back((X_GPS.col(i) - sim(X_SfM.col(i))).norm());
           }
           std::cout << "\nFound: " << vec_fitting_errors.size() << " inliers"
-           << " from " << X_SfM.cols() << " points." << std::endl; 
+           << " from " << X_SfM.cols() << " points." << std::endl;
           std::cout << "\n3D Similarity fitting error using only the fitted inliers (in target coordinate system units):";
           minMaxMeanMedian<float>( vec_fitting_errors.begin(), vec_fitting_errors.end() );
         }

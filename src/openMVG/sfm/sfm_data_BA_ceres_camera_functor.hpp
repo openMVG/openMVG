@@ -256,7 +256,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1
 
     return true;
   }
-  
+
   static const int num_residuals() { return 2; }
 
   // Factory to hide the construction of the CostFunction object from
@@ -385,7 +385,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3
 
   // Factory to hide the construction of the CostFunction object from
   // the client code.
-  static ceres::CostFunction* Create  
+  static ceres::CostFunction* Create
   (
     const Vec2 & observation,
     const double weight = 0.0
