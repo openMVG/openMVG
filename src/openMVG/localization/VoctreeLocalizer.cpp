@@ -208,16 +208,11 @@ bool VoctreeLocalizer::localize(const image::Image<unsigned char> & imageGrey,
 #if USE_SIFT_FLOAT
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Float_Regions());
 #else
-  POPART_COUT("[features]\t1");
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::SIFT_Regions());
-  POPART_COUT("[features]\t2");
 #endif
   auto detect_start = std::chrono::steady_clock::now();
-  POPART_COUT("[features]\t3");
   _image_describer->Set_configuration_preset(param->_featurePreset);
-  POPART_COUT("[features]\t4");
   _image_describer->Describe(imageGrey, tmpQueryRegions, nullptr);
-  POPART_COUT("[features]\t5");
   auto detect_end = std::chrono::steady_clock::now();
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
   POPART_COUT("[features]\tExtract SIFT done: found " << tmpQueryRegions->RegionCount() << " features in " << detect_elapsed.count() << " [ms]");
