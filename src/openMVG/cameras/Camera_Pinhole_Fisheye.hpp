@@ -44,7 +44,8 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
 
   virtual bool have_disto() const { return true;}
 
-  virtual Vec2 add_disto(const Vec2 & p) const{
+  virtual Vec2 add_disto(const Vec2 & p) const
+  {
     const double eps = 1e-8;
     const double k1 = _params[0], k2 = _params[1], k3 = _params[2], k4 = _params[3];
     const double r = std::sqrt(p(0)*p(0) + p(1)*p(1));
@@ -64,7 +65,8 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     return  p*cdist;
   }
 
-  virtual Vec2 remove_disto(const Vec2 & p) const{
+  virtual Vec2 remove_disto(const Vec2 & p) const
+  {
     const double eps = 1e-8;
     double scale = 1.0;
     const double theta_dist = std::sqrt(p[0]*p[0] + p[1]*p[1]);

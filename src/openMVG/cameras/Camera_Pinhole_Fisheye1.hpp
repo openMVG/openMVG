@@ -17,7 +17,7 @@ namespace cameras {
  * 
  * "Straight lines have to be straight: automatic calibration and
  * removal of distortion from scenes of structured enviroments"
- * from Frederic Devernay and Olivier Faugeras
+ * by Frederic Devernay and Olivier Faugeras
  * https://hal.inria.fr/inria-00267247/document
  */
 class Pinhole_Intrinsic_Fisheye1 : public Pinhole_Intrinsic
