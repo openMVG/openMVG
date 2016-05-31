@@ -8,6 +8,7 @@
 
 #include "openMVG/stl/hash.hpp"
 
+#include <cstdlib>
 
 namespace openMVG {
 namespace exif  {
