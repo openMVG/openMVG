@@ -418,8 +418,7 @@ float Database::sparseDistance(const SparseHistogram& v1, const SparseHistogram&
   }
   else
   {
-    std::cout << "Unknown distanceMethod" << std::endl;
-    exit(-1);
+    throw std::invalid_argument("distance method "+ distanceMethod +" unknown!");
   }
   
   return distance;
