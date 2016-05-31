@@ -374,8 +374,7 @@ void AlembicExporter::add(const sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_par
       {
         // OpenMVG Camera
         pose = sfmdata.GetPoseOrDie(view);
-        auto iterIntrinsic = sfmdata.GetIntrinsics().find(view->id_intrinsic);
-        cam = iterIntrinsic->second;
+        cam = sfmdata.GetIntrinsics().at(view->id_intrinsic);
       }
       else if(!(flags_part & sfm::ESfM_Data::VIEWS))
       {
@@ -391,7 +390,9 @@ void AlembicExporter::add(const sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_par
       const sfm::View_Metadata* viewMetadata = dynamic_cast<const sfm::View_Metadata*>(view);
       if(viewMetadata)
       {
-        sensorWidth_mm = std::stof(viewMetadata->metadata.at(std::string("sensor_width")));
+        static const std::string kSensorWidth("sensor_width");
+        if(viewMetadata->metadata.find(kSensorWidth) != viewMetadata->metadata.end())
+          sensorWidth_mm = std::stof(viewMetadata->metadata.at(kSensorWidth));
       }
       appendCamera(cameraName, pose,
             dynamic_cast<openMVG::cameras::Pinhole_Intrinsic*>(cam.get()),
