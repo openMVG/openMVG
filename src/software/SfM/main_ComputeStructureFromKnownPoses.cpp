@@ -42,7 +42,7 @@ int main(int argc, char **argv)
        "[-i|--input_file] path to a SfM_Data scene\n"
        "[-o|--output_file] file where the output data will be stored "
           "(i.e. path/sfm_data_structure.bin)\n"
-       "[-m|--feat_dir] path to the features and descriptors that "
+       "[-f|--feat_dir] path to the features and descriptors that "
           "corresponds to the provided SfM_Data scene\n"
        "\n[Optional]\n"
        "[-m|--match_dir] path to the matches files "
