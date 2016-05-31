@@ -113,7 +113,7 @@ std::size_t populateDatabase(const std::string &fileFullPath,
  * @param[in] db The built database
  * @param[in] numResults The number of results to retrieve for each image
  * @param[out] allMatches The matches for all the images
- * @param[in] distanceMethod The distance method used for create the pair list
+ * @param[in] distanceMethod the method used to compute distance between histograms.
  * @param[in] Nmax The maximum number of features loaded in each desc file. For Nmax = 0 (default), all the descriptors are loaded. 
  * @see queryDatabase()
  */
@@ -141,7 +141,7 @@ void queryDatabase(const std::string &fileFullPath,
  * @param[in] numResults The number of results to retrieve for each image
  * @param[out] allMatches The matches for all the images
  * @param[out] documents For each document, it contains the list of associated visual words 
- * @param[in] distanceMethod The distance method used for create the pair list
+ * @param[in] distanceMethod The method used to compute distance between histograms.
  * @param[in] Nmax The maximum number of features loaded in each desc file. For Nmax = 0 (default), all the descriptors are loaded.
  */
 template<class DescriptorT, class VocDescriptorT>

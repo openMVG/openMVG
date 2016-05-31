@@ -37,14 +37,14 @@ std::size_t populateDatabase(const std::string &fileFullPath,
  * @param[in] db The built database
  * @param[in] numResults The number of results to retrieve for each image
  * @param[out] allMatches The matches for all the images
- * @param[in] distanceMethod The distance method used for create the pair list
+ * @param[in] distanceMethod The distance method used to create the pair list
  * @param[in] Nmax The maximum number of features loaded in each desc file. For Nmax = 0 (default), all the descriptors are loaded. 
  * @see queryDatabase()
  */
 template<class DescriptorT, class VocDescriptorT>
 void queryDatabase(const std::string &fileFullPath,
-                   const openMVG::voctree::VocabularyTree<VocDescriptorT> &tree,
-                   const openMVG::voctree::Database &db,
+                   const VocabularyTree<VocDescriptorT> &tree,
+                   const Database &db,
                    size_t numResults,
                    std::map<size_t, DocMatches> &allMatches,
                    const std::string &distanceMethod,
@@ -61,7 +61,7 @@ void queryDatabase(const std::string &fileFullPath,
  * @param[in] numResults The number of results to retrieve for each image
  * @param[out] allMatches The matches for all the images
  * @param[out] documents For each document, it contains the list of associated visual words 
- * @param[in] distanceMethod The distance method used for create the pair list
+ * @param[in] distanceMethod The distance method used to create the pair list
  * @param[in] Nmax The maximum number of features loaded in each desc file. For Nmax = 0 (default), all the descriptors are loaded.
  */
 template<class DescriptorT, class VocDescriptorT>

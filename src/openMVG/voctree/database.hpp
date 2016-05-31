@@ -74,8 +74,9 @@ public:
   /**
    * @brief Find the top N matches in the database for the query document.
    *
-   * @param      document The query document, a set of quantized words.
-   * @param      N        The number of matches to return.
+   * @param[in] document The query document, a set of quantized words.
+   * @param[in] N        The number of matches to return.
+   * @param[in] distanceMethod distance method (norm L1, etc.)
    * @param[out] matches  IDs and scores for the top N matching database documents.
    */
   void find(const std::vector<Word>& document, size_t N, std::vector<DocMatch>& matches, const std::string &distanceMethod = "strongCommonPoints") const;
@@ -83,8 +84,9 @@ public:
     /**
    * @brief Find the top N matches in the database for the query document.
    *
-   * @param      query The query document, a normalized set of quantized words.
-   * @param      N        The number of matches to return.
+   * @param[in] query The query document, a normalized set of quantized words.
+   * @param[int] N        The number of matches to return.
+   * @param[in] distanceMethod distance method (norm L1, etc.)
    * @param[out] matches  IDs and scores for the top N matching database documents.
    */
   void find(const SparseHistogram& query, size_t N, std::vector<DocMatch>& matches, const std::string &distanceMethod = "strongCommonPoints") const;
@@ -161,7 +163,6 @@ private:
   std::vector<float> word_weights_;
   SparseHistogramPerImage database_; // Precomputed for inserted documents
 
-
   /**
    * Normalize a document vector representing the histogram of visual words for a given image
    * @param[in/out] v the unnormalized histogram of visual words
@@ -169,11 +170,12 @@ private:
   void normalize(SparseHistogram& v) const;
 
   /**
-   * @brief compute the sparse distance L1 between two histograms
+   * @brief compute the sparse distance between two histograms according to the chosen distance method.
    * 
    * @param v1 The first sparse histogram
    * @param v2 The second sparse histogram
-   * @return the distance of the two histograms in norm L1
+   * @param distanceMethod distance method (norm L1, etc.)
+   * @return the distance of the two histograms
    */
   float sparseDistance(const SparseHistogram& v1, const SparseHistogram& v2, const std::string &distanceMethod = "classic") const;
 };
