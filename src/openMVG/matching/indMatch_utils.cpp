@@ -122,7 +122,12 @@ bool LoadMatchFilePerImage(
     PairWiseMatches fileMatches;
     if(!LoadMatchFile(fileMatches, folder, matchFilename))
     {
-      std::cerr << "Unable to load match file: " << folder << "/" << matchFilename << std::endl;
+#ifdef OPENMVG_USE_OPENMP
+      #pragma omp critical
+#endif
+      {
+        std::cerr << "Unable to load match file: " << folder << "/" << matchFilename << std::endl;
+      }
       continue;
     }
 #ifdef OPENMVG_USE_OPENMP
