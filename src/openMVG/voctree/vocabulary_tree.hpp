@@ -111,16 +111,12 @@ public:
 
   bool operator==(const VocabularyTree& other) const
   {
-    if( (centers_ != other.centers_) ||
-        (valid_centers_ != other.valid_centers_) ||
-        (k_ != other.k_) ||
-        (levels_ != other.levels_) ||
-        (num_words_ != other.num_words_) ||
-        (word_start_ != other.word_start_))
-    {
-      return false;
-    }
-    return true;
+    return (centers_ == other.centers_) &&
+        (valid_centers_ == other.valid_centers_) &&
+        (k_ == other.k_) &&
+        (levels_ == other.levels_) &&
+        (num_words_ == other.num_words_) &&
+        (word_start_ == other.word_start_);
   }
 protected:
   std::vector<Feature, FeatureAllocator> centers_;

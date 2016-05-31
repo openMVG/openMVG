@@ -69,10 +69,9 @@ bool exportToCMPMVSFormat(
     {
       std::map<std::pair<size_t, size_t>, size_t> imgResolutions;
       std::size_t nbValidImages = 0;
-      for(Views::const_iterator iter = sfm_data.GetViews().begin();
-        iter != sfm_data.GetViews().end(); ++iter)
+      for(const auto &iter : sfm_data.GetViews())
       {
-        const View * view = iter->second.get();
+        const View * view = iter.second.get();
         if (!sfm_data.IsPoseAndIntrinsicDefined(view))
           continue;
         Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
@@ -106,10 +105,9 @@ bool exportToCMPMVSFormat(
       }
     }
     // Export valid views as Projective Cameras:
-    for(Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter)
+    for(const auto &iter : sfm_data.GetViews())
     {
-      const View * view = iter->second.get();
+      const View * view = iter.second.get();
       if (!sfm_data.IsPoseAndIntrinsicDefined(view))
         continue;
       Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);

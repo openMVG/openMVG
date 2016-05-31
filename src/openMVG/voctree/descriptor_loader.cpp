@@ -62,10 +62,10 @@ void getListOfDescriptorFiles(const std::string &fileFullPath, std::map<IndexT, 
     std::size_t viewId = 0;
     for(bfs::recursive_directory_iterator it(bp), end; it != end; ++it)
     {
-        if(!bfs::is_directory(*it) && boost::algorithm::ends_with(it->path().string(), ".desc"))
-        {
-          descriptorsFiles[viewId++] = it->path().string();
-        }
+      if(!bfs::is_directory(*it) && it->path().extension() == ".desc")
+      {
+        descriptorsFiles[viewId++] = it->path().string();
+      }
     }
     return;
   }
