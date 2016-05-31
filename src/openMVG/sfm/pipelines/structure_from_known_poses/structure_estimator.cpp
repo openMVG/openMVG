@@ -44,8 +44,8 @@ void PointsToMat(
   m.resize(2, vec_feats.size());
   typedef typename MatT::Scalar Scalar; // Output matrix type
 
-  size_t i = 0;
-  for( PointFeatures::const_iterator iter = vec_feats.begin();
+  Mat::Index i = 0;
+  for (PointFeatures::const_iterator iter = vec_feats.begin();
     iter != vec_feats.end(); ++iter, ++i)
   {
     if (cam)
@@ -178,7 +178,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
   C_Progress_display my_progress_bar( triplets.size(), std::cout,
     "Per triplet tracks validation (discard spurious correspondences):\n" );
 #ifdef OPENMVG_USE_OPENMP
-    #pragma omp parallel
+  #pragma omp parallel
 #endif // OPENMVG_USE_OPENMP
   for (Triplets::const_iterator it = triplets.begin(); it != triplets.end(); ++it)
   {
@@ -187,7 +187,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
 #endif // OPENMVG_USE_OPENMP
     {
       #ifdef OPENMVG_USE_OPENMP
-        #pragma omp critical
+      #pragma omp critical
       #endif // OPENMVG_USE_OPENMP
       {++my_progress_bar;}
 
@@ -238,7 +238,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
           // TODO: Add an angular check ?
           {
             #ifdef OPENMVG_USE_OPENMP
-              #pragma omp critical
+            #pragma omp critical
             #endif // OPENMVG_USE_OPENMP
             {
               openMVG::tracks::submapTrack::const_iterator iterI, iterJ, iterK;
@@ -273,29 +273,44 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::triangulate(
   // Generate new Structure tracks
   sfm_data.structure.clear();
 
+  SfM_Data_Structure_Computation_Robust structure_estimator(max_reprojection_error_);
+  C_Progress_display my_progress_bar( map_tracksCommon.size(), std::cout,
+    "Tracks to structure conversion:\n" );
   // Fill sfm_data with the computed tracks (no 3D yet)
-  Landmarks & structure = sfm_data.structure;
-  IndexT idx(0);
-  for (tracks::STLMAPTracks::const_iterator itTracks = map_tracksCommon.begin();
-    itTracks != map_tracksCommon.end();
-    ++itTracks, ++idx)
+#ifdef OPENMVG_USE_OPENMP
+  #pragma omp parallel for schedule(dynamic)
+#endif // OPENMVG_USE_OPENMP
+  for (int i = 0; i < map_tracksCommon.size(); ++i)
   {
-    const tracks::submapTrack & track = itTracks->second;
-    structure[idx] = Landmark();
-    Observations & obs = structure.at(idx).obs;
-    for (tracks::submapTrack::const_iterator it = track.begin(); it != track.end(); ++it)
+    #ifdef OPENMVG_USE_OPENMP
+    #pragma omp critical
+    #endif // OPENMVG_USE_OPENMP
+    {++my_progress_bar;}
+
+    tracks::STLMAPTracks::const_iterator itTracks = map_tracksCommon.begin();
+    std::advance(itTracks, i);
     {
-      const size_t imaIndex = it->first;
-      const size_t featIndex = it->second;
-      std::shared_ptr<features::Regions> regions = regions_provider->get(imaIndex);
-      const Vec2 pt = regions->GetRegionPosition(featIndex);
-      obs[imaIndex] = Observation(pt, featIndex);
+      const tracks::submapTrack & track = itTracks->second;
+
+      Observations obs;
+      for (tracks::submapTrack::const_iterator it = track.begin(); it != track.end(); ++it)
+      {
+        const IndexT imaIndex = it->first;
+        const IndexT featIndex = it->second;
+        const std::shared_ptr<features::Regions> regions = regions_provider->get(imaIndex);
+        const Vec2 pt = regions->GetRegionPosition(featIndex);
+        obs[imaIndex] = Observation(pt, featIndex);
+      }
+      Landmark landmark;
+      if (structure_estimator.robust_triangulation(sfm_data, obs, landmark))
+      #ifdef OPENMVG_USE_OPENMP
+      #pragma omp critical
+      #endif // OPENMVG_USE_OPENMP
+      {
+        sfm_data.structure[itTracks->first] = landmark;
+      }
     }
   }
-
-  // Triangulate them using a robust triangulation scheme
-  SfM_Data_Structure_Computation_Robust structure_estimator(max_reprojection_error_, true);
-  structure_estimator.triangulate(sfm_data);
 }
 
 } // namespace sfm
