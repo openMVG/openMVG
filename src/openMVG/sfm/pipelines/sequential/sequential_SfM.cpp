@@ -518,7 +518,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
 
   const unsigned iMin_inliers_count = 100;
   // Use a min angle limit to ensure quality of the geometric evaluation.
-  const float fRequired_min_angle = 15.0f;
+  const float fRequired_min_angle = 5.0f;
   // Use a max angle limit to ensure good matching quality.
   const float fLimit_max_angle = 40.0f;
 
@@ -545,6 +545,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
   C_Progress_display my_progress_bar( _matches_provider->_pairWise_matches.size(),
     std::cout,
     "Automatic selection of an initial pair:\n" );
+
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
