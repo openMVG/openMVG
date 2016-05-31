@@ -57,22 +57,22 @@ enum EPairMode
 void getStatsMap(const PairWiseMatches& map)
 {
 #ifdef OPENMVG_DEBUG_MATCHING
-      std::map<int,int> stats;
-      for( const auto& imgMatches: map)
-      {
-        for( const matching::IndMatch& featMatches: imgMatches.second)
-        {
-          int d = std::floor(featMatches._distance / 1000.0);
-          if( stats.find(d) != stats.end() )
-            stats[d] += 1;
-          else
-            stats[d] = 1;
-        }
-      }
-      for(const auto& stat: stats)
-      {
-        std::cout << stat.first << "\t" << stat.second << std::endl;
-      }
+  std::map<int,int> stats;
+  for( const auto& imgMatches: map)
+  {
+    for( const matching::IndMatch& featMatches: imgMatches.second)
+    {
+      int d = std::floor(featMatches._distance / 1000.0);
+      if( stats.find(d) != stats.end() )
+        stats[d] += 1;
+      else
+        stats[d] = 1;
+    }
+  }
+  for(const auto& stat: stats)
+  {
+    std::cout << stat.first << "\t" << stat.second << std::endl;
+  }
 #endif
 }
 
@@ -124,11 +124,14 @@ int main(int argc, char **argv)
   cmd.add(make_option('y', bUseGridSort, "use_grid_sort"));
   cmd.add(make_option('e', bExportDebugFiles, "export_debug_files"));
 
-  try {
-      if(argc == 1) throw std::string("Invalid command line parameter.");
-      cmd.process(argc, argv);
-  } catch(const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << '\n'
+  try
+  {
+    if(argc == 1) throw std::string("Invalid command line parameter.");
+    cmd.process(argc, argv);
+  }
+  catch(const std::string& s)
+  {
+    std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--input_file] a SfM_Data file\n"
       << "[-o|--out_dir path] output path where computed matches are stored\n"
       << "\n[Optional]\n"
@@ -175,8 +178,8 @@ int main(int argc, char **argv)
       << "[-e|--export_debug_files] Export debug files (svg, dot)"
       << std::endl;
 
-      std::cerr << s << std::endl;
-      return EXIT_FAILURE;
+    std::cerr << s << std::endl;
+    return EXIT_FAILURE;
   }
 
   std::cout << " You called : " << "\n"
