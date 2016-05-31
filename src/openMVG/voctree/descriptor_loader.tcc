@@ -49,35 +49,33 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
     std::cout << "WARNING: Empty descriptor file: " << fileFullPath << std::endl;
     return 0;
   }
-  else
+
+  // Allocate the memory
+  descriptors.reserve(numDescriptors);
+  size_t numDescriptorsCheck = numDescriptors; // for later check
+  numDescriptors = 0;
+
+  // Read the descriptors
+  std::cout << "Reading the descriptors..." << std::endl;
+  display.restart(descriptorsFiles.size());
+
+  // Run through the path vector and read the descriptors
+  for(const auto &currentFile : descriptorsFiles)
   {
-    // Allocate the memory
-    descriptors.reserve(numDescriptors);
-    size_t numDescriptorsCheck = numDescriptors; // for later check
-    numDescriptors = 0;
+    // Read the descriptors and append them in the vector
+    features::loadDescsFromBinFile<DescriptorT, FileDescriptorT>(currentFile.second, descriptors, true);
+    size_t result = descriptors.size();
 
-    // Read the descriptors
-    std::cout << "Reading the descriptors..." << std::endl;
-    display.restart(descriptorsFiles.size());
+    // Add the number of descriptors from this file
+    numFeatures.push_back(result - numDescriptors);
 
-    // Run through the path vector and read the descriptors
-    for(const auto &currentFile : descriptorsFiles)
-    {
-      // Read the descriptors and append them in the vector
-      features::loadDescsFromBinFile<DescriptorT, FileDescriptorT>(currentFile.second, descriptors, true);
-      size_t result = descriptors.size();
+    // Update the overall counter
+    numDescriptors = result;
 
-      // Add the number of descriptors from this file
-      numFeatures.push_back(result - numDescriptors);
-
-      // Update the overall counter
-      numDescriptors = result;
-
-      ++display;
-    }
-    BOOST_ASSERT(numDescriptors == numDescriptorsCheck);
-
+    ++display;
   }
+  assert(numDescriptors == numDescriptorsCheck);
+
   // Return the result
   return numDescriptors;
 }
