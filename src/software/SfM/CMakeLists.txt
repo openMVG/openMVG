@@ -39,6 +39,8 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures
   openMVG_features
   openMVG_multiview
   openMVG_sfm
+  openMVG_exif
+  easyexif
   stlplus
   vlsift
   )

@@ -18,6 +18,8 @@
 #include "openMVG/features/cctag/SIFT_CCTAG_describer.hpp"
 #endif
 
+#include "openMVG/exif/exif_IO_EasyExif.hpp"
+
 #include <cereal/archives/json.hpp>
 #include "openMVG/system/timer.hpp"
 
@@ -354,14 +356,14 @@ int main(int argc, char **argv)
       sfm_data.s_root_path = sSfM_Data_Filename; // Setup main image root_path
     Views & views = sfm_data.views;
     
-    for(std::vector<std::string>::const_iterator iter_image = vec_images.begin();
-        iter_image != vec_images.end(); ++iter_image)
+    for(const auto &imageName : vec_images)
     {
-      std::size_t id_view = 0;
-      stl::hash_combine(id_view, *iter_image);
-    
+      exif::Exif_IO_EasyExif exifReader(imageName);
+
+      const std::size_t uid = exif::computeUID(exifReader, imageName);
+
       // Build the view corresponding to the image
-      View v(*iter_image, (IndexT)id_view);
+      View v(imageName, (IndexT)uid);
       v.id_intrinsic = UndefinedIndexT;
       views[v.id_view] = std::make_shared<View>(v);
     }
