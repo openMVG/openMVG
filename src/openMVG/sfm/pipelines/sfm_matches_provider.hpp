@@ -26,7 +26,7 @@ struct Matches_Provider
   {
     if (!matching::Load(_pairWise_matches, sfm_data.GetViewsKeys(), folder, matchesMode))
     {
-      std::cerr<< "Unable to read the matches file: " << folder << "/" << matchesMode << std::endl;
+      std::cerr<< "Unable to read the matches file(s) from: " << folder << " (mode: " << matchesMode << ")" << std::endl;
       return false;
     }
     return true;
