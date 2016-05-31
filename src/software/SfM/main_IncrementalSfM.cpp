@@ -17,12 +17,20 @@ using namespace openMVG;
 using namespace openMVG::cameras;
 using namespace openMVG::sfm;
 
-bool computeIndexFromImageName(
+/**
+ * @brief Retrieve the view id in the sfmData from the image filename.
+ *
+ * @param[in] sfm_data the SfM scene
+ * @param[in] initialName the image name to find (filename or path)
+ * @param[out] out_viewId the id found
+ * @return if a view is found
+ */
+bool retrieveViewIdFromImageName(
   const SfM_Data & sfm_data,
   const std::string& initialName,
-  IndexT& initialIndex)
-{  
-  initialIndex = UndefinedIndexT;
+  IndexT& out_viewId)
+{
+  out_viewId = UndefinedIndexT;
 
   bool isName = (initialName == stlplus::filename_part(initialName));
   
@@ -51,9 +59,9 @@ bool computeIndexFromImageName(
     
     if (filename == initialName)
     {
-      if(initialIndex == UndefinedIndexT)
+      if(out_viewId == UndefinedIndexT)
       {
-          initialIndex = v->id_view;
+          out_viewId = v->id_view;
       }
       else
       {
@@ -61,7 +69,7 @@ bool computeIndexFromImageName(
       }
     }
   }
-  return initialIndex != UndefinedIndexT;
+  return out_viewId != UndefinedIndexT;
 }
 
 
@@ -205,8 +213,8 @@ int main(int argc, char **argv)
     }
 
     Pair initialPairIndex;
-    if(!computeIndexFromImageName(sfm_data, initialPairString.first, initialPairIndex.first)
-            || !computeIndexFromImageName(sfm_data, initialPairString.second, initialPairIndex.second))
+    if(!retrieveViewIdFromImageName(sfm_data, initialPairString.first, initialPairIndex.first)
+            || !retrieveViewIdFromImageName(sfm_data, initialPairString.second, initialPairIndex.second))
     {
         std::cerr << "Could not find the initial pairs <" << initialPairString.first
           <<  ", " << initialPairString.second << ">!\n";
