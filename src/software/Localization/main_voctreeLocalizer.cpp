@@ -245,6 +245,7 @@ int main(int argc, char** argv)
     }
     ++frameCounter;
   }
+  localization::save(vec_localizationResults, bfs::path(exportFile).stem().string()+".json");
   
   if(globalBundle)
   {
@@ -280,6 +281,7 @@ int main(int argc, char** argv)
       }
       exporterBA.addPoints(localizer.getSfMData().GetLandmarks());
 #endif
+      localization::save(vec_localizationResults, bfs::path(exportFile).stem().string()+".BUNDLE.json");
     }
   }
   
