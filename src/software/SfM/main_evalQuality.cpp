@@ -7,7 +7,6 @@
 
 #include "openMVG/sfm/sfm.hpp"
 
-#include "software/SfM/io_readGT.hpp"
 #include "software/SfM/tools_precisionEvaluationToGt.hpp"
 #include "software/SfM/SfMPlyHelper.hpp"
 

@@ -14,6 +14,7 @@
 #include "openMVG/sfm/sfm_data_io_cereal.hpp"
 #include "openMVG/sfm/sfm_data_io_ply.hpp"
 #include "openMVG/sfm/sfm_data_io_baf.hpp"
+#include "openMVG/sfm/sfm_data_io_gt.hpp"
 
 #include "openMVG/sfm/AlembicExporter.hpp"
 #include "openMVG/sfm/AlembicImporter.hpp"
@@ -92,23 +93,32 @@ bool ValidIds(const SfM_Data & sfm_data, ESfM_Data flags_part)
 bool Load(SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_part)
 {
   bool bStatus = false;
-  const std::string ext = stlplus::extension_part(filename);
-  if (ext == "json")
-    bStatus = Load_Cereal<cereal::JSONInputArchive>(sfm_data, filename, flags_part);
-  else if (ext == "bin")
-    bStatus = Load_Cereal<cereal::PortableBinaryInputArchive>(sfm_data, filename, flags_part);
-  else if (ext == "xml")
-    bStatus = Load_Cereal<cereal::XMLInputArchive>(sfm_data, filename, flags_part);
-#if HAVE_ALEMBIC
-  else if (ext == "abc") {
-    openMVG::dataio::AlembicImporter(filename).populate(sfm_data, flags_part);
-    bStatus = true;
+  // Folder of camera files
+  if (stlplus::folder_exists(filename))
+  {
+    bStatus = readGt(filename, sfm_data);
   }
-#endif // HAVE_ALEMBIC
+  // File
   else
   {
-    std::cerr << "Unknown sfm_data input format: " << ext << std::endl;
-    return false;
+    const std::string ext = stlplus::extension_part(filename);
+    if (ext == "json")
+      bStatus = Load_Cereal<cereal::JSONInputArchive>(sfm_data, filename, flags_part);
+    else if (ext == "bin")
+      bStatus = Load_Cereal<cereal::PortableBinaryInputArchive>(sfm_data, filename, flags_part);
+    else if (ext == "xml")
+      bStatus = Load_Cereal<cereal::XMLInputArchive>(sfm_data, filename, flags_part);
+  #if HAVE_ALEMBIC
+    else if (ext == "abc") {
+      openMVG::dataio::AlembicImporter(filename).populate(sfm_data, flags_part);
+      bStatus = true;
+    }
+  #endif // HAVE_ALEMBIC
+    else
+    {
+      std::cerr << "Unknown sfm_data input format: " << ext << std::endl;
+      return false;
+    }
   }
 
   // Assert that loaded intrinsics | extrinsics are linked to valid view
