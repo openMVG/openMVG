@@ -93,27 +93,27 @@ bool ValidIds(const SfM_Data & sfm_data, ESfM_Data flags_part)
 bool Load(SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_part)
 {
   bool bStatus = false;
-  // Folder of camera files
-  if (stlplus::folder_exists(filename))
-  {
-    bStatus = readGt(filename, sfm_data);
+  const std::string ext = stlplus::extension_part(filename);
+  if (ext == "json")
+    bStatus = Load_Cereal<cereal::JSONInputArchive>(sfm_data, filename, flags_part);
+  else if (ext == "bin")
+    bStatus = Load_Cereal<cereal::PortableBinaryInputArchive>(sfm_data, filename, flags_part);
+  else if (ext == "xml")
+    bStatus = Load_Cereal<cereal::XMLInputArchive>(sfm_data, filename, flags_part);
+#if HAVE_ALEMBIC
+  else if (ext == "abc") {
+    openMVG::dataio::AlembicImporter(filename).populate(sfm_data, flags_part);
+    bStatus = true;
   }
-  // File
+#endif // HAVE_ALEMBIC
   else
   {
-    const std::string ext = stlplus::extension_part(filename);
-    if (ext == "json")
-      bStatus = Load_Cereal<cereal::JSONInputArchive>(sfm_data, filename, flags_part);
-    else if (ext == "bin")
-      bStatus = Load_Cereal<cereal::PortableBinaryInputArchive>(sfm_data, filename, flags_part);
-    else if (ext == "xml")
-      bStatus = Load_Cereal<cereal::XMLInputArchive>(sfm_data, filename, flags_part);
-  #if HAVE_ALEMBIC
-    else if (ext == "abc") {
-      openMVG::dataio::AlembicImporter(filename).populate(sfm_data, flags_part);
-      bStatus = true;
+    // Try if it's a folder
+    if (stlplus::folder_exists(filename))
+    {
+      bStatus = readGt(filename, sfm_data);
     }
-  #endif // HAVE_ALEMBIC
+    // It is not a folder or known format, return false
     else
     {
       std::cerr << "Unknown sfm_data input format: " << ext << std::endl;
