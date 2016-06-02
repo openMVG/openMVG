@@ -28,8 +28,8 @@ namespace robust{
 /// IJCV 1998
 template <typename Kernel>
   double LeastMedianOfSquares(const Kernel &kernel,
-	  typename Kernel::Model * model = NULL,
-    double* outlierThreshold = NULL,
+	  typename Kernel::Model * model = nullptr,
+    double* outlierThreshold = nullptr,
     double outlierRatio=0.5,
 	  double minProba=0.99)
 {

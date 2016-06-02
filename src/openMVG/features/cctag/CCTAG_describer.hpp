@@ -31,7 +31,7 @@ public:
   */
   bool Describe(const image::Image<unsigned char>& image,
     std::unique_ptr<Regions> &regions,
-    const image::Image<unsigned char> * mask = NULL);
+    const image::Image<unsigned char> * mask = nullptr);
 
   /// Allocate Regions type depending of the Image_describer
   void Allocate(std::unique_ptr<Regions> &regions) const;

@@ -21,27 +21,27 @@ static void MSKAPI printstr(void *handle,
   std::cout << str;
 }
 
-MSKenv_t     env = NULL;
+MSKenv_t     env = nullptr;
 
 MOSEK_SolveWrapper::MOSEK_SolveWrapper(int nbParams) : LP_Solver(nbParams)
 {
-  task = NULL;
-  //env  = NULL;
+  task = nullptr;
+  //env  = nullptr;
 
   //-- Initialize MOSEK framework
 
   // Create the mosek environment.
-  /*MSKrescodee r = MSK_makeenv(&env,NULL,NULL,NULL,NULL);
+  /*MSKrescodee r = MSK_makeenv(&env,nullptr,nullptr,nullptr,nullptr);
   if ( r!=MSK_RES_OK )  {
     std::cerr << "Cannot create the MOSEK environment" << std::endl;
   }*/
-  if (env == NULL)
+  if (env == nullptr)
   {
-     MSKrescodee r = MSK_makeenv(&env,NULL,NULL,NULL,NULL);
+     MSKrescodee r = MSK_makeenv(&env,nullptr,nullptr,nullptr,nullptr);
 
     // Directs the env log stream to the 'printstr' function.
     if ( r==MSK_RES_OK )
-      MSK_linkfunctoenvstream(env,MSK_STREAM_LOG,NULL,printstr);
+      MSK_linkfunctoenvstream(env,MSK_STREAM_LOG,nullptr,printstr);
 
     // Initialize the environment.
     if ( r==MSK_RES_OK )
@@ -95,7 +95,7 @@ bool MOSEK_SolveWrapper::setup(const LP_Constraints & cstraints) //cstraints <->
 
     // Directs the log task stream to the 'printstr' function.
     if ( r==MSK_RES_OK )
-      MSK_linkfunctotaskstream(task,MSK_STREAM_LOG,NULL,printstr);
+      MSK_linkfunctotaskstream(task,MSK_STREAM_LOG,nullptr,printstr);
 
     // Give MOSEK an estimate of the size of the input data.
     //This is done to increase the speed of inputting data.
@@ -214,7 +214,7 @@ bool MOSEK_SolveWrapper::setup(const LP_Constraints_Sparse & cstraints) //cstrai
   {
     // Directs the log task stream to the 'printstr' function.
     if ( r==MSK_RES_OK )
-      MSK_linkfunctotaskstream(task,MSK_STREAM_LOG,NULL,printstr);
+      MSK_linkfunctotaskstream(task,MSK_STREAM_LOG,nullptr,printstr);
 
     // Create the optimization task.
     r = MSK_maketask(env,NUMCON,NUMVAR,&task);
@@ -359,7 +359,7 @@ bool MOSEK_SolveWrapper::solve()
     MSKsolstae solsta;
     MSK_getsolutionstatus (task,
                            MSK_SOL_BAS,
-                           NULL,
+                           nullptr,
                            &solsta);
     switch(solsta)
     {
@@ -395,7 +395,7 @@ bool MOSEK_SolveWrapper::getSolution(std::vector<double> & estimatedParams)
   MSKsolstae solsta;
   MSK_getsolutionstatus (task,
                            MSK_SOL_BAS,
-                           NULL,
+                           nullptr,
                            &solsta);
   switch(solsta)
   {

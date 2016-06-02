@@ -46,7 +46,7 @@ void Frustum_Filter::initFrustum(const SfM_Data & sfm_data)
     const Pose3 pose = sfm_data.GetPoseOrDie(view);
 
     const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic->second.get());
-    if (cam == NULL)
+    if (cam == nullptr)
       continue;
 
     if (!_bTruncated) // use infinite frustum

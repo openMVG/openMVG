@@ -75,7 +75,7 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
    */
   bool SearchNeighbour( const Scalar * query, int * indice, DistanceType * distance)
   {
-    if (_index.get() == NULL)
+    if (_index.get() == nullptr)
       return false;
     
     int * indicePTR = indice;
@@ -107,7 +107,7 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
     size_t NN
   )
   {
-    if (_index.get() == NULL || NN > _datasetM->rows)
+    if (_index.get() == nullptr || NN > _datasetM->rows)
       return false;
 
     std::vector<DistanceType> vec_distances(nbQuery * NN);

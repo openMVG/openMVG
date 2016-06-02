@@ -42,7 +42,7 @@ ceres::CostFunction * IntrinsicsToCostFunction(IntrinsicBase * intrinsic, const 
       return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye1, 2, 4, 6, 3>(
               new ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye1(observation.data()));
     default:
-      return NULL;
+      return nullptr;
   }
 }
 

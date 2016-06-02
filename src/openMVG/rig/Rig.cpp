@@ -367,7 +367,7 @@ bool Rig::optimizeCalibration()
 
   // Set a LossFunction to be less penalized by false measurements
   //  - set it to NULL if you don't want use a lossFunction.
-  ceres::LossFunction * p_LossFunction = NULL;//new ceres::HuberLoss(Square(4.0));
+  ceres::LossFunction * p_LossFunction = nullptr;//new ceres::HuberLoss(Square(4.0));
   // todo: make the LOSS function and the parameter an option
 
   // For all visibility add reprojections errors:

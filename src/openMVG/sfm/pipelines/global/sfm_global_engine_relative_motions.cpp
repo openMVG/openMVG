@@ -33,7 +33,7 @@ GlobalSfMReconstructionEngine_RelativeMotions::GlobalSfMReconstructionEngine_Rel
   const SfM_Data & sfm_data,
   const std::string & soutDirectory,
   const std::string & sloggingFile)
-  : ReconstructionEngine(sfm_data, soutDirectory), _sLoggingFile(sloggingFile), _normalized_features_provider(NULL) {
+  : ReconstructionEngine(sfm_data, soutDirectory), _sLoggingFile(sloggingFile), _normalized_features_provider(nullptr) {
 
   if (!_sLoggingFile.empty())
   {

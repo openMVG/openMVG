@@ -574,7 +574,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
 
     const Pinhole_Intrinsic * cam_I = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_I->second.get());
     const Pinhole_Intrinsic * cam_J = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_J->second.get());
-    if (cam_I == NULL || cam_J == NULL)
+    if (cam_I == nullptr || cam_J == nullptr)
       continue;
 
     openMVG::tracks::STLMAPTracks map_tracksCommon;
@@ -710,7 +710,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
 
   const Pinhole_Intrinsic * cam_I = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_I->second.get());
   const Pinhole_Intrinsic * cam_J = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_J->second.get());
-  if (cam_I == NULL || cam_J == NULL)
+  if (cam_I == nullptr || cam_J == nullptr)
   {
     std::cerr << "Can't find initial image pair intrinsics (NULL ptr): " << view_I->id_intrinsic << ", "  << view_J->id_intrinsic << std::endl;
     return false;

@@ -86,7 +86,7 @@ bool solve_translations_problem_l2_chordal(
   int max_iterations)
 {
   // seed the random number generator
-  std::srand( std::time( NULL ) );
+  std::srand( std::time( nullptr ) );
 
   // re index the edges to be a sequential set
   std::vector<int> _edges(edges, edges+2*num_edges);
@@ -112,7 +112,7 @@ bool solve_translations_problem_l2_chordal(
 
     if (loss_width == 0.0) {
       // No robust loss function
-      problem.AddResidualBlock(cost_function, NULL, &x[3*_edges[2*i+0]], &x[3*_edges[2*i+1]]);
+      problem.AddResidualBlock(cost_function, nullptr, &x[3*_edges[2*i+0]], &x[3*_edges[2*i+1]]);
     } else {
       problem.AddResidualBlock(cost_function, new ceres::HuberLoss(loss_width), &x[3*_edges[2*i+0]], &x[3*_edges[2*i+1]]);
     }

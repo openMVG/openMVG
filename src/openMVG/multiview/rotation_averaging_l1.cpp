@@ -461,7 +461,7 @@ unsigned int FilterRelativeRotations(
 //----------------------------------------------------------------
 
 
-REAL RelRotationAvgError(const RelativeRotations& RelRs, const Matrix3x3Arr& Rs, REAL* pMin=NULL, REAL* pMax=NULL)
+REAL RelRotationAvgError(const RelativeRotations& RelRs, const Matrix3x3Arr& Rs, REAL* pMin=nullptr, REAL* pMax=nullptr)
 {
 #ifdef OPENMVG_ROTATION_AVERAGING_WITH_BOOST
   boost::accumulators::accumulator_set<REAL,

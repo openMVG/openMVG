@@ -174,7 +174,7 @@ template<typename Kernel>
 std::pair<double, double> ACRANSAC(const Kernel &kernel,
   std::vector<size_t> & vec_inliers,
   size_t nIter = 1024,
-  typename Kernel::Model * model = NULL,
+  typename Kernel::Model * model = nullptr,
   double precision = std::numeric_limits<double>::infinity(),
   bool bVerbose = false)
 {
