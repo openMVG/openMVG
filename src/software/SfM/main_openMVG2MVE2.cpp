@@ -1,4 +1,4 @@
-/* v.0.16 25 August 2015
+/* v.0.17 October 14th, 2015
  * Kevin CAIN, www.insightdigital.org
  * Adapted from the openMVG libraries,
  * Copyright (c) 2012-2015 Pierre MOULON.
@@ -20,6 +20,7 @@ using namespace openMVG::features;
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/progress/progress.hpp"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include <stdlib.h>
 #include <stdio.h>
 #include <cmath>
@@ -96,8 +97,9 @@ bool exportToMVE2Format(
     std::pair<int,int> w_h_image_size;
     Image<RGBColor> image, image_ud, thumbnail;
     std::string sOutViewIteratorDirectory;
+    std::size_t view_index = 0;
     for(Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
+      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar, ++view_index)
     {
       const View * view = iter->second.get();
 
@@ -105,7 +107,9 @@ bool exportToMVE2Format(
       {
         // Create current view subdirectory 'view_xxxx.mve'
         std::ostringstream padding;
-        padding << std::setw(4) << std::setfill('0') << view->id_view;
+        // Warning: We use view_index instead of view->id_view because MVE use indexes instead of IDs.
+        padding << std::setw(4) << std::setfill('0') << view_index;
+
         sOutViewIteratorDirectory = stlplus::folder_append_separator(sOutViewsDirectory) + "view_" + padding.str() + ".mve";
         if (!stlplus::folder_exists(sOutViewIteratorDirectory))
         {
@@ -157,8 +161,8 @@ bool exportToMVE2Format(
         // For each camera, write to bundle:  focal length, radial distortion[0-1], rotation matrix[0-8], translation vector[0-2]
         std::ostringstream fileOut;
         fileOut
-          << "#MVE view meta data is stored in INI-file syntax." << fileOut.widen('\n')
-          << "#This file is generated, formatting will get lost." << fileOut.widen('\n')
+          << "# MVE view meta data is stored in INI-file syntax." << fileOut.widen('\n')
+          << "# This file is generated, formatting will get lost." << fileOut.widen('\n')
           << fileOut.widen('\n')
           << "[camera]" << fileOut.widen('\n')
           << "focal_length = " << flen << fileOut.widen('\n')
@@ -169,9 +173,10 @@ bool exportToMVE2Format(
           << rotation(2, 0) << " " << rotation(2, 1) << " " << rotation(2, 2) << fileOut.widen('\n')
           << "translation = " << translation[0] << " " << translation[1] << " "
           << translation[2] << " " << fileOut.widen('\n')
+          << fileOut.widen('\n')
           << "[view]" << fileOut.widen('\n')
-          << "id = " << view->id_view << fileOut.widen('\n')
-          << "name = " << srcImage.c_str() << fileOut.widen('\n');
+          << "id = " << view_index << fileOut.widen('\n')
+          << "name = " << stlplus::filename_part(srcImage.c_str()) << fileOut.widen('\n');
 
         // To do:  trim any extra separator(s) from openMVG name we receive, e.g.:
         // '/home/insight/openMVG_KevinCain/openMVG_Build/software/SfM/ImageDataset_SceauxCastle/images//100_7100.JPG'

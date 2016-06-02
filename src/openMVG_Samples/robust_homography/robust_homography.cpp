@@ -139,7 +139,7 @@ int main() {
       false); // configure as point to point error model.
 
     Mat3 H;
-    std::pair<double,double> ACRansacOut = ACRANSAC(kernel, vec_inliers, 1024, &H,
+    const std::pair<double,double> ACRansacOut = ACRANSAC(kernel, vec_inliers, 1024, &H,
       std::numeric_limits<double>::infinity(),
       true);
     const double & thresholdH = ACRansacOut.first;

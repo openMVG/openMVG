@@ -112,11 +112,14 @@ bool SfM_Localizer::Localize
   // pass to the function
 #ifdef HAVE_CCTAG
   const bool bResection = (resection_data.vec_inliers.size() > MINIMUM_SAMPLES);
-  if (!bResection) {
+#ifdef WANTS_POPART_COUT
+  if (!bResection) 
+  {
     std::cout << "bResection is false";
     std::cout << " because resection_data.vec_inliers.size() = " << resection_data.vec_inliers.size();
     std::cout << " and MINIMUM_SAMPLES = " << MINIMUM_SAMPLES << std::endl;
   }
+#endif
 #else
   const bool bResection = (resection_data.vec_inliers.size() > 2.5 * MINIMUM_SAMPLES);
 #endif
@@ -129,7 +132,7 @@ bool SfM_Localizer::Localize
     KRt_From_P(P, &K, &R, &t);
     pose = geometry::Pose3(R, -R.transpose() * t);
   }
-
+#ifdef WANTS_POPART_COUT
   std::cout << "\n"
     << "-------------------------------" << "\n"
     << "-- Robust Resection " << "\n"
@@ -138,7 +141,7 @@ bool SfM_Localizer::Localize
     << "-- #Points validated by robust Resection: " << resection_data.vec_inliers.size() << "\n"
     << "-- Threshold: " << resection_data.error_max << "\n"
     << "-------------------------------" << std::endl;
-
+#endif
   return bResection;
 }
 

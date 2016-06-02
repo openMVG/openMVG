@@ -11,6 +11,7 @@
 #include <openMVG/image/image_io.hpp>
 #include <openMVG/dataio/FeedProvider.hpp>
 #include <openMVG/features/image_describer.hpp>
+#include <openMVG/logger.hpp>
 
 #include <boost/filesystem.hpp>
 #include <boost/progress.hpp>
@@ -27,11 +28,8 @@
 #include <chrono>
 
 #if HAVE_ALEMBIC
-#include <openMVG/dataio/AlembicExporter.hpp>
+#include <openMVG/sfm/AlembicExporter.hpp>
 #endif // HAVE_ALEMBIC
-
-#define POPART_COUT(x) std::cout << x << std::endl
-#define POPART_CERR(x) std::cerr << x << std::endl
 
 
 namespace bfs = boost::filesystem;
@@ -60,6 +58,8 @@ int main(int argc, char** argv)
   std::string preset = features::describerPreset_enumToString(param._featurePreset);               //< the preset for the feature extractor
 #if HAVE_ALEMBIC
   std::string exportFile = "trackedcameras.abc"; //!< the export file
+#else
+  std::string exportFile = "localizationResult.json"; //!< the export file
 #endif
 #if HAVE_CCTAG
   bool useSIFT_CCTAG = false;
@@ -91,7 +91,9 @@ int main(int argc, char** argv)
       ("noBArefineIntrinsics", po::bool_switch(&noBArefineIntrinsics), "It does not refine intrinsics during BA")
       ("visualDebug", po::value<std::string>(&param._visualDebug), "If a directory is provided it enables visual debug and saves all the debugging info in that directory")
 #if HAVE_ALEMBIC
-      ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), "Filename for the SfM_Data export file (where camera poses will be stored). Default : trackedcameras.json If Alambic is enable it will also export an .abc file of the scene with the same name")
+      ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), "Filename for the SfM_Data export file (where camera poses will be stored). Default : trackedcameras.abc. It will also save the localization results as .json of the same name")
+#else
+      ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), "Filename for the SfM_Data export file containing the localization results. Default : localizationResult.json.")
 #endif
 #if HAVE_CCTAG
       ("useSIFT_CCTAG", po::bool_switch(&useSIFT_CCTAG), "If provided, for each image it will extract both SIFT and the CCTAG.")
@@ -161,6 +163,8 @@ int main(int argc, char** argv)
     bfs::create_directories(param._visualDebug);
   }
  
+  const std::string basename = bfs::path(exportFile).stem().string();
+  
   // init the localizer
   localization::VoctreeLocalizer localizer(sfmFilePath,
                                            descriptorsFolder,
@@ -189,6 +193,7 @@ int main(int argc, char** argv)
 #if HAVE_ALEMBIC
   dataio::AlembicExporter exporter( exportFile );
   exporter.addPoints(localizer.getSfMData().GetLandmarks());
+  exporter.initAnimatedCamera("camera");
 #endif
   
   image::Image<unsigned char> imageGrey;
@@ -228,7 +233,7 @@ int main(int argc, char** argv)
     if(localizationResult.isValid())
     {
 #if HAVE_ALEMBIC
-      exporter.appendCamera("camera."+myToString(frameCounter,4), localizationResult.getPose(), &queryIntrinsics, currentImgName, frameCounter, frameCounter);
+      exporter.addCameraKeyframe(localizationResult.getPose(), &queryIntrinsics, currentImgName, frameCounter, frameCounter);
 #endif
       if(globalBundle)
       {
@@ -240,13 +245,13 @@ int main(int argc, char** argv)
     else
     {
 #if HAVE_ALEMBIC
-      // @fixme for now just add a fake camera so that it still can be see in MAYA
-      exporter.appendCamera("camera.V."+myToString(frameCounter,4), geometry::Pose3(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
+      exporter.jumpKeyframe();
 #endif
       POPART_CERR("Unable to localize frame " << frameCounter);
     }
     ++frameCounter;
   }
+  localization::save(vec_localizationResults, basename+".json");
   
   if(globalBundle)
   {
@@ -264,24 +269,25 @@ int main(int argc, char** argv)
     {
 #if HAVE_ALEMBIC
       // now copy back in a new abc with the same name file and BUNDLE appended at the end
-      dataio::AlembicExporter exporterBA( bfs::path(exportFile).stem().string()+".BUNDLE.abc" );
+      dataio::AlembicExporter exporterBA( basename+".BUNDLE.abc" );
+      exporterBA.initAnimatedCamera("camera");
       size_t idx = 0;
       for(const localization::LocalizationResult &res : vec_localizationResults)
       {
         if(res.isValid())
         {
           assert(idx < vec_localizationResults.size());
-//          exporterBA.appendCamera("camera."+myToString(idx,4), res.getPose(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
-          exporterBA.appendCamera("camera."+myToString(idx,4), res.getPose(), &res.getIntrinsics(), mediaFilepath, frameCounter, frameCounter);
+          exporterBA.addCameraKeyframe(res.getPose(), &res.getIntrinsics(), currentImgName, frameCounter, frameCounter);
         }
         else
         {
-          exporterBA.appendCamera("camera.V."+myToString(idx,4), geometry::Pose3(), &queryIntrinsics, mediaFilepath, frameCounter, frameCounter);
+          exporterBA.jumpKeyframe();
         }
         idx++;
       }
       exporterBA.addPoints(localizer.getSfMData().GetLandmarks());
 #endif
+      localization::save(vec_localizationResults, basename+".BUNDLE.json");
     }
   }
   

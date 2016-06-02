@@ -149,33 +149,30 @@ bool SequentialSfMReconstructionEngine::Process()
   //-------------------
   //-- Incremental reconstruction
   //-------------------
-
   if (!InitLandmarkTracks())
     return false;
 
   // Initial pair choice
-  Pair initialPairIndex = _initialpair;
-  if (_initialpair == Pair(0,0))
+  if(_initialpair == Pair(0,0))
   {
-    Pair putative_initial_pair;
-    if (AutomaticInitialPairChoice(putative_initial_pair))
+    if(!AutomaticInitialPairChoice(_initialpair))
     {
-      initialPairIndex = _initialpair = putative_initial_pair;
-    }
-    else if(_userInteraction) // Cannot find a valid initial pair, try to set it by hand?
-    {
-      if (!ChooseInitialPair(_initialpair))
+      if(_userInteraction)
+      {
+        // Cannot find a valid initial pair, try to set it by hand?
+        if(!ChooseInitialPair(_initialpair))
+          return false;
+      }
+      else
+      {
         return false;
-    }
-    else
-    {
-      return false;
+      }
     }
   }
   // Else a starting pair was already initialized before
 
   // Initial pair Essential Matrix and [R|t] estimation.
-  if (!MakeInitialPair3D(initialPairIndex))
+  if (!MakeInitialPair3D(_initialpair))
     return false;
 
   std::set<size_t> reconstructedViewIds;
@@ -220,7 +217,11 @@ bool SequentialSfMReconstructionEngine::Process()
   Histogram<double> h;
   ComputeResidualsHistogram(&h);
   std::cout << "\nHistogram of residuals:" << h.ToString() << std::endl;
-
+    
+  Histogram<double> hTracks;
+  ComputeTracksLengthsHistogram(&hTracks);
+  std::cout << "\nHistogram of tracks length:" << hTracks.ToString() << std::endl;
+  
   if (!_sLoggingFile.empty())
   {
     using namespace htmlDocument;
@@ -240,18 +241,16 @@ bool SequentialSfMReconstructionEngine::Process()
 
     _htmlDocStream->pushInfo(htmlMarkup("h2","Histogram of reprojection-residuals"));
 
+    
     const std::vector<double> xBin = h.GetXbinsValue();
-    std::pair< std::pair<double,double>, std::pair<double,double> > range =
-      autoJSXGraphViewport<double>(xBin, h.GetHist());
-
     htmlDocument::JSXGraphWrapper jsxGraph;
-    jsxGraph.init("3DtoImageResiduals",600,300);
-    jsxGraph.addXYChart(xBin, h.GetHist(), "line,point");
-    jsxGraph.UnsuspendUpdate();
-    jsxGraph.setViewport(range);
-    jsxGraph.close();
-    _htmlDocStream->pushInfo(jsxGraph.toStr());
+    _htmlDocStream->pushXYChart(xBin, h.GetHist(),"3DtoImageResiduals");
+    
+    const std::vector<double> xBinTracks = hTracks.GetXbinsValue();
+    htmlDocument::JSXGraphWrapper jsxGraphTracks;
+    _htmlDocStream->pushXYChart(xBinTracks, hTracks.GetHist(),"3DtoTracksSize");
   }
+
   return true;
 }
 
@@ -260,12 +259,12 @@ bool SequentialSfMReconstructionEngine::ChooseInitialPair(Pair & initialPairInde
 {
   if (_initialpair != Pair(0,0))
   {
+    // Internal initial pair is already initialized (so return it)
     initialPairIndex = _initialpair;
   }
   else
   {
-
-    // List Views that support valid intrinsic
+    // List Views that supports valid intrinsic
     std::set<IndexT> valid_views;
     for (Views::const_iterator it = _sfm_data.GetViews().begin();
       it != _sfm_data.GetViews().end(); ++it)
@@ -357,14 +356,8 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
 
     tracksBuilder.Build(map_Matches);
     std::cout << "\n" << "Track filtering" << std::endl;
-    tracksBuilder.Filter();
-    std::cout << "\n" << "Track filtering : min occurence" << std::endl;
-#ifdef HAVE_CCTAG
-    tracksBuilder.FilterPairWiseMinimumMatches(3); // todo param@L
-#else
-    tracksBuilder.FilterPairWiseMinimumMatches(20); // todo param@L
-#endif
-    
+    tracksBuilder.Filter(_minInputTrackLength);
+
     std::cout << "\n" << "Track export to internal struct" << std::endl;
     //-- Build tracks with STL compliant type :
     tracksBuilder.ExportToSTL(_map_tracks);
@@ -416,7 +409,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
     it != _sfm_data.GetViews().end(); ++it)
   {
     const View * v = it->second.get();
-    if( _sfm_data.GetIntrinsics().find(v->id_intrinsic) != _sfm_data.GetIntrinsics().end())
+    if (_sfm_data.GetIntrinsics().count(v->id_intrinsic))
       valid_views.insert(v->id_view);
   }
 
@@ -450,81 +443,84 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
 
       const size_t I = min(current_pair.first, current_pair.second);
       const size_t J = max(current_pair.first, current_pair.second);
-
-      const View * view_I = _sfm_data.GetViews().at(I).get();
-      const Intrinsics::const_iterator iterIntrinsic_I = _sfm_data.GetIntrinsics().find(view_I->id_intrinsic);
-      const View * view_J = _sfm_data.GetViews().at(J).get();
-      const Intrinsics::const_iterator iterIntrinsic_J = _sfm_data.GetIntrinsics().find(view_J->id_intrinsic);
-
-      const Pinhole_Intrinsic * cam_I = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_I->second.get());
-      const Pinhole_Intrinsic * cam_J = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_J->second.get());
-      if (cam_I != NULL && cam_J != NULL)
+      if (valid_views.count(I) && valid_views.count(J))
       {
-        openMVG::tracks::STLMAPTracks map_tracksCommon;
-        const std::set<size_t> set_imageIndex= {I, J};
-        tracks::TracksUtilsMap::GetTracksInImages(set_imageIndex, _map_tracks, map_tracksCommon);
+        const View * view_I = _sfm_data.GetViews().at(I).get();
+        const Intrinsics::const_iterator iterIntrinsic_I = _sfm_data.GetIntrinsics().find(view_I->id_intrinsic);
+        const View * view_J = _sfm_data.GetViews().at(J).get();
+        const Intrinsics::const_iterator iterIntrinsic_J = _sfm_data.GetIntrinsics().find(view_J->id_intrinsic);
 
-        // Copy points correspondences to arrays for relative pose estimation
-        const size_t n = map_tracksCommon.size();
-        Mat xI(2,n), xJ(2,n);
-        size_t cptIndex = 0;
-        for (openMVG::tracks::STLMAPTracks::const_iterator
-          iterT = map_tracksCommon.begin(); iterT != map_tracksCommon.end();
-          ++iterT, ++cptIndex)
+        const Pinhole_Intrinsic * cam_I = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_I->second.get());
+        const Pinhole_Intrinsic * cam_J = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_J->second.get());
+        if (cam_I != NULL && cam_J != NULL)
         {
-          tracks::submapTrack::const_iterator iter = iterT->second.begin();
-          const size_t i = iter->second;
-          const size_t j = (++iter)->second;
+          openMVG::tracks::STLMAPTracks map_tracksCommon;
+          const std::set<size_t> set_imageIndex= {I, J};
+          tracks::TracksUtilsMap::GetTracksInImages(set_imageIndex, _map_tracks, map_tracksCommon);
 
-          Vec2 feat = _features_provider->feats_per_view[I][i].coords().cast<double>();
-          xI.col(cptIndex) = cam_I->get_ud_pixel(feat);
-          feat = _features_provider->feats_per_view[J][j].coords().cast<double>();
-          xJ.col(cptIndex) = cam_J->get_ud_pixel(feat);
-        }
-
-        // Robust estimation of the relative pose
-        RelativePose_Info relativePose_info;
-        relativePose_info.initial_residual_tolerance = Square(4.0);
-
-        if (robustRelativePose(
-          cam_I->K(), cam_J->K(),
-          xI, xJ, relativePose_info,
-          std::make_pair(cam_I->w(), cam_I->h()), std::make_pair(cam_J->w(), cam_J->h()),
-          256) && relativePose_info.vec_inliers.size() > iMin_inliers_count)
-        {
-          // Triangulate inliers & compute angle between bearing vectors
-          std::vector<float> vec_angles;
-          const Pose3 pose_I = Pose3(Mat3::Identity(), Vec3::Zero());
-          const Pose3 pose_J = relativePose_info.relativePose;
-          const Mat34 PI = cam_I->get_projective_equivalent(pose_I);
-          const Mat34 PJ = cam_J->get_projective_equivalent(pose_J);
-          for (const size_t inlier_idx : relativePose_info.vec_inliers)
+          // Copy points correspondences to arrays for relative pose estimation
+          const size_t n = map_tracksCommon.size();
+          Mat xI(2,n), xJ(2,n);
+          size_t cptIndex = 0;
+          for (openMVG::tracks::STLMAPTracks::const_iterator
+            iterT = map_tracksCommon.begin(); iterT != map_tracksCommon.end();
+            ++iterT, ++cptIndex)
           {
-            Vec3 X;
-            TriangulateDLT(PI, xI.col(inlier_idx), PJ, xJ.col(inlier_idx), &X);
-
-            openMVG::tracks::STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
-            std::advance(iterT, inlier_idx);
             tracks::submapTrack::const_iterator iter = iterT->second.begin();
-            const Vec2 featI = _features_provider->feats_per_view[I][iter->second].coords().cast<double>();
-            const Vec2 featJ = _features_provider->feats_per_view[J][(++iter)->second].coords().cast<double>();
-            vec_angles.push_back(AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, featI, featJ));
+            const size_t i = iter->second;
+            const size_t j = (++iter)->second;
+
+            Vec2 feat = _features_provider->feats_per_view[I][i].coords().cast<double>();
+            xI.col(cptIndex) = cam_I->get_ud_pixel(feat);
+            feat = _features_provider->feats_per_view[J][j].coords().cast<double>();
+            xJ.col(cptIndex) = cam_J->get_ud_pixel(feat);
           }
-          // Compute the median triangulation angle
-          const unsigned median_index = vec_angles.size() / 2;
-          std::nth_element(
-            vec_angles.begin(),
-            vec_angles.begin() + median_index,
-            vec_angles.end());
-          const float scoring_angle = vec_angles[median_index];
-          // Store the pair iff the pair is in the asked angle range [fRequired_min_angle;fLimit_max_angle]
-          if (scoring_angle > fRequired_min_angle &&
-              scoring_angle < fLimit_max_angle)
+
+          // Robust estimation of the relative pose
+          RelativePose_Info relativePose_info;
+          relativePose_info.initial_residual_tolerance = Square(4.0);
+
+          if (robustRelativePose(
+            cam_I->K(), cam_J->K(),
+            xI, xJ, relativePose_info,
+            std::make_pair(cam_I->w(), cam_I->h()), std::make_pair(cam_J->w(), cam_J->h()),
+            256) && relativePose_info.vec_inliers.size() > iMin_inliers_count)
           {
-#ifdef OPENMVG_USE_OPENMP
-            #pragma omp critical
-#endif
-            scoring_per_pair.emplace_back(scoring_angle, current_pair);
+            // Triangulate inliers & compute angle between bearing vectors
+            std::vector<float> vec_angles;
+            vec_angles.reserve(relativePose_info.vec_inliers.size());
+            const Pose3 pose_I = Pose3(Mat3::Identity(), Vec3::Zero());
+            const Pose3 pose_J = relativePose_info.relativePose;
+            const Mat34 PI = cam_I->get_projective_equivalent(pose_I);
+            const Mat34 PJ = cam_J->get_projective_equivalent(pose_J);
+            for (const size_t inlier_idx : relativePose_info.vec_inliers)
+            {
+              Vec3 X;
+              TriangulateDLT(PI, xI.col(inlier_idx), PJ, xJ.col(inlier_idx), &X);
+
+              openMVG::tracks::STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
+              std::advance(iterT, inlier_idx);
+              tracks::submapTrack::const_iterator iter = iterT->second.begin();
+              const Vec2 featI = _features_provider->feats_per_view[I][iter->second].coords().cast<double>();
+              const Vec2 featJ = _features_provider->feats_per_view[J][(++iter)->second].coords().cast<double>();
+              vec_angles.push_back(AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, featI, featJ));
+            }
+            // Compute the median triangulation angle
+            const unsigned median_index = vec_angles.size() / 2;
+            std::nth_element(
+              vec_angles.begin(),
+              vec_angles.begin() + median_index,
+              vec_angles.end());
+            const float scoring_angle = vec_angles[median_index];
+            // Store the pair iff the pair is in the asked angle range [fRequired_min_angle;fLimit_max_angle]
+            if (scoring_angle > fRequired_min_angle &&
+                scoring_angle < fLimit_max_angle)
+            {
+  #ifdef OPENMVG_USE_OPENMP
+              #pragma omp critical
+  #endif
+              scoring_per_pair.emplace_back(scoring_angle, current_pair);
+            }
           }
         }
       }
@@ -767,7 +763,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
   return !_sfm_data.structure.empty();
 }
 
-double SequentialSfMReconstructionEngine::ComputeResidualsHistogram(Histogram<double> * histo)
+double SequentialSfMReconstructionEngine::ComputeResidualsHistogram(Histogram<double> * histo) const
 {
   // Collect residuals for each observation
   std::vector<float> vec_residuals;
@@ -810,6 +806,41 @@ double SequentialSfMReconstructionEngine::ComputeResidualsHistogram(Histogram<do
     return dMean;
   }
   return -1.0;
+}
+
+double SequentialSfMReconstructionEngine::ComputeTracksLengthsHistogram(Histogram<double> * histo) const
+{
+  // Collect tracks size: number of 2D observations per 3D points
+  std::vector<float> vec_nbTracks;
+  vec_nbTracks.reserve(_sfm_data.GetLandmarks().size());
+
+  for(Landmarks::const_iterator iterTracks = _sfm_data.GetLandmarks().begin();
+      iterTracks != _sfm_data.GetLandmarks().end(); ++iterTracks)
+  {
+    const Observations & obs = iterTracks->second.obs;
+    vec_nbTracks.push_back(obs.size());
+  }
+
+  float dMin, dMax, dMean, dMedian;
+  minMaxMeanMedian<float>(
+    vec_nbTracks.begin(), vec_nbTracks.end(),
+    dMin, dMax, dMean, dMedian);
+
+  if (histo)
+  {
+    *histo = Histogram<double>(dMin, dMax, dMax-dMin+1);
+    histo->Add(vec_nbTracks.begin(), vec_nbTracks.end());
+  }
+
+  std::cout << std::endl
+    << "SequentialSfMReconstructionEngine::ComputeTracksLengthsHistogram." << "\n"
+    << "\t-- #Tracks:\t" << _sfm_data.GetLandmarks().size() << std::endl
+    << "\t-- Tracks Length min:\t" << dMin << std::endl
+    << "\t-- Tracks Length median:\t" << dMedian << std::endl
+    << "\t-- Tracks Length max:\t "  << dMax << std::endl
+    << "\t-- Tracks Length mean:\t " << dMean << std::endl;
+
+  return dMean;
 }
 
 /// Functor to sort a vector of pair given the pair's second value
@@ -1078,6 +1109,11 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
         case PINHOLE_CAMERA_BROWN:
           optional_intrinsic =
             std::make_shared<Pinhole_Intrinsic_Brown_T2>
+            (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
+        break;
+        case PINHOLE_CAMERA_FISHEYE:
+            optional_intrinsic =
+                std::make_shared<Pinhole_Intrinsic_Fisheye>
             (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
         break;
         default:

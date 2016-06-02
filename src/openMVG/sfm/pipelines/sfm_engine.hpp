@@ -37,6 +37,8 @@ public:
 
   const SfM_Data & Get_SfM_Data() const {return _sfm_data;}
 
+  bool Colorize() { return ColorizeTracks(_sfm_data); }
+
 protected:
   std::string _sOutDirectory; // Output path where outputs will be stored
 

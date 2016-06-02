@@ -46,9 +46,9 @@ int main(int argc, char **argv)
 #endif
            "\n"
         << "\n[Options to export partial data (by default all data are exported)]\n"
-        << "\nUsable for json/bin/xml format"
+        << "\nUsable for json/bin/xml format\n"
         << "[-V|--VIEWS] export views\n"
-        << "[-I|--INTRINSICS] export intrinsics (view orientations)\n"
+        << "[-I|--INTRINSICS] export intrinsics\n"
         << "[-E|--EXTRINSICS] export extrinsics (view poses)\n"
         << "[-S|--STRUCTURE] export structure\n"
         << "[-O|--OBSERVATIONS] export 2D observations associated with 3D structure\n"
@@ -86,17 +86,11 @@ int main(int argc, char **argv)
   }
 
   // Export the SfM_Data scene in the expected format
-  if (Save(
-    sfm_data,
-    sSfM_Data_Filename_Out.c_str(),
-    ESfM_Data(flags)))
-  {
-    return EXIT_SUCCESS;
-  }
-  else
+  if (!Save(sfm_data, sSfM_Data_Filename_Out.c_str(), ESfM_Data(flags)))
   {
     std::cerr << std::endl
       << "An error occured while trying to save \"" << sSfM_Data_Filename_Out << "\"." << std::endl;
     return EXIT_FAILURE;
   }
+  return EXIT_SUCCESS;
 }

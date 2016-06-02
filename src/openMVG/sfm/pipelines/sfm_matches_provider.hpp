@@ -9,7 +9,8 @@
 #define OPENMVG_SFM_MATCHES_PROVIDER_HPP
 
 #include <openMVG/types.hpp>
-#include "openMVG/matching/indMatch.hpp"
+#include <openMVG/sfm/sfm_data.hpp>
+#include <openMVG/matching/indMatch.hpp>
 #include <openMVG/matching/indMatch_utils.hpp>
 
 namespace openMVG {
@@ -21,33 +22,13 @@ struct Matches_Provider
   matching::PairWiseMatches _pairWise_matches;
 
   // Load matches from the provided matches file
-  virtual bool load(const SfM_Data & sfm_data, const std::string & matchesfile)
+  virtual bool load(const SfM_Data & sfm_data, const std::string & folder, const std::string & matchesMode)
   {
-    if (!stlplus::is_file(matchesfile))
+    std::cout << "- Loading matches..." << std::endl;
+    if (!matching::Load(_pairWise_matches, sfm_data.GetViewsKeys(), folder, matchesMode))
     {
-      std::cerr << std::endl
-        << "Invalid matches file: " << matchesfile << std::endl;
+      std::cerr<< "Unable to read the matches file: " << folder << "/" << matchesMode << std::endl;
       return false;
-    }
-    if (!matching::PairedIndMatchImport(matchesfile, _pairWise_matches)) {
-      std::cerr<< "Unable to read the matches file: " << matchesfile << std::endl;
-      return false;
-    }
-    // Filter to keep only the one defined in SfM_Data
-    {
-      const Views & views = sfm_data.GetViews();
-      matching::PairWiseMatches matches_saved;
-      for (matching::PairWiseMatches::const_iterator iter = _pairWise_matches.begin();
-        iter != _pairWise_matches.end();
-        ++iter)
-      {
-        if (views.find(iter->first.first) != views.end() &&
-          views.find(iter->first.second) != views.end())
-        {
-          matches_saved.insert(*iter);
-        }
-      }
-      _pairWise_matches.swap(matches_saved);
     }
     return true;
   }

@@ -79,8 +79,8 @@ public:
   two_view::kernel::Kernel<SolverArg,ErrorArg, ModelArg>(x1,x2),
                                                          K1_(K1), K2_(K2) {}
   void Fit(const vector<size_t> &samples, vector<ModelArg> *models) const {
-    Mat x1 = ExtractColumns(this->x1_, samples);
-    Mat x2 = ExtractColumns(this->x2_, samples);
+    const Mat x1 = ExtractColumns(this->x1_, samples);
+    const Mat x2 = ExtractColumns(this->x2_, samples);
 
     assert(2 == x1.rows());
     assert(SolverArg::MINIMUM_SAMPLES <= x1.cols());
@@ -88,8 +88,8 @@ public:
     assert(x1.cols() == x2.cols());
 
     // Normalize the data (image coords to camera coords).
-    Mat3 K1Inverse = K1_.inverse();
-    Mat3 K2Inverse = K2_.inverse();
+    const Mat3 K1Inverse = K1_.inverse();
+    const Mat3 K2Inverse = K2_.inverse();
     Mat x1_normalized, x2_normalized;
     ApplyTransformationToPoints(x1, K1Inverse, &x1_normalized);
     ApplyTransformationToPoints(x2, K2Inverse, &x2_normalized);

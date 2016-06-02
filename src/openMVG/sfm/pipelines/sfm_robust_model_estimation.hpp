@@ -45,8 +45,8 @@ struct RelativePose_Info
   double found_residual_precision;
 
   RelativePose_Info()
-    :initial_residual_tolerance(std::numeric_limits<double>::max()),
-    found_residual_precision(std::numeric_limits<double>::max())
+    :initial_residual_tolerance(std::numeric_limits<double>::infinity()),
+    found_residual_precision(std::numeric_limits<double>::infinity())
   {}
 };
 

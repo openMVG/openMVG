@@ -32,17 +32,17 @@ struct TrifocalTensorModel {
 
   static double Error(const TrifocalTensorModel & t, const Vec2 & pt1, const Vec2 & pt2, const Vec2 & pt3)
   {
-    // Triangulate and return the reprojection error
+    // Triangulate
     Triangulation triangulationObj;
     triangulationObj.add(t.P1, pt1);
     triangulationObj.add(t.P2, pt2);
     triangulationObj.add(t.P3, pt3);
     const Vec3 X = triangulationObj.compute();
 
-    //- Return max error as a test
-    double pt1ReProj = (Project(t.P1, X) - pt1).squaredNorm();
-    double pt2ReProj = (Project(t.P2, X) - pt2).squaredNorm();
-    double pt3ReProj = (Project(t.P3, X) - pt3).squaredNorm();
+    // Return the maximum observed reprojection error
+    const double pt1ReProj = (Project(t.P1, X) - pt1).squaredNorm();
+    const double pt2ReProj = (Project(t.P2, X) - pt2).squaredNorm();
+    const double pt3ReProj = (Project(t.P3, X) - pt3).squaredNorm();
 
     return std::max(pt1ReProj, std::max(pt2ReProj,pt3ReProj));
   }
@@ -56,7 +56,7 @@ namespace openMVG{
 
 using namespace openMVG::trifocal::kernel;
 
-/// Solve the translation and the structure of a view-triplet that have known rotations
+/// Solve the translations and the structure of a view-triplet that have known rotations
 struct translations_Triplet_Solver {
   enum { MINIMUM_SAMPLES = 4 };
   enum { MAX_MODELS = 1 };
@@ -72,17 +72,12 @@ struct translations_Triplet_Solver {
     Mat4X megaMat(4, n_obs*3);
     {
       size_t cpt = 0;
-      for (size_t i = 0; i  < n_obs; ++i) {
-
-        megaMat.col(cpt) << pt0.col(i)(0), pt0.col(i)(1), (double)i, 0.0;
-        ++cpt;
-
-        megaMat.col(cpt) << pt1.col(i)(0), pt1.col(i)(1), (double)i, 1.0;
-        ++cpt;
-
-        megaMat.col(cpt) << pt2.col(i)(0), pt2.col(i)(1), (double)i, 2.0;
-        ++cpt;
-        }
+      for (size_t i = 0; i  < n_obs; ++i)
+      {
+        megaMat.col(cpt++) << pt0.col(i)(0), pt0.col(i)(1), (double)i, 0.0;
+        megaMat.col(cpt++) << pt1.col(i)(0), pt1.col(i)(1), (double)i, 1.0;
+        megaMat.col(cpt++) << pt2.col(i)(0), pt2.col(i)(1), (double)i, 2.0;
+      }
     }
     //-- Solve the LInfinity translation and structure from Rotation and points data.
     std::vector<double> vec_solution((3 + MINIMUM_SAMPLES)*3);
@@ -104,10 +99,10 @@ struct translations_Triplet_Solver {
       ThresholdUpperBound,
       0.0, 1e-8, 2, &gamma, false))
     {
-      std::vector<Vec3> vec_tis(3);
-      vec_tis[0] = Vec3(vec_solution[0], vec_solution[1], vec_solution[2]);
-      vec_tis[1] = Vec3(vec_solution[3], vec_solution[4], vec_solution[5]);
-      vec_tis[2] = Vec3(vec_solution[6], vec_solution[7], vec_solution[8]);
+      const std::vector<Vec3> vec_tis = {
+        Vec3(vec_solution[0], vec_solution[1], vec_solution[2]),
+        Vec3(vec_solution[3], vec_solution[4], vec_solution[5]),
+        Vec3(vec_solution[6], vec_solution[7], vec_solution[8])};
 
       TrifocalTensorModel PTemp;
       PTemp.P1 = HStack(vec_KR[0], vec_tis[0]);

@@ -13,6 +13,7 @@
 #include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 #include <openMVG/image/image_io.hpp>
 #include <openMVG/dataio/FeedProvider.hpp>
+#include <openMVG/logger.hpp>
 
 #include <boost/filesystem.hpp>
 #include <boost/progress.hpp>
@@ -29,11 +30,8 @@
 #include <chrono>
 
 #if HAVE_ALEMBIC
-#include <openMVG/dataio/AlembicExporter.hpp>
+#include <openMVG/sfm/AlembicExporter.hpp>
 #endif // HAVE_ALEMBIC
-
-#define POPART_COUT(x) std::cout << x << std::endl
-#define POPART_CERR(x) std::cerr << x << std::endl
 
 
 namespace bfs = boost::filesystem;
@@ -237,7 +235,6 @@ int main(int argc, char** argv)
     localization::VoctreeLocalizer::Parameters *casted = static_cast<localization::VoctreeLocalizer::Parameters *>(param);
     casted->_algorithm = localization::VoctreeLocalizer::initFromString(algostring);;
     casted->_numResults = numResults;
-    casted->_maxResults = maxResults;
   }
 #if HAVE_CCTAG
   else

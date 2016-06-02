@@ -15,8 +15,8 @@
 #include "openMVG/sfm/sfm_data_io_ply.hpp"
 #include "openMVG/sfm/sfm_data_io_baf.hpp"
 
-#include "openMVG/dataio/AlembicExporter.hpp"
-#include "openMVG/dataio/AlembicImporter.hpp"
+#include "openMVG/sfm/AlembicExporter.hpp"
+#include "openMVG/sfm/AlembicImporter.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -105,6 +105,11 @@ bool Load(SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_par
     bStatus = true;
   }
 #endif // HAVE_ALEMBIC
+  else
+  {
+    std::cerr << "Unknown sfm_data input format: " << ext << std::endl;
+    return false;
+  }
 
   // Assert that loaded intrinsics | extrinsics are linked to valid view
   if(bStatus &&

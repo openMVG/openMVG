@@ -82,13 +82,21 @@ public:
     _userInteraction = v;
   }
 
+  void setMinInputTrackLength(int minInputTrackLength)
+  {
+    _minInputTrackLength = minInputTrackLength;
+  }
+
 protected:
 
 
 private:
 
   /// Return MSE (Mean Square Error) and a histogram of residual values.
-  double ComputeResidualsHistogram(Histogram<double> * histo);
+  double ComputeResidualsHistogram(Histogram<double> * histo) const;
+
+  /// Return MSE (Mean Square Error) and a histogram of tracks size.
+  double ComputeTracksLengthsHistogram(Histogram<double> * histo) const;
 
   /// List the images that the greatest number of matches to the current 3D reconstruction.
   bool FindImagesWithPossibleResection(
@@ -120,6 +128,7 @@ private:
   bool _userInteraction = true;
   Pair _initialpair;
   cameras::EINTRINSIC _camType; // The camera type for the unknown cameras
+  int _minInputTrackLength = 2;
 
   //-- Data provider
   Features_Provider  * _features_provider;

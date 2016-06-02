@@ -1,23 +1,18 @@
-#ifdef HAVE_CCTAG
-
 #include "CCTagLocalizer.hpp"
 #include "reconstructed_regions.hpp"
 #include "optimization.hpp"
 #include "rigResection.hpp"
-#include "svgVisualization.hpp"
 
+#include <openMVG/features/svgVisualization.hpp>
 #include <openMVG/sfm/sfm_data_io.hpp>
 #include <openMVG/matching/indMatch.hpp>
 #include <openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp>
+#include <openMVG/logger.hpp>
 
+#include <cctag/ICCTag.hpp>
 #include <boost/filesystem.hpp>
 
 #include <algorithm>
-
-//@fixme move/redefine
-#define POPART_COUT(x) std::cout << x << std::endl
-#define POPART_CERR(x) std::cerr << x << std::endl
-#define POPART_COUT_DEBUG(x) std::cout << x << std::endl
 
 namespace openMVG {
 namespace localization {
@@ -236,7 +231,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
     features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (tmpQueryRegions.get());
     
     // just debugging -- save the svg image with detected cctag
-    saveCCTag2SVG(imagePath, 
+    features::saveCCTag2SVG(imagePath, 
                   imageSize, 
                   queryRegions, 
                   param->_visualDebug+"/"+bfs::path(imagePath).stem().string()+".svg");
@@ -309,7 +304,7 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
       const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
       
       
-      saveCCTagMatches2SVG(imagePath, 
+      features::saveCCTagMatches2SVG(imagePath, 
                            imageSize, 
                            queryRegions,
                            matchedPath,
@@ -584,7 +579,7 @@ bool CCTagLocalizer::localizeRig(const std::vector<std::unique_ptr<features::Reg
   const size_t numCams = vec_queryRegions.size();
   assert(numCams == vec_queryIntrinsics.size());
   assert(numCams == vec_subPoses.size() - 1);   
-  
+
   const CCTagLocalizer::Parameters *param = static_cast<const CCTagLocalizer::Parameters *>(parameters);
   if(!param)
   {
@@ -622,21 +617,21 @@ bool CCTagLocalizer::localizeRig(const std::vector<std::unique_ptr<features::Reg
     POPART_COUT("[poseEstimation]\tonly " << numAssociations << " have been found, not enough to do the resection!");
     return false;
   }
-  
+
   std::vector<std::vector<std::size_t> > inliers;
   return localization::rigResection(vec_pts2D,
                                     vec_pts3D,
                                     vec_queryIntrinsics,
                                     vec_subPoses,
-                                    rigPose,
+                                                     rigPose, 
                                     inliers);
 
-}
-
+  }
+  
 #endif // HAVE_OPENGV
 
 void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegions,
-                                        const CCTagLocalizer::Parameters &param,
+                                                          const CCTagLocalizer::Parameters &param,
                                         std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences,
                                         Mat &pt2D,
                                         Mat &pt3D) const
@@ -683,22 +678,22 @@ void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegi
       }
     }
   }
-  
+      
   const size_t numCollectedPts = occurences.size();
 
   pt2D = Mat2X(2, numCollectedPts);
   pt3D = Mat3X(3, numCollectedPts);
-
+      
   size_t index = 0;
   for(const auto &idx : occurences)
   {
     // recopy all the points in the matching structure
     const IndexT pt3D_id = idx.first.first;
     const IndexT pt2D_id = idx.first.second;
-
+      
     pt2D.col(index) = queryRegions.GetRegionPosition(pt2D_id);
     pt3D.col(index) = _sfm_data.GetLandmarks().at(pt3D_id).X;
-    ++index;
+      ++index;
   }
 }
 
@@ -800,4 +795,3 @@ std::bitset<128> constructCCTagViewDescriptor(
 } // localization
 } // openMVG
 
-#endif //HAVE_CCTAG

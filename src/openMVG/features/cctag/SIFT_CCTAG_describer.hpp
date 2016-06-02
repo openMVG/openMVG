@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "CCTAG_describer.hpp"
+
 #include <openMVG/features/image_describer.hpp>
 #include <openMVG/features/regions_factory.hpp>
 
@@ -26,31 +28,15 @@ namespace features {
 class SIFT_CCTAG_Image_describer : public Image_describer
 {
 public:
-  SIFT_CCTAG_Image_describer(const SiftParams & params = SiftParams(), bool bOrientation = true, std::size_t nRings = 3)
-    :Image_describer(), _paramsSift(params), _bOrientation(bOrientation), _paramsCCTag(nRings) {}
+  SIFT_CCTAG_Image_describer(const SiftParams & params = SiftParams(), bool bOrientation = true, std::size_t nRings = 3);
 
-  ~SIFT_CCTAG_Image_describer() {}
+  ~SIFT_CCTAG_Image_describer(){}
 
-  bool Set_configuration_preset(EDESCRIBER_PRESET preset)
+  bool Set_configuration_preset(EDESCRIBER_PRESET preset);
+
+  void Set_cctag_use_cuda(bool use_cuda)
   {
-    switch(preset)
-    {
-    case LOW_PRESET:
-    case MEDIUM_PRESET:
-    case NORMAL_PRESET:
-      _paramsSift._peak_threshold = 0.04f;
-    break;
-    case HIGH_PRESET:
-      _paramsSift._peak_threshold = 0.01f;
-    break;
-    case ULTRA_PRESET:
-      _paramsSift._peak_threshold = 0.01f;
-      _paramsSift._first_octave = -1;
-    break;
-    default:
-      return false;
-    }
-    return true;
+    _cctagDescriber.Set_use_cuda(use_cuda);
   }
 
   /**
@@ -79,9 +65,8 @@ public:
   }
 
 private:
-  SiftParams _paramsSift;
-  cctag::Parameters _paramsCCTag;
-  bool _bOrientation;
+  SIFT_Image_describer _siftDescriber;
+  CCTAG_Image_describer _cctagDescriber;
 };
 
 } // namespace features

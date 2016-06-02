@@ -7,16 +7,16 @@
 
 #pragma once
 
-#include <openMVG/features/image_describer.hpp>
+#include "image_describer.hpp"
 #if HAVE_CCTAG
-#include <openMVG/features/regions_factory.hpp>
+#include "regions_factory.hpp"
 #endif
 #include <openMVG/matching/indMatch.hpp>
 
 #include <vector>
 
 namespace openMVG {
-namespace localization {
+namespace features {
 
 /**
  * @brief
@@ -118,6 +118,6 @@ void saveCCTagMatches2SVG(const std::string &imagePathLeft,
                      bool showNotMatched);
 #endif
 
-} // namespace localization
+} // namespace features
 } // namespace openMVG
 

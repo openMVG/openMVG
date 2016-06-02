@@ -116,47 +116,6 @@ namespace htmlDocument
     return viewport;
   }
 
-  class htmlDocumentStream
-  {
-  public:
-    htmlDocumentStream(const std::string & title)
-    {
-      htmlStream << htmlMarkup("head",
-        std::string("\n") +
-        "<link rel=\"stylesheet\" type=\"text/css\" href=\"http://jsxgraph.uni-bayreuth.de/distrib/jsxgraph.css\" />\n" +
-        "<link rel=\"stylesheet\" type=\"text/css\" href=\"http://imagine.enpc.fr/~moulonp/style.css\" />" +
-        "<script type=\"text/javascript\" src=\"http://cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.93/jsxgraphcore.js\"></script>\n" +
-        htmlMarkup("title",title));
-    }
-
-    htmlDocumentStream(const std::string & title,
-                       const std::vector<std::string> & vec_css,
-                       const std::vector<std::string> & vec_js)
-    {
-      htmlStream << "\n<head>\n";
-      htmlStream << htmlMarkup("title",title);
-      // CSS and JS ressources
-      for (std::vector<std::string>::const_iterator iter = vec_css.begin(); iter != vec_css.end(); ++iter)
-        htmlStream << "<link rel=\"stylesheet\" type=\"text/css\" href=\"" << *iter <<"\" />\n";
-      for (std::vector<std::string>::const_iterator iter = vec_js.begin(); iter != vec_js.end(); ++iter)
-        htmlStream << "<script type=\"text/javascript\" src=\"" << *iter <<"\"> </script>\n";
-      htmlStream << "</head>\n";
-    }
-
-    void pushInfo(const std::string & text)
-    {
-      htmlStream << text;
-    }
-
-    std::string getDoc()
-    {
-      return htmlMarkup("html", htmlStream.str());
-    }
-
-  private:
-    std::ostringstream htmlStream;
-  };
-
   /// Class to draw with the JSXGraph library in HTML page.
   class JSXGraphWrapper
   {
@@ -256,6 +215,62 @@ namespace htmlDocument
     std::ostringstream stream;
     size_t cpt; //increment for variable
   };
+  
+  class htmlDocumentStream
+  {
+  public:
+    htmlDocumentStream(const std::string & title)
+    {
+      htmlStream << htmlMarkup("head",
+        std::string("\n") +
+        "<link rel=\"stylesheet\" type=\"text/css\" href=\"http://jsxgraph.uni-bayreuth.de/distrib/jsxgraph.css\" />\n" +
+        "<link rel=\"stylesheet\" type=\"text/css\" href=\"http://imagine.enpc.fr/~moulonp/style.css\" />" +
+        "<script type=\"text/javascript\" src=\"http://cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.93/jsxgraphcore.js\"></script>\n" +
+        htmlMarkup("title",title));
+    }
+
+    htmlDocumentStream(const std::string & title,
+                       const std::vector<std::string> & vec_css,
+                       const std::vector<std::string> & vec_js)
+    {
+      htmlStream << "\n<head>\n";
+      htmlStream << htmlMarkup("title",title);
+      // CSS and JS ressources
+      for (std::vector<std::string>::const_iterator iter = vec_css.begin(); iter != vec_css.end(); ++iter)
+        htmlStream << "<link rel=\"stylesheet\" type=\"text/css\" href=\"" << *iter <<"\" />\n";
+      for (std::vector<std::string>::const_iterator iter = vec_js.begin(); iter != vec_js.end(); ++iter)
+        htmlStream << "<script type=\"text/javascript\" src=\"" << *iter <<"\"> </script>\n";
+      htmlStream << "</head>\n";
+    }
+
+    void pushInfo(const std::string & text)
+    {
+      htmlStream << text;
+    }
+
+    template<typename T, typename T2>
+    void pushXYChart(const std::vector<T>& vec_x, const std::vector<T2>& vec_y,std::string name)
+    {
+      std::pair< std::pair<double,double>, std::pair<double,double> > range = autoJSXGraphViewport<double>(vec_x, vec_y);
+
+      htmlDocument::JSXGraphWrapper jsxGraph;
+      jsxGraph.init(name,600,300);
+      jsxGraph.addXYChart(vec_x, vec_y, "line,point");
+      jsxGraph.UnsuspendUpdate();
+      jsxGraph.setViewport(range);
+      jsxGraph.close();
+      pushInfo(jsxGraph.toStr());
+    }
+    
+    std::string getDoc()
+    {
+      return htmlMarkup("html", htmlStream.str());
+    }
+
+  private:
+    std::ostringstream htmlStream;
+  };
+
 } // namespace htmlDocument
 
 #endif // MIMATTE_HTML_DOC_H

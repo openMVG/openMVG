@@ -1,5 +1,4 @@
 #include "VoctreeLocalizer.hpp"
-#include "svgVisualization.hpp"
 #include "rigResection.hpp"
 #include "optimization.hpp"
 
@@ -7,6 +6,7 @@
 #include <openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp>
 #include <openMVG/sfm/sfm_data_BA_ceres.hpp>
 #include <openMVG/features/io_regions_type.hpp>
+#include <openMVG/features/svgVisualization.hpp>
 #ifdef HAVE_CCTAG
 #include <openMVG/features/cctag/SIFT_CCTAG_describer.hpp>
 #endif
@@ -17,6 +17,8 @@
 #include <openMVG/matching_image_collection/F_ACRobust.hpp>
 #include <openMVG/numeric/numeric.h>
 #include <openMVG/robust_estimation/guided_matching.hpp>
+#include <openMVG/logger.hpp>
+
 #include <third_party/progress/progress.hpp>
 //#include <cereal/archives/json.hpp>
 
@@ -24,10 +26,6 @@
 
 #include <algorithm>
 #include <chrono>
-
-//@fixme move/redefine
-#define POPART_COUT(x) std::cout << x << std::endl
-#define POPART_CERR(x) std::cerr << x << std::endl
 
 namespace openMVG {
 namespace localization {
@@ -85,6 +83,7 @@ VoctreeLocalizer::Algorithm VoctreeLocalizer::initFromString(const std::string &
     throw std::invalid_argument("Unrecognized algorithm \"" + value + "\"!");
 }
 
+
 VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
                                    const std::string &descriptorsFolder,
                                    const std::string &vocTreeFilepath,
@@ -109,9 +108,13 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
     _image_describer = new features::SIFT_Image_describer();
 #endif
   }
-#else
+#else //HAVE_CCTAG
+#if USE_SIFT_FLOAT
   _image_describer = new features::SIFT_float_describer();
+#else
+    _image_describer = new features::SIFT_Image_describer();
 #endif
+#endif //HAVE_CCTAG
 
   // load the sfm data containing the 3D reconstruction info
   POPART_COUT("Loading SFM data...");
@@ -492,7 +495,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const features::SIFT_Regions &que
       const std::string matchedImage = bfs::path(mview->s_Img_path).stem().string();
       const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) / bfs::path(mview->s_Img_path)).string();
 
-      saveMatches2SVG(imagePath,
+      features::saveMatches2SVG(imagePath,
                       queryImageSize,
                       queryRegions.GetRegionsPositions(),
                       matchedPath,
@@ -620,7 +623,7 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
                      resectionData.pt3D,
                      imagePath);
 
-  const size_t numCollectedPts = occurences.size();
+  const std::size_t numCollectedPts = occurences.size();
   std::vector<pair<IndexT, IndexT> > associationIDs;
   associationIDs.reserve(numCollectedPts);
 
@@ -648,7 +651,7 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
     if(!param._visualDebug.empty() && !imagePath.empty())
     {
       namespace bfs = boost::filesystem;
-      saveFeatures2SVG(imagePath,
+    features::saveFeatures2SVG(imagePath, 
                        queryImageSize,
                        resectionData.pt2D,
                        param._visualDebug + "/" + bfs::path(imagePath).stem().string() + ".associations.svg");
@@ -691,7 +694,7 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
   if(!param._visualDebug.empty() && !imagePath.empty())
   {
     namespace bfs = boost::filesystem;
-    saveFeatures2SVG(imagePath,
+    features::saveFeatures2SVG(imagePath,
                      queryImageSize,
                      resectionData.pt2D,
                      param._visualDebug + "/" + bfs::path(imagePath).stem().string() + ".associations.svg",
@@ -825,7 +828,7 @@ void VoctreeLocalizer::getAllAssociations(const features::SIFT_Regions &queryReg
     //      const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
     //      
     //
-    //      saveMatches2SVG(imagePath,
+    //      features::saveMatches2SVG(imagePath,
     //                      queryImageSize,
     //                      queryRegions.GetRegionsPositions(),
     //                      matchedPath,

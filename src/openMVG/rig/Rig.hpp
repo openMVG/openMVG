@@ -19,12 +19,14 @@ namespace rig {
 class Rig {
 public:
   
-  Rig(){};
+  Rig() : _isInitialized(false) {};
  
   virtual ~Rig();
   
   // Accessors
   std::size_t nCams() const { return _vLocalizationResults.size(); }
+  
+  bool isInitialized() const { return _isInitialized; }
   
   std::vector<localization::LocalizationResult> & getLocalizationResults(IndexT i)
   { 
@@ -100,6 +102,8 @@ private:
   
   // Rig pose
   std::vector<geometry::Pose3> _vPoses; // (i.e., by convention, pose of the main camera)
+  
+  bool _isInitialized;
 };
 
 /*

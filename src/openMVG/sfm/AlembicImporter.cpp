@@ -27,10 +27,11 @@ namespace dataio {
  *         if it's an array.
  * @param userProps
  * @param id
+ * @param sampleTime
  * @return value
  */
 template<class AbcProperty>
-typename AbcProperty::traits_type::value_type getAbcProp(ICompoundProperty& userProps, const Alembic::Abc::PropertyHeader& propHeader, const std::string& id)
+typename AbcProperty::traits_type::value_type getAbcProp(ICompoundProperty& userProps, const Alembic::Abc::PropertyHeader& propHeader, const std::string& id, chrono_t sampleTime)
 {
   typedef typename AbcProperty::traits_type traits_type;
   typedef typename traits_type::value_type value_type;
@@ -42,14 +43,14 @@ typename AbcProperty::traits_type::value_type getAbcProp(ICompoundProperty& user
   {
     Alembic::Abc::ITypedArrayProperty<traits_type> prop(userProps, id);
     array_sample_ptr_type sample;
-    prop.get(sample);
+    prop.get(sample, ISampleSelector(sampleTime));
     return (*sample)[0];
   }
   else
   {
     value_type v;
     AbcProperty prop(userProps, id);
-    prop.get(v);
+    prop.get(v, ISampleSelector(sampleTime));
     return v;
   }
 }
@@ -76,20 +77,36 @@ bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmd
   IPoints points(iObj, kWrapExisting);
   IPointsSchema& ms = points.getSchema();
   P3fArraySamplePtr positions = ms.getValue().getPositions();
+
   ICompoundProperty userProps = getAbcUserProperties(ms);
+  ICompoundProperty arbGeom = ms.getArbGeomParams();
+
+  C3fArraySamplePtr sampleColors;
+  if(arbGeom.getPropertyHeader("color"))
+  {
+    IC3fArrayProperty propColor(arbGeom, "color");
+    propColor.get(sampleColors);
+    if(sampleColors->size() != positions->size())
+    {
+      std::cerr << "[Alembic Importer] WARNING: colors will be ignored. Color vector size: " << sampleColors->size() << ", positions vector size: " << positions->size() << std::endl;
+      sampleColors.reset();
+    }
+  }
 
   // Number of points before adding the Alembic data
   const std::size_t nbPointsInit = sfmdata.structure.size();
-  // Number of points with all the new Alembic data
-  std::size_t nbPointsAll = nbPointsInit + positions->size();
-  for(std::size_t point3d_i = nbPointsInit;
-      point3d_i < nbPointsAll;
+  for(std::size_t point3d_i = 0;
+      point3d_i < positions->size();
       ++point3d_i)
   {
     const P3fArraySamplePtr::element_type::value_type & pos_i = positions->get()[point3d_i];
-    Landmark& landmark = sfmdata.structure[point3d_i] = Landmark(Vec3(pos_i.x, pos_i.y, pos_i.z));
+    Landmark& landmark = sfmdata.structure[nbPointsInit + point3d_i] = Landmark(Vec3(pos_i.x, pos_i.y, pos_i.z));
+    if(sampleColors)
+    {
+      const P3fArraySamplePtr::element_type::value_type & color_i = sampleColors->get()[point3d_i];
+      landmark.rgb = image::RGBColor(color_i[0], color_i[1], color_i[2]);
+    }
   }
-
 
   if(userProps.getPropertyHeader("mvg_visibilitySize") &&
      userProps.getPropertyHeader("mvg_visibilityIds") &&
@@ -97,15 +114,15 @@ bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmd
      )
   {
     IUInt32ArrayProperty propVisibilitySize(userProps, "mvg_visibilitySize");
-    std::shared_ptr<UInt32ArraySample> sampleVisibilitySize;
+    UInt32ArraySamplePtr sampleVisibilitySize;
     propVisibilitySize.get(sampleVisibilitySize);
 
     IUInt32ArrayProperty propVisibilityIds(userProps, "mvg_visibilityIds");
-    std::shared_ptr<UInt32ArraySample> sampleVisibilityIds;
+    UInt32ArraySamplePtr sampleVisibilityIds;
     propVisibilityIds.get(sampleVisibilityIds);
 
     IFloatArrayProperty propFeatPos2d(userProps, "mvg_visibilityFeatPos");
-    std::shared_ptr<FloatArraySample> sampleFeatPos2d;
+    FloatArraySamplePtr sampleFeatPos2d;
     propFeatPos2d.get(sampleFeatPos2d);
 
     if( positions->size() != sampleVisibilitySize->size() )
@@ -124,11 +141,11 @@ bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmd
     }
 
     std::size_t obsGlobal_i = 0;
-    for(std::size_t point3d_i = nbPointsInit;
-        point3d_i < nbPointsAll;
+    for(std::size_t point3d_i = 0;
+        point3d_i < positions->size();
         ++point3d_i)
     {
-      Landmark& landmark = sfmdata.structure[point3d_i];
+      Landmark& landmark = sfmdata.structure[nbPointsInit + point3d_i];
       // Number of observation for this 3d point
       const std::size_t visibilitySize = (*sampleVisibilitySize)[point3d_i];
 
@@ -152,7 +169,7 @@ bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmd
   return true;
 }
 
-bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part)
+bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part, const chrono_t sampleTime)
 {
   using namespace openMVG::geometry;
   using namespace openMVG::cameras;
@@ -160,13 +177,17 @@ bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata,
 
   ICamera camera(iObj, kWrapExisting);
   ICameraSchema cs = camera.getSchema();
-  CameraSample camSample = cs.getValue();
+  CameraSample camSample;
+  if(sampleTime == 0)
+    camSample = cs.getValue();
+  else
+    camSample = cs.getValue(ISampleSelector(sampleTime));
 
   // Check if we have an associated image plane
   ICompoundProperty userProps = getAbcUserProperties(cs);
   std::string imagePath;
-  float sensorWidth_pix = 2048.0;
-  std::string mvg_intrinsicType = "PINHOLE_CAMERA";
+  std::vector<int> sensorSize_pix = {2048, 2048};
+  std::string mvg_intrinsicType = EINTRINSIC_enumToString(PINHOLE_CAMERA);
   std::vector<double> mvg_intrinsicParams;
   IndexT id_view = sfmdata.GetViews().size();
   IndexT id_intrinsic = sfmdata.GetIntrinsics().size();
@@ -174,44 +195,43 @@ bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata,
   {
     if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_imagePath"))
     {
-      imagePath = getAbcProp<Alembic::Abc::IStringProperty>(userProps, *propHeader, "mvg_imagePath");
+      imagePath = getAbcProp<Alembic::Abc::IStringProperty>(userProps, *propHeader, "mvg_imagePath", sampleTime);
     }
-    if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_sensorWidth_pix"))
+    if(userProps.getPropertyHeader("mvg_sensorSizePix"))
     {
-      try {
-        sensorWidth_pix = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_sensorWidth_pix");
-      } catch(Alembic::Util::v7::Exception&)
-      {
-        sensorWidth_pix = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_sensorWidth_pix");
-      }
+      Alembic::Abc::IUInt32ArrayProperty prop(userProps, "mvg_sensorSizePix");
+      std::shared_ptr<UInt32ArraySample> sample;
+      prop.get(sample, ISampleSelector(sampleTime));
+      sensorSize_pix.assign(sample->get(), sample->get()+sample->size());
+      assert(sensorSize_pix.size() == 2);
     }
     if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_intrinsicType"))
     {
-      mvg_intrinsicType = getAbcProp<Alembic::Abc::IStringProperty>(userProps, *propHeader, "mvg_intrinsicType");
+      mvg_intrinsicType = getAbcProp<Alembic::Abc::IStringProperty>(userProps, *propHeader, "mvg_intrinsicType", sampleTime);
     }
     if(userProps.getPropertyHeader("mvg_intrinsicParams"))
     {
       Alembic::Abc::IDoubleArrayProperty prop(userProps, "mvg_intrinsicParams");
       std::shared_ptr<DoubleArraySample> sample;
-      prop.get(sample);
+      prop.get(sample, ISampleSelector(sampleTime));
       mvg_intrinsicParams.assign(sample->get(), sample->get()+sample->size());
     }
     if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_viewId"))
     {
       try {
-        id_view = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_viewId");
+        id_view = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_viewId", sampleTime);
       } catch(Alembic::Util::v7::Exception&)
       {
-        id_view = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_viewId");
+        id_view = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_viewId", sampleTime);
       }
     }
     if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_intrinsicId"))
     {
       try {
-        id_intrinsic = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_intrinsicId");
+        id_intrinsic = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_intrinsicId", sampleTime);
       } catch(Alembic::Util::v7::Exception&)
       {
-        id_intrinsic = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_intrinsicId");
+        id_intrinsic = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_intrinsicId", sampleTime);
       }
     }
   }
@@ -241,26 +261,17 @@ bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata,
   // Get known values from alembic
   const float haperture_cm = camSample.getHorizontalAperture();
   const float vaperture_cm = camSample.getVerticalAperture();
-  const float hoffset_cm = camSample.getHorizontalFilmOffset();
-  const float voffset_cm = camSample.getVerticalFilmOffset();
-  const float focalLength_mm = camSample.getFocalLength();
 
   // Compute other needed values
   const float sensorWidth_mm = std::max(vaperture_cm, haperture_cm) * 10.0;
-  const float mm2pix = sensorWidth_pix / sensorWidth_mm;
+  const float mm2pix = sensorSize_pix.at(0) / sensorWidth_mm;
   const float imgWidth = haperture_cm * 10.0 * mm2pix;
   const float imgHeight = vaperture_cm * 10.0 * mm2pix;
-  const float focalLength_pix = focalLength_mm * mm2pix;
-
-  // Following values are in cm, hence the 10.0 multiplier
-  const float hoffset_pix = (imgWidth*0.5) - (10.0 * hoffset_cm * mm2pix);
-  const float voffset_pix = (imgHeight*0.5) + (10.0 * voffset_cm * mm2pix);
 
   // Create intrinsic parameters object
   std::shared_ptr<Pinhole_Intrinsic> pinholeIntrinsic = createPinholeIntrinsic(EINTRINSIC_stringToEnum(mvg_intrinsicType));
   pinholeIntrinsic->setWidth(imgWidth);
   pinholeIntrinsic->setHeight(imgHeight);
-  pinholeIntrinsic->setK(focalLength_pix, hoffset_pix, voffset_pix);
   pinholeIntrinsic->updateFromParams(mvg_intrinsicParams);
 
   // Add imported data to the SfM_Data container TODO use UID
@@ -286,12 +297,32 @@ void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata
   {
     IXform xform(iObj, kWrapExisting);
     XformSample xs;
-    xform.getSchema().get(xs);
-    mat *= xs.getMatrix();
+    if(xform.getSchema().getNumSamples() == 1)
+    {
+      xform.getSchema().get(xs);
+      mat *= xs.getMatrix();
+    }
+    // If we have an animated camera we handle it with the xform here
+    else
+    {
+      std::cout << xform.getSchema().getNumSamples() << " samples found in this animated xform." << std::endl;
+      const float timebase = 1.0 / 24.0;
+      const float timestep = 1.0 / 24.0;
+      for(int frame = 0; frame < xform.getSchema().getNumSamples(); ++frame)
+      {
+        xform.getSchema().get(xs, ISampleSelector(frame * timestep + timebase));
+        readCamera(iObj.getChild(0), mat * xs.getMatrix(), sfmdata, flags_part, frame * timestep + timebase);
+      }
+    }
   }
   else if(ICamera::matches(md) && (flags_part & sfm::ESfM_Data::EXTRINSICS))
   {
-    readCamera(iObj, mat, sfmdata, flags_part);
+    ICamera check_cam(iObj, kWrapExisting);
+    // If it's not an animated camera we add it here
+    if(check_cam.getSchema().getNumSamples() == 1)
+    {
+      readCamera(iObj, mat, sfmdata, flags_part);
+    }
   }
 
   // Recurse

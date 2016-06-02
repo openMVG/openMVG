@@ -55,7 +55,6 @@ namespace features {
     Real cx = - static_cast<Real>( 0.5 ) , cy = static_cast<Real>( 0.5 ) ;
 
     // Set the descriptor size and the sample and pattern sizes
-    const int dsize = 64;
     const int sample_step = 5;
     const int pattern_size = 12;
 

@@ -39,7 +39,6 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
 
   public:
   Bundle_Adjustment_Ceres(Bundle_Adjustment_Ceres::BA_options options = BA_options());
-
   bool Adjust(
     SfM_Data & sfm_data,            // the SfM scene to refine
     bool bRefineRotations = true,   // tell if pose rotations will be refined

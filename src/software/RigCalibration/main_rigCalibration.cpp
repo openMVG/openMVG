@@ -6,6 +6,7 @@
 #include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 #include <openMVG/image/image_io.hpp>
 #include <openMVG/dataio/FeedProvider.hpp>
+#include <openMVG/logger.hpp>
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
@@ -23,11 +24,8 @@
 #include <chrono>
 
 #if HAVE_ALEMBIC
-#include <openMVG/dataio/AlembicExporter.hpp>
+#include <openMVG/sfm/AlembicExporter.hpp>
 #endif // HAVE_ALEMBIC
-
-#define POPART_COUT(x) std::cout << x << std::endl
-#define POPART_CERR(x) std::cerr << x << std::endl
 
 
 namespace bfs = boost::filesystem;
@@ -138,7 +136,7 @@ int main(int argc, char** argv)
           ("nNearestKeyFrames", po::value<size_t>(&nNearestKeyFrames)->default_value(nNearestKeyFrames), "[CCTAG] Number of images to retrieve in database")
 #endif
 #if HAVE_ALEMBIC
-          ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), "Filename for the SfM_Data export file (where camera poses will be stored). Default : trackedcameras.json If Alambic is enable it will also export an .abc file of the scene with the same name")
+          ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), "If Alambic is enabled, filename for the file containing the camera poses. Default : trackedcameras.abc")
 #endif
           ;
 
@@ -189,6 +187,7 @@ int main(int argc, char** argv)
       // parameters for voctree localizer
       POPART_COUT("\tvoctree: " << vocTreeFilepath);
       POPART_COUT("\tweights: " << weightsFilepath);
+      POPART_COUT("\toutfile: " << outputFile);
       POPART_COUT("\talgorithm: " << algostring);
       POPART_COUT("\tresults: " << numResults);
     }
@@ -229,6 +228,7 @@ int main(int argc, char** argv)
     localization::VoctreeLocalizer::Parameters *casted = static_cast<localization::VoctreeLocalizer::Parameters *>(param);
     casted->_algorithm = localization::VoctreeLocalizer::initFromString(algostring);;
     casted->_numResults = numResults;
+    casted->_ccTagUseCuda = false;
   }
 #if HAVE_CCTAG
   else
@@ -259,7 +259,7 @@ int main(int argc, char** argv)
   rig::Rig rig;
 
   // Loop over all cameras of the rig
-  for(int idCamera = 0; idCamera < nCam; ++idCamera)
+  for(std::size_t idCamera = 0; idCamera < nCam; ++idCamera)
   {
     POPART_COUT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     POPART_COUT("CAMERA " << idCamera);
@@ -303,11 +303,12 @@ int main(int argc, char** argv)
       POPART_COUT("******************************");
       auto detect_start = std::chrono::steady_clock::now();
       localization::LocalizationResult localizationResult;
-      localizer->localize(imageGrey,
-                         param,
-                         hasIntrinsics/*useInputIntrinsics*/,
-                         queryIntrinsics,
-                         localizationResult);
+      const bool ok = localizer->localize(imageGrey,
+                                          param,
+                                          hasIntrinsics/*useInputIntrinsics*/,
+                                          queryIntrinsics,
+                                          localizationResult);
+      assert( ok == localizationResult.isValid() );
       vLocalizationResults.emplace_back(localizationResult);
       auto detect_end = std::chrono::steady_clock::now();
       auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
@@ -332,16 +333,44 @@ int main(int argc, char** argv)
 
     // print out some time stats
     POPART_COUT("\n\n******************************");
-    POPART_COUT("Localized " << frameCounter << " images");
+    POPART_COUT("Processed " << frameCounter << " images for camera " << idCamera);
     POPART_COUT("Processing took " << bacc::sum(stats) / 1000 << " [s] overall");
     POPART_COUT("Mean time for localization:   " << bacc::mean(stats) << " [ms]");
     POPART_COUT("Max time for localization:   " << bacc::max(stats) << " [ms]");
     POPART_COUT("Min time for localization:   " << bacc::min(stats) << " [ms]");
   }
-  POPART_COUT("Rig calibration initialization");
-  rig.initializeCalibration();
-  POPART_COUT("Rig calibration optimization");
-  rig.optimizeCalibration();
+  
+  {
+    // just for statistics purposes
+    const std::size_t numRigCam = rig.nCams();
+    POPART_COUT("\n\n******************************");
+    for(std::size_t idCam = 0; idCam < numRigCam; ++idCam)
+    {
+      auto & currResult = rig.getLocalizationResults(idCam);
+      std::size_t numLocalized = 0;
+      for(const auto &curr : currResult)
+      {
+        if(curr.isValid())
+          ++numLocalized;
+      }
+      POPART_COUT("Camera " << idCam << " localized " 
+              << numLocalized << "/" << currResult.size());
+    }
+    
+  }
+  
+  POPART_COUT("Rig calibration initialization...");
+  if(!rig.initializeCalibration())
+  {
+    POPART_CERR("Unable to find a proper initialization for the relative poses! Aborting...");
+    return EXIT_FAILURE;
+  }
+  POPART_COUT("Rig calibration optimization...");
+  if(!rig.optimizeCalibration())
+  {
+    POPART_CERR("Unable to optimize the relative poses! Aborting...");
+    return EXIT_FAILURE;
+  }
   
   // save the rig calibration (subposes)
   rig.saveCalibration(outputFile);
@@ -371,4 +400,6 @@ int main(int argc, char** argv)
     POPART_COUT("t\n" << pose.translation());
     POPART_COUT("--------------------\n");
   }
+  
+  return EXIT_SUCCESS;
 }

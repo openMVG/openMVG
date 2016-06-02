@@ -1,3 +1,4 @@
+#include <openMVG/features/descriptor.hpp>
 #include <openMVG/sfm/sfm_data_io.hpp>
 
 #include <boost/filesystem.hpp>
@@ -10,7 +11,7 @@
 namespace openMVG {
 namespace voctree {
 
-template<class DescriptorT>
+template<class DescriptorT, class FileDescriptorT>
 size_t readDescFromFiles(const std::string &fileFullPath, std::vector<DescriptorT>& descriptors, std::vector<size_t> &numFeatures)
 {
   namespace bfs = boost::filesystem;
@@ -58,7 +59,7 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
   for(const auto &currentFile : descriptorsFiles)
   {
     // Read the descriptors and append them in the vector
-    loadDescsFromBinFile(currentFile.second, descriptors, true);
+    features::loadDescsFromBinFile<DescriptorT, FileDescriptorT>(currentFile.second, descriptors, true);
     size_t result = descriptors.size();
 
     // Add the number of descriptors from this file

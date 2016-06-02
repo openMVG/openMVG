@@ -5,6 +5,7 @@
  * Created on November 28, 2015, 1:30 PM
  */
 #include <openMVG/features/descriptor.hpp>
+#include <openMVG/logger.hpp>
 
 #include <boost/progress.hpp>
 #include <boost/filesystem.hpp>
@@ -13,8 +14,6 @@
 
 #include <cstdlib>
 
-#define POPART_COUT(x) std::cout << x << std::endl
-#define POPART_CERR(x) std::cerr << x << std::endl
 
 namespace bfs = boost::filesystem;
 namespace po = boost::program_options;

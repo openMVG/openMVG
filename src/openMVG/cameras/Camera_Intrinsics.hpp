@@ -32,6 +32,14 @@ struct IntrinsicBase
   void setWidth(unsigned int w) { _w = w;}
   void setHeight(unsigned int h) { _h = h;}
 
+  // Operator ==
+  bool operator==(const IntrinsicBase& other) const {
+    return _w == other._w &&
+           _h == other._h &&
+           getType() == other.getType() &&
+           getParams() == other.getParams();
+  }
+
   /// Projection of a 3D point into the camera plane (Apply pose, disto (if any) and Intrinsics)
   Vec2 project(
     const geometry::Pose3 & pose,
@@ -137,7 +145,7 @@ struct IntrinsicBase
 };
 
 /// Return the angle (degree) between two bearing vector rays
-static double AngleBetweenRay(
+static inline double AngleBetweenRay(
   const geometry::Pose3 & pose1,
   const IntrinsicBase * intrinsic1,
   const geometry::Pose3 & pose2,
