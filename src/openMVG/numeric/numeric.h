@@ -217,7 +217,8 @@ template<typename TVec>
 inline bool AreVecNearEqual(const TVec& x, const TVec& y, const double epsilon)
 {
   assert(x.cols() == y.cols());
-  for(std::size_t i = 0; i < x.cols(); ++i)
+//  for(std::size_t i = 0; i < x.cols(); ++i)
+  for(typename TVec::Index i = 0; i < x.cols(); ++i)
   {
     if((y(i) - epsilon > x(i)) 
       || (x(i) > y(i) + epsilon))
@@ -231,9 +232,9 @@ inline bool AreMatNearEqual(const TMat& X, const TMat& Y, const double epsilon)
 {
   assert(X.cols() == Y.cols());
   assert(X.rows() == Y.rows());
-  for(std::size_t i = 0; i < X.rows(); ++i)
+  for(typename TMat::Index i = 0; i < X.rows(); ++i)
   {
-    for(std::size_t j = 0; j < X.cols(); ++j)
+    for(typename TMat::Index j = 0; j < X.cols(); ++j)
     {
       if((Y(i,j) - epsilon > X(i,j)) 
         || (X(i,j) > Y(i,j) + epsilon))
