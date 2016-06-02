@@ -186,6 +186,10 @@ bool readGt(
       const std::string sImgFile = stlplus::create_filespec(sImgPath, sImgName);
 
       // Generate UID
+      if (!stlplus::file_exists(sImgFile))
+      {
+        throw std::logic_error("Impossible to generate UID from this file, because it does not exists: "+sImgName);
+      }
       Exif_IO_EasyExif exifReader;
       const size_t uid = computeUID(exifReader, sImgName);
 
