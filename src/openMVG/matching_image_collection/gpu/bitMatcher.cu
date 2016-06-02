@@ -17,7 +17,7 @@ using namespace std;
 #define vectorsPerGroup (8)
 #define warpsPerBlock (32)
 // The total number of int32's needed to store a vector. We should drop this down to 16 for an optimized implementation for canonical LATCH.
-#define vectorDimension (16)
+#define vectorDimension (64)
 #define _warpSize (32)
 #define cacheSize (128)
 #define halfCacheSize (64)
@@ -32,11 +32,11 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 
 // Launch as 32x32
 __global__ void __launch_bounds__(1024, 1)
-                bitMatch(   const unsigned int *g_query,
-                            const unsigned int *g_training,
-                            int *g_match,
-                            const int trainingSize,
-                            const int threshold) {
+                bitMatchGPU(   const unsigned int *g_query,
+                               const unsigned int *g_training,
+                               int *g_match,
+                               const int trainingSize,
+                               const int threshold) {
     // Load query vectors
     register unsigned int query[vectorsPerWarp][chunksPerVector];
 
@@ -183,16 +183,15 @@ __global__ void __launch_bounds__(1024, 1)
 }
 
 
-void bitMatcher(unsigned int* d_Q, unsigned int* d_T, int keypointsQ, int keypointsT, int maxKP, int* d_M, const int threshold, cudaStream_t stream, cudaEvent_t event) {
+void bitMatch(unsigned int* d_Q, unsigned int* d_T, int keypointsQ, int keypointsT, int maxKP, int* d_M, const int threshold, cudaStream_t stream) {
     dim3 threadsPerBlock(_warpSize, warpsPerBlock);
     const int neededBlocks = (keypointsQ + (vectorsPerWarp * warpsPerBlock) - 1) / (vectorsPerWarp * warpsPerBlock); // This is the "round up integer division" pattern
     dim3 blocksPerGrid(neededBlocks, 1, 1);
 
-    cudaStreamWaitEvent(stream, event, 0);
-    bitMatch<<<blocksPerGrid, threadsPerBlock, 0, stream>>>(d_Q, d_T, d_M, keypointsT, threshold);
+    bitMatchGPU<<<blocksPerGrid, threadsPerBlock, 0, stream>>>(d_Q, d_T, d_M, keypointsT, threshold);
 }
 
-void getMatches(int maxKP, int* h_M, int* d_M) {
+void getMatches(int maxKP, int* h_M, int* d_M, cudaStream_t stream) {
     size_t sizeM = maxKP * sizeof(int);
-    cudaMemcpyAsync(h_M, d_M, sizeM, cudaMemcpyDeviceToHost);
+    cudaMemcpyAsync(h_M, d_M, sizeM, cudaMemcpyDeviceToHost, stream);
 };

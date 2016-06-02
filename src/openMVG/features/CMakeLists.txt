@@ -22,7 +22,9 @@ file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 #Remove the future main files
 list(REMOVE_ITEM features_files_sources ${REMOVEFILESUNITTEST})
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}
+	/usr/local/cuda/include
+	)
 
 set_source_files_properties(${features_files_sources} PROPERTIES LANGUAGE CXX)
 add_library(openMVG_features ${features_files_sources} ${features_files_headers})

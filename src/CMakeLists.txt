@@ -97,8 +97,8 @@ IF (SSE2_FOUND OR TARGET_ARCHITECTURE STREQUAL "native")
   ADD_DEFINITIONS(-DOPENMVG_USE_SSE)
 ENDIF ()
 IF (UNIX AND NOT OpenMVG_BUILD_COVERAGE)
-  SET(CMAKE_C_FLAGS_RELEASE "-O3")
-  SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
+  SET(CMAKE_C_FLAGS_RELEASE "-O0 -ggdb")
+  SET(CMAKE_CXX_FLAGS_RELEASE "-O0 -ggdb")
 ENDIF ()
 
 # ==============================================================================

@@ -25,5 +25,4 @@ class LatchBitMatcher {
         // CUDA stuff
         cudaStream_t m_stream1;
         cudaStream_t m_stream2;
-        cudaEvent_t m_finished;
 };

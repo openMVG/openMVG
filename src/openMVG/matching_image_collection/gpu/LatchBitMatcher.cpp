@@ -5,6 +5,8 @@
 #include "bitMatcher.h"
 #include "params.hpp"
 
+#define DESCRIPTOR_SIZE 2048
+
 /* Helper functions. */
 
 #define cudaCalloc(A, B) \
@@ -28,10 +30,7 @@ LatchBitMatcher::LatchBitMatcher() :
         || cudaStreamCreate(&m_stream2) == cudaErrorInvalidValue) {
         std::cerr << "Unable to create streams" << std::endl;
     }
-    if (cudaEventCreate(&m_finished) != cudaSuccess) {
-        std::cerr << "Unable to create event" << std::endl;
-    }
-    size_t sizeD = m_maxKP * (512 / 32) * sizeof(unsigned int); // D for Descriptor
+    size_t sizeD = m_maxKP * (DESCRIPTOR_SIZE / 32) * sizeof(unsigned int); // D for Descriptor
 	size_t sizeM = m_maxKP * sizeof(int); // M for Matches
 
     cudaCalloc((void**) &m_dD1, sizeD);
@@ -42,24 +41,41 @@ LatchBitMatcher::LatchBitMatcher() :
 }
 
 std::vector<LatchBitMatcherMatch> LatchBitMatcher::match(unsigned int* h_descriptors1, unsigned int* h_descriptors2, int numKP0, int numKP1) {
-    size_t sizeD1 = numKP0 * (512 / 32) * sizeof(unsigned int); // D1 for descriptor1
-    size_t sizeD2 = numKP1 * (512 / 32) * sizeof(unsigned int); // D2 for descriptor2
+    size_t sizeD1 = numKP0 * (DESCRIPTOR_SIZE / 32) * sizeof(unsigned int); // D1 for descriptor1
+    size_t sizeD2 = numKP1 * (DESCRIPTOR_SIZE / 32) * sizeof(unsigned int); // D2 for descriptor2
+	size_t sizeM = m_maxKP * sizeof(int); // M for Matches
+
+	cudaMemsetAsync(m_dD1, 0, sizeD1, m_stream1);
+	cudaMemsetAsync(m_dD2, 0, sizeD2, m_stream2);
+
+	cudaMemsetAsync(m_dM1, 0, sizeM, m_stream1);
+	cudaMemsetAsync(m_dM2, 0, sizeM, m_stream2);
+
+	cudaStreamSynchronize(m_stream1);
+	cudaStreamSynchronize(m_stream2);
+	cudaDeviceSynchronize();
 
     cudaMemcpyAsync(m_dD1, h_descriptors1, sizeD1, cudaMemcpyHostToDevice, m_stream1);
     cudaMemcpyAsync(m_dD2, h_descriptors2, sizeD2, cudaMemcpyHostToDevice, m_stream2);
     
-    bitMatcher(m_dD1, m_dD2, numKP0, numKP1, m_maxKP, m_dM1, m_matchThreshold, m_stream1, m_finished);
-    bitMatcher(m_dD2, m_dD1, numKP1, numKP0, m_maxKP, m_dM2, m_matchThreshold, m_stream2, m_finished);
+	cudaStreamSynchronize(m_stream1);
+	cudaStreamSynchronize(m_stream2);
+	cudaDeviceSynchronize();
 
-    cudaStreamSynchronize(m_stream1);
-    cudaStreamSynchronize(m_stream2);
+    bitMatch(m_dD1, m_dD2, numKP0, numKP1, m_maxKP, m_dM1, m_matchThreshold, m_stream1);
+    bitMatch(m_dD2, m_dD1, numKP1, numKP0, m_maxKP, m_dM2, m_matchThreshold, m_stream2);
 
     int h_M1[m_maxKP];
     int h_M2[m_maxKP];
-    getMatches(m_maxKP, h_M1, m_dM1);
-    getMatches(m_maxKP, h_M2, m_dM2);
+    getMatches(m_maxKP, h_M1, m_dM1, m_stream1);
+    getMatches(m_maxKP, h_M2, m_dM2, m_stream2);
 
     std::vector<LatchBitMatcherMatch> matches;
+
+	cudaStreamSynchronize(m_stream1);
+	cudaStreamSynchronize(m_stream2);
+
+	cudaDeviceSynchronize();
 
     for (size_t i = 0; i < numKP0; i++) {
         if (h_M1[i] >= 0 && h_M1[i] < numKP1 && h_M2[h_M1[i]] == i) {
@@ -72,7 +88,10 @@ std::vector<LatchBitMatcherMatch> LatchBitMatcher::match(unsigned int* h_descrip
 }
 
 LatchBitMatcher::~LatchBitMatcher() {
-    cudaEventDestroy(m_finished);
+	cudaFree(m_dD1);
+	cudaFree(m_dD2);
+	cudaFree(m_dM1);
+	cudaFree(m_dM2);
     cudaStreamDestroy(m_stream1);
     cudaStreamDestroy(m_stream2);
 }

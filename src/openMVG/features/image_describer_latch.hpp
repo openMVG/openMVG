@@ -26,7 +26,6 @@ public:
   LATCH_Image_describer(
   ):Image_describer(),
     latch(LatchClassifierOpenMVG()){
-        latch.setImageSize(4000, 3000);
         }
 
   // Don't need to really define this for the LATCH class yet, until more descriptors come out.
@@ -72,8 +71,8 @@ public:
           }
           regionsCasted->Features()[i] =
             SIOPointFeature(ptLatch.x, ptLatch.y, ptLatch.size, ptLatch.angle);
-          // Compute descriptors
-          for (int j = 0; j < 16; j++) {
+          // Store descriptors
+          for (int j = 0; j < 64; j++) {
             const unsigned int index = i * 64 + j;
             regionsCasted->Descriptors()[i][j] = static_cast<unsigned int>(latch.getDescriptorSet1()[index]);
           }

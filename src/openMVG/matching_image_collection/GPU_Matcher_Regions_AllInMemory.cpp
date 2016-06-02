@@ -58,15 +58,15 @@ void GPU_Matcher_Regions_AllInMemory::Match(
       my_progress_bar += indexToCompare.size();
       continue;
     }
-    
-    // LatchClassifier for the GPU
-    LatchBitMatcher matcher;
-
+   
 #ifdef OPENMVG_USE_OPENMP
-    #pragma omp parallel for schedule(dynamic)
+//    #pragma omp parallel for schedule(dynamic)
 #endif
     for (int j = 0; j < (int)indexToCompare.size(); ++j)
     {
+	  // LatchClassifier for the GPU
+      LatchBitMatcher matcher;
+   
       const size_t J = indexToCompare[j];
 
       const features::Regions &regionsJ = *regions_provider->regions_per_view.at(J).get();
