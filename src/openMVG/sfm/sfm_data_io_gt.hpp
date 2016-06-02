@@ -180,7 +180,7 @@ bool readGt(
   }
 
   std::cout << std::endl << "Read rotation and translation estimates" << std::endl;
-  std::string sImgPath = stlplus::folder_down(stlplus::folder_up(sGTPath), "images");
+  const std::string sImgPath = stlplus::folder_down(stlplus::folder_up(sGTPath), "images");
   std::map< std::string, Mat3 > map_R_gt;
   //Try to read .suffix camera (parse camera names)
   std::vector<std::string> vec_camfilenames =
@@ -201,14 +201,12 @@ bool readGt(
         return false;
       }
 
-      std::string sImgName = stlplus::basename_part(*iter);
-      std::string sImgFile = stlplus::create_filespec(sImgPath, sImgName);
+      const std::string sImgName = stlplus::basename_part(*iter);
+      const std::string sImgFile = stlplus::create_filespec(sImgPath, sImgName);
 
       // Generate UID
       Exif_IO_EasyExif exifReader;
-      std::cout << "open " << exifReader.open( sImgFile ) << std::endl;
-      size_t uid = computeUID(exifReader, sImgName);
-      std::cout << uid << " " << (IndexT) uid << " " << stlplus::basename_part(*iter) << std::endl;
+      const size_t uid = computeUID(exifReader, sImgName);
 
       // Update intrinsics with width and height of image
       sfm_data.views.emplace((IndexT)uid, std::make_shared<View>(stlplus::basename_part(*iter), (IndexT)uid, id, id, pinholeIntrinsic->w(), pinholeIntrinsic->h()));
