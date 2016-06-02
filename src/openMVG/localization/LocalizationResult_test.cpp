@@ -105,9 +105,9 @@ TEST(LocalizationResult, LoadSaveBinSingle)
   }
 
 
-  AreMatNearEqual(res.getPt3D(), check.getPt3D(), threshold);
-  AreMatNearEqual(res.getPt2D(), check.getPt2D(), threshold);
-  AreMatNearEqual(res.getProjection(), check.getProjection(), threshold);
+  EXPECT_MATRIX_NEAR(res.getPt3D(), check.getPt3D(), threshold);
+  EXPECT_MATRIX_NEAR(res.getPt2D(), check.getPt2D(), threshold);
+  EXPECT_MATRIX_NEAR(res.getProjection(), check.getProjection(), threshold);
 
   stlplus::file_delete(filename);
 }
@@ -181,9 +181,9 @@ TEST(LocalizationResult, LoadSaveBinVector)
       EXPECT_TRUE(inliersGT[i] == inliers[i]);
     }
 
-    AreMatNearEqual(res.getPt3D(), check.getPt3D(), threshold);
-    AreMatNearEqual(res.getPt2D(), check.getPt2D(), threshold);
-    AreMatNearEqual(res.getProjection(), check.getProjection(), threshold);
+    EXPECT_MATRIX_NEAR(res.getPt3D(), check.getPt3D(), threshold);
+    EXPECT_MATRIX_NEAR(res.getPt2D(), check.getPt2D(), threshold);
+    EXPECT_MATRIX_NEAR(res.getProjection(), check.getProjection(), threshold);
     
     stlplus::file_delete(filename);
   }
