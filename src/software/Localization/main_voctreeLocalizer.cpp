@@ -58,6 +58,8 @@ int main(int argc, char** argv)
   std::string preset = features::describerPreset_enumToString(param._featurePreset);               //< the preset for the feature extractor
 #if HAVE_ALEMBIC
   std::string exportFile = "trackedcameras.abc"; //!< the export file
+#else
+  std::string exportFile = "localizationResult.json"; //!< the export file
 #endif
 #if HAVE_CCTAG
   bool useSIFT_CCTAG = false;
@@ -89,7 +91,9 @@ int main(int argc, char** argv)
       ("noBArefineIntrinsics", po::bool_switch(&noBArefineIntrinsics), "It does not refine intrinsics during BA")
       ("visualDebug", po::value<std::string>(&param._visualDebug), "If a directory is provided it enables visual debug and saves all the debugging info in that directory")
 #if HAVE_ALEMBIC
-      ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), "Filename for the SfM_Data export file (where camera poses will be stored). Default : trackedcameras.json If Alambic is enable it will also export an .abc file of the scene with the same name")
+      ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), "Filename for the SfM_Data export file (where camera poses will be stored). Default : trackedcameras.abc. It will also save the localization results as .json of the same name")
+#else
+      ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), "Filename for the SfM_Data export file containing the localization results. Default : localizationResult.json.")
 #endif
 #if HAVE_CCTAG
       ("useSIFT_CCTAG", po::bool_switch(&useSIFT_CCTAG), "If provided, for each image it will extract both SIFT and the CCTAG.")
@@ -159,6 +163,8 @@ int main(int argc, char** argv)
     bfs::create_directories(param._visualDebug);
   }
  
+  const std::string basename = bfs::path(exportFile).stem().string();
+  
   // init the localizer
   localization::VoctreeLocalizer localizer(sfmFilePath,
                                            descriptorsFolder,
@@ -245,7 +251,7 @@ int main(int argc, char** argv)
     }
     ++frameCounter;
   }
-  localization::save(vec_localizationResults, bfs::path(exportFile).stem().string()+".json");
+  localization::save(vec_localizationResults, basename+".json");
   
   if(globalBundle)
   {
@@ -263,7 +269,7 @@ int main(int argc, char** argv)
     {
 #if HAVE_ALEMBIC
       // now copy back in a new abc with the same name file and BUNDLE appended at the end
-      dataio::AlembicExporter exporterBA( bfs::path(exportFile).stem().string()+".BUNDLE.abc" );
+      dataio::AlembicExporter exporterBA( basename+".BUNDLE.abc" );
       exporterBA.initAnimatedCamera("camera");
       size_t idx = 0;
       for(const localization::LocalizationResult &res : vec_localizationResults)
@@ -281,7 +287,7 @@ int main(int argc, char** argv)
       }
       exporterBA.addPoints(localizer.getSfMData().GetLandmarks());
 #endif
-      localization::save(vec_localizationResults, bfs::path(exportFile).stem().string()+".BUNDLE.json");
+      localization::save(vec_localizationResults, basename+".BUNDLE.json");
     }
   }
   
