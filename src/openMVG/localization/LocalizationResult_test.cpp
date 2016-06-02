@@ -4,6 +4,8 @@
 #include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 #include "testing/testing.h"
 
+#include <third_party/stlplus3/filesystemSimplified/file_system.hpp>
+
 #include <vector>
 #include <chrono>
 #include <random>
@@ -107,6 +109,7 @@ TEST(LocalizationResult, LoadSaveBinSingle)
   AreMatNearEqual(res.getPt2D(), check.getPt2D(), threshold);
   AreMatNearEqual(res.getProjection(), check.getProjection(), threshold);
 
+  stlplus::file_delete(filename);
 }
 
 TEST(LocalizationResult, LoadSaveBinVector)
@@ -181,6 +184,8 @@ TEST(LocalizationResult, LoadSaveBinVector)
     AreMatNearEqual(res.getPt3D(), check.getPt3D(), threshold);
     AreMatNearEqual(res.getPt2D(), check.getPt2D(), threshold);
     AreMatNearEqual(res.getProjection(), check.getProjection(), threshold);
+    
+    stlplus::file_delete(filename);
   }
 }
 
