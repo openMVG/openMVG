@@ -149,29 +149,11 @@ bool readGt(
     fcnReadCamPtr = &read_openMVG_Camera;
     suffix = "bin";
   }
-  else if (!stlplus::folder_wildcard(sGTPath, "*.png.camera", false, true).empty())
+  else if (!stlplus::folder_wildcard(sGTPath, "*.camera", false, true).empty())
   {
-    std::cout << "\nusing Strechas Camera (png)";
+    std::cout << "\nusing Strechas Camera";
     fcnReadCamPtr = &read_Strecha_Camera;
-    suffix = "png.camera";
-  }
-  else if (!stlplus::folder_wildcard(sGTPath, "*.jpg.camera", false, true).empty())
-  {
-    std::cout << "\nusing Strechas Camera (jpg)";
-    fcnReadCamPtr = &read_Strecha_Camera;
-    suffix = "jpg.camera";
-  }
-  else if (!stlplus::folder_wildcard(sGTPath, "*.PNG.camera", false, true).empty())
-  {
-    std::cout << "\nusing Strechas Camera (PNG)";
-    fcnReadCamPtr = &read_Strecha_Camera;
-    suffix = "PNG.camera";
-  }
-  else if (!stlplus::folder_wildcard(sGTPath, "*.JPG.camera", false, true).empty())
-  {
-    std::cout << "\nusing Strechas Camera (JPG)";
-    fcnReadCamPtr = &read_Strecha_Camera;
-    suffix = "jpg.camera";
+    suffix = "camera";
   }
   else
   {
