@@ -157,8 +157,7 @@ bool readGt(
   }
   else
   {
-    std::cerr << "Unsupported camera type. Please write your camera reader." << std::endl;
-    return EXIT_FAILURE;
+    throw std::logic_error(std::string("No camera found in ") + sGTPath);
   }
 
   std::cout << std::endl << "Read rotation and translation estimates" << std::endl;
