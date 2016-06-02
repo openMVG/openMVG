@@ -627,7 +627,7 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
                      resectionData.pt3D,
                      imagePath);
 
-  const size_t numCollectedPts = occurences.size();
+  const std::size_t numCollectedPts = occurences.size();
   std::vector<pair<IndexT, IndexT> > associationIDs;
   associationIDs.reserve(numCollectedPts);
 
@@ -865,7 +865,7 @@ void VoctreeLocalizer::getAllAssociations(const features::SIFT_Regions &queryReg
     if((param._maxResults !=0) && (goodMatches == param._maxResults))
     { 
       // let's say we have enough features
-      POPART_COUT("[matching]\tgot enough point from " << param._maxResults << "images");
+      POPART_COUT("[matching]\tgot enough point from " << param._maxResults << " images");
       break;
     }
   }
