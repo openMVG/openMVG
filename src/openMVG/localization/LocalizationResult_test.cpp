@@ -1,5 +1,6 @@
 #include "LocalizationResult.hpp"
 #include <openMVG/cameras/Camera_Pinhole_Radial.hpp>
+#include <openMVG/numeric/numeric.h>
 #include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 #include "testing/testing.h"
 
@@ -48,19 +49,6 @@ localization::LocalizationResult generateRandomResult(std::size_t numPts)
   //
   return localization::LocalizationResult(data, indMatch3D2D, pose, intrinsics, valid);
 }
-
-#define checkMatrices( a, b , threshold)              \
-{                                                     \
-  EXPECT_TRUE(a.rows() == b.rows());                  \
-  EXPECT_TRUE(a.cols() == b.cols());                  \
-  for(std::size_t i = 0; i < a.rows(); ++i)           \
-  {                                                   \
-    for(std::size_t j = 0; j < a.cols(); ++j)         \
-    {                                                 \
-      EXPECT_NEAR(a(i, j), b(i, j), threshold);       \
-    }                                                 \
-  }                                                   \
-}                                                     \
 
 // generate a random localization result, save it to binary file, load it again
 // and compare each value
@@ -114,10 +102,10 @@ TEST(LocalizationResult, LoadSaveBinSingle)
     EXPECT_TRUE(inliersGT[i] == inliers[i]);
   }
 
-  checkMatrices(res.getPt3D(), check.getPt3D(), threshold);
-  checkMatrices(res.getPt2D(), check.getPt2D(), threshold);
-  checkMatrices(res.getProjection(), check.getProjection(), threshold);
 
+  AreMatNearEqual(res.getPt3D(), check.getPt3D(), threshold);
+  AreMatNearEqual(res.getPt2D(), check.getPt2D(), threshold);
+  AreMatNearEqual(res.getProjection(), check.getProjection(), threshold);
 
 }
 
@@ -190,9 +178,9 @@ TEST(LocalizationResult, LoadSaveBinVector)
       EXPECT_TRUE(inliersGT[i] == inliers[i]);
     }
 
-    checkMatrices(res.getPt3D(), check.getPt3D(), threshold);
-    checkMatrices(res.getPt2D(), check.getPt2D(), threshold);
-    checkMatrices(res.getProjection(), check.getProjection(), threshold);
+    AreMatNearEqual(res.getPt3D(), check.getPt3D(), threshold);
+    AreMatNearEqual(res.getPt2D(), check.getPt2D(), threshold);
+    AreMatNearEqual(res.getProjection(), check.getProjection(), threshold);
   }
 }
 
