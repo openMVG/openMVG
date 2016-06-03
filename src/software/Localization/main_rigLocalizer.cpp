@@ -180,6 +180,7 @@ int main(int argc, char** argv)
     POPART_COUT("\tsfmdata: " << sfmFilePath);
     POPART_COUT("\tmediapath: " << mediaPath);
     POPART_COUT("\tdescriptorPath: " << descriptorsFolder);
+    POPART_COUT("\tcalibration: " << rigCalibPath);
     if(!filelist.empty())
       POPART_COUT("\tfilelist: " << filelist);
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
