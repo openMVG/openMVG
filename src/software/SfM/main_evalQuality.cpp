@@ -104,7 +104,6 @@ int main(int argc, char **argv)
     const int idPoseGT = sfm_data_gt.GetViews().at(view->id_view)->id_pose;
 
     //-- GT
-    std::cout << std::setw(6) << idPoseGT << std::endl;
     const geometry::Pose3 pose_gt = sfm_data_gt.GetPoses().at(idPoseGT);
     vec_camPosGT.push_back(pose_gt.center());
     vec_camRotGT.push_back(pose_gt.rotation());
