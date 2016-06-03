@@ -99,7 +99,8 @@ public:
           // Store descriptors
           for (int j = 0; j < 64; j++) {
             const unsigned int index = i * 64 + j;
-            regionsCasted->Descriptors()[i][j] = static_cast<unsigned int>(latch.getDescriptorSet1()[index]);
+            unsigned int descriptor = static_cast<unsigned int>(latch.getDescriptorSet1()[index]);
+			regionsCasted->Descriptors()[i][j] = descriptor;
           }
         }
       }

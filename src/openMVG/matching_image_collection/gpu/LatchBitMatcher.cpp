@@ -65,8 +65,9 @@ std::vector<LatchBitMatcherMatch> LatchBitMatcher::match(unsigned int* h_descrip
     bitMatch(m_dD1, m_dD2, numKP0, numKP1, m_maxKP, m_dM1, m_matchThreshold, m_stream1);
     bitMatch(m_dD2, m_dD1, numKP1, numKP0, m_maxKP, m_dM2, m_matchThreshold, m_stream2);
 
-    int h_M1[m_maxKP];
-    int h_M2[m_maxKP];
+    int *h_M1 = new int[m_maxKP];
+    int *h_M2 = new int[m_maxKP];
+	cudaDeviceSynchronize();
     getMatches(m_maxKP, h_M1, m_dM1, m_stream1);
     getMatches(m_maxKP, h_M2, m_dM2, m_stream2);
 
@@ -83,6 +84,9 @@ std::vector<LatchBitMatcherMatch> LatchBitMatcher::match(unsigned int* h_descrip
             matches.push_back(LatchBitMatcherMatch(i, h_M1[i], 0));
         }
     }
+
+	delete [] h_M1;
+	delete [] h_M2;
 
     return matches;
 }
