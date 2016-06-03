@@ -20,11 +20,34 @@ using namespace std;
 namespace openMVG {
 namespace features {
 
+enum ELATCH_DESCRIPTOR
+{
+	LATCH_UNSIGNED,
+	LATCH_BINARY
+};
+
+struct LATCHParams
+{
+  LATCHParams(
+    ELATCH_DESCRIPTOR eLatchDescriptor = LATCH_UNSIGNED
+  ):eLatchDescriptor_(eLatchDescriptor){}
+
+  template<class Archive>
+  void serialize(Archive & ar)
+  {
+    ar(eLatchDescriptor_);
+  }
+
+  // Parameters
+  ELATCH_DESCRIPTOR eLatchDescriptor_;
+};
+
 class LATCH_Image_describer : public Image_describer
 {
 public:
   LATCH_Image_describer(
-  ):Image_describer(),
+	const LATCHParams & params = LATCHParams()
+  ):Image_describer(), params_(params),
     latch(LatchClassifierOpenMVG()){
         }
 
@@ -36,7 +59,6 @@ public:
 
   /**
   @brief Detect regions on the image and compute their attributes (description)
-  @param image Image.
   @param regions The detected regions and attributes (the caller must delete the allocated data)
   @param mask 8-bit gray image for keypoint filtering (optional).
      Non-zero values depict the region of interest.
@@ -49,7 +71,10 @@ public:
 
 
     Allocate(regions);
-
+    switch (params_.eLatchDescriptor_)
+    {
+      case LATCH_UNSIGNED:
+      {
         // Build alias to cached data
         LATCH_Unsigned_Int_Regions * regionsCasted = dynamic_cast<LATCH_Unsigned_Int_Regions*>(regions.get());
         regionsCasted->Features().resize(kpts.size());
@@ -77,25 +102,75 @@ public:
             regionsCasted->Descriptors()[i][j] = static_cast<unsigned int>(latch.getDescriptorSet1()[index]);
           }
         }
+      }
+      break;
+      case LATCH_BINARY:
+      {
+        // Build alias to cached data
+        LATCH_Binary_Regions * regionsCasted = dynamic_cast<LATCH_Binary_Regions*>(regions.get());
+        regionsCasted->Features().resize(kpts.size());
+        regionsCasted->Descriptors().resize(kpts.size());
 
+      #ifdef OPENMVG_USE_OPENMP
+        #pragma omp parallel for
+      #endif
+        for (size_t i = 0; i < static_cast<int>(kpts.size()); ++i)
+        {
+          LatchClassifierKeypoint ptLatch = kpts[i];
+
+          // Feature masking
+          if (mask)
+          {
+            const image::Image<unsigned char> & maskIma = *mask;
+            if (maskIma(ptLatch.y, ptLatch.x) == 0)
+              continue;
+          }
+          regionsCasted->Features()[i] =
+            SIOPointFeature(ptLatch.x, ptLatch.y, ptLatch.size, ptLatch.angle);
+          // Store descriptors
+          for (size_t j = 0; j < 16; j++) {
+            const unsigned int descriptorIndex = i * 64 + j;
+			unsigned int descriptor = static_cast<unsigned int>(latch.getDescriptorSet1()[descriptorIndex]);
+			for (size_t k = 0; k < 4; k++) {
+			  unsigned char descriptorRawByte = static_cast<unsigned char>((descriptor >> (24-k*3)) & 0xFF);
+			  const unsigned int descriptorRawIndex = j * 4 + k;
+              regionsCasted->Descriptors()[i][descriptorRawIndex] = descriptorRawByte;
+			}
+          }
+          regionsCasted->Descriptors()[i][64] = static_cast<unsigned char>(0);
+        }
+      }
+      break;
+      
+    }
     return true;
   };
 
   /// Allocate Regions type depending of the Image_describer
   void Allocate(std::unique_ptr<Regions> &regions) const override
   {
-    return regions.reset(new LATCH_Unsigned_Int_Regions);
+	switch(params_.eLatchDescriptor_)
+	{
+      case LATCH_UNSIGNED:
+        return regions.reset(new LATCH_Unsigned_Int_Regions);
+      break;
+      case LATCH_BINARY:
+        return regions.reset(new LATCH_Binary_Regions);
+      break;
+	}
   }
 
   template<class Archive>
   void serialize(Archive & ar)
   {
     ar(
+     cereal::make_nvp("params", params_),
      cereal::make_nvp("bOrientation", bOrientation_));
   }
 
 
 private:
+  LATCHParams params_;
   bool bOrientation_;
   LatchClassifierOpenMVG latch;
 };

@@ -192,9 +192,14 @@ int main(int argc, char **argv)
       image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_MLDB), !bUpRight));
     }
     else
-    if (sImage_Describer_Method == "LATCH")
+    if (sImage_Describer_Method == "LATCH_UNSIGNED")
     {
-      image_describer.reset(new LATCH_Image_describer());
+      image_describer.reset(new LATCH_Image_describer(LATCHParams(LATCH_UNSIGNED)));
+    }
+    else
+    if (sImage_Describer_Method == "LATCH_BINARY")
+    {
+      image_describer.reset(new LATCH_Image_describer(LATCHParams(LATCH_BINARY)));
     }
     //image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_LIOP), !bUpRight));
     if (!image_describer)
