@@ -97,6 +97,195 @@ void saveFeatures2SVG(const std::string &inputImagePath,
   svgFile.close();
 }
 
+bool lineToBorderPoints(const Vec3 &epiLine, const std::size_t imgW, const std::size_t imgH, std::vector<Vec2> &intersectionPts)
+{
+  intersectionPts.clear();
+  intersectionPts.reserve(2);
+  // @TODO check special case of epiline coincident with the border lines
+  
+  // intersect epiline with x=0
+  //y = -(a*0+c)/b
+  double p = - epiLine(2)/epiLine(1);
+  if(p >= 0 && p <= imgH)
+    intersectionPts.emplace_back(0, p);
+  
+  // intersect epiline with x=imgW
+  //y = -(a*imgW+c)/b
+  p = - (imgW*epiLine(0) + epiLine(2))/epiLine(1);
+  if(p >= 0 && p <= imgH)
+    intersectionPts.emplace_back(imgW, p);
+  
+  if(intersectionPts.size()==2)
+    return true;
+  
+  // intersect epiline with y=0
+  //x = -(b*0+c)/a
+  p = - epiLine(2)/epiLine(0);
+  if(p >= 0 && p <= imgW)
+    intersectionPts.emplace_back(p, 0);
+  
+  if(intersectionPts.size()==2)
+    return true;
+  
+  // intersect epiline with y=imgH
+  //y = -(a*imgW+c)/b
+  p = - (imgH*epiLine(1) + epiLine(2))/epiLine(0);
+  if(p >= 0 && p <= imgW)
+    intersectionPts.emplace_back(p, imgH);
+  
+  return (intersectionPts.size()==2);
+  
+}
+
+void saveEpipolarGeometry2SVG(const std::string &imagePath,
+                              const std::pair<size_t, size_t> & imageSize,
+                              const std::vector<features::PointFeature> &keypoints,
+                              const std::vector<features::PointFeature> &otherKeypoints,
+                              const matching::IndMatches &matches,
+                              const Mat3 &Fmat,
+                              const std::string &outputSVGPath,
+                              bool left)
+{
+  svg::svgDrawer svgStream(imageSize.first, imageSize.second);
+  svgStream.drawImage(imagePath, imageSize.first, imageSize.second);
+  std::size_t count = 0;
+  // heuristic for the radious of the point to draw
+  const float radius = std::max(imageSize.first, imageSize.second) / float(600);
+  const float strokeWidth = std::max(imageSize.first, imageSize.second) / float(2200);
+  for(const matching::IndMatch &m : matches)
+  {
+    //Get back linked feature, draw a circle and link them by a line
+    features::PointFeature p;
+    features::PointFeature other;
+    if(left)
+    {
+      p = keypoints[m._i];
+      other = otherKeypoints[m._j];
+    }
+    else
+    {
+      p = keypoints[m._j];
+      other = otherKeypoints[m._i];
+    }
+    if(count > 7)
+      svgStream.drawCircle(p.x(), p.y(), radius, svg::svgStyle().stroke("yellow", strokeWidth));
+    else
+      svgStream.drawCircle(p.x(), p.y(), radius, svg::svgStyle().stroke("red", strokeWidth).fill("red"));
+
+    Vec3 epiLine;
+    if(left)
+    {
+      epiLine = Fmat.transpose() * Vec3(other.x(), other.y(), 1.0);
+    }
+    else
+    {
+      epiLine = Fmat * Vec3(other.x(), other.y(), 1.0);
+    }
+
+    //    std::cout << "test 1 o*F*p " << (Fmat*Vec3(p.x(), p.y(), 1.0)).transpose()*Vec3(other.x(), other.y(), 1.0) << std::endl;
+    //    std::cout << "test 2 p*F*o " << (Fmat.transpose()*Vec3(p.x(), p.y(), 1.0)).transpose()*Vec3(other.x(), other.y(), 1.0) << std::endl;
+    //    std::cout << "epiline\n" << epiLine << " dotprod " << (epiLine.dot(Vec3(p.x(), p.y(), 1.0))) << std::endl;
+    std::vector<Vec2> pts;
+    if(lineToBorderPoints(epiLine, imageSize.first, imageSize.second, pts))
+    {
+      //      std::cout << "pt1*epiline " << (epiLine.transpose()*Vec3(pts[0](0), pts[0](1), 1)) << std::endl;
+      //      std::cout << "pt1 " << pts[0] << std::endl;
+      //      std::cout << "pt2*epiline " << (epiLine.transpose()*Vec3(pts[1](0), pts[1](1), 1)) << std::endl;
+      //      std::cout << "pt2 " << pts[1] << std::endl;
+      if(count > 7)
+        svgStream.drawLine(pts[0](0), pts[0](1), pts[1](0), pts[1](1), svg::svgStyle().stroke("green", strokeWidth));
+      else
+        svgStream.drawLine(pts[0](0), pts[0](1), pts[1](0), pts[1](1), svg::svgStyle().stroke("red", strokeWidth));
+    }
+    else
+    {
+      std::cerr << "********** pts size: " << pts.size() << " epiline " << epiLine << " out of image" << std::endl;
+      if(pts.size() > 0)
+      {
+        svgStream.drawLine(pts[0](0), pts[0](1), p.x(), p.y(), svg::svgStyle().stroke("red", 10 * strokeWidth));
+        std::cerr << "********** pts: " << pts[0].transpose() << std::endl;
+      }
+    }
+    ++count;
+    //    if(count > 7) break;
+
+  }
+
+  //draw the epipole
+  Mat epipole;
+  if(left)
+    epipole = Fmat.fullPivLu().kernel();
+  else
+    epipole = Fmat.transpose().fullPivLu().kernel();
+
+  if(epipole.cols() > 1)
+  {
+    std::cerr << "F has kernel of size " << epipole.cols() << std::endl << epipole << std::endl;
+  }
+  else
+  {
+    // normalize coordinates
+    Vec3 point = epipole.col(0);
+    std::cout << "epipole:\n" << point << std::endl;
+    //@todo check 0
+    point /= point(2);
+    std::cout << "epipole normalized:\n" << point << std::endl;
+    // check if the point is inside the image
+    if(!((point(0) > 0 && point(0) < imageSize.first) &&
+            (point(1) > 0 && point(1) < imageSize.second)))
+    {
+      std::cout << "epipole outside the image:\n" << point << std::endl;
+      // point outside the image, clamp it to the borders
+      if(point(0) < 0) point(0) = 0;
+      if(point(0) > imageSize.first) point(0) = imageSize.first;
+      if(point(1) < 0) point(1) = 0;
+      if(point(1) > imageSize.second) point(0) = imageSize.second;
+      std::cout << "clamped epipole:\n" << point << std::endl;
+    }
+    svgStream.drawCircle(point(0), point(1), 3 * radius, svg::svgStyle().stroke("red", strokeWidth).fill("red"));
+  }
+
+  std::ofstream svgFile(outputSVGPath.c_str());
+  svgFile << svgStream.closeSvgFile().str();
+  svgFile.close();
+}
+
+void saveMatchesAsMotion(const std::string &imagePath,
+                         const std::pair<size_t, size_t> & imageSize,
+                         const std::vector<features::SIOPointFeature> &keypoints,
+                         const std::vector<features::SIOPointFeature> &otherKeypoints,
+                         const matching::IndMatches &matches,
+                         const std::string &outputSVGPath,
+                         bool left)
+{
+  svg::svgDrawer svgStream(imageSize.first, imageSize.second);
+  svgStream.drawImage(imagePath, imageSize.first, imageSize.second);
+  const float radius = std::max(imageSize.first, imageSize.second) / float(600);
+  const float strokeWidth = std::max(imageSize.first, imageSize.second) / float(2200);
+  for(size_t i = 0; i < matches.size(); ++i)
+  {
+    //Get back linked feature, draw a circle and link them by a line
+    const auto L = keypoints[matches[i]._i];
+    const auto R = otherKeypoints[matches[i]._j];
+    if(left)
+    {
+      svgStream.drawLine(L.x(), L.y(), R.x(), R.y(), svg::svgStyle().stroke("green", strokeWidth));
+      svgStream.drawCircle(L.x(), L.y(), L.scale(), svg::svgStyle().stroke("yellow", 2.0));
+      svgStream.drawCircle(R.x(), R.y(), R.scale(), svg::svgStyle().stroke("yellow", strokeWidth));
+    }
+    else
+    {
+      svgStream.drawLine(L.x(), L.y(), R.x(), R.y(), svg::svgStyle().stroke("green", strokeWidth));
+      svgStream.drawCircle(R.x(), R.y(), R.scale(), svg::svgStyle().stroke("yellow", 2.0));
+      svgStream.drawCircle(L.x(), L.y(), L.scale(), svg::svgStyle().stroke("yellow", strokeWidth));
+
+    }
+  }
+  std::ofstream svgFile(outputSVGPath.c_str());
+  svgFile << svgStream.closeSvgFile().str();
+  svgFile.close();
+}
+
 #if HAVE_CCTAG
 
 void saveCCTag2SVG(const std::string &inputImagePath,
