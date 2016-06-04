@@ -19,7 +19,10 @@ namespace openMVG {
 namespace features {
 
 /**
- * @brief
+ * @brief It saves a svg file containing two images (as linked images) and their
+ * feature matches: the two images are showed side by side and each feature in each
+ * image (depicted as a circle) is connected to the corresponding feature on the 
+ * other image through a line.
  * 
  * @param[in] imagePathLeft The full path to the left iamge. The image is only 
  * saved as a link, no image data is stored in the svg.
@@ -42,7 +45,8 @@ void saveMatches2SVG(const std::string &imagePathLeft,
                      const std::string &outputSVGPath);
 
 /**
- * @brief
+ * @brief It saves a svg file containing an image (as linked image) and its detected
+ * features.
  * 
  * @param[in] inputImagePath The full path to the image file. The image is only 
  * saved as a link, no image data is stored in the svg.
@@ -56,13 +60,15 @@ void saveFeatures2SVG(const std::string &inputImagePath,
                       const std::string &outputSVGPath);
 
 /**
- * @brief
+ * @brief It saves a svg file containing an image (as linked image) and its detected
+ * features.
  * 
  * @param[in] inputImagePath The full path to the image file. The image is only 
  * saved as a link, no image data is stored in the svg.
  * @param[in] imageSize The size of the image <width,height>.
  * @param[in] points A vector containing the points to draw.
  * @param[in] outputSVGPath The name of the svg file to generate.
+ * @param[in] inliers [optional] The indices of the features to draw.
  */
 void saveFeatures2SVG(const std::string &inputImagePath,
                       const std::pair<size_t,size_t> & imageSize,
