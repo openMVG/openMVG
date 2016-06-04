@@ -60,7 +60,7 @@ void GPU_Matcher_Regions_AllInMemory::Match(
     }
    
 #ifdef OPENMVG_USE_OPENMP
-//    #pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for schedule(dynamic)
 #endif
     for (int j = 0; j < (int)indexToCompare.size(); ++j)
     {

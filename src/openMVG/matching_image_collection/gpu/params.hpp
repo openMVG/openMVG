@@ -2,6 +2,6 @@
 #define PARAMS_H
 
 #define NUM_SM 30
-#define MATCH_THRESHOLD 14
+#define MATCH_THRESHOLD 12
 
 #endif
