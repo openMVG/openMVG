@@ -85,16 +85,16 @@ void computeTracksPyramidPerView(
   {
     const auto viewId = viewTracks.first;
     auto& tracksPyramidIndex = tracksPyramidPerView[viewId];
-    View& view = *views.at(viewId).get();
+    const View& view = *views.at(viewId).get();
     std::vector<double> cellWidthPerLevel(pyramidDepth);
     std::vector<double> cellHeightPerLevel(pyramidDepth);
-    for(size_t level = 0; level < pyramidDepth; ++level)
+    for(std::size_t level = 0; level < pyramidDepth; ++level)
     {
       cellWidthPerLevel[level] = (double)view.ui_width / (double)widthPerLevel[level];
       cellHeightPerLevel[level] = (double)view.ui_height / (double)widthPerLevel[level];
     }
     const auto& features = featuresProvider.feats_per_view.at(viewId);
-    for(int i = 0; i < viewTracks.second.size(); ++i)
+    for(std::size_t i = 0; i < viewTracks.second.size(); ++i)
     {
       const std::size_t trackId = viewTracks.second[i];
       const std::size_t featIndex = map_tracks.at(trackId).at(viewId);
@@ -103,7 +103,7 @@ void computeTracksPyramidPerView(
       assert(feature.x() < view.ui_width);
       assert(feature.y() >= 0);
       assert(feature.y() < view.ui_height);
-      for(size_t level = 0; level < pyramidDepth; ++level)
+      for(std::size_t level = 0; level < pyramidDepth; ++level)
       {
         std::size_t xCell = std::floor(std::max(feature.x(), 0.0f) / cellWidthPerLevel[level]);
         std::size_t yCell = std::floor(std::max(feature.y(), 0.0f) / cellHeightPerLevel[level]);
@@ -606,7 +606,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
     RelativePose_Info relativePose_info;
     relativePose_info.initial_residual_tolerance = Square(4.0);
 
-    bool relativePoseSuccess = robustRelativePose(
+    const bool relativePoseSuccess = robustRelativePose(
       cam_I->K(), cam_J->K(),
       xI, xJ, relativePose_info,
       std::make_pair(cam_I->w(), cam_I->h()), std::make_pair(cam_J->w(), cam_J->h()),
