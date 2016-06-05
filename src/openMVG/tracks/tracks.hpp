@@ -82,14 +82,33 @@ private:
 
 namespace tracks {
 
-// Data structure to store a track: collection of {ImageId,FeatureId}
-//  The corresponding image points with their imageId and FeatureId.
+/// Data structure to store a track: collection of {ImageId,FeatureId}
+///  The corresponding image points with their imageId and FeatureId.
 typedef stl::flat_map<size_t,size_t> submapTrack;
-// A track is a collection of {trackId, submapTrack}
+/// A track is a collection of {trackId, submapTrack}
 typedef stl::flat_map< size_t, submapTrack > STLMAPTracks;
 typedef std::vector<size_t> TrackIdSet;
-// FeatsPyramidPerView contains map<viewId, map<trackId*N, pyramidIndex>>
+
+/**
+ * @brief Data structure that contains for each features of each view, its corresponding cell positions for each level of the pyramid, i.e.
+ * for each view:
+ *   each feature is mapped N times (N=depth of the pyramid)
+ *      each times it contains the absolute position P of the cell in the corresponding pyramid level
+ *
+ * FeatsPyramidPerView contains map<viewId, map<trackId*N, pyramidIndex>>
+ *
+ * Cell position:
+ * Consider the set of all cells of all pyramids, there are M = \sum_{l=1...N} K_l^2 cells with K_l = 2^l and l=1...N
+ * We enumerate the cells starting from the first pyramid l=1 (so that they have position from 0 to 3 (ie K^2 - 1))
+ * and we go on for increasing values of l so that e.g. the first cell of the pyramid at l=2 has position K^2, the second K^2 + 1 etc...
+ * So in general the i-th cell of the pyramid at level l has position P= \sum_{j=1...l-1} K_j^2 + i
+ */
 typedef stl::flat_map< size_t, stl::flat_map<size_t, size_t> > TracksPyramidPerView;
+/**
+ * List of visible track ids for each view.
+ *
+ * TracksPerView contains <viewId, vector<trackId> >
+ */
 typedef stl::flat_map< size_t, TrackIdSet > TracksPerView;
 
 struct TracksBuilder
