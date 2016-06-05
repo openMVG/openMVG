@@ -44,7 +44,7 @@ using namespace openMVG::cameras;
 
 /**
  * @brief Compute indexes of all features in a fixed size pyramid grid.
- * These precomputed values are useful to the next best view for incremental SfM.
+ * These precomputed values are useful to the next best view selection for incremental SfM.
  *
  * @param[in] tracksPerView: The list of TrackID per view
  * @param[in] map_tracks: All putative tracks
@@ -251,6 +251,10 @@ bool SequentialSfMReconstructionEngine::Process()
     for(std::size_t level = 0; level < _pyramidDepth; ++level)
     {
       std::size_t nbCells = Square(std::pow(2.0, level+1));
+      // We use a different weighting strategy than [Schonberger 2016].
+      // They use w = 2^l with l={1...L} (even if there is a typo in the text where they say to use w=2^{2*l}.
+      // We prefer to give more importance to the first levels of the pyramid, so:
+      // w = 2^{L-l} with L the number of levels in the pyramid.
       _pyramidWeights[level] = std::pow(2.0, (_pyramidDepth-(level+1)));
       maxWeight += nbCells * _pyramidWeights[level];
     }
@@ -536,6 +540,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
     std::cerr << "Failed to find an initial pair automatically. There is no view with valid intrinsics." << std::endl;
     return false;
   }
+  // ImagePairScore contains <imagePairScore*scoring_angle, imagePairScore, scoring_angle, numberOfInliers, imagePair>
   typedef std::tuple<double, double, double, std::size_t, Pair> ImagePairScore;
   std::vector<ImagePairScore> scoring_per_pair;
   scoring_per_pair.reserve(_matches_provider->_pairWise_matches.size());
@@ -818,6 +823,8 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
     _set_remainingViewId.erase(view_I->id_view);
     _set_remainingViewId.erase(view_J->id_view);
 
+    static const double minAngle = 3.0;
+    
     // List inliers and save them
     for (Landmarks::const_iterator iter = tiny_scene.GetLandmarks().begin();
       iter != tiny_scene.GetLandmarks().end(); ++iter)
@@ -839,7 +846,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
         pose_I, cam_I, pose_J, cam_J, ob_xI.x, ob_xJ.x);
       const Vec2 residual_I = cam_I->residual(pose_I, landmark.X, ob_xI.x);
       const Vec2 residual_J = cam_J->residual(pose_J, landmark.X, ob_xJ.x);
-      if ( angle > 3.0 &&
+      if ( angle > minAngle &&
            pose_I.depth(landmark.X) > 0 &&
            pose_J.depth(landmark.X) > 0 &&
            residual_I.norm() < relativePose_info.found_residual_precision &&
@@ -1010,28 +1017,17 @@ std::size_t SequentialSfMReconstructionEngine::computeImageScore(std::size_t vie
 #endif
 }
 
-/**
- * @brief Estimate images on which we can compute the resectioning safely.
- *
- * @param[out] vec_possible_indexes: list of indexes we can use for resectioning.
- * @return False if there is no possible resection.
- *
- * Sort the images by the number of features id shared with the reconstruction.
- * Select the image I that share the most of correspondences.
- * Then keep all the images that have at least:
- *  0.75 * #correspondences(I) common correspondences to the reconstruction.
- */
 bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
-  std::vector<size_t> & vec_possible_indexes,
-  std::set<size_t>& set_remainingViewId) const
+  std::vector<size_t> & possibleViewIds,
+  const std::set<size_t>& remainingViewIds) const
 {
   auto chrono_start = std::chrono::steady_clock::now();
   // Threshold used to select the best images
   static const float dThresholdGroup = 0.75f;
 
-  vec_possible_indexes.clear();
+  possibleViewIds.clear();
 
-  if (set_remainingViewId.empty() || _sfm_data.GetLandmarks().empty())
+  if (remainingViewIds.empty() || _sfm_data.GetLandmarks().empty())
     return false;
 
   // Collect tracksIds
@@ -1048,9 +1044,9 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
   #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for
   #endif
-  for (int i = 0; i < set_remainingViewId.size(); ++i)
+  for (int i = 0; i < remainingViewIds.size(); ++i)
   {
-    std::set<size_t>::const_iterator iter = set_remainingViewId.cbegin();
+    std::set<size_t>::const_iterator iter = remainingViewIds.cbegin();
     std::advance(iter, i);
     const size_t viewId = *iter;
     const size_t intrinsicId = _sfm_data.GetViews().at(viewId)->id_intrinsic;
@@ -1091,6 +1087,7 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
         return get<2>(t1) > get<2>(t2);
       });
 
+  // Impose a minimal number of points to ensure that it makes sense to try the pose estimation.
   std::size_t minPointsThreshold = 30;
 
   std::cout << "FindImagesWithPossibleResection -- Scores (features): " << std::endl;
@@ -1118,14 +1115,22 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
     }
     std::cout << std::endl;
     // All remaining images cannot be used for pose estimation
-    set_remainingViewId.clear();
     return false;
   }
 
   // Add the image view index with the best score
-  vec_possible_indexes.push_back(std::get<0>(vec_putative[0]));
+  possibleViewIds.push_back(std::get<0>(vec_putative[0]));
 
-  if (_sfm_data.GetPoses().size() < 30)
+  // The beginning of the incremental SfM is a well known risky and
+  // unstable step which has a big impact on the final result.
+  // The Bundle Adjustment is a compute intensive step so we only use it
+  // every N cameras.
+  // We make an exception for the first 'nbFirstUnstableCameras' cameras
+  // and perform a BA for each camera because it makes the results
+  // more stable and it's quite cheap because we have few data.
+  static const std::size_t nbFirstUnstableCameras = 30;
+
+  if (_sfm_data.GetPoses().size() < nbFirstUnstableCameras)
   {
     // Add images one by one to reconstruct the first cameras.
     std::cout << "FindImagesWithPossibleResection with few images. " << " images took: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - chrono_start).count() << " msec" << std::endl
@@ -1140,14 +1145,17 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
 #else
   const size_t scoreThreshold = _pyramidThreshold;
 #endif
+  // Force max of 30 images per group to ensure that we don't add too much data
+  // in one step without bundle adjustment.
+  const std::size_t maxImagesPerGroup = 30;
   for (size_t i = 1;
-       i < 30 && // max of 30 images per group
+       i < maxImagesPerGroup &&
        i < vec_putative.size() &&
        std::get<1>(vec_putative[i]) > minPointsThreshold && // ensure min number of points
        std::get<2>(vec_putative[i]) > scoreThreshold; // ensure score level
        ++i)
   {
-    vec_possible_indexes.push_back(std::get<0>(vec_putative[i]));
+    possibleViewIds.push_back(std::get<0>(vec_putative[i]));
     if(!std::get<3>(vec_putative[i]))
     {
       // If we add a new intrinsic, it is a sensitive stage in the process,
@@ -1155,9 +1163,9 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
       break;
     }
   }
-  std::cout << "FindImagesWithPossibleResection with " << vec_possible_indexes.size() << " images took: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - chrono_start).count() << " msec" << std::endl
-            << " - Scores: " << std::get<2>(vec_putative.front()) << " to " << std::get<2>(vec_putative[vec_possible_indexes.size()-1]) << " (threshold was " << scoreThreshold << ")" << std::endl
-            << " - Features: " << std::get<1>(vec_putative.front()) << " to " << std::get<1>(vec_putative[vec_possible_indexes.size()-1]) << " (threshold was " << minPointsThreshold << ")" << std::endl;
+  std::cout << "FindImagesWithPossibleResection with " << possibleViewIds.size() << " images took: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - chrono_start).count() << " msec" << std::endl
+            << " - Scores: " << std::get<2>(vec_putative.front()) << " to " << std::get<2>(vec_putative[possibleViewIds.size()-1]) << " (threshold was " << scoreThreshold << ")" << std::endl
+            << " - Features: " << std::get<1>(vec_putative.front()) << " to " << std::get<1>(vec_putative[possibleViewIds.size()-1]) << " (threshold was " << minPointsThreshold << ")" << std::endl;
   return true;
 }
 

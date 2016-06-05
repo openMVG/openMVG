@@ -110,8 +110,9 @@ private:
    * The score is based on a pyramid which allows to compute a weighting
    * strategy to promote a good repartition in the image (instead of relying
    * only on the number of features).
-   * Inspired from "Structure-from-Motion Revisited",
-   *   Johannes L. Schonberger, Jan-Michael Frahm
+   * Inspired by [Schonberger 2016]:
+   * "Structure-from-Motion Revisited", Johannes L. Schonberger, Jan-Michael Frahm
+   * 
    * http://people.inf.ethz.ch/jschoenb/papers/schoenberger2016sfm.pdf
    * We don't use the same weighting strategy. The weighting choice
    * is not justified in the paper.
@@ -121,11 +122,19 @@ private:
    * @return the computed score
    */
   std::size_t computeImageScore(std::size_t viewId, const std::vector<std::size_t>& trackIds) const;
-  
-  /// List the images that the greatest number of matches to the current 3D reconstruction.
+
+  /**
+   * @brief Estimate the best images on which we can compute the resectioning safely.
+   * Sort the image by a score based on the number of features id shared with
+   * the reconstruction and the repartition of these points in the image.
+   *
+   * @param[out] possibleViewIds: output list of view IDs we can use for resectioning.
+   * @param[in] remainingViewIds: input list of remaining view IDs in which we will search for the best ones for resectioning.
+   * @return False if there is no possible resection.
+   */
   bool FindImagesWithPossibleResection(
-    std::vector<size_t>& vec_possible_indexes,
-    std::set<size_t>& set_remainingViewId) const;
+    std::vector<size_t>& possibleViewIds,
+    const std::set<size_t>& remainingViewIds) const;
 
   /// Add a single Image to the scene and triangulate new possible tracks.
   bool Resection(const size_t imageIndex);
