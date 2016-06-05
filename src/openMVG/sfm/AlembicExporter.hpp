@@ -28,9 +28,14 @@ public:
   /**
    * @brief Add a single camera
    * 
-   * @param name An identifier for the camera
-   * @param pose The camera pose
-   * @param cam The camera intrinsics
+   * @param[in] name An identifier for the camera
+   * @param[in] pose The camera pose
+   * @param[in] cam The camera intrinsics
+   * @param[in] imagePath Path to the image
+   * @param[in] id_view View id
+   * @param[in] id_intrinsic Intrinsic id
+   * @param[in] sensorWidth_mm Width of the sensor in millimeters
+   * @param[in] id_pose Pose id
    */
   void appendCamera(const std::string &name, 
                     const geometry::Pose3 &pose, 

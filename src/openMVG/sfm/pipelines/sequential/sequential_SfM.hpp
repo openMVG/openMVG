@@ -117,8 +117,8 @@ private:
    * We don't use the same weighting strategy. The weighting choice
    * is not justified in the paper.
    *
-   * @param viewId: the ID of the view
-   * @param trackIds: set of track IDs contained in viewId
+   * @param[in] viewId: the ID of the view
+   * @param[in] trackIds: set of track IDs contained in viewId
    * @return the computed score
    */
   std::size_t computeImageScore(std::size_t viewId, const std::vector<std::size_t>& trackIds) const;
