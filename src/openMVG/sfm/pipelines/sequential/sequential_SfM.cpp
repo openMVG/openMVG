@@ -74,14 +74,13 @@ void computeTracksPyramidPerView(
 
 #ifdef HAVE_BOOST
   tracksPyramidPerView.reserve(tracksPerView.size());
-#endif
   for(const auto& viewTracks: tracksPerView)
   {
     auto& trackPyramid = tracksPyramidPerView[viewTracks.first];
-#ifdef HAVE_BOOST
+    // reserve 500 tracks in each view
     trackPyramid.reserve(500 * pyramidDepth);
-#endif
   }
+#endif
   for(const auto& viewTracks: tracksPerView)
   {
     const auto viewId = viewTracks.first;
