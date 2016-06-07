@@ -100,7 +100,7 @@ public:
           for (int j = 0; j < 64; j++) {
             const unsigned int index = i * 64 + j;
             unsigned int descriptor = static_cast<unsigned int>(latch.getDescriptorSet1()[index]);
-			regionsCasted->Descriptors()[i][j] = descriptor;
+			      regionsCasted->Descriptors()[i][j] = descriptor;
           }
         }
       }
