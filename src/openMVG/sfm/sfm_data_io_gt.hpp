@@ -124,9 +124,10 @@ static bool read_Strecha_Camera(const std::string & camName, cameras::Pinhole_In
 @param[out] sfm_data, the SfM_Data structure to put views/poses/intrinsics in.
 @return Returns true if data has been read without errors
 **/
-bool readGt(const std::string sGTPath, SfM_Data & sfm_data)
+bool readGt(const std::string sRootPath, SfM_Data & sfm_data)
 {
   // IF GT_Folder exists, perform evaluation of the quality of rotation estimates
+  std::string sGTPath = stlplus::folder_down(sRootPath, "gt_dense_cameras");
   if (!stlplus::is_folder(sGTPath))
   {
     std::cout << std::endl << "There is not valid GT data to read from " << sGTPath << std::endl;
@@ -136,13 +137,13 @@ bool readGt(const std::string sGTPath, SfM_Data & sfm_data)
   // Switch between case to choose the file reader according to the file types in GT path
   bool (*fcnReadCamPtr)(const std::string &, cameras::Pinhole_Intrinsic &, geometry::Pose3&);
   std::string suffix;
-  if (!stlplus::folder_wildcard(sGTPath, "*.bin", false, true).empty())
+  if (!stlplus::folder_wildcard(sGTPath, "*.bin", true, true).empty())
   {
     std::cout << "\nusing openMVG Camera";
     fcnReadCamPtr = &read_openMVG_Camera;
     suffix = "bin";
   }
-  else if (!stlplus::folder_wildcard(sGTPath, "*.camera", false, true).empty())
+  else if (!stlplus::folder_wildcard(sGTPath, "*.camera", true, true).empty())
   {
     std::cout << "\nusing Strechas Camera";
     fcnReadCamPtr = &read_Strecha_Camera;
@@ -154,11 +155,11 @@ bool readGt(const std::string sGTPath, SfM_Data & sfm_data)
   }
 
   std::cout << std::endl << "Read rotation and translation estimates" << std::endl;
-  const std::string sImgPath = stlplus::folder_down(stlplus::folder_up(sGTPath), "images");
+  const std::string sImgPath = stlplus::folder_down(sRootPath, "images");
   std::map< std::string, Mat3 > map_R_gt;
   //Try to read .suffix camera (parse camera names)
   std::vector<std::string> vec_camfilenames =
-    stlplus::folder_wildcard(sGTPath, "*."+suffix, false, true);
+    stlplus::folder_wildcard(sGTPath, "*."+suffix, true, true);
   std::sort(vec_camfilenames.begin(), vec_camfilenames.end());
   if (vec_camfilenames.empty())
   {
