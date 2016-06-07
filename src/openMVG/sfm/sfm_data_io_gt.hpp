@@ -5,8 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_DATA_IO_GT_HPP
-#define OPENMVG_SFM_DATA_IO_GT_HPP
+#pragma once
 
 #include "sfm_data_io.hpp"
 
@@ -97,27 +96,25 @@ static bool read_Strecha_Camera(const std::string & camName, cameras::Pinhole_In
       val.push_back(valT);
   }
 
-  if (val.size() == 3*3 +3 +3*3 +3 + 3 || val.size() == 26) //Strecha cam
+  if (!(val.size() == 3*3 +3 +3*3 +3 + 3 || val.size() == 26)) //Strecha cam
   {
-    Mat3 K, R;
-    K << val[0], val[1], val[2],
-      val[3], val[4], val[5],
-      val[6], val[7], val[8];
-    R << val[12], val[13], val[14],
-      val[15], val[16], val[17],
-      val[18], val[19], val[20];
-
-    Vec3 C (val[21], val[22], val[23]);
-    // R need to be transposed
-    cam = cameras::Pinhole_Intrinsic(0,0,K);
-    cam.setWidth(val[24]);
-    cam.setHeight(val[25]);
-    pose = geometry::Pose3(R.transpose(), C);
-  }
-  else
-  {
+    std::cerr << "File " << camName << " is not in Stretcha format ! " << std::endl;
     return false;
   }
+  Mat3 K, R;
+  K << val[0], val[1], val[2],
+    val[3], val[4], val[5],
+    val[6], val[7], val[8];
+  R << val[12], val[13], val[14],
+    val[15], val[16], val[17],
+    val[18], val[19], val[20];
+
+  Vec3 C (val[21], val[22], val[23]);
+  // R need to be transposed
+  cam = cameras::Pinhole_Intrinsic(0,0,K);
+  cam.setWidth(val[24]);
+  cam.setHeight(val[25]);
+  pose = geometry::Pose3(R.transpose(), C);
   return true;
 }
 
@@ -125,14 +122,13 @@ static bool read_Strecha_Camera(const std::string & camName, cameras::Pinhole_In
 @brief Reads a set of Pinhole Cameras and its poses from a ground truth dataset.
 @param[in] sGTPath, the directory where the camera files are located.
 @param[out] sfm_data, the SfM_Data structure to put views/poses/intrinsics in.
+@return Returns true if data has been read without errors
 **/
-bool readGt(
-  std::string sGTPath,
-  SfM_Data & sfm_data
-  )
+bool readGt(const std::string sGTPath, SfM_Data & sfm_data)
 {
   // IF GT_Folder exists, perform evaluation of the quality of rotation estimates
-  if (!stlplus::is_folder(sGTPath)) {
+  if (!stlplus::is_folder(sGTPath))
+  {
     std::cout << std::endl << "There is not valid GT data to read from " << sGTPath << std::endl;
     return false;
   }
@@ -164,43 +160,43 @@ bool readGt(
   std::vector<std::string> vec_camfilenames =
     stlplus::folder_wildcard(sGTPath, "*."+suffix, false, true);
   std::sort(vec_camfilenames.begin(), vec_camfilenames.end());
-  if (!vec_camfilenames.empty())
+  if (vec_camfilenames.empty())
   {
-    IndexT id = 0;
-    for (std::vector<std::string>::const_iterator iter = vec_camfilenames.begin();
-      iter != vec_camfilenames.end(); ++iter, ++id)
+    std::cout << "No camera found in " << sGTPath << std::endl;
+    return false;
+  }
+  IndexT id = 0;
+  for (std::vector<std::string>::const_iterator iter = vec_camfilenames.begin();
+    iter != vec_camfilenames.end(); ++iter, ++id)
+  {
+    geometry::Pose3 pose;
+    std::shared_ptr<cameras::Pinhole_Intrinsic> pinholeIntrinsic = std::make_shared<cameras::Pinhole_Intrinsic>();
+    bool loaded = fcnReadCamPtr(stlplus::create_filespec(sGTPath, *iter), *pinholeIntrinsic.get(), pose);
+    if (!loaded)
     {
-      geometry::Pose3 pose;
-      std::shared_ptr<cameras::Pinhole_Intrinsic> pinholeIntrinsic = std::make_shared<cameras::Pinhole_Intrinsic>();
-      bool loaded = fcnReadCamPtr(stlplus::create_filespec(sGTPath, *iter), *pinholeIntrinsic.get(), pose);
-      if (!loaded)
-      {
-        std::cout << "Failed to load: " << *iter << std::endl;
-        return false;
-      }
-
-      const std::string sImgName = stlplus::basename_part(*iter);
-      const std::string sImgFile = stlplus::create_filespec(sImgPath, sImgName);
-
-      // Generate UID
-      if (!stlplus::file_exists(sImgFile))
-      {
-        throw std::logic_error("Impossible to generate UID from this file, because it does not exists: "+sImgPath);
-      }
-      exif::Exif_IO_EasyExif exifReader;
-      exifReader.open( sImgFile );
-      const size_t uid = computeUID(exifReader, sImgName);
-
-      // Update intrinsics with width and height of image
-      sfm_data.views.emplace((IndexT)uid, std::make_shared<View>(stlplus::basename_part(*iter), (IndexT)uid, id, id, pinholeIntrinsic->w(), pinholeIntrinsic->h()));
-      sfm_data.poses.emplace(id, pose);
-      sfm_data.intrinsics.emplace(id, pinholeIntrinsic);
+      std::cout << "Failed to load: " << *iter << std::endl;
+      return false;
     }
+
+    const std::string sImgName = stlplus::basename_part(*iter);
+    const std::string sImgFile = stlplus::create_filespec(sImgPath, sImgName);
+
+    // Generate UID
+    if (!stlplus::file_exists(sImgFile))
+    {
+      throw std::logic_error("Impossible to generate UID from this file, because it does not exists: "+sImgFile);
+    }
+    exif::Exif_IO_EasyExif exifReader;
+    exifReader.open( sImgFile );
+    const size_t uid = computeUID(exifReader, sImgName);
+
+    // Update intrinsics with width and height of image
+    sfm_data.views.emplace((IndexT)uid, std::make_shared<View>(stlplus::basename_part(*iter), (IndexT)uid, id, id, pinholeIntrinsic->w(), pinholeIntrinsic->h()));
+    sfm_data.poses.emplace(id, pose);
+    sfm_data.intrinsics.emplace(id, pinholeIntrinsic);
   }
   return true;
 }
 
 } // namespace sfm
 } // namespace openMVG
-
-#endif // OPENMVG_SFM_DATA_IO_GT_HPP
