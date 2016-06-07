@@ -21,10 +21,7 @@
 namespace openMVG {
 namespace sfm {
 
-using namespace openMVG::cameras;
-using namespace openMVG::exif;
-
-static bool read_openMVG_Camera(const std::string & camName, Pinhole_Intrinsic & cam, geometry::Pose3 & pose)
+static bool read_openMVG_Camera(const std::string & camName, cameras::Pinhole_Intrinsic & cam, geometry::Pose3 & pose)
 {
   std::vector<double> val;
   if (stlplus::extension_part(camName) == "bin")
@@ -77,13 +74,13 @@ static bool read_openMVG_Camera(const std::string & camName, Pinhole_Intrinsic &
   Mat3 K, R;
   Vec3 t;
   KRt_From_P(P, &K, &R, &t);
-  cam = Pinhole_Intrinsic(0,0,K);
+  cam = cameras::Pinhole_Intrinsic(0,0,K);
   // K.transpose() is applied to give [R t] to the constructor instead of P = K [R t]
   pose = geometry::Pose3(K.transpose() * P);
   return true;
 }
 
-static bool read_Strecha_Camera(const std::string & camName, Pinhole_Intrinsic & cam, geometry::Pose3 & pose)
+static bool read_Strecha_Camera(const std::string & camName, cameras::Pinhole_Intrinsic & cam, geometry::Pose3 & pose)
 {
   std::ifstream ifs;
   ifs.open( camName.c_str(), std::ifstream::in);
@@ -112,7 +109,7 @@ static bool read_Strecha_Camera(const std::string & camName, Pinhole_Intrinsic &
 
     Vec3 C (val[21], val[22], val[23]);
     // R need to be transposed
-    cam = Pinhole_Intrinsic(0,0,K);
+    cam = cameras::Pinhole_Intrinsic(0,0,K);
     cam.setWidth(val[24]);
     cam.setHeight(val[25]);
     pose = geometry::Pose3(R.transpose(), C);
@@ -141,7 +138,7 @@ bool readGt(
   }
 
   // Switch between case to choose the file reader according to the file types in GT path
-  bool (*fcnReadCamPtr)(const std::string &, Pinhole_Intrinsic &, geometry::Pose3&);
+  bool (*fcnReadCamPtr)(const std::string &, cameras::Pinhole_Intrinsic &, geometry::Pose3&);
   std::string suffix;
   if (!stlplus::folder_wildcard(sGTPath, "*.bin", false, true).empty())
   {
@@ -174,7 +171,7 @@ bool readGt(
       iter != vec_camfilenames.end(); ++iter, ++id)
     {
       geometry::Pose3 pose;
-      std::shared_ptr<Pinhole_Intrinsic> pinholeIntrinsic = std::make_shared<Pinhole_Intrinsic>();
+      std::shared_ptr<cameras::Pinhole_Intrinsic> pinholeIntrinsic = std::make_shared<cameras::Pinhole_Intrinsic>();
       bool loaded = fcnReadCamPtr(stlplus::create_filespec(sGTPath, *iter), *pinholeIntrinsic.get(), pose);
       if (!loaded)
       {
@@ -190,7 +187,7 @@ bool readGt(
       {
         throw std::logic_error("Impossible to generate UID from this file, because it does not exists: "+sImgPath);
       }
-      Exif_IO_EasyExif exifReader;
+      exif::Exif_IO_EasyExif exifReader;
       exifReader.open( sImgFile );
       const size_t uid = computeUID(exifReader, sImgName);
 
