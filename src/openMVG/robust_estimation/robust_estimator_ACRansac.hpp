@@ -240,8 +240,6 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
         }
         if (nInlier > 2.5 * sizeSample) // does the model is meaningful
           bACRansacMode = true;
-        if (!bACRansacMode && nIter > nIterReserve)
-          nIter = 0;
       }
       if (bACRansacMode)
       {
@@ -284,8 +282,12 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
             std::cout << ")" <<std::endl;
           }
         }
-      }
-    }
+      } //if(bACRansacMode)
+    } //for(size_t k...
+    
+    // Early exit test -> no meaningful model found after nIterReserve*2 iterations
+    if (!bACRansacMode && iter > nIterReserve*2)
+      break;
 
     // ACRANSAC optimization: draw samples among best set of inliers so far
     if (bACRansacMode && ((better && minNFA<0) || (iter+1==nIter && nIterReserve)))

@@ -189,7 +189,10 @@ int main(int argc, char **argv)
   }
 
   // get the color for the 3D points
-  sfmEngine.Colorize();
+  if(!sfmEngine.Colorize())
+  {
+    std::cerr << "Colorize failed!" << std::endl;
+  }
 
   std::cout << std::endl << " Total Ac-Global-Sfm took (s): " << timer.elapsed() << std::endl;
 

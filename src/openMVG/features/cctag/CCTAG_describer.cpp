@@ -62,6 +62,11 @@ bool CCTAG_Image_describer::Set_configuration_preset(EDESCRIBER_PRESET preset)
   return _params->setPreset(preset);
 }
 
+void CCTAG_Image_describer::Set_use_cuda(bool use_cuda)
+{
+  _params->_useCuda = use_cuda;
+}
+
 bool CCTAG_Image_describer::Describe(const image::Image<unsigned char>& image,
     std::unique_ptr<Regions> &regions,
     const image::Image<unsigned char> * mask)

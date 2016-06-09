@@ -41,7 +41,11 @@ int main(int argc, char **argv)
     cmd.process(argc, argv);
   } catch(const std::string& s) {
     std::cerr << "Usage: " << argv[0] << '\n'
-      << "[-i|--gt] ground truth path: it could be a json/abc file containing\n"
+      << "[-i|--gt] ground truth path: it could be a json/"
+#if HAVE_ALEMBIC
+      << "abc"
+#endif
+      << " file containing\n"
       << " a reconstructed scene or localized camera, or the path to a directory\n"
       << " containing the 2 other directories, \"images\" containing the images of\n"
       << " the scene, and \"gt_dense_cameras\" containing the corresponding .camera files\n"

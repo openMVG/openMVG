@@ -392,6 +392,10 @@ bool VoctreeLocalizer::localizeFirstBestResult(const image::Image<unsigned char>
 #endif
   auto detect_start = std::chrono::steady_clock::now();
   _image_describer->Set_configuration_preset(param._featurePreset);
+#if HAVE_CCTAG
+  if (auto* p = dynamic_cast<features::SIFT_CCTAG_Image_describer*>(_image_describer))
+    p->Set_cctag_use_cuda(param._ccTagUseCuda);
+#endif
   _image_describer->Describe(imageGrey, tmpQueryRegions, nullptr);
   auto detect_end = std::chrono::steady_clock::now();
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
@@ -633,6 +637,10 @@ bool VoctreeLocalizer::localizeAllResults(const image::Image<unsigned char> & im
 #endif
   auto detect_start = std::chrono::steady_clock::now();
   _image_describer->Set_configuration_preset(param._featurePreset);
+#if HAVE_CCTAG
+  if (auto* p = dynamic_cast<features::SIFT_CCTAG_Image_describer*>(_image_describer))
+    p->Set_cctag_use_cuda(param._ccTagUseCuda);
+#endif
   _image_describer->Describe(imageGrey, tmpQueryRegions, nullptr);
   auto detect_end = std::chrono::steady_clock::now();
   auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
