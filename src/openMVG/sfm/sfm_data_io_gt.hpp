@@ -120,7 +120,7 @@ static bool read_Strecha_Camera(const std::string & camName, cameras::Pinhole_In
 
 /**
 @brief Reads a set of Pinhole Cameras and its poses from a ground truth dataset.
-@param[in] sGTPath, the directory where the camera files are located.
+@param[in] sRootPath, the directory containing an image folder "images" and a GT folder "gt_dense_cameras".
 @param[out] sfm_data, the SfM_Data structure to put views/poses/intrinsics in.
 @return Returns true if data has been read without errors
 **/
