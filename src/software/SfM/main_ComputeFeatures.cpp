@@ -144,14 +144,36 @@ int main(int argc, char **argv)
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
     std::cerr << std::endl
       << "The input file \""<< sSfM_Data_Filename << "\" cannot be read" << std::endl;
-    return false;
+    return EXIT_FAILURE;
   }
+  C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
+    std::cout, "\n- EXTRACT FEATURES -\n" );
+
 
   // b. Init the image_describer
   // - retrieve the used one in case of pre-computed features
   // - else create the desired one
 
   using namespace openMVG::features;
+  system::Timer timer;
+    
+#ifdef OPENMVG_USE_OPENMP
+  const unsigned int nb_max_thread = omp_get_max_threads();
+#endif
+
+#ifdef OPENMVG_USE_OPENMP
+  omp_set_num_threads(iNumThreads);
+  if (iNumThreads == 0) omp_set_num_threads(2);
+  #pragma omp parallel for schedule(static)
+#endif
+  for(int i = 0; i < sfm_data.views.size(); ++i)
+  {
+#ifdef OPENMVG_USE_OPENMP
+    if(iNumThreads == 0) omp_set_num_threads(nb_max_thread);
+#endif
+
+	std::cout << "Running with max threads: " << nb_max_thread << " with runtime thread of " << omp_get_num_threads() << std::endl;
+	std::cout << "Running from thread " << omp_get_thread_num() << " with i " << i << std::endl;
   std::unique_ptr<Image_describer> image_describer;
 
   const std::string sImage_describer = stlplus::create_filespec(sOutDir, "image_describer", "json");
@@ -160,7 +182,7 @@ int main(int argc, char **argv)
     // Dynamically load the image_describer from the file (will restore old used settings)
     std::ifstream stream(sImage_describer.c_str());
     if (!stream.is_open())
-      return false;
+      continue;
 
     try
     {
@@ -171,7 +193,7 @@ int main(int argc, char **argv)
     {
       std::cerr << e.what() << std::endl
         << "Cannot dynamically allocate the Image_describer interface." << std::endl;
-      return EXIT_FAILURE;
+	  continue;
     }
   }
   else
@@ -207,7 +229,7 @@ int main(int argc, char **argv)
     {
       std::cerr << "Cannot create the designed Image_describer:"
         << sImage_Describer_Method << "." << std::endl;
-      return EXIT_FAILURE;
+      continue;
     }
     else
     {
@@ -215,7 +237,7 @@ int main(int argc, char **argv)
       if (!image_describer->Set_configuration_preset(stringToEnum(sFeaturePreset)))
       {
         std::cerr << "Preset configuration failed." << std::endl;
-        return EXIT_FAILURE;
+        continue;
       }
     }
 
@@ -224,7 +246,7 @@ int main(int argc, char **argv)
     {
       std::ofstream stream(sImage_describer.c_str());
       if (!stream.is_open())
-        return false;
+        continue;
 
       cereal::JSONOutputArchive archive(stream);
       archive(cereal::make_nvp("image_describer", image_describer));
@@ -239,29 +261,12 @@ int main(int argc, char **argv)
   // - if regions file exists continue,
   // - if no file, compute features
   {
-    system::Timer timer;
     Image<unsigned char> imageGray, globalMask, imageMask;
 
     const std::string sGlobalMask_filename = stlplus::create_filespec(sOutDir, "mask.png");
     if(stlplus::file_exists(sGlobalMask_filename))
       ReadImage(sGlobalMask_filename.c_str(), &globalMask);
 
-    C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
-      std::cout, "\n- EXTRACT FEATURES -\n" );
-
-    #ifdef OPENMVG_USE_OPENMP
-    const unsigned int nb_max_thread = omp_get_max_threads();
-    #endif
-
-#ifdef OPENMVG_USE_OPENMP
-    omp_set_num_threads(iNumThreads);
-    #pragma omp parallel for schedule(static) if(iNumThreads > 0) private(imageMask)
-#endif
-    for(int i = 0; i < sfm_data.views.size(); ++i)
-    {
-#ifdef OPENMVG_USE_OPENMP
-      if(iNumThreads == 0) omp_set_num_threads(nb_max_thread);
-#endif
       Views::const_iterator iterViews = sfm_data.views.begin();
       std::advance(iterViews, i);
       const View * view = iterViews->second.get();

@@ -68,11 +68,11 @@ public:
   {
 	std::vector<LatchClassifierKeypoint> kpts;
 	unsigned int* descriptors;
-	
-	LatchClassifierOpenMVG latchLocal;
-	kpts = latchLocal.identifyFeaturePointsOpenMVG(image.GetMat());
-	descriptors = std::move(latchLocal.getDescriptorSet1());
-	
+	{
+	  LatchClassifierOpenMVG latchLocal;
+	  kpts = latchLocal.identifyFeaturePointsOpenMVG(image.GetMat());
+	  descriptors = std::move(latchLocal.getDescriptorSet1());
+	}
 	Allocate(regions);
 	switch (params_.eLatchDescriptor_)
 	{
