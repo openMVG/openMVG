@@ -127,7 +127,7 @@ static bool read_Strecha_Camera(const std::string & camName, cameras::Pinhole_In
 bool readGt(const std::string sRootPath, SfM_Data & sfm_data)
 {
   // IF GT_Folder exists, perform evaluation of the quality of rotation estimates
-  std::string sGTPath = stlplus::folder_down(sRootPath, "gt_dense_cameras");
+  const std::string sGTPath = stlplus::folder_down(sRootPath, "gt_dense_cameras");
   if (!stlplus::is_folder(sGTPath))
   {
     std::cout << std::endl << "There is not valid GT data to read from " << sGTPath << std::endl;
