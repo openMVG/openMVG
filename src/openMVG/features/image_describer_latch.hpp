@@ -68,11 +68,11 @@ public:
   {
 	std::vector<LatchClassifierKeypoint> kpts;
 	unsigned int* descriptors;
-	{
-		LatchClassifierOpenMVG latchLocal;
-		kpts = latchLocal.identifyFeaturePointsOpenMVG(image.GetMat());
-		descriptors = std::move(latchLocal.getDescriptorSet1());
-	}
+	
+	LatchClassifierOpenMVG latchLocal;
+	kpts = latchLocal.identifyFeaturePointsOpenMVG(image.GetMat());
+	descriptors = std::move(latchLocal.getDescriptorSet1());
+	
 	Allocate(regions);
 	switch (params_.eLatchDescriptor_)
 	{
@@ -83,7 +83,7 @@ public:
 		regionsCasted->Features().resize(kpts.size());
 		regionsCasted->Descriptors().resize(kpts.size());
 
-	  #ifdef OPENMVG_USE_OPENMP
+      #ifdef OPENMVG_USE_OPENMP
 		#pragma omp parallel for
 	  #endif
 		for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
@@ -100,9 +100,6 @@ public:
 		  regionsCasted->Features()[i] =
 			SIOPointFeature(ptLatch.x, ptLatch.y, ptLatch.size, ptLatch.angle);
 		  // Store descriptors
-		  #ifdef OPENMVG_USE_OPENMP
-			#pragma omp parallel for
-		  #endif
 		  for (int j = 0; j < 64; j++) {
 			const unsigned int index = i * 64 + j;
 			unsigned int descriptor = static_cast<unsigned int>(descriptors[index]);
@@ -147,7 +144,6 @@ public:
 		}
 	  }
 	  break;
-	  
 	}
     return true;
   };

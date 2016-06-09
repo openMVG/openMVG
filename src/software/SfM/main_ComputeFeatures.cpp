@@ -255,7 +255,7 @@ int main(int argc, char **argv)
 
 #ifdef OPENMVG_USE_OPENMP
     omp_set_num_threads(iNumThreads);
-    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) private(imageMask)
+    #pragma omp parallel for schedule(static) if(iNumThreads > 0) private(imageMask)
 #endif
     for(int i = 0; i < sfm_data.views.size(); ++i)
     {
@@ -297,13 +297,13 @@ int main(int argc, char **argv)
         {
           // Compute features and descriptors and export them to files
           std::unique_ptr<Regions> regions;
-          image_describer->Describe(imageGray, regions, mask);
+		  image_describer->Describe(imageGray, regions, mask);
           image_describer->Save(regions.get(), sFeat, sDesc);
         }
 #ifdef OPENMVG_USE_OPENMP
-        #pragma omp critical
+		#pragma omp critical
 #endif
-        ++my_progress_bar;
+		++my_progress_bar;
       }
     }
     std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
