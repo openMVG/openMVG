@@ -106,19 +106,15 @@ bool Load(SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_par
     bStatus = true;
   }
 #endif // HAVE_ALEMBIC
+  else if (stlplus::folder_exists(filename))
+  {
+    bStatus = readGt(filename, sfm_data);
+  }
+  // It is not a folder or known format, return false
   else
   {
-    // Try if it's a folder
-    if (stlplus::folder_exists(filename))
-    {
-      bStatus = readGt(filename, sfm_data);
-    }
-    // It is not a folder or known format, return false
-    else
-    {
-      std::cerr << "Unknown sfm_data input format: " << ext << std::endl;
-      return false;
-    }
+    std::cerr << "Unknown sfm_data input format: " << ext << std::endl;
+    return false;
   }
 
   // Assert that loaded intrinsics | extrinsics are linked to valid view
