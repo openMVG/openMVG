@@ -652,14 +652,14 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
   if(!bResection)
   {
     POPART_COUT("[poseEstimation]\tResection FAILED");
-  if(!param._visualDebug.empty() && !imagePath.empty())
-  {
-    namespace bfs = boost::filesystem;
-    features::saveFeatures2SVG(imagePath, 
-                     queryImageSize, 
-                       resectionData.pt2D,
-                       param._visualDebug + "/" + bfs::path(imagePath).stem().string() + ".associations.svg");
-  }
+    if(!param._visualDebug.empty() && !imagePath.empty())
+    {
+      namespace bfs = boost::filesystem;
+      features::saveFeatures2SVG(imagePath, 
+                       queryImageSize, 
+                         resectionData.pt2D,
+                         param._visualDebug + "/" + bfs::path(imagePath).stem().string() + ".associations.svg");
+    }
     localizationResult = LocalizationResult();
     return localizationResult.isValid();
   }
@@ -821,26 +821,32 @@ void VoctreeLocalizer::getAllAssociations(const features::SIFT_Regions &queryReg
     }
     assert(vec_featureMatches.size()>0);
     
-    //    // if debug is enable save the matches between the query image and the current matching image
-    //    if(!param._visualDebug.empty() && !imagePath.empty())
-    //    {
-    //      namespace bfs = boost::filesystem;
-    //      const auto &matchedViewIndex = matchedImage.id;
-    //      const sfm::View *mview = _sfm_data.GetViews().at(matchedViewIndex).get();
-    //      const std::string queryimage = bfs::path(imagePath).stem().string();
-    //      const std::string matchedImage = bfs::path(mview->s_Img_path).stem().string();
-    //      const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
-    //      
-    //
-    //      features::saveMatches2SVG(imagePath,
-    //                      queryImageSize,
-    //                      queryRegions.GetRegionsPositions(),
-    //                      matchedPath,
-    //                      std::make_pair(mview->ui_width, mview->ui_height),
-    //                      _regions_per_view[matchedViewIndex]._regions.GetRegionsPositions(),
-    //                      vec_featureMatches,
-    //                      param._visualDebug + "/" + queryimage + "_" + matchedImage + ".svg"); 
-    //    }
+    // if debug is enable save the matches between the query image and the current matching image
+    if(!param._visualDebug.empty() && !imagePath.empty())
+    {
+      namespace bfs = boost::filesystem;
+      const auto &matchedViewIndex = matchedImage.id;
+      const sfm::View *mview = _sfm_data.GetViews().at(matchedViewIndex).get();
+      const std::string queryimage = bfs::path(imagePath).stem().string();
+      const std::string matchedImage = bfs::path(mview->s_Img_path).stem().string();
+      const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
+
+      const std::string baseDir = param._visualDebug + "/" + queryimage;
+      if((!bfs::exists(baseDir)))
+      {
+        POPART_COUT("created " << baseDir);
+        bfs::create_directories(baseDir);
+      }
+
+      features::saveMatches2SVG(imagePath,
+                                imageSize,
+                                queryRegions.GetRegionsPositions(),
+                                matchedPath,
+                                std::make_pair(mview->ui_width, mview->ui_height),
+                                _regions_per_view.at(matchedViewIndex)._regions.GetRegionsPositions(),
+                                vec_featureMatches,
+                                baseDir + "/" + queryimage + "_" + matchedImage + ".svg"); 
+    }
     
     // C. recover the 2D-3D associations from the matches 
     // Each matched feature in the current similar image is associated to a 3D point
