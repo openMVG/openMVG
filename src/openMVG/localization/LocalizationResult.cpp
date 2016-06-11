@@ -40,6 +40,23 @@ const Mat & LocalizationResult::getPt2D() const
   return _matchData.pt2D;
 }
 
+const Mat LocalizationResult::getUndistortedPt2D() const
+{
+  const auto &intrinsics =  getIntrinsics();
+  const auto &distorted = getPt2D();
+  if(!intrinsics.have_disto())
+  {
+    return getPt2D();
+  }
+  const std::size_t numPts = distorted.cols();
+  Mat pt2Dundistorted = Mat2X(2, numPts);
+  for(std::size_t iPoint = 0; iPoint < numPts; ++iPoint)
+  {
+    pt2Dundistorted.col(iPoint) = intrinsics.get_ud_pixel(distorted.col(iPoint));
+  }
+  return pt2Dundistorted;
+}
+
 const Mat & LocalizationResult::getPt3D() const 
 {
   return _matchData.pt3D;
