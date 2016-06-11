@@ -399,7 +399,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const features::SIFT_Regions &que
                                                LocalizationResult &localizationResult,
                                                const std::string& imagePath /*= std::string()*/)
 {
-  // B. Find the (visually) similar images in the database 
+  // A. Find the (visually) similar images in the database 
   POPART_COUT("[database]\tRequest closest images from voctree");
   // pass the descriptors through the vocabulary tree to get the visual words
   // associated to each feature
@@ -431,7 +431,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const features::SIFT_Regions &que
   std::vector<pair<IndexT, IndexT> > associationIDs;
   geometry::Pose3 pose;
  
-  // C. for each found similar image, try to find the correspondences between the 
+  // B. for each found similar image, try to find the correspondences between the 
   // query image and the similar image
   for(const voctree::DocMatch& matchedImage : matchedImages)
   {
@@ -509,7 +509,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const features::SIFT_Regions &que
                       param._visualDebug + "/" + queryimage + "_" + matchedImage + ".svg"); 
     }
     
-    // D. recover the 2D-3D associations from the matches 
+    // C. recover the 2D-3D associations from the matches 
     // Each matched feature in the current similar image is associated to a 3D point,
     // hence we can recover the 2D-3D associations to estimate the pose
     // Prepare data for resection
@@ -574,7 +574,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const features::SIFT_Regions &que
       queryIntrinsics.setHeight(queryImageSize.second);
     }
 
-    // E. refine the estimated pose
+    // D. refine the estimated pose
     POPART_COUT("[poseEstimation]\tRefining estimated pose");
     bool refineStatus = sfm::SfM_Localizer::RefinePose(&queryIntrinsics, 
                                                        pose, 
@@ -708,7 +708,7 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
   localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, true);
 
   {
-    // just temporary code to evaluate the estimated pose @todo remove it
+    // just debugging this block can be safely removed or commented out
     POPART_COUT("R refined\n" << pose.rotation());
     POPART_COUT("t refined\n" << pose.translation());
     POPART_COUT("K refined\n" << queryIntrinsics.K());
@@ -734,7 +734,7 @@ void VoctreeLocalizer::getAllAssociations(const features::SIFT_Regions &queryReg
                                           Mat &pt3D,
                                           const std::string& imagePath /*= std::string()*/) const
 {
-  // B. Find the (visually) similar images in the database 
+  // A. Find the (visually) similar images in the database 
   // pass the descriptors through the vocabulary tree to get the visual words
   // associated to each feature
   POPART_COUT("[database]\tRequest closest images from voctree");
@@ -764,7 +764,7 @@ void VoctreeLocalizer::getAllAssociations(const features::SIFT_Regions &queryReg
   
   std::map< std::pair<IndexT, IndexT>, std::size_t > repeated;
   
-  // C. for each found similar image, try to find the correspondences between the 
+  // B. for each found similar image, try to find the correspondences between the 
   // query image adn the similar image
   // stop when param._maxResults successful matches have been found
   std::size_t goodMatches = 0;
@@ -842,7 +842,7 @@ void VoctreeLocalizer::getAllAssociations(const features::SIFT_Regions &queryReg
     //                      param._visualDebug + "/" + queryimage + "_" + matchedImage + ".svg"); 
     //    }
     
-    // D. recover the 2D-3D associations from the matches 
+    // C. recover the 2D-3D associations from the matches 
     // Each matched feature in the current similar image is associated to a 3D point
     for(const matching::IndMatch& featureMatch : vec_featureMatches)
     {
