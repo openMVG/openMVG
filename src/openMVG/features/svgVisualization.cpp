@@ -21,14 +21,22 @@ void saveMatches2SVG(const std::string &imagePathLeft,
   svgStream.drawImage(imagePathLeft, imageSizeLeft.first, imageSizeLeft.second);
   svgStream.drawImage(imagePathRight, imageSizeRight.first, imageSizeRight.second, imageSizeLeft.first);
   
+  // heuristic for the radius of the feature according to the size of the image
+  // the larger the distance the larger the minimum radius should be in order to be visible
+  // We consider a minimum of 2 pixel and we increment it linearly according to 
+  // the image size
+  const float radiusLeft = std::max(std::max(imageSizeLeft.first, imageSizeLeft.second) / float(600), 2.0f);
+  const float radiusRight = std::max(std::max(imageSizeRight.first, imageSizeRight.second) / float(600), 2.0f);
+  const float strokeWidth = std::max(std::max(imageSizeLeft.first, imageSizeRight.first) / float(2200), 2.0f);
+  
   for(const matching::IndMatch &m : matches) 
   {
     //Get back linked feature, draw a circle and link them by a line
     const features::PointFeature & L = keypointsLeft[m._i];
     const features::PointFeature & R = keypointsRight[m._j];
-    svgStream.drawLine(L.x(), L.y(), R.x()+imageSizeLeft.first, R.y(), svg::svgStyle().stroke("green", 2.0));
-    svgStream.drawCircle(L.x(), L.y(), 3.0f, svg::svgStyle().stroke("yellow", 2.0));
-    svgStream.drawCircle(R.x()+imageSizeLeft.first, R.y(), 3.0f, svg::svgStyle().stroke("yellow", 2.0));
+    svgStream.drawLine(L.x(), L.y(), R.x()+imageSizeLeft.first, R.y(), svg::svgStyle().stroke("green", strokeWidth));
+    svgStream.drawCircle(L.x(), L.y(), radiusLeft, svg::svgStyle().stroke("yellow", strokeWidth));
+    svgStream.drawCircle(R.x()+imageSizeLeft.first, R.y(), radiusRight, svg::svgStyle().stroke("yellow", strokeWidth));
   }
  
   std::ofstream svgFile( outputSVGPath.c_str() );
@@ -44,10 +52,16 @@ void saveFeatures2SVG(const std::string &inputImagePath,
 {
   svg::svgDrawer svgStream( imageSize.first, imageSize.second);
   svgStream.drawImage(inputImagePath, imageSize.first, imageSize.second);
+  // heuristic for the radius of the feature according to the size of the image
+  // the larger the distance the larger the minimum radius should be in order to be visible
+  // We consider a minimum of 2 pixel and we increment it linearly according to 
+  // the image size
+  const float radius = std::max(std::max(imageSize.first, imageSize.second) / float(600), 2.0f);
+  const float strokeWidth = std::max(std::max(imageSize.first, imageSize.second) / float(2200), 2.0f);
   
   for(const features::PointFeature &kpt : keypoints) 
   {
-    svgStream.drawCircle(kpt.x(), kpt.y(), 3.0f, svg::svgStyle().stroke("yellow", 2.0));
+    svgStream.drawCircle(kpt.x(), kpt.y(), radius, svg::svgStyle().stroke("yellow", strokeWidth));
   }
  
   std::ofstream svgFile( outputSVGPath );
@@ -73,12 +87,18 @@ void saveFeatures2SVG(const std::string &inputImagePath,
   assert(points.rows()>=2);
   svg::svgDrawer svgStream( imageSize.first, imageSize.second);
   svgStream.drawImage(inputImagePath, imageSize.first, imageSize.second);
+  // heuristic for the radius of the feature according to the size of the image
+  // the larger the distance the larger the minimum radius should be in order to be visible
+  // We consider a minimum of 2 pixel and we increment it linearly according to 
+  // the image size
+  const float radius = std::max(std::max(imageSize.first, imageSize.second) / float(600), 2.0f);
+  const float strokeWidth = std::max(std::max(imageSize.first, imageSize.second) / float(2200), 2.0f);
   
   if(!inliers)
   {
     for(std::size_t i=0; i < points.cols(); ++i) 
     {
-      svgStream.drawCircle(points(0,i), points(1,i), 3.0f, svg::svgStyle().stroke("yellow", 2.0));
+      svgStream.drawCircle(points(0,i), points(1,i), radius, svg::svgStyle().stroke("yellow", strokeWidth));
     }
   }
   else
@@ -86,9 +106,9 @@ void saveFeatures2SVG(const std::string &inputImagePath,
     for(std::size_t i=0; i < points.cols(); ++i) 
     {
       if(std::find(inliers->begin(), inliers->end(), i) != inliers->end())
-        svgStream.drawCircle(points(0,i), points(1,i), 3.0f, svg::svgStyle().stroke("green", 3.0));
+        svgStream.drawCircle(points(0,i), points(1,i), radius, svg::svgStyle().stroke("green", strokeWidth));
       else
-        svgStream.drawCircle(points(0,i), points(1,i), 3.0f, svg::svgStyle().stroke("yellow", 2.0));
+        svgStream.drawCircle(points(0,i), points(1,i), radius, svg::svgStyle().stroke("yellow", strokeWidth));
     }   
   }
  
@@ -149,9 +169,12 @@ void saveEpipolarGeometry2SVG(const std::string &imagePath,
   svg::svgDrawer svgStream(imageSize.first, imageSize.second);
   svgStream.drawImage(imagePath, imageSize.first, imageSize.second);
   std::size_t count = 0;
-  // heuristic for the radious of the point to draw
-  const float radius = std::max(imageSize.first, imageSize.second) / float(600);
-  const float strokeWidth = std::max(imageSize.first, imageSize.second) / float(2200);
+  // heuristic for the radius of the feature according to the size of the image
+  // the larger the distance the larger the minimum radius should be in order to be visible
+  // We consider a minimum of 2 pixel and we increment it linearly according to 
+  // the image size
+  const float radius = std::max(std::max(imageSize.first, imageSize.second) / float(600), 2.0f);
+  const float strokeWidth = std::max(std::max(imageSize.first, imageSize.second) / float(2200), 2.0f);
   for(const matching::IndMatch &m : matches)
   {
     //Get back linked feature, draw a circle and link them by a line
@@ -256,12 +279,17 @@ void saveMatchesAsMotion(const std::string &imagePath,
                          const std::vector<features::SIOPointFeature> &otherKeypoints,
                          const matching::IndMatches &matches,
                          const std::string &outputSVGPath,
-                         bool left)
+                         bool left,
+                         bool richKeypoint)
 {
   svg::svgDrawer svgStream(imageSize.first, imageSize.second);
   svgStream.drawImage(imagePath, imageSize.first, imageSize.second);
-  const float radius = std::max(imageSize.first, imageSize.second) / float(600);
-  const float strokeWidth = std::max(imageSize.first, imageSize.second) / float(2200);
+  // heuristic for the radius of the feature according to the size of the image
+  // the larger the distance the larger the minimum radius should be in order to be visible
+  // We consider a minimum of 2 pixel and we increment it linearly according to 
+  // the image size
+  const float radius = std::max(std::max(imageSize.first, imageSize.second) / float(600), 2.0f);
+  const float strokeWidth = std::max(std::max(imageSize.first, imageSize.second) / float(2200), 2.0f);
   for(size_t i = 0; i < matches.size(); ++i)
   {
     //Get back linked feature, draw a circle and link them by a line
@@ -270,14 +298,14 @@ void saveMatchesAsMotion(const std::string &imagePath,
     if(left)
     {
       svgStream.drawLine(L.x(), L.y(), R.x(), R.y(), svg::svgStyle().stroke("green", strokeWidth));
-      svgStream.drawCircle(L.x(), L.y(), L.scale(), svg::svgStyle().stroke("yellow", 2.0));
-      svgStream.drawCircle(R.x(), R.y(), R.scale(), svg::svgStyle().stroke("yellow", strokeWidth));
+      svgStream.drawCircle(L.x(), L.y(), (richKeypoint) ? L.scale()*radius : radius, svg::svgStyle().stroke("yellow", 2.0));
+      svgStream.drawCircle(R.x(), R.y(), (richKeypoint) ? R.scale()*radius : radius, svg::svgStyle().stroke("red", strokeWidth));
     }
     else
     {
       svgStream.drawLine(L.x(), L.y(), R.x(), R.y(), svg::svgStyle().stroke("green", strokeWidth));
-      svgStream.drawCircle(R.x(), R.y(), R.scale(), svg::svgStyle().stroke("yellow", 2.0));
-      svgStream.drawCircle(L.x(), L.y(), L.scale(), svg::svgStyle().stroke("yellow", strokeWidth));
+      svgStream.drawCircle(R.x(), R.y(), (richKeypoint) ? R.scale()*radius : radius, svg::svgStyle().stroke("yellow", 2.0));
+      svgStream.drawCircle(L.x(), L.y(), (richKeypoint) ? L.scale()*radius : radius, svg::svgStyle().stroke("red", strokeWidth));
 
     }
   }

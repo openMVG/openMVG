@@ -53,6 +53,8 @@ void saveMatches2SVG(const std::string &imagePathLeft,
  * @param[in] imageSize The size of the image <width,height>.
  * @param[in] keypoints The keypoints of the right image.
  * @param[in] outputSVGPath The name of the svg file to generate.
+ * @param[in] richKeypoint Draw rich keypoints with a circle proportional to the 
+ * octave in which the point has been detected. 
  */
 void saveFeatures2SVG(const std::string &inputImagePath,
                       const std::pair<size_t,size_t> & imageSize,
@@ -106,15 +108,18 @@ void saveEpipolarGeometry2SVG(const std::string &imagePath,
 /**
  * @brief It saves a svg file containing an image (as linked image) and its
  * feature matches: the matches are depicted as trails, ie both feature and its 
- * corresponding match are drawn on the same image and connected by a line.
+ * corresponding match are drawn on the same image and connected by a line. The 
+ * keypoint of the current image is drawn in yellow, the other in red.
  * 
  * @param[in] imagePath The full path to the image file to display.
  * @param[in] imageSize The size of the image <width, height>.
  * @param[in] keypoints The list of keypoints associated to the image.
  * @param[in] otherKeypoints The list of keypoints associated to the other image, they are used to draw the epipolar lines.
  * @param[in] matches The correspondences between the keypoints of the current image and the other image.
- * @param[in] outputSVGPath The filename for the svg file to generate
- * @param[in] left If true it will consider the current image as the left image
+ * @param[in] outputSVGPath The filename for the svg file to generate.
+ * @param[in] left If true it will consider the current image as the left image.
+ * @param[in] richKeypoint Draw rich keypoints with a circle proportional to the 
+ * octave in which the point has been detected.
  */
 void saveMatchesAsMotion(const std::string &imagePath,
                          const std::pair<size_t, size_t> & imageSize,
@@ -122,7 +127,8 @@ void saveMatchesAsMotion(const std::string &imagePath,
                          const std::vector<features::SIOPointFeature> &otherKeypoints,
                          const matching::IndMatches &matches,
                          const std::string &outputSVGPath,
-                         bool left);
+                         bool left,
+                         bool richKeypoint = true);
 
 /**
  * @brief Given a 2d line and an image size it returns the intersection points 
