@@ -7,6 +7,19 @@
 namespace openMVG {
 namespace features {
 
+float getRadiusEstimate(const std::pair<size_t,size_t> & imgSize)
+{
+  // heuristic for the radius of the feature according to the size of the image
+  // the larger the distance the larger the minimum radius should be in order to be visible
+  // We consider a minimum of 2 pixel and we increment it linearly according to 
+  // the image size
+  return std::max(std::max(imgSize.first, imgSize.second) / float(600), 2.0f);
+}
+
+float getStrokeEstimate(const std::pair<size_t,size_t> & imgSize)
+{
+  return std::max(std::max(imgSize.first, imgSize.second) / float(2200), 2.0f);
+}
 
 void saveMatches2SVG(const std::string &imagePathLeft,
                      const std::pair<size_t,size_t> & imageSizeLeft,
@@ -25,18 +38,20 @@ void saveMatches2SVG(const std::string &imagePathLeft,
   // the larger the distance the larger the minimum radius should be in order to be visible
   // We consider a minimum of 2 pixel and we increment it linearly according to 
   // the image size
-  const float radiusLeft = std::max(std::max(imageSizeLeft.first, imageSizeLeft.second) / float(600), 2.0f);
-  const float radiusRight = std::max(std::max(imageSizeRight.first, imageSizeRight.second) / float(600), 2.0f);
-  const float strokeWidth = std::max(std::max(imageSizeLeft.first, imageSizeRight.first) / float(2200), 2.0f);
+  const float radiusLeft = getRadiusEstimate(imageSizeLeft);
+  const float radiusRight = getRadiusEstimate(imageSizeRight);
+  const float strokeLeft = getStrokeEstimate(imageSizeLeft);
+  const float strokeRight = getStrokeEstimate(imageSizeRight);
+ 
   
   for(const matching::IndMatch &m : matches) 
   {
     //Get back linked feature, draw a circle and link them by a line
     const features::PointFeature & L = keypointsLeft[m._i];
     const features::PointFeature & R = keypointsRight[m._j];
-    svgStream.drawLine(L.x(), L.y(), R.x()+imageSizeLeft.first, R.y(), svg::svgStyle().stroke("green", strokeWidth));
-    svgStream.drawCircle(L.x(), L.y(), radiusLeft, svg::svgStyle().stroke("yellow", strokeWidth));
-    svgStream.drawCircle(R.x()+imageSizeLeft.first, R.y(), radiusRight, svg::svgStyle().stroke("yellow", strokeWidth));
+    svgStream.drawLine(L.x(), L.y(), R.x()+imageSizeLeft.first, R.y(), svg::svgStyle().stroke("green", std::min(strokeRight,strokeLeft)));
+    svgStream.drawCircle(L.x(), L.y(), radiusLeft, svg::svgStyle().stroke("yellow", strokeLeft));
+    svgStream.drawCircle(R.x()+imageSizeLeft.first, R.y(), radiusRight, svg::svgStyle().stroke("yellow", strokeRight));
   }
  
   std::ofstream svgFile( outputSVGPath.c_str() );
@@ -56,8 +71,8 @@ void saveFeatures2SVG(const std::string &inputImagePath,
   // the larger the distance the larger the minimum radius should be in order to be visible
   // We consider a minimum of 2 pixel and we increment it linearly according to 
   // the image size
-  const float radius = std::max(std::max(imageSize.first, imageSize.second) / float(600), 2.0f);
-  const float strokeWidth = std::max(std::max(imageSize.first, imageSize.second) / float(2200), 2.0f);
+  const float radius = getRadiusEstimate(imageSize);
+  const float strokeWidth = getStrokeEstimate(imageSize);
   
   for(const features::PointFeature &kpt : keypoints) 
   {
@@ -91,8 +106,8 @@ void saveFeatures2SVG(const std::string &inputImagePath,
   // the larger the distance the larger the minimum radius should be in order to be visible
   // We consider a minimum of 2 pixel and we increment it linearly according to 
   // the image size
-  const float radius = std::max(std::max(imageSize.first, imageSize.second) / float(600), 2.0f);
-  const float strokeWidth = std::max(std::max(imageSize.first, imageSize.second) / float(2200), 2.0f);
+  const float radius = getRadiusEstimate(imageSize);
+  const float strokeWidth = getStrokeEstimate(imageSize);
   
   if(!inliers)
   {
@@ -173,8 +188,8 @@ void saveEpipolarGeometry2SVG(const std::string &imagePath,
   // the larger the distance the larger the minimum radius should be in order to be visible
   // We consider a minimum of 2 pixel and we increment it linearly according to 
   // the image size
-  const float radius = std::max(std::max(imageSize.first, imageSize.second) / float(600), 2.0f);
-  const float strokeWidth = std::max(std::max(imageSize.first, imageSize.second) / float(2200), 2.0f);
+  const float radius = getRadiusEstimate(imageSize);
+  const float strokeWidth = getStrokeEstimate(imageSize);
   for(const matching::IndMatch &m : matches)
   {
     //Get back linked feature, draw a circle and link them by a line
@@ -284,12 +299,9 @@ void saveMatchesAsMotion(const std::string &imagePath,
 {
   svg::svgDrawer svgStream(imageSize.first, imageSize.second);
   svgStream.drawImage(imagePath, imageSize.first, imageSize.second);
-  // heuristic for the radius of the feature according to the size of the image
-  // the larger the distance the larger the minimum radius should be in order to be visible
-  // We consider a minimum of 2 pixel and we increment it linearly according to 
-  // the image size
-  const float radius = std::max(std::max(imageSize.first, imageSize.second) / float(600), 2.0f);
-  const float strokeWidth = std::max(std::max(imageSize.first, imageSize.second) / float(2200), 2.0f);
+
+  const float radius = getRadiusEstimate(imageSize);
+  const float strokeWidth = getStrokeEstimate(imageSize);
   for(size_t i = 0; i < matches.size(); ++i)
   {
     //Get back linked feature, draw a circle and link them by a line
@@ -326,6 +338,9 @@ void saveCCTag2SVG(const std::string &inputImagePath,
   
   svg::svgDrawer svgStream( imageSize.first, imageSize.second);
   svgStream.drawImage(inputImagePath, imageSize.first, imageSize.second);
+  
+  const float radius = getRadiusEstimate(imageSize);
+  const float strokeWidth = getStrokeEstimate(imageSize);
     
   const auto &feat = cctags.Features();
   const auto &desc = cctags.Descriptors();
@@ -338,7 +353,7 @@ void saveCCTag2SVG(const std::string &inputImagePath,
       continue;
     }
     const auto &kpt = feat[i];
-    svgStream.drawCircle(kpt.x(), kpt.y(), 3.0f, svg::svgStyle().stroke("yellow", 2.0));
+    svgStream.drawCircle(kpt.x(), kpt.y(), radius, svg::svgStyle().stroke("yellow", strokeWidth));
     svgStream.drawText(kpt.x(), kpt.y(), textSize, std::to_string(cctagId), "yellow");
   }
  
@@ -373,6 +388,11 @@ void saveCCTagMatches2SVG(const std::string &imagePathLeft,
   assert(keypointsLeft.size() == descLeft.size());
   assert(keypointsRight.size() == descRight.size());
   
+  const float radiusLeft = getRadiusEstimate(imageSizeLeft);
+  const float radiusRight = getRadiusEstimate(imageSizeRight);
+  const float strokeLeft = getStrokeEstimate(imageSizeLeft);
+  const float strokeRight = getStrokeEstimate(imageSizeRight);
+  
   for(const matching::IndMatch &m : matches)
   {
     //Get back linked feature, draw a circle and link them by a line
@@ -386,9 +406,9 @@ void saveCCTagMatches2SVG(const std::string &imagePathLeft,
       continue;
     }
     
-    svgStream.drawLine(L.x(), L.y(), R.x() + imageSizeLeft.first, R.y(), svg::svgStyle().stroke("green", 2.0));
-    svgStream.drawCircle(L.x(), L.y(), 3.0f, svg::svgStyle().stroke("yellow", 2.0));
-    svgStream.drawCircle(R.x() + imageSizeLeft.first, R.y(), 3.0f, svg::svgStyle().stroke("yellow", 2.0));
+    svgStream.drawLine(L.x(), L.y(), R.x() + imageSizeLeft.first, R.y(), svg::svgStyle().stroke("green", std::min(imageSizeLeft,imageSizeRight)));
+    svgStream.drawCircle(L.x(), L.y(), radiusLeft, svg::svgStyle().stroke("yellow", imageSizeLeft));
+    svgStream.drawCircle(R.x() + imageSizeLeft.first, R.y(), radiusRight, svg::svgStyle().stroke("yellow", imageSizeRight));
     
     svgStream.drawText(L.x(), L.y(), textSize, std::to_string(cctagIdLeft), "yellow");
     svgStream.drawText(R.x() + imageSizeLeft.first, R.y(), textSize, std::to_string(cctagIdRight), "yellow");
@@ -420,7 +440,7 @@ void saveCCTagMatches2SVG(const std::string &imagePathLeft,
       
       // draw the center
       const features::PointFeature & L = keypointsLeft[i];
-      svgStream.drawCircle(L.x(), L.y(), 3.0f, svg::svgStyle().stroke("red", 2.0));
+      svgStream.drawCircle(L.x(), L.y(), radiusLeft, svg::svgStyle().stroke("red", strokeLeft));
       // print the id
       svgStream.drawText(L.x(), L.y(), textSizeSmaller, std::to_string(cctagIdLeft), "red");
     }
@@ -447,7 +467,7 @@ void saveCCTagMatches2SVG(const std::string &imagePathLeft,
       
       // draw the center
       const features::PointFeature & R = keypointsRight[i];
-      svgStream.drawCircle(R.x() + imageSizeLeft.first, R.y(), 3.0f, svg::svgStyle().stroke("red", 2.0));
+      svgStream.drawCircle(R.x() + imageSizeLeft.first, R.y(), radiusRight, svg::svgStyle().stroke("red", strokeRight));
       // print the id
       svgStream.drawText(R.x() + imageSizeLeft.first, R.y(), textSizeSmaller, std::to_string(cctagIdRight), "red");
 
