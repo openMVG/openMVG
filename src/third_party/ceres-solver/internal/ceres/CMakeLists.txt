@@ -241,7 +241,10 @@ else (BUILD_SHARED_LIBS)
         ${CERES_LIBRARY_PRIVATE_DEPENDENCIES})
   target_link_libraries(ceres ${CERES_LIBRARY_DEPENDENCIES})
 endif (BUILD_SHARED_LIBS)
-
+if(ANDROID)
+    message("-- add liblog.so for android")
+    target_link_libraries(ceres log)
+endif(ANDROID)
 install(TARGETS ceres
         EXPORT  CeresExport
         RUNTIME DESTINATION bin
