@@ -92,7 +92,15 @@ struct Hamming
   static inline unsigned int popcnt64(uint64_t n)
   {
 #if defined _MSC_VER && defined PLATFORM_64_BIT
-    return __popcnt64(n);
+	  std::array<int, 4> cpui;
+	  __cpuid(cpui.data(), 1);
+	  std::bitset<32> d = cpui[2];
+	  if (d[23])
+		  return __popcnt64(n);
+	  else
+		  n -= ((n >> 1) & 0x5555555555555555LL);
+	    n = (n & 0x3333333333333333LL) + ((n >> 2) & 0x3333333333333333LL);
+	    return (((n + (n >> 4))& 0x0f0f0f0f0f0f0f0fLL)* 0x0101010101010101LL) >> 56;
 #else
 #if (defined __GNUC__ || defined __clang__)
     return __builtin_popcountll(n);
