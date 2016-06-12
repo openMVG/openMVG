@@ -387,7 +387,7 @@ struct RealPixel<float>
   */
   static real_type convert_to_real( const base_type & val )
   {
-    return val ;
+    return (real_type)val;
   }
 
   /**
