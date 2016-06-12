@@ -38,7 +38,7 @@ TEST(Resection_L_Infinity, Robust_OutlierFree) {
   {
     typedef  lInfinityCV::kernel::l1PoseResectionKernel KernelType;
     const Mat & pt2D = d2._x[nResectionCameraIndex];
-    const Mat & pt3D = d2._X;
+    const Mat & pt3D = d2.X;
     KernelType kernel(pt2D, pt3D);
     ScorerEvaluator<KernelType> scorer(2*Square(0.6));
     Mat34 P = MaxConsensus(kernel, scorer, NULL, 128);
@@ -83,16 +83,16 @@ TEST(Resection_L_Infinity, Robust_OneOutlier) {
   const int nbOutlier = nbPoints*0.2;
   for (int i=0; i < nbOutlier; ++i)
   {
-    d2._X.col(i)(0) += 120.0;
-    d2._X.col(i)(1) += -60.0;
-    d2._X.col(i)(2) += 80.0;
+    d2.X.col(i)(0) += 120.0;
+    d2.X.col(i)(1) += -60.0;
+    d2.X.col(i)(2) += 80.0;
   }
 
   // Solve the problem and check that fitted value are good enough
   {
     typedef  lInfinityCV::kernel::l1PoseResectionKernel KernelType;
     const Mat & pt2D = d2._x[nResectionCameraIndex];
-    const Mat & pt3D = d2._X;
+    const Mat & pt3D = d2.X;
     KernelType kernel(pt2D, pt3D);
     ScorerEvaluator<KernelType> scorer(Square(0.1)); //Highly intolerant for the test
     Mat34 P = MaxConsensus(kernel, scorer, NULL, 128);

@@ -34,7 +34,7 @@ TEST(lInfinityCV, Triangulation_OSICLPSOLVER) {
   d.ExportToPLY("test_Before_Infinity_Triangulation_OSICLP.ply");
   //-- Test triangulation of all the point
   NViewDataSet d2 = d;
-  d2._X.fill(0); //Set _Xi of dataset 2 to 0 to be sure of new data computation
+  d2.X.fill(0); //Set _Xi of dataset 2 to 0 to be sure of new data computation
 
   for (int i = 0; i < d._n; ++i)
     vec_Pi.push_back(d.P(i));
@@ -62,7 +62,7 @@ TEST(lInfinityCV, Triangulation_OSICLPSOLVER) {
     );
 
     Vec3 XSolution(vec_solution[0], vec_solution[1], vec_solution[2]);
-    d2._X.col(k) = XSolution.transpose();
+    d2.X.col(k) = XSolution.transpose();
 
     // Compute residuals L2 from estimated parameter values :
     const Vec3 & X = XSolution;
@@ -74,7 +74,7 @@ TEST(lInfinityCV, Triangulation_OSICLPSOLVER) {
     double dResidual2D = (xsum.array().sqrt().sum());
 
     // Residual LInfinity between GT 3D point and found one
-    double dResidual3D = DistanceLInfinity(XSolution, Vec3(d._X.col(k)));
+    double dResidual3D = DistanceLInfinity(XSolution, Vec3(d.X.col(k)));
 
     // Check that 2D re-projection and 3D point are near to GT.
     EXPECT_NEAR(0.0, dResidual2D, 1e-5);
@@ -94,7 +94,7 @@ TEST(computervision, Triangulation_MOSEK) {
   d.ExportToPLY("test_Before_Infinity_Triangulation_MOSEK.ply");
   //-- Test triangulation of all the point
   NViewDataSet d2 = d;
-  d2._X.fill(0); //Set _Xi of dataset 2 to 0 to be sure of new data computation
+  d2.X.fill(0); //Set _Xi of dataset 2 to 0 to be sure of new data computation
 
   for (int i = 0; i < d._n; ++i)
     vec_Pi.push_back(d.P(i));
@@ -122,7 +122,7 @@ TEST(computervision, Triangulation_MOSEK) {
     );
 
     Vec3 XSolution(vec_solution[0], vec_solution[1], vec_solution[2]);
-    d2._X.col(k) = XSolution.transpose();
+    d2.X.col(k) = XSolution.transpose();
 
     // Compute residuals L2 from estimated parameter values :
     const Vec3 & X = XSolution;
@@ -134,7 +134,7 @@ TEST(computervision, Triangulation_MOSEK) {
     double dResidual2D = (xsum.array().sqrt().sum());
 
     // Residual LInfinity between GT 3D point and found one
-    double dResidual3D = DistanceLInfinity(XSolution, Vec3(d._X.col(k)));
+    double dResidual3D = DistanceLInfinity(XSolution, Vec3(d.X.col(k)));
 
     // Check that 2D re-projection and 3D point are near to GT.
     EXPECT_NEAR(0.0, dResidual2D, 1e-5);

@@ -25,7 +25,7 @@ TEST(Camera_IO, PinholeSaveRead) {
 
   PinholeCamera cam;
   EXPECT_TRUE( load( "pinholeCam.bin", cam));
-  EXPECT_MATRIX_NEAR(camGT._P, cam._P, 1e-3);
+  EXPECT_MATRIX_NEAR(camGT.P, cam.P, 1e-3);
 }
 
 /* ************************************************************************* */

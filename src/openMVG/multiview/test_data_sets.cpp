@@ -51,13 +51,13 @@ NViewDataSet NRealisticCamerasRing(size_t nviews, size_t npoints,
   d._K.resize(nviews);
   d._R.resize(nviews);
   d._t.resize(nviews);
-  d._C.resize(nviews);
+  d.C.resize(nviews);
   d._x.resize(nviews);
   d._x_ids.resize(nviews);
 
-  d._X.resize(3, npoints);
-  d._X.setRandom();
-  d._X *= 0.6;
+  d.X.resize(3, npoints);
+  d.X.setRandom();
+  d.X *= 0.6;
 
   Vecu all_point_ids(npoints);
   for (size_t j = 0; j < npoints; ++j)
@@ -70,7 +70,7 @@ NViewDataSet NRealisticCamerasRing(size_t nviews, size_t npoints,
     //-- Circle equation
     camera_center << sin(theta), 0.0, cos(theta); // Y axis UP
     camera_center *= config._dist;
-    d._C[i] = camera_center;
+    d.C[i] = camera_center;
 
     jitter.setRandom();
     jitter *= config._jitter_amount / camera_center.norm();
@@ -81,7 +81,7 @@ NViewDataSet NRealisticCamerasRing(size_t nviews, size_t npoints,
                         0,           0,          1;
     d._R[i] = LookAt(lookdir);  // Y axis UP
     d._t[i] = -d._R[i] * camera_center; // [t]=[-RC] Cf HZ.
-    d._x[i] = Project(d.P(i), d._X);
+    d._x[i] = Project(d.P(i), d.X);
     d._x_ids[i] = all_point_ids;
   }
   return d;
@@ -104,7 +104,7 @@ void NViewDataSet::ExportToPLY(
      << std::endl << "comment NViewDataSet export"
      << std::endl << "comment It shows 3D point structure and cameras"
                   << "+ camera looking direction"
-     << std::endl << "element vertex " << _X.cols() + _t.size()*2
+     << std::endl << "element vertex " << X.cols() + _t.size()*2
      << std::endl << "property float x"
      << std::endl << "property float y"
      << std::endl << "property float z"
@@ -114,9 +114,9 @@ void NViewDataSet::ExportToPLY(
      << std::endl << "end_header" << std::endl;
 
     //-- Export 3D point cloud
-    for(Mat3X::Index i = 0; i < _X.cols(); ++i) {
+    for(Mat3X::Index i = 0; i < X.cols(); ++i) {
       // Exports the point position and point color
-      outfile << _X.col(i).transpose()
+      outfile << X.col(i).transpose()
         << " " << "255 255 255" << std::endl;
     }
 
@@ -147,13 +147,13 @@ NViewDataSet NRealisticCamerasCardioid(size_t nviews, size_t npoints,
   d._K.resize(nviews);
   d._R.resize(nviews);
   d._t.resize(nviews);
-  d._C.resize(nviews);
+  d.C.resize(nviews);
   d._x.resize(nviews);
   d._x_ids.resize(nviews);
 
-  d._X.resize(3, npoints);
-  d._X.setRandom();
-  d._X *= 0.6;
+  d.X.resize(3, npoints);
+  d.X.setRandom();
+  d.X *= 0.6;
 
   Vecu all_point_ids(npoints);
   for (size_t j = 0; j < npoints; ++j)
@@ -169,7 +169,7 @@ NViewDataSet NRealisticCamerasCardioid(size_t nviews, size_t npoints,
       0.0,
       2*cos(theta)-(cos(2*theta)); // Y axis UP
     camera_center *= config._dist;
-    d._C[i] = camera_center;
+    d.C[i] = camera_center;
 
     jitter.setRandom();
     jitter *= config._jitter_amount / camera_center.norm();
@@ -180,7 +180,7 @@ NViewDataSet NRealisticCamerasCardioid(size_t nviews, size_t npoints,
       0,           0,          1;
     d._R[i] = LookAt(lookdir);  // Y axis UP
     d._t[i] = -d._R[i] * camera_center; // [t]=[-RC] Cf HZ.
-    d._x[i] = Project(d.P(i), d._X);
+    d._x[i] = Project(d.P(i), d.X);
     d._x_ids[i] = all_point_ids;
   }
   return d;

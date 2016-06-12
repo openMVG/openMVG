@@ -102,8 +102,8 @@ SfM_Data getInputScene
   // 3. Intrinsic data (shared, so only one camera intrinsic is defined)
   // 4. Landmarks
 
-  const int nviews = d._C.size();
-  const int npoints = d._X.cols();
+  const int nviews = d.C.size();
+  const int npoints = d.X.cols();
 
   // 1. Views
   for (int i = 0; i < nviews; ++i)
@@ -116,7 +116,7 @@ SfM_Data getInputScene
   // 2. Poses
   for (int i = 0; i < nviews; ++i)
   {
-    sfm_data.poses[i] = geometry::Pose3(d._R[i], d._C[i]);;
+    sfm_data.poses[i] = geometry::Pose3(d._R[i], d.C[i]);;
   }
 
   // 3. Intrinsic data (shared, so only one camera intrinsic is defined)
@@ -146,7 +146,7 @@ SfM_Data getInputScene
   for (int i = 0; i < npoints; ++i) {
     // Collect the image of point i in each frame.
     Landmark landmark;
-    landmark.X = d._X.col(i);
+    landmark.X = d.X.col(i);
     for (int j = 0; j < nviews; ++j) {
       const Vec2 pt = d._x[j].col(i);
       landmark.obs[j] = Observation(pt, i);

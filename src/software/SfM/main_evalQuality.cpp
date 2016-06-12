@@ -144,7 +144,7 @@ int main(int argc, char **argv)
     iterGT != map_Cam_gt.end(); ++iterGT, ++iter_loaded_poses)
   {
     // GT
-    vec_camPosGT.push_back(iterGT->second._C);
+    vec_camPosGT.push_back(iterGT->second.C);
     vec_camRotGT.push_back(iterGT->second._R);
 
     //-- Computed

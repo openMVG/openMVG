@@ -46,7 +46,7 @@ TEST(Resection_Kernel, Multiview) {
   // Solve the problem and check that fitted value are good enough
   {
     Mat x = d._x[nResectionCameraIndex];
-    Mat X = d._X;
+    Mat X = d.X;
     openMVG::resection::kernel::PoseResectionKernel kernel(x, X);
 
     size_t samples_[6]={0,1,2,3,4,5};
@@ -79,7 +79,7 @@ TEST(P3P_Kneip_CVPR11, Multiview) {
   // Solve the problem and check that fitted value are good enough
   {
     Mat x = d._x[nResectionCameraIndex];
-    Mat X = d._X;
+    Mat X = d.X;
     openMVG::euclidean_resection::P3P_ResectionKernel_K kernel(x, X, d._K[0]);
 
     size_t samples_[3]={0,1,2};

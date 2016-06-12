@@ -38,7 +38,7 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets_softL1_Ceres) {
     );
 
   d.ExportToPLY("global_translations_from_triplets_GT.ply");
-  visibleCamPosToSVGSurface(d._C, "global_translations_from_triplets_GT.svg");
+  visibleCamPosToSVGSurface(d.C, "global_translations_from_triplets_GT.svg");
 
   // Solve the translation averaging problem:
   std::vector<Vec3> vec_translations;
@@ -54,7 +54,7 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets_softL1_Ceres) {
     const Mat3 & Ri = d._R[i];
     const Vec3 C_computed = - Ri.transpose() * t;
 
-    const Vec3 C_GT = d._C[i] - d._C[0];
+    const Vec3 C_GT = d.C[i] - d.C[0];
 
     //-- Check that found camera position is equal to GT value
     if (i==0)  {
@@ -87,7 +87,7 @@ TEST(translation_averaging, globalTi_from_tijs_softl1_Ceres) {
     );
 
   d.ExportToPLY("global_translations_from_Tij_GT.ply");
-  visibleCamPosToSVGSurface(d._C, "global_translations_from_Tij_GT.svg");
+  visibleCamPosToSVGSurface(d.C, "global_translations_from_Tij_GT.svg");
 
   // Solve the translation averaging problem:
   std::vector<Vec3> vec_translations;
@@ -103,7 +103,7 @@ TEST(translation_averaging, globalTi_from_tijs_softl1_Ceres) {
     const Mat3 & Ri = d._R[i];
     const Vec3 C_computed = - Ri.transpose() * t;
 
-    const Vec3 C_GT = d._C[i] - d._C[0];
+    const Vec3 C_GT = d.C[i] - d.C[0];
 
     //-- Check that found camera position is equal to GT value
     if (i==0)  {
@@ -136,7 +136,7 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets_l2_chordal) {
     );
 
   d.ExportToPLY("global_translations_from_Tij_GT.ply");
-  visibleCamPosToSVGSurface(d._C, "global_translations_from_Tij_GT.svg");
+  visibleCamPosToSVGSurface(d.C, "global_translations_from_Tij_GT.svg");
 
   //-- Compute the global translations from the triplets of heading directions
   //-   with the L2 minimization of a Chordal distance
@@ -192,7 +192,7 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets_l2_chordal) {
       EXPECT_NEAR(0.0, DistanceLInfinity(C0, Vec3(0,0,0)), 1e-6);
     }
     else  {
-      const Vec3 t_GT = (d._C[i] - d._C[0]);
+      const Vec3 t_GT = (d.C[i] - d.C[0]);
 
       const Vec3 CI(X[i*3], X[i*3+1], X[i*3+2]);
       const Vec3 C0(X[0], X[1], X[2]);

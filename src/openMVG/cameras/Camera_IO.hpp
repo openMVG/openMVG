@@ -37,7 +37,7 @@ static bool save(
     return false;
   }
 
-  const Mat34 & PMat = cam._P;
+  const Mat34 & PMat = cam.P;
   std::ofstream file( scameraFile.c_str(), std::ios::out | std::ios::binary );
   file.write( ( const char* )PMat.data(), ( std::streamsize )( 3 * 4 )*sizeof( double ) );
 

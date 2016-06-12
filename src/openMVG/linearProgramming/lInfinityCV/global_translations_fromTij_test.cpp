@@ -37,7 +37,7 @@ TEST(translation_averaging, globalTi_from_tijs) {
     );
 
   d.ExportToPLY("global_translations_from_Tij_GT.ply");
-  visibleCamPosToSVGSurface(d._C, "global_translations_from_Tij_GT.svg");
+  visibleCamPosToSVGSurface(d.C, "global_translations_from_Tij_GT.svg");
 
   //-- Compute the global translations from the translation heading directions
   //-   with the L_infinity optimization
@@ -88,7 +88,7 @@ TEST(translation_averaging, globalTi_from_tijs) {
     const Mat3 & Ri = d._R[i];
     const Vec3 C_computed = - Ri.transpose() * t;
 
-    const Vec3 C_GT = d._C[i] - d._C[0];
+    const Vec3 C_GT = d.C[i] - d.C[0];
 
     //-- Check that found camera position is equal to GT value
     if (i==0)  {
