@@ -7,7 +7,7 @@
 #include "testing/testing.h"
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/tbmr/tbmr.hpp"
-
+#include <stdint.h>
 using namespace openMVG;
 using namespace image; 
 using namespace features;
