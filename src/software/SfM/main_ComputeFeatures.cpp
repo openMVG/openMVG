@@ -163,7 +163,7 @@ int main(int argc, char **argv)
 
 #ifdef OPENMVG_USE_OPENMP
   omp_set_num_threads(iNumThreads);
-  if (iNumThreads == 0) omp_set_num_threads(2);
+  if (iNumThreads == 0) omp_set_num_threads(1);
   #pragma omp parallel for schedule(static)
 #endif
   for(int i = 0; i < sfm_data.views.size(); ++i)

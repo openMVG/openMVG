@@ -10,7 +10,8 @@
 class LatchBitMatcher {
     public:
         LatchBitMatcher();
-        std::vector<LatchBitMatcherMatch> match(unsigned int*, unsigned int*, int, int);
+       	void match(unsigned int*, unsigned int*, int, int);
+		std::vector<LatchBitMatcherMatch> retrieveMatches();
         ~LatchBitMatcher();
     private:
         const int m_maxKP;
@@ -18,6 +19,9 @@ class LatchBitMatcher {
 
         unsigned int* m_dD1;
         unsigned int* m_dD2;
+
+		unsigned int m_numKP0;
+		unsigned int m_numKP1;
 
         int* m_dM1;
         int* m_dM2;

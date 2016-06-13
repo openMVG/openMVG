@@ -40,7 +40,10 @@ LatchBitMatcher::LatchBitMatcher() :
 	cudaCalloc((void**) &m_dM2, sizeM, m_stream2);
 }
 
-std::vector<LatchBitMatcherMatch> LatchBitMatcher::match(unsigned int* h_descriptors1, unsigned int* h_descriptors2, int numKP0, int numKP1) {
+void LatchBitMatcher::match(unsigned int* h_descriptors1, unsigned int* h_descriptors2, int numKP0, int numKP1) {
+    m_numKP0 = numKP0;
+	m_numKP1 = numKP1;
+
     size_t sizeD1 = numKP0 * (DESCRIPTOR_SIZE / 32) * sizeof(unsigned int); // D1 for descriptor1
     size_t sizeD2 = numKP1 * (DESCRIPTOR_SIZE / 32) * sizeof(unsigned int); // D2 for descriptor2
 	size_t sizeM = m_maxKP * sizeof(int); // M for Matches
@@ -50,44 +53,34 @@ std::vector<LatchBitMatcherMatch> LatchBitMatcher::match(unsigned int* h_descrip
 
 	cudaMemsetAsync(m_dM1, 0, sizeM, m_stream1);
 	cudaMemsetAsync(m_dM2, 0, sizeM, m_stream2);
-/*
-	cudaStreamSynchronize(m_stream1);
-	cudaStreamSynchronize(m_stream2);
-	cudaDeviceSynchronize();
-*/
-    cudaMemcpyAsync(m_dD1, h_descriptors1, sizeD1, cudaMemcpyHostToDevice, m_stream1);
+    
+	cudaMemcpyAsync(m_dD1, h_descriptors1, sizeD1, cudaMemcpyHostToDevice, m_stream1);
     cudaMemcpyAsync(m_dD2, h_descriptors2, sizeD2, cudaMemcpyHostToDevice, m_stream2);
-/*    
-	cudaStreamSynchronize(m_stream1);
-	cudaStreamSynchronize(m_stream2);
-	cudaDeviceSynchronize();
-*/
-    bitMatch(m_dD1, m_dD2, numKP0, numKP1, m_maxKP, m_dM1, m_matchThreshold, m_stream1);
+ 
+	bitMatch(m_dD1, m_dD2, numKP0, numKP1, m_maxKP, m_dM1, m_matchThreshold, m_stream1);
     bitMatch(m_dD2, m_dD1, numKP1, numKP0, m_maxKP, m_dM2, m_matchThreshold, m_stream2);
+}
 
-//    int *h_M1 = new int[m_maxKP];
-//    int *h_M2 = new int[m_maxKP];
+std::vector<LatchBitMatcherMatch> LatchBitMatcher::retrieveMatches() {
 	int h_M1[m_maxKP];
 	int h_M2[m_maxKP];
 
     getMatches(m_maxKP, h_M1, m_dM1, m_stream1);
     getMatches(m_maxKP, h_M2, m_dM2, m_stream2);
 
-    std::vector<LatchBitMatcherMatch> matches;
-
 	cudaStreamSynchronize(m_stream1);
 	cudaStreamSynchronize(m_stream2);
 
-    for (size_t i = 0; i < numKP0; i++) {
-        if (h_M1[i] >= 0 && h_M1[i] < numKP1 && h_M2[h_M1[i]] == i) {
+	std::vector<LatchBitMatcherMatch> matches;
+#ifdef OPENMVG_USE_OMP
+    #pragma omp parallel for schedule(dynamic)
+#endif
+	for (size_t i = 0; i < m_numKP0; i++) {
+        if (h_M1[i] >= 0 && h_M1[i] < m_numKP1 && h_M2[h_M1[i]] == i) {
             // Add matches
             matches.push_back(LatchBitMatcherMatch(i, h_M1[i], 0));
         }
     }
-
-//	delete [] h_M1;
-//	delete [] h_M2;
-
     return matches;
 }
 
