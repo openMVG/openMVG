@@ -172,8 +172,6 @@ int main(int argc, char **argv)
     if(iNumThreads == 0) omp_set_num_threads(nb_max_thread);
 #endif
 
-	std::cout << "Running with max threads: " << nb_max_thread << " with runtime thread of " << omp_get_num_threads() << std::endl;
-	std::cout << "Running from thread " << omp_get_thread_num() << " with i " << i << std::endl;
   std::unique_ptr<Image_describer> image_describer;
 
   const std::string sImage_describer = stlplus::create_filespec(sOutDir, "image_describer", "json");
