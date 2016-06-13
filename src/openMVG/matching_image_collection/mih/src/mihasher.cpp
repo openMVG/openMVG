@@ -8,7 +8,7 @@ using namespace std;
  */
 
 /*
- * Outputs: results, numres, stats
+ * Outputs: results, numres
  *
  *   results: an array of indices (1-based) of the K-nearest neighbors
  *   for each query. So the array includes K*numq uint32 integers.
@@ -19,7 +19,7 @@ using namespace std;
  *   Hamming distances of the K-nearest neighbors.
  */
 
-void mihasher::batchquery(UINT32 *results, UINT32 *numres, qstat *stats, UINT8 *queries, UINT32 numq, int dim1queries)
+void mihasher::batchquery(UINT32 *results, UINT32 *numres, UINT8 *queries, UINT32 numq, int dim1queries)
 {
     counter = new bitarray;
     counter->init(N);
@@ -29,15 +29,13 @@ void mihasher::batchquery(UINT32 *results, UINT32 *numres, qstat *stats, UINT8 *
 
     UINT32 *presults = results;
     UINT32 *pnumres = numres;
-    qstat *pstats = stats;
     UINT8 *pq = queries;
 
     for (int i=0; i<numq; i++) {
-        query(presults, pnumres, pstats, pq, chunks, res);
+        query(presults, pnumres, pq, chunks, res);
 
         presults += K;
         pnumres += B+1;
-        pstats ++;
         pq += dim1queries;
     }
 	
@@ -51,7 +49,7 @@ void mihasher::batchquery(UINT32 *results, UINT32 *numres, qstat *stats, UINT8 *
 // Temp variables: chunks, res -- I did not want to malloc inside
 // query, so these arrays are passed from outside
 
-void mihasher::query(UINT32 *results, UINT32* numres, qstat *stats, UINT8 *query, UINT64 *chunks, UINT32 *res)
+void mihasher::query(UINT32 *results, UINT32* numres, UINT8 *query, UINT64 *chunks, UINT32 *res)
 {
     UINT32 maxres = K ? K : N;			// if K == 0 that means we want everything to be processed.
 						// So maxres = N in that case. Otherwise K limits the results processed.
@@ -144,11 +142,6 @@ void mihasher::query(UINT32 *results, UINT32* numres, qstat *stats, UINT8 *query
 	    
     end = clock();
 
-    stats->ticks = end-start;
-    stats->numcand = nc;
-    stats->numdups = nd;
-    stats->numlookups = nl;
-
     n = 0;
     for (s = 0; s <= D && n < K; s++ ) {
 	for (int c = 0; c < numres[s] && n < K; c++)
@@ -156,13 +149,9 @@ void mihasher::query(UINT32 *results, UINT32* numres, qstat *stats, UINT8 *query
     }
 
     UINT32 total = 0;
-    stats->maxrho = -1;
     for (int i=0; i<=B; i++) {
 	total += numres[i];
-	if (total >= K && stats->maxrho == -1)
-	    stats->maxrho = i;
     }
-    stats->numres = n;
 }
 
 mihasher::mihasher(int _B, int _m)

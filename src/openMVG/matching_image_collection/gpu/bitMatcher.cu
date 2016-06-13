@@ -188,9 +188,7 @@ void bitMatch(unsigned int* d_Q, unsigned int* d_T, int keypointsQ, int keypoint
     const int neededBlocks = (keypointsQ + (vectorsPerWarp * warpsPerBlock) - 1) / (vectorsPerWarp * warpsPerBlock); // This is the "round up integer division" pattern
     dim3 blocksPerGrid(neededBlocks, 1, 1);
 
-	cudaDeviceSynchronize();
     bitMatchGPU<<<blocksPerGrid, threadsPerBlock, 0, stream>>>(d_Q, d_T, d_M, keypointsT, threshold);
-	cudaDeviceSynchronize();
 }
 
 void getMatches(int maxKP, int* h_M, int* d_M, cudaStream_t stream) {

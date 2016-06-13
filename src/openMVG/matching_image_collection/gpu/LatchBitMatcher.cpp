@@ -9,10 +9,10 @@
 
 /* Helper functions. */
 
-#define cudaCalloc(A, B) \
+#define cudaCalloc(A, B, STREAM) \
     do { \
         cudaError_t __cudaCalloc_err = cudaMalloc(A, B); \
-        if (__cudaCalloc_err == cudaSuccess) cudaMemset(*A, 0, B); \
+        if (__cudaCalloc_err == cudaSuccess) cudaMemsetAsync(*A, 0, B, STREAM); \
     } while (0)
 
 #define checkError(ans) { gpuAssert((ans), __FILE__, __LINE__); }
@@ -33,11 +33,11 @@ LatchBitMatcher::LatchBitMatcher() :
     size_t sizeD = m_maxKP * (DESCRIPTOR_SIZE / 32) * sizeof(unsigned int); // D for Descriptor
 	size_t sizeM = m_maxKP * sizeof(int); // M for Matches
 
-    cudaCalloc((void**) &m_dD1, sizeD);
-    cudaCalloc((void**) &m_dD2, sizeD);
+    cudaCalloc((void**) &m_dD1, sizeD, m_stream1);
+    cudaCalloc((void**) &m_dD2, sizeD, m_stream2);
 
-	cudaCalloc((void**) &m_dM1, sizeM);
-	cudaCalloc((void**) &m_dM2, sizeM);
+	cudaCalloc((void**) &m_dM1, sizeM, m_stream1);
+	cudaCalloc((void**) &m_dM2, sizeM, m_stream2);
 }
 
 std::vector<LatchBitMatcherMatch> LatchBitMatcher::match(unsigned int* h_descriptors1, unsigned int* h_descriptors2, int numKP0, int numKP1) {
@@ -70,7 +70,6 @@ std::vector<LatchBitMatcherMatch> LatchBitMatcher::match(unsigned int* h_descrip
 	int h_M1[m_maxKP];
 	int h_M2[m_maxKP];
 
-	cudaDeviceSynchronize();
     getMatches(m_maxKP, h_M1, m_dM1, m_stream1);
     getMatches(m_maxKP, h_M2, m_dM2, m_stream2);
 
@@ -78,8 +77,6 @@ std::vector<LatchBitMatcherMatch> LatchBitMatcher::match(unsigned int* h_descrip
 
 	cudaStreamSynchronize(m_stream1);
 	cudaStreamSynchronize(m_stream2);
-
-	cudaDeviceSynchronize();
 
     for (size_t i = 0; i < numKP0; i++) {
         if (h_M1[i] >= 0 && h_M1[i] < numKP1 && h_M2[h_M1[i]] == i) {
