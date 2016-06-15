@@ -47,7 +47,7 @@ class LATCH_Image_describer : public Image_describer
 public:
   LATCH_Image_describer(
 	const LATCHParams & params = LATCHParams()
-  ):Image_describer(), params_(params) {
+  ):Image_describer(), params_(params), latch_() {
         }
 
   // Don't need to really define this for the LATCH class yet, until more descriptors come out.
@@ -69,9 +69,9 @@ public:
 	std::vector<LatchClassifierKeypoint> kpts;
 	unsigned int* descriptors;
 	{
-	  LatchClassifierOpenMVG latchLocal;
-	  kpts = latchLocal.identifyFeaturePointsOpenMVG(image.GetMat());
-	  descriptors = std::move(latchLocal.getDescriptorSet1());
+	 // LatchClassifierOpenMVG latchLocal;
+	  kpts = latch_.identifyFeaturePointsOpenMVG(image.GetMat());
+	  descriptors = std::move(latch_.getDescriptorSet1());
 	}
 	Allocate(regions);
 	switch (params_.eLatchDescriptor_)
@@ -174,6 +174,7 @@ public:
 private:
   LATCHParams params_;
   bool bOrientation_;
+  LatchClassifierOpenMVG latch_;
 };
 
 } // namespace features
