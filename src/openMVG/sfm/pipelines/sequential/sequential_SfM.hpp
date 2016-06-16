@@ -185,6 +185,7 @@ private:
   Matches_Provider  * _matches_provider;
 
   // Pyramid scoring
+  int _pyramidBase = 2;
   int _pyramidDepth = 5;
   /// internal cache of precomputed values for the weighting of the pyramid levels
   std::vector<int> _pyramidWeights;

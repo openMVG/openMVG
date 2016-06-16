@@ -59,6 +59,7 @@ void computeTracksPyramidPerView(
     const tracks::STLMAPTracks& map_tracks,
     const Views& views,
     const Features_Provider& featuresProvider,
+    const std::size_t pyramidBase,
     const std::size_t pyramidDepth,
     tracks::TracksPyramidPerView& tracksPyramidPerView)
 {
@@ -68,7 +69,7 @@ void computeTracksPyramidPerView(
   for(size_t level = 0; level < pyramidDepth; ++level)
   {
     startPerLevel[level] = start;
-    widthPerLevel[level] = std::pow(2.0, level+1);
+    widthPerLevel[level] = std::pow(pyramidBase, level+1);
     start += Square(widthPerLevel[level]);
   }
 
@@ -250,7 +251,7 @@ bool SequentialSfMReconstructionEngine::Process()
     std::size_t maxWeight = 0;
     for(std::size_t level = 0; level < _pyramidDepth; ++level)
     {
-      std::size_t nbCells = Square(std::pow(2.0, level+1));
+      std::size_t nbCells = Square(std::pow(_pyramidBase, level+1));
       // We use a different weighting strategy than [Schonberger 2016].
       // They use w = 2^l with l={1...L} (even if there is a typo in the text where they say to use w=2^{2*l}.
       // We prefer to give more importance to the first levels of the pyramid, so:
@@ -480,7 +481,7 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
     tracks::TracksUtilsMap::computeTracksPerView(_map_tracks, _map_tracksPerView);
     std::cout << "Build tracks pyramid per view" << std::endl;
     computeTracksPyramidPerView(
-            _map_tracksPerView, _map_tracks, _sfm_data.views, *_features_provider, _pyramidDepth, _map_featsPyramidPerView);
+            _map_tracksPerView, _map_tracks, _sfm_data.views, *_features_provider, _pyramidBase, _pyramidDepth, _map_featsPyramidPerView);
 
     std::cout << "\n" << "Track stats" << std::endl;
     {
