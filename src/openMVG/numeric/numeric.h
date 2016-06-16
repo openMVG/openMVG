@@ -148,6 +148,8 @@ Mat3 RotationAroundY(double angle);
 // Create a rotation matrix around axis Z with the provided radian angle
 Mat3 RotationAroundZ(double angle);
 
+Mat3 rotationXYZ(double angleX, double angleY, double angleZ);
+
 // Degree to Radian (suppose input in [0;360])
 
 inline double D2R(double degree)
@@ -165,6 +167,15 @@ inline double R2D(double radian)
 /// Return in radian the mean rotation amplitude of the given rotation matrix
 /// Computed as the mean of matrix column dot products to an Identity matrix
 double getRotationMagnitude(const Mat3 & R2);
+
+/**
+ * @brief Compute the angle between two rotation matrices.
+ * @param[in] R1 The first rotation matrix.
+ * @param[in] R2 The second rotation matrix.
+ * @return The angle between the two rotations as the angle of the rotation 
+ * matrix R1*R2.transpose().
+ */
+double rotationDifference(const Mat3 & R1, const Mat3 & R2);
 
 inline double SIGN(double x)
 {
@@ -217,7 +228,7 @@ template<typename TVec>
 inline bool AreVecNearEqual(const TVec& x, const TVec& y, const double epsilon)
 {
   assert(x.cols() == y.cols());
-  for(int i=0; i < x.cols(); ++i)
+  for(typename TVec::Index i = 0; i < x.cols(); ++i)
   {
     if((y(i) - epsilon > x(i)) 
       || (x(i) > y(i) + epsilon))
@@ -231,9 +242,9 @@ inline bool AreMatNearEqual(const TMat& X, const TMat& Y, const double epsilon)
 {
   assert(X.cols() == Y.cols());
   assert(X.rows() == Y.rows());
-  for(int i=0; i < X.cols(); ++i)
+  for(typename TMat::Index i = 0; i < X.rows(); ++i)
   {
-    for(int j=0; j < X.rows(); ++j)
+    for(typename TMat::Index j = 0; j < X.cols(); ++j)
     {
       if((Y(i,j) - epsilon > X(i,j)) 
         || (X(i,j) > Y(i,j) + epsilon))

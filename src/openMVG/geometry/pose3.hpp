@@ -102,6 +102,18 @@ class Pose3
       _center = Eigen::Map<const Vec3>(&vec[0]);
     }
 };
+
+/**
+ * @brief Build a pose froma a rotation and a translation.
+ * @param[in] R The 3x3 rotation.
+ * @param[in] t The 3x1 translation.
+ * @return The pose as [R, -R'*t]
+ */
+inline Pose3 poseFromRT(const Mat3& R, const Vec3& t) 
+{
+  return Pose3(R, -R.transpose()*t);
+}
+
 } // namespace geometry
 } // namespace openMVG
 
