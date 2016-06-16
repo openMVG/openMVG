@@ -50,7 +50,7 @@ int main(int argc, char **argv)
       << " containing the 2 other directories, \"images\" containing the images of\n"
       << " the scene, and \"gt_dense_cameras\" containing the corresponding .camera files\n"
       << "[-c|--computed] path (openMVG sfm_data.json file)\n"
-      << "[-o|--output] path (where statistics will be saved)\n"
+      << "[-o|--outdir] path (where statistics will be saved)\n"
       << std::endl;
 
     std::cerr << s << std::endl;
