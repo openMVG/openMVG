@@ -173,7 +173,7 @@ int main(int argc, char **argv)
       if(!sDebugOutputDir.empty())
       {
         cameras::IntrinsicBase* intrinsics = reconstructionSfmData.GetIntrinsics().at(view->id_intrinsic).get();
-        localization::saveCCTag2SVG(view->s_Img_path, 
+        features::saveCCTag2SVG(view->s_Img_path, 
                 std::make_pair(intrinsics->w(), intrinsics->h()),
                 cctagRegions_debug,
                 (bfs::path(sDebugOutputDir) / bfs::path(bfs::path(view->s_Img_path).stem().string()+".svg")).string());
@@ -244,7 +244,7 @@ int main(int argc, char **argv)
 //
 //            View* view = reconstructionSfmData.GetViews().at(iObsViewId).get();
 //            cameras::IntrinsicBase* intrinsics = reconstructionSfmData.GetIntrinsics().at(view->id_intrinsic).get();
-//            localization::saveCCTag2SVG(view->s_Img_path, 
+//            features::saveCCTag2SVG(view->s_Img_path, 
 //                    std::make_pair(intrinsics->w(), intrinsics->h()),
 //                    cctagRegions_debug,
 //                    (cctagDir/(bfs::path(view->s_Img_path).stem().string()+".svg")).string());
