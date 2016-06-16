@@ -476,7 +476,7 @@ int main(int argc, char **argv)
       case HOMOGRAPHY_MATRIX:
       {
         const bool bGeometric_only_guided_matching = true;
-        filter_ptr->Robust_model_estimation(GeometricFilter_HMatrix_AC(4.0, imax_iteration),
+        filter_ptr->Robust_model_estimation(GeometricFilter_HMatrix_AC(std::numeric_limits<double>::infinity(), imax_iteration),
           map_PutativesMatches, bGuided_matching,
           bGeometric_only_guided_matching ? -1.0 : 0.6);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
@@ -484,14 +484,14 @@ int main(int argc, char **argv)
       break;
       case FUNDAMENTAL_MATRIX:
       {
-        filter_ptr->Robust_model_estimation(GeometricFilter_FMatrix_AC(4.0, imax_iteration),
+        filter_ptr->Robust_model_estimation(GeometricFilter_FMatrix_AC(std::numeric_limits<double>::infinity(), imax_iteration),
           map_PutativesMatches, bGuided_matching);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
       case ESSENTIAL_MATRIX:
       {
-        filter_ptr->Robust_model_estimation(GeometricFilter_EMatrix_AC(4.0, imax_iteration),
+        filter_ptr->Robust_model_estimation(GeometricFilter_EMatrix_AC(std::numeric_limits<double>::infinity(), imax_iteration),
           map_PutativesMatches, bGuided_matching);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
 
