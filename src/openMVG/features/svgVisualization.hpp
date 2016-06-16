@@ -56,6 +56,21 @@ void saveMatches2SVG(const std::string &imagePathLeft,
  * @param[in] richKeypoint Draw rich keypoints with a circle proportional to the 
  * octave in which the point has been detected. 
  */
+void saveKeypoints2SVG(const std::string &inputImagePath,
+                       const std::pair<size_t,size_t> & imageSize,
+                       const std::vector<features::SIOPointFeature> &keypoints,
+                       const std::string &outputSVGPath,
+                       bool richKeypoint = true);
+/**
+ * @brief It saves a svg file containing an image (as linked image) and its detected
+ * features.
+ * 
+ * @param[in] inputImagePath The full path to the image file. The image is only 
+ * saved as a link, no image data is stored in the svg.
+ * @param[in] imageSize The size of the image <width,height>.
+ * @param[in] keypoints The points of the right image.
+ * @param[in] outputSVGPath The name of the svg file to generate.
+ **/
 void saveFeatures2SVG(const std::string &inputImagePath,
                       const std::pair<size_t,size_t> & imageSize,
                       const std::vector<features::PointFeature> &keypoints,

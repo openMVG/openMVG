@@ -60,6 +60,40 @@ void saveMatches2SVG(const std::string &imagePathLeft,
 }
 
 
+void saveKeypoints2SVG(const std::string &inputImagePath,
+                       const std::pair<size_t,size_t> & imageSize,
+                       const std::vector<features::SIOPointFeature> &keypoints,
+                       const std::string &outputSVGPath,
+                       bool richKeypoint /*= true*/)
+{
+  svg::svgDrawer svgStream( imageSize.first, imageSize.second);
+  svgStream.drawImage(inputImagePath, imageSize.first, imageSize.second);
+  // heuristic for the radius of the feature according to the size of the image
+  // the larger the distance the larger the minimum radius should be in order to be visible
+  // We consider a minimum of 2 pixel and we increment it linearly according to 
+  // the image size
+  const float radius = getRadiusEstimate(imageSize);
+  const float strokeWidth = getStrokeEstimate(imageSize);
+  
+  for(const features::SIOPointFeature &kpt : keypoints) 
+  {
+    svgStream.drawCircle(kpt.x(), kpt.y(), (richKeypoint) ? kpt.scale()*radius : radius, svg::svgStyle().stroke("yellow", strokeWidth));
+    if(richKeypoint)
+    {
+      // compute the coordinate of the point on the circle used to draw the orientation line
+      const float pointX = kpt.x()+std::cos(kpt.orientation())*kpt.scale()*radius;
+      const float pointY = kpt.y()+std::sin(kpt.orientation())*kpt.scale()*radius;
+      svgStream.drawLine(kpt.x(), kpt.y(), 
+                         pointX, pointY,
+                         svg::svgStyle().stroke("yellow", strokeWidth));
+    }
+  }
+ 
+  std::ofstream svgFile( outputSVGPath );
+  svgFile << svgStream.closeSvgFile().str();
+  svgFile.close();  
+}
+
 void saveFeatures2SVG(const std::string &inputImagePath,
                       const std::pair<size_t,size_t> & imageSize,
                       const std::vector<features::PointFeature> &keypoints,
