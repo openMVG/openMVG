@@ -440,9 +440,9 @@ void saveCCTagMatches2SVG(const std::string &imagePathLeft,
       continue;
     }
     
-    svgStream.drawLine(L.x(), L.y(), R.x() + imageSizeLeft.first, R.y(), svg::svgStyle().stroke("green", std::min(imageSizeLeft,imageSizeRight)));
-    svgStream.drawCircle(L.x(), L.y(), radiusLeft, svg::svgStyle().stroke("yellow", imageSizeLeft));
-    svgStream.drawCircle(R.x() + imageSizeLeft.first, R.y(), radiusRight, svg::svgStyle().stroke("yellow", imageSizeRight));
+    svgStream.drawLine(L.x(), L.y(), R.x() + imageSizeLeft.first, R.y(), svg::svgStyle().stroke("green", std::min(strokeLeft, strokeRight)));
+    svgStream.drawCircle(L.x(), L.y(), radiusLeft, svg::svgStyle().stroke("yellow", strokeLeft));
+    svgStream.drawCircle(R.x() + imageSizeLeft.first, R.y(), radiusRight, svg::svgStyle().stroke("yellow", std::min(strokeLeft, strokeRight)));
     
     svgStream.drawText(L.x(), L.y(), textSize, std::to_string(cctagIdLeft), "yellow");
     svgStream.drawText(R.x() + imageSizeLeft.first, R.y(), textSize, std::to_string(cctagIdRight), "yellow");
