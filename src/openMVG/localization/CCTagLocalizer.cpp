@@ -268,11 +268,10 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
   std::vector<IndexT> nearestKeyFrames;
   nearestKeyFrames.reserve(param->_nNearestKeyFrames);
   
-  kNearestKeyFrames(
-          queryRegions,
-          _regions_per_view,
-          param->_nNearestKeyFrames,
-          nearestKeyFrames);
+  kNearestKeyFrames(queryRegions,
+                    _regions_per_view,
+                    param->_nNearestKeyFrames,
+                    nearestKeyFrames, 4);
   
   // Set the minimum of the residual to infinite.
   double residualMin = std::numeric_limits<double>::max();
@@ -526,7 +525,7 @@ bool CCTagLocalizer::localizeAllAssociations(const std::vector<std::unique_ptr<f
               geometry::Pose3 rigPose)
 {
   assert(vec_queryRegions.size()==vec_queryIntrinsics.size());
-  assert(vec_queryRegions.size()==vec_subPoses.size());   
+  assert(vec_queryRegions.size()==vec_subPoses.size()-1);   
 
   const size_t numCams = vec_queryRegions.size();
 

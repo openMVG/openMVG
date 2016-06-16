@@ -152,8 +152,9 @@ struct SfM_Data
  * the sfm_data, using the track to determine the best view from which
  * to get the color.
  * @param sfm_data The container of the data
+ * @return true if everything went well
  */
-void ColorizeTracks( SfM_Data & sfm_data );
+bool ColorizeTracks( SfM_Data & sfm_data );
 
 } // namespace sfm
 } // namespace openMVG

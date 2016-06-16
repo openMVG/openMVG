@@ -57,7 +57,7 @@ typedef stl::flat_map<IndexT, Observation> Observations;
  */
 struct Landmark
 {
-  Landmark() = default;
+  Landmark() : rgb(image::WHITE) {}
   Landmark(const Vec3& pos3d, 
            const Observations& observations = Observations(), 
            const image::RGBColor &color = image::WHITE)

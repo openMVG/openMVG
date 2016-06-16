@@ -68,13 +68,13 @@ public:
                         LocalizationResult & localizationResult,
                         const std::string& imagePath = std::string()) = 0;
     
-    virtual bool localizeRig(const std::vector<image::Image<unsigned char> > & vec_imageGrey,
-                             const LocalizerParameters *param,
-                             std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
-                             const std::vector<geometry::Pose3 > &vec_subPoses,
-                             geometry::Pose3 rigPose)=0;
+  virtual bool localizeRig(const std::vector<image::Image<unsigned char> > & vec_imageGrey,
+                           const LocalizerParameters *param,
+                           std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                           const std::vector<geometry::Pose3 > &vec_subPoses,
+                           geometry::Pose3 rigPose)=0;
    
-    virtual ~ILocalizer( ) { } ;
+  virtual ~ILocalizer( ) { } ;
 protected:
   bool _isInit;
   sfm::SfM_Data _sfm_data;
