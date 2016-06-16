@@ -178,7 +178,7 @@ void SequentialSfMReconstructionEngine::RobustResectionOfImages(
   size_t resectionGroupIndex = 0;
   std::set<size_t> set_remainingViewId(viewIds);
   std::vector<size_t> vec_possible_resection_indexes;
-  while (FindImagesWithPossibleResection(vec_possible_resection_indexes, set_remainingViewId))
+  while (FindNextImagesGroupForResection(vec_possible_resection_indexes, set_remainingViewId))
   {
     auto chrono_start = std::chrono::steady_clock::now();
     std::cout << "Resection group start " << resectionGroupIndex << " with " << vec_possible_resection_indexes.size() << " images.\n";
@@ -1017,15 +1017,11 @@ std::size_t SequentialSfMReconstructionEngine::computeImageScore(std::size_t vie
 #endif
 }
 
-bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
-  std::vector<size_t> & possibleViewIds,
+bool SequentialSfMReconstructionEngine::FindConnectedViews(
+  std::vector<ViewConnectionScore>& out_connectedViews,
   const std::set<size_t>& remainingViewIds) const
 {
-  auto chrono_start = std::chrono::steady_clock::now();
-  // Threshold used to select the best images
-  static const float dThresholdGroup = 0.75f;
-
-  possibleViewIds.clear();
+  out_connectedViews.clear();
 
   if (remainingViewIds.empty() || _sfm_data.GetLandmarks().empty())
     return false;
@@ -1038,9 +1034,6 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
   
   const std::set<IndexT> reconstructedIntrinsics = Get_Reconstructed_Intrinsics(_sfm_data);
 
-  // ImageId, NbPutativeCommonPoint, score, isIntrinsicsReconstructed
-  typedef std::tuple<IndexT, std::size_t, std::size_t, bool> PutativeScore;
-  std::vector<PutativeScore> vec_putative;
   #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for
   #endif
@@ -1077,40 +1070,54 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
       #pragma omp critical
 #endif
     {
-      vec_putative.emplace_back(viewId, vec_trackIdForResection.size(), score, isIntrinsicsReconstructed);
+      out_connectedViews.emplace_back(viewId, vec_trackIdForResection.size(), score, isIntrinsicsReconstructed);
     }
   }
 
   // Sort by the image score
-  std::sort(vec_putative.begin(), vec_putative.end(),
-      [](const PutativeScore& t1, const PutativeScore& t2) {
+  std::sort(out_connectedViews.begin(), out_connectedViews.end(),
+      [](const ViewConnectionScore& t1, const ViewConnectionScore& t2) {
         return get<2>(t1) > get<2>(t2);
       });
+
+  return !out_connectedViews.empty();
+}
+
+
+bool SequentialSfMReconstructionEngine::FindNextImagesGroupForResection(
+  std::vector<size_t> & out_selectedViewIds,
+  const std::set<size_t>& remainingViewIds) const
+{
+  out_selectedViewIds.clear();
+  auto chrono_start = std::chrono::steady_clock::now();
+  std::vector<ViewConnectionScore> vec_viewsScore;
+  if(!FindConnectedViews(vec_viewsScore, remainingViewIds))
+    return false;
 
   // Impose a minimal number of points to ensure that it makes sense to try the pose estimation.
   std::size_t minPointsThreshold = 30;
 
-  std::cout << "FindImagesWithPossibleResection -- Scores (features): " << std::endl;
+  std::cout << "FindNextImagesGroupForResection -- Scores (features): " << std::endl;
   // print the 30 best scores
-  for(std::size_t i = 0; i < vec_putative.size() && i < 30; ++i)
+  for(std::size_t i = 0; i < vec_viewsScore.size() && i < 30; ++i)
   {
-    std::cout << std::get<2>(vec_putative[i]) << "(" << std::get<1>(vec_putative[i]) << "), ";
+    std::cout << std::get<2>(vec_viewsScore[i]) << "(" << std::get<1>(vec_viewsScore[i]) << "), ";
   }
   std::cout << std::endl;
 
   // If the list is empty or if the list contains images with no correspondences
   // -> (no resection will be possible)
-  if (vec_putative.empty() || std::get<1>(vec_putative[0]) < minPointsThreshold)
+  if (vec_viewsScore.empty() || std::get<1>(vec_viewsScore[0]) == 0)
   {
-    std::cout << "FindImagesWithPossibleResection failed: ";
-    if(vec_putative.empty())
+    std::cout << "FindNextImagesGroupForResection failed: ";
+    if(vec_viewsScore.empty())
     {
       std::cout << "No putative image.";
     }
     else
     {
       std::cout << "Not enough point in the putative images: ";
-      for(auto v: vec_putative)
+      for(auto v: vec_viewsScore)
         std::cout << std::get<1>(v) << ", ";
     }
     std::cout << std::endl;
@@ -1119,7 +1126,7 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
   }
 
   // Add the image view index with the best score
-  possibleViewIds.push_back(std::get<0>(vec_putative[0]));
+  out_selectedViewIds.push_back(std::get<0>(vec_viewsScore[0]));
 
   // The beginning of the incremental SfM is a well known risky and
   // unstable step which has a big impact on the final result.
@@ -1133,14 +1140,14 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
   if (_sfm_data.GetPoses().size() < nbFirstUnstableCameras)
   {
     // Add images one by one to reconstruct the first cameras.
-    std::cout << "FindImagesWithPossibleResection with few images. " << " images took: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - chrono_start).count() << " msec" << std::endl
-              << " - Scores: " << std::get<2>(vec_putative.front()) << std::endl
-              << " - Features: " << std::get<1>(vec_putative.front()) << std::endl;
+    std::cout << "FindNextImagesGroupForResection with few images. " << " images took: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - chrono_start).count() << " msec" << std::endl
+              << " - Scores: " << std::get<2>(vec_viewsScore.front()) << std::endl
+              << " - Features: " << std::get<1>(vec_viewsScore.front()) << std::endl;
     return true;
   }
   // Then, add all the image view indexes that have at least N% of the score of the best image.
 #ifdef OPENMVG_NEXTBESTVIEW_WITHOUT_SCORE
-  const IndexT M = std::get<2>(vec_putative[0]); // View score based on the number of 2D-3D correspondences and their repartition.
+  const IndexT M = std::get<2>(vec_viewsScore[0]); // View score based on the number of 2D-3D correspondences and their repartition.
   const size_t scoreThreshold = dThresholdGroup * M;
 #else
   const size_t scoreThreshold = _pyramidThreshold;
@@ -1150,22 +1157,22 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
   const std::size_t maxImagesPerGroup = 30;
   for (size_t i = 1;
        i < maxImagesPerGroup &&
-       i < vec_putative.size() &&
-       std::get<1>(vec_putative[i]) > minPointsThreshold && // ensure min number of points
-       std::get<2>(vec_putative[i]) > scoreThreshold; // ensure score level
+       i < vec_viewsScore.size() &&
+       std::get<1>(vec_viewsScore[i]) > minPointsThreshold && // ensure min number of points
+       std::get<2>(vec_viewsScore[i]) > scoreThreshold; // ensure score level
        ++i)
   {
-    possibleViewIds.push_back(std::get<0>(vec_putative[i]));
-    if(!std::get<3>(vec_putative[i]))
+    out_selectedViewIds.push_back(std::get<0>(vec_viewsScore[i]));
+    if(!std::get<3>(vec_viewsScore[i]))
     {
       // If we add a new intrinsic, it is a sensitive stage in the process,
       // so it is better to perform a Bundle Adjustment just after.
       break;
     }
   }
-  std::cout << "FindImagesWithPossibleResection with " << possibleViewIds.size() << " images took: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - chrono_start).count() << " msec" << std::endl
-            << " - Scores: " << std::get<2>(vec_putative.front()) << " to " << std::get<2>(vec_putative[possibleViewIds.size()-1]) << " (threshold was " << scoreThreshold << ")" << std::endl
-            << " - Features: " << std::get<1>(vec_putative.front()) << " to " << std::get<1>(vec_putative[possibleViewIds.size()-1]) << " (threshold was " << minPointsThreshold << ")" << std::endl;
+  std::cout << "FindNextImagesGroupForResection with " << out_selectedViewIds.size() << " images took: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - chrono_start).count() << " msec" << std::endl
+            << " - Scores: " << std::get<2>(vec_viewsScore.front()) << " to " << std::get<2>(vec_viewsScore[out_selectedViewIds.size()-1]) << " (threshold was " << scoreThreshold << ")" << std::endl
+            << " - Features: " << std::get<1>(vec_viewsScore.front()) << " to " << std::get<1>(vec_viewsScore[out_selectedViewIds.size()-1]) << " (threshold was " << minPointsThreshold << ")" << std::endl;
   return true;
 }
 

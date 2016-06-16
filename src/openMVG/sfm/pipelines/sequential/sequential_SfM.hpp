@@ -96,6 +96,8 @@ protected:
 
 
 private:
+  /// Image score contains <ImageId, NbPutativeCommonPoint, score, isIntrinsicsReconstructed>
+  typedef std::tuple<IndexT, std::size_t, std::size_t, bool> ViewConnectionScore;
 
   /// Return MSE (Mean Square Error) and a histogram of residual values.
   double ComputeResidualsHistogram(Histogram<double> * histo) const;
@@ -124,16 +126,29 @@ private:
   std::size_t computeImageScore(std::size_t viewId, const std::vector<std::size_t>& trackIds) const;
 
   /**
-   * @brief Estimate the best images on which we can compute the resectioning safely.
-   * Sort the image by a score based on the number of features id shared with
+   * @brief Return all the images containing matches with already reconstructed 3D points.
+   * The images are sorted by a score based on the number of features id shared with
    * the reconstruction and the repartition of these points in the image.
    *
-   * @param[out] possibleViewIds: output list of view IDs we can use for resectioning.
+   * @param[out] out_connectedViews: output list of view IDs connected with the 3D reconstruction.
+   * @param[in] remainingViewIds: input list of remaining view IDs in which we will search for connected views.
+   * @return False if there is no view connected.
+   */
+  bool FindConnectedViews(
+    std::vector<ViewConnectionScore>& out_connectedViews,
+    const std::set<size_t>& remainingViewIds) const;
+
+  /**
+   * @brief Estimate the best images on which we can compute the resectioning safely.
+   * The images are sorted by a score based on the number of features id shared with
+   * the reconstruction and the repartition of these points in the image.
+   *
+   * @param[out] out_selectedViewIds: output list of view IDs we can use for resectioning.
    * @param[in] remainingViewIds: input list of remaining view IDs in which we will search for the best ones for resectioning.
    * @return False if there is no possible resection.
    */
-  bool FindImagesWithPossibleResection(
-    std::vector<size_t>& possibleViewIds,
+  bool FindNextImagesGroupForResection(
+    std::vector<size_t>& out_selectedViewIds,
     const std::set<size_t>& remainingViewIds) const;
 
   /// Add a single Image to the scene and triangulate new possible tracks.
