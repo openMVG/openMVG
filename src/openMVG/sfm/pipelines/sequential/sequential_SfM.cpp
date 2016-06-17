@@ -100,10 +100,6 @@ void computeTracksPyramidPerView(
       const std::size_t trackId = viewTracks.second[i];
       const std::size_t featIndex = map_tracks.at(trackId).at(viewId);
       const auto& feature = features[featIndex];
-      assert(feature.x() >= 0);
-      assert(feature.x() < view.ui_width);
-      assert(feature.y() >= 0);
-      assert(feature.y() < view.ui_height);
       for(std::size_t level = 0; level < pyramidDepth; ++level)
       {
         std::size_t xCell = std::floor(std::max(feature.x(), 0.0f) / cellWidthPerLevel[level]);
