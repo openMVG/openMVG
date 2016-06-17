@@ -1131,7 +1131,7 @@ bool SequentialSfMReconstructionEngine::FindNextImagesGroupForResection(
 
   // The beginning of the incremental SfM is a well known risky and
   // unstable step which has a big impact on the final result.
-  // The Bundle Adjustment is a compute intensive step so we only use it
+  // The Bundle Adjustment is an intensive computing step so we only use it
   // every N cameras.
   // We make an exception for the first 'nbFirstUnstableCameras' cameras
   // and perform a BA for each camera because it makes the results
@@ -1146,15 +1146,17 @@ bool SequentialSfMReconstructionEngine::FindNextImagesGroupForResection(
               << " - Features: " << std::get<1>(vec_viewsScore.front()) << std::endl;
     return true;
   }
-  // Then, add all the image view indexes that have at least N% of the score of the best image.
 #ifdef OPENMVG_NEXTBESTVIEW_WITHOUT_SCORE
-  const IndexT M = std::get<2>(vec_viewsScore[0]); // View score based on the number of 2D-3D correspondences and their repartition.
-  const size_t scoreThreshold = dThresholdGroup * M;
+  static const float dThresholdGroup = 0.75f;
+  // Number of 2D-3D correspondences for the best view.
+  const IndexT bestScore = std::get<2>(vec_viewsScore[0]);
+  // Add all the image view indexes that have at least N% of the score of the best image.
+  const size_t scoreThreshold = dThresholdGroup * bestScore;
 #else
   const size_t scoreThreshold = _pyramidThreshold;
 #endif
-  // Force max of 30 images per group to ensure that we don't add too much data
-  // in one step without bundle adjustment.
+  // Limit to a maximum number of images per group to ensure that
+  // we don't add too much data in one step without bundle adjustment.
   const std::size_t maxImagesPerGroup = 30;
   for (size_t i = 1;
        i < maxImagesPerGroup &&
