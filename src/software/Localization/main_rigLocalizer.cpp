@@ -111,9 +111,10 @@ int main(int argc, char** argv)
   std::string vocTreeFilepath;            //< the vocabulary tree file
   std::string weightsFilepath;            //< the vocabulary tree weights file
   std::string algostring = "AllResults";   //< the localization algorithm to use for the voctree localizer
-  size_t numResults = 10;                 //< number of documents to search when querying the voctree
+  std::size_t numResults = 4;              //< number of documents to search when querying the voctree
+  std::size_t maxResults = 10;             //< maximum number of matching documents to retain
   // parameters for cctag localizer
-  size_t nNearestKeyFrames = 5;           //
+  std::size_t nNearestKeyFrames = 5;           //
 
 #if HAVE_ALEMBIC
   std::string exportFile = "trackedcameras.abc"; //!< the export file
@@ -155,6 +156,9 @@ int main(int argc, char** argv)
           "[voctree] Algorithm type: {FirstBest,BestResult,AllResults,Cluster}" )
         ("results,r", po::value<size_t>(&numResults)->default_value(numResults),
           "[voctree] Number of images to retrieve in database")
+        ("maxResults", po::value<size_t>(&maxResults)->default_value(maxResults), 
+          "[voctree] For algorithm AllResults, it stops the image matching when "
+          "this number of matched images is reached. If 0 it is ignored.")
 #if HAVE_CCTAG
   // parameters for cctag localizer
         ("nNearestKeyFrames", po::value<size_t>(&nNearestKeyFrames)->default_value(nNearestKeyFrames),
@@ -249,24 +253,30 @@ int main(int argc, char** argv)
 #endif
                                            );
     param = new localization::VoctreeLocalizer::Parameters();
-    param->_featurePreset = features::describerPreset_stringToEnum(preset);
-    param->_refineIntrinsics = refineIntrinsics;
+
     localization::VoctreeLocalizer::Parameters *casted = static_cast<localization::VoctreeLocalizer::Parameters *>(param);
     casted->_algorithm = localization::VoctreeLocalizer::initFromString(algostring);;
     casted->_numResults = numResults;
+    casted->_maxResults = maxResults;
+    casted->_ccTagUseCuda = false;
   }
 #if HAVE_CCTAG
   else
   {
     localizer = new localization::CCTagLocalizer(sfmFilePath, descriptorsFolder);
     param = new localization::CCTagLocalizer::Parameters();
-    param->_featurePreset = features::describerPreset_stringToEnum(preset);
-    param->_refineIntrinsics = refineIntrinsics;
+
     localization::CCTagLocalizer::Parameters *casted = static_cast<localization::CCTagLocalizer::Parameters *>(param);
     casted->_nNearestKeyFrames = nNearestKeyFrames;
   }
 #endif 
 
+  assert(localizer);
+  assert(param);
+  
+  // set other common parameters
+  param->_featurePreset = features::describerPreset_stringToEnum(preset);
+  param->_refineIntrinsics = refineIntrinsics;
 
   if(!localizer->isInit())
   {
