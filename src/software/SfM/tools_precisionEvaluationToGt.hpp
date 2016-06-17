@@ -14,6 +14,7 @@
 #include "third_party/htmlDoc/htmlDoc.hpp"
 #include "third_party/histogram/histogram.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <vector>
 #include <algorithm>
@@ -312,6 +313,24 @@ void EvaluteToGT(
     }
     htmlDocStream->pushInfo(sFullLine);
   }
+}
+
+// Find a file in a list and return the index, or -1 if nothing found.
+// Handle relative/absolute paths
+int findIdGT(std::string file, std::vector<std::string> filelist)
+{
+  int result = -1;
+  std::string file_relative = stlplus::filename_part(file);
+  for(unsigned int i = 0; i < filelist.size(); ++i)
+  {
+    if(file_relative.compare(stlplus::basename_part(filelist[i])) == 0)
+    {
+      result = i;
+      break;
+    }
+  }
+
+  return result;
 }
 
 } //namespace openMVG

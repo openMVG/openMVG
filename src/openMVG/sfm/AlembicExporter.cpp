@@ -376,9 +376,13 @@ void AlembicExporter::add(const sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_par
         pose = sfmdata.GetPoseOrDie(view);
         cam = sfmdata.GetIntrinsics().at(view->id_intrinsic);
       }
-      else if(!(flags_part & sfm::ESfM_Data::VIEWS))
-      {
-        // If we don't export views, skip cameras without valid pose.
+      // else if(!(flags_part & sfm::ESfM_Data::VIEWS))
+      // {
+      //   // If we don't export views, skip cameras without valid pose.
+      //   continue;
+      // }
+      else{
+        // If there is no intrinsic/pose defined, skip camera
         continue;
       }
       const std::string cameraName = stlplus::basename_part(view->s_Img_path);
