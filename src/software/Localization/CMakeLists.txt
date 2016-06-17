@@ -25,17 +25,6 @@ IF(OpenMVG_BUILD_VOCTREE)
     INSTALL(TARGETS openMVG_main_createVoctree DESTINATION bin/)
     TARGET_LINK_LIBRARIES(openMVG_main_createVoctree openMVG_voctree openMVG_features ${BOOST_LIBRARIES})
 
-    IF(OpenMVG_USE_CCTAG)
-      ###
-      # Localize images in an existing SfM reconstruction based on CCTag features
-      ###
-      ADD_EXECUTABLE(openMVG_main_cctagLocalizer main_cctagLocalizer.cpp)
-      INSTALL(TARGETS openMVG_main_cctagLocalizer DESTINATION bin/)
-      TARGET_LINK_LIBRARIES(openMVG_main_cctagLocalizer openMVG_localization openMVG_dataio openMVG_image openMVG_features ${CCTAG_LIBRARIES} ${BOOST_LIBRARIES})
-      if(OpenMVG_USE_ALEMBIC)
-        target_link_libraries(openMVG_main_cctagLocalizer ${ABC_LIBRARIES})
-      endif()
-    ENDIF(OpenMVG_USE_CCTAG)
 
     ###
     # generate the pair lists
