@@ -10,7 +10,6 @@
 #include <openMVG/localization/CCTagLocalizer.hpp>
 #endif
 #include <openMVG/rig/Rig.hpp>
-#include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 #include <openMVG/image/image_io.hpp>
 #include <openMVG/dataio/FeedProvider.hpp>
 #include <openMVG/logger.hpp>

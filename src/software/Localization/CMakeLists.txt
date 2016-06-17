@@ -4,9 +4,15 @@ IF(OpenMVG_BUILD_VOCTREE)
     ###
     ADD_EXECUTABLE(openMVG_main_cameraLocalizer main_cameraLocalizer.cpp)
     INSTALL(TARGETS openMVG_main_cameraLocalizer DESTINATION bin/)
-    TARGET_LINK_LIBRARIES(openMVG_main_cameraLocalizer openMVG_localization openMVG_dataio openMVG_image openMVG_features vlsift ${BOOST_LIBRARIES})
+    TARGET_LINK_LIBRARIES(openMVG_main_cameraLocalizer 
+                    openMVG_localization 
+                    openMVG_dataio  
+                    openMVG_image 
+                    openMVG_features 
+                    vlsift 
+                    ${BOOST_LIBRARIES})
     if(OpenMVG_USE_ALEMBIC)
-        target_link_libraries(openMVG_main_cameraLocalizer ${ABC_LIBRARIES})
+        target_link_libraries(openMVG_main_cameraLocalizer openMVG_sfm ${ABC_LIBRARIES})
     endif()
     if(OpenMVG_USE_CCTAG)
         target_link_libraries(openMVG_main_cameraLocalizer ${CCTAG_LIBRARIES})
@@ -50,9 +56,16 @@ IF(OpenMVG_BUILD_VOCTREE)
     ###
     ADD_EXECUTABLE(openMVG_main_rigLocalizer main_rigLocalizer.cpp)
     INSTALL(TARGETS openMVG_main_rigLocalizer DESTINATION bin/)
-    TARGET_LINK_LIBRARIES(openMVG_main_rigLocalizer openMVG_localization openMVG_dataio openMVG_rig openMVG_image openMVG_features vlsift ${BOOST_LIBRARIES})
+    TARGET_LINK_LIBRARIES(openMVG_main_rigLocalizer 
+                            openMVG_localization 
+                            openMVG_dataio 
+                            openMVG_rig 
+                            openMVG_image 
+                            openMVG_features 
+                            vlsift 
+                            ${BOOST_LIBRARIES})
     if(OpenMVG_USE_ALEMBIC)
-        target_link_libraries(openMVG_main_rigLocalizer ${ABC_LIBRARIES})
+        target_link_libraries(openMVG_main_rigLocalizer openMVG_sfm ${ABC_LIBRARIES})
     endif()
     if(OpenMVG_USE_CCTAG)
         target_link_libraries(openMVG_main_rigLocalizer ${CCTAG_LIBRARIES})
