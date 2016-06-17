@@ -6,6 +6,7 @@
  */
 
 #include "optimization.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
 #include <openMVG/sfm/sfm_data_BA_ceres.hpp>
 #include <openMVG/rig/rig_BA_ceres.hpp>
 #include <openMVG/logger.hpp>
@@ -27,7 +28,9 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
                     bool b_refine_intrinsic /*= true*/,
                     bool b_no_distortion /*= false*/,
                     bool b_refine_pose /*= true*/,
-                    bool b_refine_structure /*= false*/)
+                    bool b_refine_structure /*= false*/,
+                    const std::string filename /*= ""*/,
+                    std::size_t minPointVisibility /*=0*/)
 {
   
   const size_t numViews = vec_localizationResult.size();
@@ -44,7 +47,7 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
   {
     // find the first valid localization result and use its intrinsics
     std::size_t intrinsicIndex = 0;
-    for(size_t viewID = 0; viewID < numViews; ++viewID, ++intrinsicIndex)
+    for(std::size_t viewID = 0; viewID < numViews; ++viewID, ++intrinsicIndex)
     {
       if(vec_localizationResult[viewID].isValid())
         break;
@@ -143,8 +146,8 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
         {
           // this is weird but it could happen when two features are really close to each other (?)
           POPART_COUT("Point 3D " << landmarkID << " has multiple features " 
-                  << tinyScene.structure[landmarkID].obs.size() 
-                  << " in the same view " << viewID << " size "); 
+                  << " in the same view " << viewID << " , size of obs: " 
+                  << tinyScene.structure[landmarkID].obs.size() );
           continue;
         }
         
@@ -161,6 +164,20 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
       }
     }
   }
+
+//  {
+//    POPART_COUT("Number of 3D-2D associations before filtering " << tinyScene.structure.size());
+//    sfm::Landmarks &landmarks = tinyScene.structure;
+//    for(sfm::Landmarks::iterator it = landmarks.begin(), ite = landmarks.end(); it != ite;)
+//    {
+//      if(it->second.obs.size() < 5)
+//      {
+//         it = landmarks.erase(it);
+//      }
+//      else
+//        ++it;
+//    }
+//  }
   
   {
     // just debugging some stats -- this block can be safely removed/commented out
@@ -202,6 +219,33 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
     }
   }
 
+  // filter out the 3D points having too few observations.
+  if(minPointVisibility > 0)
+  {
+    auto &landmarks = tinyScene.structure;
+    auto iter = landmarks.begin();
+    auto endIter = landmarks.end();
+
+    for(; iter != endIter;)
+    {
+      if(iter->second.obs.size() < minPointVisibility)
+      {
+        iter = landmarks.erase(iter);
+      }
+      else
+      {
+        ++iter;
+      }
+    }
+  }
+  
+  if(!filename.empty())
+  {
+    const std::string outputfile = filename+".BEFORE.json";
+    if(!sfm::Save(tinyScene, outputfile, sfm::ESfM_Data::ALL))
+      POPART_CERR("Could not save " << outputfile);
+  }
+
   sfm::Bundle_Adjustment_Ceres bundle_adjustment_obj;
   const bool b_BA_Status = bundle_adjustment_obj.Adjust(tinyScene, b_refine_pose, b_refine_pose, b_refine_intrinsic, b_refine_structure);
   if(b_BA_Status)
@@ -211,6 +255,13 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
     {
       const IndexT idPose = pose.first;
       vec_localizationResult[idPose].setPose(pose.second);
+    }
+
+    if(!filename.empty())
+    {
+      const std::string outputfile = filename+".AFTER.json";
+      if(!sfm::Save(tinyScene, outputfile, sfm::ESfM_Data::ALL))
+        POPART_CERR("Could not save " << outputfile);
     }
   }
   
