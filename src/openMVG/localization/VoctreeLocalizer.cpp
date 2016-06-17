@@ -822,21 +822,37 @@ void VoctreeLocalizer::getAllAssociations(const features::SIFT_Regions &queryReg
     assert(vec_featureMatches.size()>0);
     
     // if debug is enable save the matches between the query image and the current matching image
+    // It saves the feature matches in a folder with the same name as the query
+    // image, if it does not exist it will create it. The final svg file will have
+    // a name like this: queryImage_matchedImage.svg placed in the following directory:
+    // param._visualDebug/queryImage/
     if(!param._visualDebug.empty() && !imagePath.empty())
     {
       namespace bfs = boost::filesystem;
       const auto &matchedViewIndex = matchedImage.id;
       const sfm::View *mview = _sfm_data.GetViews().at(matchedViewIndex).get();
-      const std::string queryimage = bfs::path(imagePath).stem().string();
-      const std::string matchedImage = bfs::path(mview->s_Img_path).stem().string();
-      const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
+      // the current query image without extension
+      const auto queryImage = bfs::path(imagePath).stem();
+      // the matching image without extension
+      const auto matchedImage = bfs::path(mview->s_Img_path).stem();
+      // the full path of the matching image
+      const auto matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
 
-      const std::string baseDir = param._visualDebug + "/" + queryimage;
+      // the directory where to save the feature matches
+      const auto baseDir = bfs::path(param._visualDebug) / queryImage;
       if((!bfs::exists(baseDir)))
       {
-        POPART_COUT("created " << baseDir);
+        POPART_COUT("created " << baseDir.string());
         bfs::create_directories(baseDir);
       }
+      
+      // damn you, boost, what does it take to make the operator "+"?
+      // the final filename for the output svg file as a composition of the query
+      // image and the matched image
+      auto outputName = baseDir / queryImage;
+      outputName += "_";
+      outputName += matchedImage;
+      outputName += ".svg";
 
       features::saveMatches2SVG(imagePath,
                                 imageSize,
@@ -845,7 +861,7 @@ void VoctreeLocalizer::getAllAssociations(const features::SIFT_Regions &queryReg
                                 std::make_pair(mview->ui_width, mview->ui_height),
                                 _regions_per_view.at(matchedViewIndex)._regions.GetRegionsPositions(),
                                 vec_featureMatches,
-                                baseDir + "/" + queryimage + "_" + matchedImage + ".svg"); 
+                                outputName.string()); 
     }
     
     // C. recover the 2D-3D associations from the matches 
