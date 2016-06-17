@@ -8,6 +8,10 @@ IF(OpenMVG_BUILD_VOCTREE)
     if(OpenMVG_USE_ALEMBIC)
         target_link_libraries(openMVG_main_voctreeLocalizer ${ABC_LIBRARIES})
     endif()
+    if(OpenMVG_USE_CCTAG)
+        target_link_libraries(openMVG_main_voctreeLocalizer ${CCTAG_LIBRARIES})
+    endif()
+
     ###
     # Create the vocabulary tree
     ###
@@ -42,7 +46,7 @@ IF(OpenMVG_BUILD_VOCTREE)
     TARGET_LINK_LIBRARIES(openMVG_main_voctreeQueryUtility openMVG_voctree ${BOOST_LIBRARIES})
 
     ###
-    # Test the localization class
+    # Test the localization class for the rig
     ###
     ADD_EXECUTABLE(openMVG_main_rigLocalizer main_rigLocalizer.cpp)
     INSTALL(TARGETS openMVG_main_rigLocalizer DESTINATION bin/)
@@ -55,7 +59,7 @@ IF(OpenMVG_BUILD_VOCTREE)
     endif()
 
     ###
-    # Test the localization class
+    # utility to convert float descriptors to char
     ###
     ADD_EXECUTABLE(openMVG_main_convertDescFloat2Uchar convertDescFloat2Uchar.cpp)
     INSTALL(TARGETS openMVG_main_convertDescFloat2Uchar DESTINATION bin/)

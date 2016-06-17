@@ -4,10 +4,13 @@
  *
  * Created on September 12, 2015, 3:16 PM
  */
+#include <openMVG/localization/ILocalizer.hpp>
 #include <openMVG/localization/VoctreeLocalizer.hpp>
+#if HAVE_CCTAG
+#include <openMVG/localization/CCTagLocalizer.hpp>
+#endif
 #include <openMVG/localization/LocalizationResult.hpp>
 #include <openMVG/localization/optimization.hpp>
-#include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
 #include <openMVG/image/image_io.hpp>
 #include <openMVG/dataio/FeedProvider.hpp>
 #include <openMVG/features/image_describer.hpp>
@@ -25,6 +28,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 #include <chrono>
 
 #if HAVE_ALEMBIC
@@ -38,6 +42,55 @@ namespace po = boost::program_options;
 
 using namespace openMVG;
 
+enum DescriberType
+{
+  SIFT
+#if HAVE_CCTAG
+  ,CCTAG,
+  SIFT_CCTAG
+#endif
+};
+
+inline DescriberType stringToDescriberType(const std::string& describerType)
+{
+  if(describerType == "SIFT")
+    return DescriberType::SIFT;
+#if HAVE_CCTAG
+  if (describerType == "CCTAG")
+    return DescriberType::CCTAG;
+  if(describerType == "SIFT_CCTAG")
+    return DescriberType::SIFT_CCTAG;
+#endif
+  throw std::invalid_argument("Unsupported describer type "+describerType);
+}
+
+inline std::string describerTypeToString(DescriberType describerType)
+{
+  if(describerType == DescriberType::SIFT)
+    return "SIFT";
+#if HAVE_CCTAG
+  if (describerType == DescriberType::CCTAG)
+    return "CCTAG";
+  if(describerType == DescriberType::SIFT_CCTAG)
+    return "SIFT_CCTAG";
+#endif
+  throw std::invalid_argument("Unrecognized DescriberType "+std::to_string(describerType));
+}
+
+std::ostream& operator<<(std::ostream& os, const DescriberType describerType)
+{
+  os << describerTypeToString(describerType);
+  return os;
+}
+
+std::istream& operator>>(std::istream &in, DescriberType &describerType)
+{
+  int i;
+  in >> i;
+  describerType = static_cast<DescriberType>(i);
+  return in;
+}
+
 
 std::string myToString(std::size_t i, std::size_t zeroPadding)
 {
@@ -48,55 +101,105 @@ std::string myToString(std::size_t i, std::size_t zeroPadding)
 
 int main(int argc, char** argv)
 {
-  std::string calibFile;            //< the calibration file
-  std::string sfmFilePath;          //< the OpenMVG .json data file
-  std::string descriptorsFolder;    //< the OpenMVG .json data file
+  std::string calibFile;                    //< the calibration file
+  std::string sfmFilePath;                  //< the OpenMVG .json data file
+  std::string descriptorsFolder;            //< the OpenMVG .json data file
+  std::string mediaFilepath;                //< the media file to localize
+  std::string featurePreset = "NORMAL";     //< the preset for the feature extractor
+  std::string str_descriptorType = describerTypeToString(DescriberType::SIFT);        //< the preset for the feature extractor
+  bool refineIntrinsics = false;
+  
+  // voctree parameters
+  std::string algostring = "AllResults";
+  size_t numResults = 4;
+  size_t maxResults = 10;
+  size_t numCommonViews = 3;
   std::string vocTreeFilepath;      //< the vocabulary tree file
   std::string weightsFilepath;      //< the vocabulary tree weights file
-  std::string mediaFilepath;        //< the media file to localize
-  localization::VoctreeLocalizer::Parameters param = localization::VoctreeLocalizer::Parameters();
-  std::string preset = features::describerPreset_enumToString(param._featurePreset);               //< the preset for the feature extractor
+  
 #if HAVE_ALEMBIC
   std::string exportFile = "trackedcameras.abc"; //!< the export file
 #else
   std::string exportFile = "localizationResult.json"; //!< the export file
 #endif
 #if HAVE_CCTAG
-  bool useSIFT_CCTAG = false;
+  // parameters for cctag localizer
+  size_t nNearestKeyFrames = 5;   
 #endif
-  std::string algostring = "FirstBest";
-  bool globalBundle = false;      ///< If !param._refineIntrinsics it can run a final global budndle to refine the scene
-  bool noDistortion = false;      ///< It does not count the distortion
+  bool globalBundle = false;              ///< If !refineIntrinsics it can run a final global budndle to refine the scene
+  bool noDistortion = false;              ///< It does not count the distortion
   bool noBArefineIntrinsics = false;      ///< It does not refine intrinsics during BA
+  std::size_t minPointVisibility = 0;
+  
+  std::string visualDebug = "";        ///< whether to save visual debug info
+  bool useVoctreeLocalizer = true;        ///< whether to use the voctreeLocalizer or cctagLocalizer
+  bool useSIFT_CCTAG = false;             ///< whether to use SIFT_CCTAG
 
   po::options_description desc(
-                               "This program takes as input a media (image, image sequence, video) and a database (voctree, 3D structure data) \n"
-                               "and returns for each frame a pose estimation for the camera.");
+      "This program takes as input a media (image, image sequence, video) and a database (voctree, 3D structure data) \n"
+      "and returns for each frame a pose estimation for the camera.");
+  
   desc.add_options()
       ("help,h", "Print this message")
-      ("results,r", po::value<size_t>(&param._numResults)->default_value(param._numResults), "Number of images to retrieve in database")
-      ("maxResults", po::value<size_t>(&param._maxResults)->default_value(param._maxResults), "For algorithm AllResults, it stops the image matching when this number of matched images is reached. If 0 it is ignored.")
-      ("commonviews", po::value<size_t>(&param._numCommonViews)->default_value(param._numCommonViews), "Number of minimum images in which a point must be seen to be used in cluster tracking")
-      ("preset", po::value<std::string>(&preset)->default_value(preset), "Preset for the feature extractor when localizing a new image {LOW,NORMAL,HIGH,ULTRA}")
-      ("calibration,c", po::value<std::string>(&calibFile)/*->required( )*/, "Calibration file")
-      ("voctree,t", po::value<std::string>(&vocTreeFilepath)->required(), "Filename for the vocabulary tree")
-      ("weights,w", po::value<std::string>(&weightsFilepath), "Filename for the vocabulary tree weights")
-      ("sfmdata,d", po::value<std::string>(&sfmFilePath)->required(), "The sfm_data.json kind of file generated by OpenMVG [it could be also a bundle.out to use an older version of OpenMVG]")
-      ("siftPath,s", po::value<std::string>(&descriptorsFolder)->required(), "Folder containing the .desc [for the older version of openMVG it is the list.txt].")
-      ("algorithm", po::value<std::string>(&algostring)->default_value(algostring), "Algorithm type: FirstBest=0, BestResult=1, AllResults=2, Cluster=3" )
-      ("mediafile,m", po::value<std::string>(&mediaFilepath)->required(), "The folder path or the filename for the media to track")
-      ("refineIntrinsics", po::bool_switch(&param._refineIntrinsics), "Enable/Disable camera intrinsics refinement for each localized image")
-      ("globalBundle", po::bool_switch(&globalBundle), "If --refineIntrinsics is not set, this option allows to run a final global budndle adjustment to refine the scene")
-      ("noDistortion", po::bool_switch(&noDistortion), "It does not take into account distortion during the BA, it consider the distortion coefficients all equal to 0")
-      ("noBArefineIntrinsics", po::bool_switch(&noBArefineIntrinsics), "It does not refine intrinsics during BA")
-      ("visualDebug", po::value<std::string>(&param._visualDebug), "If a directory is provided it enables visual debug and saves all the debugging info in that directory")
-#if HAVE_ALEMBIC
-      ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), "Filename for the SfM_Data export file (where camera poses will be stored). Default : trackedcameras.abc. It will also save the localization results as .json of the same name")
-#else
-      ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), "Filename for the SfM_Data export file containing the localization results. Default : localizationResult.json.")
-#endif
+      ("descriptors", po::value<std::string>(&str_descriptorType)->default_value(str_descriptorType), 
+          "Type of descriptors to use {SIFT,CCTAG,SIFT_CCTAG}")
+      ("preset", po::value<std::string>(&featurePreset)->default_value(featurePreset), 
+          "Preset for the feature extractor when localizing a new image {LOW,NORMAL,HIGH,ULTRA}")
+      ("calibration,c", po::value<std::string>(&calibFile)/*->required( )*/, 
+          "Calibration file")
+      ("sfmdata,d", po::value<std::string>(&sfmFilePath)->required(), 
+          "The sfm_data.json kind of file generated by OpenMVG [it could be also "
+          "a bundle.out to use an older version of OpenMVG]")
+      ("siftPath,s", po::value<std::string>(&descriptorsFolder)->required(), 
+          "Folder containing the .desc [for the older version of openMVG it is the list.txt].")
+      ("mediafile,m", po::value<std::string>(&mediaFilepath)->required(), 
+          "The folder path or the filename for the media to track")
+      ("refineIntrinsics", po::bool_switch(&refineIntrinsics), 
+          "Enable/Disable camera intrinsics refinement for each localized image")
+// voctree specific options
+      ("results,r", po::value<size_t>(&numResults)->default_value(numResults), 
+          "[voctree] Number of images to retrieve in database")
+      ("maxResults", po::value<size_t>(&maxResults)->default_value(maxResults), 
+          "[voctree] For algorithm AllResults, it stops the image matching when "
+          "this number of matched images is reached. If 0 it is ignored.")
+      ("commonviews", po::value<size_t>(&numCommonViews)->default_value(numCommonViews), 
+          "[voctree] Number of minimum images in which a point must be seen to "
+          "be used in cluster tracking")
+      ("voctree,t", po::value<std::string>(&vocTreeFilepath)->required(), 
+          "[voctree] Filename for the vocabulary tree")
+      ("weights,w", po::value<std::string>(&weightsFilepath), 
+          "[voctree] Filename for the vocabulary tree weights")
+      ("algorithm", po::value<std::string>(&algostring)->default_value(algostring), 
+          "[voctree] Algorithm type: FirstBest, BestResult, AllResults, Cluster" )
+// cctag specific options
 #if HAVE_CCTAG
-      ("useSIFT_CCTAG", po::bool_switch(&useSIFT_CCTAG), "If provided, for each image it will extract both SIFT and the CCTAG.")
+      ("nNearestKeyFrames", po::value<size_t>(&nNearestKeyFrames)->default_value(nNearestKeyFrames), 
+          "[cctag] Number of images to retrieve in database")
+#endif
+// final bundle adjustment options
+      ("globalBundle", po::bool_switch(&globalBundle), 
+          "[bundle adjustment] If --refineIntrinsics is not set, this option "
+          "allows to run a final global budndle adjustment to refine the scene")
+      ("noDistortion", po::bool_switch(&noDistortion), 
+          "[bundle adjustment] It does not take into account distortion during "
+          "the BA, it consider the distortion coefficients all equal to 0")
+      ("noBArefineIntrinsics", po::bool_switch(&noBArefineIntrinsics), 
+          "[bundle adjustment] It does not refine intrinsics during BA")
+      ("minPointVisibility", po::value<size_t>(&minPointVisibility)->default_value(minPointVisibility), 
+          "[bundle adjustment] Minimum number of observation that a point must "
+          "have in order to be considered for bundle adjustment")
+      ("visualDebug", po::value<std::string>(&visualDebug), 
+          "If a directory is provided it enables visual debug and saves all the "
+          "debugging info in that directory")
+#if HAVE_ALEMBIC
+      ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), 
+          "Filename for the SfM_Data export file (where camera poses will be stored). "
+          "Default : trackedcameras.abc. It will also save the localization "
+          "results (raw data) as .json with the same name")
+#else
+      ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile), 
+          "Filename for the SfM_Data export file containing the localization "
+          "results. Default : localizationResult.json.")
 #endif
       ;
 
@@ -126,55 +229,121 @@ int main(int argc, char** argv)
     POPART_COUT("Usage:\n\n" << desc);
     return EXIT_FAILURE;
   }
-  if(vm.count("algorithm"))
+  
+  // just for debugging purpose, print out all the parameters
   {
-    param._algorithm = localization::VoctreeLocalizer::initFromString(algostring);
-  }
-  if(vm.count("preset"))
-  {
-    param._featurePreset = features::describerPreset_stringToEnum(preset);
-  }
-  {
+    // decide the localizer to use based on the type of feature
+    useVoctreeLocalizer = ((DescriberType::SIFT==stringToDescriberType(str_descriptorType))
+#if HAVE_CCTAG
+            || (DescriberType::SIFT_CCTAG==stringToDescriberType(str_descriptorType))
+#endif
+            );
+    
+#if HAVE_CCTAG   
+    // check whether we have to use SIFT and CCTAG together
+    useSIFT_CCTAG = (DescriberType::SIFT_CCTAG==stringToDescriberType(str_descriptorType));
+#endif    
+    
     // the bundle adjustment can be run for now only if the refine intrinsics option is not set
-    globalBundle = (globalBundle && !param._refineIntrinsics);
+    globalBundle = (globalBundle && !refineIntrinsics);
     POPART_COUT("Program called with the following parameters:");
-    POPART_COUT("\tvoctree: " << vocTreeFilepath);
-    POPART_COUT("\tweights: " << weightsFilepath);
+    POPART_COUT("\tdescriptors: " << str_descriptorType);
+    POPART_COUT("\tpreset: " << featurePreset);
     POPART_COUT("\tcalibration: " << calibFile);
-    POPART_COUT("\tsfmdata: " << sfmFilePath);
-    POPART_COUT("\tmediafile: " << mediaFilepath);
     POPART_COUT("\tsiftPath: " << descriptorsFolder);
-    POPART_COUT("\tresults: " << param._numResults);
-    POPART_COUT("\tcommon views: " << param._numCommonViews);
-    POPART_COUT("\trefineIntrinsics: " << param._refineIntrinsics);
-    POPART_COUT("\tpreset: " << features::describerPreset_enumToString(param._featurePreset));
+    POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
+    POPART_COUT("\tmediafile: " << mediaFilepath);
+    POPART_COUT("\tsfmdata: " << sfmFilePath);
+    if(useVoctreeLocalizer)
+    {
+      POPART_COUT("\tvoctree: " << vocTreeFilepath);
+      POPART_COUT("\tweights: " << weightsFilepath);
+      POPART_COUT("\tresults: " << numResults);
+      POPART_COUT("\tmaxResults: " << maxResults);
+      POPART_COUT("\tcommon views: " << numCommonViews);
+      POPART_COUT("\talgorithm: " << algostring);
+    }
+#if HAVE_CCTAG 
+    else
+    {
+      POPART_COUT("\tnNearestKeyFrames: " << nNearestKeyFrames);
+    }
+#endif 
+    POPART_COUT("\tminPointVisibility: " << minPointVisibility);
     POPART_COUT("\tglobalBundle: " << globalBundle);
     POPART_COUT("\tnoDistortion: " << noDistortion);
     POPART_COUT("\tnoBArefineIntrinsics: " << noBArefineIntrinsics);
-    POPART_COUT("\tvisualDebug: " << param._visualDebug);
-    POPART_COUT("\talgorithm: " << param._algorithm);
-#if HAVE_CCTAG
-    POPART_COUT("\tuseSIFT_CCTAG: " << useSIFT_CCTAG);
-#endif
+    POPART_COUT("\tvisualDebug: " << visualDebug);
   }
   
-  if((!param._visualDebug.empty()) && (!bfs::exists(param._visualDebug)))
+  // if the provided directory for visual debugging does not exist create it
+  // recursively
+  if((!visualDebug.empty()) && (!bfs::exists(visualDebug)))
   {
-    bfs::create_directories(param._visualDebug);
+    bfs::create_directories(visualDebug);
   }
  
   const std::string basename = bfs::path(exportFile).stem().string();
   
-  // init the localizer
-  localization::VoctreeLocalizer localizer(sfmFilePath,
-                                           descriptorsFolder,
-                                           vocTreeFilepath,
-                                           weightsFilepath
+  
+  //***********************************************************************
+  // Localizer initialization
+  //***********************************************************************
+  
+  localization::LocalizerParameters *param;
+  
+  localization::ILocalizer *localizer;
+  
+  // if a describer is not supported an exception will be thrown here
+  DescriberType describer = stringToDescriberType(str_descriptorType);
+  
+  // initialize the localizer according to the chosen type of describer
+  if((DescriberType::SIFT==describer)
 #if HAVE_CCTAG
-                                           , useSIFT_CCTAG
+            ||(DescriberType::SIFT_CCTAG==describer)
 #endif
-                                           );
-  bool isInit = localizer.isInit();
+      )
+  {
+    localizer = new localization::VoctreeLocalizer(sfmFilePath,
+                                                   descriptorsFolder,
+                                                   vocTreeFilepath,
+                                                   weightsFilepath
+#ifdef HAVE_CCTAG
+                                                    , useSIFT_CCTAG
+#endif
+            );
+    
+    param = new localization::VoctreeLocalizer::Parameters();
+
+    localization::VoctreeLocalizer::Parameters *casted = static_cast<localization::VoctreeLocalizer::Parameters *>(param);
+    casted->_algorithm = localization::VoctreeLocalizer::initFromString(algostring);;
+    casted->_numResults = numResults;
+    casted->_maxResults = maxResults;
+    casted->_numCommonViews = numCommonViews;
+    casted->_ccTagUseCuda = false;
+  }
+#if HAVE_CCTAG
+  else
+  {
+    localizer = new localization::CCTagLocalizer(sfmFilePath, descriptorsFolder);
+    
+    param = new localization::CCTagLocalizer::Parameters();
+
+    localization::CCTagLocalizer::Parameters *casted = static_cast<localization::CCTagLocalizer::Parameters *>(param);
+    casted->_nNearestKeyFrames = nNearestKeyFrames;
+  }
+#endif 
+   
+  assert(localizer);
+  assert(param);
+  
+  // set other common parameters
+  param->_featurePreset = features::describerPreset_stringToEnum(featurePreset);
+  param->_refineIntrinsics = refineIntrinsics;
+  param->_visualDebug = visualDebug;
+  
+
+  bool isInit = localizer->isInit();
   
   if(!isInit)
   {
@@ -191,8 +360,9 @@ int main(int argc, char** argv)
   }
   
 #if HAVE_ALEMBIC
+  // init alembic exporter
   dataio::AlembicExporter exporter( exportFile );
-  exporter.addPoints(localizer.getSfMData().GetLandmarks());
+  exporter.addPoints(localizer->getSfMData().GetLandmarks());
   exporter.initAnimatedCamera("camera");
 #endif
   
@@ -200,10 +370,14 @@ int main(int argc, char** argv)
   cameras::Pinhole_Intrinsic_Radial_K3 queryIntrinsics;
   bool hasIntrinsics = false;
   
-  size_t frameCounter = 0;
-  size_t goodFrameCounter = 0;
-  vector<string> goodFrameList;
+  std::size_t frameCounter = 0;
+  std::size_t goodFrameCounter = 0;
+  vector<std::string> goodFrameList;
   std::string currentImgName;
+  
+  //***********************************************************************
+  // Main loop
+  //***********************************************************************
   
   // Define an accumulator set for computing the mean and the
   // standard deviation of the time taken for localization
@@ -218,8 +392,8 @@ int main(int argc, char** argv)
     POPART_COUT("******************************");
     localization::LocalizationResult localizationResult;
     auto detect_start = std::chrono::steady_clock::now();
-    localizer.localize(imageGrey, 
-                       &param,
+    localizer->localize(imageGrey, 
+                       param,
                        hasIntrinsics /*useInputIntrinsics*/,
                        queryIntrinsics,
                        localizationResult,
@@ -253,6 +427,12 @@ int main(int argc, char** argv)
   }
   localization::save(vec_localizationResults, basename+".json");
   
+  
+  
+  //***********************************************************************
+  // Global bundle
+  //***********************************************************************
+  
   if(globalBundle)
   {
     POPART_COUT("\n\n\n***********************************************");
@@ -260,7 +440,16 @@ int main(int argc, char** argv)
     POPART_COUT("***********************************************\n\n");
     // run a bundle adjustment
     const bool b_allTheSame = true;
-    const bool BAresult = localization::refineSequence(vec_localizationResults, b_allTheSame, !noBArefineIntrinsics, noDistortion);
+    const bool b_refineStructure = false;
+    const bool b_refinePose = true;
+    const bool BAresult = localization::refineSequence(vec_localizationResults,
+                                                       b_allTheSame, 
+                                                       !noBArefineIntrinsics, 
+                                                       noDistortion, 
+                                                       b_refinePose,
+                                                       b_refineStructure,
+                                                       basename+".BUNDLE",
+                                                       minPointVisibility);
     if(!BAresult)
     {
       POPART_CERR("Bundle Adjustment failed!");
@@ -285,7 +474,7 @@ int main(int argc, char** argv)
         }
         idx++;
       }
-      exporterBA.addPoints(localizer.getSfMData().GetLandmarks());
+      exporterBA.addPoints(localizer->getSfMData().GetLandmarks());
 #endif
       localization::save(vec_localizationResults, basename+".BUNDLE.json");
     }
@@ -295,7 +484,7 @@ int main(int argc, char** argv)
   POPART_COUT("\n\n******************************");
   POPART_COUT("Localized " << goodFrameCounter << "/" << frameCounter << " images");
   POPART_COUT("Images localized with the number of 2D/3D matches during localization :");
-  for(int i = 0; i < goodFrameList.size(); i++)
+  for(std::size_t i = 0; i < goodFrameList.size(); ++i)
     POPART_COUT(goodFrameList[i]);
   POPART_COUT("Processing took " << bacc::sum(stats)/1000 << " [s] overall");
   POPART_COUT("Mean time for localization:   " << bacc::mean(stats) << " [ms]");
