@@ -87,7 +87,7 @@ public:
   */
   bool Describe(const image::Image<unsigned char>& image,
     std::unique_ptr<Regions> &regions,
-    const image::Image<unsigned char> * mask = NULL)
+    const image::Image<unsigned char> * mask = nullptr)
   {
     _params._options.fDesc_factor =
       (_params._eAkazeDescriptor == AKAZE_MSURF ||

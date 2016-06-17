@@ -31,6 +31,8 @@
 namespace openMVG {
 namespace robust {
 
+#define OPENMVG_MINIMUM_SAMPLES_COEF 7
+
 /// Two view Kernel adapter for the A contrario model estimator
 /// Handle data normalization and compute the corresponding logalpha 0
 ///  that depends of the error model (point to line, or point to point)

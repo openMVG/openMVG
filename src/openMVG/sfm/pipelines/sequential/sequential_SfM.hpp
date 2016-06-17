@@ -87,10 +87,17 @@ public:
     _minInputTrackLength = minInputTrackLength;
   }
 
+  void setMinTrackLength(int minTrackLength)
+  {
+    _minTrackLength = minTrackLength;
+  }
+
 protected:
 
 
 private:
+  /// Image score contains <ImageId, NbPutativeCommonPoint, score, isIntrinsicsReconstructed>
+  typedef std::tuple<IndexT, std::size_t, std::size_t, bool> ViewConnectionScore;
 
   /// Return MSE (Mean Square Error) and a histogram of residual values.
   double ComputeResidualsHistogram(Histogram<double> * histo) const;
@@ -98,10 +105,51 @@ private:
   /// Return MSE (Mean Square Error) and a histogram of tracks size.
   double ComputeTracksLengthsHistogram(Histogram<double> * histo) const;
 
-  /// List the images that the greatest number of matches to the current 3D reconstruction.
-  bool FindImagesWithPossibleResection(
-    std::vector<size_t>& vec_possible_indexes,
-    std::set<size_t>& set_remainingViewId) const;
+  /**
+   * @brief Compute a score of the view for a subset of features. This is
+   *        used for the next best view choice.
+   *
+   * The score is based on a pyramid which allows to compute a weighting
+   * strategy to promote a good repartition in the image (instead of relying
+   * only on the number of features).
+   * Inspired by [Schonberger 2016]:
+   * "Structure-from-Motion Revisited", Johannes L. Schonberger, Jan-Michael Frahm
+   * 
+   * http://people.inf.ethz.ch/jschoenb/papers/schoenberger2016sfm.pdf
+   * We don't use the same weighting strategy. The weighting choice
+   * is not justified in the paper.
+   *
+   * @param[in] viewId: the ID of the view
+   * @param[in] trackIds: set of track IDs contained in viewId
+   * @return the computed score
+   */
+  std::size_t computeImageScore(std::size_t viewId, const std::vector<std::size_t>& trackIds) const;
+
+  /**
+   * @brief Return all the images containing matches with already reconstructed 3D points.
+   * The images are sorted by a score based on the number of features id shared with
+   * the reconstruction and the repartition of these points in the image.
+   *
+   * @param[out] out_connectedViews: output list of view IDs connected with the 3D reconstruction.
+   * @param[in] remainingViewIds: input list of remaining view IDs in which we will search for connected views.
+   * @return False if there is no view connected.
+   */
+  bool FindConnectedViews(
+    std::vector<ViewConnectionScore>& out_connectedViews,
+    const std::set<size_t>& remainingViewIds) const;
+
+  /**
+   * @brief Estimate the best images on which we can compute the resectioning safely.
+   * The images are sorted by a score based on the number of features id shared with
+   * the reconstruction and the repartition of these points in the image.
+   *
+   * @param[out] out_selectedViewIds: output list of view IDs we can use for resectioning.
+   * @param[in] remainingViewIds: input list of remaining view IDs in which we will search for the best ones for resectioning.
+   * @return False if there is no possible resection.
+   */
+  bool FindNextImagesGroupForResection(
+    std::vector<size_t>& out_selectedViewIds,
+    const std::set<size_t>& remainingViewIds) const;
 
   /// Add a single Image to the scene and triangulate new possible tracks.
   bool Resection(const size_t imageIndex);
@@ -122,23 +170,39 @@ private:
 
   // Extension of the file format to store intermediate reconstruction files.
   std::string _sfmdataInterFileExtension = ".ply";
-  ESfM_Data _sfmdataInterFilter = ESfM_Data(VIEWS | EXTRINSICS | INTRINSICS | STRUCTURE);
+  ESfM_Data _sfmdataInterFilter = ESfM_Data(EXTRINSICS | INTRINSICS | STRUCTURE | OBSERVATIONS | CONTROL_POINTS);
 
   // Parameter
   bool _userInteraction = true;
   Pair _initialpair;
   cameras::EINTRINSIC _camType; // The camera type for the unknown cameras
   int _minInputTrackLength = 2;
-
+  int _minTrackLength = 2;
+  int _minPointsPerPose = 30;
+  
   //-- Data provider
   Features_Provider  * _features_provider;
   Matches_Provider  * _matches_provider;
 
-  // Temporary data
-  openMVG::tracks::STLMAPTracks _map_tracks; // putative landmark tracks (visibility per 3D point)
-  Hash_Map<IndexT, double> _map_ACThreshold; // Per camera confidence (A contrario estimated threshold error)
+  // Pyramid scoring
+  const int _pyramidBase = 2;
+  const int _pyramidDepth = 5;
+  /// internal cache of precomputed values for the weighting of the pyramid levels
+  std::vector<int> _pyramidWeights;
+  int _pyramidThreshold;
 
-  std::set<size_t> _set_remainingViewId;     // Remaining camera index that can be used for resection
+  // Temporary data
+  /// Putative landmark tracks (visibility per potential 3D point)
+  tracks::STLMAPTracks _map_tracks;
+  /// Putative tracks per view
+  tracks::TracksPerView _map_tracksPerView;
+  /// Precomputed pyramid index for each trackId of each viewId.
+  tracks::TracksPyramidPerView _map_featsPyramidPerView;
+  /// Per camera confidence (A contrario estimated threshold error)
+  Hash_Map<IndexT, double> _map_ACThreshold;
+
+  /// Remaining camera index that can be used for resection
+  std::set<size_t> _set_remainingViewId;
 };
 
 } // namespace sfm

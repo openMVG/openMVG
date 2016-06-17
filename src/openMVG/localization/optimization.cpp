@@ -203,7 +203,15 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
   }
 
   sfm::Bundle_Adjustment_Ceres bundle_adjustment_obj;
-  const bool b_BA_Status = bundle_adjustment_obj.Adjust(tinyScene, b_refine_pose, b_refine_pose, b_refine_intrinsic, b_refine_structure);
+  sfm::BA_Refine refineOptions = sfm::BA_REFINE_NONE;
+  if(b_refine_pose)
+    refineOptions |= sfm::BA_REFINE_ROTATION | sfm::BA_REFINE_TRANSLATION;
+  if(b_refine_intrinsic)
+    refineOptions |= sfm::BA_REFINE_INTRINSICS;
+  if(b_refine_structure)
+    refineOptions |= sfm::BA_REFINE_STRUCTURE;
+
+  const bool b_BA_Status = bundle_adjustment_obj.Adjust(tinyScene, refineOptions);
   if(b_BA_Status)
   {
     // get back the results and update the localization result with the refined pose

@@ -88,7 +88,7 @@ public:
   */
   virtual bool Describe(const image::Image<unsigned char> & image,
     std::unique_ptr<Regions> &regions,
-    const image::Image<unsigned char> * mask = NULL) = 0;
+    const image::Image<unsigned char> * mask = nullptr) = 0;
 
   /// Allocate regions depending of the Image_describer
   virtual void Allocate(std::unique_ptr<Regions> &regions) const = 0;

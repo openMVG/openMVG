@@ -21,7 +21,7 @@ TEST(kmeans, kmeanInitializer)
   std::cout << "Testing kmeanspp Initializer..." << std::endl;
 
   const std::size_t DIMENSION = 128;
-  const std::size_t FEATURENUMBER = 1000;
+  const std::size_t FEATURENUMBER = 500;
 
   const std::size_t K = 10;
 
@@ -77,8 +77,8 @@ TEST(kmeans, kmeanInitializerVarying)
   
   std::cout << "Testing kmeanspp Initializer with variable k and DIM..." << std::endl;
 
-  const int FEATURENUMBER = 1000;
-  const std::size_t numTrial = 10;
+  const int FEATURENUMBER = 500;
+  const std::size_t numTrial = 3;
   using namespace std;
 
   // generate random values for K and DIMENSION
@@ -131,7 +131,7 @@ TEST(kmeans, kmeanSimple)
   std::cout << "Testing kmeans..." << std::endl;
 
   const std::size_t DIMENSION = 8;
-  const std::size_t FEATURENUMBER = 1000;
+  const std::size_t FEATURENUMBER = 500;
 
   const std::size_t K = 30;
 
@@ -208,9 +208,8 @@ TEST(kmeans, kmeanVarying)
   using namespace openMVG;
   std::cout << "Testing kmeans with variable k and DIM..." << std::endl;
 
-
-  const std::size_t FEATURENUMBER = 1000;
-  const std::size_t numTrial = 10;
+  const std::size_t FEATURENUMBER = 300;
+  const std::size_t numTrial = 3;
 
   // generate random values for K and DIMENSION
   std::default_random_engine generator;

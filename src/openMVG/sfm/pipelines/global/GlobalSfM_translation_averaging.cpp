@@ -770,7 +770,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
   Bundle_Adjustment_Ceres::BA_options options(false, false);
   options._linear_solver_type = ceres::SPARSE_SCHUR;
   Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-  if (bundle_adjustment_obj.Adjust(tiny_scene, false, true, false))
+  if (bundle_adjustment_obj.Adjust(tiny_scene, BA_REFINE_TRANSLATION | BA_REFINE_STRUCTURE))
   {
     // export scene for visualization
     std::ostringstream os;

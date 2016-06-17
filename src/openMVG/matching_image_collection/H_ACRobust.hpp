@@ -77,7 +77,7 @@ struct GeometricFilter_HMatrix_AC
     const std::pair<double,double> ACRansacOut =
       ACRANSAC(kernel, vec_inliers, m_stIteration, &m_H, upper_bound_precision);
 
-    if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5)  {
+    if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES * OPENMVG_MINIMUM_SAMPLES_COEF)  {
       m_dPrecision_robust = ACRansacOut.first;
       // update geometric_inliers
       geometric_inliers.reserve(vec_inliers.size());
@@ -136,10 +136,10 @@ struct GeometricFilter_HMatrix_AC
       // Retrieve corresponding pair camera intrinsic if any
       const cameras::IntrinsicBase * cam_I =
         sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
-          sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
+          sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : nullptr;
       const cameras::IntrinsicBase * cam_J =
         sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
-          sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
+          sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
       if (dDistanceRatio < 0)
       {

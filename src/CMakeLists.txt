@@ -111,6 +111,14 @@ IF (UNIX AND NOT OpenMVG_BUILD_COVERAGE)
 ENDIF ()
 include(UpdateCacheVariable)
 
+if(CMAKE_COMPILER_IS_GNUCXX)
+  include(AddCompilerFlag)
+
+  # This flag is useful as not returning from a non-void function is an error with MSVC
+  AddCompilerFlag("-Werror=return-type")
+  AddCompilerFlag("-Werror=switch")
+endif()
+
 # ==============================================================================
 # Check C++11 support
 # ==============================================================================
@@ -411,6 +419,7 @@ OPTION(BOOST_NO_CXX11 "If Boost is not build with C++11 support this must be ena
 FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS system filesystem program_options thread serialization)
 IF(Boost_FOUND)
    MESSAGE(STATUS "Boost ${Boost_LIB_VERSION} found")
+   add_definitions(-DHAVE_BOOST)
    if(BOOST_NO_CXX11)
      add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
    endif(BOOST_NO_CXX11)

@@ -23,11 +23,13 @@ int main(int argc, char **argv)
   CmdLine cmd;
 
   std::string sSfM_Data_Filename;
+  std::string sFeaturesDir;
   std::string sMatchesDir;
   std::string sMatchesGeometricModel = "f";
   std::string sOutFile = "";
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
+  cmd.add( make_option('f', sFeaturesDir, "feat_dir") );
   cmd.add( make_option('m', sMatchesDir, "match_dir") );
   cmd.add( make_option('o', sOutFile, "output_file") );
   cmd.add( make_option('g', sMatchesGeometricModel, "matchesGeometricModel"));
@@ -36,30 +38,22 @@ int main(int argc, char **argv)
     if (argc == 1) throw std::string("Invalid command line parameter.");
     cmd.process(argc, argv);
   } catch(const std::string& s) {
-    std::cerr << "Usage: " << argv[0] << '\n'
-    << "[-i|--input_file] path to a SfM_Data scene\n"
-    << "[-o|--output_file] file where the output data will be stored "
-    <<    "(i.e. path/sfm_data_structure.bin)\n"
-    << "\n[Optional]\n"
-    << "[-m|--match_dir] path to the features and descriptors that "
-    <<    "corresponds to the provided SfM_Data scene\n"
-    << "[-g|--matchesGeometricModel MODEL] matching geometric model used: 'f' (default), 'e' or 'h'"
+    std::cerr << "Usage: " << argv[0] << "\n"
+       "[-i|--input_file] path to a SfM_Data scene\n"
+       "[-o|--output_file] file where the output data will be stored "
+          "(i.e. path/sfm_data_structure.bin)\n"
+       "[-f|--feat_dir] path to the features and descriptors that "
+          "corresponds to the provided SfM_Data scene\n"
+       "\n[Optional]\n"
+       "[-m|--match_dir] path to the matches files "
+       "(if not provided the images connections will be computed from Frustrums intersections)\n"
+       "[-g|--matchesGeometricModel MODEL] matching geometric model used: 'f' (default), 'e' or 'h'"
     << std::endl;
 
     std::cerr << s << std::endl;
     return EXIT_FAILURE;
   }
   
-  // Create output dir
-  if (!stlplus::folder_exists(sOutFile))
-  {
-    if (!stlplus::folder_create(sOutFile))
-    {
-      std::cerr << "Cannot create output directory." << std::endl;
-      return EXIT_FAILURE;
-    }
-  }
-
   // Load input SfM_Data scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS))) {
@@ -70,7 +64,7 @@ int main(int argc, char **argv)
 
   // Init the regions_type from the image describer file (used for image regions extraction)
   using namespace openMVG::features;
-  const std::string sImage_describer = stlplus::create_filespec(sMatchesDir, "image_describer", "json");
+  const std::string sImage_describer = stlplus::create_filespec(sFeaturesDir, "image_describer", "json");
   std::unique_ptr<Regions> regions_type = Init_region_type_from_file(sImage_describer);
   if (!regions_type)
   {
@@ -81,7 +75,7 @@ int main(int argc, char **argv)
 
   // Prepare the Regions provider
   std::shared_ptr<Regions_Provider> regions_provider = std::make_shared<Regions_Provider>();
-  if (!regions_provider->load(sfm_data, sMatchesDir, regions_type)) {
+  if (!regions_provider->load(sfm_data, sFeaturesDir, regions_type)) {
     std::cerr << std::endl
       << "Invalid regions." << std::endl;
     return EXIT_FAILURE;
@@ -117,11 +111,23 @@ int main(int argc, char **argv)
 
   openMVG::system::Timer timer;
 
+  // Clear previous 3D landmarks
+  sfm_data.structure.clear();
+
   //------------------------------------------
   // Compute Structure from known camera poses
   //------------------------------------------
   SfM_Data_Structure_Estimation_From_Known_Poses structure_estimator;
-  structure_estimator.run(sfm_data, pairs, regions_provider);
+  structure_estimator.match(sfm_data, pairs, regions_provider);
+
+  // Unload descriptors before triangulation
+  regions_provider->clearDescriptors();
+
+  // Filter matches
+  structure_estimator.filter(sfm_data, pairs, regions_provider);
+  // Create 3D landmarks
+  structure_estimator.triangulate(sfm_data, regions_provider);
+
   RemoveOutliers_AngleError(sfm_data, 2.0);
 
   std::cout

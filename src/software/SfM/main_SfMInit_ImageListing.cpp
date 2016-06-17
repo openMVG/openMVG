@@ -144,7 +144,7 @@ int main(int argc, char **argv)
   std::string sOutputDir;
   std::string sKmatrix;
 
-  std::string i_User_camera_model = EINTRINSIC_enumToString(PINHOLE_CAMERA_RADIAL3);
+  std::string i_User_camera_model;
 
   bool b_Group_camera_model = true;
   bool b_use_UID = false;
@@ -204,7 +204,9 @@ int main(int argc, char **argv)
             << "--use_UID " << b_use_UID << std::endl
             << "--storeMetadata " << b_storeMetadata << std::endl;
 
-  const EINTRINSIC e_User_camera_model = EINTRINSIC_stringToEnum(i_User_camera_model);
+  EINTRINSIC e_User_camera_model = PINHOLE_CAMERA_START;
+  if(!i_User_camera_model.empty())
+    e_User_camera_model = EINTRINSIC_stringToEnum(i_User_camera_model);
   double ppx = -1.0, ppy = -1.0;
 
   if(!sImageDir.empty() && !sJsonFile.empty())
@@ -335,6 +337,30 @@ int main(int argc, char **argv)
     if( bHaveValidExifMetadata )
       allExifData = exifReader.getExifData();
 
+    int metadataImageWidth = imgHeader.width;
+    int metadataImageHeight = imgHeader.height;
+    if(allExifData.count("image_width"))
+    {
+      metadataImageWidth = std::stoi(allExifData.at("image_width"));
+      // If the metadata is bad, use the real image size
+      if(metadataImageWidth <= 0)
+        metadataImageWidth = imgHeader.width;
+    }
+    if(allExifData.count("image_height"))
+    {
+      metadataImageHeight = std::stoi(allExifData.at("image_height"));
+      // If the metadata is bad, use the real image size
+      if(metadataImageHeight <= 0)
+        metadataImageHeight = imgHeader.height;
+    }
+    const bool resizedImage = metadataImageWidth != width || metadataImageHeight != height;
+    if(resizedImage)
+    {
+      std::cout << "Resized image detected:" << std::endl;
+      std::cout << " * real image size: " << imgHeader.width << "x" << imgHeader.height << std::endl;
+      std::cout << " * image size from metadata is: " << metadataImageWidth << "x" << metadataImageHeight << std::endl;
+    }
+
     // Sensor width
     double ccdw = 0.0;
     if(userSensorWidth != -1.0)
@@ -370,6 +396,9 @@ int main(int argc, char **argv)
     }
 
     // Focal
+    float focalLength_mm = 0.0;
+    std::string sCamName;
+    std::string sCamModel;
     // Consider the case where the focal is provided manually
     if (sKmatrix.size() > 0) // Known user calibration K matrix
     {
@@ -384,11 +413,11 @@ int main(int argc, char **argv)
     // If image contains meta data
     else if(bHaveValidExifMetadata)
     {
-      const std::string sCamName = exifReader.getBrand();
-      const std::string sCamModel = exifReader.getModel();
-
+      sCamName = exifReader.getBrand();
+      sCamModel = exifReader.getModel();
+      focalLength_mm = exifReader.getFocal();
       // Handle case where focal length is equal to 0
-      if (exifReader.getFocal() == 0.0f)
+      if (focalLength_mm == 0.0f)
       {
         error_report_stream
           << stlplus::basename_part(imageAbsFilepath) << ": Focal length is missing in metadata." << "\n";
@@ -397,7 +426,7 @@ int main(int argc, char **argv)
       else
       {
         // Retrieve the focal from the metadata in mm and convert to pixel.
-        focalPix = std::max ( width, height ) * exifReader.getFocal() / ccdw;
+        focalPix = std::max ( metadataImageWidth, metadataImageHeight ) * focalLength_mm / ccdw;
       }
     }
     else
@@ -407,37 +436,60 @@ int main(int argc, char **argv)
       focalPix = -1.0;
     }
 
-
     // Build intrinsic parameter related to the view
     std::shared_ptr<IntrinsicBase> intrinsic (NULL);
     if (focalPix > 0 && ppx > 0 && ppy > 0 && width > 0 && height > 0)
     {
-      // Create the desired camera type
-      switch(e_User_camera_model)
+      EINTRINSIC camera_model = e_User_camera_model;
+      // If no user input choose a default camera model
+      if(camera_model == PINHOLE_CAMERA_START)
       {
-        case PINHOLE_CAMERA:
-          intrinsic = std::make_shared<Pinhole_Intrinsic>
-            (width, height, focalPix, ppx, ppy);
-        break;
-        case PINHOLE_CAMERA_RADIAL1:
-          intrinsic = std::make_shared<Pinhole_Intrinsic_Radial_K1>
-            (width, height, focalPix, ppx, ppy, 0.0); // setup no distortion as initial guess
-        break;
-        case PINHOLE_CAMERA_RADIAL3:
-          intrinsic = std::make_shared<Pinhole_Intrinsic_Radial_K3>
-            (width, height, focalPix, ppx, ppy, 0.0, 0.0, 0.0);  // setup no distortion as initial guess
-        break;
-        case PINHOLE_CAMERA_BROWN:
-          intrinsic =std::make_shared<Pinhole_Intrinsic_Brown_T2>
-            (width, height, focalPix, ppx, ppy, 0.0, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
-        break;
+        // Use standard lens with radial distortion by default
+        camera_model = PINHOLE_CAMERA_RADIAL3;
+        if(resizedImage)
+        {
+          // If the image has been resized, we assume that it has been undistorted
+          // and we use a camera without lens distortion.
+          camera_model = PINHOLE_CAMERA;
+        }
+        else if(focalLength_mm > 0.0 && focalLength_mm < 15)
+        {
+          // If the focal lens is short, the fisheye model should fit better.
+          camera_model = PINHOLE_CAMERA_FISHEYE;
+        }
+      }
+
+      // Create the desired camera type
+      intrinsic = createPinholeIntrinsic(camera_model, width, height, focalPix, ppx, ppy);
+
+      // Initialize distortion parameters
+      switch(camera_model)
+      {
         case PINHOLE_CAMERA_FISHEYE:
-          intrinsic =std::make_shared<Pinhole_Intrinsic_Fisheye>
-            (width, height, focalPix, ppx, ppy, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
-        break;
+        {
+          if(sCamName == "GoPro")
+            intrinsic->updateFromParams({focalPix, ppx, ppy, 0.0524, 0.0094, -0.0037, -0.0004});
+          break;
+        }
+        case PINHOLE_CAMERA_FISHEYE1:
+        {
+          if(sCamName == "GoPro")
+            intrinsic->updateFromParams({focalPix, ppx, ppy, 1.04});
+          break;
+        }
         default:
-          std::cerr << "Error: unknown camera model: " << (int) e_User_camera_model << std::endl;
-          return EXIT_FAILURE;
+          break;
+      }
+
+      // Add serial number
+      if( bHaveValidExifMetadata )
+      {
+        // Create custom serial number
+        std::string customSerialNumber = "";
+        customSerialNumber += exifReader.getSerialNumber();
+        customSerialNumber += exifReader.getLensSerialNumber();
+
+        intrinsic->setSerialNumber(customSerialNumber);
       }
     }
     else

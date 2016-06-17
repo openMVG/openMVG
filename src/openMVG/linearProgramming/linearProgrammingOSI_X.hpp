@@ -75,10 +75,10 @@ template<typename SOLVERINTERFACE>
 OSI_X_SolverWrapper<SOLVERINTERFACE>::~OSI_X_SolverWrapper()
 {
   // Memory cleaning.
-  if ( si != NULL )
+  if ( si != nullptr )
   {
     delete si;
-    si = NULL;
+    si = nullptr;
   }
 }
 
@@ -86,7 +86,7 @@ template<typename SOLVERINTERFACE>
 bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints & cstraints) //cstraints <-> constraints
 {
   bool bOk = true;
-  if ( si == NULL )
+  if ( si == nullptr )
   {
     return false;
   }
@@ -164,7 +164,7 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints & cstraint
     }
   }
 
-  si->loadProblem(*matrix, &col_lb[0], &col_ub[0], cstraints._vec_cost.empty() ? NULL : &cstraints._vec_cost[0], &row_lb[0], &row_ub[0] );
+  si->loadProblem(*matrix, &col_lb[0], &col_ub[0], cstraints._vec_cost.empty() ? nullptr : &cstraints._vec_cost[0], &row_lb[0], &row_ub[0] );
 
   delete matrix;
 
@@ -175,7 +175,7 @@ template<typename SOLVERINTERFACE>
 bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints_Sparse & cstraints) //cstraints <-> constraints
 {
   bool bOk = true;
-  if ( si == NULL )
+  if ( si == nullptr )
   {
     return false;
   }
@@ -266,7 +266,7 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints_Sparse & c
     *matrix,
     &col_lb[0],
     &col_ub[0],
-    cstraints._vec_cost.empty() ? NULL : &cstraints._vec_cost[0],
+    cstraints._vec_cost.empty() ? nullptr : &cstraints._vec_cost[0],
     &row_lb[0],
     &row_ub[0]);
 
@@ -279,7 +279,7 @@ template<typename SOLVERINTERFACE>
 bool OSI_X_SolverWrapper<SOLVERINTERFACE>::solve()
 {
   //-- Compute solution
-  if ( si != NULL )
+  if ( si != nullptr )
   {
     si->getModelPtr()->setPerturbation(50);
     si->initialSolve();
@@ -291,7 +291,7 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::solve()
 template<typename SOLVERINTERFACE>
 bool OSI_X_SolverWrapper<SOLVERINTERFACE>::getSolution(std::vector<double> & estimatedParams)
 {
-  if ( si != NULL )
+  if ( si != nullptr )
   {
     const int n = si->getNumCols();
     memcpy(&estimatedParams[0], si->getColSolution(), n * sizeof(double));
