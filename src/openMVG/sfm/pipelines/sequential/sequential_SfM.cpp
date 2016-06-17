@@ -661,13 +661,13 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
     }
   }
   // We print the N best scores and return the best one.
-  static const std::size_t nBestScores = 50;
+  const std::size_t nBestScores = std::min(std::size_t(50), scoring_per_pair.size());
   std::partial_sort(scoring_per_pair.begin(), scoring_per_pair.begin() + nBestScores, scoring_per_pair.end(), std::greater<ImagePairScore>());
   std::cout << scoring_per_pair.size() << " possible image pairs. " << nBestScores << " best possibles image pairs are:" << std::endl;
 #ifdef HAVE_BOOST
   std::cout << boost::format("%=15s | %=15s | %=15s | %=15s\n")  % "Score" % "ImagePairScore" % "Angle" % "NbMatches";
   std::cout << std::string(15*4+3*3, '-') << "\n";
-  for(std::size_t i = 0; i < scoring_per_pair.size() && i < nBestScores; ++i)
+  for(std::size_t i = 0; i < nBestScores; ++i)
   {
     const ImagePairScore& s = scoring_per_pair[i];
     std::cout << boost::format("%+15.1f | %+15.1f | %+15.1f | %+15f\n") % std::get<0>(s) % std::get<1>(s) % std::get<2>(s) % std::get<3>(s);
