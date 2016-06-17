@@ -111,9 +111,9 @@ int main(int argc, char** argv)
   
   // voctree parameters
   std::string algostring = "AllResults";
-  size_t numResults = 4;
-  size_t maxResults = 10;
-  size_t numCommonViews = 3;
+  std::size_t numResults = 4;       //< number of documents to search when querying the voctree
+  std::size_t maxResults = 10;      //< maximum number of matching documents to retain
+  std::size_t numCommonViews = 3;
   std::string vocTreeFilepath;      //< the vocabulary tree file
   std::string weightsFilepath;      //< the vocabulary tree weights file
   
@@ -124,7 +124,7 @@ int main(int argc, char** argv)
 #endif
 #if HAVE_CCTAG
   // parameters for cctag localizer
-  size_t nNearestKeyFrames = 5;   
+  std::size_t nNearestKeyFrames = 5;   
 #endif
   bool globalBundle = false;              ///< If !refineIntrinsics it can run a final global budndle to refine the scene
   bool noDistortion = false;              ///< It does not count the distortion
@@ -372,7 +372,7 @@ int main(int argc, char** argv)
   
   std::size_t frameCounter = 0;
   std::size_t goodFrameCounter = 0;
-  vector<std::string> goodFrameList;
+  std::vector<std::string> goodFrameList;
   std::string currentImgName;
   
   //***********************************************************************
