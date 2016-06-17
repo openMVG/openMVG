@@ -1,10 +1,3 @@
-/* 
- * File:   main_rigLocalizer.cpp
- * Author: sgaspari
- *
- * Created on November 23, 2015, 6:48 PM
- */
-
 #include <openMVG/localization/VoctreeLocalizer.hpp>
 #if HAVE_CCTAG
 #include <openMVG/localization/CCTagLocalizer.hpp>

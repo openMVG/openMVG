@@ -1,9 +1,3 @@
-/* 
- * File:   main_voctreeLocalizer.cpp
- * Author: sgaspari
- *
- * Created on September 12, 2015, 3:16 PM
- */
 #include <openMVG/localization/ILocalizer.hpp>
 #include <openMVG/localization/VoctreeLocalizer.hpp>
 #if HAVE_CCTAG

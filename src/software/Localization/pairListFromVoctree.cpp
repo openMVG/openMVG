@@ -1,11 +1,3 @@
-/*
- * File:   pairListFromVoctree.cpp
- * Author: sgaspari
- *
- * Created on July 18, 2015, 4:36 PM
- */
-
-
 #include <openMVG/voctree/database.hpp>
 #include <openMVG/voctree/vocabulary_tree.hpp>
 #include <openMVG/voctree/databaseIO.hpp>
