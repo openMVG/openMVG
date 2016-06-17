@@ -49,7 +49,7 @@ public:
 
     Parameters() : LocalizerParameters(), 
       _useGuidedMatching(false),
-      _algorithm(Algorithm::FirstBest),
+      _algorithm(Algorithm::AllResults),
       _numResults(4),
       _maxResults(10),
       _numCommonViews(3),
