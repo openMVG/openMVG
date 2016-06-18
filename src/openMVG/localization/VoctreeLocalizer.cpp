@@ -102,7 +102,7 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
   else
   {
 #if USE_SIFT_FLOAT
-    POPART_COUT(SIFT_float_describer");
+    POPART_COUT("SIFT_float_describer");
     _image_describer = new features::SIFT_float_describer();
 #else
     POPART_COUT("SIFT_Image_describer");
@@ -111,7 +111,7 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
   }
 #else
 #if USE_SIFT_FLOAT
-    POPART_COUT(SIFT_float_describer");
+    POPART_COUT("SIFT_float_describer");
     _image_describer = new features::SIFT_float_describer();
 #else
     POPART_COUT("SIFT_Image_describer");
