@@ -8,7 +8,7 @@ ENDIF (OpenMVG_BUILD_OPENGL_EXAMPLES)
 
 ADD_SUBDIRECTORY(colorHarmonize)
 
-find_package(Qt4 QUIET)
+find_host_package(Qt4 QUIET)
 if (QT_FOUND)
 ADD_SUBDIRECTORY(ui)
 endif (QT_FOUND)

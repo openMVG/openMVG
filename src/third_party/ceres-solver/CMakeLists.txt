@@ -156,7 +156,7 @@ endif (IOS)
 unset(CERES_COMPILE_OPTIONS)
 
 # Eigen.
-find_package(Eigen REQUIRED)
+find_host_package(Eigen REQUIRED)
 if (EIGEN_FOUND)
   if (EIGEN_VERSION VERSION_LESS 3.1.0)
     message(FATAL_ERROR "-- Ceres requires Eigen version >= 3.1.0 in order "
@@ -196,14 +196,14 @@ endif (EIGEN_FOUND)
 
 # LAPACK (& BLAS).
 if (LAPACK)
-  find_package(LAPACK QUIET)
+  find_host_package(LAPACK QUIET)
   if (LAPACK_FOUND)
     message("-- Found LAPACK library: ${LAPACK_LIBRARIES}")
   else (LAPACK_FOUND)
     message("-- Did not find LAPACK library, disabling LAPACK support.")
   endif (LAPACK_FOUND)
 
-  find_package(BLAS QUIET)
+  find_host_package(BLAS QUIET)
   if (BLAS_FOUND)
     message("-- Found BLAS library: ${BLAS_LIBRARIES}")
   else (BLAS_FOUND)
@@ -233,7 +233,7 @@ if (SUITESPARSE)
   # built with SuiteSparse support.
 
   # Check for SuiteSparse and dependencies.
-  find_package(SuiteSparse)
+  find_host_package(SuiteSparse)
   if (SUITESPARSE_FOUND)
     # On Ubuntu the system install of SuiteSparse (v3.4.0) up to at least
     # Ubuntu 13.10 cannot be used to link shared libraries.
@@ -290,7 +290,7 @@ endif(NOT SUITESPARSE AND NOT CXSPARSE AND NOT EIGENSPARSE)
 # GFlags.
 if (GFLAGS)
   # Don't search with REQUIRED as we can continue without gflags.
-  find_package(Gflags)
+  find_host_package(Gflags)
   if (GFLAGS_FOUND)
     message("-- Found Google Flags header in: ${GFLAGS_INCLUDE_DIRS}, "
       "in namespace: ${GFLAGS_NAMESPACE}")
@@ -325,7 +325,7 @@ if (MINIGLOG)
 else (MINIGLOG)
   # Don't search with REQUIRED so that configuration continues if not found and
   # we can output an error messages explaining MINIGLOG option.
-  find_package(Glog)
+  find_host_package(Glog)
   if (GLOG_FOUND)
     message("-- Found Google Log header in: ${GLOG_INCLUDE_DIRS}")
   else (GLOG_FOUND)
@@ -353,7 +353,7 @@ if (OPENMP)
     list(APPEND CERES_COMPILE_OPTIONS CERES_NO_THREADS)
   else (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     # Find quietly s/t as we can continue without OpenMP if it is not found.
-    find_package(OpenMP QUIET)
+    find_host_package(OpenMP QUIET)
     if (OPENMP_FOUND)
       message("-- Building with OpenMP.")
       list(APPEND CERES_COMPILE_OPTIONS CERES_USE_OPENMP)
@@ -361,7 +361,7 @@ if (OPENMP)
       if (UNIX)
         # At least on Linux, we need pthreads to be enabled for mutex to
         # compile.  This may not work on Windows or Android.
-        find_package(Threads REQUIRED)
+        find_host_package(Threads REQUIRED)
         list(APPEND CERES_COMPILE_OPTIONS CERES_HAVE_PTHREAD)
         list(APPEND CERES_COMPILE_OPTIONS CERES_HAVE_RWLOCK)
       endif (UNIX)
@@ -453,7 +453,7 @@ include_directories(
 # compiler warnings from them being suppressed.
 #
 # Note that this is *not* propagated to clients, ie CERES_INCLUDE_DIRS
-# used by clients after find_package(Ceres) does not identify Eigen as
+# used by clients after find_host_package(Ceres) does not identify Eigen as
 # as system headers.
 include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS})
 
@@ -653,7 +653,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/config)
 add_subdirectory(internal/ceres)
 
 if (BUILD_DOCUMENTATION)
-  find_package(Sphinx QUIET)
+  find_host_package(Sphinx QUIET)
   if (NOT SPHINX_FOUND)
     message("-- Failed to find Sphinx, disabling build of documentation.")
     update_cache_variable(BUILD_DOCUMENTATION OFF)
