@@ -66,39 +66,39 @@ env:
 before_install:
  - gem install coveralls-lcov
  # OPENCV
- - mkdir --parent $OPENCV_SOURCE
- - mkdir --parent $OPENCV_CONTRIB
- - mkdir --parent $OPENCV_BUILD
- - mkdir --parent $OPENCV_INSTALL
  - >
-    if [ -d "$OPENCV_INSTALL" ]; then
+    if [ "$(ls -A $OPENCV_INSTALL)" ]; then
       echo "OpenCV found in cache.";
     else
+      mkdir --parent $OPENCV_SOURCE
+      mkdir --parent $OPENCV_CONTRIB
+      mkdir --parent $OPENCV_BUILD
+      mkdir --parent $OPENCV_INSTALL
       git clone --recursive --branch 3.0.0 --depth 1 https://github.com/Itseez/opencv.git $OPENCV_SOURCE;
       git clone --branch 3.0.0 --depth 1  https://github.com/Itseez/opencv_contrib.git $OPENCV_CONTRIB;
     fi
  # EIGEN
- - mkdir --parent $EIGEN_INSTALL
  - >
-    if [ -d "$EIGEN_INSTALL" ]; then
+    if [ "$(ls -A $EIGEN_INSTALL)" ]; then
       echo "Eigen found in cache.";
     else
+      mkdir --parent $EIGEN_INSTALL
       hg clone -r 3.2.8 https://bitbucket.org/eigen/eigen/ $EIGEN_INSTALL;
     fi 
  # BOOST
- - mkdir --parent $BOOST_SOURCE
- - mkdir --parent $BOOST_INSTALL
  - >
-    if [ -d "$BOOST_INSTALL" ]; then
+    if [ "$(ls -A $BOOST_INSTALL)" ]; then
       echo "Boost found in cache.";
     else
+      mkdir --parent $BOOST_SOURCE
+      mkdir --parent $BOOST_INSTALL
       wget https://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.tar.gz;
       tar -xf boost_1_55_0.tar.gz;
       cp -r boost_1_55_0/* $BOOST_SOURCE;
     fi
  # SUITESPARSE
  - >
-    if [ -d "$SS_INSTALL" ]; then
+    if [ "$(ls -A $SS_INSTALL)" ]; then
       echo "SuiteSparse found in cache.";
     else
       cd $SS_ROOT;
@@ -107,13 +107,13 @@ before_install:
       tar -xf SuiteSparse-4.5.3.tar.gz;
     fi
  # CERES
- - mkdir --parent $CERES_SOURCE
- - mkdir --parent $CERES_BUILD
- - mkdir --parent $CERES_INSTALL
  - >
-    if [ -d "$CERES_INSTALL" ]; then
+    if [ "$(ls -A $CERES_INSTALL)" ]; then
       echo "Ceres found in cache.";
     else
+      mkdir --parent $CERES_SOURCE
+      mkdir --parent $CERES_BUILD
+      mkdir --parent $CERES_INSTALL
       wget http://ceres-solver.org/ceres-solver-1.11.0.tar.gz;
       tar -xf ceres-solver-1.11.0.tar.gz;
       cp -r ceres-solver-1.11.0/* $CERES_SOURCE;
@@ -121,43 +121,43 @@ before_install:
 
 install:
   # OPENCV
-  - cd $OPENCV_BUILD
   - >
-     if [ ! -d "$OPENCV_INSTALL" ]; then
-     cmake
-     -DCMAKE_BUILD_TYPE=Release
-     -DCMAKE_INSTALL_PREFIX=$OPENCV_INSTALL
-     -DOPENCV_EXTRA_MODULES_PATH=$OPENCV_CONTRIB/modules
-     $OPENCV_SOURCE;
+     if [ ! "$(ls -A $OPENCV_INSTALL)" ]; then
+       cd $OPENCV_BUILD
+       cmake \
+         -DCMAKE_BUILD_TYPE=Release \
+         -DCMAKE_INSTALL_PREFIX=$OPENCV_INSTALL \
+         -DOPENCV_EXTRA_MODULES_PATH=$OPENCV_CONTRIB/modules \
+         $OPENCV_SOURCE;
      make -j 2 > null;
      make install;
      fi
   # BOOST
-  - cd $BOOST_SOURCE
   - >
-     if [ ! -d "$BOOST_INSTALL" ]; then
-     ./bootstrap.sh --with-libraries=filesystem,program_options,graph,serialization,thread --prefix=$BOOST_INSTALL;
-     ./b2 link=shared install > null;
+     if [ ! "$(ls -A $BOOST_INSTALL)" ]; then
+       cd $BOOST_SOURCE
+       ./bootstrap.sh --with-libraries=filesystem,program_options,graph,serialization,thread --prefix=$BOOST_INSTALL;
+       ./b2 link=shared install > null;
      fi
   # SUITESPARSE
   - >
-     if [ ! -d "$SS_INSTALL" ]; then
-     cd $SS_SOURCE;
-     make -j 2 > null;
-     cp -r include $SS_INSTALL;
-     cp -r lib $SS_INSTALL;
+     if [ ! "$(ls -A $SS_INSTALL)" ]; then
+       cd $SS_SOURCE;
+       make -j 2 > null;
+       cp -r include $SS_INSTALL;
+       cp -r lib $SS_INSTALL;
      fi
   # CERES
-  - cd $CERES_BUILD
   - >
-     if [ ! -d "$CERES_INSTALL" ]; then
-     cmake
-     -DCMAKE_INSTALL_PREFIX=$CERES_INSTALL
-     -DEIGEN_INCLUDE_DIR=$EIGEN_INSTALL
-     -DSUITESPARSE_INCLUDE_DIR_HINTS=$SS_INSTALL/include
-     -DSUITESPARSE_LIBRARY_DIR_HINTS=$SS_INSTALL/lib
-     -DMINIGLOG=ON
-     $CERES_SOURCE;
+     if [ ! "$(ls -A $CERES_INSTALL)" ]; then
+       cd $CERES_BUILD
+       cmake \
+         -DCMAKE_INSTALL_PREFIX=$CERES_INSTALL \
+         -DEIGEN_INCLUDE_DIR=$EIGEN_INSTALL \
+         -DSUITESPARSE_INCLUDE_DIR_HINTS=$SS_INSTALL/include \
+         -DSUITESPARSE_LIBRARY_DIR_HINTS=$SS_INSTALL/lib \
+         -DMINIGLOG=ON \
+         $CERES_SOURCE;
      make -j 2 > null;
      make install;
      fi
@@ -169,20 +169,20 @@ before_script:
   - cd $OPENMVG_BUILD
   # Classic release build
   - >
-     cmake
-     -DCMAKE_BUILD_TYPE=$BUILD_TYPE
-     -DOpenMVG_BUILD_TESTS=ON
-     -DOpenMVG_BUILD_EXAMPLES=ON
-     -DOpenMVG_USE_OPENCV=ON
-     -DOpenCV_DIR=$OPENCV_INSTALL/share/OpenCV
-     -DOpenMVG_BUILD_VOCTREE=ON
-     -DOpenMVG_USE_CCTAG=OFF
-     -DBOOST_NO_CXX11=ON
-     -DOpenMVG_USE_INTERNAL_CERES=OFF
-     -DCeres_DIR=$CERES_INSTALL/share/Ceres
-     -DEIGEN_INCLUDE_DIR_HINTS=$EIGEN_INSTALL
-     -DBOOST_ROOT=$BOOST_INSTALL
-     . $OPENMVG_SOURCE
+     cmake \
+       -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+       -DOpenMVG_BUILD_TESTS=ON \
+       -DOpenMVG_BUILD_EXAMPLES=ON \
+       -DOpenMVG_USE_OPENCV=ON \
+       -DOpenCV_DIR=$OPENCV_INSTALL/share/OpenCV \
+       -DOpenMVG_BUILD_VOCTREE=ON \
+       -DOpenMVG_USE_CCTAG=OFF \
+       -DBOOST_NO_CXX11=ON \
+       -DOpenMVG_USE_INTERNAL_CERES=OFF \
+       -DCeres_DIR=$CERES_INSTALL/share/Ceres \
+       -DEIGEN_INCLUDE_DIR_HINTS=$EIGEN_INSTALL \
+       -DBOOST_ROOT=$BOOST_INSTALL \
+       . $OPENMVG_SOURCE
   # Build for code coverage evaluation
   #- cmake -DOpenMVG_BUILD_COVERAGE=ON -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src
 
@@ -193,7 +193,7 @@ script:
   - if [ "$CC" = "gcc" ]; then make test; fi
 # Perform benchmark through ground truth tests with many scenes
   - >
-    if [ -d "$GT_TEST_SOURCE" ]; then
+    if [ "$(ls -A $GT_TEST_SOURCE)" ]; then
       echo "Evaluation benchmark found in cache.";
     else
       git clone --branch dev https://github.com/caymard/SfM_quality_evaluation.git $GT_TEST_SOURCE;
@@ -207,10 +207,8 @@ script:
   - cd $TRAVIS_BUILD_DIR
   - rm -rf $GT_TEST_SOURCE
   - rm -rf $GT_TEST_OUTPUT
+
 after_success:
-  - du -hs $OPENCV_SOURCE
-  - du -hs $OPENCV_CONTRIB
-  - du -hs $OPENCV_BUILD
   - du -hs $OPENCV_INSTALL
   #- cd ../openMVG
   # If GCC: compute code coverage and export it to coveralls
