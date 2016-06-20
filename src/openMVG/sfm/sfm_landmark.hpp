@@ -67,9 +67,9 @@ struct Landmark
   {}
 
   Vec3 X;
-  image::RGBColor rgb;    //!> the color associated to the point
   Observations obs;
-
+  image::RGBColor rgb;    //!> the color associated to the point
+  
   bool operator==(const Landmark& other) const
   {
     return AreVecNearEqual(X, other.X, 1e-3) &&
