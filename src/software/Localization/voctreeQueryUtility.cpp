@@ -15,9 +15,6 @@
 
 #include <Eigen/Core>
 
-//#include "selection.hpp"
-#include <opencv2/opencv.hpp>
-
 #include <boost/program_options.hpp> 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/tail.hpp>
