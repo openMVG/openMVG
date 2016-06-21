@@ -29,7 +29,7 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
                     bool b_no_distortion /*= false*/,
                     bool b_refine_pose /*= true*/,
                     bool b_refine_structure /*= false*/,
-                    const std::string filename /*= ""*/,
+                    const std::string outputFilename /*= ""*/,
                     std::size_t minPointVisibility /*=0*/)
 {
   
@@ -239,11 +239,11 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
     }
   }
   
-  if(!filename.empty())
+  if(!outputFilename.empty())
   {
-    const std::string outputfile = filename+".BEFORE.json";
-    if(!sfm::Save(tinyScene, outputfile, sfm::ESfM_Data::ALL))
-      POPART_CERR("Could not save " << outputfile);
+    const std::string outfile = outputFilename+".BEFORE.json";
+    if(!sfm::Save(tinyScene, outfile, sfm::ESfM_Data::ALL))
+      POPART_CERR("Could not save " << outfile);
   }
 
   sfm::Bundle_Adjustment_Ceres bundle_adjustment_obj;
@@ -257,11 +257,11 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
       vec_localizationResult[idPose].setPose(pose.second);
     }
 
-    if(!filename.empty())
+    if(!outputFilename.empty())
     {
-      const std::string outputfile = filename+".AFTER.json";
-      if(!sfm::Save(tinyScene, outputfile, sfm::ESfM_Data::ALL))
-        POPART_CERR("Could not save " << outputfile);
+      const std::string outfile = outputFilename+".AFTER.json";
+      if(!sfm::Save(tinyScene, outfile, sfm::ESfM_Data::ALL))
+        POPART_CERR("Could not save " << outfile);
     }
   }
   
