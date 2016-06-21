@@ -151,7 +151,7 @@ int main(int argc, char** argv)
           "[voctree] Filename for the vocabulary tree weights")
         ("algorithm", po::value<std::string>(&algostring)->default_value(algostring),
           "[voctree] Algorithm type: {FirstBest,BestResult,AllResults,Cluster}" )
-        ("results", po::value<size_t>(&numResults)->default_value(numResults),
+        ("nbImageMatch", po::value<size_t>(&numResults)->default_value(numResults),
           "[voctree] Number of images to retrieve in the database")
         ("maxResults", po::value<size_t>(&maxResults)->default_value(maxResults), 
           "[voctree] For algorithm AllResults, it stops the image matching when "

@@ -156,7 +156,7 @@ int main(int argc, char** argv)
       ("refineIntrinsics", po::bool_switch(&refineIntrinsics), 
           "Enable/Disable camera intrinsics refinement for each localized image")
 // voctree specific options
-      ("results", po::value<size_t>(&numResults)->default_value(numResults), 
+      ("nbImageMatch", po::value<size_t>(&numResults)->default_value(numResults), 
           "[voctree] Number of images to retrieve in database")
       ("maxResults", po::value<size_t>(&maxResults)->default_value(maxResults), 
           "[voctree] For algorithm AllResults, it stops the image matching when "
