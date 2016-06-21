@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 #include <chrono>
+#include <memory>
 
 #if HAVE_ALEMBIC
 #include <openMVG/sfm/AlembicExporter.hpp>
@@ -288,9 +289,9 @@ int main(int argc, char** argv)
   // Localizer initialization
   //***********************************************************************
   
-  localization::LocalizerParameters *param;
+  std::unique_ptr<localization::LocalizerParameters> param;
   
-  localization::ILocalizer *localizer;
+  std::unique_ptr<localization::ILocalizer> localizer;
   
   // if a describer is not supported an exception will be thrown here
   DescriberType describer = stringToDescriberType(str_descriptorType);
@@ -302,28 +303,30 @@ int main(int argc, char** argv)
 #endif
       )
   {
-    localizer = new localization::VoctreeLocalizer(sfmFilePath,
+    localization::VoctreeLocalizer* tmpLoc = new localization::VoctreeLocalizer(sfmFilePath,
                                                    descriptorsFolder,
                                                    vocTreeFilepath,
                                                    weightsFilepath
 #ifdef HAVE_CCTAG
                                                     , useSIFT_CCTAG
 #endif
-            );
+                                                  );
+    localizer.reset(tmpLoc);
     
-    param = new localization::VoctreeLocalizer::Parameters();
-
-    localization::VoctreeLocalizer::Parameters *casted = static_cast<localization::VoctreeLocalizer::Parameters *>(param);
-    casted->_algorithm = localization::VoctreeLocalizer::initFromString(algostring);;
-    casted->_numResults = numResults;
-    casted->_maxResults = maxResults;
-    casted->_numCommonViews = numCommonViews;
-    casted->_ccTagUseCuda = false;
+    localization::VoctreeLocalizer::Parameters *tmpParam = new localization::VoctreeLocalizer::Parameters();
+    tmpParam->_algorithm = localization::VoctreeLocalizer::initFromString(algostring);;
+    tmpParam->_numResults = numResults;
+    tmpParam->_maxResults = maxResults;
+    tmpParam->_numCommonViews = numCommonViews;
+    tmpParam->_ccTagUseCuda = false;
+    
+    param.reset(tmpParam);
   }
 #if HAVE_CCTAG
   else
   {
-    localizer = new localization::CCTagLocalizer(sfmFilePath, descriptorsFolder);
+    localization::CCTagLocalizer tmp = new localization::CCTagLocalizer(sfmFilePath, descriptorsFolder);
+    localizer.reset(tmp);
     
     param = new localization::CCTagLocalizer::Parameters();
 
@@ -391,7 +394,7 @@ int main(int argc, char** argv)
     localization::LocalizationResult localizationResult;
     auto detect_start = std::chrono::steady_clock::now();
     localizer->localize(imageGrey, 
-                       param,
+                       param.get(),
                        hasIntrinsics /*useInputIntrinsics*/,
                        queryIntrinsics,
                        localizationResult,

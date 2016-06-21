@@ -20,6 +20,7 @@
 #include <iostream>
 #include <string>
 #include <chrono>
+#include <memory>
 
 #if HAVE_ALEMBIC
 #include <openMVG/sfm/AlembicExporter.hpp>
@@ -225,9 +226,9 @@ int main(int argc, char** argv)
 
   }
 
-  localization::LocalizerParameters *param;
+  std::unique_ptr<localization::LocalizerParameters> param;
   
-  localization::ILocalizer *localizer;
+  std::unique_ptr<localization::ILocalizer> localizer;
   
   DescriberType describer = stringToDescriberType(str_descriptorType);
   
@@ -238,30 +239,34 @@ int main(int argc, char** argv)
 #endif
       )
   {
-    localizer = new localization::VoctreeLocalizer(sfmFilePath,
-                                           descriptorsFolder,
-                                           vocTreeFilepath,
-                                           weightsFilepath
+    localization::VoctreeLocalizer* tmpLoc = new localization::VoctreeLocalizer(sfmFilePath,
+                                                            descriptorsFolder,
+                                                            vocTreeFilepath,
+                                                            weightsFilepath
 #if HAVE_CCTAG
-                                           , DescriberType::SIFT_CCTAG==describer
+                                                            , DescriberType::SIFT_CCTAG==describer
 #endif
-                                           );
-    param = new localization::VoctreeLocalizer::Parameters();
-
-    localization::VoctreeLocalizer::Parameters *casted = static_cast<localization::VoctreeLocalizer::Parameters *>(param);
-    casted->_algorithm = localization::VoctreeLocalizer::initFromString(algostring);;
-    casted->_numResults = numResults;
-    casted->_maxResults = maxResults;
-    casted->_ccTagUseCuda = false;
+                                                            );
+    localizer.reset(tmpLoc);
+    
+    localization::VoctreeLocalizer::Parameters *tmpParam = new localization::VoctreeLocalizer::Parameters();
+    tmpParam->_algorithm = localization::VoctreeLocalizer::initFromString(algostring);;
+    tmpParam->_numResults = numResults;
+    tmpParam->_maxResults = maxResults;
+    tmpParam->_ccTagUseCuda = false;
+    
+    param.reset(tmpParam);
   }
 #if HAVE_CCTAG
   else
   {
-    localizer = new localization::CCTagLocalizer(sfmFilePath, descriptorsFolder);
-    param = new localization::CCTagLocalizer::Parameters();
-
-    localization::CCTagLocalizer::Parameters *casted = static_cast<localization::CCTagLocalizer::Parameters *>(param);
-    casted->_nNearestKeyFrames = nNearestKeyFrames;
+    localization::CCTagLocalizer tmp = new localization::CCTagLocalizer(sfmFilePath, descriptorsFolder);
+    localizer.reset(tmp);
+    
+    localization::CCTagLocalizer::Parameters *tmpParam = localization::CCTagLocalizer::Parameters();
+    tmpParam->_nNearestKeyFrames = nNearestKeyFrames;
+    
+    param.reset(tmpParam);
   }
 #endif 
 
@@ -368,7 +373,7 @@ int main(int argc, char** argv)
     POPART_COUT("******************************");
     auto detect_start = std::chrono::steady_clock::now();
     const bool isLocalized = localizer->localizeRig(vec_imageGrey,
-                                                    param,
+                                                    param.get(),
                                                     vec_queryIntrinsics,
                                                     vec_subPoses,
                                                     rigPose);
