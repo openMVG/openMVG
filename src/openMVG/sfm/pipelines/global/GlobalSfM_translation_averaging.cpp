@@ -23,6 +23,7 @@
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_solver.hpp"
 #include "openMVG/sfm/pipelines/global/triplet_t_ACRansac_kernelAdaptator.hpp"
+#include "openMVG/sfm/pipelines/global/triplet_t_ACRansac_kernelAdaptator_rig.hpp"
 #include "third_party/histogram/histogram.hpp"
 #include "third_party/progress/progress.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -34,7 +35,8 @@ using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 
 /// Use features in normalized camera frames
-bool GlobalSfM_Translation_AveragingSolver::Run(
+bool GlobalSfM_Translation_AveragingSolver::Run
+(
   ETranslationAveragingMethod eTranslationAveragingMethod,
   SfM_Data & sfm_data,
   const Features_Provider * normalized_features_provider,
@@ -287,12 +289,14 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
   return true;
 }
 
-void GlobalSfM_Translation_AveragingSolver::Compute_translations(
+void GlobalSfM_Translation_AveragingSolver::Compute_translations
+(
   const SfM_Data & sfm_data,
   const Features_Provider * normalized_features_provider,
   const Matches_Provider * matches_provider,
   const Hash_Map<IndexT, Mat3> & map_globalR,
-  matching::PairWiseMatches &tripletWise_matches)
+  matching::PairWiseMatches &tripletWise_matches
+)
 {
   std::cout << "\n-------------------------------" << "\n"
     << " Relative translations computation: " << "\n"
@@ -311,13 +315,15 @@ void GlobalSfM_Translation_AveragingSolver::Compute_translations(
 
 //-- Perform a trifocal estimation of the graph contain in vec_triplets with an
 // edge coverage algorithm. Its complexity is sub-linear in term of edges count.
-void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCoverage(
+void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCoverage
+(
   const SfM_Data & sfm_data,
   const Hash_Map<IndexT, Mat3> & map_globalR,
   const Features_Provider * normalized_features_provider,
   const Matches_Provider * matches_provider,
   std::vector<RelativeInfo_Vec> & vec_triplet_relative_motion,
-  matching::PairWiseMatches & newpairMatches)
+  matching::PairWiseMatches & newpairMatches
+)
 {
   openMVG::system::Timer timerLP_triplet;
 
@@ -413,7 +419,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     const bool bVerbose = false;
 
     #ifdef OPENMVG_USE_OPENMP
-      #pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for schedule(dynamic)
     #endif
     for (int k = 0; k < vec_edges.size(); ++k)
     {
@@ -532,24 +538,20 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
 
               initial_estimates[thread_id].emplace_back(triplet_relative_motion);
 
-              //--- ATOMIC
-
               #ifdef OPENMVG_USE_OPENMP
                  #pragma omp critical
               #endif
               {
                 // Add inliers as valid pairwise matches
-                for (std::vector<size_t>::const_iterator iterInliers = vec_inliers.begin();
-                  iterInliers != vec_inliers.end(); ++iterInliers)
+                for (const size_t inlier_it : vec_inliers)
                 {
-                  using namespace openMVG::tracks;
-                  STLMAPTracks::iterator it_tracks = pose_triplet_tracks.begin();
-                  std::advance(it_tracks, *iterInliers);
-                  const submapTrack & subTrack = it_tracks->second;
+                  if (pose_triplet_tracks.count(inlier_it)==0)
+                    continue;
+                  const openMVG::tracks::submapTrack & subTrack = pose_triplet_tracks.at(inlier_it);
 
                   // create pairwise matches from the inlier track
-                  submapTrack::const_iterator iter_I = subTrack.begin();
-                  submapTrack::const_iterator iter_J = subTrack.begin();
+                  tracks::submapTrack::const_iterator iter_I = subTrack.begin();
+                  tracks::submapTrack::const_iterator iter_J = subTrack.begin();
                   std::advance(iter_J, 1);
                   while (iter_J != subTrack.end())
                   { // matches(pair(view_id(I), view_id(J))) <= IndMatch(feat_id(I), feat_id(J))
@@ -587,7 +589,8 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
 }
 
 // Robust estimation and refinement of a triplet of translations
-bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
+bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
+(
   const SfM_Data & sfm_data,
   const Hash_Map<IndexT, Mat3> & map_globalR,
   const Features_Provider * normalized_features_provider,
@@ -597,12 +600,22 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
   double & dPrecision, // UpperBound of the precision found by the AContrario estimator
   std::vector<size_t> & vec_inliers,
   openMVG::tracks::STLMAPTracks & tracks,
-  const std::string & sOutDirectory) const
+  const std::string & sOutDirectory
+) const
 {
+  // Evaluate the triplet for relative translation computation:
+  // 1. Compute tracks
+  // 2. Setup the known parameters:
+  //    - camera intrinsics + (in case of non central camera -> subposes)
+  //    - images observations
+  //    - global rotations
+  // 3. Solve the unknown: relative translations + structure
+
   // List matches that belong to the triplet of poses
   PairWiseMatches map_triplet_matches;
   const std::set<IndexT> set_pose_ids = {poses_id.i, poses_id.j, poses_id.k};
   // List shared correspondences (pairs) between poses
+  std::set<IndexT> used_views;
   for (const auto & match_iterator : matches_provider->pairWise_matches_)
   {
     const Pair & pair = match_iterator.first;
@@ -614,6 +627,8 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
         && set_pose_ids.count(v2->id_pose))
     {
       map_triplet_matches.insert( match_iterator );
+      used_views.insert(v1->id_view);
+      used_views.insert(v2->id_view);
     }
   }
 
@@ -622,88 +637,296 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
   tracksBuilder.Filter(3);
   tracksBuilder.ExportToSTL(tracks);
 
+  // reject triplets of pose that share tool few 3 poses matches
   if (tracks.size() < 30)
     return false;
-
-  // Convert data
-  Mat x1(2, tracks.size());
-  Mat x2(2, tracks.size());
-  Mat x3(2, tracks.size());
-
-  Mat* xxx[3] = {&x1, &x2, &x3};
-  std::set<IndexT> intrinsic_ids;
-  size_t cpt = 0;
-  for (tracks::STLMAPTracks::const_iterator iterTracks = tracks.begin();
-    iterTracks != tracks.end(); ++iterTracks, ++cpt) {
-    const tracks::submapTrack & subTrack = iterTracks->second;
-    size_t index = 0;
-    for (tracks::submapTrack::const_iterator iter = subTrack.begin(); iter != subTrack.end(); ++iter, ++index) {
-      const size_t idx_view = iter->first;
-      const features::PointFeature pt = normalized_features_provider->getFeatures(idx_view)[iter->second];
-      xxx[index]->col(cpt) = pt.coords().cast<double>();
-      const View * view = sfm_data.views.at(idx_view).get();
-      intrinsic_ids.insert(view->id_intrinsic);
-    }
-  }
-  // Retrieve the smallest focal value, for threshold normalization
-  double min_focal = std::numeric_limits<double>::max();
-  for (const auto & ids : intrinsic_ids)
-  {
-    const cameras::IntrinsicBase * intrinsicPtr = sfm_data.GetIntrinsics().at(ids).get();
-    const cameras::Pinhole_Intrinsic * intrinsic = dynamic_cast< const cameras::Pinhole_Intrinsic * > (intrinsicPtr);
-    if (intrinsic)
-    {
-      min_focal = std::min(min_focal, intrinsic->focal());
-    }
-  }
-  if (min_focal == std::numeric_limits<double>::max())
-  {
-    return false;
-  }
 
   // Get rotations:
   const std::vector<Mat3> vec_global_R_Triplet =
     {map_globalR.at(poses_id.i), map_globalR.at(poses_id.j), map_globalR.at(poses_id.k)};
 
-  using namespace openMVG::trifocal;
-  using namespace openMVG::trifocal::kernel;
+  //--
+  // Test if we are in a central or non central camera configuration.
+  //--
+  if (used_views.size() == 3)
+  {
+    // Using classic central cameras
 
-  typedef TranslationTripletKernel_ACRansac<
-    translations_Triplet_Solver,
-    translations_Triplet_Solver,
-    TrifocalTensorModel> KernelType;
+    // Data conversion
+    // Fill image observations as a unique matrix array
+    Mat
+      x1(2, tracks.size()),
+      x2(2, tracks.size()),
+      x3(2, tracks.size());
+
+    Mat* xxx[3] = {&x1, &x2, &x3};
+    std::set<IndexT> intrinsic_ids;
+    size_t cpt = 0;
+    for (const auto & tracks_it : tracks)
+    {
+      const tracks::submapTrack & subTrack = tracks_it.second;
+      size_t index = 0;
+      for (const auto & track_it : subTrack)
+      {
+        const size_t idx_view = track_it.first;
+        const View * view = sfm_data.views.at(idx_view).get();
+        intrinsic_ids.insert(view->id_intrinsic);
+        const features::PointFeature pt = normalized_features_provider->getFeatures(idx_view)[track_it.second];
+        xxx[index++]->col(cpt) = pt.coords().cast<double>();
+      }
+      ++cpt;
+    }
+
+    // Robust computation of the triplet of translations:
+    using namespace openMVG::trifocal;
+    using namespace openMVG::trifocal::kernel;
+
+    typedef TranslationTripletKernel_ACRansac<
+      translations_Triplet_Solver,
+      translations_Triplet_Solver,
+      TrifocalTensorModel> KernelType;
+    const double ThresholdUpperBound = 1.0e-2; // upper bound of the pixel residual (normalized coordinates)
+    KernelType kernel(x1, x2, x3, vec_global_R_Triplet, Mat3::Identity(), ThresholdUpperBound);
+
+    const size_t ORSA_ITER = 320;  // max number of iterations of AC-RANSAC
+
+    // Retrieve the smallest focal value, for threshold normalization
+    double min_focal = std::numeric_limits<double>::max();
+    for (const auto & ids : intrinsic_ids)
+    {
+      const cameras::IntrinsicBase * intrinsicPtr = sfm_data.GetIntrinsics().at(ids).get();
+      const cameras::Pinhole_Intrinsic * intrinsic = dynamic_cast< const cameras::Pinhole_Intrinsic * > (intrinsicPtr);
+      if (intrinsic)
+      {
+        min_focal = std::min(min_focal, intrinsic->focal());
+      }
+    }
+    if (min_focal == std::numeric_limits<double>::max())
+    {
+      return false;
+    }
+
+    TrifocalTensorModel T;
+    const std::pair<double,double> acStat =
+      robust::ACRANSAC(kernel, vec_inliers, ORSA_ITER, &T, dPrecision/min_focal, false);
+    // If robust estimation fails => stop.
+    if (dPrecision == std::numeric_limits<double>::infinity())
+      return false;
+
+    // Update output parameters
+    dPrecision = acStat.first * min_focal;
+
+    vec_tis.resize(3);
+    Mat3 K, R;
+    KRt_From_P(T.P1, &K, &R, &vec_tis[0]);
+    KRt_From_P(T.P2, &K, &R, &vec_tis[1]);
+    KRt_From_P(T.P3, &K, &R, &vec_tis[2]);
+
+    // Keep the model iff it has a sufficient inlier count
+    const bool bTest = ( vec_inliers.size() > 30 && 0.33 * tracks.size() );
+
+    #ifdef DEBUG_TRIPLET
+      {
+        std::cout << "Triplet : status: " << bTest
+          << " AC: " << std::sqrt(dPrecision)
+          << " inliers % " << double(vec_inliers.size()) / tracks.size() * 100.0
+          << " total putative " << tracks.size() << std::endl;
+      }
+    #endif
+
+    return bTest;
+  }
+  else
+  {
+    // There is at least a non central cameras that it is used in the view list
+  }
+
+  std::map<IndexT, IndexT> intrinsic_id_remapping;
+  for (const auto & view_id : used_views )
+  {
+    const View * view = sfm_data.views.at(view_id).get();
+    if (intrinsic_id_remapping.count(view->id_intrinsic) == 0)
+      intrinsic_id_remapping.insert(std::make_pair(view->id_intrinsic, intrinsic_id_remapping.size()));
+  }
+
+  // initialize rig structure for relative translation estimation
+  std::vector<Vec3>  rigOffsets(intrinsic_id_remapping.size());
+  std::vector<Mat3>  rigRotations(intrinsic_id_remapping.size());
+  double             minFocal = std::numeric_limits<double>::max();
+
+  // Extract the used camera subposes from the used non central cameras
+  for (const auto & view_id : used_views )
+  {
+    const View * view = sfm_data.views.at(view_id).get();
+    const cameras::IntrinsicBase * intrinsic_ptr = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
+    if ( intrinsic_ptr->getType() == cameras::PINHOLE_CAMERA_SUBPOSE )
+    {
+      // retrieve camera intrinsic information from the shared pointer
+      const cameras::Pinhole_Intrinsic_Subpose * subpose_intrinsic_ptr =
+        dynamic_cast< const cameras::Pinhole_Intrinsic_Subpose * > (intrinsic_ptr);
+
+      // update the used subposes
+      const IndexT index = intrinsic_id_remapping.at(view->id_intrinsic);
+      rigOffsets[index]   = subpose_intrinsic_ptr->get_subpose().center();
+      rigRotations[index] = subpose_intrinsic_ptr->get_subpose().rotation();
+
+      minFocal = std::min( minFocal , subpose_intrinsic_ptr->focal() );
+    }
+    else
+    {
+      std::cerr << "Mixing central & non central cameras is not yet supported" << std::endl;
+    }
+  }
+
+  // initialize rigId map
+  const std::map< IndexT, IndexT > map_poseId_to_contiguous =
+    {
+      {poses_id.i,0},
+      {poses_id.j,1},
+      {poses_id.k,2}
+    };
+
+  // clean tracks to keep only those shared by three poses
+  IndexT rigSize = 0; // Store the number of intrinsics used in the non central camera
+  {
+    std::set<IndexT>
+      tracksToRemove,
+      intrinsic_pose_I,
+      intrinsic_pose_J,
+      intrinsic_pose_K;
+
+    for (const auto & tracks_it : tracks)
+    {
+      std::set<size_t> set_poses_index;
+      // loop on subtracks
+      const tracks::submapTrack & track = tracks_it.second;
+      for (const auto & track_it : track)
+      {
+        // extract pose id
+        const size_t idx_view  = track_it.first;
+        const View * view = sfm_data.views.at(idx_view).get();
+        const IndexT pose_index = view->id_pose;
+
+        set_poses_index.insert( pose_index );
+
+        if ( pose_index == poses_id.i )
+          intrinsic_pose_I.insert( view->id_intrinsic );
+        if ( pose_index == poses_id.j )
+          intrinsic_pose_J.insert( view->id_intrinsic );
+        if ( pose_index == poses_id.k )
+          intrinsic_pose_K.insert( view->id_intrinsic );
+      }
+
+      // if the track is not seen by three views, mark it and then we will erase it
+      if ( set_poses_index.size() != 3 )
+        tracksToRemove.insert(tracks_it.first);
+    }
+
+    // remove un-needed tracks
+    for (std::set<IndexT>::const_iterator iterSet = tracksToRemove.begin();
+          iterSet != tracksToRemove.end(); ++iterSet)
+    {
+      tracks.erase(*iterSet);
+    }
+
+    rigSize = std::max(intrinsic_pose_I.size(), std::max(intrinsic_pose_J.size(), intrinsic_pose_K.size()));
+    // Use a heuristic to reject non central camera that have a poor image observation coverage
+    if (tracks.size() < 50 * rigSize)
+      return false;
+  }
+
+  // initialize data for model evaluation
+  std::vector < std::vector < std::vector < double > > > featsAndRigIdPerTrack;
+  std::map  <size_t, size_t>  sampleToTrackId;
+
+  // List the tracks to associate a pair of bearing vector to a track Id
+  std::pair<IndexT, IndexT> image_size = std::make_pair(0, 0);
+  std::map < size_t, size_t >  map_bearingIdToTrackId;
+  for (const auto & tracks_it : tracks)
+  {
+    const tracks::submapTrack & track = tracks_it.second;
+    std::vector<std::vector< double > > tmp;
+    tmp.reserve(track.size());
+    for (const auto & track_it : track)
+    {
+      const size_t idx_view   = track_it.first;
+      const size_t feat       = track_it.second;
+      const View * view       = sfm_data.views.at(idx_view).get();
+      const IndexT pose_index = view->id_pose;
+
+      // update minimal image size
+      const IndexT area = view->ui_width * view->ui_height;
+      if (area < image_size.first * image_size.second || image_size.first == 0 || image_size.second == 0)
+      {
+        image_size = std::make_pair(view->ui_width, view->ui_height);
+      }
+
+      Vec2 bearing;
+      bearing << normalized_features_provider->feats_per_view.at(idx_view).at(feat).coords().cast<double>();
+
+      // initialize information relative to this bearing vector
+      // Add the non central sub pose camera index & the non central camera pose index
+      const std::vector<double> feat_cam = {
+        bearing[0], bearing[1],
+        static_cast<double>(intrinsic_id_remapping.at(view->id_intrinsic)),
+        static_cast<double>(map_poseId_to_contiguous.at(pose_index))
+      };
+
+      // export bearing vector in the triplet pose ordering
+      tmp.emplace_back(feat_cam);
+    }
+    featsAndRigIdPerTrack.emplace_back( tmp );
+    sampleToTrackId[ sampleToTrackId.size() ] = tracks_it.first;
+  }
+  // set thresholds for relative translation estimation
+  const size_t ORSA_ITER = 320; // max number of iterations of AC-RANSAC
+
+  // compute model
+  typedef openMVG::non_central_camera::translations_Triplet_Solver SolverType;
+
+  typedef non_central_camera::TranslationTripletKernel_ACRansac<
+    SolverType,
+    SolverType,
+    openMVG::non_central_camera::PoseTripletErrorModel> KernelType;
+
   const double ThresholdUpperBound = 1.0e-2; // upper bound of the pixel residual (normalized coordinates)
-  KernelType kernel(x1, x2, x3, vec_global_R_Triplet, Mat3::Identity(), ThresholdUpperBound);
+  KernelType kernel(featsAndRigIdPerTrack, vec_global_R_Triplet, rigRotations, rigOffsets,
+                    ThresholdUpperBound,
+                    image_size);
 
-  const size_t ORSA_ITER = 320;  // max number of iterations of AC-RANSAC
-
-  TrifocalTensorModel T;
-  const std::pair<double,double> acStat =
-    robust::ACRANSAC(kernel, vec_inliers, ORSA_ITER, &T, dPrecision/min_focal, false);
-  // If robust estimation fails => stop.
+  openMVG::non_central_camera::PoseTripletErrorModel T;
+  const std::pair<double,double> acStat = robust::ACRANSAC(
+    kernel, vec_inliers, ORSA_ITER, &T,
+    std::numeric_limits<double>::infinity(),
+    false);
+  // In case of robust estimation failure => early stop.
   if (dPrecision == std::numeric_limits<double>::infinity())
     return false;
 
-  // Update output parameters
-  dPrecision = acStat.first * min_focal;
+  // Update output parameters (approximate un-normalize of the AContrario found threshold)
+  dPrecision = acStat.first * minFocal;
 
-  vec_tis.resize(3);
-  Mat3 K, R;
-  KRt_From_P(T.P1, &K, &R, &vec_tis[0]);
-  KRt_From_P(T.P2, &K, &R, &vec_tis[1]);
-  KRt_From_P(T.P3, &K, &R, &vec_tis[2]);
+  vec_tis = {T.t1, T.t2, T.t3};
 
-#ifdef DEBUG_TRIPLET
+  // update inlier track list
+  std::set <size_t>  inliers_tracks;
+  for (size_t i = 0 ; i < vec_inliers.size() ; ++i)
+    inliers_tracks.insert( sampleToTrackId.at(vec_inliers[i]) );
+
+  std::vector <size_t>(std::make_move_iterator(inliers_tracks.begin()),
+    std::make_move_iterator(inliers_tracks.end())).swap(vec_inliers);
+
+#if defined TRIPLET_DEBUG
   // compute 3D scene base on motion estimation
-  SfM_Data    tiny_scene;
+  SfM_Data tiny_scene;
 
   // intialize poses (which are now shared by a group of images)
-  tiny_scene.poses[poses_id.i] = Pose3(vec_global_R_Triplet[0], -vec_global_R_Triplet[0].transpose() * vec_tis[0]);
-  tiny_scene.poses[poses_id.j] = Pose3(vec_global_R_Triplet[1], -vec_global_R_Triplet[1].transpose() * vec_tis[1]);
-  tiny_scene.poses[poses_id.k] = Pose3(vec_global_R_Triplet[2], -vec_global_R_Triplet[2].transpose() * vec_tis[2]);
+  tiny_scene.poses[poses_id.i] = Pose3(vec_global_R_Triplet[0], -vec_global_R_Triplet[0].transpose() * T.t1 );
+  tiny_scene.poses[poses_id.j] = Pose3(vec_global_R_Triplet[1], -vec_global_R_Triplet[1].transpose() * T.t2 );
+  tiny_scene.poses[poses_id.k] = Pose3(vec_global_R_Triplet[2], -vec_global_R_Triplet[2].transpose() * T.t3 );
 
   // insert views used by the relative pose pairs
-  for (const auto & pairIterator : map_triplet_matches )
+  for (const auto & pairIterator : map_triplet_matches)
   {
     // initialize camera indexes
     const IndexT I = pairIterator.first.first;
@@ -725,10 +948,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
   for (size_t idx=0; idx < vec_inliers.size(); ++idx)
   {
     const size_t trackId = vec_inliers[idx];
-    openMVG::tracks::STLMAPTracks::const_iterator iter = tracks.begin();
-    std::advance(iter, trackId);
-
-    const tracks::submapTrack & track = iter->second;
+    const tracks::submapTrack & track = tracks.at(trackId);
     Observations & obs = structure[idx].obs;
     for (tracks::submapTrack::const_iterator it = track.begin(); it != track.end(); ++it)
     {
@@ -744,7 +964,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
 
       // get normalized feature
       const features::PointFeature & pt = normalized_features_provider->feats_per_view.at(viewIndex)[featIndex];
-      const Vec2 pt_unnormalized (cam->cam2ima(pt.coords().cast<double>()));
+      const Vec2 pt_unnormalized( cam->cam2ima(pt.coords().cast<double>()));
       obs[viewIndex] = Observation(pt_unnormalized, featIndex);
     }
   }
@@ -755,43 +975,40 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
     structure_estimator.triangulate(tiny_scene);
   }
 
-  // Refine structure and poses (keep intrinsic constant)
-  Bundle_Adjustment_Ceres::BA_Ceres_options options(false, false);
-  Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-  if (bundle_adjustment_obj.Adjust(tiny_scene,
-        Optimize_Options(
-          cameras::Intrinsic_Parameter_Type::NONE,
-          Extrinsic_Parameter_Type::ADJUST_ALL,
-          Structure_Parameter_Type::ADJUST_ALL)
-        )
-      )
-  {
-    // export scene for visualization
-    std::ostringstream os;
-    os << poses_id.i << "_" << poses_id.j << "_" << poses_id.k << ".ply";
-    Save(tiny_scene, os.str(), ESfM_Data(STRUCTURE | EXTRINSICS));
-
-    // Export refined translations
-    vec_tis[0] = tiny_scene.poses[poses_id.i].translation();
-    vec_tis[1] = tiny_scene.poses[poses_id.j].translation();
-    vec_tis[2] = tiny_scene.poses[poses_id.k].translation();
-  }
-
+  // export scene for visualization
   std::ostringstream os;
   os << poses_id.i << "_" << poses_id.j << "_" << poses_id.k << ".ply";
-  Save(tiny_scene, os.str(), ESfM_Data(STRUCTURE | EXTRINSICS));
-
+  Save(tiny_scene, os.str(), ESfM_Data(ALL));
 #endif
 
-  // Keep the model iff it has a sufficient inlier count
-  const bool bTest = ( vec_inliers.size() > 30 && 0.33 * tracks.size() );
+  Vec3 C1 = -vec_global_R_Triplet[0] * vec_global_R_Triplet[1].transpose() * T.t2;
+  Vec3 C2 = -vec_global_R_Triplet[0] * vec_global_R_Triplet[2].transpose() * T.t3;
+
+  // check that all components of C1 and C2 have differents order of magnitude
+  const double C1_norm_inf = C1.lpNorm<Eigen::Infinity>();
+  const double C2_norm_inf = C2.lpNorm<Eigen::Infinity>();
+  const bool bNorm = ( C1_norm_inf > 1.0e-2) && (C2_norm_inf > 1.0e-2);
+
+  // normalize and compute the smallest order of magnitude
+  C1 /= C1_norm_inf ; C2 /= C2_norm_inf;
+  const double C1_min_magn = C1.cwiseAbs().minCoeff();
+  const double C2_min_magn = C2.cwiseAbs().minCoeff();
+
+  // if there is more than 1/3 of inliers, keep model
+  // reject small motion since they are not stable
+  const bool bTest =  ( vec_inliers.size() > 0.33 * tracks.size()      // consider only model with good inlier proportion
+                        && vec_inliers.size() > 30 * rigSize           // there must be enough tracks
+                        && bNorm                                       // the distance between rigs should be at least 10[cm]
+                        && (C1_min_magn < 0.1)                         // the minimal magnitude of displacement should be less than 10%
+                        && (C2_min_magn < 0.1));                       // the minimal magnitude of displacement should be less than 10%
+
 
 #ifdef DEBUG_TRIPLET
   {
     std::cout << "Triplet : status: " << bTest
-      << " AC: " << std::sqrt(dPrecision)
-      << " inliers % " << double(vec_inliers.size()) / tracks.size() * 100.0
-      << " total putative " << tracks.size() << std::endl;
+      << " AC: " << dPrecision
+      << " ;inliers % " << double(inliers_tracks.size()) / tracks.size() * 100.0
+      << " ;total putative " << tracks.size() << std::endl;
   }
 #endif
 

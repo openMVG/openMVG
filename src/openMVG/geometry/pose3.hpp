@@ -110,7 +110,7 @@ class Pose3
     /**
     * @brief Composition of poses
     * @param P a Pose
-    * @return Composition of current pose and parameter pose
+    * @return Composition of current pose and internal pose
     */
     Pose3 operator * ( const Pose3& P ) const
     {

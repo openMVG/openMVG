@@ -553,16 +553,17 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
     SfM_Data tiny_scene;
     tiny_scene.views.insert(*sfm_data_.GetViews().find(view_I->id_view));
     tiny_scene.views.insert(*sfm_data_.GetViews().find(view_J->id_view));
-    tiny_scene.intrinsics.insert(*sfm_data_.GetIntrinsics().find(view_I->id_intrinsic));
-    tiny_scene.intrinsics.insert(*sfm_data_.GetIntrinsics().find(view_J->id_intrinsic));
+    tiny_scene.intrinsics.insert(*iterIntrinsic_I);
+    tiny_scene.intrinsics.insert(*iterIntrinsic_J);
 
     // Init poses
     const Pose3 & Pose_I = tiny_scene.poses[view_I->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
-    const Pose3 & Pose_J = tiny_scene.poses[view_J->id_pose] = relativePose_info.relativePose;
+    const Pose3 & Pose_J = tiny_scene.poses[view_J->id_pose] =
+      cam_J->get_subpose().inverse() * relativePose_info.relativePose;
 
     // Init structure
     const Mat34 P1 = cam_I->get_projective_equivalent(Pose_I);
-    const Mat34 P2 = cam_J->get_projective_equivalent(Pose_J);
+    const Mat34 P2 = cam_J->get_projective_equivalent(relativePose_info.relativePose);
     Landmarks & landmarks = tiny_scene.structure;
 
     for (openMVG::tracks::STLMAPTracks::const_iterator
@@ -629,12 +630,12 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
       const IndexT & viewId_xJ = iterObs_xJ->first;
 
       const double angle = AngleBetweenRay(
-        pose_I, cam_I, pose_J, cam_J, ob_xI.x, ob_xJ.x);
-      const Vec2 residual_I = cam_I->residual(pose_I, landmark.X, ob_xI.x);
-      const Vec2 residual_J = cam_J->residual(pose_J, landmark.X, ob_xJ.x);
+        sfm_data_.GetPoseOrDie(view_I), cam_I, sfm_data_.GetPoseOrDie(view_J), cam_J, ob_xI.x, ob_xJ.x);
+      const Vec2 residual_I = cam_I->residual(sfm_data_.GetPoseOrDie(view_I), landmark.X, ob_xI.x);
+      const Vec2 residual_J = cam_J->residual(sfm_data_.GetPoseOrDie(view_J), landmark.X, ob_xJ.x);
       if ( angle > 2.0 &&
-           pose_I.depth(landmark.X) > 0 &&
-           pose_J.depth(landmark.X) > 0 &&
+           sfm_data_.GetPoseOrDie(view_I).depth(landmark.X) > 0 &&
+           sfm_data_.GetPoseOrDie(view_J).depth(landmark.X) > 0 &&
            residual_I.norm() < relativePose_info.found_residual_precision &&
            residual_J.norm() < relativePose_info.found_residual_precision)
       {
@@ -1030,7 +1031,12 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
           return false;
       }
     }
-    if(!sfm::SfM_Localizer::RefinePose(
+    else
+    {
+      optional_intrinsic = sfm_data_.intrinsics[view_I->id_intrinsic];
+      pose = optional_intrinsic.get()->get_subpose().inverse() * pose;
+    }
+    if (!sfm::SfM_Localizer::RefinePose(
       optional_intrinsic.get(), pose,
       resection_data, true, b_new_intrinsic))
     {
@@ -1053,7 +1059,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
         new_intrinsic_id = (*existing_intrinsicId.rbegin())+1;
       }
       sfm_data_.views.at(viewIndex).get()->id_intrinsic = new_intrinsic_id;
-      sfm_data_.intrinsics[new_intrinsic_id]= optional_intrinsic;
+      sfm_data_.intrinsics[new_intrinsic_id] = optional_intrinsic;
     }
     // Update the view pose
     sfm_data_.poses[view_I->id_pose] = pose;
@@ -1067,7 +1073,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
   {
     const Vec3 X = resection_data.pt3D.col(i);
     const Vec2 x = resection_data.pt2D.col(i);
-    const Vec2 residual = optional_intrinsic->residual(pose, X, x);
+    const Vec2 residual = optional_intrinsic->residual(sfm_data_.GetPoseOrDie(view_I), X, x);
     if (residual.norm() < resection_data.error_max &&
         pose.depth(X) > 0)
     {
@@ -1106,7 +1112,6 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
         const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
         const Pose3 pose_I = sfm_data_.GetPoseOrDie(view_I);
         const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
-
         size_t new_putative_track = 0, new_added_track = 0, extented_track = 0;
         for (const std::pair< size_t, tracks::submapTrack >& trackIt : map_tracksCommonIJ)
         {
@@ -1115,6 +1120,9 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
 
           const Vec2 xI = features_provider_->feats_per_view.at(I)[track.at(I)].coords().cast<double>();
           const Vec2 xJ = features_provider_->feats_per_view.at(J)[track.at(J)].coords().cast<double>();
+
+          if (map_ACThreshold_.count(I) == 0 || map_ACThreshold_.count(J) == 0)
+            continue;
 
           // test if the track already exists in 3D
           if (sfm_data_.structure.count(trackId) != 0)
@@ -1154,11 +1162,11 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
             {
               ++new_putative_track;
             }
-            Vec3 X_euclidean = Vec3::Zero();
             const Vec2 xI_ud = cam_I->get_ud_pixel(xI);
             const Vec2 xJ_ud = cam_J->get_ud_pixel(xJ);
             const Mat34 P_I = cam_I->get_projective_equivalent(pose_I);
             const Mat34 P_J = cam_J->get_projective_equivalent(pose_J);
+            Vec3 X_euclidean = Vec3::Zero();
             TriangulateDLT(P_I, xI_ud, P_J, xJ_ud, &X_euclidean);
             // Check triangulation results
             //  - Check angle (small angle leads imprecise triangulation)

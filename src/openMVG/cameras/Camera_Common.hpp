@@ -31,6 +31,8 @@ namespace cameras
 *      \f$ y_d = y_u (1 + K_1 r^2 + K_2 r^4 + K_3 r^6) + (T_1 (r^2 + 2 y_u^2) + 2 T_2 x_u y_u) \f$
 * @var PINHOLE_CAMERA_FISHEYE
 *   Simple fisheye camera with 4 distortion coefficients
+* @var PINHOLE_CAMERA_SUBPOSE
+*   Simple Pinhole camera with a local subpose (used for rigid-rig/non central camera definition)
 */
 enum EINTRINSIC
 {
@@ -40,6 +42,7 @@ enum EINTRINSIC
   PINHOLE_CAMERA_RADIAL3 = 3, // radial distortion K1,K2,K3
   PINHOLE_CAMERA_BROWN = 4, // radial distortion K1,K2,K3, tangential distortion T1,T2
   PINHOLE_CAMERA_FISHEYE = 5, // a simple Fish-eye distortion model with 4 distortion coefficients
+  PINHOLE_CAMERA_SUBPOSE = 6, // A simple pinhole camera with a local subpose
   PINHOLE_CAMERA_END
 };
 
@@ -86,7 +89,8 @@ enum class Intrinsic_Parameter_Type : int
   ADJUST_FOCAL_LENGTH     = 0x02,
   ADJUST_PRINCIPAL_POINT  = 0x04,
   ADJUST_DISTORTION       = 0x08,
-  ADJUST_ALL = ADJUST_FOCAL_LENGTH | ADJUST_PRINCIPAL_POINT | ADJUST_DISTORTION
+  ADJUST_SUBPOSE          = 0x10,
+  ADJUST_ALL = ADJUST_FOCAL_LENGTH | ADJUST_PRINCIPAL_POINT | ADJUST_DISTORTION | ADJUST_SUBPOSE
 };
 
 inline constexpr Intrinsic_Parameter_Type

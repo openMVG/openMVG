@@ -1,5 +1,5 @@
 
-// Copyright (c) 2012, 2013, 2014, 2015 Pierre MOULON.
+// Copyright (c) 2012 - 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -26,11 +26,17 @@ namespace openMVG {
 namespace trifocal {
 namespace kernel {
 
-/// A trifocal tensor seen as 3 projective cameras
+/// A triplet of camera pose (seen as 3 projective cameras)
 struct TrifocalTensorModel {
   Mat34 P1, P2, P3;
 
-  static double Error(const TrifocalTensorModel & t, const Vec2 & pt1, const Vec2 & pt2, const Vec2 & pt3)
+  static double Error
+  (
+    const TrifocalTensorModel & t,
+    const Vec2 & pt1,
+    const Vec2 & pt2,
+    const Vec2 & pt3
+  )
   {
     // Triangulate
     Triangulation triangulationObj;
@@ -57,17 +63,22 @@ namespace openMVG{
 using namespace openMVG::trifocal::kernel;
 
 /// Solve the translations and the structure of a view-triplet that have known rotations
-struct translations_Triplet_Solver {
+struct translations_Triplet_Solver
+{
   enum { MINIMUM_SAMPLES = 4 };
   enum { MAX_MODELS = 1 };
 
   /// Solve the computation of the "tensor".
   static void Solve(
-    const Mat &pt0, const Mat & pt1, const Mat & pt2,
-    const std::vector<Mat3> & vec_KR, std::vector<TrifocalTensorModel> *P,
-    const double ThresholdUpperBound)
+    const Mat & pt0,
+    const Mat & pt1,
+    const Mat & pt2,
+    const std::vector<Mat3> & vec_KR,
+    std::vector<TrifocalTensorModel> *P,
+    const double ThresholdUpperBound
+  )
   {
-    const int n_obs = pt0.cols();
+    const size_t n_obs = pt0.cols();
     if (n_obs < MINIMUM_SAMPLES)
       return;
 
@@ -117,9 +128,13 @@ struct translations_Triplet_Solver {
   }
 
   // Compute the residual of reprojections
-  static double Error(
+  static double Error
+  (
     const TrifocalTensorModel & Tensor,
-    const Vec2 & pt0, const Vec2 & pt1, const Vec2 & pt2)
+    const Vec2 & pt0,
+    const Vec2 & pt1,
+    const Vec2 & pt2
+  )
   {
     return TrifocalTensorModel::Error(Tensor, pt0, pt1, pt2);
   }

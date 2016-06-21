@@ -8,6 +8,7 @@ ADD_SUBDIRECTORY(multiview_robust_fundamental_guided)
 ADD_SUBDIRECTORY(multiview_robust_essential)
 ADD_SUBDIRECTORY(multiview_robust_essential_spherical)
 ADD_SUBDIRECTORY(multiview_robust_essential_ba)
+ADD_SUBDIRECTORY(multiview_non_central_camera_relative_pose)
 
 ADD_SUBDIRECTORY(exif_Parsing)
 
@@ -16,3 +17,4 @@ ADD_SUBDIRECTORY(features_affine_demo)
 ADD_SUBDIRECTORY(features_kvld_filter)
 ADD_SUBDIRECTORY(features_siftPutativeMatches)
 ADD_SUBDIRECTORY(features_image_matching)
+

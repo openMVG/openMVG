@@ -217,6 +217,16 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   virtual Mat34 get_projective_equivalent( const geometry::Pose3 & pose ) const = 0;
 
   /**
+  * @brief Return if the intrinsic define a subpose
+  */
+  virtual bool use_subpose() const { return false; }
+
+  /**
+  * @brief As no subpose exist by default, return an Identity transform
+  */
+  virtual geometry::Pose3 get_subpose() const { return geometry::Pose3(Mat3::Identity(), Vec3::Zero()); }
+
+  /**
   * @brief Serialization out
   * @param ar Archive
   */
@@ -239,7 +249,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   }
 
   /**
-  * @brief Generate an unique Hash from the camera parameters (used for grouping)
+  * @brief Generate a unique Hash from the camera parameters (used for grouping)
   * @return Hash value
   */
   virtual std::size_t hashValue() const
@@ -249,7 +259,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
     stl::hash_combine( seed, w_ );
     stl::hash_combine( seed, h_ );
     const std::vector<double> params = this->getParams();
-    for ( const auto & param : params ) 
+    for ( const auto & param : params )
       stl::hash_combine( seed , param );
     return seed;
   }

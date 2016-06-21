@@ -1,13 +1,13 @@
 
 file(
-	GLOB_RECURSE
-	sfm_files_header
-	*.hpp
+  GLOB_RECURSE
+  sfm_files_header
+  *.hpp
 )
 file(
-	GLOB_RECURSE
-	sfm_files_cpp
-	*.cpp
+  GLOB_RECURSE
+  sfm_files_cpp
+  *.cpp
 )
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 #Remove the future main files
@@ -15,6 +15,8 @@ list(REMOVE_ITEM sfm_files_cpp ${REMOVEFILESUNITTEST})
 #Remove the test header main files
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.hpp)
 list(REMOVE_ITEM sfm_files_header ${REMOVEFILESUNITTEST})
+
+find_package(opengv REQUIRED)
 
 add_library(openMVG_sfm ${sfm_files_header} ${sfm_files_cpp})
 target_link_libraries(
@@ -25,6 +27,7 @@ target_link_libraries(
   openMVG_lInftyComputerVision
   openMVG_system
   openMVG_matching
+  opengv
 )
 set_target_properties(openMVG_sfm PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 

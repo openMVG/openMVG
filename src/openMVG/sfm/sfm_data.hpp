@@ -67,9 +67,22 @@ struct SfM_Data
   }
 
   /// Get the pose associated to a view
-  const geometry::Pose3 GetPoseOrDie(const View * view) const
+  const geometry::Pose3 GetPoseOrDie
+  (
+    const View * view,
+    const bool b_combine_subpose = true
+  ) const
   {
+    if (b_combine_subpose)
+    {
+      const cameras::IntrinsicBase * intrinsic = intrinsics.at(view->id_intrinsic).get();
+      if (intrinsic->use_subpose())
+      {
+        return intrinsic->get_subpose() * poses.at(view->id_pose);
+      }
+    }
     return poses.at(view->id_pose);
+
   }
 };
 

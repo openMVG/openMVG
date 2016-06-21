@@ -11,6 +11,7 @@
 #include "openMVG/linearProgramming/lInfinityCV/tijsAndXis_From_xi_Ri.hpp"
 #include "openMVG/linearProgramming/lInfinityCV/tijsAndXis_From_xi_Ri_noise.hpp"
 #include "openMVG/linearProgramming/lInfinityCV/triplet_tijsAndXis_kernel.hpp"
+#include "openMVG/linearProgramming/lInfinityCV/triplet_tijsAndXis_non_central_cameras_kernel.hpp"
 
 // Pose estimation solver
 #include "openMVG/linearProgramming/lInfinityCV/resection.hpp"
