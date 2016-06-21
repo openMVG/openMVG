@@ -147,7 +147,7 @@ int main(int argc, char** argv)
 // parameters for voctree localizer
         ("voctree", po::value<std::string>(&vocTreeFilepath),
           "[voctree] Filename for the vocabulary tree")
-        ("weights", po::value<std::string>(&weightsFilepath),
+        ("voctreeWeights", po::value<std::string>(&weightsFilepath),
           "[voctree] Filename for the vocabulary tree weights")
         ("algorithm", po::value<std::string>(&algostring)->default_value(algostring),
           "[voctree] Algorithm type: {FirstBest,BestResult,AllResults,Cluster}" )
