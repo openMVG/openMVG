@@ -246,7 +246,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
 
 
 bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQueryRegions,
-                              const std::pair<std::size_t, std::size_t> imageSize,
+                              const std::pair<std::size_t, std::size_t> &imageSize,
                               const LocalizerParameters *parameters,
                               bool useInputIntrinsics,
                               cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,

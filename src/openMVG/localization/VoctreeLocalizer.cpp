@@ -146,12 +146,12 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
 }
 
 bool VoctreeLocalizer::localize(const std::unique_ptr<features::Regions> &genQueryRegions,
-                              const std::pair<std::size_t, std::size_t> imageSize,
+                                const std::pair<std::size_t, std::size_t> &imageSize,
                                 const LocalizerParameters *param,
-                              bool useInputIntrinsics,
-                              cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                              LocalizationResult & localizationResult,
-                              const std::string& imagePath)
+                                bool useInputIntrinsics,
+                                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
+                                LocalizationResult & localizationResult,
+                                const std::string& imagePath)
 {
   const Parameters *voctreeParam = static_cast<const Parameters *>(param);
   if(!voctreeParam)
@@ -174,23 +174,23 @@ bool VoctreeLocalizer::localize(const std::unique_ptr<features::Regions> &genQue
   
   switch(voctreeParam->_algorithm)
   {
-    case Algorithm::FirstBest: 
+    case Algorithm::FirstBest:
     return localizeFirstBestResult(*queryRegions,
                                    imageSize,
-                                     *voctreeParam,
-                                     useInputIntrinsics,
-                                     queryIntrinsics,
-                                     localizationResult,
-                                     imagePath);
+                                   *voctreeParam,
+                                   useInputIntrinsics,
+                                   queryIntrinsics,
+                                   localizationResult,
+                                   imagePath);
     case Algorithm::BestResult: throw std::invalid_argument("BestResult not yet implemented");
-    case Algorithm::AllResults: 
+    case Algorithm::AllResults:
     return localizeAllResults(*queryRegions,
                               imageSize,
-                                *voctreeParam,
-                                useInputIntrinsics, 
-                                queryIntrinsics,
-                                localizationResult,
-                                imagePath);
+                              *voctreeParam,
+                              useInputIntrinsics,
+                              queryIntrinsics,
+                              localizationResult,
+                              imagePath);
     case Algorithm::Cluster: throw std::invalid_argument("Cluster not yet implemented");
     default: throw std::invalid_argument("Unknown algorithm type");
   }
@@ -393,9 +393,9 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
 
 bool VoctreeLocalizer::localizeFirstBestResult(const features::SIFT_Regions &queryRegions,
                                                const std::pair<std::size_t, std::size_t> queryImageSize,
-                                                const Parameters &param,
-                                                bool useInputIntrinsics,
-                                                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
+                                               const Parameters &param,
+                                               bool useInputIntrinsics,
+                                               cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                                                LocalizationResult &localizationResult,
                                                const std::string& imagePath /*= std::string()*/)
 {

@@ -126,7 +126,7 @@ public:
    * @return  true if the image has been successfully localized.
    */
   bool localize(const std::unique_ptr<features::Regions> &genQueryRegions,
-                const std::pair<std::size_t, std::size_t> imageSize,
+                const std::pair<std::size_t, std::size_t> &imageSize,
                 const LocalizerParameters *param,
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,

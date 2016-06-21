@@ -61,7 +61,7 @@ public:
                         const std::string& imagePath = std::string()) = 0;
 
   virtual bool localize(const std::unique_ptr<features::Regions> &queryRegions,
-                        const std::pair<std::size_t, std::size_t> imageSize,
+                        const std::pair<std::size_t, std::size_t> &imageSize,
                         const LocalizerParameters *param,
                         bool useInputIntrinsics,
                         cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
