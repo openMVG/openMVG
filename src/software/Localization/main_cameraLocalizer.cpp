@@ -136,7 +136,11 @@ int main(int argc, char** argv)
   desc.add_options()
       ("help,h", "Print this message")
       ("descriptors", po::value<std::string>(&str_descriptorType)->default_value(str_descriptorType), 
-          "Type of descriptors to use {SIFT,CCTAG,SIFT_CCTAG}")
+          "Type of descriptors to use {SIFT"
+#ifdef HAVE_CCTAG
+          ", CCTAG, SIFT_CCTAG"
+#endif
+          "}")
       ("preset", po::value<std::string>(&featurePreset)->default_value(featurePreset), 
           "Preset for the feature extractor when localizing a new image "
           "{LOW,MEDIUM,NORMAL,HIGH,ULTRA}")
