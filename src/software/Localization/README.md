@@ -8,24 +8,23 @@ both of them (SIFT_CCTAG) [depending on you build options].
 ### Usage:
 
 ```
-  -h [ --help ]                      Print this message
+   -h [ --help ]                      Print this message
   --descriptors arg (=SIFT)          Type of descriptors to use 
                                      {SIFT,CCTAG,SIFT_CCTAG}
   
   --preset arg (=NORMAL)             Preset for the feature extractor when 
                                      localizing a new image 
-                                     {LOW,NORMAL,HIGH,ULTRA}
+                                     {LOW,MEDIUM,NORMAL,HIGH,ULTRA}
   --calibration arg                  Calibration file
   --sfmdata arg                      The sfm_data.json kind of file generated 
-                                     by OpenMVG [it could be also a bundle.out 
-                                     to use an older version of OpenMVG]
-  --descriptorPath arg               Folder containing the .desc [for the older
-                                     version of openMVG it is the list.txt].
+                                     by OpenMVG.
+  --descriptorPath arg               Folder containing the .desc.
   --mediafile arg                    The folder path or the filename for the 
                                      media to track
   --refineIntrinsics                 Enable/Disable camera intrinsics 
                                      refinement for each localized image
-  --results arg (=4)                 [voctree] Number of images to retrieve in 
+
+  --nbImageMatch arg (=4)            [voctree] Number of images to retrieve in 
                                      database
   --maxResults arg (=10)             [voctree] For algorithm AllResults, it 
                                      stops the image matching when this number 
@@ -35,12 +34,14 @@ both of them (SIFT_CCTAG) [depending on you build options].
                                      which a point must be seen to be used in 
                                      cluster tracking
   --voctree arg                      [voctree] Filename for the vocabulary tree
-  --weights arg                      [voctree] Filename for the vocabulary tree
+  --voctreeWeights arg               [voctree] Filename for the vocabulary tree
                                      weights
-  --algorithm arg (=AllResults)      [voctree] Algorithm type: {FirstBest, 
-                                     BestResult, AllResults, Cluster}
-  --nNearestKeyFrames arg (=3)       [cctag] Number of images to retrieve in the
+  --algorithm arg (=AllResults)      [voctree] Algorithm type: FirstBest, 
+                                     BestResult, AllResults, Cluster
+
+  --nNearestKeyFrames                [cctag] Number of images to retrieve in the 
                                      database
+
   --globalBundle                     [bundle adjustment] If --refineIntrinsics 
                                      is not set, this option allows to run a 
                                      final global budndle adjustment to refine 
@@ -58,7 +59,7 @@ both of them (SIFT_CCTAG) [depending on you build options].
   --visualDebug arg                  If a directory is provided it enables 
                                      visual debug and saves all the debugging 
                                      info in that directory
-  --export arg (=trackedcameras.abc) Filename for the SfM_Data export file 
+  --output arg (=trackedcameras.abc) Filename for the SfM_Data export file 
                                      (where camera poses will be stored). 
                                      Default : trackedcameras.abc. It will also
                                      save the localization results (raw data) 

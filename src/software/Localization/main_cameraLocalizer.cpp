@@ -190,12 +190,12 @@ int main(int argc, char** argv)
           "If a directory is provided it enables visual debug and saves all the "
           "debugging info in that directory")
 #if HAVE_ALEMBIC
-      ("export", po::value<std::string>(&exportFile)->default_value(exportFile), 
+      ("output", po::value<std::string>(&exportFile)->default_value(exportFile), 
           "Filename for the SfM_Data export file (where camera poses will be stored). "
           "Default : trackedcameras.abc. It will also save the localization "
           "results (raw data) as .json with the same name")
 #else
-      ("export", po::value<std::string>(&exportFile)->default_value(exportFile), 
+      ("output", po::value<std::string>(&exportFile)->default_value(exportFile), 
           "Filename for the SfM_Data export file containing the localization "
           "results. Default : localizationResult.json.")
 #endif
