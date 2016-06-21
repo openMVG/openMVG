@@ -232,8 +232,9 @@ static bool loadFeatsFromFile(
 
   std::ifstream fileIn(sfileNameFeats.c_str());
   if (!fileIn.is_open())
+  {
     return false;
-
+  }
   std::copy(
     std::istream_iterator<typename FeaturesT::value_type >(fileIn),
     std::istream_iterator<typename FeaturesT::value_type >(),
