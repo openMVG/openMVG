@@ -49,7 +49,7 @@ struct Features_Provider
         const std::string featFile = stlplus::create_filespec(feat_directory, basename, ".feat");
 
         std::unique_ptr<features::Regions> regions(region_type->EmptyClone());
-        if (!regions->LoadFeatures(featFile))
+        if (!stlplus::file_exists(featFile) || !regions->LoadFeatures(featFile))
         {
           std::cerr << "Invalid feature files for the view: " << sImageName << std::endl;
 #ifdef OPENMVG_USE_OPENMP
