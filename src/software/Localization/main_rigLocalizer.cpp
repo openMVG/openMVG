@@ -157,10 +157,9 @@ int main(int argc, char** argv)
           "[cctag] Number of images to retrieve in database")
 #endif
 #if HAVE_ALEMBIC
-        ("export", po::value<std::string>(&exportFile)->default_value(exportFile),
+        ("output", po::value<std::string>(&exportFile)->default_value(exportFile),
           "Filename for the SfM_Data export file (where camera poses will be stored)."
-          " Default : trackedcameras.json If Alambic is enable it will also "
-          "export an .abc file of the scene with the same name")
+          " Default : trackedcameras.abc.")
 #endif
           ;
 
