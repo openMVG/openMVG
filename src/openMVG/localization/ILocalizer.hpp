@@ -21,7 +21,7 @@ struct LocalizerParameters
   LocalizerParameters() :
   _visualDebug(""),
   _refineIntrinsics(false),
-  _fDistRatio(0.6),
+  _fDistRatio(0.8),
   _featurePreset(features::EDESCRIBER_PRESET::ULTRA_PRESET),
   _errorMax(std::numeric_limits<double>::max()) { }
 
