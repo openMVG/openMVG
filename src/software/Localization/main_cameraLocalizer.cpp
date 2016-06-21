@@ -138,7 +138,8 @@ int main(int argc, char** argv)
       ("descriptors", po::value<std::string>(&str_descriptorType)->default_value(str_descriptorType), 
           "Type of descriptors to use {SIFT,CCTAG,SIFT_CCTAG}")
       ("preset", po::value<std::string>(&featurePreset)->default_value(featurePreset), 
-          "Preset for the feature extractor when localizing a new image {LOW,NORMAL,HIGH,ULTRA}")
+          "Preset for the feature extractor when localizing a new image "
+          "{LOW,MEDIUM,NORMAL,HIGH,ULTRA}")
       ("calibration", po::value<std::string>(&calibFile)/*->required( )*/, 
           "Calibration file")
       ("sfmdata", po::value<std::string>(&sfmFilePath)->required(), 
