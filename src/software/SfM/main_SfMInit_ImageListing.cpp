@@ -312,7 +312,7 @@ int main(int argc, char **argv)
     if (openMVG::image::GetFormat(imageAbsFilepath.c_str()) == openMVG::image::Unknown)
     {
       error_report_stream
-          << stlplus::filename_part(imageAbsFilepath) << ": Unkown image file format." << "\n";
+          << stlplus::filename_part(imageAbsFilepath) << ": Unknown image file format." << "\n";
       continue; // image cannot be opened
     }
 
@@ -335,7 +335,17 @@ int main(int argc, char **argv)
 
     std::map<std::string, std::string> allExifData;
     if( bHaveValidExifMetadata )
+    {
       allExifData = exifReader.getExifData();
+    }
+    if(!exifReader.doesHaveExifInfo())
+    {
+      std::cerr << "No metadata for image: " << imageAbsFilepath << std::endl;
+    }
+    else if(exifReader.getBrand().empty() || exifReader.getModel().empty())
+    {
+      std::cerr << "No Brand/Model in metadata for image: " << imageAbsFilepath << std::endl;
+    }
 
     int metadataImageWidth = imgHeader.width;
     int metadataImageHeight = imgHeader.height;
@@ -494,10 +504,13 @@ int main(int argc, char **argv)
     }
     else
     {
-      std::cerr << "Error: No instrinsics for \"" << imageFilename << "\".\n"
-        << "focal: " << focalPix << "\n"
-        << "ppx,ppy: " << ppx << ", " << ppy << "\n"
-        << "width,height: " << width << ", " << height
+      std::cerr
+        << "Error: No instrinsics for \"" << imageFilename << "\".\n"
+        << "   - focal: " << focalPix << "\n"
+        << "   - ppx,ppy: " << ppx << ", " << ppy << "\n"
+        << "   - width,height: " << width << ", " << height << "\n"
+        << "   - camera: \"" << sCamName << "\"\n"
+        << "   - model \"" << sCamModel << "\""
         << std::endl;
     }
 
