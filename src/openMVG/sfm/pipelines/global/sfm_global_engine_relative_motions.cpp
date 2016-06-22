@@ -279,7 +279,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations
         graph::indexedGraph putativeGraph(set_pose_ids, rotation_averaging_solver.GetUsedPairs());
         graph::exportToGraphvizData(
           stlplus::create_filespec(sOut_directory_, sGraph_name),
-          putativeGraph.g);
+          putativeGraph);
 
         using namespace htmlDocument;
         std::ostringstream os;
@@ -749,7 +749,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
       graph::indexedGraph putativeGraph(set_ViewIds, getPairs(matches_provider_->pairWise_matches_));
       graph::exportToGraphvizData(
         stlplus::create_filespec(sOut_directory_, "global_relative_rotation_view_graph"),
-        putativeGraph.g);
+        putativeGraph);
     }
 
     // Log a relative pose graph
@@ -767,7 +767,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
       graph::indexedGraph putativeGraph(set_pose_ids, relative_pose_pairs);
       graph::exportToGraphvizData(
         stlplus::create_filespec(sOut_directory_, sGraph_name),
-        putativeGraph.g);
+        putativeGraph);
       using namespace htmlDocument;
       std::ostringstream os;
 

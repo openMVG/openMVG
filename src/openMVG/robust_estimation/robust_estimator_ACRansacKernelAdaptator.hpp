@@ -28,6 +28,7 @@
 //
 
 #include "openMVG/numeric/numeric.h"
+#include "openMVG/multiview/conditioning.hpp"
 
 namespace openMVG {
 namespace robust{
@@ -191,7 +192,6 @@ private:
 ///  known Intrinsic
 template <typename SolverArg,
   typename ErrorArg,
-  typename UnnormalizerArg,
   typename ModelArg = Mat34>
 class ACKernelAdaptorResection_K
 {
@@ -257,7 +257,6 @@ private:
 /// Essential matrix Kernel adaptor for the A contrario model estimator
 template <typename SolverArg,
   typename ErrorArg,
-  typename UnnormalizerArg,
   typename ModelArg = Mat3>
 class ACKernelAdaptorEssential
 {
@@ -330,7 +329,6 @@ private:
 /// Specialization to handle radian angular residual error.
 template <typename SolverArg,
           typename ErrorArg,
-          typename UnnormalizerArg,
           typename ModelArg = Mat3>
 class ACKernelAdaptor_AngularRadianError
 {

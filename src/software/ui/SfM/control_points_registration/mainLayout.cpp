@@ -35,7 +35,7 @@ void MainWindow::help()
    tr(
    "This application allow to perform a rigid registration of a SfM scene to know GCP (Ground Control Points)<br>"
    "<b>Important:</b><br>"
-   "Each GCP must have an unique numbered ID.<br>"
+   "Each GCP must have a unique numbered ID.<br>"
    "<b>1-</b> Add GCP image observations:<br>"
    " - double-click on one image on the left (in which you want add a GCP observation)<br>"
    " - click on the displayed image on the right, and choose your ID and move your GCP observation to the right place.<br>"

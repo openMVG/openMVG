@@ -27,9 +27,10 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
   public:
   typedef typename Metric::ResultType DistanceType;
 
-  ArrayMatcher_Kdtree_Flann() = default ; 
+  ArrayMatcher_Kdtree_Flann() = default ;
 
-  virtual ~ArrayMatcher_Kdtree_Flann()  {
+  virtual ~ArrayMatcher_Kdtree_Flann()
+  {
     _datasetM.reset();
     _index.reset();
   }
@@ -44,8 +45,13 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
    *
    * \return True if success.
    */
-  bool Build( const Scalar * dataset, int nbRows, int dimension)  {
-
+  bool Build
+  (
+    const Scalar * dataset,
+    int nbRows,
+    int dimension
+  ) override
+  {
     if (nbRows > 0)
     {
       _dimension = dimension;
@@ -73,9 +79,14 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
    *
    * \return True if success.
    */
-  bool SearchNeighbour( const Scalar * query, int * indice, DistanceType * distance)
+  bool SearchNeighbour
+  (
+    const Scalar * query,
+    int * indice,
+    DistanceType * distance
+  ) override
   {
-    if (_index.get() != NULL)  {
+    if (_index.get() != nullptr)  {
       int * indicePTR = indice;
       DistanceType * distancePTR = distance;
       flann::Matrix<Scalar> queries((Scalar*)query, 1, _dimension);
@@ -108,9 +119,9 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
     IndMatches * pvec_indices,
     std::vector<DistanceType> * pvec_distances,
     size_t NN
-  )
+  ) override
   {
-    if (_index.get() != NULL && NN <= _datasetM->rows)  {
+    if (_index.get() != nullptr && NN <= _datasetM->rows)  {
       std::vector<DistanceType> vec_distances(nbQuery * NN);
       DistanceType * distancePTR = &(vec_distances[0]);
       flann::Matrix<DistanceType> dists(distancePTR, nbQuery, NN);
@@ -134,7 +145,7 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
         {
           for (size_t j = 0; j < NN; ++j)
           {
-            if (indices[i] > 0) // rperrot : nullptr here ? 
+            if (indices[i] > 0) // rperrot : nullptr here ?
             {
               pvec_indices->emplace_back(IndMatch(i, vec_indices[i*NN+j]));
               pvec_distances->emplace_back(vec_distances[i*NN+j]);

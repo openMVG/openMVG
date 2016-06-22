@@ -57,14 +57,12 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes
   const EdgesInterface_T & edges
 )
 {
-  std::set<IndexT> largestBiEdgeCC;
-
   // Create a graph from pairwise correspondences:
   // - remove not biedge connected component,
   // - keep the largest connected component.
 
-  typedef lemon::ListGraph Graph;
   graph::indexedGraph putativeGraph(edges);
+  typedef indexedGraph::GraphT Graph;
 
   // Remove not bi-edge connected edges
   typedef Graph::EdgeMap<bool> EdgeMapAlias;
@@ -85,7 +83,9 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes
   }
 
   // Graph is bi-edge connected, but still many connected components can exist
-  // Keep only the largest one
+  // Keep only the nodes belonging to the largest Bi-edge component
+  std::set<IndexT> largestBiEdgeCC;
+
   const int connectedComponentCount = lemon::countConnectedComponents( putativeGraph.g );
   std::cout << "\n" << "CleanGraph_KeepLargestBiEdge_Nodes():: => connected Component: "
             << connectedComponentCount << std::endl;
@@ -93,15 +93,15 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes
   {
     // Keep only the largest connected component
     // - list all CC size
-    // - if the largest one is meet, keep all the edges that belong to this node
+    // - export node that belong to the largest CC
 
     const std::map<IndexT, std::set<Graph::Node> > map_subgraphs = exportGraphToMapSubgraphs<Graph, IndexT>( putativeGraph.g );
     size_t count = std::numeric_limits<size_t>::min();
     typename std::map<IndexT, std::set<Graph::Node> >::const_iterator iterLargestCC = map_subgraphs.end();
-    for( typename std::map<IndexT, std::set<Graph::Node> >::const_iterator iter = map_subgraphs.begin();
+    for (typename std::map<IndexT, std::set<Graph::Node> >::const_iterator iter = map_subgraphs.begin();
          iter != map_subgraphs.end(); ++iter )
     {
-      if ( iter->second.size() > count )
+      if (iter->second.size() > count)
       {
         count = iter->second.size();
         iterLargestCC = iter;
@@ -110,42 +110,16 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes
     }
 
     //-- Keep only the nodes that are in the largest CC
-    for( typename std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
-         iter != map_subgraphs.end(); ++iter )
+    if (iterLargestCC != map_subgraphs.end())
     {
-      if ( iter == iterLargestCC )
+      const std::set<lemon::ListGraph::Node> & ccSet = iterLargestCC->second;
+      for (const auto & iter2 : ccSet)
       {
-        // list all nodes that belong to the current CC and update the Node Ids list
-        const std::set<lemon::ListGraph::Node> & ccSet = iter->second;
-        for ( std::set<lemon::ListGraph::Node>::const_iterator iter2 = ccSet.begin();
-              iter2 != ccSet.end(); ++iter2 )
-        {
-          const IndexT Id = ( *putativeGraph.map_nodeMapIndex )[*iter2];
-          largestBiEdgeCC.insert( Id );
-        }
-      }
-      else
-      {
-        // remove the edges from the graph
-        const std::set<lemon::ListGraph::Node> & ccSet = iter->second;
-        for ( std::set<lemon::ListGraph::Node>::const_iterator iter2 = ccSet.begin();
-              iter2 != ccSet.end(); ++iter2 )
-        {
-          typedef Graph::OutArcIt OutArcIt;
-          for ( OutArcIt e( putativeGraph.g, *iter2 ); e != lemon::INVALID; ++e )
-          {
-            putativeGraph.g.erase( e );
-          }
-        }
+        const IndexT Id = (*putativeGraph.node_map_id)[iter2];
+        largestBiEdgeCC.insert(Id);
       }
     }
   }
-
-  std::cout
-    << "\n"
-    << "Cardinal of nodes: " << lemon::countNodes( putativeGraph.g ) << "\n"
-    << "Cardinal of edges: " << lemon::countEdges( putativeGraph.g ) << std::endl
-    << std::endl;
 
   return largestBiEdgeCC;
 }

@@ -65,8 +65,11 @@ inline bool Save_PLY(
           if (sfm_data.IsPoseAndIntrinsicDefined(view.second.get()))
           {
             const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view.second.get());
-            stream << pose.center().transpose().cast<float>()
-              << " 0 255 0" << '\n';
+            stream
+              << pose.center()(0) << ' '
+              << pose.center()(1) << ' '
+              << pose.center()(2)
+              << " 0 255 0\n";
           }
         }
       }
@@ -77,7 +80,11 @@ inline bool Save_PLY(
         const Landmarks & landmarks = sfm_data.GetLandmarks();
         for ( const auto & iterLandmarks : landmarks )
         {
-          stream << iterLandmarks.second.X.transpose().cast<float>() << " 255 255 255" << '\n';
+          stream
+            << iterLandmarks.second.X(0) << ' '
+            << iterLandmarks.second.X(1) << ' '
+            << iterLandmarks.second.X(2)
+            << " 255 255 255\n";
         }
       }
 
@@ -87,7 +94,11 @@ inline bool Save_PLY(
         const Landmarks & landmarks = sfm_data.GetControl_Points();
         for ( const auto & iterGCP : landmarks )
         {
-          stream << iterGCP.second.X.transpose().cast<float>() << " 255 255 0" << '\n';
+          stream
+            << iterGCP.second.X(0) << ' '
+            << iterGCP.second.X(1) << ' '
+            << iterGCP.second.X(2)
+            << " 255 255 0\n";
         }
       }
 
