@@ -30,7 +30,7 @@ class SIFT_CCTAG_Image_describer : public Image_describer
 public:
   SIFT_CCTAG_Image_describer(const SiftParams & params = SiftParams(), bool bOrientation = true, std::size_t nRings = 3);
 
-  ~SIFT_CCTAG_Image_describer(){}
+  ~SIFT_CCTAG_Image_describer();
 
   bool Set_configuration_preset(EDESCRIBER_PRESET preset);
 
@@ -59,9 +59,8 @@ public:
   template<class Archive>
   void serialize( Archive & ar )
   {
-    //ar(
-    // cereal::make_nvp("params", _paramsSift),
-    // cereal::make_nvp("bOrientation", _bOrientation));
+    _siftDescriber.serialize<Archive>(ar);
+    _cctagDescriber.serialize<Archive>(ar);
   }
 
 private:

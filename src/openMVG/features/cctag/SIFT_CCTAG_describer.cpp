@@ -16,6 +16,10 @@ SIFT_CCTAG_Image_describer::SIFT_CCTAG_Image_describer(const SiftParams & params
 {
 }
 
+SIFT_CCTAG_Image_describer::~SIFT_CCTAG_Image_describer()
+{
+}
+
 bool SIFT_CCTAG_Image_describer::Set_configuration_preset(EDESCRIBER_PRESET preset)
 {
   bool res = _siftDescriber.Set_configuration_preset(preset);
