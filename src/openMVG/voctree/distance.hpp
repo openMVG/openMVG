@@ -15,7 +15,7 @@ namespace voctree {
  * Works with std::vector, boost::array, or more generally any container that has
  * a \c value_type typedef, \c size() and array-indexed element access.
  */
-template<class DescriptorA, class DescriptorB>
+template<class DescriptorA, class DescriptorB=DescriptorA>
 struct L2
 {
   typedef typename DescriptorA::value_type value_type;

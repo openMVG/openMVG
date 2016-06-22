@@ -19,7 +19,17 @@ using namespace AbcG;
 namespace openMVG {
 namespace dataio {
 
-  
+template<class AbcArrayProperty, typename T>
+void getAbcArrayProp(ICompoundProperty& userProps, const std::string& id, chrono_t sampleTime, T& outputArray)
+{
+  typedef typename AbcArrayProperty::sample_ptr_type sample_ptr_type;
+
+  AbcArrayProperty prop(userProps, id);
+  sample_ptr_type sample;
+  prop.get(sample, ISampleSelector(sampleTime));
+  outputArray.assign(sample->get(), sample->get()+sample->size());
+}
+
 /**
  * @brief Retrieve an Abc property.
  *         Maya convert everything into arrays. So here we made a trick
@@ -70,7 +80,6 @@ inline ICompoundProperty getAbcUserProperties(ABCSCHEMA& schema)
 
 bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part)
 {
-
   using namespace openMVG::geometry;
   using namespace openMVG::sfm;
 
@@ -82,7 +91,7 @@ bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmd
   ICompoundProperty arbGeom = ms.getArbGeomParams();
 
   C3fArraySamplePtr sampleColors;
-  if(arbGeom.getPropertyHeader("color"))
+  if(arbGeom && arbGeom.getPropertyHeader("color"))
   {
     IC3fArrayProperty propColor(arbGeom, "color");
     propColor.get(sampleColors);
@@ -108,7 +117,8 @@ bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmd
     }
   }
 
-  if(userProps.getPropertyHeader("mvg_visibilitySize") &&
+  if(userProps &&
+     userProps.getPropertyHeader("mvg_visibilitySize") &&
      userProps.getPropertyHeader("mvg_visibilityIds") &&
      userProps.getPropertyHeader("mvg_visibilityFeatPos")
      )
@@ -186,10 +196,11 @@ bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata,
   // Check if we have an associated image plane
   ICompoundProperty userProps = getAbcUserProperties(cs);
   std::string imagePath;
-  std::vector<int> sensorSize_pix = {2048, 2048};
+  std::vector<unsigned int> sensorSize_pix = {2048, 2048};
   std::string mvg_intrinsicType = EINTRINSIC_enumToString(PINHOLE_CAMERA);
   std::vector<double> mvg_intrinsicParams;
   IndexT id_view = sfmdata.GetViews().size();
+  IndexT id_pose = sfmdata.GetViews().size();
   IndexT id_intrinsic = sfmdata.GetIntrinsics().size();
   if(userProps)
   {
@@ -199,10 +210,12 @@ bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata,
     }
     if(userProps.getPropertyHeader("mvg_sensorSizePix"))
     {
-      Alembic::Abc::IUInt32ArrayProperty prop(userProps, "mvg_sensorSizePix");
-      std::shared_ptr<UInt32ArraySample> sample;
-      prop.get(sample, ISampleSelector(sampleTime));
-      sensorSize_pix.assign(sample->get(), sample->get()+sample->size());
+      try {
+        getAbcArrayProp<Alembic::Abc::IUInt32ArrayProperty>(userProps, "mvg_sensorSizePix", sampleTime, sensorSize_pix);
+      } catch(Alembic::Util::v7::Exception&)
+      {
+        getAbcArrayProp<Alembic::Abc::IInt32ArrayProperty>(userProps, "mvg_sensorSizePix", sampleTime, sensorSize_pix);
+      }
       assert(sensorSize_pix.size() == 2);
     }
     if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_intrinsicType"))
@@ -223,6 +236,15 @@ bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata,
       } catch(Alembic::Util::v7::Exception&)
       {
         id_view = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_viewId", sampleTime);
+      }
+    }
+    if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_poseId"))
+    {
+      try {
+        id_pose = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_poseId", sampleTime);
+      } catch(Alembic::Util::v7::Exception&)
+      {
+        id_pose = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_poseId", sampleTime);
       }
     }
     if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_intrinsicId"))

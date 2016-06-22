@@ -79,7 +79,7 @@ bool ExpectFundamentalProperties(const TMat &F,
 template <class Kernel>
 bool ExpectKernelProperties(const Mat &x1,
                               const Mat &x2,
-                              Mat3 *F_expected = NULL) {
+                              Mat3 *F_expected = nullptr) {
   bool bOk = true;
   Kernel kernel(x1, x2);
   vector<size_t> samples;

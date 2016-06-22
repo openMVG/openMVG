@@ -51,7 +51,7 @@ namespace system {
     start_ = static_cast<double>(li_start_.QuadPart);
 #else
     timeval start;
-    gettimeofday(&start, NULL);
+    gettimeofday(&start, nullptr);
     start_ = start.tv_sec + start.tv_usec * 1e-6;
 #endif
 
@@ -72,7 +72,7 @@ namespace system {
     elapsed_ = (static_cast<double>(end_.QuadPart) - start_) / frequency_;
 #else
     timeval end;
-    gettimeofday(&end, NULL);
+    gettimeofday(&end, nullptr);
     const double end_ = end.tv_sec + end.tv_usec * 1e-6;
     elapsed_ = end_ - start_;
 #endif

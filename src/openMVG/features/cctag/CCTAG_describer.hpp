@@ -8,11 +8,15 @@
 #include <iostream>
 #include <numeric>
 
+namespace cctag {
+  class Parameters; // Hidden implementation
+}
+
 namespace openMVG {
 namespace features {
 
-/** @brief CCTag filter pixel type */
 
+/** @brief CCTag filter pixel type */
 class CCTAG_Image_describer : public Image_describer
 {
 public:
@@ -33,7 +37,7 @@ public:
   */
   bool Describe(const image::Image<unsigned char>& image,
     std::unique_ptr<Regions> &regions,
-    const image::Image<unsigned char> * mask = NULL);
+    const image::Image<unsigned char> * mask = nullptr);
 
   /// Allocate Regions type depending of the Image_describer
   void Allocate(std::unique_ptr<Regions> &regions) const;
@@ -41,15 +45,25 @@ public:
   template<class Archive>
   void serialize( Archive & ar )
   {
-    //ar(
-     //cereal::make_nvp("params", _params),
-     //cereal::make_nvp("bOrientation", _bOrientation));
+    ar(
+     cereal::make_nvp("cannyThrLow", _params._cannyThrLow),
+     cereal::make_nvp("cannyThrHigh", _params._cannyThrHigh));
   }
 
+  struct CCTagParameters
+  {
+    CCTagParameters(size_t nRings);
+    ~CCTagParameters();
+
+    bool setPreset(EDESCRIBER_PRESET preset);
+
+    float _cannyThrLow;
+    float _cannyThrHigh;
+    cctag::Parameters* _internalParams;
+  };
 private:
   //CCTag parameters
-  struct CCTagParameters; // Hidden implementation
-  CCTagParameters *_params;
+  CCTagParameters _params;
   bool _doAppend;
 };
 

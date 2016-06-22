@@ -39,6 +39,8 @@ public:
     const std::string& sfileNameFeats,
     const std::string& sfileNameDescs) const = 0;
 
+  virtual bool SaveDesc(const std::string& sfileNameDescs) const = 0;
+
   virtual bool LoadFeatures(
     const std::string& sfileNameFeats) = 0;
 
@@ -62,6 +64,8 @@ public:
   /// Return a pointer to the first value of the descriptor array
   // Used to avoid complex template imbrication
   virtual const void * DescriptorRawData() const = 0;
+
+  virtual void clearDescriptors() = 0;
 
   /// Return the squared distance between two descriptors
   // A default metric is used according the descriptor type:
@@ -149,11 +153,18 @@ public:
           & saveDescsToBinFile(sfileNameDescs, _vec_descs);
   }
 
+  bool SaveDesc(const std::string& sfileNameDescs) const
+  {
+    return saveDescsToBinFile(sfileNameDescs, _vec_descs);
+  }
+
   /// Mutable and non-mutable DescriptorT getters.
   inline std::vector<DescriptorT> & Descriptors() { return _vec_descs; }
   inline const std::vector<DescriptorT> & Descriptors() const { return _vec_descs; }
 
   const void * DescriptorRawData() const { return &_vec_descs[0];}
+
+  void clearDescriptors() { _vec_descs.clear(); }
 
   void swap(This& other)
   {

@@ -17,7 +17,7 @@ SfM_Data create_test_scene(const IndexT viewsCount, const IndexT pointCount, con
   SfM_Data sfm_data;
   sfm_data.s_root_path = "./";
 
-  std::srand(time(NULL));
+  std::srand(time(nullptr));
 
   for(IndexT i = 0; i < viewsCount; ++i)
   {

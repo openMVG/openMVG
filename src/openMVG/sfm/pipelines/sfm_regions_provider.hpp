@@ -26,6 +26,14 @@ struct Regions_Provider
   /// Regions per ViewId of the considered SfM_Data container
   Hash_Map<IndexT, std::unique_ptr<features::Regions> > regions_per_view;
 
+  void clearDescriptors()
+  {
+    for(auto& it: regions_per_view)
+    {
+      it.second->clearDescriptors();
+    }
+  }
+
   // Load Regions related to a provided SfM_Data View container
   virtual bool load(
     const SfM_Data & sfm_data,
@@ -37,10 +45,10 @@ struct Regions_Provider
       std::cout, "\n- Regions Loading -\n");
     // Read for each view the corresponding regions and store them
     bool bContinue = true;
+
 #ifdef OPENMVG_USE_OPENMP
-    #pragma omp parallel
+    #pragma omp parallel num_threads(3)
 #endif
-    
     for (Views::const_iterator iter = sfm_data.GetViews().begin();
       iter != sfm_data.GetViews().end() && bContinue; ++iter)
     {

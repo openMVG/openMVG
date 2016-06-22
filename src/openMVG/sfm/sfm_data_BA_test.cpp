@@ -193,31 +193,7 @@ SfM_Data getInputScene(const NViewDataSet & d, const nViewDatasetConfigurator & 
   {
     const unsigned int w = config._cx *2;
     const unsigned int h = config._cy *2;
-    switch (eintrinsic)
-    {
-      case PINHOLE_CAMERA:
-        sfm_data.intrinsics[0] = std::make_shared<Pinhole_Intrinsic>
-          (w, h, config._fx, config._cx, config._cy);
-      break;
-      case PINHOLE_CAMERA_RADIAL1:
-        sfm_data.intrinsics[0] = std::make_shared<Pinhole_Intrinsic_Radial_K1>
-          (w, h, config._fx, config._cx, config._cy, 0.0);
-      break;
-      case PINHOLE_CAMERA_RADIAL3:
-        sfm_data.intrinsics[0] = std::make_shared<Pinhole_Intrinsic_Radial_K3>
-          (w, h, config._fx, config._cx, config._cy, 0., 0., 0.);
-      break;
-      case PINHOLE_CAMERA_BROWN:
-        sfm_data.intrinsics[0] = std::make_shared<Pinhole_Intrinsic_Brown_T2>
-          (w, h, config._fx, config._cx, config._cy, 0., 0., 0., 0., 0.);
-      break;
-      case PINHOLE_CAMERA_FISHEYE:
-      sfm_data.intrinsics[0] = std::make_shared<Pinhole_Intrinsic_Fisheye>
-          (w, h, config._fx, config._cx, config._cy, 0., 0., 0., 0.);
-      break;
-      default:
-        std::cout << "Not yet supported" << std::endl;
-    }
+    sfm_data.intrinsics[0] = createPinholeIntrinsic(eintrinsic, w, h, config._fx, config._cx, config._cy);
   }
 
   // 4. Landmarks

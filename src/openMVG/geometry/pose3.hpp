@@ -27,7 +27,7 @@ class Pose3
     Pose3(const Mat34& Rt)
     : _rotation(Rt.block<3,3>(0,0))
     {
-      Vec3 t = Rt.block<1, 3>(3,0);
+      Vec3 t = Rt.block<3, 1>(0,3);
       _center = -_rotation.transpose() * t;
     }
 
@@ -65,9 +65,19 @@ class Pose3
       return Pose3(_rotation.transpose(),  -(_rotation * _center));
     }
 
-    // Return the depth (distance) of a point respect to the camera center
-    double depth(const Vec3 &X) const {
+    /// Return the depth (distance) of a point respect to the camera center
+    double depth(const Vec3 &X) const
+    {
       return (_rotation * (X - _center))[2];
+    }
+
+    /// Return the pose with the Scale, Rotation and translation applied.
+    Pose3 transformSRt(const double S, const Mat3 & R, const Vec3 & t) const
+    {
+      Pose3 pose;
+      pose._center = S * R * _center + t;
+      pose._rotation = _rotation * R.transpose();
+      return pose;
     }
 
     // Serialization

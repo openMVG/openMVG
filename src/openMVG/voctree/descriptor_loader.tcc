@@ -43,8 +43,12 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
     }
     ++display;
   }
-  BOOST_ASSERT(bytesPerElement > 0);
   std::cout << "Found " << numDescriptors << " descriptors overall, allocating memory..." << std::endl;
+  if(bytesPerElement == 0)
+  {
+    std::cout << "WARNING: Empty descriptor file: " << fileFullPath << std::endl;
+    return 0;
+  }
 
   // Allocate the memory
   descriptors.reserve(numDescriptors);
@@ -67,10 +71,10 @@ size_t readDescFromFiles(const std::string &fileFullPath, std::vector<Descriptor
 
     // Update the overall counter
     numDescriptors = result;
-    
+
     ++display;
   }
-  BOOST_ASSERT(numDescriptors == numDescriptorsCheck);
+  assert(numDescriptors == numDescriptorsCheck);
 
   // Return the result
   return numDescriptors;

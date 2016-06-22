@@ -17,40 +17,59 @@ using namespace openMVG;
 using namespace openMVG::cameras;
 using namespace openMVG::sfm;
 
-/// From 2 given image file-names, find the two corresponding index in the View list
-bool computeIndexFromImageNames(
+/**
+ * @brief Retrieve the view id in the sfmData from the image filename.
+ *
+ * @param[in] sfm_data the SfM scene
+ * @param[in] initialName the image name to find (filename or path)
+ * @param[out] out_viewId the id found
+ * @return if a view is found
+ */
+bool retrieveViewIdFromImageName(
   const SfM_Data & sfm_data,
-  const std::pair<std::string,std::string>& initialPairName,
-  Pair& initialPairIndex)
+  const std::string& initialName,
+  IndexT& out_viewId)
 {
-  if (initialPairName.first == initialPairName.second)
-  {
-    std::cerr << "\nInvalid image names. You cannot use the same image to initialize a pair." << std::endl;
-    return false;
-  }
+  out_viewId = UndefinedIndexT;
 
-  initialPairIndex = Pair(UndefinedIndexT, UndefinedIndexT);
-
+  bool isName = (initialName == stlplus::filename_part(initialName));
+  
   /// List views filenames and find the one that correspond to the user ones:
-  std::vector<std::string> vec_camImageName;
-  for (Views::const_iterator it = sfm_data.GetViews().begin();
+  for(Views::const_iterator it = sfm_data.GetViews().begin();
     it != sfm_data.GetViews().end(); ++it)
   {
     const View * v = it->second.get();
-    const std::string filename = stlplus::filename_part(v->s_Img_path);
-    if (filename == initialPairName.first)
+    std::string filename;
+    
+    if(isName)
     {
-      initialPairIndex.first = v->id_view;
+      filename = stlplus::filename_part(v->s_Img_path);
     }
-    else{
-      if (filename == initialPairName.second)
+    else
+    {
+      if(stlplus::is_full_path(v->s_Img_path))
       {
-        initialPairIndex.second = v->id_view;
+        filename = v->s_Img_path;
+      }
+      else
+      {
+        filename = sfm_data.s_root_path + v->s_Img_path;
+      }
+    }
+    
+    if (filename == initialName)
+    {
+      if(out_viewId == UndefinedIndexT)
+      {
+          out_viewId = v->id_view;
+      }
+      else
+      {
+        std::cout<<"Error: Two pictures named :" << initialName << " !" << std::endl;
       }
     }
   }
-  return (initialPairIndex.first != UndefinedIndexT &&
-      initialPairIndex.second != UndefinedIndexT);
+  return out_viewId != UndefinedIndexT;
 }
 
 
@@ -187,13 +206,21 @@ int main(int argc, char **argv)
   // Handle Initial pair parameter
   if (!initialPairString.first.empty() && !initialPairString.second.empty())
   {
+    if (initialPairString.first == initialPairString.second)
+    {
+      std::cerr << "\nInvalid image names. You cannot use the same image to initialize a pair." << std::endl;
+      return EXIT_FAILURE;
+    }
+
     Pair initialPairIndex;
-    if(!computeIndexFromImageNames(sfm_data, initialPairString, initialPairIndex))
+    if(!retrieveViewIdFromImageName(sfm_data, initialPairString.first, initialPairIndex.first)
+            || !retrieveViewIdFromImageName(sfm_data, initialPairString.second, initialPairIndex.second))
     {
         std::cerr << "Could not find the initial pairs <" << initialPairString.first
           <<  ", " << initialPairString.second << ">!\n";
-      return EXIT_FAILURE;
+        return EXIT_FAILURE;
     }
+ 
     sfmEngine.setInitialPair(initialPairIndex);
   }
 

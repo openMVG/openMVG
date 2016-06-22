@@ -7,16 +7,15 @@
 
 #include "openMVG/sfm/sfm.hpp"
 
-#include "software/SfM/io_readGT.hpp"
 #include "software/SfM/tools_precisionEvaluationToGt.hpp"
 #include "software/SfM/SfMPlyHelper.hpp"
 
 #include "third_party/htmlDoc/htmlDoc.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cstdlib>
+#include <iostream>
 
 using namespace openMVG;
 using namespace openMVG::sfm;
@@ -28,102 +27,43 @@ int main(int argc, char **argv)
   CmdLine cmd;
 
   std::string
-    sGTDirectory,
-    sComputedDirectory,
-    sOutDir = "";
-  int camType = -1; //1: openMVG cam, 2,3: Strechas cam
+    sGTFile,
+    sComputedFile,
+    sOutDirectory = "";
 
 
-  cmd.add( make_option('i', sGTDirectory, "gt") );
-  cmd.add( make_option('c', sComputedDirectory, "computed") );
-  cmd.add( make_option('o', sOutDir, "outdir") );
-  cmd.add( make_option('t', camType, "camtype") );
+  cmd.add( make_option('i', sGTFile, "gt") );
+  cmd.add( make_option('c', sComputedFile, "computed") );
+  cmd.add( make_option('o', sOutDirectory, "outdir") );
 
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
     cmd.process(argc, argv);
   } catch(const std::string& s) {
     std::cerr << "Usage: " << argv[0] << '\n'
-      << "[-i|--gt] path (where ground truth camera trajectory are saved)\n"
-      << "[-c|--computed] path to a .json/.bin"
-#if HAVE_ALEMBIC            
-            " or an alembic file .abc"
-#endif            
-            " containing the reconstruction or the localization result\n"
-      << "[-o|--output] path (where statistics will be saved)\n"
-      << "[-t|--camtype] Type of the camera:\n"
-      << " -1: autoguess (try 1,2,3),\n"
-      << "  1: openMVG (bin),\n"
-      << "  2: Strechas 'png.camera' \n"
-      << "  3: Strechas 'jpg.camera' ]\n"
+      << "[-i|--gt] ground truth path: it could be a json/bin"
+#if HAVE_ALEMBIC
+      << "/abc"
+#endif
+      << " file containing\n"
+      << " a reconstructed scene or localized camera, or the path to a directory\n"
+      << " containing the 2 other directories, \"images\" containing the images of\n"
+      << " the scene, and \"gt_dense_cameras\" containing the corresponding .camera files\n"
+      << "[-c|--computed] path (openMVG sfm_data.json file)\n"
+      << "[-o|--outdir] path (where statistics will be saved)\n"
       << std::endl;
 
     std::cerr << s << std::endl;
     return EXIT_FAILURE;
   }
 
-  if (sOutDir.empty())  {
+  if (sOutDirectory.empty())  {
     std::cerr << "\nIt is an invalid output directory" << std::endl;
     return EXIT_FAILURE;
   }
 
-  if (!stlplus::folder_exists(sOutDir))
-    stlplus::folder_create(sOutDir);
-
-  //Setup the camera type and the appropriate camera reader
-  bool (*fcnReadCamPtr)(const std::string&, Pinhole_Intrinsic&, geometry::Pose3&);
-  std::string suffix;
-
-  switch (camType)
-  {
-    case -1:  // handle auto guess
-    {
-      if (!stlplus::folder_wildcard(sGTDirectory, "*.bin", false, true).empty())
-        camType = 1;
-      else if (!stlplus::folder_wildcard(sGTDirectory, "*.png.camera", false, true).empty())
-        camType = 2;
-      else if (!stlplus::folder_wildcard(sGTDirectory, "*.jpg.camera", false, true).empty())
-        camType = 3;
-      else if (!stlplus::folder_wildcard(sGTDirectory, "*.PNG.camera", false, true).empty())
-        camType = 4;
-      else if (!stlplus::folder_wildcard(sGTDirectory, "*.JPG.camera", false, true).empty())
-        camType = 5;
-      else
-        camType = std::numeric_limits<int>::infinity();
-    }
-    break;
-  }
-  switch (camType)
-  {
-    case 1:
-      std::cout << "\nusing openMVG Camera";
-      fcnReadCamPtr = &read_openMVG_Camera;
-      suffix = "bin";
-      break;
-    case 2:
-      std::cout << "\nusing Strechas Camera (png)";
-      fcnReadCamPtr = &read_Strecha_Camera;
-      suffix = "png.camera";
-      break;
-    case 3:
-      std::cout << "\nusing Strechas Camera (jpg)";
-      fcnReadCamPtr = &read_Strecha_Camera;
-      suffix = "jpg.camera";
-      break;
-    case 4:
-      std::cout << "\nusing Strechas Camera (PNG)";
-      fcnReadCamPtr = &read_Strecha_Camera;
-      suffix = "PNG.camera";
-      break;
-    case 5:
-      std::cout << "\nusing Strechas Camera (JPG)";
-      fcnReadCamPtr = &read_Strecha_Camera;
-      suffix = "JPG.camera";
-      break;
-    default:
-      std::cerr << "Unsupported camera type. Please write your camera reader." << std::endl;
-      return EXIT_FAILURE;
-  }
+  if (!stlplus::folder_exists(sOutDirectory))
+    stlplus::folder_create(sOutDirectory);
 
   //---------------------------------------
   // Quality evaluation
@@ -132,58 +72,64 @@ int main(int argc, char **argv)
   //-- Load GT camera rotations & positions [R|C]:
   SfM_Data sfm_data_gt;
   // READ DATA FROM GT
+  std::cout << "Try to read data from GT" << std::endl;
+  if (!Load(sfm_data_gt, sGTFile, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS)))
   {
-    std::cout << "\nTry to read data from GT";
-    std::vector<std::string> vec_fileNames;
-    readGt(fcnReadCamPtr, sGTDirectory, suffix, vec_fileNames, sfm_data_gt.poses, sfm_data_gt.intrinsics);
-    std::cout << sfm_data_gt.poses.size() << " gt cameras have been found" << std::endl;
+    std::cerr << "The input SfM_Data file \""<< sComputedFile << "\" cannot be read." << std::endl;
+    return EXIT_FAILURE;
   }
+  std::cout << sfm_data_gt.poses.size() << " gt cameras have been found" << std::endl;
 
   //-- Load the camera that we have to evaluate
   SfM_Data sfm_data;
-  if (!Load(sfm_data, sComputedDirectory, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS)))
+  if (!Load(sfm_data, sComputedFile, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS)))
   {
     std::cerr << std::endl
-      << "The input SfM_Data file \""<< sComputedDirectory << "\" cannot be read." << std::endl;
-    return EXIT_FAILURE;
-  }
-  // Assert that GT and loaded scene have the same camera count
-  if (sfm_data_gt.poses.size() != sfm_data.GetPoses().size())
-  {
-    std::cerr << std::endl
-      << "There is missing camera in the loaded scene." << std::endl;
-    std::cerr << "number of poses in GT    : " << sfm_data_gt.poses.size() << std::endl;
-    std::cerr << "number of poses in scene :" << sfm_data.GetPoses().size() << std::endl;
+      << "The input SfM_Data file \""<< sComputedFile << "\" cannot be read." << std::endl;
     return EXIT_FAILURE;
   }
 
-  // Prepare data for comparison (corresponding camera centers and rotations)
-  Poses::const_iterator iter_poses_eval = sfm_data.GetPoses().begin();
-  Poses::const_iterator iter_poses_gt = sfm_data_gt.GetPoses().begin();
+  // Fill vectors of valid views for evaluation
   std::vector<Vec3> vec_camPosGT, vec_C;
   std::vector<Mat3> vec_camRotGT, vec_camRot;
-  for(; iter_poses_gt != sfm_data_gt.GetPoses().end(); ++iter_poses_gt, ++iter_poses_eval)
+  for(const auto &iter : sfm_data.GetViews())
   {
+    const auto &view = iter.second;
+    // Jump to next view if there is no correponding pose in reconstruction
+    if(sfm_data.GetPoses().find(view->id_pose) == sfm_data.GetPoses().end())
+    {
+      std::cout << "no pose in input (" << view->id_pose << ")" << std::endl;
+      continue;
+    }
+
+    // Jump to next view if there is no corresponding view in GT
+    if(sfm_data_gt.GetViews().find(view->id_view) == sfm_data_gt.GetViews().end())
+    {
+      std::cout << "no view in GT (" << view->id_view << ")" << std::endl;
+      continue;
+    }
+    const int idPoseGT = sfm_data_gt.GetViews().at(view->id_view)->id_pose;
+
     //-- GT
-    const geometry::Pose3& pose_gt = iter_poses_gt->second;
+    const geometry::Pose3 pose_gt = sfm_data_gt.GetPoses().at(idPoseGT);
     vec_camPosGT.push_back(pose_gt.center());
     vec_camRotGT.push_back(pose_gt.rotation());
 
     //-- Data to evaluate
-    const geometry::Pose3& pose_eval = iter_poses_eval->second;
+    const geometry::Pose3 pose_eval = sfm_data.GetPoses().at(view->id_pose);
     vec_C.push_back(pose_eval.center());
     vec_camRot.push_back(pose_eval.rotation());
   }
 
   // Visual output of the camera location
-  plyHelper::exportToPly(vec_camPosGT, string(stlplus::folder_append_separator(sOutDir) + "camGT.ply").c_str());
-  plyHelper::exportToPly(vec_C, string(stlplus::folder_append_separator(sOutDir) + "camComputed.ply").c_str());
+  plyHelper::exportToPly(vec_camPosGT, string(stlplus::folder_append_separator(sOutDirectory) + "camGT.ply").c_str());
+  plyHelper::exportToPly(vec_C, string(stlplus::folder_append_separator(sOutDirectory) + "camComputed.ply").c_str());
 
   // Evaluation
   htmlDocument::htmlDocumentStream _htmlDocStream("openMVG Quality evaluation.");
-  EvaluteToGT(vec_camPosGT, vec_C, vec_camRotGT, vec_camRot, sOutDir, &_htmlDocStream);
+  EvaluteToGT(vec_camPosGT, vec_C, vec_camRotGT, vec_camRot, sOutDirectory, &_htmlDocStream);
 
-  ofstream htmlFileStream( string(stlplus::folder_append_separator(sOutDir) +
+  ofstream htmlFileStream( string(stlplus::folder_append_separator(sOutDirectory) +
     "ExternalCalib_Report.html"));
   htmlFileStream << _htmlDocStream.getDoc();
 

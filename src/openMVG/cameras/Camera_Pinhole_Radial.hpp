@@ -67,6 +67,9 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     _params[0] = k1;
   }
 
+  Pinhole_Intrinsic_Radial_K1* clone() const { return new Pinhole_Intrinsic_Radial_K1(*this); }
+  void assign(const IntrinsicBase& other) { *this = dynamic_cast<const Pinhole_Intrinsic_Radial_K1&>(other); }
+
   EINTRINSIC getType() const { return PINHOLE_CAMERA_RADIAL1; }
 
   virtual bool have_disto() const {  return true; }
@@ -105,14 +108,16 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
   // Data wrapper for non linear optimization (update from data)
   virtual bool updateFromParams(const std::vector<double> & params)
   {
-    if (params.size() == 4) {
-      *this = Pinhole_Intrinsic_Radial_K1(
-        _w, _h,
-        params[0], params[1], params[2], // focal, ppx, ppy
-        params[3]); //K1
+    if (params.size() == 4)
+    {
+      this->setK(params[0], params[1], params[2]);
+      _params = {
+        params[3] // K1
+      };
       return true;
     }
-    else  {
+    else
+    {
       return false;
     }
   }
@@ -177,6 +182,9 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     _params[2] = k3;
   }
 
+  Pinhole_Intrinsic_Radial_K3* clone() const { return new Pinhole_Intrinsic_Radial_K3(*this); }
+  void assign(const IntrinsicBase& other) { *this = dynamic_cast<const Pinhole_Intrinsic_Radial_K3&>(other); }
+
   EINTRINSIC getType() const { return PINHOLE_CAMERA_RADIAL3; }
 
   virtual bool have_disto() const {  return true; }
@@ -219,16 +227,15 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
   // Data wrapper for non linear optimization (update from data)
   virtual bool updateFromParams(const std::vector<double> & params)
   {
-    if (params.size() == 6) {
-      *this = Pinhole_Intrinsic_Radial_K3(
-        _w, _h,
-        params[0], params[1], params[2], // focal, ppx, ppy
-        params[3], params[4], params[5]); // K1, K2, K3
+    if (params.size() == 6)
+    {
+      this->setK(params[0], params[1], params[2]);
+      _params = {
+        params[3], params[4], params[5] // K1, K2, K3
+      };
       return true;
     }
-    else  {
-      return false;
-    }
+    return false;
   }
 
   /// Return the un-distorted pixel (with removed distortion)

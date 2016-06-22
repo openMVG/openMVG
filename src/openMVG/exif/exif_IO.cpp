@@ -8,6 +8,7 @@
 
 #include "openMVG/stl/hash.hpp"
 
+#include <cstdlib>
 
 namespace openMVG {
 namespace exif  {
@@ -44,6 +45,9 @@ std::size_t computeUID(const Exif_IO& exifReader, const std::string& imageFilena
 
   stl::hash_combine(uid, exifReader.getWidth());
   stl::hash_combine(uid, exifReader.getHeight());
+  
+  // Limit to integer to maximize compatibility (like Alembic in Maya)
+  uid = std::abs((int) uid);
 
   return uid;
 }
