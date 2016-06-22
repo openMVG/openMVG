@@ -173,7 +173,7 @@ bool List_Triplets( const GraphT & g, std::vector< Triplet > & vec_triplets )
             g.id( g.target( vec_edges[i] ) )
           };
           std::sort( &triplet[0], &triplet[3] );
-          vec_triplets.push_back( Triplet( triplet[0], triplet[1], triplet[2] ) );
+          vec_triplets.emplace_back( triplet[0], triplet[1], triplet[2] );
         }
       }
       // Mark the current ref edge as visited
@@ -197,18 +197,16 @@ static std::vector< graph::Triplet > tripletListing
   const IterablePairs & pairs
 )
 {
-  std::vector< graph::Triplet > vec_triplets;
-
   indexedGraph putativeGraph( pairs );
-
+  std::vector< graph::Triplet > vec_triplets;
   graph::List_Triplets<indexedGraph::GraphT>( putativeGraph.g, vec_triplets );
 
   //Change triplets to ImageIds
   for ( auto & triplet : vec_triplets )
   {
-    const IndexT I = ( *putativeGraph.map_nodeMapIndex )[putativeGraph.g.nodeFromId( triplet.i )];
-    const IndexT J = ( *putativeGraph.map_nodeMapIndex )[putativeGraph.g.nodeFromId( triplet.j )];
-    const IndexT K = ( *putativeGraph.map_nodeMapIndex )[putativeGraph.g.nodeFromId( triplet.k )];
+    const IndexT I = ( *putativeGraph.node_map_id )[putativeGraph.g.nodeFromId( triplet.i )];
+    const IndexT J = ( *putativeGraph.node_map_id )[putativeGraph.g.nodeFromId( triplet.j )];
+    const IndexT K = ( *putativeGraph.node_map_id )[putativeGraph.g.nodeFromId( triplet.k )];
     IndexT triplet_[3] = { I, J, K };
     std::sort( &triplet_[0], &triplet_[3] );
     triplet = graph::Triplet( triplet_[0], triplet_[1], triplet_[2] );

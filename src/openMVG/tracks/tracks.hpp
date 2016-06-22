@@ -86,7 +86,7 @@ struct TracksBuilder
     }
 
     // 2. Build the 'flat' representation where a tuple (the node)
-    //  is attached to an unique index.
+    //  is attached to a unique index.
     map_node_to_index.reserve(allFeatures.size());
     unsigned int cpt = 0;
     for (const auto & feat : allFeatures)

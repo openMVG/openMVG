@@ -120,7 +120,7 @@ bool ColorHarmonizationEngineGlobal::Process()
     // Save the graph before cleaning:
     graph::exportToGraphvizData(
       stlplus::create_filespec(_sOutDirectory, "input_graph_poor_supportRemoved"),
-      putativeGraph.g);
+      putativeGraph);
   }
 
   //-------------------
@@ -158,7 +158,7 @@ bool ColorHarmonizationEngineGlobal::Process()
       << "- VLD Segment: 2\n";
     while( ! ( cin >> _selectionMethod ) || _selectionMethod < 0 || _selectionMethod > 2 )
     {
-      cout << _selectionMethod << " is not accepted.\nTo use: \n- FullFrame enter: 0\n- Matched Points enter: 1\n- VLD Segment enter: 2\n";
+      cout << _selectionMethod << " is not accepted.\nPlease use a valid method number.\n";
     }
   }
 
@@ -456,13 +456,13 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
   if ( !stlplus::is_file( _sSfM_Data_Path ))
   {
     std::cerr << std::endl
-      << "Invalid input sfm_data file: (" << stlplus::basename_part(_sMatchesFile) << ")" << std::endl;
+      << "Invalid input sfm_data file: (" << _sSfM_Data_Path << ")" << std::endl;
     return false;
   }
   if (!stlplus::is_file( _sMatchesFile ))
   {
     std::cerr << std::endl
-      << "Invalid match file: (" << stlplus::basename_part(_sMatchesFile) << ")"<< std::endl;
+      << "Invalid match file: (" << _sMatchesFile << ")"<< std::endl;
     return false;
   }
 
@@ -511,7 +511,7 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
   // Save the graph before cleaning:
   graph::exportToGraphvizData(
       stlplus::create_filespec( _sOutDirectory, "initialGraph" ),
-      putativeGraph.g );
+      putativeGraph);
 
   return true;
 }
@@ -526,7 +526,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
   // Save the graph before cleaning:
   graph::exportToGraphvizData(
     stlplus::create_filespec(_sOutDirectory, "initialGraph"),
-    putativeGraph.g);
+    putativeGraph);
 
   const int connectedComponentCount = lemon::countConnectedComponents(putativeGraph.g);
   std::cout << "\n"
@@ -565,8 +565,8 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
         for (lemon::ListGraph::OutArcIt e(putativeGraph.g, *iter2); e!=INVALID; ++e)
         {
           putativeGraph.g.erase(e);
-          const IndexT Idu = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.target(e)];
-          const IndexT Idv = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.source(e)];
+          const IndexT Idu = (*putativeGraph.node_map_id)[putativeGraph.g.target(e)];
+          const IndexT Idv = (*putativeGraph.node_map_id)[putativeGraph.g.source(e)];
           matching::PairWiseMatches::iterator iterM = _map_Matches.find(std::make_pair(Idu,Idv));
           if( iterM != _map_Matches.end())
           {
@@ -586,7 +586,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
   // Save the graph after cleaning:
   graph::exportToGraphvizData(
     stlplus::create_filespec(_sOutDirectory, "cleanedGraph"),
-    putativeGraph.g);
+    putativeGraph);
 
   std::cout << "\n"
     << "Cardinal of nodes: " << lemon::countNodes(putativeGraph.g) << "\n"
