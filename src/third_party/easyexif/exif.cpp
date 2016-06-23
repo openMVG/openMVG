@@ -35,6 +35,8 @@
 #include <stdio.h>
 #include <vector>
 
+#include <iostream>
+
 using std::string;
 
 namespace {
@@ -415,8 +417,16 @@ IFEntry parseIFEntry(const unsigned char *buf, const unsigned offs,
 //
 int easyexif::EXIFInfo::parseFrom(const unsigned char *buf, unsigned len) {
   // Sanity check: all JPEG files start with 0xFFD8.
-  if (!buf || len < 4) return PARSE_EXIF_ERROR_NO_JPEG;
-  if (buf[0] != 0xFF || buf[1] != 0xD8) return PARSE_EXIF_ERROR_NO_JPEG;
+  if (!buf || len < 4)
+  {
+    std::cerr << "[exif] Empty file." << std::endl;
+    return PARSE_EXIF_ERROR_NO_JPEG;
+  }
+  if (buf[0] != 0xFF || buf[1] != 0xD8)
+  {
+    std::cerr << "[exif] Unrecognized file type code." << std::endl;
+    return PARSE_EXIF_ERROR_NO_JPEG;
+  }
 
   // Sanity check: some cameras pad the JPEG image with null bytes at the end.
   // Normally, we should able to find the JPEG end marker 0xFFD9 at the end
@@ -424,17 +434,23 @@ int easyexif::EXIFInfo::parseFrom(const unsigned char *buf, unsigned len) {
   // end of the image buffer, keep decrementing len until an 0xFFD9 is found,
   // or some other bytes are. If the first non-zero/0xFF bytes from the end are
   // not 0xFFD9, then we can be reasonably sure that the buffer is not a JPEG.
+  //
+  // [OpenMVG note]
+  // Since we encounter often invalid ended JPEG file, we skip this check.
+  /*
   while (len > 2) {
     if (buf[len - 1] == 0 || buf[len - 1] == 0xFF) {
       len--;
     } else {
       if (buf[len - 1] != 0xD9 || buf[len - 2] != 0xFF) {
+        std::cerr << "[exif] Not a valid JPEG file." << std::endl;
         return PARSE_EXIF_ERROR_NO_JPEG;
       } else {
         break;
       }
     }
   }
+  */
   clear();
 
   // Scan for EXIF header (bytes 0xFF 0xE1) and do a sanity check by
@@ -452,11 +468,18 @@ int easyexif::EXIFInfo::parseFrom(const unsigned char *buf, unsigned len) {
   unsigned offs = 0;  // current offset into buffer
   for (offs = 0; offs < len - 1; offs++)
     if (buf[offs] == 0xFF && buf[offs + 1] == 0xE1) break;
-  if (offs + 4 > len) return PARSE_EXIF_ERROR_NO_EXIF;
+  if (offs + 4 > len)
+  {
+    std::cerr << "[exif] No exif." << std::endl;
+    return PARSE_EXIF_ERROR_NO_EXIF;
+  }
   offs += 2;
   unsigned short section_length = parse_value<uint16_t>(buf + offs, false);
   if (offs + section_length > len || section_length < 16)
+  {
+    std::cerr << "[exif] Header corrupted." << std::endl;
     return PARSE_EXIF_ERROR_CORRUPT;
+  }
   offs += 2;
 
   return parseFromEXIFSegment(buf + offs, len - offs);
