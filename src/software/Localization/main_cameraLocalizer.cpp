@@ -321,24 +321,22 @@ int main(int argc, char** argv)
     localizer.reset(tmpLoc);
     
     localization::VoctreeLocalizer::Parameters *tmpParam = new localization::VoctreeLocalizer::Parameters();
+    param.reset(tmpParam);
     tmpParam->_algorithm = localization::VoctreeLocalizer::initFromString(algostring);;
     tmpParam->_numResults = numResults;
     tmpParam->_maxResults = maxResults;
     tmpParam->_numCommonViews = numCommonViews;
     tmpParam->_ccTagUseCuda = false;
-    
-    param.reset(tmpParam);
   }
 #if HAVE_CCTAG
   else
   {
-    localization::CCTagLocalizer tmp = new localization::CCTagLocalizer(sfmFilePath, descriptorsFolder);
-    localizer.reset(tmp);
+    localization::CCTagLocalizer* tmpLoc = new localization::CCTagLocalizer(sfmFilePath, descriptorsFolder);
+    localizer.reset(tmpLoc);
     
-    param = new localization::CCTagLocalizer::Parameters();
-
-    localization::CCTagLocalizer::Parameters *casted = static_cast<localization::CCTagLocalizer::Parameters *>(param);
-    casted->_nNearestKeyFrames = nNearestKeyFrames;
+    localization::CCTagLocalizer::Parameters* tmpParam = new localization::CCTagLocalizer::Parameters();
+    param.reset(tmpParam);
+    tmpParam->_nNearestKeyFrames = nNearestKeyFrames;
   }
 #endif 
    
