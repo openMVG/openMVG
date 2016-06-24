@@ -100,6 +100,8 @@ int main(int argc, char** argv)
   std::string preset = features::describerPreset_enumToString(features::EDESCRIBER_PRESET::NORMAL_PRESET);               //< the preset for the feature extractor
   std::string str_descriptorType = describerTypeToString(DescriberType::SIFT);               //< the preset for the feature extractor
   bool refineIntrinsics = false;
+  double errorMax = 4.0;                    //< the maximum error allowed for resection
+
   // parameters for voctree localizer
   std::string vocTreeFilepath;            //< the vocabulary tree file
   std::string weightsFilepath;            //< the vocabulary tree weights file
@@ -143,7 +145,10 @@ int main(int argc, char** argv)
           "Number of cameras composing the rig")
         ("calibration", po::value<std::string>(&rigCalibPath)->required(), 
           "The file containing the calibration data for the rig (subposes)")
-// parameters for voctree localizer
+        ("reprojectionError", po::value<double>(&errorMax)->default_value(errorMax), 
+          "Maximum reprojection error (in pixels) allowed for resectioning. If set "
+          "to 0 it lets the ACRansac to select an optimal value.")
+  // parameters for voctree localizer
         ("voctree", po::value<std::string>(&vocTreeFilepath),
           "[voctree] Filename for the vocabulary tree")
         ("voctreeWeights", po::value<std::string>(&weightsFilepath),
@@ -200,6 +205,9 @@ int main(int argc, char** argv)
     POPART_COUT("\tmediapath: " << mediaPath);
     POPART_COUT("\tdescriptorPath: " << descriptorsFolder);
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
+    if(errorMax == 0) 
+      errorMax = std::numeric_limits<double>::infinity();
+    POPART_COUT("\terrorMax: " << errorMax);
     POPART_COUT("\tnCameras: " << numCameras);
     POPART_COUT("\tpreset: " << preset);
     if(!filelist.empty())
@@ -276,6 +284,7 @@ int main(int argc, char** argv)
   // set other common parameters
   param->_featurePreset = features::describerPreset_stringToEnum(preset);
   param->_refineIntrinsics = refineIntrinsics;
+  param->_errorMax = errorMax;
 
   if(!localizer->isInit())
   {

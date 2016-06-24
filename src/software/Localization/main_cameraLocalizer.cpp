@@ -103,6 +103,7 @@ int main(int argc, char** argv)
   std::string featurePreset = "NORMAL";     //< the preset for the feature extractor
   std::string str_descriptorType = describerTypeToString(DescriberType::SIFT);        //< the preset for the feature extractor
   bool refineIntrinsics = false;
+  double errorMax = 4.0;                    //< the maximum error allowed for resection
   
   // voctree parameters
   std::string algostring = "AllResults";
@@ -155,13 +156,16 @@ int main(int argc, char** argv)
           "The folder path or the filename for the media to track")
       ("refineIntrinsics", po::bool_switch(&refineIntrinsics), 
           "Enable/Disable camera intrinsics refinement for each localized image")
+      ("reprojectionError", po::value<double>(&errorMax)->default_value(errorMax), 
+          "Maximum reprojection error (in pixels) allowed for resectioning. If set "
+          "to 0 it lets the ACRansac to select an optimal value.")
 // voctree specific options
-      ("nbImageMatch", po::value<size_t>(&numResults)->default_value(numResults), 
+      ("nbImageMatch", po::value<std::size_t>(&numResults)->default_value(numResults), 
           "[voctree] Number of images to retrieve in database")
-      ("maxResults", po::value<size_t>(&maxResults)->default_value(maxResults), 
+      ("maxResults", po::value<std::size_t>(&maxResults)->default_value(maxResults), 
           "[voctree] For algorithm AllResults, it stops the image matching when "
           "this number of matched images is reached. If 0 it is ignored.")
-      ("commonviews", po::value<size_t>(&numCommonViews)->default_value(numCommonViews), 
+      ("commonviews", po::value<std::size_t>(&numCommonViews)->default_value(numCommonViews), 
           "[voctree] Number of minimum images in which a point must be seen to "
           "be used in cluster tracking")
       ("voctree", po::value<std::string>(&vocTreeFilepath)->required(), 
@@ -253,6 +257,9 @@ int main(int argc, char** argv)
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
     POPART_COUT("\tmediafile: " << mediaFilepath);
     POPART_COUT("\tsfmdata: " << sfmFilePath);
+    if(errorMax == 0) 
+      errorMax = std::numeric_limits<double>::infinity();
+    POPART_COUT("\terrorMax: " << errorMax);
     if(useVoctreeLocalizer)
     {
       POPART_COUT("\tvoctree: " << vocTreeFilepath);
@@ -342,6 +349,7 @@ int main(int argc, char** argv)
   param->_featurePreset = features::describerPreset_stringToEnum(featurePreset);
   param->_refineIntrinsics = refineIntrinsics;
   param->_visualDebug = visualDebug;
+  param->_errorMax = errorMax;
   
 
   bool isInit = localizer->isInit();
