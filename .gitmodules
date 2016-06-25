@@ -9,4 +9,4 @@
 	url = https://github.com/openMVG-thirdparty/cereal.git
 [submodule "src/toolchains"]
 	path = src/toolchains
-	url =	https://github.com/Oliver001/android-cmake.git
+	url = https://github.com/oliver001/android-cmake.git
