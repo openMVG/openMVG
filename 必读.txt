@@ -1,0 +1,8 @@
+项目地址：https://github.com/Oliver001/openMVG
+1.git bash 下运行：
+git clone  --recursive https://github.com/Oliver001/openMVG.git
+
+2.使用cmake-gui 生成VS项目文件。只有将openmvg_USE_opencv勾上并设置opencv_dir为最顶层OpenCVConfig.cmake所在路径时，才会生成main_tianxian项目。main_tianxian项目依赖opencv_contrib。
+
+3.tianxian_test.bat为运行整个天线姿态测量过程的批处理，使用时修改图像存放路径和可执行文件所在路径即可。
+

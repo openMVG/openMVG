@@ -54,14 +54,14 @@ TEST(Resection_L_Infinity, OSICLP) {
     std::vector<double> vec_solution(11);
 
     //-- Translate 3D point in order to have X0 = (0,0,0,1).
-    Vec3 vecTranslation = - d2._X.col(0);
+    Vec3 vecTranslation = - d2.X.col(0);
     Mat4 translationMatrix = Mat4::Identity();
     translationMatrix << 1, 0, 0, vecTranslation(0),
                          0, 1, 0, vecTranslation(1),
                          0, 0, 1, vecTranslation(2),
                          0, 0, 0, 1;
     Mat3X XPoints;
-    translate(d2._X, vecTranslation, &XPoints);
+    translate(d2.X, vecTranslation, &XPoints);
 
     OSI_CLP_SolverWrapper wrapperOSICLPSolver(vec_solution.size());
     Resection_L1_ConstraintBuilder cstBuilder(d2._x[nResectionCameraIndex], XPoints);
@@ -112,14 +112,14 @@ TEST(Resection_L_Infinity, MOSEK) {
     std::vector<double> vec_solution(11);
 
     //-- Translate 3D point in order to have X0 = (0,0,0,1).
-    Vec3 vecTranslation = - d2._X.col(0);
+    Vec3 vecTranslation = - d2.X.col(0);
     Mat4 translationMatrix = Mat4::Identity();
     translationMatrix << 1, 0, 0, vecTranslation(0),
                          0, 1, 0, vecTranslation(1),
                          0, 0, 1, vecTranslation(2),
                          0, 0, 0, 1;
     Mat3X XPoints;
-    translate(d2._X, vecTranslation, &XPoints);
+    translate(d2.X, vecTranslation, &XPoints);
 
     MOSEK_SolveWrapper wrapperMosek(vec_solution.size());
     Resection_L1_ConstraintBuilder cstBuilder(d2._x[nResectionCameraIndex], XPoints);

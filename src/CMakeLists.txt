@@ -8,7 +8,16 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 PROJECT(openMVG C CXX)
-
+if(NOT COMMAND find_host_package)
+  macro(find_host_package)
+    find_package(${ARGN})
+  endmacro()
+endif()
+if(NOT COMMAND find_host_program)
+  macro(find_host_program)
+    find_program(${ARGN})
+  endmacro()
+endif()
 # guard against in-source builds
 IF(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed.")
@@ -125,7 +134,7 @@ ENDIF(CXX11_COMPILER)
 # OpenMP detection
 # ==============================================================================
 IF(OpenMVG_USE_OPENMP)
-  FIND_PACKAGE(OpenMP)
+  find_host_package(OpenMP)
   IF(OPENMP_FOUND)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     OPTION(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" ON)
@@ -160,9 +169,9 @@ ENDIF()
 # IMAGE IO detection
 # ==============================================================================
 IF (NOT APPLE)
-  FIND_PACKAGE(JPEG QUIET)
-  FIND_PACKAGE(PNG QUIET)
-  FIND_PACKAGE(TIFF QUIET)
+  find_host_package(JPEG QUIET)
+  find_host_package(PNG QUIET)
+  find_host_package(TIFF QUIET)
 ENDIF (NOT APPLE)
 
 # Folders
@@ -185,7 +194,7 @@ ENDIF (OpenMVG_BUILD_OPENGL_EXAMPLES)
 
 #- Mosek (linear programming interface)
 #===============================================================================
-FIND_PACKAGE(Mosek)
+find_host_package(Mosek)
 IF(MOSEK_FOUND)
   ADD_DEFINITIONS(-DOPENMVG_HAVE_MOSEK)
   SET(LP_INCLUDE_DIRS
@@ -238,7 +247,7 @@ IF(NOT DEFINED EIGEN_INCLUDE_DIR_HINTS)
   SET(EIGEN_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen)
   SET(OpenMVG_USE_INTERNAL_EIGEN ON)
 ENDIF()
-FIND_PACKAGE(Eigen QUIET)
+find_host_package(Eigen QUIET)
 IF(EIGEN_FOUND)
   INCLUDE_DIRECTORIES(${EIGEN_INCLUDE_DIRS})
 ENDIF(EIGEN_FOUND)
@@ -247,9 +256,9 @@ ENDIF(EIGEN_FOUND)
 # Ceres
 # ==============================================================================
 # - internal by default (ceres-solver+cxsparse+miniglog),
-# - external if CERES_DIR_HINTS and FIND_PACKAGE return a valid Ceres setup
+# - external if CERES_DIR_HINTS and find_host_package return a valid Ceres setup
 # ==============================================================================
-FIND_PACKAGE(Ceres QUIET HINTS ${CERES_DIR_HINTS})
+find_host_package(Ceres QUIET HINTS ${CERES_DIR_HINTS})
 IF(NOT Ceres_FOUND)
   SET(OpenMVG_USE_INTERNAL_CERES ON)
   SET(CERES_INCLUDE_DIRS
@@ -271,7 +280,7 @@ IF(NOT DEFINED FLANN_INCLUDE_DIR_HINTS)
   SET(FLANN_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp)
   SET(OpenMVG_USE_INTERNAL_FLANN ON)
 ENDIF()
-FIND_PACKAGE(Flann QUIET)
+find_host_package(Flann QUIET)
 IF(NOT FLANN_FOUND OR OpenMVG_USE_INTERNAL_FLANN)
   SET(FLANN_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp)
   SET(FLANN_LIBRARY flann_cpp_s)
@@ -287,7 +296,7 @@ IF(NOT DEFINED COINUTILS_INCLUDE_DIR_HINTS)
   SET(COINUTILS_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/CoinUtils/src/)
   SET(OpenMVG_USE_INTERNAL_COINUTILS ON)
 ENDIF()
-FIND_PACKAGE(CoinUtils QUIET)
+find_host_package(CoinUtils QUIET)
 IF(NOT COINUTILS_FOUND OR OpenMVG_USE_INTERNAL_COINUTILS)
   SET(COINUTILS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/CoinUtils/src/)
   SET(COINUTILS_LIBRARY lib_CoinUtils)
@@ -303,7 +312,7 @@ IF(NOT DEFINED CLP_INCLUDE_DIR_HINTS)
   SET(CLP_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/)
   SET(OpenMVG_USE_INTERNAL_CLP ON)
 ENDIF()
-FIND_PACKAGE(Clp QUIET)
+find_host_package(Clp QUIET)
 IF(NOT CLP_FOUND OR OpenMVG_USE_INTERNAL_CLP)
   SET(CLP_INCLUDE_DIRS
      ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/
@@ -321,7 +330,7 @@ IF(NOT DEFINED OSI_INCLUDE_DIR_HINTS)
   SET(OSI_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/)
   SET(OpenMVG_USE_INTERNAL_OSI ON)
 ENDIF()
-FIND_PACKAGE(Osi QUIET)
+find_host_package(Osi QUIET)
 IF(NOT OSI_FOUND OR OpenMVG_USE_INTERNAL_OSI)
   SET(OSI_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/Osi/)
   SET(OSI_LIBRARY lib_Osi)
@@ -348,7 +357,7 @@ IF(NOT DEFINED LEMON_INCLUDE_DIR_HINTS)
   SET(LEMON_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon)
   SET(OpenMVG_USE_INTERNAL_LEMON ON)
 ENDIF()
-FIND_PACKAGE(Lemon QUIET)
+find_host_package(Lemon QUIET)
 IF(NOT LEMON_FOUND OR OpenMVG_USE_INTERNAL_LEMON)
   SET(LEMON_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon
@@ -362,7 +371,7 @@ ENDIF()
 # - only external and enabled only if OpenMVG_USE_OPENCV is set to ON
 # ==============================================================================
 IF(OpenMVG_USE_OPENCV)
-  FIND_PACKAGE( OpenCV )
+  find_host_package( OpenCV )
   IF(NOT OpenCV_FOUND)
     MESSAGE(STATUS "OpenCV was not found. Disabling OpenCV support.")
     UPDATE_CACHE_VARIABLE(OpenMVG_USE_OPENCV OFF)
@@ -447,7 +456,7 @@ ADD_SUBDIRECTORY(nonFree)
 # Sphinx detection
 # ==============================================================================
 IF (OpenMVG_BUILD_DOC)
-  FIND_PACKAGE(Sphinx)
+  find_host_package(Sphinx)
   IF (EXISTS ${SPHINX_EXECUTABLE})
     SET(SPHINX_HTML_DIR "${CMAKE_CURRENT_BINARY_DIR}/htmlDoc")
 
@@ -473,7 +482,7 @@ IF (OpenMVG_BUILD_DOC)
   # ------
   # Doxygen detection
   # ======
-  FIND_PACKAGE(Doxygen)
+  find_host_package(Doxygen)
   IF (DOXYGEN_FOUND)
   
     CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/../docs/doxygen/Doxyfile.in
@@ -614,7 +623,7 @@ IF (OpenMVG_USE_INTERNAL_CERES)
 ENDIF(OpenMVG_USE_INTERNAL_CERES)
 
 # Create a OpenMVGConfig.cmake file. <name>Config.cmake files are searched by
-# FIND_PACKAGE() automatically. We configure that file so that we can put any
+# find_host_package() automatically. We configure that file so that we can put any
 # information we want in it, e.g. version numbers, include directories, etc.
 CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/cmakeFindModules/OpenMVGConfig.cmake.in"
                "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake" @ONLY)

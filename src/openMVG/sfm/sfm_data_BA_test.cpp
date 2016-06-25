@@ -192,8 +192,8 @@ SfM_Data getInputScene(const NViewDataSet & d, const nViewDatasetConfigurator & 
   // 3. Intrinsic data (shared, so only one camera intrinsic is defined)
   // 4. Landmarks
 
-  const int nviews = d._C.size();
-  const int npoints = d._X.cols();
+  const int nviews = d.C.size();
+  const int npoints = d.X.cols();
 
   // 1. Views
   for (int i = 0; i < nviews; ++i)
@@ -205,7 +205,7 @@ SfM_Data getInputScene(const NViewDataSet & d, const nViewDatasetConfigurator & 
   // 2. Poses
   for (int i = 0; i < nviews; ++i)
   {
-    Pose3 pose(d._R[i], d._C[i]);
+    Pose3 pose(d._R[i], d.C[i]);
     sfm_data.poses[i] = pose;
   }
 
@@ -244,7 +244,7 @@ SfM_Data getInputScene(const NViewDataSet & d, const nViewDatasetConfigurator & 
   for (int i = 0; i < npoints; ++i) {
     // Collect observation of the landmarks X in each frame.
     Landmark landmark;
-    landmark.X = d._X.col(i);
+    landmark.X = d.X.col(i);
     for (int j = 0; j < nviews; ++j) {
       Vec2 pt = d._x[j].col(i);
       // => random noise between [-.5,.5] is added

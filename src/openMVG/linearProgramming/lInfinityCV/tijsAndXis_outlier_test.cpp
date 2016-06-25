@@ -42,7 +42,7 @@ TEST(Translation_Structure_L_Infinity_Noisy, Outlier_OSICLP_SOLVER) {
   NViewDataSet d2 = d;
 
   //-- Set to 0 the future computed data to be sure of computation results :
-  d2._X.fill(0); //Set _Xi of dataset 2 to 0 to be sure of new data computation
+  d2.X.fill(0); //Set _Xi of dataset 2 to 0 to be sure of new data computation
   fill(d2._t.begin(), d2._t.end(), Vec3(0.0,0.0,0.0));
 
   {
@@ -100,12 +100,12 @@ TEST(Translation_Structure_L_Infinity_Noisy, Outlier_OSICLP_SOLVER) {
     for (int i=0; i < nViews; ++i)  {
       d2._t[i] = K.inverse() * Vec3(vec_solution[3*i], vec_solution[3*i+1], vec_solution[3*i+2]);
       // Change Ci to -Ri*Ci
-      d2._C[i] = -d2._R[i].inverse() * d2._t[i];
+      d2.C[i] = -d2._R[i].inverse() * d2._t[i];
     }
 
     for (int i=0; i < nbPoints; ++i)  {
       size_t index = 3*nViews;
-      d2._X.col(i) = Vec3(vec_solution[index+i*3], vec_solution[index+i*3+1], vec_solution[index+i*3+2]);
+      d2.X.col(i) = Vec3(vec_solution[index+i*3], vec_solution[index+i*3+1], vec_solution[index+i*3+2]);
     }
 
     // Compute residuals L2 from estimated parameter values :
@@ -116,7 +116,7 @@ TEST(Translation_Structure_L_Infinity_Noisy, Outlier_OSICLP_SOLVER) {
         std::cout << "\nCamera : " << i << " \t:";
         for(int k = 0; k < d._x[0].cols(); ++k)
         {
-          xk = Project(d2.P(i),  Vec3(d2._X.col(k)));
+          xk = Project(d2.P(i),  Vec3(d2.X.col(k)));
           double residual = (xk - d2._x[i].col(k)).norm();
           std::cout << Vec2(( xk - d2._x[i].col(k)).array().pow(2)).array().sqrt().mean() <<"\t";
           //-- Check that were measurement are not noisy the residual is small
@@ -156,7 +156,7 @@ TEST(Translation_Structure_L_Infinity_Noisy, Outlier_MOSEK) {
   NViewDataSet d2 = d;
 
   //-- Set to 0 the future computed data to be sure of computation results :
-  d2._X.fill(0); //Set _Xi of dataset 2 to 0 to be sure of new data computation
+  d2.X.fill(0); //Set _Xi of dataset 2 to 0 to be sure of new data computation
   fill(d2._t.begin(), d2._t.end(), Vec3(0.0,0.0,0.0));
 
   {
@@ -214,12 +214,12 @@ TEST(Translation_Structure_L_Infinity_Noisy, Outlier_MOSEK) {
     for (int i=0; i < nViews; ++i)  {
       d2._t[i] = K.inverse() * Vec3(vec_solution[3*i], vec_solution[3*i+1], vec_solution[3*i+2]);
       // Change Ci to -Ri*Ci
-      d2._C[i] = -d2._R[i].inverse() * d2._t[i];
+      d2.C[i] = -d2._R[i].inverse() * d2._t[i];
     }
 
     for (int i=0; i < nbPoints; ++i)  {
       size_t index = 3*nViews;
-      d2._X.col(i) = Vec3(vec_solution[index+i*3], vec_solution[index+i*3+1], vec_solution[index+i*3+2]);
+      d2.X.col(i) = Vec3(vec_solution[index+i*3], vec_solution[index+i*3+1], vec_solution[index+i*3+2]);
     }
 
     // Compute residuals L2 from estimated parameter values :
@@ -230,7 +230,7 @@ TEST(Translation_Structure_L_Infinity_Noisy, Outlier_MOSEK) {
         std::cout << "\nCamera : " << i << " \t:";
         for(int k = 0; k < d._x[0].cols(); ++k)
         {
-          xk = Project(d2.P(i),  Vec3(d2._X.col(k)));
+          xk = Project(d2.P(i),  Vec3(d2.X.col(k)));
           double residual = (xk - d2._x[i].col(k)).norm();
           std::cout << Vec2(( xk - d2._x[i].col(k)).array().pow(2)).array().sqrt().mean() <<"\t";
           //-- Check that were measurement are not noisy the residual is small

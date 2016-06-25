@@ -61,7 +61,7 @@ TEST(box_frustum, intersection)
     std::vector<Frustum> vec_frustum;
     for (int i=0; i < iNviews; ++i)
     {
-      const Frustum f (principal_Point*2, principal_Point*2, d._K[i], d._R[i], d._C[i]);
+      const Frustum f (principal_Point*2, principal_Point*2, d._K[i], d._R[i], d.C[i]);
       EXPECT_TRUE(f.intersect(box));
       EXPECT_TRUE(box.intersect(f));
 
@@ -80,14 +80,14 @@ TEST(box_frustum, intersection)
       double maxDepth = std::numeric_limits<double>::min();
       for (int j=0; j < iNbPoints; ++j)
       {
-        const double depth = Depth(d._R[i], d._t[i], d._X.col(j));
+        const double depth = Depth(d._R[i], d._t[i], d.X.col(j));
         if (depth < minDepth)
           minDepth = depth;
         if (depth > maxDepth)
           maxDepth = depth;
       }
       const Frustum f(principal_Point*2, principal_Point*2,
-          d._K[i], d._R[i], d._C[i], minDepth, maxDepth);
+          d._K[i], d._R[i], d.C[i], minDepth, maxDepth);
 
       EXPECT_TRUE(f.intersect(box));
       EXPECT_TRUE(box.intersect(f));
@@ -122,7 +122,7 @@ TEST(box_frustum, no_intersection)
     std::vector<Frustum> vec_frustum;
     for (int i = 0; i < iNviews; ++i)
     {
-      const Frustum f(principal_Point * 2, principal_Point * 2, d._K[i], d._R[i], d._C[i]);
+      const Frustum f(principal_Point * 2, principal_Point * 2, d._K[i], d._R[i], d.C[i]);
       EXPECT_FALSE(f.intersect(box));
       EXPECT_FALSE(box.intersect(f));
 
@@ -141,14 +141,14 @@ TEST(box_frustum, no_intersection)
       double maxDepth = std::numeric_limits<double>::min();
       for (int j = 0; j < iNbPoints; ++j)
       {
-        const double depth = Depth(d._R[i], d._t[i], d._X.col(j));
+        const double depth = Depth(d._R[i], d._t[i], d.X.col(j));
         if (depth < minDepth)
           minDepth = depth;
         if (depth > maxDepth)
           maxDepth = depth;
       }
       const Frustum f(principal_Point * 2, principal_Point * 2,
-        d._K[i], d._R[i], d._C[i], minDepth, maxDepth);
+        d._K[i], d._R[i], d.C[i], minDepth, maxDepth);
 
       EXPECT_FALSE(f.intersect(box));
       EXPECT_FALSE(box.intersect(f));

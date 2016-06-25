@@ -13,7 +13,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 # Libraries setup
 # ==============================================================================
 # Find and setup Qt4.
-FIND_PACKAGE(Qt4 REQUIRED)
+find_host_package(Qt4 REQUIRED)
 INCLUDE(${QT_USE_FILE})
 
 # ==============================================================================

@@ -352,3 +352,20 @@ SET(OPENMVG_TUTORIAL_IN_FILE "${CMAKE_CURRENT_LIST_DIR}/SfM_SequentialPipeline.p
 CONFIGURE_FILE(${OPENMVG_TUTORIAL_IN_FILE}
     "${CMAKE_CURRENT_BINARY_DIR}/SfM_SequentialPipeline.py" @ONLY)
 
+IF(MSVC AND OpenMVG_USE_OPENCV)
+  ADD_EXECUTABLE(openMVG_main_tianxian
+      main_tianxian.cpp)
+  TARGET_LINK_LIBRARIES(openMVG_main_tianxian
+      openMVG_system
+      openMVG_image
+      openMVG_features
+      openMVG_multiview
+      openMVG_sfm
+      stlplus
+      vlsift
+      ${OpenCV_LIBS})
+  message("$OpenCV_LIBS": ${OpenCV_LIBS})
+  SET_PROPERTY(TARGET openMVG_main_tianxian PROPERTY FOLDER OpenMVG/software)
+  SET_PROPERTY(TARGET openMVG_main_tianxian PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
+  INSTALL(TARGETS openMVG_main_tianxian DESTINATION bin/)
+ENDIF(OpenMVG_USE_OPENCV)

@@ -38,7 +38,7 @@ TEST(Translation_Structure_L_Infinity, OSICLP_SOLVER) {
   NViewDataSet d2 = d;
 
   //-- Set to 0 the future computed data to be sure of computation results :
-  d2._X.fill(0); //Set _Xi of dataset 2 to 0 to be sure of new data computation
+  d2.X.fill(0); //Set _Xi of dataset 2 to 0 to be sure of new data computation
   fill(d2._t.begin(), d2._t.end(), Vec3(0.0,0.0,0.0));
 
   //Create the mega matrix
@@ -82,13 +82,13 @@ TEST(Translation_Structure_L_Infinity, OSICLP_SOLVER) {
         size_t index = i*3;
         d2._t[i] = Vec3(vec_solution[index], vec_solution[index+1], vec_solution[index+2]);
         // Change Ci to -Ri*Ci
-        d2._C[i] = -d2._R[i] * d2._t[i];
+        d2.C[i] = -d2._R[i] * d2._t[i];
       }
 
       //-- Now the Xi :
       for (size_t i=0; i < nbPoints; ++i) {
         size_t index = 3*nViews;
-        d2._X.col(i) = Vec3(vec_solution[index+i*3], vec_solution[index+i*3+1], vec_solution[index+i*3+2]);
+        d2.X.col(i) = Vec3(vec_solution[index+i*3], vec_solution[index+i*3+1], vec_solution[index+i*3+2]);
       }
     }
 
@@ -97,7 +97,7 @@ TEST(Translation_Structure_L_Infinity, OSICLP_SOLVER) {
     for (size_t i = 0; i < d2._n; ++i) {
       for(size_t k = 0; k < d._x[0].cols(); ++k)
       {
-        xk = Project(d2.P(i), Vec3(d2._X.col(k)));
+        xk = Project(d2.P(i), Vec3(d2.X.col(k)));
         xsum += Vec2(( xk - d2._x[i].col(k)).array().pow(2));
       }
     }
@@ -122,7 +122,7 @@ TEST(Translation_Structure_L_Infinity, OSICLP_SOLVER_K) {
   NViewDataSet d2 = d;
 
   //-- Set to 0 the future computed data to be sure of computation results :
-  d2._X.fill(0); //Set _Xi of dataset 2 to 0 to be sure of new data computation
+  d2.X.fill(0); //Set _Xi of dataset 2 to 0 to be sure of new data computation
   fill(d2._t.begin(), d2._t.end(), Vec3(0.0,0.0,0.0));
 
   //Create the mega matrix
@@ -170,13 +170,13 @@ TEST(Translation_Structure_L_Infinity, OSICLP_SOLVER_K) {
         size_t index = i*3;
         d2._t[i] = d._K[0].inverse() * Vec3(vec_solution[index], vec_solution[index+1], vec_solution[index+2]);
         // Change Ci to -Ri*Ci
-        d2._C[i] = -d2._R[i] * d2._t[i];
+        d2.C[i] = -d2._R[i] * d2._t[i];
       }
 
       //-- Now the Xi :
       for (size_t i=0; i < nbPoints; ++i) {
         size_t index = 3*nViews;
-        d2._X.col(i) = Vec3(vec_solution[index+i*3], vec_solution[index+i*3+1], vec_solution[index+i*3+2]);
+        d2.X.col(i) = Vec3(vec_solution[index+i*3], vec_solution[index+i*3+1], vec_solution[index+i*3+2]);
       }
     }
 
@@ -185,7 +185,7 @@ TEST(Translation_Structure_L_Infinity, OSICLP_SOLVER_K) {
     for (size_t i = 0; i < d2._n; ++i) {
       for(size_t k = 0; k < (size_t)d._x[0].cols(); ++k)
       {
-        xk = Project(d2.P(i), Vec3(d2._X.col(k)));
+        xk = Project(d2.P(i), Vec3(d2.X.col(k)));
         xsum += Vec2(( xk - d2._x[i].col(k)).array().pow(2));
       }
     }
@@ -211,7 +211,7 @@ TEST(Translation_Structure_L_Infinity, MOSEK) {
   NViewDataSet d2 = d;
 
   //-- Set to 0 the future computed data to be sure of computation results :
-  d2._X.fill(0); //Set _Xi of dataset 2 to 0 to be sure of new data computation
+  d2.X.fill(0); //Set _Xi of dataset 2 to 0 to be sure of new data computation
   fill(d2._t.begin(), d2._t.end(), Vec3(0.0,0.0,0.0));
 
   //Create the mega matrix
@@ -255,13 +255,13 @@ TEST(Translation_Structure_L_Infinity, MOSEK) {
         size_t index = i*3;
         d2._t[i] = Vec3(vec_solution[index], vec_solution[index+1], vec_solution[index+2]);
         // Change Ci to -Ri*Ci
-        d2._C[i] = -d2._R[i] * d2._t[i];
+        d2.C[i] = -d2._R[i] * d2._t[i];
       }
 
       //-- Now the Xi :
       for (size_t i=0; i < nbPoints; ++i) {
         size_t index = 3*nViews;
-        d2._X.col(i) = Vec3(vec_solution[index+i*3], vec_solution[index+i*3+1], vec_solution[index+i*3+2]);
+        d2.X.col(i) = Vec3(vec_solution[index+i*3], vec_solution[index+i*3+1], vec_solution[index+i*3+2]);
       }
     }
 
@@ -270,7 +270,7 @@ TEST(Translation_Structure_L_Infinity, MOSEK) {
     for (size_t i = 0; i < d2._n; ++i) {
       for(size_t k = 0; k < d._x[0].cols(); ++k)
       {
-        xk = Project(d2.P(i), Vec3(d2._X.col(k)));
+        xk = Project(d2.P(i), Vec3(d2.X.col(k)));
         xsum += Vec2(( xk - d2._x[i].col(k)).array().pow(2));
       }
     }

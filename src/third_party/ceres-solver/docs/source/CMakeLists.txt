@@ -1,4 +1,4 @@
-find_package(Sphinx REQUIRED)
+find_host_package(Sphinx REQUIRED)
 
 # HTML output directory
 set(SPHINX_HTML_DIR "${CMAKE_BINARY_DIR}/docs/html")

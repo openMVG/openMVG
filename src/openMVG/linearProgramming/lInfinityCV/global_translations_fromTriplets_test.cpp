@@ -37,7 +37,7 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
     );
 
   d.ExportToPLY("global_translations_from_triplets_GT.ply");
-  visibleCamPosToSVGSurface(d._C, "global_translations_from_triplets_GT.svg");
+  visibleCamPosToSVGSurface(d.C, "global_translations_from_triplets_GT.svg");
 
   //-- Compute the global translations from the triplets of heading directions
   //-   with the L_infinity optimization
@@ -87,7 +87,7 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
   std::cout << std::endl << "Camera centers (Computed): " << std::endl;
   for (size_t i = 0; i < iNviews; ++i)
   {
-    const Vec3 C_GT = d._C[i] - d._C[0]; //First camera supposed to be at Identity
+    const Vec3 C_GT = d.C[i] - d.C[0]; //First camera supposed to be at Identity
 
     const Vec3 t(vec_camTranslation[i*3], vec_camTranslation[i*3+1], vec_camTranslation[i*3+2]);
     const Mat3 & Ri = d._R[i];

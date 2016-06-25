@@ -23,19 +23,19 @@ struct PinholeCamera
     const Vec3 & t = Vec3::Zero())
     : _K(K), _R(R), _t(t)
   {
-    _C = -R.transpose() * t;
-    P_From_KRt(_K, _R, _t, &_P);
+    C = -R.transpose() * t;
+    P_From_KRt(_K, _R, _t, &P);
   }
   
-  PinholeCamera(const Mat34 & P)
+  PinholeCamera(const Mat34 & matP)
   {
-    _P = P;
-    KRt_From_P(_P, &_K, &_R, &_t);
-    _C = -_R.transpose() * _t;
+    P = matP;
+    KRt_From_P(P, &_K, &_R, &_t);
+    C = -_R.transpose() * _t;
   }
 
   /// Projection matrix P = K[R|t]
-  Mat34 _P;
+  Mat34 P;
 
   /// Intrinsic parameter (Focal, principal point)
   Mat3 _K;
@@ -47,35 +47,35 @@ struct PinholeCamera
   Vec3 _t;
 
   /// Camera center
-  Vec3 _C;
+  Vec3 C;
 
   /// Projection of a 3D point into the camera plane
-  static Vec2 Project(const Mat34 & P, const Vec3 & pt3D)
+  static Vec2 Project(const Mat34 & matP, const Vec3 & pt3D)
   {
-    return openMVG::Project(P, pt3D);
+    return openMVG::Project(matP, pt3D);
   }
 
   /// Projection of a 3D point into the camera plane (member function)
   Vec2 Project(const Vec3 & pt3D) const
   {
-    return openMVG::Project(_P, pt3D);
+    return openMVG::Project(P, pt3D);
   }
 
   /// Return the residual value to the given 2d point
   static double Residual(
-    const Mat34 & P,
+    const Mat34 & matP,
     const Vec3 & pt3D,
     const Vec2 & ref) {
-    return (ref - openMVG::Project(P, pt3D)).norm();
+    return (ref - openMVG::Project(matP, pt3D)).norm();
   }
 
   /// Return the residual value to the given 2d point
   double Residual(const Vec3 & pt3D, const Vec2 & ref) const  {
-    return (ref - openMVG::Project(_P, pt3D)).norm();
+    return (ref - openMVG::Project(P, pt3D)).norm();
   }
 
   double ResidualSquared(const Vec3 & pt3D, const Vec2 & ref) const  {
-    return (ref - openMVG::Project(_P, pt3D)).squaredNorm();
+    return (ref - openMVG::Project(P, pt3D)).squaredNorm();
   }
 
   // Compute the depth of the X point. R*X[2]+t[2].

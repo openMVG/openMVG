@@ -41,7 +41,7 @@ TEST(frustum, intersection)
     for (int i=0; i < iNviews; ++i)
     {
       vec_frustum.push_back(
-        Frustum(principal_Point*2, principal_Point*2, d._K[i], d._R[i], d._C[i]));
+        Frustum(principal_Point*2, principal_Point*2, d._K[i], d._R[i], d.C[i]));
       EXPECT_TRUE(vec_frustum[i].isInfinite());
     }
 
@@ -65,7 +65,7 @@ TEST(frustum, intersection)
       double maxDepth = std::numeric_limits<double>::min();
       for (int j=0; j < iNbPoints; ++j)
       {
-        const double depth = Depth(d._R[i], d._t[i], d._X.col(j));
+        const double depth = Depth(d._R[i], d._t[i], d.X.col(j));
         if (depth < minDepth)
           minDepth = depth;
         if (depth > maxDepth)
@@ -73,7 +73,7 @@ TEST(frustum, intersection)
       }
       vec_frustum.push_back(
         Frustum(principal_Point*2, principal_Point*2,
-          d._K[i], d._R[i], d._C[i], minDepth, maxDepth));
+          d._K[i], d._R[i], d.C[i], minDepth, maxDepth));
       EXPECT_TRUE(vec_frustum[i].isTruncated());
     }
 
@@ -113,7 +113,7 @@ TEST(frustum, empty_intersection)
     {
       const Mat3 flipMatrix = RotationAroundY(D2R(180));
       vec_frustum.push_back(
-        Frustum(principal_Point*2, principal_Point*2, d._K[i], d._R[i]*flipMatrix, d._C[i]));
+        Frustum(principal_Point*2, principal_Point*2, d._K[i], d._R[i]*flipMatrix, d.C[i]));
       EXPECT_TRUE(vec_frustum[i].isInfinite());
     }
 
@@ -144,7 +144,7 @@ TEST(frustum, empty_intersection)
       double maxDepth = std::numeric_limits<double>::min();
       for (int j=0; j < iNbPoints; ++j)
       {
-        const double depth = Depth(d._R[i], d._t[i], d._X.col(j));
+        const double depth = Depth(d._R[i], d._t[i], d.X.col(j));
         if (depth < minDepth)
           minDepth = depth;
         if (depth > maxDepth)
@@ -153,7 +153,7 @@ TEST(frustum, empty_intersection)
       const Mat3 flipMatrix = RotationAroundY(D2R(180));
       vec_frustum.push_back(
         Frustum(principal_Point*2, principal_Point*2,
-          d._K[i], d._R[i]*flipMatrix, d._C[i], minDepth, maxDepth));
+          d._K[i], d._R[i]*flipMatrix, d.C[i], minDepth, maxDepth));
       EXPECT_TRUE(vec_frustum[i].isTruncated());
     }
 

@@ -42,8 +42,8 @@ struct NViewDataSet {
   vector<Mat3> _K;   // Internal parameters (fx, fy, etc).
   vector<Mat3> _R;   // Rotation.
   vector<Vec3> _t;   // Translation.
-  vector<Vec3> _C;   // Camera centers.
-  Mat3X _X;          // 3D points.
+  vector<Vec3> C;   // Camera centers.
+  Mat3X X;          // 3D points.
   vector<Mat2X> _x;  // Projected points; may have noise added.
   vector<Vecu>  _x_ids;// Indexes of points corresponding to the projections
 

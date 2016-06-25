@@ -11,6 +11,12 @@ foreach(f ${Eigen_directory_files})
   endif()
 endforeach(f ${Eigen_directory_files})
 
+if(EIGEN_INCLUDE_INSTALL_DIR)
+  set(INCLUDE_INSTALL_DIR ${EIGEN_INCLUDE_INSTALL_DIR})
+else()
+  set(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include/eigen")
+endif()
+
 install(FILES
   ${Eigen_directory_files_to_install}
   DESTINATION ${INCLUDE_INSTALL_DIR}/Eigen COMPONENT Devel

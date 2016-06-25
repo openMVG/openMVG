@@ -2,7 +2,7 @@
 #
 # OpenGL
 #
-find_package(OpenGL REQUIRED)
+find_host_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
 add_definitions(-DGL_GLEXT_PROTOTYPES -DGL3_PROTOTYPES)
 
