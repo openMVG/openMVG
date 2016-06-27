@@ -25,7 +25,7 @@ both of them (SIFT_CCTAG) [depending on you build options].
                                      refinement for each localized image
   --reprojectionError arg (=4)       Maximum reprojection error (in pixels) 
                                      allowed for resectioning. If set to 0 it 
-                                     lets the ACRansac to select an optimal value.
+                                     lets the ACRansac select an optimal value.
 
   --nbImageMatch arg (=4)            [voctree] Number of images to retrieve in 
                                      database

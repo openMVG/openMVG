@@ -158,7 +158,7 @@ int main(int argc, char** argv)
           "Enable/Disable camera intrinsics refinement for each localized image")
       ("reprojectionError", po::value<double>(&errorMax)->default_value(errorMax), 
           "Maximum reprojection error (in pixels) allowed for resectioning. If set "
-          "to 0 it lets the ACRansac to select an optimal value.")
+          "to 0 it lets the ACRansac select an optimal value.")
 // voctree specific options
       ("nbImageMatch", po::value<std::size_t>(&numResults)->default_value(numResults), 
           "[voctree] Number of images to retrieve in database")
