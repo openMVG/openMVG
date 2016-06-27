@@ -104,6 +104,7 @@ int main(int argc, char** argv)
   std::string str_descriptorType = describerTypeToString(DescriberType::SIFT);        //< the preset for the feature extractor
   bool refineIntrinsics = false;
   double errorMax = 4.0;                    //< the maximum error allowed for resection
+  double matchingError = 4.0;               //< the maximum error allowed for image matching with geometric validation
   
   // voctree parameters
   std::string algostring = "AllResults";
@@ -174,6 +175,10 @@ int main(int argc, char** argv)
           "[voctree] Filename for the vocabulary tree weights")
       ("algorithm", po::value<std::string>(&algostring)->default_value(algostring), 
           "[voctree] Algorithm type: FirstBest, BestResult, AllResults, Cluster" )
+      ("matchingError", po::value<double>(&matchingError)->default_value(matchingError), 
+          "[voctree] Maximum matching error (in pixels) allowed for image matching with "
+          "geometric verification. If set to 0 it lets the ACRansac select "
+          "an optimal value.")
 // cctag specific options
 #if HAVE_CCTAG
       ("nNearestKeyFrames", po::value<size_t>(&nNearestKeyFrames)->default_value(nNearestKeyFrames), 
@@ -268,6 +273,9 @@ int main(int argc, char** argv)
       POPART_COUT("\tmaxResults: " << maxResults);
       POPART_COUT("\tcommon views: " << numCommonViews);
       POPART_COUT("\talgorithm: " << algostring);
+      if(matchingError == 0) 
+        matchingError = std::numeric_limits<double>::infinity();
+      POPART_COUT("\tmatchingError: " << matchingError);
     }
 #if HAVE_CCTAG 
     else
@@ -327,6 +335,7 @@ int main(int argc, char** argv)
     tmpParam->_maxResults = maxResults;
     tmpParam->_numCommonViews = numCommonViews;
     tmpParam->_ccTagUseCuda = false;
+    tmpParam->_matchingError = matchingError;
   }
 #if HAVE_CCTAG
   else

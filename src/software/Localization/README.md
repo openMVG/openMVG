@@ -41,6 +41,10 @@ both of them (SIFT_CCTAG) [depending on you build options].
                                      weights
   --algorithm arg (=AllResults)      [voctree] Algorithm type: FirstBest, 
                                      BestResult, AllResults, Cluster
+  --matchingError arg (=4)           [voctree] Maximum matching error (in pixels) 
+                                     allowed for image matching with geometric 
+                                     verification. If set to 0 it lets the 
+                                     ACRansac select an optimal value.
 
   --nNearestKeyFrames                [cctag] Number of images to retrieve in the 
                                      database

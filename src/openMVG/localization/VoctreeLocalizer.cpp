@@ -478,6 +478,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const features::SIFT_Regions &que
                                       matchedRegions,
                                       matchedIntrinsics,
                                       param._fDistRatio,
+                                      param._matchingError,
                                       param._useGuidedMatching,
                                       queryImageSize,
                                       std::make_pair(matchedView->ui_width, matchedView->ui_height), 
@@ -808,6 +809,7 @@ void VoctreeLocalizer::getAllAssociations(const features::SIFT_Regions &queryReg
                                       matchedRegions,
                                       matchedIntrinsics,
                                       param._fDistRatio,
+                                      param._matchingError,
                                       param._useGuidedMatching,
                                       imageSize,
                                       std::make_pair(matchedView->ui_width, matchedView->ui_height), 
@@ -918,6 +920,7 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
                     const Reconstructed_RegionsT & matchedRegions,
                     const cameras::IntrinsicBase * matchedIntrinsicsBase,
                     const float fDistRatio,
+                    const double matchingError,
                     const bool b_guided_matching,
                     const std::pair<size_t,size_t> & imageSizeI,     // size of the first image @fixme change the API of the kernel!! 
                     const std::pair<size_t,size_t> & imageSizeJ,     // size of the first image
@@ -976,7 +979,7 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
     }
   }
   // perform the geometric filtering
-  matching_image_collection::GeometricFilter_FMatrix_AC geometricFilter(4.0);
+  matching_image_collection::GeometricFilter_FMatrix_AC geometricFilter(matchingError, 5000);
   std::vector<size_t> vec_matchingInliers;
   bool valid = geometricFilter.Robust_estimation(featuresI, // points of the query image
                                                  featuresJ, // points of the matched image
