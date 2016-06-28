@@ -84,8 +84,6 @@ private:
   //-- Data provider
   Features_Provider  * features_provider_;
   Matches_Provider  * matches_provider_;
-
-  std::shared_ptr<Features_Provider> normalized_features_provider_;
 };
 
 } // namespace sfm
