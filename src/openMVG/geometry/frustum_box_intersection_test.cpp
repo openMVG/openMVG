@@ -58,7 +58,6 @@ TEST(box_frustum, intersection)
 
   // Test with infinite Frustum for each camera
   {
-    std::vector<Frustum> vec_frustum;
     for (int i=0; i < iNviews; ++i)
     {
       const Frustum f (principal_Point*2, principal_Point*2, d._K[i], d._R[i], d._C[i]);

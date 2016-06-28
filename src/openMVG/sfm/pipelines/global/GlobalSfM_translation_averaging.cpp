@@ -416,8 +416,6 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     std::vector< std::vector<RelativeInfo_Vec> > initial_estimates(1);
 #  endif
 
-    const bool bVerbose = false;
-
     #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for schedule(dynamic)
     #endif
@@ -958,9 +956,6 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
 
       // initialize view and get intrinsics
       const View * view = sfm_data.GetViews().at(viewIndex).get();
-      const cameras::IntrinsicBase *  cam = sfm_data.GetIntrinsics().find(view->id_intrinsic)->second.get();
-      const cameras::Pinhole_Intrinsic * intrinsicPtr = dynamic_cast< const cameras::Pinhole_Intrinsic * >(cam);
-      const Vec2 principal_point = intrinsicPtr->principal_point();
 
       // get normalized feature
       const features::PointFeature & pt = normalized_features_provider->feats_per_view.at(viewIndex)[featIndex];
