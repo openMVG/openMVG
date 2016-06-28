@@ -140,6 +140,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Process() {
     std::cerr << "GlobalSfM:: Rotation Averaging failure!" << std::endl;
     return false;
   }
+
   matching::PairWiseMatches  tripletWise_matches;
   if (!Compute_Global_Translations(global_rotations, tripletWise_matches))
   {

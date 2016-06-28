@@ -82,7 +82,6 @@ int main( int argc, char **argv )
 
   if ( m_colorHarmonizeEngine->Process() )
   {
-    clock_t timeEnd = clock();
     std::cout << std::endl
       << " ColorHarmonization took (s): "
       << timer.elapsed() << std::endl;

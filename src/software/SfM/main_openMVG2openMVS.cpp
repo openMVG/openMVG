@@ -1,4 +1,4 @@
-// Copyright (c) 2016 
+// Copyright (c) 2016
 // cDc <cdc.seacave@gmail.com>
 // Pierre MOULON
 
@@ -47,7 +47,6 @@ bool exportToOpenMVS(
   // Export data :
   MVS::Interface scene;
   size_t nPoses(0);
-  const size_t nCameras(sfm_data.GetIntrinsics().size());
   const uint32_t nViews((uint32_t)sfm_data.GetViews().size());
 
   C_Progress_display my_progress_bar(nViews);

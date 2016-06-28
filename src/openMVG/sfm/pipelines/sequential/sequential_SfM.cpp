@@ -336,10 +336,8 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
 
 bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initial_pair) const
 {
-  // From the k view pairs with the highest number of verified matches
   // select a pair that have the largest baseline (mean angle between it's bearing vectors).
 
-  const unsigned k = 20;
   const unsigned iMin_inliers_count = 100;
   const float fRequired_min_angle = 3.0f;
   const float fLimit_max_angle = 60.0f; // More than 60 degree, we cannot rely on matches for initial pair seeding
@@ -623,10 +621,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
       Observations::const_iterator iterObs_xJ = obs.find(view_J->id_view);
 
       const Observation & ob_xI = iterObs_xI->second;
-      const IndexT & viewId_xI = iterObs_xI->first;
-
       const Observation & ob_xJ = iterObs_xJ->second;
-      const IndexT & viewId_xJ = iterObs_xJ->first;
 
       const double angle = AngleBetweenRay(
         pose_I, cam_I, pose_J, cam_J, ob_xI.x, ob_xJ.x);
@@ -1053,7 +1048,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
         new_intrinsic_id = (*existing_intrinsicId.rbegin())+1;
       }
       sfm_data_.views.at(viewIndex).get()->id_intrinsic = new_intrinsic_id;
-      sfm_data_.intrinsics[new_intrinsic_id]= optional_intrinsic;
+      sfm_data_.intrinsics[new_intrinsic_id] = optional_intrinsic;
     }
     // Update the view pose
     sfm_data_.poses[view_I->id_pose] = pose;
@@ -1154,11 +1149,11 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
             {
               ++new_putative_track;
             }
-            Vec3 X_euclidean = Vec3::Zero();
             const Vec2 xI_ud = cam_I->get_ud_pixel(xI);
             const Vec2 xJ_ud = cam_J->get_ud_pixel(xJ);
             const Mat34 P_I = cam_I->get_projective_equivalent(pose_I);
             const Mat34 P_J = cam_J->get_projective_equivalent(pose_J);
+            Vec3 X_euclidean = Vec3::Zero();
             TriangulateDLT(P_I, xI_ud, P_J, xJ_ud, &X_euclidean);
             // Check triangulation results
             //  - Check angle (small angle leads imprecise triangulation)

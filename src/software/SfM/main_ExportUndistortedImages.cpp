@@ -63,8 +63,10 @@ int main(int argc, char *argv[]) {
       iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
       const View * view = iter->second.get();
-      bool bIntrinsicDefined = view->id_intrinsic != UndefinedIndexT &&
+      const bool bIntrinsicDefined = view->id_intrinsic != UndefinedIndexT &&
         sfm_data.GetIntrinsics().find(view->id_intrinsic) != sfm_data.GetIntrinsics().end();
+      if (!bIntrinsicDefined)
+        continue;
 
       Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
 
