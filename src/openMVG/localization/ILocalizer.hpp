@@ -21,15 +21,15 @@ struct LocalizerParameters
   LocalizerParameters() :
   _visualDebug(""),
   _refineIntrinsics(false),
-  _fDistRatio(0.6),
+  _fDistRatio(0.8),
   _featurePreset(features::EDESCRIBER_PRESET::ULTRA_PRESET),
-  _errorMax(std::numeric_limits<double>::max()) { }
+  _errorMax(std::numeric_limits<double>::infinity()) { }
 
   std::string _visualDebug;          //< enable visual debugging options
   bool _refineIntrinsics;     //< whether or not the Intrinsics of the query camera has to be refined
   float _fDistRatio;          //< the ratio distance to use when matching feature with the ratio test
   features::EDESCRIBER_PRESET _featurePreset; //< the preset to use for feature extraction of the query image
-  double _errorMax;  
+  double _errorMax;				//< maximum reprojection error allowed for resectioning
 };
 
 class ILocalizer
@@ -61,7 +61,7 @@ public:
                         const std::string& imagePath = std::string()) = 0;
 
   virtual bool localize(const std::unique_ptr<features::Regions> &queryRegions,
-                        const std::pair<std::size_t, std::size_t> imageSize,
+                        const std::pair<std::size_t, std::size_t> &imageSize,
                         const LocalizerParameters *param,
                         bool useInputIntrinsics,
                         cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,

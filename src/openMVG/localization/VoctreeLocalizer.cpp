@@ -102,7 +102,7 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
   else
   {
 #if USE_SIFT_FLOAT
-    POPART_COUT(SIFT_float_describer");
+    POPART_COUT("SIFT_float_describer");
     _image_describer = new features::SIFT_float_describer();
 #else
     POPART_COUT("SIFT_Image_describer");
@@ -111,7 +111,7 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
   }
 #else
 #if USE_SIFT_FLOAT
-    POPART_COUT(SIFT_float_describer");
+    POPART_COUT("SIFT_float_describer");
     _image_describer = new features::SIFT_float_describer();
 #else
     POPART_COUT("SIFT_Image_describer");
@@ -146,12 +146,12 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
 }
 
 bool VoctreeLocalizer::localize(const std::unique_ptr<features::Regions> &genQueryRegions,
-                              const std::pair<std::size_t, std::size_t> imageSize,
+                                const std::pair<std::size_t, std::size_t> &imageSize,
                                 const LocalizerParameters *param,
-                              bool useInputIntrinsics,
-                              cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                              LocalizationResult & localizationResult,
-                              const std::string& imagePath)
+                                bool useInputIntrinsics,
+                                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
+                                LocalizationResult & localizationResult,
+                                const std::string& imagePath)
 {
   const Parameters *voctreeParam = static_cast<const Parameters *>(param);
   if(!voctreeParam)
@@ -174,23 +174,23 @@ bool VoctreeLocalizer::localize(const std::unique_ptr<features::Regions> &genQue
   
   switch(voctreeParam->_algorithm)
   {
-    case Algorithm::FirstBest: 
+    case Algorithm::FirstBest:
     return localizeFirstBestResult(*queryRegions,
                                    imageSize,
-                                     *voctreeParam,
-                                     useInputIntrinsics,
-                                     queryIntrinsics,
-                                     localizationResult,
-                                     imagePath);
+                                   *voctreeParam,
+                                   useInputIntrinsics,
+                                   queryIntrinsics,
+                                   localizationResult,
+                                   imagePath);
     case Algorithm::BestResult: throw std::invalid_argument("BestResult not yet implemented");
-    case Algorithm::AllResults: 
+    case Algorithm::AllResults:
     return localizeAllResults(*queryRegions,
                               imageSize,
-                                *voctreeParam,
-                                useInputIntrinsics, 
-                                queryIntrinsics,
-                                localizationResult,
-                                imagePath);
+                              *voctreeParam,
+                              useInputIntrinsics,
+                              queryIntrinsics,
+                              localizationResult,
+                              imagePath);
     case Algorithm::Cluster: throw std::invalid_argument("Cluster not yet implemented");
     default: throw std::invalid_argument("Unknown algorithm type");
   }
@@ -395,9 +395,9 @@ bool VoctreeLocalizer::initDatabase(const std::string & vocTreeFilepath,
 
 bool VoctreeLocalizer::localizeFirstBestResult(const features::SIFT_Regions &queryRegions,
                                                const std::pair<std::size_t, std::size_t> queryImageSize,
-                                                const Parameters &param,
-                                                bool useInputIntrinsics,
-                                                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
+                                               const Parameters &param,
+                                               bool useInputIntrinsics,
+                                               cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                                                LocalizationResult &localizationResult,
                                                const std::string& imagePath /*= std::string()*/)
 {
@@ -478,6 +478,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const features::SIFT_Regions &que
                                       matchedRegions,
                                       matchedIntrinsics,
                                       param._fDistRatio,
+                                      param._matchingError,
                                       param._useGuidedMatching,
                                       queryImageSize,
                                       std::make_pair(matchedView->ui_width, matchedView->ui_height), 
@@ -808,6 +809,7 @@ void VoctreeLocalizer::getAllAssociations(const features::SIFT_Regions &queryReg
                                       matchedRegions,
                                       matchedIntrinsics,
                                       param._fDistRatio,
+                                      param._matchingError,
                                       param._useGuidedMatching,
                                       imageSize,
                                       std::make_pair(matchedView->ui_width, matchedView->ui_height), 
@@ -824,21 +826,37 @@ void VoctreeLocalizer::getAllAssociations(const features::SIFT_Regions &queryReg
     assert(vec_featureMatches.size()>0);
     
     // if debug is enable save the matches between the query image and the current matching image
+    // It saves the feature matches in a folder with the same name as the query
+    // image, if it does not exist it will create it. The final svg file will have
+    // a name like this: queryImage_matchedImage.svg placed in the following directory:
+    // param._visualDebug/queryImage/
     if(!param._visualDebug.empty() && !imagePath.empty())
     {
       namespace bfs = boost::filesystem;
       const auto &matchedViewIndex = matchedImage.id;
       const sfm::View *mview = _sfm_data.GetViews().at(matchedViewIndex).get();
-      const std::string queryimage = bfs::path(imagePath).stem().string();
-      const std::string matchedImage = bfs::path(mview->s_Img_path).stem().string();
-      const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
+      // the current query image without extension
+      const auto queryImage = bfs::path(imagePath).stem();
+      // the matching image without extension
+      const auto matchedImage = bfs::path(mview->s_Img_path).stem();
+      // the full path of the matching image
+      const auto matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
 
-      const std::string baseDir = param._visualDebug + "/" + queryimage;
+      // the directory where to save the feature matches
+      const auto baseDir = bfs::path(param._visualDebug) / queryImage;
       if((!bfs::exists(baseDir)))
       {
-        POPART_COUT("created " << baseDir);
+        POPART_COUT("created " << baseDir.string());
         bfs::create_directories(baseDir);
       }
+      
+      // damn you, boost, what does it take to make the operator "+"?
+      // the final filename for the output svg file as a composition of the query
+      // image and the matched image
+      auto outputName = baseDir / queryImage;
+      outputName += "_";
+      outputName += matchedImage;
+      outputName += ".svg";
 
       features::saveMatches2SVG(imagePath,
                                 imageSize,
@@ -847,7 +865,7 @@ void VoctreeLocalizer::getAllAssociations(const features::SIFT_Regions &queryReg
                                 std::make_pair(mview->ui_width, mview->ui_height),
                                 _regions_per_view.at(matchedViewIndex)._regions.GetRegionsPositions(),
                                 vec_featureMatches,
-                                baseDir + "/" + queryimage + "_" + matchedImage + ".svg"); 
+                                outputName.string()); 
     }
     
     // C. recover the 2D-3D associations from the matches 
@@ -902,6 +920,7 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
                     const Reconstructed_RegionsT & matchedRegions,
                     const cameras::IntrinsicBase * matchedIntrinsicsBase,
                     const float fDistRatio,
+                    const double matchingError,
                     const bool b_guided_matching,
                     const std::pair<size_t,size_t> & imageSizeI,     // size of the first image @fixme change the API of the kernel!! 
                     const std::pair<size_t,size_t> & imageSizeJ,     // size of the first image
@@ -960,7 +979,7 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
     }
   }
   // perform the geometric filtering
-  matching_image_collection::GeometricFilter_FMatrix_AC geometricFilter(4.0);
+  matching_image_collection::GeometricFilter_FMatrix_AC geometricFilter(matchingError, 5000);
   std::vector<size_t> vec_matchingInliers;
   bool valid = geometricFilter.Robust_estimation(featuresI, // points of the query image
                                                  featuresJ, // points of the matched image

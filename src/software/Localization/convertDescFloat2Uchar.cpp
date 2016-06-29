@@ -1,9 +1,3 @@
-/* 
- * File:   convertDescFloat2Uchar.cpp
- * Author: sgaspari
- *
- * Created on November 28, 2015, 1:30 PM
- */
 #include <openMVG/features/descriptor.hpp>
 #include <openMVG/logger.hpp>
 
