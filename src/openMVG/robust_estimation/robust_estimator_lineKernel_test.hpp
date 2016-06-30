@@ -88,6 +88,9 @@ struct LineKernel
     return pointToLineError::Error(ba, xs_.col(sample));
   }
 
+  void Unnormalize(Model * model) const
+  {  }
+  
   const Mat2X &xs_;
 };
 
