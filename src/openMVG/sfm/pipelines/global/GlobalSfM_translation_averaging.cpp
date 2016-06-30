@@ -665,7 +665,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet(
   {
     const cameras::IntrinsicBase * intrinsicPtr = sfm_data.GetIntrinsics().at(ids).get();
     const cameras::Pinhole_Intrinsic * intrinsic = dynamic_cast< const cameras::Pinhole_Intrinsic * > (intrinsicPtr);
-    if (intrinsic)
+    if (intrinsic && intrinsic->isValid())
     {
       min_focal = std::min(min_focal, intrinsic->focal());
     }

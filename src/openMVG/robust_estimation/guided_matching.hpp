@@ -189,11 +189,25 @@ void GuidedMatching(
   std::vector<Vec2>
     lRegionsPos(lRegions.RegionCount()),
    rRegionsPos(rRegions.RegionCount());
-  for (size_t i = 0; i < lRegions.RegionCount(); ++i) {
-    lRegionsPos[i] = camL ? camL->get_ud_pixel(lRegions.GetRegionPosition(i)) : lRegions.GetRegionPosition(i);
+  if(camL && camL->isValid())
+  {
+    for (size_t i = 0; i < lRegions.RegionCount(); ++i)
+      lRegionsPos[i] = camL->get_ud_pixel(lRegions.GetRegionPosition(i));
   }
-  for (size_t i = 0; i < rRegions.RegionCount(); ++i) {
-    rRegionsPos[i] = camR ? camR->get_ud_pixel(rRegions.GetRegionPosition(i)) : rRegions.GetRegionPosition(i);
+  else
+  {
+    for (size_t i = 0; i < lRegions.RegionCount(); ++i)
+      lRegionsPos[i] = lRegions.GetRegionPosition(i);
+  }
+  if(camR && camR->isValid())
+  {
+    for (size_t i = 0; i < rRegions.RegionCount(); ++i)
+      rRegionsPos[i] =  camR->get_ud_pixel(rRegions.GetRegionPosition(i));
+  }
+  else
+  {
+    for (size_t i = 0; i < rRegions.RegionCount(); ++i)
+      rRegionsPos[i] = rRegions.GetRegionPosition(i);
   }
 
   for (size_t i = 0; i < lRegions.RegionCount(); ++i) {
@@ -322,10 +336,10 @@ void GuidedMatching_Fundamental_Fast(
 	const int nb_buckets = 2*(widthR + heightR-2);
 
   Buckets_vec buckets(nb_buckets);
-  for (size_t i = 0; i < lRegions.RegionCount(); ++i) {
-
+  for (size_t i = 0; i < lRegions.RegionCount(); ++i)
+  {
     // Compute epipolar line
-    const Vec2 l_pt = camL ? camL->get_ud_pixel(lRegions.GetRegionPosition(i)) : lRegions.GetRegionPosition(i);
+    const Vec2 l_pt = (camL && camL->isValid()) ? camL->get_ud_pixel(lRegions.GetRegionPosition(i)) : lRegions.GetRegionPosition(i);
     const Vec3 line = F * Vec3(l_pt(0), l_pt(1), 1.);
     // If the epipolar line exists in Right image
     Vec2 x0, x1;
@@ -346,7 +360,7 @@ void GuidedMatching_Fundamental_Fast(
     // - compute the range of possible bucket by computing
     //    the epipolar line gauge limitation introduced by the tolerated pixel error
 
-    const Vec2 xR = camR ? camR->get_ud_pixel(rRegions.GetRegionPosition(j)) : rRegions.GetRegionPosition(j);
+    const Vec2 xR = (camR && camR->isValid()) ? camR->get_ud_pixel(rRegions.GetRegionPosition(j)) : rRegions.GetRegionPosition(j);
     const Vec3 l2 = ep2.cross(Vec3(xR(0), xR(1), 1.));
 		const Vec2 n = l2.head<2>() * (sqrt(errorTh) / l2.head<2>().norm());
 
