@@ -1,5 +1,7 @@
 #include "selection.hpp"
 
+#include <openMVG/numeric/numeric.h>
+
 namespace openMVG {
 namespace features {
 
@@ -107,9 +109,12 @@ void matchesGridFiltering(const openMVG::features::Feat_Regions<openMVG::feature
     const openMVG::features::SIOPointFeature& leftPoint = lRegions->Features()[match._i];
     const openMVG::features::SIOPointFeature& rightPoint = rRegions->Features()[match._j];
     
-    const size_t leftGridIndex = std::floor(leftPoint.x() / (float)leftCellWidth) + std::floor(leftPoint.y() / (float)leftCellHeight) * gridSize;
-    const size_t rightGridIndex = std::floor(rightPoint.x() / (float)rightCellWidth) + std::floor(rightPoint.y() / (float)rightCellHeight) * gridSize;
-    
+    const float leftGridIndex_f = std::floor(leftPoint.x() / (float)leftCellWidth) + std::floor(leftPoint.y() / (float)leftCellHeight) * gridSize;
+    const float rightGridIndex_f = std::floor(rightPoint.x() / (float)rightCellWidth) + std::floor(rightPoint.y() / (float)rightCellHeight) * gridSize;
+    // clamp the values if we have feature/marker centers outside the image size.
+    const std::size_t leftGridIndex = clamp(leftGridIndex_f, 0.f, float(gridSize-1));
+    const std::size_t rightGridIndex = clamp(rightGridIndex_f, 0.f, float(gridSize-1));
+
     openMVG::matching::IndMatches& currentCaseL = completeGrid[leftGridIndex];
     openMVG::matching::IndMatches& currentCaseR = completeGrid[rightGridIndex + gridSize*gridSize];
     
