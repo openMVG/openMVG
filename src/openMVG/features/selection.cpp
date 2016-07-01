@@ -113,13 +113,13 @@ void matchesGridFiltering(const openMVG::features::Feat_Regions<openMVG::feature
     openMVG::matching::IndMatches& currentCaseL = completeGrid[leftGridIndex];
     openMVG::matching::IndMatches& currentCaseR = completeGrid[rightGridIndex + gridSize*gridSize];
     
-    if(currentCaseL.size() > currentCaseR.size())
+    if(currentCaseL.size() <= currentCaseR.size())
     {
-      currentCaseR.push_back(match);
+      currentCaseL.push_back(match);
     }
     else
     {
-      currentCaseL.push_back(match);
+      currentCaseR.push_back(match);
     }
   }
   
@@ -132,7 +132,7 @@ void matchesGridFiltering(const openMVG::features::Feat_Regions<openMVG::feature
       maxSize = cell.size();
     }
   }
-   
+  
   openMVG::matching::IndMatches finalMatches;
   finalMatches.reserve(outMatches.size());
   
@@ -141,7 +141,7 @@ void matchesGridFiltering(const openMVG::features::Feat_Regions<openMVG::feature
   {
     for(const auto& cell: completeGrid)
     {
-      if(cell.size() > cmpt)
+      if(cmpt < cell.size())
       {
         finalMatches.push_back(cell[cmpt]);
       }
