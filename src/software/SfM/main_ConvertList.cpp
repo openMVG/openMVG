@@ -69,9 +69,6 @@ int main(int argc, char **argv)
             << "--camera_model " << i_User_camera_model << std::endl
             << "--group_camera_model " << b_Group_camera_model << std::endl;
 
-  // Expected properties for each image
-  double width = -1, height = -1, focal = -1, ppx = -1,  ppy = -1;
-
   const EINTRINSIC e_User_camera_model = EINTRINSIC(i_User_camera_model);
 
   if ( !stlplus::folder_exists( sImageDir ) )
@@ -127,10 +124,11 @@ int main(int argc, char **argv)
     iter != vec_camImageNames.end(); ++iter)
   {
     const openMVG::SfMIO::CameraInfo & camInfo = *iter;
-    // Find the index of the correponding cameraInfo
+    // Find the index of the corresponding cameraInfo
     const size_t idx = std::distance((std::vector<openMVG::SfMIO::CameraInfo>::const_iterator)vec_camImageNames.begin(), iter);
 
-    double width = height = ppx = ppy = focal = -1.0;
+    // Expected properties for each image
+    double width = -1, height = -1, focal = -1, ppx = -1,  ppy = -1;
 
     std::shared_ptr<IntrinsicBase> intrinsic (NULL);
 

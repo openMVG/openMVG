@@ -39,7 +39,7 @@ bool GlobalSfM_Translation_AveragingSolver::Run
 (
   ETranslationAveragingMethod eTranslationAveragingMethod,
   SfM_Data & sfm_data,
-  const Features_Provider * normalized_features_provider,
+  const Features_Provider * features_provider,
   const Matches_Provider * matches_provider,
   const Hash_Map<IndexT, Mat3> & map_globalR,
   matching::PairWiseMatches & tripletWise_matches
@@ -48,7 +48,7 @@ bool GlobalSfM_Translation_AveragingSolver::Run
   // Compute the relative translations and save them to vec_initialRijTijEstimates:
   Compute_translations(
     sfm_data,
-    normalized_features_provider,
+    features_provider,
     matches_provider,
     map_globalR,
     tripletWise_matches);
@@ -292,7 +292,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
 void GlobalSfM_Translation_AveragingSolver::Compute_translations
 (
   const SfM_Data & sfm_data,
-  const Features_Provider * normalized_features_provider,
+  const Features_Provider * features_provider,
   const Matches_Provider * matches_provider,
   const Hash_Map<IndexT, Mat3> & map_globalR,
   matching::PairWiseMatches &tripletWise_matches
@@ -307,7 +307,7 @@ void GlobalSfM_Translation_AveragingSolver::Compute_translations
   ComputePutativeTranslation_EdgesCoverage(
     sfm_data,
     map_globalR,
-    normalized_features_provider,
+    features_provider,
     matches_provider,
     vec_relative_motion_,
     tripletWise_matches);
@@ -319,7 +319,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
 (
   const SfM_Data & sfm_data,
   const Hash_Map<IndexT, Mat3> & map_globalR,
-  const Features_Provider * normalized_features_provider,
+  const Features_Provider * features_provider,
   const Matches_Provider * matches_provider,
   std::vector<RelativeInfo_Vec> & vec_triplet_relative_motion,
   matching::PairWiseMatches & newpairMatches
@@ -416,8 +416,6 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     std::vector< std::vector<RelativeInfo_Vec> > initial_estimates(1);
 #  endif
 
-    const bool bVerbose = false;
-
     #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for schedule(dynamic)
     #endif
@@ -478,7 +476,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
           const bool bTriplet_estimation = Estimate_T_triplet(
               sfm_data,
               map_globalR,
-              normalized_features_provider,
+              features_provider,
               matches_provider,
               triplet,
               vec_tis,
@@ -593,7 +591,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
 (
   const SfM_Data & sfm_data,
   const Hash_Map<IndexT, Mat3> & map_globalR,
-  const Features_Provider * normalized_features_provider,
+  const Features_Provider * features_provider,
   const Matches_Provider * matches_provider,
   const graph::Triplet & poses_id,
   std::vector<Vec3> & vec_tis,
@@ -670,9 +668,10 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
       {
         const size_t idx_view = track_it.first;
         const View * view = sfm_data.views.at(idx_view).get();
+        const IntrinsicBase * cam = sfm_data.intrinsics.at(view->id_intrinsic).get();
         intrinsic_ids.insert(view->id_intrinsic);
-        const features::PointFeature pt = normalized_features_provider->getFeatures(idx_view)[track_it.second];
-        xxx[index++]->col(cpt) = pt.coords().cast<double>();
+        const Vec2 pt = features_provider->getFeatures(idx_view)[track_it.second].coords().cast<double>();
+        xxx[index++]->col(cpt) = ((*cam)(cam->get_ud_pixel(pt))).hnormalized();
       }
       ++cpt;
     }
@@ -852,6 +851,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
       const size_t idx_view   = track_it.first;
       const size_t feat       = track_it.second;
       const View * view       = sfm_data.views.at(idx_view).get();
+      const IntrinsicBase * cam = sfm_data.intrinsics.at(view->id_intrinsic).get();
       const IndexT pose_index = view->id_pose;
 
       // update minimal image size
@@ -861,8 +861,8 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
         image_size = std::make_pair(view->ui_width, view->ui_height);
       }
 
-      Vec2 bearing;
-      bearing << normalized_features_provider->feats_per_view.at(idx_view).at(feat).coords().cast<double>();
+      Vec2 bearing = features_provider->feats_per_view.at(idx_view).at(feat).coords().cast<double>();
+      bearing << (*cam)(cam->get_ud_pixel(bearing)).hnormalized();
 
       // initialize information relative to this bearing vector
       // Add the non central sub pose camera index & the non central camera pose index
@@ -958,14 +958,10 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
 
       // initialize view and get intrinsics
       const View * view = sfm_data.GetViews().at(viewIndex).get();
-      const cameras::IntrinsicBase *  cam = sfm_data.GetIntrinsics().find(view->id_intrinsic)->second.get();
-      const cameras::Pinhole_Intrinsic * intrinsicPtr = dynamic_cast< const cameras::Pinhole_Intrinsic * >(cam);
-      const Vec2 principal_point = intrinsicPtr->principal_point();
 
-      // get normalized feature
-      const features::PointFeature & pt = normalized_features_provider->feats_per_view.at(viewIndex)[featIndex];
-      const Vec2 pt_unnormalized( cam->cam2ima(pt.coords().cast<double>()));
-      obs[viewIndex] = Observation(pt_unnormalized, featIndex);
+      // get feature
+      const features::PointFeature & pt = features_provider->feats_per_view.at(viewIndex)[featIndex];
+      obs[viewIndex] = Observation(pt, featIndex);
     }
   }
 

@@ -101,12 +101,12 @@ TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
   SfM_Data sfm_data_2 = sfm_data;
   sfm_data_2.poses.clear();
   sfm_data_2.structure.clear();
-  // Only the first two views will have valid intrinsics
+  // Only the first three views will have valid intrinsics
   // Remaining one will have undefined intrinsics
   for (Views::iterator iterV = sfm_data_2.views.begin();
     iterV != sfm_data_2.views.end(); ++iterV)
   {
-    if (std::distance(sfm_data_2.views.begin(),iterV) >1)
+    if (std::distance(sfm_data_2.views.begin(),iterV) > 2)
     {
       iterV->second.get()->id_intrinsic = UndefinedIndexT;
     }
@@ -135,12 +135,12 @@ TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
   // Configure reconstruction parameters (intrinsic parameters are held constant)
   sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
 
-  // Will use view ids (0,1) as the initial pair
+  // Will use view ids (0,2) as the initial pair
   Views::const_iterator iter_view_0 = sfm_data_2.GetViews().begin();
-  Views::const_iterator iter_view_1 = sfm_data_2.GetViews().begin();
-  std::advance(iter_view_1, 1);
+  Views::const_iterator iter_view_2 = sfm_data_2.GetViews().begin();
+  std::advance(iter_view_2, 2);
   sfmEngine.setInitialPair(Pair(iter_view_0->second.get()->id_view,
-    iter_view_1->second.get()->id_view));
+    iter_view_2->second.get()->id_view));
 
   EXPECT_TRUE (sfmEngine.Process());
 

@@ -336,10 +336,8 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
 
 bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initial_pair) const
 {
-  // From the k view pairs with the highest number of verified matches
   // select a pair that have the largest baseline (mean angle between it's bearing vectors).
 
-  const unsigned k = 20;
   const unsigned iMin_inliers_count = 100;
   const float fRequired_min_angle = 3.0f;
   const float fLimit_max_angle = 60.0f; // More than 60 degree, we cannot rely on matches for initial pair seeding
@@ -624,10 +622,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
       Observations::const_iterator iterObs_xJ = obs.find(view_J->id_view);
 
       const Observation & ob_xI = iterObs_xI->second;
-      const IndexT & viewId_xI = iterObs_xI->first;
-
       const Observation & ob_xJ = iterObs_xJ->second;
-      const IndexT & viewId_xJ = iterObs_xJ->first;
 
       const double angle = AngleBetweenRay(
         sfm_data_.GetPoseOrDie(view_I), cam_I, sfm_data_.GetPoseOrDie(view_J), cam_J, ob_xI.x, ob_xJ.x);

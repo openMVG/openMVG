@@ -37,11 +37,10 @@ class GlobalSfM_Translation_AveragingSolver
 
 public:
 
-  /// Use features in normalized camera frames
   bool Run(
     ETranslationAveragingMethod eTranslationAveragingMethod,
     SfM_Data & sfm_data,
-    const Features_Provider * normalized_features_provider,
+    const Features_Provider * features_provider,
     const Matches_Provider * matches_provider,
     const Hash_Map<IndexT, Mat3> & map_globalR,
     matching::PairWiseMatches & tripletWise_matches
@@ -55,7 +54,7 @@ private:
 
   void Compute_translations(
     const SfM_Data & sfm_data,
-    const Features_Provider * normalized_features_provider,
+    const Features_Provider * features_provider,
     const Matches_Provider * matches_provider,
     const Hash_Map<IndexT, Mat3> & map_globalR,
     matching::PairWiseMatches &tripletWise_matches);
@@ -67,7 +66,7 @@ private:
   void ComputePutativeTranslation_EdgesCoverage(
     const SfM_Data & sfm_data,
     const Hash_Map<IndexT, Mat3> & map_globalR,
-    const Features_Provider * normalized_features_provider,
+    const Features_Provider * features_provider,
     const Matches_Provider * matches_provider,
     std::vector<RelativeInfo_Vec> & vec_triplet_relative_motion,
     matching::PairWiseMatches & newpairMatches);
@@ -76,7 +75,7 @@ private:
   bool Estimate_T_triplet(
     const SfM_Data & sfm_data,
     const Hash_Map<IndexT, Mat3> & map_globalR,
-    const Features_Provider * normalized_features_provider,
+    const Features_Provider * features_provider,
     const Matches_Provider * matches_provider,
     const graph::Triplet & poses_id,
     std::vector<Vec3> & vec_tis,
