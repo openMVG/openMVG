@@ -10,6 +10,9 @@
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 
+namespace openMVG {
+namespace features {
+
 /**
 * @brief Compute the n best matches.
 * @param[in] inputMatches Set of indices for (putative) matches.
@@ -52,3 +55,6 @@ void matchesGridFiltering(const openMVG::features::Feat_Regions<openMVG::feature
         const openMVG::Pair& indexImagePair,
         const openMVG::sfm::SfM_Data sfm_data, 
         openMVG::matching::IndMatches& outMatches);
+
+}
+}
