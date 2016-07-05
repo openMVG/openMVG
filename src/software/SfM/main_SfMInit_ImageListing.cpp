@@ -363,7 +363,13 @@ int main(int argc, char **argv)
       if(metadataImageHeight <= 0)
         metadataImageHeight = imgHeader.height;
     }
-    const bool resizedImage = metadataImageWidth != width || metadataImageHeight != height;
+    // If metadata is rotated
+    if(metadataImageWidth == height && metadataImageHeight == width)
+    {
+      metadataImageWidth = width;
+      metadataImageHeight = height;
+    }
+    const bool resizedImage = (metadataImageWidth != width || metadataImageHeight != height);
     if(resizedImage)
     {
       std::cout << "Resized image detected:" << std::endl;
