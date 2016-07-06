@@ -1,7 +1,7 @@
 #ifndef PARAMS_H
 #define PARAMS_H
 
-#define NUM_SM 15
-#define MATCH_THRESHOLD 8
+#define NUM_SM 30
+#define MATCH_THRESHOLD 12
 
 #endif
