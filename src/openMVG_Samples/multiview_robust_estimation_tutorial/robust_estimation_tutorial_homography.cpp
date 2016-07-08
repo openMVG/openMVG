@@ -57,7 +57,7 @@ void display_info
   const IndMatches & vec_PutativeMatches,
   const Mat3 &H,
   const std::vector<size_t> & vec_inliers,
-  const std::string sMethod
+  const std::string & sMethod
 );
 
 int main() {
@@ -328,7 +328,7 @@ void display_info
   const IndMatches & vec_PutativeMatches,
   const Mat3 &H,
   const std::vector<size_t> & vec_inliers,
-  const std::string sMethod
+  const std::string & sMethod
 )
 {
   std::cout

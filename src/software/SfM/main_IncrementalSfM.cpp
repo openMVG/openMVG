@@ -36,7 +36,6 @@ bool computeIndexFromImageNames(
   initialPairIndex = Pair(UndefinedIndexT, UndefinedIndexT);
 
   /// List views filenames and find the one that correspond to the user ones:
-  std::vector<std::string> vec_camImageName;
   for (Views::const_iterator it = sfm_data.GetViews().begin();
     it != sfm_data.GetViews().end(); ++it)
   {
