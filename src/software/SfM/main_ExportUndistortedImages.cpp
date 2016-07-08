@@ -103,6 +103,8 @@ int main(int argc, char *argv[]) {
         
       bool bIntrinsicDefined = view->id_intrinsic != UndefinedIndexT &&
         sfm_data.GetIntrinsics().find(view->id_intrinsic) != sfm_data.GetIntrinsics().end();
+      if (!bIntrinsicDefined)
+        continue;
 
       Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
 

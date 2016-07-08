@@ -106,8 +106,6 @@ bool L2RotationAveraging
     iter != vec_relativeRot.end();
     iter++, cpt++)
   {
-    const RelativeRotation & Elem = *iter;
-
     //-- Encode weight * ( rj - Rij * ri ) = 0
     const sMat::Index i = iter->i;
     const sMat::Index j = iter->j;
