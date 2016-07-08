@@ -251,7 +251,7 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
   if(b_refine_pose)
     refineOptions |= sfm::BA_REFINE_ROTATION | sfm::BA_REFINE_TRANSLATION;
   if(b_refine_intrinsic)
-    refineOptions |= sfm::BA_REFINE_INTRINSICS;
+    refineOptions |= sfm::BA_REFINE_INTRINSICS_ALL;
   if(b_refine_structure)
     refineOptions |= sfm::BA_REFINE_STRUCTURE;
 
