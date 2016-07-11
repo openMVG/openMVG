@@ -36,13 +36,14 @@ public:
                      std::string &mediaPath,
                      bool &hasIntrinsics);
   
+  std::size_t nbFrames() const;
+  
 private:
   bool _isInit;
   bool _withIntrinsics;
   std::string _videoPath;
   cv::VideoCapture _videoCapture;
   cameras::Pinhole_Intrinsic_Radial_K3 _camIntrinsics;
-  
 };
 
 
@@ -103,6 +104,12 @@ bool VideoFeed::FeederImpl::next(image::Image<unsigned char> &imageGray,
   return true;
 }
 
+std::size_t VideoFeed::FeederImpl::nbFrames() const
+{
+  if (!_videoCapture.isOpened())
+    return 0;
+  return _videoCapture.get(cv::CAP_PROP_FRAME_COUNT);
+}
 
 /*******************************************************************************/
 /*                                 VideoFeed                                   */
@@ -114,13 +121,17 @@ VideoFeed::VideoFeed(const std::string &videoPath, const std::string &calibPath)
   : _feeder(new FeederImpl(videoPath, calibPath))
 { }
 
-
 bool VideoFeed::next(image::Image<unsigned char> &imageGray,
                      cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
                      std::string &mediaPath,
                      bool &hasIntrinsics)
 {
   return(_feeder->next(imageGray, camIntrinsics, mediaPath, hasIntrinsics));
+}
+
+std::size_t VideoFeed::nbFrames() const
+{
+  return _feeder->nbFrames();
 }
 
 bool VideoFeed::isInit() const {return(_feeder->isInit()); }

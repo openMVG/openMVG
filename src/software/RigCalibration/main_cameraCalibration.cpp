@@ -4,8 +4,11 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 
+#include <openMVG/dataio/FeedProvider.hpp>
+
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
+#include <opencv2/core/eigen.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 
@@ -33,34 +36,34 @@ enum Pattern
 #endif
 };
 
-std::string getFilename(const std::string& filepath)
-{
-  const std::size_t found = filepath.rfind("/");
-  if (found == std::string::npos)
-    return filepath;
-
-  return filepath.substr(found + 1, filepath.size());
-}
-
-void exportDebug(std::vector<std::string>& out_filepaths, const std::string& debugFolder,
-                 const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs, const cv::Size& imageSize)
+void exportDebug(openMVG::dataio::FeedProvider& feed, const std::string& debugFolder, 
+                 const unsigned int& maxNbFrames, const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs, const cv::Size& imageSize)
 {
   std::vector<int> export_params;
-  cv::Mat view;
+  openMVG::image::Image<unsigned char> view;
+  std::string currentImgName;
+  openMVG::cameras::Pinhole_Intrinsic_Radial_K3 queryIntrinsics;
+  bool hasIntrinsics;
   cv::Mat rview;
 
   export_params.push_back(CV_IMWRITE_JPEG_QUALITY);
   export_params.push_back(100);
 
   std::cout << "Exporting undistorted images ..." << std::endl;
-  for (int i = 0; i<out_filepaths.size(); i++)
+  while(feed.next(view, queryIntrinsics, currentImgName, hasIntrinsics))
   {
-    view = cv::imread(out_filepaths[i], 1);
-    if (!view.data)
+    std::cout << currentImgName << std::endl;
+    cv::Mat viewMat;
+    cv::eigen2cv(view.GetMat(), viewMat);
+    
+    viewMat = cv::imread(currentImgName, 1);
+    if (!viewMat.data)
       continue;
-
-    cv::undistort(view, rview, cameraMatrix, distCoeffs, cameraMatrix);
-    cv::imwrite(debugFolder + getFilename(out_filepaths[i]) + "_undistort.png", rview, export_params);
+    
+    //std::cout << debugFolder + currentImgName + "_undistort.png" << std::endl;
+    
+    cv::undistort(viewMat, rview, cameraMatrix, distCoeffs, cameraMatrix);
+    cv::imwrite(debugFolder + currentImgName + "_undistort.png", rview, export_params);
   }
   std::cout << "... finished" << std::endl;
 }
@@ -315,8 +318,8 @@ int main(int argc, char** argv)
   std::string debugFolder;
   std::vector<std::size_t> checkerboardSize;
   Pattern pattern;
-  unsigned int nbFrames;
-  unsigned int nbRadialCoef;
+  unsigned int maxNbFrames = 0;
+  unsigned int nbRadialCoef = 3;
   bool writeExtrinsics = false;
   bool writePoints = false;
   int flags = 0;
@@ -325,13 +328,16 @@ int main(int argc, char** argv)
   cv::Mat cameraMatrix;
   cv::Mat distCoeffs;
   
+  std::clock_t startAlgo = std::clock();
+  double durationAlgo;
+  
   po::options_description desc("This program is used to calibrate a camera from a dataset of images.\n");
   desc.add_options()
           ("help,h", "Produce help message.\n")
           ("input,i", po::value<bfs::path>(&inputPath)->required(), 
                       "Input images in one of the following form:\n"
                       " - folder containing images\n"
-                      " - image sequence like /path/to/seq.#.jpg\n"
+                      " - image sequence like /path/to/seq.@.jpg\n"
                       " - video file\n")
           ("output,o", po::value<std::string>(&outputFilename)->required(), 
                       "Output filename for intrinsic [and extrinsic] parameters.\n")
@@ -343,9 +349,9 @@ int main(int argc, char** argv)
                       ".\n")
           ("size,s", po::value<std::vector<std::size_t>>(&checkerboardSize)->multitoken(),
                       "Number of inner corners per one of board dimension like W H.\n")
-          ("nFrames,f", po::value<unsigned int>(&nbFrames)->default_value(20),
-                      "Number of frames to use for calibration.\n")
-          ("nRadialCoef,rd", po::value<unsigned int>(&nbRadialCoef)->default_value(3), 
+          ("maxFrames,m", po::value<unsigned int>(&maxNbFrames)->default_value(0),
+                      "Number of maximal frames to use for calibration from a video file.\n")
+          ("nRadialCoef,r", po::value<unsigned int>(&nbRadialCoef)->default_value(3), 
                       "Number of radial distortion coefficient.\n")
           ("debugFolder,d", po::value<std::string>(&debugFolder)->default_value(""),
                       "Folder to export debug images.\n")
@@ -391,47 +397,42 @@ int main(int argc, char** argv)
   cv::Size imageSize(0, 0);
 
   std::vector<std::vector<cv::Point2f> > imagePoints;
-  std::vector<std::string> inputFilepaths;
-  
-  try
-  {
-    if (!bfs::exists(inputPath))
-    {
-      std::cerr << inputPath << " does not exist." << std::endl;
-      return EXIT_FAILURE;
-    }
-    if (!bfs::is_directory(inputPath))
-    {
-      std::cout << inputPath << " exists, but is not a directory" << std::endl;
-      return EXIT_FAILURE;
-    }
-    //else if(is_regular_file(inputPath))
-    //  TODO: video
-    
-    for (auto it = bfs::directory_iterator(inputPath); it != bfs::directory_iterator(); ++it)
-    {
-      if(!bfs::is_directory(it->path()))
-        inputFilepaths.push_back(bfs::absolute(it->path()).string());
-    }
-  }
-  catch (const bfs::filesystem_error ex)
-  {
-    std::cerr << "ERROR: " << ex.what() << std::endl;
-    return EXIT_FAILURE;
-  }
 
   std::clock_t start = std::clock();
   double duration;
-  
-  for (const std::string& inputFilepath : inputFilepaths)
+
+  // create the feedProvider
+  openMVG::dataio::FeedProvider feed(inputPath.string());
+  if(!feed.isInit())
   {
+    std::cerr << "ERROR while initializing the FeedProvider!" << std::endl;
+    return EXIT_FAILURE;
+  }
+  openMVG::image::Image<unsigned char> imageGrey;
+  openMVG::cameras::Pinhole_Intrinsic_Radial_K3 queryIntrinsics;
+  bool hasIntrinsics = false;
+  std::string currentImgName;
+  int step = 1;
+  if(maxNbFrames)
+    step = feed.nbFrames() / maxNbFrames;
+  int iInputFrame = 0;
+
+  while(feed.next(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics))
+  {
+    // TODO: feed.seek(frame);
+    if((iInputFrame % step) != 0)
+    {
+      ++iInputFrame;
+      continue;
+    }
+
     cv::Mat viewGray;
-    viewGray = cv::imread(inputFilepath, cv::IMREAD_GRAYSCALE);
-    
+    cv::eigen2cv(imageGrey.GetMat(), viewGray);
+
     // Check image is correctly loaded
     if (viewGray.size() == cv::Size(0,0))
     {
-      throw std::runtime_error(std::string("Invalid image: ") + inputFilepath);
+      throw std::runtime_error(std::string("Invalid image: ") + currentImgName);
     }
     // Check image size is always the same
     if (imageSize == cv::Size(0,0))
@@ -441,29 +442,50 @@ int main(int argc, char** argv)
     }
     else if (imageSize != viewGray.size())
     {
-      throw std::runtime_error(std::string("You cannot mix multiple image resolutions during the camera calibration. See image file: ") + inputFilepath);
+      throw std::runtime_error(std::string("You cannot mix multiple image resolutions during the camera calibration. See image file: ") + currentImgName);
     }
 
     std::vector<cv::Point2f> pointbuf;
 
+    std::clock_t startCh;
+    double durationCh;
     bool found;
     switch (pattern)
     {
       case CHESSBOARD:
+        startCh = std::clock();
+        
         found = cv::findChessboardCorners(viewGray, boardSize, pointbuf,
                                       CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE);
+        durationCh = ( std::clock() - startCh ) / (double) CLOCKS_PER_SEC;
+        std::cout<<"find chessboard corners' duration: "<< durationCh << std::endl;
+        startCh = std::clock();
+        
         // improve the found corners' coordinate accuracy
         if (found)
           cv::cornerSubPix(viewGray, pointbuf, cv::Size(11, 11), cv::Size(-1, -1),
                        cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
+        
+        durationCh = ( std::clock() - startCh ) / (double) CLOCKS_PER_SEC;
+        std::cout<<"refine chessboard corners' duration: "<< durationCh << std::endl;
         break;
         
       case CIRCLES_GRID:
+        startCh = std::clock();
+        
         found = cv::findCirclesGrid(viewGray, boardSize, pointbuf);
+        
+        durationCh = ( std::clock() - startCh ) / (double) CLOCKS_PER_SEC;
+        std::cout<<"find circles grid duration: "<< durationCh << std::endl;
         break;
         
       case ASYMMETRIC_CIRCLES_GRID:
+        startCh = std::clock();
+        
         found = cv::findCirclesGrid(viewGray, boardSize, pointbuf, cv::CALIB_CB_ASYMMETRIC_GRID);
+        
+        durationCh = ( std::clock() - startCh ) / (double) CLOCKS_PER_SEC;
+        std::cout<<"find asymmetric circles grid duration: "<< durationCh << std::endl;
         break;
 
 #ifdef HAVE_CCTAG
@@ -479,10 +501,14 @@ int main(int argc, char** argv)
 
     if (found)
       imagePoints.push_back(pointbuf);
+    
+    ++iInputFrame;
   }
+  std::cout << "maxNbFrames: " << maxNbFrames << std::endl;
   
   duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
-  std::cout<<"find points duration: "<< duration << std::endl;
+  std::cout << "find points duration: " << duration << std::endl;
+  std::cout << "Grid detected in " << imagePoints.size() << " images on " << iInputFrame << " input images." << std::endl;
 
   if (imagePoints.size() == 0)
     throw std::logic_error("All points are not detected");
@@ -519,8 +545,13 @@ int main(int argc, char** argv)
 
   if (!debugFolder.empty())
   {
-    exportDebug(inputFilepaths, debugFolder, cameraMatrix, distCoeffs, imageSize);
+    // TODO: feed.seek(0);
+    exportDebug(feed, debugFolder, maxNbFrames, 
+                cameraMatrix, distCoeffs, imageSize);
     // drawChessboardCorners(view, boardSize, cv::Mat(pointbuf), found);
   }
+  durationAlgo = ( std::clock() - startAlgo ) / (double) CLOCKS_PER_SEC;
+  std::cout<<"total duration: "<< durationAlgo << std::endl;
+  
   return 0;
 }

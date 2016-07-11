@@ -20,13 +20,14 @@ namespace dataio{
 FeedProvider::FeedProvider(const std::string &feedPath, const std::string &calibPath) : _isVideo(false)
 {
   namespace bf = boost::filesystem;
-  if(!bf::exists(feedPath))
+  if(feedPath.empty())
   {
-    throw std::invalid_argument(feedPath+" does not exist!");
+    throw std::invalid_argument("Empty filepath.");
   }
-  
+
   if(bf::is_regular_file(bf::path(feedPath))) 
   {
+    // Image or video file
     const std::string extension = bf::path(feedPath).extension().string();
     if(ImageFeed::isSupported(extension))
     {
@@ -44,25 +45,28 @@ FeedProvider::FeedProvider(const std::string &feedPath, const std::string &calib
 #endif
     }
   }
-  else if(bf::is_directory(bf::path(feedPath)))
+  else if(bf::is_directory(bf::path(feedPath)) || bf::is_directory(bf::path(feedPath).parent_path()))
   {
-    std::cout << "directory\n"; 
+    // Folder or sequence of images
     _feeder.reset(new ImageFeed(feedPath, calibPath));
   }
   else
   {
-    // throw something
-    throw std::invalid_argument("File or mode not (yet) supported");
+    throw std::invalid_argument(std::string("Input filepath not supported: ") + feedPath);
   }
 }
 
-  
 bool FeedProvider::next(image::Image<unsigned char> &imageGray,
       cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
       std::string &mediaPath,
       bool &hasIntrinsics)
 {
   return(_feeder->next(imageGray, camIntrinsics, mediaPath, hasIntrinsics));
+}
+  
+std::size_t FeedProvider::nbFrames() const
+{
+  return _feeder->nbFrames();
 }
 
 bool FeedProvider::isInit() const
@@ -71,7 +75,6 @@ bool FeedProvider::isInit() const
 }
 
 FeedProvider::~FeedProvider( ) { }
-
 
 }//namespace dataio 
 }//namespace openMVG

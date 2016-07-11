@@ -12,11 +12,15 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string/case_conv.hpp> 
+#include <boost/algorithm/string/replace.hpp>
 
 #include <queue>
 #include <iostream>
 #include <fstream>
 #include <exception>
+#include <regex>
+#include <iterator>
+#include <string>
 
 namespace openMVG{
 namespace dataio{
@@ -29,12 +33,14 @@ public:
   
   FeederImpl() : _isInit(false) {}
   
-  FeederImpl(const std::string imagePath, const std::string calibPath);
+  FeederImpl(const std::string& imagePath, const std::string& calibPath);
 
   bool next(image::Image<unsigned char> &imageGray, 
                      cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
                      std::string &imageName,
                      bool &hasIntrinsics);
+  
+  std::size_t nbFrames() const;
   
   bool isInit() const {return _isInit;} 
   
@@ -69,9 +75,9 @@ bool ImageFeed::FeederImpl::isSupported(const std::string &ext)
   return(std::find(start, end, boost::to_lower_copy(ext)) != end);
 }
 
-
-ImageFeed::FeederImpl::FeederImpl(const std::string imagePath, const std::string calibPath) 
-: _isInit(false), _withCalibration(false)
+ImageFeed::FeederImpl::FeederImpl(const std::string& imagePath, const std::string& calibPath) 
+: _isInit(false)
+, _withCalibration(false)
 {
   namespace bf = boost::filesystem;
 //    std::cout << imagePath << std::endl;
@@ -122,11 +128,33 @@ ImageFeed::FeederImpl::FeederImpl(const std::string imagePath, const std::string
       throw std::invalid_argument("File or mode not yet implemented");
     }
   }
-  else if(bf::is_directory(imagePath))
+  else if(bf::is_directory(imagePath) || bf::is_directory(bf::path(imagePath).parent_path()))
   {
-    std::cout << "directory feedImage\n";
+    std::string folder = imagePath;
+    // Recover the pattern : img.@.png (for example)
+    std::string filePattern;
+    std::regex re;
+    if(!bf::is_directory(imagePath))
+    {
+      filePattern = bf::path(imagePath).filename().string();
+      folder = bf::path(imagePath).parent_path().string();
+      std::cout << "filePattern: " << filePattern << std::endl;
+      std::string regexStr = filePattern;
+      // escape "."
+      boost::algorithm::replace_all(regexStr, ".", "\\.");
+      // recognize # as a digit
+      boost::algorithm::replace_all(regexStr, "#", "[0-9]");
+      // recognize @ as a sequence of digits
+      boost::algorithm::replace_all(regexStr, "@", "[0-9]+");
+      re = regexStr;
+    }
+    else
+    {
+      std::cout << "folder without expression: " << imagePath << std::endl;
+    }
+    std::cout << "directory feedImage" << std::endl;
     // if it is a directory, list all the images and add them to the list
-    bf::directory_iterator iterator(imagePath);
+    bf::directory_iterator iterator(folder);
     // since some OS will provide the files in a random order, first store them
     // in a priority queue and then fill the _image queue with the alphabetical
     // order from the priority queue
@@ -139,7 +167,11 @@ ImageFeed::FeederImpl::FeederImpl(const std::string imagePath, const std::string
       const std::string ext = iterator->path().extension().string();
       if(FeederImpl::isSupported(ext))
       {
-        tmpSorter.push(iterator->path().string());
+        const std::string filepath = iterator->path().string();
+        const std::string filename = iterator->path().filename().string();
+        // If we have a filePattern (a sequence of images), we have to match the regex.
+        if(filePattern.empty() || std::regex_match(filename, re))
+          tmpSorter.push(filepath);
       }
     }
     // put all the retrieve files inside the queue
@@ -216,6 +248,16 @@ bool ImageFeed::FeederImpl::next(image::Image<unsigned char> &imageGray,
   return true;
 }
 
+std::size_t ImageFeed::FeederImpl::nbFrames() const
+{
+  if(!_isInit)
+    return 0;
+  
+  if(_jsonMode)
+    return _sfmdata.GetViews().size();
+  
+  return _images.size();
+}
 
 bool ImageFeed::FeederImpl::feedWithJson(image::Image<unsigned char> &imageGray, 
                    cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
@@ -275,7 +317,7 @@ bool ImageFeed::FeederImpl::feedWithJson(image::Image<unsigned char> &imageGray,
 
 ImageFeed::ImageFeed() : _imageFeed(new FeederImpl()) { }
 
-ImageFeed::ImageFeed(const std::string imagePath, const std::string calibPath)  
+ImageFeed::ImageFeed(const std::string& imagePath, const std::string& calibPath)  
     : _imageFeed( new FeederImpl(imagePath, calibPath) ) { }
 
 bool ImageFeed::next(image::Image<unsigned char> &imageGray, 
@@ -284,6 +326,11 @@ bool ImageFeed::next(image::Image<unsigned char> &imageGray,
                      bool &hasIntrinsics)
 {
   return(_imageFeed->next(imageGray, camIntrinsics, mediaPath, hasIntrinsics));
+}
+
+std::size_t ImageFeed::nbFrames() const
+{
+  return _imageFeed->nbFrames();
 }
 
 bool ImageFeed::isInit() const

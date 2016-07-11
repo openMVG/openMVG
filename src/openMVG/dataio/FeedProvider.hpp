@@ -19,7 +19,7 @@ class FeedProvider
 {
 public:
   
-  FeedProvider(const std::string &feedPath, const std::string &calibPath);
+  FeedProvider(const std::string &feedPath, const std::string &calibPath = "");
   
   /**
    * @brief Provide a new image from the feed.
@@ -36,6 +36,9 @@ public:
         cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
         std::string &mediaPath,
         bool &hasIntrinsics);
+  
+  std::size_t nbFrames() const;
+  
   /**
    * @brief Return true if the feed is correctly initialized.
    * 

@@ -38,8 +38,9 @@ public:
                     std::string &mediaPath,
                     bool &hasIntrinsics) = 0;  
 
-  virtual ~IFeed( ) { };
-
+  virtual std::size_t nbFrames() const = 0;
+  
+  virtual ~IFeed( ) {}
 
 };
 
