@@ -1,3 +1,6 @@
+[submodule "src/openMVG/features/fast"]
+	path = src/openMVG/features/fast
+	url = https://github.com/komrad36/KFAST_OpenMVG.git
 [submodule "src/dependencies/glfw"]
 	path = src/dependencies/glfw
 	url = https://github.com/elmindreda/glfw.git
