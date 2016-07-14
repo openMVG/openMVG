@@ -297,7 +297,8 @@ int main(int argc, char** argv)
     bfs::create_directories(visualDebug);
   }
  
-  const std::string basename = bfs::path(exportFile).stem().string();
+  // this contains the full path and the root name of the file without the extension
+  const std::string basename = (bfs::path(exportFile).parent_path() / bfs::path(exportFile).stem()).string();
   
   
   //***********************************************************************
@@ -441,7 +442,7 @@ int main(int argc, char** argv)
     }
     ++frameCounter;
   }
-  localization::save(vec_localizationResults, basename+".json");
+  localization::save(vec_localizationResults, basename+".locres.json");
   
   
   
@@ -464,7 +465,7 @@ int main(int argc, char** argv)
                                                        noDistortion, 
                                                        b_refinePose,
                                                        b_refineStructure,
-                                                       basename+".BUNDLE",
+                                                       basename+".sfmdata.BUNDLE",
                                                        minPointVisibility);
     if(!BAresult)
     {
@@ -492,7 +493,7 @@ int main(int argc, char** argv)
       }
       exporterBA.addPoints(localizer->getSfMData().GetLandmarks());
 #endif
-      localization::save(vec_localizationResults, basename+".BUNDLE.json");
+      localization::save(vec_localizationResults, basename+".locres.BUNDLE.json");
     }
   }
   
