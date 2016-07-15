@@ -264,13 +264,16 @@ bool Bundle_Adjustment_Ceres::Adjust(
       {
         // Refine optical center within 10% of the image size.
         assert(map_intrinsics[idIntrinsics].size() >= 3);
-
+        
+        const double opticalCenterMinPercent = 0.45;
+        const double opticalCenterMaxPercent = 0.55;
+        
         // Add bounds to the principal point
-        problem.SetParameterLowerBound(parameter_block, 1, 0.45 * itIntrinsic.second->w());
-        problem.SetParameterUpperBound(parameter_block, 1, 0.55 * itIntrinsic.second->w());
+        problem.SetParameterLowerBound(parameter_block, 1, opticalCenterMinPercent * itIntrinsic.second->w());
+        problem.SetParameterUpperBound(parameter_block, 1, opticalCenterMaxPercent * itIntrinsic.second->w());
 
-        problem.SetParameterLowerBound(parameter_block, 2, 0.45 * itIntrinsic.second->h());
-        problem.SetParameterUpperBound(parameter_block, 2, 0.55 * itIntrinsic.second->h());
+        problem.SetParameterLowerBound(parameter_block, 2, opticalCenterMinPercent * itIntrinsic.second->h());
+        problem.SetParameterUpperBound(parameter_block, 2, opticalCenterMaxPercent * itIntrinsic.second->h());
       }
       else
       {
