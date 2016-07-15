@@ -1295,7 +1295,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
   // We use a local scene with only the 3D points and the new camera.
   {
     cameras::Pinhole_Intrinsic * pinhole_cam = dynamic_cast<cameras::Pinhole_Intrinsic *>(optional_intrinsic.get());
-    const bool b_new_intrinsic = (optional_intrinsic == nullptr) || (pinhole_cam && pinhole_cam->focal() <= 0);
+    const bool b_new_intrinsic = (optional_intrinsic == nullptr) || (pinhole_cam && !pinhole_cam->isValid());
     // A valid pose has been found (try to refine it):
     // If no valid intrinsic as input:
     //  init a new one from the projection matrix decomposition
