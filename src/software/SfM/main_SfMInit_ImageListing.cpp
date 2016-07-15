@@ -551,7 +551,7 @@ int main(int argc, char **argv)
     }
 
     // Add intrinsic related to the image (if any)
-    if (intrinsic == NULL)
+    if (intrinsic == nullptr)
     {
       //Since the view have invalid intrinsic data
       // (export the view, with an invalid intrinsic field value)

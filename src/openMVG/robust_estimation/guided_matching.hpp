@@ -38,11 +38,11 @@ void GuidedMatching(
   // Looking for the corresponding points that have
   //  the smallest distance (smaller than the provided Threshold)
 
-  for (size_t i = 0; i < xLeft.cols(); ++i) {
+  for (std::size_t i = 0; i < xLeft.cols(); ++i) {
 
     double min = std::numeric_limits<double>::max();
     IndMatch match;
-    for (size_t j = 0; j < xRight.cols(); ++j) {
+    for (std::size_t j = 0; j < xRight.cols(); ++j) {
       // Compute the geometric error: error to the model
       const double err = ErrorArg::Error(
         mod,  // The model
@@ -70,7 +70,7 @@ template <typename DistT>
 struct distanceRatio
 {
   DistT bd, sbd; // best and second best distance
-  size_t idx; // best corresponding index
+  std::size_t idx; // best corresponding index
 
   distanceRatio():
     bd(std::numeric_limits<DistT>::max()),
@@ -79,7 +79,7 @@ struct distanceRatio
   { }
 
   // Update match according the provided distance
-  inline bool update(size_t index, DistT dist)
+  inline bool update(std::size_t index, DistT dist)
   {
     if (dist < bd) // best than any previous
     {
@@ -137,10 +137,10 @@ void GuidedMatching(
   //   1. a geometric distance below the provided Threshold
   //   2. a distance ratio between descriptors of valid geometric correspondencess
 
-  for (size_t i = 0; i < xLeft.cols(); ++i) {
+  for (std::size_t i = 0; i < xLeft.cols(); ++i) {
 
     distanceRatio<typename MetricT::ResultType > dR;
-    for (size_t j = 0; j < xRight.cols(); ++j) {
+    for (std::size_t j = 0; j < xRight.cols(); ++j) {
       // Compute the geometric error: error to the model
       const double geomErr = ErrorArg::Error(
         mod,  // The model
@@ -191,29 +191,29 @@ void GuidedMatching(
    rRegionsPos(rRegions.RegionCount());
   if(camL && camL->isValid())
   {
-    for (size_t i = 0; i < lRegions.RegionCount(); ++i)
+    for (std::size_t i = 0; i < lRegions.RegionCount(); ++i)
       lRegionsPos[i] = camL->get_ud_pixel(lRegions.GetRegionPosition(i));
   }
   else
   {
-    for (size_t i = 0; i < lRegions.RegionCount(); ++i)
+    for (std::size_t i = 0; i < lRegions.RegionCount(); ++i)
       lRegionsPos[i] = lRegions.GetRegionPosition(i);
   }
   if(camR && camR->isValid())
   {
-    for (size_t i = 0; i < rRegions.RegionCount(); ++i)
+    for (std::size_t i = 0; i < rRegions.RegionCount(); ++i)
       rRegionsPos[i] =  camR->get_ud_pixel(rRegions.GetRegionPosition(i));
   }
   else
   {
-    for (size_t i = 0; i < rRegions.RegionCount(); ++i)
+    for (std::size_t i = 0; i < rRegions.RegionCount(); ++i)
       rRegionsPos[i] = rRegions.GetRegionPosition(i);
   }
 
-  for (size_t i = 0; i < lRegions.RegionCount(); ++i) {
+  for (std::size_t i = 0; i < lRegions.RegionCount(); ++i) {
 
     distanceRatio<double> dR;
-    for (size_t j = 0; j < rRegions.RegionCount(); ++j) {
+    for (std::size_t j = 0; j < rRegions.RegionCount(); ++j) {
       // Compute the geometric error: error to the model
       const double geomErr = ErrorArg::Error(
         mod,  // The model
@@ -336,7 +336,7 @@ void GuidedMatching_Fundamental_Fast(
 	const int nb_buckets = 2*(widthR + heightR-2);
 
   Buckets_vec buckets(nb_buckets);
-  for (size_t i = 0; i < lRegions.RegionCount(); ++i)
+  for (std::size_t i = 0; i < lRegions.RegionCount(); ++i)
   {
     // Compute epipolar line
     const Vec2 l_pt = (camL && camL->isValid()) ? camL->get_ud_pixel(lRegions.GetRegionPosition(i)) : lRegions.GetRegionPosition(i);
@@ -353,7 +353,7 @@ void GuidedMatching_Fundamental_Fast(
 
   // For each point in right image, find if there is good candidates.
   std::vector<distanceRatio<double > > dR(lRegions.RegionCount());
-  for (size_t j = 0; j < rRegions.RegionCount(); ++j)
+  for (std::size_t j = 0; j < rRegions.RegionCount(); ++j)
   {
     // According the point:
     // - Compute it's epipolar line from the epipole
@@ -393,7 +393,7 @@ void GuidedMatching_Fundamental_Fast(
     }
   }
   // Check distance ratio validity
-  for (size_t i=0; i < dR.size(); ++i)
+  for (std::size_t i=0; i < dR.size(); ++i)
   {
     if (dR[i].isValid(distRatio))
     {
