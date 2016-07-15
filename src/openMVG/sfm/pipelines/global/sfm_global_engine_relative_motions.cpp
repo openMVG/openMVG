@@ -451,7 +451,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
   }
   BA_Refine refineOptions = BA_REFINE_ROTATION | BA_REFINE_TRANSLATION | BA_REFINE_STRUCTURE;
   if(!_bFixedIntrinsics)
-    refineOptions |= BA_REFINE_INTRINSICS;
+    refineOptions |= BA_REFINE_INTRINSICS_ALL;
   b_BA_Status = bundle_adjustment_obj.Adjust(_sfm_data, refineOptions);
   if (b_BA_Status && !_sLoggingFile.empty())
   {

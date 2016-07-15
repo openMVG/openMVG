@@ -298,7 +298,8 @@ int main(int argc, char **argv)
     ++iter_image, ++my_progress_bar )
   {
     // Read meta data to fill camera parameter (w,h,focal,ppx,ppy) fields.
-    double width = -1.0, height = -1.0, focalPix = -1.0;
+    double width = -1.0;
+    double height = -1.0;
     ppx = ppy = -1.0;
     
     const std::string imageFilename = *iter_image;
@@ -412,6 +413,7 @@ int main(int argc, char **argv)
     }
 
     // Focal
+    double focalPix = -1.0;
     float focalLength_mm = 0.0;
     std::string sCamName;
     std::string sCamModel;
@@ -477,6 +479,8 @@ int main(int argc, char **argv)
 
       // Create the desired camera type
       intrinsic = createPinholeIntrinsic(camera_model, width, height, focalPix, ppx, ppy);
+
+      intrinsic->setInitialFocalLengthPix(focalPix);
 
       // Initialize distortion parameters
       switch(camera_model)

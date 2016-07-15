@@ -17,10 +17,15 @@ enum BA_Refine
   BA_REFINE_NONE = 0,
   BA_REFINE_ROTATION = 1, //< refine pose rotations
   BA_REFINE_TRANSLATION = 2, //< refine pose translations
-  BA_REFINE_INTRINSICS = 4, //< refine camera intrinsics
-  BA_REFINE_STRUCTURE = 8, //<  refine structure (i.e. 3D points)
+  BA_REFINE_STRUCTURE = 4, //<  refine structure (i.e. 3D points)
+  BA_REFINE_INTRINSICS_FOCAL = 8, //< refine the focal length
+  BA_REFINE_INTRINSICS_OPTICALCENTER_ALWAYS = 16, //< refine the optical center
+  BA_REFINE_INTRINSICS_OPTICALCENTER_IF_ENOUGH_DATA = 32, //< refine the optical center only if we have a minimum number of cameras
+  BA_REFINE_INTRINSICS_DISTORTION = 64, //< refine the distortion parameters
+  /// Refine all intrinsics parameters
+  BA_REFINE_INTRINSICS_ALL = BA_REFINE_INTRINSICS_FOCAL | BA_REFINE_INTRINSICS_OPTICALCENTER_IF_ENOUGH_DATA | BA_REFINE_INTRINSICS_DISTORTION,
   /// Refine all parameters
-  BA_REFINE_ALL = BA_REFINE_ROTATION | BA_REFINE_TRANSLATION | BA_REFINE_INTRINSICS | BA_REFINE_STRUCTURE,
+  BA_REFINE_ALL = BA_REFINE_ROTATION | BA_REFINE_TRANSLATION | BA_REFINE_INTRINSICS_ALL | BA_REFINE_STRUCTURE,
 };
 
 OPENMVG_BITMASK(BA_Refine)
