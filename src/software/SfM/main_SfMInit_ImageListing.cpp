@@ -299,7 +299,8 @@ int main(int argc, char **argv)
     ++iter_image, ++my_progress_bar )
   {
     // Read meta data to fill camera parameter (w,h,focal,ppx,ppy) fields.
-    double width = -1.0, height = -1.0, focalPix = -1.0;
+    double width = -1.0;
+    double height = -1.0;
     ppx = ppy = -1.0;
     
     const std::string imageFilename = *iter_image;
@@ -372,7 +373,13 @@ int main(int argc, char **argv)
       if(metadataImageHeight <= 0)
         metadataImageHeight = imgHeader.height;
     }
-    const bool resizedImage = metadataImageWidth != width || metadataImageHeight != height;
+    // If metadata is rotated
+    if(metadataImageWidth == height && metadataImageHeight == width)
+    {
+      metadataImageWidth = width;
+      metadataImageHeight = height;
+    }
+    const bool resizedImage = (metadataImageWidth != width || metadataImageHeight != height);
     if(resizedImage)
     {
       std::cout << "Resized image detected:" << std::endl;
@@ -415,7 +422,8 @@ int main(int argc, char **argv)
     }
 
     // Focal
-    float focalLength_mm = -1.0;
+    double focalPix = -1.0;
+    float focalLength_mm = 0.0;
     std::string sCamName;
     std::string sCamModel;
     // Consider the case where the focal is provided manually
@@ -485,6 +493,8 @@ int main(int argc, char **argv)
     }
     // Create the desired camera type
     std::shared_ptr<IntrinsicBase> intrinsic = createPinholeIntrinsic(camera_model, width, height, focalPix, ppx, ppy);
+
+    intrinsic->setInitialFocalLengthPix(focalPix);
 
     // Initialize distortion parameters
     switch(camera_model)

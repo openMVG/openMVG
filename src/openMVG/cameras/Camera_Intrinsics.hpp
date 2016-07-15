@@ -23,6 +23,7 @@ namespace cameras {
 struct IntrinsicBase
 {
   unsigned int _w, _h;
+  double _initialFocalLengthPix = -1;
   std::string _serialNumber;
 
   IntrinsicBase(unsigned int w = 0, unsigned int h = 0, const std::string& serialNumber = ""):_w(w), _h(h), _serialNumber(serialNumber)
@@ -38,11 +39,17 @@ struct IntrinsicBase
   unsigned int w() const {return _w;}
   unsigned int h() const {return _h;}
   const std::string& serialNumber() const {return _serialNumber;}
+  double initialFocalLengthPix() const {return _initialFocalLengthPix;}
+  
   void setWidth(unsigned int w) { _w = w;}
   void setHeight(unsigned int h) { _h = h;}
   void setSerialNumber(const std::string& serialNumber)
   {
     _serialNumber = serialNumber;
+  }
+  void setInitialFocalLengthPix(double initialFocalLengthPix)
+  {
+    _initialFocalLengthPix = initialFocalLengthPix;
   }
 
   // Operator ==
@@ -135,6 +142,7 @@ struct IntrinsicBase
     ar(cereal::make_nvp("width", _w));
     ar(cereal::make_nvp("height", _h));
     ar(cereal::make_nvp("serialNumber", _serialNumber));
+    ar(cereal::make_nvp("initialFocalLengthPix", _initialFocalLengthPix));
   }
 
   /// Serialization in
@@ -143,15 +151,22 @@ struct IntrinsicBase
   {
     ar(cereal::make_nvp("width", _w));
     ar(cereal::make_nvp("height", _h));
+    // compatibility with older versions
     try
     {
-      // compatibility with older versions
       ar(cereal::make_nvp("serialNumber", _serialNumber));
     }
-    catch(cereal::Exception e)
+    catch(cereal::Exception& e)
     {
-      // if it fails, just use empty string
       _serialNumber = "";
+    }
+    try
+    {
+      ar(cereal::make_nvp("initialFocalLengthPix", _initialFocalLengthPix));
+    }
+    catch(cereal::Exception& e)
+    {
+      _initialFocalLengthPix = -1;
     }
   }
 

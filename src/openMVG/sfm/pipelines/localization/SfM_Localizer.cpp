@@ -172,7 +172,7 @@ bool SfM_Localizer::RefinePose
   if(b_refine_pose)
     refineOptions |= BA_REFINE_ROTATION | BA_REFINE_TRANSLATION;
   if(b_refine_intrinsic)
-    refineOptions |= BA_REFINE_INTRINSICS;
+    refineOptions |= BA_REFINE_INTRINSICS_ALL;
 
   const bool b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data, refineOptions);
   if (!b_BA_Status)

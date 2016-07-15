@@ -68,6 +68,9 @@ AgfaPhoto;AgfaPhoto ePhoto CL30;6.16
 AgfaPhoto;AgfaPhoto ePhoto CL50;6.16
 AgfaPhoto;AgfaPhoto ePhoto 1680;6.16
 AgfaPhoto;AgfaPhoto ePhoto 1280;6.16
+Apple;Apple iPhone 6;4.90
+Apple;Apple iPhone 6s;4.92
+Apple;Apple iPhone SE;4.92
 BenQ;BenQ GH200;6.16
 BenQ;BenQ LM100;6.16
 BenQ;BenQ G1;6.16
@@ -2540,6 +2543,10 @@ Praktica;Praktica DCZ 2.2;5.33
 Praktica;Praktica DCZ 3.2;7.11
 Praktica;Praktica DCZ 3.3;7.11
 Praktica;Praktica DCZ 1.3;6.4
+PtGrey;PtGrey Grasshopper3 2048x1536;7.18
+PtGrey;PtGrey Grasshopper3 1920x1440;6.73
+Red;Red Mysterium-X 4K HD;20.74
+Red;Red Dragon 4K HD;19.19
 Ricoh;Ricoh GR;23.6
 Ricoh;Ricoh CX6;6.16
 Ricoh;Ricoh GR Digital 4;7.53
