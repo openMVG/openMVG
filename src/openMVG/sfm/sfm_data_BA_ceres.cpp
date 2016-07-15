@@ -257,9 +257,11 @@ bool Bundle_Adjustment_Ceres::Adjust(
         vec_constant_params.push_back(0);
       }
 
+      const std::size_t minImagesForOpticalCenter = 3;
+
       // Optical center
       if((refineOptions & BA_REFINE_INTRINSICS_OPTICALCENTER_ALWAYS) ||
-         ((refineOptions & BA_REFINE_INTRINSICS_OPTICALCENTER_IF_ENOUGH_DATA) && intrinsicsUsage[idIntrinsics] > 3)
+         ((refineOptions & BA_REFINE_INTRINSICS_OPTICALCENTER_IF_ENOUGH_DATA) && intrinsicsUsage[idIntrinsics] > minImagesForOpticalCenter)
          )
       {
         // Refine optical center within 10% of the image size.
