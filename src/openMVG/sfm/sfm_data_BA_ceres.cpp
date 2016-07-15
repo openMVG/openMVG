@@ -186,7 +186,7 @@ bool Bundle_Adjustment_Ceres::Adjust(
   Hash_Map<IndexT, std::size_t> intrinsicsUsage;
 
   // Setup Intrinsics data & subparametrization
-  const bool refineIntrinsicsOpticalCenter = (refineOptions & BA_REFINE_INTRINSICS_OPTICALCENTER_ALWAYS) || (refineOptions & BA_REFINE_INTRINSICS_OPTICALCENTER_ALWAYS);
+  const bool refineIntrinsicsOpticalCenter = (refineOptions & BA_REFINE_INTRINSICS_OPTICALCENTER_ALWAYS) || (refineOptions & BA_REFINE_INTRINSICS_OPTICALCENTER_IF_ENOUGH_DATA);
   const bool refineIntrinsics = (refineOptions & BA_REFINE_INTRINSICS_FOCAL) ||
                                 (refineOptions & BA_REFINE_INTRINSICS_DISTORTION) ||
                                 refineIntrinsicsOpticalCenter;
