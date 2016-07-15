@@ -190,10 +190,9 @@ bool Bundle_Adjustment_Ceres::Adjust(
   const bool refineIntrinsics = (refineOptions & BA_REFINE_INTRINSICS_FOCAL) ||
                                 (refineOptions & BA_REFINE_INTRINSICS_DISTORTION) ||
                                 refineIntrinsicsOpticalCenter;
-  for (Views::const_iterator itView = sfm_data.views.begin();
-    itView != sfm_data.views.end(); ++itView)
+  for(const auto& itView: sfm_data.GetViews())
   {
-    View* v = itView->second.get();
+    const View* v = itView.second.get();
     if (sfm_data.IsPoseAndIntrinsicDefined(v))
     {
       if(intrinsicsUsage.find(v->id_intrinsic) == intrinsicsUsage.end())
@@ -210,16 +209,15 @@ bool Bundle_Adjustment_Ceres::Adjust(
 
   Hash_Map<IndexT, std::vector<double> > map_intrinsics;
   // Setup Intrinsics data & subparametrization
-  for (Intrinsics::const_iterator itIntrinsic = sfm_data.intrinsics.begin();
-    itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
+  for(const auto& itIntrinsic: sfm_data.GetIntrinsics())
   {
-    const IndexT idIntrinsics = itIntrinsic->first;
+    const IndexT idIntrinsics = itIntrinsic.first;
     if(intrinsicsUsage[idIntrinsics] == 0)
     {
       continue;
     }
-    assert(isValid(itIntrinsic->second->getType()));
-    map_intrinsics[idIntrinsics] = itIntrinsic->second->getParams();
+    assert(isValid(itIntrinsic.second->getType()));
+    map_intrinsics[idIntrinsics] = itIntrinsic.second->getParams();
 
     double * parameter_block = &map_intrinsics[idIntrinsics][0];
     problem.AddParameterBlock(parameter_block, map_intrinsics[idIntrinsics].size());
@@ -236,13 +234,13 @@ bool Bundle_Adjustment_Ceres::Adjust(
       if(refineOptions & BA_REFINE_INTRINSICS_FOCAL)
       {
         // Refine the focal length
-        if(itIntrinsic->second->initialFocalLengthPix() > 0)
+        if(itIntrinsic.second->initialFocalLengthPix() > 0)
         {
           // If we have an initial guess, we only authorize a margin around this value.
           assert(map_intrinsics[idIntrinsics].size() >= 1);
-          const unsigned int maxFocalErr = 0.2 * std::max(itIntrinsic->second->w(), itIntrinsic->second->h());
-          problem.SetParameterLowerBound(parameter_block, 0, (double)itIntrinsic->second->initialFocalLengthPix() - maxFocalErr);
-          problem.SetParameterUpperBound(parameter_block, 0, (double)itIntrinsic->second->initialFocalLengthPix() + maxFocalErr);
+          const unsigned int maxFocalErr = 0.2 * std::max(itIntrinsic.second->w(), itIntrinsic.second->h());
+          problem.SetParameterLowerBound(parameter_block, 0, (double)itIntrinsic.second->initialFocalLengthPix() - maxFocalErr);
+          problem.SetParameterUpperBound(parameter_block, 0, (double)itIntrinsic.second->initialFocalLengthPix() + maxFocalErr);
         }
         else // no initial guess
         {
@@ -268,11 +266,11 @@ bool Bundle_Adjustment_Ceres::Adjust(
         assert(map_intrinsics[idIntrinsics].size() >= 3);
 
         // Add bounds to the principal point
-        problem.SetParameterLowerBound(parameter_block, 1, 0.45 * itIntrinsic->second->w());
-        problem.SetParameterUpperBound(parameter_block, 1, 0.55 * itIntrinsic->second->w());
+        problem.SetParameterLowerBound(parameter_block, 1, 0.45 * itIntrinsic.second->w());
+        problem.SetParameterUpperBound(parameter_block, 1, 0.55 * itIntrinsic.second->w());
 
-        problem.SetParameterLowerBound(parameter_block, 2, 0.45 * itIntrinsic->second->h());
-        problem.SetParameterUpperBound(parameter_block, 2, 0.55 * itIntrinsic->second->h());
+        problem.SetParameterLowerBound(parameter_block, 2, 0.45 * itIntrinsic.second->h());
+        problem.SetParameterUpperBound(parameter_block, 2, 0.55 * itIntrinsic.second->h());
       }
       else
       {
