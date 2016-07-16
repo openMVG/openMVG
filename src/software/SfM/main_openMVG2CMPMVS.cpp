@@ -76,7 +76,7 @@ bool exportToCMPMVSFormat(
           continue;
         Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
         const IntrinsicBase * cam = iterIntrinsic->second.get();
-        if(cam->w() == 0 || cam->h() == 0)
+        if(!cam->isValid())
           continue;
         ++nbValidImages;
         std::pair<size_t, size_t> imgResolution = std::make_pair(cam->w(), cam->h());
@@ -158,7 +158,7 @@ bool exportToCMPMVSFormat(
 
         const IntrinsicBase * cam = iterIntrinsic->second.get();
         Image<RGBColor> image, image_ud;
-        if (cam->have_disto())
+        if (cam->isValid() && cam->have_disto())
         {
           // undistort the image and save it
           ReadImage( srcImage.c_str(), &image);

@@ -33,6 +33,8 @@ struct IntrinsicBase
   
   virtual IntrinsicBase* clone() const = 0;
   virtual void assign(const IntrinsicBase& other) = 0;
+
+  virtual bool isValid() const { return _w != 0 && _h != 0; }
   
   unsigned int w() const {return _w;}
   unsigned int h() const {return _h;}

@@ -47,7 +47,7 @@ bool SfM_Localizer::Localize
 
   size_t MINIMUM_SAMPLES = 0;
   const cameras::Pinhole_Intrinsic * pinhole_cam = dynamic_cast<const cameras::Pinhole_Intrinsic *>(optional_intrinsics);
-  if (pinhole_cam == nullptr)
+  if (pinhole_cam == nullptr || !pinhole_cam->isValid())
   {
     //--
     // Classic resection (try to compute the entire P matrix)

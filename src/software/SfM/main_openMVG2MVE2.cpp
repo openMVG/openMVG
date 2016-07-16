@@ -129,7 +129,7 @@ bool exportToMVE2Format(
 
       Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
       const IntrinsicBase * cam = iterIntrinsic->second.get();
-      if (cam->have_disto())
+      if (cam->isValid() && cam->have_disto())
       {
         // Undistort and save the image
         ReadImage(srcImage.c_str(), &image);

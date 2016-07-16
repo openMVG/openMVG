@@ -104,11 +104,12 @@ struct GeometricFilter_HMatrix_AC
     m.resize(2, vec_feats.size());
     typedef typename MatT::Scalar Scalar; // Output matrix type
 
+    const bool hasValidIntrinsics = cam && cam->isValid();
     size_t i = 0;
     for( features::PointFeatures::const_iterator iter = vec_feats.begin();
       iter != vec_feats.end(); ++iter, ++i)
     {
-      if (cam)
+      if (hasValidIntrinsics)
         m.col(i) = cam->get_ud_pixel(Vec2(iter->x(), iter->y()));
       else
         m.col(i) = iter->coords().cast<Scalar>();
