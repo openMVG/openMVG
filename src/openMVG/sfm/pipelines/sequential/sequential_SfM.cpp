@@ -1112,75 +1112,70 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
           const Vec2 xJ = features_provider_->feats_per_view.at(J)[track.at(J)].coords().cast<double>();
 
           // test if the track already exists in 3D
-          if (sfm_data_.structure.count(trackId) != 0)
+#ifdef OPENMVG_USE_OPENMP
+#pragma omp critical
+#endif
           {
-            // 3D point triangulated before, only add image observation if needed
-#ifdef OPENMVG_USE_OPENMP
-            #pragma omp critical
-#endif
+            if (sfm_data_.structure.count(trackId) != 0)
             {
-              Landmark & landmark = sfm_data_.structure[trackId];
-              if (landmark.obs.count(I) == 0)
+              // 3D point triangulated before, only add image observation if needed
               {
-                const Vec2 residual = cam_I->residual(pose_I, landmark.X, xI);
-                if (pose_I.depth(landmark.X) > 0 && residual.norm() < std::max(4.0, map_ACThreshold_.at(I)))
-                {
-                  landmark.obs[I] = Observation(xI, track.at(I));
-                  ++extented_track;
-                }
-              }
-              if (landmark.obs.count(J) == 0)
-              {
-                const Vec2 residual = cam_J->residual(pose_J, landmark.X, xJ);
-                if (pose_J.depth(landmark.X) > 0 && residual.norm() < std::max(4.0, map_ACThreshold_.at(J)))
-                {
-                  landmark.obs[J] = Observation(xJ, track.at(J));
-                  ++extented_track;
-                }
-              }
-            }
-          }
-          else
-          {
-            // A new 3D point must be added
-#ifdef OPENMVG_USE_OPENMP
-            #pragma omp critical
-#endif
-            {
-              ++new_putative_track;
-            }
-            const Vec2 xI_ud = cam_I->get_ud_pixel(xI);
-            const Vec2 xJ_ud = cam_J->get_ud_pixel(xJ);
-            const Mat34 P_I = cam_I->get_projective_equivalent(pose_I);
-            const Mat34 P_J = cam_J->get_projective_equivalent(pose_J);
-            Vec3 X_euclidean = Vec3::Zero();
-            TriangulateDLT(P_I, xI_ud, P_J, xJ_ud, &X_euclidean);
-            // Check triangulation results
-            //  - Check angle (small angle leads imprecise triangulation)
-            //  - Check positive depth
-            //  - Check residual values
-            const double angle = AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, xI, xJ);
-            const Vec2 residual_I = cam_I->residual(pose_I, X_euclidean, xI);
-            const Vec2 residual_J = cam_J->residual(pose_J, X_euclidean, xJ);
-            if (angle > 2.0 &&
-              pose_I.depth(X_euclidean) > 0 &&
-              pose_J.depth(X_euclidean) > 0 &&
-              residual_I.norm() < std::max(4.0, map_ACThreshold_.at(I)) &&
-              residual_J.norm() < std::max(4.0, map_ACThreshold_.at(J)))
-            {
-#ifdef OPENMVG_USE_OPENMP
-              #pragma omp critical
-#endif
-              {
-                // Add a new track
                 Landmark & landmark = sfm_data_.structure[trackId];
-                landmark.X = X_euclidean;
-                landmark.obs[I] = Observation(xI, track.at(I));
-                landmark.obs[J] = Observation(xJ, track.at(J));
-                ++new_added_track;
-              } // critical
-            } // 3D point is valid
-          } // else (New 3D point)
+                if (landmark.obs.count(I) == 0)
+                {
+                  const Vec2 residual = cam_I->residual(pose_I, landmark.X, xI);
+                  if (pose_I.depth(landmark.X) > 0 && residual.norm() < std::max(4.0, map_ACThreshold_.at(I)))
+                  {
+                    landmark.obs[I] = Observation(xI, track.at(I));
+                    ++extented_track;
+                  }
+                }
+                if (landmark.obs.count(J) == 0)
+                {
+                  const Vec2 residual = cam_J->residual(pose_J, landmark.X, xJ);
+                  if (pose_J.depth(landmark.X) > 0 && residual.norm() < std::max(4.0, map_ACThreshold_.at(J)))
+                  {
+                    landmark.obs[J] = Observation(xJ, track.at(J));
+                    ++extented_track;
+                  }
+                }
+              }
+            }
+            else
+            {
+              // A new 3D point must be added
+              ++new_putative_track;
+              // Triangulate it
+              const Vec2 xI_ud = cam_I->get_ud_pixel(xI);
+              const Vec2 xJ_ud = cam_J->get_ud_pixel(xJ);
+              const Mat34 P_I = cam_I->get_projective_equivalent(pose_I);
+              const Mat34 P_J = cam_J->get_projective_equivalent(pose_J);
+              Vec3 X_euclidean = Vec3::Zero();
+              TriangulateDLT(P_I, xI_ud, P_J, xJ_ud, &X_euclidean);
+              // Check triangulation results
+              //  - Check angle (small angle leads imprecise triangulation)
+              //  - Check positive depth
+              //  - Check residual values
+              const double angle = AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, xI, xJ);
+              const Vec2 residual_I = cam_I->residual(pose_I, X_euclidean, xI);
+              const Vec2 residual_J = cam_J->residual(pose_J, X_euclidean, xJ);
+              if (angle > 2.0 &&
+                pose_I.depth(X_euclidean) > 0 &&
+                pose_J.depth(X_euclidean) > 0 &&
+                residual_I.norm() < std::max(4.0, map_ACThreshold_.at(I)) &&
+                residual_J.norm() < std::max(4.0, map_ACThreshold_.at(J)))
+              {
+                {
+                  // Add a new track
+                  Landmark & landmark = sfm_data_.structure[trackId];
+                  landmark.X = X_euclidean;
+                  landmark.obs[I] = Observation(xI, track.at(I));
+                  landmark.obs[J] = Observation(xJ, track.at(J));
+                  ++new_added_track;
+                } // critical
+              } // 3D point is valid
+            } // else (New 3D point)
+          }
         }// For all correspondences
 #ifdef OPENMVG_USE_OPENMP
         #pragma omp critical
