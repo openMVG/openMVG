@@ -417,7 +417,7 @@ int main(int argc, char** argv)
     step = feed.nbFrames() / maxNbFrames;
   int iInputFrame = 0;
 
-  while(feed.next(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics))
+  while(feed.readImage(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics))
   {
     // TODO: feed.seek(frame);
     if((iInputFrame % step) != 0)
@@ -503,6 +503,7 @@ int main(int argc, char** argv)
       imagePoints.push_back(pointbuf);
     
     ++iInputFrame;
+    feed.goToFrame(iInputFrame * step);
   }
   std::cout << "maxNbFrames: " << maxNbFrames << std::endl;
   

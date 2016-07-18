@@ -35,12 +35,16 @@ public:
   
   FeederImpl(const std::string& imagePath, const std::string& calibPath);
 
-  bool next(image::Image<unsigned char> &imageGray, 
+  bool readImage(image::Image<unsigned char> &imageGray, 
                      cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
                      std::string &imageName,
                      bool &hasIntrinsics);
   
   std::size_t nbFrames() const;
+  
+  bool goToFrame(const unsigned int frame);
+  
+  bool goToNextFrame();
   
   bool isInit() const {return _isInit;} 
   
@@ -58,12 +62,13 @@ private:
   bool _isInit;
   bool _withCalibration;
   // It contains the images to be fed
-  std::queue<std::string> _images;
+  std::vector<std::string> _images;
   cameras::Pinhole_Intrinsic_Radial_K3 _camIntrinsics;
   
-  bool _jsonMode = false;
+  bool _sfmMode = false;
   sfm::SfM_Data _sfmdata;
   sfm::Views::const_iterator _viewIterator;
+  unsigned int _currentImageIndex = 0;
 };
 
 const std::vector<std::string> ImageFeed::FeederImpl::supportedExtensions = { ".jpg", ".jpeg", ".png", ".ppm" };
@@ -91,14 +96,14 @@ ImageFeed::FeederImpl::FeederImpl(const std::string& imagePath, const std::strin
       // load the json
       _isInit = sfm::Load(_sfmdata, imagePath, sfm::ESfM_Data(sfm::ESfM_Data::VIEWS | sfm::ESfM_Data::INTRINSICS));
       _viewIterator = _sfmdata.GetViews().begin();
-      _jsonMode = true;
+      _sfmMode = true;
     }
     // if it is an image file
     else if(FeederImpl::isSupported(ext))
     {
-      _images.push(imagePath);
+      _images.push_back(imagePath);
       _withCalibration = !calibPath.empty();
-      _jsonMode = false;
+      _sfmMode = false;
       _isInit = true;
     }
     // if it is an image file
@@ -114,12 +119,12 @@ ImageFeed::FeederImpl::FeederImpl(const std::string& imagePath, const std::strin
         // compose the file name as the base path of the inputPath and
         // the filename just read
         const std::string filename = (bf::path(imagePath).parent_path() / line).string();
-        _images.push(filename);
+        _images.push_back(filename);
       }
       // Close file
       fs.close();
       _withCalibration = !calibPath.empty();
-      _jsonMode = false;
+      _sfmMode = false;
       _isInit = true;
     }
     else
@@ -177,12 +182,12 @@ ImageFeed::FeederImpl::FeederImpl(const std::string& imagePath, const std::strin
     // put all the retrieve files inside the queue
     while(!tmpSorter.empty())
     {
-      _images.push(tmpSorter.top());
+      _images.push_back(tmpSorter.top());
       tmpSorter.pop();
     }
     
     _withCalibration = !calibPath.empty();
-    _jsonMode = false;
+    _sfmMode = false;
     _isInit = true;
   }
   else
@@ -202,7 +207,7 @@ ImageFeed::FeederImpl::FeederImpl(const std::string& imagePath, const std::strin
 
 
 
-bool ImageFeed::FeederImpl::next(image::Image<unsigned char> &imageGray, 
+bool ImageFeed::FeederImpl::readImage(image::Image<unsigned char> &imageGray, 
                    cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
                    std::string &imageName,
                    bool &hasIntrinsics)
@@ -213,18 +218,18 @@ bool ImageFeed::FeederImpl::next(image::Image<unsigned char> &imageGray,
     return false;
   }
 
-  // dealing with json mode
-  if(_jsonMode)
+  // dealing with SFM mode
+  if(_sfmMode)
   {
-    return(feedWithJson(imageGray, camIntrinsics, imageName, hasIntrinsics));
+    return feedWithJson(imageGray, camIntrinsics, imageName, hasIntrinsics);
   }
   else
   {
     if(_images.empty())
-    {
       return false;
-    }
-    
+    if(_currentImageIndex >= _images.size())
+      return false;
+
     if(_withCalibration)
     {
       // get the calibration
@@ -235,14 +240,13 @@ bool ImageFeed::FeederImpl::next(image::Image<unsigned char> &imageGray,
     {
       hasIntrinsics = false;
     }
-    imageName = _images.front();
+    imageName = _images[_currentImageIndex];
     std::cout << imageName << std::endl;
     if (!image::ReadImage(imageName.c_str(), &imageGray))
     {
       std::cerr << "Error while opening image " << imageName << std::endl;
       throw std::invalid_argument("Error while opening image " + imageName);
     }
-    _images.pop();
     return true;
   }
   return true;
@@ -253,10 +257,62 @@ std::size_t ImageFeed::FeederImpl::nbFrames() const
   if(!_isInit)
     return 0;
   
-  if(_jsonMode)
+  if(_sfmMode)
     return _sfmdata.GetViews().size();
   
   return _images.size();
+}
+
+bool ImageFeed::FeederImpl::goToFrame(const unsigned int frame)
+{
+  if(!_isInit)
+  {
+    _currentImageIndex = frame;
+    std::cerr << "Image feed is not initialized " << std::endl;
+    return false;
+  }
+  
+  // Reconstruction mode
+  if(_sfmMode)
+  {
+    if(frame < 0 || frame >= _sfmdata.GetViews().size())
+    {
+      _viewIterator = _sfmdata.GetViews().end();
+      return false;
+    }
+
+    _viewIterator = _sfmdata.GetViews().begin();
+    std::advance(_viewIterator, frame);
+  }
+  else
+  {
+    _currentImageIndex = frame;
+    // Image list mode
+    if(frame < 0 || frame >= _images.size())
+      return false;
+    std::cout << "frame " << frame << std::endl;
+  }
+  return true;
+}
+
+bool ImageFeed::FeederImpl::goToNextFrame()
+{
+  if(_sfmMode)
+  {
+    if(_viewIterator == _sfmdata.GetViews().end())
+      return false;
+    ++_viewIterator;
+    if(_viewIterator == _sfmdata.GetViews().end())
+      return false;
+  }
+  else
+  {
+    ++_currentImageIndex;
+    std::cout << "next frame " << _currentImageIndex << std::endl;
+    if(_currentImageIndex < 0 || _currentImageIndex >= _images.size())
+      return false;
+  }
+  return true;
 }
 
 bool ImageFeed::FeederImpl::feedWithJson(image::Image<unsigned char> &imageGray, 
@@ -320,17 +376,27 @@ ImageFeed::ImageFeed() : _imageFeed(new FeederImpl()) { }
 ImageFeed::ImageFeed(const std::string& imagePath, const std::string& calibPath)  
     : _imageFeed( new FeederImpl(imagePath, calibPath) ) { }
 
-bool ImageFeed::next(image::Image<unsigned char> &imageGray, 
+bool ImageFeed::readImage(image::Image<unsigned char> &imageGray, 
                      cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
                      std::string &mediaPath,
                      bool &hasIntrinsics)
 {
-  return(_imageFeed->next(imageGray, camIntrinsics, mediaPath, hasIntrinsics));
+  return(_imageFeed->readImage(imageGray, camIntrinsics, mediaPath, hasIntrinsics));
 }
 
 std::size_t ImageFeed::nbFrames() const
 {
   return _imageFeed->nbFrames();
+}
+
+bool ImageFeed::goToFrame(const unsigned int frame)
+{
+  return _imageFeed->goToFrame(frame);
+}
+
+bool ImageFeed::goToNextFrame()
+{
+  return _imageFeed->goToNextFrame();
 }
 
 bool ImageFeed::isInit() const

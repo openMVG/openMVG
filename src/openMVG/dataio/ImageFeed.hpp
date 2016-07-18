@@ -58,12 +58,16 @@ public:
    * is no intrinsics associated to \p imageGray.
    * @return True if there is a new image, false otherwise.
    */
-  bool next(image::Image<unsigned char> &imageGray,
+  bool readImage(image::Image<unsigned char> &imageGray,
             cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
             std::string &mediaPath,
             bool &hasIntrinsics);
   
   std::size_t nbFrames() const;
+  
+  bool goToFrame(const unsigned int frame);
+
+  bool goToNextFrame();
   
   /**
    * @brief Return true if the feed is correctly initialized.

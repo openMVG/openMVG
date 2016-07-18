@@ -325,7 +325,7 @@ int main(int argc, char** argv)
     }
   }
   
-  bool haveNext = true;
+  bool haveImage = true;
   size_t frameCounter = 0;
   
   // load the subposes
@@ -339,7 +339,7 @@ int main(int argc, char** argv)
   bacc::accumulator_set<double, bacc::stats<bacc::tag::mean, bacc::tag::min, bacc::tag::max, bacc::tag::sum > > stats;
 
   
-  while(haveNext)
+  while(haveImage)
   {
     // @fixme It's better to have arrays of pointers...
     std::vector<image::Image<unsigned char> > vec_imageGrey;
@@ -354,9 +354,10 @@ int main(int argc, char** argv)
       cameras::Pinhole_Intrinsic_Radial_K3 queryIntrinsics;
       bool hasIntrinsics = false;
       std::string currentImgName;
-      haveNext = feeders[idCamera]->next(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics);
-      
-      if(!haveNext)
+      haveImage = feeders[idCamera]->readImage(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics);
+      feeders[idCamera]->goToNextFrame();
+
+      if(!haveImage)
       {
         if(idCamera > 0)
         {
@@ -380,7 +381,7 @@ int main(int argc, char** argv)
       vec_queryIntrinsics.push_back(queryIntrinsics);
     }
     
-    if(!haveNext)
+    if(!haveImage)
     {
       // no more images are available
       break;
@@ -415,8 +416,6 @@ int main(int argc, char** argv)
 #endif
 
     ++frameCounter;
-    
-    
   }
   
   // print out some time stats
