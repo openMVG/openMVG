@@ -40,7 +40,7 @@ enum Pattern
 };
 
 void exportDebug(openMVG::dataio::FeedProvider& feed, const std::string& debugFolder, 
-                const std::vector<int>& validFrames, const cv::Mat& cameraMatrix, 
+                const std::vector<int>& calibInputFrames, const cv::Mat& cameraMatrix, 
                 const cv::Mat& distCoeffs, const cv::Size& imageSize)
 {
   std::vector<int> export_params;
@@ -55,7 +55,7 @@ void exportDebug(openMVG::dataio::FeedProvider& feed, const std::string& debugFo
   export_params.push_back(100);
 
   std::cout << "Exporting undistorted images ..." << std::endl;
-  for(int currentFrame : validFrames)
+  for(int currentFrame : calibInputFrames)
   {
     feed.goToFrame(currentFrame);
     feed.readImage(inputImage, queryIntrinsics, currentImgName, hasIntrinsics);
@@ -137,38 +137,48 @@ static void calcChessboardCorners(cv::Size boardSize, float squareSize,
   }
 }
 
-static bool runCalibration(std::vector<std::vector<cv::Point2f> > imagePoints,
-                           cv::Size imageSize, cv::Size boardSize, Pattern pattern,
-                           float squareSize, float aspectRatio,
-                           int flags, cv::Mat& cameraMatrix, cv::Mat& distCoeffs,
-                           std::vector<cv::Mat>& rvecs, std::vector<cv::Mat>& tvecs,
+static void computeObjectPoints(
+    cv::Size boardSize,
+    Pattern pattern,
+    float squareSize,
+    const std::vector<std::vector<cv::Point2f> > imagePoints,
+    std::vector<std::vector<cv::Point3f> >& objectPoints)
+{
+  std::vector<cv::Point3f> templateObjectPoints;
+
+  // Generate the object points coordinates
+  calcChessboardCorners(boardSize, squareSize, templateObjectPoints, pattern);
+  
+  // Assign the template to all items
+  objectPoints.resize(imagePoints.size(), templateObjectPoints);
+}
+
+static bool runCalibration(const std::vector<std::vector<cv::Point2f> >& imagePoints,
+                           const std::vector<std::vector<cv::Point3f> >& objectPoints,
+                           cv::Size imageSize,
+                           float aspectRatio,
+                           int cvCalibFlags, cv::Mat& cameraMatrix,
+                           cv::Mat& distCoeffs,
+                           std::vector<cv::Mat>& rvecs,
+                           std::vector<cv::Mat>& tvecs,
                            std::vector<float>& reprojErrs,
                            double& totalAvgErr)
 {
+  rvecs.resize(0);
+  tvecs.resize(0);
+  reprojErrs.resize(0);
   cameraMatrix = cv::Mat::eye(3, 3, CV_64F);
-  if (flags & CV_CALIB_FIX_ASPECT_RATIO)
+  if (cvCalibFlags & CV_CALIB_FIX_ASPECT_RATIO)
     cameraMatrix.at<double>(0, 0) = aspectRatio;
 
   distCoeffs = cv::Mat::zeros(8, 1, CV_64F);
 
-  std::vector<std::vector<cv::Point3f> > objectPoints(1);
-  
   std::clock_t startrC = std::clock();
-  double durationrC;
   
-  calcChessboardCorners(boardSize, squareSize, objectPoints[0], pattern);
-  
-  durationrC = ( std::clock() - startrC ) / (double) CLOCKS_PER_SEC;
-  std::cout <<"  calcChessboardCorners duration: "<< durationrC << std::endl;
-  
-  objectPoints.resize(imagePoints.size(), objectPoints[0]);
- 
-  startrC = std::clock();
-  
-  double rms = cv::calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix,
-                               distCoeffs, rvecs, tvecs, flags | CV_CALIB_FIX_K4 | CV_CALIB_FIX_K5 | CV_CALIB_FIX_K6);
-  durationrC = ( std::clock() - startrC ) / (double) CLOCKS_PER_SEC;
-  std::cout <<"  calibrateCamera duration: "<< durationrC << std::endl;
+  const double rms = cv::calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix,
+                               distCoeffs, rvecs, tvecs, cvCalibFlags | CV_CALIB_FIX_K4 | CV_CALIB_FIX_K5 | CV_CALIB_FIX_K6);
+  std::clock_t durationrC = ( std::clock() - startrC ) / (double) CLOCKS_PER_SEC;
+  std::cout << "  calibrateCamera duration: "<< durationrC << std::endl;
   
   printf("RMS error reported by calibrateCamera: %g\n", rms);
   bool ok = cv::checkRange(cameraMatrix) && cv::checkRange(distCoeffs);
@@ -178,7 +188,7 @@ static bool runCalibration(std::vector<std::vector<cv::Point2f> > imagePoints,
   totalAvgErr = computeReprojectionErrors(objectPoints, imagePoints,
                                           rvecs, tvecs, cameraMatrix, distCoeffs, reprojErrs);
   durationrC = ( std::clock() - startrC ) / (double) CLOCKS_PER_SEC;
-  std::cout <<"  computeReprojectionErrors duration: "<< durationrC << std::endl;
+  std::cout << "  computeReprojectionErrors duration: "<< durationrC << std::endl;
 
   return ok;
 }
@@ -235,7 +245,7 @@ static void saveCameraParamsToPlainTxt(const std::string &filename,
 
 static void saveCameraParams(const std::string& filename,
                              cv::Size imageSize, cv::Size boardSize,
-                             float squareSize, float aspectRatio, int flags,
+                             float squareSize, float aspectRatio, int cvCalibFlags,
                              const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs,
                              const std::vector<cv::Mat>& rvecs, const std::vector<cv::Mat>& tvecs,
                              const std::vector<float>& reprojErrs,
@@ -260,20 +270,20 @@ static void saveCameraParams(const std::string& filename,
   fs << "board_height" << boardSize.height;
   fs << "square_size" << squareSize;
 
-  if (flags & CV_CALIB_FIX_ASPECT_RATIO)
+  if (cvCalibFlags & CV_CALIB_FIX_ASPECT_RATIO)
     fs << "aspectRatio" << aspectRatio;
 
-  if (flags != 0)
+  if (cvCalibFlags != 0)
   {
     sprintf(buf, "flags: %s%s%s%s",
-            flags & CV_CALIB_USE_INTRINSIC_GUESS ? "+use_intrinsic_guess" : "",
-            flags & CV_CALIB_FIX_ASPECT_RATIO ? "+fix_aspectRatio" : "",
-            flags & CV_CALIB_FIX_PRINCIPAL_POINT ? "+fix_principal_point" : "",
-            flags & CV_CALIB_ZERO_TANGENT_DIST ? "+zero_tangent_dist" : "");
+            cvCalibFlags & CV_CALIB_USE_INTRINSIC_GUESS ? "+use_intrinsic_guess" : "",
+            cvCalibFlags & CV_CALIB_FIX_ASPECT_RATIO ? "+fix_aspectRatio" : "",
+            cvCalibFlags & CV_CALIB_FIX_PRINCIPAL_POINT ? "+fix_principal_point" : "",
+            cvCalibFlags & CV_CALIB_ZERO_TANGENT_DIST ? "+zero_tangent_dist" : "");
     cvWriteComment(*fs, buf, 0);
   }
 
-  fs << "flags" << flags;
+  fs << "flags" << cvCalibFlags;
 
   fs << "camera_matrix" << cameraMatrix;
   fs << "distortion_coefficients" << distCoeffs;
@@ -339,21 +349,17 @@ std::istream& operator>> (std::istream &in, Pattern &pattern)
 
 int main(int argc, char** argv)
 {
+  // Command line arguments
   bfs::path inputPath;
   std::string outputFilename;
   std::string debugFolder;
   std::vector<std::size_t> checkerboardSize;
-  Pattern pattern;
+  Pattern pattern = CHESSBOARD;
   unsigned int maxNbFrames = 0;
   unsigned int nbRadialCoef = 3;
-  bool writeExtrinsics = false;
-  bool writePoints = false;
-  int flags = 0;
-  float squareSize = 1.f;
-  float aspectRatio = 1.f;
-  cv::Mat cameraMatrix;
-  cv::Mat distCoeffs;
-  
+  unsigned int minInputFrames = 10;
+  double maxTotalAvgErr = 0.1;
+
   std::clock_t startAlgo = std::clock();
   double durationAlgo;
   
@@ -367,7 +373,7 @@ int main(int argc, char** argv)
                       " - video file\n")
           ("output,o", po::value<std::string>(&outputFilename)->required(), 
                       "Output filename for intrinsic [and extrinsic] parameters.\n")
-          ("pattern,p", po::value<Pattern>(&pattern)->default_value(CHESSBOARD),
+          ("pattern,p", po::value<Pattern>(&pattern)->default_value(pattern),
                       "Type of pattern: 'chessboard', 'circles', 'asymmetric_circles'"
                       #ifdef HAVE_CCTAG
                         " or 'cctag'"
@@ -375,15 +381,20 @@ int main(int argc, char** argv)
                       ".\n")
           ("size,s", po::value<std::vector<std::size_t>>(&checkerboardSize)->multitoken(),
                       "Number of inner corners per one of board dimension like W H.\n")
-          ("maxFrames,m", po::value<unsigned int>(&maxNbFrames)->default_value(0),
-                      "Number of maximal frames to use for calibration from a video file.\n")
-          ("nRadialCoef,r", po::value<unsigned int>(&nbRadialCoef)->default_value(3), 
+          ("maxFrames", po::value<unsigned int>(&maxNbFrames)->default_value(maxNbFrames),
+                      "Maximal number of frames to use for calibration from a video file.\n")
+          ("nRadialCoef,r", po::value<unsigned int>(&nbRadialCoef)->default_value(nbRadialCoef), 
                       "Number of radial distortion coefficient.\n")
+          ("maxTotalAvgErr,e", po::value<double>(&maxTotalAvgErr)->default_value(maxTotalAvgErr), 
+                      "Max Total Average Error.\n")
+          ("minInputFrames", po::value<unsigned int>(&minInputFrames)->default_value(minInputFrames), 
+                      "Minimal number of frames to limit the refinement loop.\n")
           ("debugFolder,d", po::value<std::string>(&debugFolder)->default_value(""),
                       "Folder to export debug images.\n")
   ;
   
   po::variables_map vm;
+  int cvCalibFlags = 0;
   
   try
   {
@@ -395,12 +406,12 @@ int main(int argc, char** argv)
       return EXIT_SUCCESS;
     }
     
-    flags |= CV_CALIB_ZERO_TANGENT_DIST;
+    cvCalibFlags |= CV_CALIB_ZERO_TANGENT_DIST;
     if(nbRadialCoef < 1 || nbRadialCoef > 6)
       throw boost::program_options::invalid_option_value(std::string("Only supports 2 or 3 radial coefs: ") + std::to_string(nbRadialCoef));
     const std::array<int, 6> fixRadialCoefs = {CV_CALIB_FIX_K1, CV_CALIB_FIX_K2, CV_CALIB_FIX_K3, CV_CALIB_FIX_K4, CV_CALIB_FIX_K5, CV_CALIB_FIX_K6};
     for(int i = nbRadialCoef; i < 6; ++i)
-      flags |= fixRadialCoefs[i];
+      cvCalibFlags |= fixRadialCoefs[i];
     
     po::notify(vm);
   }
@@ -418,7 +429,15 @@ int main(int argc, char** argv)
   }
 
   if(checkerboardSize.size() != 2)
-    throw std::logic_error("The size of the checkerboard is not defined;");;
+    throw std::logic_error("The size of the checkerboard is not defined");
+  
+  bool writeExtrinsics = false;
+  bool writePoints = false;
+  float squareSize = 1.f;
+  float aspectRatio = 1.f;
+  cv::Mat cameraMatrix;
+  cv::Mat distCoeffs;
+  
   cv::Size boardSize(checkerboardSize[0], checkerboardSize[1]);
   cv::Size imageSize(0, 0);
 
@@ -478,7 +497,7 @@ int main(int argc, char** argv)
         found = cv::findChessboardCorners(viewGray, boardSize, pointbuf,
                                       CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE);
         durationCh = ( std::clock() - startCh ) / (double) CLOCKS_PER_SEC;
-        std::cout<< "find chessboard corners' duration: "<< durationCh << std::endl;
+        std::cout<< "Find chessboard corners' duration: "<< durationCh << std::endl;
         startCh = std::clock();
         
         // improve the found corners' coordinate accuracy
@@ -487,7 +506,7 @@ int main(int argc, char** argv)
                        cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
         
         durationCh = ( std::clock() - startCh ) / (double) CLOCKS_PER_SEC;
-        std::cout << "refine chessboard corners' duration: "<< durationCh << std::endl;
+        std::cout << "Refine chessboard corners' duration: "<< durationCh << std::endl;
         break;
         
       case CIRCLES_GRID:
@@ -496,7 +515,7 @@ int main(int argc, char** argv)
         found = cv::findCirclesGrid(viewGray, boardSize, pointbuf);
         
         durationCh = ( std::clock() - startCh ) / (double) CLOCKS_PER_SEC;
-        std::cout << "find circles grid duration: "<< durationCh << std::endl;
+        std::cout << "Find circles grid duration: "<< durationCh << std::endl;
         break;
         
       case ASYMMETRIC_CIRCLES_GRID:
@@ -505,7 +524,7 @@ int main(int argc, char** argv)
         found = cv::findCirclesGrid(viewGray, boardSize, pointbuf, cv::CALIB_CB_ASYMMETRIC_GRID);
         
         durationCh = ( std::clock() - startCh ) / (double) CLOCKS_PER_SEC;
-        std::cout << "find asymmetric circles grid duration: "<< durationCh << std::endl;
+        std::cout << "Find asymmetric circles grid duration: "<< durationCh << std::endl;
         break;
 
 #ifdef HAVE_CCTAG
@@ -536,52 +555,105 @@ int main(int argc, char** argv)
   if (imagePoints.empty())
     throw std::logic_error("No checkerboard detected.");
 
+  std::vector<int> calibInputFrames = validFrames;
+  std::vector<std::vector<cv::Point2f> > calibImagePoints = imagePoints;
+  std::vector<std::vector<cv::Point3f> > calibObjectPoints;
   std::vector<cv::Mat> rvecs;
   std::vector<cv::Mat> tvecs;
   std::vector<float> reprojErrs;
   double totalAvgErr = 0;
+  std::size_t calibIteration = 0;
+  bool calibSucceeded = false;
 
   start = std::clock();
   
-  // TODO: Refinement Loop 
-  bool calibSucceeded = runCalibration(imagePoints, imageSize, boardSize, pattern, squareSize,
-                                       aspectRatio, flags, cameraMatrix, distCoeffs,
-                                       rvecs, tvecs, reprojErrs, totalAvgErr);
+  computeObjectPoints(boardSize, pattern, squareSize, calibImagePoints, calibObjectPoints);
 
-  std::cout << " avg reprojection error = " << totalAvgErr << std::endl;
+  // Refinement loop of the calibration
+  do
+  {
+    // Estimate the camera calibration
+    std::cout << "Calibration iteration " <<  calibIteration << " with " << calibImagePoints.size() << " frames." << std::endl;
+    calibSucceeded = runCalibration(calibImagePoints, calibObjectPoints, imageSize,
+                                    aspectRatio, cvCalibFlags, cameraMatrix, distCoeffs,
+                                    rvecs, tvecs, reprojErrs, totalAvgErr);
+
+    if(totalAvgErr <= maxTotalAvgErr)
+    {
+      // The calibration succeed with an average error that respects the maxTotalAvgErr.
+      break;
+    }
+    else if(calibInputFrames.size() < minInputFrames)
+    {
+      // Not enough valid input image to continue the refinement.
+      break;
+    }
+    else if(calibSucceeded)
+    {
+      // Filter the successfully calibrated images to keep the best ones
+      // in order to refine the calibration.
+      // For instance, remove blurry images which introduce imprecision.
+      
+      const auto minMaxError = std::minmax_element(reprojErrs.begin(), reprojErrs.end());
+      // We only keep the frames with N% of the largest error.
+      const float errorThreshold = *minMaxError.first + 0.8 * (*minMaxError.second - *minMaxError.first);
+      std::vector<std::vector<cv::Point2f> > filteredImagePoints;
+      std::vector<std::vector<cv::Point3f> > filteredObjectPoints;
+      std::vector<int> filteredInputFrames;
+      
+      for(std::size_t i = 0; i < calibImagePoints.size(); ++i)
+      {
+        if(reprojErrs[i] < errorThreshold)
+        {
+          filteredImagePoints.push_back(calibImagePoints[i]);
+          filteredObjectPoints.push_back(calibObjectPoints[i]);
+          filteredInputFrames.push_back(calibInputFrames[i]);
+        }
+      }
+      if(filteredImagePoints.size() < minInputFrames)
+      {
+        // Not enough valid input images to continue the refinement.
+        break;
+      }
+      calibImagePoints.swap(filteredImagePoints);
+      calibObjectPoints.swap(filteredObjectPoints);
+      calibInputFrames.swap(filteredInputFrames);
+    }
+    ++calibIteration;
+  }
+  while(calibSucceeded);
+  
+  std::cout << "Calibration done with " << calibIteration << " iterations." << std::endl;
+  std::cout << "Average reprojection error is " << totalAvgErr << std::endl;
   std::cout << (calibSucceeded ? "Calibration succeeded" : "Calibration failed") << std::endl;
   
   duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
-  std::cout << "Calibration duration: "<< duration << std::endl;
+  std::cout << "Calibration duration: " << duration << std::endl;
 
   if (!calibSucceeded)
     return -1;
-  
-  start = std::clock();
-  
+
   saveCameraParams(outputFilename, imageSize,
                    boardSize, squareSize, aspectRatio,
-                   flags, cameraMatrix, distCoeffs,
+                   cvCalibFlags, cameraMatrix, distCoeffs,
                    writeExtrinsics ? rvecs : std::vector<cv::Mat>(),
                    writeExtrinsics ? tvecs : std::vector<cv::Mat>(),
                    writeExtrinsics ? reprojErrs : std::vector<float>(),
-                   writePoints ? imagePoints : std::vector<std::vector<cv::Point2f> >(),
+                   writePoints ? calibImagePoints : std::vector<std::vector<cv::Point2f> >(),
                    totalAvgErr);
-  
-  duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
-  std::cout << "saveCameraParams duration: "<< duration << std::endl;
-  
-  start = std::clock();
+
   if (!debugFolder.empty())
   {
-    exportDebug(feed, debugFolder, validFrames, 
+    start = std::clock();
+    exportDebug(feed, debugFolder, calibInputFrames,
                 cameraMatrix, distCoeffs, imageSize);
+    
+    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+    std::cout << "Undistorted images export for debug took: "<< duration << std::endl;
   }
-  duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
-  std::cout << "exportDebug duration: "<< duration << std::endl;
-  
+
   durationAlgo = ( std::clock() - startAlgo ) / (double) CLOCKS_PER_SEC;
-  std::cout << "total duration: "<< durationAlgo << std::endl;
+  std::cout << "Total duration: "<< durationAlgo << std::endl;
   
   return 0;
 }
