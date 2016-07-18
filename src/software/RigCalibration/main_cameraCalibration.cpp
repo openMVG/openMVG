@@ -5,6 +5,9 @@
 #include <boost/algorithm/string/case_conv.hpp>
 
 #include <openMVG/dataio/FeedProvider.hpp>
+#include <openMVG/cameras/Camera_undistort_image.hpp>
+#include <openMVG/cameras/Camera_Pinhole_Radial.hpp>
+#include <openMVG/image/image_io.hpp>
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
@@ -37,10 +40,12 @@ enum Pattern
 };
 
 void exportDebug(openMVG::dataio::FeedProvider& feed, const std::string& debugFolder, 
-                 const unsigned int& maxNbFrames, const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs, const cv::Size& imageSize)
+                const std::vector<int>& validFrames, const cv::Mat& cameraMatrix, 
+                const cv::Mat& distCoeffs, const cv::Size& imageSize)
 {
   std::vector<int> export_params;
-  openMVG::image::Image<unsigned char> view;
+  openMVG::image::Image<unsigned char> inputImage;
+  openMVG::image::Image<unsigned char> outputImage;
   std::string currentImgName;
   openMVG::cameras::Pinhole_Intrinsic_Radial_K3 queryIntrinsics;
   bool hasIntrinsics;
@@ -50,20 +55,25 @@ void exportDebug(openMVG::dataio::FeedProvider& feed, const std::string& debugFo
   export_params.push_back(100);
 
   std::cout << "Exporting undistorted images ..." << std::endl;
-  while(feed.next(view, queryIntrinsics, currentImgName, hasIntrinsics))
+  for(int currentFrame : validFrames)
   {
-    std::cout << currentImgName << std::endl;
-    cv::Mat viewMat;
-    cv::eigen2cv(view.GetMat(), viewMat);
-    
-    viewMat = cv::imread(currentImgName, 1);
-    if (!viewMat.data)
-      continue;
-    
-    //std::cout << debugFolder + currentImgName + "_undistort.png" << std::endl;
-    
-    cv::undistort(viewMat, rview, cameraMatrix, distCoeffs, cameraMatrix);
-    cv::imwrite(debugFolder + currentImgName + "_undistort.png", rview, export_params);
+    feed.goToFrame(currentFrame);
+    feed.readImage(inputImage, queryIntrinsics, currentImgName, hasIntrinsics);
+
+    // drawChessboardCorners(view, boardSize, cv::Mat(pointbuf), found);
+
+    openMVG::cameras::Pinhole_Intrinsic_Radial_K3 camera(
+            imageSize.width, imageSize.height,
+            cameraMatrix.at<double>(0,0), cameraMatrix.at<double>(0,2), cameraMatrix.at<double>(1,2),
+            distCoeffs.at<double>(0), distCoeffs.at<double>(1), distCoeffs.at<double>(2));
+
+    openMVG::cameras::UndistortImage(inputImage, &camera, outputImage, openMVG::image::BLACK);
+    const bfs::path imagePath = bfs::path(debugFolder) / (std::to_string(currentFrame) + "_undistort.png");
+    const bool exportStatus = openMVG::image::WriteImage(imagePath.c_str(), outputImage);
+    if(!exportStatus)
+    {
+      std::cerr << "Failed to export: " << imagePath << std::endl;
+    }
   }
   std::cout << "... finished" << std::endl;
 }
@@ -142,17 +152,33 @@ static bool runCalibration(std::vector<std::vector<cv::Point2f> > imagePoints,
   distCoeffs = cv::Mat::zeros(8, 1, CV_64F);
 
   std::vector<std::vector<cv::Point3f> > objectPoints(1);
+  
+  std::clock_t startrC = std::clock();
+  double durationrC;
+  
   calcChessboardCorners(boardSize, squareSize, objectPoints[0], pattern);
+  
+  durationrC = ( std::clock() - startrC ) / (double) CLOCKS_PER_SEC;
+  std::cout <<"  calcChessboardCorners duration: "<< durationrC << std::endl;
+  
   objectPoints.resize(imagePoints.size(), objectPoints[0]);
-
+ 
+  startrC = std::clock();
+  
   double rms = cv::calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix,
                                distCoeffs, rvecs, tvecs, flags | CV_CALIB_FIX_K4 | CV_CALIB_FIX_K5 | CV_CALIB_FIX_K6);
+  durationrC = ( std::clock() - startrC ) / (double) CLOCKS_PER_SEC;
+  std::cout <<"  calibrateCamera duration: "<< durationrC << std::endl;
+  
   printf("RMS error reported by calibrateCamera: %g\n", rms);
-
   bool ok = cv::checkRange(cameraMatrix) && cv::checkRange(distCoeffs);
 
+  startrC = std::clock();
+  
   totalAvgErr = computeReprojectionErrors(objectPoints, imagePoints,
                                           rvecs, tvecs, cameraMatrix, distCoeffs, reprojErrs);
+  durationrC = ( std::clock() - startrC ) / (double) CLOCKS_PER_SEC;
+  std::cout <<"  computeReprojectionErrors duration: "<< durationrC << std::endl;
 
   return ok;
 }
@@ -414,18 +440,12 @@ int main(int argc, char** argv)
   std::string currentImgName;
   int step = 1;
   if(maxNbFrames)
-    step = feed.nbFrames() / maxNbFrames;
-  int iInputFrame = 0;
+    step = std::floor(feed.nbFrames() / (double)maxNbFrames);
+  unsigned int iInputFrame = 0;
+  std::vector<int> validFrames;
 
   while(feed.readImage(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics))
   {
-    // TODO: feed.seek(frame);
-    if((iInputFrame % step) != 0)
-    {
-      ++iInputFrame;
-      continue;
-    }
-
     cv::Mat viewGray;
     cv::eigen2cv(imageGrey.GetMat(), viewGray);
 
@@ -458,7 +478,7 @@ int main(int argc, char** argv)
         found = cv::findChessboardCorners(viewGray, boardSize, pointbuf,
                                       CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE);
         durationCh = ( std::clock() - startCh ) / (double) CLOCKS_PER_SEC;
-        std::cout<<"find chessboard corners' duration: "<< durationCh << std::endl;
+        std::cout<< "find chessboard corners' duration: "<< durationCh << std::endl;
         startCh = std::clock();
         
         // improve the found corners' coordinate accuracy
@@ -467,7 +487,7 @@ int main(int argc, char** argv)
                        cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
         
         durationCh = ( std::clock() - startCh ) / (double) CLOCKS_PER_SEC;
-        std::cout<<"refine chessboard corners' duration: "<< durationCh << std::endl;
+        std::cout << "refine chessboard corners' duration: "<< durationCh << std::endl;
         break;
         
       case CIRCLES_GRID:
@@ -476,7 +496,7 @@ int main(int argc, char** argv)
         found = cv::findCirclesGrid(viewGray, boardSize, pointbuf);
         
         durationCh = ( std::clock() - startCh ) / (double) CLOCKS_PER_SEC;
-        std::cout<<"find circles grid duration: "<< durationCh << std::endl;
+        std::cout << "find circles grid duration: "<< durationCh << std::endl;
         break;
         
       case ASYMMETRIC_CIRCLES_GRID:
@@ -485,7 +505,7 @@ int main(int argc, char** argv)
         found = cv::findCirclesGrid(viewGray, boardSize, pointbuf, cv::CALIB_CB_ASYMMETRIC_GRID);
         
         durationCh = ( std::clock() - startCh ) / (double) CLOCKS_PER_SEC;
-        std::cout<<"find asymmetric circles grid duration: "<< durationCh << std::endl;
+        std::cout << "find asymmetric circles grid duration: "<< durationCh << std::endl;
         break;
 
 #ifdef HAVE_CCTAG
@@ -500,19 +520,21 @@ int main(int argc, char** argv)
     }
 
     if (found)
+    {
+      validFrames.push_back(iInputFrame * step);
       imagePoints.push_back(pointbuf);
+    }
     
     ++iInputFrame;
     feed.goToFrame(iInputFrame * step);
   }
-  std::cout << "maxNbFrames: " << maxNbFrames << std::endl;
   
   duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
   std::cout << "find points duration: " << duration << std::endl;
   std::cout << "Grid detected in " << imagePoints.size() << " images on " << iInputFrame << " input images." << std::endl;
 
-  if (imagePoints.size() == 0)
-    throw std::logic_error("All points are not detected");
+  if (imagePoints.empty())
+    throw std::logic_error("No checkerboard detected.");
 
   std::vector<cv::Mat> rvecs;
   std::vector<cv::Mat> tvecs;
@@ -530,11 +552,13 @@ int main(int argc, char** argv)
   std::cout << (calibSucceeded ? "Calibration succeeded" : "Calibration failed") << std::endl;
   
   duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
-  std::cout<<"Calibration duration: "<< duration << std::endl;
+  std::cout << "Calibration duration: "<< duration << std::endl;
 
   if (!calibSucceeded)
     return -1;
-
+  
+  start = std::clock();
+  
   saveCameraParams(outputFilename, imageSize,
                    boardSize, squareSize, aspectRatio,
                    flags, cameraMatrix, distCoeffs,
@@ -543,16 +567,21 @@ int main(int argc, char** argv)
                    writeExtrinsics ? reprojErrs : std::vector<float>(),
                    writePoints ? imagePoints : std::vector<std::vector<cv::Point2f> >(),
                    totalAvgErr);
-
+  
+  duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+  std::cout << "saveCameraParams duration: "<< duration << std::endl;
+  
+  start = std::clock();
   if (!debugFolder.empty())
   {
-    // TODO: feed.seek(0);
-    exportDebug(feed, debugFolder, maxNbFrames, 
+    exportDebug(feed, debugFolder, validFrames, 
                 cameraMatrix, distCoeffs, imageSize);
-    // drawChessboardCorners(view, boardSize, cv::Mat(pointbuf), found);
   }
+  duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+  std::cout << "exportDebug duration: "<< duration << std::endl;
+  
   durationAlgo = ( std::clock() - startAlgo ) / (double) CLOCKS_PER_SEC;
-  std::cout<<"total duration: "<< durationAlgo << std::endl;
+  std::cout << "total duration: "<< durationAlgo << std::endl;
   
   return 0;
 }
