@@ -146,7 +146,7 @@ int main(int argc, char **argv)
 
   std::string i_User_camera_model;
 
-  int b_Group_camera_model = 0;
+  int b_Group_camera_model = 1;
   bool b_use_UID = false;
   bool b_storeMetadata = false;
 
