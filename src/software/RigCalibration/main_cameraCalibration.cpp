@@ -39,9 +39,13 @@ enum Pattern
 #endif
 };
 
-void exportDebug(openMVG::dataio::FeedProvider& feed, const std::string& debugFolder, 
-                const std::vector<int>& calibInputFrames, const cv::Mat& cameraMatrix, 
-                const cv::Mat& distCoeffs, const cv::Size& imageSize)
+void exportDebug(openMVG::dataio::FeedProvider& feed,
+                const std::string& debugFolder,
+                const std::vector<int>& exportFrames,
+                const cv::Mat& cameraMatrix,
+                const cv::Mat& distCoeffs,
+                const cv::Size& imageSize,
+                const std::string suffix = "_undistort.png")
 {
   std::vector<int> export_params;
   openMVG::image::Image<unsigned char> inputImage;
@@ -49,26 +53,25 @@ void exportDebug(openMVG::dataio::FeedProvider& feed, const std::string& debugFo
   std::string currentImgName;
   openMVG::cameras::Pinhole_Intrinsic_Radial_K3 queryIntrinsics;
   bool hasIntrinsics;
-  cv::Mat rview;
 
   export_params.push_back(CV_IMWRITE_JPEG_QUALITY);
   export_params.push_back(100);
 
-  std::cout << "Exporting undistorted images ..." << std::endl;
-  for(int currentFrame : calibInputFrames)
+  openMVG::cameras::Pinhole_Intrinsic_Radial_K3 camera(
+          imageSize.width, imageSize.height,
+          cameraMatrix.at<double>(0,0), cameraMatrix.at<double>(0,2), cameraMatrix.at<double>(1,2),
+          distCoeffs.at<double>(0), distCoeffs.at<double>(1), distCoeffs.at<double>(2));
+
+  std::cout << "Exporting images ..." << std::endl;
+  for(int currentFrame : exportFrames)
   {
     feed.goToFrame(currentFrame);
     feed.readImage(inputImage, queryIntrinsics, currentImgName, hasIntrinsics);
 
     // drawChessboardCorners(view, boardSize, cv::Mat(pointbuf), found);
 
-    openMVG::cameras::Pinhole_Intrinsic_Radial_K3 camera(
-            imageSize.width, imageSize.height,
-            cameraMatrix.at<double>(0,0), cameraMatrix.at<double>(0,2), cameraMatrix.at<double>(1,2),
-            distCoeffs.at<double>(0), distCoeffs.at<double>(1), distCoeffs.at<double>(2));
-
     openMVG::cameras::UndistortImage(inputImage, &camera, outputImage, openMVG::image::BLACK);
-    const bfs::path imagePath = bfs::path(debugFolder) / (std::to_string(currentFrame) + "_undistort.png");
+    const bfs::path imagePath = bfs::path(debugFolder) / (std::to_string(currentFrame) + suffix);
     const bool exportStatus = openMVG::image::WriteImage(imagePath.c_str(), outputImage);
     if(!exportStatus)
     {
@@ -352,7 +355,8 @@ int main(int argc, char** argv)
   // Command line arguments
   bfs::path inputPath;
   std::string outputFilename;
-  std::string debugFolder;
+  std::string debugSelectedImgFolder;
+  std::string debugRejectedImgFolder;
   std::vector<std::size_t> checkerboardSize;
   Pattern pattern = CHESSBOARD;
   unsigned int maxNbFrames = 0;
@@ -389,7 +393,9 @@ int main(int argc, char** argv)
                       "Max Total Average Error.\n")
           ("minInputFrames", po::value<unsigned int>(&minInputFrames)->default_value(minInputFrames), 
                       "Minimal number of frames to limit the refinement loop.\n")
-          ("debugFolder,d", po::value<std::string>(&debugFolder)->default_value(""),
+          ("debugRejectedImgFolder", po::value<std::string>(&debugRejectedImgFolder)->default_value(""),
+                      "Folder to export delete images during the refinement loop.\n")
+          ("debugSelectedImgFolder,d", po::value<std::string>(&debugSelectedImgFolder)->default_value(""),
                       "Folder to export debug images.\n")
   ;
   
@@ -543,11 +549,11 @@ int main(int argc, char** argv)
       validFrames.push_back(iInputFrame * step);
       imagePoints.push_back(pointbuf);
     }
-    
+
     ++iInputFrame;
     feed.goToFrame(iInputFrame * step);
   }
-  
+
   duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
   std::cout << "find points duration: " << duration << std::endl;
   std::cout << "Grid detected in " << imagePoints.size() << " images on " << iInputFrame << " input images." << std::endl;
@@ -556,6 +562,7 @@ int main(int argc, char** argv)
     throw std::logic_error("No checkerboard detected.");
 
   std::vector<int> calibInputFrames = validFrames;
+  std::vector<int> rejectInputFrames;
   std::vector<std::vector<cv::Point2f> > calibImagePoints = imagePoints;
   std::vector<std::vector<cv::Point3f> > calibObjectPoints;
   std::vector<cv::Mat> rvecs;
@@ -566,7 +573,7 @@ int main(int argc, char** argv)
   bool calibSucceeded = false;
 
   start = std::clock();
-  
+
   computeObjectPoints(boardSize, pattern, squareSize, calibImagePoints, calibObjectPoints);
 
   // Refinement loop of the calibration
@@ -600,6 +607,7 @@ int main(int argc, char** argv)
       std::vector<std::vector<cv::Point2f> > filteredImagePoints;
       std::vector<std::vector<cv::Point3f> > filteredObjectPoints;
       std::vector<int> filteredInputFrames;
+      std::vector<int> tmpRejectInputFrames;
       
       for(std::size_t i = 0; i < calibImagePoints.size(); ++i)
       {
@@ -608,6 +616,11 @@ int main(int argc, char** argv)
           filteredImagePoints.push_back(calibImagePoints[i]);
           filteredObjectPoints.push_back(calibObjectPoints[i]);
           filteredInputFrames.push_back(calibInputFrames[i]);
+        }
+        else
+        {
+          // We collect rejected frames for debug purpose
+          tmpRejectInputFrames.push_back(calibInputFrames[i]);
         }
       }
       if(filteredImagePoints.size() < minInputFrames)
@@ -618,6 +631,7 @@ int main(int argc, char** argv)
       calibImagePoints.swap(filteredImagePoints);
       calibObjectPoints.swap(filteredObjectPoints);
       calibInputFrames.swap(filteredInputFrames);
+      rejectInputFrames.insert(rejectInputFrames.end(), tmpRejectInputFrames.begin(), tmpRejectInputFrames.end());
     }
     ++calibIteration;
   }
@@ -642,18 +656,23 @@ int main(int argc, char** argv)
                    writePoints ? calibImagePoints : std::vector<std::vector<cv::Point2f> >(),
                    totalAvgErr);
 
-  if (!debugFolder.empty())
+  if (!debugSelectedImgFolder.empty())
   {
     start = std::clock();
-    exportDebug(feed, debugFolder, calibInputFrames,
-                cameraMatrix, distCoeffs, imageSize);
-    
-    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
-    std::cout << "Undistorted images export for debug took: "<< duration << std::endl;
+    exportDebug(feed, debugSelectedImgFolder, calibInputFrames,
+                cameraMatrix, distCoeffs, imageSize, "_undistort.png");
+    durationAlgo = ( std::clock() - startAlgo ) / (double) CLOCKS_PER_SEC;
+    std::cout << "Export debug of selected frames, duration: "<< durationAlgo << std::endl;
   }
-
-  durationAlgo = ( std::clock() - startAlgo ) / (double) CLOCKS_PER_SEC;
-  std::cout << "Total duration: "<< durationAlgo << std::endl;
+  
+  if (!debugRejectedImgFolder.empty())
+  {
+    start = std::clock();
+    exportDebug(feed, debugRejectedImgFolder, rejectInputFrames,
+                cameraMatrix, distCoeffs, imageSize, "_rejected_undistort.png");
+    durationAlgo = ( std::clock() - startAlgo ) / (double) CLOCKS_PER_SEC;
+    std::cout << "Export debug of rejected frames, duration: "<< durationAlgo << std::endl;
+  }
   
   return 0;
 }
