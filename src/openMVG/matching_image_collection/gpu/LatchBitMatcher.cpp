@@ -65,8 +65,8 @@ std::vector<LatchBitMatcherMatch> LatchBitMatcher::retrieveMatches() {
 	int h_M1[m_maxKP];
 	int h_M2[m_maxKP];
 
-    getMatches(m_maxKP, h_M1, m_dM1, m_stream1);
-    getMatches(m_maxKP, h_M2, m_dM2, m_stream2);
+  getMatches(m_maxKP, h_M1, m_dM1, m_stream1);
+  getMatches(m_maxKP, h_M2, m_dM2, m_stream2);
 
 	cudaStreamSynchronize(m_stream1);
 	cudaStreamSynchronize(m_stream2);

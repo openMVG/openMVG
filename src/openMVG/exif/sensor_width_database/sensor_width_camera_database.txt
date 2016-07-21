@@ -195,7 +195,6 @@ Canon PowerShot SX500 IS;6.16
 Canon EOS M;22.3
 Canon PowerShot D20;6.16
 Canon PowerShot S110;7.53
-Canon EOS 5D Mark III;36
 Canon IXUS 125 HS;6.16
 Canon PowerShot SX260 HS;6.16
 Canon IXUS 240 HS;6.16
@@ -253,6 +252,7 @@ Canon PowerShot SX210 IS;6.16
 Canon IXUS 300 HS;6.16
 Canon PowerShot SD4500 IS;6.16
 Canon EOS 60D;22.3
+Canon EOS 5D Mark II;36.0
 Canon PowerShot S95;7.53
 Canon PowerShot SX130 IS;6.16
 Canon PowerShot SD1300 IS;6.16
@@ -298,7 +298,6 @@ Canon PowerShot E1;6.16
 Canon PowerShot A2000 IS;6.16
 Canon PowerShot A1000 IS;6.16
 Canon EOS 50D;22.3
-Canon EOS 5D Mark II;36
 Canon PowerShot SD990 IS;7.53
 Canon PowerShot SD1100 IS;5.75
 Canon PowerShot SX1 IS;6.16

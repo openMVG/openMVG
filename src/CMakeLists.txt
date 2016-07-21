@@ -284,6 +284,20 @@ IF(NOT FLANN_FOUND OR OpenMVG_USE_INTERNAL_FLANN)
 ENDIF()
 
 # ==============================================================================
+# Torch
+# ==============================================================================
+# - internal by default (Torch),
+# ==============================================================================
+FIND_PACKAGE(Torch)
+IF(DEFINED Torch_INSTALL_INCLUDE)
+  SET(THC_INSTALL_INCLUDE ${Torch_INSTALL_INCLUDE})
+  SET(TH_INSTALL_INCLUDE ${Torch_INSTALL_INCLUDE})
+  SET(TH_INSTALL_LIB ${Torch_INSTALL_LIB})
+  SET(THC_INSTALL_LIB ${Torch_INSTALL_LIB})
+ENDIF()
+
+
+# ==============================================================================
 # CoinUtils
 # ==============================================================================
 # - internal by default (CoinUtils),

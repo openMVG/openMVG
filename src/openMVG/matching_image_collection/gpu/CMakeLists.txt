@@ -11,7 +11,7 @@ SET(CUDASRCS
     bitMatcher.cu
 )
 
-LIST(APPEND CUDA_NVCC_FLAGS "-g -D_MWAITXINTRIN_H_INCLUDED -lineinfo -Xptxas -v -use_fast_math -O3 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_35,code=sm_35")
+LIST(APPEND CUDA_NVCC_FLAGS "-D_MWAITXINTRIN_H_INCLUDED -lineinfo -Xptxas -v -use_fast_math -O3 -gencode arch=compute_60,code=sm_60")
 message("CUDA_NVCC_FLAGS: ${CUDA_NVCC_FLAGS}")
 
 SET(CUDA_PROPAGATE_HOST_FLAGS OFF)
