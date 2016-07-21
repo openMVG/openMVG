@@ -23,11 +23,9 @@ int main(int argc, char **argv)
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
   } catch(const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << '\n'
-        << "[-i|--input_file] path to the input SfM_Data scene\n"
-        << "[-o|--output_file] path to the output SfM_Data scene\n"
-        << "\t .json, .bin, .xml, .ply, .baf, .abc\n"
-        << std::endl;
+      std::cerr << "Usage: " << argv[0] << std::endl;
+      std::cerr  << "[-i|--input_file] path to the input ground truth folder" << std::endl;
+      std::cerr << "[-o|--output_file] path to the output Alembic file" << std::endl;
 
       std::cerr << s << std::endl;
       return EXIT_FAILURE;
@@ -60,6 +58,5 @@ int main(int argc, char **argv)
     intrinsic_gt = sfm_data.GetIntrinsics().at(view->id_intrinsic);
     exporter.addCameraKeyframe(pose_gt, dynamic_cast<cameras::Pinhole_Intrinsic*>(intrinsic_gt.get()), view->s_Img_path, view->id_view, view->id_intrinsic);
   }
-
   return EXIT_SUCCESS;
 }
