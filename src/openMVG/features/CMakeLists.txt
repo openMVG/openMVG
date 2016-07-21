@@ -2,6 +2,7 @@
 project(features)
 
 add_subdirectory(latch)
+add_subdirectory(deep)
 
 file(GLOB features_files_headers
        *.hpp
@@ -33,6 +34,8 @@ install(TARGETS openMVG_features DESTINATION lib EXPORT openMVG-targets)
 set_property(TARGET openMVG_features PROPERTY FOLDER OpenMVG/OpenMVG)
 add_dependencies(openMVG_features latch_cuda)
 target_link_libraries(openMVG_features latch_cuda)
+add_dependencies(openMVG_features deepDescriptor_static)
+target_link_libraries(openMVG_features deepDescriptor_static)
 
 UNIT_TEST(openMVG features "openMVG_features;stlplus")
 

@@ -183,6 +183,52 @@ inline void rgbFloat2rgbInt(
   }
 }
 
+//--------------------------------------------------------------------------
+// unsigned char to float
+//--------------------------------------------------------------------------
+
+/**
+* @brief Convert unsigned char color to float color (grayscale)
+* @param valin Input color
+* @param[out] Output color
+* @param factor scaling factor applied to input color components
+*/
+inline
+void convertUnsignedCharToFloat
+(
+  const unsigned char& valIn,
+  float& valOut,
+  float factor = 1.f/255.f,
+  float mean = 0.f
+)
+{
+  valOut = static_cast<float>( static_cast<float>(valIn) * factor - mean);
+}
+
+/**
+* @brief Convert grayscale stored as uchar components to grayscale image stored as float components
+* @param imaIn Input image
+* @param[out] imaOut Output image
+* @param factor scaling factor applied to each input color component
+*/
+inline void unsignedChar2Float(
+  const Image< unsigned char >& imaIn,
+  Image< float > *imaOut,
+  float factor = 1.f/255.f,
+  float mean = 0.f)
+{
+  assert( imaIn.Depth() == 1 );
+  ( *imaOut ).resize( imaIn.Width(), imaIn.Height() );
+  // Convert each unsigned char to float values
+  for( int j = 0; j < imaIn.Height(); ++j )
+  {
+    for( int i = 0; i < imaIn.Width(); ++i )
+    {
+      convertUnsignedCharToFloat( imaIn( j, i ), ( *imaOut )( j, i ), factor, mean );
+    }
+  }
+}
+
 } // namespace image
 } // namespace openMVG
 

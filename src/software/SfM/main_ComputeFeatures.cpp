@@ -157,21 +157,6 @@ int main(int argc, char **argv)
   using namespace openMVG::features;
   system::Timer timer;
     
-#ifdef OPENMVG_USE_OPENMP
-  const unsigned int nb_max_thread = omp_get_max_threads();
-#endif
-
-#ifdef OPENMVG_USE_OPENMP
-  omp_set_num_threads(iNumThreads);
-  if (iNumThreads == 0) omp_set_num_threads(1);
-  #pragma omp parallel for schedule(static)
-#endif
-  for(int i = 0; i < sfm_data.views.size(); ++i)
-  {
-#ifdef OPENMVG_USE_OPENMP
-    if(iNumThreads == 0) omp_set_num_threads(nb_max_thread);
-#endif
-
   std::unique_ptr<Image_describer> image_describer;
 
   const std::string sImage_describer = stlplus::create_filespec(sOutDir, "image_describer", "json");
@@ -180,7 +165,7 @@ int main(int argc, char **argv)
     // Dynamically load the image_describer from the file (will restore old used settings)
     std::ifstream stream(sImage_describer.c_str());
     if (!stream.is_open())
-      continue;
+      return 1;
 
     try
     {
@@ -191,7 +176,7 @@ int main(int argc, char **argv)
     {
       std::cerr << e.what() << std::endl
         << "Cannot dynamically allocate the Image_describer interface." << std::endl;
-	  continue;
+	  return 1;
     }
   }
   else
@@ -222,12 +207,28 @@ int main(int argc, char **argv)
     {
       image_describer.reset(new LATCH_Image_describer(LATCHParams(LATCH_BINARY)));
     }
+		else
+    if (sImage_Describer_Method == "DEEP_SIAM_2_STREAM_DESC_NOTRE_DAME")
+    {
+      image_describer.reset(new DEEP_Image_describer(DEEPParams(SIAM_2_STREAM_DESC_NOTRE_DAME)));
+		}
+		else
+    if (sImage_Describer_Method == "DEEP_SIAM_2_STREAM_DESC_YOSEMITE")
+    {
+      image_describer.reset(new DEEP_Image_describer(DEEPParams(SIAM_2_STREAM_DESC_YOSEMITE)));
+		}
+		else
+    if (sImage_Describer_Method == "DEEP_SIAM_DESC_YOSEMITE")
+    {
+      image_describer.reset(new DEEP_Image_describer(DEEPParams(SIAM_DESC_YOSEMITE)));
+		}
+
     //image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_LIOP), !bUpRight));
     if (!image_describer)
     {
       std::cerr << "Cannot create the designed Image_describer:"
         << sImage_Describer_Method << "." << std::endl;
-      continue;
+      return 1;;
     }
     else
     {
@@ -235,7 +236,7 @@ int main(int argc, char **argv)
       if (!image_describer->Set_configuration_preset(stringToEnum(sFeaturePreset)))
       {
         std::cerr << "Preset configuration failed." << std::endl;
-        continue;
+        return 1;
       }
     }
 
@@ -244,7 +245,7 @@ int main(int argc, char **argv)
     {
       std::ofstream stream(sImage_describer.c_str());
       if (!stream.is_open())
-        continue;
+        return 1;
 
       cereal::JSONOutputArchive archive(stream);
       archive(cereal::make_nvp("image_describer", image_describer));
@@ -253,6 +254,21 @@ int main(int argc, char **argv)
       archive(cereal::make_nvp("regions_type", regionsType));
     }
   }
+#ifdef OPENMVG_USE_OPENMP
+  const unsigned int nb_max_thread = 1;//omp_get_max_threads();
+#endif
+
+#ifdef OPENMVG_USE_OPENMP
+  omp_set_num_threads(iNumThreads);
+  if (iNumThreads == 0) omp_set_num_threads(1);
+  #pragma omp parallel for schedule(static)
+#endif
+  for(int i = 0; i < sfm_data.views.size(); ++i)
+  {
+#ifdef OPENMVG_USE_OPENMP
+    if(iNumThreads == 0) omp_set_num_threads(nb_max_thread);
+#endif
+
 
   // Feature extraction routines
   // For each View of the SfM_Data container:

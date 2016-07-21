@@ -148,9 +148,10 @@ int main(int argc, char **argv)
     std::cerr << s << std::endl;
     return EXIT_FAILURE;
   }
-  const std::string sInputDir =
-    stlplus::folder_up(string(THIS_SOURCE_DIR)) + "/imageData/SceauxCastle/";
-  const std::string jpg_filename = sInputDir + "100_7101.jpg";
+//  const std::string sInputDir =
+//    stlplus::folder_up(string(THIS_SOURCE_DIR)) + "/imageData/SceauxCastle/";
+//  const std::string jpg_filename = sInputDir + "100_7101.jpg";
+  const std::string jpg_filename = "/home/nomoko/Downloads/castle_testing_2/images/100_7102_Gray.jpg";
 
   Image<unsigned char> image;
   ReadImage(jpg_filename.c_str(), &image);
@@ -179,12 +180,12 @@ int main(int argc, char **argv)
     for( size_t i = 0; i < feats_bright.size(); ++i)
     {
       const AffinePointFeature & fp = feats_bright[i];
-      DrawEllipse(fp.x(), fp.y(), fp.l1(), fp.l2(), 255, &Icpy, fp.orientation());
+      //DrawEllipse(fp.x(), fp.y(), fp.l1(), fp.l2(), 255, &Icpy, fp.orientation());
       if (cmd.used('P'))
       {
         //-- Ellipse to square 41x41 patch normalization
         Image<unsigned char> patch;
-        NormalizePatch( Icpy , fp , 41 , patch );
+        NormalizePatch( Icpy , fp , 64 , patch );
         std::stringstream str;
         str << "Patch_" << i << ".png";
         WriteImage( str.str().c_str() , patch );
@@ -201,7 +202,7 @@ int main(int argc, char **argv)
     for( size_t i = 0; i < feats_dark.size(); ++i)
     {
       const AffinePointFeature & fp = feats_dark[i];
-      DrawEllipse(fp.x(), fp.y(), fp.l1(), fp.l2(), 255, &Icpy, fp.orientation());
+      //DrawEllipse(fp.x(), fp.y(), fp.l1(), fp.l2(), 255, &Icpy, fp.orientation());
     }
     os.str("");
     os << sAffine_Detector_Method << "_DARK_features.jpg";

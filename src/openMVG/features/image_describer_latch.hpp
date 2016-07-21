@@ -66,13 +66,13 @@ public:
     std::unique_ptr<Regions> &regions,
     const image::Image<unsigned char> * mask = nullptr ) override
   {
-	std::vector<LatchClassifierKeypoint> kpts;
-	unsigned int* descriptors;
-	{
-	 // LatchClassifierOpenMVG latchLocal;
-	  kpts = latch_.identifyFeaturePointsOpenMVG(image.GetMat());
-	  descriptors = std::move(latch_.getDescriptorSet1());
-	}
+		std::vector<LatchClassifierKeypoint> kpts;
+		unsigned int* descriptors;
+	
+		// LatchClassifierOpenMVG latchLocal;
+  	kpts = latch_.identifyFeaturePointsOpenMVG(image.GetMat());
+		descriptors = std::move(latch_.getDescriptorSet1());
+	
 	Allocate(regions);
 	switch (params_.eLatchDescriptor_)
 	{
@@ -88,7 +88,7 @@ public:
 	  #endif
 		for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
 		{
-		  LatchClassifierKeypoint ptLatch = kpts[i];
+		  const LatchClassifierKeypoint ptLatch = kpts[i];
 
 		  // Feature masking
 		  if (mask)
@@ -103,7 +103,7 @@ public:
 		  for (int j = 0; j < 64; j++) {
 			const unsigned int index = i * 64 + j;
 			unsigned int descriptor = static_cast<unsigned int>(descriptors[index]);
-				  regionsCasted->Descriptors()[i][j] = descriptor;
+			regionsCasted->Descriptors()[i][j] = descriptor;
 		  }
 		}
 	  }
@@ -120,7 +120,7 @@ public:
 	  #endif
 		for (size_t i = 0; i < static_cast<int>(kpts.size()); ++i)
 		{
-		  LatchClassifierKeypoint ptLatch = kpts[i];
+		  const LatchClassifierKeypoint ptLatch = kpts[i];
 
 		  // Feature masking
 		  if (mask)

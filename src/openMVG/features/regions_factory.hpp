@@ -26,6 +26,10 @@ typedef Binary_Regions<SIOPointFeature,64> AKAZE_Binary_Regions;
 typedef Scalar_Regions<SIOPointFeature, unsigned int, 64> LATCH_Unsigned_Int_Regions;
 // Define the LATCH Keypoint (with a binary descriptor saved in a uchar array)
 typedef Binary_Regions<SIOPointFeature,65> LATCH_Binary_Regions;
+// Define the DEEP Keypoint (with a float descriptor)
+typedef Scalar_Regions<SIOPointFeature, float, 512> DEEP_Float_512_Regions;
+// Define the DEEP Keypoint (with a float descriptor)
+typedef Scalar_Regions<SIOPointFeature, float, 256> DEEP_Float_256_Regions;
 
 } // namespace features
 } // namespace openMVG
@@ -42,5 +46,7 @@ CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Liop_Regions, "AKAZE_Lio
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Binary_Regions, "AKAZE_Binary_Regions");
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::LATCH_Unsigned_Int_Regions, "LATCH_Unsigned_Int_Regions");
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::LATCH_Binary_Regions, "LATCH_Binary_Regions");
+CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::DEEP_Float_512_Regions, "DEEP_Float_512_Regions");
+CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::DEEP_Float_256_Regions, "DEEP_Float_256_Regions");
 
 #endif // OPENMVG_FEATURES_REGIONS_FACTORY_HPP
