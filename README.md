@@ -14,11 +14,18 @@ The openMVG credo is: "Keep it simple, keep it maintainable". OpenMVG targets re
 
 All the features and modules are unit tested. This test driven development ensures that the code works as it should and enables more consistent repeatability. Furthermore, it makes it easier for the user to understand and learn the given features.
 
+Specifically, this repository is aimed at integrating GPU-oriented features and matchers into the photogrammetry pipeline in order to allow for optimised reconstruction times. Currently, this repository uses CUDA >= 7.0. However, future plans may involve
+using OpenCL/FPGA descriptors for faster detections and matching.
+
+Current additional descriptors and matchers involve a CUDA implementation of LATCH and a CUDA implementation of a brute force Hamming matcher. To change the parameters of these matchers, there are files located under 
+[cudaLATCH's NUM SM parameter](https://github.com/mdaiter/cudaLATCH/blob/cf05a8fdf19b83519e68cc0c184e334f83be18e5/params.hpp) and [bitMatcher's THRESHOLD parameter](https://github.com/mdaiter/openMVG/blob/custom/src/openMVG/matching_image_collection/gpu/params.hpp). These numbers allow the user to tune exactly how many CUDA SMs are used during the descriptor detection and matching, as well as the threshold for a possible match. WARNING: these numbers are multiplied by 512 to give a maximum
+amount of keypoints to the CUDA FAST detector.
+
 --------
 Building
 --------
 
-See [BUILD](https://github.com/openMVG/openMVG/raw/master/BUILD) text file
+See [BUILD](https://github.com/mdaiter/openMVG/raw/custom/BUILD) text file
 
 Continuous integration:
  - linux 64 bits/GCC (Build + tests): [![Build Status](https://travis-ci.org/openMVG/openMVG.png?branch=develop)](https://travis-ci.org/openMVG/openMVG)
