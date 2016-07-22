@@ -8,6 +8,7 @@
 #include <openMVG/cameras/Camera_undistort_image.hpp>
 #include <openMVG/cameras/Camera_Pinhole_Radial.hpp>
 #include <openMVG/image/image_io.hpp>
+#include "openMVG/geometry/half_space_intersection.hpp"
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
@@ -25,6 +26,9 @@
 #include <iostream>
 #include <stdexcept>
 #include <exception>
+#include <map>
+
+#define GRID_SIZE 10
 
 namespace bfs = boost::filesystem;
 namespace po = boost::program_options;
@@ -177,7 +181,7 @@ static bool runCalibration(const std::vector<std::vector<cv::Point2f> >& imagePo
   distCoeffs = cv::Mat::zeros(8, 1, CV_64F);
 
   std::clock_t startrC = std::clock();
-  
+
   const double rms = cv::calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix,
                                distCoeffs, rvecs, tvecs, cvCalibFlags | CV_CALIB_FIX_K4 | CV_CALIB_FIX_K5 | CV_CALIB_FIX_K6);
   std::clock_t durationrC = ( std::clock() - startrC ) / (double) CLOCKS_PER_SEC;
@@ -187,7 +191,7 @@ static bool runCalibration(const std::vector<std::vector<cv::Point2f> >& imagePo
   bool ok = cv::checkRange(cameraMatrix) && cv::checkRange(distCoeffs);
 
   startrC = std::clock();
-  
+
   totalAvgErr = computeReprojectionErrors(objectPoints, imagePoints,
                                           rvecs, tvecs, cameraMatrix, distCoeffs, reprojErrs);
   durationrC = ( std::clock() - startrC ) / (double) CLOCKS_PER_SEC;
@@ -468,6 +472,10 @@ int main(int argc, char** argv)
     step = std::floor(feed.nbFrames() / (double)maxNbFrames);
   unsigned int iInputFrame = 0;
   std::vector<int> validFrames;
+  float cellWidth = 0;
+  float cellHeight = 0;
+
+  std::vector<std::vector<int> > cellIndexesPerImage;
 
   while(feed.readImage(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics))
   {
@@ -484,6 +492,8 @@ int main(int argc, char** argv)
     {
       // First image: initialize the image size.
       imageSize = viewGray.size();
+      cellWidth = float(imageSize.width) / float(GRID_SIZE);
+      cellHeight = float(imageSize.height) / float(GRID_SIZE);
     }
     else if (imageSize != viewGray.size())
     {
@@ -548,6 +558,18 @@ int main(int argc, char** argv)
     {
       validFrames.push_back(iInputFrame * step);
       imagePoints.push_back(pointbuf);
+
+      std::vector<int> imageCellIndexes;
+      // Points repartition in image
+      for (cv::Point2f point : pointbuf)
+      {
+        // Compute the index of the point
+        unsigned int cellPointX = std::floor(point.x / cellWidth);
+        unsigned int cellPointY = std::floor(point.y / cellHeight);
+        unsigned int cellIndex = cellPointY * GRID_SIZE + cellPointX;
+        imageCellIndexes.push_back(cellIndex);
+      }
+      cellIndexesPerImage.push_back(imageCellIndexes);
     }
 
     ++iInputFrame;
@@ -560,7 +582,48 @@ int main(int argc, char** argv)
 
   if (imagePoints.empty())
     throw std::logic_error("No checkerboard detected.");
+  
+  
+  // Count points in each cell of the grid
+  std::map<unsigned int, unsigned int> cellsWeight;
+  for(unsigned int i = 0; i < GRID_SIZE * GRID_SIZE; ++i)
+    cellsWeight[i] = 0;
 
+  for(const auto& imageCellIndexes: cellIndexesPerImage)
+  {
+    std::vector<int> uniqueCellIndexes = imageCellIndexes;
+    std::sort(uniqueCellIndexes.begin(), uniqueCellIndexes.end());
+    auto last = std::unique(uniqueCellIndexes.begin(), uniqueCellIndexes.end());
+    uniqueCellIndexes.erase(last, uniqueCellIndexes.end());
+
+    for(int cellIndex : uniqueCellIndexes)
+    {
+      ++cellsWeight[cellIndex];
+    }
+  }
+// Print the cellsIndex and the cellsWeight  
+//  for(std::map<unsigned int, unsigned int>::const_iterator it = cellsWeight.begin();
+//    it != cellsWeight.end(); ++it)
+//  {
+//    std::cout << it->first << " " << it->second << std::endl;
+//  }
+
+  std::vector<float> imageScores;
+  // Compute the score of each image
+  for(const auto& imageCellIndexes: cellIndexesPerImage)
+  {
+    float imageScore = 0;
+    for(int cellIndex : imageCellIndexes)
+    {
+      imageScore += cellsWeight[cellIndex];
+    }
+    // Normalize by the number of checker items.
+    // If the detector support occlusions of the checker the number of items may vary.
+    imageScore /= imageCellIndexes.size();
+    imageScores.push_back(imageScore);
+  }
+  
+  std::vector<float> calibImageScore = imageScores;
   std::vector<int> calibInputFrames = validFrames;
   std::vector<int> rejectInputFrames;
   std::vector<std::vector<cv::Point2f> > calibImagePoints = imagePoints;
@@ -588,11 +651,13 @@ int main(int argc, char** argv)
     if(totalAvgErr <= maxTotalAvgErr)
     {
       // The calibration succeed with an average error that respects the maxTotalAvgErr.
+      std::cout << "The calibration succeed with an average error that respects the maxTotalAvgErr." << std::endl;
       break;
     }
     else if(calibInputFrames.size() < minInputFrames)
     {
       // Not enough valid input image to continue the refinement.
+      std::cout << "Not enough valid input image to continue the refinement." << std::endl;
       break;
     }
     else if(calibSucceeded)
@@ -600,22 +665,30 @@ int main(int argc, char** argv)
       // Filter the successfully calibrated images to keep the best ones
       // in order to refine the calibration.
       // For instance, remove blurry images which introduce imprecision.
+
+      std::vector<float> globalScores;
+      for(int i = 0; i < calibInputFrames.size(); ++i)
+      {
+        globalScores.push_back(reprojErrs[i] * imageScores[i]) ;
+      }
       
-      const auto minMaxError = std::minmax_element(reprojErrs.begin(), reprojErrs.end());
+      const auto minMaxError = std::minmax_element(globalScores.begin(), globalScores.end());
       // We only keep the frames with N% of the largest error.
       const float errorThreshold = *minMaxError.first + 0.8 * (*minMaxError.second - *minMaxError.first);
       std::vector<std::vector<cv::Point2f> > filteredImagePoints;
       std::vector<std::vector<cv::Point3f> > filteredObjectPoints;
       std::vector<int> filteredInputFrames;
       std::vector<int> tmpRejectInputFrames;
-      
+      std::vector<float> filteredImageScores;
+
       for(std::size_t i = 0; i < calibImagePoints.size(); ++i)
       {
-        if(reprojErrs[i] < errorThreshold)
+        if(globalScores[i] < errorThreshold)
         {
           filteredImagePoints.push_back(calibImagePoints[i]);
           filteredObjectPoints.push_back(calibObjectPoints[i]);
           filteredInputFrames.push_back(calibInputFrames[i]);
+          filteredImageScores.push_back(calibImageScore[i]);
         }
         else
         {
@@ -626,21 +699,29 @@ int main(int argc, char** argv)
       if(filteredImagePoints.size() < minInputFrames)
       {
         // Not enough valid input images to continue the refinement.
+        std::cout << "Not enough valid input images to continue the refinement." << std::endl;
+        break;
+      }
+      if(calibImagePoints.size() == filteredImagePoints.size())
+      {
+        // Convergence reached
+        std::cout << "Convergence reached." << std::endl;
         break;
       }
       calibImagePoints.swap(filteredImagePoints);
       calibObjectPoints.swap(filteredObjectPoints);
       calibInputFrames.swap(filteredInputFrames);
+      calibImageScore.swap(filteredImageScores);
       rejectInputFrames.insert(rejectInputFrames.end(), tmpRejectInputFrames.begin(), tmpRejectInputFrames.end());
     }
     ++calibIteration;
   }
   while(calibSucceeded);
-  
+
   std::cout << "Calibration done with " << calibIteration << " iterations." << std::endl;
   std::cout << "Average reprojection error is " << totalAvgErr << std::endl;
   std::cout << (calibSucceeded ? "Calibration succeeded" : "Calibration failed") << std::endl;
-  
+
   duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
   std::cout << "Calibration duration: " << duration << std::endl;
 
@@ -673,6 +754,6 @@ int main(int argc, char** argv)
     durationAlgo = ( std::clock() - startAlgo ) / (double) CLOCKS_PER_SEC;
     std::cout << "Export debug of rejected frames, duration: "<< durationAlgo << std::endl;
   }
-  
+
   return 0;
 }
