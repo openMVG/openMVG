@@ -192,7 +192,7 @@ bool readGt(const std::string sRootPath, SfM_Data & sfm_data)
     const size_t uid = computeUID(exifReader, sImgName);
 
     // Update intrinsics with width and height of image
-    sfm_data.views.emplace((IndexT)uid, std::make_shared<View>(stlplus::basename_part(*iter), id, id, id, pinholeIntrinsic->w(), pinholeIntrinsic->h()));
+    sfm_data.views.emplace((IndexT)uid, std::make_shared<View>(stlplus::basename_part(*iter), (IndexT)uid, id, id, pinholeIntrinsic->w(), pinholeIntrinsic->h()));
     sfm_data.poses.emplace(id, pose);
     sfm_data.intrinsics.emplace(id, pinholeIntrinsic);
   }
