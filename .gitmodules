@@ -2,6 +2,10 @@
 	path = src/openMVG/features/latch
 	url = https://github.com/mdaiter/cudaLATCH.git
 	branch = deleteBitMatchClass
+[submodule "src/openMVG/features/deep/thnets"]
+	path = src/openMVG/features/deep/thnets
+	url = https://github.com/mdaiter/thnets.git
+	branch = master
 [submodule "src/dependencies/glfw"]
 	path = src/dependencies/glfw
 	url = https://github.com/elmindreda/glfw.git
