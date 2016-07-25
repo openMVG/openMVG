@@ -47,7 +47,7 @@ int main(int argc, char **argv)
   }
 
   // init alembic exporter
-  dataio::AlembicExporter exporter( sSfM_Data_Filename_Out.c_str() );
+  dataio::AlembicExporter exporter( sSfM_Data_Filename_Out );
   exporter.initAnimatedCamera("camera");
 
   for(const auto &iter : sfm_data.GetViews())
