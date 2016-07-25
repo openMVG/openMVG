@@ -5,11 +5,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "sfm_data_io_gt.hpp"
+#include "openMVG/sfm/sfm_data_io_gt.hpp"
 
-#include "openMVG/exif/exif_IO_EasyExif.hpp"
+#include <openMVG/exif/exif_IO_EasyExif.hpp>
 
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+#include <third_party/stlplus3/filesystemSimplified/file_system.hpp>
 
 #include <fstream>
 #include <vector>

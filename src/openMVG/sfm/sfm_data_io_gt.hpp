@@ -6,8 +6,10 @@
 
 #pragma once
 
-#include "openMVG/geometry/pose3.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
+
+#include <openMVG/geometry/pose3.hpp>
+#include <openMVG/cameras/Camera_Pinhole.hpp>
 
 #include <string>
 
