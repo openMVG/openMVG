@@ -55,99 +55,132 @@ bool exportToCMPMVSFormat(
   if (!bOk)
   {
     std::cerr << "Cannot access to one of the desired output directory" << std::endl;
-	return false;
+    return false;
   }
   else
   {
-    // Export data :
-
-    C_Progress_display my_progress_bar( sfm_data.GetViews().size()*2 );
-
     // Since CMPMVS requires contiguous camera index, and that some views can have some missing poses,
     // we reindex the poses to ensure a contiguous pose list.
     Hash_Map<IndexT, IndexT> map_viewIdToContiguous;
 
-    // Export valid views as Projective Cameras:
-    for(Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
+    // CMPMVS only support images of the same resolution,
+    // so select the most used resolution and only export those images.
+    std::pair<size_t, size_t> mostCommonResolution;
     {
-      const View * view = iter->second.get();
-      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
-        continue;
-
-      const Pose3 pose = sfm_data.GetPoseOrDie(view);
-      Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
-
-      // View Id re-indexing
-      // Need to start at 1 for CMPMVS
-      map_viewIdToContiguous.insert(std::make_pair(view->id_view, map_viewIdToContiguous.size() + 1));
-
-      // We have a valid view with a corresponding camera & pose
-      const Mat34 P = iterIntrinsic->second.get()->get_projective_equivalent(pose);
-      std::ostringstream os;
-      os << std::setw(5) << std::setfill('0') << map_viewIdToContiguous[view->id_view] << "_P";
-      std::ofstream file(
-        stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory),
-        os.str() ,"txt").c_str());
-      file << "CONTOUR" << os.widen('\n')
-        << P.row(0) <<"\n"<< P.row(1) <<"\n"<< P.row(2) << os.widen('\n');
-      file.close();
-    }
-
-    // Export (calibrated) views as undistorted images
-    std::pair<int,int> w_h_image_size;
-    Image<RGBColor> image, image_ud;
-    for(Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
-    {
-      const View * view = iter->second.get();
-      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
-        continue;
-
-      Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
-
-      // We have a valid view with a corresponding camera & pose
-      const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
-      std::ostringstream os;
-      os << std::setw(5) << std::setfill('0') << map_viewIdToContiguous[view->id_view];
-      
-      std::string dstImage = stlplus::create_filespec(
-        stlplus::folder_append_separator(sOutDirectory), os.str(),"jpg");
-
-      const IntrinsicBase * cam = iterIntrinsic->second.get();
-      if (map_viewIdToContiguous[view->id_view] == 1)
-        w_h_image_size = std::make_pair(cam->w(), cam->h());
-      else
+      std::map<std::pair<size_t, size_t>, size_t> imgResolutions;
+      std::size_t nbValidImages = 0;
+      for(const auto &iter : sfm_data.GetViews())
       {
-        // check that there is no image sizing change (CMPMVS support only images of the same size)
-        if (cam->w() != w_h_image_size.first ||
-            cam->h() != w_h_image_size.second)
+        const View * view = iter.second.get();
+        if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+          continue;
+        Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
+        const IntrinsicBase * cam = iterIntrinsic->second.get();
+        if(!cam->isValid())
+          continue;
+        ++nbValidImages;
+        std::pair<size_t, size_t> imgResolution = std::make_pair(cam->w(), cam->h());
+        if(imgResolutions.find(imgResolution) == imgResolutions.end())
         {
-          std::cerr << "CMPMVS support only image having the same image size";
-          return false;
-        }
-      }
-      if (cam->have_disto())
-      {
-        // undistort the image and save it
-        ReadImage( srcImage.c_str(), &image);
-        UndistortImage(image, cam, image_ud, BLACK);
-        WriteImage(dstImage.c_str(), image_ud);
-      }
-      else // (no distortion)
-      {
-        // copy the image if extension match
-        if (stlplus::extension_part(srcImage) == "JPG" ||
-          stlplus::extension_part(srcImage) == "jpg")
-        {
-          stlplus::file_copy(srcImage, dstImage);
+          imgResolutions[imgResolution] = 1;
         }
         else
         {
-          ReadImage( srcImage.c_str(), &image);
-          WriteImage( dstImage.c_str(), image);
+          ++imgResolutions[imgResolution];
         }
       }
+      std::size_t s = 0;
+      for(auto& r: imgResolutions)
+      {
+        if(r.second > s)
+        {
+          mostCommonResolution = r.first;
+          s = r.second;
+        }
+      }
+      if(imgResolutions.size() > 1)
+      {
+        std::cerr << "CMPMVS only supports images of the same size, so we export the most common resolution: " << mostCommonResolution.first << "x" << mostCommonResolution.second << std::endl;
+        std::cerr << "We will only export " << s << " cameras from a dataset of " << nbValidImages << " cameras." << std::endl;
+      }
+    }
+    // Export valid views as Projective Cameras:
+    for(const auto &iter : sfm_data.GetViews())
+    {
+      const View * view = iter.second.get();
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+        continue;
+      Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
+      const IntrinsicBase * cam = iterIntrinsic->second.get();
+      if(cam->w() != mostCommonResolution.first || cam->h() != mostCommonResolution.second)
+        continue;
+      // View Id re-indexing
+      // Need to start at 1 for CMPMVS
+      map_viewIdToContiguous.insert(std::make_pair(view->id_view, map_viewIdToContiguous.size() + 1));
+    }
+
+    // Export data
+    C_Progress_display my_progress_bar(map_viewIdToContiguous.size());
+
+    // Export (calibrated) views as undistorted images
+    for(int i = 0; i < map_viewIdToContiguous.size(); ++i)
+    {
+      auto viewIdToContiguous = map_viewIdToContiguous.cbegin();
+      std::advance(viewIdToContiguous, i);
+      IndexT viewId = viewIdToContiguous->first;
+      const View * view = sfm_data.GetViews().at(viewId).get();
+      Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
+      // We have a valid view with a corresponding camera & pose
+      
+      // Export camera pose
+      {
+        const Pose3 pose = sfm_data.GetPoseOrDie(view);
+        const Mat34 P = iterIntrinsic->second.get()->get_projective_equivalent(pose);
+        std::ostringstream os;
+        os << std::setw(5) << std::setfill('0') << map_viewIdToContiguous[view->id_view] << "_P";
+        std::ofstream file(
+          stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory),
+          os.str() ,"txt").c_str());
+        file << "CONTOUR" << "\n"
+          << P(0, 0) << " " << P(0, 1) << " "  << P(0, 2) << " "  << P(0, 3) << "\n"
+          << P(1, 0) << " " << P(1, 1) << " "  << P(1, 2) << " "  << P(1, 3) << "\n"
+          << P(2, 0) << " " << P(2, 1) << " "  << P(2, 2) << " "  << P(2, 3) << "\n";
+        file.close();
+      }
+      // Export undistort image
+      {
+        const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
+        std::ostringstream os;
+        os << std::setw(5) << std::setfill('0') << map_viewIdToContiguous[view->id_view];
+
+        std::string dstImage = stlplus::create_filespec(
+          stlplus::folder_append_separator(sOutDirectory), os.str(),"jpg");
+
+        const IntrinsicBase * cam = iterIntrinsic->second.get();
+        Image<RGBColor> image, image_ud;
+        if (cam->isValid() && cam->have_disto())
+        {
+          // undistort the image and save it
+          ReadImage( srcImage.c_str(), &image);
+          UndistortImage(image, cam, image_ud, BLACK);
+          WriteImage(dstImage.c_str(), image_ud);
+        }
+        else // (no distortion)
+        {
+          // copy the image if extension match
+          if (stlplus::extension_part(srcImage) == "JPG" ||
+            stlplus::extension_part(srcImage) == "jpg")
+          {
+            stlplus::file_copy(srcImage, dstImage);
+          }
+          else
+          {
+            ReadImage( srcImage.c_str(), &image);
+            WriteImage( dstImage.c_str(), image);
+          }
+        }
+      }
+      ++my_progress_bar;
     }
     std::string dirName = stlplus::folder_append_separator(sOutDirectory);
     std::cout << "Linux path is: " << dirName << std::endl;
@@ -155,7 +188,7 @@ bool exportToCMPMVSFormat(
     dirName = replaceAll(dirName, "/s/v/", "V:\\");
     dirName = replaceAll(dirName, "/", "\\");
     std::cout << "Windows path is: " << dirName << std::endl;
-    
+
     // Write the cmpmvs ini file
     std::ostringstream os;
     os << "[global]" << os.widen('\n')
@@ -163,8 +196,8 @@ bool exportToCMPMVSFormat(
     << "prefix=\"\"" << os.widen('\n')
     << "imgExt=\"jpg\"" << os.widen('\n')
     << "ncams=" << map_viewIdToContiguous.size() << os.widen('\n')
-    << "width=" << w_h_image_size.first << os.widen('\n')
-    << "height=" << w_h_image_size.second << os.widen('\n')
+    << "width=" << mostCommonResolution.first << os.widen('\n')
+    << "height=" << mostCommonResolution.second << os.widen('\n')
     << "scale=2" << os.widen('\n')
     << "workDirName=\"_tmp_scale2\"" << os.widen('\n')
     << "doPrepareData=TRUE" << os.widen('\n')
@@ -223,8 +256,8 @@ bool exportToCMPMVSFormat(
   return bOk;
 }
 
-int main(int argc, char *argv[]) {
-
+int main(int argc, char *argv[])
+{
   CmdLine cmd;
   std::string sSfM_Data_Filename;
   std::string sOutDir = "";
@@ -245,21 +278,23 @@ int main(int argc, char *argv[]) {
       return EXIT_FAILURE;
   }
 
+  sOutDir = stlplus::folder_to_path(sOutDir);
+
   // Create output dir
   if (!stlplus::folder_exists(sOutDir))
     stlplus::folder_create( sOutDir );
 
-
   // Read the input SfM scene
   SfM_Data sfm_data;
-  if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(ALL))) {
+  if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(ALL)))
+  {
     std::cerr << std::endl
       << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
     return EXIT_FAILURE;
   }
 
-  if (exportToCMPMVSFormat(sfm_data, stlplus::folder_append_separator(sOutDir) + "CMPMVS"))
-    return( EXIT_SUCCESS );
-  else
-    return( EXIT_FAILURE );
+  if (!exportToCMPMVSFormat(sfm_data, stlplus::filespec_to_path(sOutDir, "CMPMVS")))
+    return EXIT_FAILURE;
+
+  return EXIT_SUCCESS;
 }

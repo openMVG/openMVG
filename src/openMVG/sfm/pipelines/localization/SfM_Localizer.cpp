@@ -47,7 +47,7 @@ bool SfM_Localizer::Localize
 
   size_t MINIMUM_SAMPLES = 0;
   const cameras::Pinhole_Intrinsic * pinhole_cam = dynamic_cast<const cameras::Pinhole_Intrinsic *>(optional_intrinsics);
-  if (pinhole_cam == nullptr)
+  if (pinhole_cam == nullptr || !pinhole_cam->isValid())
   {
     //--
     // Classic resection (try to compute the entire P matrix)
@@ -108,10 +108,7 @@ bool SfM_Localizer::Localize
   }
 
   // Test if the mode support some points (more than those required for estimation)
-  // @fixme this is a compilation flag, this should be rather some sort of param to
-  // pass to the function
-#ifdef HAVE_CCTAG
-  const bool bResection = (resection_data.vec_inliers.size() > MINIMUM_SAMPLES);
+  const bool bResection = (resection_data.vec_inliers.size() > MINIMUM_SAMPLES * OPENMVG_MINIMUM_SAMPLES_COEF);
 #ifdef WANTS_POPART_COUT
   if (!bResection) 
   {
@@ -119,9 +116,6 @@ bool SfM_Localizer::Localize
     std::cout << " because resection_data.vec_inliers.size() = " << resection_data.vec_inliers.size();
     std::cout << " and MINIMUM_SAMPLES = " << MINIMUM_SAMPLES << std::endl;
   }
-#endif
-#else
-  const bool bResection = (resection_data.vec_inliers.size() > 2.5 * MINIMUM_SAMPLES);
 #endif
 
   if (bResection)
@@ -161,7 +155,8 @@ bool SfM_Localizer::RefinePose
   // pose
   sfm_data.poses[0] = pose;
   // intrinsic (the shared_ptr does not take the ownership, will not release the input pointer)
-  sfm_data.intrinsics[0] = std::shared_ptr<cameras::IntrinsicBase>(intrinsics, [](cameras::IntrinsicBase*){});
+  std::shared_ptr<cameras::IntrinsicBase> localIntrinsics(intrinsics->clone());
+  sfm_data.intrinsics[0] = localIntrinsics;
   // structure data (2D-3D correspondences)
   for (size_t i = 0; i < matching_data.vec_inliers.size(); ++i)
   {
@@ -173,12 +168,20 @@ bool SfM_Localizer::RefinePose
   }
 
   Bundle_Adjustment_Ceres bundle_adjustment_obj;
-  const bool b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data, b_refine_pose, b_refine_pose, b_refine_intrinsic, false);
-  if (b_BA_Status)
-  {
-    pose = sfm_data.poses[0];
-  }
-  return b_BA_Status;
+  BA_Refine refineOptions = BA_REFINE_NONE;
+  if(b_refine_pose)
+    refineOptions |= BA_REFINE_ROTATION | BA_REFINE_TRANSLATION;
+  if(b_refine_intrinsic)
+    refineOptions |= BA_REFINE_INTRINSICS_ALL;
+
+  const bool b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data, refineOptions);
+  if (!b_BA_Status)
+    return false;
+
+  pose = sfm_data.poses[0];
+  if(b_refine_intrinsic)
+    intrinsics->assign(*localIntrinsics);
+  return true;
 }
 
 } // namespace sfm

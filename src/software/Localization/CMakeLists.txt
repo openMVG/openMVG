@@ -2,12 +2,22 @@ IF(OpenMVG_BUILD_VOCTREE)
     ###
     # Test the localization class
     ###
-    ADD_EXECUTABLE(openMVG_main_voctreeLocalizer main_voctreeLocalizer.cpp)
-    INSTALL(TARGETS openMVG_main_voctreeLocalizer DESTINATION bin/)
-    TARGET_LINK_LIBRARIES(openMVG_main_voctreeLocalizer openMVG_localization openMVG_dataio openMVG_image openMVG_features vlsift ${BOOST_LIBRARIES})
+    ADD_EXECUTABLE(openMVG_main_cameraLocalizer main_cameraLocalizer.cpp)
+    INSTALL(TARGETS openMVG_main_cameraLocalizer DESTINATION bin/)
+    TARGET_LINK_LIBRARIES(openMVG_main_cameraLocalizer 
+                    openMVG_localization 
+                    openMVG_dataio  
+                    openMVG_image 
+                    openMVG_features 
+                    vlsift 
+                    ${BOOST_LIBRARIES})
     if(OpenMVG_USE_ALEMBIC)
-        target_link_libraries(openMVG_main_voctreeLocalizer ${ABC_LIBRARIES})
+        target_link_libraries(openMVG_main_cameraLocalizer openMVG_sfm ${ABC_LIBRARIES})
     endif()
+    if(OpenMVG_USE_CCTAG)
+        target_link_libraries(openMVG_main_cameraLocalizer ${CCTAG_LIBRARIES})
+    endif()
+
     ###
     # Create the vocabulary tree
     ###
@@ -15,17 +25,6 @@ IF(OpenMVG_BUILD_VOCTREE)
     INSTALL(TARGETS openMVG_main_createVoctree DESTINATION bin/)
     TARGET_LINK_LIBRARIES(openMVG_main_createVoctree openMVG_voctree openMVG_features ${BOOST_LIBRARIES})
 
-    IF(OpenMVG_USE_CCTAG)
-      ###
-      # Localize images in an existing SfM reconstruction based on CCTag features
-      ###
-      ADD_EXECUTABLE(openMVG_main_cctagLocalizer main_cctagLocalizer.cpp)
-      INSTALL(TARGETS openMVG_main_cctagLocalizer DESTINATION bin/)
-      TARGET_LINK_LIBRARIES(openMVG_main_cctagLocalizer openMVG_localization openMVG_dataio openMVG_image openMVG_features ${CCTAG_LIBRARIES} ${BOOST_LIBRARIES})
-      if(OpenMVG_USE_ALEMBIC)
-        target_link_libraries(openMVG_main_cctagLocalizer ${ABC_LIBRARIES})
-      endif()
-    ENDIF(OpenMVG_USE_CCTAG)
 
     ###
     # generate the pair lists
@@ -42,25 +41,37 @@ IF(OpenMVG_BUILD_VOCTREE)
     TARGET_LINK_LIBRARIES(openMVG_main_voctreeQueryUtility openMVG_voctree ${BOOST_LIBRARIES})
 
     ###
-    # Test the localization class
+    # Test the localization class for the rig
     ###
     ADD_EXECUTABLE(openMVG_main_rigLocalizer main_rigLocalizer.cpp)
     INSTALL(TARGETS openMVG_main_rigLocalizer DESTINATION bin/)
-    TARGET_LINK_LIBRARIES(openMVG_main_rigLocalizer openMVG_localization openMVG_dataio openMVG_rig openMVG_image openMVG_features vlsift ${BOOST_LIBRARIES})
+    TARGET_LINK_LIBRARIES(openMVG_main_rigLocalizer 
+                            openMVG_localization 
+                            openMVG_dataio 
+                            openMVG_rig 
+                            openMVG_image 
+                            openMVG_features 
+                            vlsift 
+                            ${BOOST_LIBRARIES})
     if(OpenMVG_USE_ALEMBIC)
-        target_link_libraries(openMVG_main_rigLocalizer ${ABC_LIBRARIES})
+        target_link_libraries(openMVG_main_rigLocalizer openMVG_sfm ${ABC_LIBRARIES})
     endif()
     if(OpenMVG_USE_CCTAG)
         target_link_libraries(openMVG_main_rigLocalizer ${CCTAG_LIBRARIES})
     endif()
 
     ###
-    # Test the localization class
+    # utility to convert float descriptors to char
     ###
     ADD_EXECUTABLE(openMVG_main_convertDescFloat2Uchar convertDescFloat2Uchar.cpp)
     INSTALL(TARGETS openMVG_main_convertDescFloat2Uchar DESTINATION bin/)
     TARGET_LINK_LIBRARIES(openMVG_main_convertDescFloat2Uchar openMVG_localization openMVG_features ${BOOST_LIBRARIES})
 
+    # voctree statistics
+    ###
+    ADD_EXECUTABLE(openMVG_main_voctreeStatistics voctreeStatistics.cpp)
+    INSTALL(TARGETS openMVG_main_voctreeStatistics DESTINATION bin/)
+    TARGET_LINK_LIBRARIES(openMVG_main_voctreeStatistics openMVG_voctree ${BOOST_LIBRARIES})
 
     #@TODO decide where to put the binaries
 

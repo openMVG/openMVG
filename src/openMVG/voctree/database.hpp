@@ -7,12 +7,12 @@
 #include <cereal/types/vector.hpp>
 #include <cereal/types/map.hpp>
 
+#include <openMVG/types.hpp>
+
 #include <map>
 
 namespace openMVG{
 namespace voctree{
-
-typedef uint32_t DocId;
 
 /**
  * @brief Struct representing a single database match.
@@ -36,8 +36,6 @@ struct DocMatch
   }
 };
 
-// Remove these, just make docs more confusing
-typedef std::vector<Word> Document;
 typedef std::vector<DocMatch> DocMatches;
 
 /**
@@ -62,7 +60,7 @@ public:
    * @param document The set of quantized words in a document/image.
    * \return An ID representing the inserted document.
    */
-  DocId insert(DocId doc_id, const std::vector<Word>& document);
+  DocId insert(DocId doc_id, const SparseHistogram& document);
 
   /**
    * @brief Perform a sanity check of the database by querying each document
@@ -76,11 +74,22 @@ public:
   /**
    * @brief Find the top N matches in the database for the query document.
    *
-   * @param      document The query document, a set of quantized words.
-   * @param      N        The number of matches to return.
+   * @param[in] document The query document, a set of quantized words.
+   * @param[in] N        The number of matches to return.
+   * @param[in] distanceMethod distance method (norm L1, etc.)
    * @param[out] matches  IDs and scores for the top N matching database documents.
    */
-  void find(const std::vector<Word>& document, size_t N, std::vector<DocMatch>& matches) const;
+  void find(const std::vector<Word>& document, size_t N, std::vector<DocMatch>& matches, const std::string &distanceMethod = "strongCommonPoints") const;
+  
+    /**
+   * @brief Find the top N matches in the database for the query document.
+   *
+   * @param[in] query The query document, a normalized set of quantized words.
+   * @param[int] N        The number of matches to return.
+   * @param[in] distanceMethod distance method (norm L1, etc.)
+   * @param[out] matches  IDs and scores for the top N matching database documents.
+   */
+  void find(const SparseHistogram& query, size_t N, std::vector<DocMatch>& matches, const std::string &distanceMethod = "strongCommonPoints") const;
 
   /**
    * @brief Compute the TF-IDF weights of all the words. To be called after inserting a corpus of
@@ -113,6 +122,11 @@ public:
     archive(word_files_, word_weights_, database_);
   }
 
+  const SparseHistogramPerImage& getSparseHistogramPerImage() const
+  {
+    return database_;
+  }
+  
 private:
 
   struct WordFrequency
@@ -142,45 +156,28 @@ private:
 
   /// @todo Use sorted vector?
   // typedef std::vector< std::pair<Word, float> > DocumentVector;
-  typedef std::map<Word, float> DocumentVector;
-  friend std::ostream& operator<<(std::ostream& os, const Database::DocumentVector &dv);	
+  
+  friend std::ostream& operator<<(std::ostream& os, const SparseHistogram &dv);	
 
   std::vector<InvertedFile> word_files_;
   std::vector<float> word_weights_;
-  std::map<DocId, DocumentVector> database_; // Precomputed for inserted documents
-
-  /**
-   * Given a list of visual words associated to the features of a document it computes the 
-   * vector of unique weighted visual words
-   * 
-   * @param[in] document a list of (possibly repeated) visual words
-   * @param[out] v the vector of visual words
-   */
-  void computeVector(const std::vector<Word>& document, DocumentVector& v) const;
-
-  /**
-   * @brief Find the top N matches in the database for the query document.
-   *
-   * @param      query The query document, a normalized set of quantized words.
-   * @param      N        The number of matches to return.
-   * @param[out] matches  IDs and scores for the top N matching database documents.
-   */
-  void find(const DocumentVector& query, size_t N, std::vector<DocMatch>& matches) const;
+  SparseHistogramPerImage database_; // Precomputed for inserted documents
 
   /**
    * Normalize a document vector representing the histogram of visual words for a given image
    * @param[in/out] v the unnormalized histogram of visual words
    */
-  static void normalize(DocumentVector& v);
+  void normalize(SparseHistogram& v) const;
 
   /**
-   * @brief compute the sparse distance L1 between two histograms
+   * @brief compute the sparse distance between two histograms according to the chosen distance method.
    * 
    * @param v1 The first sparse histogram
    * @param v2 The second sparse histogram
-   * @return the distance of the two histograms in norm L1
+   * @param distanceMethod distance method (norm L1, etc.)
+   * @return the distance of the two histograms
    */
-  static float sparseDistance(const DocumentVector& v1, const DocumentVector& v2);
+  float sparseDistance(const SparseHistogram& v1, const SparseHistogram& v2, const std::string &distanceMethod = "classic") const;
 };
 
 }//namespace voctree

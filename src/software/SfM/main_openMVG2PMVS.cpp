@@ -108,7 +108,7 @@ bool exportToPMVSFormat(
         stlplus::folder_append_separator(sOutDirectory) + "visualize", os.str(),"jpg");
 
       const IntrinsicBase * cam = iterIntrinsic->second.get();
-      if (cam->have_disto())
+      if (cam->isValid() && cam->have_disto())
       {
         // undistort the image and save it
         ReadImage( srcImage.c_str(), &image);

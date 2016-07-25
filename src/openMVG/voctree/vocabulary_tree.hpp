@@ -4,8 +4,11 @@
 #include "distance.hpp"
 #include "feature_allocator.hpp"
 
+#include <openMVG/types.hpp>
+
 #include <stdint.h>
 #include <vector>
+#include <map>
 #include <cassert>
 #include <limits>
 #include <fstream>
@@ -17,6 +20,32 @@ namespace openMVG {
 namespace voctree {
 
 typedef int32_t Word;
+
+typedef IndexT DocId;
+
+typedef std::vector<Word> Document;
+typedef std::map<Word, std::vector<IndexT> > SparseHistogram;
+typedef std::map<DocId, SparseHistogram> SparseHistogramPerImage;
+
+/**
+ * Given a list of visual words associated to the features of a document it computes the 
+ * vector of unique weighted visual words
+ * 
+ * @param[in] document a list of (possibly repeated) visual words
+ * @param[out] v the vector of visual words (ie the visual word histogram of the image)
+ */
+inline void computeSparseHistogram(const std::vector<Word>& document, SparseHistogram& v)
+{
+  // for each visual word in the list
+  for(std::size_t i = 0; i < document.size(); ++i)
+  {
+    // update its weighted count inside the map
+    // the map v contains only the visual words that are associated to some features
+    // the visual words in v are unique unlikely the document
+    Word word = document[i];
+    v[word].push_back(i);
+  }
+}
 
 /**
  * @brief Optimized vocabulary tree quantizer, templated on feature type and distance metric
@@ -61,6 +90,9 @@ public:
   /// Quantizes a set of features into visual words.
   template<class DescriptorT>
   std::vector<Word> quantize(const std::vector<DescriptorT>& features) const;
+  /// Quantizes a set of features into sparse histogram of visual words.
+  template<class DescriptorT>
+  SparseHistogram quantizeToSparse(const std::vector<DescriptorT>& features) const;
 
   /// Get the depth (number of levels) of the tree.
   uint32_t levels() const;
@@ -77,6 +109,15 @@ public:
   /// Load vocabulary from a file.
   void load(const std::string& file);
 
+  bool operator==(const VocabularyTree& other) const
+  {
+    return (centers_ == other.centers_) &&
+        (valid_centers_ == other.valid_centers_) &&
+        (k_ == other.k_) &&
+        (levels_ == other.levels_) &&
+        (num_words_ == other.num_words_) &&
+        (word_start_ == other.word_start_);
+  }
 protected:
   std::vector<Feature, FeatureAllocator> centers_;
   std::vector<uint8_t> valid_centers_; /// @todo Consider bit-vector
@@ -159,6 +200,16 @@ std::vector<Word> VocabularyTree<Feature, Distance, FeatureAllocator>::quantize(
 
   // add the vector to the documents
   return imgVisualWords;
+}
+
+template<class Feature, template<typename, typename> class Distance, class FeatureAllocator>
+template<class DescriptorT>
+SparseHistogram VocabularyTree<Feature, Distance, FeatureAllocator>::quantizeToSparse(const std::vector<DescriptorT>& features) const
+{
+  SparseHistogram histo;
+  std::vector<Word> doc = quantize(features);
+  computeSparseHistogram(doc, histo);
+  return histo;
 }
 
 template<class Feature, template<typename, typename> class Distance, class FeatureAllocator>

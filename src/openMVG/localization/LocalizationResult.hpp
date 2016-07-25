@@ -60,10 +60,14 @@ public:
   const std::vector<size_t> & getInliers() const;
 
   const Mat & getPt2D() const;
+  
+  const Mat getUndistortedPt2D() const;
 
   const Mat & getPt3D() const;
   
   const Mat34 & getProjection() const;
+  
+  sfm::Image_Localizer_Match_Data getMatchData() const { return _matchData; } 
 
   const std::vector<pair<IndexT, IndexT> > & getIndMatch3D2D() const;
 

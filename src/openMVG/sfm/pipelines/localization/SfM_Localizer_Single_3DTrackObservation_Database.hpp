@@ -54,7 +54,7 @@ public:
     const cameras::IntrinsicBase * optional_intrinsics,
     const features::Regions & query_regions,
     geometry::Pose3 & pose,
-    Image_Localizer_Match_Data * resection_data_ptr = NULL // optional
+    Image_Localizer_Match_Data * resection_data_ptr = nullptr // optional
   ) const;
 
 private:

@@ -38,15 +38,19 @@ void MatchesPointsToMat
   x_J.resize(2, n);
   typedef typename MatT::Scalar Scalar; // Output matrix type
 
-  for (size_t i=0; i < putativeMatches.size(); ++i)  {
+  const bool I_hasValidIntrinsics = cam_I && cam_I->isValid();
+  const bool J_hasValidIntrinsics = cam_J && cam_J->isValid();
+
+  for (size_t i=0; i < putativeMatches.size(); ++i)
+  {
     const features::PointFeature & pt_I = feature_I[putativeMatches[i]._i];
     const features::PointFeature & pt_J = feature_J[putativeMatches[i]._j];
-    if (cam_I)
+    if (I_hasValidIntrinsics)
       x_I.col(i) = cam_I->get_ud_pixel(pt_I.coords().cast<double>());
     else
       x_I.col(i) = pt_I.coords().cast<double>();
 
-    if (cam_J)
+    if (J_hasValidIntrinsics)
       x_J.col(i) = cam_J->get_ud_pixel(pt_J.coords().cast<double>());
     else
       x_J.col(i) = pt_J.coords().cast<double>();
@@ -78,10 +82,10 @@ void MatchesPairToMat
   // Retrieve corresponding pair camera intrinsic if any
   const cameras::IntrinsicBase * cam_I =
     sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
-      sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
+      sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : nullptr;
   const cameras::IntrinsicBase * cam_J =
     sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
-      sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
+      sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
   // Load features of Inth and Jnth images
   const features::PointFeatures feature_I = regions_provider->regions_per_view.at(pairIndex.first)->GetRegionsPositions();
@@ -119,10 +123,10 @@ void MatchesPairToMat
   // Retrieve corresponding pair camera intrinsic if any
   const cameras::IntrinsicBase * cam_I =
     sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
-      sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : NULL;
+      sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : nullptr;
   const cameras::IntrinsicBase * cam_J =
     sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
-      sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : NULL;
+      sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
   // Load features of Inth and Jnth images
   const features::PointFeatures feature_I = features_provider->feats_per_view.at(pairIndex.first);

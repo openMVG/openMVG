@@ -34,7 +34,7 @@ using namespace openMVG::sfm;
 TEST(SEQUENTIAL_SFM, Known_Intrinsics) {
 
   const int nviews = 6;
-  const int npoints = 32;
+  const int npoints = 128;
   const nViewDatasetConfigurator config;
   const NViewDataSet d = NRealisticCamerasRing(nviews, npoints, config);
 
@@ -56,7 +56,7 @@ TEST(SEQUENTIAL_SFM, Known_Intrinsics) {
     std::make_shared<Synthetic_Features_Provider>();
   // Add a tiny noise in 2D observations to make data more realistic
   std::normal_distribution<double> distribution(0.0,0.5);
-  dynamic_cast<Synthetic_Features_Provider*>(feats_provider.get())->load(d,distribution);
+  dynamic_cast<Synthetic_Features_Provider*>(feats_provider.get())->load(d, distribution);
 
   std::shared_ptr<Matches_Provider> matches_provider =
     std::make_shared<Synthetic_Matches_Provider>();
@@ -85,7 +85,7 @@ TEST(SEQUENTIAL_SFM, Known_Intrinsics) {
 TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
 
   const int nviews = 6;
-  const int npoints = 32;
+  const int npoints = 256;
   const nViewDatasetConfigurator config;
   const NViewDataSet d = NRealisticCamerasRing(nviews, npoints, config);
 
@@ -117,7 +117,7 @@ TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
     std::make_shared<Synthetic_Features_Provider>();
   // Add a tiny noise in 2D observations to make data more realistic
   std::normal_distribution<double> distribution(0.0,0.5);
-  dynamic_cast<Synthetic_Features_Provider*>(feats_provider.get())->load(d,distribution);
+  dynamic_cast<Synthetic_Features_Provider*>(feats_provider.get())->load(d, distribution);
 
   std::shared_ptr<Matches_Provider> matches_provider =
     std::make_shared<Synthetic_Matches_Provider>();
@@ -138,8 +138,8 @@ TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
   const double dResidual = RMSE(sfmEngine.Get_SfM_Data());
   std::cout << "RMSE residual: " << dResidual << std::endl;
   EXPECT_TRUE( dResidual < 0.5);
-  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
-  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
+  EXPECT_EQ(nviews, sfmEngine.Get_SfM_Data().GetPoses().size());
+  EXPECT_EQ(npoints, sfmEngine.Get_SfM_Data().GetLandmarks().size());
 }
 
 /* ************************************************************************* */

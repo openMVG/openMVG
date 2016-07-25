@@ -60,7 +60,7 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
   bool SearchNeighbour( const Scalar * query,
                         int * indice, DistanceType * distance)
   {
-    if (memMapping.get() == NULL)
+    if (memMapping.get() == nullptr)
       return false;
 
       //matrix representation of the input data;
@@ -105,7 +105,7 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
     size_t NN
   )
   {
-    if (memMapping.get() == NULL)  {
+    if (memMapping.get() == nullptr)  {
       return false;
     }
 

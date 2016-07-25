@@ -37,11 +37,15 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     _params = {k1, k2, k3, k4};
   }
 
+  Pinhole_Intrinsic_Fisheye* clone() const { return new Pinhole_Intrinsic_Fisheye(*this); }
+  void assign(const IntrinsicBase& other) { *this = dynamic_cast<const Pinhole_Intrinsic_Fisheye&>(other); }
+
   EINTRINSIC getType() const { return PINHOLE_CAMERA_FISHEYE; }
 
   virtual bool have_disto() const { return true;}
 
-  virtual Vec2 add_disto(const Vec2 & p) const{
+  virtual Vec2 add_disto(const Vec2 & p) const
+  {
     const double eps = 1e-8;
     const double k1 = _params[0], k2 = _params[1], k3 = _params[2], k4 = _params[3];
     const double r = std::sqrt(p(0)*p(0) + p(1)*p(1));
@@ -61,7 +65,8 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     return  p*cdist;
   }
 
-  virtual Vec2 remove_disto(const Vec2 & p) const{
+  virtual Vec2 remove_disto(const Vec2 & p) const
+  {
     const double eps = 1e-8;
     double scale = 1.0;
     const double theta_dist = std::sqrt(p[0]*p[0] + p[1]*p[1]);
@@ -100,16 +105,13 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
   // Data wrapper for non linear optimization (update from data)
   virtual bool updateFromParams(const std::vector<double> & params)
   {
-    if (params.size() == 7) {
-      *this = Pinhole_Intrinsic_Fisheye(
-      _w, _h,
-      params[0], params[1], params[2], // focal, ppx, ppy
-      params[3], params[4], params[5], params[6]); // k1, k2, k3, k4
+    if (params.size() == 7)
+    {
+      this->setK(params[0], params[1], params[2]);
+      _params = {params[3], params[4], params[5], params[6]};
       return true;
     }
-    else  {
-      return false;
-    }
+    return false;
   }
 
   /// Return the un-distorted pixel (with removed distortion)

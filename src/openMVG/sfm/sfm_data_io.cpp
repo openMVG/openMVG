@@ -14,6 +14,7 @@
 #include "openMVG/sfm/sfm_data_io_cereal.hpp"
 #include "openMVG/sfm/sfm_data_io_ply.hpp"
 #include "openMVG/sfm/sfm_data_io_baf.hpp"
+#include "openMVG/sfm/sfm_data_io_gt.hpp"
 
 #include "openMVG/sfm/AlembicExporter.hpp"
 #include "openMVG/sfm/AlembicImporter.hpp"
@@ -105,6 +106,11 @@ bool Load(SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_par
     bStatus = true;
   }
 #endif // HAVE_ALEMBIC
+  else if (stlplus::folder_exists(filename))
+  {
+    bStatus = readGt(filename, sfm_data);
+  }
+  // It is not a folder or known format, return false
   else
   {
     std::cerr << "Unknown sfm_data input format: " << ext << std::endl;

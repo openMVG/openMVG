@@ -37,6 +37,9 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
         _params = {k1, k2, k3, t1, t2};
     }
 
+    Pinhole_Intrinsic_Brown_T2* clone() const { return new Pinhole_Intrinsic_Brown_T2(*this); }
+    void assign(const IntrinsicBase& other) { *this = dynamic_cast<const Pinhole_Intrinsic_Brown_T2&>(other); }
+  
     EINTRINSIC getType() const { return PINHOLE_CAMERA_BROWN; }
 
     virtual bool have_disto() const { return true;}
@@ -76,17 +79,16 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     // Data wrapper for non linear optimization (update from data)
     virtual bool updateFromParams(const std::vector<double> & params)
     {
-        if (params.size() == 8) {
-          *this = Pinhole_Intrinsic_Brown_T2(
-            _w, _h,
-            params[0], params[1], params[2], // focal, ppx, ppy
-            params[3], params[4], params[5], // K1, K2, K3
-            params[6], params[7]);           // T1, T2
-            return true;
-        }
-        else  {
-            return false;
-        }
+      if (params.size() == 8)
+      {
+        this->setK(params[0], params[1], params[2]);
+        _params = {
+          params[3], params[4], params[5], // K1, K2, K3
+          params[6], params[7]             // T1, T2
+        };
+        return true;
+      }
+      return false;
     }
 
     /// Return the un-distorted pixel (with removed distortion)

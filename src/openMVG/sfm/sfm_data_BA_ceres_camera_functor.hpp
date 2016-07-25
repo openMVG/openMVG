@@ -403,7 +403,6 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2
  *  - 3 => a 3D point data block.
  *
  */
-
 struct ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye
 {
   ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye(const double* const pos_2dpoint)
@@ -480,6 +479,98 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye
 
     const T x_d = x_u * cdist;
     const T y_d = y_u * cdist;
+
+    // Apply focal length and principal point to get the final image coordinates
+    const T projected_x = principal_point_x + focal * x_d;
+    const T projected_y = principal_point_y + focal * y_d;
+
+    // Compute and return the error is the difference between the predicted
+    //  and observed position
+    out_residuals[0] = projected_x - T(m_pos_2dpoint[0]);
+    out_residuals[1] = projected_y - T(m_pos_2dpoint[1]);
+
+    return true;
+  }
+
+  double m_pos_2dpoint[2]; // The 2D observation
+};
+
+/**
+ * @brief Ceres functor to use a ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye1
+ *
+ *  Data parameter blocks are the following <2,4,6,3>
+ *  - 2 => dimension of the residuals,
+ *  - 4 => the intrinsic data block [focal, principal point x, principal point y, K1],
+ *  - 6 => the camera extrinsic data block (camera orientation and position) [R;t],
+ *         - rotation(angle axis), and translation [rX,rY,rZ,tx,ty,tz].
+ *  - 3 => a 3D point data block.
+ *
+ */
+struct ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye1
+{
+  ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye1(const double* const pos_2dpoint)
+  {
+    m_pos_2dpoint[0] = pos_2dpoint[0];
+    m_pos_2dpoint[1] = pos_2dpoint[1];
+  }
+
+  // Enum to map intrinsics parameters between openMVG & ceres camera data parameter block.
+  enum {
+    OFFSET_FOCAL_LENGTH = 0,
+    OFFSET_PRINCIPAL_POINT_X = 1,
+    OFFSET_PRINCIPAL_POINT_Y = 2,
+    OFFSET_DISTO_K1 = 3
+  };
+
+  /**
+   * @param[in] cam_K: Camera intrinsics( focal, principal point [x,y], K1 )
+   * @param[in] cam_Rt: Camera parameterized using one block of 6 parameters [R;t]:
+   *   - 3 for rotation(angle axis), 3 for translation
+   * @param[in] pos_3dpoint
+   * @param[out] out_residuals
+   */
+  template <typename T>
+  bool operator()(
+    const T* const cam_K,
+    const T* const cam_Rt,
+    const T* const pos_3dpoint,
+    T* out_residuals) const
+  {
+    //--
+    // Apply external parameters (Pose)
+    //--
+
+    const T * cam_R = cam_Rt;
+    const T * cam_t = &cam_Rt[3];
+
+    T pos_proj[3];
+    // Rotate the point according the camera rotation
+    ceres::AngleAxisRotatePoint(cam_R, pos_3dpoint, pos_proj);
+
+    // Apply the camera translation
+    pos_proj[0] += cam_t[0];
+    pos_proj[1] += cam_t[1];
+    pos_proj[2] += cam_t[2];
+
+    // Transform the point from homogeneous to euclidean (undistorted point)
+    const T x_u = pos_proj[0] / pos_proj[2];
+    const T y_u = pos_proj[1] / pos_proj[2];
+
+    //--
+    // Apply intrinsic parameters
+    //--
+
+    const T& focal = cam_K[OFFSET_FOCAL_LENGTH];
+    const T& principal_point_x = cam_K[OFFSET_PRINCIPAL_POINT_X];
+    const T& principal_point_y = cam_K[OFFSET_PRINCIPAL_POINT_Y];
+    const T& k1 = cam_K[OFFSET_DISTO_K1];
+
+    // Apply distortion (xd,yd) = disto(x_u,y_u)
+    const T r2 = x_u*x_u + y_u*y_u;
+    const T r = sqrt(r2);
+    const T r_coeff = (atan(2.0 * r * tan(0.5 * k1)) / k1) / r;
+    const T x_d = x_u * r_coeff;
+    const T y_d = y_u * r_coeff;
 
     // Apply focal length and principal point to get the final image coordinates
     const T projected_x = principal_point_x + focal * x_d;

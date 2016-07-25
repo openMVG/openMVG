@@ -61,10 +61,7 @@ class RegionsMatcher
      * 
      * @param[in] regions The Regions to be used as reference when matching another Region.
      */
-    virtual void Init_database
-    (
-      const features::Regions& regions
-    ) = 0;
+    virtual void Init_database(const features::Regions& regions) = 0;
 
     /**
      * @brief Match a Regions to the internal database using the test ratio to improve
@@ -81,7 +78,7 @@ class RegionsMatcher
       const float f_dist_ratio,
       const features::Regions& query_regions,
       matching::IndMatches & vec_putative_matches
-    ) =0;
+    ) = 0;
 };
 
 /**
@@ -225,14 +222,18 @@ public:
       vec_fDistance.begin(), // distance start
       vec_fDistance.end(),   // distance end
       NNN__, // Number of neighbor in iterator sequence (minimum required 2)
-      vec_nn_ratio_idx, // output (indices that respect the distance Ratio)
+      vec_nn_ratio_idx, // output (indices that respect the distance Ratio)     
       b_squared_metric_ ? Square(f_dist_ratio) : f_dist_ratio);
 
     vec_putative_matches.reserve(vec_nn_ratio_idx.size());
     for (size_t k=0; k < vec_nn_ratio_idx.size(); ++k)
     {
       const size_t index = vec_nn_ratio_idx[k];
-      vec_putative_matches.emplace_back(vec_nIndice[index*NNN__]._j, vec_nIndice[index*NNN__]._i);
+      vec_putative_matches.emplace_back(vec_nIndice[index*NNN__]._j, vec_nIndice[index*NNN__]._i
+#ifdef OPENMVG_DEBUG_MATCHING
+          , (float) vec_fDistance[vec_nn_ratio_idx[0]]
+#endif
+      );
     }
 
     // Remove duplicates
@@ -245,6 +246,8 @@ public:
 
     return (!vec_putative_matches.empty());
   }
+  
+  
   
   const features::Regions* getDatabaseRegions() const { return regions_; } 
   

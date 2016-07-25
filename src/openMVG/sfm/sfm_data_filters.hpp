@@ -8,6 +8,8 @@
 #ifndef OPENMVG_SFM_DATA_FILTERS_HPP
 #define OPENMVG_SFM_DATA_FILTERS_HPP
 
+#include "sfm_view.hpp"
+
 #include "openMVG/stl/stl.hpp"
 #include <iterator>
 
@@ -33,6 +35,25 @@ static std::set<IndexT> Get_Valid_Views
   return valid_idx;
 }
 
+/// List the view indexes that have valid camera intrinsic and pose.
+static std::set<IndexT> Get_Reconstructed_Intrinsics
+(
+  const SfM_Data & sfm_data
+)
+{
+  std::set<IndexT> valid_idx;
+  for (Views::const_iterator it = sfm_data.GetViews().begin();
+    it != sfm_data.GetViews().end(); ++it)
+  {
+    const View * v = it->second.get();
+    if (sfm_data.IsPoseAndIntrinsicDefined(v))
+    {
+      valid_idx.insert(v->id_intrinsic);
+    }
+  }
+  return valid_idx;
+}
+
 /// Filter a list of pair: Keep only the pair that are defined in index list
 template <typename IterablePairs, typename IterableIndex>
 static Pair_Set Pair_filter
@@ -51,8 +72,8 @@ static Pair_Set Pair_filter
   return kept_pairs;
 }
 
-// Remove tracks that have a small angle (tracks with tiny angle leads to instable 3D points)
-// Return the number of removed tracks
+/// Remove observations with too large reprojection error.
+/// Return the number of removed tracks.
 static IndexT RemoveOutliers_PixelResidualError
 (
   SfM_Data & sfm_data,
@@ -139,7 +160,7 @@ static bool eraseMissingPoses(SfM_Data & sfm_data, const IndexT min_points_per_p
   IndexT removed_elements = 0;
   const Landmarks & landmarks = sfm_data.structure;
 
-  // Count the observation poses occurence
+  // Count the observation poses occurrence
   Hash_Map<IndexT, IndexT> map_PoseId_Count;
   // Init with 0 count (in order to be able to remove non referenced elements)
   for (Poses::const_iterator itPoses = sfm_data.GetPoses().begin();
@@ -148,7 +169,7 @@ static bool eraseMissingPoses(SfM_Data & sfm_data, const IndexT min_points_per_p
     map_PoseId_Count[itPoses->first] = 0;
   }
 
-  // Count occurence of the poses in the Landmark observations
+  // Count occurrence of the poses in the Landmark observations
   for (Landmarks::const_iterator itLandmarks = landmarks.begin();
     itLandmarks != landmarks.end(); ++itLandmarks)
   {
@@ -174,6 +195,8 @@ static bool eraseMissingPoses(SfM_Data & sfm_data, const IndexT min_points_per_p
       ++removed_elements;
     }
   }
+  if(removed_elements)
+    std::cout << "eraseMissingPoses: " << removed_elements << std::endl;
   return removed_elements > 0;
 }
 
@@ -181,9 +204,9 @@ static bool eraseObservationsWithMissingPoses(SfM_Data & sfm_data, const IndexT 
 {
   IndexT removed_elements = 0;
 
-  std::set<IndexT> pose_Index;
+  std::set<IndexT> reconstructedPoseIndexes;
   std::transform(sfm_data.poses.begin(), sfm_data.poses.end(),
-    std::inserter(pose_Index, pose_Index.begin()), stl::RetrieveKey());
+    std::inserter(reconstructedPoseIndexes, reconstructedPoseIndexes.begin()), stl::RetrieveKey());
 
   // For each landmark:
   //  - Check if we need to keep the observations & the track
@@ -196,7 +219,7 @@ static bool eraseObservationsWithMissingPoses(SfM_Data & sfm_data, const IndexT 
     {
       const IndexT ViewId = itObs->first;
       const View * v = sfm_data.GetViews().at(ViewId).get();
-      if (pose_Index.count(v->id_pose) == 0)
+      if (reconstructedPoseIndexes.count(v->id_pose) == 0)
       {
         itObs = obs.erase(itObs);
         ++removed_elements;

@@ -29,6 +29,12 @@ namespace localization{
  * the optical distortion, setting it to 0. 
  * @param[in] b_refine_pose Whether to refine the camera poses.
  * @param[in] b_refine_structure Whether to refine the 3D points.
+ * @param[in] outputFilename If not empty, a filename (possibly with path) without 
+ * extension where to save the scene before and after the bundle adjustment. The 
+ * file will be named outputFilename.BEFORE.json and outputFilename.AFTER.json.
+ * @param[in] minPointVisibility if > 0 it allows to use only the 3D points that 
+ * are seen in at least \p minPointVisibility views/frames, all the other 
+ * points (and associated 2D features) will be discarded.
  * @return true if the bundle adjustment has success.
  */
 bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
@@ -36,7 +42,9 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
                     bool b_refine_intrinsic = true,
                     bool b_no_distortion = false,
                     bool b_refine_pose = true,
-                    bool b_refine_structure = false);
+                    bool b_refine_structure = false,
+                    const std::string outputFilename = "",
+                    std::size_t minPointVisibility = 0);
 
 /**
  * @brief refine the pose of a camera rig by minimizing the reprojection error in

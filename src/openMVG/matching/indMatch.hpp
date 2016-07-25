@@ -17,6 +17,8 @@
 #include <map>
 #include <vector>
 
+#define OPENMVG_DEBUG_MATCHING
+
 namespace openMVG {
 namespace matching {
 
@@ -24,9 +26,18 @@ namespace matching {
 /// A sort operator exist in order to remove duplicates of IndMatch series.
 struct IndMatch
 {
-  IndMatch(IndexT i = 0, IndexT j = 0)  {
+  IndMatch(
+          IndexT i = 0, IndexT j = 0
+#ifdef OPENMVG_DEBUG_MATCHING
+          , float distance = 0.0
+#endif
+          )
+  {
     _i = i;
     _j = j;
+#ifdef OPENMVG_DEBUG_MATCHING
+    _distance = distance;
+#endif
   }
 
   friend bool operator==(const IndMatch& m1, const IndMatch& m2)  {
@@ -58,6 +69,9 @@ struct IndMatch
   }
 
   IndexT _i, _j;  // Left, right index
+#ifdef OPENMVG_DEBUG_MATCHING
+  float _distance;
+#endif
 };
 
 static inline std::ostream& operator<<(std::ostream & out, const IndMatch & obj) {
