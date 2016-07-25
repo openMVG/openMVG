@@ -18,6 +18,10 @@ typedef Scalar_Regions<SIOPointFeature,unsigned char,128> SIFT_Regions;
 
 /// Define the AKAZE Keypoint (with a float descriptor)
 typedef Scalar_Regions<SIOPointFeature,float,64> AKAZE_Float_Regions;
+
+/// Define the SURF Keypoint (with a float descriptor)
+typedef Scalar_Regions<SIOPointFeature,float,64> SURF_Float_Regions;
+
 /// Define the AKAZE Keypoint (with a LIOP descriptor)
 typedef Scalar_Regions<SIOPointFeature,unsigned char,144> AKAZE_Liop_Regions;
 /// Define the AKAZE Keypoint (with a binary descriptor saved in an uchar array)
