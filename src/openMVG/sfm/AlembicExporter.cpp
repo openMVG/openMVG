@@ -354,10 +354,18 @@ void AlembicExporter::addCameraKeyframe(const geometry::Pose3 &pose,
   mcamObj.getSchema().set(camSample);
 }
 
-void AlembicExporter::jumpKeyframe()
+void AlembicExporter::jumpKeyframe(const std::string &imagePath)
 {
-  mxform.getSchema().setFromPrevious();
-  mcamObj.getSchema().setFromPrevious();
+  if(mxform.getSchema().getNumSamples() == 0)
+  {
+    cameras::Pinhole_Intrinsic default_intrinsic;
+    this->addCameraKeyframe(geometry::Pose3(), &default_intrinsic, imagePath, 0, 0);
+  }
+  else
+  {
+    mxform.getSchema().setFromPrevious();
+    mcamObj.getSchema().setFromPrevious();
+  }
 }
 
 void AlembicExporter::add(const sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part)

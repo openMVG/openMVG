@@ -436,15 +436,7 @@ int main(int argc, char** argv)
     {
       POPART_CERR("Unable to localize frame " << frameCounter);
 #if HAVE_ALEMBIC
-      if(frameCounter == 0)
-      {
-        // No previous pose, use the identity matrix
-        exporter.addCameraKeyframe(geometry::Pose3(), &queryIntrinsics, currentImgName, frameCounter, frameCounter);
-      }
-      else
-      {
-        exporter.jumpKeyframe();
-      }
+      exporter.jumpKeyframe(currentImgName);
 #endif
     }
     ++frameCounter;
@@ -494,7 +486,7 @@ int main(int argc, char** argv)
         }
         else
         {
-          exporterBA.jumpKeyframe();
+          exporterBA.jumpKeyframe(currentImgName);
         }
         idx++;
       }
