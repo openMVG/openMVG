@@ -117,7 +117,10 @@ bool ColorizeTracks( SfM_Data & sfm_data )
       if (it != obs.end())
       {
         // Color the track
-        const Vec2 & pt = it->second.x;
+        Vec2 pt = it->second.x;
+        // Clamp the pixel position if the feature/marker center is outside the image.
+        pt.x() = clamp(pt.x(), 0.0, double(image.Width()-1));
+        pt.y() = clamp(pt.y(), 0.0, double(image.Height()-1));
         sfm_data.structure.at(trackId).rgb = image(pt.y(), pt.x());
         set_toRemove.insert(trackId);
         ++my_progress_bar;

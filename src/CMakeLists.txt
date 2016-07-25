@@ -117,6 +117,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   # This flag is useful as not returning from a non-void function is an error with MSVC
   AddCompilerFlag("-Werror=return-type")
   AddCompilerFlag("-Werror=switch")
+  AddCompilerFlag("-Werror=return-local-addr")
 endif()
 
 # ==============================================================================

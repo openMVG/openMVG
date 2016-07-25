@@ -1294,7 +1294,8 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
   // D. Refine the pose of the found camera.
   // We use a local scene with only the 3D points and the new camera.
   {
-    const bool b_new_intrinsic = (optional_intrinsic == nullptr);
+    cameras::Pinhole_Intrinsic * pinhole_cam = dynamic_cast<cameras::Pinhole_Intrinsic *>(optional_intrinsic.get());
+    const bool b_new_intrinsic = (optional_intrinsic == nullptr) || (pinhole_cam && !pinhole_cam->isValid());
     // A valid pose has been found (try to refine it):
     // If no valid intrinsic as input:
     //  init a new one from the projection matrix decomposition
@@ -1309,8 +1310,16 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
       const double focal = (K(0,0) + K(1,1))/2.0;
       const Vec2 principal_point(K(0,2), K(1,2));
 
-      // Create the new camera intrinsic group
-      optional_intrinsic = createPinholeIntrinsic(_camType, view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
+      if(optional_intrinsic == nullptr)
+      {
+        // Create the new camera intrinsic group
+        optional_intrinsic = createPinholeIntrinsic(_camType, view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
+      }
+      else if(pinhole_cam)
+      {
+        // Fill the uninitialized camera intrinsic group
+        pinhole_cam->setK(focal, principal_point(0), principal_point(1));
+      }
     }
     const std::set<IndexT> reconstructedIntrinsics = Get_Reconstructed_Intrinsics(_sfm_data);
     // If we use a camera intrinsic for the first time we need to refine it.
@@ -1506,7 +1515,7 @@ bool SequentialSfMReconstructionEngine::BundleAdjustment()
   Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
   BA_Refine refineOptions = BA_REFINE_ROTATION | BA_REFINE_TRANSLATION | BA_REFINE_STRUCTURE;
   if(!_bFixedIntrinsics)
-    refineOptions |= BA_REFINE_INTRINSICS;
+    refineOptions |= BA_REFINE_INTRINSICS_ALL;
   return bundle_adjustment_obj.Adjust(_sfm_data, refineOptions);
 }
 

@@ -146,7 +146,7 @@ int main(int argc, char **argv)
 
   std::string i_User_camera_model;
 
-  bool b_Group_camera_model = true;
+  int b_Group_camera_model = 1;
   bool b_use_UID = false;
   bool b_storeMetadata = false;
 
@@ -180,8 +180,9 @@ int main(int argc, char **argv)
       << "[-k|--intrinsics] Kmatrix: \"f;0;ppx;0;f;ppy;0;0;1\"\n"
       << "[-c|--camera_model] Camera model type (pinhole, radial1, radial3, brown or fisheye4)\n"
       << "[-g|--group_camera_model]\n"
-      << "\t 0-> each view have it's own camera intrinsic parameters,\n"
-      << "\t 1-> (default) view can share some camera intrinsic parameters\n"
+      << "\t 0-> each view have its own camera intrinsic parameters,\n"
+      << "\t 1-> (default) view share camera intrinsic parameters based on metadata, if no metadata each view has its own camera intrinsic parameters\n"
+      << "\t 2-> view share camera intrinsic parameters based on metadata, if no metadata they are grouped by folder\n"
       << "[-u|--use_UID] Generate a UID (unique identifier) for each view. By default, the key is the image index.\n"
       << "[-m|--storeMetadata] Store image metadata in the sfm data\n"
       << std::endl;
@@ -298,7 +299,8 @@ int main(int argc, char **argv)
     ++iter_image, ++my_progress_bar )
   {
     // Read meta data to fill camera parameter (w,h,focal,ppx,ppy) fields.
-    double width = -1.0, height = -1.0, focalPix = -1.0;
+    double width = -1.0;
+    double height = -1.0;
     ppx = ppy = -1.0;
     
     const std::string imageFilename = *iter_image;
@@ -307,6 +309,7 @@ int main(int argc, char **argv)
       imageAbsFilepath = imageFilename;
     else if(!sImageDir.empty())
       imageAbsFilepath = stlplus::create_filespec( sImageDir, imageFilename );
+    std::string imageFolder = stlplus::folder_part(imageAbsFilepath);
 
     // Test if the image format is supported:
     if (openMVG::image::GetFormat(imageAbsFilepath.c_str()) == openMVG::image::Unknown)
@@ -322,6 +325,13 @@ int main(int argc, char **argv)
 
     width = imgHeader.width;
     height = imgHeader.height;
+    
+    if (width <= 0 || height <= 0)
+    {
+      std::cerr << "Error: Image size is unrecognized for \"" << imageFilename << "\". Skip image.\n"
+        << "width, height: " << width << ", " << height << std::endl;
+      continue;
+    }
     ppx = width / 2.0;
     ppy = height / 2.0;
 
@@ -363,7 +373,13 @@ int main(int argc, char **argv)
       if(metadataImageHeight <= 0)
         metadataImageHeight = imgHeader.height;
     }
-    const bool resizedImage = metadataImageWidth != width || metadataImageHeight != height;
+    // If metadata is rotated
+    if(metadataImageWidth == height && metadataImageHeight == width)
+    {
+      metadataImageWidth = width;
+      metadataImageHeight = height;
+    }
+    const bool resizedImage = (metadataImageWidth != width || metadataImageHeight != height);
     if(resizedImage)
     {
       std::cout << "Resized image detected:" << std::endl;
@@ -406,6 +422,7 @@ int main(int argc, char **argv)
     }
 
     // Focal
+    double focalPix = -1.0;
     float focalLength_mm = 0.0;
     std::string sCamName;
     std::string sCamModel;
@@ -416,7 +433,7 @@ int main(int argc, char **argv)
         focalPix = -1.0;
     }
     // User provided focal length value
-    else if (userFocalLengthPixel != -1)
+    else if (userFocalLengthPixel != -1.0)
     {
       focalPix = userFocalLengthPixel;
     }
@@ -427,13 +444,13 @@ int main(int argc, char **argv)
       sCamModel = exifReader.getModel();
       focalLength_mm = exifReader.getFocal();
       // Handle case where focal length is equal to 0
-      if (focalLength_mm == 0.0f)
+      if (focalLength_mm <= 0.0f)
       {
         error_report_stream
           << stlplus::basename_part(imageAbsFilepath) << ": Focal length is missing in metadata." << "\n";
         focalPix = -1.0;
       }
-      else
+      else if(ccdw != 0.0)
       {
         // Retrieve the focal from the metadata in mm and convert to pixel.
         focalPix = std::max ( metadataImageWidth, metadataImageHeight ) * focalLength_mm / ccdw;
@@ -447,60 +464,65 @@ int main(int argc, char **argv)
     }
 
     // Build intrinsic parameter related to the view
-    std::shared_ptr<IntrinsicBase> intrinsic (NULL);
-    if (focalPix > 0 && ppx > 0 && ppy > 0 && width > 0 && height > 0)
+    EINTRINSIC camera_model = e_User_camera_model;
+    // If no user input choose a default camera model
+    if(camera_model == PINHOLE_CAMERA_START)
     {
-      EINTRINSIC camera_model = e_User_camera_model;
-      // If no user input choose a default camera model
-      if(camera_model == PINHOLE_CAMERA_START)
+      // Use standard lens with radial distortion by default
+      camera_model = PINHOLE_CAMERA_RADIAL3;
+      if(resizedImage)
       {
-        // Use standard lens with radial distortion by default
-        camera_model = PINHOLE_CAMERA_RADIAL3;
-        if(resizedImage)
-        {
-          // If the image has been resized, we assume that it has been undistorted
-          // and we use a camera without lens distortion.
-          camera_model = PINHOLE_CAMERA;
-        }
-        else if(focalLength_mm > 0.0 && focalLength_mm < 15)
-        {
-          // If the focal lens is short, the fisheye model should fit better.
-          camera_model = PINHOLE_CAMERA_FISHEYE;
-        }
+        // If the image has been resized, we assume that it has been undistorted
+        // and we use a camera without lens distortion.
+        camera_model = PINHOLE_CAMERA;
       }
-
-      // Create the desired camera type
-      intrinsic = createPinholeIntrinsic(camera_model, width, height, focalPix, ppx, ppy);
-
-      // Initialize distortion parameters
-      switch(camera_model)
+      else if(focalLength_mm > 0.0 && focalLength_mm < 15)
       {
-        case PINHOLE_CAMERA_FISHEYE:
-        {
-          if(sCamName == "GoPro")
-            intrinsic->updateFromParams({focalPix, ppx, ppy, 0.0524, 0.0094, -0.0037, -0.0004});
-          break;
-        }
-        case PINHOLE_CAMERA_FISHEYE1:
-        {
-          if(sCamName == "GoPro")
-            intrinsic->updateFromParams({focalPix, ppx, ppy, 1.04});
-          break;
-        }
-        default:
-          break;
+        // If the focal lens is short, the fisheye model should fit better.
+        camera_model = PINHOLE_CAMERA_FISHEYE;
       }
+    }
 
-      // Add serial number
-      if( bHaveValidExifMetadata )
+    if (focalPix <= 0 || ppx <= 0 || ppy <= 0)
+    {
+      std::cerr << "Warning: No intrinsic information for \"" << imageFilename << "\".\n"
+        << "focal: " << focalPix << "\n"
+        << "ppx,ppy: " << ppx << ", " << ppy << "\n"
+        << "width,height: " << width << ", " << height
+        << std::endl;
+    }
+    // Create the desired camera type
+    std::shared_ptr<IntrinsicBase> intrinsic = createPinholeIntrinsic(camera_model, width, height, focalPix, ppx, ppy);
+
+    intrinsic->setInitialFocalLengthPix(focalPix);
+
+    // Initialize distortion parameters
+    switch(camera_model)
+    {
+      case PINHOLE_CAMERA_FISHEYE:
       {
-        // Create custom serial number
-        std::string customSerialNumber = "";
-        customSerialNumber += exifReader.getSerialNumber();
-        customSerialNumber += exifReader.getLensSerialNumber();
-
-        intrinsic->setSerialNumber(customSerialNumber);
+        if(sCamName == "GoPro")
+          intrinsic->updateFromParams({focalPix, ppx, ppy, 0.0524, 0.0094, -0.0037, -0.0004});
+        break;
       }
+      case PINHOLE_CAMERA_FISHEYE1:
+      {
+        if(sCamName == "GoPro")
+          intrinsic->updateFromParams({focalPix, ppx, ppy, 1.04});
+        break;
+      }
+      default:
+        break;
+    }
+
+    // Add serial number
+    if( bHaveValidExifMetadata )
+    {
+      // Create serial number
+      std::string serialNumber = "";
+      serialNumber += exifReader.getSerialNumber();
+      serialNumber += exifReader.getLensSerialNumber();
+      intrinsic->setSerialNumber(serialNumber);
     }
     else
     {
@@ -512,6 +534,12 @@ int main(int argc, char **argv)
         << "   - camera: \"" << sCamName << "\"\n"
         << "   - model \"" << sCamModel << "\""
         << std::endl;
+      if(b_Group_camera_model == 2)
+      {
+        // When we have no metadata at all, we create one intrinsic group per folder.
+        // The use case is images extracted from a video without metadata and assumes fixed intrinsics in the video.
+        intrinsic->setSerialNumber(imageFolder);
+      }
     }
 
     IndexT id_view = views.size();
@@ -533,7 +561,7 @@ int main(int argc, char **argv)
     }
 
     // Add intrinsic related to the image (if any)
-    if (intrinsic == NULL)
+    if (intrinsic == nullptr)
     {
       //Since the view have invalid intrinsic data
       // (export the view, with an invalid intrinsic field value)
