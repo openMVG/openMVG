@@ -1,5 +1,5 @@
-#include "openMVG/sfm/sfm.hpp"
 #include <openMVG/sfm/AlembicExporter.hpp>
+#include <openMVG/sfm/sfm_data_io_gt.hpp>
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include <string>
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 
   // Load input SfM_Data scene
   SfM_Data sfm_data;
-  if (!Load(sfm_data, sSfM_Data_Filename_In, ESfM_Data(ALL)))
+  if (!readGt(sSfM_Data_Filename_In, sfm_data, false))
   {
     std::cerr << std::endl
       << "The input SfM_Data file \"" << sSfM_Data_Filename_In << "\" cannot be read." << std::endl;
