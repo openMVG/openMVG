@@ -259,5 +259,6 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
 #include <cereal/types/vector.hpp>
 
 CEREAL_REGISTER_TYPE_WITH_NAME( openMVG::cameras::Pinhole_Intrinsic_Brown_T2, "pinhole_brown_t2" );
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::IntrinsicBase, openMVG::cameras::Pinhole_Intrinsic_Brown_T2)
 
 #endif // #ifndef OPENMVG_CAMERA_PINHOLE_BROWN_HPP

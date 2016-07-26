@@ -520,7 +520,9 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
 #include <cereal/types/vector.hpp>
 
 CEREAL_REGISTER_TYPE_WITH_NAME( openMVG::cameras::Pinhole_Intrinsic_Radial_K1, "pinhole_radial_k1" );
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::Pinhole_Intrinsic, openMVG::cameras::Pinhole_Intrinsic_Radial_K1)
 CEREAL_REGISTER_TYPE_WITH_NAME( openMVG::cameras::Pinhole_Intrinsic_Radial_K3, "pinhole_radial_k3" );
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::Pinhole_Intrinsic, openMVG::cameras::Pinhole_Intrinsic_Radial_K3)
 
 #endif // #ifndef OPENMVG_CAMERA_PINHOLE_RADIAL_K_HPP
 
