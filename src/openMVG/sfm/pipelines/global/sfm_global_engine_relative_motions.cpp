@@ -104,11 +104,14 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Process() {
       const Pair pair = matches_it.first;
       const View * v1 = sfm_data_.GetViews().at(pair.first).get();
       const View * v2 = sfm_data_.GetViews().at(pair.second).get();
-      relative_pose_pairs.insert(
-        Pair(
-          std::min(v1->id_pose, v2->id_pose),
-          std::max(v1->id_pose, v2->id_pose))
-        );
+      if (v1->id_pose != v2->id_pose)
+      {
+        relative_pose_pairs.insert(
+          Pair(
+            std::min(v1->id_pose, v2->id_pose),
+            std::max(v1->id_pose, v2->id_pose))
+          );
+      }
     }
 
     const std::set<IndexT> set_remaining_poseIds = graph::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(relative_pose_pairs);

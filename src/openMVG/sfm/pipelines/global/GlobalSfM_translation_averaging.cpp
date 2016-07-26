@@ -977,27 +977,25 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
   Save(tiny_scene, os.str(), ESfM_Data(ALL));
 #endif
 
-  Vec3 C1 = -vec_global_R_Triplet[0] * vec_global_R_Triplet[1].transpose() * T.t2;
-  Vec3 C2 = -vec_global_R_Triplet[0] * vec_global_R_Triplet[2].transpose() * T.t3;
+  const Vec3 C1 = -vec_global_R_Triplet[0] * vec_global_R_Triplet[1].transpose() * T.t2;
+  const Vec3 C2 = -vec_global_R_Triplet[0] * vec_global_R_Triplet[2].transpose() * T.t3;
 
   // check that all components of C1 and C2 have differents order of magnitude
   const double C1_norm_inf = C1.lpNorm<Eigen::Infinity>();
   const double C2_norm_inf = C2.lpNorm<Eigen::Infinity>();
-  const bool bNorm = ( C1_norm_inf > 1.0e-2) && (C2_norm_inf > 1.0e-2);
+  const bool bNorm = (C1_norm_inf > 1.0e-2) && (C2_norm_inf > 1.0e-2);
 
   // normalize and compute the smallest order of magnitude
-  C1 /= C1_norm_inf ; C2 /= C2_norm_inf;
-  const double C1_min_magn = C1.cwiseAbs().minCoeff();
-  const double C2_min_magn = C2.cwiseAbs().minCoeff();
+  const double C1_min_magn = (C1 / C1_norm_inf).cwiseAbs().minCoeff();
+  const double C2_min_magn = (C2 / C2_norm_inf).cwiseAbs().minCoeff();
 
   // if there is more than 1/3 of inliers, keep model
   // reject small motion since they are not stable
   const bool bTest =  ( vec_inliers.size() > 0.33 * tracks.size()      // consider only model with good inlier proportion
                         && vec_inliers.size() > 30 * rigSize           // there must be enough tracks
                         && bNorm                                       // the distance between rigs should be at least 10[cm]
-                        && (C1_min_magn < 0.1)                         // the minimal magnitude of displacement should be less than 10%
-                        && (C2_min_magn < 0.1));                       // the minimal magnitude of displacement should be less than 10%
-
+                        && ( C1_min_magn < 0.1 || C2_min_magn < 0.1 )  // at least a minimal magnitude of displacement should be less than 10%
+                      );
 
 #ifdef DEBUG_TRIPLET
   {
