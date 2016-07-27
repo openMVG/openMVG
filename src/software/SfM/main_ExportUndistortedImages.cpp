@@ -51,9 +51,9 @@ int main(int argc, char *argv[]) {
       << "Usage: " << argv[0] << '\n'
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
       << "[-o|--outdir] path\n"
-      << "[-r|--exportOnlyReconstructed] path\n"
+      << "[-r|--exportOnlyReconstructed] boolean 1/0 (default = 0)\n"
 #ifdef OPENMVG_USE_OPENMP
-      << "[-n|--numThreads] number of parallel computations\n"
+      << "[-n|--numThreads] number of thread(s)\n"
 #endif
       << std::endl;
 
@@ -74,34 +74,33 @@ int main(int argc, char *argv[]) {
 
   bool bOk = true;
   {
-  
     system::Timer timer;
     // Export views as undistorted images (those with valid Intrinsics)
     Image<RGBColor> image, image_ud;
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(), std::cout, "\n- EXTRACT UNDISTORTED IMAGES -\n" );
-    
+
     #ifdef OPENMVG_USE_OPENMP
     const unsigned int nb_max_thread = omp_get_max_threads();
     #endif
-    
+
 #ifdef OPENMVG_USE_OPENMP
     omp_set_num_threads(iNumThreads);
     #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) private(image,image_ud)
 #endif
-    for(int i = 0; i < sfm_data.views.size(); ++i)
+    for (int i = 0; i < sfm_data.views.size(); ++i)
     {
 #ifdef OPENMVG_USE_OPENMP
       if(iNumThreads == 0) omp_set_num_threads(nb_max_thread);
 #endif
       Views::const_iterator iterViews = sfm_data.views.begin();
-      std::advance(iterViews, i);     
-    
+      std::advance(iterViews, i);
+
       const View * view = iterViews->second.get();
       // Check if the view is in reconstruction
-      if(bExportOnlyReconstructedViews && !sfm_data.IsPoseAndIntrinsicDefined(view))
+      if (bExportOnlyReconstructedViews && !sfm_data.IsPoseAndIntrinsicDefined(view))
         continue;
         
-      bool bIntrinsicDefined = view->id_intrinsic != UndefinedIndexT &&
+      const bool bIntrinsicDefined = view->id_intrinsic != UndefinedIndexT &&
         sfm_data.GetIntrinsics().find(view->id_intrinsic) != sfm_data.GetIntrinsics().end();
       if (!bIntrinsicDefined)
         continue;
@@ -119,7 +118,11 @@ int main(int argc, char *argv[]) {
         if (ReadImage( srcImage.c_str(), &image))
         {
           UndistortImage(image, cam, image_ud, BLACK);
-          bOk &= WriteImage(dstImage.c_str(), image_ud);
+          const bool bRes = WriteImage(dstImage.c_str(), image_ud);
+#ifdef OPENMVG_USE_OPENMP
+          #pragma omp critical
+#endif
+          bOk &= bRes;
         }
       }
       else // (no distortion)
