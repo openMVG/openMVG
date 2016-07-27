@@ -122,7 +122,7 @@ bool read_Strecha_Camera(const std::string & camName, cameras::Pinhole_Intrinsic
 @param[in] useUID, set to false to disable UID".
 @return Returns true if data has been read without errors
 **/
-bool readGt(const std::string sRootPath, SfM_Data & sfm_data, bool useUID)
+bool readGt(const std::string & sRootPath, SfM_Data & sfm_data, bool useUID)
 {
   // IF GT_Folder exists, perform evaluation of the quality of rotation estimates
   const std::string sGTPath = stlplus::folder_down(sRootPath, "gt_dense_cameras");
@@ -164,9 +164,9 @@ bool readGt(const std::string sRootPath, SfM_Data & sfm_data, bool useUID)
     std::cout << "No camera found in " << sGTPath << std::endl;
     return false;
   }
-  IndexT id = 0;
+  IndexT index = 0;
   for (std::vector<std::string>::const_iterator iter = vec_camfilenames.begin();
-    iter != vec_camfilenames.end(); ++iter, ++id)
+    iter != vec_camfilenames.end(); ++iter, ++index)
   {
     geometry::Pose3 pose;
     std::shared_ptr<cameras::Pinhole_Intrinsic> pinholeIntrinsic = std::make_shared<cameras::Pinhole_Intrinsic>();
@@ -180,7 +180,7 @@ bool readGt(const std::string sRootPath, SfM_Data & sfm_data, bool useUID)
     const std::string sImgName = stlplus::basename_part(*iter);
     const std::string sImgFile = stlplus::create_filespec(sImgPath, sImgName);
 
-    IndexT used_id = id;
+    IndexT used_id = index;
     if(useUID)
     {
       // Generate UID
@@ -194,9 +194,9 @@ bool readGt(const std::string sRootPath, SfM_Data & sfm_data, bool useUID)
     }
 
     // Update intrinsics with width and height of image
-    sfm_data.views.emplace(used_id, std::make_shared<View>(stlplus::basename_part(*iter), used_id, id, id, pinholeIntrinsic->w(), pinholeIntrinsic->h()));
-    sfm_data.poses.emplace(id, pose);
-    sfm_data.intrinsics.emplace(id, pinholeIntrinsic);
+    sfm_data.views.emplace(used_id, std::make_shared<View>(stlplus::basename_part(*iter), used_id, index, index, pinholeIntrinsic->w(), pinholeIntrinsic->h()));
+    sfm_data.poses.emplace(index, pose);
+    sfm_data.intrinsics.emplace(index, pinholeIntrinsic);
   }
   return true;
 }

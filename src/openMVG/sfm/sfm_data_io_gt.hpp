@@ -27,7 +27,7 @@ bool read_Strecha_Camera(const std::string & camName, cameras::Pinhole_Intrinsic
 @param[in] useUID, set to false to disable UID".
 @return Returns true if data has been read without errors
 **/
-bool readGt(const std::string sRootPath, SfM_Data & sfm_data, bool useUID = true);
+bool readGt(const std::string & sRootPath, SfM_Data & sfm_data, bool useUID = true);
 
 } // namespace sfm
 } // namespace openMVG
