@@ -27,7 +27,7 @@ namespace features
   // Create a DIPOLE describer [1].
   //
   // Note :
-  // - Angle is in radian.
+  // - Angle is in radians.
   // - data the output array (must be allocated to 20 values).
   template<typename Real, typename T>
   void PickNaiveDipole
