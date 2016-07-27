@@ -437,7 +437,7 @@ int main(int argc, char** argv)
     {
       POPART_CERR("Unable to localize frame " << frameCounter);
 #if HAVE_ALEMBIC
-      exporter.jumpKeyframe();
+      exporter.jumpKeyframe(currentImgName);
 #endif
     }
     ++frameCounter;
@@ -487,7 +487,7 @@ int main(int argc, char** argv)
         }
         else
         {
-          exporterBA.jumpKeyframe();
+          exporterBA.jumpKeyframe(currentImgName);
         }
         idx++;
       }
