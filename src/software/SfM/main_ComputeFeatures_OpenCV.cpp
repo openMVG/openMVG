@@ -145,7 +145,7 @@ CEREAL_REGISTER_TYPE_WITH_NAME(AKAZE_OCV_Image_describer, "AKAZE_OCV_Image_descr
 // i.e. with the SURF detector+descriptor
 //--/!\ If you use a new Regions type you define and register it in
 //   "openMVG/features/regions_factory.hpp" file.
-typedef features::SURF_Float_Regions SURF_OpenCV_Regions;
+typedef features::AKAZE_Float_Regions SURF_OpenCV_Regions;
 // Define the Interface
 class SURF_OCV_Image_describer : public Image_describer
 {
@@ -213,7 +213,7 @@ public:
   /// Allocate Regions type depending of the Image_describer
   void Allocate(std::unique_ptr<Regions> &regions) const
   {
-    regions.reset( new AKAZE_OpenCV_Regions );
+    regions.reset( new SURF_OpenCV_Regions );
   }
 
   template<class Archive>
@@ -222,6 +222,167 @@ public:
   }
 };
 CEREAL_REGISTER_TYPE_WITH_NAME(SURF_OCV_Image_describer, "SURF_OCV_Image_describer");
+
+
+typedef features::AKAZE_Binary_Regions BRISK_OpenCV_Regions;
+// Define the Interface
+class BRISK_OPENCV_Image_describer : public Image_describer
+{
+public:
+	BRISK_OPENCV_Image_describer() :Image_describer(){}
+
+
+  bool Set_configuration_preset(EDESCRIBER_PRESET preset)
+  {
+    return false;
+  }
+  /**
+  @brief Detect regions on the image and compute their attributes (description)
+  @param image Image.
+  @param regions The detected regions and attributes (the caller must delete the allocated data)
+  @param mask 8-bit gray image for keypoint filtering (optional).
+     Non-zero values depict the region of interest.
+  */
+  bool Describe(const Image<unsigned char>& image,
+    std::unique_ptr<Regions> &regions,
+    const Image<unsigned char> * mask = NULL)
+  {
+    cv::Mat img;
+    cv::eigen2cv(image.GetMat(), img);
+
+    std::vector< cv::KeyPoint > vec_keypoints;
+    cv::Mat m_desc;
+
+    //cv::Ptr<cv::Feature2D> extractor = cv::AKAZE::create(cv::AKAZE::DESCRIPTOR_KAZE);
+	// CV_WRAP static Ptr<BRISK> create(int thresh=30, int octaves=3, float patternScale=1.0f);
+	cv::Ptr<cv::Feature2D> extractor = cv::BRISK::create(30,3,1.2f);
+    extractor->detectAndCompute(img, cv::Mat(), vec_keypoints, m_desc);
+
+    if (!vec_keypoints.empty())
+    {
+      Allocate(regions);
+
+      // Build alias to cached data
+	  BRISK_OpenCV_Regions * regionsCasted = dynamic_cast<BRISK_OpenCV_Regions*>(regions.get());
+      // reserve some memory for faster keypoint saving
+      regionsCasted->Features().reserve(vec_keypoints.size());
+      regionsCasted->Descriptors().reserve(vec_keypoints.size());
+
+      typedef Descriptor<unsigned char, 64> DescriptorT;
+      DescriptorT descriptor;
+      int cpt = 0;
+      for(std::vector< cv::KeyPoint >::const_iterator i_keypoint = vec_keypoints.begin();
+        i_keypoint != vec_keypoints.end(); ++i_keypoint, ++cpt){
+
+        SIOPointFeature feat((*i_keypoint).pt.x, (*i_keypoint).pt.y, (*i_keypoint).size, (*i_keypoint).angle);
+        regionsCasted->Features().push_back(feat);
+
+        memcpy(descriptor.data(),
+               m_desc.ptr<typename DescriptorT::bin_type>(cpt),
+               DescriptorT::static_size*sizeof(DescriptorT::bin_type));
+        regionsCasted->Descriptors().push_back(descriptor);
+      }
+    }
+    return true;
+  };
+
+  /// Allocate Regions type depending of the Image_describer
+  void Allocate(std::unique_ptr<Regions> &regions) const
+  {
+	  regions.reset(new BRISK_OpenCV_Regions);
+  }
+
+  template<class Archive>
+  void serialize( Archive & ar )
+  {
+  }
+};
+CEREAL_REGISTER_TYPE_WITH_NAME(BRISK_OPENCV_Image_describer, "BRISK_OPENCV_Image_describer");
+
+
+//- Create an Image_describer interface that use an OpenCV feature extraction method
+// i.e. with the ORB detector+descriptor
+//--/!\ If you use a new Regions type you define and register it in
+//   "openMVG/features/regions_factory.hpp" file.
+typedef features::ORB_Binary_Regions ORB_OpenCV_Regions;
+// Define the Interface
+class ORB_OCV_Image_describer : public Image_describer
+{
+public:
+  ORB_OCV_Image_describer():Image_describer(){}
+
+
+  bool Set_configuration_preset(EDESCRIBER_PRESET preset)
+  {
+    return false;
+  }
+  /**
+  @brief Detect regions on the image and compute their attributes (description)
+  @param image Image.
+  @param regions The detected regions and attributes (the caller must delete the allocated data)
+  @param mask 8-bit gray image for keypoint filtering (optional).
+     Non-zero values depict the region of interest.
+  */
+  bool Describe(const Image<unsigned char>& image,
+    std::unique_ptr<Regions> &regions,
+    const Image<unsigned char> * mask = nullptr)
+  {
+    cv::Mat img;
+    cv::eigen2cv(image.GetMat(), img);
+
+    cv::Mat m_mask;
+    if(mask != nullptr) {
+      cv::eigen2cv(mask->GetMat(), m_mask);
+    }
+
+    std::vector< cv::KeyPoint > vec_keypoints;
+    cv::Mat m_desc;
+
+    cv::Ptr<cv::Feature2D> extractor = cv::ORB::create(1000);
+    extractor->detectAndCompute(img, m_mask, vec_keypoints, m_desc);
+
+    if (!vec_keypoints.empty())
+    {
+      Allocate(regions);
+
+      // Build alias to cached data
+      ORB_OpenCV_Regions * regionsCasted = dynamic_cast<ORB_OpenCV_Regions*>(regions.get());
+      // reserve some memory for faster keypoint saving
+      regionsCasted->Features().reserve(vec_keypoints.size());
+      regionsCasted->Descriptors().reserve(vec_keypoints.size());
+
+      typedef Descriptor<unsigned char, 32> DescriptorT;
+      DescriptorT descriptor;
+      int cpt = 0;
+      for(std::vector< cv::KeyPoint >::const_iterator i_keypoint = vec_keypoints.begin();
+        i_keypoint != vec_keypoints.end(); ++i_keypoint, ++cpt){
+
+        SIOPointFeature feat((*i_keypoint).pt.x, (*i_keypoint).pt.y, (*i_keypoint).size, (*i_keypoint).angle);
+        regionsCasted->Features().push_back(feat);
+
+        memcpy(descriptor.data(),
+               m_desc.ptr<typename DescriptorT::bin_type>(cpt),
+               DescriptorT::static_size*sizeof(DescriptorT::bin_type));
+        regionsCasted->Descriptors().push_back(descriptor);
+      }
+    }
+    return true;
+  };
+
+
+  /// Allocate Regions type depending of the Image_describer
+  void Allocate(std::unique_ptr<Regions> &regions) const
+  {
+    regions.reset( new ORB_OpenCV_Regions );
+  }
+
+  template<class Archive>
+  void serialize( Archive & ar )
+  {
+  }
+};
+CEREAL_REGISTER_TYPE_WITH_NAME(ORB_OCV_Image_describer, "ORB_OCV_Image_describer");
+
 
 
 #ifdef USE_OCVSIFT
@@ -357,6 +518,8 @@ int main(int argc, char **argv)
       << "   AKAZE_OPENCV (default),\n"
       << "   SIFT_OPENCV: SIFT FROM OPENCV\n"
       << "   SURF_OPENCV: SURF FROM OPENCV\n"
+      << "   ORB_OPENCV: ORB FROM OPENCV\n"
+      << "   BRISK_OPENCV: BRISK FROM OPENCV\n"
 #endif
       << std::endl;
 
@@ -432,6 +595,16 @@ int main(int argc, char **argv)
     if (sImage_Describer_Method == "SURF_OPENCV")
     {
       image_describer.reset(new SURF_OCV_Image_describer);
+    }
+    else
+    if (sImage_Describer_Method == "ORB_OPENCV")
+    {
+      image_describer.reset(new ORB_OCV_Image_describer);
+    }
+    else
+    if (sImage_Describer_Method == "BRISK_OPENCV")
+    {
+      image_describer.reset(new BRISK_OPENCV_Image_describer);
     }
     else
     {
