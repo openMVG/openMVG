@@ -34,6 +34,10 @@ This program includes works distributed under the terms of another license(s) an
     Distributed under the [MPL2 license](http://opensource.org/licenses/MPL-2.0).
     Compiled with EIGEN_MPL2_ONLY to ensure MPL2 compatible code.
 
+*   __fast__<br />
+    Copyright (c) 2006, 2008 Edward Rosten
+    Distributed under the [New BSD License](https://opensource.org/licenses/BSD-3-Clause).
+
 *   __flann__<br />
     Copyright (c) 2008-2011  Marius Muja (mariusm@cs.ubc.ca). All rights reserved.
     Copyright (c) 2008-2011  David G. Lowe (lowe@cs.ubc.ca). All rights reserved.
