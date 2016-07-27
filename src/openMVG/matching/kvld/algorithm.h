@@ -59,7 +59,7 @@ struct IntegralImages
 	}
   inline double operator()( double x, double y, double size ) const
   {
-    double window = 0.5 * size;
+    const double window = 0.5 * size;
     return ( get( x + window, y + window ) - get( x - window, y + window ) - get( x + window, y - window ) + get( x - window, y - window ) ) / ( 4 * window * window );
   }
 private :

@@ -73,9 +73,8 @@ struct WeightedCostFunction
 struct ResidualErrorFunctor_Pinhole_Intrinsic
 {
   ResidualErrorFunctor_Pinhole_Intrinsic(const double* const pos_2dpoint)
+  :m_pos_2dpoint(pos_2dpoint)
   {
-    m_pos_2dpoint[0] = pos_2dpoint[0];
-    m_pos_2dpoint[1] = pos_2dpoint[1];
   }
 
   // Enum to map intrinsics parameters between openMVG & ceres camera data parameter block.
@@ -166,7 +165,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic
     }
   }
 
-  double m_pos_2dpoint[2]; // The 2D observation
+  const double * m_pos_2dpoint; // The 2D observation
 };
 
 /**
@@ -183,9 +182,8 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic
 struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1
 {
   ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1(const double* const pos_2dpoint)
+  :m_pos_2dpoint(pos_2dpoint)
   {
-    m_pos_2dpoint[0] = pos_2dpoint[0];
-    m_pos_2dpoint[1] = pos_2dpoint[1];
   }
 
   // Enum to map intrinsics parameters between openMVG & ceres camera data parameter block.
@@ -256,7 +254,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1
 
     return true;
   }
-  
+
   static const int num_residuals() { return 2; }
 
   // Factory to hide the construction of the CostFunction object from
@@ -284,7 +282,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1
     }
   }
 
-  double m_pos_2dpoint[2]; // The 2D observation
+  const double * m_pos_2dpoint; // The 2D observation
 };
 
 /**
@@ -301,9 +299,8 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1
 struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3
 {
   ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3(const double* const pos_2dpoint)
+  :m_pos_2dpoint(pos_2dpoint)
   {
-    m_pos_2dpoint[0] = pos_2dpoint[0];
-    m_pos_2dpoint[1] = pos_2dpoint[1];
   }
 
   // Enum to map intrinsics parameters between openMVG & ceres camera data parameter block.
@@ -385,7 +382,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3
 
   // Factory to hide the construction of the CostFunction object from
   // the client code.
-  static ceres::CostFunction* Create  
+  static ceres::CostFunction* Create
   (
     const Vec2 & observation,
     const double weight = 0.0
@@ -408,7 +405,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3
     }
   }
 
-  double m_pos_2dpoint[2]; // The 2D observation
+  const double * m_pos_2dpoint; // The 2D observation
 };
 
 /**
@@ -425,9 +422,8 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3
 struct ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2
 {
   ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2(const double* const pos_2dpoint)
+  :m_pos_2dpoint(pos_2dpoint)
   {
-    m_pos_2dpoint[0] = pos_2dpoint[0];
-    m_pos_2dpoint[1] = pos_2dpoint[1];
   }
 
   // Enum to map intrinsics parameters between openMVG & ceres camera data parameter block.
@@ -538,7 +534,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2
     }
   }
 
-  double m_pos_2dpoint[2]; // The 2D observation
+  const double * m_pos_2dpoint; // The 2D observation
 };
 
 
@@ -557,9 +553,8 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2
 struct ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye
 {
   ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye(const double* const pos_2dpoint)
+  :m_pos_2dpoint(pos_2dpoint)
   {
-    m_pos_2dpoint[0] = pos_2dpoint[0];
-    m_pos_2dpoint[1] = pos_2dpoint[1];
   }
 
   // Enum to map intrinsics parameters between openMVG & ceres camera data parameter block.
@@ -676,7 +671,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye
     }
   }
 
-  double m_pos_2dpoint[2]; // The 2D observation
+  const double * m_pos_2dpoint; // The 2D observation
 };
 
 } // namespace sfm

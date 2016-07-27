@@ -35,7 +35,7 @@ void DistanceRatioMatch
 class RegionsMatcher
 {
   public:
-  ~RegionsMatcher() = default ; 
+  ~RegionsMatcher() = default ;
 
   /**
    * @brief Initialize the retrieval database
@@ -103,7 +103,7 @@ public:
   typedef typename ArrayMatcherT::ScalarT Scalar;
   typedef typename ArrayMatcherT::DistanceType DistanceType;
 
-  RegionsMatcherT() :regions_(nullptr) {}
+  RegionsMatcherT() :regions_(nullptr), b_squared_metric_(false) {}
 
   /**
    * @brief Init the matcher with some reference regions.

@@ -32,7 +32,8 @@ GlobalSfMReconstructionEngine_RelativeMotions::GlobalSfMReconstructionEngine_Rel
   const SfM_Data & sfm_data,
   const std::string & soutDirectory,
   const std::string & sloggingFile)
-  : ReconstructionEngine(sfm_data, soutDirectory), sLogging_file_(sloggingFile), normalized_features_provider_(NULL) {
+  : ReconstructionEngine(sfm_data, soutDirectory), sLogging_file_(sloggingFile)
+{
 
   if (!sLogging_file_.empty())
   {
@@ -65,33 +66,6 @@ GlobalSfMReconstructionEngine_RelativeMotions::~GlobalSfMReconstructionEngine_Re
 void GlobalSfMReconstructionEngine_RelativeMotions::SetFeaturesProvider(Features_Provider * provider)
 {
   features_provider_ = provider;
-
-  // Copy features and save a normalized version
-  normalized_features_provider_ = std::make_shared<Features_Provider>(*provider);
-#ifdef OPENMVG_USE_OPENMP
-  #pragma omp parallel
-#endif
-  for (Hash_Map<IndexT, PointFeatures>::iterator iter = normalized_features_provider_->feats_per_view.begin();
-    iter != normalized_features_provider_->feats_per_view.end(); ++iter)
-  {
-#ifdef OPENMVG_USE_OPENMP
-    #pragma omp single nowait
-#endif
-    {
-      // get the related view & camera intrinsic and compute the corresponding bearing vectors
-      const View * view = sfm_data_.GetViews().at(iter->first).get();
-      if (sfm_data_.GetIntrinsics().count(view->id_intrinsic))
-      {
-        const std::shared_ptr<IntrinsicBase> cam = sfm_data_.GetIntrinsics().find(view->id_intrinsic)->second;
-        for (PointFeatures::iterator iterPt = iter->second.begin();
-          iterPt != iter->second.end(); ++iterPt)
-        {
-          const Vec3 bearingVector = (*cam)(cam->get_ud_pixel(iterPt->coords().cast<double>()));
-          iterPt->coords() << (bearingVector.head(2) / bearingVector(2)).cast<float>();
-        }
-      }
-    }
-  }
 }
 
 void GlobalSfMReconstructionEngine_RelativeMotions::SetMatchesProvider(Matches_Provider * provider)
@@ -140,6 +114,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Process() {
     std::cerr << "GlobalSfM:: Rotation Averaging failure!" << std::endl;
     return false;
   }
+
   matching::PairWiseMatches  tripletWise_matches;
   if (!Compute_Global_Translations(global_rotations, tripletWise_matches))
   {
@@ -302,7 +277,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Translations
   const bool bTranslationAveraging = translation_averaging_solver.Run(
     eTranslation_averaging_method_,
     sfm_data_,
-    normalized_features_provider_.get(),
+    features_provider_,
     matches_provider_,
     global_rotations,
     tripletWise_matches);
@@ -540,10 +515,9 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
 
   // List shared correspondences (pairs) between poses
   PoseWiseMatches poseWiseMatches;
-  for (PairWiseMatches::const_iterator iterMatches = matches_provider_->pairWise_matches_.begin();
-    iterMatches != matches_provider_->pairWise_matches_.end(); ++iterMatches)
+  for (const auto & iterMatches : matches_provider_->pairWise_matches_)
   {
-    const Pair pair = iterMatches->first;
+    const Pair pair = iterMatches.first;
     const View * v1 = sfm_data_.GetViews().at(pair.first).get();
     const View * v2 = sfm_data_.GetViews().at(pair.second).get();
     poseWiseMatches[Pair(v1->id_pose, v2->id_pose)].insert(pair);
@@ -597,6 +571,10 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
         sfm_data_.GetIntrinsics().count(view_J->id_intrinsic) == 0)
         continue;
 
+
+      const IntrinsicBase * cam_I = sfm_data_.GetIntrinsics().at(view_I->id_intrinsic).get();
+      const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
+
       // Setup corresponding bearing vector
       const matching::IndMatches & matches = matches_provider_->pairWise_matches_.at(pairIterator);
       size_t nbBearing = matches.size();
@@ -604,12 +582,9 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
       nbBearing = 0;
       for (const auto & match : matches)
       {
-        x1.col(nbBearing) = normalized_features_provider_->feats_per_view[I][match.i_].coords().cast<double>();
-        x2.col(nbBearing++) = normalized_features_provider_->feats_per_view[J][match.j_].coords().cast<double>();
+        x1.col(nbBearing) = ((*cam_I)(cam_I->get_ud_pixel(features_provider_->feats_per_view[I][match.i_].coords().cast<double>()))).hnormalized();
+        x2.col(nbBearing++) = ((*cam_J)(cam_J->get_ud_pixel(features_provider_->feats_per_view[J][match.j_].coords().cast<double>()))).hnormalized();
       }
-
-      const IntrinsicBase * cam_I = sfm_data_.GetIntrinsics().at(view_I->id_intrinsic).get();
-      const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
 
       RelativePose_Info relativePose_info;
       // Compute max authorized error as geometric mean of camera plane tolerated residual error

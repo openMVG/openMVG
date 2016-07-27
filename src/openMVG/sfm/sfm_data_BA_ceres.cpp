@@ -185,7 +185,6 @@ bool Bundle_Adjustment_Ceres::Adjust
     if (isValid(itIntrinsic->second->getType()))
     {
       map_intrinsics[indexCam] = itIntrinsic->second->getParams();
-
       double * parameter_block = &map_intrinsics[indexCam][0];
       problem.AddParameterBlock(parameter_block, map_intrinsics[indexCam].size());
       if (options.intrinsics_opt == Intrinsic_Parameter_Type::NONE)

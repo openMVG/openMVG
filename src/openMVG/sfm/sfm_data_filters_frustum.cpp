@@ -200,7 +200,6 @@ void Frustum_Filter::init_z_near_z_far_depth(const SfM_Data & sfm_data,
         iterO != landmark.obs.end(); ++iterO)
       {
         const IndexT id_view = iterO->first;
-        const Observation & ob = iterO->second;
         const View * view = sfm_data.GetViews().at(id_view).get();
         if (!sfm_data.IsPoseAndIntrinsicDefined(view))
           continue;

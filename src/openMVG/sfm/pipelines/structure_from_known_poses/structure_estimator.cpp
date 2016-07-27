@@ -131,7 +131,6 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
     #else
       const Vec3 epipole2  = epipole_from_P(P_R, poseL);
 
-      const features::Regions * regions = regions_provider->regions_per_view.at(it->first).get();
       geometry_aware::GuidedMatching_Fundamental_Fast
         <openMVG::fundamental::kernel::EpipolarDistanceError>
         (
