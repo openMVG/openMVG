@@ -338,7 +338,7 @@ public:
     std::vector< cv::KeyPoint > vec_keypoints;
     cv::Mat m_desc;
 
-    cv::Ptr<cv::Feature2D> extractor = cv::ORB::create(1000);
+    cv::Ptr<cv::Feature2D> extractor = cv::ORB::create(1000000);
     extractor->detectAndCompute(img, m_mask, vec_keypoints, m_desc);
 
     if (!vec_keypoints.empty())
