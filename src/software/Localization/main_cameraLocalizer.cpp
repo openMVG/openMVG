@@ -104,6 +104,9 @@ int main(int argc, char** argv)
   std::string featurePreset = "NORMAL";     //< the preset for the feature extractor
   std::string str_descriptorType = describerTypeToString(DescriberType::SIFT);        //< the preset for the feature extractor
   std::string str_estimatorType = robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC);        //< the preset for the feature extractor
+  //< the possible choices for the estimators as strings
+  const std::string str_estimatorChoice = ""+robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
+                                          +","+robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC);
   bool refineIntrinsics = false;
   double errorMax = 4.0;                    //< the maximum error allowed for resection
   double matchingError = 4.0;               //< the maximum error allowed for image matching with geometric validation
@@ -150,8 +153,8 @@ int main(int argc, char** argv)
           "Preset for the feature extractor when localizing a new image "
           "{LOW,MEDIUM,NORMAL,HIGH,ULTRA}")
       ("estimator", po::value<std::string>(&str_estimatorType)->default_value(str_estimatorType), 
-          "The type of *sac framework to use for matching and resectioning "
-          "{acransac, loransac}")
+          std::string("The type of *sac framework to use for matching and resectioning "
+          "{"+str_estimatorChoice+"}").c_str())
       ("calibration", po::value<std::string>(&calibFile)/*->required( )*/, 
           "Calibration file")
       ("sfmdata", po::value<std::string>(&sfmFilePath)->required(), 
@@ -268,8 +271,12 @@ int main(int argc, char** argv)
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
     POPART_COUT("\tmediafile: " << mediaFilepath);
     POPART_COUT("\tsfmdata: " << sfmFilePath);
-    if(errorMax == 0) 
+    if(errorMax == 0 && 
+       robust::EROBUST_ESTIMATOR_stringToEnum(str_estimatorType) == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
+    {
+      // for acransac set it to infinity
       errorMax = std::numeric_limits<double>::infinity();
+    }
     POPART_COUT("\terrorMax: " << errorMax);
     if(useVoctreeLocalizer)
     {
@@ -279,8 +286,12 @@ int main(int argc, char** argv)
       POPART_COUT("\tmaxResults: " << maxResults);
       POPART_COUT("\tcommon views: " << numCommonViews);
       POPART_COUT("\talgorithm: " << algostring);
-      if(matchingError == 0) 
+      if(matchingError == 0 &&
+         robust::EROBUST_ESTIMATOR_stringToEnum(str_estimatorType) == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
+      {
+        // for acransac set it to infinity
         matchingError = std::numeric_limits<double>::infinity();
+      }
       POPART_COUT("\tmatchingError: " << matchingError);
     }
 #if HAVE_CCTAG 
@@ -296,6 +307,29 @@ int main(int argc, char** argv)
     POPART_COUT("\tvisualDebug: " << visualDebug);
   }
   
+  // check for consistency of the estimators to use
+  // only loransac and acransac are currently supported
+  if(robust::EROBUST_ESTIMATOR_stringToEnum(str_estimatorType) != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC &&
+     robust::EROBUST_ESTIMATOR_stringToEnum(str_estimatorType) != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
+  {
+    POPART_CERR("Only " << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC 
+            << " and " << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC 
+            << " are supported!");
+    return EXIT_FAILURE;
+  }
+  // for loransac we need thresholds > 0
+  if(robust::EROBUST_ESTIMATOR_stringToEnum(str_estimatorType) == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC)
+  {
+    const double minThreshold = 0.00001;
+    if( errorMax <= minThreshold || matchingError <= minThreshold)
+    {
+      POPART_CERR("Error!: errorMax and matchingError cannot be 0 with " 
+              << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC 
+              << " estimator");
+      return EXIT_FAILURE;     
+    }
+  }
+
   // if the provided directory for visual debugging does not exist create it
   // recursively
   if((!visualDebug.empty()) && (!bfs::exists(visualDebug)))
