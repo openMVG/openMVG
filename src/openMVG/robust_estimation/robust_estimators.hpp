@@ -50,5 +50,10 @@ inline EROBUST_ESTIMATOR EROBUST_ESTIMATOR_stringToEnum(const std::string& estim
   throw std::out_of_range("Invalid Ransac type string " + estimator);
 }
 
+inline std::ostream& operator<<(std::ostream& os, EROBUST_ESTIMATOR e)
+{
+    return os << EROBUST_ESTIMATOR_enumToString(e);
+}
+
 } //namespace robust
 } //namespace openMVG
