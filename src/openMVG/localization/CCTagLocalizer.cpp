@@ -353,12 +353,12 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
     
     geometry::Pose3 poseTemp;
     
-    bool bResection = sfm::SfM_Localizer::Localize(
-            imageSize,
-            // pass the input intrinsic if they are valid, null otherwise
-            (useInputIntrinsics) ? &queryIntrinsics : nullptr,
-            resectionDataTemp,
-            poseTemp);
+    bool bResection = sfm::SfM_Localizer::Localize(imageSize,
+                                                  // pass the input intrinsic if they are valid, null otherwise
+                                                  (useInputIntrinsics) ? &queryIntrinsics : nullptr,
+                                                  resectionDataTemp,
+                                                  poseTemp,
+                                                  param->_estimator);
 
     if ( ( bResection ) && ( resectionDataTemp.error_max < residualMin) )
     {
@@ -599,7 +599,8 @@ bool CCTagLocalizer::localizeAllAssociations(const std::vector<std::unique_ptr<f
   bool bResection = sfm::SfM_Localizer::Localize(std::make_pair(0,0), // image size is not used for calibrated case
                                                  &rigIntrinsics,
                                                  resectionData,
-                                                 rigPose);
+                                                 rigPose,
+                                                 param._estimator);
 
   if(!bResection)
   {

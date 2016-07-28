@@ -12,6 +12,7 @@
 #include <openMVG/image/image_container.hpp>
 #include <openMVG/features/image_describer.hpp>
 #include <openMVG/cameras/Camera_Pinhole_Radial.hpp>
+#include <openMVG/robust_estimation/robust_estimators.hpp>
 
 namespace openMVG {
 namespace localization {
@@ -23,13 +24,15 @@ struct LocalizerParameters
   _refineIntrinsics(false),
   _fDistRatio(0.8),
   _featurePreset(features::EDESCRIBER_PRESET::ULTRA_PRESET),
-  _errorMax(std::numeric_limits<double>::infinity()) { }
+  _errorMax(std::numeric_limits<double>::infinity()),
+  _estimator(robust::ROBUST_ESTIMATOR_ACRANSAC) { }
 
   std::string _visualDebug;          //< enable visual debugging options
   bool _refineIntrinsics;     //< whether or not the Intrinsics of the query camera has to be refined
   float _fDistRatio;          //< the ratio distance to use when matching feature with the ratio test
   features::EDESCRIBER_PRESET _featurePreset; //< the preset to use for feature extraction of the query image
   double _errorMax;				//< maximum reprojection error allowed for resectioning
+  robust::EROBUST_ESTIMATOR _estimator; 	//< the type of *sac framework to use (matching,resection)
 };
 
 class ILocalizer

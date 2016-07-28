@@ -548,7 +548,8 @@ bool VoctreeLocalizer::localizeFirstBestResult(const features::SIFT_Regions &que
                                                    // pass the input intrinsic if they are valid, null otherwise
                                                    (useInputIntrinsics) ? &queryIntrinsics : nullptr,
                                                    resectionData,
-                                                   pose);
+                                                   pose,
+                                                   param._estimator);
 
     if(!bResection)
     {
@@ -647,10 +648,11 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
   resectionData.error_max = param._errorMax;
   POPART_COUT("[poseEstimation]\tEstimating camera pose...");
   const bool bResection = sfm::SfM_Localizer::Localize(queryImageSize,
-                                                 // pass the input intrinsic if they are valid, null otherwise
-                                                 (useInputIntrinsics) ? &queryIntrinsics : nullptr,
-                                                 resectionData,
-                                                 pose);
+                                                      // pass the input intrinsic if they are valid, null otherwise
+                                                      (useInputIntrinsics) ? &queryIntrinsics : nullptr,
+                                                      resectionData,
+                                                      pose,
+                                                      param._estimator);
 
   if(!bResection)
   {
