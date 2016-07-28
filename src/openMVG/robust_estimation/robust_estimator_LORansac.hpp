@@ -210,7 +210,7 @@ typename Kernel::Model LO_RANSAC(
   if (total_samples < min_samples) 
   {
     if (best_inliers) {
-      best_inliers->resize(0);
+      best_inliers->clear();
     }
     return bestModel;
   }
