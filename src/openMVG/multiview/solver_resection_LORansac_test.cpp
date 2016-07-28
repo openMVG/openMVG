@@ -199,6 +199,11 @@ TEST(P3P_Ransac, noisyFromImagePoints)
     robust::ScorerEvaluator<KernelType> scorer(normalizedThreshold);
     Mat34 Pest = robust::LO_RANSAC(kernel, scorer, &vec_inliers);
     
+    const std::size_t numInliersFound = vec_inliers.size();
+    const std::size_t numInliersExpected = nbPoints-vec_outliers.size();
+    
+    CHECK(numInliersFound > KernelType::MINIMUM_SAMPLES *2.5);
+    
     Mat3 Rest;
     Mat3 Kest;
     Vec3 Test;
@@ -209,8 +214,6 @@ TEST(P3P_Ransac, noisyFromImagePoints)
             << "\nKest:\n" << Kest
             << "\ntest:\n" << Test << std::endl;
     
-    const std::size_t numInliersFound = vec_inliers.size();
-    const std::size_t numInliersExpected = nbPoints-vec_outliers.size();
     std::cout << "Solution found with " << numInliersFound << " inliers" << std::endl;
     std::cout << "Expected number of inliers " << numInliersExpected << std::endl;
 
