@@ -8,6 +8,7 @@
 #include <openMVG/image/image_io.hpp>
 #include <openMVG/dataio/FeedProvider.hpp>
 #include <openMVG/features/image_describer.hpp>
+#include <openMVG/robust_estimation/robust_estimators.hpp>
 #include <openMVG/logger.hpp>
 
 #include <boost/filesystem.hpp>
@@ -102,6 +103,7 @@ int main(int argc, char** argv)
   std::string mediaFilepath;                //< the media file to localize
   std::string featurePreset = "NORMAL";     //< the preset for the feature extractor
   std::string str_descriptorType = describerTypeToString(DescriberType::SIFT);        //< the preset for the feature extractor
+  std::string str_estimatorType = robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC);        //< the preset for the feature extractor
   bool refineIntrinsics = false;
   double errorMax = 4.0;                    //< the maximum error allowed for resection
   double matchingError = 4.0;               //< the maximum error allowed for image matching with geometric validation
@@ -147,6 +149,9 @@ int main(int argc, char** argv)
       ("preset", po::value<std::string>(&featurePreset)->default_value(featurePreset), 
           "Preset for the feature extractor when localizing a new image "
           "{LOW,MEDIUM,NORMAL,HIGH,ULTRA}")
+      ("estimator", po::value<std::string>(&str_estimatorType)->default_value(str_estimatorType), 
+          "The type of *sac framework to use for matching and resectioning "
+          "{acransac, loransac}")
       ("calibration", po::value<std::string>(&calibFile)/*->required( )*/, 
           "Calibration file")
       ("sfmdata", po::value<std::string>(&sfmFilePath)->required(), 
@@ -257,6 +262,7 @@ int main(int argc, char** argv)
     POPART_COUT("Program called with the following parameters:");
     POPART_COUT("\tdescriptors: " << str_descriptorType);
     POPART_COUT("\tpreset: " << featurePreset);
+    POPART_COUT("\testimator: " << str_estimatorType);
     POPART_COUT("\tcalibration: " << calibFile);
     POPART_COUT("\tdescriptorPath: " << descriptorsFolder);
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
@@ -358,6 +364,7 @@ int main(int argc, char** argv)
   param->_refineIntrinsics = refineIntrinsics;
   param->_visualDebug = visualDebug;
   param->_errorMax = errorMax;
+  param->_estimator = robust::EROBUST_ESTIMATOR_stringToEnum(str_estimatorType);
   
 
   bool isInit = localizer->isInit();
