@@ -143,7 +143,7 @@ namespace sfm {
     }
 
     // Configure BA options (refine the intrinsic and the pose parameter only if requested)
-    const Optimize_Options ba_refine_options;
+    const Optimize_Options ba_refine_options
     (
       (b_refine_intrinsic) ? cameras::Intrinsic_Parameter_Type::ADJUST_ALL : cameras::Intrinsic_Parameter_Type::NONE,
       (b_refine_pose) ? Extrinsic_Parameter_Type::ADJUST_ALL : Extrinsic_Parameter_Type::NONE,

@@ -1025,9 +1025,11 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
           return false;
       }
     }
+    const bool b_refine_pose = true;
+    const bool b_refine_intrinsics = false;
     if(!sfm::SfM_Localizer::RefinePose(
-      optional_intrinsic.get(), pose,
-      resection_data, true, b_new_intrinsic))
+        optional_intrinsic.get(), pose,
+        resection_data, b_refine_pose, b_refine_intrinsics))
     {
       return false;
     }
