@@ -27,6 +27,7 @@
 #include <stdexcept>
 #include <exception>
 #include <map>
+#include <limits> 
 
 #define GRID_SIZE 10
 
@@ -45,7 +46,7 @@ enum Pattern
 
 void exportDebug(openMVG::dataio::FeedProvider& feed,
                 const std::string& debugFolder,
-                const std::vector<int>& exportFrames,
+                const std::vector<std::size_t>& exportFrames,
                 const cv::Mat& cameraMatrix,
                 const cv::Mat& distCoeffs,
                 const cv::Size& imageSize,
@@ -60,14 +61,14 @@ void exportDebug(openMVG::dataio::FeedProvider& feed,
 
   export_params.push_back(CV_IMWRITE_JPEG_QUALITY);
   export_params.push_back(100);
-
+  
   openMVG::cameras::Pinhole_Intrinsic_Radial_K3 camera(
           imageSize.width, imageSize.height,
           cameraMatrix.at<double>(0,0), cameraMatrix.at<double>(0,2), cameraMatrix.at<double>(1,2),
-          distCoeffs.at<double>(0), distCoeffs.at<double>(1), distCoeffs.at<double>(2));
-
+          distCoeffs.at<double>(0), distCoeffs.at<double>(1), distCoeffs.at<double>(4));
+  std::cout << "Coefficients matrix :\n " << distCoeffs << std::endl;
   std::cout << "Exporting images ..." << std::endl;
-  for(int currentFrame : exportFrames)
+  for(std::size_t currentFrame : exportFrames)
   {
     feed.goToFrame(currentFrame);
     feed.readImage(inputImage, queryIntrinsics, currentImgName, hasIntrinsics);
@@ -148,7 +149,7 @@ static void computeObjectPoints(
     cv::Size boardSize,
     Pattern pattern,
     float squareSize,
-    const std::vector<std::vector<cv::Point2f> > imagePoints,
+    const std::vector<std::vector<cv::Point2f> >& imagePoints,
     std::vector<std::vector<cv::Point3f> >& objectPoints)
 {
   std::vector<cv::Point3f> templateObjectPoints;
@@ -239,13 +240,13 @@ static void saveCameraParamsToPlainTxt(const std::string &filename,
   {
     fs << distCoeffs.at<double>(0) << std::endl;
     fs << distCoeffs.at<double>(1) << std::endl;
-    fs << distCoeffs.at<double>(2) << std::endl;
+    fs << distCoeffs.at<double>(4) << std::endl;
   }
   else
   {
     fs << distCoeffs.at<float>(0) << std::endl;
     fs << distCoeffs.at<float>(1) << std::endl;
-    fs << distCoeffs.at<float>(2) << std::endl;
+    fs << distCoeffs.at<float>(4) << std::endl;
   }
   fs.close();
 }
@@ -354,6 +355,52 @@ std::istream& operator>> (std::istream &in, Pattern &pattern)
   return in;
 }
 
+void computeCellsWeight(const std::vector<std::size_t>& imagesIndexes,
+                        const std::vector<std::vector<std::size_t> >& cellIndexesPerImage,
+                        std::map<std::size_t, std::size_t>& cellsWeight)
+{
+  for(std::size_t i = 0; i < GRID_SIZE * GRID_SIZE; ++i)
+    cellsWeight[i] = 0;
+
+  for(std::size_t i = 0; i < imagesIndexes.size(); ++i)
+  {
+    std::vector<std::size_t> uniqueCellIndexes = cellIndexesPerImage[imagesIndexes[i]];
+    std::sort(uniqueCellIndexes.begin(), uniqueCellIndexes.end());
+    auto last = std::unique(uniqueCellIndexes.begin(), uniqueCellIndexes.end());
+    uniqueCellIndexes.erase(last, uniqueCellIndexes.end());
+
+    for(std::size_t cellIndex : uniqueCellIndexes)
+    {
+      ++cellsWeight[cellIndex];
+    }
+  }
+}
+
+void computeImageScores(std::vector<std::pair<float, std::size_t> >& imageScores,
+                        const std::vector<std::size_t>& remainingImagesIndexes,
+                        const std::vector<std::vector<std::size_t> >& cellIndexesPerImage,
+                        std::map<std::size_t, std::size_t>& cellsWeight)
+{
+  // Compute the score of each image
+  for(std::size_t i = 0; i < remainingImagesIndexes.size(); ++i)
+  {
+    const auto& imageCellIndexes = cellIndexesPerImage[remainingImagesIndexes[i]];
+    float imageScore = 0;
+    for(std::size_t cellIndex : imageCellIndexes)
+    {
+      imageScore += cellsWeight[cellIndex];
+    }
+    // Normalize by the number of checker items.
+    // If the detector support occlusions of the checker the number of items may vary.
+    imageScore /= imageCellIndexes.size();
+    imageScores.push_back(std::make_pair(imageScore, i));
+  }
+//  for(int i = 0; i < imageScores.size(); ++i)
+//  {
+//    std::cout << "score : " << imageScores[i].first << " index : " << imageScores[i].second << std::endl;
+//  }
+}
+
 int main(int argc, char** argv)
 {
   // Command line arguments
@@ -363,9 +410,10 @@ int main(int argc, char** argv)
   std::string debugRejectedImgFolder;
   std::vector<std::size_t> checkerboardSize;
   Pattern pattern = CHESSBOARD;
-  unsigned int maxNbFrames = 0;
-  unsigned int nbRadialCoef = 3;
-  unsigned int minInputFrames = 10;
+  std::size_t maxNbFrames = 0;
+  std::size_t maxCalibFrames = 100;
+  std::size_t nbRadialCoef = 3;
+  std::size_t minInputFrames = 10;
   double maxTotalAvgErr = 0.1;
 
   std::clock_t startAlgo = std::clock();
@@ -389,14 +437,16 @@ int main(int argc, char** argv)
                       ".\n")
           ("size,s", po::value<std::vector<std::size_t>>(&checkerboardSize)->multitoken(),
                       "Number of inner corners per one of board dimension like W H.\n")
-          ("maxFrames", po::value<unsigned int>(&maxNbFrames)->default_value(maxNbFrames),
-                      "Maximal number of frames to use for calibration from a video file.\n")
-          ("nRadialCoef,r", po::value<unsigned int>(&nbRadialCoef)->default_value(nbRadialCoef), 
+          ("nRadialCoef,r", po::value<std::size_t>(&nbRadialCoef)->default_value(nbRadialCoef), 
                       "Number of radial distortion coefficient.\n")
+          ("maxFrames", po::value<std::size_t>(&maxNbFrames)->default_value(maxNbFrames),
+                      "Maximal number of frames to extract from the video file.\n")
+          ("maxCalibFrames", po::value<std::size_t>(&maxCalibFrames)->default_value(maxCalibFrames),
+                      "Maximal number of frames to use to calibrate from the selected frames.\n")
+          ("minInputFrames", po::value<std::size_t>(&minInputFrames)->default_value(minInputFrames), 
+                      "Minimal number of frames to limit the refinement loop.\n")
           ("maxTotalAvgErr,e", po::value<double>(&maxTotalAvgErr)->default_value(maxTotalAvgErr), 
                       "Max Total Average Error.\n")
-          ("minInputFrames", po::value<unsigned int>(&minInputFrames)->default_value(minInputFrames), 
-                      "Minimal number of frames to limit the refinement loop.\n")
           ("debugRejectedImgFolder", po::value<std::string>(&debugRejectedImgFolder)->default_value(""),
                       "Folder to export delete images during the refinement loop.\n")
           ("debugSelectedImgFolder,d", po::value<std::string>(&debugSelectedImgFolder)->default_value(""),
@@ -441,6 +491,11 @@ int main(int argc, char** argv)
   if(checkerboardSize.size() != 2)
     throw std::logic_error("The size of the checkerboard is not defined");
   
+  if(maxCalibFrames > maxNbFrames || minInputFrames > maxCalibFrames)
+  {
+    throw std::logic_error("Check the value for maxFrames, maxCalibFrames & minInputFrames. It must be decreasing.");
+  }
+  
   bool writeExtrinsics = false;
   bool writePoints = false;
   float squareSize = 1.f;
@@ -467,18 +522,20 @@ int main(int argc, char** argv)
   openMVG::cameras::Pinhole_Intrinsic_Radial_K3 queryIntrinsics;
   bool hasIntrinsics = false;
   std::string currentImgName;
-  int step = 1;
+  double step = 1.0;
   if(maxNbFrames)
-    step = std::floor(feed.nbFrames() / (double)maxNbFrames);
-  unsigned int iInputFrame = 0;
-  std::vector<int> validFrames;
+  {
+    if(feed.nbFrames() < maxNbFrames)
+      step = feed.nbFrames() / (double)maxNbFrames;
+  }
+  std::size_t iInputFrame = 0;
+  std::vector<std::size_t> validFrames;
   float cellWidth = 0;
   float cellHeight = 0;
 
-  std::vector<std::vector<int> > cellIndexesPerImage;
-
-  while(feed.readImage(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics))
+  while(feed.readImage(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics) && iInputFrame < maxNbFrames)
   {
+    std::size_t currentFrame = std::floor(iInputFrame * step);
     cv::Mat viewGray;
     cv::eigen2cv(imageGrey.GetMat(), viewGray);
 
@@ -505,6 +562,7 @@ int main(int argc, char** argv)
     std::clock_t startCh;
     double durationCh;
     bool found;
+    std::cout<< "[" << currentFrame << "/" << maxNbFrames << "]" << std::endl;
     switch (pattern)
     {
       case CHESSBOARD:
@@ -556,24 +614,12 @@ int main(int argc, char** argv)
 
     if (found)
     {
-      validFrames.push_back(iInputFrame * step);
+      validFrames.push_back(currentFrame);
       imagePoints.push_back(pointbuf);
-
-      std::vector<int> imageCellIndexes;
-      // Points repartition in image
-      for (cv::Point2f point : pointbuf)
-      {
-        // Compute the index of the point
-        unsigned int cellPointX = std::floor(point.x / cellWidth);
-        unsigned int cellPointY = std::floor(point.y / cellHeight);
-        unsigned int cellIndex = cellPointY * GRID_SIZE + cellPointX;
-        imageCellIndexes.push_back(cellIndex);
-      }
-      cellIndexesPerImage.push_back(imageCellIndexes);
     }
 
     ++iInputFrame;
-    feed.goToFrame(iInputFrame * step);
+    feed.goToFrame(std::floor(currentFrame));
   }
 
   duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
@@ -582,51 +628,80 @@ int main(int argc, char** argv)
 
   if (imagePoints.empty())
     throw std::logic_error("No checkerboard detected.");
-  
-  
-  // Count points in each cell of the grid
-  std::map<unsigned int, unsigned int> cellsWeight;
-  for(unsigned int i = 0; i < GRID_SIZE * GRID_SIZE; ++i)
-    cellsWeight[i] = 0;
 
-  for(const auto& imageCellIndexes: cellIndexesPerImage)
+  // Precompute cell indexes per image
+  std::vector<std::vector<std::size_t> > cellIndexesPerImage;
+  for(const auto& pointbuf: imagePoints)
   {
-    std::vector<int> uniqueCellIndexes = imageCellIndexes;
-    std::sort(uniqueCellIndexes.begin(), uniqueCellIndexes.end());
-    auto last = std::unique(uniqueCellIndexes.begin(), uniqueCellIndexes.end());
-    uniqueCellIndexes.erase(last, uniqueCellIndexes.end());
-
-    for(int cellIndex : uniqueCellIndexes)
+    std::vector<std::size_t> imageCellIndexes;
+    // Points repartition in image
+    for (cv::Point2f point : pointbuf)
     {
-      ++cellsWeight[cellIndex];
+      // Compute the index of the point
+      std::size_t cellPointX = std::floor(point.x / cellWidth);
+      std::size_t cellPointY = std::floor(point.y / cellHeight);
+      std::size_t cellIndex = cellPointY * GRID_SIZE + cellPointX;
+      imageCellIndexes.push_back(cellIndex);
     }
-  }
-// Print the cellsIndex and the cellsWeight  
-//  for(std::map<unsigned int, unsigned int>::const_iterator it = cellsWeight.begin();
-//    it != cellsWeight.end(); ++it)
-//  {
-//    std::cout << it->first << " " << it->second << std::endl;
-//  }
-
-  std::vector<float> imageScores;
-  // Compute the score of each image
-  for(const auto& imageCellIndexes: cellIndexesPerImage)
-  {
-    float imageScore = 0;
-    for(int cellIndex : imageCellIndexes)
-    {
-      imageScore += cellsWeight[cellIndex];
-    }
-    // Normalize by the number of checker items.
-    // If the detector support occlusions of the checker the number of items may vary.
-    imageScore /= imageCellIndexes.size();
-    imageScores.push_back(imageScore);
+    cellIndexesPerImage.push_back(imageCellIndexes);
   }
   
-  std::vector<float> calibImageScore = imageScores;
-  std::vector<int> calibInputFrames = validFrames;
-  std::vector<int> rejectInputFrames;
-  std::vector<std::vector<cv::Point2f> > calibImagePoints = imagePoints;
+  // Select best images based on repartition in images
+  std::vector<std::size_t> bestImagesIndexes;
+  std::vector<std::pair<float, std::size_t> > imageScores;
+  std::vector<std::size_t> remainingImagesIndexes(validFrames.size());
+  // Init with 0, 1, 2, ...
+  for(std::size_t i = 0; i < remainingImagesIndexes.size(); ++i)
+    remainingImagesIndexes[i] = i;
+  
+  if(maxCalibFrames < validFrames.size())
+  {
+    float maxScore = std::numeric_limits<float>::max();
+    std::size_t bestImageIndex = 0;
+    while(bestImagesIndexes.size() < maxCalibFrames)
+    {
+      // Count points in each cell of the grid
+      std::map<std::size_t, std::size_t> cellsWeight;
+      if(bestImagesIndexes.empty())
+        computeCellsWeight(remainingImagesIndexes, cellIndexesPerImage, cellsWeight);
+      else
+        computeCellsWeight(bestImagesIndexes, cellIndexesPerImage, cellsWeight);
+
+      computeImageScores(imageScores, remainingImagesIndexes, cellIndexesPerImage, cellsWeight);
+      
+      // find max score
+      for(int i = 0; i < imageScores.size(); ++i)
+      {
+        if(imageScores[i].first < maxScore)
+        {
+          maxScore = imageScores[i].first;
+          bestImageIndex = imageScores[i].second;
+        }
+      }
+      remainingImagesIndexes.erase(remainingImagesIndexes.begin() + bestImageIndex);
+      bestImagesIndexes.push_back(bestImageIndex);
+    }
+  }
+  else
+  {
+    std::cout << "Info: Less valid frames (" << validFrames.size() << ") than specified maxCalibFrames (" << maxCalibFrames << ")." << std::endl;
+    bestImagesIndexes = validFrames;
+  }
+  
+  assert(bestImagesIndexes.size() == std::min(maxCalibFrames, validFrames.size()));
+  
+  std::vector<float> calibImageScore(bestImagesIndexes.size());
+  std::vector<std::size_t> calibInputFrames(bestImagesIndexes.size());
+  std::vector<std::vector<cv::Point2f> > calibImagePoints(bestImagesIndexes.size());
+  for(std::size_t i = 0; i < bestImagesIndexes.size(); ++i)
+  {
+    const std::size_t origI = bestImagesIndexes[i];
+    calibImagePoints[i] = imagePoints[origI];
+    calibImageScore[i] = imageScores[origI].first;
+    calibInputFrames[i] = validFrames[origI];
+  }
+
+  std::vector<std::size_t> rejectInputFrames;
   std::vector<std::vector<cv::Point3f> > calibObjectPoints;
   std::vector<cv::Mat> rvecs;
   std::vector<cv::Mat> tvecs;
@@ -636,7 +711,7 @@ int main(int argc, char** argv)
   bool calibSucceeded = false;
 
   start = std::clock();
-
+  
   computeObjectPoints(boardSize, pattern, squareSize, calibImagePoints, calibObjectPoints);
 
   // Refinement loop of the calibration
@@ -656,8 +731,7 @@ int main(int argc, char** argv)
     }
     else if(calibInputFrames.size() < minInputFrames)
     {
-      // Not enough valid input image to continue the refinement.
-      std::cout << "Not enough valid input image to continue the refinement." << std::endl;
+      std::cout << "Not enough valid input image (" << calibInputFrames.size() << ") to continue the refinement." << std::endl;
       break;
     }
     else if(calibSucceeded)
@@ -669,16 +743,24 @@ int main(int argc, char** argv)
       std::vector<float> globalScores;
       for(int i = 0; i < calibInputFrames.size(); ++i)
       {
-        globalScores.push_back(reprojErrs[i] * imageScores[i]) ;
+        globalScores.push_back(reprojErrs[i] * calibImageScore[i]) ;
       }
       
       const auto minMaxError = std::minmax_element(globalScores.begin(), globalScores.end());
+      std::cout << "minMaxError: " << *minMaxError.first << ", " << *minMaxError.second << std::endl;
+      if(*minMaxError.first == *minMaxError.second)
+      {
+        std::cout << "Same error on all images: " << *minMaxError.first << std::endl;
+        for(float f: globalScores)
+          std::cout << "f: " << f << std::endl;
+        break;
+      }
       // We only keep the frames with N% of the largest error.
       const float errorThreshold = *minMaxError.first + 0.8 * (*minMaxError.second - *minMaxError.first);
       std::vector<std::vector<cv::Point2f> > filteredImagePoints;
       std::vector<std::vector<cv::Point3f> > filteredObjectPoints;
-      std::vector<int> filteredInputFrames;
-      std::vector<int> tmpRejectInputFrames;
+      std::vector<std::size_t> filteredInputFrames;
+      std::vector<std::size_t> tmpRejectInputFrames;
       std::vector<float> filteredImageScores;
 
       for(std::size_t i = 0; i < calibImagePoints.size(); ++i)
@@ -698,8 +780,7 @@ int main(int argc, char** argv)
       }
       if(filteredImagePoints.size() < minInputFrames)
       {
-        // Not enough valid input images to continue the refinement.
-        std::cout << "Not enough valid input images to continue the refinement." << std::endl;
+        std::cout << "Not enough filtered input images (filtered: " << filteredImagePoints.size() << ", rejected:" << tmpRejectInputFrames.size() << ") to continue the refinement." << std::endl;
         break;
       }
       if(calibImagePoints.size() == filteredImagePoints.size())
@@ -753,6 +834,15 @@ int main(int argc, char** argv)
                 cameraMatrix, distCoeffs, imageSize, "_rejected_undistort.png");
     durationAlgo = ( std::clock() - startAlgo ) / (double) CLOCKS_PER_SEC;
     std::cout << "Export debug of rejected frames, duration: "<< durationAlgo << std::endl;
+  }
+  
+  if (!debugRejectedImgFolder.empty())
+  {
+    start = std::clock();
+    exportDebug(feed, debugRejectedImgFolder, remainingImagesIndexes,
+                cameraMatrix, distCoeffs, imageSize, "_not_selected_undistort.png");
+    durationAlgo = ( std::clock() - startAlgo ) / (double) CLOCKS_PER_SEC;
+    std::cout << "Export debug of non selected frames, duration: "<< durationAlgo << std::endl;
   }
 
   return 0;
