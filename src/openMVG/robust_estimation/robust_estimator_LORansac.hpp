@@ -191,6 +191,7 @@ typename Kernel::Model LO_RANSAC(
   std::vector<std::size_t> *best_inliers = NULL,
   double *best_score = NULL,
   bool bVerbose = true,
+  std::size_t max_iterations = 100,
   double outliers_probability = 1e-2)
 {
   assert(outliers_probability < 1.0);
@@ -199,7 +200,6 @@ typename Kernel::Model LO_RANSAC(
   const std::size_t min_samples = Kernel::MINIMUM_SAMPLES;
   const std::size_t total_samples = kernel.NumSamples();
 
-  std::size_t max_iterations = 100;
   const std::size_t really_max_iterations = 4096;
 
   std::size_t bestNumInliers = 0;
