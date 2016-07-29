@@ -15,13 +15,24 @@
 using namespace openMVG;
 using namespace openMVG::robust;
 
+/**
+ * @brief Generate a svg file with the ground truth line, the estimated one, the
+ * estimated inliers and outliers.
+ * 
+ * @param[in] outfile The name of the svg file to generate.
+ * @param[in] W The width of the image to generate.
+ * @param[in] H The height of the image to generate.
+ * @param[in] lineGT The ground truth line.
+ * @param[in] lineEst The estimated line.
+ * @param[in] points The points from which the lines are generated.
+ * @param[in] vec_inliers The inliers that fit the estimated line.
+ */
 void drawTest(const std::string &outfile,
               int W, int H,
               const Vec2 &lineGT,
               const Vec2 &lineEst,
               const Mat &points,
               const std::vector<std::size_t> &vec_inliers)
-//Svg drawing
 {
   const std::size_t nbPoints = points.cols();
   svg::svgDrawer svgTest(W, H);
