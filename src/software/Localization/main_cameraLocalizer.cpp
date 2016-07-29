@@ -518,7 +518,7 @@ int main(int argc, char** argv)
       // now copy back in a new abc with the same name file and BUNDLE appended at the end
       dataio::AlembicExporter exporterBA( basename+".BUNDLE.abc" );
       exporterBA.initAnimatedCamera("camera");
-      size_t idx = 0;
+      std::size_t idx = 0;
       for(const localization::LocalizationResult &res : vec_localizationResults)
       {
         if(res.isValid())
