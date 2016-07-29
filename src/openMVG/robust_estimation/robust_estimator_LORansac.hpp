@@ -12,7 +12,29 @@
 namespace openMVG {
 namespace robust{
 
-//*****************************************************
+/**
+ * @brief It performs an iterative reweighted least square (IRLS) estimation of the problem
+ * defined by \p Kernel. At each step it perform a LS estimation using weights
+ * for each data element computed iteratively on some residual error.
+ * This implementation follow the Algorithm 3 described in  
+ * 
+ * Karel Lebeda, Jiri Matas, Ondrej Chum:
+ * Fixing the Locally Optimized RANSAC. BMVC 2012: 1-11
+ * 
+ * @tparam Kernel The kernel used in the LORansac estimator which must provide a
+ * minimum solver and a LS solver, the latter used here for the IRLS 
+ * @see openMVG/robust_estimation/robust_estimator_LORansacKernelAdaptor.hpp
+ * @tparam Scorer The scorer used in the LORansac estimator @see ScorerEvaluator
+ * 
+ * @param[in] kernel The kernel used in the LORansac estimator.
+ * @param[in] scorer The scorer used in the LORansac estimator.
+ * @param[out] best_model The best model found at the end of the iterations.
+ * @param[out] inliers The inliers supporting the best model.
+ * @param[in] mtheta A threshold multiplier used to vary the threshold of the scorer. 
+ * @param[in] numIter The max number of iterations to run.
+ * @return the score of the best model as computed by the Scorer, infinity if the
+ * process does not converge.
+ */
 template<typename Kernel, typename Scorer>
 double iterativeReweightedLeastSquares(const Kernel &kernel,
                                      const Scorer &scorer,
@@ -94,7 +116,35 @@ double iterativeReweightedLeastSquares(const Kernel &kernel,
 }
 
 
-
+/**
+ * @brief The local optimization step used by LORansac. It takes as input a model
+ * and its inliers computed by a minimal solver and refine the solution by using 
+ * IRLS (@see iterativeReweightedLeastSquares()). It first estimates a new model 
+ * using LS and its associated inliers. Then it repeatedly (\p numRep) re-estimate
+ * a new model by LS on a randomly drawn sample of those inliers and then refine 
+ * the model by IRLS. The best found model (in terms of number of supporting inliers
+ * is then returned.
+ * 
+ * This implementation follow the Algorithm 2 described in  
+ * 
+ * Karel Lebeda, Jiri Matas, Ondrej Chum:
+ * Fixing the Locally Optimized RANSAC. BMVC 2012: 1-11 
+ * 
+ * @tparam Kernel The kernel used in the LORansac estimator which must provide a
+ * minimum solver and a LS solver, the latter used here for the IRLS 
+ * @see openMVG/robust_estimation/robust_estimator_LORansacKernelAdaptor.hpp
+ * @tparam Scorer The scorer used in the LORansac estimator @see ScorerEvaluator
+ * 
+ * @param[in] kernel The kernel used in the LORansac estimator.
+ * @param[in] scorer The scorer used in the LORansac estimator.
+ * @param[in,out] best_model In input the model estimated by a minimum solver, as
+ * output the best model found.
+ * @param[out] bestInliers The inliers supporting the best model.
+ * @param[in] mtheta A threshold multiplier used for IRLS.
+ * @param[in] numRep The number of re-sampling/re-estimation of the model.
+ * @param[in] minSampleSize Size of the inner sample used for re-estimation.
+ * @return the best score of the best model as computed by Scorer.
+ */
 template<typename Kernel, typename Scorer>
 double localOptimization(const Kernel &kernel, 
                        const Scorer &scorer, 
@@ -184,15 +234,37 @@ double localOptimization(const Kernel &kernel,
 }
 
 //@todo make visible parameters for the optimization step
+/**
+ * @brief Implementation of the LORansac framework.
+ * 
+ * This implementation follow the Algorithm 1 described in  
+ * 
+ * Karel Lebeda, Jiri Matas, Ondrej Chum:
+ * Fixing the Locally Optimized RANSAC. BMVC 2012: 1-11 
+ * 
+ * @tparam Kernel The kernel used in the LORansac estimator which must provide a
+ * minimum solver and a LS solver, the latter used here for the IRLS 
+ * @see openMVG/robust_estimation/robust_estimator_LORansacKernelAdaptor.hpp
+ * @tparam Scorer The scorer used in the LORansac estimator @see ScorerEvaluator
+ * 
+ * @param[in] kernel The kernel containing the problem to solve.
+ * @param[in] scorer The scorer used to asses the model quality.
+ * @param[out] best_inliers The indices of the samples supporting the best model.
+ * @param[out] best_score The score of the best model, ie the number of inliers
+ * supporting the best model.
+ * @param[in] bVerbose Enable/Disable log messages
+ * @param[in] max_iterations Maximum number of iterations for the ransac part.
+ * @param[in] outliers_probability The wanted probability of picking outliers.
+ * @return The best model found.
+ */
 template<typename Kernel, typename Scorer>
-typename Kernel::Model LO_RANSAC(
-  const Kernel &kernel,
-  const Scorer &scorer,
-  std::vector<std::size_t> *best_inliers = NULL,
-  double *best_score = NULL,
-  bool bVerbose = true,
-  std::size_t max_iterations = 100,
-  double outliers_probability = 1e-2)
+typename Kernel::Model LO_RANSAC(const Kernel &kernel,
+                                const Scorer &scorer,
+                                std::vector<std::size_t> *best_inliers = NULL,
+                                double *best_score = NULL,
+                                bool bVerbose = true,
+                                std::size_t max_iterations = 100,
+                                double outliers_probability = 1e-2)
 {
   assert(outliers_probability < 1.0);
   assert(outliers_probability > 0.0);
