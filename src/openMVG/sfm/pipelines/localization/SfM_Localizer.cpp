@@ -73,50 +73,8 @@ bool SfM_Localizer::Localize
     resection_data.error_max = ACRansacOut.first;
   }
   else
-  {
-#if 0
-    //--
-    // Since K calibration matrix is known, compute only [R|t]
-    typedef openMVG::euclidean_resection::P3PSolver SolverType;
-    MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
-
-    typedef openMVG::robust::ACKernelAdaptorResection_K<
-      SolverType, ResectionSquaredResidualError,
-      openMVG::robust::UnnormalizerResection, Mat34>  KernelType;
-
-    // since the intrinsics are known undistort the input 2d points
-    //@fixe there is a lot of code redundancy in this solution; find better solution to
-    // avoid code duplication when calling ACRansacOut
-    if(pinhole_cam->have_disto())
-    {
-      const std::size_t numPts = resection_data.pt2D.cols();
-      Mat pt2Dundistorted = Mat2X(2, numPts);
-      for(std::size_t iPoint = 0; iPoint < numPts; ++iPoint)
-      {
-        pt2Dundistorted.col(iPoint) = pinhole_cam->get_ud_pixel(resection_data.pt2D.col(iPoint));
-      }
-      KernelType kernel = KernelType(pt2Dundistorted, resection_data.pt3D, pinhole_cam->K());
-      // Robust estimation of the Projection matrix and its precision
-      const std::pair<double,double> ACRansacOut =
-        openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision, true);
-      // Update the upper bound precision of the model found by AC-RANSAC
-      resection_data.error_max = ACRansacOut.first;
-    }
-    else
-    {
-      // otherwise we just pass the input points
-      KernelType kernel = KernelType(resection_data.pt2D, resection_data.pt3D, pinhole_cam->K());
-      // Robust estimation of the Projection matrix and its precision
-      const std::pair<double,double> ACRansacOut =
-        openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision, true);
-      // Update the upper bound precision of the model found by AC-RANSAC
-      resection_data.error_max = ACRansacOut.first;
-    }
-#else
-    
-    // since the intrinsics are known undistort the input 2d points
-    //@fixe there is a lot of code redundancy in this solution; find better solution to
-    // avoid code duplication when calling ACRansacOut
+  { 
+    // undistort the points if the camera has a distortion model
     Mat pt2Dundistorted;
     const bool has_disto = pinhole_cam->have_disto();
     if(has_disto)
@@ -128,65 +86,68 @@ bool SfM_Localizer::Localize
         pt2Dundistorted.col(iPoint) = pinhole_cam->get_ud_pixel(resection_data.pt2D.col(iPoint));
       }
     }
-    
-    if(estimator == robust::ROBUST_ESTIMATOR_ACRANSAC)
+
+    switch(estimator)
     {
-      //--
-      // Since K calibration matrix is known, compute only [R|t]
-      typedef openMVG::euclidean_resection::P3PSolver SolverType;
-      MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
-
-      typedef openMVG::robust::ACKernelAdaptorResection_K<
-        SolverType, ResectionSquaredResidualError,
-        openMVG::robust::UnnormalizerResection, Mat34>  KernelType;
-
-      // otherwise we just pass the input points
-      KernelType kernel = KernelType(has_disto ? pt2Dundistorted : resection_data.pt2D, resection_data.pt3D, pinhole_cam->K());
-
-      // Robust estimation of the Projection matrix and its precision
-      const std::pair<double, double> ACRansacOut =
-              openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision, true);
-      // Update the upper bound precision of the model found by AC-RANSAC
-      resection_data.error_max = ACRansacOut.first;
-    }
-    else if(estimator == robust::ROBUST_ESTIMATOR_LORANSAC)
-    {
-      
-      // just a safeguard
-      if(resection_data.error_max == std::numeric_limits<double>::infinity())
+      case robust::ROBUST_ESTIMATOR_ACRANSAC:
       {
-        throw std::invalid_argument("[SfM_Localizer::Localize] the threshold of the LORANSAC is set to infinity!");
+        //--
+        // Since K calibration matrix is known, compute only [R|t]
+        typedef openMVG::euclidean_resection::P3PSolver SolverType;
+        MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
+
+        typedef openMVG::robust::ACKernelAdaptorResection_K<
+                SolverType, ResectionSquaredResidualError,
+                openMVG::robust::UnnormalizerResection, Mat34> KernelType;
+
+        // otherwise we just pass the input points
+        KernelType kernel = KernelType(has_disto ? pt2Dundistorted : resection_data.pt2D, resection_data.pt3D, pinhole_cam->K());
+
+        // Robust estimation of the Projection matrix and its precision
+        const std::pair<double, double> ACRansacOut =
+                openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision, true);
+        // Update the upper bound precision of the model found by AC-RANSAC
+        resection_data.error_max = ACRansacOut.first;
+        break;
       }
 
-      // use the P3P solver for generating the model
-      typedef openMVG::euclidean_resection::P3PSolver SolverType;
-      MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
-      // use the six point algorithm as Least square solution to refine the model
-      typedef openMVG::resection::kernel::SixPointResectionSolver SolverLSType;
+      case robust::ROBUST_ESTIMATOR_LORANSAC:
+      {
 
-      typedef openMVG::robust::KernelAdaptorResectionLORansac_K<SolverType,
-              ResectionSquaredResidualError,
-              openMVG::robust::UnnormalizerResection,
-              SolverLSType,
-              Mat34> KernelType;
+        // just a safeguard
+        if(resection_data.error_max == std::numeric_limits<double>::infinity())
+        {
+          throw std::invalid_argument("[SfM_Localizer::Localize] the threshold of the LORANSAC is set to infinity!");
+        }
 
-      // otherwise we just pass the input points
-      KernelType kernel = KernelType(has_disto ? pt2Dundistorted : resection_data.pt2D, resection_data.pt3D, pinhole_cam->K());
+        // use the P3P solver for generating the model
+        typedef openMVG::euclidean_resection::P3PSolver SolverType;
+        MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
+        // use the six point algorithm as Least square solution to refine the model
+        typedef openMVG::resection::kernel::SixPointResectionSolver SolverLSType;
 
-      // this is just stupid and ugly, the threshold should be always give as pixel
-      // value, the scorer should be not aware of the fact that we treat squared errors
-      // and normalization inside the kernel
-      // @todo refactor, maybe move scorer directly inside the kernel
-      const double threshold = resection_data.error_max*resection_data.error_max / (kernel.normalizer2()(0,0)*kernel.normalizer2()(0,0));
-      robust::ScorerEvaluator<KernelType> scorer(threshold);
-      P = robust::LO_RANSAC(kernel, scorer, &resection_data.vec_inliers);
+        typedef openMVG::robust::KernelAdaptorResectionLORansac_K<SolverType,
+                ResectionSquaredResidualError,
+                openMVG::robust::UnnormalizerResection,
+                SolverLSType,
+                Mat34> KernelType;
+
+        // otherwise we just pass the input points
+        KernelType kernel = KernelType(has_disto ? pt2Dundistorted : resection_data.pt2D, resection_data.pt3D, pinhole_cam->K());
+
+        // this is just stupid and ugly, the threshold should be always give as pixel
+        // value, the scorer should be not aware of the fact that we treat squared errors
+        // and normalization inside the kernel
+        // @todo refactor, maybe move scorer directly inside the kernel
+        const double threshold = resection_data.error_max * resection_data.error_max / (kernel.normalizer2()(0, 0) * kernel.normalizer2()(0, 0));
+        robust::ScorerEvaluator<KernelType> scorer(threshold);
+        P = robust::LO_RANSAC(kernel, scorer, &resection_data.vec_inliers);
+        break;
+      }
+
+      default:
+        throw std::runtime_error("[SfM_Localizer::Localize] Only ACRansac and LORansac are supported!");
     }
-    else
-    {
-      throw std::runtime_error("[SfM_Localizer::Localize] Only ACRansac and LORansac are supported!");
-    }
-
-#endif // 0
   }
 
   // Test if the mode support some points (more than those required for estimation)
