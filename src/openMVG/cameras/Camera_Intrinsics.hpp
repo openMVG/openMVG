@@ -64,10 +64,11 @@ struct IntrinsicBase
   /// Projection of a 3D point into the camera plane (Apply pose, disto (if any) and Intrinsics)
   Vec2 project(
     const geometry::Pose3 & pose,
-    const Vec3 & pt3D) const
+    const Vec3 & pt3D,
+    bool applyDistortion = true) const
   {
     const Vec3 X = pose(pt3D); // apply pose
-    if (this->have_disto()) // apply disto & intrinsics
+    if (applyDistortion && this->have_disto()) // apply disto & intrinsics
       return this->cam2ima( this->add_disto(X.head<2>()/X(2)) );
     else // apply intrinsics
       return this->cam2ima( X.head<2>()/X(2) );
