@@ -93,6 +93,7 @@ int main(int argc, char **argv)
       << "   AKAZE_MLDB:  AKAZE with binary descriptors\n"
       << "   LATCH_UNSIGNED: Latch descriptor (unsigned int representation)\n"
       << "   LATCH_BINARY: Latch descriptor (unsigned char representation)\n"
+      << "   PNNET: PN-NET descriptor\n"
       << "[-u|--upright] Use Upright feature 0 or 1\n"
       << "[-p|--describerPreset]\n"
       << "  (used to control the Image_describer configuration):\n"
@@ -222,7 +223,11 @@ int main(int argc, char **argv)
     {
       image_describer.reset(new DEEP_Image_describer(DEEPParams(SIAM_DESC_YOSEMITE)));
 		}
-
+		else
+    if (sImage_Describer_Method == "PNNET")
+    {
+      image_describer.reset(new DEEP_Image_describer(DEEPParams(PNNET)));
+		}
     //image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_LIOP), !bUpRight));
     if (!image_describer)
     {
