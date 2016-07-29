@@ -8,6 +8,19 @@ namespace openMVG {
 namespace robust {
 
 
+/**
+ * @brief The generic kernel to be used for LORansac framework.
+ * 
+ * @tparam SolverArg The minimal solver able to find a solution from a
+ * minimum set of points.
+ * @tparam ErrorArg The functor computing the error for each data sample with
+ * respect to the estimated model.
+ * @tparam UnnormalizerArg The functor used to normalize the data before the 
+ * estimation of the model.
+ * @tparam ModelArg = Mat3 The type of the model to estimate.
+ * @tparam SolverLSArg = SolverArg The least square solver that is used to find
+ * a solution from any set of data larger than the minimum required.
+ */
 template <typename SolverArg,
   typename ErrorArg,
   typename UnnormalizerArg,
@@ -43,6 +56,16 @@ public:
     SolverLS::Solve(x1, x2, models, weights);
   }
   
+  /**
+   * @brief Given a model and the associated inliers, it computes the weight for
+   * each inlier as the squared inverse of the associated error.
+   * 
+   * @param[in] model The model to against which to compute the weights.
+   * @param[in] inliers The inliers associated to the model.
+   * @param[out] vec_weights The weights associated to each inlier.
+   * @param[in] eps Each inlier having an error below this value will be assigned
+   * a weight of 1/eps^2 (to avoid division by zero).
+   */
   void computeWeights(const Model & model, 
                       const std::vector<std::size_t> &inliers, 
                       std::vector<double> & vec_weights, 
@@ -61,7 +84,22 @@ public:
 
 };
 
-
+/**
+ * @brief The kernel for the resection with known intrinsics (PnP) to be used with
+ * the LORansac framework.
+ * 
+ * @tparam SolverArg The minimal solver able to find a solution from a
+ * minimum set of points, usually any PnP solver.
+ * @tparam ErrorArg The functor computing the error for each data sample with
+ * respect to the estimated model, usually a reprojection error functor.
+ * @tparam UnnormalizerArg The functor used to normalize the data before the 
+ * estimation of the model, usually a functor that normalize the point in camera
+ * coordinates (ie multiply by the inverse of the calibration matrix).
+ * @tparam ModelArg = Mat34 The type of the model to estimate, the projection matrix.
+ * @tparam SolverLSArg = SolverArg The least square solver that is used to find
+ * a solution from any set of data larger than the minimum required, usually the 
+ * 6 point algorithm which solves the resection problem by means of LS.
+ */
 template <typename SolverArg,
 typename ErrorArg,
 typename UnnormalizerArg,
