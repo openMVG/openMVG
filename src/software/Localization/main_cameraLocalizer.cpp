@@ -95,6 +95,38 @@ std::string myToString(std::size_t i, std::size_t zeroPadding)
   return ss.str();
 }
 
+bool checkRobustEstimator(robust::EROBUST_ESTIMATOR e, double &value)
+{
+  if(e != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC &&
+     e != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
+  {
+    POPART_CERR("Only " << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC 
+            << " and " << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC 
+            << " are supported.");
+    return false;
+  }
+  if(value == 0 && 
+     e == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
+  {
+    // for acransac set it to infinity
+    value = std::numeric_limits<double>::infinity();
+  }
+  // for loransac we need thresholds > 0
+  if(e == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC)
+  {
+    const double minThreshold = 1e-6;
+    if( value <= minThreshold || value <= minThreshold)
+    {
+      POPART_CERR("Error: errorMax and matchingError cannot be 0 with " 
+              << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC 
+              << " estimator.");
+      return false;     
+    }
+  }
+
+  return true;
+}
+
 int main(int argc, char** argv)
 {
   std::string calibFile;                    //< the calibration file
@@ -250,6 +282,12 @@ int main(int argc, char** argv)
     return EXIT_FAILURE;
   }
   
+  if(!checkRobustEstimator(matchingEstimator, matchingErrorMax) || 
+     !checkRobustEstimator(resectionEstimator, resectionErrorMax))
+  {
+    return EXIT_FAILURE;
+  }
+  
   // just for debugging purpose, print out all the parameters
   {
     // decide the localizer to use based on the type of feature
@@ -276,13 +314,7 @@ int main(int argc, char** argv)
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
     POPART_COUT("\tmediafile: " << mediaFilepath);
     POPART_COUT("\tsfmdata: " << sfmFilePath);
-    if(resectionErrorMax == 0 && 
-       resectionEstimator == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
-    {
-      // for acransac set it to infinity
-      resectionErrorMax = std::numeric_limits<double>::infinity();
-    }
-    POPART_COUT("\terrorMax: " << resectionErrorMax);
+    POPART_COUT("\reprojectionError: " << resectionErrorMax);
     if(useVoctreeLocalizer)
     {
       POPART_COUT("\tvoctree: " << vocTreeFilepath);
@@ -291,12 +323,6 @@ int main(int argc, char** argv)
       POPART_COUT("\tmaxResults: " << maxResults);
       POPART_COUT("\tcommon views: " << numCommonViews);
       POPART_COUT("\talgorithm: " << algostring);
-      if(matchingErrorMax == 0 &&
-         matchingEstimator == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
-      {
-        // for acransac set it to infinity
-        matchingErrorMax = std::numeric_limits<double>::infinity();
-      }
       POPART_COUT("\tmatchingError: " << matchingErrorMax);
     }
 #if HAVE_CCTAG 
@@ -310,31 +336,6 @@ int main(int argc, char** argv)
     POPART_COUT("\tnoDistortion: " << noDistortion);
     POPART_COUT("\tnoBArefineIntrinsics: " << noBArefineIntrinsics);
     POPART_COUT("\tvisualDebug: " << visualDebug);
-  }
-  
-  // check for consistency of the estimators to use
-  // only loransac and acransac are currently supported
-  if(resectionEstimator != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC &&
-     resectionEstimator != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC &&
-     matchingEstimator != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC &&
-     matchingEstimator != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
-  {
-    POPART_CERR("Only " << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC 
-            << " and " << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC 
-            << " are supported.");
-    return EXIT_FAILURE;
-  }
-  // for loransac we need thresholds > 0
-  if(resectionEstimator == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC)
-  {
-    const double minThreshold = 0.00001;
-    if( resectionErrorMax <= minThreshold || matchingErrorMax <= minThreshold)
-    {
-      POPART_CERR("Error: errorMax and matchingError cannot be 0 with " 
-              << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC 
-              << " estimator.");
-      return EXIT_FAILURE;     
-    }
   }
 
   // if the provided directory for visual debugging does not exist create it
