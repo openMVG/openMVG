@@ -21,7 +21,7 @@ CCTagLocalizer::CCTagLocalizer(const std::string &sfmFilePath,
                                const std::string &descriptorsFolder)
 {
   using namespace openMVG::features;
-  
+
   // load the sfm data containing the 3D reconstruction info
   if (!Load(_sfm_data, sfmFilePath, sfm::ESfM_Data::ALL)) 
   {
@@ -214,8 +214,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
   const CCTagLocalizer::Parameters *param = static_cast<const CCTagLocalizer::Parameters *>(parameters);
   if(!param)
   {
-    // error!
-    throw std::invalid_argument("The parameters are not in the right format!!");
+    throw std::invalid_argument("The CCTag localizer parameters are not in the right format.");
   }
   // extract descriptors and features from image
   POPART_COUT("[features]\tExtract CCTag from query image");
@@ -260,8 +259,7 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
   const CCTagLocalizer::Parameters *param = static_cast<const CCTagLocalizer::Parameters *>(parameters);
   if(!param)
   {
-    // error!
-    throw std::invalid_argument("The parameters are not in the right format!!");
+    throw std::invalid_argument("The CCTag localizer parameters are not in the right format.");
   }
   
   // it automatically throws an exception if the cast does not work
@@ -433,8 +431,7 @@ bool CCTagLocalizer::localizeRig(const std::vector<image::Image<unsigned char> >
   const CCTagLocalizer::Parameters *param = static_cast<const CCTagLocalizer::Parameters *>(parameters);
   if(!param)
   {
-    // error!
-    throw std::invalid_argument("The parameters are not in the right format!!");
+    throw std::invalid_argument("The CCTag localizer parameters are not in the right format.");
   }
   const size_t numCams = vec_imageGrey.size();
   assert(numCams == vec_queryIntrinsics.size());
@@ -464,11 +461,95 @@ bool CCTagLocalizer::localizeRig(const std::vector<image::Image<unsigned char> >
                      rigPose);
 }
 
-#ifndef HAVE_OPENGV
+bool CCTagLocalizer::localizeRig(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+                                 const std::vector<std::pair<std::size_t, std::size_t> > &vec_imageSize,
+                                 const LocalizerParameters *parameters,
+                                 std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                                 const std::vector<geometry::Pose3 > &vec_subPoses,
+                                 geometry::Pose3 &rigPose)
+{
+#ifdef HAVE_OPENGV
+  return localizeRig_opengv(vec_queryRegions,
+                            vec_imageSize,
+                            parameters,
+                            vec_queryIntrinsics,
+                            vec_subPoses,
+                            rigPose);
+#else
+  return localizeRig_naive(vec_queryRegions,
+                           vec_imageSize,
+                           parameters,
+                           vec_queryIntrinsics,
+                           vec_subPoses,
+                           rigPose);
+#endif
+}
+
+#ifdef HAVE_OPENGV
+bool CCTagLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+                                 const std::vector<std::pair<std::size_t, std::size_t> > &imageSize,
+                                 const LocalizerParameters *parameters,
+                                 std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                                 const std::vector<geometry::Pose3 > &vec_subPoses,
+                                 geometry::Pose3 &rigPose)
+{
+  const size_t numCams = vec_queryRegions.size();
+  assert(numCams == vec_queryIntrinsics.size());
+  assert(numCams == vec_subPoses.size() - 1);   
+
+  const CCTagLocalizer::Parameters *param = static_cast<const CCTagLocalizer::Parameters *>(parameters);
+  if(!param)
+  {
+    throw std::invalid_argument("The CCTag localizer parameters are not in the right format.");
+  }
+
+  vector<std::map< pair<IndexT, IndexT>, std::size_t > > vec_occurrences(numCams);
+  vector<Mat> vec_pts3D(numCams);
+  vector<Mat> vec_pts2D(numCams);
+
+  // for each camera retrieve the associations
+  //@todo parallelize?
+  size_t numAssociations = 0;
+  for( size_t i = 0; i < numCams; ++i )
+  {
+
+    // this map is used to collect the 2d-3d associations as we go through the images
+    // the key is a pair <Id3D, Id2d>
+    // the element is the pair 3D point - 2D point
+    auto &occurrences = vec_occurrences[i];
+    Mat &pts3D = vec_pts3D[i];
+    Mat &pts2D = vec_pts2D[i];
+    features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (vec_queryRegions[i].get());
+    getAllAssociations(queryRegions, *param, occurrences, pts2D, pts3D);
+    numAssociations += occurrences.size();
+  }
+  
+  // @todo Here it could be possible to filter the associations according to their
+  // occurrences, eg giving priority to those associations that are more frequent
+
+  const size_t minNumAssociations = 5;  //possible parameter?
+  if(numAssociations < minNumAssociations)
+  {
+    POPART_COUT("[poseEstimation]\tonly " << numAssociations << " have been found, not enough to do the resection!");
+    return false;
+  }
+
+  std::vector<std::vector<std::size_t> > inliers;
+  return localization::rigResection(vec_pts2D,
+                                    vec_pts3D,
+                                    vec_queryIntrinsics,
+                                    vec_subPoses,
+                                                     rigPose, 
+                                    inliers);
+
+  }
+  
+
+#else
 
 // subposes is n-1 as we consider the first camera as the main camera and the 
 // reference frame of the grid
-bool CCTagLocalizer::localizeRig(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+bool CCTagLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
                                  const std::vector<std::pair<std::size_t, std::size_t> > &imageSize,
                                  const LocalizerParameters *parameters,
                                  std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
@@ -566,67 +647,7 @@ bool CCTagLocalizer::localizeRig(const std::vector<std::unique_ptr<features::Reg
   return true;
 }
 
-#else
 
-bool CCTagLocalizer::localizeRig(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
-                                 const std::vector<std::pair<std::size_t, std::size_t> > &imageSize,
-                                 const LocalizerParameters *parameters,
-                                 std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
-                                 const std::vector<geometry::Pose3 > &vec_subPoses,
-                                 geometry::Pose3 &rigPose)
-{
-  const size_t numCams = vec_queryRegions.size();
-  assert(numCams == vec_queryIntrinsics.size());
-  assert(numCams == vec_subPoses.size() - 1);   
-
-  const CCTagLocalizer::Parameters *param = static_cast<const CCTagLocalizer::Parameters *>(parameters);
-  if(!param)
-  {
-    // error!
-    throw std::invalid_argument("The parameters are not in the right format!!");
-  }
-
-  vector<std::map< pair<IndexT, IndexT>, std::size_t > > vec_occurrences(numCams);
-  vector<Mat> vec_pts3D(numCams);
-  vector<Mat> vec_pts2D(numCams);
-
-  // for each camera retrieve the associations
-  //@todo parallelize?
-  size_t numAssociations = 0;
-  for( size_t i = 0; i < numCams; ++i )
-  {
-
-    // this map is used to collect the 2d-3d associations as we go through the images
-    // the key is a pair <Id3D, Id2d>
-    // the element is the pair 3D point - 2D point
-    auto &occurrences = vec_occurrences[i];
-    Mat &pts3D = vec_pts3D[i];
-    Mat &pts2D = vec_pts2D[i];
-    features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (vec_queryRegions[i].get());
-    getAllAssociations(queryRegions, *param, occurrences, pts2D, pts3D);
-    numAssociations += occurrences.size();
-  }
-  
-  // @todo Here it could be possible to filter the associations according to their
-  // occurrences, eg giving priority to those associations that are more frequent
-
-  const size_t minNumAssociations = 5;  //possible parameter?
-  if(numAssociations < minNumAssociations)
-  {
-    POPART_COUT("[poseEstimation]\tonly " << numAssociations << " have been found, not enough to do the resection!");
-    return false;
-  }
-
-  std::vector<std::vector<std::size_t> > inliers;
-  return localization::rigResection(vec_pts2D,
-                                    vec_pts3D,
-                                    vec_queryIntrinsics,
-                                    vec_subPoses,
-                                                     rigPose, 
-                                    inliers);
-
-  }
-  
 #endif // HAVE_OPENGV
 
 void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegions,

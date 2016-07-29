@@ -91,10 +91,25 @@ public:
                    const std::vector<geometry::Pose3 > &vec_subPoses,
                    geometry::Pose3 &rigPose);
   
+#ifdef HAVE_OPENGV
+  bool localizeRig_opengv(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+                          const std::vector<std::pair<std::size_t, std::size_t> > &imageSize,
+                          const LocalizerParameters *parameters,
+                          std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                          const std::vector<geometry::Pose3 > &vec_subPoses,
+                          geometry::Pose3 &rigPose);
+#else
+  bool localizeRig_naive(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+                        const std::vector<std::pair<std::size_t, std::size_t> > &imageSize,
+                        const LocalizerParameters *parameters,
+                        std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                        const std::vector<geometry::Pose3 > &vec_subPoses,
+                        geometry::Pose3 &rigPose);
+#endif
   
   /**
    * @brief Given the input Regions, it retrieves all the 2D-3D associations from
-   * the nearest k-frames in the database. The associations are retrived in terms
+   * the nearest k-frames in the database. The associations are retrieved in terms
    * of region index and 3D point index along with the number of times (\p occurrences) that the 
    * pair has been found. \p pt2D and \p pt3D contains the coordinates of the corresponding
    * points of the associations, in the same order as in \p occurences.
