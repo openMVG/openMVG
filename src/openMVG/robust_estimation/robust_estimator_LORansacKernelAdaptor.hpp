@@ -55,7 +55,7 @@ public:
       const auto idx = inliers[sample];
       vec_weights[sample] = ErrorT::Error(model, this->x1_.col(idx), this->x2_.col(idx));
       // avoid division by zero
-      vec_weights[sample] = 1/std::pow(std::max(eps, vec_weights[sample]), 2);
+      vec_weights[sample] = 1.0 / std::pow(std::max(eps, vec_weights[sample]), 2.0);
     }
   }
 
