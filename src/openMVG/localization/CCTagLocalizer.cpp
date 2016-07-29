@@ -478,8 +478,7 @@ bool CCTagLocalizer::localizeRig(const std::vector<std::unique_ptr<features::Reg
   const CCTagLocalizer::Parameters *param = static_cast<const CCTagLocalizer::Parameters *>(parameters);
   if(!param)
   {
-    // error!
-    throw std::invalid_argument("The parameters are not in the right format!!");
+    throw std::invalid_argument("The CCTag localizer parameters are not in the right format.");
   }
 
   const size_t numCams = vec_queryRegions.size();
