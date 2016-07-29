@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <iostream>
+
 namespace openMVG {
 namespace robust {
 
@@ -53,6 +56,14 @@ inline EROBUST_ESTIMATOR EROBUST_ESTIMATOR_stringToEnum(const std::string& estim
 inline std::ostream& operator<<(std::ostream& os, EROBUST_ESTIMATOR e)
 {
     return os << EROBUST_ESTIMATOR_enumToString(e);
+}
+
+inline std::istream& operator>>(std::istream& in, robust::EROBUST_ESTIMATOR& estimatorType)
+{
+    std::string token;
+    in >> token;
+    estimatorType = robust::EROBUST_ESTIMATOR_stringToEnum(token);
+    return in;
 }
 
 } //namespace robust
