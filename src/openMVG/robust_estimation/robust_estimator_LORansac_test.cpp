@@ -28,27 +28,28 @@ using namespace openMVG::robust;
  * @param[in] vec_inliers The inliers that fit the estimated line.
  */
 void drawTest(const std::string &outfile,
-              int W, int H,
+              int imageWidth, 
+              int imageHeight,
               const Vec2 &lineGT,
               const Vec2 &lineEst,
               const Mat &points,
               const std::vector<std::size_t> &vec_inliers)
 {
   const std::size_t nbPoints = points.cols();
-  svg::svgDrawer svgTest(W, H);
-  for(size_t i = 0; i < nbPoints; ++i)
+  svg::svgDrawer svgTest(imageWidth, imageHeight);
+  for(std::size_t i = 0; i < nbPoints; ++i)
   {
-    string sCol = "red";
+    std::string sCol = "red";
     float x = points.col(i)[0];
     float y = points.col(i)[1];
-    if(find(vec_inliers.begin(), vec_inliers.end(), i) != vec_inliers.end())
+    if(std::find(vec_inliers.begin(), vec_inliers.end(), i) != vec_inliers.end())
     {
       sCol = "green";
     }
     svgTest.drawCircle(x, y, 1, svg::svgStyle().fill(sCol).noStroke());
   }
   //draw the found line
-  float xa = 0, xb = W;
+  float xa = 0, xb = imageWidth;
   float ya = lineEst[1] * xa + lineEst[0];
   float yb = lineEst[1] * xb + lineEst[0];
   svgTest.drawLine(xa, ya, xb, yb, svg::svgStyle().stroke("blue", 0.5));
@@ -59,7 +60,7 @@ void drawTest(const std::string &outfile,
 
   //  ostringstream osSvg;
   //  osSvg << gaussianNoiseLevel << "_line_" << sqrt(errorMax) << ".svg";
-  ofstream svgFile(outfile);
+  std::ofstream svgFile(outfile);
   svgFile << svgTest.closeSvgFile().str();
   svgFile.close();
 }
