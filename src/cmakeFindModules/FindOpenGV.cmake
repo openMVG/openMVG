@@ -15,7 +15,7 @@
 
 MESSAGE(STATUS "Looking for OpenGV.")
 
-FIND_PATH(OPENGV_INCLUDE_DIR openGV/types.hpp
+FIND_PATH(OPENGV_INCLUDE_DIR opengv/types.hpp
   HINTS
   $ENV{OPENGV_DIR}/include
   ${OPENGV_DIR}/include
