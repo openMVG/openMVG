@@ -48,8 +48,12 @@ localization::LocalizationResult generateRandomResult(std::size_t numPts)
   
   // random valid
   const bool valid = (numInliers % 2 == 0);
-  //
-  return localization::LocalizationResult(data, indMatch3D2D, pose, intrinsics, valid);
+
+  std::vector<voctree::DocMatch> matchedImages;
+  matchedImages.push_back(voctree::DocMatch(2, 0.5));
+  matchedImages.push_back(voctree::DocMatch(3, 0.8));
+
+  return localization::LocalizationResult(data, indMatch3D2D, pose, intrinsics, matchedImages, valid);
 }
 
 // generate a random localization result, save it to binary file, load it again
