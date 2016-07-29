@@ -107,8 +107,8 @@ int main(int argc, char** argv)
   const std::string str_estimatorChoice = ""+robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
                                           +","+robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC);
   bool refineIntrinsics = false;
-  double errorMax = 4.0;                    //< the maximum error allowed for resection
-  double matchingError = 4.0;               //< the maximum error allowed for image matching with geometric validation
+  double resectionErrorMax = 4.0;                    //< the maximum error allowed for resection
+  double matchingErrorMax = 4.0;               //< the maximum error allowed for image matching with geometric validation
 
 
   // parameters for voctree localizer
@@ -157,7 +157,7 @@ int main(int argc, char** argv)
           "Number of cameras composing the rig")
         ("calibration", po::value<std::string>(&rigCalibPath)->required(), 
           "The file containing the calibration data for the rig (subposes)")
-        ("reprojectionError", po::value<double>(&errorMax)->default_value(errorMax), 
+        ("reprojectionError", po::value<double>(&resectionErrorMax)->default_value(resectionErrorMax), 
           "Maximum reprojection error (in pixels) allowed for resectioning. If set "
           "to 0 it lets the ACRansac select an optimal value.")
   // parameters for voctree localizer
@@ -172,7 +172,7 @@ int main(int argc, char** argv)
         ("maxResults", po::value<size_t>(&maxResults)->default_value(maxResults), 
           "[voctree] For algorithm AllResults, it stops the image matching when "
           "this number of matched images is reached. If 0 it is ignored.")
-      ("matchingError", po::value<double>(&matchingError)->default_value(matchingError), 
+      ("matchingError", po::value<double>(&matchingErrorMax)->default_value(matchingErrorMax), 
           "[voctree] Maximum matching error (in pixels) allowed for image matching with "
           "geometric verification. If set to 0 it lets the ACRansac select "
           "an optimal value.")
@@ -222,13 +222,13 @@ int main(int argc, char** argv)
     POPART_COUT("\tdescriptorPath: " << descriptorsFolder);
     POPART_COUT("\testimator: " << str_estimatorType);
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
-    if(errorMax == 0 && 
+    if(resectionErrorMax == 0 && 
        robust::EROBUST_ESTIMATOR_stringToEnum(str_estimatorType) == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
     {
       // for acransac set it to infinity
-      errorMax = std::numeric_limits<double>::infinity();
+      resectionErrorMax = std::numeric_limits<double>::infinity();
     }
-    POPART_COUT("\terrorMax: " << errorMax);
+    POPART_COUT("\terrorMax: " << resectionErrorMax);
     POPART_COUT("\tnCameras: " << numCameras);
     POPART_COUT("\tpreset: " << preset);
     if(!filelist.empty())
@@ -245,13 +245,13 @@ int main(int argc, char** argv)
       POPART_COUT("\tweights: " << weightsFilepath);
       POPART_COUT("\talgorithm: " << algostring);
       POPART_COUT("\tresults: " << numResults);
-      if(matchingError == 0 &&
+      if(matchingErrorMax == 0 &&
          robust::EROBUST_ESTIMATOR_stringToEnum(str_estimatorType) == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
       {
         // for acransac set it to infinity
-        matchingError = std::numeric_limits<double>::infinity();
+        matchingErrorMax = std::numeric_limits<double>::infinity();
       }
-      POPART_COUT("\tmatchingError: " << matchingError);
+      POPART_COUT("\tmatchingError: " << matchingErrorMax);
     }
 #if HAVE_CCTAG
     else
@@ -276,7 +276,7 @@ int main(int argc, char** argv)
   if(robust::EROBUST_ESTIMATOR_stringToEnum(str_estimatorType) == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC)
   {
     const double minThreshold = 0.00001;
-    if( errorMax <= minThreshold || matchingError <= minThreshold)
+    if( resectionErrorMax <= minThreshold || matchingErrorMax <= minThreshold)
     {
       POPART_CERR("Error: errorMax and matchingError cannot be 0 with " 
               << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC 
@@ -313,7 +313,7 @@ int main(int argc, char** argv)
     tmpParam->_numResults = numResults;
     tmpParam->_maxResults = maxResults;
     tmpParam->_ccTagUseCuda = false;
-    tmpParam->_matchingError = matchingError;
+    tmpParam->_matchingError = matchingErrorMax;
     
   }
 #if HAVE_CCTAG
@@ -334,7 +334,7 @@ int main(int argc, char** argv)
   // set other common parameters
   param->_featurePreset = features::describerPreset_stringToEnum(preset);
   param->_refineIntrinsics = refineIntrinsics;
-  param->_errorMax = errorMax;
+  param->_errorMax = resectionErrorMax;
   param->_estimator = robust::EROBUST_ESTIMATOR_stringToEnum(str_estimatorType);
 
   if(!localizer->isInit())
