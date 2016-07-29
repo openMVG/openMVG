@@ -53,7 +53,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
 {
   protected:
   // center of distortion is applied by the Intrinsics class
-  std::vector<double> _params; // K1
+  std::vector<double> _distortionParams; // K1
 
   public:
 
@@ -63,8 +63,8 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     double k1 = 0.0)
       :Pinhole_Intrinsic(w, h, focal, ppx, ppy)
   {
-    _params.resize(1);
-    _params[0] = k1;
+    _distortionParams.resize(1);
+    _distortionParams[0] = k1;
   }
 
   Pinhole_Intrinsic_Radial_K1* clone() const { return new Pinhole_Intrinsic_Radial_K1(*this); }
@@ -77,7 +77,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
   /// Add distortion to the point p (assume p is in the camera frame [normalized coordinates])
   virtual Vec2 add_disto(const Vec2 & p) const {
 
-    const double k1 = _params[0];
+    const double k1 = _distortionParams[0];
 
     const double r2 = p(0)*p(0) + p(1)*p(1);
     const double r_coeff = (1. + k1*r2);
@@ -93,7 +93,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     const double r2 = p(0)*p(0) + p(1)*p(1);
     const double radius = (r2 == 0) ?
       1. :
-      ::sqrt(radial_distortion::bisection_Radius_Solve(_params, r2, distoFunctor) / r2);
+      ::sqrt(radial_distortion::bisection_Radius_Solve(_distortionParams, r2, distoFunctor) / r2);
     return radius * p;
   }
 
@@ -101,8 +101,13 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
   virtual std::vector<double> getParams() const
   {
     std::vector<double> params = Pinhole_Intrinsic::getParams();
-    params.push_back(_params[0]);
+    params.push_back(_distortionParams[0]);
     return params;
+  }
+
+  virtual std::vector<double> getDistortionParams() const
+  {
+    return _distortionParams;
   }
 
   // Data wrapper for non linear optimization (update from data)
@@ -111,7 +116,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     if (params.size() == 4)
     {
       this->setK(params[0], params[1], params[2]);
-      _params = {
+      _distortionParams = {
         params[3] // K1
       };
       return true;
@@ -139,7 +144,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
   void save( Archive & ar) const
   {
     Pinhole_Intrinsic::save(ar);
-    ar(cereal::make_nvp("disto_k1", _params));
+    ar(cereal::make_nvp("disto_k1", _distortionParams));
   }
 
   // Serialization
@@ -147,7 +152,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
   void load( Archive & ar)
   {
     Pinhole_Intrinsic::load(ar);
-    ar(cereal::make_nvp("disto_k1", _params));
+    ar(cereal::make_nvp("disto_k1", _distortionParams));
   }
 
   private:
@@ -166,7 +171,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
 {
   protected:
   // center of distortion is applied by the Intrinsics class
-  std::vector<double> _params; // K1, K2, K3
+  std::vector<double> _distortionParams; // K1, K2, K3
 
   public:
 
@@ -176,10 +181,10 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     double k1 = 0.0, double k2 = 0.0, double k3 = 0.0)
       :Pinhole_Intrinsic(w, h, focal, ppx, ppy)
   {
-    _params.resize(3);
-    _params[0] = k1;
-    _params[1] = k2;
-    _params[2] = k3;
+    _distortionParams.resize(3);
+    _distortionParams[0] = k1;
+    _distortionParams[1] = k2;
+    _distortionParams[2] = k3;
   }
 
   Pinhole_Intrinsic_Radial_K3* clone() const { return new Pinhole_Intrinsic_Radial_K3(*this); }
@@ -192,7 +197,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
   /// Add distortion to the point p (assume p is in the camera frame [normalized coordinates])
   virtual Vec2 add_disto(const Vec2 & p) const {
 
-    const double k1 = _params[0], k2 = _params[1], k3 = _params[2];
+    const double k1 = _distortionParams[0], k2 = _distortionParams[1], k3 = _distortionParams[2];
 
     const double r2 = p(0)*p(0) + p(1)*p(1);
     const double r4 = r2 * r2;
@@ -208,9 +213,9 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     // Minimize disto(radius(p')^2) == actual Squared(radius(p))
 
     const double r2 = p(0)*p(0) + p(1)*p(1);
-    const double radius = (r2 == 0) ? //1. : ::sqrt(bisectionSolve(_params, r2) / r2);
+    const double radius = (r2 == 0) ? //1. : ::sqrt(bisectionSolve(_distortionParams, r2) / r2);
       1. :
-      ::sqrt(radial_distortion::bisection_Radius_Solve(_params, r2, distoFunctor) / r2);
+      ::sqrt(radial_distortion::bisection_Radius_Solve(_distortionParams, r2, distoFunctor) / r2);
     return radius * p;
   }
 
@@ -218,10 +223,15 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
   virtual std::vector<double> getParams() const
   {
     std::vector<double> params = Pinhole_Intrinsic::getParams();
-    params.push_back(_params[0]);
-    params.push_back(_params[1]);
-    params.push_back(_params[2]);
+    params.push_back(_distortionParams[0]);
+    params.push_back(_distortionParams[1]);
+    params.push_back(_distortionParams[2]);
     return params;
+  }
+
+  virtual std::vector<double> getDistortionParams() const
+  {
+    return _distortionParams;
   }
 
   // Data wrapper for non linear optimization (update from data)
@@ -230,7 +240,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     if (params.size() == 6)
     {
       this->setK(params[0], params[1], params[2]);
-      _params = {
+      _distortionParams = {
         params[3], params[4], params[5] // K1, K2, K3
       };
       return true;
@@ -255,7 +265,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
   void save( Archive & ar) const
   {
     Pinhole_Intrinsic::save(ar);
-    ar(cereal::make_nvp("disto_k3", _params));
+    ar(cereal::make_nvp("disto_k3", _distortionParams));
   }
 
   // Serialization
@@ -263,7 +273,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
   void load( Archive & ar)
   {
     Pinhole_Intrinsic::load(ar);
-    ar(cereal::make_nvp("disto_k3", _params));
+    ar(cereal::make_nvp("disto_k3", _distortionParams));
   }
 
   private:
