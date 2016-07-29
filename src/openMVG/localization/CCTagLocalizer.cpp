@@ -358,7 +358,7 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
                                                   (useInputIntrinsics) ? &queryIntrinsics : nullptr,
                                                   resectionDataTemp,
                                                   poseTemp,
-                                                  param->_estimator);
+                                                  param->_resectionEstimator);
 
     if ( ( bResection ) && ( resectionDataTemp.error_max < residualMin) )
     {
@@ -600,7 +600,7 @@ bool CCTagLocalizer::localizeAllAssociations(const std::vector<std::unique_ptr<f
                                                  &rigIntrinsics,
                                                  resectionData,
                                                  rigPose,
-                                                 param._estimator);
+                                                 param._resectionEstimator);
 
   if(!bResection)
   {

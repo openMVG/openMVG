@@ -549,7 +549,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const features::SIFT_Regions &que
                                                    (useInputIntrinsics) ? &queryIntrinsics : nullptr,
                                                    resectionData,
                                                    pose,
-                                                   param._estimator);
+                                                   param._resectionEstimator);
 
     if(!bResection)
     {
@@ -652,7 +652,7 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
                                                       (useInputIntrinsics) ? &queryIntrinsics : nullptr,
                                                       resectionData,
                                                       pose,
-                                                      param._estimator);
+                                                      param._resectionEstimator);
 
   if(!bResection)
   {

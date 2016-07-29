@@ -102,7 +102,7 @@ int main(int argc, char** argv)
   std::string rigCalibPath;               //< the file containing the calibration data for the file (subposes)
   std::string preset = features::describerPreset_enumToString(features::EDESCRIBER_PRESET::NORMAL_PRESET);               //< the preset for the feature extractor
   std::string str_descriptorType = describerTypeToString(DescriberType::SIFT);               //< the preset for the feature extractor
-  robust::EROBUST_ESTIMATOR estimatorType = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        //< the preset for the feature extractor
+  robust::EROBUST_ESTIMATOR resectionEstimator = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        //< the preset for the feature extractor
   //< the possible choices for the estimators as strings
   const std::string str_estimatorChoices = ""+robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
                                           +","+robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC);
@@ -137,7 +137,7 @@ int main(int argc, char** argv)
         ("preset", po::value<std::string>(&preset)->default_value(preset), 
           "Preset for the feature extractor when localizing a new image "
           "{LOW,MEDIUM,NORMAL,HIGH,ULTRA}")
-      ("estimator", po::value<robust::EROBUST_ESTIMATOR>(&estimatorType)->default_value(estimatorType), 
+      ("estimator", po::value<robust::EROBUST_ESTIMATOR>(&resectionEstimator)->default_value(resectionEstimator), 
           std::string("The type of *sac framework to use for matching and resectioning "
           "{"+str_estimatorChoices+"}").c_str())
         ("sfmdata", po::value<std::string>(&sfmFilePath)->required(),
@@ -220,10 +220,10 @@ int main(int argc, char** argv)
     POPART_COUT("\tsfmdata: " << sfmFilePath);
     POPART_COUT("\tmediapath: " << mediaPath);
     POPART_COUT("\tdescriptorPath: " << descriptorsFolder);
-    POPART_COUT("\testimator: " << estimatorType);
+    POPART_COUT("\testimator: " << resectionEstimator);
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
     if(resectionErrorMax == 0 && 
-       estimatorType == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
+       resectionEstimator == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
     {
       // for acransac set it to infinity
       resectionErrorMax = std::numeric_limits<double>::infinity();
@@ -246,7 +246,7 @@ int main(int argc, char** argv)
       POPART_COUT("\talgorithm: " << algostring);
       POPART_COUT("\tresults: " << numResults);
       if(matchingErrorMax == 0 &&
-         estimatorType == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
+         resectionEstimator == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
       {
         // for acransac set it to infinity
         matchingErrorMax = std::numeric_limits<double>::infinity();
@@ -264,8 +264,8 @@ int main(int argc, char** argv)
   
   // check for consistency of the estimators to use
   // only loransac and acransac are currently supported
-  if(estimatorType != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC &&
-     estimatorType != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
+  if(resectionEstimator != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC &&
+     resectionEstimator != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
   {
     POPART_CERR("Only " << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC 
             << " and " << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC 
@@ -273,7 +273,7 @@ int main(int argc, char** argv)
     return EXIT_FAILURE;
   }
   // for loransac we need thresholds > 0
-  if(estimatorType == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC)
+  if(resectionEstimator == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC)
   {
     const double minThreshold = 0.00001;
     if( resectionErrorMax <= minThreshold || matchingErrorMax <= minThreshold)
@@ -335,7 +335,7 @@ int main(int argc, char** argv)
   param->_featurePreset = features::describerPreset_stringToEnum(preset);
   param->_refineIntrinsics = refineIntrinsics;
   param->_errorMax = resectionErrorMax;
-  param->_estimator = estimatorType;
+  param->_resectionEstimator = resectionEstimator;
 
   if(!localizer->isInit())
   {
