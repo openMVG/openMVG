@@ -314,7 +314,7 @@ int main(int argc, char** argv)
   {
     POPART_CERR("Only " << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC 
             << " and " << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC 
-            << " are supported!");
+            << " are supported.");
     return EXIT_FAILURE;
   }
   // for loransac we need thresholds > 0
@@ -323,9 +323,9 @@ int main(int argc, char** argv)
     const double minThreshold = 0.00001;
     if( errorMax <= minThreshold || matchingError <= minThreshold)
     {
-      POPART_CERR("Error!: errorMax and matchingError cannot be 0 with " 
+      POPART_CERR("Error: errorMax and matchingError cannot be 0 with " 
               << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC 
-              << " estimator");
+              << " estimator.");
       return EXIT_FAILURE;     
     }
   }
