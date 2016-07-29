@@ -103,7 +103,8 @@ int main(int argc, char** argv)
   std::string mediaFilepath;                //< the media file to localize
   std::string featurePreset = "NORMAL";     //< the preset for the feature extractor
   std::string str_descriptorType = describerTypeToString(DescriberType::SIFT);        //< the preset for the feature extractor
-  robust::EROBUST_ESTIMATOR resectionEstimator = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        //< the preset for the feature extractor
+  robust::EROBUST_ESTIMATOR resectionEstimator = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        //< the estimator to use for resection
+  robust::EROBUST_ESTIMATOR matchingEstimator = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        //< the estimator to use for matching
   //< the possible choices for the estimators as strings
   const std::string str_estimatorChoices = ""+robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
                                           +","+robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC);
@@ -152,8 +153,11 @@ int main(int argc, char** argv)
       ("preset", po::value<std::string>(&featurePreset)->default_value(featurePreset), 
           "Preset for the feature extractor when localizing a new image "
           "{LOW,MEDIUM,NORMAL,HIGH,ULTRA}")
-      ("estimator", po::value<robust::EROBUST_ESTIMATOR>(&resectionEstimator)->default_value(resectionEstimator), 
-          std::string("The type of *sac framework to use for matching and resectioning "
+      ("resectionEstimator", po::value<robust::EROBUST_ESTIMATOR>(&resectionEstimator)->default_value(resectionEstimator), 
+          std::string("The type of *sac framework to use for resection "
+          "{"+str_estimatorChoices+"}").c_str())
+      ("matchingEstimator", po::value<robust::EROBUST_ESTIMATOR>(&matchingEstimator)->default_value(matchingEstimator), 
+          std::string("The type of *sac framework to use for matching "
           "{"+str_estimatorChoices+"}").c_str())
       ("calibration", po::value<std::string>(&calibFile)/*->required( )*/, 
           "Calibration file")
@@ -265,7 +269,8 @@ int main(int argc, char** argv)
     POPART_COUT("Program called with the following parameters:");
     POPART_COUT("\tdescriptors: " << str_descriptorType);
     POPART_COUT("\tpreset: " << featurePreset);
-    POPART_COUT("\testimator: " << resectionEstimator);
+    POPART_COUT("\tresectionEstimator: " << resectionEstimator);
+    POPART_COUT("\tmatchingEstimator: " << matchingEstimator);
     POPART_COUT("\tcalibration: " << calibFile);
     POPART_COUT("\tdescriptorPath: " << descriptorsFolder);
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
@@ -287,7 +292,7 @@ int main(int argc, char** argv)
       POPART_COUT("\tcommon views: " << numCommonViews);
       POPART_COUT("\talgorithm: " << algostring);
       if(matchingErrorMax == 0 &&
-         resectionEstimator == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
+         matchingEstimator == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
       {
         // for acransac set it to infinity
         matchingErrorMax = std::numeric_limits<double>::infinity();
@@ -310,7 +315,9 @@ int main(int argc, char** argv)
   // check for consistency of the estimators to use
   // only loransac and acransac are currently supported
   if(resectionEstimator != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC &&
-     resectionEstimator != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
+     resectionEstimator != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC &&
+     matchingEstimator != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC &&
+     matchingEstimator != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
   {
     POPART_CERR("Only " << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC 
             << " and " << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC 
@@ -399,6 +406,7 @@ int main(int argc, char** argv)
   param->_visualDebug = visualDebug;
   param->_errorMax = resectionErrorMax;
   param->_resectionEstimator = resectionEstimator;
+  param->_matchingEstimator = matchingEstimator;
   
 
   bool isInit = localizer->isInit();
