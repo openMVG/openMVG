@@ -132,10 +132,14 @@ int main(int argc, char** argv)
   std::string mediaPath;                  //< the media file to localize
   std::string filelist;                  //< the media file to localize
   std::string rigCalibPath;               //< the file containing the calibration data for the file (subposes)
-  std::string preset = features::describerPreset_enumToString(features::EDESCRIBER_PRESET::NORMAL_PRESET);               //< the preset for the feature extractor
-  DescriberType descriptorType = DescriberType::SIFT;               //< the preset for the feature extractor
-  robust::EROBUST_ESTIMATOR resectionEstimator = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        //< the estimator to use for resection
-  robust::EROBUST_ESTIMATOR matchingEstimator = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        //< the estimator to use for matching
+//< the preset for the feature extractor
+  features::EDESCRIBER_PRESET featurePreset = features::EDESCRIBER_PRESET::NORMAL_PRESET;     
+  //< the preset for the feature extractor
+  DescriberType descriptorType = DescriberType::SIFT;        
+  //< the estimator to use for resection
+  robust::EROBUST_ESTIMATOR resectionEstimator = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        
+  //< the estimator to use for matching
+  robust::EROBUST_ESTIMATOR matchingEstimator = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        
   //< the possible choices for the estimators as strings
   const std::string str_estimatorChoices = ""+robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
                                           +","+robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC);
@@ -167,7 +171,7 @@ int main(int argc, char** argv)
           ", CCTAG, SIFT_CCTAG"
 #endif
           "}")
-        ("preset", po::value<std::string>(&preset)->default_value(preset), 
+      ("preset", po::value<features::EDESCRIBER_PRESET>(&featurePreset)->default_value(featurePreset), 
           "Preset for the feature extractor when localizing a new image "
           "{LOW,MEDIUM,NORMAL,HIGH,ULTRA}")
       ("resectionEstimator", po::value<robust::EROBUST_ESTIMATOR>(&resectionEstimator)->default_value(resectionEstimator), 
@@ -268,7 +272,7 @@ int main(int argc, char** argv)
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
     POPART_COUT("\terrorMax: " << resectionErrorMax);
     POPART_COUT("\tnCameras: " << numCameras);
-    POPART_COUT("\tpreset: " << preset);
+    POPART_COUT("\tpreset: " << featurePreset);
     if(!filelist.empty())
       POPART_COUT("\tfilelist: " << filelist);
     POPART_COUT("\tdescriptors: " << descriptorType);
@@ -341,7 +345,7 @@ int main(int argc, char** argv)
   assert(param);
   
   // set other common parameters
-  param->_featurePreset = features::describerPreset_stringToEnum(preset);
+  param->_featurePreset = featurePreset;
   param->_refineIntrinsics = refineIntrinsics;
   param->_errorMax = resectionErrorMax;
   param->_resectionEstimator = resectionEstimator;

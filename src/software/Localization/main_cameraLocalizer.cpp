@@ -133,16 +133,20 @@ int main(int argc, char** argv)
   std::string sfmFilePath;                  //< the OpenMVG .json data file
   std::string descriptorsFolder;            //< the OpenMVG .json data file
   std::string mediaFilepath;                //< the media file to localize
-  std::string featurePreset = "NORMAL";     //< the preset for the feature extractor
-  DescriberType descriptorType = DescriberType::SIFT;        //< the preset for the feature extractor
-  robust::EROBUST_ESTIMATOR resectionEstimator = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        //< the estimator to use for resection
-  robust::EROBUST_ESTIMATOR matchingEstimator = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        //< the estimator to use for matching
+  //< the preset for the feature extractor
+  features::EDESCRIBER_PRESET featurePreset = features::EDESCRIBER_PRESET::NORMAL_PRESET;     
+  //< the preset for the feature extractor
+  DescriberType descriptorType = DescriberType::SIFT;        
+  //< the estimator to use for resection
+  robust::EROBUST_ESTIMATOR resectionEstimator = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        
+  //< the estimator to use for matching
+  robust::EROBUST_ESTIMATOR matchingEstimator = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        
   //< the possible choices for the estimators as strings
   const std::string str_estimatorChoices = ""+robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
                                           +","+robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC);
   bool refineIntrinsics = false;
-  double resectionErrorMax = 4.0;                    //< the maximum error allowed for resection
-  double matchingErrorMax = 4.0;               //< the maximum error allowed for image matching with geometric validation
+  double resectionErrorMax = 4.0;  //< the maximum error allowed for resection
+  double matchingErrorMax = 4.0;   //< the maximum error allowed for image matching with geometric validation
   
   // voctree parameters
   std::string algostring = "AllResults";
@@ -182,7 +186,7 @@ int main(int argc, char** argv)
           ", CCTAG, SIFT_CCTAG"
 #endif
           "}")
-      ("preset", po::value<std::string>(&featurePreset)->default_value(featurePreset), 
+      ("preset", po::value<features::EDESCRIBER_PRESET>(&featurePreset)->default_value(featurePreset), 
           "Preset for the feature extractor when localizing a new image "
           "{LOW,MEDIUM,NORMAL,HIGH,ULTRA}")
       ("resectionEstimator", po::value<robust::EROBUST_ESTIMATOR>(&resectionEstimator)->default_value(resectionEstimator), 
@@ -399,7 +403,7 @@ int main(int argc, char** argv)
   assert(param);
   
   // set other common parameters
-  param->_featurePreset = features::describerPreset_stringToEnum(featurePreset);
+  param->_featurePreset = featurePreset;
   param->_refineIntrinsics = refineIntrinsics;
   param->_visualDebug = visualDebug;
   param->_errorMax = resectionErrorMax;
