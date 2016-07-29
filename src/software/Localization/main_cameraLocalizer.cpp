@@ -134,7 +134,7 @@ int main(int argc, char** argv)
   std::string descriptorsFolder;            //< the OpenMVG .json data file
   std::string mediaFilepath;                //< the media file to localize
   std::string featurePreset = "NORMAL";     //< the preset for the feature extractor
-  std::string str_descriptorType = describerTypeToString(DescriberType::SIFT);        //< the preset for the feature extractor
+  DescriberType descriptorType = DescriberType::SIFT;        //< the preset for the feature extractor
   robust::EROBUST_ESTIMATOR resectionEstimator = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        //< the estimator to use for resection
   robust::EROBUST_ESTIMATOR matchingEstimator = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        //< the estimator to use for matching
   //< the possible choices for the estimators as strings
@@ -176,7 +176,7 @@ int main(int argc, char** argv)
   
   desc.add_options()
       ("help,h", "Print this message")
-      ("descriptors", po::value<std::string>(&str_descriptorType)->default_value(str_descriptorType), 
+      ("descriptors", po::value<DescriberType>(&descriptorType)->default_value(descriptorType), 
           "Type of descriptors to use {SIFT"
 #ifdef HAVE_CCTAG
           ", CCTAG, SIFT_CCTAG"
@@ -291,21 +291,21 @@ int main(int argc, char** argv)
   // just for debugging purpose, print out all the parameters
   {
     // decide the localizer to use based on the type of feature
-    useVoctreeLocalizer = ((DescriberType::SIFT==stringToDescriberType(str_descriptorType))
+    useVoctreeLocalizer = ((DescriberType::SIFT==descriptorType)
 #if HAVE_CCTAG
-            || (DescriberType::SIFT_CCTAG==stringToDescriberType(str_descriptorType))
+            || (DescriberType::SIFT_CCTAG==descriptorType)
 #endif
             );
     
 #if HAVE_CCTAG   
     // check whether we have to use SIFT and CCTAG together
-    useSIFT_CCTAG = (DescriberType::SIFT_CCTAG==stringToDescriberType(str_descriptorType));
+    useSIFT_CCTAG = (DescriberType::SIFT_CCTAG==descriptorType);
 #endif    
     
     // the bundle adjustment can be run for now only if the refine intrinsics option is not set
     globalBundle = (globalBundle && !refineIntrinsics);
     POPART_COUT("Program called with the following parameters:");
-    POPART_COUT("\tdescriptors: " << str_descriptorType);
+    POPART_COUT("\tdescriptors: " << descriptorType);
     POPART_COUT("\tpreset: " << featurePreset);
     POPART_COUT("\tresectionEstimator: " << resectionEstimator);
     POPART_COUT("\tmatchingEstimator: " << matchingEstimator);
@@ -357,13 +357,10 @@ int main(int argc, char** argv)
   
   std::unique_ptr<localization::ILocalizer> localizer;
   
-  // if a describer is not supported an exception will be thrown here
-  DescriberType describer = stringToDescriberType(str_descriptorType);
-  
   // initialize the localizer according to the chosen type of describer
-  if((DescriberType::SIFT==describer)
+  if((DescriberType::SIFT==descriptorType)
 #if HAVE_CCTAG
-            ||(DescriberType::SIFT_CCTAG==describer)
+            ||(DescriberType::SIFT_CCTAG==descriptorType)
 #endif
       )
   {

@@ -133,7 +133,7 @@ int main(int argc, char** argv)
   std::string filelist;                  //< the media file to localize
   std::string rigCalibPath;               //< the file containing the calibration data for the file (subposes)
   std::string preset = features::describerPreset_enumToString(features::EDESCRIBER_PRESET::NORMAL_PRESET);               //< the preset for the feature extractor
-  std::string str_descriptorType = describerTypeToString(DescriberType::SIFT);               //< the preset for the feature extractor
+  DescriberType descriptorType = DescriberType::SIFT;               //< the preset for the feature extractor
   robust::EROBUST_ESTIMATOR resectionEstimator = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        //< the estimator to use for resection
   robust::EROBUST_ESTIMATOR matchingEstimator = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        //< the estimator to use for matching
   //< the possible choices for the estimators as strings
@@ -161,7 +161,7 @@ int main(int argc, char** argv)
   po::options_description desc("This program is used to localize a camera rig composed of internally calibrated cameras");
   desc.add_options()
         ("help,h", "Print this message")
-        ("descriptors", po::value<std::string>(&str_descriptorType)->default_value(str_descriptorType), 
+        ("descriptors", po::value<DescriberType>(&descriptorType)->default_value(descriptorType), 
           "Type of descriptors to use {SIFT"
 #ifdef HAVE_CCTAG
           ", CCTAG, SIFT_CCTAG"
@@ -271,10 +271,10 @@ int main(int argc, char** argv)
     POPART_COUT("\tpreset: " << preset);
     if(!filelist.empty())
       POPART_COUT("\tfilelist: " << filelist);
-    POPART_COUT("\tdescriptors: " << str_descriptorType);
-    if((DescriberType::SIFT==stringToDescriberType(str_descriptorType))
+    POPART_COUT("\tdescriptors: " << descriptorType);
+    if((DescriberType::SIFT==descriptorType)
 #if HAVE_CCTAG
-            ||(DescriberType::SIFT_CCTAG==stringToDescriberType(str_descriptorType))
+            ||(DescriberType::SIFT_CCTAG==descriptorType)
 #endif
       )
     {
@@ -299,12 +299,10 @@ int main(int argc, char** argv)
   
   std::unique_ptr<localization::ILocalizer> localizer;
   
-  DescriberType describer = stringToDescriberType(str_descriptorType);
-  
   // initialize the localizer according to the chosen type of describer
-  if((DescriberType::SIFT==describer)
+  if((DescriberType::SIFT==descriptorType)
 #if HAVE_CCTAG
-            ||(DescriberType::SIFT_CCTAG==describer)
+            ||(DescriberType::SIFT_CCTAG==descriptorType)
 #endif
       )
   {
@@ -313,7 +311,7 @@ int main(int argc, char** argv)
                                                             vocTreeFilepath,
                                                             weightsFilepath
 #if HAVE_CCTAG
-                                                            , DescriberType::SIFT_CCTAG==describer
+                                                            , DescriberType::SIFT_CCTAG==descriptorType
 #endif
                                                             );
     localizer.reset(tmpLoc);
