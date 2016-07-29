@@ -20,6 +20,7 @@ set(features_files_headers
 
 set( features_files_sources
   selection.cpp
+  image_describer.cpp
   akaze/AKAZE.cpp
   liop/liop_descriptor.cpp
   features_test.cpp
