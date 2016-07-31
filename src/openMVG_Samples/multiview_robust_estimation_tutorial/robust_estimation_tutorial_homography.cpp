@@ -57,7 +57,7 @@ void display_info
   const IndMatches & vec_PutativeMatches,
   const Mat3 &H,
   const std::vector<size_t> & vec_inliers,
-  const std::string sMethod
+  const std::string & sMethod
 );
 
 int main() {
@@ -159,9 +159,9 @@ int main() {
     xL.col(k) = imaL.coords().cast<double>();
     xR.col(k) = imaR.coords().cast<double>();
   }
-  
+
   // Then we use a robust_estimator to find if a model can be fitted in the defined datum
-  
+
   //--
   //-- Max Consensus
   //- Return the Model that have the most of inliers
@@ -328,7 +328,7 @@ void display_info
   const IndMatches & vec_PutativeMatches,
   const Mat3 &H,
   const std::vector<size_t> & vec_inliers,
-  const std::string sMethod
+  const std::string & sMethod
 )
 {
   std::cout

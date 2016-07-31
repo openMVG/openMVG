@@ -53,7 +53,7 @@ namespace openMVG
         x = m_moment_x / static_cast<double>( m_area ) ;
         y = m_moment_y / static_cast<double>( m_area ) ;
       }
-        
+
       /**
       * Compute covariance matrix corresponding to the ellipse
       *
@@ -74,9 +74,6 @@ namespace openMVG
         /*
         * Compute covariance matrix corresponding to the ellipse
         */
-        const double x = m_moment_x / static_cast<double>( m_area ) ;
-        const double y = m_moment_y / static_cast<double>( m_area ) ;
-
         const double i20 = m_moment_x2 - static_cast<double>( m_area ) * ell_x * ell_x ;
         const double i02 = m_moment_y2 - static_cast<double>( m_area ) * ell_y * ell_y ;
         const double i11 = m_moment_xy - static_cast<double>( m_area ) * ell_x * ell_y ;

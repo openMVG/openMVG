@@ -32,9 +32,6 @@ inline bool Save_PLY(
   if (!stream.is_open())
     return false;
 
-  // Configure a sufficient precision for the float data
-  // Avoid the quantification effects when scientific notation is used
-  stream << std::fixed << std::setprecision(9); // float have up to 9 significative digits
   bool bOk = false;
   {
     // Count how many views having valid poses:
@@ -69,8 +66,10 @@ inline bool Save_PLY(
           {
             const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view.second.get());
             stream
-              << pose.center().transpose().cast<float>()
-              << " 0 255 0" << '\n';
+              << pose.center()(0) << ' '
+              << pose.center()(1) << ' '
+              << pose.center()(2)
+              << " 0 255 0\n";
           }
         }
       }
@@ -82,8 +81,10 @@ inline bool Save_PLY(
         for ( const auto & iterLandmarks : landmarks )
         {
           stream
-            << iterLandmarks.second.X.transpose().cast<float>()
-            << " 255 255 255" << '\n';
+            << iterLandmarks.second.X(0) << ' '
+            << iterLandmarks.second.X(1) << ' '
+            << iterLandmarks.second.X(2)
+            << " 255 255 255\n";
         }
       }
 
@@ -94,8 +95,10 @@ inline bool Save_PLY(
         for ( const auto & iterGCP : landmarks )
         {
           stream
-            << iterGCP.second.X.transpose().cast<float>()
-            << " 255 255 0" << '\n';
+            << iterGCP.second.X(0) << ' '
+            << iterGCP.second.X(1) << ' '
+            << iterGCP.second.X(2)
+            << " 255 255 0\n";
         }
       }
 

@@ -61,7 +61,7 @@ class Exif_IO
     virtual std::string getLensModel() const = 0;
 
     /**
-    * @brief Get an unique identifier for this image
+    * @brief Get a unique identifier for this image
     * @return Unique ID
     */
     virtual std::string getImageUniqueID() const = 0;

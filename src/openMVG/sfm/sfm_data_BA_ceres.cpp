@@ -278,7 +278,7 @@ bool Bundle_Adjustment_Ceres::Adjust
       {
         std::cerr
           << "Cannot use this GCP id: " << gcp_landmark_it.first
-          << ". It is linked to no image observation." << std::endl;
+          << ". There is not linked image observation." << std::endl;
       }
       else
       {

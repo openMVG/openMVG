@@ -323,12 +323,15 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
  * @return (errorMax, minNFA)
  */
 template<typename Kernel>
-std::pair<double, double> ACRANSAC(const Kernel &kernel,
+std::pair<double, double> ACRANSAC
+(
+  const Kernel &kernel,
   std::vector<size_t> & vec_inliers,
   const unsigned int num_max_iteration = 1024,
   typename Kernel::Model * model = NULL,
   double precision = std::numeric_limits<double>::infinity(),
-  bool bVerbose = false)
+  bool bVerbose = false
+)
 {
   vec_inliers.clear();
 

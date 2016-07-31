@@ -12,13 +12,15 @@ namespace sfm{
 
 /// Association of Ids to a contiguous set of Ids
 template<typename IterablePairs, typename PairValueType>
-void reindex(
+void reindex
+(
   const IterablePairs& pairs,
   Hash_Map<PairValueType, PairValueType> & reindex_forward,
-  Hash_Map<PairValueType, PairValueType> & reindex_backward)
+  Hash_Map<PairValueType, PairValueType> & reindex_backward
+)
 {
   typedef std::pair<PairValueType,PairValueType> PairT;
-  // get an unique set of Ids
+  // get a unique set of Ids
   std::set<size_t> unique_id;
   for(typename IterablePairs::const_iterator iter = pairs.begin();
         iter != pairs.end(); ++iter)

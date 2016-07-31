@@ -84,7 +84,6 @@ struct GeometricFilter_EMatrix_AC
     typedef ACKernelAdaptorEssential<
         openMVG::essential::kernel::FivePointKernel,
         openMVG::fundamental::kernel::EpipolarDistanceError,
-        UnnormalizerT,
         Mat3>
         KernelType;
 

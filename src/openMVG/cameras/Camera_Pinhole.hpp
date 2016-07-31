@@ -315,6 +315,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
 #include <cereal/types/vector.hpp>
 
 CEREAL_REGISTER_TYPE_WITH_NAME( openMVG::cameras::Pinhole_Intrinsic, "pinhole" );
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::IntrinsicBase, openMVG::cameras::Pinhole_Intrinsic)
 
 #endif // #ifndef OPENMVG_CAMERA_PINHOLE_HPP
 

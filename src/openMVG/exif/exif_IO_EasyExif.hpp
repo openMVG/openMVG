@@ -149,7 +149,7 @@ class Exif_IO_EasyExif : public Exif_IO
     }
 
     /**
-    * @brief Get an unique indentifier for this image
+    * @brief Get a unique indentifier for this image
     * @return Unique ID
     */
     std::string getImageUniqueID() const override

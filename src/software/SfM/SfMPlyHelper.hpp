@@ -21,8 +21,9 @@ namespace plyHelper{
 static bool exportToPly(const std::vector<Vec3> & vec_points,
   const std::string & sFileName)
 {
-  std::ofstream outfile;
-  outfile.open(sFileName.c_str(), std::ios_base::out);
+  std::ofstream outfile(sFileName.c_str());
+  if (!outfile.is_open())
+    return false;
 
   outfile << "ply"
     << std::endl << "format ascii 1.0"
@@ -37,10 +38,13 @@ static bool exportToPly(const std::vector<Vec3> & vec_points,
 
   for (size_t i=0; i < vec_points.size(); ++i)
   {
-    outfile << vec_points[i].transpose()
-      << " 255 255 255" << "\n";
+    outfile
+      << vec_points[i](0) << ' '
+      << vec_points[i](1) << ' '
+      << vec_points[i](2) << ' '
+      << "255 255 255" << "\n";
   }
-  bool bOk = outfile.good();
+  const bool bOk = outfile.good();
   outfile.close();
   return bOk;
 }
@@ -51,8 +55,9 @@ static bool exportToPly(const std::vector<Vec3> & vec_points,
   const std::string & sFileName,
   const std::vector<Vec3> * vec_coloredPoints = NULL)
 {
-  std::ofstream outfile;
-  outfile.open(sFileName.c_str(), std::ios_base::out);
+  std::ofstream outfile(sFileName.c_str());
+  if (!outfile.is_open())
+    return false;
 
   outfile << "ply"
     << '\n' << "format ascii 1.0"
@@ -67,19 +72,31 @@ static bool exportToPly(const std::vector<Vec3> & vec_points,
 
   for (size_t i=0; i < vec_points.size(); ++i)  {
     if (vec_coloredPoints == NULL)
-      outfile << vec_points[i].transpose()
-        << " 255 255 255" << "\n";
+      outfile
+        << vec_points[i](0) << ' '
+        << vec_points[i](1) << ' '
+        << vec_points[i](2) << ' '
+        << "255 255 255" << "\n";
     else
-      outfile << vec_points[i].transpose()
-        << " " << (*vec_coloredPoints)[i].transpose() << "\n";
+      outfile
+        << vec_points[i](0) << ' '
+        << vec_points[i](1) << ' '
+        << vec_points[i](2) << ' '
+        << (*vec_coloredPoints)[i](0) << ' '
+        << (*vec_coloredPoints)[i](1) << ' '
+        << (*vec_coloredPoints)[i](2)
+        << "\n";
   }
 
   for (size_t i=0; i < vec_camPos.size(); ++i)  {
-    outfile << vec_camPos[i].transpose()
-      << " 0 255 0" << "\n";
+    outfile
+      << vec_camPos[i](0) << ' '
+      << vec_camPos[i](1) << ' '
+      << vec_camPos[i](2) << ' '
+      << "0 255 0" << "\n";
   }
   outfile.flush();
-  bool bOk = outfile.good();
+  const bool bOk = outfile.good();
   outfile.close();
   return bOk;
 }

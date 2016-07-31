@@ -247,7 +247,6 @@ bool IsTracksOneCC
     itLandmarks != landmarks.end(); ++itLandmarks)
   {
     const Observations & obs = itLandmarks->second.obs;
-    std::set<IndexT> id_to_link;
     for (Observations::const_iterator itObs = obs.begin();
       itObs != obs.end(); ++itObs)
     {
@@ -305,7 +304,6 @@ void KeepLargestViewCCTracks
       itLandmarks != landmarks.end(); ++itLandmarks)
     {
       const Observations & obs = itLandmarks->second.obs;
-      std::set<IndexT> id_to_link;
       for (Observations::const_iterator itObs = obs.begin();
         itObs != obs.end(); ++itObs)
       {
