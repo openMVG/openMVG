@@ -124,6 +124,14 @@ Mat2X LocalizationResult::computeResiduals() const
   return intrinsics.residuals(getPose(), inliers3d, inliers2d);
 }
 
+double LocalizationResult::computeRMSE() const 
+{
+  const auto& residuals = computeResiduals();
+  // squared residual for each point
+  const auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
+  //RMSE
+  return std::sqrt(sqrErrors.mean());
+}
 
 
 bool load(LocalizationResult & res, const std::string & filename)
