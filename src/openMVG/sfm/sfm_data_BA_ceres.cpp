@@ -9,6 +9,10 @@
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/types.hpp"
 
+//- Robust estimation - LMeds (since no threshold can be defined)
+#include "openMVG/robust_estimation/robust_estimator_LMeds.hpp"
+#include "openMVG/geometry/Similarity3_Kernel.hpp"
+
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
 
@@ -17,6 +21,35 @@ namespace sfm {
 
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
+
+// Ceres CostFunctor used for SfM pose center to GPS pose center minimization
+struct PoseCenterConstraintCostFunction
+{
+  double weight_;
+  Vec3 pose_center_constraint_;
+
+  PoseCenterConstraintCostFunction
+  (
+    const Vec3 & center,
+    const double weight
+  ): weight_(weight), pose_center_constraint_(center)
+  {
+  }
+
+  template <typename T> bool
+  operator()
+  (
+    const T* const pose_center,
+    T* residuals
+  )
+  const
+  {
+    residuals[0] = T(weight_) * (pose_center[0] - T(pose_center_constraint_[0]));
+    residuals[1] = T(weight_) * (pose_center[1] - T(pose_center_constraint_[1]));
+    residuals[2] = T(weight_) * (pose_center[2] - T(pose_center_constraint_[2]));
+    return true;
+  }
+};
 
 /// Create the appropriate cost functor according the provided input camera intrinsic model.
 /// The residual can be weighetd if desired (default 0.0 means no weight).
@@ -120,6 +153,64 @@ bool Bundle_Adjustment_Ceres::Adjust
   // Create residuals for each observation in the bundle adjustment problem. The
   // parameters for cameras and points are added automatically.
   //----------
+  double pose_center_robust_fitting_error = 0.0;
+  if (sfm_data.GetViews().size() > 3)
+  {
+    // Apply X-Y affine transformation - Early transformation to be closer to the Prior coordinate system
+    {
+      // Collect corresponding camera centers
+      std::vector<Vec3> X_SfM, X_GPS;
+      for (const auto & view_it : sfm_data.GetViews())
+      {
+        const sfm::ViewPriors * prior = dynamic_cast<sfm::ViewPriors*>(view_it.second.get());
+        if (prior != nullptr)
+        {
+          const IndexT & pose_id = prior->id_view;
+          if (prior->b_use_pose_center_ && sfm_data.GetPoses().count(pose_id) != 0)
+          {
+            X_SfM.push_back( sfm_data.GetPoses().at(pose_id).center() );
+            X_GPS.push_back( prior->pose_center_ );
+          }
+        }
+      }
+      openMVG::geometry::Similarity3 sim;
+
+      // Compute the registration:
+      {
+        using namespace openMVG::robust;
+        using namespace openMVG::geometry;
+
+        geometry::kernel::Similarity3_Kernel kernel(Eigen::Map<Mat3X>(X_SfM[0].data(),3, X_SfM.size()), Eigen::Map<Mat3X>(X_GPS[0].data(),3, X_GPS.size()));
+        const double lmeds_median = LeastMedianOfSquares
+          (
+            kernel,
+            &sim
+          );
+        std::cout << "LMeds found a model with an upper bound of: " <<  sqrt(lmeds_median) << " user units."<< std::endl;
+        pose_center_robust_fitting_error = sqrt(lmeds_median);
+      }
+
+      //--
+      // Apply the found transformation to the SfM Data Scene
+      //--
+
+      // Transform the landmark positions
+      for (Landmarks::iterator iterL = sfm_data.structure.begin();
+          iterL != sfm_data.structure.end(); ++iterL)
+      {
+        iterL->second.X = sim(iterL->second.X);
+      }
+
+      // Transform the camera positions
+      for (Poses::iterator iterP = sfm_data.poses.begin();
+          iterP != sfm_data.poses.end(); ++iterP)
+      {
+        geometry::Pose3 & pose = iterP->second;
+        pose = sim(pose);
+      }
+
+    }
+  }
 
   ceres::Problem problem;
 
@@ -128,7 +219,7 @@ bool Bundle_Adjustment_Ceres::Adjust
   Hash_Map<IndexT, std::vector<double> > map_poses;
 
   // Setup Poses data & subparametrization
- for (const auto & pose_it : sfm_data.poses)
+  for (const auto & pose_it : sfm_data.poses)
   {
     const IndexT indexPose = pose_it.first;
 
@@ -284,6 +375,30 @@ bool Bundle_Adjustment_Ceres::Adjust
       {
         // Set the 3D point as FIXED (it's a valid GCP)
         problem.SetParameterBlockConstant(gcp_landmark_it.second.X.data());
+      }
+    }
+  }
+
+  // Add Pose prior constraints if any
+  if (sfm_data.GetViews().size() > 3)
+  {
+    std::vector<Vec3> poses_centers;
+    for (const auto & view_it : sfm_data.GetViews())
+    {
+      const sfm::ViewPriors * prior = dynamic_cast<sfm::ViewPriors*>(view_it.second.get());
+      if (prior != nullptr)
+      {
+        const IndexT & pose_id = prior->id_view;
+        if (prior->b_use_pose_center_ && sfm_data.GetPoses().count(pose_id) != 0)
+        {
+          // Add the cost functor (distance from Pose prior to the SfM_Data Pose center)
+          ceres::CostFunction * cost_function =
+            new ceres::AutoDiffCostFunction<PoseCenterConstraintCostFunction, 3, 6>(
+              new PoseCenterConstraintCostFunction(prior->pose_center_, prior->center_weight_));
+
+          problem.AddResidualBlock(cost_function, new ceres::HuberLoss(Square(pose_center_robust_fitting_error)), &map_poses[pose_id][0]);
+          poses_centers.push_back(prior->pose_center_);
+        }
       }
     }
   }

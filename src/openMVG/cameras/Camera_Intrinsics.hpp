@@ -249,7 +249,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
     stl::hash_combine( seed, w_ );
     stl::hash_combine( seed, h_ );
     const std::vector<double> params = this->getParams();
-    for ( const auto & param : params ) 
+    for ( const auto & param : params )
       stl::hash_combine( seed , param );
     return seed;
   }

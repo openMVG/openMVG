@@ -43,6 +43,8 @@ inline bool Save_PLY(
         view_with_pose_count += sfm_data.IsPoseAndIntrinsicDefined(view.second.get());
       }
     }
+    stream << std::fixed << std::setprecision (std::numeric_limits<double>::digits10 + 1);
+
     stream << "ply"
       << '\n' << "format ascii 1.0"
       << '\n' << "element vertex "
@@ -50,9 +52,9 @@ inline bool Save_PLY(
         << (  (b_structure ? sfm_data.GetLandmarks().size() : 0)
             + (b_control_points ? sfm_data.GetControl_Points().size() : 0)
             + view_with_pose_count)
-      << '\n' << "property float x"
-      << '\n' << "property float y"
-      << '\n' << "property float z"
+      << '\n' << "property double x"
+      << '\n' << "property double y"
+      << '\n' << "property double z"
       << '\n' << "property uchar red"
       << '\n' << "property uchar green"
       << '\n' << "property uchar blue"

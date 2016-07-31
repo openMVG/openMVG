@@ -56,7 +56,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     {
       params_ = {k1, k2, k3, k4};
     }
-    
+
     ~Pinhole_Intrinsic_Fisheye() override = default;
 
     /**
