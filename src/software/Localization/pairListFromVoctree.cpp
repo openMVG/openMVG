@@ -5,6 +5,7 @@
 #include <Eigen/Core>
 
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -19,6 +20,7 @@ static const int DIMENSION = 128;
 
 using namespace std;
 namespace po = boost::program_options;
+namespace bfs = boost::filesystem;
 
 
 typedef openMVG::features::Descriptor<float, DIMENSION> DescriptorFloat;
@@ -371,6 +373,18 @@ int main(int argc, char** argv)
   detect_elapsed = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - detect_start);
   POPART_COUT("Convert all matches to pairList took " << detect_elapsed.count() << " sec.");
 
+  // check if the output directory exists
+  const auto basePath = bfs::path(outfile).parent_path();
+  if(!bfs::exists(basePath))
+  {
+    // then create the missing directory
+    if(!bfs::create_directories(basePath))
+    {
+      POPART_CERR("Unable to create directories: " << basePath);
+      return EXIT_FAILURE;
+    }
+  }
+  
   // write it to file
   std::ofstream fileout;
   fileout.open(outfile, ofstream::out);
