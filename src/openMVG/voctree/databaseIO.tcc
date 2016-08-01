@@ -16,7 +16,10 @@ namespace voctree {
 /**
  * @brief Given a vocabulary tree and a set of features it builds a database
  *
- * @param[in] fileFullPath A file containing the path the features to load, it could be a .txt or an OpenMVG .json
+ * @param[in] fileFullPath A file containing the path the features to load, 
+ * it could be a .txt or an OpenMVG .json or the path to a directory containing
+ * the feature. In the case of a json, it is assumed that the descriptors are
+ * in the same folder as the file. 
  * @param[in] tree The vocabulary tree to be used for feature quantization
  * @param[out] db The built database
  * @param[out] documents A map containing for each image the list of associated visual words
