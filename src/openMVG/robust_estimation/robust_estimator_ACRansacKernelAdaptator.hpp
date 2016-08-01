@@ -27,6 +27,7 @@
 //  by the generic ACRANSAC routine.
 //
 #include <openMVG/numeric/numeric.h>
+#include <openMVG/multiview/conditioning.hpp>
 
 namespace openMVG {
 namespace robust {
@@ -94,7 +95,7 @@ public:
     const Mat x2 = ExtractColumns(x2_, samples);
     Solver::Solve(x1, x2, models);
   }
-
+  
   double Error(std::size_t sample, const Model &model) const
   {
     return ErrorT::Error(model, x1_.col(sample), x2_.col(sample));
@@ -126,7 +127,7 @@ public:
   Mat3 normalizer2() const {return N2_;}
   double unormalizeError(double val) const {return sqrt(val) / N2_(0,0);}
 
-private:
+protected:
   Mat x1_, x2_; // Normalized input data
   Mat3 N1_, N2_; // Matrix used to normalize data
   double logalpha0_; // Alpha0 is used to make the error adaptive to the image size
@@ -289,7 +290,7 @@ public:
   Mat3 normalizer2() const {return N1_;}
   double unormalizeError(double val) const {return sqrt(val) / N1_(0,0);}
 
-private:
+protected:
   Mat x2d_;
   const Mat& x3D_;
   Mat3 N1_; // Matrix used to normalize data

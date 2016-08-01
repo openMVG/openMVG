@@ -58,7 +58,7 @@ struct SevenPointSolver {
 struct EightPointSolver {
   enum { MINIMUM_SAMPLES = 8 };
   enum { MAX_MODELS = 1 };
-  static void Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Fs);
+  static void Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Fs, const vector<double> *weights = nullptr);
 };
 
 /**
@@ -79,8 +79,15 @@ struct EightPointSolver {
  * appropriate size already.
  */
 template<typename TMatX, typename TMatA>
-inline void EncodeEpipolarEquation(const TMatX &x1, const TMatX &x2, TMatA *A) {
-  for (typename TMatX::Index i = 0; i < x1.cols(); ++i) {
+inline void EncodeEpipolarEquation(const TMatX &x1, const TMatX &x2, TMatA *A, const vector<double> *weights = nullptr) 
+{
+  assert(x1.cols()==x2.cols());
+  if(weights)
+  {
+    assert(x1.cols()==weights->size());
+  }
+  for (typename TMatX::Index i = 0; i < x1.cols(); ++i) 
+  {
     const Vec2 xx1 = x1.col(i);
     const Vec2 xx2 = x2.col(i);
     A->row(i) <<
@@ -93,6 +100,8 @@ inline void EncodeEpipolarEquation(const TMatX &x1, const TMatX &x2, TMatA *A) {
       xx1(0),
       xx1(1),
       1.0;
+    if(weights)
+      A->row(i) *= (*weights)[i];
   }
 }
 

@@ -336,10 +336,8 @@ void AlembicExporter::addCameraKeyframe(const geometry::Pose3 &pose,
   
   // Set custom attributes
   // Image path
-  if(!imagePath.empty())
-  {
-    mimagePlane.set(imagePath.c_str());
-  }
+  mimagePlane.set(imagePath);
+
   // View id
   mpropViewId.set(id_view);
   // Intrinsic id

@@ -13,6 +13,8 @@
 #include <limits>
 #include <numeric>
 #include <vector>
+#include <iostream>
+#include <iterator>
 
 namespace openMVG {
 namespace robust{
@@ -35,6 +37,7 @@ typename Kernel::Model RANSAC(
   const Scorer &scorer,
   std::vector<size_t> *best_inliers = nullptr,
   double *best_score = nullptr,
+  bool bVerbose = true,
   double outliers_probability = 1e-2)
 {
   assert(outliers_probability < 1.0);
@@ -47,12 +50,12 @@ typename Kernel::Model RANSAC(
   const size_t really_max_iterations = 4096;
 
   size_t best_num_inliers = 0;
-  double best_cost = std::numeric_limits<double>::infinity();
   double best_inlier_ratio = 0.0;
   typename Kernel::Model best_model;
 
   // Test if we have sufficient points for the kernel.
-  if (total_samples < min_samples) {
+  if (total_samples < min_samples) 
+  {
     if (best_inliers) {
       best_inliers->resize(0);
     }
@@ -67,35 +70,54 @@ typename Kernel::Model RANSAC(
   std::vector<size_t> sample;
   for (iteration = 0;
     iteration < max_iterations &&
-    iteration < really_max_iterations; ++iteration) {
+    iteration < really_max_iterations; ++iteration) 
+  {
       UniformSample(min_samples, total_samples, &sample);
 
       std::vector<typename Kernel::Model> models;
       kernel.Fit(sample, &models);
 
-      // Compute costs for each fit.
-      for (size_t i = 0; i < models.size(); ++i) {
+      // Compute the inlier list for each fit.
+      for (size_t i = 0; i < models.size(); ++i) 
+      {
         std::vector<size_t> inliers;
-        double cost = scorer.Score(kernel, models[i], all_samples, &inliers);
+        scorer.Score(kernel, models[i], all_samples, &inliers);
 
-        if (cost < best_cost) {
-          best_cost = cost;
-          best_inlier_ratio = inliers.size() / double(total_samples);
+        if (best_num_inliers < inliers.size()) 
+        {
           best_num_inliers = inliers.size();
+          best_inlier_ratio = inliers.size() / double(total_samples);
           best_model = models[i];
-          if (best_inliers) {
+          if (best_inliers) 
+          {
             best_inliers->swap(inliers);
           }
+          if(bVerbose)
+          {
+            std::cout << " inliers=" << best_num_inliers << "/" << total_samples
+                      << " (iter=" << iteration;
+            std::cout << ",sample=";
+            std::copy(sample.begin(), sample.end(),
+                      std::ostream_iterator<size_t>(std::cout, ","));
+            std::cout << ")";
         }
-        if (best_inlier_ratio) {
+          if (best_inlier_ratio) 
+          {
           max_iterations = IterationsRequired(min_samples,
             outliers_probability,
             best_inlier_ratio);
+            if(bVerbose)
+              std::cout << " New max_iteration: " << max_iterations << std::endl;
+          }
         }
       }
   }
   if (best_score)
-    *best_score = best_cost;
+    *best_score = best_num_inliers;
+  
+  if(best_num_inliers)
+    kernel.Unnormalize(&best_model);
+  
   return best_model;
 }
 

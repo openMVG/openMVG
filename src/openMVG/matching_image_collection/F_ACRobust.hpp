@@ -8,8 +8,12 @@
 
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
 #include "openMVG/multiview/essential.hpp"
+#include "openMVG/robust_estimation/robust_estimators.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
+#include "openMVG/robust_estimation/robust_estimator_LORansac.hpp"
+#include "openMVG/robust_estimation/robust_estimator_LORansacKernelAdaptor.hpp"
+#include "openMVG/robust_estimation/score_evaluator.hpp"
 #include "openMVG/robust_estimation/guided_matching.hpp"
 
 #include "openMVG/matching/indMatch.hpp"
@@ -94,7 +98,8 @@ struct GeometricFilter_FMatrix_AC
     const Mat& xJ,       // points of the second image
     const std::pair<size_t,size_t> & imageSizeI,     // size of the first image  
     const std::pair<size_t,size_t> & imageSizeJ,     // size of the first image
-    std::vector<size_t> &vec_inliers)
+    std::vector<size_t> &vec_inliers,
+    robust::EROBUST_ESTIMATOR estimator = robust::ROBUST_ESTIMATOR_ACRANSAC)
   {
     using namespace openMVG;
     using namespace openMVG::robust;
@@ -104,30 +109,70 @@ struct GeometricFilter_FMatrix_AC
     // Robust estimation
     //--
 
-    // Define the AContrario adapted Fundamental matrix solver
-    typedef ACKernelAdaptor<
-      openMVG::fundamental::kernel::SevenPointSolver,
-      openMVG::fundamental::kernel::SimpleError,
-      //openMVG::fundamental::kernel::SymmetricEpipolarDistanceError,
-      UnnormalizerT,
-      Mat3>
-      KernelType;
+    if(estimator == ROBUST_ESTIMATOR_ACRANSAC)
+    {
 
-    const KernelType kernel(
-      xI, imageSizeI.first, imageSizeI.second,
-      xJ, imageSizeJ.first, imageSizeJ.second, true);
+      // Define the AContrario adapted Fundamental matrix solver
+      typedef ACKernelAdaptor<
+        openMVG::fundamental::kernel::SevenPointSolver,
+        openMVG::fundamental::kernel::SimpleError,
+        //openMVG::fundamental::kernel::SymmetricEpipolarDistanceError,
+        UnnormalizerT,
+        Mat3>
+        KernelType;
 
-    // Robustly estimate the Fundamental matrix with A Contrario ransac
-    const double upper_bound_precision = Square(m_dPrecision);
-    const std::pair<double,double> ACRansacOut =
-      ACRANSAC(kernel, vec_inliers, m_stIteration, &m_F, upper_bound_precision);
-    
-    bool valid = ( (vec_inliers.size() > KernelType::MINIMUM_SAMPLES * OPENMVG_MINIMUM_SAMPLES_COEF) );
-    
-    // if the estimation has enough support set its precision
-    if(valid) m_dPrecision_robust = ACRansacOut.first;
-    
-    return valid;
+      const KernelType kernel(
+        xI, imageSizeI.first, imageSizeI.second,
+        xJ, imageSizeJ.first, imageSizeJ.second, true);
+      
+      // Robustly estimate the Fundamental matrix with A Contrario ransac
+      const double upper_bound_precision = Square(m_dPrecision);
+      const std::pair<double,double> ACRansacOut =
+        ACRANSAC(kernel, vec_inliers, m_stIteration, &m_F, upper_bound_precision);
+
+      bool valid = ( (vec_inliers.size() > KernelType::MINIMUM_SAMPLES * OPENMVG_MINIMUM_SAMPLES_COEF) );
+
+      // if the estimation has enough support set its precision
+      if(valid) m_dPrecision_robust = ACRansacOut.first;
+
+      return valid;
+    }
+    else if(estimator == ROBUST_ESTIMATOR_LORANSAC)
+    {
+      // just a safeguard
+      if(m_dPrecision == std::numeric_limits<double>::infinity())
+      {
+        throw std::invalid_argument("[GeometricFilter_FMatrix_AC::Robust_estimation] the threshold of the LORANSAC is set to infinity!");
+      }
+      
+      typedef KernelAdaptorLoRansac<
+              openMVG::fundamental::kernel::SevenPointSolver,
+              openMVG::fundamental::kernel::SymmetricEpipolarDistanceError,
+              UnnormalizerT,
+              Mat3,
+              openMVG::fundamental::kernel::EightPointSolver>
+              KernelType;
+
+      const KernelType kernel(xI, imageSizeI.first, imageSizeI.second,
+                              xJ, imageSizeJ.first, imageSizeJ.second, true);
+
+      //@fixme scorer should be using the pixel error, not the squared version, refactoring needed
+      const double normalizedThreshold = Square(m_dPrecision * kernel.normalizer2()(0, 0));
+      ScorerEvaluator<KernelType> scorer(normalizedThreshold);
+
+      m_F = LO_RANSAC(kernel, scorer, &vec_inliers);
+      
+      bool valid = ( (vec_inliers.size() > KernelType::MINIMUM_SAMPLES * OPENMVG_MINIMUM_SAMPLES_COEF) );
+
+      // for LORansac the robust precision is the same as the threshold
+      if(valid) m_dPrecision_robust = m_dPrecision;
+
+      return valid;
+    }
+    else
+    {
+      throw std::runtime_error("[GeometricFilter_FMatrix_AC::Robust_estimation] only ACRansac and LORansac are supported!");
+    }
   }
   
 
