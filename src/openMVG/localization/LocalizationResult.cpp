@@ -35,7 +35,7 @@ const Mat LocalizationResult::retrieveUndistortedPt2D() const
 {
   const auto &intrinsics =  getIntrinsics();
   const auto &distorted = getPt2D();
-  if(!intrinsics.have_disto())
+  if(!intrinsics.have_disto() || !intrinsics.isValid())
   {
     return getPt2D();
   }
@@ -70,6 +70,14 @@ Mat2X LocalizationResult::computeResiduals() const
   return intrinsics.residuals(getPose(), inliers3d, inliers2d);
 }
 
+double LocalizationResult::computeRMSE() const 
+{
+  const auto& residuals = computeResiduals();
+  // squared residual for each point
+  const auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
+  //RMSE
+  return std::sqrt(sqrErrors.mean());
+}
 
 
 bool load(LocalizationResult & res, const std::string & filename)

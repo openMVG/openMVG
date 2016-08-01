@@ -10,6 +10,7 @@
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include <openMVG/robust_estimation/robust_estimators.hpp>
 
 namespace openMVG {
 namespace sfm {
@@ -80,6 +81,8 @@ public:
   * @param[in,out] resection_data matching data (with filled 2D-3D correspondences). 
    * The 2D points are supposed to be the original distorted image points
   * @param[out] pose found pose
+  * @param[in] estimator The type of robust estimator to use. The only supported 
+   * frameworks are ROBUST_ESTIMATOR_ACRANSAC and ROBUST_ESTIMATOR_LORANSAC.
   * @return True if a putative pose has been estimated
   */
   static bool Localize
@@ -87,7 +90,8 @@ public:
     const Pair & image_size,
     const cameras::IntrinsicBase * optional_intrinsics,
     Image_Localizer_Match_Data & resection_data,
-    geometry::Pose3 & pose
+    geometry::Pose3 & pose,
+    robust::EROBUST_ESTIMATOR estimator = robust::ROBUST_ESTIMATOR_ACRANSAC
   );
 
   /**
@@ -109,6 +113,7 @@ public:
     bool b_refine_intrinsic
   );
 };
+
 
 } // namespace sfm
 } // namespace openMVG

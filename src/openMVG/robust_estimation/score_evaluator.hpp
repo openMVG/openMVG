@@ -41,22 +41,40 @@ public:
 
   template <typename T>
   double Score(const Kernel &kernel,
-    const typename Kernel::Model &model,
-    const std::vector<T> &samples,
-    std::vector<T> *inliers) const
+               const typename Kernel::Model &model,
+               const std::vector<T> &samples,
+               std::vector<T> *inliers,
+               double threshold) const
   {
     double cost = 0.0;
-    for (size_t j = 0; j < samples.size(); ++j) {
+    for (size_t j = 0; j < samples.size(); ++j) 
+    {
       double error = kernel.Error(samples[j], model);
-      if (error < threshold_) {
+      if (error < threshold) 
+      {
         cost += error;
         inliers->push_back(samples[j]);
-      } else {
-        cost += threshold_;
+      } 
+      else 
+      {
+//        cost += threshold;
+        cost += error;
       }
     }
     return cost;
   }
+
+  template <typename T>
+  double Score(const Kernel &kernel,
+               const typename Kernel::Model &model,
+               const std::vector<T> &samples,
+               std::vector<T> *inliers) const
+  {
+    return Score(kernel, model, samples, inliers, threshold_);
+  }
+  
+  double getThreshold() const {return threshold_;} 
+  
 private:
   double threshold_;
 };
