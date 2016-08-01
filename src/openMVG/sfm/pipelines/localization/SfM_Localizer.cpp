@@ -139,7 +139,7 @@ bool SfM_Localizer::Localize
         // value, the scorer should be not aware of the fact that we treat squared errors
         // and normalization inside the kernel
         // @todo refactor, maybe move scorer directly inside the kernel
-        const double threshold = resection_data.error_max * resection_data.error_max / (kernel.normalizer2()(0, 0) * kernel.normalizer2()(0, 0));
+        const double threshold = resection_data.error_max * resection_data.error_max * (kernel.normalizer2()(0, 0) * kernel.normalizer2()(0, 0));
         robust::ScorerEvaluator<KernelType> scorer(threshold);
         P = robust::LO_RANSAC(kernel, scorer, &resection_data.vec_inliers);
         break;
