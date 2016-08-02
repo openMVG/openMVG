@@ -35,7 +35,17 @@ struct DocMatch
   {
     return score < other.score;
   }
-  
+
+  bool operator==(const DocMatch& other) const
+  {
+    return id == other.id &&
+           score == other.score;
+  }
+  bool operator!=(const DocMatch& other) const
+  {
+    return !(*this == other);
+  }
+
   // Serialization
   template <class Archive>
   void serialize(Archive & ar)
