@@ -18,10 +18,19 @@ typedef Scalar_Regions<SIOPointFeature,unsigned char,128> SIFT_Regions;
 
 /// Define the AKAZE Keypoint (with a float descriptor)
 typedef Scalar_Regions<SIOPointFeature,float,64> AKAZE_Float_Regions;
+
+/// Define the ORB Keypoint (with a binary descriptor)
+///typedef Scalar_Regions<SIOPointFeature,float,64> ORB_Float_Regions;
+typedef Binary_Regions<SIOPointFeature,32> ORB_Binary_Regions;
+
+/// Define the SURF Keypoint (with a float descriptor)
+///typedef Scalar_Regions<SIOPointFeature,float,65> SURF_Float_Regions;
+
 /// Define the AKAZE Keypoint (with a LIOP descriptor)
 typedef Scalar_Regions<SIOPointFeature,unsigned char,144> AKAZE_Liop_Regions;
 /// Define the AKAZE Keypoint (with a binary descriptor saved in an uchar array)
 typedef Binary_Regions<SIOPointFeature,64> AKAZE_Binary_Regions;
+
 
 } // namespace features
 } // namespace openMVG
@@ -34,6 +43,7 @@ typedef Binary_Regions<SIOPointFeature,64> AKAZE_Binary_Regions;
 #include <cereal/archives/json.hpp>
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::SIFT_Regions, "SIFT_Regions");
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Float_Regions, "AKAZE_Float_Regions");
+CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::ORB_Binary_Regions, "ORB_Binary_Regions");
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Liop_Regions, "AKAZE_Liop_Regions");
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Binary_Regions, "AKAZE_Binary_Regions");
 

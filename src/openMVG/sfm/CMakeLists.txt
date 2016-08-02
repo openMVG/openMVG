@@ -21,6 +21,7 @@ target_link_libraries(
   openMVG_sfm
   openMVG_multiview
   stlplus
+  openMVG_features
   ${CERES_LIBRARIES}
   openMVG_lInftyComputerVision
   openMVG_system
