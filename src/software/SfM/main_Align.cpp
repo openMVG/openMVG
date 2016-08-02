@@ -99,10 +99,7 @@ int main(int argc, char **argv)
   std::cout << "Save into \"" << sSfM_Data_Filename_Out << "\"" << std::endl;
   
   // Export the SfM_Data scene in the expected format
-  if (!Save(
-    sfm_data_in,
-    sSfM_Data_Filename_Out.c_str(),
-    ESfM_Data(ALL)))
+  if (!Save(sfm_data_in, sSfM_Data_Filename_Out, ESfM_Data(ALL)))
   {
     std::cerr << std::endl
       << "An error occurred while trying to save \"" << sSfM_Data_Filename_Out << "\"." << std::endl;
