@@ -27,9 +27,7 @@
 #include <stdexcept>
 #include <exception>
 #include <map>
-#include <limits> 
-
-#define GRID_SIZE 10
+#include <limits>
 
 namespace bfs = boost::filesystem;
 namespace po = boost::program_options;
@@ -44,13 +42,24 @@ enum Pattern
 #endif
 };
 
-void exportDebug(openMVG::dataio::FeedProvider& feed,
-                const std::string& debugFolder,
-                const std::vector<std::size_t>& exportFrames,
-                const cv::Mat& cameraMatrix,
-                const cv::Mat& distCoeffs,
-                const cv::Size& imageSize,
-                const std::string suffix = "_undistort.png")
+/**
+ * @brief This function exports undistorted images.
+ *
+ * @param[in] feed
+ * @param[in] debugFolder
+ * @param[in] exportFrames
+ * @param[in] cameraMatrix
+ * @param[in] distCoeffs
+ * @param[in] imageSize
+ * @param[in] suffix
+ */
+void exportImages(openMVG::dataio::FeedProvider& feed,
+                  const std::string& debugFolder,
+                  const std::vector<std::size_t>& exportFrames,
+                  const cv::Mat& cameraMatrix,
+                  const cv::Mat& distCoeffs,
+                  const cv::Size& imageSize,
+                  const std::string suffix = "_undistort.png")
 {
   std::vector<int> export_params;
   openMVG::image::Image<unsigned char> inputImage;
@@ -61,14 +70,14 @@ void exportDebug(openMVG::dataio::FeedProvider& feed,
 
   export_params.push_back(CV_IMWRITE_JPEG_QUALITY);
   export_params.push_back(100);
-  
+
   openMVG::cameras::Pinhole_Intrinsic_Radial_K3 camera(
-          imageSize.width, imageSize.height,
-          cameraMatrix.at<double>(0,0), cameraMatrix.at<double>(0,2), cameraMatrix.at<double>(1,2),
-          distCoeffs.at<double>(0), distCoeffs.at<double>(1), distCoeffs.at<double>(4));
+                                                       imageSize.width, imageSize.height,
+                                                       cameraMatrix.at<double>(0, 0), cameraMatrix.at<double>(0, 2), cameraMatrix.at<double>(1, 2),
+                                                       distCoeffs.at<double>(0), distCoeffs.at<double>(1), distCoeffs.at<double>(4));
   std::cout << "Coefficients matrix :\n " << distCoeffs << std::endl;
   std::cout << "Exporting images ..." << std::endl;
-  for(std::size_t currentFrame : exportFrames)
+  for (std::size_t currentFrame : exportFrames)
   {
     feed.goToFrame(currentFrame);
     feed.readImage(inputImage, queryIntrinsics, currentImgName, hasIntrinsics);
@@ -78,7 +87,7 @@ void exportDebug(openMVG::dataio::FeedProvider& feed,
     openMVG::cameras::UndistortImage(inputImage, &camera, outputImage, openMVG::image::BLACK);
     const bfs::path imagePath = bfs::path(debugFolder) / (std::to_string(currentFrame) + suffix);
     const bool exportStatus = openMVG::image::WriteImage(imagePath.c_str(), outputImage);
-    if(!exportStatus)
+    if (!exportStatus)
     {
       std::cerr << "Failed to export: " << imagePath << std::endl;
     }
@@ -86,6 +95,73 @@ void exportDebug(openMVG::dataio::FeedProvider& feed,
   std::cout << "... finished" << std::endl;
 }
 
+/**
+ * @brief This debug function lets the user to see the undistorted images.
+ *
+ * @param[in] debugSelectedImgFolder
+ * @param[in] debugRejectedImgFolder
+ * @param[in] feed
+ * @param[in] calibInputFrames
+ * @param[in] rejectInputFrames
+ * @param[in] remainingImagesIndexes
+ * @param[in] cameraMatrix
+ * @param[in] distCoeffs
+ * @param[in] imageSize
+ */
+void exportDebug(const std::string& debugSelectedImgFolder,
+                 const std::string& debugRejectedImgFolder,
+                 openMVG::dataio::FeedProvider& feed,
+                 const std::vector<std::size_t>& calibInputFrames,
+                 const std::vector<std::size_t>& rejectInputFrames,
+                 const std::vector<std::size_t>& remainingImagesIndexes,
+                 const cv::Mat& cameraMatrix,
+                 const cv::Mat& distCoeffs,
+                 const cv::Size& imageSize)
+{
+  std::clock_t startDebug = std::clock();
+  double durationDebug;
+
+  if (!debugSelectedImgFolder.empty())
+  {
+
+    startDebug = std::clock();
+    exportImages(feed, debugSelectedImgFolder, calibInputFrames,
+                 cameraMatrix, distCoeffs, imageSize, "_undistort.png");
+    durationDebug = (std::clock() - startDebug) / (double) CLOCKS_PER_SEC;
+    std::cout << "Export debug of selected frames, duration: " << durationDebug << std::endl;
+  }
+
+  if (!debugRejectedImgFolder.empty())
+  {
+    startDebug = std::clock();
+    exportImages(feed, debugRejectedImgFolder, rejectInputFrames,
+                 cameraMatrix, distCoeffs, imageSize, "_rejected_undistort.png");
+    durationDebug = (std::clock() - startDebug) / (double) CLOCKS_PER_SEC;
+    std::cout << "Export debug of rejected frames, duration: " << durationDebug << std::endl;
+  }
+
+  if (!debugRejectedImgFolder.empty())
+  {
+    startDebug = std::clock();
+    exportImages(feed, debugRejectedImgFolder, remainingImagesIndexes,
+                 cameraMatrix, distCoeffs, imageSize, "_not_selected_undistort.png");
+    durationDebug = (std::clock() - startDebug) / (double) CLOCKS_PER_SEC;
+    std::cout << "Export debug of not selected frames, duration: " << durationDebug << std::endl;
+  }
+}
+
+/**
+ * @brief This function computes the average of the reprojection errors.
+ *
+ * @param[in] objectPoints
+ * @param[in] imagePoints
+ * @param[in] rvecs
+ * @param[in] tvecs
+ * @param[in] cameraMatrix
+ * @param[in] distCoeffs
+ * @param[out] perViewErrors
+ * @return The average of the reprojection errors.
+ */
 static double computeReprojectionErrors(
                                         const std::vector<std::vector<cv::Point3f> >& objectPoints,
                                         const std::vector<std::vector<cv::Point2f> >& imagePoints,
@@ -101,7 +177,7 @@ static double computeReprojectionErrors(
   for (i = 0; i < (int) objectPoints.size(); i++)
   {
     cv::projectPoints(cv::Mat(objectPoints[i]), rvecs[i], tvecs[i],
-                  cameraMatrix, distCoeffs, imagePoints2);
+                      cameraMatrix, distCoeffs, imagePoints2);
     err = cv::norm(cv::Mat(imagePoints[i]), cv::Mat(imagePoints2), CV_L2);
     int n = (int) objectPoints[i].size();
     perViewErrors[i] = (float) std::sqrt(err * err / n);
@@ -112,7 +188,15 @@ static double computeReprojectionErrors(
   return std::sqrt(totalErr / totalPoints);
 }
 
-static void calcChessboardCorners(cv::Size boardSize, float squareSize, 
+/**
+ * @brief This function computes the points' coordinates of the checkerboard.
+ *
+ * @param[in] boardSize
+ * @param[in] squareSize
+ * @param[out] corners
+ * @param[in] pattern
+ */
+static void calcChessboardCorners(cv::Size boardSize, float squareSize,
                                   std::vector<cv::Point3f>& corners, Pattern pattern = CHESSBOARD)
 {
   corners.resize(0);
@@ -124,14 +208,14 @@ static void calcChessboardCorners(cv::Size boardSize, float squareSize,
     for (int i = 0; i < boardSize.height; i++)
       for (int j = 0; j < boardSize.width; j++)
         corners.push_back(cv::Point3f(float(j * squareSize),
-                                  float(i * squareSize), 0));
+                                      float(i * squareSize), 0));
     break;
 
   case ASYMMETRIC_CIRCLES_GRID:
     for (int i = 0; i < boardSize.height; i++)
       for (int j = 0; j < boardSize.width; j++)
         corners.push_back(cv::Point3f(float((2 * j + i % 2) * squareSize),
-                                  float(i * squareSize), 0));
+                                      float(i * squareSize), 0));
     break;
 
 #ifdef HAVE_CCTAG
@@ -145,22 +229,113 @@ static void calcChessboardCorners(cv::Size boardSize, float squareSize,
   }
 }
 
+/**
+ * @brief This function detects the checkerboard in images
+ *
+ * @param[in] pattern
+ * @param[out] found
+ * @param[in] viewGray
+ * @param[in] boardSize
+ * @param[in] pointbuf
+ * @return True if the pattern is found, otherwise false.
+ */
+int findPattern(const Pattern& pattern, bool& found, const cv::Mat& viewGray, const cv::Size& boardSize, std::vector<cv::Point2f>& pointbuf)
+{
+  std::clock_t startCh;
+  double durationCh;
+
+  switch (pattern)
+  {
+  case CHESSBOARD:
+    startCh = std::clock();
+
+    found = cv::findChessboardCorners(viewGray, boardSize, pointbuf,
+                                      CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE);
+    durationCh = (std::clock() - startCh) / (double) CLOCKS_PER_SEC;
+    std::cout << "Find chessboard corners' duration: " << durationCh << std::endl;
+    startCh = std::clock();
+
+    // improve the found corners' coordinate accuracy
+    if (found)
+      cv::cornerSubPix(viewGray, pointbuf, cv::Size(11, 11), cv::Size(-1, -1),
+                       cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
+
+    durationCh = (std::clock() - startCh) / (double) CLOCKS_PER_SEC;
+    std::cout << "Refine chessboard corners' duration: " << durationCh << std::endl;
+    break;
+
+  case CIRCLES_GRID:
+    startCh = std::clock();
+
+    found = cv::findCirclesGrid(viewGray, boardSize, pointbuf);
+
+    durationCh = (std::clock() - startCh) / (double) CLOCKS_PER_SEC;
+    std::cout << "Find circles grid duration: " << durationCh << std::endl;
+    break;
+
+  case ASYMMETRIC_CIRCLES_GRID:
+    startCh = std::clock();
+
+    found = cv::findCirclesGrid(viewGray, boardSize, pointbuf, cv::CALIB_CB_ASYMMETRIC_GRID);
+
+    durationCh = (std::clock() - startCh) / (double) CLOCKS_PER_SEC;
+    std::cout << "Find asymmetric circles grid duration: " << durationCh << std::endl;
+    break;
+
+#ifdef HAVE_CCTAG
+  case CCTAG_GRID:
+    throw std::invalid_argument("CCTag calibration not implemented.");
+    break;
+#endif
+
+  default:
+    std::cerr << "Unknown pattern type" << std::endl;
+    return EXIT_FAILURE;
+  }
+  return EXIT_SUCCESS;
+}
+
+/**
+ * @brief This function creates an object which stores all the points of the images.
+ *
+ * @param[in] boardSize
+ * @param[in] pattern
+ * @param[in] squareSize
+ * @param[in] imagePoints
+ * @param[out] objectPoints
+ */
 static void computeObjectPoints(
-    cv::Size boardSize,
-    Pattern pattern,
-    float squareSize,
-    const std::vector<std::vector<cv::Point2f> >& imagePoints,
-    std::vector<std::vector<cv::Point3f> >& objectPoints)
+                                cv::Size boardSize,
+                                Pattern pattern,
+                                float squareSize,
+                                const std::vector<std::vector<cv::Point2f> >& imagePoints,
+                                std::vector<std::vector<cv::Point3f> >& objectPoints)
 {
   std::vector<cv::Point3f> templateObjectPoints;
 
   // Generate the object points coordinates
   calcChessboardCorners(boardSize, squareSize, templateObjectPoints, pattern);
-  
+
   // Assign the template to all items
   objectPoints.resize(imagePoints.size(), templateObjectPoints);
 }
 
+/**
+ * @brief This function calibrates the camera.
+ *
+ * @param[in] imagePoints
+ * @param[in] objectPoints
+ * @param[in] imageSize
+ * @param[in] aspectRatio
+ * @param[in] cvCalibFlags
+ * @param[in] cameraMatrix
+ * @param[in] distCoeffs
+ * @param[in] rvecs
+ * @param[in] tvecs
+ * @param[in] reprojErrs
+ * @param[out] totalAvgErr
+ * @return True if the calibration is a success, otherwise false.
+ */
 static bool runCalibration(const std::vector<std::vector<cv::Point2f> >& imagePoints,
                            const std::vector<std::vector<cv::Point3f> >& objectPoints,
                            cv::Size imageSize,
@@ -184,10 +359,10 @@ static bool runCalibration(const std::vector<std::vector<cv::Point2f> >& imagePo
   std::clock_t startrC = std::clock();
 
   const double rms = cv::calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix,
-                               distCoeffs, rvecs, tvecs, cvCalibFlags | CV_CALIB_FIX_K4 | CV_CALIB_FIX_K5 | CV_CALIB_FIX_K6);
-  std::clock_t durationrC = ( std::clock() - startrC ) / (double) CLOCKS_PER_SEC;
-  std::cout << "  calibrateCamera duration: "<< durationrC << std::endl;
-  
+                                         distCoeffs, rvecs, tvecs, cvCalibFlags | CV_CALIB_FIX_K4 | CV_CALIB_FIX_K5 | CV_CALIB_FIX_K6);
+  std::clock_t durationrC = (std::clock() - startrC) / (double) CLOCKS_PER_SEC;
+  std::cout << "  calibrateCamera duration: " << durationrC << std::endl;
+
   printf("RMS error reported by calibrateCamera: %g\n", rms);
   bool ok = cv::checkRange(cameraMatrix) && cv::checkRange(distCoeffs);
 
@@ -195,12 +370,153 @@ static bool runCalibration(const std::vector<std::vector<cv::Point2f> >& imagePo
 
   totalAvgErr = computeReprojectionErrors(objectPoints, imagePoints,
                                           rvecs, tvecs, cameraMatrix, distCoeffs, reprojErrs);
-  durationrC = ( std::clock() - startrC ) / (double) CLOCKS_PER_SEC;
-  std::cout << "  computeReprojectionErrors duration: "<< durationrC << std::endl;
+  durationrC = (std::clock() - startrC) / (double) CLOCKS_PER_SEC;
+  std::cout << "  computeReprojectionErrors duration: " << durationrC << std::endl;
 
   return ok;
 }
 
+/**
+ * @brief This function is the refinement loop of the calibration.
+ *
+ * @param[in,out] calibImagePoints
+ * @param[in,out] calibObjectPoints
+ * @param[in] imageSize
+ * @param[in] aspectRatio
+ * @param[in] cvCalibFlags
+ * @param[in] cameraMatrix
+ * @param[in] distCoeffs
+ * @param[in] rvecs
+ * @param[in] tvecs
+ * @param[in] reprojErrs
+ * @param[in] totalAvgErr
+ * @param[in] maxTotalAvgErr
+ * @param[in] minInputFrames
+ * @param[in,out] calibInputFrames
+ * @param[in,out] calibImageScore
+ * @param[out] rejectInputFrames
+ * @return True if the calibration is a success, otherwise false.
+ */
+int calibrationIterativeOptimization(std::vector<std::vector<cv::Point2f> >& calibImagePoints,
+                        std::vector<std::vector<cv::Point3f> >& calibObjectPoints,
+                        const cv::Size& imageSize,
+                        float aspectRatio,
+                        int cvCalibFlags,
+                        cv::Mat& cameraMatrix,
+                        cv::Mat& distCoeffs,
+                        std::vector<cv::Mat>& rvecs,
+                        std::vector<cv::Mat>& tvecs,
+                        std::vector<float>& reprojErrs,
+                        double& totalAvgErr,
+                        const double& maxTotalAvgErr,
+                        const std::size_t& minInputFrames,
+                        std::vector<std::size_t>& calibInputFrames,
+                        std::vector<float>& calibImageScore,
+                        std::vector<std::size_t>& rejectInputFrames)
+{
+  std::size_t calibIteration = 0;
+  bool calibSucceeded = false;
+  do
+  {
+    // Estimate the camera calibration
+    std::cout << "Calibration iteration " << calibIteration << " with " << calibImagePoints.size() << " frames." << std::endl;
+    calibSucceeded = runCalibration(calibImagePoints, calibObjectPoints, imageSize,
+                                    aspectRatio, cvCalibFlags, cameraMatrix, distCoeffs,
+                                    rvecs, tvecs, reprojErrs, totalAvgErr);
+
+    if (totalAvgErr <= maxTotalAvgErr)
+    {
+      std::cout << "The calibration succeed with an average error that respects the maxTotalAvgErr." << std::endl;
+      break;
+    }
+    else if (calibInputFrames.size() < minInputFrames)
+    {
+      std::cout << "Not enough valid input image (" << calibInputFrames.size() << ") to continue the refinement." << std::endl;
+      break;
+    }
+    else if (calibSucceeded)
+    {
+      // Filter the successfully calibrated images to keep the best ones
+      // in order to refine the calibration.
+      // For instance, remove blurry images which introduce imprecision.
+
+      std::vector<float> globalScores;
+      for (int i = 0; i < calibInputFrames.size(); ++i)
+      {
+        globalScores.push_back(reprojErrs[i] * calibImageScore[i]);
+      }
+
+      const auto minMaxError = std::minmax_element(globalScores.begin(), globalScores.end());
+      std::cout << "minMaxError: " << *minMaxError.first << ", " << *minMaxError.second << std::endl;
+      if (*minMaxError.first == *minMaxError.second)
+      {
+        std::cout << "Same error on all images: " << *minMaxError.first << std::endl;
+        for (float f : globalScores)
+          std::cout << "f: " << f << std::endl;
+        break;
+      }
+      // We only keep the frames with N% of the largest error.
+      const float errorThreshold = *minMaxError.first + 0.8 * (*minMaxError.second - *minMaxError.first);
+      std::vector<std::vector<cv::Point2f> > filteredImagePoints;
+      std::vector<std::vector<cv::Point3f> > filteredObjectPoints;
+      std::vector<std::size_t> filteredInputFrames;
+      std::vector<std::size_t> tmpRejectInputFrames;
+      std::vector<float> filteredImageScores;
+
+      for (std::size_t i = 0; i < calibImagePoints.size(); ++i)
+      {
+        if (globalScores[i] < errorThreshold)
+        {
+          filteredImagePoints.push_back(calibImagePoints[i]);
+          filteredObjectPoints.push_back(calibObjectPoints[i]);
+          filteredInputFrames.push_back(calibInputFrames[i]);
+          filteredImageScores.push_back(calibImageScore[i]);
+        }
+        else
+        {
+          // We collect rejected frames for debug purpose
+          tmpRejectInputFrames.push_back(calibInputFrames[i]);
+        }
+      }
+      if (filteredImagePoints.size() < minInputFrames)
+      {
+        std::cout << "Not enough filtered input images (filtered: " << filteredImagePoints.size() << ", rejected:" << tmpRejectInputFrames.size() << ") to continue the refinement." << std::endl;
+        break;
+      }
+      if (calibImagePoints.size() == filteredImagePoints.size())
+      {
+        // Convergence reached
+        std::cout << "Convergence reached." << std::endl;
+        break;
+      }
+      calibImagePoints.swap(filteredImagePoints);
+      calibObjectPoints.swap(filteredObjectPoints);
+      calibInputFrames.swap(filteredInputFrames);
+      calibImageScore.swap(filteredImageScores);
+      rejectInputFrames.insert(rejectInputFrames.end(), tmpRejectInputFrames.begin(), tmpRejectInputFrames.end());
+    }
+    ++calibIteration;
+  }
+  while (calibSucceeded);
+
+  std::cout << "Calibration done with " << calibIteration << " iterations." << std::endl;
+  std::cout << "Average reprojection error is " << totalAvgErr << std::endl;
+  std::cout << (calibSucceeded ? "Calibration succeeded" : "Calibration failed") << std::endl;
+
+  if (!calibSucceeded)
+    return EXIT_FAILURE;
+
+  return EXIT_SUCCESS;
+}
+
+/**
+ * @brief This function saves the parameters' camera into a txt file.
+ *
+ * @param[out] filename
+ * @param[in] imageSize
+ * @param[in] cameraMatrix
+ * @param[in] distCoeffs
+ */
 static void saveCameraParamsToPlainTxt(const std::string &filename,
                                        const cv::Size &imageSize,
                                        const cv::Mat& cameraMatrix,
@@ -250,7 +566,23 @@ static void saveCameraParamsToPlainTxt(const std::string &filename,
   }
   fs.close();
 }
-
+/**
+ * @brief This function saves some parameters' camera into a txt file.
+ *
+ * @param[in] filename
+ * @param[in] imageSize
+ * @param[in] boardSize
+ * @param[in] squareSize
+ * @param[in] aspectRatio
+ * @param[in] cvCalibFlags
+ * @param[in] cameraMatrix
+ * @param[in] distCoeffs
+ * @param[in] rvecs
+ * @param[in] tvecs
+ * @param[in] reprojErrs
+ * @param[in] imagePoints
+ * @param[in] totalAvgErr
+ */
 static void saveCameraParams(const std::string& filename,
                              cv::Size imageSize, cv::Size boardSize,
                              float squareSize, float aspectRatio, int cvCalibFlags,
@@ -334,7 +666,7 @@ static void saveCameraParams(const std::string& filename,
   saveCameraParamsToPlainTxt(txtfilename, imageSize, cameraMatrix, distCoeffs);
 }
 
-std::istream& operator>> (std::istream &in, Pattern &pattern)
+std::istream& operator>>(std::istream &in, Pattern &pattern)
 {
   std::string token;
   in >> token;
@@ -347,58 +679,193 @@ std::istream& operator>> (std::istream &in, Pattern &pattern)
   else if (token == "ASYMMETRIC_CIRCLES")
     pattern = ASYMMETRIC_CIRCLES_GRID;
 #ifdef HAVE_CCTAG
-//  else if (token == "CCTAG")
-//    pattern = CCTAG_GRID;
+    //  else if (token == "CCTAG")
+    //    pattern = CCTAG_GRID;
 #endif
   else
     throw boost::program_options::invalid_option_value(std::string("Invalid pattern: ") + token);
   return in;
 }
 
+/**
+ * @brief This function computes cell indexes per image.
+ *
+ * @param[in] imagePoints
+ * @param[out] cellIndexesPerImage
+ * @param[in] imageSize
+ * @param[in] calibGridSize
+ */
+void precomputeCellIndexes(const std::vector<std::vector<cv::Point2f> >& imagePoints,
+                           std::vector<std::vector<std::size_t> >& cellIndexesPerImage,
+                           const cv::Size& imageSize, const std::size_t calibGridSize)
+{
+  float cellWidth = float(imageSize.width) / float(calibGridSize);
+  float cellHeight = float(imageSize.height) / float(calibGridSize);
+
+  for (const auto& pointbuf : imagePoints)
+  {
+    std::vector<std::size_t> imageCellIndexes;
+    // Points repartition in image
+    for (cv::Point2f point : pointbuf)
+    {
+      // Compute the index of the point
+      std::size_t cellPointX = std::floor(point.x / cellWidth);
+      std::size_t cellPointY = std::floor(point.y / cellHeight);
+      std::size_t cellIndex = cellPointY * calibGridSize + cellPointX;
+      imageCellIndexes.push_back(cellIndex);
+    }
+    cellIndexesPerImage.push_back(imageCellIndexes);
+  }
+}
+
+/**
+ * @brief This function counts the number of points in each cell of the grid.
+ *
+ * @param[in] imagesIndexes
+ * @param[in] cellIndexesPerImage
+ * @param[out] cellsWeight
+ * @param[in] calibGridSize
+ */
 void computeCellsWeight(const std::vector<std::size_t>& imagesIndexes,
                         const std::vector<std::vector<std::size_t> >& cellIndexesPerImage,
-                        std::map<std::size_t, std::size_t>& cellsWeight)
+                        std::map<std::size_t, std::size_t>& cellsWeight, const std::size_t calibGridSize)
 {
-  for(std::size_t i = 0; i < GRID_SIZE * GRID_SIZE; ++i)
+  //Init cell's weight to 0
+  for (std::size_t i = 0; i < calibGridSize * calibGridSize; ++i)
     cellsWeight[i] = 0;
 
-  for(std::size_t i = 0; i < imagesIndexes.size(); ++i)
+  // Add weight into cells
+  for (std::size_t i = 0; i < imagesIndexes.size(); ++i)
   {
     std::vector<std::size_t> uniqueCellIndexes = cellIndexesPerImage[imagesIndexes[i]];
     std::sort(uniqueCellIndexes.begin(), uniqueCellIndexes.end());
     auto last = std::unique(uniqueCellIndexes.begin(), uniqueCellIndexes.end());
     uniqueCellIndexes.erase(last, uniqueCellIndexes.end());
 
-    for(std::size_t cellIndex : uniqueCellIndexes)
+    for (std::size_t cellIndex : uniqueCellIndexes)
     {
       ++cellsWeight[cellIndex];
     }
   }
 }
 
+/**
+ * @brief This function computes the score of each image.
+ *
+ * @param[out] imageScores
+ * @param[in] remainingImagesIndexes
+ * @param[in] cellIndexesPerImage
+ * @param[in] cellsWeight
+ */
 void computeImageScores(std::vector<std::pair<float, std::size_t> >& imageScores,
                         const std::vector<std::size_t>& remainingImagesIndexes,
                         const std::vector<std::vector<std::size_t> >& cellIndexesPerImage,
-                        std::map<std::size_t, std::size_t>& cellsWeight)
+                        const std::map<std::size_t, std::size_t>& cellsWeight)
 {
   // Compute the score of each image
-  for(std::size_t i = 0; i < remainingImagesIndexes.size(); ++i)
+  for (std::size_t i = 0; i < remainingImagesIndexes.size(); ++i)
   {
-    const auto& imageCellIndexes = cellIndexesPerImage[remainingImagesIndexes[i]];
+    const std::vector<std::size_t>& imageCellIndexes = cellIndexesPerImage[remainingImagesIndexes[i]];
     float imageScore = 0;
-    for(std::size_t cellIndex : imageCellIndexes)
+    for (std::size_t cellIndex : imageCellIndexes)
     {
-      imageScore += cellsWeight[cellIndex];
+      imageScore += cellsWeight.at(cellIndex);
     }
     // Normalize by the number of checker items.
     // If the detector support occlusions of the checker the number of items may vary.
-    imageScore /= imageCellIndexes.size();
-    imageScores.push_back(std::make_pair(imageScore, i));
+    imageScore /= float(imageCellIndexes.size());
+    imageScores.emplace_back(imageScore, remainingImagesIndexes[i]);
   }
-//  for(int i = 0; i < imageScores.size(); ++i)
-//  {
-//    std::cout << "score : " << imageScores[i].first << " index : " << imageScores[i].second << std::endl;
-//  }
+}
+
+/**
+ * @brief This function selects the best images based on repartition in images of the calibration landmarks.
+ *
+ * @param[in] imagePoints
+ * @param[in] imageSize
+ * @param[in,out] remainingImagesIndexes
+ * @param[in] maxCalibFrames
+ * @param[in] validFrames
+ * @param[out] calibImageScore
+ * @param[out] calibInputFrames
+ * @param[out] calibImagePoints
+ * @param[in] calibGridSize
+ */
+void selectBestImages(const std::vector<std::vector<cv::Point2f> >& imagePoints,
+                      const cv::Size& imageSize,
+                      std::vector<std::size_t>& remainingImagesIndexes,
+                      const std::size_t& maxCalibFrames,
+                      const std::vector<std::size_t>& validFrames,
+                      std::vector<float>& calibImageScore,
+                      std::vector<std::size_t>& calibInputFrames,
+                      std::vector<std::vector<cv::Point2f> >& calibImagePoints,
+                      const std::size_t calibGridSize)
+{
+  std::vector<std::vector<std::size_t> > cellIndexesPerImage;
+
+  // Precompute cell indexes per image
+  precomputeCellIndexes(imagePoints, cellIndexesPerImage, imageSize, calibGridSize);
+
+  // Init with 0, 1, 2, ...
+  for (std::size_t i = 0; i < remainingImagesIndexes.size(); ++i)
+    remainingImagesIndexes[i] = i;
+
+  std::vector<std::size_t> bestImagesIndexes;
+  if (maxCalibFrames < validFrames.size())
+  {
+    while (bestImagesIndexes.size() < maxCalibFrames )
+    {
+      std::map<std::size_t, std::size_t> cellsWeight;
+      std::vector<std::pair<float, std::size_t> > imageScores;
+      // Count points in each cell of the grid
+      if (bestImagesIndexes.empty())
+        computeCellsWeight(remainingImagesIndexes, cellIndexesPerImage, cellsWeight, calibGridSize);
+      else
+        computeCellsWeight(bestImagesIndexes, cellIndexesPerImage, cellsWeight, calibGridSize);
+
+      computeImageScores(imageScores, remainingImagesIndexes, cellIndexesPerImage, cellsWeight);
+
+      // Find best score
+      std::size_t bestImageIndex = std::numeric_limits<std::size_t>::max();
+      float bestScore = std::numeric_limits<float>::max();
+      for (const auto& imageScore: imageScores)
+      {
+        if (imageScore.first < bestScore)
+        {
+          bestScore = imageScore.first;
+          bestImageIndex = imageScore.second;
+        }
+      }
+      auto eraseIt = std::find(remainingImagesIndexes.begin(), remainingImagesIndexes.end(), bestImageIndex);
+      assert(bestScore != std::numeric_limits<float>::max());
+      assert(eraseIt != remainingImagesIndexes.end());
+      remainingImagesIndexes.erase(eraseIt);
+      bestImagesIndexes.push_back(bestImageIndex);
+      calibImageScore.push_back(bestScore);
+    }
+  }
+  else
+  {
+    std::cout << "Info: Less valid frames (" << validFrames.size() << ") than specified maxCalibFrames (" << maxCalibFrames << ")." << std::endl;
+    bestImagesIndexes = validFrames;
+    std::map<std::size_t, std::size_t> cellsWeight;
+    computeCellsWeight(remainingImagesIndexes, cellIndexesPerImage, cellsWeight, calibGridSize);
+    std::vector<std::pair<float, std::size_t> > imageScores;
+    computeImageScores(imageScores, remainingImagesIndexes, cellIndexesPerImage, cellsWeight);
+    for(auto imgScore: imageScores)
+    {
+      calibImageScore.push_back(imgScore.first);
+    }
+  }
+
+  assert(bestImagesIndexes.size() == std::min(maxCalibFrames, validFrames.size()));
+
+  for(std::size_t i = 0; i < bestImagesIndexes.size(); ++i)
+  {
+    const std::size_t origI = bestImagesIndexes[i];
+    calibImagePoints.push_back(imagePoints[origI]);
+    calibInputFrames.push_back(validFrames[origI]);
+  }
 }
 
 int main(int argc, char** argv)
@@ -412,67 +879,70 @@ int main(int argc, char** argv)
   Pattern pattern = CHESSBOARD;
   std::size_t maxNbFrames = 0;
   std::size_t maxCalibFrames = 100;
+  std::size_t calibGridSize = 10;
   std::size_t nbRadialCoef = 3;
   std::size_t minInputFrames = 10;
   double maxTotalAvgErr = 0.1;
 
   std::clock_t startAlgo = std::clock();
   double durationAlgo;
-  
-  po::options_description desc("This program is used to calibrate a camera from a dataset of images.\n");
+
+  po::options_description desc("\n\nThis program is used to calibrate a camera from a dataset of images.\n");
   desc.add_options()
           ("help,h", "Produce help message.\n")
-          ("input,i", po::value<bfs::path>(&inputPath)->required(), 
-                      "Input images in one of the following form:\n"
-                      " - folder containing images\n"
-                      " - image sequence like /path/to/seq.@.jpg\n"
-                      " - video file\n")
-          ("output,o", po::value<std::string>(&outputFilename)->required(), 
-                      "Output filename for intrinsic [and extrinsic] parameters.\n")
+          ("input,i", po::value<bfs::path>(&inputPath)->required(),
+           "Input images in one of the following form:\n"
+           " - folder containing images\n"
+           " - image sequence like /path/to/seq.@.jpg\n"
+           " - video file\n")
+          ("output,o", po::value<std::string>(&outputFilename)->required(),
+           "Output filename for intrinsic [and extrinsic] parameters.\n")
           ("pattern,p", po::value<Pattern>(&pattern)->default_value(pattern),
-                      "Type of pattern: 'chessboard', 'circles', 'asymmetric_circles'"
-                      #ifdef HAVE_CCTAG
-                        " or 'cctag'"
-                      #endif
-                      ".\n")
-          ("size,s", po::value<std::vector<std::size_t>>(&checkerboardSize)->multitoken(),
-                      "Number of inner corners per one of board dimension like W H.\n")
-          ("nRadialCoef,r", po::value<std::size_t>(&nbRadialCoef)->default_value(nbRadialCoef), 
-                      "Number of radial distortion coefficient.\n")
+           "Type of pattern: 'chessboard', 'circles', 'asymmetric_circles'"
+#ifdef HAVE_CCTAG
+          " or 'cctag'"
+#endif
+          ".\n")
+          ("size,s", po::value<std::vector < std::size_t >> (&checkerboardSize)->multitoken(),
+           "Number of inner corners per one of board dimension like W H.\n")
+          ("nRadialCoef,r", po::value<std::size_t>(&nbRadialCoef)->default_value(nbRadialCoef),
+           "Number of radial distortion coefficient.\n")
           ("maxFrames", po::value<std::size_t>(&maxNbFrames)->default_value(maxNbFrames),
-                      "Maximal number of frames to extract from the video file.\n")
+           "Maximal number of frames to extract from the video file.\n")
           ("maxCalibFrames", po::value<std::size_t>(&maxCalibFrames)->default_value(maxCalibFrames),
-                      "Maximal number of frames to use to calibrate from the selected frames.\n")
-          ("minInputFrames", po::value<std::size_t>(&minInputFrames)->default_value(minInputFrames), 
-                      "Minimal number of frames to limit the refinement loop.\n")
-          ("maxTotalAvgErr,e", po::value<double>(&maxTotalAvgErr)->default_value(maxTotalAvgErr), 
-                      "Max Total Average Error.\n")
+           "Maximal number of frames to use to calibrate from the selected frames.\n")
+          ("calibGridSize", po::value<std::size_t>(&calibGridSize)->default_value(calibGridSize),
+           "Define the number of cells per edge.\n")
+          ("minInputFrames", po::value<std::size_t>(&minInputFrames)->default_value(minInputFrames),
+           "Minimal number of frames to limit the refinement loop.\n")
+          ("maxTotalAvgErr,e", po::value<double>(&maxTotalAvgErr)->default_value(maxTotalAvgErr),
+           "Max Total Average Error.\n")
           ("debugRejectedImgFolder", po::value<std::string>(&debugRejectedImgFolder)->default_value(""),
-                      "Folder to export delete images during the refinement loop.\n")
+           "Folder to export delete images during the refinement loop.\n")
           ("debugSelectedImgFolder,d", po::value<std::string>(&debugSelectedImgFolder)->default_value(""),
-                      "Folder to export debug images.\n")
-  ;
-  
+           "Folder to export debug images.\n")
+          ;
+
   po::variables_map vm;
   int cvCalibFlags = 0;
-  
+
   try
   {
     po::store(po::parse_command_line(argc, argv, desc), vm);
-    
+
     if (vm.count("help") || (argc == 1))
     {
       std::cout << desc << std::endl;
       return EXIT_SUCCESS;
     }
-    
+
     cvCalibFlags |= CV_CALIB_ZERO_TANGENT_DIST;
-    if(nbRadialCoef < 1 || nbRadialCoef > 6)
+    if (nbRadialCoef < 1 || nbRadialCoef > 6)
       throw boost::program_options::invalid_option_value(std::string("Only supports 2 or 3 radial coefs: ") + std::to_string(nbRadialCoef));
     const std::array<int, 6> fixRadialCoefs = {CV_CALIB_FIX_K1, CV_CALIB_FIX_K2, CV_CALIB_FIX_K3, CV_CALIB_FIX_K4, CV_CALIB_FIX_K5, CV_CALIB_FIX_K6};
-    for(int i = nbRadialCoef; i < 6; ++i)
+    for (int i = nbRadialCoef; i < 6; ++i)
       cvCalibFlags |= fixRadialCoefs[i];
-    
+
     po::notify(vm);
   }
   catch (boost::program_options::required_option& e)
@@ -488,21 +958,21 @@ int main(int argc, char** argv)
     return EXIT_FAILURE;
   }
 
-  if(checkerboardSize.size() != 2)
+  if (checkerboardSize.size() != 2)
     throw std::logic_error("The size of the checkerboard is not defined");
-  
-  if(maxCalibFrames > maxNbFrames || minInputFrames > maxCalibFrames)
+
+  if (maxCalibFrames > maxNbFrames || minInputFrames > maxCalibFrames)
   {
     throw std::logic_error("Check the value for maxFrames, maxCalibFrames & minInputFrames. It must be decreasing.");
   }
-  
+
   bool writeExtrinsics = false;
   bool writePoints = false;
   float squareSize = 1.f;
   float aspectRatio = 1.f;
   cv::Mat cameraMatrix;
   cv::Mat distCoeffs;
-  
+
   cv::Size boardSize(checkerboardSize[0], checkerboardSize[1]);
   cv::Size imageSize(0, 0);
 
@@ -513,7 +983,7 @@ int main(int argc, char** argv)
 
   // create the feedProvider
   openMVG::dataio::FeedProvider feed(inputPath.string());
-  if(!feed.isInit())
+  if (!feed.isInit())
   {
     std::cerr << "ERROR while initializing the FeedProvider!" << std::endl;
     return EXIT_FAILURE;
@@ -522,95 +992,46 @@ int main(int argc, char** argv)
   openMVG::cameras::Pinhole_Intrinsic_Radial_K3 queryIntrinsics;
   bool hasIntrinsics = false;
   std::string currentImgName;
-  double step = 1.0;
-  if(maxNbFrames)
-  {
-    if(feed.nbFrames() < maxNbFrames)
-      step = feed.nbFrames() / (double)maxNbFrames;
-  }
   std::size_t iInputFrame = 0;
   std::vector<std::size_t> validFrames;
-  float cellWidth = 0;
-  float cellHeight = 0;
+  double step = 1.0;
 
-  while(feed.readImage(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics) && iInputFrame < maxNbFrames)
+  // Compute the discretization's step
+  if (maxNbFrames)
+  {
+    if (feed.nbFrames() < maxNbFrames)
+      step = feed.nbFrames() / (double) maxNbFrames;
+  }
+
+  while (feed.readImage(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics) && iInputFrame < maxNbFrames)
   {
     std::size_t currentFrame = std::floor(iInputFrame * step);
     cv::Mat viewGray;
     cv::eigen2cv(imageGrey.GetMat(), viewGray);
 
     // Check image is correctly loaded
-    if (viewGray.size() == cv::Size(0,0))
+    if (viewGray.size() == cv::Size(0, 0))
     {
       throw std::runtime_error(std::string("Invalid image: ") + currentImgName);
     }
     // Check image size is always the same
-    if (imageSize == cv::Size(0,0))
+    if (imageSize == cv::Size(0, 0))
     {
       // First image: initialize the image size.
       imageSize = viewGray.size();
-      cellWidth = float(imageSize.width) / float(GRID_SIZE);
-      cellHeight = float(imageSize.height) / float(GRID_SIZE);
     }
+    // Check image resolutions are always the same
     else if (imageSize != viewGray.size())
     {
       throw std::runtime_error(std::string("You cannot mix multiple image resolutions during the camera calibration. See image file: ") + currentImgName);
     }
 
     std::vector<cv::Point2f> pointbuf;
-
-    std::clock_t startCh;
-    double durationCh;
     bool found;
-    std::cout<< "[" << currentFrame << "/" << maxNbFrames << "]" << std::endl;
-    switch (pattern)
-    {
-      case CHESSBOARD:
-        startCh = std::clock();
-        
-        found = cv::findChessboardCorners(viewGray, boardSize, pointbuf,
-                                      CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE);
-        durationCh = ( std::clock() - startCh ) / (double) CLOCKS_PER_SEC;
-        std::cout<< "Find chessboard corners' duration: "<< durationCh << std::endl;
-        startCh = std::clock();
-        
-        // improve the found corners' coordinate accuracy
-        if (found)
-          cv::cornerSubPix(viewGray, pointbuf, cv::Size(11, 11), cv::Size(-1, -1),
-                       cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
-        
-        durationCh = ( std::clock() - startCh ) / (double) CLOCKS_PER_SEC;
-        std::cout << "Refine chessboard corners' duration: "<< durationCh << std::endl;
-        break;
-        
-      case CIRCLES_GRID:
-        startCh = std::clock();
-        
-        found = cv::findCirclesGrid(viewGray, boardSize, pointbuf);
-        
-        durationCh = ( std::clock() - startCh ) / (double) CLOCKS_PER_SEC;
-        std::cout << "Find circles grid duration: "<< durationCh << std::endl;
-        break;
-        
-      case ASYMMETRIC_CIRCLES_GRID:
-        startCh = std::clock();
-        
-        found = cv::findCirclesGrid(viewGray, boardSize, pointbuf, cv::CALIB_CB_ASYMMETRIC_GRID);
-        
-        durationCh = ( std::clock() - startCh ) / (double) CLOCKS_PER_SEC;
-        std::cout << "Find asymmetric circles grid duration: "<< durationCh << std::endl;
-        break;
+    std::cout << "[" << currentFrame << "/" << maxNbFrames << "]" << std::endl;
 
-#ifdef HAVE_CCTAG
-      case CCTAG_GRID:
-        throw std::invalid_argument("CCTag calibration not implemented.");
-        break;
-#endif
-
-      default:
-        std::cerr << "Unknown pattern type" << std::endl;
-        return EXIT_FAILURE;
-    }
+    // Find the chosen pattern in images
+    findPattern(pattern, found, viewGray, boardSize, pointbuf);
 
     if (found)
     {
@@ -622,192 +1043,41 @@ int main(int argc, char** argv)
     feed.goToFrame(std::floor(currentFrame));
   }
 
-  duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+  duration = (std::clock() - start) / (double) CLOCKS_PER_SEC;
   std::cout << "find points duration: " << duration << std::endl;
   std::cout << "Grid detected in " << imagePoints.size() << " images on " << iInputFrame << " input images." << std::endl;
 
   if (imagePoints.empty())
     throw std::logic_error("No checkerboard detected.");
 
-  // Precompute cell indexes per image
-  std::vector<std::vector<std::size_t> > cellIndexesPerImage;
-  for(const auto& pointbuf: imagePoints)
-  {
-    std::vector<std::size_t> imageCellIndexes;
-    // Points repartition in image
-    for (cv::Point2f point : pointbuf)
-    {
-      // Compute the index of the point
-      std::size_t cellPointX = std::floor(point.x / cellWidth);
-      std::size_t cellPointY = std::floor(point.y / cellHeight);
-      std::size_t cellIndex = cellPointY * GRID_SIZE + cellPointX;
-      imageCellIndexes.push_back(cellIndex);
-    }
-    cellIndexesPerImage.push_back(imageCellIndexes);
-  }
-  
-  // Select best images based on repartition in images
-  std::vector<std::size_t> bestImagesIndexes;
-  std::vector<std::pair<float, std::size_t> > imageScores;
   std::vector<std::size_t> remainingImagesIndexes(validFrames.size());
-  // Init with 0, 1, 2, ...
-  for(std::size_t i = 0; i < remainingImagesIndexes.size(); ++i)
-    remainingImagesIndexes[i] = i;
-  
-  if(maxCalibFrames < validFrames.size())
-  {
-    float maxScore = std::numeric_limits<float>::max();
-    std::size_t bestImageIndex = 0;
-    while(bestImagesIndexes.size() < maxCalibFrames)
-    {
-      // Count points in each cell of the grid
-      std::map<std::size_t, std::size_t> cellsWeight;
-      if(bestImagesIndexes.empty())
-        computeCellsWeight(remainingImagesIndexes, cellIndexesPerImage, cellsWeight);
-      else
-        computeCellsWeight(bestImagesIndexes, cellIndexesPerImage, cellsWeight);
+  std::vector<float> calibImageScore;
+  std::vector<std::size_t> calibInputFrames;
+  std::vector<std::vector<cv::Point2f> > calibImagePoints;
 
-      computeImageScores(imageScores, remainingImagesIndexes, cellIndexesPerImage, cellsWeight);
-      
-      // find max score
-      for(int i = 0; i < imageScores.size(); ++i)
-      {
-        if(imageScores[i].first < maxScore)
-        {
-          maxScore = imageScores[i].first;
-          bestImageIndex = imageScores[i].second;
-        }
-      }
-      remainingImagesIndexes.erase(remainingImagesIndexes.begin() + bestImageIndex);
-      bestImagesIndexes.push_back(bestImageIndex);
-    }
-  }
-  else
-  {
-    std::cout << "Info: Less valid frames (" << validFrames.size() << ") than specified maxCalibFrames (" << maxCalibFrames << ")." << std::endl;
-    bestImagesIndexes = validFrames;
-  }
-  
-  assert(bestImagesIndexes.size() == std::min(maxCalibFrames, validFrames.size()));
-  
-  std::vector<float> calibImageScore(bestImagesIndexes.size());
-  std::vector<std::size_t> calibInputFrames(bestImagesIndexes.size());
-  std::vector<std::vector<cv::Point2f> > calibImagePoints(bestImagesIndexes.size());
-  for(std::size_t i = 0; i < bestImagesIndexes.size(); ++i)
-  {
-    const std::size_t origI = bestImagesIndexes[i];
-    calibImagePoints[i] = imagePoints[origI];
-    calibImageScore[i] = imageScores[origI].first;
-    calibInputFrames[i] = validFrames[origI];
-  }
+  // Select best images based on repartition in images of the calibration landmarks
+  selectBestImages(imagePoints, imageSize, remainingImagesIndexes, maxCalibFrames,
+                   validFrames, calibImageScore, calibInputFrames, calibImagePoints, calibGridSize);
 
-  std::vector<std::size_t> rejectInputFrames;
   std::vector<std::vector<cv::Point3f> > calibObjectPoints;
+  start = std::clock();
+
+  computeObjectPoints(boardSize, pattern, squareSize, calibImagePoints, calibObjectPoints);
+
+  double totalAvgErr = 0;
   std::vector<cv::Mat> rvecs;
   std::vector<cv::Mat> tvecs;
   std::vector<float> reprojErrs;
-  double totalAvgErr = 0;
-  std::size_t calibIteration = 0;
-  bool calibSucceeded = false;
-
-  start = std::clock();
+  std::vector<std::size_t> rejectInputFrames;
   
-  computeObjectPoints(boardSize, pattern, squareSize, calibImagePoints, calibObjectPoints);
-
   // Refinement loop of the calibration
-  do
-  {
-    // Estimate the camera calibration
-    std::cout << "Calibration iteration " <<  calibIteration << " with " << calibImagePoints.size() << " frames." << std::endl;
-    calibSucceeded = runCalibration(calibImagePoints, calibObjectPoints, imageSize,
-                                    aspectRatio, cvCalibFlags, cameraMatrix, distCoeffs,
-                                    rvecs, tvecs, reprojErrs, totalAvgErr);
+  calibrationIterativeOptimization(calibImagePoints, calibObjectPoints, imageSize, aspectRatio,
+                        cvCalibFlags, cameraMatrix, distCoeffs, rvecs, tvecs, reprojErrs,
+                        totalAvgErr, maxTotalAvgErr, minInputFrames, calibInputFrames,
+                        calibImageScore, rejectInputFrames);
 
-    if(totalAvgErr <= maxTotalAvgErr)
-    {
-      // The calibration succeed with an average error that respects the maxTotalAvgErr.
-      std::cout << "The calibration succeed with an average error that respects the maxTotalAvgErr." << std::endl;
-      break;
-    }
-    else if(calibInputFrames.size() < minInputFrames)
-    {
-      std::cout << "Not enough valid input image (" << calibInputFrames.size() << ") to continue the refinement." << std::endl;
-      break;
-    }
-    else if(calibSucceeded)
-    {
-      // Filter the successfully calibrated images to keep the best ones
-      // in order to refine the calibration.
-      // For instance, remove blurry images which introduce imprecision.
-
-      std::vector<float> globalScores;
-      for(int i = 0; i < calibInputFrames.size(); ++i)
-      {
-        globalScores.push_back(reprojErrs[i] * calibImageScore[i]) ;
-      }
-      
-      const auto minMaxError = std::minmax_element(globalScores.begin(), globalScores.end());
-      std::cout << "minMaxError: " << *minMaxError.first << ", " << *minMaxError.second << std::endl;
-      if(*minMaxError.first == *minMaxError.second)
-      {
-        std::cout << "Same error on all images: " << *minMaxError.first << std::endl;
-        for(float f: globalScores)
-          std::cout << "f: " << f << std::endl;
-        break;
-      }
-      // We only keep the frames with N% of the largest error.
-      const float errorThreshold = *minMaxError.first + 0.8 * (*minMaxError.second - *minMaxError.first);
-      std::vector<std::vector<cv::Point2f> > filteredImagePoints;
-      std::vector<std::vector<cv::Point3f> > filteredObjectPoints;
-      std::vector<std::size_t> filteredInputFrames;
-      std::vector<std::size_t> tmpRejectInputFrames;
-      std::vector<float> filteredImageScores;
-
-      for(std::size_t i = 0; i < calibImagePoints.size(); ++i)
-      {
-        if(globalScores[i] < errorThreshold)
-        {
-          filteredImagePoints.push_back(calibImagePoints[i]);
-          filteredObjectPoints.push_back(calibObjectPoints[i]);
-          filteredInputFrames.push_back(calibInputFrames[i]);
-          filteredImageScores.push_back(calibImageScore[i]);
-        }
-        else
-        {
-          // We collect rejected frames for debug purpose
-          tmpRejectInputFrames.push_back(calibInputFrames[i]);
-        }
-      }
-      if(filteredImagePoints.size() < minInputFrames)
-      {
-        std::cout << "Not enough filtered input images (filtered: " << filteredImagePoints.size() << ", rejected:" << tmpRejectInputFrames.size() << ") to continue the refinement." << std::endl;
-        break;
-      }
-      if(calibImagePoints.size() == filteredImagePoints.size())
-      {
-        // Convergence reached
-        std::cout << "Convergence reached." << std::endl;
-        break;
-      }
-      calibImagePoints.swap(filteredImagePoints);
-      calibObjectPoints.swap(filteredObjectPoints);
-      calibInputFrames.swap(filteredInputFrames);
-      calibImageScore.swap(filteredImageScores);
-      rejectInputFrames.insert(rejectInputFrames.end(), tmpRejectInputFrames.begin(), tmpRejectInputFrames.end());
-    }
-    ++calibIteration;
-  }
-  while(calibSucceeded);
-
-  std::cout << "Calibration done with " << calibIteration << " iterations." << std::endl;
-  std::cout << "Average reprojection error is " << totalAvgErr << std::endl;
-  std::cout << (calibSucceeded ? "Calibration succeeded" : "Calibration failed") << std::endl;
-
-  duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+  duration = (std::clock() - start) / (double) CLOCKS_PER_SEC;
   std::cout << "Calibration duration: " << duration << std::endl;
-
-  if (!calibSucceeded)
-    return -1;
 
   saveCameraParams(outputFilename, imageSize,
                    boardSize, squareSize, aspectRatio,
@@ -818,32 +1088,12 @@ int main(int argc, char** argv)
                    writePoints ? calibImagePoints : std::vector<std::vector<cv::Point2f> >(),
                    totalAvgErr);
 
-  if (!debugSelectedImgFolder.empty())
-  {
-    start = std::clock();
-    exportDebug(feed, debugSelectedImgFolder, calibInputFrames,
-                cameraMatrix, distCoeffs, imageSize, "_undistort.png");
-    durationAlgo = ( std::clock() - startAlgo ) / (double) CLOCKS_PER_SEC;
-    std::cout << "Export debug of selected frames, duration: "<< durationAlgo << std::endl;
-  }
-  
-  if (!debugRejectedImgFolder.empty())
-  {
-    start = std::clock();
-    exportDebug(feed, debugRejectedImgFolder, rejectInputFrames,
-                cameraMatrix, distCoeffs, imageSize, "_rejected_undistort.png");
-    durationAlgo = ( std::clock() - startAlgo ) / (double) CLOCKS_PER_SEC;
-    std::cout << "Export debug of rejected frames, duration: "<< durationAlgo << std::endl;
-  }
-  
-  if (!debugRejectedImgFolder.empty())
-  {
-    start = std::clock();
-    exportDebug(feed, debugRejectedImgFolder, remainingImagesIndexes,
-                cameraMatrix, distCoeffs, imageSize, "_not_selected_undistort.png");
-    durationAlgo = ( std::clock() - startAlgo ) / (double) CLOCKS_PER_SEC;
-    std::cout << "Export debug of non selected frames, duration: "<< durationAlgo << std::endl;
-  }
+  exportDebug(debugSelectedImgFolder, debugRejectedImgFolder,
+              feed, calibInputFrames, rejectInputFrames, remainingImagesIndexes,
+              cameraMatrix, distCoeffs, imageSize);
+
+  durationAlgo = (std::clock() - startAlgo) / (double) CLOCKS_PER_SEC;
+  std::cout << "Total duration: " << durationAlgo << std::endl;
 
   return 0;
 }
