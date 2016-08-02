@@ -6,15 +6,32 @@
 namespace openMVG {
 namespace sfm {
 
-inline void getCommonViews(
-  const SfM_Data & sfmDataA,
-  const SfM_Data & sfmDataB,
-  std::vector<IndexT>& outIndexes
-  )
+inline void getCommonViews(const SfM_Data & sfmDataA,
+                           const SfM_Data & sfmDataB,
+                           std::vector<IndexT>& outIndexes)
 {
   for(const auto& viewA: sfmDataA.GetViews())
   {
     if(sfmDataB.GetViews().find(viewA.first) != sfmDataB.GetViews().end())
+    {
+      outIndexes.push_back(viewA.first);
+    }
+  }
+}
+
+inline void getCommonViewsWithPoses(const SfM_Data & sfmDataA,
+                                    const SfM_Data & sfmDataB,
+                                    std::vector<IndexT>& outIndexes)
+{
+  for(const auto& viewA: sfmDataA.GetViews())
+  {
+    // check there is a view with the same ID and both of them have pose and 
+    // intrinsics defined
+    if(!sfmDataA.IsPoseAndIntrinsicDefined(viewA.second.get()))
+      continue;
+
+    if(sfmDataB.GetViews().find(viewA.first) != sfmDataB.GetViews().end() &&
+       sfmDataB.IsPoseAndIntrinsicDefined(viewA.first))
     {
       outIndexes.push_back(viewA.first);
     }
