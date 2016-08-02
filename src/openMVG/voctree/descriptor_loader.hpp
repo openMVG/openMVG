@@ -24,7 +24,8 @@ void getInfoBinFile(const std::string &path, int dim, size_t &numDescriptors, in
 
 /**
  * @brief Extract a list of decriptor files to read from a file containing the path to the descriptor files.
- * Two format are supported:
+ * Three formats are supported:
+ * 
  * 1. a simple text file containing a list of filenames of images or descriptors, one for
  * each line, like:
  * imagename1.jpg
@@ -41,6 +42,9 @@ void getInfoBinFile(const std::string &path, int dim, size_t &numDescriptors, in
  * parse the view section to retrieve the image name and it will infer the descriptor
  * filename from that
  * 
+ * 3. a path to a directory containing the features and the descriptors. The function
+ * looks for all .desc files there inside.
+ *  
  * @param[in] listFile The input filename containing the list of files to read
  * @param[out] descriptorsFiles A list of descriptor files 
  */
@@ -48,7 +52,7 @@ void getListOfDescriptorFiles(const std::string &fileFullPath, std::map<IndexT, 
 
 /**
  * @brief Read a set of descriptors from a file containing the path to the descriptor files.
- * Two format are supported:
+ * Three formats are supported:
  * 1. a simple text file containing a list of filenames of images or descriptors, one for
  * each line, like:
  * imagename1.jpg
@@ -63,7 +67,11 @@ void getListOfDescriptorFiles(const std::string &fileFullPath, std::map<IndexT, 
  *
  * 2. a json file containing the sfm_data using the OpenMVG data container. The function will
  * parse the view section to retrieve the image name and it will infer the descriptor
- * filename from that
+ * filename from that. It assumes that the descriptors are in the same folder as
+ * the .json file.
+ * 
+ * 3. a path to a directory containing the features and the descriptors. The function
+ * looks for all .desc files there inside.
  * 
  * \p FileDescriptorT is the type of descriptors that are stored in the file. Usually 
  * the two types should be the same, but it could be the case in which the descriptor 
