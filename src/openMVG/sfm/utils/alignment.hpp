@@ -43,9 +43,9 @@ inline void getCommonViewsWithPoses(const SfM_Data & sfmDataA,
  *
  * @param[in] sfmDataA
  * @param[in] sfmDataB
- * @param[out] out_S: output scale factor
- * @param[out] out_R: output rotation 3x3 matrix
- * @param[out] out_t: output translation vector
+ * @param[out] out_S output scale factor
+ * @param[out] out_R output rotation 3x3 matrix
+ * @param[out] out_t output translation vector
  * @return true if it finds a similarity transformation
  */
 bool computeSimilarity(const SfM_Data & sfmDataA,
