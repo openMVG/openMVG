@@ -10,6 +10,11 @@
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
+#ifdef HAVE_BOOST
+#include <boost/system/error_code.hpp>
+#include <boost/filesystem.hpp>
+#endif
+
 #include <string>
 #include <vector>
 
@@ -40,14 +45,11 @@ void updateStructureWithNewUID(Landmarks &landmarks, const std::map<std::size_t,
   }  
 }
 
-void regenerateUID(sfm::SfM_Data &sfmdata, bool sanityCheck = false)
+void regenerateUID(sfm::SfM_Data &sfmdata, std::map<std::size_t, std::size_t> &oldIdToNew, bool sanityCheck = false)
 {
   // if the views are empty, nothing to be done. 
   if(sfmdata.GetViews().empty())
     return;
-  
-  // this is used to map the old viewID to the UID for each view
-  std::map<std::size_t, std::size_t> oldIdToNew;
   
   Views newViews;
 
@@ -123,9 +125,11 @@ int main(int argc, char **argv)
 {
   CmdLine cmd;
 
-  std::string
-    sSfM_Data_Filename_In,
-    sSfM_Data_Filename_Out;
+  std::string sSfM_Data_Filename_In;
+  std::string sSfM_Data_Filename_Out;
+#ifdef HAVE_BOOST
+  std::string matchDir;
+#endif
 
   cmd.add(make_option('i', sSfM_Data_Filename_In, "input_file"));
   cmd.add(make_switch('V', "VIEWS"));
@@ -136,6 +140,9 @@ int main(int argc, char **argv)
   cmd.add(make_switch('C', "CONTROL_POINTS"));
   cmd.add(make_switch('u', "uid"));
   cmd.add(make_option('o', sSfM_Data_Filename_Out, "output_file"));
+#ifdef HAVE_BOOST
+  cmd.add(make_option('m', matchDir, "matchDirectory"));
+#endif
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -158,6 +165,12 @@ int main(int argc, char **argv)
         << "[-O|--OBSERVATIONS] export 2D observations associated with 3D structure\n"
         << "[-C|--CONTROL_POINTS] export control points\n"
         << "[-u|--uid] (re-)compute the unique ID (UID) for the views\n"
+#ifdef HAVE_BOOST              
+        << "[-m|--matchDirectory] the directory containing the features used for the\n"
+           "    reconstruction. If provided along the -u option, it creates symbolic\n"
+           "    links to the .desc and .feat with the new UID as name. This can be\n"
+           "    for legacy reconstructions that were not made using UID"
+#endif
         << std::endl;
 
       std::cerr << s << std::endl;
@@ -195,7 +208,45 @@ int main(int argc, char **argv)
   if(recomputeUID)
   {
     std::cout << "Recomputing the UID of the views..." << std::endl;
-    regenerateUID(sfm_data);
+    std::map<std::size_t, std::size_t> oldIdToNew;
+    regenerateUID(sfm_data, oldIdToNew);
+    
+#ifdef HAVE_BOOST
+    if(!matchDir.empty())
+    {
+      std::cout << "Generating alias for .feat and .desc with the UIDs" << std::endl;
+      for(const auto& iter : oldIdToNew)
+      {
+        const auto oldID = iter.first;
+        const auto newID = iter.second;
+        const auto oldFeatfilename = stlplus::create_filespec(matchDir, std::to_string(oldID), ".feat");
+        const auto newFeatfilename = stlplus::create_filespec(matchDir, std::to_string(newID), ".feat");
+        const auto oldDescfilename = stlplus::create_filespec(matchDir, std::to_string(oldID), ".desc");
+        const auto newDescfilename = stlplus::create_filespec(matchDir, std::to_string(newID), ".desc");
+
+        if(!(stlplus::is_file(oldFeatfilename) && stlplus::is_file(oldDescfilename)))
+        {
+          std::cerr << "Cannot find the features file for view ID " << oldID
+                      << std::endl;
+          return EXIT_FAILURE;
+        }
+        boost::system::error_code ec;
+        boost::filesystem::create_symlink(oldFeatfilename, newFeatfilename, ec);
+        if(ec)
+        {
+          std::cerr << "Error while creating " << newFeatfilename << ": " << ec.message() << std::endl;
+          return EXIT_FAILURE;
+        }
+        boost::filesystem::create_symlink(oldDescfilename, newDescfilename, ec);
+        if(ec)
+        {
+          std::cerr << "Error while creating " << newDescfilename << ": " << ec.message() << std::endl;
+          return EXIT_FAILURE;
+        }
+      }
+    }
+#endif
+    
   }
 
   // Export the SfM_Data scene in the expected format

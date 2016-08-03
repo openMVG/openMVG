@@ -95,13 +95,16 @@ TARGET_LINK_LIBRARIES(openMVG_main_GlobalSfM
   stlplus
   )
 
-ADD_EXECUTABLE(openMVG_main_ConvertSfM_DataFormat main_ConvertSfM_DataFormat.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_ConvertSfM_DataFormat
+add_executable(openMVG_main_ConvertSfM_DataFormat main_ConvertSfM_DataFormat.cpp)
+target_link_libraries(openMVG_main_ConvertSfM_DataFormat
   openMVG_system
   openMVG_features
   openMVG_sfm
   stlplus
   )
+if(Boost_FOUND)
+target_link_libraries(openMVG_main_ConvertSfM_DataFormat ${Boost_LIBRARIES})
+endif()
 
 ADD_EXECUTABLE(openMVG_main_Align main_Align.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_Align
