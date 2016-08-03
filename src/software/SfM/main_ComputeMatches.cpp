@@ -67,7 +67,6 @@ int main(int argc, char **argv)
   float fDistRatio = 0.8f;
   int iMatchingVideoMode = -1;
   std::string sPredefinedPairList = "";
-  bool bUpRight = false;
   std::string sNearestMatchingMethod = "AUTO";
   bool bForce = false;
   bool bGuided_matching = false;
@@ -362,7 +361,7 @@ int main(int argc, char **argv)
     graph::indexedGraph putativeGraph(set_ViewIds, getPairs(map_PutativesMatches));
     graph::exportToGraphvizData(
       stlplus::create_filespec(sMatchesDirectory, "putative_matches"),
-      putativeGraph.g);
+      putativeGraph);
   }
 
   //---------------------------------------
@@ -456,7 +455,7 @@ int main(int argc, char **argv)
       graph::indexedGraph putativeGraph(set_ViewIds, getPairs(map_GeometricMatches));
       graph::exportToGraphvizData(
         stlplus::create_filespec(sMatchesDirectory, "geometric_matches"),
-        putativeGraph.g);
+        putativeGraph);
     }
   }
   return EXIT_SUCCESS;

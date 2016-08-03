@@ -19,6 +19,8 @@
 #include "openMVG/features/image_describer_akaze.hpp"
 #include "openMVG/features/tbmr/tbmr.hpp"
 #include "openMVG/features/mser/mser.hpp"
+#include "openMVG/features/fast/fast_detector.hpp"
+#include "openMVG/features/dipole/dipole_descriptor.hpp"
 #include "openMVG/features/io_regions_type.hpp"
 
 #endif // OPENMVG_FEATURES_HPP

@@ -147,9 +147,12 @@ bool Load<TYPE>(ArchiveLoad& a, TYPE& v) { \
 
 // Serialization support for basic types
 ARCHIVE_DEFINE_TYPE(uint32_t)
-ARCHIVE_DEFINE_TYPE(size_t)
+ARCHIVE_DEFINE_TYPE(uint64_t)
 ARCHIVE_DEFINE_TYPE(float)
 ARCHIVE_DEFINE_TYPE(double)
+//#ifdef __clang__
+//ARCHIVE_DEFINE_TYPE(unsigned long)
+//#endif
 
 // Serialization support for cv::Matx
 template<typename _Tp, int m, int n>

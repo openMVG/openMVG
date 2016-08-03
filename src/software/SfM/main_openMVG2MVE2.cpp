@@ -94,7 +94,6 @@ bool exportToMVE2Format(
 
     // Export (calibrated) views as undistorted images
     C_Progress_display my_progress_bar(sfm_data.GetViews().size());
-    std::pair<int,int> w_h_image_size;
     Image<RGBColor> image, image_ud, thumbnail;
     std::string sOutViewIteratorDirectory;
     for(Views::const_iterator iter = sfm_data.GetViews().begin();

@@ -43,12 +43,13 @@ int main( int argc, char **argv )
   }
   catch( const std::string& s )
   {
-    std::cerr << "Usage: " << argv[ 0 ] << ' '
-    << "[-i|--input_file] path to a SfM_Data scene"
-    << "[-m|--sMatchesFile path] "
-    << "[-o|--outdir path] "
-    << "[-s|--selectionMethod int] "
-    << "[-r|--referenceImage int]"
+    std::cerr << "Usage: " << argv[ 0 ] << '\n'
+    << "[-i|--input_file] path to a SfM_Data scene\n"
+    << "[-m|--sMatchesFile path] i.e path/matches.(h/f/e).txt\n"
+    << "[-o|--outdir path]\n"
+    << "\n[Optional]\n"
+    << "[-s|--selectionMethod int]\n"
+    << "[-r|--referenceImage int]\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -81,7 +82,6 @@ int main( int argc, char **argv )
 
   if ( m_colorHarmonizeEngine->Process() )
   {
-    clock_t timeEnd = clock();
     std::cout << std::endl
       << " ColorHarmonization took (s): "
       << timer.elapsed() << std::endl;

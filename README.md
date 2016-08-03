@@ -21,7 +21,7 @@ Building
 See [BUILD](https://github.com/openMVG/openMVG/raw/master/BUILD) text file
 
 Continuous integration:
- - linux 64 bits/GCC (Build + tests): [![Build Status](https://travis-ci.org/openMVG/openMVG.png?branch=develop)](https://travis-ci.org/openMVG/openMVG)
+ - linux 64 bits, GCC/CLANG (Build + tests): [![Build Status](https://travis-ci.org/openMVG/openMVG.png?branch=develop)](https://travis-ci.org/openMVG/openMVG)
  - VStudio 2015 64 bits (Build): [![Build status](https://ci.appveyor.com/api/projects/status/3nv6rt41yxqx5v7i?svg=true)](https://ci.appveyor.com/project/pmoulon/openmvg)
  - Unit test coverage: [![Coverage Status](https://coveralls.io/repos/openMVG/openMVG/badge.png?branch=develop)](https://coveralls.io/r/openMVG/openMVG?branch=develop)
 

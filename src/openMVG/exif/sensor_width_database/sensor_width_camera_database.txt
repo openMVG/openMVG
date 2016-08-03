@@ -68,6 +68,27 @@ AgfaPhoto ePhoto CL30;6.16
 AgfaPhoto ePhoto CL50;6.16
 AgfaPhoto ePhoto 1680;6.16
 AgfaPhoto ePhoto 1280;6.16
+iPhone 4S;4.57
+iPad 3;4.54
+iPhone 3,1;4.74
+iPhone 4;4.74
+iPhone 5;4.57
+iPhone 5S;4.89
+iPhone3;4.74
+iPhone4;4.57
+iPhone3,1;4.74
+iPhone4,1;4.57
+iPhone4S;4.57
+iPhone5,1;4.57
+iPhone5,2;4.57
+iPhone5,3;4.57
+iPhone5,4;4.57
+iPhone6;4.89
+iPhone6,1;4.89
+iPhone6,2;4.89
+iPhone 6;4.89
+iPhone 6 Plus;4.89
+iPhone 6s Plus;4.89
 BenQ GH200;6.16
 BenQ LM100;6.16
 BenQ G1;6.16
@@ -1075,6 +1096,7 @@ GE E1030;7.53
 GE E1040;7.53
 GE E1240;7.53
 GE G 1;5.75
+HERO3+ Black Edition;6.2
 HERO4 Black;5.75
 HERO4 Silver;5.75
 HP PW550;6.16

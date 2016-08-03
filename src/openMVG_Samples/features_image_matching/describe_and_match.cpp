@@ -61,11 +61,14 @@ int main(int argc, char **argv) {
   using namespace openMVG::features;
   std::shared_ptr<Image_describer> image_describer;
   if (sImage_describer_type == "SIFT")
-    image_describer = std::make_shared<SIFT_Image_describer>(SiftParams());
+    image_describer = std::make_shared<SIFT_Image_describer>
+      (SIFT_Image_describer::Params());
   else if (sImage_describer_type == "AKAZE")
-    image_describer = std::make_shared<AKAZE_Image_describer>(AKAZEParams(AKAZEConfig(), AKAZE_MSURF));
+    image_describer = std::make_shared<AKAZE_Image_describer>
+      (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MSURF));
   else if (sImage_describer_type == "AKAZE_MLDB")
-    image_describer = std::make_shared<AKAZE_Image_describer>(AKAZEParams(AKAZEConfig(), AKAZE_MLDB));
+    image_describer = std::make_shared<AKAZE_Image_describer>
+      (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MLDB));
 
   if (image_describer.use_count()==0)
   {

@@ -35,7 +35,7 @@ typename Kernel::Model RANSAC(
   const Kernel &kernel,
   const Scorer &scorer,
   std::vector<size_t> *best_inliers = nullptr ,
-  double *best_score = nullptr , // Found number of inliers
+  size_t *best_score = nullptr , // Found number of inliers
   double outliers_probability = 1e-2)
 {
   assert(outliers_probability < 1.0);
@@ -68,7 +68,7 @@ typename Kernel::Model RANSAC(
   for (iteration = 0;
     iteration < max_iterations &&
     iteration < really_max_iterations; ++iteration) {
-      UniformSample(min_samples, total_samples, &sample);
+      UniformSample(min_samples, &all_samples, &sample);
 
       std::vector<typename Kernel::Model> models;
       kernel.Fit(sample, &models);

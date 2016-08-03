@@ -61,7 +61,7 @@ class Exif_IO
     virtual std::string getLensModel() const = 0;
 
     /**
-    * @brief Get an unique identifier for this image
+    * @brief Get a unique identifier for this image
     * @return Unique ID
     */
     virtual std::string getImageUniqueID() const = 0;
@@ -86,6 +86,24 @@ class Exif_IO
     * @return string containing all EXIF data
     */
     virtual std::string allExifData() const = 0;
+
+    /**
+    * @brief Try to read and save the EXIF GPS latitude
+    * @return If GPS Latitude can be read & exported, return true
+    */
+    virtual bool GPSLatitude(double * latitude) const = 0;
+
+    /**
+    * @brief Try to read and save the EXIF GPS longitude
+    * @return If GPS Longitude can be read & exported, return true
+    */
+    virtual bool GPSLongitude(double * longitude) const = 0;
+
+   /**
+    * @brief Try to read and save the EXIF GPS altitude
+    * @return If GPS Altitude can be read & exported, return true
+    */
+    virtual bool GPSAltitude(double * altitude) const = 0;
 
 };
 

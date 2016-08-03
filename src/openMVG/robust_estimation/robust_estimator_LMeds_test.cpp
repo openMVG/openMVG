@@ -115,8 +115,8 @@ TEST(LMedsLineFitter, RealisticCase) {
   }
 
   //-- Add some noise (for the asked percentage amount)
-  int nbPtToNoise = (int) NbPoints*inlierPourcentAmount/100.0;
-  vector<size_t> vec_samples; // Fit with unique random index
+  const int nbPtToNoise = (int) NbPoints*inlierPourcentAmount/100.0;
+  std::vector<size_t> vec_samples; // Fit with unique random index
   UniformSample(nbPtToNoise, NbPoints, &vec_samples);
   for(size_t i = 0; i <vec_samples.size(); ++i)
   {
@@ -130,7 +130,7 @@ TEST(LMedsLineFitter, RealisticCase) {
 
   Vec2 model;
   double dThreshold = std::numeric_limits<double>::infinity();
-  double dBestMedian = LeastMedianOfSquares(kernel, &model, &dThreshold);
+  const double dBestMedian = LeastMedianOfSquares(kernel, &model, &dThreshold);
   EXPECT_NEAR(-2.0, model[0], dExpectedPrecision);
   EXPECT_NEAR(6.3, model[1], dExpectedPrecision);
   //Compute which point are inliers (error below dThreshold)

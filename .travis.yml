@@ -4,10 +4,25 @@
 
 language: cpp
 
-compiler:
-  - gcc
-  #- clang: #Consider clang later, since cereal does not build fine on the clang CI version
-  #  - "3.3"
+matrix:
+  include:
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.8
+      env: COMPILER=g++-4.8
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.7
+          packages:
+            - clang-3.7
+      env: COMPILER=clang++-3.7
 
 sudo: false
 
@@ -17,7 +32,6 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - cmake
-      - lcov
       - libpng-dev
       - libjpeg8-dev
       - libtiff4-dev
@@ -25,47 +39,31 @@ addons:
       - libxxf86vm-dev
       - x11proto-xf86vidmode-dev
       - libxrandr-dev
-      - g++-4.8
 
 env:
   global:
-    - NUM_CPU="`grep processor /proc/cpuinfo | wc -l`"; echo $NUM_CPU
     - OPENMVG_SOURCE=${TRAVIS_BUILD_DIR}/src
     - OPENMVG_BUILD=${TRAVIS_BUILD_DIR}/build
 
-before_install:
- - gem install coveralls-lcov
-
 before_script:
-  - export CXX="g++-4.8"
   # Create build folder
   - mkdir $OPENMVG_BUILD
   - cd $OPENMVG_BUILD
   # Classic release build
-  - cmake -DCMAKE_BUILD_TYPE=release -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . $OPENMVG_SOURCE
-  # Build for code coverage evaluation
-  #- cmake -DOpenMVG_BUILD_COVERAGE=ON -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . $OPENMVG_SOURCE
+  - >
+    cmake \
+      -DCMAKE_CXX_COMPILER=$COMPILER \
+      -DCMAKE_BUILD_TYPE=release \
+      -DOpenMVG_BUILD_TESTS=ON \
+      -DOpenMVG_BUILD_EXAMPLES=ON \
+      . $OPENMVG_SOURCE
 
 script:
 # limit GCC builds to a reduced number of thread for the virtual machine
   - make -j 2
-# Perform unit tests only on GCC builds
-  - if [ "$CC" = "gcc" ]; then make test; fi
+  - make test
 
 branches:
   only:
     - develop
-
-after_success:
-  #- cd ../openMVG
-  # If GCC: compute code coverage and export it to coveralls
-  #- if [ "$CC" = "gcc" ];
-  #  then
-  #    lcov --directory ../build/openMVG --base-directory=./src --capture --output-file=coverage.info;
-  #    lcov --remove coverage.info '/usr*' -o coverage.info;
-  #    lcov --remove coverage.info '*_test.cpp*' -o coverage.info;
-  #    lcov --remove coverage.info '*/third_party/*' -o coverage.info;
-  #    lcov --remove coverage.info '*/src/dependencies/*' -o coverage.info;
-  #    coveralls-lcov coverage.info;
-  #  fi
 

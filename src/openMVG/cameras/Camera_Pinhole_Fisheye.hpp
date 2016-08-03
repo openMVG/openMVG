@@ -262,5 +262,6 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
 #include <cereal/types/vector.hpp>
 
 CEREAL_REGISTER_TYPE_WITH_NAME( openMVG::cameras::Pinhole_Intrinsic_Fisheye, "fisheye" );
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::Pinhole_Intrinsic, openMVG::cameras::Pinhole_Intrinsic_Fisheye)
 
 #endif // #ifndef OPENMVG_CAMERA_PINHOLE_FISHEYE_HPP

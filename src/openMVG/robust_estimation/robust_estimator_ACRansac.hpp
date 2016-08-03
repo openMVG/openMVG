@@ -306,22 +306,6 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
 }
 }  // namespace acransac_nfa_internal
 
-/// Pick n random sample from an array of indices
-/// @param[in] sizeSample The size of the sample.
-/// @param[in] vec_index  The possible data indices (must be unique).
-/// @param[out] sample The random sample of sizeSample indices.
-static void UniformSample
-(
-  int sizeSample,
-  const std::vector<size_t> &vec_index,
-  std::vector<size_t> *sample
-)
-{
-  robust::UniformSample(sizeSample, vec_index.size(), sample);
-  for (int i = 0; i < sizeSample; ++i)
-    (*sample)[i] = vec_index[ (*sample)[i] ];
-}
-
 /**
  * @brief ACRANSAC routine (ErrorThreshold, NFA)
  * If an upper bound of the threshold is provided:
@@ -339,12 +323,15 @@ static void UniformSample
  * @return (errorMax, minNFA)
  */
 template<typename Kernel>
-std::pair<double, double> ACRANSAC(const Kernel &kernel,
+std::pair<double, double> ACRANSAC
+(
+  const Kernel &kernel,
   std::vector<size_t> & vec_inliers,
   const unsigned int num_max_iteration = 1024,
   typename Kernel::Model * model = NULL,
   double precision = std::numeric_limits<double>::infinity(),
-  bool bVerbose = false)
+  bool bVerbose = false
+)
 {
   vec_inliers.clear();
 
@@ -393,7 +380,7 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
   {
     // Get random samples
     if (bACRansacMode)
-      UniformSample(sizeSample, vec_index, &vec_sample);
+      UniformSample(sizeSample, &vec_index, &vec_sample);
     else
       UniformSample(sizeSample, nData, &vec_sample);
 
@@ -419,8 +406,6 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
         }
         if (nInlier > 2.5 * sizeSample) // does the model is meaningful
           bACRansacMode = true;
-        if (!bACRansacMode && nIter > nIterReserve*2)
-          nIter = 0;
       }
 
       if (bACRansacMode)
@@ -451,6 +436,14 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
           }
         }
       }
+    }
+
+    // Early exit test -> no meaningful model found so far
+    //  see explanation above
+    if (!bACRansacMode && iter > nIterReserve*2)
+    {
+      nIter = 0; // No more round will be performed
+      continue;
     }
 
     // ACRANSAC optimization: draw samples among best set of inliers so far
