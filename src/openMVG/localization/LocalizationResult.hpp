@@ -84,6 +84,8 @@ public:
   bool isValid() const;
   
   Mat2X computeResiduals() const ;
+  
+  double computeRMSE() const ;
 
   // Serialization
   template<class Archive>

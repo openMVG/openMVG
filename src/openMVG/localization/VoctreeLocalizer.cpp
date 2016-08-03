@@ -484,7 +484,8 @@ bool VoctreeLocalizer::localizeFirstBestResult(const features::SIFT_Regions &que
                                       param._useGuidedMatching,
                                       queryImageSize,
                                       std::make_pair(matchedView->ui_width, matchedView->ui_height), 
-                                      vec_featureMatches);
+                                      vec_featureMatches,
+                                      param._matchingEstimator);
     if (!matchWorked)
     {
       POPART_COUT("[matching]\tMatching with " << matchedView->s_Img_path << " failed! Skipping image");
@@ -550,7 +551,8 @@ bool VoctreeLocalizer::localizeFirstBestResult(const features::SIFT_Regions &que
                                                    // pass the input intrinsic if they are valid, null otherwise
                                                    (useInputIntrinsics) ? &queryIntrinsics : nullptr,
                                                    resectionData,
-                                                   pose);
+                                                   pose,
+                                                   param._resectionEstimator);
 
     if(!bResection)
     {
@@ -649,10 +651,11 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
   resectionData.error_max = param._errorMax;
   POPART_COUT("[poseEstimation]\tEstimating camera pose...");
   const bool bResection = sfm::SfM_Localizer::Localize(queryImageSize,
-                                                 // pass the input intrinsic if they are valid, null otherwise
-                                                 (useInputIntrinsics) ? &queryIntrinsics : nullptr,
-                                                 resectionData,
-                                                 pose);
+                                                      // pass the input intrinsic if they are valid, null otherwise
+                                                      (useInputIntrinsics) ? &queryIntrinsics : nullptr,
+                                                      resectionData,
+                                                      pose,
+                                                      param._resectionEstimator);
 
   if(!bResection)
   {
@@ -815,7 +818,8 @@ void VoctreeLocalizer::getAllAssociations(const features::SIFT_Regions &queryReg
                                       param._useGuidedMatching,
                                       imageSize,
                                       std::make_pair(matchedView->ui_width, matchedView->ui_height), 
-                                      vec_featureMatches);
+                                      vec_featureMatches,
+                                      param._matchingEstimator);
     if (!matchWorked)
     {
 //      POPART_COUT("[matching]\tMatching with " << matchedView->s_Img_path << " failed! Skipping image");
@@ -918,15 +922,16 @@ void VoctreeLocalizer::getAllAssociations(const features::SIFT_Regions &queryReg
 }
 
 bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matcher, 
-                    const cameras::IntrinsicBase * queryIntrinsicsBase,   // the intrinsics of the image we are using as reference
-                    const Reconstructed_RegionsT & matchedRegions,
-                    const cameras::IntrinsicBase * matchedIntrinsicsBase,
-                    const float fDistRatio,
-                    const double matchingError,
-                    const bool b_guided_matching,
-                    const std::pair<size_t,size_t> & imageSizeI,     // size of the first image @fixme change the API of the kernel!! 
-                    const std::pair<size_t,size_t> & imageSizeJ,     // size of the first image
-                    std::vector<matching::IndMatch> & vec_featureMatches) const
+                                      const cameras::IntrinsicBase * queryIntrinsicsBase,   // the intrinsics of the image we are using as reference
+                                      const Reconstructed_RegionsT & matchedRegions,
+                                      const cameras::IntrinsicBase * matchedIntrinsicsBase,
+                                      const float fDistRatio,
+                                      const double matchingError,
+                                      const bool b_guided_matching,
+                                      const std::pair<size_t,size_t> & imageSizeI,     // size of the first image @fixme change the API of the kernel!! 
+                                      const std::pair<size_t,size_t> & imageSizeJ,     // size of the first image
+                                      std::vector<matching::IndMatch> & vec_featureMatches,
+                                      robust::EROBUST_ESTIMATOR estimator /*= robust::ROBUST_ESTIMATOR_ACRANSAC*/) const
 {
   // get the intrinsics of the query camera
   if ((queryIntrinsicsBase != nullptr) && !isPinhole(queryIntrinsicsBase->getType()))
@@ -987,7 +992,8 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
                                                  featuresJ, // points of the matched image
                                                  imageSizeI,
                                                  imageSizeJ,
-                                                 vec_matchingInliers);
+                                                 vec_matchingInliers,
+                                                 estimator);
   if(!valid)
   {
     POPART_COUT("[matching]\tUnable to robustly matching the query image with the database image.");

@@ -14,12 +14,15 @@
 #include <memory>
 #include <cereal/cereal.hpp> // Serialization
 
-#include <exception>
 #include <string>
+#include <iostream>
 
 namespace openMVG {
 namespace features {
 
+/**
+ * @brief The preset to control the number of detected regions
+ */
 enum EDESCRIBER_PRESET
 {
   LOW_PRESET = 0,
@@ -29,35 +32,35 @@ enum EDESCRIBER_PRESET
   ULTRA_PRESET
 };
 
-inline EDESCRIBER_PRESET describerPreset_stringToEnum(const std::string& sPreset)
-{
-  if(sPreset == "LOW")
-    return LOW_PRESET;
-  if (sPreset == "MEDIUM")
-    return MEDIUM_PRESET;
-  if(sPreset == "NORMAL")
-    return NORMAL_PRESET;
-  if (sPreset == "HIGH")
-    return HIGH_PRESET;
-  if (sPreset == "ULTRA")
-    return ULTRA_PRESET;
-  throw std::invalid_argument("Invalid descriptor preset: " + sPreset);
-}
+/**
+ * @brief It returns the preset from a string.
+ * @param[in] sPreset the input string.
+ * @return the associated describer preset.
+ */
+EDESCRIBER_PRESET describerPreset_stringToEnum(const std::string& sPreset);
 
-inline std::string describerPreset_enumToString(const EDESCRIBER_PRESET preset)
-{
-  if(preset == LOW_PRESET)
-    return "LOW";
-  if (preset == MEDIUM_PRESET)
-    return "MEDIUM";
-  if(preset == NORMAL_PRESET)
-    return "NORMAL";
-  if (preset == HIGH_PRESET)
-    return "HIGH";
-  if (preset == ULTRA_PRESET)
-    return "ULTRA";
-  throw std::invalid_argument("Unrecognized EDESCRIBER_PRESET "+std::to_string(preset));
-}
+/**
+ * @brief It converts a preset to a string.
+ * @param[in] preset the describer preset enum to convert.
+ * @return the string associated to the describer preset.
+ */
+std::string describerPreset_enumToString(const EDESCRIBER_PRESET preset);
+
+/**
+ * @brief It write a describer preset into a stream by converting it to a string. 
+ * @param[in] os the stream where to write the preset.
+ * @param[in] p the preset to write.
+ * @return the modified stream.
+ */
+std::ostream& operator<<(std::ostream& os, EDESCRIBER_PRESET p);
+
+/**
+ * @brief It read a describer preset from a stream. 
+ * @param[in] in the stream from which the preset is read.
+ * @param[out] p the preset read from the stream.
+ * @return the modified stream without the read preset.
+ */
+std::istream& operator>>(std::istream& in, EDESCRIBER_PRESET& p);
 
 
 /// A pure virtual class for image description computation

@@ -48,10 +48,23 @@ void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *F) {
     //  compiler doing the maximum of optimization.
     Mat9 A = Mat::Zero(9,9);
     EncodeEpipolarEquation(x1, x2, &A);
+//    Eigen::FullPivLU<Mat9> luA(A);
+//    std::cout << "\n rank(A) = " << luA.rank() << std::endl; 
+//    Eigen::JacobiSVD<Mat9> svdA(A);
+//    cout << "Its singular values are:" << endl << svdA.singularValues() << endl;
     // Find the two F matrices in the nullspace of A.
     Nullspace2(&A, &f1, &f2);
+    //@fixme here there is a potential error, we should check that the size of
+    // null(A) is 2. Otherwise we have a family of possible solutions for the
+    // fundamental matrix (ie infinite solution). This happens, e.g., when matching
+    // the image against itself or in other degenerate configurations of the camera,
+    // such as pure rotation or correspondences all on the same plane (cf HZ pg296 table 11.1)
+    // This is not critical for just matching images with geometric validation, 
+    // it becomes an issue if the estimated F has to be used for retrieving the 
+    // motion of the camera.
   }
-  else  {
+  else
+  {
     // Set up the homogeneous system Af = 0 from the equations x'T*F*x = 0.
     Mat A(x1.cols(), 9);
     EncodeEpipolarEquation(x1, x2, &A);
@@ -94,24 +107,27 @@ void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *F) {
   }
 }
 
-void EightPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Fs) {
+void EightPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Fs, const vector<double> *weights) 
+{
   assert(2 == x1.rows());
   assert(8 <= x1.cols());
   assert(x1.rows() == x2.rows());
   assert(x1.cols() == x2.cols());
 
   Vec9 f;
-  if (x1.cols() == 8) {
+  if (x1.cols() == 8) 
+  {
     typedef Eigen::Matrix<double, 9, 9> Mat9;
     // In the minimal solution use fixed sized matrix to let Eigen and the
     //  compiler doing the maximum of optimization.
     Mat9 A = Mat::Zero(9,9);
-    EncodeEpipolarEquation(x1, x2, &A);
+    EncodeEpipolarEquation(x1, x2, &A, weights);
     Nullspace(&A, &f);
   }
-  else  {
+  else  
+  {
     MatX9 A(x1.cols(), 9);
-    EncodeEpipolarEquation(x1, x2, &A);
+    EncodeEpipolarEquation(x1, x2, &A, weights);
     Nullspace(&A, &f);
   }
 
@@ -119,7 +135,8 @@ void EightPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Fs) {
 
   // Force the fundamental property if the A matrix has full rank.
   // HZ 11.1.1 pag.280
-  if (x1.cols() > 8) {
+  if (x1.cols() > 8) 
+  {
     // Force fundamental matrix to have rank 2
     Eigen::JacobiSVD<Mat3> USV(F, Eigen::ComputeFullU | Eigen::ComputeFullV);
     Vec3 d = USV.singularValues();

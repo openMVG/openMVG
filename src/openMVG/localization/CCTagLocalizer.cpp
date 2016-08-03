@@ -1,7 +1,6 @@
 #include "CCTagLocalizer.hpp"
 #include "reconstructed_regions.hpp"
 #include "optimization.hpp"
-#include "rigResection.hpp"
 
 #include <openMVG/features/svgVisualization.hpp>
 #include <openMVG/sfm/sfm_data_io.hpp>
@@ -10,8 +9,7 @@
 #include <openMVG/logger.hpp>
 
 #include <cctag/ICCTag.hpp>
-#include <boost/filesystem.hpp>
-
+#include <boost/filesystem/path.hpp>
 #include <algorithm>
 
 namespace openMVG {
@@ -353,12 +351,12 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
     
     geometry::Pose3 poseTemp;
     
-    bool bResection = sfm::SfM_Localizer::Localize(
-            imageSize,
+    bool bResection = sfm::SfM_Localizer::Localize(imageSize,
             // pass the input intrinsic if they are valid, null otherwise
             (useInputIntrinsics) ? &queryIntrinsics : nullptr,
             resectionDataTemp,
-            poseTemp);
+                                                  poseTemp,
+                                                  param->_resectionEstimator);
 
     if ( ( bResection ) && ( resectionDataTemp.error_max < residualMin) )
     {
@@ -651,7 +649,7 @@ bool CCTagLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<feature
 #endif // HAVE_OPENGV
 
 void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegions,
-                                                          const CCTagLocalizer::Parameters &param,
+                                        const CCTagLocalizer::Parameters &param,
                                         std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences,
                                         Mat &pt2D,
                                         Mat &pt3D) const

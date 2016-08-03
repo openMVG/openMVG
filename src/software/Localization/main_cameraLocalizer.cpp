@@ -8,6 +8,7 @@
 #include <openMVG/image/image_io.hpp>
 #include <openMVG/dataio/FeedProvider.hpp>
 #include <openMVG/features/image_describer.hpp>
+#include <openMVG/robust_estimation/robust_estimators.hpp>
 #include <openMVG/logger.hpp>
 
 #include <boost/filesystem.hpp>
@@ -94,17 +95,58 @@ std::string myToString(std::size_t i, std::size_t zeroPadding)
   return ss.str();
 }
 
+bool checkRobustEstimator(robust::EROBUST_ESTIMATOR e, double &value)
+{
+  if(e != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC &&
+     e != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
+  {
+    POPART_CERR("Only " << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC 
+            << " and " << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC 
+            << " are supported.");
+    return false;
+  }
+  if(value == 0 && 
+     e == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
+  {
+    // for acransac set it to infinity
+    value = std::numeric_limits<double>::infinity();
+  }
+  // for loransac we need thresholds > 0
+  if(e == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC)
+  {
+    const double minThreshold = 1e-6;
+    if( value <= minThreshold || value <= minThreshold)
+    {
+      POPART_CERR("Error: errorMax and matchingError cannot be 0 with " 
+              << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC 
+              << " estimator.");
+      return false;     
+    }
+  }
+
+  return true;
+}
+
 int main(int argc, char** argv)
 {
   std::string calibFile;                    //< the calibration file
   std::string sfmFilePath;                  //< the OpenMVG .json data file
   std::string descriptorsFolder;            //< the OpenMVG .json data file
   std::string mediaFilepath;                //< the media file to localize
-  std::string featurePreset = "NORMAL";     //< the preset for the feature extractor
-  std::string str_descriptorType = describerTypeToString(DescriberType::SIFT);        //< the preset for the feature extractor
+  //< the preset for the feature extractor
+  features::EDESCRIBER_PRESET featurePreset = features::EDESCRIBER_PRESET::NORMAL_PRESET;     
+  //< the preset for the feature extractor
+  DescriberType descriptorType = DescriberType::SIFT;        
+  //< the estimator to use for resection
+  robust::EROBUST_ESTIMATOR resectionEstimator = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        
+  //< the estimator to use for matching
+  robust::EROBUST_ESTIMATOR matchingEstimator = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        
+  //< the possible choices for the estimators as strings
+  const std::string str_estimatorChoices = ""+robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
+                                          +","+robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC);
   bool refineIntrinsics = false;
-  double errorMax = 4.0;                    //< the maximum error allowed for resection
-  double matchingError = 4.0;               //< the maximum error allowed for image matching with geometric validation
+  double resectionErrorMax = 4.0;  //< the maximum error allowed for resection
+  double matchingErrorMax = 4.0;   //< the maximum error allowed for image matching with geometric validation
   
   // voctree parameters
   std::string algostring = "AllResults";
@@ -138,15 +180,21 @@ int main(int argc, char** argv)
   
   desc.add_options()
       ("help,h", "Print this message")
-      ("descriptors", po::value<std::string>(&str_descriptorType)->default_value(str_descriptorType), 
+      ("descriptors", po::value<DescriberType>(&descriptorType)->default_value(descriptorType), 
           "Type of descriptors to use {SIFT"
 #ifdef HAVE_CCTAG
           ", CCTAG, SIFT_CCTAG"
 #endif
           "}")
-      ("preset", po::value<std::string>(&featurePreset)->default_value(featurePreset), 
+      ("preset", po::value<features::EDESCRIBER_PRESET>(&featurePreset)->default_value(featurePreset), 
           "Preset for the feature extractor when localizing a new image "
           "{LOW,MEDIUM,NORMAL,HIGH,ULTRA}")
+      ("resectionEstimator", po::value<robust::EROBUST_ESTIMATOR>(&resectionEstimator)->default_value(resectionEstimator), 
+          std::string("The type of *sac framework to use for resection "
+          "{"+str_estimatorChoices+"}").c_str())
+      ("matchingEstimator", po::value<robust::EROBUST_ESTIMATOR>(&matchingEstimator)->default_value(matchingEstimator), 
+          std::string("The type of *sac framework to use for matching "
+          "{"+str_estimatorChoices+"}").c_str())
       ("calibration", po::value<std::string>(&calibFile)/*->required( )*/, 
           "Calibration file")
       ("sfmdata", po::value<std::string>(&sfmFilePath)->required(), 
@@ -157,7 +205,7 @@ int main(int argc, char** argv)
           "The folder path or the filename for the media to track")
       ("refineIntrinsics", po::bool_switch(&refineIntrinsics), 
           "Enable/Disable camera intrinsics refinement for each localized image")
-      ("reprojectionError", po::value<double>(&errorMax)->default_value(errorMax), 
+      ("reprojectionError", po::value<double>(&resectionErrorMax)->default_value(resectionErrorMax), 
           "Maximum reprojection error (in pixels) allowed for resectioning. If set "
           "to 0 it lets the ACRansac select an optimal value.")
 // voctree specific options
@@ -175,7 +223,7 @@ int main(int argc, char** argv)
           "[voctree] Filename for the vocabulary tree weights")
       ("algorithm", po::value<std::string>(&algostring)->default_value(algostring), 
           "[voctree] Algorithm type: FirstBest, BestResult, AllResults, Cluster" )
-      ("matchingError", po::value<double>(&matchingError)->default_value(matchingError), 
+      ("matchingError", po::value<double>(&matchingErrorMax)->default_value(matchingErrorMax), 
           "[voctree] Maximum matching error (in pixels) allowed for image matching with "
           "geometric verification. If set to 0 it lets the ACRansac select "
           "an optimal value.")
@@ -238,33 +286,39 @@ int main(int argc, char** argv)
     return EXIT_FAILURE;
   }
   
+  if(!checkRobustEstimator(matchingEstimator, matchingErrorMax) || 
+     !checkRobustEstimator(resectionEstimator, resectionErrorMax))
+  {
+    return EXIT_FAILURE;
+  }
+  
   // just for debugging purpose, print out all the parameters
   {
     // decide the localizer to use based on the type of feature
-    useVoctreeLocalizer = ((DescriberType::SIFT==stringToDescriberType(str_descriptorType))
+    useVoctreeLocalizer = ((DescriberType::SIFT==descriptorType)
 #if HAVE_CCTAG
-            || (DescriberType::SIFT_CCTAG==stringToDescriberType(str_descriptorType))
+            || (DescriberType::SIFT_CCTAG==descriptorType)
 #endif
             );
     
 #if HAVE_CCTAG   
     // check whether we have to use SIFT and CCTAG together
-    useSIFT_CCTAG = (DescriberType::SIFT_CCTAG==stringToDescriberType(str_descriptorType));
+    useSIFT_CCTAG = (DescriberType::SIFT_CCTAG==descriptorType);
 #endif    
     
     // the bundle adjustment can be run for now only if the refine intrinsics option is not set
     globalBundle = (globalBundle && !refineIntrinsics);
     POPART_COUT("Program called with the following parameters:");
-    POPART_COUT("\tdescriptors: " << str_descriptorType);
+    POPART_COUT("\tdescriptors: " << descriptorType);
     POPART_COUT("\tpreset: " << featurePreset);
+    POPART_COUT("\tresectionEstimator: " << resectionEstimator);
+    POPART_COUT("\tmatchingEstimator: " << matchingEstimator);
     POPART_COUT("\tcalibration: " << calibFile);
     POPART_COUT("\tdescriptorPath: " << descriptorsFolder);
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
     POPART_COUT("\tmediafile: " << mediaFilepath);
     POPART_COUT("\tsfmdata: " << sfmFilePath);
-    if(errorMax == 0) 
-      errorMax = std::numeric_limits<double>::infinity();
-    POPART_COUT("\terrorMax: " << errorMax);
+    POPART_COUT("\reprojectionError: " << resectionErrorMax);
     if(useVoctreeLocalizer)
     {
       POPART_COUT("\tvoctree: " << vocTreeFilepath);
@@ -273,9 +327,7 @@ int main(int argc, char** argv)
       POPART_COUT("\tmaxResults: " << maxResults);
       POPART_COUT("\tcommon views: " << numCommonViews);
       POPART_COUT("\talgorithm: " << algostring);
-      if(matchingError == 0) 
-        matchingError = std::numeric_limits<double>::infinity();
-      POPART_COUT("\tmatchingError: " << matchingError);
+      POPART_COUT("\tmatchingError: " << matchingErrorMax);
     }
 #if HAVE_CCTAG 
     else
@@ -289,7 +341,7 @@ int main(int argc, char** argv)
     POPART_COUT("\tnoBArefineIntrinsics: " << noBArefineIntrinsics);
     POPART_COUT("\tvisualDebug: " << visualDebug);
   }
-  
+
   // if the provided directory for visual debugging does not exist create it
   // recursively
   if((!visualDebug.empty()) && (!bfs::exists(visualDebug)))
@@ -309,13 +361,10 @@ int main(int argc, char** argv)
   
   std::unique_ptr<localization::ILocalizer> localizer;
   
-  // if a describer is not supported an exception will be thrown here
-  DescriberType describer = stringToDescriberType(str_descriptorType);
-  
   // initialize the localizer according to the chosen type of describer
-  if((DescriberType::SIFT==describer)
+  if((DescriberType::SIFT==descriptorType)
 #if HAVE_CCTAG
-            ||(DescriberType::SIFT_CCTAG==describer)
+            ||(DescriberType::SIFT_CCTAG==descriptorType)
 #endif
       )
   {
@@ -336,7 +385,7 @@ int main(int argc, char** argv)
     tmpParam->_maxResults = maxResults;
     tmpParam->_numCommonViews = numCommonViews;
     tmpParam->_ccTagUseCuda = false;
-    tmpParam->_matchingError = matchingError;
+    tmpParam->_matchingError = matchingErrorMax;
   }
 #if HAVE_CCTAG
   else
@@ -354,10 +403,12 @@ int main(int argc, char** argv)
   assert(param);
   
   // set other common parameters
-  param->_featurePreset = features::describerPreset_stringToEnum(featurePreset);
+  param->_featurePreset = featurePreset;
   param->_refineIntrinsics = refineIntrinsics;
   param->_visualDebug = visualDebug;
-  param->_errorMax = errorMax;
+  param->_errorMax = resectionErrorMax;
+  param->_resectionEstimator = resectionEstimator;
+  param->_matchingEstimator = matchingEstimator;
   
 
   bool isInit = localizer->isInit();
@@ -437,7 +488,7 @@ int main(int argc, char** argv)
     {
       POPART_CERR("Unable to localize frame " << frameCounter);
 #if HAVE_ALEMBIC
-      exporter.jumpKeyframe();
+      exporter.jumpKeyframe(currentImgName);
 #endif
     }
     ++frameCounter;
@@ -477,7 +528,7 @@ int main(int argc, char** argv)
       // now copy back in a new abc with the same name file and BUNDLE appended at the end
       dataio::AlembicExporter exporterBA( basename+".BUNDLE.abc" );
       exporterBA.initAnimatedCamera("camera");
-      size_t idx = 0;
+      std::size_t idx = 0;
       for(const localization::LocalizationResult &res : vec_localizationResults)
       {
         if(res.isValid())
@@ -487,7 +538,7 @@ int main(int argc, char** argv)
         }
         else
         {
-          exporterBA.jumpKeyframe();
+          exporterBA.jumpKeyframe(currentImgName);
         }
         idx++;
       }
