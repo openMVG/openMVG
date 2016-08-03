@@ -79,8 +79,16 @@ GPUBruteForceL2Matcher<featureType, featureLength>::~GPUBruteForceL2Matcher() {
 }
 
 // When adding extra features, you need to add their instantiation here
+// PNNet
 template class GPUBruteForceL2Matcher<float, 128>;
+// DeepSiam
 template class GPUBruteForceL2Matcher<float, 256>;
+// DeepSiam2Stream
 template class GPUBruteForceL2Matcher<float, 512>;
+// SIFT
 template class GPUBruteForceL2Matcher<unsigned char, 128>;
+// SURF
+template class GPUBruteForceL2Matcher<float, 64>;
+// Dissociated dipole like Regions
+template class GPUBruteForceL2Matcher<float, 20>;
 
