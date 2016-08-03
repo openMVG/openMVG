@@ -248,10 +248,10 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  std::vector<Datasheet> vec_database;
+  std::vector<sensordb::Datasheet> vec_database;
   if (!sfileDatabase.empty())
   {
-    if ( !parseDatabase( sfileDatabase, vec_database ) )
+    if ( !sensordb::parseDatabase( sfileDatabase, vec_database ) )
     {
       std::cerr
        << "\nInvalid input database: " << sfileDatabase
@@ -399,7 +399,7 @@ int main(int argc, char **argv)
       const std::string sCamName = exifReader.getBrand();
       const std::string sCamModel = exifReader.getModel();
 
-      Datasheet datasheet;
+      openMVG::exif::sensordb::Datasheet datasheet;
       if ( getInfo( sCamName, sCamModel, vec_database, datasheet ))
       {
         // The camera model was found in the database so we can compute it's approximated focal length

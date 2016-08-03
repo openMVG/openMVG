@@ -1,9 +1,12 @@
-#ifndef DATASHEET_HPP
-#define DATASHEET_HPP
+#pragma once
 
 #include "openMVG/stl/split.hpp"
 #include <iterator>
 #include <algorithm>
+
+namespace openMVG {
+namespace exif {
+namespace sensordb {
 
 // Database structure
 struct Datasheet
@@ -98,6 +101,6 @@ struct Datasheet
   double _sensorSize;
 };
 
-
-#endif // DATASHEET_HPP
-
+}
+}
+}
