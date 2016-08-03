@@ -39,11 +39,24 @@ struct PoseCenterConstraintCostFunction
   template <typename T> bool
   operator()
   (
-    const T* const pose_center,
+    const T* const cam_extrinsics, // R_t
     T* residuals
   )
   const
   {
+    // Compute camera center C = - R.transpose() * t;
+    const T * cam_R = cam_extrinsics;
+    const T * cam_t = &cam_extrinsics[3];
+    const T cam_R_transpose[3] = {-cam_extrinsics[0], -cam_extrinsics[1], -cam_extrinsics[2]};
+
+    T pose_center[3];
+    // Rotate the point according the camera rotation
+    ceres::AngleAxisRotatePoint(cam_R_transpose, cam_t, pose_center);
+    pose_center[0] *= T(-1);
+    pose_center[1] *= T(-1);
+    pose_center[2] *= T(-1);
+
+
     residuals[0] = T(weight_) * (pose_center[0] - T(pose_center_constraint_[0]));
     residuals[1] = T(weight_) * (pose_center[1] - T(pose_center_constraint_[1]));
     residuals[2] = T(weight_) * (pose_center[2] - T(pose_center_constraint_[2]));
