@@ -14,6 +14,7 @@
 
 #include "openMVG/features/deep/src/DeepClassifier.hpp"
 #include "openMVG/features/deep/src/DeepClassifierTorch.hpp"
+#include "openMVG/features/deep/src/DeepClassifierTHNets.hpp"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/image_describer.hpp"
 #include "openMVG/features/regions_factory.hpp"
@@ -54,7 +55,9 @@ enum EDEEP_DESCRIPTOR
 
 	SIAM_2_STREAM_DESC_NOTRE_DAME,
 	SIAM_2_STREAM_DESC_YOSEMITE,
-	SIAM_2_STREAM_DESC_LIBERTY
+	SIAM_2_STREAM_DESC_LIBERTY,
+
+	PNNET
 };
 
 struct DEEPParams
@@ -147,6 +150,10 @@ struct DEEPParams
 	      const std::string modelStr(modelDir + "siam/siam_liberty.bin");
 	      return modelStr;
 	    }
+			case PNNET: {
+				const std::string modelStr(modelDir + "pnnet/");
+				return modelStr;
+			}
 	    default: {
 	      const std::string& emptyStr("");
 	      return emptyStr;
@@ -176,7 +183,10 @@ public:
   DEEP_Image_describer(
 	const DEEPParams & params = DEEPParams()
   ):Image_describer(), params_(params) {
-		deepClassifier_ = new DeepClassifierTorch(params_.eDeepDescriptorFileName_);
+		if (params_.eDeepDescriptor_ == PNNET)
+			deepClassifier_ = new DeepClassifierTHNets(params_.eDeepDescriptorFileName_);
+		else
+			deepClassifier_ = new DeepClassifierTorch(params_.eDeepDescriptorFileName_);
   }
 	~DEEP_Image_describer() {
 		delete deepClassifier_;
@@ -231,7 +241,7 @@ public:
 					// Store descriptors
 					for (int j = 0; j < 512; j++) {
 						const unsigned int index = i * 512 + j;
-						float descriptor = static_cast<float>(descriptors[index]);
+						const float descriptor = static_cast<float>(descriptors[index]);
 						regionsCasted->Descriptors()[i][j] = descriptor;
 					}
 				}
@@ -270,6 +280,37 @@ public:
 				}
 				break;
 			}
+			case PNNET:
+			{
+				// Build alias to cached data
+				DEEP_Float_128_Regions * regionsCasted = dynamic_cast<DEEP_Float_128_Regions*>(regions.get());
+				regionsCasted->Features().resize(kpts.size());
+				regionsCasted->Descriptors().resize(kpts.size());
+
+			#ifdef OPENMVG_USE_OPENMP
+				#pragma omp parallel for
+			#endif
+				for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
+				{
+					const SIOPointFeature& ptDeep = SIOPointFeature(kpts[i].pt.x, kpts[i].pt.y, kpts[i].size, kpts[i].angle);
+
+					// Feature masking
+					if (mask)
+					{
+					const image::Image<unsigned char> & maskIma = *mask;
+					if (maskIma(ptDeep.y(), ptDeep.x()) == 0)
+						continue;
+					}
+					regionsCasted->Features()[i] = ptDeep;
+					// Store descriptors
+					for (int j = 0; j < 128; j++) {
+						const unsigned int index = i * 128 + j;
+						float descriptor = static_cast<float>(descriptors[index]);
+						regionsCasted->Descriptors()[i][j] = descriptor;
+					}
+				}
+				break;
+			}
 			default:
 			{
 				break;
@@ -291,6 +332,8 @@ public:
 			case SIAM_DESC_YOSEMITE:
 			case SIAM_DESC_LIBERTY:
 				return regions.reset(new DEEP_Float_256_Regions);
+			case PNNET:
+				return regions.reset(new DEEP_Float_128_Regions);
       break;
 	}
   }

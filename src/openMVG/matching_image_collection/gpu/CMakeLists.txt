@@ -1,6 +1,7 @@
 PROJECT(bitMatcher_cuda)
 
 FIND_PACKAGE(CUDA REQUIRED)
+FIND_PACKAGE(OpenCV 3 REQUIRED)
 
 FILE(GLOB 
     SOURCES "*.h" ".hpp" ".cpp")

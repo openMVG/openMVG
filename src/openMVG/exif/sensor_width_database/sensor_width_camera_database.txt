@@ -1799,6 +1799,8 @@ Olympus SP-620 UZ;6.16
 Olympus TG-320;6.16
 Olympus TG-820 iHS;6.16
 Olympus SZ-31MR iHS;6.16
+Olympus OM-D E-M1;17.3
+E-M1;17.3
 Olympus OM-D E-M5;17.3
 Olympus SH-25MR;6.16
 Olympus VR-340;6.16

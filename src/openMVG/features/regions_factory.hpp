@@ -1,4 +1,5 @@
 
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -30,6 +31,8 @@ typedef Binary_Regions<SIOPointFeature,65> LATCH_Binary_Regions;
 typedef Scalar_Regions<SIOPointFeature, float, 512> DEEP_Float_512_Regions;
 // Define the DEEP Keypoint (with a float descriptor)
 typedef Scalar_Regions<SIOPointFeature, float, 256> DEEP_Float_256_Regions;
+// Define the DEEP Keypoint (with a float descriptor)
+typedef Scalar_Regions<SIOPointFeature, float, 128> DEEP_Float_128_Regions;
 
 } // namespace features
 } // namespace openMVG
@@ -48,5 +51,6 @@ CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::LATCH_Unsigned_Int_Regions, "L
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::LATCH_Binary_Regions, "LATCH_Binary_Regions");
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::DEEP_Float_512_Regions, "DEEP_Float_512_Regions");
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::DEEP_Float_256_Regions, "DEEP_Float_256_Regions");
+CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::DEEP_Float_128_Regions, "DEEP_Float_128_Regions");
 
 #endif // OPENMVG_FEATURES_REGIONS_FACTORY_HPP
