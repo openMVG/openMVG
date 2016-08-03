@@ -81,10 +81,9 @@ void saveKeypoints2SVG(const std::string &inputImagePath,
     if(richKeypoint)
     {
       // compute the coordinate of the point on the circle used to draw the orientation line
-      const float pointX = kpt.x()+std::cos(kpt.orientation())*kpt.scale()*radius;
-      const float pointY = kpt.y()+std::sin(kpt.orientation())*kpt.scale()*radius;
+      const Vec2f point = kpt.coords() + kpt.getOrientationVector() * radius;
       svgStream.drawLine(kpt.x(), kpt.y(), 
-                         pointX, pointY,
+                         point(0), point(1),
                          svg::svgStyle().stroke("yellow", strokeWidth));
     }
   }

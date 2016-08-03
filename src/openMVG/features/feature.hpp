@@ -83,6 +83,11 @@ public:
   float orientation() const { return _orientation; }
   float& orientation() { return _orientation; }
 
+  Vec2f getOrientationVector() const
+  {
+    return Vec2f(std::cos(orientation()) * scale(), std::sin(orientation()) * scale());
+  }
+
   bool operator ==(const SIOPointFeature& b) const {
     return (_scale == b.scale()) &&
            (_orientation == b.orientation()) &&
