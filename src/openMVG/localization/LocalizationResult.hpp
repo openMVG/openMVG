@@ -76,10 +76,10 @@ public:
     return _matchData.pt3D;
   }
 
-   const Mat34 & getProjection() const
-   {
-     return _matchData.projection_matrix;
-   }
+  const Mat34 & getProjection() const
+  {
+    return _matchData.projection_matrix;
+  }
 
   const std::vector<std::pair<IndexT, IndexT> > & getIndMatch3D2D() const
   {
