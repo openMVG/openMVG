@@ -39,4 +39,12 @@ Arguments description:
 
     - path where the undistorted images will be stored
 
+  - **[-r|--exportOnlyReconstructed]**
+
+    - Export only the images that have valid intrinsic and pose data (Can be 0(default) or 1)
+
+  - **[-n|--numThreads]**
+
+    -  number of thread(s)
+
 
