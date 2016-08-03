@@ -23,22 +23,21 @@ IF(OpenMVG_BUILD_VOCTREE)
     ###
     ADD_EXECUTABLE(openMVG_main_createVoctree createVoctree.cpp)
     INSTALL(TARGETS openMVG_main_createVoctree DESTINATION bin/)
-    TARGET_LINK_LIBRARIES(openMVG_main_createVoctree openMVG_voctree openMVG_features ${BOOST_LIBRARIES})
-
+    TARGET_LINK_LIBRARIES(openMVG_main_createVoctree openMVG_voctree openMVG_features ${Boost_LIBRARIES})
 
     ###
     # generate the pair lists
     ###
     ADD_EXECUTABLE(openMVG_main_generatePairList pairListFromVoctree.cpp)
     INSTALL(TARGETS openMVG_main_generatePairList DESTINATION bin/)
-    TARGET_LINK_LIBRARIES(openMVG_main_generatePairList openMVG_voctree ${BOOST_LIBRARIES})
+    TARGET_LINK_LIBRARIES(openMVG_main_generatePairList openMVG_voctree ${Boost_LIBRARIES})
 
     ###
     # voctree query utility
     ###
     ADD_EXECUTABLE(openMVG_main_voctreeQueryUtility voctreeQueryUtility.cpp)
     INSTALL(TARGETS openMVG_main_voctreeQueryUtility DESTINATION bin/)
-    TARGET_LINK_LIBRARIES(openMVG_main_voctreeQueryUtility openMVG_voctree ${BOOST_LIBRARIES})
+    TARGET_LINK_LIBRARIES(openMVG_main_voctreeQueryUtility openMVG_voctree ${Boost_LIBRARIES})
 
     ###
     # Test the localization class for the rig
@@ -52,7 +51,7 @@ IF(OpenMVG_BUILD_VOCTREE)
                             openMVG_image 
                             openMVG_features 
                             vlsift 
-                            ${BOOST_LIBRARIES})
+                            ${Boost_LIBRARIES})
     if(OpenMVG_USE_ALEMBIC)
         target_link_libraries(openMVG_main_rigLocalizer openMVG_sfm ${ABC_LIBRARIES})
     endif()
@@ -65,13 +64,13 @@ IF(OpenMVG_BUILD_VOCTREE)
     ###
     ADD_EXECUTABLE(openMVG_main_convertDescFloat2Uchar convertDescFloat2Uchar.cpp)
     INSTALL(TARGETS openMVG_main_convertDescFloat2Uchar DESTINATION bin/)
-    TARGET_LINK_LIBRARIES(openMVG_main_convertDescFloat2Uchar openMVG_localization openMVG_features ${BOOST_LIBRARIES})
+    TARGET_LINK_LIBRARIES(openMVG_main_convertDescFloat2Uchar openMVG_localization openMVG_features ${Boost_LIBRARIES})
 
     # voctree statistics
     ###
     ADD_EXECUTABLE(openMVG_main_voctreeStatistics voctreeStatistics.cpp)
     INSTALL(TARGETS openMVG_main_voctreeStatistics DESTINATION bin/)
-    TARGET_LINK_LIBRARIES(openMVG_main_voctreeStatistics openMVG_voctree ${BOOST_LIBRARIES})
+    TARGET_LINK_LIBRARIES(openMVG_main_voctreeStatistics openMVG_voctree ${Boost_LIBRARIES})
 
     #@TODO decide where to put the binaries
 
