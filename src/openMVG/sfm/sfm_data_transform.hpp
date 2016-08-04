@@ -23,7 +23,8 @@ struct SfM_Data;
 void ApplySimilarity
 (
   const geometry::Similarity3 & sim,
-  SfM_Data & sfm_data
+  SfM_Data & sfm_data,
+  bool transform_priors = false
 );
 
 } // namespace sfm

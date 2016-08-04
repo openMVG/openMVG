@@ -68,6 +68,16 @@ struct Similarity3
   {
     return Pose3( pose.rotation() * pose_.rotation().transpose(), this->operator()( pose.center() ) );
   }
+
+  /**
+  * @brief Get inverse of the similarity
+  * @return Inverse of the similarity
+  */
+  Similarity3 inverse() const
+  {
+    return Similarity3(pose_.inverse(), 1 / scale_);
+  }
+
 };
 
 } // namespace geometry
