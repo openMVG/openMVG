@@ -239,19 +239,19 @@ int main(int argc, char **argv)
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
 
-    #ifdef OPENMVG_USE_OPENMP
-    const unsigned int nb_max_thread = omp_get_max_threads();
-    #endif
-
 #ifdef OPENMVG_USE_OPENMP
-    omp_set_num_threads(iNumThreads);
+    const unsigned int nb_max_thread = omp_get_max_threads();
+
+    if (iNumThreads > 0) {
+        omp_set_num_threads(iNumThreads);
+    } else {
+        omp_set_num_threads(nb_max_thread);
+    }
+
     #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) private(imageMask)
 #endif
     for(int i = 0; i < sfm_data.views.size(); ++i)
     {
-#ifdef OPENMVG_USE_OPENMP
-      if(iNumThreads == 0) omp_set_num_threads(nb_max_thread);
-#endif
       Views::const_iterator iterViews = sfm_data.views.begin();
       std::advance(iterViews, i);
       const View * view = iterViews->second.get();
