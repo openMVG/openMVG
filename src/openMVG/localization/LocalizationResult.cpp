@@ -25,6 +25,9 @@ LocalizationResult::LocalizationResult(
         _matchedImages(matchedImages),
         _isValid(isValid)
 {
+  // verify data consistency
+  assert(_matchData.pt2D.cols() == _matchData.pt3D.cols());
+  assert(_matchData.pt2D.cols() == _indMatch3D2D.size());
 }
         
 LocalizationResult::~LocalizationResult()
