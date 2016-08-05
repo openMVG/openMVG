@@ -82,12 +82,25 @@ public:
   float& scale() { return _scale; }
   float orientation() const { return _orientation; }
   float& orientation() { return _orientation; }
-
+  
+  /**
+    * @brief Return the orientation of the feature as an unit vector.
+    * @return a unit vector corresponding to the orientation of the feature.
+    */
   Vec2f getOrientationVector() const
   {
-    return Vec2f(std::cos(orientation()) * scale(), std::sin(orientation()) * scale());
+    return Vec2f(std::cos(orientation()), std::sin(orientation()));
   }
 
+  /**
+    * @brief Return the orientation of the feature as a vector scaled to the the scale of the feature.
+    * @return a vector corresponding to the orientation of the feature scaled at the scale of the feature.
+    */
+  Vec2f getScaledOrientationVector() const
+  {
+    return scale()*getOrientationVector();
+  }
+  
   bool operator ==(const SIOPointFeature& b) const {
     return (_scale == b.scale()) &&
            (_orientation == b.orientation()) &&
