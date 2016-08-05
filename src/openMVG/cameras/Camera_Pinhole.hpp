@@ -109,6 +109,12 @@ class Pinhole_Intrinsic : public IntrinsicBase
     const std::vector<double> params = {_K(0,0), _K(0,2), _K(1,2)};
     return params;
   }
+  
+  virtual std::vector<double> getDistortionParams() const
+  {
+    // No distortion
+    return std::vector<double>();
+  }
 
   // Data wrapper for non linear optimization (update from data)
   virtual bool updateFromParams(const std::vector<double> & params)
