@@ -23,7 +23,6 @@ set( features_files_sources
   image_describer.cpp
   akaze/AKAZE.cpp
   liop/liop_descriptor.cpp
-  features_test.cpp
   svgVisualization.cpp)
 
 if (CCTAG_FOUND)
@@ -38,7 +37,7 @@ endif()
 set_source_files_properties(${features_files_sources} PROPERTIES LANGUAGE CXX)
 ADD_LIBRARY(openMVG_features ${features_files_sources} ${features_files_headers})
 
-target_link_libraries( openMVG_features openMVG_numeric openMVG_image vlsift stlplus)
+target_link_libraries( openMVG_features openMVG_numeric openMVG_image openMVG_multiview vlsift stlplus)
 if(OpenMVG_USE_CCTAG)
   target_link_libraries( openMVG_features ${CCTAG_LIBRARIES})
 endif()
