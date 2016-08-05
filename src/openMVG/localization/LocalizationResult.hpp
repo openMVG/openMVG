@@ -49,13 +49,12 @@ public:
   
   LocalizationResult();
   
-  LocalizationResult(
-        const sfm::Image_Localizer_Match_Data & matchData,
-        const std::vector<pair<IndexT, IndexT> > & indMatch3D2D,
-        const geometry::Pose3 & pose,
-        const cameras::Pinhole_Intrinsic_Radial_K3 & intrinsics,
-        const std::vector<voctree::DocMatch>& matchedImages,
-        bool isValid = true);
+  LocalizationResult(const sfm::Image_Localizer_Match_Data & matchData,
+                     const std::vector<pair<IndexT, IndexT> > & indMatch3D2D,
+                     const geometry::Pose3 & pose,
+                     const cameras::Pinhole_Intrinsic_Radial_K3 & intrinsics,
+                     const std::vector<voctree::DocMatch>& matchedImages,
+                     bool isValid = true);
   
   virtual ~LocalizationResult();
   
