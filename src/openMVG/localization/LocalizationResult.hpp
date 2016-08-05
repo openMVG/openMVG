@@ -122,9 +122,10 @@ public:
     return _isValid;
   }
   
-  Mat2X computeResiduals() const ;
+  Mat2X computeAllResiduals() const;
   
   double computeRMSE() const ;
+  Mat2X computeInliersResiduals() const ;
 
   // Serialization
   template<class Archive>

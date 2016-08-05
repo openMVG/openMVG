@@ -51,7 +51,17 @@ const Mat LocalizationResult::retrieveUndistortedPt2D() const
   return pt2Dundistorted;
 }
 
-Mat2X LocalizationResult::computeResiduals() const 
+Mat2X LocalizationResult::computeAllResiduals() const 
+{
+  const Mat2X &orig2d = getPt2D();
+  const Mat3X &orig3d = getPt3D();
+  assert(orig2d.cols()==orig3d.cols());
+  
+  const auto &intrinsics = getIntrinsics();
+  return intrinsics.residuals(getPose(), orig3d, orig2d);
+}
+
+Mat2X LocalizationResult::computeInliersResiduals() const 
 {
   // get the inliers.
   const auto &currInliers = getInliers();
@@ -75,7 +85,7 @@ Mat2X LocalizationResult::computeResiduals() const
 
 double LocalizationResult::computeRMSE() const 
 {
-  const auto& residuals = computeResiduals();
+  const auto& residuals = computeInliersResiduals();
   // squared residual for each point
   const auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
   //RMSE

@@ -89,7 +89,7 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
         continue;
       }
       
-      const Mat2X residuals = currResult.computeResiduals();
+      const Mat2X residuals = currResult.computeInliersResiduals();
       
       const auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
       POPART_COUT("View " << viewID << " RMSE = " << std::sqrt(sqrErrors.mean()) 
@@ -304,7 +304,7 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
       currResult.updateIntrinsics(params);
       
       // just debugging -- print reprojection errors
-      const Mat2X residuals = currResult.computeResiduals();
+      const Mat2X residuals = currResult.computeInliersResiduals();
       
       const auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
       POPART_COUT("View " << viewID << " RMSE = " << std::sqrt(sqrErrors.mean()) 
