@@ -124,8 +124,8 @@ public:
   
   Mat2X computeAllResiduals() const;
   
-  double computeRMSE() const ;
   Mat2X computeInliersResiduals() const ;
+  double computeInliersRMSE() const ;
 
   // Serialization
   template<class Archive>

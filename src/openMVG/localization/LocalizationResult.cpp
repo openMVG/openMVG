@@ -83,7 +83,7 @@ Mat2X LocalizationResult::computeInliersResiduals() const
   return intrinsics.residuals(getPose(), inliers3d, inliers2d);
 }
 
-double LocalizationResult::computeRMSE() const 
+double LocalizationResult::computeInliersRMSE() const 
 {
   const auto& residuals = computeInliersResiduals();
   // squared residual for each point
