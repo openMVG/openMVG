@@ -513,10 +513,10 @@ SET(OpenMVG_LIBRARIES
   openMVG_features
   openMVG_image
 #  openMVG_linearProgramming
-    openMVG_lInftyComputerVision
   openMVG_localization
+  openMVG_lInftyComputerVision
   openMVG_matching
-    openMVG_kvld
+  openMVG_kvld
   openMVG_matching_image_collection
   openMVG_multiview
   openMVG_numeric
