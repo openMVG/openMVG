@@ -19,7 +19,7 @@ namespace sensordb {
 // Parse the database
 inline bool parseDatabase( const std::string& sfileDatabase, std::vector<Datasheet>& vec_database )
 {
-  std::ifstream iFilein( sfileDatabase.c_str() );
+  std::ifstream iFilein( sfileDatabase );
   if(!iFilein || !stlplus::is_file(sfileDatabase))
     return false;
 
