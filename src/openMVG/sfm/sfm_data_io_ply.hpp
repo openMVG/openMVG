@@ -35,8 +35,8 @@ inline bool Save_PLY(
   bool bOk = false;
   {
     // Count how many views having valid poses:
-      IndexT view_with_pose_count = 0;
-      IndexT view_with_pose_prior_count = 0;
+    IndexT view_with_pose_count = 0;
+    IndexT view_with_pose_prior_count = 0;
     if (b_extrinsics)
     {
       for (const auto & view : sfm_data.GetViews())
@@ -86,9 +86,9 @@ inline bool Save_PLY(
               << "0 255 0\n";
           }
 
+          // Export pose priors as Blue points
           if (const sfm::ViewPriors *prior = dynamic_cast<sfm::ViewPriors*>(view.second.get()))
           {
-            // Export pose priors as Blue points
             if (prior->b_use_pose_center_) {
               stream
                 << prior->pose_center_(0) << ' '

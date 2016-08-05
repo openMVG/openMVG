@@ -186,19 +186,20 @@ bool Bundle_Adjustment_Ceres::Adjust
       openMVG::geometry::Similarity3 sim;
 
       // Compute the registration:
+      if (X_GPS.size() > 3)
       {
         geometry::kernel::Similarity3_Kernel kernel(Eigen::Map<Mat3X>(X_SfM[0].data(),3, X_SfM.size()), Eigen::Map<Mat3X>(X_GPS[0].data(),3, X_GPS.size()));
         const double lmeds_median = openMVG::robust::LeastMedianOfSquares(kernel, &sim);
         std::cout << "Initial LMeds found a model with an upper bound of: " <<  sqrt(lmeds_median) << " user units."<< std::endl;
         pose_center_robust_fitting_error = sqrt(lmeds_median);
-      }
 
-      // Apply the found transformation to the SfM Data Scene
-      openMVG::sfm::ApplySimilarity(sim, sfm_data);
+        // Apply the found transformation to the SfM Data Scene
+        openMVG::sfm::ApplySimilarity(sim, sfm_data);
+      }
     }
   }
 
-  // Move entire scene to center for beter numerical stability
+  // Move entire scene to center for better numerical stability
   Vec3 pose_centroid(0.0, 0.0, 0.0);
   for (const auto & pose_it : sfm_data.poses)
   {
@@ -469,6 +470,7 @@ bool Bundle_Adjustment_Ceres::Adjust
     // Structure is already updated directly if needed (no data wrapping)
 
 
+    // set back to the original scene centroid
     openMVG::sfm::ApplySimilarity(sim_to_center.inverse(), sfm_data, true);
 
     {

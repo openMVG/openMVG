@@ -21,7 +21,7 @@ TEST(GEODESY, LLA_TO_ECEF_TO_LLA)
 }
 
 
-TEST(GEODESY, LLA_TO_WGS84)
+TEST(GEODESY, LLA_TO_UTM)
 {
   const double lat = 10, lon = 20, alt = 30;
   const openMVG::Vec3 utm = lla_to_utm(lat, lon, alt);

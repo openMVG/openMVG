@@ -75,7 +75,7 @@ struct Similarity3
   */
   Similarity3 inverse() const
   {
-    return Similarity3(pose_.inverse(), 1 / scale_);
+    return Similarity3(pose_.inverse(), 1.0 / scale_);
   }
 
 };
