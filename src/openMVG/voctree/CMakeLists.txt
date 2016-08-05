@@ -1,4 +1,4 @@
-IF(OpenMVG_BUILD_VOCTREE)
+IF(OpenMVG_USE_BOOST)
 file(
   GLOB_RECURSE
   voctree_header
@@ -25,4 +25,4 @@ UNIT_TEST(openMVG voctree "openMVG_voctree")
 UNIT_TEST(openMVG kmeans "openMVG_voctree")
 UNIT_TEST(openMVG voctreebuild "openMVG_voctree")
 
-ENDIF(OpenMVG_BUILD_VOCTREE)
+ENDIF(OpenMVG_USE_BOOST)
