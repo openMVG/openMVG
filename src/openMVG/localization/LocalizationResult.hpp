@@ -164,23 +164,28 @@ public:
   }
   
 private:
+  
+  // Hold all the imaged points, their associated 3D points and the inlier indices 
+  // (w.r.t. the pose robust estimation)
   sfm::Image_Localizer_Match_Data _matchData;
-                             // Hold all the imaged points, 
-                             // their associated 3D points and the inlier indices 
-                             // (w.r.t. the F/E robust estimation)
 
-  std::vector<std::pair<IndexT, IndexT> > _indMatch3D2D; // 3D to 2D index matches in the global index system,
-                                                    // i.e. the set of pair (landmark id, index of the associated 2D point)
-
-  geometry::Pose3 _pose; // Computed camera pose
-
+  // 3D to 2D index matches in the global index system,
+  // i.e. the set of pair (landmark id, index of the associated 2D point).
+  // It must have the same size of _matchData.pt3D (and pt2D)
+  std::vector<std::pair<IndexT, IndexT> > _indMatch3D2D; 
+                                                    
+  // Computed camera pose
+  geometry::Pose3 _pose; 
+  
+  // The camera intrinsics associated 
   cameras::Pinhole_Intrinsic_Radial_K3 _intrinsics;
 
+  // the database images that have been used for matching
   std::vector<voctree::DocMatch> _matchedImages;
-
-  bool _isValid; // True if the localization succeeded, false otherwise
   
-private:
+  // True if the localization succeeded, false otherwise
+  bool _isValid; 
+  
 
 };
 
