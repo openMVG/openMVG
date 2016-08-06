@@ -13,7 +13,6 @@
 #include <cereal/cereal.hpp>
 
 #include "openMVG/features/deep/src/DeepClassifier.hpp"
-#include "openMVG/features/deep/src/DeepClassifierTorch.hpp"
 #include "openMVG/features/deep/src/DeepClassifierTHNets.hpp"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/image_describer.hpp"
@@ -29,35 +28,15 @@ namespace features {
 
 enum EDEEP_DESCRIPTOR
 {
-	SIAM_2_STREAM_NOTRE_DAME,
-	SIAM_2_STREAM_YOSEMITE,
-	SIAM_2_STREAM_LIBERTY,
-	
-	TWO_CH_NOTRE_DAME,
-	TWO_CH_YOSEMITE,
-	TWO_CH_LIBERTY,
+  SIAM_DESC_NOTRE_DAME,
+  SIAM_DESC_YOSEMITE,
+  SIAM_DESC_LIBERTY,
 
-	TWO_CH_2_STREAM_NOTRE_DAME,
-	TWO_CH_2_STREAM_YOSEMITE,
-	TWO_CH_2_STREAM_LIBERTY,
-	
-	TWO_CH_DEEP_NOTRE_DAME,
-	TWO_CH_DEEP_YOSEMITE,
-	TWO_CH_DEEP_LIBERTY,
-		
-	SIAM_NOTRE_DAME,
-	SIAM_YOSEMITE,
-	SIAM_LIBERTY,
-	
-	SIAM_DESC_NOTRE_DAME,
-	SIAM_DESC_YOSEMITE,
-	SIAM_DESC_LIBERTY,
+  SIAM_2_STREAM_DESC_NOTRE_DAME,
+  SIAM_2_STREAM_DESC_YOSEMITE,
+  SIAM_2_STREAM_DESC_LIBERTY,
 
-	SIAM_2_STREAM_DESC_NOTRE_DAME,
-	SIAM_2_STREAM_DESC_YOSEMITE,
-	SIAM_2_STREAM_DESC_LIBERTY,
-
-	PNNET
+  PNNET
 };
 
 struct DEEPParams
@@ -66,99 +45,39 @@ struct DEEPParams
   const std::string DeepDescriptorFileName(EDEEP_DESCRIPTOR descriptor) {
     const std::string& modelDir = "/home/nomoko/Downloads/debug/openMVGOxford/src/openMVG/features/deep/networks/";
     switch (descriptor) {
-	    case SIAM_2_STREAM_DESC_NOTRE_DAME: {
-	      const std::string modelStr(modelDir + "siam2stream/siam2stream_desc_notredame.bin");
-	      return modelStr;
-	    }
-	    case SIAM_2_STREAM_DESC_YOSEMITE: {
-	      const std::string modelStr(modelDir + "siam2stream/siam2stream_desc_yosemite.bin");
-	      return modelStr;
-	    }
-	    case SIAM_2_STREAM_DESC_LIBERTY: {
-	      const std::string modelStr(modelDir + "siam2stream/siam2stream_desc_liberty.bin");
-	      return modelStr;
-	    }
-	    case SIAM_DESC_NOTRE_DAME: {
-	      const std::string modelStr(modelDir + "siam/siam_desc_notredame.bin");
-	      return modelStr;
-	    }
-	    case SIAM_DESC_YOSEMITE: {
-	      const std::string modelStr(modelDir + "siam/siam_desc_yosemite.bin");
-	      return modelStr;
-	    }
-	    case SIAM_DESC_LIBERTY: {
-	      const std::string modelStr(modelDir + "siam/siam_desc_liberty.bin");
-	      return modelStr;
-	    }
-	    case SIAM_2_STREAM_NOTRE_DAME: {
-	      const std::string modelStr(modelDir + "siam2stream/siam2stream_notredame.bin");
-	      return modelStr;
-	    }
-	    case SIAM_2_STREAM_YOSEMITE: {
-	      const std::string modelStr(modelDir + "siam2stream/siam2stream_yosemite.bin");
-	      return modelStr;
-	    }
-	    case SIAM_2_STREAM_LIBERTY: {
-	      const std::string modelStr(modelDir + "siam2stream/siam2stream_liberty.bin");
-	      return modelStr;
-	    }
-	    case TWO_CH_NOTRE_DAME: {
-	      const std::string modelStr(modelDir + "2ch/2ch_notredame.bin");
-	      return modelStr;
-	    }
-	    case TWO_CH_YOSEMITE: {
-	      const std::string modelStr(modelDir + "2ch/2ch_yosemite.bin");
-	      return modelStr;
-	    }
-	    case TWO_CH_LIBERTY: {
-	      const std::string modelStr(modelDir + "2ch/2ch_liberty.bin");
-	      return modelStr;
-	    }
-	    case TWO_CH_2_STREAM_NOTRE_DAME: {
-	      const std::string modelStr(modelDir + "2ch2stream/2ch2stream_notredame.bin");
-	      return modelStr;
-	    }
-	    case TWO_CH_2_STREAM_YOSEMITE: {
-	      const std::string modelStr(modelDir + "2ch2stream/2ch2stream_yosemite.bin");
-	      return modelStr;
-	    }
-	    case TWO_CH_2_STREAM_LIBERTY: {
-	      const std::string modelStr(modelDir + "2ch2stream/2ch2stream_liberty.bin");
-	      return modelStr;
-	    }
-	    case TWO_CH_DEEP_NOTRE_DAME: {
-	      const std::string modelStr(modelDir + "2chdeep/2chdeep_notredame.bin");
-	      return modelStr;
-	    }
-	    case TWO_CH_DEEP_YOSEMITE: {
-	      const std::string modelStr(modelDir + "2chdeep/2chdeep_yosemite.bin");
-	      return modelStr;
-	    }
-	    case TWO_CH_DEEP_LIBERTY: {
-	      const std::string modelStr(modelDir + "2chdeep/2chdeep_liberty.bin");
-	      return modelStr;
-	    }
-	    case SIAM_NOTRE_DAME: {
-	      const std::string modelStr(modelDir + "siam/siam_notredame.bin");
-	      return modelStr;
-	    }
-	    case SIAM_YOSEMITE: {
-	      const std::string modelStr(modelDir + "siam/siam_yosemite.bin");
-	      return modelStr;
-	    }
-	    case SIAM_LIBERTY: {
-	      const std::string modelStr(modelDir + "siam/siam_liberty.bin");
-	      return modelStr;
-	    }
-			case PNNET: {
-				const std::string modelStr(modelDir + "pnnet/");
-				return modelStr;
-			}
-	    default: {
-	      const std::string& emptyStr("");
-	      return emptyStr;
-	    }
-		}
+      case SIAM_2_STREAM_DESC_NOTRE_DAME: {
+        const std::string modelStr(modelDir + "siam2stream/siam2stream_desc_notredame.bin");
+        return modelStr;
+      }
+      case SIAM_2_STREAM_DESC_YOSEMITE: {
+        const std::string modelStr(modelDir + "siam2stream/siam2stream_desc_yosemite.bin");
+        return modelStr;
+      }
+      case SIAM_2_STREAM_DESC_LIBERTY: {
+        const std::string modelStr(modelDir + "siam2stream/siam2stream_desc_liberty.bin");
+        return modelStr;
+      }
+      case SIAM_DESC_NOTRE_DAME: {
+        const std::string modelStr(modelDir + "siam/siam_desc_notredame.bin");
+        return modelStr;
+      }
+      case SIAM_DESC_YOSEMITE: {
+        const std::string modelStr(modelDir + "siam/siam_desc_yosemite.bin");
+        return modelStr;
+      }
+      case SIAM_DESC_LIBERTY: {
+        const std::string modelStr(modelDir + "siam/siam_desc_liberty.bin");
+        return modelStr;
+      }
+      case PNNET: {
+        const std::string modelStr(modelDir + "pnnet/");
+        return modelStr;
+      }
+      default: {
+        const std::string& emptyStr("");
+        return emptyStr;
+      }
+    }
   }
 
   DEEPParams(
@@ -183,10 +102,7 @@ public:
   DEEP_Image_describer(
 	const DEEPParams & params = DEEPParams()
   ):Image_describer(), params_(params) {
-		if (params_.eDeepDescriptor_ == PNNET)
-			deepClassifier_ = new DeepClassifierTHNets(params_.eDeepDescriptorFileName_);
-		else
-			deepClassifier_ = new DeepClassifierTorch(params_.eDeepDescriptorFileName_);
+	deepClassifier_ = new DeepClassifierTHNets(params_.eDeepDescriptorFileName_);
   }
 	~DEEP_Image_describer() {
 		delete deepClassifier_;

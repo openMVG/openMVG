@@ -16,15 +16,14 @@ namespace matching_image_collection {
 /// Compute putative matches between a collection of pictures
 /// Spurious correspondences are discarded by using the
 ///  a threshold over the distance ratio of the 2 nearest neighbours.
-/// Using a Cascade Hashing matching
-/// Cascade hashing tables are computed once and used for all the regions.
 ///
 class GPU_Matcher_Regions_AllInMemory : public Matcher
 {
   public:
   GPU_Matcher_Regions_AllInMemory
   (
-    float dist_ratio
+    float dist_ratio,
+		matching::EMatcherType eMatcherType
   );
 
   /// Find corresponding points between some pair of view Ids
@@ -39,6 +38,7 @@ class GPU_Matcher_Regions_AllInMemory : public Matcher
   private:
   // Distance ratio used to discard spurious correspondence
   float f_dist_ratio_;
+	matching::EMatcherType eMatcherType_;
 };
 
 } // namespace matching_image_collection
