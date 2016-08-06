@@ -91,4 +91,3 @@ template class GPUBruteForceL2Matcher<unsigned char, 128>;
 template class GPUBruteForceL2Matcher<float, 64>;
 // Dissociated dipole like Regions
 template class GPUBruteForceL2Matcher<float, 20>;
-

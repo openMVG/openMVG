@@ -35,9 +35,6 @@ set_property(TARGET openMVG_features PROPERTY FOLDER OpenMVG/OpenMVG)
 add_dependencies(openMVG_features latch_cuda)
 target_link_libraries(openMVG_features latch_cuda)
 
-add_dependencies(openMVG_features deepDescriptor_static)
-target_link_libraries(openMVG_features deepDescriptor_static)
-
 add_dependencies(openMVG_features deepDescriptorTHNets_static)
 target_link_libraries(openMVG_features deepDescriptorTHNets_static)
 

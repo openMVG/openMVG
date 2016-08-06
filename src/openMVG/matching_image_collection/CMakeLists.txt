@@ -13,6 +13,7 @@ file(
   matching_collection_images_files_cpp
   *.cpp
 )
+
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 
 #Remove the unit test files (not been used by the library)

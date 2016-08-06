@@ -49,6 +49,7 @@ class DeepClassifierTHNets : public DeepClassifier {
 		int m_count;
 
 		void extractPatches(const cv::Mat&, const std::vector<cv::KeyPoint>&, std::vector<cv::Mat>&);
+		void extractPatches(const cv::Mat&, const std::vector<openMVG::features::AffinePointFeature>&, std::vector<cv::Mat>&);
 
 		Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> m_descriptorsOpenMVG;
 		cv::Mat m_descriptors;
