@@ -241,7 +241,7 @@ public:
 	switch(params_.eDeepDescriptor_)
 	{
       case SIAM_2_STREAM_DESC_NOTRE_DAME:
-			case SIAM_2_STREAM_DESC_YOSEMITE:
+	    case SIAM_2_STREAM_DESC_YOSEMITE:
 			case SIAM_2_STREAM_DESC_LIBERTY:
         return regions.reset(new DEEP_Float_512_Regions);
 			case SIAM_DESC_NOTRE_DAME:
