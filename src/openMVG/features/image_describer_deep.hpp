@@ -19,8 +19,6 @@
 #include "openMVG/features/regions_factory.hpp"
 #include "openMVG/features/tbmr/tbmr.hpp"
 
-#include "opencv2/core.hpp"
-
 using namespace std;
 
 namespace openMVG {
@@ -43,7 +41,7 @@ struct DEEPParams
 {
   // Because of the absurdities of C++ not having an enum -> string generator
   const std::string DeepDescriptorFileName(EDEEP_DESCRIPTOR descriptor) {
-    const std::string& modelDir = "/home/nomoko/Downloads/debug/openMVGOxford/src/openMVG/features/deep/networks/";
+    const std::string& modelDir = "/home/nomoko/Code/openMVG/src/openMVG/features/deep/networks/";
     switch (descriptor) {
       case SIAM_2_STREAM_DESC_NOTRE_DAME: {
         const std::string modelStr(modelDir + "siam2stream/siam2stream_desc_notredame.bin");
@@ -124,7 +122,16 @@ public:
     const image::Image<unsigned char> * mask = nullptr ) override
   {
     
-    std::vector<cv::KeyPoint> kpts;
+    std::vector<features::AffinePointFeature> feats_tbmr_bright;
+    std::vector<features::AffinePointFeature> feats_tbmr_dark;
+
+    tbmr::Extract_tbmr(image, feats_tbmr_bright, std::less<uint8_t>());
+    tbmr::Extract_tbmr(image, feats_tbmr_dark, std::greater<uint8_t>());
+    feats_tbmr_bright.insert(feats_tbmr_bright.end(), feats_tbmr_dark.begin(), feats_tbmr_dark.end());
+  
+    const std::vector<features::AffinePointFeature>& kpts(feats_tbmr_bright);
+  
+
     float* descriptors = deepClassifier_->describeOpenMVG(image, kpts);
 
     Allocate(regions);
@@ -144,7 +151,7 @@ public:
       #endif
         for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
         {
-          const SIOPointFeature& ptDeep = SIOPointFeature(kpts[i].pt.x, kpts[i].pt.y, kpts[i].size, kpts[i].angle);
+          const AffinePointFeature& ptDeep = kpts[i];
 
           // Feature masking
           if (mask)
@@ -153,7 +160,7 @@ public:
           if (maskIma(ptDeep.y(), ptDeep.x()) == 0)
             continue;
           }
-          regionsCasted->Features()[i] = ptDeep;
+          regionsCasted->Features()[i] = SIOPointFeature(ptDeep.x(), ptDeep.y(), 2 * std::sqrt(ptDeep.l1() * ptDeep.l2()), ptDeep.orientation());
           // Store descriptors
           for (int j = 0; j < 512; j++) {
             const unsigned int index = i * 512 + j;
@@ -177,7 +184,7 @@ public:
       #endif
         for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
         {
-          const SIOPointFeature& ptDeep = SIOPointFeature(kpts[i].pt.x, kpts[i].pt.y, kpts[i].size, kpts[i].angle);
+          const AffinePointFeature& ptDeep = kpts[i];
 
           // Feature masking
           if (mask)
@@ -186,7 +193,7 @@ public:
           if (maskIma(ptDeep.y(), ptDeep.x()) == 0)
             continue;
           }
-          regionsCasted->Features()[i] = ptDeep;
+          regionsCasted->Features()[i] = SIOPointFeature(ptDeep.x(), ptDeep.y(), 2 * std::sqrt(ptDeep.l1() * ptDeep.l2()), ptDeep.orientation());
           // Store descriptors
           for (int j = 0; j < 256; j++) {
             const unsigned int index = i * 256 + j;
@@ -208,7 +215,7 @@ public:
       #endif
         for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
         {
-          const SIOPointFeature& ptDeep = SIOPointFeature(kpts[i].pt.x, kpts[i].pt.y, kpts[i].size, kpts[i].angle);
+          const AffinePointFeature& ptDeep = kpts[i];
 
           // Feature masking
           if (mask)
@@ -217,7 +224,7 @@ public:
           if (maskIma(ptDeep.y(), ptDeep.x()) == 0)
             continue;
           }
-          regionsCasted->Features()[i] = ptDeep;
+          regionsCasted->Features()[i] = SIOPointFeature(ptDeep.x(), ptDeep.y(), 2 * std::sqrt(ptDeep.l1() * ptDeep.l2()), ptDeep.orientation());
           // Store descriptors
           for (int j = 0; j < 128; j++) {
             const unsigned int index = i * 128 + j;
