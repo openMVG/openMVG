@@ -58,16 +58,26 @@ bool computeSimilarity(const SfM_Data & sfmDataA,
 inline void applyTransform(SfM_Data & sfmData,
                            const double S,
                            const Mat3& R,
-                           const Vec3& t)
+                           const Vec3& t,
+                           bool transformControlPoints = false)
 {
   for(auto& view: sfmData.views)
   {
     geometry::Pose3& pose = sfmData.poses[view.second->id_pose];
     pose = pose.transformSRt(S, R, t);
   }
+  
   for(auto& landmark: sfmData.structure)
   {
     landmark.second.X = S * R * landmark.second.X + t;
+  }
+  
+  if(!transformControlPoints)
+    return;
+  
+  for(auto& controlPts: sfmData.control_points)
+  {
+    controlPts.second.X = S * R * controlPts.second.X + t;
   }
 }
 
