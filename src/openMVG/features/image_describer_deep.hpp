@@ -41,7 +41,7 @@ struct DEEPParams
 {
   // Because of the absurdities of C++ not having an enum -> string generator
   const std::string DeepDescriptorFileName(EDEEP_DESCRIPTOR descriptor) {
-    const std::string& modelDir = "/home/nomoko/Code/openMVG/src/openMVG/features/deep/networks/";
+    const std::string& modelDir = "./deep/networks/";
     switch (descriptor) {
       case SIAM_2_STREAM_DESC_NOTRE_DAME: {
         const std::string modelStr(modelDir + "siam2stream/siam2stream_desc_notredame.bin");
