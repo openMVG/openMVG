@@ -24,6 +24,7 @@ if(OpenCV_FOUND AND Boost_FOUND)
     PUBLIC
     openMVG_dataio
     openMVG_image
+    openMVG_calibration
     ${OpenCV_LIBRARIES}
     ${Boost_LIBRARIES}
     )
