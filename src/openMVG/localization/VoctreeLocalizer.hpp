@@ -192,6 +192,20 @@ public:
                           const std::string& imagePath = std::string());
   
   
+  /**
+   * @brief Retrieve matches to all images of the database.
+   *
+   * @param[in] siftQueryRegions
+   * @param[in] imageSize
+   * @param[in] param
+   * @param[in] useInputIntrinsics
+   * @param[in] queryIntrinsics
+   * @param[out] occurences
+   * @param[out] pt2D output matrix of 2D points
+   * @param[out] pt3D output matrix of 3D points
+   * @param[out] matchedImages image matches output
+   * @param[in] imagePath
+   */
   void getAllAssociations(const features::SIFT_Regions &siftQueryRegions,
                           const std::pair<std::size_t, std::size_t> imageSize,
                           const Parameters &param,
@@ -200,6 +214,7 @@ public:
                           std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences,
                           Mat &pt2D,
                           Mat &pt3D,
+                          std::vector<voctree::DocMatch>& matchedImages,
                           const std::string& imagePath = std::string()) const;
 
 private:
@@ -235,7 +250,8 @@ private:
                       const bool b_guided_matching,
                       const std::pair<size_t,size_t> & imageSizeI,     // size of the first image  
                       const std::pair<size_t,size_t> & imageSizeJ,     // size of the first image
-                      std::vector<matching::IndMatch> & vec_featureMatches) const;
+                      std::vector<matching::IndMatch> & vec_featureMatches,
+                      robust::EROBUST_ESTIMATOR estimator = robust::ROBUST_ESTIMATOR_ACRANSAC) const;
   
   /**
    * @brief Load all the Descriptors who have contributed to the reconstruction.

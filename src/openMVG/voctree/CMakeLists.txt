@@ -1,4 +1,4 @@
-IF(OpenMVG_BUILD_VOCTREE)
+IF(OpenMVG_USE_BOOST)
 file(
   GLOB_RECURSE
   voctree_header
@@ -18,10 +18,11 @@ ADD_LIBRARY(openMVG_voctree
   ${voctree_cpp})
 SET_PROPERTY(TARGET openMVG_voctree PROPERTY FOLDER OpenMVG/OpenMVG)
 TARGET_LINK_LIBRARIES( openMVG_voctree openMVG_features openMVG_sfm ${Boost_LIBRARIES})
+SET_TARGET_PROPERTIES(openMVG_voctree PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 INSTALL(TARGETS openMVG_voctree DESTINATION lib/ EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG voctree "openMVG_voctree")
 UNIT_TEST(openMVG kmeans "openMVG_voctree")
 UNIT_TEST(openMVG voctreebuild "openMVG_voctree")
 
-ENDIF(OpenMVG_BUILD_VOCTREE)
+ENDIF(OpenMVG_USE_BOOST)

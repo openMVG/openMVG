@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
         sOutDir, stlplus::filename_part(srcImage));
 
       const IntrinsicBase * cam = iterIntrinsic->second.get();
-      if (cam->have_disto())
+      if (cam->isValid() && cam->have_disto())
       {
         // undistort the image and save it
         if (ReadImage( srcImage.c_str(), &image))

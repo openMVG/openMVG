@@ -1,6 +1,8 @@
 #pragma once
 
 #include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
+#include <openMVG/voctree/database.hpp>
+
 #include <cereal/cereal.hpp>
 #include <vector>
 
@@ -52,38 +54,76 @@ public:
         const std::vector<pair<IndexT, IndexT> > & indMatch3D2D,
         const geometry::Pose3 & pose,
         const cameras::Pinhole_Intrinsic_Radial_K3 & intrinsics,
+        const std::vector<voctree::DocMatch>& matchedImages,
         bool isValid = true);
   
   virtual ~LocalizationResult();
   
-  // Accessors
-  const std::vector<size_t> & getInliers() const;
+  const std::vector<size_t> & getInliers() const 
+  {
+    return _matchData.vec_inliers;
+  }
 
-  const Mat & getPt2D() const;
-  
-  const Mat getUndistortedPt2D() const;
+  const Mat & getPt2D() const 
+  {
+    return _matchData.pt2D;
+  }
 
-  const Mat & getPt3D() const;
-  
-  const Mat34 & getProjection() const;
-  
-  sfm::Image_Localizer_Match_Data getMatchData() const { return _matchData; } 
+  const Mat retrieveUndistortedPt2D() const;
 
-  const std::vector<pair<IndexT, IndexT> > & getIndMatch3D2D() const;
+  const Mat & getPt3D() const 
+  {
+    return _matchData.pt3D;
+  }
 
-  const geometry::Pose3 & getPose() const;
-  
-  void setPose(const geometry::Pose3 & pose);
-  
-  const cameras::Pinhole_Intrinsic_Radial_K3 & getIntrinsics() const;
-  
-  cameras::Pinhole_Intrinsic_Radial_K3 & getIntrinsics();
-  
-  void updateIntrinsics(const std::vector<double> & params);
+  const Mat34 & getProjection() const
+  {
+    return _matchData.projection_matrix;
+  }
 
-  bool isValid() const;
+  const std::vector<std::pair<IndexT, IndexT> > & getIndMatch3D2D() const
+  {
+    return _indMatch3D2D;
+  }
+
+  const std::vector<voctree::DocMatch>& getMatchedImages() const
+  {
+    return _matchedImages;
+  }
+  
+  const geometry::Pose3 & getPose() const
+  {
+    return _pose;
+  }
+
+  void setPose(const geometry::Pose3 & pose)
+  {
+    _pose = pose;
+  }
+
+  const cameras::Pinhole_Intrinsic_Radial_K3 & getIntrinsics() const
+  {
+    return _intrinsics;
+  }
+
+  cameras::Pinhole_Intrinsic_Radial_K3 & getIntrinsics()
+  {
+    return _intrinsics;
+  }
+
+  void updateIntrinsics(const std::vector<double> & params)
+  {
+    _intrinsics.updateFromParams(params);
+  }
+
+  bool isValid() const
+  {
+    return _isValid;
+  }
   
   Mat2X computeResiduals() const ;
+  
+  double computeRMSE() const ;
 
   // Serialization
   template<class Archive>
@@ -99,6 +139,7 @@ public:
     ar(cereal::make_nvp("projection_matrix", _matchData.projection_matrix));
     ar(cereal::make_nvp("error_max", _matchData.error_max));
     ar(cereal::make_nvp("max_iteration", _matchData.max_iteration));
+    ar(cereal::make_nvp("matchedImages", _matchedImages));
   }
 
   template<class Archive>
@@ -114,6 +155,11 @@ public:
     ar(cereal::make_nvp("projection_matrix", _matchData.projection_matrix));
     ar(cereal::make_nvp("error_max", _matchData.error_max));
     ar(cereal::make_nvp("max_iteration", _matchData.max_iteration));
+    try
+    {
+      ar(cereal::make_nvp("matchedImages", _matchedImages));
+    } catch(cereal::Exception&)
+    {}
   }
   
 private:
@@ -126,8 +172,10 @@ private:
                                                     // i.e. the set of pair (landmark id, index of the associated 2D point)
 
   geometry::Pose3 _pose; // Computed camera pose
-  
+
   cameras::Pinhole_Intrinsic_Radial_K3 _intrinsics;
+
+  std::vector<voctree::DocMatch> _matchedImages;
 
   bool _isValid; // True if the localization succeeded, false otherwise
   

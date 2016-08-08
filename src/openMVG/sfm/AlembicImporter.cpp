@@ -20,13 +20,13 @@ namespace openMVG {
 namespace dataio {
 
 template<class AbcArrayProperty, typename T>
-void getAbcArrayProp(ICompoundProperty& userProps, const std::string& id, chrono_t sampleTime, T& outputArray)
+void getAbcArrayProp(ICompoundProperty& userProps, const std::string& id, index_t sampleFrame, T& outputArray)
 {
   typedef typename AbcArrayProperty::sample_ptr_type sample_ptr_type;
 
   AbcArrayProperty prop(userProps, id);
   sample_ptr_type sample;
-  prop.get(sample, ISampleSelector(sampleTime));
+  prop.get(sample, ISampleSelector(sampleFrame));
   outputArray.assign(sample->get(), sample->get()+sample->size());
 }
 
@@ -37,11 +37,11 @@ void getAbcArrayProp(ICompoundProperty& userProps, const std::string& id, chrono
  *         if it's an array.
  * @param userProps
  * @param id
- * @param sampleTime
+ * @param sampleFrame
  * @return value
  */
 template<class AbcProperty>
-typename AbcProperty::traits_type::value_type getAbcProp(ICompoundProperty& userProps, const Alembic::Abc::PropertyHeader& propHeader, const std::string& id, chrono_t sampleTime)
+typename AbcProperty::traits_type::value_type getAbcProp(ICompoundProperty& userProps, const Alembic::Abc::PropertyHeader& propHeader, const std::string& id, index_t sampleFrame)
 {
   typedef typename AbcProperty::traits_type traits_type;
   typedef typename traits_type::value_type value_type;
@@ -53,14 +53,14 @@ typename AbcProperty::traits_type::value_type getAbcProp(ICompoundProperty& user
   {
     Alembic::Abc::ITypedArrayProperty<traits_type> prop(userProps, id);
     array_sample_ptr_type sample;
-    prop.get(sample, ISampleSelector(sampleTime));
+    prop.get(sample, ISampleSelector(sampleFrame));
     return (*sample)[0];
   }
   else
   {
     value_type v;
     AbcProperty prop(userProps, id);
-    prop.get(v, ISampleSelector(sampleTime));
+    prop.get(v, ISampleSelector(sampleFrame));
     return v;
   }
 }
@@ -179,7 +179,7 @@ bool AlembicImporter::readPointCloud(IObject iObj, M44d mat, sfm::SfM_Data &sfmd
   return true;
 }
 
-bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part, const chrono_t sampleTime)
+bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata, sfm::ESfM_Data flags_part, const index_t sampleFrame)
 {
   using namespace openMVG::geometry;
   using namespace openMVG::cameras;
@@ -188,10 +188,10 @@ bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata,
   ICamera camera(iObj, kWrapExisting);
   ICameraSchema cs = camera.getSchema();
   CameraSample camSample;
-  if(sampleTime == 0)
+  if(sampleFrame == 0)
     camSample = cs.getValue();
   else
-    camSample = cs.getValue(ISampleSelector(sampleTime));
+    camSample = cs.getValue(ISampleSelector(sampleFrame));
 
   // Check if we have an associated image plane
   ICompoundProperty userProps = getAbcUserProperties(cs);
@@ -206,54 +206,54 @@ bool AlembicImporter::readCamera(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata,
   {
     if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_imagePath"))
     {
-      imagePath = getAbcProp<Alembic::Abc::IStringProperty>(userProps, *propHeader, "mvg_imagePath", sampleTime);
+      imagePath = getAbcProp<Alembic::Abc::IStringProperty>(userProps, *propHeader, "mvg_imagePath", sampleFrame);
     }
     if(userProps.getPropertyHeader("mvg_sensorSizePix"))
     {
       try {
-        getAbcArrayProp<Alembic::Abc::IUInt32ArrayProperty>(userProps, "mvg_sensorSizePix", sampleTime, sensorSize_pix);
+        getAbcArrayProp<Alembic::Abc::IUInt32ArrayProperty>(userProps, "mvg_sensorSizePix", sampleFrame, sensorSize_pix);
       } catch(Alembic::Util::v7::Exception&)
       {
-        getAbcArrayProp<Alembic::Abc::IInt32ArrayProperty>(userProps, "mvg_sensorSizePix", sampleTime, sensorSize_pix);
+        getAbcArrayProp<Alembic::Abc::IInt32ArrayProperty>(userProps, "mvg_sensorSizePix", sampleFrame, sensorSize_pix);
       }
       assert(sensorSize_pix.size() == 2);
     }
     if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_intrinsicType"))
     {
-      mvg_intrinsicType = getAbcProp<Alembic::Abc::IStringProperty>(userProps, *propHeader, "mvg_intrinsicType", sampleTime);
+      mvg_intrinsicType = getAbcProp<Alembic::Abc::IStringProperty>(userProps, *propHeader, "mvg_intrinsicType", sampleFrame);
     }
     if(userProps.getPropertyHeader("mvg_intrinsicParams"))
     {
       Alembic::Abc::IDoubleArrayProperty prop(userProps, "mvg_intrinsicParams");
       std::shared_ptr<DoubleArraySample> sample;
-      prop.get(sample, ISampleSelector(sampleTime));
+      prop.get(sample, ISampleSelector(sampleFrame));
       mvg_intrinsicParams.assign(sample->get(), sample->get()+sample->size());
     }
     if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_viewId"))
     {
       try {
-        id_view = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_viewId", sampleTime);
+        id_view = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_viewId", sampleFrame);
       } catch(Alembic::Util::v7::Exception&)
       {
-        id_view = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_viewId", sampleTime);
+        id_view = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_viewId", sampleFrame);
       }
     }
     if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_poseId"))
     {
       try {
-        id_pose = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_poseId", sampleTime);
+        id_pose = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_poseId", sampleFrame);
       } catch(Alembic::Util::v7::Exception&)
       {
-        id_pose = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_poseId", sampleTime);
+        id_pose = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_poseId", sampleFrame);
       }
     }
     if(const Alembic::Abc::PropertyHeader *propHeader = userProps.getPropertyHeader("mvg_intrinsicId"))
     {
       try {
-        id_intrinsic = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_intrinsicId", sampleTime);
+        id_intrinsic = getAbcProp<Alembic::Abc::IUInt32Property>(userProps, *propHeader, "mvg_intrinsicId", sampleFrame);
       } catch(Alembic::Util::v7::Exception&)
       {
-        id_intrinsic = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_intrinsicId", sampleTime);
+        id_intrinsic = getAbcProp<Alembic::Abc::IInt32Property>(userProps, *propHeader, "mvg_intrinsicId", sampleFrame);
       }
     }
   }
@@ -328,12 +328,10 @@ void AlembicImporter::visitObject(IObject iObj, M44d mat, sfm::SfM_Data &sfmdata
     else
     {
       std::cout << xform.getSchema().getNumSamples() << " samples found in this animated xform." << std::endl;
-      const float timebase = 1.0 / 24.0;
-      const float timestep = 1.0 / 24.0;
-      for(int frame = 0; frame < xform.getSchema().getNumSamples(); ++frame)
+      for(index_t frame = 0; frame < xform.getSchema().getNumSamples(); ++frame)
       {
-        xform.getSchema().get(xs, ISampleSelector(frame * timestep + timebase));
-        readCamera(iObj.getChild(0), mat * xs.getMatrix(), sfmdata, flags_part, frame * timestep + timebase);
+        xform.getSchema().get(xs, ISampleSelector(frame));
+        readCamera(iObj.getChild(0), mat * xs.getMatrix(), sfmdata, flags_part, frame);
       }
     }
   }

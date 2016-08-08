@@ -16,11 +16,13 @@ LocalizationResult::LocalizationResult(
         const std::vector<pair<IndexT, IndexT> > & indMatch3D2D,
         const geometry::Pose3 & pose,
         const cameras::Pinhole_Intrinsic_Radial_K3 & intrinsics,
+        const std::vector<voctree::DocMatch>& matchedImages,
         bool isValid) :
         _matchData(matchData),
         _indMatch3D2D(indMatch3D2D),
         _pose(pose),
         _intrinsics(intrinsics),
+        _matchedImages(matchedImages),
         _isValid(isValid)
 {
 }
@@ -29,22 +31,11 @@ LocalizationResult::~LocalizationResult()
 {
 }
 
-// Accessor
-const std::vector<size_t> & LocalizationResult::getInliers() const 
-{
-  return _matchData.vec_inliers;
-}
-
-const Mat & LocalizationResult::getPt2D() const 
-{
-  return _matchData.pt2D;
-}
-
-const Mat LocalizationResult::getUndistortedPt2D() const
+const Mat LocalizationResult::retrieveUndistortedPt2D() const
 {
   const auto &intrinsics =  getIntrinsics();
   const auto &distorted = getPt2D();
-  if(!intrinsics.have_disto())
+  if(!intrinsics.have_disto() || !intrinsics.isValid())
   {
     return getPt2D();
   }
@@ -55,51 +46,6 @@ const Mat LocalizationResult::getUndistortedPt2D() const
     pt2Dundistorted.col(iPoint) = intrinsics.get_ud_pixel(distorted.col(iPoint));
   }
   return pt2Dundistorted;
-}
-
-const Mat & LocalizationResult::getPt3D() const 
-{
-  return _matchData.pt3D;
-}
-
- const Mat34 & LocalizationResult::getProjection() const
- {
-   return _matchData.projection_matrix;
- }
-
-const std::vector<pair<IndexT, IndexT> > & LocalizationResult::getIndMatch3D2D() const
-{
-  return _indMatch3D2D;
-}
-        
-const geometry::Pose3 & LocalizationResult::getPose() const
-{
-  return _pose;
-}
-
-void LocalizationResult::setPose(const geometry::Pose3 & pose)
-{
-  _pose = pose;
-}
-
-const cameras::Pinhole_Intrinsic_Radial_K3 & LocalizationResult::getIntrinsics() const
-{
-  return _intrinsics;
-}
-
-cameras::Pinhole_Intrinsic_Radial_K3 & LocalizationResult::getIntrinsics()
-{
-  return _intrinsics;
-}
-
-void LocalizationResult::updateIntrinsics(const std::vector<double> & params)
-{
-  _intrinsics.updateFromParams(params);
-}
-
-bool LocalizationResult::isValid() const
-{
-  return _isValid;
 }
 
 Mat2X LocalizationResult::computeResiduals() const 
@@ -124,6 +70,14 @@ Mat2X LocalizationResult::computeResiduals() const
   return intrinsics.residuals(getPose(), inliers3d, inliers2d);
 }
 
+double LocalizationResult::computeRMSE() const 
+{
+  const auto& residuals = computeResiduals();
+  // squared residual for each point
+  const auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
+  //RMSE
+  return std::sqrt(sqrErrors.mean());
+}
 
 
 bool load(LocalizationResult & res, const std::string & filename)

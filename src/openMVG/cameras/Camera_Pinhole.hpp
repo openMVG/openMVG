@@ -49,6 +49,8 @@ class Pinhole_Intrinsic : public IntrinsicBase
   virtual Pinhole_Intrinsic* clone() const { return new Pinhole_Intrinsic(*this); }
   virtual void assign(const IntrinsicBase& other) { *this = dynamic_cast<const Pinhole_Intrinsic&>(other); }
   
+  virtual bool isValid() const { return focal() > 0 && IntrinsicBase::isValid(); }
+  
   virtual EINTRINSIC getType() const { return PINHOLE_CAMERA; }
   std::string getTypeStr() const { return EINTRINSIC_enumToString(getType()); }
 
@@ -106,6 +108,12 @@ class Pinhole_Intrinsic : public IntrinsicBase
   {
     const std::vector<double> params = {_K(0,0), _K(0,2), _K(1,2)};
     return params;
+  }
+  
+  virtual std::vector<double> getDistortionParams() const
+  {
+    // No distortion
+    return std::vector<double>();
   }
 
   // Data wrapper for non linear optimization (update from data)

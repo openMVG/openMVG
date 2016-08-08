@@ -1,5 +1,5 @@
 # Rig calibration
-if(OpenMVG_BUILD_VOCTREE)
+if(OpenMVG_USE_BOOST)
 
   ###
   # Calibrate a rig based on CCTag localizers
@@ -14,7 +14,7 @@ if(OpenMVG_BUILD_VOCTREE)
       )
   endif(OpenMVG_USE_CCTAG)
 
-endif(OpenMVG_BUILD_VOCTREE)
+endif(OpenMVG_USE_BOOST)
 
 # Camera calibration
 if(OpenCV_FOUND AND Boost_FOUND)

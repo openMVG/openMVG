@@ -38,15 +38,19 @@ void MatchesPointsToMat
   x_J.resize(2, n);
   typedef typename MatT::Scalar Scalar; // Output matrix type
 
-  for (size_t i=0; i < putativeMatches.size(); ++i)  {
+  const bool I_hasValidIntrinsics = cam_I && cam_I->isValid();
+  const bool J_hasValidIntrinsics = cam_J && cam_J->isValid();
+
+  for (size_t i=0; i < putativeMatches.size(); ++i)
+  {
     const features::PointFeature & pt_I = feature_I[putativeMatches[i]._i];
     const features::PointFeature & pt_J = feature_J[putativeMatches[i]._j];
-    if (cam_I)
+    if (I_hasValidIntrinsics)
       x_I.col(i) = cam_I->get_ud_pixel(pt_I.coords().cast<double>());
     else
       x_I.col(i) = pt_I.coords().cast<double>();
 
-    if (cam_J)
+    if (J_hasValidIntrinsics)
       x_J.col(i) = cam_J->get_ud_pixel(pt_J.coords().cast<double>());
     else
       x_J.col(i) = pt_J.coords().cast<double>();

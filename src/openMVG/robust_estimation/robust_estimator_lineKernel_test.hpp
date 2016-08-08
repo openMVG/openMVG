@@ -49,6 +49,26 @@ struct LineSolver
     const Vec2 ba = svd.solve(b);
     lines->push_back(ba);
   }
+  
+  static void SolveWeightedLS(const Mat &x, std::vector<Vec2> *lines, const std::vector<double> &weights)
+  {
+    const std::size_t numPts = x.cols();
+    assert(numPts == weights.size());
+    
+    // create the weight matrix
+    Mat W = Mat::Zero(numPts, numPts);
+    for(std::size_t i = 0; i < numPts; ++i)
+      W(i,i) = weights[i];
+
+    Mat X(numPts, 2);
+    X.col(0).setOnes();
+    X.col(1) = x.row(0).transpose();
+    const Mat A(X.transpose() * W * X);
+    const Vec b(X.transpose() * W * x.row(1).transpose());
+    Eigen::JacobiSVD<Mat> svd(A, Eigen::ComputeFullU | Eigen::ComputeFullV);
+    const Vec2 ba = svd.solve(b);
+    lines->push_back(ba);
+  }
 };
 
 struct pointToLineError
@@ -87,6 +107,9 @@ struct LineKernel
   {
     return pointToLineError::Error(ba, xs_.col(sample));
   }
+  
+  void Unnormalize(Model * model) const
+  {  }
 
   const Mat2X &xs_;
 };

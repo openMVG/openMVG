@@ -149,6 +149,16 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeSfM_DataColor
   stlplus
   )
 
+IF(OpenMVG_USE_ALEMBIC)
+  ADD_EXECUTABLE(openMVG_main_ConvertAnimatedCamera main_ConvertAnimatedCamera.cpp)
+  TARGET_LINK_LIBRARIES(openMVG_main_ConvertAnimatedCamera
+    openMVG_system
+    openMVG_features
+    openMVG_sfm
+    stlplus
+  )
+ENDIF(OpenMVG_USE_ALEMBIC)
+
 # Installation rules
 SET_PROPERTY(TARGET openMVG_main_IncrementalSfM PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_IncrementalSfM DESTINATION bin/)
@@ -164,6 +174,10 @@ SET_PROPERTY(TARGET openMVG_main_ComputeStructureFromKnownPoses PROPERTY FOLDER 
 INSTALL(TARGETS openMVG_main_ComputeStructureFromKnownPoses DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_ComputeSfM_DataColor PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ComputeSfM_DataColor DESTINATION bin/)
+IF(OpenMVG_USE_ALEMBIC)
+  SET_PROPERTY(TARGET openMVG_main_ConvertAnimatedCamera PROPERTY FOLDER OpenMVG/software)
+  INSTALL(TARGETS openMVG_main_ConvertAnimatedCamera DESTINATION bin/)
+ENDIF(OpenMVG_USE_ALEMBIC)
 
 ###
 # SfM tools to visualize feature tracking data

@@ -73,7 +73,7 @@ public:
   /**
    * @brief Register keyframe on the previous values
    */
-  void jumpKeyframe();
+  void jumpKeyframe(const std::string &imagePath = std::string());
   
   /**
    * @brief Add SfM Data

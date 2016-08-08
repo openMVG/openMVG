@@ -23,6 +23,7 @@ namespace cameras {
 struct IntrinsicBase
 {
   unsigned int _w, _h;
+  double _initialFocalLengthPix = -1;
   std::string _serialNumber;
 
   IntrinsicBase(unsigned int w = 0, unsigned int h = 0, const std::string& serialNumber = ""):_w(w), _h(h), _serialNumber(serialNumber)
@@ -32,15 +33,23 @@ struct IntrinsicBase
   
   virtual IntrinsicBase* clone() const = 0;
   virtual void assign(const IntrinsicBase& other) = 0;
+
+  virtual bool isValid() const { return _w != 0 && _h != 0; }
   
   unsigned int w() const {return _w;}
   unsigned int h() const {return _h;}
   const std::string& serialNumber() const {return _serialNumber;}
+  double initialFocalLengthPix() const {return _initialFocalLengthPix;}
+  
   void setWidth(unsigned int w) { _w = w;}
   void setHeight(unsigned int h) { _h = h;}
   void setSerialNumber(const std::string& serialNumber)
   {
     _serialNumber = serialNumber;
+  }
+  void setInitialFocalLengthPix(double initialFocalLengthPix)
+  {
+    _initialFocalLengthPix = initialFocalLengthPix;
   }
 
   // Operator ==
@@ -55,10 +64,11 @@ struct IntrinsicBase
   /// Projection of a 3D point into the camera plane (Apply pose, disto (if any) and Intrinsics)
   Vec2 project(
     const geometry::Pose3 & pose,
-    const Vec3 & pt3D) const
+    const Vec3 & pt3D,
+    bool applyDistortion = true) const
   {
     const Vec3 X = pose(pt3D); // apply pose
-    if (this->have_disto()) // apply disto & intrinsics
+    if (applyDistortion && this->have_disto()) // apply disto & intrinsics
       return this->cam2ima( this->add_disto(X.head<2>()/X(2)) );
     else // apply intrinsics
       return this->cam2ima( X.head<2>()/X(2) );
@@ -133,6 +143,7 @@ struct IntrinsicBase
     ar(cereal::make_nvp("width", _w));
     ar(cereal::make_nvp("height", _h));
     ar(cereal::make_nvp("serialNumber", _serialNumber));
+    ar(cereal::make_nvp("initialFocalLengthPix", _initialFocalLengthPix));
   }
 
   /// Serialization in
@@ -141,15 +152,22 @@ struct IntrinsicBase
   {
     ar(cereal::make_nvp("width", _w));
     ar(cereal::make_nvp("height", _h));
+    // compatibility with older versions
     try
     {
-      // compatibility with older versions
       ar(cereal::make_nvp("serialNumber", _serialNumber));
     }
-    catch(cereal::Exception e)
+    catch(cereal::Exception& e)
     {
-      // if it fails, just use empty string
       _serialNumber = "";
+    }
+    try
+    {
+      ar(cereal::make_nvp("initialFocalLengthPix", _initialFocalLengthPix));
+    }
+    catch(cereal::Exception& e)
+    {
+      _initialFocalLengthPix = -1;
     }
   }
 
