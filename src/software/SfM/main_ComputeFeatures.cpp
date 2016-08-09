@@ -157,7 +157,8 @@ int main(int argc, char **argv)
 
   using namespace openMVG::features;
   system::Timer timer;
-    
+
+  bool force_single_thread = false;
   std::unique_ptr<Image_describer> image_describer;
 
   const std::string sImage_describer = stlplus::create_filespec(sOutDir, "image_describer", "json");
@@ -202,32 +203,38 @@ int main(int argc, char **argv)
     if (sImage_Describer_Method == "LATCH_UNSIGNED")
     {
       image_describer.reset(new LATCH_Image_describer(LATCHParams(LATCH_UNSIGNED)));
+      force_single_thread = true;
     }
     else
     if (sImage_Describer_Method == "LATCH_BINARY")
     {
       image_describer.reset(new LATCH_Image_describer(LATCHParams(LATCH_BINARY)));
+      force_single_thread = true;
     }
-		else
+    else
     if (sImage_Describer_Method == "DEEP_SIAM_2_STREAM_DESC_NOTRE_DAME")
     {
       image_describer.reset(new DEEP_Image_describer(DEEPParams(SIAM_2_STREAM_DESC_NOTRE_DAME)));
-		}
-		else
+      force_single_thread = true;
+    }
+    else
     if (sImage_Describer_Method == "DEEP_SIAM_2_STREAM_DESC_YOSEMITE")
     {
       image_describer.reset(new DEEP_Image_describer(DEEPParams(SIAM_2_STREAM_DESC_YOSEMITE)));
-		}
-		else
+      force_single_thread = true;
+    }
+    else
     if (sImage_Describer_Method == "DEEP_SIAM_DESC_YOSEMITE")
     {
       image_describer.reset(new DEEP_Image_describer(DEEPParams(SIAM_DESC_YOSEMITE)));
-		}
-		else
+      force_single_thread = true;
+    }
+    else
     if (sImage_Describer_Method == "PNNET")
     {
       image_describer.reset(new DEEP_Image_describer(DEEPParams(PNNET)));
-		}
+      force_single_thread = true;
+    }
     //image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_LIOP), !bUpRight));
     if (!image_describer)
     {
@@ -260,21 +267,13 @@ int main(int argc, char **argv)
     }
   }
 #ifdef OPENMVG_USE_OPENMP
-  const unsigned int nb_max_thread = 1;//omp_get_max_threads();
-#endif
-
-#ifdef OPENMVG_USE_OPENMP
-  omp_set_num_threads(iNumThreads);
-  if (iNumThreads == 0) omp_set_num_threads(1);
-  #pragma omp parallel for schedule(static)
+    if(iNumThreads == 0) iNumThreads = omp_get_max_threads();
+    const unsigned int nb_max_thread = force_single_thread ? 1 : omp_get_max_threads();
+    omp_set_num_threads(std::min<unsigned int>(iNumThreads, nb_max_thread));
+    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) private(imageMask)
 #endif
   for(int i = 0; i < sfm_data.views.size(); ++i)
   {
-#ifdef OPENMVG_USE_OPENMP
-    if(iNumThreads == 0) omp_set_num_threads(nb_max_thread);
-#endif
-
-
   // Feature extraction routines
   // For each View of the SfM_Data container:
   // - if regions file exists continue,
