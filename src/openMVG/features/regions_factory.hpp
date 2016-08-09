@@ -52,9 +52,14 @@ CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::featur
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Binary_Regions, "AKAZE_Binary_Regions");
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::features::AKAZE_Binary_Regions)
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::LATCH_Unsigned_Int_Regions, "LATCH_Unsigned_Int_Regions");
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::features::LATCH_Unsigned_Int_Regions)
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::LATCH_Binary_Regions, "LATCH_Binary_Regions");
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::features::LATCH_Binary_Regions)
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::DEEP_Float_512_Regions, "DEEP_Float_512_Regions");
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::features::DEEP_Float_512_Regions)
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::DEEP_Float_256_Regions, "DEEP_Float_256_Regions");
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::features::DEEP_Float_256_Regions)
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::DEEP_Float_128_Regions, "DEEP_Float_128_Regions");
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::features::DEEP_Float_128_Regions)
 
 #endif // OPENMVG_FEATURES_REGIONS_FACTORY_HPP
