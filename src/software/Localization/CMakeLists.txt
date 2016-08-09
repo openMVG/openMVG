@@ -1,4 +1,4 @@
-IF(OpenMVG_BUILD_VOCTREE)
+IF(OpenMVG_USE_BOOST)
     ###
     # Test the localization class
     ###
@@ -81,7 +81,7 @@ IF(OpenMVG_BUILD_VOCTREE)
     #SET_PROPERTY(TARGET openMVG_main_generatePairList PROPERTY FOLDER OpenMVG/software)
     #INSTALL(TARGETS openMVG_main_generatePairList DESTINATION bin/)
 
-ENDIF(OpenMVG_BUILD_VOCTREE)
+ENDIF(OpenMVG_USE_BOOST)
 
 
 

@@ -3,6 +3,7 @@
 
 #include "vocabulary_tree.hpp"
 
+#include <cereal/cereal.hpp> // Serialization
 #include <cereal/archives/binary.hpp>
 #include <cereal/types/vector.hpp>
 #include <cereal/types/map.hpp>
@@ -33,6 +34,24 @@ struct DocMatch
   bool operator<(const DocMatch& other) const
   {
     return score < other.score;
+  }
+
+  bool operator==(const DocMatch& other) const
+  {
+    return id == other.id &&
+           score == other.score;
+  }
+  bool operator!=(const DocMatch& other) const
+  {
+    return !(*this == other);
+  }
+
+  // Serialization
+  template <class Archive>
+  void serialize(Archive & ar)
+  {
+    ar(cereal::make_nvp("id", id),
+       cereal::make_nvp("score", score));
   }
 };
 
@@ -142,8 +161,7 @@ private:
     {
     }
 
-    // Cereal serialize methode
-
+    // Cereal serialize method
     template<class Archive>
     void serialize(Archive & archive)
     {

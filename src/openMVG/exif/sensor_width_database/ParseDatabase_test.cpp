@@ -5,6 +5,8 @@
 
 #include <string>
 
+using namespace openMVG::exif::sensordb;
+
 static const std::string sDatabase = "sensor_width_camera_database.txt";
 TEST(Matching, InvalidDatabase)
 {

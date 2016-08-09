@@ -23,7 +23,7 @@ OPTION(OpenMVG_BUILD_DOC "Build OpenMVG documentation" ON)
 OPTION(OpenMVG_BUILD_EXAMPLES "Build OpenMVG samples applications." ON)
 OPTION(OpenMVG_BUILD_OPENGL_EXAMPLES "Build OpenMVG openGL examples" OFF)
 OPTION(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
-OPTION(OpenMVG_BUILD_VOCTREE "Build the vocabulary tree and localization module" ON)
+OPTION(OpenMVG_USE_BOOST "Build code depending on Boost (localization/voctree)" ON)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
 OPTION(OpenMVG_USE_CCTAG "Enable CCTAG markers" ON)
 OPTION(OpenMVG_USE_OPENGV "Enable use of OpenGV algorithms" OFF)
@@ -417,21 +417,23 @@ ENDIF(OpenMVG_USE_OPENCV)
 # ==============================================================================
 # - optional, it allows to compile the vocabulary tree
 # ==============================================================================
-OPTION(BOOST_NO_CXX11 "If Boost is not build with C++11 support this must be enabled to avoid symbol conflicts (SCOPED_ENUM)" OFF)
-FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS system filesystem program_options thread serialization)
-IF(Boost_FOUND)
-   MESSAGE(STATUS "Boost ${Boost_LIB_VERSION} found")
-   add_definitions(-DHAVE_BOOST)
-   if(BOOST_NO_CXX11)
-     add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
-   endif(BOOST_NO_CXX11)
-   include_directories(${Boost_INCLUDE_DIRS})
-   link_directories(${Boost_LIBRARIES})
-   add_definitions(${Boost_DEFINITIONS})
-ELSE()
-  MESSAGE(STATUS "Boost not found -- disabling the vocabulary tree")
-  UPDATE_CACHE_VARIABLE(OpenMVG_BUILD_VOCTREE OFF)
-ENDIF(Boost_FOUND)
+IF(OpenMVG_USE_BOOST)
+  OPTION(BOOST_NO_CXX11 "If Boost is not build with C++11 support this must be enabled to avoid symbol conflicts (SCOPED_ENUM)" OFF)
+  FIND_PACKAGE(Boost 1.53.0 QUIET COMPONENTS system filesystem program_options thread serialization)
+  IF(Boost_FOUND)
+     MESSAGE(STATUS "Boost ${Boost_LIB_VERSION} found")
+     add_definitions(-DHAVE_BOOST)
+     if(BOOST_NO_CXX11)
+       add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
+     endif(BOOST_NO_CXX11)
+     include_directories(${Boost_INCLUDE_DIRS})
+     link_directories(${Boost_LIBRARIES})
+     add_definitions(${Boost_DEFINITIONS})
+  ELSE()
+    MESSAGE(STATUS "Boost not found -- disabling the vocabulary tree")
+    UPDATE_CACHE_VARIABLE(OpenMVG_USE_BOOST OFF)
+  ENDIF(Boost_FOUND)
+ENDIF(OpenMVG_USE_BOOST)
 
 # ==============================================================================
 # Alembic
@@ -527,14 +529,26 @@ ADD_SUBDIRECTORY(openMVG)
 # openMVG libraries
 # ==============================================================================
 SET(OpenMVG_LIBRARIES
-  openMVG_image
+  openMVG_exif
   openMVG_features
-  openMVG_matching_image_collection
-  openMVG_kvld
-  openMVG_multiview
+  openMVG_image
+#  openMVG_linearProgramming
   openMVG_lInftyComputerVision
-  openMVG_system
-  openMVG_sfm)
+  openMVG_matching
+  openMVG_kvld
+  openMVG_matching_image_collection
+  openMVG_multiview
+  openMVG_numeric
+  openMVG_sfm
+  openMVG_system)
+
+IF(OpenMVG_USE_BOOST)
+  list(APPEND OpenMVG_LIBRARIES 
+    openMVG_dataio 
+    openMVG_voctree 
+    openMVG_localization
+    openMVG_rig)
+ENDIF()
 
 FOREACH(omvglib ${OpenMVG_LIBRARIES})
   SET_PROPERTY(TARGET ${omvglib} PROPERTY FOLDER OpenMVG/OpenMVG)
@@ -590,7 +604,7 @@ MESSAGE("** Build OpenMVG tests: " ${OpenMVG_BUILD_TESTS})
 MESSAGE("** Build OpenMVG documentation: " ${OpenMVG_BUILD_DOC})
 MESSAGE("** Build OpenMVG samples applications: " ${OpenMVG_BUILD_EXAMPLES})
 MESSAGE("** Build OpenMVG openGL examples: " ${OpenMVG_BUILD_OPENGL_EXAMPLES})
-MESSAGE("** Build the voctree and localization module: " ${OpenMVG_BUILD_VOCTREE})
+MESSAGE("** Build the voctree and localization module: " ${OpenMVG_USE_BOOST})
 MESSAGE("** Enable code coverage generation: " ${OpenMVG_BUILD_COVERAGE})
 MESSAGE("** Enable OpenMP parallelization: " ${OpenMVG_USE_OPENMP})
 MESSAGE("** Build OpenCV+OpenMVG samples programs: " ${OpenMVG_USE_OPENCV})

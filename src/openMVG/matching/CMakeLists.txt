@@ -1,6 +1,4 @@
 
-project(matching)
-
 file(
 	GLOB
 	matching_files_header
@@ -21,7 +19,7 @@ add_library(openMVG_matching
   ${matching_files_header}
   ${matching_files_cpp})
 set_target_properties(openMVG_matching PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
-target_link_libraries(openMVG_matching ${FLANN_LIBRARY})
+target_link_libraries(openMVG_matching openMVG_features ${FLANN_LIBRARY})
 set_property(TARGET openMVG_matching PROPERTY FOLDER OpenMVG/OpenMVG)
 install(TARGETS openMVG_matching DESTINATION lib EXPORT openMVG-targets)
 

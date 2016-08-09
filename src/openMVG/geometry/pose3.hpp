@@ -114,7 +114,7 @@ class Pose3
 };
 
 /**
- * @brief Build a pose froma a rotation and a translation.
+ * @brief Build a pose from a rotation and a translation.
  * @param[in] R The 3x3 rotation.
  * @param[in] t The 3x1 translation.
  * @return The pose as [R, -R'*t]

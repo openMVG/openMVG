@@ -603,7 +603,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const features::SIFT_Regions &que
       POPART_COUT("center difference: " << (pose.center()-referencePose.center()).norm());
       POPART_COUT("err = [err; " << R2D(getRotationMagnitude(pose.rotation()*referencePose.rotation().inverse())) << ", "<< (pose.center()-referencePose.center()).norm() << "];");
     }
-    localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, true);
+    localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, matchedImages, true);
     break;
   }
   //@todo deal with unsuccesful case...
@@ -617,13 +617,14 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
                                           bool useInputIntrinsics,
                                           cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                                           LocalizationResult &localizationResult,
-                                          const std::string& imagePath /*= std::string()*/)
+                                          const std::string& imagePath)
 {
   
   sfm::Image_Localizer_Match_Data resectionData;
   std::map< std::pair<IndexT, IndexT>, std::size_t > occurences;
   
   // get all the association from the database images
+  std::vector<voctree::DocMatch> matchedImages;
   getAllAssociations(queryRegions,
                      queryImageSize,
                      param,
@@ -632,6 +633,7 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
                      occurences,
                      resectionData.pt2D,
                      resectionData.pt3D,
+                     matchedImages,
                      imagePath);
 
   const std::size_t numCollectedPts = occurences.size();
@@ -713,7 +715,7 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
                      &resectionData.vec_inliers);
   }
 
-  localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, true);
+  localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, matchedImages, true);
 
   {
     // just debugging this block can be safely removed or commented out
@@ -740,7 +742,8 @@ void VoctreeLocalizer::getAllAssociations(const features::SIFT_Regions &queryReg
                                           std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences,
                                           Mat &pt2D,
                                           Mat &pt3D,
-                                          const std::string& imagePath /*= std::string()*/) const
+                                          std::vector<voctree::DocMatch>& matchedImages,
+                                          const std::string& imagePath) const
 {
   // A. Find the (visually) similar images in the database 
   // pass the descriptors through the vocabulary tree to get the visual words
@@ -749,9 +752,8 @@ void VoctreeLocalizer::getAllAssociations(const features::SIFT_Regions &queryReg
   std::vector<voctree::Word> requestImageWords = _voctree.quantize(queryRegions.Descriptors());
   
   // Request closest images from voctree
-  std::vector<voctree::DocMatch> matchedImages;
   _database.find(requestImageWords, (param._numResults==0) ? (_database.size()) : (param._numResults) , matchedImages);
-  
+
 //  // just debugging bla bla
 //  // for each similar image found print score and number of features
 //  for(const voctree::DocMatch& currMatch : matchedImages )
@@ -937,7 +939,7 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
   if ((queryIntrinsicsBase != nullptr) && !isPinhole(queryIntrinsicsBase->getType()))
   {
     //@fixme maybe better to throw something here
-    POPART_CERR("Only Pinhole cameras are supported!");
+    POPART_CERR("[matching]\tOnly Pinhole cameras are supported!");
     return false;
   }
   const cameras::Pinhole_Intrinsic *queryIntrinsics = (const cameras::Pinhole_Intrinsic*)(queryIntrinsicsBase);
@@ -946,7 +948,7 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
   if ((matchedIntrinsicsBase != nullptr) &&  !isPinhole(matchedIntrinsicsBase->getType()) )
   {
     //@fixme maybe better to throw something here
-    POPART_CERR("Only Pinhole cameras are supported!");
+    POPART_CERR("[matching]\tOnly Pinhole cameras are supported!");
     return false;
   }
   const cameras::Pinhole_Intrinsic *matchedIntrinsics = (const cameras::Pinhole_Intrinsic*)(matchedIntrinsicsBase);
@@ -957,7 +959,7 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
   const bool matchWorked = matcher.Match(fDistRatio, matchedRegions._regions, vec_featureMatches);
   if (!matchWorked)
   {
-    POPART_COUT("\tRobust matching failed!");
+    POPART_COUT("[matching]\tPutative matching failed.");
     return false;
   }
   assert(vec_featureMatches.size()>0);
@@ -996,7 +998,7 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
                                                  estimator);
   if(!valid)
   {
-    POPART_COUT("[matching]\tUnable to robustly matching the query image with the database image.");
+    POPART_COUT("[matching]\tGeometric validation failed.");
     return false;
   }
   if(!b_guided_matching)
@@ -1137,6 +1139,7 @@ bool VoctreeLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<feat
     cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics = vec_queryIntrinsics[cam];
     features::SIFT_Regions &queryRegions = *dynamic_cast<features::SIFT_Regions*> (vec_queryRegions[cam].get());
     const bool useInputIntrinsics = true;
+    std::vector<voctree::DocMatch> matchedImages;
     getAllAssociations(queryRegions,
                        imageSize,
                        *param,
@@ -1144,7 +1147,8 @@ bool VoctreeLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<feat
                        queryIntrinsics,
                        occurrences,
                        pts2D,
-                       pts3D);
+                       pts3D,
+                       matchedImages);
     numAssociations += occurrences.size();
   }
   

@@ -407,8 +407,8 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
   
   if(!refineStatus)
     POPART_COUT("[poseEstimation]\tRefine pose could not improve the estimation of the camera pose.");
-  
-  localizationResult = LocalizationResult(bestResectionData, bestAssociationIDs, bestPose, queryIntrinsics, true);
+
+  localizationResult = LocalizationResult(bestResectionData, bestAssociationIDs, bestPose, queryIntrinsics, std::vector<voctree::DocMatch>(), true);
 
   return localizationResult.isValid();
   

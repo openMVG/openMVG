@@ -205,7 +205,7 @@ before_script:
        -DOpenCV_DIR=$OPENCV_INSTALL/share/OpenCV \
        -DOpenMVG_USE_OPENGV=ON \
        -DOPENGV_DIR=$OPENGV_INSTALL \
-       -DOpenMVG_BUILD_VOCTREE=ON \
+       -DOpenMVG_USE_BOOST=ON \
        -DOpenMVG_USE_CCTAG=OFF \
        -DBOOST_NO_CXX11=ON \
        -DOpenMVG_USE_INTERNAL_CERES=OFF \

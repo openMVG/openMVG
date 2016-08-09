@@ -216,6 +216,20 @@ public:
                           const std::string& imagePath = std::string());
   
   
+  /**
+   * @brief Retrieve matches to all images of the database.
+   *
+   * @param[in] siftQueryRegions
+   * @param[in] imageSize
+   * @param[in] param
+   * @param[in] useInputIntrinsics
+   * @param[in] queryIntrinsics
+   * @param[out] occurences
+   * @param[out] pt2D output matrix of 2D points
+   * @param[out] pt3D output matrix of 3D points
+   * @param[out] matchedImages image matches output
+   * @param[in] imagePath
+   */
   void getAllAssociations(const features::SIFT_Regions &siftQueryRegions,
                           const std::pair<std::size_t, std::size_t> &imageSize,
                           const Parameters &param,
@@ -224,6 +238,7 @@ public:
                           std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences,
                           Mat &pt2D,
                           Mat &pt3D,
+                          std::vector<voctree::DocMatch>& matchedImages,
                           const std::string& imagePath = std::string()) const;
 
 private:
