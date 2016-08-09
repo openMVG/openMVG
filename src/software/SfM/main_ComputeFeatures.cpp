@@ -270,7 +270,7 @@ int main(int argc, char **argv)
     if(iNumThreads == 0) iNumThreads = omp_get_max_threads();
     const unsigned int nb_max_thread = force_single_thread ? 1 : omp_get_max_threads();
     omp_set_num_threads(std::min<unsigned int>(iNumThreads, nb_max_thread));
-    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) private(imageMask)
+    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) 
 #endif
   for(int i = 0; i < sfm_data.views.size(); ++i)
   {
