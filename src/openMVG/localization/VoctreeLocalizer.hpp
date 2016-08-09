@@ -140,14 +140,16 @@ public:
                    const LocalizerParameters *param,
                    std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
                    const std::vector<geometry::Pose3 > &vec_subPoses,
-                   geometry::Pose3 &rigPose);
+                   geometry::Pose3 &rigPose,
+                   std::vector<LocalizationResult> & vec_locResults);
   
   bool localizeRig(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
                    const std::vector<std::pair<std::size_t, std::size_t> > &vec_imageSize,
                    const LocalizerParameters *param,
                    std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
                    const std::vector<geometry::Pose3 > &vec_subPoses,
-                   geometry::Pose3 &rigPose);
+                   geometry::Pose3 &rigPose,
+                   std::vector<LocalizationResult>& vec_locResults);
 
 
 #ifdef HAVE_OPENGV
@@ -156,14 +158,16 @@ public:
                           const LocalizerParameters *parameters,
                           std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
                           const std::vector<geometry::Pose3 > &vec_subPoses,
-                          geometry::Pose3 &rigPose);
+                          geometry::Pose3 &rigPose,
+                          std::vector<LocalizationResult>& vec_locResults);
 #else
   bool localizeRig_naive(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
                         const std::vector<std::pair<std::size_t, std::size_t> > &imageSize,
                         const LocalizerParameters *parameters,
                         std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
                         const std::vector<geometry::Pose3 > &vec_subPoses,
-                        geometry::Pose3 &rigPose);
+                        geometry::Pose3 &rigPose,
+                        std::vector<LocalizationResult>& vec_locResults);
 #endif
 
   /**
