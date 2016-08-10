@@ -3132,6 +3132,7 @@ Sony;Sony Cybershot DSC S5000;6.16
 Sony;Sony Cybershot DSC W610;6.16
 Sony;Sony Cybershot DSC W620;6.16
 Sony;Sony Cybershot DSC RX100;13.2
+Sony;Sony Cybershot DSC RX100M4;13.2
 Sony;Sony Cybershot DSC W670;6.16
 Sony;Sony Cybershot DSC W650;6.16
 Sony;Sony Alpha NEX-5N;23.4
