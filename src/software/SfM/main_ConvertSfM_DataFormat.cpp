@@ -52,6 +52,16 @@ void updateStructureWithNewUID(Landmarks &landmarks, const std::map<std::size_t,
   }  
 }
 
+/**
+ * @brief Recompute the UID from the metadata of the original input images and 
+ * modify the ID if it's not the same.
+ * 
+ * @param[in,out] sfmdata The sfmdata scene for which to recompute the UID.
+ * @param[out] oldIdToNew A map that holds the mapping between the old ID and the 
+ * reconmputed UID.
+ * @param[in] sanityCheck Enable a sanity check at the end to assure that the 
+ * observations of 3D points and the control points have been correctly updated.
+ */
 void regenerateUID(sfm::SfM_Data &sfmdata, std::map<std::size_t, std::size_t> &oldIdToNew, bool sanityCheck = false)
 {
   // if the views are empty, nothing to be done. 
