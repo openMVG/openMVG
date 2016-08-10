@@ -536,38 +536,38 @@ bool Rig::optimizeCalibration()
     }
   }
     
-    displayRelativePoseReprojection(geometry::Pose3(openMVG::Mat3::Identity(), openMVG::Vec3::Zero()), 0);
+  displayRelativePoseReprojection(geometry::Pose3(openMVG::Mat3::Identity(), openMVG::Vec3::Zero()), 0);
     
     // Update all poses over all witness cameras after optimization
   for(std::size_t iRelativePose = 0; iRelativePose < _vRelativePoses.size(); ++iRelativePose)
   {
     const std::size_t iLocalizer = iRelativePose+1;
-      // Loop over all views
+    // Loop over all views
     for(std::size_t iView = 0; iView < _vLocalizationResults[iLocalizer].size(); ++iView)
+    {
+      // If the localization has succeeded then if the witness camera localization succeeded 
+      // then update the pose else continue.
+      if( _vLocalizationResults[0][iView].isValid() && _vLocalizationResults[iLocalizer][iView].isValid() )
       {
-        // If the localization has succeeded then if the witness camera localization succeeded 
-        // then update the pose else continue.
-        if( _vLocalizationResults[0][iView].isValid() && _vLocalizationResults[iLocalizer][iView].isValid() )
-        {
-          // Retrieve the witness camera pose from the main camera one.
-          const geometry::Pose3 poseWitnessCamera = poseFromMainToWitness(_vLocalizationResults[0][iView].getPose(), _vRelativePoses[iRelativePose]);
-          _vLocalizationResults[iLocalizer][iView].setPose(poseWitnessCamera);
-        }
+        // Retrieve the witness camera pose from the main camera one.
+        const geometry::Pose3 poseWitnessCamera = poseFromMainToWitness(_vLocalizationResults[0][iView].getPose(), _vRelativePoses[iRelativePose]);
+        _vLocalizationResults[iLocalizer][iView].setPose(poseWitnessCamera);
       }
-      displayRelativePoseReprojection(_vRelativePoses[iRelativePose], iLocalizer);
     }
-    // Possibility to update the intrinsics here
+    displayRelativePoseReprojection(_vRelativePoses[iRelativePose], iLocalizer);
+  }
+  // Possibility to update the intrinsics here
 
-    // Update camera intrinsics with refined data
-    //    for (Intrinsics::iterator itIntrinsic = sfm_data.intrinsics.begin();
-    //      itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
-    //    {
-    //      const IndexT indexCam = itIntrinsic->first;
-    //
-    //      const std::vector<double> & vec_params = map_intrinsics[indexCam];
-    //      itIntrinsic->second.get()->updateFromParams(vec_params);
-    //    }
-    return true;
+  // Update camera intrinsics with refined data
+  //    for (Intrinsics::iterator itIntrinsic = sfm_data.intrinsics.begin();
+  //      itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
+  //    {
+  //      const IndexT indexCam = itIntrinsic->first;
+  //
+  //      const std::vector<double> & vec_params = map_intrinsics[indexCam];
+  //      itIntrinsic->second.get()->updateFromParams(vec_params);
+  //    }
+  return true;
 }
 
 
