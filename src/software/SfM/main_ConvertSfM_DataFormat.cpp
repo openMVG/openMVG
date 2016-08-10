@@ -155,7 +155,7 @@ int main(int argc, char **argv)
   cmd.add(make_switch('S', "STRUCTURE"));
   cmd.add(make_switch('O', "OBSERVATIONS"));
   cmd.add(make_switch('C', "CONTROL_POINTS"));
-  cmd.add(make_switch('u', "uid"));
+  cmd.add(make_switch('u', "regenerateUID"));
   cmd.add(make_option('o', sSfM_Data_Filename_Out, "output_file"));
 #ifdef HAVE_BOOST
   cmd.add(make_option('m', matchDir, "matchDirectory"));
