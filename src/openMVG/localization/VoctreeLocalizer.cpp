@@ -1200,7 +1200,9 @@ bool VoctreeLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<feat
     if(vec_inliers.size() < numCams)
     {
       // in general the inlier should be spread among different cameras
-      POPART_CERR("****************** Oh, this is weird!!!!");
+      POPART_CERR("WARNING: RIG Voctree Localizer: Inliers in " 
+              << vec_inliers.size() << " cameras on a RIG of " 
+              << numCams << " cameras.");
     }
     else
     {
