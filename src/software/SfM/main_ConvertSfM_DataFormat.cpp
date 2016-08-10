@@ -236,6 +236,11 @@ int main(int argc, char **argv)
       {
         const auto oldID = iter.first;
         const auto newID = iter.second;
+        
+        // nothing to do if the ids are the same
+        if(oldID == newID)
+          continue;
+        
         const auto oldFeatfilename = stlplus::create_filespec(matchDir, std::to_string(oldID), ".feat");
         const auto newFeatfilename = stlplus::create_filespec(matchDir, std::to_string(newID), ".feat");
         const auto oldDescfilename = stlplus::create_filespec(matchDir, std::to_string(oldID), ".desc");
