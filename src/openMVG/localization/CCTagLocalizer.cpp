@@ -613,7 +613,7 @@ bool CCTagLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<featur
     vec_locResults.emplace_back(matchData, indMatch3D2D, pose, intrinsics, std::vector<voctree::DocMatch>(), refineOk);
   }
   
-  return resectionOk;
+  return refineOk;
   
   }
   
