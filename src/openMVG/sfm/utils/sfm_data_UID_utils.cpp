@@ -53,7 +53,7 @@ void regenerateUID(SfM_Data &sfmdata, std::map<std::size_t, std::size_t> &oldIdT
   if(sfmdata.GetViews().empty())
     return;
   
-  updateViewIDs(sfmdata.views, oldIdToNew);
+  regenerateViewUIDs(sfmdata.views, oldIdToNew);
   
   if(!sanityCheck)
     return;
@@ -65,7 +65,7 @@ void regenerateUID(SfM_Data &sfmdata, std::map<std::size_t, std::size_t> &oldIdT
 }
 
 
-void updateViewIDs(Views &views, std::map<std::size_t, std::size_t> &oldIdToNew)
+void regenerateViewUIDs(Views &views, std::map<std::size_t, std::size_t> &oldIdToNew)
 {
   // if the views are empty, nothing to be done. 
   if(views.empty())

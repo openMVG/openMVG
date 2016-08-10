@@ -44,7 +44,7 @@ void regenerateUID(SfM_Data &sfmdata, std::map<std::size_t, std::size_t> &oldIdT
  * @param[out] oldIdToNew oldIdToNew A map that holds the mapping between the 
  * old ID and the reconmputed UID.
  */
-void updateViewIDs(Views &views, std::map<std::size_t, std::size_t> &oldIdToNew);
+void regenerateViewUIDs(Views &views, std::map<std::size_t, std::size_t> &oldIdToNew);
 
 }
 }
