@@ -80,7 +80,7 @@ public:
     return _matchData.projection_matrix;
   }
   
-  sfm::Image_Localizer_Match_Data getMatchData() const { return _matchData; }
+  const sfm::Image_Localizer_Match_Data& getMatchData() const { return _matchData; }
 
   const std::vector<std::pair<IndexT, IndexT> > & getIndMatch3D2D() const
   {
