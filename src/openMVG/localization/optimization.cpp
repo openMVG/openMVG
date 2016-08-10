@@ -33,7 +33,7 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
                     std::size_t minPointVisibility /*=0*/)
 {
   
-  const size_t numViews = vec_localizationResult.size();
+  const std::size_t numViews = vec_localizationResult.size();
   assert(numViews > 0 );
    
   // the id for the instrinsic group
@@ -322,6 +322,9 @@ bool refineRigPose(const std::vector<geometry::Pose3 > &vec_subPoses,
                    const std::vector<localization::LocalizationResult> vec_localizationResults,
                    geometry::Pose3 & rigPose)
 {
+  const std::size_t numCameras = vec_localizationResults.size();
+  assert(vec_subPoses.size() == numCameras - 1);
+  
   ceres::Problem problem;
   
   const openMVG::Mat3 & R = rigPose.rotation();
@@ -342,7 +345,7 @@ bool refineRigPose(const std::vector<geometry::Pose3 > &vec_subPoses,
   // todo: make the LOSS function and the parameter an option
 
   // For all visibility add reprojections errors:
-  for(int iLocalizer = 0; iLocalizer < vec_localizationResults.size(); ++iLocalizer)
+  for(std::size_t iLocalizer = 0; iLocalizer < numCameras; ++iLocalizer)
   {
     const localization::LocalizationResult & localizationResult = vec_localizationResults[iLocalizer];
 
@@ -380,7 +383,7 @@ bool refineRigPose(const std::vector<geometry::Pose3 > &vec_subPoses,
                                                                    points3D.col(iPoint),
                                                                    subPose));
 
-      if(!cost_function)
+      if(cost_function)
       {
         problem.AddResidualBlock(cost_function,
                                  p_LossFunction,
@@ -450,6 +453,145 @@ bool refineRigPose(const std::vector<geometry::Pose3 > &vec_subPoses,
   return true;
 }
 
+bool refineRigPose(const std::vector<Mat> &pts2d,
+                   const std::vector<Mat> &pts3d,
+                   const std::vector<std::vector<std::size_t> > &inliers,
+                   const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                   const std::vector<geometry::Pose3 > &vec_subPoses,
+                   geometry::Pose3 &rigPose)
+{
+  const size_t numCameras = pts2d.size();
+  assert(pts3d.size() == numCameras);
+  assert(vec_queryIntrinsics.size() == numCameras);
+  assert(inliers.size() == numCameras);
+  assert(vec_subPoses.size() == numCameras - 1);
+  
+  ceres::Problem problem;
+  
+  const openMVG::Mat3 & R = rigPose.rotation();
+  const openMVG::Vec3 & t = rigPose.translation();
+
+  double mainPose[6];
+  ceres::RotationMatrixToAngleAxis((const double*)R.data(), mainPose);
+
+  mainPose[3] = t(0);
+  mainPose[4] = t(1);
+  mainPose[5] = t(2);
+  problem.AddParameterBlock(mainPose, 6);
+
+
+  // Set a LossFunction to be less penalized by false measurements
+  //  - set it to NULL if you don't want use a lossFunction.
+  ceres::LossFunction * p_LossFunction = nullptr;//new ceres::HuberLoss(Square(4.0));
+  // todo: make the LOSS function and the parameter an option
+
+  // For all visibility add reprojections errors:
+  for(size_t cam = 0; cam < numCameras; ++cam)
+  {
+
+    // Get the inliers 3D points
+    const Mat & points3D = pts3d[cam];
+    assert(points3D.rows() == 3);
+    // Get their image locations (also referred as observations)
+    const Mat & points2D = pts2d[cam];
+    assert(points2D.rows() == 2);
+
+    // Add a residual block for all inliers
+    for(const IndexT iPoint : inliers[cam])
+    {
+      assert(iPoint < points2D.cols());
+      assert(iPoint < points3D.cols());
+      
+      // Each Residual block takes a point and a camera as input and outputs a 2
+      // dimensional residual. Internally, the cost function stores the observations
+      // and the 3D point and compares the reprojection against the observation.
+      ceres::CostFunction* cost_function;
+
+      // Vector-2 residual, pose of the rig parameterized by 6 parameters
+      //                  + relative pose of the secondary camera parameterized by 6 parameters
+      
+      geometry::Pose3 subPose;
+      // if it is not the main camera (whose subpose is the identity)
+      if(cam != 0)
+      {
+        subPose = vec_subPoses[cam - 1];
+      }
+
+      cost_function = new ceres::AutoDiffCostFunction<rig::ResidualErrorSecondaryCameraFixedRelativeFunctor, 2, 6>(
+              new rig::ResidualErrorSecondaryCameraFixedRelativeFunctor(vec_queryIntrinsics[cam],
+                                                                   points2D.col(iPoint),
+                                                                   points3D.col(iPoint),
+                                                                   subPose));
+
+      if(cost_function)
+      {
+        problem.AddResidualBlock(cost_function,
+                                 p_LossFunction,
+                                 mainPose);
+      }
+      else
+      {
+        POPART_CERR("Fail in adding residual block for the " << cam 
+                << " camera while adding point id " << iPoint);
+      }
+    }
+  }
+
+  // Configure a BA engine and run it
+  // todo: Set the most appropriate options
+  openMVG::sfm::Bundle_Adjustment_Ceres::BA_options openMVG_options; // Set all
+  // the options field in our owm struct - unnecessary dependancy to openMVG here
+  
+  ceres::Solver::Options options;
+  
+  options.preconditioner_type = openMVG_options._preconditioner_type;
+  options.linear_solver_type = openMVG_options._linear_solver_type;
+  options.sparse_linear_algebra_library_type = openMVG_options._sparse_linear_algebra_library_type;
+  options.minimizer_progress_to_stdout = true;
+  //options.logging_type = ceres::SILENT;
+  options.num_threads = 1;//openMVG_options._nbThreads;
+  options.num_linear_solver_threads = 1;//openMVG_options._nbThreads;
+  
+  // Solve BA
+  ceres::Solver::Summary summary;
+  ceres::Solve(options, &problem, &summary);
+  
+  if (openMVG_options._bCeres_Summary)
+    std::cout << summary.FullReport() << std::endl;
+
+  // If no error, get back refined parameters
+  if (!summary.IsSolutionUsable())
+  {
+    if (openMVG_options._bVerbose)
+      std::cout << "Bundle Adjustment failed." << std::endl;
+    return false;
+  }
+
+  if(openMVG_options._bVerbose)
+  {
+    // Display statistics about the minimization
+    std::cout << std::endl
+            << "Bundle Adjustment statistics (approximated RMSE):\n"
+            << " #cameras: " << numCameras << "\n"
+            << " #residuals: " << summary.num_residuals << "\n"
+            << " Initial RMSE: " << std::sqrt(summary.initial_cost / summary.num_residuals) << "\n"
+            << " Final RMSE: " << std::sqrt(summary.final_cost / summary.num_residuals) << "\n"
+            << std::endl;
+  }
+
+  // update the rigPose 
+  openMVG::Mat3 R_refined;
+  ceres::AngleAxisToRotationMatrix(mainPose, R_refined.data());
+  openMVG::Vec3 t_refined(mainPose[3], mainPose[4], mainPose[5]);
+  // Push the optimized pose
+  rigPose = geometry::Pose3(R_refined, -R_refined.transpose() * t_refined);
+
+//  displayRelativePoseReprojection(geometry::Pose3(openMVG::Mat3::Identity(), openMVG::Vec3::Zero()), 0);
+
+  // @todo do we want to update pose inside the LocalizationResults 
+
+  return true;
+}
 
 } //namespace localization
 } //namespace openMVG

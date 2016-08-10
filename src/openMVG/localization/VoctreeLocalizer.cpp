@@ -1,4 +1,6 @@
 #include "VoctreeLocalizer.hpp"
+#include "rigResection.hpp"
+#include "optimization.hpp"
 
 #include <openMVG/sfm/sfm_data_io.hpp>
 #include <openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp>
@@ -109,7 +111,7 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
     _image_describer = new features::SIFT_Image_describer();
 #endif
   }
-#else
+#else //HAVE_CCTAG
 #if USE_SIFT_FLOAT
     POPART_COUT("SIFT_float_describer");
     _image_describer = new features::SIFT_float_describer();
@@ -117,7 +119,7 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
     POPART_COUT("SIFT_Image_describer");
     _image_describer = new features::SIFT_Image_describer();
 #endif
-#endif
+#endif //HAVE_CCTAG
   
   // load the sfm data containing the 3D reconstruction info
   POPART_COUT("Loading SFM data...");
@@ -148,10 +150,10 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
 bool VoctreeLocalizer::localize(const std::unique_ptr<features::Regions> &genQueryRegions,
                                 const std::pair<std::size_t, std::size_t> &imageSize,
                                 const LocalizerParameters *param,
-                                bool useInputIntrinsics,
-                                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                                LocalizationResult & localizationResult,
-                                const std::string& imagePath)
+                              bool useInputIntrinsics,
+                              cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
+                              LocalizationResult & localizationResult,
+                                const std::string& imagePath /* = std::string()*/)
 {
   const Parameters *voctreeParam = static_cast<const Parameters *>(param);
   if(!voctreeParam)
@@ -174,20 +176,20 @@ bool VoctreeLocalizer::localize(const std::unique_ptr<features::Regions> &genQue
   
   switch(voctreeParam->_algorithm)
   {
-    case Algorithm::FirstBest:
+    case Algorithm::FirstBest: 
     return localizeFirstBestResult(*queryRegions,
-                                   imageSize,
-                                   *voctreeParam,
-                                   useInputIntrinsics,
-                                   queryIntrinsics,
-                                   localizationResult,
-                                   imagePath);
+                                  imageSize,
+                                  *voctreeParam,
+                                  useInputIntrinsics,
+                                  queryIntrinsics,
+                                  localizationResult,
+                                  imagePath);
     case Algorithm::BestResult: throw std::invalid_argument("BestResult not yet implemented");
-    case Algorithm::AllResults:
+    case Algorithm::AllResults: 
     return localizeAllResults(*queryRegions,
                               imageSize,
                               *voctreeParam,
-                              useInputIntrinsics,
+                              useInputIntrinsics, 
                               queryIntrinsics,
                               localizationResult,
                               imagePath);
@@ -733,7 +735,7 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
 }
 
 void VoctreeLocalizer::getAllAssociations(const features::SIFT_Regions &queryRegions,
-                                          const std::pair<std::size_t, std::size_t> imageSize,
+                                          const std::pair<std::size_t, std::size_t> &imageSize,
                                           const Parameters &param,
                                           bool useInputIntrinsics,
                                           const cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
@@ -954,7 +956,7 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
   const bool canBeUndistorted = (queryIntrinsicsBase != nullptr) && (matchedIntrinsicsBase != nullptr);
     
   // A. Putative Features Matching
-  bool matchWorked = matcher.Match(fDistRatio, matchedRegions._regions, vec_featureMatches);
+  const bool matchWorked = matcher.Match(fDistRatio, matchedRegions._regions, vec_featureMatches);
   if (!matchWorked)
   {
     POPART_COUT("[matching]\tPutative matching failed.");
@@ -1038,13 +1040,410 @@ bool VoctreeLocalizer::robustMatching(matching::RegionsMatcherT<MatcherT> & matc
 }
 
 bool VoctreeLocalizer::localizeRig(const std::vector<image::Image<unsigned char> > & vec_imageGrey,
-                             const LocalizerParameters *parameters,
-                             std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
-                             const std::vector<geometry::Pose3 > &vec_subPoses,
-                             geometry::Pose3 rigPose)
+                                   const LocalizerParameters *parameters,
+                                   std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                                   const std::vector<geometry::Pose3 > &vec_subPoses,
+                                   geometry::Pose3 &rigPose, 
+                                   std::vector<LocalizationResult> & vec_locResults)
 {
-  throw std::runtime_error("localizeRig is not yet supported for voctree_localizer");
+  const size_t numCams = vec_imageGrey.size();
+  assert(numCams == vec_queryIntrinsics.size());
+  assert(numCams == vec_subPoses.size() + 1);
+
+  std::vector<std::unique_ptr<features::Regions> > vec_queryRegions(numCams);
+  std::vector<std::pair<std::size_t, std::size_t> > vec_imageSize;
+  
+  //@todo parallelize?
+  for(size_t i = 0; i < numCams; ++i)
+  {
+    // extract descriptors and features from each image
+    vec_queryRegions[i] = std::unique_ptr<features::Regions>(new features::SIFT_Regions());
+    POPART_COUT("[features]\tExtract SIFT from query image...");
+    _image_describer->Describe(vec_imageGrey[i], vec_queryRegions[i]);
+    POPART_COUT("[features]\tExtract SIFT done: found " <<  vec_queryRegions[i]->RegionCount() << " features");
+    // add the image size for this image
+    vec_imageSize.emplace_back(vec_imageGrey[i].Width(), vec_imageGrey[i].Height());
 }
+  assert(vec_imageSize.size() == vec_queryRegions.size());
+          
+  return localizeRig(vec_queryRegions,
+                     vec_imageSize,
+                     parameters,
+                     vec_queryIntrinsics,
+                     vec_subPoses,
+                     rigPose,
+                     vec_locResults);
+}
+
+
+bool VoctreeLocalizer::localizeRig(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+                                   const std::vector<std::pair<std::size_t, std::size_t> > &vec_imageSize,
+                                   const LocalizerParameters *parameters,
+                                   std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                                   const std::vector<geometry::Pose3 > &vec_subPoses,
+                                   geometry::Pose3 &rigPose,
+                                   std::vector<LocalizationResult>& vec_locResults)
+{
+#ifdef HAVE_OPENGV
+  return localizeRig_opengv(vec_queryRegions,
+                            vec_imageSize,
+                            parameters,
+                            vec_queryIntrinsics,
+                            vec_subPoses,
+                            rigPose,
+                            vec_locResults);
+#else
+  return localizeRig_naive(vec_queryRegions,
+                           vec_imageSize,
+                           parameters,
+                           vec_queryIntrinsics,
+                           vec_subPoses,
+                           rigPose,
+                           vec_locResults);
+#endif
+}
+
+
+#ifdef HAVE_OPENGV
+
+bool VoctreeLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+                                          const std::vector<std::pair<std::size_t, std::size_t> > &vec_imageSize,
+                                          const LocalizerParameters *parameters,
+                                          std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                                          const std::vector<geometry::Pose3 > &vec_subPoses,
+                                          geometry::Pose3 &rigPose,
+                                          std::vector<LocalizationResult>& vec_locResults)
+{
+  const std::size_t numCams = vec_queryRegions.size();
+  assert(numCams == vec_queryIntrinsics.size());
+  assert(numCams == vec_subPoses.size() + 1);   
+  
+  const VoctreeLocalizer::Parameters *param = static_cast<const VoctreeLocalizer::Parameters *>(parameters);
+  if(!param)
+  {
+    // error!
+    throw std::invalid_argument("The parameters are not in the right format!!");
+  }
+
+  std::vector<std::map< pair<IndexT, IndexT>, std::size_t > > vec_occurrences(numCams);
+  std::vector<std::vector<voctree::DocMatch> > vec_matchedImages(numCams);
+  std::vector<Mat> vec_pts3D(numCams);
+  std::vector<Mat> vec_pts2D(numCams);
+
+  // for each camera retrieve the associations
+  //@todo parallelize?
+  size_t numAssociations = 0;
+  for(std::size_t cam = 0; cam < numCams; ++cam)
+  {
+
+    // this map is used to collect the 2d-3d associations as we go through the images
+    // the key is a pair <Id3D, Id2d>
+    // the element is the pair 3D point - 2D point
+    auto &occurrences = vec_occurrences[cam];
+    auto &matchedImages = vec_matchedImages[cam];
+    auto &imageSize = vec_imageSize[cam];
+    Mat &pts3D = vec_pts3D[cam];
+    Mat &pts2D = vec_pts2D[cam];
+    cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics = vec_queryIntrinsics[cam];
+    features::SIFT_Regions &queryRegions = *dynamic_cast<features::SIFT_Regions*> (vec_queryRegions[cam].get());
+    const bool useInputIntrinsics = true;
+    getAllAssociations(queryRegions,
+                       imageSize,
+                       *param,
+                       useInputIntrinsics,
+                       queryIntrinsics,
+                       occurrences,
+                       pts2D,
+                       pts3D,
+                       matchedImages);
+    numAssociations += occurrences.size();
+  }
+  
+  // @todo Here it could be possible to filter the associations according to their
+  // occurrences, eg giving priority to those associations that are more frequent
+
+  const std::size_t minNumAssociations = 5;  //possible parameter?
+  if(numAssociations < minNumAssociations)
+  {
+    POPART_COUT("[poseEstimation]\tonly " << numAssociations << " have been found, not enough to do the resection!");
+    return false;
+  }
+  
+  {
+    for(std::size_t cam = 0; cam < vec_subPoses.size(); ++cam)
+    {
+    POPART_COUT("Rotation: " << vec_subPoses[cam].rotation());
+    POPART_COUT("Centre: " << vec_subPoses[cam].center());
+    }
+  }
+  
+  std::vector<std::vector<std::size_t> > vec_inliers;
+  const bool resectionOk = rigResection(vec_pts2D,
+                                        vec_pts3D,
+                                        vec_queryIntrinsics,
+                                        vec_subPoses,
+                                        rigPose,
+                                        vec_inliers);
+  
+  if(!resectionOk)
+  {
+    for(std::size_t cam = 0; cam < numCams; ++cam)
+    {
+      // empty result with isValid set to false
+      vec_locResults.emplace_back();
+    }
+    return resectionOk;
+  }
+  
+  { // just debugging stuff, this block can be removed
+    
+    if(vec_inliers.size() < numCams)
+    {
+      // in general the inlier should be spread among different cameras
+      POPART_CERR("WARNING: RIG Voctree Localizer: Inliers in " 
+              << vec_inliers.size() << " cameras on a RIG of " 
+              << numCams << " cameras.");
+    }
+
+    for(std::size_t cam = 0; cam < vec_inliers.size(); ++cam)
+      POPART_COUT("#inliers for cam " << cam << ": " << vec_inliers[cam].size());
+    
+    POPART_COUT("Pose after resection:");
+    POPART_COUT("Rotation: " << rigPose.rotation());
+    POPART_COUT("Centre: " << rigPose.center());
+    
+    // compute the reprojection error for inliers (just debugging purposes)
+    for(std::size_t cam = 0; cam < numCams; ++cam)
+    {
+      const std::size_t numPts = vec_pts2D[cam].cols();
+      const cameras::Pinhole_Intrinsic_Radial_K3 &currCamera = vec_queryIntrinsics[cam];
+      Mat2X residuals;
+      if(cam!=0)
+        residuals = currCamera.residuals(vec_subPoses[cam-1]*rigPose, vec_pts3D[cam], vec_pts2D[cam]);
+      else
+        residuals = currCamera.residuals(geometry::Pose3()*rigPose, vec_pts3D[cam], vec_pts2D[cam]);
+
+      auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
+
+//      POPART_COUT("Camera " << cam << " all reprojection errors:");
+//      POPART_COUT(sqrErrors);
+//
+//      POPART_COUT("Camera " << cam << " inliers reprojection errors:");
+      const auto &currInliers = vec_inliers[cam];
+
+      double rmse = 0;
+      for(std::size_t j = 0; j < currInliers.size(); ++j)
+      {
+//          std::cout << sqrErrors(currInliers[j]) << " ";
+          rmse += sqrErrors(currInliers[j]);
+      }
+      if(!currInliers.empty())
+        POPART_COUT("\n\nRMSE inliers: " << std::sqrt(rmse/currInliers.size()));
+    }
+  }
+
+  const bool refineOk = refineRigPose(vec_pts2D,
+                                      vec_pts3D,
+                                      vec_inliers,
+                                      vec_queryIntrinsics,
+                                      vec_subPoses,
+                                      rigPose);
+  
+  vec_locResults.clear();
+  vec_locResults.reserve(numCams);
+  
+  // create localization results
+  for(std::size_t cam = 0; cam < numCams; ++cam)
+  {
+
+    const auto &intrinsics = vec_queryIntrinsics[cam];
+
+    // compute the (absolute) pose of each camera: for the main camera it's the 
+    // rig pose, for the others, combine the subpose with the rig pose
+    geometry::Pose3 pose;
+    if(cam == 0)
+    {
+      pose = rigPose;
+    }
+    else
+    {
+      // main camera: q1 ~ [R1 t1] Q = [I 0] A   where A = [R1 t1] Q  
+      // another camera: q2 ~ [R2 t2] Q = [R2 t2]*inv([R1 t1]) A 
+      // and subPose12 = [R12 t12] = [R2 t2]*inv([R1 t1])
+      // With rigResection() we compute [R1 t1] (aka rigPose), hence:
+      // subPose12 = [R12 t12] = [R2 t2]*inv([R1 t1]) and we need [R2 t2], ie the absolute pose
+      // => [R1 t1] * subPose12 = [R2 t2]
+      // => rigPose * subPose12 = [R2 t2]
+      pose = vec_subPoses[cam] * rigPose;
+    }
+    
+    // create matchData
+    sfm::Image_Localizer_Match_Data matchData;
+    matchData.vec_inliers = vec_inliers[cam];
+    matchData.error_max = param->_errorMax;
+    matchData.projection_matrix = intrinsics.get_projective_equivalent(pose);
+    matchData.pt2D = vec_pts2D[cam];
+    matchData.pt3D = vec_pts3D[cam];
+    
+    // create indMatch3D2D
+    std::vector<pair<IndexT, IndexT> > indMatch3D2D;
+    indMatch3D2D.reserve(matchData.pt2D.cols());
+    const auto &occurrences = vec_occurrences[cam];
+    for(const auto &ass : occurrences)
+    {
+      // recopy the associations IDs in the vector
+      indMatch3D2D.push_back(ass.first);
+    }
+    
+    const auto &matchedImages = vec_matchedImages[cam];
+    
+    vec_locResults.emplace_back(matchData, indMatch3D2D, pose, intrinsics, matchedImages, refineOk);
+  }
+  
+  
+  if(!refineOk)
+    return resectionOk;
+  
+  { // just debugging stuff, this block can be removed
+    
+    POPART_COUT("Pose after BA:");
+    POPART_COUT("Rotation: " << rigPose.rotation());
+    POPART_COUT("Centre: " << rigPose.center());
+    
+    // compute the reprojection error for inliers (just debugging purposes)
+    for(std::size_t cam = 0; cam < numCams; ++cam)
+    {
+      const std::size_t numPts = vec_pts2D[cam].cols();
+      const cameras::Pinhole_Intrinsic_Radial_K3 &currCamera = vec_queryIntrinsics[cam];
+      Mat2X residuals;
+      if(cam!=0)
+        residuals = currCamera.residuals(vec_subPoses[cam-1]*rigPose, vec_pts3D[cam], vec_pts2D[cam]);
+      else
+        residuals = currCamera.residuals(geometry::Pose3()*rigPose, vec_pts3D[cam], vec_pts2D[cam]);
+
+      auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
+
+//      POPART_COUT("Camera " << cam << " all reprojection errors after BA:");
+//      POPART_COUT(sqrErrors);
+
+//      POPART_COUT("Camera " << cam << " inliers reprojection errors after BA:");
+      const auto &currInliers = vec_inliers[cam];
+
+      double rmse = 0;
+      for(std::size_t j = 0; j < currInliers.size(); ++j)
+      {
+//          std::cout << sqrErrors(currInliers[j]) << " ";
+          rmse += sqrErrors(currInliers[j]);
+      }
+      if(!currInliers.empty())
+        POPART_COUT("\n\nRMSE inliers cam " << cam << ": " << std::sqrt(rmse/currInliers.size()));
+    }
+  }
+    
+  return resectionOk;
+}
+
+
+#else
+
+
+// subposes is n-1 as we consider the first camera as the main camera and the 
+// reference frame of the grid
+bool VoctreeLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+                                          const std::vector<std::pair<std::size_t, std::size_t> > &vec_imageSize,
+                                          const LocalizerParameters *parameters,
+                                          std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                                          const std::vector<geometry::Pose3 > &vec_subPoses,
+                                          geometry::Pose3 &rigPose,
+                                          std::vector<LocalizationResult>& vec_localizationResults)
+{
+  const size_t numCams = vec_queryRegions.size();
+  
+  assert(numCams==vec_queryIntrinsics.size());
+  assert(numCams==vec_subPoses.size()+1);
+  assert(numCams==vec_imageSize.size());
+
+  vec_localizationResults.clear();
+  vec_localizationResults.reserve(numCams);
+    
+  // this is basic, just localize each camera alone
+  //@todo parallelize?
+  std::vector<bool> isLocalized(numCams, false);
+  for(size_t i = 0; i < numCams; ++i)
+  {
+    isLocalized[i] = localize(vec_queryRegions[i], vec_imageSize[i], parameters, true /*useInputIntrinsics*/, vec_queryIntrinsics[i], vec_localizationResults[i]);
+    if(!isLocalized[i])
+    {
+      POPART_CERR("Could not localize camera " << i);
+      // even if it is not localize we can try to go on and do with the cameras we have
+    }
+  }
+  
+  // ** 'easy' cases in which we don't need further processing **
+  
+  const std::size_t numLocalizedCam = std::count(isLocalized.begin(), isLocalized.end(), true);
+  
+  // no camera has be localized
+  if(numLocalizedCam == 0)
+  {
+    POPART_COUT("No camera has been localized!!!");
+    return false;
+  }
+  
+  POPART_COUT("Localized cameras: " << numLocalizedCam << "/" << numCams);
+  
+  // if there is only one camera (the main one)
+  if(numCams==1)
+  {
+    // there is only the main camera, not much else to do, the position is already
+    // refined by the call to localize
+    //set the pose
+    rigPose = vec_localizationResults[0].getPose();
+    return vec_localizationResults[0].isValid();
+  }
+  
+  // if only one camera has been localized
+  if(numLocalizedCam == 1)
+  {
+    // all the other cameras have not been localized just return the result of the 
+    // localized one
+    
+    // find the index of the localized camera
+    const std::size_t idx = std::distance(isLocalized.begin(), 
+                                          std::find(isLocalized.begin(), isLocalized.end(), true));
+    
+    // useless safeguard as there should be at least 1 element at this point but
+    // better safe than sorry
+    assert(idx < isLocalized.size());
+    
+    // if the only localized camera is the main camera
+    if(idx==0)
+    {
+      // just give its pose
+      rigPose = vec_localizationResults[0].getPose();
+    }
+    else
+    {
+      // main camera: q1 ~ [R1 t1] Q = [I 0] A   where A = [R1 t1] Q  
+      // another camera: q2 ~ [R2 t2] Q = [R2 t2]*inv([R1 t1]) A   and subPose12 = [R12 t12] = [R2 t2]*inv([R1 t1])
+      // with the localization localize() we have computed [R2 t2], hence:
+      // q2 ~ [R2 t2] Q = [R12 t12]*inv([R12 t12]) * [R2 t2] Q
+      // and inv([R12 t12]) * [R2 t2] is the pose of the main camera
+      
+      // recover the rig pose using the subposes
+      rigPose = vec_subPoses[idx-1].inverse() * vec_localizationResults[idx].getPose();
+    }
+    return vec_localizationResults[idx].isValid();
+  }
+  
+  // ** otherwise run a BA with the localized cameras
+
+  refineRigPose(vec_subPoses, vec_localizationResults, rigPose);
+  
+  return true;
+}
+
+#endif // HAVE_OPENGV
 
 } // localization
 } // openMVG

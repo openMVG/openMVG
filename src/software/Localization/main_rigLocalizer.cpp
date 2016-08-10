@@ -295,9 +295,8 @@ int main(int argc, char** argv)
       POPART_COUT("\tnNearestKeyFrames: " << nNearestKeyFrames);
     }
 #endif
-    
+
   }
-  
 
   std::unique_ptr<localization::LocalizerParameters> param;
   
@@ -394,6 +393,8 @@ int main(int argc, char** argv)
   // standard deviation of the time taken for localization
   bacc::accumulator_set<double, bacc::stats<bacc::tag::mean, bacc::tag::min, bacc::tag::max, bacc::tag::sum > > stats;
 
+  // store the result
+  std::vector< std::vector<localization::LocalizationResult> > rigResultPerFrame;
   
   while(haveNext)
   {
@@ -446,17 +447,19 @@ int main(int argc, char** argv)
     POPART_COUT("FRAME " << myToString(frameCounter, 4));
     POPART_COUT("******************************");
     auto detect_start = std::chrono::steady_clock::now();
+    std::vector<localization::LocalizationResult> localizationResults;
     const bool isLocalized = localizer->localizeRig(vec_imageGrey,
                                                     param.get(),
                                                     vec_queryIntrinsics,
                                                     vec_subPoses,
-                                                    rigPose);
+                                                    rigPose,
+                                                    localizationResults);
     auto detect_end = std::chrono::steady_clock::now();
     auto detect_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(detect_end - detect_start);
     POPART_COUT("\nLocalization took  " << detect_elapsed.count() << " [ms]");
     stats(detect_elapsed.count());
     
-    //@todo do something with the pose
+    rigResultPerFrame.push_back(localizationResults);
     
 #if HAVE_ALEMBIC
     if(isLocalized)
