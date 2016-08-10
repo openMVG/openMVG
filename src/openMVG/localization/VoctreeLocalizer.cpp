@@ -723,7 +723,7 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
     POPART_COUT("t refined\n" << pose.translation());
     POPART_COUT("K refined\n" << queryIntrinsics.K());
 
-    const Mat2X residuals = localizationResult.computeResiduals();
+    const Mat2X residuals = localizationResult.computeInliersResiduals();
 
     const auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
     POPART_COUT("RMSE = " << std::sqrt(sqrErrors.mean())

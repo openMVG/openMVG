@@ -32,10 +32,9 @@ localization::LocalizationResult generateRandomResult(std::size_t numPts)
   const sfm::Image_Localizer_Match_Data &data = generateRandomMatch_Data(numPts);
   
   // random indMatch3D2D
-  const std::size_t numInliers = data.vec_inliers.size();
   std::vector<pair<IndexT, IndexT> > indMatch3D2D;
-  indMatch3D2D.reserve(numInliers);
-  for(std::size_t i = 0; i < numInliers; ++i)
+  indMatch3D2D.reserve(numPts);
+  for(std::size_t i = 0; i < numPts; ++i)
   {
     indMatch3D2D.emplace_back(i,i);
   }
@@ -47,7 +46,7 @@ localization::LocalizationResult generateRandomResult(std::size_t numPts)
   cameras::Pinhole_Intrinsic_Radial_K3 intrinsics = cameras::Pinhole_Intrinsic_Radial_K3(640, 480, 1400, 320.5, 240.5, 0.001, -0.05, 0.00003);
   
   // random valid
-  const bool valid = (numInliers % 2 == 0);
+  const bool valid = (numPts % 2 == 0);
 
   std::vector<voctree::DocMatch> matchedImages;
   matchedImages.push_back(voctree::DocMatch(2, 0.5));
@@ -107,6 +106,7 @@ TEST(LocalizationResult, LoadSaveBinSingle)
   {
     EXPECT_TRUE(inliersGT[i] == inliers[i]);
   }
+
 
   EXPECT_MATRIX_NEAR(res.getPt3D(), check.getPt3D(), threshold);
   EXPECT_MATRIX_NEAR(res.getPt2D(), check.getPt2D(), threshold);
