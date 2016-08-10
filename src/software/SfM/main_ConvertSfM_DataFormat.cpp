@@ -53,24 +53,21 @@ void updateStructureWithNewUID(Landmarks &landmarks, const std::map<std::size_t,
 }
 
 /**
- * @brief Recompute the UID from the metadata of the original input images and 
- * modify the ID if it's not the same.
+ * @brief Update all viewID of a list of view by replacing them with the UID.
  * 
- * @param[in,out] sfmdata The sfmdata scene for which to recompute the UID.
- * @param[out] oldIdToNew A map that holds the mapping between the old ID and the 
- * reconmputed UID.
- * @param[in] sanityCheck Enable a sanity check at the end to assure that the 
- * observations of 3D points and the control points have been correctly updated.
+ * @param[in,out] views The list of views to update
+ * @param[out] oldIdToNew oldIdToNew A map that holds the mapping between the 
+ * old ID and the reconmputed UID.
  */
-void regenerateUID(sfm::SfM_Data &sfmdata, std::map<std::size_t, std::size_t> &oldIdToNew, bool sanityCheck = false)
+void updateViewIDs(sfm::Views &views, std::map<std::size_t, std::size_t> &oldIdToNew)
 {
   // if the views are empty, nothing to be done. 
-  if(sfmdata.GetViews().empty())
+  if(views.empty())
     return;
   
   Views newViews;
 
-  for(auto const &iter : sfmdata.views)
+  for(auto const &iter : views)
   {
     const View& currentView = *iter.second.get();
     const auto &imageName = currentView.s_Img_path;
@@ -90,50 +87,58 @@ void regenerateUID(sfm::SfM_Data &sfmdata, std::map<std::size_t, std::size_t> &o
     newViews[uid]->id_view = uid;
   }
   
-  assert(newViews.size() == sfmdata.GetViews().size());
-  sfmdata.views.swap(newViews);
+  assert(newViews.size() == views.size());
+  views.swap(newViews);
+}
+
+/**
+ * @brief It perform a sanity check on a list of Landmarks and check if the viewIDs
+ * in the observations of each landmark has a corresponding ID in the list of views. 
+ * @param[in] landmarks A list of landmarks.
+ * @param[in] views A list of views.
+ */
+void sanityCheckLandmarks(const sfm::Landmarks &landmarks, const sfm::Views &views)
+{
+  for(const auto &iter : landmarks)
+  {
+    const Landmark& currentLandmark = iter.second;
+    for(const auto &iterObs : currentLandmark.obs)
+    {
+      const auto idview = iterObs.first;
+      const Observation &obs = iterObs.second;
+
+      // there must be a view with that id (in the map) and the view must have 
+      // the same id (the member)
+      assert(views.count(idview) == 1);
+      assert(views.at(idview)->id_view == idview);
+    }
+  }  
+}
+
+/**
+ * @brief Recompute the UID from the metadata of the original input images and 
+ * modify the ID if it's not the same.
+ * 
+ * @param[in,out] sfmdata The sfmdata scene for which to recompute the UID.
+ * @param[out] oldIdToNew A map that holds the mapping between the old ID and the 
+ * reconmputed UID.
+ * @param[in] sanityCheck Enable a sanity check at the end to assure that the 
+ * observations of 3D points and the control points have been correctly updated.
+ */
+void regenerateUID(sfm::SfM_Data &sfmdata, std::map<std::size_t, std::size_t> &oldIdToNew, bool sanityCheck = false)
+{
+  // if the views are empty, nothing to be done. 
+  if(sfmdata.GetViews().empty())
+    return;
   
-  
-  // update the id in the visibility of each 3D point
-  updateStructureWithNewUID(sfmdata.structure, oldIdToNew);
-  
-   // update the id in the visibility of each 3D point
-  updateStructureWithNewUID(sfmdata.control_points, oldIdToNew);
+  updateViewIDs(sfmdata.views, oldIdToNew);
   
   if(!sanityCheck)
     return;
   
-  // sanity check
-  for(auto &iter : sfmdata.structure)
-  {
-    Landmark& currentLandmark = iter.second;
-    for(const auto &iterObs : currentLandmark.obs)
-    {
-      const auto idview = iterObs.first;
-      const Observation &obs = iterObs.second;
-
-      // there must be a view with that id (in the map) and the view must have 
-      // the same id (the member)
-      assert(sfmdata.views.count(idview) == 1);
-      assert(sfmdata.views.at(idview)->id_view == idview);
-    }
-  }  
+  sanityCheckLandmarks(sfmdata.GetLandmarks(), sfmdata.GetViews());
   
-  // sanity check
-  for(auto &iter : sfmdata.control_points)
-  {
-    Landmark& currentLandmark = iter.second;
-    for(const auto &iterObs : currentLandmark.obs)
-    {
-      const auto idview = iterObs.first;
-      const Observation &obs = iterObs.second;
-
-      // there must be a view with that id (in the map) and the view must have 
-      // the same id (the member)
-      assert(sfmdata.views.count(idview) == 1);
-      assert(sfmdata.views.at(idview)->id_view == idview);
-    }
-  }
+  sanityCheckLandmarks(sfmdata.GetControl_Points(), sfmdata.GetViews());
   
 }
 
