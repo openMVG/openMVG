@@ -1204,11 +1204,9 @@ bool VoctreeLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<feat
               << vec_inliers.size() << " cameras on a RIG of " 
               << numCams << " cameras.");
     }
-    else
-    {
-      for(std::size_t cam = 0; cam < numCams; ++cam)
-        POPART_COUT("#inliers for cam " << cam << ": " << vec_inliers[cam].size());
-    }
+
+    for(std::size_t cam = 0; cam < vec_inliers.size(); ++cam)
+      POPART_COUT("#inliers for cam " << cam << ": " << vec_inliers[cam].size());
     
     POPART_COUT("Pose after resection:");
     POPART_COUT("Rotation: " << rigPose.rotation());
