@@ -21,6 +21,13 @@
 using namespace openMVG;
 using namespace openMVG::sfm;
 
+/**
+ * @brief Update all viewID referenced in the observation of each landmark according 
+ * to the provided mapping.
+ * 
+ * @param[in,out] landmarks The landmarks to update.
+ * @param[in] oldIdToNew The mapping between the old ID and the reconmputed UID.
+ */
 void updateStructureWithNewUID(Landmarks &landmarks, const std::map<std::size_t, std::size_t> &oldIdToNew)
 {
   // update the id in the visibility of each 3D point
