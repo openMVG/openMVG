@@ -309,6 +309,7 @@ int main(int argc, char** argv)
     // the bundle adjustment can be run for now only if the refine intrinsics option is not set
     globalBundle = (globalBundle && !refineIntrinsics);
     POPART_COUT("Program called with the following parameters:");
+    POPART_COUT("\tsfmdata: " << sfmFilePath);
     POPART_COUT("\tdescriptors: " << descriptorType);
     POPART_COUT("\tpreset: " << featurePreset);
     POPART_COUT("\tresectionEstimator: " << resectionEstimator);
@@ -316,14 +317,13 @@ int main(int argc, char** argv)
     POPART_COUT("\tcalibration: " << calibFile);
     POPART_COUT("\tdescriptorPath: " << descriptorsFolder);
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
-    POPART_COUT("\tmediafile: " << mediaFilepath);
-    POPART_COUT("\tsfmdata: " << sfmFilePath);
     POPART_COUT("\reprojectionError: " << resectionErrorMax);
+    POPART_COUT("\tmediafile: " << mediaFilepath);
     if(useVoctreeLocalizer)
     {
       POPART_COUT("\tvoctree: " << vocTreeFilepath);
       POPART_COUT("\tweights: " << weightsFilepath);
-      POPART_COUT("\tresults: " << numResults);
+      POPART_COUT("\tnbImageMatch: " << numResults);
       POPART_COUT("\tmaxResults: " << maxResults);
       POPART_COUT("\tcommon views: " << numCommonViews);
       POPART_COUT("\talgorithm: " << algostring);
