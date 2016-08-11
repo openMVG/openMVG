@@ -41,7 +41,7 @@ int main(int argc, char **argv)
       std::cerr << "Usage: " << argv[0] << '\n'
         << "[-i|--input_file] path to the input SfM_Data scene to align.\n"
         << "[-r|--reference_file] path to the scene used as the reference coordinate system\n"
-        << "[-y|--y_align_scale] align [X,Y,Z] to +Y-axis, scale scene by S; syntax: X,Y,Z;S \n"
+        << "[-y|--y_align_scale] align [X,Y,Z] to +Y-axis, rotate around Y by R deg, scale by S; syntax: X,Y,Z;R;S \n"
         << "[-o|--output_file] path to the output SfM_Data scene\n"
         << "\t .json, .bin, .xml, .ply, .baf"
 #if HAVE_ALEMBIC
@@ -140,19 +140,21 @@ int main(int argc, char **argv)
 
 static bool parseAlignScale(const std::string& alignScale, double& S, Mat3& R, Vec3& t)
 {
-  double rx, ry, rz;
+  double rx, ry, rz, rr;
   
   {
-    char delim[3];
+    char delim[4];
     std::istringstream iss(alignScale);
-    if (!(iss >> rx >> delim[0] >> ry >> delim[1] >> rz >> delim[2] >> S))
+    if (!(iss >> rx >> delim[0] >> ry >> delim[1] >> rz >> delim[2] >> rr >> delim[3] >> S))
       return false;
-    if (delim[0] != ',' || delim[1] != ',' || delim[2] != ';')
+    if (delim[0] != ',' || delim[1] != ',' || delim[2] != ';' || delim[3] != ';')
       return false;
   }
   
-  auto q = ::openMVG::Quaternion::FromTwoVectors(Vec3(rx, ry, rz), Vec3(0, 1, 0));
-  R = q.matrix();
+  auto q = ::Eigen::Quaterniond::FromTwoVectors(Vec3(rx, ry, rz), Vec3::UnitY());
+  auto r = ::Eigen::AngleAxisd(rr*M_PI/180, Vec3::UnitY());
+
+  R = r * q.toRotationMatrix();
 
   t = Vec3::Zero();
   
