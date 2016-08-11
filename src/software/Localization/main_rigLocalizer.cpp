@@ -212,10 +212,10 @@ int main(int argc, char** argv)
       ("maxResults", po::value<size_t>(&maxResults)->default_value(maxResults), 
         "[voctree] For algorithm AllResults, it stops the image matching when "
         "this number of matched images is reached. If 0 it is ignored.")
-    ("matchingError", po::value<double>(&matchingErrorMax)->default_value(matchingErrorMax), 
-        "[voctree] Maximum matching error (in pixels) allowed for image matching with "
-        "geometric verification. If set to 0 it lets the ACRansac select "
-        "an optimal value.")
+      ("matchingError", po::value<double>(&matchingErrorMax)->default_value(matchingErrorMax), 
+          "[voctree] Maximum matching error (in pixels) allowed for image matching with "
+          "geometric verification. If set to 0 it lets the ACRansac select "
+          "an optimal value.")
 #if HAVE_CCTAG
   // parameters for cctag localizer
       ("nNearestKeyFrames", po::value<size_t>(&nNearestKeyFrames)->default_value(nNearestKeyFrames),
@@ -265,14 +265,14 @@ int main(int argc, char** argv)
   {
     POPART_COUT("Program called with the following parameters:");
     POPART_COUT("\tsfmdata: " << sfmFilePath);
+    POPART_COUT("\tpreset: " << featurePreset);
     POPART_COUT("\tmediapath: " << mediaPath);
-    POPART_COUT("\tdescriptorPath: " << descriptorsFolder);
     POPART_COUT("\tresectionEstimator: " << resectionEstimator);
     POPART_COUT("\tmatchingEstimator: " << matchingEstimator);
+    POPART_COUT("\tdescriptorPath: " << descriptorsFolder);
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
-    POPART_COUT("\terrorMax: " << resectionErrorMax);
+    POPART_COUT("\reprojectionError: " << resectionErrorMax);
     POPART_COUT("\tnCameras: " << numCameras);
-    POPART_COUT("\tpreset: " << featurePreset);
     if(!filelist.empty())
       POPART_COUT("\tfilelist: " << filelist);
     POPART_COUT("\tdescriptors: " << descriptorType);
@@ -285,8 +285,9 @@ int main(int argc, char** argv)
       // parameters for voctree localizer
       POPART_COUT("\tvoctree: " << vocTreeFilepath);
       POPART_COUT("\tweights: " << weightsFilepath);
+      POPART_COUT("\tnbImageMatch: " << numResults);
+      POPART_COUT("\tmaxResults: " << maxResults);
       POPART_COUT("\talgorithm: " << algostring);
-      POPART_COUT("\tresults: " << numResults);
       POPART_COUT("\tmatchingError: " << matchingErrorMax);
     }
 #if HAVE_CCTAG
