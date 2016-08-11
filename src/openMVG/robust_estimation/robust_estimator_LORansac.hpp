@@ -285,7 +285,7 @@ typename Kernel::Model LO_RANSAC(const Kernel &kernel,
                                 const Scorer &scorer,
                                 std::vector<std::size_t> *best_inliers = NULL,
                                 double *best_score = NULL,
-                                bool bVerbose = true,
+                                bool bVerbose = false,
                                 std::size_t max_iterations = 100,
                                 double outliers_probability = 1e-2)
 {
@@ -379,7 +379,7 @@ typename Kernel::Model LO_RANSAC(const Kernel &kernel,
           std::cout << ",sample=";
           std::copy(sample.begin(), sample.end(),
                     std::ostream_iterator<std::size_t>(std::cout, ","));
-          std::cout << ")";
+          std::cout << ")" << std::endl;
         }
         if (bestInlierRatio) 
         {
