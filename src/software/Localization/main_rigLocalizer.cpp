@@ -381,7 +381,8 @@ int main(int argc, char** argv)
   }
   
   bool haveNext = true;
-  size_t frameCounter = 0;
+  std::size_t frameCounter = 0;
+  std::size_t numLocalizedFrames = 0;
   
   // load the subposes
   std::vector<geometry::Pose3> vec_subPoses;
@@ -463,6 +464,7 @@ int main(int argc, char** argv)
     
     if(isLocalized)
     {
+      ++numLocalizedFrames;
 #if HAVE_ALEMBIC
       // for now just save the position of the main camera
       exporter.addCameraKeyframe(rigPose, &vec_queryIntrinsics[0], mediaPath, frameCounter, frameCounter);
@@ -477,13 +479,11 @@ int main(int argc, char** argv)
     }
 
     ++frameCounter;
-    
-    
   }
   
   // print out some time stats
   POPART_COUT("\n\n******************************");
-  POPART_COUT("Localized " << frameCounter << " images");
+  POPART_COUT("Localized " << numLocalizedFrames << " / " << frameCounter << " images");
   POPART_COUT("Processing took " << bacc::sum(stats) / 1000 << " [s] overall");
   POPART_COUT("Mean time for localization:   " << bacc::mean(stats) << " [ms]");
   POPART_COUT("Max time for localization:   " << bacc::max(stats) << " [ms]");
