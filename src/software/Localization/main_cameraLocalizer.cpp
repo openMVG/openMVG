@@ -410,10 +410,8 @@ int main(int argc, char** argv)
   param->_resectionEstimator = resectionEstimator;
   param->_matchingEstimator = matchingEstimator;
   
-
-  bool isInit = localizer->isInit();
   
-  if(!isInit)
+  if(!localizer->isInit())
   {
     POPART_CERR("ERROR while initializing the localizer!");
     return EXIT_FAILURE;
