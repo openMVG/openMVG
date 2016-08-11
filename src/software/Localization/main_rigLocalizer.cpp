@@ -461,17 +461,20 @@ int main(int argc, char** argv)
     
     rigResultPerFrame.push_back(localizationResults);
     
-#if HAVE_ALEMBIC
     if(isLocalized)
     {
+#if HAVE_ALEMBIC
       // for now just save the position of the main camera
-      exporter.appendCamera("camera." + myToString(frameCounter, 4), rigPose, &vec_queryIntrinsics[0], mediaPath, frameCounter, frameCounter);
+      exporter.addCameraKeyframe(rigPose, &vec_queryIntrinsics[0], mediaPath, frameCounter, frameCounter);
+#endif
     }
     else
     {
-      exporter.appendCamera("camera.V." + myToString(frameCounter, 4), geometry::Pose3(), &vec_queryIntrinsics[0], mediaPath, frameCounter, frameCounter);
-    }
+     POPART_CERR("Unable to localize frame " << frameCounter);
+#if HAVE_ALEMBIC
+      exporter.jumpKeyframe();
 #endif
+    }
 
     ++frameCounter;
     
