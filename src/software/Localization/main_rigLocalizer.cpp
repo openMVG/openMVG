@@ -144,6 +144,7 @@ int main(int argc, char** argv)
   const std::string str_estimatorChoices = ""+robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC)
                                           +","+robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC);
   bool refineIntrinsics = false;
+  bool useLocalizeRigNaive = false;
   double resectionErrorMax = 4.0;                    //< the maximum error allowed for resection
   double matchingErrorMax = 4.0;               //< the maximum error allowed for image matching with geometric validation
 
@@ -200,6 +201,10 @@ int main(int argc, char** argv)
       ("reprojectionError", po::value<double>(&resectionErrorMax)->default_value(resectionErrorMax), 
         "Maximum reprojection error (in pixels) allowed for resectioning. If set "
         "to 0 it lets the ACRansac select an optimal value.")
+      ("useLocalizeRigNaive", po::bool_switch(&useLocalizeRigNaive),
+          "Enable/Disable the naive method for rig localization: naive method tries "
+          "to localize each camera separately. This is enabled by default if the "
+          "library has not been built with openGV.")
   // parameters for voctree localizer
       ("voctree", po::value<std::string>(&vocTreeFilepath),
         "[voctree] Filename for the vocabulary tree")
@@ -271,6 +276,7 @@ int main(int argc, char** argv)
     POPART_COUT("\tmatchingEstimator: " << matchingEstimator);
     POPART_COUT("\tdescriptorPath: " << descriptorsFolder);
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
+    POPART_COUT("\tuseLocalizeRigNaive: " << useLocalizeRigNaive);
     POPART_COUT("\reprojectionError: " << resectionErrorMax);
     POPART_COUT("\tnCameras: " << numCameras);
     if(!filelist.empty())
@@ -350,6 +356,7 @@ int main(int argc, char** argv)
   param->_errorMax = resectionErrorMax;
   param->_resectionEstimator = resectionEstimator;
   param->_matchingEstimator = matchingEstimator;
+  param->_useLocalizeRigNaive = useLocalizeRigNaive;
 
   if(!localizer->isInit())
   {
