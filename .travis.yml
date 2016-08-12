@@ -47,6 +47,11 @@ env:
     - OPENCV_CONTRIB=${OPENCV_ROOT}/contrib
     - OPENCV_BUILD=${OPENCV_ROOT}/build
     - OPENCV_INSTALL=${OPENCV_ROOT}/install
+    # OPENGV
+    - OPENGV_ROOT=${TRAVIS_BUILD_DIR}/opengv
+    - OPENGV_SOURCE=${OPENGV_ROOT}/source
+    - OPENGV_BUILD=${OPENGV_ROOT}/build
+    - OPENGV_INSTALL=${OPENGV_ROOT}/install
     # EIGEN
     - EIGEN_INSTALL=${TRAVIS_BUILD_DIR}/eigen
     # CERES
@@ -76,6 +81,16 @@ before_install:
       mkdir --parent $OPENCV_INSTALL
       git clone --recursive --branch 3.0.0 --depth 1 https://github.com/Itseez/opencv.git $OPENCV_SOURCE;
       git clone --branch 3.0.0 --depth 1  https://github.com/Itseez/opencv_contrib.git $OPENCV_CONTRIB;
+    fi
+ # OPENGV
+ - >
+    if [ "$(ls -A $OPENGV_INSTALL)" ]; then
+      echo "OPENGV found in cache.";
+    else
+      mkdir --parent $OPENGV_SOURCE
+      mkdir --parent $OPENGV_BUILD
+      mkdir --parent $OPENGV_INSTALL
+      git clone --depth 1 https://github.com/laurentkneip/opengv.git $OPENGV_SOURCE;
     fi
  # EIGEN
  - >
@@ -120,6 +135,19 @@ before_install:
     fi
 
 install:
+  # OPENGV
+  - >
+     if [ ! "$(ls -A $OPENGV_INSTALL)" ]; then
+       cd $OPENGV_BUILD
+       cmake \
+         -DCMAKE_BUILD_TYPE=Release \
+         -DCMAKE_INSTALL_PREFIX=$OPENGV_INSTALL \
+         -DINSTALL_OPENGV=ON \
+         -DEIGEN_INCLUDE_DIR=$EIGEN_INSTALL \
+         $OPENGV_SOURCE;
+     make -j 2 > null;
+     make install;
+     fi
   # OPENCV
   - >
      if [ ! "$(ls -A $OPENCV_INSTALL)" ]; then
@@ -175,6 +203,8 @@ before_script:
        -DOpenMVG_BUILD_EXAMPLES=ON \
        -DOpenMVG_USE_OPENCV=ON \
        -DOpenCV_DIR=$OPENCV_INSTALL/share/OpenCV \
+       -DOpenMVG_USE_OPENGV=ON \
+       -DOPENGV_DIR=$OPENGV_INSTALL \
        -DOpenMVG_USE_BOOST=ON \
        -DOpenMVG_USE_CCTAG=OFF \
        -DBOOST_NO_CXX11=ON \
@@ -225,6 +255,7 @@ after_success:
 cache:
   directories:
     - $OPENCV_INSTALL
+    - $OPENGV_INSTALL
     - $CERES_INSTALL
     - $BOOST_INSTALL
     - $EIGEN_INSTALL

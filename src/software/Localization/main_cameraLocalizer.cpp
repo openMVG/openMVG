@@ -477,10 +477,9 @@ int main(int argc, char** argv)
 #if HAVE_ALEMBIC
       exporter.addCameraKeyframe(localizationResult.getPose(), &queryIntrinsics, currentImgName, frameCounter, frameCounter);
 #endif
-      if(globalBundle)
-      {
-        vec_localizationResults.emplace_back(localizationResult);
-      }
+
+      vec_localizationResults.emplace_back(localizationResult);
+      
       goodFrameCounter++;
       goodFrameList.push_back(currentImgName + " : " + std::to_string(localizationResult.getIndMatch3D2D().size()) );
     }

@@ -25,6 +25,9 @@ LocalizationResult::LocalizationResult(
         _matchedImages(matchedImages),
         _isValid(isValid)
 {
+  // verify data consistency
+  assert(_matchData.pt2D.cols() == _matchData.pt3D.cols());
+  assert(_matchData.pt2D.cols() == _indMatch3D2D.size());
 }
         
 LocalizationResult::~LocalizationResult()
@@ -48,7 +51,17 @@ const Mat LocalizationResult::retrieveUndistortedPt2D() const
   return pt2Dundistorted;
 }
 
-Mat2X LocalizationResult::computeResiduals() const 
+Mat2X LocalizationResult::computeAllResiduals() const 
+{
+  const Mat2X &orig2d = getPt2D();
+  const Mat3X &orig3d = getPt3D();
+  assert(orig2d.cols()==orig3d.cols());
+  
+  const auto &intrinsics = getIntrinsics();
+  return intrinsics.residuals(getPose(), orig3d, orig2d);
+}
+
+Mat2X LocalizationResult::computeInliersResiduals() const 
 {
   // get the inliers.
   const auto &currInliers = getInliers();
@@ -70,9 +83,9 @@ Mat2X LocalizationResult::computeResiduals() const
   return intrinsics.residuals(getPose(), inliers3d, inliers2d);
 }
 
-double LocalizationResult::computeRMSE() const 
+double LocalizationResult::computeInliersRMSE() const 
 {
-  const auto& residuals = computeResiduals();
+  const auto& residuals = computeInliersResiduals();
   // squared residual for each point
   const auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
   //RMSE

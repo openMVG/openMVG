@@ -133,14 +133,42 @@ public:
                 bool useInputIntrinsics,
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult & localizationResult,
-                const std::string& imagePath);
+                const std::string& imagePath = std::string());
   
-  // not yet implemented!
+  
   bool localizeRig(const std::vector<image::Image<unsigned char> > & vec_imageGrey,
-                             const LocalizerParameters *param,
-                             std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
-                             const std::vector<geometry::Pose3 > &vec_subPoses,
-                             geometry::Pose3 rigPose);
+                   const LocalizerParameters *param,
+                   std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                   const std::vector<geometry::Pose3 > &vec_subPoses,
+                   geometry::Pose3 &rigPose,
+                   std::vector<LocalizationResult> & vec_locResults);
+  
+  bool localizeRig(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+                   const std::vector<std::pair<std::size_t, std::size_t> > &vec_imageSize,
+                   const LocalizerParameters *param,
+                   std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                   const std::vector<geometry::Pose3 > &vec_subPoses,
+                   geometry::Pose3 &rigPose,
+                   std::vector<LocalizationResult>& vec_locResults);
+
+
+#ifdef HAVE_OPENGV
+  bool localizeRig_opengv(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+                          const std::vector<std::pair<std::size_t, std::size_t> > &imageSize,
+                          const LocalizerParameters *parameters,
+                          std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                          const std::vector<geometry::Pose3 > &vec_subPoses,
+                          geometry::Pose3 &rigPose,
+                          std::vector<LocalizationResult>& vec_locResults);
+#else
+  bool localizeRig_naive(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
+                        const std::vector<std::pair<std::size_t, std::size_t> > &imageSize,
+                        const LocalizerParameters *parameters,
+                        std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                        const std::vector<geometry::Pose3 > &vec_subPoses,
+                        geometry::Pose3 &rigPose,
+                        std::vector<LocalizationResult>& vec_locResults);
+#endif
 
   /**
    * @brief Try to localize an image in the database: it queries the database to 
@@ -207,7 +235,7 @@ public:
    * @param[in] imagePath
    */
   void getAllAssociations(const features::SIFT_Regions &siftQueryRegions,
-                          const std::pair<std::size_t, std::size_t> imageSize,
+                          const std::pair<std::size_t, std::size_t> &imageSize,
                           const Parameters &param,
                           bool useInputIntrinsics,
                           const cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,

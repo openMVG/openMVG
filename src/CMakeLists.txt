@@ -26,6 +26,7 @@ OPTION(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 OPTION(OpenMVG_USE_BOOST "Build code depending on Boost (localization/voctree)" ON)
 OPTION(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
 OPTION(OpenMVG_USE_CCTAG "Enable CCTAG markers" ON)
+OPTION(OpenMVG_USE_OPENGV "Enable use of OpenGV algorithms" OFF)
 OPTION(OpenMVG_USE_ALEMBIC "Enable Alembic I/O" OFF)
 OPTION(OpenMVG_USE_POPART_LOG "Enable POPART logger" ON)
 
@@ -426,7 +427,7 @@ IF(OpenMVG_USE_BOOST)
        add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
      endif(BOOST_NO_CXX11)
      include_directories(${Boost_INCLUDE_DIRS})
-     link_directories(${Boost_LIBRARIES})
+     link_directories(${Boost_LIBRARY_DIRS})
      add_definitions(${Boost_DEFINITIONS})
   ELSE()
     MESSAGE(STATUS "Boost not found -- disabling the vocabulary tree")
@@ -475,6 +476,24 @@ IF(OpenMVG_USE_CCTAG)
     ADD_DEFINITIONS(-DHAVE_CCTAG)
   ENDIF(NOT CCTAG_FOUND)
 ENDIF(OpenMVG_USE_CCTAG)
+
+# ==============================================================================
+# OpenGV
+# ==============================================================================
+# - optional, it allows to use the generic camera PnP algorithms for rig localization
+# ==============================================================================
+IF(OpenMVG_USE_OPENGV)
+  FIND_PACKAGE(OpenGV)
+  IF(OPENGV_FOUND)
+    MESSAGE(STATUS "OpenGV found")
+    INCLUDE_DIRECTORIES(${OPENGV_INCLUDE_DIR})
+    LINK_DIRECTORIES(${OPENGV_LIBRARY_DIR})
+    ADD_DEFINITIONS(-DHAVE_OPENGV)
+  ELSE()
+    MESSAGE(STATUS "OpenGV not found -- disabling some rig localization algorithms")
+    UPDATE_CACHE_VARIABLE(OpenMVG_USE_OPENGV OFF)
+  ENDIF(OPENGV_FOUND)
+ENDIF(OpenMVG_USE_OPENGV)
 
 # ==============================================================================
 # Include directories
@@ -596,6 +615,7 @@ MESSAGE("** Build OpenCV+OpenMVG samples programs: " ${OpenMVG_USE_OPENCV})
 MESSAGE("** Use OpenCV SIFT features: " ${OpenMVG_USE_OCVSIFT})
 MESSAGE("** Use CCTAG markers: " ${OpenMVG_USE_CCTAG})
 MESSAGE("** Build Alembic exporter: " ${OpenMVG_USE_ALEMBIC})
+MESSAGE("** Use OpenGV for rig localization: " ${OpenMVG_USE_OPENGV})
 MESSAGE("** Use POPART logger: " ${OpenMVG_USE_POPART_LOG})
 
 MESSAGE("\n")

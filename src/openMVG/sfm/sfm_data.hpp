@@ -74,6 +74,11 @@ struct SfM_Data
       intrinsics.find(view->id_intrinsic) != intrinsics.end() &&
       poses.find(view->id_pose) != poses.end());
   }
+  
+  bool IsPoseAndIntrinsicDefined(IndexT viewID) const
+  { 
+    return IsPoseAndIntrinsicDefined(views.at(viewID).get());
+  }
 
   /// Get the pose associated to a view
   const geometry::Pose3 GetPoseOrDie(const View * view) const

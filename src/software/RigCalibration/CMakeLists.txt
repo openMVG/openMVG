@@ -6,7 +6,7 @@ if(OpenMVG_USE_BOOST)
   ###
   add_executable(openMVG_main_rigCalibration main_rigCalibration.cpp)
   install(TARGETS openMVG_main_rigCalibration DESTINATION bin/)
-  target_link_libraries(openMVG_main_rigCalibration openMVG_rig openMVG_localization  openMVG_dataio openMVG_image openMVG_features vlsift ${BOOST_LIBRARIES}) #todo: delete vlsift
+  target_link_libraries(openMVG_main_rigCalibration openMVG_rig openMVG_localization  openMVG_dataio openMVG_image openMVG_features vlsift ${Boost_LIBRARIES}) #todo: delete vlsift
    
   if(OpenMVG_USE_CCTAG)
     target_link_libraries(openMVG_main_rigCalibration

@@ -37,11 +37,12 @@ namespace robust{
  */
 template<typename Kernel, typename Scorer>
 double iterativeReweightedLeastSquares(const Kernel &kernel,
-                                     const Scorer &scorer,
-                                     typename Kernel::Model &best_model,
-                                     std::vector<std::size_t> &inliers,
-                                     double mtheta = std::sqrt(2),
-                                     std::size_t numIter = 4)
+                                       const Scorer &scorer,
+                                       typename Kernel::Model &best_model,
+                                       std::vector<std::size_t> &inliers,
+                                       double mtheta = std::sqrt(2),
+                                       std::size_t numIter = 4,
+                                       bool verbose = false)
 {
   const std::size_t total_samples = kernel.NumSamples();
   const std::size_t min_samples = Kernel::MINIMUM_LSSAMPLES;
@@ -59,7 +60,10 @@ double iterativeReweightedLeastSquares(const Kernel &kernel,
   if(inliers.size() < min_samples)
   {
     inliers.clear();
-    std::cerr << "[IRLS] returning cause inliers.size() < min_samples" << std::endl;
+    if(verbose)
+    {
+      std::cerr << "[IRLS] returning cause inliers.size() < min_samples" << std::endl;
+    }
     return std::numeric_limits<double>::infinity();
   }
   
@@ -82,7 +86,10 @@ double iterativeReweightedLeastSquares(const Kernel &kernel,
     if(inliers.size() < min_samples)
     {
       inliers.clear();
-      std::cerr << "[IRLS] returning cause inliers.size() < min_samples" << std::endl;
+      if(verbose)
+      {
+        std::cerr << "[IRLS] returning cause inliers.size() < min_samples" << std::endl;
+      }
       return std::numeric_limits<double>::infinity();
     }
 //    std::cout << "[IRLS] #" << i 
@@ -98,7 +105,10 @@ double iterativeReweightedLeastSquares(const Kernel &kernel,
     kernel.FitLS(inliers, &models, &weights);
     if(models.size() != 1)   // LS fitting must always return 1 model
     {
-      std::cerr << "[IRLS] found "<< models.size() << " models, aborting..." << std::endl;
+      if(verbose)
+      {
+        std::cerr << "[IRLS] found "<< models.size() << " models, aborting..." << std::endl;
+      }
       return std::numeric_limits<double>::infinity();
     }
     
@@ -110,8 +120,11 @@ double iterativeReweightedLeastSquares(const Kernel &kernel,
   best_model = models[0];
   inliers.clear();
   const double score = scorer.Score(kernel, best_model, all_samples, &inliers, theta);
-  std::cout << "[IRLS] returning with num inliers: " << inliers.size() 
-          << " and score " << score << std::endl;
+  if(verbose)
+  {
+    std::cout << "[IRLS] returning with num inliers: " << inliers.size() 
+            << " and score " << score << std::endl;
+  }
   return score;
 }
 
@@ -146,13 +159,14 @@ double iterativeReweightedLeastSquares(const Kernel &kernel,
  * @return the best score of the best model as computed by Scorer.
  */
 template<typename Kernel, typename Scorer>
-double localOptimization(const Kernel &kernel, 
-                       const Scorer &scorer, 
-                       typename Kernel::Model &bestModel, 
-                       std::vector<std::size_t> &bestInliers,
-                       double mtheta = std::sqrt(2),
-                       std::size_t numRep = 10,
-                       std::size_t minSampleSize = 10)
+double localOptimization(const Kernel &kernel,
+                         const Scorer &scorer,
+                         typename Kernel::Model &bestModel,
+                         std::vector<std::size_t> &bestInliers,
+                         double mtheta = std::sqrt(2),
+                         std::size_t numRep = 10,
+                         std::size_t minSampleSize = 10,
+                         bool verbose = false)
 {
   const std::size_t total_samples = kernel.NumSamples();
   const std::size_t min_samples = Kernel::MINIMUM_LSSAMPLES;
@@ -175,9 +189,12 @@ double localOptimization(const Kernel &kernel,
   
   // so far this is the best model
   std::size_t bestNumInliers = bestInliers.size();
-  std::cout << "[localOptim] so far best num inliers: " << bestNumInliers << std::endl;
-  std::cout << "[localOptim] so far best model:\n" << bestModel << std::endl;
-  std::cout << "[localOptim] so far best score: " << bestScore << std::endl;
+  if(verbose)
+  {
+    std::cout << "[localOptim] so far best num inliers: " << bestNumInliers << std::endl;
+    std::cout << "[localOptim] so far best model:\n" << bestModel << std::endl;
+    std::cout << "[localOptim] so far best score: " << bestScore << std::endl;
+  }
      
   // find inliers from best model with larger threshold t*m over all the samples
   std::vector<std::size_t> inliersBase;
@@ -198,7 +215,10 @@ double localOptimization(const Kernel &kernel,
   const std::size_t sampleSize = std::min(minSampleSize, inliersBase.size()/2);
   if(sampleSize <= Kernel::MINIMUM_LSSAMPLES)
   {
-    std::cout << "breaking cause sampleSize is " << sampleSize << std::endl;
+    if(verbose)
+    {
+      std::cout << "breaking cause sampleSize is " << sampleSize << std::endl;
+    }
     return bestScore;
   }
   
@@ -227,7 +247,10 @@ double localOptimization(const Kernel &kernel,
       bestScore = score;
       bestModel = models[0];
       bestInliers.swap(inliers);
-      std::cout << "[localOptim] new best num inliers: " << bestNumInliers << std::endl;
+      if(verbose)
+      {
+        std::cout << "[localOptim] new best num inliers: " << bestNumInliers << std::endl;
+      }
     }
   }
   return bestScore;
@@ -262,7 +285,7 @@ typename Kernel::Model LO_RANSAC(const Kernel &kernel,
                                 const Scorer &scorer,
                                 std::vector<std::size_t> *best_inliers = NULL,
                                 double *best_score = NULL,
-                                bool bVerbose = true,
+                                bool bVerbose = false,
                                 std::size_t max_iterations = 100,
                                 double outliers_probability = 1e-2)
 {
@@ -305,31 +328,40 @@ typename Kernel::Model LO_RANSAC(const Kernel &kernel,
     {
       std::vector<std::size_t> inliers;
       double score = scorer.Score(kernel, models[i], all_samples, &inliers);
-      std::cout << "sample=";
-      std::sort(sample.begin(), sample.end());
-      std::copy(sample.begin(), sample.end(),
-                    std::ostream_iterator<std::size_t>(std::cout, ","));
-      std::cout << "\nmodel " << i 
-              << " e: " << score << std::endl;
+      if(bVerbose)
+      {
+        std::cout << "sample=";
+        std::copy(sample.begin(), sample.end(),
+                      std::ostream_iterator<std::size_t>(std::cout, ","));
+        std::cout << "\nmodel " << i 
+                << " e: " << score << std::endl;
+      }
 
       if (bestNumInliers <= inliers.size()) 
       {
         bestModel = models[i];
         //** LOCAL OPTIMIZATION
-        std::cout << "Before Optim: num inliers: " << inliers.size() 
-                << " score: " << score
-                << " Kernel::MINIMUM_LSSAMPLES: " << Kernel::MINIMUM_LSSAMPLES 
-                << std::endl;
-        
-        std::cout << "Model:\n" << bestModel << std::endl;
+        if(bVerbose)
+        {
+          std::cout << "Before Optim: num inliers: " << inliers.size() 
+                  << " score: " << score
+                  << " Kernel::MINIMUM_LSSAMPLES: " << Kernel::MINIMUM_LSSAMPLES 
+                  << std::endl;
+
+          std::cout << "Model:\n" << bestModel << std::endl;
+        }
         
         if(inliers.size() > Kernel::MINIMUM_LSSAMPLES)
         {
           score = localOptimization(kernel, scorer, bestModel, inliers);
         }
-        std::cout << "After Optim: num inliers: " << inliers.size()
-                << " score: " << score << std::endl;
-        std::cout << "Model:\n" << bestModel << std::endl;
+        
+        if(bVerbose)
+        {
+          std::cout << "After Optim: num inliers: " << inliers.size()
+                  << " score: " << score << std::endl;
+          std::cout << "Model:\n" << bestModel << std::endl;
+        }
         
         bestNumInliers = inliers.size();
         bestInlierRatio = inliers.size() / double(total_samples);
@@ -347,7 +379,7 @@ typename Kernel::Model LO_RANSAC(const Kernel &kernel,
           std::cout << ",sample=";
           std::copy(sample.begin(), sample.end(),
                     std::ostream_iterator<std::size_t>(std::cout, ","));
-          std::cout << ")";
+          std::cout << ")" << std::endl;
         }
         if (bestInlierRatio) 
         {

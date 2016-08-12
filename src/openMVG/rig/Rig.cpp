@@ -1,7 +1,5 @@
 #include "Rig.hpp"
 #include "rig_BA_ceres.hpp"
-
-#include <openMVG/logger.hpp>
 #include <openMVG/sfm/sfm_data_BA_ceres.hpp>
 #include <openMVG/logger.hpp>
 
@@ -76,7 +74,7 @@ bool Rig::initializeCalibration()
       shortestSeqLength = std::min(shortestSeqLength, v.second.size());
     for (auto& v: _vLocalizationResults)
       v.second.resize(shortestSeqLength);
-
+  
     if(shortestSeqLength == 0)
     {
         POPART_COUT("The calibration results are empty!");
@@ -134,7 +132,7 @@ bool Rig::initializeCalibration()
     std::size_t iRes = iRelativePose+1;
     for(std::size_t iView = 0 ; iView < _vLocalizationResults[iRes].size() ; ++iView )
     {
-      if(_vLocalizationResults[0][iView].isValid())
+      if(  _vLocalizationResults[0][iView].isValid() )
       {
         const geometry::Pose3 & relativePose = _vRelativePoses[iRelativePose];
         
@@ -321,6 +319,7 @@ bool Rig::optimizeCalibration()
 
     vMainPoses.emplace(iView, mainPose);
   }
+
   for(auto &elem : vMainPoses)
   {
     auto pose = elem.second;
@@ -427,7 +426,7 @@ bool Rig::optimizeCalibration()
           // Vector-2 residual, pose of the rig parameterized by 6 parameters
           cost_function = new ceres::AutoDiffCostFunction<ResidualErrorMainCameraFunctor, 2, 6>(
           new ResidualErrorMainCameraFunctor(currentResult[iView].getIntrinsics(), points2D.col(iPoint), points3D.col(iPoint) ));
-
+            
           if (cost_function)
           {
             assert(vMainPoses.find(iView) != vMainPoses.end());
@@ -442,13 +441,13 @@ bool Rig::optimizeCalibration()
         }else
         // Add a residual block for a secondary camera
         {
-          // Vector-2 residual, pose of the rig parameterized by 6 parameters
-          //                  + relative pose of the secondary camera parameterized by 6 parameters
-
-          cost_function = new ceres::AutoDiffCostFunction<ResidualErrorSecondaryCameraFunctor, 2, 6, 6>(
+            // Vector-2 residual, pose of the rig parameterized by 6 parameters
+            //                  + relative pose of the secondary camera parameterized by 6 parameters
+            
+            cost_function = new ceres::AutoDiffCostFunction<ResidualErrorSecondaryCameraFunctor, 2, 6, 6>(
           new ResidualErrorSecondaryCameraFunctor(currentResult[iView].getIntrinsics(), points2D.col(iPoint), points3D.col(iPoint)));
-
-          if(cost_function)
+          
+          if (cost_function)
           {
             assert(vMainPoses.find(iView) != vMainPoses.end());
             assert(iLocalizer-1 < vRelativePoses.size());
@@ -484,30 +483,30 @@ bool Rig::optimizeCalibration()
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
   
-  if(openMVG_options._bCeres_Summary)
+  if (openMVG_options._bCeres_Summary)
     POPART_COUT(summary.FullReport());
 
   // If no error, get back refined parameters
-  if(!summary.IsSolutionUsable())
+  if (!summary.IsSolutionUsable())
   {
     if (openMVG_options._bVerbose)
       POPART_COUT("Bundle Adjustment failed.");
     return false;
   }
 
-  if(openMVG_options._bVerbose)
+  if (openMVG_options._bVerbose)
   {
     // Display statistics about the minimization
-    POPART_COUT( "\n"
+  POPART_COUT( "\n"
       << "Bundle Adjustment statistics (approximated RMSE):\n"
       << " #localizers: " << _vLocalizationResults.size() << "\n"
       << " #views: " << _vLocalizationResults[0].size() << "\n"
       << " #residuals: " << summary.num_residuals << "\n"
       << " Initial RMSE: " << std::sqrt( summary.initial_cost / summary.num_residuals) << "\n"
-      << " Final RMSE: " << std::sqrt( summary.final_cost / summary.num_residuals) << "\n");
+    << " Final RMSE: " << std::sqrt( summary.final_cost / summary.num_residuals) << "\n");
   }
-
-  // Update relative pose after optimization
+    
+    // Update relative pose after optimization
   for(std::size_t iRelativePose = 0 ; iRelativePose < _vRelativePoses.size() ; ++iRelativePose)
   {
     openMVG::Mat3 R_refined;
@@ -519,11 +518,11 @@ bool Rig::optimizeCalibration()
     geometry::Pose3 & pose = _vRelativePoses[iRelativePose];
     pose = geometry::Pose3(R_refined, -R_refined.transpose() * t_refined);
   }
-
-  // Update the main camera pose after optimization
+    
+    // Update the main camera pose after optimization
   for(std::size_t iView = 0 ; iView < _vLocalizationResults[0].size() ; ++iView)
   {
-    if(_vLocalizationResults[0][iView].isValid())
+    if( _vLocalizationResults[0][iView].isValid() )
     {
       openMVG::Mat3 R_refined;
       std::vector<double> vPose;
@@ -536,10 +535,10 @@ bool Rig::optimizeCalibration()
       _vPoses.push_back(pose);
     }
   }
-
+    
   displayRelativePoseReprojection(geometry::Pose3(openMVG::Mat3::Identity(), openMVG::Vec3::Zero()), 0);
-
-  // Update all poses over all witness cameras after optimization
+    
+    // Update all poses over all witness cameras after optimization
   for(std::size_t iRelativePose = 0; iRelativePose < _vRelativePoses.size(); ++iRelativePose)
   {
     const std::size_t iLocalizer = iRelativePose+1;
@@ -548,7 +547,7 @@ bool Rig::optimizeCalibration()
     {
       // If the localization has succeeded then if the witness camera localization succeeded 
       // then update the pose else continue.
-      if(_vLocalizationResults[0][iView].isValid() && _vLocalizationResults[iLocalizer][iView].isValid())
+      if( _vLocalizationResults[0][iView].isValid() && _vLocalizationResults[iLocalizer][iView].isValid() )
       {
         // Retrieve the witness camera pose from the main camera one.
         const geometry::Pose3 poseWitnessCamera = poseFromMainToWitness(_vLocalizationResults[0][iView].getPose(), _vRelativePoses[iRelativePose]);
@@ -672,10 +671,10 @@ bool loadRigCalibration(const std::string &filename, std::vector<geometry::Pose3
     fs >> center(2);
     
     // add the pose in the vector
-    subposes.push_back(geometry::Pose3(rot, center));
+    subposes.emplace_back(rot, center);
   }
   
-  const bool isOk = fs.good();
+  bool isOk = fs.good();
   fs.close();
   return isOk;
 }
