@@ -150,10 +150,10 @@ VoctreeLocalizer::VoctreeLocalizer(const std::string &sfmFilePath,
 bool VoctreeLocalizer::localize(const std::unique_ptr<features::Regions> &genQueryRegions,
                                 const std::pair<std::size_t, std::size_t> &imageSize,
                                 const LocalizerParameters *param,
-                              bool useInputIntrinsics,
-                              cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                              LocalizationResult & localizationResult,
-                                const std::string& imagePath /* = std::string()*/)
+                                bool useInputIntrinsics,
+                                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
+                                LocalizationResult & localizationResult,
+                                const std::string& imagePath)
 {
   const Parameters *voctreeParam = static_cast<const Parameters *>(param);
   if(!voctreeParam)
@@ -176,20 +176,20 @@ bool VoctreeLocalizer::localize(const std::unique_ptr<features::Regions> &genQue
   
   switch(voctreeParam->_algorithm)
   {
-    case Algorithm::FirstBest: 
+    case Algorithm::FirstBest:
     return localizeFirstBestResult(*queryRegions,
-                                  imageSize,
-                                  *voctreeParam,
-                                  useInputIntrinsics,
-                                  queryIntrinsics,
-                                  localizationResult,
-                                  imagePath);
+                                   imageSize,
+                                   *voctreeParam,
+                                   useInputIntrinsics,
+                                   queryIntrinsics,
+                                   localizationResult,
+                                   imagePath);
     case Algorithm::BestResult: throw std::invalid_argument("BestResult not yet implemented");
-    case Algorithm::AllResults: 
+    case Algorithm::AllResults:
     return localizeAllResults(*queryRegions,
                               imageSize,
                               *voctreeParam,
-                              useInputIntrinsics, 
+                              useInputIntrinsics,
                               queryIntrinsics,
                               localizationResult,
                               imagePath);
