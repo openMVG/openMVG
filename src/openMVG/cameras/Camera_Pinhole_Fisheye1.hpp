@@ -1,8 +1,8 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-#ifndef OPENMVG_CAMERA_PINHOLE_FISHEYE1_HPP
-#define OPENMVG_CAMERA_PINHOLE_FISHEYE1_HPP
+
+#pragma once
 
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/cameras/Camera_Common.hpp"
@@ -15,10 +15,10 @@ namespace cameras {
 /**
  * Implement a simple Fish-eye camera model with only one parameter
  * 
- * "Straight lines have to be straight: automatic calibration and
- * removal of distortion from scenes of structured enviroments"
- * by Frederic Devernay and Olivier Faugeras
- * https://hal.inria.fr/inria-00267247/document
+ * Fredreric Devernay and Olivier Faugeras. 2001. Straight lines have to be 
+ * straight: automatic calibration and removal of distortion from scenes of 
+ * structured environments. Mach. Vision Appl. 13, 1 (August 2001), 14-24. 
+ * DOI: 10.1007/PL00013269 https://hal.inria.fr/inria-00267247/document
  */
 class Pinhole_Intrinsic_Fisheye1 : public Pinhole_Intrinsic
 {
@@ -121,5 +121,3 @@ public:
 #include <cereal/types/vector.hpp>
 
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::cameras::Pinhole_Intrinsic_Fisheye1, "fisheye1");
-
-#endif // #ifndef OPENMVG_CAMERA_PINHOLE_FISHEYE1_HPP
