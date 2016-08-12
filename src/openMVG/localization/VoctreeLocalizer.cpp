@@ -1343,9 +1343,7 @@ bool VoctreeLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<feat
   return resectionOk;
 }
 
-
-#else
-
+#endif // HAVE_OPENGV
 
 // subposes is n-1 as we consider the first camera as the main camera and the 
 // reference frame of the grid
@@ -1442,7 +1440,7 @@ bool VoctreeLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<featu
   return true;
 }
 
-#endif // HAVE_OPENGV
+
 
 } // localization
 } // openMVG

@@ -101,7 +101,8 @@ public:
                           const std::vector<geometry::Pose3 > &vec_subPoses,
                           geometry::Pose3 &rigPose,
                           std::vector<LocalizationResult>& vec_locResults);
-#else
+#endif
+  
   bool localizeRig_naive(const std::vector<std::unique_ptr<features::Regions> > & vec_queryRegions,
                         const std::vector<std::pair<std::size_t, std::size_t> > &imageSize,
                         const LocalizerParameters *parameters,
@@ -109,8 +110,7 @@ public:
                         const std::vector<geometry::Pose3 > &vec_subPoses,
                         geometry::Pose3 &rigPose,
                         std::vector<LocalizationResult>& vec_locResults);
-#endif
-  
+
   /**
    * @brief Given the input Regions, it retrieves all the 2D-3D associations from
    * the nearest k-frames in the database. The associations are retrieved in terms

@@ -617,8 +617,7 @@ bool CCTagLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<featur
   
   }
   
-
-#else
+#endif //HAVE_OPENGV
 
 // subposes is n-1 as we consider the first camera as the main camera and the 
 // reference frame of the grid
@@ -722,8 +721,6 @@ bool CCTagLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<feature
   return true;
 }
 
-
-#endif // HAVE_OPENGV
 
 void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegions,
                                         const CCTagLocalizer::Parameters &param,
