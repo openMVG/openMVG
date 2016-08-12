@@ -372,7 +372,7 @@ namespace openMVG
     const RGBColor YELLOW( 255, 255, 0 );
     const RGBColor CYAN( 0, 255, 255 );
     const RGBColor MAGENTA( 255, 0, 255 );
-
+    
   } // namespace image
 } // namespace openMVG
 

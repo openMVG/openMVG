@@ -8,7 +8,7 @@ namespace patternDetect {
 
 enum Pattern
 {
-  CHESSBOARD,
+  CHESSBOARD = 0,
   CIRCLES_GRID,
   ASYMMETRIC_CIRCLES_GRID
 #ifdef HAVE_CCTAG
@@ -20,13 +20,12 @@ enum Pattern
  * @brief This function detects the checkerboard in images
  *
  * @param[in] pattern
- * @param[out] found
  * @param[in] viewGray
  * @param[in] boardSize
- * @param[in] pointbuf
+ * @param[out] pointbuf
  * @return True if the pattern is found, otherwise false.
  */
-int findPattern(const Pattern& pattern, bool& found, const cv::Mat& viewGray, const cv::Size& boardSize, std::vector<cv::Point2f>& pointbuf);
+bool findPattern(const Pattern& pattern, const cv::Mat& viewGray, const cv::Size& boardSize, std::vector<cv::Point2f>& pointbuf);
 
 /**
  * @brief This function computes the points' coordinates of the checkerboard.

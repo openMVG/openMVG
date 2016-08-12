@@ -9,8 +9,9 @@
 namespace openMVG {
 namespace patternDetect {
 
-int findPattern(const Pattern& pattern, bool& found, const cv::Mat& viewGray, const cv::Size& boardSize, std::vector<cv::Point2f>& pointbuf)
+bool findPattern(const Pattern& pattern, const cv::Mat& viewGray, const cv::Size& boardSize, std::vector<cv::Point2f>& pointbuf)
 {
+  bool found = false;
   std::clock_t startCh;
   double durationCh;
 
@@ -23,15 +24,17 @@ int findPattern(const Pattern& pattern, bool& found, const cv::Mat& viewGray, co
                                       CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE);
     durationCh = (std::clock() - startCh) / (double) CLOCKS_PER_SEC;
     std::cout << "Find chessboard corners' duration: " << durationCh << std::endl;
-    startCh = std::clock();
 
     // improve the found corners' coordinate accuracy
     if (found)
+    {
+      startCh = std::clock();
       cv::cornerSubPix(viewGray, pointbuf, cv::Size(11, 11), cv::Size(-1, -1),
                        cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
 
-    durationCh = (std::clock() - startCh) / (double) CLOCKS_PER_SEC;
-    std::cout << "Refine chessboard corners' duration: " << durationCh << std::endl;
+      durationCh = (std::clock() - startCh) / (double) CLOCKS_PER_SEC;
+      std::cout << "Refine chessboard corners' duration: " << durationCh << std::endl;
+    }
     break;
 
   case CIRCLES_GRID:
@@ -59,10 +62,9 @@ int findPattern(const Pattern& pattern, bool& found, const cv::Mat& viewGray, co
 #endif
 
   default:
-    std::cerr << "Unknown pattern type" << std::endl;
-    return EXIT_FAILURE;
+    throw std::logic_error("LensCalibration: Unknown pattern type.");
   }
-  return EXIT_SUCCESS;
+  return found;
 }
 
 void calcChessboardCorners(cv::Size boardSize, const float& squareSize,
