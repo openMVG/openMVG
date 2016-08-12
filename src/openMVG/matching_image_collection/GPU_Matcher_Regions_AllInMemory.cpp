@@ -66,7 +66,7 @@ void GPU_Matcher_Regions_AllInMemory::Match(
 			{
 				std::vector<LatchBitMatcherMatch> matchedPoints[indexToCompare.size()];
 #ifdef OPENMVG_USE_OPENMP
-				omp_set_num_threads(1);
+				omp_set_num_threads(12);
 				#pragma omp parallel for schedule(dynamic)
 #endif
 				for (int j = 0; j < (int)indexToCompare.size(); ++j)
