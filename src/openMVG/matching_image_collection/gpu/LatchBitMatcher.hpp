@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <vector>
 
 #include <cuda.h>
@@ -8,25 +9,27 @@
 #include "openMVG/features/latch/LatchBitMatcherMatch.hpp"
 
 class LatchBitMatcher {
-    public:
-        LatchBitMatcher();
-       	void match(unsigned int*, unsigned int*, int, int);
-		std::vector<LatchBitMatcherMatch> retrieveMatches();
-        ~LatchBitMatcher();
-    private:
-        const int m_maxKP;
-        const int m_matchThreshold;
+  public:
+    LatchBitMatcher();
+    void match(void*, void*, int, int);
+	  std::vector<LatchBitMatcherMatch> retrieveMatches();
+    ~LatchBitMatcher();
+	private:
+    const int m_maxKP;
+    const int m_matchThreshold;
 
-        unsigned int* m_dD1;
-        unsigned int* m_dD2;
+    void* m_dQuery;
+    void* m_dTraining;
 
-		unsigned int m_numKP0;
-		unsigned int m_numKP1;
+		unsigned int m_numKPQuery;
+		unsigned int m_numKPTraining;
 
-        int* m_dM1;
-        int* m_dM2;
+    int* m_dMatches1;
+    int* m_dMatches2;
 
-        // CUDA stuff
-        cudaStream_t m_stream1;
-        cudaStream_t m_stream2;
+    cudaTextureObject_t m_texQuery;
+    cudaTextureObject_t m_texTraining;
+    // CUDA stuff
+    cudaStream_t m_stream1;
+    cudaStream_t m_stream2;
 };

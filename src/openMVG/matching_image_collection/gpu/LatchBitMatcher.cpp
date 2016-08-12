@@ -1,8 +1,9 @@
 #include "LatchBitMatcher.hpp"
 
+#include <cstring>
 #include <iostream>
 
-#include "bitMatcher.h"
+#include "CudaBruteForceMatcher.h"
 #include "params.hpp"
 
 #define DESCRIPTOR_SIZE 2048
@@ -26,69 +27,112 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 LatchBitMatcher::LatchBitMatcher() :
     m_maxKP(512 * NUM_SM),
     m_matchThreshold(MATCH_THRESHOLD) {
-    if (cudaStreamCreate(&m_stream1) == cudaErrorInvalidValue
-        || cudaStreamCreate(&m_stream2) == cudaErrorInvalidValue) {
-        std::cerr << "Unable to create streams" << std::endl;
-    }
-    size_t sizeD = m_maxKP * (DESCRIPTOR_SIZE / 32) * sizeof(unsigned int); // D for Descriptor
-	size_t sizeM = m_maxKP * sizeof(int); // M for Matches
+  if (cudaStreamCreate(&m_stream1) == cudaErrorInvalidValue
+			|| cudaStreamCreate(&m_stream2) == cudaErrorInvalidValue)
+    std::cerr << "Unable to create stream" << std::endl;
+    
+  const size_t sizeD = m_maxKP * 64; // D for Descriptor
+	const size_t sizeMatches = m_maxKP * sizeof(uint32_t); // M for Matches
 
-    cudaCalloc((void**) &m_dD1, sizeD, m_stream1);
-    cudaCalloc((void**) &m_dD2, sizeD, m_stream2);
+  cudaCalloc((void**) &m_dQuery, sizeD, m_stream1);
+  cudaCalloc((void**) &m_dTraining, sizeD, m_stream2);
 
-	cudaCalloc((void**) &m_dM1, sizeM, m_stream1);
-	cudaCalloc((void**) &m_dM2, sizeM, m_stream2);
+	cudaCalloc((void**) &m_dMatches1, sizeMatches, m_stream1);
+	cudaCalloc((void**) &m_dMatches2, sizeMatches, m_stream2);
+
+	cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
+	cudaDeviceSetSharedMemConfig(cudaSharedMemBankSizeEightByte);
+
+	struct cudaResourceDesc resDescQuery;
+	memset(&resDescQuery, 0, sizeof(resDescQuery));
+	resDescQuery.resType = cudaResourceTypeLinear;
+	resDescQuery.res.linear.devPtr = m_dQuery;
+	resDescQuery.res.linear.desc.f = cudaChannelFormatKindUnsigned;
+	resDescQuery.res.linear.desc.x = 32;
+	resDescQuery.res.linear.desc.y = 32;
+	resDescQuery.res.linear.sizeInBytes = sizeD;
+	
+	struct cudaTextureDesc texDescQuery;
+	memset(&texDescQuery, 0, sizeof(texDescQuery));
+	texDescQuery.addressMode[0] = cudaAddressModeBorder;
+	texDescQuery.addressMode[1] = cudaAddressModeBorder;
+	texDescQuery.filterMode = cudaFilterModePoint;
+	texDescQuery.readMode = cudaReadModeElementType;
+	texDescQuery.normalizedCoords = 0;
+	
+  struct cudaResourceDesc resDescTraining;
+	memset(&resDescTraining, 0, sizeof(resDescTraining));
+	resDescTraining.resType = cudaResourceTypeLinear;
+	resDescTraining.res.linear.devPtr = m_dTraining;
+	resDescTraining.res.linear.desc.f = cudaChannelFormatKindUnsigned;
+	resDescTraining.res.linear.desc.x = 32;
+	resDescTraining.res.linear.desc.y = 32;
+	resDescTraining.res.linear.sizeInBytes = sizeD;
+	
+	struct cudaTextureDesc texDescTraining;
+	memset(&texDescTraining, 0, sizeof(texDescTraining));
+	texDescTraining.addressMode[0] = cudaAddressModeBorder;
+	texDescTraining.addressMode[1] = cudaAddressModeBorder;
+	texDescTraining.filterMode = cudaFilterModePoint;
+	texDescTraining.readMode = cudaReadModeElementType;
+	texDescTraining.normalizedCoords = 0;
+
+  m_texQuery = 0;
+  m_texTraining = 0;
+
+	checkError(cudaCreateTextureObject(&m_texQuery, &resDescQuery, &texDescQuery, nullptr));
+	checkError(cudaCreateTextureObject(&m_texTraining, &resDescTraining, &texDescTraining, nullptr));
 }
 
-void LatchBitMatcher::match(unsigned int* h_descriptors1, unsigned int* h_descriptors2, int numKP0, int numKP1) {
-    m_numKP0 = numKP0;
-	m_numKP1 = numKP1;
+void LatchBitMatcher::match(void* h_descriptorsQuery, void* h_descriptorsTraining, int numKPQuery, int numKPTraining) {
+  m_numKPQuery = numKPQuery;
+	m_numKPTraining = numKPTraining;
 
-    size_t sizeD1 = numKP0 * (DESCRIPTOR_SIZE / 32) * sizeof(unsigned int); // D1 for descriptor1
-    size_t sizeD2 = numKP1 * (DESCRIPTOR_SIZE / 32) * sizeof(unsigned int); // D2 for descriptor2
-	size_t sizeM = m_maxKP * sizeof(int); // M for Matches
+  const size_t sizeDQuery = numKPQuery * 64; // D1 for descriptor1
+  const size_t sizeDTraining = numKPTraining * 64; // D2 for descriptor2
+	const size_t sizeMatches = m_maxKP * sizeof(int); // M for Matches
 
-	cudaMemsetAsync(m_dD1, 0, sizeD1, m_stream1);
-	cudaMemsetAsync(m_dD2, 0, sizeD2, m_stream2);
+	cudaMemsetAsync(m_dQuery, 0, sizeDQuery, m_stream1);
+	cudaMemsetAsync(m_dTraining, 0, sizeDTraining, m_stream2);
 
-	cudaMemsetAsync(m_dM1, 0, sizeM, m_stream1);
-	cudaMemsetAsync(m_dM2, 0, sizeM, m_stream2);
-    
-	cudaMemcpyAsync(m_dD1, h_descriptors1, sizeD1, cudaMemcpyHostToDevice, m_stream1);
-  cudaMemcpyAsync(m_dD2, h_descriptors2, sizeD2, cudaMemcpyHostToDevice, m_stream2);
+	cudaMemsetAsync(m_dMatches1, 0, sizeMatches, m_stream1);
+	cudaMemsetAsync(m_dMatches2, 0, sizeMatches, m_stream2);
+
+	cudaMemcpyAsync(m_dQuery, h_descriptorsQuery, sizeDQuery, cudaMemcpyHostToDevice, m_stream1);
+  cudaMemcpyAsync(m_dTraining, h_descriptorsTraining, sizeDTraining, cudaMemcpyHostToDevice, m_stream2);
  
-	bitMatch(m_dD1, m_dD2, numKP0, numKP1, m_maxKP, m_dM1, m_matchThreshold, m_stream1);
-    bitMatch(m_dD2, m_dD1, numKP1, numKP0, m_maxKP, m_dM2, m_matchThreshold, m_stream2);
+  cudaStreamSynchronize(m_stream1);
+  cudaStreamSynchronize(m_stream2);
+
+  cudaBruteForceMatcher(m_dTraining, m_numKPTraining, m_texQuery, m_numKPQuery, m_dMatches1, MATCH_THRESHOLD, m_stream1);
+  cudaBruteForceMatcher(m_dQuery, m_numKPQuery, m_texTraining, m_numKPTraining, m_dMatches2, MATCH_THRESHOLD, m_stream2);
 }
 
 std::vector<LatchBitMatcherMatch> LatchBitMatcher::retrieveMatches() {
-	int h_M1[m_maxKP];
-	int h_M2[m_maxKP];
-
-  getMatches(m_maxKP, h_M1, m_dM1, m_stream1);
-  getMatches(m_maxKP, h_M2, m_dM2, m_stream2);
+	int h_Matches1[m_maxKP];
+	int h_Matches2[m_maxKP];
+	cudaMemcpyAsync(h_Matches1, m_dMatches1, m_maxKP * sizeof(int), cudaMemcpyDeviceToHost, m_stream1);
+	cudaMemcpyAsync(h_Matches2, m_dMatches2, m_maxKP * sizeof(int), cudaMemcpyDeviceToHost, m_stream2);
 
 	cudaStreamSynchronize(m_stream1);
 	cudaStreamSynchronize(m_stream2);
 
 	std::vector<LatchBitMatcherMatch> matches;
-#ifdef OPENMVG_USE_OMP
-    #pragma omp parallel for schedule(dynamic)
-#endif
-	for (size_t i = 0; i < m_numKP0; i++) {
-        if (h_M1[i] >= 0 && h_M1[i] < m_numKP1 && h_M2[h_M1[i]] == i) {
-            // Add matches
-            matches.push_back(LatchBitMatcherMatch(i, h_M1[i], 0));
-        }
-    }
-    return matches;
+//#ifdef OPENMVG_USE_OMP
+//  #pragma omp parallel for schedule(dynamic)
+//#endif
+	for (size_t i = 0; i < m_numKPQuery; i++) {
+   if (h_Matches1[i] != -1 && h_Matches1[i] < m_numKPTraining && h_Matches2[h_Matches1[i]] == i)
+      matches.push_back(LatchBitMatcherMatch(i, h_Matches1[i], 0));
+	}
+  return matches;
 }
 
 LatchBitMatcher::~LatchBitMatcher() {
-	cudaFree(m_dD1);
-	cudaFree(m_dD2);
-	cudaFree(m_dM1);
-	cudaFree(m_dM2);
-    cudaStreamDestroy(m_stream1);
-    cudaStreamDestroy(m_stream2);
+	cudaFree(m_dQuery);
+	cudaFree(m_dTraining);
+	cudaFree(m_dMatches1);
+	cudaFree(m_dMatches2);
+  cudaStreamDestroy(m_stream1);
+  cudaStreamDestroy(m_stream2);
 }

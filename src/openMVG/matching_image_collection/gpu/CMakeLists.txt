@@ -11,7 +11,7 @@ INCLUDE(FindCUDA)
 link_directories(${cuda_library_dirs})
 
 SET(CUDASRCS
-    bitMatcher.cu
+	CudaBruteForceMatcher.cu
 )
 
 LIST(APPEND CUDA_NVCC_FLAGS "-D_MWAITXINTRIN_H_INCLUDED -lineinfo -Xptxas -v -use_fast_math -O3 -gencode arch=compute_60,code=sm_60 -std=c++11")

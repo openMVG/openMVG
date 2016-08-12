@@ -83,7 +83,7 @@ public:
 		regionsCasted->Features().resize(kpts.size());
 		regionsCasted->Descriptors().resize(kpts.size());
 
-      #ifdef OPENMVG_USE_OPENMP
+    #ifdef OPENMVG_USE_OPENMP
 		#pragma omp parallel for
 	  #endif
 		for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
@@ -183,5 +183,5 @@ private:
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/archives/json.hpp>
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::LATCH_Image_describer, "LATCH_Image_describer");
-
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Image_describer, openMVG::features::LATCH_Image_describer)
 #endif // OPENMVG_FEATURES_LATCH_IMAGE_DESCRIBER_HPP

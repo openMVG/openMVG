@@ -65,7 +65,7 @@ void GPU_Matcher_Regions_AllInMemory::Match(
 			{
 				LatchBitMatcher matchers[indexToCompare.size()];
 #ifdef OPENMVG_USE_OPENMP
-				omp_set_num_threads(1);
+				omp_set_num_threads(12);
 				#pragma omp parallel for schedule(dynamic)
 #endif
 				for (int j = 0; j < static_cast<int>(indexToCompare.size()); ++j)
