@@ -657,8 +657,7 @@ bool CCTagLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<feature
   assert(numCams==vec_subPoses.size()-1);
   assert(numCams==imageSize.size());
 
-  vec_localizationResults.clear();
-  vec_localizationResults.reserve(numCams);
+  vec_localizationResults.resize(numCams);
     
   // this is basic, just localize each camera alone
   //@todo parallelize?
