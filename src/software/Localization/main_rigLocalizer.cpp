@@ -128,13 +128,13 @@ int main(int argc, char** argv)
 {
   // common parameters
   std::string sfmFilePath;                //< the OpenMVG .json data file
-  std::string descriptorsFolder;          //< the OpenMVG .json data file
+  std::string descriptorsFolder;          //< the the folder containing the descriptors
   std::string mediaPath;                  //< the media file to localize
   std::string filelist;                  //< the media file to localize
   std::string rigCalibPath;               //< the file containing the calibration data for the file (subposes)
-//< the preset for the feature extractor
-  features::EDESCRIBER_PRESET featurePreset = features::EDESCRIBER_PRESET::NORMAL_PRESET;     
   //< the preset for the feature extractor
+  features::EDESCRIBER_PRESET featurePreset = features::EDESCRIBER_PRESET::NORMAL_PRESET;     
+  //< the type of features to use for localization
   DescriberType descriptorType = DescriberType::SIFT;        
   //< the estimator to use for resection
   robust::EROBUST_ESTIMATOR resectionEstimator = robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_ACRANSAC;        
@@ -195,28 +195,28 @@ int main(int argc, char** argv)
       ("refineIntrinsics", po::bool_switch(&refineIntrinsics),
           "Enable/Disable camera intrinsics refinement for each localized image")
       ("nCameras", po::value<size_t>(&numCameras)->default_value(numCameras), 
-        "Number of cameras composing the rig")
+          "Number of cameras composing the rig")
       ("calibration", po::value<std::string>(&rigCalibPath)->required(), 
-        "The file containing the calibration data for the rig (subposes)")
+          "The file containing the calibration data for the rig (subposes)")
       ("reprojectionError", po::value<double>(&resectionErrorMax)->default_value(resectionErrorMax), 
-        "Maximum reprojection error (in pixels) allowed for resectioning. If set "
-        "to 0 it lets the ACRansac select an optimal value.")
+          "Maximum reprojection error (in pixels) allowed for resectioning. If set "
+          "to 0 it lets the ACRansac select an optimal value.")
       ("useLocalizeRigNaive", po::bool_switch(&useLocalizeRigNaive),
           "Enable/Disable the naive method for rig localization: naive method tries "
           "to localize each camera separately. This is enabled by default if the "
           "library has not been built with openGV.")
   // parameters for voctree localizer
       ("voctree", po::value<std::string>(&vocTreeFilepath),
-        "[voctree] Filename for the vocabulary tree")
+          "[voctree] Filename for the vocabulary tree")
       ("voctreeWeights", po::value<std::string>(&weightsFilepath),
-        "[voctree] Filename for the vocabulary tree weights")
+          "[voctree] Filename for the vocabulary tree weights")
       ("algorithm", po::value<std::string>(&algostring)->default_value(algostring),
-        "[voctree] Algorithm type: {FirstBest,BestResult,AllResults,Cluster}" )
+          "[voctree] Algorithm type: {FirstBest,BestResult,AllResults,Cluster}" )
       ("nbImageMatch", po::value<size_t>(&numResults)->default_value(numResults),
-        "[voctree] Number of images to retrieve in the database")
+          "[voctree] Number of images to retrieve in the database")
       ("maxResults", po::value<size_t>(&maxResults)->default_value(maxResults), 
-        "[voctree] For algorithm AllResults, it stops the image matching when "
-        "this number of matched images is reached. If 0 it is ignored.")
+          "[voctree] For algorithm AllResults, it stops the image matching when "
+          "this number of matched images is reached. If 0 it is ignored.")
       ("matchingError", po::value<double>(&matchingErrorMax)->default_value(matchingErrorMax), 
           "[voctree] Maximum matching error (in pixels) allowed for image matching with "
           "geometric verification. If set to 0 it lets the ACRansac select "
@@ -316,6 +316,7 @@ int main(int argc, char** argv)
 #endif
       )
   {
+    POPART_COUT("Localizing sequence using the voctree localizer");
     localization::VoctreeLocalizer* tmpLoc = new localization::VoctreeLocalizer(sfmFilePath,
                                                             descriptorsFolder,
                                                             vocTreeFilepath,
