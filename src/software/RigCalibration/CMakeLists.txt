@@ -20,14 +20,13 @@ endif(OpenMVG_USE_BOOST)
 if(OpenCV_FOUND AND Boost_FOUND)
   message(STATUS "OpenCV & Boost found: build openMVG_main_cameraCalibration")
   add_executable(openMVG_main_cameraCalibration main_cameraCalibration.cpp)
-  target_link_libraries(openMVG_main_cameraCalibration
-    PUBLIC
+  target_link_libraries(openMVG_main_cameraCalibration # PUBLIC
     openMVG_dataio
     openMVG_image
     openMVG_calibration
     ${OpenCV_LIBRARIES}
     ${Boost_LIBRARIES}
     )
-  target_include_directories(openMVG_main_cameraCalibration PUBLIC ${Boost_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
+  # target_include_directories(openMVG_main_cameraCalibration PUBLIC ${Boost_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
   install(TARGETS openMVG_main_cameraCalibration DESTINATION bin/)
 endif()
