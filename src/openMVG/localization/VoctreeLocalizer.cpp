@@ -1290,7 +1290,7 @@ bool VoctreeLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<feat
       // subPose12 = [R12 t12] = [R2 t2]*inv([R1 t1]) and we need [R2 t2], ie the absolute pose
       // => [R1 t1] * subPose12 = [R2 t2]
       // => rigPose * subPose12 = [R2 t2]
-      pose = vec_subPoses[cam] * rigPose;
+      pose = vec_subPoses[cam-1] * rigPose;
     }
     
     // create matchData
