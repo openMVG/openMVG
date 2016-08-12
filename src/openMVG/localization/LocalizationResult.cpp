@@ -172,5 +172,37 @@ bool save(const std::vector<LocalizationResult> & res, const std::string & filen
 }
 
 
+
+void updateRigPoses(std::vector<LocalizationResult>& vec_localizationResults,
+                    const geometry::Pose3 &rigPose,
+                    const std::vector<geometry::Pose3 > &vec_subPoses)
+{
+  const std::size_t numCams = vec_localizationResults.size();
+  assert(numCams==vec_subPoses.size()+1);
+  
+  // update localization result poses
+  for(std::size_t cam = 0; cam < numCams; ++cam)
+  {
+    geometry::Pose3 pose;
+    if(cam == 0)
+    {
+      pose = rigPose;
+    }
+    else
+    {
+      // main camera: q1 ~ [R1 t1] Q = [I 0] A   where A = [R1 t1] Q  
+      // another camera: q2 ~ [R2 t2] Q = [R2 t2]*inv([R1 t1]) A 
+      // and subPose12 = [R12 t12] = [R2 t2]*inv([R1 t1])
+      // With rigResection() we compute [R1 t1] (aka rigPose), hence:
+      // subPose12 = [R12 t12] = [R2 t2]*inv([R1 t1]) and we need [R2 t2], ie the absolute pose
+      // => [R1 t1] * subPose12 = [R2 t2]
+      // => rigPose * subPose12 = [R2 t2]
+      pose = vec_subPoses[cam] * rigPose;
+    }
+    
+    vec_localizationResults[cam].setPose(pose);
+  }
+}
+
 } // localization
 } // openMVG

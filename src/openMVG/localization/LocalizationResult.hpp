@@ -197,6 +197,18 @@ bool load(std::vector<LocalizationResult> & res, const std::string & filename);
 bool save(const LocalizationResult & res, const std::string & filename);
 bool save(const std::vector<LocalizationResult> & res, const std::string & filename);
 
+/**
+ * @brief It recompute the pose of each camera in Localization results according
+ * to the rigPose given as input. The camera in position 0 is supposed to be the 
+ * main camera and it is set to the pose of the rig.
+ * @param[in,out] vec_localizationResults
+ * @param[in] rigPose
+ * @param[in] vec_subPoses (N-1) vector
+ */
+void updateRigPoses(std::vector<LocalizationResult>& vec_localizationResults,
+                    const geometry::Pose3 &rigPose,
+                    const std::vector<geometry::Pose3 > &vec_subPoses);
+
 } // localization
 } // openMVG
 
