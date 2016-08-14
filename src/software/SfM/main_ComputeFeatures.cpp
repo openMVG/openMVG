@@ -235,6 +235,12 @@ int main(int argc, char **argv)
       image_describer.reset(new DEEP_Image_describer(DEEPParams(PNNET)));
       force_single_thread = true;
     }
+    else
+    if (sImage_Describer_Method == "ORB")
+    {
+      image_describer.reset(new ORB_Image_describer(ORBParams(ORB)));
+      force_single_thread = true;
+    }
     //image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_LIOP), !bUpRight));
     if (!image_describer)
     {

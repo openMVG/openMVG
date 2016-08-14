@@ -1,4 +1,4 @@
-#include "BruteForceL2Matcher.hpp"
+#include "BruteForceHammingMatcher.hpp"
 
 #include <iostream>
 #include <limits>
@@ -7,19 +7,16 @@
 #include <opencv2/core/cuda_stream_accessor.hpp>
 
 template<typename featureType, unsigned int featureLength>
-GPUBruteForceL2Matcher<featureType, featureLength>::GPUBruteForceL2Matcher(const float matchThreshold) :
+GPUBruteForceHammingMatcher<featureType, featureLength>::GPUBruteForceHammingMatcher(const float matchThreshold) :
 	m_matchThreshold(matchThreshold){
-	if (typeid(featureType).hash_code() == typeid(unsigned char).hash_code() && featureLength == 32)
-		m_matcher = cv::cuda::DescriptorMatcher::createBFMatcher(cv::NORM_HAMMING);
-	else
-		m_matcher = cv::cuda::DescriptorMatcher::createBFMatcher(cv::NORM_L2);
+	m_matcher = cv::cuda::DescriptorMatcher::createBFMatcher(cv::NORM_HAMMING);
 	
 	if (cudaStreamCreate(&m_stream) == cudaErrorInvalidValue )
     std::cerr << "Unable to create streams" << std::endl;
 }
 
 template <typename featureType, unsigned int featureLength>
-void GPUBruteForceL2Matcher<featureType, featureLength>::match(featureType* descriptors1, featureType* descriptors2, int h_numKP1, int h_numKP2) {
+void GPUBruteForceHammingMatcher<featureType, featureLength>::match(featureType* descriptors1, featureType* descriptors2, int h_numKP1, int h_numKP2) {
 	const int largerKPNum = h_numKP1 >= h_numKP2 ? h_numKP1 : h_numKP2;
 
 	// Because hash_code is silly but works
@@ -33,24 +30,13 @@ void GPUBruteForceL2Matcher<featureType, featureLength>::match(featureType* desc
 	const cv::Mat h_descriptors1(h_numKP1, featureLength, typeMat, descriptors1);
 	const cv::Mat h_descriptors2(h_numKP2, featureLength, typeMat, descriptors2);
 
-	cv::cuda::GpuMat d_descriptors1(h_numKP1, featureLength, CV_32F);
-  cv::cuda::GpuMat d_descriptors2(h_numKP2, featureLength, CV_32F);
+	cv::cuda::GpuMat d_descriptors1(h_numKP1, featureLength, typeMat);
+  cv::cuda::GpuMat d_descriptors2(h_numKP2, featureLength, typeMat);
 
 	cv::cuda::Stream stream = cv::cuda::StreamAccessor::wrapStream(m_stream);
 	
-	if (typeMat == CV_8U) {
-		cv::Mat h_descriptorsFloat1(h_numKP1, featureLength, CV_32F);
-		cv::Mat h_descriptorsFloat2(h_numKP2, featureLength, CV_32F);
-
-		h_descriptors1.convertTo(h_descriptorsFloat1, CV_32F, 1.0/512.0);
-		h_descriptors2.convertTo(h_descriptorsFloat2, CV_32F, 1.0/512.0);
-
-		d_descriptors1.upload(h_descriptorsFloat1, stream);
-		d_descriptors2.upload(h_descriptorsFloat2, stream);
-	} else {
-		d_descriptors1.upload(h_descriptors1, stream);
-		d_descriptors2.upload(h_descriptors2, stream);
-	}
+	d_descriptors1.upload(h_descriptors1, stream);
+	d_descriptors2.upload(h_descriptors2, stream);
 
 	cv::cuda::GpuMat d_results;
 
@@ -71,28 +57,16 @@ void GPUBruteForceL2Matcher<featureType, featureLength>::match(featureType* desc
 }
 
 template<typename featureType, unsigned int featureLength>
-const std::vector<LatchBitMatcherMatch> GPUBruteForceL2Matcher<featureType, featureLength>::retrieveMatches() {
+const std::vector<LatchBitMatcherMatch> GPUBruteForceHammingMatcher<featureType, featureLength>::retrieveMatches() {
 	return m_goodMatches;
 }
 
 template<typename featureType, unsigned int featureLength>
-GPUBruteForceL2Matcher<featureType, featureLength>::~GPUBruteForceL2Matcher() {
+GPUBruteForceHammingMatcher<featureType, featureLength>::~GPUBruteForceHammingMatcher() {
 	m_matcher.release();
 	cudaStreamDestroy(m_stream);
 }
 
 // When adding extra features, you need to add their instantiation here
-// PNNet
-template class GPUBruteForceL2Matcher<float, 128>;
-// DeepSiam
-template class GPUBruteForceL2Matcher<float, 256>;
-// DeepSiam2Stream
-template class GPUBruteForceL2Matcher<float, 512>;
-// SIFT
-template class GPUBruteForceL2Matcher<unsigned char, 128>;
 // ORB
-template class GPUBruteForceL2Matcher<unsigned char, 32>;
-// SURF
-template class GPUBruteForceL2Matcher<float, 64>;
-// Dissociated dipole like Regions
-template class GPUBruteForceL2Matcher<float, 20>;
+template class GPUBruteForceHammingMatcher<unsigned char, 32>;

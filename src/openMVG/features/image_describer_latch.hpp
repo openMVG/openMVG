@@ -133,13 +133,13 @@ public:
 			SIOPointFeature(ptLatch.x, ptLatch.y, ptLatch.size, ptLatch.angle);
 		  // Store descriptors
 		  for (size_t j = 0; j < 16; j++) {
-			const unsigned int descriptorIndex = i * 64 + j;
-				  unsigned int descriptor = static_cast<unsigned int>(descriptors[descriptorIndex]);
-				  for (size_t k = 0; k < 4; k++) {
+        const unsigned int descriptorIndex = i * 64 + j;
+				unsigned int descriptor = static_cast<unsigned int>(descriptors[descriptorIndex]);
+				for (size_t k = 0; k < 4; k++) {
 					unsigned char descriptorRawByte = static_cast<unsigned char>((descriptor >> (24-k*3)) & 0xFF);
 					const unsigned int descriptorRawIndex = j * 4 + k;
-			  regionsCasted->Descriptors()[i][descriptorRawIndex] = descriptorRawByte;
-				  }
+			    regionsCasted->Descriptors()[i][descriptorRawIndex] = descriptorRawByte;
+				}
 		  }
 		}
 	  }

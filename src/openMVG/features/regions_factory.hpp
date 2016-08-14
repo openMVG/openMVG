@@ -27,6 +27,8 @@ typedef Binary_Regions<SIOPointFeature,64> AKAZE_Binary_Regions;
 typedef Scalar_Regions<SIOPointFeature, unsigned int, 64> LATCH_Unsigned_Int_Regions;
 // Define the LATCH Keypoint (with a binary descriptor saved in a uchar array)
 typedef Binary_Regions<SIOPointFeature,65> LATCH_Binary_Regions;
+// Define the ORB Keypoint (with a binary descriptor saved in a uchar array)
+typedef Binary_Regions<SIOPointFeature,32> ORB_Binary_Regions;
 // Define the DEEP Keypoint (with a float descriptor)
 typedef Scalar_Regions<SIOPointFeature, float, 512> DEEP_Float_512_Regions;
 // Define the DEEP Keypoint (with a float descriptor)
@@ -55,6 +57,8 @@ CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::LATCH_Unsigned_Int_Regions, "L
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::features::LATCH_Unsigned_Int_Regions)
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::LATCH_Binary_Regions, "LATCH_Binary_Regions");
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::features::LATCH_Binary_Regions)
+CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::ORB_Binary_Regions, "ORB_Binary_Regions");
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::features::ORB_Binary_Regions)
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::DEEP_Float_512_Regions, "DEEP_Float_512_Regions");
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::features::DEEP_Float_512_Regions)
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::DEEP_Float_256_Regions, "DEEP_Float_256_Regions");

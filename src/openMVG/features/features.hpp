@@ -19,6 +19,7 @@
 #include "openMVG/features/image_describer_akaze.hpp"
 #include "openMVG/features/image_describer_deep.hpp"
 #include "openMVG/features/image_describer_latch.hpp"
+#include "openMVG/features/image_describer_orb.hpp"
 #include "openMVG/features/tbmr/tbmr.hpp"
 #include "openMVG/features/mser/mser.hpp"
 #include "openMVG/features/io_regions_type.hpp"
