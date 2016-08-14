@@ -66,7 +66,6 @@ void GPU_Matcher_Regions_AllInMemory::Match(
 			{
 				std::vector<LatchBitMatcherMatch> matchedPoints[indexToCompare.size()];
 #ifdef OPENMVG_USE_OPENMP
-				omp_set_num_threads(1);
 				#pragma omp parallel for schedule(dynamic)
 #endif
 				for (int j = 0; j < (int)indexToCompare.size(); ++j)
@@ -96,14 +95,14 @@ void GPU_Matcher_Regions_AllInMemory::Match(
 							break;
 						}
 						case 128: {
-							LatchBitMatcher matchers[indexToCompare.size()];
+							LatchBitMatcher matcher;
 								// LatchClassifier for the GPU
-								matchers[j].match(
+								matcher.match(
 									const_cast<unsigned int*>(static_cast<const unsigned int*>(regionsI.DescriptorRawData())),
 									const_cast<unsigned int*>(static_cast<const unsigned int*>(regionsJ.DescriptorRawData())), 
 									regionsI.RegionCount(), 
 									regionsJ.RegionCount());
-								matchedPoints[j] = matchers[j].retrieveMatches();
+								matchedPoints[j] = matcher.retrieveMatches();
 								break;
 							}
 						default: {

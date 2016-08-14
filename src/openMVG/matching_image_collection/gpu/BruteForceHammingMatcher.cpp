@@ -26,7 +26,6 @@ void GPUBruteForceHammingMatcher<featureType, featureLength>::match(featureType*
 	else if (typeid(featureType).hash_code() == typeid(unsigned char).hash_code())
 			typeMat = CV_8U;
 
-
 	const cv::Mat h_descriptors1(h_numKP1, featureLength, typeMat, descriptors1);
 	const cv::Mat h_descriptors2(h_numKP2, featureLength, typeMat, descriptors2);
 
