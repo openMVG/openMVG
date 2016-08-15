@@ -92,6 +92,59 @@ double LocalizationResult::computeInliersRMSE() const
   return std::sqrt(sqrErrors.mean());
 }
 
+double LocalizationResult::computeAllRMSE() const 
+{
+  const auto& residuals = computeAllResiduals();
+  // squared residual for each point
+  const auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
+  //RMSE
+  return std::sqrt(sqrErrors.mean());
+}
+
+Vec LocalizationResult::computeReprojectionErrorPerInlier() const 
+{
+  const auto& residuals = computeInliersResiduals();
+  // squared residual for each point
+  const Vec sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
+  //RMSE
+  return sqrErrors.array().sqrt();
+}
+
+Vec LocalizationResult::computeReprojectionErrorPerAll() const
+{
+  const auto& residuals = computeAllResiduals();
+  // squared residual for each point
+  const Vec sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
+  //RMSE
+  return sqrErrors.array().sqrt();
+}
+
+std::size_t LocalizationResult::updateInliers(double threshold)
+{
+   const auto &residuals = computeReprojectionErrorPerAll();
+   auto &inliers = _matchData.vec_inliers;
+   std::cout << "Inliers before: " << inliers.size();
+   inliers.clear();
+   // at worst they could all be inliers
+   inliers.reserve(getPt2D().size());
+   
+   for(std::size_t i = 0; i < residuals.size(); ++i )
+   {
+     if(residuals[i] < threshold)
+     {
+       inliers.push_back(i);
+     }
+   }
+   std::cout << " \tafter: " << inliers.size() << std::endl;
+   _matchData.error_max = threshold;
+   return inliers.size();
+}
+
+std::size_t LocalizationResult::updateInliers()
+{  
+   const auto threshold = _matchData.error_max;
+   return updateInliers(threshold);
+}
 
 bool load(LocalizationResult & res, const std::string & filename)
 {
@@ -197,7 +250,7 @@ void updateRigPoses(std::vector<LocalizationResult>& vec_localizationResults,
       // subPose12 = [R12 t12] = [R2 t2]*inv([R1 t1]) and we need [R2 t2], ie the absolute pose
       // => [R1 t1] * subPose12 = [R2 t2]
       // => rigPose * subPose12 = [R2 t2]
-      pose = vec_subPoses[cam] * rigPose;
+      pose = vec_subPoses[cam-1] * rigPose;
     }
     
     vec_localizationResults[cam].setPose(pose);

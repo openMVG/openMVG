@@ -122,10 +122,56 @@ public:
     return _isValid;
   }
   
+  /**
+   * @brief Compute the residual for each 2D-3D association.
+   * @return A 2xN matrix containing the x-y residual for each point.
+   */
   Mat2X computeAllResiduals() const;
   
+  /**
+   * @brief Compute the residual for the inlier 2D-3D association.
+   * @return A 2xNumInliers containing the x-y residual for each inlier point.
+   */
   Mat2X computeInliersResiduals() const ;
+  
+  /**
+   * @brief Compute the reprojection error for the inliers.
+   * @return A 1xNumInliers vector containing the reprojection error for each inlier point.
+   */
+  Vec computeReprojectionErrorPerInlier() const;
+  
+   /**
+   * @brief Compute the reprojection error for the all the points.
+   * @return A 1xNumInliers vector containing the reprojection error for each point.
+   */
+  Vec computeReprojectionErrorPerAll() const;
+  
+  /**
+   * @brief Compute the RMSE for the inlier association.
+   * @return The RMSE for the inlier associations.
+   */
   double computeInliersRMSE() const ;
+
+  /**
+   * @brief Compute the RMSE for the all the associations.
+   * @return The RMSE for the inlier associations.
+   */
+  double computeAllRMSE() const ;
+  
+  /**
+   * @brief Re-compute the inliers according to the given threshold.
+   * @param[in] threshold The threshold for the reprojection error in pixels.
+   * @return The number of inliers detected with the new threshold.
+   */
+  std::size_t updateInliers(double threshold);
+  
+  /**
+   * @brief Re-compute the inliers using the threshold computed during resection.
+   * @return The number of inliers detected.
+   */
+  std::size_t updateInliers();
+  
+  double getThreshold() const { return _matchData.error_max;}
 
   // Serialization
   template<class Archive>
