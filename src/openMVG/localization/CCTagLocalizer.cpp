@@ -698,7 +698,6 @@ bool CCTagLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<feature
     // refined by the call to localize
     //set the pose
     rigPose = vec_localizationResults[0].getPose();
-    return vec_localizationResults[0].isValid();
   }
   
   // if only one camera has been localized
@@ -732,12 +731,18 @@ bool CCTagLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<feature
       // recover the rig pose using the subposes
       rigPose = vec_subPoses[idx-1].inverse() * vec_localizationResults[idx].getPose();
     }
-    return vec_localizationResults[idx].isValid();
   }
   
   // ** otherwise run a BA with the localized cameras
-
-  refineRigPose(vec_subPoses, vec_localizationResults, rigPose);
+  const bool refineOk = refineRigPose(vec_subPoses, vec_localizationResults, rigPose);
+  
+  if(!refineOk)
+  {
+    POPART_COUT("[poseEstimation]\tRig pose refinement failed.");
+    return false;
+  }
+  
+  updateRigPoses(vec_localizationResults, rigPose, vec_subPoses);
   
   return true;
 }

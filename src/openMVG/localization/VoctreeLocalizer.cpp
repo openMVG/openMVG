@@ -1393,6 +1393,7 @@ bool VoctreeLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<featu
   for(size_t i = 0; i < numCams; ++i)
   {
     isLocalized[i] = localize(vec_queryRegions[i], vec_imageSize[i], parameters, true /*useInputIntrinsics*/, vec_queryIntrinsics[i], vec_localizationResults[i]);
+    assert(isLocalized[i] == vec_localizationResults[i].isValid());
     if(!isLocalized[i])
     {
       POPART_CERR("Could not localize camera " << i);
@@ -1420,11 +1421,9 @@ bool VoctreeLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<featu
     // refined by the call to localize
     //set the pose
     rigPose = vec_localizationResults[0].getPose();
-    return vec_localizationResults[0].isValid();
   }
-  
   // if only one camera has been localized
-  if(numLocalizedCam == 1)
+  else if(numLocalizedCam == 1)
   {
     // all the other cameras have not been localized just return the result of the 
     // localized one
@@ -1454,12 +1453,18 @@ bool VoctreeLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<featu
       // recover the rig pose using the subposes
       rigPose = vec_subPoses[idx-1].inverse() * vec_localizationResults[idx].getPose();
     }
-    return vec_localizationResults[idx].isValid();
   }
   
   // ** otherwise run a BA with the localized cameras
-
-  refineRigPose(vec_subPoses, vec_localizationResults, rigPose);
+  const bool refineOk = refineRigPose(vec_subPoses, vec_localizationResults, rigPose);
+  
+  if(!refineOk)
+  {
+    POPART_COUT("[poseEstimation]\tRig pose refinement failed.");
+    return false;
+  }
+  
+  updateRigPoses(vec_localizationResults, rigPose, vec_subPoses);
   
   return true;
 }
