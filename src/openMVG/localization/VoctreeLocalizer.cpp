@@ -1212,6 +1212,7 @@ bool VoctreeLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<feat
       // empty result with isValid set to false
       vec_locResults.emplace_back();
     }
+    POPART_COUT("Resection failed.");
     return resectionOk;
   }
   
@@ -1322,7 +1323,10 @@ bool VoctreeLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<feat
   
   
   if(!refineOk)
-    return resectionOk;
+  {
+    POPART_COUT("[poseEstimation]\tRefine failed.");
+    return false;
+  }
   
   { // just debugging stuff, this block can be removed
     
@@ -1360,7 +1364,7 @@ bool VoctreeLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<feat
     }
   }
     
-  return resectionOk;
+  return true;
 }
 
 #endif // HAVE_OPENGV
