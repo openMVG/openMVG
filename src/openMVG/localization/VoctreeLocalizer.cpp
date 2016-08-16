@@ -20,7 +20,6 @@
 #include <openMVG/logger.hpp>
 
 #include <third_party/progress/progress.hpp>
-//#include <cereal/archives/json.hpp>
 
 #include <boost/filesystem.hpp>
 
