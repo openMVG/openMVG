@@ -589,7 +589,11 @@ bool VoctreeLocalizer::localizeFirstBestResult(const features::SIFT_Regions &que
                                                        true /*b_refine_pose*/, 
                                                        param._refineIntrinsics /*b_refine_intrinsic*/);
     if(!refineStatus)
-      POPART_COUT("[poseEstimation]\tRefine pose could not improve the estimation of the camera pose.");
+    {
+      POPART_COUT("[poseEstimation]\tRefine pose failed.");
+      // try next one
+      continue;
+    }
     
     {
       // just temporary code to evaluate the estimated pose @todo remove it
@@ -603,7 +607,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const features::SIFT_Regions &que
       POPART_COUT("center difference: " << (pose.center()-referencePose.center()).norm());
       POPART_COUT("err = [err; " << R2D(getRotationMagnitude(pose.rotation()*referencePose.rotation().inverse())) << ", "<< (pose.center()-referencePose.center()).norm() << "];");
     }
-    localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, matchedImages, true);
+    localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, matchedImages, refineStatus);
     break;
   }
   //@todo deal with unsuccesful case...
@@ -703,7 +707,7 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
                                                      true /*b_refine_pose*/,
                                                      param._refineIntrinsics /*b_refine_intrinsic*/);
   if(!refineStatus)
-    POPART_COUT("Refine pose could not improve the estimation of the camera pose.");
+    POPART_COUT("Refine pose failed.");
 
   if(!param._visualDebug.empty() && !imagePath.empty())
   {
@@ -715,7 +719,7 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
                      &resectionData.vec_inliers);
   }
 
-  localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, matchedImages, true);
+  localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, matchedImages, refineStatus);
 
   {
     // just debugging this block can be safely removed or commented out
