@@ -279,6 +279,10 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
   // Loop over all k nearest key frames in order to get the most geometrically 
   // consistent one.
   sfm::Image_Localizer_Match_Data bestResectionData;
+    // Upper bound pixel(s) tolerance for residual errors
+  bestResectionData.error_max = std::numeric_limits<double>::infinity();
+  bestResectionData.max_iteration = 4096;
+  
   std::vector<pair<IndexT, IndexT> > bestAssociationIDs;
   geometry::Pose3 bestPose;
   
@@ -392,10 +396,6 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
     queryIntrinsics.setWidth(imageSize.first);
     queryIntrinsics.setHeight(imageSize.second);
   }
-  
-  // Upper bound pixel(s) tolerance for residual errors
-  bestResectionData.error_max = std::numeric_limits<double>::infinity();
-  bestResectionData.max_iteration = 4096;
   
   // E. refine the estimated pose
   POPART_COUT("[poseEstimation]\tRefining estimated pose");
