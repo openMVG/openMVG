@@ -443,20 +443,35 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
     if(!param->_visualDebug.empty() && !imagePath.empty())
     {
       const sfm::View *mview = _sfm_data.GetViews().at(indexKeyFrame).get();
-      const std::string queryimage = bfs::path(imagePath).stem().string();
+      const std::string queryImage = bfs::path(imagePath).stem().string();
       const std::string matchedImage = bfs::path(mview->s_Img_path).stem().string();
       const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
+
+      // the directory where to save the feature matches
+      const auto baseDir = bfs::path(param->_visualDebug) / queryImage;
+      if((!bfs::exists(baseDir)))
+      {
+        POPART_COUT("created " << baseDir.string());
+        bfs::create_directories(baseDir);
+      }
       
+      // the final filename for the output svg file as a composition of the query
+      // image and the matched image
+      auto outputName = baseDir / queryImage;
+      outputName += "_";
+      outputName += matchedImage;
+      outputName += ".svg";
       
+      const bool showNotMatched = true;
       features::saveCCTagMatches2SVG(imagePath, 
-                           imageSize, 
-                           queryRegions,
-                           matchedPath,
-                           std::make_pair(mview->ui_width, mview->ui_height), 
-                           _regions_per_view[indexKeyFrame]._regions,
-                           vec_featureMatches,
-                           param->_visualDebug+"/"+queryimage+"_"+matchedImage+".svg",
-                           true ); //showNotMatched
+                                     imageSize, 
+                                     queryRegions,
+                                     matchedPath,
+                                     std::make_pair(mview->ui_width, mview->ui_height), 
+                                     _regions_per_view[indexKeyFrame]._regions,
+                                     vec_featureMatches,
+                                     outputName.string(),
+                                     showNotMatched ); 
     }
     
     if ( vec_featureMatches.size() < 3 )
