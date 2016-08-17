@@ -7,6 +7,7 @@
 #include <openMVG/sfm/sfm_data_io.hpp>
 #include <openMVG/matching/indMatch.hpp>
 #include <openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp>
+#include <openMVG/system/timer.hpp>
 #include <openMVG/logger.hpp>
 
 #include <cctag/ICCTag.hpp>
@@ -245,6 +246,145 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                   queryIntrinsics,
                   localizationResult,
                   imagePath);
+}
+
+bool CCTagLocalizer::localizeAllAssociations(const std::unique_ptr<features::Regions> &genQueryRegions,
+                                              const std::pair<std::size_t, std::size_t> &imageSize,
+                                              const LocalizerParameters *parameters,
+                                              bool useInputIntrinsics,
+                                              cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
+                                              LocalizationResult & localizationResult,
+                                              const std::string& imagePath)
+{
+  namespace bfs = boost::filesystem;
+  
+  const CCTagLocalizer::Parameters *param = static_cast<const CCTagLocalizer::Parameters *>(parameters);
+  if(!param)
+  {
+    throw std::invalid_argument("The CCTag localizer parameters are not in the right format.");
+  }
+  
+  // it automatically throws an exception if the cast does not work
+  features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (genQueryRegions.get());
+  
+  std::map< std::pair<IndexT, IndexT>, std::size_t > occurences;
+  sfm::Image_Localizer_Match_Data resectionData;
+  
+  system::Timer timer;
+  getAllAssociations(queryRegions, imageSize, *param, occurences, resectionData.pt2D, resectionData.pt3D, imagePath);
+  POPART_COUT("[Matching]\tRetrieving associations took " << timer.elapsedMs() << "ms");
+  
+  const std::size_t numCollectedPts = occurences.size();
+  
+  // create an vector of <feat3D_id, feat2D_id>
+  std::vector<pair<IndexT, IndexT> > associationIDs;
+  associationIDs.reserve(numCollectedPts);
+
+  for(const auto &ass : occurences)
+  {
+    // recopy the associations IDs in the vector
+    associationIDs.push_back(ass.first);
+  }
+  
+  assert(associationIDs.size() == numCollectedPts);
+  assert(resectionData.pt2D.cols() == numCollectedPts);
+  assert(resectionData.pt3D.cols() == numCollectedPts);
+
+  geometry::Pose3 pose;
+  
+  timer.reset();
+  // estimate the pose
+  resectionData.error_max = param->_errorMax;
+  POPART_COUT("pt2D\n"<<resectionData.pt2D);
+  POPART_COUT("pt3D\n"<<resectionData.pt3D);
+  POPART_COUT("[poseEstimation]\tEstimating camera pose...");
+  const bool bResection = sfm::SfM_Localizer::Localize(imageSize,
+                                                      // pass the input intrinsic if they are valid, null otherwise
+                                                      (useInputIntrinsics) ? &queryIntrinsics : nullptr,
+                                                      resectionData,
+                                                      pose,
+                                                      param->_resectionEstimator);
+  
+  if(!bResection)
+  {
+    POPART_COUT("[poseEstimation]\tResection failed");
+    if(!param->_visualDebug.empty() && !imagePath.empty())
+    {
+//      namespace bfs = boost::filesystem;
+//      features::saveFeatures2SVG(imagePath,
+//                                 imageSize,
+//                                 resectionData.pt2D,
+//                                 param._visualDebug + "/" + bfs::path(imagePath).stem().string() + ".associations.svg");
+    }
+    localizationResult = LocalizationResult();
+    return localizationResult.isValid();
+  }
+  POPART_COUT("[poseEstimation]\tResection SUCCEDED");
+
+  POPART_COUT("R est\n" << pose.rotation());
+  POPART_COUT("t est\n" << pose.translation());
+
+  // if we didn't use the provided intrinsics, estimate K from the projection
+  // matrix estimated by the localizer and initialize the queryIntrinsics with
+  // it and the image size. This will provide a first guess for the refine function
+  if(!useInputIntrinsics)
+  {
+    // Decompose P matrix
+    Mat3 K_, R_;
+    Vec3 t_;
+    // Decompose the projection matrix  to get K, R and t using 
+    // RQ decomposition
+    KRt_From_P(resectionData.projection_matrix, &K_, &R_, &t_);
+    queryIntrinsics.setK(K_);
+    POPART_COUT("K estimated\n" << K_);
+    queryIntrinsics.setWidth(imageSize.first);
+    queryIntrinsics.setHeight(imageSize.second);
+  }
+
+  // refine the estimated pose
+  POPART_COUT("[poseEstimation]\tRefining estimated pose");
+  const bool b_refine_pose = true;
+  const bool refineStatus = sfm::SfM_Localizer::RefinePose(&queryIntrinsics,
+                                                            pose,
+                                                            resectionData,
+                                                            b_refine_pose,
+                                                            param->_refineIntrinsics);
+  if(!refineStatus)
+    POPART_COUT("Refine pose failed.");
+
+  if(!param->_visualDebug.empty() && !imagePath.empty())
+  {
+//    namespace bfs = boost::filesystem;
+//    features::saveFeatures2SVG(imagePath,
+//                              imageSize,
+//                              resectionData.pt2D,
+//                              param._visualDebug + "/" + bfs::path(imagePath).stem().string() + ".associations.svg",
+//                              &resectionData.vec_inliers);
+  }
+  
+  POPART_COUT("[poseEstimation]\tPose estimation took " << timer.elapsedMs() << "ms.");
+
+  //@todo for now just empty, to be added to getAllAssociations
+  std::vector<voctree::DocMatch> matchedImages;
+  localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, matchedImages, refineStatus);
+
+  {
+    // just debugging this block can be safely removed or commented out
+    POPART_COUT("R refined\n" << pose.rotation());
+    POPART_COUT("t refined\n" << pose.translation());
+    POPART_COUT("K refined\n" << queryIntrinsics.K());
+
+    const Mat2X residuals = localizationResult.computeInliersResiduals();
+
+    const auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
+    POPART_COUT("RMSE = " << std::sqrt(sqrErrors.mean())
+                << " min = " << std::sqrt(sqrErrors.minCoeff())
+                << " max = " << std::sqrt(sqrErrors.maxCoeff()));
+  }
+
+  return localizationResult.isValid();
+  
+  
 }
 
 
