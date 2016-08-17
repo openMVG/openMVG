@@ -1088,20 +1088,9 @@ bool VoctreeLocalizer::localizeRig(const std::vector<std::unique_ptr<features::R
                                    std::vector<LocalizationResult>& vec_locResults)
 {
 #ifdef HAVE_OPENGV
-  if(parameters->_useLocalizeRigNaive)
+  if(!parameters->_useLocalizeRigNaive)
   {
     POPART_COUT("Using localizeRig_naive()");
-    return localizeRig_naive(vec_queryRegions,
-                           vec_imageSize,
-                           parameters,
-                           vec_queryIntrinsics,
-                           vec_subPoses,
-                           rigPose,
-                           vec_locResults);
-  }
-  else
-  {
-    POPART_COUT("Using localizeRig_opengv()");
     return localizeRig_opengv(vec_queryRegions,
                               vec_imageSize,
                               parameters,
@@ -1110,16 +1099,19 @@ bool VoctreeLocalizer::localizeRig(const std::vector<std::unique_ptr<features::R
                               rigPose,
                               vec_locResults);
   }
-#else
-  POPART_COUT("Using localizeRig_naive() -- openGV not supported");
-  return localizeRig_naive(vec_queryRegions,
+  else
+#endif
+  {
+    if(!parameters->_useLocalizeRigNaive)
+      POPART_COUT("OpenGV is not available. Fallback to localizeRig_naive().");
+    return localizeRig_naive(vec_queryRegions,
                            vec_imageSize,
                            parameters,
                            vec_queryIntrinsics,
                            vec_subPoses,
                            rigPose,
                            vec_locResults);
-#endif
+  }
 }
 
 
