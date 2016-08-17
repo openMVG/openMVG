@@ -110,7 +110,7 @@ Vec LocalizationResult::computeReprojectionErrorPerInlier() const
   return sqrErrors.array().sqrt();
 }
 
-Vec LocalizationResult::computeReprojectionErrorPerAll() const
+Vec LocalizationResult::computeReprojectionErrorPerPoint() const
 {
   const auto& residuals = computeAllResiduals();
   // squared residual for each point
@@ -121,7 +121,7 @@ Vec LocalizationResult::computeReprojectionErrorPerAll() const
 
 std::size_t LocalizationResult::selectBestInliers(double maxReprojectionError)
 {
-   const auto &residuals = computeReprojectionErrorPerAll();
+   const auto &residuals = computeReprojectionErrorPerPoint();
    auto &inliers = _matchData.vec_inliers;
    std::cout << "Inliers before: " << inliers.size();
    inliers.clear();

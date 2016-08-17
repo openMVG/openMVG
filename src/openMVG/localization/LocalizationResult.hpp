@@ -144,7 +144,7 @@ public:
    * @brief Compute the reprojection error for the all the points.
    * @return A 1xNumInliers vector containing the reprojection error for each point.
    */
-  Vec computeReprojectionErrorPerAll() const;
+  Vec computeReprojectionErrorPerPoint() const;
   
   /**
    * @brief Compute the RMSE for the inlier association.
