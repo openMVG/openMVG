@@ -669,10 +669,10 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
     if(!param._visualDebug.empty() && !imagePath.empty())
     {
       namespace bfs = boost::filesystem;
-      features::saveFeatures2SVG(imagePath, 
-                       queryImageSize, 
-                         resectionData.pt2D,
-                         param._visualDebug + "/" + bfs::path(imagePath).stem().string() + ".associations.svg");
+      features::saveFeatures2SVG(imagePath,
+                                 queryImageSize,
+                                 resectionData.pt2D,
+                                 param._visualDebug + "/" + bfs::path(imagePath).stem().string() + ".associations.svg");
     }
     localizationResult = LocalizationResult();
     return localizationResult.isValid();

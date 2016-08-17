@@ -202,11 +202,11 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
 }
 
 bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
-                const LocalizerParameters *parameters,
-                bool useInputIntrinsics,
-                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                LocalizationResult & localizationResult, 
-                const std::string& imagePath /* = std::string() */)
+                              const LocalizerParameters *parameters,
+                              bool useInputIntrinsics,
+                              cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
+                              LocalizationResult & localizationResult, 
+                              const std::string& imagePath)
 {
   namespace bfs = boost::filesystem;
   
@@ -231,9 +231,9 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
     
     // just debugging -- save the svg image with detected cctag
     features::saveCCTag2SVG(imagePath, 
-                  imageSize, 
-                  queryRegions, 
-                  param->_visualDebug+"/"+bfs::path(imagePath).stem().string()+".svg");
+                            imageSize, 
+                            queryRegions, 
+                            param->_visualDebug+"/"+bfs::path(imagePath).stem().string()+".svg");
   }
 
   return localize(tmpQueryRegions,
@@ -368,7 +368,7 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
     {
       residualMin = resectionDataTemp.error_max;
       indexBestKeyFrame = indexKeyFrame;
-      // Update best inital pose.
+      // Update best initial pose.
       bestPose = poseTemp;
       bestResectionData = resectionDataTemp;
       std::swap(bestAssociationIDs, associationIDsTemp);
@@ -812,12 +812,11 @@ void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegi
 
 
 
-void kNearestKeyFrames(
-          const features::CCTAG_Regions & queryRegions,
-          const CCTagRegionsPerViews & regionsPerView,
-          std::size_t nNearestKeyFrames,
-          std::vector<IndexT> & kNearestFrames,
-          const float similarityThreshold /*=.0f*/)
+void kNearestKeyFrames(const features::CCTAG_Regions & queryRegions,
+                       const CCTagRegionsPerViews & regionsPerView,
+                       std::size_t nNearestKeyFrames,
+                       std::vector<IndexT> & kNearestFrames,
+                       const float similarityThreshold /*=.0f*/)
 {
   kNearestFrames.clear();
   
@@ -848,10 +847,9 @@ void kNearestKeyFrames(
   }
 }
  
-void viewMatching(
-        const features::CCTAG_Regions & regionsA,
-        const features::CCTAG_Regions & regionsB,
-        std::vector<matching::IndMatch> & vec_featureMatches)
+void viewMatching(const features::CCTAG_Regions & regionsA,
+                  const features::CCTAG_Regions & regionsB,
+                  std::vector<matching::IndMatch> & vec_featureMatches)
 {
   vec_featureMatches.clear();
   
@@ -875,9 +873,8 @@ void viewMatching(
  
  
  
-float viewSimilarity(
-        const features::CCTAG_Regions & regionsA,
-        const features::CCTAG_Regions & regionsB)
+float viewSimilarity(const features::CCTAG_Regions & regionsA,
+                     const features::CCTAG_Regions & regionsB)
 {
   assert(regionsA.DescriptorLength() == regionsB.DescriptorLength()); 
   
@@ -888,8 +885,7 @@ float viewSimilarity(
   return (descriptorViewA & descriptorViewB).count();
 }
 
-std::bitset<128> constructCCTagViewDescriptor(
-        const std::vector<CCTagDescriptor> & vCCTagDescriptors)
+std::bitset<128> constructCCTagViewDescriptor(const std::vector<CCTagDescriptor> & vCCTagDescriptors)
 {
   std::bitset<128> descriptorView;
   for(const auto & cctagDescriptor : vCCTagDescriptors )
