@@ -117,7 +117,10 @@ bool SfM_Localizer::Localize
         // just a safeguard
         if(resection_data.error_max == std::numeric_limits<double>::infinity())
         {
-          throw std::invalid_argument("[SfM_Localizer::Localize] the threshold of the LORANSAC is set to infinity!");
+          // switch to a default value
+          resection_data.error_max = 4.0;
+          std::cout << "LORansac: error was set to infinity, a default value of " 
+                  << resection_data.error_max << " is going to be used" << std::endl;
         }
 
         // use the P3P solver for generating the model

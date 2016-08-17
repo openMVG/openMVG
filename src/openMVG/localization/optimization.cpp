@@ -95,7 +95,8 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
       POPART_COUT("View " << viewID << " RMSE = " << std::sqrt(sqrErrors.mean()) 
               << " min = " << std::sqrt(sqrErrors.minCoeff()) 
               << " mean = " << std::sqrt(sqrErrors.mean())
-              << " max = " << std::sqrt(sqrErrors.maxCoeff()));
+              << " max = " << std::sqrt(sqrErrors.maxCoeff())
+              << " threshold = " << currResult.getMaxReprojectionError());
     }
   }
   
@@ -310,7 +311,8 @@ bool refineSequence(std::vector<LocalizationResult> & vec_localizationResult,
       POPART_COUT("View " << viewID << " RMSE = " << std::sqrt(sqrErrors.mean()) 
               << " min = " << std::sqrt(sqrErrors.minCoeff()) 
               << " mean = " << std::sqrt(sqrErrors.mean())
-              << " max = " << std::sqrt(sqrErrors.maxCoeff()));
+              << " max = " << std::sqrt(sqrErrors.maxCoeff())
+              << " threshold = " << currResult.getMaxReprojectionError());
     }
     
   }

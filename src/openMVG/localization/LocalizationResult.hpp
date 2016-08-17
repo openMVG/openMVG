@@ -122,10 +122,57 @@ public:
     return _isValid;
   }
   
+  /**
+   * @brief Compute the residual for each 2D-3D association.
+   * @return A 2xN matrix containing the x-y residual for each point.
+   */
   Mat2X computeAllResiduals() const;
   
+  /**
+   * @brief Compute the residual for the inlier 2D-3D association.
+   * @return A 2xNumInliers containing the x-y residual for each inlier point.
+   */
   Mat2X computeInliersResiduals() const ;
+  
+  /**
+   * @brief Compute the reprojection error for the inliers.
+   * @return A 1xNumInliers vector containing the reprojection error for each inlier point.
+   */
+  Vec computeReprojectionErrorPerInlier() const;
+  
+   /**
+   * @brief Compute the reprojection error for the all the points.
+   * @return A 1xNumInliers vector containing the reprojection error for each point.
+   */
+  Vec computeReprojectionErrorPerPoint() const;
+  
+  /**
+   * @brief Compute the RMSE for the inlier association.
+   * @return The RMSE for the inlier associations.
+   */
   double computeInliersRMSE() const ;
+
+  /**
+   * @brief Compute the RMSE for the all the associations.
+   * @return The RMSE for the inlier associations.
+   */
+  double computeAllRMSE() const ;
+  
+  /**
+   * @brief Select the best inliers according to the given reprojection error threshold.
+   * @param[in] threshold The threshold for the reprojection error in pixels.
+   * @return The number of inliers detected with the new threshold.
+   */
+  std::size_t selectBestInliers(double maxReprojectionError);
+  
+  /**
+   * @brief Select the best inliers according to the reprojection error threshold 
+   * used/computed during the resection.
+   * @return The number of inliers detected.
+   */
+  std::size_t selectBestInliers();
+  
+  double getMaxReprojectionError() const { return _matchData.error_max;}
 
   // Serialization
   template<class Archive>
@@ -196,6 +243,18 @@ bool load(std::vector<LocalizationResult> & res, const std::string & filename);
 
 bool save(const LocalizationResult & res, const std::string & filename);
 bool save(const std::vector<LocalizationResult> & res, const std::string & filename);
+
+/**
+ * @brief It recompute the pose of each camera in Localization results according
+ * to the rigPose given as input. The camera in position 0 is supposed to be the 
+ * main camera and it is set to the pose of the rig.
+ * @param[out] vec_localizationResults
+ * @param[in] rigPose
+ * @param[in] vec_subPoses (N-1) vector
+ */
+void updateRigPoses(std::vector<LocalizationResult>& vec_localizationResults,
+                    const geometry::Pose3 &rigPose,
+                    const std::vector<geometry::Pose3 > &vec_subPoses);
 
 } // localization
 } // openMVG

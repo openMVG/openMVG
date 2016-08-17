@@ -26,15 +26,17 @@ struct LocalizerParameters
   _featurePreset(features::EDESCRIBER_PRESET::ULTRA_PRESET),
   _errorMax(std::numeric_limits<double>::infinity()),
   _resectionEstimator(robust::ROBUST_ESTIMATOR_ACRANSAC),
-  _matchingEstimator(robust::ROBUST_ESTIMATOR_ACRANSAC) { }
+  _matchingEstimator(robust::ROBUST_ESTIMATOR_ACRANSAC),
+  _useLocalizeRigNaive(false) { }
 
-  std::string _visualDebug;          //< enable visual debugging options
-  bool _refineIntrinsics;     //< whether or not the Intrinsics of the query camera has to be refined
-  float _fDistRatio;          //< the ratio distance to use when matching feature with the ratio test
-  features::EDESCRIBER_PRESET _featurePreset; //< the preset to use for feature extraction of the query image
-  double _errorMax;				//< maximum reprojection error allowed for resectioning
+  std::string _visualDebug;                       //< enable visual debugging options
+  bool _refineIntrinsics;                         //< whether or not the Intrinsics of the query camera has to be refined
+  float _fDistRatio;                              //< the ratio distance to use when matching feature with the ratio test
+  features::EDESCRIBER_PRESET _featurePreset;     //< the preset to use for feature extraction of the query image
+  double _errorMax;                               //< maximum reprojection error allowed for resectioning
   robust::EROBUST_ESTIMATOR _resectionEstimator; 	//< the type of *sac framework to use for resection
   robust::EROBUST_ESTIMATOR _matchingEstimator; 	//< the type of *sac framework to use for matching
+  bool _useLocalizeRigNaive;                      //< the type of *sac framework to use for matching
 };
 
 class ILocalizer
