@@ -92,6 +92,15 @@ std::string myToString(std::size_t i, std::size_t zeroPadding)
   return ss.str();
 }
 
+/**
+ * @brief It checks if the value for the reprojection error or the matching error
+ * is compatible with the given robust estimator. The value cannot be 0 for 
+ * LORansac, for ACRansac a value of 0 means to use infinity (ie estimate the 
+ * threshold during ransac process)
+ * @param e The estimator to be checked.
+ * @param value The value for the reprojection or matching error.
+ * @return true if the value is compatible
+ */
 bool checkRobustEstimator(robust::EROBUST_ESTIMATOR e, double &value)
 {
   if(e != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC &&
@@ -112,7 +121,7 @@ bool checkRobustEstimator(robust::EROBUST_ESTIMATOR e, double &value)
   if(e == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC)
   {
     const double minThreshold = 1e-6;
-    if( value <= minThreshold || value <= minThreshold)
+    if(value <= minThreshold)
     {
       POPART_CERR("Error: errorMax and matchingError cannot be 0 with " 
               << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC 
@@ -486,11 +495,17 @@ int main(int argc, char** argv)
     {
       ++numLocalizedFrames;
 #if HAVE_ALEMBIC
-      // for now just save the position of the main camera
+      // save the position of the main camera
       exporter.addCameraKeyframe(rigPose, &vec_queryIntrinsics[0], mediaPath, frameCounter, frameCounter);
       assert(cameraExporters.size()==numCameras);
+      assert(localizationResults.size()==numCameras);
+      assert(vec_queryIntrinsics.size()==numCameras);
+      // save the position of all cameras of the rig
       for(std::size_t camIDX = 0; camIDX < numCameras; ++camIDX)
       {
+        POPART_COUT("cam pose" << camIDX << "\n" <<  localizationResults[camIDX].getPose().rotation() << "\n" << localizationResults[camIDX].getPose().center());
+        if(camIDX > 0)
+          POPART_COUT("cam subpose" << camIDX-1 << "\n" <<  vec_subPoses[camIDX-1].rotation() << "\n" << vec_subPoses[camIDX-1].center());
         cameraExporters[camIDX].addCameraKeyframe(localizationResults[camIDX].getPose(), &vec_queryIntrinsics[camIDX], mediaPath, frameCounter, frameCounter);
       }
 #endif

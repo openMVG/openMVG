@@ -92,6 +92,15 @@ std::string myToString(std::size_t i, std::size_t zeroPadding)
   return ss.str();
 }
 
+/**
+ * @brief It checks if the value for the reprojection error or the matching error
+ * is compatible with the given robust estimator. The value cannot be 0 for 
+ * LORansac, for ACRansac a value of 0 means to use infinity (ie estimate the 
+ * threshold during ransac process)
+ * @param e The estimator to be checked.
+ * @param value The value for the reprojection or matching error.
+ * @return true if the value is compatible
+ */
 bool checkRobustEstimator(robust::EROBUST_ESTIMATOR e, double &value)
 {
   if(e != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC &&
@@ -112,7 +121,7 @@ bool checkRobustEstimator(robust::EROBUST_ESTIMATOR e, double &value)
   if(e == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC)
   {
     const double minThreshold = 1e-6;
-    if( value <= minThreshold || value <= minThreshold)
+    if(value <= minThreshold)
     {
       POPART_CERR("Error: errorMax and matchingError cannot be 0 with " 
               << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC 
