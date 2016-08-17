@@ -218,6 +218,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
   // extract descriptors and features from image
   POPART_COUT("[features]\tExtract CCTag from query image");
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::CCTAG_Regions());
+  _image_describer.Set_configuration_preset(param->_featurePreset);
   _image_describer.Describe(imageGrey, tmpQueryRegions);
   POPART_COUT("[features]\tExtract CCTAG done: found " << tmpQueryRegions->RegionCount() << " features");
   
@@ -446,6 +447,7 @@ bool CCTagLocalizer::localizeRig(const std::vector<image::Image<unsigned char> >
     // extract descriptors and features from each image
     vec_queryRegions[i] = std::unique_ptr<features::Regions>(new features::CCTAG_Regions());
     POPART_COUT("[features]\tExtract CCTag from query image...");
+    _image_describer.Set_configuration_preset(param->_featurePreset);
     _image_describer.Describe(vec_imageGrey[i], vec_queryRegions[i]);
     POPART_COUT("[features]\tExtract CCTAG done: found " <<  vec_queryRegions[i]->RegionCount() << " features");
     // add the image size for this image
