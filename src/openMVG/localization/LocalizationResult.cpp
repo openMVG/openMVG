@@ -119,7 +119,7 @@ Vec LocalizationResult::computeReprojectionErrorPerAll() const
   return sqrErrors.array().sqrt();
 }
 
-std::size_t LocalizationResult::updateInliers(double threshold)
+std::size_t LocalizationResult::selectBestInliers(double maxReprojectionError)
 {
    const auto &residuals = computeReprojectionErrorPerAll();
    auto &inliers = _matchData.vec_inliers;
@@ -130,20 +130,20 @@ std::size_t LocalizationResult::updateInliers(double threshold)
    
    for(std::size_t i = 0; i < residuals.size(); ++i )
    {
-     if(residuals[i] < threshold)
+     if(residuals[i] < maxReprojectionError)
      {
        inliers.push_back(i);
      }
    }
    std::cout << " \tafter: " << inliers.size() << std::endl;
-   _matchData.error_max = threshold;
+   _matchData.error_max = maxReprojectionError;
    return inliers.size();
 }
 
-std::size_t LocalizationResult::updateInliers()
+std::size_t LocalizationResult::selectBestInliers()
 {  
    const auto threshold = _matchData.error_max;
-   return updateInliers(threshold);
+   return selectBestInliers(threshold);
 }
 
 bool load(LocalizationResult & res, const std::string & filename)

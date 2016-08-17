@@ -159,17 +159,18 @@ public:
   double computeAllRMSE() const ;
   
   /**
-   * @brief Re-compute the inliers according to the given threshold.
+   * @brief Select the best inliers according to the given reprojection error threshold.
    * @param[in] threshold The threshold for the reprojection error in pixels.
    * @return The number of inliers detected with the new threshold.
    */
-  std::size_t updateInliers(double threshold);
+  std::size_t selectBestInliers(double maxReprojectionError);
   
   /**
-   * @brief Re-compute the inliers using the threshold computed during resection.
+   * @brief Select the best inliers according to the reprojection error threshold 
+   * used/computed during the resection.
    * @return The number of inliers detected.
    */
-  std::size_t updateInliers();
+  std::size_t selectBestInliers();
   
   double getThreshold() const { return _matchData.error_max;}
 
