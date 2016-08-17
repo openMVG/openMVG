@@ -4,8 +4,8 @@
 #include <map>
 #include <opencv2/opencv.hpp>
 
-namespace openMVG {
-namespace bestImages {
+namespace openMVG{
+namespace calibration{
 
 /**
  * @brief This function computes cell indexes per image.
@@ -67,6 +67,6 @@ void selectBestImages(const std::vector<std::vector<cv::Point2f> >& imagePoints,
                       std::vector<std::vector<cv::Point2f> >& calibImagePoints,
                       const std::size_t calibGridSize);
 
-}//namespace bestImages
+}//namespace calibration
 }//namespace openMVG
 

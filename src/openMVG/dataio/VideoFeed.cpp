@@ -128,8 +128,6 @@ bool VideoFeed::FeederImpl::goToFrame(const unsigned int frame)
   if(frame > 0)
   {
     _videoCapture.set(cv::CAP_PROP_POS_FRAMES, frame);
-//    double pos = frame / (double)_videoCapture.get(cv::CAP_PROP_FRAME_COUNT);
-//    _videoCapture.set(cv::CAP_PROP_POS_AVI_RATIO, pos);
     _videoCapture.grab();
     return true;
   }

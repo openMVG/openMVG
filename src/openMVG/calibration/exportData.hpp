@@ -7,8 +7,8 @@
 #include <vector>
 #include <string>
 
-namespace openMVG {
-namespace exportData {
+namespace openMVG{
+namespace calibration{
 
 /**
  * @brief This function exports undistorted images.
@@ -61,9 +61,9 @@ void exportDebug(const std::string& debugSelectedImgFolder,
  * @param[in] distCoeffs
  */
 void saveCameraParamsToPlainTxt(const std::string& filename,
-                                       const cv::Size& imageSize,
-                                       const cv::Mat& cameraMatrix,
-                                       const cv::Mat& distCoeffs);
+                                const cv::Size& imageSize,
+                                const cv::Mat& cameraMatrix,
+                                const cv::Mat& distCoeffs);
 
 /**
  * @brief This function saves some parameters' camera into a txt file.
@@ -83,14 +83,14 @@ void saveCameraParamsToPlainTxt(const std::string& filename,
  * @param[in] totalAvgErr
  */
 void saveCameraParams(const std::string& filename,
-                             cv::Size imageSize, cv::Size boardSize,
-                             float squareSize, float aspectRatio, int cvCalibFlags,
-                             const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs,
-                             const std::vector<cv::Mat>& rvecs, const std::vector<cv::Mat>& tvecs,
-                             const std::vector<float>& reprojErrs,
-                             const std::vector<std::vector<cv::Point2f> >& imagePoints,
-                             double totalAvgErr);
+                      const cv::Size& imageSize, const cv::Size& boardSize,
+                      float squareSize, float aspectRatio, int cvCalibFlags,
+                      const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs,
+                      const std::vector<cv::Mat>& rvecs, const std::vector<cv::Mat>& tvecs,
+                      const std::vector<float>& reprojErrs,
+                      const std::vector<std::vector<cv::Point2f> >& imagePoints,
+                      double totalAvgErr);
 
-}//namespace exportData
+}//namespace calibration
 }//namespace openMVG
 

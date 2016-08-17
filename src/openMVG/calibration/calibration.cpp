@@ -4,27 +4,26 @@
 #include <algorithm>
 #include <iostream>
 
-namespace openMVG {
-namespace calibration {
+namespace openMVG{
+namespace calibration{
 
-static double computeReprojectionErrors(
-                                        const std::vector<std::vector<cv::Point3f> >& objectPoints,
-                                        const std::vector<std::vector<cv::Point2f> >& imagePoints,
-                                        const std::vector<cv::Mat>& rvecs, const std::vector<cv::Mat>& tvecs,
-                                        const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs,
-                                        std::vector<float>& perViewErrors)
+double computeReprojectionErrors(const std::vector<std::vector<cv::Point3f> >& objectPoints,
+                                 const std::vector<std::vector<cv::Point2f> >& imagePoints,
+                                 const std::vector<cv::Mat>& rvecs, const std::vector<cv::Mat>& tvecs,
+                                 const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs,
+                                 std::vector<float>& perViewErrors)
 {
   std::vector<cv::Point2f> imagePoints2;
-  int i, totalPoints = 0;
-  double err, totalErr = 0;
+  int totalPoints = 0;
+  double totalErr = 0;
   perViewErrors.resize(objectPoints.size());
 
-  for (i = 0; i < (int) objectPoints.size(); i++)
+  for (std::size_t i = 0; i < (int) objectPoints.size(); i++)
   {
     cv::projectPoints(cv::Mat(objectPoints[i]), rvecs[i], tvecs[i],
                       cameraMatrix, distCoeffs, imagePoints2);
-    err = cv::norm(cv::Mat(imagePoints[i]), cv::Mat(imagePoints2), CV_L2);
-    int n = (int) objectPoints[i].size();
+    const double err = cv::norm(cv::Mat(imagePoints[i]), cv::Mat(imagePoints2), CV_L2);
+    const std::size_t n = (int) objectPoints[i].size();
     perViewErrors[i] = (float) std::sqrt(err * err / n);
     totalErr += err*err;
     totalPoints += n;
@@ -32,16 +31,17 @@ static double computeReprojectionErrors(
   return std::sqrt(totalErr / totalPoints);
 }
 
-static bool runCalibration(const std::vector<std::vector<cv::Point2f> >& imagePoints,
-                           const std::vector<std::vector<cv::Point3f> >& objectPoints,
-                           cv::Size imageSize,
-                           float aspectRatio,
-                           int cvCalibFlags, cv::Mat& cameraMatrix,
-                           cv::Mat& distCoeffs,
-                           std::vector<cv::Mat>& rvecs,
-                           std::vector<cv::Mat>& tvecs,
-                           std::vector<float>& reprojErrs,
-                           double& totalAvgErr)
+bool runCalibration(const std::vector<std::vector<cv::Point2f> >& imagePoints,
+                    const std::vector<std::vector<cv::Point3f> >& objectPoints,
+                    const cv::Size imageSize,
+                    float aspectRatio,
+                    int cvCalibFlags,
+                    cv::Mat& cameraMatrix,
+                    cv::Mat& distCoeffs,
+                    std::vector<cv::Mat>& rvecs,
+                    std::vector<cv::Mat>& tvecs,
+                    std::vector<float>& reprojErrs,
+                    double& totalAvgErr)
 {
   rvecs.resize(0);
   tvecs.resize(0);
@@ -72,7 +72,7 @@ static bool runCalibration(const std::vector<std::vector<cv::Point2f> >& imagePo
   return ok;
 }
 
-int calibrationIterativeOptimization(std::vector<std::vector<cv::Point2f> >& calibImagePoints,
+bool calibrationIterativeOptimization(std::vector<std::vector<cv::Point2f> >& calibImagePoints,
                         std::vector<std::vector<cv::Point3f> >& calibObjectPoints,
                         const cv::Size& imageSize,
                         float aspectRatio,
@@ -116,7 +116,7 @@ int calibrationIterativeOptimization(std::vector<std::vector<cv::Point2f> >& cal
       // For instance, remove blurry images which introduce imprecision.
 
       std::vector<float> globalScores;
-      for (int i = 0; i < calibInputFrames.size(); ++i)
+      for (std::size_t i = 0; i < calibInputFrames.size(); ++i)
       {
         globalScores.push_back(reprojErrs[i] * calibImageScore[i]);
       }
@@ -178,10 +178,7 @@ int calibrationIterativeOptimization(std::vector<std::vector<cv::Point2f> >& cal
   std::cout << "Average reprojection error is " << totalAvgErr << std::endl;
   std::cout << (calibSucceeded ? "Calibration succeeded" : "Calibration failed") << std::endl;
 
-  if (!calibSucceeded)
-    return EXIT_FAILURE;
-
-  return EXIT_SUCCESS;
+  return calibSucceeded;
 }
 
 }//namespace calibration

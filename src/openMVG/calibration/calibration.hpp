@@ -3,8 +3,8 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 
-namespace openMVG {
-namespace calibration {
+namespace openMVG{
+namespace calibration{
 
 /**
  * @brief This function computes the average of the reprojection errors.
@@ -18,12 +18,11 @@ namespace calibration {
  * @param[out] perViewErrors
  * @return The average of the reprojection errors.
  */
-static double computeReprojectionErrors(
-                                        const std::vector<std::vector<cv::Point3f> >& objectPoints,
-                                        const std::vector<std::vector<cv::Point2f> >& imagePoints,
-                                        const std::vector<cv::Mat>& rvecs, const std::vector<cv::Mat>& tvecs,
-                                        const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs,
-                                        std::vector<float>& perViewErrors);
+double computeReprojectionErrors(const std::vector<std::vector<cv::Point3f> >& objectPoints,
+                                 const std::vector<std::vector<cv::Point2f> >& imagePoints,
+                                 const std::vector<cv::Mat>& rvecs, const std::vector<cv::Mat>& tvecs,
+                                 const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs,
+                                 std::vector<float>& perViewErrors);
 
 /**
  * @brief This function calibrates the camera.
@@ -41,16 +40,17 @@ static double computeReprojectionErrors(
  * @param[out] totalAvgErr
  * @return True if the calibration is a success, otherwise false.
  */
-static bool runCalibration(const std::vector<std::vector<cv::Point2f> >& imagePoints,
-                           const std::vector<std::vector<cv::Point3f> >& objectPoints,
-                           cv::Size imageSize,
-                           float aspectRatio,
-                           int cvCalibFlags, cv::Mat& cameraMatrix,
-                           cv::Mat& distCoeffs,
-                           std::vector<cv::Mat>& rvecs,
-                           std::vector<cv::Mat>& tvecs,
-                           std::vector<float>& reprojErrs,
-                           double& totalAvgErr);
+bool runCalibration(const std::vector<std::vector<cv::Point2f> >& imagePoints,
+                    const std::vector<std::vector<cv::Point3f> >& objectPoints,
+                    const cv::Size imageSize,
+                    float aspectRatio,
+                    int cvCalibFlags,
+                    cv::Mat& cameraMatrix,
+                    cv::Mat& distCoeffs,
+                    std::vector<cv::Mat>& rvecs,
+                    std::vector<cv::Mat>& tvecs,
+                    std::vector<float>& reprojErrs,
+                    double& totalAvgErr);
 
 /**
  * @brief This function is the refinement loop of the calibration.
@@ -73,7 +73,7 @@ static bool runCalibration(const std::vector<std::vector<cv::Point2f> >& imagePo
  * @param[out] rejectInputFrames
  * @return True if the calibration is a success, otherwise false.
  */
-int calibrationIterativeOptimization(std::vector<std::vector<cv::Point2f> >& calibImagePoints,
+bool calibrationIterativeOptimization(std::vector<std::vector<cv::Point2f> >& calibImagePoints,
                         std::vector<std::vector<cv::Point3f> >& calibObjectPoints,
                         const cv::Size& imageSize,
                         float aspectRatio,

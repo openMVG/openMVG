@@ -34,27 +34,6 @@
 namespace bfs = boost::filesystem;
 namespace po = boost::program_options;
 
-std::istream& operator>>(std::istream &in, openMVG::patternDetect::Pattern &pattern)
-{
-  std::string token;
-  in >> token;
-  boost::to_upper(token);
-
-  if (token == "CHESSBOARD")
-    pattern = openMVG::patternDetect::Pattern::CHESSBOARD;
-  else if (token == "CIRCLES")
-    pattern = openMVG::patternDetect::Pattern::CIRCLES_GRID;
-  else if (token == "ASYMMETRIC_CIRCLES")
-    pattern = openMVG::patternDetect::Pattern::ASYMMETRIC_CIRCLES_GRID;
-#ifdef HAVE_CCTAG
-    //  else if (token == "CCTAG")
-    //    pattern = CCTAG_GRID;
-#endif
-  else
-    throw boost::program_options::invalid_option_value(std::string("Invalid pattern: ") + token);
-  return in;
-}
-
 int main(int argc, char** argv)
 {
   // Command line arguments
@@ -63,7 +42,7 @@ int main(int argc, char** argv)
   std::string debugSelectedImgFolder;
   std::string debugRejectedImgFolder;
   std::vector<std::size_t> checkerboardSize;
-  openMVG::patternDetect::Pattern pattern = openMVG::patternDetect::Pattern::CHESSBOARD;
+  openMVG::calibration::Pattern pattern = openMVG::calibration::Pattern::CHESSBOARD;
   std::size_t maxNbFrames = 0;
   std::size_t maxCalibFrames = 100;
   std::size_t calibGridSize = 10;
@@ -85,12 +64,12 @@ int main(int argc, char** argv)
            " - video file\n")
           ("output,o", po::value<std::string>(&outputFilename)->required(),
            "Output filename for intrinsic [and extrinsic] parameters.\n")
-//          ("pattern,p", po::value<openMVG::patternDetect::Pattern>(&pattern)->default_value(pattern),
-//           "Type of pattern: 'chessboard', 'circles', 'asymmetric_circles'"
-//#ifdef HAVE_CCTAG
-//          " or 'cctag'"
-//#endif
-//          ".\n")
+          ("pattern,p", po::value<openMVG::calibration::Pattern>(&pattern)->default_value(pattern),
+           "Type of pattern: 'chessboard', 'circles', 'asymmetric_circles'"
+            #ifdef HAVE_CCTAG
+//                      " or 'cctag'"
+            #endif
+          ".\n")
           ("size,s", po::value<std::vector < std::size_t >> (&checkerboardSize)->multitoken(),
            "Number of inner corners per one of board dimension like W H.\n")
           ("squareSize", po::value<double> (&squareSize)->default_value(squareSize),
@@ -219,7 +198,7 @@ int main(int argc, char** argv)
     std::cout << "[" << currentFrame << "/" << maxNbFrames << "]" << std::endl;
 
     // Find the chosen pattern in images
-    const bool found = openMVG::patternDetect::findPattern(pattern, viewGray, boardSize, pointbuf);
+    const bool found = openMVG::calibration::findPattern(pattern, viewGray, boardSize, pointbuf);
 
     if (found)
     {
@@ -244,13 +223,13 @@ int main(int argc, char** argv)
   std::vector<std::vector<cv::Point2f> > calibImagePoints;
 
   // Select best images based on repartition in images of the calibration landmarks
-  openMVG::bestImages::selectBestImages(imagePoints, imageSize, remainingImagesIndexes, maxCalibFrames,
-                   validFrames, calibImageScore, calibInputFrames, calibImagePoints, calibGridSize);
+  openMVG::calibration::selectBestImages(imagePoints, imageSize, remainingImagesIndexes, maxCalibFrames,
+                                         validFrames, calibImageScore, calibInputFrames, calibImagePoints, calibGridSize);
 
   std::vector<std::vector<cv::Point3f> > calibObjectPoints;
   start = std::clock();
 
-  openMVG::patternDetect::computeObjectPoints(boardSize, pattern, squareSize, calibImagePoints, calibObjectPoints);
+  openMVG::calibration::computeObjectPoints(boardSize, pattern, squareSize, calibImagePoints, calibObjectPoints);
 
   double totalAvgErr = 0;
   std::vector<cv::Mat> rvecs;
@@ -267,18 +246,18 @@ int main(int argc, char** argv)
   duration = (std::clock() - start) / (double) CLOCKS_PER_SEC;
   std::cout << "Calibration duration: " << duration << std::endl;
 
-  openMVG::exportData::saveCameraParams(outputFilename, imageSize,
-                   boardSize, squareSize, aspectRatio,
-                   cvCalibFlags, cameraMatrix, distCoeffs,
-                   writeExtrinsics ? rvecs : std::vector<cv::Mat>(),
-                   writeExtrinsics ? tvecs : std::vector<cv::Mat>(),
-                   writeExtrinsics ? reprojErrs : std::vector<float>(),
-                   writePoints ? calibImagePoints : std::vector<std::vector<cv::Point2f> >(),
-                   totalAvgErr);
+  openMVG::calibration::saveCameraParams(outputFilename, imageSize,
+                                         boardSize, squareSize, aspectRatio,
+                                         cvCalibFlags, cameraMatrix, distCoeffs,
+                                         writeExtrinsics ? rvecs : std::vector<cv::Mat>(),
+                                         writeExtrinsics ? tvecs : std::vector<cv::Mat>(),
+                                         writeExtrinsics ? reprojErrs : std::vector<float>(),
+                                         writePoints ? calibImagePoints : std::vector<std::vector<cv::Point2f> >(),
+                                         totalAvgErr);
 
-  openMVG::exportData::exportDebug(debugSelectedImgFolder, debugRejectedImgFolder,
-              feed, calibInputFrames, rejectInputFrames, remainingImagesIndexes,
-              cameraMatrix, distCoeffs, imageSize);
+  openMVG::calibration::exportDebug(debugSelectedImgFolder, debugRejectedImgFolder,
+                                    feed, calibInputFrames, rejectInputFrames, remainingImagesIndexes,
+                                    cameraMatrix, distCoeffs, imageSize);
 
   durationAlgo = (std::clock() - startAlgo) / (double) CLOCKS_PER_SEC;
   std::cout << "Total duration: " << durationAlgo << std::endl;

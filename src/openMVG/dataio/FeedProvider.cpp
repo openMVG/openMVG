@@ -24,7 +24,6 @@ FeedProvider::FeedProvider(const std::string &feedPath, const std::string &calib
   {
     throw std::invalid_argument("Empty filepath.");
   }
-
   if(bf::is_regular_file(bf::path(feedPath))) 
   {
     // Image or video file
@@ -41,10 +40,12 @@ FeedProvider::FeedProvider(const std::string &feedPath, const std::string &calib
       _isVideo = true;
 #else
       throw std::invalid_argument("Unsupported mode! If you intended to use a video"
-              " please add OpenCV support");
+                                  " please add OpenCV support");
 #endif
     }
   }
+  // parent_path() returns "/foo/bar/" when input path equals to "/foo/bar/"
+  // if the user just gives the relative path as "bar", throws invalid argument exception.
   else if(bf::is_directory(bf::path(feedPath)) || bf::is_directory(bf::path(feedPath).parent_path()))
   {
     // Folder or sequence of images

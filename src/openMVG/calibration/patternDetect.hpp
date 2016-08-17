@@ -1,10 +1,11 @@
 #pragma once
 
 #include <vector>
+#include <iostream>
 #include <opencv2/opencv.hpp>
 
-namespace openMVG {
-namespace patternDetect {
+namespace openMVG{
+namespace calibration{
 
 enum Pattern
 {
@@ -15,6 +16,24 @@ enum Pattern
   , CCTAG_GRID
 #endif
 };
+
+/**
+ * @brief Read pattern from console.
+ * 
+ * @param[in,out] stream
+ * @param[in] pattern
+ * @return stream
+ */
+std::istream& operator>>(std::istream &stream, Pattern &pattern);
+
+/**
+ * @brief Write pattern to console.
+ * 
+ * @param[out] stream
+ * @param[in] pattern
+ * @return stream
+ */
+std::ostream& operator<<(std::ostream &stream, const Pattern pattern);
 
 /**
  * @brief This function detects the checkerboard in images
@@ -35,8 +54,8 @@ bool findPattern(const Pattern& pattern, const cv::Mat& viewGray, const cv::Size
  * @param[out] corners
  * @param[in] pattern
  */
-void calcChessboardCorners(cv::Size boardSize, const float& squareSize,
-                                  std::vector<cv::Point3f>& corners, Pattern pattern);
+void calcChessboardCorners(const cv::Size& boardSize, const float& squareSize,
+                           std::vector<cv::Point3f>& corners, Pattern pattern);
 
 /**
  * @brief This function creates an object which stores all the points of the images.
@@ -47,13 +66,13 @@ void calcChessboardCorners(cv::Size boardSize, const float& squareSize,
  * @param[in] imagePoints
  * @param[out] objectPoints
  */
-void computeObjectPoints(cv::Size boardSize,
-                                Pattern pattern,
-                                const float& squareSize,
-                                const std::vector<std::vector<cv::Point2f> >& imagePoints,
-                                std::vector<std::vector<cv::Point3f> >& objectPoints);
+void computeObjectPoints(const cv::Size& boardSize,
+                         Pattern pattern,
+                         const float& squareSize,
+                         const std::vector<std::vector<cv::Point2f> >& imagePoints,
+                         std::vector<std::vector<cv::Point3f> >& objectPoints);
 
-}//namespace patternDetect
+}//namespace calibration
 }//namespace openMVG
 
 

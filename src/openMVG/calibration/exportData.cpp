@@ -10,8 +10,8 @@
 #include <stdio.h>
 #include <cstdio>
 
-namespace openMVG {
-namespace exportData {
+namespace openMVG{
+namespace calibration{
 
 void exportImages(openMVG::dataio::FeedProvider& feed,
                   const std::string& debugFolder,
@@ -26,13 +26,12 @@ void exportImages(openMVG::dataio::FeedProvider& feed,
   openMVG::image::Image<unsigned char> outputImage;
   std::string currentImgName;
   openMVG::cameras::Pinhole_Intrinsic_Radial_K3 queryIntrinsics;
-  bool hasIntrinsics;
+  bool hasIntrinsics = true;
 
   export_params.push_back(CV_IMWRITE_JPEG_QUALITY);
   export_params.push_back(100);
 
-  openMVG::cameras::Pinhole_Intrinsic_Radial_K3 camera(
-                                                       imageSize.width, imageSize.height,
+  openMVG::cameras::Pinhole_Intrinsic_Radial_K3 camera(imageSize.width, imageSize.height,
                                                        cameraMatrix.at<double>(0, 0), cameraMatrix.at<double>(0, 2), cameraMatrix.at<double>(1, 2),
                                                        distCoeffs.at<double>(0), distCoeffs.at<double>(1), distCoeffs.at<double>(4));
   std::cout << "Coefficients matrix :\n " << distCoeffs << std::endl;
@@ -66,7 +65,7 @@ void exportDebug(const std::string& debugSelectedImgFolder,
                  const cv::Size& imageSize)
 {
   std::clock_t startDebug = std::clock();
-  double durationDebug;
+  double durationDebug = 0.0;
 
   if (!debugSelectedImgFolder.empty())
   {
@@ -98,9 +97,9 @@ void exportDebug(const std::string& debugSelectedImgFolder,
 }
 
 void saveCameraParamsToPlainTxt(const std::string& filename,
-                                       const cv::Size& imageSize,
-                                       const cv::Mat& cameraMatrix,
-                                       const cv::Mat& distCoeffs)
+                                const cv::Size& imageSize,
+                                const cv::Mat& cameraMatrix,
+                                const cv::Mat& distCoeffs)
 {
   std::ofstream fs(filename, std::ios::out);
   if (!fs.is_open())
@@ -148,23 +147,21 @@ void saveCameraParamsToPlainTxt(const std::string& filename,
 }
 
 void saveCameraParams(const std::string& filename,
-                             cv::Size imageSize, cv::Size boardSize,
-                             float squareSize, float aspectRatio, int cvCalibFlags,
-                             const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs,
-                             const std::vector<cv::Mat>& rvecs, const std::vector<cv::Mat>& tvecs,
-                             const std::vector<float>& reprojErrs,
-                             const std::vector<std::vector<cv::Point2f> >& imagePoints,
-                             double totalAvgErr)
+                      const cv::Size& imageSize, const cv::Size& boardSize,
+                      float squareSize, float aspectRatio, int cvCalibFlags,
+                      const cv::Mat& cameraMatrix, const cv::Mat& distCoeffs,
+                      const std::vector<cv::Mat>& rvecs, const std::vector<cv::Mat>& tvecs,
+                      const std::vector<float>& reprojErrs,
+                      const std::vector<std::vector<cv::Point2f> >& imagePoints,
+                      double totalAvgErr)
 {
   cv::FileStorage fs(filename, cv::FileStorage::WRITE);
 
   time_t tt;
   time(&tt);
   struct tm *t2 = localtime(&tt);
-  char buf[1024];
-  strftime(buf, sizeof (buf) - 1, "%c", t2);
 
-  fs << "calibration_time" << buf;
+  fs << "calibration_time" << asctime(t2);
 
   if (!rvecs.empty() || !reprojErrs.empty())
     fs << "nbFrames" << (int) std::max(rvecs.size(), reprojErrs.size());
@@ -179,12 +176,12 @@ void saveCameraParams(const std::string& filename,
 
   if (cvCalibFlags != 0)
   {
-    sprintf(buf, "flags: %s%s%s%s",
+    sprintf(asctime(t2), "flags: %s%s%s%s",
             cvCalibFlags & CV_CALIB_USE_INTRINSIC_GUESS ? "+use_intrinsic_guess" : "",
             cvCalibFlags & CV_CALIB_FIX_ASPECT_RATIO ? "+fix_aspectRatio" : "",
             cvCalibFlags & CV_CALIB_FIX_PRINCIPAL_POINT ? "+fix_principal_point" : "",
             cvCalibFlags & CV_CALIB_ZERO_TANGENT_DIST ? "+zero_tangent_dist" : "");
-    cvWriteComment(*fs, buf, 0);
+    cvWriteComment(*fs, asctime(t2), 0);
   }
 
   fs << "flags" << cvCalibFlags;
@@ -200,7 +197,7 @@ void saveCameraParams(const std::string& filename,
   {
     CV_Assert(rvecs[0].type() == tvecs[0].type());
     cv::Mat bigmat((int) rvecs.size(), 6, rvecs[0].type());
-    for (int i = 0; i < (int) rvecs.size(); i++)
+    for (std::size_t i = 0; i < (int) rvecs.size(); i++)
     {
       cv::Mat r = bigmat(cv::Range(i, i + 1), cv::Range(0, 3));
       cv::Mat t = bigmat(cv::Range(i, i + 1), cv::Range(3, 6));
@@ -218,7 +215,7 @@ void saveCameraParams(const std::string& filename,
   if (!imagePoints.empty())
   {
     cv::Mat imagePtMat((int) imagePoints.size(), (int) imagePoints[0].size(), CV_32FC2);
-    for (int i = 0; i < (int) imagePoints.size(); i++)
+    for (std::size_t i = 0; i < (int) imagePoints.size(); i++)
     {
       cv::Mat r = imagePtMat.row(i).reshape(2, imagePtMat.cols);
       cv::Mat imgpti(imagePoints[i]);
@@ -230,5 +227,5 @@ void saveCameraParams(const std::string& filename,
   saveCameraParamsToPlainTxt(txtfilename, imageSize, cameraMatrix, distCoeffs);
 }
 
-}//namespace exportData
+}//namespace calibration
 }//namespace openMVG

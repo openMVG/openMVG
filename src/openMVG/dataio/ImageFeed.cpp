@@ -278,6 +278,7 @@ bool ImageFeed::FeederImpl::goToFrame(const unsigned int frame)
     if(frame < 0 || frame >= _sfmdata.GetViews().size())
     {
       _viewIterator = _sfmdata.GetViews().end();
+      std::cerr << "The current frame is out of the range." << std::endl;
       return false;
     }
 
@@ -289,7 +290,10 @@ bool ImageFeed::FeederImpl::goToFrame(const unsigned int frame)
     _currentImageIndex = frame;
     // Image list mode
     if(frame < 0 || frame >= _images.size())
+    {
+      std::cerr << "The current frame is out of the range." << std::endl;
       return false;
+    }
     std::cout << "frame " << frame << std::endl;
   }
   return true;

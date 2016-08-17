@@ -4,8 +4,8 @@
 #include <iostream>
 #include <assert.h> 
 
-namespace openMVG {
-namespace bestImages {
+namespace openMVG{
+namespace calibration{
 
 void precomputeCellIndexes(const std::vector<std::vector<cv::Point2f> >& imagePoints,
                            std::vector<std::vector<std::size_t> >& cellIndexesPerImage,
@@ -154,5 +154,5 @@ void selectBestImages(const std::vector<std::vector<cv::Point2f> >& imagePoints,
   }
 }
 
-}//namespace bestImages
+}//namespace calibration
 }//namespace openMVG

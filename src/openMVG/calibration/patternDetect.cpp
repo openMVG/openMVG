@@ -1,19 +1,65 @@
 #include "patternDetect.hpp"
 
+#include <boost/program_options.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
+
 #include <boost/lexical_cast.hpp>
+
+#include <string>
 #include <ctime>
 #include <cctype>
 #include <stdexcept>
 #include <iostream>
 
-namespace openMVG {
-namespace patternDetect {
+namespace openMVG{
+namespace calibration{
+
+std::istream& operator>>(std::istream &stream, Pattern &pattern)
+{
+  std::string token;
+  stream >> token;
+  boost::to_upper(token);
+
+  if (token == "CHESSBOARD")
+    pattern = openMVG::calibration::Pattern::CHESSBOARD;
+  else if (token == "CIRCLES")
+    pattern = openMVG::calibration::Pattern::CIRCLES_GRID;
+  else if (token == "ASYMMETRIC_CIRCLES")
+    pattern = openMVG::calibration::Pattern::ASYMMETRIC_CIRCLES_GRID;
+#ifdef HAVE_CCTAG
+    //  else if (token == "CCTAG")
+    //    pattern = CCTAG_GRID;
+#endif
+  else
+    throw boost::program_options::invalid_option_value(std::string("Invalid pattern: ") + token);
+  return stream;
+}
+
+std::ostream& operator<<(std::ostream &stream, const Pattern pattern)
+{
+  switch(pattern)
+  {
+    case openMVG::calibration::Pattern::CHESSBOARD:
+      stream << "CHESSBOARD";
+      break;
+    case openMVG::calibration::Pattern::CIRCLES_GRID:
+      stream << "CIRCLES_GRID";
+      break;
+    case openMVG::calibration::Pattern::ASYMMETRIC_CIRCLES_GRID:
+      stream << "ASYMMETRIC_CIRCLES_GRID";
+      break;
+    case openMVG::calibration::Pattern::CCTAG_GRID:
+      stream << "CCTAG_GRID";
+      break;
+  }
+  return stream;
+}
 
 bool findPattern(const Pattern& pattern, const cv::Mat& viewGray, const cv::Size& boardSize, std::vector<cv::Point2f>& pointbuf)
 {
   bool found = false;
   std::clock_t startCh;
-  double durationCh;
+  double durationCh = 0.0;
 
   switch (pattern)
   {
@@ -67,8 +113,8 @@ bool findPattern(const Pattern& pattern, const cv::Mat& viewGray, const cv::Size
   return found;
 }
 
-void calcChessboardCorners(cv::Size boardSize, const float& squareSize,
-                                  std::vector<cv::Point3f>& corners, Pattern pattern = Pattern::CHESSBOARD)
+void calcChessboardCorners(const cv::Size& boardSize, const float& squareSize,
+                           std::vector<cv::Point3f>& corners, Pattern pattern = Pattern::CHESSBOARD)
 {
   corners.resize(0);
 
@@ -100,11 +146,11 @@ void calcChessboardCorners(cv::Size boardSize, const float& squareSize,
   }
 }
 
-void computeObjectPoints(cv::Size boardSize,
-                                Pattern pattern,
-                                const float& squareSize,
-                                const std::vector<std::vector<cv::Point2f> >& imagePoints,
-                                std::vector<std::vector<cv::Point3f> >& objectPoints)
+void computeObjectPoints(const cv::Size& boardSize,
+                         Pattern pattern,
+                         const float& squareSize,
+                         const std::vector<std::vector<cv::Point2f> >& imagePoints,
+                         std::vector<std::vector<cv::Point3f> >& objectPoints)
 {
   std::vector<cv::Point3f> templateObjectPoints;
 
@@ -115,7 +161,7 @@ void computeObjectPoints(cv::Size boardSize,
   objectPoints.resize(imagePoints.size(), templateObjectPoints);
 }
 
-}//namespace patternDetect
+}//namespace calibration
 }//namespace openMVG
 
 
