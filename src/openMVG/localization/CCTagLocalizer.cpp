@@ -180,7 +180,7 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
     
     // Display histogram
     std::cout << std::endl << "Histogram of number of cctags in images :" << std::endl;
-    for(int i = 0; i < 5; i++)
+    for(std::size_t i = 0; i < 5; i++)
       std::cout << "Images with " << i << "  CCTags : " << counterCCtagsInImage[i] << std::endl;
     std::cout << "Images with 5+ CCTags : " << counterCCtagsInImage[5] << std::endl << std::endl;
 
@@ -353,9 +353,9 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
     geometry::Pose3 poseTemp;
     
     bool bResection = sfm::SfM_Localizer::Localize(imageSize,
-            // pass the input intrinsic if they are valid, null otherwise
-            (useInputIntrinsics) ? &queryIntrinsics : nullptr,
-            resectionDataTemp,
+                                                  // pass the input intrinsic if they are valid, null otherwise
+                                                  (useInputIntrinsics) ? &queryIntrinsics : nullptr,
+                                                  resectionDataTemp,
                                                   poseTemp,
                                                   param->_resectionEstimator);
 
@@ -399,12 +399,12 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
   
   // E. refine the estimated pose
   POPART_COUT("[poseEstimation]\tRefining estimated pose");
-  bool refineStatus = sfm::SfM_Localizer::RefinePose(
-          &queryIntrinsics, 
-          bestPose, 
-          bestResectionData, 
-          true /*b_refine_pose*/, 
-          param->_refineIntrinsics /*b_refine_intrinsic*/);
+  const bool b_refine_pose = true;
+  bool refineStatus = sfm::SfM_Localizer::RefinePose(&queryIntrinsics, 
+                                                     bestPose, 
+                                                     bestResectionData, 
+                                                     b_refine_pose, 
+                                                     param->_refineIntrinsics);
   
   if(!refineStatus)
     POPART_COUT("[poseEstimation]\tRefine pose failed.");
@@ -488,12 +488,12 @@ bool CCTagLocalizer::localizeRig(const std::vector<std::unique_ptr<features::Reg
     if(!parameters->_useLocalizeRigNaive)
       POPART_COUT("OpenGV is not available. Fallback to localizeRig_naive().");
     return localizeRig_naive(vec_queryRegions,
-                           vec_imageSize,
-                           parameters,
-                           vec_queryIntrinsics,
-                           vec_subPoses,
-                           rigPose,
-                           vec_locResults);
+                             vec_imageSize,
+                             parameters,
+                             vec_queryIntrinsics,
+                             vec_subPoses,
+                             rigPose,
+                             vec_locResults);
   }
 }
 
@@ -749,11 +749,10 @@ void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegi
   std::vector<IndexT> nearestKeyFrames;
   nearestKeyFrames.reserve(param._nNearestKeyFrames);
   
-  kNearestKeyFrames(
-          queryRegions,
-          _regions_per_view,
-          param._nNearestKeyFrames,
-          nearestKeyFrames);
+  kNearestKeyFrames(queryRegions,
+                    _regions_per_view,
+                    param._nNearestKeyFrames,
+                    nearestKeyFrames);
   
   POPART_COUT_DEBUG("nearestKeyFrames.size() = " << nearestKeyFrames.size());
   for(const IndexT indexKeyFrame : nearestKeyFrames)

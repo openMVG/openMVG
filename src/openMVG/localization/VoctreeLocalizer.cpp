@@ -555,7 +555,8 @@ bool VoctreeLocalizer::localizeFirstBestResult(const features::SIFT_Regions &que
 
     if(!bResection)
     {
-      POPART_COUT("[poseEstimation]\tResection FAILED");
+      POPART_COUT("[poseEstimation]\tResection failed");
+      // try next one
       continue;
     }
     POPART_COUT("[poseEstimation]\tResection SUCCEDED");
@@ -664,7 +665,7 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
 
   if(!bResection)
   {
-    POPART_COUT("[poseEstimation]\tResection FAILED");
+    POPART_COUT("[poseEstimation]\tResection failed");
     if(!param._visualDebug.empty() && !imagePath.empty())
     {
       namespace bfs = boost::filesystem;
