@@ -10,7 +10,9 @@
 #include <openMVG/logger.hpp>
 
 #include <cctag/ICCTag.hpp>
-#include <boost/filesystem/path.hpp>
+
+#include <boost/filesystem.hpp>
+
 #include <algorithm>
 
 namespace openMVG {
@@ -535,7 +537,7 @@ bool CCTagLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<featur
     Mat &pts3D = vec_pts3D[i];
     Mat &pts2D = vec_pts2D[i];
     features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (vec_queryRegions[i].get());
-    getAllAssociations(queryRegions, *param, occurrences, pts2D, pts3D);
+    getAllAssociations(queryRegions, imageSize[i],*param, occurrences, pts2D, pts3D);
     numAssociations += occurrences.size();
   }
   
@@ -743,10 +745,12 @@ bool CCTagLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<feature
 
 
 void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegions,
+                                        const std::pair<std::size_t, std::size_t> &imageSize,
                                         const CCTagLocalizer::Parameters &param,
-                                        std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences,
+                                        std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences, 
                                         Mat &pt2D,
-                                        Mat &pt3D) const
+                                        Mat &pt3D,
+                                        const std::string& imagePath) const
 {
   std::vector<IndexT> nearestKeyFrames;
   nearestKeyFrames.reserve(param._nNearestKeyFrames);
@@ -766,8 +770,44 @@ void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegi
     // Matching
     std::vector<matching::IndMatch> vec_featureMatches;
     viewMatching(queryRegions, _regions_per_view.at(indexKeyFrame)._regions, vec_featureMatches);
+    POPART_COUT("[localization]\tFound "<< vec_featureMatches.size() <<" matches.");
     
-    // D. recover the 2D-3D associations from the matches 
+    if(!param._visualDebug.empty() && !imagePath.empty())
+    {
+      namespace bfs = boost::filesystem;
+      const sfm::View *mview = _sfm_data.GetViews().at(indexKeyFrame).get();
+      const std::string queryImage = bfs::path(imagePath).stem().string();
+      const std::string matchedImage = bfs::path(mview->s_Img_path).stem().string();
+      const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
+
+      // the directory where to save the feature matches
+      const auto baseDir = bfs::path(param._visualDebug) / queryImage;
+      if((!bfs::exists(baseDir)))
+      {
+        POPART_COUT("created " << baseDir.string());
+        bfs::create_directories(baseDir);
+      }
+      
+      // the final filename for the output svg file as a composition of the query
+      // image and the matched image
+      auto outputName = baseDir / queryImage;
+      outputName += "_";
+      outputName += matchedImage;
+      outputName += ".svg";
+      
+      const bool showNotMatched = true;
+      features::saveCCTagMatches2SVG(imagePath, 
+                                     imageSize, 
+                                     queryRegions,
+                                     matchedPath,
+                                     std::make_pair(mview->ui_width, mview->ui_height), 
+                                     _regions_per_view.at(indexKeyFrame)._regions,
+                                     vec_featureMatches,
+                                     outputName.string(),
+                                     showNotMatched ); 
+    }
+    
+    // Recover the 2D-3D associations from the matches 
     // Each matched feature in the current similar image is associated to a 3D point,
     // hence we can recover the 2D-3D associations to estimate the pose
     
@@ -791,6 +831,42 @@ void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegi
   }
       
   const size_t numCollectedPts = occurences.size();
+  POPART_COUT("[localization]\tCollected "<< numCollectedPts <<" associations.");
+  
+  {
+    // just debugging statistics, this block can be safely removed    
+    std::size_t maxOcc = 0;
+    for(const auto &idx : occurences)
+    {
+      const auto &key = idx.first;
+      const auto &value = idx.second;
+       POPART_COUT("[localization]\tAssociations "
+               << key.first << "," << key.second <<"] found " 
+               << value << " times.");
+       if(value > maxOcc)
+         maxOcc = value;
+    }
+    
+    std::size_t numOccTreated = 0;
+    for(std::size_t value = 1; value < maxOcc; ++value)
+    {
+      std::size_t counter = 0;
+      for(const auto &idx : occurences)
+      {
+        if(idx.second == value)
+        {
+          ++counter;
+        }
+      }
+      if(counter>0)
+        POPART_COUT("[matching]\tThere are " << counter
+                    << " associations occurred " << value << " times ("
+                    << 100.0 * counter / (double) numCollectedPts << "%)");
+      numOccTreated += counter;
+      if(numOccTreated >= numCollectedPts)
+        break;
+    }
+  }
 
   pt2D = Mat2X(2, numCollectedPts);
   pt3D = Mat3X(3, numCollectedPts);

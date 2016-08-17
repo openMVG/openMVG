@@ -119,18 +119,22 @@ public:
    * points of the associations, in the same order as in \p occurences.
    * 
    * @param[in] queryRegions The input query regions containing the extracted 
-   * markers from the query image
-   * @param[in] param The parameters to use
+   * markers from the query image.
+   * @param[in] imageSize The size of the query image.
+   * @param[in] param The parameters to use.
    * @param[out] occurences A map with a pair of indices for each association as 
-   * key and its occurrence as value
-   * @param[out] pt2D The set of 2D points of the associations as they are given in \p queryRegions
-   * @param[out] pt3D The set of 3D points of the associations
+   * key and its occurrence as value.
+   * @param[out] pt2D The set of 2D points of the associations as they are given in \p queryRegions.
+   * @param[out] pt3D The set of 3D points of the associations.
+   * @param[in] The optional path to the query image file, used for debugging.
    */
   void getAllAssociations(const features::CCTAG_Regions &queryRegions,
+                          const std::pair<std::size_t, std::size_t> &imageSize,
                           const CCTagLocalizer::Parameters &param,
                           std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences,
                           Mat &pt2D,
-                          Mat &pt3D) const;
+                          Mat &pt3D,
+                          const std::string& imagePath = std::string()) const;
   
   virtual ~CCTagLocalizer();
 
