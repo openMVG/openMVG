@@ -233,7 +233,8 @@ int main(int argc, char** argv)
 #endif
 #if HAVE_ALEMBIC
       ("export,e", po::value<std::string>(&exportFile)->default_value(exportFile),
-          "If Alambic is enabled, filename for the file containing the camera poses. Default : trackedcameras.abc")
+          "Filename for the alembic file containing the rig poses with the 3D points. "
+          "It also saves a file for each camera named 'filename.cam##.abc'.")
 #endif
           ;
 
