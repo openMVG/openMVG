@@ -239,7 +239,8 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                             param->_visualDebug+"/"+bfs::path(imagePath).stem().string()+".svg");
   }
 
-  return localize(tmpQueryRegions,
+//  return localize(tmpQueryRegions,
+  return localizeAllAssociations(tmpQueryRegions,
                   imageSize,
                   parameters,
                   useInputIntrinsics,
