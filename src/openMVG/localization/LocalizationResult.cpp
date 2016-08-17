@@ -234,10 +234,10 @@ void updateRigPoses(std::vector<LocalizationResult>& vec_localizationResults,
   assert(numCams==vec_subPoses.size()+1);
   
   // update localization result poses
-  for(std::size_t cam = 0; cam < numCams; ++cam)
+  for(std::size_t camID = 0; camID < numCams; ++camID)
   {
     geometry::Pose3 pose;
-    if(cam == 0)
+    if(camID == 0)
     {
       pose = rigPose;
     }
@@ -250,10 +250,10 @@ void updateRigPoses(std::vector<LocalizationResult>& vec_localizationResults,
       // subPose12 = [R12 t12] = [R2 t2]*inv([R1 t1]) and we need [R2 t2], ie the absolute pose
       // => [R1 t1] * subPose12 = [R2 t2]
       // => rigPose * subPose12 = [R2 t2]
-      pose = vec_subPoses[cam-1] * rigPose;
+      pose = vec_subPoses[camID-1] * rigPose;
     }
     
-    vec_localizationResults[cam].setPose(pose);
+    vec_localizationResults[camID].setPose(pose);
   }
 }
 
