@@ -295,8 +295,6 @@ bool CCTagLocalizer::localizeAllAssociations(const std::unique_ptr<features::Reg
   timer.reset();
   // estimate the pose
   resectionData.error_max = param->_errorMax;
-  POPART_COUT("pt2D\n"<<resectionData.pt2D);
-  POPART_COUT("pt3D\n"<<resectionData.pt3D);
   POPART_COUT("[poseEstimation]\tEstimating camera pose...");
   const bool bResection = sfm::SfM_Localizer::Localize(imageSize,
                                                       // pass the input intrinsic if they are valid, null otherwise
