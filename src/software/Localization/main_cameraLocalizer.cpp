@@ -326,7 +326,7 @@ int main(int argc, char** argv)
     POPART_COUT("\tcalibration: " << calibFile);
     POPART_COUT("\tdescriptorPath: " << descriptorsFolder);
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
-    POPART_COUT("\reprojectionError: " << resectionErrorMax);
+    POPART_COUT("\treprojectionError: " << resectionErrorMax);
     POPART_COUT("\tmediafile: " << mediaFilepath);
     if(useVoctreeLocalizer)
     {

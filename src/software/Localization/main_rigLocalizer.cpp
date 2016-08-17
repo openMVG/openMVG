@@ -286,7 +286,7 @@ int main(int argc, char** argv)
     POPART_COUT("\tdescriptorPath: " << descriptorsFolder);
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
     POPART_COUT("\tuseLocalizeRigNaive: " << useLocalizeRigNaive);
-    POPART_COUT("\reprojectionError: " << resectionErrorMax);
+    POPART_COUT("\rreprojectionError: " << resectionErrorMax);
     POPART_COUT("\tnCameras: " << numCameras);
     if(!filelist.empty())
       POPART_COUT("\tfilelist: " << filelist);
