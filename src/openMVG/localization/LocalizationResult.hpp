@@ -172,7 +172,7 @@ public:
    */
   std::size_t selectBestInliers();
   
-  double getThreshold() const { return _matchData.error_max;}
+  double getMaxReprojectionError() const { return _matchData.error_max;}
 
   // Serialization
   template<class Archive>
