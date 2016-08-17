@@ -72,7 +72,7 @@ public:
                                 bool useInputIntrinsics,
                                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                                 LocalizationResult & localizationResult,
-                                const std::string& imagePath);
+                                const std::string& imagePath = std::string());
 
   /**
    * @brief Naive implementation of the localizer using the rig. Each image from
