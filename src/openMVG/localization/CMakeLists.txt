@@ -24,7 +24,7 @@ endif()
 ADD_LIBRARY(openMVG_localization
   ${localization_files_headers}
   ${localization_files_sources})
-TARGET_LINK_LIBRARIES(openMVG_localization openMVG_sfm openMVG_voctree openMVG_numeric ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(openMVG_localization openMVG_sfm openMVG_voctree openMVG_numeric openMVG_system ${Boost_LIBRARIES})
 IF(OpenMVG_USE_CCTAG)
   TARGET_LINK_LIBRARIES(openMVG_localization ${CCTAG_LIBRARIES})
 ENDIF(OpenMVG_USE_CCTAG)
