@@ -79,9 +79,9 @@ std::ostream& operator<<(std::ostream& os, const DescriberType describerType)
 
 std::istream& operator>>(std::istream &in, DescriberType &describerType)
 {
-  int i;
-  in >> i;
-  describerType = static_cast<DescriberType>(i);
+  std::string token;
+  in >> token;
+  describerType = stringToDescriberType(token);
   return in;
 }
 
