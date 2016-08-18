@@ -27,8 +27,8 @@ std::istream& operator>>(std::istream &stream, Pattern &pattern)
   else if (token == "ASYMMETRIC_CIRCLES")
     pattern = openMVG::calibration::Pattern::ASYMMETRIC_CIRCLES_GRID;
 #ifdef HAVE_CCTAG
-    //  else if (token == "CCTAG")
-    //    pattern = CCTAG_GRID;
+  else if (token == "CCTAG")
+    pattern = CCTAG_GRID;
 #endif
   else
     throw boost::program_options::invalid_option_value(std::string("Invalid pattern: ") + token);
@@ -48,9 +48,11 @@ std::ostream& operator<<(std::ostream &stream, const Pattern pattern)
     case openMVG::calibration::Pattern::ASYMMETRIC_CIRCLES_GRID:
       stream << "ASYMMETRIC_CIRCLES_GRID";
       break;
+#ifdef HAVE_CCTAG
     case openMVG::calibration::Pattern::CCTAG_GRID:
       stream << "CCTAG_GRID";
       break;
+#endif
   }
   return stream;
 }
