@@ -91,7 +91,7 @@ int main(int argc, char **argv)
     // We can now create the .cam file for the View in the output dir 
     std::ofstream outfile( stlplus::create_filespec(
                 sOutDir, stlplus::basename_part(view->s_Img_path), "cam" ).c_str() );
-    // See https://github.com/nmoehrle/mvs-texturing/blob/master/Arguments.cpp
+    // See https://github.com/nmoehrle/mvs-texturing/blob/master/apps/texrecon/arguments.cpp
     // for full specs
     const int largerDim = w > h ? w : h;
     outfile << t(0) << " " << t(1) << " " << t(2) << " "
