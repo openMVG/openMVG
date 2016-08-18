@@ -460,7 +460,7 @@ int main(int argc, char** argv)
   
   std::vector<localization::LocalizationResult> vec_localizationResults;
   
-  while(feed.next(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics))
+  while(feed.readImage(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics))
   {
     POPART_COUT("******************************");
     POPART_COUT("FRAME " << myToString(frameCounter,4));
@@ -498,9 +498,9 @@ int main(int argc, char** argv)
 #endif
     }
     ++frameCounter;
+    feed.goToNextFrame();
   }
   localization::save(vec_localizationResults, basename+".locres.json");
-  
   
   
   //***********************************************************************
