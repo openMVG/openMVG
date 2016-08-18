@@ -431,7 +431,7 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
   POPART_COUT_DEBUG("nearestKeyFrames.size() = " << nearestKeyFrames.size());
   for(const IndexT indexKeyFrame : nearestKeyFrames)
   {
-    POPART_COUT("[localization]\tProcessing nearest kframe " << indexKeyFrame 
+    POPART_COUT("[matching]\tProcessing nearest kframe " << indexKeyFrame 
             << " (" << _sfm_data.GetViews().at(indexKeyFrame)->s_Img_path << ")");
     const Reconstructed_RegionsCCTag& matchedRegions = _regions_per_view[indexKeyFrame];
     
@@ -475,10 +475,10 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
     
     if ( vec_featureMatches.size() < 3 )
     {
-      POPART_COUT("[localization]\tSkipping kframe " << indexKeyFrame << " as it contains only "<< vec_featureMatches.size()<<" matches");
+      POPART_COUT("[matching]\tSkipping kframe " << indexKeyFrame << " as it contains only "<< vec_featureMatches.size()<<" matches");
       continue;
     }
-    POPART_COUT("[localization]\tFound "<< vec_featureMatches.size()<<" matches");
+    POPART_COUT("[matching]\tFound "<< vec_featureMatches.size()<<" matches");
     
     // D. recover the 2D-3D associations from the matches 
     // Each matched feature in the current similar image is associated to a 3D point,
@@ -924,7 +924,7 @@ void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegi
     // Matching
     std::vector<matching::IndMatch> vec_featureMatches;
     viewMatching(queryRegions, _regions_per_view.at(indexKeyFrame)._regions, vec_featureMatches);
-    POPART_COUT("[localization]\tFound "<< vec_featureMatches.size() <<" matches.");
+    POPART_COUT("matching]\tFound "<< vec_featureMatches.size() <<" matches.");
     
     if(!param._visualDebug.empty() && !imagePath.empty())
     {
@@ -985,7 +985,7 @@ void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegi
   }
       
   const size_t numCollectedPts = occurences.size();
-  POPART_COUT("[localization]\tCollected "<< numCollectedPts <<" associations.");
+  POPART_COUT("[matching]\tCollected "<< numCollectedPts <<" associations.");
   
   {
     // just debugging statistics, this block can be safely removed    
@@ -994,7 +994,7 @@ void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegi
     {
       const auto &key = idx.first;
       const auto &value = idx.second;
-       POPART_COUT("[localization]\tAssociations "
+       POPART_COUT("[matching]\tAssociations "
                << key.first << "," << key.second <<"] found " 
                << value << " times.");
        if(value > maxOcc)
