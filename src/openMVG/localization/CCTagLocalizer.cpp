@@ -180,7 +180,7 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
     
     // Display histogram
     std::cout << std::endl << "Histogram of number of cctags in images :" << std::endl;
-    for(int i = 0; i < 5; i++)
+    for(std::size_t i = 0; i < 5; i++)
       std::cout << "Images with " << i << "  CCTags : " << counterCCtagsInImage[i] << std::endl;
     std::cout << "Images with 5+ CCTags : " << counterCCtagsInImage[5] << std::endl << std::endl;
 
@@ -279,6 +279,10 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
   // Loop over all k nearest key frames in order to get the most geometrically 
   // consistent one.
   sfm::Image_Localizer_Match_Data bestResectionData;
+    // Upper bound pixel(s) tolerance for residual errors
+  bestResectionData.error_max = std::numeric_limits<double>::infinity();
+  bestResectionData.max_iteration = 4096;
+  
   std::vector<pair<IndexT, IndexT> > bestAssociationIDs;
   geometry::Pose3 bestPose;
   
@@ -353,9 +357,9 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
     geometry::Pose3 poseTemp;
     
     bool bResection = sfm::SfM_Localizer::Localize(imageSize,
-            // pass the input intrinsic if they are valid, null otherwise
-            (useInputIntrinsics) ? &queryIntrinsics : nullptr,
-            resectionDataTemp,
+                                                  // pass the input intrinsic if they are valid, null otherwise
+                                                  (useInputIntrinsics) ? &queryIntrinsics : nullptr,
+                                                  resectionDataTemp,
                                                   poseTemp,
                                                   param->_resectionEstimator);
 
@@ -393,23 +397,19 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
     queryIntrinsics.setHeight(imageSize.second);
   }
   
-  // Upper bound pixel(s) tolerance for residual errors
-  bestResectionData.error_max = std::numeric_limits<double>::infinity();
-  bestResectionData.max_iteration = 4096;
-  
   // E. refine the estimated pose
   POPART_COUT("[poseEstimation]\tRefining estimated pose");
-  bool refineStatus = sfm::SfM_Localizer::RefinePose(
-          &queryIntrinsics, 
-          bestPose, 
-          bestResectionData, 
-          true /*b_refine_pose*/, 
-          param->_refineIntrinsics /*b_refine_intrinsic*/);
+  const bool b_refine_pose = true;
+  bool refineStatus = sfm::SfM_Localizer::RefinePose(&queryIntrinsics, 
+                                                     bestPose, 
+                                                     bestResectionData, 
+                                                     b_refine_pose, 
+                                                     param->_refineIntrinsics);
   
   if(!refineStatus)
-    POPART_COUT("[poseEstimation]\tRefine pose could not improve the estimation of the camera pose.");
+    POPART_COUT("[poseEstimation]\tRefine pose failed.");
 
-  localizationResult = LocalizationResult(bestResectionData, bestAssociationIDs, bestPose, queryIntrinsics, std::vector<voctree::DocMatch>(), true);
+  localizationResult = LocalizationResult(bestResectionData, bestAssociationIDs, bestPose, queryIntrinsics, std::vector<voctree::DocMatch>(), refineStatus);
 
   return localizationResult.isValid();
   
@@ -471,22 +471,30 @@ bool CCTagLocalizer::localizeRig(const std::vector<std::unique_ptr<features::Reg
                                  std::vector<LocalizationResult>& vec_locResults)
 {
 #ifdef HAVE_OPENGV
-  return localizeRig_opengv(vec_queryRegions,
-                            vec_imageSize,
-                            parameters,
-                            vec_queryIntrinsics,
-                            vec_subPoses,
-                            rigPose,
-                            vec_locResults);
-#else
-  return localizeRig_naive(vec_queryRegions,
-                           vec_imageSize,
-                           parameters,
-                           vec_queryIntrinsics,
-                           vec_subPoses,
-                           rigPose,
-                           vec_locResults);
+  if(!parameters->_useLocalizeRigNaive)
+  {
+    POPART_COUT("Using localizeRig_naive()");
+    return localizeRig_opengv(vec_queryRegions,
+                              vec_imageSize,
+                              parameters,
+                              vec_queryIntrinsics,
+                              vec_subPoses,
+                              rigPose,
+                              vec_locResults);
+  }
+  else
 #endif
+  {
+    if(!parameters->_useLocalizeRigNaive)
+      POPART_COUT("OpenGV is not available. Fallback to localizeRig_naive().");
+    return localizeRig_naive(vec_queryRegions,
+                             vec_imageSize,
+                             parameters,
+                             vec_queryIntrinsics,
+                             vec_subPoses,
+                             rigPose,
+                             vec_locResults);
+  }
 }
 
 #ifdef HAVE_OPENGV
@@ -613,12 +621,17 @@ bool CCTagLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<featur
     vec_locResults.emplace_back(matchData, indMatch3D2D, pose, intrinsics, std::vector<voctree::DocMatch>(), refineOk);
   }
   
-  return refineOk;
-  
+  if(!refineOk)
+  {
+    POPART_COUT("[poseEstimation]\tRefine failed.");
+    return false;
   }
   
-
-#else
+  return true;
+  
+}
+  
+#endif //HAVE_OPENGV
 
 // subposes is n-1 as we consider the first camera as the main camera and the 
 // reference frame of the grid
@@ -642,8 +655,7 @@ bool CCTagLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<feature
   assert(numCams==vec_subPoses.size()-1);
   assert(numCams==imageSize.size());
 
-  vec_localizationResults.clear();
-  vec_localizationResults.reserve(numCams);
+  vec_localizationResults.resize(numCams);
     
   // this is basic, just localize each camera alone
   //@todo parallelize?
@@ -678,7 +690,6 @@ bool CCTagLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<feature
     // refined by the call to localize
     //set the pose
     rigPose = vec_localizationResults[0].getPose();
-    return vec_localizationResults[0].isValid();
   }
   
   // if only one camera has been localized
@@ -712,18 +723,22 @@ bool CCTagLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<feature
       // recover the rig pose using the subposes
       rigPose = vec_subPoses[idx-1].inverse() * vec_localizationResults[idx].getPose();
     }
-    return vec_localizationResults[idx].isValid();
   }
   
   // ** otherwise run a BA with the localized cameras
-
-  refineRigPose(vec_subPoses, vec_localizationResults, rigPose);
+  const bool refineOk = refineRigPose(vec_subPoses, vec_localizationResults, rigPose);
+  
+  if(!refineOk)
+  {
+    POPART_COUT("[poseEstimation]\tRig pose refinement failed.");
+    return false;
+  }
+  
+  updateRigPoses(vec_localizationResults, rigPose, vec_subPoses);
   
   return true;
 }
 
-
-#endif // HAVE_OPENGV
 
 void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegions,
                                         const CCTagLocalizer::Parameters &param,
@@ -734,11 +749,10 @@ void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegi
   std::vector<IndexT> nearestKeyFrames;
   nearestKeyFrames.reserve(param._nNearestKeyFrames);
   
-  kNearestKeyFrames(
-          queryRegions,
-          _regions_per_view,
-          param._nNearestKeyFrames,
-          nearestKeyFrames);
+  kNearestKeyFrames(queryRegions,
+                    _regions_per_view,
+                    param._nNearestKeyFrames,
+                    nearestKeyFrames);
   
   POPART_COUT_DEBUG("nearestKeyFrames.size() = " << nearestKeyFrames.size());
   for(const IndexT indexKeyFrame : nearestKeyFrames)

@@ -81,9 +81,9 @@ std::ostream& operator<<(std::ostream& os, const DescriberType describerType)
 
 std::istream& operator>>(std::istream &in, DescriberType &describerType)
 {
-  int i;
-  in >> i;
-  describerType = static_cast<DescriberType>(i);
+  std::string token;
+  in >> token;
+  describerType = stringToDescriberType(token);
   return in;
 }
 
@@ -95,6 +95,15 @@ std::string myToString(std::size_t i, std::size_t zeroPadding)
   return ss.str();
 }
 
+/**
+ * @brief It checks if the value for the reprojection error or the matching error
+ * is compatible with the given robust estimator. The value cannot be 0 for 
+ * LORansac, for ACRansac a value of 0 means to use infinity (ie estimate the 
+ * threshold during ransac process)
+ * @param e The estimator to be checked.
+ * @param value The value for the reprojection or matching error.
+ * @return true if the value is compatible
+ */
 bool checkRobustEstimator(robust::EROBUST_ESTIMATOR e, double &value)
 {
   if(e != robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC &&
@@ -115,7 +124,7 @@ bool checkRobustEstimator(robust::EROBUST_ESTIMATOR e, double &value)
   if(e == robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC)
   {
     const double minThreshold = 1e-6;
-    if( value <= minThreshold || value <= minThreshold)
+    if( value <= minThreshold)
     {
       POPART_CERR("Error: errorMax and matchingError cannot be 0 with " 
               << robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC 
@@ -309,6 +318,7 @@ int main(int argc, char** argv)
     // the bundle adjustment can be run for now only if the refine intrinsics option is not set
     globalBundle = (globalBundle && !refineIntrinsics);
     POPART_COUT("Program called with the following parameters:");
+    POPART_COUT("\tsfmdata: " << sfmFilePath);
     POPART_COUT("\tdescriptors: " << descriptorType);
     POPART_COUT("\tpreset: " << featurePreset);
     POPART_COUT("\tresectionEstimator: " << resectionEstimator);
@@ -316,14 +326,13 @@ int main(int argc, char** argv)
     POPART_COUT("\tcalibration: " << calibFile);
     POPART_COUT("\tdescriptorPath: " << descriptorsFolder);
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
+    POPART_COUT("\treprojectionError: " << resectionErrorMax);
     POPART_COUT("\tmediafile: " << mediaFilepath);
-    POPART_COUT("\tsfmdata: " << sfmFilePath);
-    POPART_COUT("\reprojectionError: " << resectionErrorMax);
     if(useVoctreeLocalizer)
     {
       POPART_COUT("\tvoctree: " << vocTreeFilepath);
       POPART_COUT("\tweights: " << weightsFilepath);
-      POPART_COUT("\tresults: " << numResults);
+      POPART_COUT("\tnbImageMatch: " << numResults);
       POPART_COUT("\tmaxResults: " << maxResults);
       POPART_COUT("\tcommon views: " << numCommonViews);
       POPART_COUT("\talgorithm: " << algostring);
@@ -410,10 +419,8 @@ int main(int argc, char** argv)
   param->_resectionEstimator = resectionEstimator;
   param->_matchingEstimator = matchingEstimator;
   
-
-  bool isInit = localizer->isInit();
   
-  if(!isInit)
+  if(!localizer->isInit())
   {
     POPART_CERR("ERROR while initializing the localizer!");
     return EXIT_FAILURE;
