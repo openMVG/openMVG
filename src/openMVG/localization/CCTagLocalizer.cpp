@@ -849,14 +849,10 @@ bool CCTagLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<feature
     //set the pose
     rigPose = vec_localizationResults[0].getPose();
   }
-  
-  // if only one camera has been localized
-  if(numLocalizedCam == 1)
+  else
   {
-    // all the other cameras have not been localized just return the result of the 
-    // localized one
-    
-    // find the index of the localized camera
+
+    // find the index of the first localized camera
     const std::size_t idx = std::distance(isLocalized.begin(), 
                                           std::find(isLocalized.begin(), isLocalized.end(), true));
     
@@ -864,6 +860,7 @@ bool CCTagLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<feature
     // better safe than sorry
     assert(idx < isLocalized.size());
     
+    POPART_COUT("Index of the first localized camera: " << idx);
     // if the only localized camera is the main camera
     if(idx==0)
     {
