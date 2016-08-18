@@ -9,12 +9,12 @@
 
 /**
  * @file histogram.h
- * @brief Histogram computes the distrubution function (df) of 
- *  unique sended value or iterable data
+ * @brief Histogram computes the distribution function (df) of
+ *  unique sent value or iterable data
  *  inside the provided range.
- * @author Pierre MOULON base on work from Jansson Consulting 
+ * @author Pierre MOULON base on work from Jansson Consulting
  * 2009-06-30, updated 2011-06-17 and 2011-08-03 Dedicated to the public domain.
- * 
+ *
  *
  * Copyright (c) 2011, 2012, 2013 Pierre MOULON
  * All rights reserved.
@@ -36,7 +36,7 @@ namespace {
 // 2009-06-30, updated 2011-06-17 and 2011-08-03
 
 // 2011-12-17 Modified by Pierre Moulon
-//  - use vector array to avoid memory managment
+//  - use vector array to avoid memory management
 //  - add value by sequence with iterator
 
 template <typename T>
@@ -102,7 +102,8 @@ public:
   // Get frequencies
   const std::vector<size_t> & GetHist() const {return freq;}
   // Get XbinsValue
-  std::vector<T> GetXbinsValue() const {
+  std::vector<T> GetXbinsValue() const
+  {
     std::vector<T> vec_XbinValue(nBins, T(0));
     double val = (End-Start)/static_cast<double>(nBins-1);
     for (size_t i = 0; i < nBins; ++i)
