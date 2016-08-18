@@ -152,27 +152,29 @@ struct VO_Monocular
         // add some new feature
         const size_t count = _maxTrackedFeatures - countTracked;
         std::vector<features::PointFeature> new_pt;
-        tracker_->detect(ima, new_pt, count);
-        std::cout << "#features added: " << new_pt.size() << std::endl;
-        size_t j = 0;
-        for (size_t i = 0; i < _tracking_status.size(); ++i)
+        if (tracker_->detect(ima, new_pt, count))
         {
-          if (!_tracking_status[i])
+          std::cout << "#features added: " << new_pt.size() << std::endl;
+          size_t j = 0;
+          for (size_t i = 0; i < _tracking_status.size(); ++i)
           {
-            // Create a new landmark
-            Landmark landmark;
-            landmark._obs.emplace_back(frameId, new_pt[j].coords());
-            _landmark.push_back(landmark);
-            // a new landmark ID have be tracked
+            if (!_tracking_status[i])
+            {
+              // Create a new landmark
+              Landmark landmark;
+              landmark._obs.emplace_back(frameId, new_pt[j].coords());
+              _landmark.push_back(landmark);
+              // a new landmark ID have be tracked
 
-            _trackedLandmarkIds[i] = _landmark.size()-1;
-            _landmarkListPerFrame.back().insert(_landmark.size() - 1);
+              _trackedLandmarkIds[i] = _landmark.size()-1;
+              _landmarkListPerFrame.back().insert(_landmark.size() - 1);
 
-            _pt_to_track[i] = new_pt[j];
-            ++j;
+              _pt_to_track[i] = new_pt[j];
+              ++j;
+            }
           }
+          std::cout << "_landmark.size() " << _landmark.size() << std::endl;
         }
-        std::cout << "_landmark.size() " << _landmark.size() << std::endl;
       }
     }
     if (!bTrackerStatus)

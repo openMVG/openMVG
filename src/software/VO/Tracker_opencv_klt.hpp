@@ -88,16 +88,16 @@ struct Tracker_opencv_KLT : public Abstract_Tracker
     {
       // shuffle to avoid to sample only in one bucket
       std::random_shuffle(m_nextKeypoints.begin(), m_nextKeypoints.end());
-      m_nextKeypoints.resize(count);
-
-      pt_to_track.resize(count);
-      for (size_t i = 0; i  < count; ++i)
-        pt_to_track[i] = features::PointFeature(m_nextKeypoints[i].pt.x, m_nextKeypoints[i].pt.y);
-
-      return true;
     }
+    const size_t kept_kp_count =  std::min(m_nextKeypoints.size(), count);
+    m_nextKeypoints.resize(kept_kp_count);
 
-    return false; // Cannot compute a sufficient number of points for the given image
+    pt_to_track.resize(kept_kp_count);
+    for (size_t i = 0; i  < kept_kp_count; ++i)
+      pt_to_track[i] = features::PointFeature(m_nextKeypoints[i].pt.x, m_nextKeypoints[i].pt.y);
+
+    return kept_kp_count != 0;
+    // Return false if no point can be added
   }
 };
 
