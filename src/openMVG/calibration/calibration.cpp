@@ -33,7 +33,7 @@ double computeReprojectionErrors(const std::vector<std::vector<cv::Point3f> >& o
 
 bool runCalibration(const std::vector<std::vector<cv::Point2f> >& imagePoints,
                     const std::vector<std::vector<cv::Point3f> >& objectPoints,
-                    const cv::Size imageSize,
+                    const cv::Size& imageSize,
                     float aspectRatio,
                     int cvCalibFlags,
                     cv::Mat& cameraMatrix,

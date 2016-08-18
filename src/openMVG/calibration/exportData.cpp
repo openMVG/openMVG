@@ -26,7 +26,6 @@ void exportImages(openMVG::dataio::FeedProvider& feed,
   openMVG::image::Image<unsigned char> outputImage;
   std::string currentImgName;
   openMVG::cameras::Pinhole_Intrinsic_Radial_K3 queryIntrinsics;
-  bool hasIntrinsics = true;
 
   export_params.push_back(CV_IMWRITE_JPEG_QUALITY);
   export_params.push_back(100);
@@ -39,6 +38,7 @@ void exportImages(openMVG::dataio::FeedProvider& feed,
   for (std::size_t currentFrame : exportFrames)
   {
     feed.goToFrame(currentFrame);
+    bool hasIntrinsics = true;
     feed.readImage(inputImage, queryIntrinsics, currentImgName, hasIntrinsics);
 
     // drawChessboardCorners(view, boardSize, cv::Mat(pointbuf), found);
@@ -197,7 +197,7 @@ void saveCameraParams(const std::string& filename,
   {
     CV_Assert(rvecs[0].type() == tvecs[0].type());
     cv::Mat bigmat((int) rvecs.size(), 6, rvecs[0].type());
-    for (std::size_t i = 0; i < (int) rvecs.size(); i++)
+    for (std::size_t i = 0; i < rvecs.size(); i++)
     {
       cv::Mat r = bigmat(cv::Range(i, i + 1), cv::Range(0, 3));
       cv::Mat t = bigmat(cv::Range(i, i + 1), cv::Range(3, 6));
@@ -215,7 +215,7 @@ void saveCameraParams(const std::string& filename,
   if (!imagePoints.empty())
   {
     cv::Mat imagePtMat((int) imagePoints.size(), (int) imagePoints[0].size(), CV_32FC2);
-    for (std::size_t i = 0; i < (int) imagePoints.size(); i++)
+    for (std::size_t i = 0; i < imagePoints.size(); i++)
     {
       cv::Mat r = imagePtMat.row(i).reshape(2, imagePtMat.cols);
       cv::Mat imgpti(imagePoints[i]);
