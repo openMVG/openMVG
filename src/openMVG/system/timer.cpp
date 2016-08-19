@@ -21,45 +21,44 @@
 namespace openMVG {
 namespace system {
 
-  Timer::Timer()
-   {
-#ifdef HAVE_CXX11_CHRONO
-#else
+Timer::Timer()
+{
+#ifndef HAVE_CXX11_CHRONO
 #ifdef _WIN32
-    LARGE_INTEGER freq;
-    if (!QueryPerformanceFrequency(&freq))
-    {
-      const char *msg = "Failed to initialize high resolution timer!";
-      std::cerr << msg << std::endl;
-      throw std::runtime_error(msg);
-    }
-    frequency_ = static_cast<double>(freq.QuadPart);
-#endif
-#endif
-    reset();
-  }
-
-  void Timer::reset()
+  LARGE_INTEGER freq;
+  if (!QueryPerformanceFrequency(&freq))
   {
+    const char *msg = "Failed to initialize high resolution timer!";
+    std::cerr << msg << std::endl;
+    throw std::runtime_error(msg);
+  }
+  frequency_ = static_cast<double>(freq.QuadPart);
+#endif
+#endif
+  reset();
+}
+
+void Timer::reset()
+{
 #ifdef HAVE_CXX11_CHRONO
-    start_ = std::chrono::high_resolution_clock::now();
+  start_ = std::chrono::high_resolution_clock::now();
 #else
 
 #ifdef _WIN32
-    LARGE_INTEGER li_start_;
-    QueryPerformanceCounter(&li_start_);
-    start_ = static_cast<double>(li_start_.QuadPart);
+  LARGE_INTEGER li_start_;
+  QueryPerformanceCounter(&li_start_);
+  start_ = static_cast<double>(li_start_.QuadPart);
 #else
-    timeval start;
-    gettimeofday(&start, nullptr);
-    start_ = start.tv_sec + start.tv_usec * 1e-6;
+  timeval start;
+  gettimeofday(&start, nullptr);
+  start_ = start.tv_sec + start.tv_usec * 1e-6;
 #endif
 
 #endif // HAVE_CXX11_CHRONO
-  }
+}
 
-  double Timer::elapsed() const
-  {
+double Timer::elapsed() const
+{
 #ifdef HAVE_CXX11_CHRONO
   return elapsedMs() / 1000.;
 #else
@@ -77,17 +76,23 @@ namespace system {
 #endif
   return elapsed_;
 #endif // HAVE_CXX11_CHRONO
-  }
+}
 
-  double Timer::elapsedMs() const
-  {
+double Timer::elapsedMs() const
+{
 #ifdef HAVE_CXX11_CHRONO
-    const auto end_ = std::chrono::high_resolution_clock::now();
-    return std::chrono::duration_cast<std::chrono::milliseconds>(end_ - start_).count();
+  const auto end_ = std::chrono::high_resolution_clock::now();
+  return std::chrono::duration_cast<std::chrono::milliseconds>(end_ - start_).count();
 #else
-    return elapsed() * 1000.;
+  return elapsed() * 1000.;
 #endif // HAVE_CXX11_CHRONO
-  }
+}
+
+std::ostream& operator << (std::ostream& str, const Timer& t)
+{
+  return str << t.elapsed() << " s elapsed";
+}
+
 
   std::ostream& operator << (std::ostream& str, const Timer& t)
   {
