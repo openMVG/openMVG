@@ -625,6 +625,8 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
 {
   
   sfm::Image_Localizer_Match_Data resectionData;
+  // a map containing for each pair <pt3D_id, pt2D_id> the number of times that 
+  // the association has been seen
   std::map< std::pair<IndexT, IndexT>, std::size_t > occurences;
   
   // get all the association from the database images
@@ -833,7 +835,7 @@ void VoctreeLocalizer::getAllAssociations(const features::SIFT_Regions &queryReg
     }
     else
     {
-      POPART_COUT("[matching]\tFound " << vec_featureMatches.size() << " matches");
+      POPART_COUT("[matching]\tFound " << vec_featureMatches.size() << " geometrically validated matches");
     }
     assert(vec_featureMatches.size()>0);
     

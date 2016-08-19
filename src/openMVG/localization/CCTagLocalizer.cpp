@@ -266,6 +266,8 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
   // it automatically throws an exception if the cast does not work
   features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (genQueryRegions.get());
   
+  // a map containing for each pair <pt3D_id, pt2D_id> the number of times that 
+  // the association has been seen
   std::map< std::pair<IndexT, IndexT>, std::size_t > occurences;
   sfm::Image_Localizer_Match_Data resectionData;
   
@@ -480,7 +482,10 @@ bool CCTagLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<featur
   {
     throw std::invalid_argument("The CCTag localizer parameters are not in the right format.");
   }
-
+  
+  // each element of the vector is a map containing for each pair <pt3D_id, pt2D_id> 
+  // the number of times that the association has been seen. One element fo the 
+  // vector for each camera.
   std::vector<std::map< pair<IndexT, IndexT>, std::size_t > > vec_occurrences(numCams);
   std::vector<Mat> vec_pts3D(numCams);
   std::vector<Mat> vec_pts2D(numCams);

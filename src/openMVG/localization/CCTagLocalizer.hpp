@@ -124,8 +124,8 @@ public:
    * markers from the query image.
    * @param[in] imageSize The size of the query image.
    * @param[in] param The parameters to use.
-   * @param[out] occurences A map with a pair of indices for each association as 
-   * key and its occurrence as value.
+   * @param[out] occurences A map containing for each pair <pt3D_id, pt2D_id> 
+   * the number of times that the association has been seen
    * @param[out] pt2D The set of 2D points of the associations as they are given in \p queryRegions.
    * @param[out] pt3D The set of 3D points of the associations.
    * @param[in] The optional path to the query image file, used for debugging.
