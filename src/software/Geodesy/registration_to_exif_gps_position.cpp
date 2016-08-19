@@ -147,14 +147,8 @@ int main(int argc, char **argv)
 
   {
     // Convert positions to the appropriate data container
-    Mat
-      X_SfM(3, vec_sfm_center.size()),
-      X_GPS(3, vec_sfm_center.size());
-    for (size_t i = 0; i < vec_sfm_center.size(); ++i)
-    {
-      X_SfM.col(i) = vec_sfm_center[i];
-      X_GPS.col(i) = vec_gps_center[i];
-    }
+    const Mat X_SfM = Eigen::Map<Mat>(vec_sfm_center[0].data(), 3, vec_sfm_center.size());
+    const Mat X_GPS = Eigen::Map<Mat>(vec_gps_center[0].data(), 3, vec_gps_center.size());
 
     openMVG::geometry::Similarity3 sim;
 
@@ -240,28 +234,14 @@ int main(int argc, char **argv)
     //--
     // Apply the found transformation to the SfM Data Scene
     //--
-
-    // Transform the landmark positions
-    for (Landmarks::iterator iterL = sfm_data.structure.begin();
-        iterL != sfm_data.structure.end(); ++iterL)
-    {
-      iterL->second.X = sim(iterL->second.X);
-    }
-
-    // Transform the camera positions
-    for (Poses::iterator iterP = sfm_data.poses.begin();
-        iterP != sfm_data.poses.end(); ++iterP)
-    {
-      geometry::Pose3 & pose = iterP->second;
-      pose = sim(pose);
-    }
+    openMVG::sfm::ApplySimilarity(sim, sfm_data);
   }
 
   // Export the SfM_Data scene in the expected format
   if (Save(
-    sfm_data,
-    sSfM_Data_Filename_Out.c_str(),
-    ESfM_Data(ALL)))
+        sfm_data,
+        sSfM_Data_Filename_Out.c_str(),
+        ESfM_Data(ALL)))
   {
     return EXIT_SUCCESS;
   }

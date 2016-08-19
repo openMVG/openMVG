@@ -7,6 +7,7 @@
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 #include "openMVG/sfm/sfm_data_BA_ceres_camera_functor.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/types.hpp"
 
 //- Robust estimation - LMeds (since no threshold can be defined)
@@ -167,10 +168,15 @@ bool Bundle_Adjustment_Ceres::Adjust
   // Create residuals for each observation in the bundle adjustment problem. The
   // parameters for cameras and points are added automatically.
   //----------
+
+
   double pose_center_robust_fitting_error = 0.0;
-  if (sfm_data.GetViews().size() > 3)
+  openMVG::geometry::Similarity3 sim_to_center;
+  bool b_usable_prior = false;
+  if (options.use_motion_priors_opt && sfm_data.GetViews().size() > 3)
   {
-    // Apply X-Y affine transformation - Early transformation to be closer to the Prior coordinate system
+    // - Compute a robust X-Y affine transformation & apply it
+    // - This early transformation enhance the conditionning (solution closer to the Prior coordinate system)
     {
       // Collect corresponding camera centers
       std::vector<Vec3> X_SfM, X_GPS;
@@ -179,7 +185,7 @@ bool Bundle_Adjustment_Ceres::Adjust
         const sfm::ViewPriors * prior = dynamic_cast<sfm::ViewPriors*>(view_it.second.get());
         if (prior != nullptr && prior->b_use_pose_center_ && sfm_data.IsPoseAndIntrinsicDefined(prior))
         {
-          X_SfM.push_back( sfm_data.GetPoses().at(prior->id_view).center() );
+          X_SfM.push_back( sfm_data.GetPoses().at(prior->id_pose).center() );
           X_GPS.push_back( prior->pose_center_ );
         }
       }
@@ -188,27 +194,38 @@ bool Bundle_Adjustment_Ceres::Adjust
       // Compute the registration:
       if (X_GPS.size() > 3)
       {
-        geometry::kernel::Similarity3_Kernel kernel(Eigen::Map<Mat3X>(X_SfM[0].data(),3, X_SfM.size()), Eigen::Map<Mat3X>(X_GPS[0].data(),3, X_GPS.size()));
+        const Mat X_SfM_Mat = Eigen::Map<Mat>(X_SfM[0].data(),3, X_SfM.size());
+        const Mat X_GPS_Mat = Eigen::Map<Mat>(X_GPS[0].data(),3, X_GPS.size());
+        geometry::kernel::Similarity3_Kernel kernel(X_SfM_Mat, X_GPS_Mat);
         const double lmeds_median = openMVG::robust::LeastMedianOfSquares(kernel, &sim);
-        std::cout << "Initial LMeds found a model with an upper bound of: " <<  sqrt(lmeds_median) << " user units."<< std::endl;
-        pose_center_robust_fitting_error = sqrt(lmeds_median);
+        if (lmeds_median != std::numeric_limits<double>::max())
+        {
+          b_usable_prior = true; // PRIOR can be used safely
 
-        // Apply the found transformation to the SfM Data Scene
-        openMVG::sfm::ApplySimilarity(sim, sfm_data);
+          // Compute the median residual error once the registration is applied
+          for (Vec3 & pos : X_SfM) // Transform SfM poses for residual computation
+          {
+            pos = sim(pos);
+          }
+          Vec residual = (Eigen::Map<Mat3X>(X_SfM[0].data(), 3, X_SfM.size()) - Eigen::Map<Mat3X>(X_GPS[0].data(), 3, X_GPS.size())).colwise().norm();
+          std::sort(residual.data(), residual.data() + residual.size());
+          pose_center_robust_fitting_error = residual(residual.size()/2);
+
+          // Apply the found transformation to the SfM Data Scene
+          openMVG::sfm::ApplySimilarity(sim, sfm_data);
+
+          // Move entire scene to center for better numerical stability
+          Vec3 pose_centroid = Vec3::Zero();
+          for (const auto & pose_it : sfm_data.poses)
+          {
+            pose_centroid += (pose_it.second.center() / (double)sfm_data.poses.size());
+          }
+          sim_to_center = openMVG::geometry::Similarity3(openMVG::sfm::Pose3(Mat3::Identity(), pose_centroid), 1.0);
+          openMVG::sfm::ApplySimilarity(sim_to_center, sfm_data, true);
+        }
       }
     }
   }
-
-  // Move entire scene to center for better numerical stability
-  Vec3 pose_centroid(0.0, 0.0, 0.0);
-  for (const auto & pose_it : sfm_data.poses)
-  {
-    pose_centroid += (pose_it.second.center() / sfm_data.poses.size());
-  }
-
-  openMVG::geometry::Similarity3 sim_to_center(openMVG::sfm::Pose3(Mat3::Identity(), pose_centroid), 1.0);
-  openMVG::sfm::ApplySimilarity(sim_to_center, sfm_data, true);
-
 
   ceres::Problem problem;
 
@@ -378,7 +395,7 @@ bool Bundle_Adjustment_Ceres::Adjust
   }
 
   // Add Pose prior constraints if any
-  if (sfm_data.GetViews().size() > 3)
+  if (b_usable_prior)
   {
     for (const auto & view_it : sfm_data.GetViews())
     {
@@ -398,12 +415,12 @@ bool Bundle_Adjustment_Ceres::Adjust
   // Configure a BA engine and run it
   //  Make Ceres automatically detect the bundle structure.
   ceres::Solver::Options ceres_config_options;
-  ceres_config_options.max_num_iterations = 100;
+  ceres_config_options.max_num_iterations = 500;
   ceres_config_options.preconditioner_type = ceres_options_.preconditioner_type_;
   ceres_config_options.linear_solver_type = ceres_options_.linear_solver_type_;
   ceres_config_options.sparse_linear_algebra_library_type = ceres_options_.sparse_linear_algebra_library_type_;
   ceres_config_options.minimizer_progress_to_stdout = ceres_options_.bVerbose_;
-  ceres_config_options.logging_type = ceres::PER_MINIMIZER_ITERATION;
+  ceres_config_options.logging_type = ceres::SILENT;
   ceres_config_options.num_threads = ceres_options_.nb_threads_;
   ceres_config_options.num_linear_solver_threads = ceres_options_.nb_threads_;
   ceres_config_options.parameter_tolerance = ceres_options_.parameter_tolerance_;
@@ -437,6 +454,8 @@ bool Bundle_Adjustment_Ceres::Adjust
         << " Final RMSE: " << std::sqrt( summary.final_cost / summary.num_residuals) << "\n"
         << " Time (s): " << summary.total_time_in_seconds << "\n"
         << std::endl;
+      if (options.use_motion_priors_opt)
+        std::cout << "Usable motion priors: " << (int)b_usable_prior << std::endl;
     }
 
     // Update camera poses with refined data
@@ -469,11 +488,15 @@ bool Bundle_Adjustment_Ceres::Adjust
 
     // Structure is already updated directly if needed (no data wrapping)
 
-
-    // set back to the original scene centroid
-    openMVG::sfm::ApplySimilarity(sim_to_center.inverse(), sfm_data, true);
-
+    if (b_usable_prior)
     {
+      // set back to the original scene centroid
+      openMVG::sfm::ApplySimilarity(sim_to_center.inverse(), sfm_data, true);
+
+      //--
+      // - Compute some fitting statistics
+      //--
+
       // Collect corresponding camera centers
       std::vector<Vec3> X_SfM, X_GPS;
       for (const auto & view_it : sfm_data.GetViews())
@@ -481,24 +504,26 @@ bool Bundle_Adjustment_Ceres::Adjust
         const sfm::ViewPriors * prior = dynamic_cast<sfm::ViewPriors*>(view_it.second.get());
         if (prior != nullptr && prior->b_use_pose_center_ && sfm_data.IsPoseAndIntrinsicDefined(prior))
         {
-          X_SfM.push_back( sfm_data.GetPoses().at(prior->id_view).center() );
+          X_SfM.push_back( sfm_data.GetPoses().at(prior->id_pose).center() );
           X_GPS.push_back( prior->pose_center_ );
         }
       }
-      // Compute the registration:
+      // Compute the registration fitting error (once BA with Prior have been used):
       if (X_GPS.size() > 3)
       {
-        openMVG::geometry::Similarity3 sim;
-        geometry::kernel::Similarity3_Kernel kernel(Eigen::Map<Mat3X>(X_SfM[0].data(),3, X_SfM.size()), Eigen::Map<Mat3X>(X_GPS[0].data(),3, X_GPS.size()));
-        const double lmeds_median = openMVG::robust::LeastMedianOfSquares( kernel, &sim );
-        std::cout << "Final LMeds found a model with an upper bound of: " << sqrt(lmeds_median) << " user units."<< std::endl;
+        // Compute the median residual error
+        Vec residual = (Eigen::Map<Mat3X>(X_SfM[0].data(), 3, X_SfM.size()) - Eigen::Map<Mat3X>(X_GPS[0].data(), 3, X_GPS.size())).colwise().norm();
+        std::sort(residual.data(), residual.data() + residual.size());
+        const double fitting_error = residual(residual.size()/2);
+        std::cout
+          << "Pose prior statistics:\n"
+          << " - Starting median fitting error: " << pose_center_robust_fitting_error << " user units." << std::endl
+          << " - Final median fitting error: " << fitting_error << " user units.\n"<< std::endl;
       }
     }
-
     return true;
   }
 }
 
 } // namespace sfm
 } // namespace openMVG
-

@@ -18,6 +18,9 @@ TEST(GEODESY, LLA_TO_ECEF_TO_LLA)
   EXPECT_NEAR(lat, lla(0), 1e-6);
   EXPECT_NEAR(lon, lla(1), 1e-6);
   EXPECT_NEAR(alt, lla(2), 1e-6);
+  EXPECT_TRUE(ecef_xyz(0) != lla(0));
+  EXPECT_TRUE(ecef_xyz(1) != lla(1));
+  EXPECT_TRUE(ecef_xyz(2) != lla(2));
 }
 
 
@@ -25,9 +28,9 @@ TEST(GEODESY, LLA_TO_UTM)
 {
   const double lat = 10, lon = 20, alt = 30;
   const openMVG::Vec3 utm = lla_to_utm(lat, lon, alt);
-  EXPECT_NEAR(utm(0), 604609.3238322088, 1e-6);
-  EXPECT_NEAR(utm(1), 2211793.55600484, 1e-6);
-  EXPECT_NEAR(utm(2), alt, 1e-6);
+  EXPECT_NEAR(390399.227485604, utm(0), 1e-6);
+  EXPECT_NEAR(1105578.58919181, utm(1), 1e-6);
+  EXPECT_NEAR(alt, utm(2), 1e-6);
 }
 
 /* ************************************************************************* */

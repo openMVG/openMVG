@@ -69,6 +69,7 @@ int main(int argc, char **argv)
   std::pair<std::string,std::string> initialPairString("","");
   std::string sIntrinsic_refinement_options = "ADJUST_ALL";
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
+  bool b_use_motion_priors = false;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
@@ -77,6 +78,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('b', initialPairString.second, "initialPairB") );
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_option('f', sIntrinsic_refinement_options, "refineIntrinsics") );
+  cmd.add( make_option('p', b_use_motion_priors, "prior_usage") );
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -107,6 +109,7 @@ int main(int argc, char **argv)
       <<      "\t\t-> refine the focal length & the distortion coefficient(s) (if any)\n"
       << "\t ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION\n"
       <<      "\t\t-> refine the principal point position & the distortion coefficient(s) (if any)\n"
+      << "[-p|--prior_usage] Use motion priors (i.e GPS positions) (default: false)\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -191,6 +194,7 @@ int main(int argc, char **argv)
   // Configure reconstruction parameters
   sfmEngine.Set_Intrinsics_Refinement_Type(intrinsic_refinement_options);
   sfmEngine.SetUnknownCameraType(EINTRINSIC(i_User_camera_model));
+  sfmEngine.Set_Use_Motion_Prior(b_use_motion_priors);
 
   // Handle Initial pair parameter
   if (!initialPairString.first.empty() && !initialPairString.second.empty())
