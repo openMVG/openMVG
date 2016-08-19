@@ -351,12 +351,7 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
 
   if(!param->_visualDebug.empty() && !imagePath.empty())
   {
-//    namespace bfs = boost::filesystem;
-//    features::saveFeatures2SVG(imagePath,
-//                              imageSize,
-//                              resectionData.pt2D,
-//                              param._visualDebug + "/" + bfs::path(imagePath).stem().string() + ".associations.svg",
-//                              &resectionData.vec_inliers);
+    //@todo save image with cctag with different code color for inliers
   }
   
   POPART_COUT("[poseEstimation]\tPose estimation took " << timer.elapsedMs() << "ms.");
