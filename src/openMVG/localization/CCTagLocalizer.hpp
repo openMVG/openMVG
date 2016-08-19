@@ -65,14 +65,6 @@ public:
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult & localizationResult,
                 const std::string& imagePath = std::string());
-  
-  bool localizeAllAssociations(const std::unique_ptr<features::Regions> &genQueryRegions,
-                                const std::pair<std::size_t, std::size_t> &imageSize,
-                                const LocalizerParameters *parameters,
-                                bool useInputIntrinsics,
-                                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                                LocalizationResult & localizationResult,
-                                const std::string& imagePath = std::string());
 
   /**
    * @brief Naive implementation of the localizer using the rig. Each image from

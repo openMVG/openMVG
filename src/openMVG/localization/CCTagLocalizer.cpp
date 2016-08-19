@@ -238,9 +238,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                             queryRegions, 
                             param->_visualDebug+"/"+bfs::path(imagePath).stem().string()+".svg");
   }
-
-//  return localize(tmpQueryRegions,
-  return localizeAllAssociations(tmpQueryRegions,
+  return localize(tmpQueryRegions,
                   imageSize,
                   parameters,
                   useInputIntrinsics,
@@ -249,7 +247,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                   imagePath);
 }
 
-bool CCTagLocalizer::localizeAllAssociations(const std::unique_ptr<features::Regions> &genQueryRegions,
+bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQueryRegions,
                                               const std::pair<std::size_t, std::size_t> &imageSize,
                                               const LocalizerParameters *parameters,
                                               bool useInputIntrinsics,
@@ -385,192 +383,6 @@ bool CCTagLocalizer::localizeAllAssociations(const std::unique_ptr<features::Reg
   
   
 }
-
-
-bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQueryRegions,
-                              const std::pair<std::size_t, std::size_t> &imageSize,
-                              const LocalizerParameters *parameters,
-                              bool useInputIntrinsics,
-                              cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                              LocalizationResult & localizationResult,
-                              const std::string& imagePath)
-{
-  namespace bfs = boost::filesystem;
-  
-  const CCTagLocalizer::Parameters *param = static_cast<const CCTagLocalizer::Parameters *>(parameters);
-  if(!param)
-  {
-    throw std::invalid_argument("The CCTag localizer parameters are not in the right format.");
-  }
-  
-  // it automatically throws an exception if the cast does not work
-  features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (genQueryRegions.get());
-   
-  std::vector<IndexT> nearestKeyFrames;
-  nearestKeyFrames.reserve(param->_nNearestKeyFrames);
-  
-  kNearestKeyFrames(queryRegions,
-                    _regions_per_view,
-                    param->_nNearestKeyFrames,
-                    nearestKeyFrames, 4);
-  
-  // Set the minimum of the residual to infinite.
-  double residualMin = std::numeric_limits<double>::max();
-  IndexT indexBestKeyFrame = UndefinedIndexT;
-  
-  // Loop over all k nearest key frames in order to get the most geometrically 
-  // consistent one.
-  sfm::Image_Localizer_Match_Data bestResectionData;
-    // Upper bound pixel(s) tolerance for residual errors
-  bestResectionData.error_max = std::numeric_limits<double>::infinity();
-  bestResectionData.max_iteration = 4096;
-  
-  std::vector<pair<IndexT, IndexT> > bestAssociationIDs;
-  geometry::Pose3 bestPose;
-  
-  POPART_COUT_DEBUG("nearestKeyFrames.size() = " << nearestKeyFrames.size());
-  for(const IndexT indexKeyFrame : nearestKeyFrames)
-  {
-    POPART_COUT("[matching]\tProcessing nearest kframe " << indexKeyFrame 
-            << " (" << _sfm_data.GetViews().at(indexKeyFrame)->s_Img_path << ")");
-    const Reconstructed_RegionsCCTag& matchedRegions = _regions_per_view[indexKeyFrame];
-    
-    // Matching
-    std::vector<matching::IndMatch> vec_featureMatches;
-    viewMatching(queryRegions, _regions_per_view[indexKeyFrame]._regions, vec_featureMatches);
-    
-    if(!param->_visualDebug.empty() && !imagePath.empty())
-    {
-      const sfm::View *mview = _sfm_data.GetViews().at(indexKeyFrame).get();
-      const std::string queryImage = bfs::path(imagePath).stem().string();
-      const std::string matchedImage = bfs::path(mview->s_Img_path).stem().string();
-      const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
-
-      // the directory where to save the feature matches
-      const auto baseDir = bfs::path(param->_visualDebug) / queryImage;
-      if((!bfs::exists(baseDir)))
-      {
-        POPART_COUT("created " << baseDir.string());
-        bfs::create_directories(baseDir);
-      }
-      
-      // the final filename for the output svg file as a composition of the query
-      // image and the matched image
-      auto outputName = baseDir / queryImage;
-      outputName += "_";
-      outputName += matchedImage;
-      outputName += ".svg";
-      
-      const bool showNotMatched = true;
-      features::saveCCTagMatches2SVG(imagePath, 
-                                     imageSize, 
-                                     queryRegions,
-                                     matchedPath,
-                                     std::make_pair(mview->ui_width, mview->ui_height), 
-                                     _regions_per_view[indexKeyFrame]._regions,
-                                     vec_featureMatches,
-                                     outputName.string(),
-                                     showNotMatched ); 
-    }
-    
-    if ( vec_featureMatches.size() < 3 )
-    {
-      POPART_COUT("[matching]\tSkipping kframe " << indexKeyFrame << " as it contains only "<< vec_featureMatches.size()<<" matches");
-      continue;
-    }
-    POPART_COUT("[matching]\tFound "<< vec_featureMatches.size()<<" matches");
-    
-    // D. recover the 2D-3D associations from the matches 
-    // Each matched feature in the current similar image is associated to a 3D point,
-    // hence we can recover the 2D-3D associations to estimate the pose
-    // Prepare data for resection
-    std::vector<pair<IndexT, IndexT> > associationIDsTemp;
-    sfm::Image_Localizer_Match_Data resectionDataTemp;
-    
-    resectionDataTemp.error_max = param->_errorMax;
-    
-    resectionDataTemp = sfm::Image_Localizer_Match_Data();
-    resectionDataTemp.pt2D = Mat2X(2, vec_featureMatches.size());
-    resectionDataTemp.pt3D = Mat3X(3, vec_featureMatches.size());
-    
-    // Get the 3D points associated to each matched feature
-    std::size_t index = 0;
-    for(const matching::IndMatch& featureMatch : vec_featureMatches)
-    {
-      assert(vec_featureMatches.size()>index);
-      // the ID of the 3D point
-      const IndexT trackId3D = matchedRegions._associated3dPoint[featureMatch._j];
-
-      // prepare data for resectioning
-      resectionDataTemp.pt3D.col(index) = _sfm_data.GetLandmarks().at(trackId3D).X;
-
-      const Vec2 feat = queryRegions.GetRegionPosition(featureMatch._i);
-      resectionDataTemp.pt2D.col(index) = feat;
-
-      associationIDsTemp.emplace_back(trackId3D, featureMatch._i);
-      ++index;
-    }
-    
-    geometry::Pose3 poseTemp;
-    
-    bool bResection = sfm::SfM_Localizer::Localize(imageSize,
-                                                  // pass the input intrinsic if they are valid, null otherwise
-                                                  (useInputIntrinsics) ? &queryIntrinsics : nullptr,
-                                                  resectionDataTemp,
-                                                  poseTemp,
-                                                  param->_resectionEstimator);
-
-    if ( ( bResection ) && ( resectionDataTemp.error_max < residualMin) )
-    {
-      residualMin = resectionDataTemp.error_max;
-      indexBestKeyFrame = indexKeyFrame;
-      // Update best initial pose.
-      bestPose = poseTemp;
-      bestResectionData = resectionDataTemp;
-      std::swap(bestAssociationIDs, associationIDsTemp);
-    }
-  }
-  
-  // If the resection has failed for all the nearest keyframes, the localization 
-  // has failed.
-  if ( indexBestKeyFrame == UndefinedIndexT ) 
-  {
-    return false;
-  }
-  
-  // if we didn't use the provided intrinsics, estimate K from the projection
-  // matrix estimated by the localizer and initialize the queryIntrinsics with
-  // it and the image size. This will provide a first guess for the refine function
-  if(!useInputIntrinsics)
-  {
-    // Decompose P matrix
-    Mat3 K_, R_;
-    Vec3 t_;
-    // Decompose the projection matrix  to get K, R and t using 
-    // RQ decomposition
-    KRt_From_P(bestResectionData.projection_matrix, &K_, &R_, &t_);
-    queryIntrinsics.setK(K_);
-    queryIntrinsics.setWidth(imageSize.first);
-    queryIntrinsics.setHeight(imageSize.second);
-  }
-  
-  // E. refine the estimated pose
-  POPART_COUT("[poseEstimation]\tRefining estimated pose");
-  const bool b_refine_pose = true;
-  bool refineStatus = sfm::SfM_Localizer::RefinePose(&queryIntrinsics, 
-                                                     bestPose, 
-                                                     bestResectionData, 
-                                                     b_refine_pose, 
-                                                     param->_refineIntrinsics);
-  
-  if(!refineStatus)
-    POPART_COUT("[poseEstimation]\tRefine pose failed.");
-
-  localizationResult = LocalizationResult(bestResectionData, bestAssociationIDs, bestPose, queryIntrinsics, std::vector<voctree::DocMatch>(), refineStatus);
-
-  return localizationResult.isValid();
-  
- } 
 
 CCTagLocalizer::~CCTagLocalizer()
 {
