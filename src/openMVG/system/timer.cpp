@@ -12,6 +12,8 @@
 // ========================================================================== //
 
 #include <openMVG/system/timer.hpp>
+#include <cmath>
+
 #ifdef _WIN32
 # include <windows.h>
 #else
@@ -93,11 +95,48 @@ std::ostream& operator << (std::ostream& str, const Timer& t)
   return str << t.elapsed() << " s elapsed";
 }
 
+std::string prettyTime(double durationMs)
+{
+  std::string out;
 
-  std::ostream& operator << (std::ostream& str, const Timer& t)
+  const auto msecs = fmod(durationMs, 1000);
+  durationMs /= 1000.;
+  const std::size_t secs = std::size_t(fmod(durationMs, 60));
+  durationMs /= 60.;
+  const std::size_t mins = std::size_t(fmod(durationMs, 60));
+  durationMs /= 60.;
+  const std::size_t hours = std::size_t(fmod(durationMs, 24));
+  durationMs /= 24.;
+  const std::size_t days = durationMs;
+
+  bool printed_earlier = false;
+  if(days >= 1)
   {
-    return str << t.elapsed() << " s elapsed";
+    printed_earlier = true;
+    out += (std::to_string(days) + "d ");
   }
+  if(printed_earlier || hours >= 1)
+  {
+    printed_earlier = true;
+    out += (std::to_string(hours) + "h ");
+  }
+  if(printed_earlier || mins >= 1)
+  {
+    printed_earlier = true;
+    out += (std::to_string(mins) + "m ");
+  }
+  if(printed_earlier || secs >= 1)
+  {
+    printed_earlier = true;
+    out += (std::to_string(secs) + "s ");
+  }
+  if(printed_earlier || msecs >= 1)
+  {
+    printed_earlier = true;
+    out += (std::to_string(msecs) + "ms");
+  }
+  return out;
+}
 
 } // namespace system
 } // namespace openMVG
