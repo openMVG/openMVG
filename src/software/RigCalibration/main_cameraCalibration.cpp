@@ -213,7 +213,7 @@ int main(int argc, char** argv)
   }
 
   
-  std::cout << "find points duration: " << duration.elapsed() << "s" << std::endl;
+  std::cout << "find points duration: " << openMVG::system::prettyTime(duration.elapsedMs()) << std::endl;
   std::cout << "Grid detected in " << imagePoints.size() << " images on " << iInputFrame << " input images." << std::endl;
 
   if (imagePoints.empty())
