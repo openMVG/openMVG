@@ -14,7 +14,7 @@ set(calibration_files_sources
 ADD_LIBRARY(openMVG_calibration
   ${calibration_files_headers}
   ${calibration_files_sources})
-TARGET_LINK_LIBRARIES(openMVG_calibration openMVG_image openMVG_dataio ${BOOST_LIBRARIES}  ${OpenCV_LIBS})
+TARGET_LINK_LIBRARIES(openMVG_calibration openMVG_image openMVG_system openMVG_dataio ${BOOST_LIBRARIES}  ${OpenCV_LIBS})
 IF(OpenMVG_USE_CCTAG)
   TARGET_LINK_LIBRARIES(openMVG_calibration ${CCTAG_LIBRARIES})
 ENDIF(OpenMVG_USE_CCTAG)

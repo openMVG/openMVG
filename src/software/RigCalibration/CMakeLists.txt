@@ -14,6 +14,7 @@ if(OpenMVG_USE_BOOST)
     openMVG_dataio
     openMVG_image
     openMVG_calibration
+    openMVG_system
     ${OpenCV_LIBRARIES}
     ${Boost_LIBRARIES}
     )

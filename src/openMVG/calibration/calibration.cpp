@@ -1,5 +1,7 @@
 #include "openMVG/calibration/calibration.hpp"
 
+#include <openMVG/system/timer.hpp>
+
 #include <ctime>
 #include <algorithm>
 #include <iostream>
@@ -52,42 +54,41 @@ bool runCalibration(const std::vector<std::vector<cv::Point2f> >& imagePoints,
 
   distCoeffs = cv::Mat::zeros(8, 1, CV_64F);
 
-  std::clock_t startrC = std::clock();
+  system::Timer durationrC;
 
   const double rms = cv::calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix,
                                          distCoeffs, rvecs, tvecs, cvCalibFlags | CV_CALIB_FIX_K4 | CV_CALIB_FIX_K5 | CV_CALIB_FIX_K6);
-  std::clock_t durationrC = (std::clock() - startrC) / (double) CLOCKS_PER_SEC;
-  std::cout << "  calibrateCamera duration: " << durationrC << std::endl;
+  std::cout << "\tcalibrateCamera duration: " << system::prettyTime(durationrC.elapsedMs()) << std::endl;
 
-  printf("RMS error reported by calibrateCamera: %g\n", rms);
+  std::cout << "\tRMS error reported by calibrateCamera: " << rms << std::endl;
   bool ok = cv::checkRange(cameraMatrix) && cv::checkRange(distCoeffs);
 
-  startrC = std::clock();
+  durationrC.reset();
 
   totalAvgErr = computeReprojectionErrors(objectPoints, imagePoints,
                                           rvecs, tvecs, cameraMatrix, distCoeffs, reprojErrs);
-  durationrC = (std::clock() - startrC) / (double) CLOCKS_PER_SEC;
-  std::cout << "  computeReprojectionErrors duration: " << durationrC << std::endl;
+
+  std::cout << "\tcomputeReprojectionErrors duration: " << durationrC.elapsedMs() << "ms" << std::endl;
 
   return ok;
 }
 
 bool calibrationIterativeOptimization(std::vector<std::vector<cv::Point2f> >& calibImagePoints,
-                        std::vector<std::vector<cv::Point3f> >& calibObjectPoints,
-                        const cv::Size& imageSize,
-                        float aspectRatio,
-                        int cvCalibFlags,
-                        cv::Mat& cameraMatrix,
-                        cv::Mat& distCoeffs,
-                        std::vector<cv::Mat>& rvecs,
-                        std::vector<cv::Mat>& tvecs,
-                        std::vector<float>& reprojErrs,
-                        double& totalAvgErr,
-                        const double& maxTotalAvgErr,
-                        const std::size_t& minInputFrames,
-                        std::vector<std::size_t>& calibInputFrames,
-                        std::vector<float>& calibImageScore,
-                        std::vector<std::size_t>& rejectInputFrames)
+                                      std::vector<std::vector<cv::Point3f> >& calibObjectPoints,
+                                      const cv::Size& imageSize,
+                                      float aspectRatio,
+                                      int cvCalibFlags,
+                                      cv::Mat& cameraMatrix,
+                                      cv::Mat& distCoeffs,
+                                      std::vector<cv::Mat>& rvecs,
+                                      std::vector<cv::Mat>& tvecs,
+                                      std::vector<float>& reprojErrs,
+                                      double& totalAvgErr,
+                                      const double& maxTotalAvgErr,
+                                      const std::size_t& minInputFrames,
+                                      std::vector<std::size_t>& calibInputFrames,
+                                      std::vector<float>& calibImageScore,
+                                      std::vector<std::size_t>& rejectInputFrames)
 {
   std::size_t calibIteration = 0;
   bool calibSucceeded = false;
@@ -122,7 +123,7 @@ bool calibrationIterativeOptimization(std::vector<std::vector<cv::Point2f> >& ca
       }
 
       const auto minMaxError = std::minmax_element(globalScores.begin(), globalScores.end());
-      std::cout << "minMaxError: " << *minMaxError.first << ", " << *minMaxError.second << std::endl;
+      std::cout << "\terror min: " << *minMaxError.first << ", max: " << *minMaxError.second << std::endl;
       if (*minMaxError.first == *minMaxError.second)
       {
         std::cout << "Same error on all images: " << *minMaxError.first << std::endl;

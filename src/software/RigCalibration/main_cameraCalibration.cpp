@@ -6,6 +6,7 @@
 #include <openMVG/calibration/bestImages.hpp>
 #include <openMVG/calibration/calibration.hpp>
 #include <openMVG/calibration/exportData.hpp>
+#include <openMVG/system/timer.hpp>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
@@ -51,8 +52,6 @@ int main(int argc, char** argv)
   double squareSize = 1.0;
   double maxTotalAvgErr = 0.1;
 
-  std::clock_t startAlgo = std::clock();
-  double durationAlgo;
 
   po::options_description desc("\n\nThis program is used to calibrate a camera from a dataset of images.\n");
   desc.add_options()
@@ -147,7 +146,6 @@ int main(int argc, char** argv)
   std::vector<std::vector<cv::Point2f> > imagePoints;
 
   std::clock_t start = std::clock();
-  double duration;
 
   // create the feedProvider
   openMVG::dataio::FeedProvider feed(inputPath.string());
@@ -171,8 +169,12 @@ int main(int argc, char** argv)
       step = feed.nbFrames() / (double) maxNbFrames;
   }
 
+  openMVG::system::Timer durationAlgo;
+  openMVG::system::Timer duration;
+  
   while (feed.readImage(imageGrey, queryIntrinsics, currentImgName, hasIntrinsics) && iInputFrame < maxNbFrames)
   {
+    
     std::size_t currentFrame = std::floor(iInputFrame * step);
     cv::Mat viewGray;
     cv::eigen2cv(imageGrey.GetMat(), viewGray);
@@ -210,8 +212,8 @@ int main(int argc, char** argv)
     feed.goToFrame(std::floor(currentFrame));
   }
 
-  duration = (std::clock() - start) / (double) CLOCKS_PER_SEC;
-  std::cout << "find points duration: " << duration << std::endl;
+  
+  std::cout << "find points duration: " << duration.elapsed() << "s" << std::endl;
   std::cout << "Grid detected in " << imagePoints.size() << " images on " << iInputFrame << " input images." << std::endl;
 
   if (imagePoints.empty())
@@ -237,14 +239,14 @@ int main(int argc, char** argv)
   std::vector<float> reprojErrs;
   std::vector<std::size_t> rejectInputFrames;
   
+  duration.reset();
   // Refinement loop of the calibration
   openMVG::calibration::calibrationIterativeOptimization(calibImagePoints, calibObjectPoints, imageSize, aspectRatio,
                         cvCalibFlags, cameraMatrix, distCoeffs, rvecs, tvecs, reprojErrs,
                         totalAvgErr, maxTotalAvgErr, minInputFrames, calibInputFrames,
                         calibImageScore, rejectInputFrames);
 
-  duration = (std::clock() - start) / (double) CLOCKS_PER_SEC;
-  std::cout << "Calibration duration: " << duration << std::endl;
+  std::cout << "Calibration duration: " << duration.elapsedMs() << "ms" << std::endl;
 
   openMVG::calibration::saveCameraParams(outputFilename, imageSize,
                                          boardSize, squareSize, aspectRatio,
@@ -259,8 +261,7 @@ int main(int argc, char** argv)
                                     feed, calibInputFrames, rejectInputFrames, remainingImagesIndexes,
                                     cameraMatrix, distCoeffs, imageSize);
 
-  durationAlgo = (std::clock() - startAlgo) / (double) CLOCKS_PER_SEC;
-  std::cout << "Total duration: " << durationAlgo << std::endl;
+  std::cout << "Total duration: " << openMVG::system::prettyTime(durationAlgo.elapsed()) << "s" << std::endl;
 
-  return 0;
+  return EXIT_SUCCESS;
 }
