@@ -33,13 +33,18 @@ public:
    * is no intrinsics associated to \p imageGray.
    * @return True if there is a new image, false otherwise.
    */
-  virtual bool next(image::Image<unsigned char> &imageGray,
+  virtual bool readImage(image::Image<unsigned char> &imageGray,
                     cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics, 
                     std::string &mediaPath,
                     bool &hasIntrinsics) = 0;  
 
-  virtual ~IFeed( ) { };
-
+  virtual std::size_t nbFrames() const = 0;
+  
+  virtual bool goToFrame(const unsigned int frame) = 0;
+  
+  virtual bool goToNextFrame() = 0;
+  
+  virtual ~IFeed( ) {}
 
 };
 

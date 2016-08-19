@@ -548,6 +548,10 @@ IF(OpenMVG_USE_BOOST)
     openMVG_voctree 
     openMVG_localization
     openMVG_rig)
+  IF(OpenMVG_USE_OPENCV)
+    list(APPEND OpenMVG_LIBRARIES 
+      openMVG_calibration)
+  ENDIF()
 ENDIF()
 
 FOREACH(omvglib ${OpenMVG_LIBRARIES})

@@ -25,12 +25,10 @@ public:
   
   /**
    * @brief Set up an image based feed from a choice of different sources:
-   * 1) a json file containing a sfm data reconstruction (in that case \p calibPath is ignored)
-   * 2) a txt file containing a list of images to use
-   * 3) a single image
-   * 4) a directory containing images
-   * In the last two cases \p calibPath is simple text file containing the camera
-   * intrinsics common to each image.
+   * 1) a directory containing images
+   * 2) a json file containing a sfm data reconstruction (in that case \p calibPath is ignored)
+   * 3) a txt file containing a list of images to use
+   * 4) a regex for an image sequence
    * 
    * @param[in] imagePath The source of images, it could be a file (json, txt) or a directory.
    * @param[in] calibPath The source for the camera intrinsics common to each image. 
@@ -46,7 +44,7 @@ public:
    * 
    * @see readCalibrationFromFile()
    */
-  ImageFeed(const std::string imagePath, const std::string calibPath);
+  ImageFeed(const std::string& imagePath, const std::string& calibPath);
 
   /**
    * @brief Provide a new image from the feed
@@ -58,10 +56,16 @@ public:
    * is no intrinsics associated to \p imageGray.
    * @return True if there is a new image, false otherwise.
    */
-  bool next(image::Image<unsigned char> &imageGray,
+  bool readImage(image::Image<unsigned char> &imageGray,
             cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
             std::string &mediaPath,
             bool &hasIntrinsics);
+  
+  std::size_t nbFrames() const;
+  
+  bool goToFrame(const unsigned int frame);
+
+  bool goToNextFrame();
   
   /**
    * @brief Return true if the feed is correctly initialized.

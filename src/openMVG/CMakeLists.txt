@@ -21,6 +21,9 @@ IF(OpenMVG_USE_BOOST)
   ADD_SUBDIRECTORY(voctree)
   ADD_SUBDIRECTORY(localization)
   ADD_SUBDIRECTORY(rig)
+  if(OpenMVG_USE_OPENCV)
+    ADD_SUBDIRECTORY(calibration)
+  endif(OpenMVG_USE_OPENCV)
 ENDIF(OpenMVG_USE_BOOST)
 
 

@@ -30,22 +30,18 @@ ELSE()
 ENDIF (OPENMVG_INCLUDE_DIR)
 
 SET(OPENMVG_LIBRARIES_NAMES
-  openMVG_dataio
   openMVG_exif
   openMVG_features
   openMVG_image
   openMVG_linearProgramming
     openMVG_lInftyComputerVision
-  openMVG_localization
   openMVG_matching
     openMVG_kvld
   openMVG_matching_image_collection
   openMVG_multiview
   openMVG_numeric
-  openMVG_rig
   openMVG_sfm
   openMVG_system
-  openMVG_voctree
 
   #third_party libraries
   ceres
@@ -62,6 +58,17 @@ SET(OPENMVG_LIBRARIES_NAMES
   zlib
   )
 
+IF(OpenMVG_USE_BOOST)
+  list(APPEND OPENMVG_LIBRARIES_NAMES
+    openMVG_dataio 
+    openMVG_voctree 
+    openMVG_localization
+    openMVG_rig)
+  IF(OpenMVG_USE_OPENCV)
+    list(APPEND OPENMVG_LIBRARIES_NAMES
+      openMVG_calibration)
+  ENDIF()
+ENDIF()
 
 FIND_LIBRARY(OPENMVG_LIBRARY NAMES ${OPENMVG_LIBRARIES_NAMES}
   HINTS

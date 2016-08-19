@@ -12,11 +12,15 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string/case_conv.hpp> 
+#include <boost/algorithm/string/replace.hpp>
 
 #include <queue>
 #include <iostream>
 #include <fstream>
 #include <exception>
+#include <regex>
+#include <iterator>
+#include <string>
 
 namespace openMVG{
 namespace dataio{
@@ -29,12 +33,18 @@ public:
   
   FeederImpl() : _isInit(false) {}
   
-  FeederImpl(const std::string imagePath, const std::string calibPath);
+  FeederImpl(const std::string& imagePath, const std::string& calibPath);
 
-  bool next(image::Image<unsigned char> &imageGray, 
+  bool readImage(image::Image<unsigned char> &imageGray, 
                      cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
                      std::string &imageName,
                      bool &hasIntrinsics);
+  
+  std::size_t nbFrames() const;
+  
+  bool goToFrame(const unsigned int frame);
+  
+  bool goToNextFrame();
   
   bool isInit() const {return _isInit;} 
   
@@ -52,12 +62,13 @@ private:
   bool _isInit;
   bool _withCalibration;
   // It contains the images to be fed
-  std::queue<std::string> _images;
+  std::vector<std::string> _images;
   cameras::Pinhole_Intrinsic_Radial_K3 _camIntrinsics;
   
-  bool _jsonMode = false;
+  bool _sfmMode = false;
   sfm::SfM_Data _sfmdata;
   sfm::Views::const_iterator _viewIterator;
+  unsigned int _currentImageIndex = 0;
 };
 
 const std::vector<std::string> ImageFeed::FeederImpl::supportedExtensions = { ".jpg", ".jpeg", ".png", ".ppm" };
@@ -69,9 +80,9 @@ bool ImageFeed::FeederImpl::isSupported(const std::string &ext)
   return(std::find(start, end, boost::to_lower_copy(ext)) != end);
 }
 
-
-ImageFeed::FeederImpl::FeederImpl(const std::string imagePath, const std::string calibPath) 
-: _isInit(false), _withCalibration(false)
+ImageFeed::FeederImpl::FeederImpl(const std::string& imagePath, const std::string& calibPath) 
+: _isInit(false)
+, _withCalibration(false)
 {
   namespace bf = boost::filesystem;
 //    std::cout << imagePath << std::endl;
@@ -85,14 +96,14 @@ ImageFeed::FeederImpl::FeederImpl(const std::string imagePath, const std::string
       // load the json
       _isInit = sfm::Load(_sfmdata, imagePath, sfm::ESfM_Data(sfm::ESfM_Data::VIEWS | sfm::ESfM_Data::INTRINSICS));
       _viewIterator = _sfmdata.GetViews().begin();
-      _jsonMode = true;
+      _sfmMode = true;
     }
     // if it is an image file
     else if(FeederImpl::isSupported(ext))
     {
-      _images.push(imagePath);
+      _images.push_back(imagePath);
       _withCalibration = !calibPath.empty();
-      _jsonMode = false;
+      _sfmMode = false;
       _isInit = true;
     }
     // if it is an image file
@@ -108,12 +119,12 @@ ImageFeed::FeederImpl::FeederImpl(const std::string imagePath, const std::string
         // compose the file name as the base path of the inputPath and
         // the filename just read
         const std::string filename = (bf::path(imagePath).parent_path() / line).string();
-        _images.push(filename);
+        _images.push_back(filename);
       }
       // Close file
       fs.close();
       _withCalibration = !calibPath.empty();
-      _jsonMode = false;
+      _sfmMode = false;
       _isInit = true;
     }
     else
@@ -122,11 +133,33 @@ ImageFeed::FeederImpl::FeederImpl(const std::string imagePath, const std::string
       throw std::invalid_argument("File or mode not yet implemented");
     }
   }
-  else if(bf::is_directory(imagePath))
+  else if(bf::is_directory(imagePath) || bf::is_directory(bf::path(imagePath).parent_path()))
   {
-    std::cout << "directory feedImage\n";
+    std::string folder = imagePath;
+    // Recover the pattern : img.@.png (for example)
+    std::string filePattern;
+    std::regex re;
+    if(!bf::is_directory(imagePath))
+    {
+      filePattern = bf::path(imagePath).filename().string();
+      folder = bf::path(imagePath).parent_path().string();
+      std::cout << "filePattern: " << filePattern << std::endl;
+      std::string regexStr = filePattern;
+      // escape "."
+      boost::algorithm::replace_all(regexStr, ".", "\\.");
+      // recognize # as a digit
+      boost::algorithm::replace_all(regexStr, "#", "[0-9]");
+      // recognize @ as a sequence of digits
+      boost::algorithm::replace_all(regexStr, "@", "[0-9]+");
+      re = regexStr;
+    }
+    else
+    {
+      std::cout << "folder without expression: " << imagePath << std::endl;
+    }
+    std::cout << "directory feedImage" << std::endl;
     // if it is a directory, list all the images and add them to the list
-    bf::directory_iterator iterator(imagePath);
+    bf::directory_iterator iterator(folder);
     // since some OS will provide the files in a random order, first store them
     // in a priority queue and then fill the _image queue with the alphabetical
     // order from the priority queue
@@ -139,18 +172,22 @@ ImageFeed::FeederImpl::FeederImpl(const std::string imagePath, const std::string
       const std::string ext = iterator->path().extension().string();
       if(FeederImpl::isSupported(ext))
       {
-        tmpSorter.push(iterator->path().string());
+        const std::string filepath = iterator->path().string();
+        const std::string filename = iterator->path().filename().string();
+        // If we have a filePattern (a sequence of images), we have to match the regex.
+        if(filePattern.empty() || std::regex_match(filename, re))
+          tmpSorter.push(filepath);
       }
     }
     // put all the retrieve files inside the queue
     while(!tmpSorter.empty())
     {
-      _images.push(tmpSorter.top());
+      _images.push_back(tmpSorter.top());
       tmpSorter.pop();
     }
     
     _withCalibration = !calibPath.empty();
-    _jsonMode = false;
+    _sfmMode = false;
     _isInit = true;
   }
   else
@@ -170,7 +207,7 @@ ImageFeed::FeederImpl::FeederImpl(const std::string imagePath, const std::string
 
 
 
-bool ImageFeed::FeederImpl::next(image::Image<unsigned char> &imageGray, 
+bool ImageFeed::FeederImpl::readImage(image::Image<unsigned char> &imageGray, 
                    cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
                    std::string &imageName,
                    bool &hasIntrinsics)
@@ -181,18 +218,18 @@ bool ImageFeed::FeederImpl::next(image::Image<unsigned char> &imageGray,
     return false;
   }
 
-  // dealing with json mode
-  if(_jsonMode)
+  // dealing with SFM mode
+  if(_sfmMode)
   {
-    return(feedWithJson(imageGray, camIntrinsics, imageName, hasIntrinsics));
+    return feedWithJson(imageGray, camIntrinsics, imageName, hasIntrinsics);
   }
   else
   {
     if(_images.empty())
-    {
       return false;
-    }
-    
+    if(_currentImageIndex >= _images.size())
+      return false;
+
     if(_withCalibration)
     {
       // get the calibration
@@ -203,19 +240,84 @@ bool ImageFeed::FeederImpl::next(image::Image<unsigned char> &imageGray,
     {
       hasIntrinsics = false;
     }
-    imageName = _images.front();
+    imageName = _images[_currentImageIndex];
     std::cout << imageName << std::endl;
     if (!image::ReadImage(imageName.c_str(), &imageGray))
     {
       std::cerr << "Error while opening image " << imageName << std::endl;
       throw std::invalid_argument("Error while opening image " + imageName);
     }
-    _images.pop();
     return true;
   }
   return true;
 }
 
+std::size_t ImageFeed::FeederImpl::nbFrames() const
+{
+  if(!_isInit)
+    return 0;
+  
+  if(_sfmMode)
+    return _sfmdata.GetViews().size();
+  
+  return _images.size();
+}
+
+bool ImageFeed::FeederImpl::goToFrame(const unsigned int frame)
+{
+  if(!_isInit)
+  {
+    _currentImageIndex = frame;
+    std::cerr << "Image feed is not initialized " << std::endl;
+    return false;
+  }
+  
+  // Reconstruction mode
+  if(_sfmMode)
+  {
+    if(frame < 0 || frame >= _sfmdata.GetViews().size())
+    {
+      _viewIterator = _sfmdata.GetViews().end();
+      std::cerr << "The current frame is out of the range." << std::endl;
+      return false;
+    }
+
+    _viewIterator = _sfmdata.GetViews().begin();
+    std::advance(_viewIterator, frame);
+  }
+  else
+  {
+    _currentImageIndex = frame;
+    // Image list mode
+    if(frame < 0 || frame >= _images.size())
+    {
+      std::cerr << "The current frame is out of the range." << std::endl;
+      return false;
+    }
+    std::cout << "frame " << frame << std::endl;
+  }
+  return true;
+}
+
+bool ImageFeed::FeederImpl::goToNextFrame()
+{
+  if(_sfmMode)
+  {
+    if(_viewIterator == _sfmdata.GetViews().end())
+      return false;
+    ++_viewIterator;
+    if(_viewIterator == _sfmdata.GetViews().end())
+      return false;
+  }
+  else
+  {
+    ++_currentImageIndex;
+    std::cout << "next frame " << _currentImageIndex << std::endl;
+    if(_currentImageIndex < 0 || _currentImageIndex >= _images.size())
+      return false;
+  }
+  return true;
+}
 
 bool ImageFeed::FeederImpl::feedWithJson(image::Image<unsigned char> &imageGray, 
                    cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
@@ -275,15 +377,30 @@ bool ImageFeed::FeederImpl::feedWithJson(image::Image<unsigned char> &imageGray,
 
 ImageFeed::ImageFeed() : _imageFeed(new FeederImpl()) { }
 
-ImageFeed::ImageFeed(const std::string imagePath, const std::string calibPath)  
+ImageFeed::ImageFeed(const std::string& imagePath, const std::string& calibPath)  
     : _imageFeed( new FeederImpl(imagePath, calibPath) ) { }
 
-bool ImageFeed::next(image::Image<unsigned char> &imageGray, 
+bool ImageFeed::readImage(image::Image<unsigned char> &imageGray, 
                      cameras::Pinhole_Intrinsic_Radial_K3 &camIntrinsics,
                      std::string &mediaPath,
                      bool &hasIntrinsics)
 {
-  return(_imageFeed->next(imageGray, camIntrinsics, mediaPath, hasIntrinsics));
+  return(_imageFeed->readImage(imageGray, camIntrinsics, mediaPath, hasIntrinsics));
+}
+
+std::size_t ImageFeed::nbFrames() const
+{
+  return _imageFeed->nbFrames();
+}
+
+bool ImageFeed::goToFrame(const unsigned int frame)
+{
+  return _imageFeed->goToFrame(frame);
+}
+
+bool ImageFeed::goToNextFrame()
+{
+  return _imageFeed->goToNextFrame();
 }
 
 bool ImageFeed::isInit() const
