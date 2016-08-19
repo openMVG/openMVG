@@ -56,7 +56,6 @@ namespace system {
  * 
  * @param durationMs the duration in milliseconds.
  * @return a formatted string
- * @note adapted form http://ideone.com/bBNHQp
  */  
 std::string prettyTime(double durationMs);
 
