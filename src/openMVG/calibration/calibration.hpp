@@ -74,21 +74,21 @@ bool runCalibration(const std::vector<std::vector<cv::Point2f> >& imagePoints,
  * @return True if the calibration is a success, otherwise false.
  */
 bool calibrationIterativeOptimization(std::vector<std::vector<cv::Point2f> >& calibImagePoints,
-                        std::vector<std::vector<cv::Point3f> >& calibObjectPoints,
-                        const cv::Size& imageSize,
-                        float aspectRatio,
-                        int cvCalibFlags,
-                        cv::Mat& cameraMatrix,
-                        cv::Mat& distCoeffs,
-                        std::vector<cv::Mat>& rvecs,
-                        std::vector<cv::Mat>& tvecs,
-                        std::vector<float>& reprojErrs,
-                        double& totalAvgErr,
-                        const double& maxTotalAvgErr,
-                        const std::size_t& minInputFrames,
-                        std::vector<std::size_t>& calibInputFrames,
-                        std::vector<float>& calibImageScore,
-                        std::vector<std::size_t>& rejectInputFrames);
+                                      std::vector<std::vector<cv::Point3f> >& calibObjectPoints,
+                                      const cv::Size& imageSize,
+                                      float aspectRatio,
+                                      int cvCalibFlags,
+                                      cv::Mat& cameraMatrix,
+                                      cv::Mat& distCoeffs,
+                                      std::vector<cv::Mat>& rvecs,
+                                      std::vector<cv::Mat>& tvecs,
+                                      std::vector<float>& reprojErrs,
+                                      double& totalAvgErr,
+                                      const double& maxTotalAvgErr,
+                                      const std::size_t& minInputFrames,
+                                      std::vector<std::size_t>& calibInputFrames,
+                                      std::vector<float>& calibImageScore,
+                                      std::vector<std::size_t>& rejectInputFrames);
 
 }//namespace calibration
 }//namespace openMVG
