@@ -60,24 +60,23 @@ namespace system {
 
   double Timer::elapsed() const
   {
-    double elapsed_;
 #ifdef HAVE_CXX11_CHRONO
-    const auto end_ = std::chrono::high_resolution_clock::now();
-    elapsed_ = std::chrono::duration_cast<std::chrono::milliseconds>(end_ - start_).count() / 1000.;
+  return elapsedMs() / 1000.;
 #else
 
+  double elapsed_;
 #ifdef _WIN32
-    LARGE_INTEGER end_;
-    QueryPerformanceCounter(&end_);
-    elapsed_ = (static_cast<double>(end_.QuadPart) - start_) / frequency_;
+  LARGE_INTEGER end_;
+  QueryPerformanceCounter(&end_);
+  elapsed_ = (static_cast<double>(end_.QuadPart) - start_) / frequency_;
 #else
-    timeval end;
-    gettimeofday(&end, nullptr);
-    const double end_ = end.tv_sec + end.tv_usec * 1e-6;
-    elapsed_ = end_ - start_;
+  timeval end;
+  gettimeofday(&end, nullptr);
+  const double end_ = end.tv_sec + end.tv_usec * 1e-6;
+  elapsed_ = end_ - start_;
 #endif
+  return elapsed_;
 #endif // HAVE_CXX11_CHRONO
-    return elapsed_;
   }
 
   double Timer::elapsedMs() const
