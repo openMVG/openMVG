@@ -269,8 +269,10 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
   std::map< std::pair<IndexT, IndexT>, std::size_t > occurences;
   sfm::Image_Localizer_Match_Data resectionData;
   
+
+  std::vector<voctree::DocMatch> matchedImages;
   system::Timer timer;
-  getAllAssociations(queryRegions, imageSize, *param, occurences, resectionData.pt2D, resectionData.pt3D, imagePath);
+  getAllAssociations(queryRegions, imageSize, *param, occurences, resectionData.pt2D, resectionData.pt3D, matchedImages, imagePath);
   POPART_COUT("[Matching]\tRetrieving associations took " << timer.elapsedMs() << "ms");
   
   const std::size_t numCollectedPts = occurences.size();
@@ -356,8 +358,6 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
   
   POPART_COUT("[poseEstimation]\tPose estimation took " << timer.elapsedMs() << "ms.");
 
-  //@todo for now just empty, to be added to getAllAssociations
-  std::vector<voctree::DocMatch> matchedImages;
   localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, matchedImages, refineStatus);
 
   {
@@ -481,9 +481,10 @@ bool CCTagLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<featur
     throw std::invalid_argument("The CCTag localizer parameters are not in the right format.");
   }
 
-  vector<std::map< pair<IndexT, IndexT>, std::size_t > > vec_occurrences(numCams);
-  vector<Mat> vec_pts3D(numCams);
-  vector<Mat> vec_pts2D(numCams);
+  std::vector<std::map< pair<IndexT, IndexT>, std::size_t > > vec_occurrences(numCams);
+  std::vector<Mat> vec_pts3D(numCams);
+  std::vector<Mat> vec_pts2D(numCams);
+  std::vector<std::vector<voctree::DocMatch> > vec_matchedImages(numCams);
 
   // for each camera retrieve the associations
   //@todo parallelize?
@@ -495,10 +496,11 @@ bool CCTagLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<featur
     // the key is a pair <Id3D, Id2d>
     // the element is the pair 3D point - 2D point
     auto &occurrences = vec_occurrences[i];
+    auto &matchedImages = vec_matchedImages[i];
     Mat &pts3D = vec_pts3D[i];
     Mat &pts2D = vec_pts2D[i];
     features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (vec_queryRegions[i].get());
-    getAllAssociations(queryRegions, imageSize[i],*param, occurrences, pts2D, pts3D);
+    getAllAssociations(queryRegions, imageSize[i],*param, occurrences, pts2D, pts3D, matchedImages);
     numAssociations += occurrences.size();
   }
   
@@ -583,7 +585,7 @@ bool CCTagLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<featur
       indMatch3D2D.push_back(ass.first);
     }
     
-    vec_locResults.emplace_back(matchData, indMatch3D2D, pose, intrinsics, std::vector<voctree::DocMatch>(), refineOk);
+    vec_locResults.emplace_back(matchData, indMatch3D2D, pose, intrinsics, vec_matchedImages[cam], refineOk);
   }
   
   if(!refineOk)
@@ -668,6 +670,7 @@ bool CCTagLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<feature
     assert(idx < isLocalized.size());
     
     POPART_COUT("Index of the first localized camera: " << idx);
+    
     // if the only localized camera is the main camera
     if(idx==0)
     {
@@ -708,6 +711,7 @@ void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegi
                                         std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences, 
                                         Mat &pt2D,
                                         Mat &pt3D,
+                                        std::vector<voctree::DocMatch>& matchedImages,
                                         const std::string& imagePath) const
 {
   std::vector<IndexT> nearestKeyFrames;
@@ -717,6 +721,9 @@ void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegi
                     _regions_per_view,
                     param._nNearestKeyFrames,
                     nearestKeyFrames);
+  
+  matchedImages.clear();
+  matchedImages.reserve(nearestKeyFrames.size());
   
   POPART_COUT_DEBUG("nearestKeyFrames.size() = " << nearestKeyFrames.size());
   for(const IndexT indexKeyFrame : nearestKeyFrames)
@@ -729,6 +736,8 @@ void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegi
     std::vector<matching::IndMatch> vec_featureMatches;
     viewMatching(queryRegions, _regions_per_view.at(indexKeyFrame)._regions, vec_featureMatches);
     POPART_COUT("matching]\tFound "<< vec_featureMatches.size() <<" matches.");
+    
+    matchedImages.emplace_back(indexKeyFrame, vec_featureMatches.size());
     
     if(!param._visualDebug.empty() && !imagePath.empty())
     {

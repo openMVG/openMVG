@@ -9,6 +9,7 @@
 #include <openMVG/features/cctag/CCTAG_describer.hpp>
 #include <openMVG/sfm/sfm_data.hpp>
 #include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
+#include <openMVG/voctree/database.hpp>
 
 #include <iostream>
 #include <bitset>
@@ -135,6 +136,7 @@ public:
                           std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences,
                           Mat &pt2D,
                           Mat &pt3D,
+                          std::vector<voctree::DocMatch>& matchedImages,
                           const std::string& imagePath = std::string()) const;
   
   virtual ~CCTagLocalizer();
