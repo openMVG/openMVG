@@ -246,7 +246,7 @@ int main(int argc, char** argv)
                         totalAvgErr, maxTotalAvgErr, minInputFrames, calibInputFrames,
                         calibImageScore, rejectInputFrames);
 
-  std::cout << "Calibration duration: " << duration.elapsedMs() << "ms" << std::endl;
+  std::cout << "Calibration duration: " << openMVG::system::prettyTime(duration.elapsedMs()) << std::endl;
 
   openMVG::calibration::saveCameraParams(outputFilename, imageSize,
                                          boardSize, squareSize, aspectRatio,
@@ -261,7 +261,7 @@ int main(int argc, char** argv)
                                     feed, calibInputFrames, rejectInputFrames, remainingImagesIndexes,
                                     cameraMatrix, distCoeffs, imageSize);
 
-  std::cout << "Total duration: " << openMVG::system::prettyTime(durationAlgo.elapsed()) << "s" << std::endl;
+  std::cout << "Total duration: " << openMVG::system::prettyTime(durationAlgo.elapsedMs()) << std::endl;
 
   return EXIT_SUCCESS;
 }
