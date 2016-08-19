@@ -65,9 +65,9 @@ int main(int argc, char** argv)
           ("output,o", po::value<std::string>(&outputFilename)->required(),
            "Output filename for intrinsic [and extrinsic] parameters.\n")
           ("pattern,p", po::value<openMVG::calibration::Pattern>(&pattern)->default_value(pattern),
-           "Type of pattern: 'chessboard', 'circles', 'asymmetric_circles'"
+           "Type of pattern: 'CHESSBOARD', 'CIRCLES', 'ASYMMETRIC_CIRCLES'"
             #ifdef HAVE_CCTAG
-//                      " or 'cctag'"
+//                      " or 'CCTAG'"
             #endif
           ".\n")
           ("size,s", po::value<std::vector < std::size_t >> (&checkerboardSize)->multitoken(),
