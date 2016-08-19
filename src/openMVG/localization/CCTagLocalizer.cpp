@@ -7,10 +7,13 @@
 #include <openMVG/sfm/sfm_data_io.hpp>
 #include <openMVG/matching/indMatch.hpp>
 #include <openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp>
+#include <openMVG/system/timer.hpp>
 #include <openMVG/logger.hpp>
 
 #include <cctag/ICCTag.hpp>
-#include <boost/filesystem/path.hpp>
+
+#include <boost/filesystem.hpp>
+
 #include <algorithm>
 
 namespace openMVG {
@@ -202,11 +205,11 @@ bool CCTagLocalizer::loadReconstructionDescriptors(const sfm::SfM_Data & sfm_dat
 }
 
 bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
-                const LocalizerParameters *parameters,
-                bool useInputIntrinsics,
-                cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                LocalizationResult & localizationResult, 
-                const std::string& imagePath /* = std::string() */)
+                              const LocalizerParameters *parameters,
+                              bool useInputIntrinsics,
+                              cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
+                              LocalizationResult & localizationResult, 
+                              const std::string& imagePath)
 {
   namespace bfs = boost::filesystem;
   
@@ -218,6 +221,7 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
   // extract descriptors and features from image
   POPART_COUT("[features]\tExtract CCTag from query image");
   std::unique_ptr<features::Regions> tmpQueryRegions(new features::CCTAG_Regions());
+  _image_describer.Set_configuration_preset(param->_featurePreset);
   _image_describer.Describe(imageGrey, tmpQueryRegions);
   POPART_COUT("[features]\tExtract CCTAG done: found " << tmpQueryRegions->RegionCount() << " features");
   
@@ -230,11 +234,10 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
     
     // just debugging -- save the svg image with detected cctag
     features::saveCCTag2SVG(imagePath, 
-                  imageSize, 
-                  queryRegions, 
-                  param->_visualDebug+"/"+bfs::path(imagePath).stem().string()+".svg");
+                            imageSize, 
+                            queryRegions, 
+                            param->_visualDebug+"/"+bfs::path(imagePath).stem().string()+".svg");
   }
-
   return localize(tmpQueryRegions,
                   imageSize,
                   parameters,
@@ -244,14 +247,13 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
                   imagePath);
 }
 
-
 bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQueryRegions,
-                              const std::pair<std::size_t, std::size_t> &imageSize,
-                              const LocalizerParameters *parameters,
-                              bool useInputIntrinsics,
-                              cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                              LocalizationResult & localizationResult,
-                              const std::string& imagePath)
+                                              const std::pair<std::size_t, std::size_t> &imageSize,
+                                              const LocalizerParameters *parameters,
+                                              bool useInputIntrinsics,
+                                              cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
+                                              LocalizationResult & localizationResult,
+                                              const std::string& imagePath)
 {
   namespace bfs = boost::filesystem;
   
@@ -263,124 +265,66 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
   
   // it automatically throws an exception if the cast does not work
   features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (genQueryRegions.get());
-   
-  std::vector<IndexT> nearestKeyFrames;
-  nearestKeyFrames.reserve(param->_nNearestKeyFrames);
   
-  kNearestKeyFrames(queryRegions,
-                    _regions_per_view,
-                    param->_nNearestKeyFrames,
-                    nearestKeyFrames, 4);
+  // a map containing for each pair <pt3D_id, pt2D_id> the number of times that 
+  // the association has been seen
+  std::map< std::pair<IndexT, IndexT>, std::size_t > occurences;
+  sfm::Image_Localizer_Match_Data resectionData;
   
-  // Set the minimum of the residual to infinite.
-  double residualMin = std::numeric_limits<double>::max();
-  IndexT indexBestKeyFrame = UndefinedIndexT;
+
+  std::vector<voctree::DocMatch> matchedImages;
+  system::Timer timer;
+  getAllAssociations(queryRegions, imageSize, *param, occurences, resectionData.pt2D, resectionData.pt3D, matchedImages, imagePath);
+  POPART_COUT("[Matching]\tRetrieving associations took " << timer.elapsedMs() << "ms");
   
-  // Loop over all k nearest key frames in order to get the most geometrically 
-  // consistent one.
-  sfm::Image_Localizer_Match_Data bestResectionData;
-    // Upper bound pixel(s) tolerance for residual errors
-  bestResectionData.error_max = std::numeric_limits<double>::infinity();
-  bestResectionData.max_iteration = 4096;
+  const std::size_t numCollectedPts = occurences.size();
   
-  std::vector<pair<IndexT, IndexT> > bestAssociationIDs;
-  geometry::Pose3 bestPose;
-  
-  POPART_COUT_DEBUG("nearestKeyFrames.size() = " << nearestKeyFrames.size());
-  for(const IndexT indexKeyFrame : nearestKeyFrames)
+  // create an vector of <feat3D_id, feat2D_id>
+  std::vector<pair<IndexT, IndexT> > associationIDs;
+  associationIDs.reserve(numCollectedPts);
+
+  for(const auto &ass : occurences)
   {
-    POPART_COUT("[localization]\tProcessing nearest kframe " << indexKeyFrame 
-            << " (" << _sfm_data.GetViews().at(indexKeyFrame)->s_Img_path << ")");
-    const Reconstructed_RegionsCCTag& matchedRegions = _regions_per_view[indexKeyFrame];
-    
-    // Matching
-    std::vector<matching::IndMatch> vec_featureMatches;
-    viewMatching(queryRegions, _regions_per_view[indexKeyFrame]._regions, vec_featureMatches);
-    
+    // recopy the associations IDs in the vector
+    associationIDs.push_back(ass.first);
+  }
+  
+  assert(associationIDs.size() == numCollectedPts);
+  assert(resectionData.pt2D.cols() == numCollectedPts);
+  assert(resectionData.pt3D.cols() == numCollectedPts);
+
+  geometry::Pose3 pose;
+  
+  timer.reset();
+  // estimate the pose
+  resectionData.error_max = param->_errorMax;
+  POPART_COUT("[poseEstimation]\tEstimating camera pose...");
+  const bool bResection = sfm::SfM_Localizer::Localize(imageSize,
+                                                      // pass the input intrinsic if they are valid, null otherwise
+                                                      (useInputIntrinsics) ? &queryIntrinsics : nullptr,
+                                                      resectionData,
+                                                      pose,
+                                                      param->_resectionEstimator);
+  
+  if(!bResection)
+  {
+    POPART_COUT("[poseEstimation]\tResection failed");
     if(!param->_visualDebug.empty() && !imagePath.empty())
     {
-      const sfm::View *mview = _sfm_data.GetViews().at(indexKeyFrame).get();
-      const std::string queryimage = bfs::path(imagePath).stem().string();
-      const std::string matchedImage = bfs::path(mview->s_Img_path).stem().string();
-      const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
-      
-      
-      features::saveCCTagMatches2SVG(imagePath, 
-                           imageSize, 
-                           queryRegions,
-                           matchedPath,
-                           std::make_pair(mview->ui_width, mview->ui_height), 
-                           _regions_per_view[indexKeyFrame]._regions,
-                           vec_featureMatches,
-                           param->_visualDebug+"/"+queryimage+"_"+matchedImage+".svg",
-                           true ); //showNotMatched
+//      namespace bfs = boost::filesystem;
+//      features::saveFeatures2SVG(imagePath,
+//                                 imageSize,
+//                                 resectionData.pt2D,
+//                                 param._visualDebug + "/" + bfs::path(imagePath).stem().string() + ".associations.svg");
     }
-    
-    if ( vec_featureMatches.size() < 3 )
-    {
-      POPART_COUT("[localization]\tSkipping kframe " << indexKeyFrame << " as it contains only "<< vec_featureMatches.size()<<" matches");
-      continue;
-    }
-    POPART_COUT("[localization]\tFound "<< vec_featureMatches.size()<<" matches");
-    
-    // D. recover the 2D-3D associations from the matches 
-    // Each matched feature in the current similar image is associated to a 3D point,
-    // hence we can recover the 2D-3D associations to estimate the pose
-    // Prepare data for resection
-    std::vector<pair<IndexT, IndexT> > associationIDsTemp;
-    sfm::Image_Localizer_Match_Data resectionDataTemp;
-    
-    resectionDataTemp.error_max = param->_errorMax;
-    
-    resectionDataTemp = sfm::Image_Localizer_Match_Data();
-    resectionDataTemp.pt2D = Mat2X(2, vec_featureMatches.size());
-    resectionDataTemp.pt3D = Mat3X(3, vec_featureMatches.size());
-    
-    // Get the 3D points associated to each matched feature
-    std::size_t index = 0;
-    for(const matching::IndMatch& featureMatch : vec_featureMatches)
-    {
-      assert(vec_featureMatches.size()>index);
-      // the ID of the 3D point
-      const IndexT trackId3D = matchedRegions._associated3dPoint[featureMatch._j];
-
-      // prepare data for resectioning
-      resectionDataTemp.pt3D.col(index) = _sfm_data.GetLandmarks().at(trackId3D).X;
-
-      const Vec2 feat = queryRegions.GetRegionPosition(featureMatch._i);
-      resectionDataTemp.pt2D.col(index) = feat;
-
-      associationIDsTemp.emplace_back(trackId3D, featureMatch._i);
-      ++index;
-    }
-    
-    geometry::Pose3 poseTemp;
-    
-    bool bResection = sfm::SfM_Localizer::Localize(imageSize,
-                                                  // pass the input intrinsic if they are valid, null otherwise
-                                                  (useInputIntrinsics) ? &queryIntrinsics : nullptr,
-                                                  resectionDataTemp,
-                                                  poseTemp,
-                                                  param->_resectionEstimator);
-
-    if ( ( bResection ) && ( resectionDataTemp.error_max < residualMin) )
-    {
-      residualMin = resectionDataTemp.error_max;
-      indexBestKeyFrame = indexKeyFrame;
-      // Update best inital pose.
-      bestPose = poseTemp;
-      bestResectionData = resectionDataTemp;
-      std::swap(bestAssociationIDs, associationIDsTemp);
-    }
+    localizationResult = LocalizationResult();
+    return localizationResult.isValid();
   }
-  
-  // If the resection has failed for all the nearest keyframes, the localization 
-  // has failed.
-  if ( indexBestKeyFrame == UndefinedIndexT ) 
-  {
-    return false;
-  }
-  
+  POPART_COUT("[poseEstimation]\tResection SUCCEDED");
+
+  POPART_COUT("R est\n" << pose.rotation());
+  POPART_COUT("t est\n" << pose.translation());
+
   // if we didn't use the provided intrinsics, estimate K from the projection
   // matrix estimated by the localizer and initialize the queryIntrinsics with
   // it and the image size. This will provide a first guess for the refine function
@@ -391,29 +335,51 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
     Vec3 t_;
     // Decompose the projection matrix  to get K, R and t using 
     // RQ decomposition
-    KRt_From_P(bestResectionData.projection_matrix, &K_, &R_, &t_);
+    KRt_From_P(resectionData.projection_matrix, &K_, &R_, &t_);
     queryIntrinsics.setK(K_);
+    POPART_COUT("K estimated\n" << K_);
     queryIntrinsics.setWidth(imageSize.first);
     queryIntrinsics.setHeight(imageSize.second);
   }
-  
-  // E. refine the estimated pose
+
+  // refine the estimated pose
   POPART_COUT("[poseEstimation]\tRefining estimated pose");
   const bool b_refine_pose = true;
-  bool refineStatus = sfm::SfM_Localizer::RefinePose(&queryIntrinsics, 
-                                                     bestPose, 
-                                                     bestResectionData, 
-                                                     b_refine_pose, 
-                                                     param->_refineIntrinsics);
-  
+  const bool refineStatus = sfm::SfM_Localizer::RefinePose(&queryIntrinsics,
+                                                            pose,
+                                                            resectionData,
+                                                            b_refine_pose,
+                                                            param->_refineIntrinsics);
   if(!refineStatus)
-    POPART_COUT("[poseEstimation]\tRefine pose failed.");
+    POPART_COUT("Refine pose failed.");
 
-  localizationResult = LocalizationResult(bestResectionData, bestAssociationIDs, bestPose, queryIntrinsics, std::vector<voctree::DocMatch>(), refineStatus);
+  if(!param->_visualDebug.empty() && !imagePath.empty())
+  {
+    //@todo save image with cctag with different code color for inliers
+  }
+  
+  POPART_COUT("[poseEstimation]\tPose estimation took " << timer.elapsedMs() << "ms.");
+
+  localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, matchedImages, refineStatus);
+
+  {
+    // just debugging this block can be safely removed or commented out
+    POPART_COUT("R refined\n" << pose.rotation());
+    POPART_COUT("t refined\n" << pose.translation());
+    POPART_COUT("K refined\n" << queryIntrinsics.K());
+
+    const Mat2X residuals = localizationResult.computeInliersResiduals();
+
+    const auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
+    POPART_COUT("RMSE = " << std::sqrt(sqrErrors.mean())
+                << " min = " << std::sqrt(sqrErrors.minCoeff())
+                << " max = " << std::sqrt(sqrErrors.maxCoeff()));
+  }
 
   return localizationResult.isValid();
   
- } 
+  
+}
 
 CCTagLocalizer::~CCTagLocalizer()
 {
@@ -446,6 +412,7 @@ bool CCTagLocalizer::localizeRig(const std::vector<image::Image<unsigned char> >
     // extract descriptors and features from each image
     vec_queryRegions[i] = std::unique_ptr<features::Regions>(new features::CCTAG_Regions());
     POPART_COUT("[features]\tExtract CCTag from query image...");
+    _image_describer.Set_configuration_preset(param->_featurePreset);
     _image_describer.Describe(vec_imageGrey[i], vec_queryRegions[i]);
     POPART_COUT("[features]\tExtract CCTAG done: found " <<  vec_queryRegions[i]->RegionCount() << " features");
     // add the image size for this image
@@ -515,10 +482,14 @@ bool CCTagLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<featur
   {
     throw std::invalid_argument("The CCTag localizer parameters are not in the right format.");
   }
-
-  vector<std::map< pair<IndexT, IndexT>, std::size_t > > vec_occurrences(numCams);
-  vector<Mat> vec_pts3D(numCams);
-  vector<Mat> vec_pts2D(numCams);
+  
+  // each element of the vector is a map containing for each pair <pt3D_id, pt2D_id> 
+  // the number of times that the association has been seen. One element fo the 
+  // vector for each camera.
+  std::vector<std::map< pair<IndexT, IndexT>, std::size_t > > vec_occurrences(numCams);
+  std::vector<Mat> vec_pts3D(numCams);
+  std::vector<Mat> vec_pts2D(numCams);
+  std::vector<std::vector<voctree::DocMatch> > vec_matchedImages(numCams);
 
   // for each camera retrieve the associations
   //@todo parallelize?
@@ -530,10 +501,11 @@ bool CCTagLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<featur
     // the key is a pair <Id3D, Id2d>
     // the element is the pair 3D point - 2D point
     auto &occurrences = vec_occurrences[i];
+    auto &matchedImages = vec_matchedImages[i];
     Mat &pts3D = vec_pts3D[i];
     Mat &pts2D = vec_pts2D[i];
     features::CCTAG_Regions &queryRegions = *dynamic_cast<features::CCTAG_Regions*> (vec_queryRegions[i].get());
-    getAllAssociations(queryRegions, *param, occurrences, pts2D, pts3D);
+    getAllAssociations(queryRegions, imageSize[i],*param, occurrences, pts2D, pts3D, matchedImages);
     numAssociations += occurrences.size();
   }
   
@@ -618,7 +590,7 @@ bool CCTagLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<featur
       indMatch3D2D.push_back(ass.first);
     }
     
-    vec_locResults.emplace_back(matchData, indMatch3D2D, pose, intrinsics, std::vector<voctree::DocMatch>(), refineOk);
+    vec_locResults.emplace_back(matchData, indMatch3D2D, pose, intrinsics, vec_matchedImages[cam], refineOk);
   }
   
   if(!refineOk)
@@ -691,20 +663,18 @@ bool CCTagLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<feature
     //set the pose
     rigPose = vec_localizationResults[0].getPose();
   }
-  
-  // if only one camera has been localized
-  if(numLocalizedCam == 1)
+  else
   {
-    // all the other cameras have not been localized just return the result of the 
-    // localized one
-    
-    // find the index of the localized camera
+
+    // find the index of the first localized camera
     const std::size_t idx = std::distance(isLocalized.begin(), 
                                           std::find(isLocalized.begin(), isLocalized.end(), true));
     
     // useless safeguard as there should be at least 1 element at this point but
     // better safe than sorry
     assert(idx < isLocalized.size());
+    
+    POPART_COUT("Index of the first localized camera: " << idx);
     
     // if the only localized camera is the main camera
     if(idx==0)
@@ -741,10 +711,13 @@ bool CCTagLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<feature
 
 
 void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegions,
+                                        const std::pair<std::size_t, std::size_t> &imageSize,
                                         const CCTagLocalizer::Parameters &param,
-                                        std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences,
+                                        std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences, 
                                         Mat &pt2D,
-                                        Mat &pt3D) const
+                                        Mat &pt3D,
+                                        std::vector<voctree::DocMatch>& matchedImages,
+                                        const std::string& imagePath) const
 {
   std::vector<IndexT> nearestKeyFrames;
   nearestKeyFrames.reserve(param._nNearestKeyFrames);
@@ -753,6 +726,9 @@ void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegi
                     _regions_per_view,
                     param._nNearestKeyFrames,
                     nearestKeyFrames);
+  
+  matchedImages.clear();
+  matchedImages.reserve(nearestKeyFrames.size());
   
   POPART_COUT_DEBUG("nearestKeyFrames.size() = " << nearestKeyFrames.size());
   for(const IndexT indexKeyFrame : nearestKeyFrames)
@@ -764,8 +740,46 @@ void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegi
     // Matching
     std::vector<matching::IndMatch> vec_featureMatches;
     viewMatching(queryRegions, _regions_per_view.at(indexKeyFrame)._regions, vec_featureMatches);
+    POPART_COUT("matching]\tFound "<< vec_featureMatches.size() <<" matches.");
     
-    // D. recover the 2D-3D associations from the matches 
+    matchedImages.emplace_back(indexKeyFrame, vec_featureMatches.size());
+    
+    if(!param._visualDebug.empty() && !imagePath.empty())
+    {
+      namespace bfs = boost::filesystem;
+      const sfm::View *mview = _sfm_data.GetViews().at(indexKeyFrame).get();
+      const std::string queryImage = bfs::path(imagePath).stem().string();
+      const std::string matchedImage = bfs::path(mview->s_Img_path).stem().string();
+      const std::string matchedPath = (bfs::path(_sfm_data.s_root_path) /  bfs::path(mview->s_Img_path)).string();
+
+      // the directory where to save the feature matches
+      const auto baseDir = bfs::path(param._visualDebug) / queryImage;
+      if((!bfs::exists(baseDir)))
+      {
+        POPART_COUT("created " << baseDir.string());
+        bfs::create_directories(baseDir);
+      }
+      
+      // the final filename for the output svg file as a composition of the query
+      // image and the matched image
+      auto outputName = baseDir / queryImage;
+      outputName += "_";
+      outputName += matchedImage;
+      outputName += ".svg";
+      
+      const bool showNotMatched = true;
+      features::saveCCTagMatches2SVG(imagePath, 
+                                     imageSize, 
+                                     queryRegions,
+                                     matchedPath,
+                                     std::make_pair(mview->ui_width, mview->ui_height), 
+                                     _regions_per_view.at(indexKeyFrame)._regions,
+                                     vec_featureMatches,
+                                     outputName.string(),
+                                     showNotMatched ); 
+    }
+    
+    // Recover the 2D-3D associations from the matches 
     // Each matched feature in the current similar image is associated to a 3D point,
     // hence we can recover the 2D-3D associations to estimate the pose
     
@@ -789,6 +803,42 @@ void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegi
   }
       
   const size_t numCollectedPts = occurences.size();
+  POPART_COUT("[matching]\tCollected "<< numCollectedPts <<" associations.");
+  
+  {
+    // just debugging statistics, this block can be safely removed    
+    std::size_t maxOcc = 0;
+    for(const auto &idx : occurences)
+    {
+      const auto &key = idx.first;
+      const auto &value = idx.second;
+       POPART_COUT("[matching]\tAssociations "
+               << key.first << "," << key.second <<"] found " 
+               << value << " times.");
+       if(value > maxOcc)
+         maxOcc = value;
+    }
+    
+    std::size_t numOccTreated = 0;
+    for(std::size_t value = 1; value < maxOcc; ++value)
+    {
+      std::size_t counter = 0;
+      for(const auto &idx : occurences)
+      {
+        if(idx.second == value)
+        {
+          ++counter;
+        }
+      }
+      if(counter>0)
+        POPART_COUT("[matching]\tThere are " << counter
+                    << " associations occurred " << value << " times ("
+                    << 100.0 * counter / (double) numCollectedPts << "%)");
+      numOccTreated += counter;
+      if(numOccTreated >= numCollectedPts)
+        break;
+    }
+  }
 
   pt2D = Mat2X(2, numCollectedPts);
   pt3D = Mat3X(3, numCollectedPts);
@@ -810,12 +860,11 @@ void CCTagLocalizer::getAllAssociations(const features::CCTAG_Regions &queryRegi
 
 
 
-void kNearestKeyFrames(
-          const features::CCTAG_Regions & queryRegions,
-          const CCTagRegionsPerViews & regionsPerView,
-          std::size_t nNearestKeyFrames,
-          std::vector<IndexT> & kNearestFrames,
-          const float similarityThreshold /*=.0f*/)
+void kNearestKeyFrames(const features::CCTAG_Regions & queryRegions,
+                       const CCTagRegionsPerViews & regionsPerView,
+                       std::size_t nNearestKeyFrames,
+                       std::vector<IndexT> & kNearestFrames,
+                       const float similarityThreshold /*=.0f*/)
 {
   kNearestFrames.clear();
   
@@ -846,10 +895,9 @@ void kNearestKeyFrames(
   }
 }
  
-void viewMatching(
-        const features::CCTAG_Regions & regionsA,
-        const features::CCTAG_Regions & regionsB,
-        std::vector<matching::IndMatch> & vec_featureMatches)
+void viewMatching(const features::CCTAG_Regions & regionsA,
+                  const features::CCTAG_Regions & regionsB,
+                  std::vector<matching::IndMatch> & vec_featureMatches)
 {
   vec_featureMatches.clear();
   
@@ -873,9 +921,8 @@ void viewMatching(
  
  
  
-float viewSimilarity(
-        const features::CCTAG_Regions & regionsA,
-        const features::CCTAG_Regions & regionsB)
+float viewSimilarity(const features::CCTAG_Regions & regionsA,
+                     const features::CCTAG_Regions & regionsB)
 {
   assert(regionsA.DescriptorLength() == regionsB.DescriptorLength()); 
   
@@ -886,8 +933,7 @@ float viewSimilarity(
   return (descriptorViewA & descriptorViewB).count();
 }
 
-std::bitset<128> constructCCTagViewDescriptor(
-        const std::vector<CCTagDescriptor> & vCCTagDescriptors)
+std::bitset<128> constructCCTagViewDescriptor(const std::vector<CCTagDescriptor> & vCCTagDescriptors)
 {
   std::bitset<128> descriptorView;
   for(const auto & cctagDescriptor : vCCTagDescriptors )

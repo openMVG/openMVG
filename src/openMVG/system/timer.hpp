@@ -18,6 +18,7 @@
 #include <chrono>
 #endif
 #include <iostream>
+#include <string>
 
 namespace openMVG {
 namespace system {
@@ -48,6 +49,15 @@ namespace system {
   
   // print the elapsed time
   std::ostream& operator << (std::ostream&, const Timer&);
+  
+/**
+ * @brief Prints the duration in the format #d #h #m #s #ms starting from the non-zero
+ * most significant entity (ie it does not print #d if d is 0 and so on...).
+ * 
+ * @param durationMs the duration in milliseconds.
+ * @return a formatted string
+ */  
+std::string prettyTime(double durationMs);
 
 } // namespace system
 } // namespace openMVG

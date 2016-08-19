@@ -1,5 +1,7 @@
 #include "patternDetect.hpp"
 
+#include <openMVG/system/timer.hpp>
+
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 
@@ -60,47 +62,39 @@ std::ostream& operator<<(std::ostream &stream, const Pattern pattern)
 bool findPattern(const Pattern& pattern, const cv::Mat& viewGray, const cv::Size& boardSize, std::vector<cv::Point2f>& pointbuf)
 {
   bool found = false;
-  std::clock_t startCh;
-  double durationCh = 0.0;
+  system::Timer durationCh;
 
   switch (pattern)
   {
   case CHESSBOARD:
-    startCh = std::clock();
 
     found = cv::findChessboardCorners(viewGray, boardSize, pointbuf,
                                       CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE);
-    durationCh = (std::clock() - startCh) / (double) CLOCKS_PER_SEC;
-    std::cout << "Find chessboard corners' duration: " << durationCh << std::endl;
+    std::cout << "Find chessboard corners' duration: " << durationCh.elapsedMs() << "ms" << std::endl;
 
     // improve the found corners' coordinate accuracy
     if (found)
     {
-      startCh = std::clock();
+      durationCh.reset();
       cv::cornerSubPix(viewGray, pointbuf, cv::Size(11, 11), cv::Size(-1, -1),
                        cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
 
-      durationCh = (std::clock() - startCh) / (double) CLOCKS_PER_SEC;
-      std::cout << "Refine chessboard corners' duration: " << durationCh << std::endl;
+      std::cout << "Refine chessboard corners' duration: " << durationCh.elapsedMs() << "ms" << std::endl;
     }
     break;
 
   case CIRCLES_GRID:
-    startCh = std::clock();
 
     found = cv::findCirclesGrid(viewGray, boardSize, pointbuf);
 
-    durationCh = (std::clock() - startCh) / (double) CLOCKS_PER_SEC;
-    std::cout << "Find circles grid duration: " << durationCh << std::endl;
+    std::cout << "Find circles grid duration: " << durationCh.elapsedMs() << "ms" << std::endl;
     break;
 
   case ASYMMETRIC_CIRCLES_GRID:
-    startCh = std::clock();
 
     found = cv::findCirclesGrid(viewGray, boardSize, pointbuf, cv::CALIB_CB_ASYMMETRIC_GRID);
 
-    durationCh = (std::clock() - startCh) / (double) CLOCKS_PER_SEC;
-    std::cout << "Find asymmetric circles grid duration: " << durationCh << std::endl;
+    std::cout << "Find asymmetric circles grid duration: " << durationCh.elapsedMs() << "ms" << std::endl;
     break;
 
 #ifdef HAVE_CCTAG

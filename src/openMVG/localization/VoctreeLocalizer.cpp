@@ -625,6 +625,8 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
 {
   
   sfm::Image_Localizer_Match_Data resectionData;
+  // a map containing for each pair <pt3D_id, pt2D_id> the number of times that 
+  // the association has been seen
   std::map< std::pair<IndexT, IndexT>, std::size_t > occurences;
   
   // get all the association from the database images
@@ -669,10 +671,10 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
     if(!param._visualDebug.empty() && !imagePath.empty())
     {
       namespace bfs = boost::filesystem;
-      features::saveFeatures2SVG(imagePath, 
-                       queryImageSize, 
-                         resectionData.pt2D,
-                         param._visualDebug + "/" + bfs::path(imagePath).stem().string() + ".associations.svg");
+      features::saveFeatures2SVG(imagePath,
+                                 queryImageSize,
+                                 resectionData.pt2D,
+                                 param._visualDebug + "/" + bfs::path(imagePath).stem().string() + ".associations.svg");
     }
     localizationResult = LocalizationResult();
     return localizationResult.isValid();
@@ -833,7 +835,7 @@ void VoctreeLocalizer::getAllAssociations(const features::SIFT_Regions &queryReg
     }
     else
     {
-      POPART_COUT("[matching]\tFound " << vec_featureMatches.size() << " matches");
+      POPART_COUT("[matching]\tFound " << vec_featureMatches.size() << " geometrically validated matches");
     }
     assert(vec_featureMatches.size()>0);
     
@@ -1413,19 +1415,17 @@ bool VoctreeLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<featu
     //set the pose
     rigPose = vec_localizationResults[0].getPose();
   }
-  // if only one camera has been localized
-  else if(numLocalizedCam == 1)
-  {
-    // all the other cameras have not been localized just return the result of the 
-    // localized one
-    
-    // find the index of the localized camera
+  else
+  { 
+    // find the index of the first localized camera
     const std::size_t idx = std::distance(isLocalized.begin(), 
                                           std::find(isLocalized.begin(), isLocalized.end(), true));
     
     // useless safeguard as there should be at least 1 element at this point but
     // better safe than sorry
     assert(idx < isLocalized.size());
+    
+    POPART_COUT("Index of the first localized camera: " << idx);
     
     // if the only localized camera is the main camera
     if(idx==0)

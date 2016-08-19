@@ -94,7 +94,7 @@ bool rigResection(const std::vector<Mat> &pts2d,
       
       // we first remove the distortion and then we transform the undistorted point in
       // normalized camera coordinates (inv(K)*undistortedPoint)
-      auto pt = currCamera.ima2cam(currCamera.remove_disto(pts2d[cam].col(i)));
+      auto pt = currCamera.ima2cam(currCamera.get_ud_pixel(pts2d[cam].col(i)));
       
       opengv::bearingVector_t bearing(pt(0), pt(1), 1.0);
       

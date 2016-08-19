@@ -1,10 +1,3 @@
-/* 
- * File:   ImageFeed.cpp
- * Author: sgaspari
- * 
- * Created on September 28, 2015, 10:31 AM
- */
-
 #include "ImageFeed.hpp"
 #include <openMVG/sfm/sfm_data.hpp>
 #include <openMVG/sfm/sfm_data_io.hpp>
@@ -275,7 +268,7 @@ bool ImageFeed::FeederImpl::goToFrame(const unsigned int frame)
   // Reconstruction mode
   if(_sfmMode)
   {
-    if(frame < 0 || frame >= _sfmdata.GetViews().size())
+    if(frame >= _sfmdata.GetViews().size())
     {
       _viewIterator = _sfmdata.GetViews().end();
       std::cerr << "The current frame is out of the range." << std::endl;
@@ -289,7 +282,7 @@ bool ImageFeed::FeederImpl::goToFrame(const unsigned int frame)
   {
     _currentImageIndex = frame;
     // Image list mode
-    if(frame < 0 || frame >= _images.size())
+    if(frame >= _images.size())
     {
       std::cerr << "The current frame is out of the range." << std::endl;
       return false;
@@ -313,7 +306,7 @@ bool ImageFeed::FeederImpl::goToNextFrame()
   {
     ++_currentImageIndex;
     std::cout << "next frame " << _currentImageIndex << std::endl;
-    if(_currentImageIndex < 0 || _currentImageIndex >= _images.size())
+    if(_currentImageIndex >= _images.size())
       return false;
   }
   return true;

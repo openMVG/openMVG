@@ -9,6 +9,7 @@
 #include <openMVG/features/cctag/CCTAG_describer.hpp>
 #include <openMVG/sfm/sfm_data.hpp>
 #include <openMVG/sfm/pipelines/localization/SfM_Localizer.hpp>
+#include <openMVG/voctree/database.hpp>
 
 #include <iostream>
 #include <bitset>
@@ -65,6 +66,7 @@ public:
                 cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
                 LocalizationResult & localizationResult,
                 const std::string& imagePath = std::string());
+
   /**
    * @brief Naive implementation of the localizer using the rig. Each image from
    * the rig is localized and then a bundle adjustment is run for optimizing the 
@@ -119,18 +121,23 @@ public:
    * points of the associations, in the same order as in \p occurences.
    * 
    * @param[in] queryRegions The input query regions containing the extracted 
-   * markers from the query image
-   * @param[in] param The parameters to use
-   * @param[out] occurences A map with a pair of indices for each association as 
-   * key and its occurrence as value
-   * @param[out] pt2D The set of 2D points of the associations as they are given in \p queryRegions
-   * @param[out] pt3D The set of 3D points of the associations
+   * markers from the query image.
+   * @param[in] imageSize The size of the query image.
+   * @param[in] param The parameters to use.
+   * @param[out] occurences A map containing for each pair <pt3D_id, pt2D_id> 
+   * the number of times that the association has been seen
+   * @param[out] pt2D The set of 2D points of the associations as they are given in \p queryRegions.
+   * @param[out] pt3D The set of 3D points of the associations.
+   * @param[in] The optional path to the query image file, used for debugging.
    */
   void getAllAssociations(const features::CCTAG_Regions &queryRegions,
+                          const std::pair<std::size_t, std::size_t> &imageSize,
                           const CCTagLocalizer::Parameters &param,
                           std::map< std::pair<IndexT, IndexT>, std::size_t > &occurences,
                           Mat &pt2D,
-                          Mat &pt3D) const;
+                          Mat &pt3D,
+                          std::vector<voctree::DocMatch>& matchedImages,
+                          const std::string& imagePath = std::string()) const;
   
   virtual ~CCTagLocalizer();
 
