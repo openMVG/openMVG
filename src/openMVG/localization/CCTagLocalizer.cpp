@@ -248,12 +248,12 @@ bool CCTagLocalizer::localize(const image::Image<unsigned char> & imageGrey,
 }
 
 bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQueryRegions,
-                                              const std::pair<std::size_t, std::size_t> &imageSize,
-                                              const LocalizerParameters *parameters,
-                                              bool useInputIntrinsics,
-                                              cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
-                                              LocalizationResult & localizationResult,
-                                              const std::string& imagePath)
+                              const std::pair<std::size_t, std::size_t> &imageSize,
+                              const LocalizerParameters *parameters,
+                              bool useInputIntrinsics,
+                              cameras::Pinhole_Intrinsic_Radial_K3 &queryIntrinsics,
+                              LocalizationResult & localizationResult,
+                              const std::string& imagePath)
 {
   namespace bfs = boost::filesystem;
   
@@ -401,7 +401,7 @@ bool CCTagLocalizer::localizeRig(const std::vector<image::Image<unsigned char> >
   }
   const size_t numCams = vec_imageGrey.size();
   assert(numCams == vec_queryIntrinsics.size());
-  assert(numCams == vec_subPoses.size() - 1);
+  assert(numCams == vec_subPoses.size() + 1);
 
   std::vector<std::unique_ptr<features::Regions> > vec_queryRegions(numCams);
   std::vector<std::pair<std::size_t, std::size_t> > vec_imageSize;
@@ -475,7 +475,7 @@ bool CCTagLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<featur
 {
   const size_t numCams = vec_queryRegions.size();
   assert(numCams == vec_queryIntrinsics.size());
-  assert(numCams == vec_subPoses.size() - 1);   
+  assert(numCams == vec_subPoses.size() + 1);   
 
   const CCTagLocalizer::Parameters *param = static_cast<const CCTagLocalizer::Parameters *>(parameters);
   if(!param)
@@ -624,7 +624,7 @@ bool CCTagLocalizer::localizeRig_naive(const std::vector<std::unique_ptr<feature
   const size_t numCams = vec_queryRegions.size();
   
   assert(numCams==vec_queryIntrinsics.size());
-  assert(numCams==vec_subPoses.size()-1);
+  assert(numCams==vec_subPoses.size()+1);
   assert(numCams==imageSize.size());
 
   vec_localizationResults.resize(numCams);
