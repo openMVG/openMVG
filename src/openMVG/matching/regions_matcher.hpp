@@ -21,7 +21,7 @@ namespace openMVG {
 namespace matching {
 
 /**
- * @brief Match two Regions according a chosen MatcherType using the ratio test
+ * @brief Match two Regions according to a chosen MatcherType using the ratio test
  * to assure the robustness of the matches.
  * It returns the matching features.
  * 
