@@ -281,12 +281,13 @@ int main(int argc, char** argv)
     POPART_COUT("\tsfmdata: " << sfmFilePath);
     POPART_COUT("\tpreset: " << featurePreset);
     POPART_COUT("\tmediapath: " << mediaPath);
+    POPART_COUT("\tcalibration: " << rigCalibPath);
     POPART_COUT("\tresectionEstimator: " << resectionEstimator);
     POPART_COUT("\tmatchingEstimator: " << matchingEstimator);
     POPART_COUT("\tdescriptorPath: " << descriptorsFolder);
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
     POPART_COUT("\tuseLocalizeRigNaive: " << useLocalizeRigNaive);
-    POPART_COUT("\rreprojectionError: " << resectionErrorMax);
+    POPART_COUT("\treprojectionError: " << resectionErrorMax);
     POPART_COUT("\tnCameras: " << numCameras);
     if(!filelist.empty())
       POPART_COUT("\tfilelist: " << filelist);
