@@ -416,7 +416,8 @@ int main(int argc, char** argv)
   
   // load the subposes
   std::vector<geometry::Pose3> vec_subPoses;
-  rig::loadRigCalibration(rigCalibPath, vec_subPoses);
+  if(numCameras > 1)
+    rig::loadRigCalibration(rigCalibPath, vec_subPoses);
   assert(vec_subPoses.size() == numCameras-1);
   geometry::Pose3 rigPose;
   
