@@ -58,7 +58,7 @@ bool CreateNVMFile( const SfM_Data & sfm_data ,
   }
 
   // Number of cameras
-  // For each camera : File_name Focal Qw Qx Qy Qz Cx Cy Cz D0 D1 0
+  // For each camera : File_name Focal Qw Qx Qy Qz Cx Cy Cz D0 0
 
   file << nb_cam << std::endl ;
   std::string sOutViewIteratorDirectory;
@@ -110,7 +110,7 @@ bool CreateNVMFile( const SfM_Data & sfm_data ,
     const double Qy = q.y() ;
     const double Qz = q.z() ;
     const double Qw = q.w() ;
-    double d0 = 0.0 ;
+    const double d0 = 0.0 ;
     // Remove distortion
     if ( cam->have_disto() )
     {
@@ -135,34 +135,34 @@ bool CreateNVMFile( const SfM_Data & sfm_data ,
     }
 
 
-    file << dstImage2 << " " <<
-         flen << " " <<
-
-         Qw << " " <<
-         Qx << " " <<
-         Qy << " " <<
-         Qz << " " <<
-
-         Cx << " " <<
-         Cy << " " <<
-         Cz << " " <<
-
-         d0 << " " <<
-         0 << std::endl ;
+    file << dstImage2 << " " 
+         
+         << flen << " " 
+         
+         << Qw << " " 
+         << Qx << " " 
+         << Qy << " " 
+         << Qz << " " 
+         
+         << Cx << " " 
+         << Cy << " " 
+         << Cz << " " 
+         << d0 << " " 
+         << 0 << std::endl ;
   }
 
   // Now exports points
   // Number of points
-  // For each points : X Y Z R G B Nm [ mesurements ]
+  // For each points : X Y Z R G B Nm [ measurements ]
   // mesurements : Img_idx Feat_idx X Y
   const Landmarks & landmarks = sfm_data.GetLandmarks();
-  const size_t featureCount = std::distance( landmarks.begin(), landmarks.end() );
+  const size_t featureCount = landmarks.size() ; 
   file << featureCount << std::endl ;
   for ( Landmarks::const_iterator iterLandmarks = landmarks.begin(); iterLandmarks != landmarks.end(); ++iterLandmarks )
   {
     const Vec3 exportPoint = iterLandmarks->second.X;
     file << exportPoint.x() << " " << exportPoint.y() << " " << exportPoint.z() << " ";
-    file << 250 << " " << 100 << " " << 150 << " ";  // Write arbitrary RGB color, see above note
+    file << 250 << " " << 100 << " " << 150 << " ";  // Write arbitrary RGB color
 
     // Tally set of feature observations
     const Observations & obs = iterLandmarks->second.obs;
@@ -241,7 +241,7 @@ int main( int argc , char ** argv )
   {
     std::cerr << "Usage: " << argv[0] << '\n'
               << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
-              << "[-o|--outdir] path\n"
+              << "[-o|--outdir] path where the scene.nvm will be saved\n"
               << std::endl;
 
     std::cerr << s << std::endl;
