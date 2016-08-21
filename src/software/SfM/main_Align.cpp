@@ -40,14 +40,15 @@ int main(int argc, char **argv)
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
         << "[-i|--input_file] path to the input SfM_Data scene to align.\n"
-        << "[-r|--reference_file] path to the scene used as the reference coordinate system\n"
-        << "[-y|--y_align_scale] align [X,Y,Z] to +Y-axis, rotate around Y by R deg, scale by S; syntax: X,Y,Z;R;S \n"
         << "[-o|--output_file] path to the output SfM_Data scene\n"
         << "\t .json, .bin, .xml, .ply, .baf"
 #if HAVE_ALEMBIC
            ", .abc"
 #endif
            "\n"
+        << "\n[Optional]\n"
+        << "[-r|--reference_file] path to the scene used as the reference coordinate system\n"
+        << "[-y|--y_align_scale] align [X,Y,Z] to +Y-axis, rotate around Y by R deg, scale by S; syntax: X,Y,Z;R;S \n"
         << std::endl;
 
       std::cerr << s << std::endl;
