@@ -138,6 +138,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeCCTagStructureFromKnownPoses
   openMVG_sfm
   stlplus
   ${CCTAG_LIBRARIES}
+  ${Boost_LIBRARIES}
   )
 SET_PROPERTY(TARGET openMVG_main_ComputeCCTagStructureFromKnownPoses PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ComputeCCTagStructureFromKnownPoses DESTINATION bin/)

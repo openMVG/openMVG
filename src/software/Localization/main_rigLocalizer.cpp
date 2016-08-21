@@ -154,8 +154,9 @@ int main(int argc, char** argv)
                                           +","+robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC);
   bool refineIntrinsics = false;
   bool useLocalizeRigNaive = false;
-  double resectionErrorMax = 4.0;                    //< the maximum error allowed for resection
+  double resectionErrorMax = 4.0;              //< the maximum error allowed for resection
   double matchingErrorMax = 4.0;               //< the maximum error allowed for image matching with geometric validation
+  double angularThreshold = D2R(0.1);          //< the maximum angular error allowed for rig resectioning (in rad)
 
 
   // parameters for voctree localizer
@@ -214,6 +215,9 @@ int main(int argc, char** argv)
           "Enable/Disable the naive method for rig localization: naive method tries "
           "to localize each camera separately. This is enabled by default if the "
           "library has not been built with openGV.")
+      ("angularThreshold", po::value<double>(&angularThreshold)->default_value(angularThreshold), 
+          "The maximum angular threshold between feature bearing vector and 3D "
+          "point direction. Used only with the opengv method.")
   // parameters for voctree localizer
       ("voctree", po::value<std::string>(&vocTreeFilepath),
           "[voctree] Filename for the vocabulary tree")
@@ -281,12 +285,13 @@ int main(int argc, char** argv)
     POPART_COUT("\tsfmdata: " << sfmFilePath);
     POPART_COUT("\tpreset: " << featurePreset);
     POPART_COUT("\tmediapath: " << mediaPath);
+    POPART_COUT("\tcalibration: " << rigCalibPath);
     POPART_COUT("\tresectionEstimator: " << resectionEstimator);
     POPART_COUT("\tmatchingEstimator: " << matchingEstimator);
     POPART_COUT("\tdescriptorPath: " << descriptorsFolder);
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
     POPART_COUT("\tuseLocalizeRigNaive: " << useLocalizeRigNaive);
-    POPART_COUT("\rreprojectionError: " << resectionErrorMax);
+    POPART_COUT("\treprojectionError: " << resectionErrorMax);
     POPART_COUT("\tnCameras: " << numCameras);
     if(!filelist.empty())
       POPART_COUT("\tfilelist: " << filelist);
@@ -415,7 +420,8 @@ int main(int argc, char** argv)
   
   // load the subposes
   std::vector<geometry::Pose3> vec_subPoses;
-  rig::loadRigCalibration(rigCalibPath, vec_subPoses);
+  if(numCameras > 1)
+    rig::loadRigCalibration(rigCalibPath, vec_subPoses);
   assert(vec_subPoses.size() == numCameras-1);
   geometry::Pose3 rigPose;
   

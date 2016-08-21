@@ -361,7 +361,7 @@ TEST(rigResection, simpleWithNoiseNoOutliers)
                                            vec_subPoses,
                                            rigPose,
                                            inliers,
-                                           1e-8));
+                                           D2R(0.008)));
 
     std::cout << "rigPose\n" << rigPose.rotation() << "\n" << rigPose.center()<< std::endl;
     
@@ -444,7 +444,7 @@ TEST(rigResection, simpleNoNoiseWithOutliers)
                                           vec_subPoses,
                                           rigPose,
                                           inliers,
-                                          1e-8));
+                                          D2R(0.008)));
 
     std::cout << "rigPose\n" << rigPose.rotation() << "\n" << rigPose.center()<< std::endl;
 

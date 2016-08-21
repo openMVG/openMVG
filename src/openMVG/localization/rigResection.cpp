@@ -31,11 +31,17 @@ bool rigResection(const std::vector<Mat> &pts2d,
                   const std::vector<geometry::Pose3 > &vec_subPoses,
                   geometry::Pose3 &rigPose,
                   std::vector<std::vector<std::size_t> > &inliers,
-                  double threshold /*= 1e-6*/,
+                  double angularThreshold,
                   size_t maxIterations /*= 100*/,
                   bool verbosity /*= true*/)
 {
   const std::size_t numCameras = pts2d.size();
+  // Note that the  threshold to provide ot the ransac is expressed in cos(angle), 
+  // more specifically it's the maximum angle allowed between the 3D direction of 
+  // the feature point and the 3D direction of the associated 3D point. The reprojection 
+  // error computed in the ransac is 1-cos(angle), where angle is the angle between 
+  // the two directions.
+  const double threshold = 1-std::cos(angularThreshold);
   
   assert(pts3d.size() == numCameras);
   assert(vec_queryIntrinsics.size() == numCameras);
@@ -166,7 +172,7 @@ bool rigResection(const std::vector<Mat> &pts2d,
     << "-- #Points used for Resection: " << numTotalPoints << "\n"
     << "-- #Points validated by robust Resection: " << numInliers << "\n"
     << "-- #Iterations needed: " << ransac.iterations_ << "\n"
-    << "-- #Thresehold used: " << ransac.threshold_ << "\n"
+    << "-- #Thresehold used: " << ransac.threshold_ <<  " (" << R2D(angularThreshold) << "deg)\n"
     << "-- Time spent in ransac [ms]: " << detect_elapsed.count() << "\n"
     << "-------------------------------" << std::endl;
   }

@@ -1197,8 +1197,9 @@ bool VoctreeLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<feat
                                         vec_queryIntrinsics,
                                         vec_subPoses,
                                         rigPose,
-                                        vec_inliers);
-  
+                                        vec_inliers,
+                                        param->_angularThreshold);
+
   if(!resectionOk)
   {
     for(std::size_t camID = 0; camID < numCams; ++camID)
