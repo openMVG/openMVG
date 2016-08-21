@@ -59,7 +59,7 @@ public:
 
     float _cannyThrLow;
     float _cannyThrHigh;
-    cctag::Parameters* _internalParams;
+    std::unique_ptr<cctag::Parameters> _internalParams;
   };
 private:
   //CCTag parameters

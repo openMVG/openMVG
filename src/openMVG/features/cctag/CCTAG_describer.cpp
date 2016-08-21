@@ -11,13 +11,12 @@ namespace openMVG {
 namespace features {
 
 CCTAG_Image_describer::CCTagParameters::CCTagParameters(size_t nRings)
+  : _internalParams(new cctag::Parameters(nRings))
 {
-  _internalParams = new cctag::Parameters(nRings);
 }
 
 CCTAG_Image_describer::CCTagParameters::~CCTagParameters()
 {
-  delete _internalParams;
 }
 
 bool CCTAG_Image_describer::CCTagParameters::setPreset(EDESCRIBER_PRESET preset)
