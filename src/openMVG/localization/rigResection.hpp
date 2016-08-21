@@ -1,15 +1,9 @@
-/* 
- * File:   rigResection.hpp
- * Author: sgaspari
- *
- * Created on January 2, 2016, 5:51 PM
- */
-
 #pragma once
 
 #include <openMVG/types.hpp>
 #include <openMVG/cameras/Camera_Pinhole_Radial.hpp>
 #include <openMVG/geometry/pose3.hpp>
+#include <openMVG/numeric/numeric.h>
 
 #include <vector>
 
@@ -36,11 +30,10 @@ namespace localization{
  * @param[out] rigPose The rig pose referred to the position of the main camera.
  * @param[out] inliers A vector of the same size as the number of cameras c
  * ontaining the indices of inliers.
- * @param[in] threshold The threshold to use in the ransac process. Note that the 
- * threshold is an cos(angle), more specifically it's the maximum angle allowed 
- * between the 3D direction of the feature point and the 3D direction of the 
- * associated 3D point. The reprojection error computed in the ransac is 1-cos(angle),
- * where angle is the angle between the two directions.
+ * @param[in] threshold The threshold in radians to use in the ransac process. It
+ * represents the maximum angular error between the direction of the 3D point in
+ * space and the bearing vector of the feature (i.e. the direction of the 
+ * re-projection ray).
  * @param[in] maxIterations Maximum number of iteration for the ransac process.
  * @param[in] verbosity Mute/unmute the debugging messages.
  * @return true if the ransac has success.
@@ -51,8 +44,8 @@ bool rigResection(const std::vector<Mat> &vec_pts2d,
                   const std::vector<geometry::Pose3 > &vec_subPoses,
                   geometry::Pose3 &rigPose,
                   std::vector<std::vector<std::size_t> > &inliers,
-                  double threshold = 1-std::cos(0.00141421368),   // ~0.1deg
-                  size_t maxIterations = 100, 
+                  double threshold = D2R(0.1),
+                  size_t maxIterations = 100,
                   bool verbosity = true);
 
 #endif
