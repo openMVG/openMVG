@@ -11,10 +11,13 @@
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <string>
+#include <sstream>
 #include <vector>
 
 using namespace openMVG;
 using namespace openMVG::sfm;
+
+static bool parseAlignScale(const std::string& alignScale, double& S, Mat3& R, Vec3& t);
 
 // Convert from a SfM_Data format to another
 int main(int argc, char **argv)
@@ -24,9 +27,11 @@ int main(int argc, char **argv)
   std::string sSfM_Data_Filename_In;
   std::string sSfM_Data_Filename_InRef;
   std::string sSfM_Data_Filename_Out;
+  std::string sSfm_Data_YAlignScale;
 
   cmd.add(make_option('i', sSfM_Data_Filename_In, "input_file"));
   cmd.add(make_option('r', sSfM_Data_Filename_InRef, "reference_file"));
+  cmd.add(make_option('y', sSfm_Data_YAlignScale, "y_align_scale"));
   cmd.add(make_option('o', sSfM_Data_Filename_Out, "output_file"));
 
   try {
@@ -35,24 +40,40 @@ int main(int argc, char **argv)
   } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
         << "[-i|--input_file] path to the input SfM_Data scene to align.\n"
-        << "[-r|--reference_file] path to the scene used as the reference coordinate system\n"
         << "[-o|--output_file] path to the output SfM_Data scene\n"
         << "\t .json, .bin, .xml, .ply, .baf"
 #if HAVE_ALEMBIC
            ", .abc"
 #endif
            "\n"
+        << "\n[Optional]\n"
+        << "[-r|--reference_file] path to the scene used as the reference coordinate system\n"
+        << "[-y|--y_align_scale] align [X,Y,Z] to +Y-axis, rotate around Y by R deg, scale by S; syntax: X,Y,Z;R;S \n"
         << std::endl;
 
       std::cerr << s << std::endl;
       return EXIT_FAILURE;
   }
+  
 
   if (sSfM_Data_Filename_In.empty() ||
-      sSfM_Data_Filename_InRef.empty() ||
       sSfM_Data_Filename_Out.empty())
   {
     std::cerr << "Invalid input or output filename." << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  if (sSfM_Data_Filename_InRef.empty() &&
+      sSfm_Data_YAlignScale.empty())
+  {
+    std::cerr << "At least one of -y and -r must be specified." << std::endl;
+    return EXIT_FAILURE;
+  }
+  
+  if (!sSfM_Data_Filename_InRef.empty() &&
+      !sSfm_Data_YAlignScale.empty())
+  {
+    std::cerr << "Must specify exactly one of alignment and reference scene." << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -65,27 +86,36 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  // Load reference scene
-  SfM_Data sfm_data_inRef;
-  if (!Load(sfm_data_inRef, sSfM_Data_Filename_InRef, ESfM_Data(ALL)))
-  {
-    std::cerr << std::endl
-      << "The reference SfM_Data file \"" << sSfM_Data_Filename_InRef << "\" cannot be read." << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  std::cout << "Search similarity transformation." << std::endl;
   double S;
   Mat3 R;
   Vec3 t;
-  bool hasValidSimilarity = computeSimilarity(sfm_data_in, sfm_data_inRef, &S, &R, &t);
-  if(!hasValidSimilarity)
+
+  if (!sSfM_Data_Filename_InRef.empty())
   {
-    std::cerr << std::endl
-      << "Failed to find similarity between the 2 SfM scenes:"
-      << "\"" << sSfM_Data_Filename_In << "\", "
-      << "\"" << sSfM_Data_Filename_InRef << "\""
-      << std::endl;
+    // Load reference scene
+    SfM_Data sfm_data_inRef;
+    if (!Load(sfm_data_inRef, sSfM_Data_Filename_InRef, ESfM_Data(ALL)))
+    {
+      std::cerr << std::endl
+        << "The reference SfM_Data file \"" << sSfM_Data_Filename_InRef << "\" cannot be read." << std::endl;
+      return EXIT_FAILURE;
+    }
+
+    std::cout << "Search similarity transformation." << std::endl;
+    bool hasValidSimilarity = computeSimilarity(sfm_data_in, sfm_data_inRef, &S, &R, &t);
+    if(!hasValidSimilarity)
+    {
+      std::cerr << std::endl
+        << "Failed to find similarity between the 2 SfM scenes:"
+        << "\"" << sSfM_Data_Filename_In << "\", "
+        << "\"" << sSfM_Data_Filename_InRef << "\""
+        << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
+  else if (!parseAlignScale(sSfm_Data_YAlignScale, S, R, t))
+  {
+    std::cerr << std::endl << "Failed to parse align/scale argument.";
     return EXIT_FAILURE;
   }
   
@@ -107,4 +137,27 @@ int main(int argc, char **argv)
   }
 
   return EXIT_SUCCESS;
+}
+
+static bool parseAlignScale(const std::string& alignScale, double& S, Mat3& R, Vec3& t)
+{
+  double rx, ry, rz, rr;
+  
+  {
+    char delim[4];
+    std::istringstream iss(alignScale);
+    if (!(iss >> rx >> delim[0] >> ry >> delim[1] >> rz >> delim[2] >> rr >> delim[3] >> S))
+      return false;
+    if (delim[0] != ',' || delim[1] != ',' || delim[2] != ';' || delim[3] != ';')
+      return false;
+  }
+  
+  auto q = ::Eigen::Quaterniond::FromTwoVectors(Vec3(rx, ry, rz), Vec3::UnitY());
+  auto r = ::Eigen::AngleAxisd(rr*M_PI/180, Vec3::UnitY());
+
+  R = r * q.toRotationMatrix();
+
+  t = Vec3::Zero();
+  
+  return true;
 }
