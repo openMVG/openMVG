@@ -154,8 +154,9 @@ int main(int argc, char** argv)
                                           +","+robust::EROBUST_ESTIMATOR_enumToString(robust::EROBUST_ESTIMATOR::ROBUST_ESTIMATOR_LORANSAC);
   bool refineIntrinsics = false;
   bool useLocalizeRigNaive = false;
-  double resectionErrorMax = 4.0;                    //< the maximum error allowed for resection
+  double resectionErrorMax = 4.0;              //< the maximum error allowed for resection
   double matchingErrorMax = 4.0;               //< the maximum error allowed for image matching with geometric validation
+  double angularThreshold = D2R(0.1);          //< the maximum angular error allowed for rig resectioning (in rad)
 
 
   // parameters for voctree localizer
@@ -214,6 +215,9 @@ int main(int argc, char** argv)
           "Enable/Disable the naive method for rig localization: naive method tries "
           "to localize each camera separately. This is enabled by default if the "
           "library has not been built with openGV.")
+      ("angularThreshold", po::value<double>(&angularThreshold)->default_value(angularThreshold), 
+          "The maximum angular threshold between feature bearing vector and 3D "
+          "point direction. Used only with the opengv method.")
   // parameters for voctree localizer
       ("voctree", po::value<std::string>(&vocTreeFilepath),
           "[voctree] Filename for the vocabulary tree")

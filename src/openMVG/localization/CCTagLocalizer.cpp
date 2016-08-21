@@ -524,8 +524,9 @@ bool CCTagLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<featur
                                         vec_pts3D,
                                         vec_queryIntrinsics,
                                         vec_subPoses,
-                                        rigPose, 
-                                        vec_inliers);
+                                        rigPose,
+                                        vec_inliers,
+                                        param->_angularThreshold);
 
   if(!resectionOk)
   {
