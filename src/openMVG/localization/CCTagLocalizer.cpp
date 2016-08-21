@@ -538,12 +538,23 @@ bool CCTagLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<featur
     return resectionOk;
   }
   
-  const bool refineOk = refineRigPose(vec_pts2D,
-                                      vec_pts3D,
-                                      vec_inliers,
-                                      vec_queryIntrinsics,
-                                      vec_subPoses,
-                                      rigPose);
+//  const bool refineOk = refineRigPose(vec_pts2D,
+//                                      vec_pts3D,
+//                                      vec_inliers,
+//                                      vec_queryIntrinsics,
+//                                      vec_subPoses,
+//                                      rigPose);
+  openMVG::system::Timer timer;
+  const std::size_t minNumPoints = 4;
+  const bool refineOk = iterativeRefineRigPose(vec_pts2D,
+                                               vec_pts3D,
+                                               vec_queryIntrinsics,
+                                               vec_subPoses,
+                                               param->_errorMax,
+                                               minNumPoints,
+                                               vec_inliers,
+                                               rigPose);
+  POPART_COUT("Iterative refinement took " << timer.elapsedMs() << "ms");
   
   vec_locResults.clear();
   vec_locResults.reserve(numCams);

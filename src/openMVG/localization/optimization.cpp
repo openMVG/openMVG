@@ -595,6 +595,147 @@ bool refineRigPose(const std::vector<Mat> &pts2d,
   return true;
 }
 
+std::pair<double, bool> computeInliers(const std::vector<Mat> &vec_pts2d,
+                                       const std::vector<Mat> &vec_pts3d,
+                                       const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                                       const std::vector<geometry::Pose3 > &vec_subPoses,
+                                       const double maxReprojectionError,
+                                       const geometry::Pose3 &rigPose,
+                                       std::vector<std::vector<std::size_t> > &vec_inliers)
+{
+  const std::size_t numCams = vec_pts2d.size();
+  assert(numCams == vec_pts3d.size());
+  assert(numCams == vec_queryIntrinsics.size());
+  assert(numCams == vec_subPoses.size() + 1);
+  
+  const double squareThreshold = Square(maxReprojectionError);
+  
+  double rmse = 0;
+  std::size_t numInliers = 0;
+  // number of inlier removed
+  std::size_t numAdded = 0;
+  // number of point that were not inliers and now they are
+  std::size_t numRemoved = 0;
+  
+  std::vector<std::vector<std::size_t> > vec_newInliers(numCams);
+
+  
+  // compute the reprojection error for inliers (just debugging purposes)
+  for(std::size_t camID = 0; camID < numCams; ++camID)
+  {
+    const std::size_t numPts = vec_pts2d[camID].cols();
+    
+    const cameras::Pinhole_Intrinsic_Radial_K3 &currCamera = vec_queryIntrinsics[camID];
+    
+    Mat2X residuals;
+    if(camID != 0)
+      residuals = currCamera.residuals(vec_subPoses[camID - 1] * rigPose, vec_pts3d[camID], vec_pts2d[camID]);
+    else
+      residuals = currCamera.residuals(geometry::Pose3() * rigPose, vec_pts3d[camID], vec_pts2d[camID]);
+
+    auto sqrErrors = (residuals.cwiseProduct(residuals)).colwise().sum();
+
+    auto &currInliers = vec_newInliers[camID];
+    const auto &oldInliers = vec_inliers[camID];
+    currInliers.reserve(numPts);
+    
+    for(std::size_t i = 0; i < numPts; ++i)
+    {
+      // check whether the current point was an inlier
+      const auto occ = std::count(oldInliers.begin(), oldInliers.end(), i);
+      assert(occ == 0 || occ == 1);
+      
+      if(sqrErrors(i) < squareThreshold)
+      {
+        currInliers.push_back(i);
+        
+        // if it was not an inlier mark it as added one
+        if(occ == 0)
+          ++numAdded;
+        
+        rmse += sqrErrors(i);
+        ++numInliers;
+      }
+      else
+      {
+         // if it was an inlier mark it as removed one
+         if(occ == 1)
+          ++numRemoved;       
+      }
+    }
+  }
+  POPART_COUT("Removed " << numRemoved << " inliers, added new " << numAdded << " point");
+  
+  // swap
+  vec_inliers.swap(vec_newInliers);
+  return std::make_pair(std::sqrt(rmse/numInliers), (numRemoved > 0 || numAdded > 0) );
+}
+
+
+bool iterativeRefineRigPose(const std::vector<Mat> &pts2d,
+                            const std::vector<Mat> &pts3d,
+                            const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                            const std::vector<geometry::Pose3 > &vec_subPoses,
+                            double maxReprojectionError,
+                            std::size_t minNumPoints,
+                            std::vector<std::vector<std::size_t> > &vec_inliers,
+                            geometry::Pose3 &rigPose,
+                            std::size_t maxIterationNumber)
+
+{
+  geometry::Pose3 optimalPose = rigPose;
+  std::size_t iterationNumber = 1;
+  bool hasChanged = false;
+  
+  do
+  {
+    POPART_COUT("[poseEstimation]\tIteration " << iterationNumber);
+    const bool refineOk = refineRigPose(pts2d,
+                                        pts3d,
+                                        vec_inliers,
+                                        vec_queryIntrinsics,
+                                        vec_subPoses,
+                                        optimalPose);
+    if(!refineOk)
+    {
+      POPART_COUT("[poseEstimation]\tIterative refine rig pose failed");
+      return false;
+    }
+    
+    // recompute the inliers and the RMSE
+    const auto& result = computeInliers(pts2d,
+                                        pts3d,
+                                        vec_queryIntrinsics,
+                                        vec_subPoses,
+                                        maxReprojectionError,
+                                        optimalPose,
+                                        vec_inliers);
+    // if there have been changes in the inlier sets
+    hasChanged = result.second;
+    
+    // if not enough inliers stop?
+    std::size_t numInliers = 0;
+    for(const auto& inliers : vec_inliers)
+      numInliers += inliers.size();
+    
+    if(numInliers <= minNumPoints)
+    {
+      POPART_COUT("[poseEstimation]\tIterative refine rig pose has reached the minimum number of points");
+      return false;
+    }
+    
+    ++iterationNumber;
+    if(iterationNumber > maxIterationNumber)
+      POPART_COUT("Terminating refine because the max number of iterations has been reached");
+  }
+  while(hasChanged && iterationNumber <= maxIterationNumber);
+
+  rigPose = optimalPose;
+
+  return true;
+}
+
+
 } //namespace localization
 } //namespace openMVG
 

@@ -88,5 +88,28 @@ bool refineRigPose(const std::vector<Mat> &pts2d,
                    const std::vector<geometry::Pose3 > &vec_subPoses,
                    geometry::Pose3 &rigPose);
 
+/**
+ * 
+ * @param pts2d
+ * @param pts3d
+ * @param vec_queryIntrinsics
+ * @param vec_subPoses
+ * @param maxReprojectionError
+ * @param minNumPoints
+ * @param vec_inliers
+ * @param rigPose
+ * @param maxIterationNumber
+ * @return 
+ */
+bool iterativeRefineRigPose(const std::vector<Mat> &pts2d,
+                            const std::vector<Mat> &pts3d,
+                            const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                            const std::vector<geometry::Pose3 > &vec_subPoses,
+                            double maxReprojectionError,
+                            std::size_t minNumPoints,
+                            std::vector<std::vector<std::size_t> > &vec_inliers,
+                            geometry::Pose3 &rigPose,
+                            std::size_t maxIterationNumber = 10);
+
 } //namespace localization
 } //namespace openMVG
