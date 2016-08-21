@@ -20,13 +20,14 @@ namespace features {
 class CCTAG_Image_describer : public Image_describer
 {
 public:
-  CCTAG_Image_describer();
-  CCTAG_Image_describer(const std::size_t nRings, const bool doAppend = false);
+  CCTAG_Image_describer(const std::size_t nRings = 3);
   ~CCTAG_Image_describer();
 
   bool Set_configuration_preset(EDESCRIBER_PRESET preset);
 
   void Set_use_cuda(bool);
+
+  void setCudaPipe(int pipe) { _cudaPipe = pipe; }
 
   /**
   @brief Detect regions on the image and compute their attributes (description)
@@ -64,7 +65,8 @@ public:
 private:
   //CCTag parameters
   CCTagParameters _params;
-  bool _doAppend;
+  bool _doAppend = false;
+  int _cudaPipe = 0;
 };
 
 /**
