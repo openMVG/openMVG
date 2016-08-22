@@ -515,7 +515,7 @@ bool CCTagLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<featur
   // @todo Here it could be possible to filter the associations according to their
   // occurrences, eg giving priority to those associations that are more frequent
 
-  const size_t minNumAssociations = 5;  //possible parameter?
+  const size_t minNumAssociations = 4;  //possible parameter?
   if(numAssociations < minNumAssociations)
   {
     POPART_COUT("[poseEstimation]\tonly " << numAssociations << " have been found, not enough to do the resection!");
