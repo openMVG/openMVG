@@ -538,6 +538,27 @@ bool CCTagLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<featur
     return resectionOk;
   }
   
+  {
+    if(vec_inliers.size() < numCams)
+    {
+      // in general the inlier should be spread among different cameras
+      POPART_CERR("WARNING: RIG Voctree Localizer: Inliers in " 
+              << vec_inliers.size() << " cameras on a RIG of " 
+              << numCams << " cameras.");
+    }
+
+    for(std::size_t camID = 0; camID < vec_inliers.size(); ++camID)
+      POPART_COUT("#inliers for cam " << camID << ": " << vec_inliers[camID].size());
+    
+    POPART_COUT("Pose after resection:");
+    POPART_COUT("Rotation: " << rigPose.rotation());
+    POPART_COUT("Centre: " << rigPose.center());
+    
+    // debugging stats
+    // print the reprojection error for inliers (just debugging purposes)
+    printRigRMSEStats(vec_pts2D, vec_pts3D, vec_queryIntrinsics, vec_subPoses, rigPose, vec_inliers);
+  }
+  
 //  const bool refineOk = refineRigPose(vec_pts2D,
 //                                      vec_pts3D,
 //                                      vec_inliers,
@@ -555,6 +576,12 @@ bool CCTagLocalizer::localizeRig_opengv(const std::vector<std::unique_ptr<featur
                                                vec_inliers,
                                                rigPose);
   POPART_COUT("Iterative refinement took " << timer.elapsedMs() << "ms");
+  
+  {
+    // debugging stats
+    // print the reprojection error for inliers (just debugging purposes)
+    printRigRMSEStats(vec_pts2D, vec_pts3D, vec_queryIntrinsics, vec_subPoses, rigPose, vec_inliers);
+  }
   
   vec_locResults.clear();
   vec_locResults.reserve(numCams);
