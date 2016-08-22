@@ -156,7 +156,7 @@ int main(int argc, char** argv)
   bool useLocalizeRigNaive = false;
   double resectionErrorMax = 4.0;              //< the maximum error allowed for resection
   double matchingErrorMax = 4.0;               //< the maximum error allowed for image matching with geometric validation
-  double angularThreshold = D2R(0.1);          //< the maximum angular error allowed for rig resectioning (in rad)
+  double angularThreshold = 0.1;               //< the maximum angular error allowed for rig resectioning (in rad)
 
 
   // parameters for voctree localizer
@@ -216,7 +216,7 @@ int main(int argc, char** argv)
           "to localize each camera separately. This is enabled by default if the "
           "library has not been built with openGV.")
       ("angularThreshold", po::value<double>(&angularThreshold)->default_value(angularThreshold), 
-          "The maximum angular threshold between feature bearing vector and 3D "
+          "The maximum angular threshold in degrees between feature bearing vector and 3D "
           "point direction. Used only with the opengv method.")
   // parameters for voctree localizer
       ("voctree", po::value<std::string>(&vocTreeFilepath),
@@ -292,6 +292,7 @@ int main(int argc, char** argv)
     POPART_COUT("\trefineIntrinsics: " << refineIntrinsics);
     POPART_COUT("\tuseLocalizeRigNaive: " << useLocalizeRigNaive);
     POPART_COUT("\treprojectionError: " << resectionErrorMax);
+    POPART_COUT("\tangularThreshold: " << angularThreshold);
     POPART_COUT("\tnCameras: " << numCameras);
     if(!filelist.empty())
       POPART_COUT("\tfilelist: " << filelist);
@@ -372,6 +373,7 @@ int main(int argc, char** argv)
   param->_resectionEstimator = resectionEstimator;
   param->_matchingEstimator = matchingEstimator;
   param->_useLocalizeRigNaive = useLocalizeRigNaive;
+  param->_angularThreshold = D2R(angularThreshold);
 
   if(!localizer->isInit())
   {
