@@ -11,6 +11,10 @@
 #include <openMVG/cameras/Camera_Pinhole_Radial.hpp>
 #include <openMVG/geometry/pose3.hpp>
 
+#include <vector>
+#include <string>
+#include <tuple>
+
 namespace openMVG{
 namespace localization{
 
@@ -110,6 +114,38 @@ bool iterativeRefineRigPose(const std::vector<Mat> &pts2d,
                             std::vector<std::vector<std::size_t> > &vec_inliers,
                             geometry::Pose3 &rigPose,
                             std::size_t maxIterationNumber = 10);
+
+std::pair<double, bool> computeInliers(const std::vector<Mat> &vec_pts2d,
+                                       const std::vector<Mat> &vec_pts3d,
+                                       const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                                       const std::vector<geometry::Pose3 > &vec_subPoses,
+                                       const double maxReprojectionError,
+                                       const geometry::Pose3 &rigPose,
+                                       std::vector<std::vector<std::size_t> > &vec_inliers);
+
+void printRigRMSEStats(const std::vector<Mat> &vec_pts2D,
+                       const std::vector<Mat> &vec_pts3D,
+                       const std::vector<cameras::Pinhole_Intrinsic_Radial_K3 > &vec_queryIntrinsics,
+                       const std::vector<geometry::Pose3 > &vec_subPoses,
+                       const geometry::Pose3 &rigPose,
+                       const std::vector<std::vector<std::size_t> > &vec_inliers);
+
+/**
+ * 
+ * @param pts2d
+ * @param pts3d
+ * @param currCamera
+ * @param currInliers
+ * @param subPoses
+ * @param rigPose
+ * @return 
+ */
+std::tuple<double, double, double> computeStatistics(const Mat &pts2d, 
+                                                     const Mat &pts3d,
+                                                     const cameras::Pinhole_Intrinsic_Radial_K3 &currCamera,
+                                                     const std::vector<std::size_t> &currInliers,
+                                                     const geometry::Pose3 &subPoses,
+                                                     const geometry::Pose3 &rigPose);
 
 } //namespace localization
 } //namespace openMVG
