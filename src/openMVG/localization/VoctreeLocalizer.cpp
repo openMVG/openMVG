@@ -493,7 +493,7 @@ bool VoctreeLocalizer::localizeFirstBestResult(const features::SIFT_Regions &que
     }
     else
     {
-      POPART_COUT("[matching]\tFound " << vec_featureMatches.size() << " matches");
+      POPART_COUT("[matching]\tFound " << vec_featureMatches.size() << " geometrically validated matches");
     }
     assert(vec_featureMatches.size()>0);
     
@@ -677,7 +677,7 @@ bool VoctreeLocalizer::localizeAllResults(const features::SIFT_Regions &queryReg
                                  resectionData.pt2D,
                                  param._visualDebug + "/" + bfs::path(imagePath).stem().string() + ".associations.svg");
     }
-    localizationResult = LocalizationResult();
+    localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, matchedImages, bResection);
     return localizationResult.isValid();
   }
   POPART_COUT("[poseEstimation]\tResection SUCCEDED");

@@ -317,7 +317,7 @@ bool CCTagLocalizer::localize(const std::unique_ptr<features::Regions> &genQuery
 //                                 resectionData.pt2D,
 //                                 param._visualDebug + "/" + bfs::path(imagePath).stem().string() + ".associations.svg");
     }
-    localizationResult = LocalizationResult();
+    localizationResult = LocalizationResult(resectionData, associationIDs, pose, queryIntrinsics, matchedImages, bResection);
     return localizationResult.isValid();
   }
   POPART_COUT("[poseEstimation]\tResection SUCCEDED");
