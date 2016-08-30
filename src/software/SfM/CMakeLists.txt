@@ -52,11 +52,22 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeMatches
   stlplus
   )
 
+ADD_EXECUTABLE(openMVG_main_CreatePairsFromPosesIds  main_CreatePairsFromPosesIds.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_CreatePairsFromPosesIds
+  openMVG_system
+  openMVG_features
+  openMVG_multiview
+  openMVG_sfm
+  stlplus
+  )
+
 # Installation rules
 SET_PROPERTY(TARGET openMVG_main_ComputeFeatures PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ComputeFeatures DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_ComputeMatches PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ComputeMatches DESTINATION bin/)
+SET_PROPERTY(TARGET openMVG_main_CreatePairsFromPosesIds PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_CreatePairsFromPosesIds DESTINATION bin/)
 
 ###
 # SfM Pipelines
