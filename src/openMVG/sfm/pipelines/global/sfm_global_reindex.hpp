@@ -19,7 +19,6 @@ void reindex
   Hash_Map<PairValueType, PairValueType> & reindex_backward
 )
 {
-  typedef std::pair<PairValueType,PairValueType> PairT;
   // get a unique set of Ids
   std::set<size_t> unique_id;
   for(typename IterablePairs::const_iterator iter = pairs.begin();
