@@ -4,22 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
-//---------------------------------
-//  Universal Image Processing Algorithm (UIPA)
-//   _  _  __  ___  __
-//  ( )( )(  )(  ,\(  )
-//  ( )( ) )(  ) _//__\
-//  (____)(__)(_) (_)(_)
-//-------
-// Generic Image algorithm that require
-//  an ImageModel class that must implement the following:
-//
-// ::Contains(int y, int x) <= Tell if a point is inside or not the image
-// ::operator(int y,int x)  <= Modification accessor over the pixel (y,x)
-// ::Width()
-// ::Height()
-
 #ifndef OPENMVG_IMAGE_IMAGE_DRAWING_HPP
 #define OPENMVG_IMAGE_IMAGE_DRAWING_HPP
 

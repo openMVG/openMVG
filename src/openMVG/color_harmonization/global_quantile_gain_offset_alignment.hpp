@@ -217,7 +217,7 @@ struct ConstraintBuilder_GainOffset
   {
     //Count the number of images
     std::set<size_t> countSet;
-    for (int i = 0; i  < _vec_relative.size(); ++i)
+    for (size_t i = 0; i  < _vec_relative.size(); ++i)
     {
       countSet.insert(_vec_relative[i].I);
       countSet.insert(_vec_relative[i].J);

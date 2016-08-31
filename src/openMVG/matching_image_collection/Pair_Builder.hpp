@@ -17,7 +17,7 @@
 namespace openMVG {
 
 /// Generate all the (I,J) pairs of the upper diagonal of the NxN matrix
-static Pair_Set exhaustivePairs(const size_t N)
+inline Pair_Set exhaustivePairs(const size_t N)
 {
   Pair_Set pairs;
   for(size_t I = 0; I < N; ++I)
@@ -29,7 +29,7 @@ static Pair_Set exhaustivePairs(const size_t N)
 
 /// Generate the pairs that have a distance inferior to the overlapSize
 /// Usable to match video sequence
-static Pair_Set contiguousWithOverlap(const size_t N, const size_t overlapSize)
+inline Pair_Set contiguousWithOverlap(const size_t N, const size_t overlapSize)
 {
   Pair_Set pairs;
   for(size_t I = 0; I < N; ++I)
@@ -40,7 +40,7 @@ static Pair_Set contiguousWithOverlap(const size_t N, const size_t overlapSize)
 
 /// Load a set of Pair_Set from a file
 /// I J K L (pair that link I)
-static bool loadPairs(
+inline bool loadPairs(
      const size_t N,  // number of image in the current project (to check index validity)
      const std::string &sFileName, // filename of the list file,
      Pair_Set & pairs)  // output pairs read from the list file
@@ -95,7 +95,7 @@ static bool loadPairs(
 /// I J
 /// I K
 /// ...
-static bool savePairs(const std::string &sFileName, const Pair_Set & pairs)
+inline bool savePairs(const std::string &sFileName, const Pair_Set & pairs)
 {
   std::ofstream outStream(sFileName.c_str());
   if(!outStream.is_open())  {

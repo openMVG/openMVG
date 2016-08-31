@@ -46,14 +46,14 @@ void MatchesPointsToMat
     const features::PointFeature & pt_I = feature_I[putativeMatches[i].i_];
     const features::PointFeature & pt_J = feature_J[putativeMatches[i].j_];
     if (cam_I)
-      x_I.col(i) = cam_I->get_ud_pixel(pt_I.coords().cast<double>());
+      x_I.col(i) = cam_I->get_ud_pixel(pt_I.coords().cast<Scalar>());
     else
-      x_I.col(i) = pt_I.coords().cast<double>();
+      x_I.col(i) = pt_I.coords().cast<Scalar>();
 
     if (cam_J)
-      x_J.col(i) = cam_J->get_ud_pixel(pt_J.coords().cast<double>());
+      x_J.col(i) = cam_J->get_ud_pixel(pt_J.coords().cast<Scalar>());
     else
-      x_J.col(i) = pt_J.coords().cast<double>();
+      x_J.col(i) = pt_J.coords().cast<Scalar>();
   }
 }
 
@@ -140,4 +140,4 @@ void MatchesPairToMat
 }
 
 } //namespace matching_image_collection
-} // namespace openMVG 
+} // namespace openMVG

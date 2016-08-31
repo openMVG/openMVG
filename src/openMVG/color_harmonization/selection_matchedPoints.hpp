@@ -27,11 +27,12 @@ public:
                                  const std::vector< features::SIOPointFeature >& vec_featsR,
                                  const size_t radius = 1 ):
      commonDataByPair( sLeftImage, sRightImage ),
+     _radius( radius ),
      _vec_PutativeMatches( vec_PutativeMatches ),
-     _vec_featsL( vec_featsL ), _vec_featsR( vec_featsR ), _radius( radius )
+     _vec_featsL( vec_featsL ), _vec_featsR( vec_featsR )
   {}
 
-  ~commonDataByPair_MatchedPoints() override = default ; 
+  ~commonDataByPair_MatchedPoints() override = default ;
 
   /**
    * Fill mask from corresponding points (each point pictured by a disk of radius _radius)
@@ -41,7 +42,7 @@ public:
    *
    * \return True if some pixel have been set to true.
    */
-  bool computeMask( image::Image< unsigned char > & maskLeft, image::Image< unsigned char > & maskRight ) override 
+  bool computeMask( image::Image< unsigned char > & maskLeft, image::Image< unsigned char > & maskRight ) override
   {
     maskLeft.fill(0);
     maskRight.fill(0);

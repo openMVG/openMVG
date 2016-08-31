@@ -138,7 +138,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic
     return true;
   }
 
-  static const int num_residuals() { return 2; }
+  static int num_residuals() { return 2; }
 
   // Factory to hide the construction of the CostFunction object from
   // the client code.
@@ -255,7 +255,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1
     return true;
   }
 
-  static const int num_residuals() { return 2; }
+  static int num_residuals() { return 2; }
 
   // Factory to hide the construction of the CostFunction object from
   // the client code.
@@ -378,7 +378,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3
     return true;
   }
 
-  static const int num_residuals() { return 2; }
+  static int num_residuals() { return 2; }
 
   // Factory to hide the construction of the CostFunction object from
   // the client code.
@@ -507,7 +507,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2
     return true;
   }
 
-  static const int num_residuals() { return 2; }
+  static int num_residuals() { return 2; }
 
   // Factory to hide the construction of the CostFunction object from
   // the client code.
@@ -644,7 +644,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye
     return true;
   }
 
-  static const int num_residuals() { return 2; }
+  static int num_residuals() { return 2; }
 
   // Factory to hide the construction of the CostFunction object from
   // the client code.

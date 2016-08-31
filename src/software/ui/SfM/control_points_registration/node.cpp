@@ -20,9 +20,9 @@ control_point_2DNode::control_point_2DNode
   double & y,
   size_t id_control_point
 ):
+  _id_control_point(id_control_point),
   _x(x),
-  _y(y),
-  _id_control_point(id_control_point)
+  _y(y)
 {
   setFlags(ItemIsMovable | ItemIsSelectable);
   setFlag(ItemSendsGeometryChanges);
