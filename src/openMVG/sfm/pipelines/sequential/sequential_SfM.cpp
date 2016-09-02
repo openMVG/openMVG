@@ -1060,7 +1060,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
   // F. Update the observations into the global scene structure
   // - Add the new 2D observations to the reconstructed tracks
   iterTrackId = set_trackIdForResection.begin();
-  for (size_t i = 0; i < resection_data.pt2D.cols(); ++i, ++iterTrackId)
+  for (Mat::Index i = 0; i < resection_data.pt2D.cols(); ++i, ++iterTrackId)
   {
     const Vec3 X = resection_data.pt3D.col(i);
     const Vec2 x = resection_data.pt2D.col(i);
@@ -1089,7 +1089,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
 
       // Ignore the current view
       if (indexI == viewIndex) {  continue; }
-      
+
       const size_t I = std::min((IndexT)viewIndex, indexI);
       const size_t J = std::max((IndexT)viewIndex, indexI);
 

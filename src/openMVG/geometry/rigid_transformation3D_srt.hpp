@@ -32,11 +32,14 @@ namespace geometry
  *
  * \note Need at least 3 points
  */
-static bool FindRTS( const Mat &x1,
-                     const Mat &x2,
-                     double * S,
-                     Vec3 * t,
-                     Mat3 * R )
+inline bool FindRTS
+(
+  const Mat &x1,
+  const Mat &x2,
+  double * S,
+  Vec3 * t,
+  Mat3 * R
+)
 {
   if ( x1.cols() < 3 || x2.cols() < 3 )
   {
@@ -209,11 +212,14 @@ struct lm_RRefine_functor : Functor<double>
  *
  * \return none
  */
-static void Refine_RTS( const Mat &x1,
-                        const Mat &x2,
-                        double * S,
-                        Vec3 * t,
-                        Mat3 * R )
+inline void Refine_RTS
+(
+  const Mat &x1,
+  const Mat &x2,
+  double * S,
+  Vec3 * t,
+  Mat3 * R
+)
 {
   {
     lm_SRTRefine_functor functor( 7, 3 * x1.cols(), x1, x2, *S, *R, *t );

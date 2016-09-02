@@ -63,7 +63,7 @@ TEST(MaxConsensusLineFitter, TooFewPoints) {
         3;   // y = 2x + 1 with x = 1
   LineKernel kernel(xy);
   std::vector<size_t> vec_inliers;
-  Vec2 model = RANSAC(kernel, ScorerEvaluator<LineKernel>(0.3), &vec_inliers);
+  RANSAC(kernel, ScorerEvaluator<LineKernel>(0.3), &vec_inliers);
   CHECK_EQUAL(0, vec_inliers.size());
 }
 

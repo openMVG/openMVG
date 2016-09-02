@@ -21,7 +21,7 @@ TEST(LineFitter, ItWorks) {
   std::vector<Vec2> models;
   LineKernel kernel(xy);
   std::vector<size_t> samples;
-  for (size_t i = 0; i < xy.cols(); ++i) {
+  for (Mat2X::Index i = 0; i < xy.cols(); ++i) {
     samples.push_back(i);
   }
   kernel.Fit(samples, &models);

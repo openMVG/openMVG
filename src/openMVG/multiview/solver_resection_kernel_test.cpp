@@ -53,7 +53,7 @@ TEST(Resection_Kernel, Multiview) {
     vector<size_t> samples(samples_,samples_+6);
     vector<Mat34> Ps;
     kernel.Fit(samples, &Ps);
-    for (size_t i = 0; i < x.cols(); ++i) {
+    for (Mat::Index i = 0; i < x.cols(); ++i) {
       EXPECT_NEAR(0.0, kernel.Error(i, Ps[0]), 1e-8);
     }
 
@@ -102,7 +102,7 @@ TEST(P3P_Kneip_CVPR11, Multiview) {
     EXPECT_TRUE(bFound);
 
     // Check that for the found matrix residual is small
-    for (size_t i = 0; i < x.cols(); ++i) {
+    for (Mat::Index i = 0; i < x.cols(); ++i) {
       EXPECT_NEAR(0.0, kernel.Error(i,Ps[index]), 1e-8);
     }
   }

@@ -32,7 +32,7 @@ TEST( MSER , Extraction )
 
   // Export ellipse
   outimg = image ;
-  for( int i = 0 ; i < regs.size() ; ++i )
+  for( size_t i = 0 ; i < regs.size() ; ++i )
   {
     double ex , ey ;
     double Mx, My ;

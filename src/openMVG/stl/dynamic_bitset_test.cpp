@@ -20,20 +20,20 @@ TEST(DYNAMIC_BITSET, InitAndReset_64)
   EXPECT_EQ(64, mybitset.size());
   // Check that there is just the necessary count of BlockType allocated for storage
   EXPECT_EQ(64/dynamic_bitset::bits_per_block, mybitset.num_blocks());
-  
+
   // Set some bits to 1
-  for (int i = 0; i < mybitset.size(); i+=2)
+  for (size_t i = 0; i < mybitset.size(); i+=2)
     mybitset[i] = true;
 
   // Check that some bits have been correctly set to 1
-  for (int i = 0; i < mybitset.size(); ++i)
+  for (size_t i = 0; i < mybitset.size(); ++i)
   {
     EXPECT_EQ(!(i%2), mybitset[i]);
   }
-  
+
   // Reset the value to 0
   mybitset.reset();
-  for (int i = 0; i < mybitset.size(); ++i)
+  for (size_t i = 0; i < mybitset.size(); ++i)
   {
     EXPECT_EQ(false, mybitset[i]);
   }
@@ -46,23 +46,23 @@ TEST(DYNAMIC_BITSET, InitAndReset_4)
 
   const int nbBits = 4;
   dynamic_bitset mybitset(nbBits);
-  
+
   EXPECT_EQ(4, mybitset.size());
   EXPECT_EQ(1, mybitset.num_blocks());
 
   // Set some bits to 1
-  for (int i = 0; i < mybitset.size(); i+=2)
+  for (size_t i = 0; i < mybitset.size(); i+=2)
     mybitset[i] = true;
 
   // Check that some bits have been correctly set to 1
-  for (int i = 0; i < mybitset.size(); ++i)
+  for (size_t i = 0; i < mybitset.size(); ++i)
   {
     EXPECT_EQ(!(i%2), mybitset[i]);
   }
-  
+
   // Reset the value to 0
   mybitset.reset();
-  for (int i = 0; i < mybitset.size(); ++i)
+  for (size_t i = 0; i < mybitset.size(); ++i)
   {
     EXPECT_EQ(false, mybitset[i]);
   }

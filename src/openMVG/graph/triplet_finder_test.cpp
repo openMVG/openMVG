@@ -215,12 +215,13 @@ TEST(TripletFinder, test_three_triplet) {
   }
 
     {
-    //
-    // a---b
-    // |\  |\
-    // | \ | \
-    // |  \|  \
-    // c---d---e
+    /*
+     a---b
+     |\  |\
+     | \ | \
+     |  \|  \
+     c---d---e
+    */
     Graph ga;
     Graph::Node a = ga.addNode(), b = ga.addNode(),
       c = ga.addNode(), d = ga.addNode(),

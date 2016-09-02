@@ -148,7 +148,7 @@ bool Frustum_Filter::export_Ply(const std::string & filename) const
     it != frustum_perView.end(); ++it)
   {
     const std::vector<Vec3> & points = it->second.frustum_points();
-    for (int i=0; i < points.size(); ++i)
+    for (size_t i=0; i < points.size(); ++i)
       of << points[i].transpose() << '\n';
   }
 

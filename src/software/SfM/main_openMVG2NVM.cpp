@@ -76,7 +76,7 @@ bool CreateNVMFile( const SfM_Data & sfm_data ,
   #ifdef OPENMVG_USE_OPENMP
       #pragma omp parallel for schedule(dynamic) private(image, image_ud)
   #endif
-    for (int i = 0; i < sfm_data.views.size(); ++i)
+    for (int i = 0; i < static_cast<int>(sfm_data.views.size()); ++i)
     {
       Views::const_iterator iterViews = sfm_data.views.begin();
       std::advance(iterViews, i);
@@ -174,18 +174,18 @@ bool CreateNVMFile( const SfM_Data & sfm_data ,
       const double Qw = q.w() ;
       const double d0 = 0.0 ;
 
-      file << dstImage << " " 
-         << flen << " " 
-         
-         << Qw << " " 
-         << Qx << " " 
-         << Qy << " " 
-         << Qz << " " 
-         
-         << Cx << " " 
-         << Cy << " " 
-         << Cz << " " 
-         << d0 << " " 
+      file << dstImage << " "
+         << flen << " "
+
+         << Qw << " "
+         << Qx << " "
+         << Qy << " "
+         << Qz << " "
+
+         << Cx << " "
+         << Cy << " "
+         << Cz << " "
+         << d0 << " "
          << 0 << std::endl ;
     }
   }
@@ -195,7 +195,7 @@ bool CreateNVMFile( const SfM_Data & sfm_data ,
   // For each points : X Y Z R G B Nm [ measurements ]
   // mesurements : Img_idx Feat_idx X Y
   const Landmarks & landmarks = sfm_data.GetLandmarks();
-  const size_t featureCount = landmarks.size() ; 
+  const size_t featureCount = landmarks.size() ;
   file << featureCount << std::endl ;
   C_Progress_display my_progress_bar( featureCount, std::cout, "\n- EXPORT LANDMARKS DATA -\n" );
   for ( Landmarks::const_iterator iterLandmarks = landmarks.begin();

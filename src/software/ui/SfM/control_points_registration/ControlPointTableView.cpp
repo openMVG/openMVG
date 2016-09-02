@@ -23,8 +23,8 @@ ControlPointTableView::ControlPointTableView
   const SfM_Data * sfm_data,
   QWidget *parent
 )
-: sfm_data_(sfm_data),
-  QDialog(parent)
+: QDialog(parent),
+  sfm_data_(sfm_data)
 {
   if (sfm_data_ == nullptr)
     return;

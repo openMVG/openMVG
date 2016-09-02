@@ -79,7 +79,7 @@ float AKAZE::ComputeAutomaticContrastFactor( const Image<float> & src , const fl
 
   const size_t search_id = percentile * static_cast<float>(nb_value) ;
 
-  int id_bin = 0 ;
+  size_t id_bin = 0 ;
   size_t acc = 0 ;
   while( acc < search_id && id_bin < nb_bin )
   {
@@ -317,17 +317,17 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
 
   //-- Filter duplicates
   detectDuplicates(vec_kpts_perSlice[0], vec_kpts_perSlice[0]);
-  for (int k = 1; k < vec_kpts_perSlice.size(); ++k)
+  for (size_t k = 1; k < vec_kpts_perSlice.size(); ++k)
   {
     detectDuplicates(vec_kpts_perSlice[k], vec_kpts_perSlice[k]);    // detect inter scale duplicates
     detectDuplicates(vec_kpts_perSlice[k-1], vec_kpts_perSlice[k]);  // detect duplicates using previous octave
   }
 
   // Keep only the one marked as not duplicated
-  for (int k = 0; k < vec_kpts_perSlice.size(); ++k)
+  for (size_t k = 0; k < vec_kpts_perSlice.size(); ++k)
   {
     const std::vector< std::pair<AKAZEKeypoint, bool> > & vec_kp = vec_kpts_perSlice[k];
-    for (int i = 0; i < vec_kp.size(); ++i)
+    for (size_t i = 0; i < vec_kp.size(); ++i)
       if (!vec_kp[i].second)
         kpts.emplace_back(vec_kp[i].first);
   }
@@ -447,7 +447,7 @@ void AKAZE::Compute_Main_Orientation(
       ang1 + M_PI / 3.0f);
     sumX = sumY = 0.f;
 
-    for (size_t k = 0; k < idx; ++k) {
+    for (int k = 0; k < idx; ++k) {
       // Get angle from the x-axis of the sample point
       const float & ang = Ang[k];
 

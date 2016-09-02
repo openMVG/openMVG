@@ -403,10 +403,8 @@ void MainWindow::createMenus()
   m_menuFile = new QMenu(tr("&File"),this);
   m_menuFile->setObjectName(QString::fromUtf8("m_menuFile"));
   menuBar()->addMenu(m_menuFile);
-  QMenu * fileMenu = new QMenu(tr("Open Project"), this);
   m_menuFile->addAction(m_open_action);
 
-  QMenu * m_menuSave = new QMenu(tr("&Save Project"),this);
   m_menuFile->setObjectName(QString::fromUtf8("m_menuSave"));
   m_menuFile->addAction(m_save_action);
 
@@ -425,7 +423,6 @@ void MainWindow::createMenus()
   m_menuHelp = new QMenu(tr("&Help"),this);
   m_menuHelp->setObjectName(QString::fromUtf8("m_menuHelp"));
   menuBar()->addMenu(m_menuHelp);
-  QMenu * helpMenu = new QMenu(tr("Help"), this);
   m_menuHelp->addAction(m_help_action);
 }
 

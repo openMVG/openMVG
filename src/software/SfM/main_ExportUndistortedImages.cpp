@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
     omp_set_num_threads(iNumThreads);
     #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) private(image,image_ud)
 #endif
-    for (int i = 0; i < sfm_data.views.size(); ++i)
+    for (int i = 0; i < static_cast<int>(sfm_data.views.size()); ++i)
     {
 #ifdef OPENMVG_USE_OPENMP
       if(iNumThreads == 0) omp_set_num_threads(nb_max_thread);
@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
       // Check if the view is in reconstruction
       if (bExportOnlyReconstructedViews && !sfm_data.IsPoseAndIntrinsicDefined(view))
         continue;
-        
+
       const bool bIntrinsicDefined = view->id_intrinsic != UndefinedIndexT &&
         sfm_data.GetIntrinsics().find(view->id_intrinsic) != sfm_data.GetIntrinsics().end();
       if (!bIntrinsicDefined)

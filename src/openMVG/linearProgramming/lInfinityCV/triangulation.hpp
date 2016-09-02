@@ -51,7 +51,7 @@ inline void EncodeTriangulation(
   C.resize(5*nbCamera,1);
 
   int cpt = 0;
-  for (int i = 0; i< nbCamera; ++i)
+  for (size_t i = 0; i < nbCamera; ++i)
   {
     const Mat3 R = Pi[i].block<3,3>(0,0);
     const Vec3 t = Pi[i].block<3,1>(0,3);
