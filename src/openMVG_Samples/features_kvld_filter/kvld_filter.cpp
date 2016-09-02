@@ -217,8 +217,8 @@ int main(int argc, char **argv) {
     svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
 
 
-    for (int it1=0; it1<matchesPair.size()-1;it1++){
-      for (int it2=it1+1; it2<matchesPair.size();it2++){
+    for (size_t it1=0; it1<matchesPair.size()-1;it1++){
+      for (size_t it2=it1+1; it2<matchesPair.size();it2++){
          if (valide[it1] && valide[it2] && E(it1,it2)>=0){
 
           const PointFeature & l1 = featsL[matchesPair[it1].first];
@@ -238,8 +238,7 @@ int main(int argc, char **argv) {
         }
       }
     }
-    string out_filename = "05_KVLD_Matches.svg";
-      out_filename = stlplus::create_filespec(sOutDir, out_filename);
+    const string out_filename = stlplus::create_filespec(sOutDir, "05_KVLD_Matches.svg");
     ofstream svgFile( out_filename.c_str() );
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
@@ -254,7 +253,7 @@ int main(int argc, char **argv) {
     svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
     svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
 
-    for (int it=0; it<matchesPair.size();it++){
+    for (size_t it=0; it<matchesPair.size();it++){
        if (valide[it]){
 
         const PointFeature & l = featsL[matchesPair[it].first];
@@ -265,8 +264,7 @@ int main(int argc, char **argv) {
         svgStream.drawCircle(r.x() + imageL.Width(), r.y(), 10, svgStyle().stroke("yellow", 2.0));
       }
     }
-    string out_filename = "06_KVLD_Keypoints.svg";
-    out_filename = stlplus::create_filespec(sOutDir, out_filename);
+    const string out_filename = stlplus::create_filespec(sOutDir, "06_KVLD_Keypoints.svg");
     ofstream svgFile( out_filename.c_str() );
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
@@ -283,13 +281,11 @@ int main(int argc, char **argv) {
     E);
 
   {
-    string out_filename = "07_Left-K-VLD-MASK.jpg";
-    out_filename = stlplus::create_filespec(sOutDir, out_filename);
+    const string out_filename = stlplus::create_filespec(sOutDir, "07_Left-K-VLD-MASK.jpg");
     WriteImage(out_filename.c_str(), imageOutL);
   }
   {
-    string out_filename = "08_Right-K-VLD-MASK.jpg";
-    out_filename = stlplus::create_filespec(sOutDir, out_filename);
+    const string out_filename = stlplus::create_filespec(sOutDir, "08_Right-K-VLD-MASK.jpg");
     WriteImage(out_filename.c_str(), imageOutR);
   }
 

@@ -204,7 +204,7 @@ struct Frustum : public HalfPlaneObject
     // Export frustums points
     {
       const std::vector<Vec3> & points = frustum.frustum_points();
-      for (int i = 0; i < points.size(); ++i)
+      for (size_t i = 0; i < points.size(); ++i)
         of << points[i].transpose() << '\n';
     }
 

@@ -68,7 +68,6 @@ TEST ( rotation_averaging, RotationLeastSquare_3_Camera)
   const Mat3 R01 = RotationAroundZ(2.*M_PI/3.0); //120°
   const Mat3 R12 = RotationAroundZ(2.*M_PI/3.0); //120°
   const Mat3 R20 = RotationAroundZ(2.*M_PI/3.0); //120°
-  const Mat3 Id = Mat3::Identity();
 
   std::vector<RelativeRotation > vec_relativeRotEstimate;
   vec_relativeRotEstimate.push_back( RelativeRotation(0,1, R01));
@@ -170,7 +169,6 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_SimpleTriplet)
   const Mat3 R01 = RotationAroundZ(2.*M_PI/3.0); //120°
   const Mat3 R12 = RotationAroundZ(2.*M_PI/3.0); //120°
   const Mat3 R20 = RotationAroundZ(2.*M_PI/3.0); //120°
-  const Mat3 Id = Mat3::Identity();
 
   // Setup the relative motions (relative rotations)
   RelativeRotations vec_relativeRotEstimate;

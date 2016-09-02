@@ -18,8 +18,13 @@ namespace openMVG{
 namespace plyHelper{
 
 /// Export 3D point vector to PLY format
-static bool exportToPly(const std::vector<Vec3> & vec_points,
-  const std::string & sFileName)
+inline
+bool
+exportToPly
+(
+  const std::vector<Vec3> & vec_points,
+  const std::string & sFileName
+)
 {
   std::ofstream outfile(sFileName.c_str());
   if (!outfile.is_open())
@@ -50,10 +55,15 @@ static bool exportToPly(const std::vector<Vec3> & vec_points,
 }
 
 /// Export 3D point vector and camera position to PLY format
-static bool exportToPly(const std::vector<Vec3> & vec_points,
+inline
+bool
+exportToPly
+(
+  const std::vector<Vec3> & vec_points,
   const std::vector<Vec3> & vec_camPos,
   const std::string & sFileName,
-  const std::vector<Vec3> * vec_coloredPoints = NULL)
+  const std::vector<Vec3> * vec_coloredPoints = nullptr
+)
 {
   std::ofstream outfile(sFileName.c_str());
   if (!outfile.is_open())
@@ -71,7 +81,7 @@ static bool exportToPly(const std::vector<Vec3> & vec_points,
     << '\n' << "end_header" << std::endl;
 
   for (size_t i=0; i < vec_points.size(); ++i)  {
-    if (vec_coloredPoints == NULL)
+    if (vec_coloredPoints == nullptr)
       outfile
         << vec_points[i](0) << ' '
         << vec_points[i](1) << ' '

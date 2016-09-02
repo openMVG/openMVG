@@ -142,7 +142,7 @@ bool ColorHarmonizationEngineGlobal::Process()
     do
     {
       cout << "Choose your reference image:\n";
-      for( int i = 0; i < _vec_fileNames.size(); ++i )
+      for( size_t i = 0; i < _vec_fileNames.size(); ++i )
       {
         cout << "id: " << i << "\t" << _vec_fileNames[ i ] << endl;
       }

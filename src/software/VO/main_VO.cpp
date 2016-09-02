@@ -98,7 +98,7 @@ int main(int argc, char **argv)
   image::Image<unsigned char> currentImage;
 
   using namespace openMVG::VO;
-  
+
   // Initialize the tracker interface
   std::unique_ptr<Abstract_Tracker> tracker_ptr;
   switch (uTracker)
@@ -176,27 +176,28 @@ int main(int argc, char **argv)
       glColor3f(0.f, 1.f, 0.f);
       glLineWidth(2.f);
 
-      for (size_t idx = 0; idx < monocular_vo._landmark.size(); ++idx)
+      for (size_t idx = 0; idx < monocular_vo.landmark_.size(); ++idx)
       {
-        if (std::find(monocular_vo._trackedLandmarkIds.begin(),
-                      monocular_vo._trackedLandmarkIds.end(), idx)
-            == monocular_vo._trackedLandmarkIds.end())
+        if (std::find(monocular_vo.trackedLandmarkIds_.begin(),
+                      monocular_vo.trackedLandmarkIds_.end(), idx)
+            == monocular_vo.trackedLandmarkIds_.end())
           continue;
 
-        const Landmark & landmark = monocular_vo._landmark[idx];
-        if (landmark._obs.back()._frameId == frameId && landmark._obs.size() > 1 )
+        const Landmark & landmark = monocular_vo.landmark_[idx];
+        if (landmark.obs_.back().frameId_ == frameId && landmark.obs_.size() > 1 )
         {
-          const std::deque<Measurement> & obs = landmark._obs;
+          const std::deque<Measurement> & obs = landmark.obs_;
 
-          std::deque<Measurement>::const_reverse_iterator iter = obs.rbegin();
-          std::deque<Measurement>::const_reverse_iterator iterEnd = obs.rend();
+          std::deque<Measurement>::const_reverse_iterator
+            iter = obs.rbegin(),
+            iterEnd = obs.rend();
 
           int limit = 10;
           glBegin(GL_LINE_STRIP);
           glColor3f(0.f, 1.f, 0.f);
           for (; iter != iterEnd && limit >=0; ++iter, --limit)
           {
-            const Vec2f & p0 = iter->_pos;
+            const Vec2f & p0 = iter->pos_;
             glVertex2f(p0(0), p0(1));
           }
           glEnd();
@@ -207,7 +208,7 @@ int main(int argc, char **argv)
             glPointSize(4.0f);
             glBegin(GL_POINTS);
             glColor3f(1.f, 1.f, 0.f); // Yellow
-            const Vec2f & p0 = iter->_pos;
+            const Vec2f & p0 = iter->pos_;
             glVertex2f(p0(0), p0(1));
             glEnd();
           }
@@ -215,13 +216,13 @@ int main(int argc, char **argv)
         else // Draw the new initialized point
         {
           glPointSize(10.0f);
-          if ( landmark._obs.size() == 1 )
+          if ( landmark.obs_.size() == 1 )
           {
-            const std::deque<Measurement> & obs = landmark._obs;
+            const std::deque<Measurement> & obs = landmark.obs_;
             glBegin(GL_POINTS);
             glColor3f(0.f, 0.f, 1.f); // Blue
             std::deque<Measurement>::const_iterator iter = obs.begin();
-            const Vec2f & p0 = iter->_pos;
+            const Vec2f & p0 = iter->pos_;
             glVertex2f(p0(0), p0(1));
             glEnd();
           }

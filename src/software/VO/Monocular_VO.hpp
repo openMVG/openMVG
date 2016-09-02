@@ -25,21 +25,21 @@ struct Measurement
   (
     const uint32_t & frameId,
     const Vec2f & p
-  ): _frameId(frameId), _pos(p)
+  ): frameId_(frameId), pos_(p)
   { }
   Measurement( const Measurement & src ) = default ;
 
-  uint32_t _frameId;
-  Vec2f _pos;
+  uint32_t frameId_;
+  Vec2f pos_;
 };
 
 /// A 3D point with it's associated image observations
 struct Landmark
 {
-  Landmark():_pt(-1,-1,-1) {}
+  Landmark():pt_(-1,-1,-1) {}
 
-  Vec3 _pt;
-  std::deque<Measurement> _obs;
+  Vec3 pt_;
+  std::deque<Measurement> obs_;
 };
 
 /// Monocular test interface
@@ -47,26 +47,26 @@ struct Landmark
 struct VO_Monocular
 {
   // Structure and visibility
-  std::deque<Landmark> _landmark;
-  std::vector<uint64_t> _trackedLandmarkIds;
+  std::deque<Landmark> landmark_;
+  std::vector<uint64_t> trackedLandmarkIds_;
 
   // Landmark Id per frame (for easier pairing)
-  std::deque< std::set<uint32_t> > _landmarkListPerFrame;
+  std::deque< std::set<uint32_t> > landmarkListPerFrame_;
 
   // Tracking
   Abstract_Tracker * tracker_;
-  int _maxTrackedFeatures ;
-  std::vector<features::PointFeature> _pt_to_track, _pt_tracked;
-  std::vector<bool> _tracking_status;
+  uint32_t maxTrackedFeatures_ ;
+  std::vector<features::PointFeature> pt_to_track_, pt_tracked_;
+  std::vector<bool> tracking_status_;
 
   VO_Monocular
   (
     Abstract_Tracker * tracker,
-    const int maxTrackedFeatures = 1500
+    const uint32_t maxTrackedFeatures = 1500
     // Add an abstract camera model here
   )
-  : _maxTrackedFeatures(maxTrackedFeatures),
-    tracker_(tracker)
+  : tracker_(tracker),
+  maxTrackedFeatures_(maxTrackedFeatures)
   {
   }
 
@@ -76,10 +76,10 @@ struct VO_Monocular
     const size_t frameId
   )
   {
-    const bool bTrackerStatus = tracker_->track(ima, _pt_to_track, _pt_tracked, _tracking_status);
+    const bool bTrackerStatus = tracker_->track(ima, pt_to_track_, pt_tracked_, tracking_status_);
     std::cout << (int) bTrackerStatus  << " : tracker status" << std::endl;
-    _landmarkListPerFrame.push_back(std::set<uint32_t>());
-    if (_landmarkListPerFrame.size()==1 || bTrackerStatus)
+    landmarkListPerFrame_.push_back(std::set<uint32_t>());
+    if (landmarkListPerFrame_.size()==1 || bTrackerStatus)
     {
       // Update landmark observation
       // Update tracking point set (if necessary)
@@ -90,29 +90,29 @@ struct VO_Monocular
       #ifdef OPENMVG_USE_OPENMP
       #pragma omp parallel for schedule(dynamic)
       #endif
-      for (int i = 0; i < (int)_tracking_status.size(); ++i)
+      for (int i = 0; i < (int)tracking_status_.size(); ++i)
       {
-        if (_tracking_status[i])
+        if (tracking_status_[i])
         {
           // if tracked
-          const features::PointFeature & a = _pt_to_track[i];
-          const features::PointFeature b = _pt_tracked[i];
+          const features::PointFeature & a = pt_to_track_[i];
+          const features::PointFeature b = pt_tracked_[i];
           // Use a spatial filter
           if ((a.coords() - b.coords()).norm() < 25)
           {
-            const size_t tracker_landmark_id = _trackedLandmarkIds[i];
+            const uint64_t tracker_landmark_id = trackedLandmarkIds_[i];
             #ifdef OPENMVG_USE_OPENMP
             #pragma omp critical
             #endif
             {
-              _landmark[tracker_landmark_id]._obs.push_back(Measurement( frameId , b.coords() ) );
-              _landmarkListPerFrame.back().insert(tracker_landmark_id);
+              landmark_[tracker_landmark_id].obs_.push_back(Measurement( frameId , b.coords() ) );
+              landmarkListPerFrame_.back().insert(tracker_landmark_id);
             }
-            _pt_to_track[i] = b; // update the tracked point
+            pt_to_track_[i] = b; // update the tracked point
           }
           else // the feature does not longer appear or tracking failed to find the feature
           {
-            _tracking_status[i] = 0;
+            tracking_status_[i] = 0;
           }
         }
         else
@@ -122,57 +122,59 @@ struct VO_Monocular
       }
 
       // Count the number of tracked features
-      const size_t countTracked = std::accumulate(_tracking_status.begin(), _tracking_status.end(), 0);
+      const size_t countTracked = std::accumulate(tracking_status_.begin(), tracking_status_.end(), 0);
       std::cout << "#tracked: " << countTracked << std::endl;
 
       // try compute pose and decide if it's a Keyframe
-      if (frameId > 0 && _landmarkListPerFrame.size() > 1)
+      if (frameId > 0 && landmarkListPerFrame_.size() > 1)
       {
         size_t lastKf = frameId-1;
         std::vector<size_t> ids;
         std::set_intersection(
-          _landmarkListPerFrame[lastKf].begin(), _landmarkListPerFrame[lastKf].end(),
-          _landmarkListPerFrame[frameId].begin(), _landmarkListPerFrame[frameId].end(),
+          landmarkListPerFrame_[lastKf].begin(), landmarkListPerFrame_[lastKf].end(),
+          landmarkListPerFrame_[frameId].begin(), landmarkListPerFrame_[frameId].end(),
           std::back_inserter(ids));
         std::cout << "Track in common with the last Keyframe: " << ids.size() << std::endl;
       }
 
       // Update tracking point set (if necessary)
-      if (countTracked < _maxTrackedFeatures)
+      if (countTracked < maxTrackedFeatures_)
       {
-        if (_pt_to_track.empty())
+        if (pt_to_track_.empty())
         {
-          _pt_to_track.resize(_maxTrackedFeatures);
-          _pt_tracked.resize(_maxTrackedFeatures);
-          _trackedLandmarkIds.resize(_maxTrackedFeatures);
-          _tracking_status.resize(_maxTrackedFeatures);
-          std::fill(_tracking_status.begin(), _tracking_status.end(), false);
+          pt_to_track_.resize(maxTrackedFeatures_);
+          pt_tracked_.resize(maxTrackedFeatures_);
+          trackedLandmarkIds_.resize(maxTrackedFeatures_);
+          tracking_status_.resize(maxTrackedFeatures_);
+          std::fill(tracking_status_.begin(), tracking_status_.end(), false);
         }
 
         // add some new feature
-        const size_t count = _maxTrackedFeatures - countTracked;
+        const size_t count = maxTrackedFeatures_ - countTracked;
         std::vector<features::PointFeature> new_pt;
-        tracker_->detect(ima, new_pt, count);
-        std::cout << "#features added: " << new_pt.size() << std::endl;
-        size_t j = 0;
-        for (size_t i = 0; i < _tracking_status.size(); ++i)
+        if (tracker_->detect(ima, new_pt, count))
         {
-          if (!_tracking_status[i])
+          std::cout << "#features added: " << new_pt.size() << std::endl;
+          size_t j = 0;
+          for (size_t i = 0; i < tracking_status_.size(); ++i)
           {
-            // Create a new landmark
-            Landmark landmark;
-            landmark._obs.emplace_back(frameId, new_pt[j].coords());
-            _landmark.push_back(landmark);
-            // a new landmark ID have be tracked
+            if (!tracking_status_[i])
+            {
+              // Create a new landmark
+              Landmark landmark;
+              landmark.obs_.emplace_back(frameId, new_pt[j].coords());
+              landmark_.push_back(landmark);
+              // a new landmark ID have be tracked
 
-            _trackedLandmarkIds[i] = _landmark.size()-1;
-            _landmarkListPerFrame.back().insert(_landmark.size() - 1);
+              trackedLandmarkIds_[i] = landmark_.size()-1;
+              landmarkListPerFrame_.back().insert(landmark_.size() - 1);
 
-            _pt_to_track[i] = new_pt[j];
-            ++j;
+              pt_to_track_[i] = new_pt[j];
+              ++j;
+            }
           }
+          std::cout << "_landmark.size() " << landmark_.size() << std::endl;
         }
-        std::cout << "_landmark.size() " << _landmark.size() << std::endl;
       }
     }
     if (!bTrackerStatus)

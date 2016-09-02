@@ -41,7 +41,7 @@ public:
     int size = 9,
     int threshold = 30
   )
-  :size_(size), threshold_(threshold)
+  :threshold_(threshold), size_(size)
   {
   }
 

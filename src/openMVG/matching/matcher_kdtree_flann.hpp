@@ -126,9 +126,8 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
       DistanceType * distancePTR = &(vec_distances[0]);
       flann::Matrix<DistanceType> dists(distancePTR, nbQuery, NN);
 
-      std::vector<int> vec_indices(nbQuery * NN);
-      int * indicePTR = &(vec_indices[0]);
-      flann::Matrix<int> indices(indicePTR, nbQuery, NN);
+      std::vector<int> vec_indices(nbQuery * NN, -1);
+      flann::Matrix<int> indices(&(vec_indices[0]), nbQuery, NN);
 
       flann::Matrix<Scalar> queries((Scalar*)query, nbQuery, _dimension);
       // do a knn search, using 128 checks
@@ -145,11 +144,8 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
         {
           for (size_t j = 0; j < NN; ++j)
           {
-            if (indices[i] > 0) // rperrot : nullptr here ?
-            {
-              pvec_indices->emplace_back(IndMatch(i, vec_indices[i*NN+j]));
-              pvec_distances->emplace_back(vec_distances[i*NN+j]);
-            }
+            pvec_indices->emplace_back(IndMatch(i, vec_indices[i*NN+j]));
+            pvec_distances->emplace_back(vec_distances[i*NN+j]);
           }
         }
         return true;

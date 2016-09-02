@@ -186,7 +186,7 @@ unsigned int FilterRelativeRotations(
   assert(threshold >= 0);
   // compute errors for each relative rotation
   std::vector<float> errors(RelRs.size());
-  for(int r= 0; r<RelRs.size(); ++r) {
+  for (size_t r= 0; r<RelRs.size(); ++r) {
     const RelativeRotation& relR = RelRs[r];
     const Matrix3x3& Ri = Rs[relR.i];
     const Matrix3x3& Rj = Rs[relR.j];
@@ -206,7 +206,7 @@ unsigned int FilterRelativeRotations(
   }
   // mark outliers
   unsigned int nInliers = 0;
-  for(int r=0; r<errors.size(); ++r) {
+  for (size_t r=0; r<errors.size(); ++r) {
     const bool bInlier = (errors[r] < threshold);
     if (vec_inliers)
       (*vec_inliers)[r] = bInlier;
@@ -244,7 +244,7 @@ double RelRotationAvgError
   return boost::accumulators::mean(acc);
 #else
   std::vector<double> vec_err(RelRs.size(), 0.0);
-  for(int i=0; i < RelRs.size(); ++i) {
+  for (size_t i=0; i < RelRs.size(); ++i) {
     const RelativeRotation& relR = RelRs[i];
     vec_err[i] = openMVG::FrobeniusNorm(relR.Rij  - (Rs[relR.j]*Rs[relR.i].transpose()));
   }
@@ -341,7 +341,7 @@ inline void FillMappingMatrix(
 {
   A.reserve(A.rows()*2); // estimate of the number of non-zeros (optional)
   sMat::Index i = 0, j = 0;
-  for(int r=0; r<RelRs.size(); ++r) {
+  for (size_t r=0; r<RelRs.size(); ++r) {
     const RelativeRotation& relR = RelRs[r];
     if (relR.i != nMainViewID) {
       j = 3*(relR.i<nMainViewID ? relR.i : relR.i-1);

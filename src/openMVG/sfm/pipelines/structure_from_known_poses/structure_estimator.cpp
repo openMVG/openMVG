@@ -225,7 +225,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
             const Vec2 pt = regions_provider->regions_per_view.at(imaIndex)->GetRegionPosition(featIndex);
             trianObj.add(cam->get_projective_equivalent(pose), cam->get_ud_pixel(pt));
           }
-          const Vec3 Xs = trianObj.compute();
+          trianObj.compute();
           if (trianObj.minDepth() > 0 && trianObj.error()/(double)trianObj.size() < max_reprojection_error_)
           // TODO: Add an angular check ?
           {

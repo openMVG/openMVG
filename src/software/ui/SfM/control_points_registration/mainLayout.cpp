@@ -266,7 +266,7 @@ void MainWindow::registerProject()
     // data conversion to appropriate container
     Mat x1(3, vec_control_points.size()),
         x2(3, vec_control_points.size());
-    for (int i=0; i < vec_control_points.size(); ++i)
+    for (size_t i=0; i < vec_control_points.size(); ++i)
     {
       x1.col(i) = vec_triangulated[i];
       x2.col(i) = vec_control_points[i];

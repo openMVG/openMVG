@@ -262,7 +262,7 @@ TEST(FivePointsRelativePose, test_data_sets) {
     }
     //-- Compute Ground Truth motion
     Mat3 R;
-    Vec3 t, t0 = Vec3::Zero(), t1 = Vec3::Zero();
+    Vec3 t;
     RelativeCameraMotion(d._R[0], d._t[0], d._R[i], d._t[i], &R, &t);
 
     // Assert that found relative motion is correct for almost one model.
