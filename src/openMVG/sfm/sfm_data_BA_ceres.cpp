@@ -513,12 +513,11 @@ bool Bundle_Adjustment_Ceres::Adjust
       {
         // Compute the median residual error
         Vec residual = (Eigen::Map<Mat3X>(X_SfM[0].data(), 3, X_SfM.size()) - Eigen::Map<Mat3X>(X_GPS[0].data(), 3, X_GPS.size())).colwise().norm();
-        std::sort(residual.data(), residual.data() + residual.size());
-        const double fitting_error = residual(residual.size()/2);
         std::cout
-          << "Pose prior statistics:\n"
-          << " - Starting median fitting error: " << pose_center_robust_fitting_error << " user units." << std::endl
-          << " - Final median fitting error: " << fitting_error << " user units.\n"<< std::endl;
+          << "Pose prior statistics (user units):\n"
+          << " - Starting median fitting error: " << pose_center_robust_fitting_error << "\n"
+          << " - Final fitting error:";
+        minMaxMeanMedian<Vec::Scalar>(residual.data(), residual.data() + residual.size());
       }
     }
     return true;
