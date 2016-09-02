@@ -17,13 +17,16 @@ namespace openMVG  {
 namespace matching {
 
 /// Display pair wises matches as an Adjacency matrix in svg format
-void PairWiseMatchingToAdjacencyMatrixSVG(const size_t NbImages,
+void PairWiseMatchingToAdjacencyMatrixSVG
+(
+  const size_t NbImages,
   const matching::PairWiseMatches & map_Matches,
-  const std::string & sOutName)
+  const std::string & sOutName
+)
 {
   if ( !map_Matches.empty())
   {
-    float scaleFactor = 5.0f;
+    const float scaleFactor = 5.0f;
     svgDrawer svgStream((NbImages+3)*5, (NbImages+3)*5);
     // Go along all possible pair
     for (size_t I = 0; I < NbImages; ++I) {
