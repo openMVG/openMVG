@@ -1,0 +1,119 @@
+<!-- 
+  Copyright (c) 2016 Romuald PERROT.
+
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title> openMVG WebGL viewer</title>
+    
+    <!-- Style -->
+    <link rel="stylesheet" type="text/css" href="style/style.css">
+
+    <!-- Common files -->
+    <script type="text/javascript" src="common/camera.js"> </script>
+    <script type="text/javascript" src="common/common.js"> </script>
+    <script type="text/javascript" src="common/dual_quaternion.js"> </script>
+    <script type="text/javascript" src="common/matrix3.js"> </script>
+    <script type="text/javascript" src="common/matrix4.js"> </script>
+    <script type="text/javascript" src="common/plane.js"> </script>
+    <script type="text/javascript" src="common/point_cloud.js"> </script>
+    <script type="text/javascript" src="common/quaternion.js"> </script>
+    <script type="text/javascript" src="common/render_context.js"> </script>
+    <script type="text/javascript" src="common/shader.js"> </script>
+    <script type="text/javascript" src="common/trackball.js"> </script>
+    <script type="text/javascript" src="common/vector.js"> </script>
+
+    <!-- Main entry point -->
+    <script type="text/javascript" src="common/main.js"> </script>
+    
+    <!-- Scene dependent files -->
+    <script type="text/javascript" src="model/model.js"> </script>
+
+    <!-- Shaders -->
+    <!-- line shaders -->
+    <script id="line_v_shad" type="x-shader/x-vertex"> 
+    uniform mat4 uModelViewProjMat ; 
+
+    attribute vec3 inNor ;
+    attribute vec3 inPos ;
+    attribute vec3 inCol ;
+
+    varying vec4 vColor;
+
+    void main( )
+    {
+      gl_Position = uModelViewProjMat * vec4( inPos , 1.0 ) ;
+      vColor = vec4( inCol , 1.0 ) ;
+    }
+    </script>
+    <script id="line_f_shad" type="x-shader/x-fragment">
+    precision mediump float;
+    varying vec4 vColor ;
+
+    void main( )
+    {
+      gl_FragColor = vColor ;
+    }
+    </script>
+    <!-- Point shader -->
+    <script id="point_v_shad" type="x-shader/x-vertex">
+    uniform mat4 uModelViewProjMat ; 
+
+    uniform vec3 uCamPos ; 
+
+    attribute vec3 inNor ;
+    attribute vec3 inPos ;
+    attribute vec3 inCol ;
+
+    varying vec4 vColor;
+
+    void main( )
+    {
+      /* Backface culling */
+      //      if( dot( inNor , normalize( uCamPos - inPos ) ) > 0.0 )
+      {
+        gl_Position = uModelViewProjMat * vec4( inPos , 1.0 ) ;
+        vColor = vec4( inCol , 1.0 ) ;
+      }
+    }
+    </script>
+    <script id="point_f_shad" type="x-shader/x-fragment">
+    precision mediump float;
+    varying vec4 vColor ;
+
+    void main( )
+    {
+      gl_FragColor = vColor ;
+    }
+    </script>
+
+  </head>
+
+  <body onload="init()">
+    <h1 id="title">openMVG WebGL viewer</h1>
+
+    <div id="container">
+      <div id="divOptions">
+        <div class="divHeader">Options</div>
+
+        <div class="button active" id="divShowCam">Show cameras</div>
+        <div class="button active" id="divShowPCloud">Show point cloud</div>
+        <div class="button active" id="divShowTrackball">Show trackball</div>
+        
+      </div>
+      <div id="divViewer">
+        <canvas id="viewerCanvas" width="0" height="0"> </canvas>
+      </div>
+      <div id="divHelp">
+        Help
+      </div>
+    <div id="container">
+
+
+  </body>
+</html>

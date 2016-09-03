@@ -1,0 +1,14 @@
+SET( OPENMVG_SOFTWARE_SFMWEBGLVIEWER_SRC_DIR ${CMAKE_CURRENT_LIST_DIR} )
+CONFIGURE_FILE( config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h )
+
+ADD_EXECUTABLE(openMVG_main_openMVG2WebGL openMVG_main_openMVG2WebGL.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_openMVG2WebGL
+  openMVG_system
+  openMVG_features
+  openMVG_image
+  openMVG_sfm
+  stlplus
+  )
+
+TARGET_INCLUDE_DIRECTORIES( openMVG_main_openMVG2WebGL PRIVATE ${CMAKE_CURRENT_BINARY_DIR} )
+
