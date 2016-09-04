@@ -19,6 +19,18 @@ Vector.create = function( aX , aY , aZ )
   return res ; 
 }
 
+/* Copy a vector */
+Vector.copy = function( aVec )
+{
+  var res = new Common.ARRAY_TYPE( 3 ) ;
+
+  res[0] = aVec[0] ;
+  res[1] = aVec[1] ;
+  res[2] = aVec[2] ;
+
+  return res ; 
+}
+
 /* Add two vectors */
 Vector.add = function( aVector1 , aVector2 )
 {
@@ -75,5 +87,17 @@ Vector.cross = function( aVector1 , aVector2 )
   res[2] = aVector1[0] * aVector2[1] - aVector1[1] * aVector2[0] ;
 
   return res ;  
+}
+
+/* Negation of a vector */
+Vector.negate = function( aVector )
+{
+  var res = new Common.ARRAY_TYPE( 3 ) ;
+
+  res[0] = - aVector[0] ;
+  res[1] = - aVector[1] ;
+  res[2] = - aVector[2] ;
+
+  return res ; 
 }
 

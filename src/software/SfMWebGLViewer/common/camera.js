@@ -60,10 +60,10 @@ PerspectiveCamera.prototype.PointOnPlane = function( aPixX , aPixY )
 PerspectiveCamera.prototype.PointOnSphere = function( aPixX , aPixY , aRad )
 {
   var pt = this.UnProject( aPixX , aPixY ) ;
-  var diff = Vector.normalize( Vector.sub( this.m_pos , this.m_dir ) ) ;
+  var n = Vector.normalize( Vector.sub( this.m_pos , this.m_dir ) ) ;
 
   // Plane passing through the destination point and facing the camera 
-  var pl = Plane.initFromPositionAndNormal( this.m_dir , diff ) ;
+  var pl = Plane.initFromPositionAndNormal( this.m_dir , n ) ;
 
   var hit_plane = Plane.intersectLine( pl , this.m_pos , pt ) ;
 
@@ -83,7 +83,7 @@ PerspectiveCamera.prototype.PointOnSphere = function( aPixX , aPixY , aRad )
     z = t * t / d ;
   }
 
-  var res = Common.ARRAY_TYPE( 3 ) ;
+  var res = new Common.ARRAY_TYPE( 3 ) ;
 
   res[0] = hit_plane[0] + n[0] ;
   res[1] = hit_plane[1] + n[1] ;
@@ -135,4 +135,28 @@ PerspectiveCamera.prototype.FitBoundingSphere = function( aCenter , aRadius )
   this.m_dir[2] = this.m_pos[2] - dir[2] * d ; 
 
 
+}
+
+PerspectiveCamera.prototype.zoom = function( aFactor )
+{
+  var dir = Vector.sub( this.m_dir , this.m_pos ) ; 
+  var d = Vector.norm( dir ) ;
+
+  dir = Vector.normalize( dir ) ; 
+
+  var new_pos = Vector.copy( this.m_pos ) ; 
+
+  new_pos[0] += dir[0] * aFactor * d / 10.0 ; 
+  new_pos[1] += dir[1] * aFactor * d / 10.0 ;
+  new_pos[2] += dir[2] * aFactor * d / 10.0 ;
+
+  var new_dir = Vector.normalize( Vector.sub( this.m_dir , new_pos ) ) ;
+
+  // Detect inversion of orientation 
+  if( Vector.dot( new_dir , dir ) < 0.0 )
+  {
+    return ; 
+  }
+
+  this.m_pos = new_pos ; 
 }

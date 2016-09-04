@@ -58,6 +58,8 @@ function RemoveClass( aNode , aClassName )
   }
 }
 
+/* Compute bounding sphere of a point list 
+* Return a 4d array (cx,cy,cz,rad) */
 function ComputeBoundingSphere( aPointList )
 {
   var min_x = 10e10 ;

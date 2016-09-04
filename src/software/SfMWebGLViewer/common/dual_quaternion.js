@@ -51,7 +51,7 @@ DualQuaternion.prototype.mul= function( aDualQuat )
   res.m_r = this.m_r.mul( aDualQuat.m_r ) ;
   var tmp1 = this.m_r.mul( aDualQuat.m_d ) ;
   var tmp2 = this.m_d.mul( aDualQuat.m_r ) ;
-  res.m_d = this.m_r.mul + tmp1.add( tmp2 ) ; 
+  res.m_d = tmp1.add( tmp2 ) ; 
 
   return res ; 
 }

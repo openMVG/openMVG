@@ -190,3 +190,15 @@ Trackball.prototype.setRadius = function( aRad )
 {
   this.m_radius = aRad ; 
 }
+
+/* Get current radius */
+Trackball.prototype.getRadius = function( )
+{
+  return this.m_radius ; 
+}
+
+/* Reset orientation */
+Trackball.prototype.reset = function()
+{
+  this.m_orient = new DualQuaternion() ; 
+}

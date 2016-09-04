@@ -14,8 +14,6 @@ var renderContext ;
 // Some state variables of the interface 
 var optionEnableCameraBtn ;
 var cameraEnabled ;
-var optionEnablePointCloudBtn ;
-var pcloudEnabled ; 
 
 // The trackball object 
 var trackball ; 
@@ -26,7 +24,15 @@ var camera ;
 
 // The pointcloud
 var pointcloud ; 
+var optionEnablePointCloudBtn ;
 
+var optionResetBtn ;
+
+var mouseEnterPosition = {} ;
+var mouseLastPosition = {} ; 
+var mouseIsClicked = false ;
+
+// Main entry point 
 function init()
 {
   divCanvas = document.getElementById("divViewer");
@@ -35,6 +41,7 @@ function init()
   optionEnableCameraBtn = document.getElementById("divShowCam");
   optionEnablePointCloudBtn = document.getElementById("divShowPCloud");
   optionEnableTrackballBtn = document.getElementById("divShowTrackball");
+  optionResetBtn = document.getElementById( "divResetButton" ) ;
 
   cameraEnabled = true ; 
   pcloudEnabled = true ; 
@@ -46,13 +53,16 @@ function init()
   var camDst = Vector.create( 0.0 , 0.0 , 0.0 ) ; 
   var camUp = Vector.create( 0.0 , -1.0 , 0.0 ) ; 
 
-  camera = new PerspectiveCamera( camPos , camDst , camUp , 75.0 , 0.1 , 1000.0 , 640 , 480 ) ;  
+  camera = new PerspectiveCamera( camPos , camDst , camUp , 75.0 , 0.01 , 1000.0 , 640 , 480 ) ;  
 
   /* Center scene on the pcloud */
   var bs = ComputeBoundingSphere( modelPos ) ;
-  camera.FitBoundingSphere( bs , 1.2 * bs[3] ) ; 
+  camera.FitBoundingSphere( bs , bs[3] ) ; 
   trackball.setPosition( bs ) ;
-  trackball.setRadius( bs[3] ) ; 
+  var d = Vector.norm( Vector.sub( camera.m_pos , camera.m_dir ) ) ;
+  var arad = DegToRad( camera.m_fov ) ; 
+  var new_rad = d * Math.sin( arad * 0.5 ) ; 
+  trackball.setRadius( bs[3] * 0.8 ) ; 
 
   setEventListeners();
 
@@ -63,7 +73,7 @@ function init()
   resizeGLCanvas();
 }
 
-
+// Handle visibility on the camera 
 function toggleEnableCameras()
 {
   if( cameraEnabled )
@@ -83,25 +93,27 @@ function toggleEnableCameras()
   update();
 }
 
+// Handle visibility on the point cloud 
 function toggleEnablePointCloud()
 {
-  if( pcloudEnabled )
+  if( pointcloud.isVisible() )
   {
     optionEnablePointCloudBtn.className = optionEnablePointCloudBtn.className.replace( 'active' , '' ) ;
     optionEnablePointCloudBtn.classList ? optionEnablePointCloudBtn.classList.add('inactive') : optionEnablePointCloudBtn.className += ' inactive';
-    
-    pcloudEnabled = false ; 
+
+    pointcloud.setVisible( false ) ;
   }
   else 
   {
     optionEnablePointCloudBtn.className = optionEnablePointCloudBtn.className.replace( 'inactive' , '' ) ;
     optionEnablePointCloudBtn.classList ? optionEnablePointCloudBtn.classList.add('active') : optionEnablePointCloudBtn.className += ' active';
 
-    pcloudEnabled = true ; 
+    pointcloud.setVisible( true ) ; 
   }
   update(); 
 }
 
+// Handle visibility on the trackball
 function toggleEnableTrackball()
 {
   if( trackball.isVisible() )
@@ -121,17 +133,123 @@ function toggleEnableTrackball()
   update(); 
 }
 
+// Handle mouse click 
+function onMouseDown( e )
+{
+  mouseEnterPosition.x = e.clientX - canvas.offsetLeft ;
+  mouseEnterPosition.y = e.clientY - canvas.offsetTop ;
+
+  mouseLastPosition.x = e.clientX - canvas.offsetLeft ;
+  mouseLastPosition.y = e.clientY - canvas.offsetTop ;
+
+  if( e.which === 1 )
+  {
+    mouseIsClicked = true ; 
+  } 
+}
+
+// Handle mouse unclick 
+function onMouseUp( e ) 
+{
+  if( e.which === 1 )
+  {
+    mouseIsClicked = false ; 
+  }
+}
+
+// Handle mouse drag 
+function onMouseMove( e )
+{
+  if( e.button == 0 && mouseIsClicked ) // Left click 
+  {
+    var mouseCurX = e.clientX - canvas.offsetLeft ;
+    var mouseCurY = e.clientY - canvas.offsetTop ;
+
+    if( e.shiftKey )
+    { 
+      var dx = mouseCurX - mouseLastPosition.x ;
+      var dy = mouseCurY - mouseLastPosition.y ;
+
+      // Zoom camera 
+      camera.zoom( dy / 20.0 ) ;   
+
+      // Update trackball 
+      var d = Vector.norm( Vector.sub( camera.m_pos , camera.m_dir ) ) ;
+      var arad = DegToRad( camera.m_fov ) ; 
+      var new_rad = d * Math.sin( arad * 0.5 ) ; 
+      trackball.setRadius( new_rad * 0.8 ) ; 
+    }
+    else if( e.altKey )
+    {
+      // Pan 
+    }
+    else 
+    {
+      var p_old = camera.PointOnSphere( mouseLastPosition.x , canvas.height - mouseLastPosition.y , trackball.getRadius() ) ;
+      var p_new = camera.PointOnSphere( mouseCurX , canvas.height - mouseCurY , trackball.getRadius() ) ;
+
+      // Axis of rotation 
+      var d1 = Vector.sub( p_new , camera.m_dir ) ;
+      var d2 = Vector.sub( p_old , camera.m_dir ) ; 
+      var axis = Vector.cross( d1 , d2 ) ;
+      
+      d1 = Vector.normalize( d1 );
+      d2 = Vector.normalize( d2 ) ; 
+      var d = Vector.norm( Vector.sub( p_old , p_new ) ) ;
+      // Angle of rotation 
+      var angle = 0.75 * d / trackball.getRadius() ; 
+
+      if( angle > 0.0 )
+      {
+        var q = new Quaternion( 0.0 , 0.0 , 0.0 , 0.0 ) ;
+        q.setFromAxisAngle( axis , - angle ) ; 
+
+
+        var neg_dir = new Vector.negate( camera.m_dir ) ; 
+        var dqv = new DualQuaternion() ;
+        dqv.setFromTranslationVector( camera.m_dir ) ;
+
+        var invdqv = new DualQuaternion() ;
+        invdqv.setFromTranslationVector( neg_dir ) ; 
+        
+        var dqq = new DualQuaternion() ; 
+        dqq.setFromRotationQuaternion( q ) ; 
+
+        // Update trackball
+        trackball.m_orient = dqv.mul( dqq.mul( invdqv.mul( trackball.m_orient ) ) ) ;
+
+        // Update point cloud 
+        pointcloud.rotate( q , camera.m_dir ) ; 
+      }
+      
+      // Rotate 
+    }
+
+    mouseLastPosition.x = mouseCurX ;
+    mouseLastPosition.y = mouseCurY ;
+
+    update( ) ;
+  }
+}
+
+// Setup event listener 
 function setEventListeners()
 {
   // Buttons 
   optionEnableCameraBtn.addEventListener( "click" , toggleEnableCameras ) ;
   optionEnablePointCloudBtn.addEventListener( "click" , toggleEnablePointCloud ) ; 
   optionEnableTrackballBtn.addEventListener( "click" , toggleEnableTrackball ) ; 
+  optionResetBtn.addEventListener( "click" , resetView ) ; 
+
+  canvas.addEventListener( "mousedown" , onMouseDown ) ;
+  canvas.addEventListener( "mousemove" , onMouseMove ) ;
+  canvas.addEventListener( "mouseup" , onMouseUp ) ;
 
   // Window resizing 
   window.addEventListener( 'resize' , resizeGLCanvas ) ; 
 }
 
+// Function called when user resize the window 
 function resizeGLCanvas()
 {
   var w = divCanvas.clientWidth ;
@@ -145,9 +263,10 @@ function resizeGLCanvas()
     camera.m_width = w ;
     camera.m_height = h ; 
   }
-  draw();
+  update();
 }
 
+/* Update all rendering infos before rendering (matrices) */
 function update()
 {
   // Update internal matrices 
@@ -158,6 +277,7 @@ function update()
   draw() ; 
 }
 
+/* Draw the scene */
 function draw()
 {
   var gl = renderContext.getGLContext() ; 
@@ -172,4 +292,30 @@ function draw()
   pointcloud.draw( renderContext ) ; 
 
   // Draw the cameras 
+}
+
+/* Reset the view on the default orientation */
+function resetView()
+{
+  trackball.reset() ;
+  pointcloud.reset() ;
+
+  var camPos = Vector.create( 0 , 0 , -10 ) ;
+  var camDst = Vector.create( 0.0 , 0.0 , 0.0 ) ; 
+  var camUp = Vector.create( 0.0 , -1.0 , 0.0 ) ; 
+
+  camera = new PerspectiveCamera( camPos , camDst , camUp , 75.0 , 0.01 , 1000.0 , canvas.width , canvas.height ) ;  
+
+  /* Center scene on the pcloud */
+  var bs = ComputeBoundingSphere( modelPos ) ;
+  camera.FitBoundingSphere( bs , bs[3] ) ; 
+  trackball.setPosition( bs ) ;
+  var d = Vector.norm( Vector.sub( camera.m_pos , camera.m_dir ) ) ;
+  var arad = DegToRad( camera.m_fov ) ; 
+  var new_rad = d * Math.sin( arad * 0.5 ) ; 
+  trackball.setRadius( bs[3] * 0.8 ) ; 
+
+
+  update() ;
+  resizeGLCanvas() ;
 }

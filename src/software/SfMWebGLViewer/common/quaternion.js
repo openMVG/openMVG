@@ -19,6 +19,30 @@ Quaternion = function( aX , aY , aZ , aW )
 }
 
 /**
+ * Initialize a quaternion from an axis and an angle 
+ */
+Quaternion.prototype.setFromAxisAngle = function( anAxis , anAngle )
+{
+  var axis = Vector.normalize( anAxis ) ;
+  var sin_t = Math.sin( anAngle * 0.5 ) ; 
+
+  if( Math.abs( anAngle ) > 0.0 )
+  {
+    this.m_w = Math.cos( anAngle * 0.5 ) ;
+    this.m_x = axis[0] * sin_t ;
+    this.m_y = axis[1] * sin_t ;
+    this.m_z = axis[2] * sin_t ; 
+  }
+  else 
+  {
+    this.m_w = 0.0 ;
+    this.m_x = 1.0 ;
+    this.m_y = 0.0 ;
+    this.m_z = 0.0 ; 
+  }
+}
+
+/**
  * First imaginary part 
  */
 Quaternion.prototype.getX = function( )
@@ -199,14 +223,17 @@ Quaternion.prototype.mul = function( anOther )
           this.m_x * anOther.m_x -
           this.m_y * anOther.m_y -
           this.m_z * anOther.m_z ;
+
   var x = this.m_w * anOther.m_x +
           this.m_x * anOther.m_w +
-          this.m_y * anOther.m_z +
+          this.m_y * anOther.m_z -
           this.m_z * anOther.m_y ;
+
   var y = this.m_w * anOther.m_y -
           this.m_x * anOther.m_z +
           this.m_y * anOther.m_w +
           this.m_z * anOther.m_x ;
+
   var z = this.m_w * anOther.m_z +
           this.m_x * anOther.m_y -
           this.m_y * anOther.m_x + 

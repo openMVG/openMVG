@@ -1,6 +1,8 @@
 PointCloud = function( aPointPosition , aPointNormal , aPointColor , aRenderContext )
 {
   this.initGLData( aPointPosition , aPointNormal , aPointColor , aRenderContext ) ;
+  this.m_orient = new DualQuaternion() ; 
+  this.m_show   = true ; 
 }
 
 PointCloud.prototype.initGLData = function( aPointPosition , aPointNormal , aPointColor , aRenderContext )
@@ -51,29 +53,64 @@ PointCloud.prototype.initGLData = function( aPointPosition , aPointNormal , aPoi
 
 PointCloud.prototype.draw = function( aRenderContext )
 {
-  var gl = aRenderContext.getGLContext() ;
-  var shad = aRenderContext.getPointcloudShader() ;
-  shad.enable() ; 
+  if( this.m_show )
+  {
+    var gl = aRenderContext.getGLContext() ;
+    var shad = aRenderContext.getPointcloudShader() ;
+    shad.enable() ; 
 
-  gl.bindBuffer( gl.ARRAY_BUFFER , this.m_vbo ) ; 
+    gl.bindBuffer( gl.ARRAY_BUFFER , this.m_vbo ) ; 
 
-  var mvp = Matrix4.mul( aRenderContext.getCurrentViewMatrix() , aRenderContext.getCurrentProjectionMatrix() ) ;
+    var mvp = Matrix4.mul( Matrix4.transpose(this.m_orient.toMatrix()) , Matrix4.mul( aRenderContext.getCurrentViewMatrix() , aRenderContext.getCurrentProjectionMatrix() ) ) ;
   shad.setModelViewProjectionMatrix( mvp ) ;
 
-  var posLoc = shad.getPositionAttributeLocation() ;
-  if( shad.hasNormalAttribute() )
-  {
-    var norLoc = shad.getNormalAttributeLocation() ;
-    gl.enableVertexAttribArray( norLoc ) ;
-    gl.vertexAttribPointer( norLoc , 3 , gl.FLOAT , false , ( ( 3 + 3 + 3 ) * 4 ) , ( 3 * 4 ) ) ;
+    var posLoc = shad.getPositionAttributeLocation() ;
+    if( shad.hasNormalAttribute() )
+    {
+      var norLoc = shad.getNormalAttributeLocation() ;
+      gl.enableVertexAttribArray( norLoc ) ;
+      gl.vertexAttribPointer( norLoc , 3 , gl.FLOAT , false , ( ( 3 + 3 + 3 ) * 4 ) , ( 3 * 4 ) ) ;
+    }
+    var colLoc = shad.getColorAttributeLocation() ;
+
+    gl.enableVertexAttribArray( posLoc ) ;
+    gl.enableVertexAttribArray( colLoc ) ;
+
+    gl.vertexAttribPointer( posLoc , 3 , gl.FLOAT , false , ( ( 3 + 3 + 3 ) * 4 ) , 0 ) ;
+    gl.vertexAttribPointer( colLoc , 3 , gl.FLOAT , false , ( ( 3 + 3 + 3 ) * 4 ) , ( 3 + 3 ) * 4 ) ; 
+
+    gl.drawArrays( gl.POINTS , 0 , this.m_nb_point ) ; 
   }
-  var colLoc = shad.getColorAttributeLocation() ;
+}
 
-  gl.enableVertexAttribArray( posLoc ) ;
-  gl.enableVertexAttribArray( colLoc ) ;
+PointCloud.prototype.rotate = function( aQuat , aCenter )
+{
+  var inv = Vector.negate( aCenter ) ;
 
-  gl.vertexAttribPointer( posLoc , 3 , gl.FLOAT , false , ( ( 3 + 3 + 3 ) * 4 ) , 0 ) ;
-  gl.vertexAttribPointer( colLoc , 3 , gl.FLOAT , false , ( ( 3 + 3 + 3 ) * 4 ) , ( 3 + 3 ) * 4 ) ; 
+  var dqv = new DualQuaternion() ;
+  dqv.setFromTranslationVector( aCenter ) ;
+  var dqinv = new DualQuaternion() ;
+  dqinv.setFromTranslationVector( inv ) ; 
+  var dqq = new DualQuaternion() ;
+  dqq.setFromRotationQuaternion( aQuat ) ;
 
-  gl.drawArrays( gl.POINTS , 0 , this.m_nb_point ) ; 
+  this.m_orient = dqv.mul( dqq.mul( dqinv.mul( this.m_orient ) ) )  ;
+}
+
+/* Set visibility of the point cloud */
+PointCloud.prototype.setVisible = function( aVal )
+{
+  this.m_show = aVal ;
+}
+
+/* Indicate if the point cloud is visible */
+PointCloud.prototype.isVisible = function( )
+{
+  return this.m_show ; 
+}
+
+/* Reset orientation */
+PointCloud.prototype.reset = function()
+{
+  this.m_orient = new DualQuaternion() ; 
 }
