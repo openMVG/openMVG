@@ -1,3 +1,4 @@
+/* Class managing a point cloud */
 PointCloud = function( aPointPosition , aPointNormal , aPointColor , aRenderContext )
 {
   this.initGLData( aPointPosition , aPointNormal , aPointColor , aRenderContext ) ;
@@ -5,6 +6,7 @@ PointCloud = function( aPointPosition , aPointNormal , aPointColor , aRenderCont
   this.m_show   = true ; 
 }
 
+/* Create vbo */
 PointCloud.prototype.initGLData = function( aPointPosition , aPointNormal , aPointColor , aRenderContext )
 {
   this.m_nb_point = aPointPosition.length / 3 ;
@@ -51,6 +53,7 @@ PointCloud.prototype.initGLData = function( aPointPosition , aPointNormal , aPoi
   gl.bufferData( gl.ARRAY_BUFFER , tmpData , gl.STATIC_DRAW ) ;
 }
 
+/* Draw a point cloud */
 PointCloud.prototype.draw = function( aRenderContext )
 {
   if( this.m_show )
@@ -83,6 +86,7 @@ PointCloud.prototype.draw = function( aRenderContext )
   }
 }
 
+/* Rotate a point cloud */
 PointCloud.prototype.rotate = function( aQuat , aCenter )
 {
   var inv = Vector.negate( aCenter ) ;
@@ -95,6 +99,15 @@ PointCloud.prototype.rotate = function( aQuat , aCenter )
   dqq.setFromRotationQuaternion( aQuat ) ;
 
   this.m_orient = dqv.mul( dqq.mul( dqinv.mul( this.m_orient ) ) )  ;
+}
+
+/* Translate a point cloud */
+PointCloud.prototype.translate = function( aVector )
+{
+  var dqv = new DualQuaternion() ;
+  dqv.setFromTranslationVector( aVector ) ; 
+
+  this.m_orient = dqv.mul( this.m_orient ) ; 
 }
 
 /* Set visibility of the point cloud */

@@ -182,11 +182,17 @@ function onMouseMove( e )
     else if( e.altKey )
     {
       // Pan 
+      var p_old = camera.pointOnPlane( mouseLastPosition.x , canvas.height - mouseLastPosition.y ) ;
+      var p_new = camera.pointOnPlane( mouseCurX , canvas.height - mouseCurY ) ;
+
+      var d = Vector.sub( p_new , p_old ) ; 
+
+      pointcloud.translate( d ) ; 
     }
     else 
     {
-      var p_old = camera.PointOnSphere( mouseLastPosition.x , canvas.height - mouseLastPosition.y , trackball.getRadius() ) ;
-      var p_new = camera.PointOnSphere( mouseCurX , canvas.height - mouseCurY , trackball.getRadius() ) ;
+      var p_old = camera.pointOnSphere( mouseLastPosition.x , canvas.height - mouseLastPosition.y , trackball.getRadius() ) ;
+      var p_new = camera.pointOnSphere( mouseCurX , canvas.height - mouseCurY , trackball.getRadius() ) ;
 
       // Axis of rotation 
       var d1 = Vector.sub( p_new , camera.m_dir ) ;

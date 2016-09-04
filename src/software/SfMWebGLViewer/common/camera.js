@@ -40,7 +40,7 @@ PerspectiveCamera.prototype.GetProjectionMatrix = function()
  * Compute point a a plane passing through the destination point an parallel to the view plane 
  * The result is the intersection between the ray passing throug the eye to the pixel point and the plane  
  */
-PerspectiveCamera.prototype.PointOnPlane = function( aPixX , aPixY )
+PerspectiveCamera.prototype.pointOnPlane = function( aPixX , aPixY )
 {
   var diff = Vector.normalize( Vector.sub( this.m_dir , this.m_pos ) ) ; 
 
@@ -57,7 +57,7 @@ PerspectiveCamera.prototype.PointOnPlane = function( aPixX , aPixY )
  * Compute (nearest) point on a sphere centered at the destination point 
  * The result is the intersection between the ray passing throug the eye to the pixel point and the sphere 
  */
-PerspectiveCamera.prototype.PointOnSphere = function( aPixX , aPixY , aRad )
+PerspectiveCamera.prototype.pointOnSphere = function( aPixX , aPixY , aRad )
 {
   var pt = this.UnProject( aPixX , aPixY ) ;
   var n = Vector.normalize( Vector.sub( this.m_pos , this.m_dir ) ) ;
